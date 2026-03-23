@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-yellow: #ccff00;
+  --color-brand-pink: #ff3399;
+  --color-brand-blue: #00d2ff;
+  --color-brand-red: #ff0000;
+  --color-brand-green: #00ff99;
+  --color-brand-orange: #ffb158;
+}
+
+@layer utilities {
+  .neo-brutalist {
+    @apply border-4 border-black shadow-[8px_8px_0px_0px_black] bg-white transition-all;
+  }
+  .neo-brutalist:hover {
+    @apply shadow-[12px_12px_0px_0px_black] -translate-y-1;
+  }
+  .neo-brutalist:active {
+    @apply shadow-none translate-y-2;
+  }
+  
+  .pop-title {
+    @apply font-black italic tracking-tighter uppercase;
+  }
+}
+
+body {
+  margin: 0;
+  background-color: #f3f4f6; /* Tailwind gray-100 */
+  color: #000;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
