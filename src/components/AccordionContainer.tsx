@@ -25,11 +25,11 @@ export const AccordionContainer: React.FC<AccordionContainerProps> = ({
   const [isOpen, setIsOpen] = useState(isOpenInitial);
 
   return (
-    <div className="w-full border-[4px] border-black rounded-2xl bg-white overflow-hidden">
+    <div className="w-full border-[4px] border-black rounded-2xl bg-white overflow-hidden shadow-[6px_6px_0px_0px_black]">
       {/* Header mirrors the polished Reference Studio toolboxes. */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`${headerColor} h-14 flex items-center justify-between cursor-pointer select-none sticky top-0 z-20 group border-b-[4px] ${isOpen ? 'border-black' : 'border-transparent'}`}
+        className={`${headerColor} h-14 flex items-center justify-between cursor-pointer select-none relative z-20 group ${isOpen ? 'border-b-[4px] border-black' : 'border-b-0'}`}
       >
         <div className="flex items-center h-full">
           {/* Square Colored Icon Box — icon fills 90% (50/56) */}
@@ -45,7 +45,7 @@ export const AccordionContainer: React.FC<AccordionContainerProps> = ({
         </div>
 
         {/* Toggle — Solid dark, large, fills 90% of header height */}
-        <div className={`px-4 flex items-center justify-center transition-all duration-700 ease-in-out transform ${isOpen ? 'rotate-180 scale-110' : 'rotate-0 scale-100 group-hover:scale-110'}`}>
+        <div className={`h-full px-4 flex items-center justify-center border-l-[4px] border-black transition-all duration-500 ease-in-out transform ${isOpen ? 'rotate-180 scale-110' : 'rotate-0 scale-100 group-hover:scale-110'}`}>
           <CustomIcon name={isOpen ? "SYMBOLS 19" : "SYMBOLS 22"} size={48} className="opacity-80" />
         </div>
       </div>
