@@ -161,8 +161,8 @@ const CustomChartsEngine = () => {
             {barData.map((h, i) => (
                <div key={i} className="absolute w-6 h-6 rounded-full bg-[#00CCFF] border-[3px] border-black shadow-[2px_2px_0_0_black] hover:scale-125 transition-transform" style={{ left: `${(i / barData.length) * 100 + 5}%`, bottom: `${h}%` }} />
             ))}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
-               <polyline points={barData.map((h, i) => `${(i / barData.length) * 100 + 5}%,${100 - h}%`).join(' ')} fill="none" stroke="black" strokeWidth="4" strokeLinejoin="round" strokeDasharray="8 8" className="opacity-20" />
+            <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+               <polyline points={barData.map((h, i) => `${(i / barData.length) * 100 + 5},${100 - h}`).join(' ')} fill="none" stroke="black" strokeWidth="4" strokeLinejoin="round" strokeDasharray="8 8" className="opacity-20" />
             </svg>
          </div>
       </div>
