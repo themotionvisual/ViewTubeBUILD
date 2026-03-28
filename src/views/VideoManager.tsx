@@ -514,7 +514,7 @@ const VideoManager: React.FC = () => {
                       <h2 className="text-3xl font-[1000] uppercase leading-tight line-clamp-2 mb-2 group-hover:text-[#FF3399] transition-colors tracking-tighter">{selectedVideo.title}</h2>
                       <div className="flex gap-2 mt-2">
                         <button onClick={(e) => { e.stopPropagation(); updateBrain({ coreConcept: selectedVideo.title }); window.location.href = '/studio'; }} className="bg-black text-[#CCFF00] px-4 py-2 rounded-lg font-black uppercase text-[10px] tracking-widest border-2 border-black hover:scale-105 transition-transform shadow-[2px_2px_0px_0px_#CCFF00]">To Studio Hub</button>
-                        <button onClick={(e) => { e.stopPropagation(); updateBrain({ coreConcept: selectedVideo.title }); window.location.href = '/strategy'; }} className="bg-black text-[#00CCFF] px-4 py-2 rounded-lg font-black uppercase text-[10px] tracking-widest border-2 border-black hover:scale-105 transition-transform shadow-[2px_2px_0px_0px_#00CCFF]">To Strategy Hub</button>
+                        <button onClick={(e) => { e.stopPropagation(); updateBrain({ coreConcept: selectedVideo.title }); window.location.href = '/reference-studio'; }} className="bg-black text-[#00CCFF] px-4 py-2 rounded-lg font-black uppercase text-[10px] tracking-widest border-2 border-black hover:scale-105 transition-transform shadow-[2px_2px_0px_0px_#00CCFF]">To Reference Studio</button>
                       </div>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3">
                         <p className="text-black/50 font-black text-xs uppercase tracking-widest">ID: {selectedVideo.videoId}</p>

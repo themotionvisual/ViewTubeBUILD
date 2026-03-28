@@ -17,7 +17,6 @@ import Dashboard from '../views/Dashboard';
 import StudioHub from '../views/StudioHub';
 import PerformanceHub from '../views/PerformanceHub';
 import SettingsHub from '../views/SettingsHub';
-import ProjectsV3 from '../views/ProjectsV3';
 
 interface LiveCanvasSpec {
   label: string;
@@ -99,7 +98,6 @@ const liveCanvasRegistry: Record<string, LiveCanvasSpec> = {
   'views/StudioHub.tsx': { label: 'StudioHub', render: () => <StudioHub /> },
   'views/PerformanceHub.tsx': { label: 'PerformanceHub', render: () => <PerformanceHub /> },
   'views/SettingsHub.tsx': { label: 'SettingsHub', render: () => <SettingsHub /> },
-  'views/ProjectsV3.tsx': { label: 'ProjectsV3', render: () => <ProjectsV3 /> },
 };
 
 export const getLiveCanvasSpec = (path: string): LiveCanvasSpec | null => {
