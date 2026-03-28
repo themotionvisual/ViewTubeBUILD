@@ -1,0 +1,30 @@
+# ViewTUBE AI Core Rules
+
+Any AI agent (Antigravity, Gemini, etc.) working on this project MUST follow these rules to maintain workspace harmony and speed.
+
+## 🎨 Visual Identity: Neo-Brutalist v2.2 (Ultra-High Contrast)
+- **Borders**: All primary containers MUST use `border-[5px] border-black`. Components use `border-[4px]`.
+- **Shadows**: Mandatory hard-offset `shadow-[12px_12px_0px_0px_black]`. Inner components use `shadow-[6px_6px_0px_0px_black]`.
+- **Border Radius**: Containers: `rounded-[48px]`. Buttons/Cards: `rounded-3xl`.
+- **Colors**: Neon High-Contrast (#ff3399, #ccff00, #00ccff, #ffdd00).
+- **Typography**: `font-[1000]`, uppercase, tracking-tighter. Use `italic` for impact.
+- **Header Pattern**: "Flush Header" - Stretch headers to container edges with `-m-6 mb-6 p-4` (or similar negative margin).
+
+## 🏗️ Architectural Integrity: The 4 Core Pillars (Modular Workbench)
+We are building a highly cohesive Modular Workbench. All AI agents must adhere to these pillars:
+1. **Universal Data Hub**: Standalone ingestion engine + embeddable component (`<UniversalDataTable />`). Merges CSV uploads and YouTube API telemetry into a single global state (`brain.researchLabState.allData`). Must support Global vs. Local filter scoping.
+2. **Visualizer Stations**: Houses all 30+ Google Charts and Narrative DNA. Uses the Data Table as an interactive header overlay to instantly filter charts.
+3. **Master Oracle**: The AI Brain. Merges CSV/Data Reports with the Daily Algorithm Brief. Reads directly from the global Universal Data Hub state to guarantee synchronization.
+4. **Action Command Center**: The execution layer (The Governor). Includes CTR Pivot, Retention Rescue, and Pre-Launch Priming.
+
+## 📊 Data & API Strategy
+- **Global State**: All core data must go through `useBrain()` in `GlobalDataContext`. Never store isolated state in tools.
+- **Unified Ingestion**: The Universal Data Hub handles all data normalization (CSVs + API). Do not build isolated parsers in individual tools.
+- **Component Standard**: Wrap all views in the `<ToolHeader />`. 
+- **Overlay Pattern**: Use the `Database` icon in tool headers to trigger the Universal Data Table overlay, rather than rendering tables statically at the bottom of pages.
+- **Future GCP Integrations**: Design components to easily accept future Google Cloud streams (Vertex AI, Video Intelligence, Cloud Translation, Search Console).
+
+## 🤝 AI Collaboration
+- **Brain Sync**: Always check `brain/task.md` before starting work to see what your AI partner has already done.
+- **Plan First**: Always generate an `implementation_plan.md` before making sweeping changes.
+- **Verification**: Run `npm run dev` and check for `ReferenceError` before marking a task as complete.

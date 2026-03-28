@@ -11,4 +11,12 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    host: true, // Listen on all network interfaces (0.0.0.0) so Docker can map the port
+    port: 5173,
+    strictPort: true,
+    watch: {
+      usePolling: true, // Ensures hot-reloading detects file saves reliably through the Docker volume
+    },
+  },
 })

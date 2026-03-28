@@ -1,0 +1,146 @@
+### 10 Current Codebase Changes & Updates Needed
+
+1. ** Restore Deep Project Metadata Parity(Regression Fix) **
+    *   ** The Issue:** `ProjectsV3.tsx` completely stripped out the rich text editors, script box, thumbnail upload drag - and - drop, and SEO tag inputs that existed in previous versions(like`Projects.tsx`).Right now, it only tracks the project's name, status, and tasks.
+    *   ** The Fix:** Reintroduce the`SectionBox` / `AccordionContainer` elements into the right - hand panel of V3 when a project is selected, effectively merging the robust data entry of V2 with the advanced 120 - day calendar of V3.
+2. ** Missing "Delete Project" Confirmation Modal **
+    *   ** The Issue:** Currently, the delete action is tied directly to an `onClick` event(`deleteProject(p.id)`) on the trash icon.One misclick will instantly wipe a project without warning.
+    *   ** The Fix:** Restore the aggressive red Neo - Brutalist confirmation modal from previous versions, requiring the user to check a box stating "I understand this is permanent" before triggering the delete function.
+3. ** Calendar Data Density & Tooltips **
+    *   ** The Issue:** The 120 - day grid generates beautiful colored geometric patterns for tasks, but hovering over a calendar day only shows the date number.The user cannot see * what * tasks are scheduled without explicitly clicking the day.
+    *   ** The Fix:** Implement a floating absolute`div`(custom tooltip) on hover over the `group` container of the calendar cell that lists the `task.text` for the first 3 tasks scheduled on that day.
+4. ** Hardcoded "7-5-3" Shorts Strategy Constraints **
+    *   ** The Issue:** The`handleOrchestrate753` function hardcodes a 7 - day, 5 - day, and 3 - day interval for promotional shorts.
+    *   ** The Fix:** Refactor this to accept a dynamic configuration object(e.g., a modal that lets users input their own rollout cadence like 14 - 7 - 1) and dynamically map over the user's input array to generate the `dayTasks`.
+5. ** Project Creation Form Density **
+    *   ** The Issue:** The "Initialize Project" modal only asks for a name.It dropped the highly useful Project Type(Long / Short), Aspect Ratio, and Color Palette selectors.
+    *   ** The Fix:** Expand the modal to include a 3 - column layout where users can assign a specific Neo - Brutalist hex color(to map to the calendar) and define if the project is a Short, Long - form, or Community Post.
+6. ** Task Synchronization Fragility **
+    *   ** The Issue:** Manual tasks are stored in `brain.calendarState.dayTasks`, while project - specific tasks are stored in `project.tasks`.The calendar maps these together, but toggling a project task from the global calendar requires string - splitting the ID(`prefix, pId, tId = taskId.split('-')`), which is brittle.
+    *   ** The Fix:** Normalize all tasks into a single `Task` interface with a`type: 'global' | 'project'` and a`referenceId`, handling the toggle logic through a unified `useBrain().toggleTask` dispatch method.
+7. ** Mobile Responsiveness of the 120 - Day Grid **
+    *   ** The Issue:** The`min-w-max` class on the calendar grid guarantees horizontal scrolling, but touch - swiping the timeline on mobile devices will feel clunky because CSS scroll snapping is missing.
+    *   ** The Fix:** Apply CSS `scroll-snap-type: x mandatory` to the calendar wrapper and `scroll-snap-align: start` to the week columns to ensure smooth, app - like swiping.
+8. ** Cloud Sync "Spinning" State UI **
+    *   ** The Issue:** When pushing a milestone to Google Calendar via`handlePushToCalendar`, the button shows a loading spinner, but the rest of the UI is still clickable, leading to potential duplicate API calls.
+    *   ** The Fix:** Apply a `disabled` attribute and a `grayscale opacity-50` class to all other sync buttons while `isPushing` evaluates to true.
+9. ** Empty State Call - to - Action(CTA) **
+    *   ** The Issue:** When a day has no tasks, it shows a "Quiet Sector" icon.It tells the user there are no pulses but doesn't offer a direct way to fix it.
+    *   ** The Fix:** Wrap the "Quiet Sector" empty state in an`onClick` handler that automatically focuses the "INITIATE NEW TASK..." input field at the bottom of the screen.
+10. ** Calendar Event Color Blending **
+    *   ** The Issue:** The SVG background generator(`renderCellBackground`) supports up to 4 colors.If 5 tasks are scheduled with different colors, the 5th is dropped.
+    *   ** The Fix:** Update the SVG generator to support an infinite stripe / gradient matrix, or add a "+X" visual badge on the corner of the cell when`tasks.length > 4`.
+### 10 New Features & Integration Strategies
+
+1. ** Visual Kanban Board Mode(Drag - and - Drop) **
+    *   ** Feature:** A dedicated view to drag projects between Ideation, Scripting, Filming, Editing, and Publishing columns.
+    *   ** How to Integrate:** Install`@hello-pangea/dnd`.Add a toggle button in the header next to "NEW PROJECT" to switch from`mode: 'calendar'` to`mode: 'kanban'`.Map the `projects` array into Droppable columns based on their `status` property.
+2. ** AI - Powered Content Auto - Scheduler **
+    *   ** Feature:** Instead of manually picking a publish date, an "Optimize Date" button uses your best uploading days to assign a slot.
+    *   ** How to Integrate:** Import the `chartConfigs` from `ResearchLab.tsx` specifically the "Best Upload Day" logic.Find the day with the highest average views, find the next available calendar date matching that weekday, and set the project's `publishDate`.
+3. ** Direct YouTube Studio Deployment **
+    *   ** Feature:** Push a finished project's title, description, and tags directly to an unlisted YouTube video draft.
+    *   ** How to Integrate:** Utilize the Google OAuth scope`https://www.googleapis.com/auth/youtube.upload`.Add a "Deploy to Studio" button that constructs the JSON payload and calls the YouTube Data API `videos/insert` endpoint.
+4. ** Dynamic Storyboard Planner **
+    *   ** Feature:** A visual grid where users can upload reference images for specific timestamps in their video script.
+    *   ** How to Integrate:** Create a new `Storyboard[]` property on the `Project` type.Build a grid component where users can drop images from the`AssetVault`.Use the Gemini API to automatically generate shot - list text based on the uploaded images.
+5. ** Asset Vault Media Linkage **
+    *   ** Feature:** Link specific raw files or generated assets from the `AssetVault` directly to the project card.
+    *   ** How to Integrate:** Create a "Project Files" section.Query the `nexusSyncService` for files matching the`project.name` and render a mini - carousel of thumbnails right inside the project view.
+6. ** Script - to - Teleprompter View **
+    *   ** Feature:** A high - contrast, distraction - free reading mode for recording voiceovers.
+    *   ** How to Integrate:** Add a "Launch Prompter" button.This triggers a full - screen React Portal with a black background, massive yellow text, and a `useEffect` interval that controls `window.scrollBy` to automatically scroll the text at a readable WPM(Words Per Minute) pace.
+7. ** Sponsor & ROI Tracker **
+    *   ** Feature:** Track estimated revenue, ad integrations, and production costs directly on the project.
+    *   ** How to Integrate:** Extend the `Project` type with `financials: { sponsorRate, expenses }`.In the project panel, render a mini gauge chart calculating `(sponsorRate - expenses)` to show the net profit baseline before YouTube AdSense is even factored in.
+8. ** Collaborative "Read-Only" Share Links **
+    *   ** Feature:** Generate a link to send to an editor that shows the script, assets, and tasks without giving them full app access.
+    *   ** How to Integrate:** Compress the `Project` JSON object, encode it in Base64, and append it to a URL parameter(e.g., `viewtube.os/share?data=...`).Create a minimal viewing component that decodes and renders the data when that URL is accessed.
+9. ** Automated B - Roll Prompt Extraction **
+    *   ** Feature:** The AI reads your project script and generates a list of stock - footage search terms.
+    *   ** How to Integrate:** Add a "Generate Shot List" button.Pass the project's `script` state to `gemini.ts` with a prompt to return a JSON array of visual descriptions. Map this array into clickable "Copy to Clipboard" tags.
+10. ** Calendar "Heatmap" View **
+    *   ** Feature:** Color - code the past calendar days based on actual YouTube performance to see momentum trends alongside your tasks.
+    *   ** How to Integrate:** Read`ytVideos` views.Map the view counts to an opacity scale.Apply a background gradient to the calendar cells where `opacity` matches performance, effectively creating a GitHub - style contribution graph for your views.
+### 10 Antigravity Extensions(IDE Environment)
+
+### 1. File Reader / Codebase Indexer
+    *   ** What it does:** Allows the AI to instantly scan and read local files, maintaining the context of massive 1000 + line components.
+*   ** Why for this app:** `ResearchLab.tsx` and `ProjectsV3.tsx` are massive.You need the AI to read the entire file tree to ensure variable names, CSS classes, and`GlobalDataContext` typings are perfectly aligned when you request a change.
+
+### 2. Diff Reviewer & Patcher
+    *   ** What it does:** Allows the AI to generate `.patch` files or unified diffs and apply them directly to your files without manual copy - pasting.
+*   ** Why for this app:** Neo - Brutalist design requires surgical tweaks(e.g., changing`shadow-[8px_8px_0_0_black]` to`12px`).Manually finding and replacing these across 30 components is tedious.This extension automates precision styling updates.
+
+### 3. Terminal Control Agent
+    *   ** What it does:** Grants the AI read / write access to your local terminal to run build commands, start dev servers, and install packages.
+*   ** Why for this app:** When adding features like `@hello-pangea/dnd` for the Kanban board or `JSZip` for exports, the AI can install the dependencies, spin up the Vite server, and verify the build doesn't break instantly.
+
+### 4. Web Browser / DOM Inspector
+    *   ** What it does:** Allows the AI to navigate to URLs, take screenshots, and inspect the rendered DOM structure.
+*   ** Why for this app:** You can ask the AI to "look at localhost:5173/projects" and identify why a flexbox container is overflowing or why the Neo - Brutalist borders are clipping on mobile viewports.
+
+### 5. Linter & Type Checker Integrator
+    *   ** What it does:** Connects directly to TypeScript and ESLint, surfacing errors to the AI before the code is even saved.
+*   ** Why for this app:** The`GlobalDataContext` relies heavily on complex types(e.g., `VideoStats`, `ChartConfig`).This prevents the AI from hallucinating incorrect prop names and breaking the strict TypeScript compilation.
+
+### 6. Git Graph & Commit Manager
+    *   ** What it does:** Reads your git history, diffs uncommitted changes, and can automatically generate semantic commit messages.
+*   ** Why for this app:** When implementing massive architectural changes(like moving from`Projects.tsx` to`ProjectsV3.tsx`), this tool allows the AI to cleanly stash, branch, and commit your working states so you never lose the "Golden Build."
+
+### 7. Global Search(Regex / Grep Engine)
+    *   ** What it does:** Executes high - speed regex searches across the entire `/src` directory.
+*   ** Why for this app:** If you decide to change the accent color from `#CCFF00` to a new hex code, the AI can find every instance of that specific tailwind class globally and replace it, rather than missing hidden styling components.
+
+### 8. Component Storyboarder(React Profiler)
+    *   ** What it does:** Analyzes component render cycles and prop drilling depth.
+*   ** Why for this app:** The`ResearchLab` renders 18 Google Charts simultaneously.This tool helps the AI identify performance bottlenecks and automatically suggest `useMemo` or `React.memo` optimizations to stop the UI from lagging.
+
+### 9. Documentation Sync(Markdown Generator)
+    *   ** What it does:** Reads your active code and automatically updates `.md` documentation files.
+*   ** Why for this app:** As you rapidly iterate on the "100 ways to improve Creator OS" or add new tools, this extension keeps your `MASTER_PLANS.md` and roadmap artifacts perfectly synchronized with the actual codebase state.
+
+### 10. API Mocking Service
+    *   ** What it does:** Intercepts outgoing `fetch` calls and returns synthetic JSON data.
+*   ** Why for this app:** When testing the Google OAuth and YouTube Analytics API integrations, you don't want to exhaust your live quota. This allows the AI to feed the dashboard fake "Viral Video" data to test chart rendering offline.
+### 10 Developer AI & Online Tools(External Integration)
+
+### 1. v0 by Vercel(or Claude Artifacts)
+    *   ** What it does:** Generates React / Tailwind UI components from natural language prompts.
+*   ** Why for this app:** When you need to build the new "Teleprompter View" or "Kanban Board," you can prompt v0 to generate the core layout using your Neo-Brutalist design language, then copy the boilerplate directly into Creator OS to wire up the logic.
+
+### 2. Gemini Code Assist / GitHub Copilot
+    *   ** What it does:** Inline IDE autocomplete that predicts the next block of code.
+*   ** Why for this app:** When writing tedious array manipulations(like sorting YouTube metrics or parsing CSV data), inline AI can predict the exact`map`, `filter`, and`reduce` functions instantly based on the surrounding context.
+
+### 3. Google AI Studio(Gemini Platform)
+    *   ** What it does:** A sandbox for testing and tweaking system instructions and prompt temperatures.
+*   ** Why for this app:** Before hardcoding the "Algorithm Architect" or "SEO Generator" prompts into`services/gemini.ts`, you use this to test how the AI responds to real YouTube transcripts, ensuring your JSON output schemas don't break.
+
+### 4. Supabase(Backend as a Service)
+    *   ** What it does:** Open - source Firebase alternative offering Postgres databases, Auth, and Edge Functions.
+*   ** Why for this app:** You need to transition Creator OS from `localStorage` to a real SaaS.Supabase handles the Google OAuth login and securely stores users' saved projects, API keys, and Analytics caches in the cloud.
+
+### 5. Recharts / React - Google - Charts Visualizer
+    *   ** What it does:** Online sandboxes to test data visualization configurations.
+*   ** Why for this app:** The dashboard relies entirely on complex data mapping.Using a sandbox lets you test how to implement "Outlier Clipping" or "Dual Y-Axes" on a Scatter chart before risking application - crashing bugs in the main UI.
+
+### 6. Stripe Developer Sandbox
+    *   ** What it does:** Payment processing API and subscription management.
+*   ** Why for this app:** To commercialize Creator OS(e.g., $7.99 / mo), you must integrate the Stripe SDK to handle trial periods, lock the "Research Lab" behind a paywall, and manage user billing cycles securely.
+
+### 7. Perplexity AI(Pro)
+    *   ** What it does:** An AI search engine that conducts deep, real - time web research with citations.
+*   ** Why for this app:** When you hit a roadblock with the YouTube Data API v3(e.g., "How do I fetch Shorts retention curves?"), Perplexity will crawl the most recent StackOverflow threads and official documentation to give you a definitive technical answer.
+
+### 8. ElevenLabs / Auphonic APIs
+    *   ** What it does:** Next - generation text - to - speech and audio mastering APIs.
+*   ** Why for this app:** You are integrating voiceovers into the`StoryboardStudio`.Understanding their developer consoles allows you to pull the correct REST API endpoints into your application to generate synthetic audio directly inside the app.
+
+### 9. Figma(with AI Plugins like Magician)
+*   ** What it does:** Interface design software equipped with AI generation plugins.
+*   ** Why for this app:** Neo - Brutalism requires strict adherence to border radiuses, shadow offsets, and typography scales.Designing the new "Packaging Lab" in Figma first ensures you know the exact Tailwind utility classes(`border-[6px] shadow-[8px_8px]`) to apply in the code.
+
+### 10. Hoppscotch / Postman AI
+    *   ** What it does:** API testing environments that can generate integration code.
+*   ** Why for this app:** When mapping the data payloads required for the YouTube Analytics API, you can fire test requests in Hoppscotch, view the raw JSON tree, and use its AI to automatically generate the TypeScript `interface` types for your`types.ts` file.
