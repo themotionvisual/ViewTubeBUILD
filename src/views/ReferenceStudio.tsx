@@ -466,10 +466,10 @@ const ReferenceStudio: React.FC = () => {
             )}
 
             {activeReferenceTab === 'thumbnail' && (
-            <div className="w-full max-w-[1400px] mx-auto mb-40 bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] flex flex-col overflow-hidden">
+            <div className="w-full max-w-[1400px] mx-auto mb-40 bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] transition-all duration-700 ease-in-out flex flex-col overflow-hidden">
 
                 {/* Main Header — Large Icon + Ultra-Large Title (Image #3 Style) */}
-                <header className="bg-[#FFE357] h-[80px] flex items-center justify-between px-0 overflow-hidden border-b-[6px] border-black">
+                <header className={`bg-[#FFE357] h-[80px] flex items-center justify-between px-0 overflow-hidden transition-all duration-700 ${isMainToolOpen ? 'border-b-[6px] border-black' : ''}`}>
                     <div onClick={() => setIsMainToolOpen(!isMainToolOpen)} className="flex items-center h-full cursor-pointer">
                         {/* Large Colored Icon Box */}
                         <div className="bg-[#FF7497] h-full w-[80px] flex items-center justify-center border-r-[6px] border-black flex-shrink-0">
@@ -502,7 +502,7 @@ const ReferenceStudio: React.FC = () => {
                 </header>
 
                 {/* Main Content Area — Grid-based for perfect collapse */}
-                <div className={`grid transition-[grid-template-rows,opacity] duration-700 ease-in-out ${isMainToolOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                <div className={`grid transition-all duration-1000 ease-in-out ${isMainToolOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
                     <div className="overflow-hidden">
                         <main className="p-8 bg-white min-h-[600px] relative">
                             {/* Studio Tab — Animated Transition */}
