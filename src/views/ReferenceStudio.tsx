@@ -4,6 +4,9 @@ import { AspectRatio, ImageSize, type ThumbnailHistoryItem } from '../types';
 import { useBrain } from '../context/GlobalDataContext';
 import { CustomIcon } from '../components/CustomIcon';
 import { AccordionContainer } from '../components/AccordionContainer';
+import { ProjectStudio } from '../components/ProjectStudio';
+import { NativeUIKit } from '../components/NativeUIKit';
+import UIReferenceLibraryContent from '../components/UIReferenceLibraryContent';
 import {
     ResponsiveContainer,
     LineChart,
@@ -15,16 +18,6 @@ import {
     CartesianGrid,
     Tooltip
 } from 'recharts';
-
-const ProjectStudio = React.lazy(() =>
-    import('../components/ProjectStudio').then(module => ({ default: module.ProjectStudio }))
-);
-const NativeUIKit = React.lazy(() =>
-    import('../components/NativeUIKit').then(module => ({ default: module.NativeUIKit }))
-);
-const UIReferenceLibraryContent = React.lazy(() => import('../components/UIReferenceLibraryContent'));
-
-type ReferenceTab = 'curated' | 'thumbnail' | 'project' | 'matrix' | 'library' | 'native';
 
 interface ReferenceImage {
     id: string;
@@ -87,7 +80,7 @@ const BEST_COMPONENTS = [
         title: 'Thumbnail Studio Shell',
         source: 'Header + Accordion composition',
         reason: 'Best visual hierarchy and interaction density.',
-        tab: 'thumbnail' as const,
+        anchorId: 'ref-thumbnail-shell',
         accent: 'bg-[#FFE357]'
     },
     {
@@ -95,7 +88,7 @@ const BEST_COMPONENTS = [
         title: 'Project Studio Core',
         source: 'Calendar + tasks + AI tactic rail',
         reason: 'Strongest operational workflow block.',
-        tab: 'project' as const,
+        anchorId: 'ref-project-studio',
         accent: 'bg-[#FF7497]'
     },
     {
@@ -103,7 +96,7 @@ const BEST_COMPONENTS = [
         title: 'Mega Toolbox Matrix',
         source: 'Cause-effect layouts + data table engine',
         reason: 'Most scalable container pattern.',
-        tab: 'matrix' as const,
+        anchorId: 'ref-mega-matrix',
         accent: 'bg-[#00CCFF]'
     },
     {
@@ -111,7 +104,7 @@ const BEST_COMPONENTS = [
         title: 'Reference Library',
         source: 'Section C + Section E components',
         reason: 'Primary source of reusable UI choices.',
-        tab: 'library' as const,
+        anchorId: 'ref-library',
         accent: 'bg-[#B14AED]'
     },
     {
@@ -119,18 +112,9 @@ const BEST_COMPONENTS = [
         title: 'Native UI Kit',
         source: 'Integrated standalone component kit',
         reason: 'Fastest path to consistent production styling.',
-        tab: 'native' as const,
+        anchorId: 'ref-native-kit',
         accent: 'bg-[#CCFF00]'
     }
-];
-
-const REFERENCE_TABS: { id: ReferenceTab; label: string; accent: string }[] = [
-    { id: 'curated', label: 'Curated', accent: 'bg-[#B14AED]' },
-    { id: 'thumbnail', label: 'Thumbnail', accent: 'bg-[#FFE357]' },
-    { id: 'project', label: 'Project', accent: 'bg-[#FF7497]' },
-    { id: 'matrix', label: 'Matrix', accent: 'bg-[#00CCFF]' },
-    { id: 'library', label: 'Library', accent: 'bg-[#B14AED]' },
-    { id: 'native', label: 'Native Kit', accent: 'bg-[#CCFF00]' }
 ];
 
 const ReferenceStudio: React.FC = () => {
@@ -139,7 +123,6 @@ const ReferenceStudio: React.FC = () => {
     // Tab State
     const [activeTab, setActiveTab] = useState<'generate' | 'analyze'>('generate');
     const [isMainToolOpen, setIsMainToolOpen] = useState(true);
-    const [activeReferenceTab, setActiveReferenceTab] = useState<ReferenceTab>('curated');
 
     // Loading States
     const [genLoading, setGenLoading] = useState(false);
@@ -390,16 +373,9 @@ const ReferenceStudio: React.FC = () => {
         }
     };
 
-    const openReferenceTab = (tab: ReferenceTab) => {
-        setActiveReferenceTab(tab);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    const jumpToAnchor = (anchorId: string) => {
+        document.getElementById(anchorId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
-
-    const sectionLoadingFallback = (
-        <div className="w-full max-w-[1400px] mx-auto mb-24 bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] p-12 text-center">
-            <p className="text-xs font-black uppercase tracking-[0.24em] opacity-50">Loading section...</p>
-        </div>
-    );
 
     return (
         <div className="min-h-screen w-full bg-[#f3f4f6] flex flex-col p-4 overflow-y-auto custom-scrollbar animate-fade-in">
@@ -425,10 +401,10 @@ const ReferenceStudio: React.FC = () => {
                                 <h3 className="text-sm font-[1000] uppercase tracking-tight leading-tight">{item.title}</h3>
                                 <p className="text-[10px] font-bold uppercase leading-relaxed opacity-60">{item.reason}</p>
                                 <button
-                                    onClick={() => openReferenceTab(item.tab)}
+                                    onClick={() => jumpToAnchor(item.anchorId)}
                                     className="mt-auto h-9 border-[3px] border-black rounded-lg bg-white text-[10px] font-black uppercase tracking-widest shadow-[3px_3px_0px_0px_black] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
                                 >
-                                    Open Section
+                                    Jump To Module
                                 </button>
                             </div>
                         </article>
@@ -436,37 +412,8 @@ const ReferenceStudio: React.FC = () => {
                 </div>
             </div>
 
-            <div className="w-full max-w-[1400px] mx-auto mb-10 bg-white border-[5px] border-black rounded-2xl shadow-[8px_8px_0px_0px_black] p-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
-                    {REFERENCE_TABS.map(tab => {
-                        const isActive = activeReferenceTab === tab.id;
-                        return (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveReferenceTab(tab.id)}
-                                className={`h-11 border-[3px] border-black rounded-xl font-black uppercase text-[11px] tracking-widest transition-all ${
-                                    isActive
-                                        ? `${tab.accent} shadow-[3px_3px_0px_0px_black]`
-                                        : 'bg-white hover:bg-[#f3f4f6]'
-                                }`}
-                            >
-                                {tab.label}
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
-
             {/* Main Toolbox (V2.1.8 — Full Polish) */}
-            {activeReferenceTab === 'curated' && (
-                <div className="w-full max-w-[1400px] mx-auto mb-24 bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] p-12 text-center">
-                    <p className="text-[10px] font-black uppercase tracking-[0.35em] opacity-50">Curation mode active</p>
-                    <h3 className="text-3xl font-[1000] uppercase tracking-tighter mt-4">Choose a tab to load a section</h3>
-                </div>
-            )}
-
-            {activeReferenceTab === 'thumbnail' && (
-            <div className="w-full max-w-[1400px] mx-auto mb-40 bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] transition-all duration-700 ease-in-out flex flex-col overflow-hidden">
+            <div id="ref-thumbnail-shell" className="w-full max-w-[1400px] mx-auto mb-40 bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] transition-all duration-700 ease-in-out flex flex-col overflow-hidden">
 
                 {/* Main Header — Large Icon + Ultra-Large Title (Image #3 Style) */}
                 <header className={`bg-[#FFE357] h-[80px] flex items-center justify-between px-0 overflow-hidden transition-all duration-700 ${isMainToolOpen ? 'border-b-[6px] border-black' : ''}`}>
@@ -739,18 +686,12 @@ const ReferenceStudio: React.FC = () => {
                     </div>
                 </div>
             </div>
-            )}
 
-            {activeReferenceTab === 'project' && (
-            <div className="w-full max-w-[1400px] mx-auto mb-40 animate-slide-up duration-1000">
-                <React.Suspense fallback={sectionLoadingFallback}>
-                    <ProjectStudio />
-                </React.Suspense>
+            <div id="ref-project-studio" className="w-full max-w-[1400px] mx-auto mb-40 animate-slide-up duration-1000">
+                <ProjectStudio />
             </div>
-            )}
 
-            {activeReferenceTab === 'matrix' && (
-            <div className="w-full max-w-[1400px] mx-auto mb-40 bg-white border-[6px] border-black rounded-[36px] shadow-[12px_12px_0px_0px_black] overflow-hidden">
+            <div id="ref-mega-matrix" className="w-full max-w-[1400px] mx-auto mb-40 bg-white border-[6px] border-black rounded-[36px] shadow-[12px_12px_0px_0px_black] overflow-hidden">
                 <header className="h-[82px] bg-[#00CCFF] border-b-[6px] border-black flex items-center justify-between px-0">
                     <div className="flex items-center h-full">
                         <div className="h-full w-[82px] bg-[#CCFF00] border-r-[6px] border-black flex items-center justify-center">
@@ -1056,11 +997,9 @@ const ReferenceStudio: React.FC = () => {
                     </div>
                 </div>
             </div>
-            )}
 
             {/* 3. Global UI Reference Library — Unified Design System Layer */}
-            {activeReferenceTab === 'library' && (
-            <div className="w-full max-w-[1400px] mx-auto mb-40">
+            <div id="ref-library" className="w-full max-w-[1400px] mx-auto mb-40">
                 <div className="p-12 border-b-[12px] border-black bg-white mb-20 text-black shadow-[16px_16px_0px_0px_black] rounded-[3rem] border-[4px]">
                     <div className="max-w-[1400px] mx-auto text-center">
                         <h2 className="text-6xl font-[1000] uppercase italic tracking-tighter bg-[#B14AED] text-white inline-block px-12 py-6 rounded-2xl border-[5px] border-black shadow-[10px_10px_0px_0px_black]">
@@ -1071,14 +1010,10 @@ const ReferenceStudio: React.FC = () => {
                         </p>
                     </div>
                 </div>
-                <React.Suspense fallback={sectionLoadingFallback}>
-                    <UIReferenceLibraryContent />
-                </React.Suspense>
+                <UIReferenceLibraryContent />
             </div>
-            )}
 
-            {activeReferenceTab === 'native' && (
-            <div className="w-full max-w-[1400px] mx-auto mb-40">
+            <div id="ref-native-kit" className="w-full max-w-[1400px] mx-auto mb-40">
                 <div className="p-12 border-b-[12px] border-black bg-white mb-20 text-black shadow-[16px_16px_0px_0px_black] rounded-[3rem] border-[4px]">
                     <div className="max-w-[1400px] mx-auto text-center">
                         <h2 className="text-6xl font-[1000] uppercase italic tracking-tighter bg-[#CCFF00] text-black inline-block px-12 py-6 rounded-2xl border-[5px] border-black shadow-[10px_10px_0px_0px_black]">
@@ -1099,13 +1034,10 @@ const ReferenceStudio: React.FC = () => {
                         </div>
                     </div>
                     <div className="p-8 bg-white">
-                        <React.Suspense fallback={sectionLoadingFallback}>
-                            <NativeUIKit />
-                        </React.Suspense>
+                        <NativeUIKit />
                     </div>
                 </div>
             </div>
-            )}
         </div>
     );
 };
