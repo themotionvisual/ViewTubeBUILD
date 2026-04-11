@@ -84,7 +84,6 @@ function App() {
               <Route path="/reference-studio" element={<ReferenceStudio />} />
               <Route path="/strategy" element={<Navigate to="/studio" replace />} />
               <Route path="/vault" element={<Navigate to="/reference-studio" replace />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
         </div>
