@@ -26,8 +26,10 @@ export const Sidebar: React.FC = () => {
 
   const tools = [
     { id: 'DASHBOARD', path: '/', label: 'Overview', icon: 'home' },
+    { id: 'STRATEGY', path: '/strategy', label: 'Strategy', icon: '!!!TRAFIC' },
     { id: 'STUDIO', path: '/studio', label: 'Studio', icon: '!!!POST-VIDEO' },
     { id: 'SHORTS', path: '/shorts', label: 'Shorts', icon: 'video' },
+    { id: 'VAULT', path: '/vault', label: 'The Vault', icon: 'zap' },
     { id: 'PERFORMANCE', path: '/performance', label: 'Performance', icon: '!!!ANALYTICS' },
     { id: 'SYSTEM', path: '/settings', label: 'System', icon: '!!!SETTINGS' },
   ];

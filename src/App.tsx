@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { GlobalDataProvider } from './context/GlobalDataContext';
 import { Sidebar } from './components/Sidebar';
 
@@ -9,7 +9,9 @@ import VideoManager from './views/VideoManager';
 import PerformanceHub from './views/PerformanceHub';
 import SettingsHub from './views/SettingsHub';
 import ReferenceStudio from './views/ReferenceStudio';
+import ProjectsV3 from './views/ProjectsV3';
 import { ShortsStudio } from './views/ShortsStudio';
+import { TheVault } from './views/TheVault';
 
 const Placeholder = ({ title }: { title: string }) => (
   <div className="flex items-center justify-center h-full">
@@ -76,14 +78,14 @@ function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/studio" element={<StudioHub />} />
+              <Route path="/strategy" element={<ProjectsV3 />} />
               <Route path="/video-manager" element={<VideoManager />} />
               <Route path="/shorts" element={<ShortsStudio />} />
               <Route path="/performance" element={<PerformanceHub />} />
               <Route path="/user-guide" element={<Placeholder title="User Guide" />} />
               <Route path="/settings" element={<SettingsHub />} />
               <Route path="/reference-studio" element={<ReferenceStudio />} />
-              <Route path="/strategy" element={<Navigate to="/studio" replace />} />
-              <Route path="/vault" element={<Navigate to="/reference-studio" replace />} />
+              <Route path="/vault" element={<TheVault />} />
             </Routes>
           </main>
         </div>

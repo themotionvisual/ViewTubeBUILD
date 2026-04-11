@@ -74,49 +74,6 @@ const CAUSE_EFFECT_STEPS = [
     'Track Feedback Loop'
 ];
 
-const BEST_COMPONENTS = [
-    {
-        id: 'shell',
-        title: 'Thumbnail Studio Shell',
-        source: 'Header + Accordion composition',
-        reason: 'Best visual hierarchy and interaction density.',
-        anchorId: 'ref-thumbnail-shell',
-        accent: 'bg-[#FFE357]'
-    },
-    {
-        id: 'project',
-        title: 'Project Studio Core',
-        source: 'Calendar + tasks + AI tactic rail',
-        reason: 'Strongest operational workflow block.',
-        anchorId: 'ref-project-studio',
-        accent: 'bg-[#FF7497]'
-    },
-    {
-        id: 'matrix',
-        title: 'Mega Toolbox Matrix',
-        source: 'Cause-effect layouts + data table engine',
-        reason: 'Most scalable container pattern.',
-        anchorId: 'ref-mega-matrix',
-        accent: 'bg-[#00CCFF]'
-    },
-    {
-        id: 'library',
-        title: 'Reference Library',
-        source: 'Section C + Section E components',
-        reason: 'Primary source of reusable UI choices.',
-        anchorId: 'ref-library',
-        accent: 'bg-[#B14AED]'
-    },
-    {
-        id: 'native',
-        title: 'Native UI Kit',
-        source: 'Integrated standalone component kit',
-        reason: 'Fastest path to consistent production styling.',
-        anchorId: 'ref-native-kit',
-        accent: 'bg-[#CCFF00]'
-    }
-];
-
 const ReferenceStudio: React.FC = () => {
     const { brain } = useBrain();
 
@@ -373,47 +330,11 @@ const ReferenceStudio: React.FC = () => {
         }
     };
 
-    const jumpToAnchor = (anchorId: string) => {
-        document.getElementById(anchorId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
-
     return (
         <div className="min-h-screen w-full bg-[#f3f4f6] flex flex-col p-4 overflow-y-auto custom-scrollbar animate-fade-in">
 
-            <div className="w-full max-w-[1400px] mx-auto mb-16 bg-white border-[6px] border-black rounded-[28px] shadow-[12px_12px_0px_0px_black] overflow-hidden">
-                <header className="h-[78px] bg-[#B14AED] border-b-[6px] border-black flex items-center px-0">
-                    <div className="h-full w-[78px] bg-[#CCFF00] border-r-[6px] border-black flex items-center justify-center">
-                        <CustomIcon name="!!!GENERATE1" size={42} />
-                    </div>
-                    <div className="px-6">
-                        <h2 className="text-[36px] font-[1000] uppercase tracking-tighter text-white leading-none">Best Components Curation</h2>
-                        <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/70 mt-1">Pinned picks while keeping full library below</p>
-                    </div>
-                </header>
-
-                <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 bg-[#f8fafc]">
-                    {BEST_COMPONENTS.map((item) => (
-                        <article key={item.id} className="bg-white border-[4px] border-black rounded-2xl shadow-[6px_6px_0px_0px_black] overflow-hidden flex flex-col">
-                            <div className={`h-10 border-b-[4px] border-black px-3 flex items-center ${item.accent}`}>
-                                <span className="text-[10px] font-black uppercase tracking-widest">{item.source}</span>
-                            </div>
-                            <div className="p-4 flex-1 flex flex-col gap-3">
-                                <h3 className="text-sm font-[1000] uppercase tracking-tight leading-tight">{item.title}</h3>
-                                <p className="text-[10px] font-bold uppercase leading-relaxed opacity-60">{item.reason}</p>
-                                <button
-                                    onClick={() => jumpToAnchor(item.anchorId)}
-                                    className="mt-auto h-9 border-[3px] border-black rounded-lg bg-white text-[10px] font-black uppercase tracking-widest shadow-[3px_3px_0px_0px_black] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
-                                >
-                                    Jump To Module
-                                </button>
-                            </div>
-                        </article>
-                    ))}
-                </div>
-            </div>
-
             {/* Main Toolbox (V2.1.8 — Full Polish) */}
-            <div id="ref-thumbnail-shell" className="w-full max-w-[1400px] mx-auto mb-40 bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] transition-all duration-700 ease-in-out flex flex-col overflow-hidden">
+            <div className="w-full max-w-[1400px] mx-auto mb-40 bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] transition-all duration-700 ease-in-out flex flex-col overflow-hidden">
 
                 {/* Main Header — Large Icon + Ultra-Large Title (Image #3 Style) */}
                 <header className={`bg-[#FFE357] h-[80px] flex items-center justify-between px-0 overflow-hidden transition-all duration-700 ${isMainToolOpen ? 'border-b-[6px] border-black' : ''}`}>
@@ -687,11 +608,11 @@ const ReferenceStudio: React.FC = () => {
                 </div>
             </div>
 
-            <div id="ref-project-studio" className="w-full max-w-[1400px] mx-auto mb-40 animate-slide-up duration-1000">
+            <div className="w-full max-w-[1400px] mx-auto mb-40 animate-slide-up duration-1000">
                 <ProjectStudio />
             </div>
 
-            <div id="ref-mega-matrix" className="w-full max-w-[1400px] mx-auto mb-40 bg-white border-[6px] border-black rounded-[36px] shadow-[12px_12px_0px_0px_black] overflow-hidden">
+            <div className="w-full max-w-[1400px] mx-auto mb-40 bg-white border-[6px] border-black rounded-[36px] shadow-[12px_12px_0px_0px_black] overflow-hidden">
                 <header className="h-[82px] bg-[#00CCFF] border-b-[6px] border-black flex items-center justify-between px-0">
                     <div className="flex items-center h-full">
                         <div className="h-full w-[82px] bg-[#CCFF00] border-r-[6px] border-black flex items-center justify-center">
@@ -999,7 +920,7 @@ const ReferenceStudio: React.FC = () => {
             </div>
 
             {/* 3. Global UI Reference Library — Unified Design System Layer */}
-            <div id="ref-library" className="w-full max-w-[1400px] mx-auto mb-40">
+            <div className="w-full max-w-[1400px] mx-auto mb-40">
                 <div className="p-12 border-b-[12px] border-black bg-white mb-20 text-black shadow-[16px_16px_0px_0px_black] rounded-[3rem] border-[4px]">
                     <div className="max-w-[1400px] mx-auto text-center">
                         <h2 className="text-6xl font-[1000] uppercase italic tracking-tighter bg-[#B14AED] text-white inline-block px-12 py-6 rounded-2xl border-[5px] border-black shadow-[10px_10px_0px_0px_black]">
@@ -1013,7 +934,7 @@ const ReferenceStudio: React.FC = () => {
                 <UIReferenceLibraryContent />
             </div>
 
-            <div id="ref-native-kit" className="w-full max-w-[1400px] mx-auto mb-40">
+            <div className="w-full max-w-[1400px] mx-auto mb-40">
                 <div className="p-12 border-b-[12px] border-black bg-white mb-20 text-black shadow-[16px_16px_0px_0px_black] rounded-[3rem] border-[4px]">
                     <div className="max-w-[1400px] mx-auto text-center">
                         <h2 className="text-6xl font-[1000] uppercase italic tracking-tighter bg-[#CCFF00] text-black inline-block px-12 py-6 rounded-2xl border-[5px] border-black shadow-[10px_10px_0px_0px_black]">
