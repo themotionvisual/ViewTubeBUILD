@@ -1,91 +1,44 @@
-import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { GlobalDataProvider } from './context/GlobalDataContext';
 import { Sidebar } from './components/Sidebar';
-
+import StoryboardStudio from './views/StoryboardStudio';
+import SeoGenerator from './views/SeoGenerator';
+import ThumbnailStudio from './views/ThumbnailStudio';
+import Channelytics from './views/Channelytics';
+import IdeasVault from './views/IdeasVault';
 import Dashboard from './views/Dashboard';
-import StudioHub from './views/StudioHub';
-import VideoManager from './views/VideoManager';
-import PerformanceHub from './views/PerformanceHub';
-import SettingsHub from './views/SettingsHub';
-import ReferenceStudio from './views/ReferenceStudio';
-import ProjectsV3 from './views/ProjectsV3';
-import { ShortsStudio } from './views/ShortsStudio';
-import { TheVault } from './views/TheVault';
+import Settings from './views/Settings';
+import LaunchCalendar from './views/LaunchCalendar';
+import AssetVault from './views/AssetVault';
 
-const Placeholder = ({ title }: { title: string }) => (
-  <div className="flex items-center justify-center h-full">
-    <div className="pop-box p-10 text-4xl font-black uppercase tracking-tighter shadow-[10px_10px_0px_0px_black]">{title} Initializing...</div>
+// Temporary Placeholder Views (Keeping one if needed, but Dashboard is live)
+const PlaceholderView = ({ title }: { title: string }) => (
+  <div className="flex-1 p-8 flex flex-col h-full">
+    <div className="w-full h-full border-4 border-dashed border-black/20 rounded-2xl flex items-center justify-center relative overflow-hidden bg-white/50">
+      <h2 className="text-6xl font-black text-black/10 uppercase italic tracking-tighter shadow-sm">{title}</h2>
+    </div>
   </div>
 );
 
 function App() {
-  useEffect(() => {
-    const isDark = localStorage.getItem('vt_dark_mode') === 'true';
-    if (isDark) {
-      document.body.classList.add('dark-theme-override');
-    } else {
-      document.body.classList.remove('dark-theme-override');
-    }
-  }, []);
-
   return (
     <GlobalDataProvider>
-      <style>{`
-        .dark-theme-override {
-          background-color: #05070c;
-          color: #e8f7ff;
-        }
-
-        .dark-theme-override .pop-box {
-          background: #0f172a !important;
-          color: #e8f7ff !important;
-          border-color: #38bdf8 !important;
-          box-shadow: 0 0 0 2px #000, 8px 8px 0 0 #000, 0 0 22px rgba(56, 189, 248, 0.35) !important;
-        }
-
-        .dark-theme-override .pop-header {
-          border-color: #38bdf8 !important;
-        }
-
-        .dark-theme-override .pop-button {
-          border-color: #38bdf8 !important;
-          box-shadow: 0 0 0 2px #000, 6px 6px 0 0 #000, 0 0 16px rgba(204, 255, 0, 0.35) !important;
-        }
-
-        .dark-theme-override input,
-        .dark-theme-override textarea,
-        .dark-theme-override select {
-          background: #0b1220 !important;
-          color: #e8f7ff !important;
-          border-color: #38bdf8 !important;
-        }
-
-        .dark-theme-override a {
-          color: inherit;
-        }
-
-        .dark-theme-override img,
-        .dark-theme-override video {
-          filter: none;
-        }
-      `}</style>
       <BrowserRouter>
-        <div className="flex h-screen w-screen bg-[#f3f4f6] overflow-hidden font-sans">
+        <div className="flex h-screen w-screen bg-[#f3f4f6] overflow-hidden">
           <Sidebar />
-
-          <main className="flex-1 h-full overflow-y-auto overflow-x-hidden p-8 relative pb-96">
+          
+          <main className="flex-1 h-full overflow-y-auto overflow-x-hidden pt-8 px-10 pb-8 relative">
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/studio" element={<StudioHub />} />
-              <Route path="/strategy" element={<ProjectsV3 />} />
-              <Route path="/video-manager" element={<VideoManager />} />
-              <Route path="/shorts" element={<ShortsStudio />} />
-              <Route path="/performance" element={<PerformanceHub />} />
-              <Route path="/user-guide" element={<Placeholder title="User Guide" />} />
-              <Route path="/settings" element={<SettingsHub />} />
-              <Route path="/reference-studio" element={<ReferenceStudio />} />
-              <Route path="/vault" element={<TheVault />} />
+              <Route path="/storyboard" element={<StoryboardStudio />} />
+              <Route path="/seo" element={<SeoGenerator />} />
+              <Route path="/thumbnail" element={<ThumbnailStudio />} />
+              <Route path="/channelytics" element={<Channelytics />} />
+              <Route path="/ideas" element={<IdeasVault />} />
+              <Route path="/calendar" element={<LaunchCalendar />} />
+              <Route path="/vault" element={<AssetVault />} />
+              <Route path="/settings" element={<Settings />} />
             </Routes>
           </main>
         </div>

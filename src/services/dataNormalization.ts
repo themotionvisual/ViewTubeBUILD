@@ -1,7 +1,4 @@
-/**
- * YouTube Data Normalization Service
- * Maps polymorphic CSV headers and API keys to a standardized internal schema.
- */
+// src/services/dataNormalization.ts
 
 export const HEADER_MAP: Record<string, string> = {
   // Dimensions
@@ -34,7 +31,7 @@ export const HEADER_MAP: Record<string, string> = {
   'Subscribers': 'Subscribers Gained',
   'Subscribers gained': 'Subscribers Gained',
   'subscribersGained': 'Subscribers Gained',
-
+  
   // Engagement
   'Impressions': 'Impressions',
   'Impressions click-through rate (%)': 'CTR (%)',
@@ -61,7 +58,7 @@ export const HEADER_MAP: Record<string, string> = {
   'Casual viewers': 'Casual Viewers',
   'Regular viewers': 'Regular Viewers',
   'Average views per viewer': 'Avg Views Per Viewer',
-
+  
   // Membership & Shopping
   'Members gained': 'Members Gained',
   'Members lost': 'Members Lost',
@@ -72,33 +69,42 @@ export const HEADER_MAP: Record<string, string> = {
 
 export const normalizeRow = (row: Record<string, any>): Record<string, any> => {
   const normalized: Record<string, any> = {};
-
+  
+  // Create a lowercase map for case-insensitive lookup
   const lowerHeaderMap = Object.keys(HEADER_MAP).reduce((acc, key) => {
     acc[key.toLowerCase()] = HEADER_MAP[key];
     return acc;
   }, {} as Record<string, string>);
 
+  // Map headers case-insensitively
   Object.keys(row).forEach(key => {
     const val = row[key];
     const lowerKey = key.toLowerCase();
     const standardKey = lowerHeaderMap[lowerKey];
 
     if (standardKey) {
+      // Calculate title length if standardKey is Dimension and we suspect it's a video title
       if (standardKey === 'Dimension' && typeof val === 'string') {
-        normalized['titleLength'] = val.length;
+          normalized['titleLength'] = val.length;
       }
+
+      // Clean numeric values
       if (typeof val === 'string' && standardKey !== 'Dimension' && standardKey !== 'Date') {
         const cleaned = val.replace(/[^0-9.-]/g, '');
         normalized[standardKey] = cleaned === '' ? 0 : Number(cleaned);
       } else {
         normalized[standardKey] = val;
       }
+
+      // Special handling for units (e.g., minutes to hours)
       if (lowerKey === 'estimatedminuteswatched') {
         normalized[standardKey] = (Number(normalized[standardKey]) || 0) / 60;
       }
     } else if (key.startsWith('_')) {
+      // Preserve private fields
       normalized[key] = val;
     } else {
+      // Fallback for unmapped headers
       normalized[key] = val;
     }
   });

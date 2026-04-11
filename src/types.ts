@@ -1,11 +1,10 @@
 // src/types.ts
 
-export type AppTool =
+export type AppTool = 
   | 'STORYBOARD_STUDIO'
   | 'SEO_GENERATOR'
   | 'THUMBNAIL_STUDIO'
   | 'CHANNELYTICS'
-  | 'RESEARCH_LAB'
   | 'IDEAS_VAULT'
   | 'LAUNCH_CALENDAR';
 
@@ -21,19 +20,10 @@ export interface ProjectTask {
 export interface Project {
   id: string;
   name: string;
-  videoTitle: string;
   status: ProjectStatus;
   color: string;
   publishDate: string;
   tasks: ProjectTask[];
-  script: string;
-  description: string;
-  notes: string;
-  tags: string;
-  thumbnailUrl: string;
-  plan: ProjectPlan;
-  storyboard: Scene[];
-  shortsStrategyGenerated?: boolean;
 }
 
 export interface DayTask {
@@ -53,35 +43,30 @@ export interface ProjectPlan {
   hook: string;
 }
 
-export const AspectRatio = {
-  SQUARE: "1:1",
-  PORTRAIT_2_3: "2:3",
-  LANDSCAPE_3_2: "3:2",
-  PORTRAIT_3_4: "3:4",
-  LANDSCAPE_4_3: "4:3",
-  PORTRAIT_9_16: "9:16",
-  LANDSCAPE_16_9: "16:9",
-  CINEMATIC_21_9: "21:9"
-} as const;
-export type AspectRatio = typeof AspectRatio[keyof typeof AspectRatio];
+export enum AspectRatio {
+  SQUARE = "1:1",
+  PORTRAIT_2_3 = "2:3",
+  LANDSCAPE_3_2 = "3:2",
+  PORTRAIT_3_4 = "3:4",
+  LANDSCAPE_4_3 = "4:3",
+  PORTRAIT_9_16 = "9:16",
+  LANDSCAPE_16_9 = "16:9",
+  CINEMATIC_21_9 = "21:9"
+}
 
-export const ImageSize = {
-  SIZE_1K: "1K",
-  SIZE_2K: "2K",
-  SIZE_4K: "4K"
-} as const;
-export type ImageSize = typeof ImageSize[keyof typeof ImageSize];
+export enum ImageSize {
+  SIZE_1K = "1K",
+  SIZE_2K = "2K",
+  SIZE_4K = "4K"
+}
 
 // --- Analytics / Channelytics Types ---
 
-export type CsvTag = 'shorts' | 'long' | 'combined' | 'geo' | 'audience' | 'traffic' | 'external' | 'search' | 'daily' | 'other';
- 
 export interface CsvFileWithTag {
   id: string;
   name: string;
-  tag: CsvTag;
-  file?: File;
-  data?: any[];
+  data: any[];
+  tag: 'shorts' | 'long' | 'combined' | 'geo' | 'audience' | 'traffic' | 'external' | 'search' | 'daily' | 'other';
   dateRange?: string;
   featureName?: string;
 }
@@ -134,24 +119,24 @@ export interface ChatMessage {
   isThinking?: boolean;
 }
 
-export type SeoResult = {
+export interface SeoResult {
   id?: string;
   timestamp?: number;
-  concept?: string;
-  niche?: string;
-  analysis: string;
+  concept?: string; 
+  niche?: string;   
+  analysis: string; 
   filenames: { video: string; thumbnail: string };
   titleSets: { title: string; thumbnailPrompt: string; thumbnailText: string }[];
   description: string;
   tags: string;
   category: string;
   pinnedComment: string[];
-  communityPost: string[];
+  communityPost: string[]; 
   shortsScript: string;
   educationMoments: string;
   social: { twitter: string; email: string };
   groundingUrls?: string[];
-};
+}
 
 export interface KeywordAnalysisResult {
   lsiKeywords: string[];
@@ -164,33 +149,33 @@ export interface KeywordAnalysisResult {
   viralHooks: string[];
   trendData: {
     month: string;
-    google: number;
-    youtube: number;
+    google: number;  
+    youtube: number; 
   }[];
   keywordMetrics: {
     keyword: string;
-    volume: number;
-    difficulty: number;
-    relevance: number;
+    volume: number;      
+    difficulty: number;  
+    relevance: number;   
   }[];
   demographics: {
     group: string;
     percentage: number;
   }[];
   contentFormats: {
-    format: string;
+    format: string; 
     percentage: number;
   }[];
   sentimentAnalysis: {
-    emotion: string;
-    score: number;
+    emotion: string; 
+    score: number; 
   }[];
   retentionForecast: {
-    timePoint: string;
-    retention: number;
+    timePoint: string; 
+    retention: number; 
   }[];
   competitorScores: {
-    aspect: string;
+    aspect: string; 
     score: number;
   }[];
   ctrPowerWords: {
@@ -199,56 +184,10 @@ export interface KeywordAnalysisResult {
   }[];
   formatRoi: {
     format: string;
-    effort: number;
-    impact: number;
+    effort: number; 
+    impact: number; 
   }[];
-  marketAnalysis: string;
-}
-
-export interface TagSuggestion {
-  tag: string;
-  score: number;
-  searchVolume: number;
-  competition: number;
-  rank: number;
-  tripleKeyword: boolean;
-}
-
-export interface MediaAnalysisResult {
-  analysis: string;
-  strategicAnalysis?: string;
-  retentionCurve?: {
-    timePoint: string;
-    retention: number;
-  }[];
-}
-
-export interface HookResult {
-  styleName: string;
-  explanation: string;
-  script: string;
-  timeline: { time: string; audio: string; visuals: string; }[];
-  assemblyInstructions: string;
-}
-
-export interface PollBlueprint {
-  question: string;
-  options: string[];
-  strategy: string;
-}
-
-export interface ShortsConcept {
-  hook: string;
-  script: string;
-  visuals: string;
-  bridgeStrategy: string;
-}
-
-export interface ThumbnailHistoryItem {
-  id: string;
-  url: string;
-  prompt: string;
-  timestamp: number;
+  marketAnalysis: string; 
 }
 
 export interface Scene {
@@ -260,28 +199,6 @@ export interface Scene {
   voiceoverUrl?: string | null; // NEW: Voiceover support
   emotionScore: number;
   durationEstimate: number;
-}
-
-export type AlgorithmDiagnosis = {
-  clusterCenter: string;
-  nicheAuthority: number;
-  audienceDNA: { interest: string; overlap: number }[];
-  hiddenStory: string;
-};
-
-export type DailyBrief = {
-  algorithmSentiment: 'positive' | 'neutral' | 'negative';
-  mainPriority: string;
-  actionSteps: string[];
-  estimatedImpact: string;
-};
-
-export interface AuthState {
-  isAuthenticated: boolean;
-  channelName: string | null;
-  channelThumbnail: string | null;
-  subscriberCount: number | null;
-  totalViews: number | null;
 }
 
 export interface WorkspaceBrain {
@@ -311,7 +228,6 @@ export interface WorkspaceBrain {
   thumbnailState: {
     selectedStyle: string;
     activeImageUrl: string | null;
-    prompt?: string;
   };
 
   // 5. Analytical Constraints
@@ -327,19 +243,9 @@ export interface WorkspaceBrain {
     analyticsResult: AnalyticsResult | null;
   };
 
-  researchLabState: {
-    csvFiles: CsvFileWithTag[];
-    allData: any[]; // Store the parsed CSV rows persistently
-    analyticsResult: AnalyticsResult | null;
-  };
-
   // 7. Project & Calendar Management
   projects: Project[];
   calendarState: {
     dayTasks: Record<string, DayTask[]>; // dateString -> tasks
-  };
-  channelHub: {
-    toDos: ProjectTask[];
-    goals: { id: string; text: string; category: string; completed: boolean }[];
   };
 }

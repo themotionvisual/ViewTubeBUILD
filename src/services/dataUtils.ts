@@ -1,6 +1,7 @@
+// src/services/dataUtils.ts
 import { normalizeRow } from './dataNormalization';
 
-export const generateFileId = (name: string) => `${name}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+export const generateFileId = (name: string) => `${name}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
 export const parseCSVLine = (line: string) => {
     const result = [];
@@ -26,7 +27,8 @@ export const extractMetadataFromPath = (fileName: string, folderName: string = '
     let dateRange = '';
     const folderParts = folderName.split('/');
     const lastFolder = folderParts[folderParts.length - 1] || fileName;
-
+    
+    // Match pattern like "Geography 2026-02-15_2026-03-15 The Motion Visual History"
     const dateMatch = lastFolder.match(/(\d{4}-\d{2}-\d{2}_\d{4}-\d{2}-\d{2})/);
     if (dateMatch) {
         dateRange = dateMatch[1];
@@ -53,6 +55,7 @@ export const cleanCSVValue = (val: any) => {
         }
     }
 
+    // Strip commas, currency symbols, and spaces from numbers like "$ 1,234.56"
     const cleanVal = typeof val === 'string' ? val.replace(/[$,\s]/g, '') : val;
     if (cleanVal !== '' && !isNaN(Number(cleanVal))) {
         return Number(cleanVal);
@@ -60,51 +63,49 @@ export const cleanCSVValue = (val: any) => {
     return val;
 };
 
-export const processCSVText = (text: string, fileName: string, folderName: string = '', fileId: string = '') => {
-    if (!text || text.trim().length === 0) return [];
-    const lines = text.split('\n').filter(l => l.trim() !== '');
-    if (lines.length < 2) return [];
+export const processCSVText = (
+    text: string, 
+    fileName: string, 
+    folderName: string = '', 
+    fileId: string,
+    videoType: 'shorts' | 'long' | 'combined' = 'combined'
+) => {
+    const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+    if (lines.length === 0) return [];
 
     const headers = parseCSVLine(lines[0]);
-    const data: any[] = [];
+    
+    // Detect type based on folder or filename
+    let type = 'unknown';
+    const lowerFolder = (folderName || '').toLowerCase();
+    const lowerFile = (fileName || '').toLowerCase();
+    if (lowerFolder.includes('table data') || lowerFile.includes('table data')) type = 'table';
+    else if (lowerFolder.includes('chart data') || lowerFile.includes('chart data')) type = 'chart';
+    else if (lowerFolder.includes('totals') || lowerFile.includes('totals')) type = 'totals';
+    else if (lowerFile === 'all.csv') type = 'all';
+    else if (lowerFile.includes('new, casual and regular viewers')) type = 'breakdown';
+    else if (lowerFile.includes('subscribers')) type = 'subscribers';
 
-    for (let i = 1; i < lines.length; i++) {
-        const values = parseCSVLine(lines[i]);
-        const rowObj: any = {};
-        let isEmptyRow = true;
+    const { featureName, dateRange } = extractMetadataFromPath(fileName, folderName);
 
-        for (let j = 0; j < headers.length; j++) {
-            const h = headers[j];
-            const val = values[j];
-
-            if (val !== undefined && val !== '') {
-                rowObj[h] = cleanCSVValue(val);
-                if (rowObj[h] !== null) {
-                    isEmptyRow = false;
-                }
-            } else {
-                rowObj[h] = null;
-            }
-        }
-
-        if (!isEmptyRow) {
-            // Filter out 'Total' rows
-            const firstColKey = Object.keys(rowObj)[0];
-            const firstColVal = String(rowObj[firstColKey] || '').toLowerCase();
-            if (firstColVal !== 'total' && firstColVal !== 'totals' && firstColVal !== 'grand total') {
-                const metadata = extractMetadataFromPath(fileName, folderName);
-                const normalizedRow = normalizeRow(rowObj);
-
-                data.push({
-                    ...normalizedRow,
-                    _sourceFile: fileName,
-                    _folderName: folderName,
-                    _featureName: metadata.featureName,
-                    _dateRange: metadata.dateRange,
-                    _id: `${fileId}-${i}`
-                });
-            }
-        }
-    }
-    return data;
+    return lines.slice(1).map(line => {
+        const values = parseCSVLine(line);
+        const row: any = {};
+        headers.forEach((header, index) => {
+            row[header] = cleanCSVValue(values[index]);
+        });
+        
+        row['_sourceFile'] = fileName;
+        row['_fileId'] = fileId;
+        row['_folder'] = folderName;
+        row['_type'] = type;
+        row['_featureName'] = featureName;
+        row['_dateRange'] = dateRange;
+        row['_userTag'] = videoType;
+        
+        return normalizeRow(row);
+    }).filter(row => {
+        const isEmptyRow = Object.values(row).every(v => v === null || v === '' || v === 'null' || v === 'undefined');
+        return !isEmptyRow;
+    });
 };

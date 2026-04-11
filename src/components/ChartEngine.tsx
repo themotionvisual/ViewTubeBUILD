@@ -1,7 +1,5 @@
 import React, { useState, useMemo } from "react";
 import { Chart } from "react-google-charts";
-import type { ChartConfig } from "../types";
-import { AlertCircle } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -25,6 +23,8 @@ import {
   Label,
   Cell,
 } from "recharts";
+import { AlertCircle, Info, Zap } from "lucide-react";
+import { ChartConfig } from "../types";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -33,13 +33,13 @@ const GoogleChartWrapper: React.FC<any> = (props) => (
 );
 
 export const MemoizedGoogleChart = React.memo(GoogleChartWrapper, (prev: any, next: any) => {
-  return prev.data === next.data &&
-    prev.options === next.options &&
-    prev.chartEvents === next.chartEvents;
+  return prev.data === next.data && 
+         prev.options === next.options && 
+         prev.chartEvents === next.chartEvents;
 });
 
 // --- CHART UTILS ---
-const getChartData = (chart: ChartConfig, data: any[]): any[] => {
+export const getChartData = (chart: ChartConfig, data: any[]): any[] => {
   if (!chart || !data.length) return [];
 
   const firstRow = data[0] || {};
@@ -165,7 +165,7 @@ const getChartData = (chart: ChartConfig, data: any[]): any[] => {
   // Smart Clipping: Prevent extreme spikes from squashing other data points
   if (primaryKey && rawPoints.length > 5) {
     const values = rawPoints.map((p) => p[primaryKey]).sort((a, b) => a - b);
-    const median = values[Math.floor(values.length / 2)];
+    const median = values[values.length >> 1];
     const ceiling = median * 10; // Cap at 10x the median
 
     return rawPoints.map((p) => {
@@ -186,10 +186,10 @@ const getChartData = (chart: ChartConfig, data: any[]): any[] => {
 };
 
 // --- CUSTOM TOOLTIP ---
-const CustomTooltip = ({ active, payload, label }: any) => {
+export const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white border-[4px] border-black p-4 rounded-xl shadow-[6px_6px_0px_0px_black] z-[200]">
+      <div className="bg-white border-4 border-black p-4 rounded-xl shadow-[6px_6px_0px_0px_black] z-[200]">
         <p className="text-xs font-black uppercase mb-2 border-b-2 border-dashed border-black pb-1 leading-tight">
           {payload[0].payload.videoTitle || label}
         </p>
@@ -221,14 +221,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const formatNumber = (value: number) => {
+export const formatNumber = (value: number) => {
   if (value >= 1000) {
     return (value / 1000).toFixed(0) + "k";
   }
   return value.toString();
 };
 
-const formatMonth = (value: string) => {
+export const formatMonth = (value: string) => {
   const date = new Date(value);
   if (isNaN(date.getTime())) return value;
   return date.toLocaleString("default", { month: "short" });
@@ -250,41 +250,41 @@ export const RenderGoogleChart: React.FC<{ chart: ChartConfig; data: any[] }> = 
   }, [chart, data]);
 
   if (typeKey === "geographysplitview") {
-    if (!GOOGLE_MAPS_API_KEY) {
-      return (
-        <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-white border-[4px] border-black rounded-2xl text-center">
-          <AlertCircle size={48} className="text-[#FF7497] mb-4" />
-          <h3 className="text-xl font-black uppercase mb-2">Google Maps Key Required</h3>
-          <p className="text-sm font-bold text-black/60 max-w-md">
-            To view geographic data, you must provide a Google Maps API key in your environment variables as <code className="bg-gray-100 px-1 rounded">VITE_GOOGLE_MAPS_API_KEY</code>.
-          </p>
+     if (!GOOGLE_MAPS_API_KEY) {
+       return (
+         <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-white border-4 border-black rounded-2xl text-center">
+           <AlertCircle size={48} className="text-[#FF7497] mb-4" />
+           <h3 className="text-xl font-black uppercase mb-2">Google Maps Key Required</h3>
+           <p className="text-sm font-bold text-black/60 max-w-md">
+             To view geographic data, you must provide a Google Maps API key in your environment variables.
+           </p>
+         </div>
+       );
+     }
+     return (
+        <div className="w-full h-full flex flex-col p-4 bg-white border-4 border-black rounded-2xl overflow-hidden">
+           <Chart
+             chartType="GeoChart"
+             width="100%"
+             height="100%"
+             data={googleData as any}
+             mapsApiKey={GOOGLE_MAPS_API_KEY}
+             version="current"
+             options={{
+               keepAspectRatio: true,
+               chartArea: { width: "95%", height: "95%" },
+               colorAxis: { colors: ["#00CCFF", "#CCFF00", "#FFDD00", "#FFB158", "#FF7497"] },
+               datalessRegionColor: "#f5f5f5",
+               backgroundColor: "transparent",
+             }}
+           />
         </div>
-      );
-    }
-    return (
-      <div className="w-full h-full flex flex-col p-4 bg-white border-[4px] border-black rounded-2xl overflow-hidden">
-        <Chart
-          chartType="GeoChart"
-          width="100%"
-          height="100%"
-          data={googleData as any}
-          mapsApiKey={GOOGLE_MAPS_API_KEY}
-          version="current"
-          options={{
-            keepAspectRatio: true,
-            chartArea: { width: "95%", height: "95%" },
-            colorAxis: { colors: ["#00CCFF", "#CCFF00", "#FFDD00", "#FFB158", "#FF7497"] },
-            datalessRegionColor: "#f5f5f5",
-            backgroundColor: "transparent",
-          }}
-        />
-      </div>
-    );
+     );
   }
 
   if (typeKey === "topperformerstrio") {
     return (
-      <div className="grid grid-cols-3 gap-6 h-full p-4 overflow-y-auto">
+      <div className="grid grid-cols-3 gap-6 h-full p-4 overflow-y-auto font-black italic">
         <TrioPieCard chart={{ title: "REVENUE", data: (googleData as any)?.moneyMakers || [] }} />
         <TrioPieCard chart={{ title: "WATCH HOURS", data: (googleData as any)?.mostViewed || [] }} />
         <TrioPieCard chart={{ title: "SUBS", data: (googleData as any)?.newSubs || [] }} />
@@ -320,7 +320,7 @@ export const RenderGoogleChart: React.FC<{ chart: ChartConfig; data: any[] }> = 
       mapsApiKey={typeKey === "geo" || typeKey === "geochart" ? GOOGLE_MAPS_API_KEY : undefined}
       options={{
         backgroundColor: "transparent",
-        chartArea: { width: "95%", height: "80%", left: "5%", top: "10%" },
+        chartArea: { width: "90%", height: "80%", left: "5%", top: "10%" },
         colors: ["#10B981", "#4F46E5", "#FF7497", "#FFDD00", "#FFB158", "#B14AED"],
         ...chart.options
       }}
@@ -333,7 +333,7 @@ export const TrioPieCard = ({ chart, colors, pieStartAngle = 0, height = "240px"
   const topSlice = useMemo(() => {
     if (!chart.data || chart.data.length <= 1) return null;
     const slices = [...chart.data.slice(1)];
-    slices.sort((a, b) => {
+    slices.sort((a,b) => {
       const vA = typeof a[1] === 'object' ? a[1].v : a[1];
       const vB = typeof b[1] === 'object' ? b[1].v : b[1];
       return vB - vA;
@@ -368,7 +368,7 @@ export const TrioPieCard = ({ chart, colors, pieStartAngle = 0, height = "240px"
   ];
 
   return (
-    <div className="flex flex-col items-center justify-center p-0 transition-all group/trio origin-center w-full" style={{ height: height }}>
+    <div className="flex flex-col items-center justify-center transition-all group/trio origin-center w-full" style={{ height: height }}>
       <div className="w-full h-full pointer-events-auto relative">
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
           <span className="text-[14px] font-black uppercase text-black max-w-[80px] text-center leading-none tracking-tighter group-hover/trio:scale-110 transition-transform">
@@ -379,10 +379,10 @@ export const TrioPieCard = ({ chart, colors, pieStartAngle = 0, height = "240px"
       </div>
       {height !== "200px" && displaySlice && (
         <div className="flex flex-col items-center justify-center -mt-16 px-4">
-          <span className="text-[12px] font-black text-black/50 uppercase tracking-widest leading-none mb-1 line-clamp-3 w-[260px] text-center">{displaySlice[0]}</span>
-          <span className="text-[20px] font-black text-indigo-500 tracking-tighter leading-none">
-            {typeof displaySlice[1] === "object" ? displaySlice[1].f || displaySlice[1].v : displaySlice[1].toLocaleString()}
-          </span>
+           <span className="text-[12px] font-black text-black/50 uppercase tracking-widest leading-none mb-1 line-clamp-2 w-[200px] text-center">{displaySlice[0]}</span>
+           <span className="text-[20px] font-black text-indigo-500 tracking-tighter leading-none">
+             {typeof displaySlice[1] === "object" ? displaySlice[1].f || displaySlice[1].v : displaySlice[1].toLocaleString()}
+           </span>
         </div>
       )}
     </div>
@@ -403,70 +403,70 @@ export const RenderChart: React.FC<{
   fallbackData = [],
   dataDateRange = "",
 }) => {
-    const chartData = (data && data.length > 0) ? data : fallbackData;
-    const rawType = String(chart.type || "").trim().toLowerCase();
+  const chartData = (data && data.length > 0) ? data : fallbackData;
+  const rawType = String(chart.type || "").trim().toLowerCase();
 
-    // 1. ELITE HTML TABLE OVERRIDE
-    if (rawType === "table") {
-      const tableData = (typeof chart.data === "function" ? chart.data() : []);
-      const hasData = tableData.length > 1;
-
-      return (
-        <div className={`w-full flex flex-col ${isModal ? "h-full" : "h-[400px] mt-2 bg-white border-[4px] border-black rounded-xl overflow-hidden shadow-[4px_4px_0px_0px_black]"}`}>
-          <div className="flex-1 min-h-0 overflow-auto bg-gray-50/20">
-            <table className="w-full text-left text-[11px] font-black border-collapse">
-              <thead className="sticky top-0 bg-black text-white z-10">
-                <tr>
-                  {(hasData ? tableData[0] : ["METRIC", "VALUE"]).map((h: any, i: number) => (
-                    <th key={i} className="p-3 border-r border-white/10 uppercase tracking-tighter whitespace-nowrap">{String(h)}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {(hasData ? tableData.slice(1) : [["NO DATA DETECTED", "0"]]).map((row: any, i: number) => (
-                  <tr key={i} className={`border-b border-black/5 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/50"} hover:bg-[#FFDD00]/20`}>
-                    {row.map((cell: any, j: number) => (
-                      <td key={j} className="p-3 border-r border-black/5 tabular-nums">
-                        {typeof cell === "number" ? (cell > 1 ? cell.toLocaleString() : cell.toFixed(3)) : String(cell || "")}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      );
-    }
-
-    // 2. DATA LOAD VERIFICATION
-    if (!chartData || chartData.length === 0) {
-      if (chart.provider === "google") {
-        const checkData = (typeof chart.data === "function" ? chart.data() : []);
-        if (checkData.length <= 1) return <div className="p-8 text-center font-black opacity-20 uppercase">Station Idle: No Dataset</div>;
-      } else {
-        return <div className="p-8 text-center font-black opacity-20 uppercase">Station Idle: No dataset</div>;
-      }
-    }
+  // 1. ELITE HTML TABLE OVERRIDE
+  if (rawType === "table") {
+    const tableData = (typeof chart.data === "function" ? chart.data() : []);
+    const hasData = tableData.length > 1;
 
     return (
-      <div className={`w-full flex flex-col ${isModal ? "h-full" : "h-[450px] mt-6 bg-white border-[4px] border-black rounded-2xl shadow-[8px_8px_0px_0px_black] overflow-hidden"}`}>
-        <div className="flex-1 min-h-0">
-          {chart.provider === "google" ? (
-            <RenderGoogleChart chart={chart} data={chartData} />
-          ) : (
-            <div className="p-8 text-center font-black">Unknown Provider</div>
-          )}
-        </div>
-
-        <div className="bg-black text-white px-6 py-3 text-[10px] font-black uppercase tracking-widest flex justify-between items-center border-t-[4px] border-black">
-          <div className="flex items-center gap-4">
-            <span className="text-[#FFDD00]">{chart.title}</span>
-            <span className="opacity-40">|</span>
-            <span>{chartData.length} Records</span>
-          </div>
-          {dataDateRange && <span className="text-[#FF7497]">{dataDateRange}</span>}
+      <div className={`w-full flex flex-col ${isModal ? "h-full" : "h-[400px] mt-2 bg-white border-2 border-black rounded-xl overflow-hidden shadow-[4px_4px_0px_0px_black]"}`}>
+        <div className="flex-1 min-h-0 overflow-auto bg-gray-50/20">
+          <table className="w-full text-left text-[11px] font-black border-collapse">
+            <thead className="sticky top-0 bg-black text-white z-10">
+              <tr>
+                {(hasData ? tableData[0] : ["METRIC", "VALUE"]).map((h: any, i: number) => (
+                  <th key={i} className="p-3 border-r border-white/10 uppercase tracking-tighter whitespace-nowrap">{String(h)}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {(hasData ? tableData.slice(1) : [["NO DATA DETECTED", "0"]]).map((row: any, i: number) => (
+                <tr key={i} className={`border-b border-black/5 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/50"} hover:bg-[#FFDD00]/20`}>
+                  {row.map((cell: any, j: number) => (
+                    <td key={j} className="p-3 border-r border-black/5 tabular-nums">
+                      {typeof cell === "number" ? (cell > 1 ? cell.toLocaleString() : cell.toFixed(3)) : String(cell || "")}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     );
-  };
+  }
+
+  // 2. DATA LOAD VERIFICATION
+  if (!chartData || chartData.length === 0) {
+    if (chart.provider === "google") {
+      const checkData = (typeof chart.data === "function" ? chart.data() : []);
+      if (checkData.length <= 1) return <div className="p-8 text-center font-black opacity-20 uppercase italic tracking-tighter">Station Idle: No Dataset</div>;
+    } else {
+      return <div className="p-8 text-center font-black opacity-20 uppercase italic tracking-tighter">Station Idle: No dataset</div>;
+    }
+  }
+
+  return (
+    <div className={`w-full flex flex-col ${isModal ? "h-full" : "h-[450px] mt-6 bg-white border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_black] overflow-hidden"}`}>
+      <div className="flex-1 min-h-0 pointer-events-auto">
+        {chart.provider === "google" ? (
+          <RenderGoogleChart chart={chart} data={chartData} />
+        ) : (
+          <div className="p-8 text-center font-black opacity-40 uppercase">Unknown Provider (Station Config Error)</div>
+        )}
+      </div>
+
+      <div className="bg-black text-white px-4 py-3 text-[10px] font-black uppercase tracking-widest flex justify-between items-center border-t-4 border-black">
+        <div className="flex items-center gap-4">
+          <span className="text-[#CCFF00] italic">{chart.title}</span>
+          <span className="opacity-20">|</span>
+          <span className="text-white/60">{chartData.length} Records Analyzed</span>
+        </div>
+        {dataDateRange && <span className="text-[#FF3399] tracking-tighter italic">{dataDateRange}</span>}
+      </div>
+    </div>
+  );
+};

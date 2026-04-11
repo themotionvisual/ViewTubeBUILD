@@ -78,13 +78,13 @@ class SheetsService {
       ['Project', projectName],
       [''],
       ['Suggested Titles'],
-      ...seoData.titleSets.map((t: any) => [t.title]),
+      ...seoData.suggestedTitles.map((t: string) => [t]),
       [''],
       ['Description Draft'],
-      [seoData.description],
+      [seoData.descriptionDraft],
       [''],
       ['Keyword Tags'],
-      [seoData.tags]
+      [seoData.keywordTags.join(', ')]
     ];
 
     return this.exportToNewSheet({
