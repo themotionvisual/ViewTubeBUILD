@@ -139,7 +139,7 @@ const ReferenceStudio: React.FC = () => {
     // Tab State
     const [activeTab, setActiveTab] = useState<'generate' | 'analyze'>('generate');
     const [isMainToolOpen, setIsMainToolOpen] = useState(true);
-    const [activeReferenceTab, setActiveReferenceTab] = useState<ReferenceTab>('thumbnail');
+    const [activeReferenceTab, setActiveReferenceTab] = useState<ReferenceTab>('curated');
 
     // Loading States
     const [genLoading, setGenLoading] = useState(false);
@@ -455,9 +455,6 @@ const ReferenceStudio: React.FC = () => {
                         );
                     })}
                 </div>
-                <p className="mt-3 text-[9px] font-black uppercase tracking-[0.2em] opacity-50 text-center">
-                    Tip: Open <span className="opacity-100">Library</span> to browse the reference code sections.
-                </p>
             </div>
 
             {/* Main Toolbox (V2.1.8 — Full Polish) */}
