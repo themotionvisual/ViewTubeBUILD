@@ -1,0 +1,1055 @@
+Sure<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:ui-sans-serif,system-ui,sans-serif;background:#f3f4f6}
+.outer{width:100%;padding:20px;display:flex;flex-direction:column;gap:20px}
+
+/* MAIN TOOLBOX */
+.toolbox{background:#fff;border:4px solid #000;border-radius:16px;overflow:hidden;box-shadow:8px 8px 0 #000}
+.tb-header{display:flex;align-items:center;height:64px;border-bottom:4px solid #000}
+.tb-icon{width:64px;height:64px;display:flex;align-items:center;justify-content:center;border-right:4px solid #000;font-size:22px;flex-shrink:0}
+.tb-title{font-size:26px;font-weight:900;letter-spacing:-0.05em;text-transform:uppercase;padding-left:16px;flex:1}
+.tb-body{background:#f3f4f6;padding:20px;display:grid;gap:16px}
+
+/* SUB TOOLBOX */
+.stb{background:#fff;border:3px solid #000;border-radius:12px;overflow:hidden}
+.stb-header{display:flex;align-items:center;height:44px;border-bottom:3px solid #000}
+.stb-icon{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-right:3px solid #000;font-size:14px;flex-shrink:0}
+.stb-title{font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;padding-left:10px}
+.stb-body{padding:10px;display:flex;flex-direction:column;gap:8px}
+
+/* COMPONENT STYLES */
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* BUTTON variants */
+.btn{display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;border:3px solid #000;border-radius:8px;padding:6px 14px;cursor:pointer;transition:all 0.1s;box-shadow:3px 3px 0 #000;gap:6px}
+.btn:active{transform:translate(3px,3px);box-shadow:none}
+.btn-yellow{background:#FFE357}
+.btn-pink{background:#FF7497}
+.btn-cyan{background:#24D3FF}
+.btn-green{background:#C9F830}
+.btn-white{background:#fff}
+.btn-black{background:#000;color:#fff}
+.btn-sm{padding:4px 10px;font-size:10px;border:2px solid #000;box-shadow:2px 2px 0 #000;border-radius:6px}
+.btn-lg{padding:10px 24px;font-size:14px}
+.btn-full{width:100%;border-radius:10px;justify-content:center}
+.btn-icon{width:36px;height:36px;padding:0;border-radius:8px}
+
+/* BADGE / TAG */
+.badge{display:inline-flex;align-items:center;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;border:2px solid #000;border-radius:999px;padding:2px 10px;gap:4px}
+.tag{display:inline-flex;align-items:center;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;border:2px solid #000;border-radius:6px;padding:3px 8px;gap:4px}
+
+/* INPUT */
+.inp{width:100%;border:3px solid #000;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;outline:none;background:#fff}
+.inp:focus{border-color:#24D3FF;box-shadow:0 0 0 2px #24D3FF}
+.inp-wrap{position:relative}
+.inp-label{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px}
+
+/* TOGGLE / SWITCH */
+.sw-wrap{display:flex;align-items:center;gap:8px}
+.sw{position:relative;width:44px;height:24px;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0}
+.sw-track{position:absolute;inset:0;border:3px solid #000;border-radius:999px;background:#e5e5e5;cursor:pointer;transition:background 0.2s}
+.sw-track::before{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:#000;top:2px;left:2px;transition:transform 0.2s}
+.sw input:checked ~ .sw-track{background:#C9F830}
+.sw input:checked ~ .sw-track::before{transform:translateX(20px)}
+.sw-label{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em}
+
+/* CHECKBOX */
+.cb-wrap{display:flex;align-items:center;gap:8px}
+.cb-box{width:18px;height:18px;border:3px solid #000;border-radius:4px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer}
+.cb-box.checked{background:#C9F830}
+.cb-label{font-size:11px;font-weight:700}
+
+/* RADIO */
+.rb-wrap{display:flex;align-items:center;gap:8px}
+.rb-circle{width:18px;height:18px;border:3px solid #000;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer}
+.rb-dot{width:8px;height:8px;border-radius:50%;background:#000}
+.rb-label{font-size:11px;font-weight:700}
+
+/* AVATAR */
+.avatar{width:36px;height:36px;border-radius:50%;border:3px solid #000;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;flex-shrink:0}
+.avatar-sm{width:28px;height:28px;font-size:10px;border:2px solid #000}
+.avatar-lg{width:48px;height:48px;font-size:14px}
+.avatar-stack{display:flex}
+.avatar-stack .avatar{margin-left:-10px;box-shadow:none}
+.avatar-stack .avatar:first-child{margin-left:0}
+
+/* PROGRESS BAR */
+.prog-wrap{display:flex;flex-direction:column;gap:4px}
+.prog-label{display:flex;justify-content:space-between;font-size:10px;font-weight:900;text-transform:uppercase}
+.prog-track{width:100%;height:16px;border:3px solid #000;border-radius:999px;background:#e5e5e5;overflow:hidden}
+.prog-fill{height:100%;border-radius:999px;transition:width 0.3s}
+
+/* SLIDER */
+.slider-wrap{display:flex;align-items:center;gap:8px}
+.slider{flex:1;-webkit-appearance:none;height:16px;border:3px solid #000;border-radius:999px;background:#e5e5e5;outline:none}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#FFE357;border:3px solid #000;cursor:pointer;box-shadow:2px 2px 0 #000}
+.slider-val{font-size:12px;font-weight:900;min-width:24px;text-align:right}
+
+/* SELECT */
+.sel{width:100%;border:3px solid #000;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;outline:none;background:#fff;cursor:pointer}
+.sel:focus{border-color:#24D3FF}
+
+/* NOTIFICATION */
+.notif{display:flex;align-items:flex-start;gap:10px;border:3px solid #000;border-radius:10px;padding:10px;background:#fff}
+.notif-dot{width:12px;height:12px;border-radius:50%;border:2px solid #000;flex-shrink:0;margin-top:2px}
+.notif-title{font-size:11px;font-weight:900;text-transform:uppercase}
+.notif-body{font-size:10px;color:#555;margin-top:2px}
+
+/* DIVIDER */
+.divider{display:flex;align-items:center;gap:8px}
+.div-line{flex:1;height:3px;background:#000;border-radius:2px}
+.div-text{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;white-space:nowrap}
+
+/* KBD */
+.kbd{display:inline-flex;align-items:center;justify-content:center;border:3px solid #000;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:900;background:#FFE357;font-family:monospace;box-shadow:2px 2px 0 #000;min-width:28px}
+
+/* TOOLTIP BOX */
+.tooltip-demo{position:relative;display:inline-block}
+.tooltip-box{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#000;color:#fff;font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;white-space:nowrap}
+.tooltip-box::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#000}
+
+/* METER */
+.meter-wrap{display:flex;align-items:center;gap:8px}
+.meter-track{flex:1;height:20px;border:3px solid #000;border-radius:4px;background:#e5e5e5;overflow:hidden}
+.meter-fill{height:100%;border-radius:1px}
+.meter-label{font-size:10px;font-weight:900;min-width:30px;text-align:right}
+
+/* BREADCRUMB */
+.breadcrumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.bc-item{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em}
+.bc-sep{font-size:11px;font-weight:900;color:#999}
+.bc-item.active{border-bottom:3px solid #000}
+
+/* STEPPER */
+.stepper{display:flex;align-items:center}
+.step-circle{width:32px;height:32px;border-radius:50%;border:3px solid #000;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0}
+.step-line{flex:1;height:3px;background:#000}
+.step-done{background:#C9F830}
+.step-active{background:#FFE357}
+.step-idle{background:#e5e5e5}
+
+/* SPINNER */
+.spinner{width:28px;height:28px;border:4px solid #e5e5e5;border-top-color:#000;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* OTP */
+.otp-wrap{display:flex;gap:6px}
+.otp-box{width:36px;height:42px;border:3px solid #000;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;background:#fff}
+.otp-box.filled{background:#FFE357}
+.otp-box.active{border-color:#24D3FF;box-shadow:0 0 0 2px #24D3FF}
+
+/* RATING */
+.rating{display:flex;gap:4px}
+.star{font-size:20px;cursor:pointer}
+
+/* PAGINATION */
+.pagination{display:flex;gap:4px}
+.pg-btn{width:32px;height:32px;border:2px solid #000;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;cursor:pointer;background:#fff}
+.pg-btn.active{background:#FFE357}
+.pg-btn:hover{background:#f0f0f0}
+
+/* TAB GROUP */
+.tab-group{display:flex;flex-direction:column;gap:0}
+.tabs{display:flex;border-bottom:3px solid #000}
+.tab{padding:8px 14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;border-bottom:4px solid transparent;margin-bottom:-3px}
+.tab.active{border-bottom-color:#000;background:#FFE357}
+.tab-panel{padding:10px;font-size:11px;font-weight:700;border:3px solid #000;border-top:0;border-radius:0 0 8px 8px;background:#fff}
+
+/* SKELETON */
+.skel{background:#e5e5e5;border-radius:4px;overflow:hidden;position:relative}
+.skel::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent);animation:shimmer 1.5s infinite}
+@keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.skel-line{height:12px;margin-bottom:8px}
+.skel-circle{border-radius:50%}
+
+/* CHIP / TAG GROUP */
+.chip{display:inline-flex;align-items:center;gap:6px;border:2px solid #000;border-radius:999px;padding:3px 10px;font-size:10px;font-weight:900;text-transform:uppercase;background:#fff}
+.chip-close{font-size:12px;font-weight:900;cursor:pointer;line-height:1}
+
+/* ALERT */
+.alert{display:flex;align-items:flex-start;gap:10px;border:3px solid #000;border-radius:10px;padding:12px;border-left:6px solid #000}
+.alert-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.alert-title{font-size:11px;font-weight:900;text-transform:uppercase;margin-bottom:2px}
+.alert-body{font-size:10px;color:#555}
+
+/* FILE UPLOAD */
+.upload-zone{border:3px dashed #000;border-radius:10px;padding:16px;text-align:center;background:#f9f9f9;display:flex;flex-direction:column;align-items:center;gap:8px}
+.upload-icon{font-size:24px}
+.upload-text{font-size:11px;font-weight:900;text-transform:uppercase}
+.upload-sub{font-size:10px;color:#888}
+
+/* CARD component */
+.card-comp{border:3px solid #000;border-radius:12px;overflow:hidden;background:#fff}
+.card-img{height:80px;background:#FFE357;border-bottom:3px solid #000;display:flex;align-items:center;justify-content:center;font-size:28px}
+.card-content{padding:10px}
+.card-title{font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:-0.03em}
+.card-sub{font-size:10px;color:#666;margin-top:2px}
+.card-actions{display:flex;gap:6px;margin-top:10px}
+
+/* ACCORDION */
+.accord-item{border:3px solid #000;border-radius:8px;overflow:hidden;margin-bottom:6px}
+.accord-header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;background:#FFE357}
+.accord-body{padding:10px 12px;font-size:11px;border-top:3px solid #000;background:#fff}
+
+/* TIMELINE */
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl-item{display:flex;gap:10px;position:relative;padding-bottom:12px}
+.tl-dot{width:16px;height:16px;border-radius:50%;border:3px solid #000;flex-shrink:0;margin-top:2px}
+.tl-line{position:absolute;left:7px;top:20px;width:2px;background:#000;bottom:0}
+.tl-content{flex:1}
+.tl-title{font-size:11px;font-weight:900;text-transform:uppercase}
+.tl-time{font-size:9px;color:#888;margin-top:1px}
+.tl-item:last-child .tl-line{display:none}
+
+/* FLOATING ACTION BUTTON */
+.fab{width:48px;height:48px;border-radius:50%;border:3px solid #000;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;box-shadow:4px 4px 0 #000;background:#FF7497}
+.fab-sm{width:36px;height:36px;font-size:14px;box-shadow:2px 2px 0 #000}
+
+/* QR CODE (fake) */
+.qr{width:80px;height:80px;border:3px solid #000;border-radius:8px;background:repeating-conic-gradient(#000 0% 25%, #fff 0% 50%) 0/10px 10px;padding:4px}
+
+/* COLOR SWATCH */
+.swatch-row{display:flex;gap:6px}
+.swatch{width:28px;height:28px;border-radius:6px;border:3px solid #000;cursor:pointer}
+.swatch.selected{box-shadow:0 0 0 3px #fff,0 0 0 5px #000}
+
+/* RANGE */
+.range-comp{display:flex;flex-direction:column;gap:4px}
+.range-labels{display:flex;justify-content:space-between;font-size:10px;font-weight:900;text-transform:uppercase}
+
+/* EMPTY STATE */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:8px;border:3px dashed #ccc;border-radius:12px}
+.empty-icon{font-size:32px}
+.empty-title{font-size:13px;font-weight:900;text-transform:uppercase}
+.empty-sub{font-size:10px;color:#888;text-align:center}
+
+/* BANNER */
+.banner{border:3px solid #000;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;justify-content:space-between;border-left:6px solid #000}
+.banner-content{flex:1}
+.banner-title{font-size:12px;font-weight:900;text-transform:uppercase}
+.banner-sub{font-size:10px;color:#555}
+
+/* COLOR PICKER */
+.color-picker-demo{display:flex;flex-direction:column;gap:8px}
+.color-preview{height:40px;border:3px solid #000;border-radius:8px;width:100%}
+.color-hex{display:flex;align-items:center;gap:6px}
+.hex-swatch{width:24px;height:24px;border-radius:4px;border:2px solid #000}
+.hex-input{flex:1;border:2px solid #000;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:900;font-family:monospace;outline:none}
+
+/* MARQUEE */
+.marquee-wrap{overflow:hidden;border:3px solid #000;border-radius:8px;background:#000;padding:8px 0}
+.marquee-inner{display:flex;gap:24px;animation:marquee 8s linear infinite;white-space:nowrap}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.marquee-item{color:#FFE357;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;white-space:nowrap}
+
+/* COPY BUTTON */
+.copy-btn{display:flex;align-items:center;gap:6px;border:2px solid #000;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:900;text-transform:uppercase;cursor:pointer;background:#fff;box-shadow:2px 2px 0 #000}
+
+/* PASSWORD INPUT */
+.pw-wrap{position:relative}
+.pw-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:14px;cursor:pointer}
+
+/* SCROLL AREA */
+.scroll-area{height:80px;overflow-y:auto;border:3px solid #000;border-radius:8px;padding:8px}
+.scroll-item{font-size:11px;font-weight:700;padding:4px 0;border-bottom:1px solid #eee}
+
+/* COMBOBOX */
+.combo-wrap{position:relative}
+.combo-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;border:3px solid #000;border-radius:8px;background:#fff;z-index:10;overflow:hidden}
+.combo-opt{padding:8px 10px;font-size:11px;font-weight:700;cursor:pointer;border-bottom:2px solid #eee}
+.combo-opt:hover{background:#FFE357}
+.combo-opt:last-child{border-bottom:none}
+
+/* CONTEXT MENU */
+.ctx-menu{border:3px solid #000;border-radius:10px;background:#fff;overflow:hidden;width:160px}
+.ctx-item{padding:8px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;border-bottom:2px solid #f0f0f0}
+.ctx-item:hover{background:#FFE357}
+.ctx-item:last-child{border-bottom:none}
+.ctx-sep{height:3px;background:#000;margin:0}
+
+/* COLUMN LAYOUT */
+.cols-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cols-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+</style>
+
+<div class="outer">
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- TOOLBOX 1: BUTTONS & ACTIONS -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="toolbox">
+  <div class="tb-header">
+    <div class="tb-icon" style="background:#FFE357;">⚡</div>
+    <div class="tb-title">Buttons & Actions</div>
+  </div>
+  <div class="tb-body" style="grid-template-columns:1fr 1fr;">
+
+    <!-- Sub: Single Buttons -->
+    <div class="stb">
+      <div class="stb-header">
+        <div class="stb-icon" style="background:#C9F830;">●</div>
+        <div class="stb-title">Singles</div>
+      </div>
+      <div class="stb-body">
+        <div class="row">
+          <button class="btn btn-yellow">Primary</button>
+          <button class="btn btn-pink">Delete</button>
+          <button class="btn btn-cyan">Info</button>
+        </div>
+        <div class="row">
+          <button class="btn btn-green btn-sm">Small</button>
+          <button class="btn btn-white btn-sm">Ghost</button>
+          <button class="btn btn-black btn-sm">Dark</button>
+        </div>
+        <button class="btn btn-yellow btn-full btn-lg">FULL WIDTH BUTTON</button>
+        <div class="row">
+          <div class="tooltip-demo">
+            <div class="tooltip-box">Tooltip text</div>
+            <button class="btn btn-white">Hover me</button>
+          </div>
+          <button class="btn btn-icon btn-pink">✕</button>
+          <button class="btn btn-icon btn-cyan">+</button>
+          <button class="btn btn-icon btn-green">↑</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub: Button Groups & FAB -->
+    <div class="stb">
+      <div class="stb-header">
+        <div class="stb-icon" style="background:#FF7497;">▣</div>
+        <div class="stb-title">Groups & FAB</div>
+      </div>
+      <div class="stb-body">
+        <div class="row">
+          <button class="btn btn-yellow" style="border-radius:8px 0 0 8px;box-shadow:none">Left</button>
+          <button class="btn btn-white" style="border-radius:0;border-left:0;box-shadow:none">Mid</button>
+          <button class="btn btn-white" style="border-radius:0 8px 8px 0;border-left:0;box-shadow:3px 3px 0 #000">Right</button>
+        </div>
+        <div class="row">
+          <button class="btn btn-cyan btn-sm" style="border-radius:8px 0 0 8px;box-shadow:none">A</button>
+          <button class="btn btn-cyan btn-sm" style="border-radius:0;border-left:0;box-shadow:none">B</button>
+          <button class="btn btn-cyan btn-sm" style="border-radius:0;border-left:0;box-shadow:none">C</button>
+          <button class="btn btn-cyan btn-sm" style="border-radius:0 8px 8px 0;border-left:0;box-shadow:2px 2px 0 #000">D</button>
+        </div>
+        <div class="row" style="align-items:flex-end">
+          <div class="fab">+</div>
+          <div class="fab" style="background:#C9F830;">✓</div>
+          <div class="fab fab-sm" style="background:#FFE357;">✎</div>
+          <div class="fab fab-sm" style="background:#24D3FF;">↑</div>
+          <div class="fab fab-sm" style="background:#fff;">⋮</div>
+        </div>
+        <div class="copy-btn">
+          <span>📋</span> Copy to clipboard
+        </div>
+        <div class="row">
+          <span class="kbd">⌘</span>
+          <span class="kbd">K</span>
+          <span class="kbd">Enter</span>
+          <span class="kbd">Esc</span>
+          <span class="kbd">Tab</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- TOOLBOX 2: INPUTS & FORMS -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="toolbox">
+  <div class="tb-header">
+    <div class="tb-icon" style="background:#24D3FF;">✎</div>
+    <div class="tb-title">Inputs & Forms</div>
+  </div>
+  <div class="tb-body" style="grid-template-columns:1fr 1fr 1fr;">
+
+    <!-- Sub: Text Inputs -->
+    <div class="stb">
+      <div class="stb-header">
+        <div class="stb-icon" style="background:#FFE357;">T</div>
+        <div class="stb-title">Text Fields</div>
+      </div>
+      <div class="stb-body">
+        <div>
+          <div class="inp-label">Username</div>
+          <input class="inp" placeholder="Enter username..." value="">
+        </div>
+        <div class="pw-wrap">
+          <div class="inp-label">Password</div>
+          <input class="inp" type="password" placeholder="••••••••" value="secret" style="padding-right:36px">
+          <span class="pw-toggle">👁</span>
+        </div>
+        <div>
+          <div class="inp-label">Search</div>
+          <div style="position:relative">
+            <input class="inp" placeholder="Search anything..." style="padding-left:32px">
+            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;">🔍</span>
+          </div>
+        </div>
+        <div>
+          <div class="inp-label">Multiline</div>
+          <textarea class="inp" rows="3" placeholder="Write something..." style="resize:none"></textarea>
+        </div>
+        <div>
+          <div class="inp-label">Editable Text</div>
+          <div class="inp" contenteditable="true" style="min-height:32px;cursor:text">Click to edit this text inline</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub: Select & Combobox -->
+    <div class="stb">
+      <div class="stb-header">
+        <div class="stb-icon" style="background:#C9F830;">▾</div>
+        <div class="stb-title">Select & Combo</div>
+      </div>
+      <div class="stb-body">
+        <div>
+          <div class="inp-label">Select</div>
+          <select class="sel">
+            <option>Option A</option>
+            <option>Option B</option>
+            <option selected>Option C</option>
+          </select>
+        </div>
+        <div>
+          <div class="inp-label">Combobox</div>
+          <div class="combo-wrap">
+            <input class="inp" placeholder="Type to search..." value="New York">
+            <div class="combo-dropdown">
+              <div class="combo-opt" style="background:#FFE357;">New York</div>
+              <div class="combo-opt">Los Angeles</div>
+              <div class="combo-opt">Chicago</div>
+              <div class="combo-opt">Miami</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:80px">
+          <div class="inp-label">Autocomplete tag</div>
+          <div class="row">
+            <span class="chip" style="background:#FFE357;">React <span class="chip-close">×</span></span>
+            <span class="chip" style="background:#24D3FF;">TypeScript <span class="chip-close">×</span></span>
+          </div>
+        </div>
+        <div>
+          <div class="inp-label">OTP Input</div>
+          <div class="otp-wrap">
+            <div class="otp-box filled">4</div>
+            <div class="otp-box filled">2</div>
+            <div class="otp-box active">_</div>
+            <div class="otp-box">_</div>
+            <div class="otp-box">_</div>
+            <div class="otp-box">_</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub: Toggles & Pickers -->
+    <div class="stb">
+      <div class="stb-header">
+        <div class="stb-icon" style="background:#FF7497;">◉</div>
+        <div class="stb-title">Toggles & Pick</div>
+      </div>
+      <div class="stb-body">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label class="sw-wrap"><div class="sw"><input type="checkbox" checked><div class="sw-track"></div></div><span class="sw-label">Notifications ON</span></label>
+          <label class="sw-wrap"><div class="sw"><input type="checkbox"><div class="sw-track"></div></div><span class="sw-label">Dark Mode OFF</span></label>
+          <label class="sw-wrap"><div class="sw"><input type="checkbox" checked><div class="sw-track"></div></div><span class="sw-label">Auto-save ON</span></label>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+          <div class="cb-wrap"><div class="cb-box checked">✓</div><span class="cb-label">Option Alpha</span></div>
+          <div class="cb-wrap"><div class="cb-box checked">✓</div><span class="cb-label">Option Beta</span></div>
+          <div class="cb-wrap"><div class="cb-box"></div><span class="cb-label">Option Gamma</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="rb-wrap"><div class="rb-circle"><div class="rb-dot"></div></div><span class="rb-label">Radio Selected</span></div>
+          <div class="rb-wrap"><div class="rb-circle"></div><span class="rb-label">Radio Unselected</span></div>
+        </div>
+        <div>
+          <div class="inp-label">Color Picker</div>
+          <div class="color-picker-demo">
+            <div class="color-preview" style="background:#FF7497;"></div>
+            <div class="color-hex">
+              <div class="hex-swatch" style="background:#FF7497;"></div>
+              <input class="hex-input" value="#FF7497">
+            </div>
+            <div class="swatch-row">
+              <div class="swatch" style="background:#FF7497;" class="selected"></div>
+              <div class="swatch" style="background:#FFE357;"></div>
+              <div class="swatch" style="background:#24D3FF;"></div>
+              <div class="swatch" style="background:#C9F830;"></div>
+              <div class="swatch" style="background:#000;"></div>
+              <div class="swatch" style="background:#fff;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- TOOLBOX 3: FEEDBACK & STATUS -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="toolbox">
+  <div class="tb-header">
+    <div class="tb-icon" style="background:#C9F830;">◎</div>
+    <div class="tb-title">Feedback & Status</div>
+  </div>
+  <div class="tb-body" style="grid-template-columns:1fr 1fr;">
+
+    <!-- Sub: Progress & Meters -->
+    <div class="stb">
+      <div class="stb-header">
+        <div class="stb-icon" style="background:#FFE357;">▓</div>
+        <div class="stb-title">Progress & Meters</div>
+      </div>
+      <div class="stb-body">
+        <div class="prog-wrap">
+          <div class="prog-label"><span>Download</span><span>72%</span></div>
+          <div class="prog-track"><div class="prog-fill" style="width:72%;background:#C9F830;"></div></div>
+        </div>
+        <div class="prog-wrap">
+          <div class="prog-label"><span>Upload</span><span>45%</span></div>
+          <div class="prog-track"><div class="prog-fill" style="width:45%;background:#24D3FF;"></div></div>
+        </div>
+        <div class="prog-wrap">
+          <div class="prog-label"><span>Storage</span><span>91%</span></div>
+          <div class="prog-track"><div class="prog-fill" style="width:91%;background:#FF7497;"></div></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="inp-label">Meter</div>
+          <div class="meter-wrap"><span style="font-size:10px;font-weight:900">LOW</span><div class="meter-track"><div class="meter-fill" style="width:30%;background:#C9F830"></div></div><span class="meter-label">30%</span></div>
+          <div class="meter-wrap"><span style="font-size:10px;font-weight:900">MID</span><div class="meter-track"><div class="meter-fill" style="width:65%;background:#FFE357"></div></div><span class="meter-label">65%</span></div>
+          <div class="meter-wrap"><span style="font-size:10px;font-weight:900">HIGH</span><div class="meter-track"><div class="meter-fill" style="width:90%;background:#FF7497"></div></div><span class="meter-label">90%</span></div>
+        </div>
+
+        <div>
+          <div class="inp-label">Slider</div>
+          <div class="slider-wrap">
+            <input class="slider" type="range" min="0" max="100" value="60">
+            <span class="slider-val">60</span>
+          </div>
+          <div class="slider-wrap" style="margin-top:8px">
+            <input class="slider" type="range" min="0" max="100" value="25">
+            <span class="slider-val">25</span>
+          </div>
+        </div>
+
+        <div class="range-comp">
+          <div class="inp-label">Range with labels</div>
+          <div class="range-labels"><span>0</span><span>50</span><span>100</span></div>
+          <input class="slider" type="range" min="0" max="100" value="40" style="width:100%">
+        </div>
+
+        <div class="row" style="align-items:center">
+          <div class="spinner"></div>
+          <span style="font-size:11px;font-weight:900;text-transform:uppercase">Loading...</span>
+          <div class="spinner" style="border-top-color:#24D3FF"></div>
+          <div class="spinner" style="border-top-color:#FF7497;width:20px;height:20px;border-width:3px"></div>
+        </div>
+
+        <div>
+          <div class="inp-label">Progress Ring</div>
+          <div class="row" style="gap:12px">
+            <svg width="48" height="48" viewBox="0 0 48 48">
+              <circle cx="24" cy="24" r="18" fill="none" stroke="#e5e5e5" stroke-width="6"/>
+              <circle cx="24" cy="24" r="18" fill="none" stroke="#C9F830" stroke-width="6" stroke-dasharray="113" stroke-dashoffset="28" stroke-linecap="round" transform="rotate(-90 24 24)"/>
+              <text x="24" y="28" text-anchor="middle" font-size="10" font-weight="900" font-family="system-ui">75%</text>
+            </svg>
+            <svg width="48" height="48" viewBox="0 0 48 48">
+              <circle cx="24" cy="24" r="18" fill="none" stroke="#e5e5e5" stroke-width="6"/>
+              <circle cx="24" cy="24" r="18" fill="none" stroke="#FF7497" stroke-width="6" stroke-dasharray="113" stroke-dashoffset="56" stroke-linecap="round" transform="rotate(-90 24 24)"/>
+              <text x="24" y="28" text-anchor="middle" font-size="10" font-weight="900" font-family="system-ui">50%</text>
+            </svg>
+            <svg width="48" height="48" viewBox="0 0 48 48">
+              <circle cx="24" cy="24" r="18" fill="none" stroke="#e5e5e5" stroke-width="6"/>
+              <circle cx="24" cy="24" r="18" fill="none" stroke="#24D3FF" stroke-width="6" stroke-dasharray="113" stroke-dashoffset="91" stroke-linecap="round" transform="rotate(-90 24 24)"/>
+              <text x="24" y="28" text-anchor="middle" font-size="10" font-weight="900" font-family="system-ui">20%</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub: Alerts, Badges, Notifications -->
+    <div class="stb">
+      <div class="stb-header">
+        <div class="stb-icon" style="background:#FF7497;">!</div>
+        <div class="stb-title">Alerts & Notifs</div>
+      </div>
+      <div class="stb-body">
+        <div class="alert" style="background:#C9F830;border-left-color:#000">
+          <span class="alert-icon">✓</span>
+          <div><div class="alert-title">Success</div><div class="alert-body">Your changes have been saved.</div></div>
+        </div>
+        <div class="alert" style="background:#FFE357;border-left-color:#000">
+          <span class="alert-icon">⚠</span>
+          <div><div class="alert-title">Warning</div><div class="alert-body">Disk space is running low.</div></div>
+        </div>
+        <div class="alert" style="background:#FF7497;border-left-color:#000">
+          <span class="alert-icon">✕</span>
+          <div><div class="alert-title">Error</div><div class="alert-body">Failed to connect to server.</div></div>
+        </div>
+        <div class="alert" style="background:#24D3FF;border-left-color:#000">
+          <span class="alert-icon">ℹ</span>
+          <div><div class="alert-title">Info</div><div class="alert-body">Update available: v2.4.0</div></div>
+        </div>
+
+        <div>
+          <div class="inp-label">Badges</div>
+          <div class="row">
+            <span class="badge" style="background:#C9F830;">New</span>
+            <span class="badge" style="background:#FF7497;">Hot</span>
+            <span class="badge" style="background:#24D3FF;">Beta</span>
+            <span class="badge" style="background:#FFE357;">Sale</span>
+            <span class="badge" style="background:#000;color:#fff;">Pro</span>
+            <span class="badge" style="background:#fff;">Default</span>
+          </div>
+          <div class="row" style="margin-top:6px">
+            <span class="tag" style="background:#C9F830;">✓ Done</span>
+            <span class="tag" style="background:#FFE357;">⏳ Pending</span>
+            <span class="tag" style="background:#FF7497;">✕ Failed</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="inp-label">Notifications</div>
+          <div class="notif">
+            <div class="notif-dot" style="background:#C9F830;"></div>
+            <div><div class="notif-title">File exported</div><div class="notif-body">report-Q4.pdf is ready</div></div>
+            <span style="font-size:10px;color:#888;margin-left:auto">2m</span>
+          </div>
+          <div class="notif" style="margin-top:6px">
+            <div class="notif-dot" style="background:#FF7497;"></div>
+            <div><div class="notif-title">Login attempt</div><div class="notif-body">Unknown device, NY</div></div>
+            <span style="font-size:10px;color:#888;margin-left:auto">5m</span>
+          </div>
+          <div class="notif" style="margin-top:6px;background:#FFE357;">
+            <div class="notif-dot" style="background:#000;"></div>
+            <div><div class="notif-title">Reminder</div><div class="notif-body">Team standup at 9am</div></div>
+            <span style="font-size:10px;color:#555;margin-left:auto">Now</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="inp-label">Rating</div>
+          <div class="rating">
+            <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star" style="color:#ccc">★</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="inp-label">Skeleton Loading</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div class="skel skel-circle" style="width:36px;height:36px;flex-shrink:0"></div>
+            <div style="flex:1">
+              <div class="skel skel-line" style="width:70%"></div>
+              <div class="skel skel-line" style="width:45%"></div>
+            </div>
+          </div>
+          <div class="skel skel-line" style="width:100%"></div>
+          <div class="skel skel-line" style="width:80%"></div>
+          <div class="skel skel-line" style="width:60%"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- TOOLBOX 4: NAVIGATION & LAYOUT -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="toolbox">
+  <div class="tb-header">
+    <div class="tb-icon" style="background:#FF7497;">◈</div>
+    <div class="tb-title">Navigation & Layout</div>
+  </div>
+  <div class="tb-body" style="grid-template-columns:1fr 1fr 1fr;">
+
+    <!-- Sub: Breadcrumb, Tabs, Pagination -->
+    <div class="stb">
+      <div class="stb-header">
+        <div class="stb-icon" style="background:#24D3FF;">»</div>
+        <div class="stb-title">Nav Components</div>
+      </div>
+      <div class="stb-body">
+        <div>
+          <div class="inp-label">Breadcrumb</div>
+          <div class="breadcrumb">
+            <span class="bc-item">Home</span><span class="bc-sep">/</span>
+            <span class="bc-item">Products</span><span class="bc-sep">/</span>
+            <span class="bc-item active">Detail</span>
+          </div>
+        </div>
+        <div>
+          <div class="inp-label">Tab Group</div>
+          <div class="tab-group">
+            <div class="tabs">
+              <div class="tab active">Overview</div>
+              <div class="tab">Details</div>
+              <div class="tab">Reviews</div>
+            </div>
+            <div class="tab-panel">Tab content goes here. Click other tabs.</div>
+          </div>
+        </div>
+        <div>
+          <div class="inp-label">Pagination</div>
+          <div class="pagination">
+            <div class="pg-btn">‹</div>
+            <div class="pg-btn">1</div>
+            <div class="pg-btn active">2</div>
+            <div class="pg-btn">3</div>
+            <div class="pg-btn">…</div>
+            <div class="pg-btn">9</div>
+            <div class="pg-btn">›</div>
+          </div>
+        </div>
+        <div>
+          <div class="inp-label">Bottom Navigation</div>
+          <div style="display:flex;border:3px solid #000;border-radius:12px;overflow:hidden;background:#fff">
+            <div style="flex:1;padding:8px 4px;text-align:center;border-right:2px solid #000;background:#FFE357">
+              <div style="font-size:16px">⌂</div><div style="font-size:9px;font-weight:900;text-transform:uppercase">Home</div>
+            </div>
+            <div style="flex:1;padding:8px 4px;text-align:center;border-right:2px solid #000">
+              <div style="font-size:16px">🔍</div><div style="font-size:9px;font-weight:900;text-transform:uppercase">Search</div>
+            </div>
+            <div style="flex:1;padding:8px 4px;text-align:center;border-right:2px solid #000">
+              <div style="font-size:16px">🔔</div><div style="font-size:9px;font-weight:900;text-transform:uppercase">Alerts</div>
+            </div>
+            <div style="flex:1;padding:8px 4px;text-align:center">
+              <div style="font-size:16px">👤</div><div style="font-size:9px;font-weight:900;text-transform:uppercase">Profile</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub: Stepper & Timeline -->
+    <div class="stb">
+      <div class="stb-header">
+        <div class="stb-icon" style="background:#C9F830;">→</div>
+        <div class="stb-title">Stepper & Timeline</div>
+      </div>
+      <div class="stb-body">
+        <div>
+          <div class="inp-label">Stepper horizontal</div>
+          <div class="stepper">
+            <div class="step-circle step-done">✓</div>
+            <div class="step-line"></div>
+            <div class="step-circle step-done">✓</div>
+            <div class="step-line"></div>
+            <div class="step-circle step-active">3</div>
+            <div class="step-line" style="background:#ccc"></div>
+            <div class="step-circle step-idle">4</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px">
+            <span style="font-size:9px;font-weight:900">CART</span>
+            <span style="font-size:9px;font-weight:900">SHIP</span>
+            <span style="font-size:9px;font-weight:900">PAY</span>
+            <span style="font-size:9px;font-weight:900">DONE</span>
+          </div>
+        </div>
+        <div>
+          <div class="inp-label">Timeline</div>
+          <div class="timeline">
+            <div class="tl-item">
+              <div class="tl-dot" style="background:#C9F830;"></div>
+              <div class="tl-line"></div>
+              <div class="tl-content">
+                <div class="tl-title">Account created</div>
+                <div class="tl-time">2h ago</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot" style="background:#24D3FF;"></div>
+              <div class="tl-line"></div>
+              <div class="tl-content">
+                <div class="tl-title">Profile verified</div>
+                <div class="tl-time">1h ago</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot" style="background:#FFE357;"></div>
+              <div class="tl-line"></div>
+              <div class="tl-content">
+                <div class="tl-title">First purchase</div>
+                <div class="tl-time">30m ago</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot" style="background:#FF7497;"></div>
+              <div class="tl-content">
+                <div class="tl-title">Support ticket opened</div>
+                <div class="tl-time">5m ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="inp-label">Scroll Area</div>
+          <div class="scroll-area">
+            <div class="scroll-item">Item 1 — Dashboard overview</div>
+            <div class="scroll-item">Item 2 — User settings</div>
+            <div class="scroll-item">Item 3 — Billing history</div>
+            <div class="scroll-item">Item 4 — API keys</div>
+            <div class="scroll-item">Item 5 — Integrations</div>
+            <div class="scroll-item">Item 6 — Security log</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub: Accordion & Menus -->
+    <div class="stb">
+      <div class="stb-header">
+        <div class="stb-icon" style="background:#FFE357;">☰</div>
+        <div class="stb-title">Accordion & Menu</div>
+      </div>
+      <div class="stb-body">
+        <div>
+          <div class="inp-label">Accordion</div>
+          <div class="accord-item">
+            <div class="accord-header">What is this? <span>▾</span></div>
+            <div class="accord-body">This is a bold-bordered accordion component. Click the header to toggle.</div>
+          </div>
+          <div class="accord-item" style="border-color:#24D3FF">
+            <div class="accord-header" style="background:#24D3FF">How does it work? <span>▸</span></div>
+          </div>
+          <div class="accord-item" style="border-color:#FF7497">
+            <div class="accord-header" style="background:#FF7497">Can I customize it? <span>▾</span></div>
+            <div class="accord-body">Yes — swap colors, borders, icons freely.</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="inp-label">Context Menu</div>
+          <div class="ctx-menu">
+            <div class="ctx-item">✎ Edit</div>
+            <div class="ctx-item">📋 Duplicate</div>
+            <div class="ctx-item">↑ Move up</div>
+            <div class="ctx-sep"></div>
+            <div class="ctx-item" style="color:#FF7497">🗑 Delete</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="inp-label">Divider</div>
+          <div class="divider"><div class="div-line"></div><span class="div-text">or</span><div class="div-line"></div></div>
+          <div class="divider" style="margin-top:6px"><div class="div-line" style="background:#FF7497"></div><span class="div-text" style="color:#FF7497">danger zone</span><div class="div-line" style="background:#FF7497"></div></div>
+          <div class="divider" style="margin-top:6px"><div class="div-line" style="background:#24D3FF"></div><span class="div-text" style="color:#24D3FF">section</span><div class="div-line" style="background:#24D3FF"></div></div>
+        </div>
+
+        <div>
+          <div class="inp-label">Marquee</div>
+          <div class="marquee-wrap">
+            <div class="marquee-inner">
+              <span class="marquee-item">BREAKING NEWS</span>
+              <span class="marquee-item">★</span>
+              <span class="marquee-item">LIVE UPDATE</span>
+              <span class="marquee-item">★</span>
+              <span class="marquee-item">VERSION 2.0</span>
+              <span class="marquee-item">★</span>
+              <span class="marquee-item">BREAKING NEWS</span>
+              <span class="marquee-item">★</span>
+              <span class="marquee-item">LIVE UPDATE</span>
+              <span class="marquee-item">★</span>
+              <span class="marquee-item">VERSION 2.0</span>
+              <span class="marquee-item">★</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- TOOLBOX 5: CARDS & DISPLAY -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="toolbox">
+  <div class="tb-header">
+    <div class="tb-icon" style="background:#FFE357;">▣</div>
+    <div class="tb-title">Cards & Display</div>
+  </div>
+  <div class="tb-body" style="grid-template-columns:1fr 1fr;">
+
+    <!-- Sub: Card Variants -->
+    <div class="stb">
+      <div class="stb-header">
+        <div class="stb-icon" style="background:#FF7497;">◻</div>
+        <div class="stb-title">Card Variants</div>
+      </div>
+      <div class="stb-body">
+        <div class="cols-3">
+          <div class="card-comp">
+            <div class="card-img" style="background:#FFE357;">🎵</div>
+            <div class="card-content">
+              <div class="card-title">Track One</div>
+              <div class="card-sub">Artist · 3:22</div>
+              <div class="card-actions">
+                <button class="btn btn-yellow btn-sm">Play</button>
+                <button class="btn btn-white btn-sm">Save</button>
+              </div>
+            </div>
+          </div>
+          <div class="card-comp">
+            <div class="card-img" style="background:#24D3FF;">📊</div>
+            <div class="card-content">
+              <div class="card-title">Analytics</div>
+              <div class="card-sub">+24% MoM</div>
+              <div class="card-actions">
+                <button class="btn btn-cyan btn-sm">View</button>
+              </div>
+            </div>
+          </div>
+          <div class="card-comp">
+            <div class="card-img" style="background:#C9F830;">🌱</div>
+            <div class="card-content">
+              <div class="card-title">Growth</div>
+              <div class="card-sub">On track</div>
+              <div class="card-actions">
+                <button class="btn btn-green btn-sm">Go</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Avatar + stat card -->
+        <div style="display:flex;gap:8px;align-items:center;border:3px solid #000;border-radius:10px;padding:10px;background:#FFE357">
+          <div class="avatar-stack">
+            <div class="avatar" style="background:#FF7497">JD</div>
+            <div class="avatar" style="background:#24D3FF">MK</div>
+            <div class="avatar" style="background:#C9F830">RS</div>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:900;text-transform:uppercase">3 Members</div>
+            <div style="font-size:10px;color:#555">Active team</div>
+          </div>
+          <button class="btn btn-black btn-sm">Invite</button>
+        </div>
+
+        <!-- Description List -->
+        <div style="border:3px solid #000;border-radius:10px;overflow:hidden">
+          <div style="background:#000;color:#fff;padding:6px 10px;font-size:11px;font-weight:900;text-transform:uppercase">Description List</div>
+          <table style="width:100%;font-size:11px">
+            <tr style="border-bottom:2px solid #eee"><td style="padding:6px 10px;font-weight:900;width:40%">Plan</td><td style="padding:6px 10px">Pro Monthly</td></tr>
+            <tr style="border-bottom:2px solid #eee"><td style="padding:6px 10px;font-weight:900">Status</td><td style="padding:6px 10px"><span class="badge" style="background:#C9F830">Active</span></td></tr>
+            <tr style="border-bottom:2px solid #eee"><td style="padding:6px 10px;font-weight:900">Seats</td><td style="padding:6px 10px">12 / 20</td></tr>
+            <tr><td style="padding:6px 10px;font-weight:900">Renews</td><td style="padding:6px 10px">May 1, 2026</td></tr>
+          </table>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty">
+          <div class="empty-icon">📭</div>
+          <div class="empty-title">No results found</div>
+          <div class="empty-sub">Try adjusting your search or filters</div>
+          <button class="btn btn-yellow btn-sm">Clear Filters</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub: Misc Display Components -->
+    <div class="stb">
+      <div class="stb-header">
+        <div class="stb-icon" style="background:#24D3FF;">⊞</div>
+        <div class="stb-title">Display & Misc</div>
+      </div>
+      <div class="stb-body">
+        <!-- Banner -->
+        <div class="banner" style="background:#C9F830;border-left-color:#000">
+          <div class="banner-content">
+            <div class="banner-title">New feature available!</div>
+            <div class="banner-sub">Try the new dashboard builder</div>
+          </div>
+          <button class="btn btn-black btn-sm">Try it</button>
+        </div>
+        <div class="banner" style="background:#FF7497;border-left-color:#000">
+          <div class="banner-content">
+            <div class="banner-title">Action required</div>
+            <div class="banner-sub">Verify your email to continue</div>
+          </div>
+          <button class="btn btn-black btn-sm">Verify</button>
+        </div>
+
+        <!-- File Upload -->
+        <div class="upload-zone">
+          <div class="upload-icon">📁</div>
+          <div class="upload-text">Drop files here</div>
+          <div class="upload-sub">SVG, PNG, JPG up to 10MB</div>
+          <button class="btn btn-yellow btn-sm">Browse Files</button>
+        </div>
+
+        <!-- QR Code + Avatar row -->
+        <div class="row" style="align-items:center;gap:16px">
+          <div class="qr"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+            <div class="inp-label">Avatars</div>
+            <div class="row">
+              <div class="avatar" style="background:#FF7497">AB</div>
+              <div class="avatar" style="background:#24D3FF">CD</div>
+              <div class="avatar avatar-sm" style="background:#C9F830">EF</div>
+              <div class="avatar avatar-lg" style="background:#FFE357">GH</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Color Swatch Group -->
+        <div>
+          <div class="inp-label">Color Swatches</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="swatch-row">
+              <div class="swatch" style="background:#FFE357;"></div>
+              <div class="swatch" style="background:#FCAF57;"></div>
+              <div class="swatch" style="background:#FF7497;"></div>
+              <div class="swatch" style="background:#FF3399;"></div>
+              <div class="swatch" style="background:#FF66CC;"></div>
+            </div>
+            <div class="swatch-row">
+              <div class="swatch" style="background:#24D3FF;"></div>
+              <div class="swatch" style="background:#00CCFF;"></div>
+              <div class="swatch" style="background:#C9F830;"></div>
+              <div class="swatch" style="background:#00FF99;"></div>
+              <div class="swatch selected" style="background:#000;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chip group -->
+        <div>
+          <div class="inp-label">Tags / Chips</div>
+          <div class="row" style="flex-wrap:wrap">
+            <span class="chip" style="background:#FFE357;">Design <span class="chip-close">×</span></span>
+            <span class="chip" style="background:#24D3FF;">Code <span class="chip-close">×</span></span>
+            <span class="chip" style="background:#C9F830;">UX <span class="chip-close">×</span></span>
+            <span class="chip" style="background:#FF7497;">Motion <span class="chip-close">×</span></span>
+            <span class="chip">System <span class="chip-close">×</span></span>
+          </div>
+        </div>
+
+        <!-- Separator pairs -->
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="inp-label">Separators</div>
+          <div style="height:3px;background:#000;border-radius:2px"></div>
+          <div style="height:3px;background:#FFE357;border-radius:2px"></div>
+          <div style="height:3px;background:#FF7497;border-radius:2px"></div>
+          <div style="height:3px;background:#24D3FF;border-radius:2px"></div>
+          <div style="height:1px;background:#ccc;"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div>

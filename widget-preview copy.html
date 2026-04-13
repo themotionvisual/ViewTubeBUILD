@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ViewTube — New Dashboard Widgets Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #E8E8E8;
+      color: #000;
+      padding: 40px 24px 120px;
+      min-height: 100vh;
+    }
+
+    .page-title {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: #000;
+      opacity: 0.3;
+      margin-bottom: 40px;
+    }
+
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    /* ═══════════════════════════════════════
+       DESIGN TOKENS (Neo-Brutalist)
+    ═══════════════════════════════════════ */
+    .widget {
+      background: #fff;
+      border: 5px solid #000;
+      border-radius: 2rem;
+      box-shadow: 12px 12px 0px 0px #000;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .widget-header {
+      padding: 20px 32px;
+      border-bottom: 5px solid #000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .widget-header h2 {
+      font-size: 28px;
+      font-weight: 1000;
+      text-transform: uppercase;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .widget-header h2 .icon {
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+    }
+
+    .widget-body {
+      padding: 32px;
+      background: #F9F9F9;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Buttons */
+    .btn-brutalist {
+      background: #fff;
+      color: #000;
+      padding: 8px 16px;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      border-radius: 12px;
+      border: 3px solid #000;
+      box-shadow: 4px 4px 0 0 #000;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-brutalist:hover {
+      transform: translate(1px, 1px);
+      box-shadow: 2px 2px 0 0 #000;
+    }
+
+    .btn-primary {
+      border: 4px solid #000;
+      border-radius: 1rem;
+      font-weight: 1000;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 6px 6px 0 0 #000;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-primary:hover {
+      transform: translate(1px, 1px);
+      box-shadow: 4px 4px 0 0 #000;
+    }
+
+    /* Badge */
+    .badge {
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      padding: 6px 12px;
+      border-radius: 12px;
+      border: 3px solid #000;
+      box-shadow: 3px 3px 0 0 #000;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-offline {
+      background: #FF8AAF;
+      color: #fff;
+      border-color: transparent;
+      box-shadow: none;
+    }
+
+    .badge-saved {
+      background: #4FFF5B;
+      animation: pulse 1.5s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Section Label */
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .section-label .dot {
+      width: 16px;
+      height: 16px;
+      display: inline-flex;
+    }
+    .section-label span {
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+
+    /* ═══════════════════════════════════════
+       1. DAILY ORACLE ADVICE
+    ═══════════════════════════════════════ */
+    .advice-card {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      background: #fff;
+      border: 4px solid #000;
+      border-radius: 1rem;
+      padding: 16px 20px;
+      box-shadow: 6px 6px 0 0 #000;
+      transition: all 0.15s ease;
+    }
+    .advice-card:hover {
+      transform: translate(1px, 1px);
+      box-shadow: 4px 4px 0 0 #000;
+    }
+    .advice-card.major {
+      overflow: hidden;
+      padding: 0;
+    }
+    .advice-card.major .stripe {
+      width: 8px;
+      align-self: stretch;
+      flex-shrink: 0;
+    }
+    .advice-card.major .inner {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .advice-card .color-pip {
+      width: 16px;
+      height: 48px;
+      border-radius: 999px;
+      border: 2px solid #000;
+      flex-shrink: 0;
+    }
+    .advice-card .text {
+      flex: 1;
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 1.35;
+    }
+    .advice-card .text .time {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.35;
+    }
+    .advice-action {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      border: 3px solid #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .advice-action:hover { transform: scale(1.05); }
+    .advice-action .label {
+      font-size: 7px;
+      font-weight: 900;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+
+    /* Quick win cards (smaller) */
+    .advice-card.quick {
+      border-width: 3px;
+      box-shadow: 4px 4px 0 0 #000;
+      padding: 16px;
+      gap: 20px;
+    }
+    .advice-card.quick:hover {
+      box-shadow: 2px 2px 0 0 #000;
+    }
+    .advice-card.quick .color-pip {
+      width: 12px;
+      height: 40px;
+    }
+    .advice-card.quick .text {
+      font-size: 14px;
+    }
+    .advice-card.quick .advice-action {
+      width: 48px;
+      height: 48px;
+      box-shadow: 3px 3px 0 0 #000;
+    }
+
+    /* ═══════════════════════════════════════
+       2. ASK ME ANYTHING
+    ═══════════════════════════════════════ */
+    .ama-input {
+      width: 100%;
+      padding: 16px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 1rem;
+      border: 4px solid #000;
+      outline: none;
+      resize: none;
+      background: #fff;
+      box-shadow: 4px 4px 0 0 #000;
+      font-family: inherit;
+    }
+    .ama-input::placeholder {
+      color: rgba(0,0,0,0.2);
+    }
+    .ama-input:focus {
+      box-shadow: 4px 4px 0 0 #000, 0 0 0 4px #40C6E9;
+    }
+
+    .send-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      border: 4px solid #000;
+      background: #40C6E9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 4px 4px 0 0 #000;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+    .send-btn:hover {
+      transform: translate(1px, 1px);
+      box-shadow: 2px 2px 0 0 #000;
+    }
+
+    .progress-dots {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .progress-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 3px solid #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 1000;
+    }
+    .progress-dot.done { background: #4FFF5B; box-shadow: 2px 2px 0 0 #000; }
+    .progress-dot.active { background: #40C6E9; box-shadow: 3px 3px 0 0 #000; transform: scale(1.1); }
+    .progress-dot.pending { background: #fff; color: rgba(0,0,0,0.3); }
+
+    .chevron-sep {
+      opacity: 0.2;
+      font-size: 14px;
+    }
+
+    .clarify-card {
+      background: #fff;
+      border: 4px solid #000;
+      border-radius: 1rem;
+      padding: 20px;
+      box-shadow: 6px 6px 0 0 #000;
+    }
+    .clarify-card .q-label {
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .clarify-card .question {
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 16px;
+    }
+
+    .prev-answer {
+      background: #fff;
+      border: 3px solid #000;
+      border-radius: 1rem;
+      padding: 16px;
+      box-shadow: 3px 3px 0 0 #000;
+      opacity: 0.6;
+    }
+    .prev-answer .q-label {
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.4;
+      margin-bottom: 4px;
+    }
+    .prev-answer .q-text {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .prev-answer .a-text {
+      font-size: 14px;
+      font-weight: 700;
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 2px solid rgba(0,0,0,0.12);
+    }
+
+    .answer-card {
+      background: #fff;
+      border: 4px solid #000;
+      border-radius: 1rem;
+      padding: 24px;
+      box-shadow: 6px 6px 0 0 #000;
+    }
+    .answer-card .ai-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #40C6E9;
+      margin-bottom: 16px;
+    }
+    .answer-card .answer-text {
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.7;
+      color: #000;
+    }
+    .answer-card .answer-text strong {
+      font-weight: 900;
+    }
+
+    .recap-box {
+      background: rgba(64,198,233,0.1);
+      border: 3px solid #40C6E9;
+      border-radius: 1rem;
+      padding: 16px;
+    }
+    .recap-box .recap-label {
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #40C6E9;
+      margin-bottom: 4px;
+    }
+    .recap-box .recap-text {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .next-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      border: 4px solid #000;
+      background: #4FFF5B;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 4px 4px 0 0 #000;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .ama-input-row {
+      display: flex;
+      gap: 12px;
+    }
+    .ama-input-inline {
+      flex: 1;
+      height: 56px;
+      padding: 0 16px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 1rem;
+      border: 4px solid #000;
+      outline: none;
+      background: #fff;
+      box-shadow: 3px 3px 0 0 #000;
+      font-family: inherit;
+    }
+    .ama-input-inline::placeholder { color: rgba(0,0,0,0.2); }
+    .ama-input-inline:focus { box-shadow: 3px 3px 0 0 #000, 0 0 0 4px #40C6E9; }
+
+    /* Helper text */
+    .helper-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .helper-row span {
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      opacity: 0.35;
+    }
+
+    /* ═══════════════════════════════════════
+       3. DATA EDIT
+    ═══════════════════════════════════════ */
+    .dropdown-trigger {
+      width: 100%;
+      height: 56px;
+      padding: 0 16px;
+      text-align: left;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 1rem;
+      border: 4px solid #000;
+      background: #fff;
+      box-shadow: 4px 4px 0 0 #000;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+    .dropdown-trigger:hover {
+      box-shadow: 2px 2px 0 0 #000;
+      transform: translate(1px, 1px);
+    }
+
+    .accordion {
+      background: #fff;
+      border: 4px solid #000;
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 4px 4px 0 0 #000;
+    }
+    .accordion-header {
+      width: 100%;
+      height: 48px;
+      padding: 0 16px;
+      border: none;
+      border-bottom: 3px solid #000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .accordion-header .left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .accordion-header .left span {
+      font-size: 14px;
+      font-weight: 1000;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+    }
+    .accordion-header .right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .accordion-header .right .meta {
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.5;
+    }
+
+    .accordion-body {
+      padding: 16px;
+    }
+
+    .edit-input {
+      width: 100%;
+      height: 48px;
+      padding: 0 16px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 3px solid #000;
+      outline: none;
+      background: #fff;
+      font-family: inherit;
+    }
+    .edit-input:focus { box-shadow: 0 0 0 4px #FF83EA; }
+
+    .edit-textarea {
+      width: 100%;
+      padding: 16px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 3px solid #000;
+      outline: none;
+      resize: none;
+      background: #fff;
+      font-family: inherit;
+      min-height: 120px;
+    }
+    .edit-textarea:focus { box-shadow: 0 0 0 4px #4FFF5B; }
+
+    .char-count {
+      margin-top: 8px;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.35;
+    }
+
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .cat-btn {
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.01em;
+      border: 3px solid rgba(0,0,0,0.15);
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.1s ease;
+      font-family: inherit;
+    }
+    .cat-btn:hover { border-color: #000; background: rgba(255,181,112,0.2); }
+    .cat-btn.active {
+      background: #FFB570;
+      border-color: #000;
+      box-shadow: 2px 2px 0 0 #000;
+      transform: scale(1.02);
+    }
+
+    .tags-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      border: 3px solid #000;
+      border-radius: 999px;
+      background: rgba(87,154,255,0.15);
+      box-shadow: 2px 2px 0 0 #000;
+    }
+    .tag-x {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #000;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      cursor: pointer;
+    }
+    .tag-x:hover { background: #f00; }
+
+    .tag-add-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .tag-add-input {
+      flex: 1;
+      height: 40px;
+      padding: 0 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 3px solid #000;
+      outline: none;
+      background: #fff;
+      font-family: inherit;
+    }
+    .tag-add-btn {
+      height: 40px;
+      width: 40px;
+      border-radius: 12px;
+      border: 3px solid #000;
+      background: #4FFF5B;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 2px 2px 0 0 #000;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .action-bar {
+      display: flex;
+      gap: 12px;
+      padding-top: 8px;
+    }
+
+    /* ═══════════════════════════════════════
+       SECTION DIVIDERS
+    ═══════════════════════════════════════ */
+    .section-divider {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 24px 0;
+    }
+    .section-divider h3 {
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      opacity: 0.25;
+    }
+    .section-divider hr {
+      border: none;
+      border-top: 3px dashed rgba(0,0,0,0.1);
+      margin-top: 16px;
+    }
+
+    /* SVG Icons (inline) */
+    .ico { display: inline-flex; align-items: center; justify-content: center; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .grid-2col {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-title">ViewTube — New Dashboard Widgets Preview</div>
+
+  <div class="grid-2col">
+
+    <!-- ═══════════════════════════════════
+         WIDGET 1: DAILY ORACLE ADVICE
+    ════════════════════════════════════ -->
+    <div class="widget full-width">
+      <div class="widget-header" style="background: #FFFF61;">
+        <h2>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+          Daily Oracle Advice
+        </h2>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.12em; opacity:0.5;">Last: 04/10/2026</span>
+          <button class="btn-brutalist">Generate</button>
+        </div>
+      </div>
+      <div class="widget-body" style="gap: 24px;">
+
+        <!-- MAJOR section -->
+        <div class="section-label">
+          <svg class="dot" viewBox="0 0 24 24" fill="none" stroke="#FF8AAF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+          <span style="color: #FF8AAF;">Strategic Priorities</span>
+        </div>
+
+        <div class="advice-card major">
+          <div class="stripe" style="background: #FF8AAF;"></div>
+          <div class="inner">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3; flex-shrink:0; margin-top:2px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            <div class="text">
+              Your titles are generic homework assignments. "How to Edit Videos" competes with 10M results. Rewrite your last 5 titles with emotional power words and specific outcomes.
+              <div class="time">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                2–3 days
+              </div>
+            </div>
+            <div class="advice-action" style="background: #FF8AAF; box-shadow: 4px 4px 0 0 #000;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              <span class="label">Fix</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="advice-card major">
+          <div class="stripe" style="background: #579AFF;"></div>
+          <div class="inner">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3; flex-shrink:0; margin-top:2px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            <div class="text">
+              You have zero upload consistency — 3 videos in January, 0 in February, 1 in March. Commit to a 2-per-week schedule and pre-batch your next 6 scripts this weekend.
+              <div class="time">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                1–2 weeks
+              </div>
+            </div>
+            <div class="advice-action" style="background: #579AFF; box-shadow: 4px 4px 0 0 #000;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              <span class="label">Plan</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- QUICK WINS section -->
+        <div class="section-label" style="margin-top: 8px;">
+          <svg class="dot" viewBox="0 0 24 24" fill="none" stroke="#4FFF5B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span style="color: rgba(0,0,0,0.5);">Quick Wins (20–30 min)</span>
+        </div>
+
+        <div class="advice-card quick">
+          <div class="color-pip" style="background: #FFFF61;"></div>
+          <div class="text">Add end screens to your top 5 videos — they currently have none. Link to your best-performing video and a subscribe button.</div>
+          <div class="advice-action" style="background: #fff; box-shadow: 3px 3px 0 0 #000;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            <span class="label">Go</span>
+          </div>
+        </div>
+
+        <div class="advice-card quick">
+          <div class="color-pip" style="background: #40C6E9;"></div>
+          <div class="text">Pin a comment on your latest video asking viewers a direct question. Engagement in the first 2 hours is critical for the algorithm.</div>
+          <div class="advice-action" style="background: #fff; box-shadow: 3px 3px 0 0 #000;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            <span class="label">Post</span>
+          </div>
+        </div>
+
+        <div class="advice-card quick">
+          <div class="color-pip" style="background: #FF83EA;"></div>
+          <div class="text">Create a Community Tab poll asking which topic your audience wants next. Use the top 3 video ideas from your backlog as options.</div>
+          <div class="advice-action" style="background: #fff; box-shadow: 3px 3px 0 0 #000;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            <span class="label">Poll</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="section-divider">
+      <h3>AI-Powered Tools</h3>
+      <hr>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         WIDGET 2: ASK ME ANYTHING
+    ════════════════════════════════════ -->
+
+    <!-- STATE A: Initial question input -->
+    <div class="widget">
+      <div class="widget-header" style="background: #40C6E9;">
+        <h2>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+          Ask Me Anything
+        </h2>
+      </div>
+      <div class="widget-body">
+        <div class="helper-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.35;"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>Ask anything about your channel, strategy, analytics, or growth</span>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <textarea class="ama-input" rows="3" placeholder="Why are my views dropping this month?"></textarea>
+          <div class="send-btn" style="align-self: flex-end;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATE B: Clarifying questions flow -->
+    <div class="widget">
+      <div class="widget-header" style="background: #40C6E9;">
+        <h2>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+          Ask Me Anything
+        </h2>
+        <button class="btn-brutalist">⟲ New Question</button>
+      </div>
+      <div class="widget-body" style="gap: 20px;">
+
+        <div class="progress-dots">
+          <div class="progress-dot done">1</div>
+          <span class="chevron-sep">›</span>
+          <div class="progress-dot active">2</div>
+          <span class="chevron-sep">›</span>
+          <div class="progress-dot pending">3</div>
+          <span style="margin-left:8px; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.12em; opacity:0.35;">Clarifying (2/3)</span>
+        </div>
+
+        <!-- Previous answered question -->
+        <div class="prev-answer">
+          <div class="q-label">Question 1</div>
+          <div class="q-text">What type of content are you primarily creating?</div>
+          <div class="a-text" style="background: rgba(255,131,234,0.15);">Tech tutorials and reviews, mostly 10-15 min long</div>
+        </div>
+
+        <!-- Current question -->
+        <div class="clarify-card">
+          <div class="q-label" style="color: #40C6E9;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21"/></svg>
+            Question 2
+          </div>
+          <div class="question">Have you noticed the drop on specific videos or across everything?</div>
+          <div class="ama-input-row">
+            <input class="ama-input-inline" placeholder="Your answer...">
+            <div class="next-btn">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATE C: Final answer -->
+    <div class="widget full-width">
+      <div class="widget-header" style="background: #40C6E9;">
+        <h2>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+          Ask Me Anything
+        </h2>
+        <button class="btn-brutalist">⟲ New Question</button>
+      </div>
+      <div class="widget-body" style="gap: 16px;">
+        <div class="recap-box">
+          <div class="recap-label">Your Question</div>
+          <div class="recap-text">Why are my views dropping this month?</div>
+        </div>
+        <div class="answer-card">
+          <div class="ai-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#40C6E9" stroke-width="3"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21"/></svg>
+            AI Analysis
+          </div>
+          <div class="answer-text">
+            <strong>Direct Answer:</strong> Your views dropped 23% because you broke your upload cadence — YouTube's algorithm deprioritizes channels that go silent. Your last upload was 18 days ago, and your impressions fell by 40% in that gap.
+            <br><br>
+            <strong>Deep Analysis:</strong> Looking at your data, your top-performing videos ("Best Budget Laptops 2026" with 142K views) share a pattern: comparison format + specific price hooks. Your recent videos pivoted to abstract reviews without clear search intent, which killed browse and search traffic simultaneously.
+            <br><br>
+            <strong>Action Steps:</strong><br>
+            1. Upload a new video within the next 48 hours — even a shorter one.<br>
+            2. Return to the comparison format that drove your top 3 videos.<br>
+            3. Add timestamps and chapters to your last 5 videos.<br>
+            4. Create a Community Tab post announcing your return schedule.<br>
+            5. Respond to every comment on your latest video within 1 hour of posting.
+            <br><br>
+            <strong>Pro Tip:</strong> Schedule your next 4 uploads in advance using YouTube's scheduler. Channels that maintain a visible "coming soon" pipeline get an algorithmic boost in Suggested feeds.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-divider">
+      <h3>Video Management</h3>
+      <hr>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         WIDGET 3: DATA EDIT
+    ════════════════════════════════════ -->
+    <div class="widget">
+      <div class="widget-header" style="background: #FF83EA;">
+        <h2>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+          Data Editor
+        </h2>
+        <div class="badge badge-saved">✓ Saved</div>
+      </div>
+      <div class="widget-body" style="gap: 16px;">
+
+        <!-- Dropdown -->
+        <button class="dropdown-trigger">
+          <span>Best Budget Laptops 2026 — Full Comparison</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+
+        <!-- Title accordion -->
+        <div class="accordion">
+          <button class="accordion-header" style="background: #FFFF61;">
+            <div class="left">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+              <span>Title</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(180deg);"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="accordion-body">
+            <input class="edit-input" value="Best Budget Laptops 2026 — Full Comparison">
+            <div class="char-count">47/100 characters</div>
+          </div>
+        </div>
+
+        <!-- Description accordion -->
+        <div class="accordion">
+          <button class="accordion-header" style="background: #4FFF5B;">
+            <div class="left">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+              <span>Description</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(180deg);"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="accordion-body">
+            <textarea class="edit-textarea">In this video I compare the 5 best budget laptops of 2026, testing everything from battery life to gaming performance. Links to each laptop below...
+
+🔗 Timestamps:
+0:00 Intro
+1:30 #5 — Acer Swift Go 14
+3:45 #4 — Lenovo IdeaPad Slim
+6:10 #3 — HP Pavilion Plus
+8:30 #2 — ASUS Vivobook S
+10:45 #1 — Best Overall Pick</textarea>
+            <div class="char-count">342/5000 characters</div>
+          </div>
+        </div>
+
+        <!-- Category accordion -->
+        <div class="accordion">
+          <button class="accordion-header" style="background: #FFB570;">
+            <div class="left">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3"/></svg>
+              <span>Category</span>
+            </div>
+            <div class="right">
+              <span class="meta">Science & Technology</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </button>
+        </div>
+
+        <!-- Tags accordion (open) -->
+        <div class="accordion">
+          <button class="accordion-header" style="background: #579AFF;">
+            <div class="left">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg>
+              <span style="color:#fff;">Tags</span>
+            </div>
+            <div class="right">
+              <span class="meta" style="color:rgba(255,255,255,0.7);">6 tags</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" style="transform:rotate(180deg);"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </button>
+          <div class="accordion-body">
+            <div class="tags-wrap">
+              <span class="tag-chip">budget laptops <span class="tag-x">✕</span></span>
+              <span class="tag-chip">laptop 2026 <span class="tag-x">✕</span></span>
+              <span class="tag-chip">best laptop <span class="tag-x">✕</span></span>
+              <span class="tag-chip">tech review <span class="tag-x">✕</span></span>
+              <span class="tag-chip">comparison <span class="tag-x">✕</span></span>
+              <span class="tag-chip">affordable <span class="tag-x">✕</span></span>
+            </div>
+            <div class="tag-add-row">
+              <input class="tag-add-input" placeholder="New tag...">
+              <button class="tag-add-btn">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action bar -->
+        <div class="action-bar">
+          <button class="btn-primary" style="flex: 1; background: #4FFF5B; border-color: #000;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save Changes
+          </button>
+          <button class="btn-primary" style="background: #fff; border-color: #000; box-shadow: 4px 4px 0 0 #000;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state for Data Edit -->
+    <div class="widget">
+      <div class="widget-header" style="background: #FF83EA;">
+        <h2>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+          Data Editor
+        </h2>
+      </div>
+      <div class="widget-body">
+        <button class="dropdown-trigger">
+          <span style="opacity: 0.3;">Select a video to edit...</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div style="padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; border: 2px dashed rgba(0,0,0,0.12); border-radius: 1rem; background: #fff;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.12;"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+          <span style="font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.15em; opacity:0.25;">Select a video above to edit its metadata</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

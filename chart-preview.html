@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ViewTube - The 40 Master Charts Collection</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900;1000&display=swap');
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #E6E8EB;
+      padding: 40px;
+      color: #000;
+    }
+    
+    /* Scaffolding */
+    .main-scaffold {
+      max-width: 1600px;
+      margin: 0 auto;
+      border: 6px solid #000;
+      border-radius: 20px;
+      background: #E8E8E8;
+      box-shadow: 16px 16px 0 0 #000;
+      overflow: hidden;
+    }
+    
+    .section-header {
+      background: #000;
+      color: #fff;
+      padding: 24px;
+      font-size: 32px;
+      font-weight: 1000;
+      text-transform: uppercase;
+      letter-spacing: -0.05em;
+      border-bottom: 6px solid #000;
+    }
+
+    .category-header {
+      background: #000;
+      color: #fff;
+      padding: 16px 24px;
+      font-size: 20px;
+      font-weight: 1000;
+      text-transform: uppercase;
+      letter-spacing: -0.05em;
+      margin-top: 40px;
+    }
+    
+    .grid-scaffold {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+    @media (min-width: 1400px) {
+      .grid-scaffold { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (min-width: 1800px) {
+      .grid-scaffold { grid-template-columns: repeat(4, 1fr); }
+    }
+    
+    /* Chart Boxes */
+    .chart-box {
+      border: 4px solid #000;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 6px 6px 0 0 rgba(0,0,0,1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      height: 320px;
+    }
+    .chart-box.dark { background: #111; color: #fff; }
+    
+    .chart-header {
+      border-bottom: 4px solid #000;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chart-box.dark .chart-header { border-bottom-color: #333; }
+    
+    .chart-title { font-size: 14px; font-weight: 1000; text-transform: uppercase; line-height: 1.1; }
+    .chart-subtitle { font-size: 9px; font-weight: 900; opacity: 0.6; text-transform: uppercase; margin-top: 2px;}
+    
+    .chart-content {
+      padding: 16px;
+      flex: 1;
+      position: relative;
+      background: radial-gradient(circle at 50% 50%, rgba(0,0,0,0.02) 0%, transparent 100%);
+    }
+    .chart-box.dark .chart-content { background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, transparent 100%); }
+
+    /* Number badge */
+    .chart-num {
+      width: 24px; height: 24px;
+      background: #000; color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 1000;
+      flex-shrink: 0; margin-right: 12px;
+    }
+    .chart-box.dark .chart-num { background: #fff; color: #000; }
+    .header-left { display: flex; align-items: center; }
+
+    /* SVG Base Rules */
+    svg { width: 100%; height: 100%; overflow: visible; }
+    .grid-lines line { stroke: rgba(0,0,0,0.05); stroke-dasharray: 4; }
+    .chart-box.dark .grid-lines line { stroke: rgba(255,255,255,0.1); }
+    .axis-line { stroke: #000; stroke-width: 2; }
+    .chart-box.dark .axis-line { stroke: #555; }
+    .axis-text { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 900; fill: #888; }
+  </style>
+</head>
+<body>
+
+<div class="main-scaffold">
+  <div class="section-header">The 40 Ultimate ViewTube Charts</div>
+  
+  <!-- ══════════════════════════════════════════════════════════
+       1. REVENUE & MONETIZATION
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="category-header" style="background:#C9F830; color:#000; border-top:6px solid #000; border-bottom:6px solid #000;">
+    💰 Revenue & Monetization
+  </div>
+  <div class="grid-scaffold">
+    
+    <!-- 1. True Value of Watch Time (Bubble) -->
+    <div class="chart-box">
+      <div class="chart-header" style="background:#00D2FF;">
+        <div class="header-left">
+          <div class="chart-num">1</div>
+          <div>
+            <div class="chart-title">The True Value of Watch Time</div>
+            <div class="chart-subtitle">Bubble: RPM | X: Watch Time | Y: Revenue</div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <g class="grid-lines"><line x1="20" y1="50" x2="380" y2="50"/><line x1="20" y1="100" x2="380" y2="100"/><line x1="20" y1="150" x2="380" y2="150"/></g>
+          <line x1="20" y1="190" x2="380" y2="190" class="axis-line"/><line x1="20" y1="10" x2="20" y2="190" class="axis-line"/>
+          <!-- High RPM Small View -->
+          <circle cx="80" cy="40" r="25" fill="#FF8AAF" opacity="0.8" stroke="#000" stroke-width="2"/>
+          <!-- Average -->
+          <circle cx="180" cy="120" r="15" fill="#C9F830" opacity="0.8" stroke="#000" stroke-width="2"/>
+          <circle cx="260" cy="90" r="10" fill="#00D2FF" opacity="0.8" stroke="#000" stroke-width="2"/>
+          <!-- Huge Virality, Low RPM -->
+          <circle cx="340" cy="60" r="8" fill="#FF1744" opacity="0.8" stroke="#000" stroke-width="2"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 2. Ad Format Dominance (Stacked Area) -->
+    <div class="chart-box dark">
+      <div class="chart-header">
+        <div class="header-left">
+          <div class="chart-num">2</div>
+          <div>
+            <div class="chart-title">Ad Format Dominance</div>
+            <div class="chart-subtitle">Stacked Area: Skip, Bumper, Non-Skip</div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-content" style="padding:0; padding-top:20px;">
+        <svg viewBox="0 0 400 200" preserveAspectRatio="none">
+          <path d="M 0 200 L 0 50 L 100 80 L 200 40 L 300 70 L 400 30 L 400 200 Z" fill="#FF8AAF" opacity="0.9" />
+          <path d="M 0 200 L 0 100 L 100 120 L 200 90 L 300 130 L 400 80 L 400 200 Z" fill="#00D2FF" opacity="0.9" />
+          <path d="M 0 200 L 0 160 L 100 170 L 200 150 L 300 180 L 400 140 L 400 200 Z" fill="#C9F830" opacity="0.9" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- 3. Premium vs Standard (Combo) -->
+    <div class="chart-box">
+      <div class="chart-header">
+        <div class="header-left">
+          <div class="chart-num">3</div>
+          <div>
+            <div class="chart-title">Premium vs. Standard</div>
+            <div class="chart-subtitle">Columns: Views | Line: Prem Rev Rate</div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <g class="grid-lines"><line x1="20" y1="100" x2="380" y2="100"/></g>
+          <line x1="20" y1="190" x2="380" y2="190" class="axis-line"/>
+          <!-- Standard -->
+          <rect x="60" y="80" width="20" height="110" fill="#ddd" />
+          <rect x="120" y="60" width="20" height="130" fill="#ddd" />
+          <rect x="180" y="90" width="20" height="100" fill="#ddd" />
+          <!-- Premium -->
+          <rect x="80" y="140" width="20" height="50" fill="#FF1744" />
+          <rect x="140" y="110" width="20" height="80" fill="#FF1744" />
+          <rect x="200" y="150" width="20" height="40" fill="#FF1744" />
+          <!-- Line -->
+          <path d="M 20 180 Q 100 40 200 60 T 380 20" fill="none" stroke="#000" stroke-width="4" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- 4. Geography of High CPMs (World Map MOCK) -->
+    <div class="chart-box dark">
+      <div class="chart-header">
+        <div class="header-left">
+          <div class="chart-num">4</div>
+          <div>
+            <div class="chart-title">Geography of High CPMs</div>
+            <div class="chart-subtitle">Heatmap: Top 5 Highest RPM Countries</div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-content" style="display:flex; flex-direction:column; justify-content:center; gap:8px;">
+        <div style="display:flex; align-items:center; gap:10px;"><div style="width:20px; height:10px; background:#4FFF5B;"></div><span style="font-weight:900; font-size:12px;">NORWAY ($18.40)</span></div>
+        <div style="display:flex; align-items:center; gap:10px;"><div style="width:160px; height:10px; background:#00D2FF;"></div><span style="font-weight:900; font-size:12px;">USA ($14.20)</span></div>
+        <div style="display:flex; align-items:center; gap:10px;"><div style="width:70px; height:10px; background:#FFE357;"></div><span style="font-weight:900; font-size:12px;">AUSTRALIA ($11.80)</span></div>
+        <div style="display:flex; align-items:center; gap:10px;"><div style="width:120px; height:10px; background:#FF8AAF;"></div><span style="font-weight:900; font-size:12px;">UK ($9.40)</span></div>
+        <div style="display:flex; align-items:center; gap:10px;"><div style="width:40px; height:10px; background:#FF1744;"></div><span style="font-weight:900; font-size:12px;">SWEDEN ($8.10)</span></div>
+      </div>
+    </div>
+
+    <!-- 5. Live Stream Tipping Dynamics (Stacked Bars) -->
+    <div class="chart-box">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">5</div><div><div class="chart-title">Live Tipping Dynamics</div><div class="chart-subtitle">Super Chat vs Stickers vs Members</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="20" y1="190" x2="380" y2="190" class="axis-line" />
+          <rect x="60" y="100" width="40" height="90" fill="#00D2FF" /><rect x="60" y="60" width="40" height="40" fill="#FF8AAF" /><rect x="60" y="30" width="40" height="30" fill="#C9F830" />
+          <rect x="140" y="80" width="40" height="110" fill="#00D2FF" /><rect x="140" y="50" width="40" height="30" fill="#FF8AAF" /><rect x="140" y="10" width="40" height="40" fill="#C9F830" />
+          <rect x="220" y="130" width="40" height="60" fill="#00D2FF" /><rect x="220" y="110" width="40" height="20" fill="#FF8AAF" /><rect x="220" y="90" width="40" height="20" fill="#C9F830" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- 6. Video Length vs Monetization (Scatter) -->
+    <div class="chart-box dark">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">6</div><div><div class="chart-title">Length vs Efficiency</div><div class="chart-subtitle">Length (X) vs CPM (Y) + Trendline</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="30" y1="180" x2="380" y2="180" class="axis-line" stroke="#fff" /><line x1="30" y1="20" x2="30" y2="180" class="axis-line" stroke="#fff"/>
+          <!-- Trendline -->
+          <path d="M 30 160 Q 200 120 380 40" fill="none" stroke="#FFE357" stroke-width="2" stroke-dasharray="6"/>
+          <!-- 8+ minute threshold line -->
+          <line x1="160" y1="20" x2="160" y2="180" stroke="#FF1744" stroke-width="2" stroke-dasharray="4"/>
+          <!-- Dots -->
+          <circle cx="80" cy="150" r="4" fill="#00D2FF" /><circle cx="120" cy="140" r="4" fill="#00D2FF" /><circle cx="140" cy="160" r="4" fill="#00D2FF" />
+          <!-- Post 8-m dots jump up -->
+          <circle cx="180" cy="80" r="5" fill="#4FFF5B" /><circle cx="220" cy="60" r="5" fill="#4FFF5B" /><circle cx="260" cy="70" r="5" fill="#4FFF5B" /><circle cx="320" cy="40" r="5" fill="#4FFF5B" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- 7. Seasonal RPM Fluctuations (Radar) -->
+    <div class="chart-box">
+      <div class="chart-header" style="background:#FF8AAF;"><div class="header-left"><div class="chart-num">7</div><div><div class="chart-title">Seasonal RPM</div><div class="chart-subtitle">Radar Chart across 12 months</div></div></div></div>
+      <div class="chart-content" style="align-items:center; display:flex;">
+        <svg viewBox="-100 -100 200 200" style="width:200px; height:200px; margin:0 auto;">
+          <polygon points="0,-80 69,-40 69,40 0,80 -69,40 -69,-40" fill="none" stroke="#ccc" stroke-width="2"/>
+          <polygon points="0,-40 34,-20 34,20 0,40 -34,20 -34,-20" fill="none" stroke="#ccc" stroke-width="2"/>
+          <!-- RPM Shape (Huge in Q4/Oct-Dec) -->
+          <polygon points="0,-90 40,-30 60,30 0,20 -30,40 -20,-20" fill="rgba(255,51,153,0.5)" stroke="#FF3399" stroke-width="3"/>
+          <!-- Views Shape (Huge in Summer) -->
+          <polygon points="0,-30 80,-40 40,60 -10,70 -60,20 -20,-40" fill="rgba(0,210,255,0.4)" stroke="#00D2FF" stroke-width="3"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 8. Playback CPM vs Ad Density (Dual Axis) -->
+    <div class="chart-box dark">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">8</div><div><div class="chart-title">CPM vs Ad Density</div><div class="chart-subtitle">Is high CPM real if ad fill is low?</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <path d="M 20 60 L 80 50 L 140 30 L 200 70 L 260 20 L 380 40" fill="none" stroke="#C9F830" stroke-width="4"/>
+          <path d="M 20 120 L 80 140 L 140 180 L 200 90 L 260 160 L 380 150" fill="none" stroke="#FF1744" stroke-width="4"/>
+          <line x1="20" y1="190" x2="380" y2="190" class="axis-line" stroke="#fff" />
+        </svg>
+      </div>
+    </div>
+
+  </div> <!-- End Category 1 -->
+
+  <!-- ══════════════════════════════════════════════════════════
+       2. GROWTH & REACH
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="category-header" style="background:#00D2FF; color:#000; border-top:6px solid #000; border-bottom:6px solid #000;">
+    📈 Growth & Reach
+  </div>
+  <div class="grid-scaffold">
+
+    <!-- 9. Algorithm Trigger Matrix -->
+    <div class="chart-box">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">9</div><div><div class="chart-title">Algorithm Trigger Matrix</div><div class="chart-subtitle">Impressions Pop vs CTR Drop</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="20" y1="190" x2="380" y2="190" class="axis-line" />
+          <!-- Impressions (Massive spike) -->
+          <path d="M 20 180 L 100 170 L 150 160 L 180 80 L 220 20 L 380 10" fill="none" stroke="#4FFF5B" stroke-width="4"/>
+          <!-- CTR (Dips as impressions rise) -->
+          <path d="M 20 40 L 100 50 L 150 60 L 180 120 L 220 150 L 380 160" fill="none" stroke="#FF1744" stroke-width="4"/>
+          <!-- Milestone Vertical line -->
+          <line x1="180" y1="20" x2="180" y2="190" stroke="#000" stroke-width="2" stroke-dasharray="4"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 10. Shorts Swipe VS Retention (3D Scatter) -->
+    <div class="chart-box dark">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">10</div><div><div class="chart-title">Shorts Swipe vs Retention</div><div class="chart-subtitle">Bubble = Subs Gained</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="20" y1="190" x2="380" y2="190" class="axis-line" stroke="#fff"/><line x1="20" y1="10" x2="20" y2="190" class="axis-line" stroke="#fff"/>
+          <!-- Swiped heavily, but those who stayed subbed (Large dot, bottom right) -->
+          <circle cx="300" cy="160" r="30" fill="rgba(255,227,87,0.8)" stroke="#fff" stroke-width="2"/>
+          <!-- Viewed but didn't sub (Top left, small dot) -->
+          <circle cx="80" cy="40" r="8" fill="rgba(0,210,255,0.8)" stroke="#fff" stroke-width="2"/>
+          <circle cx="160" cy="90" r="15" fill="rgba(255,138,175,0.8)" stroke="#fff" stroke-width="2"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 11. Conversion Power of Views -->
+    <div class="chart-box">
+      <div class="chart-header" style="background:#FFE357;"><div class="header-left"><div class="chart-num">11</div><div><div class="chart-title">Conversion Power</div><div class="chart-subtitle">Bars: Views | Line: Sub Conv Rate</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+           <line x1="20" y1="190" x2="380" y2="190" class="axis-line"/>
+           <rect x="50" y="80" width="30" height="110" fill="#000" />
+           <rect x="120" y="20" width="30" height="170" fill="#000" />
+           <rect x="190" y="140" width="30" height="50" fill="#000" />
+           <rect x="260" y="100" width="30" height="90" fill="#000" />
+           <!-- Sub conversion line spiking on the low view bar -->
+           <path d="M 65 140 L 135 160 L 205 30 L 275 120" fill="none" stroke="#FF1744" stroke-width="5" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 12. Thumbnail A/B Timelines -->
+    <div class="chart-box dark">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">12</div><div><div class="chart-title">Thumb A/B Timeline</div><div class="chart-subtitle">CTR Line + Event Markers</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="20" y1="190" x2="380" y2="190" class="axis-line" stroke="#fff"/>
+          <!-- Pre change -->
+          <path d="M 20 140 L 80 150 L 120 160 L 180 140 L 240 150" fill="none" stroke="#FF1744" stroke-width="4"/>
+          <!-- Marker -->
+          <line x1="240" y1="10" x2="240" y2="190" stroke="#00D2FF" stroke-width="4" stroke-dasharray="8"/>
+          <!-- Post Change Spike -->
+          <path d="M 240 150 L 280 40 L 340 60 L 380 50" fill="none" stroke="#4FFF5B" stroke-width="4"/>
+          <text x="250" y="25" fill="#00D2FF" font-size="12" font-weight="900" font-family="Inter">THUMB SWAP</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 13. Source-Specific Retention -->
+    <div class="chart-box">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">13</div><div><div class="chart-title">Source-Specific Retention</div><div class="chart-subtitle">Grouped Bars: Search vs Browse</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="20" y1="190" x2="380" y2="190" class="axis-line" />
+          <rect x="40" y="40" width="20" height="150" fill="#00D2FF" /><rect x="62" y="100" width="20" height="90" fill="#FF8AAF" />
+          <rect x="140" y="70" width="20" height="120" fill="#00D2FF" /><rect x="162" y="80" width="20" height="110" fill="#FF8AAF" />
+          <rect x="240" y="140" width="20" height="50" fill="#00D2FF" /><rect x="262" y="30" width="20" height="160" fill="#FF8AAF" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- 14. Publish Time Heatmap -->
+    <div class="chart-box dark">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">14</div><div><div class="chart-title">Publish Time Momentum</div><div class="chart-subtitle">Matrix: Day vs Hour</div></div></div></div>
+      <div class="chart-content" style="padding:10px;">
+        <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; height:100%;">
+          <script>
+            for(let i=0; i<35; i++) {
+              let op = Math.random();
+              document.write(`<div style="background:rgba(201,248,48,${op}); border-radius:4px;"></div>`);
+            }
+          </script>
+        </div>
+      </div>
+    </div>
+
+    <!-- 15. Shorts Length vs Sub Conversion -->
+    <div class="chart-box">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">15</div><div><div class="chart-title">Shorts Length vs Growth</div><div class="chart-subtitle">Scatter: Seconds vs Output</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="20" y1="190" x2="380" y2="190" class="axis-line" />
+          <circle cx="80" cy="140" r="10" fill="#000" /><circle cx="100" cy="160" r="6" fill="#000" />
+          <circle cx="200" cy="40" r="20" fill="#FF1744" stroke="#000" stroke-width="3"/><circle cx="220" cy="60" r="15" fill="#FF1744" stroke="#000" stroke-width="3"/>
+          <circle cx="340" cy="120" r="8" fill="#000" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- 16. External Traffic Power -->
+    <div class="chart-box dark">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">16</div><div><div class="chart-title">External Traffic</div><div class="chart-subtitle">100% Stacked: Reddit vs X vs Google</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="20" y1="20" x2="20" y2="180" class="axis-line" stroke="#fff"/>
+          <!-- Horizontal 100% Stacks -->
+          <rect x="20" y="40" width="100" height="20" fill="#FF4500" /><rect x="120" y="40" width="60" height="20" fill="#1DA1F2" /><rect x="180" y="40" width="180" height="20" fill="#4285F4" />
+          <rect x="20" y="90" width="200" height="20" fill="#FF4500" /><rect x="220" y="90" width="40" height="20" fill="#1DA1F2" /><rect x="260" y="90" width="100" height="20" fill="#4285F4" />
+          <rect x="20" y="140" width="30" height="20" fill="#FF4500" /><rect x="50" y="140" width="250" height="20" fill="#1DA1F2" /><rect x="300" y="140" width="60" height="20" fill="#4285F4" />
+        </svg>
+      </div>
+    </div>
+
+  </div> <!-- End Category 2 -->
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       3. AUDIENCE ENGAGEMENT
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="category-header" style="background:#FF3399; color:#fff; border-top:6px solid #000; border-bottom:6px solid #000;">
+    ❤️ Audience Engagement
+  </div>
+  <div class="grid-scaffold">
+
+    <!-- 17. The Engagement Breakdown (100% Stack) -->
+    <div class="chart-box">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">17</div><div><div class="chart-title">Engagement Breakdown</div><div class="chart-subtitle">% Likes vs Comments vs Shares</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <rect x="40" y="20" width="40" height="160" fill="#FF1744" /><rect x="40" y="20" width="40" height="100" fill="#C9F830" /><rect x="40" y="20" width="40" height="40" fill="#00D2FF" />
+          <rect x="120" y="20" width="40" height="160" fill="#FF1744" /><rect x="120" y="20" width="40" height="140" fill="#C9F830" /><rect x="120" y="20" width="40" height="20" fill="#00D2FF" />
+          <rect x="200" y="20" width="40" height="160" fill="#FF1744" /><rect x="200" y="20" width="40" height="60" fill="#C9F830" /><rect x="200" y="20" width="40" height="10" fill="#00D2FF" />
+          <rect x="280" y="20" width="40" height="160" fill="#FF1744" /><rect x="280" y="20" width="40" height="120" fill="#C9F830" /><rect x="280" y="20" width="40" height="80" fill="#00D2FF" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- 18. Viewer Loyalty Index -->
+    <div class="chart-box dark">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">18</div><div><div class="chart-title">Viewer Loyalty Index</div><div class="chart-subtitle">Area: New/Returning | Line: AVD</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200" preserveAspectRatio="none">
+          <path d="M 0 200 L 0 80 L 100 120 L 200 40 L 300 90 L 400 60 L 400 200 Z" fill="#BB86FC" opacity="0.6"/>
+          <path d="M 0 200 L 0 160 L 100 180 L 200 120 L 300 150 L 400 100 L 400 200 Z" fill="#00D2FF" opacity="0.8"/>
+          <!-- AVD Line crashing as new viewers spike -->
+          <path d="M 0 40 L 100 30 L 200 180 L 300 150 L 400 160" fill="none" stroke="#FF1744" stroke-width="4"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 19. End Screen Effectiveness -->
+    <div class="chart-box">
+      <div class="chart-header" style="background:#4FFF5B;"><div class="header-left"><div class="chart-num">19</div><div><div class="chart-title">End Screen Effectiveness</div><div class="chart-subtitle">Funnel: Views -> Shown -> Click</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <polygon points="20,20 380,20 300,80 100,80" fill="#00D2FF" stroke="#000" stroke-width="3"/>
+          <polygon points="100,90 300,90 240,140 160,140" fill="#FFE357" stroke="#000" stroke-width="3"/>
+          <polygon points="160,150 240,150 200,190 200,190" fill="#FF1744" stroke="#000" stroke-width="3"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 20. Dislike Ratio vs Retention -->
+    <div class="chart-box dark">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">20</div><div><div class="chart-title">Controversy vs Retention</div><div class="chart-subtitle">Scatter: Dislike % vs AVP</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+           <line x1="20" y1="190" x2="380" y2="190" class="axis-line" stroke="#fff"/>
+           <!-- High dispute, high retention trend -->
+           <path d="M 40 160 Q 200 120 350 40" fill="none" stroke="#FF8AAF" stroke-width="2" stroke-dasharray="6"/>
+           <circle cx="80" cy="140" r="6" fill="#fff" /><circle cx="160" cy="100" r="6" fill="#fff" />
+           <circle cx="280" cy="60" r="6" fill="#fff" /><circle cx="340" cy="30" r="6" fill="#fff" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- 21. Interaction Density -->
+    <div class="chart-box">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">21</div><div><div class="chart-title">Interaction Density</div><div class="chart-subtitle">Likes/Comments/Subs per 1K Views</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <path d="M 20 180 L 100 80 L 200 120 L 300 40 L 380 90" fill="none" stroke="#000" stroke-width="6" stroke-linejoin="round"/>
+          <path d="M 20 160 L 100 140 L 200 160 L 300 100 L 380 140" fill="none" stroke="#FF3399" stroke-width="4" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 22. Subtitle Language Engagement -->
+    <div class="chart-box dark">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">22</div><div><div class="chart-title">Localization Quality</div><div class="chart-subtitle">Horizontal Bar: Lang Views vs AVD</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="80" y1="20" x2="80" y2="180" class="axis-line" stroke="#fff"/>
+          <text x="70" y="50" font-family="Inter" font-size="12" font-weight="900" fill="#fff" text-anchor="end">ES</text>
+          <rect x="80" y="40" width="200" height="10" fill="#00D2FF" />
+          <rect x="80" y="52" width="40" height="10" fill="#FF1744" /> <!-- High views, terrible retention -->
+
+          <text x="70" y="100" font-family="Inter" font-size="12" font-weight="900" fill="#fff" text-anchor="end">FR</text>
+          <rect x="80" y="90" width="80" height="10" fill="#00D2FF" />
+          <rect x="80" y="102" width="120" height="10" fill="#4FFF5B" /> <!-- Low views, stellar retention -->
+        </svg>
+      </div>
+    </div>
+
+    <!-- 23. Card Click-Throughs by Timestamp -->
+    <div class="chart-box">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">23</div><div><div class="chart-title">Card Click Heatmap</div><div class="chart-subtitle">Histogram by Minute</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="20" y1="190" x2="380" y2="190" class="axis-line"/>
+          <!-- Sparse bars with one massive spike at contextual moment -->
+          <rect x="40" y="180" width="10" height="10" fill="#000" />
+          <rect x="120" y="170" width="10" height="20" fill="#000" />
+          <rect x="200" y="30" width="10" height="160" fill="#FF1744" />
+          <rect x="280" y="185" width="10" height="5" fill="#000" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- 24. Community Post Conversions -->
+    <div class="chart-box dark">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">24</div><div><div class="chart-title">Community Conversions</div><div class="chart-subtitle">Posts vs Channel Visits vs Subs</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <!-- Spikes aligning perfectly -->
+          <rect x="80" y="100" width="10" height="90" fill="#C9F830" opacity="0.3"/>
+          <rect x="240" y="80" width="10" height="110" fill="#C9F830" opacity="0.3"/>
+          <path d="M 20 180 L 85 40 L 140 160 L 245 20 L 380 170" fill="none" stroke="#fff" stroke-width="4"/>
+        </svg>
+      </div>
+    </div>
+
+  </div> <!-- End Category 3 -->
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       4. RETENTION & CONTENT STRATEGY
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="category-header" style="background:#FFA756; color:#000; border-top:6px solid #000; border-bottom:6px solid #000;">
+    ⏱️ Retention & Content Strategy
+  </div>
+  <div class="grid-scaffold">
+
+    <!-- 25. Retention Triangle -->
+    <div class="chart-box">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">25</div><div><div class="chart-title">The Retention Triangle</div><div class="chart-subtitle">Video Length vs Watch Time vs Views</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="20" y1="190" x2="380" y2="190" class="axis-line"/><line x1="20" y1="10" x2="20" y2="190" class="axis-line"/>
+          <!-- Triangle bounds line -->
+          <path d="M 20 190 L 380 20" fill="none" stroke="#ccc" stroke-dasharray="4"/>
+          <circle cx="100" cy="140" r="30" fill="#00D2FF" stroke="#000" stroke-width="3"/>
+          <circle cx="200" cy="100" r="10" fill="#FF8AAF" stroke="#000" stroke-width="3"/>
+          <circle cx="340" cy="140" r="15" fill="#C9F830" stroke="#000" stroke-width="3"/> <!-- Long video, low watch time -->
+        </svg>
+      </div>
+    </div>
+
+    <!-- 26. Intro Hook Success Rate -->
+    <div class="chart-box dark">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">26</div><div><div class="chart-title">Hook Success Translation</div><div class="chart-subtitle">Bar: 30s Retention | Line: Total Views</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+           <line x1="20" y1="190" x2="380" y2="190" class="axis-line" stroke="#fff"/>
+           <rect x="40" y="80" width="30" height="110" fill="#FF1744" />
+           <rect x="120" y="40" width="30" height="150" fill="#FF1744" />
+           <rect x="200" y="100" width="30" height="90" fill="#FF1744" />
+           <rect x="280" y="60" width="30" height="130" fill="#FF1744" />
+           <path d="M 55 120 L 135 20 L 215 140 L 295 40" fill="none" stroke="#fff" stroke-width="6"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 27. Series vs Standalone (Box Plot mock) -->
+    <div class="chart-box">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">27</div><div><div class="chart-title">Series Variance</div><div class="chart-subtitle">Box Plot: Consistency check</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="20" y1="190" x2="380" y2="190" class="axis-line"/>
+          <!-- Box 1 -->
+          <line x1="80" y1="40" x2="80" y2="160" stroke="#000" stroke-width="2"/>
+          <rect x="60" y="80" width="40" height="50" fill="#4FFF5B" stroke="#000" stroke-width="2"/>
+          <line x1="60" y1="110" x2="100" y2="110" stroke="#000" stroke-width="3"/>
+          <!-- Box 2 (Huge spread) -->
+          <line x1="200" y1="20" x2="200" y2="180" stroke="#000" stroke-width="2"/>
+          <rect x="180" y="60" width="40" height="90" fill="#FFE357" stroke="#000" stroke-width="2"/>
+          <line x1="180" y1="130" x2="220" y2="130" stroke="#000" stroke-width="3"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 28. Upload Frequency Burnout -->
+    <div class="chart-box dark">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">28</div><div><div class="chart-title">Upload Burnout Plot</div><div class="chart-subtitle">Days Since Last Upload vs Views</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="20" y1="190" x2="380" y2="190" class="axis-line" stroke="#fff"/>
+          <!-- Polynomial arc -->
+          <path d="M 20 160 Q 200 20 380 180" fill="none" stroke="#C9F830" stroke-width="2" stroke-dasharray="6"/>
+          <circle cx="60" cy="140" r="6" fill="#fff" /><circle cx="100" cy="90" r="6" fill="#fff" />
+          <circle cx="200" cy="40" r="8" fill="#FF3399" /> <!-- The sweet spot -->
+          <circle cx="280" cy="90" r="6" fill="#fff" /><circle cx="340" cy="150" r="6" fill="#fff" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- 29. Playlist Bingeability -->
+    <div class="chart-box">
+      <div class="chart-header" style="background:#000; color:#fff;"><div class="header-left"><div class="chart-num">29</div><div><div class="chart-title">Playlist Flow</div><div class="chart-subtitle">Waterfall Drop-off</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <rect x="40" y="20" width="40" height="170" fill="#000" />
+          <rect x="100" y="60" width="40" height="130" fill="#333" />
+          <rect x="160" y="120" width="40" height="70" fill="#666" />
+          <rect x="220" y="160" width="40" height="30" fill="#999" />
+          <rect x="280" y="180" width="40" height="10" fill="#ccc" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- 30. Title Length vs CTR -->
+    <div class="chart-box dark">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">30</div><div><div class="chart-title">Title Length vs CTR</div><div class="chart-subtitle">Scatter: Char Count vs CTR</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="20" y1="190" x2="380" y2="190" class="axis-line" stroke="#fff"/>
+          <!-- Sweet spot under 40 chars -->
+          <rect x="20" y="0" width="120" height="200" fill="#00D2FF" opacity="0.1" />
+          <circle cx="60" cy="40" r="6" fill="#00D2FF" /><circle cx="80" cy="60" r="6" fill="#00D2FF" />
+          <circle cx="120" cy="30" r="6" fill="#00D2FF" /><circle cx="180" cy="120" r="6" fill="#fff" />
+          <circle cx="280" cy="150" r="6" fill="#fff" /><circle cx="350" cy="160" r="6" fill="#fff" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- 31. The Remix Ripple Effect -->
+    <div class="chart-box">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">31</div><div><div class="chart-title">Remix Ecosystem</div><div class="chart-subtitle">Network/Node Graph</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="200" y1="100" x2="100" y2="50" stroke="#000" stroke-width="2"/>
+          <line x1="200" y1="100" x2="300" y2="40" stroke="#000" stroke-width="2"/>
+          <line x1="200" y1="100" x2="120" y2="160" stroke="#000" stroke-width="2"/>
+          <line x1="200" y1="100" x2="280" y2="150" stroke="#000" stroke-width="2"/>
+          <!-- Core Video -->
+          <circle cx="200" cy="100" r="30" fill="#FF1744" stroke="#000" stroke-width="4"/>
+          <!-- Shorts -->
+          <circle cx="100" cy="50" r="15" fill="#C9F830" stroke="#000" stroke-width="2"/>
+          <circle cx="300" cy="40" r="20" fill="#C9F830" stroke="#000" stroke-width="2"/>
+          <circle cx="120" cy="160" r="10" fill="#C9F830" stroke="#000" stroke-width="2"/>
+          <circle cx="280" cy="150" r="25" fill="#C9F830" stroke="#000" stroke-width="2"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 32. Notification Squad Impact -->
+    <div class="chart-box dark">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">32</div><div><div class="chart-title">Bell Squad Power</div><div class="chart-subtitle">Combo: Notification Clicks vs Total Views</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <!-- Bars showing clicks -->
+          <rect x="60" y="100" width="20" height="90" fill="#FF8AAF" />
+          <rect x="140" y="80" width="20" height="110" fill="#FF8AAF" />
+          <rect x="220" y="140" width="20" height="50" fill="#FF8AAF" />
+          <!-- Line showing 3-hour views totally unaffected by low click video -->
+          <path d="M 70 80 L 150 70 L 230 40" fill="none" stroke="#fff" stroke-width="4"/>
+        </svg>
+      </div>
+    </div>
+
+  </div> <!-- End Category 4 -->
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       5. DEMOGRAPHICS & DEVICES
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="category-header" style="background:#BB86FC; color:#000; border-top:6px solid #000; border-bottom:6px solid #000;">
+    🌍 Demographics & Devices
+  </div>
+  <div class="grid-scaffold">
+
+    <!-- 33. Age Demographic Valuations -->
+    <div class="chart-box">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">33</div><div><div class="chart-title">Age Demographic Value</div><div class="chart-subtitle">Grouped Bar: Audience Size vs CPM</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+           <line x1="20" y1="190" x2="380" y2="190" class="axis-line"/>
+           <!-- 13-17: Huge views, $0 CPM -->
+           <rect x="40" y="20" width="20" height="170" fill="#000" /><rect x="65" y="180" width="20" height="10" fill="#4FFF5B" />
+           <!-- 18-24 -->
+           <rect x="120" y="60" width="20" height="130" fill="#000" /><rect x="145" y="140" width="20" height="50" fill="#4FFF5B" />
+           <!-- 35-44: Low views, massive CPM -->
+           <rect x="200" y="150" width="20" height="40" fill="#000" /><rect x="225" y="40" width="20" height="150" fill="#4FFF5B" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- 34. Mobile vs Desktop Divide -->
+    <div class="chart-box dark">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">34</div><div><div class="chart-title">Screen Size Divide</div><div class="chart-subtitle">Scatter: CTR vs Retention by Device</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="200" y1="10" x2="200" y2="190" stroke="#fff" stroke-dasharray="4"/>
+          <line x1="20" y1="100" x2="380" y2="100" stroke="#fff" stroke-dasharray="4"/>
+          <!-- Mobile: High CTR, Low Ret -->
+          <circle cx="320" cy="160" r="15" fill="#FF1744" stroke="#fff" stroke-width="2"/>
+          <!-- TV: Low CTR, High Ret -->
+          <circle cx="80" cy="40" r="20" fill="#00D2FF" stroke="#fff" stroke-width="2"/>
+          <!-- PC -->
+          <circle cx="220" cy="80" r="12" fill="#FFE357" stroke="#fff" stroke-width="2"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 35. Subscriber Churn Ratio -->
+    <div class="chart-box">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">35</div><div><div class="chart-title">Subscriber Churn</div><div class="chart-subtitle">Positive/Negative Stacked Area</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="20" y1="100" x2="380" y2="100" class="axis-line" stroke-width="4"/>
+          <path d="M 20 100 L 100 40 L 200 60 L 300 20 L 380 80 L 380 100 L 20 100 Z" fill="#4FFF5B" opacity="0.8"/>
+          <path d="M 20 100 L 100 120 L 200 180 L 300 140 L 380 190 L 380 100 L 20 100 Z" fill="#FF1744" opacity="0.8"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 36. Gender Demographics Drift -->
+    <div class="chart-box dark">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">36</div><div><div class="chart-title">Demographic Drift</div><div class="chart-subtitle">100% Stacked Area</div></div></div></div>
+      <div class="chart-content" style="padding:0; padding-top:20px;">
+        <svg viewBox="0 0 400 200" preserveAspectRatio="none">
+          <!-- Total block -->
+          <rect x="0" y="0" width="400" height="200" fill="#FF8AAF" />
+          <!-- Drift shape -->
+          <path d="M 0 200 L 0 50 L 100 70 L 200 120 L 300 150 L 400 180 L 400 200 Z" fill="#00D2FF" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- 37. OS Preferences Outer/Inner -->
+    <div class="chart-box">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">37</div><div><div class="chart-title">OS Valuation Gap</div><div class="chart-subtitle">Inner/Outer Donut</div></div></div></div>
+      <div class="chart-content" style="align-items:center;">
+        <svg viewBox="-100 -100 200 200" style="width:200px;">
+          <!-- Outer (Views: Mostly Android/Yellow) -->
+          <circle cx="0" cy="0" r="80" fill="none" stroke="#FFE357" stroke-width="20" stroke-dasharray="350 500" />
+          <circle cx="0" cy="0" r="80" fill="none" stroke="#00D2FF" stroke-width="20" stroke-dasharray="150 500" stroke-dashoffset="-350" />
+          <!-- Inner (Rev: Mostly iOS/Blue) -->
+          <circle cx="0" cy="0" r="40" fill="none" stroke="#FFE357" stroke-width="20" stroke-dasharray="100 500" />
+          <circle cx="0" cy="0" r="40" fill="none" stroke="#00D2FF" stroke-width="20" stroke-dasharray="150 500" stroke-dashoffset="-100" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- 38. Format Overlap (Venn) -->
+    <div class="chart-box dark">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">38</div><div><div class="chart-title">Audience Overlap</div><div class="chart-subtitle">Venn Diagram: Live | VOD | Shorts</div></div></div></div>
+      <div class="chart-content" style="align-items:center;">
+        <svg viewBox="0 0 400 200">
+           <circle cx="160" cy="100" r="60" fill="rgba(255,23,68,0.5)" stroke="#FF1744" stroke-width="4" mix-blend-mode="screen"/>
+           <circle cx="240" cy="100" r="60" fill="rgba(0,210,255,0.5)" stroke="#00D2FF" stroke-width="4" mix-blend-mode="screen"/>
+           <circle cx="200" cy="150" r="60" fill="rgba(201,248,48,0.5)" stroke="#C9F830" stroke-width="4" mix-blend-mode="screen"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 39. Long-Tail Shelf Life -->
+    <div class="chart-box">
+      <div class="chart-header"><div class="header-left"><div class="chart-num">39</div><div><div class="chart-title">Long-Tail Evergreen Index</div><div class="chart-subtitle">Aligned @ Day 0</div></div></div></div>
+      <div class="chart-content">
+        <svg viewBox="0 0 400 200">
+          <line x1="20" y1="190" x2="380" y2="190" class="axis-line" />
+          <line x1="20" y1="10" x2="20" y2="190" class="axis-line" />
+          <!-- Viral burst then flat -->
+          <path d="M 20 190 Q 60 20 380 20" fill="none" stroke="#000" stroke-width="2"/>
+          <!-- Evergreen steady climb -->
+          <path d="M 20 190 L 100 160 L 200 120 L 300 80 L 380 40" fill="none" stroke="#4FFF5B" stroke-width="5"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 40. The Golden Ratio Dashboard (Radar) -->
+    <div class="chart-box dark" style="border-width:6px; border-color:#FF3399; grid-column: span 2;">
+      <div class="chart-header" style="background:#FF3399;">
+        <div class="header-left">
+          <div class="chart-num" style="color:#FF3399; background:#fff;">40</div>
+          <div>
+            <div class="chart-title">The Golden Ratio Profile</div>
+            <div class="chart-subtitle text-white">Radar: Measuring the perfect viral "Shape"</div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-content" style="align-items:center;">
+        <svg viewBox="-100 -100 200 200" style="width:200px; height:200px;">
+          <!-- Pentagon axis grid -->
+          <polygon points="0,-80 76,-25 47,65 -47,65 -76,-25" fill="none" stroke="#333" stroke-width="2"/>
+          <polygon points="0,-40 38,-12 23,32 -23,32 -38,-12" fill="none" stroke="#333" stroke-width="2"/>
+          <line x1="0" y1="0" x2="0" y2="-80" stroke="#333"/>
+          <line x1="0" y1="0" x2="76" y2="-25" stroke="#333"/>
+          <line x1="0" y1="0" x2="47" y2="65" stroke="#333"/>
+          <line x1="0" y1="0" x2="-47" y2="65" stroke="#333"/>
+          <line x1="0" y1="0" x2="-76" y2="-25" stroke="#333"/>
+          
+          <!-- Viral Benchmark Shape -->
+          <polygon points="0,-70 50,-10 30,50 -20,60 -60,-10" fill="rgba(255,255,255,0.1)" stroke="#fff" stroke-width="2" stroke-dasharray="4"/>
+          <!-- Current Video Shape -->
+          <polygon points="0,-40 70,-20 10,40 -40,30 -40,-20" fill="rgba(255,51,153,0.5)" stroke="#FF3399" stroke-width="4"/>
+          
+          <text x="0" y="-85" font-size="8" fill="#fff" text-anchor="middle">CTR</text>
+          <text x="85" y="-25" font-size="8" fill="#fff" text-anchor="start">RETENTION</text>
+          <text x="50" y="75" font-size="8" fill="#fff" text-anchor="middle">SHARES</text>
+          <text x="-50" y="75" font-size="8" fill="#fff" text-anchor="middle">COMMENTS</text>
+          <text x="-85" y="-25" font-size="8" fill="#fff" text-anchor="end">LIKES</text>
+        </svg>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>

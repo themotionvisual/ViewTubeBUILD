@@ -1,0 +1,1106 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica-Bold;\f1\fswiss\fcharset0 Helvetica;\f2\fswiss\fcharset0 Helvetica-Oblique;
+}
+{\colortbl;\red255\green255\blue255;\red24\green24\blue24;\red52\green55\blue54;\red228\green234\blue244;
+\red246\green249\blue252;\red236\green241\blue247;\red109\green109\blue109;}
+{\*\expandedcolortbl;;\cssrgb\c12157\c12157\c12157;\cssrgb\c26667\c27843\c27451;\cssrgb\c91373\c93333\c96471;
+\cssrgb\c97255\c98039\c99216;\cssrgb\c94118\c95686\c97647;\cssrgb\c50196\c50196\c50196;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}
+{\list\listtemplateid2\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid101\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid2}
+{\list\listtemplateid3\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid201\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid3}
+{\list\listtemplateid4\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid301\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid4}
+{\list\listtemplateid5\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid401\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid5}
+{\list\listtemplateid6\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid501\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid6}
+{\list\listtemplateid7\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid601\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid7}
+{\list\listtemplateid8\listhybrid{\listlevel\levelnfc0\levelnfcn0\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{decimal\}}{\leveltext\leveltemplateid701\'01\'00;}{\levelnumbers\'01;}\fi-360\li720\lin720 }{\listname ;}\listid8}
+{\list\listtemplateid9\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid801\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid9}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}{\listoverride\listid2\listoverridecount0\ls2}{\listoverride\listid3\listoverridecount0\ls3}{\listoverride\listid4\listoverridecount0\ls4}{\listoverride\listid5\listoverridecount0\ls5}{\listoverride\listid6\listoverridecount0\ls6}{\listoverride\listid7\listoverridecount0\ls7}{\listoverride\listid8\listoverridecount0\ls8}{\listoverride\listid9\listoverridecount0\ls9}}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs48 \cf2 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Comprehensive Architecture of YouTube API Data Analytics: A Deep Dive into Dimensions, Metrics, and Integration Strategies\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 The YouTube data ecosystem represents one of the most sophisticated and high-volume analytics environments in the digital landscape. Accessing this data programmatically requires a highly nuanced understanding of three distinct interfaces: the YouTube Analytics API, the YouTube Reporting API, and the YouTube Data API v3. Each system is architected for specific data delivery methodologies, and mastering their interplay is essential for comprehensive channel analysis, content network auditing, and financial reconciliation. The platform does not offer a monolithic endpoint for all statistics; rather, it segregates data based on the requested volume, the necessary latency, and the depth of financial granularity required by the requesting entity.\
+This report provides an exhaustive analysis of the statistical data styles, dimensions, metrics, and retrieval mechanisms available through the YouTube API integration suite. It details how data for individual videos and entire networks is received, categorizes the exact nomenclature utilized within the reporting schemas, outlines the methodologies for distinguishing short-form from long-form content, and addresses the critical strategic blind spots inherent in enterprise-level data ingestion.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs36 \cf2 Architectural Overview of Data Retrieval Systems\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 To understand how data of each type is received, one must first delineate the operational paradigms of the three core APIs. The method of data reception fundamentally alters the shape, granularity, and availability of the statistics returned to the client application.\
+The YouTube Analytics API is engineered for synchronous, real-time targeted queries. It operates on a request-response model where a client submits a query parameterized by a specific channel, content owner, or individual video, alongside desired dimensions, metrics, and filters. This API is ideal for generating custom, on-the-fly dashboards and immediate performance checks, as it permits sorting and filtering prior to data retrieval. When querying data for an individual video, the API requires a filter parameter (e.g., \cf3 \cb4 \strokec3 filters=video==\cf2 \cb1 \strokec2 ), which instructs the server to isolate the activity metrics solely for that requested entity.\
+Conversely, the YouTube Reporting API is an asynchronous data warehousing system designed to deliver bulk datasets without the restrictions of query timeouts or row-limit truncations. Instead of executing targeted queries, a client schedules a reporting job. YouTube's internal servers subsequently generate massive, versioned \cf3 \cb4 \strokec3 .csv\cf2 \cb1 \strokec2  datasets on a daily basis, encapsulating complete data sets for all videos associated with a channel or content owner. Data is not pre-filtered; the client downloads the exhaustive list and must perform subsequent filtering, sorting, and aggregation within their own local data warehouse, utilizing the provided dimensions as relational primary keys.\
+The YouTube Data API v3 functions as the contextual backbone for the aforementioned analytics systems. While it does not provide deep engagement or monetary metrics, it governs the retrieval of core entity metadata\'97such as video tags, category IDs, localized descriptions, and absolute view counts. A robust data pipeline invariably fuses the temporal engagement data from the Analytics or Reporting APIs with the static metadata retrieved via the Data API v3 to form a complete analytical picture.\
+Data access across all three APIs is governed by OAuth 2.0 authorization, utilizing specific scopes to enforce security and privacy. Basic channel management utilizes the \cf3 \cb4 \strokec3 youtube\cf2 \cb1 \strokec2  or \cf3 \cb4 \strokec3 youtube.readonly\cf2 \cb1 \strokec2  scopes. Accessing standard user activity and engagement reports requires the \cf3 \cb4 \strokec3 yt-analytics.readonly\cf2 \cb1 \strokec2  scope. However, retrieving any data related to estimated revenue, ad performance, or system-managed financial reporting mandates the highly restricted \cf3 \cb4 \strokec3 yt-analytics-monetary.readonly\cf2 \cb1 \strokec2  scope.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs36 \cf2 Structural Taxonomy and Harmonization of Dimensions\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 Within the YouTube data architecture, dimensions serve as the fundamental criteria used to aggregate, segment, and group data. In the context of bulk reporting, every row of data possesses a unique combination of dimension values, which collectively act as the primary key for that specific row. Understanding dimensions is critical to understanding how data is categorized and to what it applies.\
+A critical friction point in enterprise data ingestion is the strict variance in nomenclature between the two primary analytics interfaces. The YouTube Analytics API universally employs \cf3 \cb4 \strokec3 camelCase\cf2 \cb1 \strokec2  for dimension and metric names, whereas the YouTube Reporting API universally outputs \cf3 \cb4 \strokec3 snake_case\cf2 \cb1 \strokec2  in its \cf3 \cb4 \strokec3 .csv\cf2 \cb1 \strokec2  headers. Systems engineers must maintain dynamic mapping dictionaries in their Extract, Transform, Load (ETL) pipelines to harmonize targeted queries with bulk warehouse data.\
+Furthermore, YouTube categorizes dimensions into core and non-core classifications. Core dimensions are subject to the YouTube API Deprecation Policy, guaranteeing stability and advance notice of structural changes, while non-core dimensions may be altered or deprecated without extended warning periods.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs28 \cf2 Core Dimensions\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 The foundational axes upon which YouTube analytics are built include the following core dimensions, which are essential for grouping viewer demographics and tracking temporal trends.\
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrt\brdrnil \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth1827\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth1920\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth9911\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Analytics API (camelCase)
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Reporting API (snake_case)
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Definition and Application Context
+\f1\b0 \cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth1827\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth1920\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth9911\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 ageGroup\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 age_group\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Categorizes viewers into specific age brackets (e.g., 13-17, 18-24, 25-34). As of a March 2026 update, this dimension formally includes users algorithmically estimated to be under 18 years old.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth1827\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth1920\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth9911\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 channel\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 channel_id\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The unique alphanumeric identifier of the YouTube channel associated with the activity. This allows MCNs to aggregate data across multiple distinct channels.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth1827\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth1920\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth9911\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 country\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 country_code\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Identifies the geographic location of the viewer, represented uniformly by ISO 3166-1 alpha-2 or alpha-3 geographic codes.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth1827\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth1920\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth9911\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 day\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 date\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The specific 24-hour period during which the activity occurred, aligned strictly to Pacific Standard Time (UTC-8).\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth1827\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth1920\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth9911\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 gender\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 gender\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Groups viewership by demographic gender classification (e.g., male, female).\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth1827\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth1920\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth9911\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 month\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 month\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Aggregates user activity temporally by calendar month.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth1827\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth1920\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth9911\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 sharingService\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 sharing_service\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Specifies the exact third-party platform used to share the video externally (e.g., Twitter, Facebook, WhatsApp).\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth1827\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth1920\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth9911\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 uploaderType\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 uploader_type\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Indicates whether the content was uploaded directly by the content owner or claimed from a third party. This is heavily utilized in Content Owner asset reports.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrt\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth1827\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth1920\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth9911\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 video\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 video_id\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The unique 11-character identifier of the individual YouTube video.\cell \lastrow\row
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs28 \cf2 Geographic and Temporal Dimensions\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 Beyond the core country and day dimensions, the APIs support a broader hierarchy of geographic and temporal segmentation. This allows analysts to drill down from global macro-trends to highly localized micro-trends.\
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrt\brdrnil \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2388\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth1240\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth10030\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Dimension Name
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Scope
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Definition and Application Context
+\f1\b0 \cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2388\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth1240\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth10030\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 continent\cf2 \cb1 \strokec2  / \cf3 \cb4 \strokec3 continent_code\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Geographic\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Filters or groups data by broad continental regions.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2388\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth1240\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth10030\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 subContinent\cf2 \cb1 \strokec2  / \cf3 \cb4 \strokec3 sub_continent_code\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Geographic\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Identifies sub-continental regions for more precise global tracking.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2388\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth1240\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth10030\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 region\cf2 \cb1 \strokec2  / \cf3 \cb4 \strokec3 region_iso_code\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Geographic\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Typically maps to national regions or territories.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2388\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth1240\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth10030\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 province\cf2 \cb1 \strokec2  / \cf3 \cb4 \strokec3 province_code\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Geographic\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Specifies state-level or province-level activity, crucial for localized ad targeting and compliance reporting.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrt\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2388\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth1240\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth10030\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 city\cf2 \cb1 \strokec2  / \cf3 \cb4 \strokec3 city_id\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Geographic\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The most granular geographic dimension, providing specific city-level engagement metrics (often requiring a secondary lookup table to map IDs to localized string names).\cell \lastrow\row
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs28 \cf2 Playback Context and Audience Dimensions\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 Understanding exactly how, where, and why a user clicked on a video requires deeply granular contextual dimensions. These parameters define the environment of the view and the referrer that initiated the session.\
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrt\brdrnil \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2708\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth2855\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth8096\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Analytics API (camelCase)
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Reporting API (snake_case)
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Definition and Application Context
+\f1\b0 \cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2708\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth2855\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth8096\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 deviceType\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 device_type\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Partitions the audience by hardware platforms (e.g., DESKTOP, MOBILE, GAME_CONSOLE, TABLET, TV).\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2708\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth2855\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth8096\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 operatingSystem\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 operating_system\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Fragments device data further by software environment (e.g., ANDROID, IOS, WINDOWS).\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2708\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth2855\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth8096\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 trafficSourceType\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 traffic_source_type\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Categorizes the high-level referrer that initiated playback.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2708\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth2855\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth8096\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 trafficSourceDetail\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 traffic_source_detail\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Provides highly specific context for the traffic source, such as the exact external URL or the specific YouTube search term utilized by the viewer.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2708\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth2855\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth8096\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 playbackLocationType\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 playback_location_type\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Classifies the environment of the view, distinguishing between a native YouTube watch page, a channel page, or an external embedded player.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2708\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth2855\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth8096\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 playbackLocationDetail\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 playback_location_detail\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 When a video is embedded externally, this dimension provides the specific domain where the embed occurred.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2708\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth2855\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth8096\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 liveOrOnDemand\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 live_or_on_demand\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Differentiates metrics generated during a live broadcast from those generated by archived, on-demand video playbacks.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2708\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth2855\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth8096\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 subscribedStatus\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 subscribed_status\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Determines whether the viewer was an active subscriber to the channel at the exact moment of the interaction.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrt\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2708\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth2855\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth8096\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 claimedStatus\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 claimed_status\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Identifies whether a video is actively claimed via the Content ID system (crucial for network revenue aggregation).\cell \lastrow\row
+\pard\pardeftab720\sa200\partightenfactor0
+\cf2 The \cf3 \cb4 \strokec3 trafficSourceType\cf2 \cb1 \strokec2  dimension represents a prime example of structural divergence between the APIs. In targeted Analytics API queries, these sources are returned as string identifiers, whereas in bulk Reporting API CSVs, they are returned as integers. For instance, the integer \cf3 \cb4 \strokec3 1\cf2 \cb1 \strokec2  maps to \cf3 \cb4 \strokec3 ADVERTISING\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 3\cf2 \cb1 \strokec2  to \cf3 \cb4 \strokec3 SUBSCRIBER\cf2 \cb1 \strokec2  (Browse features), \cf3 \cb4 \strokec3 4\cf2 \cb1 \strokec2  to \cf3 \cb4 \strokec3 YT_CHANNEL\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 5\cf2 \cb1 \strokec2  to \cf3 \cb4 \strokec3 YT_SEARCH\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 7\cf2 \cb1 \strokec2  to \cf3 \cb4 \strokec3 RELATED_VIDEO\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 9\cf2 \cb1 \strokec2  to \cf3 \cb4 \strokec3 EXT_URL\cf2 \cb1 \strokec2 , and \cf3 \cb4 \strokec3 20\cf2 \cb1 \strokec2  to \cf3 \cb4 \strokec3 END_SCREEN\cf2 \cb1 \strokec2 . Analysts must build internal mapping tables to translate these bulk integers into human-readable dashboard formats.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs28 \cf2 The Content Format Dimension: creatorContentType\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 A critical non-core dimension for modern YouTube analysis is the \cf3 \cb4 \strokec3 creatorContentType\cf2 \cb1 \strokec2 . As the platform has expanded beyond traditional video hosting to embrace short-form algorithms and ephemeral content, analyzing aggregate data without filtering by format yields distorted insights. This dimension addresses the fragmentation of video formats on the platform, allowing data to be explicitly filtered or grouped based on the type of media consumed. The possible enumerations for this dimension are:\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa200\partightenfactor0
+\ls1\ilvl0
+\f0\b \cf3 \cb4 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec3 VIDEO_ON_DEMAND
+\f1\b0 \cf2 \cb1 \strokec2 : Standard, long-form recorded videos, which form the historical baseline of YouTube content.\
+\ls1\ilvl0
+\f0\b \cf3 \cb4 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec3 SHORTS
+\f1\b0 \cf2 \cb1 \strokec2 : Vertical, short-form content typically under 60 seconds, which operates on an entirely distinct algorithmic discovery feed and monetization structure.\
+\ls1\ilvl0
+\f0\b \cf3 \cb4 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec3 LIVE_STREAM
+\f1\b0 \cf2 \cb1 \strokec2 : Real-time broadcast events.\
+\ls1\ilvl0
+\f0\b \cf3 \cb4 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec3 STORY
+\f1\b0 \cf2 \cb1 \strokec2 : Ephemeral content designed for mobile engagement.\
+\ls1\ilvl0
+\f0\b \cf3 \cb4 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec3 UNSPECIFIED
+\f1\b0 \cf2 \cb1 \strokec2 : Unknown media types where the platform cannot conclusively categorize the format.\
+\pard\pardeftab720\sa200\partightenfactor0
+\cf2 Using this dimension is paramount for content strategists. For example, a channel owner can execute a query passing \cf3 \cb4 \strokec3 dimensions=creatorContentType\cf2 \cb1 \strokec2  and \cf3 \cb4 \strokec3 metrics=estimatedRevenue\cf2 \cb1 \strokec2  to isolate the exact financial performance of their Shorts feed distinct from traditional AdSense revenue generated by long-form VODs.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs36 \cf2 The Ecosystem of Metrics: Quantitative Measurement\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 Metrics represent the quantitative measurements of user activity, engagement, retention, and financial performance. Like dimensions, metrics are divided between core classifications (which are protected by deprecation policies to prevent sudden breaking changes) and non-core classifications. The nomenclature divide between \cf3 \cb4 \strokec3 camelCase\cf2 \cb1 \strokec2  and \cf3 \cb4 \strokec3 snake_case\cf2 \cb1 \strokec2  remains consistent here.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs28 \cf2 View and Reach Metrics\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 The concept of a "view" on YouTube is not a static definition; it represents a dynamically evaluated metric subject to rigorous algorithmic validation to strip out bot traffic and inorganic inflation.\
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrt\brdrnil \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth4255\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth3801\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth4309\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Analytics API (camelCase)
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Reporting API (snake_case)
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Core Status
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Definition and Application Context
+\f1\b0 \cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth4255\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth3801\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth4309\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 views\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 views\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Yes\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The total absolute number of times a video was viewed. In the context of a playlist report, it specifically quantifies views that occurred within the playlist session.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth4255\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth3801\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth4309\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 engagedViews\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 engaged_views\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Yes\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Quantifies the number of times a channel's videos have been viewed past the initial few seconds. This metric became vital during the 2025/2026 Shorts algorithm update to separate intentional viewership from accidental feed scrolls.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth4255\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth3801\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth4309\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 redViews\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 red_views\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 No\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Playbacks initiated by users holding an active YouTube Premium (formerly YouTube Red) subscription.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth4255\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth3801\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth4309\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 viewerPercentage\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 views_percentage\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Yes\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The percentage of the audience logged into an authenticated Google account during playback, serving as a proxy for audience trackability.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth4255\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth3801\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth4309\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 videoThumbnailImpressions\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 video_thumbnail_impressions\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 No\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Logged when a video thumbnail is visible for more than one second with at least 50% of its pixels rendered on screen.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrt\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth4255\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth3801\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth4309\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 videoThumbnailImpressionsClickRate\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 video_thumbnail_impressions_ctr\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 No\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The ratio of clicks to watch a video divided by the total number of valid thumbnail impressions.\cell \lastrow\row
+\pard\pardeftab720\sa200\partightenfactor0
+\cf2 The introduction of reach metrics (\cf3 \cb4 \strokec3 video_thumbnail_impressions\cf2 \cb1 \strokec2 ) in January 2026 bulk reports marked a massive shift for bulk data consumers. Previously, top-of-funnel visibility and the effectiveness of video packaging (thumbnails and titles) could only be evaluated via the Analytics API or Creator Studio. By integrating these metrics into bulk datasets, network owners can now systematically identify underperforming thumbnails across tens of thousands of catalog items programmatically. Furthermore, the \cf3 \cb4 \strokec3 engaged_views\cf2 \cb1 \strokec2  metric was introduced to bulk reports as part of a June 2025 structural change. As Shorts playbacks evolved, YouTube changed the definition of a "view" for Shorts to count whenever a Short starts to play or loop. The \cf3 \cb4 \strokec3 engaged_views\cf2 \cb1 \strokec2  metric was added to preserve historical data continuity and reflect the older, stricter watch-time-based methodology.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs28 \cf2 Watch Time and Audience Retention Metrics\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 Watch time dictates algorithmic discovery on YouTube. The recommendation engine heavily favors content that extends session duration, making these metrics paramount for audience development.\
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrt\brdrnil \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3499\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth4056\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth4810\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Analytics API (camelCase)
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Reporting API (snake_case)
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Core Status
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Definition and Application Context
+\f1\b0 \cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3499\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth4056\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth4810\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 estimatedMinutesWatched\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 watch_time_minutes\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Yes\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The total aggregate watch time, in minutes, for a specified dimension grouping.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3499\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth4056\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth4810\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 estimatedRedMinutesWatched\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 red_watch_time_minutes\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 No\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Total minutes watched specifically by YouTube Premium members.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3499\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth4056\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth4810\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 averageViewDuration\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 average_view_duration_seconds\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Yes\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The mean length, in seconds, of playbacks. Notably, this metric algorithmically excludes traffic originating from looping clips to prevent distortion.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3499\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth4056\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth4810\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 averageViewPercentage\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 average_view_duration_percentage\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 No\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The average percentage of a video's total length watched during a playback.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3499\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth4056\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth4810\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 audienceWatchRatio\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 audience_watch_ratio\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 No\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The absolute ratio of viewers at specific time points. Values can uniquely exceed 1.0 if users rewind and re-watch specific segments of the media.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrt\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3499\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth4056\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth4810\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 relativeRetentionPerformance\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 relative_retention_performance\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 No\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 A comparative 0 to 1 scale evaluating a video's retention curve against all YouTube videos of similar length across the entire platform, where 0.5 represents the median.\cell \lastrow\row
+\pard\pardeftab720\sa200\partightenfactor0
+\cf2 Audience retention metrics require a unique querying approach. They are generally accessible via targeted queries utilizing the \cf3 \cb4 \strokec3 elapsedVideoTimeRatio\cf2 \cb1 \strokec2  dimension. A developer sets this dimension (which accepts float values ranging from 0.01 to 1.0, representing 1% to 100% of the video's runtime) alongside \cf3 \cb4 \strokec3 audienceWatchRatio\cf2 \cb1 \strokec2  or \cf3 \cb4 \strokec3 relativeRetentionPerformance\cf2 \cb1 \strokec2 . The API responds with an array plotting the exact retention curve of the video, allowing analysts to programmatically detect precisely where viewers lose interest or which segments are highly re-watched.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs28 \cf2 Engagement, Interaction, and Playlist Metrics\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 Interactions are captured via straightforward core metrics that signal content resonance. These are crucial for understanding community building and organic virality.\
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrt\brdrnil \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2241\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth2321\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth7803\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Analytics API (camelCase)
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Reporting API (snake_case)
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Core Status
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Definition and Application Context
+\f1\b0 \cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2241\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth2321\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth7803\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 likes\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 likes\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Yes\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The absolute number of positive ratings issued by authenticated users.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2241\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth2321\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth7803\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 dislikes\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 dislikes\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Yes\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The absolute number of negative ratings. Despite UI deprecations, this remains accessible via APIs for the content owner.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2241\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth2321\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth7803\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 comments\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 comments\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Yes\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The total count of user comments generated on a video.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2241\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth2321\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth7803\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 shares\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 shares\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Yes\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The number of times the native "Share" button was utilized to export the video URL.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2241\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth2321\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth7803\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 subscribersGained\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 subscribers_gained\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Yes\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The gross number of new subscribers acquired. When queried at the channel level, it includes all sources (homepage, search). When filtered by \cf3 \cb4 \strokec3 video_id\cf2 \cb1 \strokec2 , it explicitly isolates subscriptions triggered directly from that video's watch page.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrt\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth2241\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2160
+\clvertalc \clcbpat5 \clwWidth2321\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx4320
+\clvertalc \clcbpat5 \clwWidth733\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx6480
+\clvertalc \clcbpat5 \clwWidth7803\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 subscribersLost\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 subscribers_lost\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Yes\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The gross number of subscription cancellations.\cell \lastrow\row
+\pard\pardeftab720\sa200\partightenfactor0
+\cf2 To evaluate how users interact with curated video groups, playlist metrics distinguish between aggregated video metrics (activity for all videos within the playlist) and in-playlist metrics (activity occurring specifically within the context of the playlist user interface).\
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrt\brdrnil \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3925\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth2801\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth6933\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Analytics API (camelCase)
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Reporting API (snake_case)
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Definition and Application Context
+\f1\b0 \cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3925\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth2801\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth6933\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 playlistViews\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 playlist_views\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Total views of videos occurring specifically within the playlist context.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3925\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth2801\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth6933\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 playlistStarts\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 playlist_starts\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Number of times a playback session was initiated for the playlist (Web only).\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3925\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth2801\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth6933\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 playlistSaves\cf2 \cb1 \strokec2  / \cf3 \cb4 \strokec3 videosAddedToPlaylists\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 playlist_saves_added\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Net number of times users saved the playlist or video to their personal library.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrt\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3925\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth2801\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth6933\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 videosRemovedFromPlaylists\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 playlist_saves_removed\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Net number of times videos were removed from user playlists.\cell \lastrow\row
+\pard\pardeftab720\sa200\partightenfactor0
+\cf2 Finally, legacy interaction features are tracked via \cf3 \cb4 \strokec3 annotationClickThroughRate\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 annotationCloseRate\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 cardImpressions\cf2 \cb1 \strokec2 , and \cf3 \cb4 \strokec3 cardClicks\cf2 \cb1 \strokec2 . Card impressions are explicitly logged every time the interactive card panel is opened by the user, providing a measure of proactive viewer engagement with supplementary content.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs28 \cf2 Financial, Monetization, and Ad Performance Metrics\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 Monetization tracking yields the most highly guarded data on the platform. The Analytics API generally provides "estimated" metrics, while the Reporting API delivers finalized, system-managed revenue data capable of being used for accounting and payout distribution.\
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrt\brdrnil \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3468\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth3655\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth6535\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Analytics API (camelCase)
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Reporting API (snake_case)
+\f1\b0 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b \cf2 Definition and Application Context
+\f1\b0 \cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3468\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth3655\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth6535\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 estimatedRevenue\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 estimated_partner_revenue\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 (Core) Total net revenue earned from both Google-sold advertisements and non-ad sources (such as YouTube Premium payouts).\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3468\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth3655\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth6535\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 estimatedAdRevenue\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 estimated_partner_ad_revenue\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Net revenue earned strictly from Google-sold advertising.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3468\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth3655\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth6535\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 estimatedRedPartnerRevenue\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 estimated_partner_red_revenue\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Revenue earned exclusively from the allocation of YouTube Premium subscription pools.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3468\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth3655\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth6535\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 grossRevenue\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 gross_revenue\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Estimated gross revenue from ads before the creator/platform revenue split is applied.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3468\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth3655\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth6535\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 cpm\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 cpm\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Gross revenue calculated per 1,000 ad impressions.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3468\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth3655\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth6535\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 adImpressions\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 ad_impressions\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The absolute number of verified advertisements served to viewers.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3468\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth3655\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth6535\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 monetizedPlaybacks\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 monetized_playbacks\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 The total number of unique video views where at least one ad impression was successfully displayed.\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat6 \tamarb640 \trbrdrl\brdrnil \trbrdrt\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clcbpat5 \clwWidth3468\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx2880
+\clvertalc \clcbpat5 \clwWidth3655\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx5760
+\clvertalc \clcbpat5 \clwWidth6535\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf2 \clbrdrl\brdrs\brdrw20\brdrcf2 \clbrdrb\brdrs\brdrw20\brdrcf2 \clbrdrr\brdrs\brdrw20\brdrcf2 \clpadt160 \clpadl240 \clpadb160 \clpadr240 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 playbackBasedCpm\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf3 \cb4 \strokec3 playback_based_cpm\cf2 \cb1 \strokec2 \cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 Gross revenue calculated per 1,000 monetized playbacks.\cell \lastrow\row
+\pard\pardeftab720\sa200\partightenfactor0
+\cf2 The Reporting API exposes highly granular programmatic revenue metrics not found in standard Analytics queries. For instance, it separates ad revenue by auction type, utilizing metrics like \cf3 \cb4 \strokec3 estimated_partner_ad_auction_revenue\cf2 \cb1 \strokec2  (formerly \cf3 \cb4 \strokec3 estimated_partner_ad_sense_revenue\cf2 \cb1 \strokec2 ) and \cf3 \cb4 \strokec3 estimated_partner_ad_reserved_revenue\cf2 \cb1 \strokec2  (formerly \cf3 \cb4 \strokec3 estimated_partner_double_click_revenue\cf2 \cb1 \strokec2 ). This allows enterprise accounting teams to verify the performance of guaranteed ad buys versus open programmatic auctions.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs36 \cf2 Report Typologies and Schemas\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 The breadth of reports available via the Reporting API dictates exactly what data points can be correlated within a data warehouse. The system categorizes reports into standard Bulk Reports (created manually via the \cf3 \cb4 \strokec3 jobs.create\cf2 \cb1 \strokec2  endpoint) and System-Managed Reports (automatically generated by YouTube for financial auditing).\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs28 \cf2 Standard Channel and Content Owner Reports\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 Due to the June 2025 structural change in how YouTube Shorts views are calculated, the vast majority of standard bulk reports underwent a version increment (e.g., from \cf3 \cb4 \strokec3 _a2\cf2 \cb1 \strokec2  to \cf3 \cb4 \strokec3 _a3\cf2 \cb1 \strokec2 ) to formally accommodate the new \cf3 \cb4 \strokec3 engaged_views\cf2 \cb1 \strokec2  column.\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f0\b \cf2 1. Basic User Activity (\cf3 \cb4 \strokec3 channel_basic_a3\cf2 \cb1 \strokec2  / \cf3 \cb4 \strokec3 content_owner_basic_a3\cf2 \cb1 \strokec2 )
+\f1\b0  This is the foundational, high-density report for daily channel performance analysis.\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa200\partightenfactor0
+\ls2\ilvl0
+\f2\i \cf2 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Dimensions
+\f1\i0 : \cf3 \cb4 \strokec3 date\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 channel_id\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 video_id\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 live_or_on_demand\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 subscribed_status\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 country_code\cf2 \cb1 \strokec2  (with \cf3 \cb4 \strokec3 claimed_status\cf2 \cb1 \strokec2  and \cf3 \cb4 \strokec3 uploader_type\cf2 \cb1 \strokec2  added for content owners).\
+\ls2\ilvl0
+\f2\i \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Metrics
+\f1\i0 : \cf3 \cb4 \strokec3 engaged_views\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 views\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 watch_time_minutes\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 average_view_duration_seconds\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 average_view_duration_percentage\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 red_views\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 red_watch_time_minutes\cf2 \cb1 \strokec2 .\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f0\b \cf2 2. Traffic Sources (\cf3 \cb4 \strokec3 channel_traffic_source_a3\cf2 \cb1 \strokec2  / \cf3 \cb4 \strokec3 content_owner_traffic_source_a3\cf2 \cb1 \strokec2 )
+\f1\b0  This schema isolates the origin of video playbacks, allowing marketers to calculate the ROI of external links or the strength of YouTube's internal recommendation engine.\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa200\partightenfactor0
+\ls3\ilvl0
+\f2\i \cf2 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Dimensions
+\f1\i0 : \cf3 \cb4 \strokec3 date\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 video_id\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 traffic_source_type\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 traffic_source_detail\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 country_code\cf2 \cb1 \strokec2 .\
+\ls3\ilvl0
+\f2\i \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Metrics
+\f1\i0 : \cf3 \cb4 \strokec3 views\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 watch_time_minutes\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 average_view_duration_seconds\cf2 \cb1 \strokec2 .\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f0\b \cf2 3. Demographics (\cf3 \cb4 \strokec3 channel_demographics_a1\cf2 \cb1 \strokec2 )
+\f1\b0  Provides audience age and gender breakdowns. This report is highly susceptible to data anonymization thresholds.\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa200\partightenfactor0
+\ls4\ilvl0
+\f2\i \cf2 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Dimensions
+\f1\i0 : \cf3 \cb4 \strokec3 date\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 video_id\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 country_code\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 age_group\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 gender\cf2 \cb1 \strokec2 .\
+\ls4\ilvl0
+\f2\i \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Metrics
+\f1\i0 : \cf3 \cb4 \strokec3 views\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 viewer_percentage\cf2 \cb1 \strokec2 .\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f0\b \cf2 4. Playlist User Activity (\cf3 \cb4 \strokec3 content_owner_playlist_basic_a1\cf2 \cb1 \strokec2 )
+\f1\b0  Tracks activity occurring inside curated playlists.\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa200\partightenfactor0
+\ls5\ilvl0
+\f2\i \cf2 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Dimensions
+\f1\i0 : \cf3 \cb4 \strokec3 date\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 playlist_id\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 video_id\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 country_code\cf2 \cb1 \strokec2 .\
+\ls5\ilvl0
+\f2\i \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Metrics
+\f1\i0 : \cf3 \cb4 \strokec3 playlist_starts\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 views\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 playlist_saves_added\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 playlist_saves_removed\cf2 \cb1 \strokec2 .\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs28 \cf2 System-Managed Financial Reports\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 System-managed reports cannot be triggered manually via a scheduled job; they are populated automatically for monetized partners and can only be accessed by passing the \cf3 \cb4 \strokec3 includeSystemManaged=True\cf2 \cb1 \strokec2  flag to the \cf3 \cb4 \strokec3 reportTypes.list\cf2 \cb1 \strokec2  API endpoint. These reports are engineered for financial reconciliation and provide actual revenue auditing, distinct from the algorithmic "estimated" revenue provided in standard Analytics queries.\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f0\b \cf2 1. Ads and Revenue Adjustments
+\f1\b0  The ad revenue reports (e.g., \cf3 \cb4 \strokec3 content_owner_ad_revenue_raw_a1\cf2 \cb1 \strokec2 ) provide highly granular data. The fields mapping in these reports goes far beyond standard analytics, incorporating deep copyright and policy evaluation.\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa200\partightenfactor0
+\ls6\ilvl0
+\f2\i \cf2 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Identifiers
+\f1\i0 : \cf3 \cb4 \strokec3 asset_id\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 claim_id\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 asset_custom_id\cf2 \cb1 \strokec2 .\
+\ls6\ilvl0
+\f2\i \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Adjustment Types
+\f1\i0 : The \cf3 \cb4 \strokec3 adjustment_type\cf2 \cb1 \strokec2  dimension indicates if the revenue row represents normal daily revenue or a retroactive accounting adjustment. Values include \cf3 \cb4 \strokec3 Backpay\cf2 \cb1 \strokec2  (withheld funds released after ownership validation), \cf3 \cb4 \strokec3 Conflict Resolution\cf2 \cb1 \strokec2  (funds released after an ownership dispute is settled), \cf3 \cb4 \strokec3 Spam Adjustment\cf2 \cb1 \strokec2  (deductions executed for invalid bot views, reported to AdSense as 'Invalid Activity'), and \cf3 \cb4 \strokec3 Revenue Correction\cf2 \cb1 \strokec2  (credits/deductions related to technical bugs).\
+\ls6\ilvl0
+\f2\i \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Revenue Metrics
+\f1\i0 : \cf3 \cb4 \strokec3 youtube_revenue_split\cf2 \cb1 \strokec2  (total revenue generated before platform share splits), and \cf3 \cb4 \strokec3 partner_revenue\cf2 \cb1 \strokec2  (the final revenue paid to the partner in USD).\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f0\b \cf2 2. Asset, Conflict, and Claim Reports
+\f1\b0  Crucial for music labels, movie studios, and MCNs managing the Content ID system.\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa200\partightenfactor0
+\ls7\ilvl0
+\f2\i \cf2 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Dimensions/Fields
+\f1\i0 : \cf3 \cb4 \strokec3 asset_type\cf2 \cb1 \strokec2  (Art Track, Sound Recording, Web), \cf3 \cb4 \strokec3 claim_type\cf2 \cb1 \strokec2  (Audio, Visual), \cf3 \cb4 \strokec3 claim_origin\cf2 \cb1 \strokec2  (Audio Match, Video Match, Web Search), \cf3 \cb4 \strokec3 claim_status\cf2 \cb1 \strokec2  (ACTIVE, INACTIVE).\
+\ls7\ilvl0
+\f2\i \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Policy Mapping
+\f1\i0 : \cf3 \cb4 \strokec3 asset_policy_block\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 asset_policy_monetize\cf2 \cb1 \strokec2 , and \cf3 \cb4 \strokec3 asset_policy_track\cf2 \cb1 \strokec2  define exactly which ISO 3166-1 alpha-2 territories are monetized versus geo-blocked by the content owner.\
+\ls7\ilvl0
+\f2\i \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Conflict Fields
+\f1\i0 : \cf3 \cb4 \strokec3 conflicting_owner\cf2 \cb1 \strokec2  and \cf3 \cb4 \strokec3 conflicting_country_code\cf2 \cb1 \strokec2  isolate territories experiencing active ownership disputes.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs36 \cf2 Algorithmic Differentiation of Short-Form and Long-Form Content\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 A frequent, highly complex technical challenge for data engineers is differentiating between YouTube Shorts and traditional long-form videos within datasets. Because the platforms share the same overarching infrastructure, the standard YouTube Data API v3 does not natively export a simple boolean flag (e.g., \cf3 \cb4 \strokec3 isShort = true\cf2 \cb1 \strokec2 ). Consequently, developers must employ distinct methodologies depending on the specific API endpoint being utilized and the metadata available.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs28 \cf2 Method 1: The Analytics API \cf3 \cb4 \strokec3 creatorContentType\cf2 \cb1 \strokec2  Dimension\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 The most robust, forward-compatible, and officially supported method to segment data by video format is strictly analytical. By calling the \cf3 \cb4 \strokec3 reports.query\cf2 \cb1 \strokec2  endpoint of the YouTube Analytics API, a developer can pass \cf3 \cb4 \strokec3 creatorContentType\cf2 \cb1 \strokec2  in the dimensions parameter. This explicitly aggregates and filters rows into \cf3 \cb4 \strokec3 SHORTS\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 VIDEO_ON_DEMAND\cf2 \cb1 \strokec2 , \cf3 \cb4 \strokec3 LIVE_STREAM\cf2 \cb1 \strokec2 , and \cf3 \cb4 \strokec3 STORY\cf2 \cb1 \strokec2  classifications. This is the only method that flawlessly analyzes historical performance data based on format without requiring external script execution or metadata inference.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs28 \cf2 Method 2: Data API Heuristics (Duration and Aspect Ratio Analysis)\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 If analytical dimension data is unavailable, format must be inferred through a multi-factor heuristic approach utilizing the Data API v3 (\cf3 \cb4 \strokec3 videos.list\cf2 \cb1 \strokec2 ) :\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa200\partightenfactor0
+\ls8\ilvl0
+\f0\b \cf2 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	1	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Duration Parsing
+\f1\b0 : Retrieve the \cf3 \cb4 \strokec3 contentDetails.duration\cf2 \cb1 \strokec2  property, which outputs the video length in strict ISO 8601 format (e.g., \cf3 \cb4 \strokec3 PT59S\cf2 \cb1 \strokec2 ). A local script must parse this string and evaluate if the duration is 60 seconds or less, which is the hard duration limit for a video to be eligible as a Short.\
+\ls8\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	2	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Aspect Ratio Validation
+\f1\b0 : Duration alone is insufficient, as a 59-second horizontal video is classified as standard VOD, not a Short. To verify verticality, authenticated video owners can request the \cf3 \cb4 \strokec3 fileDetails.videoStreams\cf2 \cb1 \strokec2  part of the API response. If the \cf3 \cb4 \strokec3 heightPixels\cf2 \cb1 \strokec2  value is greater than the \cf3 \cb4 \strokec3 widthPixels\cf2 \cb1 \strokec2  value, or the \cf3 \cb4 \strokec3 aspectRatio\cf2 \cb1 \strokec2  resolves exactly to 9:16, the video is definitively a Short.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs28 \cf2 Method 3: The Unofficial Playlist Prefix Extraction (\cf3 \cb4 \strokec3 UUSH\cf2 \cb1 \strokec2 )\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 Every YouTube channel features auto-generated, hidden playlists grouping specific content types. A developer can request the channel's \cf3 \cb4 \strokec3 contentDetails.relatedPlaylists.uploads\cf2 \cb1 \strokec2  ID (which typically starts with \cf3 \cb4 \strokec3 UU\cf2 \cb1 \strokec2 , e.g., \cf3 \cb4 \strokec3 UUutJqz566...\cf2 \cb1 \strokec2 ). By algorithmically replacing the \cf3 \cb4 \strokec3 UU\cf2 \cb1 \strokec2  prefix with \cf3 \cb4 \strokec3 UUSH\cf2 \cb1 \strokec2  (e.g., \cf3 \cb4 \strokec3 UUSHutJqz566...\cf2 \cb1 \strokec2 ) and querying the \cf3 \cb4 \strokec3 playlistItems.list\cf2 \cb1 \strokec2  endpoint, the API will return a definitive, pre-filtered list consisting 
+\f2\i only
+\f1\i0  of the channel's Shorts. While highly reliable and computationally inexpensive, this is a reverse-engineered pattern undocumented officially by Google and is subject to unannounced changes.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs28 \cf2 Method 4: The Network Routing Verification (HTTP 303 Redirects)\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 If processing massive external datasets where only the Video ID is known and API quota is limited, an application can execute a lightweight HTTP HEAD request to the public routing URL: \cf3 \cb4 \strokec3 https://www.youtube.com/shorts/\{VIDEO_ID\}\cf2 \cb1 \strokec2 . YouTube's server architecture natively recognizes format at the routing level. It will return an HTTP 200 (OK) status code if the video is a Short. If the video is long-form, the server instantly issues an HTTP 303 (See Other) redirect, pushing the user to the standard \cf3 \cb4 \strokec3 /watch?v=\cf2 \cb1 \strokec2  URL format. While highly effective for one-off checks, this method is severely susceptible to IP rate-limiting and Cloudflare flagging if executed across millions of rows simultaneously in a production environment.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs36 \cf2 Strategic Blind Spots: The Unasked Questions\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 When architecting a data integration with YouTube, several critical dimensions of the system remain obscure to novice integrators. Building a resilient data pipeline requires a deep understanding of data latency, privacy thresholds, API quota mechanics, and the forward-looking retention roadmap of the platform.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs28 \cf2 Data Latency and Retention Lifecycles\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 A common architectural failure arises from the assumption that all YouTube API data is strictly real-time. In reality, the analytics systems operate on delayed batch-processing pipelines designed to validate views and strip out bot traffic.\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa200\partightenfactor0
+\ls9\ilvl0
+\f0\b \cf2 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Processing Freshness
+\f1\b0 : Analytics API queries and Bulk Reports experience a standard processing latency of approximately 48 to 72 hours. Data for a given day is typically consolidated, validated, and finalized shortly after midnight Pacific Time (PT). Applications querying "today's" data will reliably receive incomplete or null datasets.\
+\ls9\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 System-Managed Financials
+\f1\b0 : Official revenue reports (\cf3 \cb4 \strokec3 content_owner_ad_revenue_raw_a1\cf2 \cb1 \strokec2 ) are never processed daily. They undergo rigorous month-end adjustments for invalid activity and are typically generated and published between the 10th and 14th of the following month (or after the 17th for AdSense Payment Summaries).\
+\ls9\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Strict Data Retention Limits
+\f1\b0 : The Reporting API is not a permanent cloud archive. Standard bulk reports are retained on YouTube's servers for exactly 60 days post-generation. System-managed financial reports are permanently deleted after two months to comply with strict internal data retention and privacy policies. Consequently, clients must implement automated daily ingest scripts to warehouse data locally before the Google-hosted \cf3 \cb4 \strokec3 .csv\cf2 \cb1 \strokec2  URLs expire permanently.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs28 \cf2 Privacy Thresholds and Data Anonymization\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 When querying datasets involving demographics or localized geography, data completeness is never guaranteed. YouTube enforces strict privacy thresholds at the API level to prevent the re-identification of individual users. If a specific video receives a statistically insignificant number of views from a particular country, province, or age group, the Analytics API will entirely omit that demographic data, returning an empty array or null values. In the Reporting API, these datasets are forcefully anonymized, meaning rows will simply not exist for micro-audiences. Revenue metrics, however, are exempt from geography thresholds to ensure financial accounting remains perfectly accurate. Analysts must be acutely aware that summing localized demographic views (e.g., summing views from all cities) will rarely equal the absolute global view count of a video due to this privacy-induced data scrubbing.\
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs28 \cf2 Quota Optimization and Cost Architecture\
+\pard\pardeftab720\sa200\partightenfactor0
+
+\f1\b0\fs24 \cf2 Interacting with the Data API v3 to retrieve contextual metadata requires careful budget management of the daily 10,000-unit quota limit imposed on Google Cloud projects. Different API endpoints carry vastly different "costs." Calling the \cf3 \cb4 \strokec3 search.list\cf2 \cb1 \strokec2  endpoint to find videos dynamically costs a massive 100 units per request, meaning a developer will exhaust their entire daily limit after just 100 searches. Conversely, the \cf3 \cb4 \strokec3 videos.list\cf2 \cb1 \strokec2  endpoint costs only 1 unit and accepts up to 50 comma-separated Video IDs per call. An optimized pipeline architecture never uses the Search endpoint for analytics; instead, it warehouses Video IDs locally via the Reporting API CSVs, and batches 50 IDs per single-unit \cf3 \cb4 \strokec3 videos.list\cf2 \cb1 \strokec2  request, allowing metadata updates for up to 500,000 videos per day within the standard free quota tier.\
+Understanding the interplay between real-time queries, bulk warehousing, quota optimization, and the nuanced definition of dimensions and metrics is what transforms a basic API integration into an enterprise-grade analytics infrastructure. By leveraging advanced analytical dimensions like \cf3 \cb4 \strokec3 creatorContentType\cf2 \cb1 \strokec2  and respecting the strict boundaries of data anonymization and latency, analysts can build highly resilient systems capable of parsing the complex, shifting landscape of the world's largest video platform.\
+}

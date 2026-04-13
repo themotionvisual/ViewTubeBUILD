@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ViewTube.live Deployment Checklist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f0f0f0; }
+        .brutal-box { background: #fff; border: 4px solid #000; box-shadow: 6px 6px 0px 0px #000; transition: all 0.1s ease; }
+        .brutal-box:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0px 0px #000; }
+        .brutal-checkbox { appearance: none; width: 32px; height: 32px; border: 3px solid #000; background: #fff; cursor: pointer; position: relative; flex-shrink: 0; }
+        .brutal-checkbox:checked { background: #00CCFF; }
+        .brutal-checkbox:checked::after { content: '✓'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #000; font-weight: 900; font-size: 20px; }
+        .code-block { background: #1a1a1a; color: #00CCFF; padding: 1rem; border: 3px solid #000; font-family: 'Courier New', monospace; overflow-x: auto; margin: 0.5rem 0; white-space: pre; }
+        .phase-header { background: #000; color: #fff; padding: 1rem; font-weight: 900; text-transform: uppercase; font-size: 1.5rem; border: 4px solid #000; box-shadow: 6px 6px 0px 0px #000; margin-bottom: 1.5rem; }
+        .accent-blue { background: #00CCFF; }
+        .accent-green { background: #CCFF00; }
+        .accent-pink { background: #FF3399; }
+        .accent-yellow { background: #FFDD00; }
+        .accent-orange { background: #FFB158; }
+        .progress-bar { height: 32px; background: #000; border: 3px solid #000; overflow: hidden; }
+        .progress-fill { height: 100%; background: #CCFF00; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: #000; font-weight: 900; font-size: 0.875rem; }
+        .warning-box { background: #FFB158; border: 4px solid #000; padding: 1rem; margin: 1rem 0; box-shadow: 4px 4px 0px 0px #000; }
+        .success-box { background: #CCFF00; border: 4px solid #000; padding: 1rem; margin: 1rem 0; box-shadow: 4px 4px 0px 0px #000; }
+        .info-box { background: #00CCFF; border: 4px solid #000; padding: 1rem; margin: 1rem 0; box-shadow: 4px 4px 0px 0px #000; }
+    </style>
+</head>
+<body class="min-h-screen p-8">
+    <div class="max-w-5xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-7xl font-black uppercase italic tracking-tighter mb-4" style="text-shadow: 4px 4px 0 #000;">ViewTube.live</h1>
+            <p class="text-2xl font-bold">Deployment Checklist</p>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mb-12">
+            <div class="flex justify-between mb-2 font-bold uppercase">
+                <span>Progress</span>
+                <span id="progress-text">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill" style="width: 0%">0/23</div>
+            </div>
+        </div>
+
+        <!-- Phase 1 -->
+        <div class="mb-12">
+            <div class="phase-header accent-blue">Phase 1: GitHub & Vercel Setup</div>
+            <div class="space-y-4">
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Create GitHub Repository</h3>
+                            <p class="text-gray-700 mb-3">Create a new repository on GitHub called "viewtube-live"</p>
+                            <div class="code-block">cd /Users/cwb/Downloads/viewtube
+git init
+git add .
+git commit -m "Initial commit"
+git remote add origin https://github.com/YOUR_USERNAME/viewtube-live.git
+git push -u origin main</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Set Up Vercel Project</h3>
+                            <p class="text-gray-700 mb-3">Import your GitHub repository to Vercel</p>
+                            <div class="info-box"><strong>📝 Steps:</strong><ol class="list-decimal list-inside space-y-2 mt-2"><li>Go to <a href="https://vercel.com" target="_blank" class="underline font-bold">vercel.com</a></li><li>Click "Add New Project"</li><li>Select "viewtube-live" repo</li><li>Click "Deploy"</li></ol></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Create Staging Branch</h3>
+                            <p class="text-gray-700 mb-3">Set up a staging environment for testing</p>
+                            <div class="code-block">git checkout -b staging
+git push origin staging</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase 2 -->
+        <div class="mb-12">
+            <div class="phase-header accent-green">Phase 2: CSV Import Version</div>
+            <div class="space-y-4">
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Create CSVImportLanding.tsx</h3>
+                            <p class="text-gray-700 mb-3">Create file: <code>src/views/CSVImportLanding.tsx</code></p>
+                            <div class="info-box"><strong>📄 Copy the component code from the deployment documentation.</strong></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Modify AppRoutes.tsx</h3>
+                            <p class="text-gray-700 mb-3">Update routing to use CSVImportLanding as home page</p>
+                            <div class="code-block">// Add import:
+import { CSVImportLanding } from "../views/CSVImportLanding"
+
+// Change line 34:
+<Route path="/" element={<CSVImportLanding />} /></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Test Locally</h3>
+                            <p class="text-gray-700 mb-3">Make sure everything works before deploying</p>
+                            <div class="code-block">npm install
+npm run dev</div>
+                            <p class="text-gray-700 mt-2">Open <a href="http://localhost:5173" target="_blank" class="text-blue-600 underline">http://localhost:5173</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase 3 -->
+        <div class="mb-12">
+            <div class="phase-header accent-pink">Phase 3: GoDaddy DNS Configuration</div>
+            <div class="warning-box mb-6"><strong>⚠️ CRITICAL:</strong> You must add TWO separate DNS records!</div>
+            <div class="space-y-4">
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Add Domain to Vercel</h3>
+                            <p class="text-gray-700 mb-3">Add your custom domain in Vercel first</p>
+                            <div class="info-box"><strong>📝 Steps:</strong><ol class="list-decimal list-inside space-y-2 mt-2"><li>Vercel → Project Settings → Domains</li><li>Click "Add" and enter: <code>viewtube.live</code></li></ol></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Configure GoDaddy DNS Records</h3>
+                            <p class="text-gray-700 mb-3">Log into GoDaddy and add these TWO records:</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div class="border-4 border-black p-4 bg-blue-50">
+                                    <h4 class="font-black text-lg mb-2">Record 1: A Record</h4>
+                                    <table class="w-full text-sm"><tr><td class="font-bold">Type:</td><td>A</td></tr><tr><td class="font-bold">Name:</td><td>@</td></tr><tr><td class="font-bold">Value:</td><td>76.76.21.21</td></tr><tr><td class="font-bold">TTL:</td><td>600</td></tr></table>
+                                </div>
+                                <div class="border-4 border-black p-4 bg-green-50">
+                                    <h4 class="font-black text-lg mb-2">Record 2: CNAME</h4>
+                                    <table class="w-full text-sm"><tr><td class="font-bold">Type:</td><td>CNAME</td></tr><tr><td class="font-bold">Name:</td><td>www</td></tr><tr><td class="font-bold">Value:</td><td>cname.vercel-dns.com</td></tr><tr><td class="font-bold">TTL:</td><td>600</td></tr></table>
+                                </div>
+                            </div>
+                            <div class="warning-box"><strong>⚠️ Common Mistakes:</strong><ul class="list-disc list-inside mt-2"><li>Don't select "A" for both records</li><li>Don't put "to:" before the value</li><li>Don't put IP in CNAME</li></ul></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Verify DNS & Enable HTTPS</h3>
+                            <p class="text-gray-700 mb-3">Wait for DNS propagation and verify in Vercel</p>
+                            <div class="warning-box"><strong>⏳ Wait Time:</strong> 5-30 minutes</div>
+                            <div class="info-box mt-3"><strong>📝 Steps:</strong><ol class="list-decimal list-inside space-y-2 mt-2"><li>Wait 30 minutes</li><li>Vercel → Project Settings → Domains → Verify</li><li>HTTPS is automatic</li></ol></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase 4 -->
+        <div class="mb-12">
+            <div class="phase-header accent-yellow">Phase 4: Deploy CSV Version</div>
+            <div class="space-y-4">
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Deploy to Production</h3>
+                            <p class="text-gray-700 mb-3">Push your code to trigger Vercel deployment</p>
+                            <div class="code-block">git checkout main
+git add .
+git commit -m "Production ready"
+git push origin main</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Test Live Site</h3>
+                            <p class="text-gray-700 mb-3">Verify everything works on the live domain</p>
+                            <div class="success-box"><strong>🎉 Your site is live at:</strong><br><a href="https://viewtube.live" target="_blank" class="text-xl font-black underline">https://viewtube.live</a></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase 5 -->
+        <div class="mb-12">
+            <div class="phase-header accent-blue">Phase 5: Firebase Setup (For YouTube Auth)</div>
+            <div class="space-y-4">
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Create Firebase Project</h3>
+                            <p class="text-gray-700 mb-3">Set up Firebase for authentication</p>
+                            <div class="info-box"><strong>📝 Steps:</strong><ol class="list-decimal list-inside space-y-2 mt-2"><li>Go to <a href="https://console.firebase.google.com" target="_blank" class="underline font-bold">console.firebase.google.com</a></li><li>Click "Add project"</li><li>Name: <code>viewtube-live</code></li></ol></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Enable Firebase Services</h3>
+                            <p class="text-gray-700 mb-3">Activate Authentication, Firestore, and Storage</p>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="border-4 border-black p-4 bg-blue-50"><h4 class="font-black">Authentication</h4><p class="text-sm mt-2">Enable Google sign-in</p></div>
+                                <div class="border-4 border-black p-4 bg-green-50"><h4 class="font-black">Firestore</h4><p class="text-sm mt-2">Create database (test mode)</p></div>
+                                <div class="border-4 border-black p-4 bg-yellow-50"><h4 class="font-black">Storage</h4><p class="text-sm mt-2">Start in test mode</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Add Firebase to Vercel</h3>
+                            <p class="text-gray-700 mb-3">Install Firebase SDK and add env variables</p>
+                            <div class="code-block">npm install firebase</div>
+                            <div class="code-block">VITE_FIREBASE_API_KEY=your_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase 6 -->
+        <div class="mb-12">
+            <div class="phase-header accent-green">Phase 6: YouTube Auth Integration</div>
+            <div class="space-y-4">
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Enable YouTube Data API</h3>
+                            <p class="text-gray-700 mb-3">Set up Google Cloud Console</p>
+                            <div class="info-box"><strong>📝 Steps:</strong><ol class="list-decimal list-inside space-y-2 mt-2"><li>Go to <a href="https://console.cloud.google.com" target="_blank" class="underline font-bold">console.cloud.google.com</a></li><li>Select your project</li><li>APIs & Services → Library</li><li>Enable "YouTube Data API v3"</li></ol></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Configure OAuth Consent</h3>
+                            <p class="text-gray-700 mb-3">Set up OAuth for YouTube authentication</p>
+                            <div class="info-box"><strong>📝 Steps:</strong><ol class="list-decimal list-inside space-y-2 mt-2"><li>APIs & Services → OAuth consent screen</li><li>User Type: "External"</li><li>Add scopes: youtube.readonly</li><li>Add test users</li></ol></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Create OAuth Credentials</h3>
+                            <p class="text-gray-700 mb-3">Generate OAuth 2.0 Client ID</p>
+                            <div class="info-box"><strong>📝 Steps:</strong><ol class="list-decimal list-inside space-y-2 mt-2"><li>APIs & Services → Credentials</li><li>Create OAuth 2.0 Client ID</li><li>Authorized origins: <code>https://viewtube.live</code></li><li>Redirect URI: <code>https://viewtube.live/auth/callback</code></li></ol></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase 7 -->
+        <div class="mb-12">
+            <div class="phase-header accent-orange">Phase 7: Final Deployment</div>
+            <div class="space-y-4">
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Create Feature Branch</h3>
+                            <p class="text-gray-700 mb-3">Create a branch for YouTube auth</p>
+                            <div class="code-block">git checkout -b feature/youtube-auth
+git add .
+git commit -m "Add YouTube OAuth"
+git push origin feature/youtube-auth</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Create Pull Request</h3>
+                            <p class="text-gray-700 mb-3">Open a PR to merge to staging</p>
+                            <div class="info-box"><strong>📝 Steps:</strong><ol class="list-decimal list-inside space-y-2 mt-2"><li>GitHub → Pull Requests → New</li><li>Compare: staging ← feature/youtube-auth</li><li>Vercel creates preview deployment</li></ol></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Test in Staging</h3>
+                            <p class="text-gray-700 mb-3">Test the YouTube auth flow</p>
+                            <div class="info-box"><strong>📝 Test:</strong><ul class="list-disc list-inside space-y-1 mt-2"><li>Click "Connect YouTube"</li><li>Sign in with Google</li><li>Grant permissions</li><li>Verify data loads</li></ul></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Merge to Staging</h3>
+                            <p class="text-gray-700 mb-3">Merge the PR to deploy</p>
+                            <div class="code-block">git checkout staging
+git merge feature/youtube-auth
+git push origin staging</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Deploy to Production</h3>
+                            <p class="text-gray-700 mb-3">Deploy YouTube version to main</p>
+                            <div class="code-block">git checkout main
+git merge feature/youtube-auth
+git push origin main</div>
+                            <div class="success-box mt-3"><strong>🎉 YouTube auth is now live!</strong></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="brutal-box p-6">
+                    <div class="flex items-start gap-4">
+                        <input type="checkbox" class="brutal-checkbox mt-1 task-checkbox">
+                        <div class="flex-1">
+                            <h3 class="font-black text-xl uppercase mb-2">Final Verification</h3>
+                            <p class="text-gray-700 mb-3">Confirm everything works on production</p>
+                            <div class="info-box"><strong>📝 Final checks:</strong><ul class="list-disc list-inside space-y-1 mt-2"><li>Visit https://viewtube.live</li><li>Test YouTube connection</li><li>Verify data syncs</li><li>Test on mobile</li></ul></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-12 mb-8">
+            <div class="brutal-box p-6 inline-block">
+                <p class="font-black text-lg uppercase mb-2">🎉 Deployment Complete!</p>
+                <p class="text-gray-700">Your ViewTube.live app is now live.</p>
+                <p class="text-gray-700 mt-2">Visit <a href="https://viewtube.live" target="_blank" class="text-blue-600 underline font-bold">https://viewtube.live</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Progress tracking
+        document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', updateProgress);
+        });
+
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('.task-checkbox');
+            const checked = document.querySelectorAll('.task-checkbox:checked');
+            const percent = Math.round((checked.length / checkboxes.length) * 100);
+            
+            document.getElementById('progress-fill').style.width = percent + '%';
+            document.getElementById('progress-fill').textContent = checked.length + '/' + checkboxes.length;
+            document.getElementById('progress-text').textContent = percent + '%';
+            
+            // Save to localStorage
+            const state = {};
+            checkboxes.forEach((cb, i) => {
+                state[i] = cb.checked;
+            });
+            localStorage.setItem('viewtube-deploy-progress', JSON.stringify(state));
+        }
+
+        // Load saved progress
+        const saved = localStorage.getItem('viewtube-deploy-progress');
+        if (saved) {
+            const state = JSON.parse(saved);
+            document.querySelectorAll('.task-checkbox').forEach((cb, i) => {
+                if (state[i]) cb.checked = true;
+            });
+            updateProgress();
+        }
+    </script>
+</body>
+</html>

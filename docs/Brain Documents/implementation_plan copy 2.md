@@ -1,0 +1,43 @@
+# UI Refinement & Chart Expansion for Research Lab
+
+This document outlines the planned aesthetic changes and the massive expansion of the chart collection with 10 new advanced visualizations.
+
+## User Review Required
+> [!IMPORTANT]
+> I am adding 10 new charts to the bottom of the Research Lab. These will introduce entirely new visual styles (Maps, Heatmaps, Funnels, Box Plots). Please ensure your CSV data contains the relevant columns (e.g., Country for Maps, Publish Time for Heatmaps).
+
+## Proposed Changes
+
+### ResearchLab.tsx
+
+#### 1. Technical Data Mapping (`getChartData`)
+Add 10 new logic branches to handle the following:
+- **Geo CPM**: Map `Country` name to `CPM/Revenue`.
+- **Momentum Heatmap**: Group views by `DayOfWeek` and `HourOfDay` into a 24x7 grid.
+- **Retention Funnel**: Waterfall data for `Views -> Shown -> Clicks`.
+- **Series Consistency**: Box Plot mapping for categorized view spreads.
+- **Seasonal RPM**: Monthly RPM radar points.
+- **Algorithm Matrix**: Multi-axis sync for Impressions/CTR/Views.
+- **OS Revenue**: Dual-ring donut for OS demographics.
+- **Shelf Life**: Normalized timeline starting at `T=0`.
+- **Golden Ratio**: Radar benchmark overlay.
+
+#### 2. Chart Component Expansion
+- **Google GeoChart**: Integrate `chartType="GeoChart"` for world-map visuals.
+- **Google Candlestick**: Adapt for the Box Plot consistency visualization.
+- **Custom Heatmap**: Create a grid-based component for the post-time momentum matrix.
+- **Custom Funnel**: Build a styled SVG funnel for end-screen conversion tracking.
+
+#### 3. UX/UI Refinements
+- Ensure all new charts follow the "Pop Dashboard" aesthetic with thick borders and bold typography.
+- Maintain the footer sorting control logic where applicable.
+
+## Verification Plan
+
+### Automated Verification
+1.  Run the Vite dev server.
+2.  Use the browser subagent to scroll to the bottom of the and verify all 10 new charts render without console errors.
+
+### Manual Verification
+1.  Verify the interactivity of the new GeoChart (hovering over countries).
+2.  Check the labels and tooltips on the Funnel and Heatmap for accuracy.

@@ -1,0 +1,16 @@
+@import "tailwindcss" source(none);
+@source "./**/*.{ts,tsx,js,jsx,html}";
+@source not "./index.css.fullbak";
+@source not "./components/UIReferenceLibraryContent.tsx";
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  box-sizing: border-box;
+}

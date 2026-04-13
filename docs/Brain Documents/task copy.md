@@ -1,0 +1,9 @@
+- `[/]` Core math & logic structure.
+  - `[ ]` Introduce `getUnitHeight()` utility to compute exact pixel heights for any unit span (`N * 60 + (N-1) * 24`).
+  - `[ ]` Update `SubToolbox` to apply exact pixel heights to its outer container instead of relying on intrinsic content height.
+- `[/]` UI Component Standardizing
+  - `[ ]` Update `DropdownControl` sizes and radiuses to 1:1 match a closed `SubToolbox`.
+  - `[ ]` Update the 'Generate Art' button.
+- `[/]` Layout Implementation
+  - `[ ]` Remove `flex-1` from Canvas Standby.
+  - `[ ]` Inject the unit-calculator into the main container to exactly size the Canvas Standby.

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canvas Masterpiece — 45053v1html</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f3f4f6; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo, useCallback, createContext, useContext, Fragment } = React;
+    
+    const iconStub = (props) => React.createElement('span', {
+      style: { display: 'inline-flex', width: props?.size || 24, height: props?.size || 24, alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 900, opacity: 0.3 },
+      className: props?.className || ''
+    }, '⬡');
+    const Network=iconStub,LayoutTemplate=iconStub,Activity=iconStub,Scissors=iconStub,MessageSquareWarning=iconStub,SplitSquareHorizontal=iconStub,MoveRight=iconStub,Play=iconStub,Pause=iconStub,FastForward=iconStub,Settings=iconStub,Crosshair=iconStub,BarChart=iconStub,LayoutGrid=iconStub,Terminal=iconStub,ChevronDown=iconStub,Upload=iconStub,Maximize2=iconStub,Minimize2=iconStub,Eye=iconStub,EyeOff=iconStub,AlertTriangle=iconStub,Check=iconStub,X=iconStub,Shield=iconStub,Sliders=iconStub,Hash=iconStub,MessageSquare=iconStub,Users=iconStub,SkipForward=iconStub,SkipBack=iconStub,ImageIcon=iconStub,Layers=iconStub,Type=iconStub,Video=iconStub,MousePointer2=iconStub,Shapes=iconStub,Sparkles=iconStub,WandSparkles=iconStub,Mic=iconStub,Wand2=iconStub,ChevronRight=iconStub,ChevronLeft=iconStub,ChevronUp=iconStub,Copy=iconStub,Download=iconStub,Share2=iconStub,Star=iconStub,Heart=iconStub,Bookmark=iconStub,Zap=iconStub,Clock=iconStub,TrendingUp=iconStub,BarChart2=iconStub,PieChart=iconStub,Globe=iconStub,Target=iconStub,Award=iconStub,Flag=iconStub,FileText=iconStub,FolderOpen=iconStub,Save=iconStub,Trash2=iconStub,Edit3=iconStub,RefreshCw=iconStub,RotateCcw=iconStub,ZoomIn=iconStub,ZoomOut=iconStub,Volume2=iconStub,VolumeX=iconStub,Camera=iconStub,Film=iconStub,Music=iconStub,Cpu=iconStub,Database=iconStub,Server=iconStub,Wifi=iconStub,Loader=iconStub,Plus=iconStub,Minus=iconStub,ArrowRight=iconStub,ArrowLeft=iconStub,ArrowUp=iconStub,ArrowDown=iconStub,ExternalLink=iconStub,Link=iconStub,Lock=iconStub,Unlock=iconStub,Key=iconStub,Search=iconStub,Filter=iconStub,Grid=iconStub,List=iconStub,Menu=iconStub,MoreHorizontal=iconStub,MoreVertical=iconStub,Info=iconStub,HelpCircle=iconStub,AlertCircle=iconStub,CheckCircle=iconStub,XCircle=iconStub,Power=iconStub,Headphones=iconStub,Speaker=iconStub,Radio=iconStub,Sun=iconStub,Moon=iconStub,ThumbsUp=iconStub,ThumbsDown=iconStub,Send=iconStub,Mail=iconStub,Phone=iconStub,MapPin=iconStub,Navigation=iconStub,Palette=iconStub,Droplet=iconStub,Feather=iconStub,Pen=iconStub,Image=iconStub,Move=iconStub,Crop=iconStub,Columns=iconStub,Rows=iconStub,SidebarIcon=iconStub,Monitor=iconStub,Smartphone=iconStub,Tablet=iconStub,Tv=iconStub,Bell=iconStub,BellOff=iconStub,Calendar=iconStub,Inbox=iconStub,Aperture=iconStub,Box=iconStub,Package=iconStub,Tag=iconStub,Briefcase=iconStub,Code=iconStub,GitBranch=iconStub,Repeat=iconStub,Shuffle=iconStub,AlignLeft=iconStub,AlignCenter=iconStub,AlignRight=iconStub,Bold=iconStub,Italic=iconStub,Underline=iconStub,MinusCircle=iconStub,PlusCircle=iconStub,Maximize=iconStub,Minimize=iconStub,ToggleLeft=iconStub,ToggleRight=iconStub,Map=iconStub,Circle=iconStub,Square=iconStub,Triangle=iconStub,Hexagon=iconStub,Octagon=iconStub,Edit=iconStub,Trash=iconStub,RotateCw=iconStub;
+
+
+      Network, LayoutTemplate, Activity, Scissors, 
+  MessageSquareWarning, SplitSquareHorizontal, MoveRight, 
+  Play, Pause, FastForward, Settings, Crosshair, 
+  Clock, Database, Eye, AlertOctagon, TrendingUp
+} from 'lucide-react';
+
+// --- THEME CONSTANTS ---
+const COLORS = {
+  bg: 'bg-[#E5E5E5]',
+  primary: 'bg-[#FFDE00]', // Yellow
+  secondary: 'bg-[#FF0055]', // Pink
+  tertiary: 'bg-[#00FF9D]', // Mint
+  accent: 'bg-[#00E5FF]', // Cyan
+  white: 'bg-[#FFFFFF]',
+  black: 'bg-[#000000]'
+};
+
+const BRUTAL_BOX = "border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none";
+const BRUTAL_BTN = "border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none transition-all font-black uppercase tracking-wider rounded-none";
+const BRUTAL_INPUT = "border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-none focus:translate-y-[4px] focus:translate-x-[4px] transition-all outline-none p-3 font-mono rounded-none";
+
+// --- SUB-TOOL COMPONENTS ---
+
+// Tool 1: Interactive Storyboard Node Canvas
+const StoryboardCanvas = () => {
+  const [nodes, setNodes] = useState([
+    { id: 1, type: 'Hook', duration: 15, text: 'Explosion + Quick Question', color: 'bg-[#FF0055]' },
+    { id: 2, type: 'A-Roll', duration: 45, text: 'Context and Setup', color: 'bg-[#00E5FF]' },
+    { id: 3, type: 'B-Roll', duration: 20, text: 'Montage of process', color: 'bg-[#00FF9D]' },
+    { id: 4, type: 'CTA', duration: 10, text: 'Subscribe & Click Link', color: 'bg-[#FFDE00]' },
+  ]);
+
+  return (
+    <div className={`h-full ${COLORS.white} ${BRUTAL_BOX} p-6 flex flex-col`}>
+      <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
+        <h2 className="text-3xl font-black uppercase flex items-center gap-3">
+          <Network size={32} /> Storyboard Node Canvas
+        </h2>
+        <button className={`${COLORS.primary} ${BRUTAL_BTN} px-4 py-2`}>+ Add Node</button>
+      </div>
+      
+      <div className="flex-1 relative overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] border-4 border-black">
+        {/* Connection Line */}
+        <div className="absolute top-1/2 left-10 right-10 h-2 bg-black -translate-y-1/2 z-0"></div>
+        
+        <div className="flex items-center justify-between h-full px-10 relative z-10 overflow-x-auto gap-8">
+          {nodes.map((node, i) => (
+            <div key={node.id} className={`${node.color} ${BRUTAL_BOX} w-64 shrink-0 flex flex-col`}>
+              <div className="border-b-4 border-black p-3 flex justify-between items-center bg-white/50 font-black">
+                <span>{node.type}</span>
+                <span className="font-mono text-sm bg-black text-white px-2 py-1">{node.duration}s</span>
+              </div>
+              <div className="p-4 font-mono font-bold flex-1 min-h-[120px]">
+                {node.text}
+              </div>
+              <div className="border-t-4 border-black p-2 flex gap-2">
+                <button className={`flex-1 ${COLORS.white} border-2 border-black font-black text-sm py-1 hover:bg-black hover:text-white`}>EDIT</button>
+                <button className={`flex-1 ${COLORS.white} border-2 border-black font-black text-sm py-1 hover:bg-black hover:text-white`}>DEL</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Tool 3 & 4: Niche Scatter Plot & Stop-Motion Calculator
+const PlotAndCalc = () => {
+  const [bpm, setBpm] = useState(120);
+  const [duration, setDuration] = useState(60);
+  
+  return (
+    <div className="grid grid-cols-2 gap-6 h-full">
+      {/* Tool 3: Scatter Plot */}
+      <div className={`${COLORS.white} ${BRUTAL_BOX} p-6 flex flex-col`}>
+        <h2 className="text-2xl font-black uppercase mb-4 flex items-center gap-2 border-b-4 border-black pb-2">
+          <Crosshair /> Niche Scatter Plot
+        </h2>
+        <div className="flex-1 border-4 border-black relative bg-[#111] overflow-hidden group">
+          <div className="absolute top-4 left-4 text-[#00FF9D] font-mono text-sm">Y: Competition</div>
+          <div className="absolute bottom-4 right-4 text-[#00E5FF] font-mono text-sm">X: Search Vol</div>
+          
+          {/* Simulated Bubbles */}
+          <div className="absolute top-[20%] left-[60%] w-20 h-20 rounded-full bg-[#FF0055] border-4 border-white shadow-[0_0_15px_#FF0055] hover:scale-125 transition-transform flex items-center justify-center text-xs font-black text-white text-center p-1 cursor-pointer">React Native</div>
+          <div className="absolute top-[70%] left-[30%] w-12 h-12 rounded-full bg-[#FFDE00] border-4 border-white shadow-[0_0_15px_#FFDE00] hover:scale-125 transition-transform flex items-center justify-center text-[10px] font-black text-black cursor-pointer">Svelte</div>
+          <div className="absolute top-[40%] left-[80%] w-24 h-24 rounded-full bg-[#00FF9D] border-4 border-white shadow-[0_0_15px_#00FF9D] hover:scale-125 transition-transform flex items-center justify-center text-sm font-black text-black cursor-pointer">Next.js SEO</div>
+          <div className="absolute top-[80%] left-[80%] w-16 h-16 rounded-full bg-[#00E5FF] border-4 border-white shadow-[0_0_15px_#00E5FF] hover:scale-125 transition-transform flex items-center justify-center text-xs font-black text-black cursor-pointer">Vue 3</div>
+          
+          {/* Axis lines */}
+          <div className="absolute left-10 top-10 bottom-10 w-0.5 bg-white/20"></div>
+          <div className="absolute bottom-10 left-10 right-10 h-0.5 bg-white/20"></div>
+        </div>
+      </div>
+
+      {/* Tool 4: Frame Rate Calc */}
+      <div className={`${COLORS.primary} ${BRUTAL_BOX} p-6 flex flex-col`}>
+        <h2 className="text-2xl font-black uppercase mb-4 flex items-center gap-2 border-b-4 border-black pb-2">
+          <Activity /> Stop-Motion Engine
+        </h2>
+        
+        <div className="space-y-6 bg-white p-6 border-4 border-black flex-1">
+          <div>
+            <label className="font-black block mb-2 text-xl">TRACK BPM: {bpm}</label>
+            <input type="range" min="60" max="200" value={bpm} onChange={(e)=>setBpm(e.target.value)} className="w-full accent-[#FF0055] h-4 bg-black appearance-none" />
+          </div>
+          <div>
+            <label className="font-black block mb-2 text-xl">DURATION (SEC): {duration}</label>
+            <input type="range" min="10" max="300" value={duration} onChange={(e)=>setDuration(e.target.value)} className="w-full accent-[#00E5FF] h-4 bg-black appearance-none" />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 mt-8">
+            <div className="border-4 border-black p-4 text-center bg-[#00FF9D]">
+              <div className="font-mono text-sm font-bold">TOTAL FRAMES (24fps)</div>
+              <div className="text-4xl font-black">{Math.floor(duration * 24)}</div>
+            </div>
+            <div className="border-4 border-black p-4 text-center bg-[#FF0055] text-white">
+              <div className="font-mono text-sm font-bold">BEATS TOTAL</div>
+              <div className="text-4xl font-black">{Math.floor((duration/60) * bpm)}</div>
+            </div>
+          </div>
+          
+          <div className="mt-6 border-4 border-black p-4 bg-[#E5E5E5] font-mono text-sm h-32 overflow-y-auto">
+            <p className="text-black font-bold mb-2">KEYFRAME SYNC LOG:</p>
+            {Array.from({length: 5}).map((_, i) => (
+              <div key={i} className="flex justify-between border-b border-black/20 py-1">
+                <span>Beat {i+1}</span>
+                <span className="text-[#FF0055] font-black">Frame {Math.floor((i / (bpm/60)) * 24)}</span>
+              </div>
+            ))}
+            <div className="text-center pt-2">...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Tool 2 & 5: Script Matrix & Historical Scrubber
+const ScriptAndHistory = () => {
+  return (
+    <div className="flex flex-col gap-6 h-full">
+      {/* Tool 2: Matrix */}
+      <div className={`h-2/3 ${COLORS.white} ${BRUTAL_BOX} flex flex-col overflow-hidden`}>
+        <div className="p-4 border-b-4 border-black flex justify-between items-center bg-[#00E5FF]">
+          <h2 className="text-2xl font-black uppercase flex items-center gap-2">
+            <Database /> Multi-Track Matrix
+          </h2>
+          <button className={`${COLORS.white} ${BRUTAL_BTN} px-4 py-1 text-sm`}>EXPORT CSV</button>
+        </div>
+        <div className="flex-1 overflow-auto bg-[#E5E5E5] p-4">
+          <table className="w-full text-left border-collapse border-4 border-black bg-white">
+            <thead className="bg-black text-white font-mono uppercase">
+              <tr>
+                <th className="p-3 border-r-4 border-black w-24">Time</th>
+                <th className="p-3 border-r-4 border-black w-1/3">Audio / Dialogue</th>
+                <th className="p-3 border-r-4 border-black w-1/3">Visual / B-Roll</th>
+                <th className="p-3">SFX / GFX</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                {t: '0:00', a: 'Have you ever wondered...', v: 'Close up, looking directly into lens.', s: 'Whoosh SFX'},
+                {t: '0:05', a: 'Why the Roman empire fell?', v: 'Stock footage of colosseum.', s: 'Dramatic boom'},
+                {t: '0:12', a: 'Well, it wasn\'t just barbarians.', v: 'Animated map spreading red.', s: 'Map draw sound'},
+              ].map((row, i) => (
+                <tr key={i} className="border-b-4 border-black font-mono text-sm hover:bg-yellow-100 transition-colors">
+                  <td className="p-3 border-r-4 border-black font-black">{row.t}</td>
+                  <td className="p-3 border-r-4 border-black" contentEditable>{row.a}</td>
+                  <td className="p-3 border-r-4 border-black" contentEditable>{row.v}</td>
+                  <td className="p-3" contentEditable>{row.s}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Tool 5: Historical Scrubber */}
+      <div className={`h-1/3 ${COLORS.tertiary} ${BRUTAL_BOX} flex flex-col`}>
+        <div className="p-3 border-b-4 border-black bg-white">
+          <h2 className="text-xl font-black uppercase flex items-center gap-2">
+            <Clock /> Historical Accuracy Scrubber
+          </h2>
+        </div>
+        <div className="flex-1 relative p-6 flex flex-col justify-center">
+           <div className="h-4 w-full bg-black relative">
+              {/* Timeline nodes */}
+              <div className="absolute top-1/2 -translate-y-1/2 left-[10%] w-6 h-6 bg-white border-4 border-black rounded-full shadow-[2px_2px_0px_0px_#000]"></div>
+              
+              {/* Flagged Node */}
+              <div className="absolute top-1/2 -translate-y-1/2 left-[45%] w-8 h-8 bg-[#FF0055] border-4 border-black rounded-full shadow-[2px_2px_0px_0px_#000] animate-pulse cursor-pointer group">
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white p-2 text-xs font-mono border-2 border-white">
+                  WARNING: Tomatoes did not exist in Italy in 400 AD.
+                </div>
+              </div>
+
+              <div className="absolute top-1/2 -translate-y-1/2 left-[80%] w-6 h-6 bg-white border-4 border-black rounded-full shadow-[2px_2px_0px_0px_#000]"></div>
+           </div>
+           <div className="flex justify-between mt-4 font-mono font-bold text-sm">
+             <span>100 AD</span>
+             <span className="text-[#FF0055] font-black tracking-widest">ERROR DETECTED</span>
+             <span>500 AD</span>
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Tool 23 & 4: Live Chat Modulator & Stream Engine
+const StreamTech = () => {
+  const [chatSpeed, setChatSpeed] = useState(50);
+  const chatRef = useRef(null);
+
+  return (
+    <div className="grid grid-cols-12 gap-6 h-full">
+      {/* Tool 23: Chat Modulator */}
+      <div className={`col-span-8 ${COLORS.white} ${BRUTAL_BOX} flex flex-col overflow-hidden`}>
+        <div className="bg-[#FF0055] text-white p-4 border-b-4 border-black flex justify-between items-center">
+          <h2 className="text-2xl font-black uppercase flex items-center gap-2">
+            <MessageSquareWarning /> Chat Modulator
+          </h2>
+          <div className="flex gap-2">
+            <button className={`${COLORS.white} text-black border-2 border-black p-2 hover:bg-[#00E5FF]`}><Pause size={16}/></button>
+            <button className={`${COLORS.white} text-black border-2 border-black p-2 hover:bg-[#00FF9D]`}><Play size={16}/></button>
+          </div>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-4 bg-[#111] space-y-4 font-mono text-sm" ref={chatRef}>
+          <div className="p-3 bg-white border-l-8 border-[#00E5FF] shadow-[4px_4px_0px_0px_#00E5FF]">
+            <span className="font-black text-[#00E5FF]">User_99:</span> This stream is insane!
+          </div>
+          <div className="p-3 bg-[#FFDE00] border-4 border-black shadow-[4px_4px_0px_0px_#FF0055] transform scale-[1.02]">
+            <div className="font-black uppercase text-[#FF0055] text-xs mb-1 flex items-center gap-1"><AlertOctagon size={12}/> Super Chat - $50.00</div>
+            <span className="font-black">BigFan22:</span> Keep up the great work man! Love the new format.
+          </div>
+          <div className="p-3 bg-white border-l-8 border-[#00FF9D] shadow-[4px_4px_0px_0px_#00FF9D]">
+            <span className="font-black text-[#00FF9D]">DevGuy:</span> what theme is that??
+          </div>
+          <div className="p-3 bg-[#333] text-white border-l-8 border-red-500 shadow-[4px_4px_0px_0px_red]">
+            <span className="font-black text-red-500">[FILTERED] Troll123:</span> *** ****** ***
+          </div>
+        </div>
+
+        <div className="p-4 border-t-4 border-black bg-[#E5E5E5] flex items-center gap-4">
+          <span className="font-black uppercase text-sm">Scroll Speed</span>
+          <input type="range" min="1" max="100" value={chatSpeed} onChange={(e)=>setChatSpeed(e.target.value)} className="flex-1 accent-black h-2 bg-white border-2 border-black appearance-none" />
+        </div>
+      </div>
+
+      {/* Component 4 Variant: Stream Frame Engine */}
+      <div className={`col-span-4 ${COLORS.accent} ${BRUTAL_BOX} p-4 flex flex-col`}>
+        <h3 className="font-black text-xl mb-4 border-b-4 border-black pb-2">Stream Engine</h3>
+        
+        <div className="space-y-4 flex-1">
+          <div className="bg-white border-4 border-black p-4 shadow-[4px_4px_0px_0px_#000]">
+            <div className="text-xs font-black text-gray-500 uppercase mb-1">Target Bitrate</div>
+            <div className="font-mono text-2xl font-bold">6,000 Kbps</div>
+          </div>
+          <div className="bg-white border-4 border-black p-4 shadow-[4px_4px_0px_0px_#000]">
+            <div className="text-xs font-black text-gray-500 uppercase mb-1">Frame Drops</div>
+            <div className="font-mono text-2xl font-bold text-[#FF0055]">0.02%</div>
+          </div>
+          <div className="bg-white border-4 border-black p-4 shadow-[4px_4px_0px_0px_#000] flex-1">
+             <div className="text-xs font-black text-gray-500 uppercase mb-1">Bandwidth Health</div>
+             {/* Fake graph */}
+             <div className="h-16 mt-2 flex items-end gap-1">
+               {[40, 60, 50, 80, 90, 70, 85, 95, 60, 80].map((h,i) => (
+                 <div key={i} className="flex-1 bg-black" style={{height: `${h}%`}}></div>
+               ))}
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Tool 6: A/B Hook Simulator
+const HookSimulator = () => {
+  return (
+    <div className={`h-full ${COLORS.primary} ${BRUTAL_BOX} flex flex-col p-6`}>
+      <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
+        <h2 className="text-3xl font-black uppercase flex items-center gap-3 bg-white px-4 py-2 border-4 border-black shadow-[4px_4px_0px_0px_#000]">
+          <SplitSquareHorizontal size={32} /> A/B Hook Simulator
+        </h2>
+        <button className={`bg-[#00FF9D] ${BRUTAL_BTN} px-8 py-3 text-xl`}>RUN SIMULATION</button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-8 flex-1">
+        {/* Hook Inputs */}
+        <div className="space-y-6 flex flex-col">
+          <div className={`bg-white ${BRUTAL_BOX} flex-1 p-4 flex flex-col relative`}>
+            <div className="absolute -top-4 -left-4 bg-[#FF0055] text-white font-black text-2xl px-4 py-1 border-4 border-black">HOOK A</div>
+            <textarea 
+              className="w-full flex-1 mt-4 p-4 text-xl font-mono border-2 border-dashed border-gray-400 outline-none focus:border-solid focus:border-black resize-none"
+              defaultValue="In this video, I'm going to show you how to build a house..."
+            ></textarea>
+            <div className="mt-4 flex justify-between text-sm font-black text-gray-500">
+              <span>SCORE: 42/100</span>
+              <span>EST. DROP: 60%</span>
+            </div>
+          </div>
+
+          <div className={`bg-white ${BRUTAL_BOX} flex-1 p-4 flex flex-col relative`}>
+            <div className="absolute -top-4 -left-4 bg-[#00E5FF] text-black font-black text-2xl px-4 py-1 border-4 border-black">HOOK B</div>
+            <textarea 
+              className="w-full flex-1 mt-4 p-4 text-xl font-mono border-2 border-dashed border-gray-400 outline-none focus:border-solid focus:border-black resize-none"
+              defaultValue="I spent 100 days trapped inside a wooden box..."
+            ></textarea>
+             <div className="mt-4 flex justify-between text-sm font-black text-gray-500">
+              <span className="text-[#00FF9D]">SCORE: 94/100</span>
+              <span className="text-[#00FF9D]">EST. DROP: 15%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Graph Output */}
+        <div className={`bg-[#111] ${BRUTAL_BOX} p-6 relative flex flex-col`}>
+          <h3 className="text-white font-black uppercase text-xl mb-4 flex items-center gap-2">
+            <TrendingUp className="text-[#00FF9D]"/> Projected Retention
+          </h3>
+          
+          <div className="flex-1 border-l-4 border-b-4 border-white/30 relative">
+             <div className="absolute top-0 -left-12 text-white font-mono text-xs">100%</div>
+             <div className="absolute bottom-0 -left-10 text-white font-mono text-xs">0%</div>
+             <div className="absolute -bottom-6 left-0 text-white font-mono text-xs">0:00</div>
+             <div className="absolute -bottom-6 right-0 text-white font-mono text-xs">0:30</div>
+             
+             {/* Simulated Paths */}
+             <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+               {/* Hook A (Red, steep drop) */}
+               <path d="M 0 0 Q 10 0, 20 40 T 100 80" fill="none" stroke="#FF0055" strokeWidth="3" strokeDasharray="5,5" className="animate-[dash_2s_linear_infinite]" />
+               {/* Hook B (Cyan, high retention) */}
+               <path d="M 0 0 Q 30 5, 60 10 T 100 15" fill="none" stroke="#00E5FF" strokeWidth="4" />
+             </svg>
+          </div>
+
+          <div className="mt-10 flex gap-6 justify-center">
+             <div className="flex items-center gap-2 text-white font-mono text-sm">
+               <div className="w-4 h-4 bg-[#FF0055]"></div> Hook A
+             </div>
+             <div className="flex items-center gap-2 text-white font-mono text-sm">
+               <div className="w-4 h-4 bg-[#00E5FF]"></div> Hook B
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+// --- MAIN APP SHELL ---
+function App() {
+  const [activeTab, setActiveTab] = useState('1');
+
+  const tabs = [
+    { id: '1', label: '1. Storyboard Canvas', icon: LayoutTemplate, color: 'hover:bg-[#FF0055]' },
+    { id: '3-4', label: '3/4. Plot & Calc', icon: Activity, color: 'hover:bg-[#00E5FF]' },
+    { id: '2-5', label: '2/5. Matrix & Scrubber', icon: Database, color: 'hover:bg-[#00FF9D]' },
+    { id: '23-4', label: '23/4. Stream Engine', icon: MessageSquareWarning, color: 'hover:bg-[#FFDE00]' },
+    { id: '6', label: '6. Hook Simulator', icon: SplitSquareHorizontal, color: 'hover:bg-[#FF0055]' },
+  ];
+
+  return (
+    <div className={`min-h-screen ${COLORS.bg} font-sans p-6 flex gap-6 selection:bg-black selection:text-white`}>
+      
+      {/* SIDEBAR TOOLBOX */}
+      <div className={`w-80 ${COLORS.white} ${BRUTAL_BOX} flex flex-col`}>
+        <div className="p-6 bg-black text-white border-b-4 border-black">
+          <h1 className="text-3xl font-black uppercase tracking-tighter leading-none">
+            Creator<br/>Toolbox<br/><span className="text-[#00FF9D]">v2.0</span>
+          </h1>
+        </div>
+        
+        <div className="flex-1 p-4 space-y-4">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`w-full flex items-center gap-3 p-4 border-4 border-black font-black uppercase transition-all
+                  ${isActive ? 'bg-black text-white translate-x-2' : `bg-white text-black ${tab.color} hover:text-white hover:translate-x-1 shadow-[4px_4px_0px_0px_#000]`}
+                `}
+              >
+                <Icon size={20} />
+                {tab.label}
+                {isActive && <MoveRight className="ml-auto" size={20} />}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="p-4 border-t-4 border-black bg-[#E5E5E5] flex justify-between items-center">
+           <div className="font-mono text-xs font-bold flex items-center gap-2"><Settings size={14}/> SYSTEM ONLINE</div>
+           <div className="w-3 h-3 bg-[#00FF9D] rounded-full border-2 border-black animate-pulse"></div>
+        </div>
+      </div>
+
+      {/* MAIN CONTENT AREA (SUB-TOOLBOX) */}
+      <div className="flex-1 relative">
+         {activeTab === '1' && <StoryboardCanvas />}
+         {activeTab === '3-4' && <PlotAndCalc />}
+         {activeTab === '2-5' && <ScriptAndHistory />}
+         {activeTab === '23-4' && <StreamTech />}
+         {activeTab === '6' && <HookSimulator />}
+      </div>
+      
+    </div>
+  );
+}
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
+</body>
+</html>

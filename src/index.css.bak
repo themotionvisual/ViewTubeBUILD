@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-yellow: #ccff00;
+  --color-brand-pink: #ff3399;
+  --color-brand-blue: #00d2ff;
+  --color-brand-red: #ff0000;
+  --color-brand-green: #00ff99;
+  --color-brand-orange: #ffb158;
+}
+
+@layer utilities {
+  /* ... original contents ... */
+}
+
+body {
+  margin: 0;
+  background-color: #f8fafc;
+}

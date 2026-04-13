@@ -1,0 +1,651 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  BarChart, LayoutGrid, Terminal, Play, Pause, FastForward, 
+  Settings, ChevronDown, Upload, Maximize2, Minimize2, 
+  Eye, EyeOff, Activity, AlertTriangle, Check, X, Shield,
+  Image as ImageIcon, Zap, Radio, Database, Cpu, Music,
+  Sliders, Power, Disc, Volume2, Plus, SquareSplitHorizontal
+} from 'lucide-react';
+
+// ==========================================
+// CORE ANIMATION & LAYOUT SYSTEM
+// ==========================================
+
+const AnimatedToggleIcon = ({ open, size = 36, isDark = false }) => {
+  const colorClass = isDark ? "text-[#00FF99]" : "text-black";
+  return (
+    <div className="relative group flex items-center justify-center shrink-0 cursor-pointer" style={{ width: size, height: size }}>
+      <div className="absolute inset-0 w-full h-full transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 group-active:scale-95">
+        <div className={`w-full h-full relative transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${open ? 'rotate-180' : 'rotate-0'}`}>
+          <div className={`absolute inset-0 w-full h-full flex items-center justify-center ${colorClass} transition-opacity duration-500 ease-in-out ${open ? 'opacity-0' : 'opacity-80 group-hover:opacity-100'}`}>
+            <Maximize2 size={size * 0.75} strokeWidth={3} />
+          </div>
+          <div className={`absolute inset-0 w-full h-full flex items-center justify-center ${colorClass} transition-opacity duration-500 ease-in-out ${open ? 'opacity-80 group-hover:opacity-100' : 'opacity-0'}`}>
+            <Minimize2 size={size * 0.75} strokeWidth={3} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MainScaffold = ({ title, icon: Icon, headerBg, iconBg, isOpen, onToggle, children }) => (
+  <div className="w-full max-w-7xl bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] flex flex-col overflow-hidden relative mb-12">
+    <header 
+      onClick={onToggle}
+      className={`h-[80px] flex items-center justify-between select-none relative z-20 group border-b-[6px] border-black transition-[margin] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] cursor-pointer ${isOpen ? 'mb-0' : 'mb-[-6px]'}`}
+      style={{ backgroundColor: headerBg }}
+    >
+      <div className="flex items-center h-full flex-1">
+        <div className="h-full w-[80px] flex items-center justify-center border-r-[6px] border-black shrink-0" style={{ backgroundColor: iconBg }}>
+          <Icon size={40} strokeWidth={2.5} className="text-black" />
+        </div>
+        <h1 className="text-[40px] md:text-[50px] font-[1000] uppercase tracking-tighter text-black pl-6 leading-none mt-1 truncate">
+          {title}
+        </h1>
+      </div>
+      <div className="flex items-center pr-6 h-full">
+        <AnimatedToggleIcon open={isOpen} size={48} />
+      </div>
+    </header>
+    <div className={`grid transition-[grid-template-rows] duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+      <div className="overflow-hidden min-h-0 bg-neutral-100 flex flex-col p-6 lg:p-8 gap-8 relative">
+        <div className="absolute inset-x-0 top-0 h-[4px] bg-black z-30" /> {/* Inner persistent divider logic */}
+        {children}
+      </div>
+    </div>
+  </div>
+);
+
+const SubToolbox = ({ title, icon: Icon, headerBg, iconBg, isOpen, onToggle, isDark = false, children }) => {
+  const containerClass = isDark 
+    ? "bg-[#1A1A1A] border-[4px] border-[#00FF99]" 
+    : "bg-white border-[4px] border-black";
+  
+  const textClass = isDark ? "text-[#00FF99]" : "text-black";
+  const borderClass = isDark ? "border-[#00FF99]" : "border-black";
+
+  return (
+    <div className={`w-full rounded-2xl overflow-hidden relative flex flex-col shrink-0 shadow-none ${containerClass}`}>
+      <header 
+        onClick={onToggle}
+        className={`h-[56px] min-h-[56px] flex items-center justify-between select-none relative z-20 group border-b-[4px] transition-[margin] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] cursor-pointer ${borderClass} ${isOpen ? 'mb-0' : 'mb-[-4px]'}`}
+        style={{ backgroundColor: headerBg }}
+      >
+        <div className="flex items-center h-full flex-1">
+          <div className={`h-full aspect-square border-r-[4px] flex items-center justify-center shrink-0 ${borderClass}`} style={{ backgroundColor: iconBg }}>
+            {Icon && <Icon size={32} strokeWidth={2.5} className="text-black" />}
+          </div>
+          <h3 className={`text-[32px] font-[900] uppercase tracking-tighter leading-none mt-0.5 pl-4 ${textClass}`}>
+            {title}
+          </h3>
+        </div>
+        <div className="flex items-center pr-4 h-full">
+          <AnimatedToggleIcon open={isOpen} size={36} isDark={isDark} />
+        </div>
+      </header>
+      <div className={`grid transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+        <div className="overflow-hidden min-h-0 relative">
+           <div className={`absolute inset-x-0 top-0 h-[4px] z-30 ${isDark ? 'bg-[#00FF99]' : 'bg-black'}`} />
+          <main className={`w-full p-6 flex flex-col ${isDark ? 'bg-[#1A1A1A] text-white' : 'bg-white text-black'}`}>
+            {children}
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==========================================
+// PRIMITIVE COMPONENTS (Standard & Creative)
+// ==========================================
+
+const NeoButton = ({ children, variant = "primary", className = "", icon: Icon }) => {
+  const variants = {
+    primary: "bg-[#CCFF00] border-black text-black shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-y-1 hover:translate-x-1",
+    ghost: "bg-white border-black text-black hover:bg-black hover:text-white shadow-none",
+    tokyo: "bg-[#1A1A1A] border-[#00FF99] text-[#00FF99] shadow-[4px_4px_0px_0px_#FF3399] hover:shadow-none hover:translate-y-1 hover:translate-x-1 hover:bg-[#FF3399] hover:text-white hover:border-black",
+    inverted: "bg-black border-black text-white hover:bg-[#FF7497] hover:text-black shadow-[4px_4px_0px_0px_black]"
+  };
+  return (
+    <button className={`h-14 px-6 border-[4px] rounded-xl font-black uppercase tracking-tight transition-all flex items-center justify-center gap-3 ${variants[variant]} ${className}`}>
+      {Icon && <Icon size={20} strokeWidth={3} />}
+      {children}
+    </button>
+  );
+};
+
+const Keycap = ({ children }) => (
+  <button className="h-14 px-4 bg-white border-[4px] border-b-[8px] border-black rounded-lg font-[1000] uppercase text-xl active:border-b-[4px] active:translate-y-[4px] transition-all hover:bg-neutral-100">
+    {children}
+  </button>
+);
+
+const OTPSquare = ({ isTokyo = false }) => (
+  <input 
+    type="text" 
+    maxLength={1} 
+    className={`w-14 h-14 border-[4px] text-center font-[1000] text-2xl uppercase rounded-xl outline-none focus:scale-110 transition-transform ${isTokyo ? 'bg-[#1A1A1A] border-[#FF3399] text-[#00FF99] focus:bg-[#FF3399] focus:text-white' : 'bg-white border-black text-black focus:bg-[#FFE357]'}`} 
+    placeholder="0"
+  />
+);
+
+const RangeSlider = ({ color = "#FF7497", value = 50, isTokyo = false }) => (
+  <div className="w-full relative h-14 flex items-center">
+    <div className={`w-full h-4 border-[4px] rounded-full overflow-hidden ${isTokyo ? 'bg-[#1A1A1A] border-[#00FF99]' : 'bg-gray-100 border-black'}`}>
+      <div className="h-full border-r-[4px] border-black" style={{ width: `${value}%`, backgroundColor: color }} />
+    </div>
+    <div className={`absolute w-8 h-8 border-[4px] rounded-full shadow-[2px_2px_0px_0px_black] cursor-pointer hover:scale-110 transition-transform ${isTokyo ? 'bg-[#FF3399] border-[#00FF99]' : 'bg-white border-black'}`} style={{ left: `calc(${value}% - 16px)` }} />
+  </div>
+);
+
+// ==========================================
+// TACTILE BOOMBOX & RUBE GOLDBERG COMPONENTS
+// ==========================================
+
+const MechanicalSlider = ({ value, onChange, thumbBg = "bg-black", trackBg = "bg-white", activeColor = "#D1A3FF" }) => (
+  <div className={`w-full h-[16px] ${trackBg} border-[3px] border-black rounded-full relative flex items-center`}>
+    <input 
+      type="range" min="0" max="100" value={value} onChange={(e) => onChange(e.target.value)}
+      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" 
+    />
+    <div className="absolute left-0 top-0 bottom-0 border-r-[3px] border-black rounded-l-full pointer-events-none" style={{ width: `${value}%`, backgroundColor: activeColor }} />
+    <div 
+      className={`absolute w-[24px] h-[32px] ${thumbBg} border-[3px] border-white shadow-[0_0_0_3px_black] z-10 pointer-events-none flex items-center justify-center transform -translate-x-1/2 transition-all`} 
+      style={{ left: `${value}%` }}
+    >
+      <div className="w-[2px] h-[12px] bg-white" />
+    </div>
+  </div>
+);
+
+const VelocityEqualizer = () => {
+  const [eq, setEq] = useState([40, 70, 45, 90, 60, 80, 50, 100, 30]);
+  
+  const randomize = () => {
+    setEq(eq.map(() => Math.floor(Math.random() * 80) + 20));
+  };
+
+  return (
+    <div className="flex-1 border-[4px] border-black bg-white p-4 rounded-xl flex items-end gap-2 relative cursor-pointer group" onClick={randomize}>
+      <div className="absolute top-3 left-4 font-black uppercase text-[12px] bg-[#FFE357] px-3 py-1 border-[3px] border-black rounded-lg shadow-[2px_2px_0px_0px_black] z-10">Velocity</div>
+      {eq.map((val, i) => (
+        <div key={i} className="flex-1 bg-[#24D3FF] border-[3px] border-black rounded-t-md group-hover:bg-[#FF7497] transition-all duration-300" style={{ height: `${val}%` }} />
+      ))}
+    </div>
+  );
+};
+
+const ResonanceGrid = () => {
+  const [grid, setGrid] = useState(Array(16).fill(false));
+  const toggle = (i) => {
+    const newGrid = [...grid];
+    newGrid[i] = !newGrid[i];
+    setGrid(newGrid);
+  };
+  
+  return (
+    <div className="flex-1 border-[4px] border-black bg-white p-4 rounded-xl shadow-[4px_4px_0px_0px_black] flex flex-col">
+      <div className="font-black uppercase text-[10px] mb-3 border-b-[3px] border-black pb-1">Resonance</div>
+      <div className="flex-1 grid grid-cols-4 gap-2">
+        {grid.map((active, i) => (
+          <div 
+            key={i} 
+            onClick={() => toggle(i)}
+            className={`border-[2px] border-black rounded-sm cursor-pointer transition-colors ${active ? 'bg-[#FF7497]' : 'bg-[#A0E8AF]'}`} 
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const SequenceEngine = () => {
+  const [power, setPower] = useState(false);
+  const [freq, setFreq] = useState(0);
+  const [launched, setLaunched] = useState(false);
+
+  const handleLaunch = () => {
+    if (power && freq >= 95) setLaunched(true);
+  };
+
+  const reset = () => {
+    setPower(false); setFreq(0); setLaunched(false);
+  };
+
+  return (
+    <div className={`p-6 border-[4px] border-black rounded-xl flex flex-col gap-6 shadow-[8px_8px_0px_0px_black] transition-colors duration-1000 ${launched ? 'bg-[#CCFF00]' : 'bg-white'}`}>
+      <div className="flex justify-between items-center border-b-[4px] border-black pb-4">
+        <h3 className="font-[1000] uppercase text-2xl tracking-tighter">{launched ? 'SEQUENCE ACTIVE' : 'CHAIN REACTION'}</h3>
+        {launched && <button onClick={reset} className="font-black text-[10px] bg-black text-white px-3 py-1 rounded-full uppercase">Reset</button>}
+      </div>
+      
+      <div className="flex items-center gap-6">
+        {/* STEP 1: Power */}
+        <div className="flex flex-col items-center gap-2">
+          <div className="text-[10px] font-black uppercase">1. Power</div>
+          <button 
+            onClick={() => { setPower(!power); if (power) setFreq(0); }} 
+            className={`w-16 h-24 border-[4px] border-black rounded-xl flex flex-col p-1 transition-colors ${power ? 'bg-black' : 'bg-gray-200'}`}
+          >
+            <div className={`w-full h-1/2 border-[3px] border-black rounded-lg transition-transform duration-300 ${power ? 'bg-[#FF3399] translate-y-full' : 'bg-white'}`} />
+          </button>
+        </div>
+
+        <FastForward size={32} className={power ? "text-black" : "text-black/20"} />
+
+        {/* STEP 2: Frequency Slider */}
+        <div className="flex-1 flex flex-col gap-2">
+          <div className="flex justify-between text-[10px] font-black uppercase">
+            <span>2. Charge Drive</span>
+            <span className={power ? "text-[#24D3FF]" : "text-black/30"}>{freq}%</span>
+          </div>
+          <div className={`h-[48px] border-[4px] border-black rounded-xl px-4 flex flex-col justify-center transition-colors ${power ? 'bg-[#FFE357]' : 'bg-gray-200 pointer-events-none opacity-50'}`}>
+            <MechanicalSlider value={freq} onChange={setFreq} activeColor="#24D3FF" />
+          </div>
+        </div>
+
+        <FastForward size={32} className={freq >= 95 ? "text-black" : "text-black/20"} />
+
+        {/* STEP 3: Launch */}
+        <div className="flex flex-col items-center gap-2">
+          <div className="text-[10px] font-black uppercase">3. Engage</div>
+          <button 
+            onClick={handleLaunch}
+            disabled={!power || freq < 95 || launched}
+            className={`w-24 h-24 border-[4px] border-black rounded-full font-[1000] text-xl transition-all shadow-[4px_4px_0px_0px_black]
+              ${power && freq >= 95 && !launched ? 'bg-[#FF3399] text-white hover:scale-105 active:translate-y-1 active:shadow-none cursor-pointer animate-pulse' : 'bg-gray-100 text-black/30 cursor-not-allowed'}
+              ${launched ? 'bg-black text-[#CCFF00] shadow-none scale-95' : ''}
+            `}
+          >
+            {launched ? 'ON' : 'GO'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+// ==========================================
+// DATA VIZ & CHARTS (Mocked DOM & SVGs)
+// ==========================================
+
+const DOMBarChart = ({ data, colors }) => (
+  <div className="h-48 w-full flex items-end gap-2 border-b-[4px] border-l-[4px] border-black p-4 bg-white relative">
+    {data.map((val, i) => (
+      <div key={i} className="flex-1 border-[4px] border-black border-b-0 rounded-t-xl relative group hover:opacity-80 transition-opacity" style={{ height: `${val}%`, backgroundColor: colors[i % colors.length] }}>
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">{val}%</div>
+      </div>
+    ))}
+  </div>
+);
+
+const RadialProgress = ({ percentage, color, label }) => (
+  <div className="relative w-32 h-32 flex flex-col items-center justify-center">
+    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="40" fill="transparent" stroke="currentColor" strokeWidth="8" className="text-gray-100" />
+      <circle cx="50" cy="50" r="40" fill="transparent" stroke={color} strokeWidth="8" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * percentage) / 100} className="transition-all duration-1000 ease-out" strokeLinecap="round" />
+    </svg>
+    <div className="absolute inset-0 flex flex-col items-center justify-center">
+      <span className="text-2xl font-[1000]">{percentage}</span>
+      <span className="text-[9px] font-black uppercase text-black/50">{label}</span>
+    </div>
+  </div>
+);
+
+
+// ==========================================
+// MAIN APPLICATION
+// ==========================================
+
+export default function ViewTubeStudio() {
+  const [mains, setMains] = useState({ analytics: true, synth: true, content: true, ops: true });
+  const [subs, setSubs] = useState({
+    an1: true, an2: true, 
+    sy1: true, sy2: true, sy3: true,
+    co1: true, co2: true,
+    op1: true, op2: true
+  });
+
+  const [trimVal, setTrimVal] = useState(45);
+  const [hueVal, setHueVal] = useState(60);
+
+  const toggleMain = (k) => setMains(p => ({ ...p, [k]: !p[k] }));
+  const toggleSub = (k) => setSubs(p => ({ ...p, [k]: !p[k] }));
+
+  return (
+    <div className="min-h-screen bg-[#F0F0F0] p-4 md:p-8 font-sans flex flex-col items-center">
+      
+      {/* ========================================== */}
+      {/* TOOLBOX 1: MEDIA ANALYTICS */}
+      {/* ========================================== */}
+      <MainScaffold title="MEDIA ANALYTICS" icon={BarChart} headerBg="#24D3FF" iconBg="#FFE357" isOpen={mains.analytics} onToggle={() => toggleMain('analytics')}>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          
+          {/* Standard Pack */}
+          <SubToolbox title="PERFORMANCE Core" icon={Activity} headerBg="#C9F830" iconBg="#24D3FF" isOpen={subs.an1} onToggle={() => toggleSub('an1')}>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="border-[4px] border-black p-4 rounded-xl flex flex-col">
+                   <span className="text-[10px] font-black uppercase text-black/40">Watch Time (Hrs)</span>
+                   <span className="text-4xl font-[1000] mt-1">14.2K</span>
+                   <div className="h-2 w-full bg-gray-100 border-[2px] border-black rounded-full mt-3 overflow-hidden"><div className="h-full bg-[#FF7497] w-[75%]" /></div>
+                 </div>
+                 <div className="border-[4px] border-black p-4 rounded-xl flex flex-col bg-[#FFE357]">
+                   <span className="text-[10px] font-black uppercase text-black/60">Engagement Rate</span>
+                   <span className="text-4xl font-[1000] mt-1">8.4%</span>
+                   <div className="h-2 w-full bg-white border-[2px] border-black rounded-full mt-3 overflow-hidden"><div className="h-full bg-black w-[45%]" /></div>
+                 </div>
+              </div>
+              <div className="border-[4px] border-black rounded-xl overflow-hidden">
+                <div className="bg-black text-white px-4 py-2 text-xs font-black uppercase tracking-widest flex justify-between">
+                  <span>Regional Distribution</span>
+                  <span className="text-[#CCFF00]">Live</span>
+                </div>
+                <DOMBarChart data={[40, 70, 45, 90, 60, 30]} colors={['#FF7497', '#24D3FF', '#FFE357', '#C9F830', '#FCAF57']} />
+              </div>
+            </div>
+          </SubToolbox>
+
+          {/* Creative Pack (Tokyo-Pop Dark Mode) */}
+          <SubToolbox title="TOKYO-POP HUB" icon={Zap} headerBg="#FF3399" iconBg="#1A1A1A" isDark={true} isOpen={subs.an2} onToggle={() => toggleSub('an2')}>
+             <div className="space-y-6">
+               <div className="flex items-center justify-between border-[4px] border-[#00FF99] p-4 bg-black rounded-xl shadow-[4px_4px_0px_0px_#FF3399]">
+                 <div className="flex flex-col">
+                   <span className="text-[#FF3399] font-black uppercase text-[10px] tracking-widest">System Status</span>
+                   <span className="text-[#00FF99] text-2xl font-[1000]">OVERDRIVE</span>
+                 </div>
+                 <Activity className="text-[#00FF99] animate-pulse" size={32} />
+               </div>
+               
+               <div className="grid grid-cols-2 gap-4">
+                  <div className="border-[4px] border-[#00FF99] rounded-xl flex items-center justify-center p-4 bg-[#1A1A1A]">
+                    <RadialProgress percentage={88} color="#FF3399" label="CPU Load" />
+                  </div>
+                  <div className="border-[4px] border-[#00FF99] rounded-xl p-4 flex flex-col justify-center gap-4 bg-[#1A1A1A]">
+                    <RangeSlider value={90} color="#00FF99" isTokyo={true} />
+                    <RangeSlider value={40} color="#FF3399" isTokyo={true} />
+                    <RangeSlider value={65} color="#24D3FF" isTokyo={true} />
+                  </div>
+               </div>
+             </div>
+          </SubToolbox>
+        </div>
+      </MainScaffold>
+
+      {/* ========================================== */}
+      {/* TOOLBOX 2: RETRO SYNTH DECK (NEW) */}
+      {/* ========================================== */}
+      <MainScaffold title="RETRO SYNTH DECK" icon={Radio} headerBg="#C9F830" iconBg="#24D3FF" isOpen={mains.synth} onToggle={() => toggleMain('synth')}>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          
+          <SubToolbox title="BOOMBOX EQUALIZER" icon={Sliders} headerBg="#FF7497" iconBg="#FFE357" isOpen={subs.sy1} onToggle={() => toggleSub('sy1')}>
+            <div className="flex flex-col gap-6">
+              
+              {/* Complex Velocity & Resonance Module */}
+              <div className="w-full h-[300px] bg-[#F3F4F6] border-[6px] border-black shadow-[8px_8px_0px_0px_black] p-6 flex gap-6 relative overflow-hidden rounded-2xl">
+                
+                <div className="flex-1 flex flex-col gap-6 z-10">
+                  <VelocityEqualizer />
+                  <div className="h-[60px] grid grid-cols-4 gap-4">
+                    {['APX', 'TKN', 'SYS', 'NET'].map((lbl, idx) => (
+                      <div key={idx} className="border-[4px] border-black bg-white rounded-xl flex flex-col items-center justify-center font-black shadow-[4px_4px_0px_0px_black] hover:bg-[#C9F830] transition-colors cursor-default">
+                        <span className="text-[10px] text-black/50">{lbl}</span>
+                        <span className="text-[18px]">91%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="w-[30%] flex flex-col gap-6 z-10">
+                  <ResonanceGrid />
+                  <div className="h-[60px] border-[4px] border-black bg-[#C9F830] rounded-xl px-4 flex flex-col justify-center gap-2 shadow-[4px_4px_0px_0px_black]">
+                    <MechanicalSlider value={75} onChange={() => {}} activeColor="#FF7497" trackBg="bg-white" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Transport Timeline Control */}
+              <div className="w-full h-[144px] bg-[#FCAF57] border-[6px] border-black rounded-2xl shadow-[8px_8px_0px_0px_black] p-6 flex items-center gap-6">
+                <div className="flex-1 h-[80px] bg-white border-[4px] border-black rounded-xl p-4 flex flex-col justify-center relative shadow-[inset_6px_6px_0px_rgba(0,0,0,0.15)]">
+                  <MechanicalSlider value={trimVal} onChange={setTrimVal} thumbBg="bg-black" activeColor="#D1A3FF" />
+                  <div className="absolute top-2 right-4 font-black uppercase text-[10px] bg-black text-[#FCAF57] px-2 py-0.5 rounded-md border-[2px] border-black">
+                    TC: 01:24:{Math.floor(trimVal).toString().padStart(2, '0')}
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <button className="h-[80px] w-[80px] bg-[#24D3FF] border-[4px] border-black rounded-xl shadow-[6px_6px_0px_0px_black] active:translate-y-[6px] active:translate-x-[6px] active:shadow-none transition-all flex flex-col items-center justify-center gap-1 font-black uppercase text-[10px]">
+                    <SquareSplitHorizontal strokeWidth={3} /> Trim
+                  </button>
+                  <button className="h-[80px] w-[80px] bg-[#FF7497] border-[4px] border-black rounded-xl shadow-[6px_6px_0px_0px_black] active:translate-y-[6px] active:translate-x-[6px] active:shadow-none transition-all flex flex-col items-center justify-center gap-1 font-black uppercase text-[10px]">
+                    <Plus strokeWidth={4} /> Mark
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </SubToolbox>
+
+          <div className="flex flex-col gap-8">
+            
+            <SubToolbox title="COLOR MATRIX" icon={Disc} headerBg="#24D3FF" iconBg="#FF7497" isOpen={subs.sy2} onToggle={() => toggleSub('sy2')}>
+              <div className="p-6 border-[4px] border-black bg-white shadow-[8px_8px_0px_0px_black] flex flex-col gap-6 rounded-2xl">
+                <div className="grid grid-cols-5 gap-3">
+                  {['#FF7497', '#CCFF00', '#24D3FF', '#B28DFF', '#FFE357'].map((col, idx) => (
+                    <button key={idx} className="aspect-square border-[3px] border-black shadow-[3px_3px_0px_0px_black] hover:scale-110 active:scale-95 transition-transform rounded-lg" style={{ backgroundColor: col }} />
+                  ))}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div className="flex justify-between text-[10px] font-black uppercase">
+                    <span>Hue_Shift</span><span>{Math.floor((hueVal / 100) * 360)}°</span>
+                  </div>
+                  <div className="h-6 bg-gradient-to-r from-red-500 via-green-500 to-blue-500 border-[3px] border-black relative rounded-full">
+                    <input 
+                      type="range" min="0" max="100" value={hueVal} onChange={(e) => setHueVal(e.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" 
+                    />
+                    <div 
+                      className="absolute top-0 w-4 h-full bg-white border-x-[3px] border-black shadow-[2px_2px_0px_0px_black] pointer-events-none transform -translate-x-1/2" 
+                      style={{ left: `${hueVal}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </SubToolbox>
+
+            <SubToolbox title="RUBE GOLDBERG" icon={Power} headerBg="#FFE357" iconBg="#24D3FF" isOpen={subs.sy3} onToggle={() => toggleSub('sy3')}>
+              <SequenceEngine />
+            </SubToolbox>
+
+          </div>
+
+        </div>
+      </MainScaffold>
+
+      {/* ========================================== */}
+      {/* TOOLBOX 3: CONTENT STRATEGY */}
+      {/* ========================================== */}
+      <MainScaffold title="CONTENT STRATEGY" icon={LayoutGrid} headerBg="#CCFF00" iconBg="#FF7497" isOpen={mains.content} onToggle={() => toggleMain('content')}>
+         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            
+            {/* Standard Pack: Primitives */}
+            <SubToolbox title="PRIMITIVES 01" icon={Settings} headerBg="#FCAF57" iconBg="#FFE357" isOpen={subs.co1} onToggle={() => toggleSub('co1')}>
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <NeoButton variant="primary">Deploy Content</NeoButton>
+                  <NeoButton variant="inverted">Schedule</NeoButton>
+                </div>
+                
+                {/* Segmented Control */}
+                <div className="flex w-full h-14 border-[4px] border-black rounded-xl overflow-hidden shadow-[4px_4px_0px_0px_black] p-1 bg-white">
+                  <button className="flex-1 bg-black text-white font-black uppercase rounded-lg text-xs transition-all">Drafts</button>
+                  <button className="flex-1 bg-white text-black font-black uppercase rounded-lg text-xs hover:bg-neutral-100 transition-all">Published</button>
+                  <button className="flex-1 bg-white text-black font-black uppercase rounded-lg text-xs hover:bg-neutral-100 transition-all">Archived</button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="border-[4px] border-black rounded-xl p-4 flex items-center gap-4">
+                    <div className="w-8 h-8 border-[4px] border-black bg-[#CCFF00] rounded shadow-[2px_2px_0px_0px_black] flex items-center justify-center"><Check size={16} strokeWidth={4} /></div>
+                    <span className="font-black uppercase text-sm">Monetization</span>
+                  </div>
+                  <div className="border-[4px] border-black rounded-xl p-4 flex items-center gap-4 bg-gray-50">
+                    <div className="w-8 h-8 border-[4px] border-black bg-white rounded shadow-[2px_2px_0px_0px_black] flex items-center justify-center" />
+                    <span className="font-black uppercase text-sm opacity-50">Age Restrict</span>
+                  </div>
+                </div>
+
+                {/* Dropdown Mock */}
+                <div className="relative w-full text-black flex flex-col justify-end h-16">
+                  <label className="absolute bottom-[100%] mb-1 left-2 text-[10px] font-black uppercase text-black/40 tracking-[0.2em] z-10">Category</label>
+                  <button className="w-full h-full border-[4px] border-black rounded-xl flex items-stretch overflow-hidden bg-white hover:bg-neutral-50 transition-colors shadow-[4px_4px_0px_0px_black]">
+                    <div className="flex-1 flex items-center px-4"><span className="text-xl font-[900] uppercase tracking-tighter">Entertainment</span></div>
+                    <div className="h-full aspect-square border-l-[4px] border-black bg-[#FFE357] flex items-center justify-center shrink-0">
+                      <ChevronDown size={24} strokeWidth={4} />
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </SubToolbox>
+
+            {/* Creative Pack: Advanced Inputs */}
+            <SubToolbox title="ADVANCED INPUTS" icon={Database} headerBg="#1A1A1A" iconBg="#00FF99" isDark={true} isOpen={subs.co2} onToggle={() => toggleSub('co2')}>
+               <div className="space-y-6">
+                 
+                 {/* Keyboard Keys */}
+                 <div className="flex justify-between items-center bg-black p-4 border-[4px] border-[#FF3399] rounded-xl shadow-[4px_4px_0px_0px_#00FF99]">
+                   <span className="text-[#00FF99] font-black uppercase text-[10px] tracking-widest">Macro Bindings</span>
+                   <div className="flex gap-2">
+                     <Keycap>CTRL</Keycap>
+                     <Keycap>ALT</Keycap>
+                     <Keycap>DEL</Keycap>
+                   </div>
+                 </div>
+
+                 {/* Password with Eye */}
+                 <div className="relative h-14">
+                   <input type="password" placeholder="ENTER OVERRIDE KEY" className="w-full h-full bg-[#1A1A1A] border-[4px] border-[#00FF99] rounded-xl px-4 text-[#00FF99] font-black uppercase placeholder:text-[#00FF99]/30 outline-none focus:bg-black transition-colors" value="••••••••" readOnly/>
+                   <div className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 border-[3px] border-[#00FF99] bg-[#FF3399] rounded-lg flex items-center justify-center text-black cursor-pointer hover:bg-white transition-colors">
+                     <Eye size={20} strokeWidth={3} />
+                   </div>
+                 </div>
+
+                 {/* OTP Code */}
+                 <div className="flex flex-col gap-2">
+                   <span className="text-[#FF3399] font-black uppercase text-[10px] tracking-widest">Authorization Code</span>
+                   <div className="flex justify-between gap-2">
+                     <OTPSquare isTokyo={true} /><OTPSquare isTokyo={true} /><OTPSquare isTokyo={true} />
+                     <div className="w-4 flex items-center justify-center text-[#00FF99] font-black">-</div>
+                     <OTPSquare isTokyo={true} /><OTPSquare isTokyo={true} /><OTPSquare isTokyo={true} />
+                   </div>
+                 </div>
+
+                 <NeoButton variant="tokyo" className="w-full" icon={Shield}>Verify Identity</NeoButton>
+               </div>
+            </SubToolbox>
+
+         </div>
+      </MainScaffold>
+
+      {/* ========================================== */}
+      {/* TOOLBOX 4: SYSTEM OPS */}
+      {/* ========================================== */}
+      <MainScaffold title="SYSTEM OPS" icon={Terminal} headerBg="#FF7497" iconBg="#00D2FF" isOpen={mains.ops} onToggle={() => toggleMain('ops')}>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          
+          {/* Layout & Overlays */}
+          <SubToolbox title="CONTAINERS & ALERTS" icon={LayoutGrid} headerBg="#FFE357" iconBg="#FF7497" isOpen={subs.op1} onToggle={() => toggleSub('op1')}>
+            <div className="space-y-6">
+              
+              {/* Alert Toast */}
+              <div className="w-full border-[4px] border-black bg-[#CCFF00] rounded-xl flex items-stretch shadow-[4px_4px_0px_0px_black]">
+                <div className="w-14 border-r-[4px] border-black flex items-center justify-center bg-white">
+                  <AlertTriangle strokeWidth={3} />
+                </div>
+                <div className="flex-1 p-3 flex flex-col justify-center">
+                  <span className="font-[1000] uppercase text-sm leading-none">System Update</span>
+                  <span className="text-[10px] font-black uppercase text-black/60 tracking-wide mt-1">Reboot required in 4 mins</span>
+                </div>
+                <div className="w-12 flex items-center justify-center cursor-pointer hover:bg-black hover:text-white transition-colors rounded-r-lg">
+                  <X strokeWidth={4} size={20} />
+                </div>
+              </div>
+
+              {/* Creator Profile Card (from pink mask image vibe) */}
+              <div className="w-full border-[4px] border-black rounded-xl overflow-hidden flex shadow-[4px_4px_0px_0px_black] bg-white">
+                <div className="w-32 bg-[#FF3399] border-r-[4px] border-black flex items-center justify-center">
+                   {/* Mocking the pixel art profile */}
+                   <div className="w-20 h-20 border-[4px] border-black bg-[#24D3FF] shadow-[inset_4px_4px_0_0_rgba(255,255,255,0.4)]" />
+                </div>
+                <div className="p-4 flex-1 flex flex-col justify-between bg-neutral-100">
+                  <div>
+                    <h4 className="text-xl font-[1000] uppercase tracking-tighter leading-none">Anon_Creator</h4>
+                    <p className="text-[10px] font-black uppercase text-black/40 mt-1">Status: Online</p>
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <span className="px-2 py-1 bg-black text-white text-[9px] font-black uppercase rounded">Top 1%</span>
+                    <span className="px-2 py-1 border-[2px] border-black text-[9px] font-black uppercase rounded">Verified</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Accordion Inside SubToolbox */}
+              <div className="border-[4px] border-black rounded-xl bg-white overflow-hidden">
+                <div className="h-12 bg-[#24D3FF] flex items-center px-4 font-black uppercase text-sm border-b-[4px] border-black justify-between">
+                  Log History <ChevronDown size={16} strokeWidth={4} />
+                </div>
+                <div className="p-4 space-y-2 bg-neutral-50 text-[10px] font-mono font-bold uppercase">
+                  <div className="flex gap-4 border-b-2 border-black/10 pb-2"><span className="text-[#FF3399]">10:42</span><span>Compile Success</span></div>
+                  <div className="flex gap-4 border-b-2 border-black/10 pb-2"><span className="text-[#FF3399]">10:45</span><span>Assets Uploaded</span></div>
+                  <div className="flex gap-4 text-black/40"><span className="text-[#FF3399]/40">10:50</span><span>Awaiting Input...</span></div>
+                </div>
+              </div>
+
+            </div>
+          </SubToolbox>
+
+          {/* Media Player Mockup (90s Anime Retro Pop Vibe) */}
+          <SubToolbox title="MEDIA ENGINE" icon={Music} headerBg="#00D2FF" iconBg="#CCFF00" isOpen={subs.op2} onToggle={() => toggleSub('op2')}>
+             <div className="flex flex-col h-full space-y-6">
+                
+                {/* Video / Audio Window */}
+                <div className="w-full aspect-video border-[4px] border-black rounded-xl bg-black relative overflow-hidden shadow-[6px_6px_0px_0px_black] group">
+                   {/* Abstract vibrant background representing media */}
+                   <div className="absolute inset-0 bg-gradient-to-br from-[#FF3399] via-[#24D3FF] to-[#FFE357] opacity-80" />
+                   
+                   <div className="absolute inset-0 flex items-center justify-center">
+                     <div className="w-16 h-16 bg-white border-[4px] border-black rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-[4px_4px_0px_0px_black]">
+                       <Play fill="black" size={24} className="ml-1" />
+                     </div>
+                   </div>
+
+                   {/* Transport Bar */}
+                   <div className="absolute bottom-0 inset-x-0 h-12 bg-white border-t-[4px] border-black flex items-center px-4 gap-4 transform translate-y-full group-hover:translate-y-0 transition-transform">
+                     <Pause size={20} fill="black" strokeWidth={0} className="cursor-pointer hover:text-[#FF3399]" />
+                     <div className="flex-1 h-3 border-[2px] border-black rounded-full overflow-hidden bg-gray-200">
+                       <div className="h-full bg-[#CCFF00] w-1/3 border-r-[2px] border-black" />
+                     </div>
+                     <span className="font-black text-[10px]">01:24</span>
+                   </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <button className="h-12 border-[4px] border-black rounded-xl bg-white flex items-center justify-center shadow-[3px_3px_0px_0px_black] hover:bg-black hover:text-white transition-colors">
+                    <FastForward size={20} className="rotate-180" />
+                  </button>
+                  <button className="h-12 border-[4px] border-black rounded-xl bg-[#FFE357] flex items-center justify-center shadow-[3px_3px_0px_0px_black] hover:translate-y-1 hover:shadow-none transition-all">
+                    <Volume2 size={20} strokeWidth={3} />
+                  </button>
+                  <button className="h-12 border-[4px] border-black rounded-xl bg-white flex items-center justify-center shadow-[3px_3px_0px_0px_black] hover:bg-black hover:text-white transition-colors">
+                    <FastForward size={20} />
+                  </button>
+                </div>
+
+             </div>
+          </SubToolbox>
+        </div>
+      </MainScaffold>
+
+    </div>
+  );
+}

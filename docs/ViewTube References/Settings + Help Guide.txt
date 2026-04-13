@@ -1,0 +1,684 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue255;\red255\green255\blue254;\red0\green0\blue0;
+\red14\green110\blue109;\red144\green1\blue18;\red19\green118\blue70;\red15\green112\blue1;\red191\green28\blue37;
+}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c100000;\cssrgb\c100000\c100000\c99608;\cssrgb\c0\c0\c0;
+\cssrgb\c0\c50196\c50196;\cssrgb\c63922\c8235\c8235;\cssrgb\c3529\c52549\c34510;\cssrgb\c0\c50196\c0;\cssrgb\c80392\c19216\c19216;
+}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 Help Guide\
+\
+\pard\pardeftab720\partightenfactor0
+
+\f1 \cf2 \cb3 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 import\cf0 \strokec4  \cf5 \strokec5 React\cf0 \strokec4 , \{ useState \} \cf2 \strokec2 from\cf0 \strokec4  \cf6 \strokec6 'react'\cf0 \strokec4 ;\cb1 \
+\cf2 \cb3 \strokec2 import\cf0 \strokec4  \{ \cf5 \strokec5 HelpCircle\cf0 \strokec4 , \cf5 \strokec5 Zap\cf0 \strokec4 , \cf5 \strokec5 ShieldCheck\cf0 \strokec4 , \cf5 \strokec5 AlertTriangle\cf0 \strokec4 , \cf5 \strokec5 BookOpen\cf0 \strokec4 , \cf5 \strokec5 Terminal\cf0 \strokec4 , \cf5 \strokec5 Cpu\cf0 \strokec4 , \cf5 \strokec5 Search\cf0 \strokec4 , \cf5 \strokec5 Image\cf0 \strokec4 , \cf5 \strokec5 BarChart3\cf0 \strokec4 , \cf5 \strokec5 MessageSquare\cf0 \strokec4 , \cf5 \strokec5 Rocket\cf0 \strokec4 , \cf5 \strokec5 Upload\cf0 \strokec4  \} \cf2 \strokec2 from\cf0 \strokec4  \cf6 \strokec6 'lucide-react'\cf0 \strokec4 ;\cb1 \
+\
+\cf2 \cb3 \strokec2 const\cf0 \strokec4  \cf5 \strokec5 HelpGuide\cf0 \strokec4 : \cf5 \strokec5 React\cf0 \strokec4 .\cf5 \strokec5 FC\cf0 \strokec4  = () => \{\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3   \cf2 \strokec2 const\cf0 \strokec4  [checkedState, setCheckedState] = useState<\cf5 \strokec5 Record\cf0 \strokec4 <\cf2 \strokec2 string\cf0 \strokec4 , \cf2 \strokec2 boolean\cf0 \strokec4 >>(\{\});\cb1 \
+\
+\cb3   \cf2 \strokec2 const\cf0 \strokec4  toggle = (id: \cf2 \strokec2 string\cf0 \strokec4 ) => \{\cb1 \
+\cb3     setCheckedState(prev => (\{ ...prev, [id]: !prev[id] \}));\cb1 \
+\cb3   \};\cb1 \
+\
+\cb3   \cf2 \strokec2 const\cf0 \strokec4  toolInstructions = [\cb1 \
+\cb3     \{\cb1 \
+\cb3       \cf2 \strokec2 module\cf0 \strokec4 : \cf6 \strokec6 'Studio Hub'\cf0 \strokec4 ,\cb1 \
+\cb3       color: \cf6 \strokec6 '#00CCFF'\cf0 \strokec4 ,\cb1 \
+\cb3       icon: <\cf5 \strokec5 Rocket\cf0 \strokec4  size=\{\cf7 \strokec7 32\cf0 \strokec4 \} />,\cb1 \
+\cb3       tools: [\cb1 \
+\cb3         \{\cb1 \
+\cb3           name: \cf6 \strokec6 'Upload Generator'\cf0 \strokec4 ,\cb1 \
+\cb3           desc: \cf6 \strokec6 'Converts scripts or concepts into SEO-optimized assets.'\cf0 \strokec4 ,\cb1 \
+\cb3           steps: [\cb1 \
+\cb3             \cf6 \strokec6 'Paste your video script or a detailed concept into the input field.'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Click "Generate SEO Assets" to receive 3 title variations and a keyword-rich description.'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Use the "Copy" buttons to move assets directly to YouTube Studio.'\cf0 \cb1 \strokec4 \
+\cb3           ]\cb1 \
+\cb3         \},\cb1 \
+\cb3         \{\cb1 \
+\cb3           name: \cf6 \strokec6 'Hook Generator'\cf0 \strokec4 ,\cb1 \
+\cb3           desc: \cf6 \strokec6 'Crafts high-retention intros based on psychological triggers.'\cf0 \strokec4 ,\cb1 \
+\cb3           steps: [\cb1 \
+\cb3             \cf6 \strokec6 'Input your video topic and target audience.'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Select a "Hook Style" (e.g., Curiosity, Fear, Value).'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Generate and refine the first 15 seconds of your script to maximize retention.'\cf0 \cb1 \strokec4 \
+\cb3           ]\cb1 \
+\cb3         \},\cb1 \
+\cb3         \{\cb1 \
+\cb3           name: \cf6 \strokec6 'Thumbnail Studio'\cf0 \strokec4 ,\cb1 \
+\cb3           desc: \cf6 \strokec6 'AI-driven visual conceptualization tool.'\cf0 \strokec4 ,\cb1 \
+\cb3           steps: [\cb1 \
+\cb3             \cf6 \strokec6 'Describe your visual idea in the prompt field.'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Select aspect ratio (16:9 for Long-form, 9:16 for Shorts).'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Generate concepts and use the "Analyze" tab to check for visual hierarchy and clarity.'\cf0 \cb1 \strokec4 \
+\cb3           ]\cb1 \
+\cb3         \},\cb1 \
+\cb3         \{\cb1 \
+\cb3           name: \cf6 \strokec6 'Media Analyzer'\cf0 \strokec4 ,\cb1 \
+\cb3           desc: \cf6 \strokec6 'Transcribes and analyzes video/audio files for quality.'\cf0 \strokec4 ,\cb1 \
+\cb3           steps: [\cb1 \
+\cb3             \cf6 \strokec6 'Upload your .mp4 or .mp3 file.'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Run "Transcribe" to get a full text readout.'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Use "Analyze" to get AI feedback on pacing, tone, and key takeaways.'\cf0 \cb1 \strokec4 \
+\cb3           ]\cb1 \
+\cb3         \}\cb1 \
+\cb3       ]\cb1 \
+\cb3     \},\cb1 \
+\cb3     \{\cb1 \
+\cb3       \cf2 \strokec2 module\cf0 \strokec4 : \cf6 \strokec6 'Research Lab'\cf0 \strokec4 ,\cb1 \
+\cb3       color: \cf6 \strokec6 '#CCFF00'\cf0 \strokec4 ,\cb1 \
+\cb3       icon: <\cf5 \strokec5 Cpu\cf0 \strokec4  size=\{\cf7 \strokec7 32\cf0 \strokec4 \} />,\cb1 \
+\cb3       tools: [\cb1 \
+\cb3         \{\cb1 \
+\cb3           name: \cf6 \strokec6 'Analytics Oracle'\cf0 \strokec4 ,\cb1 \
+\cb3           desc: \cf6 \strokec6 'Deep-dive AI analysis of your channel performance.'\cf0 \strokec4 ,\cb1 \
+\cb3           steps: [\cb1 \
+\cb3             \cf6 \strokec6 'Connect your YouTube channel via OAuth.'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Sync data to pull the latest 30-90 days of performance.'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Click "Consult Oracle" for a strategic report on what is working and what is failing.'\cf0 \cb1 \strokec4 \
+\cb3           ]\cb1 \
+\cb3         \},\cb1 \
+\cb3         \{\cb1 \
+\cb3           name: \cf6 \strokec6 'Algorithm Architect'\cf0 \strokec4 ,\cb1 \
+\cb3           desc: \cf6 \strokec6 'Strategic diagnosis of channel-wide patterns.'\cf0 \strokec4 ,\cb1 \
+\cb3           steps: [\cb1 \
+\cb3             \cf6 \strokec6 'Review the "Retention Heatmap" to find where viewers drop off.'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Analyze the "CTR vs AVD" matrix to identify "Ghost Hits" (high CTR, low retention).'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Implement the suggested "Architectural Fixes" in your next upload.'\cf0 \cb1 \strokec4 \
+\cb3           ]\cb1 \
+\cb3         \},\cb1 \
+\cb3         \{\cb1 \
+\cb3           name: \cf6 \strokec6 'Keyword Research'\cf0 \strokec4 ,\cb1 \
+\cb3           desc: \cf6 \strokec6 'Finds high-volume, low-competition opportunities.'\cf0 \strokec4 ,\cb1 \
+\cb3           steps: [\cb1 \
+\cb3             \cf6 \strokec6 'Enter a seed keyword related to your niche.'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Analyze the "Opportunity Score" (Volume vs. Competition).'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Save high-score keywords to your Ideas Vault for future production.'\cf0 \cb1 \strokec4 \
+\cb3           ]\cb1 \
+\cb3         \},\cb1 \
+\cb3         \{\cb1 \
+\cb3           name: \cf6 \strokec6 'Strategy Chat'\cf0 \strokec4 ,\cb1 \
+\cb3           desc: \cf6 \strokec6 'Thinking-mode AI for deep strategic planning.'\cf0 \strokec4 ,\cb1 \
+\cb3           steps: [\cb1 \
+\cb3             \cf6 \strokec6 'Ask complex questions like "How do I pivot from gaming to tech?"'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Use the "Thinking" toggle for multi-step reasoning and detailed roadmaps.'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Export chat logs to your strategy documents.'\cf0 \cb1 \strokec4 \
+\cb3           ]\cb1 \
+\cb3         \}\cb1 \
+\cb3       ]\cb1 \
+\cb3     \},\cb1 \
+\cb3     \{\cb1 \
+\cb3       \cf2 \strokec2 module\cf0 \strokec4 : \cf6 \strokec6 'Management'\cf0 \strokec4 ,\cb1 \
+\cb3       color: \cf6 \strokec6 '#B197FC'\cf0 \strokec4 ,\cb1 \
+\cb3       icon: <\cf5 \strokec5 BarChart3\cf0 \strokec4  size=\{\cf7 \strokec7 32\cf0 \strokec4 \} />,\cb1 \
+\cb3       tools: [\cb1 \
+\cb3         \{\cb1 \
+\cb3           name: \cf6 \strokec6 'Ideas Vault'\cf0 \strokec4 ,\cb1 \
+\cb3           desc: \cf6 \strokec6 'Stores and organizes your high-potential video concepts and keywords.'\cf0 \strokec4 ,\cb1 \
+\cb3           steps: [\cb1 \
+\cb3             \cf6 \strokec6 'Browse your saved keywords and concepts.'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Organize ideas into production-ready lists.'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Move ideas directly to the Hook Generator when ready for production.'\cf0 \cb1 \strokec4 \
+\cb3           ]\cb1 \
+\cb3         \},\cb1 \
+\cb3         \{\cb1 \
+\cb3           name: \cf6 \strokec6 'Video Manager'\cf0 \strokec4 ,\cb1 \
+\cb3           desc: \cf6 \strokec6 'Oversees your video library and production status.'\cf0 \strokec4 ,\cb1 \
+\cb3           steps: [\cb1 \
+\cb3             \cf6 \strokec6 'View all your uploaded and planned videos.'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Track production status (Draft, Editing, Published).'\cf0 \strokec4 ,\cb1 \
+\cb3             \cf6 \strokec6 'Quickly access analytics or SEO assets for each video.'\cf0 \cb1 \strokec4 \
+\cb3           ]\cb1 \
+\cb3         \}\cb1 \
+\cb3       ]\cb1 \
+\cb3     \}\cb1 \
+\cb3   ];\cb1 \
+\
+\cb3   \cf2 \strokec2 const\cf0 \strokec4  preUpload = [\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'pre1'\cf0 \strokec4 , title: \cf6 \strokec6 'File Hygiene'\cf0 \strokec4 , desc: \cf6 \strokec6 'Rename video file to `target-keyword.mp4` before upload.'\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'pre2'\cf0 \strokec4 , title: \cf6 \strokec6 'Thumbnail Stress Test'\cf0 \strokec4 , desc: \cf6 \strokec6 'Zoom out to 10%. Is the subject clear? Is text readable?'\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'pre3'\cf0 \strokec4 , title: \cf6 \strokec6 'Title Hook'\cf0 \strokec4 , desc: \cf6 \strokec6 'Ensure primary keyword is in the first 60 characters.'\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'pre4'\cf0 \strokec4 , title: \cf6 \strokec6 'Description SEO'\cf0 \strokec4 , desc: \cf6 \strokec6 'First 2 lines = Hook + Keyword + Value Prop.'\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'pre5'\cf0 \strokec4 , title: \cf6 \strokec6 'Timestamps'\cf0 \strokec4 , desc: \cf6 \strokec6 'Add "Key Moments" (e.g. 00:00 Intro) to aid Google Search.'\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'pre6'\cf0 \strokec4 , title: \cf6 \strokec6 'Tags Hierarchy'\cf0 \strokec4 , desc: \cf6 \strokec6 'Target keyword first, then variations, then channel tag.'\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'pre7'\cf0 \strokec4 , title: \cf6 \strokec6 'End Screens'\cf0 \strokec4 , desc: \cf6 \strokec6 'Link to "Best for Viewer" or specific sequel. 20s max.'\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'pre8'\cf0 \strokec4 , title: \cf6 \strokec6 'Monetization'\cf0 \strokec4 , desc: \cf6 \strokec6 'Complete Self-Certification for Ad Suitability.'\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'pre9'\cf0 \strokec4 , title: \cf6 \strokec6 'Processing'\cf0 \strokec4 , desc: \cf6 \strokec6 'Upload as UNLISTED first. Wait for HD/4K processing.'\cf0 \strokec4  \},\cb1 \
+\cb3   ];\cb1 \
+\
+\cb3   \cf2 \strokec2 const\cf0 \strokec4  postUpload = [\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'post1'\cf0 \strokec4 , title: \cf6 \strokec6 'The First View'\cf0 \strokec4 , desc: \cf6 \strokec6 'Watch your video fully to seed 100% retention.'\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'post2'\cf0 \strokec4 , title: \cf6 \strokec6 'The Engagement Spark'\cf0 \strokec4 , desc: \cf6 \strokec6 'Like your video. Pin a comment with a specific question.'\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'post3'\cf0 \strokec4 , title: \cf6 \strokec6 'Community Tab'\cf0 \strokec4 , desc: \cf6 \strokec6 'Post link on Community Tab with a Poll or GIF.'\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'post4'\cf0 \strokec4 , title: \cf6 \strokec6 'Reply Sprint'\cf0 \strokec4 , desc: \cf6 \strokec6 'Reply to ALL comments in the first 60 mins. Heart them.'\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'post5'\cf0 \strokec4 , title: \cf6 \strokec6 'External Signal'\cf0 \strokec4 , desc: \cf6 \strokec6 'Share to Discord, Twitter, or Email List immediately.'\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'post6'\cf0 \strokec4 , title: \cf6 \strokec6 'Playlist Optimization'\cf0 \strokec4 , desc: \cf6 \strokec6 'Add to relevant playlists. Move to position #1.'\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'post7'\cf0 \strokec4 , title: \cf6 \strokec6 'CTR Emergency Check'\cf0 \strokec4 , desc: \cf6 \strokec6 'Check CTR at 2 hours. If < 4%, swap thumbnail.'\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'post8'\cf0 \strokec4 , title: \cf6 \strokec6 'Remix Strategy'\cf0 \strokec4 , desc: \cf6 \strokec6 'Create a 15s Short from the highest retention moment.'\cf0 \strokec4  \},\cb1 \
+\cb3   ];\cb1 \
+\
+\cb3   \cf2 \strokec2 const\cf0 \strokec4  troubleshooting = [\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'ts1'\cf0 \strokec4 , title: \cf6 \strokec6 '403 Error on Google Page'\cf0 \strokec4 , desc: \cf6 \strokec6 'If you get a 403 error immediately after clicking Connect, your Google Cloud project is likely in "Testing" mode. You MUST add your email address to the "Test Users" list in the Google Cloud Console under "OAuth consent screen".'\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'ts2'\cf0 \strokec4 , title: \cf6 \strokec6 'Redirect URI Mismatch'\cf0 \strokec4 , desc: \cf6 \strokec6 `Ensure you have added "\cf0 \strokec4 $\{window.location.origin\}\cf6 \strokec6 /auth/callback" to the "Authorized redirect URIs" in your Google Cloud Console credentials.`\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'ts3'\cf0 \strokec4 , title: \cf6 \strokec6 'Sensitive Scopes'\cf0 \strokec4 , desc: \cf6 \strokec6 'This app requests sensitive YouTube Analytics scopes. If your app is not verified, you will see a "Google hasn\\'t verified this app" warning. Click "Advanced" and then "Go to UsTube (unsafe)" to proceed.'\cf0 \strokec4  \},\cb1 \
+\cb3     \{ id: \cf6 \strokec6 'ts4'\cf0 \strokec4 , title: \cf6 \strokec6 'Token Expiry'\cf0 \strokec4 , desc: \cf6 \strokec6 'If analytics stop syncing, your refresh token might have expired or been revoked. Disconnect and reconnect your channel to get a fresh session.'\cf0 \strokec4  \},\cb1 \
+\cb3   ];\cb1 \
+\
+\cb3   \cf2 \strokec2 return\cf0 \strokec4  (\cb1 \
+\cb3     <div className=\cf6 \strokec6 "max-w-6xl mx-auto space-y-12 pb-20"\cf0 \strokec4 >\cb1 \
+\cb3        \cb1 \
+\cb3        \{\cf8 \strokec8 /* Header */\cf0 \strokec4 \}\cb1 \
+\cb3        <div className=\cf6 \strokec6 "flex justify-between items-end border-b-4 border-black pb-4"\cf0 \strokec4 >\cb1 \
+\cb3           <div>\cb1 \
+\cb3             <h1 className=\cf6 \strokec6 "text-5xl font-black uppercase tracking-tighter text-black"\cf0 \strokec4 >\cf5 \strokec5 User\cf0 \strokec4  \cf5 \strokec5 Guide\cf0 \strokec4 </h1>\cb1 \
+\cb3             <p className=\cf6 \strokec6 "text-xl font-bold text-gray-600 mt-1"\cf0 \strokec4 >\cf5 \strokec5 Operational\cf0 \strokec4  protocols \cf2 \strokec2 for\cf0 \strokec4  the \cf5 \strokec5 UsTube\cf0 \strokec4  ecosystem</p>\cb1 \
+\cb3           </div>\cb1 \
+\cb3           <div className=\cf6 \strokec6 "bg-[#B197FC] text-black p-3 rounded-xl border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform rotate-2 flex items-center justify-center"\cf0 \strokec4 >\cb1 \
+\cb3             <\cf5 \strokec5 BookOpen\cf0 \strokec4  size=\{\cf7 \strokec7 32\cf0 \strokec4 \} />\cb1 \
+\cb3           </div>\cb1 \
+\cb3        </div>\cb1 \
+\
+\cb3        \{\cf8 \strokec8 /* Tool Intelligence Section */\cf0 \strokec4 \}\cb1 \
+\cb3        <div className=\cf6 \strokec6 "pop-box"\cf0 \strokec4 >\cb1 \
+\cb3           <div className=\cf6 \strokec6 "pop-header bg-[#FF7497] text-black flex flex-wrap justify-between items-center cursor-pointer gap-4"\cf0 \strokec4 >\cb1 \
+\cb3             <div className=\cf6 \strokec6 "flex items-center gap-2 md:gap-4"\cf0 \strokec4 >\cb1 \
+\cb3               <div className=\cf6 \strokec6 "w-10 h-10 md:w-12 md:h-12 bg-white border-2 border-black rounded-lg flex items-center justify-center shadow-[2px_2px_0px_0px_black]"\cf0 \strokec4 >\cb1 \
+\cb3                 <\cf5 \strokec5 Cpu\cf0 \strokec4  size=\{\cf7 \strokec7 44\cf0 \strokec4 \} className=\cf6 \strokec6 "text-black"\cf0 \strokec4  />\cb1 \
+\cb3               </div>\cb1 \
+\cb3               <span className=\cf6 \strokec6 "text-[38px] font-black uppercase"\cf0 \strokec4 >\cf5 \strokec5 Tool\cf0 \strokec4  \cf5 \strokec5 Intelligence\cf0 \strokec4 </span>\cb1 \
+\cb3             </div>\cb1 \
+\cb3           </div>\cb1 \
+\cb3           <div className=\cf6 \strokec6 "pop-content p-8 bg-white space-y-12"\cf0 \strokec4 >\cb1 \
+\cb3             \{toolInstructions.map((\cf2 \strokec2 module\cf0 \strokec4 ) => (\cb1 \
+\cb3               <div key=\{\cf2 \strokec2 module\cf0 \strokec4 .\cf2 \strokec2 module\cf0 \strokec4 \} className=\cf6 \strokec6 "space-y-6"\cf0 \strokec4 >\cb1 \
+\cb3                 <div className=\cf6 \strokec6 "flex items-center gap-4 border-b-4 border-black pb-2"\cf0 \strokec4 >\cb1 \
+\cb3                   <div className=\cf6 \strokec6 "p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_black]"\cf0 \strokec4  style=\{\{ backgroundColor: \cf2 \strokec2 module\cf0 \strokec4 .color \}\}>\cb1 \
+\cb3                     \{\cf2 \strokec2 module\cf0 \strokec4 .icon\}\cb1 \
+\cb3                   </div>\cb1 \
+\cb3                   <h2 className=\cf6 \strokec6 "text-3xl font-black uppercase"\cf0 \strokec4 >\{\cf2 \strokec2 module\cf0 \strokec4 .\cf2 \strokec2 module\cf0 \strokec4 \} \cf5 \strokec5 Manual\cf0 \strokec4 </h2>\cb1 \
+\cb3                 </div>\cb1 \
+\cb3                 <div className=\cf6 \strokec6 "grid grid-cols-1 md:grid-cols-2 gap-6"\cf0 \strokec4 >\cb1 \
+\cb3                   \{\cf2 \strokec2 module\cf0 \strokec4 .tools.map((tool) => (\cb1 \
+\cb3                     <div key=\{tool.name\} className=\cf6 \strokec6 "p-6 border-3 border-black rounded-2xl bg-gray-50 shadow-[4px_4px_0px_0px_black]"\cf0 \strokec4 >\cb1 \
+\cb3                       <h3 className=\cf6 \strokec6 "text-xl font-black uppercase mb-2"\cf0 \strokec4 >\{tool.name\}</h3>\cb1 \
+\cb3                       <p className=\cf6 \strokec6 "font-bold text-gray-600 text-sm mb-4 leading-tight"\cf0 \strokec4 >\{tool.desc\}</p>\cb1 \
+\cb3                       <ul className=\cf6 \strokec6 "space-y-2"\cf0 \strokec4 >\cb1 \
+\cb3                         \{tool.steps.map((step, idx) => (\cb1 \
+\cb3                           <li key=\{idx\} className=\cf6 \strokec6 "flex gap-3 text-xs font-bold text-black leading-tight"\cf0 \strokec4 >\cb1 \
+\cb3                             <span className=\cf6 \strokec6 "flex-shrink-0 w-5 h-5 bg-black text-white rounded flex items-center justify-center"\cf0 \strokec4 >\{idx + \cf7 \strokec7 1\cf0 \strokec4 \}</span>\cb1 \
+\cb3                             \{step\}\cb1 \
+\cb3                           </li>\cb1 \
+\cb3                         ))\}\cb1 \
+\cb3                       </ul>\cb1 \
+\cb3                     </div>\cb1 \
+\cb3                   ))\}\cb1 \
+\cb3                 </div>\cb1 \
+\cb3               </div>\cb1 \
+\cb3             ))\}\cb1 \
+\cb3           </div>\cb1 \
+\cb3        </div>\cb1 \
+\
+\cb3        \{\cf8 \strokec8 /* AI Tag Intelligence Section */\cf0 \strokec4 \}\cb1 \
+\cb3        <div className=\cf6 \strokec6 "pop-box"\cf0 \strokec4 >\cb1 \
+\cb3           <div className=\cf6 \strokec6 "pop-header bg-[#00CCFF] text-black flex flex-wrap justify-between items-center cursor-pointer gap-4"\cf0 \strokec4 >\cb1 \
+\cb3             <div className=\cf6 \strokec6 "flex items-center gap-2 md:gap-4"\cf0 \strokec4 >\cb1 \
+\cb3               <div className=\cf6 \strokec6 "w-10 h-10 md:w-12 md:h-12 bg-white border-2 border-black rounded-lg flex items-center justify-center shadow-[2px_2px_0px_0px_black]"\cf0 \strokec4 >\cb1 \
+\cb3                 <\cf5 \strokec5 Zap\cf0 \strokec4  size=\{\cf7 \strokec7 44\cf0 \strokec4 \} className=\cf6 \strokec6 "text-black"\cf0 \strokec4  />\cb1 \
+\cb3               </div>\cb1 \
+\cb3               <span className=\cf6 \strokec6 "text-[38px] font-black uppercase"\cf0 \strokec4 >\cf5 \strokec5 AI\cf0 \strokec4  \cf5 \strokec5 Tag\cf0 \strokec4  \cf5 \strokec5 Intelligence\cf0 \strokec4 </span>\cb1 \
+\cb3             </div>\cb1 \
+\cb3           </div>\cb1 \
+\cb3           <div className=\cf6 \strokec6 "pop-content p-8 bg-white"\cf0 \strokec4 >\cb1 \
+\cb3             <div className=\cf6 \strokec6 "flex flex-col space-y-12 w-full"\cf0 \strokec4 >\cb1 \
+\cb3               <div className=\cf6 \strokec6 "w-full space-y-4"\cf0 \strokec4 >\cb1 \
+\cb3                 <h3 className=\cf6 \strokec6 "text-3xl font-black uppercase border-b-4 border-black pb-2"\cf0 \strokec4 >\cf5 \strokec5 How\cf0 \strokec4  the \cf5 \strokec5 Tag\cf0 \strokec4  \cf5 \strokec5 Manager\cf0 \strokec4  \cf5 \strokec5 Works\cf0 \strokec4 </h3>\cb1 \
+\cb3                 <ul className=\cf6 \strokec6 "space-y-4 font-bold text-gray-700 text-base"\cf0 \strokec4 >\cb1 \
+\cb3                   <li className=\cf6 \strokec6 "flex flex-col"\cf0 \strokec4 >\cb1 \
+\cb3                     <span className=\cf6 \strokec6 "text-black text-lg"\cf0 \strokec4 ><strong>\cf7 \strokec7 1\cf0 \strokec4 . \cf5 \strokec5 Context\cf0 \strokec4  \cf5 \strokec5 Extraction\cf0 \strokec4  & \cf5 \strokec5 Automatic\cf0 \strokec4  \cf5 \strokec5 Suggestions\cf0 \strokec4 :</strong></span>\cb1 \
+\cb3                     <span>\cf5 \strokec5 AI\cf0 \strokec4  (gemini-\cf7 \strokec7 3.1\cf0 \strokec4 -pro-preview) performs \cf5 \strokec5 NLP\cf0 \strokec4  analysis \cf2 \strokec2 of\cf0 \strokec4  your \cf5 \strokec5 Video\cf0 \strokec4  \cf5 \strokec5 Title\cf0 \strokec4  & \cf5 \strokec5 Description\cf0 \strokec4  to identify core themes and secondary topics automatically, generating \cf7 \strokec7 10\cf0 \strokec4  relevant tags.</span>\cb1 \
+\cb3                   </li>\cb1 \
+\cb3                   <li className=\cf6 \strokec6 "flex flex-col"\cf0 \strokec4 >\cb1 \
+\cb3                     <span className=\cf6 \strokec6 "text-black text-lg"\cf0 \strokec4 ><strong>\cf7 \strokec7 2\cf0 \strokec4 . \cf5 \strokec5 Semantic\cf0 \strokec4  \cf5 \strokec5 Expansion\cf0 \strokec4 :</strong></span>\cb1 \
+\cb3                     <span>\cf5 \strokec5 Maps\cf0 \strokec4  keywords to related high-volume search terms, discovering \cf6 \strokec6 "hidden"\cf0 \strokec4  keywords users actually search \cf2 \strokec2 for\cf0 \strokec4 .</span>\cb1 \
+\cb3                   </li>\cb1 \
+\cb3                   <li className=\cf6 \strokec6 "flex flex-col"\cf0 \strokec4 >\cb1 \
+\cb3                     <span className=\cf6 \strokec6 "text-black text-lg"\cf0 \strokec4 ><strong>\cf7 \strokec7 3\cf0 \strokec4 . \cf5 \strokec5 Relevance\cf0 \strokec4  \cf5 \strokec5 Scoring\cf0 \strokec4  & \cf5 \strokec5 Color\cf0 \strokec4 -\cf5 \strokec5 Coded\cf0 \strokec4  \cf5 \strokec5 Rankings\cf0 \strokec4 :</strong></span>\cb1 \
+\cb3                     <span>\cf5 \strokec5 Ranks\cf0 \strokec4  tags on a \cf7 \strokec7 1\cf0 \strokec4 -\cf7 \strokec7 100\cf0 \strokec4  scale based on semantic fit to prioritize the most impactful tags. <span className=\cf6 \strokec6 "px-2 py-1 bg-[#00CCFF] text-black rounded ml-2"\cf0 \strokec4 >\cf7 \strokec7 90\cf0 \strokec4 + (\cf5 \strokec5 Blue\cf0 \strokec4 )</span> <span className=\cf6 \strokec6 "px-2 py-1 bg-[#CCFF33] text-black rounded"\cf0 \strokec4 >\cf7 \strokec7 80\cf0 \strokec4 + (\cf5 \strokec5 Green\cf0 \strokec4 )</span> <span className=\cf6 \strokec6 "px-2 py-1 bg-[#FFCC33] text-black rounded"\cf0 \strokec4 >\cf7 \strokec7 70\cf0 \strokec4 + (\cf5 \strokec5 Yellow\cf0 \strokec4 )</span> <span className=\cf6 \strokec6 "px-2 py-1 bg-[#FF9933] text-black rounded"\cf0 \strokec4 >\cf7 \strokec7 60\cf0 \strokec4 + (\cf5 \strokec5 Orange\cf0 \strokec4 )</span> <span className=\cf6 \strokec6 "px-2 py-1 bg-[#FF6699] text-black rounded"\cf0 \strokec4 >&lt;\cf7 \strokec7 60\cf0 \strokec4  (\cf5 \strokec5 Pink\cf0 \strokec4 )</span></span>\cb1 \
+\cb3                   </li>\cb1 \
+\cb3                   <li className=\cf6 \strokec6 "flex flex-col"\cf0 \strokec4 >\cb1 \
+\cb3                     <span className=\cf6 \strokec6 "text-black text-lg"\cf0 \strokec4 ><strong>\cf7 \strokec7 4\cf0 \strokec4 . \cf5 \strokec5 Deduplication\cf0 \strokec4  & \cf5 \strokec5 Character\cf0 \strokec4  \cf5 \strokec5 Tracking\cf0 \strokec4 :</strong></span>\cb1 \
+\cb3                     <span>\cf5 \strokec5 Filters\cf0 \strokec4  \cf2 \strokec2 out\cf0 \strokec4  redundant variations and provides a real-time \cf7 \strokec7 500\cf0 \strokec4 -char limit counter (turns pink \cf2 \strokec2 if\cf0 \strokec4  exceeded) to ensure efficient use \cf2 \strokec2 of\cf0 \strokec4  space.</span>\cb1 \
+\cb3                   </li>\cb1 \
+\cb3                   <li className=\cf6 \strokec6 "flex flex-col"\cf0 \strokec4 >\cb1 \
+\cb3                     <span className=\cf6 \strokec6 "text-black text-lg"\cf0 \strokec4 ><strong>\cf7 \strokec7 5\cf0 \strokec4 . \cf5 \strokec5 One\cf0 \strokec4 -\cf5 \strokec5 Click\cf0 \strokec4  \cf5 \strokec5 Add\cf0 \strokec4 :</strong></span>\cb1 \
+\cb3                     <span>\cf5 \strokec5 Instantly\cf0 \strokec4  add suggestions to active tags.</span>\cb1 \
+\cb3                   </li>\cb1 \
+\cb3                 </ul>\cb1 \
+\cb3               </div>\cb1 \
+\cb3               \cb1 \
+\cb3               <div className=\cf6 \strokec6 "w-full space-y-4"\cf0 \strokec4 >\cb1 \
+\cb3                 <h3 className=\cf6 \strokec6 "text-3xl font-black uppercase border-b-4 border-black pb-2"\cf0 \strokec4 >\cf5 \strokec5 Understanding\cf0 \strokec4  \cf5 \strokec5 SEO\cf0 \strokec4  \cf5 \strokec5 Metrics\cf0 \strokec4 </h3>\cb1 \
+\cb3                 <p className=\cf6 \strokec6 "font-bold text-gray-700 text-base mb-4"\cf0 \strokec4 >\cf5 \strokec5 Hover\cf0 \strokec4  over tags to reveal detailed metrics:</p>\cb1 \
+\cb3                 <div className=\cf6 \strokec6 "grid grid-cols-1 md:grid-cols-2 gap-4 font-bold text-gray-700 text-base"\cf0 \strokec4 >\cb1 \
+\cb3                   <div className=\cf6 \strokec6 "flex items-center gap-3 p-3 border-2 border-black rounded-xl bg-gray-50"\cf0 \strokec4 >\cb1 \
+\cb3                     <span className=\cf6 \strokec6 "w-8 h-8 flex items-center justify-center bg-[#00CCFF] rounded text-black border-2 border-black"\cf0 \strokec4 >\cf5 \strokec5 V\cf0 \strokec4 </span> \cb1 \
+\cb3                     <span><strong>\cf5 \strokec5 Volume\cf0 \strokec4 :</strong> \cf5 \strokec5 Search\cf0 \strokec4  volume.</span>\cb1 \
+\cb3                   </div>\cb1 \
+\cb3                   <div className=\cf6 \strokec6 "flex items-center gap-3 p-3 border-2 border-black rounded-xl bg-gray-50"\cf0 \strokec4 >\cb1 \
+\cb3                     <span className=\cf6 \strokec6 "w-8 h-8 flex items-center justify-center bg-[#CCFF33] rounded text-black border-2 border-black"\cf0 \strokec4 >\cf5 \strokec5 C\cf0 \strokec4 </span> \cb1 \
+\cb3                     <span><strong>\cf5 \strokec5 Competition\cf0 \strokec4 :</strong> \cf5 \strokec5 Competing\cf0 \strokec4  videos.</span>\cb1 \
+\cb3                   </div>\cb1 \
+\cb3                   <div className=\cf6 \strokec6 "flex items-center gap-3 p-3 border-2 border-black rounded-xl bg-gray-50"\cf0 \strokec4 >\cb1 \
+\cb3                     <span className=\cf6 \strokec6 "w-8 h-8 flex items-center justify-center bg-[#FFCC33] rounded text-black border-2 border-black"\cf0 \strokec4 >\cf5 \strokec5 R\cf0 \strokec4 </span> \cb1 \
+\cb3                     <span><strong>\cf5 \strokec5 Est\cf0 \strokec4 . \cf5 \strokec5 Rank\cf0 \strokec4 :</strong> \cf5 \strokec5 Predicted\cf0 \strokec4  search position.</span>\cb1 \
+\cb3                   </div>\cb1 \
+\cb3                   <div className=\cf6 \strokec6 "flex items-center gap-3 p-3 border-2 border-black rounded-xl bg-gray-50"\cf0 \strokec4 >\cb1 \
+\cb3                     <span className=\cf6 \strokec6 "w-8 h-8 flex items-center justify-center bg-[#FF9933] rounded text-black border-2 border-black"\cf0 \strokec4 >\cf5 \strokec5 T\cf0 \strokec4 </span> \cb1 \
+\cb3                     <span><strong>\cf5 \strokec5 Triple\cf0 \strokec4  \cf5 \strokec5 Keyword\cf0 \strokec4 :</strong> \cf5 \strokec5 In\cf0 \strokec4  \cf5 \strokec5 Title\cf0 \strokec4 /\cf5 \strokec5 Desc\cf0 \strokec4 /\cf5 \strokec5 Tags\cf0 \strokec4  (\cf5 \strokec5 Huge\cf0 \strokec4  signal).</span>\cb1 \
+\cb3                   </div>\cb1 \
+\cb3                   <div className=\cf6 \strokec6 "flex items-center gap-3 p-3 border-2 border-black rounded-xl bg-gray-50 md:col-span-2"\cf0 \strokec4 >\cb1 \
+\cb3                     <span className=\cf6 \strokec6 "w-8 h-8 flex items-center justify-center bg-[#FF6699] rounded text-black border-2 border-black"\cf0 \strokec4 >\cf5 \strokec5 S\cf0 \strokec4 </span> \cb1 \
+\cb3                     <span><strong>\cf5 \strokec5 Score\cf0 \strokec4 :</strong> \cf5 \strokec5 Final\cf0 \strokec4  \cf7 \strokec7 1\cf0 \strokec4 -\cf7 \strokec7 100\cf0 \strokec4  ranking.</span>\cb1 \
+\cb3                   </div>\cb1 \
+\cb3                 </div>\cb1 \
+\cb3               </div>\cb1 \
+\cb3             </div>\cb1 \
+\cb3             <div className=\cf6 \strokec6 "mt-8 p-4 bg-gray-100 border-3 border-black rounded-xl italic text-sm font-bold text-gray-600"\cf0 \strokec4 >\cb1 \
+\cb3               * \cf5 \strokec5 Note\cf0 \strokec4 : \cf5 \strokec5 AI\cf0 \strokec4  suggestions are generated \cf2 \strokec2 in\cf0 \strokec4  real-time using the \cf5 \strokec5 Gemini\cf0 \strokec4  model, optimized \cf2 \strokec2 for\cf0 \strokec4  speed and semantic accuracy.\cb1 \
+\cb3             </div>\cb1 \
+\cb3           </div>\cb1 \
+\cb3        </div>\cb1 \
+\
+\cb3        \{\cf8 \strokec8 /* Video Uploader Section */\cf0 \strokec4 \}\cb1 \
+\cb3        <div className=\cf6 \strokec6 "pop-box"\cf0 \strokec4 >\cb1 \
+\cb3           <div className=\cf6 \strokec6 "pop-header bg-[#FFB158] text-black flex flex-wrap justify-between items-center cursor-pointer gap-4"\cf0 \strokec4 >\cb1 \
+\cb3             <div className=\cf6 \strokec6 "flex items-center gap-2 md:gap-4"\cf0 \strokec4 >\cb1 \
+\cb3               <div className=\cf6 \strokec6 "w-10 h-10 md:w-12 md:h-12 bg-white border-2 border-black rounded-lg flex items-center justify-center shadow-[2px_2px_0px_0px_black]"\cf0 \strokec4 >\cb1 \
+\cb3                 <\cf5 \strokec5 Upload\cf0 \strokec4  size=\{\cf7 \strokec7 44\cf0 \strokec4 \} className=\cf6 \strokec6 "text-black"\cf0 \strokec4  />\cb1 \
+\cb3               </div>\cb1 \
+\cb3               <span className=\cf6 \strokec6 "text-[38px] font-black uppercase"\cf0 \strokec4 >\cf5 \strokec5 Video\cf0 \strokec4  \cf5 \strokec5 Uploader\cf0 \strokec4 </span>\cb1 \
+\cb3             </div>\cb1 \
+\cb3           </div>\cb1 \
+\cb3           <div className=\cf6 \strokec6 "pop-content p-8 bg-white"\cf0 \strokec4 >\cb1 \
+\cb3             <div className=\cf6 \strokec6 "space-y-8 mb-8"\cf0 \strokec4 >\cb1 \
+\cb3               <div className=\cf6 \strokec6 "space-y-4"\cf0 \strokec4 >\cb1 \
+\cb3                 <h3 className=\cf6 \strokec6 "text-2xl font-black uppercase"\cf0 \strokec4 >\cf5 \strokec5 How\cf0 \strokec4  the \cf5 \strokec5 Video\cf0 \strokec4  \cf5 \strokec5 Uploader\cf0 \strokec4  \cf5 \strokec5 Works\cf0 \strokec4 </h3>\cb1 \
+\cb3                 <ul className=\cf6 \strokec6 "space-y-3 font-bold text-gray-700 text-sm"\cf0 \strokec4 >\cb1 \
+\cb3                   <li><strong>\cf7 \strokec7 1\cf0 \strokec4 . \cf5 \strokec5 Script\cf0 \strokec4  \cf5 \strokec5 Input\cf0 \strokec4 :</strong> \cf5 \strokec5 Paste\cf0 \strokec4  your video script or concept into the input field.</li>\cb1 \
+\cb3                   <li><strong>\cf7 \strokec7 2\cf0 \strokec4 . \cf5 \strokec5 SEO\cf0 \strokec4  \cf5 \strokec5 Generation\cf0 \strokec4 :</strong> \cf5 \strokec5 AI\cf0 \strokec4  analyzes your input to create \cf7 \strokec7 3\cf0 \strokec4  title variations and a keyword-rich description.</li>\cb1 \
+\cb3                   <li><strong>\cf7 \strokec7 3\cf0 \strokec4 . \cf5 \strokec5 Asset\cf0 \strokec4  \cf5 \strokec5 Export\cf0 \strokec4 :</strong> \cf5 \strokec5 Use\cf0 \strokec4  the \cf6 \strokec6 "Copy"\cf0 \strokec4  buttons to move assets directly to \cf5 \strokec5 YouTube\cf0 \strokec4  \cf5 \strokec5 Studio\cf0 \strokec4 .</li>\cb1 \
+\cb3                 </ul>\cb1 \
+\cb3               </div>\cb1 \
+\cb3               <div className=\cf6 \strokec6 "space-y-4"\cf0 \strokec4 >\cb1 \
+\cb3                 <h3 className=\cf6 \strokec6 "text-2xl font-black uppercase"\cf0 \strokec4 >\cf5 \strokec5 Understanding\cf0 \strokec4  \cf5 \strokec5 Upload\cf0 \strokec4  \cf5 \strokec5 Metrics\cf0 \strokec4 </h3>\cb1 \
+\cb3                 <p className=\cf6 \strokec6 "font-bold text-gray-700 text-sm"\cf0 \strokec4 >\cf5 \strokec5 Key\cf0 \strokec4  metrics generated:</p>\cb1 \
+\cb3                 <ul className=\cf6 \strokec6 "space-y-2 font-bold text-gray-700 text-sm"\cf0 \strokec4 >\cb1 \
+\cb3                   <li><strong>\cf5 \strokec5 Title\cf0 \strokec4  \cf5 \strokec5 Variations\cf0 \strokec4 :</strong> \cf5 \strokec5 Optimized\cf0 \strokec4  \cf2 \strokec2 for\cf0 \strokec4  click-through rate.</li>\cb1 \
+\cb3                   <li><strong>\cf5 \strokec5 Keyword\cf0 \strokec4  \cf5 \strokec5 Density\cf0 \strokec4 :</strong> \cf5 \strokec5 Ensures\cf0 \strokec4  your primary keywords are naturally integrated.</li>\cb1 \
+\cb3                   <li><strong>\cf5 \strokec5 Description\cf0 \strokec4  \cf5 \strokec5 Hook\cf0 \strokec4 :</strong> \cf5 \strokec5 Crafted\cf0 \strokec4  to maximize viewer retention \cf2 \strokec2 in\cf0 \strokec4  the first \cf7 \strokec7 30\cf0 \strokec4  seconds.</li>\cb1 \
+\cb3                 </ul>\cb1 \
+\cb3               </div>\cb1 \
+\cb3             </div>\cb1 \
+\cb3             <div className=\cf6 \strokec6 "overflow-x-auto"\cf0 \strokec4 >\cb1 \
+\cb3               <table className=\cf6 \strokec6 "w-full border-4 border-black border-collapse"\cf0 \strokec4 >\cb1 \
+\cb3                 <thead>\cb1 \
+\cb3                   <tr className=\cf6 \strokec6 "bg-black text-white"\cf0 \strokec4 >\cb1 \
+\cb3                     <th className=\cf6 \strokec6 "p-4 text-left font-black uppercase text-xl border-r-4 border-white"\cf0 \strokec4 >\cf5 \strokec5 Process\cf0 \strokec4  \cf5 \strokec5 Step\cf0 \strokec4 </th>\cb1 \
+\cb3                     <th className=\cf6 \strokec6 "p-4 text-left font-black uppercase text-xl border-r-4 border-white"\cf0 \strokec4 >\cf5 \strokec5 Mechanism\cf0 \strokec4 </th>\cb1 \
+\cb3                     <th className=\cf6 \strokec6 "p-4 text-left font-black uppercase text-xl"\cf0 \strokec4 >\cf5 \strokec5 Benefit\cf0 \strokec4 </th>\cb1 \
+\cb3                   </tr>\cb1 \
+\cb3                 </thead>\cb1 \
+\cb3                 <tbody className=\cf6 \strokec6 "font-bold text-black"\cf0 \strokec4 >\cb1 \
+\cb3                   <tr className=\cf6 \strokec6 "border-b-4 border-black hover:bg-gray-50 transition-colors"\cf0 \strokec4 >\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4 border-r-4 border-black bg-[#FFB158]/10"\cf0 \strokec4 >\cf5 \strokec5 Script\cf0 \strokec4  \cf5 \strokec5 Analysis\cf0 \strokec4 </td>\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4 border-r-4 border-black"\cf0 \strokec4 >\cf5 \strokec5 NLP\cf0 \strokec4  analysis \cf2 \strokec2 of\cf0 \strokec4  your script/concept.</td>\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4"\cf0 \strokec4 >\cf5 \strokec5 Extracts\cf0 \strokec4  key themes and target audience.</td>\cb1 \
+\cb3                   </tr>\cb1 \
+\cb3                   <tr className=\cf6 \strokec6 "border-b-4 border-black hover:bg-gray-50 transition-colors"\cf0 \strokec4 >\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4 border-r-4 border-black bg-[#FF7497]/10"\cf0 \strokec4 >\cf5 \strokec5 SEO\cf0 \strokec4  \cf5 \strokec5 Optimization\cf0 \strokec4 </td>\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4 border-r-4 border-black"\cf0 \strokec4 >\cf5 \strokec5 Mapping\cf0 \strokec4  content to high-volume search terms.</td>\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4"\cf0 \strokec4 >\cf5 \strokec5 Increases\cf0 \strokec4  discoverability on \cf5 \strokec5 YouTube\cf0 \strokec4 .</td>\cb1 \
+\cb3                   </tr>\cb1 \
+\cb3                   <tr className=\cf6 \strokec6 "hover:bg-gray-50 transition-colors"\cf0 \strokec4 >\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4 border-r-4 border-black bg-[#CCFF00]/10"\cf0 \strokec4 >\cf5 \strokec5 Asset\cf0 \strokec4  \cf5 \strokec5 Generation\cf0 \strokec4 </td>\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4 border-r-4 border-black"\cf0 \strokec4 >\cf5 \strokec5 Creating\cf0 \strokec4  titles and descriptions.</td>\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4"\cf0 \strokec4 >\cf5 \strokec5 Saves\cf0 \strokec4  time and improves \cf5 \strokec5 SEO\cf0 \strokec4  performance.</td>\cb1 \
+\cb3                   </tr>\cb1 \
+\cb3                 </tbody>\cb1 \
+\cb3               </table>\cb1 \
+\cb3             </div>\cb1 \
+\cb3           </div>\cb1 \
+\cb3        </div>\cb1 \
+\
+\cb3        \{\cf8 \strokec8 /* Thumbnail Studio Section */\cf0 \strokec4 \}\cb1 \
+\cb3        <div className=\cf6 \strokec6 "pop-box"\cf0 \strokec4 >\cb1 \
+\cb3           <div className=\cf6 \strokec6 "pop-header bg-[#B197FC] text-black flex flex-wrap justify-between items-center cursor-pointer gap-4"\cf0 \strokec4 >\cb1 \
+\cb3             <div className=\cf6 \strokec6 "flex items-center gap-2 md:gap-4"\cf0 \strokec4 >\cb1 \
+\cb3               <div className=\cf6 \strokec6 "w-10 h-10 md:w-12 md:h-12 bg-white border-2 border-black rounded-lg flex items-center justify-center shadow-[2px_2px_0px_0px_black]"\cf0 \strokec4 >\cb1 \
+\cb3                 <\cf5 \strokec5 Image\cf0 \strokec4  size=\{\cf7 \strokec7 44\cf0 \strokec4 \} className=\cf6 \strokec6 "text-black"\cf0 \strokec4  />\cb1 \
+\cb3               </div>\cb1 \
+\cb3               <span className=\cf6 \strokec6 "text-[38px] font-black uppercase"\cf0 \strokec4 >\cf5 \strokec5 Thumbnail\cf0 \strokec4  \cf5 \strokec5 Studio\cf0 \strokec4 </span>\cb1 \
+\cb3             </div>\cb1 \
+\cb3           </div>\cb1 \
+\cb3           <div className=\cf6 \strokec6 "pop-content p-8 bg-white"\cf0 \strokec4 >\cb1 \
+\cb3             <div className=\cf6 \strokec6 "space-y-8 mb-8"\cf0 \strokec4 >\cb1 \
+\cb3               <div className=\cf6 \strokec6 "space-y-4"\cf0 \strokec4 >\cb1 \
+\cb3                 <h3 className=\cf6 \strokec6 "text-2xl font-black uppercase"\cf0 \strokec4 >\cf5 \strokec5 How\cf0 \strokec4  the \cf5 \strokec5 Thumbnail\cf0 \strokec4  \cf5 \strokec5 Studio\cf0 \strokec4  \cf5 \strokec5 Works\cf0 \strokec4 </h3>\cb1 \
+\cb3                 <ul className=\cf6 \strokec6 "space-y-3 font-bold text-gray-700 text-sm"\cf0 \strokec4 >\cb1 \
+\cb3                   <li><strong>\cf7 \strokec7 1\cf0 \strokec4 . \cf5 \strokec5 Prompt\cf0 \strokec4  \cf5 \strokec5 Input\cf0 \strokec4 :</strong> \cf5 \strokec5 Describe\cf0 \strokec4  your visual idea \cf2 \strokec2 in\cf0 \strokec4  the prompt field.</li>\cb1 \
+\cb3                   <li><strong>\cf7 \strokec7 2\cf0 \strokec4 . \cf5 \strokec5 Aspect\cf0 \strokec4  \cf5 \strokec5 Ratio\cf0 \strokec4 :</strong> \cf5 \strokec5 Select\cf0 \strokec4  \cf7 \strokec7 16\cf0 \strokec4 :\cf7 \strokec7 9\cf0 \strokec4  \cf2 \strokec2 for\cf0 \strokec4  \cf5 \strokec5 Long\cf0 \strokec4 -form or \cf7 \strokec7 9\cf0 \strokec4 :\cf7 \strokec7 16\cf0 \strokec4  \cf2 \strokec2 for\cf0 \strokec4  \cf5 \strokec5 Shorts\cf0 \strokec4 .</li>\cb1 \
+\cb3                   <li><strong>\cf7 \strokec7 3\cf0 \strokec4 . \cf5 \strokec5 Concept\cf0 \strokec4  \cf5 \strokec5 Generation\cf0 \strokec4 :</strong> \cf5 \strokec5 AI\cf0 \strokec4  generates visual concepts based on your prompt.</li>\cb1 \
+\cb3                   <li><strong>\cf7 \strokec7 4\cf0 \strokec4 . \cf5 \strokec5 Analysis\cf0 \strokec4 :</strong> \cf5 \strokec5 Use\cf0 \strokec4  the \cf6 \strokec6 "Analyze"\cf0 \strokec4  tab to check \cf2 \strokec2 for\cf0 \strokec4  visual hierarchy and clarity.</li>\cb1 \
+\cb3                 </ul>\cb1 \
+\cb3               </div>\cb1 \
+\cb3               <div className=\cf6 \strokec6 "space-y-4"\cf0 \strokec4 >\cb1 \
+\cb3                 <h3 className=\cf6 \strokec6 "text-2xl font-black uppercase"\cf0 \strokec4 >\cf5 \strokec5 Understanding\cf0 \strokec4  \cf5 \strokec5 Thumbnail\cf0 \strokec4  \cf5 \strokec5 Metrics\cf0 \strokec4 </h3>\cb1 \
+\cb3                 <p className=\cf6 \strokec6 "font-bold text-gray-700 text-sm"\cf0 \strokec4 >\cf5 \strokec5 Key\cf0 \strokec4  metrics analyzed:</p>\cb1 \
+\cb3                 <ul className=\cf6 \strokec6 "space-y-2 font-bold text-gray-700 text-sm"\cf0 \strokec4 >\cb1 \
+\cb3                   <li><strong>\cf5 \strokec5 Visual\cf0 \strokec4  \cf5 \strokec5 Hierarchy\cf0 \strokec4 :</strong> \cf5 \strokec5 Ensures\cf0 \strokec4  the main subject \cf2 \strokec2 is\cf0 \strokec4  the focal point.</li>\cb1 \
+\cb3                   <li><strong>\cf5 \strokec5 Clarity\cf0 \strokec4 :</strong> \cf5 \strokec5 Checks\cf0 \strokec4  \cf2 \strokec2 for\cf0 \strokec4  readability and contrast.</li>\cb1 \
+\cb3                   <li><strong>\cf5 \strokec5 Aspect\cf0 \strokec4  \cf5 \strokec5 Ratio\cf0 \strokec4 :</strong> \cf5 \strokec5 Validates\cf0 \strokec4  compatibility \cf2 \strokec2 with\cf0 \strokec4  target format.</li>\cb1 \
+\cb3                 </ul>\cb1 \
+\cb3               </div>\cb1 \
+\cb3             </div>\cb1 \
+\cb3             <div className=\cf6 \strokec6 "overflow-x-auto"\cf0 \strokec4 >\cb1 \
+\cb3               <table className=\cf6 \strokec6 "w-full border-4 border-black border-collapse"\cf0 \strokec4 >\cb1 \
+\cb3                 <thead>\cb1 \
+\cb3                   <tr className=\cf6 \strokec6 "bg-black text-white"\cf0 \strokec4 >\cb1 \
+\cb3                     <th className=\cf6 \strokec6 "p-4 text-left font-black uppercase text-xl border-r-4 border-white"\cf0 \strokec4 >\cf5 \strokec5 Process\cf0 \strokec4  \cf5 \strokec5 Step\cf0 \strokec4 </th>\cb1 \
+\cb3                     <th className=\cf6 \strokec6 "p-4 text-left font-black uppercase text-xl border-r-4 border-white"\cf0 \strokec4 >\cf5 \strokec5 Mechanism\cf0 \strokec4 </th>\cb1 \
+\cb3                     <th className=\cf6 \strokec6 "p-4 text-left font-black uppercase text-xl"\cf0 \strokec4 >\cf5 \strokec5 Benefit\cf0 \strokec4 </th>\cb1 \
+\cb3                   </tr>\cb1 \
+\cb3                 </thead>\cb1 \
+\cb3                 <tbody className=\cf6 \strokec6 "font-bold text-black"\cf0 \strokec4 >\cb1 \
+\cb3                   <tr className=\cf6 \strokec6 "border-b-4 border-black hover:bg-gray-50 transition-colors"\cf0 \strokec4 >\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4 border-r-4 border-black bg-[#B197FC]/10"\cf0 \strokec4 >\cf5 \strokec5 Visual\cf0 \strokec4  \cf5 \strokec5 Conceptualization\cf0 \strokec4 </td>\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4 border-r-4 border-black"\cf0 \strokec4 >\cf5 \strokec5 Generative\cf0 \strokec4  \cf5 \strokec5 AI\cf0 \strokec4  based on your prompt.</td>\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4"\cf0 \strokec4 >\cf5 \strokec5 Creates\cf0 \strokec4  \cf2 \strokec2 unique\cf0 \strokec4  and engaging thumbnails.</td>\cb1 \
+\cb3                   </tr>\cb1 \
+\cb3                   <tr className=\cf6 \strokec6 "border-b-4 border-black hover:bg-gray-50 transition-colors"\cf0 \strokec4 >\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4 border-r-4 border-black bg-[#00CCFF]/10"\cf0 \strokec4 >\cf5 \strokec5 Clarity\cf0 \strokec4  \cf5 \strokec5 Analysis\cf0 \strokec4 </td>\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4 border-r-4 border-black"\cf0 \strokec4 >\cf5 \strokec5 Checking\cf0 \strokec4  contrast and readability.</td>\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4"\cf0 \strokec4 >\cf5 \strokec5 Ensures\cf0 \strokec4  the thumbnail \cf2 \strokec2 is\cf0 \strokec4  effective at small sizes.</td>\cb1 \
+\cb3                   </tr>\cb1 \
+\cb3                   <tr className=\cf6 \strokec6 "hover:bg-gray-50 transition-colors"\cf0 \strokec4 >\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4 border-r-4 border-black bg-[#FFDD00]/10"\cf0 \strokec4 >\cf5 \strokec5 Hierarchy\cf0 \strokec4  \cf5 \strokec5 Check\cf0 \strokec4 </td>\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4 border-r-4 border-black"\cf0 \strokec4 >\cf5 \strokec5 Analyzing\cf0 \strokec4  visual focus points.</td>\cb1 \
+\cb3                     <td className=\cf6 \strokec6 "p-4"\cf0 \strokec4 >\cf5 \strokec5 Guides\cf0 \strokec4  the viewer\cf6 \strokec6 's eye to the most important element.</td>\cf0 \cb1 \strokec4 \
+\cb3                   </tr>\cb1 \
+\cb3                 </tbody>\cb1 \
+\cb3               </table>\cb1 \
+\cb3             </div>\cb1 \
+\cb3           </div>\cb1 \
+\cb3        </div>\cb1 \
+\
+\cb3        \{\cf8 \strokec8 /* Pre-Flight Protocol */\cf0 \strokec4 \}\cb1 \
+\cb3        <div className=\cf6 \strokec6 "pop-box"\cf0 \strokec4 >\cb1 \
+\cb3           <div className=\cf6 \strokec6 "pop-header bg-[#CCFF00] text-black flex flex-wrap justify-between items-center cursor-pointer gap-4"\cf0 \strokec4 >\cb1 \
+\cb3             <div className=\cf6 \strokec6 "flex items-center gap-2 md:gap-4"\cf0 \strokec4 >\cb1 \
+\cb3               <div className=\cf6 \strokec6 "w-10 h-10 md:w-12 md:h-12 bg-[#FF87F3] border-2 border-black rounded-lg flex items-center justify-center shadow-[2px_2px_0px_0px_black]"\cf0 \strokec4 >\cb1 \
+\cb3                 <\cf5 \strokec5 ShieldCheck\cf0 \strokec4  size=\{\cf7 \strokec7 44\cf0 \strokec4 \} className=\cf6 \strokec6 "text-black"\cf0 \strokec4  />\cb1 \
+\cb3               </div>\cb1 \
+\cb3               <span className=\cf6 \strokec6 "text-[38px] font-black uppercase"\cf0 \strokec4 >\cf5 \strokec5 Pre\cf0 \strokec4 -\cf5 \strokec5 Flight\cf0 \strokec4  \cf5 \strokec5 Protocol\cf0 \strokec4 </span>\cb1 \
+\cb3             </div>\cb1 \
+\cb3           </div>\cb1 \
+\cb3           <div className=\cf6 \strokec6 "pop-content p-0 bg-white"\cf0 \strokec4 >\cb1 \
+\cb3             <div className=\cf6 \strokec6 "grid grid-cols-1 lg:grid-cols-2"\cf0 \strokec4 >\cb1 \
+\cb3               <div className=\cf6 \strokec6 "p-8 border-b-2 lg:border-b-0 lg:border-r-2 border-black bg-gray-50"\cf0 \strokec4 >\cb1 \
+\cb3                 <h3 className=\cf6 \strokec6 "text-2xl font-black uppercase mb-4 flex items-center gap-2"\cf0 \strokec4 >\cb1 \
+\cb3                   <span className=\cf6 \strokec6 "bg-black text-white px-2 py-1 rounded text-sm"\cf0 \strokec4 >\cf5 \strokec5 PHASE\cf0 \strokec4  \cf5 \strokec5 A\cf0 \strokec4 </span>\cb1 \
+\cb3                   \cf5 \strokec5 Content\cf0 \strokec4  \cf5 \strokec5 Optimization\cf0 \cb1 \strokec4 \
+\cb3                 </h3>\cb1 \
+\cb3                 <div className=\cf6 \strokec6 "space-y-3"\cf0 \strokec4 >\cb1 \
+\cb3                   \{preUpload.slice(\cf7 \strokec7 0\cf0 \strokec4 , \cf7 \strokec7 5\cf0 \strokec4 ).map((item) => (\cb1 \
+\cb3                     <div \cb1 \
+\cb3                       key=\{item.id\}\cb1 \
+\cb3                       onClick=\{() => toggle(item.id)\}\cb1 \
+\cb3                       className=\{\cf6 \strokec6 `p-4 border-3 border-black rounded-xl flex gap-4 cursor-pointer transition-all \cf0 \strokec4 $\{\cb1 \
+\cb3                         checkedState[item.id] ? \cf6 \strokec6 'bg-gray-200 opacity-50'\cf0 \strokec4  : \cf6 \strokec6 'bg-white shadow-[4px_4px_0px_0px_black] hover:translate-x-1 hover:translate-y-1 hover:shadow-none'\cf0 \cb1 \strokec4 \
+\cb3                       \}\cf6 \strokec6 `\cf0 \strokec4 \}\cb1 \
+\cb3                     >\cb1 \
+\cb3                       <div className=\{\cf6 \strokec6 `w-6 h-6 flex-shrink-0 border-2 border-black rounded flex items-center justify-center \cf0 \strokec4 $\{checkedState[item.id] ? \cf6 \strokec6 'bg-black'\cf0 \strokec4  : \cf6 \strokec6 'bg-white'\cf0 \strokec4 \}\cf6 \strokec6 `\cf0 \strokec4 \}>\cb1 \
+\cb3                         \{checkedState[item.id] && <svg className=\cf6 \strokec6 "w-4 h-4 text-white"\cf0 \strokec4  fill=\cf6 \strokec6 "none"\cf0 \strokec4  stroke=\cf6 \strokec6 "currentColor"\cf0 \strokec4  viewBox=\cf6 \strokec6 "0 0 24 24"\cf0 \strokec4 ><path strokeLinecap=\cf6 \strokec6 "round"\cf0 \strokec4  strokeLinejoin=\cf6 \strokec6 "round"\cf0 \strokec4  strokeWidth=\{\cf7 \strokec7 4\cf0 \strokec4 \} d=\cf6 \strokec6 "M5 13l4 4L19 7"\cf0 \strokec4  /></svg>\}\cb1 \
+\cb3                       </div>\cb1 \
+\cb3                       <div>\cb1 \
+\cb3                         <h4 className=\cf6 \strokec6 "font-black uppercase text-sm"\cf0 \strokec4 >\{item.title\}</h4>\cb1 \
+\cb3                         <p className=\cf6 \strokec6 "text-xs font-bold text-gray-500"\cf0 \strokec4 >\{item.desc\}</p>\cb1 \
+\cb3                       </div>\cb1 \
+\cb3                     </div>\cb1 \
+\cb3                   ))\}\cb1 \
+\cb3                 </div>\cb1 \
+\cb3               </div>\cb1 \
+\cb3               <div className=\cf6 \strokec6 "p-8"\cf0 \strokec4 >\cb1 \
+\cb3                 <h3 className=\cf6 \strokec6 "text-2xl font-black uppercase mb-4 flex items-center gap-2"\cf0 \strokec4 >\cb1 \
+\cb3                   <span className=\cf6 \strokec6 "bg-black text-white px-2 py-1 rounded text-sm"\cf0 \strokec4 >\cf5 \strokec5 PHASE\cf0 \strokec4  \cf5 \strokec5 B\cf0 \strokec4 </span>\cb1 \
+\cb3                   \cf5 \strokec5 Technical\cf0 \strokec4  \cf5 \strokec5 Readiness\cf0 \cb1 \strokec4 \
+\cb3                 </h3>\cb1 \
+\cb3                 <div className=\cf6 \strokec6 "space-y-3"\cf0 \strokec4 >\cb1 \
+\cb3                   \{preUpload.slice(\cf7 \strokec7 5\cf0 \strokec4 ).map((item) => (\cb1 \
+\cb3                     <div \cb1 \
+\cb3                       key=\{item.id\}\cb1 \
+\cb3                       onClick=\{() => toggle(item.id)\}\cb1 \
+\cb3                       className=\{\cf6 \strokec6 `p-4 border-3 border-black rounded-xl flex gap-4 cursor-pointer transition-all \cf0 \strokec4 $\{\cb1 \
+\cb3                         checkedState[item.id] ? \cf6 \strokec6 'bg-gray-200 opacity-50'\cf0 \strokec4  : \cf6 \strokec6 'bg-white shadow-[4px_4px_0px_0px_black] hover:translate-x-1 hover:translate-y-1 hover:shadow-none'\cf0 \cb1 \strokec4 \
+\cb3                       \}\cf6 \strokec6 `\cf0 \strokec4 \}\cb1 \
+\cb3                     >\cb1 \
+\cb3                       <div className=\{\cf6 \strokec6 `w-6 h-6 flex-shrink-0 border-2 border-black rounded flex items-center justify-center \cf0 \strokec4 $\{checkedState[item.id] ? \cf6 \strokec6 'bg-black'\cf0 \strokec4  : \cf6 \strokec6 'bg-white'\cf0 \strokec4 \}\cf6 \strokec6 `\cf0 \strokec4 \}>\cb1 \
+\cb3                         \{checkedState[item.id] && <svg className=\cf6 \strokec6 "w-4 h-4 text-white"\cf0 \strokec4  fill=\cf6 \strokec6 "none"\cf0 \strokec4  stroke=\cf6 \strokec6 "currentColor"\cf0 \strokec4  viewBox=\cf6 \strokec6 "0 0 24 24"\cf0 \strokec4 ><path strokeLinecap=\cf6 \strokec6 "round"\cf0 \strokec4  strokeLinejoin=\cf6 \strokec6 "round"\cf0 \strokec4  strokeWidth=\{\cf7 \strokec7 4\cf0 \strokec4 \} d=\cf6 \strokec6 "M5 13l4 4L19 7"\cf0 \strokec4  /></svg>\}\cb1 \
+\cb3                       </div>\cb1 \
+\cb3                       <div>\cb1 \
+\cb3                         <h4 className=\cf6 \strokec6 "font-black uppercase text-sm"\cf0 \strokec4 >\{item.title\}</h4>\cb1 \
+\cb3                         <p className=\cf6 \strokec6 "text-xs font-bold text-gray-500"\cf0 \strokec4 >\{item.desc\}</p>\cb1 \
+\cb3                       </div>\cb1 \
+\cb3                     </div>\cb1 \
+\cb3                   ))\}\cb1 \
+\cb3                 </div>\cb1 \
+\cb3               </div>\cb1 \
+\cb3             </div>\cb1 \
+\cb3           </div>\cb1 \
+\cb3        </div>\cb1 \
+\
+\cb3        \{\cf8 \strokec8 /* Post-Launch Protocol */\cf0 \strokec4 \}\cb1 \
+\cb3        <div className=\cf6 \strokec6 "pop-box"\cf0 \strokec4 >\cb1 \
+\cb3           <div className=\cf6 \strokec6 "pop-header bg-[#FFDD00] text-black flex flex-wrap justify-between items-center cursor-pointer gap-4"\cf0 \strokec4 >\cb1 \
+\cb3             <div className=\cf6 \strokec6 "flex items-center gap-2 md:gap-4"\cf0 \strokec4 >\cb1 \
+\cb3               <div className=\cf6 \strokec6 "w-10 h-10 md:w-12 md:h-12 bg-[#00CCFF] border-2 border-black rounded-lg flex items-center justify-center shadow-[2px_2px_0px_0px_black]"\cf0 \strokec4 >\cb1 \
+\cb3                 <\cf5 \strokec5 Zap\cf0 \strokec4  size=\{\cf7 \strokec7 44\cf0 \strokec4 \} className=\cf6 \strokec6 "text-black"\cf0 \strokec4  />\cb1 \
+\cb3               </div>\cb1 \
+\cb3               <span className=\cf6 \strokec6 "text-[38px] font-black uppercase"\cf0 \strokec4 >\cf5 \strokec5 Post\cf0 \strokec4 -\cf5 \strokec5 Launch\cf0 \strokec4  \cf5 \strokec5 Protocol\cf0 \strokec4 </span>\cb1 \
+\cb3             </div>\cb1 \
+\cb3           </div>\cb1 \
+\cb3           <div className=\cf6 \strokec6 "pop-content p-8 bg-white"\cf0 \strokec4 >\cb1 \
+\cb3             <div className=\cf6 \strokec6 "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"\cf0 \strokec4 >\cb1 \
+\cb3               \{postUpload.map((item) => (\cb1 \
+\cb3                 <div \cb1 \
+\cb3                   key=\{item.id\}\cb1 \
+\cb3                   onClick=\{() => toggle(item.id)\}\cb1 \
+\cb3                   className=\{\cf6 \strokec6 `p-6 border-3 border-black rounded-2xl flex flex-col gap-3 cursor-pointer transition-all \cf0 \strokec4 $\{\cb1 \
+\cb3                     checkedState[item.id] ? \cf6 \strokec6 'bg-gray-100 opacity-50'\cf0 \strokec4  : \cf6 \strokec6 'bg-white shadow-[6px_6px_0px_0px_black] hover:translate-x-1 hover:translate-y-1 hover:shadow-none'\cf0 \cb1 \strokec4 \
+\cb3                   \}\cf6 \strokec6 `\cf0 \strokec4 \}\cb1 \
+\cb3                 >\cb1 \
+\cb3                   <div className=\{\cf6 \strokec6 `w-8 h-8 border-2 border-black rounded-lg flex items-center justify-center \cf0 \strokec4 $\{checkedState[item.id] ? \cf6 \strokec6 'bg-black'\cf0 \strokec4  : \cf6 \strokec6 'bg-[#FFDD00]'\cf0 \strokec4 \}\cf6 \strokec6 `\cf0 \strokec4 \}>\cb1 \
+\cb3                     \{checkedState[item.id] ? <svg className=\cf6 \strokec6 "w-5 h-5 text-white"\cf0 \strokec4  fill=\cf6 \strokec6 "none"\cf0 \strokec4  stroke=\cf6 \strokec6 "currentColor"\cf0 \strokec4  viewBox=\cf6 \strokec6 "0 0 24 24"\cf0 \strokec4 ><path strokeLinecap=\cf6 \strokec6 "round"\cf0 \strokec4  strokeLinejoin=\cf6 \strokec6 "round"\cf0 \strokec4  strokeWidth=\{\cf7 \strokec7 4\cf0 \strokec4 \} d=\cf6 \strokec6 "M5 13l4 4L19 7"\cf0 \strokec4  /></svg> : <span className=\cf6 \strokec6 "font-black text-xs"\cf0 \strokec4 >\cf5 \strokec5 GO\cf0 \strokec4 </span>\}\cb1 \
+\cb3                   </div>\cb1 \
+\cb3                   <h4 className=\cf6 \strokec6 "font-black uppercase text-base leading-tight"\cf0 \strokec4 >\{item.title\}</h4>\cb1 \
+\cb3                   <p className=\cf6 \strokec6 "text-xs font-bold text-gray-500 leading-relaxed"\cf0 \strokec4 >\{item.desc\}</p>\cb1 \
+\cb3                 </div>\cb1 \
+\cb3               ))\}\cb1 \
+\cb3             </div>\cb1 \
+\cb3           </div>\cb1 \
+\cb3        </div>\cb1 \
+\
+\cb3        \{\cf8 \strokec8 /* Troubleshooting */\cf0 \strokec4 \}\cb1 \
+\cb3        <div className=\cf6 \strokec6 "pop-box"\cf0 \strokec4 >\cb1 \
+\cb3           <div className=\cf6 \strokec6 "pop-header bg-[#FFB158] text-black flex flex-wrap justify-between items-center cursor-pointer gap-4"\cf0 \strokec4 >\cb1 \
+\cb3             <div className=\cf6 \strokec6 "flex items-center gap-2 md:gap-4"\cf0 \strokec4 >\cb1 \
+\cb3               <div className=\cf6 \strokec6 "w-10 h-10 md:w-12 md:h-12 bg-[#CCFF00] border-2 border-black rounded-lg flex items-center justify-center shadow-[2px_2px_0px_0px_black]"\cf0 \strokec4 >\cb1 \
+\cb3                 <\cf5 \strokec5 AlertTriangle\cf0 \strokec4  size=\{\cf7 \strokec7 44\cf0 \strokec4 \} className=\cf6 \strokec6 "text-black"\cf0 \strokec4  />\cb1 \
+\cb3               </div>\cb1 \
+\cb3               <span className=\cf6 \strokec6 "text-[38px] font-black uppercase"\cf0 \strokec4 >\cf5 \strokec5 Troubleshooting\cf0 \strokec4 </span>\cb1 \
+\cb3             </div>\cb1 \
+\cb3           </div>\cb1 \
+\cb3           <div className=\cf6 \strokec6 "pop-content p-0 bg-white"\cf0 \strokec4 >\cb1 \
+\cb3             <div className=\cf6 \strokec6 "divide-y-4 divide-black"\cf0 \strokec4 >\cb1 \
+\cb3               \{troubleshooting.map((item) => (\cb1 \
+\cb3                 <div key=\{item.id\} className=\cf6 \strokec6 "p-8 hover:bg-gray-50 transition-colors"\cf0 \strokec4 >\cb1 \
+\cb3                   <div className=\cf6 \strokec6 "flex items-start gap-4"\cf0 \strokec4 >\cb1 \
+\cb3                     <div className=\cf6 \strokec6 "bg-black text-[#FFB158] px-3 py-1 rounded font-black text-xs uppercase mt-1"\cf0 \strokec4 >\cf5 \strokec5 ERROR_LOG\cf0 \strokec4 </div>\cb1 \
+\cb3                     <div className=\cf6 \strokec6 "flex-1"\cf0 \strokec4 >\cb1 \
+\cb3                       <h4 className=\cf6 \strokec6 "font-black uppercase text-xl text-black"\cf0 \strokec4 >\{item.title\}</h4>\cb1 \
+\cb3                       <p className=\cf6 \strokec6 "text-base font-bold text-gray-600 mt-2 leading-relaxed"\cf0 \strokec4 >\{item.desc\}</p>\cb1 \
+\cb3                     </div>\cb1 \
+\cb3                   </div>\cb1 \
+\cb3                 </div>\cb1 \
+\cb3               ))\}\cb1 \
+\cb3             </div>\cb1 \
+\cb3           </div>\cb1 \
+\cb3        </div>\cb1 \
+\
+\cb3        \{\cf8 \strokec8 /* Footer Note */\cf0 \strokec4 \}\cb1 \
+\cb3        <div className=\cf6 \strokec6 "bg-black text-white p-8 rounded-3xl border-4 border-[#CCFF00] text-center space-y-4"\cf0 \strokec4 >\cb1 \
+\cb3           <h2 className=\cf6 \strokec6 "text-3xl font-black uppercase italic tracking-tighter"\cf0 \strokec4 >\cf5 \strokec5 Operational\cf0 \strokec4  \cf5 \strokec5 Excellence\cf0 \strokec4  \cf5 \strokec5 Required\cf0 \strokec4 </h2>\cb1 \
+\cb3           <p className=\cf6 \strokec6 "text-lg font-bold text-gray-400 max-w-2xl mx-auto"\cf0 \strokec4 >\cb1 \
+\cb3             \cf5 \strokec5 The\cf0 \strokec4  algorithm rewards consistency and precision. \cf5 \strokec5 Follow\cf0 \strokec4  the protocols, analyze the data, and dominate the niche.\cb1 \
+\cb3           </p>\cb1 \
+\cb3           <div className=\cf6 \strokec6 "pt-4"\cf0 \strokec4 >\cb1 \
+\cb3             <span className=\cf6 \strokec6 "bg-[#CCFF00] text-black px-6 py-2 rounded-full font-black text-sm uppercase tracking-widest"\cf0 \strokec4 >\cf5 \strokec5 System\cf0 \strokec4  \cf5 \strokec5 Status\cf0 \strokec4 : \cf5 \strokec5 Optimal\cf0 \strokec4 </span>\cb1 \
+\cb3           </div>\cb1 \
+\cb3        </div>\cb1 \
+\cb3     </div>\cb1 \
+\cb3   );\cb1 \
+\cb3 \};\cb1 \
+\
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \strokec2 import\cf0 \strokec4  \cf5 \strokec5 React\cf0 \strokec4 , \{ useState, useEffect \} \cf2 \strokec2 from\cf0 \strokec4  \cf6 \strokec6 'react'\cf0 \strokec4 ;\cb1 \
+\cf2 \cb3 \strokec2 import\cf0 \strokec4  \{ \cf5 \strokec5 Settings\cf0 \strokec4  \cf2 \strokec2 as\cf0 \strokec4  \cf5 \strokec5 SettingsIcon\cf0 \strokec4  \} \cf2 \strokec2 from\cf0 \strokec4  \cf6 \strokec6 'lucide-react'\cf0 \strokec4 ;\cb1 \
+\
+\cf2 \cb3 \strokec2 const\cf0 \strokec4  \cf5 \strokec5 Settings\cf0 \strokec4 : \cf5 \strokec5 React\cf0 \strokec4 .\cf5 \strokec5 FC\cf0 \strokec4  = () => \{\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3   \cf2 \strokec2 const\cf0 \strokec4  [apiKey, setApiKey] = useState(\cf6 \strokec6 ''\cf0 \strokec4 );\cb1 \
+\cb3   \cf2 \strokec2 const\cf0 \strokec4  [modelPreference, setModelPreference] = useState<\cf6 \strokec6 'flash'\cf0 \strokec4  | \cf6 \strokec6 'pro'\cf0 \strokec4 >(\cf6 \strokec6 'pro'\cf0 \strokec4 );\cb1 \
+\cb3   \cf2 \strokec2 const\cf0 \strokec4  [showKey, setShowKey] = useState(\cf2 \strokec2 false\cf0 \strokec4 );\cb1 \
+\cb3   \cf2 \strokec2 const\cf0 \strokec4  [saveStatus, setSaveStatus] = useState<\cf2 \strokec2 string\cf0 \strokec4  | \cf2 \strokec2 null\cf0 \strokec4 >(\cf2 \strokec2 null\cf0 \strokec4 );\cb1 \
+\
+\cb3   useEffect(() => \{\cb1 \
+\cb3     \cf2 \strokec2 const\cf0 \strokec4  savedKey = localStorage.getItem(\cf6 \strokec6 'yt_api_key'\cf0 \strokec4 ) || \cf6 \strokec6 ''\cf0 \strokec4 ;\cb1 \
+\cb3     \cf2 \strokec2 const\cf0 \strokec4  savedModel = (localStorage.getItem(\cf6 \strokec6 'yt_model_preference'\cf0 \strokec4 ) \cf2 \strokec2 as\cf0 \strokec4  \cf6 \strokec6 'flash'\cf0 \strokec4  | \cf6 \strokec6 'pro'\cf0 \strokec4 ) || \cf6 \strokec6 'pro'\cf0 \strokec4 ;\cb1 \
+\cb3     setApiKey(savedKey);\cb1 \
+\cb3     setModelPreference(savedModel);\cb1 \
+\cb3   \}, []);\cb1 \
+\
+\cb3   \cf2 \strokec2 const\cf0 \strokec4  handleSave = () => \{\cb1 \
+\cb3     localStorage.setItem(\cf6 \strokec6 'yt_api_key'\cf0 \strokec4 , apiKey.trim());\cb1 \
+\cb3     localStorage.setItem(\cf6 \strokec6 'yt_model_preference'\cf0 \strokec4 , modelPreference);\cb1 \
+\cb3     \cb1 \
+\cb3     setSaveStatus(\cf6 \strokec6 'Settings Saved!'\cf0 \strokec4 );\cb1 \
+\cb3     setTimeout(() => setSaveStatus(\cf2 \strokec2 null\cf0 \strokec4 ), \cf7 \strokec7 3000\cf0 \strokec4 );\cb1 \
+\cb3     \cb1 \
+\cb3     \cf8 \strokec8 // Dispatch event to notify other components (like Sidebar)\cf0 \cb1 \strokec4 \
+\cb3     window.dispatchEvent(\cf2 \strokec2 new\cf0 \strokec4  \cf5 \strokec5 Event\cf0 \strokec4 (\cf6 \strokec6 'yt_settings_updated'\cf0 \strokec4 ));\cb1 \
+\cb3   \};\cb1 \
+\
+\cb3   \cf2 \strokec2 return\cf0 \strokec4  (\cb1 \
+\cb3     <div className=\cf6 \strokec6 "space-y-6 animate-fade-in max-w-4xl mx-auto"\cf0 \strokec4 >\cb1 \
+\cb3       <div className=\cf6 \strokec6 "flex justify-between items-end border-b-4 border-black pb-4"\cf0 \strokec4 >\cb1 \
+\cb3         <div>\cb1 \
+\cb3           <h1 className=\cf6 \strokec6 "text-5xl font-black uppercase tracking-tighter text-black"\cf0 \strokec4 >\cf5 \strokec5 Settings\cf0 \strokec4 </h1>\cb1 \
+\cb3           <p className=\cf6 \strokec6 "text-xl font-bold text-gray-600 mt-1"\cf0 \strokec4 >\cf5 \strokec5 Configure\cf0 \strokec4  your \cf5 \strokec5 AI\cf0 \strokec4  engine and keys</p>\cb1 \
+\cb3         </div>\cb1 \
+\cb3         <div className=\cf6 \strokec6 "bg-[#FF87F3] text-black p-3 rounded-xl border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform rotate-2 flex items-center justify-center"\cf0 \strokec4 >\cb1 \
+\cb3           <\cf5 \strokec5 SettingsIcon\cf0 \strokec4  size=\{\cf7 \strokec7 32\cf0 \strokec4 \} />\cb1 \
+\cb3         </div>\cb1 \
+\cb3       </div>\cb1 \
+\
+\cb3       <div className=\cf6 \strokec6 "pop-box"\cf0 \strokec4 >\cb1 \
+\cb3         <div className=\cf6 \strokec6 "pop-header bg-black text-white"\cf0 \strokec4 >\cb1 \
+\cb3           <span className=\cf6 \strokec6 "text-xl md:text-2xl font-black uppercase"\cf0 \strokec4 >\cf5 \strokec5 AI\cf0 \strokec4  \cf5 \strokec5 Engine\cf0 \strokec4  \cf5 \strokec5 Preference\cf0 \strokec4 </span>\cb1 \
+\cb3         </div>\cb1 \
+\cb3         <div className=\cf6 \strokec6 "pop-content space-y-6"\cf0 \strokec4 >\cb1 \
+\cb3           <p className=\cf6 \strokec6 "font-bold text-gray-700"\cf0 \strokec4 > \cf5 \strokec5 Choose\cf0 \strokec4  whether to prioritize raw speed and efficiency (\cf5 \strokec5 Flash\cf0 \strokec4 ) or deep intelligence and tactical research (\cf5 \strokec5 Pro\cf0 \strokec4  \cf7 \strokec7 3.1\cf0 \strokec4 ).</p>\cb1 \
+\cb3           \cb1 \
+\cb3           <div className=\cf6 \strokec6 "grid grid-cols-1 md:grid-cols-2 gap-4"\cf0 \strokec4 >\cb1 \
+\cb3             <button \cb1 \
+\cb3               onClick=\{() => setModelPreference(\cf6 \strokec6 'flash'\cf0 \strokec4 )\}\cb1 \
+\cb3               className=\{\cf6 \strokec6 `flex flex-col items-start p-6 border-4 border-black rounded-2xl transition-all \cf0 \strokec4 $\{modelPreference === \cf6 \strokec6 'flash'\cf0 \strokec4  ? \cf6 \strokec6 'bg-[#FF7497] shadow-[4px_4px_0px_0px_black] -translate-y-1'\cf0 \strokec4  : \cf6 \strokec6 'bg-white hover:bg-gray-50 shadow-[2px_2px_0px_0px_black]'\cf0 \strokec4 \}\cf6 \strokec6 `\cf0 \strokec4 \}\cb1 \
+\cb3             >\cb1 \
+\cb3               <div className=\cf6 \strokec6 "flex items-center gap-2 mb-2"\cf0 \strokec4 >\cb1 \
+\cb3                 <span className=\cf6 \strokec6 "text-2xl font-black"\cf0 \strokec4 >\cf9 \cb3 \strokec9 \uc0\u9889 \cf0 \cb3 \strokec4  \cf5 \strokec5 FLASH\cf0 \strokec4 </span>\cb1 \
+\cb3                 \{modelPreference === \cf6 \strokec6 'flash'\cf0 \strokec4  && <span className=\cf6 \strokec6 "bg-black text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase"\cf0 \strokec4 >\cf5 \strokec5 ACTIVE\cf0 \strokec4 </span>\}\cb1 \
+\cb3               </div>\cb1 \
+\cb3               <p className=\cf6 \strokec6 "text-sm font-bold opacity-80 text-left"\cf0 \strokec4 >\cf5 \strokec5 Optimized\cf0 \strokec4  \cf2 \strokec2 for\cf0 \strokec4  rapid generations, bulk processing, and quick title ideas. \cf5 \strokec5 Uses\cf0 \strokec4  \cf5 \strokec5 Gemini\cf0 \strokec4  \cf7 \strokec7 2.0\cf0 \strokec4  \cf5 \strokec5 Flash\cf0 \strokec4 .</p>\cb1 \
+\cb3             </button>\cb1 \
+\
+\cb3             <button \cb1 \
+\cb3               onClick=\{() => setModelPreference(\cf6 \strokec6 'pro'\cf0 \strokec4 )\}\cb1 \
+\cb3               className=\{\cf6 \strokec6 `flex flex-col items-start p-6 border-4 border-black rounded-2xl transition-all \cf0 \strokec4 $\{modelPreference === \cf6 \strokec6 'pro'\cf0 \strokec4  ? \cf6 \strokec6 'bg-[#CCFF00] shadow-[4px_4px_0px_0px_black] -translate-y-1'\cf0 \strokec4  : \cf6 \strokec6 'bg-white hover:bg-gray-100 shadow-[2px_2px_0px_0px_black]'\cf0 \strokec4 \}\cf6 \strokec6 `\cf0 \strokec4 \}\cb1 \
+\cb3             >\cb1 \
+\cb3               <div className=\cf6 \strokec6 "flex items-center gap-2 mb-2"\cf0 \strokec4 >\cb1 \
+\cb3                 <span className=\cf6 \strokec6 "text-2xl font-black"\cf0 \strokec4 >\cf9 \cb3 \strokec9 \uc0\u55358 \u56800 \cf0 \cb3 \strokec4  \cf5 \strokec5 PRO\cf0 \strokec4  \cf7 \strokec7 3.1\cf0 \strokec4 </span>\cb1 \
+\cb3                 \{modelPreference === \cf6 \strokec6 'pro'\cf0 \strokec4  && <span className=\cf6 \strokec6 "bg-black text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase"\cf0 \strokec4 >\cf5 \strokec5 ACTIVE\cf0 \strokec4 </span>\}\cb1 \
+\cb3               </div>\cb1 \
+\cb3               <p className=\cf6 \strokec6 "text-sm font-bold opacity-80 text-left"\cf0 \strokec4 >\cf5 \strokec5 The\cf0 \strokec4  heavy hitter. \cf5 \strokec5 Deep\cf0 \strokec4  tactical analysis, combinatorial data research, and complex scripting. \cf5 \strokec5 High\cf0 \strokec4 -intelligence output.</p>\cb1 \
+\cb3             </button>\cb1 \
+\cb3           </div>\cb1 \
+\cb3         </div>\cb1 \
+\cb3       </div>\cb1 \
+\
+\cb3       <div className=\cf6 \strokec6 "pop-box"\cf0 \strokec4 >\cb1 \
+\cb3         <div className=\cf6 \strokec6 "pop-header bg-[#00CCFF] text-black"\cf0 \strokec4 >\cb1 \
+\cb3           <span className=\cf6 \strokec6 "text-xl md:text-2xl font-black uppercase"\cf0 \strokec4 >\cf5 \strokec5 Gemini\cf0 \strokec4  \cf5 \strokec5 API\cf0 \strokec4  \cf5 \strokec5 Key\cf0 \strokec4 </span>\cb1 \
+\cb3         </div>\cb1 \
+\cb3         <div className=\cf6 \strokec6 "pop-content space-y-4"\cf0 \strokec4 >\cb1 \
+\cb3           <p className=\cf6 \strokec6 "font-bold text-gray-700"\cf0 \strokec4 > \cf5 \strokec5 Attach\cf0 \strokec4  your own \cf5 \strokec5 Google\cf0 \strokec4  \cf5 \strokec5 AI\cf0 \strokec4  \cf5 \strokec5 Studio\cf0 \strokec4  \cf5 \strokec5 API\cf0 \strokec4  key to bypass \cf2 \strokec2 default\cf0 \strokec4  limits and use your own quotas.</p>\cb1 \
+\cb3           \cb1 \
+\cb3           <div className=\cf6 \strokec6 "relative group"\cf0 \strokec4 >\cb1 \
+\cb3             <input \cb1 \
+\cb3               \cf2 \strokec2 type\cf0 \strokec4 =\{showKey ? \cf6 \strokec6 "text"\cf0 \strokec4  : \cf6 \strokec6 "password"\cf0 \strokec4 \} \cb1 \
+\cb3               value=\{apiKey\}\cb1 \
+\cb3               onChange=\{(e) => setApiKey(e.target.value)\}\cb1 \
+\cb3               placeholder=\cf6 \strokec6 "Enter your Gemini API Key..."\cf0 \cb1 \strokec4 \
+\cb3               className=\cf6 \strokec6 "w-full p-4 text-lg font-bold border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_black] focus:outline-none focus:ring-0 focus:translate-x-1 focus:translate-y-1 focus:shadow-none transition-all pr-12"\cf0 \cb1 \strokec4 \
+\cb3             />\cb1 \
+\cb3             <button \cb1 \
+\cb3               onClick=\{() => setShowKey(!showKey)\}\cb1 \
+\cb3               className=\cf6 \strokec6 "absolute right-4 top-1/2 -translate-y-1/2 text-black hover:scale-110 transition-transform"\cf0 \cb1 \strokec4 \
+\cb3             >\cb1 \
+\cb3               \{showKey ? (\cb1 \
+\cb3                 <svg className=\cf6 \strokec6 "w-6 h-6"\cf0 \strokec4  fill=\cf6 \strokec6 "none"\cf0 \strokec4  stroke=\cf6 \strokec6 "currentColor"\cf0 \strokec4  viewBox=\cf6 \strokec6 "0 0 24 24"\cf0 \strokec4 ><path strokeLinecap=\cf6 \strokec6 "round"\cf0 \strokec4  strokeLinejoin=\cf6 \strokec6 "round"\cf0 \strokec4  strokeWidth=\{\cf7 \strokec7 3\cf0 \strokec4 \} d=\cf6 \strokec6 "M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.046m9.656-5.64a9.959 9.959 0 018.859 5.813M15 12a3 3 0 11-6 0 3 3 0 016 0zm6.342 6.342l-1.414-1.414"\cf0 \strokec4  /></svg>\cb1 \
+\cb3               ) : (\cb1 \
+\cb3                 <svg className=\cf6 \strokec6 "w-6 h-6"\cf0 \strokec4  fill=\cf6 \strokec6 "none"\cf0 \strokec4  stroke=\cf6 \strokec6 "currentColor"\cf0 \strokec4  viewBox=\cf6 \strokec6 "0 0 24 24"\cf0 \strokec4 ><path strokeLinecap=\cf6 \strokec6 "round"\cf0 \strokec4  strokeLinejoin=\cf6 \strokec6 "round"\cf0 \strokec4  strokeWidth=\{\cf7 \strokec7 3\cf0 \strokec4 \} d=\cf6 \strokec6 "M15 12a3 3 0 11-6 0 3 3 0 016 0z"\cf0 \strokec4  /><path strokeLinecap=\cf6 \strokec6 "round"\cf0 \strokec4  strokeLinejoin=\cf6 \strokec6 "round"\cf0 \strokec4  strokeWidth=\{\cf7 \strokec7 3\cf0 \strokec4 \} d=\cf6 \strokec6 "M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"\cf0 \strokec4  /></svg>\cb1 \
+\cb3               )\}\cb1 \
+\cb3             </button>\cb1 \
+\cb3           </div>\cb1 \
+\cb3           \cb1 \
+\cb3           <div className=\cf6 \strokec6 "flex items-center gap-2"\cf0 \strokec4 >\cb1 \
+\cb3             <span className=\cf6 \strokec6 "text-xs font-black uppercase opacity-60"\cf0 \strokec4 >\cf5 \strokec5 Status\cf0 \strokec4 :</span>\cb1 \
+\cb3             \{apiKey ? (\cb1 \
+\cb3               <span className=\cf6 \strokec6 "text-xs font-black uppercase text-[#CCFF00]"\cf0 \strokec4 >\cf5 \strokec5 Custom\cf0 \strokec4  \cf5 \strokec5 Key\cf0 \strokec4  \cf5 \strokec5 Provided\cf0 \strokec4 </span>\cb1 \
+\cb3             ) : (\cb1 \
+\cb3               <span className=\cf6 \strokec6 "text-xs font-black uppercase text-[#FFB158]"\cf0 \strokec4 >\cf5 \strokec5 Using\cf0 \strokec4  \cf5 \strokec5 System\cf0 \strokec4  \cf5 \strokec5 Default\cf0 \strokec4  (\cf5 \strokec5 Restricted\cf0 \strokec4 )</span>\cb1 \
+\cb3             )\}\cb1 \
+\cb3           </div>\cb1 \
+\cb3         </div>\cb1 \
+\cb3       </div>\cb1 \
+\
+\cb3       <div className=\cf6 \strokec6 "flex items-center gap-4"\cf0 \strokec4 >\cb1 \
+\cb3         <button \cb1 \
+\cb3           onClick=\{handleSave\}\cb1 \
+\cb3           className=\cf6 \strokec6 "pop-button bg-[#CCFF00] text-black px-12 py-4 text-xl w-full md:w-auto"\cf0 \cb1 \strokec4 \
+\cb3         >\cb1 \
+\cb3           \{saveStatus || \cf6 \strokec6 'SAVE SETTINGS'\cf0 \strokec4 \}\cb1 \
+\cb3         </button>\cb1 \
+\cb3       </div>\cb1 \
+\cb3     </div>\cb1 \
+\cb3   );\cb1 \
+\cb3 \};\cb1 \
+\
+\pard\pardeftab720\partightenfactor0
+\cf2 \cb3 \strokec2 export\cf0 \cb1 \strokec4 \
+}

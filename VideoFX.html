@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neo-Brutalist Video FX</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Public+Sans:wght@700;900&display=swap');
+
+        :root {
+            --bg: #FF3D00;
+            --primary: #BCFF00;
+            --secondary: #00E5FF;
+            --accent: #FF00E5;
+            --black: #000000;
+            --white: #FFFFFF;
+            --border-size: 4px;
+            --shadow-offset: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Public Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            padding: 2rem;
+            color: var(--black);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+        }
+
+        header {
+            grid-column: 1 / -1;
+            background: var(--white);
+            border: var(--border-size) solid var(--black);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--black);
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 3rem;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+
+        .tagline {
+            background: var(--primary);
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--black);
+            font-weight: 900;
+            transform: rotate(-2deg);
+        }
+
+        .video-canvas-area {
+            background: var(--white);
+            border: var(--border-size) solid var(--black);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--black);
+            position: relative;
+            min-height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-image: 
+                linear-gradient(45deg, #eee 25%, transparent 25%), 
+                linear-gradient(-45deg, #eee 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #eee 75%), 
+                linear-gradient(-45deg, transparent 75%, #eee 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        video {
+            max-width: 90%;
+            max-height: 90%;
+            border: var(--border-size) solid var(--black);
+            background: #000;
+            transition: filter 0.2s ease;
+        }
+
+        .controls-panel {
+            background: var(--secondary);
+            border: var(--border-size) solid var(--black);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--black);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .section-title {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            border-bottom: 3px solid var(--black);
+            padding-bottom: 0.5rem;
+        }
+
+        .fx-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .fx-btn {
+            background: var(--white);
+            border: 3px solid var(--black);
+            padding: 0.8rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.1s;
+        }
+
+        .fx-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0px var(--black);
+        }
+
+        .fx-btn:active {
+            transform: translate(0, 0);
+            box-shadow: 0px 0px 0px var(--black);
+        }
+
+        .fx-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .slider-group {
+            margin-bottom: 1rem;
+        }
+
+        .slider-group label {
+            display: block;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 15px;
+            background: var(--white);
+            border: 3px solid var(--black);
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 25px;
+            height: 25px;
+            background: var(--black);
+            cursor: pointer;
+            border-radius: 0;
+            border: 2px solid var(--primary);
+        }
+
+        .upload-btn-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .btn-upload {
+            border: var(--border-size) solid var(--black);
+            color: var(--black);
+            background-color: var(--white);
+            padding: 1rem;
+            font-weight: 900;
+            width: 100%;
+            text-transform: uppercase;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .btn-upload:hover {
+            background: var(--primary);
+        }
+
+        .upload-btn-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+        }
+
+        .action-btns {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            padding: 1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            border: var(--border-size) solid var(--black);
+            cursor: pointer;
+            box-shadow: 4px 4px 0px var(--black);
+            font-size: 1.2rem;
+        }
+
+        .btn-primary:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--black);
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            h1 { font-size: 2rem; }
+        }
+
+        .empty-state {
+            text-align: center;
+            font-weight: 900;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>FX-BENDER v1.0</h1>
+            <div class="tagline">RAW VIDEO PROCESSING</div>
+        </header>
+
+        <main class="video-canvas-area" id="dropZone">
+            <video id="videoPlayer" controls style="display: none;"></video>
+            <div id="placeholderText" class="empty-state">
+                <p style="font-size: 1.5rem;">NO SIGNAL</p>
+                <p>UPLOAD MP4 TO START BENDING</p>
+            </div>
+        </main>
+
+        <aside class="controls-panel">
+            <section>
+                <h2 class="section-title">1. Source</h2>
+                <div class="upload-btn-wrapper">
+                    <button class="btn-upload">Load Video</button>
+                    <input type="file" id="fileInput" accept="video/*" />
+                </div>
+            </section>
+
+            <section>
+                <h2 class="section-title">2. Filters</h2>
+                <div class="fx-grid">
+                    <button class="fx-btn" data-filter="grayscale(100%)">B&W</button>
+                    <button class="fx-btn" data-filter="sepia(100%)">Vintage</button>
+                    <button class="fx-btn" data-filter="invert(100%)">Invert</button>
+                    <button class="fx-btn" data-filter="hue-rotate(90deg)">Acid</button>
+                    <button class="fx-btn" data-filter="contrast(200%)">Hard</button>
+                    <button class="fx-btn" id="resetBtn">Reset</button>
+                </div>
+            </section>
+
+            <section>
+                <h2 class="section-title">3. Tweaks</h2>
+                <div class="slider-group">
+                    <label>Blur Intensity</label>
+                    <input type="range" id="blurRange" min="0" max="20" value="0">
+                </div>
+                <div class="slider-group">
+                    <label>Brightness</label>
+                    <input type="range" id="brightRange" min="0" max="200" value="100">
+                </div>
+            </section>
+
+            <div class="action-btns">
+                <button class="btn-primary" onclick="alert('Exporting sequence...')">Export Master</button>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const video = document.getElementById('videoPlayer');
+        const placeholder = document.getElementById('placeholderText');
+        const fxButtons = document.querySelectorAll('.fx-btn');
+        const blurRange = document.getElementById('blurRange');
+        const brightRange = document.getElementById('brightRange');
+        const resetBtn = document.getElementById('resetBtn');
+
+        let activeFilter = "";
+        let blurVal = 0;
+        let brightVal = 100;
+
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                video.src = url;
+                video.style.display = 'block';
+                placeholder.style.display = 'none';
+                video.play();
+            }
+        });
+
+        function updateFilters() {
+            video.style.filter = `${activeFilter} blur(${blurVal}px) brightness(${brightVal}%)`;
+        }
+
+        fxButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if(btn.id === 'resetBtn') {
+                    activeFilter = "";
+                    blurVal = 0;
+                    brightVal = 100;
+                    blurRange.value = 0;
+                    brightRange.value = 100;
+                    fxButtons.forEach(b => b.classList.remove('active'));
+                } else {
+                    fxButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    activeFilter = btn.getAttribute('data-filter');
+                }
+                updateFilters();
+            });
+        });
+
+        blurRange.addEventListener('input', (e) => {
+            blurVal = e.target.value;
+            updateFilters();
+        });
+
+        brightRange.addEventListener('input', (e) => {
+            brightVal = e.target.value;
+            updateFilters();
+        });
+
+        // Drag and drop logic
+        const dropZone = document.getElementById('dropZone');
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.backgroundColor = 'var(--primary)';
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.backgroundColor = 'var(--white)';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.backgroundColor = 'var(--white)';
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('video/')) {
+                const url = URL.createObjectURL(file);
+                video.src = url;
+                video.style.display = 'block';
+                placeholder.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

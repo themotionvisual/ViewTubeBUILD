@@ -1,0 +1,27 @@
+# Refining Station Controls and Aesthetics
+
+- [x] Decrease header height to make titles and headers shorter and thinner.
+- [x] Restyle the 'Expand' button to be smaller, with a full border, and evenly padded within the top-right corner.
+- [x] Ensure subtitle is positioned directly beneath the main title on the left.
+- [x] Add metric labels to the large statistics on the right side of the legend bar.
+- [x] Increase border thicknesses for the station frames to match reference image (e.g., `border-[6px]`).
+- [x] Make chart legend text and axis labels bolder and slightly larger.
+- [x] Refine Engagement Map Layout:
+    - [x] Move sorting buttons to chart footer.
+    - [x] Restyle hover banner (stacked numbers + labels, no dots).
+    - [x] Increase video title font size in hover banner.
+    - [x] Fix Y-axis numeric truncation ('...' bug) by adjusting margins.
+    - [x] Increase chart height by reducing internal vertical padding.
+    - [x] Add labels to the banner stats (L, C, S, V) beneath numbers.
+    - [x] Fix cutoff buttons by refactoring internal card layout.
+- [ ] Expand Chart Collection (10 New Styles):
+    - [ ] 1. Geography of High CPMs (GeoChart Map)
+    - [ ] 2. Published Time vs. Momentum (Heatmap Grid)
+    - [ ] 3. End Screen Effectiveness (Funnel Chart)
+    - [ ] 4. Series vs. Standalone Performance (Box Plot)
+    - [ ] 5. Seasonal RPM Radar (Spider Chart)
+    - [ ] 6. Thumbnail A/B Test (Annotated Line)
+    - [ ] 7. Algorithm Trigger Matrix (Dual-Axis)
+    - [ ] 8. OS Revenue vs Volume (Nested Donut)
+    - [ ] 9. Long-Tail Shelf Life (Normalized Line)
+    - [ ] 10. Golden Ratio Dashboard (Overlay Radar)

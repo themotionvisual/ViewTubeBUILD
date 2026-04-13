@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ViewTube — Dashboard V3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   DESIGN TOKENS — ToolboxUISystem Canonical
+═══════════════════════════════════════════════════════════ */
+:root {
+  --gap: 20px;
+  --stroke: 4px;
+  --radius: 16px;
+  --rail-size: 56px;
+  --header-height: 56px;
+  --shadow-offset: 6px;
+  --transition: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --bg-page: #f0f0f0;
+  --bg-widget: #ffffff;
+  --bg-inner: #F2F2F2;
+  --text-main: #000000;
+}
+body.dark-mode {
+  --bg-page: #0a0a0a;
+  --bg-widget: #1e1e1e;
+  --bg-inner: #111111;
+  --text-main: #ffffff;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-main);
+  min-height: 100vh;
+  transition: background var(--transition), color var(--transition);
+  overflow-x: hidden;
+}
+
+/* ═══ TOP BAR ═══ */
+.topbar {
+  background: #000; color: #fff;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; height: 60px;
+  position: sticky; top: 0; z-index: 1000;
+  border-bottom: 4px solid #222;
+}
+.topbar-logo { font-size: 26px; font-weight: 900; letter-spacing: -0.04em; display: flex; align-items: center; gap: 8px; }
+.topbar-logo .accent { color: #C9F830; }
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+.tb { height: 36px; padding: 0 14px; border: 2px solid #fff; border-radius: 10px; background: transparent; color: #fff; font-weight: 900; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; transition: all 0.15s; font-family: inherit; display: flex; align-items: center; gap: 5px; }
+.tb:hover { background: #fff; color: #000; }
+.tb.active { background: #C9F830; color: #000; border-color: #C9F830; }
+
+/* ═══ MARQUEE ═══ */
+.marquee-bar { background: #FF1744; height: 32px; overflow: hidden; display: flex; align-items: center; border-bottom: 3px solid #000; }
+.marquee-label { background: #000; color: #fff; font-size: 9px; font-weight: 900; padding: 0 12px; height: 100%; display: flex; align-items: center; letter-spacing: 0.1em; flex-shrink: 0; }
+.marquee-track { display: flex; gap: 50px; white-space: nowrap; animation: marquee 50s linear infinite; padding-left: 100%; }
+.marquee-track span { font-weight: 800; font-size: 11px; color: #fff; }
+.marquee-track .hl { color: #FFE357; font-weight: 900; }
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+/* ═══ 12-COL GRID ═══ */
+.dashboard { max-width: 1500px; margin: 0 auto; padding: 20px; transition: margin-right var(--transition); }
+body.picker-open .dashboard { margin-right: 320px; }
+.grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--gap); align-items: start; }
+.s-full { grid-column: span 12; }
+.s-half { grid-column: span 6; }
+.s-third { grid-column: span 4; }
+.s-quarter { grid-column: span 3; }
+@media (max-width: 1200px) { .s-quarter { grid-column: span 6; } .s-third { grid-column: span 6; } }
+@media (max-width: 900px) { .s-quarter, .s-third, .s-half, .s-full { grid-column: span 12; } }
+
+/* ═══ SUBTOOLBOX WIDGET ═══ */
+.w {
+  background: var(--bg-widget);
+  border: var(--stroke) solid var(--text-main);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  transition: all var(--transition);
+}
+.w.hidden-w { display: none !important; }
+.wh {
+  display: flex; align-items: center; justify-content: space-between;
+  height: var(--header-height); min-height: var(--header-height);
+  border-bottom: var(--stroke) solid var(--text-main);
+  cursor: pointer; user-select: none;
+}
+.wh .left { display: flex; align-items: center; height: 100%; flex: 1; overflow: hidden; }
+.ir { height: 100%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: var(--rail-size); border-right: var(--stroke) solid var(--text-main); }
+.ir svg, .ir img { width: 26px; height: 26px; }
+.wt { font-weight: 900; text-transform: uppercase; letter-spacing: -0.03em; color: #000; font-size: 22px; padding-left: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wt.light { color: #fff; }
+.wbadge { font-size: 9px; font-weight: 900; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; border: 2px solid #000; margin-right: 8px; letter-spacing: 0.05em; }
+.wchev { width: 20px; height: 20px; margin-right: 12px; opacity: 0.4; transition: transform var(--transition); flex-shrink: 0; }
+.w.open .wchev { transform: rotate(180deg); }
+.wb { padding: 14px; display: flex; flex-direction: column; gap: 12px; background: var(--bg-inner); }
+.w:not(.open) .wb { display: none; }
+.w:not(.open) .wh { border-bottom-color: transparent; }
+
+/* ═══ KPI MICRO MODULE ═══ */
+.kpi {
+  background: var(--bg-widget);
+  border: var(--stroke) solid var(--text-main);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: all 0.2s;
+}
+.kpi:hover { transform: translateY(-2px); box-shadow: 0 6px 0 0 rgba(0,0,0,0.15); }
+.kpi-head { height: 36px; display: flex; align-items: center; padding: 0 12px; border-bottom: var(--stroke) solid var(--text-main); }
+.kpi-head span { font-size: 16px; font-weight: 1000; text-transform: uppercase; letter-spacing: -0.02em; color: #000; }
+.kpi-body { background: var(--bg-inner); padding: 10px 14px; display: flex; align-items: baseline; gap: 6px; }
+.kpi-val { font-size: 32px; font-weight: 1000; letter-spacing: -0.04em; line-height: 1; }
+.kpi-sub { font-size: 10px; font-weight: 900; opacity: 0.35; text-transform: uppercase; }
+
+/* ═══ INNER COMPONENTS ═══ */
+.mc { background: var(--bg-widget); border: 3px solid var(--text-main); border-radius: 12px; padding: 10px 12px; }
+.mc-label { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.35; }
+.mc-val { font-size: 24px; font-weight: 1000; letter-spacing: -0.04em; line-height: 1.1; margin-top: 2px; }
+.mc-chg { font-size: 10px; font-weight: 900; margin-top: 2px; }
+.mc-chg.pos { color: #00C853; }
+.mc-chg.neg { color: #FF1744; }
+
+.ss { display: flex; align-items: center; gap: 6px; }
+.ss-l { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; width: 60px; flex-shrink: 0; opacity: 0.5; }
+.ss-t { flex: 1; height: 8px; background: var(--bg-widget); border-radius: 4px; border: 2px solid var(--text-main); overflow: hidden; }
+.ss-f { height: 100%; border-radius: 2px; transition: width 0.6s; }
+.ss-v { font-size: 10px; font-weight: 900; width: 28px; text-align: right; }
+
+.label-xs { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; }
+.brutal-input { width: 100%; height: 40px; padding: 0 10px; font-size: 12px; font-weight: 700; border-radius: 10px; border: 3px solid var(--text-main); outline: none; background: var(--bg-widget); color: var(--text-main); font-family: inherit; }
+.brutal-input:focus { box-shadow: 0 0 0 3px rgba(201,248,48,0.4); }
+.brutal-ta { width: 100%; padding: 10px; font-size: 12px; font-weight: 700; border-radius: 10px; border: 3px solid var(--text-main); outline: none; resize: none; background: var(--bg-widget); color: var(--text-main); font-family: inherit; }
+
+.toggle-sw { width: 40px; height: 22px; background: var(--bg-inner); border-radius: 11px; border: 2px solid var(--text-main); position: relative; cursor: pointer; transition: all var(--transition); flex-shrink: 0; }
+.toggle-sw.on { background: #00FF99; }
+.toggle-dot { width: 14px; height: 14px; background: #fff; border: 2px solid #000; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: all var(--transition); }
+.toggle-sw.on .toggle-dot { transform: translateX(18px); }
+
+.tag-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; font-size: 9px; font-weight: 900; text-transform: uppercase; border: 2px solid var(--text-main); border-radius: 999px; }
+
+.action-row { height: var(--header-height); border: var(--stroke) solid #000; border-radius: var(--radius); display: flex; align-items: center; overflow: hidden; cursor: pointer; transition: all 0.15s; }
+.action-row:hover { transform: translate(1px, 1px); }
+.action-row .ar-icon { height: 100%; width: var(--rail-size); display: flex; align-items: center; justify-content: center; border-right: var(--stroke) solid #000; flex-shrink: 0; }
+.action-row .ar-label { flex: 1; padding: 0 14px; font-weight: 900; font-size: 12px; text-transform: uppercase; letter-spacing: -0.02em; }
+
+/* ═══ SECTION DIVIDERS ═══ */
+.section { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; padding: 6px 0; }
+.section::before, .section::after { content: ''; flex: 1; height: 3px; background: var(--text-main); opacity: 0.05; }
+.section span { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3em; opacity: 0.15; }
+
+/* ═══ EDIT MODE ═══ */
+.edit-mode .w:not(.section) { animation: wiggle 0.25s ease-in-out infinite alternate; cursor: grab; }
+.edit-mode .kpi { animation: wiggle 0.25s ease-in-out infinite alternate; cursor: grab; }
+.edit-mode .section { pointer-events: none; opacity: 0.2; }
+@keyframes wiggle { 0% { transform: rotate(-0.4deg) scale(0.995); } 100% { transform: rotate(0.4deg) scale(0.995); } }
+.w.dragging, .kpi.dragging { opacity: 0.4; transform: scale(0.93) !important; animation: none !important; }
+.w.drag-over, .kpi.drag-over { border-color: #C9F830 !important; box-shadow: 0 0 0 4px rgba(201,248,48,0.5) !important; }
+
+/* ═══ WIDGET PICKER PANEL ═══ */
+.picker-panel {
+  position: fixed; top: 0; right: -320px; width: 300px; height: 100vh;
+  background: #fff; border-left: 5px solid #000; z-index: 2000;
+  display: flex; flex-direction: column;
+  transition: right var(--transition);
+  box-shadow: -8px 0 30px rgba(0,0,0,0.15);
+}
+body.picker-open .picker-panel { right: 0; }
+body.dark-mode .picker-panel { background: #1a1a1a; }
+.picker-header { height: 60px; background: #C9F830; border-bottom: 4px solid #000; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; flex-shrink: 0; }
+.picker-header h3 { font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.02em; color: #000; }
+.picker-close { width: 32px; height: 32px; border-radius: 8px; border: 2px solid #000; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 900; font-size: 16px; }
+.picker-close:hover { background: #FF1744; color: #fff; }
+.picker-body { flex: 1; overflow-y: auto; padding: 16px; }
+.picker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.picker-tile {
+  aspect-ratio: 1; border-radius: 14px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 3px;
+  cursor: pointer; transition: all 0.2s; position: relative;
+  border: 3px solid #000; background: #f0f0f0;
+}
+.picker-tile.active { box-shadow: 3px 3px 0 0 rgba(0,0,0,0.2); }
+.picker-tile:not(.active) { border-color: #ccc; opacity: 0.4; }
+.picker-tile:hover { transform: scale(1.08); opacity: 1 !important; }
+.picker-tile svg { width: 22px; height: 22px; stroke-width: 2.5; }
+.picker-tile .pt-label { font-size: 7px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; text-align: center; line-height: 1.1; color: #000; }
+body.dark-mode .picker-tile .pt-label { color: #000; }
+body.dark-mode .picker-tile:not(.active) .pt-label { color: #888; }
+
+/* ═══ HEATMAP ═══ */
+.heatmap-bars { display: flex; align-items: flex-end; gap: 2px; height: 70px; }
+.heatmap-bars div { flex: 1; border-radius: 2px 2px 0 0; transition: height 0.4s; min-width: 5px; }
+
+/* ═══ CONSISTENCY GRID ═══ */
+.con-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.con-cell { aspect-ratio: 1; border-radius: 4px; border: 1px solid rgba(0,0,0,0.06); }
+
+/* ═══ RADAR ═══ */
+.radar-wrap { display: flex; align-items: center; justify-content: center; padding: 8px; }
+.radar-wrap svg text { font-family: 'Inter'; font-weight: 900; font-size: 8px; fill: var(--text-main); }
+body.dark-mode .radar-wrap svg text { fill: #fff; }
+
+/* ═══ DARK MODE EXTRAS ═══ */
+body.dark-mode .kpi-head { border-bottom-color: rgba(0,0,0,0.5); }
+body.dark-mode .wh { border-bottom-color: rgba(255,255,255,0.2); }
+body.dark-mode .ir { border-right-color: rgba(0,0,0,0.4); }
+body.dark-mode .mc { border-color: rgba(255,255,255,0.15); }
+body.dark-mode .picker-tile:not(.active) { background: #333; border-color: #555; }
+</style>
+</head>
+<body>
+
+<!-- ═══ TOP BAR ═══ -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C9F830" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect width="15" height="14" x="1" y="5" rx="2"/></svg>
+    <span>VIEW<span class="accent">TUBE</span></span>
+  </div>
+  <div class="topbar-actions">
+    <button class="tb" onclick="toggleDark()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> THEME</button>
+    <button class="tb" id="edit-btn" onclick="toggleEdit()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> REARRANGE</button>
+    <button class="tb active" onclick="togglePicker()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> WIDGETS</button>
+  </div>
+</div>
+
+<!-- ═══ MARQUEE ═══ -->
+<div class="marquee-bar">
+  <div class="marquee-label">🔴 LIVE</div>
+  <div class="marquee-track">
+    <span class="hl">📈 TRENDING</span><span>YouTube rolls out AI-powered auto-dubbing to all creators</span>
+    <span class="hl">⚡ ALERT</span><span>Google DeepMind releases Gemini 2.5 Pro with 1M context window</span>
+    <span class="hl">🌐 GLOBAL</span><span>Creator economy surpasses $250B market valuation in 2026</span>
+    <span class="hl">🎬 PLATFORM</span><span>Shorts monetization RPM increases 40% for tech creators Q1 2026</span>
+    <span class="hl">📈 TRENDING</span><span>YouTube rolls out AI-powered auto-dubbing to all creators</span>
+    <span class="hl">⚡ ALERT</span><span>Google DeepMind releases Gemini 2.5 Pro with 1M context window</span>
+  </div>
+</div>
+
+<div class="dashboard">
+<div class="grid" id="main-grid">
+
+<!-- ═══════════ HERO ROW ═══════════ -->
+<!-- Avatar -->
+<div class="s-quarter" data-wid="avatar" style="grid-row: span 2;">
+  <div style="width:100%;aspect-ratio:1;border-radius:50%;border:6px solid #000;background:#fff;box-shadow:6px 6px 0 0 #000;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+    <span style="font-size:48px;font-weight:1000;color:rgba(0,0,0,0.1);">VT</span>
+  </div>
+</div>
+
+<!-- KPIs -->
+<div class="s-quarter" data-wid="stat-views">
+  <div class="kpi"><div class="kpi-head" style="background:#C9F830;"><span>Views</span></div><div class="kpi-body"><span class="kpi-val">1.2M</span></div></div>
+</div>
+<div class="s-quarter" data-wid="stat-subs">
+  <div class="kpi"><div class="kpi-head" style="background:#4FFF5B;"><span>Subscribers</span></div><div class="kpi-body"><span class="kpi-val">4,040</span></div></div>
+</div>
+<div class="s-quarter" data-wid="stat-hours">
+  <div class="kpi"><div class="kpi-head" style="background:#FF7497;"><span>Hours</span></div><div class="kpi-body"><span class="kpi-val">847</span></div></div>
+</div>
+<div class="s-quarter" data-wid="stat-revenue">
+  <div class="kpi"><div class="kpi-head" style="background:#FFE357;"><span>Revenue</span></div><div class="kpi-body"><span class="kpi-val">$1,842</span><span class="kpi-sub">.50</span></div></div>
+</div>
+
+<!-- Calendar -->
+<div class="s-third" data-wid="calendar">
+  <div class="w open">
+    <div class="wh" style="background:#FFB570;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#FFD8A8;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><span class="wt">Calendar</span></div>
+      <span class="wbadge" style="background:#fff;">04/13/26</span>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb" id="cal-body"></div>
+  </div>
+</div>
+
+<!-- To Do -->
+<div class="s-third" data-wid="todo">
+  <div class="w open">
+    <div class="wh" style="background:#FFB570;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#FFD8A8;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><span class="wt">To Do</span></div>
+      <span class="wbadge" style="background:#fff;cursor:pointer;">Add Task</span>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb">
+      <div style="border:2px dashed rgba(0,0,0,0.15);border-radius:12px;padding:20px;text-align:center;">
+        <span class="label-xs" style="opacity:0.3;">Schedule Clear</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section"><span>Status</span></div>
+
+<!-- ═══════════ INFO ROW ═══════════ -->
+<!-- Connection -->
+<div class="s-third" data-wid="connection">
+  <div class="w open">
+    <div class="wh" style="background:#4FFF5B;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#B9FFBE;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.13C5.12 19.56 12 19.56 12 19.56s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.43z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg></div><span class="wt">Connection</span></div>
+      <span class="wbadge" style="background:#4FFF5B;">Linked</span>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb">
+      <div style="font-size:20px;font-weight:1000;text-transform:uppercase;letter-spacing:-0.03em;">YouTube Connected</div>
+      <div class="label-xs" style="opacity:0.35;">Last Sync: 19m ago</div>
+    </div>
+  </div>
+</div>
+
+<!-- Top Performer -->
+<div class="s-third" data-wid="top-performer">
+  <div class="w open">
+    <div class="wh" style="background:#FF83EA;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#FFB3F0;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 9 7 12 7s5-3 7.5-3a2.5 2.5 0 0 1 0 5H18"/><path d="m18 9-6 13L6 9"/></svg></div><span class="wt">Top Performer</span></div>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb">
+      <div style="font-size:14px;font-weight:1000;text-transform:uppercase;letter-spacing:-0.02em;line-height:1.3;">Napoleon's Cavalry ⚔ Types of Cavalry 🐴</div>
+      <div style="font-size:28px;font-weight:1000;letter-spacing:-0.04em;">63.2K <span style="font-size:14px;opacity:0.4;">views</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Uploads -->
+<div class="s-third" data-wid="recent-uploads">
+  <div class="w open">
+    <div class="wh" style="background:#579AFF;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#BBD4FF;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><span class="wt" style="color:#fff;">Recent Uploads</span></div>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb">
+      <div style="display:flex;align-items:center;gap:10px;"><div style="width:48px;height:32px;border-radius:8px;border:2px solid #000;background:#ddd;flex-shrink:0;"></div><div><div class="label-xs">Inside the Saddle of a French Hussar ⚔</div><div class="label-xs" style="opacity:0.3;margin-top:2px;">04/12/2026</div></div></div>
+      <div style="display:flex;align-items:center;gap:10px;"><div style="width:48px;height:32px;border-radius:8px;border:2px solid #000;background:#ddd;flex-shrink:0;"></div><div><div class="label-xs">Inside the Saddle of a French Hussar ⚔ Pt 2</div><div class="label-xs" style="opacity:0.3;margin-top:2px;">04/10/2026</div></div></div>
+      <div style="display:flex;align-items:center;gap:10px;"><div style="width:48px;height:32px;border-radius:8px;border:2px solid #000;background:#ddd;flex-shrink:0;"></div><div><div class="label-xs">⚔ General Lasalle 🐴 Napoleonic Cavalry Legend 🎖</div><div class="label-xs" style="opacity:0.3;margin-top:2px;">04/06/2026</div></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="section"><span>Quick Actions</span></div>
+
+<!-- ═══════════ QUICK ACTIONS ═══════════ -->
+<div class="s-full" data-wid="quick-actions">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;" id="qa-grid">
+    <div class="action-row" style="background:#4FFF5B;box-shadow:4px 4px 0 0 rgba(0,0,0,0.15);"><div class="ar-icon" style="background:#B9FFBE;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect width="15" height="14" x="1" y="5" rx="2"/></svg></div><div class="ar-label">Publish Video</div></div>
+    <div class="action-row" style="background:#4FFF5B;box-shadow:4px 4px 0 0 rgba(0,0,0,0.15);"><div class="ar-icon" style="background:#B9FFBE;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></div><div class="ar-label">Design Thumbnail</div></div>
+    <div class="action-row" style="background:#4FFF5B;box-shadow:4px 4px 0 0 rgba(0,0,0,0.15);"><div class="ar-icon" style="background:#B9FFBE;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="ar-label">Manage Projects</div></div>
+    <div class="action-row" style="background:#4FFF5B;box-shadow:4px 4px 0 0 rgba(0,0,0,0.15);"><div class="ar-icon" style="background:#B9FFBE;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="ar-label">Performance</div></div>
+    <div class="action-row" style="background:#579AFF;box-shadow:4px 4px 0 0 rgba(0,0,0,0.15);"><div class="ar-icon" style="background:#BBD4FF;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/></svg></div><div class="ar-label">Shorts Studio</div></div>
+    <div class="action-row" style="background:#579AFF;box-shadow:4px 4px 0 0 rgba(0,0,0,0.15);"><div class="ar-icon" style="background:#BBD4FF;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><div class="ar-label">Studio Hub</div></div>
+    <div class="action-row" style="background:#579AFF;box-shadow:4px 4px 0 0 rgba(0,0,0,0.15);"><div class="ar-icon" style="background:#BBD4FF;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="ar-label">Schedule</div></div>
+    <div class="action-row" style="background:#579AFF;box-shadow:4px 4px 0 0 rgba(0,0,0,0.15);"><div class="ar-icon" style="background:#BBD4FF;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><div class="ar-label">Settings</div></div>
+  </div>
+</div>
+
+<div class="section"><span>Analytics & Insights</span></div>
+
+<!-- ═══════════ THE 9 REFERENCE WIDGETS ═══════════ -->
+<!-- Storage -->
+<div class="s-quarter" data-wid="storage">
+  <div class="w open">
+    <div class="wh" style="background:#C9F830;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#E5FF80;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg></div><span class="wt">Storage</span></div>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb">
+      <div style="display:flex;justify-content:space-between;"><span class="label-xs" style="opacity:0.5;">API Quota</span><span style="font-weight:900;font-size:13px;">8,400<span style="opacity:0.3;">/10k</span></span></div>
+      <div style="display:flex;justify-content:space-between;"><span class="label-xs" style="opacity:0.5;">Gemini Engine</span><span style="font-weight:900;font-size:13px;">Ready <span style="color:#4FFF5B;">●</span></span></div>
+      <div style="display:flex;justify-content:space-between;"><span class="label-xs" style="opacity:0.5;">Local Cache</span><span style="font-weight:900;font-size:13px;color:#FF1744;">98% Full <span>●</span></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Weekly Rev -->
+<div class="s-quarter" data-wid="weekly-rev">
+  <div class="w open">
+    <div class="wh" style="background:#C9F830;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#E5FF80;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><span class="wt">Weekly Rev</span></div>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb">
+      <div style="font-size:36px;font-weight:1000;letter-spacing:-0.04em;line-height:1;">$1,842<span style="font-size:18px;opacity:0.4;">.50</span></div>
+      <div style="display:inline-flex;align-items:center;gap:4px;background:#C9F830;border:2px solid #000;border-radius:8px;padding:3px 10px;font-size:10px;font-weight:900;box-shadow:2px 2px 0 0 #000;">📈 +24% vs Last Wk</div>
+    </div>
+  </div>
+</div>
+
+<!-- Sync Status -->
+<div class="s-quarter" data-wid="sync-status">
+  <div class="w open">
+    <div class="wh" style="background:#40C6E9;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#99E5F5;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></div><span class="wt">Sync Status</span></div>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:900;font-size:12px;text-transform:uppercase;">Fetching Comments</span><span style="font-weight:1000;font-size:18px;">84%</span></div>
+      <div style="height:10px;border-radius:5px;border:2px solid var(--text-main);overflow:hidden;background:var(--bg-widget);"><div style="width:84%;height:100%;background:linear-gradient(90deg,#40C6E9,#C9F830,#FF83EA);border-radius:3px;"></div></div>
+      <div class="label-xs" style="opacity:0.3;text-align:center;">~12s remaining</div>
+    </div>
+  </div>
+</div>
+
+<!-- Superfan -->
+<div class="s-quarter" data-wid="superfan">
+  <div class="w open">
+    <div class="wh" style="background:#FF83EA;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#FFB3F0;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><span class="wt" style="color:#fff;">Superfan</span></div>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:40px;height:40px;border-radius:50%;border:3px solid #000;background:#579AFF;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><span style="font-weight:900;font-size:14px;color:#fff;">H</span></div>
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;"><span style="font-weight:900;font-size:13px;">@HistoryBuff99</span><span style="background:#FF1744;color:#fff;font-size:8px;font-weight:900;padding:1px 6px;border-radius:4px;">TOP 1%</span></div>
+          <div style="font-size:10px;font-weight:700;opacity:0.5;margin-top:2px;">Watched your last 10 videos full through and dropped 15 comments this week.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Milestone -->
+<div class="s-quarter" data-wid="milestone">
+  <div class="w open">
+    <div class="wh" style="background:#FF7497;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#FFB3C7;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div><span class="wt" style="color:#fff;">Milestone</span></div>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb">
+      <div class="label-xs" style="opacity:0.4;">Road to 100K Subs</div>
+      <div style="font-size:32px;font-weight:1000;letter-spacing:-0.04em;line-height:1;">88,430<span style="font-size:14px;opacity:0.3;">/100K</span></div>
+      <div style="height:12px;border-radius:6px;border:2px solid var(--text-main);overflow:hidden;background:var(--bg-widget);"><div style="width:88%;height:100%;background:linear-gradient(90deg,#FF7497,#FF1744);border-radius:4px;"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Engagement -->
+<div class="s-quarter" data-wid="engagement">
+  <div class="w open">
+    <div class="wh" style="background:#C9F830;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#E5FF80;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"/></svg></div><span class="wt">Engagement</span></div>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb" style="text-align:center;">
+      <div style="font-size:52px;font-weight:1000;line-height:1;">A+ <span style="font-size:18px;color:#00C853;">▲</span></div>
+      <div class="label-xs" style="opacity:0.4;">Top 5% of Tech Niche</div>
+    </div>
+  </div>
+</div>
+
+<!-- Consistency -->
+<div class="s-third" data-wid="consistency">
+  <div class="w open">
+    <div class="wh" style="background:#40C6E9;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#99E5F5;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><span class="wt">Consistency</span></div>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb">
+      <div class="label-xs" style="opacity:0.35;">Last 14 Days</div>
+      <div class="con-grid" id="con-grid"></div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:4px;">
+        <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:2px;background:#40C6E9;"></div><span class="label-xs" style="opacity:0.4;">Long</span></div>
+        <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:2px;background:#FFE357;"></div><span class="label-xs" style="opacity:0.4;">Short</span></div>
+        <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:2px;background:#4FFF5B;"></div><span class="label-xs" style="opacity:0.4;">Both</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Audience -->
+<div class="s-quarter" data-wid="audience">
+  <div class="w open">
+    <div class="wh" style="background:#FFE357;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#FFF0A3;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><span class="wt">Audience</span></div>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb" style="gap:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border:2px solid #FF0000;border-radius:8px;background:rgba(255,0,0,0.03);"><span style="font-weight:900;font-size:11px;color:#FF0000;">YOUTUBE</span><span style="font-weight:1000;font-size:15px;">88.4K</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border:2px solid #1DA1F2;border-radius:8px;background:rgba(29,161,242,0.03);"><span style="font-weight:900;font-size:11px;color:#1DA1F2;">TWITTER</span><span style="font-weight:1000;font-size:15px;">21.2K</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border:2px solid #000;border-radius:8px;background:rgba(0,0,0,0.02);"><span style="font-weight:900;font-size:11px;">TIKTOK</span><span style="font-weight:1000;font-size:15px;">145K</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings -->
+<div class="s-quarter" data-wid="settings">
+  <div class="w open">
+    <div class="wh" style="background:#eee;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#ddd;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><span class="wt">Settings</span></div>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb" style="gap:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-weight:800;font-size:12px;">Dark Mode</span><div class="toggle-sw" id="dm-toggle" onclick="toggleDark()"><div class="toggle-dot"></div></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-weight:800;font-size:12px;">Pro Mode</span><div class="toggle-sw" onclick="this.classList.toggle('on')"><div class="toggle-dot"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="section"><span>AI-Powered Tools</span></div>
+
+<!-- ═══════════ AI TOOLS ═══════════ -->
+<!-- Daily Oracle -->
+<div class="s-full" data-wid="daily-oracle">
+  <div class="w open" style="box-shadow:6px 6px 0 0 rgba(255,255,97,0.4);">
+    <div class="wh" style="background:#FFFF61;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#FF83EA;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/></svg></div><span class="wt">Daily Oracle Advice</span></div>
+      <div style="display:flex;gap:6px;margin-right:12px;">
+        <span class="wbadge" style="background:#fff;cursor:pointer;">Generate</span>
+        <span class="wbadge" style="background:#FF1744;color:#fff;cursor:pointer;">Gemini Offline</span>
+      </div>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb">
+      <div style="display:flex;gap:12px;">
+        <div style="flex:1;background:var(--bg-widget);border:3px solid var(--text-main);border-radius:12px;padding:14px;border-left:6px solid #FF7497;">
+          <div style="font-weight:700;font-size:13px;line-height:1.5;">Your titles are generic. "How to Edit Videos" competes with 10M results. Rewrite your last 5 titles with power words and specific outcomes.</div>
+          <div style="margin-top:8px;"><span class="label-xs" style="opacity:0.25;">⏱ 2–3 days</span></div>
+        </div>
+        <div style="flex:1;background:var(--bg-widget);border:3px solid var(--text-main);border-radius:12px;padding:14px;border-left:6px solid #579AFF;">
+          <div style="font-weight:700;font-size:13px;line-height:1.5;">Zero upload consistency — 3 videos in January, 0 in February. Commit to 2/week and batch your next 6 scripts this weekend.</div>
+          <div style="margin-top:8px;"><span class="label-xs" style="opacity:0.25;">⏱ 1–2 weeks</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Ask Me -->
+<div class="s-half" data-wid="ask-me">
+  <div class="w open">
+    <div class="wh" style="background:#40C6E9;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#579AFF;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></div><span class="wt">Ask Me</span></div>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb">
+      <span class="label-xs" style="opacity:0.25;">Ask anything about your channel</span>
+      <div style="display:flex;gap:8px;"><textarea class="brutal-ta" rows="2" placeholder="Why are my views dropping?"></textarea><div style="width:42px;height:42px;border-radius:10px;border:3px solid #000;background:#40C6E9;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;box-shadow:2px 2px 0 0 #000;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Hook Gen -->
+<div class="s-half" data-wid="hook-gen">
+  <div class="w open">
+    <div class="wh" style="background:#FF83EA;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#FFB570;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><span class="wt">Hook Gen</span></div>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb">
+      <input class="brutal-input" value="Best Budget Laptops 2026">
+      <div style="padding:10px;border:3px solid #000;border-radius:10px;background:rgba(255,131,234,0.05);font-weight:700;font-size:12px;">💥 "I tested 47 laptops under $500 — only 3 are worth buying."</div>
+      <div style="padding:10px;border:3px solid #000;border-radius:10px;background:rgba(87,154,255,0.05);font-weight:700;font-size:12px;">🎯 "Stop wasting money. Here's the EXACT laptop you need in 2026."</div>
+    </div>
+  </div>
+</div>
+
+<div class="section"><span>Deep Analytics</span></div>
+
+<!-- ═══════════ DEEP ANALYTICS ═══════════ -->
+<!-- Retention -->
+<div class="s-third" data-wid="retention">
+  <div class="w open">
+    <div class="wh" style="background:#FF7497;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#FFE357;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div><span class="wt">Retention</span></div>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb">
+      <div class="heatmap-bars" id="heatmap"></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+        <div class="mc" style="text-align:center;"><div class="mc-label">Hook</div><div class="mc-val" style="font-size:18px;color:#4FFF5B;">92%</div></div>
+        <div class="mc" style="text-align:center;"><div class="mc-label">Mid</div><div class="mc-val" style="font-size:18px;color:#FFE357;">71%</div></div>
+        <div class="mc" style="text-align:center;"><div class="mc-label">End</div><div class="mc-val" style="font-size:18px;color:#FF7497;">34%</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SEO Score -->
+<div class="s-third" data-wid="seo-score">
+  <div class="w open">
+    <div class="wh" style="background:#24D3FF;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#C9F830;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><span class="wt">SEO Score</span></div>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb">
+      <div style="display:grid;grid-template-columns:80px 1fr;gap:14px;align-items:center;">
+        <div style="text-align:center;"><div style="font-size:44px;font-weight:1000;color:#24D3FF;">78</div><span class="label-xs" style="opacity:0.25;">/100</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div class="ss"><span class="ss-l">Title</span><div class="ss-t"><div class="ss-f" style="width:90%;background:#4FFF5B;"></div></div><span class="ss-v">90</span></div>
+          <div class="ss"><span class="ss-l">Desc</span><div class="ss-t"><div class="ss-f" style="width:65%;background:#FFE357;"></div></div><span class="ss-v">65</span></div>
+          <div class="ss"><span class="ss-l">Tags</span><div class="ss-t"><div class="ss-f" style="width:85%;background:#40C6E9;"></div></div><span class="ss-v">85</span></div>
+          <div class="ss"><span class="ss-l">Thumb</span><div class="ss-t"><div class="ss-f" style="width:72%;background:#FF83EA;"></div></div><span class="ss-v">72</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Viral Score -->
+<div class="s-third" data-wid="viral-score">
+  <div class="w open">
+    <div class="wh" style="background:#4FFF5B;" onclick="tw(this)">
+      <div class="left"><div class="ir" style="background:#B9FFBE;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div><span class="wt">Viral Score</span></div>
+      <svg class="wchev" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="wb" style="text-align:center;">
+      <div style="font-size:52px;font-weight:1000;line-height:1;background:linear-gradient(135deg,#4FFF5B,#40C6E9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">7.4</div>
+      <span class="label-xs" style="opacity:0.25;">/10 Viral Potential</span>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px;text-align:left;">
+        <div class="ss"><span class="ss-l">Velocity</span><div class="ss-t"><div class="ss-f" style="width:82%;background:#4FFF5B;"></div></div><span class="ss-v">82</span></div>
+        <div class="ss"><span class="ss-l">Share</span><div class="ss-t"><div class="ss-f" style="width:65%;background:#40C6E9;"></div></div><span class="ss-v">65</span></div>
+        <div class="ss"><span class="ss-l">CTR</span><div class="ss-t"><div class="ss-f" style="width:78%;background:#FFE357;"></div></div><span class="ss-v">78</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end grid -->
+</div><!-- end dashboard -->
+
+<!-- ═══════════ WIDGET PICKER PANEL ═══════════ -->
+<div class="picker-panel" id="picker-panel">
+  <div class="picker-header">
+    <h3>⊞ Widgets</h3>
+    <div class="picker-close" onclick="togglePicker()">✕</div>
+  </div>
+  <div class="picker-body">
+    <div class="picker-grid" id="picker-grid"></div>
+  </div>
+</div>
+
+<script>
+// ═══ WIDGET REGISTRY ═══
+const W = [
+  { id:'stat-views',    name:'Views',         icon:'eye',       color:'#C9F830' },
+  { id:'stat-subs',     name:'Subs',          icon:'users',     color:'#4FFF5B' },
+  { id:'stat-hours',    name:'Hours',         icon:'clock',     color:'#FF7497' },
+  { id:'stat-revenue',  name:'Revenue',       icon:'dollar',    color:'#FFE357' },
+  { id:'calendar',      name:'Calendar',      icon:'calendar',  color:'#FFB570' },
+  { id:'todo',          name:'To Do',         icon:'zap',       color:'#FFB570' },
+  { id:'connection',    name:'Connection',    icon:'wifi',      color:'#4FFF5B' },
+  { id:'top-performer', name:'Top Video',     icon:'trophy',    color:'#FF83EA' },
+  { id:'recent-uploads',name:'Uploads',       icon:'upload',    color:'#579AFF' },
+  { id:'quick-actions', name:'Actions',       icon:'grid',      color:'#4FFF5B' },
+  { id:'storage',       name:'Storage',       icon:'database',  color:'#C9F830' },
+  { id:'weekly-rev',    name:'Weekly $',      icon:'dollar',    color:'#C9F830' },
+  { id:'sync-status',   name:'Sync',          icon:'refresh',   color:'#40C6E9' },
+  { id:'superfan',      name:'Superfan',      icon:'heart',     color:'#FF83EA' },
+  { id:'milestone',     name:'Milestone',     icon:'flag',      color:'#FF7497' },
+  { id:'engagement',    name:'Engage',        icon:'thumbsup',  color:'#C9F830' },
+  { id:'consistency',   name:'Consistency',   icon:'barchart',  color:'#40C6E9' },
+  { id:'audience',      name:'Audience',      icon:'users2',    color:'#FFE357' },
+  { id:'settings',      name:'Settings',      icon:'settings',  color:'#eee' },
+  { id:'daily-oracle',  name:'Oracle',        icon:'sparkles',  color:'#FFFF61' },
+  { id:'ask-me',        name:'Ask AI',        icon:'message',   color:'#40C6E9' },
+  { id:'hook-gen',      name:'Hook Gen',      icon:'bolt',      color:'#FF83EA' },
+  { id:'retention',     name:'Retention',     icon:'table',     color:'#FF7497' },
+  { id:'seo-score',     name:'SEO',           icon:'search',    color:'#24D3FF' },
+  { id:'viral-score',   name:'Viral',         icon:'trending',  color:'#4FFF5B' },
+];
+
+const ICON_SVG = {
+  eye:      '<circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>',
+  users:    '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  clock:    '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  dollar:   '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  zap:      '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  wifi:     '<path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>',
+  trophy:   '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 9 7 12 7s5-3 7.5-3a2.5 2.5 0 0 1 0 5H18"/><path d="m18 9-6 13L6 9"/>',
+  upload:   '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+  grid:     '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  database: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/>',
+  refresh:  '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+  heart:    '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+  flag:     '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
+  thumbsup: '<path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"/>',
+  barchart: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  users2:   '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09"/>',
+  sparkles: '<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/>',
+  message:  '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+  bolt:     '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  table:    '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>',
+  search:   '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  trending: '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+};
+
+// ═══ BUILD WIDGET PICKER ═══
+function buildPicker() {
+  const g = document.getElementById('picker-grid');
+  g.innerHTML = '';
+  W.forEach(w => {
+    const el = document.querySelector(`[data-wid="${w.id}"]`);
+    const active = el && !el.classList.contains('hidden-w');
+    const tile = document.createElement('div');
+    tile.className = 'picker-tile' + (active ? ' active' : '');
+    tile.style.background = active ? w.color : '';
+    tile.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5">${ICON_SVG[w.icon]||''}</svg><span class="pt-label">${w.name}</span>`;
+    tile.onclick = () => {
+      if (el) {
+        el.classList.toggle('hidden-w');
+        buildPicker();
+      }
+    };
+    g.appendChild(tile);
+  });
+}
+
+// ═══ TOGGLE FUNCTIONS ═══
+function tw(h) { if (!document.body.classList.contains('edit-mode')) h.closest('.w').classList.toggle('open'); }
+function toggleDark() {
+  document.body.classList.toggle('dark-mode');
+  const t = document.getElementById('dm-toggle');
+  if (t) t.classList.toggle('on');
+}
+function togglePicker() {
+  document.body.classList.toggle('picker-open');
+  buildPicker();
+}
+let editOn = false;
+function toggleEdit() {
+  editOn = !editOn;
+  document.body.classList.toggle('edit-mode', editOn);
+  document.getElementById('edit-btn').classList.toggle('active', editOn);
+}
+
+// ═══ CALENDAR ═══
+function buildCal() {
+  const body = document.getElementById('cal-body');
+  if (!body) return;
+  const now = new Date(); now.setHours(0,0,0,0);
+  const start = new Date(now); start.setDate(now.getDate() - now.getDay());
+  let html = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;text-align:center;margin-bottom:4px;">';
+  ['S','M','T','W','T','F','S'].forEach(d => html += `<div class="label-xs" style="opacity:0.3;padding:2px 0;">${d}</div>`);
+  html += '</div>';
+  for (let row = 0; row < 2; row++) {
+    html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">';
+    for (let col = 0; col < 7; col++) {
+      const d = new Date(start); d.setDate(start.getDate() + row * 7 + col);
+      const isToday = d.getTime() === now.getTime();
+      html += `<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;border:2px solid ${isToday ? '#000' : '#ddd'};font-weight:1000;font-size:14px;${isToday ? 'background:#FFB570;box-shadow:2px 2px 0 0 #000;' : 'background:#fafafa;color:rgba(0,0,0,0.3);'}">${d.getDate()}</div>`;
+    }
+    html += '</div>';
+  }
+  body.innerHTML = html;
+}
+
+// ═══ HEATMAP ═══
+function buildHeatmap() {
+  const c = document.getElementById('heatmap');
+  if (!c) return;
+  [95,92,88,84,81,78,76,74,72,70,68,71,73,70,67,63,58,52,45,34].forEach(v => {
+    const b = document.createElement('div');
+    b.style.height = v + '%';
+    b.style.background = v > 80 ? '#4FFF5B' : v > 65 ? '#C9F830' : v > 50 ? '#FFE357' : v > 40 ? '#FFB570' : '#FF7497';
+    b.title = v + '% retention';
+    c.appendChild(b);
+  });
+}
+
+// ═══ CONSISTENCY GRID ═══
+function buildCon() {
+  const g = document.getElementById('con-grid');
+  if (!g) return;
+  const types = ['','','long','','short','','','long','','','both','','','short'];
+  types.forEach(t => {
+    const cell = document.createElement('div');
+    cell.className = 'con-cell';
+    cell.style.background = t === 'long' ? '#40C6E9' : t === 'short' ? '#FFE357' : t === 'both' ? '#4FFF5B' : 'rgba(0,0,0,0.04)';
+    cell.title = t || 'No upload';
+    g.appendChild(cell);
+  });
+}
+
+// ═══ INIT ═══
+buildCal();
+buildHeatmap();
+buildCon();
+buildPicker();
+</script>
+</body>
+</html>

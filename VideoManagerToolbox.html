@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Manager - Toolbox UI Style</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 12px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-left: 3px solid #000;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #000;
+            border: 2px solid #f1f1f1;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #333;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .animate-pulse-custom {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-6xl mx-auto">
+        
+        <!-- Video Selector Card -->
+        <div id="selectorCard" 
+             class="bg-white border-[4px] border-black rounded-[24px] shadow-[8px_8px_0px_0px_black] cursor-pointer transition-all hover:shadow-[6px_6px_0px_0px_black] hover:translate-x-[2px] hover:translate-y-[2px]"
+             onclick="toggleDropdown()">
+            
+            <div class="p-6 flex items-center gap-6">
+                <!-- Thumbnail -->
+                <div class="flex-shrink-0">
+                    <div class="w-56 aspect-video border-[3px] border-black rounded-xl overflow-hidden shadow-[4px_4px_0px_0px_black]">
+                        <img id="selectedThumb" 
+                             src="https://images.unsplash.com/photo-1465847899084-d164df4dedc6?q=80&w=640&auto=format&fit=crop" 
+                             alt="Selected video"
+                             class="w-full h-full object-cover">
+                    </div>
+                </div>
+                
+                <!-- Meta Info -->
+                <div class="flex-1 min-w-0">
+                    <h2 id="selectedTitle" class="font-black text-3xl uppercase mb-3 line-clamp-2">
+                        Inside The Saddle Of A French Hussar ⚔️ Pt 2
+                    </h2>
+                    
+                    <!-- Quick Action Pills -->
+                    <div class="flex gap-2 mb-3 flex-wrap">
+                        <button class="bg-[#CCFF00] text-black border-[2px] border-black px-3 py-1.5 rounded-lg font-black text-[10px] uppercase tracking-widest shadow-[2px_2px_0px_0px_black] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all">
+                            Studio Hub
+                        </button>
+                        <button class="bg-[#00CCFF] text-black border-[2px] border-black px-3 py-1.5 rounded-lg font-black text-[10px] uppercase tracking-widest shadow-[2px_2px_0px_0px_black] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all">
+                            Reference Studio
+                        </button>
+                    </div>
+                    
+                    <!-- Subline -->
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <p id="selectedId" class="text-[10px] font-black uppercase tracking-widest text-black/50">
+                            ID: OMCLJ50CJ4M
+                        </p>
+                        <a id="selectedLink" 
+                           href="https://youtube.com/watch?v=OMCLJ50CJ4M" 
+                           target="_blank"
+                           class="text-[10px] font-black uppercase tracking-widest text-[#00CCFF] hover:text-[#FF3399] transition-colors"
+                           onclick="event.stopPropagation()">
+                            View on YouTube ↗
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Chevron -->
+                <div class="flex-shrink-0 pl-4">
+                    <div id="chevron" class="w-6 h-6 border-r-[4px] border-b-[4px] border-black transform rotate-45 -mt-2 transition-transform duration-300"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dropdown Panel -->
+        <div id="dropdown" class="hidden mt-6 animate-fade-in">
+            <div class="bg-white border-[4px] border-black rounded-[24px] shadow-[8px_8px_0px_0px_black] overflow-hidden">
+                
+                <!-- Header -->
+                <div class="bg-[#FFDD00] border-b-[4px] border-black p-6">
+                    <div class="flex items-center justify-between gap-4 flex-wrap">
+                        <h3 class="font-black text-4xl uppercase">Select Asset</h3>
+                        
+                        <!-- Search -->
+                        <div class="relative flex-1 max-w-xl">
+                            <input 
+                                type="text" 
+                                id="searchInput"
+                                placeholder="SEARCH ASSETS..."
+                                class="w-full p-4 pl-12 border-[4px] border-black rounded-xl font-bold text-sm uppercase outline-none transition-colors shadow-[4px_4px_0px_0px_black] focus:bg-[#CCFF00]/10"
+                                onclick="event.stopPropagation()"
+                                oninput="filterVideos(this.value)">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xl">⌕</span>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="flex gap-3">
+                            <button onclick="event.stopPropagation(); loadVideos()" 
+                                    class="bg-black text-[#CCFF00] border-[4px] border-black px-6 py-3 font-black uppercase text-xs rounded-xl shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] transition-all">
+                                Refresh
+                            </button>
+                            <button onclick="event.stopPropagation(); closeDropdown()" 
+                                    class="bg-white text-black border-[4px] border-black px-6 py-3 font-black uppercase text-xs rounded-xl shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] transition-all">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Results -->
+                <div id="results" class="max-h-[60vh] overflow-y-auto custom-scrollbar bg-gray-50">
+                    <!-- Items will be inserted here -->
+                </div>
+                
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden p-20 text-center">
+                    <p class="font-black text-xl uppercase tracking-widest text-black/30">
+                        No videos found
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Sample data
+        const videos = [
+            {
+                videoId: "OMCLJ50CJ4M",
+                title: "Inside The Saddle Of A French Hussar ⚔️ Pt 2",
+                publishedAt: "2026-03-14",
+                thumbnail: "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?q=80&w=640&auto=format&fit=crop",
+            },
+            {
+                videoId: "V3SY18T2MBA",
+                title: "Inside The Saddle Of A French Hussar ⚔️",
+                publishedAt: "2026-03-14",
+                thumbnail: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?q=80&w=640&auto=format&fit=crop",
+            },
+            {
+                videoId: "8IXUQTN5CJA",
+                title: "General Lasalle Napoleonic Cavalry Legend",
+                publishedAt: "2026-03-14",
+                thumbnail: "https://images.unsplash.com/photo-1539683255143-73a6b838b106?q=80&w=640&auto=format&fit=crop",
+            },
+            {
+                videoId: "EKEIYIJMONO",
+                title: "Battle Of The Pyramids",
+                publishedAt: "2026-03-09",
+                thumbnail: "https://images.unsplash.com/photo-1518998053901-5348d3961a04?q=80&w=640&auto=format&fit=crop",
+            },
+            {
+                videoId: "ABC123XYZ",
+                title: "Napoleon's Egyptian Campaign Documentary",
+                publishedAt: "2026-03-08",
+                thumbnail: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=640&auto=format&fit=crop",
+            },
+            {
+                videoId: "DEF456UVW",
+                title: "The Imperial Guard at Waterloo",
+                publishedAt: "2026-03-07",
+                thumbnail: "https://images.unsplash.com/photo-1484417894907-623942c8ee29?q=80&w=640&auto=format&fit=crop",
+            }
+        ];
+        
+        let selectedVideoId = videos[0].videoId;
+        let isDropdownOpen = false;
+        
+        function formatDate(iso) {
+            const d = new Date(iso + "T00:00:00");
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+        
+        function selectVideo(video) {
+            selectedVideoId = video.videoId;
+            
+            // Update selector card
+            document.getElementById('selectedTitle').textContent = video.title;
+            document.getElementById('selectedId').textContent = `ID: ${video.videoId}`;
+            document.getElementById('selectedLink').href = `https://youtube.com/watch?v=${video.videoId}`;
+            document.getElementById('selectedThumb').src = video.thumbnail;
+            
+            // Refresh results to show active state
+            filterVideos(document.getElementById('searchInput').value);
+            
+            // Close dropdown
+            closeDropdown();
+        }
+        
+        function renderVideos(videosToRender) {
+            const resultsContainer = document.getElementById('results');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (videosToRender.length === 0) {
+                resultsContainer.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            resultsContainer.innerHTML = videosToRender.map((video, index) => {
+                const isActive = video.videoId === selectedVideoId;
+                
+                return `
+                    <div class="flex items-center gap-6 p-4 cursor-pointer transition-all hover:bg-white ${index > 0 ? 'border-t-[3px] border-black/10' : ''} ${isActive ? 'bg-[#CCFF00]/20' : ''}"
+                         onclick="event.stopPropagation(); selectVideo(videos[${videos.indexOf(video)}])">
+                        
+                        <!-- Thumbnail -->
+                        <div class="flex-shrink-0">
+                            <div class="w-32 aspect-video border-[3px] border-black rounded-lg overflow-hidden shadow-[4px_4px_0px_0px_black] transition-transform hover:scale-105">
+                                <img src="${video.thumbnail}" 
+                                     alt="${video.title}"
+                                     class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                        
+                        <!-- Meta -->
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-black text-2xl uppercase mb-2 line-clamp-2 transition-colors hover:text-[#FF3399]">
+                                ${video.title}
+                            </h4>
+                            <div class="flex items-center gap-4 flex-wrap">
+                                <span class="text-[10px] font-black uppercase tracking-widest text-black/50">
+                                    ID: ${video.videoId}
+                                </span>
+                                <span class="text-[10px] font-black uppercase tracking-widest text-black/50">
+                                    PUB: ${formatDate(video.publishedAt)}
+                                </span>
+                                ${isActive ? `
+                                    <span class="bg-black text-[#CCFF00] px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest animate-pulse-custom">
+                                        Active
+                                    </span>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function filterVideos(query = '') {
+            const term = query.trim().toLowerCase();
+            const filtered = videos.filter(v => 
+                !term || 
+                v.title.toLowerCase().includes(term) || 
+                v.videoId.toLowerCase().includes(term)
+            );
+            renderVideos(filtered);
+        }
+        
+        function loadVideos() {
+            filterVideos(document.getElementById('searchInput').value);
+        }
+        
+        function toggleDropdown() {
+            isDropdownOpen = !isDropdownOpen;
+            const dropdown = document.getElementById('dropdown');
+            const chevron = document.getElementById('chevron');
+            const selectorCard = document.getElementById('selectorCard');
+            
+            if (isDropdownOpen) {
+                dropdown.classList.remove('hidden');
+                chevron.style.transform = 'rotate(225deg)';
+                chevron.style.marginTop = '0.5rem';
+                chevron.style.borderColor = '#FF3399';
+                selectorCard.classList.add('shadow-none', 'translate-x-[2px]', 'translate-y-[2px]');
+                selectorCard.classList.remove('shadow-[8px_8px_0px_0px_black]');
+            } else {
+                dropdown.classList.add('hidden');
+                chevron.style.transform = 'rotate(45deg)';
+                chevron.style.marginTop = '-0.5rem';
+                chevron.style.borderColor = '#000';
+                selectorCard.classList.remove('shadow-none', 'translate-x-[2px]', 'translate-y-[2px]');
+                selectorCard.classList.add('shadow-[8px_8px_0px_0px_black]');
+            }
+        }
+        
+        function closeDropdown() {
+            if (isDropdownOpen) {
+                toggleDropdown();
+            }
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const selectorCard = document.getElementById('selectorCard');
+            const dropdown = document.getElementById('dropdown');
+            
+            if (!selectorCard.contains(event.target) && !dropdown.contains(event.target)) {
+                closeDropdown();
+            }
+        });
+        
+        // Initialize
+        loadVideos();
+        
+        console.log('🎮 Video Manager - Toolbox UI Style Loaded!');
+    </script>
+</body>
+</html>
