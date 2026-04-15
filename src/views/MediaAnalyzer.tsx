@@ -198,7 +198,7 @@ const [transcriptResult, setTranscriptResult] = useState("")
        <input
         value={targetNiche}
         onChange={(e) => setTargetNiche(e.target.value)}
-        placeholder="Napoleonic History"
+        placeholder="History Channel"
         className="w-full p-3 border-[4px] border-black rounded-xl font-bold text-sm uppercase outline-none focus:bg-[#FFB570]/10 transition-colors"
        />
       </div>

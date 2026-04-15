@@ -64,6 +64,9 @@ const buildTrustReport = (manifest: ExportManifest): string => {
   "- derived_exact: deterministic formula from exact inputs",
   "- estimated: modeled or extrapolated",
   "- unavailable: not accessible in current mode",
+  "",
+  "## Sync Diagnostics",
+  "- Includes run-level attempted groups, disabled metrics, bounded failures, and suppressed retry combos.",
  ].join("\n")
 }
 
@@ -86,6 +89,7 @@ export const createExportBundle = async (
    "Raw local analytics cache snapshot",
    "Canonical domain master tables (CSV + JSON)",
    "Coverage registry snapshot",
+   "Window sync diagnostics",
    "Trust report",
   ],
  }
@@ -97,8 +101,24 @@ export const createExportBundle = async (
 
  const ytCacheRaw = localStorage.getItem("yt_analytics_cache") || "{}"
  const ga4CacheRaw = localStorage.getItem("ga4_analytics_cache") || "{}"
+ const ytCache = JSON.parse(ytCacheRaw || "{}") as {
+  analyticsByWindow?: Record<string, { syncDiagnostics?: unknown }>
+ }
  zip.file("raw/yt_analytics_cache.json", ytCacheRaw)
  zip.file("raw/ga4_analytics_cache.json", ga4CacheRaw)
+ zip.file(
+  "raw/sync_diagnostics.json",
+  JSON.stringify(
+   Object.fromEntries(
+    Object.entries(ytCache.analyticsByWindow || {}).map(([window, payload]) => [
+     window,
+     payload?.syncDiagnostics || null,
+    ]),
+   ),
+   null,
+   2,
+  ),
+ )
 
  for (const tableName of Object.keys(bundle.tables) as MasterTableType[]) {
   const rows = bundle.tables[tableName]

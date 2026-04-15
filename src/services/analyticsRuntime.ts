@@ -1,7 +1,7 @@
 import type { CanonicalVideoRow } from "./analyticsContract"
 
 export type SyncSourceMode = "api_analytics" | "uploads" | "both"
-export type StorageMode = "cache" | "storage" | "both"
+export type StorageMode = "sync" | "storage" | "both"
 
 export interface EffectiveAnalyticsRows {
  rows: CanonicalVideoRow[]
@@ -31,7 +31,11 @@ export const setStoredSyncSourceMode = (mode: SyncSourceMode): void => {
 
 export const getStoredStorageMode = (): StorageMode => {
  const raw = localStorage.getItem(STORAGE_MODE_KEY)
- if (raw === "cache" || raw === "storage" || raw === "both") return raw
+ if (raw === "sync" || raw === "storage" || raw === "both") return raw
+ if (raw === "cache") {
+  localStorage.setItem(STORAGE_MODE_KEY, "sync")
+  return "sync"
+ }
  return "both"
 }
 

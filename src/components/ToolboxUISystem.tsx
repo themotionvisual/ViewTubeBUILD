@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
-import { createPortal } from "react-dom"
 
 import {
-  ChevronDown,
+ ChevronDown,
   Cloud,
   Grid3X3,
   Image as ImageIcon,
@@ -117,27 +116,28 @@ import {
  AreaChartDemo,
 
 } from "./NativeUIKit"
+import { getPaletteColor } from "../styles/toolboxPalette"
 
-
-export const zoomIn35 = new URL(
-  "../assets/icons/toolbox-toggle/zoom-in-35.png",
-  import.meta.url
+const zoomIn35 = new URL(
+ "../assets/toolbox-toggle/zoom-in-35.png",
+ import.meta.url,
 ).href
 
-export const zoomIn50 = new URL(
-  "../assets/icons/toolbox-toggle/zoom-in-50.png",
-  import.meta.url
+const zoomIn50 = new URL(
+ "../assets/toolbox-toggle/zoom-in-50.png",
+ import.meta.url,
 ).href
 
-export const zoomOut35 = new URL(
-  "../assets/icons/toolbox-toggle/zoom-out-35.png",
-  import.meta.url
+const zoomOut35 = new URL(
+ "../assets/toolbox-toggle/zoom-out-35.png",
+ import.meta.url,
 ).href
 
-export const zoomOut50 = new URL(
-  "../assets/icons/toolbox-toggle/zoom-out-50.png",
-  import.meta.url
+const zoomOut50 = new URL(
+ "../assets/toolbox-toggle/zoom-out-50.png",
+ import.meta.url,
 ).href
+
 
 const closeIcon21 = new URL(
 
@@ -213,6 +213,12 @@ type DropdownControlProps = {
 
  tone?: keyof typeof ROW_CONTROL_THEMES
 
+ surfaceColor?: string
+
+ controlColor?: string
+
+ shadowColor?: string
+
 }
 
 type ActionControlButtonProps = {
@@ -220,6 +226,9 @@ type ActionControlButtonProps = {
  tone?: keyof typeof ROW_CONTROL_THEMES
  icon: React.ReactNode
  onClick?: () => void
+ surfaceColor?: string
+ controlColor?: string
+ shadowColor?: string
 }
 
 // Universal subtoolbox-sized control geometry.
@@ -278,6 +287,12 @@ const CONFIG: SystemConfig = {
 
 }
 
+const paletteAt = (index: number) => getPaletteColor(index)
+const palettePair = (index: number) => ({
+ header: paletteAt(index),
+ icon: paletteAt(index + 4),
+})
+
 
 const STYLES = [
 
@@ -325,49 +340,22 @@ const STYLES = [
 
 
 const RULES = [
-
- "Main toolbox content uses inner margin 0. The structural grid owns spacing.",
-
- "The base structural rhythm is 24px gaps and 24px internal grid padding.",
-
- "A component should never cut off contained elements to force grid fit.",
-
- "If content exceeds a unit bucket, the module opens to the next level.",
-
- "Subtoolbox stroke is 4px; first-level internals max 3px; nested internals max 2px.",
-
- "Dropdown labels stay embedded inside controls so grid alignment stays locked.",
-
- "All subtoolbox-sized controls use one shared left icon-section primitive: same width, stroke divider, and full-height geometry as SubToolbox.",
-
- "Control shells reuse subtoolbox motion tokens: 60px height, 4px stroke, 16px radius, and 600ms open/close timing.",
-
- "Dropdown collapse must use subtoolbox grid-row mechanics only; no fade/scale animation paths.",
-
- "Do not add one-off corner/size overrides for subtoolbox-sized controls; extend shared shell/rail primitives instead.",
-
- "Chart cards can span full / half / third widths based on readability and data density.",
-
- "Chart catalog and spec pages do not use dashed or dotted grid/cursor lines; use low-opacity solid lines only.",
-
- "Chart primitives must render from canonical adapter outputs only, with deterministic fallbacks when dimensions are missing.",
-
- "Subtoolbox demo content must not be clipped to force grid fit; expand the module instead.",
+ "60px closed unit.",
+ "4/3/2 stroke hierarchy.",
+ "16px radius on canonical shells.",
+ "56px left rail tied to header height.",
+ "SYMBOLS 19/22 for open and close affordance.",
+ "Grid-row collapse timing only (600ms canonical transition).",
 
 ]
 
 
 const RATIO_RULES = [
-
- "Closed subtoolbox = 60px",
-
- "2 rows (60 + 60) + 1 gap (24) = 144px",
-
- "Three compact slider rows map to same 144px rhythm",
-
- "Canvas uses flex-1 with min-h-0 for automatic column sync",
-
- "Avoid fixed min-height that blocks synchronized vertical math",
+ "Closed subtoolbox = 60px.",
+ "2 rows (60 + 60) + 24 gap = 144px.",
+ "Three compact rows also map to 144px.",
+ "Canvas uses flex-1 + min-h-0.",
+ "Do not force layout with fixed min-height hacks.",
 
 ]
 
@@ -391,710 +379,61 @@ const CHART_METRIC_COLORS = {
 } as const
 
 
-const ENGAGEMENT_MAP_SOURCE = [
-
- {
-
-  idx: 1,
-
-  shortTitle: "IRISH LEGION",
-
-  likes: 7,
-
-  comments: 2,
-
-  shares: 0,
-
-  subs: 2,
-
-  views: 136,
-
-  impressions: 2605,
-
-  ctr: 3.95,
-
-  avp: 36.6,
-
-  revenue: 0.102,
-
-  durationSec: 123,
-
- },
-
- {
-
-  idx: 2,
-
-  shortTitle: "PYRAMIDS SPEECH",
-
-  likes: 11,
-
-  comments: 3,
-
-  shares: 0,
-
-  subs: 1,
-
-  views: 276,
-
-  impressions: 5705,
-
-  ctr: 3.72,
-
-  avp: 42.8,
-
-  revenue: 0.297,
-
-  durationSec: 142,
-
- },
-
- {
-
-  idx: 3,
-
-  shortTitle: "JOIN OLD GUARD",
-
-  likes: 27,
-
-  comments: 4,
-
-  shares: 5,
-
-  subs: 4,
-
-  views: 675,
-
-  impressions: 11942,
-
-  ctr: 4.07,
-
-  avp: 25.62,
-
-  revenue: 1.98,
-
-  durationSec: 497,
-
- },
-
- {
-
-  idx: 4,
-
-  shortTitle: "BEAUCAIRE",
-
-  likes: 10,
-
-  comments: 4,
-
-  shares: 0,
-
-  subs: 2,
-
-  views: 232,
-
-  impressions: 3748,
-
-  ctr: 4.32,
-
-  avp: 8.85,
-
-  revenue: 0.914,
-
-  durationSec: 1616,
-
- },
-
- {
-
-  idx: 5,
-
-  shortTitle: "BLACK BRUNSWICKERS",
-
-  likes: 24,
-
-  comments: 5,
-
-  shares: 5,
-
-  subs: 2,
-
-  views: 461,
-
-  impressions: 8304,
-
-  ctr: 4.01,
-
-  avp: 40.32,
-
-  revenue: 0.633,
-
-  durationSec: 146,
-
- },
-
- {
-
-  idx: 6,
-
-  shortTitle: "AUSTERLITZ 1805",
-
-  likes: 15,
-
-  comments: 4,
-
-  shares: 4,
-
-  subs: 6,
-
-  views: 528,
-
-  impressions: 4197,
-
-  ctr: 3.96,
-
-  avp: 12.49,
-
-  revenue: 3.658,
-
-  durationSec: 1843,
-
- },
-
- {
-
-  idx: 7,
-
-  shortTitle: "1805 PREMIERE",
-
-  likes: 1,
-
-  comments: 0,
-
-  shares: 0,
-
-  subs: 0,
-
-  views: 1,
-
-  impressions: 0,
-
-  ctr: 0,
-
-  avp: 42.88,
-
-  revenue: 0,
-
-  durationSec: 670,
-
- },
-
- {
-
-  idx: 8,
-
-  shortTitle: "AUSTERLITZ ABOVE",
-
-  likes: 4,
-
-  comments: 1,
-
-  shares: 0,
-
-  subs: 2,
-
-  views: 152,
-
-  impressions: 2368,
-
-  ctr: 4.35,
-
-  avp: 35.6,
-
-  revenue: 0.51,
-
-  durationSec: 559,
-
- },
-
- {
-
-  idx: 9,
-
-  shortTitle: "UNION JACK",
-
-  likes: 1,
-
-  comments: 0,
-
-  shares: 0,
-
-  subs: 0,
-
-  views: 15,
-
-  impressions: 775,
-
-  ctr: 1.16,
-
-  avp: 36.6,
-
-  revenue: 0.023,
-
-  durationSec: 128,
-
- },
-
- {
-
-  idx: 10,
-
-  shortTitle: "UNKNOWN FACTS",
-
-  likes: 0,
-
-  comments: 0,
-
-  shares: 0,
-
-  subs: 0,
-
-  views: 13,
-
-  impressions: 607,
-
-  ctr: 1.15,
-
-  avp: 55.13,
-
-  revenue: 0.017,
-
-  durationSec: 223,
-
- },
-
- {
-
-  idx: 11,
-
-  shortTitle: "TOP 3 STRATEGIES",
-
-  likes: 0,
-
-  comments: 0,
-
-  shares: 1,
-
-  subs: 0,
-
-  views: 27,
-
-  impressions: 562,
-
-  ctr: 2.49,
-
-  avp: 43.75,
-
-  revenue: 0.13,
-
-  durationSec: 502,
-
- },
-
- {
-
-  idx: 12,
-
-  shortTitle: "CORPS SYSTEM",
-
-  likes: 25,
-
-  comments: 2,
-
-  shares: 4,
-
-  subs: 3,
-
-  views: 828,
-
-  impressions: 6878,
-
-  ctr: 6.73,
-
-  avp: 37.56,
-
-  revenue: 2.743,
-
-  durationSec: 508,
-
- },
-
- {
-
-  idx: 13,
-
-  shortTitle: "BATTALION CARRE",
-
-  likes: 0,
-
-  comments: 0,
-
-  shares: 0,
-
-  subs: 0,
-
-  views: 54,
-
-  impressions: 654,
-
-  ctr: 2.45,
-
-  avp: 68.84,
-
-  revenue: 0.118,
-
-  durationSec: 69,
-
- },
-
- {
-
-  idx: 14,
-
-  shortTitle: "MARENGO",
-
-  likes: 2,
-
-  comments: 0,
-
-  shares: 0,
-
-  subs: 0,
-
-  views: 65,
-
-  impressions: 1188,
-
-  ctr: 2.44,
-
-  avp: 38.53,
-
-  revenue: 0.739,
-
-  durationSec: 151,
-
- },
-
- {
-
-  idx: 15,
-
-  shortTitle: "EMPERORS MEN",
-
-  likes: 15,
-
-  comments: 2,
-
-  shares: 1,
-
-  subs: 1,
-
-  views: 331,
-
-  impressions: 3775,
-
-  ctr: 4.74,
-
-  avp: 21.3,
-
-  revenue: 1.446,
-
-  durationSec: 1068,
-
- },
-
- {
-
-  idx: 16,
-
-  shortTitle: "KOZIETULSKI",
-
-  likes: 2,
-
-  comments: 0,
-
-  shares: 0,
-
-  subs: 0,
-
-  views: 29,
-
-  impressions: 740,
-
-  ctr: 3.51,
-
-  avp: 42.65,
-
-  revenue: 0.093,
-
-  durationSec: 258,
-
- },
-
- {
-
-  idx: 17,
-
-  shortTitle: "MARSHAL NEY",
-
-  likes: 1,
-
-  comments: 0,
-
-  shares: 0,
-
-  subs: 0,
-
-  views: 29,
-
-  impressions: 733,
-
-  ctr: 2.46,
-
-  avp: 40.57,
-
-  revenue: 0.109,
-
-  durationSec: 271,
-
- },
-
- {
-
-  idx: 18,
-
-  shortTitle: "JOACHIM MURAT",
-
-  likes: 0,
-
-  comments: 0,
-
-  shares: 0,
-
-  subs: 0,
-
-  views: 17,
-
-  impressions: 509,
-
-  ctr: 2.16,
-
-  avp: 53.12,
-
-  revenue: 0.019,
-
-  durationSec: 212,
-
- },
-
- {
-
-  idx: 19,
-
-  shortTitle: "ANTOINE LASALLE",
-
-  likes: 7,
-
-  comments: 0,
-
-  shares: 0,
-
-  subs: 0,
-
-  views: 144,
-
-  impressions: 1780,
-
-  ctr: 5.06,
-
-  avp: 36.81,
-
-  revenue: 0.227,
-
-  durationSec: 271,
-
- },
-
- {
-
-  idx: 20,
-
-  shortTitle: "CAVALRY ALIVE",
-
-  likes: 3,
-
-  comments: 0,
-
-  shares: 0,
-
-  subs: 1,
-
-  views: 13,
-
-  impressions: 338,
-
-  ctr: 2.96,
-
-  avp: 29.54,
-
-  revenue: 0.049,
-
-  durationSec: 511,
-
- },
-
- {
-
-  idx: 21,
-
-  shortTitle: "LAST KNIGHTS TRAILER",
-
-  likes: 2,
-
-  comments: 0,
-
-  shares: 0,
-
-  subs: 1,
-
-  views: 12,
-
-  impressions: 390,
-
-  ctr: 1.03,
-
-  avp: 42.27,
-
-  revenue: 0.017,
-
-  durationSec: 226,
-
- },
-
- {
-
-  idx: 22,
-
-  shortTitle: "JAN BESSIERES",
-
-  likes: 1,
-
-  comments: 0,
-
-  shares: 0,
-
-  subs: 0,
-
-  views: 22,
-
-  impressions: 649,
-
-  ctr: 2.47,
-
-  avp: 55.04,
-
-  revenue: 0.06,
-
-  durationSec: 210,
-
- },
-
- {
-
-  idx: 23,
-
-  shortTitle: "2D TO 3D",
-
-  likes: 0,
-
-  comments: 0,
-
-  shares: 1,
-
-  subs: 0,
-
-  views: 98,
-
-  impressions: 764,
-
-  ctr: 4.06,
-
-  avp: 37.48,
-
-  revenue: 0.033,
-
-  durationSec: 199,
-
- },
-
- {
-
-  idx: 24,
-
-  shortTitle: "MURAT COMMANDER",
-
-  likes: 0,
-
-  comments: 0,
-
-  shares: 0,
-
-  subs: 0,
-
-  views: 32,
-
-  impressions: 501,
-
-  ctr: 2.2,
-
-  avp: 40.44,
-
-  revenue: 0.057,
-
-  durationSec: 187,
-
- },
-
- {
-
-  idx: 25,
-
-  shortTitle: "LAST KNIGHTS EUROPE",
-
-  likes: 6,
-
-  comments: 0,
-
-  shares: 0,
-
-  subs: 1,
-
-  views: 122,
-
-  impressions: 1140,
-
-  ctr: 3.33,
-
-  avp: 13.96,
-
-  revenue: 0.446,
-
-  durationSec: 1806,
-
- },
-
-]
-
+const ENGAGEMENT_TITLES = [
+ "CHANNEL UPDATE",
+ "WEEKLY INSIGHTS",
+ "COMMUNITY POST",
+ "EDITORIAL CUT",
+ "FORMAT TEST",
+ "SERIES EPISODE",
+ "TRAILER DROP",
+ "TOPIC BREAKDOWN",
+ "AUDIENCE Q&A",
+ "CONTENT NOTES",
+ "TOP 3 STRATEGIES",
+ "STORY ARC",
+ "HOOK PATTERN",
+ "NARRATIVE CUT",
+ "ANALYTICS REVIEW",
+ "RETENTION TEST",
+ "THUMBNAIL PASS",
+ "SHORTS MIX",
+ "COMMENT ROUNDUP",
+ "POST MORTEM",
+ "SNEAK PREVIEW",
+ "WEEKEND RECAP",
+ "WORKFLOW TIPS",
+ "FEATURE SPOTLIGHT",
+ "EDITOR NOTES",
+] as const
+
+const ENGAGEMENT_MAP_SOURCE = ENGAGEMENT_TITLES.map((shortTitle, index) => {
+ const idx = index + 1
+ const views = 150 + idx * 48
+ const impressions = views * 9 + idx * 21
+ const likes = 3 + (idx % 9) * 2
+ const comments = idx % 5
+ const shares = idx % 4
+ const subs = idx % 6
+ const ctr = Number((2.2 + (idx % 7) * 0.43).toFixed(2))
+ const avp = Number((31 + (idx % 8) * 4.1).toFixed(2))
+ const revenue = Number((views * 0.0042).toFixed(3))
+ const durationSec = 95 + idx * 33
+ return {
+  idx,
+  shortTitle,
+  likes,
+  comments,
+  shares,
+  subs,
+  views,
+  impressions,
+  ctr,
+  avp,
+  revenue,
+  durationSec,
+ }
+})
 export const hexToRgba = (hex: string, alpha: number) => {
 
  const normalized = hex.replace("#", "")
@@ -1172,11 +511,8 @@ export const AnimatedToggleIcon: React.FC<{ open: boolean; size?: number }> = ({
  size = 36,
 
 }) => {
-
  const openActionIcon = size >= 44 ? zoomOut50 : zoomOut35
-
  const closeActionIcon = size >= 44 ? zoomIn50 : zoomIn35
-
 
  return (
 
@@ -1187,29 +523,17 @@ export const AnimatedToggleIcon: React.FC<{ open: boolean; size?: number }> = ({
    style={{ width: size, height: size }}>
 
    <div
-
     className={`absolute inset-0 w-full h-full transition-all duration-1000 ease-in-out rotate-45 ${open ? "scale-90" : "scale-100"} group-hover:scale-110 group-active:scale-95`}>
-
     <img
-
      alt="Open toolbox"
-
      src={openActionIcon}
-
      className={`absolute inset-0 w-full h-full inline-block select-none pointer-events-none transition-all duration-1000 ease-in-out ${open ? "opacity-0 rotate-180 scale-75" : "opacity-80 rotate-0 scale-100 group-hover:opacity-100"}`}
-
     />
-
     <img
-
      alt="Close toolbox"
-
      src={closeActionIcon}
-
      className={`absolute inset-0 w-full h-full inline-block select-none pointer-events-none transition-all duration-1000 ease-in-out ${open ? "opacity-80 rotate-180 scale-100 group-hover:opacity-100" : "opacity-0 rotate-0 scale-75"}`}
-
     />
-
    </div>
 
   </div>
@@ -1289,7 +613,7 @@ const SubToolbox: React.FC<SubToolboxProps> = ({
 
   <div
 
-   className="w-full bg-white overflow-hidden relative flex flex-col shrink-0"
+   className="w-full self-start bg-white overflow-hidden relative flex flex-col shrink-0"
 
    style={{
 
@@ -1386,34 +710,24 @@ const DropdownControl: React.FC<DropdownControlProps> = ({
  options,
  onChange,
  tone = "orange",
+ surfaceColor,
+ controlColor,
+ shadowColor,
 }) => {
  const toneConfig = ROW_CONTROL_THEMES[tone]
- const resolvedSurfaceColor = toneConfig.surface
- const resolvedControlColor = toneConfig.control
- const resolvedShadowColor = toneConfig.shadow
+ const resolvedSurfaceColor = surfaceColor ?? toneConfig.surface
+ const resolvedControlColor = controlColor ?? toneConfig.control
+ const resolvedShadowColor = shadowColor ?? toneConfig.shadow
  const [open, setOpen] = useState(false)
  const [hoveredOption, setHoveredOption] = useState<string | null>(null)
  const rootRef = useRef<HTMLDivElement>(null)
- const menuRef = useRef<HTMLDivElement>(null)
- const [menuPos, setMenuPos] = useState({ top: 0, left: 0, width: 0 })
  const idleOptionColor = hexToRgba(resolvedSurfaceColor, 0.28)
-
- const updateMenuPosition = () => {
-  if (!rootRef.current) return
-  const rect = rootRef.current.getBoundingClientRect()
-  setMenuPos({
-   top: rect.bottom - CONTROL_SHELL.stroke,
-   left: rect.left,
-   width: rect.width,
-  })
- }
 
  useEffect(() => {
   const onDocumentMouseDown = (event: MouseEvent) => {
    const target = event.target as Node
    const insideDropdown = rootRef.current?.contains(target) ?? false
-   const insideMenu = menuRef.current?.contains(target) ?? false
-   if (!insideDropdown && !insideMenu) {
+   if (!insideDropdown) {
     setOpen(false)
    }
   }
@@ -1421,26 +735,14 @@ const DropdownControl: React.FC<DropdownControlProps> = ({
   return () => document.removeEventListener("mousedown", onDocumentMouseDown)
  }, [])
 
- useEffect(() => {
-  if (!open) return
-  updateMenuPosition()
-  const onWindowChange = () => updateMenuPosition()
-  window.addEventListener("resize", onWindowChange)
-  window.addEventListener("scroll", onWindowChange, true)
-  return () => {
-   window.removeEventListener("resize", onWindowChange)
-   window.removeEventListener("scroll", onWindowChange, true)
-  }
- }, [open])
-
  return (
   <div
    ref={rootRef}
-   className="relative w-full"
+   className="w-full"
    style={{
-    height: `${CONTROL_SHELL.height}px`,
     zIndex: open ? 120 : 1,
    }}>
+   <div className={`grid transition-[grid-template-rows] ${CONTROL_SHELL.transition} ${open ? "grid-rows-[auto_1fr]" : "grid-rows-[auto_0fr]"}`}>
    <button
     type="button"
     onClick={() => setOpen((prev) => !prev)}
@@ -1458,31 +760,28 @@ const DropdownControl: React.FC<DropdownControlProps> = ({
    <div className="h-full flex items-stretch">
      <IconRail backgroundColor={resolvedControlColor}>
       <div className="h-full w-full flex flex-col items-stretch justify-start">
-       <div className="h-1/2 border-b-[4px] border-black text-[8px] font-black uppercase tracking-[0.14em] flex items-center justify-center px-1 leading-none">
-        {label}
-       </div>
-       <div className="h-1/2 flex items-center justify-center">
-        <ChevronDown size={30} strokeWidth={2.5} className="text-black" />
+      <div className="h-1/2 border-b-[4px] border-black text-[8px] font-black uppercase tracking-[0.14em] flex items-center justify-center px-1 leading-none">
+       {label}
+      </div>
+      <div className="h-1/2 flex items-center justify-center">
+        <ChevronDown
+         size={22}
+         strokeWidth={3}
+         className="text-black transition-transform duration-100 ease-out group-active:translate-y-0.5"
+        />
        </div>
       </div>
      </IconRail>
      <div
       className="flex-1 h-full flex items-center justify-center px-4 text-[20px] font-[900] uppercase tracking-tighter leading-none text-center"
       style={{ paddingRight: `${CONTROL_SHELL.contentOffset}px` }}>
-      {value}
+     {value}
      </div>
     </div>
    </button>
-
-   {createPortal(
-    <div
-     ref={menuRef}
-     className={`${open ? "pointer-events-auto" : "pointer-events-none"} fixed z-[2500]`}
-     style={{
-      top: `${menuPos.top}px`,
-      left: `${menuPos.left}px`,
-      width: `${menuPos.width}px`,
-     }}>
+   <div
+     className={`${open ? "pointer-events-auto" : "pointer-events-none"} w-full`}
+   >
     <div
      className={`grid transition-[grid-template-rows] ${CONTROL_SHELL.transition} ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
      style={{ marginTop: `-${CONTROL_SHELL.stroke}px` }}>
@@ -1509,12 +808,11 @@ const DropdownControl: React.FC<DropdownControlProps> = ({
           </div>
          </button>
         ))}
-       </div>
       </div>
      </div>
-    </div>,
-    document.body,
-   )}
+    </div>
+   </div>
+   </div>
   </div>
  )
 }
@@ -1524,8 +822,14 @@ const ActionControlButton: React.FC<ActionControlButtonProps> = ({
  tone = "pink",
  icon,
  onClick,
+ surfaceColor,
+ controlColor,
+ shadowColor,
 }) => {
  const toneConfig = ROW_CONTROL_THEMES[tone]
+ const resolvedSurfaceColor = surfaceColor ?? toneConfig.surface
+ const resolvedControlColor = controlColor ?? toneConfig.control
+ const resolvedShadowColor = shadowColor ?? toneConfig.shadow
  return (
   <button
    type="button"
@@ -1533,14 +837,14 @@ const ActionControlButton: React.FC<ActionControlButtonProps> = ({
    className="w-full border-[4px] border-black rounded-[16px] overflow-hidden cursor-pointer active:translate-y-1 transition-all shrink-0 flex items-stretch appearance-none p-0"
    style={{
     height: `${CONTROL_SHELL.height}px`,
-    backgroundColor: toneConfig.surface,
+    backgroundColor: resolvedSurfaceColor,
    boxShadow: `${CONTROL_SHELL.shadowOffset}px ${CONTROL_SHELL.shadowOffset}px 0px 0px ${hexToRgba(
-     toneConfig.shadow,
+     resolvedShadowColor,
      0.45,
     )}`,
    }}>
    <IconRail
-    backgroundColor={toneConfig.control}
+    backgroundColor={resolvedControlColor}
     >
     {icon}
    </IconRail>
@@ -1986,7 +1290,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
   const [images, setImages] = useState<Array<{ id: string; name: string; url: string }>>([])
 
   // Subtoolboxes Gallery state
-  const [showSubtoolboxesGallery, setShowSubtoolboxesGallery] = useState(true)
+  const [isSubtoolboxesGalleryOpen, setIsSubtoolboxesGalleryOpen] = useState(true)
  const [isGalOverviewOpen, setIsGalOverviewOpen] = useState(true)
  const [isGalTrendsOpen, setIsGalTrendsOpen] = useState(false)
  const [isGalEngagementOpen, setIsGalEngagementOpen] = useState(false)
@@ -2629,6 +1933,15 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
  const showComponentGrid = mode === "full" || mode === "component-grid"
 
  const showRulebook = mode === "full" || mode === "ui-system"
+ const showSubtoolboxesGallery = mode === "full" || mode === "ui-system"
+ const studioMainPaletteIndex = 3
+ const studioMainPair = palettePair(studioMainPaletteIndex)
+ const studioMainShadow = hexToRgba(studioMainPair.header, 0.5)
+ const studioRow0Pair = palettePair(studioMainPaletteIndex + 4)
+ const studioRow1Pair = palettePair(studioMainPaletteIndex + 3)
+ const studioRow2Pair = palettePair(studioMainPaletteIndex + 2)
+ const studioRow3Pair = palettePair(studioMainPaletteIndex + 1)
+ const studioRow4Pair = palettePair(studioMainPaletteIndex)
 
  const switchResolutionLabel =
 
@@ -2766,7 +2079,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
     <div
 
-     className="w-full bg-white flex flex-col overflow-hidden relative shadow-[12px_12px_0px_0px_rgba(0,0,0,0.5)] transition-all"
+     className="w-full bg-white flex flex-col overflow-hidden relative transition-all"
 
      style={{
 
@@ -2774,15 +2087,18 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
       borderRadius: `${CONFIG.radius}px`,
 
+      boxShadow: `${CONFIG.scaffoldStroke + 6}px ${CONFIG.scaffoldStroke + 6}px 0px 0px ${studioMainShadow}`,
+
      }}>
 
      <header
 
       onClick={() => setIsStudioOpen((prev) => !prev)}
 
-      className="bg-[#FFE357] h-[80px] min-h-[80px] flex items-center justify-between select-none z-30 relative cursor-pointer"
+      className="h-[80px] min-h-[80px] flex items-center justify-between select-none z-30 relative cursor-pointer"
 
       style={{
+       backgroundColor: studioMainPair.header,
 
        borderBottom: `${CONFIG.scaffoldStroke}px solid black`,
 
@@ -2796,7 +2112,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
         style={{
 
-         backgroundColor: "#FF7497",
+         backgroundColor: studioMainPair.icon,
 
          borderRight: `${CONFIG.scaffoldStroke}px solid black`,
 
@@ -2853,9 +2169,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
            icon={Lightbulb}
 
-           headerBg="#24D3FF"
+           headerBg={studioRow0Pair.header}
 
-           iconBg="#FFE357"
+           iconBg={studioRow0Pair.icon}
 
            isOpen={isConceptOpen}
 
@@ -2899,8 +2215,8 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
           <SubToolbox
            title="STYLES"
            icon={Grid3X3}
-           headerBg="#C9F830"
-           iconBg="#24D3FF"
+           headerBg={studioRow1Pair.header}
+           iconBg={studioRow1Pair.icon}
            isOpen={isStylesOpen}
            onToggle={() => setIsStylesOpen((prev) => !prev)}
            openUnits={3}
@@ -2924,8 +2240,8 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
           <SubToolbox
            title="TEXT"
            icon={Type}
-           headerBg="#FFE357"
-           iconBg="#C9F830"
+           headerBg={studioRow2Pair.header}
+           iconBg={studioRow2Pair.icon}
            isOpen={isTextOpen}
            onToggle={() => setIsTextOpen((prev) => !prev)}
            config={CONFIG}>
@@ -2952,9 +2268,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
            icon={ImagePlus}
 
-           headerBg="#FCAF57"
+           headerBg={studioRow3Pair.header}
 
-           iconBg="#FFE357"
+           iconBg={studioRow3Pair.icon}
 
            isOpen={isImagesOpen}
 
@@ -3024,8 +2340,8 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
           <SubToolbox
            title="PALETTE"
            icon={Palette}
-           headerBg="#FF7497"
-           iconBg="#FCAF57"
+           headerBg={studioRow4Pair.header}
+           iconBg={studioRow4Pair.icon}
            isOpen={isPaletteOpen}
            onToggle={() => setIsPaletteOpen((prev) => !prev)}
            openUnits={3}
@@ -3089,54 +2405,34 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
           />
 
-          <div className="w-full border-[4px] border-black bg-white rounded-2xl flex-1 min-h-[220px] flex flex-col items-center justify-center p-3 relative overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]">
-
+          <div
+           className="w-full border-[4px] border-black bg-white rounded-2xl flex-1 min-h-[220px] flex flex-col items-center justify-center p-3 relative overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
+           style={{
+            boxShadow: `${CONFIG.stroke + 2}px ${CONFIG.stroke + 2}px 0px 0px ${hexToRgba(studioRow0Pair.header, 0.5)}`,
+           }}>
            {canvasPreview ? (
-
             <img
-
              src={canvasPreview}
-
              alt="Canvas preview"
-
              className="w-full h-full object-contain border-[3px] border-black rounded-2xl"
-
             />
-
            ) : (
-
             <div
-
              onClick={() => canvasInputRef.current?.click()}
-
              className="w-full h-full border-[3px] border-[#9ca3af] border-dashed rounded-2xl bg-gray-100 flex flex-col items-center justify-center gap-4 cursor-pointer">
-
              <div className="w-16 h-16 border-[3px] border-black rounded-full bg-white flex items-center justify-center">
-
-              <Zap size={32} strokeWidth={2.5} className="text-[#FF7497]" />
-
+              <Zap size={32} strokeWidth={2.5} className="text-black" style={{ color: studioRow0Pair.header }} />
              </div>
-
              <h3 className="text-[42px] font-[1000] uppercase tracking-tighter text-black leading-none text-center">
-
               CANVAS
-
               <br />
-
               STANDBY
-
              </h3>
-
              <p className="font-black text-black/40 uppercase tracking-[0.18em] text-[11px] text-center">
-
               DROP FILES OR CLICK TO UPLOAD
-
              </p>
-
             </div>
-
            )}
-
           </div>
 
 
@@ -3157,6 +2453,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
             onChange={setRatio}
 
             tone="orange"
+            surfaceColor={studioRow3Pair.header}
+            controlColor={studioRow3Pair.icon}
+            shadowColor={studioRow3Pair.header}
 
            />
 
@@ -3171,6 +2470,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
             onChange={setResolution}
 
             tone="orange"
+            surfaceColor={studioRow3Pair.header}
+            controlColor={studioRow3Pair.icon}
+            shadowColor={studioRow3Pair.header}
 
            />
 
@@ -3180,6 +2482,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
           <ActionControlButton
            label="GENERATE ART"
            tone="pink"
+           surfaceColor={studioRow4Pair.header}
+           controlColor={studioRow4Pair.icon}
+           shadowColor={studioRow4Pair.header}
            icon={<Zap size={30} strokeWidth={2.5} className="text-black" />}
           />
 
@@ -3198,14 +2503,14 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
    )}
 
    {showSubtoolboxesGallery && (
-    <div
+   <div
      className="w-full bg-white flex flex-col overflow-hidden relative shadow-[12px_12px_0px_0px_rgba(0,0,0,0.5)] transition-all"
      style={{
       border: `${CONFIG.scaffoldStroke}px solid black`,
       borderRadius: `${CONFIG.radius}px`,
      }}>
      <header
-      onClick={() => setShowSubtoolboxesGallery((prev) => !prev)}
+      onClick={() => setIsSubtoolboxesGalleryOpen((prev) => !prev)}
       className="bg-[#C9F830] h-[80px] min-h-[80px] flex items-center justify-between select-none z-30 relative cursor-pointer"
       style={{ borderBottom: `${CONFIG.scaffoldStroke}px solid black` }}>
       <div className="flex items-center h-full flex-1">
@@ -3217,13 +2522,13 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
        </h2>
       </div>
       <div className="flex items-center gap-3 pr-6 h-full">
-       <AnimatedToggleIcon open={showSubtoolboxesGallery} size={40} />
+       <AnimatedToggleIcon open={isSubtoolboxesGalleryOpen} size={40} />
       </div>
      </header>
 
-     <div className={`grid transition-[grid-template-rows] duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${showSubtoolboxesGallery ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`} style={{ marginTop: `-${CONFIG.scaffoldStroke}px` }}>
+     <div className={`grid transition-[grid-template-rows] duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${isSubtoolboxesGalleryOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`} style={{ marginTop: `-${CONFIG.scaffoldStroke}px` }}>
       <div className="overflow-hidden min-h-0">
-       <main className={`bg-[#f5f5f5] w-full p-6 md:p-8 text-black transition-opacity duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${showSubtoolboxesGallery ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+       <main className={`bg-[#f5f5f5] w-full p-6 md:p-8 text-black transition-opacity duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${isSubtoolboxesGalleryOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
          {/* 1. MEDIA ANALYTICS */}
@@ -5033,7 +4338,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
             <div className="h-[220px] border-[2px] border-black rounded-lg bg-white p-2">
 
-             <ResponsiveContainer width="100%" height="100%">
+             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
 
               <LineChart
 
@@ -5126,7 +4431,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
             <div className="h-[220px] border-[2px] border-[#5ff6ff] rounded-lg bg-[#111827] p-2 synth-stripes">
 
-             <ResponsiveContainer width="100%" height="100%">
+             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
 
               <AreaChart
 
@@ -5223,7 +4528,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
             <div className="h-[220px] border-[2px] border-black rounded-lg bg-[#f9fafb] p-2">
 
-             <ResponsiveContainer width="100%" height="100%">
+             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
 
               <LineChart
 
@@ -5324,7 +4629,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
             <div className="h-[220px] border-[2px] border-black rounded-lg bg-[#f9fafb] p-2">
 
-             <ResponsiveContainer width="100%" height="100%">
+             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
 
               <BarChart
 
@@ -5383,7 +4688,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
             <div className="h-[220px] border-[2px] border-black rounded-lg bg-white p-2">
 
-             <ResponsiveContainer width="100%" height="100%">
+             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
 
               <BarChart
 
@@ -5428,7 +4733,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
             <div className="h-[220px] border-[2px] border-[#C9F830] rounded-lg bg-[#111827] p-2">
 
-             <ResponsiveContainer width="100%" height="100%">
+             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
 
               <BarChart
 
@@ -5525,7 +4830,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
             <div className="h-[220px] border-[2px] border-black rounded-lg bg-[#f9fafb] p-2">
 
-             <ResponsiveContainer width="100%" height="100%">
+             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
 
               <PieChart>
 
@@ -5582,7 +4887,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
             <div className="h-[220px] border-[2px] border-black rounded-lg bg-white p-2">
 
-             <ResponsiveContainer width="100%" height="100%">
+             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
 
               <PieChart>
 
@@ -5635,7 +4940,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
             <div className="h-[220px] border-[2px] border-[#FF7497] rounded-lg bg-[#111827] p-2">
 
-             <ResponsiveContainer width="100%" height="100%">
+             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
 
               <PieChart>
 
@@ -5762,7 +5067,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
             <div className="h-[220px] border-[2px] border-black rounded-lg bg-[#f9fafb] p-2">
 
-             <ResponsiveContainer width="100%" height="100%">
+             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
 
               <ScatterChart margin={{ top: 8, right: 8, left: 0, bottom: 6 }}>
 
@@ -5815,7 +5120,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
             <div className="h-[220px] border-[2px] border-black rounded-lg bg-white p-2">
 
-             <ResponsiveContainer width="100%" height="100%">
+             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
 
               <ScatterChart margin={{ top: 8, right: 8, left: 0, bottom: 6 }}>
 
@@ -5912,7 +5217,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
             <div className="h-[220px] border-[2px] border-[#5ff6ff] rounded-lg bg-[#111827] p-2">
 
-             <ResponsiveContainer width="100%" height="100%">
+             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
 
               <ScatterChart margin={{ top: 8, right: 8, left: 0, bottom: 6 }}>
 
@@ -6562,7 +5867,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
               emoji: "🏖",
 
-              title: "Napoleon's Irish General 🇮🇪",
+              title: "Sample Video One",
 
               views: "22.1K",
 
@@ -6582,7 +5887,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
               emoji: "⚔️",
 
-              title: "Battle of Pyramids 🔥🔥",
+              title: "Sample Video Two",
 
               views: "47.2K",
 
@@ -6974,7 +6279,7 @@ export function Sparkline({ data, color = "#FF7497", height = 40, variant = "sta
   const getStrokeColor = () => variant === "tokyo-pop" ? "#00FFFF" : variant === "inverted" ? "#FFFFFF" : color
   return (
     <div style={{ height }} className="w-full">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
         <LineChart data={chartData}>
           <Line type="monotone" dataKey="value" stroke={getStrokeColor()} strokeWidth={3} dot={false} />
         </LineChart>
@@ -6988,7 +6293,7 @@ export function TrendAreaChart({ data, dataKey, color = "#C9F830", height = 200,
   const getStrokeColor = () => variant === "tokyo-pop" ? "#00FFFF" : color
   return (
     <div style={{ height }} className={`w-full border-[4px] rounded-2xl overflow-hidden p-4 ${variant === "inverted" ? "border-white bg-black" : variant === "tokyo-pop" ? "border-[#FF00FF] bg-black" : "border-black bg-white"}`}>
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
         <AreaChart data={data}>
           <defs>
             <linearGradient id={`gradient-${variant}`} x1="0" y1="0" x2="0" y2="1">
@@ -7009,7 +6314,7 @@ export function TrendAreaChart({ data, dataKey, color = "#C9F830", height = 200,
 export function BrutalistBarChart({ data, dataKey, colors = ["#FF7497", "#C9F830", "#00D2FF", "#FFE357", "#FF3399"], height = 200, variant = "standard" }: any) {
   return (
     <div style={{ height }} className={`w-full border-[4px] rounded-2xl overflow-hidden p-4 ${variant === "inverted" ? "border-white bg-black" : variant === "tokyo-pop" ? "border-[#FF00FF] bg-black" : "border-black bg-white"}`}>
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
         <BarChart data={data}>
           <XAxis dataKey="name" stroke={variant === "standard" ? "#000" : "#FFF"} strokeWidth={2} tick={{ fontSize: 10, fontWeight: 900 }} />
           <YAxis stroke={variant === "standard" ? "#000" : "#FFF"} strokeWidth={2} tick={{ fontSize: 10 }} />

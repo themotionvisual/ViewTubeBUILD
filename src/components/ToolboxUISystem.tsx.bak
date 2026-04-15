@@ -339,7 +339,7 @@ const ENGAGEMENT_MAP_SOURCE = [
 
   idx: 1,
 
-  shortTitle: "IRISH LEGION",
+  shortTitle: "CHANNEL UPDATE",
 
   likes: 7,
 
@@ -367,7 +367,7 @@ const ENGAGEMENT_MAP_SOURCE = [
 
   idx: 2,
 
-  shortTitle: "PYRAMIDS SPEECH",
+  shortTitle: "WEEKLY INSIGHTS",
 
   likes: 11,
 
@@ -395,7 +395,7 @@ const ENGAGEMENT_MAP_SOURCE = [
 
   idx: 3,
 
-  shortTitle: "JOIN OLD GUARD",
+  shortTitle: "COMMUNITY POST",
 
   likes: 27,
 
@@ -423,7 +423,7 @@ const ENGAGEMENT_MAP_SOURCE = [
 
   idx: 4,
 
-  shortTitle: "BEAUCAIRE",
+  shortTitle: "EDITORIAL CUT",
 
   likes: 10,
 
@@ -451,7 +451,7 @@ const ENGAGEMENT_MAP_SOURCE = [
 
   idx: 5,
 
-  shortTitle: "BLACK BRUNSWICKERS",
+  shortTitle: "FORMAT TEST",
 
   likes: 24,
 
@@ -479,7 +479,7 @@ const ENGAGEMENT_MAP_SOURCE = [
 
   idx: 6,
 
-  shortTitle: "AUSTERLITZ 1805",
+  shortTitle: "SERIES EPISODE",
 
   likes: 15,
 
@@ -507,7 +507,7 @@ const ENGAGEMENT_MAP_SOURCE = [
 
   idx: 7,
 
-  shortTitle: "1805 PREMIERE",
+  shortTitle: "TRAILER CUT",
 
   likes: 1,
 
@@ -535,7 +535,7 @@ const ENGAGEMENT_MAP_SOURCE = [
 
   idx: 8,
 
-  shortTitle: "AUSTERLITZ ABOVE",
+  shortTitle: "TOPIC BREAKDOWN",
 
   likes: 4,
 
@@ -647,7 +647,7 @@ const ENGAGEMENT_MAP_SOURCE = [
 
   idx: 12,
 
-  shortTitle: "CORPS SYSTEM",
+  shortTitle: "STORY ARC",
 
   likes: 25,
 
@@ -703,7 +703,7 @@ const ENGAGEMENT_MAP_SOURCE = [
 
   idx: 14,
 
-  shortTitle: "MARENGO",
+  shortTitle: "NARRATIVE CUT",
 
   likes: 2,
 
@@ -759,7 +759,7 @@ const ENGAGEMENT_MAP_SOURCE = [
 
   idx: 16,
 
-  shortTitle: "KOZIETULSKI",
+  shortTitle: "RETENTION TEST",
 
   likes: 2,
 
@@ -787,7 +787,7 @@ const ENGAGEMENT_MAP_SOURCE = [
 
   idx: 17,
 
-  shortTitle: "MARSHAL NEY",
+  shortTitle: "THUMBNAIL PASS",
 
   likes: 1,
 
@@ -815,7 +815,7 @@ const ENGAGEMENT_MAP_SOURCE = [
 
   idx: 18,
 
-  shortTitle: "JOACHIM MURAT",
+  shortTitle: "SHORTS MIX",
 
   likes: 0,
 
@@ -843,7 +843,7 @@ const ENGAGEMENT_MAP_SOURCE = [
 
   idx: 19,
 
-  shortTitle: "ANTOINE LASALLE",
+  shortTitle: "COMMENT ROUNDUP",
 
   likes: 7,
 
@@ -983,7 +983,7 @@ const ENGAGEMENT_MAP_SOURCE = [
 
   idx: 24,
 
-  shortTitle: "MURAT COMMANDER",
+  shortTitle: "FEATURE SPOTLIGHT",
 
   likes: 0,
 
@@ -7751,7 +7751,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
               emoji: "🏖",
 
-              title: "Napoleon's Irish General 🇮🇪",
+              title: "Audience Retention Deep Dive",
 
               views: "22.1K",
 
@@ -7771,7 +7771,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
               emoji: "⚔️",
 
-              title: "Battle of Pyramids 🔥🔥",
+              title: "Thumbnail Refresh Breakdown",
 
               views: "47.2K",
 
@@ -8153,6 +8153,4 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 };
 
 export default ToolboxUISystem;
-
-
 

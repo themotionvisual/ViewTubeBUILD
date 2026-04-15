@@ -152,7 +152,7 @@ const PreLaunchPriming: React.FC<PreLaunchPrimingProps> = ({
            onChange={(e) =>
             setInputData({ ...inputData, topic: e.target.value })
            }
-           placeholder="E.G. NAPOLEON'S LAST STAND"
+           placeholder="E.G. HOW TO PLAN A WEEKLY CONTENT SYSTEM"
            className="pop-input w-full p-4 font-black uppercase text-sm border-[4px] border-black"
           />
          </div>
@@ -166,7 +166,7 @@ const PreLaunchPriming: React.FC<PreLaunchPrimingProps> = ({
            onChange={(e) =>
             setInputData({ ...inputData, niche: e.target.value })
            }
-           placeholder="E.G. MILITARY HISTORY"
+           placeholder="E.G. CREATOR EDUCATION"
            className="pop-input w-full p-4 font-black uppercase text-sm border-[4px] border-black"
           />
          </div>

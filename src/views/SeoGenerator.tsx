@@ -386,7 +386,7 @@ const SeoGenerator: React.FC<SeoGeneratorProps> = ({
           setNiche(e.target.value)
           if (missingFields.niche) setMissingFields((prev) => ({ ...prev, niche: false }))
          }}
-         placeholder="Napoleonic History"
+         placeholder="History Channel"
          className={`w-full h-12 p-3 border-[3px] border-black rounded-xl font-bold text-sm outline-none bg-[#F5F5F5] ${missingFields.niche ? "ring-4 ring-[#FF8AAF]/60" : ""}`}
         />
        </div>

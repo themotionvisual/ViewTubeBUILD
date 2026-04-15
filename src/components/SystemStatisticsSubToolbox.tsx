@@ -9,7 +9,7 @@ import {
 } from "../services/dataCoverageInventory"
 
 interface SystemStatisticsSubToolboxProps {
- masterTableRows: any[]
+ masterTableRows: Array<Record<string, unknown>>
 }
 
 const SCOPE_STYLES: Record<DataCoverageScope, string> = {
@@ -20,6 +20,9 @@ const SCOPE_STYLES: Record<DataCoverageScope, string> = {
  geo: "bg-[#FFDD00] text-black",
  demographic: "bg-[#B14AED] text-white",
  traffic: "bg-[#FFB158] text-black",
+ device: "bg-[#8BE9FD] text-black",
+ retention: "bg-[#C084FC] text-white",
+ monetization: "bg-[#F9A8D4] text-black",
  daily: "bg-[#E5E7EB] text-black",
  history: "bg-black text-white",
 }
@@ -28,6 +31,9 @@ const sourceLabel = (row: DataCoverageRow): string => {
  if (row.source === "history_placeholder") return "history"
  return row.source
 }
+
+const scopeLabel = (row: DataCoverageRow): string =>
+ row.source === "formula" ? `formula + ${row.scope.replace("_", " ")}` : row.scope.replace("_", " ")
 
 const STATUS_STYLES: Record<DataCoverageStatus, string> = {
  received: "bg-[#CCFF00] text-black",
@@ -38,20 +44,33 @@ const STATUS_STYLES: Record<DataCoverageStatus, string> = {
 
 export function SystemStatisticsSubToolbox({ masterTableRows }: SystemStatisticsSubToolboxProps) {
  const [searchTerm, setSearchTerm] = useState("")
+ const [showFullCatalog, setShowFullCatalog] = useState(true)
+ const [showReceivedOnly, setShowReceivedOnly] = useState(false)
+ const [showFormulaOnly, setShowFormulaOnly] = useState(false)
 
  const inventory = useMemo(() => buildDataCoverageInventory(masterTableRows), [masterTableRows])
+ const canonicalCount = inventory.rows.length
+ const fullCatalogCount = inventory.expandedRows.length
+ const baseRows = showFullCatalog ? inventory.expandedRows : inventory.rows
 
  const filteredRows = useMemo(() => {
-  if (!searchTerm.trim()) return inventory.rows
+  const rowsForMode = showReceivedOnly
+   ? baseRows.filter((row) => row.status === "received")
+   : baseRows
+  const rowsForFormula = showFormulaOnly
+   ? rowsForMode.filter((row) => row.formulaCapable)
+   : rowsForMode
+  if (!searchTerm.trim()) return rowsForFormula
   const lower = searchTerm.toLowerCase()
-  return inventory.rows.filter(
+  return rowsForFormula.filter(
    (row) =>
     row.categoryName.toLowerCase().includes(lower) ||
     row.canonicalKey.toLowerCase().includes(lower) ||
     row.scope.toLowerCase().includes(lower) ||
-    sourceLabel(row).toLowerCase().includes(lower),
+    sourceLabel(row).toLowerCase().includes(lower) ||
+    row.reason.toLowerCase().includes(lower),
   )
- }, [inventory.rows, searchTerm])
+ }, [baseRows, searchTerm, showReceivedOnly, showFormulaOnly])
 
  const statusCounts = useMemo(() => {
   return filteredRows.reduce(
@@ -73,16 +92,21 @@ export function SystemStatisticsSubToolbox({ masterTableRows }: SystemStatistics
    title="Data Coverage Reference"
    icon={<Database size={24} />}
    collapsible
-   isOpenInitial={false}>
+   isOpenInitial>
    <div className="bg-[#EDEDED] border-[4px] border-black p-4 space-y-4">
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
      <div className="bg-white border-[3px] border-black rounded-lg p-3">
       <div className="text-[10px] font-black uppercase text-black/50">Total Categories</div>
-      <div className="text-xl font-black">{inventory.summary.totalCategories}</div>
+      <div className="text-xl font-black">{baseRows.length}</div>
+      <div className="text-[9px] font-black uppercase text-black/45 mt-1">
+       Canonical {canonicalCount} · Full {fullCatalogCount}
+      </div>
      </div>
      <div className="bg-white border-[3px] border-black rounded-lg p-3">
       <div className="text-[10px] font-black uppercase text-black/50">History Placeholders</div>
-      <div className="text-xl font-black">{inventory.summary.historyNotConnected}</div>
+      <div className="text-xl font-black">
+       {baseRows.filter((row) => row.scope === "history").length}
+      </div>
      </div>
      <div className="bg-white border-[3px] border-black rounded-lg p-3">
       <div className="text-[10px] font-black uppercase text-black/50">Showing</div>
@@ -101,6 +125,33 @@ export function SystemStatisticsSubToolbox({ masterTableRows }: SystemStatistics
     </div>
 
     <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+     <div className="flex items-center gap-2 flex-wrap">
+      <button
+       type="button"
+       onClick={() => setShowFullCatalog((value) => !value)}
+       className={`px-3 py-2 rounded-md border border-black text-[10px] font-black uppercase ${
+        showFullCatalog ? "bg-black text-white" : "bg-white text-black"
+       }`}>
+       {showFullCatalog ? "Mode: Full Catalog" : "Mode: Canonical"}
+      </button>
+      <button
+       type="button"
+       onClick={() => setShowReceivedOnly((value) => !value)}
+       className={`px-3 py-2 rounded-md border border-black text-[10px] font-black uppercase ${
+        showReceivedOnly ? "bg-[#CCFF00] text-black" : "bg-white text-black"
+       }`}>
+       {showReceivedOnly ? "Received Only: On" : "Received Only: Off"}
+      </button>
+      <button
+       type="button"
+       onClick={() => setShowFormulaOnly((value) => !value)}
+       className={`px-3 py-2 rounded-md border border-black text-[10px] font-black uppercase ${
+        showFormulaOnly ? "bg-[#B14AED] text-white" : "bg-white text-black"
+       }`}>
+       {showFormulaOnly ? "Formula-capable: On" : "Formula-capable: Off"}
+      </button>
+     </div>
+
      <div className="relative w-full md:w-[440px]">
       <input
        type="text"
@@ -134,12 +185,13 @@ export function SystemStatisticsSubToolbox({ masterTableRows }: SystemStatistics
         <th className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left">Status</th>
         <th className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left">Example</th>
         <th className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left bg-[#FFDD00]/20">Example Channel</th>
+        <th className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left bg-[#00CCFF]/20">Reason</th>
        </tr>
       </thead>
       <tbody>
        {filteredRows.length === 0 ? (
         <tr>
-         <td colSpan={7} className="p-8 text-center text-xs font-black uppercase tracking-widest text-black/40">
+         <td colSpan={8} className="p-8 text-center text-xs font-black uppercase tracking-widest text-black/40">
           No categories found matching "{searchTerm}"
          </td>
         </tr>
@@ -157,7 +209,7 @@ export function SystemStatisticsSubToolbox({ masterTableRows }: SystemStatistics
           </td>
           <td className="p-3 border-r border-black/10">
            <span className={`inline-flex items-center rounded-md px-2 py-1 text-[10px] font-black uppercase border border-black ${SCOPE_STYLES[row.scope]}`}>
-            {row.scope.replace("_", " ")}
+            {scopeLabel(row)}
            </span>
           </td>
           <td className="p-3 border-r border-black/10">
@@ -170,6 +222,9 @@ export function SystemStatisticsSubToolbox({ masterTableRows }: SystemStatistics
           </td>
           <td className="p-3 border-r border-black/10 text-xs font-black">
            {row.exampleChannel}
+          </td>
+          <td className="p-3 border-r border-black/10 text-xs font-black text-black/70">
+           {row.reason}
           </td>
          </tr>
         ))

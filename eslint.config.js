@@ -6,7 +6,12 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores([
+    'dist',
+    'docs/**',
+    // keep generated / non-runtime experiments out of the lint surface area
+    '**/*.bak',
+  ]),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

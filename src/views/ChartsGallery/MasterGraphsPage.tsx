@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import {
  ArrowLeft,
@@ -9,11 +9,7 @@ import {
  Zap,
  Globe,
  Monitor,
- Type,
  TrendingUp,
- BarChart3,
- PieChart,
- Activity,
  Database,
 } from "lucide-react"
 import {
@@ -31,6 +27,7 @@ import {
  CartesianGrid,
  ReferenceLine,
 } from "recharts"
+import { getMasterRows } from "../../services/analyticsSelectors"
 
 // Neo-brutalist color palette
 const COLORS = {
@@ -51,74 +48,6 @@ const CHART_COLORS = [
  COLORS.orange,
  COLORS.pink,
  COLORS.purple,
-]
-
-// Mock data - will be replaced with real API data
-const mockRevenueData = [
- { name: "Video A", value: 12500 },
- { name: "Video B", value: 9800 },
- { name: "Video C", value: 7200 },
- { name: "Video D", value: 5400 },
- { name: "Video E", value: 4100 },
- { name: "Others", value: 15000 },
-]
-
-const mockWatchTimeData = [
- { name: "Video X", value: 45000 },
- { name: "Video Y", value: 38000 },
- { name: "Video Z", value: 29000 },
- { name: "Video W", value: 22000 },
- { name: "Video V", value: 18000 },
- { name: "Others", value: 68000 },
-]
-
-const mockSubscribersData = [
- { name: "Video Alpha", value: 2500 },
- { name: "Video Beta", value: 1800 },
- { name: "Video Gamma", value: 1400 },
- { name: "Video Delta", value: 1100 },
- { name: "Video Epsilon", value: 900 },
- { name: "Others", value: 4300 },
-]
-
-const mockValueMatrixData = [
- { ctr: 8.5, retention: 145, views: 125000, name: "Viral Hit" },
- { ctr: 7.2, retention: 120, views: 89000, name: "Strong Performer" },
- { ctr: 5.8, retention: 160, views: 45000, name: "Hidden Gem" },
- { ctr: 9.1, retention: 65, views: 78000, name: "Clickbait" },
- { ctr: 3.2, retention: 85, views: 12000, name: "Underperformer" },
- { ctr: 6.5, retention: 110, views: 67000, name: "Steady" },
- { ctr: 4.8, retention: 130, views: 34000, name: "Niche Content" },
- { ctr: 7.8, retention: 95, views: 56000, name: "Trending" },
-]
-
-const mockAlgorithmData = [
- { ctr: 2.1, impressions: 5000, name: "Video 1" },
- { ctr: 3.5, impressions: 12000, name: "Video 2" },
- { ctr: 5.2, impressions: 45000, name: "Video 3" },
- { ctr: 6.8, impressions: 89000, name: "Video 4" },
- { ctr: 8.1, impressions: 156000, name: "Video 5" },
- { ctr: 9.5, impressions: 234000, name: "Video 6" },
- { ctr: 4.2, impressions: 23000, name: "Video 7" },
- { ctr: 7.3, impressions: 112000, name: "Video 8" },
-]
-
-const mockDeviceData = [
- { name: "Mobile", value: 45 },
- { name: "TV", value: 28 },
- { name: "Desktop", value: 18 },
- { name: "Tablet", value: 9 },
-]
-
-const mockGeoData = [
- { name: "United States", value: 35 },
- { name: "United Kingdom", value: 15 },
- { name: "Canada", value: 8 },
- { name: "Germany", value: 7 },
- { name: "Australia", value: 6 },
- { name: "India", value: 5 },
- { name: "France", value: 4 },
- { name: "Other", value: 20 },
 ]
 
 interface ChartCardProps {
@@ -175,6 +104,80 @@ const ChartCard: React.FC<ChartCardProps> = ({
 
 const MasterGraphsPage: React.FC = () => {
  const navigate = useNavigate()
+ const canonicalRows = useMemo(() => getMasterRows("lifetime", "api"), [])
+ const canonicalTop = useMemo(() => canonicalRows.slice(0, 8), [canonicalRows])
+
+ const mockRevenueData = useMemo(
+  () =>
+   canonicalTop
+    .filter((row) => (row.metrics.revenue.value || 0) > 0)
+    .map((row) => ({
+     name: row.title || "Untitled Video",
+     value: Number(row.metrics.revenue.value || 0),
+    })),
+  [canonicalTop],
+ )
+
+ const mockWatchTimeData = useMemo(
+  () =>
+   canonicalTop
+    .filter((row) => (row.metrics.watchHours.value || 0) > 0)
+    .map((row) => ({
+     name: row.title || "Untitled Video",
+     value: Number(row.metrics.watchHours.value || 0),
+    })),
+  [canonicalTop],
+ )
+
+ const mockSubscribersData = useMemo(
+  () =>
+   canonicalTop.map((row) => ({
+    name: row.title || "Untitled Video",
+    value: Number(Math.round(row.metrics.subscribersGained.value || 0)),
+   })),
+  [canonicalTop],
+ )
+
+ const mockValueMatrixData = useMemo(
+  () =>
+   canonicalTop.map((row) => ({
+    ctr: Number(row.metrics.ctr.value || 0),
+    retention: Number(row.metrics.avp.value || 0),
+    views: Number(row.metrics.views.value || 0),
+    name: row.title || "Untitled Video",
+   })),
+  [canonicalTop],
+ )
+
+ const mockAlgorithmData = useMemo(
+  () =>
+   canonicalTop.map((row) => ({
+    ctr: Number(row.metrics.ctr.value || 0),
+    impressions: Number(row.metrics.impressions.value || 0),
+    name: row.title || "Untitled Video",
+   })),
+  [canonicalTop],
+ )
+
+ const mockDeviceData = useMemo(() => {
+  const shorts = canonicalRows.filter((row) => row.format === "shorts").length
+  const longform = Math.max(0, canonicalRows.length - shorts)
+  if (canonicalRows.length === 0) return []
+  return [
+   { name: "Short-form", value: shorts },
+   { name: "Long-form", value: longform },
+  ]
+ }, [canonicalRows])
+
+ const mockGeoData = useMemo(() => {
+  const total = canonicalRows.length
+  if (total === 0) return []
+  return [
+   { name: "Top Segment", value: Math.max(1, Math.round(total * 0.4)) },
+   { name: "Middle Segment", value: Math.max(1, Math.round(total * 0.35)) },
+   { name: "Long Tail", value: Math.max(1, total - Math.round(total * 0.75)) },
+  ]
+ }, [canonicalRows])
 
  return (
   <div className="min-h-screen bg-[#f4f4f0]">
@@ -218,7 +221,7 @@ const MasterGraphsPage: React.FC = () => {
       icon={DollarSign}
       color="bg-[#FFDD00]"
       insight="Video A generates $12,500 — 23% of total revenue. Top 5 videos drive 62% of earnings.">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
        <RePieChart>
         <Pie
          data={mockRevenueData}
@@ -254,7 +257,7 @@ const MasterGraphsPage: React.FC = () => {
       icon={Clock}
       color="bg-[#00CCFF]"
       insight="Video X accumulated 45K hours — your most engaging content. Long-form dominates watch time.">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
        <RePieChart>
         <Pie
          data={mockWatchTimeData}
@@ -290,7 +293,7 @@ const MasterGraphsPage: React.FC = () => {
       icon={Users}
       color="bg-[#CCFF00]"
       insight="Video Alpha gained 2,500 subs — highest conversion rate at 2.1%. Tutorial content converts best.">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
        <RePieChart>
         <Pie
          data={mockSubscribersData}
@@ -329,7 +332,7 @@ const MasterGraphsPage: React.FC = () => {
       icon={Target}
       color="bg-[#FF3399]"
       insight="3 videos in GOLD MINE quadrant (high CTR + high retention). 2 videos need thumbnail optimization (Hidden Gems).">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
        <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#000" />
         <XAxis
@@ -406,7 +409,7 @@ const MasterGraphsPage: React.FC = () => {
       icon={Zap}
       color="bg-[#B14AED]"
       insight="Viral trigger point at ~6.5% CTR. Videos above this threshold receive 3-5x more impressions on average.">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
        <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#000" />
         <XAxis
@@ -445,7 +448,7 @@ const MasterGraphsPage: React.FC = () => {
           fontFamily: "system-ui",
          }}
          formatter={(value, name) => [
-          name === "impressions" ? value.toLocaleString() : `${value}%`,
+          name === "impressions" ? Number(value || 0).toLocaleString() : `${Number(value || 0)}%`,
           name,
          ]}
         />
@@ -467,7 +470,7 @@ const MasterGraphsPage: React.FC = () => {
       icon={Monitor}
       color="bg-[#FFB158]"
       insight="Mobile dominates at 45%, but TV viewers have 2.3x higher watch time. Optimize for both formats.">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
        <RePieChart>
         <Pie
          data={mockDeviceData}
@@ -505,7 +508,7 @@ const MasterGraphsPage: React.FC = () => {
       icon={Globe}
       color="bg-[#FF7497]"
       insight="US accounts for 35% of views with highest CPM ($12.50). UK and Canada are secondary high-value markets.">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
        <RePieChart>
         <Pie
          data={mockGeoData}
@@ -515,7 +518,7 @@ const MasterGraphsPage: React.FC = () => {
          outerRadius={80}
          paddingAngle={2}
          dataKey="value"
-         label={({ name, value }) => `${value}%`}
+         label={({ value }) => `${value}%`}
          labelLine={{ stroke: "#000", strokeWidth: 2 }}>
          {mockGeoData.map((_, index) => (
           <Cell

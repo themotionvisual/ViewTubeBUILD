@@ -1,7 +1,14 @@
 // src/context/GlobalDataContext.tsx
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import type { WorkspaceBrain, AppTool, Project, AuthState } from '../types';
+import type {
+  WorkspaceBrain,
+  AppTool,
+  Project,
+  AuthState,
+  ChannelAnalysisSyncStatus,
+  VideoSyncBatchState,
+} from '../types';
 import { authService } from '../services/authService';
 
 const STORAGE_KEY = 'vt_workspace_brain';
@@ -33,7 +40,9 @@ interface GlobalDataContextProps {
   logout: () => void;
   isSyncing: boolean;
   lastSyncComplete: string | null;
-  globalSyncData: () => Promise<void>;
+  syncStatus: ChannelAnalysisSyncStatus;
+  syncBatch: VideoSyncBatchState;
+  globalSyncData: (options?: { batchMode?: 'initial' | 'next' }) => Promise<void>;
 }
 
 const defaultBrain: WorkspaceBrain = {
@@ -74,6 +83,22 @@ const defaultAuthState: AuthState = {
   channelThumbnail: null,
   subscriberCount: null,
   totalViews: null
+};
+
+const defaultSyncStatus: ChannelAnalysisSyncStatus = {
+  phase: 'idle',
+  startedAt: null,
+  completedAt: null,
+  lastError: null,
+  stages: [],
+};
+
+const defaultSyncBatch: VideoSyncBatchState = {
+  initialLimit: 500,
+  incrementSize: 250,
+  cursor: 0,
+  hasMore: true,
+  lastBatchCount: 0,
 };
 
 const loadPersistedBrain = (): WorkspaceBrain => {
@@ -157,7 +182,6 @@ const loadPersistedAuth = (): AuthState => {
 };
 
 const GlobalDataContext = createContext<GlobalDataContextProps | undefined>(undefined);
-let hasWarnedUseBrainFallback = false;
 const fallbackContext: GlobalDataContextProps = {
   brain: defaultBrain,
   updateBrain: () => {},
@@ -181,6 +205,8 @@ const fallbackContext: GlobalDataContextProps = {
   logout: () => {},
   isSyncing: false,
   lastSyncComplete: null,
+  syncStatus: defaultSyncStatus,
+  syncBatch: defaultSyncBatch,
   globalSyncData: async () => {},
 };
 
@@ -191,13 +217,31 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({ children
   const [lastSyncComplete, setLastSyncComplete] = useState<string | null>(
     localStorage.getItem("yt_analytics_last_sync") || null
   );
+  const [syncStatus, setSyncStatus] = useState<ChannelAnalysisSyncStatus>(defaultSyncStatus);
+  const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
+    try {
+      const raw = localStorage.getItem("vt_video_sync_batch_state");
+      if (!raw) return defaultSyncBatch;
+      return { ...defaultSyncBatch, ...(JSON.parse(raw) as Partial<VideoSyncBatchState>) };
+    } catch {
+      return defaultSyncBatch;
+    }
+  });
 
-  const globalSyncData = useCallback(async () => {
+  const globalSyncData = useCallback(async (options?: { batchMode?: 'initial' | 'next' }) => {
     setIsSyncing(true);
     try {
       const { performSync } = await import('../services/analyticsSync');
-      await performSync(true);
+      await performSync(true, { batchMode: options?.batchMode || 'initial' });
       setLastSyncComplete(new Date().toISOString());
+      try {
+        const raw = localStorage.getItem("vt_video_sync_batch_state");
+        if (raw) {
+          setSyncBatch({ ...defaultSyncBatch, ...(JSON.parse(raw) as Partial<VideoSyncBatchState>) });
+        }
+      } catch {
+        // no-op
+      }
     } catch (e) {
       console.warn("Global sync failed:", e);
     } finally {
@@ -206,8 +250,37 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({ children
   }, []);
 
   useEffect(() => {
+    const onStatus = (event: Event) => {
+      const detail = (event as CustomEvent<ChannelAnalysisSyncStatus>).detail;
+      if (!detail) return;
+      setSyncStatus(detail);
+    };
+    window.addEventListener("vt_channel_sync_status", onStatus as EventListener);
+    return () => {
+      window.removeEventListener("vt_channel_sync_status", onStatus as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Keep last sync timestamp in sync with any cache reset actions.
+    const onLocalDataChanged = () => {
+      try {
+        setLastSyncComplete(localStorage.getItem("yt_analytics_last_sync") || null);
+      } catch {
+        setLastSyncComplete(null);
+      }
+    };
+    window.addEventListener("vt_local_data_changed", onLocalDataChanged);
+    window.addEventListener("storage", onLocalDataChanged);
+    return () => {
+      window.removeEventListener("vt_local_data_changed", onLocalDataChanged);
+      window.removeEventListener("storage", onLocalDataChanged);
+    };
+  }, []);
+
+  useEffect(() => {
     try {
-      const { channelyticsState, researchLabState, ...persistable } = brain;
+      const persistable = { ...brain };
       const toSave = {
         ...persistable,
         channelyticsState: { csvFiles: [], allData: [], analyticsResult: null },
@@ -373,6 +446,8 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({ children
       logout,
       isSyncing,
       lastSyncComplete,
+      syncStatus,
+      syncBatch,
       globalSyncData
     }}>
       {children}
@@ -380,13 +455,11 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({ children
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useBrain = () => {
   const context = useContext(GlobalDataContext);
   if (!context) {
-    if (!hasWarnedUseBrainFallback) {
-      hasWarnedUseBrainFallback = true;
-      console.warn('useBrain fallback used (likely HMR boundary mismatch). Reloading the page will restore provider state.');
-    }
+    console.warn('useBrain fallback used (likely HMR boundary mismatch). Reloading the page will restore provider state.');
     return fallbackContext;
   }
   return context;

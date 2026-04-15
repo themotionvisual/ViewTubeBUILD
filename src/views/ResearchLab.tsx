@@ -13,6 +13,10 @@ import type {
 } from "../types"
 import { useBrain } from "../context/GlobalDataContext"
 import { getMasterRows, canonicalRowsToMasterTableRows } from "../services/analyticsSelectors"
+import {
+ collectAvailableCanonicalStats,
+ type CanonicalStatKey,
+} from "../services/canonicalStatsEngine"
 import { UniversalDataTable } from "../components/UniversalDataTable"
 import { Database } from "lucide-react"
 import {
@@ -46,7 +50,11 @@ import {
 } from "recharts"
 import { Chart } from "react-google-charts"
 
-const MemoizedGoogleChart = React.memo(Chart, (prev: any, next: any) => {
+const GoogleChartWithUnifiedLoader: React.FC<any> = (props) => (
+ <Chart {...props} version="current" />
+)
+
+const MemoizedGoogleChart = React.memo(GoogleChartWithUnifiedLoader, (prev: any, next: any) => {
  return (
   prev.data === next.data &&
   prev.options === next.options &&
@@ -449,6 +457,9 @@ const RenderChart: React.FC<{
  dataDateRange = "",
 }) => {
  const chartData = data && data.length > 0 ? data : fallbackData
+ const missingMetrics = chart.missingMetrics || []
+ const hasMissingRequiredMetrics =
+  Array.isArray(chart.requiredMetrics) && missingMetrics.length > 0
  const rawType = String(chart.type || "")
   .trim()
   .toLowerCase()
@@ -496,6 +507,17 @@ const RenderChart: React.FC<{
        )}
       </tbody>
      </table>
+    </div>
+   </div>
+  )
+ }
+
+ if (hasMissingRequiredMetrics) {
+  return (
+   <div className="p-8 text-center font-black opacity-70 uppercase">
+    <div>Data Missing For This Chart</div>
+    <div className="mt-2 text-[10px] opacity-70 normal-case">
+     Missing: {missingMetrics.join(", ")}
     </div>
    </div>
   )
@@ -674,6 +696,7 @@ const StationCard = ({
    ...(isPieChart
     ? {
        pieSliceText: "value",
+       pieSliceBorderColor: "transparent",
        pieSliceTextStyle: {
         color: "white",
         fontSize: 16,
@@ -1274,7 +1297,7 @@ const StationCard = ({
        </div>
       ) : (
        <div className="w-full h-full bg-white flex flex-col pt-2">
-        <div
+       <div
          className={`w-full ${isEngagementRanker ? "h-[calc(100%-52px)]" : "h-full"} relative`}>
          <MemoizedGoogleChart
           chartType={cfg.type as any}
@@ -1284,6 +1307,21 @@ const StationCard = ({
           options={chartOptions}
           chartEvents={chartEvents}
          />
+         {isEngagementRanker &&
+          hovered?.row !== undefined &&
+          Array.isArray(currentData) &&
+          currentData.length > 2 && (
+           <div
+            className="absolute pointer-events-none bg-black/5 border-2 border-black z-10 transition-all duration-75"
+            style={{
+             top: 8,
+             bottom: 8,
+             width: `calc(100% / ${Math.max(1, (currentData as any[]).length - 1)})`,
+             left: `calc((100% / ${Math.max(1, (currentData as any[]).length - 1)}) * ${hovered.row})`,
+             transform: "translateX(-50%)",
+            }}
+           />
+          )}
         </div>
         {isEngagementRanker && (
          <div className="h-[52px] flex items-center justify-center gap-8 px-4 border-t border-black/5 bg-gray-50/30">
@@ -1398,6 +1436,54 @@ const GoogleChartsGallery: React.FC<{
  const revenueKey =
   findKey(["revenue", "earnings"]) || "Your estimated revenue (USD)"
  const durationKey = findKey(["duration"]) || "Duration"
+
+ const canonicalFieldMap = useMemo(
+  () => ({
+   views: viewsKey,
+   likes: likesKey,
+   comments: commentsKey,
+   shares: sharesKey,
+   subscribersGained: subsKey,
+   impressions: impressionsKey,
+   ctr: ctrKey,
+   estimatedRevenue: revenueKey,
+   estimatedMinutesWatched: watchTimeKey,
+   avgViewDurationSeconds: avdKey,
+   videoLengthSeconds: durationKey,
+   avgPercentageViewed: apvKey,
+   stayedToWatchAt30: stwKey,
+  }),
+  [
+   viewsKey,
+   likesKey,
+   commentsKey,
+   sharesKey,
+   subsKey,
+   impressionsKey,
+   ctrKey,
+   revenueKey,
+   watchTimeKey,
+   avdKey,
+   durationKey,
+   apvKey,
+   stwKey,
+  ],
+ )
+
+ const availableCanonicalStats = useMemo(
+  () => collectAvailableCanonicalStats(videoOnlyData as Record<string, unknown>[], canonicalFieldMap),
+  [videoOnlyData, canonicalFieldMap],
+ )
+
+ const resolveMissingMetrics = useCallback(
+  (requiredMetrics?: string[]) => {
+   if (!requiredMetrics || requiredMetrics.length === 0) return []
+   return requiredMetrics.filter(
+    (metric) => !availableCanonicalStats.has(metric as CanonicalStatKey),
+   )
+  },
+  [availableCanonicalStats],
+ )
 
  const parseDurationToSeconds = (duration: any) => {
   if (typeof duration === "number") return duration
@@ -1924,7 +2010,8 @@ const GoogleChartsGallery: React.FC<{
  ]
 
  const chartConfigs = useMemo(
-  () => [
+  () => {
+   const configs = [
    {
     title: "Top Performers Trio",
     subtitle: "Combined Insights",
@@ -2003,9 +2090,16 @@ const GoogleChartsGallery: React.FC<{
    },
 
    {
-    title: "Shorts Retention",
-    subtitle: "AVD% x Duration",
-    type: "ScatterChart",
+   title: "Shorts Retention",
+   subtitle: "AVD% x Duration",
+   tier: "B",
+   requiredMetrics: ["watch_time_per_video_minute"],
+   insight: {
+    title: "Shorts Ceiling",
+    statPair: "Length x APV",
+    reveal: "Shows where short-form length starts to reduce retention.",
+   },
+   type: "ScatterChart",
     provider: "google",
     data: () => {
      const header = [
@@ -2072,9 +2166,16 @@ const GoogleChartsGallery: React.FC<{
     },
    },
    {
-    title: "Packaging",
-    subtitle: "CTR x Impressions",
-    type: "BubbleChart",
+   title: "Packaging",
+   subtitle: "CTR x Impressions",
+   tier: "B",
+   requiredMetrics: ["ctr_percent", "impressions"],
+   insight: {
+    title: "Packaging Signal",
+    statPair: "CTR x Impressions",
+    reveal: "Shows how strong packaging performs as distribution expands.",
+   },
+   type: "BubbleChart",
     data: () => {
      const header = [
       "ID",
@@ -2245,10 +2346,17 @@ const GoogleChartsGallery: React.FC<{
    },
 
    {
-    title: "Performance Stack",
-    subtitle: "Viral DNA Pulse",
-    type: "SteppedAreaChart",
-    provider: "google",
+   title: "Performance Stack",
+   subtitle: "Viral DNA Pulse",
+   tier: "A",
+   requiredMetrics: ["retention_30_percent_viewers", "ctr_percent", "views"],
+   insight: {
+    title: "Hook Integrity",
+    statPair: "30s Retention x CTR",
+    reveal: "Separates strong hooks from weak hooks using only raw retention.",
+   },
+   type: "SteppedAreaChart",
+   provider: "google",
     data: () => {
      const header = [
       "Video",
@@ -2266,12 +2374,8 @@ const GoogleChartsGallery: React.FC<{
        const title = String(v?.[titleKey] || v?.title || "Video")
         .substring(0, 15)
         .toUpperCase()
-       const retention = Math.max(
-        0,
-        parseFloat(
-         String(v?.[stwKey] || v?.retention || 0).replace(/,/g, ""),
-        ) || 0,
-       )
+       const retention =
+        Math.max(0, parseFloat(String(v?.[stwKey] || 0).replace(/,/g, ""))) || 0
        const ctr = Math.max(
         0,
         parseFloat(String(v?.[ctrKey] || v?.ctr || 0).replace(/,/g, "")) || 0,
@@ -2286,7 +2390,7 @@ const GoogleChartsGallery: React.FC<{
        return [
         title,
         -views, // Flows DOWN
-        ctr * 5, // The "Anchor" hinge
+        ctr,
         retention, // Flows UP
        ]
       }),
@@ -2314,9 +2418,16 @@ const GoogleChartsGallery: React.FC<{
    },
 
    {
-    title: "Viewer Loyalty",
-    subtitle: "New vs Returning Viewers",
-    type: "BubbleChart",
+   title: "Viewer Loyalty",
+   subtitle: "New vs Returning Viewers",
+   tier: "A",
+   requiredMetrics: ["views"],
+   insight: {
+    title: "Loyalty Split",
+    statPair: "New x Returning",
+    reveal: "Shows whether videos attract fresh viewers or bring audiences back.",
+   },
+   type: "BubbleChart",
     provider: "google",
     data: () => {
      const newKey = findKey(["new viewer", "new viewers"])
@@ -2335,37 +2446,7 @@ const GoogleChartsGallery: React.FC<{
       (v) => !excludedOutliers.has(v._id),
      )
 
-     if (!newKey || !retKey) {
-      const sorted = [...validVideos]
-       .filter((r) => parseFloat(String(r[viewsKey]).replace(/,/g, "")) > 0)
-       .sort(
-        (a, b) =>
-         new Date(b[dateKey]).getTime() - new Date(a[dateKey]).getTime(),
-       )
-       .slice(0, 40)
-      if (!sorted.length) return [header, ["", 0, 0, "No Data", 0, "No Data"]]
-      const oldest = new Date(sorted[sorted.length - 1][dateKey]).getTime()
-      const newest = new Date(sorted[0][dateKey]).getTime()
-      const range = newest - oldest || 1
-      return [
-       header,
-       ...sorted.map((r) => {
-        const views = parseFloat(String(r[viewsKey]).replace(/,/g, "")) || 0
-        const age = (newest - new Date(r[dateKey]).getTime()) / range
-        const est_returning = Math.round(views * age * 0.6)
-        const est_new = views - est_returning
-        const t = String(r[titleKey]).toUpperCase()
-        return [
-         r._id || "",
-         est_new,
-         est_returning,
-         r._userTag === "shorts" ? "Shorts" : "Long-form",
-         views,
-         `${t}\nNEW: ${est_new.toLocaleString()}\nRETURNING: ${est_returning.toLocaleString()}\n\n[TRIPLE CLICK TO REMOVE OUTLIER]`,
-        ]
-       }),
-      ]
-     }
+     if (!newKey || !retKey) return [header, ["", 0, 0, "No Data", 0, "No Data"]]
      const filtered = validVideos
       .filter((r) => {
        const n = parseFloat(String(r[newKey]).replace(/,/g, "")) || 0
@@ -2581,10 +2662,17 @@ const GoogleChartsGallery: React.FC<{
    },
 
    {
-    title: "Hook-to-Binge Funnel",
-    subtitle: "Views → Watch → Subs → Shares",
-    type: "Sankey",
-    provider: "google",
+   title: "Hook-to-Binge Funnel",
+   subtitle: "Views → Watch → Subs → Shares",
+   tier: "A",
+   requiredMetrics: ["views", "retention_30_percent_viewers", "impressions"],
+   insight: {
+    title: "Hook-to-Binge",
+    statPair: "Impressions x Retention30",
+    reveal: "Tracks how many viewers remain after hook without synthetic fallback.",
+   },
+   type: "Sankey",
+   provider: "google",
     data: () => {
      const header = ["From", "To", "Weight"]
      let totalViews = 0,
@@ -2603,8 +2691,7 @@ const GoogleChartsGallery: React.FC<{
       const shares = parseFloat(String(r[sharesKey]).replace(/,/g, "")) || 0
       const comments = parseFloat(String(r[commentsKey]).replace(/,/g, "")) || 0
       totalViews += views
-      totalWatchedPast30 +=
-       stw > 0 ? views * (stw / 100) : views * Math.min(apv / 100, 1)
+      totalWatchedPast30 += stw > 0 ? views * (stw / 100) : 0
       totalFinished += apv > 0 ? views * Math.min(apv / 100, 1) * 0.3 : 0
       totalSubs += subs
       totalLikes += likes
@@ -2615,11 +2702,13 @@ const GoogleChartsGallery: React.FC<{
      const hooked = Math.round(totalWatchedPast30)
      const finished = Math.round(totalFinished)
      const engaged = totalSubs + totalLikes + totalShares + totalComments
-     const impressions =
-      parseFloat(
-       String(videoOnlyData[0]?.[impressionsKey] || "0").replace(/,/g, ""),
-      ) || totalViews * 8
-     const estImpressions = Math.max(totalViews * 1.5, impressions)
+     const impressions = videoOnlyData.reduce((sum, row) => {
+      return (
+       sum +
+       (parseFloat(String(row[impressionsKey] || "0").replace(/,/g, "")) || 0)
+      )
+     }, 0)
+     const estImpressions = impressions
      return [
       header,
       ["1. IMPRESSIONS", "2. VIEWS", totalViews],
@@ -4154,11 +4243,18 @@ const GoogleChartsGallery: React.FC<{
     },
    },
    {
-    title: "Solo Audience Retention",
-    subtitle: "Moment-by-Moment Stickiness",
-    type: "LineChart",
-    provider: "google",
-    data: () => {
+   title: "Solo Audience Retention",
+   subtitle: "Moment-by-Moment Stickiness",
+   tier: "A",
+   requiredMetrics: ["retention_30_percent_viewers"],
+   insight: {
+    title: "Retention Checkpoint",
+    statPair: "Video Progress x STW@0:30",
+    reveal: "Shows only exact retention checkpoints when raw retention exists.",
+   },
+   type: "LineChart",
+   provider: "google",
+   data: () => {
      const header = ["Time", "Retention %"]
      const targetData = videoOnlyData.filter(
       (v) =>
@@ -4171,20 +4267,10 @@ const GoogleChartsGallery: React.FC<{
       : baseList[0]
 
      if (!video) return [header, ["0:00", 100]]
-
-     // Simulation based on APV/AVD if actual retention curve is missing
-     const apv = parseFloat(String(video[apvKey] || 50).replace(/,/g, ""))
-     const rows: any[] = []
-     const steps = 20
-     for (let i = 0; i <= steps; i++) {
-      const pct = i / steps
-      // Standard decay curve: y = 100 * e^(-k*x)
-      // We adjust k so that the average (integral) matches APV approx
-      const k = -Math.log(apv / 100) * 1.5
-      const val = Math.max(0, Math.min(100, 100 * Math.exp(-k * pct)))
-      rows.push([`${Math.round(pct * 100)}%`, val])
-     }
-     return [header, ...rows]
+     const stw = parseFloat(String(video[stwKey] || "").replace(/,/g, ""))
+     if (!Number.isFinite(stw)) return [header, ["No Data", 0]]
+     const boundedStw = Math.max(0, Math.min(100, stw))
+     return [header, ["0%", 100], ["0:30 checkpoint", boundedStw]]
     },
     options: {
      hAxis: { title: "Video Progress (% Length)" },
@@ -4196,15 +4282,32 @@ const GoogleChartsGallery: React.FC<{
     },
    },
    {
-    title: "Solo Device Breakdown",
-    subtitle: "Desktop vs Mobile vs TV",
-    type: "PieChart",
-    provider: "google",
-    data: () => {
+   title: "Solo Device Breakdown",
+   subtitle: "Desktop vs Mobile vs TV",
+   tier: "A",
+   requiredMetrics: ["views"],
+   insight: {
+    title: "Device Split",
+    statPair: "Device x Views",
+    reveal: "Shows device mix only when explicit device data is present.",
+   },
+   type: "PieChart",
+   provider: "google",
+   data: () => {
      const header = ["Device", "Views"]
-     // In most channel exports, device data isn't in the main video list.
-     // We'll simulate based on standard averages unless we find a hint.
-     return [header, ["Mobile", 65], ["Desktop", 25], ["Tablet", 7], ["TV", 3]]
+     const deviceKey = Object.keys(allData[0] || {}).find((k) =>
+      k.toLowerCase().includes("device"),
+     )
+     if (!deviceKey) return [header, ["No Data", 0]]
+     const map = new Map<string, number>()
+     allData.forEach((row) => {
+      const device = String(row[deviceKey] || "").trim()
+      const views = parseFloat(String(row[viewsKey] || "0").replace(/,/g, "")) || 0
+      if (!device || views <= 0) return
+      map.set(device, (map.get(device) || 0) + views)
+     })
+     const rows = Array.from(map.entries())
+     return rows.length ? [header, ...rows] : [header, ["No Data", 0]]
     },
     options: {
      pieHole: 0.5,
@@ -4444,7 +4547,12 @@ const GoogleChartsGallery: React.FC<{
      colors: ["#00CCFF", "#FF7497"],
     },
    }
-  ],
+   ]
+   return configs.map((cfg) => ({
+    ...cfg,
+    missingMetrics: resolveMissingMetrics(cfg.requiredMetrics),
+   }))
+  },
   [
    lastThreeMonthsData,
    videoOnlyData,
@@ -4472,6 +4580,7 @@ const GoogleChartsGallery: React.FC<{
    dateKey,
    dataDateRange,
    selectedSoloVideoId,
+   resolveMissingMetrics,
   ],
  )
 
@@ -5143,9 +5252,10 @@ const GoogleChartsGallery: React.FC<{
                       ),
                      }
                    : {}),
-                  ...(isPieChart
+                 ...(isPieChart
                    ? {
                       pieSliceText: "value",
+                      pieSliceBorderColor: "transparent",
                       pieSliceTextStyle: {
                        color: "white",
                        fontSize: 16,

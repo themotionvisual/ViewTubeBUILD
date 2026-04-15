@@ -118,6 +118,15 @@ export interface ChartConfig {
   videoCount?: number;
   sortType?: 'recent' | 'highest_rated' | 'alphabetical';
   durationType?: 'shorts' | 'long' | 'combined';
+  isEngagementRanker?: boolean;
+  requiredMetrics?: string[];
+  missingMetrics?: string[];
+  tier?: 'A' | 'B';
+  insight?: {
+    title: string;
+    statPair: string;
+    reveal: string;
+  };
 }
 
 export interface AnalysisSection {
@@ -143,6 +152,58 @@ export interface AnalyticsResult {
   sections: AnalysisSection[];
   keywordComparisonTable?: KeywordComparisonTable;
   miniSpreadsheets?: MiniSpreadsheet[];
+  meta?: {
+    oraclePromptVersion?: ChannelOraclePromptVersion;
+    inputBytes?: number;
+    generatedAt?: string;
+    warnings?: string[];
+  };
+}
+
+export type ChannelOraclePromptVersion = 'creative_oracle_v1';
+
+export interface ChannelOracleInput {
+  schemaVersion: 'channel_oracle_input_v1';
+  analyticsWindow: '7d' | '28d' | '90d' | '365d' | 'lifetime';
+  generatedAt: string;
+  fullChannelStats: {
+    views: number;
+    watchHours: number;
+    subscribers: number;
+    revenue: number;
+    rpm: number;
+    ctr: number;
+  };
+  channelLevel: {
+    trafficSources?: unknown;
+    geography?: unknown;
+    demographics?: unknown;
+    dailyMetrics?: unknown;
+  };
+  topVideos: Array<Record<string, unknown>>;
+}
+
+export interface VideoSyncBatchState {
+  initialLimit: number;
+  incrementSize: number;
+  cursor: number;
+  hasMore: boolean;
+  lastBatchCount: number;
+}
+
+export type ChannelAnalysisSyncPhase =
+  | 'idle'
+  | 'syncing'
+  | 'partial'
+  | 'complete'
+  | 'error';
+
+export interface ChannelAnalysisSyncStatus {
+  phase: ChannelAnalysisSyncPhase;
+  startedAt: string | null;
+  completedAt: string | null;
+  lastError: string | null;
+  stages: string[];
 }
 
 
@@ -343,6 +404,9 @@ export interface WorkspaceBrain {
     csvFiles: CsvFileWithTag[];
     allData: any[];
     analyticsResult: AnalyticsResult | null;
+    oraclePromptVersion?: ChannelOraclePromptVersion;
+    syncBatch?: VideoSyncBatchState;
+    syncStatus?: ChannelAnalysisSyncStatus;
   };
 
   researchLabState: {

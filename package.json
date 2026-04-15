@@ -8,11 +8,15 @@
     "dev:staging": "vite --mode staging",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "generate:chart-inventory": "node scripts/generate-chart-inventory.mjs",
     "check:css": "node scripts/check-css-parse.mjs",
-    "preview": "vite preview",
-    "audit": "node scripts/audit.js"
+    "check:privacy-src": "bash scripts/privacy-audit-src.sh",
+    "preview": "vite preview"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@google/genai": "^1.46.0",
     "@imgly/background-removal": "^1.7.0",
     "autoprefixer": "^10.4.27",

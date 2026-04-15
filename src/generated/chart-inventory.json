@@ -1,0 +1,140 @@
+{
+  "generatedAt": "2026-04-15T10:17:09.677Z",
+  "primaryScopeRoutes": [
+    "/performance",
+    "/legacy/channelytics",
+    "/legacy/research-lab",
+    "/legacy/data-vizualizations",
+    "/studio/internal-analytics",
+    "/charts-gallery/master-graphs",
+    "/charts-gallery/toolbox-preview"
+  ],
+  "viewNowLinks": [
+    "/performance",
+    "/legacy/channelytics",
+    "/legacy/research-lab",
+    "/legacy/data-vizualizations",
+    "/studio/internal-analytics",
+    "/charts-gallery/master-graphs",
+    "/charts-gallery/toolbox-preview"
+  ],
+  "entries": [
+    {
+      "route": "/performance",
+      "component": "PerformanceHub",
+      "pageSection": "Performance Hub",
+      "toolbox": "CHANNEL ANALYSIS + CHANNEL",
+      "provider": "recharts + custom svg",
+      "dataSource": "canonical selectors (api/csv/hybrid)",
+      "timeWindowBehavior": "lifetime default, user-selectable windows",
+      "metricDependencies": [
+        "views",
+        "watchHours",
+        "likes",
+        "comments",
+        "shares",
+        "subs",
+        "ctr",
+        "retention",
+        "impressions"
+      ]
+    },
+    {
+      "route": "/legacy/channelytics",
+      "component": "Channelytics",
+      "pageSection": "Channelytics",
+      "toolbox": "Channel Intelligence Lab",
+      "provider": "ChartEngine (google)",
+      "dataSource": "canonical selectors + uploaded csv",
+      "timeWindowBehavior": "lifetime-focused",
+      "metricDependencies": [
+        "views",
+        "watchHours",
+        "subs",
+        "likes",
+        "comments",
+        "shares"
+      ]
+    },
+    {
+      "route": "/legacy/research-lab",
+      "component": "ResearchLab",
+      "pageSection": "Research Lab",
+      "toolbox": "Legacy Lab Charts",
+      "provider": "google + recharts + custom",
+      "dataSource": "canonical selectors + cache adapters",
+      "timeWindowBehavior": "window-selectable",
+      "metricDependencies": [
+        "views",
+        "watchHours",
+        "revenue",
+        "ctr",
+        "impressions",
+        "retention",
+        "demographics"
+      ]
+    },
+    {
+      "route": "/legacy/data-vizualizations",
+      "component": "DataVisualizations",
+      "pageSection": "Data Visualizations",
+      "toolbox": "Graph Catalog",
+      "provider": "custom svg",
+      "dataSource": "canonical selectors",
+      "timeWindowBehavior": "lifetime",
+      "metricDependencies": [
+        "views",
+        "impressions",
+        "ctr",
+        "retention",
+        "revenue"
+      ]
+    },
+    {
+      "route": "/studio/internal-analytics",
+      "component": "InternalAnalyticsPanel",
+      "pageSection": "Internal Analytics",
+      "toolbox": "KPI Panel",
+      "provider": "recharts + tables",
+      "dataSource": "canonical selectors",
+      "timeWindowBehavior": "lifetime + selectable",
+      "metricDependencies": [
+        "coverage",
+        "availability",
+        "window sync diagnostics"
+      ]
+    },
+    {
+      "route": "/charts-gallery/master-graphs",
+      "component": "MasterGraphsPage",
+      "pageSection": "Master Graphs Gallery",
+      "toolbox": "Charts Gallery",
+      "provider": "recharts",
+      "dataSource": "canonical selectors",
+      "timeWindowBehavior": "lifetime",
+      "metricDependencies": [
+        "views",
+        "retention",
+        "ctr",
+        "impressions",
+        "revenue"
+      ]
+    },
+    {
+      "route": "/charts-gallery/toolbox-preview",
+      "component": "ToolboxPreviewPage",
+      "pageSection": "Toolbox Preview",
+      "toolbox": "ChannelyticsChartToolbox + ChartEngine",
+      "provider": "google + custom",
+      "dataSource": "canonical selectors + fixtures",
+      "timeWindowBehavior": "toggle by source dataset",
+      "metricDependencies": [
+        "views",
+        "watchHours",
+        "ctr",
+        "impressions",
+        "retention"
+      ]
+    }
+  ]
+}

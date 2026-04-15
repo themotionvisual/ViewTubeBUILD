@@ -3,16 +3,8 @@ import { useNavigate } from "react-router-dom"
 import {
  BarChart3,
  TrendingUp,
- PieChart,
  Activity,
- Map,
  Target,
- Clock,
- DollarSign,
- Users,
- Monitor,
- Smartphone,
- Globe,
  Zap,
  Layers,
  Eye,
@@ -149,6 +141,17 @@ const ChartsGalleryHome: React.FC = () => {
    route: "/charts-gallery/kpi",
    description:
     "Channel overview KPI grid and content breakdown progress bars for at-a-glance performance monitoring.",
+  },
+  {
+   title: "Toolbox Preview",
+   subtitle: "QA Surface",
+   chartCount: 2,
+   icon: Layers,
+   color: "bg-[#f0f0f0]",
+   iconColor: "bg-[#00CCFF]",
+   route: "/charts-gallery/toolbox-preview",
+   description:
+    "Visual regression surface for ChannelyticsChartToolbox and ChartEngine with source toggles.",
   },
  ]
 

@@ -10,14 +10,23 @@ export const Sidebar: React.FC = () => {
  const clickTimesRef = useRef<number[]>([])
 
  useEffect(() => {
-  const handleSync = (e: any) => {
-   const data = e.detail
+  const handleSync = (event: Event) => {
+   const data = (
+    event as CustomEvent<{
+     profile?: {
+      name?: string
+      profilePictureUrl?: string
+      subscriberCount?: string | number
+      totalViews?: string | number
+     }
+    }>
+   ).detail
    if (data && data.profile) {
     setAuthState({
      channelName: data.profile.name,
      channelThumbnail: data.profile.profilePictureUrl,
-     subscriberCount: parseInt(data.profile.subscriberCount),
-     totalViews: parseInt(data.profile.totalViews),
+     subscriberCount: Number(data.profile.subscriberCount || 0),
+     totalViews: Number(data.profile.totalViews || 0),
     })
    }
   }
@@ -110,7 +119,9 @@ export const Sidebar: React.FC = () => {
      </button>
     ) : (
      <button
-      onClick={globalSyncData}
+      onClick={() => {
+       void globalSyncData()
+      }}
       disabled={isSyncing}
       className={`flex items-center justify-center w-full border-[4px] border-black rounded-xl p-3 text-xs font-[1000] uppercase tracking-tighter text-black transition-all ${
        isSyncing ? 'bg-gray-300 opacity-50 cursor-not-allowed' : 'bg-[#CCFF00] hover:bg-white'

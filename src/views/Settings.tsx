@@ -22,6 +22,7 @@ import {
  type IngestMode,
 } from "../services/productArchitecture"
 import { downloadExportBundle } from "../services/dataExport"
+import { clearCachedDataSoft, factoryResetAll } from "../services/localDataReset"
 
 const Settings: React.FC = () => {
  const navigate = useNavigate()
@@ -37,6 +38,9 @@ const Settings: React.FC = () => {
  const [handleInput, setHandleInput] = useState("")
  const [handleStatus, setHandleStatus] = useState<string | null>(null)
  const [exportStatus, setExportStatus] = useState<string | null>(null)
+ const [dataResetStatus, setDataResetStatus] = useState<string | null>(null)
+ const canonicalButtonClass =
+  "border-[4px] border-black rounded-xl shadow-[4px_4px_0px_0px_black] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_black] transition-all font-black uppercase"
 
  useEffect(() => {
   const checkAuth = setInterval(() => {
@@ -102,7 +106,7 @@ const Settings: React.FC = () => {
       Settings
      </h1>
     </div>
-    <div className="bg-[#FF83EA] text-black p-3 rounded-xl border-[3px] border-black shadow-[4px_4px_0px_0px_black] rotate-2">
+    <div className="bg-[#FF83EA] text-black p-3 rounded-xl border-[4px] border-black shadow-[4px_4px_0px_0px_black] rotate-2">
      <SettingsIcon size={32} />
     </div>
    </div>
@@ -112,7 +116,7 @@ const Settings: React.FC = () => {
     <SubToolbox
      title="Connect Channel"
      icon={<Link2 size={20} strokeWidth={3} className="text-black" />}
-     paletteIndex={0}
+     paletteIndex={1}
      contentClassName="p-6 flex flex-col gap-6">
      <div className="space-y-2">
       <h2 className="text-2xl font-black uppercase tracking-tighter">
@@ -125,13 +129,13 @@ const Settings: React.FC = () => {
      {isAuth ? (
       <button
        onClick={() => authService.logout()}
-       className="pop-button bg-black text-white px-8 py-4 text-sm">
+       className={`${canonicalButtonClass} bg-black text-white px-8 py-4 text-sm`}>
        Disconnect Channel
       </button>
      ) : (
       <button
        onClick={() => authService.login()}
-       className="pop-button bg-[#FFFF61] text-black px-8 py-4 text-sm">
+       className={`${canonicalButtonClass} bg-[#FFFF61] text-black px-8 py-4 text-sm`}>
        Connect Channel
       </button>
      )}
@@ -141,7 +145,7 @@ const Settings: React.FC = () => {
     <SubToolbox
      title="Gemini API Key"
      icon={<KeyRound size={20} strokeWidth={3} className="text-black" />}
-     paletteIndex={1}
+     paletteIndex={2}
      contentClassName="p-6 flex flex-col gap-4">
      <p className="font-bold text-gray-700">
       Use your own key so generations run on your quota and billing.
@@ -167,7 +171,7 @@ const Settings: React.FC = () => {
    <SubToolbox
     title="Ingest Mode"
     icon={<ShieldCheck size={20} strokeWidth={3} className="text-black" />}
-    paletteIndex={2}
+    paletteIndex={3}
     contentClassName="p-6 space-y-4">
     <p className="font-bold text-gray-700">
      Select how ViewTube should source data for analytics and master tables.
@@ -207,44 +211,56 @@ const Settings: React.FC = () => {
      />
      <button
       onClick={handlePublicResolve}
-      className="pop-button bg-[#96F5A6] text-black px-5 py-3 text-sm whitespace-nowrap">
+      className={`${canonicalButtonClass} bg-[#96F5A6] text-black px-5 py-3 text-sm whitespace-nowrap`}>
       Resolve Handle
      </button>
     </div>
     {handleStatus ? <p className="text-sm font-bold text-gray-700">{handleStatus}</p> : null}
    </SubToolbox>
 
-   {/* Data Management */}
-   <SubToolbox
-    title="Data Management"
-    icon={<Trash2 size={20} strokeWidth={3} className="text-black" />}
-    paletteIndex={3}
-    contentClassName="p-6 space-y-6">
-    <p className="font-bold text-gray-700">
-     Clear cached analytics data to force a fresh sync with YouTube.
-    </p>
-    <div className="flex flex-col gap-4">
-     <button
-      onClick={() => {
-       if (
-        confirm(
-         "Clear all cached YouTube analytics data? This will force a fresh sync on next page load.",
-        )
-       ) {
-        localStorage.removeItem("yt_analytics_cache")
-        window.location.reload()
-       }
-      }}
-      className="flex items-center justify-center gap-3 bg-[#FFB570] text-black px-8 py-4 rounded-2xl border-[4px] border-black shadow-[4px_4px_0px_0px_black] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_black] transition-all font-black uppercase">
-      <Trash2 size={20} />
-      Clear Analytics Cache
-     </button>
-     <p className="text-xs font-bold text-gray-500">
-      Cache includes: channel profile, video list, video stats, and analytics
-      data.
-     </p>
-    </div>
-   </SubToolbox>
+	   {/* Data Management */}
+	   <SubToolbox
+	    title="Data Management"
+	    icon={<Trash2 size={20} strokeWidth={3} className="text-black" />}
+	    paletteIndex={5}
+	    contentClassName="p-6 space-y-6">
+	    <p className="font-bold text-gray-700">
+	     Control what is stored locally on this device. Use the safe clear for caches, or factory reset for a full wipe.
+	    </p>
+	    <div className="flex flex-col gap-4">
+	     <button
+	      onClick={() => {
+	       if (!confirm("Clear cached analytics + uploads + GA4 data on this device? (Keeps keys/preferences/auth)")) return
+	       clearCachedDataSoft()
+	       setDataResetStatus("Cached data cleared (keys/preferences/auth kept).")
+	       setTimeout(() => setDataResetStatus(null), 3500)
+	      }}
+	      className="flex items-center justify-center gap-3 bg-[#FFB570] text-black px-8 py-4 rounded-2xl border-[4px] border-black shadow-[4px_4px_0px_0px_black] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_black] transition-all font-black uppercase">
+	      <Trash2 size={20} />
+	      Clear Cached Data (Safe)
+	     </button>
+	     <button
+	      onClick={async () => {
+	       if (
+	        !confirm(
+	         "FACTORY RESET EVERYTHING? This clears ALL localStorage/sessionStorage keys (including API keys and auth) and attempts to clear browser caches.",
+	        )
+	       )
+	        return
+	       await factoryResetAll()
+	       setDataResetStatus("Factory reset complete. You may need to refresh.")
+	       setTimeout(() => setDataResetStatus(null), 3500)
+	      }}
+	      className="flex items-center justify-center gap-3 bg-black text-white px-8 py-4 rounded-2xl border-[4px] border-black shadow-[4px_4px_0px_0px_black] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_black] transition-all font-black uppercase">
+	      <ShieldCheck size={20} />
+	      Factory Reset (Everything)
+	     </button>
+	     <p className="text-xs font-bold text-gray-500">
+	      Safe clear includes: `yt_analytics_cache`, `vt_uploaded_csv_cache`, GA4 caches, and video-details snippet cache.
+	     </p>
+	     {dataResetStatus ? <p className="text-xs font-black text-gray-700">{dataResetStatus}</p> : null}
+	    </div>
+	   </SubToolbox>
 
    <SubToolbox
     title="Trust + Export"
@@ -257,12 +273,12 @@ const Settings: React.FC = () => {
     <div className="flex flex-wrap gap-3">
      <button
       onClick={() => navigate("/data-transparency")}
-      className="pop-button bg-[#40C6E9] text-black px-5 py-3 text-sm">
+      className={`${canonicalButtonClass} bg-[#40C6E9] text-black px-5 py-3 text-sm`}>
       Open Data Transparency Center
      </button>
      <button
       onClick={handleExport}
-      className="pop-button bg-[#FFB570] text-black px-5 py-3 text-sm">
+      className={`${canonicalButtonClass} bg-[#FFB570] text-black px-5 py-3 text-sm`}>
       Export All Data
      </button>
     </div>
@@ -273,7 +289,7 @@ const Settings: React.FC = () => {
    <SubToolbox
     title="Gemini Preference"
     icon={<Zap size={20} strokeWidth={3} className="text-black" />}
-    paletteIndex={2}
+    paletteIndex={7}
     contentClassName="p-6 space-y-6">
     <p className="font-bold text-gray-700">
      Choose speed or depth. Switch anytime and keep your workflow flexible.
@@ -321,9 +337,9 @@ const Settings: React.FC = () => {
    </SubToolbox>
 
    <div className="flex items-center gap-4">
-    <button
+   <button
      onClick={handleSave}
-     className="pop-button bg-[#FFFF61] text-black px-12 py-4 text-xl w-full md:w-auto flex items-center justify-center gap-3">
+     className={`${canonicalButtonClass} bg-[#FFFF61] text-black px-12 py-4 text-xl w-full md:w-auto flex items-center justify-center gap-3`}>
      {saveStatus ? <Check size={24} /> : <Zap size={24} />}
      {saveStatus || "Save Settings"}
     </button>

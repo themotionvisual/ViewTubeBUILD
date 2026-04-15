@@ -493,9 +493,9 @@ export const AnimationsDemo = () => (
 export const VideoCardsDemo = () => (
    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {[
-         { emoji: '🏖', title: "Napoleon's Irish General 🇮🇪", views: '22.1K', ctr: '9.3%', status: 'LIVE', statusColor: 'bg-[#CCFF00]', dur: '22:14', thumbBg: 'bg-[#00CCFF]/20' },
-         { emoji: '⚔️', title: 'Battle of Pyramids 🔥🔥', views: '47.2K', ctr: '8.1%', status: 'SCHED', statusColor: 'bg-[#FFDD00]', dur: '35:07', thumbBg: 'bg-[#FF3399]/20' },
-         { emoji: '👑', title: 'Austerlitz — 3 Emperors', views: '—', ctr: '—', status: 'DRAFT', statusColor: 'bg-[#FF3399]', dur: '41:22', thumbBg: 'bg-gray-100' },
+         { emoji: '🏖', title: "Sample Video One", views: '22.1K', ctr: '9.3%', status: 'LIVE', statusColor: 'bg-[#CCFF00]', dur: '22:14', thumbBg: 'bg-[#00CCFF]/20' },
+         { emoji: '⚔️', title: 'Sample Video Two', views: '47.2K', ctr: '8.1%', status: 'SCHED', statusColor: 'bg-[#FFDD00]', dur: '35:07', thumbBg: 'bg-[#FF3399]/20' },
+         { emoji: '👑', title: 'Sample Video Three', views: '—', ctr: '—', status: 'DRAFT', statusColor: 'bg-[#FF3399]', dur: '41:22', thumbBg: 'bg-gray-100' },
       ].map(v => (
          <div key={v.title} className="border-[4px] border-black rounded-2xl overflow-hidden shadow-[4px_4px_0px_0px_black] hover:shadow-[8px_8px_0px_0px_black] hover:-translate-y-1 transition-all bg-white cursor-pointer group">
             <div className={`${v.thumbBg} h-36 flex items-center justify-center text-5xl relative`}>

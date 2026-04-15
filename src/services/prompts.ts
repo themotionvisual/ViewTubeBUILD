@@ -150,6 +150,8 @@ TASK: Analyze raw YouTube Studio CSV exports and generate a "Creative Oracle" Go
 - Validate JSON integrity before output
 `
 
+export const CHANNEL_ORACLE_PROMPT_VERSION = "creative_oracle_v1" as const
+
 // ============================================================================
 // DATA HANDLING - Universal Schema Discovery
 // ============================================================================

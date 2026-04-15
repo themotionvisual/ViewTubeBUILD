@@ -1,6 +1,7 @@
 import type { AnalyticsWindow } from "./analyticsContract"
 import { getMasterRows } from "./analyticsSelectors"
 import { buildDataCoverageInventory, type DataCoverageRow } from "./dataCoverageInventory"
+import { readYouTubeAnalyticsCache } from "./canonicalAnalyticsStore"
 import {
  type CoverageScope,
  type DomainTableRow,
@@ -23,15 +24,6 @@ const EMPTY_TABLES = (): Record<MasterTableType, DomainTableRow[]> => ({
  master_formula_metrics: [],
  master_coverage_registry: [],
 })
-
-const safeParse = <T>(raw: string | null, fallback: T): T => {
- if (!raw) return fallback
- try {
-  return JSON.parse(raw) as T
- } catch {
-  return fallback
- }
-}
 
 const textValue = (value: unknown): string | number | null => {
  if (value === null || value === undefined) return null
@@ -178,7 +170,7 @@ export const buildMasterTableBundle = (
   ]
  })
 
- const ytCache = safeParse<Record<string, unknown>>(localStorage.getItem("yt_analytics_cache"), {})
+ const ytCache = readYouTubeAnalyticsCache() as Record<string, unknown>
  const profileRows = [ytCache.profile].filter(
   (row): row is Record<string, unknown> => !!row && typeof row === "object",
  )
@@ -221,7 +213,12 @@ export const buildMasterTableBundle = (
   "device",
  )
 
- const ga4Cache = safeParse<Record<string, unknown>>(localStorage.getItem("ga4_analytics_cache"), {})
+ let ga4Cache: Record<string, unknown> = {}
+ try {
+  ga4Cache = JSON.parse(localStorage.getItem("ga4_analytics_cache") || "{}") as Record<string, unknown>
+ } catch {
+  ga4Cache = {}
+ }
  const ga4Rows = parseReportRows(ga4Cache.channelAnalytics)
  tables.master_external_signals = toDomainRows(ga4Rows, "ga4", "traffic")
 

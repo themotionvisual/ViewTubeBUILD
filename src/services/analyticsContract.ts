@@ -10,6 +10,8 @@ export const ANALYTICS_WINDOWS: AnalyticsWindow[] = [
 
 export type MetricStatus = "actual" | "derived" | "unavailable"
 export type MetricSource = "api" | "csv_table" | "ga4" | "hybrid"
+export type MetricAvailability = "available" | "unavailable"
+export type MetricConfidence = "raw_direct" | "derived_exact" | "unavailable"
 
 export type CanonicalMetricKey =
  | "views"
@@ -39,6 +41,11 @@ export interface MetricCell {
  value: number | null
  status: MetricStatus
  source: MetricSource
+ availability: MetricAvailability
+ confidence: MetricConfidence
+ reasonCode?: string
+ sourceField?: string
+ windowScope?: AnalyticsWindow | "multi" | "unknown"
 }
 
 export interface CanonicalMetricDefinition {
@@ -383,28 +390,46 @@ export const getMetricByAliases = (
  return { value: null, found: false }
 }
 
-export const buildUnavailableMetricCell = (source: MetricSource): MetricCell => ({
+export const buildUnavailableMetricCell = (
+ source: MetricSource,
+ reasonCode?: string,
+): MetricCell => ({
  value: null,
  status: "unavailable",
  source,
+ availability: "unavailable",
+ confidence: "unavailable",
+ reasonCode,
+ windowScope: "unknown",
 })
 
 export const buildActualMetricCell = (
  value: number,
  source: MetricSource,
+ meta?: Pick<MetricCell, "sourceField" | "windowScope">,
 ): MetricCell => ({
  value,
  status: "actual",
  source,
+ availability: "available",
+ confidence: "raw_direct",
+ sourceField: meta?.sourceField,
+ windowScope: meta?.windowScope ?? "unknown",
 })
 
 export const buildDerivedMetricCell = (
  value: number,
  source: MetricSource,
+ meta?: Pick<MetricCell, "sourceField" | "windowScope" | "reasonCode">,
 ): MetricCell => ({
  value,
  status: "derived",
  source,
+ availability: "available",
+ confidence: "derived_exact",
+ sourceField: meta?.sourceField,
+ windowScope: meta?.windowScope ?? "unknown",
+ reasonCode: meta?.reasonCode,
 })
 
 export const emptyMetricCells = (source: MetricSource): Record<CanonicalMetricKey, MetricCell> =>

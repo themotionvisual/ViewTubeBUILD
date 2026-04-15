@@ -44,6 +44,40 @@ export interface CoverageRegistryRow {
  status: CoverageStatus
 }
 
+export interface MetricRegistryRow {
+ canonicalKey: string
+ aliases: string[]
+ applicability: CoverageScope
+ sourceCapability: "api" | "csv_only" | "derived" | "unsupported"
+}
+
+export interface SyncDiagnosticsFailure {
+ group: string
+ ids: string
+ metrics: string[]
+ status?: number
+ reason: string
+}
+
+export interface SyncDiagnosticsGroup {
+ metricsAttempted: string[]
+ idsTried: number
+ failedAttempts: number
+ rowsReturned: number
+}
+
+export interface SyncDiagnostics {
+ attemptedGroups: Record<string, SyncDiagnosticsGroup>
+ disabledMetrics: string[]
+ failureReasons: SyncDiagnosticsFailure[]
+ knownInvalidCombos: string[]
+ // Gate A: bounded split-on-400 retries for filtered video queries.
+ splitRetries: number
+ // Debug helpers for request sizing.
+ maxRequestChars: number
+ requestCharCounts: number[]
+}
+
 export interface DomainTableRow extends Record<string, unknown> {
  canonicalKey: string
  displayName: string

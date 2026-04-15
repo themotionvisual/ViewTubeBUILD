@@ -443,7 +443,7 @@ export const ComponentGridLab: React.FC = () => {
      <VideoCardGrid
       videos={[
        {
-        title: "Napoleon's Irish General 🇮🇪",
+        title: "Sample Video One",
         views: "22.1K",
         ctr: "9.3%",
         duration: "22:14",
@@ -451,7 +451,7 @@ export const ComponentGridLab: React.FC = () => {
         placeholderIcon: "🏖",
        },
        {
-        title: "Battle of Pyramids 🔥🔥",
+        title: "Sample Video Two",
         views: "47.2K",
         ctr: "8.1%",
         duration: "35:07",
@@ -460,7 +460,7 @@ export const ComponentGridLab: React.FC = () => {
         gradientColors: ["#9B59FF", "#FF3399"],
        },
        {
-        title: "Austerlitz — 3 Emperors",
+        title: "Sample Video Three",
         duration: "41:22",
         status: "DRAFT",
         placeholderIcon: "👑",

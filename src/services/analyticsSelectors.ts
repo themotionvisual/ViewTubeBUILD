@@ -15,6 +15,10 @@ import {
  getMetricByAliases,
 } from "./analyticsContract"
 import {
+ readYouTubeAnalyticsCache,
+ markDeprecatedLocalStorageRead,
+} from "./canonicalAnalyticsStore"
+import {
  classifyCsvExportKind,
  inferAnalyticsWindowFromName,
  isLikelyTotalCsvRow,
@@ -71,6 +75,17 @@ type AnalyticsCache = {
  lastSyncedByWindow?: Partial<Record<AnalyticsWindow, number>>
  videoContentType?: Record<string, string>
  analytics?: AnalyticsReport
+ channelAnalytics?: AnalyticsReport
+ dailyMetrics?: AnalyticsReport
+}
+
+type WindowTotals = {
+ views: number
+ watchHours: number
+ subscribersGained: number
+ revenue: number
+ impressions: number
+ ctr: number | null
 }
 
 export interface MetricSummary {
@@ -115,14 +130,9 @@ export type MasterTableRow = Record<string, unknown> & {
 }
 
 const parseCache = (): AnalyticsCache => {
- try {
-  const raw = localStorage.getItem("yt_analytics_cache")
-  if (!raw) return {}
-  const parsed = JSON.parse(raw) as AnalyticsCache
-  return parsed && typeof parsed === "object" ? parsed : {}
- } catch {
-  return {}
- }
+ markDeprecatedLocalStorageRead("analyticsSelectors.parseCache", "yt_analytics_cache")
+ const parsed = readYouTubeAnalyticsCache() as AnalyticsCache
+ return parsed && typeof parsed === "object" ? parsed : {}
 }
 
 const text = (value: unknown): string => {
@@ -172,6 +182,9 @@ const parseDurationSeconds = (value: unknown): number => {
  const parsed = toNumber(raw)
  return parsed !== null ? Math.max(0, parsed) : 0
 }
+
+const nonNegative = (value: number | null): number =>
+ value !== null && Number.isFinite(value) && value > 0 ? value : 0
 
 const hasMetadataShortSignal = (
  title: string,
@@ -329,6 +342,68 @@ const enrichDerivedMetricCells = (
  }
 
  return next
+}
+
+const sumTotalsFromReport = (report: AnalyticsReport | undefined): WindowTotals => {
+ const objects = reportRowsToObjects(report).map(toNormalizedRow)
+ if (objects.length === 0) {
+  return {
+   views: 0,
+   watchHours: 0,
+   subscribersGained: 0,
+   revenue: 0,
+   impressions: 0,
+   ctr: null,
+  }
+ }
+
+ let views = 0
+ let watchHours = 0
+ let subscribersGained = 0
+ let revenue = 0
+ let impressions = 0
+ const ctrValues: number[] = []
+
+ objects.forEach((row) => {
+  views += nonNegative(getMetricByAliases(row, "views").value)
+  const watchCell = getMetricByAliases(row, "watchHours").value
+  const watchMinutes = toNumber((row as Record<string, unknown>).estimatedMinutesWatched)
+  watchHours += nonNegative(watchCell) + (watchCell === null && watchMinutes ? watchMinutes / 60 : 0)
+  subscribersGained += nonNegative(getMetricByAliases(row, "subscribersGained").value)
+  revenue += nonNegative(getMetricByAliases(row, "revenue").value)
+  impressions += nonNegative(getMetricByAliases(row, "impressions").value)
+  const ctr = getMetricByAliases(row, "ctr").value
+  if (ctr !== null && Number.isFinite(ctr) && ctr > 0) {
+   ctrValues.push(normalizeMetricValue("ctr", ctr))
+  }
+ })
+
+ const ctr =
+  impressions > 0 && views > 0
+   ? (views / impressions) * 100
+   : ctrValues.length > 0
+    ? ctrValues.reduce((sum, value) => sum + value, 0) / ctrValues.length
+    : null
+
+ return { views, watchHours, subscribersGained, revenue, impressions, ctr }
+}
+
+const resolveWindowTotals = (
+ cache: AnalyticsCache,
+ window: AnalyticsWindow,
+): WindowTotals => {
+ const fromWindow = sumTotalsFromReport(getBundleForWindow(cache, window)?.report)
+ if (fromWindow.views > 0 || fromWindow.watchHours > 0 || fromWindow.revenue > 0) {
+  return fromWindow
+ }
+
+ const fromDaily = sumTotalsFromReport(cache.dailyMetrics)
+ if (fromDaily.views > 0 || fromDaily.watchHours > 0 || fromDaily.revenue > 0) {
+  return fromDaily
+ }
+
+ const fromChannel = sumTotalsFromReport(cache.channelAnalytics)
+ return fromChannel
 }
 
 const metricPriority = (cell: MetricCell): number => {
@@ -656,7 +731,8 @@ const apiRowsForWindow = (cache: AnalyticsCache, window: AnalyticsWindow): Canon
   canonicalRows.push(row)
  })
 
- return dedupeCanonicalRows(canonicalRows)
+ const deduped = dedupeCanonicalRows(canonicalRows)
+ return deduped.map((row) => enrichDerivedMetricCells(row, row.durationSeconds))
 }
 
 const resolveCsvFileWindow = (file: CsvFileWithTag): AnalyticsWindow | null => {
@@ -800,6 +876,8 @@ export const getMetricSummary = (
  csvFiles: CsvFileWithTag[] = [],
 ): MetricSummary => {
  const rows = getMasterRows(window, sourceMode, csvFiles)
+ const cache = parseCache()
+ const totalsFallback = resolveWindowTotals(cache, window)
 
  let views = 0
  let watchHours = 0
@@ -841,14 +919,19 @@ export const getMetricSummary = (
   return values.reduce((sum, value) => sum + value, 0) / values.length
  }
 
+ const resolvedTotals = {
+  views: views > 0 ? views : totalsFallback.views,
+  watchHours: watchHours > 0 ? watchHours : totalsFallback.watchHours,
+  subscribersGained:
+   subscribersGained > 0
+    ? subscribersGained
+    : totalsFallback.subscribersGained,
+  revenue: revenue > 0 ? revenue : totalsFallback.revenue,
+ }
+
  return {
   rowCount: rows.length,
-  totals: {
-   views,
-   watchHours,
-   subscribersGained,
-   revenue,
-  },
+  totals: resolvedTotals,
   averages: {
    ctr: avg(ctrValues),
    rpm: avg(rpmValues),

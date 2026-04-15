@@ -235,6 +235,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  const hasTriggeredInitialLoadRef = useRef(false)
 
  const connected = authState.isAuthenticated
+ const showHeaderLoadAssetsButton = videos.length === 0
 
  const formatVideoLoadError = (err: any) => {
   const raw = err?.message || "Failed to load channel assets."
@@ -857,6 +858,26 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    onToggle={() => setIsOpen(!isOpen)}
    embedded={embedded}
    helpText="Manage existing videos in one place. Update titles, descriptions, tags, playlists, and thumbnails without leaving the app."
+   headerActions={
+    showHeaderLoadAssetsButton ? (
+     <button
+      type="button"
+      onClick={(event) => {
+       event.stopPropagation()
+       lastSearchRef.current = ""
+       setVideoSearchQuery("")
+       loadInitialData()
+      }}
+      disabled={loading}
+      className={`h-[38px] px-4 rounded-[12px] border-[3px] border-black bg-black text-white text-[10px] font-black uppercase tracking-[0.14em] shadow-[2px_2px_0px_0px_black] transition-all ${
+       loading
+        ? "opacity-60 cursor-not-allowed"
+        : "hover:bg-[#111] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_black]"
+      }`}>
+      {loading ? "SYNCING..." : "LOAD SPACE ASSETS"}
+     </button>
+    ) : null
+   }
    shellClassName="animate-fade-in"
    contentClassName={embedded ? "p-0" : "p-8"}>
    <div className="flex flex-col h-full">
@@ -872,18 +893,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       <p>Asset Deployed Successfully</p>
      </div>
     )}
-    <div className="mb-6 flex justify-end">
-     <button
-      onClick={() => {
-       lastSearchRef.current = ""
-       setVideoSearchQuery("")
-       loadInitialData()
-      }}
-      disabled={loading}
-      className="bg-white text-black border-[3px] border-black px-5 py-3 rounded-xl font-black uppercase tracking-widest text-[11px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all disabled:opacity-50">
-      {loading ? "Syncing..." : "Reload Assets"}
-     </button>
-    </div>
     {showRankDetails && existingTagAnalysis.length > 0 && (
      <div className="fixed inset-0 z-[110] bg-black/75 backdrop-blur-sm flex items-center justify-center p-6">
       <div className="w-full max-w-4xl bg-white border-[5px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] overflow-hidden">

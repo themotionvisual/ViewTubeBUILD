@@ -166,11 +166,11 @@ export default function DataVisualizations() {
     }
   }, [])
 
-  // Use real data if available, else fallback to mock
+  // Use real data if available, else fallback to isolated demo-only mock rows.
   const finalVideos = data.length > 0 ? data : [
-    { title: "Napoleon's Marshals", views: 450000, revenue: 1200, ctr: 8.5, adjustedAVP: 65, impressions: 5000000, archetype: "Documentary" },
-    { title: "The Old Guard", views: 800000, revenue: 3400, ctr: 11.2, adjustedAVP: 82, impressions: 7100000, archetype: "Documentary" },
-    { title: "Austerlitz Breakdown", views: 150000, revenue: 400, ctr: 5.1, adjustedAVP: 45, impressions: 2900000, archetype: "Explainer" },
+    { title: "Sample History Video A", views: 450000, revenue: 1200, ctr: 8.5, adjustedAVP: 65, impressions: 5000000, archetype: "Documentary" },
+    { title: "Sample History Video B", views: 800000, revenue: 3400, ctr: 11.2, adjustedAVP: 82, impressions: 7100000, archetype: "Documentary" },
+    { title: "Sample History Video C", views: 150000, revenue: 400, ctr: 5.1, adjustedAVP: 45, impressions: 2900000, archetype: "Explainer" },
   ];
 
   // Derive custom chart structures

@@ -129,6 +129,7 @@ export const TrioPieCard = ({ chart, colors, pieStartAngle = 0, height = "240px"
     pieHole: 0.5,
     chartArea: { width: "88%", height: "88%", left: "6%", top: "6%" },
     pieSliceText: "value",
+    pieSliceBorderColor: "transparent",
     pieSliceTextStyle: { color: "white", fontSize: 13, fontName: "Inter", bold: true },
     pieStartAngle: pieStartAngle,
     tooltip: { trigger: "none" },

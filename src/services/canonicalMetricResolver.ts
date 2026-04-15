@@ -57,29 +57,6 @@ const numeric = (value: unknown): number | null => {
  return null
 }
 
-const lookupFromCacheStats = (
- row: CanonicalVideoRow,
- metricKey: CanonicalMetricKey,
-): number | null => {
- if (!row.videoId) return null
-
- let cache: Record<string, unknown> = {}
- try {
-  cache = JSON.parse(localStorage.getItem("yt_analytics_cache") || "{}") as Record<string, unknown>
- } catch {
-  cache = {}
- }
-
- const stats = (cache.stats || {}) as Record<string, Record<string, unknown>>
- const byVideo = stats[row.videoId] || {}
-
- if (metricKey === "views") return numeric(byVideo.viewCount)
- if (metricKey === "likes") return numeric(byVideo.likeCount)
- if (metricKey === "comments") return numeric(byVideo.commentCount)
- if (metricKey === "avdSeconds") return numeric(byVideo.durationSeconds)
- return null
-}
-
 const derive = (row: CanonicalVideoRow, metricKey: CanonicalMetricKey): number | null => {
  if (metricKey === "watchHours") {
   const avdCell = row.metrics.avdSeconds
@@ -139,11 +116,6 @@ export const resolveMetricNumber = (
    }
   }
   return { value: fallbackFromRow, status: "received", reason: "fallback" }
- }
-
- const cacheFallback = lookupFromCacheStats(row, metricKey)
- if (cacheFallback !== null) {
-  return { value: cacheFallback, status: "received", reason: "fallback" }
  }
 
  const derived = derive(row, metricKey)

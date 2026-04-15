@@ -4575,7 +4575,7 @@ const ResearchLab: React.FC = () => {
               type = detected;
             } else {
               if (path.includes("cavalry") && path.includes("types of cavalry")) type = "single_short_video";
-              else if (path.includes("epic speech") && path.includes("pyramids")) type = "single_long_video";
+              else if (path.includes("epic speech") && path.includes("landmark")) type = "single_long_video";
               else if (path.includes("content ") && path.includes("shorts")) type = "single_short_video";
               else if (path.includes("content ") && path.includes("single")) type = "single_long_video";
               else if (name.includes("short") || path.includes("short")) type = "shorts";

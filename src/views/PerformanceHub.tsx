@@ -1,19 +1,21 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
-import {
- Activity,
- Database,
- ChartColumnBig,
- BrainCircuit,
- Table2,
- Upload,
- Trash2,
- X,
- FileText,
- Clock3,
- ChevronDown,
- RefreshCw,
- ExternalLink,
-} from "lucide-react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+ import {
+  Activity,
+  Database,
+  ChartColumnBig,
+  BrainCircuit,
+  Table2,
+  Zap,
+  Upload,
+  Trash2,
+  X,
+  FileText,
+  Clock3,
+  ChevronDown,
+  RefreshCw,
+  ExternalLink,
+  Check,
+ } from "lucide-react"
 import {
  LineChart,
  Line,
@@ -29,15 +31,17 @@ import {
  Pie,
  Cell,
  ScatterChart,
- Scatter,
- ResponsiveContainer,
-} from "recharts"
-import { ToolboxScaffold } from "../components/Toolbox"
-import { useBrain } from "../context/GlobalDataContext"
-import type { AnalyticsResult, CsvFileWithTag, CsvUploadType } from "../types"
-import { analyzeChannelData, hasGeminiKey } from "../services/gemini"
-import { SystemStatisticsSubToolbox } from "../components/SystemStatisticsSubToolbox"
-import ReportViewer from "../components/ReportViewer"
+  Scatter,
+  ResponsiveContainer,
+  ReferenceArea,
+  ReferenceLine,
+  ZAxis,
+ } from "recharts"
+ import { SubToolbox, ToolboxScaffold } from "../components/Toolbox"
+ import { useBrain } from "../context/GlobalDataContext"
+ import type { AnalyticsResult, CsvFileWithTag, CsvUploadType } from "../types"
+ import { analyzeChannelData, hasGeminiKey } from "../services/gemini"
+ import ReportViewer from "../components/ReportViewer"
 import {
  buildCsvFilesWithTags,
  expandCsvAndZipFiles,
@@ -75,6 +79,16 @@ import {
  textFromUnknown,
 } from "./performanceHubUtils"
 import type { UnifiedRow } from "./performanceHubUtils"
+import {
+ getAvpRawPercent,
+ resolveCtrPercent,
+ resolveImpressions,
+} from "../services/metricAliasResolver"
+import {
+ CHANNEL_ORACLE_PROMPT_VERSION,
+ buildChannelOracleInput,
+ buildChannelOracleSystemPrompt,
+} from "../services/channelOracle"
 import type { AnalyticsWindow } from "../services/analyticsContract"
 import {
  canonicalRowsToMasterTableRows,
@@ -83,6 +97,10 @@ import {
  getMetricSummary,
  type MasterTableRow,
 } from "../services/analyticsSelectors"
+import {
+ readYouTubeAnalyticsCache,
+ writeYouTubeAnalyticsCache,
+} from "../services/canonicalAnalyticsStore"
 import {
  UPLOAD_CACHE_FILES_KEY,
  applyGlobalRowFilters,
@@ -96,11 +114,7 @@ import {
  type SyncSourceMode,
 } from "../services/analyticsRuntime"
 
-type PerformanceTool =
- | "data-manager"
- | "data-viz"
- | "channel-analysis"
- | "data-tables"
+type PerformanceTool = "channel-analysis" | "channel"
 type DataSource = "csv" | "api" | "hybrid"
 
 type DailyPoint = {
@@ -123,6 +137,66 @@ type TopRow = {
  views: number
  likes: number
  tag: string
+}
+
+type EngagementMapPoint = {
+ index: number
+ label: string
+ videoId: string
+ title: string
+ views: number
+ ctr: number
+ retention: number
+ format: "shorts" | "long-form"
+ likes: number
+ comments: number
+ shares: number
+ subscribers: number
+}
+
+type EngagementSortMetric = "comments" | "subscribers" | "shares" | "likes"
+
+type EngagementHoverState = {
+ index: number
+ videoId: string
+ title: string
+ comments: number
+ subscribers: number
+ shares: number
+ likes: number
+}
+
+type ValueMatrixThresholds = {
+ ctr: number
+ retention: number
+}
+
+type RailTransitionState = {
+ current: EngagementHoverState | null
+ previous: EngagementHoverState | null
+ fading: boolean
+}
+
+type FormatMetricDistribution = {
+ id: string
+ label: string
+ total: number
+ shorts: number
+ longForm: number
+ unit: "number" | "hours" | "currency"
+}
+
+type TopPerformerDonut = {
+ id: string
+ label: string
+ unit: "number" | "hours" | "currency"
+ slices: Array<{
+  label: string
+  fullTitle: string
+  value: number
+ }>
+ highestTitle: string
+ highestValue: number
 }
 
 type TableDatasetId =
@@ -380,42 +454,64 @@ const CHART_COLORS = [
  "#FFDD00",
 ]
 
-const TOOLBOXES: Array<{
- id: PerformanceTool
- title: string
- headerColor: string
- iconBoxColor: string
- icon: React.ComponentType<{ size?: number; className?: string }>
-}> = [
- {
-  id: "data-manager",
-  title: "DATA & STATISTICS ASSET MANAGER",
-  headerColor: "bg-[#00CCFF]",
-  iconBoxColor: "bg-[#CC99FF]",
-  icon: Database,
- },
- {
-  id: "data-viz",
-  title: "DATA VISUALIZATIONS",
-  headerColor: "bg-[#CCFF00]",
-  iconBoxColor: "bg-[#00CCFF]",
-  icon: ChartColumnBig,
- },
- {
-  id: "channel-analysis",
-  title: "CHANNEL ANALYSIS REPORT",
-  headerColor: "bg-[#FFDD00]",
-  iconBoxColor: "bg-[#CCFF00]",
-  icon: BrainCircuit,
- },
- {
-  id: "data-tables",
-  title: "DATA TABLES",
-  headerColor: "bg-[#FFB158]",
-  iconBoxColor: "bg-[#FFDD00]",
-  icon: Table2,
- },
+const EXTENDED_CHART_COLORS = [
+ "#00CCFF",
+ "#CCFF00",
+ "#FF7497",
+ "#FFB158",
+ "#FFDD00",
+ "#B366FF",
+ "#6BD8FF",
+ "#E6FF75",
+ "#FF95B1",
+ "#FFC884",
 ]
+
+const formatMetricDisplay = (
+ value: number,
+ unit: "number" | "hours" | "currency",
+): string => {
+ if (unit === "currency") return `$${value.toFixed(value >= 100 ? 0 : 2)}`
+ if (unit === "hours") {
+  if (value >= 1000) return `${Math.round(value).toLocaleString()}h`
+  return `${value.toFixed(1)}h`
+ }
+ return Math.round(value).toLocaleString()
+}
+
+const pickCtrPercent = (row: Record<string, unknown>): number => {
+ const resolved = resolveCtrPercent(row)
+ return resolved.value && Number.isFinite(resolved.value) ? resolved.value : 0
+}
+
+const pickRetentionPercent = (row: Record<string, unknown>): number => {
+ const rawDirect = getAvpRawPercent(row)
+ if (rawDirect && Number.isFinite(rawDirect) && rawDirect > 0) {
+  return rawDirect
+ }
+
+ const direct = getAvpPercent(row)
+ if (direct > 0 && Number.isFinite(direct)) return direct
+
+ const aliases = [
+  "AVP (%)",
+  "Average percentage viewed",
+  "averageViewPercentage",
+  "averagePercentageViewed",
+  "Retention",
+  "retention",
+ ]
+ for (const key of aliases) {
+  const raw = numberFromUnknown(row[key])
+  if (Number.isFinite(raw) && raw > 0) return raw
+ }
+ return 0
+}
+
+const VALUE_MATRIX_THRESHOLDS: ValueMatrixThresholds = {
+ ctr: 5,
+ retention: 75,
+}
 
 const UPLOAD_TYPE_OPTIONS: Array<{
  value: CsvUploadType
@@ -455,13 +551,24 @@ const PerformanceHub: React.FC = () => {
    patch: { excludeAnalysis?: boolean; includeOnly?: boolean; priorityAnalysis?: boolean },
   ) => void
  }
- const { brain, updateBrain, setResearchLabState, videoFlags, setVideoFlags, globalSyncData, isSyncing, lastSyncComplete } =
-  brainContext
+ const {
+  brain,
+  updateBrain,
+  setResearchLabState,
+  videoFlags,
+  setVideoFlags,
+  globalSyncData,
+  isSyncing,
+  lastSyncComplete,
+  syncStatus,
+  syncBatch,
+ } = brainContext
 
  const [openTools, setOpenTools] = useState<Set<PerformanceTool>>(
-  () => new Set<PerformanceTool>(["data-manager"]),
+  () => new Set<PerformanceTool>(["channel-analysis"]),
  )
  const [analysisLoading, setAnalysisLoading] = useState(false)
+ const [pipelineLogTick, setPipelineLogTick] = useState(0)
  const [syncSourceMode, setSyncSourceMode] = useState<SyncSourceMode>(
   getStoredSyncSourceMode(),
  )
@@ -471,13 +578,23 @@ const PerformanceHub: React.FC = () => {
  const [tableSearch, setTableSearch] = useState("")
  const [tableTag, setTableTag] = useState("all")
  const [tableDataset, setTableDataset] = useState<TableDatasetId>("master")
- const [tableLimit, setTableLimit] = useState(200)
+ const [tableLimit, setTableLimit] = useState(500)
  const [sortColumn, setSortColumn] = useState<string | null>(null)
  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc")
  const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(
   () => new Set(),
  )
+ const [engagementSortMetric, setEngagementSortMetric] =
+  useState<EngagementSortMetric>("comments")
+ const [engagementHoverIndex, setEngagementHoverIndex] = useState(0)
+ const [valueMatrixHoverVideoId, setValueMatrixHoverVideoId] = useState("")
+ const [railTransition, setRailTransition] = useState<RailTransitionState>({
+  current: null,
+  previous: null,
+  fading: false,
+ })
  const [vizRenderTick, setVizRenderTick] = useState(0)
+ const [dataVizAutoOpenTick, setDataVizAutoOpenTick] = useState(0)
  const [lineChartSize, setLineChartSize] = useState({ width: 0, height: 0 })
  const [barChartSize, setBarChartSize] = useState({ width: 0, height: 0 })
  const [uploadMenuOpen, setUploadMenuOpen] = useState(false)
@@ -505,7 +622,7 @@ const PerformanceHub: React.FC = () => {
  }, [lastSyncComplete])
 
  const csvFiles = useMemo(() => {
-  if (storageMode === "cache") return cachedUploadFiles
+  if (storageMode === "sync") return cachedUploadFiles
   if (storageMode === "storage") return storedCsvFiles
   const seen = new Set<string>()
   return [...storedCsvFiles, ...cachedUploadFiles].filter((file) => {
@@ -584,33 +701,43 @@ const PerformanceHub: React.FC = () => {
  const analyticsGroupStatus = useMemo<
   Array<{ key: string; ok: boolean; metrics: string[]; error?: string }>
  >(() => {
-  try {
-   const cacheRaw = localStorage.getItem("yt_analytics_cache")
-   if (!cacheRaw) return []
-   const cache = JSON.parse(cacheRaw) as {
-    analyticsByWindow?: Record<
-     AnalyticsWindow,
-     { groups?: Record<string, { ok?: boolean; metrics?: string[]; error?: string }> }
-    >
-   }
-   const groups = cache.analyticsByWindow?.[analyticsWindow]?.groups || {}
-   return Object.entries(groups).map(([key, group]) => ({
-    key,
-    ok: group?.ok === true,
-    metrics: Array.isArray(group?.metrics) ? group.metrics : [],
-    error: group?.error,
-   }))
-  } catch {
-   return []
+  const cache = readYouTubeAnalyticsCache() as {
+   analyticsByWindow?: Record<
+    AnalyticsWindow,
+    { groups?: Record<string, { ok?: boolean; metrics?: string[]; error?: string }> }
+   >
   }
- }, [lastSyncComplete, analyticsWindow])
+  const groups = cache.analyticsByWindow?.[analyticsWindow]?.groups || {}
+  return Object.entries(groups).map(([key, group]) => ({
+   key,
+   ok: group?.ok === true,
+   metrics: Array.isArray(group?.metrics) ? group.metrics : [],
+   error: group?.error,
+  }))
+ }, [lastSyncComplete, analyticsWindow, pipelineLogTick, readYouTubeAnalyticsCache])
+
+ const analyticsSyncDiagnostics = useMemo(() => {
+  const cache = readYouTubeAnalyticsCache() as {
+   analyticsByWindow?: Record<
+    AnalyticsWindow,
+    {
+     syncDiagnostics?: {
+      disabledMetrics?: string[]
+      failureReasons?: Array<{ reason?: string }>
+      knownInvalidCombos?: string[]
+     }
+    }
+   >
+  }
+  return cache.analyticsByWindow?.[analyticsWindow]?.syncDiagnostics || null
+ }, [lastSyncComplete, analyticsWindow, pipelineLogTick, readYouTubeAnalyticsCache])
 
  useEffect(() => {
-  setTableLimit(200)
+  setTableLimit(500)
  }, [tableSearch, tableTag, tableDataset, analyticsWindow])
 
  useEffect(() => {
-  if (!openTools.has("data-viz")) return
+  if (!openTools.has("channel-analysis")) return
   const timeoutId = window.setTimeout(() => {
    setVizRenderTick((value) => value + 1)
   }, 120)
@@ -618,7 +745,7 @@ const PerformanceHub: React.FC = () => {
  }, [openTools])
 
  useEffect(() => {
-  if (!openTools.has("data-viz")) return
+  if (!openTools.has("channel-analysis")) return
 
   const syncSize = (
    element: HTMLDivElement | null,
@@ -654,6 +781,20 @@ const PerformanceHub: React.FC = () => {
    cleanupBar()
   }
  }, [openTools, vizRenderTick])
+
+ useEffect(() => {
+  const handleSyncComplete = () => {
+   setOpenTools(() => new Set<PerformanceTool>(["channel-analysis"]))
+   setDataVizAutoOpenTick((value) => value + 1)
+   setVizRenderTick((value) => value + 1)
+  }
+  window.addEventListener("yt_analytics_synced", handleSyncComplete as EventListener)
+  return () =>
+   window.removeEventListener(
+    "yt_analytics_synced",
+    handleSyncComplete as EventListener,
+   )
+ }, [])
 
  useEffect(() => {
   if (!uploadMenuOpen) return
@@ -714,7 +855,7 @@ const PerformanceHub: React.FC = () => {
    if (storageMode === "storage" || storageMode === "both") {
     setUnifiedCsvFiles([...(brain.channelyticsState.csvFiles || []), ...tagged])
    }
-   if (storageMode === "cache" || storageMode === "both") {
+  if (storageMode === "sync" || storageMode === "both") {
     persistCachedUploadFiles([...(cachedUploadFiles || []), ...tagged])
    }
   } finally {
@@ -736,6 +877,22 @@ const PerformanceHub: React.FC = () => {
   persistCachedUploadFiles((cachedUploadFiles || []).filter((file) => file.id !== id))
  }
 
+ const clearPipelineLogs = () => {
+  const cache = readYouTubeAnalyticsCache() as any
+  if (cache?.analyticsByWindow?.[analyticsWindow]) {
+   if (cache.analyticsByWindow[analyticsWindow].groups) {
+    delete cache.analyticsByWindow[analyticsWindow].groups
+   }
+   if (cache.analyticsByWindow[analyticsWindow].syncDiagnostics) {
+    // Keep disabledMetrics as "truth", but drop noisy run events.
+    cache.analyticsByWindow[analyticsWindow].syncDiagnostics.failureReasons = []
+    cache.analyticsByWindow[analyticsWindow].syncDiagnostics.knownInvalidCombos = []
+   }
+  }
+  writeYouTubeAnalyticsCache(cache)
+  setPipelineLogTick((value) => value + 1)
+ }
+
  const runAnalysis = async () => {
   if (filteredUnifiedRows.length === 0) return
   if (!hasGeminiKey()) {
@@ -746,15 +903,53 @@ const PerformanceHub: React.FC = () => {
   }
   setAnalysisLoading(true)
   try {
-   const csvContent = buildCsvFromRows(filteredUnifiedRows)
-   const result = await analyzeChannelData(csvContent, undefined, (partial) => {
+   const reportRows = filteredUnifiedRows.slice(0, 500)
+   const csvContent = buildCsvFromRows(reportRows)
+   const cache = readYouTubeAnalyticsCache() as Record<string, unknown>
+   const channelOracleInput = buildChannelOracleInput({
+    analyticsWindow,
+    fullChannelStats: {
+     views: selectedMetricSummary.totals.views ?? 0,
+     watchHours: selectedMetricSummary.totals.watchHours ?? 0,
+     subscribers: selectedMetricSummary.totals.subscribersGained ?? 0,
+     revenue: selectedMetricSummary.totals.revenue ?? 0,
+     rpm:
+      selectedMetricSummary.averages.rpm ??
+      ((selectedMetricSummary.totals.views || 0) > 0
+       ? ((selectedMetricSummary.totals.revenue || 0) /
+          (selectedMetricSummary.totals.views || 1)) *
+         1000
+       : 0),
+     ctr: selectedMetricSummary.averages.ctr ?? 0,
+    },
+    trafficSources: cache["trafficSources"],
+    geography: cache["geography"] || cache["countryAnalytics"] || cache["audienceByCountry"],
+    demographics: cache["demographics"],
+    dailyMetrics: cache["dailyMetrics"],
+    topVideos: reportRows as Array<Record<string, unknown>>,
+   })
+   const customSystemPrompt = buildChannelOracleSystemPrompt(channelOracleInput)
+   const inputBytes = new TextEncoder().encode(JSON.stringify(channelOracleInput)).length
+   const resultPromise = analyzeChannelData(csvContent, customSystemPrompt, (partial) => {
     const merged = {
      ...(brain.channelyticsState.analyticsResult || {}),
      ...(partial || {}),
     } as AnalyticsResult
     setUnifiedAnalysisResult(merged)
    })
-   setUnifiedAnalysisResult(result)
+   const timeoutPromise = new Promise<never>((_, reject) => {
+    window.setTimeout(() => reject(new Error("Report generation timed out after 120s")), 120000)
+   })
+   const result = (await Promise.race([resultPromise, timeoutPromise])) as AnalyticsResult
+   setUnifiedAnalysisResult({
+    ...result,
+    meta: {
+     ...(result.meta || {}),
+     oraclePromptVersion: CHANNEL_ORACLE_PROMPT_VERSION,
+     inputBytes,
+     generatedAt: new Date().toISOString(),
+    },
+   })
    setOpenTools((previous) => {
     const next = new Set(previous)
     next.add("channel-analysis")
@@ -762,7 +957,31 @@ const PerformanceHub: React.FC = () => {
    })
   } catch (error) {
    console.error("Channel analysis failed", error)
-   alert("Channel analysis failed.")
+   const fallback: AnalyticsResult = {
+    executiveSummary:
+     "Oracle report generation failed. Sync data is still available in visualizations and tables.",
+    stats: {
+     views: selectedMetricSummary.totals.views ?? 0,
+     watchTime: selectedMetricSummary.totals.watchHours ?? 0,
+     revenue: selectedMetricSummary.totals.revenue ?? 0,
+     subscribers: selectedMetricSummary.totals.subscribersGained ?? 0,
+     rpm: selectedMetricSummary.averages.rpm ?? 0,
+     ctr: selectedMetricSummary.averages.ctr ?? 0,
+    },
+    sections: [
+     {
+      title: "Report Generation Error",
+      content: `Reason: ${error instanceof Error ? error.message : "Unknown error"}. You can retry report generation; synced channel analytics remain available.`,
+     },
+    ],
+    meta: {
+      oraclePromptVersion: CHANNEL_ORACLE_PROMPT_VERSION,
+      generatedAt: new Date().toISOString(),
+      warnings: ["Fallback report emitted due to model/runtime failure."],
+    },
+   }
+   setUnifiedAnalysisResult(fallback)
+   alert("Channel analysis failed. A fallback report summary was generated.")
   } finally {
    setAnalysisLoading(false)
   }
@@ -867,9 +1086,7 @@ const PerformanceHub: React.FC = () => {
   if (dataSource === "csv") return []
 
   try {
-   const cacheRaw = localStorage.getItem("yt_analytics_cache")
-   if (!cacheRaw) return []
-   const cache = JSON.parse(cacheRaw) as {
+   const cache = readYouTubeAnalyticsCache() as {
     dailyMetrics?: {
      columnHeaders?: Array<{ name?: string }>
      rows?: unknown[][]
@@ -925,6 +1142,8 @@ const PerformanceHub: React.FC = () => {
  }, [filteredUnifiedRows, dataSource])
 
  const dataWindowLabel = useMemo(() => {
+  if (analyticsWindow === "lifetime") return ""
+
   const rowDates = filteredUnifiedRows
    .map((row) => parseDate(getDateLabel(row)))
    .filter((value): value is Date => value instanceof Date)
@@ -936,7 +1155,7 @@ const PerformanceHub: React.FC = () => {
    .filter((value): value is Date => value instanceof Date)
 
   return formatDateWindow(seriesDates)
- }, [filteredUnifiedRows, dailySeries])
+ }, [analyticsWindow, filteredUnifiedRows, dailySeries])
 
  const formatSeries = useMemo<FormatPoint[]>(() => {
   const map = new Map<string, number>()
@@ -959,6 +1178,413 @@ const PerformanceHub: React.FC = () => {
    .sort((a, b) => b.views - a.views)
    .slice(0, 20)
  }, [filteredUnifiedRows])
+
+ const engagementMapSeries = useMemo<EngagementMapPoint[]>(() => {
+  const recent = [...filteredUnifiedRows]
+   .sort((a, b) => {
+    const aTs = parseDate(getDateLabel(a))?.getTime() || 0
+    const bTs = parseDate(getDateLabel(b))?.getTime() || 0
+    return bTs - aTs
+   })
+   .slice(0, 50)
+   .map((row, index) => {
+    const formatValue = textFromUnknown(
+     row["Format"] || row["Type"] || row["type"] || row._userTag || "",
+    ).toLowerCase()
+    return {
+     index,
+     label: `${index + 1}`,
+     videoId: toStorageIdentity(
+      textFromUnknown(row["Video ID"] || row.videoId || row.Dimension || getTitle(row, index)),
+     ),
+     title: getTitle(row, index),
+     views: getViews(row),
+     ctr: pickCtrPercent(row),
+     retention: pickRetentionPercent(row),
+     format: formatValue.includes("short") ? "shorts" : "long-form",
+     likes: getLikes(row),
+     comments: getComments(row),
+     shares: getShares(row),
+     subscribers: Math.max(0, Math.round(getSubscribers(row))),
+    } satisfies EngagementMapPoint
+   })
+
+  const sorted = [...recent].sort(
+   (a, b) => b[engagementSortMetric] - a[engagementSortMetric],
+  )
+  return sorted.map((row, index) => ({
+   ...row,
+   index,
+   label: `${index + 1}`,
+  }))
+ }, [filteredUnifiedRows, engagementSortMetric])
+
+ const activeEngagementPoint = useMemo<EngagementMapPoint | null>(() => {
+  if (engagementMapSeries.length === 0) return null
+  const safeIndex = Math.max(
+   0,
+   Math.min(engagementHoverIndex, engagementMapSeries.length - 1),
+  )
+  return engagementMapSeries[safeIndex] || engagementMapSeries[0]
+ }, [engagementMapSeries, engagementHoverIndex])
+
+ const engagementHoverState = useMemo<EngagementHoverState | null>(() => {
+  if (!activeEngagementPoint) return null
+  return {
+   index: activeEngagementPoint.index,
+   videoId: activeEngagementPoint.videoId,
+   title: activeEngagementPoint.title,
+   comments: activeEngagementPoint.comments,
+   subscribers: activeEngagementPoint.subscribers,
+   shares: activeEngagementPoint.shares,
+   likes: activeEngagementPoint.likes,
+  }
+ }, [activeEngagementPoint])
+
+ const valueMatrixSeries = useMemo(
+  () =>
+   engagementMapSeries
+    .map((row) => ({
+     ...row,
+     retention: Number.isFinite(row.retention)
+      ? Math.max(0, Math.min(150, row.retention))
+      : 0,
+     ctr: Number.isFinite(row.ctr) ? Math.max(0, Math.min(10, row.ctr)) : 0,
+     views: Number.isFinite(row.views) ? Math.max(0, row.views) : 0,
+    }))
+    // Exact-only gate for matrix: must have all core metrics.
+    .filter((row) => row.ctr > 0 && row.retention > 0 && row.views > 0),
+  [engagementMapSeries],
+ )
+
+ const valueMatrixMissingSummary = useMemo(() => {
+  const missing = new Set<string>()
+  let validRows = 0
+  filteredUnifiedRows.forEach((row) => {
+   const views = getViews(row)
+   const ctrResolved = resolveCtrPercent(row)
+   const retention = pickRetentionPercent(row)
+   const impressionsResolved = resolveImpressions(row)
+   if (views > 0 && ctrResolved.value && ctrResolved.value > 0 && retention > 0) {
+    validRows += 1
+   } else {
+    if (!(views > 0)) missing.add("views")
+    if (!(ctrResolved.value && ctrResolved.value > 0)) missing.add("ctr_percent")
+    if (!(retention > 0)) missing.add("retention_percent")
+   }
+
+   if (!(impressionsResolved.value && impressionsResolved.value > 0)) {
+    missing.add("impressions")
+   }
+  })
+  return {
+    validRows,
+    missingMetrics: Array.from(missing).sort(),
+  }
+ }, [filteredUnifiedRows])
+
+ const activeValueMatrixPoint = useMemo(() => {
+  if (valueMatrixSeries.length === 0) return null
+  const selected = valueMatrixSeries.find(
+   (row) => row.videoId === valueMatrixHoverVideoId,
+  )
+  return selected || valueMatrixSeries[0]
+ }, [valueMatrixSeries, valueMatrixHoverVideoId])
+
+ useEffect(() => {
+  if (engagementMapSeries.length === 0) return
+  setEngagementHoverIndex((previous) =>
+   Math.max(0, Math.min(previous, engagementMapSeries.length - 1)),
+  )
+ }, [engagementMapSeries])
+
+ useEffect(() => {
+  if (!engagementHoverState) return
+  setRailTransition((previous) => {
+   const isSame =
+    previous.current?.videoId &&
+    engagementHoverState.videoId &&
+    previous.current.videoId === engagementHoverState.videoId
+   if (isSame) {
+    return {
+     ...previous,
+     current: engagementHoverState,
+     previous: null,
+     fading: false,
+    }
+   }
+   return {
+    current: engagementHoverState,
+    previous: previous.current,
+    fading: true,
+   }
+  })
+  const timeoutId = window.setTimeout(() => {
+   setRailTransition((previous) => ({
+    ...previous,
+    previous: null,
+    fading: false,
+   }))
+  }, 220)
+  return () => window.clearTimeout(timeoutId)
+ }, [engagementHoverState])
+
+ const latestTrendsDistributions = useMemo<FormatMetricDistribution[]>(() => {
+  const seed: Record<
+   string,
+   Omit<FormatMetricDistribution, "id" | "label" | "unit">
+  > = {
+   views: { total: 0, shorts: 0, longForm: 0 },
+   watchHours: { total: 0, shorts: 0, longForm: 0 },
+   revenue: { total: 0, shorts: 0, longForm: 0 },
+   subscribers: { total: 0, shorts: 0, longForm: 0 },
+   likes: { total: 0, shorts: 0, longForm: 0 },
+   comments: { total: 0, shorts: 0, longForm: 0 },
+   shares: { total: 0, shorts: 0, longForm: 0 },
+  }
+
+  filteredUnifiedRows.forEach((row) => {
+   const format = textFromUnknown(
+    row["Format"] || row["Type"] || row["type"] || row._userTag || "",
+   ).toLowerCase()
+   const isShort = format.includes("short")
+   const bucket = isShort ? "shorts" : "longForm"
+
+   const metrics = {
+    views: getViews(row),
+    watchHours: getWatchHours(row),
+    revenue: getRevenue(row),
+    subscribers: Math.max(0, getSubscribers(row)),
+    likes: getLikes(row),
+    comments: getComments(row),
+    shares: getShares(row),
+   } as const
+
+   ;(Object.keys(metrics) as Array<keyof typeof metrics>).forEach((metricKey) => {
+    const value = Math.max(0, metrics[metricKey])
+    seed[metricKey].total += value
+    seed[metricKey][bucket] += value
+   })
+  })
+
+  return [
+   {
+    id: "views",
+    label: "Views",
+    unit: "number",
+    ...seed.views,
+   },
+   {
+    id: "watchHours",
+    label: "Watch Time",
+    unit: "hours",
+    ...seed.watchHours,
+   },
+   {
+    id: "revenue",
+    label: "Revenue",
+    unit: "currency",
+    ...seed.revenue,
+   },
+   {
+    id: "subscribers",
+    label: "Subs",
+    unit: "number",
+    ...seed.subscribers,
+   },
+   {
+    id: "likes",
+    label: "Likes",
+    unit: "number",
+    ...seed.likes,
+   },
+   {
+    id: "comments",
+    label: "Comments",
+    unit: "number",
+    ...seed.comments,
+   },
+   {
+    id: "shares",
+    label: "Shares",
+    unit: "number",
+    ...seed.shares,
+   },
+  ]
+ }, [filteredUnifiedRows])
+
+ const topPerformersTrio = useMemo<TopPerformerDonut[]>(() => {
+  const formatTitle = (title: string) =>
+   title.length > 34 ? `${title.slice(0, 34)}...` : title
+
+  const buildDonut = (
+   id: string,
+   label: string,
+   unit: TopPerformerDonut["unit"],
+   getter: (row: UnifiedRow) => number,
+  ): TopPerformerDonut => {
+   const ranked = [...filteredUnifiedRows]
+    .map((row, index) => ({
+     fullTitle: getTitle(row, index),
+     value: Math.max(0, getter(row)),
+    }))
+    .filter((entry) => entry.value > 0)
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 10)
+
+   const slices = ranked.map((entry) => ({
+    label: formatTitle(entry.fullTitle),
+    fullTitle: entry.fullTitle,
+    value: entry.value,
+   }))
+
+   const leader = ranked[0]
+   return {
+    id,
+    label,
+    unit,
+    slices,
+    highestTitle: leader?.fullTitle || "No data yet",
+    highestValue: leader?.value || 0,
+   }
+  }
+
+ return [
+  buildDonut("revenue", "Revenue", "currency", (row) => getRevenue(row)),
+  buildDonut("watchHours", "Watch Hours", "hours", (row) => getWatchHours(row)),
+  buildDonut("subscribers", "Subs", "number", (row) => getSubscribers(row)),
+ ]
+}, [filteredUnifiedRows])
+
+ const algorithmTriggerSeries = useMemo(
+  () =>
+   filteredUnifiedRows
+    .map((row, index) => {
+     const views = getViews(row)
+     const impressions = getImpressions(row)
+     const ctr = getCtr(row)
+     const trigger = impressions > 0 ? (views / impressions) * 100 : ctr
+     return {
+      title: getTitle(row, index),
+      trigger: Number.isFinite(trigger) ? trigger : 0,
+      ctr,
+      views,
+     }
+    })
+    .filter((row) => row.views > 0)
+    .slice(0, 100),
+  [filteredUnifiedRows],
+ )
+
+ const titleLengthCtrSeries = useMemo(
+  () =>
+   filteredUnifiedRows
+    .map((row, index) => {
+     const title = getTitle(row, index)
+     return {
+      title,
+      titleLength: title.length,
+      ctr: getCtr(row),
+      views: getViews(row),
+     }
+    })
+    .filter((row) => row.titleLength > 0 && row.ctr > 0)
+    .slice(0, 120),
+  [filteredUnifiedRows],
+ )
+
+ const viewerLoyaltySeries = useMemo(
+  () =>
+   dailySeries.map((point, index) => {
+    const previous = dailySeries[index - 1]
+    const returning = previous ? Math.max(0, previous.views * 0.42) : point.views * 0.35
+    const newViewers = Math.max(0, point.views - returning)
+    const avd = point.views > 0 ? (point.watchHours * 3600) / point.views : 0
+    return {
+     ...point,
+     returning,
+     newViewers,
+     avd,
+    }
+   }),
+  [dailySeries],
+ )
+
+ const publishTimeMomentumGrid = useMemo(() => {
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+  const buckets = ["0-3", "4-7", "8-11", "12-15", "16-19", "20-23"]
+  const cellMap = new Map<string, { score: number; count: number }>()
+
+  filteredUnifiedRows.forEach((row) => {
+   const date = parseDate(getDateLabel(row))
+   if (!date) return
+   const day = date.getDay()
+   const hour = date.getHours()
+   const bucket = Math.floor(hour / 4)
+   const key = `${day}-${bucket}`
+   const score = getViews(row) * 0.6 + getLikes(row) * 3 + getComments(row) * 6
+   const current = cellMap.get(key) || { score: 0, count: 0 }
+   current.score += score
+   current.count += 1
+   cellMap.set(key, current)
+  })
+
+  const values: number[] = []
+  const cells = days.flatMap((dayLabel, dayIdx) =>
+   buckets.map((bucketLabel, bucketIdx) => {
+    const key = `${dayIdx}-${bucketIdx}`
+    const source = cellMap.get(key)
+    const value = source && source.count > 0 ? source.score / source.count : 0
+    values.push(value)
+    return {
+     day: dayLabel,
+     bucket: bucketLabel,
+     value,
+    }
+   }),
+  )
+  const max = Math.max(1, ...values)
+  return { cells, max, days, buckets }
+ }, [filteredUnifiedRows])
+
+ const sourceSpecificRetentionSeries = useMemo(() => {
+  const sourceMap = new Map<string, { retention: number; ctr: number; count: number }>()
+  filteredUnifiedRows.forEach((row) => {
+   const source = textFromUnknown(
+    row["Traffic source"] || row.insightTrafficSourceType || row["Source mode"] || "Other",
+   )
+   const key = source || "Other"
+   const current = sourceMap.get(key) || { retention: 0, ctr: 0, count: 0 }
+   current.retention += Math.max(0, getAvpPercent(row))
+   current.ctr += Math.max(0, getCtr(row))
+   current.count += 1
+   sourceMap.set(key, current)
+  })
+  return Array.from(sourceMap.entries())
+   .map(([source, stats]) => ({
+    source,
+    retention: stats.count > 0 ? stats.retention / stats.count : 0,
+    ctr: stats.count > 0 ? stats.ctr / stats.count : 0,
+   }))
+   .sort((a, b) => b.retention - a.retention)
+   .slice(0, 6)
+ }, [filteredUnifiedRows])
+
+ const interactionDensitySeries = useMemo(() => {
+  return topRows.slice(0, 12).map((row) => {
+   const source = filteredUnifiedRows.find((r, idx) => getTitle(r, idx) === row.title)
+   const views = Math.max(1, source ? getViews(source) : row.views)
+   const likesPer1K = ((source ? getLikes(source) : row.likes) / views) * 1000
+   const commentsPer1K = (source ? getComments(source) / views : 0) * 1000
+   const subsPer1K = (source ? getSubscribers(source) / views : 0) * 1000
+   return {
+    title: row.title.length > 20 ? `${row.title.slice(0, 20)}...` : row.title,
+    likesPer1K,
+    commentsPer1K,
+    subsPer1K,
+   }
+  })
+ }, [topRows, filteredUnifiedRows])
 
  const topViewsSeries = useMemo(
   () =>
@@ -1069,6 +1695,9 @@ const PerformanceHub: React.FC = () => {
    ) {
     return value.toFixed(2)
    }
+   if (header === "Subs +") {
+    return Math.round(value).toLocaleString()
+   }
    if (
     header === "AVD (Average View Duration)" ||
     header === "AVD (Sec)"
@@ -1132,7 +1761,9 @@ const PerformanceHub: React.FC = () => {
   if (header === "Comments") return getComments(row).toLocaleString()
   if (header === "Shares") return getShares(row).toLocaleString()
   if (header === "Subs +")
-   return getMetric(row, ["Subs +", "Subscribers Gained", "Subscribers"]).toLocaleString()
+   return Math.round(
+    getMetric(row, ["Subs +", "Subscribers Gained", "Subscribers"]),
+   ).toLocaleString()
   if (header === "CPM")
    return getMetric(row, ["CPM", "CPM (USD)"]).toLocaleString(undefined, {
     maximumFractionDigits: 3,
@@ -1247,13 +1878,7 @@ const PerformanceHub: React.FC = () => {
    columns: string[]
   }>
  >(() => {
-  let cache: any = null
-  try {
-   const cacheRaw = localStorage.getItem("yt_analytics_cache")
-   cache = cacheRaw ? JSON.parse(cacheRaw) : null
-  } catch {
-   cache = null
-  }
+  const cache = readYouTubeAnalyticsCache()
 
   const normalizedReportRows = (
    report: any,
@@ -1603,138 +2228,179 @@ const PerformanceHub: React.FC = () => {
   })
  }
 
+ type CapsuleOption<T extends string> = { id: T; label: string }
+
+ const CapsuleToggle = <T extends string,>({
+  value,
+  options,
+  onChange,
+  ariaLabel,
+ }: {
+  value: T
+  options: Array<CapsuleOption<T>>
+  onChange: (next: T) => void
+  ariaLabel: string
+ }) => (
+  <div
+   role="group"
+   aria-label={ariaLabel}
+   className="inline-flex h-[40px] p-[3px] border-[4px] border-black rounded-[14px] bg-white items-center gap-1 shadow-[2px_2px_0px_0px_black]">
+   {options.map((opt) => {
+    const active = opt.id === value
+    return (
+     <button
+      key={opt.id}
+      type="button"
+      onClick={(event) => {
+       event.stopPropagation()
+       onChange(opt.id)
+      }}
+      className={`h-full px-4 rounded-[10px] text-[10px] font-black uppercase tracking-wide transition-all border-[2px] ${
+       active
+        ? "bg-black text-white border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.65)]"
+        : "bg-white text-black/35 border-transparent"
+      }`}
+      aria-pressed={active}>
+      {opt.label}
+     </button>
+    )
+   })}
+  </div>
+ )
+
  const renderDataManager = () => (
-  <div className="space-y-5">
-   <div className="w-full border-[4px] border-black rounded-2xl bg-[#FFDD00] px-3 py-3 flex flex-col gap-3">
-    <div className="flex flex-wrap items-center gap-2">
-     {(
-      [
-       { id: "api_analytics", label: "API Analytics" },
-       { id: "uploads", label: "Uploads" },
-       { id: "both", label: "Both" },
-      ] as Array<{ id: SyncSourceMode; label: string }>
-     ).map((mode) => (
-      <button
-       key={mode.id}
-       onClick={() => {
-        setSyncSourceMode(mode.id)
-        setStoredSyncSourceMode(mode.id)
-       }}
-       className={`px-4 py-2 rounded-full border-[3px] border-black text-[10px] font-black uppercase tracking-wider transition-all ${
-        syncSourceMode === mode.id ? "bg-black text-white" : "bg-white text-black"
-       }`}>
-       {mode.label}
-      </button>
-     ))}
-    </div>
-    <div className="flex flex-wrap items-center gap-2">
-     {(
-      [
-       { id: "cache", label: "Cache" },
-       { id: "storage", label: "Storage" },
-       { id: "both", label: "Both" },
-      ] as Array<{ id: StorageMode; label: string }>
-     ).map((mode) => (
-      <button
-       key={mode.id}
-       onClick={() => {
-        setStorageMode(mode.id)
-        setStoredStorageMode(mode.id)
-       }}
-       className={`px-4 py-2 rounded-full border-[3px] border-black text-[10px] font-black uppercase tracking-wider transition-all ${
-        storageMode === mode.id ? "bg-black text-white" : "bg-white text-black"
-       }`}>
-       {mode.label}
-      </button>
-     ))}
-    </div>
-    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-black/60">
-     Sync Source controls reads. Storage controls where uploaded analytics files are kept.
-    </p>
-   </div>
-
+  <div className="space-y-6">
    <div className="border-[4px] border-black rounded-2xl bg-white overflow-hidden shadow-[8px_8px_0px_0px_black]">
-    <div className="bg-[#EA73E8] border-b-[4px] border-black px-4 py-3 flex items-center justify-between gap-4">
-     <div className="flex items-center gap-3">
-      <span className="px-3 py-1 rounded-lg bg-black text-white border-[3px] border-black text-[10px] font-black uppercase tracking-widest">
-       Channel Data
-      </span>
-      <h3 className="text-3xl md:text-4xl font-[1000] uppercase tracking-tight">
+    <div className="h-[60px] border-b-[4px] border-black flex items-center justify-between px-4 bg-[#FF00F5]">
+     <div className="flex items-center h-full gap-3">
+      <div className="h-full w-[52px] -ml-4 flex items-center justify-center border-r-[4px] border-black bg-black">
+       <Zap size={20} strokeWidth={3.5} className="text-white" />
+      </div>
+      <span className="text-[24px] font-[1000] uppercase tracking-tight text-white">
        Channel Intelligence Lab
-      </h3>
+      </span>
      </div>
-     <span className="text-3xl font-black leading-none">-</span>
+
+     <div className="flex items-center gap-3">
+      <CapsuleToggle
+       ariaLabel="Sync Source"
+       value={syncSourceMode}
+       options={[
+        { id: "api_analytics", label: "API ANALYTICS" },
+        { id: "uploads", label: "UPLOADS" },
+        { id: "both", label: "BOTH" },
+       ]}
+       onChange={(next) => {
+        setSyncSourceMode(next)
+        setStoredSyncSourceMode(next)
+       }}
+      />
+      <CapsuleToggle
+       ariaLabel="Write Target"
+       value={storageMode}
+       options={[
+        { id: "sync", label: "SYNC" },
+        { id: "storage", label: "STORAGE" },
+        { id: "both", label: "BOTH" },
+       ]}
+       onChange={(next) => {
+        setStorageMode(next)
+        setStoredStorageMode(next)
+       }}
+      />
+      <ChevronDown size={22} strokeWidth={4} className="text-black" />
+     </div>
     </div>
 
-    <div className="p-4 md:p-5 space-y-4">
-     <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
-      <button
-       onClick={globalSyncData}
-       disabled={isSyncing}
-       className={`flex items-center gap-2 px-6 py-3 font-[1000] uppercase tracking-tighter rounded-xl border-[4px] border-black transition-all shadow-[4px_4px_0px_0px_black] bg-[#ccff00] text-black ${
-        isSyncing
-         ? "opacity-50 cursor-not-allowed translate-x-1 translate-y-1 shadow-none"
-         : "hover:bg-white active:translate-x-1 active:translate-y-1 active:shadow-none"
-       }`}
-      >
-       {isSyncing ? (
-        <RefreshCw size={20} className="animate-spin" />
-       ) : (
-        <RefreshCw size={20} />
-       )}
-       Sync Now
-      </button>
-
-      <div className="space-y-2">
-       <div className="relative text-black" ref={uploadMenuRef}>
-        <button
-         type="button"
-         onClick={() => setUploadMenuOpen((open) => !open)}
-         className={`w-full h-[48px] px-4 border-[4px] border-black rounded-xl text-[11px] font-black uppercase tracking-[0.11em] outline-none shadow-[4px_4px_0px_0px_black] cursor-pointer flex items-center justify-between hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_black] transition-all ${selectedUploadType.menuClass}`}
-         aria-haspopup="listbox"
-         aria-expanded={uploadMenuOpen}>
-         <span>{selectedUploadType.label}</span>
-         <span className="inline-flex items-center justify-center h-6 w-6 bg-white border-[2px] border-black rounded-md">
-          <ChevronDown
-           size={14}
-           strokeWidth={4}
-           className={`transition-transform ${uploadMenuOpen ? "rotate-180" : ""}`}
-          />
-         </span>
-        </button>
-        {uploadMenuOpen && (
-         <div className="absolute top-full left-0 mt-2 w-full bg-white border-[4px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] overflow-hidden z-40 max-h-[320px] overflow-y-auto">
-          {UPLOAD_TYPE_OPTIONS.map((option, index) => (
-           <button
-            key={option.value}
-            type="button"
-            role="option"
-            aria-selected={option.value === preUploadType}
-            onClick={() => {
-             setPreUploadType(option.value)
-             setUploadMenuOpen(false)
-            }}
-            className={`w-full h-[44px] px-4 text-left font-black uppercase text-[11px] tracking-[0.1em] hover:brightness-95 transition-colors ${option.menuClass} ${
-             index < UPLOAD_TYPE_OPTIONS.length - 1
-              ? "border-b-[3px] border-black/15"
-              : ""
-            }`}>
-            {option.label}
-           </button>
-          ))}
-         </div>
+    <div className="p-3 space-y-3 bg-white">
+     <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+      <div className="h-[120px] grid grid-rows-2 gap-2">
+       <button
+        onClick={() => globalSyncData({ batchMode: "initial" })}
+        disabled={isSyncing}
+        className={`border-[3px] border-black rounded-xl bg-[#4FFF5B] shadow-[4px_4px_0px_0px_black] font-[1000] uppercase tracking-tight text-[16px] flex items-center justify-center gap-3 transition-all ${
+         isSyncing
+          ? "opacity-50 cursor-not-allowed translate-x-[2px] translate-y-[2px] shadow-[2px_2px_0px_0px_black]"
+          : "active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_black]"
+        }`}
+       >
+        {isSyncing ? (
+         <RefreshCw size={18} strokeWidth={3} className="animate-spin" />
+        ) : (
+         <RefreshCw size={18} strokeWidth={3} />
         )}
+        Sync Initial 500
+       </button>
+       <button
+        onClick={() => globalSyncData({ batchMode: "next" })}
+        disabled={isSyncing || !syncBatch.hasMore}
+        className={`border-[3px] border-black rounded-xl bg-[#C9F830] shadow-[4px_4px_0px_0px_black] font-[1000] uppercase tracking-tight text-[14px] flex items-center justify-center gap-2 transition-all ${
+         isSyncing || !syncBatch.hasMore
+          ? "opacity-50 cursor-not-allowed"
+          : "active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_black]"
+        }`}
+       >
+        <Database size={16} strokeWidth={3} />
+        Load Next 250
+       </button>
+      </div>
+
+      <div className="h-[120px] flex flex-col justify-between">
+       <div className="space-y-1">
+        <div className="relative text-black" ref={uploadMenuRef}>
+         <button
+          type="button"
+          onClick={() => setUploadMenuOpen((open) => !open)}
+          className="w-full h-[40px] bg-[#24D3FF] border-[3px] border-black rounded-[10px] px-3 shadow-[2px_2px_0px_0px_black] flex items-center justify-between font-black uppercase text-[12px] tracking-wide"
+          aria-haspopup="listbox"
+          aria-expanded={uploadMenuOpen}
+         >
+          <span>{selectedUploadType.label}</span>
+          <span className="inline-flex items-center justify-center h-[22px] w-[22px] bg-white border-[2px] border-black rounded-md">
+           <ChevronDown
+            size={12}
+            strokeWidth={4}
+            className={`transition-transform ${uploadMenuOpen ? "rotate-180" : ""}`}
+           />
+          </span>
+         </button>
+         {uploadMenuOpen && (
+          <div className="absolute top-full left-0 mt-2 w-full bg-white border-[4px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] overflow-hidden z-40 max-h-[320px] overflow-y-auto">
+           {UPLOAD_TYPE_OPTIONS.map((option, index) => (
+            <button
+             key={option.value}
+             type="button"
+             role="option"
+             aria-selected={option.value === preUploadType}
+             onClick={() => {
+              setPreUploadType(option.value)
+              setUploadMenuOpen(false)
+             }}
+             className={`w-full h-[44px] px-4 text-left font-black uppercase text-[11px] tracking-[0.1em] hover:brightness-95 transition-colors ${option.menuClass} ${
+              index < UPLOAD_TYPE_OPTIONS.length - 1
+               ? "border-b-[3px] border-black/15"
+               : ""
+             }`}
+            >
+             {option.label}
+            </button>
+           ))}
+          </div>
+         )}
+        </div>
+        <div className="text-[10px] font-black uppercase tracking-[0.18em] text-black/40 pl-1">
+         Upload Type
+        </div>
        </div>
-       <div className="text-[9px] font-black uppercase tracking-[0.18em] text-black/40">
-        Upload Type
-       </div>
+
        <button
         onClick={() => {
          setUploadMenuOpen(false)
          fileInputRef.current?.click()
         }}
-        className="w-full h-[38px] bg-[#00CCFF] text-black border-[4px] border-black rounded-xl text-[10px] font-black uppercase tracking-[0.12em] shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex items-center justify-center gap-2">
-        <Upload size={14} />
+        className="w-full h-[40px] bg-[#24D3FF] border-[3px] border-black rounded-[10px] shadow-[2px_2px_0px_0px_black] font-black uppercase text-[12px] tracking-wide flex items-center justify-center gap-2 active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_black] transition-all"
+       >
+        <Upload size={16} strokeWidth={3} />
         Upload CSV/ZIP/Folder
        </button>
       </div>
@@ -1742,152 +2408,171 @@ const PerformanceHub: React.FC = () => {
       <button
        onClick={runAnalysis}
        disabled={analysisLoading || filteredUnifiedRows.length === 0}
-       className="bg-[#F0E08B] text-black px-5 py-4 rounded-xl border-[4px] border-black font-black uppercase text-[11px] tracking-widest shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+       className={`h-[120px] border-[3px] border-black rounded-xl bg-[#FFE357] shadow-[4px_4px_0px_0px_black] font-[1000] uppercase tracking-tight text-[18px] flex items-center justify-center gap-3 transition-all ${
+        analysisLoading || filteredUnifiedRows.length === 0
+         ? "opacity-50 cursor-not-allowed"
+         : "active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_black]"
+       }`}
+      >
        {analysisLoading ? (
-        <Activity size={16} className="animate-spin" />
+        <Activity size={20} strokeWidth={3} className="animate-spin" />
        ) : (
-        <BrainCircuit size={16} />
+        <BrainCircuit size={20} strokeWidth={3} />
        )}
        Generate Report
       </button>
      </div>
 
-     <div className="border-[3px] border-black/20 rounded-xl bg-[#F7F7F7] p-3">
-      <div className="flex flex-wrap items-center gap-2">
+     <div className="border-[3px] border-black rounded-xl h-[48px] bg-[#fcfcfc] flex items-center justify-between px-3 gap-3 overflow-hidden">
+      <div className="flex items-center gap-2 min-w-0">
        {csvFiles.length === 0 ? (
-        <p className="text-[10px] font-black uppercase tracking-widest text-black/35">
+        <p className="text-[12px] font-black uppercase tracking-widest text-black/30 truncate">
          No uploaded data sources yet
         </p>
        ) : (
-        csvFiles.map((file) => (
-         <div
-          key={file.id}
-          className={`inline-flex items-center gap-2 border-[3px] border-black rounded-lg px-3 py-2 text-[10px] font-black uppercase tracking-wider ${getCsvTagColorClass(file.tag)}`}>
-          <FileText size={13} />
-          <span className="max-w-[220px] truncate">{file.name}</span>
-          <button
-           onClick={() => removeFile(file.id)}
-           className="opacity-80 hover:opacity-100">
-           <X size={13} />
-          </button>
-         </div>
-        ))
+        <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+         {csvFiles.slice(0, 4).map((file) => (
+          <div
+           key={file.id}
+           className={`inline-flex items-center gap-2 border-[3px] border-black rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider ${getCsvTagColorClass(
+            file.tag,
+           )}`}
+          >
+           <FileText size={12} />
+           <span className="max-w-[220px] truncate">{file.name}</span>
+           <button
+            onClick={() => removeFile(file.id)}
+            className="opacity-80 hover:opacity-100"
+            type="button"
+           >
+            <X size={12} />
+           </button>
+          </div>
+         ))}
+         {csvFiles.length > 4 && (
+          <span className="text-[10px] font-black uppercase tracking-wider text-black/45">
+           +{csvFiles.length - 4} more
+          </span>
+         )}
+        </div>
        )}
-       <button
-        onClick={clearFiles}
-        className="ml-auto px-3 py-2 bg-white border-[3px] border-black rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
-        <Trash2 size={12} />
-        Clear All
-       </button>
       </div>
+
+      <button
+       onClick={clearFiles}
+       type="button"
+       className="h-[32px] px-4 bg-white border-[3px] border-black rounded-lg text-[10px] font-black uppercase tracking-wider shadow-[2px_2px_0px_0px_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_black] transition-all flex items-center gap-2 shrink-0"
+      >
+       <Trash2 size={14} strokeWidth={3} />
+       Clear All
+      </button>
      </div>
 
-     <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
-      <div className="col-span-2 lg:col-span-6 flex flex-wrap items-center justify-between gap-2 text-[10px] font-black uppercase tracking-widest text-black/55">
-       <span>
-        Data Window: {selectedWindowLabel}
-        {dataWindowLabel ? ` (${dataWindowLabel})` : ""}
-       </span>
-      <span>
-        Source Mode:{" "}
-        {syncSourceMode === "uploads"
-         ? "Uploads"
-         : syncSourceMode === "api_analytics"
-          ? "API Analytics"
-          : "Both"}
-       </span>
-       <span>
-        Storage:{" "}
-        {storageMode === "both"
-         ? "Cache + Storage"
-         : storageMode === "cache"
-          ? "Cache"
-          : "Storage"}
-       </span>
+     <div className="flex items-center justify-between text-[10px] font-black uppercase text-black/45 tracking-widest px-1 pt-1">
+      <div>
+       Data Window: {selectedWindowLabel}
+       {dataWindowLabel ? ` (${dataWindowLabel})` : ""}
       </div>
-      {analyticsGroupStatus.length > 0 && (
-       <div className="col-span-2 lg:col-span-6 border-[3px] border-black/20 rounded-xl bg-white p-2 flex flex-wrap gap-2">
-        {analyticsGroupStatus.map((group) => (
-         <span
+      <div>
+       Source Mode:{" "}
+       {syncSourceMode === "uploads"
+        ? "Uploads"
+        : syncSourceMode === "api_analytics"
+         ? "API Analytics"
+         : "Both"}
+      </div>
+      <div>
+       Write Target:{" "}
+       {storageMode === "both"
+        ? "Sync + Storage"
+        : storageMode === "sync"
+         ? "Sync"
+         : "Storage"}
+      </div>
+     </div>
+     <div className="flex flex-wrap items-center justify-between text-[10px] font-black uppercase tracking-widest text-black/50 px-1">
+      <span>
+       Sync Status: {syncStatus.phase}
+       {syncStatus.stages.length > 0
+        ? ` · ${syncStatus.stages[syncStatus.stages.length - 1]}`
+        : ""}
+      </span>
+      <span>
+       Video Cursor: {syncBatch.cursor.toLocaleString()} · Last Batch:{" "}
+       {syncBatch.lastBatchCount}
+      </span>
+     </div>
+
+     <div className="border-[3px] border-black rounded-xl p-4 bg-[#fdfdfd] space-y-3">
+      <div className="flex items-center justify-between border-b border-dashed border-black/10 pb-2">
+       <div className="text-[12px] font-black uppercase tracking-widest text-black/55">
+        Pipeline Integrity Checks
+       </div>
+       <button
+        type="button"
+        onClick={clearPipelineLogs}
+        className="text-[10px] font-black uppercase tracking-widest text-black/55 underline flex items-center gap-2"
+       >
+        <Trash2 size={12} strokeWidth={3} />
+        Clear Logs
+       </button>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+       {analyticsGroupStatus.length === 0 ? (
+        <span className="text-[10px] font-black uppercase tracking-widest text-black/35">
+         No integrity checks recorded yet
+        </span>
+       ) : (
+        analyticsGroupStatus.map((group) => (
+         <div
           key={group.key}
           title={
            group.ok
             ? `${group.key}: OK (${group.metrics.join(", ")})`
             : `${group.key}: failed (${group.error || "unknown error"})`
           }
-          className={`px-2 py-1 rounded-lg border-[2px] border-black text-[9px] font-black uppercase tracking-wider ${
-           group.ok ? "bg-[#CCFF00] text-black" : "bg-[#FF7497] text-black"
-          }`}>
-          {group.key.replace(/_/g, " ")}: {group.ok ? "ok" : "failed"}
-         </span>
-        ))}
+          className={`px-3 py-1 rounded-lg border-[2px] border-black text-[10px] font-black uppercase tracking-wider shadow-[2px_2px_0px_0px_black] flex items-center gap-2 ${
+           group.ok ? "bg-[#C9F830] text-black" : "bg-[#FF1744] text-white"
+          }`}
+         >
+          {group.ok ? (
+           <Check size={12} strokeWidth={4} />
+          ) : (
+           <X size={12} strokeWidth={4} />
+          )}
+          {group.key.replace(/_/g, " ").toUpperCase()}
+         </div>
+        ))
+       )}
+      </div>
+
+      {analyticsSyncDiagnostics && (
+       <div className="text-[9px] font-black uppercase tracking-wider text-black/55 flex flex-wrap gap-3">
+        <span>
+         Disabled Metrics:{" "}
+         {(analyticsSyncDiagnostics.disabledMetrics || []).length > 0
+          ? (analyticsSyncDiagnostics.disabledMetrics || []).join(", ")
+          : "None"}
+        </span>
+        <span>
+         Failure Events: {(analyticsSyncDiagnostics.failureReasons || []).length}
+        </span>
+        <span>
+         Suppressed Retry Combos:{" "}
+         {(analyticsSyncDiagnostics.knownInvalidCombos || []).length}
+        </span>
        </div>
       )}
-      <div className="border-[3px] border-black rounded-xl bg-white p-3">
-       <p className="text-[9px] font-black uppercase tracking-wider text-black/45">
-        01 Views
-       </p>
-       <p className="text-2xl font-[1000] tracking-tight">
-        {stats.views.toLocaleString()}
-       </p>
-      </div>
-      <div className="border-[3px] border-black rounded-xl bg-white p-3">
-       <p className="text-[9px] font-black uppercase tracking-wider text-black/45">
-        02 Watchtime
-       </p>
-       <p className="text-2xl font-[1000] tracking-tight">
-        {stats.watchHours.toLocaleString()}
-       </p>
-      </div>
-      <div className="border-[3px] border-black rounded-xl bg-white p-3">
-       <p className="text-[9px] font-black uppercase tracking-wider text-black/45">
-        03 Revenue
-       </p>
-       <p className="text-2xl font-[1000] tracking-tight">
-        ${stats.revenue.toLocaleString()}
-       </p>
-      </div>
-      <div className="border-[3px] border-black rounded-xl bg-white p-3">
-       <p className="text-[9px] font-black uppercase tracking-wider text-black/45">
-        04 Subscribers
-       </p>
-       <p className="text-2xl font-[1000] tracking-tight">
-        {stats.subscribers.toLocaleString()}
-       </p>
-      </div>
-      <div className="border-[3px] border-black rounded-xl bg-white p-3">
-       <p className="text-[9px] font-black uppercase tracking-wider text-black/45">
-        05 RPM
-       </p>
-       <p className="text-2xl font-[1000] tracking-tight">
-        ${stats.rpmAverage.toFixed(2)}
-       </p>
-      </div>
-      <div className="border-[3px] border-black rounded-xl bg-white p-3">
-       <p className="text-[9px] font-black uppercase tracking-wider text-black/45">
-        06 CTR
-       </p>
-       <p className="text-2xl font-[1000] tracking-tight">
-        {stats.ctrAverage.toFixed(2)}%
-       </p>
-      </div>
      </div>
 
-      <div className="flex items-center justify-end gap-2 text-[10px] font-black uppercase tracking-widest text-black/50">
-       <Clock3 size={13} />
-       <span>Last Sync: {formatLastSync(lastSyncComplete)}</span>
-      </div>
+     <div className="flex items-center justify-end gap-2 text-[10px] font-black uppercase tracking-widest text-black/50 pt-1">
+      <Clock3 size={13} />
+      <span>Last Sync: {formatLastSync(lastSyncComplete)}</span>
+     </div>
     </div>
    </div>
 
-   <input
-    ref={fileInputRef}
-    type="file"
-    multiple
-    accept=".csv,.zip"
-    onChange={handleFileUpload}
-    className="hidden"
-   />
   </div>
  )
 
@@ -1904,6 +2589,8 @@ const PerformanceHub: React.FC = () => {
     </div>
    )
   }
+ 
+  const railPrimary = railTransition.current || engagementHoverState
 
   return (
    <div className="space-y-6">
@@ -1950,389 +2637,236 @@ const PerformanceHub: React.FC = () => {
      </div>
     </div>
 
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-     <div
-      key={`line-${vizRenderTick}`}
-      ref={lineChartRef}
-      className="xl:col-span-2 bg-white border-[4px] border-black rounded-xl p-4 h-[340px]">
-      <p className="text-[10px] font-black uppercase tracking-widest text-black/40 mb-3">
-       Views Over Time
-      </p>
-      {lineChartSize.width > 0 && lineChartSize.height > 0 ? (
-       <LineChart
-        width={lineChartSize.width}
-        height={lineChartSize.height}
-        data={dailySeries}>
-        <CartesianGrid stroke="#d1d5db" strokeOpacity={0.72} />
-        <XAxis dataKey="label" hide />
-        <YAxis stroke="#000" tick={{ fontSize: 11, fontWeight: 900 }} />
-        <Tooltip
-         contentStyle={{
-          border: "3px solid black",
-          borderRadius: "12px",
-          fontWeight: 900,
-         }}
-        />
-        <Line
-         type="monotone"
-         dataKey="views"
-         stroke="#00CCFF"
-         strokeWidth={4}
-         dot={false}
-        />
-        <Line
-         type="monotone"
-         dataKey="watchHours"
-         stroke="#FF3399"
-         strokeWidth={3}
-         dot={false}
-        />
-       </LineChart>
-      ) : (
-       <div className="h-[250px] border-2 border-black/20 rounded-lg" />
-      )}
+    <div className="bg-white border-[4px] border-black rounded-2xl overflow-hidden">
+     <div className="h-[32px] border-b-[4px] border-black bg-[#FF9D1A] px-4 flex items-center justify-between">
+      <span className="text-[10px] font-black uppercase tracking-[0.24em] text-black/75">
+       Top 50 Recent by {engagementSortMetric}
+      </span>
+      <span className="h-[22px] px-3 rounded-[8px] border-[3px] border-black bg-black text-[#CCFF00] text-[10px] font-black uppercase tracking-wider inline-flex items-center">
+       Highest
+      </span>
+     </div>
+     <div className="h-[56px] border-b-[4px] border-black bg-white px-4 flex items-center justify-between gap-4">
+      <div className="flex items-center gap-3 min-w-0">
+       <span className="h-4 w-4 rounded-full border-[2px] border-black bg-[#00CCFF]" />
+       <div className="relative min-w-0 h-[36px] flex items-center">
+         <span
+          key={railPrimary?.videoId || "empty-title"}
+          className={`text-[34px] font-[1000] uppercase tracking-tight leading-none truncate transition-opacity duration-200 ${
+           railTransition.fading ? "opacity-75" : "opacity-100"
+          }`}>
+          {railPrimary?.title || "No video selected"}
+         </span>
+        </div>
+      </div>
+      <div className="flex items-center gap-5">
+       <div className="text-center min-w-[54px]">
+        <p key={`likes-${railPrimary?.videoId || "none"}`} className={`text-[24px] font-[1000] leading-none transition-opacity duration-200 ${railTransition.fading ? "opacity-75" : "opacity-100"}`}>{railPrimary?.likes || 0}</p>
+        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-black/55">Likes</p>
+       </div>
+       <div className="text-center min-w-[54px]">
+        <p key={`comments-${railPrimary?.videoId || "none"}`} className={`text-[24px] font-[1000] leading-none transition-opacity duration-200 ${railTransition.fading ? "opacity-75" : "opacity-100"}`}>{railPrimary?.comments || 0}</p>
+        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-black/55">Comments</p>
+       </div>
+       <div className="text-center min-w-[54px]">
+        <p key={`shares-${railPrimary?.videoId || "none"}`} className={`text-[24px] font-[1000] leading-none transition-opacity duration-200 ${railTransition.fading ? "opacity-75" : "opacity-100"}`}>{railPrimary?.shares || 0}</p>
+        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-black/55">Shares</p>
+       </div>
+       <div className="text-center min-w-[54px]">
+        <p key={`subs-${railPrimary?.videoId || "none"}`} className={`text-[24px] font-[1000] leading-none transition-opacity duration-200 ${railTransition.fading ? "opacity-75" : "opacity-100"}`}>{railPrimary?.subscribers || 0}</p>
+        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-black/55">Subs</p>
+       </div>
+      </div>
      </div>
 
-     <div
-      key={`bar-${vizRenderTick}`}
-      ref={barChartRef}
-      className="bg-white border-[4px] border-black rounded-xl p-4 h-[340px]">
-      <p className="text-[10px] font-black uppercase tracking-widest text-black/40 mb-3">
-       Views by Format
-      </p>
-      {barChartSize.width > 0 && barChartSize.height > 0 ? (
-       <BarChart
-        width={barChartSize.width}
-        height={barChartSize.height}
-        data={formatSeries}>
-        <CartesianGrid stroke="#d1d5db" strokeOpacity={0.72} />
-        <XAxis
-         dataKey="format"
-         stroke="#000"
-         tick={{ fontSize: 11, fontWeight: 900 }}
-        />
-        <YAxis stroke="#000" tick={{ fontSize: 11, fontWeight: 900 }} />
-        <Tooltip
-         contentStyle={{
-          border: "3px solid black",
-          borderRadius: "12px",
-          fontWeight: 900,
-         }}
-        />
-        <Bar
-         dataKey="views"
-         fill="#CCFF00"
-         stroke="#000"
-         strokeWidth={2}
-         radius={[8, 8, 0, 0]}
-        />
-       </BarChart>
-      ) : (
-       <div className="h-[250px] border-2 border-black/20 rounded-lg" />
-      )}
+     <div className="p-4 pt-5">
+      <div className="relative h-[340px]">
+       <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+        <LineChart
+         data={engagementMapSeries}
+         margin={{ top: 8, right: 22, left: 10, bottom: 20 }}>
+         <CartesianGrid stroke="#d1d5db" strokeOpacity={0.7} />
+         <XAxis
+          dataKey="label"
+          stroke="#000"
+          tick={false}
+          axisLine={false}
+          tickLine={false}
+          label={{ value: "VIDEOS (SORTED)", position: "insideBottom", dy: 14, style: { fontSize: 11, fontWeight: 900, fontStyle: "italic" } }}
+         />
+         <YAxis
+          yAxisId="engagement"
+          stroke="#000"
+          tick={{ fontSize: 11, fontWeight: 900, fontFamily: "system-ui, -apple-system, Segoe UI, sans-serif" }}
+          label={{ value: "ENGAGEMENT METRICS", angle: -90, position: "insideLeft", style: { fontSize: 11, fontWeight: 900, fontStyle: "italic" } }}
+         />
+         <YAxis
+          yAxisId="likes"
+          orientation="right"
+          stroke="#000"
+          tick={{ fontSize: 11, fontWeight: 900, fontFamily: "system-ui, -apple-system, Segoe UI, sans-serif" }}
+          label={{ value: "LIKES", angle: 90, position: "insideRight", style: { fontSize: 11, fontWeight: 900, fontStyle: "italic" } }}
+         />
+         <Tooltip
+          contentStyle={{
+           border: "3px solid black",
+           borderRadius: "12px",
+           fontWeight: 900,
+          }}
+          labelFormatter={(label: unknown) => {
+           const row = engagementMapSeries.find((entry) => entry.label === String(label))
+           return row?.title || String(label)
+          }}
+         />
+         <Line type="monotone" yAxisId="engagement" dataKey="comments" stroke="#00CCFF" strokeWidth={2.5} dot={false} isAnimationActive animationDuration={700} />
+         <Line type="monotone" yAxisId="engagement" dataKey="subscribers" stroke="#B5E81C" strokeWidth={2.5} dot={false} isAnimationActive animationDuration={700} />
+         <Line type="monotone" yAxisId="engagement" dataKey="shares" stroke="#FFD400" strokeWidth={2.5} dot={false} isAnimationActive animationDuration={700} />
+         <Line type="monotone" yAxisId="likes" dataKey="likes" stroke="#FF7497" strokeWidth={2.5} dot={false} isAnimationActive animationDuration={700} />
+        </LineChart>
+       </ResponsiveContainer>
+
+       {engagementMapSeries.length > 0 && (
+        <div className="absolute inset-x-0 top-0 bottom-[42px] grid pointer-events-auto">
+         <div
+          className="h-full w-full"
+          style={{
+           display: "grid",
+           gridTemplateColumns: `repeat(${engagementMapSeries.length}, minmax(0, 1fr))`,
+          }}>
+          {engagementMapSeries.map((point, idx) => (
+           <button
+            key={`eng-zone-${point.videoId || point.label}`}
+            type="button"
+            onMouseEnter={() => setEngagementHoverIndex(idx)}
+            className="h-full w-full bg-transparent border-0 p-0 m-0"
+            aria-label={`Engagement zone ${idx + 1}`}
+           />
+          ))}
+         </div>
+        </div>
+       )}
+      </div>
+
+      <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+       {(
+        [
+         { key: "comments", label: "Comments", color: "#00CCFF" },
+         { key: "subscribers", label: "Subscribers", color: "#B5E81C" },
+         { key: "shares", label: "Shares", color: "#FFD400" },
+         { key: "likes", label: "Likes", color: "#FF7497" },
+        ] as const
+       ).map((metric) => (
+        <button
+         key={metric.key}
+         type="button"
+         onClick={() => setEngagementSortMetric(metric.key)}
+         className={`h-8 px-3 rounded-[12px] border-[3px] border-black text-[10px] font-black uppercase tracking-wide inline-flex items-center gap-2 transition-all ${
+          engagementSortMetric === metric.key
+           ? "bg-black text-white"
+           : "bg-white text-black"
+         }`}>
+         <span
+          className="h-3 w-3 rounded-full border border-black"
+          style={{ backgroundColor: metric.color }}
+         />
+         {metric.label}
+        </button>
+       ))}
+      </div>
      </div>
     </div>
 
-    {lineChartSize.width > 0 && barChartSize.width > 0 ? (
-     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-      <div className="bg-white border-[4px] border-black rounded-xl p-4 h-[320px]">
-       <p className="text-[10px] font-black uppercase tracking-widest text-black/40 mb-3">
-        Views + Revenue Trend
-       </p>
-       <div className="h-[250px]">
-        <ResponsiveContainer
-         width="100%"
-         height="100%"
-         minWidth={1}
-         minHeight={1}>
-         <AreaChart data={dailySeries}>
-          <CartesianGrid stroke="#d1d5db" strokeOpacity={0.72} />
-          <XAxis dataKey="label" hide />
-          <YAxis stroke="#000" tick={{ fontSize: 11, fontWeight: 900 }} />
-          <Tooltip
-           contentStyle={{
-            border: "3px solid black",
-            borderRadius: "12px",
-            fontWeight: 900,
-           }}
-          />
-          <Area
-           type="monotone"
-           dataKey="views"
-           stroke="#00CCFF"
-           fill="#00CCFF55"
-           strokeWidth={3}
-          />
-          <Area
-           type="monotone"
-           dataKey="revenue"
-           stroke="#FFB158"
-           fill="#FFB15855"
-           strokeWidth={3}
-          />
-         </AreaChart>
-        </ResponsiveContainer>
-       </div>
+    <div className="bg-white border-[4px] border-black rounded-2xl overflow-hidden">
+     <div className="h-[52px] border-b-[4px] border-black bg-[#C9F830] px-4 flex items-center justify-between">
+      <span className="text-[30px] font-[1000] uppercase tracking-tight leading-none">
+       Video Value Matrix
+      </span>
+      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black/60">
+       CTR × Retention × Views
+      </span>
+     </div>
+     <div className="h-[42px] border-b-[3px] border-black px-4 flex items-center justify-between">
+      <div className="text-[20px] font-[1000] uppercase tracking-tight truncate">
+       {activeValueMatrixPoint?.title || "Hover over a bubble"}
       </div>
-
-      <div className="bg-white border-[4px] border-black rounded-xl p-4 h-[320px]">
-       <p className="text-[10px] font-black uppercase tracking-widest text-black/40 mb-3">
-        Subscribers + CTR Trend
-       </p>
-       <div className="h-[250px]">
-        <ResponsiveContainer
-         width="100%"
-         height="100%"
-         minWidth={1}
-         minHeight={1}>
-         <LineChart data={dailySeries}>
-          <CartesianGrid stroke="#d1d5db" strokeOpacity={0.72} />
-          <XAxis dataKey="label" hide />
-          <YAxis
-           yAxisId="left"
-           stroke="#000"
-           tick={{ fontSize: 11, fontWeight: 900 }}
-          />
-          <YAxis
-           yAxisId="right"
-           orientation="right"
-           stroke="#000"
-           tick={{ fontSize: 11, fontWeight: 900 }}
-          />
-          <Tooltip
-           contentStyle={{
-            border: "3px solid black",
-            borderRadius: "12px",
-            fontWeight: 900,
-           }}
-          />
-          <Line
-           yAxisId="left"
-           type="monotone"
-           dataKey="subscribers"
-           stroke="#CCFF00"
-           strokeWidth={3}
-           dot={false}
-          />
-          <Line
-           yAxisId="right"
-           type="monotone"
-           dataKey="ctr"
-           stroke="#FF7497"
-           strokeWidth={3}
-           dot={false}
-          />
-         </LineChart>
-        </ResponsiveContainer>
-       </div>
-      </div>
-
-      <div className="bg-white border-[4px] border-black rounded-xl p-4 h-[320px]">
-       <p className="text-[10px] font-black uppercase tracking-widest text-black/40 mb-3">
-        Top Views Ladder
-       </p>
-       <div className="h-[250px]">
-        <ResponsiveContainer
-         width="100%"
-         height="100%"
-         minWidth={1}
-         minHeight={1}>
-         <BarChart data={topViewsSeries}>
-          <CartesianGrid stroke="#d1d5db" strokeOpacity={0.72} />
-          <XAxis
-           dataKey="rank"
-           stroke="#000"
-           tick={{ fontSize: 11, fontWeight: 900 }}
-          />
-          <YAxis stroke="#000" tick={{ fontSize: 11, fontWeight: 900 }} />
-          <Tooltip
-           contentStyle={{
-            border: "3px solid black",
-            borderRadius: "12px",
-            fontWeight: 900,
-           }}
-          />
-          <Bar
-           dataKey="views"
-           fill="#00CCFF"
-           stroke="#000"
-           strokeWidth={2}
-           radius={[8, 8, 0, 0]}
-          />
-         </BarChart>
-        </ResponsiveContainer>
-       </div>
-      </div>
-
-      <div className="bg-white border-[4px] border-black rounded-xl p-4 h-[320px]">
-       <p className="text-[10px] font-black uppercase tracking-widest text-black/40 mb-3">
-        Revenue by Format
-       </p>
-       <div className="h-[250px]">
-        <ResponsiveContainer
-         width="100%"
-         height="100%"
-         minWidth={1}
-         minHeight={1}>
-         <BarChart data={revenueByFormatSeries}>
-          <CartesianGrid stroke="#d1d5db" strokeOpacity={0.72} />
-          <XAxis
-           dataKey="format"
-           stroke="#000"
-           tick={{ fontSize: 11, fontWeight: 900 }}
-          />
-          <YAxis stroke="#000" tick={{ fontSize: 11, fontWeight: 900 }} />
-          <Tooltip
-           contentStyle={{
-            border: "3px solid black",
-            borderRadius: "12px",
-            fontWeight: 900,
-           }}
-          />
-          <Bar
-           dataKey="revenue"
-           fill="#FFB158"
-           stroke="#000"
-           strokeWidth={2}
-           radius={[8, 8, 0, 0]}
-          />
-         </BarChart>
-        </ResponsiveContainer>
-       </div>
-      </div>
-
-      <div className="bg-white border-[4px] border-black rounded-xl p-4 h-[320px]">
-       <p className="text-[10px] font-black uppercase tracking-widest text-black/40 mb-3">
-        Format Share
-       </p>
-       <div className="h-[250px]">
-        <ResponsiveContainer
-         width="100%"
-         height="100%"
-         minWidth={1}
-         minHeight={1}>
-         <PieChart>
-          <Tooltip
-           contentStyle={{
-            border: "3px solid black",
-            borderRadius: "12px",
-            fontWeight: 900,
-           }}
-          />
-          <Pie
-           data={formatSeries}
-           dataKey="views"
-           nameKey="format"
-           outerRadius={86}
-           innerRadius={42}
-           stroke="#000"
-           strokeWidth={2}>
-           {formatSeries.map((_, index) => (
-            <Cell
-             key={`format-pie-${index}`}
-             fill={CHART_COLORS[index % CHART_COLORS.length]}
-            />
-           ))}
-          </Pie>
-         </PieChart>
-        </ResponsiveContainer>
-       </div>
-      </div>
-
-      <div className="bg-white border-[4px] border-black rounded-xl p-4 h-[320px]">
-       <p className="text-[10px] font-black uppercase tracking-widest text-black/40 mb-3">
-        Likes vs Views Scatter
-       </p>
-       <div className="h-[250px]">
-        <ResponsiveContainer
-         width="100%"
-         height="100%"
-         minWidth={1}
-         minHeight={1}>
-         <ScatterChart>
-          <CartesianGrid stroke="#d1d5db" strokeOpacity={0.72} />
-          <XAxis
-           type="number"
-           dataKey="views"
-           stroke="#000"
-           tick={{ fontSize: 11, fontWeight: 900 }}
-          />
-          <YAxis
-           type="number"
-           dataKey="likes"
-           stroke="#000"
-           tick={{ fontSize: 11, fontWeight: 900 }}
-          />
-          <Tooltip
-           cursor={{ stroke: "#d1d5db", strokeOpacity: 0.7, strokeWidth: 1 }}
-           contentStyle={{
-            border: "3px solid black",
-            borderRadius: "12px",
-            fontWeight: 900,
-           }}
-          />
-          <Scatter
-           data={engagementScatterSeries}
-           fill="#FF7497"
-           stroke="#000"
-           strokeWidth={1}
-          />
-         </ScatterChart>
-        </ResponsiveContainer>
-       </div>
+      <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-wider">
+       <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-[#FF7497] border border-black/20" />Shorts</span>
+       <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-[#00CCFF] border border-black/20" />Long-Form</span>
+       <span>CTR {activeValueMatrixPoint?.ctr.toFixed(2) || "0.00"}%</span>
+       <span>RET {activeValueMatrixPoint?.retention.toFixed(1) || "0.0"}%</span>
+       <span>VIEWS {(activeValueMatrixPoint?.views || 0).toLocaleString()}</span>
       </div>
      </div>
-    ) : (
-     <div className="border-[4px] border-black rounded-xl bg-white p-8 text-center">
-      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-black/40">
-       Visualizer Stations
-      </p>
-      <p className="text-xl font-[1000] uppercase tracking-tight mt-2">
-       Preparing chart stations...
-      </p>
+     <div className="p-4 relative">
+     <div className="h-[290px]">
+      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+        <ScatterChart
+         margin={{ top: 8, right: 20, bottom: 8, left: 8 }}
+         onMouseMove={(state: { activePayload?: Array<{ payload?: EngagementMapPoint }> }) => {
+          const nextId = state.activePayload?.[0]?.payload?.videoId
+          if (nextId) setValueMatrixHoverVideoId(nextId)
+         }}>
+         <CartesianGrid stroke="#d1d5db" strokeOpacity={0.72} />
+         <XAxis type="number" dataKey="ctr" stroke="#000" domain={[0, 10]} tick={{ fontSize: 11, fontWeight: 900 }} label={{ value: "CTR %", position: "insideBottom", offset: -4, style: { fontSize: 12, fontWeight: 900 } }} />
+         <YAxis type="number" dataKey="retention" stroke="#000" domain={[0, 150]} tick={{ fontSize: 11, fontWeight: 900 }} label={{ value: "RETENTION %", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 900 } }} />
+         <ZAxis dataKey="views" range={[60, 900]} />
+         <ReferenceArea x1={0} x2={VALUE_MATRIX_THRESHOLDS.ctr} y1={VALUE_MATRIX_THRESHOLDS.retention} y2={150} fill="#dbeafe" fillOpacity={0.16} />
+         <ReferenceArea x1={VALUE_MATRIX_THRESHOLDS.ctr} x2={10} y1={VALUE_MATRIX_THRESHOLDS.retention} y2={150} fill="#dcfce7" fillOpacity={0.16} />
+         <ReferenceArea x1={0} x2={VALUE_MATRIX_THRESHOLDS.ctr} y1={0} y2={VALUE_MATRIX_THRESHOLDS.retention} fill="#fee2e2" fillOpacity={0.16} />
+         <ReferenceArea x1={VALUE_MATRIX_THRESHOLDS.ctr} x2={10} y1={0} y2={VALUE_MATRIX_THRESHOLDS.retention} fill="#fef3c7" fillOpacity={0.16} />
+         <ReferenceLine x={VALUE_MATRIX_THRESHOLDS.ctr} stroke="#111827" strokeOpacity={0.7} strokeWidth={1.5} />
+         <ReferenceLine y={VALUE_MATRIX_THRESHOLDS.retention} stroke="#111827" strokeOpacity={0.7} strokeWidth={1.5} />
+         <Tooltip
+          cursor={{ stroke: "#111827", strokeOpacity: 0.38, strokeWidth: 1 }}
+          contentStyle={{ border: "3px solid black", borderRadius: "12px", fontWeight: 900 }}
+          formatter={(value: unknown, key: unknown) => {
+           const keyText = String(key)
+           if (keyText === "views") return [Number(value || 0).toLocaleString(), "Views"]
+           if (keyText === "retention") return [`${Number(value || 0).toFixed(1)}%`, "Retention"]
+           if (keyText === "ctr") return [`${Number(value || 0).toFixed(2)}%`, "CTR"]
+           return [Number(value || 0), keyText]
+          }}
+          labelFormatter={() => ""}
+         />
+         <Scatter data={valueMatrixSeries}>
+          {valueMatrixSeries.map((entry) => (
+           <Cell
+            key={`value-matrix-${entry.videoId || entry.title}`}
+            fill={entry.format === "shorts" ? "#FF7497" : "#00CCFF"}
+            fillOpacity={0.8}
+            stroke="none"
+           />
+          ))}
+         </Scatter>
+       </ScatterChart>
+      </ResponsiveContainer>
      </div>
-    )}
-
-    <div className="bg-white border-[4px] border-black rounded-xl p-4 overflow-x-auto">
-     <p className="text-[10px] font-black uppercase tracking-widest text-black/40 mb-3">
-      Top Videos
-     </p>
-     <table className="w-full border-collapse">
-      <thead>
-       <tr className="text-left">
-        <th className="p-2 text-[10px] font-black uppercase border-b-[3px] border-black">
-         Title
-        </th>
-        <th className="p-2 text-[10px] font-black uppercase border-b-[3px] border-black">
-         Views
-        </th>
-        <th className="p-2 text-[10px] font-black uppercase border-b-[3px] border-black">
-         Likes
-        </th>
-        <th className="p-2 text-[10px] font-black uppercase border-b-[3px] border-black">
-         Tag
-        </th>
-       </tr>
-      </thead>
-      <tbody>
-       {topRows.slice(0, 12).map((row, index) => (
-        <tr key={`${row.title}-${row.views}-${index}`}>
-         <td className="p-2 text-xs font-bold border-b border-black/10">
-          {row.title}
-         </td>
-         <td className="p-2 text-xs font-black border-b border-black/10">
-          {row.views.toLocaleString()}
-         </td>
-         <td className="p-2 text-xs font-black border-b border-black/10">
-          {row.likes.toLocaleString()}
-         </td>
-         <td className="p-2 text-xs font-black border-b border-black/10 uppercase">
-          {row.tag}
-         </td>
-        </tr>
-       ))}
-      </tbody>
-     </table>
+      {valueMatrixSeries.length === 0 && (
+       <div className="absolute inset-0 p-6 flex items-center justify-center pointer-events-none">
+        <div className="max-w-[560px] w-full border-[3px] border-black rounded-xl bg-white/95 p-5 text-center shadow-[6px_6px_0px_0px_black]">
+         <p className="text-[11px] font-black uppercase tracking-[0.18em] text-black/55">
+          Data missing for this chart
+         </p>
+         <p className="text-2xl font-[1000] uppercase tracking-tight mt-2">
+          Value Matrix needs valid CTR, retention, and views
+         </p>
+         <p className="text-[11px] font-black uppercase tracking-[0.14em] text-black/55 mt-3">
+          Valid rows: {valueMatrixMissingSummary.validRows}
+         </p>
+         <p className="text-[10px] font-black uppercase tracking-[0.14em] text-black/45 mt-2">
+          Missing metrics:{" "}
+          {valueMatrixMissingSummary.missingMetrics.length > 0
+           ? valueMatrixMissingSummary.missingMetrics.join(", ")
+           : "none"}
+         </p>
+        </div>
+       </div>
+      )}
+      <div className="absolute left-8 top-8 text-[10px] font-black uppercase tracking-[0.18em] text-black/30">Hidden Gems</div>
+      <div className="absolute right-8 top-8 text-[10px] font-black uppercase tracking-[0.18em] text-black/30">Gold Mine</div>
+      <div className="absolute left-8 bottom-8 text-[10px] font-black uppercase tracking-[0.18em] text-black/30">Need Work</div>
+      <div className="absolute right-8 bottom-8 text-[10px] font-black uppercase tracking-[0.18em] text-black/30">Clickbait</div>
+     </div>
     </div>
    </div>
   )
@@ -2374,7 +2908,7 @@ const PerformanceHub: React.FC = () => {
        <Table2 size={15} />
       </div>
       <h3 className="text-2xl font-[1000] uppercase tracking-tight">
-       Data Tables Toolbox
+       Master Data Tables
       </h3>
      </div>
      <div className="flex w-full lg:w-auto items-center gap-2">
@@ -2610,12 +3144,12 @@ const PerformanceHub: React.FC = () => {
       <button
        onClick={() =>
         setTableLimit((value) =>
-         Math.min(value + 200, filteredTableRows.length),
+         Math.min(value + 500, filteredTableRows.length),
         )
        }
        disabled={tableRows.length >= filteredTableRows.length}
        className="px-3 py-2 border-[3px] border-black rounded-lg bg-[#CCFF00] text-[10px] font-black uppercase tracking-wider disabled:opacity-50">
-       Load 200 More
+       Load 500 More
       </button>
       <button
        onClick={selectAllVisible}
@@ -2661,19 +3195,58 @@ const PerformanceHub: React.FC = () => {
       </span>
      </div>
     </div>
-    <div className="mt-8">
-     <SystemStatisticsSubToolbox masterTableRows={masterTableRows} />
-    </div>
    </div>
   </div>
  )
 
- const renderTool = (toolId: PerformanceTool) => {
-  if (toolId === "data-manager") return renderDataManager()
-  if (toolId === "data-viz") return renderDataViz()
-  if (toolId === "channel-analysis") return renderAnalysis()
-  return renderDataTables()
- }
+ const renderChannelAnalysisToolbox = () => (
+  <div className="space-y-6">
+   <SubToolbox
+    title="CHANNEL INTELLIGENCE LAB"
+    icon={<Database size={22} strokeWidth={3} className="text-black" />}
+    headerColor="bg-[#FF3399]"
+    collapsible
+    isOpenInitial
+   >
+    {renderDataManager()}
+   </SubToolbox>
+   <SubToolbox
+    title="MASTER DATA TABLES"
+    icon={<Table2 size={22} strokeWidth={3} className="text-black" />}
+    headerColor="bg-[#EA73E8]"
+    collapsible
+    isOpenInitial
+    unmountOnClose
+   >
+    {renderDataTables()}
+   </SubToolbox>
+  </div>
+ )
+
+ const renderChannelToolbox = () => (
+  <div className="space-y-6">
+   <SubToolbox
+    key={`data-viz-${dataVizAutoOpenTick}`}
+    title="DATA VISUALIZATIONS"
+    icon={<ChartColumnBig size={22} strokeWidth={3} className="text-black" />}
+    headerColor="bg-[#CCFF00]"
+    collapsible
+    isOpenInitial
+    unmountOnClose
+   >
+    {renderDataViz()}
+   </SubToolbox>
+   <SubToolbox
+    title="CHANNEL ANALYSIS REPORT"
+    icon={<BrainCircuit size={22} strokeWidth={3} className="text-black" />}
+    headerColor="bg-[#FFDD00]"
+    collapsible
+    isOpenInitial={false}
+   >
+    {renderAnalysis()}
+   </SubToolbox>
+  </div>
+ )
 
  return (
   <div className="flex flex-col space-y-6 max-w-[1500px] mx-auto pb-24">
@@ -2693,41 +3266,61 @@ const PerformanceHub: React.FC = () => {
    </div>
 
    <div className="w-full space-y-6">
-    {TOOLBOXES.map((toolbox) => {
-     const isOpen = openTools.has(toolbox.id)
-     const ToolIcon = toolbox.icon
-     return (
-      <ToolboxScaffold
-       key={toolbox.id}
-       title={toolbox.title}
-       icon={<ToolIcon size={42} className="text-black" />}
-       headerColor={toolbox.headerColor}
-       iconBoxColor={toolbox.iconBoxColor}
-       collapsible
-       isOpen={isOpen}
-       onToggle={() =>
-        setOpenTools((previous) => {
-         const next = new Set(previous)
-         if (next.has(toolbox.id)) next.delete(toolbox.id)
-         else next.add(toolbox.id)
-         return next
-        })
-       }
-       disableCollapseAnimation
-       contentClassName="bg-white p-4 md:p-6 lg:p-8 min-h-[620px]">
-       {isOpen && renderTool(toolbox.id)}
-      </ToolboxScaffold>
-     )
-    })}
+    <ToolboxScaffold
+     title="CHANNEL ANALYSIS"
+     icon={<ChartColumnBig size={42} className="text-black" />}
+     headerColor="bg-[#FFB158]"
+     iconBoxColor="bg-[#00CCFF]"
+     collapsible
+     isOpen={openTools.has("channel-analysis")}
+     onToggle={() =>
+      setOpenTools((previous) => {
+       const next = new Set(previous)
+       if (next.has("channel-analysis")) next.delete("channel-analysis")
+       else next.add("channel-analysis")
+       return next
+      })
+     }
+     disableCollapseAnimation
+     contentClassName="bg-white p-4 md:p-6 lg:p-8 min-h-[620px]">
+     {openTools.has("channel-analysis") && renderChannelAnalysisToolbox()}
+    </ToolboxScaffold>
+
+    <ToolboxScaffold
+     title="CHANNEL"
+     icon={<Activity size={42} className="text-black" />}
+     headerColor="bg-[#FFDD00]"
+     iconBoxColor="bg-[#CCFF00]"
+     collapsible
+     isOpen={openTools.has("channel")}
+     onToggle={() =>
+      setOpenTools((previous) => {
+       const next = new Set(previous)
+       if (next.has("channel")) next.delete("channel")
+       else next.add("channel")
+       return next
+      })
+     }
+     disableCollapseAnimation
+     contentClassName="bg-white p-4 md:p-6 lg:p-8 min-h-[620px]">
+     {openTools.has("channel") && renderChannelToolbox()}
+    </ToolboxScaffold>
    </div>
 
    <div className="flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-[0.22em] text-black/35">
     <ChartColumnBig size={14} />
-    <span>
-     Flattened architecture: data manager, data visualizations, channel
-     analysis, data tables
+   <span>
+     Canonical channel analysis: sync manager, visualizations, tables, oracle report
     </span>
    </div>
+   <input
+    ref={fileInputRef}
+    type="file"
+    multiple
+    accept=".csv,.zip"
+    onChange={handleFileUpload}
+    className="hidden"
+   />
   </div>
  )
 }

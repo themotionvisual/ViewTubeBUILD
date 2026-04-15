@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
 import { CustomIcon } from './CustomIcon';
 import { getToolboxPaletteColors } from '../styles/toolboxPalette';
 import { hexToRgba, CONTROL_SHELL, AnimatedToggleIcon } from './ToolboxUISystem';
@@ -38,12 +38,12 @@ interface ToolboxProps {
   helpTitle?: string;
   helpText?: string;
   helpGuide?: string[];
+  disableCollapseAnimation?: boolean;
 }
 
 export const Toolbox: React.FC<ToolboxProps> = ({
   variant = 'scaffold',
   title,
-  subtitle,
   icon,
   headerColor,
   iconBoxColor = 'bg-white',
@@ -61,33 +61,11 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   contentClassName = '',
   embedded = false,
   children,
-  helpTitle,
-  helpText,
-  helpGuide,
+  disableCollapseAnimation = false,
 }) => {
   const [internalOpen, setInternalOpen] = useState(isOpenInitial);
-  const [helpOpen, setHelpOpen] = useState(false);
-  const [subtitleOpen, setSubtitleOpen] = useState(true);
-  const helpIdRef = useRef(`help-${Math.random().toString(36).slice(2)}`);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent<string>).detail;
-      if (detail !== helpIdRef.current) {
-        setHelpOpen(false);
-      }
-    };
-    window.addEventListener('toolbox_help_open', handler as EventListener);
-    return () => window.removeEventListener('toolbox_help_open', handler as EventListener);
-  }, []);
   const controlled = typeof isOpen === 'boolean';
   const open = controlled ? Boolean(isOpen) : internalOpen;
-  useEffect(() => {
-    if (!open) {
-      setHelpOpen(false);
-      setSubtitleOpen(true);
-    }
-  }, [open]);
 
   const setOpen = () => {
     if (onToggle) {
@@ -146,7 +124,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   if (variant === 'sub') {
     return (
       <div 
-        className={`bg-white border-black rounded-2xl overflow-hidden flex flex-col h-full ${outerClassName}`}
+        className={`bg-white border-black rounded-2xl overflow-hidden flex flex-col h-full self-start ${outerClassName}`}
         style={{
           border: `${stroke}px solid black`,
           borderRadius: `${radius}px`,
@@ -175,6 +153,9 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   }
 
   const frameClass = `w-full bg-white overflow-hidden flex flex-col relative ${outerClassName}`;
+  const collapseTransitionClass = disableCollapseAnimation
+    ? "duration-0 ease-linear"
+    : CONTROL_SHELL.transition;
   
   const headerHeight = variant === 'accordion' ? 56 : 80;
 
@@ -188,18 +169,16 @@ export const Toolbox: React.FC<ToolboxProps> = ({
           ...accentShadowStyle
         }}
       >
-        <header 
-          className={`${headerColor} ${textColor} flex items-center justify-between select-none relative z-20 group`}
+        <header
+          className={`${headerColor} ${textColor} flex items-center justify-between select-none relative z-20 group ${isCollapsible ? 'cursor-pointer' : ''}`}
+          onClick={isCollapsible ? setOpen : undefined}
           style={{
             ...headerStyle,
             height: `${headerHeight}px`,
-            borderBottom: open ? `${stroke}px solid black` : '0px solid black'
+            borderBottom: `${stroke}px solid black`
           }}
         >
-          <div
-            onClick={isCollapsible ? setOpen : undefined}
-            className={`flex items-center h-full flex-1 ${isCollapsible ? 'cursor-pointer' : ''}`}
-          >
+          <div className="flex items-center h-full flex-1">
             <div
               className={`${iconBoxColor} flex items-center justify-center border-r-[4px] border-black flex-shrink-0 transition-all`}
               style={{
@@ -220,25 +199,40 @@ export const Toolbox: React.FC<ToolboxProps> = ({
             </div>
           </div>
 
-          <div className={`flex items-center ${variant === 'accordion' ? 'gap-3 pr-4' : 'gap-6 pr-6'} h-full`}>
+          <div
+            className={`flex items-center ${variant === 'accordion' ? 'gap-3 pr-4' : 'gap-6 pr-6'} h-full`}
+            onClick={(event) => event.stopPropagation()}
+          >
             {headerActions}
             {indicator === 'plusminus' && (
-              <div onClick={setOpen} className="h-full px-2 flex items-center justify-center cursor-pointer">
+              <div
+                onClick={setOpen}
+                className="h-full px-2 flex items-center justify-center cursor-pointer border-l-[4px] border-black"
+              >
                 <span className="text-2xl font-black leading-none text-black">{open ? '−' : '+'}</span>
               </div>
             )}
             {indicator === 'symbols' && isCollapsible && (
-              <AnimatedToggleIcon 
-                open={open} 
-                size={variant === 'accordion' ? 32 : 44} 
-              />
+              <div
+                onClick={setOpen}
+                className="h-full px-1 flex items-center justify-center cursor-pointer border-l-[4px] border-black"
+                style={{ width: variant === "accordion" ? "48px" : "64px" }}
+              >
+                <AnimatedToggleIcon
+                  open={open}
+                  size={variant === 'accordion' ? 32 : 44}
+                />
+              </div>
             )}
           </div>
         </header>
 
         {/* Subtitle and help sections removed from core wrapper to focus on clean block aesthetic as per instructions */}
 
-        <div className={`grid transition-[grid-template-rows,opacity] ${CONTROL_SHELL.transition} ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+        <div
+          className={`grid transition-[grid-template-rows,opacity] ${collapseTransitionClass} ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+          style={{ marginTop: `-${stroke}px` }}
+        >
           <div className="overflow-hidden min-h-0">
             {(!unmountWhenClosed || open) && <main className={`flex-1 bg-white ${finalContentClass}`}>{children}</main>}
           </div>
@@ -340,7 +334,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
   outerClassName = "",
   shellClassName = "",
   contentClassName = "",
-  disableCollapseAnimation: _disableCollapseAnimation = false,
+  disableCollapseAnimation = false,
   headerActions,
   children,
   helpTitle,
@@ -365,6 +359,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
     contentClassName={contentClassName || (embedded ? "p-0" : "p-8")}
     headerActions={headerActions}
     indicator={collapsible ? "symbols" : "none"}
+    disableCollapseAnimation={disableCollapseAnimation}
     helpTitle={helpTitle}
     helpText={helpText}
     helpGuide={helpGuide}
@@ -384,6 +379,7 @@ interface SubToolboxProps {
   contentClassName?: string;
   collapsible?: boolean;
   isOpenInitial?: boolean;
+  unmountOnClose?: boolean;
 }
 
 export const SubToolbox: React.FC<SubToolboxProps> = ({
@@ -397,6 +393,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   contentClassName,
   collapsible = false,
   isOpenInitial = true,
+  unmountOnClose = false,
 }) => (
   <SubToolboxInner
     title={title}
@@ -408,6 +405,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
     contentClassName={contentClassName}
     collapsible={collapsible}
     isOpenInitial={isOpenInitial}
+    unmountOnClose={unmountOnClose}
   >
     {children}
   </SubToolboxInner>
@@ -424,6 +422,7 @@ const SubToolboxInner: React.FC<SubToolboxProps> = ({
   contentClassName,
   collapsible = false,
   isOpenInitial = true,
+  unmountOnClose = false,
 }) => {
   const [open, setOpen] = useState(isOpenInitial);
   const palette = paletteIndex !== undefined && paletteIndex !== null ? getToolboxPaletteColors(paletteIndex) : null;
@@ -458,8 +457,8 @@ const SubToolboxInner: React.FC<SubToolboxProps> = ({
   }
 
   return (
-    <div 
-      className="bg-white overflow-hidden flex flex-col h-full"
+    <div
+      className="bg-white overflow-hidden flex flex-col self-start"
       style={{
         border: '4px solid black',
         borderRadius: '16px',
@@ -472,7 +471,7 @@ const SubToolboxInner: React.FC<SubToolboxProps> = ({
         style={{
           ...headerStyle,
           height: '60px',
-          borderBottom: open ? '4px solid black' : '0px solid black'
+          borderBottom: '4px solid black'
         }}
       >
         <div className="flex items-center h-full flex-1">
@@ -486,10 +485,11 @@ const SubToolboxInner: React.FC<SubToolboxProps> = ({
             {title}
           </span>
         </div>
-        <div className="flex items-center gap-3 pr-4">
+        <div className="flex items-center gap-3 pr-4" onClick={(event) => event.stopPropagation()}>
           {actionButton}
           <div
-            className={`cursor-pointer transition-all duration-700 ease-in-out transform ${
+            onClick={() => setOpen((prev) => !prev)}
+            className={`h-full w-[56px] cursor-pointer transition-all duration-700 ease-in-out transform border-l-[4px] border-black flex items-center justify-center ${
               open ? "rotate-180 scale-110" : "rotate-0 scale-100"
             }`}
           >
@@ -505,8 +505,9 @@ const SubToolboxInner: React.FC<SubToolboxProps> = ({
         className={`grid transition-[grid-template-rows,opacity] ${CONTROL_SHELL.transition} ${
           open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
         }`}
+        style={{ marginTop: "-4px" }}
       >
-        <div className="overflow-hidden min-h-0">{content}</div>
+        <div className="overflow-hidden min-h-0">{open || !unmountOnClose ? content : null}</div>
       </div>
     </div>
   );

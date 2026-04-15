@@ -3,6 +3,10 @@ import {
  buildUnifiedRowsFromCsvFiles,
  type DataForgeRow,
 } from "../services/dataForge"
+import {
+ resolveCtrPercent,
+ resolveImpressions,
+} from "../services/metricAliasResolver"
 
 export type UnifiedRow = DataForgeRow & {
  _id: string
@@ -226,32 +230,15 @@ export const getRpm = (row: Record<string, unknown>): number =>
  )
 
 export const getImpressions = (row: Record<string, unknown>): number => {
- // Try various column name variations
- const impressions = getMetric(row, [
-  "Impressions",
-  "impressions",
-  "Impressions count",
- ])
- if (impressions > 0) return impressions
+ const resolved = resolveImpressions(row)
+ if (resolved.value !== null && resolved.value > 0) return resolved.value
+ // Last-chance alias pattern matching for odd CSV headers.
  return getMetricByPattern(row, [], ["impression"])
 }
 
 export const getCtr = (row: Record<string, unknown>): number => {
- // Try various column name variations
- const raw = getMetric(row, [
-  "CTR (%)",
-  "CTR",
-  "ctr",
-  "Impressions click-through rate (%)",
-  "impressionClickThroughRate",
-  "clickThroughRate",
- ])
- if (raw > 0) return raw <= 1 ? raw * 100 : raw
-
- // Try to calculate from impressions and views
- const impressions = getImpressions(row)
- const views = getViews(row)
- if (impressions > 0 && views > 0) return (views / impressions) * 100
+ const resolved = resolveCtrPercent(row)
+ if (resolved.value !== null && resolved.value > 0) return resolved.value
  return 0
 }
 
@@ -383,17 +370,16 @@ export const applySummaryFallbackToRows = (
  const needsSubscriberBackfill =
   totalSubscribers <= 0 && summary.subscribers > 0
  const needsRevenueBackfill = totalRevenue <= 0 && summary.revenue > 0
- const needsCtrBackfill = totalCtr <= 0 && summary.ctrAverage > 0
+ const needsCtrBackfill = false
  const needsRpmBackfill =
   totalRpm <= 0 && summary.views > 0 && summary.revenue > 0
- const needsImpressionsBackfill =
-  totalImpressions <= 0 && summary.views > 0 && summary.ctrAverage > 0
+ const needsImpressionsBackfill = false
  const needsAvdBackfill =
   totalAvd <= 0 && summary.watchHours > 0 && summary.views > 0
  const needsAvpBackfill = totalAvp <= 0
  const summaryRpm =
   summary.views > 0 ? (summary.revenue / summary.views) * 1000 : 0
- const summaryCtr = summary.ctrAverage > 0 ? summary.ctrAverage : 0
+ const summaryCtr = 0
  const summaryAvdSeconds =
   summary.views > 0 ? (summary.watchHours * 3600) / summary.views : 0
 
@@ -421,10 +407,7 @@ export const applySummaryFallbackToRows = (
   const currentImpressions = getImpressions(row)
   const currentAvd = getAvdSeconds(row)
   const currentAvp = getAvpPercent(row)
-  const finalCtr =
-   currentCtr > 0 || !needsCtrBackfill
-    ? currentCtr
-    : Number(summaryCtr.toFixed(3))
+  const finalCtr = currentCtr > 0 || !needsCtrBackfill ? currentCtr : 0
   const finalWatchHours =
    currentWatch > 0 || !needsWatchBackfill
     ? currentWatch
@@ -436,11 +419,7 @@ export const applySummaryFallbackToRows = (
       ? (finalWatchHours * 3600) / rowViews
       : summaryAvdSeconds
   const finalImpressions =
-   currentImpressions > 0 || !needsImpressionsBackfill
-    ? currentImpressions
-    : finalCtr > 0 && rowViews > 0
-      ? rowViews / (finalCtr / 100)
-      : 0
+   currentImpressions > 0 || !needsImpressionsBackfill ? currentImpressions : 0
   const finalAvp =
    currentAvp > 0 || !needsAvpBackfill
     ? currentAvp
