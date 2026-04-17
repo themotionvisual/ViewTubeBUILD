@@ -5,10 +5,18 @@ import { SystemStatisticsSubToolbox } from "../components/SystemStatisticsSubToo
 import { canonicalRowsToMasterTableRows, getMasterRows } from "../services/analyticsSelectors"
 
 const InternalAnalyticsPanel: React.FC = () => {
+ const [refreshCount, setRefreshCount] = React.useState(0)
+
  const masterTableRows = useMemo(
   () => canonicalRowsToMasterTableRows(getMasterRows("lifetime", "api")),
-  [],
+  [refreshCount],
  )
+
+ React.useEffect(() => {
+  const handleSync = () => setRefreshCount((c) => c + 1)
+  window.addEventListener("yt_analytics_synced", handleSync)
+  return () => window.removeEventListener("yt_analytics_synced", handleSync)
+ }, [])
 
  return (
   <div className="max-w-[1500px] mx-auto pb-24 px-4 space-y-6">

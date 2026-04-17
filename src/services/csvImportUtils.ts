@@ -1,4 +1,4 @@
-import JSZip from 'jszip';
+import JSZip from "jszip"
 import type { CsvFileWithTag, CsvTag, CsvUploadType } from '../types';
 import type { AnalyticsWindow } from './analyticsContract';
 

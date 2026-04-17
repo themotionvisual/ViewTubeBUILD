@@ -33,7 +33,9 @@ const sourceLabel = (row: DataCoverageRow): string => {
 }
 
 const scopeLabel = (row: DataCoverageRow): string =>
- row.source === "formula" ? `formula + ${row.scope.replace("_", " ")}` : row.scope.replace("_", " ")
+ row.source === "formula"
+  ? `formula + ${row.scope.replace("_", " ")}`
+  : row.scope.replace("_", " ")
 
 const STATUS_STYLES: Record<DataCoverageStatus, string> = {
  received: "bg-[#CCFF00] text-black",
@@ -42,35 +44,76 @@ const STATUS_STYLES: Record<DataCoverageStatus, string> = {
  not_connected: "bg-black text-white",
 }
 
-export function SystemStatisticsSubToolbox({ masterTableRows }: SystemStatisticsSubToolboxProps) {
+export function SystemStatisticsSubToolbox({
+ masterTableRows,
+}: SystemStatisticsSubToolboxProps) {
  const [searchTerm, setSearchTerm] = useState("")
  const [showFullCatalog, setShowFullCatalog] = useState(true)
- const [showReceivedOnly, setShowReceivedOnly] = useState(false)
- const [showFormulaOnly, setShowFormulaOnly] = useState(false)
+ const [sortColumn, setSortColumn] = useState<keyof DataCoverageRow>("categoryName")
+ const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
 
- const inventory = useMemo(() => buildDataCoverageInventory(masterTableRows), [masterTableRows])
+ const inventory = useMemo(
+  () => buildDataCoverageInventory(masterTableRows),
+  [masterTableRows],
+ )
  const canonicalCount = inventory.rows.length
  const fullCatalogCount = inventory.expandedRows.length
  const baseRows = showFullCatalog ? inventory.expandedRows : inventory.rows
 
  const filteredRows = useMemo(() => {
-  const rowsForMode = showReceivedOnly
-   ? baseRows.filter((row) => row.status === "received")
-   : baseRows
-  const rowsForFormula = showFormulaOnly
-   ? rowsForMode.filter((row) => row.formulaCapable)
-   : rowsForMode
-  if (!searchTerm.trim()) return rowsForFormula
-  const lower = searchTerm.toLowerCase()
-  return rowsForFormula.filter(
-   (row) =>
-    row.categoryName.toLowerCase().includes(lower) ||
-    row.canonicalKey.toLowerCase().includes(lower) ||
-    row.scope.toLowerCase().includes(lower) ||
-    sourceLabel(row).toLowerCase().includes(lower) ||
-    row.reason.toLowerCase().includes(lower),
-  )
- }, [baseRows, searchTerm, showReceivedOnly, showFormulaOnly])
+  let result = baseRows
+
+  if (searchTerm.trim()) {
+   const lower = searchTerm.toLowerCase()
+   result = result.filter(
+    (row) =>
+     row.categoryName.toLowerCase().includes(lower) ||
+     row.canonicalKey.toLowerCase().includes(lower) ||
+     row.scope.toLowerCase().includes(lower) ||
+     sourceLabel(row).toLowerCase().includes(lower) ||
+     row.reason.toLowerCase().includes(lower),
+   )
+  }
+
+  return [...result].sort((a, b) => {
+   let valA = String(a[sortColumn] || "")
+   let valB = String(b[sortColumn] || "")
+
+   if (sortColumn === "source") {
+    valA = sourceLabel(a)
+    valB = sourceLabel(b)
+   } else if (sortColumn === "scope") {
+    valA = scopeLabel(a)
+    valB = scopeLabel(b)
+   }
+
+   // Optional: basic numeric sorting for example columns
+   if (sortColumn === "example" || sortColumn === "exampleChannel") {
+    const numA = Number(valA.replace(/[^0-9.-]/g, ""))
+    const numB = Number(valB.replace(/[^0-9.-]/g, ""))
+    if (!isNaN(numA) && !isNaN(numB) && valA !== "-" && valB !== "-") {
+     return sortDirection === "asc" ? numA - numB : numB - numA
+    }
+   }
+
+   const compare = valA.localeCompare(valB, undefined, { sensitivity: "base" })
+   return sortDirection === "asc" ? compare : -compare
+  })
+ }, [baseRows, searchTerm, sortColumn, sortDirection])
+
+ const handleSort = (column: keyof DataCoverageRow) => {
+  if (sortColumn === column) {
+   setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+  } else {
+   setSortColumn(column)
+   setSortDirection("asc")
+  }
+ }
+
+ const renderSortIcon = (column: keyof DataCoverageRow) => {
+  if (sortColumn !== column) return null
+  return sortDirection === "asc" ? " ↑" : " ↓"
+ }
 
  const statusCounts = useMemo(() => {
   return filteredRows.reduce(
@@ -95,22 +138,34 @@ export function SystemStatisticsSubToolbox({ masterTableRows }: SystemStatistics
    isOpenInitial>
    <div className="bg-[#EDEDED] border-[4px] border-black p-4 space-y-4">
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-     <div className="bg-white border-[3px] border-black rounded-lg p-3">
-      <div className="text-[10px] font-black uppercase text-black/50">Total Categories</div>
-      <div className="text-xl font-black">{baseRows.length}</div>
-      <div className="text-[9px] font-black uppercase text-black/45 mt-1">
-       Canonical {canonicalCount} · Full {fullCatalogCount}
+     <div className="bg-[#CCFF00] border-[3px] border-black rounded-lg p-3">
+      <div className="text-[10px] font-black uppercase text-black/50">
+       Current Coverage
       </div>
-     </div>
-     <div className="bg-white border-[3px] border-black rounded-lg p-3">
-      <div className="text-[10px] font-black uppercase text-black/50">History Placeholders</div>
       <div className="text-xl font-black">
-       {baseRows.filter((row) => row.scope === "history").length}
+       {inventory.summary.receivedCount} / {inventory.summary.connectedSourcesTotal}
+      </div>
+      <div className="text-[9px] font-black uppercase text-black/45 mt-1">
+       Received vs Connected Sources
       </div>
      </div>
      <div className="bg-white border-[3px] border-black rounded-lg p-3">
-      <div className="text-[10px] font-black uppercase text-black/50">Showing</div>
+      <div className="text-[10px] font-black uppercase text-black/50">
+       Master Catalog
+      </div>
+      <div className="text-xl font-black">{inventory.summary.fullCatalogTotal}</div>
+      <div className="text-[9px] font-black uppercase text-black/45 mt-1">
+       Total potential categories
+      </div>
+     </div>
+     <div className="bg-white border-[3px] border-black rounded-lg p-3">
+      <div className="text-[10px] font-black uppercase text-black/50">
+       Showing
+      </div>
       <div className="text-xl font-black">{filteredRows.length}</div>
+      <div className="text-[9px] font-black uppercase text-black/45 mt-1">
+       Filtered View
+      </div>
      </div>
     </div>
 
@@ -134,22 +189,6 @@ export function SystemStatisticsSubToolbox({ masterTableRows }: SystemStatistics
        }`}>
        {showFullCatalog ? "Mode: Full Catalog" : "Mode: Canonical"}
       </button>
-      <button
-       type="button"
-       onClick={() => setShowReceivedOnly((value) => !value)}
-       className={`px-3 py-2 rounded-md border border-black text-[10px] font-black uppercase ${
-        showReceivedOnly ? "bg-[#CCFF00] text-black" : "bg-white text-black"
-       }`}>
-       {showReceivedOnly ? "Received Only: On" : "Received Only: Off"}
-      </button>
-      <button
-       type="button"
-       onClick={() => setShowFormulaOnly((value) => !value)}
-       className={`px-3 py-2 rounded-md border border-black text-[10px] font-black uppercase ${
-        showFormulaOnly ? "bg-[#B14AED] text-white" : "bg-white text-black"
-       }`}>
-       {showFormulaOnly ? "Formula-capable: On" : "Formula-capable: Off"}
-      </button>
      </div>
 
      <div className="relative w-full md:w-[440px]">
@@ -160,17 +199,22 @@ export function SystemStatisticsSubToolbox({ masterTableRows }: SystemStatistics
        placeholder="Search category, canonical key, scope, or source..."
        className="w-full h-12 pl-12 pr-4 border-[3px] border-black rounded-lg text-sm font-black tracking-wide outline-none focus:bg-[#CCFF00] transition-colors"
       />
-      <Search className="absolute left-4 top-1/2 -translate-y-1/2 opacity-50" size={20} />
+      <Search
+       className="absolute left-4 top-1/2 -translate-y-1/2 opacity-50"
+       size={20}
+      />
      </div>
 
      <div className="flex flex-wrap gap-2 justify-end">
-      {(Object.keys(inventory.summary.perScope) as DataCoverageScope[]).map((scope) => (
-       <span
-        key={scope}
-        className={`px-2 py-1 rounded-md border border-black text-[10px] font-black uppercase ${SCOPE_STYLES[scope]}`}>
-        {scope.replace("_", " ")}: {inventory.summary.perScope[scope]}
-       </span>
-      ))}
+      {(Object.keys(inventory.summary.perScope) as DataCoverageScope[]).map(
+       (scope) => (
+        <span
+         key={scope}
+         className={`px-2 py-1 rounded-md border border-black text-[10px] font-black uppercase ${SCOPE_STYLES[scope]}`}>
+         {scope.replace("_", " ")}: {inventory.summary.perScope[scope]}
+        </span>
+       ),
+      )}
      </div>
     </div>
 
@@ -178,20 +222,54 @@ export function SystemStatisticsSubToolbox({ masterTableRows }: SystemStatistics
      <table className="w-full border-collapse whitespace-nowrap">
       <thead className="sticky top-0 bg-[#CCFF00] border-b-[3px] border-black z-10">
        <tr>
-        <th className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left">Category</th>
-        <th className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left">Canonical Key</th>
-        <th className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left">Source</th>
-        <th className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left">Scope</th>
-        <th className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left">Status</th>
-        <th className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left">Example</th>
-        <th className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left bg-[#FFDD00]/20">Example Channel</th>
-        <th className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left bg-[#00CCFF]/20">Reason</th>
+        <th 
+         onClick={() => handleSort("categoryName")}
+         className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left cursor-pointer hover:bg-black/5 transition-colors">
+         Category{renderSortIcon("categoryName")}
+        </th>
+        <th 
+         onClick={() => handleSort("canonicalKey")}
+         className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left cursor-pointer hover:bg-black/5 transition-colors">
+         Canonical Key{renderSortIcon("canonicalKey")}
+        </th>
+        <th 
+         onClick={() => handleSort("source")}
+         className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left cursor-pointer hover:bg-black/5 transition-colors">
+         Source{renderSortIcon("source")}
+        </th>
+        <th 
+         onClick={() => handleSort("scope")}
+         className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left cursor-pointer hover:bg-black/5 transition-colors">
+         Scope{renderSortIcon("scope")}
+        </th>
+        <th 
+         onClick={() => handleSort("status")}
+         className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left cursor-pointer hover:bg-black/5 transition-colors">
+         Status{renderSortIcon("status")}
+        </th>
+        <th 
+         onClick={() => handleSort("example")}
+         className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left cursor-pointer hover:bg-black/5 transition-colors">
+         Example{renderSortIcon("example")}
+        </th>
+        <th 
+         onClick={() => handleSort("exampleChannel")}
+         className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left bg-[#FFDD00]/20 cursor-pointer hover:bg-[#FFDD00]/40 transition-colors">
+         Example Channel{renderSortIcon("exampleChannel")}
+        </th>
+        <th 
+         onClick={() => handleSort("reason")}
+         className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left bg-[#00CCFF]/20 cursor-pointer hover:bg-[#00CCFF]/40 transition-colors">
+         Reason{renderSortIcon("reason")}
+        </th>
        </tr>
       </thead>
       <tbody>
        {filteredRows.length === 0 ? (
         <tr>
-         <td colSpan={8} className="p-8 text-center text-xs font-black uppercase tracking-widest text-black/40">
+         <td
+          colSpan={8}
+          className="p-8 text-center text-xs font-black uppercase tracking-widest text-black/40">
           No categories found matching "{searchTerm}"
          </td>
         </tr>
@@ -200,7 +278,9 @@ export function SystemStatisticsSubToolbox({ masterTableRows }: SystemStatistics
          <tr
           key={`${row.source}-${row.scope}-${row.canonicalKey}-${idx}`}
           className="odd:bg-white even:bg-gray-50 border-b border-black/10 hover:bg-[#CCFF00]/10 transition-colors">
-          <td className="p-3 border-r border-black/10 text-xs font-black">{row.categoryName}</td>
+          <td className="p-3 border-r border-black/10 text-xs font-black">
+           {row.categoryName}
+          </td>
           <td className="p-3 border-r border-black/10 text-xs font-bold font-mono text-black/60">
            {row.canonicalKey}
           </td>
@@ -208,12 +288,14 @@ export function SystemStatisticsSubToolbox({ masterTableRows }: SystemStatistics
            {sourceLabel(row)}
           </td>
           <td className="p-3 border-r border-black/10">
-           <span className={`inline-flex items-center rounded-md px-2 py-1 text-[10px] font-black uppercase border border-black ${SCOPE_STYLES[row.scope]}`}>
+           <span
+            className={`inline-flex items-center rounded-md px-2 py-1 text-[10px] font-black uppercase border border-black ${SCOPE_STYLES[row.scope]}`}>
             {scopeLabel(row)}
            </span>
           </td>
           <td className="p-3 border-r border-black/10">
-           <span className={`inline-flex items-center rounded-md px-2 py-1 text-[10px] font-black uppercase border border-black ${STATUS_STYLES[row.status]}`}>
+           <span
+            className={`inline-flex items-center rounded-md px-2 py-1 text-[10px] font-black uppercase border border-black ${STATUS_STYLES[row.status]}`}>
             {row.status.replace(/_/g, " ")}
            </span>
           </td>

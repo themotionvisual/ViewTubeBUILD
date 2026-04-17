@@ -24,7 +24,7 @@ import {
  expandCsvAndZipFiles,
  getCsvTagColorClass,
  parseCSV as parseCsvRows,
-} from "../services/csvImportUtils"
+} from "../services/DataEngine"
 import {
  LineChart,
  Line,
@@ -4618,11 +4618,11 @@ const GoogleChartsGallery: React.FC<{
  }
 
  return (
-  <div className="space-y-12 relative pb-24">
+  <div className="research-lab-scope space-y-12 relative pb-24">
    <style>{`
-        /* Suppress global Google Charts pulsing/blinking circles on focusTarget */
-        circle { animation: none !important; transition: none !important; opacity: 1 !important; stroke-width: 2px !important; }
-        .google-visualization-tooltip { pointer-events: none !important; }
+        /* Contain Google Charts overrides inside Research Lab only. */
+        .research-lab-scope .google-visualization-chart svg circle { animation: none !important; transition: none !important; opacity: 1 !important; stroke-width: 2px !important; }
+        .research-lab-scope .google-visualization-tooltip { pointer-events: none !important; }
       `}</style>
 
    {/* MAIN VISUALIZER STATIONS */}
@@ -5894,24 +5894,24 @@ const ResearchLab: React.FC = () => {
    )}
 
    <style>{`
-        .pop-button {
+        .research-lab-scope .pop-button {
           @apply px-6 py-3 border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_black] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_black];
         }
-        .pop-box {
+        .research-lab-scope .pop-box {
           @apply bg-white border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_black] transition-all overflow-hidden;
         }
-        .pop-header {
+        .research-lab-scope .pop-header {
           @apply px-4 py-3 border-b-4 border-black font-black uppercase tracking-tight text-sm;
         }
-        .pop-content {
+        .research-lab-scope .pop-content {
           @apply p-4;
         }
-        @keyframes fade-in {
+        .research-lab-scope .animate-fade-in {
+          animation: research-lab-fade-in 0.4s ease-out forwards;
+        }
+        @keyframes research-lab-fade-in {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.4s ease-out forwards;
         }
       `}</style>
   </div>

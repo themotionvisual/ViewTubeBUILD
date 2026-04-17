@@ -36,6 +36,9 @@ const formatUploadDate = (value: unknown): string => {
   return Number.isNaN(dt.getTime()) ? "Unknown date" : dt.toLocaleDateString()
 }
 
+const widgetControlClass =
+  "h-8 bg-[#f3f4f6] border-[3px] border-black rounded-md inline-flex items-center justify-center text-[9px] font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,0.45)] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,0.45)] transition-all"
+
 const WidgetShell: React.FC<{
   widget: WidgetDefinition
   instance: WidgetInstanceState
@@ -63,24 +66,26 @@ const WidgetShell: React.FC<{
               <>
                 <button
                   onClick={onCycleSize}
-                  className="h-7 px-2 bg-white border-[2px] border-black rounded-lg text-[9px] font-black uppercase"
+                  className={`${widgetControlClass} min-w-[44px] px-2`}
                   title="Cycle size bucket">
                   {instance.size}
                 </button>
                 <button
                   onClick={onRemove}
-                  className="h-7 w-7 bg-white border-[2px] border-black rounded-lg inline-flex items-center justify-center"
+                  className={`${widgetControlClass} w-8`}
                   title="Remove widget">
                   <X size={14} />
                 </button>
-                <span className="h-7 w-7 bg-white border-[2px] border-black rounded-lg inline-flex items-center justify-center cursor-grab active:cursor-grabbing">
+                <span
+                  className={`${widgetControlClass} w-8 cursor-grab active:cursor-grabbing`}
+                >
                   <Grip size={14} />
                 </span>
               </>
             ) : null}
             <button
               onClick={onToggleCollapse}
-              className="h-7 w-7 bg-white border-[2px] border-black rounded-lg inline-flex items-center justify-center text-[11px] font-black"
+              className={`${widgetControlClass} w-8 text-[11px]`}
               title={instance.collapsed ? "Expand" : "Collapse"}>
               {instance.collapsed ? "+" : "−"}
             </button>
@@ -93,7 +98,10 @@ const WidgetShell: React.FC<{
 }
 
 const statusBadge = (status: string, tone: string) => (
-  <span className="px-2 py-1 border-[2px] border-black rounded-md text-[9px] font-black uppercase tracking-[0.1em]" style={{ backgroundColor: tone }}>
+  <span
+    className="h-7 px-2 border-[3px] border-black rounded-md inline-flex items-center text-[9px] font-black uppercase tracking-[0.1em] shadow-[2px_2px_0px_0px_rgba(0,0,0,0.35)]"
+    style={{ backgroundColor: tone }}
+  >
     {status}
   </span>
 )

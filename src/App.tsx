@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useMemo } from "react"
 import { BrowserRouter, useLocation } from "react-router-dom"
 import { GlobalDataProvider } from "./context/GlobalDataContext"
 import { AppShell } from "./app/AppShell"
@@ -59,22 +59,20 @@ function AppInner() {
 }
 
 function App() {
- useEffect(() => {
-  const isDark = localStorage.getItem("vt_dark_mode") === "true"
-  if (isDark) {
-   document.body.classList.add("dark-theme-override")
-  } else {
-   document.body.classList.remove("dark-theme-override")
-  }
- }, [])
+ const isDarkTheme = useMemo(
+  () => localStorage.getItem("vt_dark_mode") === "true",
+  [],
+ )
 
  return (
-  <GlobalDataProvider>
-   <style>{DARK_THEME_CSS}</style>
-   <BrowserRouter>
-    <AppInner />
-   </BrowserRouter>
-  </GlobalDataProvider>
+  <div className={isDarkTheme ? "dark-theme-override" : undefined}>
+   <GlobalDataProvider>
+    <style>{DARK_THEME_CSS}</style>
+    <BrowserRouter>
+     <AppInner />
+    </BrowserRouter>
+   </GlobalDataProvider>
+  </div>
  )
 }
 

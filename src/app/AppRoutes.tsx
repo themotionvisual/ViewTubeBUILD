@@ -10,7 +10,9 @@ import ResearchLab from "../views/ResearchLab"
 import DataVisualizations from "../views/DataVizualizations"
 import Settings from "../views/Settings"
 import ReferenceStudio from "../views/ReferenceStudio"
+import ReferenceStudioIsolated from "../views/ReferenceStudioIsolated"
 import ReferenceStudioV2 from "../views/ReferenceStudioV2"
+import FourSectionsLabStandalone from "../views/FourSectionsLabStandalone"
 import SourcesLabView from "../views/SourcesLabView"
 import ComponentCatalogView from "../views/ComponentCatalogView"
 import ComponentGridView from "../views/ComponentGridView"
@@ -54,12 +56,19 @@ export const AppRoutes: React.FC = () => {
     path="/reference-studio"
     element={<Navigate to="/reference-studio/toolbox-system" replace />}
    />
-   <Route path="/reference-studio/:tabId" element={<ReferenceStudio />} />
+   <Route path="/reference-studio/:tabId" element={<ReferenceStudioIsolated />} />
    <Route path="/reference-studio-v2" element={<ReferenceStudioV2 />} />
    <Route path="/sources-lab" element={<SourcesLabView />} />
    <Route path="/component-catalog" element={<ComponentCatalogView />} />
    <Route path="/component-grid" element={<ComponentGridView />} />
+   <Route path="/four-sections-lab" element={<FourSectionsLabStandalone />} />
+   <Route path="/render-bench/four-sections-lab" element={<FourSectionsLabStandalone />} />
    <Route path="/bench/:benchId" element={<BenchExplorer />} />
+   <Route
+    path="/render-bench/reference-studio"
+    element={<Navigate to="/render-bench/reference-studio/toolbox-system" replace />}
+   />
+   <Route path="/render-bench/reference-studio/:tabId" element={<ReferenceStudio />} />
    <Route path="/render-bench/:benchId" element={<StandaloneBench />} />
    <Route path="/user-guide" element={<Placeholder title="User Guide" />} />
 

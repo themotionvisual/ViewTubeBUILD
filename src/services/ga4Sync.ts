@@ -5,7 +5,7 @@
  */
 
 import { ga4Service, type GA4Property } from "./ga4Service"
-import type { DataForgeRow } from "./dataForge"
+import type { DataForgeRow } from "./DataEngine"
 
 const GA4_STORAGE_KEY = "ga4_properties_cache"
 const GA4_DATA_KEY = "ga4_analytics_cache"

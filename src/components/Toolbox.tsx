@@ -166,6 +166,8 @@ export const Toolbox: React.FC<ToolboxProps> = ({
         style={{
           border: `${stroke}px solid black`,
           borderRadius: `${radius}px`,
+          isolation: 'isolate',
+          contain: 'content',
           ...accentShadowStyle
         }}
       >
@@ -462,6 +464,8 @@ const SubToolboxInner: React.FC<SubToolboxProps> = ({
       style={{
         border: '4px solid black',
         borderRadius: '16px',
+        isolation: 'isolate',
+        contain: 'content',
         boxShadow: `${shadowOffset}px ${shadowOffset}px 0px 0px ${shadowColor}`
       }}
     >

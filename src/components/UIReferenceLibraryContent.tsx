@@ -474,13 +474,12 @@ const VisualSlidersAndRings = () => {
  const [val1, setVal1] = useState(65)
  const [val2, setVal2] = useState(30)
  return (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center ui-library-slider-scope">
    <style>{`
-            .vt-slider { -webkit-appearance: none; appearance: none; background: transparent; outline: none; }
-            .vt-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 32px; height: 32px; border: 4px solid black; border-radius: 50%; background: #FF3399; cursor: pointer; box-shadow: 2px 2px 0 0 black; margin-top: -12px; }
-            .vt-slider::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: black; border-radius: 4px; border: 2px solid black; }
-         `}</style>
-   <div className="space-y-12 bg-white border-[4px] border-black rounded-3xl p-8 shadow-[8px_8px_0_0_black]">
+           .ui-library-slider-scope .vt-slider { -webkit-appearance: none; appearance: none; background: transparent; outline: none; }
+           .ui-library-slider-scope .vt-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 32px; height: 32px; border: 4px solid black; border-radius: 50%; background: #FF3399; cursor: pointer; box-shadow: 2px 2px 0 0 black; margin-top: -12px; }
+           .ui-library-slider-scope .vt-slider::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: black; border-radius: 4px; border: 2px solid black; }
+        `}</style>   <div className="space-y-12 bg-white border-[4px] border-black rounded-3xl p-8 shadow-[8px_8px_0_0_black]">
     <div className="space-y-6">
      <div className="flex justify-between font-[1000] text-2xl uppercase tracking-tighter">
       <span className="text-black">Velocity</span>
@@ -548,12 +547,11 @@ const VisualSlidersAndRings = () => {
 
 const LoaderAndSkeletonBay = () => {
  return (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-10 ui-library-loader-scope">
    <style>{`
-            @keyframes vt-load { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-            .vt-loading-bar::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: vt-load 1.5s infinite; }
-         `}</style>
-   <div className="space-y-6 bg-white border-[4px] border-black p-8 rounded-[24px] shadow-[8px_8px_0_0_black]">
+           @keyframes vt-load { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+           .ui-library-loader-scope .vt-loading-bar::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: vt-load 1.5s infinite; }
+        `}</style>   <div className="space-y-6 bg-white border-[4px] border-black p-8 rounded-[24px] shadow-[8px_8px_0_0_black]">
     <h4 className="font-black uppercase tracking-widest text-sm border-b-4 border-black pb-2 mb-6">
      Skeletons
     </h4>

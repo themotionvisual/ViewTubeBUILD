@@ -71,7 +71,10 @@ const parseReportRows = (report: unknown): Record<string, unknown>[] => {
  const headers = payload.columnHeaders.map((header) => String(header.name || ""))
  return payload.rows
   .map((row) => {
-   if (!Array.isArray(row)) return null
+   if (!Array.isArray(row)) {
+    if (row && typeof row === "object") return row as Record<string, unknown>
+    return null
+   }
    const out: Record<string, unknown> = {}
    headers.forEach((header, index) => {
     if (header) out[header] = row[index]
@@ -87,19 +90,62 @@ const toDomainRows = (
  scope: CoverageScope,
 ): DomainTableRow[] => {
  const now = new Date().toISOString()
- const sample = sourceRows[0] || {}
- return Object.keys(sample)
-  .filter((key) => key && !key.startsWith("_") && !key.startsWith("__"))
-  .map((key) => ({
-   canonicalKey: key,
-   displayName: key,
+ if (sourceRows.length === 0) return []
+
+ return sourceRows.map((row, index) => {
+  const rowId = `${scope}_${index}`
+  
+  // Normalize row keys for consistent display
+  const normalizedRow: Record<string, unknown> = {}
+  Object.entries(row).forEach(([k, v]) => {
+   if (k.startsWith('_')) {
+    normalizedRow[k] = v
+    return
+   }
+   
+   // Map API keys to more readable canonical versions if possible
+   let targetKey = k
+   if (k === 'insightTrafficSourceType') targetKey = 'Traffic Source'
+   if (k === 'ageGroup') targetKey = 'Age Group'
+   if (k === 'gender') targetKey = 'Gender'
+   if (k === 'viewerPercentage') targetKey = 'Viewer %'
+   if (k === 'country') targetKey = 'Country'
+   if (k === 'day') targetKey = 'Date'
+   
+   normalizedRow[targetKey] = v
+  })
+
+  // Try to find a descriptive dimension value for the display name
+  const dimensionKey = Object.keys(normalizedRow).find(k => 
+   k.toLowerCase().includes('source') || 
+   k.toLowerCase().includes('group') || 
+   k.toLowerCase().includes('gender') || 
+   k.toLowerCase().includes('country') ||
+   k.toLowerCase().includes('date')
+  )
+  const dimensionValue = dimensionKey ? String(normalizedRow[dimensionKey]) : null
+  const tableLabel = MASTER_TABLE_LABELS[`master_${scope}` as MasterTableType] || scope
+  const displaySuffix = dimensionValue ? `: ${dimensionValue}` : ` #${index + 1}`
+
+  // Use the first non-internal/non-dimension value as the primary value for the 'value' column
+  const primaryKey = Object.keys(normalizedRow).find(k => 
+   !k.startsWith('_') && !k.startsWith('__') && k !== dimensionKey && 
+   (typeof normalizedRow[k] === 'number' || (typeof normalizedRow[k] === 'string' && normalizedRow[k].length > 0))
+  )
+  const primaryValue = primaryKey ? textValue(normalizedRow[primaryKey]) : (dimensionValue || null)
+
+  return {
+   ...normalizedRow,
+   canonicalKey: rowId,
+   displayName: `${tableLabel}${displaySuffix}`,
    source,
    scope,
-   accuracyClass: textValue(sample[key]) === null ? "unavailable" : "exact",
-   value: textValue(sample[key]),
+   accuracyClass: "exact",
+   value: primaryValue,
    sampledFrom: source,
    sampledAt: now,
-  }))
+  } as DomainTableRow
+ })
 }
 
 const ingestModeToSourceMode = (mode: IngestMode): "api" | "csv" | "hybrid" => {
@@ -183,9 +229,7 @@ export const buildMasterTableBundle = (
  const trafficRows = parseReportRows(ytCache.trafficSources)
  tables.master_traffic = toDomainRows(trafficRows, "youtube", "traffic")
 
- const geoRows = parseReportRows(ytCache.channelAnalytics).filter((row) =>
-  Object.keys(row).some((key) => key.toLowerCase().includes("country") || key.toLowerCase().includes("province")),
- )
+ const geoRows = parseReportRows(ytCache.geography)
  tables.master_geography = toDomainRows(geoRows, "youtube", "geo")
 
  const dailyRows = parseReportRows(ytCache.dailyMetrics)

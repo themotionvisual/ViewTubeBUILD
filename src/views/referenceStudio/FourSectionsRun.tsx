@@ -1,11 +1,6 @@
 import React from "react"
 import { Blocks, FolderTree, Layers, Sparkles, Workflow } from "lucide-react"
-import {
- MainToolbox,
- PillList,
- SectionCard,
- SourceFrame,
-} from "./ReferenceStudioPrimitives"
+import { MainToolbox, SectionCard, PillList, SourceFrame } from "./ReferenceStudioPrimitives"
 import { SourceHeaderIcons, useAllSourceModules } from "./sourceModules"
 
 const sectionCAndE = {
@@ -134,28 +129,24 @@ const ShimBucket: React.FC<{
  </SectionCard>
 )
 
-const SectionSourcesLab: React.FC = () => {
- const {
-  sectionCE,
-  toolboxSet: setOne,
-  shim: shimSet,
-  ustube: ustubeSet,
- } = useAllSourceModules()
+const FourSectionsRun: React.FC = () => {
+ const { sectionCE, toolboxSet: setOne, shim: shimSet, ustube: ustubeSet } = useAllSourceModules()
 
  return (
-  <div className="w-full max-w-[1450px] mx-auto pb-24">
+  <div className="w-full max-w-[1450px] mx-auto pb-24 space-y-8">
    <MainToolbox
-    title="SECTION SOURCES LAB"
-    subtitle="4-source intake, traceability, and interaction-preserving extraction workspace"
+    title="Reference Studio (C & E)"
+    subtitle="Components extracted from Reference Studio Sections C and E"
     icon={<FolderTree size={40} strokeWidth={2.8} className="text-black" />}
     headerColor="bg-[#24D3FF]"
     iconBoxColor="bg-[#CCFF00]"
-    scopeId="section-ce-root"
+    scopeId="fs-section-ce"
     defaultOpen={false}
-    mountOnOpen>
+    mountOnOpen
+   >
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
      <CategoryBucket
-      scopeId="section-ce-controls"
+      scopeId="fs-section-ce-controls"
       title="Section C + E · Controls"
       subtitle="source-scoped extracted controls"
       headerColor="bg-[#FFB158]"
@@ -164,7 +155,7 @@ const SectionSourcesLab: React.FC = () => {
       {sectionCE.controls}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="section-ce-inputs"
+      scopeId="fs-section-ce-inputs"
       title="Section C + E · Inputs"
       subtitle="source-scoped input modules"
       headerColor="bg-[#FFB158]"
@@ -173,7 +164,7 @@ const SectionSourcesLab: React.FC = () => {
       {sectionCE.inputs}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="section-ce-navigation"
+      scopeId="fs-section-ce-navigation"
       title="Section C + E · Navigation"
       subtitle="sidebar + route navigation extraction"
       headerColor="bg-[#FFB158]"
@@ -182,7 +173,7 @@ const SectionSourcesLab: React.FC = () => {
       {sectionCE.navigation}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="section-ce-feedback"
+      scopeId="fs-section-ce-feedback"
       title="Section C + E · Feedback/Status"
       subtitle="kpi/status response modules"
       headerColor="bg-[#FFB158]"
@@ -191,7 +182,7 @@ const SectionSourcesLab: React.FC = () => {
       {sectionCE.feedback}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="section-ce-cards"
+      scopeId="fs-section-ce-cards"
       title="Section C + E · Cards/Media"
       subtitle="video cards + status pills"
       headerColor="bg-[#FFB158]"
@@ -200,7 +191,7 @@ const SectionSourcesLab: React.FC = () => {
       {sectionCE.cardsMedia}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="section-ce-dialogs"
+      scopeId="fs-section-ce-dialogs"
       title="Section C + E · Dialogs/Popups"
       subtitle="hover + modal extraction"
       headerColor="bg-[#FFB158]"
@@ -209,7 +200,7 @@ const SectionSourcesLab: React.FC = () => {
       {sectionCE.dialogs}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="section-ce-trees"
+      scopeId="fs-section-ce-trees"
       title="Section C + E · Trees/Structure"
       subtitle="collapsible tree extraction"
       headerColor="bg-[#FFB158]"
@@ -217,36 +208,22 @@ const SectionSourcesLab: React.FC = () => {
       items={sectionCAndE["Trees/Structure"]}>
       {sectionCE.trees}
      </CategoryBucket>
-     <SectionCard
-      scopeId="section-ce-preview"
-      title="Section C + E · Source Preview"
-      subtitle="reference library page preview"
-      headerColor="bg-[#FFE357]"
-      icon={<Workflow size={20} strokeWidth={2.6} className="text-black" />}
-      collapsible
-      isOpenInitial={false}
-      contentClassName="p-4 md:p-5 min-h-[300px]">
-      <SourceFrame
-       src="/reference-studio/library"
-       title="Reference Studio · Library"
-       heightClassName="h-[560px]"
-      />
-     </SectionCard>
     </div>
    </MainToolbox>
 
    <MainToolbox
-    title="TOOLBOX_COMPONENT_SET_1 INGEST"
-    subtitle="display, feedback, controls, and button systems extracted from toolbox_component_set_1.html"
+    title="Toolbox Components Set 1"
+    subtitle="Extracted from toolbox_components_set_1.html"
     icon={<Blocks size={40} strokeWidth={2.8} className="text-black" />}
     headerColor="bg-[#CCFF00]"
     iconBoxColor="bg-[#24D3FF]"
-    scopeId="set1-root"
+    scopeId="fs-set1"
     defaultOpen={false}
-    mountOnOpen>
+    mountOnOpen
+   >
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
      <CategoryBucket
-      scopeId="set1-controls"
+      scopeId="fs-set1-controls"
       title="Set 1 · Controls"
       subtitle="button/action families"
       headerColor="bg-[#24D3FF]"
@@ -255,7 +232,7 @@ const SectionSourcesLab: React.FC = () => {
       {setOne.controls}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="set1-inputs"
+      scopeId="fs-set1-inputs"
       title="Set 1 · Inputs"
       subtitle="text/slider/edit-field modules"
       headerColor="bg-[#24D3FF]"
@@ -264,7 +241,7 @@ const SectionSourcesLab: React.FC = () => {
       {setOne.inputs}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="set1-navigation"
+      scopeId="fs-set1-navigation"
       title="Set 1 · Navigation"
       subtitle="stepper/timeline/pagination"
       headerColor="bg-[#24D3FF]"
@@ -273,7 +250,7 @@ const SectionSourcesLab: React.FC = () => {
       {setOne.navigation}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="set1-feedback"
+      scopeId="fs-set1-feedback"
       title="Set 1 · Feedback/Status"
       subtitle="meters/loading/progress"
       headerColor="bg-[#24D3FF]"
@@ -282,7 +259,7 @@ const SectionSourcesLab: React.FC = () => {
       {setOne.feedback}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="set1-cards"
+      scopeId="fs-set1-cards"
       title="Set 1 · Cards/Media"
       subtitle="display chips/avatars/overlap cards"
       headerColor="bg-[#24D3FF]"
@@ -291,7 +268,7 @@ const SectionSourcesLab: React.FC = () => {
       {setOne.cardsMedia}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="set1-dialogs"
+      scopeId="fs-set1-dialogs"
       title="Set 1 · Dialogs/Popups"
       subtitle="accordion and tooltip interactions"
       headerColor="bg-[#24D3FF]"
@@ -300,7 +277,7 @@ const SectionSourcesLab: React.FC = () => {
       {setOne.dialogs}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="set1-trees"
+      scopeId="fs-set1-trees"
       title="Set 1 · Trees/Structure"
       subtitle="structure/divider systems"
       headerColor="bg-[#24D3FF]"
@@ -308,36 +285,22 @@ const SectionSourcesLab: React.FC = () => {
       items={toolboxSet["Trees/Structure"]}>
       {setOne.trees}
      </CategoryBucket>
-     <SectionCard
-      scopeId="set1-preview"
-      title="Set 1 · Source Preview"
-      subtitle="local authoritative source file"
-      headerColor="bg-[#FF7497]"
-      icon={<FolderTree size={20} strokeWidth={2.6} className="text-black" />}
-      collapsible
-      isOpenInitial={false}
-      contentClassName="p-4 md:p-5 min-h-[300px]">
-      <SourceFrame
-       src="/toolbox_component_set_1.html"
-       title="toolbox_component_set_1.html"
-       heightClassName="h-[560px]"
-      />
-     </SectionCard>
     </div>
    </MainToolbox>
 
    <MainToolbox
-    title="SHIM INGEST"
-    subtitle="operational widgets, tactile controls, and console dashboards from shim.html"
+    title="Shim Controls"
+    subtitle="Extracted from Shim.html"
     icon={<Workflow size={40} strokeWidth={2.8} className="text-black" />}
     headerColor="bg-[#FF7497]"
     iconBoxColor="bg-[#FFE357]"
-    scopeId="shim-root"
+    scopeId="fs-shim"
     defaultOpen={false}
-    mountOnOpen>
+    mountOnOpen
+   >
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
      <ShimBucket
-      scopeId="shim-controls"
+      scopeId="fs-shim-controls"
       title="Shim · Controls"
       subtitle="complex controls toolbox"
       icon={SourceHeaderIcons.shim}
@@ -345,7 +308,7 @@ const SectionSourcesLab: React.FC = () => {
       {shimSet.controls}
      </ShimBucket>
      <ShimBucket
-      scopeId="shim-inputs"
+      scopeId="fs-shim-inputs"
       title="Shim · Inputs"
       subtitle="hook retention input modules"
       icon={<Layers size={20} strokeWidth={2.6} className="text-black" />}
@@ -353,7 +316,7 @@ const SectionSourcesLab: React.FC = () => {
       {shimSet.inputs}
      </ShimBucket>
      <ShimBucket
-      scopeId="shim-navigation"
+      scopeId="fs-shim-navigation"
       title="Shim · Navigation"
       subtitle="console route controls"
       icon={<Layers size={20} strokeWidth={2.6} className="text-black" />}
@@ -361,7 +324,7 @@ const SectionSourcesLab: React.FC = () => {
       {shimSet.navigation}
      </ShimBucket>
      <ShimBucket
-      scopeId="shim-feedback"
+      scopeId="fs-shim-feedback"
       title="Shim · Feedback/Status"
       subtitle="loading/status system modules"
       icon={<Layers size={20} strokeWidth={2.6} className="text-black" />}
@@ -369,7 +332,7 @@ const SectionSourcesLab: React.FC = () => {
       {shimSet.feedback}
      </ShimBucket>
      <ShimBucket
-      scopeId="shim-cards"
+      scopeId="fs-shim-cards"
       title="Shim · Cards/Media"
       subtitle="matrix/media strip modules"
       icon={<Layers size={20} strokeWidth={2.6} className="text-black" />}
@@ -377,7 +340,7 @@ const SectionSourcesLab: React.FC = () => {
       {shimSet.cardsMedia}
      </ShimBucket>
      <ShimBucket
-      scopeId="shim-dialogs"
+      scopeId="fs-shim-dialogs"
       title="Shim · Dialogs/Popups"
       subtitle="hover/modal interactions"
       icon={<Layers size={20} strokeWidth={2.6} className="text-black" />}
@@ -385,45 +348,29 @@ const SectionSourcesLab: React.FC = () => {
       {shimSet.dialogs}
      </ShimBucket>
      <ShimBucket
-      scopeId="shim-trees"
+      scopeId="fs-shim-trees"
       title="Shim · Trees/Structure"
       subtitle="section structure mapping"
       icon={<Layers size={20} strokeWidth={2.6} className="text-black" />}
       items={shim["Trees/Structure"]}>
       {shimSet.trees}
      </ShimBucket>
-     <SectionCard
-      scopeId="shim-preview"
-      title="Shim · Source Preview"
-      subtitle="shim.html preview"
-      headerColor="bg-[#FFE357]"
-      icon={<FolderTree size={20} strokeWidth={2.6} className="text-black" />}
-      collapsible
-      isOpenInitial={false}
-      contentClassName="p-4 md:p-5 min-h-[300px]">
-      <div className="border-[3px] border-black rounded-xl overflow-hidden shadow-[4px_4px_0px_black]">
-       <SourceFrame
-        src="/shim.html"
-        title="shim.html"
-        heightClassName="h-[560px]"
-       />
-      </div>
-     </SectionCard>
     </div>
    </MainToolbox>
 
    <MainToolbox
-    title="USTUBE UI KIT INGEST"
-    subtitle="external source import mirrored in public/reference-studio-sources"
+    title="UsTube UI Kit"
+    subtitle="Extracted from ustube-ui-kit (3).html"
     icon={<Sparkles size={40} strokeWidth={2.8} className="text-black" />}
     headerColor="bg-[#FFE357]"
     iconBoxColor="bg-[#FFB158]"
-    scopeId="ustube-root"
+    scopeId="fs-ustube"
     defaultOpen={false}
-    mountOnOpen>
+    mountOnOpen
+   >
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
      <CategoryBucket
-      scopeId="ustube-controls"
+      scopeId="fs-ustube-controls"
       title="UStube · Controls"
       subtitle="analytics/algorithm/keyword/strategy modules"
       headerColor="bg-[#FFB158]"
@@ -432,7 +379,7 @@ const SectionSourcesLab: React.FC = () => {
       {ustubeSet.controls}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="ustube-inputs"
+      scopeId="fs-ustube-inputs"
       title="UStube · Inputs"
       subtitle="input fields + sliders/toggles"
       headerColor="bg-[#FFB158]"
@@ -441,7 +388,7 @@ const SectionSourcesLab: React.FC = () => {
       {ustubeSet.inputs}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="ustube-navigation"
+      scopeId="fs-ustube-navigation"
       title="UStube · Navigation"
       subtitle="video manager/calendar modules"
       headerColor="bg-[#FFB158]"
@@ -450,7 +397,7 @@ const SectionSourcesLab: React.FC = () => {
       {ustubeSet.navigation}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="ustube-feedback"
+      scopeId="fs-ustube-feedback"
       title="UStube · Feedback/Status"
       subtitle="loading/dialog/notification modules"
       headerColor="bg-[#FFB158]"
@@ -459,7 +406,7 @@ const SectionSourcesLab: React.FC = () => {
       {ustubeSet.feedback}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="ustube-cards"
+      scopeId="fs-ustube-cards"
       title="UStube · Cards/Media"
       subtitle="trend/histogram/distribution bins"
       headerColor="bg-[#FFB158]"
@@ -468,7 +415,7 @@ const SectionSourcesLab: React.FC = () => {
       {ustubeSet.cardsMedia}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="ustube-dialogs"
+      scopeId="fs-ustube-dialogs"
       title="UStube · Dialogs/Popups"
       subtitle="hover tips + modal + alerts"
       headerColor="bg-[#FFB158]"
@@ -477,7 +424,7 @@ const SectionSourcesLab: React.FC = () => {
       {ustubeSet.dialogs}
      </CategoryBucket>
      <CategoryBucket
-      scopeId="ustube-trees"
+      scopeId="fs-ustube-trees"
       title="UStube · Trees/Structure"
       subtitle="tasks/goals structure extraction"
       headerColor="bg-[#FFB158]"
@@ -485,25 +432,10 @@ const SectionSourcesLab: React.FC = () => {
       items={ustube["Trees/Structure"]}>
       {ustubeSet.trees}
      </CategoryBucket>
-     <SectionCard
-      scopeId="ustube-preview"
-      title="UStube · Source Preview"
-      subtitle="mirrored file for stable in-app iframe rendering"
-      headerColor="bg-[#24D3FF]"
-      icon={<FolderTree size={20} strokeWidth={2.6} className="text-black" />}
-      collapsible
-      isOpenInitial={false}
-      contentClassName="p-4 md:p-5 min-h-[300px]">
-      <SourceFrame
-       src="/reference-studio-sources/ustube-ui-kit-3.html"
-       title="ustube-ui-kit (3).html"
-       heightClassName="h-[560px]"
-      />
-     </SectionCard>
     </div>
    </MainToolbox>
   </div>
  )
 }
 
-export default SectionSourcesLab
+export default FourSectionsRun

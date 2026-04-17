@@ -33,6 +33,11 @@ const COLUMN_ALIASES: Record<string, string[]> = {
  "Members gained": ["Members Gained"],
  "Members lost": ["Members Lost"],
  "Total members": ["Total members"],
+ "Traffic Source": ["insightTrafficSourceType", "trafficSourceType"],
+ "Age Group": ["ageGroup"],
+ "Gender": ["gender"],
+ "Viewer %": ["viewerPercentage"],
+ "Country": ["country", "countryCode"],
 }
 
 // Reverse map: alias -> canonical name
@@ -54,9 +59,14 @@ const COLUMN_DISPLAY_ORDER = [
  "Video title",
  "Video",
  "Date",
+ "Country",
+ "Traffic Source",
+ "Age Group",
+ "Gender",
  "Content Type",
  "Type",
  "Views",
+ "Viewer %",
  "Watch Time (Hours)",
  "AVD (Sec)",
  "AVP (%)",

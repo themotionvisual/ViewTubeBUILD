@@ -372,3 +372,5 @@ web_modules/
 *.pid
 *.seed
 *.pid.lock
+.gemini/
+gha-creds-*.json

@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Draggable from "react-draggable";
 import { ResizableBox } from "react-resizable";
 import "react-resizable/css/styles.css";
@@ -23,6 +23,24 @@ import {
 } from "lucide-react";
 import { ToolHeader } from "../components/ToolHeader";
 import { useBrain } from "../context/GlobalDataContext";
+import {
+  createEditorEngineState,
+  findAdjacentClipOnTrack,
+  type EditorEngineState,
+  type EditorTimelineClip,
+  type EditorTimelineCommand,
+  type EditorTrackId,
+  reduceEditorCommand,
+  replayTimelineCommands,
+} from "../services/editorEngine";
+import {
+  buildPreviewRender,
+  type FinalRenderRequest,
+  type PreviewRenderRequest,
+  type RemotionBindingConfig,
+  timelineToRemotionCompiler,
+} from "../services/timelineToRemotionCompiler";
+import { buildRemotionParityReport } from "../services/remotionParity";
 
 export type EditorLayoutMode = "vertical" | "landscape";
 export type EditorTabId =
@@ -115,6 +133,10 @@ interface Layer {
   url: string;
   type: "image" | "video";
   trackId: "media" | "text" | "audio" | "effects";
+  color: string;
+  speed: number;
+  start: number;
+  end: number;
   isVisible: boolean;
   width: number;
   height: number;
@@ -283,6 +305,10 @@ export const ShortsStudio = () => {
       url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop",
       type: "image",
       trackId: "media",
+      color: "#24D3FF",
+      speed: 1,
+      start: 0,
+      end: 8,
       isVisible: true,
       x: 0,
       y: 0,
@@ -303,6 +329,10 @@ export const ShortsStudio = () => {
       url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=2576&auto=format&fit=crop",
       type: "image",
       trackId: "media",
+      color: "#FF7497",
+      speed: 1,
+      start: 2,
+      end: 16,
       isVisible: true,
       x: 0,
       y: 0,
@@ -318,6 +348,70 @@ export const ShortsStudio = () => {
       keyframes: [],
     },
   ]);
+  const [engineState, setEngineState] = useState<EditorEngineState>(() => {
+    const seedClips: EditorTimelineClip[] = [
+      {
+        id: "clip-1",
+        layerId: "1",
+        trackId: "media",
+        start: 0,
+        end: 8,
+        color: "#24D3FF",
+        speed: 1,
+        keyframes: [],
+        groupWithNext: true,
+        transitionToNext: { type: "crossfade", duration: 0.35 },
+      },
+      {
+        id: "clip-2",
+        layerId: "2",
+        trackId: "media",
+        start: 2,
+        end: 16,
+        color: "#FF7497",
+        speed: 1,
+        keyframes: [],
+        groupWithNext: false,
+      },
+    ];
+    return createEditorEngineState(seedClips);
+  });
+  const timelineDurationSec = 180;
+  const timelinePixelsPerSecond = 80;
+  const [timelineGuideSec, setTimelineGuideSec] = useState(0);
+  const [timelineCursorMode, setTimelineCursorMode] = useState<"default" | "trim" | "drag">(
+    "default",
+  );
+  const [timelineContext, setTimelineContext] = useState<{
+    open: boolean;
+    x: number;
+    y: number;
+    clipId: string | null;
+    trackId: EditorTrackId | null;
+    at: number;
+  }>({
+    open: false,
+    x: 0,
+    y: 0,
+    clipId: null,
+    trackId: null,
+    at: 0,
+  });
+  const timelineScrollRef = useRef<HTMLDivElement | null>(null);
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dragStateRef = useRef<{
+    clipId: string;
+    mode: "move" | "trimStart" | "trimEnd";
+    startX: number;
+    originStart: number;
+    originEnd: number;
+    originTrackId: EditorTrackId;
+  } | null>(null);
+  const arrowStateRef = useRef({
+    down: false,
+    left: false,
+    right: false,
+  });
 
   const [providers, setProviders] = useState<ExtensionProviderConfig[]>(INITIAL_PROVIDERS);
   const [activeLayerId, setActiveLayerId] = useState<string | null>("2");
@@ -332,6 +426,121 @@ export const ShortsStudio = () => {
     target: "selectedClip",
   });
 
+  const remotionBindingConfig: RemotionBindingConfig = useMemo(
+    () => ({
+      compositionId: "viewtube-shorts-main",
+      fps: 30,
+      width: aspectRatio === "9:16" ? 1080 : 1920,
+      height: aspectRatio === "9:16" ? 1920 : 1080,
+      durationStrategy: "fitToContent",
+      qualityProfile: "preview",
+    }),
+    [aspectRatio],
+  );
+
+  const remotionComposition = useMemo(
+    () => timelineToRemotionCompiler.compile(engineState, remotionBindingConfig),
+    [engineState, remotionBindingConfig],
+  );
+
+  const remotionParityReport = useMemo(
+    () => buildRemotionParityReport(engineState, remotionComposition),
+    [engineState, remotionComposition],
+  );
+
+  const previewRenderRequest: PreviewRenderRequest = useMemo(
+    () => ({
+      snapshotId: engineState.snapshotId,
+      compileVersion: engineState.compileVersion,
+      bindingConfig: remotionBindingConfig,
+    }),
+    [engineState.compileVersion, engineState.snapshotId, remotionBindingConfig],
+  );
+
+  const finalRenderRequest: FinalRenderRequest = useMemo(
+    () => ({
+      ...previewRenderRequest,
+      exportFormat: "mp4",
+      qualityPreset: "high",
+    }),
+    [previewRenderRequest],
+  );
+
+  const previewRender = useMemo(
+    () => buildPreviewRender(engineState, previewRenderRequest),
+    [engineState, previewRenderRequest],
+  );
+
+  const dispatchTimelineCommand = (command: EditorTimelineCommand) => {
+    setEngineState((prev) => reduceEditorCommand(prev, command));
+  };
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowDown") arrowStateRef.current.down = true;
+      if (event.key === "ArrowLeft") arrowStateRef.current.left = true;
+      if (event.key === "ArrowRight") arrowStateRef.current.right = true;
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
+        dispatchTimelineCommand({ type: event.shiftKey ? "redo" : "undo" });
+      }
+    };
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.key === "ArrowDown") arrowStateRef.current.down = false;
+      if (event.key === "ArrowLeft") arrowStateRef.current.left = false;
+      if (event.key === "ArrowRight") arrowStateRef.current.right = false;
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, []);
+
+  useEffect(() => {
+    let frameRef = 0;
+    let lastTime = performance.now();
+    const animate = (now: number) => {
+      if (isPlaying) {
+        const delta = (now - lastTime) / 1000;
+        setCurrentTime((prev) => {
+          const maxSeconds = remotionComposition.durationInFrames / remotionBindingConfig.fps;
+          if (prev + delta >= maxSeconds) {
+            setIsPlaying(false);
+            return maxSeconds;
+          }
+          return prev + delta;
+        });
+      }
+      lastTime = now;
+      frameRef = window.requestAnimationFrame(animate);
+    };
+    frameRef = window.requestAnimationFrame(animate);
+    return () => window.cancelAnimationFrame(frameRef);
+  }, [isPlaying, remotionBindingConfig.fps, remotionComposition.durationInFrames]);
+
+  useEffect(() => {
+    setLayers((prev) =>
+      prev.map((layer) => {
+        const clip = engineState.clips.find((item) => item.layerId === layer.id);
+        if (!clip) return { ...layer, isVisible: false };
+        return {
+          ...layer,
+          trackId: clip.trackId,
+          color: clip.color,
+          speed: clip.speed,
+          start: clip.start,
+          end: clip.end,
+          isVisible: true,
+          keyframes: clip.keyframes.map((keyframe) => ({
+            time: keyframe.time,
+            props: keyframe.props,
+          })),
+        };
+      }),
+    );
+  }, [engineState.clips]);
+
   const addLayer = (name: string, url: string, trackId: Layer["trackId"] = "media") => {
     const topZ = Math.max(...layers.map((l) => l.zIndex), 0);
     const newLayer: Layer = {
@@ -340,6 +549,10 @@ export const ShortsStudio = () => {
       url,
       type: "image",
       trackId,
+      color: "#CCFF00",
+      speed: 1,
+      start: currentTime,
+      end: currentTime + 6,
       isVisible: true,
       width: aspectRatio === "9:16" ? 400 : 1000,
       height: aspectRatio === "9:16" ? 711 : 562,
@@ -354,7 +567,21 @@ export const ShortsStudio = () => {
       hasBgRemoved: false,
       keyframes: [],
     };
-    setLayers([newLayer, ...layers]);
+    setLayers((prev) => [newLayer, ...prev]);
+    dispatchTimelineCommand({
+      type: "insertClip",
+      clip: {
+        id: `clip-${newLayer.id}`,
+        layerId: newLayer.id,
+        trackId,
+        start: newLayer.start,
+        end: newLayer.end,
+        color: newLayer.color,
+        speed: newLayer.speed,
+        keyframes: [],
+        groupWithNext: false,
+      },
+    });
     setActiveLayerId(newLayer.id);
   };
 
@@ -455,6 +682,10 @@ export const ShortsStudio = () => {
         "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop",
       type: "image",
       trackId: (patch.proposedClip.trackId as Layer["trackId"]) || "media",
+      color: "#24D3FF",
+      speed: 1,
+      start: currentTime,
+      end: currentTime + 4,
       isVisible: true,
       width: (patch.proposedClip.width as number) || (aspectRatio === "9:16" ? 400 : 1000),
       height: (patch.proposedClip.height as number) || (aspectRatio === "9:16" ? 711 : 562),
@@ -890,7 +1121,7 @@ export const ShortsStudio = () => {
           <div className="absolute inset-0">
             {[...layers]
               .sort((a, b) => a.zIndex - b.zIndex)
-              .filter((l) => l.isVisible)
+              .filter((l) => l.isVisible && currentTime >= l.start && currentTime <= l.end)
               .map((layer) => {
                 const animated = getInterpolatedProps(layer);
                 if (!layerRefs.current[layer.id]) {
@@ -1038,6 +1269,180 @@ export const ShortsStudio = () => {
       </div>
     </div>
   );
+
+  const getTimelineSecondsFromMouse = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const container = timelineScrollRef.current;
+    if (!container) return 0;
+    const rect = container.getBoundingClientRect();
+    const x = container.scrollLeft + (event.clientX - rect.left);
+    return Math.max(0, Math.min(timelineDurationSec, x / timelinePixelsPerSecond));
+  };
+
+  const getTrackIdFromClientY = (clientY: number): EditorTrackId => {
+    const container = timelineScrollRef.current;
+    if (!container) return "media";
+    const rows = Array.from(container.querySelectorAll("[data-track-row]"));
+    const hitRow = rows.find((row) => {
+      const rect = row.getBoundingClientRect();
+      return clientY >= rect.top && clientY <= rect.bottom;
+    });
+    const id = hitRow?.getAttribute("data-track-row");
+    if (id === "text" || id === "audio" || id === "effects" || id === "media") return id;
+    return "media";
+  };
+
+  const handleTimelineMouseMove = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const at = getTimelineSecondsFromMouse(event);
+    setTimelineGuideSec(at);
+
+    const dragState = dragStateRef.current;
+    if (!dragState) return;
+
+    const delta = (event.clientX - dragState.startX) / timelinePixelsPerSecond;
+    if (dragState.mode === "move") {
+      const duration = dragState.originEnd - dragState.originStart;
+      const nextStart = Math.max(0, dragState.originStart + delta);
+      const nextTrack = getTrackIdFromClientY(event.clientY);
+      dispatchTimelineCommand({
+        type: "moveClip",
+        clipId: dragState.clipId,
+        trackId: nextTrack,
+        start: nextStart,
+        end: nextStart + duration,
+      });
+      setTimelineCursorMode("drag");
+      return;
+    }
+
+    if (dragState.mode === "trimStart") {
+      dispatchTimelineCommand({
+        type: "trimClipStart",
+        clipId: dragState.clipId,
+        start: Math.max(0, dragState.originStart + delta),
+      });
+      setTimelineCursorMode("trim");
+      return;
+    }
+
+    dispatchTimelineCommand({
+      type: "trimClipEnd",
+      clipId: dragState.clipId,
+      end: Math.max(0.1, dragState.originEnd + delta),
+    });
+    setTimelineCursorMode("trim");
+  };
+
+  const stopTimelineInteractions = () => {
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+    dragStateRef.current = null;
+    setTimelineCursorMode("default");
+  };
+
+  const handleClipMouseDown = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    clip: EditorTimelineClip,
+  ) => {
+    event.stopPropagation();
+    const rect = event.currentTarget.getBoundingClientRect();
+    const nearStart = event.clientX - rect.left <= 10;
+    const nearEnd = rect.right - event.clientX <= 10;
+
+    if (nearStart || nearEnd) {
+      dragStateRef.current = {
+        clipId: clip.id,
+        mode: nearStart ? "trimStart" : "trimEnd",
+        startX: event.clientX,
+        originStart: clip.start,
+        originEnd: clip.end,
+        originTrackId: clip.trackId,
+      };
+      setTimelineCursorMode("trim");
+      return;
+    }
+
+    holdTimerRef.current = setTimeout(() => {
+      dragStateRef.current = {
+        clipId: clip.id,
+        mode: "move",
+        startX: event.clientX,
+        originStart: clip.start,
+        originEnd: clip.end,
+        originTrackId: clip.trackId,
+      };
+      setTimelineCursorMode("drag");
+    }, 500);
+  };
+
+  const handleClipClick = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    clip: EditorTimelineClip,
+  ) => {
+    event.stopPropagation();
+    const at = getTimelineSecondsFromMouse(event);
+    setCurrentTime(at);
+    setActiveLayerId(clip.layerId);
+
+    if (arrowStateRef.current.down) {
+      dispatchTimelineCommand({ type: "splitClip", clipId: clip.id, at, newClipId: `clip-${Date.now()}` });
+      return;
+    }
+
+    if (arrowStateRef.current.left) {
+      dispatchTimelineCommand({ type: "deleteSegment", clipId: clip.id, side: "left", at });
+      return;
+    }
+
+    if (arrowStateRef.current.right) {
+      dispatchTimelineCommand({ type: "deleteSegment", clipId: clip.id, side: "right", at });
+    }
+  };
+
+  const handleClipDoubleClick = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    clip: EditorTimelineClip,
+  ) => {
+    event.preventDefault();
+    setTimelineContext({
+      open: true,
+      x: event.clientX,
+      y: event.clientY,
+      clipId: clip.id,
+      trackId: clip.trackId,
+      at: getTimelineSecondsFromMouse(event),
+    });
+  };
+
+  const timelineCursorClass =
+    timelineCursorMode === "trim"
+      ? "ew-resize"
+      : timelineCursorMode === "drag"
+        ? "grabbing"
+        : "crosshair";
+
+  const visibleRange = useMemo(() => {
+    const scrollNode = timelineScrollRef.current;
+    if (!scrollNode) return { start: 0, end: 15 };
+    const start = scrollNode.scrollLeft / timelinePixelsPerSecond;
+    const end = (scrollNode.scrollLeft + scrollNode.clientWidth) / timelinePixelsPerSecond;
+    return { start, end };
+  }, [timelineGuideSec, engineState.compileVersion]);
+
+  const trackDisplay = useMemo(() => {
+    return engineState.tracks.map((track) => {
+      const clips = engineState.clips.filter((clip) => clip.trackId === track.id);
+      const hasVisibleMedia = clips.some(
+        (clip) => clip.start <= visibleRange.end && clip.end >= visibleRange.start,
+      );
+      return {
+        track,
+        clips,
+        tapered: !hasVisibleMedia,
+      };
+    });
+  }, [engineState.clips, engineState.tracks, visibleRange.end, visibleRange.start]);
 
   return (
     <div className="min-h-screen w-full bg-[#f3f4f6] flex flex-col p-4 overflow-y-auto custom-scrollbar animate-fade-in relative">

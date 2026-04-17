@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 import { MainToolbox, SectionCard } from "./ReferenceStudioPrimitives"
 import { SourceUtilityModules, useAllSourceModules } from "./sourceModules"
+import { SubtoolboxComponentSetDemo } from "../../components/SubtoolboxComponentSet"
 
 const paneClass = "border-[3px] border-black rounded-xl p-3 bg-white"
 
@@ -155,6 +156,13 @@ const ComponentCatalog: React.FC = () => {
       <p className="text-[10px] font-black uppercase tracking-[0.12em] opacity-50 mb-2">Unified Cards</p>
       <div className="border-[3px] border-black rounded-xl p-3">
        <SourceUtilityModules.VideoCardsLite />
+      </div>
+     </div>
+
+     <div className="border-[4px] border-black rounded-2xl bg-white p-4 shadow-[6px_6px_0px_0px_black]">
+      <p className="text-[10px] font-black uppercase tracking-[0.12em] opacity-50 mb-2">SubToolbox Set</p>
+      <div className="border-[3px] border-black rounded-xl p-3">
+       <SubtoolboxComponentSetDemo />
       </div>
      </div>
     </div>

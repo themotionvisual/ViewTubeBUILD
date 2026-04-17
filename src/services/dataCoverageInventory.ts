@@ -12,7 +12,11 @@ import {
  readYouTubeAnalyticsCache,
 } from "./canonicalAnalyticsStore"
 
-export type DataCoverageSource = "youtube" | "ga4" | "history_placeholder" | "formula"
+export type DataCoverageSource =
+ | "youtube"
+ | "ga4"
+ | "history_placeholder"
+ | "formula"
 export type DataCoverageScope =
  | "channel"
  | "video_shared"
@@ -49,6 +53,9 @@ export interface DataCoverageSummary {
  totalCategories: number
  perScope: Record<DataCoverageScope, number>
  historyNotConnected: number
+ receivedCount: number
+ connectedSourcesTotal: number
+ fullCatalogTotal: number
 }
 
 export interface DataCoverageInventory {
@@ -125,7 +132,10 @@ const asDurationSeconds = (value: unknown): number | null => {
  return asNumber(trimmed)
 }
 
-const firstNumeric = (row: Record<string, unknown>, keys: string[]): number | null => {
+const firstNumeric = (
+ row: Record<string, unknown>,
+ keys: string[],
+): number | null => {
  for (const key of keys) {
   const value = asNumber(row[key])
   if (value !== null) return value
@@ -133,7 +143,10 @@ const firstNumeric = (row: Record<string, unknown>, keys: string[]): number | nu
  return null
 }
 
-const firstDurationSeconds = (row: Record<string, unknown>, keys: string[]): number | null => {
+const firstDurationSeconds = (
+ row: Record<string, unknown>,
+ keys: string[],
+): number | null => {
  for (const key of keys) {
   const value = asDurationSeconds(row[key])
   if (value !== null) return value
@@ -172,7 +185,10 @@ const parseReportRows = (report: unknown): Record<string, unknown>[] => {
  )
  return payload.rows
   .map((row: unknown) => {
-   if (!Array.isArray(row)) return null
+   if (!Array.isArray(row)) {
+    if (row && typeof row === "object") return row as Record<string, unknown>
+    return null
+   }
    const rowValues = row as unknown[]
    const obj: Record<string, unknown> = {}
    headers.forEach((header: string, idx: number) => {
@@ -180,7 +196,10 @@ const parseReportRows = (report: unknown): Record<string, unknown>[] => {
    })
    return obj
   })
-  .filter((row: Record<string, unknown> | null): row is Record<string, unknown> => !!row)
+  .filter(
+   (row: Record<string, unknown> | null): row is Record<string, unknown> =>
+    !!row,
+  )
 }
 
 const buildAliasMap = (): Map<string, string> => {
@@ -214,7 +233,9 @@ const resolveScopeFromPresence = (
  return "video_shared"
 }
 
-const extractObjectKeys = (obj: Record<string, unknown> | null | undefined): string[] => {
+const extractObjectKeys = (
+ obj: Record<string, unknown> | null | undefined,
+): string[] => {
  if (!obj) return []
  return Object.keys(obj).filter(
   (key) => key && key !== "_originalData" && !key.startsWith("__"),
@@ -240,10 +261,22 @@ const resolveValueFromRows = (
     ? (row._originalData as Record<string, unknown>)
     : {}
   const merged = { ...row, ...originalData } as Record<string, unknown>
-  for (const key of keyCandidates) {
-   const value = merged[key]
-   const display = toDisplay(value)
-   if (display !== "-") return display
+  const keys = Object.keys(merged)
+
+  for (const candidate of keyCandidates) {
+   // Try exact match first
+   if (merged[candidate] !== undefined) {
+    const display = toDisplay(merged[candidate])
+    if (display !== "-") return display
+   }
+
+   // Try case-insensitive match
+   const lowerCandidate = candidate.toLowerCase()
+   const match = keys.find((k) => k.toLowerCase() === lowerCandidate)
+   if (match) {
+    const display = toDisplay(merged[match])
+    if (display !== "-") return display
+   }
   }
  }
  return "-"
@@ -254,10 +287,21 @@ const resolveValueFromObjects = (
  keyCandidates: string[],
 ): string => {
  for (const obj of objects) {
-  for (const key of keyCandidates) {
-   const value = obj[key]
-   const display = toDisplay(value)
-   if (display !== "-") return display
+  const keys = Object.keys(obj)
+  for (const candidate of keyCandidates) {
+   // Try exact match first
+   if (obj[candidate] !== undefined) {
+    const display = toDisplay(obj[candidate])
+    if (display !== "-") return display
+   }
+
+   // Try case-insensitive match
+   const lowerCandidate = candidate.toLowerCase()
+   const match = keys.find((k) => k.toLowerCase() === lowerCandidate)
+   if (match) {
+    const display = toDisplay(obj[match])
+    if (display !== "-") return display
+   }
   }
  }
  return "-"
@@ -291,7 +335,9 @@ const upsertShape = (
  })
 }
 
-const extractScalarKeysFromRows = (rows: Array<Record<string, unknown>>): Set<string> => {
+const extractScalarKeysFromRows = (
+ rows: Array<Record<string, unknown>>,
+): Set<string> => {
  const keys = new Set<string>()
  rows.forEach((row) => {
   const originalData =
@@ -341,10 +387,14 @@ const rowFormat = (row: Record<string, unknown>): string => {
  return String(row.Format || row.format || row.contentType || "").toLowerCase()
 }
 
-const rowMatchesScope = (row: Record<string, unknown>, scope: DataCoverageScope): boolean => {
+const rowMatchesScope = (
+ row: Record<string, unknown>,
+ scope: DataCoverageScope,
+): boolean => {
  const format = rowFormat(row)
  if (scope === "short_only") return format.includes("short")
- if (scope === "long_only") return format.includes("long") || format.includes("video")
+ if (scope === "long_only")
+  return format.includes("long") || format.includes("video")
  if (scope === "video_shared") return true
  return true
 }
@@ -377,7 +427,10 @@ export const buildDataCoverageInventory = (
   ["videothumbnailimpressionsclickrate", "ctr"],
  ])
 
- markDeprecatedLocalStorageRead("dataCoverageInventory.build", "yt_analytics_cache")
+ markDeprecatedLocalStorageRead(
+  "dataCoverageInventory.build",
+  "yt_analytics_cache",
+ )
  const ytCache = readYouTubeAnalyticsCache() as Record<string, unknown>
  const ga4Cache = safeParse<Record<string, unknown>>(
   localStorage.getItem("ga4_analytics_cache"),
@@ -385,7 +438,8 @@ export const buildDataCoverageInventory = (
  )
 
  const shortRows = masterTableRows.filter(
-  (r) => r?.Format === "Shorts" || r?.Format === "SHORTS" || r?.format === "shorts",
+  (r) =>
+   r?.Format === "Shorts" || r?.Format === "SHORTS" || r?.format === "shorts",
  )
  const longRows = masterTableRows.filter(
   (r) =>
@@ -400,16 +454,24 @@ export const buildDataCoverageInventory = (
   ...(Array.isArray(ytCache.stats) ? ytCache.stats : []),
  ]
  const cachedShortRows = cachedVideoRows.filter((row) => isLikelyShort(row))
- const cachedLongRows = cachedVideoRows.filter((row) => isLikelyLong(row) && !isLikelyShort(row))
+ const cachedLongRows = cachedVideoRows.filter(
+  (row) => isLikelyLong(row) && !isLikelyShort(row),
+ )
  const cachedUnscopedVideoRows = cachedVideoRows.filter(
   (row) => !isLikelyShort(row) && !isLikelyLong(row),
  )
 
  const analyticsByWindowRows: Record<string, unknown>[] = []
- if (ytCache.analyticsByWindow && typeof ytCache.analyticsByWindow === "object") {
-  Object.values(ytCache.analyticsByWindow as Record<string, unknown>).forEach((report) => {
-   analyticsByWindowRows.push(...parseReportRows(report))
-  })
+ if (
+  ytCache.analyticsByWindow &&
+  typeof ytCache.analyticsByWindow === "object"
+ ) {
+  Object.values(ytCache.analyticsByWindow as Record<string, unknown>).forEach(
+   (reportObj: any) => {
+    const payload = reportObj?.report || reportObj
+    analyticsByWindowRows.push(...parseReportRows(payload))
+   },
+  )
  }
 
  const shortVideoPool = [...shortRows, ...cachedShortRows]
@@ -489,7 +551,9 @@ export const buildDataCoverageInventory = (
   extractObjectKeys(row).forEach((raw) => {
    const normalized = canonicalizeMetricKey(raw)
    const scope: DataCoverageScope =
-    normalized.includes("country") || normalized.includes("city") || normalized.includes("province")
+    normalized.includes("country") ||
+    normalized.includes("city") ||
+    normalized.includes("province")
      ? "geo"
      : "demographic"
    upsertShape(
@@ -501,7 +565,6 @@ export const buildDataCoverageInventory = (
    )
   })
  })
-
  const trafficRows = parseReportRows(ytCache.trafficSources)
  trafficRows.forEach((row) => {
   extractObjectKeys(row).forEach((raw) => {
@@ -515,6 +578,20 @@ export const buildDataCoverageInventory = (
   })
  })
 
+ const geographyRows = parseReportRows(ytCache.geography)
+ geographyRows.forEach((row) => {
+  extractObjectKeys(row).forEach((raw) => {
+   upsertShape(
+    shapes,
+    normalizeKey(raw, aliasMap, fallbackMap),
+    raw,
+    "youtube",
+    "geo",
+   )
+  })
+ })
+
+ // GA4 inventory
  // Video/shared metrics from master rows with shorts-vs-long applicability
  const shortKeys = extractScalarKeysFromRows(shortVideoPool)
  const longKeys = extractScalarKeysFromRows(longVideoPool)
@@ -529,13 +606,7 @@ export const buildDataCoverageInventory = (
   const inLong = longKeys.has(raw)
   const canonicalKey = normalizeKey(raw, aliasMap, fallbackMap)
   const scope = resolveScopeFromPresence(canonicalKey, inShort, inLong)
-  upsertShape(
-   shapes,
-   canonicalKey,
-   raw,
-   "youtube",
-   scope,
-  )
+  upsertShape(shapes, canonicalKey, raw, "youtube", scope)
  })
 
  // Keep canonical contract keys visible only when they are explicitly observed in
@@ -567,7 +638,6 @@ export const buildDataCoverageInventory = (
     "channel",
    )
   })
-
   ;["trafficSources", "topPages", "conversions"].forEach((bucket) => {
    const rows = Array.isArray(ga4Cache[bucket]) ? ga4Cache[bucket] : []
    rows.forEach((row: Record<string, unknown>) => {
@@ -613,11 +683,11 @@ export const buildDataCoverageInventory = (
   ...(dailyRows as Record<string, unknown>[]),
   ...(demographicRows as Record<string, unknown>[]),
   ...(trafficRows as Record<string, unknown>[]),
- ...((ga4Cache.overview && typeof ga4Cache.overview === "object"
+  ...(geographyRows as Record<string, unknown>[]),
+  ...((ga4Cache.overview && typeof ga4Cache.overview === "object"
    ? [ga4Cache.overview as Record<string, unknown>]
    : []) as Record<string, unknown>[]),
  ]
-
  const mergedSharedRows = sharedVideoPool.map((row) => {
   const originalData =
    row._originalData && typeof row._originalData === "object"
@@ -631,27 +701,66 @@ export const buildDataCoverageInventory = (
   likes: ["likes", "Likes"],
   comments: ["comments", "Comments"],
   shares: ["shares", "Shares"],
-  subsGained: ["subscribersGained", "subscribers_gained", "subsPlus", "subs+", "Subs"],
-  impressions: ["impressions", "videoThumbnailImpressions", "video_thumbnail_impressions"],
+  subsGained: [
+   "subscribersGained",
+   "subscribers_gained",
+   "subsPlus",
+   "subs+",
+   "Subs",
+   "Subscribers Gained",
+   "Subs +",
+  ],
+  impressions: [
+   "impressions",
+   "Impressions",
+   "videoThumbnailImpressions",
+   "video_thumbnail_impressions",
+  ],
   ctr: [
    "ctr",
    "CTR",
+   "CTR (%)",
+   "Click-Through Rate (CTR)",
    "videoThumbnailImpressionsClickRate",
    "impressionsClickThroughRate",
    "impressionClickThroughRate",
    "video_thumbnail_impressions_ctr",
   ],
-  revenue: ["estimatedRevenue", "Revenue", "revenue", "estimated_partner_revenue"],
+  revenue: [
+   "estimatedRevenue",
+   "Revenue",
+   "revenue",
+   "estimated_partner_revenue",
+   "Estimated revenue",
+  ],
   watchMinutes: [
    "estimatedMinutesWatched",
-   "watch_time_minutes",
-   "watchMinutes",
    "watchTimeMinutes",
    "WatchTime",
+   "Watch Time (Hours)",
+   "Watch time (hours)",
   ],
-  avd: ["averageViewDuration", "average_view_duration_seconds", "avgViewDuration"],
-  apv: ["averageViewPercentage", "average_view_duration_percentage", "avgPercentageViewed"],
-  duration: ["videoLengthSeconds", "lengthSeconds", "durationSeconds", "Length", "length"],
+  avd: [
+   "averageViewDuration",
+   "average_view_duration_seconds",
+   "avgViewDuration",
+   "AVD (Average View Duration)",
+   "AVD (Sec)",
+  ],
+  apv: [
+   "averageViewPercentage",
+   "average_view_duration_percentage",
+   "avgPercentageViewed",
+   "AVP (%)",
+   "Average percentage viewed (%)",
+  ],
+  duration: [
+   "videoLengthSeconds",
+   "lengthSeconds",
+   "durationSeconds",
+   "Length",
+   "length",
+  ],
  }
 
  const ctrValues = mergedSharedRows
@@ -680,6 +789,13 @@ export const buildDataCoverageInventory = (
  }
 
  const formatFormulaValue = (value: number, canonicalKey: string): string => {
+  if (
+   canonicalKey.includes("rpm") ||
+   canonicalKey.includes("revenue") ||
+   canonicalKey.includes("revenue_split")
+  ) {
+   return `$${value.toFixed(2)}`
+  }
   if (
    canonicalKey.includes("rate") ||
    canonicalKey.includes("percent") ||
@@ -711,6 +827,23 @@ export const buildDataCoverageInventory = (
   const apv = firstNumeric(row, metricKeys.apv)
   const durationSeconds = firstDurationSeconds(row, metricKeys.duration)
 
+  const uniqueViewers = firstNumeric(row, [
+   "uniqueViewers",
+   "Unique Viewers",
+   "unique_viewers",
+  ])
+  const returningViewers = firstNumeric(row, [
+   "returningViewers",
+   "Returning Viewers",
+   "returning_viewers",
+  ])
+  const cpm = firstNumeric(row, ["cpm", "CPM", "CPM (USD)"])
+  const authenticatedViewers = firstNumeric(row, [
+   "authenticatedViewers",
+   "Authenticated Viewers",
+   "authenticated_viewers",
+  ]) // Approximation or placeholder if not directly available
+
   if (canonicalKey === "watch_hours") {
    if (watchMinutes === null) return null
    return watchMinutes / 60
@@ -729,7 +862,8 @@ export const buildDataCoverageInventory = (
   }
   if (canonicalKey === "ctr_percent_formula") {
    if (ctrRaw !== null) return ctrRaw
-   if (views === null || impressionsRaw === null || impressionsRaw <= 0) return null
+   if (views === null || impressionsRaw === null || impressionsRaw <= 0)
+    return null
    return (views / impressionsRaw) * 100
   }
   if (canonicalKey === "impressions_formula") {
@@ -742,9 +876,10 @@ export const buildDataCoverageInventory = (
     impressionsRaw !== null
      ? impressionsRaw
      : views !== null && ctrRaw !== null && ctrRaw > 0
-      ? views / (ctrRaw / 100)
-      : null
-   if (watchMinutes === null || impressions === null || impressions <= 0) return null
+       ? views / (ctrRaw / 100)
+       : null
+   if (watchMinutes === null || impressions === null || impressions <= 0)
+    return null
    return watchMinutes / impressions
   }
   if (canonicalKey === "like_rate_per_1k_views") {
@@ -760,7 +895,8 @@ export const buildDataCoverageInventory = (
    return (shares / views) * 1000
   }
   if (canonicalKey === "watch_time_per_video_minute") {
-   if (avd === null || durationSeconds === null || durationSeconds <= 0) return null
+   if (avd === null || durationSeconds === null || durationSeconds <= 0)
+    return null
    return avd / durationSeconds
   }
   if (canonicalKey === "relative_lift_vs_channel_median_avd") {
@@ -776,9 +912,63 @@ export const buildDataCoverageInventory = (
    return ((ctrRaw - medians.ctr) / medians.ctr) * 100
   }
   if (canonicalKey === "relative_lift_vs_channel_median_rpm") {
-   if (views === null || views <= 0 || revenue === null || medians.rpm === null || medians.rpm <= 0) return null
+   if (
+    views === null ||
+    views <= 0 ||
+    revenue === null ||
+    medians.rpm === null ||
+    medians.rpm <= 0
+   )
+    return null
    const rpm = (revenue / views) * 1000
    return ((rpm - medians.rpm) / medians.rpm) * 100
+  }
+
+  // --- NEW FORMULAS ---
+  if (canonicalKey === "impression_ctr_derived") {
+   const clicks = firstNumeric(row, [
+    "clicks",
+    "annotationClicks",
+    "cardClicks",
+   ]) // Approximate clicks if CTR isn't directly available
+   if (clicks === null || impressionsRaw === null || impressionsRaw <= 0)
+    return null
+   return (clicks / impressionsRaw) * 100
+  }
+  if (canonicalKey === "retention_quality_index") {
+   if (apv === null || durationSeconds === null || durationSeconds <= 0)
+    return null
+   return apv / (durationSeconds / 60)
+  }
+  if (canonicalKey === "monetization_efficiency") {
+   if (
+    views === null ||
+    views <= 0 ||
+    revenue === null ||
+    cpm === null ||
+    cpm <= 0
+   )
+    return null
+   const rpm = (revenue / views) * 1000
+   return (rpm / cpm) * 100
+  }
+  if (canonicalKey === "audience_loyalty_score") {
+   if (
+    returningViewers === null ||
+    uniqueViewers === null ||
+    uniqueViewers <= 0
+   )
+    return null
+   return (returningViewers / uniqueViewers) * 100
+  }
+  if (canonicalKey === "shorts_viral_threshold") {
+   if (ctrRaw === null || apv === null) return null
+   return (ctrRaw * apv) / 100
+  }
+  if (canonicalKey === "audience_quality_score") {
+   if (authenticatedViewers === null || views === null || views <= 0)
+    return null
+   return (authenticatedViewers / views) * 100
   }
   return null
  }
@@ -791,106 +981,113 @@ export const buildDataCoverageInventory = (
   return "-"
  }
 
- const expandedRows: DataCoverageRow[] = Array.from(shapes.values()).map((shape) => {
-  const shapeKey = `${shape.source}::${shape.scope}::${shape.canonicalKey}`
-  const preferredLabel = catalogLabelByShapeKey.get(shapeKey)
-  const keyCandidates = Array.from(shape.rawNames)
-  if (!keyCandidates.includes(shape.canonicalKey)) keyCandidates.unshift(shape.canonicalKey)
+ const expandedRows: DataCoverageRow[] = Array.from(shapes.values()).map(
+  (shape) => {
+   const shapeKey = `${shape.source}::${shape.scope}::${shape.canonicalKey}`
+   const preferredLabel = catalogLabelByShapeKey.get(shapeKey)
+   const keyCandidates = Array.from(shape.rawNames)
+   if (!keyCandidates.includes(shape.canonicalKey))
+    keyCandidates.unshift(shape.canonicalKey)
 
- const isHistory = shape.scope === "history" || shape.source === "history_placeholder"
-  const canonicalMetricKey = canonicalMetricOrder.find(
-   (key) => key === shape.canonicalKey,
-  ) as CanonicalMetricKey | undefined
-  const scopedCanonicalCell = canonicalMetricKey
-   ? canonicalCellForScope(masterTableRows, canonicalMetricKey, shape.scope)
-   : null
+   const isHistory =
+    shape.scope === "history" || shape.source === "history_placeholder"
+   const canonicalMetricKey = canonicalMetricOrder.find(
+    (key) => key === shape.canonicalKey,
+   ) as CanonicalMetricKey | undefined
+   const scopedCanonicalCell = canonicalMetricKey
+    ? canonicalCellForScope(masterTableRows, canonicalMetricKey, shape.scope)
+    : null
 
-  const example =
-   shape.source === "formula"
-    ? resolveFormulaExample(shape.canonicalKey)
-    : shape.scope === "short_only"
-    ? resolveValueFromRows(shortVideoPool, keyCandidates)
-    : shape.scope === "long_only"
-     ? resolveValueFromRows(longVideoPool, keyCandidates)
-     : shape.scope === "video_shared"
-      ? (() => {
-         const fromShort = resolveValueFromRows(shortVideoPool, keyCandidates)
-         if (fromShort !== "-") return fromShort
-         const fromLong = resolveValueFromRows(longVideoPool, keyCandidates)
-         if (fromLong !== "-") return fromLong
-         return resolveValueFromRows(sharedVideoPool, keyCandidates)
-        })()
-      : shape.scope === "history"
-       ? "Not Connected"
-       : resolveValueFromObjects(channelExampleObjects, keyCandidates)
+   const example =
+    shape.source === "formula"
+     ? resolveFormulaExample(shape.canonicalKey)
+     : shape.scope === "short_only"
+       ? resolveValueFromRows(shortVideoPool, keyCandidates)
+       : shape.scope === "long_only"
+         ? resolveValueFromRows(longVideoPool, keyCandidates)
+         : shape.scope === "video_shared"
+           ? (() => {
+              const fromShort = resolveValueFromRows(
+               shortVideoPool,
+               keyCandidates,
+              )
+              if (fromShort !== "-") return fromShort
+              const fromLong = resolveValueFromRows(
+               longVideoPool,
+               keyCandidates,
+              )
+              if (fromLong !== "-") return fromLong
+              return resolveValueFromRows(sharedVideoPool, keyCandidates)
+             })()
+           : shape.scope === "history"
+             ? "Not Connected"
+             : resolveValueFromObjects(channelExampleObjects, keyCandidates)
 
-  const exampleChannel =
-   isHistory ? "Not Connected" : resolveValueFromObjects(channelExampleObjects, keyCandidates)
+   const exampleChannel = isHistory
+    ? "Not Connected"
+    : resolveValueFromObjects(channelExampleObjects, keyCandidates)
 
-  const shortPoolAvailable = shortVideoPool.length > 0
-  const longPoolAvailable = longVideoPool.length > 0
-  const capabilityReason =
-   getWindowCapabilityReason(
-    ytCache as any,
-    "lifetime",
-    keyCandidates[0] || shape.canonicalKey,
-   ) ||
-   getWindowCapabilityReason(
-    ytCache as any,
-    "lifetime",
-    shape.canonicalKey,
-   )
-  const status: DataCoverageStatus = isHistory
-   ? "not_connected"
-   : shape.scope === "short_only" && !shortPoolAvailable
-    ? "not_applicable"
-    : shape.scope === "long_only" && !longPoolAvailable
-     ? "not_applicable"
-     : scopedCanonicalCell && scopedCanonicalCell.status !== "unavailable"
-      ? "received"
-      : example !== "-" || exampleChannel !== "-"
-      ? "received"
-      : capabilityReason
-       ? "missing"
-      : "missing"
+   const shortPoolAvailable = shortVideoPool.length > 0
+   const longPoolAvailable = longVideoPool.length > 0
+   const capabilityReason =
+    getWindowCapabilityReason(
+     ytCache as any,
+     "lifetime",
+     keyCandidates[0] || shape.canonicalKey,
+    ) ||
+    getWindowCapabilityReason(ytCache as any, "lifetime", shape.canonicalKey)
+   const status: DataCoverageStatus = isHistory
+    ? "not_connected"
+    : shape.scope === "short_only" && !shortPoolAvailable
+      ? "not_applicable"
+      : shape.scope === "long_only" && !longPoolAvailable
+        ? "not_applicable"
+        : scopedCanonicalCell && scopedCanonicalCell.status !== "unavailable"
+          ? "received"
+          : example !== "-" || exampleChannel !== "-"
+            ? "received"
+            : capabilityReason
+              ? "missing"
+              : "missing"
 
-  const reason =
-   status === "not_connected"
-    ? "Connector not connected."
-    : status === "not_applicable"
-     ? shape.scope === "short_only"
-       ? "No Shorts rows available in current dataset."
-       : "No Long-form rows available in current dataset."
-     : status === "received"
-      ? scopedCanonicalCell && scopedCanonicalCell.status !== "unavailable"
-        ? scopedCanonicalCell.confidence === "raw_direct"
-          ? "Value detected from canonical raw metric cell."
-          : "Value detected from canonical derived metric cell."
-        : example !== "-"
-         ? "Value detected in scoped rows."
-        : "Value detected at channel/source level."
-      : scopedCanonicalCell?.reasonCode
-       ? scopedCanonicalCell.reasonCode
-       : capabilityReason
-        ? capabilityReason
-      : shape.source === "formula"
-       ? "Formula category tracked but required operands were missing in current rows."
-      : shape.source === "ga4"
-       ? "Key tracked but GA4 cache has no value for current window."
-       : "Key tracked but no value found in current rows/cache."
+   const reason =
+    status === "not_connected"
+     ? "Connector not connected."
+     : status === "not_applicable"
+       ? shape.scope === "short_only"
+         ? "No Shorts rows available in current dataset."
+         : "No Long-form rows available in current dataset."
+       : status === "received"
+         ? scopedCanonicalCell && scopedCanonicalCell.status !== "unavailable"
+           ? scopedCanonicalCell.confidence === "raw_direct"
+             ? "Value detected from canonical raw metric cell."
+             : "Value detected from canonical derived metric cell."
+           : example !== "-"
+             ? "Value detected in scoped rows."
+             : "Value detected at channel/source level."
+         : scopedCanonicalCell?.reasonCode
+           ? scopedCanonicalCell.reasonCode
+           : capabilityReason
+             ? capabilityReason
+             : shape.source === "formula"
+               ? "Formula category tracked but required operands were missing in current rows."
+               : shape.source === "ga4"
+                 ? "Key tracked but GA4 cache has no value for current window."
+                 : "Key tracked but no value found in current rows/cache."
 
-  return {
-   categoryName: preferredLabel || keyCandidates[0] || shape.canonicalKey,
-   canonicalKey: shape.canonicalKey,
-   source: shape.source,
-   scope: shape.scope,
-   status,
-   example,
-   exampleChannel,
-   reason,
-   formulaCapable: shape.source === "formula",
-  }
- })
+   return {
+    categoryName: preferredLabel || keyCandidates[0] || shape.canonicalKey,
+    canonicalKey: shape.canonicalKey,
+    source: shape.source,
+    scope: shape.scope,
+    status,
+    example,
+    exampleChannel,
+    reason,
+    formulaCapable: shape.source === "formula",
+   }
+  },
+ )
 
  const statusPriority: Record<DataCoverageStatus, number> = {
   received: 4,
@@ -905,13 +1102,14 @@ export const buildDataCoverageInventory = (
   history_placeholder: 1,
  }
 
- // Canonical contract truth: one row per canonical key.
- // Keep the strongest evidence row when duplicates emerge from mixed buckets/scopes.
+ // Canonical contract truth: one row per canonical key + scope combination.
+ // Keep the strongest evidence row when duplicates emerge from mixed buckets/sources.
  const collapsedByCanonical = new Map<string, DataCoverageRow>()
  expandedRows.forEach((row) => {
-  const existing = collapsedByCanonical.get(row.canonicalKey)
+  const key = `${row.canonicalKey}::${row.scope}`
+  const existing = collapsedByCanonical.get(key)
   if (!existing) {
-   collapsedByCanonical.set(row.canonicalKey, row)
+   collapsedByCanonical.set(key, row)
    return
   }
 
@@ -919,46 +1117,50 @@ export const buildDataCoverageInventory = (
    statusPriority[existing.status] * 10 + sourcePriority[existing.source]
   const nextScore = statusPriority[row.status] * 10 + sourcePriority[row.source]
   if (nextScore > existingScore) {
-   collapsedByCanonical.set(row.canonicalKey, row)
+   collapsedByCanonical.set(key, row)
    return
   }
 
   if (existing.example === "-" && row.example !== "-") {
-   collapsedByCanonical.set(row.canonicalKey, { ...existing, example: row.example })
+   collapsedByCanonical.set(key, { ...existing, example: row.example })
   }
  })
 
  const rows = Array.from(collapsedByCanonical.values())
 
- const scopeOrder: DataCoverageScope[] = [
-  "channel",
-  "video_shared",
-  "short_only",
-  "long_only",
-  "geo",
-  "demographic",
-  "traffic",
-  "device",
-  "retention",
-  "monetization",
-  "daily",
-  "history",
- ]
- rows.sort((a, b) => {
-  const scopeDiff = scopeOrder.indexOf(a.scope) - scopeOrder.indexOf(b.scope)
-  if (scopeDiff !== 0) return scopeDiff
-  return a.categoryName.localeCompare(b.categoryName, undefined, { sensitivity: "base" })
- })
+ // Sort both collections alphabetically by category name to fulfill user preference.
+ const sortAlphabetical = (r: DataCoverageRow[]) => {
+  r.sort((a, b) =>
+   a.categoryName.localeCompare(b.categoryName, undefined, {
+    sensitivity: "base",
+   }),
+  )
+ }
+
+ sortAlphabetical(rows)
+ sortAlphabetical(expandedRows)
 
  const perScope = emptyScopeCounts()
  rows.forEach((row) => {
   perScope[row.scope] += 1
  })
 
+ const receivedCount = rows.filter((row) => row.status === "received").length
+ const connectedSourcesTotal = rows.filter(
+  (row) =>
+   row.source === "youtube" ||
+   (row.source === "ga4" && ga4Cache && Object.keys(ga4Cache).length > 0) ||
+   row.source === "formula",
+ ).length
+ const fullCatalogTotal = DATA_COVERAGE_CATALOG.length
+
  const summary: DataCoverageSummary = {
   totalCategories: rows.length,
   perScope,
   historyNotConnected: rows.filter((row) => row.scope === "history").length,
+  receivedCount,
+  connectedSourcesTotal,
+  fullCatalogTotal,
  }
 
  return { expandedRows, rows, summary }

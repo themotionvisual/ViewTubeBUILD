@@ -237,7 +237,17 @@ export const getAccessToken = (): string | null => {
 };
 
 export const getValidAccessToken = async (): Promise<string | null> => {
-  return getAccessToken();
+  const token = getAccessToken();
+  const expiry = getExpiry();
+  
+  if (!token) return null;
+  
+  if (expiry && Date.now() > expiry) {
+    console.warn("YouTube access token has expired.");
+    return null; // Force re-authentication
+  }
+  
+  return token;
 };
 
 export const isAuthenticated = (): boolean => {

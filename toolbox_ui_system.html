@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toolbox UI System - Robust Local Version</title>
+    <!-- React and ReactDOM must be loaded first -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Recharts depends on React and ReactDOM -->
+    <script src="https://unpkg.com/recharts@2.12.2/umd/Recharts.js"></script>
+    <!-- Lucide for icons -->
+    <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+    <!-- Babel for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Tailwind for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            color: black;
+        }
+        .brutalist-card {
+            background: white;
+            border: 4px solid black;
+            border-radius: 16px;
+            box-shadow: 6px 6px 0px 0px black;
+        }
+        .synth-stripes {
+            background-image: repeating-linear-gradient(
+                -45deg,
+                rgba(255,255,255,0.2) 0px,
+                rgba(255,255,255,0.2) 8px,
+                transparent 8px,
+                transparent 16px
+            );
+            background-size: 200% 200%;
+            animation: stripeShift 2s linear infinite;
+        }
+        @keyframes stripeShift {
+            0% { background-position: 0 0; }
+            100% { background-position: 72px 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="flex items-center justify-center h-screen">
+            <div class="text-xl font-black uppercase animate-pulse">Initializing ViewTube OS...</div>
+        </div>
+    </div>
+
+    <script type="text/babel">
+        "use strict";
+
+        // Wait for all libraries to be globally available
+        const init = () => {
+            if (!window.React || !window.ReactDOM || !window.Recharts || !window.lucide) {
+                console.warn("Libraries not ready, retrying...");
+                setTimeout(init, 100);
+                return;
+            }
+
+            const { useState, useEffect, useRef } = React;
+            const { 
+                ResponsiveContainer, AreaChart, Area, XAxis, YAxis, 
+                CartesianGrid, Tooltip, BarChart, Bar, Cell 
+            } = Recharts;
+
+            // --- ICON COMPONENT ---
+            const LucideIcon = ({ name, size = 24, className = "" }) => {
+                const iconRef = useRef(null);
+                useEffect(() => {
+                    if (iconRef.current && window.lucide) {
+                        iconRef.current.innerHTML = '';
+                        const icon = window.lucide.icons[name] || window.lucide.icons.Zap;
+                        const svgString = icon.toSvg({
+                            width: size,
+                            height: size,
+                            "stroke-width": 2.5,
+                            class: className
+                        });
+                        iconRef.current.innerHTML = svgString;
+                    }
+                }, [name, size, className]);
+                return <div ref={iconRef} className="inline-flex items-center justify-center" />;
+            };
+
+            // --- UI PRIMITIVES ---
+            const SubToolbox = ({ title, icon, headerBg, iconBg, isOpen, onToggle, children }) => (
+                <div className="brutalist-card overflow-hidden mb-6">
+                    <header 
+                        onClick={onToggle}
+                        className="flex items-center justify-between cursor-pointer border-b-4 border-black"
+                        style={{ backgroundColor: headerBg, height: '56px' }}
+                    >
+                        <div className="flex items-center h-full">
+                            <div className="h-full w-14 flex items-center justify-center border-r-4 border-black" style={{ backgroundColor: iconBg }}>
+                                <LucideIcon name={icon} size={28} />
+                            </div>
+                            <h3 className="font-black uppercase text-xl sm:text-2xl tracking-tighter px-4">{title}</h3>
+                        </div>
+                        <div className="px-4">
+                            <LucideIcon name={isOpen ? "ChevronUp" : "ChevronDown"} size={20} />
+                        </div>
+                    </header>
+                    {isOpen && (
+                        <div className="p-4 bg-white min-h-[100px] border-t-0">
+                            {children}
+                        </div>
+                    )}
+                </div>
+            );
+
+            const StatCard = ({ label, value, color }) => (
+                <div className="brutalist-card p-4 shadow-[4px_4px_0px_0px_black]" style={{ backgroundColor: color }}>
+                    <div className="text-[10px] font-black uppercase text-black/40 mb-1">{label}</div>
+                    <div className="text-2xl sm:text-3xl font-black">{value}</div>
+                </div>
+            );
+
+            // --- MAIN APPLICATION ---
+            const App = () => {
+                const [studioOpen, setStudioOpen] = useState(true);
+                const [metricsOpen, setMetricsOpen] = useState(true);
+                const [concept, setConcept] = useState("");
+
+                const chartData = [
+                    { name: 'Mon', views: 4000 }, { name: 'Tue', views: 3000 }, { name: 'Wed', views: 5000 },
+                    { name: 'Thu', views: 2780 }, { name: 'Fri', views: 1890 }, { name: 'Sat', views: 2390 },
+                ];
+
+                return (
+                    <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-12 pb-20">
+                        {/* OS Header */}
+                        <header className="brutalist-card bg-[#FFE357] p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="w-16 h-16 border-4 border-black rounded-full bg-white flex items-center justify-center">
+                                    <LucideIcon name="Cpu" size={36} />
+                                </div>
+                                <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter text-center sm:text-left">ViewTube OS</h1>
+                            </div>
+                            <div className="flex gap-2">
+                                <span className="brutalist-card bg-[#C9F830] px-3 py-1 font-black text-xs shadow-[2px_2px_0px_0px_black]">STABLE</span>
+                                <span className="brutalist-card bg-[#24D3FF] px-3 py-1 font-black text-xs shadow-[2px_2px_0px_0px_black]">LOCAL</span>
+                            </div>
+                        </header>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            {/* Control Column */}
+                            <section>
+                                <SubToolbox 
+                                    title="Creative Studio" 
+                                    icon="Image" 
+                                    headerBg="#FF7497" 
+                                    iconBg="#FCAF57" 
+                                    isOpen={studioOpen}
+                                    onToggle={() => setStudioOpen(!studioOpen)}
+                                >
+                                    <div className="space-y-4">
+                                        <label className="block text-[10px] font-black uppercase tracking-widest text-black/40">Concept Prompt</label>
+                                        <textarea 
+                                            value={concept}
+                                            onChange={(e) => setConcept(e.target.value)}
+                                            className="w-full h-32 border-4 border-black rounded-xl p-3 font-bold outline-none focus:bg-[#C9F830]/5 transition-colors"
+                                            placeholder="What's the next big thing?"
+                                        />
+                                        <button className="w-full brutalist-card bg-[#C9F830] h-12 font-black uppercase shadow-[4px_4px_0px_0px_black] active:translate-y-1 active:shadow-none transition-all">
+                                            ⚡ Process AI Script
+                                        </button>
+                                    </div>
+                                </SubToolbox>
+
+                                <SubToolbox 
+                                    title="System Metrics" 
+                                    icon="Activity" 
+                                    headerBg="#24D3FF" 
+                                    iconBg="#FFE357" 
+                                    isOpen={metricsOpen}
+                                    onToggle={() => setMetricsOpen(!metricsOpen)}
+                                >
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <StatCard label="Views" value="1.2M" color="white" />
+                                        <StatCard label="CTR" value="8.4%" color="#FFE357" />
+                                        <StatCard label="Subs" value="142K" color="#C9F830" />
+                                        <StatCard label="Rev" value="$4.2K" color="#FF7497" />
+                                    </div>
+                                </SubToolbox>
+                            </section>
+
+                            {/* Visualization Column */}
+                            <section className="space-y-8">
+                                <div className="brutalist-card p-6 bg-white">
+                                    <h4 className="text-xs font-black uppercase mb-6 tracking-widest text-black/40 flex items-center gap-2">
+                                        <LucideIcon name="TrendingUp" size={14} /> Analytics Pulse
+                                    </h4>
+                                    <div className="h-[250px] w-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart data={chartData}>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ddd" />
+                                                <XAxis dataKey="name" tick={{fontSize: 10, fontWeight: 900}} />
+                                                <YAxis tick={{fontSize: 10, fontWeight: 900}} />
+                                                <Tooltip />
+                                                <Area type="monotone" dataKey="views" stroke="#24D3FF" fill="#24D3FF" fillOpacity={0.2} strokeWidth={4} />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-4">
+                                    {[
+                                        { icon: 'Settings', label: 'Config', color: 'bg-white' },
+                                        { icon: 'Bell', label: 'Alerts', color: 'bg-[#FF7497]' },
+                                        { icon: 'Search', label: 'Audit', color: 'bg-[#24D3FF]' }
+                                    ].map(btn => (
+                                        <button key={btn.label} className={`brutalist-card ${btn.color} aspect-square flex flex-col items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[4px_4px_0px_0px_black]`}>
+                                            <LucideIcon name={btn.icon} size={32} />
+                                            <span className="text-[10px] font-black uppercase mt-2">{btn.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </section>
+                        </div>
+
+                        <footer className="text-center pt-10 border-t-4 border-black/5">
+                            <p className="text-black/20 font-black uppercase tracking-widest text-[10px]">ViewTube OS Prototype · Standalone · Built for Local Use</p>
+                        </footer>
+                    </div>
+                );
+            };
+
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(<App />);
+        };
+
+        // Trigger initialization
+        init();
+    </script>
+</body>
+</html>

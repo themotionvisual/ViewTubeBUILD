@@ -9,6 +9,8 @@ import {
  fetchDemographicAnalytics,
  fetchTrafficSourceAnalytics,
  fetchDailyAnalytics,
+ fetchGeographyAnalytics,
+ fetchGlobalLifetimeAnalytics,
  resetYouTubeApiCallCounts,
  getYouTubeApiCallCounts,
  isChannelConnected,
@@ -246,7 +248,11 @@ export const performSync = async (
  force = false,
  options: { batchMode?: "initial" | "next" } = {},
 ) => {
- if (!isChannelConnected()) return
+ console.log("performSync called, force:", force, "isConnected:", isChannelConnected())
+ if (!isChannelConnected()) {
+  console.log("Channel not connected. Returning early.")
+  return
+ }
  ensureCanonicalSchemaVersion()
 
  const syncStatusBase: Omit<ChannelAnalysisSyncStatus, "phase" | "completedAt" | "lastError"> =
@@ -445,7 +451,7 @@ export const performSync = async (
    .filter((date) => !Number.isNaN(date.getTime()))
    .sort((a, b) => a.getTime() - b.getTime())[0]
 
-  const channelPublishedDate = new Date((profile as { publishedAt?: string })?.publishedAt || "")
+  const channelPublishedDate = new Date(profile?.publishedAt || "")
   const hasChannelPublishedDate = !Number.isNaN(channelPublishedDate.getTime())
   const youtubeEpoch = new Date("2005-02-14T00:00:00.000Z")
   const lifetimeStart =
@@ -497,16 +503,28 @@ export const performSync = async (
 	     }),
 	    )
 
+    if (window === "lifetime") {
+     try {
+      const globalLifetime = await ytApiQueue.add(() =>
+       fetchGlobalLifetimeAnalytics(range.startDate, range.endDate, profile.id),
+      )
+      cacheData.globalLifetime = globalLifetime
+      console.log("Global lifetime analytics: SUCCESS -", globalLifetime.rows?.length || 0, "rows (True Channel Totals)")
+     } catch (e) {
+      console.warn("Global lifetime analytics fetch failed:", e)
+     }
+    }
+
     const report = analytics?.report || analytics
-     cacheData.analyticsByWindow[window] = {
-      window,
-      startDate: range.startDate,
-      endDate: range.endDate,
-      fetchedAt: Date.now(),
-      report,
+    cacheData.analyticsByWindow[window] = {
+     window,
+     startDate: range.startDate,
+     endDate: range.endDate,
+     fetchedAt: Date.now(),
+     report,
      groups: analytics?.groups || {},
-      metricCapabilities: analytics?.metricCapabilities || [],
-      syncDiagnostics: analytics?.syncDiagnostics || {
+     metricCapabilities: analytics?.metricCapabilities || [],
+     syncDiagnostics: analytics?.syncDiagnostics || {
        attemptedGroups: {},
        disabledMetrics: [],
        failureReasons: [],
@@ -644,10 +662,35 @@ export const performSync = async (
    } else {
     console.warn("Traffic Source analytics: returned empty data")
    }
-  } catch (e: any) {
+   } catch (e: any) {
    console.error("Traffic Source Analytics API ERROR:", e?.message || e)
-  }
+   }
 
+   // Geography analytics
+   try {
+   emitSyncStatus({
+    ...syncStatusBase,
+    phase: "syncing",
+    completedAt: null,
+    lastError: null,
+    stages: ["Fetching geography analytics"],
+   })
+   const geography = await ytApiQueue.add(() =>
+    fetchGeographyAnalytics(startDate, endDate, profile.id),
+   )
+   if (geography) {
+    cacheData.geography = geography
+    console.log(
+     "Geography analytics: SUCCESS -",
+     geography.rows?.length || 0,
+     "rows",
+    )
+   } else {
+    console.warn("Geography analytics: returned empty data")
+   }
+   } catch (e: any) {
+   console.error("Geography Analytics API ERROR:", e?.message || e)
+   }
   // Daily metrics
   try {
    emitSyncStatus({
@@ -754,6 +797,7 @@ export const performSync = async (
    hasChannelAnalytics: !!cacheData.channelAnalytics,
    hasDailyMetrics: !!cacheData.dailyMetrics,
    hasTrafficSources: !!cacheData.trafficSources,
+   hasGeography: !!cacheData.geography,
    hasDemographics: !!cacheData.demographics,
    dailyMetricsRows: cacheData.dailyMetrics?.rows?.length || 0,
    channelAnalyticsRows: cacheData.channelAnalytics?.rows?.length || 0,
@@ -771,17 +815,34 @@ export const performSync = async (
   })
  } catch (error: any) {
   console.error("Failed to sync YouTube analytics:", error)
+
+  const isAuthError = error?.message?.includes("session has expired") || error?.message?.includes("invalid") || error?.code === 401
+
+  // Save the partial sync run summary so the diagnostic panel can show what failed
+  const finalSummary = { warning: error?.message || "Sync failed" }
+  try {
+   const savedRaw = localStorage.getItem("yt_analytics_cache")
+   if (savedRaw) {
+    const saved = JSON.parse(savedRaw)
+    saved.syncRunSummary = finalSummary
+    localStorage.setItem("yt_analytics_cache", JSON.stringify(saved))
+   }
+  } catch {
+    // Ignore
+  }
+
   window.dispatchEvent(
    new CustomEvent("yt_analytics_synced", { detail: cacheData }),
   )
-  if (error?.message?.includes("session has expired") || error?.code === 401) {
+  
+  if (isAuthError) {
    disconnectChannel()
   }
   emitSyncStatus({
    ...syncStatusBase,
    phase: "error",
    completedAt: new Date().toISOString(),
-   lastError: error?.message || "Unknown sync error",
+   lastError: isAuthError ? "Authentication required: Please reconnect your channel." : (error?.message || "Unknown sync error"),
    stages: ["Sync failed"],
   })
   throw error

@@ -70,6 +70,60 @@ export const FORMULA_REGISTRY: FormulaSpec[] = [
   description: "subscribersGained / views * 100",
   expectedScope: "video_shared",
  },
+ {
+  id: "impression_ctr_derived",
+  label: "Impression Click-Through Rate",
+  outputCanonicalKey: "ctr",
+  inputs: ["clicks", "impressions"],
+  unit: "percent",
+  description: "clicks / impressions * 100",
+  expectedScope: "video_shared",
+ },
+ {
+  id: "retention_quality_index",
+  label: "Retention Quality Index",
+  outputCanonicalKey: "retentionQualityIndex",
+  inputs: ["avp", "durationSeconds"],
+  unit: "index",
+  description: "avp / (durationSeconds / 60)",
+  expectedScope: "video_shared",
+ },
+ {
+  id: "monetization_efficiency",
+  label: "Monetization Efficiency",
+  outputCanonicalKey: "monetizationEfficiency",
+  inputs: ["rpm", "cpm"],
+  unit: "percent",
+  description: "(rpm / cpm) * 100",
+  expectedScope: "monetization",
+ },
+ {
+  id: "audience_loyalty_score",
+  label: "Audience Loyalty Score",
+  outputCanonicalKey: "audienceLoyaltyScore",
+  inputs: ["returningViewers", "uniqueViewers"],
+  unit: "percent",
+  description: "(returningViewers / uniqueViewers) * 100",
+  expectedScope: "channel",
+ },
+ {
+  id: "shorts_viral_threshold",
+  label: "Shorts Viral Threshold",
+  outputCanonicalKey: "shortsViralThreshold",
+  inputs: ["ctr", "avp"],
+  unit: "index",
+  description: "(ctr * avp) / 100",
+  expectedScope: "short_only",
+ },
+ {
+  id: "audience_quality_score",
+  label: "Audience Quality Score",
+  outputCanonicalKey: "audienceQualityScore",
+  inputs: ["authenticatedViewers", "views"],
+  unit: "percent",
+  description: "(authenticatedViewers / views) * 100",
+  expectedScope: "channel",
+ },
 ]
 
 const finiteNumber = (value: unknown): number | null => {
@@ -123,6 +177,35 @@ const calc = (formulaId: string, values: Record<string, number>): number | null 
  if (formulaId === "subscriber_conversion_rate") {
   if (values.views <= 0) return null
   return (values.subscribersGained / values.views) * 100
+ }
+
+ if (formulaId === "impression_ctr_derived") {
+  if (values.impressions <= 0) return null
+  return (values.clicks / values.impressions) * 100
+ }
+
+ if (formulaId === "retention_quality_index") {
+  if (values.durationSeconds <= 0) return null
+  return values.avp / (values.durationSeconds / 60)
+ }
+
+ if (formulaId === "monetization_efficiency") {
+  if (values.cpm <= 0) return null
+  return (values.rpm / values.cpm) * 100
+ }
+
+ if (formulaId === "audience_loyalty_score") {
+  if (values.uniqueViewers <= 0) return null
+  return (values.returningViewers / values.uniqueViewers) * 100
+ }
+
+ if (formulaId === "shorts_viral_threshold") {
+  return (values.ctr * values.avp) / 100
+ }
+
+ if (formulaId === "audience_quality_score") {
+  if (values.views <= 0) return null
+  return (values.authenticatedViewers / values.views) * 100
  }
 
  return null

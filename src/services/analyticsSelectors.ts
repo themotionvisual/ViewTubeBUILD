@@ -22,7 +22,7 @@ import {
  classifyCsvExportKind,
  inferAnalyticsWindowFromName,
  isLikelyTotalCsvRow,
-} from "./csvImportUtils"
+} from "./DataEngine"
 
 export type AnalyticsSourceMode = "api" | "csv" | "hybrid"
 
@@ -71,7 +71,9 @@ type AnalyticsCache = {
  videos?: CachedVideo[]
  stats?: Record<string, CachedVideoStat>
  analyticsByWindow?: Partial<Record<AnalyticsWindow, AnalyticsWindowBundle>>
- availabilityByWindow?: Partial<Record<AnalyticsWindow, Partial<Record<CanonicalMetricKey, boolean>>>>
+ availabilityByWindow?: Partial<
+  Record<AnalyticsWindow, Partial<Record<CanonicalMetricKey, boolean>>>
+ >
  lastSyncedByWindow?: Partial<Record<AnalyticsWindow, number>>
  videoContentType?: Record<string, string>
  analytics?: AnalyticsReport
@@ -130,7 +132,10 @@ export type MasterTableRow = Record<string, unknown> & {
 }
 
 const parseCache = (): AnalyticsCache => {
- markDeprecatedLocalStorageRead("analyticsSelectors.parseCache", "yt_analytics_cache")
+ markDeprecatedLocalStorageRead(
+  "analyticsSelectors.parseCache",
+  "yt_analytics_cache",
+ )
  const parsed = readYouTubeAnalyticsCache() as AnalyticsCache
  return parsed && typeof parsed === "object" ? parsed : {}
 }
@@ -160,7 +165,8 @@ const looksLikeVideoId = (value: string): boolean =>
  /^[A-Za-z0-9_-]{8,}$/.test(value) && !value.includes(" ")
 
 const parseDurationSeconds = (value: unknown): number => {
- if (typeof value === "number" && Number.isFinite(value)) return Math.max(0, value)
+ if (typeof value === "number" && Number.isFinite(value))
+  return Math.max(0, value)
  const raw = text(value)
  if (!raw) return 0
 
@@ -240,14 +246,19 @@ const percentLikeMetrics = new Set<CanonicalMetricKey>([
  "cardClickRate",
 ])
 
-const normalizeMetricValue = (metricKey: CanonicalMetricKey, value: number): number => {
+const normalizeMetricValue = (
+ metricKey: CanonicalMetricKey,
+ value: number,
+): number => {
  if (percentLikeMetrics.has(metricKey) && value > 0 && value <= 1) {
   return value * 100
  }
  return value
 }
 
-const sourceFromCells = (cells: Array<MetricCell | null | undefined>): MetricSource => {
+const sourceFromCells = (
+ cells: Array<MetricCell | null | undefined>,
+): MetricSource => {
  const sources = new Set<MetricSource>()
  cells.forEach((cell) => {
   if (!cell || cell.status === "unavailable") return
@@ -260,7 +271,9 @@ const sourceFromCells = (cells: Array<MetricCell | null | undefined>): MetricSou
 
 const metricCellValue = (cell: MetricCell | undefined): number | null => {
  if (!cell || cell.status === "unavailable") return null
- return typeof cell.value === "number" && Number.isFinite(cell.value) ? cell.value : null
+ return typeof cell.value === "number" && Number.isFinite(cell.value)
+  ? cell.value
+  : null
 }
 
 const enrichDerivedMetricCells = (
@@ -344,7 +357,9 @@ const enrichDerivedMetricCells = (
  return next
 }
 
-const sumTotalsFromReport = (report: AnalyticsReport | undefined): WindowTotals => {
+const sumTotalsFromReport = (
+ report: AnalyticsReport | undefined,
+): WindowTotals => {
  const objects = reportRowsToObjects(report).map(toNormalizedRow)
  if (objects.length === 0) {
   return {
@@ -367,9 +382,15 @@ const sumTotalsFromReport = (report: AnalyticsReport | undefined): WindowTotals 
  objects.forEach((row) => {
   views += nonNegative(getMetricByAliases(row, "views").value)
   const watchCell = getMetricByAliases(row, "watchHours").value
-  const watchMinutes = toNumber((row as Record<string, unknown>).estimatedMinutesWatched)
-  watchHours += nonNegative(watchCell) + (watchCell === null && watchMinutes ? watchMinutes / 60 : 0)
-  subscribersGained += nonNegative(getMetricByAliases(row, "subscribersGained").value)
+  const watchMinutes = toNumber(
+   (row as Record<string, unknown>).estimatedMinutesWatched,
+  )
+  watchHours +=
+   nonNegative(watchCell) +
+   (watchCell === null && watchMinutes ? watchMinutes / 60 : 0)
+  subscribersGained += nonNegative(
+   getMetricByAliases(row, "subscribersGained").value,
+  )
   revenue += nonNegative(getMetricByAliases(row, "revenue").value)
   impressions += nonNegative(getMetricByAliases(row, "impressions").value)
   const ctr = getMetricByAliases(row, "ctr").value
@@ -382,18 +403,35 @@ const sumTotalsFromReport = (report: AnalyticsReport | undefined): WindowTotals 
   impressions > 0 && views > 0
    ? (views / impressions) * 100
    : ctrValues.length > 0
-    ? ctrValues.reduce((sum, value) => sum + value, 0) / ctrValues.length
-    : null
+     ? ctrValues.reduce((sum, value) => sum + value, 0) / ctrValues.length
+     : null
 
  return { views, watchHours, subscribersGained, revenue, impressions, ctr }
 }
 
 const resolveWindowTotals = (
- cache: AnalyticsCache,
+ cache: AnalyticsCache & { globalLifetime?: AnalyticsReport },
  window: AnalyticsWindow,
 ): WindowTotals => {
- const fromWindow = sumTotalsFromReport(getBundleForWindow(cache, window)?.report)
- if (fromWindow.views > 0 || fromWindow.watchHours > 0 || fromWindow.revenue > 0) {
+ if (window === "lifetime" && cache.globalLifetime) {
+  const fromGlobal = sumTotalsFromReport(cache.globalLifetime)
+  if (
+   fromGlobal.views > 0 ||
+   fromGlobal.watchHours > 0 ||
+   fromGlobal.revenue > 0
+  ) {
+   return fromGlobal
+  }
+ }
+
+ const fromWindow = sumTotalsFromReport(
+  getBundleForWindow(cache, window)?.report,
+ )
+ if (
+  fromWindow.views > 0 ||
+  fromWindow.watchHours > 0 ||
+  fromWindow.revenue > 0
+ ) {
   return fromWindow
  }
 
@@ -412,7 +450,10 @@ const metricPriority = (cell: MetricCell): number => {
  return 1
 }
 
-const chooseBetterMetricCell = (existing: MetricCell, incoming: MetricCell): MetricCell => {
+const chooseBetterMetricCell = (
+ existing: MetricCell,
+ incoming: MetricCell,
+): MetricCell => {
  const existingPriority = metricPriority(existing)
  const incomingPriority = metricPriority(incoming)
 
@@ -442,7 +483,7 @@ const mergeCanonicalRowMetrics = (
   title: existing.title || incoming.title,
   uploadDate: existing.uploadDate || incoming.uploadDate,
   durationSeconds: existing.durationSeconds || incoming.durationSeconds,
-   format: existing.format !== "unknown" ? existing.format : incoming.format,
+  format: existing.format !== "unknown" ? existing.format : incoming.format,
   sourceMode:
    existing.sourceMode === incoming.sourceMode ? existing.sourceMode : "hybrid",
   metrics: { ...existing.metrics },
@@ -458,13 +499,17 @@ const mergeCanonicalRowMetrics = (
  return merged
 }
 
-const rowIdentityKey = (row: Pick<CanonicalVideoRow, "videoId" | "title">): string => {
+const rowIdentityKey = (
+ row: Pick<CanonicalVideoRow, "videoId" | "title">,
+): string => {
  const videoId = text(row.videoId)
  if (videoId) return `id:${videoId}`
  return `title:${canonicalizeTextKey(text(row.title))}`
 }
 
-const dedupeCanonicalRows = (rows: CanonicalVideoRow[]): CanonicalVideoRow[] => {
+const dedupeCanonicalRows = (
+ rows: CanonicalVideoRow[],
+): CanonicalVideoRow[] => {
  const map = new Map<string, CanonicalVideoRow>()
 
  rows.forEach((row) => {
@@ -480,10 +525,15 @@ const dedupeCanonicalRows = (rows: CanonicalVideoRow[]): CanonicalVideoRow[] => 
  return Array.from(map.values())
 }
 
-const reportRowsToObjects = (report?: AnalyticsReport | null): Record<string, unknown>[] => {
- if (!report || !Array.isArray(report.rows) || report.rows.length === 0) return []
+const reportRowsToObjects = (
+ report?: AnalyticsReport | null,
+): Record<string, unknown>[] => {
+ if (!report || !Array.isArray(report.rows) || report.rows.length === 0)
+  return []
 
- const headerNames = (report.columnHeaders || []).map((header) => String(header?.name || ""))
+ const headerNames = (report.columnHeaders || []).map((header) =>
+  String(header?.name || ""),
+ )
 
  return report.rows
   .map((row) => {
@@ -498,13 +548,16 @@ const reportRowsToObjects = (report?: AnalyticsReport | null): Record<string, un
 
    if (row && typeof row === "object") {
     const input = row as Record<string, unknown>
-    const byHeader = headerNames.reduce((acc, header) => {
-     if (!header) return acc
-     if (acc[header] === undefined && input[header] !== undefined) {
-      acc[header] = input[header]
-     }
-     return acc
-    }, {} as Record<string, unknown>)
+    const byHeader = headerNames.reduce(
+     (acc, header) => {
+      if (!header) return acc
+      if (acc[header] === undefined && input[header] !== undefined) {
+       acc[header] = input[header]
+      }
+      return acc
+     },
+     {} as Record<string, unknown>,
+    )
 
     return {
      ...input,
@@ -558,10 +611,14 @@ const extractTitleCandidates = (row: Record<string, unknown>): string[] => {
   text(row.video),
  ]
 
- return candidates.filter((candidate) => !!candidate && !looksLikeVideoId(candidate))
+ return candidates.filter(
+  (candidate) => !!candidate && !looksLikeVideoId(candidate),
+ )
 }
 
-const toNormalizedRow = (input: Record<string, unknown>): Record<string, unknown> => {
+const toNormalizedRow = (
+ input: Record<string, unknown>,
+): Record<string, unknown> => {
  const normalized = normalizeRow(input as Record<string, any>)
  return {
   ...input,
@@ -617,7 +674,10 @@ const applyStatsFallback = (
  return next
 }
 
-const apiRowsForWindow = (cache: AnalyticsCache, window: AnalyticsWindow): CanonicalVideoRow[] => {
+const apiRowsForWindow = (
+ cache: AnalyticsCache,
+ window: AnalyticsWindow,
+): CanonicalVideoRow[] => {
  const report = getBundleForWindow(cache, window)?.report
  const reportRows = reportRowsToObjects(report).map(toNormalizedRow)
 
@@ -652,7 +712,10 @@ const apiRowsForWindow = (cache: AnalyticsCache, window: AnalyticsWindow): Canon
 
   const metricCells = inferMetricCellsFromRow(analyticsRow, "api")
   const durationSeconds = parseDurationSeconds(
-   stat.durationSeconds ?? stat.durationRaw ?? analyticsRow["Duration (sec)"] ?? analyticsRow.Duration,
+   stat.durationSeconds ??
+    stat.durationRaw ??
+    analyticsRow["Duration (sec)"] ??
+    analyticsRow.Duration,
   )
 
   const contentType = text(contentTypeMap[videoId] ?? stat.contentType)
@@ -682,6 +745,7 @@ const apiRowsForWindow = (cache: AnalyticsCache, window: AnalyticsWindow): Canon
    sourceMode: "api",
    metrics: metricCells,
   }
+  row.originalData = analyticsRow
 
   row = applyStatsFallback(row, stat)
   row = enrichDerivedMetricCells(row, durationSeconds)
@@ -692,11 +756,17 @@ const apiRowsForWindow = (cache: AnalyticsCache, window: AnalyticsWindow): Canon
  // Include rows that exist in Analytics report but not in channel uploads list.
  reportRows.forEach((rawRow, index) => {
   const candidateVideoId = extractVideoIdCandidates(rawRow)[0] || ""
-  const titleCandidate = extractTitleCandidates(rawRow)[0] || (candidateVideoId ? `Unknown Title (${candidateVideoId})` : `Analytics Row ${index + 1}`)
+  const titleCandidate =
+   extractTitleCandidates(rawRow)[0] ||
+   (candidateVideoId
+    ? `Unknown Title (${candidateVideoId})`
+    : `Analytics Row ${index + 1}`)
 
   const key = candidateVideoId || canonicalizeTextKey(titleCandidate)
   const alreadyIncluded = canonicalRows.some((row) =>
-   candidateVideoId ? row.videoId === candidateVideoId : canonicalizeTextKey(row.title) === key,
+   candidateVideoId
+    ? row.videoId === candidateVideoId
+    : canonicalizeTextKey(row.title) === key,
   )
   if (alreadyIncluded) return
 
@@ -726,6 +796,7 @@ const apiRowsForWindow = (cache: AnalyticsCache, window: AnalyticsWindow): Canon
    sourceMode: "api",
    metrics: inferMetricCellsFromRow(rawRow, "api"),
   }
+  row.originalData = rawRow
 
   row = enrichDerivedMetricCells(row, durationSeconds)
   canonicalRows.push(row)
@@ -736,7 +807,9 @@ const apiRowsForWindow = (cache: AnalyticsCache, window: AnalyticsWindow): Canon
 }
 
 const resolveCsvFileWindow = (file: CsvFileWithTag): AnalyticsWindow | null => {
- const explicit = (file as CsvFileWithTag & { analyticsWindow?: AnalyticsWindow }).analyticsWindow
+ const explicit = (
+  file as CsvFileWithTag & { analyticsWindow?: AnalyticsWindow }
+ ).analyticsWindow
  if (explicit && ANALYTICS_WINDOWS.includes(explicit)) return explicit
  return inferAnalyticsWindowFromName(file.name || "")
 }
@@ -757,7 +830,9 @@ const csvRowsForWindow = (
 ): CanonicalVideoRow[] => {
  if (!Array.isArray(csvFiles) || csvFiles.length === 0) return []
 
- const filesWithRows = csvFiles.filter((file) => Array.isArray(file.data) && file.data.length > 0)
+ const filesWithRows = csvFiles.filter(
+  (file) => Array.isArray(file.data) && file.data.length > 0,
+ )
 
  const scopedFiles = filesWithRows.filter((file) =>
   shouldIncludeCsvFileForWindow(resolveCsvFileWindow(file), window),
@@ -789,7 +864,9 @@ const csvRowsForWindow = (
    const normalized = toNormalizedRow(rawRow)
    const videoId = extractVideoIdCandidates(normalized)[0] || ""
    const title =
-    extractTitleCandidates(normalized)[0] || text(normalized.Dimension) || text(normalized.Video)
+    extractTitleCandidates(normalized)[0] ||
+    text(normalized.Dimension) ||
+    text(normalized.Video)
 
    if (!videoId && !title) return
 
@@ -799,15 +876,22 @@ const csvRowsForWindow = (
 
    const formatFromTag = text(file.tag)
    const formatFromRow = text(
-    normalized.Format ?? normalized.Type ?? normalized.contentType ?? normalized.creatorContentType,
+    normalized.Format ??
+     normalized.Type ??
+     normalized.contentType ??
+     normalized.creatorContentType,
    )
 
    let row: CanonicalVideoRow = {
     id: `csv-${file.id}-${index}`,
     videoId,
     title: title || `CSV Row ${index + 1}`,
-    uploadDate: text(normalized["Upload date"] || normalized.Date || normalized["Video publish time"]),
-   format: resolveCanonicalVideoFormat(
+    uploadDate: text(
+     normalized["Upload date"] ||
+      normalized.Date ||
+      normalized["Video publish time"],
+    ),
+    format: resolveCanonicalVideoFormat(
      formatFromRow,
      durationSeconds,
      false,
@@ -818,6 +902,7 @@ const csvRowsForWindow = (
     sourceMode: "csv_table",
     metrics: inferMetricCellsFromRow(normalized, "csv_table"),
    }
+   row.originalData = rawRow
 
    row = enrichDerivedMetricCells(row, durationSeconds)
    out.push(row)
@@ -923,9 +1008,7 @@ export const getMetricSummary = (
   views: views > 0 ? views : totalsFallback.views,
   watchHours: watchHours > 0 ? watchHours : totalsFallback.watchHours,
   subscribersGained:
-   subscribersGained > 0
-    ? subscribersGained
-    : totalsFallback.subscribersGained,
+   subscribersGained > 0 ? subscribersGained : totalsFallback.subscribersGained,
   revenue: revenue > 0 ? revenue : totalsFallback.revenue,
  }
 
@@ -1015,11 +1098,16 @@ const METRIC_TO_HEADER: Record<CanonicalMetricKey, string> = {
  cardClickRate: "Card click rate",
 }
 
-export const MASTER_TABLE_HEADER_TO_METRIC_KEY: Record<string, CanonicalMetricKey> =
- Object.entries(METRIC_TO_HEADER).reduce((acc, [metricKey, header]) => {
+export const MASTER_TABLE_HEADER_TO_METRIC_KEY: Record<
+ string,
+ CanonicalMetricKey
+> = Object.entries(METRIC_TO_HEADER).reduce(
+ (acc, [metricKey, header]) => {
   acc[header] = metricKey as CanonicalMetricKey
   return acc
- }, {} as Record<string, CanonicalMetricKey>)
+ },
+ {} as Record<string, CanonicalMetricKey>,
+)
 
 const metricToRowValue = (cell: MetricCell): number | null => {
  if (cell.status === "unavailable") return null
@@ -1048,6 +1136,7 @@ export const canonicalRowsToMasterTableRows = (
    titleLength: row.title.length,
    __canonical: row,
    __metricCells: row.metrics,
+   _originalData: (row as any).originalData || {},
   }
 
   canonicalMetricOrder.forEach((metricKey) => {

@@ -142,7 +142,7 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "impressions",
    label: "Impressions",
    unit: "count",
-   aliases: ["Impressions", "impressions", "videoThumbnailImpressions", "sessions"],
+   aliases: ["Impressions", "videoThumbnailImpressions", "sessions"],
    rawPolicy: "derived_ok",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
   },
@@ -191,8 +191,7 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
     "CTR",
     "ctr",
     "Impressions click-through rate (%)",
-    "impressionClickThroughRate",
-     "videoThumbnailImpressionsClickRate",
+    "videoThumbnailImpressionsClickRate",
     "Click-Through Rate (CTR)",
     "clickThroughRate",
     "engagementRate",
@@ -373,18 +372,19 @@ export const getMetricByAliases = (
  for (const alias of def.aliases) {
   if (Object.prototype.hasOwnProperty.call(row, alias)) {
    const raw = row[alias]
-   if (!valueExists(raw)) return { value: null, found: false }
-   const parsed = asNumber(raw)
-   if (parsed !== null) return { value: parsed, found: true }
+   if (valueExists(raw)) {
+    const parsed = asNumber(raw)
+    if (parsed !== null) return { value: parsed, found: true }
+   }
   }
  }
-
  for (const [rawKey, rawValue] of rowEntries) {
   const normalized = canonicalizeMetricKey(rawKey)
   if (metricAliasMap[normalized] !== metricKey) continue
-  if (!valueExists(rawValue)) return { value: null, found: false }
-  const parsed = asNumber(rawValue)
-  if (parsed !== null) return { value: parsed, found: true }
+  if (valueExists(rawValue)) {
+   const parsed = asNumber(rawValue)
+   if (parsed !== null) return { value: parsed, found: true }
+  }
  }
 
  return { value: null, found: false }
