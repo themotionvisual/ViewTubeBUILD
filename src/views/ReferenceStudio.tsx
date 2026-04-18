@@ -30,31 +30,8 @@ import {
  Cell,
 } from "recharts"
 
-const NativeUIKit = React.lazy(() =>
- import("../components/NativeUIKit").then((module) => ({
-  default: module.NativeUIKit,
- })),
-)
-const UIReferenceLibraryContent = React.lazy(
- () => import("../components/UIReferenceLibraryContent"),
-)
 const ToolboxUISystem = React.lazy(
  () => import("../components/ToolboxUISystem"),
-)
-const SectionSourcesLab = React.lazy(
- () => import("./referenceStudio/SectionSourcesLab"),
-)
-const ComponentCatalog = React.lazy(
- () => import("./referenceStudio/ComponentCatalog"),
-)
-const ChartCatalog = React.lazy(
- () => import("./referenceStudio/ChartCatalog"),
-)
-const ChartSpecImplementation = React.lazy(
- () => import("./referenceStudio/ChartSpecImplementation"),
-)
-const ToolboxRecreation = React.lazy(
- () => import("./referenceStudio/ToolboxRecreation"),
 )
 const WidgetLab = React.lazy(
  () => import("./referenceStudio/WidgetLab"),
@@ -103,16 +80,9 @@ const LEGACY_TOOL_COMPONENTS = Object.fromEntries(
 type ReferenceTab =
  | "toolbox-system"
  | "component-grid"
- | "section-sources-lab"
- | "component-catalog"
- | "chart-catalog"
- | "chart-spec-implementation"
- | "toolbox-recreation"
- | "widget-lab"
  | "analytics-lab"
  | "thumbnail"
- | "library"
- | "native"
+ | "widget-lab"
  | "legacy"
 
 type LegacyToolTabId =
@@ -230,20 +200,9 @@ const BEST_COMPONENTS = [
 const REFERENCE_TABS: { id: ReferenceTab; label: string; accent: string }[] = [
  { id: "toolbox-system", label: "Toolbox UI System", accent: "bg-[#24D3FF]" },
  { id: "component-grid", label: "Component Grid", accent: "bg-[#C9F830]" },
- { id: "section-sources-lab", label: "Section Sources Lab", accent: "bg-[#FFB158]" },
- { id: "component-catalog", label: "Component Catalog", accent: "bg-[#B14AED]" },
- { id: "chart-catalog", label: "Chart Catalog", accent: "bg-[#00CCFF]" },
- {
-  id: "chart-spec-implementation",
-  label: "Chart Spec Implementation",
-  accent: "bg-[#FFE357]",
- },
- { id: "toolbox-recreation", label: "Toolbox Recreation", accent: "bg-[#FF7497]" },
- { id: "widget-lab", label: "Widget Lab", accent: "bg-[#B14AED]" },
  { id: "analytics-lab", label: "Analytics Lab", accent: "bg-[#FFB158]" },
  { id: "thumbnail", label: "Thumbnail", accent: "bg-[#FFE357]" },
- { id: "library", label: "Library", accent: "bg-[#B14AED]" },
- { id: "native", label: "Native Kit", accent: "bg-[#CCFF00]" },
+ { id: "widget-lab", label: "Widget Lab", accent: "bg-[#B14AED]" },
  { id: "legacy", label: "Legacy Tools", accent: "bg-[#FF7497]" },
 ]
 
@@ -804,35 +763,6 @@ const ReferenceStudio: React.FC = () => {
    </React.Suspense>
   )}
 
-   {activeReferenceTab === "section-sources-lab" && (
-    <React.Suspense fallback={sectionLoadingFallback}>
-     <SectionSourcesLab />
-    </React.Suspense>
-   )}
-
-   {activeReferenceTab === "component-catalog" && (
-    <React.Suspense fallback={sectionLoadingFallback}>
-     <ComponentCatalog />
-    </React.Suspense>
-   )}
-
-   {activeReferenceTab === "chart-catalog" && (
-    <React.Suspense fallback={sectionLoadingFallback}>
-     <ChartCatalog />
-    </React.Suspense>
-   )}
-
-   {activeReferenceTab === "chart-spec-implementation" && (
-    <React.Suspense fallback={sectionLoadingFallback}>
-     <ChartSpecImplementation />
-    </React.Suspense>
-   )}
-
-   {activeReferenceTab === "toolbox-recreation" && (
-   <React.Suspense fallback={sectionLoadingFallback}>
-    <ToolboxRecreation />
-   </React.Suspense>
-  )}
 
    {activeReferenceTab === "widget-lab" && (
     <React.Suspense fallback={sectionLoadingFallback}>
@@ -1388,56 +1318,6 @@ const ReferenceStudio: React.FC = () => {
     </div>
    )}
 
-   {/* 3. Global UI Reference Library — Unified Design System Layer */}
-   {activeReferenceTab === "library" && (
-    <div className="w-full max-w-[1400px] mx-auto mb-40">
-     <div className="p-12 border-b-[12px] border-black bg-white mb-20 text-black shadow-[16px_16px_0px_0px_black] rounded-[3rem] border-[4px]">
-      <div className="max-w-[1400px] mx-auto text-center">
-       <h2 className="text-6xl font-[1000] uppercase italic tracking-tighter bg-[#B14AED] text-white inline-block px-12 py-6 rounded-2xl border-[5px] border-black shadow-[10px_10px_0px_0px_black]">
-        REFERENCE LIBRARY
-       </h2>
-       <p className="mt-8 font-black uppercase text-lg opacity-50 tracking-[0.3em] text-black">
-        Tokyo-Pop Component Repository & Design Tokens
-       </p>
-      </div>
-     </div>
-     <React.Suspense fallback={sectionLoadingFallback}>
-      <UIReferenceLibraryContent />
-     </React.Suspense>
-    </div>
-   )}
-
-   {activeReferenceTab === "native" && (
-    <div className="w-full max-w-[1400px] mx-auto mb-40">
-     <div className="p-12 border-b-[12px] border-black bg-white mb-20 text-black shadow-[16px_16px_0px_0px_black] rounded-[3rem] border-[4px]">
-      <div className="max-w-[1400px] mx-auto text-center">
-       <h2 className="text-6xl font-[1000] uppercase italic tracking-tighter bg-[#CCFF00] text-black inline-block px-12 py-6 rounded-2xl border-[5px] border-black shadow-[10px_10px_0px_0px_black]">
-        NATIVE UI KIT
-       </h2>
-       <p className="mt-8 font-black uppercase text-lg opacity-50 tracking-[0.3em] text-black">
-        Standalone Component Kit Pulled In From Shared Library Modules
-       </p>
-      </div>
-     </div>
-     <div className="bg-white border-[6px] border-black rounded-[48px] shadow-[12px_12px_0px_0px_black] overflow-hidden">
-      <div className="bg-black text-white px-8 py-4 flex justify-between items-center">
-       <span className="font-[1000] uppercase tracking-widest text-lg">
-        Native UI Kit
-       </span>
-       <div className="flex gap-2">
-        <div className="w-3 h-3 rounded-full bg-[#FF3399]" />
-        <div className="w-3 h-3 rounded-full bg-[#CCFF00]" />
-        <div className="w-3 h-3 rounded-full bg-[#00CCFF]" />
-       </div>
-      </div>
-      <div className="p-8 bg-white">
-       <React.Suspense fallback={sectionLoadingFallback}>
-        <NativeUIKit />
-       </React.Suspense>
-      </div>
-     </div>
-    </div>
-   )}
 
    {activeReferenceTab === "legacy" && (
     <div className="w-full max-w-[1400px] mx-auto mb-40">

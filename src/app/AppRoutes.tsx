@@ -56,9 +56,13 @@ export const AppRoutes: React.FC = () => {
     path="/reference-studio"
     element={<Navigate to="/reference-studio/toolbox-system" replace />}
    />
-   <Route path="/reference-studio/:tabId" element={<ReferenceStudioIsolated />} />
+   <Route path="/reference-studio/:tabId" element={<ReferenceStudio />} />
    <Route path="/reference-studio-v2" element={<ReferenceStudioV2 />} />
-   <Route path="/stuff" element={<Stuff />} />
+   <Route
+    path="/stuff"
+    element={<Navigate to="/stuff/sources-lab" replace />}
+   />
+   <Route path="/stuff/:tabId" element={<Stuff />} />
    <Route path="/sources-lab" element={<SourcesLabView />} />
    <Route path="/component-catalog" element={<ComponentCatalogView />} />
    <Route path="/component-grid" element={<ComponentGridView />} />

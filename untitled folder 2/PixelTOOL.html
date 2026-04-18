@@ -1,0 +1,1326 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ViewTube Pixel Art Studio</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+        
+        :root {
+            --black: #000000;
+            --white: #ffffff;
+            --cyan: #00CCFF;
+            --lime: #CCFF00;
+            --pink: #FF3399;
+            --shadow: 8px 8px 0px #000000;
+            --shadow-small: 4px 4px 0px #000000;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f0f0f0;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            background: var(--white);
+            border: 4px solid var(--black);
+            box-shadow: var(--shadow);
+            width: 95vw;
+            max-width: 1200px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: var(--pink);
+            border-bottom: 4px solid var(--black);
+            padding: 0 16px;
+            height: 64px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            font-style: italic;
+            letter-spacing: -2px;
+            text-shadow: 3px 3px 0px var(--black);
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .toolbar {
+            width: 220px;
+            background: var(--white);
+            border-right: 4px solid var(--black);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .toolbar-section {
+            border: 3px solid var(--black);
+            padding: 10px;
+            background: #f9f9f9;
+        }
+
+        .toolbar-section h3 {
+            margin: 0 0 8px 0;
+            font-size: 0.75rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--black);
+        }
+
+        .toolbar-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .canvas-area {
+            flex: 1;
+            background: #ddd;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            border: 4px solid var(--black);
+            box-shadow: var(--shadow);
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        canvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        #gridCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            image-rendering: pixelated;
+        }
+
+        .palette-panel {
+            width: 280px;
+            background: var(--white);
+            border-left: 4px solid var(--black);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .palette-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+            padding: 12px;
+            flex: 1;
+            overflow-y: auto;
+            background: var(--white);
+        }
+
+        .color-swatch {
+            aspect-ratio: 1;
+            border: 2px solid var(--black);
+            box-shadow: 2px 2px 0px var(--black);
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        .color-swatch:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0px var(--black);
+        }
+
+        .color-swatch:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px var(--black);
+        }
+
+        .color-swatch.active {
+            outline: 3px solid var(--cyan);
+            outline-offset: -3px;
+        }
+
+        .tool-btn {
+            background: var(--white);
+            border: 3px solid var(--black);
+            box-shadow: var(--shadow-small);
+            padding: 6px 12px;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            transition: all 0.1s;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            flex: 1;
+            min-width: 0;
+            text-align: center;
+        }
+
+        .tool-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--black);
+        }
+
+        .tool-btn.active {
+            background: var(--cyan);
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--black);
+        }
+
+        .tool-btn.danger {
+            background: var(--pink);
+        }
+
+        .tool-btn.success {
+            background: var(--lime);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .slider-label {
+            font-size: 0.7rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .slider-value {
+            color: var(--pink);
+        }
+
+        input[type="range"] {
+            cursor: pointer;
+            accent-color: var(--black);
+            width: 100%;
+        }
+
+        input[type="number"], select {
+            border: 3px solid var(--black);
+            padding: 4px 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            background: var(--white);
+            width: 100%;
+        }
+
+        .status-bar {
+            border-top: 4px solid var(--black);
+            padding: 8px 15px;
+            background: var(--cyan);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #current-color-indicator {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #000;
+            box-shadow: 2px 2px 0px #000;
+        }
+
+        .brush-icon circle {
+            fill: var(--black);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--black);
+            cursor: pointer;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            border: 2px solid var(--black);
+            margin-bottom: 4px;
+            background: var(--white);
+            cursor: pointer;
+        }
+
+        .layer-item.active {
+            background: var(--lime);
+            border-color: var(--cyan);
+        }
+
+        .layer-preview {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--black);
+            background: #eee;
+            flex-shrink: 0;
+        }
+
+        .layer-info {
+            flex: 1;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .layer-opacity {
+            width: 50px;
+        }
+
+        .timeline-panel {
+            height: 120px;
+            background: var(--white);
+            border-top: 4px solid var(--black);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 12px;
+            border-bottom: 2px solid var(--black);
+            background: var(--lime);
+        }
+
+        .timeline-header h3 {
+            margin: 0;
+            font-size: 0.75rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .timeline-frames {
+            display: flex;
+            gap: 4px;
+            padding: 8px 12px;
+            overflow-x: auto;
+            flex: 1;
+            align-items: center;
+        }
+
+        .frame-item {
+            width: 60px;
+            height: 50px;
+            border: 3px solid var(--black);
+            background: var(--white);
+            flex-shrink: 0;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .frame-item.active {
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 2px var(--cyan);
+        }
+
+        .frame-item canvas {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+        }
+
+        .frame-number {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--black);
+            color: var(--white);
+            font-size: 0.6rem;
+            font-weight: 900;
+            text-align: center;
+            padding: 1px;
+        }
+
+        .zoom-controls {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .zoom-btn {
+            background: var(--white);
+            border: 2px solid var(--black);
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        .zoom-btn:hover {
+            background: var(--lime);
+        }
+
+        .zoom-level {
+            font-weight: 900;
+            min-width: 40px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: var(--cyan); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 3px solid #000; box-shadow: 4px 4px 0px #000;">
+                    <svg class="brush-icon" width="20" height="20" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="6"/>
+                    </svg>
+                </div>
+                <h1>VIEWTUBE PIXEL STUDIO</h1>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button class="tool-btn success" onclick="exportImage()">EXPORT</button>
+                <button class="tool-btn danger" onclick="clearCanvas()">CLEAR</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <!-- Drawing Tools -->
+                <div class="toolbar-section">
+                    <h3>Tools</h3>
+                    <div class="toolbar-row">
+                        <button class="tool-btn active" onclick="setTool('brush', this)">BRUSH</button>
+                        <button class="tool-btn" onclick="setTool('eraser', this)">ERASER</button>
+                    </div>
+                    <div class="toolbar-row" style="margin-top: 8px;">
+                        <button class="tool-btn" onclick="setTool('bucket', this)">FILL</button>
+                        <button class="tool-btn" onclick="setTool('eyedropper', this)">PICK</button>
+                    </div>
+                </div>
+
+                <!-- Brush Settings -->
+                <div class="toolbar-section">
+                    <h3>Brush Settings</h3>
+                    <div class="slider-group">
+                        <span class="slider-label">Size <span id="size-value" class="slider-value">1</span></span>
+                        <input type="range" id="sizePicker" min="1" max="32" value="1">
+                    </div>
+                    <div class="slider-group" style="margin-top: 8px;">
+                        <span class="slider-label">Opacity <span id="alpha-value" class="slider-value">100%</span></span>
+                        <input type="range" id="opacityPicker" min="1" max="100" value="100">
+                    </div>
+                </div>
+
+                <!-- Grid Settings -->
+                <div class="toolbar-section">
+                    <h3>Grid</h3>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="gridToggle" checked onchange="toggleGrid()">
+                        <label for="gridToggle">Show Grid</label>
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <span class="slider-label">Grid Size</span>
+                        <select id="gridSize" onchange="updateGrid()">
+                            <option value="1">1x1</option>
+                            <option value="8" selected>8x8</option>
+                            <option value="16">16x16</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Color Mode -->
+                <div class="toolbar-section">
+                    <h3>Color Mode</h3>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="indexedToggle" onchange="toggleIndexedColor()">
+                        <label for="indexedToggle">Indexed Colors</label>
+                    </div>
+                </div>
+
+                <!-- Layers -->
+                <div class="toolbar-section">
+                    <h3>Layers</h3>
+                    <div id="layersList"></div>
+                    <div class="toolbar-row" style="margin-top: 8px;">
+                        <button class="tool-btn success" onclick="addLayer()">+ ADD</button>
+                        <button class="tool-btn danger" onclick="deleteLayer()">- DEL</button>
+                    </div>
+                </div>
+
+                <!-- Zoom -->
+                <div class="toolbar-section">
+                    <h3>View</h3>
+                    <div class="zoom-controls">
+                        <button class="zoom-btn" onclick="zoomOut()">−</button>
+                        <span class="zoom-level" id="zoomLevel">100%</span>
+                        <button class="zoom-btn" onclick="zoomIn()">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas Area -->
+            <div class="canvas-area">
+                <div class="canvas-wrapper" id="canvasWrapper">
+                    <canvas id="mainCanvas"></canvas>
+                    <canvas id="gridCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Palette Panel -->
+            <div class="palette-panel">
+                <div style="padding: 10px; border-bottom: 3px solid var(--black); background: var(--lime);">
+                    <h3 style="margin: 0; font-size: 0.75rem; font-weight: 900; text-transform: uppercase;">Color Palette</h3>
+                </div>
+                <div class="palette-grid" id="paletteGrid"></div>
+            </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="timeline-panel">
+            <div class="timeline-header">
+                <h3>Animation Timeline</h3>
+                <div style="display: flex; gap: 8px;">
+                    <button class="tool-btn success" onclick="addFrame()">+ FRAME</button>
+                    <button class="tool-btn" onclick="duplicateFrame()">COPY</button>
+                    <button class="tool-btn danger" onclick="deleteFrame()">DEL</button>
+                </div>
+            </div>
+            <div class="timeline-frames" id="timelineFrames"></div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <div id="current-color-indicator" style="background: #000;"></div>
+                <span id="toolName">BRUSH</span>
+                <span id="canvasSize">64×64</span>
+            </div>
+            <div class="status-item">
+                <span id="mousePos">X: 0 Y: 0</span>
+                <span id="pixelCount">Colors: 1</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CORE STATE ====================
+        const CANVAS_SIZE = 64;
+        const MAX_COLORS = 16; // Indexed color limit
+        
+        let currentTool = 'brush';
+        let currentColor = '#000000';
+        let brushSize = 1;
+        let brushOpacity = 100;
+        let showGrid = true;
+        let gridSize = 8;
+        let indexedColorMode = false;
+        let zoom = 1;
+        let currentFrameIndex = 0;
+        let currentLayerIndex = 0;
+        let isDrawing = false;
+        let lastX = 0, lastY = 0;
+
+        // Undo/Redo stacks
+        let undoStack = [];
+        let redoStack = [];
+        const MAX_UNDO = 50;
+
+        // Indexed color palette (limited)
+        const indexedPalette = [
+            '#000000', '#FFFFFF', '#FF0000', '#00FF00', '#0000FF',
+            '#FFFF00', '#FF00FF', '#00FFFF', '#FF8800', '#88FF00',
+            '#0088FF', '#FF0088', '#8800FF', '#00FF88', '#880000', '#008800'
+        ];
+
+        // Full rainbow palette
+        const fullPalette = [
+            '#FF0000', '#FF1744', '#FF3399', '#FF6B6B',
+            '#FFA500', '#FFB570', '#FCAF57', '#FF8C00',
+            '#FFDD00', '#FFE357', '#FFF000', '#FFEB3B',
+            '#00FF41', '#4FFF5B', '#CCFF00', '#00E676',
+            '#00CCFF', '#00E5FF', '#24D3FF', '#00D2FF',
+            '#40C6E9', '#579AFF', '#B28DFF', '#0066FF',
+            '#CC00FF', '#FF83EA', '#FF1744', '#9C27B0',
+            '#000000', '#FFFFFF', '#888888', '#CCCCCC'
+        ];
+
+        // ==================== LAYERS SYSTEM ====================
+        let layers = [];
+
+        function createLayer(name, width, height) {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            ctx.fillStyle = 'rgba(0,0,0,0)';
+            ctx.fillRect(0, 0, width, height);
+            return {
+                name: name || `Layer ${layers.length + 1}`,
+                canvas: canvas,
+                visible: true,
+                opacity: 100,
+                locked: false
+            };
+        }
+
+        function addLayer() {
+            const layer = createLayer(null, CANVAS_SIZE, CANVAS_SIZE);
+            layers.push(layer);
+            currentLayerIndex = layers.length - 1;
+            saveState();
+            renderLayers();
+            compositeCanvas();
+        }
+
+        function deleteLayer() {
+            if (layers.length <= 1) return;
+            layers.splice(currentLayerIndex, 1);
+            if (currentLayerIndex >= layers.length) currentLayerIndex = layers.length - 1;
+            saveState();
+            renderLayers();
+            compositeCanvas();
+        }
+
+        function selectLayer(index) {
+            currentLayerIndex = index;
+            renderLayers();
+        }
+
+        function renderLayers() {
+            const container = document.getElementById('layersList');
+            container.innerHTML = '';
+            layers.forEach((layer, index) => {
+                const div = document.createElement('div');
+                div.className = `layer-item ${index === currentLayerIndex ? 'active' : ''}`;
+                div.onclick = () => selectLayer(index);
+                div.innerHTML = `
+                    <canvas class="layer-preview" width="24" height="24"></canvas>
+                    <span class="layer-info">${layer.name}</span>
+                    <input type="range" class="layer-opacity" min="0" max="100" value="${layer.opacity}" 
+                           onchange="setLayerOpacity(${index}, this.value)">
+                `;
+                // Draw thumbnail
+                const preview = div.querySelector('.layer-preview');
+                const pCtx = preview.getContext('2d');
+                pCtx.drawImage(layer.canvas, 0, 0, 24, 24);
+                container.appendChild(div);
+            });
+        }
+
+        function setLayerOpacity(index, value) {
+            layers[index].opacity = parseInt(value);
+            compositeCanvas();
+        }
+
+        // ==================== FRAMES SYSTEM ====================
+        let frames = [];
+
+        function createFrame() {
+            const frameLayers = [];
+            for (let i = 0; i < layers.length; i++) {
+                const layerCanvas = document.createElement('canvas');
+                layerCanvas.width = CANVAS_SIZE;
+                layerCanvas.height = CANVAS_SIZE;
+                const ctx = layerCanvas.getContext('2d', { willReadFrequently: true });
+                ctx.fillStyle = 'rgba(0,0,0,0)';
+                ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+                frameLayers.push(layerCanvas);
+            }
+            return frameLayers;
+        }
+
+        function addFrame() {
+            const frame = createFrame();
+            frames.push(frame);
+            currentFrameIndex = frames.length - 1;
+            copyLayerToFrame();
+            renderTimeline();
+        }
+
+        function duplicateFrame() {
+            if (frames.length === 0) return;
+            const sourceFrame = frames[currentFrameIndex];
+            const newFrame = sourceFrame.map(layerCanvas => {
+                const newCanvas = document.createElement('canvas');
+                newCanvas.width = CANVAS_SIZE;
+                newCanvas.height = CANVAS_SIZE;
+                const ctx = newCanvas.getContext('2d');
+                ctx.drawImage(layerCanvas, 0, 0);
+                return newCanvas;
+            });
+            frames.push(newFrame);
+            currentFrameIndex = frames.length - 1;
+            renderTimeline();
+        }
+
+        function deleteFrame() {
+            if (frames.length <= 1) return;
+            frames.splice(currentFrameIndex, 1);
+            if (currentFrameIndex >= frames.length) currentFrameIndex = frames.length - 1;
+            loadFrame(currentFrameIndex);
+            renderTimeline();
+        }
+
+        function selectFrame(index) {
+            saveFrame(currentFrameIndex);
+            currentFrameIndex = index;
+            loadFrame(index);
+            renderTimeline();
+        }
+
+        function saveFrame(index) {
+            if (index >= frames.length) return;
+            for (let i = 0; i < layers.length && i < frames[index].length; i++) {
+                const ctx = frames[index][i].getContext('2d');
+                ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+                ctx.drawImage(layers[i].canvas, 0, 0);
+            }
+        }
+
+        function loadFrame(index) {
+            if (index >= frames.length) return;
+            for (let i = 0; i < layers.length && i < frames[index].length; i++) {
+                const ctx = layers[i].canvas.getContext('2d');
+                ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+                ctx.drawImage(frames[index][i], 0, 0);
+            }
+            compositeCanvas();
+        }
+
+        function renderTimeline() {
+            const container = document.getElementById('timelineFrames');
+            container.innerHTML = '';
+            frames.forEach((frame, index) => {
+                const div = document.createElement('div');
+                div.className = `frame-item ${index === currentFrameIndex ? 'active' : ''}`;
+                div.onclick = () => selectFrame(index);
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = CANVAS_SIZE;
+                canvas.height = CANVAS_SIZE;
+                const ctx = canvas.getContext('2d');
+                
+                // Composite frame for preview
+                frame.forEach(layerCanvas => {
+                    ctx.drawImage(layerCanvas, 0, 0);
+                });
+                
+                div.appendChild(canvas);
+                div.innerHTML += `<span class="frame-number">${index + 1}</span>`;
+                container.appendChild(div);
+            });
+        }
+
+        // ==================== UNDO/REDO SYSTEM ====================
+        function saveState() {
+            const state = layers.map(layer => {
+                const canvas = document.createElement('canvas');
+                canvas.width = CANVAS_SIZE;
+                canvas.height = CANVAS_SIZE;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(layer.canvas, 0, 0);
+                return {
+                    name: layer.name,
+                    data: canvas.toDataURL(),
+                    opacity: layer.opacity,
+                    visible: layer.visible
+                };
+            });
+            
+            undoStack.push(JSON.stringify(state));
+            if (undoStack.length > MAX_UNDO) undoStack.shift();
+            redoStack = [];
+        }
+
+        function undo() {
+            if (undoStack.length === 0) return;
+            const currentState = layers.map(layer => {
+                const canvas = document.createElement('canvas');
+                canvas.width = CANVAS_SIZE;
+                canvas.height = CANVAS_SIZE;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(layer.canvas, 0, 0);
+                return {
+                    name: layer.name,
+                    data: canvas.toDataURL(),
+                    opacity: layer.opacity,
+                    visible: layer.visible
+                };
+            });
+            redoStack.push(JSON.stringify(currentState));
+            
+            const state = JSON.parse(undoStack.pop());
+            restoreState(state);
+        }
+
+        function redo() {
+            if (redoStack.length === 0) return;
+            const currentState = layers.map(layer => {
+                const canvas = document.createElement('canvas');
+                canvas.width = CANVAS_SIZE;
+                canvas.height = CANVAS_SIZE;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(layer.canvas, 0, 0);
+                return {
+                    name: layer.name,
+                    data: canvas.toDataURL(),
+                    opacity: layer.opacity,
+                    visible: layer.visible
+                };
+            });
+            undoStack.push(JSON.stringify(currentState));
+            
+            const state = JSON.parse(redoStack.pop());
+            restoreState(state);
+        }
+
+        function restoreState(state) {
+            layers = state.map(data => {
+                const canvas = document.createElement('canvas');
+                canvas.width = CANVAS_SIZE;
+                canvas.height = CANVAS_SIZE;
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                img.src = data.data;
+                // We need to wait for image to load, but for simplicity we'll use a sync approach
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = CANVAS_SIZE;
+                tempCanvas.height = CANVAS_SIZE;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(canvas, 0, 0);
+                return {
+                    name: data.name,
+                    canvas: canvas,
+                    opacity: data.opacity,
+                    visible: data.visible
+                };
+            });
+            if (currentLayerIndex >= layers.length) currentLayerIndex = layers.length - 1;
+            renderLayers();
+            compositeCanvas();
+        }
+
+        // ==================== GRID SYSTEM ====================
+        function toggleGrid() {
+            showGrid = document.getElementById('gridToggle').checked;
+            drawGrid();
+        }
+
+        function updateGrid() {
+            gridSize = parseInt(document.getElementById('gridSize').value);
+            drawGrid();
+        }
+
+        function drawGrid() {
+            const gridCanvas = document.getElementById('gridCanvas');
+            const ctx = gridCanvas.getContext('2d');
+            gridCanvas.width = CANVAS_SIZE * zoom;
+            gridCanvas.height = CANVAS_SIZE * zoom;
+            ctx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+            
+            if (!showGrid) return;
+            
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.lineWidth = 1;
+            
+            const step = gridSize * zoom;
+            for (let x = 0; x <= gridCanvas.width; x += step) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, gridCanvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y <= gridCanvas.height; y += step) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(gridCanvas.width, y);
+                ctx.stroke();
+            }
+        }
+
+        // ==================== INDEXED COLOR MODE ====================
+        function toggleIndexedColor() {
+            indexedColorMode = document.getElementById('indexedToggle').checked;
+        }
+
+        function getNearestIndexedColor(color) {
+            if (!indexedColorMode) return color;
+            
+            const r = parseInt(color.slice(1, 3), 16);
+            const g = parseInt(color.slice(3, 5), 16);
+            const b = parseInt(color.slice(5, 7), 16);
+            
+            let minDist = Infinity;
+            let nearest = color;
+            
+            indexedPalette.forEach(paletteColor => {
+                const pr = parseInt(paletteColor.slice(1, 3), 16);
+                const pg = parseInt(paletteColor.slice(3, 5), 16);
+                const pb = parseInt(paletteColor.slice(5, 7), 16);
+                
+                const dist = Math.sqrt((r-pr)**2 + (g-pg)**2 + (b-pb)**2);
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearest = paletteColor;
+                }
+            });
+            
+            return nearest;
+        }
+
+        // ==================== CANVAS COMPOSITING ====================
+        function compositeCanvas() {
+            const mainCanvas = document.getElementById('mainCanvas');
+            const ctx = mainCanvas.getContext('2d', { willReadFrequently: true });
+            ctx.clearRect(0, 0, CANVAS_SIZE, ctx.canvas.width, ctx.canvas.height);
+            
+            // White background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            
+            // Composite layers
+            layers.forEach(layer => {
+                if (layer.visible) {
+                    ctx.globalAlpha = layer.opacity / 100;
+                    ctx.drawImage(layer.canvas, 0, 0);
+                }
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        // ==================== DRAWING TOOLS ====================
+        function setTool(tool, btn) {
+            currentTool = tool;
+            document.getElementById('toolName').textContent = tool.toUpperCase();
+            document.querySelectorAll('.toolbar-section .tool-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+        }
+
+        function getCanvasCoordinates(e) {
+            const wrapper = document.getElementById('canvasWrapper');
+            const rect = wrapper.getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) / zoom);
+            const y = Math.floor((e.clientY - rect.top) / zoom);
+            return { x, y };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const coords = getCanvasCoordinates(e);
+            lastX = coords.x;
+            lastY = coords.y;
+            
+            if (currentTool === 'bucket') {
+                floodFill(coords.x, coords.y, currentColor);
+                saveState();
+            } else if (currentTool === 'eyedropper') {
+                pickColor(coords.x, coords.y);
+            } else {
+                drawPixel(coords.x, coords.y);
+            }
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const coords = getCanvasCoordinates(e);
+            
+            if (currentTool === 'brush' || currentTool === 'eraser') {
+                // Draw line between last point and current point
+                drawLine(lastX, lastY, coords.x, coords.y);
+            }
+            
+            lastX = coords.x;
+            lastY = coords.y;
+            
+            // Update status bar
+            document.getElementById('mousePos').textContent = `X: ${coords.x} Y: ${coords.y}`;
+        }
+
+        function stopDrawing() {
+            if (isDrawing) {
+                isDrawing = false;
+                saveState();
+                compositeCanvas();
+                saveFrame(currentFrameIndex);
+            }
+        }
+
+        function drawPixel(x, y) {
+            if (x < 0 || x >= CANVAS_SIZE || y < 0 || y >= CANVAS_SIZE) return;
+            
+            const layer = layers[currentLayerIndex];
+            const ctx = layer.canvas.getContext('2d', { willReadFrequently: true });
+            
+            if (currentTool === 'eraser') {
+                ctx.clearRect(x, y, brushSize, brushSize);
+            } else {
+                const color = getNearestIndexedColor(currentColor);
+                ctx.globalAlpha = brushOpacity / 100;
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, brushSize, brushSize);
+                ctx.globalAlpha = 1;
+            }
+            
+            compositeCanvas();
+        }
+
+        function drawLine(x0, y0, x1, y1) {
+            const layer = layers[currentLayerIndex];
+            const ctx = layer.canvas.getContext('2d', { willReadFrequently: true });
+            const color = currentTool === 'eraser' ? null : getNearestIndexedColor(currentColor);
+            
+            // Bresenham's line algorithm for pixel-perfect lines
+            const dx = Math.abs(x1 - x0);
+            const dy = Math.abs(y1 - y0);
+            const sx = x0 < x1 ? 1 : -1;
+            const sy = y0 < y1 ? 1 : -1;
+            let err = dx - dy;
+            
+            while (true) {
+                if (currentTool === 'eraser') {
+                    ctx.clearRect(x0, y0, brushSize, brushSize);
+                } else {
+                    ctx.globalAlpha = brushOpacity / 100;
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x0, y0, brushSize, brushSize);
+                    ctx.globalAlpha = 1;
+                }
+                
+                if (x0 === x1 && y0 === y1) break;
+                const e2 = 2 * err;
+                if (e2 > -dy) { err -= dy; x0 += sx; }
+                if (e2 < dx) { err += dx; y0 += sy; }
+            }
+            
+            compositeCanvas();
+        }
+
+        // ==================== FLOOD FILL ====================
+        function floodFill(startX, startY, fillColor) {
+            const layer = layers[currentLayerIndex];
+            const ctx = layer.canvas.getContext('2d', { willReadFrequently: true });
+            const imageData = ctx.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            const data = imageData.data;
+            
+            const color = getNearestIndexedColor(fillColor);
+            const r = parseInt(color.slice(1, 3), 16);
+            const g = parseInt(color.slice(3, 5), 16);
+            const b = parseInt(color.slice(5, 7), 16);
+            
+            const startPos = (startY * CANVAS_SIZE + startX) * 4;
+            const startR = data[startPos];
+            const startG = data[startPos + 1];
+            const startB = data[startPos + 2];
+            const startA = data[startPos + 3];
+            
+            if (startR === r && startG === g && startB === b && startA === 255) return;
+            
+            const stack = [[startX, startY]];
+            
+            while (stack.length > 0) {
+                const [x, y] = stack.pop();
+                const pos = (y * CANVAS_SIZE + x) * 4;
+                
+                if (x < 0 || x >= CANVAS_SIZE || y < 0 || y >= CANVAS_SIZE) continue;
+                if (data[pos] !== startR || data[pos + 1] !== startG || 
+                    data[pos + 2] !== startB || data[pos + 3] !== startA) continue;
+                
+                data[pos] = r;
+                data[pos + 1] = g;
+                data[pos + 2] = b;
+                data[pos + 3] = 255;
+                
+                stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+            compositeCanvas();
+        }
+
+        // ==================== COLOR PICKER ====================
+        function pickColor(x, y) {
+            const mainCanvas = document.getElementById('mainCanvas');
+            const ctx = mainCanvas.getContext('2d', { willReadFrequently: true });
+            const pixel = ctx.getImageData(x, y, 1, 1).data;
+            const hex = '#' + [pixel[0], pixel[1], pixel[2]].map(x => x.toString(16).padStart(2, '0')).join('');
+            currentColor = hex;
+            document.getElementById('current-color-indicator').style.background = hex;
+            setTool('brush', null);
+        }
+
+        // ==================== ZOOM ====================
+        function zoomIn() {
+            if (zoom < 16) {
+                zoom *= 2;
+                updateZoom();
+            }
+        }
+
+        function zoomOut() {
+            if (zoom > 0.25) {
+                zoom /= 2;
+                updateZoom();
+            }
+        }
+
+        function updateZoom() {
+            const wrapper = document.getElementById('canvasWrapper');
+            const mainCanvas = document.getElementById('mainCanvas');
+            const gridCanvas = document.getElementById('gridCanvas');
+            
+            mainCanvas.style.width = (CANVAS_SIZE * zoom) + 'px';
+            mainCanvas.style.height = (CANVAS_SIZE * zoom) + 'px';
+            gridCanvas.style.width = (CANVAS_SIZE * zoom) + 'px';
+            gridCanvas.style.height = (CANVAS_SIZE * zoom) + 'px';
+            
+            document.getElementById('zoomLevel').textContent = Math.round(zoom * 100) + '%';
+            drawGrid();
+        }
+
+        // ==================== PALETTE ====================
+        function initPalette() {
+            const grid = document.getElementById('paletteGrid');
+            const palette = indexedColorMode ? indexedPalette : fullPalette;
+            
+            grid.innerHTML = '';
+            palette.forEach(color => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.backgroundColor = color;
+                swatch.onclick = () => {
+                    currentColor = color;
+                    document.getElementById('current-color-indicator').style.background = color;
+                    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                    swatch.classList.add('active');
+                };
+                if (color === currentColor) swatch.classList.add('active');
+                grid.appendChild(swatch);
+            });
+        }
+
+        // ==================== EXPORT ====================
+        function exportImage() {
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = CANVAS_SIZE;
+            exportCanvas.height = CANVAS_SIZE;
+            const ctx = exportCanvas.getContext('2d', { willReadFrequently: true });
+            
+            // White background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            
+            // Composite all layers
+            layers.forEach(layer => {
+                if (layer.visible) {
+                    ctx.globalAlpha = layer.opacity / 100;
+                    ctx.drawImage(layer.canvas, 0, 0);
+                }
+            });
+            
+            // Export as PNG (nearest neighbor scaling for crisp pixels)
+            const link = document.createElement('a');
+            link.download = 'viewtube-pixel-art.png';
+            link.href = exportCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // ==================== UTILITY ====================
+        function clearCanvas() {
+            layers.forEach(layer => {
+                const ctx = layer.canvas.getContext('2d');
+                ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            });
+            compositeCanvas();
+            saveState();
+            saveFrame(currentFrameIndex);
+        }
+
+        function copyLayerToFrame() {
+            if (currentFrameIndex >= frames.length) return;
+            for (let i = 0; i < layers.length && i < frames[currentFrameIndex].length; i++) {
+                const ctx = frames[currentFrameIndex][i].getContext('2d');
+                ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+                ctx.drawImage(layers[i].canvas, 0, 0);
+            }
+        }
+
+        // ==================== KEYBOARD SHORTCUTS ====================
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'z') {
+                e.preventDefault();
+                undo();
+            }
+            if (e.ctrlKey && e.key === 'y') {
+                e.preventDefault();
+                redo();
+            }
+            if (e.key === 'b') setTool('brush', document.querySelectorAll('.tool-btn')[0]);
+            if (e.key === 'e') setTool('eraser', document.querySelectorAll('.tool-btn')[1]);
+            if (e.key === 'g') {
+                document.getElementById('gridToggle').checked = !document.getElementById('gridToggle').checked;
+                toggleGrid();
+            }
+            if (e.key === '[') {
+                brushSize = Math.max(1, brushSize - 1);
+                document.getElementById('sizePicker').value = brushSize;
+                document.getElementById('size-value').textContent = brushSize;
+            }
+            if (e.key === ']') {
+                brushSize = Math.min(32, brushSize + 1);
+                document.getElementById('sizePicker').value = brushSize;
+                document.getElementById('size-value').textContent = brushSize;
+            }
+        });
+
+        // ==================== INITIALIZATION ====================
+        function init() {
+            const mainCanvas = document.getElementById('mainCanvas');
+            const gridCanvas = document.getElementById('gridCanvas');
+            mainCanvas.width = CANVAS_SIZE;
+            mainCanvas.height = CANVAS_SIZE;
+            gridCanvas.width = CANVAS_SIZE;
+            gridCanvas.height = CANVAS_SIZE;
+            
+            // Create initial layer
+            layers.push(createLayer('Background', CANVAS_SIZE, CANVAS_SIZE));
+            
+            // Create initial frame
+            frames.push(createFrame());
+            
+            // Set up canvas events
+            const wrapper = document.getElementById('canvasWrapper');
+            wrapper.addEventListener('mousedown', startDrawing);
+            wrapper.addEventListener('mousemove', draw);
+            wrapper.addEventListener('mouseup', stopDrawing);
+            wrapper.addEventListener('mouseleave', stopDrawing);
+            
+            // Touch support
+            wrapper.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                startDrawing(e.touches[0]);
+            }, { passive: false });
+            wrapper.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                draw(e.touches[0]);
+            }, { passive: false });
+            wrapper.addEventListener('touchend', stopDrawing);
+            
+            // Slider events
+            document.getElementById('sizePicker').addEventListener('input', (e) => {
+                brushSize = parseInt(e.target.value);
+                document.getElementById('size-value').textContent = brushSize;
+            });
+            
+            document.getElementById('opacityPicker').addEventListener('input', (e) => {
+                brushOpacity = parseInt(e.target.value);
+                document.getElementById('alpha-value').textContent = brushOpacity + '%';
+            });
+            
+            // Initial setup
+            updateZoom();
+            drawGrid();
+            initPalette();
+            renderLayers();
+            renderTimeline();
+            compositeCanvas();
+            
+            // Initial state for undo
+            saveState();
+            
+            // Update color count
+            updatePixelCount();
+        }
+
+        function updatePixelCount() {
+            const mainCanvas = document.getElementById('mainCanvas');
+            const ctx = mainCanvas.getContext('2d', { willReadFrequently: true });
+            const imageData = ctx.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            const data = imageData.data;
+            const colors = new Set();
+            
+            for (let i = 0; i < data.length; i += 4) {
+                if (data[i + 3] > 0) { // Only count non-transparent pixels
+                    const color = `${data[i]},${data[i+1]},${data[i+2]}`;
+                    colors.add(color);
+                }
+            }
+            
+            document.getElementById('pixelCount').textContent = `Colors: ${colors.size}`;
+        }
+
+        // Run initialization
+        init();
+        
+        // Update pixel count periodically
+        setInterval(updatePixelCount, 1000);
+    </script>
+</body>
+</html>
