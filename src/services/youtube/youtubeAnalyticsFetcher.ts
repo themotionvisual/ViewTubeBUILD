@@ -107,6 +107,7 @@ export const fetchAnalytics = async (
   monetization: [
    "estimatedRevenue",
    "estimatedAdRevenue",
+   "rpm",
    "cpm",
    "monetizedPlaybacks",
    "playbackBasedCpm",
