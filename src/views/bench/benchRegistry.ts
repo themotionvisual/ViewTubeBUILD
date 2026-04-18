@@ -5,7 +5,6 @@ const ToolboxUISystem = React.lazy(() => import('../../components/ToolboxUISyste
 const WidgetLabV2 = React.lazy(() => import('../referenceStudio/WidgetLabV2'));
 const ChartCatalogV2 = React.lazy(() => import('../referenceStudio/ChartCatalogV2'));
 const ChartSpecImplementationV2 = React.lazy(() => import('../referenceStudio/ChartSpecImplementationV2'));
-const SectionSourcesLab = React.lazy(() => import('../referenceStudio/SectionSourcesLab'));
 
 const ToolboxRecreation = React.lazy(() => import('../referenceStudio/ToolboxRecreation'));
 const ComponentCatalog = React.lazy(() => import('../referenceStudio/ComponentCatalog'));
@@ -16,7 +15,7 @@ const AlgorithmArchitect = React.lazy(() => import('../AlgorithmArchitect'));
 const StoryboardStudio = React.lazy(() => import('../StoryboardStudio'));
 const LegacyStudio = React.lazy(() => import('../ReferenceStudio'));
 
-export type BenchTag = 'UI' | 'WIDGET' | 'SOURCE' | 'CHART' | 'ANALYTICS' | 'LAB';
+export type BenchTag = 'UI' | 'WIDGET' | 'CHART' | 'ANALYTICS' | 'LAB';
 
 export interface BenchEntry {
   id: string;
@@ -59,14 +58,6 @@ export const BENCH_REGISTRY: BenchEntry[] = [
     tag: 'WIDGET',
     color: 'bg-[#B14AED]',
     render: () => React.createElement(WidgetLabV2)
-  },
-  {
-    id: 'source-lab',
-    title: 'Section Sources Lab',
-    subtitle: '4-source intake and interaction-preserving extraction',
-    tag: 'SOURCE',
-    color: 'bg-[#FFB158]',
-    render: () => React.createElement(SectionSourcesLab)
   },
   {
     id: 'analytics-hub',

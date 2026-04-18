@@ -213,7 +213,7 @@ export const detectContentTagFromRows = (rows: Record<string, unknown>[]): CsvTa
     );
     const durationSec = durationToSeconds(row['Average view duration'] ?? row['Duration'] ?? 0);
 
-    if (stayedToWatch > 0 || shortsFeedViews > 0 || (durationSec > 0 && durationSec <= 180)) {
+    if (stayedToWatch > 0 || shortsFeedViews > 0) {
       shortEvidence += 1;
     }
     if (endScreenShown > 0 || durationSec > 180) {

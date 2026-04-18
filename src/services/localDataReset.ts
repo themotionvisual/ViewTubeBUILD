@@ -20,6 +20,14 @@ const SOFT_CLEAR_KEYS: string[] = [
  "vt_video_details_cache_v1",
 ]
 
+const HARD_ANALYTICS_RESET_KEYS: string[] = [
+ ...SOFT_CLEAR_KEYS,
+ "vt_video_sync_batch_state",
+ "vt_channel_sync_status",
+ "vt_sync_source_mode",
+ "vt_sync_merge_policy",
+]
+
 export const clearCachedDataSoft = async (): Promise<void> => {
  SOFT_CLEAR_KEYS.forEach((key) => {
   try {
@@ -28,6 +36,24 @@ export const clearCachedDataSoft = async (): Promise<void> => {
    // ignore
   }
  })
+
+ dispatchLocalDataChanged()
+}
+
+export const clearAnalyticsStateForFreshSync = async (): Promise<void> => {
+ HARD_ANALYTICS_RESET_KEYS.forEach((key) => {
+  try {
+   localStorage.removeItem(key)
+  } catch {
+   // ignore
+  }
+ })
+
+ try {
+  sessionStorage.removeItem("yt_analytics_cache")
+ } catch {
+  // ignore
+ }
 
  dispatchLocalDataChanged()
 }
@@ -97,4 +123,3 @@ export const factoryResetAll = async (): Promise<void> => {
 
  dispatchLocalDataChanged()
 }
-

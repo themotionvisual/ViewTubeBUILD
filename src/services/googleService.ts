@@ -4,7 +4,7 @@ import { getAccessToken, logout } from './authSession';
  * Base Google Service
  * Provides a unified request handler for all Google APIs (Drive, Calendar, etc.)
  */
-class GoogleService {
+export class GoogleService {
   protected async request(baseUrl: string, endpoint: string, options: RequestInit = {}) {
     const token = getAccessToken();
     if (!token) throw new Error('Not authenticated');

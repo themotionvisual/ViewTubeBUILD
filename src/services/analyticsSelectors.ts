@@ -17,6 +17,8 @@ import {
 import {
  readYouTubeAnalyticsCache,
  markDeprecatedLocalStorageRead,
+ type RawAnalyticsCache,
+ type LedgerEntry,
 } from "./canonicalAnalyticsStore"
 import {
  classifyCsvExportKind,
@@ -67,10 +69,20 @@ type CachedVideoStat = {
  tags?: unknown
 }
 
-type AnalyticsCache = {
+type AnalyticsCache = RawAnalyticsCache & {
  videos?: CachedVideo[]
  stats?: Record<string, CachedVideoStat>
- analyticsByWindow?: Partial<Record<AnalyticsWindow, AnalyticsWindowBundle>>
+ analyticsByWindow?: Partial<
+  Record<
+   AnalyticsWindow,
+   {
+    startDate?: string
+    endDate?: string
+    fetchedAt?: number
+    report?: any
+   }
+  >
+ >
  availabilityByWindow?: Partial<
   Record<AnalyticsWindow, Partial<Record<CanonicalMetricKey, boolean>>>
  >
@@ -79,6 +91,7 @@ type AnalyticsCache = {
  analytics?: AnalyticsReport
  channelAnalytics?: AnalyticsReport
  dailyMetrics?: AnalyticsReport
+ globalLifetime?: AnalyticsReport
 }
 
 type WindowTotals = {
@@ -136,8 +149,7 @@ const parseCache = (): AnalyticsCache => {
   "analyticsSelectors.parseCache",
   "yt_analytics_cache",
  )
- const parsed = readYouTubeAnalyticsCache() as AnalyticsCache
- return parsed && typeof parsed === "object" ? parsed : {}
+ return readYouTubeAnalyticsCache() as AnalyticsCache
 }
 
 const text = (value: unknown): string => {
@@ -164,7 +176,7 @@ const canonicalizeTextKey = (value: string): string =>
 const looksLikeVideoId = (value: string): boolean =>
  /^[A-Za-z0-9_-]{8,}$/.test(value) && !value.includes(" ")
 
-const parseDurationSeconds = (value: unknown): number => {
+export const parseDurationSeconds = (value: unknown): number => {
  if (typeof value === "number" && Number.isFinite(value))
   return Math.max(0, value)
  const raw = text(value)
@@ -208,6 +220,7 @@ export const resolveCanonicalVideoFormat = (
  shortsPlaylistSignal: boolean,
  metadataShortSignal: boolean,
  tagHint: string,
+ metadataAspectRatio?: string,
 ): CanonicalVideoRow["format"] => {
  const normalizedType = contentTypeValue.toLowerCase()
  const normalizedHint = tagHint.toLowerCase()
@@ -215,13 +228,22 @@ export const resolveCanonicalVideoFormat = (
  if (normalizedType.includes("live")) return "live"
  if (normalizedType.includes("story")) return "story"
  if (normalizedType.includes("short")) return "shorts"
- if (normalizedType.includes("long")) return "long"
+ if (
+  normalizedType.includes("long") ||
+  normalizedType.includes("video_on_demand") ||
+  normalizedType === "video"
+ )
+  return "long"
 
- // Default long when reliable duration is present and over threshold.
+ // Definitive duration boundary:
+ // Videos over 180s cannot be Shorts.
  if (durationSeconds > 180) return "long"
 
  // Shorts playlist / API-level signal outranks metadata heuristics.
  if (shortsPlaylistSignal) return "shorts"
+
+ // Aspect ratio is a definitive signal for Shorts
+ if (metadataAspectRatio === "9:16") return "shorts"
 
  // Metadata heuristic (#shorts in title/description/tags).
  if (metadataShortSignal) return "shorts"
@@ -231,10 +253,11 @@ export const resolveCanonicalVideoFormat = (
  if (normalizedHint.includes("live")) return "live"
  if (normalizedHint.includes("story")) return "story"
 
- // Duration exists but unresolved: default to long.
+ // <= 180s without any shorts signal = standard long-form upload.
+ // Videos like intros, teasers, and clips are still regular uploads.
  if (durationSeconds > 0) return "long"
 
- // Only unknown when duration and signals are all missing.
+ // Duration and all signals missing — cannot classify.
  return "unknown"
 }
 
@@ -410,36 +433,51 @@ const sumTotalsFromReport = (
 }
 
 const resolveWindowTotals = (
- cache: AnalyticsCache & { globalLifetime?: AnalyticsReport },
+ cache: AnalyticsCache,
  window: AnalyticsWindow,
 ): WindowTotals => {
- if (window === "lifetime" && cache.globalLifetime) {
-  const fromGlobal = sumTotalsFromReport(cache.globalLifetime)
+ const ledger = cache.ledger || {}
+
+ // 1. Try Ledger for Window-Specific Channel Totals (e.g. lifetime, 28days)
+ const windowLedgerKey = `youtube_analytics_v2::channel::::${window}`
+ const windowLedgerEntry = ledger[windowLedgerKey]
+ const windowReport = windowLedgerEntry?.payload
+
+ if (windowReport) {
+  const fromWindow = sumTotalsFromReport(windowReport)
   if (
-   fromGlobal.views > 0 ||
-   fromGlobal.watchHours > 0 ||
-   fromGlobal.revenue > 0
+   fromWindow.views > 0 ||
+   fromWindow.watchHours > 0 ||
+   fromWindow.revenue > 0
   ) {
-   return fromGlobal
+   return fromWindow
   }
  }
 
- const fromWindow = sumTotalsFromReport(
-  getBundleForWindow(cache, window)?.report,
- )
- if (
-  fromWindow.views > 0 ||
-  fromWindow.watchHours > 0 ||
-  fromWindow.revenue > 0
- ) {
-  return fromWindow
+ // 2. Try Window Report (getBundleForWindow handles legacy fallback)
+ const bundle = getBundleForWindow(cache, window)
+ if (bundle?.report) {
+  const fromBundle = sumTotalsFromReport(bundle.report)
+  if (
+   fromBundle.views > 0 ||
+   fromBundle.watchHours > 0 ||
+   fromBundle.revenue > 0
+  ) {
+   return fromBundle
+  }
  }
 
- const fromDaily = sumTotalsFromReport(cache.dailyMetrics)
+ // 3. Try Daily Metrics Ledger
+ const dailyLedgerKey = `youtube_analytics_v2::channel::day::lifetime`
+ const dailyLedgerEntry = ledger[dailyLedgerKey]
+ const dailyReport = dailyLedgerEntry?.payload || cache.dailyMetrics
+
+ const fromDaily = sumTotalsFromReport(dailyReport)
  if (fromDaily.views > 0 || fromDaily.watchHours > 0 || fromDaily.revenue > 0) {
   return fromDaily
  }
 
+ // 4. Final Fallback: Legacy Channel Analytics
  const fromChannel = sumTotalsFromReport(cache.channelAnalytics)
  return fromChannel
 }
@@ -574,9 +612,25 @@ const getBundleForWindow = (
  cache: AnalyticsCache,
  window: AnalyticsWindow,
 ): AnalyticsWindowBundle | null => {
+ // 1. Try Ledger FIRST (the new standard)
+ const ledger = cache.ledger || {}
+ const ledgerKey = `youtube_analytics_v2::video::video::${window}`
+ const ledgerEntry = ledger[ledgerKey]
+ if (ledgerEntry && ledgerEntry.payload) {
+  return {
+   window,
+   startDate: "",
+   endDate: "",
+   fetchedAt: ledgerEntry.syncedAt,
+   report: ledgerEntry.payload as AnalyticsReport,
+  }
+ }
+
+ // 2. Fallback to legacy analyticsByWindow
  const bundle = cache.analyticsByWindow?.[window]
  if (bundle && bundle.report) return bundle
 
+ // 3. Fallback to global analytics if lifetime
  if (window === "lifetime" && cache.analytics) {
   return {
    window,
@@ -678,9 +732,11 @@ const apiRowsForWindow = (
  cache: AnalyticsCache,
  window: AnalyticsWindow,
 ): CanonicalVideoRow[] => {
- const report = getBundleForWindow(cache, window)?.report
+ const bundle = getBundleForWindow(cache, window)
+ const report = bundle?.report
  const reportRows = reportRowsToObjects(report).map(toNormalizedRow)
 
+ const ledger = cache.ledger || {}
  const analyticsById = new Map<string, Record<string, unknown>>()
  const analyticsByTitle = new Map<string, Record<string, unknown>>()
 
@@ -693,44 +749,66 @@ const apiRowsForWindow = (
   })
  })
 
+ // 1. Gather Video Metadata (Ledger FIRST, then legacy cache.videos/stats)
  const videos = Array.isArray(cache.videos) ? cache.videos : []
  const stats = cache.stats || {}
  const contentTypeMap = cache.videoContentType || {}
 
+ // Create a unified map of video metadata from all sources
+ const metadataByVideoId = new Map<string, CachedVideo & CachedVideoStat>()
+
+ // a) Seed with legacy videos/stats
+ videos.forEach((v) => {
+  const vid = text(v.videoId)
+  if (!vid) return
+  metadataByVideoId.set(vid, { ...v, ...(stats[vid] || {}) })
+ })
+
+ // b) Overlay with Ledger entries (youtube_data_v3::video::id)
+ Object.entries(ledger).forEach(([key, entry]) => {
+  if (entry.source === "youtube_data_v3" && entry.context === "video") {
+   // Assuming dimensions[0] is videoId for this context
+   const videoId = entry.dimensions[0]
+   if (videoId && entry.payload) {
+    const existing = metadataByVideoId.get(videoId) || {}
+    metadataByVideoId.set(videoId, { ...existing, ...entry.payload })
+   }
+  }
+ })
+
  const canonicalRows: CanonicalVideoRow[] = []
 
- videos.forEach((video, index) => {
-  const videoId = text(video.videoId)
-  const title = text(video.title) || `Video ${index + 1}`
-  const uploadDate = text(video.publishedAt)
-  const stat = stats[videoId] || {}
+ // Process videos we have metadata for
+ metadataByVideoId.forEach((meta, videoId) => {
+  const title = text(meta.title) || `Video ${videoId}`
+  const uploadDate = text(meta.publishedAt)
 
   const analyticsRow =
-   (videoId ? analyticsById.get(videoId) : undefined) ||
+   analyticsById.get(videoId) ||
    analyticsByTitle.get(canonicalizeTextKey(title)) ||
    {}
 
   const metricCells = inferMetricCellsFromRow(analyticsRow, "api")
   const durationSeconds = parseDurationSeconds(
-   stat.durationSeconds ??
-    stat.durationRaw ??
+   meta.durationSeconds ??
+    meta.durationRaw ??
     analyticsRow["Duration (sec)"] ??
     analyticsRow.Duration,
   )
 
-  const contentType = text(contentTypeMap[videoId] ?? stat.contentType)
-  const isShortSignal = stat.isShort === true
-  const metadataTags = Array.isArray(stat.tags)
-   ? stat.tags.map((tag) => text(tag)).filter(Boolean)
+  const contentType = text(contentTypeMap[videoId] ?? meta.contentType)
+  const isShortSignal = meta.isShort === true
+  const metadataTags = Array.isArray(meta.tags)
+   ? meta.tags.map((tag) => text(tag)).filter(Boolean)
    : []
   const metadataShortSignal = hasMetadataShortSignal(
-   text(stat.title) || title,
-   text(stat.description),
+   text(meta.title) || title,
+   text(meta.description),
    metadataTags,
   )
 
   let row: CanonicalVideoRow = {
-   id: `api-${videoId || index}`,
+   id: `api-${videoId}`,
    videoId,
    title,
    uploadDate,
@@ -747,13 +825,13 @@ const apiRowsForWindow = (
   }
   row.originalData = analyticsRow
 
-  row = applyStatsFallback(row, stat)
+  row = applyStatsFallback(row, meta)
   row = enrichDerivedMetricCells(row, durationSeconds)
 
   canonicalRows.push(row)
  })
 
- // Include rows that exist in Analytics report but not in channel uploads list.
+ // 2. Include rows that exist in Analytics report but were NOT in metadata lists
  reportRows.forEach((rawRow, index) => {
   const candidateVideoId = extractVideoIdCandidates(rawRow)[0] || ""
   const titleCandidate =

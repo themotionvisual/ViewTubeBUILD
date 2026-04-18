@@ -10,6 +10,7 @@ import type {
   VideoSyncBatchState,
 } from '../types';
 import { authService } from '../services/authService';
+import { clearAnalyticsStateForFreshSync } from "../services/localDataReset";
 
 const STORAGE_KEY = 'vt_workspace_brain';
 const AUTH_STORAGE_KEY = 'vt_auth_state';
@@ -231,6 +232,9 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({ children
   const globalSyncData = useCallback(async (options?: { batchMode?: 'initial' | 'next' }) => {
     setIsSyncing(true);
     try {
+      if ((options?.batchMode || "initial") === "initial") {
+        await clearAnalyticsStateForFreshSync();
+      }
       const { performSync } = await import('../services/analyticsSync');
       await performSync(true, { batchMode: options?.batchMode || 'initial' });
       setLastSyncComplete(new Date().toISOString());
@@ -411,7 +415,7 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({ children
       await authService.login();
       setAuthStateRaw(prev => ({ ...prev, isAuthenticated: true }));
       // Automatically sync all data upon login
-      globalSyncData();
+      await globalSyncData({ batchMode: "initial" });
     } catch (err) {
       console.warn("User aborted login or auth failed", err);
     }

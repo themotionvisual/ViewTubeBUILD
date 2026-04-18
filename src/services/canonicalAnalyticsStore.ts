@@ -61,6 +61,16 @@ export interface ChartDefinition {
 const YT_ANALYTICS_CACHE_KEY = "yt_analytics_cache"
 const warnedStorageReads = new Set<string>()
 
+export interface LedgerEntry {
+ source: "youtube_analytics_v2" | "youtube_data_v3" | "ga4"
+ context: "channel" | "video" | "traffic_source" | "geography" | "demographics"
+ dimensions: string[]
+ metrics: string[]
+ payload: any // Exactly as it comes from API
+ syncedAt: number
+ window?: AnalyticsWindow
+}
+
 export type RawAnalyticsCache = Record<string, unknown> & {
  analyticsByWindow?: Partial<
   Record<
@@ -73,9 +83,12 @@ export type RawAnalyticsCache = Record<string, unknown> & {
    }
   >
  >
- metricCapabilitiesByWindow?: Partial<Record<AnalyticsWindow, MetricCapability[]>>
+ metricCapabilitiesByWindow?: Partial<
+  Record<AnalyticsWindow, MetricCapability[]>
+ >
  lastSyncedByWindow?: Partial<Record<AnalyticsWindow, number>>
  lastSynced?: number
+ ledger?: Record<string, LedgerEntry>
 }
 
 const safeParse = <T>(raw: string | null, fallback: T): T => {
@@ -104,6 +117,19 @@ export const readYouTubeAnalyticsCache = (): RawAnalyticsCache =>
 
 export const writeYouTubeAnalyticsCache = (cache: RawAnalyticsCache): void => {
  localStorage.setItem(YT_ANALYTICS_CACHE_KEY, JSON.stringify(cache))
+}
+
+/**
+ * The dominant method to record API data.
+ * Differentiates metrics with same names by namespacing the dimension.
+ */
+export const commitToLedger = (entry: Omit<LedgerEntry, "syncedAt">): void => {
+ const cache = readYouTubeAnalyticsCache()
+ const ledger = cache.ledger || {}
+ const windowPart = entry.window ? `::${entry.window}` : ""
+ const key = `${entry.source}::${entry.context}::${entry.dimensions.join(",")}${windowPart}`
+ ledger[key] = { ...entry, syncedAt: Date.now() }
+ writeYouTubeAnalyticsCache({ ...cache, ledger })
 }
 
 export const getWindowCapabilityReason = (

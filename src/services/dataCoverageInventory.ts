@@ -546,6 +546,35 @@ export const buildDataCoverageInventory = (
   })
  })
 
+ // Ledger-based inventory (The dominant source)
+ const ledger = (ytCache.ledger || {}) as Record<string, any>
+ const ledgerExampleObjects: Record<string, unknown>[] = []
+ Object.values(ledger).forEach((entry) => {
+  const payloadRows = parseReportRows(entry.payload)
+  ledgerExampleObjects.push(...payloadRows)
+  payloadRows.forEach((row) => {
+   extractObjectKeys(row).forEach((raw) => {
+    const scope: DataCoverageScope =
+     entry.context === "channel"
+      ? "channel"
+      : entry.context === "traffic_source"
+        ? "traffic"
+        : entry.context === "geography"
+          ? "geo"
+          : entry.context === "demographics"
+            ? "demographic"
+            : "video_shared"
+    upsertShape(
+     shapes,
+     normalizeKey(raw, aliasMap, fallbackMap),
+     raw,
+     entry.source === "ga4" ? "ga4" : "youtube",
+     scope,
+    )
+   })
+  })
+ })
+
  const demographicRows = parseReportRows(ytCache.demographics)
  demographicRows.forEach((row) => {
   extractObjectKeys(row).forEach((raw) => {
@@ -684,17 +713,21 @@ export const buildDataCoverageInventory = (
   ...(demographicRows as Record<string, unknown>[]),
   ...(trafficRows as Record<string, unknown>[]),
   ...(geographyRows as Record<string, unknown>[]),
+  ...ledgerExampleObjects,
   ...((ga4Cache.overview && typeof ga4Cache.overview === "object"
    ? [ga4Cache.overview as Record<string, unknown>]
    : []) as Record<string, unknown>[]),
  ]
- const mergedSharedRows = sharedVideoPool.map((row) => {
-  const originalData =
-   row._originalData && typeof row._originalData === "object"
-    ? (row._originalData as Record<string, unknown>)
-    : {}
-  return { ...row, ...originalData } as Record<string, unknown>
- })
+ const mergedSharedRows = [
+  ...sharedVideoPool.map((row) => {
+   const originalData =
+    row._originalData && typeof row._originalData === "object"
+     ? (row._originalData as Record<string, unknown>)
+     : {}
+   return { ...row, ...originalData } as Record<string, unknown>
+  }),
+  ...ledgerExampleObjects,
+ ]
 
  const metricKeys = {
   views: ["views", "Views", "viewCount", "statistics.viewCount"],

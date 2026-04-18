@@ -17,6 +17,7 @@ export type CanonicalMetricKey =
  | "views"
  | "watchHours"
  | "likes"
+ | "dislikes"
  | "comments"
  | "shares"
  | "subscribersGained"
@@ -104,6 +105,14 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    label: "Likes",
    unit: "count",
    aliases: ["Likes", "likes", "likeCount"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  dislikes: {
+   key: "dislikes",
+   label: "Dislikes",
+   unit: "count",
+   aliases: ["Dislikes", "dislikes", "dislikeCount"],
    rawPolicy: "raw_preferred",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
   },
@@ -324,6 +333,7 @@ export const canonicalMetricOrder: CanonicalMetricKey[] = [
  "endScreenClickRate",
  "cardClickRate",
  "likes",
+ "dislikes",
  "avp",
  "engagedViews",
 ]

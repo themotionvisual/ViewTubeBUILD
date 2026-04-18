@@ -1,3 +1,5 @@
+import { toNumber } from "./dataUtils"
+
 /**
  * YouTube Data Normalization Service
  * Maps polymorphic CSV headers and API keys to a standardized internal schema.
@@ -101,9 +103,6 @@ export const HEADER_MAP: Record<string, string> = {
  "Total members": "Total Members",
  "Product clicks": "Product Clicks",
  Orders: "Orders",
-
- // YouTube Analytics API v2 field names (exact matches from API response)
- // Note: These are already covered by the string versions above, so no duplicates needed
 }
 
 export const normalizeRow = (row: Record<string, any>): Record<string, any> => {
@@ -131,8 +130,7 @@ export const normalizeRow = (row: Record<string, any>): Record<string, any> => {
     standardKey !== "Dimension" &&
     standardKey !== "Date"
    ) {
-    const cleaned = val.replace(/[^0-9.-]/g, "")
-    normalized[standardKey] = cleaned === "" ? 0 : Number(cleaned)
+    normalized[standardKey] = toNumber(val)
    } else {
     normalized[standardKey] = val
    }

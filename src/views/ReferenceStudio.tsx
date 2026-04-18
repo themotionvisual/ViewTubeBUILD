@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
-import { useLocation, useNavigate, useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import {
  generateThumbnail,
  rateThumbnail,
@@ -43,9 +43,6 @@ const ToolboxUISystem = React.lazy(
 )
 const SectionSourcesLab = React.lazy(
  () => import("./referenceStudio/SectionSourcesLab"),
-)
-const FourSectionsRun = React.lazy(
- () => import("./referenceStudio/FourSectionsRun"),
 )
 const ComponentCatalog = React.lazy(
  () => import("./referenceStudio/ComponentCatalog"),
@@ -105,7 +102,6 @@ const LEGACY_TOOL_COMPONENTS = Object.fromEntries(
 
 type ReferenceTab =
  | "toolbox-system"
- | "four-sections-run"
  | "component-grid"
  | "section-sources-lab"
  | "component-catalog"
@@ -233,7 +229,6 @@ const BEST_COMPONENTS = [
 
 const REFERENCE_TABS: { id: ReferenceTab; label: string; accent: string }[] = [
  { id: "toolbox-system", label: "Toolbox UI System", accent: "bg-[#24D3FF]" },
- { id: "four-sections-run", label: "4 Sections Run", accent: "bg-[#FFB158]" },
  { id: "component-grid", label: "Component Grid", accent: "bg-[#C9F830]" },
  { id: "section-sources-lab", label: "Section Sources Lab", accent: "bg-[#FFB158]" },
  { id: "component-catalog", label: "Component Catalog", accent: "bg-[#B14AED]" },
@@ -260,11 +255,7 @@ const isReferenceTab = (value: string | undefined): value is ReferenceTab =>
 const ReferenceStudio: React.FC = () => {
  const { brain } = useBrain()
  const navigate = useNavigate()
- const location = useLocation()
  const { tabId } = useParams<{ tabId?: string }>()
- const referenceBasePath = location.pathname.startsWith("/render-bench/reference-studio")
-  ? "/render-bench/reference-studio"
-  : "/reference-studio"
  const activeReferenceTab: ReferenceTab = isReferenceTab(tabId)
   ? tabId
   : DEFAULT_REFERENCE_TAB
@@ -749,12 +740,12 @@ const ReferenceStudio: React.FC = () => {
 
  useEffect(() => {
   if (!isReferenceTab(tabId)) {
-   navigate(`${referenceBasePath}/${DEFAULT_REFERENCE_TAB}`, { replace: true })
+   navigate(`/reference-studio/${DEFAULT_REFERENCE_TAB}`, { replace: true })
   }
- }, [navigate, referenceBasePath, tabId])
+ }, [navigate, tabId])
 
  const openReferenceTab = (tab: ReferenceTab) => {
-  navigate(`${referenceBasePath}/${tab}`)
+  navigate(`/reference-studio/${tab}`)
   window.scrollTo({ top: 0, behavior: "smooth" })
  }
 
@@ -778,27 +769,19 @@ const ReferenceStudio: React.FC = () => {
  return (
   <div className="min-h-screen w-full bg-[#f3f4f6] flex flex-col p-4 overflow-y-auto custom-scrollbar animate-fade-in">
    <div className="w-full max-w-[1400px] mx-auto mb-10 bg-white border-[5px] border-black rounded-2xl shadow-[8px_8px_0px_0px_black] p-4">
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
      {REFERENCE_TABS.map((tab) => {
       const isActive = activeReferenceTab === tab.id
       return (
        <button
         key={tab.id}
         onClick={() => openReferenceTab(tab.id)}
-        className={`h-12 border-[4px] border-black rounded-xl overflow-hidden transition-all ${
+        className={`h-11 border-[3px] border-black rounded-xl font-black uppercase text-[11px] tracking-widest transition-all ${
          isActive
-          ? "shadow-[4px_4px_0px_0px_black]"
-          : "shadow-[2px_2px_0px_0px_black] hover:shadow-[3px_3px_0px_0px_black]"
+          ? `${tab.accent} shadow-[3px_3px_0px_0px_black]`
+          : "bg-white hover:bg-[#f3f4f6]"
         }`}>
-        <span className="flex h-full w-full items-stretch">
-         <span className={`w-10 shrink-0 border-r-[4px] border-black ${tab.accent}`} />
-         <span
-          className={`flex-1 px-3 flex items-center justify-start text-[10px] font-black uppercase tracking-[0.16em] ${
-           isActive ? `${tab.accent} text-black` : "bg-white text-black"
-          }`}>
-          {tab.label}
-         </span>
-        </span>
+        {tab.label}
        </button>
       )
      })}
@@ -812,12 +795,6 @@ const ReferenceStudio: React.FC = () => {
    {activeReferenceTab === "toolbox-system" && (
     <React.Suspense fallback={sectionLoadingFallback}>
      <ToolboxUISystem mode="ui-system" />
-    </React.Suspense>
-   )}
-
-   {activeReferenceTab === "four-sections-run" && (
-    <React.Suspense fallback={sectionLoadingFallback}>
-     <FourSectionsRun />
     </React.Suspense>
    )}
 

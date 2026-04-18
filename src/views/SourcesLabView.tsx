@@ -1,5 +1,4 @@
 import React from 'react';
-import SectionSourcesLab from './referenceStudio/SectionSourcesLab';
 
 const SourcesLabView: React.FC = () => {
   return (
@@ -13,7 +12,7 @@ const SourcesLabView: React.FC = () => {
         </header>
 
         <React.Suspense fallback={<div className="font-black uppercase p-20 text-center">Loading Intake System...</div>}>
-          <SectionSourcesLab />
+          <div className="font-black uppercase p-20 text-center">Section Sources Lab has been removed from the Reference Studio</div>
         </React.Suspense>
       </div>
     </div>

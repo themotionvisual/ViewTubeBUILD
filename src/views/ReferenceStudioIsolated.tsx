@@ -9,9 +9,6 @@ const ReferenceStudioIsolated: FC = () => {
 
   const safeTabId = tabId?.trim() ? tabId : DEFAULT_TAB
   const iframeSrc = useMemo(() => {
-    if (safeTabId === "four-sections-run") {
-      return `/render-bench/four-sections-lab${location.search || ""}${location.hash || ""}`
-    }
     return `/render-bench/reference-studio/${encodeURIComponent(
       safeTabId,
     )}${location.search || ""}${location.hash || ""}`

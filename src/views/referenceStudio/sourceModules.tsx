@@ -498,8 +498,8 @@ const CollapsibleTree: React.FC = () => {
 const VideoCardsLite: React.FC = () => (
  <div className="space-y-2">
   {[
-   "Sample Bird's Eye View",
-   "The Road to the Campaign",
+   "Austerlitz Bird's Eye View",
+   "1805 The Road to Austerlitz",
   ].map((title, index) => (
    <div key={title} className="border-[3px] border-black rounded-xl overflow-hidden bg-white">
     <div className="h-8 px-3 border-b-[3px] border-black bg-[#24D3FF] text-[10px] font-black uppercase tracking-[0.12em] flex items-center">
@@ -689,7 +689,7 @@ const DistributionBars: React.FC = () => (
 
 const StrategyChatPanel: React.FC = () => {
  const [messages, setMessages] = useState<string[]>([
-  "Hook angle A tests best against creator-education topics.",
+  "Hook angle A tests best against 1805 history topics.",
  ])
  const [draft, setDraft] = useState("")
  return (
@@ -961,7 +961,7 @@ const VideoManagerLite: React.FC = () => (
    Video Manager
   </div>
   <div className="space-y-1">
-   {["Sample Bird's-Eye View", "The Road to the Campaign", "History Channel"].map((title) => (
+   {["Austerlitz Bird's-Eye View", "The Road to Austerlitz", "Napoleonic History"].map((title) => (
     <div key={title} className="h-9 border-[2px] border-black rounded-lg bg-white px-2 flex items-center justify-between">
      <span className="text-[9px] font-black uppercase tracking-[0.08em] truncate">{title}</span>
      <Edit size={12} />
@@ -1546,7 +1546,7 @@ const ustubeContracts = (): SourceComponentModule[] => [
   category: "Controls",
   title: "Keyword Research Toolbox",
   interactions: ["display"],
-  render: renderCard("ustube", "Keyword Research", <TagPills items={["creator growth", "audience retention", "thumbnail hooks", "storytelling", "upload strategy"]} compact />),
+  render: renderCard("ustube", "Keyword Research", <TagPills items={["napoleon", "history", "austerlitz", "warfare", "strategy"]} compact />),
  }),
  makeModule({
   id: "ustube_strategy_chat",

@@ -37,7 +37,7 @@ const formatUploadDate = (value: unknown): string => {
 }
 
 const widgetControlClass =
-  "h-8 bg-[#f3f4f6] border-[3px] border-black rounded-md inline-flex items-center justify-center text-[9px] font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,0.45)] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,0.45)] transition-all"
+  "h-8 bg-[#f3f4f6] border-[3px] border-black rounded-[12px] inline-flex items-center justify-center text-[9px] font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,0.45)] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,0.45)] transition-all"
 
 const WidgetShell: React.FC<{
   widget: WidgetDefinition
@@ -51,7 +51,7 @@ const WidgetShell: React.FC<{
   icon?: React.ReactNode
 }> = ({ widget, instance, editMode, canEdit, onToggleCollapse, onCycleSize, onRemove, children, icon }) => {
   return (
-    <article className="bg-white border-[4px] border-black rounded-2xl overflow-hidden shadow-[6px_6px_0px_0px_rgba(0,0,0,0.35)] h-full">
+    <article className="bg-white border-[4px] border-black rounded-[16px] overflow-hidden h-full" style={{ boxShadow: `6px 6px 0px 0px ${widget.headerColor}80` }}>
       <header className="h-[56px] border-b-[4px] border-black flex items-stretch" style={{ backgroundColor: widget.headerColor }}>
         <div className="w-[56px] border-r-[4px] border-black flex items-center justify-center" style={{ backgroundColor: widget.iconRailColor }}>
           {icon || <Layers size={22} className="text-black" />}
@@ -132,7 +132,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
       <WidgetShell {...common} icon={<TrendingUp size={20} />}>
         <div className="grid grid-cols-2 gap-3 h-full">
           {data.statBlocks.map((stat) => (
-            <div key={stat.label} className="border-[3px] border-black rounded-xl overflow-hidden">
+            <div key={stat.label} className="border-[3px] border-black rounded-[12px] overflow-hidden">
               <div className="h-8 border-b-[3px] border-black px-2 flex items-center" style={{ backgroundColor: stat.color }}>
                 <span className="text-[11px] font-black uppercase tracking-[0.08em]">{stat.label}</span>
               </div>
@@ -174,7 +174,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
           {data.upcomingDays.map((day) => (
             <div
               key={day.dateStr}
-              className="aspect-square rounded-lg border-[2px] border-black text-[10px] font-black flex items-center justify-center"
+              className="aspect-square rounded-[12px] border-[2px] border-black text-[10px] font-black flex items-center justify-center"
               style={{
                 backgroundColor: day.isToday ? "#FFB570" : day.tasks.length > 0 ? "#FFD8B3" : "#f1f1f1",
                 opacity: day.tasks.length > 0 || day.isToday ? 1 : 0.55,
@@ -193,13 +193,13 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
         <div className="space-y-2">
           {data.todayTasks.length ? (
             data.todayTasks.slice(0, 6).map((task: { id?: string; completed?: boolean; text?: string }, idx: number) => (
-              <div key={task.id || `task-${idx}`} className="border-[2px] border-black rounded-lg bg-white px-3 py-2 flex items-center gap-2">
+              <div key={task.id || `task-${idx}`} className="border-[2px] border-black rounded-[12px] bg-white px-3 py-2 flex items-center gap-2">
                 <span className="h-3.5 w-3.5 rounded border-[2px] border-black" style={{ backgroundColor: task.completed ? "#FFB570" : "transparent" }} />
                 <span className={`text-xs font-black uppercase ${task.completed ? "line-through opacity-45" : ""}`}>{task.text || "Untitled Task"}</span>
               </div>
             ))
           ) : (
-            <div className="border-[2px] border-dashed border-black/30 rounded-lg bg-[#f8f8f8] p-4 text-[10px] font-black uppercase tracking-[0.12em] opacity-55 text-center">
+            <div className="border-[2px] border-dashed border-black/30 rounded-[12px] bg-[#f8f8f8] p-4 text-[10px] font-black uppercase tracking-[0.12em] opacity-55 text-center">
               Schedule Clear
             </div>
           )}
@@ -216,7 +216,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
             <button
               key={action.label}
               onClick={() => onNavigate(action.to)}
-              className="h-12 border-[3px] border-black rounded-lg text-left px-3 text-[11px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0px_0px_rgba(0,0,0,0.45)]"
+              className="h-12 border-[3px] border-black rounded-[12px] text-left px-3 text-[11px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0px_0px_rgba(0,0,0,0.45)]"
               style={{ backgroundColor: idx % 2 === 0 ? "#4FFF5B" : "#579AFF" }}>
               {action.label}
             </button>
@@ -232,8 +232,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
         <div className="space-y-2">
           {data.recentUploads.length ? (
             data.recentUploads.map((video) => (
-              <div key={video.videoId} className="border-[2px] border-black rounded-lg bg-white px-2 py-2 flex gap-2">
-                <div className="w-12 h-8 rounded overflow-hidden border-2 border-black bg-gray-100 shrink-0">
+              <div key={video.videoId} className="border-[2px] border-black rounded-[12px] bg-white px-2 py-2 flex gap-2">
+                <div className="w-12 h-8 rounded-[8px] overflow-hidden border-2 border-black bg-gray-100 shrink-0">
                   <img
                     src={video.thumbnailUrl || `https://img.youtube.com/vi/${video.videoId}/0.jpg`}
                     alt={video.title}
@@ -257,8 +257,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   if (widget.id === "top-performer") {
     return (
       <WidgetShell {...common} icon={<Video size={20} />}>
-        {data.topPerformer ? (
-          <div className="border-[3px] border-black rounded-xl bg-white p-3 h-full flex flex-col justify-between">
+          {data.topPerformer ? (
+          <div className="border-[3px] border-black rounded-[12px] bg-white p-3 h-full flex flex-col justify-between">
             <p className="text-sm font-black uppercase leading-tight line-clamp-2">{data.topPerformer.title}</p>
             <div>
               <p className="text-[26px] font-[1000] uppercase leading-none">
@@ -282,19 +282,19 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
             {data.consistencyDays.map((day) => (
               <div
                 key={day.dateStr}
-                className="aspect-square border border-black rounded-sm"
+                className="aspect-square border-[2px] border-black rounded-[4px]"
                 style={{ backgroundColor: day.active ? "#40C6E9" : day.hasTasks ? "#FFE357" : "#e5e5e5" }}
               />
             ))}
           </div>
           <div className="flex gap-2 text-[9px] font-black uppercase">
-            <span className="px-2 py-1 border-[2px] border-black rounded" style={{ backgroundColor: "#40C6E9" }}>
+            <span className="px-2 py-1 border-[2px] border-black rounded-[6px]" style={{ backgroundColor: "#40C6E9" }}>
               Upload
             </span>
-            <span className="px-2 py-1 border-[2px] border-black rounded" style={{ backgroundColor: "#FFE357" }}>
+            <span className="px-2 py-1 border-[2px] border-black rounded-[6px]" style={{ backgroundColor: "#FFE357" }}>
               Tasked
             </span>
-            <span className="px-2 py-1 border-[2px] border-black rounded bg-[#e5e5e5]">Idle</span>
+            <span className="px-2 py-1 border-[2px] border-black rounded-[6px] bg-[#e5e5e5]">Idle</span>
           </div>
         </div>
       </WidgetShell>
@@ -306,7 +306,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
       <WidgetShell {...common} icon={<Bell size={20} />}>
         <div className="space-y-2">
           {data.alerts.map((alert, idx) => (
-            <div key={idx} className="border-[2px] border-black rounded-lg bg-white px-3 py-2 text-xs font-black">
+            <div key={idx} className="border-[2px] border-black rounded-[12px] bg-white px-3 py-2 text-xs font-black">
               {alert}
             </div>
           ))}
@@ -319,11 +319,11 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
     return (
       <WidgetShell {...common} icon={<Link2 size={20} />}>
         <div className="space-y-3">
-          <div className="flex items-center justify-between border-[2px] border-black rounded-lg bg-white px-3 py-2">
+          <div className="flex items-center justify-between border-[2px] border-black rounded-[12px] bg-white px-3 py-2">
             <span className="text-[10px] font-black uppercase">Channel Link</span>
             {data.authState.isAuthenticated ? statusBadge("Linked", "#4FFF5B") : statusBadge("Offline", "#FF8AAF")}
           </div>
-          <div className="flex items-center justify-between border-[2px] border-black rounded-lg bg-white px-3 py-2">
+          <div className="flex items-center justify-between border-[2px] border-black rounded-[12px] bg-white px-3 py-2">
             <span className="text-[10px] font-black uppercase">Last Sync</span>
             <span className="text-[10px] font-black uppercase">{data.formatRelativeTime(data.lastSyncComplete ? new Date(data.lastSyncComplete).getTime() : null)}</span>
           </div>
@@ -332,7 +332,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
             onClick={() => {
               void data.globalSyncData()
             }}
-            className="w-full h-10 border-[3px] border-black rounded-lg font-black uppercase text-xs flex items-center justify-center gap-2 disabled:opacity-60"
+            className="w-full h-10 border-[3px] border-black rounded-[12px] font-black uppercase text-xs flex items-center justify-center gap-2 disabled:opacity-60"
             style={{ backgroundColor: "#24D3FF" }}>
             {data.isSyncing ? <Loader2 size={14} className="animate-spin" /> : null}
             {data.isSyncing ? "Syncing" : "Sync Data"}
@@ -350,9 +350,9 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
             rows={4}
             readOnly
             value={"Why are my views dropping this month?"}
-            className="w-full resize-none border-[3px] border-black rounded-xl px-3 py-2 text-xs font-black bg-white"
+            className="w-full resize-none border-[3px] border-black rounded-[12px] px-3 py-2 text-xs font-black bg-white"
           />
-          <button className="w-full h-10 border-[3px] border-black rounded-lg bg-[#40C6E9] text-xs font-black uppercase">
+          <button className="w-full h-10 border-[3px] border-black rounded-[12px] bg-[#40C6E9] text-xs font-black uppercase">
             Draft Strategy Reply
           </button>
           <p className="text-[9px] font-black uppercase opacity-55">Prototype widget. Full AI flow is staged.</p>
@@ -368,7 +368,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
           {data.revenueMomentum.map((item) => (
             <div key={item.label} className="flex items-center gap-2">
               <span className="w-8 text-[9px] font-black uppercase">{item.label}</span>
-              <div className="flex-1 h-6 border-[2px] border-black rounded bg-[#f2f2f2] overflow-hidden">
+              <div className="flex-1 h-6 border-[2px] border-black rounded-[6px] bg-[#f2f2f2] overflow-hidden">
                 <div className="h-full bg-[#C9F830] border-r-[2px] border-black" style={{ width: `${Math.min(100, item.value)}%` }} />
               </div>
               <span className="w-10 text-right text-[9px] font-black uppercase">{item.value}%</span>
@@ -382,7 +382,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   if (widget.id === "superfan-card") {
     return (
       <WidgetShell {...common} icon={<Crown size={20} />}>
-        <div className="border-[3px] border-black rounded-xl bg-white p-3 flex items-start gap-3">
+        <div className="border-[3px] border-black rounded-[12px] bg-white p-3 flex items-start gap-3">
           <div className="h-14 w-14 rounded-full border-[3px] border-black bg-[#FFE357] flex items-center justify-center shrink-0">
             <Star size={20} />
           </div>
@@ -400,15 +400,15 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
     return (
       <WidgetShell {...common} icon={<Database size={20} />}>
         <div className="space-y-2">
-          <div className="border-[2px] border-black rounded-lg bg-white px-3 py-2 flex items-center justify-between text-[10px] font-black uppercase">
+          <div className="border-[2px] border-black rounded-[12px] bg-white px-3 py-2 flex items-center justify-between text-[10px] font-black uppercase">
             <span>Storage</span>
             <span>98% Full</span>
           </div>
-          <div className="border-[2px] border-black rounded-lg bg-white px-3 py-2 flex items-center justify-between text-[10px] font-black uppercase">
+          <div className="border-[2px] border-black rounded-[12px] bg-white px-3 py-2 flex items-center justify-between text-[10px] font-black uppercase">
             <span>Gemini</span>
             <span className="text-[#0a8f1f]">Ready</span>
           </div>
-          <div className="border-[2px] border-black rounded-lg bg-white px-3 py-2 flex items-center justify-between text-[10px] font-black uppercase">
+          <div className="border-[2px] border-black rounded-[12px] bg-white px-3 py-2 flex items-center justify-between text-[10px] font-black uppercase">
             <span>Theme</span>
             <span>Industrial</span>
           </div>

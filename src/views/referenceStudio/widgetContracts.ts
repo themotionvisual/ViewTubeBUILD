@@ -12,7 +12,7 @@ export type WidgetDataDependency =
 export interface WidgetBackendStatus {
  state: WidgetPromotionState
  dependencies: WidgetDataDependency[]
- fallbackMode: "isolated_demo" | "canonical_selectors" | "csv_only" | "hybrid"
+ fallbackMode: "mock" | "canonical_selectors" | "csv_only" | "hybrid"
  notes: string
 }
 
@@ -69,7 +69,7 @@ export const WIDGET_LAB_SPECS: WidgetSpec[] = [
   status: {
    state: "needs-backend",
    dependencies: ["youtube_data_v3", "google_search_console"],
-   fallbackMode: "isolated_demo",
+   fallbackMode: "mock",
    notes: "Cross-platform audience totals require external connectors.",
   },
  },
@@ -81,7 +81,7 @@ export const WIDGET_LAB_SPECS: WidgetSpec[] = [
   status: {
    state: "prototype",
    dependencies: ["none"],
-   fallbackMode: "isolated_demo",
+   fallbackMode: "mock",
    notes: "Keep as UX prototype while settings schema stabilizes.",
   },
  },
@@ -93,7 +93,7 @@ export const WIDGET_LAB_SPECS: WidgetSpec[] = [
   status: {
    state: "needs-backend",
    dependencies: ["google_search_console", "csv"],
-   fallbackMode: "isolated_demo",
+   fallbackMode: "mock",
    notes: "Requires policy-safe outbound posting workflow and draft queue.",
   },
  },
@@ -105,7 +105,7 @@ export const WIDGET_LAB_SPECS: WidgetSpec[] = [
   status: {
    state: "needs-backend",
    dependencies: ["none"],
-   fallbackMode: "isolated_demo",
+   fallbackMode: "mock",
    notes: "Awaiting audio processing service selection and vault persistence.",
   },
  },
@@ -117,7 +117,7 @@ export const WIDGET_LAB_SPECS: WidgetSpec[] = [
   status: {
    state: "prototype",
    dependencies: ["youtube_analytics_v2", "csv"],
-   fallbackMode: "isolated_demo",
+   fallbackMode: "mock",
    notes: "Great concept; needs deterministic visual-attention scoring backend.",
   },
  },
@@ -129,7 +129,7 @@ export const WIDGET_LAB_SPECS: WidgetSpec[] = [
   status: {
    state: "needs-backend",
    dependencies: ["none"],
-   fallbackMode: "isolated_demo",
+   fallbackMode: "mock",
    notes: "Oscilloscope UX validated; actual matching service not wired.",
   },
  },
@@ -141,7 +141,7 @@ export const WIDGET_LAB_SPECS: WidgetSpec[] = [
   status: {
    state: "prototype",
    dependencies: ["youtube_data_v3", "youtube_analytics_v2"],
-   fallbackMode: "isolated_demo",
+   fallbackMode: "mock",
    notes: "Poll-style card ready for integration with post generator.",
   },
  },

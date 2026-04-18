@@ -12,7 +12,7 @@ import Settings from "../views/Settings"
 import ReferenceStudio from "../views/ReferenceStudio"
 import ReferenceStudioIsolated from "../views/ReferenceStudioIsolated"
 import ReferenceStudioV2 from "../views/ReferenceStudioV2"
-import FourSectionsLabStandalone from "../views/FourSectionsLabStandalone"
+import Stuff from "../views/Stuff"
 import SourcesLabView from "../views/SourcesLabView"
 import ComponentCatalogView from "../views/ComponentCatalogView"
 import ComponentGridView from "../views/ComponentGridView"
@@ -58,11 +58,10 @@ export const AppRoutes: React.FC = () => {
    />
    <Route path="/reference-studio/:tabId" element={<ReferenceStudioIsolated />} />
    <Route path="/reference-studio-v2" element={<ReferenceStudioV2 />} />
+   <Route path="/stuff" element={<Stuff />} />
    <Route path="/sources-lab" element={<SourcesLabView />} />
    <Route path="/component-catalog" element={<ComponentCatalogView />} />
    <Route path="/component-grid" element={<ComponentGridView />} />
-   <Route path="/four-sections-lab" element={<FourSectionsLabStandalone />} />
-   <Route path="/render-bench/four-sections-lab" element={<FourSectionsLabStandalone />} />
    <Route path="/bench/:benchId" element={<BenchExplorer />} />
    <Route
     path="/render-bench/reference-studio"

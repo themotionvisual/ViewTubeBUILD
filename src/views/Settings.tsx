@@ -22,7 +22,11 @@ import {
  type IngestMode,
 } from "../services/productArchitecture"
 import { downloadExportBundle } from "../services/dataExport"
-import { clearCachedDataSoft, factoryResetAll } from "../services/localDataReset"
+import {
+ clearAnalyticsStateForFreshSync,
+ clearCachedDataSoft,
+ factoryResetAll,
+} from "../services/localDataReset"
 
 const Settings: React.FC = () => {
  const navigate = useNavigate()
@@ -134,7 +138,10 @@ const Settings: React.FC = () => {
       </button>
      ) : (
       <button
-       onClick={() => authService.login()}
+       onClick={async () => {
+        await clearAnalyticsStateForFreshSync()
+        await authService.login()
+       }}
        className={`${canonicalButtonClass} bg-[#FFFF61] text-black px-8 py-4 text-sm`}>
        Connect Channel
       </button>

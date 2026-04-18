@@ -44,6 +44,108 @@ const STATUS_STYLES: Record<DataCoverageStatus, string> = {
  not_connected: "bg-black text-white",
 }
 
+function RawExampleTable({ title, dataObj, colorHex }: { title: string, dataObj: Record<string, unknown> | null, colorHex: string }) {
+ if (!dataObj) return null
+ const entries = Object.entries(dataObj).filter(([k]) => k !== "_originalData" && !k.startsWith("__"))
+ return (
+  <div className="mt-8 border-[3px] border-black rounded-lg overflow-hidden bg-white">
+   <div className={`p-3 border-b-[3px] border-black font-black uppercase text-sm text-black ${colorHex}`}>
+    Raw Payload Schema: {title}
+   </div>
+   <div className="overflow-auto max-h-[300px]">
+    <table className="w-full text-left border-collapse whitespace-nowrap">
+     <thead className="bg-[#E5E7EB] border-b-[3px] border-black text-[10px] uppercase font-black sticky top-0 z-10">
+      <tr>
+       <th className="p-2 border-r border-black/20 w-1/3">Key</th>
+       <th className="p-2 border-r border-black/20">Raw Value</th>
+       <th className="p-2 w-24 text-center">Type</th>
+      </tr>
+     </thead>
+     <tbody>
+      {entries.length === 0 ? (
+       <tr><td colSpan={3} className="p-4 text-center font-black opacity-50 text-xs">Empty Payload Result</td></tr>
+      ) : (
+       entries.map(([k, v]) => (
+        <tr key={k} className="border-b border-black/10 hover:bg-[#CCFF00]/20 odd:bg-white even:bg-gray-50">
+         <td className="p-2 border-r border-black/10 text-[11px] font-bold font-mono text-black/70">{k}</td>
+         <td className="p-2 border-r border-black/10 text-xs truncate max-w-2xl">
+          {typeof v === 'object' ? JSON.stringify(v) : String(v)}
+         </td>
+         <td className="p-2 text-[10px] text-center uppercase font-black text-black/40">
+          {typeof v}
+         </td>
+        </tr>
+       ))
+      )}
+     </tbody>
+    </table>
+   </div>
+  </div>
+ )
+}
+
+function InspectorTable({
+ title,
+ dataObj,
+ colorHex,
+ icon,
+}: {
+ title: string
+ dataObj: Record<string, unknown> | null
+ colorHex: string
+ icon?: React.ReactNode
+}) {
+ if (!dataObj) {
+  return (
+   <div className="bg-white border-[3px] border-black rounded-lg p-6 text-center opacity-30 italic font-black uppercase text-xs">
+    No literal {title} data detected in current sink.
+   </div>
+  )
+ }
+
+ const entries = Object.entries(dataObj).filter(
+  ([k]) => k !== "_originalData" && !k.startsWith("__"),
+ )
+
+ return (
+  <div className="border-[3px] border-black rounded-lg overflow-hidden bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
+   <div
+    className={`p-4 border-b-[3px] border-black flex items-center gap-3 font-black uppercase text-base ${colorHex}`}>
+    {icon}
+    <span>{title} Payload Reference</span>
+   </div>
+   <div className="overflow-auto max-h-[400px]">
+    <table className="w-full text-left border-collapse whitespace-nowrap">
+     <thead className="bg-[#CCFF00] border-b-[3px] border-black text-[11px] uppercase font-black sticky top-0 z-10">
+      <tr>
+       <th className="p-3 border-r border-black/20 w-1/3">Statistic / Key</th>
+       <th className="p-3 border-r border-black/20">Literal Value</th>
+       <th className="p-3 w-32 text-center">Type</th>
+      </tr>
+     </thead>
+     <tbody>
+      {entries.map(([k, v]) => (
+       <tr
+        key={k}
+        className="border-b border-black/10 hover:bg-[#CCFF00]/10 odd:bg-white even:bg-gray-50 flex-1">
+        <td className="p-3 border-r border-black/10 text-xs font-black text-black">
+         {k}
+        </td>
+        <td className="p-3 border-r border-black/10 text-xs font-bold font-mono text-black/70 truncate max-w-xl">
+         {typeof v === "object" ? JSON.stringify(v) : String(v)}
+        </td>
+        <td className="p-3 text-[10px] text-center uppercase font-black text-black/30 bg-black/5">
+         {typeof v}
+        </td>
+       </tr>
+      ))}
+     </tbody>
+    </table>
+   </div>
+  </div>
+ )
+}
+
 export function SystemStatisticsSubToolbox({
  masterTableRows,
 }: SystemStatisticsSubToolboxProps) {
@@ -115,204 +217,169 @@ export function SystemStatisticsSubToolbox({
   return sortDirection === "asc" ? " ↑" : " ↓"
  }
 
- const statusCounts = useMemo(() => {
-  return filteredRows.reduce(
-   (acc, row) => {
-    acc[row.status] += 1
-    return acc
-   },
-   {
-    received: 0,
-    missing: 0,
-    not_applicable: 0,
-    not_connected: 0,
-   } as Record<DataCoverageStatus, number>,
+
+ const shortVideoRaw = useMemo(() => {
+  return (
+   masterTableRows.find((r) =>
+    String(
+     r.Format || r.format || r.type || r.contentType || "",
+    ).toLowerCase().includes("short"),
+   ) || null
   )
- }, [filteredRows])
+ }, [masterTableRows])
+
+ const longVideoRaw = useMemo(() => {
+  return (
+   masterTableRows.find((r) => {
+    const f = String(
+     r.Format || r.format || r.type || r.contentType || "",
+    ).toLowerCase()
+    return f.includes("long") || f === "video" || f === "video_on_demand"
+   }) || null
+  )
+ }, [masterTableRows])
+
+ const channelRaw = useMemo(() => {
+  return (
+   masterTableRows.find(
+    (r) =>
+     (r.subscribersGained !== undefined &&
+      r.views !== undefined &&
+      !r.video &&
+      !r.Format) ||
+     r["snippet.title"],
+   ) || null
+  )
+ }, [masterTableRows])
+
+ const geoRaw = useMemo(() => {
+  return (
+   masterTableRows.find(
+    (r) => r.country || r.city || r.continent || r.province,
+   ) || null
+  )
+ }, [masterTableRows])
+
+ const audienceRaw = useMemo(() => {
+  return (
+   masterTableRows.find(
+    (r) => r.ageGroup || r.gender || r.audienceType || r.subscribedStatus,
+   ) || null
+  )
+ }, [masterTableRows])
+
+ const trafficRaw = useMemo(() => {
+  return (
+   masterTableRows.find(
+    (r) => r.trafficSourceType || r.insightTrafficSourceType || r.sharingService,
+   ) || null
+  )
+ }, [masterTableRows])
 
  return (
   <SubToolbox
    title="Data Coverage Reference"
    icon={<Database size={24} />}
    collapsible
-   isOpenInitial>
-   <div className="bg-[#EDEDED] border-[4px] border-black p-4 space-y-4">
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-     <div className="bg-[#CCFF00] border-[3px] border-black rounded-lg p-3">
-      <div className="text-[10px] font-black uppercase text-black/50">
-       Current Coverage
-      </div>
-      <div className="text-xl font-black">
-       {inventory.summary.receivedCount} / {inventory.summary.connectedSourcesTotal}
-      </div>
-      <div className="text-[9px] font-black uppercase text-black/45 mt-1">
-       Received vs Connected Sources
-      </div>
-     </div>
-     <div className="bg-white border-[3px] border-black rounded-lg p-3">
-      <div className="text-[10px] font-black uppercase text-black/50">
-       Master Catalog
-      </div>
-      <div className="text-xl font-black">{inventory.summary.fullCatalogTotal}</div>
-      <div className="text-[9px] font-black uppercase text-black/45 mt-1">
-       Total potential categories
-      </div>
-     </div>
-     <div className="bg-white border-[3px] border-black rounded-lg p-3">
-      <div className="text-[10px] font-black uppercase text-black/50">
-       Showing
-      </div>
-      <div className="text-xl font-black">{filteredRows.length}</div>
-      <div className="text-[9px] font-black uppercase text-black/45 mt-1">
-       Filtered View
-      </div>
-     </div>
-    </div>
-
-    <div className="flex flex-wrap gap-2">
-     {(Object.keys(statusCounts) as DataCoverageStatus[]).map((status) => (
-      <span
-       key={status}
-       className={`px-2 py-1 rounded-md border border-black text-[10px] font-black uppercase ${STATUS_STYLES[status]}`}>
-       {status.replace(/_/g, " ")}: {statusCounts[status]}
-      </span>
-     ))}
-    </div>
-
-    <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
-     <div className="flex items-center gap-2 flex-wrap">
-      <button
-       type="button"
-       onClick={() => setShowFullCatalog((value) => !value)}
-       className={`px-3 py-2 rounded-md border border-black text-[10px] font-black uppercase ${
-        showFullCatalog ? "bg-black text-white" : "bg-white text-black"
-       }`}>
-       {showFullCatalog ? "Mode: Full Catalog" : "Mode: Canonical"}
-      </button>
+   isOpen
+  >
+   <div className="pt-2">
+     <div className="flex items-center gap-4 mb-8">
+      <div className="h-[4px] flex-1 bg-black border-y border-black" />
+      <h2 className="text-2xl font-black uppercase tracking-tighter">
+       Live Payload Tables
+      </h2>
+      <div className="h-[4px] flex-1 bg-black border-y border-black" />
      </div>
 
-     <div className="relative w-full md:w-[440px]">
-      <input
-       type="text"
-       value={searchTerm}
-       onChange={(e) => setSearchTerm(e.target.value)}
-       placeholder="Search category, canonical key, scope, or source..."
-       className="w-full h-12 pl-12 pr-4 border-[3px] border-black rounded-lg text-sm font-black tracking-wide outline-none focus:bg-[#CCFF00] transition-colors"
+     <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+      <InspectorTable
+       title="Channel Overview"
+       dataObj={channelRaw}
+       colorHex="bg-[#111827] !text-white"
+       icon={<Database size={20} />}
       />
-      <Search
-       className="absolute left-4 top-1/2 -translate-y-1/2 opacity-50"
-       size={20}
+
+      <InspectorTable
+       title="Long-Format Video"
+       dataObj={longVideoRaw}
+       colorHex="bg-[#00CCFF]"
+       icon={<Database size={20} />}
+      />
+
+      <InspectorTable
+       title="Shorts Video"
+       dataObj={shortVideoRaw}
+       colorHex="bg-[#FF7497]"
+       icon={<Database size={20} />}
+      />
+
+      <InspectorTable
+       title="Traffic & Discovery"
+       dataObj={trafficRaw}
+       colorHex="bg-[#FFB158]"
+       icon={<Database size={20} />}
+      />
+
+      <InspectorTable
+       title="Audience & Demographics"
+       dataObj={audienceRaw}
+       colorHex="bg-[#B14AED] !text-white"
+       icon={<Database size={20} />}
+      />
+
+      <InspectorTable
+       title="Geography & Reach"
+       dataObj={geoRaw}
+       colorHex="bg-[#FFDD00]"
+       icon={<Database size={20} />}
       />
      </div>
+    
+    <div className="mt-8 border-t-[4px] border-black border-dashed pt-6">
+     <h3 className="text-xl font-black uppercase mb-1">Literal Payload Inspectors</h3>
+     <p className="text-xs font-bold text-black/50 mb-6">
+      Raw individual API entries taken straight from the sink right now to prove standard object shapes.
+     </p>
 
-     <div className="flex flex-wrap gap-2 justify-end">
-      {(Object.keys(inventory.summary.perScope) as DataCoverageScope[]).map(
-       (scope) => (
-        <span
-         key={scope}
-         className={`px-2 py-1 rounded-md border border-black text-[10px] font-black uppercase ${SCOPE_STYLES[scope]}`}>
-         {scope.replace("_", " ")}: {inventory.summary.perScope[scope]}
-        </span>
-       ),
-      )}
-     </div>
-    </div>
+     <RawExampleTable 
+      title="Shorts Video Example" 
+      colorHex="bg-[#FF7497]" 
+      dataObj={masterTableRows.find(r => String(r.Format || r.format || r.type || r.contentType || "").toLowerCase().includes("short")) || null} 
+     />
 
-    <div className="bg-white border-[3px] border-black rounded-lg overflow-auto max-h-[560px]">
-     <table className="w-full border-collapse whitespace-nowrap">
-      <thead className="sticky top-0 bg-[#CCFF00] border-b-[3px] border-black z-10">
-       <tr>
-        <th 
-         onClick={() => handleSort("categoryName")}
-         className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left cursor-pointer hover:bg-black/5 transition-colors">
-         Category{renderSortIcon("categoryName")}
-        </th>
-        <th 
-         onClick={() => handleSort("canonicalKey")}
-         className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left cursor-pointer hover:bg-black/5 transition-colors">
-         Canonical Key{renderSortIcon("canonicalKey")}
-        </th>
-        <th 
-         onClick={() => handleSort("source")}
-         className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left cursor-pointer hover:bg-black/5 transition-colors">
-         Source{renderSortIcon("source")}
-        </th>
-        <th 
-         onClick={() => handleSort("scope")}
-         className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left cursor-pointer hover:bg-black/5 transition-colors">
-         Scope{renderSortIcon("scope")}
-        </th>
-        <th 
-         onClick={() => handleSort("status")}
-         className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left cursor-pointer hover:bg-black/5 transition-colors">
-         Status{renderSortIcon("status")}
-        </th>
-        <th 
-         onClick={() => handleSort("example")}
-         className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left cursor-pointer hover:bg-black/5 transition-colors">
-         Example{renderSortIcon("example")}
-        </th>
-        <th 
-         onClick={() => handleSort("exampleChannel")}
-         className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left bg-[#FFDD00]/20 cursor-pointer hover:bg-[#FFDD00]/40 transition-colors">
-         Example Channel{renderSortIcon("exampleChannel")}
-        </th>
-        <th 
-         onClick={() => handleSort("reason")}
-         className="p-3 text-[10px] font-black uppercase tracking-widest border-r border-black/20 text-left bg-[#00CCFF]/20 cursor-pointer hover:bg-[#00CCFF]/40 transition-colors">
-         Reason{renderSortIcon("reason")}
-        </th>
-       </tr>
-      </thead>
-      <tbody>
-       {filteredRows.length === 0 ? (
-        <tr>
-         <td
-          colSpan={8}
-          className="p-8 text-center text-xs font-black uppercase tracking-widest text-black/40">
-          No categories found matching "{searchTerm}"
-         </td>
-        </tr>
-       ) : (
-        filteredRows.map((row, idx) => (
-         <tr
-          key={`${row.source}-${row.scope}-${row.canonicalKey}-${idx}`}
-          className="odd:bg-white even:bg-gray-50 border-b border-black/10 hover:bg-[#CCFF00]/10 transition-colors">
-          <td className="p-3 border-r border-black/10 text-xs font-black">
-           {row.categoryName}
-          </td>
-          <td className="p-3 border-r border-black/10 text-xs font-bold font-mono text-black/60">
-           {row.canonicalKey}
-          </td>
-          <td className="p-3 border-r border-black/10 text-[10px] font-black uppercase text-black/70">
-           {sourceLabel(row)}
-          </td>
-          <td className="p-3 border-r border-black/10">
-           <span
-            className={`inline-flex items-center rounded-md px-2 py-1 text-[10px] font-black uppercase border border-black ${SCOPE_STYLES[row.scope]}`}>
-            {scopeLabel(row)}
-           </span>
-          </td>
-          <td className="p-3 border-r border-black/10">
-           <span
-            className={`inline-flex items-center rounded-md px-2 py-1 text-[10px] font-black uppercase border border-black ${STATUS_STYLES[row.status]}`}>
-            {row.status.replace(/_/g, " ")}
-           </span>
-          </td>
-          <td className="p-3 border-r border-black/10 text-xs font-black">
-           {row.example}
-          </td>
-          <td className="p-3 border-r border-black/10 text-xs font-black">
-           {row.exampleChannel}
-          </td>
-          <td className="p-3 border-r border-black/10 text-xs font-black text-black/70">
-           {row.reason}
-          </td>
-         </tr>
-        ))
-       )}
-      </tbody>
-     </table>
+     <RawExampleTable 
+      title="Long Format Video Example" 
+      colorHex="bg-[#00CCFF]" 
+      dataObj={masterTableRows.find(r => {
+       const f = String(r.Format || r.format || r.type || r.contentType || "").toLowerCase()
+       return f.includes("long") || f === "video" || f === "video_on_demand"
+      }) || null} 
+     />
+
+     <RawExampleTable 
+      title="Channel Overview Example" 
+      colorHex="bg-[#111827] !text-white" 
+      dataObj={masterTableRows.find(r => (r.subscribersGained !== undefined && r.views !== undefined && !r.video && !r.Format) || (r["snippet.title"])) || null} 
+     />
+
+     <RawExampleTable 
+      title="Traffic Source Example" 
+      colorHex="bg-[#FFB158]" 
+      dataObj={masterTableRows.find(r => r.trafficSourceType || r.insightTrafficSourceType || r.sharingService) || null} 
+     />
+
+     <RawExampleTable 
+      title="Audience & Demographics Example" 
+      colorHex="bg-[#B14AED] !text-white" 
+      dataObj={masterTableRows.find(r => r.ageGroup || r.gender || r.audienceType || r.subscribedStatus) || null} 
+     />
+
+     <RawExampleTable 
+      title="Geography Example" 
+      colorHex="bg-[#FFDD00]" 
+      dataObj={masterTableRows.find(r => r.country || r.city || r.continent || r.province) || null} 
+     />
     </div>
    </div>
   </SubToolbox>

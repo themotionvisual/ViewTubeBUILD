@@ -1,6 +1,7 @@
 import JSZip from "jszip"
 import type { CsvFileWithTag, CsvTag, CsvUploadType } from "../types"
 import { normalizeRow } from "./dataNormalization"
+import { toNumber, toText, hasValue, parseDurationSeconds } from "./dataUtils"
 
 // ==========================================
 // TYPES & SCHEMAS
@@ -33,28 +34,6 @@ export interface DataForgeIngestResult {
 // UTILITY FUNCTIONS
 // ==========================================
 
-const toNumber = (value: unknown): number => {
- if (typeof value === "number" && Number.isFinite(value)) return value
- if (typeof value !== "string") return 0
- const cleaned = value.replace(/[^0-9.-]/g, "")
- const parsed = Number(cleaned)
- return Number.isFinite(parsed) ? parsed : 0
-}
-
-const hasValue = (value: unknown): boolean => {
- if (value == null) return false
- if (typeof value === "string") return value.trim() !== ""
- if (typeof value === "number") return Number.isFinite(value)
- return true
-}
-
-const toText = (value: unknown): string => {
- if (typeof value === "string") return value
- if (typeof value === "number") return String(value)
- if (value == null) return ""
- return String(value)
-}
-
 const firstDefinedNumber = (
  row: Record<string, unknown>,
  keys: string[],
@@ -80,29 +59,6 @@ const firstText = (row: Record<string, unknown>, keys: string[]): string => {
   if (value) return value
  }
  return ""
-}
-
-const parseDurationSeconds = (value: unknown): number => {
- if (typeof value === "number" && Number.isFinite(value)) return value
- const raw = toText(value)
- if (!raw) return 0
-
- if (/^PT/.test(raw)) {
-  const match = raw.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)
-  if (!match) return 0
-  const hours = Number(match[1] || 0)
-  const minutes = Number(match[2] || 0)
-  const seconds = Number(match[3] || 0)
-  return hours * 3600 + minutes * 60 + seconds
- }
-
- if (raw.includes(":")) {
-  const parts = raw.split(":").map((p) => Number(p) || 0)
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
-  if (parts.length === 2) return parts[0] * 60 + parts[1]
- }
-
- return toNumber(raw)
 }
 
 // ==========================================
@@ -226,8 +182,7 @@ export const detectContentTagFromRows = (
 
   if (
    stayedToWatch > 0 ||
-   shortsFeedViews > 0 ||
-   (durationSec > 0 && durationSec <= 180)
+   shortsFeedViews > 0
   ) {
    shortEvidence += 1
   }

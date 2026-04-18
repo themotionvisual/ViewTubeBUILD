@@ -57,7 +57,6 @@ interface MainToolboxProps {
  headerColor?: string
  iconBoxColor?: string
  defaultOpen?: boolean
- mountOnOpen?: boolean
  children: React.ReactNode
 }
 
@@ -69,7 +68,6 @@ export const MainToolbox: React.FC<MainToolboxProps> = ({
  headerColor = "bg-[#CCFF00]",
  iconBoxColor = "bg-[#24D3FF]",
  defaultOpen = false,
- mountOnOpen = false,
  children,
 }) => {
  const [open, setOpen] = useState(defaultOpen)
@@ -77,12 +75,12 @@ export const MainToolbox: React.FC<MainToolboxProps> = ({
 
  return (
   <section
-   className="w-full border-[5px] border-black rounded-2xl bg-white overflow-hidden mb-8 relative isolation-auto"
+   className="w-full border-[5px] border-black rounded-2xl bg-white overflow-hidden mb-8 relative"
    data-rs-shell="main"
    data-rs-scope={scopeId || "default"}
    style={{
     isolation: "isolate",
-    contain: "content",
+    contain: "layout style paint",
     boxShadow: `10px 10px 0px 0px ${shadowColor}`,
    }}>
    <header
@@ -108,9 +106,7 @@ export const MainToolbox: React.FC<MainToolboxProps> = ({
    <div
     className={`grid transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
     <div className="overflow-hidden min-h-0">
-     {!mountOnOpen || open ? (
-      <div className="p-4 md:p-6 bg-white">{children}</div>
-     ) : null}
+     <div className="p-4 md:p-6 bg-white">{children}</div>
     </div>
    </div>
   </section>
@@ -165,7 +161,7 @@ export const SectionCard: React.FC<SectionCardProps> = ({
    className={wrapperClassName}
    data-rs-shell="sub"
    data-rs-scope={scopeId || "default"}
-   style={{ isolation: "isolate", contain: "content" }}>
+   style={{ isolation: "isolate", contain: "layout style paint" }}>
    <article
     className="w-full border-[4px] border-black rounded-2xl bg-white overflow-hidden"
     style={{ boxShadow: `6px 6px 0px 0px ${shadowColor}` }}>

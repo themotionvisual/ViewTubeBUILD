@@ -95,7 +95,7 @@ type ChartRenderContext = {
  histogram: Array<{ bucket: string; count: number }>
  intervals: Array<{ name: string; low: number; high: number }>
  waterfall: Array<{ name: string; delta: number; cumulative: number }>
- tableRows: Array<{ key: string; title: string; views: number; watchHours: number; revenue: number }>
+ tableRows: Array<{ title: string; views: number; watchHours: number; revenue: number }>
 }
 
 type ChartRenderer = (ctx: ChartRenderContext) => React.ReactNode
@@ -168,8 +168,7 @@ const safeContext = (analytics: CanonicalAnalyticsView): ChartRenderContext => {
   return { name: row.date.slice(5), delta, cumulative: running }
  })
 
- const tableRows = topRows.slice(0, 10).map((row, index) => ({
-  key: row.id || `row-${index}`,
+ const tableRows = topRows.slice(0, 10).map((row) => ({
   title: compactTitle(row.title),
   views: row.views,
   watchHours: row.watchHours,
@@ -269,8 +268,8 @@ const OrgBoard: React.FC<{ topByViews: ChartRenderContext["topByViews"] }> = ({ 
  <div className="h-full p-2 overflow-auto">
   <div className="border-[2px] border-black rounded-lg p-2 bg-white text-[10px] font-black uppercase mb-2">Channel</div>
   <div className="space-y-1 pl-3 border-l-[3px] border-black/25">
-   {topByViews.slice(0, 8).map((row, index) => (
-    <div key={`org-${index}`} className="border-[2px] border-black rounded-lg px-2 py-1 bg-[#f9fafb] text-[9px] font-black uppercase">
+   {topByViews.slice(0, 8).map((row) => (
+    <div key={row.name} className="border-[2px] border-black rounded-lg px-2 py-1 bg-[#f9fafb] text-[9px] font-black uppercase">
      {row.name}
     </div>
    ))}
@@ -532,7 +531,7 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     </thead>
     <tbody>
      {ctx.tableRows.map((row) => (
-      <tr key={row.key} className="bg-white even:bg-[#f3f4f6]">
+      <tr key={`table-${row.title}`} className="bg-white even:bg-[#f3f4f6]">
        <td className="border-[2px] border-black p-1">{row.title}</td>
        <td className="border-[2px] border-black p-1 text-right">{Math.round(row.views).toLocaleString()}</td>
        <td className="border-[2px] border-black p-1 text-right">{row.watchHours.toFixed(1)}</td>
