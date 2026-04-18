@@ -4,7 +4,7 @@ import { X, Globe, Lock, Search, Trash2, CheckCircle2 } from "lucide-react"
 // Column aliases - map canonical names to their aliases
 // This prevents duplicate columns from being displayed
 const COLUMN_ALIASES: Record<string, string[]> = {
- "Subscribers Gained": ["Subscribers", "subscribersGained"],
+ Subscribers Gained: ["Subscribers", "subscribersGained", "Subs +"],
  "Watch Time (Hours)": [
   "Watch time (hours)",
   "estimatedMinutesWatched",
@@ -74,8 +74,9 @@ const COLUMN_DISPLAY_ORDER = [
  "Impressions",
  "Revenue",
  "RPM",
- "CPM",
+ "CPM (USD)",
  "Likes",
+ "Dislikes",
  "Comments",
  "Shares",
  "Engagement",
@@ -90,7 +91,8 @@ const COLUMN_DISPLAY_ORDER = [
  "Total members",
  "Product clicks",
  "Orders",
-]
+ "STW %",
+ ]
 
 export interface DataRecord {
  _id?: string
