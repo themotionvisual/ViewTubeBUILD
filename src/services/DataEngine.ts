@@ -546,6 +546,10 @@ export const normalizeAndEnrichRow = (
    ? Number(Math.max(0, ((likes + comments + shares) / views) * 100).toFixed(1))
    : 0
 
+ const engagedViews = firstDefinedNumber(base, ["Engaged views", "Engaged Views"]) ?? 0
+ const dislikes = firstDefinedNumber(base, ["Dislikes", "dislikes"]) ?? 0
+ const stw = views > 0 ? (engagedViews / views) * 100 : 0
+
  const title = firstText(base, ["Video title", "Video", "Dimension"])
  const titleLength = title.length
 
@@ -573,6 +577,9 @@ export const normalizeAndEnrichRow = (
   RPM: rpm,
   adjustedAVP,
   engagementRate,
+  engagedViews,
+  dislikes,
+  stw,
   titleLength,
  }
 }
