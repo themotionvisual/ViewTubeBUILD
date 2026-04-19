@@ -23,7 +23,6 @@ import ProjectCalendarPage from "../views/ProjectCalendarPage"
 import ChartsGalleryHome from "../views/ChartsGallery/ChartsGalleryHome"
 import MasterGraphsPage from "../views/ChartsGallery/MasterGraphsPage"
 import ToolboxPreviewPage from "../views/ChartsGallery/ToolboxPreviewPage"
-import Projects from "../views/Projects"
 import DataTransparencyCenter from "../views/DataTransparencyCenter"
 import InternalAnalyticsPanel from "../views/InternalAnalyticsPanel"
 
@@ -46,7 +45,6 @@ export const AppRoutes: React.FC = () => {
    <Route path="/legacy/research-lab" element={<ResearchLab />} />
    <Route path="/legacy/data-vizualizations" element={<DataVisualizations />} />
    <Route path="/studio/internal-analytics" element={<InternalAnalyticsPanel />} />
-   <Route path="/projects" element={<Projects />} />
    <Route path="/settings" element={<Settings />} />
    <Route path="/data-transparency" element={<DataTransparencyCenter />} />
 

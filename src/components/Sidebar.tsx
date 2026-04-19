@@ -42,7 +42,6 @@ export const Sidebar: React.FC = () => {
  const tools = [
   { id: "DASHBOARD", path: "/", label: "Dashboard", color: "#FF8AAF" },
   { id: "STUDIO", path: "/studio", label: "Studio", color: "#FFB570" },
-  { id: "PROJECTS", path: "/projects", label: "Projects", color: "#ccff00" },
   { id: "CALENDAR", path: "/project-calendar", label: "Calendar", color: "#FFFF61" },
   { id: "SHORTS", path: "/shorts", label: "Shorts", color: "#4FFF5B" },
   { id: "PERFORMANCE", path: "/performance", label: "Performance", color: "#579AFF" },
