@@ -18,6 +18,7 @@ import {
  fetchVideoPlaylistMemberships,
  addToPlaylist,
  removeFromPlaylist,
+ fetchVideoComments,
 } from "./youtube/youtubeDataFetcher"
 
 import {

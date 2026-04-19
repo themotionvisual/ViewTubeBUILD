@@ -297,30 +297,32 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
             <span className="px-2 py-1 border-[2px] border-black rounded-[6px] bg-[#e5e5e5]">Idle</span>
           </div>
         </div>
-      </WidgetShell>
-    )
-  }
-
-  if (widget.id === "alerts-ticker") {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { comments } = require("./useVideoComments").useVideoComments(data.topPerformer?.videoId || null)
-    return (
-      <WidgetShell {...common} icon={<Bell size={20} />}>
-        <div className="space-y-2 overflow-y-auto h-full">
-          {comments.length ? (
-            comments.map((comment: any) => (
-              <div key={comment.id} className="border-[2px] border-black rounded-[12px] bg-white px-3 py-2 text-[10px] font-black uppercase">
-                <span className="opacity-50 mr-2">{comment.author}:</span>
-                {comment.text}
+      import { useVideoComments } from "./useVideoComments"
+      import {
+        Activity,
+        Bell,
+      ...
+        if (widget.id === "alerts-ticker") {
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          const { comments } = useVideoComments(data.topPerformer?.videoId || null)
+          return (
+            <WidgetShell {...common} icon={<Bell size={20} />}>
+              <div className="space-y-2 overflow-y-auto h-full">
+                {comments.length ? (
+                  comments.map((comment: any) => (
+                    <div key={comment.id} className="border-[2px] border-black rounded-[12px] bg-white px-3 py-2 text-[10px] font-black uppercase">
+                      <span className="opacity-50 mr-2">{comment.author}:</span>
+                      {comment.text}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-[10px] font-black uppercase opacity-60">No recent comments</p>
+                )}
               </div>
-            ))
-          ) : (
-            <p className="text-[10px] font-black uppercase opacity-60">No recent comments</p>
-          )}
-        </div>
-      </WidgetShell>
-    )
-  }
+            </WidgetShell>
+          )
+        }
+
 
 
   if (widget.id === "sync-connection") {
