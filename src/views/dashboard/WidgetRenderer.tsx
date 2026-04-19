@@ -301,19 +301,27 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
     )
   }
 
-  if (widget.id === "alerts-feed") {
+  if (widget.id === "alerts-ticker") {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { comments } = require("./useVideoComments").useVideoComments(data.topPerformer?.videoId || null)
     return (
       <WidgetShell {...common} icon={<Bell size={20} />}>
-        <div className="space-y-2">
-          {data.alerts.map((alert, idx) => (
-            <div key={idx} className="border-[2px] border-black rounded-[12px] bg-white px-3 py-2 text-xs font-black">
-              {alert}
-            </div>
-          ))}
+        <div className="space-y-2 overflow-y-auto h-full">
+          {comments.length ? (
+            comments.map((comment: any) => (
+              <div key={comment.id} className="border-[2px] border-black rounded-[12px] bg-white px-3 py-2 text-[10px] font-black uppercase">
+                <span className="opacity-50 mr-2">{comment.author}:</span>
+                {comment.text}
+              </div>
+            ))
+          ) : (
+            <p className="text-[10px] font-black uppercase opacity-60">No recent comments</p>
+          )}
         </div>
       </WidgetShell>
     )
   }
+
 
   if (widget.id === "sync-connection") {
     return (
