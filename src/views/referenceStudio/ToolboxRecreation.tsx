@@ -2,7 +2,6 @@ import React from "react"
 import {
  Activity,
  BarChart3,
- FolderKanban,
  LayoutDashboard,
  Sparkles,
 } from "lucide-react"
@@ -27,24 +26,6 @@ const ToolboxRecreation: React.FC = () => {
 
  return (
   <div className="w-full max-w-[1450px] mx-auto pb-24">
-   <MainToolbox
-    title="TOOLBOX RECREATION"
-    subtitle="recreated app toolbox layouts using toolbox-ui-system + source-scoped modules"
-    icon={<FolderKanban size={40} strokeWidth={2.8} className="text-black" />}
-    headerColor="bg-[#CCFF00]"
-    iconBoxColor="bg-[#24D3FF]"
-    defaultOpen={false}>
-    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
-     <MetricTile label="28D Views" value={formatCompactNumber(summary.totals.views)} />
-     <MetricTile label="28D Watch Hrs" value={formatCompactNumber(summary.totals.watchHours)} />
-     <MetricTile
-      label="28D Subs Gained"
-      value={formatCompactNumber(summary.totals.subscribersGained)}
-     />
-     <MetricTile label="28D Revenue" value={formatCurrency(summary.totals.revenue)} />
-    </div>
-   </MainToolbox>
-
    <MainToolbox
     title="DASHBOARD RECREATION"
     subtitle="overview cards + quick actions + compact intelligence modules"
@@ -110,7 +91,7 @@ const ToolboxRecreation: React.FC = () => {
       title="Publisher + Cards"
       subtitle="upload/script/cards modules"
       headerColor="bg-[#24D3FF]"
-      icon={<FolderKanban size={20} strokeWidth={2.6} className="text-black" />}>
+      icon={<Activity size={20} strokeWidth={2.6} className="text-black" />}>
       <div className="space-y-3">
        <div className="border-[3px] border-black rounded-xl p-3 bg-white">
         <SourceUtilityModules.PublisherUpload />

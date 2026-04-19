@@ -372,7 +372,7 @@ const enrichDerivedMetricCells = (
   durationSeconds > 0
  ) {
   next.metrics.avp = buildDerivedMetricCell(
-   Number(((avdSeconds / durationSeconds) * 100).toFixed(2)),
+   Number(((avdSeconds / durationSeconds) * 100).toFixed(1)),
    sourceFromCells([avdCell]),
   )
  }
@@ -1159,11 +1159,9 @@ const METRIC_TO_HEADER: Record<CanonicalMetricKey, string> = {
  comments: "Comments",
  shares: "Shares",
  subscribersGained: "Subscribers Gained",
- impressions: "Impressions",
- revenue: "Revenue",
- cpm: "CPM",
- rpm: "RPM",
- ctr: "Click-Through Rate (CTR)",
+  revenue: "Revenue",
+  cpm: "CPM",
+  rpm: "RPM",
  newViewers: "New Viewers",
  returningViewers: "Returning Viewers",
  casualViewers: "Casual viewers",
@@ -1226,10 +1224,10 @@ export const canonicalRowsToMasterTableRows = (
 
   // Keep legacy aliases used by existing rendering/helpers.
   base["Watch time (hours)"] = base["Watch Time (Hours)"]
-  base["Subscribers Gained"] = base["Subs +"]
-  base["CTR (%)"] = base["Click-Through Rate (CTR)"]
+  base["Subs"] = base["Subscribers Gained"]
   base["AVD (Sec)"] = base["AVD (Average View Duration)"]
   base["Estimated revenue"] = base.Revenue
+  base["Subscribers Lost"] = base["Subscribers Lost"]
 
   return base
  })

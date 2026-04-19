@@ -647,3 +647,19 @@ export const removeFromPlaylist = async (playlistItemId: string) => {
  return response.status === 204 ? { success: true } : response.json()
 }
 
+export const fetchVideoComments = async (videoId: string, maxResults = 5) => {
+ const token = await refreshTokenIfExpired()
+ const url = `${BASE_URL}/commentThreads?part=snippet,replies&videoId=${videoId}&maxResults=${maxResults}&order=time`
+ const response = await proxyFetch(url, {
+  headers: token ? { Authorization: `Bearer ${token}` } : {},
+ })
+ if (!response.ok) await handleYouTubeApiError(response, "Failed to fetch comments")
+ const data = await response.json()
+ return (data.items || []).map((item: any) => ({
+  id: item.id,
+  text: item.snippet.topLevelComment.snippet.textDisplay,
+  author: item.snippet.topLevelComment.snippet.authorDisplayName,
+  publishedAt: item.snippet.topLevelComment.snippet.publishedAt,
+ }))
+}
+

@@ -47,6 +47,7 @@ class YouTubeService {
  public fetchVideoPlaylistMemberships = fetchVideoPlaylistMemberships
  public addToPlaylist = addToPlaylist
  public removeFromPlaylist = removeFromPlaylist
+ public fetchVideoComments = fetchVideoComments
  public fetchSingleVideoAnalytics = fetchSingleVideoAnalytics
  
  // The legacy request method is now internal to YouTubeApiClient

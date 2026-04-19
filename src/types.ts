@@ -9,48 +9,11 @@ export type AppTool =
   | 'IDEAS_VAULT'
   | 'LAUNCH_CALENDAR';
 
-export type ProjectStatus = 'ideation' | 'scripting' | 'filming' | 'editing' | 'publishing' | 'published';
-
-export interface ProjectTask {
-  id: string;
-  text: string;
-  completed: boolean;
-  dueDate?: string;
-}
-
-export interface Project {
-  id: string;
-  name: string;
-  videoTitle: string;
-  status: ProjectStatus;
-  color: string;
-  publishDate: string;
-  tasks: ProjectTask[];
-  script: string;
-  description: string;
-  notes: string;
-  tags: string;
-  thumbnailUrl: string;
-  plan: ProjectPlan;
-  storyboard: Scene[];
-  shortsStrategyGenerated?: boolean;
-}
-
 export interface DayTask {
   id: string;
   text: string;
   completed: boolean;
-  projectId: string;
   isPublishEvent?: boolean;
-}
-
-export interface ProjectPlan {
-  topic: string;
-  description: string;
-  length: string;
-  audience: string;
-  vision: string;
-  hook: string;
 }
 
 export const AspectRatio = {
@@ -421,12 +384,11 @@ export interface WorkspaceBrain {
   >;
 
   // 7. Project & Calendar Management
-  projects: Project[];
   calendarState: {
     dayTasks: Record<string, DayTask[]>; // dateString -> tasks
   };
   channelHub: {
-    toDos: ProjectTask[];
+    toDos: { id: string; text: string; completed: boolean; }[];
     goals: { id: string; text: string; category: string; completed: boolean }[];
   };
 }

@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import type {
   WorkspaceBrain,
   AppTool,
-  Project,
   AuthState,
   ChannelAnalysisSyncStatus,
   VideoSyncBatchState,
@@ -23,12 +22,8 @@ interface GlobalDataContextProps {
   setSeoState: (updates: Partial<WorkspaceBrain['seoState']>) => void;
   setStoryboardState: (updates: Partial<WorkspaceBrain['storyboardState']>) => void;
   setThumbnailState: (updates: Partial<WorkspaceBrain['thumbnailState']>) => void;
-  addProject: (project: Project) => void;
-  updateProject: (id: string, updates: Partial<Project>) => void;
-  deleteProject: (id: string) => void;
   setCalendarState: (updates: Partial<WorkspaceBrain['calendarState']>) => void;
   setChannelHub: (updates: Partial<WorkspaceBrain['channelHub']>) => void;
-  setActiveProject: (id: string | null) => void;
   setVideoFlags: (
     videoId: string,
     flags: { excludeAnalysis?: boolean; includeOnly?: boolean; priorityAnalysis?: boolean },
@@ -70,7 +65,6 @@ const defaultBrain: WorkspaceBrain = {
     provenFormats: [],
     forbiddenTopics: []
   },
-  projects: [],
   calendarState: { dayTasks: {} },
   channelHub: { toDos: [], goals: [] },
   channelyticsState: { csvFiles: [], allData: [], analyticsResult: null },
@@ -114,7 +108,6 @@ const loadPersistedBrain = (): WorkspaceBrain => {
         ...defaultBrain,
         ...parsed,
         activeProviders: Array.isArray(parsed.activeProviders) ? parsed.activeProviders : defaultBrain.activeProviders,
-        projects: Array.isArray(parsed.projects) ? parsed.projects : defaultBrain.projects,
         seoState: {
           ...defaultBrain.seoState,
           ...(parsed.seoState || {}),
@@ -191,12 +184,8 @@ const fallbackContext: GlobalDataContextProps = {
   setSeoState: () => {},
   setStoryboardState: () => {},
   setThumbnailState: () => {},
-  addProject: () => {},
-  updateProject: () => {},
-  deleteProject: () => {},
   setCalendarState: () => {},
   setChannelHub: () => {},
-  setActiveProject: () => {},
   setVideoFlags: () => {},
   authState: defaultAuthState,
   setAuthState: () => {},
