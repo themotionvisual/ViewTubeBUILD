@@ -193,6 +193,8 @@ const SeoGenerator: React.FC<SeoGeneratorProps> = ({
     channelHandle,
     resourceLinks,
     formatMode === "longform" ? "Longform" : "Shorts",
+    undefined, // plan
+    brain,
    )
 
    setResult(data)

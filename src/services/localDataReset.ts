@@ -1,4 +1,4 @@
-import { authService } from "./authService"
+import { unifiedAuth } from "./authSession"
 
 export const LOCAL_DATA_CHANGED_EVENT = "vt_local_data_changed"
 
@@ -116,7 +116,7 @@ export const factoryResetAll = async (): Promise<void> => {
 
  // Belt-and-suspenders: attempt logout after wiping.
  try {
-  authService.logout()
+  unifiedAuth.logout()
  } catch {
   // ignore
  }

@@ -1,4 +1,5 @@
 export type DashboardSizeBucket = "full" | "half" | "third" | "quarter"
+export type DashboardHeightBucket = "short" | "medium" | "tall"
 
 export type DashboardWidgetCategory =
   | "core"
@@ -23,6 +24,9 @@ export interface WidgetDefinition {
   defaultSize: DashboardSizeBucket
   minSize: DashboardSizeBucket
   maxSize: DashboardSizeBucket
+  defaultHeight: DashboardHeightBucket
+  minHeight: DashboardHeightBucket
+  maxHeight: DashboardHeightBucket
   headerColor: string
   iconRailColor: string
   dependency: WidgetDependency[]
@@ -32,6 +36,7 @@ export interface WidgetDefinition {
 export interface WidgetInstanceState {
   collapsed: boolean
   size: DashboardSizeBucket
+  height: DashboardHeightBucket
   pinned: boolean
   focus: boolean
 }
@@ -47,5 +52,6 @@ export interface DashboardLayoutState {
 export interface WidgetRenderCallbacks {
   onToggleCollapse: (widgetId: string) => void
   onCycleSize: (widgetId: string) => void
+  onCycleHeight: (widgetId: string) => void
   onRemoveWidget: (widgetId: string) => void
 }

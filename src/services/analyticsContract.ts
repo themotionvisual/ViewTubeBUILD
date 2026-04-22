@@ -21,6 +21,7 @@ export type CanonicalMetricKey =
  | "comments"
  | "shares"
  | "subscribersGained"
+ | "subscribersLost"
  | "impressions"
  | "revenue"
  | "cpm"
@@ -53,6 +54,12 @@ export interface CanonicalMetricDefinition {
  key: CanonicalMetricKey
  label: string
  unit: "count" | "hours" | "seconds" | "currency" | "rate" | "percent"
+ apiFieldName: string // Canonical API name from YouTube
+ displayVariants: {
+  tableHeader: string
+  commonName: string
+  nickname: string
+ }
  aliases: string[]
  rawPolicy: "raw_preferred" | "derived_ok"
  sourceWindows: {
@@ -61,6 +68,7 @@ export interface CanonicalMetricDefinition {
   ga4: AnalyticsWindow[]
  }
 }
+
 
 export interface CanonicalVideoRow {
  id: string
@@ -79,6 +87,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "views",
    label: "Views",
    unit: "count",
+   apiFieldName: "views",
+   displayVariants: {
+    tableHeader: "Views",
+    commonName: "Views",
+    nickname: "Views",
+   },
    aliases: ["Views", "View count", "views", "viewCount", "screenPageViews"],
    rawPolicy: "raw_preferred",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
@@ -87,6 +101,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "watchHours",
    label: "Watch Time (Hours)",
    unit: "hours",
+   apiFieldName: "estimatedMinutesWatched",
+   displayVariants: {
+    tableHeader: "Watch Time (Hours)",
+    commonName: "Watch Time (Hours)",
+    nickname: "Watch Hrs",
+   },
    aliases: [
     "Watch Time (Hours)",
     "Watch time (hours)",
@@ -104,6 +124,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "likes",
    label: "Likes",
    unit: "count",
+   apiFieldName: "likes",
+   displayVariants: {
+    tableHeader: "Likes +",
+    commonName: "Likes",
+    nickname: "Likes +",
+   },
    aliases: ["Likes", "likes", "likeCount"],
    rawPolicy: "raw_preferred",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
@@ -112,6 +138,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "dislikes",
    label: "Dislikes",
    unit: "count",
+   apiFieldName: "dislikes",
+   displayVariants: {
+    tableHeader: "Likes -",
+    commonName: "Dislikes",
+    nickname: "Likes -",
+   },
    aliases: ["Dislikes", "dislikes", "dislikeCount"],
    rawPolicy: "raw_preferred",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
@@ -120,6 +152,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "comments",
    label: "Comments",
    unit: "count",
+   apiFieldName: "comments",
+   displayVariants: {
+    tableHeader: "Comments",
+    commonName: "Comments",
+    nickname: "Comments",
+   },
    aliases: ["Comments", "comments", "commentCount", "Comments added"],
    rawPolicy: "raw_preferred",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
@@ -128,6 +166,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "shares",
    label: "Shares",
    unit: "count",
+   apiFieldName: "shares",
+   displayVariants: {
+    tableHeader: "Shares",
+    commonName: "Shares",
+    nickname: "Shares",
+   },
    aliases: ["Shares", "shares", "shareCount"],
    rawPolicy: "raw_preferred",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
@@ -136,6 +180,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "subscribersGained",
    label: "Subscribers Gained",
    unit: "count",
+   apiFieldName: "subscribersGained",
+   displayVariants: {
+    tableHeader: "Subs +",
+    commonName: "Subscribers Gained",
+    nickname: "Subs +",
+   },
    aliases: [
     "Subscribers Gained",
     "Subscribers gained",
@@ -147,10 +197,30 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    rawPolicy: "raw_preferred",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
   },
+  subscribersLost: {
+   key: "subscribersLost",
+   label: "Subscribers Lost",
+   unit: "count",
+   apiFieldName: "subscribersLost",
+   displayVariants: {
+    tableHeader: "Subs -",
+    commonName: "Subscribers Lost",
+    nickname: "Subs -",
+   },
+   aliases: ["Subscribers Lost", "Subscribers lost", "subscribersLost", "Subs -"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
   impressions: {
    key: "impressions",
    label: "Impressions",
    unit: "count",
+   apiFieldName: "videoThumbnailImpressions",
+   displayVariants: {
+    tableHeader: "Impressions",
+    commonName: "Impressions",
+    nickname: "Impressions",
+   },
    aliases: ["Impressions", "videoThumbnailImpressions", "sessions"],
    rawPolicy: "derived_ok",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
@@ -159,6 +229,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "revenue",
    label: "Revenue",
    unit: "currency",
+   apiFieldName: "estimatedRevenue",
+   displayVariants: {
+    tableHeader: "Revenue",
+    commonName: "Estimated Revenue",
+    nickname: "Revenue",
+   },
    aliases: [
     "Revenue",
     "Estimated revenue",
@@ -173,6 +249,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "cpm",
    label: "CPM",
    unit: "currency",
+   apiFieldName: "cpm",
+   displayVariants: {
+    tableHeader: "CPM",
+    commonName: "CPM",
+    nickname: "CPM",
+   },
    aliases: ["CPM", "CPM (USD)", "cpm"],
    rawPolicy: "derived_ok",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
@@ -181,6 +263,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "rpm",
    label: "RPM",
    unit: "currency",
+   apiFieldName: "estimatedRevenuePer1000Views", // Using closest, although often derived
+   displayVariants: {
+    tableHeader: "RPM",
+    commonName: "RPM",
+    nickname: "RPM",
+   },
    aliases: [
     "RPM",
     "RPM (USD)",
@@ -195,6 +283,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "ctr",
    label: "Click-Through Rate (CTR)",
    unit: "percent",
+   apiFieldName: "videoThumbnailImpressionsClickRate",
+   displayVariants: {
+    tableHeader: "CTR",
+    commonName: "Click-Through Rate (CTR)",
+    nickname: "CTR",
+   },
    aliases: [
     "CTR (%)",
     "CTR",
@@ -212,6 +306,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "newViewers",
    label: "New Viewers",
    unit: "count",
+   apiFieldName: "newViewers",
+   displayVariants: {
+    tableHeader: "New",
+    commonName: "New Viewers",
+    nickname: "New",
+   },
    aliases: ["New Viewers", "New viewers", "newViewers"],
    rawPolicy: "raw_preferred",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
@@ -220,6 +320,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "returningViewers",
    label: "Returning Viewers",
    unit: "count",
+   apiFieldName: "returningViewers",
+   displayVariants: {
+    tableHeader: "Returning",
+    commonName: "Returning Viewers",
+    nickname: "Returning",
+   },
    aliases: ["Returning Viewers", "Returning viewers", "returningViewers"],
    rawPolicy: "raw_preferred",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
@@ -228,6 +334,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "casualViewers",
    label: "Casual viewers",
    unit: "count",
+   apiFieldName: "casualViewers",
+   displayVariants: {
+    tableHeader: "Casual",
+    commonName: "Casual viewers",
+    nickname: "Casual",
+   },
    aliases: ["Casual viewers", "Casual Viewers", "casualViewers"],
    rawPolicy: "raw_preferred",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
@@ -236,6 +348,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "regularViewers",
    label: "Regular viewers",
    unit: "count",
+   apiFieldName: "regularViewers",
+   displayVariants: {
+    tableHeader: "Regular",
+    commonName: "Regular viewers",
+    nickname: "Regular",
+   },
    aliases: ["Regular viewers", "Regular Viewers", "regularViewers"],
    rawPolicy: "raw_preferred",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
@@ -244,6 +362,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "uniqueViewers",
    label: "Unique viewers",
    unit: "count",
+   apiFieldName: "uniqueViewers",
+   displayVariants: {
+    tableHeader: "Unique",
+    commonName: "Unique viewers",
+    nickname: "Unique",
+   },
    aliases: ["Unique viewers", "Unique Viewers", "uniqueViewers", "Unique viewers"],
    rawPolicy: "raw_preferred",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
@@ -252,6 +376,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "avdSeconds",
    label: "AVD (Average View Duration)",
    unit: "seconds",
+   apiFieldName: "averageViewDuration",
+   displayVariants: {
+    tableHeader: "AVD",
+    commonName: "AVD (Average View Duration)",
+    nickname: "AVD",
+   },
    aliases: [
     "AVD (Sec)",
     "AVD (Average View Duration)",
@@ -265,6 +395,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "avp",
    label: "AVP (%)",
    unit: "percent",
+   apiFieldName: "averageViewPercentage",
+   displayVariants: {
+    tableHeader: "AVP %",
+    commonName: "AVP (%)",
+    nickname: "AVP",
+   },
    aliases: [
     "AVP (%)",
     "Average percentage viewed (%)",
@@ -278,6 +414,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "engagedViews",
    label: "Engaged views",
    unit: "count",
+   apiFieldName: "engagedViews",
+   displayVariants: {
+    tableHeader: "Engaged",
+    commonName: "Engaged views",
+    nickname: "Engaged",
+   },
    aliases: ["Engaged views", "Engaged Views", "engagedViews"],
    rawPolicy: "raw_preferred",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
@@ -286,6 +428,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "stw",
    label: "STW %",
    unit: "percent",
+   apiFieldName: "stayedToWatch", // Internal to Shorts
+   displayVariants: {
+    tableHeader: "STW %",
+    commonName: "STW %",
+    nickname: "STW",
+   },
    aliases: ["STW %", "Stayed to watch (%)", "stayedToWatch", "stayedToWatch0:30"],
    rawPolicy: "raw_preferred",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
@@ -294,6 +442,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "endScreenClickRate",
    label: "End screen click rate",
    unit: "percent",
+   apiFieldName: "endScreenClickRate", // Derived from endScreenElementClicks / endScreenElementImpressions
+   displayVariants: {
+    tableHeader: "End Screen %",
+    commonName: "End screen click rate",
+    nickname: "End Screen %",
+   },
    aliases: [
     "End screen click rate",
     "Clicks per end screen element shown (%)",
@@ -306,6 +460,12 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    key: "cardClickRate",
    label: "Card click rate",
    unit: "percent",
+   apiFieldName: "cardClickRate",
+   displayVariants: {
+    tableHeader: "Card %",
+    commonName: "Card click rate",
+    nickname: "Card %",
+   },
    aliases: ["Card click rate", "annotationClickThroughRate", "cardClickRate"],
    rawPolicy: "raw_preferred",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
@@ -318,6 +478,7 @@ export const canonicalMetricOrder: CanonicalMetricKey[] = [
  "comments",
  "shares",
  "subscribersGained",
+ "subscribersLost",
  "impressions",
  "revenue",
  "cpm",
@@ -450,6 +611,25 @@ export const emptyMetricCells = (source: MetricSource): Record<CanonicalMetricKe
   },
   {} as Record<CanonicalMetricKey, MetricCell>,
  )
+
+export const resolveAlias = (rawKey: string): CanonicalMetricKey | null => {
+ const normalized = canonicalizeMetricKey(rawKey)
+ return metricAliasMap[normalized] || null
+}
+
+export const getDisplayLabel = (
+ key: CanonicalMetricKey,
+ variant: "tableHeader" | "commonName" | "nickname",
+): string => {
+ const def = METRIC_REGISTRY[key]
+ if (!def || !def.displayVariants) return key
+ return def.displayVariants[variant]
+}
+
+export const getApiFieldName = (key: CanonicalMetricKey): string | null => {
+ const def = METRIC_REGISTRY[key]
+ return def ? def.apiFieldName : null
+}
 
 export const toMetricSource = (value: "api" | "csv" | "ga4" | "hybrid"): MetricSource => {
  if (value === "csv") return "csv_table"

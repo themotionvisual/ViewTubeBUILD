@@ -17,6 +17,7 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { Download, Edit3, Lock, LockOpen, RotateCcw, Upload } from "lucide-react"
+import { DashboardBarrier } from "./DashboardBarrier"
 import { DASHBOARD_WIDGET_REGISTRY, DASHBOARD_WIDGET_BY_ID } from "./WidgetRegistry"
 import { WidgetPickerPanel } from "./WidgetPickerPanel"
 import {
@@ -24,9 +25,11 @@ import {
   importDashboardLayout,
   loadDashboardLayout,
   nextSizeBucket,
+  nextHeightBucket,
   resetDashboardLayout,
   saveDashboardLayout,
   sizeBucketClassName,
+  heightBucketClassName,
 } from "./storage"
 import type { DashboardLayoutState } from "./types"
 import type { DashboardData } from "./useDashboardData"
@@ -151,6 +154,24 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
     })
   }
 
+  const onCycleHeight = (widgetId: string) => {
+    if (!canDrag) return
+    setLayout((prev) => {
+      const current = prev.instances[widgetId]
+      if (!current) return prev
+      return {
+        ...prev,
+        instances: {
+          ...prev.instances,
+          [widgetId]: {
+            ...current,
+            height: nextHeightBucket(widgetId, current.height),
+          },
+        },
+      }
+    })
+  }
+
   const onRemoveWidget = (widgetId: string) => {
     if (!canDrag) return
     toggleWidgetVisibility(widgetId)
@@ -193,58 +214,15 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
   }
 
   return (
+    <DashboardBarrier>
     <div className="w-full max-w-[1720px] mx-auto pb-24 px-4 md:px-6 xl:px-8">
-       <div className="sticky top-2 z-40 mb-4 border-[4px] border-black rounded-[16px] bg-white shadow-[6px_6px_0px_0px_rgba(201,248,48,0.5)] overflow-hidden">
-         <div className="h-[56px] border-b-[4px] border-black bg-[#C9F830] px-3 md:px-4 flex items-center justify-between gap-3">
-           <div className="min-w-0">
-             <h1 className="text-lg md:text-2xl font-[1000] uppercase leading-none tracking-tight">Standard Dashboard</h1>
-             <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.12em] opacity-65 truncate">
-               Modular toolbox shell with drag, add/remove, resize buckets, and persisted layout
-             </p>
-           </div>
-           <div className="flex items-center gap-2">
-             <button
-               onClick={() => setEditMode((prev) => !prev)}
-               className="h-9 px-3 border-[3px] border-black rounded-[12px] bg-white inline-flex items-center gap-2 text-[10px] font-black uppercase">
-               <Edit3 size={14} />
-               {editMode ? "Done" : "Rearrange"}
-             </button>
-             <button
-               onClick={() => setLayout((prev) => ({ ...prev, locked: !prev.locked }))}
-               className="h-9 px-3 border-[3px] border-black rounded-[12px] bg-white inline-flex items-center gap-2 text-[10px] font-black uppercase">
-               {layout.locked ? <Lock size={14} /> : <LockOpen size={14} />}
-               {layout.locked ? "Locked" : "Unlocked"}
-             </button>
-             <button
-               onClick={() => setPickerOpen(true)}
-               className="h-9 px-3 border-[3px] border-black rounded-[12px] bg-white text-[10px] font-black uppercase">
-               Widgets
-             </button>
-             <button
-               onClick={() => setLayout(resetDashboardLayout())}
-               className="h-9 px-3 border-[3px] border-black rounded-[12px] bg-white inline-flex items-center gap-2 text-[10px] font-black uppercase">
-               <RotateCcw size={14} /> Reset
-             </button>
-             <button
-               onClick={handleExport}
-               className="h-9 px-3 border-[3px] border-black rounded-[12px] bg-white inline-flex items-center gap-2 text-[10px] font-black uppercase">
-               <Download size={14} /> Export
-             </button>
-             <button
-               onClick={handleImportClick}
-               className="h-9 px-3 border-[3px] border-black rounded-[12px] bg-white inline-flex items-center gap-2 text-[10px] font-black uppercase">
-               <Upload size={14} /> Import
-             </button>
-             <input
-               ref={fileInputRef}
-               type="file"
-               accept="application/json"
-               onChange={handleImportFile}
-               className="hidden"
-             />
-           </div>
-         </div>
-       </div>
+       <input
+         ref={fileInputRef}
+         type="file"
+         accept="application/json"
+         onChange={handleImportFile}
+         className="hidden"
+       />
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={visibleWidgetIds} strategy={rectSortingStrategy}>
@@ -259,18 +237,29 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
                    key={widgetId}
                    id={widgetId}
                    disabled={!canDrag}
-                   className={sizeBucketClassName(instance.size)}>
-                   <WidgetRenderer
-                     widget={widget}
-                     instance={instance}
-                     editMode={editMode}
-                     canEdit={canDrag}
-                     data={data}
-                     onNavigate={onNavigate}
-                     onToggleCollapse={onToggleCollapse}
-                     onCycleSize={onCycleSize}
-                     onRemoveWidget={onRemoveWidget}
-                   />
+                   className={`${sizeBucketClassName(instance.size)} ${heightBucketClassName(instance.height)} transition-all duration-300`}>
+                    <WidgetRenderer
+                      widget={widget}
+                      instance={instance}
+                      editMode={editMode}
+                      canEdit={canDrag}
+                      data={data}
+                      onNavigate={onNavigate}
+                      onToggleCollapse={onToggleCollapse}
+                      onCycleSize={onCycleSize}
+                      onCycleHeight={onCycleHeight}
+                      onRemoveWidget={onRemoveWidget}
+                      dashboardControls={{
+                        editMode,
+                        setEditMode,
+                        locked: layout.locked,
+                        toggleLock: () => setLayout(prev => ({ ...prev, locked: !prev.locked })),
+                        openPicker: () => setPickerOpen(true),
+                        resetLayout: () => setLayout(resetDashboardLayout()),
+                        handleExport,
+                        handleImportClick
+                      }}
+                    />
                  </SortableWidgetItem>
                )
              })}
@@ -286,5 +275,6 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
         onToggleWidget={toggleWidgetVisibility}
       />
     </div>
+    </DashboardBarrier>
   )
 }

@@ -1,4 +1,5 @@
 import { toNumber } from "./dataUtils"
+import { METRIC_REGISTRY } from "./analyticsContract"
 
 /**
  * YouTube Data Normalization Service
@@ -18,84 +19,9 @@ export const HEADER_MAP: Record<string, string> = {
  "Viewer gender": "Dimension",
  Date: "Date",
 
- // Core Metrics
- Views: "Views",
- "View count": "Views",
- "Watch time (hours)": "Watch Time (Hours)",
- "Watch Time (Hours)": "Watch Time (Hours)",
- "Estimated revenue": "Revenue",
- "Estimated revenue (USD)": "Revenue",
- "Estimated revenue (Local)": "Revenue",
- estimatedRevenue: "Revenue",
- Revenue: "Revenue",
- "Your estimated revenue (USD)": "Revenue",
- RPM: "RPM",
- "RPM (USD)": "RPM",
- CPM: "CPM",
- "CPM (USD)": "CPM",
- Subscribers: "Subscribers Gained",
- "Subscribers gained": "Subscribers Gained",
- subscribersGained: "Subscribers Gained",
-
- // Engagement
- Impressions: "Impressions",
- impressions: "Impressions",
- videoThumbnailImpressions: "Impressions",
- "Impressions click-through rate (%)": "CTR (%)",
- impressionClickThroughRate: "CTR (%)",
- videoThumbnailImpressionsClickRate: "CTR (%)",
- "CTR (%)": "CTR (%)",
- "Average view duration": "AVD (Sec)",
- averageViewDuration: "AVD (Sec)",
- "Average view percentage (%)": "AVP (%)",
- averageViewPercentage: "AVP (%)",
- "AVP (%)": "AVP (%)",
- estimatedMinutesWatched: "Watch Time (Hours)",
- Likes: "Likes",
- likes: "Likes",
- Dislikes: "Dislikes",
- dislikes: "Dislikes",
- Comments: "Comments",
- comments: "Comments",
- "Comments added": "Comments",
- Shares: "Shares",
- shares: "Shares",
- Hypes: "Hypes",
- "Hype points": "Hype Points",
-
- // Audience
- "Unique viewers": "Unique Viewers",
- "New viewers": "New Viewers",
- "Returning viewers": "Returning Viewers",
- "Casual viewers": "Casual Viewers",
- "Regular viewers": "Regular Viewers",
- "Average views per viewer": "Avg Views Per Viewer",
-
- // Shorts-specific engagement (CSV export column names)
- "Stayed to watch (%)": "STW %",
- "Stayed to watch at 0:30 (%)": "STW %",
- stayedToWatch: "STW %",
-
- // End screen & cards (CSV export column names)
- "End screen click rate": "End screen click rate",
- "Clicks per end screen element shown (%)": "End screen click rate",
- endScreenClickRate: "End screen click rate",
- "Card click rate": "Card click rate",
- cardClickRate: "Card click rate",
- annotationClickThroughRate: "Card click rate",
-
- // Engaged views
- "Engaged views": "Engaged views",
- "Engaged Views": "Engaged views",
- engagedViews: "Engaged views",
-
  // Shorts feed views (used for format detection AND as a metric)
  "Views from Shorts feed": "Shorts feed views",
  "Shorts feed views": "Shorts feed views",
-
- // Subscribers lost
- "Subscribers lost": "Subscribers Lost",
- subscribersLost: "Subscribers Lost",
 
  // Membership & Shopping
  "Members gained": "Members Gained",
@@ -104,6 +30,14 @@ export const HEADER_MAP: Record<string, string> = {
  "Product clicks": "Product Clicks",
  Orders: "Orders",
 }
+
+Object.values(METRIC_REGISTRY).forEach((def) => {
+ const standardKey = def.displayVariants.commonName
+ def.aliases.forEach((alias) => {
+  HEADER_MAP[alias] = standardKey
+ })
+ HEADER_MAP[def.key] = standardKey
+})
 
 export const normalizeRow = (row: Record<string, any>): Record<string, any> => {
  const normalized: Record<string, any> = {}

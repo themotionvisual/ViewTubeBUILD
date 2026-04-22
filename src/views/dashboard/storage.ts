@@ -1,12 +1,14 @@
-import { DASHBOARD_TOKENS, DASHBOARD_LAYOUT_STORAGE_KEY, DASHBOARD_SCHEMA_VERSION, SIZE_BUCKET_ORDER } from "./tokens"
+import { DASHBOARD_TOKENS, DASHBOARD_LAYOUT_STORAGE_KEY, DASHBOARD_SCHEMA_VERSION, SIZE_BUCKET_ORDER, HEIGHT_BUCKET_ORDER } from "./tokens"
 import { DASHBOARD_WIDGET_BY_ID, DEFAULT_DASHBOARD_WIDGET_ORDER } from "./WidgetRegistry"
-import type { DashboardLayoutState, DashboardSizeBucket, WidgetInstanceState } from "./types"
+import type { DashboardLayoutState, DashboardSizeBucket, DashboardHeightBucket, WidgetInstanceState } from "./types"
 
 const SIZE_TO_INDEX = Object.fromEntries(SIZE_BUCKET_ORDER.map((size, idx) => [size, idx])) as Record<DashboardSizeBucket, number>
+const HEIGHT_TO_INDEX = Object.fromEntries(HEIGHT_BUCKET_ORDER.map((size, idx) => [size, idx])) as Record<DashboardHeightBucket, number>
 
 const defaultInstanceFor = (widgetId: string): WidgetInstanceState => ({
   collapsed: false,
   size: DASHBOARD_WIDGET_BY_ID[widgetId]?.defaultSize || "quarter",
+  height: DASHBOARD_WIDGET_BY_ID[widgetId]?.defaultHeight || "medium",
   pinned: false,
   focus: false,
 })
@@ -34,6 +36,16 @@ const clampSize = (widgetId: string, size: DashboardSizeBucket): DashboardSizeBu
   const currentIdx = SIZE_TO_INDEX[size]
   const clampedIdx = Math.min(maxIdx, Math.max(minIdx, currentIdx))
   return SIZE_BUCKET_ORDER[clampedIdx]
+}
+
+const clampHeight = (widgetId: string, height: DashboardHeightBucket): DashboardHeightBucket => {
+  const widget = DASHBOARD_WIDGET_BY_ID[widgetId]
+  if (!widget) return height
+  const minIdx = HEIGHT_TO_INDEX[widget.minHeight]
+  const maxIdx = HEIGHT_TO_INDEX[widget.maxHeight]
+  const currentIdx = HEIGHT_TO_INDEX[height]
+  const clampedIdx = Math.min(maxIdx, Math.max(minIdx, currentIdx))
+  return HEIGHT_BUCKET_ORDER[clampedIdx]
 }
 
 export const normalizeDashboardLayout = (raw: Partial<DashboardLayoutState> | null | undefined): DashboardLayoutState => {
@@ -67,6 +79,7 @@ export const normalizeDashboardLayout = (raw: Partial<DashboardLayoutState> | nu
       pinned: Boolean(candidate.pinned),
       focus: Boolean(candidate.focus),
       size: clampSize(id, candidate.size || fallbackInstance.size),
+      height: clampHeight(id, candidate.height || fallbackInstance.height),
     }
   })
 
@@ -126,11 +139,29 @@ export const nextSizeBucket = (widgetId: string, current: DashboardSizeBucket): 
   return SIZE_BUCKET_ORDER[next]
 }
 
+export const nextHeightBucket = (widgetId: string, current: DashboardHeightBucket): DashboardHeightBucket => {
+  const widget = DASHBOARD_WIDGET_BY_ID[widgetId]
+  if (!widget) return current
+  const minIdx = HEIGHT_TO_INDEX[widget.minHeight]
+  const maxIdx = HEIGHT_TO_INDEX[widget.maxHeight]
+  const idx = HEIGHT_TO_INDEX[current]
+  const candidate = idx >= maxIdx ? minIdx : idx + 1
+  const next = Math.min(maxIdx, Math.max(minIdx, candidate))
+  return HEIGHT_BUCKET_ORDER[next]
+}
+
 export const sizeBucketClassName = (size: DashboardSizeBucket): string => {
   if (size === "full") return "col-span-12"
   if (size === "half") return "col-span-12 md:col-span-6"
   if (size === "third") return "col-span-12 md:col-span-6 lg:col-span-4"
   return "col-span-12 md:col-span-6 lg:col-span-4 xl:col-span-3"
+}
+
+export const heightBucketClassName = (height: DashboardHeightBucket): string => {
+  if (height === "short") return "h-[160px]"
+  if (height === "medium") return "h-[260px]"
+  if (height === "tall") return "h-[400px]"
+  return "h-[260px]"
 }
 
 export const widgetCardShellClass =

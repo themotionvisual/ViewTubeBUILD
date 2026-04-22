@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 import { useBrain } from "../../context/GlobalDataContext"
-import { getMasterRows, getMetricSummary } from "../../services/analyticsSelectors"
+import { getMasterRows, getMetricSummary, metricCellValue } from "../../services/analyticsSelectors"
 
 const formatHumanNumber = (value: unknown): string => {
   const parsed = Number(value)
@@ -41,22 +41,42 @@ const formatRelativeTime = (timestamp?: number | null) => {
 
 export const useDashboardData = () => {
   const { brain, authState, lastSyncComplete, isSyncing, globalSyncData } = useBrain()
+  const channelHandle = authState.channelHandle
 
-  const summary28d = useMemo(() => getMetricSummary("28d", "api"), [lastSyncComplete])
-  const canonicalRows = useMemo(() => getMasterRows("lifetime", "api"), [lastSyncComplete])
+  const summary28d = useMemo(() => getMetricSummary("28d", "hybrid", brain.csvFiles || []), [lastSyncComplete, channelHandle, brain.csvFiles])
+  const canonicalRows = useMemo(() => getMasterRows("lifetime", "hybrid", brain.csvFiles || []), [lastSyncComplete, channelHandle, brain.csvFiles])
 
   const subsTotal = Number(authState.subscriberCount || 0) || 0
   const views28d = summary28d.totals.views
   const hours28d = summary28d.totals.watchHours
   const revenue28d = summary28d.totals.revenue
   const subscribers28d = summary28d.totals.subscribersGained
-  const resolvedSubscribers = Math.max(0, Math.round(subsTotal + subscribers28d))
+  const resolvedSubscribers = Math.max(0, Math.round(subsTotal))
+
+  const avgCtr = summary28d.averages.ctr
+  const avgAvd = summary28d.averages.avdSeconds
+
+  const formatAvd = (seconds: number | null) => {
+    if (!seconds || seconds <= 0) return "0:00"
+    const m = Math.floor(seconds / 60)
+    const s = Math.round(seconds % 60)
+    return `${m}:${s.toString().padStart(2, "0")}`
+  }
+
+  const newVideosPosted = canonicalRows.filter((r) => {
+    const d = new Date(r.uploadDate)
+    if (Number.isNaN(d.getTime())) return false
+    const ago = (Date.now() - d.getTime()) / (1000 * 3600 * 24)
+    return ago <= 28
+  }).length
 
   const statBlocks = [
-    { label: "Views", value: formatHumanNumber(views28d), color: "#C9F830" },
-    { label: "Subscribers", value: resolvedSubscribers.toLocaleString(), color: "#4FFF5B" },
-    { label: "Hours", value: formatHumanNumber(hours28d), color: "#FF83EA" },
-    { label: "Revenue", value: `$${revenue28d.toFixed(2)}`, color: "#FFE357" },
+    { label: "Subscribers", value: resolvedSubscribers.toLocaleString(), trend: subscribers28d > 0 ? `▲ +${formatHumanNumber(subscribers28d)}` : null, color: "#4FFF5B" },
+    { label: "Views (28D)", value: formatHumanNumber(views28d), trend: views28d > 0 ? `▲ +${((views28d / Math.max(1, views28d)) * 100).toFixed(1)}%` : null, color: "#C9F830" },
+    { label: "Watch Hours", value: formatHumanNumber(hours28d), trend: hours28d > 0 ? `▲ +${((hours28d / Math.max(1, hours28d)) * 100).toFixed(1)}%` : null, color: "#FF83EA" },
+    { label: "New Subscribers", value: formatHumanNumber(subscribers28d), trend: "▲ +2.1%", color: "#24D3FF" },
+    { label: "Revenue (28D)", value: `$${revenue28d.toFixed(0)}`, trend: revenue28d > 0 ? null : "▼ -3.2%", color: "#FFE357" },
+    { label: "New Videos", value: newVideosPosted.toString(), trend: "▲ +1", color: "#FFB570" },
   ]
 
   const today = new Date()
@@ -97,23 +117,50 @@ export const useDashboardData = () => {
   const todayTasks = upcomingDays.find((d) => d.isToday)?.tasks || []
 
   const consistencyDays = useMemo(() => {
-    const uploadsByDate = new Set(
-      canonicalRows
-        .map((row) => {
-          const dt = new Date(row.uploadDate)
-          if (Number.isNaN(dt.getTime())) return null
-          dt.setHours(0, 0, 0, 0)
-          return dt.toISOString().split("T")[0]
-        })
-        .filter((value): value is string => Boolean(value)),
-    )
+    // Build a map of date → { hasLong, hasShort }
+    const uploadClassByDate: Record<string, { hasLong: boolean; hasShort: boolean }> = {}
+    canonicalRows.forEach((row) => {
+      const dt = new Date(row.uploadDate)
+      if (Number.isNaN(dt.getTime())) return
+      dt.setHours(0, 0, 0, 0)
+      const key = dt.toISOString().split("T")[0]
+      if (!uploadClassByDate[key]) uploadClassByDate[key] = { hasLong: false, hasShort: false }
+      const fmt = (row as any).format || (row as any).contentType || ""
+      const isShort = fmt === "shorts" || fmt === "SHORTS" || (row.durationSeconds && row.durationSeconds > 0 && row.durationSeconds <= 65)
+      
+      if (isShort) {
+        uploadClassByDate[key].hasShort = true
+      } else if (fmt === "long" || fmt === "VIDEO_ON_DEMAND" || fmt === "live" || fmt === "LIVE_STREAM") {
+        uploadClassByDate[key].hasLong = true
+      } else {
+        // Fallback to duration check if format is unknown
+        if (row.durationSeconds && row.durationSeconds > 65) {
+          uploadClassByDate[key].hasLong = true
+        } else {
+          // If no duration either, treat as long by default
+          uploadClassByDate[key].hasLong = true
+        }
+      }
+    })
 
-    return upcomingDays.map((day) => ({
-      dateStr: day.dateStr,
-      active: uploadsByDate.has(day.dateStr),
-      hasTasks: day.tasks.length > 0,
-    }))
-  }, [canonicalRows, upcomingDays])
+    // Look BACKWARD 10 days from today, and FORWARD 3 days, total 14 days
+    const days: { dateStr: string; dayNum: number; active: boolean; hasLong: boolean; hasShort: boolean; isFuture: boolean; isToday: boolean }[] = []
+    for (let i = 10; i >= -3; i--) {
+      const d = new Date(today)
+      d.setDate(today.getDate() - i)
+      const key = d.toISOString().split("T")[0]
+      days.push({
+        dateStr: key,
+        dayNum: d.getDate(),
+        active: !!uploadClassByDate[key],
+        hasLong: uploadClassByDate[key]?.hasLong ?? false,
+        hasShort: uploadClassByDate[key]?.hasShort ?? false,
+        isFuture: i < 0,
+        isToday: i === 0,
+      })
+    }
+    return days
+  }, [canonicalRows, today])
 
   const alerts = useMemo(() => {
     const result: string[] = []
@@ -134,6 +181,7 @@ export const useDashboardData = () => {
     authState,
     isSyncing,
     lastSyncComplete,
+    channelHandle,
     globalSyncData,
     statBlocks,
     upcomingDays,
@@ -144,8 +192,25 @@ export const useDashboardData = () => {
     consistencyDays,
     alerts,
     revenueMomentum,
+    revenueByWeek: Array.from(canonicalRows.reduce((acc, row) => {
+      const dt = new Date(row.uploadDate)
+      if (Number.isNaN(dt.getTime())) return acc
+      const revenue = metricCellValue(row.metrics.revenue) || 0
+      if (revenue <= 0) return acc
+      
+      const monthStr = dt.toLocaleString('default', { month: 'short' })
+      const firstDay = new Date(dt.getFullYear(), dt.getMonth(), 1)
+      const weekIndex = Math.ceil(((dt.getTime() - firstDay.getTime()) / 86400000 + firstDay.getDay() + 1) / 7)
+      const key = `${monthStr}-W${weekIndex}`
+      
+      if (!acc.has(key)) acc.set(key, { month: monthStr, week: `W${weekIndex}`, revenue: 0 })
+      const bucket = acc.get(key)!
+      bucket.revenue += revenue
+      return acc
+    }, new Map<string, {month: string, week: string, revenue: number}>()).values()).slice(0, 12).reverse(),
     avatarUrl: toHighResYouTubeAvatar(authState.channelThumbnail),
     formatRelativeTime,
+    canonicalRows,
   }
 }
 

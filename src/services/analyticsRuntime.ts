@@ -36,7 +36,7 @@ export const getStoredStorageMode = (): StorageMode => {
   localStorage.setItem(STORAGE_MODE_KEY, "sync")
   return "sync"
  }
- return "both"
+ return "sync"
 }
 
 export const setStoredStorageMode = (mode: StorageMode): void => {

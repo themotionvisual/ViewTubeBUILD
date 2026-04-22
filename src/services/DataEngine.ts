@@ -17,6 +17,18 @@ export type DataForgeRow = Record<string, unknown> & {
  titleLength?: number
  engagementRate?: number
  adjustedAVP?: number
+ thumbnailImpressions?: number
+ thumbnailCtr?: number
+ premiumViews?: number
+ premiumWatchTime?: number
+ viewerLoggedInPct?: number
+ cardCtr?: number
+ adImpressions?: number
+ monetizedPlaybacks?: number
+ grossRevenue?: number
+ adRevenue?: number
+ cpm?: number
+ relativeRetention?: number
 }
 
 export interface DataForgeIngestResult {
@@ -180,10 +192,7 @@ export const detectContentTagFromRows = (
    row["Average view duration"] ?? row["Duration"] ?? 0,
   )
 
-  if (
-   stayedToWatch > 0 ||
-   shortsFeedViews > 0
-  ) {
+  if (stayedToWatch > 0 || shortsFeedViews > 0) {
    shortEvidence += 1
   }
   if (endScreenShown > 0 || durationSec > 180) {
@@ -301,11 +310,7 @@ export const inferAnalyticsWindowFromName = (
  if (lower.includes("7d")) return "7d"
  if (lower.includes("28d") || lower.includes("30d")) return "28d"
  if (lower.includes("90d")) return "90d"
- if (
-  lower.includes("365d") ||
-  lower.includes("1y") ||
-  lower.includes("1yr")
- )
+ if (lower.includes("365d") || lower.includes("1y") || lower.includes("1yr"))
   return "365d"
 
  return null
@@ -429,7 +434,6 @@ export const getCsvTagColorClass = (tag: string): string => {
  }
 }
 
-
 // ==========================================
 // NORMALIZATION & ENRICHMENT
 // ==========================================
@@ -542,16 +546,74 @@ export const normalizeAndEnrichRow = (
  if (revenue <= 0 && rpm > 0 && views > 0) revenue = (rpm * views) / 1000
 
  const engagementRate =
-  views > 0
-   ? Number(Math.max(0, ((likes + comments + shares) / views) * 100).toFixed(1))
-   : 0
+  views > 0 ?
+   Number(Math.max(0, ((likes + comments + shares) / views) * 100).toFixed(1))
+  : 0
 
- const engagedViews = firstDefinedNumber(base, ["Engaged views", "Engaged Views"]) ?? 0
+ const engagedViews =
+  firstDefinedNumber(base, ["Engaged views", "Engaged Views"]) ?? 0
  const dislikes = firstDefinedNumber(base, ["Dislikes", "dislikes"]) ?? 0
  const stw = views > 0 ? (engagedViews / views) * 100 : 0
 
  const title = firstText(base, ["Video title", "Video", "Dimension"])
  const titleLength = title.length
+
+ // Advanced Reach & Context
+ const thumbnailImpressions =
+  firstDefinedNumber(base, [
+   "videoThumbnailImpressions",
+   "Thumbnail impressions",
+  ]) ?? 0
+ const thumbnailCtr =
+  firstDefinedNumber(base, [
+   "videoThumbnailImpressionsClickRate",
+   "Thumbnail CTR (%)",
+  ]) ?? 0
+ const viewerLoggedInPct =
+  firstDefinedNumber(base, ["viewerPercentage", "Logged-in viewers %"]) ?? 0
+
+ // Playlists & Premium
+ const playlistAdds =
+  firstDefinedNumber(base, ["videosAddedToPlaylists", "Playlist adds"]) ?? 0
+ const playlistRemoves =
+  firstDefinedNumber(base, [
+   "videosRemovedFromPlaylists",
+   "Playlist removes",
+  ]) ?? 0
+ const premiumViews =
+  firstDefinedNumber(base, ["redViews", "Premium views"]) ?? 0
+ const premiumWatchTime =
+  firstDefinedNumber(base, [
+   "estimatedRedMinutesWatched",
+   "Premium watch time (min)",
+  ]) ?? 0
+
+ // Cards & Engagement
+ const cardCtr =
+  firstDefinedNumber(base, ["cardClickRate", "Card CTR (%)"]) ?? 0
+ const annotationCtr =
+  firstDefinedNumber(base, [
+   "annotationClickThroughRate",
+   "Annotation CTR (%)",
+  ]) ?? 0
+
+ // Ad Performance & Deep Revenue
+ const adImpressions =
+  firstDefinedNumber(base, ["adImpressions", "Ad impressions"]) ?? 0
+ const monetizedPlaybacks =
+  firstDefinedNumber(base, ["monetizedPlaybacks", "Monetized playbacks"]) ?? 0
+ const grossRevenue =
+  firstDefinedNumber(base, ["grossRevenue", "Gross revenue (USD)"]) ?? 0
+ const adRevenue =
+  firstDefinedNumber(base, ["estimatedAdRevenue", "Ad revenue (USD)"]) ?? 0
+ const cpm = firstDefinedNumber(base, ["cpm", "CPM (USD)"]) ?? 0
+
+ // Retention Intelligence
+ const relativeRetention =
+  firstDefinedNumber(base, [
+   "relativeRetentionPerformance",
+   "Relative retention score",
+  ]) ?? 0
 
  return {
   ...base,
@@ -576,6 +638,21 @@ export const normalizeAndEnrichRow = (
   "Your estimated revenue (USD)": revenue,
   RPM: rpm,
   adjustedAVP,
+  thumbnailImpressions,
+  thumbnailCtr,
+  premiumViews,
+  premiumWatchTime,
+  viewerLoggedInPct,
+  cardCtr,
+  annotationCtr,
+  adImpressions,
+  monetizedPlaybacks,
+  grossRevenue,
+  adRevenue,
+  cpm,
+  relativeRetention,
+  playlistAdds,
+  playlistRemoves,
   engagementRate,
   engagedViews,
   dislikes,
@@ -794,9 +871,8 @@ export const ingestUnifiedRows = (params: {
  analyticsRows?: Record<string, unknown>[]
  manualRows?: Record<string, unknown>[]
 }): DataForgeIngestResult => {
- const csvRows = params.csvFiles
-  ? buildUnifiedRowsFromCsvFiles(params.csvFiles)
-  : []
+ const csvRows =
+  params.csvFiles ? buildUnifiedRowsFromCsvFiles(params.csvFiles) : []
  const analyticsRows = (params.analyticsRows || []).map((row, index) => ({
   ...normalizeAndEnrichRow(row),
   _id: `analytics-${index}`,

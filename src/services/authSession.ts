@@ -161,62 +161,23 @@ export const loginWithImplicitPopup = async (): Promise<void> => {
     const authStartedAt = Date.now();
     const maxAuthWaitMs = 2 * 60 * 1000;
 
-    // Poll for popup callback. Avoid reading popup.closed while cross-origin
-    // to prevent noisy COOP console warnings in Chromium.
+    // Poll for auth completion without reading popup.location across origins
+    // to avoid noisy COOP warnings in Chromium.
     const pollTimer = window.setInterval(() => {
       if (settled) return;
 
-      try {
-        // Try reading the popup URL (will throw if cross-origin)
-        const popupUrl = popup.location?.href;
-        if (popupUrl && popupUrl.startsWith(window.location.origin)) {
-          // If opener linkage was severed by browser policy, the popup may not
-          // be able to signal parent. Shared localStorage is enough to complete.
-          const currentToken = localStorage.getItem(KEY_ACCESS_TOKEN);
-          if (isTokenFresh(currentToken)) {
-            cleanup();
-            try { popup.close(); } catch { /* ignore */ }
-            resolve();
-            return;
-          }
+      const currentToken = localStorage.getItem(KEY_ACCESS_TOKEN);
+      if (isTokenFresh(currentToken)) {
+        cleanup();
+        try { popup.close(); } catch { /* ignore */ }
+        resolve();
+        return;
+      }
 
-          if (popup.closed) {
-            const token = localStorage.getItem(KEY_ACCESS_TOKEN);
-            if (token && isTokenFresh(token)) {
-              cleanup();
-              resolve();
-            } else {
-              cleanup();
-              reject(new Error('Authentication window was closed before completion.'));
-            }
-            return;
-          }
-
-          const hash = popup.location.hash;
-          if (hash && hash.includes('access_token')) {
-            const params = new URLSearchParams(hash.substring(1));
-            const accessToken = params.get('access_token');
-            const expiresIn = params.get('expires_in');
-            const error = params.get('error');
-
-            if (accessToken) {
-              cleanup();
-              setImplicitSession(accessToken, Number(expiresIn || 3600));
-              try { popup.close(); } catch { /* ignore */ }
-              resolve();
-              return;
-            }
-
-            if (error) {
-              cleanup();
-              try { popup.close(); } catch { /* ignore */ }
-              reject(new Error(error));
-              return;
-            }
-          }
-        }
-      } catch {
-        // Cross-origin — can't read popup URL yet, keep polling
+      if (popup.closed) {
+        cleanup();
+        reject(new Error('Authentication window was closed before completion.'));
+        return;
       }
 
       if (Date.now() - authStartedAt > maxAuthWaitMs) {

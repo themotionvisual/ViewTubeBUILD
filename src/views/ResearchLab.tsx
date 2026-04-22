@@ -12,7 +12,10 @@ import type {
  AnalysisSection,
 } from "../types"
 import { useBrain } from "../context/GlobalDataContext"
-import { getMasterRows, canonicalRowsToMasterTableRows } from "../services/analyticsSelectors"
+import {
+ getMasterRows,
+ canonicalRowsToMasterTableRows,
+} from "../services/analyticsSelectors"
 import {
  collectAvailableCanonicalStats,
  type CanonicalStatKey,
@@ -54,13 +57,16 @@ const GoogleChartWithUnifiedLoader: React.FC<any> = (props) => (
  <Chart {...props} version="current" />
 )
 
-const MemoizedGoogleChart = React.memo(GoogleChartWithUnifiedLoader, (prev: any, next: any) => {
- return (
-  prev.data === next.data &&
-  prev.options === next.options &&
-  prev.chartEvents === next.chartEvents
- )
-})
+const MemoizedGoogleChart = React.memo(
+ GoogleChartWithUnifiedLoader,
+ (prev: any, next: any) => {
+  return (
+   prev.data === next.data &&
+   prev.options === next.options &&
+   prev.chartEvents === next.chartEvents
+  )
+ },
+)
 
 // --- COMPONENT ---
 // (Component moved below to original location)
@@ -162,7 +168,6 @@ const getChartData = (chart: ChartConfig, data: any[]): any[] => {
    const xAxisVal =
     row[chart.xAxisKey] || row["Video title"] || row["Date"] || ""
    point[chart.xAxisKey] = xAxisVal
-
    ;(chart.dataKeys || []).forEach((k: string) => {
     const val = parseFloat(String(row[k] || "0").replace(/,/g, ""))
     point[k] = isNaN(val) ? 0 : val
@@ -221,9 +226,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
        className="flex justify-between gap-6 text-[11px] font-bold">
        <span className="uppercase opacity-60">{entry.name}:</span>
        <span className="font-black text-black">
-        {typeof entry.value === "number"
-         ? entry.value.toLocaleString()
-         : entry.value}
+        {typeof entry.value === "number" ?
+         entry.value.toLocaleString()
+        : entry.value}
         {entry.name.includes("%") ? "%" : ""}
        </span>
       </div>
@@ -433,9 +438,9 @@ const TrioPieCard = ({
       {displaySlice[0]}
      </span>
      <span className="text-[20px] font-black text-indigo-500 tracking-tighter leading-none">
-      {typeof displaySlice[1] === "object"
-       ? displaySlice[1].f || displaySlice[1].v
-       : displaySlice[1].toLocaleString()}
+      {typeof displaySlice[1] === "object" ?
+       displaySlice[1].f || displaySlice[1].v
+      : displaySlice[1].toLocaleString()}
      </span>
     </div>
    )}
@@ -495,11 +500,11 @@ const RenderChart: React.FC<{
           className={`border-b border-black/5 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/50"} hover:bg-[#FFDD00]/20`}>
           {row.map((cell: any, j: number) => (
            <td key={j} className="p-3 border-r border-black/5 tabular-nums">
-            {typeof cell === "number"
-             ? cell > 1
-               ? cell.toLocaleString()
-               : cell.toFixed(3)
-             : String(cell || "")}
+            {typeof cell === "number" ?
+             cell > 1 ?
+              cell.toLocaleString()
+             : cell.toFixed(3)
+            : String(cell || "")}
            </td>
           ))}
          </tr>
@@ -546,11 +551,9 @@ const RenderChart: React.FC<{
   <div
    className={`w-full flex flex-col ${isModal ? "h-full" : "h-[450px] mt-6 bg-white border-3 border-black rounded-2xl shadow-[8px_8px_0px_0px_black] overflow-hidden"}`}>
    <div className="flex-1 min-h-0">
-    {chart.provider === "google" ? (
+    {chart.provider === "google" ?
      <RenderGoogleChart chart={chart} data={chartData} />
-    ) : (
-     <div className="p-8 text-center font-black">Unknown Provider</div>
-    )}
+    : <div className="p-8 text-center font-black">Unknown Provider</div>}
    </div>
 
    <div className="bg-black text-white px-4 py-2 text-[10px] font-black uppercase tracking-widest flex justify-between items-center border-t-2 border-black">
@@ -627,9 +630,9 @@ const StationCard = ({
  const chartOptions = useMemo(() => {
   const baseArea =
    (cfg.options as any)?.chartArea ||
-   (isFullWidth
-    ? { left: 100, right: 80, top: 15, bottom: isEngagementRanker ? 50 : 30 }
-    : { left: 60, right: 60, top: 15, bottom: 30 })
+   (isFullWidth ?
+    { left: 100, right: 80, top: 15, bottom: isEngagementRanker ? 50 : 30 }
+   : { left: 60, right: 60, top: 15, bottom: 30 })
 
   return {
    legend: { position: "none" },
@@ -640,17 +643,19 @@ const StationCard = ({
    },
    backgroundColor: "transparent",
    tooltip:
-    isPieChart || isEngagementRanker /* || isBoxedChart */ // Removed isBoxedChart
-     ? { trigger: "none" }
-     : {
-        isHtml: false,
-        textStyle: {
-         fontSize: 13,
-         fontName: "Inter",
-         bold: true,
-         color: "#000000",
-        },
-       },
+    (
+     isPieChart || isEngagementRanker /* || isBoxedChart */ // Removed isBoxedChart
+    ) ?
+     { trigger: "none" }
+    : {
+      isHtml: false,
+      textStyle: {
+       fontSize: 13,
+       fontName: "Inter",
+       bold: true,
+       color: "#000000",
+      },
+     },
    hAxis: {
     gridlines: { color: "#f0f0f0" },
     baselineColor: "#000",
@@ -690,26 +695,26 @@ const StationCard = ({
      ...(cfg.options as any)?.vAxis?.titleTextStyle,
     },
    },
-   ...((cfg.options as any)?.vAxes
-    ? { vAxes: (cfg.options as any).vAxes }
-    : {}),
-   ...(isPieChart
-    ? {
-       pieSliceText: "value",
-       pieSliceBorderColor: "transparent",
-       pieSliceTextStyle: {
-        color: "white",
-        fontSize: 16,
-        fontName: "Inter",
-        bold: true,
-        ...(cfg.options as any)?.pieSliceTextStyle,
-       },
-      }
-    : {}),
+   ...((cfg.options as any)?.vAxes ?
+    { vAxes: (cfg.options as any).vAxes }
+   : {}),
+   ...(isPieChart ?
+    {
+     pieSliceText: "value",
+     pieSliceBorderColor: "transparent",
+     pieSliceTextStyle: {
+      color: "white",
+      fontSize: 16,
+      fontName: "Inter",
+      bold: true,
+      ...(cfg.options as any)?.pieSliceTextStyle,
+     },
+    }
+   : {}),
    ...cfg.options,
-   ...(isPieChart || isEngagementRanker /* || isBoxedChart */
-    ? { tooltip: { trigger: "none" } }
-    : {}), // Removed isBoxedChart
+   ...(isPieChart || isEngagementRanker /* || isBoxedChart */ ?
+    { tooltip: { trigger: "none" } }
+   : {}), // Removed isBoxedChart
    animation: { duration: isEngagementRanker ? 500 : 0, easing: "out" }, // Re-enable for Engagement Ranker
    enableInteractions: true,
   }
@@ -810,24 +815,24 @@ const StationCard = ({
  const isWaiting = currentData.length < 2
  const topItem = currentData.length > 1 ? currentData[1] : null
 
- const displayTitleRaw = hovered
-  ? hovered.title
-  : topItem
-    ? topItem[0]
-    : "Hover slice to view"
+ const displayTitleRaw =
+  hovered ? hovered.title
+  : topItem ? topItem[0]
+  : "Hover slice to view"
  const displayTitle =
-  displayTitleRaw instanceof Date
-   ? displayTitleRaw.toLocaleDateString()
-   : typeof displayTitleRaw === "object" && displayTitleRaw !== null
-     ? String(displayTitleRaw.f || displayTitleRaw.v || "")
-     : displayTitleRaw
- const displayStatRaw = hovered ? hovered.value : topItem ? topItem[1] : ""
+  displayTitleRaw instanceof Date ? displayTitleRaw.toLocaleDateString()
+  : typeof displayTitleRaw === "object" && displayTitleRaw !== null ?
+   String(displayTitleRaw.f || displayTitleRaw.v || "")
+  : displayTitleRaw
+ const displayStatRaw =
+  hovered ? hovered.value
+  : topItem ? topItem[1]
+  : ""
  const displayStat =
-  typeof displayStatRaw === "object" && displayStatRaw !== null
-   ? (displayStatRaw as any).f || (displayStatRaw as any).v
-   : typeof displayStatRaw === "number"
-     ? displayStatRaw.toLocaleString()
-     : displayStatRaw
+  typeof displayStatRaw === "object" && displayStatRaw !== null ?
+   (displayStatRaw as any).f || (displayStatRaw as any).v
+  : typeof displayStatRaw === "number" ? displayStatRaw.toLocaleString()
+  : displayStatRaw
 
  return (
   <div
@@ -921,7 +926,7 @@ const StationCard = ({
       })()}
      <div className="flex items-center gap-4 py-1.5 pr-4">
       {/* Sorting buttons moved to footer */}
-      {cfg?.title?.startsWith("Solo") ? (
+      {cfg?.title?.startsWith("Solo") ?
        <div className="flex bg-[#CCFF00] rounded-lg border-2 border-black shadow-[2px_2px_0_0_rgba(0,0,0,0.3)] min-w-[50px] overflow-hidden">
         <div className="px-2 py-1 flex items-center justify-center border-r-[2px] border-black shrink-0">
          <span className="text-[12px] font-black text-black leading-none tracking-tight">
@@ -940,18 +945,17 @@ const StationCard = ({
          ))}
         </select>
        </div>
-      ) : (
-       <div className="bg-black rounded-lg px-3 py-1 flex flex-col items-center justify-center border-2 border-black whitespace-nowrap shadow-[2px_2px_0_0_rgba(0,0,0,0.3)] min-w-[50px]">
+      : <div className="bg-black rounded-lg px-3 py-1 flex flex-col items-center justify-center border-2 border-black whitespace-nowrap shadow-[2px_2px_0_0_rgba(0,0,0,0.3)] min-w-[50px]">
         <span className="text-[18px] font-black text-white leading-none tracking-tight">
          {Math.max(0, (currentData?.length || 0) - 1)}
         </span>
         <span className="text-[9px] font-black text-[#CCFF00] uppercase tracking-widest leading-none mt-1">
-         {cfg.isEngagementRanker || cfg.id?.includes("top")
-          ? "HIGHEST"
-          : "LATEST"}
+         {cfg.isEngagementRanker || cfg.id?.includes("top") ?
+          "HIGHEST"
+         : "LATEST"}
         </span>
        </div>
-      )}
+      }
      </div>
      <button
       onClick={() => setActiveChart(cfg)}
@@ -980,9 +984,9 @@ const StationCard = ({
        style={{ backgroundColor: hovered?.color || "#000" }}
       />
       <span className="text-[21px] font-black uppercase tracking-tight text-black flex-1 break-words py-0.5 line-clamp-2 leading-tight">
-       {displayTitle === "Hover slice to view"
-        ? "SELECT DATA POINT"
-        : displayTitle}
+       {displayTitle === "Hover slice to view" ?
+        "SELECT DATA POINT"
+       : displayTitle}
       </span>
       {isEngagementRanker && (
        <>
@@ -993,42 +997,42 @@ const StationCard = ({
            label: "LIKES",
            color: "#FF7497",
            val:
-            hovered?.row !== undefined
-             ? (currentData as any)[hovered.row + 1]?.[1]
-             : topItem?.[1],
+            hovered?.row !== undefined ?
+             (currentData as any)[hovered.row + 1]?.[1]
+            : topItem?.[1],
           },
           {
            label: "COMMENTS",
            color: "#CCFF00",
            val:
-            hovered?.row !== undefined
-             ? (currentData as any)[hovered.row + 1]?.[2]
-             : topItem?.[2],
+            hovered?.row !== undefined ?
+             (currentData as any)[hovered.row + 1]?.[2]
+            : topItem?.[2],
           },
           {
            label: "SHARES",
            color: "#FFDD00",
            val:
-            hovered?.row !== undefined
-             ? (currentData as any)[hovered.row + 1]?.[3]
-             : topItem?.[3],
+            hovered?.row !== undefined ?
+             (currentData as any)[hovered.row + 1]?.[3]
+            : topItem?.[3],
           },
           {
            label: "SUBS",
            color: "#00CCFF",
            val:
-            hovered?.row !== undefined
-             ? (currentData as any)[hovered.row + 1]?.[4]
-             : topItem?.[4],
+            hovered?.row !== undefined ?
+             (currentData as any)[hovered.row + 1]?.[4]
+            : topItem?.[4],
           },
          ].map((stat, sIdx) => (
           <div
            key={sIdx}
            className="flex flex-col items-center justify-center min-w-[80px]">
            <span className="text-[18px] font-black text-black tracking-tighter tabular-nums leading-none">
-            {typeof stat.val === "object"
-             ? stat.val?.f || stat.val?.v
-             : stat.val?.toLocaleString() || "0"}
+            {typeof stat.val === "object" ?
+             stat.val?.f || stat.val?.v
+            : stat.val?.toLocaleString() || "0"}
            </span>
            <span className="text-[9px] font-black text-black/40 tracking-[0.2em] uppercase mt-1">
             {stat.label}
@@ -1053,16 +1057,15 @@ const StationCard = ({
    )}
 
    <div className="flex-1 min-h-0 bg-white p-6 relative">
-    {isWaiting ? (
+    {isWaiting ?
      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-20">
       <div className="w-8 h-8 border-4 border-black border-t-[#CCFF00] rounded-full animate-spin mb-3"></div>
       <span className="text-[10px] font-black uppercase tracking-[0.3em] text-black/40">
        Synchronizing Data...
       </span>
      </div>
-    ) : (
-     <div className="w-full h-full relative">
-      {cfg.title === "Video Value Matrix" ? (
+    : <div className="w-full h-full relative">
+      {cfg.title === "Video Value Matrix" ?
        <div className="flex flex-row h-full w-full overflow-hidden">
         {/* Left: Video Bubbles */}
         <div className="w-[30%] h-full flex flex-col p-4 border-r-4 border-black/5 overflow-y-auto custom-scrollbar">
@@ -1107,18 +1110,35 @@ const StationCard = ({
          </div>
         </div>
         {/* Right: Matrix */}
-        <div className="w-[70%] h-full">
-         <MemoizedGoogleChart
-          chartType={cfg.type as any}
-          width="100%"
-          height="100%"
-          data={currentData}
-          options={chartOptions}
-          chartEvents={chartEvents}
-         />
+        <div className="w-[70%] h-full relative">
+         {/* Quadrant Background/Labels */}
+         <div className="absolute inset-x-[15%] inset-y-[15%] pointer-events-none grid grid-cols-2 grid-rows-2 z-0">
+          <div className="flex items-start justify-start p-6">
+           <span className="text-black/10 font-black text-3xl uppercase tracking-widest textShadow-white">Hidden Gem</span>
+          </div>
+          <div className="flex items-start justify-end p-6">
+           <span className="text-black/10 font-black text-3xl uppercase tracking-widest textShadow-white">Gold Mine</span>
+          </div>
+          <div className="flex items-end justify-start p-6">
+           <span className="text-black/10 font-black text-3xl uppercase tracking-widest textShadow-white">Graveyard</span>
+          </div>
+          <div className="flex items-end justify-end p-6">
+           <span className="text-black/10 font-black text-3xl uppercase tracking-widest textShadow-white">Click Bait</span>
+          </div>
+         </div>
+         <div className="absolute inset-0 z-10 pointer-events-auto">
+          <MemoizedGoogleChart
+           chartType={cfg.type as any}
+           width="100%"
+           height="100%"
+           data={currentData}
+           options={{...chartOptions, backgroundColor: 'transparent'}}
+           chartEvents={chartEvents}
+          />
+         </div>
         </div>
        </div>
-      ) : isGeographySplitView ? (
+      : isGeographySplitView ?
        <div className="flex flex-row h-full w-full overflow-hidden">
         {/* Left: Bubble Grid */}
         <div className="w-[45%] h-full flex flex-col p-4 border-r-4 border-black/5 overflow-y-auto custom-scrollbar">
@@ -1184,7 +1204,7 @@ const StationCard = ({
          />
         </div>
        </div>
-      ) : isTopPerformersTrio ? (
+      : isTopPerformersTrio ?
        <div className="w-full h-full relative pt-0 pb-1 px-0 flex flex-col items-center">
         {/* Olympic Row 1: 4 Trend Satellites - 12 Column System */}
         <div className="grid grid-cols-12 gap-0 z-20 w-full relative">
@@ -1226,7 +1246,7 @@ const StationCard = ({
          ))}
         </div>
        </div>
-      ) : isContentTypeDistribution ? (
+      : isContentTypeDistribution ?
        <div className="w-full h-full overflow-y-auto custom-scrollbar pr-2">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-2">
          {(Array.isArray(currentData) ? currentData : []).map(
@@ -1295,9 +1315,8 @@ const StationCard = ({
          )}
         </div>
        </div>
-      ) : (
-       <div className="w-full h-full bg-white flex flex-col pt-2">
-       <div
+      : <div className="w-full h-full bg-white flex flex-col pt-2">
+        <div
          className={`w-full ${isEngagementRanker ? "h-[calc(100%-52px)]" : "h-full"} relative`}>
          <MemoizedGoogleChart
           chartType={cfg.type as any}
@@ -1351,9 +1370,9 @@ const StationCard = ({
          </div>
         )}
        </div>
-      )}
+      }
      </div>
-    )}
+    }
    </div>
   </div>
  )
@@ -1471,7 +1490,11 @@ const GoogleChartsGallery: React.FC<{
  )
 
  const availableCanonicalStats = useMemo(
-  () => collectAvailableCanonicalStats(videoOnlyData as Record<string, unknown>[], canonicalFieldMap),
+  () =>
+   collectAvailableCanonicalStats(
+    videoOnlyData as Record<string, unknown>[],
+    canonicalFieldMap,
+   ),
   [videoOnlyData, canonicalFieldMap],
  )
 
@@ -2009,9 +2032,8 @@ const GoogleChartsGallery: React.FC<{
   "#B14AED",
  ]
 
- const chartConfigs = useMemo(
-  () => {
-   const configs = [
+ const chartConfigs = useMemo(() => {
+  const configs = [
    {
     title: "Top Performers Trio",
     subtitle: "Combined Insights",
@@ -2090,16 +2112,16 @@ const GoogleChartsGallery: React.FC<{
    },
 
    {
-   title: "Shorts Retention",
-   subtitle: "AVD% x Duration",
-   tier: "B",
-   requiredMetrics: ["watch_time_per_video_minute"],
-   insight: {
-    title: "Shorts Ceiling",
-    statPair: "Length x APV",
-    reveal: "Shows where short-form length starts to reduce retention.",
-   },
-   type: "ScatterChart",
+    title: "Shorts Retention",
+    subtitle: "AVD% x Duration",
+    tier: "B",
+    requiredMetrics: ["watch_time_per_video_minute"],
+    insight: {
+     title: "Shorts Ceiling",
+     statPair: "Length x APV",
+     reveal: "Shows where short-form length starts to reduce retention.",
+    },
+    type: "ScatterChart",
     provider: "google",
     data: () => {
      const header = [
@@ -2128,7 +2150,9 @@ const GoogleChartsGallery: React.FC<{
        const durSec = parseDurationToSeconds(r[durationKey])
        const apv = parseFloat(String(r[apvKey]).replace(/,/g, "")) || 0
        const color =
-        durSec < 60 ? "#FF6321" : durSec < 120 ? "#00CCFF" : "#00FF00"
+        durSec < 60 ? "#FF6321"
+        : durSec < 120 ? "#00CCFF"
+        : "#00FF00"
        const style = `point { fill-color: ${color}; size: 5; opacity: 0.6; }`
        const title = String(r[titleKey]).toUpperCase()
        return [
@@ -2166,16 +2190,16 @@ const GoogleChartsGallery: React.FC<{
     },
    },
    {
-   title: "Packaging",
-   subtitle: "CTR x Impressions",
-   tier: "B",
-   requiredMetrics: ["ctr_percent", "impressions"],
-   insight: {
-    title: "Packaging Signal",
-    statPair: "CTR x Impressions",
-    reveal: "Shows how strong packaging performs as distribution expands.",
-   },
-   type: "BubbleChart",
+    title: "Packaging",
+    subtitle: "CTR x Impressions",
+    tier: "B",
+    requiredMetrics: ["ctr_percent", "impressions"],
+    insight: {
+     title: "Packaging Signal",
+     statPair: "CTR x Impressions",
+     reveal: "Shows how strong packaging performs as distribution expands.",
+    },
+    type: "BubbleChart",
     data: () => {
      const header = [
       "ID",
@@ -2233,13 +2257,10 @@ const GoogleChartsGallery: React.FC<{
       const row: any[] = [String(r[titleKey]).toUpperCase()]
       engagementMetrics.forEach((m) => {
        const k =
-        m === "Comments"
-         ? commentsKey
-         : m === "Subscribers"
-           ? subsKey
-           : m === "Shares"
-             ? sharesKey
-             : likesKey
+        m === "Comments" ? commentsKey
+        : m === "Subscribers" ? subsKey
+        : m === "Shares" ? sharesKey
+        : likesKey
        row.push(parseFloat(String(r[k]).replace(/,/g, "")) || 0)
       })
       return row
@@ -2346,17 +2367,17 @@ const GoogleChartsGallery: React.FC<{
    },
 
    {
-   title: "Performance Stack",
-   subtitle: "Viral DNA Pulse",
-   tier: "A",
-   requiredMetrics: ["retention_30_percent_viewers", "ctr_percent", "views"],
-   insight: {
-    title: "Hook Integrity",
-    statPair: "30s Retention x CTR",
-    reveal: "Separates strong hooks from weak hooks using only raw retention.",
-   },
-   type: "SteppedAreaChart",
-   provider: "google",
+    title: "Performance Stack",
+    subtitle: "Viral DNA Pulse",
+    tier: "A",
+    requiredMetrics: ["retention_30_percent_viewers", "ctr_percent", "views"],
+    insight: {
+     title: "Hook Integrity",
+     statPair: "30s Retention x CTR",
+     reveal: "Separates strong hooks from weak hooks using only raw retention.",
+    },
+    type: "SteppedAreaChart",
+    provider: "google",
     data: () => {
      const header = [
       "Video",
@@ -2418,16 +2439,17 @@ const GoogleChartsGallery: React.FC<{
    },
 
    {
-   title: "Viewer Loyalty",
-   subtitle: "New vs Returning Viewers",
-   tier: "A",
-   requiredMetrics: ["views"],
-   insight: {
-    title: "Loyalty Split",
-    statPair: "New x Returning",
-    reveal: "Shows whether videos attract fresh viewers or bring audiences back.",
-   },
-   type: "BubbleChart",
+    title: "Viewer Loyalty",
+    subtitle: "New vs Returning Viewers",
+    tier: "A",
+    requiredMetrics: ["views"],
+    insight: {
+     title: "Loyalty Split",
+     statPair: "New x Returning",
+     reveal:
+      "Shows whether videos attract fresh viewers or bring audiences back.",
+    },
+    type: "BubbleChart",
     provider: "google",
     data: () => {
      const newKey = findKey(["new viewer", "new viewers"])
@@ -2446,7 +2468,8 @@ const GoogleChartsGallery: React.FC<{
       (v) => !excludedOutliers.has(v._id),
      )
 
-     if (!newKey || !retKey) return [header, ["", 0, 0, "No Data", 0, "No Data"]]
+     if (!newKey || !retKey)
+      return [header, ["", 0, 0, "No Data", 0, "No Data"]]
      const filtered = validVideos
       .filter((r) => {
        const n = parseFloat(String(r[newKey]).replace(/,/g, "")) || 0
@@ -2646,8 +2669,8 @@ const GoogleChartsGallery: React.FC<{
       }
      })
      const finalRows = Object.entries(countryMap).sort((a, b) => b[1] - a[1])
-     return finalRows.length > 0
-      ? [header, ...finalRows]
+     return finalRows.length > 0 ?
+       [header, ...finalRows]
       : [header, ["US", 1], ["GB", 0]]
     },
     options: {
@@ -2662,17 +2685,18 @@ const GoogleChartsGallery: React.FC<{
    },
 
    {
-   title: "Hook-to-Binge Funnel",
-   subtitle: "Views → Watch → Subs → Shares",
-   tier: "A",
-   requiredMetrics: ["views", "retention_30_percent_viewers", "impressions"],
-   insight: {
-    title: "Hook-to-Binge",
-    statPair: "Impressions x Retention30",
-    reveal: "Tracks how many viewers remain after hook without synthetic fallback.",
-   },
-   type: "Sankey",
-   provider: "google",
+    title: "Hook-to-Binge Funnel",
+    subtitle: "Views → Watch → Subs → Shares",
+    tier: "A",
+    requiredMetrics: ["views", "retention_30_percent_viewers", "impressions"],
+    insight: {
+     title: "Hook-to-Binge",
+     statPair: "Impressions x Retention30",
+     reveal:
+      "Tracks how many viewers remain after hook without synthetic fallback.",
+    },
+    type: "Sankey",
+    provider: "google",
     data: () => {
      const header = ["From", "To", "Weight"]
      let totalViews = 0,
@@ -3826,8 +3850,9 @@ const GoogleChartsGallery: React.FC<{
        v._userTag === "single_short_video",
      )
      const baseList = targetData.length > 0 ? targetData : videoOnlyData
-     const video = selectedSoloVideoId
-      ? baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
+     const video =
+      selectedSoloVideoId ?
+       baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
       : baseList[0]
      if (!video) return [header, ["Waiting", 0]]
      const imp = parseFloat(
@@ -3869,8 +3894,9 @@ const GoogleChartsGallery: React.FC<{
        v._userTag === "single_short_video",
      )
      const baseList = targetData.length > 0 ? targetData : videoOnlyData
-     const video = selectedSoloVideoId
-      ? baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
+     const video =
+      selectedSoloVideoId ?
+       baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
       : baseList[0]
      if (!video) return [header, ["Waiting", 0, "color: #000"]]
      const shown = parseFloat(
@@ -3904,8 +3930,9 @@ const GoogleChartsGallery: React.FC<{
        v._userTag === "single_short_video",
      )
      const baseList = targetData.length > 0 ? targetData : videoOnlyData
-     const video = selectedSoloVideoId
-      ? baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
+     const video =
+      selectedSoloVideoId ?
+       baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
       : baseList[0]
      if (!video) return [header, ["Waiting", 1]]
      const newV = parseFloat(
@@ -3935,8 +3962,9 @@ const GoogleChartsGallery: React.FC<{
        v._userTag === "single_short_video",
      )
      const baseList = targetData.length > 0 ? targetData : videoOnlyData
-     const video = selectedSoloVideoId
-      ? baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
+     const video =
+      selectedSoloVideoId ?
+       baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
       : baseList[0]
      if (!video) return [header, ["Waiting", 0, "color:#000"]]
      const gained = parseFloat(
@@ -3969,8 +3997,9 @@ const GoogleChartsGallery: React.FC<{
        v._userTag === "single_short_video",
      )
      const baseList = targetData.length > 0 ? targetData : videoOnlyData
-     const video = selectedSoloVideoId
-      ? baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
+     const video =
+      selectedSoloVideoId ?
+       baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
       : baseList[0]
      if (!video) return [header, ["Waiting", 0, "color:#000"]]
      const pageAds = parseFloat(
@@ -4010,8 +4039,9 @@ const GoogleChartsGallery: React.FC<{
        v._userTag === "single_short_video",
      )
      const baseList = targetData.length > 0 ? targetData : videoOnlyData
-     const video = selectedSoloVideoId
-      ? baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
+     const video =
+      selectedSoloVideoId ?
+       baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
       : baseList[0]
      if (!video) return [header, ["Waiting", 1]]
      const likes = parseFloat(
@@ -4056,8 +4086,9 @@ const GoogleChartsGallery: React.FC<{
        v._userTag === "single_short_video",
      )
      const baseList = targetData.length > 0 ? targetData : videoOnlyData
-     const video = selectedSoloVideoId
-      ? baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
+     const video =
+      selectedSoloVideoId ?
+       baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
       : baseList[0]
      if (!video) return [header, [new Date(), 0, 0]]
 
@@ -4115,8 +4146,9 @@ const GoogleChartsGallery: React.FC<{
        v._userTag === "single_short_video",
      )
      const baseList = targetData.length > 0 ? targetData : videoOnlyData
-     const video = selectedSoloVideoId
-      ? baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
+     const video =
+      selectedSoloVideoId ?
+       baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
       : baseList[0]
 
      if (!video) return [header, ["Waiting", 0, "color: #000"]]
@@ -4190,8 +4222,9 @@ const GoogleChartsGallery: React.FC<{
        v._userTag === "single_short_video",
      )
      const baseList = targetData.length > 0 ? targetData : videoOnlyData
-     const video = selectedSoloVideoId
-      ? baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
+     const video =
+      selectedSoloVideoId ?
+       baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
       : baseList[0]
      if (!video) return [header, [new Date(), 0, "Waiting", 0]]
 
@@ -4243,18 +4276,19 @@ const GoogleChartsGallery: React.FC<{
     },
    },
    {
-   title: "Solo Audience Retention",
-   subtitle: "Moment-by-Moment Stickiness",
-   tier: "A",
-   requiredMetrics: ["retention_30_percent_viewers"],
-   insight: {
-    title: "Retention Checkpoint",
-    statPair: "Video Progress x STW@0:30",
-    reveal: "Shows only exact retention checkpoints when raw retention exists.",
-   },
-   type: "LineChart",
-   provider: "google",
-   data: () => {
+    title: "Solo Audience Retention",
+    subtitle: "Moment-by-Moment Stickiness",
+    tier: "A",
+    requiredMetrics: ["retention_30_percent_viewers"],
+    insight: {
+     title: "Retention Checkpoint",
+     statPair: "Video Progress x STW@0:30",
+     reveal:
+      "Shows only exact retention checkpoints when raw retention exists.",
+    },
+    type: "LineChart",
+    provider: "google",
+    data: () => {
      const header = ["Time", "Retention %"]
      const targetData = videoOnlyData.filter(
       (v) =>
@@ -4262,8 +4296,9 @@ const GoogleChartsGallery: React.FC<{
        v._userTag === "single_short_video",
      )
      const baseList = targetData.length > 0 ? targetData : videoOnlyData
-     const video = selectedSoloVideoId
-      ? baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
+     const video =
+      selectedSoloVideoId ?
+       baseList.find((v) => v._id === selectedSoloVideoId) || baseList[0]
       : baseList[0]
 
      if (!video) return [header, ["0:00", 100]]
@@ -4282,18 +4317,18 @@ const GoogleChartsGallery: React.FC<{
     },
    },
    {
-   title: "Solo Device Breakdown",
-   subtitle: "Desktop vs Mobile vs TV",
-   tier: "A",
-   requiredMetrics: ["views"],
-   insight: {
-    title: "Device Split",
-    statPair: "Device x Views",
-    reveal: "Shows device mix only when explicit device data is present.",
-   },
-   type: "PieChart",
-   provider: "google",
-   data: () => {
+    title: "Solo Device Breakdown",
+    subtitle: "Desktop vs Mobile vs TV",
+    tier: "A",
+    requiredMetrics: ["views"],
+    insight: {
+     title: "Device Split",
+     statPair: "Device x Views",
+     reveal: "Shows device mix only when explicit device data is present.",
+    },
+    type: "PieChart",
+    provider: "google",
+    data: () => {
      const header = ["Device", "Views"]
      const deviceKey = Object.keys(allData[0] || {}).find((k) =>
       k.toLowerCase().includes("device"),
@@ -4302,7 +4337,8 @@ const GoogleChartsGallery: React.FC<{
      const map = new Map<string, number>()
      allData.forEach((row) => {
       const device = String(row[deviceKey] || "").trim()
-      const views = parseFloat(String(row[viewsKey] || "0").replace(/,/g, "")) || 0
+      const views =
+       parseFloat(String(row[viewsKey] || "0").replace(/,/g, "")) || 0
       if (!device || views <= 0) return
       map.set(device, (map.get(device) || 0) + views)
      })
@@ -4322,8 +4358,10 @@ const GoogleChartsGallery: React.FC<{
     provider: "google",
     data: () => {
      const header = ["Country", "Revenue"]
-     const geoKey = Object.keys(allData[0] || {}).find((k) =>
-      k.toLowerCase().includes("geography") || k.toLowerCase().includes("country")
+     const geoKey = Object.keys(allData[0] || {}).find(
+      (k) =>
+       k.toLowerCase().includes("geography") ||
+       k.toLowerCase().includes("country"),
      )
      if (!geoKey || !revenueKey) return [header, ["US", 0]]
      const geoData = [...allData].filter((r) => r[geoKey] && r[revenueKey])
@@ -4337,7 +4375,9 @@ const GoogleChartsGallery: React.FC<{
      ]
     },
     options: {
-     colorAxis: { colors: ["#00CCFF", "#CCFF00", "#FFDD00", "#FFB158", "#FF7497"] },
+     colorAxis: {
+      colors: ["#00CCFF", "#CCFF00", "#FFDD00", "#FFB158", "#FF7497"],
+     },
      backgroundColor: "transparent",
      datalessRegionColor: "#f5f5f5",
     },
@@ -4353,14 +4393,17 @@ const GoogleChartsGallery: React.FC<{
      const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
      return [
       header,
-      ...videoOnlyData.slice(0, 100).map((r) => {
-       const dt = new Date(r[dateKey])
-       if (isNaN(dt.getTime())) return ["", 0, 0, "Unknown", 0]
-       const hour = dt.getHours()
-       const dayStr = days[dt.getDay()]
-       const views = parseFloat(String(r[viewsKey]).replace(/,/g, "")) || 0
-       return ["", hour, dt.getDay(), dayStr, views]
-      }).filter((r) => r[1] !== 0 || r[2] !== 0),
+      ...videoOnlyData
+       .slice(0, 100)
+       .map((r) => {
+        const dt = new Date(r[dateKey])
+        if (isNaN(dt.getTime())) return ["", 0, 0, "Unknown", 0]
+        const hour = dt.getHours()
+        const dayStr = days[dt.getDay()]
+        const views = parseFloat(String(r[viewsKey]).replace(/,/g, "")) || 0
+        return ["", hour, dt.getDay(), dayStr, views]
+       })
+       .filter((r) => r[1] !== 0 || r[2] !== 0),
      ]
     },
     options: {
@@ -4379,11 +4422,18 @@ const GoogleChartsGallery: React.FC<{
      const header = ["Video", "Impressions", "Clicks"]
      return [
       header,
-      ...videoOnlyData.slice(0, 8).map((r) => [
-       String(r[titleKey]).substring(0, 15) + "...",
-       parseFloat(String(r.EndScreenImpressions || r[impressionsKey] || 0).replace(/,/g, "")) || 0,
-       parseFloat(String(r.EndScreenClicks || 0).replace(/,/g, "")) || 0,
-      ]),
+      ...videoOnlyData
+       .slice(0, 8)
+       .map((r) => [
+        String(r[titleKey]).substring(0, 15) + "...",
+        parseFloat(
+         String(r.EndScreenImpressions || r[impressionsKey] || 0).replace(
+          /,/g,
+          "",
+         ),
+        ) || 0,
+        parseFloat(String(r.EndScreenClicks || 0).replace(/,/g, "")) || 0,
+       ]),
      ]
     },
     options: {
@@ -4422,11 +4472,11 @@ const GoogleChartsGallery: React.FC<{
       ...videoOnlyData.slice(0, 10).map((r) => {
        const avdStr = String(r[avdKey] || "0:00")
        const p = avdStr.split(":")
-       const avdSecs = p.length === 3 
-         ? parseInt(p[0]) * 3600 + parseInt(p[1]) * 60 + parseInt(p[2])
-         : p.length === 2 
-           ? parseInt(p[0]) * 60 + parseInt(p[1])
-           : parseInt(p[0]) || 0
+       const avdSecs =
+        p.length === 3 ?
+         parseInt(p[0]) * 3600 + parseInt(p[1]) * 60 + parseInt(p[2])
+        : p.length === 2 ? parseInt(p[0]) * 60 + parseInt(p[1])
+        : parseInt(p[0]) || 0
        return [
         String(r[titleKey]).substring(0, 10),
         parseFloat(String(r[ctrKey] || 0).replace(/,/g, "")) || 0,
@@ -4515,13 +4565,7 @@ const GoogleChartsGallery: React.FC<{
     provider: "google",
     data: () => {
      const header = ["Quarter", "RPM"]
-     return [
-      header,
-      ["Q1", 4.5],
-      ["Q2", 5.0],
-      ["Q3", 6.2],
-      ["Q4", 8.9],
-     ]
+     return [header, ["Q1", 4.5], ["Q2", 5.0], ["Q3", 6.2], ["Q4", 8.9]]
     },
     options: {
      colors: ["#CCFF00"],
@@ -4534,55 +4578,48 @@ const GoogleChartsGallery: React.FC<{
     provider: "google",
     data: () => {
      const header = ["Metric", "Actual", "Target"]
-     return [
-      header,
-      ["CTR", 5.2, 8.0],
-      ["APV", 45, 60],
-      ["Likes/1k", 35, 50],
-     ]
+     return [header, ["CTR", 5.2, 8.0], ["APV", 45, 60], ["Likes/1k", 35, 50]]
     },
     options: {
      seriesType: "bars",
      series: { 1: { type: "line" } },
      colors: ["#00CCFF", "#FF7497"],
     },
-   }
-   ]
-   return configs.map((cfg) => ({
-    ...cfg,
-    missingMetrics: resolveMissingMetrics(cfg.requiredMetrics),
-   }))
-  },
-  [
-   lastThreeMonthsData,
-   videoOnlyData,
-   allData,
-   filteredTrafficData,
-   commonKeywords,
-   keywordPerformance,
-   engagementData,
-   inRangeHonesty,
-   engagementSortBy,
-   revenueKey,
-   titleKey,
-   viewsKey,
-   watchTimeKey,
-   subsKey,
-   likesKey,
-   commentsKey,
-   sharesKey,
-   avdKey,
-   apvKey,
-   stwKey,
-   durationKey,
-   impressionsKey,
-   ctrKey,
-   dateKey,
-   dataDateRange,
-   selectedSoloVideoId,
-   resolveMissingMetrics,
-  ],
- )
+   },
+  ]
+  return configs.map((cfg) => ({
+   ...cfg,
+   missingMetrics: resolveMissingMetrics(cfg.requiredMetrics),
+  }))
+ }, [
+  lastThreeMonthsData,
+  videoOnlyData,
+  allData,
+  filteredTrafficData,
+  commonKeywords,
+  keywordPerformance,
+  engagementData,
+  inRangeHonesty,
+  engagementSortBy,
+  revenueKey,
+  titleKey,
+  viewsKey,
+  watchTimeKey,
+  subsKey,
+  likesKey,
+  commentsKey,
+  sharesKey,
+  avdKey,
+  apvKey,
+  stwKey,
+  durationKey,
+  impressionsKey,
+  ctrKey,
+  dateKey,
+  dataDateRange,
+  selectedSoloVideoId,
+  resolveMissingMetrics,
+ ])
 
  const formattedDateRange = useMemo(() => {
   if (!dataDateRange) return ""
@@ -4794,29 +4831,26 @@ const GoogleChartsGallery: React.FC<{
        const hovered = pieHoveredItem[selectedChartIndex]
        const currentData = cfg.data() || []
        const topItem =
-        Array.isArray(currentData) && currentData.length > 1
-         ? currentData[1]
-         : null
-       const displayTitleRaw = hovered
-        ? hovered.title
-        : topItem
-          ? topItem[0]
-          : ""
+        Array.isArray(currentData) && currentData.length > 1 ?
+         currentData[1]
+        : null
+       const displayTitleRaw =
+        hovered ? hovered.title
+        : topItem ? topItem[0]
+        : ""
        const displayTitle =
-        displayTitleRaw instanceof Date
-         ? displayTitleRaw.toLocaleDateString()
-         : typeof displayTitleRaw === "object" && displayTitleRaw !== null
-           ? String(displayTitleRaw.f || displayTitleRaw.v || "")
-           : displayTitleRaw
-       const displayStatRaw = hovered
-        ? hovered.value
-        : topItem
-          ? topItem[1]
-          : ""
+        displayTitleRaw instanceof Date ? displayTitleRaw.toLocaleDateString()
+        : typeof displayTitleRaw === "object" && displayTitleRaw !== null ?
+         String(displayTitleRaw.f || displayTitleRaw.v || "")
+        : displayTitleRaw
+       const displayStatRaw =
+        hovered ? hovered.value
+        : topItem ? topItem[1]
+        : ""
        const displayStat =
-        typeof displayStatRaw === "object" && displayStatRaw !== null
-         ? displayStatRaw.f || displayStatRaw.v
-         : displayStatRaw
+        typeof displayStatRaw === "object" && displayStatRaw !== null ?
+         displayStatRaw.f || displayStatRaw.v
+        : displayStatRaw
 
        return (
         <>
@@ -4866,11 +4900,14 @@ const GoogleChartsGallery: React.FC<{
 
             <div className="flex flex-col items-end mr-4">
              <span className="text-[20px] font-black text-black/90 bg-white/40 px-4 py-1 rounded border-2 border-black/10 uppercase tracking-tight leading-none mb-1">
-              {cfg.title.includes("Trend") ||
-              cfg.title.includes("Latest") ||
-              cfg.title.includes("Recent")
-               ? `${Array.isArray(currentData) ? currentData.length - 1 : 0} LATEST`
-               : `${Array.isArray(currentData) ? currentData.length - 1 : 0} HIGHEST`}
+              {(
+               cfg.title.includes("Trend") ||
+               cfg.title.includes("Latest") ||
+               cfg.title.includes("Recent")
+              ) ?
+               `${Array.isArray(currentData) ? currentData.length - 1 : 0} LATEST`
+              : `${Array.isArray(currentData) ? currentData.length - 1 : 0} HIGHEST`
+              }
              </span>
              {cfg.subtitle && (
               <span className="text-[12px] font-bold text-black/40 uppercase tracking-[0.2em] leading-none text-right">
@@ -4896,23 +4933,22 @@ const GoogleChartsGallery: React.FC<{
             <div
              className="w-6 h-6 rounded-full border-4 border-black flex-shrink-0"
              style={{
-              backgroundColor: hovered
-               ? Array.isArray(currentData)
-                 ? [
-                    "#00CCFF",
-                    "#CCFF00",
-                    "#FFDD00",
-                    "#FFB158",
-                    "#FF7497",
-                    "#FF87F3",
-                   ][
-                    (currentData.findIndex((d) => d[0] === hovered.title) - 1) %
-                     6
-                   ]
-                 : "#000"
-               : topItem
-                 ? "#00CCFF"
-                 : "#000",
+              backgroundColor:
+               hovered ?
+                Array.isArray(currentData) ?
+                 [
+                  "#00CCFF",
+                  "#CCFF00",
+                  "#FFDD00",
+                  "#FFB158",
+                  "#FF7497",
+                  "#FF87F3",
+                 ][
+                  (currentData.findIndex((d) => d[0] === hovered.title) - 1) % 6
+                 ]
+                : "#000"
+               : topItem ? "#00CCFF"
+               : "#000",
              }}
             />
             <span className="font-black text-[24px] text-black uppercase truncate leading-tight">
@@ -4920,13 +4956,15 @@ const GoogleChartsGallery: React.FC<{
             </span>
            </div>
            <span className="font-black text-[32px] text-[#00CCFF] whitespace-nowrap ml-8">
-            {displayStat !== "0" &&
-            displayStat !== "Hover slice to view" &&
-            displayStat !== ""
-             ? cfg.title.toLowerCase().includes("revenue")
-               ? `$${Number(displayStatRaw && typeof displayStatRaw === "object" ? displayStatRaw.v : displayStatRaw).toFixed(2)}`
-               : displayStat
-             : ""}
+            {(
+             displayStat !== "0" &&
+             displayStat !== "Hover slice to view" &&
+             displayStat !== ""
+            ) ?
+             cfg.title.toLowerCase().includes("revenue") ?
+              `$${Number(displayStatRaw && typeof displayStatRaw === "object" ? displayStatRaw.v : displayStatRaw).toFixed(2)}`
+             : displayStat
+            : ""}
            </span>
           </div>
          )}
@@ -4964,38 +5002,38 @@ const GoogleChartsGallery: React.FC<{
            <div className="bg-white px-8 py-5 flex items-center justify-between border-b-4 border-black border-dashed shadow-inner gap-8">
             <div className="flex items-center gap-6 flex-1 min-w-0 pr-8">
              <span className="font-black text-[24px] text-black uppercase truncate leading-tight bg-black/5 px-5 py-2 rounded-lg border-2 border-black/10">
-              {displayTitle
-               ? String(displayTitle).toUpperCase()
-               : isPerformanceStack
-                 ? "HOVER OVER A BAR"
-                 : "HOVER OVER THE MAP"}
+              {displayTitle ?
+               String(displayTitle).toUpperCase()
+              : isPerformanceStack ?
+               "HOVER OVER A BAR"
+              : "HOVER OVER THE MAP"}
              </span>
             </div>
             {(isEngagementRanker || isPerformanceStack) && (
              <div className="flex items-center gap-8 flex-shrink-0">
-              {(isPerformanceStack
-               ? ["CTR", "STW", "APV"]
-               : ["Likes", "Comments", "Shares", "Subscribers"]
+              {(isPerformanceStack ?
+               ["CTR", "STW", "APV"]
+              : ["Likes", "Comments", "Shares", "Subscribers"]
               ).map((m) => {
                const val =
-                hovered && hovered.stats
-                 ? hovered.stats[m]
-                 : topItem
-                   ? (() => {
-                      if (isPerformanceStack) {
-                       const metrics = ["Ignore", "Ignore", "CTR", "STW", "APV"]
-                       const idx = metrics.indexOf(m)
-                       const raw = topItem[idx]
-                       if (m === "CTR") return (raw / 10).toFixed(1) + "%"
-                       return raw.toFixed(1) + "%"
-                      }
-                      const idx = engagementMetrics.indexOf(m as any) + 1
-                      return topItem[idx].toLocaleString()
-                     })()
-                   : 0
+                hovered && hovered.stats ? hovered.stats[m]
+                : topItem ?
+                 (() => {
+                  if (isPerformanceStack) {
+                   const metrics = ["Ignore", "Ignore", "CTR", "STW", "APV"]
+                   const idx = metrics.indexOf(m)
+                   const raw = topItem[idx]
+                   if (m === "CTR") return (raw / 10).toFixed(1) + "%"
+                   return raw.toFixed(1) + "%"
+                  }
+                  const idx = engagementMetrics.indexOf(m as any) + 1
+                  return topItem[idx].toLocaleString()
+                 })()
+                : 0
 
-               const barColor = isPerformanceStack
-                ? { CTR: "#00CCFF", STW: "#FF7497", APV: "#4F46E5" }[m]
+               const barColor =
+                isPerformanceStack ?
+                 { CTR: "#00CCFF", STW: "#FF7497", APV: "#4F46E5" }[m]
                 : metricColors[m]
 
                return (
@@ -5020,16 +5058,16 @@ const GoogleChartsGallery: React.FC<{
              </div>
             )}
             <span className="font-black text-[24px] text-[#00CCFF] whitespace-nowrap">
-             {hovered && hovered.value !== null && !hovered.stats
-              ? hovered.value.toLocaleString()
-              : ""}
+             {hovered && hovered.value !== null && !hovered.stats ?
+              hovered.value.toLocaleString()
+             : ""}
             </span>
            </div>
           </>
          )}
          <div className="flex-1 min-h-0 overflow-hidden bg-white p-4 flex flex-col">
           <div className="flex-1 min-h-0">
-           {isContentTypeDistribution && distributionData ? (
+           {isContentTypeDistribution && distributionData ?
             <div className="flex flex-col h-full bg-white p-8 overflow-y-auto">
              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
               {[
@@ -5057,7 +5095,7 @@ const GoogleChartsGallery: React.FC<{
               ))}
              </div>
             </div>
-           ) : isGeographySplitView ? (
+           : isGeographySplitView ?
             <div className="flex-1 min-h-0 bg-white p-8">
              <div className="flex flex-row h-full w-full">
               <div className="w-[30%] h-full flex flex-col p-6 border-r-4 border-black/5 overflow-y-auto">
@@ -5076,9 +5114,9 @@ const GoogleChartsGallery: React.FC<{
                    <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black text-white px-3 py-1 rounded text-[10px] whitespace-nowrap opacity-0 group-hover/modal-geo:opacity-100 transition-opacity z-50 shadow-xl">
                     {row[0]}:{" "}
                     <span className="text-[#CCFF00] font-black">
-                     {typeof row[1] === "number"
-                      ? row[1].toLocaleString()
-                      : row[1]}
+                     {typeof row[1] === "number" ?
+                      row[1].toLocaleString()
+                     : row[1]}
                     </span>
                    </div>
                   </div>
@@ -5110,7 +5148,7 @@ const GoogleChartsGallery: React.FC<{
               </div>
              </div>
             </div>
-           ) : isTopPerformersTrio ? (
+           : isTopPerformersTrio ?
             <div className="flex-1 min-h-0 bg-white p-12 overflow-y-auto">
              <div className="grid grid-cols-1 md:grid-cols-3 gap-12 h-full">
               {[
@@ -5128,8 +5166,7 @@ const GoogleChartsGallery: React.FC<{
               ))}
              </div>
             </div>
-           ) : (
-            (() => {
+           : (() => {
              const isBoxedChart =
               cfg.type === "ScatterChart" || cfg.type === "BubbleChart"
              const boxArea = (cfg.options as any)?.chartArea || {
@@ -5159,31 +5196,32 @@ const GoogleChartsGallery: React.FC<{
                    "#FF87F3",
                   ],
                   chartArea: {
-                   ...(isPieChart
-                    ? { width: "100%", height: "100%" }
-                    : boxArea),
+                   ...(isPieChart ?
+                    { width: "100%", height: "100%" }
+                   : boxArea),
                    backgroundColor: "transparent",
                    stroke: "none",
                   },
-                  tooltip: isPieChart
-                   ? {
-                      trigger: "focus",
-                      textStyle: {
-                       fontSize: 13,
-                       fontName: "Inter",
-                       bold: true,
-                       color: "#000000",
-                      },
-                     }
-                   : {
-                      isHtml: false,
-                      textStyle: {
-                       fontSize: 13,
-                       fontName: "Inter",
-                       bold: true,
-                       color: "#000000",
-                      },
+                  tooltip:
+                   isPieChart ?
+                    {
+                     trigger: "focus",
+                     textStyle: {
+                      fontSize: 13,
+                      fontName: "Inter",
+                      bold: true,
+                      color: "#000000",
                      },
+                    }
+                   : {
+                     isHtml: false,
+                     textStyle: {
+                      fontSize: 13,
+                      fontName: "Inter",
+                      bold: true,
+                      color: "#000000",
+                     },
+                    },
                   ...cfg.options,
                   hAxis: {
                    gridlines: { color: "#f0f0f0" },
@@ -5219,122 +5257,119 @@ const GoogleChartsGallery: React.FC<{
                     color: "#000000",
                    },
                   },
-                  ...((cfg.options as any)?.vAxes
-                   ? {
-                      vAxes: Object.fromEntries(
-                       Object.entries((cfg.options as any).vAxes).map(
-                        ([key, value]: [string, any]) => [
-                         key,
-                         {
-                          ...(typeof value === "object" ? value : {}),
-                          textStyle: {
-                           fontSize: 13,
-                           fontName: "Inter",
-                           bold: true,
-                           color: "#000000",
-                           ...(typeof value === "object"
-                            ? value?.textStyle
-                            : {}),
-                          },
-                          titleTextStyle: {
-                           fontSize: 14,
-                           fontName: "Inter",
-                           bold: true,
-                           italic: false,
-                           color: "#000000",
-                           ...(typeof value === "object"
-                            ? value?.titleTextStyle
-                            : {}),
-                          },
-                         },
-                        ],
-                       ),
-                      ),
-                     }
-                   : {}),
-                 ...(isPieChart
-                   ? {
-                      pieSliceText: "value",
-                      pieSliceBorderColor: "transparent",
-                      pieSliceTextStyle: {
-                       color: "white",
-                       fontSize: 16,
-                       fontName: "Inter",
-                       bold: true,
-                       ...(cfg.options as any)?.pieSliceTextStyle,
-                      },
-                     }
-                   : {}),
+                  ...((cfg.options as any)?.vAxes ?
+                   {
+                    vAxes: Object.fromEntries(
+                     Object.entries((cfg.options as any).vAxes).map(
+                      ([key, value]: [string, any]) => [
+                       key,
+                       {
+                        ...(typeof value === "object" ? value : {}),
+                        textStyle: {
+                         fontSize: 13,
+                         fontName: "Inter",
+                         bold: true,
+                         color: "#000000",
+                         ...(typeof value === "object" ? value?.textStyle : {}),
+                        },
+                        titleTextStyle: {
+                         fontSize: 14,
+                         fontName: "Inter",
+                         bold: true,
+                         italic: false,
+                         color: "#000000",
+                         ...(typeof value === "object" ?
+                          value?.titleTextStyle
+                         : {}),
+                        },
+                       },
+                      ],
+                     ),
+                    ),
+                   }
+                  : {}),
+                  ...(isPieChart ?
+                   {
+                    pieSliceText: "value",
+                    pieSliceBorderColor: "transparent",
+                    pieSliceTextStyle: {
+                     color: "white",
+                     fontSize: 16,
+                     fontName: "Inter",
+                     bold: true,
+                     ...(cfg.options as any)?.pieSliceTextStyle,
+                    },
+                   }
+                  : {}),
                  }}
                  chartEvents={
-                  (isPieChart || isEngagementRanker || isPerformanceStack
-                   ? [
-                      {
-                       eventName: "onmouseover" as any,
-                       callback: (e: any) => {
-                        const row =
-                         e?.row ?? e?.eventArgs?.[0]?.row ?? e?.eventArgs?.row
-                        if (row !== null && row !== undefined) {
-                         const item = currentData[row + 1]
-                         if (item) {
-                          if (isPerformanceStack) {
-                           setPieHoveredItem((prev) => ({
-                            ...prev,
-                            [selectedChartIndex]: {
-                             title: item[0],
-                             index: row,
-                             stats: {
-                              Views: "N/A", // Column removed from chart
-                              CTR: item[2]
-                               ? (Number(item[2]) / 10).toFixed(1) + "%"
-                               : "0%",
-                              STW: item[3]
-                               ? Number(item[3]).toFixed(1) + "%"
-                               : "0%",
-                              APV: item[4]
-                               ? Number(item[4]).toFixed(1) + "%"
-                               : "0%",
-                             },
-                            },
-                           }))
-                          } else if (isEngagementRanker) {
-                           setPieHoveredItem((prev) => ({
-                            ...prev,
-                            [selectedChartIndex]: {
-                             title: item[0],
-                             index: row,
-                             stats: {
-                              Comments: item[1] || 0,
-                              Subscribers: item[2] || 0,
-                              Shares: item[3] || 0,
-                              Likes: item[4] || 0,
-                             },
-                            },
-                           }))
-                          } else {
-                           setPieHoveredItem((prev) => ({
-                            ...prev,
-                            [selectedChartIndex]: {
-                             title: item[0],
-                             value: item[1],
-                            },
-                           }))
-                          }
-                         }
+                  (isPieChart || isEngagementRanker || isPerformanceStack ?
+                   [
+                    {
+                     eventName: "onmouseover" as any,
+                     callback: (e: any) => {
+                      const row =
+                       e?.row ?? e?.eventArgs?.[0]?.row ?? e?.eventArgs?.row
+                      if (row !== null && row !== undefined) {
+                       const item = currentData[row + 1]
+                       if (item) {
+                        if (isPerformanceStack) {
+                         setPieHoveredItem((prev) => ({
+                          ...prev,
+                          [selectedChartIndex]: {
+                           title: item[0],
+                           index: row,
+                           stats: {
+                            Views: "N/A", // Column removed from chart
+                            CTR:
+                             item[2] ?
+                              (Number(item[2]) / 10).toFixed(1) + "%"
+                             : "0%",
+                            STW:
+                             item[3] ? Number(item[3]).toFixed(1) + "%" : "0%",
+                            APV:
+                             item[4] ? Number(item[4]).toFixed(1) + "%" : "0%",
+                           },
+                          },
+                         }))
+                        } else if (isEngagementRanker) {
+                         setPieHoveredItem((prev) => ({
+                          ...prev,
+                          [selectedChartIndex]: {
+                           title: item[0],
+                           index: row,
+                           stats: {
+                            Comments: item[1] || 0,
+                            Subscribers: item[2] || 0,
+                            Shares: item[3] || 0,
+                            Likes: item[4] || 0,
+                           },
+                          },
+                         }))
+                        } else {
+                         setPieHoveredItem((prev) => ({
+                          ...prev,
+                          [selectedChartIndex]: {
+                           title: item[0],
+                           value: item[1],
+                          },
+                         }))
                         }
-                       },
-                      },
-                      {
-                       eventName: "onmouseout" as any,
-                       callback: () => {
-                        setPieHoveredItem((prev) => ({
-                         ...prev,
-                         [selectedChartIndex]: null,
-                        }))
-                       },
-                      },
-                     ]
-                   : []) as any
+                       }
+                      }
+                     },
+                    },
+                    {
+                     eventName: "onmouseout" as any,
+                     callback: () => {
+                      setPieHoveredItem((prev) => ({
+                       ...prev,
+                       [selectedChartIndex]: null,
+                      }))
+                     },
+                    },
+                   ]
+                  : []) as any
                  }
                 />
                 {isEngagementRanker &&
@@ -5355,7 +5390,7 @@ const GoogleChartsGallery: React.FC<{
               </div>
              )
             })()
-           )}
+           }
           </div>
          </div>
         </>
@@ -5369,7 +5404,8 @@ const GoogleChartsGallery: React.FC<{
 }
 
 const ResearchLab: React.FC = () => {
- const { brain, setResearchLabState, updateBrain, lastSyncComplete } = useBrain()
+ const { brain, setResearchLabState, updateBrain, lastSyncComplete } =
+  useBrain()
  const { csvFiles, allData } = brain.researchLabState
 
  const readGlobalExcludedIds = () => {
@@ -5448,7 +5484,7 @@ const ResearchLab: React.FC = () => {
    const dataSource = csvFiles.length > 0 ? "hybrid" : "api"
    const canonicalRows = getMasterRows("lifetime", dataSource, csvFiles)
    const masterRows = canonicalRowsToMasterTableRows(canonicalRows)
-   
+
    if (masterRows.length > 0) {
     setParsedData(masterRows as unknown as any[])
    } else if (csvFiles.length === 0) {
@@ -5548,16 +5584,13 @@ const ResearchLab: React.FC = () => {
     ),
    ].join("\n")
 
-   const result = await analyzeChannelData(
-    csvContent,
-    dataDateRange,
-    (partialResult: any) => {
+   const result = await analyzeChannelData(csvContent, dataDateRange, (partialResult: any) => {
      setResearchLabState({
       analyticsResult: {
        ...researchLabState.analyticsResult,
        ...partialResult,
       },
-     })
+     }, brain)
     },
    )
    setResearchLabState({ analyticsResult: result })
@@ -5673,7 +5706,7 @@ const ResearchLab: React.FC = () => {
      </button>
     </div>
     <div className="pop-content p-6 space-y-8 bg-white">
-     {showDataOverlay ? (
+     {showDataOverlay ?
       <div className="min-h-[600px] h-[80vh] relative">
        <UniversalDataTable
         data={parsedData}
@@ -5684,8 +5717,7 @@ const ResearchLab: React.FC = () => {
         onClose={() => setShowDataOverlay(false)}
        />
       </div>
-     ) : (
-      <>
+     : <>
        {/* Interaction Grid */}
        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 gap-4 items-center">
         {/* Sync Now */}
@@ -5750,9 +5782,9 @@ const ResearchLab: React.FC = () => {
           onClick={handleAnalyticsAnalyze}
           disabled={analyticsLoading || csvFiles.length === 0}
           className={`w-full pop-button py-6 text-sm font-black uppercase shadow-[6px_6px_0px_0px_black] transition-all ${
-           analyticsLoading
-            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-            : "bg-[#FFDD00] text-black hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_black]"
+           analyticsLoading ?
+            "bg-gray-100 text-gray-400 cursor-not-allowed"
+           : "bg-[#FFDD00] text-black hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_black]"
           }`}>
           {analyticsLoading ? "Crunching..." : "Generate Report"}
          </button>
@@ -5841,7 +5873,7 @@ const ResearchLab: React.FC = () => {
         ))}
        </div>
       </>
-     )}
+     }
     </div>
    </div>
 

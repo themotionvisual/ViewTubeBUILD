@@ -1,7 +1,7 @@
 import type { AnalyticsWindow } from "./analyticsContract"
 import { getMasterRows } from "./analyticsSelectors"
 import { buildDataCoverageInventory, type DataCoverageRow } from "./dataCoverageInventory"
-import { readYouTubeAnalyticsCache } from "./canonicalAnalyticsStore"
+import { getCanonicalAnalyticsCache } from "./canonicalAnalyticsStore"
 import {
  type CoverageScope,
  type DomainTableRow,
@@ -216,7 +216,7 @@ export const buildMasterTableBundle = (
   ]
  })
 
- const ytCache = readYouTubeAnalyticsCache() as Record<string, unknown>
+ const ytCache = getCanonicalAnalyticsCache() as Record<string, unknown>
  const profileRows = [ytCache.profile].filter(
   (row): row is Record<string, unknown> => !!row && typeof row === "object",
  )

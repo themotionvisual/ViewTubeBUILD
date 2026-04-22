@@ -1,4 +1,4 @@
-import type { CanonicalMetricKey, CanonicalVideoRow } from "./analyticsContract"
+import { METRIC_REGISTRY, type CanonicalMetricKey, type CanonicalVideoRow } from "./analyticsContract"
 
 export type CoverageRowStatus =
  | "received"
@@ -12,39 +12,7 @@ export interface ResolvedMetricValue {
  reason: "actual" | "derived" | "fallback" | "missing"
 }
 
-const fallbackKeys: Record<CanonicalMetricKey, string[]> = {
- views: ["Views", "viewCount", "views"],
- watchHours: ["Watch Time (Hours)", "watchHours", "estimatedMinutesWatched"],
- likes: ["Likes", "likeCount", "likes"],
- comments: ["Comments", "commentCount", "comments"],
- shares: ["Shares", "shareCount", "shares"],
- subscribersGained: ["Subs +", "Subscribers Gained", "subscribersGained"],
- impressions: ["Impressions", "videoThumbnailImpressions", "impressions"],
- revenue: [
-  "Revenue",
-  "estimatedRevenue",
-  "Estimated revenue",
-  "Your estimated revenue (USD)",
- ],
- cpm: ["CPM", "cpm"],
- rpm: ["RPM", "rpm"],
- ctr: ["Click-Through Rate (CTR)", "CTR (%)", "ctr"],
- newViewers: ["New Viewers", "newViewers"],
- returningViewers: ["Returning Viewers", "returningViewers"],
- casualViewers: ["Casual viewers", "casualViewers"],
- regularViewers: ["Regular viewers", "regularViewers"],
- uniqueViewers: ["Unique viewers", "uniqueViewers"],
- avdSeconds: ["AVD (Average View Duration)", "Duration (sec)", "avdSeconds"],
- avp: ["AVP (%)", "averageViewPercentage", "avp"],
- engagedViews: ["Engaged views", "engagedViews"],
- stw: ["STW %", "Stayed to watch (%)", "stw"],
- endScreenClickRate: [
-  "End screen click rate",
-  "Clicks per end screen element shown (%)",
-  "endScreenClickRate",
- ],
- cardClickRate: ["Card click rate", "annotationClickThroughRate", "cardClickRate"],
-}
+
 
 const numeric = (value: unknown): number | null => {
  if (typeof value === "number" && Number.isFinite(value)) return value
@@ -103,7 +71,7 @@ export const resolveMetricNumber = (
   }
  }
 
- const fallbackFromRow = fallbackKeys[metricKey]
+ const fallbackFromRow = (METRIC_REGISTRY[metricKey]?.aliases || [])
   .map((key) => numeric((row as unknown as Record<string, unknown>)[key]))
   .find((value): value is number => value !== null)
  if (fallbackFromRow !== undefined) {

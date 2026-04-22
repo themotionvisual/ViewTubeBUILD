@@ -8,7 +8,7 @@ import type {
   ChannelAnalysisSyncStatus,
   VideoSyncBatchState,
 } from '../types';
-import { authService } from '../services/authService';
+import { unifiedAuth } from '../services/authSession';
 import { clearAnalyticsStateForFreshSync } from "../services/localDataReset";
 
 const STORAGE_KEY = 'vt_workspace_brain';
@@ -69,12 +69,17 @@ const defaultBrain: WorkspaceBrain = {
   channelHub: { toDos: [], goals: [] },
   channelyticsState: { csvFiles: [], allData: [], analyticsResult: null },
   researchLabState: { csvFiles: [], allData: [], analyticsResult: null },
-  videoFlags: {}
+  videoFlags: {},
+  journalEntries: [],
+  journalFollowUps: [],
+  microPolls: [],
+  creatorPreferences: {}
 };
 
 const defaultAuthState: AuthState = {
   isAuthenticated: false,
   channelName: null,
+  channelHandle: null,
   channelThumbnail: null,
   subscriberCount: null,
   totalViews: null
@@ -154,7 +159,11 @@ const loadPersistedBrain = (): WorkspaceBrain => {
           allData: Array.isArray(parsed.researchLabState?.allData) ? parsed.researchLabState.allData : [],
           analyticsResult: parsed.researchLabState?.analyticsResult || null
         },
-        videoFlags: parsed.videoFlags || {}
+        videoFlags: parsed.videoFlags || {},
+        journalEntries: Array.isArray(parsed.journalEntries) ? parsed.journalEntries : [],
+        journalFollowUps: Array.isArray(parsed.journalFollowUps) ? parsed.journalFollowUps : [],
+        microPolls: Array.isArray(parsed.microPolls) ? parsed.microPolls : [],
+        creatorPreferences: parsed.creatorPreferences || {}
       };
     }
   } catch (e) {
@@ -167,12 +176,12 @@ const loadPersistedAuth = (): AuthState => {
   try {
     const saved = localStorage.getItem(AUTH_STORAGE_KEY);
     if (saved) {
-      return { ...defaultAuthState, ...JSON.parse(saved), isAuthenticated: authService.isAuthenticated() };
+      return { ...defaultAuthState, ...JSON.parse(saved), isAuthenticated: unifiedAuth.isAuthenticated() };
     }
   } catch (e) {
     console.warn('[Auth] Failed to load persisted state:', e);
   }
-  return { ...defaultAuthState, isAuthenticated: authService.isAuthenticated() };
+  return { ...defaultAuthState, isAuthenticated: unifiedAuth.isAuthenticated() };
 };
 
 const GlobalDataContext = createContext<GlobalDataContextProps | undefined>(undefined);
@@ -224,8 +233,8 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({ children
       if ((options?.batchMode || "initial") === "initial") {
         await clearAnalyticsStateForFreshSync();
       }
-      const { performSync } = await import('../services/analyticsSync');
-      await performSync(true, { batchMode: options?.batchMode || 'initial' });
+      const { syncCoordinator } = await import('../services/SyncCoordinator');
+      await syncCoordinator.syncYouTube(true, { batchMode: options?.batchMode || 'initial' });
       setLastSyncComplete(new Date().toISOString());
       try {
         const raw = localStorage.getItem("vt_video_sync_batch_state");
@@ -401,7 +410,7 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({ children
 
   const login = useCallback(async () => {
     try {
-      await authService.login();
+      await unifiedAuth.login();
       setAuthStateRaw(prev => ({ ...prev, isAuthenticated: true }));
       // Automatically sync all data upon login
       await globalSyncData({ batchMode: "initial" });
@@ -412,7 +421,7 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({ children
 
   const logout = useCallback(() => {
     setAuthStateRaw(defaultAuthState);
-    authService.logout();
+    unifiedAuth.logout();
   }, []);
 
   return (
@@ -441,7 +450,35 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({ children
       lastSyncComplete,
       syncStatus,
       syncBatch,
-      globalSyncData
+      syncBatch,
+      globalSyncData,
+      addJournalEntry: (content: string, category: any) => {
+        const entry = { id: crypto.randomUUID(), content, category, timestamp: Date.now() };
+        setBrain(prev => ({ ...prev, journalEntries: [entry, ...prev.journalEntries] }));
+        return entry;
+      },
+      addFollowUp: (entryId: string, question: string) => {
+        setBrain(prev => ({
+          ...prev,
+          journalFollowUps: [{ id: crypto.randomUUID(), entryId, question, timestamp: Date.now() }, ...prev.journalFollowUps]
+        }));
+      },
+      answerFollowUp: (id: string, answer: string) => {
+        setBrain(prev => ({
+          ...prev,
+          journalFollowUps: prev.journalFollowUps.map(f => f.id === id ? { ...f, answer } : f)
+        }));
+      },
+      answerMicroPoll: (id: string, answer: string) => {
+        setBrain(prev => ({
+          ...prev,
+          microPolls: prev.microPolls.map(p => p.id === id ? { ...p, answer } : p),
+          creatorPreferences: { ...prev.creatorPreferences, [id]: answer } // Optimization: cache as pref
+        }));
+      },
+      setMicroPolls: (polls: any[]) => {
+        setBrain(prev => ({ ...prev, microPolls: polls }));
+      }
     }}>
       {children}
     </GlobalDataContext.Provider>

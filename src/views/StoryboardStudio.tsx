@@ -24,6 +24,7 @@ import {
  getAudioProviderStatus,
 } from "../services/audioProviderAdapter"
 import { nexusSyncService } from "../services/nexusSyncService"
+import { generateStoryboard } from "../services/gemini"
 import type { Scene } from "../types"
 
 const calculateDuration = (text: string) => {
@@ -128,8 +129,45 @@ const StoryboardStudio: React.FC<StoryboardStudioProps> = ({
 
  const [generatingVoiceId, setGeneratingVoiceId] = useState<string | null>(null)
  const [isEnhancingId, setIsEnhancingId] = useState<string | null>(null)
+ const [isGeneratingStoryboard, setIsGeneratingStoryboard] = useState(false)
  const [isSyncing, setIsSyncing] = useState(false)
  const [isOpen, setIsOpen] = useState(isOpenInitial)
+
+ const handleAutoBRoll = async () => {
+  // Collect entire script from current scenes or use a placeholder
+  const fullScript = scenes.map(s => s.text).join("\n")
+  if (!fullScript.trim()) {
+    alert("Add some script text to the Blueprint first!")
+    return
+  }
+
+  setIsGeneratingStoryboard(true)
+  try {
+    const generatedScenes = await generateStoryboard(
+      brain.coreConcept || "General Project",
+      brain.targetNiche || "Education",
+      fullScript,
+      brain
+    )
+    
+    // Merge or replace scenes
+    if (generatedScenes.length > 0) {
+      setScenes(generatedScenes.map((gs, i) => ({
+        ...gs,
+        id: gs.id || Date.now() + i + "",
+        imageUrl: null,
+        voiceoverUrl: null,
+        durationEstimate: calculateDuration(gs.text),
+        emotionScore: calculateEmotion(gs.text)
+      })))
+    }
+  } catch (e) {
+    console.error("Storyboard generation failed:", e)
+    alert("Failed to generate storyboard. Check console.")
+  } finally {
+    setIsGeneratingStoryboard(false)
+  }
+ }
 
  const generateVoiceover = async (sceneId: string, text: string) => {
   if (!text) return
@@ -347,8 +385,17 @@ const StoryboardStudio: React.FC<StoryboardStudioProps> = ({
        <Eye size={16} />{" "}
        <h2 className="font-bold uppercase tracking-tight">Visual Canvas</h2>
       </div>
-      <button className="text-xs bg-white text-black px-3 py-1 font-bold rounded border-2 border-black flex items-center gap-1 hover:bg-[#ccff00] transition-colors">
-       <Sparkles size={12} /> Auto-B-Roll
+      <button 
+        onClick={handleAutoBRoll}
+        disabled={isGeneratingStoryboard}
+        className="text-xs bg-white text-black px-3 py-1 font-bold rounded border-2 border-black flex items-center gap-1 hover:bg-[#ccff00] transition-colors disabled:opacity-50"
+      >
+       {isGeneratingStoryboard ? (
+         <div className="w-3 h-3 border-2 border-black border-t-transparent rounded-full animate-spin" />
+       ) : (
+         <Sparkles size={12} />
+       )}
+       {isGeneratingStoryboard ? "Thinking..." : "Auto-B-Roll"}
       </button>
      </div>
      <div className="flex-1 overflow-y-auto p-6 bg-[#f3f4f6]">

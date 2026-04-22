@@ -91,7 +91,7 @@ const TagBadge: React.FC<{
      setShowTooltip(true)
     }}
     onMouseLeave={() => setShowTooltip(false)}
-    className="inline-flex items-center gap-1 px-3 py-1 text-xs font-[900] uppercase border-[3px] border-black rounded-full shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)] transition-all hover:-translate-y-0.5 active:translate-y-0"
+   className="inline-flex items-center gap-1 px-3 py-1 text-xs font-[900] uppercase border-[4px] border-black rounded-full shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)] transition-all hover:-translate-y-0.5 active:translate-y-0"
     style={{
      backgroundColor: isAdded
       ? "#E5E7EB"
@@ -115,7 +115,7 @@ const TagBadge: React.FC<{
    </button>
    {showTooltip && analysis && tooltipPos && (
     <div
-     className="fixed z-[200] w-52 bg-white text-black p-3 rounded-2xl border-[3px] border-black shadow-[6px_6px_0px_0px_black] pointer-events-none"
+     className="fixed z-[200] w-52 bg-white text-black p-3 rounded-2xl border-[4px] border-black shadow-[6px_6px_0px_0px_black] pointer-events-none"
      style={{ left: tooltipPos.left, top: tooltipPos.top - 12, transform: "translate(-50%, -100%)" }}
     >
      <div className="space-y-2 text-[10px] font-bold uppercase">
@@ -895,7 +895,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
     )}
     {showRankDetails && existingTagAnalysis.length > 0 && (
      <div className="fixed inset-0 z-[110] bg-black/75 backdrop-blur-sm flex items-center justify-center p-6">
-      <div className="w-full max-w-4xl bg-white border-[5px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] overflow-hidden">
+      <div className="w-full max-w-4xl bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] overflow-hidden">
        <div className="bg-[#CCFF00] border-b-[4px] border-black px-5 py-4 flex items-center justify-between">
         <div>
          <h3 className="text-2xl font-[1000] uppercase tracking-tight">
@@ -908,7 +908,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
         </div>
         <button
          onClick={() => setShowRankDetails(false)}
-         className="h-10 w-10 rounded-lg border-[3px] border-black bg-white flex items-center justify-center">
+         className="h-10 w-10 rounded-lg border-[4px] border-black bg-white flex items-center justify-center">
          <X size={18} />
         </button>
        </div>
@@ -1093,7 +1093,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
               searching: true,
              })
             }}
-            className="bg-white text-black border-[3px] border-black px-6 py-4 rounded-xl font-black uppercase tracking-widest hover:scale-105 transition-transform shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)]">
+         className="bg-white text-black border-[4px] border-black px-6 py-4 rounded-xl font-black uppercase tracking-widest hover:scale-105 transition-transform shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)]">
             Refresh
            </button>
           </div>
@@ -1108,7 +1108,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
             No videos found matching "{videoSearchQuery}"
            </div>
           ) : (
-           <div className="grid grid-cols-1 divide-y-[3px] divide-black/10">
+           <div className="grid grid-cols-1 divide-y-[4px] divide-black/10">
             {videos.map((video) => (
              <div
               key={video.videoId}
@@ -1371,7 +1371,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
           <select
            value={editPrivacy}
            onChange={(e) => setEditPrivacy(e.target.value)}
-           className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase outline-none text-lg">
+           className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase outline-none text-lg focus:shadow-[4px_4px_0px_0px_black]">
            <option value="public">Public</option>
            <option value="unlisted">Unlisted</option>
            <option value="private">Private</option>
@@ -1384,7 +1384,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
           <select
            value={editCategoryId}
            onChange={(e) => setEditCategoryId(e.target.value)}
-           className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase outline-none text-lg">
+           className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase outline-none text-lg focus:shadow-[4px_4px_0px_0px_black]">
            {categories.map((c) => (
             <option key={c.id} value={c.id}>
              {c.title}
@@ -1411,17 +1411,17 @@ const VideoManager: React.FC<VideoManagerProps> = ({
             <ChevronDown size={20} />
            </button>
            {playlistMenuOpen && (
-            <div className="absolute left-0 right-0 top-full mt-2 bg-white border-[4px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] max-h-72 overflow-y-auto z-50 p-3 space-y-2">
+            <div className="absolute left-0 right-0 top-full mt-2 bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] max-h-72 overflow-y-auto z-50 p-3 space-y-2">
              {userPlaylists.length > 0 ? (
               userPlaylists.map((p) => (
                <label
                 key={p.id}
-                className={`flex items-center gap-4 p-4 rounded-xl border-[3px] cursor-pointer transition-all ${selectedPlaylistIds.includes(p.id) ? "border-[#00CCFF] bg-[#00CCFF]/10" : "border-black hover:bg-gray-100"}`}>
+                className={`flex items-center gap-4 p-4 rounded-xl border-[4px] cursor-pointer transition-all ${selectedPlaylistIds.includes(p.id) ? "border-[#00CCFF] bg-[#00CCFF]/10" : "border-black hover:bg-gray-100"}`}>
                 <input
                  type="checkbox"
                  checked={selectedPlaylistIds.includes(p.id)}
                  onChange={() => togglePlaylist(p.id)}
-                 className="w-6 h-6 border-[3px] border-black accent-black"
+                 className="w-6 h-6 border-[4px] border-black accent-black"
                 />
                 <span className="font-black text-sm uppercase truncate">
                  {p.title}

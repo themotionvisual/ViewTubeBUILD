@@ -113,6 +113,7 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
    const concept = await generateThumbnailConcept(
     currentSeoResult || undefined,
     prompt,
+    brain,
    )
    setPrompt(concept.prompt)
    setAspectRatio(concept.aspectRatio)
@@ -181,6 +182,7 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
     imageSize,
     useText ? largeText : "",
     useText ? smallText : "",
+    brain,
    )
    setGeneratedImage(img)
    const newItem: ThumbnailHistoryItem = {
@@ -211,7 +213,7 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
         niche: currentSeoResult.niche,
        }
      : undefined
-    const result = await rateThumbnail(base64String, analysisFile.type, context)
+    const result = await rateThumbnail(base64String, analysisFile.type, brain)
     setAnalysisResult(result)
     setAnalyzeLoading(false)
    }

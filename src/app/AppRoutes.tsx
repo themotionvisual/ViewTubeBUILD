@@ -10,7 +10,6 @@ import ResearchLab from "../views/ResearchLab"
 import DataVisualizations from "../views/DataVizualizations"
 import Settings from "../views/Settings"
 import ReferenceStudio from "../views/ReferenceStudio"
-import ReferenceStudioIsolated from "../views/ReferenceStudioIsolated"
 import ReferenceStudioV2 from "../views/ReferenceStudioV2"
 import Stuff from "../views/Stuff"
 import SourcesLabView from "../views/SourcesLabView"
@@ -19,12 +18,21 @@ import ComponentGridView from "../views/ComponentGridView"
 import BenchExplorer from "../views/bench/BenchExplorer"
 import StandaloneBench from "../views/bench/StandaloneBench"
 import { ShortsStudio } from "../views/ShortsStudio"
+import EditorPage from "../views/EditorPage"
 import ProjectCalendarPage from "../views/ProjectCalendarPage"
 import ChartsGalleryHome from "../views/ChartsGallery/ChartsGalleryHome"
 import MasterGraphsPage from "../views/ChartsGallery/MasterGraphsPage"
 import ToolboxPreviewPage from "../views/ChartsGallery/ToolboxPreviewPage"
 import DataTransparencyCenter from "../views/DataTransparencyCenter"
 import InternalAnalyticsPanel from "../views/InternalAnalyticsPanel"
+import SimpleAnalytics from "../views/SimpleAnalytics"
+import MediaAnalyzer from "../views/MediaAnalyzer"
+import SeoGenerator from "../views/SeoGenerator"
+import HookGenerator from "../views/HookGenerator"
+import ThumbnailStudio from "../views/ThumbnailStudio"
+import AlgorithmArchitect from "../views/AlgorithmArchitect"
+import StoryboardStudio from "../views/StoryboardStudio"
+import { ComponentGridLab } from "../components/ComponentGridLab"
 
 const Placeholder = ({ title }: { title: string }) => (
  <div className="flex items-center justify-center h-full">
@@ -49,6 +57,7 @@ export const AppRoutes: React.FC = () => {
    <Route path="/data-transparency" element={<DataTransparencyCenter />} />
 
    <Route path="/shorts" element={<ShortsStudio />} />
+   <Route path="/editor" element={<EditorPage />} />
    <Route path="/project-calendar" element={<ProjectCalendarPage />} />
    <Route
     path="/reference-studio"
@@ -107,6 +116,17 @@ export const AppRoutes: React.FC = () => {
     path="/vault"
     element={<Navigate to="/reference-studio/toolbox-system" replace />}
    />
+
+   {/* Hidden Routes - Access by typing URL directly */}
+   <Route path="/simple-analytics" element={<SimpleAnalytics />} />
+   <Route path="/media-analyzer" element={<MediaAnalyzer />} />
+   <Route path="/seo-generator" element={<SeoGenerator />} />
+   <Route path="/hook-generator" element={<HookGenerator />} />
+   <Route path="/thumbnail-studio" element={<ThumbnailStudio />} />
+   <Route path="/algorithm-architect" element={<AlgorithmArchitect />} />
+   <Route path="/storyboard-studio" element={<StoryboardStudio />} />
+   <Route path="/component-grid-lab" element={<ComponentGridLab />} />
+
    <Route path="*" element={<Navigate to="/" replace />} />
   </Routes>
  )

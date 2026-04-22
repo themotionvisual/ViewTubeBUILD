@@ -12,7 +12,7 @@ import {
  ShieldCheck,
 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-import { authService } from "../services/authService"
+import { unifiedAuth } from "../services/authSession"
 import { getVaultSnapshot, setVaultSnapshot } from "../services/keyVault"
 import { SubToolbox } from "../components/Toolbox"
 import { resolvePublicChannel } from "../services/publicHandleMode"
@@ -30,7 +30,7 @@ import {
 
 const Settings: React.FC = () => {
  const navigate = useNavigate()
- const [isAuth, setIsAuth] = useState(authService.isAuthenticated())
+ const [isAuth, setIsAuth] = useState(unifiedAuth.isAuthenticated())
  const [saveStatus, setSaveStatus] = useState<string | null>(null)
  const [showKey, setShowKey] = useState(false)
  const vault = getVaultSnapshot()
@@ -48,7 +48,7 @@ const Settings: React.FC = () => {
 
  useEffect(() => {
   const checkAuth = setInterval(() => {
-   setIsAuth(authService.isAuthenticated())
+   setIsAuth(unifiedAuth.isAuthenticated())
   }, 1000)
   return () => clearInterval(checkAuth)
  }, [])
@@ -132,7 +132,7 @@ const Settings: React.FC = () => {
      </div>
      {isAuth ? (
       <button
-       onClick={() => authService.logout()}
+       onClick={() => unifiedAuth.logout()}
        className={`${canonicalButtonClass} bg-black text-white px-8 py-4 text-sm`}>
        Disconnect Channel
       </button>
@@ -140,7 +140,7 @@ const Settings: React.FC = () => {
       <button
        onClick={async () => {
         await clearAnalyticsStateForFreshSync()
-        await authService.login()
+        await unifiedAuth.login()
        }}
        className={`${canonicalButtonClass} bg-[#FFFF61] text-black px-8 py-4 text-sm`}>
        Connect Channel

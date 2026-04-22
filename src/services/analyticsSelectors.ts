@@ -13,12 +13,11 @@ import {
  canonicalMetricOrder,
  emptyMetricCells,
  getMetricByAliases,
+ getDisplayLabel,
 } from "./analyticsContract"
 import {
- readYouTubeAnalyticsCache,
- markDeprecatedLocalStorageRead,
- type RawAnalyticsCache,
- type LedgerEntry,
+  getCanonicalAnalyticsCache,
+  type RawAnalyticsCache,
 } from "./canonicalAnalyticsStore"
 import {
  classifyCsvExportKind,
@@ -144,12 +143,8 @@ export type MasterTableRow = Record<string, unknown> & {
  __metricCells: Record<CanonicalMetricKey, MetricCell>
 }
 
-const parseCache = (): AnalyticsCache => {
- markDeprecatedLocalStorageRead(
-  "analyticsSelectors.parseCache",
-  "yt_analytics_cache",
- )
- return readYouTubeAnalyticsCache() as AnalyticsCache
+const resolveAnalyticsCache = (): AnalyticsCache => {
+  return getCanonicalAnalyticsCache() as AnalyticsCache
 }
 
 const text = (value: unknown): string => {
@@ -292,7 +287,7 @@ const sourceFromCells = (
  return "hybrid"
 }
 
-const metricCellValue = (cell: MetricCell | undefined): number | null => {
+export const metricCellValue = (cell: MetricCell | undefined): number | null => {
  if (!cell || cell.status === "unavailable") return null
  return typeof cell.value === "number" && Number.isFinite(cell.value)
   ? cell.value
@@ -1024,7 +1019,7 @@ export const getMasterRows = (
  sourceMode: AnalyticsSourceMode = "api",
  csvFiles: CsvFileWithTag[] = [],
 ): CanonicalVideoRow[] => {
- const cache = parseCache()
+ const cache = resolveAnalyticsCache()
  const apiRows = sourceMode !== "csv" ? apiRowsForWindow(cache, window) : []
  const csvRows = sourceMode !== "api" ? csvRowsForWindow(csvFiles, window) : []
 
@@ -1039,7 +1034,7 @@ export const getMetricSummary = (
  csvFiles: CsvFileWithTag[] = [],
 ): MetricSummary => {
  const rows = getMasterRows(window, sourceMode, csvFiles)
- const cache = parseCache()
+ const cache = resolveAnalyticsCache()
  const totalsFallback = resolveWindowTotals(cache, window)
 
  let views = 0
@@ -1151,36 +1146,13 @@ export const getMetricAvailability = (
  }
 }
 
-const METRIC_TO_HEADER: Record<CanonicalMetricKey, string> = {
- views: "Views",
- watchHours: "Watch Time (Hours)",
- likes: "Likes",
- dislikes: "Dislikes",
- comments: "Comments",
- shares: "Shares",
- subscribersGained: "Subscribers Gained",
-  revenue: "Revenue",
-  cpm: "CPM",
-  rpm: "RPM",
- newViewers: "New Viewers",
- returningViewers: "Returning Viewers",
- casualViewers: "Casual viewers",
- regularViewers: "Regular viewers",
- uniqueViewers: "Unique viewers",
- avdSeconds: "AVD (Average View Duration)",
- avp: "AVP (%)",
- engagedViews: "Engaged views",
- stw: "STW %",
- endScreenClickRate: "End screen click rate",
- cardClickRate: "Card click rate",
-}
-
 export const MASTER_TABLE_HEADER_TO_METRIC_KEY: Record<
  string,
  CanonicalMetricKey
-> = Object.entries(METRIC_TO_HEADER).reduce(
- (acc, [metricKey, header]) => {
-  acc[header] = metricKey as CanonicalMetricKey
+> = canonicalMetricOrder.reduce(
+ (acc, metricKey) => {
+  const header = getDisplayLabel(metricKey, "tableHeader")
+  if (header) acc[header] = metricKey
   return acc
  },
  {} as Record<string, CanonicalMetricKey>,
@@ -1207,6 +1179,7 @@ export const canonicalRowsToMasterTableRows = (
    "Video title": row.title,
    "Video ID": row.videoId,
    "Upload date": row.uploadDate,
+   Date: row.uploadDate,
    Format: row.format,
    Length: row.durationSeconds > 0 ? row.durationSeconds : null,
    "Duration (sec)": row.durationSeconds > 0 ? row.durationSeconds : null,
@@ -1217,17 +1190,15 @@ export const canonicalRowsToMasterTableRows = (
   }
 
   canonicalMetricOrder.forEach((metricKey) => {
-   const header = METRIC_TO_HEADER[metricKey]
+   const header = getDisplayLabel(metricKey, "tableHeader")
    if (!header) return
    base[header] = metricToRowValue(row.metrics[metricKey])
   })
 
   // Keep legacy aliases used by existing rendering/helpers.
   base["Watch time (hours)"] = base["Watch Time (Hours)"]
-  base["Subs"] = base["Subscribers Gained"]
   base["AVD (Sec)"] = base["AVD (Average View Duration)"]
   base["Estimated revenue"] = base.Revenue
-  base["Subscribers Lost"] = base["Subscribers Lost"]
 
   return base
  })

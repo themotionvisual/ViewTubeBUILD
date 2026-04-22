@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react"
+import { useBrain } from "../context/GlobalDataContext"
 import { analyzeMediaContent, transcribeMediaContent } from "../services/gemini"
 import type { MediaAnalysisResult } from "../types"
 import {
@@ -26,6 +27,7 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
  isOpenInitial = true,
  paletteIndex,
 }) => {
+ const { brain } = useBrain()
  const [file, setFile] = useState<File | null>(null)
  const [prompt, setPrompt] = useState("")
 const [analysisResult, setAnalysisResult] =
@@ -94,7 +96,7 @@ const [transcriptResult, setTranscriptResult] = useState("")
   }
 
   const fullPrompt = [prompt, script ? `SCRIPT:\n${script}` : ""].filter(Boolean).join("\n\n")
-  analyzeMediaContent(mediaData.data, mediaData.mimeType, fullPrompt)
+  analyzeMediaContent(mediaData.data, mediaData.mimeType, fullPrompt, brain)
    .then((res) => setAnalysisResult(res))
    .catch((e) => console.error(e))
    .finally(() => setIsAnalyzing(false))

@@ -113,7 +113,13 @@ export const markDeprecatedLocalStorageRead = (
 }
 
 export const readYouTubeAnalyticsCache = (): RawAnalyticsCache =>
- safeParse<RawAnalyticsCache>(localStorage.getItem(YT_ANALYTICS_CACHE_KEY), {})
+  safeParse<RawAnalyticsCache>(localStorage.getItem(YT_ANALYTICS_CACHE_KEY), {})
+
+/**
+ * @deprecated Use canonical analytics store selectors from analyticsSelectors.ts if possible.
+ * For lower-level access, this is the official store-based reader.
+ */
+export const getCanonicalAnalyticsCache = (): RawAnalyticsCache => readYouTubeAnalyticsCache()
 
 export const writeYouTubeAnalyticsCache = (cache: RawAnalyticsCache): void => {
  localStorage.setItem(YT_ANALYTICS_CACHE_KEY, JSON.stringify(cache))

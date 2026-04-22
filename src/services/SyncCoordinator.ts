@@ -18,7 +18,7 @@ import {
 } from "./youtubeService"
 import { ga4Service, type GA4Property } from "./ga4Service"
 import { commitToLedger } from "./canonicalAnalyticsStore"
-import { toNumber, toText, hasValue, parseDurationSeconds } from "./dataUtils"
+import { parseDurationSeconds } from "./dataUtils"
 import { ytApiQueue } from "../utils/RequestQueue"
 import {
  ANALYTICS_WINDOWS,

@@ -1,0 +1,337 @@
+/* ═══════════════════════════════════════════════════════════
+   TOOLBOX UI SYSTEM — CANONICAL DESIGN TOKENS
+   Extracted verbatim from widget-preview copy 9.html
+   Source: ToolboxUISystem.tsx CONFIG + CONTROL_SHELL
+   
+   This file is imported by DashboardBarrier.tsx to provide
+   the exact same CSS classes used in widget-preview.html
+═══════════════════════════════════════════════════════════ */
+
+.dashboard-barrier {
+  --gap: 12px;
+  --padding: 12px;
+  --stroke: 2px;
+  --radius: 10px;
+  --base-height: 32px;
+  --scaffold-stroke: 4px;
+  --header-height: 30px;
+  --control-height: 32px;
+  --rail-size: 30px;
+  --shadow-offset: 3px;
+  --transition: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --bg-page: transparent;
+  --bg-scaffold: #ffffff;
+  --bg-widget: #ffffff;
+  --bg-inner: #f5f5f5;
+  --bg-card: #ffffff;
+  --bg-input: #ffffff;
+  --text-main: #000000;
+  --border-main: #000000;
+  --shadow-color: rgba(0,0,0,0.1);
+
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ═══ SUBTOOLBOX (Canonical Widget Shell) ═══ */
+.dashboard-barrier .subtoolbox {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-widget);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border: var(--stroke) solid var(--text-main);
+  border-radius: var(--radius);
+  transition: all var(--transition);
+}
+
+.dashboard-barrier .subtoolbox-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--header-height);
+  min-height: var(--header-height);
+  border-bottom: var(--stroke) solid var(--text-main);
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  z-index: 20;
+  transition: all var(--transition);
+}
+
+.dashboard-barrier .subtoolbox-header .left {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  flex: 1;
+  overflow: hidden;
+}
+
+.dashboard-barrier .icon-rail {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--rail-size);
+  border-right: var(--stroke) solid var(--text-main);
+  transition: all var(--transition);
+}
+
+.dashboard-barrier .subtoolbox-header .title {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  color: #000;
+  line-height: 1.15;
+  font-size: 11px;
+  padding-left: 6px;
+  pointer-events: none;
+  user-select: none;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.dashboard-barrier .subtoolbox-header .toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 12px;
+  height: 100%;
+}
+
+.dashboard-barrier .toggle-icon {
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  opacity: 0.8;
+  transition: transform var(--transition);
+}
+
+.dashboard-barrier .subtoolbox-content {
+  margin-top: calc(-1 * var(--stroke));
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.dashboard-barrier .subtoolbox-body {
+  background: var(--bg-widget);
+  padding: 6px;
+  color: var(--text-main);
+  transition: all var(--transition);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Kill ALL scrollbars inside widgets */
+.dashboard-barrier .subtoolbox,
+.dashboard-barrier .subtoolbox * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.dashboard-barrier .subtoolbox::-webkit-scrollbar,
+.dashboard-barrier .subtoolbox *::-webkit-scrollbar {
+  display: none;
+}
+
+.dashboard-barrier .subtoolbox.closed .subtoolbox-content {
+  display: none;
+}
+
+.dashboard-barrier .subtoolbox:not(.open) .subtoolbox-content {
+  display: none;
+}
+
+.dashboard-barrier .subtoolbox:not(.open) .subtoolbox-header {
+  border-bottom-color: transparent;
+}
+
+/* ═══ INNER PRIMITIVES — max 3px stroke ═══ */
+.dashboard-barrier .metric-card {
+  background: var(--bg-widget);
+  border: 2px solid var(--text-main);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition);
+}
+
+.dashboard-barrier .metric-card .mc-header {
+  padding: 6px 10px 2px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dashboard-barrier .metric-card .mc-title {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+}
+
+.dashboard-barrier .metric-card .mc-value {
+  padding: 0 10px;
+  font-size: 18px;
+  font-weight: 1000;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.dashboard-barrier .mini-module {
+  background: var(--bg-widget);
+  border: 2px solid var(--text-main);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition);
+}
+
+.dashboard-barrier .mini-module .mm-header {
+  padding: 6px 10px;
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 2px solid var(--text-main);
+}
+
+.dashboard-barrier .mini-module .mm-body {
+  flex: 1;
+  padding: 8px 10px;
+}
+
+/* ═══ LABEL / TAG HELPERS ═══ */
+.dashboard-barrier .label-tiny {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.dashboard-barrier .tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 2px solid #000;
+  border-radius: 999px;
+  background: rgba(87,154,255,0.15);
+}
+
+/* ═══ STAT SLIDER ═══ */
+.dashboard-barrier .stat-slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-barrier .stat-slider .ss-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  width: 60px;
+  flex-shrink: 0;
+}
+
+.dashboard-barrier .stat-slider .ss-track {
+  flex: 1;
+  height: 10px;
+  background: var(--bg-inner);
+  border-radius: 5px;
+  border: 2px solid var(--text-main);
+  overflow: hidden;
+}
+
+.dashboard-barrier .stat-slider .ss-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.dashboard-barrier .stat-slider .ss-value {
+  font-size: 9px;
+  font-weight: 700;
+  width: 28px;
+  text-align: right;
+}
+
+/* ═══ CONSISTENCY GRID ═══ */
+.dashboard-barrier .con-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.dashboard-barrier .con-cell {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+/* ═══ EDIT MODE CONTROLS ═══ */
+.dashboard-barrier .widget-control-btn {
+  height: 20px;
+  background: #f3f4f6;
+  border: 2px solid #000;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.45);
+  transition: all 0.15s;
+  cursor: pointer;
+}
+
+.dashboard-barrier .widget-control-btn:hover {
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0px 0px rgba(0,0,0,0.45);
+}
+
+/* ═══ INPUT ═══ */
+.dashboard-barrier .brutal-input {
+  width: 100%;
+  border: 2px solid #000;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #fff;
+  outline: none;
+  box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.1);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.dashboard-barrier .brutal-input:focus {
+  border-color: #00D2FF;
+  box-shadow: 2px 2px 0px 0px #00D2FF;
+}
+
+.dashboard-barrier .brutal-input::placeholder {
+  opacity: 0.35;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+

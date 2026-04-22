@@ -562,8 +562,7 @@ const ReferenceStudio: React.FC = () => {
   try {
    const concept = await generateThumbnailConcept(
     currentSeoResult || undefined,
-    prompt,
-   )
+    prompt, brain,)
    setPrompt(concept.prompt)
    setAspectRatio(concept.aspectRatio)
   } catch {
@@ -661,8 +660,7 @@ const ReferenceStudio: React.FC = () => {
     aspectRatio,
     imageSize,
     largeText,
-    smallText,
-   )
+    smallText, brain,)
    setGeneratedImage(img)
    setHistory([
     {
@@ -687,7 +685,7 @@ const ReferenceStudio: React.FC = () => {
    const reader = new FileReader()
    reader.onloadend = async () => {
     const base64String = (reader.result as string).split(",")[1]
-    const res = await rateThumbnail(base64String, analysisFile.type)
+    const res = await rateThumbnail(base64String, analysisFile.type, brain)
     setAnalysisResult(res)
     setAnalyzeLoading(false)
    }

@@ -9,7 +9,7 @@ import { DATA_COVERAGE_CATALOG } from "./dataCoverageCatalog"
 import {
  getWindowCapabilityReason,
  markDeprecatedLocalStorageRead,
- readYouTubeAnalyticsCache,
+ getCanonicalAnalyticsCache,
 } from "./canonicalAnalyticsStore"
 
 export type DataCoverageSource =
@@ -431,7 +431,7 @@ export const buildDataCoverageInventory = (
   "dataCoverageInventory.build",
   "yt_analytics_cache",
  )
- const ytCache = readYouTubeAnalyticsCache() as Record<string, unknown>
+ const ytCache = getCanonicalAnalyticsCache() as Record<string, unknown>
  const ga4Cache = safeParse<Record<string, unknown>>(
   localStorage.getItem("ga4_analytics_cache"),
   {},

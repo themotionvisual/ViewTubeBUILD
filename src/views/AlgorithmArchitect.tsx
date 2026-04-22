@@ -8,8 +8,10 @@ import type {
   DailyBrief
 } from '../types';
 import { Zap } from 'lucide-react';
+import { useBrain } from '../context/GlobalDataContext';
 
 const AlgorithmArchitect: React.FC = () => {
+  const { brain } = useBrain();
   const [diagnosis, setDiagnosis] = useState<AlgorithmDiagnosis | null>(null);
   const [brief, setBrief] = useState<DailyBrief | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,11 +36,11 @@ const AlgorithmArchitect: React.FC = () => {
     setLoading(true);
     try {
       const cachedData = localStorage.getItem('yt_analytics_cache') || 'No data synced yet.';
-      const diag = await generateAlgorithmDiagnosis(cachedData);
+      const diag = await generateAlgorithmDiagnosis(cachedData, brain);
       setDiagnosis(diag);
       localStorage.setItem('yt_algo_diagnosis', JSON.stringify(diag));
       const performanceContext = "Recent views trending up slightly. AVD is stable but CTR experiencing volatility.";
-      const daily = await generateDailyBrief(diag, performanceContext);
+      const daily = await generateDailyBrief(diag, performanceContext, brain);
       setBrief(daily);
       localStorage.setItem('yt_algo_brief', JSON.stringify(daily));
     } catch (error) {

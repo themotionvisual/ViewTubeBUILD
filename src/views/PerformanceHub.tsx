@@ -226,24 +226,37 @@ const TABLE_DATASET_CONTRACTS: Record<TableDatasetId, TableDatasetContract> = {
    "Video title",
    "Video ID",
    "Format",
-   "Upload date",
+   "Date",
    "Views",
    "Watch Time (Hours)",
    "Revenue",
-   "Subscribers Gained",
-   "Subscribers Lost",
-   "Likes",
-   "Dislikes",
+   "Subs +",
+   "Subs -",
+   "Likes +",
+   "Likes -",
    "Comments",
    "Shares",
    "Engaged views",
-   "Impressions",
-   "Click-Through Rate (CTR)",
    "CPM",
    "RPM",
    "Length",
    "AVD (Average View Duration)",
    "AVP (%)",
+   "Click-Through Rate (CTR)",
+   "Impressions",
+   "Engagement Rate",
+   "New Viewers",
+   "Returning Viewers",
+   "Unique viewers",
+   "Casual viewers",
+   "Regular viewers",
+   "STW %",
+   "End screen click rate",
+   "Card click rate",
+   "Relative Retention Performance",
+   "Audience Watch Ratio",
+   "Average Time in Playlist",
+   "Viewer percentage",
   ],
  },
  daily: {
@@ -350,10 +363,10 @@ const HEADER_LABELS: Record<string, string> = {
  Dimension: "Dimension",
  Length: "Length",
  Format: "Format",
- "Upload date": "Upload Date",
- uploadedAt: "Upload Date",
+ "Upload date": "Date",
+ uploadedAt: "Date",
  Date: "Date",
- "Video publish time": "Upload Date",
+ "Video publish time": "Date",
  day: "Date",
  "Duration (sec)": "Duration",
  durationSeconds: "Duration",
@@ -362,6 +375,7 @@ const HEADER_LABELS: Record<string, string> = {
  Views: "Views",
  viewCount: "Views",
  "Subs +": "Subs +",
+ "Subs -": "Subs -",
  Impressions: "Impressions",
  impressions: "Impressions",
  CPM: "CPM",
@@ -410,16 +424,20 @@ const HEADER_LABELS: Record<string, string> = {
  averageViewPercentage: "AVP %",
  adjustedAVP: "Adj AVP",
  "Subscribers Gained": "Subs +",
+ "Subscribers Lost": "Subs -",
  Subscribers: "Subscribers",
  subscribersGained: "Subs +",
+ subscribersLost: "Subs -",
  newViewers: "New",
  returningViewers: "Returning",
  "New Viewers": "New",
  "New viewers": "New",
  "Returning Viewers": "Returning",
  "Returning viewers": "Returning",
- Likes: "Likes",
- likeCount: "Likes",
+ Likes: "Likes +",
+ likeCount: "Likes +",
+ Dislikes: "Likes -",
+ dislikeCount: "Likes -",
  Comments: "Comments",
  commentCount: "Comments",
  Shares: "Shares",
@@ -1683,17 +1701,18 @@ const PerformanceHub: React.FC = () => {
     "Click-Through Rate (CTR)",
     "CTR (%)",
     "Impressions click-through rate (%)",
-    "AVP (%)",
     "STW %",
     "End screen click rate",
     "Card click rate",
    ])
    if (percentHeaders.has(header)) return `${value.toFixed(2)}%`
+   if (header === "AVP (%)") return `${Math.round(value)}%`
 
    if (header === "Revenue" || header === "Estimated revenue") {
     return `$${value.toFixed(2)}`
    }
    if (header === "CPM" || header === "RPM") {
+    if (header === "CPM" && isShortFormat) return "-"
     return `$${value.toFixed(2)}`
    }
    if (
@@ -1702,7 +1721,7 @@ const PerformanceHub: React.FC = () => {
    ) {
     return value.toFixed(2)
    }
-   if (header === "Subs +") {
+   if (header === "Subs +" || header === "Subs -") {
     return Math.round(value).toLocaleString()
    }
    if (
@@ -1713,9 +1732,10 @@ const PerformanceHub: React.FC = () => {
     const h = Math.floor(totalSec / 3600)
     const m = Math.floor((totalSec % 3600) / 60)
     const s = totalSec % 60
-    return h > 0
-     ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
-     : `0:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+    if (h > 0) {
+     return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+    }
+    return `${m}:${String(s).padStart(2, "0")}`
    }
 
    return Number.isInteger(value)
@@ -3109,7 +3129,7 @@ const PerformanceHub: React.FC = () => {
              <td
               key={`${row._id}-${header}`}
               title={cellValue}
-              className={`p-2 text-xs font-bold border-r border-black/10 border-b border-black/10 ${!isTextColumn ? "text-right pr-4" : "text-left pl-2"} ${cellValue === "-" ? "bg-[#111111] text-[#444444]" : ""}`}>
+              className={`p-2 text-xs font-bold border-r border-black/10 border-b border-black/10 ${!isTextColumn ? "text-right pr-4" : "text-left pl-2"}`}>
               {isTitle && videoIdentity && looksLikeVideoId(videoIdentity) ? (
                <div className="flex items-center gap-2">
                 <a

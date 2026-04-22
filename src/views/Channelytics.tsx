@@ -17,7 +17,7 @@ import type { CsvFileWithTag, ChartConfig, CsvUploadType } from '../types';
 import ReportViewer from '../components/ReportViewer';
 import { RenderChart } from '../components/ChartEngine';
 import { MobileLookChart } from '../components/MobileLookChart';
-import { performSync } from '../services/analyticsSync';
+import { syncCoordinator } from '../services/SyncCoordinator';
 import {
   buildCsvFilesWithTags,
   expandCsvAndZipFiles,
@@ -178,7 +178,7 @@ const Channelytics: React.FC = () => {
 
       const result = await analyzeChannelData(csvContent, undefined, (partial) => {
         updateBrain({ channelyticsState: { ...brain.channelyticsState, analyticsResult: { ...brain.channelyticsState.analyticsResult, ...partial } as any } });
-      });
+      }, brain);
 
       updateBrain({
         channelyticsState: { ...brain.channelyticsState, analyticsResult: result }
@@ -293,7 +293,7 @@ const Channelytics: React.FC = () => {
               <button
                 onClick={async () => {
                   setAnalysisLoading(true);
-                  try { await performSync(true); } catch (e) { console.error(e); }
+                  try { await syncCoordinator.syncYouTube(true); } catch (e) { console.error(e); }
                   setAnalysisLoading(false);
                 }}
                 disabled={analysisLoading}

@@ -9,7 +9,7 @@ import {
  BASE_URL,
 } from "./youtubeApiClient"
 import { parseDurationSeconds } from "../dataUtils"
-import { readYouTubeAnalyticsCache } from "../canonicalAnalyticsStore"
+import { getCanonicalAnalyticsCache } from "../canonicalAnalyticsStore"
 
 /**
  * YouTube Data Fetcher
@@ -45,7 +45,7 @@ export const fetchChannelProfile = async (): Promise<ChannelProfile> => {
 
  return {
   id: channel.id,
-  name: channel.snippet.title,
+  name: channel.snippet.title, channelHandle: channel.snippet.customUrl || null,
   subscriberCount: channel.statistics.subscriberCount,
   totalViews: channel.statistics.viewCount,
   totalVideos: channel.statistics.videoCount,
@@ -93,7 +93,7 @@ export const fetchVideoList = async (
 
  if (!uploadsId) {
   try {
-   const parsed = readYouTubeAnalyticsCache() as Record<string, any>
+   const parsed = getCanonicalAnalyticsCache() as Record<string, any>
    if (parsed.profile?.uploadsPlaylistId)
     uploadsId = parsed.profile.uploadsPlaylistId
   } catch (e) {}
@@ -324,8 +324,9 @@ export const fetchVideoSnippetDetails = async (
    const id = String(item.id || "")
    if (!id) return
    const description = String(item.snippet?.description || "")
-   const tags = Array.isArray(item.snippet?.tags)
-    ? item.snippet.tags.map((t: any) => String(t || "")).filter(Boolean)
+   const tags =
+    Array.isArray(item.snippet?.tags) ?
+     item.snippet.tags.map((t: any) => String(t || "")).filter(Boolean)
     : []
 
    out[id] = { description, tags }
@@ -416,9 +417,8 @@ export const fetchShortsPlaylistIds = async (
   )
 
  const shortsIds = new Set<string>()
- const shortsPlaylistId = channelId.startsWith("UC")
-  ? `UUSH${channelId.substring(2)}`
-  : channelId
+ const shortsPlaylistId =
+  channelId.startsWith("UC") ? `UUSH${channelId.substring(2)}` : channelId
 
  try {
   let nextPageToken = ""
@@ -455,7 +455,8 @@ export const getChannelOverview = async () => {
    headers: token ? { Authorization: `Bearer ${token}` } : {},
   },
  )
- if (!response.ok) await handleYouTubeApiError(response, "Failed to fetch channel overview")
+ if (!response.ok)
+  await handleYouTubeApiError(response, "Failed to fetch channel overview")
  const data = await response.json()
  const channel = data.items?.[0]
 
@@ -483,7 +484,8 @@ export const getRecentVideos = async (maxResults = 10) => {
    headers: token ? { Authorization: `Bearer ${token}` } : {},
   },
  )
- if (!response.ok) await handleYouTubeApiError(response, "Failed to fetch recent videos")
+ if (!response.ok)
+  await handleYouTubeApiError(response, "Failed to fetch recent videos")
  const data = await response.json()
  return data.items || []
 }
@@ -496,7 +498,8 @@ export const fetchVideoDetails = async (videoId: string) => {
    headers: token ? { Authorization: `Bearer ${token}` } : {},
   },
  )
- if (!response.ok) await handleYouTubeApiError(response, "Failed to fetch video details")
+ if (!response.ok)
+  await handleYouTubeApiError(response, "Failed to fetch video details")
  const data = await response.json()
  const item = data.items?.[0]
  if (!item) throw new Error("Video not found")
@@ -537,11 +540,15 @@ export const updateVideo = async (videoId: string, details: any) => {
    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   },
  })
- if (!response.ok) await handleYouTubeApiError(response, "Failed to update video")
+ if (!response.ok)
+  await handleYouTubeApiError(response, "Failed to update video")
  return response.json()
 }
 
-export const updateVideoThumbnail = async (videoId: string, thumbnailFile: File) => {
+export const updateVideoThumbnail = async (
+ videoId: string,
+ thumbnailFile: File,
+) => {
  const token = await refreshTokenIfExpired()
  const response = await proxyFetch(
   `https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${videoId}`,
@@ -554,7 +561,8 @@ export const updateVideoThumbnail = async (videoId: string, thumbnailFile: File)
    body: thumbnailFile,
   },
  )
- if (!response.ok) await handleYouTubeApiError(response, "Failed to update thumbnail")
+ if (!response.ok)
+  await handleYouTubeApiError(response, "Failed to update thumbnail")
  return response.json()
 }
 
@@ -566,7 +574,8 @@ export const fetchVideoCategories = async () => {
    headers: token ? { Authorization: `Bearer ${token}` } : {},
   },
  )
- if (!response.ok) await handleYouTubeApiError(response, "Failed to fetch categories")
+ if (!response.ok)
+  await handleYouTubeApiError(response, "Failed to fetch categories")
  const data = await response.json()
  return (data.items || []).map((item: any) => ({
   id: item.id,
@@ -582,7 +591,8 @@ export const fetchUserPlaylists = async () => {
    headers: token ? { Authorization: `Bearer ${token}` } : {},
   },
  )
- if (!response.ok) await handleYouTubeApiError(response, "Failed to fetch playlists")
+ if (!response.ok)
+  await handleYouTubeApiError(response, "Failed to fetch playlists")
  const data = await response.json()
  return (data.items || []).map((item: any) => ({
   id: item.id,
@@ -633,27 +643,40 @@ export const addToPlaylist = async (playlistId: string, videoId: string) => {
    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   },
  })
- if (!response.ok) await handleYouTubeApiError(response, "Failed to add to playlist")
+ if (!response.ok)
+  await handleYouTubeApiError(response, "Failed to add to playlist")
  return response.json()
 }
 
 export const removeFromPlaylist = async (playlistItemId: string) => {
  const token = await refreshTokenIfExpired()
- const response = await proxyFetch(`${BASE_URL}/playlistItems?id=${playlistItemId}`, {
-  method: "DELETE",
-  headers: token ? { Authorization: `Bearer ${token}` } : {},
- })
- if (!response.ok) await handleYouTubeApiError(response, "Failed to remove from playlist")
+ const response = await proxyFetch(
+  `${BASE_URL}/playlistItems?id=${playlistItemId}`,
+  {
+   method: "DELETE",
+   headers: token ? { Authorization: `Bearer ${token}` } : {},
+  },
+ )
+ if (!response.ok)
+  await handleYouTubeApiError(response, "Failed to remove from playlist")
  return response.status === 204 ? { success: true } : response.json()
 }
 
 export const fetchVideoComments = async (videoId: string, maxResults = 5) => {
  const token = await refreshTokenIfExpired()
+ if (!token) return []
  const url = `${BASE_URL}/commentThreads?part=snippet,replies&videoId=${videoId}&maxResults=${maxResults}&order=time`
  const response = await proxyFetch(url, {
   headers: token ? { Authorization: `Bearer ${token}` } : {},
  })
- if (!response.ok) await handleYouTubeApiError(response, "Failed to fetch comments")
+
+ if (response.status === 403 || response.status === 404) {
+  return []
+ }
+
+ if (!response.ok) {
+  await handleYouTubeApiError(response, "Failed to fetch comments")
+ }
  const data = await response.json()
  return (data.items || []).map((item: any) => ({
   id: item.id,
@@ -663,3 +686,152 @@ export const fetchVideoComments = async (videoId: string, maxResults = 5) => {
  }))
 }
 
+/**
+ * Universal Analytics Fetcher
+ * Targets all core, ad, and reach metrics defined in documentation.
+ */
+export const fetchComprehensiveChannelAnalytics = async (
+ startDate: string,
+ endDate: string,
+ dimensions: string[] = ["day"],
+) => {
+ const token = await refreshTokenIfExpired()
+ if (!token) throw new Error("Unauthorized to access YouTube Analytics.")
+
+ const metrics = [
+  "views",
+  "comments",
+  "likes",
+  "dislikes",
+  "shares",
+  "subscribersGained",
+  "subscribersLost",
+  "estimatedMinutesWatched",
+  "averageViewDuration",
+  "averageViewPercentage",
+  "videoThumbnailImpressions",
+  "videoThumbnailImpressionsClickRate",
+  "redViews",
+  "estimatedRedMinutesWatched",
+  "viewerPercentage",
+  "cardClickRate",
+  "adImpressions",
+  "monetizedPlaybacks",
+  "cpm",
+  "grossRevenue",
+  "estimatedAdRevenue",
+  "estimatedRevenue",
+  "videosAddedToPlaylists",
+  "videosRemovedFromPlaylists",
+ ]
+
+ const url = `https://youtubeanalytics.googleapis.com/v2/reports?ids=channel==MINE&startDate=${startDate}&endDate=${endDate}&metrics=${metrics.join(",")}&dimensions=${dimensions.join(",")}`
+
+ const response = await proxyFetch(url, {
+  headers: { Authorization: `Bearer ${token}` },
+ })
+
+ if (!response.ok) {
+  await handleYouTubeApiError(response, "Comprehensive analytics sync failed")
+ }
+
+ return response.json()
+}
+
+/**
+ * Retention Intelligence Fetcher
+ * Pulls moment-by-moment retention and relative benchmark performance.
+ */
+export const fetchRetentionAnalytics = async (videoId: string) => {
+ const token = await refreshTokenIfExpired()
+ if (!token) throw new Error("Unauthorized")
+
+ const url = `https://youtubeanalytics.googleapis.com/v2/reports?ids=channel==MINE&metrics=audienceWatchRatio,relativeRetentionPerformance&dimensions=elapsedVideoTimeRatio&filters=video==${videoId}`
+
+ const response = await proxyFetch(url, {
+  headers: { Authorization: `Bearer ${token}` },
+ })
+ if (!response.ok)
+  await handleYouTubeApiError(response, "Retention sync failed")
+ return response.json()
+}
+
+export const fetchAllCommentThreads = async (maxResults = 20, channelId?: string) => {
+ const token = await refreshTokenIfExpired()
+ if (!token) return []
+
+ // Resolve channel ID — the API requires an actual ID, not "mine"
+ let resolvedChannelId = channelId || ""
+ if (!resolvedChannelId) {
+  try {
+   const cached = getCanonicalAnalyticsCache() as Record<string, any>
+   resolvedChannelId = cached?.profile?.id || ""
+  } catch {}
+ }
+ if (!resolvedChannelId) {
+  try {
+   const profileReq = await proxyFetch(
+    `${BASE_URL}/channels?part=id&mine=true`,
+    { headers: { Authorization: `Bearer ${token}` } },
+   )
+   if (profileReq.ok) {
+    const pData = await profileReq.json()
+    resolvedChannelId = pData.items?.[0]?.id || ""
+   }
+  } catch {}
+ }
+ if (!resolvedChannelId) {
+  console.warn("fetchAllCommentThreads: No channel ID resolved")
+  return []
+ }
+
+ const response = await proxyFetch(
+  `${BASE_URL}/commentThreads?part=snippet,replies&allThreadsRelatedToChannelId=${resolvedChannelId}&maxResults=${maxResults}&order=time`,
+  { headers: { Authorization: `Bearer ${token}` } },
+ )
+ if (!response.ok)
+  await handleYouTubeApiError(response, "Failed to fetch comment threads")
+ const data = await response.json()
+ return data.items || []
+}
+
+export const postCommentReply = async (parentId: string, text: string) => {
+ const token = await refreshTokenIfExpired()
+ if (!token) throw new Error("Unauthorized")
+ const response = await proxyFetch(`${BASE_URL}/comments?part=snippet`, {
+  method: "POST",
+  headers: {
+   Authorization: `Bearer ${token}`,
+   "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+   snippet: {
+    parentId: parentId,
+    textOriginal: text,
+   },
+  }),
+ })
+ if (!response.ok) await handleYouTubeApiError(response, "Failed to post reply")
+ return response.json()
+}
+
+export const updateCommentText = async (commentId: string, text: string) => {
+ const token = await refreshTokenIfExpired()
+ if (!token) throw new Error("Unauthorized")
+ const response = await proxyFetch(`${BASE_URL}/comments?part=snippet`, {
+  method: "PUT",
+  headers: {
+   Authorization: `Bearer ${token}`,
+   "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+   id: commentId,
+   snippet: {
+    textOriginal: text,
+   },
+  }),
+ })
+ if (!response.ok)
+  await handleYouTubeApiError(response, "Failed to update comment")
+ return response.json()
+}

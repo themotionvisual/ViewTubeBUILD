@@ -318,9 +318,33 @@ export type DailyBrief = {
   estimatedImpact: string;
 };
 
+export interface JournalEntry {
+  id: string;
+  category: 'site' | 'self' | 'content' | 'style' | 'goals' | 'community' | 'plans' | 'projects' | 'other';
+  content: string;
+  timestamp: number;
+}
+
+export interface JournalFollowUp {
+  id: string;
+  entryId: string;
+  question: string;
+  answer?: string;
+  timestamp: number;
+}
+
+export interface MicroPoll {
+  id: string;
+  question: string;
+  type: 'binary' | 'short';
+  answer?: string;
+  timestamp: number;
+}
+
 export interface AuthState {
   isAuthenticated: boolean;
   channelName: string | null;
+  channelHandle: string | null;
   channelThumbnail: string | null;
   subscriberCount: number | null;
   totalViews: number | null;
@@ -391,6 +415,12 @@ export interface WorkspaceBrain {
     toDos: { id: string; text: string; completed: boolean; }[];
     goals: { id: string; text: string; category: string; completed: boolean }[];
   };
+
+  // 8. AI Journal & Creator Knowledge
+  journalEntries: JournalEntry[];
+  journalFollowUps: JournalFollowUp[];
+  microPolls: MicroPoll[];
+  creatorPreferences: Record<string, string | boolean>;
 }
 
 // Product + Data Architecture Contracts

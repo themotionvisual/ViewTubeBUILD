@@ -1,5 +1,5 @@
-export const DASHBOARD_SCHEMA_VERSION = 1
-export const DASHBOARD_LAYOUT_STORAGE_KEY = "vt_dashboard_layout_v1"
+export const DASHBOARD_SCHEMA_VERSION = 6
+export const DASHBOARD_LAYOUT_STORAGE_KEY = "vt_dashboard_layout_v6"
 
 export const DASHBOARD_TOKENS = {
   strokeLevel1: 4,
@@ -16,3 +16,4 @@ export const DASHBOARD_TOKENS = {
 } as const
 
 export const SIZE_BUCKET_ORDER = ["quarter", "third", "half", "full"] as const
+export const HEIGHT_BUCKET_ORDER = ["short", "medium", "tall"] as const

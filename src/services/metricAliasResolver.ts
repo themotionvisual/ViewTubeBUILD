@@ -1,3 +1,5 @@
+import { METRIC_REGISTRY } from "./analyticsContract"
+
 export type MetricConfidence = "raw_direct" | "derived_exact" | "unavailable"
 
 const toNumber = (value: unknown): number | null => {
@@ -17,36 +19,20 @@ const firstNumber = (row: Record<string, unknown>, keys: string[]): number | nul
  return null
 }
 
-export const METRIC_ALIASES = {
- views: ["Views", "View count", "viewCount", "views", "Engaged views", "engagedViews"],
- impressions: ["Impressions", "impressions", "videoThumbnailImpressions"],
- ctrPercent: [
-  "CTR (%)",
-  "CTR",
-  "ctr",
-  "Impressions click-through rate (%)",
-  "impressionClickThroughRate",
-  "impressionsClickThroughRate",
-  "videoThumbnailImpressionsClickRate",
-  "clickThroughRate",
- ],
- avpPercent: ["AVP (%)", "Average percentage viewed (%)", "averageViewPercentage", "adjustedAVP"],
-} as const
-
 export const getViewsRaw = (row: Record<string, unknown>): number | null =>
- firstNumber(row, METRIC_ALIASES.views)
+ firstNumber(row, METRIC_REGISTRY.views.aliases)
 
 export const getImpressionsRaw = (row: Record<string, unknown>): number | null =>
- firstNumber(row, METRIC_ALIASES.impressions)
+ firstNumber(row, METRIC_REGISTRY.impressions.aliases)
 
 export const getCtrRawPercent = (row: Record<string, unknown>): number | null => {
- const raw = firstNumber(row, METRIC_ALIASES.ctrPercent)
+ const raw = firstNumber(row, METRIC_REGISTRY.ctr.aliases)
  if (raw === null) return null
  return raw > 0 && raw <= 1 ? raw * 100 : raw
 }
 
 export const getAvpRawPercent = (row: Record<string, unknown>): number | null => {
- const raw = firstNumber(row, METRIC_ALIASES.avpPercent)
+ const raw = firstNumber(row, METRIC_REGISTRY.avp.aliases)
  if (raw === null) return null
  return raw > 0 && raw <= 1 ? raw * 100 : raw
 }

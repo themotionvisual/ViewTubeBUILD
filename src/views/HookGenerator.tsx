@@ -7,6 +7,7 @@ import {
 import type { HookResult } from "../types"
 import { Magnet } from "lucide-react"
 import { ToolboxScaffold } from "../components/Toolbox"
+import { useBrain } from "../context/GlobalDataContext"
 
 interface HookGeneratorProps {
  globalScript?: string
@@ -48,6 +49,7 @@ const HookGenerator: React.FC<HookGeneratorProps> = ({
  >({})
  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
  const [isOpen, setIsOpen] = useState(isOpenInitial)
+ const { brain } = useBrain()
 
  const handleGenerate = async () => {
   if (!localScript.trim()) {
@@ -56,7 +58,7 @@ const HookGenerator: React.FC<HookGeneratorProps> = ({
   }
   setLoading(true)
   try {
-   const hookResults = await generateHook(localScript, "script")
+   const hookResults = await generateHook(localScript, "script", brain)
    setResults(hookResults)
    setSelectedVisuals({})
    setVisualDetails({})

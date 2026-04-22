@@ -208,6 +208,7 @@ export const youtubeApiClient = new YouTubeApiClient()
 export interface ChannelProfile {
  id: string
  name: string
+ channelHandle?: string | null
  subscriberCount: string
  totalViews: string
  totalVideos: string

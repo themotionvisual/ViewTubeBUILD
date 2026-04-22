@@ -7,6 +7,7 @@ import {
  resolveCtrPercent,
  resolveImpressions,
 } from "../services/metricAliasResolver"
+import { METRIC_REGISTRY, canonicalizeMetricKey } from "../services/analyticsContract"
 
 export type UnifiedRow = DataForgeRow & {
  _id: string
@@ -38,12 +39,12 @@ export const textFromUnknown = (value: unknown): string => {
 }
 
 export const canonicalKey = (value: string): string =>
- value.toLowerCase().replace(/[^a-z0-9]/g, "")
+ value.toLowerCase().replace(/[^a-z0-9+-]/g, "")
 
 export const lookupKey = (value: unknown): string =>
  textFromUnknown(value)
   .toLowerCase()
-  .replace(/[^a-z0-9]/g, "")
+  .replace(/[^a-z0-9+-]/g, "")
 
 export const looksLikeVideoId = (value: unknown): boolean =>
  /^[a-zA-Z0-9_-]{8,}$/.test(textFromUnknown(value).trim())
@@ -58,53 +59,35 @@ export const MASTER_HEADER_ALIASES: Record<string, string[]> = {
  "Video ID": ["videoid", "id"],
  Length: ["length", "durationsec", "durationseconds", "duration"],
  Format: ["format", "type", "contenttype", "creatorcontenttype"],
- "Upload date": ["uploaddate", "videopublishtime", "publishedat", "date"],
- Likes: ["likes", "likecount"],
- Date: ["date", "day", "publishdate", "publishedat"],
- "Video publish time": ["videopublishtime", "publishedat", "publishtime"],
- Views: ["views", "viewcount"],
- "Watch Time (Hours)": ["watchtimehours", "watchhours", "watchtime"],
- Comments: ["comments", "commentsadded", "commentcount"],
- Shares: ["shares", "sharecount"],
- "Subs +": ["subs", "subscribersgained", "subscribers"],
- Impressions: ["impressions", "impression"],
- Revenue: ["revenue", "estimatedrevenue", "yourestimatedrevenueusd"],
- CPM: ["cpm", "cpmusd"],
- RPM: ["rpm", "estimatedrpm", "revenuepermillerpm"],
- "Click-Through Rate (CTR)": [
-  "clickthroughratectr",
-  "clickthroughrate",
-  "ctr",
-  "impressionsclickthroughrate",
-  "impressionclickthroughrate",
- ],
- "New Viewers": ["newviewers"],
- "Returning Viewers": ["returningviewers"],
- "Casual viewers": ["casualviewers"],
- "Regular viewers": ["regularviewers"],
- "Unique viewers": ["uniqueviewers"],
- "AVD (Average View Duration)": ["avdsec", "averageviewduration", "viewduration"],
- "STW %": ["stayedtowatch", "stayedtowatch0:30"],
- "End screen click rate": [
-  "clicksperendscreenelementshown",
-  "endscreenclickrate",
- ],
- "Card click rate": ["cardclickrate", "annotationclickthroughrate"],
- "Engaged views": ["engagedviews"],
- "Estimated minutes watched": ["estimatedminuteswatched"],
- "AVD (Sec)": ["avdsec", "averageviewduration", "viewduration"],
- "AVP (%)": ["avp", "averagepercentageviewed", "averageviewpercentage"],
- "Subscribers Gained": ["subscribersgained", "subscribergained", "subscribers"],
- "CTR (%)": [
-  "ctr",
-  "impressionsclickthroughrate",
-  "impressionclickthroughrate",
-  "clickthroughrate",
+ Date: [
+  "date",
+  "day",
+  "publishdate",
+  "publishedat",
+  "uploaddate",
+  "videopublishtime",
  ],
  "Traffic source": ["insighttrafficsourcetype", "trafficsource"],
  Country: ["country"],
  "Device type": ["devicetype", "device"],
 }
+
+Object.values(METRIC_REGISTRY).forEach((def) => {
+ const header = def.displayVariants.tableHeader
+ if (!MASTER_HEADER_ALIASES[header]) {
+  MASTER_HEADER_ALIASES[header] = []
+ }
+ def.aliases.forEach((alias) => {
+  const norm = canonicalizeMetricKey(alias)
+  if (!MASTER_HEADER_ALIASES[header].includes(norm)) {
+   MASTER_HEADER_ALIASES[header].push(norm)
+  }
+ })
+ const normKey = canonicalizeMetricKey(def.key)
+ if (!MASTER_HEADER_ALIASES[header].includes(normKey)) {
+  MASTER_HEADER_ALIASES[header].push(normKey)
+ }
+})
 
 export const getCanonicalMasterHeader = (header: string): string => {
  const normalized = canonicalKey(header)

@@ -39,15 +39,14 @@ export const Sidebar: React.FC = () => {
    )
  }, [setAuthState])
 
- const tools = [
-  { id: "DASHBOARD", path: "/", label: "Dashboard", color: "#FF8AAF" },
-  { id: "STUDIO", path: "/studio", label: "Studio", color: "#FFB570" },
-  { id: "CALENDAR", path: "/project-calendar", label: "Calendar", color: "#FFFF61" },
-  { id: "SHORTS", path: "/shorts", label: "Shorts", color: "#4FFF5B" },
-  { id: "PERFORMANCE", path: "/performance", label: "Performance", color: "#579AFF" },
-  { id: "TRUST", path: "/data-transparency", label: "Trust", color: "#96F5A6" },
-  { id: "SETTINGS", path: "/settings", label: "Settings", color: "#579AFF" },
- ]
+  const tools = [
+   { id: "DASHBOARD", path: "/", label: "Dashboard", color: "#FF8AAF" },
+   { id: "STUDIO", path: "/studio", label: "Studio", color: "#FFB570" },
+   { id: "PROJECTS", path: "/projects", label: "Projects", color: "#FFFF61" },
+   { id: "ANALYTICS", path: "/performance", label: "Analytics", color: "#4FFF5B" },
+   { id: "CALENDAR", path: "/project-calendar", label: "Calendar", color: "#40C6E9" },
+   { id: "SHORTS", path: "/shorts", label: "Shorts", color: "#579AFF" },
+  ]
 
  const handleHiddenAnalyticsClick = () => {
   const now = Date.now()
@@ -77,27 +76,27 @@ export const Sidebar: React.FC = () => {
 
    {/* Stacked Navigation */}
    <nav className="mb-6 z-10 shrink-0">
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-[4px]">
      {tools.map((t) => (
       <NavLink
        key={t.id}
        to={t.path}
        className={({ isActive }) =>
-        `transition-all relative w-[calc(100%+18px)] -ml-[18px] border-[4px] border-black rounded-r-2xl rounded-l-none shadow-[4px_4px_0px_0px_black] ${
-         isActive ? "translate-x-2" : "hover:translate-x-1"
+        `transition-all relative w-[calc(100%+40px)] -ml-[40px] border-[2px] border-black rounded-r-[14px] rounded-l-none ${
+         isActive ? "translate-x-4" : "hover:translate-x-1"
         }`
        }>
        {() => (
         <div
-         className="flex items-center w-full h-11"
+         className="flex items-center justify-end w-full h-[26px]"
          style={{
           backgroundColor: t.color,
           color: "#000000",
           padding: "0 14px",
-          borderRadius: "0 16px 16px 0",
+          borderRadius: "0 10px 10px 0",
          }}
         >
-         <span className="font-[1000] uppercase text-sm tracking-tighter leading-none whitespace-nowrap">
+         <span className="font-[800] uppercase text-sm tracking-tighter leading-none whitespace-nowrap">
           {t.label}
          </span>
         </div>
@@ -108,13 +107,25 @@ export const Sidebar: React.FC = () => {
    </nav>
 
    {/* Master Data Sync & Connect */}
-   <div className="mb-6 shrink-0">
+   <div className="mb-6 z-10 shrink-0">
     {!authState.isAuthenticated ? (
      <button
       onClick={login}
-      className="flex items-center justify-center w-full bg-[#FF83EA] border-[4px] border-black rounded-xl p-3 text-xs font-[1000] uppercase tracking-tighter text-black transition-all hover:bg-white"
+      className={`transition-all relative w-[calc(100%+40px)] -ml-[40px] border-[2px] border-black rounded-r-[14px] rounded-l-none hover:translate-x-1 outline-none`}
      >
-      Connect YouTube
+      <div
+       className="flex items-center justify-end w-full h-[26px]"
+       style={{
+        backgroundColor: "#CC00FF",
+        color: "#000000",
+        padding: "0 14px",
+        borderRadius: "0 10px 10px 0",
+       }}
+      >
+       <span className="font-[800] uppercase text-sm tracking-tighter leading-none whitespace-nowrap">
+        Connect YouTube
+       </span>
+      </div>
      </button>
     ) : (
      <button
@@ -122,21 +133,33 @@ export const Sidebar: React.FC = () => {
        void globalSyncData()
       }}
       disabled={isSyncing}
-      className={`flex items-center justify-center w-full border-[4px] border-black rounded-xl p-3 text-xs font-[1000] uppercase tracking-tighter text-black transition-all ${
-       isSyncing ? 'bg-gray-300 opacity-50 cursor-not-allowed' : 'bg-[#CCFF00] hover:bg-white'
+      className={`transition-all relative w-[calc(100%+40px)] -ml-[40px] border-[2px] border-black rounded-r-[14px] rounded-l-none outline-none ${
+       isSyncing ? "opacity-50 cursor-not-allowed" : "hover:translate-x-1"
       }`}
      >
-      {isSyncing ? (
-       <>
-        <Icons.RefreshCw size={16} className="animate-spin mr-2" />
-        Syncing...
-       </>
-      ) : (
-       <>
-        <Icons.RefreshCw size={16} className="mr-2" />
-        Sync Data
-       </>
-      )}
+      <div
+       className="flex items-center justify-end w-full h-[26px]"
+       style={{
+        backgroundColor: "#CC00FF",
+        color: "#000000",
+        padding: "0 14px",
+        borderRadius: "0 10px 10px 0",
+       }}
+      >
+       <span className="font-[800] uppercase text-sm tracking-tighter leading-none whitespace-nowrap flex items-center">
+        {isSyncing ? (
+         <>
+          <Icons.RefreshCw size={14} className="animate-spin mr-1.5" />
+          Syncing...
+         </>
+        ) : (
+         <>
+          <Icons.RefreshCw size={14} className="mr-1.5" />
+          Sync Data
+         </>
+        )}
+       </span>
+      </div>
      </button>
     )}
    </div>
@@ -149,17 +172,17 @@ export const Sidebar: React.FC = () => {
    <NavLink
    to="/reference-studio/toolbox-system"
    className={({ isActive }) =>
-     `mt-6 mb-2 w-[calc(100%+18px)] -ml-[18px] border-[4px] border-black rounded-r-2xl rounded-l-none transition-all shadow-[4px_4px_0px_0px_black] ${
-      isActive ? "translate-x-2" : "hover:translate-x-1"
+     `mt-6 mb-2 w-[calc(100%+40px)] -ml-[40px] border-[2px] border-black rounded-r-[14px] rounded-l-none transition-all ${
+      isActive ? "translate-x-4" : "hover:translate-x-1"
      }`
     }>
     {() => (
      <div
-      className="w-full h-11 px-3 flex items-center font-[1000] uppercase tracking-tighter text-[12px]"
+      className="w-full h-[26px] px-3 flex items-center font-[800] uppercase tracking-tighter text-[12px]"
       style={{
        backgroundColor: "#CC00FF",
        color: "#000",
-       borderRadius: "0 16px 16px 0",
+       borderRadius: "0 10px 10px 0",
       }}
      >
       Reference Studio
