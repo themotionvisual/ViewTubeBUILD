@@ -77,6 +77,29 @@ export const createMediaAssetFromFile = async (file: File): Promise<MediaAsset> 
   };
 };
 
+export const createMediaAssetFromUrl = async (url: string): Promise<MediaAsset> => {
+  const clean = url.trim();
+  if (!clean) throw new Error("Media URL is required.");
+
+  const guessedName = clean.split("?")[0]?.split("/").pop() || "remote-asset";
+  const inferredKind = inferFromName(guessedName);
+  if (!inferredKind) throw new Error("Unsupported URL media type.");
+
+  return {
+    id: `asset-url-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+    name: guessedName,
+    kind: inferredKind,
+    sourceUrl: clean,
+    metadata: {
+      sizeBytes: 1,
+      mimeType:
+        inferredKind === "video" ? "video/mp4" :
+        inferredKind === "audio" ? "audio/mpeg" :
+        "image/png",
+    },
+  };
+};
+
 export const sanitizeSvg = (svg: string): string => {
   return svg
     .replace(/<script[\s\S]*?<\/script>/gi, "")

@@ -1,8 +1,8 @@
 import React from "react";
-import { IntegratedRemotionEditor } from "../editor-ui/IntegratedRemotionEditor";
+import { LaunchEditor } from "../editor-ui/LaunchEditor";
 
 const EditorPage: React.FC = () => {
-  return <IntegratedRemotionEditor mode="full" />;
+  return <LaunchEditor />;
 };
 
 export default EditorPage;

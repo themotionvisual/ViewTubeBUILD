@@ -66,7 +66,7 @@ export const AIJournalWidget: React.FC<any> = ({
 
   return (
     <WidgetShell {...common} icon={<BookOpen size={20} />}>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4" style={{ height: "100%", overflowY: "auto" }}>
         {/* ENTRY SECTION */}
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap gap-1.5">

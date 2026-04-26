@@ -1,0 +1,429 @@
+{
+  "schema": "TemplateV2.Collection",
+  "version": 1,
+  "builtIn": [
+    {
+      "id": "starter_like_pop_01",
+      "name": "LIKE_POP_01",
+      "schema": "TemplateV2",
+      "meta": {
+        "category": "creator-overlay"
+      },
+      "theme": {
+        "accent": "#FF8AAF",
+        "source": "starter_pack_v1"
+      },
+      "project": {
+        "schemaVersion": "EditorProjectV2",
+        "meta": {
+          "durationSec": 8,
+          "durationSecInput": "0:00:08",
+          "zoom": 1,
+          "aspectRatio": "16:9",
+          "exportProfile": "1080",
+          "chromaEnabled": false,
+          "chromaColor": "#00ff00",
+          "visualDNA": "neo-brutalist"
+        },
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "scale": 1,
+          "rotate": 0,
+          "keyframes": []
+        },
+        "tracks": [
+          { "id": "tr_1", "name": "V1", "order": 0, "visible": true, "kind": "visual" },
+          { "id": "tr_2", "name": "V2", "order": 1, "visible": true, "kind": "visual" }
+        ],
+        "layers": [
+          {
+            "id": "l_1",
+            "trackId": "tr_1",
+            "type": "shape",
+            "visible": true,
+            "payload": {
+              "layerName": "LIKE_BG",
+              "x": 0,
+              "y": 26,
+              "scale": 1,
+              "rotation": 0,
+              "opacity": 1,
+              "blur": 0,
+              "saturation": 1,
+              "brightness": 1,
+              "hue": 0,
+              "fillColor": "#FF8AAF",
+              "strokeColor": "#1a1a1a",
+              "strokeWidth": 2,
+              "width": 48,
+              "height": 16,
+              "cornerRadius": 10,
+              "polygonSides": 5,
+              "polygonInnerRadius": 0,
+              "shapeNeedsChoice": false,
+              "shapeLocked": false,
+              "text": "",
+              "fontSize": 24,
+              "fontFamily": "Outfit",
+              "shape": "rect",
+              "mediaUrl": "",
+              "mediaName": "",
+              "fit": "cover",
+              "volume": 0.6,
+              "muted": false,
+              "audioSrcType": "",
+              "effects": []
+            }
+          },
+          {
+            "id": "l_2",
+            "trackId": "tr_2",
+            "type": "text",
+            "visible": true,
+            "payload": {
+              "layerName": "LIKE_TXT",
+              "x": 0,
+              "y": 26,
+              "scale": 1,
+              "rotation": 0,
+              "opacity": 1,
+              "blur": 0,
+              "saturation": 1,
+              "brightness": 1,
+              "hue": 0,
+              "fillColor": "#1a1a1a",
+              "strokeColor": "#ffffff",
+              "strokeWidth": 0,
+              "width": 48,
+              "height": 16,
+              "cornerRadius": 0,
+              "polygonSides": 5,
+              "polygonInnerRadius": 0,
+              "shapeNeedsChoice": false,
+              "shapeLocked": false,
+              "text": "LIKE",
+              "fontSize": 34,
+              "fontFamily": "Outfit",
+              "shape": "rect",
+              "mediaUrl": "",
+              "mediaName": "",
+              "fit": "cover",
+              "volume": 0.6,
+              "muted": false,
+              "audioSrcType": "",
+              "effects": []
+            }
+          }
+        ],
+        "clips": [
+          {
+            "id": "c_1",
+            "trackId": "tr_1",
+            "layerId": "l_1",
+            "start": 0,
+            "end": 4.6,
+            "color": "#FF8AAF",
+            "introAnimationId": null,
+            "introDurationSec": 0,
+            "introLevel": 1,
+            "outroAnimationId": null,
+            "outroDurationSec": 0,
+            "outroLevel": 1,
+            "keyframes": [
+              { "id": "kf_1", "offsetSec": 0, "values": { "scale": 0.75, "opacity": 0 }, "mode": "diamond", "interp": "linear" },
+              { "id": "kf_2", "offsetSec": 0.35, "values": { "scale": 1.08, "opacity": 1 }, "mode": "diamond", "interp": "linear" },
+              { "id": "kf_3", "offsetSec": 0.6, "values": { "scale": 1 }, "mode": "diamond", "interp": "linear" }
+            ]
+          },
+          {
+            "id": "c_2",
+            "trackId": "tr_2",
+            "layerId": "l_2",
+            "start": 0.1,
+            "end": 4.6,
+            "color": "#FF8AAF",
+            "introAnimationId": null,
+            "introDurationSec": 0,
+            "introLevel": 1,
+            "outroAnimationId": null,
+            "outroDurationSec": 0,
+            "outroLevel": 1,
+            "keyframes": [
+              { "id": "kf_4", "offsetSec": 0, "values": { "y": 44, "opacity": 0 }, "mode": "diamond", "interp": "linear" },
+              { "id": "kf_5", "offsetSec": 0.35, "values": { "y": 26, "opacity": 1 }, "mode": "diamond", "interp": "linear" }
+            ]
+          }
+        ],
+        "transitions": [],
+        "trackUiState": {},
+        "templatesBuiltIn": [],
+        "templatesCustom": [],
+        "aiJobs": []
+      }
+    },
+    {
+      "id": "starter_subscribe_bar_01",
+      "name": "SUBSCRIBE_BAR_01",
+      "schema": "TemplateV2",
+      "meta": { "category": "creator-overlay" },
+      "theme": { "accent": "#FFB570", "source": "starter_pack_v1" },
+      "project": {
+        "schemaVersion": "EditorProjectV2",
+        "meta": { "durationSec": 9, "durationSecInput": "0:00:09", "zoom": 1, "aspectRatio": "16:9", "exportProfile": "1080", "chromaEnabled": false, "chromaColor": "#00ff00", "visualDNA": "neo-brutalist" },
+        "camera": { "x": 0, "y": 0, "z": 0, "scale": 1, "rotate": 0, "keyframes": [] },
+        "tracks": [
+          { "id": "tr_1", "name": "V1", "order": 0, "visible": true, "kind": "visual" },
+          { "id": "tr_2", "name": "V2", "order": 1, "visible": true, "kind": "visual" }
+        ],
+        "layers": [
+          { "id": "l_1", "trackId": "tr_1", "type": "shape", "visible": true, "payload": { "layerName": "SUB_BG", "x": 0, "y": 34, "scale": 1, "rotation": 0, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#FFB570", "strokeColor": "#1a1a1a", "strokeWidth": 2, "width": 76, "height": 14, "cornerRadius": 8, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "", "fontSize": 24, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } },
+          { "id": "l_2", "trackId": "tr_2", "type": "text", "visible": true, "payload": { "layerName": "SUB_TXT", "x": 0, "y": 34, "scale": 1, "rotation": 0, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#1a1a1a", "strokeColor": "#ffffff", "strokeWidth": 0, "width": 76, "height": 14, "cornerRadius": 0, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "SUBSCRIBE", "fontSize": 30, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } }
+        ],
+        "clips": [
+          { "id": "c_1", "trackId": "tr_1", "layerId": "l_1", "start": 0, "end": 5.2, "color": "#FFB570", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_1", "offsetSec": 0, "values": { "x": -140, "opacity": 0 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_2", "offsetSec": 0.5, "values": { "x": 6, "opacity": 1 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_3", "offsetSec": 0.8, "values": { "x": 0 }, "mode": "diamond", "interp": "linear" }] },
+          { "id": "c_2", "trackId": "tr_2", "layerId": "l_2", "start": 0.15, "end": 5.2, "color": "#FFB570", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_4", "offsetSec": 0, "values": { "x": -140, "opacity": 0 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_5", "offsetSec": 0.5, "values": { "x": 0, "opacity": 1 }, "mode": "diamond", "interp": "linear" }] }
+        ],
+        "transitions": [],
+        "trackUiState": {},
+        "templatesBuiltIn": [],
+        "templatesCustom": [],
+        "aiJobs": []
+      }
+    },
+    {
+      "id": "starter_channel_handle_01",
+      "name": "CHANNEL_HANDLE_01",
+      "schema": "TemplateV2",
+      "meta": { "category": "creator-overlay" },
+      "theme": { "accent": "#40C6E9", "source": "starter_pack_v1" },
+      "project": {
+        "schemaVersion": "EditorProjectV2",
+        "meta": { "durationSec": 10, "durationSecInput": "0:00:10", "zoom": 1, "aspectRatio": "16:9", "exportProfile": "1080", "chromaEnabled": false, "chromaColor": "#00ff00", "visualDNA": "neo-brutalist" },
+        "camera": { "x": 0, "y": 0, "z": 0, "scale": 1, "rotate": 0, "keyframes": [] },
+        "tracks": [
+          { "id": "tr_1", "name": "V1", "order": 0, "visible": true, "kind": "visual" },
+          { "id": "tr_2", "name": "V2", "order": 1, "visible": true, "kind": "visual" }
+        ],
+        "layers": [
+          { "id": "l_1", "trackId": "tr_1", "type": "shape", "visible": true, "payload": { "layerName": "HANDLE_BG", "x": -44, "y": 36, "scale": 1, "rotation": 0, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#40C6E9", "strokeColor": "#1a1a1a", "strokeWidth": 2, "width": 42, "height": 12, "cornerRadius": 8, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "", "fontSize": 24, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } },
+          { "id": "l_2", "trackId": "tr_2", "type": "text", "visible": true, "payload": { "layerName": "HANDLE_TXT", "x": -44, "y": 36, "scale": 1, "rotation": 0, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#1a1a1a", "strokeColor": "#ffffff", "strokeWidth": 0, "width": 42, "height": 12, "cornerRadius": 0, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "@CHANNEL", "fontSize": 22, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } }
+        ],
+        "clips": [
+          { "id": "c_1", "trackId": "tr_1", "layerId": "l_1", "start": 0, "end": 6.5, "color": "#40C6E9", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_1", "offsetSec": 0, "values": { "y": 78, "opacity": 0 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_2", "offsetSec": 0.45, "values": { "y": 36, "opacity": 1 }, "mode": "diamond", "interp": "linear" }] },
+          { "id": "c_2", "trackId": "tr_2", "layerId": "l_2", "start": 0.12, "end": 6.5, "color": "#40C6E9", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_3", "offsetSec": 0, "values": { "y": 78, "opacity": 0 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_4", "offsetSec": 0.45, "values": { "y": 36, "opacity": 1 }, "mode": "diamond", "interp": "linear" }] }
+        ],
+        "transitions": [],
+        "trackUiState": {},
+        "templatesBuiltIn": [],
+        "templatesCustom": [],
+        "aiJobs": []
+      }
+    },
+    {
+      "id": "starter_chapter_pill_01",
+      "name": "CHAPTER_PILL_01",
+      "schema": "TemplateV2",
+      "meta": { "category": "creator-overlay" },
+      "theme": { "accent": "#FFFF61", "source": "starter_pack_v1" },
+      "project": {
+        "schemaVersion": "EditorProjectV2",
+        "meta": { "durationSec": 9, "durationSecInput": "0:00:09", "zoom": 1, "aspectRatio": "16:9", "exportProfile": "1080", "chromaEnabled": false, "chromaColor": "#00ff00", "visualDNA": "neo-brutalist" },
+        "camera": { "x": 0, "y": 0, "z": 0, "scale": 1, "rotate": 0, "keyframes": [] },
+        "tracks": [
+          { "id": "tr_1", "name": "V1", "order": 0, "visible": true, "kind": "visual" },
+          { "id": "tr_2", "name": "V2", "order": 1, "visible": true, "kind": "visual" }
+        ],
+        "layers": [
+          { "id": "l_1", "trackId": "tr_1", "type": "shape", "visible": true, "payload": { "layerName": "CHAPTER_BG", "x": 44, "y": 34, "scale": 1, "rotation": 0, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#FFFF61", "strokeColor": "#1a1a1a", "strokeWidth": 2, "width": 46, "height": 14, "cornerRadius": 999, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "", "fontSize": 24, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } },
+          { "id": "l_2", "trackId": "tr_2", "type": "text", "visible": true, "payload": { "layerName": "CHAPTER_TXT", "x": 44, "y": 34, "scale": 1, "rotation": 0, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#1a1a1a", "strokeColor": "#ffffff", "strokeWidth": 0, "width": 46, "height": 14, "cornerRadius": 0, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "CHAPTER 01", "fontSize": 18, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } }
+        ],
+        "clips": [
+          { "id": "c_1", "trackId": "tr_1", "layerId": "l_1", "start": 0, "end": 5, "color": "#FFFF61", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_1", "offsetSec": 0, "values": { "x": 120, "opacity": 0 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_2", "offsetSec": 0.4, "values": { "x": 44, "opacity": 1 }, "mode": "diamond", "interp": "linear" }] },
+          { "id": "c_2", "trackId": "tr_2", "layerId": "l_2", "start": 0.08, "end": 5, "color": "#FFFF61", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_3", "offsetSec": 0, "values": { "x": 120, "opacity": 0 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_4", "offsetSec": 0.4, "values": { "x": 44, "opacity": 1 }, "mode": "diamond", "interp": "linear" }] }
+        ],
+        "transitions": [],
+        "trackUiState": {},
+        "templatesBuiltIn": [],
+        "templatesCustom": [],
+        "aiJobs": []
+      }
+    },
+    {
+      "id": "starter_topic_tag_01",
+      "name": "TOPIC_TAG_01",
+      "schema": "TemplateV2",
+      "meta": { "category": "creator-overlay" },
+      "theme": { "accent": "#4FFF5B", "source": "starter_pack_v1" },
+      "project": {
+        "schemaVersion": "EditorProjectV2",
+        "meta": { "durationSec": 9, "durationSecInput": "0:00:09", "zoom": 1, "aspectRatio": "16:9", "exportProfile": "1080", "chromaEnabled": false, "chromaColor": "#00ff00", "visualDNA": "neo-brutalist" },
+        "camera": { "x": 0, "y": 0, "z": 0, "scale": 1, "rotate": 0, "keyframes": [] },
+        "tracks": [
+          { "id": "tr_1", "name": "V1", "order": 0, "visible": true, "kind": "visual" },
+          { "id": "tr_2", "name": "V2", "order": 1, "visible": true, "kind": "visual" }
+        ],
+        "layers": [
+          { "id": "l_1", "trackId": "tr_1", "type": "shape", "visible": true, "payload": { "layerName": "TOPIC_BG", "x": -44, "y": -34, "scale": 1, "rotation": -4, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#4FFF5B", "strokeColor": "#1a1a1a", "strokeWidth": 2, "width": 42, "height": 14, "cornerRadius": 6, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "", "fontSize": 24, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } },
+          { "id": "l_2", "trackId": "tr_2", "type": "text", "visible": true, "payload": { "layerName": "TOPIC_TXT", "x": -44, "y": -34, "scale": 1, "rotation": -4, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#1a1a1a", "strokeColor": "#ffffff", "strokeWidth": 0, "width": 42, "height": 14, "cornerRadius": 0, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "#TIPS", "fontSize": 20, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } }
+        ],
+        "clips": [
+          { "id": "c_1", "trackId": "tr_1", "layerId": "l_1", "start": 0, "end": 4.2, "color": "#4FFF5B", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_1", "offsetSec": 0, "values": { "scale": 0.5, "opacity": 0, "rotation": -22 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_2", "offsetSec": 0.4, "values": { "scale": 1.1, "opacity": 1, "rotation": -1 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_3", "offsetSec": 0.65, "values": { "scale": 1, "rotation": -4 }, "mode": "diamond", "interp": "linear" }] },
+          { "id": "c_2", "trackId": "tr_2", "layerId": "l_2", "start": 0.1, "end": 4.2, "color": "#4FFF5B", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_4", "offsetSec": 0, "values": { "opacity": 0 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_5", "offsetSec": 0.35, "values": { "opacity": 1 }, "mode": "diamond", "interp": "linear" }] }
+        ],
+        "transitions": [],
+        "trackUiState": {},
+        "templatesBuiltIn": [],
+        "templatesCustom": [],
+        "aiJobs": []
+      }
+    },
+    {
+      "id": "starter_callout_box_01",
+      "name": "CALLOUT_BOX_01",
+      "schema": "TemplateV2",
+      "meta": { "category": "creator-overlay" },
+      "theme": { "accent": "#579AFF", "source": "starter_pack_v1" },
+      "project": {
+        "schemaVersion": "EditorProjectV2",
+        "meta": { "durationSec": 10, "durationSecInput": "0:00:10", "zoom": 1, "aspectRatio": "16:9", "exportProfile": "1080", "chromaEnabled": false, "chromaColor": "#00ff00", "visualDNA": "neo-brutalist" },
+        "camera": { "x": 0, "y": 0, "z": 0, "scale": 1, "rotate": 0, "keyframes": [] },
+        "tracks": [
+          { "id": "tr_1", "name": "V1", "order": 0, "visible": true, "kind": "visual" },
+          { "id": "tr_2", "name": "V2", "order": 1, "visible": true, "kind": "visual" }
+        ],
+        "layers": [
+          { "id": "l_1", "trackId": "tr_1", "type": "shape", "visible": true, "payload": { "layerName": "CALLOUT_BG", "x": 0, "y": -22, "scale": 1, "rotation": 0, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#579AFF", "strokeColor": "#1a1a1a", "strokeWidth": 2, "width": 70, "height": 24, "cornerRadius": 10, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "", "fontSize": 24, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } },
+          { "id": "l_2", "trackId": "tr_2", "type": "text", "visible": true, "payload": { "layerName": "CALLOUT_TXT", "x": 0, "y": -22, "scale": 1, "rotation": 0, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#ffffff", "strokeColor": "#1a1a1a", "strokeWidth": 0, "width": 64, "height": 20, "cornerRadius": 0, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "PRO TIP", "fontSize": 28, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } }
+        ],
+        "clips": [
+          { "id": "c_1", "trackId": "tr_1", "layerId": "l_1", "start": 0, "end": 5.8, "color": "#579AFF", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_1", "offsetSec": 0, "values": { "scale": 0.4, "opacity": 0 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_2", "offsetSec": 0.45, "values": { "scale": 1.06, "opacity": 1 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_3", "offsetSec": 0.7, "values": { "scale": 1 }, "mode": "diamond", "interp": "linear" }] },
+          { "id": "c_2", "trackId": "tr_2", "layerId": "l_2", "start": 0.1, "end": 5.8, "color": "#579AFF", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_4", "offsetSec": 0, "values": { "opacity": 0 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_5", "offsetSec": 0.3, "values": { "opacity": 1 }, "mode": "diamond", "interp": "linear" }] }
+        ],
+        "transitions": [],
+        "trackUiState": {},
+        "templatesBuiltIn": [],
+        "templatesCustom": [],
+        "aiJobs": []
+      }
+    },
+    {
+      "id": "starter_comment_bubble_01",
+      "name": "COMMENT_BUBBLE_01",
+      "schema": "TemplateV2",
+      "meta": { "category": "creator-overlay" },
+      "theme": { "accent": "#CC00FF", "source": "starter_pack_v1" },
+      "project": {
+        "schemaVersion": "EditorProjectV2",
+        "meta": { "durationSec": 9, "durationSecInput": "0:00:09", "zoom": 1, "aspectRatio": "16:9", "exportProfile": "1080", "chromaEnabled": false, "chromaColor": "#00ff00", "visualDNA": "neo-brutalist" },
+        "camera": { "x": 0, "y": 0, "z": 0, "scale": 1, "rotate": 0, "keyframes": [] },
+        "tracks": [
+          { "id": "tr_1", "name": "V1", "order": 0, "visible": true, "kind": "visual" },
+          { "id": "tr_2", "name": "V2", "order": 1, "visible": true, "kind": "visual" }
+        ],
+        "layers": [
+          { "id": "l_1", "trackId": "tr_1", "type": "shape", "visible": true, "payload": { "layerName": "COMMENT_BG", "x": 28, "y": -26, "scale": 1, "rotation": 0, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#CC00FF", "strokeColor": "#1a1a1a", "strokeWidth": 2, "width": 52, "height": 18, "cornerRadius": 14, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "", "fontSize": 24, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } },
+          { "id": "l_2", "trackId": "tr_2", "type": "text", "visible": true, "payload": { "layerName": "COMMENT_TXT", "x": 28, "y": -26, "scale": 1, "rotation": 0, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#ffffff", "strokeColor": "#1a1a1a", "strokeWidth": 0, "width": 48, "height": 16, "cornerRadius": 0, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "COMMENT!", "fontSize": 20, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } }
+        ],
+        "clips": [
+          { "id": "c_1", "trackId": "tr_1", "layerId": "l_1", "start": 0, "end": 4.8, "color": "#CC00FF", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_1", "offsetSec": 0, "values": { "scale": 0.2, "opacity": 0 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_2", "offsetSec": 0.4, "values": { "scale": 1.15, "opacity": 1 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_3", "offsetSec": 0.72, "values": { "scale": 1 }, "mode": "diamond", "interp": "linear" }] },
+          { "id": "c_2", "trackId": "tr_2", "layerId": "l_2", "start": 0.12, "end": 4.8, "color": "#CC00FF", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_4", "offsetSec": 0, "values": { "opacity": 0 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_5", "offsetSec": 0.35, "values": { "opacity": 1 }, "mode": "diamond", "interp": "linear" }] }
+        ],
+        "transitions": [],
+        "trackUiState": {},
+        "templatesBuiltIn": [],
+        "templatesCustom": [],
+        "aiJobs": []
+      }
+    },
+    {
+      "id": "starter_reaction_card_01",
+      "name": "REACTION_CARD_01",
+      "schema": "TemplateV2",
+      "meta": { "category": "creator-overlay" },
+      "theme": { "accent": "#FF83EA", "source": "starter_pack_v1" },
+      "project": {
+        "schemaVersion": "EditorProjectV2",
+        "meta": { "durationSec": 10, "durationSecInput": "0:00:10", "zoom": 1, "aspectRatio": "16:9", "exportProfile": "1080", "chromaEnabled": false, "chromaColor": "#00ff00", "visualDNA": "neo-brutalist" },
+        "camera": { "x": 0, "y": 0, "z": 0, "scale": 1, "rotate": 0, "keyframes": [] },
+        "tracks": [
+          { "id": "tr_1", "name": "V1", "order": 0, "visible": true, "kind": "visual" },
+          { "id": "tr_2", "name": "V2", "order": 1, "visible": true, "kind": "visual" }
+        ],
+        "layers": [
+          { "id": "l_1", "trackId": "tr_1", "type": "shape", "visible": true, "payload": { "layerName": "REACTION_BG", "x": 0, "y": 2, "scale": 1, "rotation": 0, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#FF83EA", "strokeColor": "#1a1a1a", "strokeWidth": 2, "width": 64, "height": 30, "cornerRadius": 12, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "", "fontSize": 24, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } },
+          { "id": "l_2", "trackId": "tr_2", "type": "text", "visible": true, "payload": { "layerName": "REACTION_TXT", "x": 0, "y": 2, "scale": 1, "rotation": 0, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#1a1a1a", "strokeColor": "#ffffff", "strokeWidth": 0, "width": 58, "height": 24, "cornerRadius": 0, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "NO WAY.", "fontSize": 24, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } }
+        ],
+        "clips": [
+          { "id": "c_1", "trackId": "tr_1", "layerId": "l_1", "start": 0, "end": 6, "color": "#FF83EA", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_1", "offsetSec": 0, "values": { "y": 70, "opacity": 0 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_2", "offsetSec": 0.45, "values": { "y": 2, "opacity": 1 }, "mode": "diamond", "interp": "linear" }] },
+          { "id": "c_2", "trackId": "tr_2", "layerId": "l_2", "start": 0.1, "end": 6, "color": "#FF83EA", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_3", "offsetSec": 0, "values": { "opacity": 0 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_4", "offsetSec": 0.4, "values": { "opacity": 1 }, "mode": "diamond", "interp": "linear" }] }
+        ],
+        "transitions": [],
+        "trackUiState": {},
+        "templatesBuiltIn": [],
+        "templatesCustom": [],
+        "aiJobs": []
+      }
+    },
+    {
+      "id": "starter_pinned_comment_01",
+      "name": "PINNED_COMMENT_01",
+      "schema": "TemplateV2",
+      "meta": { "category": "creator-overlay" },
+      "theme": { "accent": "#40C6E9", "source": "starter_pack_v1" },
+      "project": {
+        "schemaVersion": "EditorProjectV2",
+        "meta": { "durationSec": 10, "durationSecInput": "0:00:10", "zoom": 1, "aspectRatio": "16:9", "exportProfile": "1080", "chromaEnabled": false, "chromaColor": "#00ff00", "visualDNA": "neo-brutalist" },
+        "camera": { "x": 0, "y": 0, "z": 0, "scale": 1, "rotate": 0, "keyframes": [] },
+        "tracks": [
+          { "id": "tr_1", "name": "V1", "order": 0, "visible": true, "kind": "visual" },
+          { "id": "tr_2", "name": "V2", "order": 1, "visible": true, "kind": "visual" }
+        ],
+        "layers": [
+          { "id": "l_1", "trackId": "tr_1", "type": "shape", "visible": true, "payload": { "layerName": "PIN_BG", "x": 0, "y": -34, "scale": 1, "rotation": 0, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#40C6E9", "strokeColor": "#1a1a1a", "strokeWidth": 2, "width": 78, "height": 12, "cornerRadius": 8, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "", "fontSize": 24, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } },
+          { "id": "l_2", "trackId": "tr_2", "type": "text", "visible": true, "payload": { "layerName": "PIN_TXT", "x": 0, "y": -34, "scale": 1, "rotation": 0, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#1a1a1a", "strokeColor": "#ffffff", "strokeWidth": 0, "width": 72, "height": 10, "cornerRadius": 0, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "PINNED: LINKS IN DESCRIPTION", "fontSize": 14, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } }
+        ],
+        "clips": [
+          { "id": "c_1", "trackId": "tr_1", "layerId": "l_1", "start": 0, "end": 7, "color": "#40C6E9", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_1", "offsetSec": 0, "values": { "y": -70, "opacity": 0 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_2", "offsetSec": 0.35, "values": { "y": -34, "opacity": 1 }, "mode": "diamond", "interp": "linear" }] },
+          { "id": "c_2", "trackId": "tr_2", "layerId": "l_2", "start": 0.1, "end": 7, "color": "#40C6E9", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_3", "offsetSec": 0, "values": { "opacity": 0 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_4", "offsetSec": 0.35, "values": { "opacity": 1 }, "mode": "diamond", "interp": "linear" }] }
+        ],
+        "transitions": [],
+        "trackUiState": {},
+        "templatesBuiltIn": [],
+        "templatesCustom": [],
+        "aiJobs": []
+      }
+    },
+    {
+      "id": "starter_end_screen_prompt_01",
+      "name": "END_SCREEN_PROMPT_01",
+      "schema": "TemplateV2",
+      "meta": { "category": "creator-overlay" },
+      "theme": { "accent": "#FFB570", "source": "starter_pack_v1" },
+      "project": {
+        "schemaVersion": "EditorProjectV2",
+        "meta": { "durationSec": 10, "durationSecInput": "0:00:10", "zoom": 1, "aspectRatio": "16:9", "exportProfile": "1080", "chromaEnabled": false, "chromaColor": "#00ff00", "visualDNA": "neo-brutalist" },
+        "camera": { "x": 0, "y": 0, "z": 0, "scale": 1, "rotate": 0, "keyframes": [] },
+        "tracks": [
+          { "id": "tr_1", "name": "V1", "order": 0, "visible": true, "kind": "visual" },
+          { "id": "tr_2", "name": "V2", "order": 1, "visible": true, "kind": "visual" }
+        ],
+        "layers": [
+          { "id": "l_1", "trackId": "tr_1", "type": "shape", "visible": true, "payload": { "layerName": "END_BG", "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#FFB570", "strokeColor": "#1a1a1a", "strokeWidth": 2, "width": 82, "height": 20, "cornerRadius": 8, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "", "fontSize": 24, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } },
+          { "id": "l_2", "trackId": "tr_2", "type": "text", "visible": true, "payload": { "layerName": "END_TXT", "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1, "blur": 0, "saturation": 1, "brightness": 1, "hue": 0, "fillColor": "#1a1a1a", "strokeColor": "#ffffff", "strokeWidth": 0, "width": 76, "height": 16, "cornerRadius": 0, "polygonSides": 5, "polygonInnerRadius": 0, "shapeNeedsChoice": false, "shapeLocked": false, "text": "WATCH NEXT VIDEO", "fontSize": 22, "fontFamily": "Outfit", "shape": "rect", "mediaUrl": "", "mediaName": "", "fit": "cover", "volume": 0.6, "muted": false, "audioSrcType": "", "effects": [] } }
+        ],
+        "clips": [
+          { "id": "c_1", "trackId": "tr_1", "layerId": "l_1", "start": 0, "end": 6.2, "color": "#FFB570", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_1", "offsetSec": 0, "values": { "opacity": 0 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_2", "offsetSec": 0.35, "values": { "opacity": 1 }, "mode": "diamond", "interp": "linear" }] },
+          { "id": "c_2", "trackId": "tr_2", "layerId": "l_2", "start": 0.12, "end": 6.2, "color": "#FFB570", "introAnimationId": null, "introDurationSec": 0, "introLevel": 1, "outroAnimationId": null, "outroDurationSec": 0, "outroLevel": 1, "keyframes": [{ "id": "kf_3", "offsetSec": 0, "values": { "opacity": 0 }, "mode": "diamond", "interp": "linear" }, { "id": "kf_4", "offsetSec": 0.35, "values": { "opacity": 1 }, "mode": "diamond", "interp": "linear" }] }
+        ],
+        "transitions": [],
+        "trackUiState": {},
+        "templatesBuiltIn": [],
+        "templatesCustom": [],
+        "aiJobs": []
+      }
+    }
+  ],
+  "custom": []
+}

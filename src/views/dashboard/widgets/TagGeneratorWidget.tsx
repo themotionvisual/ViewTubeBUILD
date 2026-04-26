@@ -133,20 +133,10 @@ export const TagGeneratorWidget = ({
     {/* Video Selector */}
      <div style={{ display: "flex", gap: "4px" }}>
       <select
+       className="vt-select"
        value={selectedVideo}
        onChange={handleSelect}
-       style={{
-        flex: 2,
-        padding: "8px",
-        background: "#fff",
-        border: "2px solid #000",
-        borderRadius: "8px",
-        fontSize: "12px",
-        fontWeight: 900,
-        boxShadow: "2px 2px 0 0 #000",
-        outline: "none",
-        cursor: "pointer",
-       }}>
+       style={{ flex: 2 }}>
        <option value="" disabled>
         Select a video...
        </option>
@@ -157,20 +147,11 @@ export const TagGeneratorWidget = ({
        ))}
       </select>
       <input
+       className="vt-input"
        value={videoSearch}
        onChange={(e) => setVideoSearch(e.target.value)}
        placeholder="Search..."
-       style={{
-        flex: 1,
-        padding: "6px 8px",
-        background: "#fff",
-        border: "2px solid #000",
-        borderRadius: "8px",
-        fontSize: "10px",
-        fontWeight: 900,
-        outline: "none",
-        boxShadow: "2px 2px 0 0 rgba(0,0,0,0.15)",
-       }}
+       style={{ flex: 1, fontSize: "10px" }}
       />
      </div>
 

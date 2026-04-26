@@ -97,7 +97,7 @@ export const KeywordEngineWidget = ({
      display: "flex",
      flexDirection: "column",
      height: "100%",
-     gap: "8px",
+     gap: "4px",
      overflowY: "auto",
      paddingRight: "4px",
     }}>
@@ -145,13 +145,12 @@ export const KeywordEngineWidget = ({
        key={kw.word}
        style={{
         display: "flex",
-        height: "22px",
+        height: "26px",
         width: "100%",
         background: "#E5F7D3",
         borderRadius: "24px",
         border: "1px solid rgba(0,0,0,0.1)",
         overflow: "hidden",
-        marginBottom: "1px",
        }}>
        <div
         style={{

@@ -15,13 +15,16 @@ const COLUMN_ALIASES: Record<string, string[]> = {
  "CTR (%)": [
   "Impressions click-through rate (%)",
   "impressionClickThroughRate",
+  "CTR",
+  "ctr",
+  "videoThumbnailImpressionsClickRate",
  ],
  Revenue: [
   "Estimated revenue",
   "Your estimated revenue (USD)",
   "estimatedRevenue",
  ],
- Impressions: ["impressions"],
+ Impressions: ["impressions", "videoThumbnailImpressions"],
  Likes: ["likeCount"],
  Comments: ["commentCount", "Comments added"],
  Shares: ["shareCount"],

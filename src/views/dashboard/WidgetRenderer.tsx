@@ -35,7 +35,7 @@ import type {
 import { TagGeneratorWidget } from "./widgets/TagGeneratorWidget"
 import { RevenueChartWidget } from "./widgets/RevenueChartWidget"
 import { CommunityPostWidget } from "./widgets/CommunityPostWidget"
-import { ThumbAIWidget } from "./widgets/ThumbAIWidget"
+import { ThumbnailLabWidget } from "./widgets/ThumbnailLabWidget"
 import { RealtimePerformanceWidget } from "./widgets/RealtimePerformanceWidget"
 import { KeywordEngineWidget } from "./widgets/KeywordEngineWidget"
 import { PublishMomentumWidget } from "./widgets/PublishMomentumWidget"
@@ -43,7 +43,7 @@ import { TrafficSourcesWidget } from "./widgets/TrafficSourcesWidget"
 import { AskMeWidget } from "./widgets/AskMeWidget"
 import { DailyOracleWidget } from "./widgets/DailyOracleWidget"
 import { FlightCheckWidget } from "./widgets/FlightCheckWidget"
-import { ABThumbnailWidget } from "./widgets/ABThumbnailWidget"
+import { DescriptionEditorWidget } from "./widgets/DescriptionEditorWidget"
 import { DataEditWidget } from "./widgets/DataEditWidget"
 import { TitleRewriterWidget } from "./widgets/TitleRewriterWidget"
 import { RetentionSimWidget } from "./widgets/RetentionSimWidget"
@@ -53,14 +53,7 @@ import { BurnoutMonitorWidget } from "./widgets/BurnoutMonitorWidget"
 import { CollabMatchmakerWidget } from "./widgets/CollabMatchmakerWidget"
 import { BridgeEfficiencyWidget } from "./widgets/BridgeEfficiencyWidget"
 import { AudienceMatrixWidget } from "./widgets/AudienceMatrixWidget"
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts"
-
+import { GoalsTrackerWidget } from "./widgets/GoalsTrackerWidget"
 const formatHumanNumber = (value: unknown): string => {
  const v = Number(value)
  if (isNaN(v)) return "0"
@@ -124,7 +117,7 @@ const AlertsFeedWidget: React.FC<{
 
  return (
   <WidgetShell {...common} icon={<Bell size={20} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+   <div style={{ display: "flex", flexDirection: "column", gap: "0", height: "100%", overflowY: "auto" }}>
     {/* COMMENTS SECTION */}
     {recentComments.length > 0 ?
      recentComments.map((comment: VideoComment, idx: number) => (
@@ -469,7 +462,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
 
  // 20. THUMB AI
  if (widget.id === "thumb-ai") {
-  return <ThumbAIWidget {...common} data={data} editMode={editMode} />
+  return <ThumbnailLabWidget {...common} data={data} editMode={editMode} />
  }
 
  // 21. REALTIME PERFORMANCE
@@ -580,7 +573,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
     <WidgetShell {...common} title="UPLOAD CADENCE" icon={<CalendarDays size={22} />}>
      <div style={{ display: "flex", flexDirection: "column", height: "100%", justifyContent: "center", padding: "4px" }}>
       <span style={{ fontSize: "10px", fontWeight: 800, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>
-       Last 14 Days
+       Last 21 Days
       </span>
        <div style={{ 
          display: "grid", 
@@ -608,7 +601,9 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
          }
          
          return (
-          <div key={day.dateStr} style={{ 
+          <div key={day.dateStr} 
+           className="group"
+           style={{ 
            aspectRatio: "1/1",
            background: bgStyle, 
            border: brdStyle, 
@@ -616,11 +611,16 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
            borderRadius: "8px",
            display: "flex", alignItems: "center", justifyContent: "center",
            position: "relative",
-           minWidth: "24px"
+           minWidth: "24px",
+           overflow: "hidden"
           }}>
            {day.isToday && (
              <span style={{ fontSize: "6px", fontWeight: 800, color: "#FF3399", textTransform: "uppercase", position: "absolute", bottom: "2px" }}>Today</span>
            )}
+           <div className="opacity-0 group-hover:opacity-50 transition-opacity absolute bottom-0 right-0 flex flex-col items-center justify-end leading-none p-[2px]" style={{ fontSize: "10px", fontWeight: 900, background: "transparent", borderTopLeftRadius: "4px" }}>
+             <span style={{ transform: "scale(0.85)" }}>{new Date(day.dateStr).toLocaleDateString([], {weekday: 'short'}).toUpperCase()}</span>
+             <span style={{ transform: "scale(0.85)" }}>{day.dayNum}</span>
+           </div>
           </div>
          )
         })}
@@ -1064,121 +1064,9 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
 
 
  // 16. GOALS TRACKER
- if (widget.id === "goals-tracker") {
-  const GOAL_STORAGE_KEY = "vt_goal_targets_v2"
-  const goalTargets = JSON.parse(localStorage.getItem(GOAL_STORAGE_KEY) || '{}')
-
-  const getMetricValue = (label: string) => {
-   const block = data.statBlocks.find((s: any) => s.label.toLowerCase().includes(label.toLowerCase()))
-   if (!block) return 0
-   const val = parseFloat(block.value.replace(/[^0-9.]/g, "") || "0")
-   if (block.value.includes("K")) return val * 1000
-   if (block.value.includes("M")) return val * 1000000
-   return val
+  if (widget.id === "goals-tracker") {
+    return <GoalsTrackerWidget data={data} commonProps={common} />
   }
-
-  const categories = [
-   { key: "Subscribers", current: getMetricValue("Subscribers"), color: "#4FFF5B", radius: 68 },
-   { key: "Views", current: getMetricValue("Views"), color: "#24D3FF", radius: 54 },
-   { key: "Revenue", current: getMetricValue("Revenue"), color: "#FFE357", radius: 40 },
-   { key: "Other", current: 0, color: "#FF83EA", radius: 26 },
-  ]
-
-  const handleSetGoal = (category: string) => {
-   const target = prompt(`Set ${category} target:`)
-   if (!target) return
-   const duration = prompt("Duration: 1mo, 3mo, or 6mo?", "3mo") || "3mo"
-   const current = JSON.parse(localStorage.getItem(GOAL_STORAGE_KEY) || "{}")
-   current[category] = { target: parseFloat(target.replace(/[^0-9.]/g, "")), duration, setAt: Date.now() }
-   localStorage.setItem(GOAL_STORAGE_KEY, JSON.stringify(current))
-   window.dispatchEvent(new Event("storage"))
-  }
-
-  const hasAnyGoal = Object.keys(goalTargets).length > 0
-
-  return (
-   <WidgetShell {...common} icon={<Activity size={22} />}>
-    <div style={{ display: "flex", height: "100%", gap: "0" }}>
-     {/* Left sidebar rail — info boxes */}
-     <div style={{ width: "62px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "4px", paddingRight: "4px", borderRight: "2px solid #000", marginRight: "6px" }}>
-      {categories.map((cat) => {
-       const goal = goalTargets[cat.key]
-       const label = cat.key === "Subscribers" ? "SUBS" : cat.key === "Views" ? "VIEWS" : cat.key === "Revenue" ? "$REV" : "OTHER"
-       const pct = goal?.target ? Math.min(100, Math.round((cat.current / goal.target) * 100)) : 0
-       return (
-        <button
-         key={cat.key}
-         onClick={() => handleSetGoal(cat.key)}
-         style={{
-          padding: "4px 3px",
-          background: goal ? cat.color : "#fff",
-          border: "2px solid #000",
-          borderRadius: "6px",
-          fontSize: "7px",
-          fontWeight: 1000,
-          textTransform: "uppercase",
-          cursor: "pointer",
-          boxShadow: "2px 2px 0 0 rgba(0,0,0,0.1)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "1px",
-          lineHeight: 1.1,
-         }}>
-         <span>{label}</span>
-         {goal ? (
-          <span style={{ fontSize: "6px", opacity: 0.7 }}>{pct}%</span>
-         ) : (
-          <span style={{ fontSize: "6px", opacity: 0.35 }}>SET</span>
-         )}
-        </button>
-       )
-      })}
-     </div>
-
-     {/* Right side — concentric rings (as large as possible) */}
-     <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-      <svg width="100%" height="100%" viewBox="0 0 160 160" style={{ maxWidth: "180px", maxHeight: "180px" }}>
-       {categories.map((cat) => {
-        const goal = goalTargets[cat.key]
-        const target = goal?.target || 0
-        const circumference = 2 * Math.PI * cat.radius
-        const progress = target > 0 ? Math.min(1, cat.current / target) : 0
-        const offset = circumference - (progress * circumference)
-        return (
-         <g key={cat.key}>
-          <circle cx="80" cy="80" r={cat.radius} fill="none" stroke="#eee" strokeWidth="9" style={{ opacity: 0.3 }} />
-          {target > 0 && (
-           <circle
-            cx="80" cy="80" r={cat.radius} fill="none"
-            stroke={cat.color} strokeWidth="9"
-            strokeDasharray={circumference} strokeDashoffset={offset}
-            strokeLinecap="round"
-            style={{ transition: "stroke-dashoffset 1s ease-out", transform: "rotate(-90deg)", transformOrigin: "center" }}
-           />
-          )}
-         </g>
-        )
-       })}
-      </svg>
-      {hasAnyGoal && (
-       <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center" }}>
-        <div style={{ fontSize: "14px", fontWeight: 800 }}>
-         {Math.round(
-          categories.filter((c) => goalTargets[c.key]?.target).reduce((sum, c) => {
-           const t = goalTargets[c.key]?.target || 1
-           return sum + Math.min(100, (c.current / t) * 100)
-          }, 0) / Math.max(1, categories.filter((c) => goalTargets[c.key]?.target).length),
-         )}%
-        </div>
-        <div style={{ fontSize: "6px", fontWeight: 900, opacity: 0.5 }}>AVG PROGRESS</div>
-       </div>
-      )}
-     </div>
-    </div>
-   </WidgetShell>
-  )
- }
 
  // 9. ALERTS FEED — comments + subscriber alerts + insights
  if (widget.id === "alerts-feed") {
@@ -1421,7 +1309,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  if (widget.id === "ask-me") return <AskMeWidget {...common} data={data} />
  if (widget.id === "daily-oracle") return <DailyOracleWidget {...common} data={data} />
  if (widget.id === "flight-check") return <FlightCheckWidget {...common} data={data} />
- if (widget.id === "ab-thumbnail") return <ABThumbnailWidget {...common} data={data} />
+ if (widget.id === "description-editor") return <DescriptionEditorWidget {...common} data={data} />
  if (widget.id === "data-edit") return <DataEditWidget {...common} data={data} />
  if (widget.id === "title-rewriter") return <TitleRewriterWidget {...common} data={data} />
  if (widget.id === "retention-sim") return <RetentionSimWidget {...common} data={data} />

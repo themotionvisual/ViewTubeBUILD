@@ -21,26 +21,37 @@ export const RealtimePerformanceWidget = ({
     onRemove,
   }
   const [viewMode, setViewMode] = useState<"48h" | "60m">("48h")
+  const [hoveredBar, setHoveredBar] = useState<any>(null)
 
   // Create segmented data: 12 bars total
   const hoursData = useMemo(() => {
     return Array.from({ length: 12 }, (_, i) => {
       const base = Math.floor(Math.random() * 80) + 20
       const peak = i === 4 || i === 9 ? Math.floor(Math.random() * 120) : 0
-      return {
-        val: base + peak,
-        label: `${(11 - i) * 4}h - ${(11 - i + 1) * 4}h ago`,
-      }
+        const now = new Date()
+        const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours())
+        const segmentEnd = new Date(currentHour.getTime() - ((11 - i) * 4) * 3600000)
+        const segmentStart = new Date(segmentEnd.getTime() - 4 * 3600000)
+        const dayStr = segmentStart.toLocaleDateString([], { weekday: 'short' }).toUpperCase()
+        const fmtH = (d: Date) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
+        return {
+          val: base + peak,
+          label: `${fmtH(segmentStart)} - ${fmtH(segmentEnd)} ${dayStr}`,
+        }
     })
   }, [])
 
   const minsData = useMemo(() => {
     return Array.from({ length: 12 }, (_, i) => {
       const base = Math.floor(Math.random() * 5)
-      return {
-        val: base,
-        label: `${(11 - i) * 5}m - ${(11 - i + 1) * 5}m ago`,
-      }
+        const now = new Date()
+        const segmentEnd = new Date(now.getTime() - ((11 - i) * 5) * 60000)
+        const segmentStart = new Date(segmentEnd.getTime() - 5 * 60000)
+        const fmtM = (d: Date) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
+        return {
+          val: base,
+          label: `${fmtM(segmentStart)}-${fmtM(segmentEnd)}`,
+        }
     })
   }, [])
 
@@ -137,6 +148,7 @@ export const RealtimePerformanceWidget = ({
                   display: "flex",
                   flexDirection: "column",
                   flex: 1,
+                  position: "relative",
                 }}
               >
                 <div
@@ -165,28 +177,56 @@ export const RealtimePerformanceWidget = ({
                     flex: 1,
                     display: "flex",
                     alignItems: "flex-end",
-                    gap: "1.5px",
-                    margin: "12px -12px -12px",
+                    gap: "6px",
+                    margin: "12px 0 -12px 0",
                     height: "80px",
                   }}
                 >
                   {activeData.map((d: any, i: number) => (
                     <div
                       key={i}
-                      title={`${d.label}: ${d.val} views`}
+                      onMouseEnter={() => setHoveredBar(d)}
+                      onMouseLeave={() => setHoveredBar(null)}
                       style={{
                         flex: 1,
                         height: `${(d.val / activeMax) * 100}%`,
-                        background: i % 2 === 0 ? "#40C6E9" : "#24D3FF",
+                        background: "#40C6E9",
+                        opacity: 0.3 + (d.val / activeMax) * 0.7,
                         minWidth: "0",
                         transition: "height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                        cursor: "help",
-                        borderTop: "2px solid #000",
-                        borderRight: i < activeData.length - 1 ? "1.5px solid rgba(0,0,0,0.15)" : "none",
+                        cursor: "crosshair",
+                        borderRadius: "4px 4px 0 0",
+                        border: "2px solid #000",
+                        borderBottom: "none",
                       }}
                     />
                   ))}
                 </div>
+
+                {hoveredBar && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "8px",
+                      left: "8px",
+                      background: "white",
+                      border: "3px solid black",
+                      padding: "10px",
+                      boxShadow: "4px 4px 0px 0px black",
+                      borderRadius: "8px",
+                      fontWeight: "bold",
+                      zIndex: 50,
+                      pointerEvents: "none",
+                      minWidth: "130px",
+                      textAlign: "left"
+                    }}
+                  >
+                    <p style={{ marginBottom: "4px", fontSize: "12px", fontWeight: 900, borderBottom: "1px solid black", paddingBottom: "4px", textTransform: "uppercase" }}>{hoveredBar.label}</p>
+                    <p style={{ fontSize: "11px", color: "black", margin: 0 }}>
+                      <span style={{ textTransform: "uppercase" }}>VIEWS:</span> {hoveredBar.val.toLocaleString()}
+                    </p>
+                  </div>
+                )}
               </div>
             )
           })()}

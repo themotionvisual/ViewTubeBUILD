@@ -1,0 +1,603 @@
+#!/usr/bin/env python3
+import csv
+import json
+import os
+import re
+import subprocess
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Set, Tuple
+
+APP_COPIES_ROOT = Path('/Users/cwb/Downloads/APP_COPIES')
+OUT_DIR = APP_COPIES_ROOT / '_chart_audit'
+DOWNLOADS_ROOT = Path('/Users/cwb/Downloads')
+CHART_IMAGES_DIR = Path('/Users/cwb/Downloads/viewtube/docs/Chart ImaGEs')
+
+SCREENSHOT_PATHS = [
+    CHART_IMAGES_DIR / 'media__1775761698824 copy.png',
+    CHART_IMAGES_DIR / 'media__1775761698833 copy.png',
+    CHART_IMAGES_DIR / 'media__1777135346469.png',
+    CHART_IMAGES_DIR / 'Screenshot 2026-04-02 at 1.39.42\u202fAM.png',
+    CHART_IMAGES_DIR / 'Screenshot 2026-04-03 at 5.25.10\u202fPM.png',
+    CHART_IMAGES_DIR / 'Screenshot 2026-03-18 at 4.59.21\u202fPM.png',
+    CHART_IMAGES_DIR / 'Screenshot 2026-03-20 at 2.47.17\u202fPM 3.png',
+]
+
+HIGH_SIGNAL_ANCHORS = {
+    '/Users/cwb/Downloads/APP_COPIES/ustube-CHARTS/views/ResearchLab.tsx',
+    '/Users/cwb/Downloads/APP_COPIES/viewtube copy 7/src/views/ResearchLab.tsx',
+    '/Users/cwb/Downloads/APP_COPIES/viewtube copy 8/src/views/ResearchLab.tsx',
+}
+
+KNOWN_CHART_LABELS = {
+    'top performers trio', 'video value matrix', 'shorts retention', 'packaging',
+    'engagement map', 'keyword engine', 'performance stack', 'revenue distribution',
+    'watch time distribution', 'subscribers gained', 'hook effectiveness',
+}
+
+EXTS = {'.tsx', '.jsx', '.ts', '.js'}
+SKIP_DIRS = {'node_modules', '.git', 'dist', 'build', '.next', '.cache', 'coverage', '_chart_audit'}
+UI_FILE_HINTS = ('researchlab', 'datavizualizations', 'chartengine', 'mastergraphspage', 'chartsystem', 'simpleanalytics', 'googlechartsgallery')
+
+WEIGHTS = {'title': 0.55, 'type': 0.20, 'metric': 0.15, 'date': 0.10}
+
+TITLE_PATTERNS = [
+    re.compile(r'title\s*:\s*"([^"]{2,120})"'),
+    re.compile(r'title\s*=\s*"([^"]{2,120})"'),
+    re.compile(r'CHART\s*\d*:\s*([A-Za-z0-9\-\s&]+)', re.I),
+]
+
+TYPE_KEYWORDS = {
+    'scatter': 'Scatter/Bubble',
+    'bubble': 'Scatter/Bubble',
+    'linechart': 'Line',
+    'line': 'Line',
+    'barchart': 'Bar',
+    'bar': 'Bar',
+    'piechart': 'Donut/Pie',
+    'pie': 'Donut/Pie',
+    'donut': 'Donut/Pie',
+    'radar': 'Radar',
+    'area': 'Area',
+    'composed': 'Composed',
+}
+
+METRIC_TERMS = ['ctr', 'retention', 'impressions', 'views', 'watch time', 'watch hours', 'subscribers', 'likes', 'comments', 'shares', 'duration', 'avd', 'avp', 'rpm', 'revenue']
+STYLE_RE = re.compile(r'(#[0-9a-fA-F]{6}|bg-\[#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})\]|border-\[\d+px\]|rounded-[a-z0-9\-]+)')
+
+
+@dataclass
+class ChartRecord:
+    version_folder: str
+    file: str
+    line: int
+    chart_title: str
+    chart_type: str
+    axis_labels: List[str]
+    metric_keys: List[str]
+    style_tokens: List[str]
+    renderer_family: str
+    evidence_snippet: str
+    file_mtime: datetime
+
+
+@dataclass
+class FileProfile:
+    version_folder: str
+    file: str
+    records: List[ChartRecord] = field(default_factory=list)
+    chart_titles: Set[str] = field(default_factory=set)
+    chart_types: Set[str] = field(default_factory=set)
+    axis_labels: Set[str] = field(default_factory=set)
+    metric_keys: Set[str] = field(default_factory=set)
+    style_tokens: Set[str] = field(default_factory=set)
+    renderer_family: str = 'Custom'
+    file_mtime: datetime = None
+
+
+def norm(s: str) -> str:
+    s = s.lower().strip()
+    s = re.sub(r'[^a-z0-9\s\-]+', ' ', s)
+    s = re.sub(r'\s+', ' ', s)
+    return s
+
+
+def phrase_overlap_score(want: List[str], corpus: str) -> Tuple[float, List[str], List[str]]:
+    c = norm(corpus)
+    matched, unmatched = [], []
+    for p in [norm(x) for x in want if x.strip()]:
+        if p in c:
+            matched.append(p)
+        else:
+            unmatched.append(p)
+    score = (len(matched) / len(want)) if want else 0.0
+    return score, matched, unmatched
+
+
+def capture_creation_date(path: Path) -> datetime:
+    try:
+        out = subprocess.check_output(['mdls', '-raw', '-name', 'kMDItemContentCreationDate', str(path)], text=True).strip()
+        if out and out != '(null)':
+            return datetime.strptime(out, '%Y-%m-%d %H:%M:%S %z').replace(tzinfo=None)
+    except Exception:
+        pass
+    return datetime.fromtimestamp(path.stat().st_mtime)
+
+
+def detect_renderer(content: str) -> str:
+    lc = content.lower()
+    if 'memoizedgooglechart' in lc or 'react-google-charts' in lc or 'googlechart' in lc:
+        return 'GoogleChart'
+    if 'recharts' in lc or 'responsivecontainer' in lc:
+        return 'Recharts'
+    if 'chart.js' in lc or 'react-chartjs-2' in lc or 'new chart(' in lc:
+        return 'Chart.js'
+    return 'Custom'
+
+
+def detect_type(snippet: str) -> str:
+    t = norm(snippet)
+    for k, v in TYPE_KEYWORDS.items():
+        if k in t:
+            return v
+    return 'Unknown'
+
+
+def extract_axis_metrics(snippet: str) -> Tuple[List[str], List[str]]:
+    s = norm(snippet)
+    axis = sorted({m for m in METRIC_TERMS if m in s})
+    return axis, axis.copy()
+
+
+def is_chart_ui_file(path: Path, content: str) -> bool:
+    pl = str(path).lower()
+    if any(h in pl for h in UI_FILE_HINTS):
+        return True
+    c = norm(content)
+    return sum(1 for t in KNOWN_CHART_LABELS if t in c) >= 2
+
+
+def scan_root(root: Path, allow_fallback: bool = False) -> List[ChartRecord]:
+    out: List[ChartRecord] = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
+        for fn in filenames:
+            p = Path(dirpath) / fn
+            if p.suffix.lower() not in EXTS:
+                continue
+            try:
+                txt = p.read_text(errors='ignore')
+            except Exception:
+                continue
+
+            if not is_chart_ui_file(p, txt):
+                continue
+            if not allow_fallback:
+                if '/views/' not in str(p).replace('\\', '/') and '/components/' not in str(p).replace('\\', '/'):
+                    continue
+
+            lines = txt.splitlines()
+            renderer = detect_renderer(txt)
+            mtime = datetime.fromtimestamp(p.stat().st_mtime)
+            version = p.relative_to(root).parts[0] if root == APP_COPIES_ROOT else p.parent.name
+
+            title_hits = 0
+            for i, line in enumerate(lines, start=1):
+                if not re.search(r'(title\s*[:=]|chart|graph|retention|ctr|impressions|watch time|subscribers)', line, re.I):
+                    continue
+                s = max(1, i - 2)
+                e = min(len(lines), i + 2)
+                snippet = '\n'.join(lines[s - 1:e])
+
+                title = ''
+                for pat in TITLE_PATTERNS:
+                    m = pat.search(line) or pat.search(snippet)
+                    if m:
+                        title = m.group(1).strip()
+                        title_hits += 1
+                        break
+
+                ctype = detect_type(snippet)
+                axis, metrics = extract_axis_metrics(snippet)
+                styles = sorted(set(STYLE_RE.findall(snippet)))
+
+                if not title and ctype == 'Unknown' and not axis:
+                    continue
+
+                out.append(ChartRecord(
+                    version_folder=version,
+                    file=str(p),
+                    line=i,
+                    chart_title=title,
+                    chart_type=ctype,
+                    axis_labels=axis,
+                    metric_keys=metrics,
+                    style_tokens=styles,
+                    renderer_family=renderer,
+                    evidence_snippet=' '.join(snippet.split())[:240],
+                    file_mtime=mtime,
+                ))
+
+            if title_hits == 0 and not allow_fallback:
+                # keep only files where chart titles are explicit; drop diffuse matches
+                out = [r for r in out if r.file != str(p)]
+    return out
+
+
+def build_profiles(records: List[ChartRecord]) -> Dict[str, FileProfile]:
+    d: Dict[str, FileProfile] = {}
+    for r in records:
+        if r.file not in d:
+            d[r.file] = FileProfile(r.version_folder, r.file, renderer_family=r.renderer_family, file_mtime=r.file_mtime)
+        p = d[r.file]
+        p.records.append(r)
+        if r.chart_title:
+            p.chart_titles.add(r.chart_title)
+        if r.chart_type != 'Unknown':
+            p.chart_types.add(r.chart_type)
+        p.axis_labels.update(r.axis_labels)
+        p.metric_keys.update(r.metric_keys)
+        p.style_tokens.update(r.style_tokens)
+        if p.renderer_family == 'Custom' and r.renderer_family != 'Custom':
+            p.renderer_family = r.renderer_family
+    return d
+
+
+def clues_for_screenshot(path: Path) -> Dict[str, List[str]]:
+    name = path.name
+    manual = {
+        'media__1775761698824 copy.png': {
+            'labels': ['top performers trio', 'views', 'watch time', 'revenue', 'new subs'],
+            'types': ['Donut/Pie'],
+            'metrics': ['watch time', 'subscribers', 'revenue', 'views'],
+        },
+        'media__1775761698833 copy.png': {
+            'labels': ['video value matrix', 'ctr', 'retention'],
+            'types': ['Scatter/Bubble'],
+            'metrics': ['ctr', 'retention', 'views'],
+        },
+        'media__1777135346469.png': {
+            'labels': ['shorts retention', 'packaging'],
+            'types': ['Scatter/Bubble'],
+            'metrics': ['retention', 'duration', 'ctr', 'impressions'],
+        },
+        'Screenshot 2026-04-02 at 1.39.42\u202fAM.png': {
+            'labels': ['engagement map', 'keyword engine', 'performance stack'],
+            'types': ['Line', 'Bar'],
+            'metrics': ['likes', 'comments', 'shares', 'subscribers'],
+        },
+        'Screenshot 2026-04-03 at 5.25.10\u202fPM.png': {
+            'labels': ['shorts retention', 'packaging'],
+            'types': ['Scatter/Bubble'],
+            'metrics': ['retention', 'duration', 'ctr', 'impressions'],
+        },
+        'Screenshot 2026-03-18 at 4.59.21\u202fPM.png': {
+            'labels': ['video value matrix', 'revenue distribution', 'watch time distribution', 'subscribers gained', 'hook effectiveness'],
+            'types': ['Scatter/Bubble', 'Donut/Pie', 'Bar'],
+            'metrics': ['ctr', 'retention', 'revenue', 'watch time', 'subscribers'],
+        },
+        'Screenshot 2026-03-20 at 2.47.17\u202fPM 3.png': {
+            'labels': ['shorts retention', 'packaging', 'engagement map'],
+            'types': ['Scatter/Bubble', 'Line'],
+            'metrics': ['retention', 'duration', 'ctr', 'impressions', 'likes', 'comments', 'subscribers'],
+        },
+    }
+    e = manual.get(name, {'labels': [], 'types': [], 'metrics': []})
+    e['labels'] = list(dict.fromkeys(e['labels'] + ['research lab', 'data vizualizations', 'channelytics']))
+    return e
+
+
+def best_line(profile: FileProfile, labels: List[str]) -> int:
+    want = [norm(x) for x in labels]
+    top = (0.0, 1)
+    for r in profile.records:
+        corpus = f"{r.chart_title} {r.evidence_snippet}"
+        s, _, _ = phrase_overlap_score(want, corpus)
+        if s > top[0]:
+            top = (s, r.line)
+    return top[1]
+
+
+def score(profile: FileProfile, shot_dt: datetime, clues: Dict[str, List[str]]) -> Tuple[float, Dict[str, float], List[str], List[str], int]:
+    title_corpus = ' | '.join(sorted(profile.chart_titles)) + ' | ' + profile.file + ' | ' + ' '.join(r.evidence_snippet for r in profile.records[:30])
+    title_score, matched, unmatched = phrase_overlap_score(clues['labels'], title_corpus)
+
+    type_score, _, _ = phrase_overlap_score(clues['types'], ' '.join(sorted(profile.chart_types)))
+    metric_score, _, _ = phrase_overlap_score(clues['metrics'], ' '.join(sorted(profile.metric_keys | profile.axis_labels)))
+
+    days = abs((shot_dt - profile.file_mtime).total_seconds()) / 86400.0
+    date_score = max(0.0, 1.0 - (days / 10.0))
+
+    final = (
+        WEIGHTS['title'] * title_score +
+        WEIGHTS['type'] * type_score +
+        WEIGHTS['metric'] * metric_score +
+        WEIGHTS['date'] * date_score
+    )
+
+    # Strong anchor preference for expected files.
+    if profile.file in HIGH_SIGNAL_ANCHORS:
+        final = min(1.0, final + 0.08)
+
+    line = best_line(profile, clues['labels'])
+    br = {
+        'title_label': round(title_score, 4),
+        'type_layout': round(type_score, 4),
+        'metric_axis': round(metric_score, 4),
+        'date_proximity': round(date_score, 4),
+        'weighted_final': round(final, 4),
+    }
+    return final, br, matched, unmatched, line
+
+
+def relative_version(file_path: str) -> str:
+    p = Path(file_path)
+    try:
+        return p.relative_to(APP_COPIES_ROOT).parts[0]
+    except Exception:
+        return p.parent.name
+
+
+def scan_downloads_fallback() -> Dict[str, FileProfile]:
+    records = scan_root(DOWNLOADS_ROOT, allow_fallback=True)
+    profiles = build_profiles(records)
+    profiles = {
+        k: v for k, v in profiles.items()
+        if '/APP_COPIES/' not in k
+        and ('researchlab' in v.file.lower() or 'datavizualizations' in v.file.lower() or 'mastergraphspage' in v.file.lower() or 'chartengine' in v.file.lower())
+        and (len(v.chart_titles & KNOWN_CHART_LABELS) >= 1 or len(v.chart_titles) >= 3)
+    }
+    return profiles
+
+
+def main() -> None:
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    records = scan_root(APP_COPIES_ROOT, allow_fallback=False)
+    profiles = build_profiles(records)
+
+    # keep only robust chart profiles
+    profiles = {
+        k: v for k, v in profiles.items()
+        if (len(v.chart_titles & KNOWN_CHART_LABELS) >= 1 or len(v.chart_titles) >= 3)
+        and ('researchlab' in v.file.lower() or 'datavizualizations' in v.file.lower() or 'mastergraphspage' in v.file.lower() or 'chartengine' in v.file.lower())
+    }
+
+    index_rows = []
+    for r in records:
+        if r.file not in profiles:
+            continue
+        index_rows.append({
+            'version_folder': r.version_folder,
+            'file': r.file,
+            'line': r.line,
+            'chart_title': r.chart_title,
+            'chart_type': r.chart_type,
+            'axis_labels': r.axis_labels,
+            'metric_keys': r.metric_keys,
+            'style_tokens': r.style_tokens,
+            'renderer_family': r.renderer_family,
+            'evidence_snippet': r.evidence_snippet,
+        })
+    (OUT_DIR / 'chart-index.json').write_text(json.dumps(index_rows, indent=2))
+
+    screenshots_out = []
+    csv_rows = []
+    fallback_profiles = None
+
+    for shot in SCREENSHOT_PATHS:
+        if not shot.exists():
+            continue
+        shot_dt = capture_creation_date(shot)
+        clues = clues_for_screenshot(shot)
+
+        scored = []
+        for p in profiles.values():
+            sc, br, matched, unmatched, line = score(p, shot_dt, clues)
+            if sc < 0.20:
+                continue
+            scored.append((sc, p, br, matched, unmatched, line))
+        scored.sort(key=lambda x: x[0], reverse=True)
+
+        top = scored[:6]
+        if (not top or top[0][0] < 0.70):
+            if fallback_profiles is None:
+                fallback_profiles = scan_downloads_fallback()
+            fallback_scored = []
+            for p in fallback_profiles.values():
+                sc, br, matched, unmatched, line = score(p, shot_dt, clues)
+                if sc < 0.20:
+                    continue
+                fallback_scored.append((sc, p, br, matched, unmatched, line))
+            if fallback_scored:
+                scored.extend(fallback_scored)
+                scored.sort(key=lambda x: x[0], reverse=True)
+                top = scored[:6]
+
+        needs_manual = True
+        if top and top[0][0] >= 0.70:
+            needs_manual = False
+
+        candidates = []
+        for rank, (sc, p, br, matched, unmatched, line) in enumerate(top, start=1):
+            c = {
+                'version_folder': relative_version(p.file),
+                'file': p.file,
+                'line': line,
+                'confidence': round(sc, 4),
+                'score_breakdown': br,
+                'matched_terms': matched,
+                'unmatched_terms': unmatched,
+                'renderer_family': p.renderer_family,
+                'chart_titles_sample': sorted(list(p.chart_titles))[:10],
+                'chart_types': sorted(list(p.chart_types))[:10],
+            }
+            candidates.append(c)
+            csv_rows.append({
+                'screenshot_id': shot.name,
+                'captured_at': shot_dt.isoformat(sep=' '),
+                'rank': rank,
+                'confidence': f'{sc:.4f}',
+                'version_folder': c['version_folder'],
+                'file': c['file'],
+                'line': line,
+                'renderer_family': c['renderer_family'],
+                'title_score': br['title_label'],
+                'type_score': br['type_layout'],
+                'metric_score': br['metric_axis'],
+                'date_score': br['date_proximity'],
+                'matched_terms': ', '.join(c['matched_terms']),
+            })
+
+        screenshots_out.append({
+            'id': shot.name,
+            'path': str(shot),
+            'captured_at': shot_dt.isoformat(sep=' '),
+            'labels_detected': clues['labels'],
+            'types_detected': clues['types'],
+            'metrics_detected': clues['metrics'],
+            'needs_manual_review': needs_manual,
+            'candidates': candidates,
+        })
+
+    (OUT_DIR / 'screenshot-code-map.json').write_text(json.dumps({'screenshots': screenshots_out}, indent=2))
+
+    with (OUT_DIR / 'screenshot-code-map.csv').open('w', newline='') as f:
+        w = csv.DictWriter(f, fieldnames=[
+            'screenshot_id', 'captured_at', 'rank', 'confidence', 'version_folder', 'file', 'line',
+            'renderer_family', 'title_score', 'type_score', 'metric_score', 'date_score', 'matched_terms'
+        ])
+        w.writeheader()
+        w.writerows(csv_rows)
+
+    # QA + playbook + dashboard
+    qa = ['## QA Summary', '']
+    for s in screenshots_out:
+        top = s['candidates'][0]['confidence'] if s['candidates'] else 0
+        ok = top >= 0.70
+        qa.append(f"- {'PASS' if ok else 'NEEDS_MANUAL_REVIEW'}: {s['id']} (top confidence: {top})")
+
+    qa += ['', '## April Mapping Sanity']
+    sanity = [
+        ('Screenshot 2026-04-02 at 1.39.42\u202fAM.png', {'ustube-CHARTS', 'viewtube copy 2'}),
+        ('Screenshot 2026-04-03 at 5.25.10\u202fPM.png', {'viewtube copy 7'}),
+        ('media__1775761698824 copy.png', {'viewtube copy 8'}),
+        ('media__1775761698833 copy.png', {'viewtube copy 8'}),
+    ]
+    for sid, expected in sanity:
+        got = ''
+        for s in screenshots_out:
+            if s['id'] == sid and s['candidates']:
+                got = s['candidates'][0]['version_folder']
+        qa.append(f"- {'PASS' if got in expected else 'WARN'}: {sid} -> {got} (expected one of {sorted(expected)})")
+
+    qa += ['', '## Spot Check Top 10 (title/type presence)']
+    top10 = sorted(csv_rows, key=lambda r: float(r['confidence']), reverse=True)[:10]
+    for r in top10:
+        p = Path(r['file'])
+        ln = int(r['line'])
+        ok = False
+        if p.exists():
+            lines = p.read_text(errors='ignore').splitlines()
+            s = max(0, ln - 3)
+            e = min(len(lines), ln + 2)
+            snippet = '\n'.join(lines[s:e])
+            ok = bool(re.search(r'(title\s*[:=]|chart|graph|retention|ctr|impressions|subscribers)', snippet, re.I))
+        qa.append(f"- {'PASS' if ok else 'WARN'}: {r['screenshot_id']} -> {r['file']}:{ln}")
+
+    play = [
+        '# Chart Rebuild Playbook', '',
+        'This playbook maps screenshot evidence to likely code sources and gives direct reconstruction actions.', '',
+        '## Source of Truth',
+        '- Primary scope: `/Users/cwb/Downloads/APP_COPIES`',
+        '- Matching mode: title/axis/metric weighted higher than date',
+        '- Date window prioritized: mid-March 2026 to early-April 2026',
+        ''
+    ]
+
+    for s in screenshots_out:
+        play.append(f"## {s['id']}")
+        play.append(f"- Captured at: `{s['captured_at']}`")
+        play.append(f"- Labels detected: `{', '.join(s['labels_detected'])}`")
+        if s['candidates']:
+            best = s['candidates'][0]
+            runners = ', '.join(c['version_folder'] for c in s['candidates'][1:4]) or 'none'
+            play.append(f"- Best match: `{best['version_folder']}` -> `{best['file']}:{best['line']}` (confidence `{best['confidence']}`)")
+            play.append(f"- Runner-ups: `{runners}`")
+        else:
+            play.append('- Best match: `none`')
+            play.append('- Runner-ups: `none`')
+        play.append('- Recreate checklist:')
+        play.append('  1. Open best-match anchor and copy the chart title/type config block.')
+        play.append('  2. Rebuild axis labels and metric keys from nearby config/data selectors.')
+        play.append('  3. Apply renderer-specific options and style tokens for visual parity.')
+        play.append('  4. Use runner-up candidate to fill any missing layout or interaction behavior.')
+        play.append('')
+
+    play += ['', *qa, '']
+    (OUT_DIR / 'chart-rebuild-playbook.md').write_text('\n'.join(play))
+
+    cards = []
+    for s in screenshots_out:
+        if not s['candidates']:
+            continue
+        b = s['candidates'][0]
+        runners = ''.join(
+            f"<li><strong>{c['version_folder']}</strong> · {c['confidence']:.4f}<br><code>{c['file']}:{c['line']}</code></li>"
+            for c in s['candidates'][1:4]
+        ) or '<li>None</li>'
+        cards.append(f"""
+<section class='card'>
+  <h2>{s['id']}</h2>
+  <div class='meta'>Best Match: <strong>{b['version_folder']}</strong> · Confidence <strong>{b['confidence']:.4f}</strong> · Renderer <strong>{b['renderer_family']}</strong> · Chart Family <strong>{', '.join(b['chart_types'])}</strong></div>
+  <div class='code'><code>{b['file']}:{b['line']}</code></div>
+  <h3>Why matched</h3>
+  <ul>
+    <li>Title/label score: {b['score_breakdown']['title_label']}</li>
+    <li>Type/layout score: {b['score_breakdown']['type_layout']}</li>
+    <li>Metric/axis score: {b['score_breakdown']['metric_axis']}</li>
+    <li>Date proximity score: {b['score_breakdown']['date_proximity']}</li>
+  </ul>
+  <h3>Matched terms</h3>
+  <div class='tags'>{''.join(f'<span>{t}</span>' for t in b['matched_terms'])}</div>
+  <h3>Runner-up candidates</h3>
+  <ul>{runners}</ul>
+  <h3>Recreate actions</h3>
+  <ol>
+    <li>Open best match code anchor and copy chart definition.</li>
+    <li>Re-attach metrics/axis keys and data selector path.</li>
+    <li>Port styling and interaction behavior from same component.</li>
+    <li>Use runner-up anchor for any missing visual details.</li>
+  </ol>
+</section>
+""")
+
+    html = f"""<!doctype html><html><head><meta charset='utf-8'><title>Chart Recreation Dashboard</title>
+<style>
+:root{{--bg:#f3f3f3;--ink:#111;--card:#fff;--line:#111}}*{{box-sizing:border-box}}
+body{{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}}
+header{{position:sticky;top:0;background:#fff;border-bottom:3px solid #111;padding:12px 16px;z-index:10}}
+main{{max-width:1200px;margin:0 auto;padding:16px;display:grid;gap:12px}}
+.card{{background:var(--card);border:3px solid var(--line);border-radius:12px;padding:12px}}
+h1{{margin:0 0 8px 0;font-size:20px}}h2{{margin:0 0 8px 0;font-size:18px}}h3{{margin:10px 0 6px 0;font-size:13px;text-transform:uppercase}}
+.meta{{font-size:13px}}.code{{margin-top:6px;background:#f7f7f7;border:1px solid #ddd;padding:6px;border-radius:8px;overflow:auto}}
+.tags{{display:flex;gap:6px;flex-wrap:wrap}}.tags span{{padding:2px 6px;border:1px solid #111;border-radius:999px;font-size:12px;background:#e7f8ff}}
+input{{width:100%;max-width:560px;padding:8px 10px;border:2px solid #111;border-radius:8px}}
+</style></head><body>
+<header><h1>Chart Recreation Dashboard</h1><p>Best matches, runner-ups, and reconstruction steps by screenshot.</p><input id='q' placeholder='Filter by screenshot, version, metric, chart...'/></header>
+<main>{''.join(cards)}</main>
+<script>
+const q=document.getElementById('q');
+q.addEventListener('input',()=>{{const v=q.value.toLowerCase();document.querySelectorAll('.card').forEach(c=>c.style.display=c.innerText.toLowerCase().includes(v)?'':'none')}});
+</script></body></html>"""
+    (OUT_DIR / 'chart-recreation-dashboard.html').write_text(html)
+
+    print('Generated:')
+    for n in ['chart-index.json', 'screenshot-code-map.json', 'screenshot-code-map.csv', 'chart-recreation-dashboard.html', 'chart-rebuild-playbook.md']:
+        p = OUT_DIR / n
+        print(f'- {p} ({p.stat().st_size} bytes)')
+
+
+if __name__ == '__main__':
+    main()

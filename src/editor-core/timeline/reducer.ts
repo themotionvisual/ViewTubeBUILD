@@ -28,7 +28,21 @@ const stateSnapshot = (state: TimelineState): Omit<TimelineState, "history" | "p
 const normalizeClip = (clip: EditorClip): EditorClip => {
   const startFrame = Math.max(0, clip.startFrame);
   const endFrame = Math.max(startFrame + MIN_CLIP_FRAMES, clip.endFrame);
-  return { ...clip, startFrame, endFrame };
+  return {
+    ...clip,
+    startFrame,
+    endFrame,
+    volume: clip.volume ?? 1,
+    muted: clip.muted ?? false,
+    x: clip.x ?? 0,
+    y: clip.y ?? 0,
+    scale: clip.scale ?? 1,
+    rotation: clip.rotation ?? 0,
+    opacity: clip.opacity ?? 1,
+    clipType: clip.clipType ?? (clip.kind === "text" ? "text" : "media"),
+    mediaUrl: clip.mediaUrl ?? "",
+    text: clip.text ?? "",
+  };
 };
 
 const upsertClip = (clips: EditorClip[], clip: EditorClip): EditorClip[] => {
@@ -305,6 +319,16 @@ const applyMutation = (
         clips: state.clips.map((clip) =>
           clip.id === command.clipId
             ? { ...clip, speed: clamp(command.speed, 0.1, 8) }
+            : clip,
+        ),
+      };
+    }
+    case "setClipProps": {
+      return {
+        ...state,
+        clips: state.clips.map((clip) =>
+          clip.id === command.clipId
+            ? { ...clip, ...command.props }
             : clip,
         ),
       };

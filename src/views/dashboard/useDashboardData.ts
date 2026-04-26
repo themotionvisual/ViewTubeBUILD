@@ -143,9 +143,9 @@ export const useDashboardData = () => {
       }
     })
 
-    // Look BACKWARD 10 days from today, and FORWARD 3 days, total 14 days
+    // Look BACKWARD 17 days from today, and FORWARD 3 days, total 21 days
     const days: { dateStr: string; dayNum: number; active: boolean; hasLong: boolean; hasShort: boolean; isFuture: boolean; isToday: boolean }[] = []
-    for (let i = 10; i >= -3; i--) {
+    for (let i = 17; i >= -3; i--) {
       const d = new Date(today)
       d.setDate(today.getDate() - i)
       const key = d.toISOString().split("T")[0]

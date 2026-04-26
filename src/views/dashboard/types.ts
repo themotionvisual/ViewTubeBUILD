@@ -1,5 +1,5 @@
 export type DashboardSizeBucket = "full" | "half" | "third" | "quarter"
-export type DashboardHeightBucket = "short" | "medium" | "tall"
+export type DashboardHeightBucket = "short" | "medium" | "tall" | "xtall"
 
 export type DashboardWidgetCategory =
   | "core"

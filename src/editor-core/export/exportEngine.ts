@@ -1,6 +1,7 @@
 import type {
   ExportArtifact,
   ExportJob,
+  LaunchEditorProjectV1,
   RenderFormat,
   RenderRequest,
   TimelineState,
@@ -79,6 +80,42 @@ export const buildProjectJson = (state: TimelineState): string => {
     null,
     2,
   );
+};
+
+export const buildLaunchProjectJson = (
+  state: TimelineState,
+  exportMeta: LaunchEditorProjectV1["exportMeta"] = {
+    aspect: "16:9",
+    resolutionProfile: "1080",
+  },
+): string => {
+  const payload: LaunchEditorProjectV1 = {
+    version: "LaunchEditorProjectV1",
+    exportedAt: new Date().toISOString(),
+    timeline: {
+      fps: state.fps,
+      playheadFrame: state.playheadFrame,
+      zoom: state.zoom,
+      snapping: state.snapping,
+      tracks: state.tracks,
+      clips: state.clips,
+      keyframes: state.keyframes,
+      transitions: state.transitions,
+    },
+    exportMeta,
+  };
+  return JSON.stringify(payload, null, 2);
+};
+
+export const parseLaunchProjectJson = (raw: string): LaunchEditorProjectV1 => {
+  const parsed = JSON.parse(raw) as LaunchEditorProjectV1;
+  if (parsed?.version !== "LaunchEditorProjectV1") {
+    throw new Error("Invalid launch project file version.");
+  }
+  if (!parsed.timeline?.tracks || !parsed.timeline?.clips) {
+    throw new Error("Invalid launch project file structure.");
+  }
+  return parsed;
 };
 
 export const buildHtmlPackage = (projectJson: string): string => {

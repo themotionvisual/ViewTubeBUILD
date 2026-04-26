@@ -158,10 +158,11 @@ export const sizeBucketClassName = (size: DashboardSizeBucket): string => {
 }
 
 export const heightBucketClassName = (height: DashboardHeightBucket): string => {
-  if (height === "short") return "h-[160px]"
-  if (height === "medium") return "h-[260px]"
-  if (height === "tall") return "h-[400px]"
-  return "h-[260px]"
+  if (height === "short") return "h-[150px]"
+  if (height === "medium") return "h-[250px]"
+  if (height === "tall") return "h-[350px]"
+  if (height === "xtall") return "h-[450px]"
+  return "h-[250px]"
 }
 
 export const widgetCardShellClass =

@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "generate:chart-inventory": "node scripts/generate-chart-inventory.mjs",
+    "generate:oracle-skill-pack": "node scripts/generate-oracle-skill-pack.mjs",
     "check:css": "node scripts/check-css-parse.mjs",
     "check:privacy-src": "bash scripts/privacy-audit-src.sh",
     "preview": "vite preview"

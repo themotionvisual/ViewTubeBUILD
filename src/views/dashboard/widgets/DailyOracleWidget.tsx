@@ -175,7 +175,7 @@ export const DailyOracleWidget = ({
 
  return (
   <WidgetShell {...common} icon={<Sparkles size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+   <div style={{ display: "flex", flexDirection: "column", gap: "10px", height: "100%", overflowY: "auto" }}>
     {/* Header Row */}
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>

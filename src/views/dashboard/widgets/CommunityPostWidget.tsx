@@ -129,6 +129,7 @@ export const CommunityPostWidget = ({
      flexDirection: "column",
      height: "100%",
      gap: "8px",
+     overflow: "hidden",
     }}>
     {/* Type Selector */}
     <div
@@ -157,7 +158,7 @@ export const CommunityPostWidget = ({
         flexDirection: "column",
         alignItems: "center",
         gap: "2px",
-        background: postType === type.id ? "#FFB570" : "transparent",
+        background: postType === type.id ? "var(--widget-color, #FFB570)" : "transparent",
         border:
          postType === type.id ? "2px solid #000" : "2px solid transparent",
         borderRadius: "6px",
@@ -179,27 +180,21 @@ export const CommunityPostWidget = ({
 
     {/* Editor Area */}
     <div
-     style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
+     style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px", overflowY: "auto", minHeight: 0, paddingRight: "4px", paddingBottom: "8px" }}>
      <textarea
+      className="vt-textarea"
       value={content}
       onChange={(e) => setContent(e.target.value)}
       placeholder={`Write your ${postType} post...`}
       style={{
        flex: postType.includes("poll") ? "none" : 1,
        minHeight: postType.includes("poll") ? "60px" : "100px",
-       padding: "10px",
-       background: "#fff",
-       border: "2px solid #000",
-       borderRadius: "8px",
-       fontSize: "12px",
-       fontFamily: "inherit",
        resize: "none",
-       outline: "none",
       }}
      />
 
      {postType.includes("poll") && (
-      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
        {pollOptions.map((opt, i) => (
         <div
          key={i}
@@ -214,24 +209,18 @@ export const CommunityPostWidget = ({
           }}
          />
          <input
+          className="vt-input"
           value={opt}
           onChange={(e) => updatePollOption(i, e.target.value)}
           placeholder={`Option ${i + 1}`}
-          style={{
-           flex: 1,
-           padding: "4px 8px",
-           fontSize: "11px",
-           border: "1px solid #000",
-           borderRadius: "4px",
-           outline: "none",
-          }}
+          style={{ flex: 1, padding: "4px 8px", fontSize: "11px" }}
          />
          {postType === "image-poll" && (
           <div
            onClick={() => alert("Simulated Image Selection")}
            style={{
-            width: "32px",
-            height: "32px",
+            width: "24px",
+            height: "24px",
             border: "1px dashed #000",
             borderRadius: "4px",
             display: "flex",
@@ -252,7 +241,7 @@ export const CommunityPostWidget = ({
           style={{
            marginTop: "6px",
            padding: "8px 12px",
-           background: "#C9F830",
+           background: "var(--widget-color, #C9F830)",
            fontSize: "10px",
            fontWeight: 1000,
            width: "fit-content",
@@ -266,16 +255,8 @@ export const CommunityPostWidget = ({
 
      {postType === "video" && (
       <select
-       style={{
-        width: "100%",
-        padding: "8px",
-        background: "#fff",
-        border: "2px solid #000",
-        borderRadius: "8px",
-        fontSize: "12px",
-        fontWeight: 900,
-        outline: "none",
-       }}>
+       className="vt-select"
+       style={{ width: "100%" }}>
        <option value="" disabled selected>
         Select an existing video...
        </option>
@@ -314,33 +295,18 @@ export const CommunityPostWidget = ({
 
     {/* Actions */}
     <div
+     className="community-post-options"
      style={{
-      display: "flex",
-      gap: "6px",
       borderTop: "2px solid #000",
       paddingTop: "8px",
       marginTop: "auto",
      }}>
      <button
+      className="vt-button"
       onClick={handleGenerate}
       disabled={isGenerating}
-      style={{
-       flex: 1,
-       display: "flex",
-       alignItems: "center",
-       justifyContent: "center",
-       gap: "6px",
-       height: "36px",
-       background: "#fff",
-       border: "2px solid #000",
-       borderRadius: "8px",
-       fontSize: "10px",
-       fontWeight: 900,
-       textTransform: "uppercase",
-       cursor: isGenerating ? "wait" : "pointer",
-       boxShadow: "2px 2px 0 0 #000",
-      }}>
-      {isGenerating ?
+      style={{ flex: 1 }}>
+      {isGenerating ? (
        <div
         style={{
          width: "12px",
@@ -351,27 +317,15 @@ export const CommunityPostWidget = ({
          animation: "spin 1s linear infinite",
         }}
        />
-      : <Sparkles size={14} color="#00D2FF" fill="#00D2FF" />}
-      {isGenerating ? "Refining..." : content.trim() ? "Refine Post" : "Draft Post"}
+      ) : (
+       <Sparkles size={14} className="text-blue-400" />
+      )}
+      {isGenerating ? "Refining..." : "Refine"}
      </button>
      <button
+      className="vt-button primary"
       onClick={handlePublish}
-      style={{
-       flex: 1,
-       display: "flex",
-       alignItems: "center",
-       justifyContent: "center",
-       gap: "6px",
-       height: "36px",
-       background: "#4FFF5B",
-       border: "2px solid #000",
-       borderRadius: "8px",
-       fontSize: "10px",
-       fontWeight: 1000,
-       textTransform: "uppercase",
-       cursor: "pointer",
-       boxShadow: "2px 2px 0 0 #000",
-      }}>
+      style={{ flex: 1.5 }}>
       <Send size={14} /> Publish
      </button>
     </div>

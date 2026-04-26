@@ -45,7 +45,7 @@ export const Sidebar: React.FC = () => {
    { id: "PROJECTS", path: "/projects", label: "Projects", color: "#FFFF61" },
    { id: "ANALYTICS", path: "/performance", label: "Analytics", color: "#4FFF5B" },
    { id: "CALENDAR", path: "/project-calendar", label: "Calendar", color: "#40C6E9" },
-   { id: "SHORTS", path: "/shorts", label: "Shorts", color: "#579AFF" },
+   { id: "EDITOR", path: "/editor-v1", label: "Editor", color: "#579AFF" },
   ]
 
  const handleHiddenAnalyticsClick = () => {

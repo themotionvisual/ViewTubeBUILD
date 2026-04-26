@@ -62,10 +62,10 @@ export const HashtagAnalyzerWidget = ({
   <WidgetShell {...common} icon={<Hash size={22} />}>
    <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%" }}>
     <div style={{ display: "flex", gap: "6px" }}>
-     <input value={input} onChange={(e) => setInput(e.target.value)}
+     <input className="vt-input" value={input} onChange={(e) => setInput(e.target.value)}
       onKeyDown={(e) => { if (e.key === "Enter") analyze() }}
       placeholder="#hashtag1, #hashtag2, #hashtag3..."
-      style={{ flex: 1, padding: "6px 8px", border: "2px solid #000", borderRadius: "8px", fontSize: "11px", fontWeight: 700, outline: "none" }}
+      style={{ flex: 1 }}
      />
      <button onClick={analyze} disabled={analyzing} style={{
       padding: "0 12px", border: "2px solid #000", borderRadius: "8px", background: "#CC00FF",

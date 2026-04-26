@@ -72,6 +72,16 @@ export interface EditorClip {
   startFrame: number;
   endFrame: number;
   speed: number;
+  volume?: number;
+  muted?: boolean;
+  x?: number;
+  y?: number;
+  scale?: number;
+  rotation?: number;
+  opacity?: number;
+  text?: string;
+  clipType?: "media" | "text" | "shape";
+  mediaUrl?: string;
   groupedWithNext: boolean;
   keyframeIds: string[];
   effectIds: string[];
@@ -135,6 +145,63 @@ export interface RenderRequest {
   includeAudio?: boolean;
 }
 
+export interface LaunchEditorProjectV1 {
+  version: "LaunchEditorProjectV1";
+  exportedAt: string;
+  timeline: {
+    fps: number;
+    playheadFrame: number;
+    zoom: number;
+    snapping: boolean;
+    tracks: TimelineState["tracks"];
+    clips: TimelineState["clips"];
+    keyframes: TimelineState["keyframes"];
+    transitions: TimelineState["transitions"];
+  };
+  exportMeta?: {
+    aspect: "16:9" | "9:16";
+    resolutionProfile: "720" | "1080" | "1k" | "2k" | "4k";
+  };
+}
+
+export interface RenderJobRequest {
+  projectId: string;
+  format: "mp4" | "mov";
+  resolutionProfile: "720" | "1080" | "1k" | "2k" | "4k";
+  aspect: "16:9" | "9:16";
+  compositionSpec: {
+    fps: number;
+    width: number;
+    height: number;
+    durationInFrames: number;
+  };
+}
+
+export interface RenderJobStatus {
+  jobId: string;
+  status: "queued" | "rendering" | "done" | "failed";
+  progress?: number;
+  outputUrl?: string;
+  error?: string;
+}
+
+export interface TemplatePresetV1 {
+  id: string;
+  name: string;
+  clips: Array<{
+    kind: "text" | "shape";
+    title: string;
+    text?: string;
+    color: string;
+    startOffsetFrames: number;
+    durationFrames: number;
+    x?: number;
+    y?: number;
+    scale?: number;
+    opacity?: number;
+  }>;
+}
+
 export interface ExportArtifact {
   id: string;
   format: RenderFormat;
@@ -191,6 +258,25 @@ export type TimelineCommand =
   | { type: "selectClip"; clipId: string | null }
   | { type: "setClipColor"; clipId: string; color: string }
   | { type: "setClipSpeed"; clipId: string; speed: number }
+  | {
+      type: "setClipProps";
+      clipId: string;
+      props: Partial<
+        Pick<
+          EditorClip,
+          | "title"
+          | "text"
+          | "x"
+          | "y"
+          | "scale"
+          | "rotation"
+          | "opacity"
+          | "volume"
+          | "muted"
+          | "color"
+        >
+      >;
+    }
   | { type: "setTrackViewportState"; trackId: string; viewportState: TrackViewportState }
   | { type: "beginPointerAction"; action: PointerActionState }
   | { type: "cancelPointerAction" }

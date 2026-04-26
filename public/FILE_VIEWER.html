@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>File Viewer</title>
+  <style>
+    body{margin:0;background:#111;color:#eaeaea;font-family:ui-monospace,Menlo,Consolas,monospace}
+    .top{position:sticky;top:0;background:#1b1b1b;border-bottom:2px solid #444;padding:10px 12px;z-index:2}
+    .name{font-weight:700;color:#ccff00}
+    .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    a{color:#7bc3ff}
+    pre{margin:0;padding:16px;white-space:pre-wrap;word-break:break-word;line-height:1.35}
+    .err{color:#ff8ca1}
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="row">
+      <span class="name" id="name">Loading...</span>
+      <a href="/ALL_LINKS.html">Back to ALL_LINKS</a>
+      <a id="raw" href="#">Open Raw</a>
+    </div>
+  </div>
+  <pre id="content">Loading file...</pre>
+  <script>
+    const q = new URLSearchParams(location.search);
+    const path = q.get('path') || '';
+    const name = document.getElementById('name');
+    const raw = document.getElementById('raw');
+    const out = document.getElementById('content');
+    if (!path || !path.startsWith('/')) {
+      name.textContent = 'Invalid path';
+      out.innerHTML = '<span class="err">Missing or invalid ?path=...</span>';
+    } else {
+      name.textContent = path;
+      raw.href = path;
+      fetch(path, { cache: 'no-store' })
+        .then(async (res) => {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const txt = await res.text();
+          out.textContent = txt;
+        })
+        .catch((e) => {
+          out.innerHTML = '<span class="err">Failed to load file: ' + e.message + '</span>';
+        });
+    }
+  </script>
+</body>
+</html>

@@ -12,12 +12,13 @@ import Settings from "../views/Settings"
 import ReferenceStudio from "../views/ReferenceStudio"
 import ReferenceStudioV2 from "../views/ReferenceStudioV2"
 import Stuff from "../views/Stuff"
+import ResearchLabToolbox from "../views/ResearchLabToolbox"
 import SourcesLabView from "../views/SourcesLabView"
 import ComponentCatalogView from "../views/ComponentCatalogView"
 import ComponentGridView from "../views/ComponentGridView"
 import BenchExplorer from "../views/bench/BenchExplorer"
 import StandaloneBench from "../views/bench/StandaloneBench"
-import { ShortsStudio } from "../views/ShortsStudio"
+import EditorV1Page from "../views/EditorV1Page"
 import EditorPage from "../views/EditorPage"
 import ProjectCalendarPage from "../views/ProjectCalendarPage"
 import ChartsGalleryHome from "../views/ChartsGallery/ChartsGalleryHome"
@@ -33,6 +34,8 @@ import ThumbnailStudio from "../views/ThumbnailStudio"
 import AlgorithmArchitect from "../views/AlgorithmArchitect"
 import StoryboardStudio from "../views/StoryboardStudio"
 import { ComponentGridLab } from "../components/ComponentGridLab"
+import { IntegratedRemotionEditor } from "../editor-ui/IntegratedRemotionEditor"
+import GraphsPage from "../views/GraphsPage"
 
 const Placeholder = ({ title }: { title: string }) => (
  <div className="flex items-center justify-center h-full">
@@ -51,13 +54,20 @@ export const AppRoutes: React.FC = () => {
    <Route path="/performance" element={<PerformanceHub />} />
    <Route path="/legacy/channelytics" element={<Channelytics />} />
    <Route path="/legacy/research-lab" element={<ResearchLab />} />
+   <Route path="/research-lab" element={<ResearchLabToolbox />} />
+   <Route path="/graphs" element={<GraphsPage />} />
    <Route path="/legacy/data-vizualizations" element={<DataVisualizations />} />
    <Route path="/studio/internal-analytics" element={<InternalAnalyticsPanel />} />
    <Route path="/settings" element={<Settings />} />
    <Route path="/data-transparency" element={<DataTransparencyCenter />} />
 
-   <Route path="/shorts" element={<ShortsStudio />} />
-   <Route path="/editor" element={<EditorPage />} />
+   <Route path="/shorts" element={<Navigate to="/editor-v1" replace />} />
+   <Route path="/editor" element={<Navigate to="/editor-v1" replace />} />
+   <Route path="/editor-v1" element={<EditorV1Page />} />
+   <Route path="/internal/editor-launch" element={<EditorPage />} />
+   {import.meta.env.DEV && (
+    <Route path="/internal/editor-dev" element={<IntegratedRemotionEditor mode="full" />} />
+   )}
    <Route path="/project-calendar" element={<ProjectCalendarPage />} />
    <Route
     path="/reference-studio"

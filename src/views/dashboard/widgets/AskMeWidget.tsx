@@ -80,7 +80,7 @@ export const AskMeWidget = ({
         style={{
          padding: "8px 10px", background: "#fff", border: "2px solid #000", borderRadius: "8px",
          fontSize: "11px", fontWeight: 700, cursor: "pointer", textAlign: "left",
-         boxShadow: "2px 2px 0 0 rgba(64,198,233,0.3)", transition: "all 0.1s",
+         boxShadow: "2px 2px 0 0 var(--widget-color, rgba(64,198,233,0.3))", transition: "all 0.1s",
         }}>
         {t.label}
        </button>
@@ -94,12 +94,12 @@ export const AskMeWidget = ({
       <div key={i} style={{
        alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
        maxWidth: "85%", padding: "8px 10px",
-       background: msg.role === "user" ? "#579AFF" : "#fff",
+       background: msg.role === "user" ? "var(--widget-color, #579AFF)" : "#fff",
        color: msg.role === "user" ? "#fff" : "#000",
        border: `2px solid ${msg.role === "user" ? "#000" : "#000"}`,
        borderRadius: "10px",
        fontSize: "11px", fontWeight: 700, lineHeight: 1.4,
-       boxShadow: msg.role === "ai" ? "2px 2px 0 0 rgba(64,198,233,0.4)" : "2px 2px 0 0 #000",
+       boxShadow: msg.role === "ai" ? "2px 2px 0 0 var(--widget-color, rgba(64,198,233,0.4))" : "2px 2px 0 0 #000",
        whiteSpace: "pre-wrap",
       }}>
        {msg.text}
@@ -121,22 +121,20 @@ export const AskMeWidget = ({
       </button>
      )}
      <textarea
+      className="vt-textarea"
       value={input}
       onChange={(e) => setInput(e.target.value)}
       onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend() } }}
       placeholder="Ask anything about your channel..."
       rows={1}
-      style={{
-       flex: 1, padding: "8px", background: "#fff", border: "2px solid #000", borderRadius: "8px",
-       fontSize: "11px", fontWeight: 700, fontFamily: "inherit", resize: "none", outline: "none",
-      }}
+      style={{ flex: 1, resize: "none", minHeight: "unset" }}
      />
      <button
       onClick={() => handleSend()}
       disabled={isThinking || !input.trim()}
       style={{
        width: "36px", height: "36px", borderRadius: "10px", border: "3px solid #000",
-       background: "#40C6E9", display: "flex", alignItems: "center", justifyContent: "center",
+       background: "var(--widget-color, #40C6E9)", display: "flex", alignItems: "center", justifyContent: "center",
        cursor: isThinking ? "wait" : "pointer", boxShadow: "2px 2px 0 0 #000", flexShrink: 0,
       }}>
       <Send size={16} />
