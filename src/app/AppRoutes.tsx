@@ -1,5 +1,6 @@
 import React from "react"
 import { Routes, Route, Navigate } from "react-router-dom"
+import { EntitlementGate } from "../components/EntitlementGate"
 
 import Dashboard from "../views/Dashboard"
 import DashboardLegacy from "../views/DashboardLegacy"
@@ -33,6 +34,7 @@ import HookGenerator from "../views/HookGenerator"
 import ThumbnailStudio from "../views/ThumbnailStudio"
 import AlgorithmArchitect from "../views/AlgorithmArchitect"
 import StoryboardStudio from "../views/StoryboardStudio"
+import Subscribe from "../views/Subscribe"
 import { ComponentGridLab } from "../components/ComponentGridLab"
 import { IntegratedRemotionEditor } from "../editor-ui/IntegratedRemotionEditor"
 import GraphsPage from "../views/GraphsPage"
@@ -46,27 +48,39 @@ const Placeholder = ({ title }: { title: string }) => (
 )
 
 export const AppRoutes: React.FC = () => {
+ const requireMedium = (element: React.ReactElement) => (
+  <EntitlementGate minimumTier="medium">{element}</EntitlementGate>
+ )
+
+ const requireLarge = (element: React.ReactElement) => (
+  <EntitlementGate minimumTier="large">{element}</EntitlementGate>
+ )
+
  return (
   <Routes>
    <Route path="/" element={<Dashboard />} />
    <Route path="/dashboard-legacy" element={<DashboardLegacy />} />
-   <Route path="/studio" element={<StudioHub />} />
-   <Route path="/performance" element={<PerformanceHub />} />
+   <Route path="/studio" element={requireMedium(<StudioHub />)} />
+   <Route path="/performance" element={requireMedium(<PerformanceHub />)} />
    <Route path="/legacy/channelytics" element={<Channelytics />} />
    <Route path="/legacy/research-lab" element={<ResearchLab />} />
-   <Route path="/research-lab" element={<ResearchLabToolbox />} />
-   <Route path="/graphs" element={<GraphsPage />} />
+   <Route path="/research-lab" element={requireMedium(<ResearchLabToolbox />)} />
+   <Route path="/graphs" element={requireMedium(<GraphsPage />)} />
    <Route path="/legacy/data-vizualizations" element={<DataVisualizations />} />
    <Route path="/studio/internal-analytics" element={<InternalAnalyticsPanel />} />
    <Route path="/settings" element={<Settings />} />
+   <Route path="/subscribe" element={<Subscribe />} />
    <Route path="/data-transparency" element={<DataTransparencyCenter />} />
 
    <Route path="/shorts" element={<Navigate to="/editor-v1" replace />} />
    <Route path="/editor" element={<Navigate to="/editor-v1" replace />} />
-   <Route path="/editor-v1" element={<EditorV1Page />} />
-   <Route path="/internal/editor-launch" element={<EditorPage />} />
+   <Route path="/editor-v1" element={requireLarge(<EditorV1Page />)} />
+   <Route path="/internal/editor-launch" element={requireLarge(<EditorPage />)} />
    {import.meta.env.DEV && (
-    <Route path="/internal/editor-dev" element={<IntegratedRemotionEditor mode="full" />} />
+    <Route
+     path="/internal/editor-dev"
+     element={requireLarge(<IntegratedRemotionEditor mode="full" />)}
+    />
    )}
    <Route path="/project-calendar" element={<ProjectCalendarPage />} />
    <Route
@@ -128,13 +142,13 @@ export const AppRoutes: React.FC = () => {
    />
 
    {/* Hidden Routes - Access by typing URL directly */}
-   <Route path="/simple-analytics" element={<SimpleAnalytics />} />
-   <Route path="/media-analyzer" element={<MediaAnalyzer />} />
-   <Route path="/seo-generator" element={<SeoGenerator />} />
-   <Route path="/hook-generator" element={<HookGenerator />} />
-   <Route path="/thumbnail-studio" element={<ThumbnailStudio />} />
-   <Route path="/algorithm-architect" element={<AlgorithmArchitect />} />
-   <Route path="/storyboard-studio" element={<StoryboardStudio />} />
+   <Route path="/simple-analytics" element={requireMedium(<SimpleAnalytics />)} />
+   <Route path="/media-analyzer" element={requireMedium(<MediaAnalyzer />)} />
+   <Route path="/seo-generator" element={requireMedium(<SeoGenerator />)} />
+   <Route path="/hook-generator" element={requireMedium(<HookGenerator />)} />
+   <Route path="/thumbnail-studio" element={requireMedium(<ThumbnailStudio />)} />
+   <Route path="/algorithm-architect" element={requireMedium(<AlgorithmArchitect />)} />
+   <Route path="/storyboard-studio" element={requireMedium(<StoryboardStudio />)} />
    <Route path="/component-grid-lab" element={<ComponentGridLab />} />
 
    <Route path="*" element={<Navigate to="/" replace />} />
