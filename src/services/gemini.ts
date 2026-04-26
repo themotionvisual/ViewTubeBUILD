@@ -29,6 +29,7 @@ import {
 } from "@/services/prompts"
 import { geminiQueue } from "../utils/RequestQueue"
 import { getVaultKey } from "./keyVault"
+import { consumeAiTokens } from "./billingEntitlement"
 
 declare global {
  interface Window {
@@ -120,7 +121,32 @@ export const getActiveModel = (
  * Universal Retry Wrapper with Exponential Backoff
  */
 export const executeWithRetry = async <T>(fn: () => Promise<T>): Promise<T> => {
- return geminiQueue.add(fn)
+ return queueGeminiTask(fn, { tokenCost: 1 })
+}
+
+type GeminiQueueOptions = {
+ tokenCost?: number
+}
+
+const queueGeminiTask = async <T>(
+ fn: () => Promise<T>,
+ options: GeminiQueueOptions = {},
+): Promise<T> => {
+ const tokenCost = options.tokenCost ?? 1
+ return geminiQueue.add(async () => {
+  const usage = consumeAiTokens(tokenCost)
+  if (!usage.allowed) {
+   if (usage.next.tier === "free") {
+    throw new Error(
+     "AI generation requires a paid plan. Upgrade to Medium or Large in /subscribe.",
+    )
+   }
+   throw new Error(
+    `Not enough AI tokens. Required ${tokenCost}, available ${Math.max(0, Math.floor(usage.next.tokenBalance))}. Upgrade or wait for daily refill.`,
+   )
+  }
+  return fn()
+ })
 }
 
 /**
@@ -831,7 +857,7 @@ export const generateSpeech = async (
  text: string,
  voiceName: string = "Kore",
 ): Promise<string> => {
- return geminiQueue.add(async () => {
+ return queueGeminiTask(async () => {
   const ai = getAiClient()
   const response = await ai.models.generateContent({
    model: getActiveModel("tts"),
@@ -850,14 +876,14 @@ export const generateSpeech = async (
    response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data
   if (!base64Audio) throw new Error("No audio generated")
   return `data:audio/wav;base64,${base64Audio}`
- })
+ }, { tokenCost: 2 })
 }
 
 export const transcribeAudio = async (
  audioData: string,
  mimeType: string = "audio/pcm;rate=16000",
 ): Promise<string> => {
- return geminiQueue.add(async () => {
+ return queueGeminiTask(async () => {
   const ai = getAiClient()
   const response = await ai.models.generateContent({
    model: "gemini-3-flash-preview",
@@ -878,7 +904,7 @@ export const transcribeAudio = async (
    ],
   })
   return response.text || ""
- })
+ }, { tokenCost: 2 })
 }
 
 export const generateVideo = async (
@@ -886,7 +912,7 @@ export const generateVideo = async (
  aspectRatio: "16:9" | "9:16" = "16:9",
 ): Promise<string> => {
  const ai = getAiClient()
- let operation = await geminiQueue.add(() =>
+let operation = await queueGeminiTask(() =>
   ai.models.generateVideos({
    model: "veo-3.1-fast-generate-preview",
    prompt: prompt,
@@ -896,6 +922,7 @@ export const generateVideo = async (
     aspectRatio: aspectRatio,
    },
   }),
+  { tokenCost: 25 },
  )
 
  while (!operation.done) {
@@ -913,7 +940,7 @@ export const analyzeImage = async (
  mimeType: string,
  prompt: string,
 ): Promise<string> => {
- return geminiQueue.add(async () => {
+ return queueGeminiTask(async () => {
   const ai = getAiClient()
   const response = await ai.models.generateContent({
    model: "gemini-3.1-pro-preview",
@@ -932,7 +959,7 @@ export const analyzeImage = async (
    },
   })
   return response.text || ""
- })
+ }, { tokenCost: 5 })
 }
 
 export const generateImage = async (
@@ -940,7 +967,7 @@ export const generateImage = async (
  aspectRatio: string = "1:1",
  imageSize: string = "1K",
 ): Promise<string> => {
- return geminiQueue.add(async () => {
+ return queueGeminiTask(async () => {
   const ai = getAiClient()
   const response = await ai.models.generateContent({
    model: "gemini-3-pro-image-preview",
@@ -961,7 +988,7 @@ export const generateImage = async (
    }
   }
   throw new Error("No image generated")
- })
+ }, { tokenCost: 8 })
 }
 
 export const generateChatResponse = async (
