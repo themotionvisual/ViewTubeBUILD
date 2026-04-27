@@ -306,6 +306,14 @@ export const consumeAiTokens = (units = 1): { next: EntitlementState; allowed: b
  return result
 }
 
+export const canAffordAiTokens = (units = 1): boolean => {
+ const current = getCurrentEntitlement()
+ if (current.tier === "large") return true
+ if (current.tier === "free") return false
+ if (!Number.isFinite(units) || units <= 0) return true
+ return current.tokenBalance >= units
+}
+
 export const createCheckoutSession = async (
  payload: CheckoutSessionRequest,
 ): Promise<CheckoutSessionResponse> => {

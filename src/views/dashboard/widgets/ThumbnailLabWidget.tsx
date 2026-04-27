@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Image as ImageIcon, Sparkles, Download, Search, CheckCircle2, AlertTriangle, Upload, ArrowRight } from "lucide-react"
+import { canAffordAiTokens, getCurrentEntitlement } from "../../../services/billingEntitlement"
 
 type TabMode = "generate" | "analyze" | "abtest"
 
@@ -23,6 +24,20 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
 
   const videos = data.canonicalRows || []
   const activeVideo = videos.find((v: any) => v.videoId === selectedVideo)
+  const modeTokenCost = mode === "generate" ? 8 : 5
+  const entitlement = getCurrentEntitlement()
+  const canAffordModeCost = canAffordAiTokens(modeTokenCost)
+
+  const modeGuardReason = (() => {
+    if (mode === "generate" && !prompt.trim()) return "Add prompt before generating."
+    if ((mode === "analyze" || mode === "abtest") && !selectedVideo) return "Select video first."
+    if (mode === "abtest" && !variants.some((v) => v.image)) return "Upload at least one variant."
+    if (!canAffordModeCost) {
+      if (entitlement.tier === "free") return "Upgrade to Medium or Large to use AI."
+      return `Need ${modeTokenCost} tokens for this action.`
+    }
+    return null
+  })()
 
   const handleGenerate = () => {
     setIsProcessing(true)
@@ -74,6 +89,13 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   const reset = () => { setResult(null); setPrompt(""); setSelectedVideo("") }
   const bestIdx = variants.reduce((best, v, i) => v.score > variants[best].score ? i : best, 0)
 
+  const triggerHeaderAi = () => {
+    if (modeGuardReason || isProcessing || abAnalyzing) return
+    if (mode === "generate") handleGenerate()
+    if (mode === "analyze") handleAnalyze()
+    if (mode === "abtest") void analyzeThumbnails()
+  }
+
   const TABS: { id: TabMode; label: string; color: string }[] = [
     { id: "generate", label: "Generate", color: "#FF83EA" },
     { id: "analyze", label: "Analyze", color: "#00D2FF" },
@@ -115,7 +137,14 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   )
 
   return (
-    <WidgetShell {...common} icon={<ImageIcon size={22} />} hasAI
+    <WidgetShell
+      {...common}
+      icon={<ImageIcon size={22} />}
+      hasAI
+      aiCost={modeTokenCost}
+      aiDisabled={Boolean(modeGuardReason) || isProcessing || abAnalyzing}
+      aiDisabledReason={modeGuardReason || undefined}
+      onRegenerate={triggerHeaderAi}
       headerContent={modeTabBar}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px", overflowY: "auto" }}>
 
@@ -131,10 +160,10 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
             />
             <button
               onClick={handleGenerate}
-              disabled={isProcessing || !prompt.trim()}
+              disabled={isProcessing || !prompt.trim() || !canAffordModeCost}
               style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", background: "#FF83EA", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", cursor: "pointer", boxShadow: "2px 2px 0 0 #000", opacity: !prompt.trim() ? 0.5 : 1 }}>
               {isProcessing ? <div style={{ width: "12px", height: "12px", border: "2px solid rgba(0,0,0,0.2)", borderTop: "2px solid #000", borderRadius: "50%", animation: "spin 1s linear infinite" }} /> : <Sparkles size={14} />}
-              {isProcessing ? "Generating..." : "Generate Concept"}
+              {isProcessing ? "Generating..." : `Generate Concept (${modeTokenCost}T)`}
             </button>
           </div>
         )}
@@ -149,10 +178,10 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
                 <div style={{ padding: "8px" }}>
                   <button
                     onClick={handleAnalyze}
-                    disabled={isProcessing}
+                    disabled={isProcessing || !canAffordModeCost}
                     style={{ width: "100%", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", background: "#00D2FF", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", cursor: "pointer", boxShadow: "2px 2px 0 0 #000" }}>
                     {isProcessing ? <div style={{ width: "12px", height: "12px", border: "2px solid rgba(0,0,0,0.2)", borderTop: "2px solid #000", borderRadius: "50%", animation: "spin 1s linear infinite" }} /> : <Search size={14} />}
-                    {isProcessing ? "Analyzing..." : "Analyze Thumbnail"}
+                    {isProcessing ? "Analyzing..." : `Analyze Thumbnail (${modeTokenCost}T)`}
                   </button>
                 </div>
               </div>
@@ -211,7 +240,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
             </div>
             <button
               onClick={analyzeThumbnails}
-              disabled={abAnalyzing || !variants.some(v => v.image)}
+              disabled={abAnalyzing || !variants.some(v => v.image) || !canAffordModeCost}
               style={{
                 height: "36px", border: "2px solid #000", borderRadius: "10px",
                 background: abAnalyzing ? "#eee" : "#C9F830", fontSize: "10px", fontWeight: 1000,
@@ -219,7 +248,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
                 boxShadow: "3px 3px 0 0 #000",
               }}>
-              <Sparkles size={14} /> {abAnalyzing ? "Analyzing..." : "Predict CTR"}
+              <Sparkles size={14} /> {abAnalyzing ? "Analyzing..." : `Predict CTR (${modeTokenCost}T)`}
             </button>
           </div>
         )}

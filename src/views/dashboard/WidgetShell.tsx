@@ -1,5 +1,6 @@
 import React, { useState } from "react"
 import { Layers, X, GripVertical, ChevronsUpDown, ChevronsLeftRight, Sparkles } from "lucide-react"
+import { VTLottie } from "../../components/VTLottie"
 import type { WidgetDefinition, WidgetInstanceState } from "./types"
 
 export const WidgetShell: React.FC<{
@@ -16,6 +17,9 @@ export const WidgetShell: React.FC<{
  headerContent?: React.ReactNode
  hasAI?: boolean
  onRegenerate?: () => void
+ aiCost?: number
+ aiDisabled?: boolean
+ aiDisabledReason?: string
 }> = ({
  widget,
  editMode,
@@ -28,6 +32,9 @@ export const WidgetShell: React.FC<{
  headerContent,
  hasAI,
  onRegenerate,
+ aiCost,
+ aiDisabled,
+ aiDisabledReason,
 }) => {
  const [isSubtitleOpen, setIsSubtitleOpen] = useState(false);
 
@@ -267,12 +274,21 @@ export const WidgetShell: React.FC<{
      : null}
      <div className="flex items-center gap-1.5">
       {hasAI && (
-       <button
-        className="widget-header-btn ai-btn"
-        title="Regenerate with AI"
-        onClick={onRegenerate}>
-        <Sparkles size={16} />
-       </button>
+       <>
+        {typeof aiCost === "number" && (
+         <span className="widget-ai-cost-chip">{aiCost}T</span>
+        )}
+        <button
+         className="widget-header-btn ai-btn"
+         title={aiDisabled && aiDisabledReason ? aiDisabledReason : "Regenerate with AI"}
+         onClick={onRegenerate}
+         disabled={aiDisabled}>
+         <VTLottie
+          animationUrl="https://assets3.lottiefiles.com/packages/lf20_m6cu8sh9.json"
+          size={16}
+         />
+        </button>
+       </>
       )}
        <button
         className={`widget-header-btn toggle-btn ${isSubtitleOpen ? 'open' : 'closed'}`}

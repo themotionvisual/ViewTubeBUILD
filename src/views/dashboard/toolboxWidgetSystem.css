@@ -171,6 +171,31 @@
   background-color: rgba(255, 255, 255, 0.5);
 }
 
+.dashboard-barrier .widget-header-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 1px 1px 0px 0px color-mix(in srgb, var(--widget-color, #000) 40%, black);
+}
+
+.dashboard-barrier .widget-ai-cost-chip {
+  height: 22px;
+  min-width: 34px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #000;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  box-shadow: 2px 2px 0px 0px color-mix(in srgb, var(--widget-color, #000) 40%, black);
+}
+
 .dashboard-barrier .widget-header-btn .icon {
   display: inline-block;
   transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
