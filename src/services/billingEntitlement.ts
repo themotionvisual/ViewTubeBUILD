@@ -49,6 +49,7 @@ export interface StripeWebhookLikeEvent {
 }
 
 const ENTITLEMENT_STORAGE_KEY = "vt_entitlement_v1"
+export const ENTITLEMENT_CHANGED_EVENT = "vt_entitlement_changed"
 const DEFAULT_MONTHLY_TOKENS = 12_000
 const DEFAULT_DAILY_ACCRUAL = 400
 
@@ -279,6 +280,9 @@ export const getStoredEntitlement = (): EntitlementState => {
 
 export const setStoredEntitlement = (state: EntitlementState): void => {
  localStorage.setItem(ENTITLEMENT_STORAGE_KEY, JSON.stringify(state))
+ if (typeof window !== "undefined") {
+  window.dispatchEvent(new CustomEvent(ENTITLEMENT_CHANGED_EVENT, { detail: state }))
+ }
 }
 
 export const getCurrentEntitlement = (): EntitlementState => {
