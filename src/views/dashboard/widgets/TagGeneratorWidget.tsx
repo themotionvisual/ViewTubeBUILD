@@ -5,6 +5,7 @@ import { Sparkles, Save, Check, Tag } from "lucide-react"
 import { fetchVideoSnippetDetails } from "../../../services/youtube/youtubeDataFetcher"
 import { generateTagSuggestions } from "../../../services/gemini"
 import type { TagSuggestion } from "../../../services/gemini"
+import { canAffordAiTokens, getCurrentEntitlement } from "../../../services/billingEntitlement"
 
 export const TagGeneratorWidget = ({
  widget,
@@ -35,6 +36,9 @@ export const TagGeneratorWidget = ({
  const [saveSuccess, setSaveSuccess] = useState(false)
  const [tagsLoading, setTagsLoading] = useState(false)
  const [videoSearch, setVideoSearch] = useState("")
+ const TAG_SUGGEST_COST = 1
+ const entitlement = getCurrentEntitlement()
+ const canAffordTagSuggestions = canAffordAiTokens(TAG_SUGGEST_COST)
 
  const videos = data.canonicalRows || data.brain?.canonicalRows || []
 
@@ -81,7 +85,7 @@ export const TagGeneratorWidget = ({
  }
 
  const generateSuggestions = async () => {
-  if (!selectedVideo) return
+  if (!selectedVideo || !canAffordTagSuggestions) return
   setIsGenerating(true)
   try {
    const vid = videos.find((v: any) => v.videoId === selectedVideo)
@@ -323,7 +327,7 @@ export const TagGeneratorWidget = ({
              alignItems: "center",
              gap: "6px",
             }}
-            disabled={isGenerating}>
+            disabled={isGenerating || !canAffordTagSuggestions}>
             {isGenerating ?
              <div
               style={{
@@ -333,11 +337,16 @@ export const TagGeneratorWidget = ({
                borderTop: "2px solid #fff",
                borderRadius: "50%",
                animation: "spin 1s linear infinite",
-              }}
+             }}
              />
             : <Sparkles size={14} fill="#fff" />}
-            {isGenerating ? "Analyzing..." : "Generate Tags"}
+            {isGenerating ? "Analyzing..." : `Generate Tags (${TAG_SUGGEST_COST}T)`}
            </button>
+           {!canAffordTagSuggestions && (
+            <div style={{ marginTop: "8px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>
+             {entitlement.tier === "free" ? "Upgrade for AI tags." : `Need ${TAG_SUGGEST_COST} token.`}
+            </div>
+           )}
           </div>
         }
        </div>

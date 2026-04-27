@@ -3,6 +3,7 @@ import { WidgetShell } from "../WidgetShell"
 import { Sparkles, Zap, ArrowRight, Check, RefreshCw } from "lucide-react"
 import { useBrain } from "../../../context/GlobalDataContext"
 import { generateOracleAdvice } from "../../../services/gemini"
+import { canAffordAiTokens, getCurrentEntitlement } from "../../../services/billingEntitlement"
 
 const ORACLE_STORAGE_KEY = "vt_daily_oracle"
 
@@ -90,6 +91,9 @@ export const DailyOracleWidget = ({
  widget, instance, editMode, onToggleCollapse, onCycleSize, onRemove, data,
 }: any) => {
  const { brain } = useBrain()
+ const ORACLE_COST = 1
+ const entitlement = getCurrentEntitlement()
+ const canAffordOracle = canAffordAiTokens(ORACLE_COST)
  const [isGenerating, setIsGenerating] = useState(false)
  const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
  const todayKey = new Date().toISOString().split("T")[0]
@@ -115,6 +119,7 @@ export const DailyOracleWidget = ({
  }
 
   const regenerate = async () => {
+   if (!canAffordOracle) return
    setIsGenerating(true)
    try {
     const fresh = await generateOracleAdvice(data, brain)
@@ -174,7 +179,14 @@ export const DailyOracleWidget = ({
  const totalCount = oracle.priorities.length + oracle.quickWins.length
 
  return (
-  <WidgetShell {...common} icon={<Sparkles size={22} />}>
+  <WidgetShell
+   {...common}
+   icon={<Sparkles size={22} />}
+   hasAI
+   aiCost={ORACLE_COST}
+   aiDisabled={!canAffordOracle || isGenerating}
+   aiDisabledReason={!canAffordOracle ? (entitlement.tier === "free" ? "Upgrade required for Oracle AI." : `Need ${ORACLE_COST} token.`) : undefined}
+   onRegenerate={regenerate}>
    <div style={{ display: "flex", flexDirection: "column", gap: "10px", height: "100%", overflowY: "auto" }}>
     {/* Header Row */}
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -186,7 +198,7 @@ export const DailyOracleWidget = ({
       <span style={{ fontSize: "8px", fontWeight: 900, opacity: 0.4 }}>{completedCount}/{totalCount}</span>
        <button 
         onClick={regenerate} 
-        disabled={isGenerating}
+        disabled={isGenerating || !canAffordOracle}
         title="Regenerate advice" 
         style={{ 
           width: "24px", height: "24px", border: "2px solid #000", borderRadius: "6px", 
@@ -198,6 +210,11 @@ export const DailyOracleWidget = ({
        </button>
      </div>
     </div>
+    {!canAffordOracle && (
+     <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>
+      {entitlement.tier === "free" ? "Upgrade for Oracle AI." : `Need ${ORACLE_COST} token.`}
+     </div>
+    )}
 
     {/* Priorities */}
     {oracle.priorities.map((p, i) => renderAdviceCard(p, i, "priorities"))}

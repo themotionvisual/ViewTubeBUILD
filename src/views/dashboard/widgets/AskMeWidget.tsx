@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { MessageSquare, Send, Sparkles, Bookmark, Trash2 } from "lucide-react"
+import { canAffordAiTokens, getCurrentEntitlement } from "../../../services/billingEntitlement"
 
 interface Message {
  role: "user" | "ai"
@@ -20,6 +21,9 @@ export const AskMeWidget = ({
  widget, instance, editMode, onToggleCollapse, onCycleSize, onRemove, data,
 }: any) => {
  const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
+ const ASK_COST = 1
+ const entitlement = getCurrentEntitlement()
+ const canAffordAsk = canAffordAiTokens(ASK_COST)
  const [messages, setMessages] = useState<Message[]>(() => {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]") } catch { return [] }
  })
@@ -44,7 +48,7 @@ export const AskMeWidget = ({
 
  const handleSend = async (question?: string) => {
   const q = question || input.trim()
-  if (!q) return
+  if (!q || !canAffordAsk) return
   setInput("")
   const userMsg: Message = { role: "user", text: q, timestamp: Date.now() }
   setMessages(prev => [...prev, userMsg])
@@ -70,21 +74,27 @@ export const AskMeWidget = ({
   <WidgetShell {...common} icon={<MessageSquare size={22} />}>
    <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px" }}>
     {/* Quick Topics */}
-    {messages.length === 0 && (
+   {messages.length === 0 && (
      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
       <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.4 }}>Quick Topics</span>
       {QUICK_TOPICS.map((t, i) => (
        <button
         key={i}
         onClick={() => handleSend(t.q)}
+        disabled={!canAffordAsk}
         style={{
          padding: "8px 10px", background: "#fff", border: "2px solid #000", borderRadius: "8px",
          fontSize: "11px", fontWeight: 700, cursor: "pointer", textAlign: "left",
          boxShadow: "2px 2px 0 0 var(--widget-color, rgba(64,198,233,0.3))", transition: "all 0.1s",
-        }}>
+       }}>
         {t.label}
        </button>
       ))}
+      {!canAffordAsk && (
+       <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>
+        {entitlement.tier === "free" ? "Upgrade for AskMe AI." : `Need ${ASK_COST} token.`}
+       </div>
+      )}
      </div>
     )}
 
@@ -131,7 +141,8 @@ export const AskMeWidget = ({
      />
      <button
       onClick={() => handleSend()}
-      disabled={isThinking || !input.trim()}
+      disabled={isThinking || !input.trim() || !canAffordAsk}
+      title={!canAffordAsk ? (entitlement.tier === "free" ? "Upgrade required for AI." : `Need ${ASK_COST} token.`) : `Ask AI (${ASK_COST}T)`}
       style={{
        width: "36px", height: "36px", borderRadius: "10px", border: "3px solid #000",
        background: "var(--widget-color, #40C6E9)", display: "flex", alignItems: "center", justifyContent: "center",
