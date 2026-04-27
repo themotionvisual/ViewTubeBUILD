@@ -1,6 +1,9 @@
 import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Type, Sparkles, Copy, Check, RefreshCw } from "lucide-react"
+import { useBrain } from "../../../context/GlobalDataContext"
+import { canAffordAiTokens, getCurrentEntitlement } from "../../../services/billingEntitlement"
+import { getAiTokenCost } from "../../../services/aiTokenCosts"
 
 const STYLE_PRESETS = [
  { label: "Mr Beast", emoji: "🤯", desc: "Extreme, numbers-heavy" },
@@ -12,7 +15,11 @@ const STYLE_PRESETS = [
 export const TitleRewriterWidget = ({
  widget, instance, editMode, onToggleCollapse, onCycleSize, onRemove, data,
 }: any) => {
+ const { brain } = useBrain()
  const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
+ const TITLE_REWRITE_COST = getAiTokenCost("titleRewrite")
+ const entitlement = getCurrentEntitlement()
+ const canAffordRewrite = canAffordAiTokens(TITLE_REWRITE_COST)
  const videos = data.canonicalRows || []
  const [selectedVideo, setSelectedVideo] = useState("")
  const [originalTitle, setOriginalTitle] = useState("")
@@ -31,6 +38,7 @@ export const TitleRewriterWidget = ({
  }
 
  const generate = async () => {
+  if (!canAffordRewrite) return
   setGenerating(true)
   try {
    const { rewriteTitle } = await import("../../../services/gemini")
@@ -91,15 +99,20 @@ export const TitleRewriterWidget = ({
        ))}
       </div>
 
-      <button onClick={generate} disabled={generating} style={{
+      <button onClick={generate} disabled={generating || !canAffordRewrite} style={{
        height: "32px", border: "2px solid #000", borderRadius: "8px",
        background: "#FF83EA", fontSize: "10px", fontWeight: 1000, textTransform: "uppercase",
        cursor: generating ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
        boxShadow: "2px 2px 0 0 #000",
       }}>
        {generating ? <RefreshCw size={12} style={{ animation: "spin 1s linear infinite" }} /> : <Sparkles size={12} />}
-       {generating ? "Rewriting..." : "Generate 5 Titles"}
+       {generating ? "Rewriting..." : `Generate 5 Titles (${TITLE_REWRITE_COST}T)`}
       </button>
+      {!canAffordRewrite && (
+       <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>
+        {entitlement.tier === "free" ? "Upgrade for title AI." : `Need ${TITLE_REWRITE_COST} token.`}
+       </div>
+      )}
 
       {/* Results */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px", overflow: "auto" }}>

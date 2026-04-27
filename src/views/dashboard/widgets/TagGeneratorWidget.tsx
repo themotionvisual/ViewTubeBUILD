@@ -6,6 +6,7 @@ import { fetchVideoSnippetDetails } from "../../../services/youtube/youtubeDataF
 import { generateTagSuggestions } from "../../../services/gemini"
 import type { TagSuggestion } from "../../../services/gemini"
 import { canAffordAiTokens, getCurrentEntitlement } from "../../../services/billingEntitlement"
+import { getAiTokenCost } from "../../../services/aiTokenCosts"
 
 export const TagGeneratorWidget = ({
  widget,
@@ -36,7 +37,7 @@ export const TagGeneratorWidget = ({
  const [saveSuccess, setSaveSuccess] = useState(false)
  const [tagsLoading, setTagsLoading] = useState(false)
  const [videoSearch, setVideoSearch] = useState("")
- const TAG_SUGGEST_COST = 1
+ const TAG_SUGGEST_COST = getAiTokenCost("tagSuggestions")
  const entitlement = getCurrentEntitlement()
  const canAffordTagSuggestions = canAffordAiTokens(TAG_SUGGEST_COST)
 

@@ -4,6 +4,7 @@ import { Sparkles, Zap, ArrowRight, Check, RefreshCw } from "lucide-react"
 import { useBrain } from "../../../context/GlobalDataContext"
 import { generateOracleAdvice } from "../../../services/gemini"
 import { canAffordAiTokens, getCurrentEntitlement } from "../../../services/billingEntitlement"
+import { getAiTokenCost } from "../../../services/aiTokenCosts"
 
 const ORACLE_STORAGE_KEY = "vt_daily_oracle"
 
@@ -91,7 +92,7 @@ export const DailyOracleWidget = ({
  widget, instance, editMode, onToggleCollapse, onCycleSize, onRemove, data,
 }: any) => {
  const { brain } = useBrain()
- const ORACLE_COST = 1
+ const ORACLE_COST = getAiTokenCost("dailyOracleRefresh")
  const entitlement = getCurrentEntitlement()
  const canAffordOracle = canAffordAiTokens(ORACLE_COST)
  const [isGenerating, setIsGenerating] = useState(false)

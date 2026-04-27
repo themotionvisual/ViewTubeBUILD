@@ -1,6 +1,8 @@
 import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Hash, Sparkles, Copy, Check, TrendingUp, TrendingDown, Minus } from "lucide-react"
+import { canAffordAiTokens, getCurrentEntitlement } from "../../../services/billingEntitlement"
+import { getAiTokenCost } from "../../../services/aiTokenCosts"
 
 interface HashtagResult {
  tag: string
@@ -13,6 +15,9 @@ export const HashtagAnalyzerWidget = ({
  widget, instance, editMode, onToggleCollapse, onCycleSize, onRemove, data,
 }: any) => {
  const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
+ const HASHTAG_ANALYZE_COST = getAiTokenCost("hashtagAnalyze")
+ const entitlement = getCurrentEntitlement()
+ const canAffordAnalyze = canAffordAiTokens(HASHTAG_ANALYZE_COST)
  const [input, setInput] = useState("")
  const [results, setResults] = useState<HashtagResult[]>([])
  const [analyzing, setAnalyzing] = useState(false)
@@ -20,7 +25,7 @@ export const HashtagAnalyzerWidget = ({
 
  const analyze = async () => {
   const tags = input.split(/[,\s#]+/).filter(Boolean).map(t => t.replace(/^#/, ""))
-  if (tags.length === 0) return
+  if (tags.length === 0 || !canAffordAnalyze) return
   setAnalyzing(true)
   // Simulate analysis (replace with real API)
   await new Promise(r => setTimeout(r, 1000))
@@ -67,14 +72,19 @@ export const HashtagAnalyzerWidget = ({
       placeholder="#hashtag1, #hashtag2, #hashtag3..."
       style={{ flex: 1 }}
      />
-     <button onClick={analyze} disabled={analyzing} style={{
+     <button onClick={analyze} disabled={analyzing || !canAffordAnalyze} style={{
       padding: "0 12px", border: "2px solid #000", borderRadius: "8px", background: "#CC00FF",
       color: "#fff", fontSize: "9px", fontWeight: 1000, textTransform: "uppercase",
       cursor: analyzing ? "wait" : "pointer", boxShadow: "2px 2px 0 0 #000",
      }}>
-      {analyzing ? "..." : <Sparkles size={14} />}
+      {analyzing ? "..." : <><Sparkles size={14} /> {HASHTAG_ANALYZE_COST}T</>}
      </button>
     </div>
+    {!canAffordAnalyze && (
+      <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>
+        {entitlement.tier === "free" ? "Upgrade for hashtag AI." : `Need ${HASHTAG_ANALYZE_COST} token.`}
+      </div>
+    )}
 
     {results.length > 0 && (
      <>

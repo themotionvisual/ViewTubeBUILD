@@ -17,6 +17,8 @@ import {
 } from "../../../services/youtube/youtubeDataFetcher"
 import { generatePerfectReply } from "../../../services/gemini"
 import { useBrain } from "../../../context/GlobalDataContext"
+import { canAffordAiTokens, getCurrentEntitlement } from "../../../services/billingEntitlement"
+import { getAiTokenCost } from "../../../services/aiTokenCosts"
 
 export const CommentReplyWidget = ({
   widget,
@@ -50,6 +52,11 @@ export const CommentReplyWidget = ({
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const itemsPerPage = 3
+  const REPLY_DRAFT_COST = getAiTokenCost("commentMagicDraftPerThread")
+  const entitlement = getCurrentEntitlement()
+  const selectedDraftCost = selectedIds.size * REPLY_DRAFT_COST
+  const canAffordSelectedDrafts =
+    selectedIds.size === 0 ? true : canAffordAiTokens(selectedDraftCost)
 
   const channelId = data.brain?.channelProfile?.id || data.authState?.channelId || ""
   const videos = useMemo(() => data.canonicalRows || data.brain?.canonicalRows || [], [data])
@@ -99,6 +106,8 @@ export const CommentReplyWidget = ({
 
   const handleMagicDraft = async (commentIds: string[]) => {
     if (commentIds.length === 0) return
+    const totalCost = commentIds.length * REPLY_DRAFT_COST
+    if (!canAffordAiTokens(totalCost)) return
     
     commentIds.forEach(id => setIsGenerating(prev => ({ ...prev, [id]: true })))
     
@@ -388,10 +397,10 @@ export const CommentReplyWidget = ({
           <div style={{ display: "flex", gap: "8px", padding: "4px 0" }}>
             <button
               onClick={() => handleMagicDraft(Array.from(selectedIds))}
-              disabled={selectedIds.size === 0 || loading}
+              disabled={selectedIds.size === 0 || loading || !canAffordSelectedDrafts}
               style={{ flex: 1, height: "32px", background: "#00D2FF", border: "2.5px solid #000", borderRadius: "10px", fontSize: "10px", fontWeight: 1000, cursor: "pointer", boxShadow: "3px 3px 0 0 #000", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
             >
-              <Sparkles size={13} /> CREATE REPLY {selectedIds.size > 0 && `(${selectedIds.size})`}
+              <Sparkles size={13} /> CREATE REPLY {selectedIds.size > 0 && `(${selectedIds.size}) • ${selectedDraftCost}T`}
             </button>
             <button
               onClick={() => handleSendBulk(Array.from(selectedIds))}
@@ -407,6 +416,13 @@ export const CommentReplyWidget = ({
             >
               + SUGGEST VIDEOS
             </button>
+          </div>
+        )}
+        {tab === "unreplied" && selectedIds.size > 0 && !canAffordSelectedDrafts && (
+          <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>
+            {entitlement.tier === "free"
+              ? "Upgrade for AI reply drafts."
+              : `Need ${selectedDraftCost} tokens for selected drafts.`}
           </div>
         )}
       </div>

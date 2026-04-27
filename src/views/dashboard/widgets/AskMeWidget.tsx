@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { MessageSquare, Send, Sparkles, Bookmark, Trash2 } from "lucide-react"
 import { canAffordAiTokens, getCurrentEntitlement } from "../../../services/billingEntitlement"
+import { getAiTokenCost } from "../../../services/aiTokenCosts"
 
 interface Message {
  role: "user" | "ai"
@@ -21,7 +22,7 @@ export const AskMeWidget = ({
  widget, instance, editMode, onToggleCollapse, onCycleSize, onRemove, data,
 }: any) => {
  const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
- const ASK_COST = 1
+ const ASK_COST = getAiTokenCost("askMeQuestion")
  const entitlement = getCurrentEntitlement()
  const canAffordAsk = canAffordAiTokens(ASK_COST)
  const [messages, setMessages] = useState<Message[]>(() => {
