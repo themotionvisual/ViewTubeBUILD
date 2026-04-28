@@ -47,7 +47,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             <div className="text-[10px] font-black uppercase tracking-[0.08em]">{tokenText}</div>
             {!isLarge && (
               <Link
-                to="/subscribe"
+                to="/settings?panel=billing"
                 className={`text-[10px] font-black uppercase border-[2px] border-black rounded-md px-2 py-1 shadow-[2px_2px_0px_0px_black] ${
                   isFree ? "bg-[#FF8AAF]" : "bg-[#CCFF00]"
                 }`}

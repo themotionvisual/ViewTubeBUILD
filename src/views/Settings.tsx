@@ -10,8 +10,10 @@ import {
  Trash2,
  Download,
  ShieldCheck,
+ Lock,
+ Sparkles,
 } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { unifiedAuth } from "../services/authSession"
 import { getVaultSnapshot, setVaultSnapshot } from "../services/keyVault"
 import { SubToolbox } from "../components/Toolbox"
@@ -27,9 +29,46 @@ import {
  clearCachedDataSoft,
  factoryResetAll,
 } from "../services/localDataReset"
+import type { SubscriptionPlanId } from "../services/subscriptionPlans"
+import {
+ createCheckoutSession,
+ getCurrentEntitlement,
+ updatePlanEntitlement,
+} from "../services/billingEntitlement"
+
+const SUBSCRIPTION_PLANS_UI: Array<{
+ id: SubscriptionPlanId
+ tierLabel: string
+ price: string
+ bullets: string[]
+ cta: string
+}> = [
+ {
+  id: "starter",
+  tierLabel: "Free",
+  price: "$0",
+  bullets: ["Public handle mode", "CSV/import workflows", "Core dashboard views"],
+  cta: "Stay Free",
+ },
+ {
+  id: "creator_plus",
+  tierLabel: "Medium",
+  price: "$29/mo",
+  bullets: ["Token meter", "Monthly pool + daily accrual", "Advanced dashboards + tools"],
+  cta: "Start Medium",
+ },
+ {
+  id: "business_team",
+  tierLabel: "Large",
+  price: "$99/mo",
+  bullets: ["Unlimited AI prompts", "Unlimited generations", "Top-tier access + team surface"],
+  cta: "Start Large",
+ },
+]
 
 const Settings: React.FC = () => {
  const navigate = useNavigate()
+ const location = useLocation()
  const [isAuth, setIsAuth] = useState(unifiedAuth.isAuthenticated())
  const [saveStatus, setSaveStatus] = useState<string | null>(null)
  const [showKey, setShowKey] = useState(false)
@@ -43,6 +82,12 @@ const Settings: React.FC = () => {
  const [handleStatus, setHandleStatus] = useState<string | null>(null)
  const [exportStatus, setExportStatus] = useState<string | null>(null)
  const [dataResetStatus, setDataResetStatus] = useState<string | null>(null)
+ const [loadingPlan, setLoadingPlan] = useState<SubscriptionPlanId | null>(null)
+ const [billingStatus, setBillingStatus] = useState<string | null>(null)
+ const query = new URLSearchParams(location.search)
+ const activePanel = query.get("panel")
+ const highlightBilling = activePanel === "billing"
+ const entitlement = getCurrentEntitlement()
  const canonicalButtonClass =
   "border-[4px] border-black rounded-xl shadow-[4px_4px_0px_0px_black] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_black] transition-all font-black uppercase"
 
@@ -102,6 +147,39 @@ const Settings: React.FC = () => {
   setStoredIngestMode(mode)
  }
 
+ const handleChoosePlan = async (planId: SubscriptionPlanId) => {
+  if (planId === "starter") {
+   updatePlanEntitlement("starter")
+   setBillingStatus("Free plan active. You can browse normally.")
+   return
+  }
+
+  try {
+   setLoadingPlan(planId)
+   setBillingStatus("Creating secure checkout session...")
+   const session = await createCheckoutSession({
+    planId,
+    userId: "local-user",
+    successUrl: `${window.location.origin}/settings?panel=billing`,
+    cancelUrl: `${window.location.origin}/settings?panel=billing`,
+   })
+
+   if (session.checkoutUrl.startsWith(window.location.origin)) {
+    // Dev fallback path when billing backend is not wired yet.
+    updatePlanEntitlement(planId)
+    setBillingStatus(`Dev mode checkout complete. ${planId} activated.`)
+    return
+   }
+
+   window.location.href = session.checkoutUrl
+  } catch (error) {
+   const message = error instanceof Error ? error.message : String(error)
+   setBillingStatus(`Checkout failed: ${message}`)
+  } finally {
+   setLoadingPlan(null)
+  }
+ }
+
  return (
   <div className="max-w-5xl mx-auto pb-32 animate-fade-in px-4 space-y-8">
    <div className="flex justify-between items-end border-b-[4px] border-black pb-4">
@@ -110,10 +188,79 @@ const Settings: React.FC = () => {
       Settings
      </h1>
     </div>
-    <div className="bg-[#FF83EA] text-black p-3 rounded-xl border-[4px] border-black shadow-[4px_4px_0px_0px_black] rotate-2">
+   <div className="bg-[#FF83EA] text-black p-3 rounded-xl border-[4px] border-black shadow-[4px_4px_0px_0px_black] rotate-2">
      <SettingsIcon size={32} />
-    </div>
    </div>
+  </div>
+
+   <SubToolbox
+    title="Billing & Subscription"
+    icon={<Lock size={20} strokeWidth={3} className="text-black" />}
+    paletteIndex={0}
+    contentClassName={`p-6 space-y-5 ${highlightBilling ? "ring-4 ring-[#CCFF00]" : ""}`}>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+     <div>
+      <h2 className="text-2xl font-black uppercase tracking-tighter">Subscription Controls</h2>
+      <p className="font-bold text-gray-700 mt-1">
+       Current tier: <span className="uppercase">{entitlement.tier}</span> • Plan:{" "}
+       <span className="uppercase">{entitlement.subscriptionPlanId}</span>
+      </p>
+      <p className="font-bold text-gray-700">
+       Tokens:{" "}
+       <span className="uppercase">
+        {Number.isFinite(entitlement.tokenBalance)
+         ? Math.max(0, Math.floor(entitlement.tokenBalance)).toLocaleString()
+         : "Unlimited"}
+       </span>
+      </p>
+     </div>
+     <button
+      onClick={() => navigate("/settings?panel=billing")}
+      className="px-4 py-2 border-[3px] border-black rounded-xl bg-[#CCFF00] font-black uppercase shadow-[3px_3px_0px_0px_black]">
+      Billing Panel
+     </button>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+     {SUBSCRIPTION_PLANS_UI.map((plan) => {
+      const active = entitlement.subscriptionPlanId === plan.id
+      const loading = loadingPlan === plan.id
+      return (
+       <div
+        key={plan.id}
+        className="border-[4px] border-black rounded-2xl bg-white p-5 shadow-[6px_6px_0px_0px_black] flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+         <p className="text-xs font-black uppercase tracking-[0.2em]">{plan.tierLabel}</p>
+         {active ? <Check size={18} strokeWidth={3} /> : null}
+        </div>
+        <h3 className="text-3xl font-black uppercase tracking-tight">{plan.price}</h3>
+        <ul className="space-y-2">
+         {plan.bullets.map((bullet) => (
+          <li key={bullet} className="font-bold text-sm uppercase">• {bullet}</li>
+         ))}
+        </ul>
+        <button
+         onClick={() => handleChoosePlan(plan.id)}
+         disabled={loading}
+         className="mt-auto border-[3px] border-black rounded-xl px-4 py-3 bg-[#FF8AAF] font-black uppercase text-sm shadow-[4px_4px_0px_0px_black] disabled:opacity-60">
+         {loading ? "Working..." : plan.cta}
+        </button>
+       </div>
+      )
+     })}
+    </div>
+
+    <div className="border-[3px] border-black rounded-xl bg-[#E5E7EB] p-4 font-bold">
+     <div className="flex items-center gap-2 text-sm uppercase">
+      <Sparkles size={16} /> Referral rewards
+     </div>
+     <p className="mt-2 text-sm">
+      Referral conversion rule active: one free month is earned after each referred customer makes their first successful payment.
+     </p>
+    </div>
+
+    {billingStatus ? <p className="text-sm font-black uppercase">{billingStatus}</p> : null}
+   </SubToolbox>
 
    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
     {/* Connect Channel */}
