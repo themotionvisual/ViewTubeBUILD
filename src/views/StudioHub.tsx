@@ -5,6 +5,7 @@ import SeoGenerator from "./SeoGenerator"
 import ThumbnailStudio from "./ThumbnailStudio"
 import MediaAnalyzer from "./MediaAnalyzer"
 import HookGenerator from "./HookGenerator"
+import ActionableTactics from "./ActionableTactics"
 import PreLaunchPriming from "../components/PreLaunchPriming"
 import { CommunityPostGenerator } from "../components/CommunityPostGenerator"
 import { CommentResponder } from "../components/CommentResponder"
@@ -16,6 +17,7 @@ const StudioHub: React.FC = () => {
   posts: false,
   comments: false,
   endscreen: false,
+  tactics: false,
  })
  const toggle = (id: string) =>
   setStates((prev) => ({ ...prev, [id]: !(prev as any)[id] }))
@@ -36,11 +38,12 @@ const StudioHub: React.FC = () => {
    <div className="space-y-6">
     {/* Natively Supported Tools */}
     <VideoManager collapsible isOpenInitial={true} paletteIndex={0} />
-    <SeoGenerator collapsible isOpenInitial={false} paletteIndex={1} />
-    <ThumbnailStudio collapsible isOpenInitial={false} paletteIndex={2} />
-    <MediaAnalyzer collapsible isOpenInitial={false} paletteIndex={3} />
-    <HookGenerator collapsible isOpenInitial={false} paletteIndex={4} />
-    <PreLaunchPriming collapsible isOpenInitial={false} paletteIndex={5} />
+    <ActionableTactics collapsible isOpenInitial={false} paletteIndex={1} />
+    <SeoGenerator collapsible isOpenInitial={false} paletteIndex={2} />
+    <ThumbnailStudio collapsible isOpenInitial={false} paletteIndex={3} />
+    <MediaAnalyzer collapsible isOpenInitial={false} paletteIndex={4} />
+    <HookGenerator collapsible isOpenInitial={false} paletteIndex={5} />
+    <PreLaunchPriming collapsible isOpenInitial={false} paletteIndex={6} />
 
     {/* ToolboxScaffold Wrappers for Un-migrated Sub-Tools */}
 
@@ -50,7 +53,7 @@ const StudioHub: React.FC = () => {
      headerColor="bg-[#CCFF00]"
      icon={<CustomIcon name="!!!TEXT" size={40} />}
      iconBoxColor="bg-[#00CCFF]"
-     paletteIndex={6}
+     paletteIndex={7}
      collapsible={true}
      isOpen={states.posts}
      onToggle={() => toggle("posts")}
@@ -64,7 +67,7 @@ const StudioHub: React.FC = () => {
      headerColor="bg-[#FFDD00]"
      icon={<CustomIcon name="!!!IDEA" size={40} />}
      iconBoxColor="bg-[#CCFF00]"
-     paletteIndex={7}
+     paletteIndex={8}
      collapsible={true}
      isOpen={states.comments}
      onToggle={() => toggle("comments")}
@@ -78,7 +81,7 @@ const StudioHub: React.FC = () => {
      headerColor="bg-[#FFB158]"
      icon={<CustomIcon name="!!!POST-VIDEO" size={40} />}
      iconBoxColor="bg-[#FFDD00]"
-     paletteIndex={8}
+     paletteIndex={9}
      collapsible={true}
      isOpen={states.endscreen}
      onToggle={() => toggle("endscreen")}

@@ -87,8 +87,16 @@ const getAvp = (row: Record<string, unknown>): number => {
   }
   const raw = getByPattern(
     row,
-    ['AVP (%)', 'Average percentage viewed (%)', 'averageViewPercentage'],
-    ['averageviewpercentage', 'avp'],
+    [
+      'AVP %',
+      'AVP (%)',
+      'Average percentage viewed (%)',
+      'averageViewPercentage',
+      'STW %',
+      'Stayed to watch (%)',
+      'stayedToWatch',
+    ],
+    ['averageviewpercentage', 'avp', 'stayed to watch', 'stw'],
   );
   const pct = raw > 0 && raw <= 1 ? raw * 100 : raw;
   return Math.min(200, pct);

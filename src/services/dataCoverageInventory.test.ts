@@ -4,7 +4,12 @@ import { buildDataCoverageInventory } from "./dataCoverageInventory"
 describe("Data Coverage Inventory Engine", () => {
  beforeEach(() => {
   vi.resetModules()
-  localStorage.clear()
+  const localStorageMock = {
+   getItem: vi.fn(),
+   setItem: vi.fn(),
+   clear: vi.fn(),
+  }
+  vi.stubGlobal('localStorage', localStorageMock)
  })
 
  it("should identify received metrics from master table rows", () => {
@@ -69,9 +74,7 @@ describe("Data Coverage Inventory Engine", () => {
  it("should mark short-only metrics as not applicable if no shorts rows exist", () => {
   const mockRows = [{ Format: "Video", Views: 100 }]
   const inventory = buildDataCoverageInventory(mockRows as any)
-  const stwEntry = inventory.rows.find(
-   (r) => r.canonicalKey === "stayedToWatch",
-  )
+  const stwEntry = inventory.rows.find((r) => r.canonicalKey === "stw")
   expect(stwEntry?.status).toBe("not_applicable")
  })
 })

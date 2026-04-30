@@ -53,6 +53,7 @@ import {
 } from "../services/DataEngine"
 import {
  buildCsvFromRows,
+ findDuplicateShortHeaders,
  firstDefined,
  flattenCsvRows,
  formatDateWindow,
@@ -76,6 +77,8 @@ import {
  numberFromUnknown,
  parseDate,
  reportToRows,
+ getShortMasterHeader,
+ MASTER_VIDEO_TABLE_HEADERS,
  textFromUnknown,
 } from "./performanceHubUtils"
 import type { UnifiedRow } from "./performanceHubUtils"
@@ -90,12 +93,17 @@ import {
  buildChannelOracleSystemPrompt,
 } from "../services/channelOracle"
 import type { AnalyticsWindow } from "../services/analyticsContract"
+import type { CanonicalMetricKey, MetricCell } from "../services/analyticsContract"
 import {
+ buildTableMetricMappingStatus,
+ buildVideoStatsVerificationSummary,
  canonicalRowsToMasterTableRows,
  getHeaderMetricCell,
  getMasterRows,
  getMetricSummary,
  type MasterTableRow,
+ type TableMetricMappingStatus,
+ type VideoStatsVerificationSummary,
 } from "../services/analyticsSelectors"
 import {
  readYouTubeAnalyticsCache,
@@ -113,6 +121,11 @@ import {
  type StorageMode,
  type SyncSourceMode,
 } from "../services/analyticsRuntime"
+import {
+ getMasterColumnVisibilityRule,
+ getVideoMetricRuntimeStatus,
+} from "../services/analyticsCapabilityMatrix"
+import { PerformanceHubChartRollout } from "./performanceHub40/PerformanceHubChartRollout"
 
 type PerformanceTool = "channel-analysis" | "channel"
 type DataSource = "csv" | "api" | "hybrid"
@@ -155,6 +168,12 @@ type EngagementMapPoint = {
 }
 
 type EngagementSortMetric = "comments" | "subscribers" | "shares" | "likes"
+const ENGAGEMENT_METRICS: EngagementSortMetric[] = [
+ "comments",
+ "subscribers",
+ "shares",
+ "likes",
+]
 
 type EngagementHoverState = {
  index: number
@@ -222,42 +241,7 @@ const TABLE_DATASET_CONTRACTS: Record<TableDatasetId, TableDatasetContract> = {
   id: "master",
   label: "Master Video Table",
   supportsTagFilter: true,
-  columns: [
-   "Video title",
-   "Video ID",
-   "Format",
-   "Date",
-   "Views",
-   "Watch Time (Hours)",
-   "Revenue",
-   "Subs +",
-   "Subs -",
-   "Likes +",
-   "Likes -",
-   "Comments",
-   "Shares",
-   "Engaged views",
-   "CPM",
-   "RPM",
-   "Length",
-   "AVD (Average View Duration)",
-   "AVP (%)",
-   "Click-Through Rate (CTR)",
-   "Impressions",
-   "Engagement Rate",
-   "New Viewers",
-   "Returning Viewers",
-   "Unique viewers",
-   "Casual viewers",
-   "Regular viewers",
-   "STW %",
-   "End screen click rate",
-   "Card click rate",
-   "Relative Retention Performance",
-   "Audience Watch Ratio",
-   "Average Time in Playlist",
-   "Viewer percentage",
-  ],
+  columns: ["Video title", "Video ID", "Format", "Date", ...MASTER_VIDEO_TABLE_HEADERS],
  },
  daily: {
   id: "daily",
@@ -266,20 +250,20 @@ const TABLE_DATASET_CONTRACTS: Record<TableDatasetId, TableDatasetContract> = {
   columns: [
    "Date",
    "Views",
-   "Watch Time (Hours)",
+   "Watch Hrs",
    "Likes",
    "Comments",
    "Shares",
    "Subscribers Gained",
    "Impressions",
-   "Click-Through Rate (CTR)",
+   "CTR",
    "Revenue",
    "CPM",
    "RPM",
-   "Engaged views",
-   "Engagement Rate",
-   "AVD (Average View Duration)",
-   "AVP (%)",
+   "Engaged",
+   "Eng Rate",
+   "AVD",
+   "AVP %",
   ],
  },
  traffic: {
@@ -289,13 +273,13 @@ const TABLE_DATASET_CONTRACTS: Record<TableDatasetId, TableDatasetContract> = {
   columns: [
    "Traffic source",
    "Views",
-   "Watch Time (Hours)",
+   "Watch Hrs",
    "Likes",
    "Comments",
    "Shares",
    "Subscribers Gained",
    "Impressions",
-   "Click-Through Rate (CTR)",
+   "CTR",
    "Revenue",
   ],
  },
@@ -307,16 +291,16 @@ const TABLE_DATASET_CONTRACTS: Record<TableDatasetId, TableDatasetContract> = {
    "Age Group",
    "Gender",
    "Views",
-   "Watch Time (Hours)",
+   "Watch Hrs",
    "New Viewers",
    "Returning Viewers",
    "Casual viewers",
    "Regular viewers",
    "Unique viewers",
-   "Engaged views",
-   "Engagement Rate",
-   "AVD (Average View Duration)",
-   "AVP (%)",
+   "Engaged",
+   "Eng Rate",
+   "AVD",
+   "AVP %",
   ],
  },
  country: {
@@ -326,9 +310,9 @@ const TABLE_DATASET_CONTRACTS: Record<TableDatasetId, TableDatasetContract> = {
   columns: [
    "Country",
    "Geography",
-   "Viewer percentage",
+   "Viewer %",
    "Views",
-   "Watch Time (Hours)",
+   "Watch Hrs",
    "Subscribers Gained",
    "Revenue",
   ],
@@ -339,19 +323,64 @@ const TABLE_DATASET_CONTRACTS: Record<TableDatasetId, TableDatasetContract> = {
   supportsTagFilter: false,
   columns: [
    "Device type",
-   "Viewer percentage",
+   "Viewer %",
    "Views",
-   "Watch Time (Hours)",
+   "Watch Hrs",
    "Subscribers Gained",
    "Revenue",
   ],
  },
 }
 
+const MASTER_HEADER_TO_CANONICAL: Partial<Record<string, CanonicalMetricKey>> = {
+ Views: "views",
+ "Watch Hrs": "watchHours",
+ Revenue: "revenue",
+ "Subs +": "subscribersGained",
+ "Subs -": "subscribersLost",
+ "Likes +": "likes",
+ "Likes -": "dislikes",
+ Comments: "comments",
+ Shares: "shares",
+ Engaged: "engagedViews",
+ CPM: "cpm",
+ RPM: "rpm",
+ AVD: "avdSeconds",
+ "AVP %": "avp",
+ CTR: "ctr",
+ "CTR %": "ctr",
+ Impressions: "impressions",
+ "STW %": "stw",
+ "End Screen %": "endScreenClickRate",
+ "ES Clicks": "endScreenClicks",
+ "ES Impr": "endScreenImpressions",
+ "Card %": "cardClickRate",
+ "Teaser %": "cardTeaserClickRate",
+ "Teaser Clicks": "cardTeaserClicks",
+ "Teaser Impr": "cardTeaserImpressions",
+ "Ann Impr": "annotationImpressions",
+ "Ann Click Impr": "annotationClickableImpressions",
+ "Ann Close Impr": "annotationClosableImpressions",
+ "Ann Clicks": "annotationClicks",
+ "Ann Closes": "annotationCloses",
+ "Red Hrs": "redWatchHours",
+}
+
+const metricCellToProvenance = (
+ cell: MetricCell | undefined,
+): "API" | "CSV" | "Derived" | "Unavailable" => {
+ if (!cell || cell.status === "unavailable") return "Unavailable"
+ if (cell.status === "derived") return "Derived"
+ if (cell.source === "csv_table") return "CSV"
+ if (cell.source === "api") return "API"
+ if (cell.source === "hybrid") return "Derived"
+ return "Unavailable"
+}
+
 const METRIC_APPLICABILITY_RULES: Record<string, MetricApplicabilityRule> = {
  "STW %": "shorts-only",
- "End screen click rate": "long-only",
- "Card click rate": "long-only",
+ "End Screen %": "long-only",
+ "Card %": "long-only",
 }
 
 const HEADER_LABELS: Record<string, string> = {
@@ -368,8 +397,8 @@ const HEADER_LABELS: Record<string, string> = {
  Date: "Date",
  "Video publish time": "Date",
  day: "Date",
- "Duration (sec)": "Duration",
- durationSeconds: "Duration",
+ "Duration (sec)": "Length",
+ durationSeconds: "Length",
  Type: "Type",
  titleLength: "Title Len",
  Views: "Views",
@@ -384,12 +413,13 @@ const HEADER_LABELS: Record<string, string> = {
  RPM: "RPM",
  rpm: "RPM",
  "RPM (USD)": "RPM",
- "Click-Through Rate (CTR)": "CTR",
- "CTR (%)": "CTR",
- ctr: "CTR",
- "Impressions click-through rate (%)": "CTR",
- impressionClickThroughRate: "CTR",
- clickThroughRate: "CTR",
+ "Click-Through Rate (CTR)": "CTR %",
+ "CTR (%)": "CTR %",
+ "CTR %": "CTR %",
+ ctr: "CTR %",
+ "Impressions click-through rate (%)": "CTR %",
+ impressionClickThroughRate: "CTR %",
+ clickThroughRate: "CTR %",
  "AVD (Average View Duration)": "AVD",
  "Average view duration": "AVD",
  averageViewDuration: "AVD",
@@ -400,7 +430,6 @@ const HEADER_LABELS: Record<string, string> = {
  "Clicks per end screen element shown (%)": "End Screen %",
  clicksPerEndScreenElementShown: "End Screen %",
  "Card click rate": "Card %",
- annotationClickThroughRate: "Card %",
  cardClickRate: "Card %",
  "Casual viewers": "Casual",
  "Casual Viewers": "Casual",
@@ -413,7 +442,7 @@ const HEADER_LABELS: Record<string, string> = {
  uniqueViewers: "Unique",
  "Engaged views": "Engaged",
  engagedViews: "Engaged",
- "Engagement Rate": "Eng. Rate",
+ "Engagement Rate": "Eng Rate",
  "Watch Time (Hours)": "Watch Hrs",
  "Watch time (hours)": "Watch Hrs",
  estimatedMinutesWatched: "Watch Hrs",
@@ -456,9 +485,17 @@ const HEADER_LABELS: Record<string, string> = {
  viewerPercentage: "Viewer %",
  ageGroup: "Age Group",
  gender: "Gender",
+ "Data Provenance": "Data Src",
 }
 
+const IMPRESSIONS_CTR_METRICS = new Set([
+ "videoThumbnailImpressions",
+ "videoThumbnailImpressionsClickRate",
+])
+
 const toDisplayHeaderLabel = (header: string): string => {
+ const short = getShortMasterHeader(header)
+ if (short && short !== header) return short
  const direct = HEADER_LABELS[header]
  if (direct) return direct
 
@@ -468,6 +505,15 @@ const toDisplayHeaderLabel = (header: string): string => {
   .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
   .replace(/\s+/g, " ")
   .trim()
+}
+
+const verificationStatusLabel = (
+ status: VideoStatsVerificationSummary["mappingStatus"],
+): string => {
+ if (status === "healthy") return "Healthy"
+ if (status === "request_failure") return "Request Fail"
+ if (status === "mapping_failure") return "Mapping Fail"
+ return "Missing Upstream"
 }
 
 const CHART_COLORS = [
@@ -520,9 +566,13 @@ const pickRetentionPercent = (row: Record<string, unknown>): number => {
 
  const aliases = [
   "AVP (%)",
+  "AVP %",
   "Average percentage viewed",
   "averageViewPercentage",
   "averagePercentageViewed",
+  "STW %",
+  "Stayed to watch (%)",
+  "stayedToWatch",
   "Retention",
   "retention",
  ]
@@ -531,6 +581,38 @@ const pickRetentionPercent = (row: Record<string, unknown>): number => {
   if (Number.isFinite(raw) && raw > 0) return raw
  }
  return 0
+}
+
+const parseDurationSecondsFromUnknown = (value: unknown): number => {
+ if (typeof value === "number" && Number.isFinite(value)) return Math.max(0, value)
+ const raw = textFromUnknown(value).trim()
+ if (!raw) return 0
+ if (raw.includes(":")) {
+  const parts = raw.split(":").map((part) => Number(part) || 0)
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
+  if (parts.length === 2) return parts[0] * 60 + parts[1]
+ }
+ const parsed = Number(raw)
+ return Number.isFinite(parsed) ? Math.max(0, parsed) : 0
+}
+
+const inferValueMatrixFormat = (row: Record<string, unknown>): "shorts" | "long-form" => {
+ const hints = [
+  textFromUnknown(row["Format"] || ""),
+  textFromUnknown(row["Type"] || ""),
+  textFromUnknown(row["type"] || ""),
+  textFromUnknown(row._userTag || ""),
+ ].join(" ").toLowerCase()
+ if (hints.includes("short")) return "shorts"
+ if (hints.includes("long") || hints.includes("live") || hints.includes("story")) {
+  return "long-form"
+ }
+
+ const durationSeconds = parseDurationSecondsFromUnknown(
+  row["Duration"] || row["Length"] || row["Duration (sec)"] || row.durationSeconds,
+ )
+ if (durationSeconds > 0 && durationSeconds <= 70) return "shorts"
+ return "long-form"
 }
 
 const VALUE_MATRIX_THRESHOLDS: ValueMatrixThresholds = {
@@ -611,6 +693,9 @@ const PerformanceHub: React.FC = () => {
  )
  const [engagementSortMetric, setEngagementSortMetric] =
   useState<EngagementSortMetric>("comments")
+ const [engagementVisibleMetrics, setEngagementVisibleMetrics] = useState<
+  EngagementSortMetric[]
+ >(["comments", "subscribers", "shares", "likes"])
  const [engagementHoverIndex, setEngagementHoverIndex] = useState(0)
  const [valueMatrixHoverVideoId, setValueMatrixHoverVideoId] = useState("")
  const [railTransition, setRailTransition] = useState<RailTransitionState>({
@@ -702,13 +787,22 @@ const PerformanceHub: React.FC = () => {
  }, [dataSource, csvRows, apiRows])
  const filteredUnifiedRows = useMemo(() => {
   if (effectiveCanonicalRows.length === 0) return unifiedRows
-  const allowed = new Set(
-   effectiveCanonicalRows.map((row) => toStorageIdentity(row.videoId || row.title)),
-  )
+  const allowed = new Set<string>()
+  effectiveCanonicalRows.forEach((row) => {
+   const idKey = toStorageIdentity(row.videoId || "")
+   const titleKey = toStorageIdentity(row.title || "")
+   if (idKey) allowed.add(idKey)
+   if (titleKey) allowed.add(titleKey)
+  })
   return unifiedRows.filter((row, index) => {
    const identity = toStorageIdentity(
     textFromUnknown(
-     row["Video ID"] || row.videoId || row.Dimension || getTitle(row, index),
+     row["Video ID"] ||
+      row.videoId ||
+      row.Content ||
+      row.content ||
+      row.Dimension ||
+      getTitle(row, index),
     ),
    )
    if (!identity) return true
@@ -748,14 +842,107 @@ const PerformanceHub: React.FC = () => {
     {
      syncDiagnostics?: {
       disabledMetrics?: string[]
-      failureReasons?: Array<{ reason?: string }>
+      failureReasons?: Array<{
+       group?: string
+       metrics?: string[]
+       status?: number
+       reason?: string
+       requestClass?: string
+       attemptedShape?: {
+        dimensions?: string
+        includesSort?: boolean
+        includesStartIndex?: boolean
+        includesMaxResults?: boolean
+        includeContentType?: boolean
+       }
+       outcome?:
+        | "failed"
+        | "split_retry"
+        | "suppressed"
+        | "quarantined"
+        | "fallback_succeeded"
+      }>
       knownInvalidCombos?: string[]
      }
     }
    >
   }
-  return cache.analyticsByWindow?.[analyticsWindow]?.syncDiagnostics || null
+ return cache.analyticsByWindow?.[analyticsWindow]?.syncDiagnostics || null
  }, [lastSyncComplete, analyticsWindow, pipelineLogTick, readYouTubeAnalyticsCache])
+
+ const creatorContentTypeDiagnostic = useMemo(() => {
+  const cache = readYouTubeAnalyticsCache() as {
+   videoContentTypeStatus?: {
+    status?: "available" | "quarantined"
+    disabledForSession?: boolean
+    rowCount?: number
+    reason?: string
+   }
+  }
+  const status = cache.videoContentTypeStatus
+  if (!status) return null
+  if (status.status === "available" && Number(status.rowCount || 0) > 0) {
+   return {
+    status: "ok" as const,
+    label: `Format Mapping: OK · ${Number(status.rowCount || 0)} videos tagged`,
+   }
+  }
+  const reason =
+   textFromUnknown(status.reason || "").slice(0, 140) ||
+   "creatorContentType unavailable"
+  return {
+   status: "error" as const,
+   label: `Format Mapping: Degraded · ${reason}`,
+  }
+ }, [lastSyncComplete, pipelineLogTick, readYouTubeAnalyticsCache])
+
+ const impressionsCtrDiagnostic = useMemo(() => {
+ if (!analyticsSyncDiagnostics) return null
+  const impressionsStatus = getVideoMetricRuntimeStatus(
+   "videoThumbnailImpressions",
+   analyticsSyncDiagnostics,
+   {
+    hasTargetVideoIds: effectiveCanonicalRows.length > 0,
+   },
+  )
+  const ctrStatus = getVideoMetricRuntimeStatus(
+   "videoThumbnailImpressionsClickRate",
+   analyticsSyncDiagnostics,
+   {
+    hasTargetVideoIds: effectiveCanonicalRows.length > 0,
+   },
+  )
+  const failures = (analyticsSyncDiagnostics.failureReasons || []).filter(
+   (failure) =>
+    failure?.group === "impressions_ctr" ||
+    (failure?.metrics || []).some((metric) =>
+     IMPRESSIONS_CTR_METRICS.has(metric),
+    ),
+  )
+  if (failures.length === 0) {
+   return {
+    status: "ok" as const,
+    label: "Impressions/CTR Sync: OK",
+   }
+  }
+  if (
+   impressionsStatus === "temporarily_unavailable_due_to_request_shape" ||
+   ctrStatus === "temporarily_unavailable_due_to_request_shape"
+  ) {
+   return {
+    status: "error" as const,
+    label: "Impressions/CTR Sync: Temporarily unavailable due to top-videos request shape.",
+   }
+  }
+  const last = failures[failures.length - 1]
+  const code = last?.status ? `HTTP ${last.status}` : "API Error"
+  const reason =
+   textFromUnknown(last?.reason || "").slice(0, 180) || "Unknown error"
+  return {
+   status: "error" as const,
+   label: `Impressions/CTR Sync: ${code} · ${reason}`,
+  }
+ }, [analyticsSyncDiagnostics, effectiveCanonicalRows.length])
 
  useEffect(() => {
   setTableLimit(500)
@@ -1268,18 +1455,42 @@ const PerformanceHub: React.FC = () => {
 
  const valueMatrixSeries = useMemo(
   () =>
-   engagementMapSeries
-    .map((row) => ({
-     ...row,
-     retention: Number.isFinite(row.retention)
-      ? Math.max(0, Math.min(150, row.retention))
-      : 0,
-     ctr: Number.isFinite(row.ctr) ? Math.max(0, Math.min(10, row.ctr)) : 0,
-     views: Number.isFinite(row.views) ? Math.max(0, row.views) : 0,
-    }))
+   filteredUnifiedRows
+    .map((row, index) => {
+     const ctr = pickCtrPercent(row)
+     const retention = pickRetentionPercent(row)
+     const views = getViews(row)
+     return {
+      index,
+      label: `${index + 1}`,
+      videoId: toStorageIdentity(
+       textFromUnknown(
+        row["Video ID"] ||
+         row.videoId ||
+         row.Content ||
+         row.content ||
+         row.Dimension ||
+         getTitle(row, index),
+       ),
+      ),
+      title: getTitle(row, index),
+      ctr: Number.isFinite(ctr) ? Math.max(0, Math.min(10, ctr)) : 0,
+      retention: Number.isFinite(retention)
+       ? Math.max(0, Math.min(150, retention))
+       : 0,
+      views: Number.isFinite(views) ? Math.max(0, Math.round(views)) : 0,
+      format: inferValueMatrixFormat(row),
+      likes: getLikes(row),
+      comments: getComments(row),
+      shares: getShares(row),
+      subscribers: Math.max(0, Math.round(getSubscribers(row))),
+     } satisfies EngagementMapPoint
+    })
     // Exact-only gate for matrix: must have all core metrics.
-    .filter((row) => row.ctr > 0 && row.retention > 0 && row.views > 0),
-  [engagementMapSeries],
+    .filter((row) => row.ctr > 0 && row.retention > 0 && row.views > 0)
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 300),
+  [filteredUnifiedRows],
  )
 
  const valueMatrixMissingSummary = useMemo(() => {
@@ -1317,11 +1528,65 @@ const PerformanceHub: React.FC = () => {
  }, [valueMatrixSeries, valueMatrixHoverVideoId])
 
  useEffect(() => {
+  if (valueMatrixSeries.length === 0) return
+  setValueMatrixHoverVideoId((previous) => {
+   if (previous && valueMatrixSeries.some((row) => row.videoId === previous)) {
+    return previous
+   }
+   return valueMatrixSeries[0].videoId
+  })
+ }, [valueMatrixSeries])
+
+ useEffect(() => {
   if (engagementMapSeries.length === 0) return
   setEngagementHoverIndex((previous) =>
    Math.max(0, Math.min(previous, engagementMapSeries.length - 1)),
   )
  }, [engagementMapSeries])
+
+ useEffect(() => {
+  if (engagementMapSeries.length === 0) {
+   setEngagementVisibleMetrics(ENGAGEMENT_METRICS)
+   return
+  }
+
+  const timeouts: number[] = []
+  const selected = engagementSortMetric
+  const leftMost = engagementMapSeries[0]
+  const revealQueue = ENGAGEMENT_METRICS.filter((metric) => metric !== selected).sort(
+   (a, b) => {
+    const aValue = leftMost?.[a] ?? 0
+    const bValue = leftMost?.[b] ?? 0
+    return aValue - bValue
+   },
+  )
+
+  setEngagementVisibleMetrics([selected])
+
+  timeouts.push(
+   window.setTimeout(() => {
+    setEngagementVisibleMetrics([selected, revealQueue[0]].filter(Boolean) as EngagementSortMetric[])
+   }, 4000),
+  )
+  timeouts.push(
+   window.setTimeout(() => {
+    setEngagementVisibleMetrics(
+     [selected, revealQueue[0], revealQueue[1]].filter(Boolean) as EngagementSortMetric[],
+    )
+   }, 5000),
+  )
+  timeouts.push(
+   window.setTimeout(() => {
+    setEngagementVisibleMetrics(
+     [selected, revealQueue[0], revealQueue[1], revealQueue[2]].filter(Boolean) as EngagementSortMetric[],
+    )
+   }, 6000),
+  )
+
+  return () => {
+   timeouts.forEach((timeoutId) => window.clearTimeout(timeoutId))
+  }
+ }, [engagementMapSeries, engagementSortMetric])
 
  useEffect(() => {
   if (!engagementHoverState) return
@@ -1661,15 +1926,18 @@ const PerformanceHub: React.FC = () => {
   const metricCell = getHeaderMetricCell(row as Record<string, unknown>, header)
   if (metricCell?.value !== undefined && metricCell.value !== null) return metricCell.value
   
-  if (header === "Views") return getViews(row)
-  if (header === "Watch Time (Hours)") return getWatchHours(row)
-  if (header === "Revenue") return getRevenue(row)
-  if (header === "Subs +") return getSubscribers(row)
-  if (header === "Likes") return getLikes(row)
-  if (header === "Comments") return getComments(row)
-  if (header === "Shares") return getShares(row)
-  if (header === "Length") return numberFromUnknown(row["Length"] || row["Duration (sec)"] || row["durationSeconds"])
-  if (header === "AVD (Average View Duration)") return getAvdSeconds(row)
+ if (header === "Views") return getViews(row)
+ if (header === "Watch Hrs") return getWatchHours(row)
+ if (header === "Revenue") return getRevenue(row)
+ if (header === "Subs +") return getSubscribers(row)
+ if (header === "Likes" || header === "Likes +") return getLikes(row)
+ if (header === "Comments") return getComments(row)
+ if (header === "Shares") return getShares(row)
+ if (header === "Length" || header === "Duration")
+  return numberFromUnknown(
+   row["Length"] || row["Duration (sec)"] || row["durationSeconds"],
+  )
+  if (header === "AVD") return getAvdSeconds(row)
   
   return 0
  }
@@ -1698,15 +1966,14 @@ const PerformanceHub: React.FC = () => {
 
    const value = metricCell.value
    const percentHeaders = new Set([
-    "Click-Through Rate (CTR)",
-    "CTR (%)",
-    "Impressions click-through rate (%)",
+    "CTR %",
     "STW %",
-    "End screen click rate",
-    "Card click rate",
+    "End Screen %",
+    "Card %",
+    "Teaser %",
    ])
    if (percentHeaders.has(header)) return `${value.toFixed(2)}%`
-   if (header === "AVP (%)") return `${Math.round(value)}%`
+   if (header === "AVP %") return `${Math.round(value)}%`
 
    if (header === "Revenue" || header === "Estimated revenue") {
     return `$${value.toFixed(2)}`
@@ -1716,6 +1983,7 @@ const PerformanceHub: React.FC = () => {
     return `$${value.toFixed(2)}`
    }
    if (
+    header === "Watch Hrs" ||
     header === "Watch Time (Hours)" ||
     header === "Watch time (hours)"
    ) {
@@ -1725,6 +1993,7 @@ const PerformanceHub: React.FC = () => {
     return Math.round(value).toLocaleString()
    }
    if (
+    header === "AVD" ||
     header === "AVD (Average View Duration)" ||
     header === "AVD (Sec)"
    ) {
@@ -1754,7 +2023,7 @@ const PerformanceHub: React.FC = () => {
    return textFromUnknown(
     firstDefined(row, ["Video ID", "Dimension", "videoId"]),
    )
-  if (header === "Length") {
+  if (header === "Length" || header === "Duration") {
    const length = numberFromUnknown(
     row["Length"] || row["Duration (sec)"] || row["durationSeconds"],
    )
@@ -1782,9 +2051,9 @@ const PerformanceHub: React.FC = () => {
    return getDateLabel(row)
   if (header === "Views") return getViews(row).toLocaleString()
   if (header === "Impressions") return getImpressions(row).toLocaleString()
-  if (header === "Engaged views")
+  if (header === "Engaged" || header === "Engaged views")
    return getMetric(row, ["Engaged views", "Engaged Views"]).toLocaleString()
-  if (header === "Likes") return getLikes(row).toLocaleString()
+  if (header === "Likes" || header === "Likes +") return getLikes(row).toLocaleString()
   if (header === "Comments") return getComments(row).toLocaleString()
   if (header === "Shares") return getShares(row).toLocaleString()
   if (header === "Subs +")
@@ -1819,13 +2088,13 @@ const PerformanceHub: React.FC = () => {
    )
    return engaged > 0 ? engaged.toLocaleString() : "-"
   }
-  if (header === "Watch Time (Hours)" || header === "Watch time (hours)")
+  if (header === "Watch Hrs" || header === "Watch Time (Hours)" || header === "Watch time (hours)")
    return getWatchHours(row).toFixed(2)
   if (header === "Estimated minutes watched")
    return (getWatchHours(row) * 60).toLocaleString(undefined, {
     maximumFractionDigits: 1,
    })
-  if (header === "AVD (Sec)" || header === "Average view duration") {
+  if (header === "AVD" || header === "AVD (Sec)" || header === "Average view duration") {
    const totalSec = Math.round(getAvdSeconds(row))
    const h = Math.floor(totalSec / 3600)
    const m = Math.floor((totalSec % 3600) / 60)
@@ -1834,7 +2103,7 @@ const PerformanceHub: React.FC = () => {
     ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
     : `${m}:${String(s).padStart(2, "0")}`
   }
-  if (header === "AVP (%)" || header === "Average percentage viewed (%)")
+  if (header === "AVP %" || header === "AVP (%)" || header === "Average percentage viewed (%)")
    return getAvpPercent(row).toLocaleString(undefined, {
     maximumFractionDigits: 2,
    })
@@ -1842,10 +2111,31 @@ const PerformanceHub: React.FC = () => {
    return getSubscribers(row).toLocaleString(undefined, {
     maximumFractionDigits: 3,
    })
-  if (header === "CTR (%)" || header === "Impressions click-through rate (%)")
+  if (
+   header === "CTR %" ||
+   header === "CTR" ||
+   header === "CTR (%)" ||
+   header === "Impressions click-through rate (%)" ||
+   header === "Click-Through Rate (CTR)"
+  )
    return getCtr(row).toLocaleString(undefined, { maximumFractionDigits: 3 })
-  if (header === "Click-Through Rate (CTR)")
-   return getCtr(row).toLocaleString(undefined, { maximumFractionDigits: 3 })
+  if ((header === "Data Provenance" || header === "Data Src") && datasetId === "master") {
+   const cells = (row as Partial<MasterTableRow>).__metricCells
+   if (!cells) return "Unavailable"
+   const probeHeaders = [
+    "Views",
+    "Watch Hrs",
+    "Revenue",
+    "CTR %",
+   ] as const
+   for (const probe of probeHeaders) {
+    const key = MASTER_HEADER_TO_CANONICAL[probe]
+    if (!key) continue
+    const provenance = metricCellToProvenance(cells[key])
+    if (provenance !== "Unavailable") return provenance
+   }
+   return "Unavailable"
+  }
   if (header === "New Viewers")
    return getMetric(row, ["New Viewers"]).toLocaleString()
   if (header === "Returning Viewers")
@@ -1869,19 +2159,90 @@ const PerformanceHub: React.FC = () => {
    const stw = getMetric(row, ["STW %", "Stayed to watch (%)"])
    return stw > 0 ? `${stw.toFixed(2)}%` : "-"
   }
-  if (header === "End screen click rate") {
+  if (header === "End Screen %" || header === "End screen click rate") {
    const endRate = getMetric(row, [
     "End screen click rate",
     "Clicks per end screen element shown (%)",
    ])
    return endRate > 0 ? `${endRate.toFixed(2)}%` : "-"
   }
-  if (header === "Card click rate") {
+  if (header === "Card %" || header === "Card click rate") {
    const cardRate = getMetric(row, [
     "Card click rate",
-    "annotationClickThroughRate",
+    "cardClickRate",
    ])
    return cardRate > 0 ? `${cardRate.toFixed(2)}%` : "-"
+  }
+  if (header === "Teaser %") {
+   const teaserRate = getMetric(row, [
+    "Teaser %",
+    "Card teaser click rate",
+    "cardTeaserClickRate",
+   ])
+   return teaserRate > 0 ? `${teaserRate.toFixed(2)}%` : "-"
+  }
+  if (header === "Teaser Clicks") {
+   const teaserClicks = getMetric(row, [
+    "Teaser Clicks",
+    "Card teaser clicks",
+    "cardTeaserClicks",
+   ])
+   return teaserClicks > 0 ? teaserClicks.toLocaleString() : "-"
+  }
+  if (header === "Teaser Impr") {
+   const teaserImpr = getMetric(row, [
+    "Teaser Impr",
+    "Card teaser impressions",
+    "cardTeaserImpressions",
+   ])
+   return teaserImpr > 0 ? teaserImpr.toLocaleString() : "-"
+  }
+  if (header === "ES Clicks") {
+   const esClicks = getMetric(row, [
+    "ES Clicks",
+    "End screen clicks",
+    "endScreenClicks",
+    "endScreenElementClicks",
+   ])
+   return esClicks > 0 ? esClicks.toLocaleString() : "-"
+  }
+  if (header === "ES Impr") {
+   const esImpr = getMetric(row, [
+    "ES Impr",
+    "End screen impressions",
+    "endScreenImpressions",
+    "endScreenElementImpressions",
+   ])
+   return esImpr > 0 ? esImpr.toLocaleString() : "-"
+  }
+  if (header === "Ann Impr" || header === "Ann Click Impr" || header === "Ann Close Impr" || header === "Ann Clicks" || header === "Ann Closes") {
+   const aliasMap: Record<string, string[]> = {
+    "Ann Impr": ["Ann Impr", "annotationImpressions", "Annotation impressions"],
+    "Ann Click Impr": [
+     "Ann Click Impr",
+     "annotationClickableImpressions",
+     "Annotation clickable impressions",
+    ],
+    "Ann Close Impr": [
+     "Ann Close Impr",
+     "annotationClosableImpressions",
+     "Annotation closable impressions",
+    ],
+    "Ann Clicks": ["Ann Clicks", "annotationClicks", "Annotation clicks"],
+    "Ann Closes": ["Ann Closes", "annotationCloses", "Annotation closes"],
+   }
+   const ann = getMetric(row, aliasMap[header] || [header])
+   return ann > 0 ? ann.toLocaleString() : "-"
+  }
+  if (header === "Red Hrs") {
+   const redHours = getMetric(row, [
+    "Red Hrs",
+    "estimatedRedMinutesWatched",
+    "redWatchHours",
+   ])
+   if (redHours > 0 && redHours > 100) return redHours.toFixed(1)
+   if (redHours > 0) return redHours.toFixed(2)
+   return "-"
   }
   if (
    header === "Revenue" ||
@@ -1933,18 +2294,18 @@ const PerformanceHub: React.FC = () => {
       textFromUnknown(
        row["Date"] || row["day"] || row["Day"] || row["Upload date"],
       ) || `Day ${index + 1}`,
-     Views: views,
-     Likes: getLikes(row),
-     Comments: getComments(row),
-     Shares: getShares(row),
-     "Watch Time (Hours)": watchHours,
-     "Subscribers Gained": subscribers,
-     "Subs +": subscribers,
-     Impressions: impressions,
-     Revenue: revenue,
-     RPM: rpm > 0 ? rpm : views > 0 && revenue > 0 ? (revenue / views) * 1000 : 0,
-     CPM: cpm,
-     "Click-Through Rate (CTR)": ctr,
+    Views: views,
+    Likes: getLikes(row),
+    Comments: getComments(row),
+    Shares: getShares(row),
+    "Watch Hrs": watchHours,
+    "Subscribers Gained": subscribers,
+    "Subs +": subscribers,
+    Impressions: impressions,
+    Revenue: revenue,
+    RPM: rpm > 0 ? rpm : views > 0 && revenue > 0 ? (revenue / views) * 1000 : 0,
+    CPM: cpm,
+    CTR: ctr,
     } as UnifiedRow
    },
   )
@@ -1966,11 +2327,11 @@ const PerformanceHub: React.FC = () => {
    Likes: getLikes(row),
    Comments: getComments(row),
    Shares: getShares(row),
-   "Watch Time (Hours)": getWatchHours(row),
+   "Watch Hrs": getWatchHours(row),
    "Subscribers Gained": getSubscribers(row),
    Revenue: getRevenue(row),
    Impressions: getImpressions(row),
-   "Click-Through Rate (CTR)": getCtr(row),
+   CTR: getCtr(row),
   })) as UnifiedRow[]
 
   const geographyReport =
@@ -1993,14 +2354,14 @@ const PerformanceHub: React.FC = () => {
      ...row,
      Country: countryLabel,
      Geography: countryLabel,
-     "Viewer percentage": numberFromUnknown(
+     "Viewer %": numberFromUnknown(
       row["Viewer percentage"] ||
        row["viewerPercentage"] ||
        row["viewer_percentage"] ||
        row["Views"],
      ),
      Views: getViews(row),
-     "Watch Time (Hours)": getWatchHours(row),
+     "Watch Hrs": getWatchHours(row),
      Revenue: getRevenue(row),
      "Subscribers Gained": getSubscribers(row),
     } as UnifiedRow
@@ -2024,7 +2385,7 @@ const PerformanceHub: React.FC = () => {
     Country: segment.toUpperCase(),
     Geography: segment.toUpperCase(),
     Views: views,
-    "Viewer percentage": totalViews > 0 ? (views / totalViews) * 100 : 0,
+    "Viewer %": totalViews > 0 ? (views / totalViews) * 100 : 0,
    })) as UnifiedRow[]
   }
 
@@ -2038,7 +2399,7 @@ const PerformanceHub: React.FC = () => {
     textFromUnknown(
      row["Device type"] || row["deviceType"] || row["Dimension"],
     ) || `Device ${index + 1}`,
-   "Viewer percentage": numberFromUnknown(
+   "Viewer %": numberFromUnknown(
     row["Viewer percentage"] || row["viewerPercentage"] || row["Views"],
    ),
   })) as UnifiedRow[]
@@ -2053,16 +2414,16 @@ const PerformanceHub: React.FC = () => {
     textFromUnknown(row["Age Group"] || row["ageGroup"]) || `Age Segment ${index + 1}`,
    Gender: textFromUnknown(row["Gender"] || row["gender"]) || "Unknown",
    Views: getViews(row),
-   "Watch Time (Hours)": getWatchHours(row),
+   "Watch Hrs": getWatchHours(row),
    "New Viewers": getMetric(row, ["New Viewers", "newViewers"]),
    "Returning Viewers": getMetric(row, ["Returning Viewers", "returningViewers"]),
    "Casual viewers": getMetric(row, ["Casual viewers", "casualViewers"]),
    "Regular viewers": getMetric(row, ["Regular viewers", "regularViewers"]),
    "Unique viewers": getMetric(row, ["Unique viewers", "uniqueViewers"]),
-   "Engaged views": getMetric(row, ["Engaged views", "engagedViews"]),
-   "Engagement Rate": getMetric(row, ["Engagement Rate", "engagementRate"]),
-   "AVD (Average View Duration)": getAvdSeconds(row),
-   "AVP (%)": getAvpPercent(row),
+   Engaged: getMetric(row, ["Engaged views", "engagedViews"]),
+   "Eng Rate": getMetric(row, ["Engagement Rate", "engagementRate"]),
+   AVD: getAvdSeconds(row),
+   "AVP %": getAvpPercent(row),
   })) as UnifiedRow[]
 
   return [
@@ -2071,7 +2432,9 @@ const PerformanceHub: React.FC = () => {
     label: TABLE_DATASET_CONTRACTS.master.label,
     rows: masterTableRows,
     supportsTagFilter: TABLE_DATASET_CONTRACTS.master.supportsTagFilter,
-    columns: TABLE_DATASET_CONTRACTS.master.columns,
+    columns: TABLE_DATASET_CONTRACTS.master.columns.filter(
+     (column) => getMasterColumnVisibilityRule(column) !== "import_only",
+    ),
    },
    {
     id: TABLE_DATASET_CONTRACTS.daily.id,
@@ -2115,12 +2478,115 @@ const PerformanceHub: React.FC = () => {
   tableDatasets.find((dataset) => dataset.id === tableDataset) ||
   tableDatasets[0]
 
+ const duplicateShortHeaders = useMemo(
+  () =>
+   activeTableDataset.id === "master"
+    ? findDuplicateShortHeaders(activeTableDataset.columns)
+    : [],
+  [activeTableDataset],
+ )
+
  const tableHeaders = useMemo(() => {
   if (activeTableDataset.id === "master") {
-   return activeTableDataset.columns.map((header) => getCanonicalMasterHeader(header))
+   const canonical = activeTableDataset.columns.map((header) =>
+    getCanonicalMasterHeader(header),
+   )
+   return Array.from(new Set(canonical))
   }
   return activeTableDataset.columns
  }, [activeTableDataset])
+
+ const videoStatsVerification = useMemo(() => {
+  const cache = readYouTubeAnalyticsCache() as {
+   analyticsByWindow?: Record<
+    AnalyticsWindow,
+    {
+     report?: unknown
+     syncDiagnostics?: {
+      failureReasons?: Array<{
+       group?: string
+       metrics?: string[]
+       status?: number
+       reason?: string
+       requestClass?: string
+       attemptedShape?: {
+        dimensions?: string
+        includesSort?: boolean
+        includesStartIndex?: boolean
+        includesMaxResults?: boolean
+        includeContentType?: boolean
+       }
+      }>
+     }
+    }
+   >
+  }
+  const report = cache.analyticsByWindow?.[analyticsWindow]?.report
+  const reportRows = report
+   ? (reportToRows(report, "verification", "Video Stats Verification") as Record<
+      string,
+      unknown
+     >[])
+   : []
+  return buildVideoStatsVerificationSummary({
+   window: analyticsWindow,
+   reportRows,
+   masterRows: canonicalApiRows,
+   diagnostics: cache.analyticsByWindow?.[analyticsWindow]?.syncDiagnostics || null,
+   duplicateShortHeaders,
+  })
+ }, [
+  analyticsWindow,
+  canonicalApiRows,
+  duplicateShortHeaders,
+  lastSyncComplete,
+  pipelineLogTick,
+ ])
+
+ const tableMetricMappingStatus = useMemo<TableMetricMappingStatus>(
+  () =>
+   buildTableMetricMappingStatus({
+    masterRows: canonicalApiRows,
+    visibleHeaders: tableHeaders,
+    duplicateHeaderKeys: duplicateShortHeaders,
+   }),
+  [canonicalApiRows, tableHeaders, duplicateShortHeaders],
+ )
+
+ useEffect(() => {
+  console.groupCollapsed(
+   `[PerformanceHub] Video stats verification · ${analyticsWindow}`,
+  )
+  console.table({
+   "Report Rows": videoStatsVerification.reportRowCount,
+   "Master Rows": videoStatsVerification.masterRowCount,
+   "Raw Impressions Rows": videoStatsVerification.rawMetricRows.impressions,
+   "Raw CTR Rows": videoStatsVerification.rawMetricRows.ctr,
+   "Mapped Impressions Rows": videoStatsVerification.mappedMetricRows.impressions,
+   "Mapped CTR Rows": videoStatsVerification.mappedMetricRows.ctr,
+   "Mapping Status": verificationStatusLabel(videoStatsVerification.mappingStatus),
+   "Duplicate Short Headers":
+    videoStatsVerification.duplicateShortHeaders.join(", ") || "None",
+   "Last Failure Request Class":
+    videoStatsVerification.lastFailure?.requestClass || "None",
+  })
+  if (videoStatsVerification.lastFailure) {
+   console.log("Last video-stats failure:", videoStatsVerification.lastFailure)
+  }
+  console.table({
+   "Synced Metrics": tableMetricMappingStatus.syncedMetricsCount,
+   "Mapped Metrics": tableMetricMappingStatus.mappedMetricsCount,
+   "Unmapped Metrics":
+    tableMetricMappingStatus.unmappedMetricKeys.join(", ") || "None",
+   "Duplicate Header Keys":
+    tableMetricMappingStatus.duplicateHeaderKeys.join(", ") || "None",
+  })
+  console.log(
+   "Unavailable-by-reason:",
+   tableMetricMappingStatus.unavailableByReason,
+  )
+  console.groupEnd()
+ }, [analyticsWindow, videoStatsVerification, tableMetricMappingStatus])
 
  const filteredTableRows = useMemo(() => {
   const search = tableSearch.trim().toLowerCase()
@@ -2589,6 +3055,80 @@ const PerformanceHub: React.FC = () => {
          Suppressed Retry Combos:{" "}
          {(analyticsSyncDiagnostics.knownInvalidCombos || []).length}
         </span>
+        {impressionsCtrDiagnostic && (
+         <span
+          className={
+           impressionsCtrDiagnostic.status === "error"
+            ? "text-[#b42318]"
+            : "text-[#046c4e]"
+          }
+          title={impressionsCtrDiagnostic.label}
+         >
+          {impressionsCtrDiagnostic.label}
+         </span>
+        )}
+        <span
+         className={
+          videoStatsVerification.mappingStatus === "healthy"
+           ? "text-[#046c4e]"
+           : "text-[#b42318]"
+         }
+         title={`Raw rows: imp ${videoStatsVerification.rawMetricRows.impressions}, ctr ${videoStatsVerification.rawMetricRows.ctr} · mapped rows: imp ${videoStatsVerification.mappedMetricRows.impressions}, ctr ${videoStatsVerification.mappedMetricRows.ctr}`}
+        >
+         Video Stats Check: {verificationStatusLabel(videoStatsVerification.mappingStatus)}
+        </span>
+        <span
+         className={
+          videoStatsVerification.duplicateShortHeaders.length > 0
+           ? "text-[#b42318]"
+           : "text-[#046c4e]"
+         }
+         title={
+          videoStatsVerification.duplicateShortHeaders.length > 0
+           ? `Duplicate short headers: ${videoStatsVerification.duplicateShortHeaders.join(", ")}`
+           : "No duplicate short headers detected."
+         }
+        >
+         Header Dedupe:{" "}
+         {videoStatsVerification.duplicateShortHeaders.length > 0
+         ? videoStatsVerification.duplicateShortHeaders.join(", ")
+         : "OK"}
+        </span>
+        <span
+         className={
+          tableMetricMappingStatus.unmappedMetricKeys.length > 0
+           ? "text-[#b42318]"
+           : "text-[#046c4e]"
+         }
+         title={
+          tableMetricMappingStatus.unmappedMetricKeys.length > 0
+           ? `Unmapped metrics: ${tableMetricMappingStatus.unmappedMetricKeys.join(", ")}`
+           : "All synced metrics are mapped to table headers."
+         }
+        >
+         Mapping:{" "}
+         {tableMetricMappingStatus.unmappedMetricKeys.length > 0
+          ? `${tableMetricMappingStatus.mappedMetricsCount}/${tableMetricMappingStatus.syncedMetricsCount} mapped`
+          : "Complete"}
+        </span>
+        {(videoStatsVerification.mappingStatus === "request_failure" ||
+         videoStatsVerification.mappingStatus === "missing_upstream") && (
+         <span className="text-[#b42318]">
+          CSV Guidance: Import YouTube Studio analytics CSV to fill unavailable thumbnail metrics.
+         </span>
+        )}
+        {creatorContentTypeDiagnostic && (
+         <span
+          className={
+           creatorContentTypeDiagnostic.status === "error"
+            ? "text-[#b42318]"
+            : "text-[#046c4e]"
+          }
+          title={creatorContentTypeDiagnostic.label}
+         >
+          {creatorContentTypeDiagnostic.label}
+         </span>
+        )}
        </div>
       )}
      </div>
@@ -2707,50 +3247,135 @@ const PerformanceHub: React.FC = () => {
      </div>
 
      <div className="p-4 pt-5">
-      <div className="relative h-[340px]">
-       <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-        <LineChart
-         data={engagementMapSeries}
-         margin={{ top: 8, right: 22, left: 10, bottom: 20 }}>
-         <CartesianGrid stroke="#d1d5db" strokeOpacity={0.7} />
-         <XAxis
-          dataKey="label"
-          stroke="#000"
-          tick={false}
-          axisLine={false}
-          tickLine={false}
-          label={{ value: "VIDEOS (SORTED)", position: "insideBottom", dy: 14, style: { fontSize: 11, fontWeight: 900, fontStyle: "italic" } }}
-         />
-         <YAxis
-          yAxisId="engagement"
-          stroke="#000"
-          tick={{ fontSize: 11, fontWeight: 900, fontFamily: "system-ui, -apple-system, Segoe UI, sans-serif" }}
-          label={{ value: "ENGAGEMENT METRICS", angle: -90, position: "insideLeft", style: { fontSize: 11, fontWeight: 900, fontStyle: "italic" } }}
-         />
-         <YAxis
-          yAxisId="likes"
-          orientation="right"
-          stroke="#000"
-          tick={{ fontSize: 11, fontWeight: 900, fontFamily: "system-ui, -apple-system, Segoe UI, sans-serif" }}
-          label={{ value: "LIKES", angle: 90, position: "insideRight", style: { fontSize: 11, fontWeight: 900, fontStyle: "italic" } }}
-         />
-         <Tooltip
-          contentStyle={{
-           border: "3px solid black",
-           borderRadius: "12px",
-           fontWeight: 900,
-          }}
-          labelFormatter={(label: unknown) => {
-           const row = engagementMapSeries.find((entry) => entry.label === String(label))
-           return row?.title || String(label)
-          }}
-         />
-         <Line type="monotone" yAxisId="engagement" dataKey="comments" stroke="#00CCFF" strokeWidth={2.5} dot={false} isAnimationActive animationDuration={700} />
-         <Line type="monotone" yAxisId="engagement" dataKey="subscribers" stroke="#B5E81C" strokeWidth={2.5} dot={false} isAnimationActive animationDuration={700} />
-         <Line type="monotone" yAxisId="engagement" dataKey="shares" stroke="#FFD400" strokeWidth={2.5} dot={false} isAnimationActive animationDuration={700} />
-         <Line type="monotone" yAxisId="likes" dataKey="likes" stroke="#FF7497" strokeWidth={2.5} dot={false} isAnimationActive animationDuration={700} />
-        </LineChart>
-       </ResponsiveContainer>
+     <div className="relative h-[340px]">
+       {engagementMapSeries.length > 0 && (
+        <div className="absolute inset-x-0 top-0 bottom-[42px] pointer-events-none z-0">
+         <div
+          className="h-full w-full"
+          style={{
+           display: "grid",
+           gridTemplateColumns: `repeat(${engagementMapSeries.length}, minmax(0, 1fr))`,
+          }}>
+          {engagementMapSeries.map((point, idx) => (
+           <div
+            key={`eng-zone-highlight-${point.videoId || point.label}`}
+            className="h-full transition-opacity duration-200 ease-out"
+            style={{
+             opacity: idx === engagementHoverIndex ? 1 : 0,
+             background: "rgba(156, 163, 175, 0.16)",
+            }}
+           />
+          ))}
+         </div>
+        </div>
+       )}
+
+       <div className="relative z-10 h-full">
+        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+         <LineChart
+          data={engagementMapSeries}
+          margin={{ top: 8, right: 22, left: 10, bottom: 20 }}>
+          <CartesianGrid stroke="#d1d5db" strokeOpacity={0.7} />
+          <XAxis
+           dataKey="label"
+           stroke="#000"
+           tick={false}
+           axisLine={false}
+           tickLine={false}
+           label={{ value: "VIDEOS (SORTED)", position: "insideBottom", dy: 14, style: { fontSize: 11, fontWeight: 900, fontStyle: "italic" } }}
+          />
+          <YAxis
+           yAxisId="engagement"
+           stroke="#000"
+           tick={{ fontSize: 11, fontWeight: 900, fontFamily: "system-ui, -apple-system, Segoe UI, sans-serif" }}
+           label={{ value: "ENGAGEMENT METRICS", angle: -90, position: "insideLeft", style: { fontSize: 11, fontWeight: 900, fontStyle: "italic" } }}
+          />
+          <YAxis
+           yAxisId="likes"
+           orientation="right"
+           stroke="#000"
+           tick={{ fontSize: 11, fontWeight: 900, fontFamily: "system-ui, -apple-system, Segoe UI, sans-serif" }}
+           label={{ value: "LIKES", angle: 90, position: "insideRight", style: { fontSize: 11, fontWeight: 900, fontStyle: "italic" } }}
+          />
+          {engagementVisibleMetrics.includes("comments") && (
+           <Line
+            key={`line-comments-${engagementSortMetric}`}
+            type="monotone"
+            yAxisId="engagement"
+            dataKey="comments"
+            stroke="#00CCFF"
+            strokeWidth={2.5}
+            dot={(props: any) =>
+             props?.index === engagementHoverIndex ? (
+              <circle cx={props.cx} cy={props.cy} r={5} fill="#00CCFF" stroke="#000" strokeWidth={1.5} />
+             ) : (
+              <g />
+             )
+            }
+            isAnimationActive
+            animationDuration={engagementSortMetric === "comments" ? 3000 : 1000}
+           />
+          )}
+          {engagementVisibleMetrics.includes("subscribers") && (
+           <Line
+            key={`line-subscribers-${engagementSortMetric}`}
+            type="monotone"
+            yAxisId="engagement"
+            dataKey="subscribers"
+            stroke="#B5E81C"
+            strokeWidth={2.5}
+            dot={(props: any) =>
+             props?.index === engagementHoverIndex ? (
+              <circle cx={props.cx} cy={props.cy} r={5} fill="#B5E81C" stroke="#000" strokeWidth={1.5} />
+             ) : (
+              <g />
+             )
+            }
+            isAnimationActive
+            animationDuration={engagementSortMetric === "subscribers" ? 3000 : 1000}
+           />
+          )}
+          {engagementVisibleMetrics.includes("shares") && (
+           <Line
+            key={`line-shares-${engagementSortMetric}`}
+            type="monotone"
+            yAxisId="engagement"
+            dataKey="shares"
+            stroke="#FFD400"
+            strokeWidth={2.5}
+            dot={(props: any) =>
+             props?.index === engagementHoverIndex ? (
+              <circle cx={props.cx} cy={props.cy} r={5} fill="#FFD400" stroke="#000" strokeWidth={1.5} />
+             ) : (
+              <g />
+             )
+            }
+            isAnimationActive
+            animationDuration={engagementSortMetric === "shares" ? 3000 : 1000}
+           />
+          )}
+          {engagementVisibleMetrics.includes("likes") && (
+           <Line
+            key={`line-likes-${engagementSortMetric}`}
+            type="monotone"
+            yAxisId="likes"
+            dataKey="likes"
+            stroke="#FF7497"
+            strokeWidth={2.5}
+            dot={(props: any) =>
+             props?.index === engagementHoverIndex ? (
+              <circle cx={props.cx} cy={props.cy} r={5} fill="#FF7497" stroke="#000" strokeWidth={1.5} />
+             ) : (
+              <g />
+             )
+            }
+            isAnimationActive
+            animationDuration={engagementSortMetric === "likes" ? 3000 : 1000}
+           />
+          )}
+         </LineChart>
+        </ResponsiveContainer>
+       </div>
 
        {engagementMapSeries.length > 0 && (
         <div className="absolute inset-x-0 top-0 bottom-[42px] grid pointer-events-auto">
@@ -2830,7 +3455,10 @@ const PerformanceHub: React.FC = () => {
         <ScatterChart
          margin={{ top: 8, right: 20, bottom: 8, left: 8 }}
          onMouseMove={(state: { activePayload?: Array<{ payload?: EngagementMapPoint }> }) => {
-          const nextId = state.activePayload?.[0]?.payload?.videoId
+          const point = state.activePayload?.[0]?.payload
+          const nextId =
+           point?.videoId ||
+           (point?.title ? toStorageIdentity(point.title) : "")
           if (nextId) setValueMatrixHoverVideoId(nextId)
          }}>
          <CartesianGrid stroke="#d1d5db" strokeOpacity={0.72} />
@@ -2846,6 +3474,9 @@ const PerformanceHub: React.FC = () => {
          <Tooltip
           cursor={{ stroke: "#111827", strokeOpacity: 0.38, strokeWidth: 1 }}
           contentStyle={{ border: "3px solid black", borderRadius: "12px", fontWeight: 900 }}
+          labelFormatter={(_label: unknown, payload: Array<{ payload?: EngagementMapPoint }>) =>
+           payload?.[0]?.payload?.title || ""
+          }
           formatter={(value: unknown, key: unknown) => {
            const keyText = String(key)
            if (keyText === "views") return [Number(value || 0).toLocaleString(), "Views"]
@@ -2853,7 +3484,6 @@ const PerformanceHub: React.FC = () => {
            if (keyText === "ctr") return [`${Number(value || 0).toFixed(2)}%`, "CTR"]
            return [Number(value || 0), keyText]
           }}
-          labelFormatter={() => ""}
          />
          <Scatter data={valueMatrixSeries}>
           {valueMatrixSeries.map((entry) => (
@@ -3252,6 +3882,16 @@ const PerformanceHub: React.FC = () => {
 
  const renderChannelToolbox = () => (
   <div className="space-y-6">
+   <SubToolbox
+    title="CHART ROLLOUT 40"
+    icon={<ChartColumnBig size={22} strokeWidth={3} className="text-black" />}
+    headerColor="bg-[#00CCFF]"
+    collapsible
+    isOpenInitial
+    unmountOnClose
+   >
+    <PerformanceHubChartRollout />
+   </SubToolbox>
    <SubToolbox
     key={`data-viz-${dataVizAutoOpenTick}`}
     title="DATA VISUALIZATIONS"

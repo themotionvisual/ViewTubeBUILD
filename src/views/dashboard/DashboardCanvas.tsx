@@ -33,6 +33,7 @@ import {
 } from "./storage"
 import type { DashboardLayoutState } from "./types"
 import type { DashboardData } from "./useDashboardData"
+import { DashboardHeader } from "./DashboardHeader"
 import { WidgetRenderer } from "./WidgetRenderer"
 
 interface DashboardCanvasProps {
@@ -222,6 +223,20 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
          accept="application/json"
          onChange={handleImportFile}
          className="hidden"
+       />
+
+       <DashboardHeader 
+         data={data}
+         dashboardControls={{
+           editMode,
+           setEditMode,
+           locked: layout.locked,
+           toggleLock: () => setLayout(prev => ({ ...prev, locked: !prev.locked })),
+           openPicker: () => setPickerOpen(true),
+           resetLayout: () => setLayout(resetDashboardLayout()),
+           handleExport,
+           handleImportClick
+         }}
        />
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>

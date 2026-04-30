@@ -12,6 +12,7 @@ import {
  Copy,
  Check,
 } from "lucide-react"
+import { VTLottie } from "../../../components/VTLottie"
 import { refineCommunityPost } from "../../../services/gemini"
 import { useBrain } from "../../../context/GlobalDataContext"
 
@@ -318,7 +319,10 @@ export const CommunityPostWidget = ({
         }}
        />
       ) : (
-       <Sparkles size={14} className="text-blue-400" />
+       <VTLottie 
+        animationUrl="https://assets3.lottiefiles.com/packages/lf20_m6cu8sh9.json" 
+        size={18} 
+       />
       )}
       {isGenerating ? "Refining..." : "Refine"}
      </button>

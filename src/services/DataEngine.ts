@@ -313,6 +313,23 @@ export const inferAnalyticsWindowFromName = (
  if (lower.includes("365d") || lower.includes("1y") || lower.includes("1yr"))
   return "365d"
 
+ const explicitDateRange = name.match(
+  /(\d{4})[-/](\d{2})[-/](\d{2}).*?(\d{4})[-/](\d{2})[-/](\d{2})/,
+ )
+ if (explicitDateRange) {
+  const [, y1, m1, d1, y2, m2, d2] = explicitDateRange
+  const start = new Date(`${y1}-${m1}-${d1}T00:00:00Z`)
+  const end = new Date(`${y2}-${m2}-${d2}T00:00:00Z`)
+  const diffMs = end.getTime() - start.getTime()
+  if (Number.isFinite(diffMs) && diffMs >= 0) {
+   const spanDays = Math.round(diffMs / 86400000) + 1
+   if (spanDays >= 85 && spanDays <= 96) return "90d"
+   if (spanDays >= 25 && spanDays <= 35) return "28d"
+   if (spanDays >= 6 && spanDays <= 9) return "7d"
+   if (spanDays >= 330 && spanDays <= 390) return "365d"
+  }
+ }
+
  return null
 }
 
@@ -447,13 +464,29 @@ export const normalizeAndEnrichRow = (
  >
  const base = { ...rawRow, ...normalized } as DataForgeRow
 
- const views =
+ let views =
   firstDefinedNumber(base, [
    "Views",
    "View count",
    "Engaged views",
    "Engaged Views",
   ]) ?? 0
+ if (views <= 0) {
+  const uniqueViewers =
+   firstDefinedNumber(base, [
+    "Unique viewers",
+    "Unique Viewers",
+    "uniqueViewers",
+   ]) ?? 0
+  const avgViewsPerViewer =
+   firstDefinedNumber(base, [
+    "Average views per viewer",
+    "averageViewsPerViewer",
+   ]) ?? 0
+  if (uniqueViewers > 0 && avgViewsPerViewer > 0) {
+   views = uniqueViewers * avgViewsPerViewer
+  }
+ }
  const likes = firstDefinedNumber(base, ["Likes", "likeCount"]) ?? 0
  const comments =
   firstDefinedNumber(base, ["Comments", "commentCount", "Comments added"]) ?? 0

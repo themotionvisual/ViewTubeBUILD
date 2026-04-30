@@ -79,6 +79,7 @@ type AnalyticsCache = RawAnalyticsCache & {
     endDate?: string
     fetchedAt?: number
     report?: any
+    syncDiagnostics?: SyncDiagnosticsShape
    }
   >
  >
@@ -91,6 +92,16 @@ type AnalyticsCache = RawAnalyticsCache & {
  channelAnalytics?: AnalyticsReport
  dailyMetrics?: AnalyticsReport
  globalLifetime?: AnalyticsReport
+}
+
+type SyncDiagnosticsShape = {
+ failureReasons?: Array<{
+  group?: string
+  metrics?: string[]
+  status?: number
+  reason?: string
+  requestClass?: string
+ }>
 }
 
 type WindowTotals = {
@@ -135,12 +146,46 @@ export interface MetricAvailability {
  }
 }
 
+export type VideoStatsVerificationSummary = {
+ window: AnalyticsWindow
+ reportRowCount: number
+ masterRowCount: number
+ rawMetricRows: {
+  impressions: number
+  ctr: number
+ }
+ mappedMetricRows: {
+  impressions: number
+  ctr: number
+ }
+ lastFailure: {
+  requestClass?: string
+  reason?: string
+  status?: number
+ } | null
+ mappingStatus:
+  | "healthy"
+  | "request_failure"
+  | "missing_upstream"
+  | "mapping_failure"
+ duplicateShortHeaders: string[]
+}
+
 export type MasterTableRow = Record<string, unknown> & {
  _id: string
  _sourceFile: string
  _userTag: string
  __canonical: CanonicalVideoRow
  __metricCells: Record<CanonicalMetricKey, MetricCell>
+}
+
+export type TableMetricMappingStatus = {
+ syncedMetricsCount: number
+ mappedMetricsCount: number
+ mappedMetricKeys: CanonicalMetricKey[]
+ unmappedMetricKeys: CanonicalMetricKey[]
+ duplicateHeaderKeys: string[]
+ unavailableByReason: Record<string, number>
 }
 
 const resolveAnalyticsCache = (): AnalyticsCache => {
@@ -641,6 +686,8 @@ const getBundleForWindow = (
 
 const extractVideoIdCandidates = (row: Record<string, unknown>): string[] => {
  const candidates = [
+  text(row.Content),
+  text(row.content),
   text(row.video),
   text(row.videoId),
   text(row["Video ID"]),
@@ -1196,11 +1243,115 @@ export const canonicalRowsToMasterTableRows = (
   })
 
   // Keep legacy aliases used by existing rendering/helpers.
-  base["Watch time (hours)"] = base["Watch Time (Hours)"]
-  base["AVD (Sec)"] = base["AVD (Average View Duration)"]
+  base["Watch Time (Hours)"] = base["Watch Hrs"]
+  base["Watch time (hours)"] = base["Watch Hrs"]
+  base["AVD (Average View Duration)"] = base.AVD
+  base["AVD (Sec)"] = base.AVD
+  base["AVP (%)"] = base["AVP %"]
+  base["Click-Through Rate (CTR)"] = base.CTR
+  base["CTR (%)"] = base.CTR
+  base["Impressions click-through rate (%)"] = base.CTR
+  base["Engaged views"] = base.Engaged
+  base["End screen click rate"] = base["End Screen %"]
+  base["Card click rate"] = base["Card %"]
+  base["Viewer percentage"] = base["Viewer %"]
+  base["Data Provenance"] = base["Data Src"]
   base["Estimated revenue"] = base.Revenue
 
   return base
+ })
+}
+
+export const buildVideoStatsVerificationSummary = ({
+ window,
+ reportRows,
+ masterRows,
+ diagnostics,
+ duplicateShortHeaders = [],
+}: {
+ window: AnalyticsWindow
+ reportRows: Record<string, unknown>[]
+ masterRows: CanonicalVideoRow[]
+ diagnostics?: SyncDiagnosticsShape | null
+ duplicateShortHeaders?: string[]
+}): VideoStatsVerificationSummary => {
+ const rawImpressions = reportRows.filter(
+  (row) => getMetricByAliases(row, "impressions").found,
+ ).length
+ const rawCtr = reportRows.filter((row) => getMetricByAliases(row, "ctr").found).length
+ const mappedImpressions = masterRows.filter((row) => {
+  const cell = row.metrics.impressions
+  return cell.status !== "unavailable" && cell.value !== null
+ }).length
+ const mappedCtr = masterRows.filter((row) => {
+  const cell = row.metrics.ctr
+  return cell.status !== "unavailable" && cell.value !== null
+ }).length
+
+ const lastFailure =
+  (diagnostics?.failureReasons || [])
+   .filter(
+    (failure) =>
+     failure?.group === "impressions_ctr" ||
+     (failure?.metrics || []).some(
+      (metric) =>
+       metric === "videoThumbnailImpressions" ||
+       metric === "videoThumbnailImpressionsClickRate",
+     ),
+   )
+   .slice(-1)[0] || null
+
+ let mappingStatus: VideoStatsVerificationSummary["mappingStatus"] = "healthy"
+ if (lastFailure && rawImpressions === 0 && rawCtr === 0) {
+  mappingStatus = "request_failure"
+ } else if (rawImpressions === 0 && rawCtr === 0) {
+  mappingStatus = "missing_upstream"
+ } else if (
+  (rawImpressions > 0 && mappedImpressions === 0) ||
+  (rawCtr > 0 && mappedCtr === 0)
+ ) {
+  mappingStatus = "mapping_failure"
+ }
+
+ return {
+  window,
+  reportRowCount: reportRows.length,
+  masterRowCount: masterRows.length,
+  rawMetricRows: {
+   impressions: rawImpressions,
+   ctr: rawCtr,
+  },
+  mappedMetricRows: {
+   impressions: mappedImpressions,
+   ctr: mappedCtr,
+  },
+  lastFailure: lastFailure
+   ? {
+      requestClass: lastFailure.requestClass,
+      reason: lastFailure.reason,
+      status: lastFailure.status,
+     }
+   : null,
+  mappingStatus,
+  duplicateShortHeaders,
+ }
+}
+
+export const getVideoStatsVerificationSummary = (
+ window: AnalyticsWindow,
+ duplicateShortHeaders: string[] = [],
+): VideoStatsVerificationSummary => {
+ const cache = resolveAnalyticsCache()
+ const bundle = getBundleForWindow(cache, window)
+ const reportRows = reportRowsToObjects(bundle?.report).map(toNormalizedRow)
+ const masterRows = getMasterRows(window, "api")
+ const diagnostics = cache.analyticsByWindow?.[window]?.syncDiagnostics || null
+ return buildVideoStatsVerificationSummary({
+  window,
+  reportRows,
+  masterRows,
+  diagnostics,
+  duplicateShortHeaders,
  })
 }
 
@@ -1215,4 +1366,45 @@ export const getHeaderMetricCell = (
  if (!metricKey) return null
 
  return masterRow.__metricCells[metricKey] || null
+}
+
+export const buildTableMetricMappingStatus = ({
+ masterRows,
+ visibleHeaders,
+ duplicateHeaderKeys = [],
+}: {
+ masterRows: CanonicalVideoRow[]
+ visibleHeaders: string[]
+ duplicateHeaderKeys?: string[]
+}): TableMetricMappingStatus => {
+ const syncedMetricKeys = canonicalMetricOrder.filter((metricKey) =>
+  masterRows.some((row) => row.metrics[metricKey]?.status !== "unavailable"),
+ )
+ const mappedMetricKeys = visibleHeaders
+  .map((header) => MASTER_TABLE_HEADER_TO_METRIC_KEY[header])
+  .filter((metricKey): metricKey is CanonicalMetricKey => Boolean(metricKey))
+ const mappedKeySet = new Set<CanonicalMetricKey>(mappedMetricKeys)
+ const syncedKeySet = new Set<CanonicalMetricKey>(syncedMetricKeys)
+ const unmappedMetricKeys = Array.from(syncedKeySet).filter(
+  (metricKey) => !mappedKeySet.has(metricKey),
+ )
+
+ const unavailableByReason: Record<string, number> = {}
+ masterRows.forEach((row) => {
+  canonicalMetricOrder.forEach((metricKey) => {
+   const cell = row.metrics[metricKey]
+   if (cell.status !== "unavailable") return
+   const reason = (cell.reasonCode || "unavailable_unknown").trim()
+   unavailableByReason[reason] = (unavailableByReason[reason] || 0) + 1
+  })
+ })
+
+ return {
+  syncedMetricsCount: syncedKeySet.size,
+  mappedMetricsCount: mappedKeySet.size,
+  mappedMetricKeys: Array.from(mappedKeySet),
+  unmappedMetricKeys,
+  duplicateHeaderKeys,
+  unavailableByReason,
+ }
 }

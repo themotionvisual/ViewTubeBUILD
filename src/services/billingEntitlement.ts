@@ -180,18 +180,26 @@ export const reconcileEntitlementWindow = (
  now = new Date(),
 ): EntitlementState => {
  let next = { ...state }
+ let changed = false
 
  if (next.tier === "large") {
+  if (
+   next.tokenBalance !== Number.POSITIVE_INFINITY ||
+   next.updatedAtIso !== now.toISOString()
+  ) {
+   changed = true
+  }
   return {
    ...next,
    tokenBalance: Number.POSITIVE_INFINITY,
-   updatedAtIso: now.toISOString(),
+   updatedAtIso: changed ? now.toISOString() : next.updatedAtIso,
   }
  }
 
  const currentPeriodEnd = next.currentPeriodEndIso ? new Date(next.currentPeriodEndIso) : null
  if (next.tier === "medium" && currentPeriodEnd && now >= currentPeriodEnd) {
   const { startIso, endIso } = toPeriodBounds(now)
+  changed = true
   next = {
    ...next,
    tokenBalance: next.tokenMonthlyLimit,
@@ -206,16 +214,23 @@ export const reconcileEntitlementWindow = (
   const nowDay = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
 
   if (nowDay > lastDay) {
-    const daysElapsed = Math.floor((nowDay - lastDay) / (24 * 60 * 60 * 1000))
-    const accrual = Math.max(0, daysElapsed) * next.tokenDailyAccrual
-    next.tokenBalance = Math.min(next.tokenMonthlyLimit, next.tokenBalance + accrual)
-    next.tokenLastAccrualIso = normalizeDailyAccrualAnchor(now)
+   const daysElapsed = Math.floor((nowDay - lastDay) / (24 * 60 * 60 * 1000))
+   const accrual = Math.max(0, daysElapsed) * next.tokenDailyAccrual
+   const nextBalance = Math.min(next.tokenMonthlyLimit, next.tokenBalance + accrual)
+   if (
+    nextBalance !== next.tokenBalance ||
+    next.tokenLastAccrualIso !== normalizeDailyAccrualAnchor(now)
+   ) {
+    changed = true
+   }
+   next.tokenBalance = nextBalance
+   next.tokenLastAccrualIso = normalizeDailyAccrualAnchor(now)
   }
  }
 
  return {
   ...next,
-  updatedAtIso: now.toISOString(),
+  updatedAtIso: changed ? now.toISOString() : next.updatedAtIso,
  }
 }
 
@@ -263,55 +278,86 @@ export const registerReferralConversion = (
  }
 }
 
-export const getStoredEntitlement = (): EntitlementState => {
+const buildEntitlementFromRaw = (raw: string | null): EntitlementState => {
+ if (!raw) return createDefaultEntitlement()
+ const parsed = JSON.parse(raw) as EntitlementState
+ return {
+  ...createDefaultEntitlement(),
+  ...parsed,
+ }
+}
+
+const serializeEntitlement = (state: EntitlementState): string => JSON.stringify(state)
+
+export const readStoredEntitlementRaw = (): EntitlementState => {
  try {
   const raw = localStorage.getItem(ENTITLEMENT_STORAGE_KEY)
-  if (!raw) return createDefaultEntitlement()
-  const parsed = JSON.parse(raw) as EntitlementState
-  const withDefaults: EntitlementState = {
-   ...createDefaultEntitlement(),
-   ...parsed,
-  }
-  return reconcileEntitlementWindow(withDefaults)
+  return buildEntitlementFromRaw(raw)
  } catch {
   return createDefaultEntitlement()
  }
 }
 
-export const setStoredEntitlement = (state: EntitlementState): void => {
- localStorage.setItem(ENTITLEMENT_STORAGE_KEY, JSON.stringify(state))
+export const readCurrentEntitlement = (now = new Date()): EntitlementState => {
+ return reconcileEntitlementWindow(readStoredEntitlementRaw(), now)
+}
+
+export const writeStoredEntitlement = (state: EntitlementState): void => {
+ localStorage.setItem(ENTITLEMENT_STORAGE_KEY, serializeEntitlement(state))
  if (typeof window !== "undefined") {
   window.dispatchEvent(new CustomEvent(ENTITLEMENT_CHANGED_EVENT, { detail: state }))
  }
 }
 
-export const getCurrentEntitlement = (): EntitlementState => {
- const current = getStoredEntitlement()
- const reconciled = reconcileEntitlementWindow(current)
- setStoredEntitlement(reconciled)
+export const syncEntitlementIfDrifted = (now = new Date()): EntitlementState => {
+ const raw = readStoredEntitlementRaw()
+ const reconciled = reconcileEntitlementWindow(raw, now)
+ if (serializeEntitlement(raw) !== serializeEntitlement(reconciled)) {
+  writeStoredEntitlement(reconciled)
+ }
  return reconciled
 }
 
+// Backward-compatible aliases.
+export const getStoredEntitlement = (): EntitlementState => readCurrentEntitlement()
+export const setStoredEntitlement = (state: EntitlementState): void =>
+ writeStoredEntitlement(state)
+export const getCurrentEntitlement = (): EntitlementState => readCurrentEntitlement()
+
+export const entitlementStatesEqual = (
+ a: EntitlementState,
+ b: EntitlementState,
+): boolean => {
+ return serializeEntitlement(a) === serializeEntitlement(b)
+}
+
 export const updatePlanEntitlement = (planId: SubscriptionPlanId): EntitlementState => {
- const current = getStoredEntitlement()
+ const current = syncEntitlementIfDrifted()
  const next = applyPlanToEntitlement(current, planId)
- setStoredEntitlement(next)
+ writeStoredEntitlement(next)
  return next
 }
 
 export const consumeAiTokens = (units = 1): { next: EntitlementState; allowed: boolean } => {
- const current = getStoredEntitlement()
+ const current = syncEntitlementIfDrifted()
  const result = consumeEntitlementTokens(current, units)
- setStoredEntitlement(result.next)
+ writeStoredEntitlement(result.next)
  return result
 }
 
-export const canAffordAiTokens = (units = 1): boolean => {
- const current = getCurrentEntitlement()
+export const canAffordAiTokensFromState = (
+ state: EntitlementState,
+ units = 1,
+): boolean => {
+ const current = reconcileEntitlementWindow(state)
  if (current.tier === "large") return true
  if (current.tier === "free") return false
  if (!Number.isFinite(units) || units <= 0) return true
  return current.tokenBalance >= units
+}
+
+export const canAffordAiTokens = (units = 1): boolean => {
+ return canAffordAiTokensFromState(readCurrentEntitlement(), units)
 }
 
 export const createCheckoutSession = async (
@@ -334,13 +380,13 @@ export const createCheckoutSession = async (
  const fakeSessionId = `cs_test_${Math.random().toString(36).slice(2, 12)}`
  return {
   sessionId: fakeSessionId,
-  checkoutUrl: `${window.location.origin}/subscribe?session_id=${fakeSessionId}&plan=${payload.planId}`,
+  checkoutUrl: `${window.location.origin}/settings?panel=billing&session_id=${fakeSessionId}&plan=${payload.planId}`,
   provider: "stripe",
  }
 }
 
 export const handleStripeWebhook = (event: StripeWebhookLikeEvent): EntitlementState => {
- const current = getStoredEntitlement()
+ const current = syncEntitlementIfDrifted()
   
  if (event.type === "checkout.session.completed" || event.type === "invoice.paid") {
   const metadata = event.data?.object?.metadata || {}
@@ -351,19 +397,19 @@ export const handleStripeWebhook = (event: StripeWebhookLikeEvent): EntitlementS
    stripeCustomerId: event.data?.object?.customer || withPlan.stripeCustomerId,
    stripeSubscriptionId: event.data?.object?.subscription || withPlan.stripeSubscriptionId,
   }
-  setStoredEntitlement(withStripe)
+  writeStoredEntitlement(withStripe)
   return withStripe
  }
 
  if (event.type === "customer.subscription.deleted" || event.type === "invoice.payment_failed") {
   const downgraded = applyPlanToEntitlement(current, "starter")
-  setStoredEntitlement(downgraded)
+  writeStoredEntitlement(downgraded)
   return downgraded
  }
 
  if (event.type === "referral.conversion") {
   const rewarded = registerReferralConversion(current)
-  setStoredEntitlement(rewarded)
+  writeStoredEntitlement(rewarded)
   return rewarded
  }
 

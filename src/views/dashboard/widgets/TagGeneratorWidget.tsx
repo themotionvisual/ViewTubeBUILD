@@ -1,11 +1,12 @@
 import React, { useState } from "react"
 import { useBrain } from "../../../context/GlobalDataContext"
 import { WidgetShell } from "../WidgetShell"
+import { useEntitlement } from "../../../app/AppShell"
 import { Sparkles, Save, Check, Tag } from "lucide-react"
 import { fetchVideoSnippetDetails } from "../../../services/youtube/youtubeDataFetcher"
 import { generateTagSuggestions } from "../../../services/gemini"
 import type { TagSuggestion } from "../../../services/gemini"
-import { canAffordAiTokens, getCurrentEntitlement } from "../../../services/billingEntitlement"
+import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
 
 export const TagGeneratorWidget = ({
@@ -38,8 +39,8 @@ export const TagGeneratorWidget = ({
  const [tagsLoading, setTagsLoading] = useState(false)
  const [videoSearch, setVideoSearch] = useState("")
  const TAG_SUGGEST_COST = getAiTokenCost("tagSuggestions")
- const entitlement = getCurrentEntitlement()
- const canAffordTagSuggestions = canAffordAiTokens(TAG_SUGGEST_COST)
+ const entitlement = useEntitlement()
+ const canAffordTagSuggestions = canAffordAiTokensFromState(entitlement, TAG_SUGGEST_COST)
 
  const videos = data.canonicalRows || data.brain?.canonicalRows || []
 

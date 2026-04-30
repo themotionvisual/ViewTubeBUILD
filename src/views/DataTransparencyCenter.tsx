@@ -10,6 +10,12 @@ import {
  type IngestMode,
  MASTER_TABLE_LABELS,
 } from "../services/productArchitecture"
+import {
+ buildTableMetricMappingStatus,
+ getMasterRows,
+ getVideoStatsVerificationSummary,
+} from "../services/analyticsSelectors"
+import { MASTER_VIDEO_TABLE_HEADERS } from "./performanceHubUtils"
 import { FORMULA_REGISTRY } from "../services/formulaRegistry"
 import { SUBSCRIPTION_PLANS } from "../services/subscriptionPlans"
 import {
@@ -108,6 +114,20 @@ const DataTransparencyCenter: React.FC = () => {
   }
  }, [localDataTick])
 
+ const videoStatsVerification = useMemo(
+  () => getVideoStatsVerificationSummary("lifetime"),
+  [localDataTick],
+ )
+ const tableMetricMappingStatus = useMemo(
+  () =>
+   buildTableMetricMappingStatus({
+    masterRows: getMasterRows("lifetime", "api"),
+    visibleHeaders: MASTER_VIDEO_TABLE_HEADERS,
+    duplicateHeaderKeys: videoStatsVerification.duplicateShortHeaders,
+   }),
+  [localDataTick, videoStatsVerification.duplicateShortHeaders],
+ )
+
  const localDataEntries = useMemo(() => listLocalDataEntries(), [localDataTick])
 
  const bytesByCategory = useMemo(() => {
@@ -145,7 +165,27 @@ const DataTransparencyCenter: React.FC = () => {
 
   let syncRunSummary: unknown = null
   try {
-   const parsed = ytCache as { syncRunSummary?: unknown }
+   const parsed = ytCache as {
+    syncRunSummary?: {
+     analyticsVerification?: {
+      window?: string
+      thumbnailMetrics?: {
+       impressionsAvailable?: boolean
+       ctrAvailable?: boolean
+       requestShapeHealthy?: boolean
+       failureEvents?: number
+       quarantinedFailures?: number
+       suppressedRetries?: number
+      }
+      creatorContentType?: {
+       status?: "available" | "quarantined"
+       disabledForSession?: boolean
+       rowCount?: number
+       reason?: string
+      }
+     }
+    }
+   }
    syncRunSummary = parsed?.syncRunSummary ?? null
   } catch {
    syncRunSummary = null
@@ -286,10 +326,10 @@ const DataTransparencyCenter: React.FC = () => {
      <div className="mt-3 flex items-center justify-between gap-3 border-t border-black/20 pt-3">
       <div className="min-w-0">
        <p className="font-black text-[11px] uppercase tracking-wide">
-        Optional Video Metrics
+        Thumbnail Metrics
        </p>
        <p className="font-bold text-[11px] text-gray-600 leading-tight">
-        Thumbnail impressions and CTR are opt-in only (reduces API 400s).
+        Thumbnail impressions and CTR are now required for launch validation. This legacy toggle no longer suppresses requests.
        </p>
       </div>
       <label className="flex items-center gap-2 shrink-0 font-black text-[11px] uppercase">
@@ -297,12 +337,84 @@ const DataTransparencyCenter: React.FC = () => {
         type="checkbox"
         className="h-4 w-4 accent-black"
         checked={optionalVideoMetricsEnabled}
+        disabled
         onChange={(e) => handleOptionalMetricsToggle(e.target.checked)}
        />
-       Enable
+       Legacy
       </label>
      </div>
 	    </SubToolbox>
+
+    <SubToolbox
+     title="Video Stats Verification"
+     icon={<Info size={18} strokeWidth={3} />}
+     paletteIndex={4}
+     contentClassName="p-4 space-y-3">
+     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="border-[3px] border-black rounded-xl p-3 bg-white">
+       <p className="font-black text-[11px] uppercase tracking-wide">Window</p>
+       <p className="font-bold text-sm">{videoStatsVerification.window}</p>
+      </div>
+      <div className="border-[3px] border-black rounded-xl p-3 bg-white">
+       <p className="font-black text-[11px] uppercase tracking-wide">Mapping Status</p>
+       <p className="font-bold text-sm">{videoStatsVerification.mappingStatus}</p>
+      </div>
+      <div className="border-[3px] border-black rounded-xl p-3 bg-white">
+       <p className="font-black text-[11px] uppercase tracking-wide">Duplicate Headers</p>
+       <p className="font-bold text-sm">
+        {videoStatsVerification.duplicateShortHeaders.join(", ") || "None"}
+       </p>
+      </div>
+     </div>
+     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="border-[3px] border-black rounded-xl p-3 bg-white">
+       <p className="font-black text-[11px] uppercase tracking-wide">Raw Report Presence</p>
+       <p className="font-bold text-sm">
+        Impressions rows: {videoStatsVerification.rawMetricRows.impressions}
+       </p>
+       <p className="font-bold text-sm">CTR rows: {videoStatsVerification.rawMetricRows.ctr}</p>
+      </div>
+      <div className="border-[3px] border-black rounded-xl p-3 bg-white">
+       <p className="font-black text-[11px] uppercase tracking-wide">Mapped Master Rows</p>
+       <p className="font-bold text-sm">
+        Impressions rows: {videoStatsVerification.mappedMetricRows.impressions}
+       </p>
+       <p className="font-bold text-sm">CTR rows: {videoStatsVerification.mappedMetricRows.ctr}</p>
+      </div>
+     </div>
+     <div className="border-[3px] border-black rounded-xl p-3 bg-white">
+      <p className="font-black text-[11px] uppercase tracking-wide">Last Failure</p>
+      <p className="font-bold text-sm">
+       {videoStatsVerification.lastFailure?.requestClass || "None"}
+      </p>
+     <p className="font-bold text-[11px] text-gray-600 break-words">
+       {videoStatsVerification.lastFailure?.reason || "No current failure recorded."}
+      </p>
+     </div>
+     {(videoStatsVerification.mappingStatus === "request_failure" ||
+      videoStatsVerification.mappingStatus === "missing_upstream") && (
+      <div className="border-[3px] border-black rounded-xl p-3 bg-[#fff9df]">
+       <p className="font-black text-[11px] uppercase tracking-wide">CSV Fallback Guidance</p>
+       <p className="font-bold text-[11px] text-gray-700 leading-tight">
+        Some stats require CSV import when API denies video-level report shape. Export YouTube Studio analytics CSV, then upload via <span className="font-black">Upload CSV/ZIP/Folder</span>.
+       </p>
+      </div>
+     )}
+     <div className="border-[3px] border-black rounded-xl p-3 bg-white">
+      <p className="font-black text-[11px] uppercase tracking-wide">Table Mapping</p>
+      <p className="font-bold text-sm">
+       Synced: {tableMetricMappingStatus.syncedMetricsCount} · Mapped:{" "}
+       {tableMetricMappingStatus.mappedMetricsCount}
+      </p>
+      <p className="font-bold text-[11px] text-gray-600 break-words">
+       Unmapped: {tableMetricMappingStatus.unmappedMetricKeys.join(", ") || "None"}
+      </p>
+      <p className="font-bold text-[11px] text-gray-600 break-words">
+       Duplicate headers:{" "}
+       {tableMetricMappingStatus.duplicateHeaderKeys.join(", ") || "None"}
+      </p>
+     </div>
+    </SubToolbox>
 	   </div>
 
     <SubToolbox
@@ -346,6 +458,62 @@ const DataTransparencyCenter: React.FC = () => {
       <p className="font-black text-[11px] uppercase tracking-wide">Last YouTube Sync</p>
       <p className="font-bold text-sm">{influencePanel.lastSync || "Never"}</p>
      </div>
+     {(() => {
+      const verification =
+       (
+        influencePanel.syncRunSummary as
+         | {
+            analyticsVerification?: {
+             thumbnailMetrics?: {
+              impressionsAvailable?: boolean
+              ctrAvailable?: boolean
+              requestShapeHealthy?: boolean
+              failureEvents?: number
+             }
+             creatorContentType?: {
+              status?: "available" | "quarantined"
+              rowCount?: number
+             }
+            }
+           }
+         | undefined
+       )?.analyticsVerification
+      if (!verification) return null
+      return (
+       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="border-[3px] border-black rounded-xl p-3 bg-white">
+         <p className="font-black text-[11px] uppercase tracking-wide">
+          Impressions Availability
+         </p>
+         <p className="font-bold text-sm">
+          {verification.thumbnailMetrics?.impressionsAvailable ? "Available" : "Unavailable"}
+         </p>
+        </div>
+        <div className="border-[3px] border-black rounded-xl p-3 bg-white">
+         <p className="font-black text-[11px] uppercase tracking-wide">CTR Availability</p>
+         <p className="font-bold text-sm">
+          {verification.thumbnailMetrics?.ctrAvailable ? "Available" : "Unavailable"}
+         </p>
+         <p className="font-bold text-[11px] text-gray-600">
+          {verification.thumbnailMetrics?.requestShapeHealthy
+           ? "Request shape healthy"
+           : `${Number(verification.thumbnailMetrics?.failureEvents || 0)} failures recorded`}
+         </p>
+        </div>
+        <div className="border-[3px] border-black rounded-xl p-3 bg-white">
+         <p className="font-black text-[11px] uppercase tracking-wide">
+          Creator Content Type
+         </p>
+         <p className="font-bold text-sm">
+          {verification.creatorContentType?.status || "unknown"}
+         </p>
+         <p className="font-bold text-[11px] text-gray-600">
+          {Number(verification.creatorContentType?.rowCount || 0)} tagged rows
+         </p>
+        </div>
+       </div>
+      )
+     })()}
      <div className="border-[3px] border-black rounded-xl p-3 bg-white">
       <p className="font-black text-[11px] uppercase tracking-wide">Sync Run Summary (raw)</p>
       <pre className="text-[11px] font-mono whitespace-pre-wrap break-words max-h-48 overflow-auto bg-gray-50 border border-black/20 rounded-lg p-3">

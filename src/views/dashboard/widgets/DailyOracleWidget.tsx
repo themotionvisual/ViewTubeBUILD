@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react"
 import { WidgetShell } from "../WidgetShell"
+import { useEntitlement } from "../../../app/AppShell"
 import { Sparkles, Zap, ArrowRight, Check, RefreshCw } from "lucide-react"
 import { useBrain } from "../../../context/GlobalDataContext"
 import { generateOracleAdvice } from "../../../services/gemini"
-import { canAffordAiTokens, getCurrentEntitlement } from "../../../services/billingEntitlement"
+import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
 
 const ORACLE_STORAGE_KEY = "vt_daily_oracle"
@@ -93,8 +94,8 @@ export const DailyOracleWidget = ({
 }: any) => {
  const { brain } = useBrain()
  const ORACLE_COST = getAiTokenCost("dailyOracleRefresh")
- const entitlement = getCurrentEntitlement()
- const canAffordOracle = canAffordAiTokens(ORACLE_COST)
+ const entitlement = useEntitlement()
+ const canAffordOracle = canAffordAiTokensFromState(entitlement, ORACLE_COST)
  const [isGenerating, setIsGenerating] = useState(false)
  const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
  const todayKey = new Date().toISOString().split("T")[0]

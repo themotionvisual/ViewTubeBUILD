@@ -1,7 +1,8 @@
 import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
+import { useEntitlement } from "../../../app/AppShell"
 import { Hash, Sparkles, Copy, Check, TrendingUp, TrendingDown, Minus } from "lucide-react"
-import { canAffordAiTokens, getCurrentEntitlement } from "../../../services/billingEntitlement"
+import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
 
 interface HashtagResult {
@@ -16,8 +17,8 @@ export const HashtagAnalyzerWidget = ({
 }: any) => {
  const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
  const HASHTAG_ANALYZE_COST = getAiTokenCost("hashtagAnalyze")
- const entitlement = getCurrentEntitlement()
- const canAffordAnalyze = canAffordAiTokens(HASHTAG_ANALYZE_COST)
+ const entitlement = useEntitlement()
+ const canAffordAnalyze = canAffordAiTokensFromState(entitlement, HASHTAG_ANALYZE_COST)
  const [input, setInput] = useState("")
  const [results, setResults] = useState<HashtagResult[]>([])
  const [analyzing, setAnalyzing] = useState(false)

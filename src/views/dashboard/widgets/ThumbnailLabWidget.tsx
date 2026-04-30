@@ -1,7 +1,8 @@
 import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
+import { useEntitlement } from "../../../app/AppShell"
 import { Image as ImageIcon, Sparkles, Download, Search, CheckCircle2, AlertTriangle, Upload, ArrowRight } from "lucide-react"
-import { canAffordAiTokens, getCurrentEntitlement } from "../../../services/billingEntitlement"
+import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 
 type TabMode = "generate" | "analyze" | "abtest"
 
@@ -25,8 +26,8 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   const videos = data.canonicalRows || []
   const activeVideo = videos.find((v: any) => v.videoId === selectedVideo)
   const modeTokenCost = mode === "generate" ? 8 : 5
-  const entitlement = getCurrentEntitlement()
-  const canAffordModeCost = canAffordAiTokens(modeTokenCost)
+  const entitlement = useEntitlement()
+  const canAffordModeCost = canAffordAiTokensFromState(entitlement, modeTokenCost)
 
   const modeGuardReason = (() => {
     if (mode === "generate" && !prompt.trim()) return "Add prompt before generating."

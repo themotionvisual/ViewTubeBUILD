@@ -390,3 +390,77 @@
   background-color: rgba(255, 255, 255, 0.35);
   border-bottom: 2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black);
 }
+
+/* ═══ DASHBOARD HEADER MODULE ═══ */
+.dashboard-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 3px solid #000;
+  border-radius: 0 0 12px 12px;
+  margin: 0 -4px 16px;
+  /* overflow: hidden; removed so dropdown can escape */
+  box-shadow: 0 4px 0 0 rgba(0,0,0,0.08);
+  /* Slide-in animation */
+  animation: headerSlideIn 600ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform: translateX(100%);
+}
+
+@keyframes headerSlideIn {
+  to { transform: translateX(0); }
+}
+
+.dashboard-header-bar {
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: #fff;
+  border-bottom: 3px solid #000;
+}
+
+.dashboard-header-ticker {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border-radius: 0 0 9px 9px;
+  background: linear-gradient(90deg, #40C6E9, #579AFF);
+}
+
+.vt-header-btn {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #000;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 2px 2px 0 0 rgba(0,0,0,0.5);
+}
+
+.vt-header-btn:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 0 rgba(0,0,0,0.5);
+}
+
+.vt-marquee-track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  animation: marqueeScroll 30s linear infinite;
+  padding-left: 100%;
+  font-size: 11px;
+}
+
+@keyframes marqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}

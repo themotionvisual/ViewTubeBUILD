@@ -28,6 +28,7 @@ import {
  ReferenceLine,
 } from "recharts"
 import { getMasterRows } from "../../services/analyticsSelectors"
+import { resolveMetricNumber } from "../../services/canonicalMetricResolver"
 
 // Neo-brutalist color palette
 const COLORS = {
@@ -106,57 +107,86 @@ const MasterGraphsPage: React.FC = () => {
  const navigate = useNavigate()
  const canonicalRows = useMemo(() => getMasterRows("lifetime", "api"), [])
  const canonicalTop = useMemo(() => canonicalRows.slice(0, 8), [canonicalRows])
+ const chartReadyRows = useMemo(
+  () =>
+   canonicalTop.map((row) => ({
+    row,
+    revenue: resolveMetricNumber(row, "revenue").value,
+    watchHours: resolveMetricNumber(row, "watchHours").value,
+    subscribers: resolveMetricNumber(row, "subscribersGained").value,
+    ctr: resolveMetricNumber(row, "ctr").value,
+    impressions: resolveMetricNumber(row, "impressions").value,
+    views: resolveMetricNumber(row, "views").value,
+    retention: resolveMetricNumber(row, "avp").value,
+   })),
+  [canonicalTop],
+ )
 
  const mockRevenueData = useMemo(
   () =>
-   canonicalTop
-    .filter((row) => (row.metrics.revenue.value || 0) > 0)
-    .map((row) => ({
-     name: row.title || "Untitled Video",
-     value: Number(row.metrics.revenue.value || 0),
+   chartReadyRows
+    .filter((entry) => entry.revenue !== null && entry.revenue > 0)
+    .map((entry) => ({
+     name: entry.row.title || "Untitled Video",
+     value: Number(entry.revenue || 0),
     })),
-  [canonicalTop],
+  [chartReadyRows],
  )
 
  const mockWatchTimeData = useMemo(
   () =>
-   canonicalTop
-    .filter((row) => (row.metrics.watchHours.value || 0) > 0)
-    .map((row) => ({
-     name: row.title || "Untitled Video",
-     value: Number(row.metrics.watchHours.value || 0),
+   chartReadyRows
+    .filter((entry) => entry.watchHours !== null && entry.watchHours > 0)
+    .map((entry) => ({
+     name: entry.row.title || "Untitled Video",
+     value: Number(entry.watchHours || 0),
     })),
-  [canonicalTop],
+  [chartReadyRows],
  )
 
  const mockSubscribersData = useMemo(
   () =>
-   canonicalTop.map((row) => ({
-    name: row.title || "Untitled Video",
-    value: Number(Math.round(row.metrics.subscribersGained.value || 0)),
+   chartReadyRows.map((entry) => ({
+    name: entry.row.title || "Untitled Video",
+    value: Number(Math.round(entry.subscribers || 0)),
    })),
-  [canonicalTop],
+  [chartReadyRows],
  )
 
  const mockValueMatrixData = useMemo(
   () =>
-   canonicalTop.map((row) => ({
-    ctr: Number(row.metrics.ctr.value || 0),
-    retention: Number(row.metrics.avp.value || 0),
-    views: Number(row.metrics.views.value || 0),
-    name: row.title || "Untitled Video",
+   chartReadyRows
+    .filter(
+     (entry) =>
+      entry.ctr !== null &&
+      entry.retention !== null &&
+      entry.views !== null &&
+      entry.views > 0,
+    )
+    .map((entry) => ({
+     ctr: Number(entry.ctr || 0),
+     retention: Number(entry.retention || 0),
+     views: Number(entry.views || 0),
+     name: entry.row.title || "Untitled Video",
    })),
-  [canonicalTop],
+  [chartReadyRows],
  )
 
  const mockAlgorithmData = useMemo(
   () =>
-   canonicalTop.map((row) => ({
-    ctr: Number(row.metrics.ctr.value || 0),
-    impressions: Number(row.metrics.impressions.value || 0),
-    name: row.title || "Untitled Video",
+   chartReadyRows
+    .filter(
+     (entry) =>
+      entry.ctr !== null &&
+      entry.impressions !== null &&
+      entry.impressions > 0,
+    )
+    .map((entry) => ({
+     ctr: Number(entry.ctr || 0),
+     impressions: Number(entry.impressions || 0),
+     name: entry.row.title || "Untitled Video",
    })),
-  [canonicalTop],
+  [chartReadyRows],
  )
 
  const mockDeviceData = useMemo(() => {

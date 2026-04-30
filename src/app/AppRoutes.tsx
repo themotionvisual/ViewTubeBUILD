@@ -35,6 +35,7 @@ import StoryboardStudio from "../views/StoryboardStudio"
 import { ComponentGridLab } from "../components/ComponentGridLab"
 import { IntegratedRemotionEditor } from "../editor-ui/IntegratedRemotionEditor"
 import GraphsPage from "../views/GraphsPage"
+import GraphsShortsRetentionPage from "../views/GraphsShortsRetentionPage"
 
 const Placeholder = ({ title }: { title: string }) => (
  <div className="flex items-center justify-center h-full">
@@ -55,6 +56,7 @@ export const AppRoutes: React.FC = () => {
    <Route path="/legacy/research-lab" element={<ResearchLab />} />
    <Route path="/research-lab" element={<ResearchLabToolbox />} />
    <Route path="/graphs" element={<GraphsPage />} />
+   <Route path="/graphs/shorts-retention" element={<GraphsShortsRetentionPage />} />
    <Route path="/legacy/data-vizualizations" element={<DataVisualizations />} />
    <Route path="/studio/internal-analytics" element={<InternalAnalyticsPanel />} />
    <Route path="/settings" element={<Settings />} />

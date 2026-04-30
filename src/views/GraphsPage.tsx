@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react"
+import { Link } from "react-router-dom"
 import { getMasterRows } from "../services/analyticsSelectors"
 import { applyGlobalRowFilters } from "../services/analyticsRuntime"
 import type { AnalyticsWindow, CanonicalVideoRow } from "../services/analyticsContract"
@@ -53,6 +54,11 @@ const GraphsPage: React.FC = () => {
      </p>
     </div>
     <div className="flex items-center gap-3">
+     <Link
+      to="/graphs/shorts-retention"
+      className="h-12 px-4 bg-white text-black rounded-xl text-[11px] font-black uppercase tracking-wider border-[4px] border-black inline-flex items-center">
+      Shorts Retention Page
+     </Link>
      <span className="text-[11px] font-black uppercase text-black/60">Timeframe:</span>
      <select value={win} onChange={e => setWin(e.target.value as AnalyticsWindow)}
       className="h-12 px-4 border-[4px] border-black rounded-xl text-[14px] font-black uppercase tracking-wider bg-[#CCFF00] outline-none cursor-pointer">

@@ -2058,6 +2058,8 @@ export const NativeUIKit = () => (
   <SectionLabel label="32 — Dropdown Action Menu" />
   <DropdownMenuDemo />
   <SectionLabel label="33 — Stacked Area Chart" />
-  <AreaChartDemo />
+ <AreaChartDemo />
  </div>
 )
+
+export default NativeUIKit

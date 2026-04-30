@@ -2,13 +2,15 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   applyTimelineCommand,
   buildLaunchProjectJson,
+  createRemotionRenderJobPayload,
+  createRenderJobRequestFromBridgePayload,
   createMediaAssetFromFile,
   createMediaAssetFromUrl,
-  createRenderJobRequest,
   createTimelineState,
   enqueueRemotionRenderJob,
   parseLaunchProjectJson,
   pollRemotionRenderJob,
+  serializeRemotionRenderJobPayload,
   timelineToComposition,
   type EditorClip,
   type RenderJobStatus,
@@ -403,18 +405,13 @@ export const LaunchEditor: React.FC = () => {
 
   const queueRender = async () => {
     try {
-      const request = createRenderJobRequest({
-        projectId: `launch-${Date.now()}`,
+      const payload = createRemotionRenderJobPayload({
+        state,
         format: renderFormat,
         resolutionProfile,
         aspect,
-        compositionSpec: {
-          fps: composition.fps,
-          width: composition.width,
-          height: composition.height,
-          durationInFrames: composition.durationInFrames,
-        },
       });
+      const request = createRenderJobRequestFromBridgePayload(payload, `launch-${Date.now()}`);
       const queued = await enqueueRemotionRenderJob(API_BASE, request);
       setRenderJobs((prev) => [queued, ...prev]);
       setStatus(`Render queued: ${queued.jobId}`);
@@ -436,6 +433,24 @@ export const LaunchEditor: React.FC = () => {
     } catch (error) {
       setStatus(`Render failed: ${(error as Error).message}`);
     }
+  };
+
+  const exportRemotionJob = () => {
+    const payload = createRemotionRenderJobPayload({
+      state,
+      format: renderFormat,
+      resolutionProfile,
+      aspect,
+    });
+    const json = serializeRemotionRenderJobPayload(payload);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `viewtube-launch-editor.remotion.${renderFormat}.job.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setStatus("Remotion bridge job exported.");
   };
 
   const runOracle = async () => {
@@ -734,6 +749,7 @@ export const LaunchEditor: React.FC = () => {
               <div className="grid grid-cols-2 gap-2">
                 <button className="border-[2px] px-2 py-1 text-xs font-black" style={{ borderColor: COLORS.black, background: COLORS.white }} onClick={saveProject}>Save JSON</button>
                 <button className="border-[2px] px-2 py-1 text-xs font-black" style={{ borderColor: COLORS.black, background: COLORS.white }} onClick={() => loadRef.current?.click()}>Load JSON</button>
+                <button className="border-[2px] px-2 py-1 text-xs font-black" style={{ borderColor: COLORS.black, background: COLORS.white }} onClick={exportRemotionJob}>Save Remotion Job</button>
                 <input ref={loadRef} type="file" accept="application/json" onChange={(e) => void loadProject(e)} className="hidden" />
               </div>
               <div className="mt-2 max-h-28 overflow-auto border-[2px] p-1 text-[10px] font-bold" style={{ borderColor: COLORS.black, background: "#f9f9f9" }}>

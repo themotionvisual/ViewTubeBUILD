@@ -9,3 +9,4 @@ export * from "./ai/patchEngine";
 export * from "./media/mediaImport";
 export * from "./export/exportEngine";
 export * from "./export/renderJobs";
+export * from "./export/remotionBridge";

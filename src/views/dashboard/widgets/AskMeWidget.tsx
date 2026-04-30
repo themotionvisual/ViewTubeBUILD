@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react"
 import { WidgetShell } from "../WidgetShell"
+import { useEntitlement } from "../../../app/AppShell"
 import { MessageSquare, Send, Sparkles, Bookmark, Trash2 } from "lucide-react"
-import { canAffordAiTokens, getCurrentEntitlement } from "../../../services/billingEntitlement"
+import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
 
 interface Message {
@@ -23,8 +24,8 @@ export const AskMeWidget = ({
 }: any) => {
  const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
  const ASK_COST = getAiTokenCost("askMeQuestion")
- const entitlement = getCurrentEntitlement()
- const canAffordAsk = canAffordAiTokens(ASK_COST)
+ const entitlement = useEntitlement()
+ const canAffordAsk = canAffordAiTokensFromState(entitlement, ASK_COST)
  const [messages, setMessages] = useState<Message[]>(() => {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]") } catch { return [] }
  })

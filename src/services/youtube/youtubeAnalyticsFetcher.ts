@@ -20,6 +20,7 @@ export type AnalyticsMetricGroupName =
  | "impressions_ctr"
  | "monetization"
  | "audience_mix"
+ | "end_screen"
 
 export type AnalyticsGroupFetchResult = {
  ok: boolean
@@ -30,8 +31,29 @@ export type AnalyticsGroupFetchResult = {
  rowCount?: number
 }
 
+type AnalyticsRequestClass =
+ | "video_filter_chunk"
+ | "video_top_videos_channel_filter"
+ | "channel_creator_content_type"
+
+export type VideoContentTypeSyncStatus = {
+ status: "available" | "quarantined"
+ requestClass: "channel_creator_content_type"
+ idsTried: string[]
+ disabledForSession: boolean
+ rowCount: number
+ reason?: string
+ fetchedAt: number
+}
+
+export type VideoContentTypeFetchResult = {
+ map: Map<string, string>
+ status: VideoContentTypeSyncStatus
+}
+
 const ANALYTICS_VIDEO_PAGE_SIZE = 200
 const MAX_ANALYTICS_VIDEO_PAGES = 50
+const MAX_VIDEO_IDS_PER_FILTER = 25
 
 const unsupportedVideoAnalyticsMetrics = new Set<string>()
 const disabledAnalyticsGroups = new Set<AnalyticsMetricGroupName>()
@@ -41,11 +63,133 @@ const metricCapabilityByMetric = new Map<
  { status: "available" | "unsupported"; reasonCode?: string }
 >()
 
+const VIDEO_METRIC_GROUPS: Record<AnalyticsMetricGroupName, string[]> = {
+ core_performance: [
+  "views",
+  "estimatedMinutesWatched",
+  "averageViewDuration",
+  "averageViewPercentage",
+  "subscribersGained",
+  "estimatedRedMinutesWatched",
+ ],
+ engagement: [
+  "likes",
+  "comments",
+  "shares",
+  "engagedViews",
+  "subscribersLost",
+  "dislikes",
+  "videosAddedToPlaylists",
+  "videosRemovedFromPlaylists",
+ ],
+ impressions_ctr: [
+  "videoThumbnailImpressions",
+  "videoThumbnailImpressionsClickRate",
+ ],
+ monetization: [
+  "estimatedRevenue",
+  "estimatedAdRevenue",
+  "grossRevenue",
+  "rpm",
+  "cpm",
+  "monetizedPlaybacks",
+  "playbackBasedCpm",
+  "adImpressions",
+  "estimatedRedPartnerRevenue",
+ ],
+ audience_mix: [
+  "annotationClickThroughRate",
+  "annotationCloseRate",
+  "annotationImpressions",
+  "annotationClickableImpressions",
+  "annotationClosableImpressions",
+  "annotationClicks",
+  "annotationCloses",
+  "cardClickRate",
+  "cardImpressions",
+  "cardClicks",
+  "cardTeaserImpressions",
+  "cardTeaserClicks",
+  "cardTeaserClickRate",
+ ],
+ end_screen: [
+ ],
+}
+
+export const buildScopedVideoMetricGroups = (): Record<
+ AnalyticsMetricGroupName,
+ string[]
+> => ({
+ core_performance: filterSupportedMetrics(
+  VIDEO_METRIC_GROUPS.core_performance,
+  "youtube_analytics_v2",
+  "video",
+ ),
+ engagement: filterSupportedMetrics(
+  VIDEO_METRIC_GROUPS.engagement,
+  "youtube_analytics_v2",
+  "video",
+ ),
+ impressions_ctr: [...VIDEO_METRIC_GROUPS.impressions_ctr],
+ monetization: filterSupportedMetrics(
+  VIDEO_METRIC_GROUPS.monetization,
+  "youtube_analytics_v2",
+  "video",
+ ),
+ audience_mix: filterSupportedMetrics(
+  VIDEO_METRIC_GROUPS.audience_mix,
+  "youtube_analytics_v2",
+  "video",
+ ),
+ end_screen: filterSupportedMetrics(
+  VIDEO_METRIC_GROUPS.end_screen,
+  "youtube_analytics_v2",
+  "video",
+ ),
+})
+
 const getErrorStatus = (error: unknown): number | undefined => {
  if (typeof error !== "object" || error === null) return undefined
  if (!("status" in error)) return undefined
  const status = Number((error as { status?: unknown }).status)
  return Number.isFinite(status) ? status : undefined
+}
+
+export const getAnalyticsRequestClass = (
+ ids: string,
+ metrics: string[],
+): AnalyticsRequestClass => {
+ if (metrics.includes("creatorContentType")) {
+  return "channel_creator_content_type"
+ }
+ return ids.startsWith("video==")
+  ? "video_filter_chunk"
+  : "video_top_videos_channel_filter"
+}
+
+export const buildChannelScopedVideoIdCandidates = (
+ channelId?: string,
+): string[] =>
+ Array.from(
+  new Set(
+   channelId ? ["channel==MINE", `channel==${channelId}`] : ["channel==MINE"],
+  ),
+ )
+
+const THUMBNAIL_VIDEO_METRICS = new Set<string>([
+ "videoThumbnailImpressions",
+ "videoThumbnailImpressionsClickRate",
+])
+
+export const shouldForceViewsMetric = (
+ ids: string,
+ metrics: string[],
+ includeContentType: boolean,
+): boolean => {
+ if (includeContentType) return false
+ if (ids.startsWith("video==")) return false
+ if (metrics.length === 0) return false
+ return !metrics.every((metric) => THUMBNAIL_VIDEO_METRICS.has(metric))
 }
 
 export const fetchAnalytics = async (
@@ -70,80 +214,27 @@ export const fetchAnalytics = async (
  >()
  const knownInvalidCombos = new Set<string>()
  const diagnosticsFailures: SyncDiagnostics["failureReasons"] = []
- const optionalMetricsEnabled = options.optionalMetricsEnabled !== false
+ // Impressions + CTR are now required for video sync attempts.
+ // Keep option parsing for compatibility, but do not skip the group.
+ const optionalMetricsEnabled = true
 
  const requestCharCounts: number[] = []
  const maxRequestChars = 1900
  let splitRetries = 0
+ const loggedFailureDedup = new Set<string>()
+ const impressionsProbeCache = new Map<
+  string,
+  { groupedSupported: boolean; minimalPagingSupported: boolean }
+ >()
 
  const targetVideoIdSet = new Set(
   Array.isArray(options.targetVideoIds)
    ? options.targetVideoIds.filter((videoId): videoId is string => !!videoId)
    : [],
  )
+ const channelIdCandidates = buildChannelScopedVideoIdCandidates(channelId)
 
- const metricGroups: Record<AnalyticsMetricGroupName, string[]> = {
-  core_performance: [
-   "views",
-   "estimatedMinutesWatched",
-   "averageViewDuration",
-   "averageViewPercentage",
-   "subscribersGained",
-  ],
-  engagement: [
-   "likes",
-   "comments",
-   "shares",
-   "engagedViews",
-   "subscribersLost",
-   "dislikes",
-   "cardImpressions",
-   "cardClicks",
-  ],
-  impressions_ctr: [
-   "videoThumbnailImpressions",
-   "videoThumbnailImpressionsClickRate",
-  ],
-  monetization: [
-   "estimatedRevenue",
-   "estimatedAdRevenue",
-   "rpm",
-   "cpm",
-   "monetizedPlaybacks",
-   "playbackBasedCpm",
-   "adImpressions",
-  ],
-  audience_mix: [
-   "annotationClickThroughRate",
-   "annotationCloseRate",
-   "redViews",
-   "estimatedRedPartnerRevenue",
-  ],
- }
-
- const scopedMetricGroups: Record<AnalyticsMetricGroupName, string[]> = {
-  core_performance: filterSupportedMetrics(
-   metricGroups.core_performance,
-   "youtube_analytics_v2",
-   "video",
-  ),
-  engagement: filterSupportedMetrics(
-   metricGroups.engagement,
-   "youtube_analytics_v2",
-   "video",
-  ),
-  impressions_ctr: [...metricGroups.impressions_ctr],
-  monetization: filterSupportedMetrics(
-   metricGroups.monetization,
-   "youtube_analytics_v2",
-   "video",
-  ),
-  audience_mix: filterSupportedMetrics(
-   metricGroups.audience_mix,
-   "youtube_analytics_v2",
-   "video",
-  ),
- }
+ const scopedMetricGroups = buildScopedVideoMetricGroups()
 
  const filteredMetricGroups: Record<AnalyticsMetricGroupName, string[]> = {
   core_performance: scopedMetricGroups.core_performance.filter(
@@ -171,6 +262,11 @@ export const fetchAnalytics = async (
     !unsupportedVideoAnalyticsMetrics.has(metric) &&
     !runDisabledMetrics.has(metric),
   ),
+  end_screen: scopedMetricGroups.end_screen.filter(
+   (metric) =>
+    !unsupportedVideoAnalyticsMetrics.has(metric) &&
+    !runDisabledMetrics.has(metric),
+  ),
  }
 
  if (disabledAnalyticsGroups.size > 0) {
@@ -183,18 +279,11 @@ export const fetchAnalytics = async (
   )
  }
 
- if (!optionalMetricsEnabled) {
-  filteredMetricGroups.impressions_ctr = []
-  metricGroups.impressions_ctr.forEach((metric) =>
-   runDisabledMetrics.add(metric),
-  )
- }
-
  const urlIdsForFiltered = channelId ? `channel==${channelId}` : "channel==MINE"
  const maxMetricsString = (
   Object.values(filteredMetricGroups) as string[][]
  ).reduce((currentMax, metrics) => {
-  const safeMetrics = Array.from(new Set(["views", ...metrics]))
+  const safeMetrics = Array.from(new Set(metrics))
   const asString = safeMetrics.join(",")
   return asString.length > currentMax.length ? asString : currentMax
  }, "views")
@@ -210,7 +299,10 @@ export const fetchAnalytics = async (
    candidates.push(`video==${current.join(",")}`)
    current = []
   }
-  for (const videoId of videoIds) {
+ for (const videoId of videoIds) {
+   if (current.length >= MAX_VIDEO_IDS_PER_FILTER) {
+    flush()
+   }
    const next = current.length === 0 ? [videoId] : [...current, videoId]
    const filterValue = `video==${next.join(",")}`
    const encoded = encodeURIComponent(filterValue)
@@ -226,31 +318,49 @@ export const fetchAnalytics = async (
   return candidates
  }
 
- const idCandidates: string[] = []
- if (targetVideoIdSet.size > 0) {
-  idCandidates.push(...buildVideoFilterCandidates(Array.from(targetVideoIdSet)))
- } else {
-  idCandidates.push(channelId ? `channel==${channelId}` : "channel==MINE")
- }
+ const filteredIdCandidates =
+  targetVideoIdSet.size > 0
+   ? buildVideoFilterCandidates(Array.from(targetVideoIdSet))
+   : []
+ const idCandidates =
+  filteredIdCandidates.length > 0 ? filteredIdCandidates : [...channelIdCandidates]
 
  const fetchVideoReportPage = async (
   ids: string,
   metrics: string[],
   startIndex = 1,
+  opts: {
+   includeSort?: boolean
+   includeStartIndex?: boolean
+   includeMaxResults?: boolean
+  } = {},
  ): Promise<any> => {
-  const safeMetrics = Array.from(
-   new Set(["views", ...metrics.filter((m) => m !== "creatorContentType")]),
-  )
   const isVideoFilter = ids.startsWith("video==")
+  const includeContentType = metrics.includes("creatorContentType")
+  const includeSort = opts.includeSort ?? !isVideoFilter
+  const includeStartIndex = opts.includeStartIndex ?? !isVideoFilter
+  const includeMaxResults = opts.includeMaxResults ?? true
+  const safeMetrics = Array.from(
+   new Set(metrics.filter((metric) => metric !== "creatorContentType")),
+  )
+  if (
+   shouldForceViewsMetric(ids, safeMetrics, includeContentType) &&
+   !safeMetrics.includes("views")
+  ) {
+   safeMetrics.unshift("views")
+  }
+  if (safeMetrics.length === 0) {
+   safeMetrics.push("views")
+  }
   const urlIds = isVideoFilter ? urlIdsForFiltered : ids
   const filters = isVideoFilter ? `&filters=${encodeURIComponent(ids)}` : ""
-  const includeContentType =
-   isVideoFilter && metrics.includes("creatorContentType")
   const dims = includeContentType ? "video,creatorContentType" : "video"
-  const baseUrl = `https://youtubeanalytics.googleapis.com/v2/reports?ids=${urlIds}&startDate=${startDate}&endDate=${endDate}&metrics=${safeMetrics.join(",")}&dimensions=${dims}${filters}&maxResults=${ANALYTICS_VIDEO_PAGE_SIZE}`
-  const url = isVideoFilter
-   ? baseUrl
-   : `${baseUrl}&startIndex=${startIndex}&sort=-views`
+  const maxResultsParam = includeMaxResults
+   ? `&maxResults=${ANALYTICS_VIDEO_PAGE_SIZE}`
+   : ""
+  const startIndexParam = !isVideoFilter && includeStartIndex ? `&startIndex=${startIndex}` : ""
+  const sortParam = !isVideoFilter && includeSort ? "&sort=-views" : ""
+  const url = `https://youtubeanalytics.googleapis.com/v2/reports?ids=${urlIds}&startDate=${startDate}&endDate=${endDate}&metrics=${safeMetrics.join(",")}&dimensions=${dims}${filters}${maxResultsParam}${startIndexParam}${sortParam}`
   requestCharCounts.push(url.length)
   const token = await refreshTokenIfExpired()
   const response = await proxyFetch(url, {
@@ -306,13 +416,60 @@ export const fetchAnalytics = async (
   return { columnHeaders: headersOut, rows: rowsOut }
  }
 
+ const filterPayloadToTargetVideos = (payload: any): any => {
+  if (targetVideoIdSet.size === 0) return payload
+  if (
+   !payload ||
+   !Array.isArray(payload.columnHeaders) ||
+   !Array.isArray(payload.rows)
+  ) {
+   return payload
+  }
+  const headers = payload.columnHeaders.map((header: any) =>
+   String(header?.name || "").toLowerCase(),
+  )
+  const videoIdx = headers.findIndex(
+   (header: string) => header === "video" || header === "videoid",
+  )
+  if (videoIdx < 0) return payload
+  return {
+   ...payload,
+   rows: payload.rows.filter((row: unknown) => {
+    if (!Array.isArray(row)) return false
+    const videoId = String(row[videoIdx] || "")
+    return targetVideoIdSet.has(videoId)
+   }),
+  }
+ }
+
+ const recordFailure = (failure: SyncDiagnostics["failureReasons"][number]) => {
+  const dedupKey = [
+   options.window || "lifetime",
+   failure.group,
+   failure.ids,
+   failure.requestClass || "na",
+   (failure.metrics || []).join(","),
+   failure.status || "na",
+   failure.outcome || "na",
+   failure.reason,
+  ].join("::")
+  if (loggedFailureDedup.has(dedupKey)) return
+  loggedFailureDedup.add(dedupKey)
+  diagnosticsFailures.push(failure)
+ }
+
  const fetchVideoReport = async (
   ids: string,
   metrics: string[],
+  requestOptions?: {
+   includeSort?: boolean
+   includeStartIndex?: boolean
+   includeMaxResults?: boolean
+  },
  ): Promise<any> => {
   const isVideoFilter = ids.startsWith("video==")
   if (isVideoFilter) {
-   const payload = await fetchVideoReportPage(ids, metrics, 1)
+   const payload = await fetchVideoReportPage(ids, metrics, 1, requestOptions)
    return flattenReportPayloads([payload])
   }
   const payloadPages: any[] = []
@@ -322,7 +479,7 @@ export const fetchAnalytics = async (
   for (let page = 0; page < maxPages; page += 1) {
    let payload: any
    try {
-    payload = await fetchVideoReportPage(ids, metrics, startIndex)
+    payload = await fetchVideoReportPage(ids, metrics, startIndex, requestOptions)
    } catch (error) {
     const status = getErrorStatus(error)
     if (page > 0 && status === 400) break
@@ -373,22 +530,14 @@ export const fetchAnalytics = async (
   metrics: string[],
   depth = 0,
   allowSplitOn400 = true,
+  requestOptions?: {
+   includeSort?: boolean
+   includeStartIndex?: boolean
+   includeMaxResults?: boolean
+  },
  ): Promise<any> => {
-  const hasImpressionMetrics = metrics.some(
-   (m) =>
-    m.includes("Impressions") ||
-    m.includes("clickThroughRate") ||
-    m.includes("ClickRate"),
-  )
-  if (hasImpressionMetrics && ids === "channel==MINE") {
-   const error: any = new Error(
-    "Invalid dimension/metric combination with channel==MINE",
-   )
-   error.status = 400
-   throw error
-  }
   try {
-   return await fetchVideoReport(ids, metrics)
+   return await fetchVideoReport(ids, metrics, requestOptions)
   } catch (error) {
    const status = getErrorStatus(error)
    if (status === 401) {
@@ -408,6 +557,15 @@ export const fetchAnalytics = async (
     filterIds.length > 1 &&
     depth < 10
    ) {
+    recordFailure({
+     group: "split_retry",
+     ids,
+     metrics,
+     status,
+     reason: "Split retry triggered for invalid filtered video request.",
+     requestClass: getAnalyticsRequestClass(ids, metrics),
+     outcome: "split_retry",
+    })
     splitRetries += 1
     const mid = Math.ceil(filterIds.length / 2)
     const left = `video==${filterIds.slice(0, mid).join(",")}`
@@ -421,6 +579,7 @@ export const fetchAnalytics = async (
        metrics,
        depth + 1,
        allowSplitOn400,
+       requestOptions,
       ),
      )
     } catch (leftError) {
@@ -433,6 +592,7 @@ export const fetchAnalytics = async (
        metrics,
        depth + 1,
        allowSplitOn400,
+       requestOptions,
       ),
      )
     } catch (rightError) {
@@ -476,6 +636,11 @@ export const fetchAnalytics = async (
    metrics: filteredMetricGroups.audience_mix,
    idsTried: [],
   },
+  end_screen: {
+   ok: false,
+   metrics: filteredMetricGroups.end_screen,
+   idsTried: [],
+  },
  }
 
  const payloads: Partial<Record<AnalyticsMetricGroupName, any[]>> = {}
@@ -489,28 +654,34 @@ export const fetchAnalytics = async (
   const aggregatedWarnings: string[] = []
   if (metrics.length === 0) {
    groupResults[groupName].ok = true
-   if (groupName === "impressions_ctr" && !optionalMetricsEnabled) {
-    groupResults[groupName].warnings = [
-     "Skipped: optional thumbnail impressions/CTR metrics are disabled (opt-in only).",
-    ]
-   } else {
-    groupResults[groupName].warnings = disabledAnalyticsGroups.has(groupName)
-     ? [
-        "Skipped: metric group disabled for this session due to repeated API errors.",
-       ]
-     : ["No supported metrics for youtube_analytics_v2 + video scope."]
-   }
+   groupResults[groupName].warnings = disabledAnalyticsGroups.has(groupName)
+    ? [
+       "Skipped: metric group disabled for this session due to repeated API errors.",
+      ]
+    : groupName === "impressions_ctr"
+      ? [
+         "Required thumbnail impressions/CTR metrics unavailable for this sync context.",
+        ]
+      : ["No supported metrics for youtube_analytics_v2 + video scope."]
    continue
   }
   const groupIdCandidates =
    groupName === "impressions_ctr"
-    ? idCandidates.filter((c) => c.startsWith("video=="))
+    ? channelIdCandidates
     : idCandidates
   if (groupName === "impressions_ctr" && groupIdCandidates.length === 0) {
    groupResults[groupName].ok = true
    groupResults[groupName].warnings = [
     "Skipped: No video IDs provided for chunking impression metrics.",
    ]
+   filteredMetricGroups.impressions_ctr.forEach((metric) => {
+    runMetricCapabilities.set(metric, {
+     metric,
+     status: "unsupported",
+     reasonCode: "blocked_by_missing_video_ids",
+     source: "api",
+    })
+   })
    continue
   }
   for (const ids of groupIdCandidates) {
@@ -530,72 +701,239 @@ export const fetchAnalytics = async (
    }
    groupResults[groupName].idsTried.push(ids)
    if (groupName === "impressions_ctr") {
-    const metricPayloads: any[] = []
-    const metricWarnings: string[] = []
-    const metricsToTry = Array.from(new Set(activeMetrics))
-    for (const metric of metricsToTry) {
-     const knownCapability = metricCapabilityByMetric.get(metric)
-     if (knownCapability?.status === "unsupported") {
-      runMetricCapabilities.set(metric, {
-       metric,
-       status: "unsupported",
-       reasonCode: knownCapability.reasonCode || "api_unsupported",
-       source: "api",
+    const shapeKey = `${options.window || "lifetime"}::${groupName}::${ids}`
+    const comboKey = `${shapeKey}::${activeMetrics.join(",")}`
+    const cachedShape = impressionsProbeCache.get(shapeKey)
+    if (knownInvalidCombos.has(comboKey)) {
+      recordFailure({
+      group: groupName,
+      ids,
+      metrics: activeMetrics,
+      status: 400,
+      reason:
+       "Suppressed known-invalid top-videos impressions/CTR request for this sync.",
+      requestClass: "video_top_videos_channel_filter",
+      outcome: "suppressed",
       })
       continue
-     }
-     try {
+    }
+    const baseAttemptShape = {
+     dimensions: "video",
+     includesSort: false,
+     includesStartIndex: false,
+     includesMaxResults: true,
+     includeContentType: false,
+    }
+    try {
       const payload = await fetchVideoReportWithSplitRetries(
        ids,
-       [metric],
+       activeMetrics,
        0,
        false,
+       {
+        includeSort: false,
+        includeStartIndex: false,
+        includeMaxResults: true,
+       },
       )
-      metricPayloads.push(payload)
+      impressionsProbeCache.set(shapeKey, {
+       groupedSupported: true,
+       minimalPagingSupported: true,
+      })
+      aggregatedPayloads.push(filterPayloadToTargetVideos(payload))
+     activeMetrics.forEach((metric) => {
       metricCapabilityByMetric.set(metric, { status: "available" })
       runMetricCapabilities.set(metric, {
        metric,
        status: "available",
        source: "api",
       })
-     } catch (metricError) {
-      const metricErrorMessage =
-       metricError instanceof Error ? metricError.message : String(metricError)
-      const metricStatus = getErrorStatus(metricError)
-      diagnosticsFailures.push({
+     })
+     groupResults[groupName].ok = true
+    } catch (groupError) {
+      const groupErrorMessage =
+       groupError instanceof Error ? groupError.message : String(groupError)
+      const groupStatus = getErrorStatus(groupError)
+      recordFailure({
        group: groupName,
        ids,
-       metrics: [metric],
-       status: metricStatus,
-       reason: metricErrorMessage,
+       metrics: activeMetrics,
+       status: groupStatus,
+       reason: groupErrorMessage,
+       requestClass: "video_top_videos_channel_filter",
+       outcome: groupStatus === 400 ? "quarantined" : "failed",
+       attemptedShape: baseAttemptShape,
       })
-      const reasonCode =
-       metricStatus === 400 ? "api_unsupported" : "api_request_failed"
-      metricWarnings.push(`${metric}: ${metricErrorMessage}`)
-      metricCapabilityByMetric.set(metric, {
-       status: "unsupported",
-       reasonCode,
-      })
-      runMetricCapabilities.set(metric, {
-       metric,
-       status: "unsupported",
-       reasonCode,
-       source: "api",
-      })
-      if (metricStatus === 400) {
-       unsupportedVideoAnalyticsMetrics.add(metric)
-       runDisabledMetrics.add(metric)
+      if (groupStatus === 400) {
+       impressionsProbeCache.set(shapeKey, {
+        groupedSupported: false,
+        minimalPagingSupported: false,
+       })
+      }
+
+      let groupedMinimalPayload: any | null = null
+      if (groupStatus === 400) {
+       try {
+        groupedMinimalPayload = await fetchVideoReportWithSplitRetries(
+         ids,
+         activeMetrics,
+         0,
+         false,
+         {
+          includeSort: false,
+          includeStartIndex: false,
+          includeMaxResults: false,
+         },
+        )
+        impressionsProbeCache.set(shapeKey, {
+         groupedSupported: true,
+         minimalPagingSupported: true,
+        })
+       } catch (minimalError) {
+        const minimalErrorMessage =
+         minimalError instanceof Error ? minimalError.message : String(minimalError)
+        const minimalStatus = getErrorStatus(minimalError)
+        recordFailure({
+         group: groupName,
+         ids,
+         metrics: activeMetrics,
+         status: minimalStatus,
+         reason: minimalErrorMessage,
+         requestClass: "video_top_videos_channel_filter",
+         outcome: minimalStatus === 400 ? "quarantined" : "failed",
+         attemptedShape: {
+          dimensions: "video",
+          includesSort: false,
+          includesStartIndex: false,
+          includesMaxResults: false,
+          includeContentType: false,
+         },
+        })
+        if (minimalStatus === 400) {
+         impressionsProbeCache.set(shapeKey, {
+          groupedSupported: false,
+          minimalPagingSupported: false,
+         })
+        }
+       }
+      }
+
+      if (groupedMinimalPayload) {
+       aggregatedPayloads.push(filterPayloadToTargetVideos(groupedMinimalPayload))
+       activeMetrics.forEach((metric) => {
+        metricCapabilityByMetric.set(metric, { status: "available" })
+        runMetricCapabilities.set(metric, {
+         metric,
+         status: "available",
+         source: "api",
+        })
+       })
+       groupResults[groupName].ok = true
+       continue
+      }
+
+      const metricPayloads: any[] = []
+      const metricWarnings: string[] = []
+      const shouldTryPerMetric =
+       !cachedShape || cachedShape.groupedSupported === false
+      for (const metric of activeMetrics) {
+       if (!shouldTryPerMetric) continue
+       const metricComboKey = `${groupName}::${ids}::${metric}`
+      if (knownInvalidCombos.has(metricComboKey)) {
+       recordFailure({
+        group: groupName,
+        ids,
+        metrics: [metric],
+        status: 400,
+        reason:
+         "Suppressed known-invalid impressions/CTR metric request for this sync.",
+        requestClass: "video_top_videos_channel_filter",
+        outcome: "suppressed",
+       })
+       continue
+      }
+       try {
+        const metricPayload = await fetchVideoReportWithSplitRetries(
+         ids,
+         [metric],
+         0,
+         false,
+         {
+          includeSort: false,
+          includeStartIndex: false,
+          includeMaxResults: true,
+         },
+        )
+        metricPayloads.push(filterPayloadToTargetVideos(metricPayload))
+       metricCapabilityByMetric.set(metric, { status: "available" })
+       runMetricCapabilities.set(metric, {
+        metric,
+        status: "available",
+        source: "api",
+       })
+      } catch (metricError) {
+       const metricErrorMessage =
+        metricError instanceof Error ? metricError.message : String(metricError)
+       const metricStatus = getErrorStatus(metricError)
+       metricWarnings.push(`${metric}: ${metricErrorMessage}`)
+        recordFailure({
+         group: groupName,
+         ids,
+         metrics: [metric],
+         status: metricStatus,
+         reason: metricErrorMessage,
+         requestClass: "video_top_videos_channel_filter",
+         outcome: metricStatus === 400 ? "quarantined" : "failed",
+         attemptedShape: baseAttemptShape,
+        })
+       metricCapabilityByMetric.set(metric, {
+        status: "unsupported",
+        reasonCode:
+         metricStatus === 400
+          ? "temporarily_unavailable_due_to_request_shape"
+          : "api_request_failed",
+       })
+       runMetricCapabilities.set(metric, {
+        metric,
+        status: "unsupported",
+        reasonCode:
+         metricStatus === 400
+          ? "temporarily_unavailable_due_to_request_shape"
+          : "api_request_failed",
+        source: "api",
+       })
+       if (metricStatus === 400) {
+        knownInvalidCombos.add(metricComboKey)
+       }
       }
      }
-    }
-    if (metricPayloads.length > 0) {
-     aggregatedPayloads.push(flattenReportPayloads(metricPayloads))
-     groupResults[groupName].ok = true
-    } else {
-     groupResults[groupName].ok = false
-    }
-    if (metricWarnings.length > 0) {
-     aggregatedWarnings.push(...metricWarnings)
+
+      if (metricPayloads.length > 0) {
+        aggregatedPayloads.push(flattenReportPayloads(metricPayloads))
+        groupResults[groupName].ok = true
+        impressionsProbeCache.set(shapeKey, {
+         groupedSupported: false,
+         minimalPagingSupported: true,
+        })
+        recordFailure({
+       group: groupName,
+       ids,
+       metrics: activeMetrics,
+       status: groupStatus,
+       reason:
+        "Recovered impressions/CTR with per-metric top-videos fallback after grouped request failed.",
+       requestClass: "video_top_videos_channel_filter",
+       outcome: "fallback_succeeded",
+      })
+     } else {
+      groupResults[groupName].ok = false
+      if (groupStatus === 400) {
+       knownInvalidCombos.add(comboKey)
+      }
+     }
+     if (metricWarnings.length > 0) {
+      aggregatedWarnings.push(...metricWarnings)
+     }
     }
     continue
    }
@@ -615,12 +953,14 @@ export const fetchAnalytics = async (
     const combinedError = error instanceof Error ? error.message : String(error)
     errors.push(combinedError)
     const status = getErrorStatus(error)
-    diagnosticsFailures.push({
+    recordFailure({
      group: groupName,
      ids,
      metrics: activeMetrics,
      status,
      reason: combinedError,
+     requestClass: getAnalyticsRequestClass(ids, activeMetrics),
+     outcome: "failed",
     })
     if (status === 400) knownInvalidCombos.add(comboKey)
     if (activeMetrics.length <= 1) {
@@ -644,12 +984,14 @@ export const fetchAnalytics = async (
        metricError instanceof Error ? metricError.message : String(metricError)
       metricWarnings.push(`${metric}: ${metricErrorMessage}`)
       const metricStatus = getErrorStatus(metricError)
-      diagnosticsFailures.push({
+      recordFailure({
        group: groupName,
        ids,
        metrics: [metric],
        status: metricStatus,
        reason: metricErrorMessage,
+       requestClass: getAnalyticsRequestClass(ids, [metric]),
+       outcome: metricStatus === 400 ? "quarantined" : "failed",
       })
       if (metricStatus === 400) {
        unsupportedVideoAnalyticsMetrics.add(metric)
@@ -792,21 +1134,51 @@ export const fetchVideoContentType = async (
  startDate: string,
  endDate: string,
  channelId?: string,
-): Promise<Map<string, string>> => {
- if (creatorContentTypeFetchDisabled) return new Map()
- const token = await refreshTokenIfExpired()
- if (!token) return new Map()
+): Promise<VideoContentTypeFetchResult> => {
  const idCandidates = channelId
   ? [`channel==${channelId}`, "channel==MINE"]
   : ["channel==MINE"]
+ if (creatorContentTypeFetchDisabled) {
+  return {
+   map: new Map(),
+   status: {
+    status: "quarantined",
+    requestClass: "channel_creator_content_type",
+    idsTried: idCandidates,
+    disabledForSession: true,
+    rowCount: 0,
+    reason: "creatorContentType fetch already disabled for this session.",
+    fetchedAt: Date.now(),
+   },
+  }
+ }
+ const token = await refreshTokenIfExpired()
+ if (!token) {
+  return {
+   map: new Map(),
+   status: {
+    status: "quarantined",
+    requestClass: "channel_creator_content_type",
+    idsTried: idCandidates,
+    disabledForSession: false,
+    rowCount: 0,
+    reason: "Missing valid YouTube token for creatorContentType fetch.",
+    fetchedAt: Date.now(),
+   },
+  }
+ }
  try {
   let data: any = null
+  let lastFailureReason = "Creator content type report returned no rows."
   for (const idParam of idCandidates) {
    const url = `https://youtubeanalytics.googleapis.com/v2/reports?ids=${idParam}&startDate=${startDate}&endDate=${endDate}&metrics=views&dimensions=video,creatorContentType&maxResults=200&sort=-views`
    const response = await proxyFetch(url, {
     headers: { Authorization: `Bearer ${token}` },
    })
-   if (!response.ok) continue
+   if (!response.ok) {
+    lastFailureReason = `HTTP ${response.status} for ${idParam}`
+    continue
+   }
    const payload = await response.json()
    if (payload?.rows?.length) {
     data = payload
@@ -818,7 +1190,18 @@ export const fetchVideoContentType = async (
    console.warn(
     "Failed to fetch creatorContentType from Analytics API; disabling for this session.",
    )
-   return new Map()
+   return {
+    map: new Map(),
+    status: {
+     status: "quarantined",
+     requestClass: "channel_creator_content_type",
+     idsTried: idCandidates,
+     disabledForSession: true,
+     rowCount: 0,
+     reason: lastFailureReason,
+     fetchedAt: Date.now(),
+    },
+   }
   }
   const contentTypeMap = new Map<string, string>()
   if (Array.isArray(data.rows)) {
@@ -839,14 +1222,35 @@ export const fetchVideoContentType = async (
     })
    }
   }
-  return contentTypeMap
+  return {
+   map: contentTypeMap,
+   status: {
+    status: "available",
+    requestClass: "channel_creator_content_type",
+    idsTried: idCandidates,
+    disabledForSession: false,
+    rowCount: contentTypeMap.size,
+    fetchedAt: Date.now(),
+   },
+  }
  } catch (error) {
   creatorContentTypeFetchDisabled = true
   console.warn(
    "Error fetching creatorContentType; disabling for this session:",
    error,
   )
-  return new Map()
+  return {
+   map: new Map(),
+   status: {
+    status: "quarantined",
+    requestClass: "channel_creator_content_type",
+    idsTried: idCandidates,
+    disabledForSession: true,
+    rowCount: 0,
+    reason: error instanceof Error ? error.message : String(error),
+    fetchedAt: Date.now(),
+   },
+  }
  }
 }
 

@@ -41,6 +41,18 @@ const COLUMN_ALIASES: Record<string, string[]> = {
  "Gender": ["gender"],
  "Viewer %": ["viewerPercentage"],
  "Country": ["country", "countryCode"],
+ "Card %": ["cardClickRate"],
+ "Teaser %": ["cardTeaserClickRate"],
+ "Teaser Clicks": ["cardTeaserClicks"],
+ "Teaser Impr": ["cardTeaserImpressions"],
+ "Ann Impr": ["annotationImpressions"],
+ "Ann Click Impr": ["annotationClickableImpressions"],
+ "Ann Close Impr": ["annotationClosableImpressions"],
+ "Ann Clicks": ["annotationClicks"],
+ "Ann Closes": ["annotationCloses"],
+ "End Screen %": ["endScreenClickRate"],
+ "ES Clicks": ["endScreenClicks"],
+ "ES Impr": ["endScreenImpressions"],
 }
 
 // Reverse map: alias -> canonical name
@@ -95,6 +107,18 @@ const COLUMN_DISPLAY_ORDER = [
  "Product clicks",
  "Orders",
  "STW %",
+ "Card %",
+ "Teaser %",
+ "Teaser Clicks",
+ "Teaser Impr",
+ "Ann Impr",
+ "Ann Click Impr",
+ "Ann Close Impr",
+ "Ann Clicks",
+ "Ann Closes",
+ "End Screen %",
+ "ES Clicks",
+ "ES Impr",
  ]
 
 export interface DataRecord {

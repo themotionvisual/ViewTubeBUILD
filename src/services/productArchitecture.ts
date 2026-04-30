@@ -57,6 +57,20 @@ export interface SyncDiagnosticsFailure {
  metrics: string[]
  status?: number
  reason: string
+ requestClass?: string
+ attemptedShape?: {
+  dimensions?: string
+  includesSort?: boolean
+  includesStartIndex?: boolean
+  includesMaxResults?: boolean
+  includeContentType?: boolean
+ }
+ outcome?:
+  | "failed"
+  | "split_retry"
+  | "suppressed"
+  | "quarantined"
+  | "fallback_succeeded"
 }
 
 export interface SyncDiagnosticsGroup {

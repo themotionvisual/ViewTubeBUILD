@@ -39,12 +39,17 @@ export const textFromUnknown = (value: unknown): string => {
 }
 
 export const canonicalKey = (value: string): string =>
- value.toLowerCase().replace(/[^a-z0-9+-]/g, "")
+ canonicalizeMetricKey(value)
 
-export const lookupKey = (value: unknown): string =>
+const canonicalDisplayKey = (value: string): string =>
  textFromUnknown(value)
   .toLowerCase()
-  .replace(/[^a-z0-9+-]/g, "")
+  .replace(/_/g, " ")
+  .replace(/\s+/g, " ")
+  .trim()
+
+export const lookupKey = (value: unknown): string =>
+ canonicalizeMetricKey(textFromUnknown(value))
 
 export const looksLikeVideoId = (value: unknown): boolean =>
  /^[a-zA-Z0-9_-]{8,}$/.test(textFromUnknown(value).trim())
@@ -77,6 +82,10 @@ Object.values(METRIC_REGISTRY).forEach((def) => {
  if (!MASTER_HEADER_ALIASES[header]) {
   MASTER_HEADER_ALIASES[header] = []
  }
+ const normalizedHeader = canonicalizeMetricKey(header)
+ if (!MASTER_HEADER_ALIASES[header].includes(normalizedHeader)) {
+  MASTER_HEADER_ALIASES[header].push(normalizedHeader)
+ }
  def.aliases.forEach((alias) => {
   const norm = canonicalizeMetricKey(alias)
   if (!MASTER_HEADER_ALIASES[header].includes(norm)) {
@@ -89,12 +98,125 @@ Object.values(METRIC_REGISTRY).forEach((def) => {
  }
 })
 
+export const MASTER_TABLE_SHORT_LABELS: Record<string, string> = {
+ "Video title": "Title",
+ "Video ID": "Video ID",
+ Format: "Format",
+ Date: "Date",
+ Views: "Views",
+ "Watch Time (Hours)": "Watch Hrs",
+ "Watch Hrs": "Watch Hrs",
+ Revenue: "Revenue",
+ "Subs +": "Subs +",
+ "Subs -": "Subs -",
+ "Likes +": "Likes +",
+ "Likes -": "Likes -",
+ Comments: "Comments",
+ Shares: "Shares",
+ "Engaged views": "Engaged",
+ Engaged: "Engaged",
+ CPM: "CPM",
+ RPM: "RPM",
+ Length: "Duration",
+ "AVD (Average View Duration)": "AVD",
+ "AVD (Sec)": "AVD",
+ AVD: "AVD",
+ "AVP (%)": "AVP %",
+ "Click-Through Rate (CTR)": "CTR %",
+ "CTR (%)": "CTR %",
+ CTR: "CTR %",
+ "CTR %": "CTR %",
+ "Impressions click-through rate (%)": "CTR %",
+ Impressions: "Impressions",
+ "Engagement Rate": "Eng Rate",
+ "STW %": "STW %",
+ "End screen click rate": "End Screen %",
+ "End Screen %": "End Screen %",
+ "End screen clicks": "ES Clicks",
+ "ES Clicks": "ES Clicks",
+ "End screen impressions": "ES Impr",
+ "ES Impr": "ES Impr",
+ "Card click rate": "Card %",
+ "Card %": "Card %",
+ "Card teaser click rate": "Teaser %",
+ "Teaser %": "Teaser %",
+ "Card teaser clicks": "Teaser Clicks",
+ "Teaser Clicks": "Teaser Clicks",
+ "Card teaser impressions": "Teaser Impr",
+ "Teaser Impr": "Teaser Impr",
+ "Annotation impressions": "Ann Impr",
+ "Ann Impr": "Ann Impr",
+ "Annotation clickable impressions": "Ann Click Impr",
+ "Ann Click Impr": "Ann Click Impr",
+ "Annotation closable impressions": "Ann Close Impr",
+ "Ann Close Impr": "Ann Close Impr",
+ "Annotation clicks": "Ann Clicks",
+ "Ann Clicks": "Ann Clicks",
+ "Annotation closes": "Ann Closes",
+ "Ann Closes": "Ann Closes",
+ "YouTube Premium Watch Time": "Red Hrs",
+ "Red Hrs": "Red Hrs",
+ Duration: "Duration",
+ "Viewer percentage": "Viewer %",
+ "Data Provenance": "Data Src",
+}
+
+export const MASTER_VIDEO_TABLE_HEADERS: string[] = [
+ "Views",
+ "Likes +",
+ "Likes -",
+ "Comments",
+ "Shares",
+ "Subs +",
+ "Subs -",
+ "Impressions",
+ "CTR %",
+ "Revenue",
+ "Watch Hrs",
+ "AVD",
+ "AVP %",
+ "Duration",
+ "CPM",
+ "RPM",
+ "Engaged",
+ "Red Hrs",
+ "Data Src",
+]
+
+const MASTER_HEADER_ALIAS_LOOKUP = (() => {
+ const map = new Map<string, string>()
+ Object.entries(MASTER_HEADER_ALIASES).forEach(([canonical, aliases]) => {
+  map.set(canonicalDisplayKey(canonical), canonical)
+  aliases.forEach((alias) => map.set(canonicalDisplayKey(alias), canonical))
+ })
+ return map
+})()
+
 export const getCanonicalMasterHeader = (header: string): string => {
+ if (MASTER_HEADER_ALIASES[header]) return header
+ const strict = MASTER_HEADER_ALIAS_LOOKUP.get(canonicalDisplayKey(header))
+ if (strict) return strict
  const normalized = canonicalKey(header)
  for (const [canonical, aliases] of Object.entries(MASTER_HEADER_ALIASES)) {
   if (aliases.includes(normalized)) return canonical
  }
  return header
+}
+
+export const getShortMasterHeader = (header: string): string => {
+ const canonical = getCanonicalMasterHeader(header)
+ return MASTER_TABLE_SHORT_LABELS[canonical] || MASTER_TABLE_SHORT_LABELS[header] || canonical
+}
+
+export const findDuplicateShortHeaders = (headers: string[]): string[] => {
+ const counts = new Map<string, number>()
+ headers.forEach((header) => {
+  const short = getShortMasterHeader(header)
+  counts.set(short, (counts.get(short) || 0) + 1)
+ })
+ return Array.from(counts.entries())
+  .filter(([, count]) => count > 1)
+  .map(([label]) => label)
 }
 
 export const firstDefined = (

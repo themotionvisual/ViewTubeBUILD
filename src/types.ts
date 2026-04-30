@@ -295,6 +295,30 @@ export interface ShortsConcept {
  bridgeStrategy: string
 }
 
+export interface Tactic {
+ title: string
+ action: string
+ whyItWorks: string
+}
+
+export interface Trend {
+ title: string
+ description: string
+ niche: string
+ strategy: string
+}
+
+export interface CreatorStrategyInput {
+ niche: string
+ videoLength: string
+ topic: string
+ audience: string
+ timeAvailable: string
+ tools: string
+ systemInstructionId: string
+ avoidTopics: string
+}
+
 export interface ThumbnailHistoryItem {
  id: string
  url: string

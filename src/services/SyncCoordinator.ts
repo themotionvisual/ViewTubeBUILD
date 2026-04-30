@@ -252,6 +252,53 @@ export class SyncCoordinator {
   return availability
  }
 
+ private buildAnalyticsVerificationSnapshot(cacheData: any) {
+  const lifetimeWindow = cacheData.analyticsByWindow?.lifetime || {}
+  const diagnostics = lifetimeWindow.syncDiagnostics || {
+   failureReasons: [],
+   knownInvalidCombos: [],
+  }
+  const lifetimeAvailability = cacheData.availabilityByWindow?.lifetime || {}
+  const thumbnailFailures = (diagnostics.failureReasons || []).filter(
+   (failure: any) =>
+    failure?.group === "impressions_ctr" ||
+    (failure?.metrics || []).some((metric: string) =>
+     metric === "videoThumbnailImpressions" ||
+     metric === "videoThumbnailImpressionsClickRate",
+    ),
+  )
+  const quarantinedFailures = thumbnailFailures.filter(
+   (failure: any) => failure?.outcome === "quarantined",
+  ).length
+  const suppressedRetries = thumbnailFailures.filter(
+   (failure: any) => failure?.outcome === "suppressed",
+  ).length
+  const requestShapeHealthy = !thumbnailFailures.some(
+   (failure: any) =>
+    failure?.requestClass === "video_top_videos_channel_filter" &&
+    (failure?.status === 400 || failure?.outcome === "quarantined"),
+  )
+
+  return {
+   window: "lifetime" as const,
+   thumbnailMetrics: {
+    impressionsAvailable: lifetimeAvailability.impressions === true,
+    ctrAvailable: lifetimeAvailability.ctr === true,
+    requestShapeHealthy,
+    failureEvents: thumbnailFailures.length,
+    quarantinedFailures,
+    suppressedRetries,
+   },
+   creatorContentType: {
+    status: cacheData.videoContentTypeStatus?.status || "quarantined",
+    disabledForSession:
+     cacheData.videoContentTypeStatus?.disabledForSession === true,
+    rowCount: Number(cacheData.videoContentTypeStatus?.rowCount || 0),
+    reason: cacheData.videoContentTypeStatus?.reason,
+   },
+  }
+ }
+
  private getStoredSyncMergePolicy(): SyncMergePolicy {
   try {
    const raw = localStorage.getItem(SYNC_MERGE_POLICY_KEY)
@@ -603,18 +650,28 @@ export class SyncCoordinator {
 
    try {
     const contentTypeRange = windowRanges["lifetime"]
-    const contentTypeMap = await ytApiQueue.add(() =>
+    const contentTypeResult = await ytApiQueue.add(() =>
      fetchVideoContentType(
       contentTypeRange.startDate,
       contentTypeRange.endDate,
       profile.id,
      ),
     )
-    if (contentTypeMap.size > 0) {
-     cacheData.videoContentType = Object.fromEntries(contentTypeMap)
+    cacheData.videoContentTypeStatus = contentTypeResult.status
+    if (contentTypeResult.map.size > 0) {
+     cacheData.videoContentType = Object.fromEntries(contentTypeResult.map)
     }
    } catch (e: any) {
     console.warn("Video content type detection failed:", e?.message || e)
+    cacheData.videoContentTypeStatus = {
+     status: "quarantined",
+     requestClass: "channel_creator_content_type",
+     idsTried: profile?.id ? [`channel==${profile.id}`, "channel==MINE"] : ["channel==MINE"],
+     disabledForSession: true,
+     rowCount: 0,
+     reason: e?.message || String(e),
+     fetchedAt: Date.now(),
+    }
    }
 
    try {
@@ -774,9 +831,10 @@ export class SyncCoordinator {
      cacheData.stats && typeof cacheData.stats === "object"
       ? Object.keys(cacheData.stats).length
       : 0,
-    dataApiCallCounts: getYouTubeApiCallCounts(),
-    warning: undefined as string | undefined,
-   }
+   dataApiCallCounts: getYouTubeApiCallCounts(),
+   warning: undefined as string | undefined,
+   analyticsVerification: this.buildAnalyticsVerificationSnapshot(cacheData),
+  }
 
    let nextRaw = ""
    try {
@@ -802,6 +860,7 @@ export class SyncCoordinator {
      videos: cacheData.videos,
      lastSynced: cacheData.lastSynced,
      lastSyncedByWindow: cacheData.lastSyncedByWindow,
+     videoContentTypeStatus: cacheData.videoContentTypeStatus,
      syncRunSummary: summary,
     }
 

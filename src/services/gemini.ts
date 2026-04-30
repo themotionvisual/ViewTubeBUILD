@@ -17,6 +17,9 @@ import type {
  ShortsConcept,
  ProjectPlan,
  Scene,
+ Tactic,
+ Trend,
+ CreatorStrategyInput,
 } from "@/types"
 import {
  DATA_ANALYSIS_SYSTEM_PROMPT,
@@ -30,6 +33,226 @@ import {
 import { geminiQueue } from "../utils/RequestQueue"
 import { getVaultKey } from "./keyVault"
 import { consumeAiTokens } from "./billingEntitlement"
+
+// --- Actionable Tactics Logic ---
+
+export const TACTICS_SYSTEM_INSTRUCTIONS = {
+ "viral-growth":
+  "You are a YouTube Growth Specialist. Your goal is to find high-engagement, viral opportunities that others miss. Focus on 'early bird' advantages, trend-jacking, and unconventional growth hacks. Recommend rare, cutting-edge tools that are brand new to the market.",
+ "revenue-max":
+  "You are a YouTube Monetization Expert. Focus on high-CPM niches, sophisticated affiliate funnels, and building secondary revenue streams that 99% of creators ignore. Suggest unique sponsorship negotiation tactics.",
+ storytelling:
+  "You are a Master Storyteller. Focus on psychological hook retention, narrative loops, and emotional resonance. Use advanced storytelling frameworks like the 'Story Circle' or 'Fichtean Curve' adapted for short-form and long-form video.",
+ "technical-edge":
+  "You are a Cutting-Edge Tech Scout. Focus on the latest AI-assisted editing workflows, custom automation scripts, and technical SEO adjustments that give a 1% edge in the algorithm.",
+}
+
+export const fetchViralTrends = async (query?: string): Promise<Trend[]> => {
+ const basePrompt = `Find the top 5 most relevant viral trends, current events, or breakout topics for YouTube creators across all niches for TODAY. 
+  Focus on things that are just starting to trend or are at their peak.`
+
+ const queryPrompt = query ? `Specifically look for trends related to "${query}".` : "Across all niches."
+
+ const prompt = `${basePrompt}
+  ${queryPrompt}
+  For each trend, provide:
+  1. A catchy title.
+  2. A brief description of why it's trending.
+  3. A suggested 'niche' it applies to.
+  4. A 'strategy' keyword (e.g., 'Shorts', 'Long-form', 'Live').
+  Format as a JSON array of objects.`
+
+ return await executeWithRetry(async () => {
+  const modelId = getActiveModel("analysis")
+  const result = await getAiClient().models.generateContent({
+   model: modelId,
+   contents: [{ role: "user", parts: [{ text: prompt }] }],
+   config: {
+    tools: [{ googleSearch: {} }] as any,
+    responseMimeType: "application/json",
+    responseSchema: {
+     type: Type.ARRAY,
+     items: {
+      type: Type.OBJECT,
+      properties: {
+       title: { type: Type.STRING },
+       description: { type: Type.STRING },
+       niche: { type: Type.STRING },
+       strategy: { type: Type.STRING },
+      },
+      required: ["title", "description", "niche", "strategy"],
+     },
+    },
+   },
+  })
+
+  const text = result.text
+  if (!text) return []
+  return JSON.parse(cleanJsonString(text))
+ })
+}
+
+export const generateActionableTactics = async (
+ input: CreatorStrategyInput,
+): Promise<Tactic[]> => {
+ const prompt = `Generate 20 actionable, immediate steps for a YouTube creator in the ${input.niche} niche. 
+  Topic: ${input.topic}
+  Target Audience: ${input.audience}
+  Video Length: ${input.videoLength}
+  Tools available: ${input.tools}
+  Time available: ${input.timeAvailable}
+  ${input.avoidTopics ? `CRITICAL: Avoid these topics/strategies: ${input.avoidTopics}` : ""}
+
+  Use Google Search to find current events, viral trends, and rare/unique tips that are working RIGHT NOW (today). 
+  Provide specific, direct actions they can take to beat the competition.
+  Format the response as a JSON array of objects with 'title', 'action', and 'whyItWorks'.`
+
+ return await executeWithRetry(async () => {
+  const modelId = getActiveModel("analysis")
+  const result = await getAiClient().models.generateContent({
+   model: modelId,
+   contents: [{ role: "user", parts: [{ text: prompt }] }],
+   config: {
+    systemInstruction: {
+     role: "system",
+     parts: [
+      {
+       text:
+        TACTICS_SYSTEM_INSTRUCTIONS[
+         input.systemInstructionId as keyof typeof TACTICS_SYSTEM_INSTRUCTIONS
+        ] || TACTICS_SYSTEM_INSTRUCTIONS["viral-growth"],
+      },
+     ],
+    },
+    tools: [{ googleSearch: {} }] as any,
+    responseMimeType: "application/json",
+    responseSchema: {
+     type: Type.ARRAY,
+     items: {
+      type: Type.OBJECT,
+      properties: {
+       title: { type: Type.STRING },
+       action: { type: Type.STRING },
+       whyItWorks: { type: Type.STRING },
+      },
+      required: ["title", "action", "whyItWorks"],
+     },
+    },
+   },
+  })
+
+  const text = result.text
+  if (!text) return []
+  return JSON.parse(cleanJsonString(text))
+ })
+}
+
+export const elaborateTactic = async (
+ tactic: Tactic,
+ niche: string,
+): Promise<string> => {
+ const prompt = `Elaborate on this YouTube growth tactic for the ${niche} niche:
+  Title: ${tactic.title}
+  Action: ${tactic.action}
+  Why it works: ${tactic.whyItWorks}
+
+  Provide 3-4 specific, concrete examples of how to implement this, and a deeper psychological or algorithmic explanation of why it's effective right now.
+  Focus on "the road less traveled" - unique, non-obvious ways to execute this tactic.
+  Format the response as clear Markdown with headings.`
+
+ return await executeWithRetry(async () => {
+  const modelId = getActiveModel("text")
+  const result = await getAiClient().models.generateContent({
+   model: modelId,
+   contents: [{ role: "user", parts: [{ text: prompt }] }],
+   config: {
+    systemInstruction: {
+     role: "system",
+     parts: [
+      {
+       text:
+        "You are a senior YouTube consultant. Provide deep, actionable, and specific elaborations on growth tactics. Focus on unique, high-leverage strategies.",
+      },
+     ],
+    },
+   },
+  })
+
+  return result.text || ""
+ })
+}
+
+export const fetchShortsSecrets = async (
+ count: number = 10,
+ offset: number = 0,
+): Promise<any[]> => {
+ const prompt = `Generate ${count} unique, insightful, strange, and lesser-known ways to use YouTube Shorts to grow a channel and revenue. 
+  Focus on "devious" or unconventional tactics that often go against standard advice. 
+  Explain the "why" behind each - specifically why doing the opposite of conventional wisdom can make a creator stand out.
+  Include "secret tricks" about the algorithm, thumbnail psychology (books judged by covers), and weird platform behaviors.
+  
+  Format as a JSON array of ${count} objects with:
+  - 'title': A punchy, intriguing name for the tip.
+  - 'insight': The core unconventional advice.
+  - 'whyItWorks': The psychological or algorithmic reason it succeeds.
+  - 'category': One of ['Algorithm Hack', 'Psychological Trigger', 'Revenue Loop', 'Visual Deception', 'Engagement Trap'].
+  
+  Start from index ${offset + 1}.`
+
+ return await executeWithRetry(async () => {
+  const modelId = getActiveModel("thinking")
+  const result = await getAiClient().models.generateContent({
+   model: modelId,
+   contents: [{ role: "user", parts: [{ text: prompt }] }],
+   config: {
+    responseMimeType: "application/json",
+    responseSchema: {
+     type: Type.ARRAY,
+     items: {
+      type: Type.OBJECT,
+      properties: {
+       title: { type: Type.STRING },
+       insight: { type: Type.STRING },
+       whyItWorks: { type: Type.STRING },
+       category: { type: Type.STRING },
+      },
+      required: ["title", "insight", "whyItWorks", "category"],
+     },
+    },
+   },
+  })
+
+  const text = result.text
+  if (!text) return []
+  return JSON.parse(cleanJsonString(text))
+ })
+}
+
+export const getComplexAdvice = async (
+ query: string,
+ context: string,
+): Promise<string> => {
+ return await executeWithRetry(async () => {
+  const modelId = getActiveModel("thinking")
+  const result = await getAiClient().models.generateContent({
+   model: modelId,
+   contents: [{ role: "user", parts: [{ text: `Context: ${context}\n\nQuery: ${query}` }] }],
+   config: {
+    systemInstruction: {
+     role: "system",
+     parts: [
+      {
+       text:
+        "You are a high-level YouTube strategist. Provide deep, reasoned advice on complex creator problems.",
+      },
+     ],
+    },
+   },
+  })
+
+  return result.text || ""
+ })
+}
 
 declare global {
  interface Window {
@@ -138,7 +361,7 @@ const queueGeminiTask = async <T>(
   if (!usage.allowed) {
    if (usage.next.tier === "free") {
     throw new Error(
-     "AI generation requires a paid plan. Upgrade to Medium or Large in /subscribe.",
+     "AI generation requires a paid plan. Upgrade to Medium or Large in /settings?panel=billing.",
     )
    }
    throw new Error(
@@ -308,6 +531,46 @@ export const cleanJsonString = (
  }
 
  return cleaned
+}
+
+// --- Idea Spark (Title Generation) ---
+export const generateIdeaSpark = async (topic: string, brain?: any): Promise<string[]> => {
+ const ai = getAiClient()
+ const journalContext = getJournalKnowledge(brain)
+
+ const responseSchema: any = {
+  type: Type.ARRAY,
+  items: { type: Type.STRING },
+ }
+
+ const prompt = `
+    IDENTITY: You are a viral YouTube strategist.
+    CREATOR CONTEXT: ${journalContext}
+    TASK: Generate 3 viral, high-CTR YouTube video titles for the core topic: "${topic}".
+    The titles should be catchy, intriguing, and optimized for search and browse.
+    OUTPUT: A JSON array of exactly 3 strings.
+  `
+
+ return await executeWithRetry(async () => {
+  const modelId = getActiveModel("fast-text")
+  const result = await getAiClient().models.generateContent({
+   model: modelId,
+   contents: [{ role: "user", parts: [{ text: prompt }] }],
+   config: {
+    responseMimeType: "application/json",
+    responseSchema: responseSchema,
+   },
+  })
+
+  const text = result.text
+  if (!text) throw new Error("No titles generated")
+  try {
+   const jsonStr = cleanJsonString(text)
+   return JSON.parse(jsonStr)
+  } catch (e) {
+   return await selfCorrectJson(text, responseSchema)
+  }
+ })
 }
 
 // --- YT-OS v5.0 Launch Protocol (SEO) ---

@@ -9,6 +9,7 @@ import {
  type MasterTableBundle,
  type MasterTableType,
  getStoredIngestMode,
+ MASTER_TABLE_LABELS,
 } from "./productArchitecture"
 
 const EMPTY_TABLES = (): Record<MasterTableType, DomainTableRow[]> => ({
@@ -111,6 +112,12 @@ const toDomainRows = (
    if (k === 'viewerPercentage') targetKey = 'Viewer %'
    if (k === 'country') targetKey = 'Country'
    if (k === 'day') targetKey = 'Date'
+   if (k === 'annotationImpressions') targetKey = 'Ann Impr'
+   if (k === 'annotationClicks') targetKey = 'Ann Clicks'
+   if (k === 'cardTeaserImpressions') targetKey = 'Teaser Impr'
+   if (k === 'cardTeaserClicks') targetKey = 'Teaser Clicks'
+   if (k === 'endScreenImpressions') targetKey = 'ES Impr'
+   if (k === 'endScreenClicks') targetKey = 'ES Clicks'
    
    normalizedRow[targetKey] = v
   })

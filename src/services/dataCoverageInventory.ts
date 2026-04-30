@@ -8,8 +8,8 @@ import {
 import { DATA_COVERAGE_CATALOG } from "./dataCoverageCatalog"
 import {
  getWindowCapabilityReason,
- markDeprecatedLocalStorageRead,
- getCanonicalAnalyticsCache,
+ readYouTubeAnalyticsCache,
+ readGA4AnalyticsCache,
 } from "./canonicalAnalyticsStore"
 
 export type DataCoverageSource =
@@ -427,15 +427,8 @@ export const buildDataCoverageInventory = (
   ["videothumbnailimpressionsclickrate", "ctr"],
  ])
 
- markDeprecatedLocalStorageRead(
-  "dataCoverageInventory.build",
-  "yt_analytics_cache",
- )
- const ytCache = getCanonicalAnalyticsCache() as Record<string, unknown>
- const ga4Cache = safeParse<Record<string, unknown>>(
-  localStorage.getItem("ga4_analytics_cache"),
-  {},
- )
+ const ytCache = readYouTubeAnalyticsCache() as Record<string, unknown>
+ const ga4Cache = readGA4AnalyticsCache()
 
  const shortRows = masterTableRows.filter(
   (r) =>
@@ -730,70 +723,25 @@ export const buildDataCoverageInventory = (
  ]
 
  const metricKeys = {
-  views: ["views", "Views", "viewCount", "statistics.viewCount"],
-  likes: ["likes", "Likes"],
-  comments: ["comments", "Comments"],
-  shares: ["shares", "Shares"],
-  subsGained: [
-   "subscribersGained",
-   "subscribers_gained",
-   "subsPlus",
-   "subs+",
-   "Subs",
-   "Subscribers Gained",
-   "Subs +",
-  ],
-  impressions: [
-   "impressions",
-   "Impressions",
-   "videoThumbnailImpressions",
-   "video_thumbnail_impressions",
-  ],
-  ctr: [
-   "ctr",
-   "CTR",
-   "CTR (%)",
-   "Click-Through Rate (CTR)",
-   "videoThumbnailImpressionsClickRate",
-   "impressionsClickThroughRate",
-   "impressionClickThroughRate",
-   "video_thumbnail_impressions_ctr",
-  ],
-  revenue: [
-   "estimatedRevenue",
-   "Revenue",
-   "revenue",
-   "estimated_partner_revenue",
-   "Estimated revenue",
-  ],
-  watchMinutes: [
-   "estimatedMinutesWatched",
-   "watchTimeMinutes",
-   "WatchTime",
-   "Watch Time (Hours)",
-   "Watch time (hours)",
-  ],
-  avd: [
-   "averageViewDuration",
-   "average_view_duration_seconds",
-   "avgViewDuration",
-   "AVD (Average View Duration)",
-   "AVD (Sec)",
-  ],
-  apv: [
-   "averageViewPercentage",
-   "average_view_duration_percentage",
-   "avgPercentageViewed",
-   "AVP (%)",
-   "Average percentage viewed (%)",
-  ],
-  duration: [
-   "videoLengthSeconds",
-   "lengthSeconds",
-   "durationSeconds",
-   "Length",
-   "length",
-  ],
+  views: ["Views", "views"],
+  likes: ["Likes +", "Likes"],
+  comments: ["Comments", "comments"],
+  shares: ["Shares", "shares"],
+  subsGained: ["Subs +", "Subscribers Gained", "subscribersGained"],
+  impressions: ["Impressions", "videoThumbnailImpressions"],
+  ctr: ["CTR %", "CTR", "videoThumbnailImpressionsClickRate"],
+  revenue: ["Revenue", "Estimated Revenue", "estimatedRevenue"],
+  watchMinutes: ["Watch Hrs", "Watch Time (Hours)", "estimatedMinutesWatched"],
+  avd: ["AVD", "AVD (Average View Duration)", "averageViewDuration"],
+  apv: ["AVP %", "AVP (%)", "averageViewPercentage"],
+  duration: ["Duration", "videoLengthSeconds"],
+  cpm: ["CPM", "CPM (USD)"],
+  rpm: ["RPM", "Estimated RPM"],
+  engagedViews: ["Engaged", "Engaged Views"],
+  redWatchHours: ["Red Hrs", "YouTube Premium Watch Time"],
+  endScreenClickRate: ["End Screen %", "End Screen Click Rate"],
+  cardClickRate: ["Card %", "Card Click Rate"],
+  cardTeaserClickRate: ["Teaser %", "Card Teaser Click Rate"],
  }
 
  const ctrValues = mergedSharedRows

@@ -40,8 +40,7 @@
       background: var(--bg);
       color: var(--fg);
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      overflow-x: hidden;
-      overflow-y: auto;
+      overflow: hidden;
     }
 
     .neo-card {
@@ -77,14 +76,14 @@
     }
 
     .checker {
-      background-color: rgba(17, 17, 17, 0.5);
+      background-color: #1f1f1f;
       background-image:
-        linear-gradient(45deg, rgba(42, 42, 42, 0.5) 25%, transparent 25%),
-        linear-gradient(-45deg, rgba(42, 42, 42, 0.5) 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, rgba(42, 42, 42, 0.5) 75%),
-        linear-gradient(-45deg, transparent 75%, rgba(42, 42, 42, 0.5) 75%);
-      background-size: 48px 48px;
-      background-position: 0 0, 0 24px, 24px -24px, -24px 0;
+        linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
+        linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
+        linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+      background-size: 24px 24px;
+      background-position: 0 0, 0 12px, 12px -12px, -12px 0;
     }
 
     .timeline-label {
@@ -217,15 +216,12 @@
     }
 
     .viewtube-logo {
-      font-size: 34px;
+      font-size: 30px;
       font-weight: 900;
       line-height: 1;
-      letter-spacing: -0.035em;
+      letter-spacing: -0.04em;
       margin: 8px 0 10px;
       user-select: none;
-      display: inline-flex;
-      align-items: baseline;
-      gap: 1px;
     }
 
     .viewtube-logo .tube {
@@ -276,7 +272,7 @@
     import React, { useEffect, useMemo, useRef, useState } from 'react';
     import { createRoot } from 'react-dom/client';
     import {
-      Play, Pause, SkipBack, SkipForward, Rewind, FastForward, Plus, Trash2, Save, Upload,
+      Play, Pause, SkipBack, SkipForward, Plus, Trash2, Save, Upload,
       Download, Layers, Sparkles, Settings, Camera, Code2, Type, RectangleHorizontal,
       Circle, Video, Eye, EyeOff, FileCode, Wand2, Palette, Filter, Workflow, Magnet, Pipette, Music2, VolumeX, Volume2, Copy, Crosshair
     } from 'lucide-react';
@@ -302,7 +298,7 @@
 
     const TRACK_HEIGHT_LARGE = 96;
     const TRACK_HEIGHT_SMALL = 68;
-    const TRACK_SIZE_MODES = [84, 55, 30, 16];
+    const TRACK_SIZE_MODES = [84, 66, 30, 16];
     const GUTTER = 92;
     const BASE_PX_PER_SEC = 36;
     const TIMELINE_SIZE_ICON = '/editors/assets/HEIGHT.png';
@@ -862,26 +858,15 @@ const basePayload = (type, i = 0) => ({
         { id: uid('track'), name: AUDIO_TRACK_NAME, order: 2, visible: true, kind: AUDIO_TRACK_KIND }
       ];
 
-      const layers = [
-        createLayer('text', tracks[0].id, 0),
-        createLayer('shape', tracks[1].id, 1),
-        createLayer('media', tracks[1].id, 2)
-      ];
-
-      const clips = [
-        createClip(tracks[0].id, layers[0].id, 0, 6, COLORS.magenta),
-        createClip(tracks[1].id, layers[1].id, 2, 10, COLORS.yellow),
-        createClip(tracks[1].id, layers[2].id, 12, 20, COLORS.cyan)
-      ];
+      const layers = [];
+      const clips = [];
 
       return {
         schemaVersion: SCHEMA_VERSION,
         meta: {
-          projectName: 'UNTITLED PROJECT',
           durationSec: 30,
           durationSecInput: '0:00:30',
           zoom: 1,
-          fps: 30,
           aspectRatio: '16:9',
           exportProfile: '1080',
           chromaEnabled: false,
@@ -980,13 +965,9 @@ const basePayload = (type, i = 0) => ({
         meta: {
           ...fallback.meta,
           ...(source.meta || {}),
-          projectName: typeof source.meta?.projectName === 'string' && source.meta.projectName.trim()
-            ? source.meta.projectName.trim().slice(0, 120)
-            : fallback.meta.projectName,
           durationSec: safeNumber(source.meta?.durationSec, fallback.meta.durationSec, 5, 7200),
           durationSecInput: typeof source.meta?.durationSecInput === 'string' ? source.meta.durationSecInput : fallback.meta.durationSecInput,
           zoom: safeNumber(source.meta?.zoom, fallback.meta.zoom, 0.2, 8),
-          fps: [24, 30, 60].includes(Number(source.meta?.fps)) ? Number(source.meta.fps) : fallback.meta.fps,
           aspectRatio: source.meta?.aspectRatio === '9:16' ? '9:16' : '16:9',
           exportProfile: EXPORT_PROFILE_KEYS.includes(source.meta?.exportProfile) ? source.meta.exportProfile : fallback.meta.exportProfile
         },
@@ -1092,7 +1073,7 @@ const basePayload = (type, i = 0) => ({
       const [project, setProject] = useState(() => normalizeProject(defaultProject()));
       const [playhead, setPlayhead] = useState(0);
       const [isPlaying, setIsPlaying] = useState(false);
-      const [activeTab, setActiveTab] = useState('media');
+      const [activeTab, setActiveTab] = useState('layers');
       const [selectedClipId, setSelectedClipId] = useState(null);
       const [selectedClipIds, setSelectedClipIds] = useState([]);
       const [selectedLayerId, setSelectedLayerId] = useState(null);
@@ -1121,8 +1102,6 @@ const basePayload = (type, i = 0) => ({
       const [cursorPreviewMode, setCursorPreviewMode] = useState('off'); // off | lite | on
       const [timelineViewportWidth, setTimelineViewportWidth] = useState(1400);
       const [boxSelect, setBoxSelect] = useState(null);
-      const [playerHover, setPlayerHover] = useState(false);
-      const [podTick, setPodTick] = useState(0);
       const previewMarkerSec = useMemo(() => {
         if (!timelineHovered || hoverMarkerSec === null) return null;
         if (cursorPreviewMode === 'on') return hoverMarkerSec;
@@ -1134,11 +1113,6 @@ const basePayload = (type, i = 0) => ({
         setCursorPreviewMode((prev) => (prev === 'off' ? 'lite' : prev === 'lite' ? 'on' : 'off'));
       };
 
-      useEffect(() => {
-        const timer = window.setInterval(() => setPodTick((v) => v + 1), 120);
-        return () => window.clearInterval(timer);
-      }, []);
-
       const timelineRef = useRef(null);
       const timelineContentRef = useRef(null);
       const tracksRegionRef = useRef(null);
@@ -1147,7 +1121,6 @@ const basePayload = (type, i = 0) => ({
       const cutHoldRef = useRef(null);
       const clipTapRef = useRef({ clipId: null, sec: 0, count: 0, at: 0, timer: null });
       const contextMenuOpenedAtRef = useRef(0);
-      const lastAutoOpenClipRef = useRef(null);
       const viewportRafRef = useRef(null);
       const dividerHoldRef = useRef({ index: null, startAt: 0 });
       const audioUploadRef = useRef(null);
@@ -1166,13 +1139,6 @@ const basePayload = (type, i = 0) => ({
       useEffect(() => {
         setDurationInput(project.meta.durationSecInput || formatHMS(project.meta.durationSec || 30));
       }, [project.meta.durationSec, project.meta.durationSecInput]);
-
-      useEffect(() => {
-        if (!selectedClipId) return;
-        if (lastAutoOpenClipRef.current === selectedClipId) return;
-        lastAutoOpenClipRef.current = selectedClipId;
-        setActiveTab('layerSettings');
-      }, [selectedClipId]);
 
       useEffect(() => {
         if (!selectedClipId && project.clips.length) setSelectedClipId(project.clips[0].id);
@@ -1941,7 +1907,7 @@ const basePayload = (type, i = 0) => ({
         contextMenuOpenedAtRef.current = Date.now();
         setContextMenu({
           x: anchorRect.left + (anchorRect.width / 2),
-          y: anchorRect.top - 8,
+          y: anchorRect.top + (anchorRect.height / 2),
           clipId,
           visible
         });
@@ -2375,7 +2341,7 @@ const basePayload = (type, i = 0) => ({
           kind: 'remotionRender',
           targetFormat: format,
           composition: {
-            fps: Number(project.meta.fps || 30),
+            fps: 30,
             durationInSeconds: project.meta.durationSec,
             width: dims.width,
             height: dims.height
@@ -2401,7 +2367,7 @@ const basePayload = (type, i = 0) => ({
           const dims = getExportDims();
           const width = dims.width;
           const height = dims.height;
-          const fps = Number(project.meta.fps || 30);
+          const fps = 30;
           const mimeCandidates = format === 'webm'
             ? ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
             : format === 'mp4'
@@ -3299,97 +3265,60 @@ const basePayload = (type, i = 0) => ({
 
       return (
         <div
-          className="w-full p-2 grid grid-cols-[620px_minmax(0,1fr)] gap-2"
-          style={{ minHeight: 'calc(100vh - 8px)' }}
+          className="h-screen w-screen p-2 grid grid-cols-[500px_1fr] gap-2"
           onClick={(e) => {
             if (Date.now() - contextMenuOpenedAtRef.current < 260) return;
             if (e.target.closest?.('.media-popup-card')) return;
             setContextMenu(null);
           }}
         >
-          <aside className="neo-card overflow-visible flex flex-col self-stretch">
+          <aside className="neo-card h-full overflow-hidden flex flex-col">
             <div className="p-3 border-b-4 border-black bg-white w-full">
-              <div className="viewtube-logo text-[36px] mb-0">VIEW<span className="tube">TUBE</span><span className="studio">studio</span></div>
+              <div className="viewtube-logo text-[32px] mb-0">You<span className="tube">tube</span><span className="studio">studio</span></div>
             </div>
-            <div className="grid grid-cols-[170px_minmax(0,1fr)] flex-1 min-h-0">
-          <nav className="overflow-visible no-scrollbar p-3 flex flex-col gap-3 bg-[#efefef] border-r-4 border-black">
+            <div className="grid grid-cols-[74px_1fr] flex-1 min-h-0">
+          <nav className="h-full flex flex-col items-center py-2 gap-3 bg-[#efefef]">
             {[
-              { id: 'media', label: 'MEDIA', color: COLORS.pink },
-              { id: 'layerSettings', label: 'LAYERS', color: COLORS.orange },
-              { id: 'project', label: 'PROJECT', color: COLORS.yellow },
-              { id: 'effects', label: 'EFFECTS', color: COLORS.green },
-              { id: 'transitions', label: 'TRANSITIONS', color: COLORS.cyan },
-              { id: 'oracle', label: 'AI ORACLE', color: COLORS.blue },
-              { id: 'code', label: 'CODE', color: COLORS.purple },
-              { id: 'export', label: 'EXPORT', color: COLORS.magenta }
+              { id: 'layers', icon: Layers, color: COLORS.pink },
+              { id: 'fx', icon: Filter, color: COLORS.green },
+              { id: 'settings', icon: Camera, color: COLORS.cyan },
+              { id: 'code', icon: Code2, color: COLORS.magenta }
             ].map((tab) => (
               <button
                 key={tab.id}
-                className="w-full py-[7px] px-[8px] border-4 border-black rounded-lg text-right text-[11px] font-black tracking-tight transition-all hover:translate-x-[1px] hover:translate-y-[1px]"
-                style={{
-                  backgroundColor: tab.color,
-                  boxShadow: activeTab === tab.id
-                    ? `0 0 0 0 ${tab.color}66, 0 0 0 2px ${tab.color}55 inset`
-                    : `4px 4px 0 0 ${tab.color}88`,
-                  transform: activeTab === tab.id ? 'translate(1px, 1px)' : 'translate(0, 0)'
-                }}
+                className="neo-btn w-12 h-12 flex items-center justify-center rounded-xl"
+                style={{ backgroundColor: tab.color, outline: activeTab === tab.id ? '1px solid #1a1a1a' : 'none' }}
                 onClick={() => setActiveTab(tab.id)}
               >
-                {tab.label}
+                <tab.icon size={20} />
               </button>
             ))}
           </nav>
-          <div className="overflow-visible flex flex-col">
-            <div className="overflow-visible p-3 space-y-3">
-              {(activeTab === 'media' || activeTab === 'layerSettings') && (
+          <div className="h-full overflow-hidden flex flex-col">
+            <div className="flex-1 overflow-y-auto no-scrollbar p-3 space-y-3">
+              {activeTab === 'layers' && (
                 <>
-                  {activeTab === 'media' && (
-                    <>
-                      <div className="neo-card p-3 space-y-2">
-                        <div className="grid grid-cols-2 gap-2 items-center">
-                          <div className="text-xs font-black uppercase">ADD MEDIA:</div>
-                          <button className="neo-btn" style={{ background: COLORS.pink }} onClick={() => addLayerWithClip('text')}><Type size={14} />Text</button>
-                          <button className="neo-btn" style={{ background: COLORS.orange }} onClick={() => addLayerWithClip('shape')}><RectangleHorizontal size={14} />Shape</button>
-                          <button className="neo-btn" style={{ background: COLORS.yellow }} onClick={() => addLayerWithClip('image')}><Circle size={14} />Image</button>
-                          <button className="neo-btn" style={{ background: COLORS.green }} onClick={() => addLayerWithClip('video')}><Video size={14} />Video</button>
-                          <button className="neo-btn" style={{ background: COLORS.blue }} onClick={() => audioUploadRef.current?.click()}><Upload size={14} />Add Audio/MP3</button>
-                          <input ref={audioUploadRef} type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg" className="hidden" onChange={(e) => onUploadAudio(e.target.files?.[0])} />
-                        </div>
-                      </div>
-                      <div className="neo-card p-3 space-y-2">
-                        <div className="text-xs font-black uppercase">Library Templates</div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <button className="neo-btn" style={{ background: COLORS.cyan }} onClick={exportTemplatesJson}>Export Templates</button>
-                          <label className="neo-btn cursor-pointer inline-flex items-center justify-center" style={{ background: COLORS.yellow }}>
-                            Import Templates
-                            <input type="file" accept="application/json" className="hidden" onChange={(e) => importTemplatesJson(e.target.files?.[0])} />
-                          </label>
-                        </div>
-                        <input className="w-full border-4 border-black p-2 text-xs font-black" value={templateName} onChange={(e) => setTemplateName(e.target.value)} />
-                        <button className="neo-btn w-full" style={{ background: COLORS.green }} onClick={saveCustomTemplate}>Save Current as Template</button>
-                        <div className="grid grid-cols-2 gap-2 overflow-visible pr-1">
-                          {[...(project.templatesBuiltIn || []), ...(project.templatesCustom || [])].map((tpl, idx) => (
-                            <button
-                              key={tpl.id}
-                              className="neo-btn w-full text-left"
-                              style={{ background: pairedColor(idx) }}
-                              onClick={() => applyTemplate(tpl)}
-                            >
-                              {tpl.name}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                  {activeTab === 'layerSettings' && selectedLayer && (
+                  <div className="neo-card p-3 space-y-2">
+                    <div className="text-xs font-black uppercase">Layer Actions</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button className="neo-btn" style={{ background: COLORS.yellow }} onClick={() => addLayerWithClip('text')}><Type size={14} />Text</button>
+                      <button className="neo-btn" style={{ background: COLORS.cyan }} onClick={() => addLayerWithClip('shape')}><RectangleHorizontal size={14} />Shape</button>
+                      <button className="neo-btn" style={{ background: COLORS.blue }} onClick={() => addLayerWithClip('image')}><Circle size={14} />Image</button>
+                      <button className="neo-btn" style={{ background: COLORS.purple }} onClick={() => addLayerWithClip('video')}><Video size={14} />Video</button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button className="neo-btn col-span-2" style={{ background: COLORS.blue }} onClick={() => audioUploadRef.current?.click()}><Upload size={14} />Add Audio/MP3</button>
+                      <input ref={audioUploadRef} type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg" className="hidden" onChange={(e) => onUploadAudio(e.target.files?.[0])} />
+                    </div>
+                  </div>
+
+                  {selectedLayer && (
                     <div className="neo-card p-3 space-y-2">
-                      <div className="text-xs font-black uppercase">Layers</div>
                       {selectedLayer.type === 'text' && (
                         <>
-                          <input className="w-full border-2 border-black rounded-md p-2 text-xs font-black" value={selectedLayer.payload.text || ''} onChange={(e) => updateLayerPayload(selectedLayer.id, { text: e.target.value })} />
+                          <input className="w-full border-4 border-black p-2 text-xs font-black" value={selectedLayer.payload.text || ''} onChange={(e) => updateLayerPayload(selectedLayer.id, { text: e.target.value })} />
                           <select
-                            className="w-full border-2 border-black rounded-md p-2 text-xs font-black bg-white"
+                            className="w-full border-4 border-black p-2 text-xs font-black bg-white"
                             value={selectedLayer.payload.fontFamily || 'Outfit'}
                             onChange={(e) => updateLayerPayload(selectedLayer.id, { fontFamily: e.target.value })}
                           >
@@ -3412,7 +3341,7 @@ const basePayload = (type, i = 0) => ({
 
                       {selectedLayer.type !== 'text' && selectedLayer.type !== 'media' && selectedLayer.type !== 'audio' && (
                         <input
-                          className="w-full border-2 border-black rounded-md p-2 text-xs font-black"
+                          className="w-full border-4 border-black p-2 text-xs font-black"
                           value={selectedLayer.payload.layerName || ''}
                           onChange={(e) => updateLayerPayload(selectedLayer.id, { layerName: e.target.value })}
                           placeholder="Layer label"
@@ -3434,14 +3363,14 @@ const basePayload = (type, i = 0) => ({
                         <>
                           <div className="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
                             <input
-                              className="w-full border-2 border-black rounded-md p-2 text-xs font-black"
+                              className="w-full border-4 border-black p-2 text-xs font-black"
                               value={selectedLayer.payload.layerName || ''}
                               onChange={(e) => updateLayerPayload(selectedLayer.id, { layerName: e.target.value })}
                               placeholder="Layer Name"
                             />
                             {isUrlModeForLayer(selectedLayer.id) ? (
                               <input
-                                className="border-2 border-black rounded-md p-2 text-xs font-black min-w-[190px]"
+                                className="border-4 border-black p-2 text-xs font-black min-w-[190px]"
                                 value={mediaUrlDraft}
                                 onChange={(e) => setMediaUrlDraft(e.target.value)}
                                 placeholder={selectedLayer.type === 'audio' ? 'Audio URL' : 'Media URL'}
@@ -3731,7 +3660,7 @@ const basePayload = (type, i = 0) => ({
                               type="color"
                               value={selectedLayer.payload.fillColor || '#ffffff'}
                               onChange={(e) => updateLayerPayload(selectedLayer.id, { fillColor: e.target.value })}
-                              className="flex-1 h-9 border-2 border-black rounded-md"
+                              className="flex-1 h-9 border-4 border-black"
                             />
                             <button className="kf-inline-btn" onClick={() => addCircleKeyframeAtPlayhead('fillColor')}>○</button>
                           </div>
@@ -3742,7 +3671,7 @@ const basePayload = (type, i = 0) => ({
                               type="color"
                               value={selectedLayer.payload.strokeColor || '#111111'}
                               onChange={(e) => updateLayerPayload(selectedLayer.id, { strokeColor: e.target.value })}
-                              className="flex-1 h-9 border-2 border-black rounded-md"
+                              className="flex-1 h-9 border-4 border-black"
                             />
                             <button className="kf-inline-btn" onClick={() => addCircleKeyframeAtPlayhead('strokeColor')}>○</button>
                           </div>
@@ -3750,16 +3679,105 @@ const basePayload = (type, i = 0) => ({
                       </div>
                     </div>
                   )}
-                  {activeTab === 'layerSettings' && !selectedLayer && (
-                    <div className="neo-card p-3 text-xs font-black uppercase">Select a clip on the timeline to edit layer settings.</div>
-                  )}
                 </>
               )}
 
+              {false && activeTab === 'templates' && (
+                <>
+                  <div className="neo-card p-3 space-y-2">
+                    <div className="text-xs font-black uppercase">Built-in Templates ({(project.templatesBuiltIn || []).length})</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button className="neo-btn" style={{ background: COLORS.cyan }} onClick={exportTemplatesJson}>Export Templates</button>
+                      <label className="neo-btn cursor-pointer inline-flex items-center justify-center" style={{ background: COLORS.yellow }}>
+                        Import Templates
+                        <input type="file" accept="application/json" className="hidden" onChange={(e) => importTemplatesJson(e.target.files?.[0])} />
+                      </label>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        {(project.templatesBuiltIn || []).map((tpl, idx) => (
+                          <button
+                            key={tpl.id}
+                            className="neo-btn w-full text-left"
+                            style={{ background: pairedColor(idx) }}
+                            onClick={() => applyTemplate(tpl)}
+                          >
+                            {tpl.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="neo-card p-3 space-y-2">
+                    <div className="text-xs font-black uppercase">Custom Templates</div>
+                    <input className="w-full border-4 border-black p-2 text-xs font-black" value={templateName} onChange={(e) => setTemplateName(e.target.value)} />
+                    <button className="neo-btn w-full" style={{ background: COLORS.green }} onClick={saveCustomTemplate}>Save Current as Template</button>
+                  </div>
+                  <div className="neo-card p-3 space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      {(project.templatesCustom || []).map((tpl, idx) => (
+                        <button
+                          key={tpl.id}
+                          className="neo-btn w-full text-left"
+                          style={{ background: pairedColor(idx) }}
+                          onClick={() => applyTemplate(tpl)}
+                        >
+                          {tpl.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
 
-              {activeTab === 'effects' && (
+              {false && activeTab === 'style' && (
                 <div className="neo-card p-3 space-y-2">
-                  <div className="text-xs font-black uppercase">Effects</div>
+                  <div className="text-xs font-black uppercase">Visual DNA</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {DNA_VARIANTS.map((dna) => (
+                      <button
+                        key={dna}
+                        className="neo-btn"
+                        style={{ background: project.meta.visualDNA === dna ? COLORS.green : COLORS.white }}
+                        onClick={() => updateMeta({ visualDNA: dna })}
+                      >
+                        {dna}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="text-xs font-black uppercase pt-2">Camera</div>
+                  <SpringToggle label="placement X" min={-500} max={500} step={1} value={project.camera.x} onChange={(v) => updateCamera({ x: Number(v) })} onReset={() => updateCamera({ x: 0 })} />
+                  <SpringToggle label="placement Y" min={-500} max={500} step={1} value={project.camera.y} onChange={(v) => updateCamera({ y: Number(v) })} onReset={() => updateCamera({ y: 0 })} />
+                  <SpringToggle label="z" min={-500} max={500} step={1} value={project.camera.z} onChange={(v) => updateCamera({ z: Number(v) })} onReset={() => updateCamera({ z: 0 })} />
+                  <SpringToggle label="scale" min={0.2} max={10} step={0.01} value={project.camera.scale} onChange={(v) => updateCamera({ scale: Number(v) })} onReset={() => updateCamera({ scale: 1 })} />
+                  <SpringToggle label="rotate" min={-3600} max={3600} step={1} value={project.camera.rotate} onChange={(v) => updateCamera({ rotate: Number(v) })} onReset={() => updateCamera({ rotate: 0 })} speed={0.22} />
+                  <button className="neo-btn w-full bg-white" onClick={resetCameraNeutral}>Reset Camera</button>
+                  <button
+                    className="neo-btn w-full"
+                    style={{ background: COLORS.cyan }}
+                    onClick={() => {
+                      const values = {
+                        x: project.camera.x,
+                        y: project.camera.y,
+                        z: project.camera.z,
+                        scale: project.camera.scale,
+                        rotate: project.camera.rotate
+                      };
+                      setProject((prev) => ({
+                        ...prev,
+                        camera: {
+                          ...prev.camera,
+                          keyframes: [...prev.camera.keyframes, makeKeyframe(playhead, values)]
+                        }
+                      }));
+                    }}
+                  >Add Camera Keyframe</button>
+                </div>
+              )}
+
+              {activeTab === 'fx' && (
+                <div className="neo-card p-3 space-y-2">
+                  <div className="text-xs font-black uppercase">Effects + Transitions</div>
                   {!selectedLayer ? (
                     <div className="text-xs font-black opacity-60">Select a clip/layer first.</div>
                   ) : (
@@ -3817,6 +3835,29 @@ const basePayload = (type, i = 0) => ({
                 </div>
               )}
 
+              {false && activeTab === 'ai' && (
+                <>
+                  <div className="neo-card p-3 space-y-2">
+                    <div className="text-xs font-black uppercase">HF Token (optional)</div>
+                    <input className="w-full border-4 border-black p-2 text-xs font-black" value={hfToken} onChange={(e) => setHfToken(e.target.value)} />
+                    <textarea className="code" value={aiTextPrompt} onChange={(e) => setAiTextPrompt(e.target.value)} />
+                    <button className="neo-btn w-full" style={{ background: COLORS.green }} onClick={() => runAiJob('text')}>Run Text Job</button>
+                    <textarea className="code" value={aiImagePrompt} onChange={(e) => setAiImagePrompt(e.target.value)} />
+                    <button className="neo-btn w-full" style={{ background: COLORS.yellow }} onClick={() => runAiJob('image')}>Run Image Job</button>
+                    <textarea className="code" value={aiVoicePrompt} onChange={(e) => setAiVoicePrompt(e.target.value)} />
+                    <button className="neo-btn w-full" style={{ background: COLORS.cyan }} onClick={() => runAiJob('voice')}>Run Voice Job</button>
+                  </div>
+                  <div className="neo-card p-3 space-y-2 max-h-[300px] overflow-y-auto neo-scroll">
+                    {(project.aiJobs || []).map((job) => (
+                      <div key={job.id} className="border-4 border-black p-2 text-[11px]">
+                        <div className="font-black uppercase">{job.type} • {job.provider}</div>
+                        <div>{job.createdAt}</div>
+                        <pre className="whitespace-pre-wrap">{JSON.stringify(job.outputs, null, 2)}</pre>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
 
               {activeTab === 'code' && (
                 <>
@@ -3830,7 +3871,7 @@ const basePayload = (type, i = 0) => ({
                     <button className="neo-btn w-full" style={{ background: COLORS.yellow }} onClick={() => runAiJob('image')}>Run Image Job</button>
                     <textarea className="code" value={aiVoicePrompt} onChange={(e) => setAiVoicePrompt(e.target.value)} />
                     <button className="neo-btn w-full" style={{ background: COLORS.cyan }} onClick={() => runAiJob('voice')}>Run Voice Job</button>
-                    <div className="overflow-visible space-y-2">
+                    <div className="max-h-[220px] overflow-y-auto neo-scroll space-y-2">
                       {(project.aiJobs || []).map((job) => (
                         <div key={job.id} className="border-4 border-black p-2 text-[11px]">
                           <div className="font-black uppercase">{job.type} • {job.provider}</div>
@@ -3856,186 +3897,123 @@ const basePayload = (type, i = 0) => ({
                 </>
               )}
 
-              {activeTab === 'oracle' && (
+              {activeTab === 'settings' && (
                 <div className="neo-card p-3 space-y-2">
-                  <div className="text-xs font-black uppercase">AI Oracle</div>
-                  <div className="text-xs font-black">
-                    Future home for AI generation tools, orchestration, and content intelligence modules.
-                  </div>
-                </div>
-              )}
-
-              {(activeTab === 'project' || activeTab === 'transitions' || activeTab === 'export') && (
-                <div className="neo-card p-3 space-y-2">
-                  {activeTab === 'project' && (
+                  <div className="text-xs font-black uppercase">Camera</div>
+                  <SpringToggle label="placement X" min={-500} max={500} step={1} value={project.camera.x} onChange={(v) => updateCamera({ x: Number(v) })} onReset={() => updateCamera({ x: 0 })} />
+                  <SpringToggle label="placement Y" min={-500} max={500} step={1} value={project.camera.y} onChange={(v) => updateCamera({ y: Number(v) })} onReset={() => updateCamera({ y: 0 })} />
+                  <SpringToggle label="z" min={-500} max={500} step={1} value={project.camera.z} onChange={(v) => updateCamera({ z: Number(v) })} onReset={() => updateCamera({ z: 0 })} />
+                  <SpringToggle label="scale" min={0.2} max={10} step={0.01} value={project.camera.scale} onChange={(v) => updateCamera({ scale: Number(v) })} onReset={() => updateCamera({ scale: 1 })} />
+                  <SpringToggle label="rotate" min={-3600} max={3600} step={1} value={project.camera.rotate} onChange={(v) => updateCamera({ rotate: Number(v) })} onReset={() => updateCamera({ rotate: 0 })} speed={0.22} />
+                  <button className="neo-btn w-full bg-white" onClick={resetCameraNeutral}>Reset Camera</button>
+                  <button
+                    className="neo-btn w-full"
+                    style={{ background: COLORS.cyan }}
+                    onClick={() => {
+                      const values = {
+                        x: project.camera.x,
+                        y: project.camera.y,
+                        z: project.camera.z,
+                        scale: project.camera.scale,
+                        rotate: project.camera.rotate
+                      };
+                      setProject((prev) => ({
+                        ...prev,
+                        camera: { ...prev.camera, keyframes: [...prev.camera.keyframes, makeKeyframe(playhead, values)] }
+                      }));
+                    }}
+                  >Add Camera Keyframe</button>
+                  <div className="border-t-4 border-black pt-2 mt-2" />
+                  <div className="text-xs font-black uppercase">Transitions</div>
+                  {!selectedTransition ? (
+                    <div className="text-xs font-black opacity-60">Click a seam badge on timeline to edit transition.</div>
+                  ) : (
                     <>
-                      <div className="text-xs font-black uppercase">Project</div>
-                      <input className="w-full border-4 border-black p-2 text-xs font-black" value={project.meta.projectName || ''} onChange={(e) => updateMeta({ projectName: e.target.value })} placeholder="Project Name" />
-                      <label className="text-[10px] font-black uppercase">Duration
-                        <input
-                          className="w-full border-2 border-black p-2 text-[11px] font-black bg-white mt-1"
-                          value={durationInput}
-                          onChange={(e) => {
-                            const next = e.target.value;
-                            setDurationInput(next);
-                            const parsed = parseDurationInput(next);
-                            if (parsed !== null) {
-                              const normalized = formatHMS(parsed);
-                              updateMeta({ durationSec: parsed, durationSecInput: normalized });
-                              setPlayhead((p) => clamp(p, 0, parsed));
-                            }
-                          }}
-                          onBlur={() => {
-                            const parsed = parseDurationInput(durationInput);
-                            if (parsed !== null) {
-                              const normalized = formatHMS(parsed);
-                              setDurationInput(normalized);
-                              updateMeta({ durationSec: parsed, durationSecInput: normalized });
-                              setPlayhead((p) => clamp(p, 0, parsed));
-                            }
-                          }}
-                        />
-                      </label>
-                      <div className="grid grid-cols-3 gap-2">
-                        <label className="text-[10px] font-black uppercase">FPS
-                          <select className="w-full border-2 border-black p-1 text-[11px] font-black bg-white mt-1" value={project.meta.fps || 30} onChange={(e) => updateMeta({ fps: Number(e.target.value) })}>
-                            <option value={24}>24</option>
-                            <option value={30}>30</option>
-                            <option value={60}>60</option>
-                          </select>
-                        </label>
-                        <label className="text-[10px] font-black uppercase col-span-2">Resolution
-                          <select className="w-full border-2 border-black p-1 text-[11px] font-black bg-white mt-1" value={project.meta.exportProfile || '1080'} onChange={(e) => updateMeta({ exportProfile: e.target.value })}>
-                            {EXPORT_PROFILE_KEYS.map((key) => (<option key={key} value={key}>{key.toUpperCase()}</option>))}
-                          </select>
-                        </label>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {aspectButtons}
-                      </div>
-                      <div className="text-xs font-black uppercase">Camera</div>
-                      <SpringToggle label="placement X" min={-500} max={500} step={1} value={project.camera.x} onChange={(v) => updateCamera({ x: Number(v) })} onReset={() => updateCamera({ x: 0 })} />
-                      <SpringToggle label="placement Y" min={-500} max={500} step={1} value={project.camera.y} onChange={(v) => updateCamera({ y: Number(v) })} onReset={() => updateCamera({ y: 0 })} />
-                      <SpringToggle label="z" min={-500} max={500} step={1} value={project.camera.z} onChange={(v) => updateCamera({ z: Number(v) })} onReset={() => updateCamera({ z: 0 })} />
-                      <SpringToggle label="scale" min={0.2} max={10} step={0.01} value={project.camera.scale} onChange={(v) => updateCamera({ scale: Number(v) })} onReset={() => updateCamera({ scale: 1 })} />
-                      <SpringToggle label="rotate" min={-3600} max={3600} step={1} value={project.camera.rotate} onChange={(v) => updateCamera({ rotate: Number(v) })} onReset={() => updateCamera({ rotate: 0 })} speed={0.22} />
-                      <button className="neo-btn w-full bg-white" onClick={resetCameraNeutral}>Reset Camera</button>
-                      <button
-                        className="neo-btn w-full"
-                        style={{ background: COLORS.cyan }}
-                        onClick={() => {
-                          const values = {
-                            x: project.camera.x,
-                            y: project.camera.y,
-                            z: project.camera.z,
-                            scale: project.camera.scale,
-                            rotate: project.camera.rotate
-                          };
-                          setProject((prev) => ({
-                            ...prev,
-                            camera: { ...prev.camera, keyframes: [...prev.camera.keyframes, makeKeyframe(playhead, values)] }
-                          }));
+                      <div className="text-[10px] font-black uppercase">Type</div>
+                      <div
+                        className="grid grid-cols-2 gap-2"
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          const t = e.dataTransfer.getData('text/transition-type');
+                          if (t) upsertTransition(selectedTransition.leftClipId, selectedTransition.rightClipId, { type: t });
                         }}
-                      >Add Camera Keyframe</button>
-                    </>
-                  )}
-                  {activeTab === 'transitions' && (
-                    <>
-                      <div className="text-xs font-black uppercase">Transitions</div>
-                      {!selectedTransition ? (
-                        <div className="text-xs font-black opacity-60">Click a seam badge on timeline to edit transition.</div>
-                      ) : (
-                        <>
-                          <div className="text-[10px] font-black uppercase">Type</div>
-                          <div
-                            className="grid grid-cols-2 gap-2"
-                            onDragOver={(e) => e.preventDefault()}
-                            onDrop={(e) => {
-                              const t = e.dataTransfer.getData('text/transition-type');
-                              if (t) upsertTransition(selectedTransition.leftClipId, selectedTransition.rightClipId, { type: t });
-                            }}
-                          >
-                            {TRANSITION_TYPES.map((type, idx) => (
-                              <button
-                                key={type}
-                                className="neo-btn"
-                                style={{ background: selectedTransition.type === type ? COLORS.green : pairedColor(idx) }}
-                                draggable
-                                onDragStart={(e) => e.dataTransfer.setData('text/transition-type', type)}
-                                onClick={() => upsertTransition(selectedTransition.leftClipId, selectedTransition.rightClipId, { type })}
-                              >
-                                {type}
-                              </button>
-                            ))}
-                          </div>
-                          <SpringToggle
-                            label="durationSec"
-                            min={0.05}
-                            max={8}
-                            step={0.01}
-                            value={selectedTransition.durationSec || 0.35}
-                            onChange={(v) => upsertTransition(selectedTransition.leftClipId, selectedTransition.rightClipId, { durationSec: Number(v) })}
-                            onReset={() => upsertTransition(selectedTransition.leftClipId, selectedTransition.rightClipId, { durationSec: 0.35 })}
-                          />
-                          <SpringToggle
-                            label="intensity"
-                            min={0}
-                            max={3}
-                            step={0.01}
-                            value={Number(selectedTransition.params?.intensity ?? 1)}
-                            onChange={(v) => upsertTransition(selectedTransition.leftClipId, selectedTransition.rightClipId, { params: { intensity: Number(v) } })}
-                            onReset={() => upsertTransition(selectedTransition.leftClipId, selectedTransition.rightClipId, { params: { intensity: 1 } })}
-                          />
-                          <button className="neo-btn bg-red-200 w-full" onClick={() => removeTransition(selectedTransition.id)}>Delete Transition</button>
-                        </>
-                      )}
-                    </>
-                  )}
-                  {activeTab === 'export' && (
-                    <>
-                      <div className="text-xs font-black uppercase">Export + Import</div>
-                      <div className="text-xs font-black uppercase">Export Resolution</div>
-                      <div className="grid grid-cols-5 gap-1">
-                        {EXPORT_PROFILE_KEYS.map((key) => (
+                      >
+                        {TRANSITION_TYPES.map((type, idx) => (
                           <button
-                            key={key}
+                            key={type}
                             className="neo-btn"
-                            style={{ background: project.meta.exportProfile === key ? COLORS.green : COLORS.white }}
-                            onClick={() => updateMeta({ exportProfile: key })}
+                            style={{ background: selectedTransition.type === type ? COLORS.green : pairedColor(idx) }}
+                            draggable
+                            onDragStart={(e) => e.dataTransfer.setData('text/transition-type', type)}
+                            onClick={() => upsertTransition(selectedTransition.leftClipId, selectedTransition.rightClipId, { type })}
                           >
-                            {key.toUpperCase()}
+                            {type}
                           </button>
                         ))}
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.cyan }} onClick={exportJson}><Save size={14} /> JSON</button>
-                        <label className="neo-btn w-full cursor-pointer inline-flex items-center justify-center gap-1" style={{ background: COLORS.blue }}>
-                          <Upload size={14} /> Load JSON
-                          <input type="file" accept="application/json" className="hidden" onChange={(e) => importJson(e.target.files?.[0])} />
-                        </label>
-                        <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.pink }} onClick={exportSvg}><FileCode size={14} /> SVG</button>
-                        <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.purple }} onClick={exportHtml}><Code2 size={14} /> HTML</button>
-                        <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.green }} disabled={isCapturing} onClick={capturePreviewWebm}>
-                          <Video size={14} /> {isCapturing ? 'Capturing' : 'Preview WebM'}
-                        </button>
-                        <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.orange }} onClick={() => capturePreviewVideo('mp4')}>
-                          <Download size={14} /> Export MP4
-                        </button>
-                        <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.yellow }} onClick={() => capturePreviewVideo('mov')}>
-                          <Download size={14} /> Export MOV
-                        </button>
-                        <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.cyan }} onClick={saveManualSession}>
-                          <Save size={14} /> Save Session
-                        </button>
-                        <button className="neo-btn w-full bg-white inline-flex items-center justify-center gap-1" onClick={restoreManualSession}>
-                          <Upload size={14} /> Restore Session
-                        </button>
-                        <button className="neo-btn w-full inline-flex items-center justify-center gap-1 col-span-2" style={{ background: COLORS.magenta }} onClick={clearManualSession}>
-                          <Trash2 size={14} /> Clear Saved Session
-                        </button>
-                      </div>
+                      <SpringToggle
+                        label="durationSec"
+                        min={0.05}
+                        max={8}
+                        step={0.01}
+                        value={selectedTransition.durationSec || 0.35}
+                        onChange={(v) => upsertTransition(selectedTransition.leftClipId, selectedTransition.rightClipId, { durationSec: Number(v) })}
+                        onReset={() => upsertTransition(selectedTransition.leftClipId, selectedTransition.rightClipId, { durationSec: 0.35 })}
+                      />
+                      <SpringToggle
+                        label="intensity"
+                        min={0}
+                        max={3}
+                        step={0.01}
+                        value={Number(selectedTransition.params?.intensity ?? 1)}
+                        onChange={(v) => upsertTransition(selectedTransition.leftClipId, selectedTransition.rightClipId, { params: { intensity: Number(v) } })}
+                        onReset={() => upsertTransition(selectedTransition.leftClipId, selectedTransition.rightClipId, { params: { intensity: 1 } })}
+                      />
+                      <button className="neo-btn bg-red-200 w-full" onClick={() => removeTransition(selectedTransition.id)}>Delete Transition</button>
                     </>
                   )}
+                  <div className="border-t-4 border-black pt-2 mt-2" />
+                  <div className="text-xs font-black uppercase">Export + Import</div>
+                  <div className="text-xs font-black uppercase">Export Resolution</div>
+                  <div className="grid grid-cols-5 gap-1">
+                    {EXPORT_PROFILE_KEYS.map((key) => (
+                      <button
+                        key={key}
+                        className="neo-btn"
+                        style={{ background: project.meta.exportProfile === key ? COLORS.green : COLORS.white }}
+                        onClick={() => updateMeta({ exportProfile: key })}
+                      >
+                        {key.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.cyan }} onClick={exportJson}><Save size={14} /> JSON</button>
+                    <label className="neo-btn w-full cursor-pointer inline-flex items-center justify-center gap-1" style={{ background: COLORS.blue }}>
+                      <Upload size={14} /> Load JSON
+                      <input type="file" accept="application/json" className="hidden" onChange={(e) => importJson(e.target.files?.[0])} />
+                    </label>
+                    <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.pink }} onClick={exportSvg}><FileCode size={14} /> SVG</button>
+                    <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.purple }} onClick={exportHtml}><Code2 size={14} /> HTML</button>
+                    <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.green }} disabled={isCapturing} onClick={capturePreviewWebm}>
+                      <Video size={14} /> {isCapturing ? 'Capturing' : 'Preview WebM'}
+                    </button>
+                    <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.orange }} onClick={() => capturePreviewVideo('mp4')}>
+                      <Download size={14} /> Export MP4
+                    </button>
+                    <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.yellow }} onClick={() => capturePreviewVideo('mov')}>
+                      <Download size={14} /> Export MOV
+                    </button>
+                    <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.cyan }} onClick={saveManualSession}>
+                      <Save size={14} /> Save Session
+                    </button>
+                    <button className="neo-btn w-full bg-white inline-flex items-center justify-center gap-1" onClick={restoreManualSession}>
+                      <Upload size={14} /> Restore Session
+                    </button>
+                    <button className="neo-btn w-full inline-flex items-center justify-center gap-1 col-span-2" style={{ background: COLORS.magenta }} onClick={clearManualSession}>
+                      <Trash2 size={14} /> Clear Saved Session
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -4043,13 +4021,11 @@ const basePayload = (type, i = 0) => ({
           </div>
           </aside>
 
-          <main className="grid gap-2 content-start" style={{ gridTemplateRows: isVerticalAspect ? 'minmax(380px, 70vh) auto' : 'minmax(430px, 72vh) auto' }}>
-            <section className="neo-card p-2 overflow-visible flex flex-col min-h-0">
-              <div className="flex-1 min-h-0 flex items-stretch overflow-visible justify-start">
+          <main className="h-full grid gap-2" style={{ gridTemplateRows: isVerticalAspect ? '1fr 255px' : '1fr 312px' }}>
+            <section className="neo-card p-2 overflow-hidden flex flex-col min-h-0">
+              <div className={`flex-1 min-h-0 flex items-stretch overflow-hidden ${isVerticalAspect ? 'justify-end' : 'justify-center'}`}>
                 <div
                   className={`relative ${project.meta.chromaEnabled ? '' : 'checker'}`}
-                  onMouseEnter={() => setPlayerHover(true)}
-                  onMouseLeave={() => setPlayerHover(false)}
                   style={{
                     aspectRatio: isVerticalAspect ? '9 / 16' : '16 / 9',
                     width: 'auto',
@@ -4057,8 +4033,8 @@ const basePayload = (type, i = 0) => ({
                     maxWidth: '100%',
                     maxHeight: '100%',
                     marginLeft: isVerticalAspect ? 'auto' : '0',
-                    border: '4px solid #111',
-                    borderRadius: '10px',
+                    border: '2px solid #111',
+                    borderRadius: '8px',
                     background: project.meta.chromaEnabled ? project.meta.chromaColor : undefined,
                     overflow: 'hidden'
                   }}
@@ -4169,105 +4145,19 @@ const basePayload = (type, i = 0) => ({
                       );
                     })}
                   </div>
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: '50%',
-                      bottom: '12px',
-                      transform: 'translateX(-50%)',
-                      opacity: playerHover ? 1 : 0,
-                      pointerEvents: playerHover ? 'auto' : 'none',
-                      transition: 'opacity 150ms ease',
-                      zIndex: 45
-                    }}
-                  >
-                    <div
-                      style={{
-                        background: '#000',
-                        border: '4px solid #111',
-                        borderRadius: '28px',
-                        padding: '10px 12px',
-                        boxShadow: '0 0 0 2px #fff inset, 8px 8px 0 0 rgba(255,131,234,.9)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '10px',
-                        minWidth: '320px'
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: '86%',
-                          height: '42px',
-                          borderRadius: '16px',
-                          border: '3px solid rgba(255,255,255,.25)',
-                          background: '#1a1a1a',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '3px',
-                          overflow: 'hidden'
-                        }}
-                      >
-                        {Array.from({ length: 12 }).map((_, i) => (
-                          <div
-                            key={`podbar_${i}`}
-                            style={{
-                              width: '4px',
-                              borderRadius: '2px',
-                              background: '#4FFF5B',
-                              height: `${Math.max(9, Math.round((Math.sin((podTick * 0.2) + i) * 11) + 17))}px`
-                            }}
-                          />
-                        ))}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <button className="neo-btn w-11 h-11 p-0 rounded-2xl" style={{ background: COLORS.white, boxShadow: '4px 4px 0 0 #FFFF61' }} onClick={() => setPlayhead(0)} title="Rewind to start"><Rewind size={18} /></button>
-                        <button className="neo-btn w-11 h-11 p-0 rounded-2xl" style={{ background: COLORS.white, boxShadow: '4px 4px 0 0 #4FFF5B' }} onClick={() => setPlayhead((p) => clamp(p - 1, 0, project.meta.durationSec))} title="Back 1 second"><SkipBack size={18} /></button>
-                        <button
-                          className="neo-btn w-16 h-16 p-0 rounded-[24px]"
-                          style={{ background: COLORS.purple, color: '#fff', boxShadow: '6px 6px 0 0 #ffffff' }}
-                          onClick={() => setIsPlaying((v) => !v)}
-                          title="Play / Pause"
-                        >
-                          {isPlaying ? <Pause size={30} /> : <Play size={30} className="ml-[2px]" />}
-                        </button>
-                        <button className="neo-btn w-11 h-11 p-0 rounded-2xl" style={{ background: COLORS.white, boxShadow: '4px 4px 0 0 #40C6E9' }} onClick={() => setPlayhead((p) => clamp(p + 1, 0, project.meta.durationSec))} title="Forward 1 second"><SkipForward size={18} /></button>
-                        <button className="neo-btn w-11 h-11 p-0 rounded-2xl" style={{ background: COLORS.white, boxShadow: '4px 4px 0 0 #FF83EA' }} onClick={() => setPlayhead(project.meta.durationSec)} title="Fast forward to end"><FastForward size={18} /></button>
-                      </div>
-                      <div
-                        style={{
-                          width: '86%',
-                          height: '40px',
-                          background: '#1A1A1A',
-                          border: '3px solid rgba(255,255,255,.25)',
-                          borderRadius: '14px',
-                          padding: '8px 10px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px'
-                        }}
-                      >
-                        <VolumeX className="text-white" size={16} />
-                        <div style={{ flex: 1, display: 'flex', gap: '2px', alignItems: 'center', height: '100%' }}>
-                          {Array.from({ length: 20 }).map((_, i) => (
-                            <div key={`vol_${i}`} style={{ flex: 1, height: '100%', borderRadius: '2px', background: i < 12 ? '#4FFF5B' : 'rgba(255,255,255,.12)' }} />
-                          ))}
-                        </div>
-                        <Volume2 className="text-[#4FFF5B]" size={16} />
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </section>
 
-            <section className="neo-card overflow-visible flex flex-col">
+            <section className="neo-card overflow-hidden flex flex-col">
               <div className="p-2 border-b-4 border-black flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
+                <button className="neo-btn" style={{ background: COLORS.yellow }} onClick={() => setPlayhead(0)} title="Rewind"><SkipBack size={14} /></button>
+                <button className="neo-btn" style={{ background: COLORS.green }} onClick={() => setIsPlaying((v) => !v)} title="Play / Pause">{isPlaying ? <Pause size={14} /> : <Play size={14} />}</button>
+                <button className="neo-btn" style={{ background: COLORS.yellow }} onClick={() => setPlayhead(project.meta.durationSec)} title="Fast Forward"><SkipForward size={14} /></button>
                 <label className="text-xs font-black">Duration</label>
                 <input
-                  className="border-2 border-black rounded-md px-2 py-1 w-24 text-xs font-black"
+                  className="border-4 border-black rounded-md px-2 py-1 w-24 text-xs font-black"
                   value={durationInput}
                   onChange={(e) => {
                     const txt = e.target.value;
@@ -4344,7 +4234,7 @@ const basePayload = (type, i = 0) => ({
 
               <div
                 ref={timelineRef}
-                className="overflow-x-auto overflow-y-visible neo-scroll bg-[#f8f8f8]"
+                className="flex-1 overflow-auto neo-scroll bg-[#f8f8f8]"
                 onPointerEnter={() => setTimelineHovered(true)}
                 onPointerLeave={() => { setTimelineHovered(false); setHoverMarkerSec(null); }}
                 onPointerMove={(e) => {
@@ -4450,7 +4340,7 @@ const basePayload = (type, i = 0) => ({
                                 top: `${clipTop}px`,
                                 width: `${durationOf(clip) * pxPerSec}px`,
                                 height: `${visualRow}px`,
-                                border: '2.5px solid #111',
+                                border: '1.5px solid #111',
                                 borderRadius: `${flatLeft ? 0 : 10}px ${flatRight ? 0 : 10}px ${flatRight ? 0 : 10}px ${flatLeft ? 0 : 10}px`,
                                 background: clip.color,
                                 display: 'flex',
@@ -4460,7 +4350,7 @@ const basePayload = (type, i = 0) => ({
                                 fontWeight: 900,
                                 zIndex: selected ? 20 : 10,
                                 boxShadow: selected
-                                  ? '0 0 0 1.5px rgba(87,154,255,0.98), 0 0 16px rgba(87,154,255,0.9), 0 0 28px rgba(87,154,255,0.55)'
+                                  ? '0 0 0 1px rgba(87,154,255,0.95), 0 0 8px rgba(87,154,255,0.55)'
                                   : ((flatLeft || flatRight) ? 'inset 0 0 0 1px rgba(87,154,255,0.35)' : 'none')
                               }}
                               onPointerDown={(e) => {
@@ -4598,7 +4488,7 @@ const basePayload = (type, i = 0) => ({
                               onPointerDown={(e) => e.stopPropagation()}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setActiveTab('transitions');
+                                setActiveTab('settings');
                                 if (!transition) {
                                   const newId = uid('tr');
                                   setProject((prev) => ({
@@ -4676,16 +4566,16 @@ const basePayload = (type, i = 0) => ({
             <div
               className="media-popup-card"
               style={{
-                left: `${clamp(contextMenu.x, 140, window.innerWidth - 140)}px`,
-                top: `${clamp(contextMenu.y, 76, window.innerHeight - 24)}px`,
-                transform: 'translate(-50%, -100%)',
-                width: '248px',
-                padding: '8px',
+                left: `${clamp(contextMenu.x, 146, window.innerWidth - 146)}px`,
+                top: `${clamp(contextMenu.y, 92, window.innerHeight - 92)}px`,
+                transform: 'translate(-50%, -50%)',
+                width: '254px',
+                padding: '9px',
                 zIndex: 140
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="grid grid-cols-4 gap-[1px] justify-items-center mb-2">
+              <div className="grid grid-cols-8 gap-[2px] justify-items-center mb-2">
                 {colorSwatches.map((c) => (
                   <button
                     key={c}
@@ -4698,19 +4588,19 @@ const basePayload = (type, i = 0) => ({
                   />
                 ))}
               </div>
-              <div className="flex items-center justify-center gap-2">
-                <button className="neo-btn w-11 h-11 p-0 inline-flex items-center justify-center" style={{ background: COLORS.cyan }} onClick={() => {
+              <div className="grid grid-cols-3 gap-2">
+                <button className="neo-btn w-9 h-9 p-0 inline-flex items-center justify-center" onClick={() => {
                   setClipVisible(contextMenu.clipId, !contextMenu.visible);
                   setContextMenu(null);
-                }} title="Toggle visibility">{contextMenu.visible ? <Eye size={18} /> : <EyeOff size={18} />}</button>
-                <button className="neo-btn w-11 h-11 p-0 inline-flex items-center justify-center" style={{ background: COLORS.yellow }} onClick={() => {
+                }} title="Toggle visibility">{contextMenu.visible ? <Eye size={16} /> : <EyeOff size={16} />}</button>
+                <button className="neo-btn w-9 h-9 p-0 inline-flex items-center justify-center" onClick={() => {
                   duplicateClipAndLayer(contextMenu.clipId);
                   setContextMenu(null);
-                }} title="Duplicate clip"><Copy size={18} /></button>
-                <button className="neo-btn w-11 h-11 p-0 inline-flex items-center justify-center" style={{ background: COLORS.magenta }} onClick={() => {
+                }} title="Duplicate clip"><Copy size={16} /></button>
+                <button className="neo-btn w-9 h-9 p-0 inline-flex items-center justify-center" style={{ background: COLORS.magenta }} onClick={() => {
                   removeClipAndLayer(contextMenu.clipId);
                   setContextMenu(null);
-                }} title="Delete clip"><Trash2 size={18} /></button>
+                }} title="Delete clip"><Trash2 size={16} /></button>
               </div>
               <div style={{ position: 'absolute', left: '50%', bottom: '-10px', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderTop: '10px solid #111' }} />
               <div style={{ position: 'absolute', left: '50%', bottom: '-8px', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '9px solid #fff' }} />

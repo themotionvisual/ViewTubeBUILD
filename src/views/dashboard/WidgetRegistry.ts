@@ -6,11 +6,11 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   title: "Channel Overview",
   subtitle: "Subscribers, views, hours, revenue, CTR, AVD",
   category: "core",
-  defaultSize: "third",
+  defaultSize: "full",
   minSize: "quarter",
   maxSize: "full",
-  defaultHeight: "tall",
-  minHeight: "short",
+  defaultHeight: "medium",
+  minHeight: "medium",
   maxHeight: "tall",
   headerColor: "#C9F830",
   iconRailColor: "#FFE357",
@@ -291,8 +291,8 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
  },
  {
   id: "thumb-ai",
-  title: "Thumbnail Lab",
-  subtitle: "Generate, analyze and A/B test thumbnails",
+  title: "Thumb AI",
+  subtitle: "Generate and analyze thumbnails",
   category: "creation",
   defaultSize: "half",
   minSize: "quarter",
@@ -350,6 +350,22 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   maxHeight: "tall",
   headerColor: "#4FFF5B",
   iconRailColor: "#B9FFBE",
+  dependency: ["none"],
+  status: "ready",
+ },
+ {
+  id: "keyword-overlap-intelligence",
+  title: "Keyword Overlap",
+  subtitle: "Venn map of title keyword value",
+  category: "analytics",
+  defaultSize: "half",
+  minSize: "quarter",
+  maxSize: "full",
+  defaultHeight: "tall",
+  minHeight: "medium",
+  maxHeight: "xtall",
+  headerColor: "#FF3399",
+  iconRailColor: "#24D3FF",
   dependency: ["none"],
   status: "ready",
  },
@@ -692,38 +708,18 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
 ]
 
 const prioritizedOrder = [
-  // 1. Dashboard (Core/System)
   "kpi-cluster", 
-  "channel-overview",
-  "realtime-performance",
-  "alerts-feed",
+  "consistency-heatmap", 
+  "realtime-performance", 
   "system-micro-stack",
-  // 2. Studio (Creation)
-  "recent-uploads",
-  "upload-cadence",
-  "task-stack",
-  "community-post",
-  "description-editor",
-  "tag-generator",
-  "thumb-ai",
-  // 3. Analytics (Analytics)
-  "top-performer",
-  "revenue-momentum",
-  "revenue-chart",
-  "keyword-engine",
-  "traffic-sources",
-  "audience-retention",
-  "shorts-vs-long",
-  // 4. Community (Community)
-  "superfan-card",
   "comment-replier",
-  // 5. AI (AI)
-  "ai-prompt-box",
-  "ask-me",
+  "community-post",
+  "goals-tracker",
+  "shorts-vs-long",
   "daily-oracle",
   "ai-journal",
-  // 6. Calendar (Calendar)
-  "mini-calendar"
+  "ask-me",
+  "collab-matchmaker"
  ];
 
 export const DEFAULT_DASHBOARD_WIDGET_ORDER = [

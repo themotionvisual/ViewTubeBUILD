@@ -11,6 +11,7 @@
     "typecheck": "tsc -b",
     "lint": "eslint .",
     "test": "vitest run",
+    "generate:analytics-sync-backlog": "node scripts/generate-analytics-sync-backlog.mjs",
     "generate:chart-inventory": "node scripts/generate-chart-inventory.mjs",
     "generate:oracle-skill-pack": "node scripts/generate-oracle-skill-pack.mjs",
     "check:css": "node scripts/check-css-parse.mjs",

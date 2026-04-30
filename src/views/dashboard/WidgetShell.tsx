@@ -251,23 +251,23 @@ export const WidgetShell: React.FC<{
       <div className="flex items-center gap-1.5 mr-2">
        <button
         onClick={onCycleSize}
-        className="widget-control-btn w-5"
+        className="widget-header-btn"
         title="Cycle width">
         <ChevronsLeftRight size={12} strokeWidth={3} />
        </button>
        <button
         onClick={onCycleHeight}
-        className="widget-control-btn w-5"
+        className="widget-header-btn"
         title="Cycle height">
         <ChevronsUpDown size={12} strokeWidth={3} />
        </button>
        <button
         onClick={onRemove}
-        className="widget-control-btn w-5"
+        className="widget-header-btn"
         title="Remove widget">
         <X size={12} strokeWidth={3} />
        </button>
-       <div className="widget-control-btn w-5 cursor-grab active:cursor-grabbing" title="Drag to reorder">
+       <div className="widget-header-btn cursor-grab active:cursor-grabbing" title="Drag to reorder">
         <GripVertical size={12} strokeWidth={3} />
        </div>
       </div>

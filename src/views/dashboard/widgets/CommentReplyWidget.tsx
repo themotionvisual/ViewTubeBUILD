@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react"
 import { WidgetShell } from "../WidgetShell"
+import { useEntitlement } from "../../../app/AppShell"
 import {
   MessageSquare,
   Sparkles,
@@ -17,7 +18,7 @@ import {
 } from "../../../services/youtube/youtubeDataFetcher"
 import { generatePerfectReply } from "../../../services/gemini"
 import { useBrain } from "../../../context/GlobalDataContext"
-import { canAffordAiTokens, getCurrentEntitlement } from "../../../services/billingEntitlement"
+import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
 
 export const CommentReplyWidget = ({
@@ -53,10 +54,10 @@ export const CommentReplyWidget = ({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const itemsPerPage = 3
   const REPLY_DRAFT_COST = getAiTokenCost("commentMagicDraftPerThread")
-  const entitlement = getCurrentEntitlement()
+  const entitlement = useEntitlement()
   const selectedDraftCost = selectedIds.size * REPLY_DRAFT_COST
   const canAffordSelectedDrafts =
-    selectedIds.size === 0 ? true : canAffordAiTokens(selectedDraftCost)
+    selectedIds.size === 0 ? true : canAffordAiTokensFromState(entitlement, selectedDraftCost)
 
   const channelId = data.brain?.channelProfile?.id || data.authState?.channelId || ""
   const videos = useMemo(() => data.canonicalRows || data.brain?.canonicalRows || [], [data])
@@ -107,7 +108,7 @@ export const CommentReplyWidget = ({
   const handleMagicDraft = async (commentIds: string[]) => {
     if (commentIds.length === 0) return
     const totalCost = commentIds.length * REPLY_DRAFT_COST
-    if (!canAffordAiTokens(totalCost)) return
+    if (!canAffordAiTokensFromState(entitlement, totalCost)) return
     
     commentIds.forEach(id => setIsGenerating(prev => ({ ...prev, [id]: true })))
     

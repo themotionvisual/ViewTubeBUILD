@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import {
  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
  BarChart, Bar, ScatterChart, Scatter, ZAxis, Legend, Cell,
  LineChart, Line, PieChart, Pie, ComposedChart, ReferenceLine,
  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
+ Customized,
 } from "recharts"
 import type { CanonicalVideoRow } from "../services/analyticsContract"
 import { resolveMetricNumber } from "../services/canonicalMetricResolver"
@@ -155,20 +156,340 @@ export const SubscribersGained: React.FC<GChartProps> = ({ data }) => {
 
 /* 5. Shorts Retention */
 export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
- const cd = useMemo(() => data.filter(r=>r.format==="shorts").map(r => ({
-  title: r.title, dur: r.durationSeconds, avd: +mv(r,"avp").toFixed(1)
- })).filter(d=>d.dur>0&&d.avd>0), [data])
+ const [mode, setMode] = useState<"top-performing" | "most-recent">("top-performing")
+ const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+ const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
+ const cd = useMemo(() => {
+  const shorts = data
+   .filter((r) => r.format === "shorts")
+   .map((r) => ({
+    title: r.title,
+    dur: r.durationSeconds,
+    avd: +mv(r, "avp").toFixed(1),
+    views: mv(r, "views"),
+    estIncome: Math.max(mv(r, "revenue"), (mv(r, "rpm") * Math.max(0, mv(r, "views"))) / 1000),
+    uploadTs: new Date(String(r.uploadDate || "")).getTime() || 0,
+   }))
+   .filter((d) => d.dur > 0 && d.avd > 0)
+
+  const ranked = mode === "most-recent"
+   ? [...shorts].sort((a, b) => b.uploadTs - a.uploadTs)
+   : [...shorts].sort((a, b) => b.views - a.views)
+
+  const top100 = ranked.slice(0, 100)
+  const maxA = Math.max(1, ...top100.map((d) => d.avd))
+  const yTop = Math.max(100, Math.ceil(maxA / 25) * 25)
+  const minViews = Math.min(...top100.map((d) => d.views))
+  const maxViews = Math.max(...top100.map((d) => d.views))
+  const minIncome = Math.min(...top100.map((d) => d.estIncome))
+  const maxIncome = Math.max(...top100.map((d) => d.estIncome))
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+  const clamp01 = (n: number) => Math.max(0, Math.min(1, n))
+
+  const points = top100.map((d) => {
+   const sizeT = maxViews > minViews ? (d.views - minViews) / (maxViews - minViews) : 0.5
+   const incomeT = maxIncome > minIncome ? (d.estIncome - minIncome) / (maxIncome - minIncome) : 0.5
+   const r = lerp(4, 40, sizeT)
+   const c = {
+    r: Math.round(lerp(36, 102, clamp01(incomeT))),
+    g: Math.round(lerp(188, 255, clamp01(incomeT))),
+    b: Math.round(255 - 116 * clamp01(incomeT)),
+   }
+   return {
+    ...d,
+    key: `${d.title}-${d.uploadTs}-${d.views}`,
+    avdRel: +((d.avd / maxA) * yTop).toFixed(2),
+    radius: r,
+    color: `rgb(${c.r}, ${c.g}, ${c.b})`,
+   }
+  })
+
+  // Draw larger bubbles first so smaller ones stay above on z-order.
+  return {
+   points: [...points].sort((a, b) => b.radius - a.radius),
+   yTop,
+  }
+ }, [data, mode])
+
+ const bubbleShape = (props: any) => {
+  const { cx, cy, payload } = props
+  const isHover = hoveredKey === payload.key
+  const scale = isHover ? 1.16 : 1
+  return (
+   <circle
+    cx={cx}
+    cy={cy}
+    r={payload.radius}
+    fill={payload.color}
+    fillOpacity={0.75}
+    stroke={payload.color}
+    strokeWidth={isHover ? 2 : 0}
+    style={{
+      transformBox: "fill-box",
+      transformOrigin: "center",
+      transform: `scale(${scale})`,
+      shapeRendering: "geometricPrecision",
+      transition: "transform 220ms cubic-bezier(0.34,1.56,0.64,1)",
+      cursor: "pointer",
+    }}
+    onMouseEnter={() => setHoveredKey(payload.key)}
+    onMouseLeave={() => setHoveredKey(null)}
+   />
+  )
+ }
+
  return (
-  <Card title="SHORTS RETENTION" subtitle="AVD% × Duration" headerColor="#CCFF00" count={cd.length}>
-   <ScatterChart margin={{top:10,right:10,bottom:10,left:-10}}>
-    <CartesianGrid strokeDasharray="3 3"/><XAxis type="number" dataKey="dur" name="Duration (s)" tick={{fontWeight:900,fontSize:10}}/>
-    <YAxis type="number" dataKey="avd" name="AVG % Viewed" tick={{fontWeight:900,fontSize:10}}/>
-    <Tooltip content={<ChartTip/>}/>
-    <Scatter data={cd.filter(d=>d.dur<60)} fill="#FF7497" name="<60s"/>
-    <Scatter data={cd.filter(d=>d.dur>=60&&d.dur<120)} fill="#24D3FF" name="60-120s"/>
-    <Scatter data={cd.filter(d=>d.dur>=120)} fill="#66FF66" name=">120s"/>
-   </ScatterChart>
-  </Card>
+  <div className="bg-white border-[4px] border-black rounded-2xl shadow-[8px_8px_0px_0px_black] overflow-hidden flex flex-col">
+   <div className="border-b-[4px] border-black px-5 py-3 flex justify-between items-center gap-3 bg-[#CCFF00]">
+    <div>
+     <span className="font-[900] text-lg uppercase tracking-tight">SHORTS RETENTION</span>
+     <span className="block text-[10px] font-bold opacity-60 uppercase">AVD% × Duration</span>
+    </div>
+    <div className="flex items-center gap-2">
+     <select
+      value={mode}
+      onChange={(e) => setMode(e.target.value as "top-performing" | "most-recent")}
+      className="h-8 px-2 bg-white border-[3px] border-black rounded-md text-[10px] font-black uppercase">
+      <option value="top-performing">Top Performing</option>
+      <option value="most-recent">Most Recent</option>
+     </select>
+     <span className="text-xs font-black uppercase">TOP AVG % {cd.yTop}</span>
+     <span className="text-sm font-black">{cd.points.length} SHOWN</span>
+     <div className="w-7 h-7 bg-[#004D40] rounded border-2 border-black flex items-center justify-center cursor-pointer text-white text-xs">⤢</div>
+    </div>
+   </div>
+   <div className="flex-1 p-4 min-h-[320px]">
+    <ResponsiveContainer width="100%" height={300}>
+     <ScatterChart
+      margin={{top:10,right:10,bottom:10,left:-10}}
+      onMouseMove={(state: any) => {
+       if (typeof state?.chartX === "number" && typeof state?.chartY === "number") {
+        setMousePos({ x: state.chartX, y: state.chartY })
+       }
+      }}
+      onMouseLeave={() => setMousePos(null)}>
+      <CartesianGrid stroke="rgba(107,114,128,0.28)" strokeDasharray="4 4"/>
+      <XAxis type="number" dataKey="dur" name="Duration (s)" tick={{fontWeight:900,fontSize:10}}/>
+      <YAxis type="number" dataKey="avdRel" name="AVG % Viewed (relative)" domain={[0, cd.yTop]} tick={{fontWeight:900,fontSize:10}}/>
+      <Tooltip
+       content={<ChartTip/>}
+       isAnimationActive={false}
+       cursor={false}
+      />
+      <Scatter data={cd.points} shape={bubbleShape} name="Income Gradient"/>
+      <Customized component={({ offset }: any) => {
+       if (!mousePos || !offset) return null
+       const left = offset.left
+       const top = offset.top
+       const right = offset.left + offset.width
+       const bottom = offset.top + offset.height
+       if (mousePos.x < left || mousePos.x > right || mousePos.y < top || mousePos.y > bottom) return null
+       const snappedX = Math.round(mousePos.x) + 0.5
+       const snappedY = Math.round(mousePos.y) + 0.5
+       return (
+        <g pointerEvents="none">
+         <line
+          x1={left}
+          y1={snappedY}
+          x2={right}
+          y2={snappedY}
+          stroke="rgba(255, 51, 153, 0.28)"
+          strokeWidth={1}
+          strokeDasharray="4 4"
+          shapeRendering="crispEdges"
+         />
+         <line
+          x1={snappedX}
+          y1={top}
+          x2={snappedX}
+          y2={bottom}
+          stroke="rgba(255, 51, 153, 0.28)"
+          strokeWidth={1}
+          strokeDasharray="4 4"
+          shapeRendering="crispEdges"
+         />
+        </g>
+       )
+      }} />
+     </ScatterChart>
+    </ResponsiveContainer>
+   </div>
+   <div className="px-5 pb-3 text-[10px] font-black uppercase opacity-70">Bubble size = Views · Color = Estimated Income (Blue → Green)</div>
+  </div>
+ )
+}
+
+/* 5b. Shorts Retention - Widget Module (no tooltip, subtitle rail) */
+export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => {
+ const [mode, setMode] = useState<"top-performing" | "most-recent">("top-performing")
+ const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+ const [activeKey, setActiveKey] = useState<string | null>(null)
+ const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
+
+ const cd = useMemo(() => {
+  const shorts = data
+   .filter((r) => r.format === "shorts")
+   .map((r) => ({
+    title: r.title,
+    dur: r.durationSeconds,
+    avd: +mv(r, "avp").toFixed(1),
+    views: mv(r, "views"),
+    estIncome: Math.max(mv(r, "revenue"), (mv(r, "rpm") * Math.max(0, mv(r, "views"))) / 1000),
+    uploadTs: new Date(String(r.uploadDate || "")).getTime() || 0,
+   }))
+   .filter((d) => d.dur > 0 && d.avd > 0)
+
+  const ranked = mode === "most-recent"
+   ? [...shorts].sort((a, b) => b.uploadTs - a.uploadTs)
+   : [...shorts].sort((a, b) => b.views - a.views)
+
+  const top100 = ranked.slice(0, 100)
+  const maxA = Math.max(1, ...top100.map((d) => d.avd))
+  const yTop = Math.max(100, Math.ceil(maxA / 25) * 25)
+  const minViews = Math.min(...top100.map((d) => d.views))
+  const maxViews = Math.max(...top100.map((d) => d.views))
+  const minIncome = Math.min(...top100.map((d) => d.estIncome))
+  const maxIncome = Math.max(...top100.map((d) => d.estIncome))
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+  const clamp01 = (n: number) => Math.max(0, Math.min(1, n))
+
+  const points = top100.map((d) => {
+   const sizeT = maxViews > minViews ? (d.views - minViews) / (maxViews - minViews) : 0.5
+   const incomeT = maxIncome > minIncome ? (d.estIncome - minIncome) / (maxIncome - minIncome) : 0.5
+   const r = lerp(4, 40, sizeT)
+   const c = {
+    r: Math.round(lerp(36, 102, clamp01(incomeT))),
+    g: Math.round(lerp(188, 255, clamp01(incomeT))),
+    b: Math.round(255 - 116 * clamp01(incomeT)),
+   }
+   return {
+    ...d,
+    key: `${d.title}-${d.uploadTs}-${d.views}`,
+    avdRel: +((d.avd / maxA) * yTop).toFixed(2),
+    radius: r,
+    color: `rgb(${c.r}, ${c.g}, ${c.b})`,
+   }
+  })
+
+  return {
+   points: [...points].sort((a, b) => b.radius - a.radius),
+   yTop,
+  }
+ }, [data, mode])
+
+ useEffect(() => {
+  if (cd.points.length === 0) {
+   setActiveKey(null)
+   return
+  }
+  if (!activeKey || !cd.points.some((p) => p.key === activeKey)) {
+   setActiveKey(cd.points[0].key)
+  }
+ }, [cd.points, activeKey])
+
+ const activePoint = useMemo(
+  () => cd.points.find((p) => p.key === activeKey) || cd.points[0] || null,
+  [cd.points, activeKey],
+ )
+
+ const bubbleShape = (props: any) => {
+  const { cx, cy, payload } = props
+  const isHover = hoveredKey === payload.key
+  const isActive = activeKey === payload.key
+  const scale = isHover ? 1.16 : 1
+  return (
+   <circle
+    cx={cx}
+    cy={cy}
+    r={payload.radius}
+    fill={payload.color}
+    fillOpacity={0.75}
+    stroke={payload.color}
+    strokeWidth={isHover || isActive ? 2 : 0}
+    style={{
+      transformBox: "fill-box",
+      transformOrigin: "center",
+      transform: `scale(${scale})`,
+      shapeRendering: "geometricPrecision",
+      transition: "transform 220ms cubic-bezier(0.34,1.56,0.64,1)",
+      cursor: "pointer",
+    }}
+    onMouseEnter={() => {
+      setHoveredKey(payload.key)
+      setActiveKey(payload.key)
+    }}
+    onMouseLeave={() => setHoveredKey(null)}
+   />
+  )
+ }
+
+ return (
+  <div className="bg-white border-[4px] border-black rounded-2xl shadow-[8px_8px_0px_0px_black] overflow-hidden flex flex-col">
+   <div className="border-b-[4px] border-black px-5 py-3 flex justify-between items-center gap-3 bg-[#CCFF00]">
+    <div>
+     <span className="font-[900] text-xl uppercase tracking-tight">SHORTS RETENTION</span>
+     <span className="block text-[10px] font-medium opacity-60 uppercase tracking-widest">AVD% × $REV × LENGTH</span>
+    </div>
+    <div className="flex items-center gap-2">
+     <select
+      value={mode}
+      onChange={(e) => setMode(e.target.value as "top-performing" | "most-recent")}
+      className="h-8 px-2 bg-white border-[3px] border-black rounded-md text-[10px] font-black uppercase">
+      <option value="top-performing">Top Performing</option>
+      <option value="most-recent">Most Recent</option>
+     </select>
+     <span className="text-xs font-black uppercase">TOP AVG % {cd.yTop}</span>
+     <span className="text-sm font-black">{cd.points.length} SHOWN</span>
+    </div>
+   </div>
+
+   <div className="border-b-[4px] border-black px-5 py-2 bg-white">
+    <div className="text-[20px] leading-none font-[1000] uppercase tracking-tight truncate">
+     {activePoint?.title || "No video selected"}
+    </div>
+    <div className="mt-1 flex flex-wrap items-center gap-5 text-[10px] font-black uppercase tracking-[0.12em] text-black/70">
+     <span>AVD%: {activePoint ? activePoint.avd.toFixed(2) : "0.00"}</span>
+     <span>REV: ${activePoint ? activePoint.estIncome.toFixed(2) : "0.00"}</span>
+     <span>LENGTH: {activePoint ? Math.round(activePoint.dur) : 0}s</span>
+     <span>VIEWS: {activePoint ? Math.round(activePoint.views).toLocaleString() : "0"}</span>
+    </div>
+   </div>
+
+   <div className="flex-1 p-4 min-h-[360px]">
+    <ResponsiveContainer width="100%" height={320}>
+     <ScatterChart
+      margin={{ top: 10, right: 10, bottom: 10, left: -10 }}
+      onMouseMove={(state: any) => {
+       if (typeof state?.chartX === "number" && typeof state?.chartY === "number") {
+        setMousePos({ x: state.chartX, y: state.chartY })
+       }
+      }}
+      onMouseLeave={() => setMousePos(null)}>
+      <CartesianGrid stroke="rgba(107,114,128,0.28)" strokeDasharray="4 4" />
+      <XAxis type="number" dataKey="dur" name="Duration (s)" tick={{ fontWeight: 900, fontSize: 10 }} />
+      <YAxis type="number" dataKey="avdRel" name="AVG % Viewed (relative)" domain={[0, cd.yTop]} tick={{ fontWeight: 900, fontSize: 10 }} />
+      <Scatter data={cd.points} shape={bubbleShape} name="Income Gradient" />
+      <Customized component={({ offset }: any) => {
+       if (!mousePos || !offset) return null
+       const left = offset.left
+       const top = offset.top
+       const right = offset.left + offset.width
+       const bottom = offset.top + offset.height
+       if (mousePos.x < left || mousePos.x > right || mousePos.y < top || mousePos.y > bottom) return null
+       const snappedX = Math.round(mousePos.x) + 0.5
+       const snappedY = Math.round(mousePos.y) + 0.5
+       return (
+        <g pointerEvents="none">
+         <line x1={left} y1={snappedY} x2={right} y2={snappedY} stroke="rgba(255, 51, 153, 0.28)" strokeWidth={1} strokeDasharray="4 4" shapeRendering="crispEdges" />
+         <line x1={snappedX} y1={top} x2={snappedX} y2={bottom} stroke="rgba(255, 51, 153, 0.28)" strokeWidth={1} strokeDasharray="4 4" shapeRendering="crispEdges" />
+        </g>
+       )
+      }} />
+     </ScatterChart>
+    </ResponsiveContainer>
+   </div>
+   <div className="px-5 pb-3 text-[10px] font-black uppercase opacity-70">Bubble size = Views · Color = Estimated Income (Blue → Green)</div>
+  </div>
  )
 }
 

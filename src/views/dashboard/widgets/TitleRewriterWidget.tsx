@@ -1,8 +1,9 @@
 import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
+import { useEntitlement } from "../../../app/AppShell"
 import { Type, Sparkles, Copy, Check, RefreshCw } from "lucide-react"
 import { useBrain } from "../../../context/GlobalDataContext"
-import { canAffordAiTokens, getCurrentEntitlement } from "../../../services/billingEntitlement"
+import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
 
 const STYLE_PRESETS = [
@@ -18,8 +19,8 @@ export const TitleRewriterWidget = ({
  const { brain } = useBrain()
  const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
  const TITLE_REWRITE_COST = getAiTokenCost("titleRewrite")
- const entitlement = getCurrentEntitlement()
- const canAffordRewrite = canAffordAiTokens(TITLE_REWRITE_COST)
+ const entitlement = useEntitlement()
+ const canAffordRewrite = canAffordAiTokensFromState(entitlement, TITLE_REWRITE_COST)
  const videos = data.canonicalRows || []
  const [selectedVideo, setSelectedVideo] = useState("")
  const [originalTitle, setOriginalTitle] = useState("")

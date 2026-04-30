@@ -55,6 +55,7 @@ export interface ChartDefinition {
  id: string
  requiredMetrics: CanonicalMetricKey[]
  acceptedConfidences: MetricConfidence[]
+ minCoverage?: number
  failClosedBehavior: "show_missing_metrics_panel" | "hide_chart"
 }
 
@@ -86,8 +87,44 @@ export type RawAnalyticsCache = Record<string, unknown> & {
  metricCapabilitiesByWindow?: Partial<
   Record<AnalyticsWindow, MetricCapability[]>
  >
+ videoContentType?: Record<string, string>
+ videoContentTypeStatus?: {
+  status: "available" | "quarantined"
+  requestClass: "channel_creator_content_type"
+  idsTried: string[]
+  disabledForSession: boolean
+  rowCount: number
+  reason?: string
+  fetchedAt?: number
+ }
  lastSyncedByWindow?: Partial<Record<AnalyticsWindow, number>>
  lastSynced?: number
+ syncRunSummary?: {
+  runAt: string
+  cacheBytesBefore: number
+  cacheBytesAfter: number
+  videoCount: number
+  statsCount: number
+  dataApiCallCounts: unknown
+  warning?: string
+  analyticsVerification?: {
+   window: AnalyticsWindow
+   thumbnailMetrics: {
+    impressionsAvailable: boolean
+    ctrAvailable: boolean
+    requestShapeHealthy: boolean
+    failureEvents: number
+    quarantinedFailures: number
+    suppressedRetries: number
+   }
+   creatorContentType: {
+    status: "available" | "quarantined"
+    disabledForSession: boolean
+    rowCount: number
+    reason?: string
+   }
+  }
+ }
  ledger?: Record<string, LedgerEntry>
 }
 
@@ -114,6 +151,9 @@ export const markDeprecatedLocalStorageRead = (
 
 export const readYouTubeAnalyticsCache = (): RawAnalyticsCache =>
   safeParse<RawAnalyticsCache>(localStorage.getItem(YT_ANALYTICS_CACHE_KEY), {})
+
+export const readGA4AnalyticsCache = (): Record<string, unknown> =>
+  safeParse<Record<string, unknown>>(localStorage.getItem("ga4_analytics_cache"), {})
 
 /**
  * @deprecated Use canonical analytics store selectors from analyticsSelectors.ts if possible.
