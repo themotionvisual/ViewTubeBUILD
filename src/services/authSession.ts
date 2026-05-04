@@ -117,6 +117,9 @@ export const loginWithImplicitPopup = async (): Promise<void> => {
       'https://www.googleapis.com/auth/youtube.readonly',
       'https://www.googleapis.com/auth/yt-analytics.readonly',
       'https://www.googleapis.com/auth/yt-analytics-monetary.readonly',
+      'openid',
+      'profile',
+      'email',
     ].join(' ');
 
     const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
