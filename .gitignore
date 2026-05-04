@@ -374,3 +374,4 @@ web_modules/
 *.pid.lock
 .gemini/
 gha-creds-*.json
+.worktrees/
