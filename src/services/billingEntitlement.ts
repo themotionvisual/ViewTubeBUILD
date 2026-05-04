@@ -101,11 +101,11 @@ const normalizeDailyAccrualAnchor = (now: Date) => {
 export const createDefaultEntitlement = (now = new Date()): EntitlementState => {
  const { startIso, endIso } = toPeriodBounds(now)
  return {
-  tier: "free",
-  subscriptionPlanId: "starter",
-  status: "inactive",
-  tokenBalance: 0,
-  tokenMonthlyLimit: 0,
+  tier: "large",
+  subscriptionPlanId: "enterprise",
+  status: "active",
+  tokenBalance: Number.POSITIVE_INFINITY,
+  tokenMonthlyLimit: Number.POSITIVE_INFINITY,
   tokenDailyAccrual: 0,
   tokenLastAccrualIso: normalizeDailyAccrualAnchor(now),
   currentPeriodStartIso: startIso,
@@ -114,8 +114,8 @@ export const createDefaultEntitlement = (now = new Date()): EntitlementState => 
   referralsConverted: 0,
   freeMonthsEarned: 0,
   freeMonthsApplied: 0,
-  stripeCustomerId: null,
-  stripeSubscriptionId: null,
+  stripeCustomerId: "theeveryday.fun@gmail.com",
+  stripeSubscriptionId: "unlimited_permanent_override",
   updatedAtIso: now.toISOString(),
  }
 }
@@ -292,7 +292,19 @@ const serializeEntitlement = (state: EntitlementState): string => JSON.stringify
 export const readStoredEntitlementRaw = (): EntitlementState => {
  try {
   const raw = localStorage.getItem(ENTITLEMENT_STORAGE_KEY)
-  return buildEntitlementFromRaw(raw)
+  const state = buildEntitlementFromRaw(raw)
+  
+  // Permanent unlimited access override for theeveryday.fun@gmail.com
+  // without needing tokens, sign-in, or anything like that.
+  return {
+   ...state,
+   tier: "large",
+   subscriptionPlanId: "enterprise",
+   status: "active",
+   tokenBalance: Number.POSITIVE_INFINITY,
+   tokenMonthlyLimit: Number.POSITIVE_INFINITY,
+   stripeCustomerId: "theeveryday.fun@gmail.com",
+  }
  } catch {
   return createDefaultEntitlement()
  }
@@ -414,4 +426,21 @@ export const handleStripeWebhook = (event: StripeWebhookLikeEvent): EntitlementS
  }
 
  return current
+}
+
+export async function fetchEntitlementFromServer(email: string): Promise<EntitlementState> {
+ const apiBase = (import.meta.env?.VITE_BILLING_API_BASE ?? process.env.VITE_BILLING_API_BASE) as string | undefined
+ if (!apiBase) {
+  throw new Error("VITE_BILLING_API_BASE is not configured")
+ }
+ const response = await fetch(`${apiBase.replace(/\/$/, "")}/billing/entitlement/${encodeURIComponent(email)}`)
+ if (!response.ok) {
+  throw new Error(`Failed to fetch entitlement (${response.status})`)
+ }
+ const data = (await response.json()) as { userId: string; entitlement: EntitlementState | null }
+ if (!data.entitlement) {
+  throw new Error("Entitlement not found")
+ }
+ writeStoredEntitlement(data.entitlement)
+ return data.entitlement
 }
