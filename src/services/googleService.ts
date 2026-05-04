@@ -82,6 +82,10 @@ export class GoogleService {
     const q = query ? `?q=${encodeURIComponent(query)}` : '';
     return this.request('https://www.googleapis.com/drive/v3', `/files${q}`);
   }
+
+  public async getUserInfo(): Promise<{ email: string }> {
+    return this.request('https://www.googleapis.com', '/oauth2/v3/userinfo');
+  }
 }
 
 export const googleService = new GoogleService();
