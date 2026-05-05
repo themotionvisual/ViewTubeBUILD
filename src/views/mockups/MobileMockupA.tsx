@@ -59,7 +59,7 @@ const MobileMockupA: React.FC = () => {
   ]
 
   return (
-    <div className="w-full max-w-[390px] mx-auto bg-[#f3f4f6] min-h-screen pb-20 font-sans">
+    <div className="w-full bg-[#f3f4f6] min-h-screen pb-20 font-sans">
       {/* Status Bar Mock */}
       <div className="h-12 bg-black flex items-center justify-between px-6">
         <span className="text-white text-xs font-bold">9:41</span>
@@ -174,7 +174,7 @@ const MobileMockupA: React.FC = () => {
       </button>
 
       {/* Bottom Tab Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-[390px] mx-auto bg-white border-t-[3px] border-black">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t-[3px] border-black">
         <div className="flex">
           {[
             { id: "dashboard" as const, icon: Home, label: "Dashboard", color: "#FF8AAF" },

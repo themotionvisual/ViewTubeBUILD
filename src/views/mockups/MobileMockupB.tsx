@@ -200,7 +200,7 @@ const MobileMockupB: React.FC = () => {
   const sections = activeView === "dashboard" ? dashboardSections : studioSections
 
   return (
-    <div className="w-full max-w-[390px] mx-auto bg-[#f3f4f6] min-h-screen font-sans relative">
+    <div className="w-full bg-[#f3f4f6] min-h-screen font-sans relative">
       {/* Drawer Overlay */}
       {drawerOpen && (
         <div

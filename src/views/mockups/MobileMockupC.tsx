@@ -87,7 +87,7 @@ const MobileMockupC: React.FC = () => {
   ]
 
   return (
-    <div className="w-full max-w-[390px] mx-auto bg-black min-h-screen font-sans">
+    <div className="w-full bg-black min-h-screen font-sans">
       {/* Status Bar Mock */}
       <div className="h-12 bg-black flex items-center justify-between px-6">
         <span className="text-white text-xs font-bold">9:41</span>
