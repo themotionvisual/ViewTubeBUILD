@@ -134,20 +134,25 @@ const MobileMockupC: React.FC = () => {
       {activeTab === "dashboard" ? (
         <div className="bg-[#f3f4f6] min-h-screen rounded-t-[32px] pt-6 px-4 pb-8">
           {/* Hero Metric Card */}
-          <div
-            className={`bg-gradient-to-br ${metrics[activeMetric].bgGradient} rounded-2xl p-5 border-[3px] border-black shadow-[6px_6px_0px_0px_black] mb-4`}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70">
-                {metrics[activeMetric].label}
-              </span>
-              <metrics[activeMetric].icon size={24} strokeWidth={2.5} />
-            </div>
-            <div className="text-4xl font-[1000] tracking-tight mb-1">
-              {metrics[activeMetric].value}
-            </div>
-            <div className="text-xs font-bold opacity-70">{metrics[activeMetric].change}</div>
-          </div>
+          {(() => {
+            const ActiveIcon = metrics[activeMetric].icon
+            return (
+              <div
+                className={`bg-gradient-to-br ${metrics[activeMetric].bgGradient} rounded-2xl p-5 border-[3px] border-black shadow-[6px_6px_0px_0px_black] mb-4`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70">
+                    {metrics[activeMetric].label}
+                  </span>
+                  <ActiveIcon size={24} strokeWidth={2.5} />
+                </div>
+                <div className="text-4xl font-[1000] tracking-tight mb-1">
+                  {metrics[activeMetric].value}
+                </div>
+                <div className="text-xs font-bold opacity-70">{metrics[activeMetric].change}</div>
+              </div>
+            )
+          })()}
 
           {/* Metric Selector Dots */}
           <div className="flex justify-center gap-2 mb-6">
