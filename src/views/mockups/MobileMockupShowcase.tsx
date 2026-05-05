@@ -229,7 +229,7 @@ const MobileMockupShowcase: React.FC = () => {
                   onClick={() => setSelectedMockup("all")}
                   className="text-white/50 hover:text-white text-sm font-bold flex items-center gap-2"
                 >
-                  ← Back to overview
+                  &larr; Back to overview
                 </button>
                 <div
                   className="px-3 py-1 rounded-lg font-bold text-sm"
@@ -260,7 +260,6 @@ const MobileMockupShowcase: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
     </div>
   )
 }
