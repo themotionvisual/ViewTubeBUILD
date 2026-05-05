@@ -35,6 +35,7 @@ import StoryboardStudio from "../views/StoryboardStudio"
 import { ComponentGridLab } from "../components/ComponentGridLab"
 import { IntegratedRemotionEditor } from "../editor-ui/IntegratedRemotionEditor"
 import GraphsPage from "../views/GraphsPage"
+import MobileMockupShowcase from "../views/mockups/MobileMockupShowcase"
 
 const Placeholder = ({ title }: { title: string }) => (
  <div className="flex items-center justify-center h-full">
@@ -135,6 +136,7 @@ export const AppRoutes: React.FC = () => {
    <Route path="/algorithm-architect" element={<AlgorithmArchitect />} />
    <Route path="/storyboard-studio" element={<StoryboardStudio />} />
    <Route path="/component-grid-lab" element={<ComponentGridLab />} />
+   <Route path="/mobile-mockups" element={<MobileMockupShowcase />} />
 
    <Route path="*" element={<Navigate to="/" replace />} />
   </Routes>
