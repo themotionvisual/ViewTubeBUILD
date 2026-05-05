@@ -24,7 +24,7 @@ interface OracleState {
  quickWins: OracleAdvice[]
 }
 
-function generateAdvice(data: any): OracleState {
+function generateAdvice(data: any, { onDecSize, onCycleHeight, onDecHeight }: any): OracleState {
  const rows = data.canonicalRows || []
  const stats = data.statBlocks || []
  const viewsBlock = stats.find((s: any) => s.label.toLowerCase().includes("views"))
@@ -44,14 +44,11 @@ function generateAdvice(data: any): OracleState {
 
  // Priority 1: Upload consistency
  if (!hasRecentUpload) {
-  priorities.push({
-   text: `You haven't uploaded in over 2 weeks. Impressions decay rapidly after 7 days of inactivity. Record something today, even if it's a Short.`,
-   timeframe: "Today", color: "#FF8AAF", shadowColor: "rgba(255,138,175,0.5)", action: "Upload", completed: false,
-  })
+  priorities.push({text: `You haven't uploaded in over 2 weeks. Impressions decay rapidly after 7 days of inactivity. Record something today, even if it's a Short.`, timeframe: "Today", color: "#FF8AAF", shadowColor: "rgba(255, 138, 175, 0.5)", action: "Upload", completed: false, onDecSize, onCycleHeight, onDecHeight})
  } else {
   priorities.push({
    text: `You have ${recentUploads.length} recent uploads — good cadence. Focus on doubling down on your top format: analyze which video type gets the best engagement rate and do more of that.`,
-   timeframe: "This week", color: "#579AFF", shadowColor: "rgba(87,154,255,0.5)", action: "Analyze", completed: false,
+   timeframe: "This week", color: "#579AFF", shadowColor: "rgba(87,154,255,0.5)", action: "Analyze", completed: false, onDecSize, onCycleHeight, onDecHeight
   })
  }
 
@@ -59,28 +56,19 @@ function generateAdvice(data: any): OracleState {
  if (avgTitleLen > 60) {
   priorities.push({
    text: `Your average title length is ${Math.round(avgTitleLen)} characters — YouTube truncates at ~60 on mobile. Rewrite your last 5 titles to be punchier with emotional power words and specific outcomes.`,
-   timeframe: "2-3 days", color: "#FF8AAF", shadowColor: "rgba(255,138,175,0.5)", action: "Fix", completed: false,
+   timeframe: "2-3 days", color: "#FF8AAF", shadowColor: "rgba(255,138,175,0.5)", action: "Fix", completed: false, onDecSize, onCycleHeight, onDecHeight
   })
  } else {
   priorities.push({
    text: `Revenue is at ${revenueBlock?.value || "$0"} this period. Increase monetized watch time by adding timestamps and end screens to your top 10 videos — this chains viewing sessions and boosts ad impressions.`,
-   timeframe: "1-2 weeks", color: "#579AFF", shadowColor: "rgba(87,154,255,0.5)", action: "Plan", completed: false,
+   timeframe: "1-2 weeks", color: "#579AFF", shadowColor: "rgba(87,154,255,0.5)", action: "Plan", completed: false, onDecSize, onCycleHeight, onDecHeight
   })
  }
 
  // Quick Wins
- quickWins.push({
-  text: "Add end screens to your top 5 videos — they currently drive 0 extra views without them.",
-  timeframe: "20 min", color: "#FFFF61", shadowColor: "rgba(255,255,97,0.5)", action: "Go", completed: false,
- })
- quickWins.push({
-  text: "Pin a comment on your latest video asking viewers a direct question to boost engagement signals.",
-  timeframe: "5 min", color: "#40C6E9", shadowColor: "rgba(64,198,233,0.5)", action: "Post", completed: false,
- })
- quickWins.push({
-  text: "Create a Community Tab poll with your top 3 backlog ideas as options — algorithms love poll engagement.",
-  timeframe: "10 min", color: "#FF83EA", shadowColor: "rgba(255,131,234,0.5)", action: "Poll", completed: false,
- })
+ quickWins.push({text: "Add end screens to your top 5 videos — they currently drive 0 extra views without them.", timeframe: "20 min", color: "#FFFF61", shadowColor: "rgba(255, 255, 97, 0.5)", action: "Go", completed: false, onDecSize, onCycleHeight, onDecHeight})
+ quickWins.push({text: "Pin a comment on your latest video asking viewers a direct question to boost engagement signals.", timeframe: "5 min", color: "#40C6E9", shadowColor: "rgba(64, 198, 233, 0.5)", action: "Post", completed: false, onDecSize, onCycleHeight, onDecHeight})
+ quickWins.push({text: "Create a Community Tab poll with your top 3 backlog ideas as options — algorithms love poll engagement.", timeframe: "10 min", color: "#FF83EA", shadowColor: "rgba(255, 131, 234, 0.5)", action: "Poll", completed: false, onDecSize, onCycleHeight, onDecHeight})
 
  return {
   dateKey: new Date().toISOString().split("T")[0],
@@ -89,15 +77,24 @@ function generateAdvice(data: any): OracleState {
  }
 }
 
-export const DailyOracleWidget = ({
- widget, instance, editMode, onToggleCollapse, onCycleSize, onRemove, data,
-}: any) => {
+export const DailyOracleWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
  const { brain } = useBrain()
  const ORACLE_COST = getAiTokenCost("dailyOracleRefresh")
  const entitlement = useEntitlement()
  const canAffordOracle = canAffordAiTokensFromState(entitlement, ORACLE_COST)
  const [isGenerating, setIsGenerating] = useState(false)
- const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
+ const common = {
+  widget,
+  instance,
+  editMode,
+  canEdit: true,
+  onToggleCollapse,
+  onCycleSize,
+  onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
+ }
  const todayKey = new Date().toISOString().split("T")[0]
 
  const [oracle, setOracle] = useState<OracleState>(() => {
@@ -105,7 +102,7 @@ export const DailyOracleWidget = ({
    const saved = JSON.parse(localStorage.getItem(ORACLE_STORAGE_KEY) || "{}")
    if (saved.dateKey === todayKey) return saved
   } catch {}
-  return generateAdvice(data)
+  return generateAdvice(data, { onDecSize, onCycleHeight, onDecHeight })
  })
 
  useEffect(() => {
@@ -141,8 +138,9 @@ export const DailyOracleWidget = ({
    <div
     key={idx}
     style={{
+     flexShrink: 0,
      display: "flex", background: advice.completed ? "#f0f0f0" : "#fff",
-     border: `${isPriority ? 3 : 2}px solid #000`, borderRadius: "12px",
+     border: `2px solid #000`, borderRadius: "12px",
      overflow: "hidden", boxShadow: `3px 3px 0 0 ${advice.shadowColor}`,
      opacity: advice.completed ? 0.5 : 1, transition: "all 0.2s",
     }}>
@@ -151,26 +149,29 @@ export const DailyOracleWidget = ({
     <div style={{ flex: 1, padding: isPriority ? "12px" : "10px 12px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
      <div style={{ flex: 1 }}>
       <div style={{
-       fontWeight: 700, fontSize: isPriority ? "12px" : "11px", lineHeight: 1.4,
+       fontWeight: 700, fontSize: isPriority ? "11px" : "10px", lineHeight: 1.4,
        textDecoration: advice.completed ? "line-through" : "none",
       }}>
        {advice.text}
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
-       <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", opacity: 0.35 }}>⏱ {advice.timeframe}</span>
+       <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.4, marginLeft: "6px", display: "inline-block" }}>
+        ⏱ {advice.timeframe}
+       </span>
       </div>
      </div>
      <button
       onClick={() => toggleComplete(type, idx)}
+      className="vt-button"
       style={{
-       width: isPriority ? "40px" : "32px", height: isPriority ? "40px" : "32px",
-       borderRadius: "10px", border: `${isPriority ? 3 : 2}px solid #000`,
        background: advice.completed ? "#4FFF5B" : advice.color,
-       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-       gap: "1px", flexShrink: 0, boxShadow: "2px 2px 0 0 #000", cursor: "pointer",
+       flexShrink: 0,
+       width: isPriority ? "42px" : "36px",
+       height: isPriority ? "42px" : "36px",
+       padding: "0",
+       flexDirection: "column",
+       gap: "2px",
       }}>
-      {advice.completed ? <Check size={14} strokeWidth={4} /> : <ArrowRight size={14} strokeWidth={4} />}
-      {!advice.completed && <span style={{ fontSize: "6px", fontWeight: 900, textTransform: "uppercase" }}>{advice.action}</span>}
+      {advice.completed ? <Check size={16} strokeWidth={3} /> : <ArrowRight size={16} strokeWidth={3} />}
+      {!advice.completed && <span style={{ fontSize: "7px", fontWeight: 900 }}>{advice.action}</span>}
      </button>
     </div>
    </div>
@@ -189,9 +190,9 @@ export const DailyOracleWidget = ({
    aiDisabled={!canAffordOracle || isGenerating}
    aiDisabledReason={!canAffordOracle ? (entitlement.tier === "free" ? "Upgrade required for Oracle AI." : `Need ${ORACLE_COST} token.`) : undefined}
    onRegenerate={regenerate}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "10px", height: "100%", overflowY: "auto" }}>
+   <div style={{ display: "flex", flexDirection: "column", gap: "10px", height: "100%", overflowY: "auto", paddingBottom: "12px" }}>
     {/* Header Row */}
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
       <Sparkles size={14} color="#FF8AAF" />
       <span style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", color: "#FF8AAF" }}>Strategic Priorities</span>
@@ -213,7 +214,7 @@ export const DailyOracleWidget = ({
      </div>
     </div>
     {!canAffordOracle && (
-     <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>
+     <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6, flexShrink: 0 }}>
       {entitlement.tier === "free" ? "Upgrade for Oracle AI." : `Need ${ORACLE_COST} token.`}
      </div>
     )}
@@ -222,7 +223,7 @@ export const DailyOracleWidget = ({
     {oracle.priorities.map((p, i) => renderAdviceCard(p, i, "priorities"))}
 
     {/* Quick Wins Header */}
-    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px", flexShrink: 0 }}>
      <Zap size={14} color="#4FFF5B" />
      <span style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", opacity: 0.5 }}>Quick Wins (20-30 min)</span>
     </div>
