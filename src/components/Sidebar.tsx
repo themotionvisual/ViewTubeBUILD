@@ -43,9 +43,10 @@ export const Sidebar: React.FC = () => {
    { id: "DASHBOARD", path: "/", label: "Dashboard", color: "#FF8AAF" },
    { id: "STUDIO", path: "/studio", label: "Studio", color: "#FFB570" },
    { id: "PROJECTS", path: "/projects", label: "Projects", color: "#FFFF61" },
+   { id: "PROJECT_CALENDAR", path: "/project-calendar", label: "Project Calendar", color: "#40C6E9" },
    { id: "ANALYTICS", path: "/performance", label: "Analytics", color: "#4FFF5B" },
-   { id: "CALENDAR", path: "/project-calendar", label: "Calendar", color: "#40C6E9" },
    { id: "EDITOR", path: "/editor-v1", label: "Editor", color: "#579AFF" },
+   { id: "SETTINGS", path: "/settings", label: "Settings", color: "#CC00FF" },
   ]
 
  const handleHiddenAnalyticsClick = () => {
@@ -103,35 +104,10 @@ export const Sidebar: React.FC = () => {
        )}
       </NavLink>
      ))}
-    </div>
-   </nav>
 
-   {/* Master Data Sync & Connect */}
-   <div className="mb-6 z-10 shrink-0">
-    {!authState.isAuthenticated ? (
+     {/* Connect YouTube (Moved up into Main Nav) */}
      <button
-      onClick={login}
-      className={`transition-all relative w-[calc(100%+40px)] -ml-[40px] border-[2px] border-black rounded-r-[14px] rounded-l-none hover:translate-x-1 outline-none`}
-     >
-      <div
-       className="flex items-center justify-end w-full h-[26px]"
-       style={{
-        backgroundColor: "#CC00FF",
-        color: "#000000",
-        padding: "0 14px",
-        borderRadius: "0 10px 10px 0",
-       }}
-      >
-       <span className="font-[800] uppercase text-sm tracking-tighter leading-none whitespace-nowrap">
-        Connect YouTube
-       </span>
-      </div>
-     </button>
-    ) : (
-     <button
-      onClick={() => {
-       void globalSyncData()
-      }}
+      onClick={() => (!authState.isAuthenticated ? login() : void globalSyncData())}
       disabled={isSyncing}
       className={`transition-all relative w-[calc(100%+40px)] -ml-[40px] border-[2px] border-black rounded-r-[14px] rounded-l-none outline-none ${
        isSyncing ? "opacity-50 cursor-not-allowed" : "hover:translate-x-1"
@@ -154,15 +130,15 @@ export const Sidebar: React.FC = () => {
          </>
         ) : (
          <>
-          <Icons.RefreshCw size={14} className="mr-1.5" />
-          Sync Data
+          {authState.isAuthenticated && <Icons.RefreshCw size={14} className="mr-1.5" />}
+          {!authState.isAuthenticated ? "Connect YouTube" : "Sync Data"}
          </>
         )}
        </span>
       </div>
      </button>
-    )}
-   </div>
+    </div>
+   </nav>
 
    {/* Sidebar Chatbot Slot */}
    <div className="flex-1 min-h-0 mt-2">
@@ -189,6 +165,26 @@ export const Sidebar: React.FC = () => {
      </div>
     )}
    </NavLink>
-  </aside>
+    <NavLink
+    to="/data-transparency"
+    className={({ isActive }) =>
+      `mb-6 w-[calc(100%+40px)] -ml-[40px] border-[2px] border-black rounded-r-[14px] rounded-l-none transition-all ${
+       isActive ? "translate-x-4" : "hover:translate-x-1"
+      }`
+     }>
+     {() => (
+      <div
+       className="w-full h-[26px] px-3 flex items-center font-[800] uppercase tracking-tighter text-[12px]"
+       style={{
+        backgroundColor: "#40C6E9",
+        color: "#000",
+        borderRadius: "0 10px 10px 0",
+       }}
+      >
+       Data Transparency
+      </div>
+     )}
+    </NavLink>
+   </aside>
  )
 }
