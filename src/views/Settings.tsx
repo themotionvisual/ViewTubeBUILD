@@ -30,73 +30,42 @@ import {
  factoryResetAll,
 } from "../services/localDataReset"
 import type { SubscriptionPlanId } from "../services/subscriptionPlans"
+import { googleService } from "../services/googleService"
 import {
  createCheckoutSession,
  getCurrentEntitlement,
  updatePlanEntitlement,
+ fetchEntitlementFromServer,
 } from "../services/billingEntitlement"
 
-const SUBSCRIPTION_PLANS_UI: Array<{
- id: SubscriptionPlanId
- tierLabel: string
- price: string
- bullets: string[]
- cta: string
-}> = [
- {
-  id: "starter",
-  tierLabel: "Free",
-  price: "$0",
-  bullets: ["Public handle mode", "CSV/import workflows", "Core dashboard views"],
-  cta: "Stay Free",
- },
- {
-  id: "creator_plus",
-  tierLabel: "Medium",
-  price: "$29/mo",
-  bullets: ["Token meter", "Monthly pool + daily accrual", "Advanced dashboards + tools"],
-  cta: "Start Medium",
- },
- {
-  id: "business_team",
-  tierLabel: "Large",
-  price: "$99/mo",
-  bullets: ["Unlimited AI prompts", "Unlimited generations", "Top-tier access + team surface"],
-  cta: "Start Large",
- },
-]
+// ... existing code ...
 
 const Settings: React.FC = () => {
- const navigate = useNavigate()
- const location = useLocation()
- const [isAuth, setIsAuth] = useState(unifiedAuth.isAuthenticated())
- const [saveStatus, setSaveStatus] = useState<string | null>(null)
- const [showKey, setShowKey] = useState(false)
- const vault = getVaultSnapshot()
- const [geminiKey, setGeminiKey] = useState(vault.gemini)
- const [modelPreference, setModelPreference] = useState<"flash" | "pro">(
-  (localStorage.getItem("yt_model_preference") as "flash" | "pro") || "pro",
- )
- const [ingestMode, setIngestMode] = useState<IngestMode>(getStoredIngestMode())
- const [handleInput, setHandleInput] = useState("")
- const [handleStatus, setHandleStatus] = useState<string | null>(null)
- const [exportStatus, setExportStatus] = useState<string | null>(null)
- const [dataResetStatus, setDataResetStatus] = useState<string | null>(null)
- const [loadingPlan, setLoadingPlan] = useState<SubscriptionPlanId | null>(null)
+ // ... existing code ...
  const [billingStatus, setBillingStatus] = useState<string | null>(null)
  const query = new URLSearchParams(location.search)
  const activePanel = query.get("panel")
  const highlightBilling = activePanel === "billing"
  const entitlement = getCurrentEntitlement()
- const canonicalButtonClass =
-  "border-[4px] border-black rounded-xl shadow-[4px_4px_0px_0px_black] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_black] transition-all font-black uppercase"
 
  useEffect(() => {
-  const checkAuth = setInterval(() => {
-   setIsAuth(unifiedAuth.isAuthenticated())
-  }, 1000)
-  return () => clearInterval(checkAuth)
- }, [])
+  const syncBilling = async () => {
+   if (isAuth) {
+    try {
+     const userInfo = await googleService.getUserInfo()
+     await fetchEntitlementFromServer(userInfo.email)
+     setBillingStatus("Entitlements synced with server.")
+    } catch (e) {
+     console.error("Billing sync failed", e)
+     setBillingStatus("Failed to sync billing.")
+    }
+   }
+  }
+  syncBilling()
+ }, [isAuth])
+
+ // ... existing code ...
+
 
  const handleSave = () => {
   setVaultSnapshot({
@@ -262,184 +231,33 @@ const Settings: React.FC = () => {
     {billingStatus ? <p className="text-sm font-black uppercase">{billingStatus}</p> : null}
    </SubToolbox>
 
-   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-    {/* Connect Channel */}
-    <SubToolbox
-     title="Connect Channel"
-     icon={<Link2 size={20} strokeWidth={3} className="text-black" />}
-     paletteIndex={1}
-     contentClassName="p-6 flex flex-col gap-6">
-     <div className="space-y-2">
-      <h2 className="text-2xl font-black uppercase tracking-tighter">
-       YouTube Workspace Link
-      </h2>
-      <p className="text-sm font-bold text-gray-600">
-       Link your channel to unlock uploads, analytics, and metadata updates.
-      </p>
-     </div>
-     {isAuth ? (
-      <button
-       onClick={() => unifiedAuth.logout()}
-       className={`${canonicalButtonClass} bg-black text-white px-8 py-4 text-sm`}>
-       Disconnect Channel
-      </button>
-     ) : (
-      <button
-       onClick={async () => {
-        await clearAnalyticsStateForFreshSync()
-        await unifiedAuth.login()
-       }}
-       className={`${canonicalButtonClass} bg-[#FFFF61] text-black px-8 py-4 text-sm`}>
-       Connect Channel
-      </button>
-     )}
-    </SubToolbox>
-
-    {/* Gemini API Key */}
-    <SubToolbox
-     title="Gemini API Key"
-     icon={<KeyRound size={20} strokeWidth={3} className="text-black" />}
-     paletteIndex={2}
-     contentClassName="p-6 flex flex-col gap-4">
-     <p className="font-bold text-gray-700">
-      Use your own key so generations run on your quota and billing.
-     </p>
-     <form onSubmit={(e) => e.preventDefault()} className="relative">
-      <input
-       type={showKey ? "text" : "password"}
-       value={geminiKey}
-       onChange={(e) => setGeminiKey(e.target.value)}
-       placeholder="Enter your Gemini API Key..."
-       className="w-full p-4 text-lg font-bold border-[4px] border-black rounded-xl shadow-[4px_4px_0px_0px_black] outline-none pr-12"
-      />
-      <button
-       type="button"
-       onClick={() => setShowKey(!showKey)}
-       className="absolute right-4 top-1/2 -translate-y-1/2 text-black">
-       {showKey ? <EyeOff size={20} /> : <Eye size={20} />}
-      </button>
-     </form>
-   </SubToolbox>
-  </div>
-
+   {/* Gemini API Key */}
    <SubToolbox
-    title="Ingest Mode"
-    icon={<ShieldCheck size={20} strokeWidth={3} className="text-black" />}
-    paletteIndex={3}
-    contentClassName="p-6 space-y-4">
+    title="Gemini API Key"
+    icon={<KeyRound size={20} strokeWidth={3} className="text-black" />}
+    paletteIndex={2}
+    contentClassName="p-6 flex flex-col gap-4">
     <p className="font-bold text-gray-700">
-     Select how ViewTube should source data for analytics and master tables.
+     Use your own key so generations run on your quota and billing.
     </p>
-    <div className="flex flex-wrap gap-2">
-     {(["connected", "import", "hybrid", "public_handle"] as IngestMode[]).map(
-      (mode) => (
-       <button
-        key={mode}
-        onClick={() => switchMode(mode)}
-        className={`px-3 py-2 border-[3px] border-black rounded-xl text-xs font-black uppercase ${
-         ingestMode === mode
-          ? "bg-[#CCFF00] shadow-[3px_3px_0px_0px_black]"
-          : "bg-white"
-        }`}>
-        {mode}
-       </button>
-      ),
-     )}
-    </div>
-   </SubToolbox>
-
-   <SubToolbox
-    title="Public Handle Mode"
-    icon={<Link2 size={20} strokeWidth={3} className="text-black" />}
-    paletteIndex={4}
-    contentClassName="p-6 space-y-4">
-    <p className="font-bold text-gray-700">
-     For users without OAuth: resolve a public handle and load public-only stats.
-    </p>
-    <div className="flex flex-col md:flex-row gap-3">
+    <form onSubmit={(e) => e.preventDefault()} className="relative">
      <input
-      value={handleInput}
-      onChange={(event) => setHandleInput(event.target.value)}
-      placeholder="@channelhandle or channel URL"
-      className="w-full p-3 border-[3px] border-black rounded-xl font-bold"
+      type={showKey ? "text" : "password"}
+      value={geminiKey}
+      onChange={(e) => setGeminiKey(e.target.value)}
+      placeholder="Enter your Gemini API Key..."
+      className="w-full p-4 text-lg font-bold border-[4px] border-black rounded-xl shadow-[4px_4px_0px_0px_black] outline-none pr-12"
      />
      <button
-      onClick={handlePublicResolve}
-      className={`${canonicalButtonClass} bg-[#96F5A6] text-black px-5 py-3 text-sm whitespace-nowrap`}>
-      Resolve Handle
+      type="button"
+      onClick={() => setShowKey(!showKey)}
+      className="absolute right-4 top-1/2 -translate-y-1/2 text-black">
+      {showKey ? <EyeOff size={20} /> : <Eye size={20} />}
      </button>
-    </div>
-    {handleStatus ? <p className="text-sm font-bold text-gray-700">{handleStatus}</p> : null}
+    </form>
    </SubToolbox>
 
-	   {/* Data Management */}
-	   <SubToolbox
-	    title="Data Management"
-	    icon={<Trash2 size={20} strokeWidth={3} className="text-black" />}
-	    paletteIndex={5}
-	    contentClassName="p-6 space-y-6">
-	    <p className="font-bold text-gray-700">
-	     Control what is stored locally on this device. Use the safe clear for caches, or factory reset for a full wipe.
-	    </p>
-	    <div className="flex flex-col gap-4">
-	     <button
-	      onClick={() => {
-	       if (!confirm("Clear cached analytics + uploads + GA4 data on this device? (Keeps keys/preferences/auth)")) return
-	       clearCachedDataSoft()
-	       setDataResetStatus("Cached data cleared (keys/preferences/auth kept).")
-	       setTimeout(() => setDataResetStatus(null), 3500)
-	      }}
-	      className="flex items-center justify-center gap-3 bg-[#FFB570] text-black px-8 py-4 rounded-2xl border-[4px] border-black shadow-[4px_4px_0px_0px_black] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_black] transition-all font-black uppercase">
-	      <Trash2 size={20} />
-	      Clear Cached Data (Safe)
-	     </button>
-	     <button
-	      onClick={async () => {
-	       if (
-	        !confirm(
-	         "FACTORY RESET EVERYTHING? This clears ALL localStorage/sessionStorage keys (including API keys and auth) and attempts to clear browser caches.",
-	        )
-	       )
-	        return
-	       await factoryResetAll()
-	       setDataResetStatus("Factory reset complete. You may need to refresh.")
-	       setTimeout(() => setDataResetStatus(null), 3500)
-	      }}
-	      className="flex items-center justify-center gap-3 bg-black text-white px-8 py-4 rounded-2xl border-[4px] border-black shadow-[4px_4px_0px_0px_black] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_black] transition-all font-black uppercase">
-	      <ShieldCheck size={20} />
-	      Factory Reset (Everything)
-	     </button>
-	     <p className="text-xs font-bold text-gray-500">
-	      Safe clear includes: `yt_analytics_cache`, `vt_uploaded_csv_cache`, GA4 caches, and video-details snippet cache.
-	     </p>
-	     {dataResetStatus ? <p className="text-xs font-black text-gray-700">{dataResetStatus}</p> : null}
-	    </div>
-	   </SubToolbox>
-
-   <SubToolbox
-    title="Trust + Export"
-    icon={<Download size={20} strokeWidth={3} className="text-black" />}
-    paletteIndex={6}
-    contentClassName="p-6 space-y-4">
-    <p className="font-bold text-gray-700">
-     Transparency docs and one-click canonical export bundle.
-    </p>
-    <div className="flex flex-wrap gap-3">
-     <button
-      onClick={() => navigate("/data-transparency")}
-      className={`${canonicalButtonClass} bg-[#40C6E9] text-black px-5 py-3 text-sm`}>
-      Open Data Transparency Center
-     </button>
-     <button
-      onClick={handleExport}
-      className={`${canonicalButtonClass} bg-[#FFB570] text-black px-5 py-3 text-sm`}>
-      Export All Data
-     </button>
-    </div>
-    {exportStatus ? <p className="text-sm font-bold text-gray-700">{exportStatus}</p> : null}
-   </SubToolbox>
-
-   {/* Gemini Preference */}
+   {/* Gemini Preference - Full Width */}
    <SubToolbox
     title="Gemini Preference"
     icon={<Zap size={20} strokeWidth={3} className="text-black" />}
@@ -464,7 +282,7 @@ const Settings: React.FC = () => {
         </span>
        )}
       </div>
-      <p className="text-sm font-bold text-gray-600">
+      <p className="text-sm font-bold text-gray-600 text-left">
        Fast, lighter responses for quick ideas, bulk work, and rapid iteration.
       </p>
      </button>
@@ -483,21 +301,173 @@ const Settings: React.FC = () => {
         </span>
        )}
       </div>
-      <p className="text-sm font-bold text-gray-600">
+      <p className="text-sm font-bold text-gray-600 text-left">
        Deeper reasoning, longer context, and higher‑quality strategic outputs.
       </p>
      </button>
     </div>
    </SubToolbox>
 
-   <div className="flex items-center gap-4">
-   <button
-     onClick={handleSave}
-     className={`${canonicalButtonClass} bg-[#FFFF61] text-black px-12 py-4 text-xl w-full md:w-auto flex items-center justify-center gap-3`}>
-     {saveStatus ? <Check size={24} /> : <Zap size={24} />}
-     {saveStatus || "Save Settings"}
-    </button>
-   </div>
+   {/* Combined Advanced Workspace & Data Module */}
+   <SubToolbox
+    title="Advanced Workspace & Data"
+    icon={<ShieldCheck size={20} strokeWidth={3} className="text-black" />}
+    paletteIndex={1}
+    contentClassName="p-8 space-y-12">
+    
+    {/* Row 1: Connection & Handle */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+     {/* YouTube Workspace Link */}
+     <div className="space-y-4">
+      <div className="flex items-center gap-2">
+       <Link2 size={20} strokeWidth={3} />
+       <h2 className="text-2xl font-black uppercase tracking-tighter">Workspace Link</h2>
+      </div>
+      <p className="text-sm font-bold text-gray-600">
+       Link your channel via OAuth to unlock uploads, analytics, and metadata updates.
+      </p>
+      {isAuth ? (
+       <button
+        onClick={() => unifiedAuth.logout()}
+        className={`${canonicalButtonClass} bg-black text-white px-8 py-4 text-sm w-full`}>
+        Disconnect Channel
+       </button>
+      ) : (
+       <button
+        onClick={async () => {
+         await clearAnalyticsStateForFreshSync()
+         await unifiedAuth.login()
+        }}
+        className={`${canonicalButtonClass} bg-[#FFFF61] text-black px-8 py-4 text-sm w-full`}>
+        Connect Channel
+       </button>
+      )}
+     </div>
+
+     {/* Public Handle Mode */}
+     <div className="space-y-4">
+      <div className="flex items-center gap-2">
+       <Eye size={20} strokeWidth={3} />
+       <h2 className="text-2xl font-black uppercase tracking-tighter">Public Handle</h2>
+      </div>
+      <p className="text-sm font-bold text-gray-600">
+       No OAuth required: resolve a public handle and load public-only stats.
+      </p>
+      <div className="flex gap-3">
+       <input
+        value={handleInput}
+        onChange={(event) => setHandleInput(event.target.value)}
+        placeholder="@channelhandle or channel URL"
+        className="flex-1 p-4 border-[3px] border-black rounded-xl font-bold outline-none"
+       />
+       <button
+        onClick={handlePublicResolve}
+        className={`${canonicalButtonClass} bg-[#96F5A6] text-black px-6 py-4 text-sm whitespace-nowrap`}>
+        Resolve
+       </button>
+      </div>
+      {handleStatus ? <p className="text-sm font-bold text-gray-700">{handleStatus}</p> : null}
+     </div>
+    </div>
+
+    {/* Row 2: Ingest Mode (Full Width but Symmetrical) */}
+    <div className="space-y-4 border-t-[3px] border-black pt-10">
+     <div className="flex items-center gap-2">
+      <Zap size={20} strokeWidth={3} />
+      <h3 className="text-xl font-black uppercase tracking-tighter">Ingest Mode</h3>
+     </div>
+     <p className="font-bold text-gray-700 text-sm">
+      Select how ViewTube should source data for analytics and master tables.
+     </p>
+     <div className="flex flex-wrap gap-3">
+      {(["connected", "import", "hybrid", "public_handle"] as IngestMode[]).map(
+       (mode) => (
+        <button
+         key={mode}
+         onClick={() => switchMode(mode)}
+         className={`px-6 py-3 border-[3px] border-black rounded-xl text-sm font-black uppercase transition-all ${
+          ingestMode === mode
+           ? "bg-[#CCFF00] shadow-[3px_3px_0px_0px_black] -translate-y-0.5"
+           : "bg-white hover:bg-gray-50 shadow-[1px_1px_0px_0px_black]"
+         }`}>
+         {mode}
+        </button>
+       ),
+      )}
+     </div>
+    </div>
+
+    {/* Row 3: Data Mgmt & Trust */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t-[3px] border-black pt-10">
+     {/* Data Management */}
+     <div className="space-y-4">
+      <div className="flex items-center gap-2">
+       <Trash2 size={20} strokeWidth={3} />
+       <h3 className="text-xl font-black uppercase tracking-tighter">Data Management</h3>
+      </div>
+      <p className="font-bold text-gray-700 text-sm">
+       Control local storage. Safe clear for caches, or factory reset for a full wipe.
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+       <button
+        onClick={() => {
+         if (!confirm("Clear cached analytics + uploads + GA4 data on this device? (Keeps keys/preferences/auth)")) return
+         clearCachedDataSoft()
+         setDataResetStatus("Cached data cleared.")
+         setTimeout(() => setDataResetStatus(null), 3500)
+        }}
+        className="flex items-center justify-center gap-2 bg-[#FFB570] text-black px-4 py-4 rounded-xl border-[3px] border-black shadow-[3px_3px_0px_0px_black] hover:translate-y-0.5 hover:shadow-[1.5px_1.5px_0px_0px_black] transition-all font-black uppercase text-[10px]">
+        Clear Cache
+       </button>
+       <button
+        onClick={async () => {
+         if (!confirm("FACTORY RESET EVERYTHING? Clears ALL keys and auth.")) return
+         await factoryResetAll()
+         setDataResetStatus("Factory reset complete.")
+         setTimeout(() => setDataResetStatus(null), 3500)
+        }}
+        className="flex items-center justify-center gap-2 bg-black text-white px-4 py-4 rounded-xl border-[3px] border-black shadow-[3px_3px_0px_0px_black] hover:translate-y-0.5 hover:shadow-[1.5px_1.5px_0px_0px_black] transition-all font-black uppercase text-[10px]">
+        Factory Reset
+       </button>
+      </div>
+      {dataResetStatus ? <p className="text-xs font-black text-gray-700">{dataResetStatus}</p> : null}
+     </div>
+
+     {/* Trust + Export */}
+     <div className="space-y-4">
+      <div className="flex items-center gap-2">
+       <Download size={20} strokeWidth={3} />
+       <h3 className="text-xl font-black uppercase tracking-tighter">Trust + Export</h3>
+      </div>
+      <p className="font-bold text-gray-700 text-sm">
+       Transparency docs and one-click canonical export bundle.
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+       <button
+        onClick={() => navigate("/data-transparency")}
+        className="flex items-center justify-center gap-2 bg-[#40C6E9] text-black px-4 py-4 rounded-xl border-[3px] border-black shadow-[3px_3px_0px_0px_black] hover:translate-y-0.5 hover:shadow-[1.5px_1.5px_0px_0px_black] transition-all font-black uppercase text-[10px]">
+        Docs Center
+       </button>
+       <button
+        onClick={handleExport}
+        className="flex items-center justify-center gap-2 bg-[#FFB570] text-black px-4 py-4 rounded-xl border-[3px] border-black shadow-[3px_3px_0px_0px_black] hover:translate-y-0.5 hover:shadow-[1.5px_1.5px_0px_0px_black] transition-all font-black uppercase text-[10px]">
+        Export All
+       </button>
+      </div>
+      {exportStatus ? <p className="text-xs font-bold text-gray-700">{exportStatus}</p> : null}
+     </div>
+    </div>
+
+    {/* Row 4: Save Settings - Centered */}
+    <div className="border-t-[3px] border-black pt-10 flex justify-center">
+     <button
+      onClick={handleSave}
+      className={`${canonicalButtonClass} bg-[#FFFF61] text-black px-16 py-5 text-2xl w-full md:w-auto flex items-center justify-center gap-4`}>
+      {saveStatus ? <Check size={28} /> : <Zap size={28} />}
+      {saveStatus || "Save All Settings"}
+     </button>
+    </div>
+   </SubToolbox>
   </div>
  )
 }
