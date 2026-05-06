@@ -128,10 +128,10 @@ export const ProjectStudio: React.FC = () => {
             tasks: [],
             script: '',
             description: '',
-            notes: '',
             tags: '',
-            thumbnailUrl: '',
             plan: {
+                concept: '',
+                niche: '',
                 topic: '',
                 description: '',
                 length: '',
@@ -151,7 +151,7 @@ export const ProjectStudio: React.FC = () => {
         if (!activeProject) return;
         setIsGenerating(true);
         try {
-            const plan = await generateProjectStrategy(activeProject);
+            const plan = await generateProjectStrategy(activeProject, brain.targetNiche, brain.coreConcept);
             updateProject(activeProject.id, { plan });
         } catch (error) {
             console.error('Failed to generate strategy:', error);
@@ -220,7 +220,7 @@ export const ProjectStudio: React.FC = () => {
                 isPublishEvent: true,
                 color: p.color
             })),
-            ...brain.projects.flatMap(p => p.tasks.filter(t => t.dueDate === selectedDate).map(t => ({
+            ...brain.projects.flatMap(p => (p.tasks || []).filter(t => t.dueDate === selectedDate).map(t => ({
                 id: `ptask-${p.id}-${t.id}`,
                 text: `${p.name}: ${t.text}`,
                 completed: t.completed,
@@ -343,7 +343,7 @@ export const ProjectStudio: React.FC = () => {
                                                         const isSelected = selectedDate === day.dateString;
                                                         const tasksOnDay = [
                                                             ...brain.projects.filter(p => p.publishDate === day.dateString).map(p => p.color),
-                                                            ...brain.projects.flatMap(p => p.tasks.filter(t => t.dueDate === day.dateString).map(t => p.color)),
+                                                            ...brain.projects.flatMap(p => (p.tasks || []).filter(t => t.dueDate === day.dateString).map(t => p.color)),
                                                             ...(dayTasks[day.dateString] || []).map(() => '#ccff00')
                                                         ];
 
@@ -445,7 +445,7 @@ export const ProjectStudio: React.FC = () => {
                                                     if (task.isProjectTask && task.originalTaskId && task.projectId) {
                                                         const proj = brain.projects.find(p => p.id === task.projectId);
                                                         if (proj) {
-                                                            const updatedTasks = proj.tasks.map(t => t.id === task.originalTaskId ? { ...t, completed: !t.completed } : t);
+                                                            const updatedTasks = (proj.tasks || []).map(t => t.id === task.originalTaskId ? { ...t, completed: !t.completed } : t);
                                                             updateProject(proj.id, { tasks: updatedTasks });
                                                         }
                                                     } else {
@@ -740,11 +740,12 @@ export const ProjectStudio: React.FC = () => {
                                                             </div>
                                                         </div>
                                                         <div className="space-y-2 flex-1 overflow-y-auto custom-scrollbar pr-2">
-                                                            {activeProject?.tasks.map((task, idx) => (
+                                                            {(activeProject?.tasks || []).map((task, idx) => (
                                                                 <div
                                                                     key={idx}
                                                                     onClick={() => {
-                                                                        const newTasks = activeProject.tasks.map(t => t.id === task.id ? { ...t, completed: !t.completed } : t);
+                                                                        if (!activeProject) return;
+                                                                        const newTasks = (activeProject.tasks || []).map(t => t.id === task.id ? { ...t, completed: !t.completed } : t);
                                                                         updateProject(activeProject.id, { tasks: newTasks });
                                                                     }}
                                                                     className="flex items-center gap-3 group hover:translate-x-1 transition-transform cursor-pointer bg-gray-50 border-[2px] border-black p-3 rounded-lg"
@@ -755,7 +756,7 @@ export const ProjectStudio: React.FC = () => {
                                                                     <span className={`font-black uppercase text-xs leading-none tracking-tight ${task.completed ? 'line-through opacity-30' : ''}`}>{task.text}</span>
                                                                 </div>
                                                             ))}
-                                                            {activeProject?.tasks.length === 0 && (
+                                                            {(activeProject?.tasks || []).length === 0 && (
                                                                 <div className="h-full flex items-center justify-center opacity-10 py-4">
                                                                     <CheckSquare size={32} />
                                                                 </div>
@@ -769,7 +770,7 @@ export const ProjectStudio: React.FC = () => {
                                                                     if (e.key === 'Enter') {
                                                                         const val = (e.target as HTMLInputElement).value;
                                                                         if (val) {
-                                                                            updateProject(activeProject!.id, { tasks: [...activeProject!.tasks, { id: Date.now().toString(), text: val, completed: false }] });
+                                                                            updateProject(activeProject!.id, { tasks: [...(activeProject!.tasks || []), { id: Date.now().toString(), text: val, completed: false }] });
                                                                             (e.target as HTMLInputElement).value = '';
                                                                         }
                                                                     }
@@ -810,9 +811,14 @@ export const ProjectStudio: React.FC = () => {
                                                             <span className="text-[9px] font-black uppercase tracking-widest opacity-30 leading-none">{f}</span>
                                                             <input
                                                                 className="bg-transparent outline-none font-black uppercase text-sm w-full pt-1"
-                                                                value={activeProject?.plan[f]}
+                                                                value={activeProject?.plan?.[f] || ''}
                                                                 onChange={(e) => updateProject(activeProject!.id, {
-                                                                    plan: { ...activeProject!.plan, [f]: e.target.value }
+                                                                    plan: {
+                                                                        concept: activeProject?.plan?.concept || '',
+                                                                        niche: activeProject?.plan?.niche || '',
+                                                                        ...activeProject?.plan,
+                                                                        [f]: e.target.value
+                                                                    }
                                                                 })}
                                                                 placeholder={`Specify ${f}...`}
                                                             />

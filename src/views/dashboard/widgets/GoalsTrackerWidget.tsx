@@ -8,13 +8,13 @@ interface GoalsTrackerWidgetProps {
   commonProps: any
 }
 
-export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, commonProps }) => {
+export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({data, commonProps, onDecSize, onCycleHeight, onDecHeight}) => {
   const GOAL_STORAGE_KEY = "vt_goal_targets_v2"
-  const [goalTargets, setGoalTargets] = useState<any>({})
+  const [goalTargets, setGoalTargets] = useState<any>({onDecSize, onCycleHeight, onDecHeight})
   const [activeGoalPrompt, setActiveGoalPrompt] = useState<string | null>(null)
   const [goalInputValue, setGoalInputValue] = useState("")
   const [goalDurationValue, setGoalDurationValue] = useState(3)
-  const [goalDurationUnit, setGoalDurationUnit] = useState<"wk"|"mo">("mo")
+  const [goalDurationUnit, setGoalDurationUnit] = useState<"day"|"wk"|"mo">("mo")
   const [goalType, setGoalType] = useState<"total" | "avg">("total")
 
   useEffect(() => {
@@ -26,20 +26,14 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, co
     return () => window.removeEventListener("storage", handleStorage)
   }, [])
 
-  const getMetricValue = (label: string) => {
-    const block = data.statBlocks.find((s: any) => s.label.toLowerCase().includes(label.toLowerCase()))
-    if (!block) return 0
-    const val = parseFloat(block.value.replace(/[^0-9.]/g, "") || "0")
-    if (block.value.includes("K")) return val * 1000
-    if (block.value.includes("M")) return val * 1000000
-    return val
-  }
+  const metrics = data.rawMetrics || { subsTotal: 0, subscribers28d: 0, views28d: 0, revenue28d: 0, dataDaysCount: 28 }
+  const daysCount = Math.max(1, metrics.dataDaysCount || 28)
 
   const categories = [
-    { key: "Subscribers", current: getMetricValue("Subscribers"), color: "#4FFF5B", radius: 68 },
-    { key: "Views", current: getMetricValue("Views"), color: "#24D3FF", radius: 54 },
-    { key: "Revenue", current: getMetricValue("Revenue"), color: "#FFE357", radius: 40 },
-    { key: "Other", current: 0, color: "#FF83EA", radius: 26 },
+    { key: "Subscribers", current: metrics.subsTotal, avg: Math.round(metrics.subscribers28d / daysCount), color: "#4FFF5B", radius: 68 },
+    { key: "Views", current: metrics.views28d, avg: Math.round(metrics.views28d / daysCount), color: "#24D3FF", radius: 54 },
+    { key: "Revenue", current: metrics.revenue28d, avg: Number((metrics.revenue28d / daysCount).toFixed(2)), color: "#FFE357", radius: 40 },
+    { key: "Other", current: 0, avg: 0, color: "#FF83EA", radius: 26 },
   ]
 
   const handleSaveGoal = () => {
@@ -69,17 +63,18 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, co
           {categories.map((cat) => {
             const goal = goalTargets[cat.key]
             const label = cat.key === "Subscribers" ? "SUBS" : cat.key === "Views" ? "VIEWS" : cat.key === "Revenue" ? "$REV" : "OTHER"
-            const pct = goal?.target ? Math.min(100, Math.round((cat.current / goal.target) * 100)) : 0
+            const progressValue = goal?.type === "avg" ? cat.avg : cat.current
+            const pct = goal?.target ? Math.min(100, Math.round((progressValue / goal.target) * 100)) : 0
             return (
               <button
                 key={cat.key}
                 onClick={() => {
                   setActiveGoalPrompt(cat.key)
                   setGoalInputValue(goal?.target ? goal.target.toString() : "")
-                  const durationMatch = (goal?.duration || "3mo").match(/(\d+)(wk|mo)/)
+                  const durationMatch = (goal?.duration || "3mo").match(/(\d+)(day|wk|mo)/)
                   if (durationMatch) {
                     setGoalDurationValue(parseInt(durationMatch[1], 10))
-                    setGoalDurationUnit(durationMatch[2] as "wk"|"mo")
+                    setGoalDurationUnit(durationMatch[2] as "day"|"wk"|"mo")
                   }
                   setGoalType(goal?.type || "total")
                 }}
@@ -121,8 +116,9 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, co
             {categories.map((cat) => {
               const goal = goalTargets[cat.key]
               const target = goal?.target || 0
+              const progressValue = goal?.type === "avg" ? cat.avg : cat.current
               const circumference = 2 * Math.PI * cat.radius
-              const progress = target > 0 ? Math.min(1, cat.current / target) : 0
+              const progress = target > 0 ? Math.min(1, progressValue / target) : 0
               const offset = circumference - (progress * circumference)
               
               // Determine ahead/behind overlay
@@ -133,7 +129,7 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, co
                 const durMatch = goal.duration.match(/(\d+)(wk|mo)/)
                 const dVal = durMatch ? parseInt(durMatch[1]) : 3
                 const dUnit = durMatch ? durMatch[2] : "mo"
-                const totalDays = dUnit === "wk" ? dVal * 7 : dVal * 30
+                const totalDays = dUnit === "day" ? dVal : dUnit === "wk" ? dVal * 7 : dVal * 30
                 const timeProgress = Math.min(1, daysElapsed / totalDays)
                 const isAhead = progress >= timeProgress
                 const overlayColor = isAhead ? "rgba(0, 255, 0, 0.2)" : "rgba(255, 0, 0, 0.2)"
@@ -169,8 +165,10 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, co
               <div style={{ fontSize: "14px", fontWeight: 800 }}>
                 {Math.round(
                   categories.filter((c) => goalTargets[c.key]?.target).reduce((sum, c) => {
-                    const t = goalTargets[c.key]?.target || 1
-                    return sum + Math.min(100, (c.current / t) * 100)
+                    const goal = goalTargets[c.key]
+                    const t = goal?.target || 1
+                    const pVal = goal?.type === "avg" ? c.avg : c.current
+                    return sum + Math.min(100, (pVal / t) * 100)
                   }, 0) / categories.filter((c) => goalTargets[c.key]?.target).length
                 )}%
               </div>
@@ -179,168 +177,122 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, co
           )}
         </div>
 
-        {/* Custom Goal Setter Modal */}
+        {/* Integrated Goal Setter Page */}
         {activeGoalPrompt && (() => {
           const activeCategory = categories.find(c => c.key === activeGoalPrompt)
-          return (
-          <div style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            background: "white",
-            border: "3px solid black",
-            padding: "8px 10px",
-            boxShadow: "4px 4px 0px 0px black",
-            borderRadius: "8px",
-            fontWeight: "bold",
-            zIndex: 50,
-            minWidth: "160px",
+          
+          let currentDisplayVal = 0
+          if (activeCategory) {
+            currentDisplayVal = (goalType === "avg") ? activeCategory.avg : activeCategory.current
+          }
+
+          const badgeStyle = {
+            height: "32px",
+            background: activeCategory?.color || "#eee",
+            border: "2px solid black",
+            borderRadius: "4px",
+            padding: "0 12px",
             display: "flex",
-            flexDirection: "column",
-            gap: "6px",
-          }}>
-            <p style={{ margin: 0, fontSize: "12px", fontWeight: 900, borderBottom: "2px solid black", paddingBottom: "4px", textTransform: "uppercase" }}>Set {activeGoalPrompt} Goal</p>
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-              <label style={{ fontSize: "9px", textTransform: "uppercase" }}>Target Number</label>
-              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                <div style={{ fontSize: "12px", fontWeight: 900, background: "#eee", border: "2px solid black", borderRadius: "4px", padding: "2px 6px", whiteSpace: "nowrap" }}>
-                  {activeCategory ? (goalType === "avg" ? Math.round(activeCategory.current / 28).toLocaleString() : activeCategory.current.toLocaleString()) : "0"} <span style={{fontSize:"8px"}}>CUR</span>
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "12px",
+            fontWeight: 800,
+            boxShadow: "2px 2px 0 0 rgba(0,0,0,1)",
+            flex: 1,
+            whiteSpace: "nowrap",
+            overflow: "hidden"
+          }
+
+          const labelStyle: React.CSSProperties = {
+            fontSize: "11px",
+            fontWeight: 800,
+            whiteSpace: "nowrap",
+            height: "32px",
+            display: "flex",
+            alignItems: "center",
+            width: "120px",
+            flexShrink: 0
+          }
+
+          return (
+            <div className="dashboard-barrier" style={{
+              position: "absolute", top: 0, left: 0, width: "100%", height: "100%", background: "white",
+              display: "flex", flexDirection: "column", zIndex: 100, padding: "8px", boxSizing: "border-box"
+            }}>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", flex: 1, justifyContent: "space-between" }}>
+                
+                {/* Row 1: Badges & Toggle */}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div style={{ ...badgeStyle }}>{activeGoalPrompt?.toUpperCase()}</div>
+                  <div style={{ ...badgeStyle, background: "#f5f5f5" }}>{currentDisplayVal.toLocaleString()}</div>
                 </div>
-                <input 
-                  type="number"
-                  value={goalInputValue}
-                  onChange={(e) => setGoalInputValue(e.target.value)}
-                  autoComplete="off"
-                  data-lpignore="true"
-                  data-1p-ignore="true"
-                  name="goal_target_value_prevent_autofill"
-                  style={{ flex: 1, border: "2px solid black", borderRadius: "4px", padding: "2px 6px", fontSize: "12px", outline: "none", minWidth: "0" }}
-                  autoFocus
-                />
-              </div>
-            </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-              <label style={{ fontSize: "9px", textTransform: "uppercase" }}>Goal Type</label>
-              <div style={{ display: "flex", gap: "4px" }}>
-                <button
-                  onClick={() => setGoalType("total")}
-                  style={{
-                    flex: 1, border: "2px solid black", borderRadius: "6px", padding: "2px 0", fontSize: "10px", fontWeight: 900, cursor: "pointer",
-                    background: goalType === "total" ? "black" : "white", color: goalType === "total" ? "white" : "black", boxShadow: goalType === "total" ? "none" : "1px 1px 0 0 #000",
-                  }}
-                >
-                  TOTAL
-                </button>
-                <button
-                  onClick={() => setGoalType("avg")}
-                  style={{
-                    flex: 1, border: "2px solid black", borderRadius: "6px", padding: "2px 0", fontSize: "10px", fontWeight: 900, cursor: "pointer",
-                    background: goalType === "avg" ? "black" : "white", color: goalType === "avg" ? "white" : "black", boxShadow: goalType === "avg" ? "none" : "1px 1px 0 0 #000",
-                  }}
-                >
-                  AVERAGE
-                </button>
-              </div>
-            </div>
+                {/* Row 2: Set Goal Input */}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ ...labelStyle, flex: "none", width: "auto" }}>GOAL:</span>
+                  <input 
+                    type="text" value={goalInputValue} onChange={(e) => setGoalInputValue(e.target.value.replace(/[^0-9]/g, ''))}
+                    className="vt-input"
+                    style={{ flex: 1, height: "32px", padding: "0 12px", fontSize: "14px", minWidth: 0 }}
+                    autoFocus
+                  />
+                  <div className="vt-tab-group" style={{ flex: 1.2, height: "32px", "--widget-color": activeCategory?.color || "#000", border: "2px solid black", flexShrink: 0 } as any}>
+                    <button onClick={() => setGoalType("total")} className={`vt-tab-btn ${goalType === "total" ? 'active' : ''}`} style={{ fontSize: "10px", fontWeight: 800 }}>TOTAL</button>
+                    <button onClick={() => setGoalType("avg")} className={`vt-tab-btn ${goalType === "avg" ? 'active' : ''}`} style={{ fontSize: "9px", fontWeight: 800 }}>DAILY AVERAGE</button>
+                  </div>
+                </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-              <label style={{ fontSize: "9px", textTransform: "uppercase" }}>Duration</label>
-              <div style={{ display: "flex", gap: "6px" }}>
-                {/* Number Toggle */}
-                <div style={{ display: "flex", flex: 1, border: "2px solid black", borderRadius: "6px", overflow: "hidden", background: "#fff" }}>
-                  {[1, 2, 3].map(val => (
-                    <button
-                      key={val}
-                      onClick={() => setGoalDurationValue(val)}
-                      style={{
-                        flex: 1,
-                        background: goalDurationValue === val ? "black" : "white",
-                        color: goalDurationValue === val ? "white" : "black",
-                        border: "none",
-                        borderRight: val < 3 ? "2px solid black" : "none",
-                        padding: "2px 0",
-                        fontSize: "10px",
-                        fontWeight: 900,
-                        cursor: "pointer",
-                      }}
+                {/* Row 3: Achieve By Selector */}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ ...labelStyle, flex: "none", width: "auto" }}>ACHIEVE BY:</span>
+                  <div className="vt-tab-group" style={{ flex: 1, height: "32px", "--widget-color": activeCategory?.color || "#000", border: "2px solid black" } as any}>
+                    {[1, 2, 3].map(val => (
+                      <button
+                        key={val} onClick={() => setGoalDurationValue(val)}
+                        className={`vt-tab-btn ${goalDurationValue === val ? 'active' : ''}`}
+                        style={{ fontSize: "12px", fontWeight: 800 }}
+                      >
+                        {val}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="vt-tab-group" style={{ flex: 1, height: "32px", "--widget-color": activeCategory?.color || "#000", border: "2px solid black", flexShrink: 0 } as any}>
+                    {[{id: "day", l: "DAYS"}, {id: "wk", l: "WEEKS"}, {id: "mo", l: "MONTHS"}].map(u => (
+                      <button
+                        key={u.id} onClick={() => setGoalDurationUnit(u.id as any)}
+                        className={`vt-tab-btn ${goalDurationUnit === u.id ? 'active' : ''}`}
+                        style={{ fontSize: "9px", fontWeight: 800 }}
+                      >
+                        {u.l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Row 4: Units & Action Footer */}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div style={{ display: "flex", gap: "8px", flex: 1 }}>
+                    <button 
+                      onClick={handleSaveGoal}
+                      className="vt-button"
+                      style={{ flex: 1, height: "32px", background: activeCategory?.color || "#4FFF5B", fontSize: "12px" }}
                     >
-                      {val}
+                      SET GOAL
                     </button>
-                  ))}
-                </div>
-                {/* Unit Toggle */}
-                <div style={{ display: "flex", flex: 1, border: "2px solid black", borderRadius: "6px", overflow: "hidden", background: "#fff" }}>
-                  {[{id: "wk", label: "WEEK"}, {id: "mo", label: "MONTH"}].map(unit => (
-                    <button
-                      key={unit.id}
-                      onClick={() => setGoalDurationUnit(unit.id as "wk"|"mo")}
-                      style={{
-                        flex: 1,
-                        background: goalDurationUnit === unit.id ? "black" : "white",
-                        color: goalDurationUnit === unit.id ? "white" : "black",
-                        border: "none",
-                        borderRight: unit.id === "wk" ? "2px solid black" : "none",
-                        padding: "2px 0",
-                        fontSize: "10px",
-                        fontWeight: 900,
-                        textTransform: "uppercase",
-                        cursor: "pointer",
-                      }}
+                    <button 
+                      onClick={() => setActiveGoalPrompt(null)}
+                      className="vt-button"
+                      style={{ width: "32px", height: "32px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", padding: 0, flexShrink: 0 }}
                     >
-                      {unit.label}
+                      ✕
                     </button>
-                  ))}
+                  </div>
                 </div>
               </div>
             </div>
-
-            <div style={{ display: "flex", gap: "6px", marginTop: "2px" }}>
-              <button 
-                onClick={() => setActiveGoalPrompt(null)}
-                style={{
-                 flex: 1,
-                 display: "flex",
-                 alignItems: "center",
-                 justifyContent: "center",
-                 height: "28px",
-                 background: "#fff",
-                 border: "2px solid #000",
-                 borderRadius: "6px",
-                 fontSize: "10px",
-                 fontWeight: 900,
-                 textTransform: "uppercase",
-                 cursor: "pointer",
-                 boxShadow: "2px 2px 0 0 #000",
-                }}
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleSaveGoal}
-                style={{
-                 flex: 1,
-                 display: "flex",
-                 alignItems: "center",
-                 justifyContent: "center",
-                 height: "28px",
-                 background: "#4FFF5B",
-                 border: "2px solid #000",
-                 borderRadius: "6px",
-                 fontSize: "10px",
-                 fontWeight: 900,
-                 textTransform: "uppercase",
-                 cursor: "pointer",
-                 boxShadow: "2px 2px 0 0 #000",
-                }}
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        )})()}
+          )
+        })()}
       </div>
     </WidgetShell>
   )

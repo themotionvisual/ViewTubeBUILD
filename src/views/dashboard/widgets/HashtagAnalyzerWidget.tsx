@@ -12,10 +12,19 @@ interface HashtagResult {
  trending: "rising" | "falling" | "stable"
 }
 
-export const HashtagAnalyzerWidget = ({
- widget, instance, editMode, onToggleCollapse, onCycleSize, onRemove, data,
-}: any) => {
- const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
+export const HashtagAnalyzerWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
+ const common = {
+  widget,
+  instance,
+  editMode,
+  canEdit: true,
+  onToggleCollapse,
+  onCycleSize,
+  onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
+ }
  const HASHTAG_ANALYZE_COST = getAiTokenCost("hashtagAnalyze")
  const entitlement = useEntitlement()
  const canAffordAnalyze = canAffordAiTokensFromState(entitlement, HASHTAG_ANALYZE_COST)

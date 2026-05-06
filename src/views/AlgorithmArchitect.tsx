@@ -9,6 +9,7 @@ import type {
 } from '../types';
 import { Zap } from 'lucide-react';
 import { useBrain } from '../context/GlobalDataContext';
+import { PostActionReflection } from '../components/PostActionReflection';
 
 const AlgorithmArchitect: React.FC = () => {
   const { brain } = useBrain();
@@ -128,6 +129,12 @@ const AlgorithmArchitect: React.FC = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {diagnosis && (
+            <div className="animate-in fade-in slide-in-from-top-4 duration-1000 delay-500">
+               <PostActionReflection toolId="ALGORITHM_ARCHITECT" />
             </div>
           )}
 

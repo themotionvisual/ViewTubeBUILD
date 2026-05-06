@@ -24,8 +24,10 @@ import {
   exportDashboardLayout,
   importDashboardLayout,
   loadDashboardLayout,
-  nextSizeBucket,
   nextHeightBucket,
+  prevHeightBucket,
+  nextSizeBucket,
+  prevSizeBucket,
   resetDashboardLayout,
   saveDashboardLayout,
   sizeBucketClassName,
@@ -64,7 +66,7 @@ const SortableWidgetItem: React.FC<{
   }
 
   return (
-    <div ref={setNodeRef} style={style} className={className} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style} className={className} data-widget-id={id} {...attributes} {...listeners}>
       {children}
     </div>
   )
@@ -155,6 +157,24 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
     })
   }
 
+  const onDecSize = (widgetId: string) => {
+    if (!canDrag) return
+    setLayout((prev) => {
+      const current = prev.instances[widgetId]
+      if (!current) return prev
+      return {
+        ...prev,
+        instances: {
+          ...prev.instances,
+          [widgetId]: {
+            ...current,
+            size: prevSizeBucket(widgetId, current.size),
+          },
+        },
+      }
+    })
+  }
+
   const onCycleHeight = (widgetId: string) => {
     if (!canDrag) return
     setLayout((prev) => {
@@ -167,6 +187,24 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
           [widgetId]: {
             ...current,
             height: nextHeightBucket(widgetId, current.height),
+          },
+        },
+      }
+    })
+  }
+
+  const onDecHeight = (widgetId: string) => {
+    if (!canDrag) return
+    setLayout((prev) => {
+      const current = prev.instances[widgetId]
+      if (!current) return prev
+      return {
+        ...prev,
+        instances: {
+          ...prev.instances,
+          [widgetId]: {
+            ...current,
+            height: prevHeightBucket(widgetId, current.height),
           },
         },
       }
@@ -262,7 +300,9 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
                       onNavigate={onNavigate}
                       onToggleCollapse={onToggleCollapse}
                       onCycleSize={onCycleSize}
+                      onDecSize={onDecSize}
                       onCycleHeight={onCycleHeight}
+                      onDecHeight={onDecHeight}
                       onRemoveWidget={onRemoveWidget}
                       dashboardControls={{
                         editMode,

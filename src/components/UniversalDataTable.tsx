@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useCallback } from "react"
-import { X, Globe, Lock, Search, Trash2, CheckCircle2 } from "lucide-react"
+import { X, Globe, Lock, Search, Trash2, CheckCircle2, Download } from "lucide-react"
+import { rowsToCsv } from "../services/dataExport"
 
 // Column aliases - map canonical names to their aliases
 // This prevents duplicate columns from being displayed
@@ -282,6 +283,29 @@ export const UniversalDataTable: React.FC<UniversalDataTableProps> = ({
   )
  }, [data, searchTerm])
 
+ const handleExportCSV = () => {
+  if (filteredData.length === 0) return
+  // Clean data for export (remove internal _ fields)
+  const exportRows = filteredData.map(row => {
+    const clean: Record<string, unknown> = {}
+    headers.forEach(h => {
+      clean[h] = getCellValue(row, h)
+    })
+    return clean
+  })
+  
+  const csv = rowsToCsv(exportRows)
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = `viewtube_matrix_export_${new Date().toISOString().split('T')[0]}.csv`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+ }
+
  return (
   <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
    <div className="bg-white border-[6px] border-black rounded-[48px] shadow-[24px_24px_0px_0px_black] w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden">
@@ -323,19 +347,27 @@ export const UniversalDataTable: React.FC<UniversalDataTableProps> = ({
       />
      </div>
 
-     <div className="flex items-center bg-black p-1 rounded-2xl border-[4px] border-black shadow-[4px_4px_0px_0px_black]">
+      <div className="flex items-center bg-black p-1 rounded-2xl border-[4px] border-black shadow-[4px_4px_0px_0px_black]">
+       <button
+        onClick={() => setFilterScope("global")}
+        className={`px-6 py-3 rounded-xl font-[1000] uppercase text-sm flex items-center gap-2 transition-all ${filterScope === "global" ? "bg-[#CCFF00] text-black" : "bg-transparent text-white hover:bg-white/10"}`}>
+        <Globe size={18} /> Global
+       </button>
+       <button
+        onClick={() => setFilterScope("local")}
+        className={`px-6 py-3 rounded-xl font-[1000] uppercase text-sm flex items-center gap-2 transition-all ${filterScope === "local" ? "bg-[#00CCFF] text-black" : "bg-transparent text-white hover:bg-white/10"}`}>
+        <Lock size={18} /> Local
+       </button>
+      </div>
+
       <button
-       onClick={() => setFilterScope("global")}
-       className={`px-6 py-3 rounded-xl font-[1000] uppercase text-sm flex items-center gap-2 transition-all ${filterScope === "global" ? "bg-[#CCFF00] text-black" : "bg-transparent text-white hover:bg-white/10"}`}>
-       <Globe size={18} /> Global
-      </button>
-      <button
-       onClick={() => setFilterScope("local")}
-       className={`px-6 py-3 rounded-xl font-[1000] uppercase text-sm flex items-center gap-2 transition-all ${filterScope === "local" ? "bg-[#00CCFF] text-black" : "bg-transparent text-white hover:bg-white/10"}`}>
-       <Lock size={18} /> Local
+       onClick={handleExportCSV}
+       disabled={filteredData.length === 0}
+       className="pop-button bg-[#FFB570] text-black px-6 py-3 flex items-center gap-2 disabled:opacity-50">
+       <Download size={20} strokeWidth={3} />
+       <span className="font-black uppercase text-sm">Export CSV</span>
       </button>
      </div>
-    </div>
 
     {/* Table Body */}
     <div className="flex-1 overflow-auto custom-scrollbar p-8">

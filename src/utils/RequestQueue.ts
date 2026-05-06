@@ -67,9 +67,10 @@ export class RequestQueue {
 
     private isRetryable(error: any): boolean {
         if (error?.status === 429 || error?.status >= 500) return true;
-        if (error?.message?.toLowerCase().includes('rate limit')) return true;
-        if (error?.message?.toLowerCase().includes('quota')) return false; // Hard fail on out-of-quota
-        return true;
+        const msg = error?.message?.toLowerCase() || '';
+        if (msg.includes('rate limit')) return true;
+        if (msg.includes('quota') || msg.includes('paid plan')) return false; // Hard fail
+        return false;
     }
 }
 

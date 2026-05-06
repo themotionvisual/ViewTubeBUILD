@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect, useRef, useState } from "react"
 import {
  ResponsiveContainer,
  LineChart,
@@ -84,6 +84,44 @@ const TOOLTIP_STYLE = {
 }
 
 const COLORS = ["#24D3FF", "#CCFF00", "#FFE357", "#FFB158", "#FF7497", "#B14AED"]
+
+const SafeResponsiveContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+ const hostRef = useRef<HTMLDivElement | null>(null)
+ const [ready, setReady] = useState(false)
+
+ useEffect(() => {
+  const host = hostRef.current
+  if (!host) return
+
+  const update = () => {
+   const rect = host.getBoundingClientRect()
+   const ok = rect.width > 1 && rect.height > 1
+   setReady(ok)
+  }
+
+  update()
+  let observer: ResizeObserver | null = null
+  if (typeof ResizeObserver !== "undefined") {
+   observer = new ResizeObserver(update)
+   observer.observe(host)
+  }
+  window.addEventListener("resize", update)
+  return () => {
+   observer?.disconnect()
+   window.removeEventListener("resize", update)
+  }
+ }, [])
+
+ return (
+  <div ref={hostRef} className="h-full w-full min-h-[1px] min-w-[1px]">
+   {ready ? (
+    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+     {children}
+    </ResponsiveContainer>
+   ) : null}
+  </div>
+ )
+}
 
 type ChartRenderContext = {
  timeline: Array<{ date: string; views: number; watchHours: number; revenue: number; subscribers: number }>
@@ -335,7 +373,7 @@ const WordTreeBoard: React.FC<{ topRows: ChartRenderContext["topRows"] }> = ({ t
 
 export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
  annotation: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <LineChart data={ctx.timeline.slice(-24)}>
     {grid}
     <XAxis dataKey="date" tick={{ fill: AXIS, fontSize: 10 }} tickFormatter={(v) => String(v).slice(5)} />
@@ -343,10 +381,10 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     <Tooltip contentStyle={TOOLTIP_STYLE} />
     <Line type="monotone" dataKey="views" stroke="#24D3FF" strokeWidth={3} dot={false} />
    </LineChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  area: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <AreaChart data={ctx.timeline.slice(-24)}>
     {grid}
     <XAxis dataKey="date" tick={{ fill: AXIS, fontSize: 10 }} tickFormatter={(v) => String(v).slice(5)} />
@@ -354,10 +392,10 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     <Tooltip contentStyle={TOOLTIP_STYLE} />
     <Area type="monotone" dataKey="views" stroke="#24D3FF" fill="#24D3FF" fillOpacity={0.28} />
    </AreaChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  bar: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <BarChart data={ctx.topByViews}>
     {grid}
     <XAxis dataKey="name" hide />
@@ -365,10 +403,10 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     <Tooltip contentStyle={TOOLTIP_STYLE} />
     <Bar dataKey="views" fill="#CCFF00" />
    </BarChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  bubble: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <ScatterChart>
     {grid}
     <XAxis type="number" dataKey="views" tick={{ fill: AXIS, fontSize: 10 }} />
@@ -376,11 +414,11 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     <Tooltip contentStyle={TOOLTIP_STYLE} />
     <Scatter data={ctx.scatter} fill="#FF7497" />
    </ScatterChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  calendar: (ctx) => <CalendarHeat timeline={ctx.timeline} />,
  candlestick: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <ComposedChart data={ctx.topByViews.slice(0, 8).map((row) => ({ ...row, low: row.views * 0.45, high: row.views }))}>
     {grid}
     <XAxis dataKey="name" hide />
@@ -389,10 +427,10 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     <Bar dataKey="low" fill="#4c7ce5" />
     <Bar dataKey="high" fill="#84a3ee" />
    </ComposedChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  column: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <BarChart data={ctx.topByViews}>
     {grid}
     <XAxis dataKey="name" hide />
@@ -400,10 +438,10 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     <Tooltip contentStyle={TOOLTIP_STYLE} />
     <Bar dataKey="views" fill="#24D3FF" />
    </BarChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  combo: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <ComposedChart data={ctx.topByViews}>
     {grid}
     <XAxis dataKey="name" hide />
@@ -413,10 +451,10 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     <Bar yAxisId="left" dataKey="views" fill="#CCFF00" />
     <Line yAxisId="right" type="monotone" dataKey="revenue" stroke="#FF7497" strokeWidth={2.5} dot={false} />
    </ComposedChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  diff: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <LineChart data={ctx.timeline.slice(-24).map((row) => ({ date: row.date, diff: row.views - row.watchHours * 40 }))}>
     {grid}
     <XAxis dataKey="date" tick={{ fill: AXIS, fontSize: 10 }} tickFormatter={(v) => String(v).slice(5)} />
@@ -424,10 +462,10 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     <Tooltip contentStyle={TOOLTIP_STYLE} />
     <Line type="monotone" dataKey="diff" stroke="#24D3FF" strokeWidth={3} dot={false} />
    </LineChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  donut: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <PieChart>
     <Pie data={ctx.formatBreakdown} dataKey="value" nameKey="name" innerRadius={48} outerRadius={88} stroke="#000" strokeWidth={2}>
      {ctx.formatBreakdown.map((row, index) => (
@@ -436,7 +474,7 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     </Pie>
     <Tooltip contentStyle={TOOLTIP_STYLE} />
    </PieChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  gantt: (ctx) => <TimelineBoard timeline={ctx.timeline} mode="gantt" />,
  gauge: (ctx) => (
@@ -448,7 +486,7 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
  ),
  geo: (ctx) => <GeoBoard topByViews={ctx.topByViews} mode="geo" />,
  histogram: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <BarChart data={ctx.histogram}>
     {grid}
     <XAxis dataKey="bucket" tick={{ fill: AXIS, fontSize: 10 }} />
@@ -456,10 +494,10 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     <Tooltip contentStyle={TOOLTIP_STYLE} />
     <Bar dataKey="count" fill="#FFB158" />
    </BarChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  intervals: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <ComposedChart data={ctx.intervals}>
     {grid}
     <XAxis dataKey="name" hide />
@@ -468,10 +506,10 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     <Bar dataKey="high" fill="#24D3FF" />
     <Bar dataKey="low" fill="#CCFF00" />
    </ComposedChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  line: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <LineChart data={ctx.timeline.slice(-24)}>
     {grid}
     <XAxis dataKey="date" tick={{ fill: AXIS, fontSize: 10 }} tickFormatter={(v) => String(v).slice(5)} />
@@ -479,12 +517,12 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     <Tooltip contentStyle={TOOLTIP_STYLE} />
     <Line type="monotone" dataKey="views" stroke="#24D3FF" strokeWidth={3} dot={false} />
    </LineChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  maps: (ctx) => <GeoBoard topByViews={ctx.topByViews} mode="maps" />,
  org: (ctx) => <OrgBoard topByViews={ctx.topByViews} />,
  pie: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <PieChart>
     <Pie data={ctx.formatBreakdown} dataKey="value" nameKey="name" outerRadius={88} stroke="#000" strokeWidth={2}>
      {ctx.formatBreakdown.map((row, index) => (
@@ -493,11 +531,11 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     </Pie>
     <Tooltip contentStyle={TOOLTIP_STYLE} />
    </PieChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  sankey: (ctx) => <SankeyBoard ctx={ctx} />,
  scatter: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <ScatterChart>
     {grid}
     <XAxis type="number" dataKey="views" tick={{ fill: AXIS, fontSize: 10 }} />
@@ -505,10 +543,10 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     <Tooltip contentStyle={TOOLTIP_STYLE} />
     <Scatter data={ctx.scatter} fill="#FF7497" />
    </ScatterChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  steppedArea: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <AreaChart data={ctx.timeline.slice(-24)}>
     {grid}
     <XAxis dataKey="date" tick={{ fill: AXIS, fontSize: 10 }} tickFormatter={(v) => String(v).slice(5)} />
@@ -516,7 +554,7 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     <Tooltip contentStyle={TOOLTIP_STYLE} />
     <Area type="stepAfter" dataKey="views" stroke="#24D3FF" fill="#24D3FF" fillOpacity={0.3} />
    </AreaChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  table: (ctx) => (
   <div className="h-full overflow-auto">
@@ -544,7 +582,7 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
  ),
  timelines: (ctx) => <TimelineBoard timeline={ctx.timeline} mode="timeline" />,
  treemap: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <Treemap
     data={ctx.topByViews.slice(0, 12).map((row) => ({ name: row.name, size: Math.max(1, row.views) }))}
     dataKey="size"
@@ -552,10 +590,10 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     fill="#24D3FF"
     aspectRatio={4 / 3}
    />
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  trendlines: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <LineChart data={ctx.timeline.slice(-24)}>
     {grid}
     <XAxis dataKey="date" tick={{ fill: AXIS, fontSize: 10 }} tickFormatter={(v) => String(v).slice(5)} />
@@ -564,10 +602,10 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     <Line type="monotone" dataKey="views" stroke="#24D3FF" strokeWidth={3} dot={false} />
     <Line type="monotone" dataKey="watchHours" stroke="#FF7497" strokeWidth={2} dot={false} />
    </LineChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  vega: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <ComposedChart data={ctx.topByViews.slice(0, 10)}>
     {grid}
     <XAxis dataKey="name" hide />
@@ -576,10 +614,10 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     <Area type="monotone" dataKey="views" fill="#24D3FF" fillOpacity={0.24} stroke="#24D3FF" />
     <Line type="monotone" dataKey="revenue" stroke="#FF7497" strokeWidth={2.5} dot={false} />
    </ComposedChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  waterfall: (ctx) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <SafeResponsiveContainer>
    <BarChart data={ctx.waterfall}>
     {grid}
     <XAxis dataKey="name" tick={{ fill: AXIS, fontSize: 10 }} />
@@ -588,7 +626,7 @@ export const CHART_RENDERER_MAP: Record<ChartRendererKey, ChartRenderer> = {
     <Bar dataKey="delta" fill="#FFB158" />
     <Bar dataKey="cumulative" fill="#24D3FF" />
    </BarChart>
-  </ResponsiveContainer>
+  </SafeResponsiveContainer>
  ),
  wordtree: (ctx) => <WordTreeBoard topRows={ctx.topRows} />,
 }

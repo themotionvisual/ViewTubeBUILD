@@ -16,8 +16,10 @@ const stateSnapshot = (state: TimelineState): Omit<TimelineState, "history" | "p
   clips: state.clips,
   keyframes: state.keyframes,
   transitions: state.transitions,
+  seams: state.seams,
   effects: state.effects,
   selectedClipId: state.selectedClipId,
+  selectedClipIds: state.selectedClipIds,
   playheadFrame: state.playheadFrame,
   zoom: state.zoom,
   snapping: state.snapping,
@@ -97,8 +99,10 @@ export const createTimelineState = (fps = 30): TimelineState => ({
   clips: [],
   keyframes: [],
   transitions: [],
+  seams: [],
   effects: [],
   selectedClipId: null,
+  selectedClipIds: [],
   playheadFrame: 0,
   zoom: 1,
   snapping: true,
@@ -216,6 +220,43 @@ const applyMutation = (
         }),
       };
     }
+    case "moveClips": {
+      // Find the primary clip (the first one in the move list is usually the one being directly dragged)
+      const primaryMove = command.moves[0];
+      if (!primaryMove) return state;
+
+      const primaryClip = state.clips.find(c => c.id === primaryMove.clipId);
+      if (!primaryClip) return state;
+
+      const snappedStart = applySnap(state, primaryMove.startFrame, primaryMove.clipId);
+      const deltaFrame = snappedStart - primaryClip.startFrame;
+      const trackIdShift = primaryMove.trackId; // In this simplified impl, we assume the primary track
+
+      return {
+        ...state,
+        clips: state.clips.map((clip) => {
+          const move = command.moves.find(m => m.clipId === clip.id);
+          if (!move) return clip;
+
+          const newStart = Math.max(0, clip.startFrame + deltaFrame);
+          const duration = clip.endFrame - clip.startFrame;
+          return {
+            ...clip,
+            trackId: move.trackId,
+            startFrame: newStart,
+            endFrame: newStart + duration,
+          };
+        }),
+        keyframes: state.keyframes.map((keyframe) => {
+          const move = command.moves.find(m => m.clipId === keyframe.clipId);
+          if (!move) return keyframe;
+          const target = state.clips.find(c => c.id === keyframe.clipId);
+          if (!target) return keyframe;
+          
+          return { ...keyframe, frame: Math.max(0, keyframe.frame + deltaFrame) };
+        }),
+      };
+    }
     case "trimClipStart": {
       return {
         ...state,
@@ -303,6 +344,14 @@ const applyMutation = (
       return {
         ...state,
         selectedClipId: command.clipId,
+        selectedClipIds: command.clipId ? [command.clipId] : [],
+      };
+    }
+    case "selectClips": {
+      return {
+        ...state,
+        selectedClipId: command.clipIds[0] || null,
+        selectedClipIds: command.clipIds,
       };
     }
     case "setClipColor": {
@@ -341,6 +390,18 @@ const applyMutation = (
             ? { ...track, viewportState: command.viewportState }
             : track,
         ),
+      };
+    }
+    case "setSeamKind": {
+      return {
+        ...state,
+        seams: state.seams.map(s => s.id === command.seamId ? { ...s, kind: command.kind } : s),
+      };
+    }
+    case "updateSeamTransition": {
+      return {
+        ...state,
+        seams: state.seams.map(s => s.id === command.seamId ? { ...s, transition: command.transition, kind: "transition" } : s),
       };
     }
     case "beginPointerAction": {

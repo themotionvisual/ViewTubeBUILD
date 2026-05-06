@@ -1,5 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
 
+import { StandardButton } from "./StandardButton"
+import { StandardInput } from "./StandardInput"
+import { StandardDropdown } from "./StandardDropdown"
+import { StandardKPI } from "./StandardKPI"
+
 import {
  ChevronDown,
  Cloud,
@@ -33,6 +38,7 @@ import {
  Wifi,
  EyeOff,
  Tag,
+ Wrench,
 } from "lucide-react"
 
 import {
@@ -136,9 +142,9 @@ type SubToolboxProps = {
 
  iconBg: string
 
- isOpen: boolean
+ isOpen?: boolean
 
- onToggle: () => void
+ onToggle?: () => void
 
  openUnits?: number
 
@@ -228,7 +234,14 @@ const CONFIG: SystemConfig = {
  baseHeight: CONTROL_SHELL.height,
 
  scaffoldStroke: 6,
-}
+} as const
+
+export const UI_CONSTANTS = {
+ border: `border-[${CONFIG.stroke}px] border-black`,
+ scaffoldBorder: `border-[${CONFIG.scaffoldStroke}px] border-black`,
+ radius: `rounded-[${CONFIG.radius}px]`,
+ shadow: `shadow-[6px_6px_0px_0px_black]`,
+} as const
 
 const paletteAt = (index: number) => getPaletteColor(index)
 const palettePair = (index: number) => ({
@@ -370,15 +383,15 @@ export const hexToRgba = (hex: string, alpha: number) => {
  const normalized = hex.replace("#", "")
 
  const fullHex =
-  normalized.length === 3
-   ? normalized
+  normalized.length === 3 ?
+   normalized
 
-      .split("")
+    .split("")
 
-      .map((char) => `${char}${char}`)
+    .map((char) => `${char}${char}`)
 
-      .join("")
-   : normalized
+    .join("")
+  : normalized
 
  if (!/^[0-9a-fA-F]{6}$/.test(fullHex)) return `rgba(0,0,0,${alpha})`
 
@@ -468,7 +481,7 @@ const IconRail: React.FC<IconRailProps> = ({ backgroundColor, children }) => {
  )
 }
 
-const SubToolbox: React.FC<SubToolboxProps> = ({
+export const SubToolbox: React.FC<SubToolboxProps> = ({
  title,
 
  icon: Icon,
@@ -477,7 +490,7 @@ const SubToolbox: React.FC<SubToolboxProps> = ({
 
  iconBg,
 
- isOpen,
+ isOpen = true,
 
  onToggle,
 
@@ -498,25 +511,25 @@ const SubToolbox: React.FC<SubToolboxProps> = ({
  )
 
  const contentSizeStyle =
-  heightMode === "compact"
-   ? undefined
-   : { minHeight: `${Math.max(0, minInnerHeight)}px` }
+  heightMode === "compact" ? undefined : (
+   { minHeight: `${Math.max(0, minInnerHeight)}px` }
+  )
 
- const shadowColor = hexToRgba(headerBg, 0.5)
+ const shadowColor = "rgba(156, 163, 175, 0.5)" // Standardized 50% gray
 
  return (
   <div
-   className="w-full self-start bg-white overflow-hidden relative flex flex-col shrink-0"
+   className="w-full self-start bg-white overflow-hidden relative flex flex-col shrink-0 transition-all duration-300"
    style={{
-    border: `${config.stroke}px solid black`,
+    border: `2px solid black`,
 
-    borderRadius: `${config.radius}px`,
+    borderRadius: `8px`,
 
-    boxShadow: `${config.stroke + 2}px ${config.stroke + 2}px 0px 0px ${shadowColor}`,
+    boxShadow: `2px 2px 0px 0px ${shadowColor}`,
    }}>
    <header
     onClick={onToggle}
-    className="flex items-center justify-between select-none relative z-20 group cursor-pointer"
+    className={`flex items-center justify-between select-none relative z-20 group ${onToggle ? "cursor-pointer" : ""}`}
     style={{
      height: `${CONTROL_SHELL.headerHeight}px`,
 
@@ -540,7 +553,7 @@ const SubToolbox: React.FC<SubToolboxProps> = ({
 
     <div className="flex items-center gap-2 pr-3 h-full">
      <div className="h-full flex items-center justify-center">
-      <AnimatedToggleIcon open={isOpen} size={24} />
+      <AnimatedToggleIcon open={isOpen} size={34} />
      </div>
     </div>
    </header>
@@ -1037,6 +1050,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
  const [isGalOverviewOpen, setIsGalOverviewOpen] = useState(true)
  const [isGalTrendsOpen, setIsGalTrendsOpen] = useState(false)
  const [isGalEngagementOpen, setIsGalEngagementOpen] = useState(false)
+ const [isGalButtonsOpen, setIsGalButtonsOpen] = useState(false)
  const [isGalConceptOpen, setIsGalConceptOpen] = useState(true)
  const [isGalStylesOpen, setIsGalStylesOpen] = useState(false)
  const [isGalTextOpen, setIsGalTextOpen] = useState(false)
@@ -1045,11 +1059,21 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
  const [isGalSecurityOpen, setIsGalSecurityOpen] = useState(false)
  const [isGalNetworkOpen, setIsGalNetworkOpen] = useState(false)
  const [isGalStorageOpen, setIsGalStorageOpen] = useState(false)
+ const [isGalStandardOpen, setIsGalStandardOpen] = useState(false)
 
  const [galCpuUsage] = useState(67)
  const [galMemUsage] = useState(45)
  const [galDiskUsage] = useState(78)
  const [galAutoSync, setGalAutoSync] = useState(true)
+
+ // Large Action Buttons for Gallery
+ const LargeActionButtons = () => (
+  <div className="flex flex-col gap-4">
+   <button className="bg-white text-black px-8 py-4 border-[4px] border-black rounded-2xl font-[1000] uppercase tracking-tighter shadow-[8px_8px_0px_0px_black] hover:shadow-none hover:translate-x-2 hover:translate-y-2 transition-all text-xl">
+    ⚡ Large Action
+   </button>
+  </div>
+ )
  const [galNetworkState, setGalNetworkState] = useState<0 | 1 | 2>(1)
  const [galPassword, setGalPassword] = useState("")
  const [galOtp, setGalOtp] = useState("")
@@ -1320,9 +1344,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
  const toggleStyle = (value: string) => {
   setActiveStyles((prev) =>
-   prev.includes(value)
-    ? prev.filter((entry) => entry !== value)
-    : [...prev, value].slice(0, 4),
+   prev.includes(value) ?
+    prev.filter((entry) => entry !== value)
+   : [...prev, value].slice(0, 4),
   )
  }
 
@@ -1334,9 +1358,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
  const toggleChip = (chip: string) => {
   setSelectedChipSet((prev) =>
-   prev.includes(chip)
-    ? prev.filter((entry) => entry !== chip)
-    : [...prev, chip].slice(0, 4),
+   prev.includes(chip) ?
+    prev.filter((entry) => entry !== chip)
+   : [...prev, chip].slice(0, 4),
   )
  }
 
@@ -1344,8 +1368,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
   setChipTheme((prev) => ({
    ...prev,
 
-   [theme]: prev[theme].includes(chip)
-    ? prev[theme].filter((entry) => entry !== chip)
+   [theme]:
+    prev[theme].includes(chip) ?
+     prev[theme].filter((entry) => entry !== chip)
     : [...prev[theme], chip].slice(0, 3),
   }))
  }
@@ -1485,20 +1510,20 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
  const scatterAvgX = useMemo(
   () =>
-   scatterPlotData.length
-    ? scatterPlotData.reduce((acc, item) => acc + item.x, 0) /
-      scatterPlotData.length
-    : 0,
+   scatterPlotData.length ?
+    scatterPlotData.reduce((acc, item) => acc + item.x, 0) /
+    scatterPlotData.length
+   : 0,
 
   [scatterPlotData],
  )
 
  const scatterAvgY = useMemo(
   () =>
-   scatterPlotData.length
-    ? scatterPlotData.reduce((acc, item) => acc + item.y, 0) /
-      scatterPlotData.length
-    : 0,
+   scatterPlotData.length ?
+    scatterPlotData.reduce((acc, item) => acc + item.y, 0) /
+    scatterPlotData.length
+   : 0,
 
   [scatterPlotData],
  )
@@ -1905,14 +1930,13 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
            style={{
             boxShadow: `${CONFIG.stroke + 2}px ${CONFIG.stroke + 2}px 0px 0px ${hexToRgba(studioRow0Pair.header, 0.5)}`,
            }}>
-           {canvasPreview ? (
+           {canvasPreview ?
             <img
              src={canvasPreview}
              alt="Canvas preview"
              className="w-full h-full object-contain border-[3px] border-black rounded-2xl"
             />
-           ) : (
-            <div
+           : <div
              onClick={() => canvasInputRef.current?.click()}
              className="w-full h-full border-[3px] border-[#9ca3af] border-dashed rounded-2xl bg-gray-100 flex flex-col items-center justify-center gap-4 cursor-pointer">
              <div className="w-16 h-16 border-[3px] border-black rounded-full bg-white flex items-center justify-center">
@@ -1932,7 +1956,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
               DROP FILES OR CLICK TO UPLOAD
              </p>
             </div>
-           )}
+           }
           </div>
 
           <div
@@ -2013,7 +2037,47 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
        <main
         className={`bg-[#f5f5f5] w-full p-6 md:p-8 text-black transition-opacity duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${isSubtoolboxesGalleryOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+         {/* 1. STANDARD COMPONENTS */}
+         <SubToolbox
+          title="STANDARD"
+          icon={Zap}
+          headerBg="#CCFF00"
+          iconBg="#FF3399"
+          isOpen={isGalStandardOpen}
+          onToggle={() => setIsGalStandardOpen((p) => !p)}
+          openUnits={4}
+          config={CONFIG}>
+          <div className="flex flex-col gap-4 p-4">
+           <StandardButton label="Action" onClick={() => {}} />
+           <StandardInput placeholder="Enter text..." onChange={() => {}} />
+           <StandardDropdown
+            options={["Option 1", "Option 2"]}
+            onChange={() => {}}
+           />
+           <StandardKPI label="Engagement" value="95%" />
+          </div>
+         </SubToolbox>
+         <SubToolbox
+          title="STANDARD"
+          icon={Zap}
+          headerBg="#CCFF00"
+          iconBg="#FF3399"
+          isOpen={isGalStandardOpen}
+          onToggle={() => setIsGalStandardOpen((p) => !p)}
+          openUnits={4}
+          config={CONFIG}>
+          <div className="flex flex-col gap-4 p-4">
+           <StandardButton label="Action" onClick={() => {}} />
+           <StandardInput placeholder="Enter text..." onChange={() => {}} />
+           <StandardDropdown
+            options={["Option 1", "Option 2"]}
+            onChange={() => {}}
+           />
+           <StandardKPI label="Engagement" value="95%" />
+          </div>
+         </SubToolbox>
          {/* 1. MEDIA ANALYTICS */}
+
          <SubToolbox
           title="OVERVIEW"
           icon={Eye}
@@ -2110,6 +2174,79 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
              />
             </div>
            </MiniModule>
+          </div>
+         </SubToolbox>
+
+         <SubToolbox
+          title="BUTTONS"
+          icon={Wrench}
+          headerBg="#FF3399"
+          iconBg="#CCFF00"
+          isOpen={isGalButtonsOpen}
+          onToggle={() => setIsGalButtonsOpen((p) => !p)}
+          openUnits={6}
+          config={CONFIG}>
+          <div className="flex flex-col gap-6 p-4 overflow-y-auto">
+           {/* 18 Color Palette Buttons */}
+           <div className="flex flex-wrap gap-2">
+            {[
+             "#FF3399",
+             "#CCFF00",
+             "#00CCFF",
+             "#FFDD00",
+             "#FFB158",
+             "#00D2FF",
+             "#FFE357",
+             "#FF7497",
+             "#FF83EA",
+             "#FF8AAF",
+             "#FFB570",
+             "#FFFF61",
+             "#4FFF5B",
+             "#40C6E9",
+             "#579AFF",
+             "#CC00FF",
+             "#00FF99",
+             "#888888",
+            ].map((color) => (
+             <button
+              key={color}
+              onMouseDown={(e) => {
+               const btn = e.currentTarget
+               btn.style.boxShadow = "none"
+               btn.style.transform = "translateY(2px)"
+              }}
+              onMouseUp={(e) => {
+               const btn = e.currentTarget
+               btn.style.boxShadow = `2px 2px 0px 0px ${color}80`
+               btn.style.transform = "translateY(0)"
+              }}
+              onClick={(e) => {
+               const btn = e.currentTarget
+               if (btn.style.backgroundColor === "white") {
+                btn.style.backgroundColor = color
+                btn.style.color = "white"
+               } else {
+                btn.style.backgroundColor = "white"
+                btn.style.color = "black"
+               }
+              }}
+              style={{
+               height: "29px",
+               borderColor: "black",
+               backgroundColor: "white",
+               borderRadius: "0.5rem",
+               boxShadow: `2px 2px 0px 0px ${color}80`,
+              }}
+              className="px-3 py-1 border-[2px] border-black font-black uppercase text-[12px] tracking-tighter text-black transition-all">
+              Color {color}
+             </button>
+            ))}
+           </div>
+           {/* Large Action Button */}
+           <button className="bg-white text-black px-6 py-3 border-[4px] border-black rounded-xl font-[1000] uppercase tracking-tighter shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all">
+            ⚡ Large Action
+           </button>
           </div>
          </SubToolbox>
 
@@ -3358,9 +3495,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
 
              <span className="text-[#24D3FF]">
               {engagementSortMetric}:{" "}
-              {engagementLeader
-               ? Number(engagementLeader[engagementSortMetric])
-               : 0}
+              {engagementLeader ?
+               Number(engagementLeader[engagementSortMetric])
+              : 0}
              </span>
             </div>
 
@@ -3597,9 +3734,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
                  <Cell
                   key={`bar-main-${idx}`}
                   fill={
-                   idx === 0
-                    ? "#111827"
-                    : chartPalette[idx % chartPalette.length]
+                   idx === 0 ? "#111827" : (
+                    chartPalette[idx % chartPalette.length]
+                   )
                   }
                  />
                 ))}
@@ -4076,9 +4213,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
                onClick={() => setTinyClicked(tinyBtn.key)}
                aria-pressed={isSelected}
                className={`${tinyBtn.color} ${tinyBtn.text} relative px-4 py-2 border-[3px] border-black rounded-xl font-black uppercase text-[10px] tracking-widest transition-[transform,box-shadow,filter] duration-150 ease-out hover:-translate-x-0.5 hover:-translate-y-0.5 hover:brightness-105 hover:shadow-[6px_6px_0px_0px_black] active:translate-x-1 active:translate-y-1 active:scale-95 active:shadow-[1px_1px_0px_0px_black] ${
-                isSelected
-                 ? "translate-x-1 translate-y-1 shadow-[1px_1px_0px_0px_black] ring-[2px] ring-black/70 ring-offset-2 ring-offset-white"
-                 : "shadow-[3px_3px_0px_0px_black]"
+                isSelected ?
+                 "translate-x-1 translate-y-1 shadow-[1px_1px_0px_0px_black] ring-[2px] ring-black/70 ring-offset-2 ring-offset-white"
+                : "shadow-[3px_3px_0px_0px_black]"
                }`}>
                {tinyBtn.label}
               </button>
@@ -4143,9 +4280,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
                   type="button"
                   onClick={() => toggleThemeChip(theme.key, chip)}
                   className={`px-2 py-1 border-[2px] border-black rounded-lg text-[8px] font-black uppercase ${
-                   chipTheme[theme.key].includes(chip)
-                    ? `${theme.accent} text-black`
-                    : "bg-white"
+                   chipTheme[theme.key].includes(chip) ?
+                    `${theme.accent} text-black`
+                   : "bg-white"
                   }`}>
                   {chip}
                  </button>
@@ -4205,9 +4342,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
                    setRadioTheme((prev) => ({ ...prev, [theme.key]: i }))
                   }
                   className={`w-6 h-6 border-[2px] border-black rounded-full flex items-center justify-center ${radioTheme[theme.key] === i ? theme.accent : "bg-white"}`}>
-                  {radioTheme[theme.key] === i ? (
+                  {radioTheme[theme.key] === i ?
                    <span className="w-2 h-2 bg-white rounded-full" />
-                  ) : null}
+                  : null}
                  </button>
                 ))}
                </div>
@@ -4480,16 +4617,15 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
               type="button"
               onClick={() => setMediaPlaying((prev) => !prev)}
               className="w-12 h-12 border-[3px] border-black rounded-full bg-[#FF7497] flex items-center justify-center shadow-[3px_3px_0px_0px_rgba(0,0,0,0.5)]">
-              {mediaPlaying ? (
+              {mediaPlaying ?
                <Pause size={20} strokeWidth={3} />
-              ) : (
-               <Play
+              : <Play
                 size={20}
                 strokeWidth={3}
                 fill="currentColor"
                 className="ml-0.5"
                />
-              )}
+              }
              </button>
             </div>
 
@@ -4645,11 +4781,9 @@ export function Sparkline({
 }: any) {
  const chartData = data.map((value: any, index: any) => ({ value, index }))
  const getStrokeColor = () =>
-  variant === "tokyo-pop"
-   ? "#00FFFF"
-   : variant === "inverted"
-     ? "#FFFFFF"
-     : color
+  variant === "tokyo-pop" ? "#00FFFF"
+  : variant === "inverted" ? "#FFFFFF"
+  : color
  return (
   <div style={{ height }} className="w-full">
    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
@@ -4675,16 +4809,18 @@ export function TrendAreaChart({
  variant = "standard",
 }: any) {
  const getBgColor = () =>
-  variant === "tokyo-pop"
-   ? "#0a0a0a"
-   : variant === "inverted"
-     ? "#000000"
-     : "#FFFFFF"
+  variant === "tokyo-pop" ? "#0a0a0a"
+  : variant === "inverted" ? "#000000"
+  : "#FFFFFF"
  const getStrokeColor = () => (variant === "tokyo-pop" ? "#00FFFF" : color)
  return (
   <div
    style={{ height }}
-   className={`w-full border-[4px] rounded-2xl overflow-hidden p-4 ${variant === "inverted" ? "border-white bg-black" : variant === "tokyo-pop" ? "border-[#FF00FF] bg-black" : "border-black bg-white"}`}>
+   className={`w-full border-[4px] rounded-2xl overflow-hidden p-4 ${
+    variant === "inverted" ? "border-white bg-black"
+    : variant === "tokyo-pop" ? "border-[#FF00FF] bg-black"
+    : "border-black bg-white"
+   }`}>
    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
     <AreaChart data={data}>
      <defs>
@@ -4735,7 +4871,11 @@ export function BrutalistBarChart({
  return (
   <div
    style={{ height }}
-   className={`w-full border-[4px] rounded-2xl overflow-hidden p-4 ${variant === "inverted" ? "border-white bg-black" : variant === "tokyo-pop" ? "border-[#FF00FF] bg-black" : "border-black bg-white"}`}>
+   className={`w-full border-[4px] rounded-2xl overflow-hidden p-4 ${
+    variant === "inverted" ? "border-white bg-black"
+    : variant === "tokyo-pop" ? "border-[#FF00FF] bg-black"
+    : "border-black bg-white"
+   }`}>
    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
     <BarChart data={data}>
      <XAxis
@@ -4789,11 +4929,11 @@ export function RadialGauge({
  const circumference = radius * 2 * Math.PI
  const offset = circumference - (percentage / 100) * circumference
  const styles =
-  variant === "tokyo-pop"
-   ? { bg: "#FF00FF20", stroke: "#00FFFF", text: "text-[#00FFFF]" }
-   : variant === "inverted"
-     ? { bg: "#FFFFFF20", stroke: "#FFFFFF", text: "text-white" }
-     : { bg: "#00000010", stroke: color, text: "text-black" }
+  variant === "tokyo-pop" ?
+   { bg: "#FF00FF20", stroke: "#00FFFF", text: "text-[#00FFFF]" }
+  : variant === "inverted" ?
+   { bg: "#FFFFFF20", stroke: "#FFFFFF", text: "text-white" }
+  : { bg: "#00000010", stroke: color, text: "text-black" }
  return (
   <div className="flex flex-col items-center">
    <div className="relative" style={{ width: size, height: size }}>
@@ -4818,9 +4958,9 @@ export function RadialGauge({
       strokeLinecap="round"
       className="transition-all duration-700 ease-out"
       style={
-       variant === "tokyo-pop"
-        ? { filter: "drop-shadow(0 0 10px #00FFFF)" }
-        : undefined
+       variant === "tokyo-pop" ?
+        { filter: "drop-shadow(0 0 10px #00FFFF)" }
+       : undefined
       }
      />
     </svg>
@@ -4848,15 +4988,15 @@ export function LinearGauge({
 }: any) {
  const percentage = (value / max) * 100
  const styles =
-  variant === "tokyo-pop"
-   ? {
-      bg: "bg-[#FF00FF]/20",
-      border: "border-[#FF00FF]",
-      text: "text-[#00FFFF]",
-     }
-   : variant === "inverted"
-     ? { bg: "bg-white/20", border: "border-white", text: "text-white" }
-     : { bg: "bg-gray-100", border: "border-black", text: "text-black" }
+  variant === "tokyo-pop" ?
+   {
+    bg: "bg-[#FF00FF]/20",
+    border: "border-[#FF00FF]",
+    text: "text-[#00FFFF]",
+   }
+  : variant === "inverted" ?
+   { bg: "bg-white/20", border: "border-white", text: "text-white" }
+  : { bg: "bg-gray-100", border: "border-black", text: "text-black" }
  return (
   <div className="w-full">
    {label && (
@@ -4958,26 +5098,26 @@ export function MetricCard({
  variant = "standard",
 }: any) {
  const styles =
-  variant === "tokyo-pop"
-   ? {
-      border: "border-[#FF00FF]",
-      bg: "bg-black",
-      text: "text-[#00FFFF]",
-      subtext: "text-[#FF00FF]",
-     }
-   : variant === "inverted"
-     ? {
-        border: "border-white",
-        bg: "bg-black",
-        text: "text-white",
-        subtext: "text-white/60",
-       }
-     : {
-        border: "border-black",
-        bg: "bg-white",
-        text: "text-black",
-        subtext: "text-black/60",
-       }
+  variant === "tokyo-pop" ?
+   {
+    border: "border-[#FF00FF]",
+    bg: "bg-black",
+    text: "text-[#00FFFF]",
+    subtext: "text-[#FF00FF]",
+   }
+  : variant === "inverted" ?
+   {
+    border: "border-white",
+    bg: "bg-black",
+    text: "text-white",
+    subtext: "text-white/60",
+   }
+  : {
+    border: "border-black",
+    bg: "bg-white",
+    text: "text-black",
+    subtext: "text-black/60",
+   }
  const changeColors: any = {
   positive: "text-[#C9F830]",
   negative: "text-[#FF3399]",
@@ -5018,34 +5158,33 @@ export function BrutalistCheckbox({
  variant = "standard",
 }: any) {
  const styles =
-  variant === "tokyo-pop"
-   ? {
-      border: "border-[#FF00FF]",
-      text: "text-[#00FFFF]",
-      bg: checked ? "bg-[#FF00FF]" : "bg-transparent",
-     }
-   : variant === "inverted"
-     ? {
-        border: "border-white",
-        text: "text-white",
-        bg: checked ? "bg-white" : "bg-transparent",
-       }
-     : {
-        border: "border-black",
-        text: "text-black",
-        bg: checked ? "" : "bg-white",
-       }
+  variant === "tokyo-pop" ?
+   {
+    border: "border-[#FF00FF]",
+    text: "text-[#00FFFF]",
+    bg: checked ? "bg-[#FF00FF]" : "bg-transparent",
+   }
+  : variant === "inverted" ?
+   {
+    border: "border-white",
+    text: "text-white",
+    bg: checked ? "bg-white" : "bg-transparent",
+   }
+  : {
+    border: "border-black",
+    text: "text-black",
+    bg: checked ? "" : "bg-white",
+   }
  return (
   <label className="flex items-center gap-3 cursor-pointer group">
    <button
     onClick={() => onChange(!checked)}
     className={`w-6 h-6 ${styles.border} border-[3px] rounded-lg flex items-center justify-center transition-all shadow-[2px_2px_0px_0px_black] group-hover:shadow-[1px_1px_0px_0px_black] group-hover:translate-x-0.5 group-hover:translate-y-0.5`}
     style={{
-     backgroundColor: checked
-      ? color
-      : variant === "standard"
-        ? "white"
-        : "transparent",
+     backgroundColor:
+      checked ? color
+      : variant === "standard" ? "white"
+      : "transparent",
     }}>
     {checked && (
      <Check
@@ -5153,11 +5292,11 @@ export function OTPInput({
   }
  }
  const styles =
-  variant === "tokyo-pop"
-   ? { border: "border-[#FF00FF]", bg: "bg-black", text: "text-[#00FFFF]" }
-   : variant === "inverted"
-     ? { border: "border-white", bg: "bg-black", text: "text-white" }
-     : { border: "border-black", bg: "bg-white", text: "text-black" }
+  variant === "tokyo-pop" ?
+   { border: "border-[#FF00FF]", bg: "bg-black", text: "text-[#00FFFF]" }
+  : variant === "inverted" ?
+   { border: "border-white", bg: "bg-black", text: "text-white" }
+  : { border: "border-black", bg: "bg-white", text: "text-black" }
  return (
   <div className="flex gap-2">
    {Array.from({ length }).map((_, index) => (
@@ -5174,9 +5313,9 @@ export function OTPInput({
      onKeyDown={(e) => handleKeyDown(index, e)}
      className={`w-12 h-14 text-center text-2xl font-[1000] ${styles.border} border-[4px] rounded-2xl ${styles.bg} ${styles.text} outline-none focus:ring-4 focus:ring-[#C9F830] transition-all shadow-[3px_3px_0px_0px_black]`}
      style={
-      variant === "tokyo-pop"
-       ? { boxShadow: "0 0 15px #FF00FF40, 3px 3px 0px 0px #FF00FF" }
-       : undefined
+      variant === "tokyo-pop" ?
+       { boxShadow: "0 0 15px #FF00FF40, 3px 3px 0px 0px #FF00FF" }
+      : undefined
      }
     />
    ))}
@@ -5192,26 +5331,26 @@ export function PasswordInput({
 }: any) {
  const [visible, setVisible] = React.useState(false)
  const styles =
-  variant === "tokyo-pop"
-   ? {
-      border: "border-[#FF00FF]",
-      bg: "bg-black",
-      text: "text-[#00FFFF]",
-      placeholder: "placeholder:text-[#00FFFF]/40",
-     }
-   : variant === "inverted"
-     ? {
-        border: "border-white",
-        bg: "bg-black",
-        text: "text-white",
-        placeholder: "placeholder:text-white/40",
-       }
-     : {
-        border: "border-black",
-        bg: "bg-white",
-        text: "text-black",
-        placeholder: "placeholder:text-black/40",
-       }
+  variant === "tokyo-pop" ?
+   {
+    border: "border-[#FF00FF]",
+    bg: "bg-black",
+    text: "text-[#00FFFF]",
+    placeholder: "placeholder:text-[#00FFFF]/40",
+   }
+  : variant === "inverted" ?
+   {
+    border: "border-white",
+    bg: "bg-black",
+    text: "text-white",
+    placeholder: "placeholder:text-white/40",
+   }
+  : {
+    border: "border-black",
+    bg: "bg-white",
+    text: "text-black",
+    placeholder: "placeholder:text-black/40",
+   }
  return (
   <div className="relative">
    <input
@@ -5225,17 +5364,16 @@ export function PasswordInput({
     type="button"
     onClick={() => setVisible(!visible)}
     className={`absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center ${styles.border} border-[3px] rounded-xl ${variant === "tokyo-pop" ? "bg-[#FF00FF]" : "bg-[#FFE357]"} hover:scale-105 transition-transform`}>
-    {visible ? (
+    {visible ?
      <EyeOff
       size={18}
       className={variant === "tokyo-pop" ? "text-[#00FFFF]" : "text-black"}
      />
-    ) : (
-     <Eye
+    : <Eye
       size={18}
       className={variant === "tokyo-pop" ? "text-[#00FFFF]" : "text-black"}
      />
-    )}
+    }
    </button>
   </div>
  )
@@ -5248,11 +5386,11 @@ export function Keycap({ children, size = "md", variant = "standard" }: any) {
   lg: "min-w-[44px] h-11 text-sm px-4",
  }
  const styles =
-  variant === "tokyo-pop"
-   ? "border-[#FF00FF] bg-black text-[#00FFFF] shadow-[0_4px_0_0_#FF00FF]"
-   : variant === "inverted"
-     ? "border-white bg-black text-white shadow-[0_4px_0_0_white]"
-     : "border-black bg-white text-black shadow-[0_4px_0_0_black]"
+  variant === "tokyo-pop" ?
+   "border-[#FF00FF] bg-black text-[#00FFFF] shadow-[0_4px_0_0_#FF00FF]"
+  : variant === "inverted" ?
+   "border-white bg-black text-white shadow-[0_4px_0_0_white]"
+  : "border-black bg-white text-black shadow-[0_4px_0_0_black]"
  return (
   <span
    className={`inline-flex items-center justify-center ${sizes[size]} font-[900] uppercase tracking-tight border-[3px] rounded-lg ${styles} hover:translate-y-1 hover:shadow-none transition-all cursor-pointer`}>
@@ -5311,11 +5449,11 @@ export function MiniModule({
  variant = "standard",
 }: any) {
  const styles =
-  variant === "tokyo-pop"
-   ? { border: "border-[#FF00FF]", bg: "bg-[#0a0a0a]", text: "text-[#00FFFF]" }
-   : variant === "inverted"
-     ? { border: "border-white", bg: "bg-black", text: "text-white" }
-     : { border: "border-black", bg: "bg-white", text: "text-black" }
+  variant === "tokyo-pop" ?
+   { border: "border-[#FF00FF]", bg: "bg-[#0a0a0a]", text: "text-[#00FFFF]" }
+  : variant === "inverted" ?
+   { border: "border-white", bg: "bg-black", text: "text-white" }
+  : { border: "border-black", bg: "bg-white", text: "text-black" }
  return (
   <section
    className={`${styles.border} border-[3px] rounded-2xl ${styles.bg} overflow-hidden flex flex-col h-full shadow-[4px_4px_0px_0px_rgba(0,0,0,0.05)]`}>
@@ -5333,26 +5471,26 @@ export function MiniModule({
 
 export function StatSlider({ label, value, color, variant = "standard" }: any) {
  const styles =
-  variant === "tokyo-pop"
-   ? {
-      labelColor: "text-[#00FFFF]/40",
-      valueColor: "text-[#00FFFF]",
-      trackBg: "bg-[#FF00FF]/20",
-      border: "border-[#FF00FF]",
-     }
-   : variant === "inverted"
-     ? {
-        labelColor: "text-white/40",
-        valueColor: "text-white",
-        trackBg: "bg-white/20",
-        border: "border-white",
-       }
-     : {
-        labelColor: "text-black/40",
-        valueColor: "text-black",
-        trackBg: "bg-gray-100",
-        border: "border-black",
-       }
+  variant === "tokyo-pop" ?
+   {
+    labelColor: "text-[#00FFFF]/40",
+    valueColor: "text-[#00FFFF]",
+    trackBg: "bg-[#FF00FF]/20",
+    border: "border-[#FF00FF]",
+   }
+  : variant === "inverted" ?
+   {
+    labelColor: "text-white/40",
+    valueColor: "text-white",
+    trackBg: "bg-white/20",
+    border: "border-white",
+   }
+  : {
+    labelColor: "text-black/40",
+    valueColor: "text-black",
+    trackBg: "bg-gray-100",
+    border: "border-black",
+   }
  return (
   <div className="flex flex-col justify-center h-[40px]">
    <div className="flex justify-between items-end mb-1">

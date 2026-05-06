@@ -8,6 +8,9 @@ export const AdStackWidget = ({
  editMode,
  onToggleCollapse,
  onCycleSize,
+ onDecSize,
+ onCycleHeight,
+ onDecHeight,
  onRemove,
  data,
 }: any) => {
@@ -19,6 +22,9 @@ export const AdStackWidget = ({
   onToggleCollapse,
   onCycleSize,
   onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
  }
 
  const currentRev = parseFloat(data.statBlocks.find((s: any) => s.label.toLowerCase() === "revenue")?.value.replace(/[^0-9.]/g, "") || "0.00")

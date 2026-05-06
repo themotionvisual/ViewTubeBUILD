@@ -21,6 +21,7 @@ interface ToolConfig {
 const TOOL_MAP: Record<AppTool, ToolConfig> = {
   STORYBOARD_STUDIO: { icon: LayoutTemplate, color: 'text-[#ff3399]', label: 'Storyboard' },
   SEO_GENERATOR: { icon: Search, color: 'text-[#00d2ff]', label: 'SEO' },
+  VIDEO_PUBLISHER: { icon: Search, color: 'text-[#ccff00]', label: 'Publisher' },
   THUMBNAIL_STUDIO: { icon: ImageIcon, color: 'text-[#ccff00]', label: 'Thumbnail' },
   CHANNELYTICS: { icon: BarChart2, color: 'text-[#00ff99]', label: 'Channelytics' },
   RESEARCH_LAB: { icon: FlaskConical, color: 'text-[#00ccff]', label: 'Research Lab' },

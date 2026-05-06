@@ -2,7 +2,8 @@ import React, { useMemo } from "react"
 import { Globe } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
 
-export const AudienceMatrixWidget: React.FC<any> = ({
+export const AudienceMatrixWidget: React.FC<any> = ({widget, instance, editMode, canEdit, onToggleCollapse, onCycleSize, onCycleHeight, onRemove, data, onDecSize, onDecHeight}) => {
+  const common = {
   widget,
   instance,
   editMode,
@@ -11,9 +12,10 @@ export const AudienceMatrixWidget: React.FC<any> = ({
   onCycleSize,
   onCycleHeight,
   onRemove,
-  data,
-}) => {
-  const common = { widget, instance, editMode, canEdit, onToggleCollapse, onCycleSize, onCycleHeight, onRemove }
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
+ }
 
   // Deterministic derivations for visual consistency
   const matrixData = useMemo(() => {
@@ -76,29 +78,32 @@ export const AudienceMatrixWidget: React.FC<any> = ({
           alignItems: "center",
           justifyContent: "center",
           position: "relative",
+          width: "100%",
+          height: "100%",
         }}>
         <div
           title={chartData.map(d => `${d.name}: ${(d.value/total*100).toFixed(1)}%`).join('\n')}
           style={{
             width: "100%",
-            aspectRatio: "1/1",
+            height: "100%",
             borderRadius: "50%",
             background: `conic-gradient(${gradientStops})`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "2px 2px 0 0 rgba(0,0,0,0.1)",
+            border: "none",
+            boxShadow: "none",
           }}>
           <div style={{ pointerEvents: "none" }}>
             <span
               style={{
                 color: "white",
-                fontSize: "11px",
+                fontSize: "27px",
                 fontWeight: "1000",
                 textTransform: "uppercase",
                 textAlign: "center",
                 lineHeight: "1",
-                textShadow: "1.5px 1.5px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000",
+                WebkitTextStroke: "2px #000",
               }}>
               {title}
             </span>
@@ -111,23 +116,22 @@ export const AudienceMatrixWidget: React.FC<any> = ({
   return (
     <WidgetShell {...common} icon={<Globe size={22} />}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-        <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.4, textAlign: "right", padding: "4px 8px 0" }}>Matrix</div>
+        {/* Chart Grid */}
         <div
           style={{
             flex: 1,
             display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gridTemplateRows: "repeat(2, 1fr)",
-            gap: "12px",
-            padding: "10px",
-            width: "100%",
-            height: "100%",
-            margin: "0",
+            gridTemplateColumns: "1fr 1fr",
+            gridTemplateRows: "1fr 1fr",
+            gap: "5px",
+            padding: "5px",
+            aspectRatio: "1/1",
+            margin: "0 auto",
           }}>
           {renderPie("Geo", matrixData.geo)}
-          {renderPie("Devices", matrixData.devices)}
-          {renderPie("Sources", matrixData.origins)}
-          {renderPie("Shares", matrixData.sharing)}
+          {renderPie("Device", matrixData.devices)}
+          {renderPie("Source", matrixData.origins)}
+          {renderPie("Share", matrixData.sharing)}
         </div>
       </div>
     </WidgetShell>

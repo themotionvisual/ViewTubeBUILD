@@ -8,10 +8,12 @@ export const WidgetShell: React.FC<{
  instance: WidgetInstanceState
  editMode: boolean
  canEdit: boolean
- onToggleCollapse: () => void
- onCycleSize: () => void
- onCycleHeight: () => void
- onRemove: () => void
+ onToggleCollapse?: () => void
+ onCycleSize?: () => void
+ onDecSize?: () => void
+ onCycleHeight?: () => void
+ onDecHeight?: () => void
+ onRemove?: () => void
  children: React.ReactNode
  icon?: React.ReactNode
  headerContent?: React.ReactNode
@@ -24,9 +26,12 @@ export const WidgetShell: React.FC<{
  widget,
  editMode,
  canEdit,
- onCycleSize,
- onCycleHeight,
- onRemove,
+ onToggleCollapse = () => {},
+ onCycleSize = () => {},
+ onDecSize = () => {},
+ onCycleHeight = () => {},
+ onDecHeight = () => {},
+ onRemove = () => {},
  children,
  icon,
  headerContent,
@@ -220,6 +225,10 @@ export const WidgetShell: React.FC<{
    short: "FIND PEERS AND GENERATE COLLAB PITCHES.",
    detailed: "Discover creators with similar audiences and get AI-drafted reach-out scripts. Use this to grow your community through partnership."
   },
+  "brain-hub": {
+   short: "YOUR AI BRAIN'S MEMORY, DIRECTIVES, AND STRATEGIC ADVICE.",
+   detailed: "View the Brain's evolved understanding of your channel identity, content DNA, performance, and goals. Trigger reflection cycles to update the Brain's strategic OODA directive."
+  },
  };
 
  const description = WIDGET_DESCRIPTIONS[widget.id] || {
@@ -229,10 +238,10 @@ export const WidgetShell: React.FC<{
 
  return (
   <div
-   className="subtoolbox open"
+   className="vt-widget open"
    style={{ "--widget-color": widget.headerColor } as any}
   >
-   <div className="subtoolbox-header">
+   <div className="vt-widget-header">
     <div className="left">
      <div className="icon-rail">
       {icon || <Layers size={22} />}
@@ -249,18 +258,36 @@ export const WidgetShell: React.FC<{
     <div className="toggle" onClick={(e) => e.stopPropagation()}>
      {canEdit && editMode ?
       <div className="flex items-center gap-1.5 mr-2">
-       <button
-        onClick={onCycleSize}
-        className="widget-header-btn"
-        title="Cycle width">
-        <ChevronsLeftRight size={12} strokeWidth={3} />
-       </button>
-       <button
-        onClick={onCycleHeight}
-        className="widget-header-btn"
-        title="Cycle height">
-        <ChevronsUpDown size={12} strokeWidth={3} />
-       </button>
+       <div className="flex flex-col gap-1 mr-1">
+        <div className="flex items-center gap-1">
+         <button
+          onClick={onCycleSize}
+          className="widget-header-btn"
+          title="Go Wider">
+          <span className="text-[8px] font-black">+W</span>
+         </button>
+         <button
+          onClick={onDecSize}
+          className="widget-header-btn"
+          title="Go Smaller">
+          <span className="text-[8px] font-black">-W</span>
+         </button>
+        </div>
+        <div className="flex items-center gap-1">
+         <button
+          onClick={onCycleHeight}
+          className="widget-header-btn"
+          title="Go Taller">
+          <span className="text-[8px] font-black">+H</span>
+         </button>
+         <button
+          onClick={onDecHeight}
+          className="widget-header-btn"
+          title="Go Shorter">
+          <span className="text-[8px] font-black">-H</span>
+         </button>
+        </div>
+       </div>
        <button
         onClick={onRemove}
         className="widget-header-btn"
@@ -313,8 +340,8 @@ export const WidgetShell: React.FC<{
     </div>
    </div>
 
-   <div className="subtoolbox-content">
-    <div className="subtoolbox-body">{children}</div>
+   <div className="vt-widget-content">
+    <div className="vt-widget-body">{children}</div>
    </div>
   </div>
  )

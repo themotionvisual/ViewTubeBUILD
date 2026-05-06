@@ -1,5 +1,6 @@
 import React, { useState } from "react"
 import { useBrain } from "../context/GlobalDataContext"
+import { StandardButton } from "./StandardButton"
 
 export const SyncButton: React.FC = () => {
  const { brain, syncMetrics } = useBrain()
@@ -24,12 +25,8 @@ export const SyncButton: React.FC = () => {
     Last Synced: {brain.lastSyncDate || "Never"}
     {isSyncedToday && " (Today)"}
    </p>
-   <button
-    className={`w-full p-2 text-sm font-black uppercase border-2 border-black ${
-     isSyncing ?
-      "bg-gray-400 text-gray-700 cursor-not-allowed"
-     : "bg-[#fff070] hover:bg-[#ffeb3b]"
-    }`}
+   <StandardButton
+    accentColor="#fff070"
     onClick={() => handleSync(false)}
     disabled={isSyncing || isSyncedToday}>
     {isSyncing ?
@@ -37,18 +34,14 @@ export const SyncButton: React.FC = () => {
     : isSyncedToday ?
      "Synced Today"
     : "Sync Now"}
-   </button>
+   </StandardButton>
    {!isSyncedToday && (
-    <button
-     className={`w-full p-2 text-sm font-black uppercase border-2 border-black mt-1 ${
-      isSyncing ?
-       "bg-gray-400 text-gray-700 cursor-not-allowed"
-      : "bg-[#ff8fb3] hover:bg-[#ff6b9e]"
-     }`}
+    <StandardButton
+     accentColor="#ff8fb3"
      onClick={() => handleSync(true)}
      disabled={isSyncing}>
      {isSyncing ? "Force Syncing..." : "Force Sync (API Quota Risk)"}
-    </button>
+    </StandardButton>
    )}
    {isSyncing && (
     <div className="flex items-center justify-center mt-2">

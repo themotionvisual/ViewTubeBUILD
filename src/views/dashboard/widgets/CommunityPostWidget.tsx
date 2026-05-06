@@ -24,6 +24,9 @@ export const CommunityPostWidget = ({
  editMode,
  onToggleCollapse,
  onCycleSize,
+ onDecSize,
+ onCycleHeight,
+ onDecHeight,
  onRemove,
  data,
 }: any) => {
@@ -35,6 +38,9 @@ export const CommunityPostWidget = ({
   canEdit: true,
   onToggleCollapse,
   onCycleSize,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
   onRemove,
  }
 
@@ -132,16 +138,8 @@ export const CommunityPostWidget = ({
      gap: "8px",
      overflow: "hidden",
     }}>
-    {/* Type Selector */}
-    <div
-     style={{
-      display: "flex",
-      gap: "4px",
-      background: "#f5f5f5",
-      padding: "4px",
-      borderRadius: "8px",
-      border: "2px solid #000",
-     }}>
+    {/* Type Selector — Standardized vt-tab-group */}
+    <div className="vt-tab-group" style={{ height: "36px" }}>
      {[
       { id: "text", icon: FileText, label: "Text" },
       { id: "image", icon: ImageIcon, label: "Image" },
@@ -152,36 +150,18 @@ export const CommunityPostWidget = ({
       <button
        key={type.id}
        onClick={() => setPostType(type.id as PostType)}
-       style={{
-        flex: 1,
-        padding: "6px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "2px",
-        background: postType === type.id ? "var(--widget-color, #FFB570)" : "transparent",
-        border:
-         postType === type.id ? "2px solid #000" : "2px solid transparent",
-        borderRadius: "6px",
-        cursor: "pointer",
-        boxShadow: postType === type.id ? "1px 1px 0 0 #000" : "none",
-       }}>
-       <type.icon size={14} color="#000" />
-       <span
-        style={{
-         fontSize: "8px",
-         fontWeight: 900,
-         textTransform: "uppercase",
-        }}>
-        {type.label}
-       </span>
+       className={`vt-tab-btn ${postType === type.id ? 'active' : ''}`}
+       style={{ padding: "0 4px", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", whiteSpace: "nowrap" }}
+      >
+       <type.icon size={14} color="#000" style={{ flexShrink: 0 }} />
+       <span style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis" }}>{type.label}</span>
       </button>
      ))}
     </div>
 
     {/* Editor Area */}
     <div
-     style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px", overflowY: "auto", minHeight: 0, paddingRight: "4px", paddingBottom: "8px" }}>
+     style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px", overflowY: "auto", minHeight: 0, paddingRight: "4px" }}>
      <textarea
       className="vt-textarea"
       value={content}
@@ -195,18 +175,19 @@ export const CommunityPostWidget = ({
      />
 
      {postType.includes("poll") && (
-      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
        {pollOptions.map((opt, i) => (
         <div
          key={i}
          style={{ display: "flex", alignItems: "center", gap: "8px" }}>
          <div
           style={{
-           width: "12px",
-           height: "12px",
+           width: "14px",
+           height: "14px",
            borderRadius: "50%",
-           border: "2px solid #000",
+           border: "3px solid #000",
            flexShrink: 0,
+           background: opt.trim() ? "#000" : "#fff"
           }}
          />
          <input
@@ -214,41 +195,21 @@ export const CommunityPostWidget = ({
           value={opt}
           onChange={(e) => updatePollOption(i, e.target.value)}
           placeholder={`Option ${i + 1}`}
-          style={{ flex: 1, padding: "4px 8px", fontSize: "11px" }}
+          style={{ flex: 1, padding: "6px 10px", fontSize: "11px" }}
          />
-         {postType === "image-poll" && (
-          <div
-           onClick={() => alert("Simulated Image Selection")}
-           style={{
-            width: "24px",
-            height: "24px",
-            border: "1px dashed #000",
-            borderRadius: "4px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            background: "#f0f0f0",
-           }}>
-           <ImageIcon size={12} opacity={0.5} />
-          </div>
-         )}
         </div>
        ))}
         {pollOptions.length < 4 && (
          <button
           onClick={addPollOption}
-          className="widget-control-btn"
+          className="vt-button"
           style={{
-           marginTop: "6px",
-           padding: "8px 12px",
-           background: "var(--widget-color, #C9F830)",
+           width: "100%",
+           height: "32px",
            fontSize: "10px",
-           fontWeight: 1000,
-           width: "fit-content",
-           color: "#000",
+           fontWeight: 950,
           }}>
-          + Add Option
+          + ADD OPTION
          </button>
         )}
       </div>
@@ -294,19 +255,19 @@ export const CommunityPostWidget = ({
      )}
     </div>
 
-    {/* Actions */}
+    {/* Actions — Standardized vt-button system */}
     <div
      className="community-post-options"
      style={{
-      borderTop: "2px solid #000",
-      paddingTop: "8px",
       marginTop: "auto",
+      display: "flex",
+      gap: "8px"
      }}>
      <button
-      className="vt-button"
+      className="vt-button secondary"
       onClick={handleGenerate}
       disabled={isGenerating}
-      style={{ flex: 1 }}>
+      style={{ flex: 1, height: "32px", fontSize: "10px", padding: "0 8px" }}>
       {isGenerating ? (
        <div
         style={{
@@ -321,16 +282,16 @@ export const CommunityPostWidget = ({
       ) : (
        <VTLottie 
         animationUrl="https://assets3.lottiefiles.com/packages/lf20_m6cu8sh9.json" 
-        size={18} 
+        size={16} 
        />
       )}
-      {isGenerating ? "Refining..." : "Refine"}
+      {isGenerating ? "REFINING..." : "REFINE"}
      </button>
      <button
       className="vt-button primary"
       onClick={handlePublish}
-      style={{ flex: 1.5 }}>
-      <Send size={14} /> Publish
+      style={{ flex: 1.5, height: "32px", fontSize: "10px", padding: "0 8px" }}>
+      <Send size={14} /> PUBLISH
      </button>
     </div>
    </div>

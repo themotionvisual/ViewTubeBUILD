@@ -1,5 +1,6 @@
 import React, { useState } from "react"
 import { MessageSquare, Sparkles, Loader2, Copy, Check } from "lucide-react"
+import { PostActionReflection } from "./PostActionReflection"
 import { generateCommunityPosts } from "../services/gemini"
 import Markdown from "react-markdown"
 import { SubToolbox } from "./Toolbox"
@@ -78,6 +79,9 @@ export const CommunityPostGenerator: React.FC = () => {
       }>
       <div className="prose prose-sm max-w-none font-bold text-black/80 prose-headings:font-black prose-headings:uppercase overflow-y-auto max-h-[400px] custom-scrollbar pr-4">
        <Markdown>{result}</Markdown>
+      </div>
+      <div className="mt-8 pt-6 border-t-[4px] border-black/10 animate-in slide-in-from-bottom-4 duration-700">
+       <PostActionReflection toolId="COMMUNITY_POST_GENERATOR" />
       </div>
      </SubToolbox>
     ) : (

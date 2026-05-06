@@ -25,6 +25,7 @@ import {
 } from "../services/audioProviderAdapter"
 import { nexusSyncService } from "../services/nexusSyncService"
 import { generateStoryboard } from "../services/gemini"
+import { PostActionReflection } from "../components/PostActionReflection"
 import type { Scene } from "../types"
 
 const calculateDuration = (text: string) => {
@@ -130,6 +131,7 @@ const StoryboardStudio: React.FC<StoryboardStudioProps> = ({
  const [generatingVoiceId, setGeneratingVoiceId] = useState<string | null>(null)
  const [isEnhancingId, setIsEnhancingId] = useState<string | null>(null)
  const [isGeneratingStoryboard, setIsGeneratingStoryboard] = useState(false)
+ const [hasGenerated, setHasGenerated] = useState(false)
  const [isSyncing, setIsSyncing] = useState(false)
  const [isOpen, setIsOpen] = useState(isOpenInitial)
 
@@ -152,6 +154,7 @@ const StoryboardStudio: React.FC<StoryboardStudioProps> = ({
     
     // Merge or replace scenes
     if (generatedScenes.length > 0) {
+      setHasGenerated(true)
       setScenes(generatedScenes.map((gs, i) => ({
         ...gs,
         id: gs.id || Date.now() + i + "",
@@ -313,6 +316,12 @@ const StoryboardStudio: React.FC<StoryboardStudioProps> = ({
       </span>
       <span className="font-bold text-xl">"{brain.seoState.winningTitle}"</span>
      </div>
+    </div>
+   )}
+
+   {hasGenerated && (
+    <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-700">
+     <PostActionReflection toolId="STORYBOARD_STUDIO" />
     </div>
    )}
 

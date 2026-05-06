@@ -27,21 +27,25 @@ export const CommentReplyWidget = ({
   editMode,
   onToggleCollapse,
   onCycleSize,
+  onDecSize,
   onCycleHeight,
+  onDecHeight,
   onRemove,
   data,
 }: any) => {
   const { brain } = useBrain()
   const common = {
-    widget,
-    instance,
-    editMode,
-    canEdit: true,
-    onToggleCollapse,
-    onCycleSize,
-    onCycleHeight,
-    onRemove,
-  }
+  widget,
+  instance,
+  editMode,
+  canEdit: true,
+  onToggleCollapse,
+  onCycleSize,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
+  onRemove,
+ }
 
   const [tab, setTab] = useState<"unreplied" | "history">("unreplied")
   const [loading, setLoading] = useState(false)
@@ -110,13 +114,10 @@ export const CommentReplyWidget = ({
     const totalCost = commentIds.length * REPLY_DRAFT_COST
     if (!canAffordAiTokensFromState(entitlement, totalCost)) return
     
-    commentIds.forEach(id => setIsGenerating(prev => ({ ...prev, [id]: true })))
+    commentIds.forEach(id => setIsGenerating(prev => ({...prev, [id]: true, onDecSize, onCycleHeight, onDecHeight})))
     
     try {
-      const available = videos.map((r: any) => ({
-        title: r.title,
-        id: r.videoId,
-      }))
+      const available = videos.map((r: any) => ({title: r.title, id: r.videoId, onDecSize, onCycleHeight, onDecHeight}))
 
       const promises = commentIds.map(async (id) => {
         const thread = allThreads.find(t => t.id === id)
@@ -137,13 +138,13 @@ export const CommentReplyWidget = ({
       })
 
       const results = await Promise.all(promises)
-      results.forEach(({ id, reply }) => {
-        setReplyText(prev => ({ ...prev, [id]: reply }))
+      results.forEach(({id, reply, onDecSize, onCycleHeight, onDecHeight}) => {
+        setReplyText(prev => ({...prev, [id]: reply, onDecSize, onCycleHeight, onDecHeight}))
       })
     } catch (e) {
       console.error(e)
     } finally {
-      commentIds.forEach(id => setIsGenerating(prev => ({ ...prev, [id]: false })))
+      commentIds.forEach(id => setIsGenerating(prev => ({...prev, [id]: false, onDecSize, onCycleHeight, onDecHeight})))
     }
   }
 
@@ -153,7 +154,7 @@ export const CommentReplyWidget = ({
     commentIds.forEach(id => {
       const randomVideo = videos[Math.floor(Math.random() * videos.length)]
       const suggestion = `\n\nI think you'd love this one too: https://youtu.be/${randomVideo.videoId}`
-      setReplyText(prev => ({ ...prev, [id]: (prev[id] || "") + suggestion }))
+      setReplyText(prev => ({...prev, [id]: (prev[id] || "") + suggestion, onDecSize, onCycleHeight, onDecHeight}))
     })
   }
 
@@ -233,61 +234,20 @@ export const CommentReplyWidget = ({
         </button>
       </div>
 
-      {/* Tabs / Toggles (Square publisher style) */}
-      <div style={{ 
-        display: "flex", 
-        background: "rgba(255,255,255,0.8)", 
-        border: "2.5px solid #000", 
-        borderRadius: "6px", 
-        padding: "1px",
-        height: "22px",
-        width: "72px",
-        position: "relative",
-        boxShadow: "2px 2px 0 0 #000"
-      }}>
-        <div style={{
-          position: "absolute",
-          top: "1px",
-          bottom: "1px",
-          left: tab === "unreplied" ? "1px" : "calc(50% + 1px)",
-          width: "calc(50% - 2px)",
-          background: "#000",
-          borderRadius: "4px",
-          transition: "left 0.2s ease-in-out",
-          zIndex: 1
-        }} />
+      {/* Tabs / Toggles — Standardized vt-tab-group */}
+      <div className="vt-tab-group" style={{ width: "90px", padding: "2px" }}>
         <button
           onClick={() => setTab("unreplied")}
-          style={{ 
-            flex: 1, 
-            background: "none", 
-            border: "none", 
-            fontSize: "8px", 
-            fontWeight: 1000, 
-            color: tab === "unreplied" ? "#fff" : "#666",
-            zIndex: 2,
-            cursor: "pointer",
-            transition: "color 0.2s",
-            padding: 0,
-            lineHeight: 1,
-          }}>
+          className={`vt-tab-btn ${tab === "unreplied" ? 'active' : ''}`}
+          style={{ padding: "4px", fontSize: "9px" }}
+        >
           NEW
         </button>
         <button
           onClick={() => setTab("history")}
-          style={{ 
-            flex: 1, 
-            background: "none", 
-            border: "none", 
-            fontSize: "8px", 
-            fontWeight: 1000, 
-            color: tab === "history" ? "#fff" : "#666",
-            zIndex: 2,
-            cursor: "pointer",
-            transition: "color 0.2s",
-            padding: 0,
-            lineHeight: 1,
-          }}>
+          className={`vt-tab-btn ${tab === "history" ? 'active' : ''}`}
+          style={{ padding: "4px", fontSize: "9px" }}
+        >
           OLD
         </button>
       </div>
@@ -359,11 +319,11 @@ export const CommentReplyWidget = ({
                   {tab === "unreplied" && (
                     <div style={{ width: "120px", flexShrink: 0 }}>
                       <textarea
-                        className="brutal-input"
+                        className="vt-textarea"
                         value={currentReply}
-                        onChange={(e) => setReplyText(prev => ({ ...prev, [threadId]: e.target.value }))}
+                        onChange={(e) => setReplyText(prev => ({...prev, [threadId]: e.target.value, onDecSize, onCycleHeight, onDecHeight}))}
                         placeholder="REPLY..."
-                        style={{ width: "100%", height: "30px", border: "2px solid #00D2FF", resize: "none", fontSize: "9px", padding: "4px", borderRadius: "6px" }}
+                        style={{ width: "100%", height: "120px", padding: 0, border: "2px solid #00D2FF", resize: "none", fontSize: "9px" }}
                       />
                     </div>
                   )}
@@ -399,23 +359,26 @@ export const CommentReplyWidget = ({
             <button
               onClick={() => handleMagicDraft(Array.from(selectedIds))}
               disabled={selectedIds.size === 0 || loading || !canAffordSelectedDrafts}
-              style={{ flex: 1, height: "32px", background: "#00D2FF", border: "2.5px solid #000", borderRadius: "10px", fontSize: "10px", fontWeight: 1000, cursor: "pointer", boxShadow: "3px 3px 0 0 #000", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
+              className="vt-button secondary"
+              style={{ flex: 1, height: "32px", fontSize: "10px", padding: "0 8px", boxSizing: "border-box" }}
             >
-              <Sparkles size={13} /> CREATE REPLY {selectedIds.size > 0 && `(${selectedIds.size}) • ${selectedDraftCost}T`}
+              <Sparkles size={13} /> DRAFT {selectedIds.size > 0 && `(${selectedIds.size})`}
             </button>
             <button
               onClick={() => handleSendBulk(Array.from(selectedIds))}
               disabled={selectedIds.size === 0 || loading}
-              style={{ flex: 1, height: "32px", background: "#4FFF5B", border: "2.5px solid #000", borderRadius: "10px", fontSize: "10px", fontWeight: 1000, cursor: "pointer", boxShadow: "3px 3px 0 0 #000", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
+              className="vt-button primary"
+              style={{ flex: 1, height: "32px", fontSize: "10px", padding: "0 8px", boxSizing: "border-box" }}
             >
-              <Send size={13} /> POST REPLY {selectedIds.size > 0 && `(${selectedIds.size})`}
+              <Send size={13} /> POST {selectedIds.size > 0 && `(${selectedIds.size})`}
             </button>
             <button
               onClick={() => handleSuggestVideoBulk(Array.from(selectedIds))}
               disabled={selectedIds.size === 0 || loading}
-              style={{ flex: 1, height: "32px", background: "#ccc", border: "2.5px solid #000", borderRadius: "10px", fontSize: "10px", fontWeight: 1000, cursor: "pointer", boxShadow: "3px 3px 0 0 #000" }}
+              className="vt-button"
+              style={{ flex: 1, height: "32px", fontSize: "10px", padding: "0 8px", boxSizing: "border-box" }}
             >
-              + SUGGEST VIDEOS
+              + VIDEOS
             </button>
           </div>
         )}

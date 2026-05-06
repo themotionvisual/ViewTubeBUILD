@@ -13,6 +13,7 @@ export interface VideoRetentionCache {
 export type AppTool =
  | "STORYBOARD_STUDIO"
  | "SEO_GENERATOR"
+ | "VIDEO_PUBLISHER"
  | "THUMBNAIL_STUDIO"
  | "CHANNELYTICS"
  | "RESEARCH_LAB"
@@ -24,6 +25,7 @@ export interface DayTask {
  text: string
  completed: boolean
  isPublishEvent?: boolean
+ dueDate?: string
 }
 
 export const AspectRatio = {
@@ -120,6 +122,7 @@ export interface MiniSpreadsheet {
 }
 
 export interface AnalyticsResult {
+ title?: string
  executiveSummary: string
  stats: Record<string, string | number>
  sections: AnalysisSection[]
@@ -392,9 +395,49 @@ export interface AuthState {
  totalViews: number | null
 }
 
+export interface ProjectPlan {
+ concept: string
+ niche: string
+ [key: string]: any
+}
+
+export interface Project {
+ id: string
+ name: string
+ color?: string
+ publishDate?: string
+ tasks?: DayTask[]
+ videoTitle?: string
+ script?: string
+ tags?: string
+ description?: string
+ status: "active" | "archived" | "completed" | string
+ notes?: string
+ plan?: ProjectPlan
+ storyboard?: Scene[]
+ thumbnailUrl?: string
+ niche?: string
+ concept?: string
+ updatedAt?: number
+}
+
+export interface AIPatchPlan {
+  operations: any[]
+}
+
+export interface OracleState {
+  analysis: any
+  suggestions: any[]
+}
+
 export interface WorkspaceBrain {
  // Global Tracking
  activeProviders: AppTool[]
+ activeProjectId: string | null
+ projects: Project[]
+ channelProfile: any | null
+ recentMetrics: any | null
+ csvFiles: any[]
 
  // 1. The Core Idea
  coreConcept: string
@@ -492,3 +535,32 @@ export type MetricAccuracyClass =
  | "derived_exact"
  | "estimated"
  | "unavailable"
+
+// --- Brain Types ---
+export interface BrainSignal {
+ id: string
+ toolId: string
+ action: string
+ payload: any
+ timestamp: number
+}
+
+export interface ContextPacket {
+ identityAndAspirations: string
+ contentDNA: string
+ performanceLedger: string
+ futureStateMap: string
+ learnedPreferences: string
+ strategicAdvice?: string
+}
+
+export interface BrainMemorySchema {
+ identityAndAspirations: string
+ contentDNA: string
+ performanceLedger: string
+ futureStateMap: string
+ interactionCount: number
+ lastReflection: number
+ tools: string[]
+ strategicAdvice?: string
+}

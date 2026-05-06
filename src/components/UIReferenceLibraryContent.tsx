@@ -67,6 +67,10 @@ import {
  Modal,
  VideoCardGrid,
 } from "./ui"
+import { StandardInput } from "./StandardInput"
+import { StandardDropdown } from "./StandardDropdown"
+import { StandardKPI } from "./StandardKPI"
+import { StandardButton } from "./StandardButton"
 
 interface LibraryManifestEntry {
  group: string
@@ -303,28 +307,37 @@ const CalendarAndTasks = () => {
      ))}
     </div>
    </div>
-   <div className="bg-white border-[4px] border-black rounded-3xl p-6 shadow-[8px_8px_0px_0px_black] flex flex-col">
-    <h4 className="font-black uppercase tracking-widest text-sm mb-4 border-b-4 border-black pb-2">
-     Brutalist Tasks
-    </h4>
-    <div className="space-y-4 flex-1">
-     {tasks.map((t) => (
-      <div
-       key={t.id}
-       onClick={() => toggleTask(t.id)}
-       className={`flex items-center gap-4 p-4 border-[3px] border-black rounded-2xl cursor-pointer group transition-all ${t.done ? "bg-gray-100 opacity-60 shadow-none" : "bg-white shadow-[4px_4px_0_0_black] hover:-translate-y-1"}`}>
-       <div
-        className={`w-8 h-8 rounded-lg border-[3px] border-black flex items-center justify-center transition-colors ${t.done ? "bg-black" : "bg-white group-hover:bg-[#CCFF00]"}`}>
-        {t.done && <Check size={20} className="text-white" strokeWidth={4} />}
-       </div>
-       <span
-        className={`font-black uppercase text-sm ${t.done ? "line-through" : ""}`}>
-        {t.text}
-       </span>
-      </div>
-     ))}
+    <div className="space-y-4">
+      <EliteToolBlock 
+        title="Standard Component Set" 
+        icon={Box} 
+        headerColor="bg-[#CCFF00]" 
+        iconBgColor="bg-white"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+             <label className="text-[10px] font-black uppercase tracking-widest text-black/50">Standard Input</label>
+             <StandardInput placeholder="Type something..." />
+          </div>
+          <div className="space-y-4">
+             <label className="text-[10px] font-black uppercase tracking-widest text-black/50">Standard Dropdown</label>
+             <StandardDropdown 
+                value="1" 
+                onChange={() => {}} 
+                options={[{label: "Option 1", value: "1"}, {label: "Option 2", value: "2"}]} 
+              />
+          </div>
+          <div className="space-y-4">
+             <label className="text-[10px] font-black uppercase tracking-widest text-black/50">Standard KPI</label>
+             <StandardKPI label="Viral Score" value="88" trend="↑ 12%" />
+          </div>
+          <div className="space-y-4">
+             <label className="text-[10px] font-black uppercase tracking-widest text-black/50">Standard Button</label>
+             <StandardButton>Action Button</StandardButton>
+          </div>
+        </div>
+      </EliteToolBlock>
     </div>
-   </div>
   </div>
  )
 }

@@ -23,6 +23,7 @@ import {
  type RenderFormat,
  type TimelineState,
 } from "../editor-core"
+import { buildRemotionParityReport, type RemotionParityReport } from "../services/remotionParity"
 
 interface Props {
  mode?: "embedded" | "full"
@@ -114,12 +115,15 @@ export const IntegratedRemotionEditor: React.FC<Props> = ({
  const [showAiPanel, setShowAiPanel] = useState(false)
  const [showExportPanel, setShowExportPanel] = useState(false)
  const [jobs, setJobs] = useState<ExportJob[]>([])
+ const [pendingPatch, setPendingPatch] = useState<AIPatchPlan | null>(null)
  const [contextMenu, setContextMenu] = useState<{
   x: number
   y: number
   clipId: string
  } | null>(null)
  const [exportFormat, setExportFormat] = useState<RenderFormat>("mp4")
+ const [parityReport, setParityReport] = useState<RemotionParityReport | null>(null)
+ const [showParityPanel, setShowParityPanel] = useState(false)
 
  const timelineRef = useRef<HTMLDivElement | null>(null)
  const holdTimerRef = useRef<number | null>(null)
@@ -238,13 +242,38 @@ export const IntegratedRemotionEditor: React.FC<Props> = ({
    const duration = clip.endFrame - clip.startFrame
    const offset = dragAction.offsetFrame ?? 0
    const startFrame = frame - offset
-   dispatch({
-    type: "moveClip",
-    clipId: clip.id,
-    trackId: targetTrackId,
-    startFrame,
-    endFrame: startFrame + duration,
-   })
+
+   const selectedIds = new Set(state.selectedClipIds);
+   if (clip.groupedWithNext) {
+       const next = state.clips.find(c => c.trackId === clip.trackId && Math.abs(c.startFrame - clip.endFrame) < 2);
+       if (next) selectedIds.add(next.id);
+   }
+   // Also check if previous clip is linked to this one
+   const prev = state.clips.find(c => c.trackId === clip.trackId && Math.abs(clip.startFrame - c.endFrame) < 2 && c.groupedWithNext);
+   if (prev) selectedIds.add(prev.id);
+
+   if (selectedIds.size > 1 || selectedIds.has(clip.id)) {
+    const moves = Array.from(selectedIds).map(id => {
+        const c = state.clips.find(item => item.id === id);
+        if (!c) return null;
+        const clipOffset = c.startFrame - clip.startFrame;
+        return {
+            clipId: c.id,
+            trackId: c.id === clip.id ? targetTrackId : c.trackId,
+            startFrame: startFrame + clipOffset,
+            endFrame: startFrame + clipOffset + (c.endFrame - c.startFrame)
+        };
+    }).filter(Boolean) as any[];
+    dispatch({ type: "moveClips", moves });
+   } else {
+    dispatch({
+     type: "moveClip",
+     clipId: clip.id,
+     trackId: targetTrackId,
+     startFrame,
+     endFrame: startFrame + duration,
+    })
+   }
   }
 
   const up = (): void => {
@@ -270,7 +299,17 @@ export const IntegratedRemotionEditor: React.FC<Props> = ({
   clip: EditorClip,
  ): void => {
   event.preventDefault()
-  dispatch({ type: "selectClip", clipId: clip.id })
+  
+  if (event.metaKey || event.ctrlKey || event.shiftKey) {
+    const nextIds = new Set(state.selectedClipIds);
+    if (nextIds.has(clip.id)) nextIds.delete(clip.id);
+    else nextIds.add(clip.id);
+    dispatch({ type: "selectClips", clipIds: Array.from(nextIds) });
+  } else {
+    if (!state.selectedClipIds.includes(clip.id)) {
+        dispatch({ type: "selectClip", clipId: clip.id })
+    }
+  }
 
   if (activeKeys.has("ArrowDown")) {
    const deleteSide =
@@ -428,18 +467,26 @@ export const IntegratedRemotionEditor: React.FC<Props> = ({
   setPatchStatus("Consulting the Brain...")
   try {
    const plan = await generateTimelinePatch(prompt, state, brain)
-   const result = applyAIPatchPlan(state, plan)
-   if (!result.validation.valid) {
-    setPatchStatus(`Patch rejected: ${result.validation.issues.join(", ")}`)
-    return
-   }
-   setState(result.state)
-   setPatchStatus(`Applied: ${plan.reason}`)
+   setPendingPatch(plan)
+   setPatchStatus(`AI proposed: ${plan.reason}`)
   } catch (error) {
    setPatchStatus(`Error: ${(error as Error).message}`)
   } finally {
    setIsThinking(false)
   }
+ }
+
+ const commitPendingPatch = (): void => {
+     if (!pendingPatch) return;
+     const result = applyAIPatchPlan(state, pendingPatch)
+     if (!result.validation.valid) {
+      setPatchStatus(`Patch rejected: ${result.validation.issues.join(", ")}`)
+      setPendingPatch(null)
+      return
+     }
+     setState(result.state)
+     setPatchStatus(`Applied: ${pendingPatch.reason}`)
+     setPendingPatch(null)
  }
 
  const runExport = (): void => {
@@ -513,8 +560,47 @@ export const IntegratedRemotionEditor: React.FC<Props> = ({
        onClick={() => dispatch({ type: "setZoom", zoom: state.zoom + 0.25 })}>
        Zoom +
       </button>
+      <button
+       className={`border-[3px] border-black px-3 py-1 text-xs font-black ${parityReport?.summary.parity === "warn" ? "bg-[#ff8fb3]" : "bg-white"}`}
+       onClick={() => {
+         const report = buildRemotionParityReport(state, composition);
+         setParityReport(report);
+         setShowParityPanel(true);
+       }}>
+       Parity {parityReport ? `(${parityReport.summary.parity.toUpperCase()})` : "Check"}
+      </button>
      </div>
     </div>
+
+    {showParityPanel && parityReport && (
+      <div className="border-b-[4px] border-black bg-[#f9f9ff] p-3">
+        <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-black uppercase">Parity Diagnostics Dashboard</div>
+            <button className="text-[10px] font-bold underline" onClick={() => setShowParityPanel(false)}>Close</button>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+            <div className={`border-[2px] border-black p-2 bg-white ${parityReport.summary.parity === "warn" ? "border-[#ff0000]" : ""}`}>
+                <div className="text-[10px] font-black uppercase mb-1">Status</div>
+                <div className={`text-lg font-black ${parityReport.summary.parity === "warn" ? "text-[#ff0000]" : "text-[#00aa00]"}`}>
+                    {parityReport.summary.parity.toUpperCase()}
+                </div>
+                <div className="text-[9px] font-bold">{parityReport.summary.totalIssues} issues found</div>
+            </div>
+            <div className="border-[2px] border-black p-2 bg-white col-span-2">
+                <div className="text-[10px] font-black uppercase mb-1">Drift Details</div>
+                <div className="max-h-24 overflow-auto text-[9px] font-bold">
+                    {parityReport.frameDrift.map((d, i) => (
+                        <div key={i} className="mb-1">🔴 Timing Drift: Clip {d.clipId} (Exp: {d.expected}, Act: {d.actual})</div>
+                    ))}
+                    {parityReport.easingMismatches.map((d, i) => (
+                        <div key={i} className="mb-1">🟡 Easing Mismatch: Clip {d.clipId} (Exp: {d.expected}, Act: {d.actual})</div>
+                    ))}
+                    {parityReport.summary.totalIssues === 0 && "All systems nominal. Visual parity confirmed."}
+                </div>
+            </div>
+        </div>
+      </div>
+    )}
 
     <div className="grid gap-0 lg:grid-cols-[280px_1fr_300px]">
      <div className="border-r-[4px] border-black bg-[#f9f9ff] p-3">
@@ -585,6 +671,37 @@ export const IntegratedRemotionEditor: React.FC<Props> = ({
          )}
          {isThinking ? "PROCESSING..." : "Apply AI Patch"}
         </button>
+        {pendingPatch && (
+            <div className="mt-3 border-[2px] border-black bg-[#fff070] p-2 text-[10px]">
+                <div className="font-black uppercase mb-1">Proposed Changes</div>
+                <div className="mb-2 italic">"{pendingPatch.reason}"</div>
+                <div className="space-y-1 mb-2 max-h-32 overflow-auto font-bold">
+                    {pendingPatch.operations.map((op, i) => (
+                        <div key={i} className="border-b border-black/10 pb-1">
+                            • {op.op === "insertClip" ? `Insert ${op.clip.kind} "${op.clip.title}"` : 
+                               op.op === "moveClip" ? `Move clip ${op.clipId} to frame ${op.startFrame}` :
+                               op.op === "deleteClip" ? `Delete clip ${op.clipId}` :
+                               op.op === "setClipProps" ? `Update properties for ${op.clipId}` :
+                               op.op}
+                        </div>
+                    ))}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                    <button 
+                        className="border-[2px] border-black bg-[#85ff85] p-1 font-black"
+                        onClick={commitPendingPatch}
+                    >
+                        APPROVE
+                    </button>
+                    <button 
+                        className="border-[2px] border-black bg-white p-1 font-black"
+                        onClick={() => setPendingPatch(null)}
+                    >
+                        REJECT
+                    </button>
+                </div>
+            </div>
+        )}
         <div className="mt-1 text-[10px] font-bold">
          {patchStatus ?? "Describe an edit to start."}
         </div>
@@ -734,17 +851,16 @@ export const IntegratedRemotionEditor: React.FC<Props> = ({
              style={{ height: `${rowHeight}px` }}>
              {clips.map((clip) => {
               const keyframes = clipKeyframes.get(clip.id) ?? []
-              const isSelected = state.selectedClipId === clip.id
+              const isSelected = state.selectedClipIds.includes(clip.id)
               return (
                <div
                 key={clip.id}
-                className="absolute top-[3px] bottom-[3px] border-[3px] border-black px-3 text-[10px] font-black shadow-[2px_2px_0px_0px_black]"
+                className={`absolute top-[3px] bottom-[3px] border-[3px] border-black px-3 text-[10px] font-black shadow-[2px_2px_0px_0px_black] ${isSelected ? "ring-2 ring-white" : ""}`}
                 style={{
                  left: `${clip.startFrame * state.zoom}px`,
                  width: `${Math.max(28, (clip.endFrame - clip.startFrame) * state.zoom)}px`,
                  background: clip.color,
                  zIndex: isSelected ? 30 : 10,
-                 opacity: selectedClip && selectedClip.id !== clip.id ? 0.6 : 1,
                 }}
                 onPointerDown={(event) => beginMoveWithHold(event, clip)}
                 onDoubleClick={(event) => {
@@ -776,6 +892,33 @@ export const IntegratedRemotionEditor: React.FC<Props> = ({
                 ))}
                </div>
               )
+             })}
+             {clips.map((clip, i) => {
+                 const next = clips[i+1];
+                 if (!next) return null;
+                 if (Math.abs(next.startFrame - clip.endFrame) > 2) return null;
+                 const transition = state.transitions.find(t => t.fromClipId === clip.id);
+                 return (
+                     <div 
+                        key={`seam-${clip.id}`}
+                        className={`absolute top-0 bottom-0 w-4 -ml-2 cursor-pointer z-40 flex items-center justify-center`}
+                        style={{ left: `${clip.endFrame * state.zoom}px` }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            // Cycle seam kind: Cut -> Group -> Transition
+                            if (clip.groupedWithNext) {
+                                dispatch({ type: "groupSeam", clipId: clip.id, enabled: false });
+                                dispatch({ type: "setTransition", transition: { id: `tr-${clip.id}`, fromClipId: clip.id, toClipId: next.id, type: "crossfade", durationInFrames: 15 } });
+                            } else if (transition) {
+                                dispatch({ type: "setTransition", transition: { id: `tr-${clip.id}`, fromClipId: clip.id, toClipId: next.id, type: "none", durationInFrames: 0 } });
+                            } else {
+                                dispatch({ type: "groupSeam", clipId: clip.id, enabled: true });
+                            }
+                        }}
+                     >
+                         <div className={`w-1 h-3/4 border-x border-black ${clip.groupedWithNext ? "bg-[#85ff85]" : transition ? "bg-[#70d6ff]" : "bg-black/20"}`} />
+                     </div>
+                 )
              })}
              <div
               className="absolute bottom-0 top-0 w-[2px] bg-[#1a7bff]"

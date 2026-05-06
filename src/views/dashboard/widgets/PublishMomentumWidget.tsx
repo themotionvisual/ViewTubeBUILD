@@ -15,16 +15,7 @@ const TIME_BLOCKS = [
  "21-24",
 ]
 
-export const PublishMomentumWidget = ({
- widget,
- instance,
- editMode,
- onToggleCollapse,
- onCycleSize,
- onCycleHeight,
- onRemove,
- data,
-}: any) => {
+export const PublishMomentumWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onCycleHeight, onDecSize, onDecHeight, onRemove, data }: any) => {
  const common = {
   widget,
   instance,
@@ -34,6 +25,9 @@ export const PublishMomentumWidget = ({
   onCycleSize,
   onCycleHeight,
   onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
  }
 
  const [tooltip, setTooltip] = useState<{
@@ -51,7 +45,7 @@ export const PublishMomentumWidget = ({
    .map(() =>
     Array(8)
      .fill(0)
-     .map(() => ({ views: 0, count: 0 })),
+     .map(() => ({views: 0, count: 0, onDecSize, onCycleHeight, onDecHeight})),
    )
 
   const rows = data.canonicalRows || data.brain?.canonicalRows || []
@@ -190,13 +184,7 @@ export const PublishMomentumWidget = ({
             const rect = e.currentTarget.getBoundingClientRect()
             const parent = e.currentTarget.closest("[style]")?.getBoundingClientRect()
             if (parent) {
-             setTooltip({
-              x: rect.left - parent.left + rect.width / 2,
-              y: rect.top - parent.top,
-              day,
-              time: TIME_BLOCKS[hIdx],
-              views: avg,
-             })
+             setTooltip({x: rect.left - parent.left + rect.width / 2, y: rect.top - parent.top, day, time: TIME_BLOCKS[hIdx], views: avg, onDecSize, onCycleHeight, onDecHeight})
             }
            }}
            onMouseLeave={(e) => {

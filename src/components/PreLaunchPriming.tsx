@@ -4,8 +4,9 @@ import {
  generateFunnelTeaser,
 } from "../services/gemini"
 import type { AlgorithmDiagnosis, PollBlueprint, ShortsConcept } from "../types"
-import { Rocket } from "lucide-react"
-import { ToolboxScaffold } from "./Toolbox"
+import { Rocket, Zap, Sparkles, Copy, Check, MessageSquare } from "lucide-react"
+import { ToolboxScaffold, Toolbox } from "./Toolbox"
+import { PostActionReflection } from "./PostActionReflection"
 
 interface PreLaunchPrimingProps {
  embedded?: boolean
@@ -128,16 +129,15 @@ const PreLaunchPriming: React.FC<PreLaunchPrimingProps> = ({
    </div>
 
    {activeAction !== "none" && (
-    <div className="border-[4px] border-black rounded-[24px] bg-white overflow-hidden shadow-[8px_8px_0px_0px_black] animate-fade-in mt-8">
-     <div
-      className={`${activeAction === "seeding" ? "bg-[#FF7497]" : "bg-[#00CCFF]"} text-black px-6 py-4 flex items-center justify-between border-b-[4px] border-black`}>
-      <span className="font-black uppercase text-xl tracking-widest">
-       {activeAction === "seeding"
-        ? "POLL GENERATOR ACTIVE"
-        : "SHORTS TEASER ACTIVE"}
-      </span>
-     </div>
-
+    <Toolbox
+      variant="sub"
+      title={activeAction === "seeding" ? "POLL GENERATOR ACTIVE" : "SHORTS TEASER ACTIVE"}
+      icon={<Zap size={24} />}
+      headerColor={activeAction === "seeding" ? "bg-[#FF7497]" : "bg-[#00CCFF]"}
+      collapsible
+      isOpenInitial={true}
+      outerClassName="mt-8"
+     >
      <div className="p-8 space-y-6">
       {!pollResult && !teaserResult ? (
        <>
@@ -232,15 +232,20 @@ const PreLaunchPriming: React.FC<PreLaunchPrimingProps> = ({
           </div>
          </div>
         )}
-        <button
-         onClick={resetAction}
-         className="w-full py-4 font-black uppercase text-sm border-[4px] border-black rounded-xl hover:bg-black hover:text-white transition-colors">
-         Reset & Generate Another
-        </button>
-       </div>
-      )}
-     </div>
-    </div>
+         <button
+          onClick={resetAction}
+          className="w-full py-4 font-black uppercase text-sm border-[4px] border-black rounded-xl hover:bg-black hover:text-white transition-colors">
+          Reset & Generate Another
+         </button>
+
+         {/* Brain Reflection UI */}
+         <div className="mt-8 animate-in slide-in-from-bottom-4 duration-700">
+           <PostActionReflection toolId="PRE_LAUNCH_PRIMING" />
+         </div>
+        </div>
+       )}
+      </div>
+    </Toolbox>
    )}
   </ToolboxScaffold>
  )

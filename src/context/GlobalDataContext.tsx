@@ -14,6 +14,8 @@ import type {
  ChannelAnalysisSyncStatus,
  VideoSyncBatchState,
  VideoRetentionCache,
+ Project,
+ BrainMemorySchema,
 } from "../types"
 import { unifiedAuth } from "../services/authSession"
 import { clearAnalyticsStateForFreshSync } from "../services/localDataReset"
@@ -21,6 +23,7 @@ import {
  fetchDailyMetrics,
  fetchRetentionCurve,
 } from "../services/youtubeDataFetcher"
+import { emitSignal, consultBrain, getBrainMemory, reflectAndCompress, initializeBrain } from "../services/brainEngine"
 
 const STORAGE_KEY = "vt_workspace_brain"
 const AUTH_STORAGE_KEY = "vt_auth_state"
@@ -35,6 +38,10 @@ interface GlobalDataContextProps {
   updates: Partial<WorkspaceBrain["storyboardState"]>,
  ) => void
  setThumbnailState: (updates: Partial<WorkspaceBrain["thumbnailState"]>) => void
+ addProject: (project: Project) => void
+ updateProject: (id: string, updates: Partial<Project>) => void
+ deleteProject: (id: string) => void
+ setActiveProject: (id: string | null) => void
  setCalendarState: (updates: Partial<WorkspaceBrain["calendarState"]>) => void
  setChannelHub: (updates: Partial<WorkspaceBrain["channelHub"]>) => void
  setVideoFlags: (
@@ -53,16 +60,29 @@ interface GlobalDataContextProps {
  ) => void
  login: () => void
  logout: () => void
+ addJournalEntry: (content: string, category: any) => void
+ addFollowUp: (id: string, q: string) => void
+ answerFollowUp: (id: string, a: string) => void
+ answerMicroPoll: (id: string, opt: string) => void
+ setMicroPolls: (p: any[]) => void
  isSyncing: boolean
  lastSyncComplete: string | null
  syncStatus: ChannelAnalysisSyncStatus
- syncBatch: VideoSyncBatchState
  globalSyncData: (options?: { batchMode?: "initial" | "next" }) => Promise<void>
  syncMetrics: (force?: boolean) => Promise<void>
+ emitSignal: (toolId: string, action: string, payload: any) => Promise<void>
+ consultBrain: (toolId: string, requestDetails?: any) => Promise<any>
+ getBrainMemory: () => BrainMemorySchema
+ reflectAndCompress: () => Promise<void>
 }
 
 const defaultBrain: WorkspaceBrain = {
  activeProviders: [],
+ activeProjectId: null,
+ projects: [],
+ channelProfile: null,
+ recentMetrics: null,
+ csvFiles: [],
  coreConcept: "",
  targetNiche: "",
  seoState: {
@@ -97,6 +117,7 @@ const defaultBrain: WorkspaceBrain = {
  lastSyncDate: null,
  retentionCache: {},
 }
+
 
 const defaultAuthState: AuthState = {
  isAuthenticated: false,
@@ -212,6 +233,8 @@ const loadPersistedBrain = (): WorkspaceBrain => {
      analyticsResult: parsed.researchLabState?.analyticsResult || null,
     },
     videoFlags: parsed.videoFlags || {},
+    projects: Array.isArray(parsed.projects) ? parsed.projects : [],
+    activeProjectId: parsed.activeProjectId || null,
     journalEntries:
      Array.isArray(parsed.journalEntries) ? parsed.journalEntries : [],
     journalFollowUps:
@@ -261,6 +284,10 @@ const fallbackContext: GlobalDataContextProps = {
  setCalendarState: () => {},
  setChannelHub: () => {},
  setVideoFlags: () => {},
+ addProject: () => {},
+ updateProject: () => {},
+ deleteProject: () => {},
+ setActiveProject: () => {},
  authState: defaultAuthState,
  setAuthState: () => {},
  researchLabState: defaultBrain.researchLabState,
@@ -273,11 +300,23 @@ const fallbackContext: GlobalDataContextProps = {
  syncBatch: defaultSyncBatch,
  globalSyncData: async () => {},
  syncMetrics: async () => {},
+ addJournalEntry: () => {},
+ addFollowUp: () => {},
+ answerFollowUp: () => {},
+ answerMicroPoll: () => {},
+ setMicroPolls: () => {},
+ emitSignal: async () => {},
+ consultBrain: async () => ({}),
+ getBrainMemory: getBrainMemory as () => BrainMemorySchema,
+ reflectAndCompress: async () => {},
 }
 
 export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
  children,
 }) => {
+ useEffect(() => {
+  initializeBrain().catch(e => console.error("Brain initialization failed:", e));
+ }, []);
  const [brain, setBrain] = useState<WorkspaceBrain>(loadPersistedBrain)
  const [authState, setAuthStateRaw] = useState<AuthState>(loadPersistedAuth)
  const [isSyncing, setIsSyncing] = useState<boolean>(false)
@@ -666,6 +705,10 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
     setMicroPolls: (polls: any[]) => {
      setBrain((prev) => ({ ...prev, microPolls: polls }))
     },
+    emitSignal,
+    consultBrain,
+    getBrainMemory,
+    reflectAndCompress,
    }}>
    {children}
   </GlobalDataContext.Provider>

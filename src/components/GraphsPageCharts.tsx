@@ -1,13 +1,15 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import {
  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
  BarChart, Bar, ScatterChart, Scatter, ZAxis, Legend, Cell,
- LineChart, Line, PieChart, Pie, ComposedChart, ReferenceLine,
+ LineChart, Line, PieChart, Pie, ComposedChart, ReferenceLine, ReferenceArea,
  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
  Customized,
 } from "recharts"
 import type { CanonicalVideoRow } from "../services/analyticsContract"
 import { resolveMetricNumber } from "../services/canonicalMetricResolver"
+import { UnifiedChartModule } from "./UnifiedChartModule"
+import { CustomIcon } from "./CustomIcon"
 
 const mv = (row: CanonicalVideoRow, key: string): number =>
  resolveMetricNumber(row, key as any).value || 0
@@ -15,6 +17,11 @@ const mv = (row: CanonicalVideoRow, key: string): number =>
 export interface GChartProps { data: CanonicalVideoRow[] }
 
 const COLORS = ["#FF3399","#00E5FF","#CCFF00","#FF9900","#9933FF","#33FF99","#FF7497","#24D3FF","#FFB158"]
+const ctrPct = (row: CanonicalVideoRow): number => {
+ const raw = mv(row, "ctr")
+ if (!Number.isFinite(raw)) return 0
+ return raw <= 1 ? raw * 100 : raw
+}
 
 /* ── Shared tooltip ── */
 const ChartTip = ({ active, payload }: any) => {
@@ -37,23 +44,19 @@ const ChartTip = ({ active, payload }: any) => {
 
 /* ── Chart card shell ── */
 const Card: React.FC<{
- title: string; subtitle?: string; headerColor?: string; count?: number; children: React.ReactNode
-}> = ({ title, subtitle, headerColor = "#FFEA00", count, children }) => (
- <div className="bg-white border-[4px] border-black rounded-2xl shadow-[8px_8px_0px_0px_black] overflow-hidden flex flex-col">
-  <div className="border-b-[4px] border-black px-5 py-3 flex justify-between items-center" style={{ background: headerColor }}>
-   <div>
-    <span className="font-[900] text-lg uppercase tracking-tight">{title}</span>
-    {subtitle && <span className="block text-[10px] font-bold opacity-60 uppercase">{subtitle}</span>}
-   </div>
-   <div className="flex items-center gap-3">
-    {count !== undefined && <span className="text-sm font-black">{count} SHOWN</span>}
-    <div className="w-7 h-7 bg-[#004D40] rounded border-2 border-black flex items-center justify-center cursor-pointer text-white text-xs">⤢</div>
-   </div>
+ title: string; subtitle?: string; headerColor?: string; count?: number; icon?: React.ReactNode; children: React.ReactNode
+}> = ({ title, subtitle = "CANONICAL METRIC VIEW", headerColor = "#FFEA00", count, icon = <CustomIcon name="analytics" size={18} />, children }) => (
+ <UnifiedChartModule
+  title={title}
+  subtitle={subtitle}
+  headerIcon={icon}
+  headerColor={headerColor}
+  stats={count !== undefined ? [{ label: "VIDEOS", value: String(count), tone: "white" }] : []}
+ >
+  <div className="mx-auto max-w-[1020px] border-[3px] border-black rounded-[8px] bg-white p-2">
+   <ResponsiveContainer width="100%" height={320}>{children}</ResponsiveContainer>
   </div>
-  <div className="flex-1 p-4 min-h-[320px]">
-   <ResponsiveContainer width="100%" height={300}>{children}</ResponsiveContainer>
-  </div>
- </div>
+ </UnifiedChartModule>
 )
 
 /* ═══════════════════════════════════════════════
@@ -61,50 +64,102 @@ const Card: React.FC<{
    ═══════════════════════════════════════════════ */
 export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
  const [hovered, setHovered] = useState<any>(null)
- const shorts = useMemo(() => data.filter(r => r.format === "shorts").map(r => ({
-  title: r.title, ctr: +mv(r,"ctr").toFixed(1), ret: +mv(r,"avp").toFixed(1), views: mv(r,"views"), format: "shorts"
- })).filter(d => d.views > 0), [data])
- const longs = useMemo(() => data.filter(r => r.format !== "shorts").map(r => ({
-  title: r.title, ctr: +mv(r,"ctr").toFixed(1), ret: +mv(r,"avp").toFixed(1), views: mv(r,"views"), format: "long"
- })).filter(d => d.views > 0), [data])
+ const shorts = useMemo(
+  () =>
+   data
+    .filter((r) => r.format === "shorts")
+    .map((r) => {
+     const avp = mv(r, "avp")
+     const ret = avp > 100 && r.durationSeconds > 0 ? (avp / r.durationSeconds) * 100 : avp
+     return {
+      title: r.title,
+      ctr: +ctrPct(r).toFixed(2),
+      ret: +Math.max(0, ret).toFixed(2),
+      views: mv(r, "views"),
+      format: "shorts",
+     }
+    })
+    .filter((d) => d.views > 0),
+  [data],
+ )
+ const longs = useMemo(
+  () =>
+   data
+    .filter((r) => r.format !== "shorts")
+    .map((r) => {
+     const avp = mv(r, "avp")
+     const ret = avp > 100 && r.durationSeconds > 0 ? (avp / r.durationSeconds) * 100 : avp
+     return {
+      title: r.title,
+      ctr: +ctrPct(r).toFixed(2),
+      ret: +Math.max(0, ret).toFixed(2),
+      views: mv(r, "views"),
+      format: "long",
+     }
+    })
+    .filter((d) => d.views > 0),
+  [data],
+ )
  const total = shorts.length + longs.length
+ const topPoint = useMemo(() => {
+  const pool = [...shorts, ...longs]
+  if (pool.length === 0) return null
+  return [...pool].sort((a, b) => b.views - a.views)[0]
+ }, [shorts, longs])
+ const all = useMemo(() => [...shorts, ...longs], [shorts, longs])
+ const maxCtr = useMemo(() => Math.max(3, ...all.map((p) => p.ctr)), [all])
+ const maxRet = useMemo(() => Math.max(100, ...all.map((p) => p.ret)), [all])
+ const ctrMid = maxCtr * 0.5
+ const retMid = maxRet * 0.5
+
  return (
-  <div className="bg-white border-[4px] border-black rounded-2xl shadow-[8px_8px_0px_0px_black] overflow-hidden">
-   <div className="border-b-[4px] border-black px-5 py-3 flex justify-between items-center bg-[#FFEA00]">
-    <span className="font-[900] text-xl uppercase">VIDEO VALUE MATRIX</span>
-    <div className="flex items-center gap-3">
-     <div className="text-right leading-none"><span className="font-black">{total} HIGHEST</span><br/><span className="text-[9px] font-bold opacity-60">CTR × RETENTION × VIEWS</span></div>
-     <div className="w-7 h-7 bg-[#004D40] rounded border-2 border-black flex items-center justify-center text-white text-xs">⤢</div>
+  <UnifiedChartModule
+   title="VIDEO VALUE MATRIX"
+   subtitle="CTR × RETENTION × VIEWS"
+   headerIcon={<CustomIcon name="target" size={18} />}
+   headerColor="#FFEA00"
+   stats={[{ label: "VIDEOS", value: String(total) }]}
+   activeVideo={
+    hovered
+     ? {
+        title: hovered.title,
+        stats: [
+         { label: "CTR", value: `${hovered.ctr.toFixed(2)}%`, tone: "cyan" },
+         { label: "RET", value: `${hovered.ret.toFixed(2)}%`, tone: "pink" },
+         { label: "VIEWS", value: hovered.views.toLocaleString(), tone: "yellow" },
+        ],
+       }
+     : topPoint
+       ? {
+          title: topPoint.title,
+          stats: [
+           { label: "CTR", value: `${topPoint.ctr.toFixed(2)}%`, tone: "cyan" },
+           { label: "RET", value: `${topPoint.ret.toFixed(2)}%`, tone: "pink" },
+           { label: "VIEWS", value: topPoint.views.toLocaleString(), tone: "yellow" },
+          ],
+         }
+       : null
+   }
+   visualLegend={
+    <div className="flex items-center gap-4 px-1 py-1 text-[10px] font-black text-black/65 uppercase tracking-[0.1em]">
+     <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#FF7497] border border-black"/>Shorts</div>
+     <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#00E5FF] border border-black"/>Long</div>
+     <div className="flex items-center gap-1">Bubble size = Views</div>
     </div>
-   </div>
-   {hovered && (
-    <div className="border-b-[4px] border-black px-5 py-2 flex justify-between items-center text-sm font-bold bg-white">
-     <div className="flex items-center gap-2"><div className={`w-3 h-3 rounded-full border-2 border-black ${hovered.format==="shorts"?"bg-[#FF7497]":"bg-[#00E5FF]"}`}/>{hovered.title}</div>
-     <div className="flex items-center gap-6">
-      <div className="text-[#00E5FF] font-black">{hovered.ctr}%<br/><span className="text-[8px] text-gray-400">CTR</span></div>
-      <div className="text-[#FF7497] font-black">{hovered.ret}%<br/><span className="text-[8px] text-gray-400">RETENTION</span></div>
-      <div className="font-black">{hovered.views.toLocaleString()}<br/><span className="text-[8px] text-gray-400">VIEWS</span></div>
-     </div>
-    </div>
-   )}
-   <div className="flex items-center gap-4 px-5 py-1 text-[10px] font-bold text-gray-500 border-b border-gray-100">
-    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#FF7497]"/>SHORTS</div>
-    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#00E5FF]"/>LONG-FORM</div>
-    <div className="flex items-center gap-1">● ●● = VIEWS</div>
-   </div>
+   }>
    <div className="p-6 h-[420px] relative">
-    <div className="absolute inset-x-10 inset-y-6 flex flex-col pointer-events-none z-0">
-     <div className="flex-1 flex text-gray-200 font-black text-[10px] pt-1"><div className="flex-1">💎 HIDDEN GEMS</div><div className="flex-1 text-right">🏆 GOLD MINE</div></div>
-     <div className="flex-1 flex items-end text-gray-200 font-black text-[10px] pb-1"><div className="flex-1">⚠️ NEEDS WORK</div><div className="flex-1 text-right">⚡ CLICKBAIT</div></div>
-    </div>
     <ResponsiveContainer width="100%" height="100%">
      <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 10 }}>
+      <ReferenceArea x1={0} x2={ctrMid} y1={0} y2={retMid} fill="#F5F5F5" fillOpacity={0.6} />
+      <ReferenceArea x1={ctrMid} x2={Math.ceil(maxCtr * 1.15)} y1={0} y2={retMid} fill="#EEF9FF" fillOpacity={0.6} />
+      <ReferenceArea x1={0} x2={ctrMid} y1={retMid} y2={Math.ceil(maxRet * 1.1)} fill="#FFF4F8" fillOpacity={0.6} />
+      <ReferenceArea x1={ctrMid} x2={Math.ceil(maxCtr * 1.15)} y1={retMid} y2={Math.ceil(maxRet * 1.1)} fill="#F4FFF4" fillOpacity={0.75} />
       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-      <XAxis type="number" dataKey="ctr" name="CTR" unit="%" domain={[0,10]} tick={{fontWeight:900,fontSize:11}} />
-      <YAxis type="number" dataKey="ret" name="Retention" unit="%" domain={[0,150]} tick={{fontWeight:900,fontSize:11}} />
+      <XAxis type="number" dataKey="ctr" name="CTR" unit="%" domain={[0, Math.ceil(maxCtr * 1.15)]} tick={{fontWeight:900,fontSize:11}} />
+      <YAxis type="number" dataKey="ret" name="Retention" unit="%" domain={[0, Math.ceil(maxRet * 1.1)]} tick={{fontWeight:900,fontSize:11}} />
       <ZAxis type="number" dataKey="views" range={[30,600]} />
-      <ReferenceLine x={5} stroke="#000" strokeWidth={1} />
-      <ReferenceLine y={60} stroke="#000" strokeWidth={1} />
+      <ReferenceLine x={ctrMid} stroke="#000" strokeWidth={1} />
+      <ReferenceLine y={retMid} stroke="#000" strokeWidth={1} />
       <Tooltip content={<ChartTip />} />
       <Scatter name="Shorts" data={shorts} fill="#FF7497" fillOpacity={0.8} stroke="#fff" strokeWidth={1}
        onMouseEnter={(d:any)=>setHovered(d)} onMouseLeave={()=>setHovered(null)} />
@@ -113,7 +168,7 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
      </ScatterChart>
     </ResponsiveContainer>
    </div>
-  </div>
+  </UnifiedChartModule>
  )
 }
 
@@ -122,7 +177,7 @@ export const RevenueDistribution: React.FC<GChartProps> = ({ data }) => {
  const cd = useMemo(() => [...data].sort((a,b) => mv(b,"revenue")-mv(a,"revenue")).slice(0,10)
   .map(r => ({ name: r.title.substring(0,25), value: +mv(r,"revenue").toFixed(2) })).filter(d=>d.value>0), [data])
  return (
-  <Card title="REVENUE DISTRIBUTION" subtitle="Top 10 — Last 90 Days" headerColor="#CCFF00" count={cd.length}>
+  <Card title="REVENUE DISTRIBUTION" subtitle="Top 10 — Last 90 Days" headerColor="#CCFF00" count={cd.length} icon={<CustomIcon name="!!!REVENUE" size={18} />}>
    <PieChart><Pie data={cd} innerRadius="30%" outerRadius="90%" dataKey="value" stroke="#fff" strokeWidth={2} label={({name,value})=>`$${value}`}>
     {cd.map((_,i)=><Cell key={i} fill={COLORS[i%COLORS.length]}/>)}</Pie><Tooltip content={<ChartTip/>}/></PieChart>
   </Card>
@@ -134,7 +189,7 @@ export const WatchTimeDistribution: React.FC<GChartProps> = ({ data }) => {
  const cd = useMemo(() => [...data].sort((a,b) => mv(b,"watchHours")-mv(a,"watchHours")).slice(0,10)
   .map(r => ({ name: r.title.substring(0,25), value: +mv(r,"watchHours").toFixed(1) })).filter(d=>d.value>0), [data])
  return (
-  <Card title="WATCH TIME DISTRIBUTION" headerColor="#FFEA00" count={cd.length}>
+  <Card title="WATCH TIME DISTRIBUTION" headerColor="#FFEA00" count={cd.length} icon={<CustomIcon name="calendar" size={18} />}>
    <PieChart><Pie data={cd} innerRadius="20%" outerRadius="90%" dataKey="value" stroke="#fff" strokeWidth={2}>
     {cd.map((_,i)=><Cell key={i} fill={COLORS[i%COLORS.length]}/>)}</Pie><Tooltip content={<ChartTip/>}/></PieChart>
   </Card>
@@ -143,14 +198,122 @@ export const WatchTimeDistribution: React.FC<GChartProps> = ({ data }) => {
 
 /* 4. Subscribers Gained */
 export const SubscribersGained: React.FC<GChartProps> = ({ data }) => {
- const cd = useMemo(() => [...data].sort((a,b) => mv(b,"subscribersGained")-mv(a,"subscribersGained")).slice(0,10)
-  .map(r => ({ name: r.title.substring(0,18), value: mv(r,"subscribersGained") })).filter(d=>d.value>0), [data])
+ const [mode, setMode] = useState<"subs" | "views" | "watch">("subs")
+ const [open, setOpen] = useState(false)
+ const menuRef = useRef<HTMLDivElement | null>(null)
+ useEffect(() => {
+  const handler = (event: MouseEvent) => {
+   if (!menuRef.current) return
+   if (!menuRef.current.contains(event.target as Node)) setOpen(false)
+  }
+  window.addEventListener("mousedown", handler)
+  return () => window.removeEventListener("mousedown", handler)
+ }, [])
+ const cd = useMemo(() => {
+  const metric = mode === "views" ? "views" : mode === "watch" ? "watchHours" : "subscribersGained"
+  return [...data]
+   .sort((a, b) => mv(b, metric) - mv(a, metric))
+   .slice(0, 10)
+   .map((r) => ({ name: r.title.substring(0, 18), value: mv(r, metric) }))
+   .filter((d) => d.value > 0)
+ }, [data, mode])
  return (
-  <Card title="SUBSCRIBERS GAINED" headerColor="#FFEA00" count={cd.length}>
+  <UnifiedChartModule
+   title="SUBSCRIBERS GAINED"
+   subtitle="RANKED VIDEO PERFORMANCE"
+   headerIcon={<CustomIcon name="!!!SUBSCRIBERS" size={18} />}
+   headerColor="#FFEA00"
+   controls={
+    <div ref={menuRef} className="relative w-[144px] bg-black text-[#CCFF00] border-[2px] border-black rounded-[8px] px-2 py-1 inline-flex flex-col items-center justify-center gap-1 leading-none">
+     <span className="text-[40px] font-[1000] leading-none">{cd.length}</span>
+     <button
+      type="button"
+      onClick={() => setOpen((v) => !v)}
+      className="h-6 w-full px-2 bg-white text-black border-[2px] border-black rounded-[4px] text-[8px] font-black uppercase tracking-[0.08em] inline-flex items-center justify-between">
+      <span>{mode === "subs" ? "Subs" : mode === "views" ? "Views" : "Watch"}</span>
+      <span className={`text-[9px] transition-transform duration-200 ${open ? "rotate-180" : ""}`}>▼</span>
+     </button>
+     <span className="text-[8px] font-black uppercase tracking-[0.12em]">videos</span>
+     <div className={`absolute right-[-2px] top-[calc(100%-2px)] w-[calc(100%+4px)] bg-white border-[3px] border-black border-t-0 rounded-b-[6px] overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] z-30 origin-top transition-all duration-200 ${open ? "opacity-100 scale-y-100 pointer-events-auto" : "opacity-0 scale-y-95 pointer-events-none"}`}>
+      {[
+       { key: "subs", label: "Subscribers" },
+       { key: "views", label: "Views" },
+       { key: "watch", label: "Watch Hours" },
+      ].map((opt) => (
+       <button
+        key={opt.key}
+        type="button"
+        onClick={() => {
+         setMode(opt.key as any)
+         setOpen(false)
+        }}
+        className="w-full h-8 px-2 text-left text-[9px] font-black uppercase tracking-[0.06em] whitespace-nowrap hover:bg-[#EEF7FF] border-t-[2px] border-black/10 first:border-t-0">
+        {mode === (opt.key as any) ? "✓ " : ""}{opt.label}
+       </button>
+      ))}
+     </div>
+    </div>
+   }
+   stats={[]}
+  >
+   <div className="mx-auto max-w-[1020px] border-[3px] border-black rounded-[8px] bg-white p-2">
    <BarChart data={cd} margin={{top:10,right:10,left:-20,bottom:40}}>
     <CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="name" tick={{fontSize:8,fontWeight:900}} interval={0} angle={-45} textAnchor="end"/>
     <YAxis tick={{fontSize:10,fontWeight:900}}/><Tooltip content={<ChartTip/>}/><Bar dataKey="value" fill="#00E5FF" radius={[4,4,0,0]}/></BarChart>
-  </Card>
+   </div>
+  </UnifiedChartModule>
+ )
+}
+
+/* 4b. Top Performers Trio (spec) */
+export const TopPerformersTrio: React.FC<GChartProps> = ({ data }) => {
+ const buildTop = (metric: "revenue" | "watchHours" | "subscribersGained", label: string) => {
+  const rows = [...data]
+   .filter((r) => mv(r, metric) > 0)
+   .sort((a, b) => mv(b, metric) - mv(a, metric))
+   .slice(0, 10)
+   .map((r) => ({ name: r.title.slice(0, 22), value: mv(r, metric) }))
+  return { label, rows, top: rows[0] }
+ }
+
+ const trio = useMemo(
+  () => [
+   buildTop("revenue", "Revenue"),
+   buildTop("watchHours", "Watch Hrs"),
+   buildTop("subscribersGained", "Subs"),
+  ],
+  [data],
+ )
+
+ return (
+  <UnifiedChartModule
+   title="TOP PERFORMERS TRIO"
+   subtitle="REVENUE • WATCH HOURS • SUBSCRIBERS"
+   headerIcon={<CustomIcon name="analytics" size={18} />}
+   headerColor="#FF7497"
+   stats={[{ label: "VIDEOS", value: "10", tone: "white" }]}
+  >
+   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    {trio.map((card, idx) => (
+     <div key={card.label} className="border-[3px] border-black rounded-xl bg-white p-2">
+      <div className="text-[10px] font-black uppercase tracking-[0.12em] mb-1">{card.label}</div>
+      <div className="h-[200px] border-[2px] border-black rounded-lg bg-[#F4F4F5] p-1">
+       <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+         <Pie data={card.rows} dataKey="value" nameKey="name" innerRadius={40} outerRadius={72} stroke="#111827" strokeWidth={1} isAnimationActive animationDuration={700} animationBegin={idx * 120}>
+          {card.rows.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+         </Pie>
+        </PieChart>
+       </ResponsiveContainer>
+      </div>
+      <div className="mt-2 h-10 border-[2px] border-black rounded-md bg-[#00CCFF] text-black px-2 flex items-center justify-between">
+       <span className="text-[8px] font-black uppercase tracking-[0.1em]">#1</span>
+       <span className="text-[10px] font-[1000] truncate max-w-[70%]">{card.top?.name || "N/A"}</span>
+      </div>
+     </div>
+    ))}
+   </div>
+  </UnifiedChartModule>
  )
 }
 
@@ -322,9 +485,22 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
 /* 5b. Shorts Retention - Widget Module (no tooltip, subtitle rail) */
 export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => {
  const [mode, setMode] = useState<"top-performing" | "most-recent">("top-performing")
- const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+ const [modeMenuOpen, setModeMenuOpen] = useState(false)
+  const [insightOpen, setInsightOpen] = useState<"none" | "general" | "personal">("none")
  const [activeKey, setActiveKey] = useState<string | null>(null)
  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
+ const modeMenuRef = useRef<HTMLDivElement | null>(null)
+
+ useEffect(() => {
+  const onClickAway = (event: MouseEvent) => {
+   if (!modeMenuRef.current) return
+   if (!modeMenuRef.current.contains(event.target as Node)) {
+    setModeMenuOpen(false)
+   }
+  }
+  window.addEventListener("mousedown", onClickAway)
+  return () => window.removeEventListener("mousedown", onClickAway)
+ }, [])
 
  const cd = useMemo(() => {
   const shorts = data
@@ -392,82 +568,199 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
   [cd.points, activeKey],
  )
 
+ const shortsInsight = useMemo(() => {
+  if (cd.points.length === 0) return "No shorts retention data yet. Sync to unlock retention insights."
+  const best = [...cd.points].sort((a, b) => b.avd - a.avd)[0]
+  const longHold = cd.points.filter((p) => p.dur >= 90 && p.avd >= 55).length
+  return `Your strongest short holds ${best.avd.toFixed(
+   1,
+  )}% at ${Math.round(best.dur)}s, and ${longHold} videos keep 55%+ attention beyond 90s - that's a repeatable retention signature.`
+ }, [cd.points])
+
+ const generalInsight =
+  "Shorts retention maps the relationship between video length, attention hold, and reach to expose your strongest duration ranges."
+
  const bubbleShape = (props: any) => {
   const { cx, cy, payload } = props
-  const isHover = hoveredKey === payload.key
   const isActive = activeKey === payload.key
-  const scale = isHover ? 1.16 : 1
+  const scale = isActive ? 1.3 : 1
   return (
    <circle
     cx={cx}
     cy={cy}
-    r={payload.radius}
+    r={payload.radius * scale}
     fill={payload.color}
     fillOpacity={0.75}
     stroke={payload.color}
-    strokeWidth={isHover || isActive ? 2 : 0}
+    strokeWidth={isActive ? 2 : 0}
+    onMouseEnter={() => setActiveKey(payload.key)}
     style={{
-      transformBox: "fill-box",
-      transformOrigin: "center",
-      transform: `scale(${scale})`,
       shapeRendering: "geometricPrecision",
-      transition: "transform 220ms cubic-bezier(0.34,1.56,0.64,1)",
+      transition: "all 220ms cubic-bezier(0.34, 1.56, 0.64, 1)",
       cursor: "pointer",
     }}
-    onMouseEnter={() => {
-      setHoveredKey(payload.key)
-      setActiveKey(payload.key)
-    }}
-    onMouseLeave={() => setHoveredKey(null)}
    />
   )
  }
 
  return (
-  <div className="bg-white border-[4px] border-black rounded-2xl shadow-[8px_8px_0px_0px_black] overflow-hidden flex flex-col">
-   <div className="border-b-[4px] border-black px-5 py-3 flex justify-between items-center gap-3 bg-[#CCFF00]">
-    <div>
-     <span className="font-[900] text-xl uppercase tracking-tight">SHORTS RETENTION</span>
-     <span className="block text-[10px] font-medium opacity-60 uppercase tracking-widest">AVD% × $REV × LENGTH</span>
+   <UnifiedChartModule
+   title="SHORTS RETENTION"
+   subtitle="AVD% × $REV × LENGTH"
+   headerIcon={<CustomIcon name="!!!A:B-TESTING" size={18} />}
+   headerColor="#CCFF00"
+   keys={[]}
+   stats={[]}
+   controls={
+    <div ref={modeMenuRef} className="relative w-[144px] bg-black text-[#CCFF00] border-[2px] border-black rounded-[8px] px-2 py-1 inline-flex flex-col items-center justify-center gap-1 leading-none">
+      <span className="text-[40px] font-[1000] leading-none">{cd.points.length}</span>
+      <button
+       type="button"
+       onClick={() => setModeMenuOpen((prev) => !prev)}
+       className="h-6 w-full px-2 bg-white text-black border-[2px] border-black rounded-[4px] text-[8px] font-black uppercase tracking-[0.08em] inline-flex items-center justify-between gap-2 transition-colors duration-200 hover:bg-[#EEF7FF]">
+       <span className="truncate">{mode === "most-recent" ? "Recent" : "Top"}</span>
+       <span className={`text-[9px] transition-transform duration-200 ${modeMenuOpen ? "rotate-180" : ""}`}>▼</span>
+      </button>
+      <span className="text-[8px] font-black uppercase tracking-[0.12em]">videos</span>
+      <div className={`absolute right-[-2px] top-[calc(100%-2px)] w-[calc(100%+4px)] bg-white border-[3px] border-black border-t-0 rounded-b-[6px] overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] z-30 origin-top transition-all duration-200 ${modeMenuOpen ? "opacity-100 scale-y-100 pointer-events-auto" : "opacity-0 scale-y-95 pointer-events-none"}`}>
+       <button
+        type="button"
+        onClick={() => {
+         setMode("top-performing")
+         setModeMenuOpen(false)
+        }}
+        className="w-full h-8 px-2 text-left text-[9px] font-black uppercase tracking-[0.06em] whitespace-nowrap hover:bg-[#EEF7FF]">
+        {mode === "top-performing" ? "✓ " : ""}Top Performing
+       </button>
+       <button
+        type="button"
+        onClick={() => {
+         setMode("most-recent")
+         setModeMenuOpen(false)
+        }}
+        className="w-full h-8 px-2 text-left text-[9px] font-black uppercase tracking-[0.06em] whitespace-nowrap hover:bg-[#EEF7FF] border-t-[2px] border-black/10">
+        {mode === "most-recent" ? "✓ " : ""}Most Recent
+       </button>
+      </div>
     </div>
-    <div className="flex items-center gap-2">
-     <select
-      value={mode}
-      onChange={(e) => setMode(e.target.value as "top-performing" | "most-recent")}
-      className="h-8 px-2 bg-white border-[3px] border-black rounded-md text-[10px] font-black uppercase">
-      <option value="top-performing">Top Performing</option>
-      <option value="most-recent">Most Recent</option>
-     </select>
-     <span className="text-xs font-black uppercase">TOP AVG % {cd.yTop}</span>
-     <span className="text-sm font-black">{cd.points.length} SHOWN</span>
+   }
+   activeVideo={{
+    title: activePoint?.title || "No video selected",
+    stats: [
+      {
+       label: "AVD%",
+       value: activePoint ? activePoint.avd.toFixed(2) : "0.00",
+       tone: "lime",
+      },
+      {
+       label: "REV",
+       value: `$${activePoint ? activePoint.estIncome.toFixed(2) : "0.00"}`,
+       tone: "cyan",
+      },
+      {
+       label: "LENGTH",
+       value: `${activePoint ? Math.round(activePoint.dur) : 0}s`,
+       tone: "yellow",
+      },
+      {
+       label: "VIEWS",
+       value: activePoint ? Math.round(activePoint.views).toLocaleString() : "0",
+       tone: "white",
+      },
+    ],
+   }}
+   visualLegend={
+    <div className="flex flex-wrap items-center justify-center gap-8 py-1">
+      <div className="flex items-center gap-3">
+        <span className="text-[10px] font-black uppercase tracking-[0.12em]">Revenue</span>
+        <div className="w-44 h-5 border-[2px] border-black rounded-[4px] bg-gradient-to-r from-[#24BCFF] via-[#45DDB0] to-[#66FF8A]" />
+      </div>
+      <div className="flex items-center gap-3">
+        <span className="text-[10px] font-black uppercase tracking-[0.12em]">Views</span>
+        <div className="flex items-end gap-1 px-1">
+          <span className="w-3 h-3 rounded-full bg-[#45DDB0] border border-black" />
+          <span className="w-5 h-5 rounded-full bg-[#45DDB0] border border-black" />
+          <span className="w-7 h-7 rounded-full bg-[#45DDB0] border border-black" />
+        </div>
+      </div>
     </div>
-   </div>
-
-   <div className="border-b-[4px] border-black px-5 py-2 bg-white">
-    <div className="text-[20px] leading-none font-[1000] uppercase tracking-tight truncate">
-     {activePoint?.title || "No video selected"}
+   }
+   footer={
+    <div className="relative bg-black border-t-[2px] border-black px-4 py-2 flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2">
+        <button
+         type="button"
+         onClick={() =>
+          setInsightOpen((prev) => (prev === "general" ? "none" : "general"))
+         }
+         className="h-7 px-2 border-[2px] border-white/70 rounded-[4px] text-[9px] font-black uppercase tracking-[0.1em] text-white">
+         Chart Insight
+        </button>
+        <button
+         type="button"
+         onClick={() =>
+          setInsightOpen((prev) => (prev === "personal" ? "none" : "personal"))
+         }
+         className="h-7 px-2 border-[2px] border-white/70 rounded-[4px] text-[9px] font-black uppercase tracking-[0.1em] text-white">
+         Personal Insight
+        </button>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="w-5 h-5 rounded-full border border-white bg-[#00CCFF] text-[9px] font-black inline-flex items-center justify-center text-black">
+         V
+        </span>
+        <span className="w-5 h-5 rounded-full border border-white bg-[#FF7497] text-[9px] font-black inline-flex items-center justify-center text-black">
+         R
+        </span>
+        <span className="w-5 h-5 rounded-full border border-white bg-[#CCFF00] text-[9px] font-black inline-flex items-center justify-center text-black">
+         S
+        </span>
+      </div>
+      {insightOpen !== "none" && (
+       <div className="absolute left-6 right-6 -translate-y-[115%] bg-black/95 border-[2px] border-white/40 rounded-[6px] px-3 py-2 text-[10px] font-black tracking-[0.04em] text-white uppercase">
+        {insightOpen === "general" ? generalInsight : shortsInsight}
+       </div>
+      )}
     </div>
-    <div className="mt-1 flex flex-wrap items-center gap-5 text-[10px] font-black uppercase tracking-[0.12em] text-black/70">
-     <span>AVD%: {activePoint ? activePoint.avd.toFixed(2) : "0.00"}</span>
-     <span>REV: ${activePoint ? activePoint.estIncome.toFixed(2) : "0.00"}</span>
-     <span>LENGTH: {activePoint ? Math.round(activePoint.dur) : 0}s</span>
-     <span>VIEWS: {activePoint ? Math.round(activePoint.views).toLocaleString() : "0"}</span>
-    </div>
-   </div>
-
-   <div className="flex-1 p-4 min-h-[360px]">
-    <ResponsiveContainer width="100%" height={320}>
+   }
+  >
+   <div className="min-h-[390px] max-w-[1040px] mx-auto border-[3px] border-black rounded-[8px] bg-white p-2">
+    <ResponsiveContainer width="100%" height={360}>
      <ScatterChart
-      margin={{ top: 10, right: 10, bottom: 10, left: -10 }}
+      className="[&_svg]:outline-none [&_*:focus]:outline-none [&_*:focus-visible]:outline-none"
+      margin={{ top: 12, right: 18, bottom: 12, left: 8 }}
       onMouseMove={(state: any) => {
        if (typeof state?.chartX === "number" && typeof state?.chartY === "number") {
         setMousePos({ x: state.chartX, y: state.chartY })
        }
       }}
-      onMouseLeave={() => setMousePos(null)}>
-      <CartesianGrid stroke="rgba(107,114,128,0.28)" strokeDasharray="4 4" />
-      <XAxis type="number" dataKey="dur" name="Duration (s)" tick={{ fontWeight: 900, fontSize: 10 }} />
-      <YAxis type="number" dataKey="avdRel" name="AVG % Viewed (relative)" domain={[0, cd.yTop]} tick={{ fontWeight: 900, fontSize: 10 }} />
+      onMouseLeave={() => {
+       setMousePos(null)
+      }}>
+      <CartesianGrid stroke="rgba(107,114,128,0.22)" />
+      <XAxis
+       type="number"
+       dataKey="dur"
+       tick={{ fontWeight: 900, fontSize: 12 }}
+       label={{
+        value: "DURATION (SECONDS)",
+        position: "insideBottom",
+        offset: -2,
+        style: { fontWeight: 900, fontSize: 11 },
+      }}
+      />
+      <YAxis
+       type="number"
+       dataKey="avdRel"
+       domain={[0, cd.yTop]}
+       tick={{ fontWeight: 900, fontSize: 12 }}
+       label={{
+        value: "AVG % VIEWED",
+        angle: -90,
+        position: "insideLeft",
+        style: { fontWeight: 900, fontSize: 11 },
+       }}
+      />
       <Scatter data={cd.points} shape={bubbleShape} name="Income Gradient" />
       <Customized component={({ offset }: any) => {
        if (!mousePos || !offset) return null
@@ -480,16 +773,31 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
        const snappedY = Math.round(mousePos.y) + 0.5
        return (
         <g pointerEvents="none">
-         <line x1={left} y1={snappedY} x2={right} y2={snappedY} stroke="rgba(255, 51, 153, 0.28)" strokeWidth={1} strokeDasharray="4 4" shapeRendering="crispEdges" />
-         <line x1={snappedX} y1={top} x2={snappedX} y2={bottom} stroke="rgba(255, 51, 153, 0.28)" strokeWidth={1} strokeDasharray="4 4" shapeRendering="crispEdges" />
+         <line
+          x1={left}
+          y1={snappedY}
+          x2={right}
+          y2={snappedY}
+          stroke="rgba(120, 130, 145, 0.24)"
+          strokeWidth={1}
+          shapeRendering="crispEdges"
+         />
+         <line
+          x1={snappedX}
+          y1={top}
+          x2={snappedX}
+          y2={bottom}
+          stroke="rgba(120, 130, 145, 0.24)"
+          strokeWidth={1}
+          shapeRendering="crispEdges"
+         />
         </g>
        )
       }} />
      </ScatterChart>
     </ResponsiveContainer>
    </div>
-   <div className="px-5 pb-3 text-[10px] font-black uppercase opacity-70">Bubble size = Views · Color = Estimated Income (Blue → Green)</div>
-  </div>
+  </UnifiedChartModule>
  )
 }
 
@@ -515,17 +823,69 @@ export const Packaging: React.FC<GChartProps> = ({ data }) => {
 
 /* 7. Engagement Map */
 export const EngagementMap: React.FC<GChartProps> = ({ data }) => {
- const cd = useMemo(() => [...data].sort((a,b)=>mv(b,"likes")-mv(a,"likes")).slice(0,15).map(r => ({
-  name: r.title.substring(0,18), likes: mv(r,"likes"), comments: mv(r,"comments"), shares: mv(r,"shares")
- })), [data])
+ const cd = useMemo(
+  () =>
+   [...data]
+    .sort((a, b) => mv(b, "likes") - mv(a, "likes"))
+    .slice(0, 15)
+    .map((r) => ({
+     name: r.title.substring(0, 28),
+     likes: mv(r, "likes"),
+     comments: mv(r, "comments"),
+     shares: mv(r, "shares"),
+    })),
+  [data],
+ )
+ const top = cd[0]
  return (
-  <Card title="ENGAGEMENT MAP" subtitle="Benchmark Engagement Signature" headerColor="#00E5FF" count={cd.length}>
-   <BarChart data={cd} margin={{top:10,right:10,left:-20,bottom:40}}>
-    <CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="name" tick={{fontSize:8,fontWeight:900}} interval={0} angle={-45} textAnchor="end"/>
-    <YAxis tick={{fontSize:10,fontWeight:900}}/><Tooltip content={<ChartTip/>}/><Legend wrapperStyle={{fontSize:"10px",fontWeight:900,textTransform:"uppercase"}}/>
-    <Bar dataKey="likes" name="Likes" fill="#FF7497" radius={[4,4,0,0]}/><Bar dataKey="comments" name="Comments" fill="#FFDD00" radius={[4,4,0,0]}/>
-    <Bar dataKey="shares" name="Shares" fill="#9933FF" radius={[4,4,0,0]}/></BarChart>
-  </Card>
+  <UnifiedChartModule
+   title="ENGAGEMENT MAP"
+   subtitle="TOP 50 RECENT BY COMMENTS"
+   headerColor="#FF9900"
+   keys={[
+    { label: "LIKES", tone: "pink" },
+    { label: "COMMENTS", tone: "cyan" },
+    { label: "SHARES", tone: "lime" },
+   ]}
+   stats={[
+    { label: "LATEST", value: String(cd.length), tone: "orange" },
+    {
+     label: "COMMENTS PEAK",
+     value: String(Math.max(0, ...cd.map((d) => d.comments))),
+     tone: "cyan",
+    },
+   ]}
+   activeVideo={{
+    title: top?.name || "No video selected",
+    stats: [
+     { label: "LIKES", value: String(top?.likes || 0), tone: "pink" },
+     { label: "COMMENTS", value: String(top?.comments || 0), tone: "cyan" },
+     { label: "SHARES", value: String(top?.shares || 0), tone: "lime" },
+    ],
+   }}
+   insight="Compares social interaction signatures across recent top-comment videos."
+  >
+   <ResponsiveContainer width="100%" height={300}>
+    <BarChart data={cd} margin={{ top: 10, right: 10, left: -20, bottom: 40 }}>
+     <CartesianGrid strokeDasharray="3 3" vertical={false} />
+     <XAxis
+      dataKey="name"
+      tick={{ fontSize: 8, fontWeight: 900 }}
+      interval={0}
+      angle={-45}
+      textAnchor="end"
+     />
+     <YAxis tick={{ fontSize: 10, fontWeight: 900 }} />
+     <Tooltip content={<ChartTip />} />
+     <Legend
+      wrapperStyle={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase" }}
+     />
+     <Bar dataKey="likes" name="Likes" fill="#FF7497" radius={[4, 4, 0, 0]} />
+     <Bar dataKey="comments" name="Comments" fill="#00E5FF" radius={[4, 4, 0, 0]} />
+     <Bar dataKey="shares" name="Shares" fill="#CCFF00" radius={[4, 4, 0, 0]} />
+    </BarChart>
+   </ResponsiveContainer>
+  </UnifiedChartModule>
  )
 }
 

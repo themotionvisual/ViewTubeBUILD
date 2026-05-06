@@ -2,8 +2,19 @@ import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Image as ImageIcon, Sparkles, Download, Search, CheckCircle2, AlertTriangle, XCircle, ArrowRight } from "lucide-react"
 
-export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onRemove, data }: any) => {
-  const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
+export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
+  const common = {
+  widget,
+  instance,
+  editMode,
+  canEdit: true,
+  onToggleCollapse,
+  onCycleSize,
+  onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
+ }
   
   const [mode, setMode] = useState<"generate" | "analyze">("generate")
   const [prompt, setPrompt] = useState("")
@@ -19,10 +30,7 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
   const handleGenerate = () => {
     setIsProcessing(true)
     setTimeout(() => {
-      setResult({
-        type: "generation",
-        imageUrl: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=600&auto=format&fit=crop",
-      })
+      setResult({type: "generation", imageUrl: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=600&auto=format&fit=crop", onDecSize, onCycleHeight, onDecHeight})
       setIsProcessing(false)
     }, 2000)
   }

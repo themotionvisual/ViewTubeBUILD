@@ -39,6 +39,9 @@ export const KeywordEngineWidget = ({
  editMode,
  onToggleCollapse,
  onCycleSize,
+ onDecSize,
+ onCycleHeight,
+ onDecHeight,
  onRemove,
  data,
 }: any) => {
@@ -50,6 +53,9 @@ export const KeywordEngineWidget = ({
   onToggleCollapse,
   onCycleSize,
   onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
  }
 
  const keywords = useMemo(() => {
@@ -77,11 +83,7 @@ export const KeywordEngineWidget = ({
 
   const list = Array.from(map.entries())
    .filter(([_, stat]) => stat.count > 1) // Must be used in >1 video to avoid 1-hit wonder skew
-   .map(([word, stat]) => ({
-    word,
-    avgViews: Math.round(stat.views / stat.count),
-    count: stat.count,
-   }))
+   .map(([word, stat]) => ({word, avgViews: Math.round(stat.views / stat.count), count: stat.count, onDecSize, onCycleHeight, onDecHeight}))
    .sort((a, b) => b.avgViews - a.avgViews)
    .slice(0, 10)
 

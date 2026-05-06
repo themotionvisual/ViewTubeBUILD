@@ -4,10 +4,20 @@ import { FileText, Copy, Check } from "lucide-react"
 
 const FOOTER_KEY = "vt_desc_default_footer"
 
-export const DescriptionEditorWidget = ({
- widget, instance, editMode, onToggleCollapse, onCycleSize, onCycleHeight, onRemove, data,
-}: any) => {
- const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onCycleHeight, onRemove }
+export const DescriptionEditorWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onCycleHeight, onDecSize, onDecHeight, onRemove, data }: any) => {
+ const common = {
+  widget,
+  instance,
+  editMode,
+  canEdit: true,
+  onToggleCollapse,
+  onCycleSize,
+  onCycleHeight,
+  onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
+ }
  const [description, setDescription] = useState("")
  const [footer, setFooter] = useState(() => localStorage.getItem(FOOTER_KEY) || "")
  const [copied, setCopied] = useState(false)

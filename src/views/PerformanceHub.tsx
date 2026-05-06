@@ -15,6 +15,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
   RefreshCw,
   ExternalLink,
   Check,
+  ShieldCheck,
  } from "lucide-react"
 import {
  LineChart,
@@ -126,8 +127,9 @@ import {
  getVideoMetricRuntimeStatus,
 } from "../services/analyticsCapabilityMatrix"
 import { PerformanceHubChartRollout } from "./performanceHub40/PerformanceHubChartRollout"
+import IntelligenceHub from "../components/IntelligenceHub/IntelligenceHub"
 
-type PerformanceTool = "channel-analysis" | "channel"
+type PerformanceTool = "intelligence-lab" | "master-tables" | "channel" | "omni-brain"
 type DataSource = "csv" | "api" | "hybrid"
 
 type DailyPoint = {
@@ -272,6 +274,7 @@ const TABLE_DATASET_CONTRACTS: Record<TableDatasetId, TableDatasetContract> = {
   supportsTagFilter: false,
   columns: [
    "Traffic source",
+   "Viewer %",
    "Views",
    "Watch Hrs",
    "Likes",
@@ -625,12 +628,12 @@ const UPLOAD_TYPE_OPTIONS: Array<{
  label: string
  menuClass: string
 }> = [
- { value: "auto", label: "Auto Detect", menuClass: "bg-[#00CCFF] text-black" },
- { value: "long", label: "Long", menuClass: "bg-[#00CCFF] text-black" },
- { value: "traffic", label: "Traffic", menuClass: "bg-[#CCFF00] text-black" },
- { value: "combined", label: "Combined", menuClass: "bg-[#FFDD00] text-black" },
- { value: "audience", label: "Audience", menuClass: "bg-[#FFB158] text-black" },
- { value: "shorts", label: "Shorts", menuClass: "bg-[#FF7497] text-black" },
+  { value: "auto", label: "Auto Detect", menuClass: "bg-white text-black" },
+  { value: "long", label: "Long Format (Content)", menuClass: "bg-[#00CCFF] text-black" },
+  { value: "traffic", label: "Traffic", menuClass: "bg-[#CCFF00] text-black" },
+  { value: "combined", label: "Combined", menuClass: "bg-[#FFDD00] text-black" },
+  { value: "audience", label: "Audience", menuClass: "bg-[#FFB158] text-black" },
+  { value: "shorts", label: "Shorts (Content)", menuClass: "bg-[#FF7497] text-black" },
  { value: "geo", label: "Geo", menuClass: "bg-[#B14AED] text-white" },
  {
   value: "single_long_video",
@@ -672,7 +675,7 @@ const PerformanceHub: React.FC = () => {
  } = brainContext
 
  const [openTools, setOpenTools] = useState<Set<PerformanceTool>>(
-  () => new Set<PerformanceTool>(["channel-analysis"]),
+  () => new Set<PerformanceTool>(["omni-brain", "intelligence-lab", "master-tables"]),
  )
  const [analysisLoading, setAnalysisLoading] = useState(false)
  const [pipelineLogTick, setPipelineLogTick] = useState(0)
@@ -2308,9 +2311,9 @@ const PerformanceHub: React.FC = () => {
     CTR: ctr,
     } as UnifiedRow
    },
-  )
+  ).reverse()
 
-  const trafficRows = normalizedReportRows(
+  const trafficRowsRaw = normalizedReportRows(
    cache?.trafficSources,
    "traffic",
    "Traffic Sources",
@@ -2333,6 +2336,13 @@ const PerformanceHub: React.FC = () => {
    Impressions: getImpressions(row),
    CTR: getCtr(row),
   })) as UnifiedRow[]
+
+  const trafficTotalViews = trafficRowsRaw.reduce((sum, row) => sum + (row["Views"] as number || 0), 0)
+  
+  const trafficRows = trafficRowsRaw.map(row => ({
+   ...row,
+   "Viewer %": trafficTotalViews > 0 ? ((row["Views"] as number || 0) / trafficTotalViews) * 100 : 0
+  })).sort((a, b) => ((b["Views"] as number) || 0) - ((a["Views"] as number) || 0))
 
   const geographyReport =
    cache?.geography ||
@@ -2756,394 +2766,201 @@ const PerformanceHub: React.FC = () => {
       aria-pressed={active}>
       {opt.label}
      </button>
-    )
+)
    })}
   </div>
  )
 
- const renderDataManager = () => (
-  <div className="space-y-6">
-   <div className="border-[4px] border-black rounded-2xl bg-white overflow-hidden shadow-[8px_8px_0px_0px_black]">
-    <div className="h-[60px] border-b-[4px] border-black flex items-center justify-between px-4 bg-[#FF00F5]">
-     <div className="flex items-center h-full gap-3">
-      <div className="h-full w-[52px] -ml-4 flex items-center justify-center border-r-[4px] border-black bg-black">
-       <Zap size={20} strokeWidth={3.5} className="text-white" />
-      </div>
-      <span className="text-[24px] font-[1000] uppercase tracking-tight text-white">
-       Channel Intelligence Lab
-      </span>
+ const renderDataManager = () => {
+  const stats = selectedMetricSummary
+  return (
+   <div className="space-y-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+     <div className="space-y-3 flex flex-col">
+      <button
+       onClick={() => globalSyncData({ batchMode: "initial" })}
+       disabled={isSyncing}
+       className={`flex-1 min-h-[48px] border-[3px] border-black rounded-xl bg-[#4FFF5B] shadow-[4px_4px_0px_0px_black] font-[1000] uppercase tracking-tight text-[13px] flex items-center justify-center gap-2 transition-all ${
+        isSyncing
+         ? "opacity-50 cursor-not-allowed translate-x-[2px] translate-y-[2px] shadow-[2px_2px_0px_0px_black]"
+         : "active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_black] hover:-translate-y-0.5"
+       }`}>
+       {isSyncing ? (
+        <RefreshCw size={18} strokeWidth={3} className="animate-spin" />
+       ) : (
+        <RefreshCw size={18} strokeWidth={3} />
+       )}
+       Full Sync
+      </button>
+      <button
+       onClick={() => globalSyncData({ batchMode: "append" })}
+       disabled={isSyncing}
+       className={`flex-1 min-h-[48px] border-[3px] border-black rounded-xl bg-[#CCFF00] shadow-[4px_4px_0px_0px_black] font-[1000] uppercase tracking-tight text-[13px] flex items-center justify-center gap-2 transition-all ${
+        isSyncing
+         ? "opacity-50 cursor-not-allowed translate-x-[2px] translate-y-[2px] shadow-[2px_2px_0px_0px_black]"
+         : "active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_black] hover:-translate-y-0.5"
+       }`}>
+       <Database size={16} strokeWidth={3} />
+       Load Next 250
+      </button>
      </div>
-
-     <div className="flex items-center gap-3">
-      <CapsuleToggle
-       ariaLabel="Sync Source"
-       value={syncSourceMode}
-       options={[
-        { id: "api_analytics", label: "API ANALYTICS" },
-        { id: "uploads", label: "UPLOADS" },
-        { id: "both", label: "BOTH" },
-       ]}
-       onChange={(next) => {
-        setSyncSourceMode(next)
-        setStoredSyncSourceMode(next)
-       }}
-      />
-      <CapsuleToggle
-       ariaLabel="Write Target"
-       value={storageMode}
-       options={[
-        { id: "sync", label: "SYNC" },
-        { id: "storage", label: "STORAGE" },
-        { id: "both", label: "BOTH" },
-       ]}
-       onChange={(next) => {
-        setStorageMode(next)
-        setStoredStorageMode(next)
-       }}
-      />
-      <ChevronDown size={22} strokeWidth={4} className="text-black" />
+     <div className="space-y-3 flex flex-col">
+      <div className="relative text-black flex-1 min-h-[48px]" ref={uploadMenuRef}>
+       <button
+        type="button"
+        onClick={() => setUploadMenuOpen((open) => !open)}
+        className="w-full h-full bg-[#24D3FF] border-[3px] border-black rounded-xl px-4 shadow-[4px_4px_0px_0px_black] flex items-center justify-between font-black uppercase text-[12px] tracking-wide hover:-translate-y-0.5 transition-all">
+        <span>{selectedUploadType.label}</span>
+        <ChevronDown
+         size={14}
+         strokeWidth={4}
+         className={uploadMenuOpen ? "rotate-180" : ""}
+        />
+       </button>
+       {uploadMenuOpen && (
+        <div className="absolute top-full left-0 mt-2 w-full bg-white border-[4px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] overflow-hidden z-40 max-h-[280px] overflow-y-auto">
+         {UPLOAD_TYPE_OPTIONS.map((option) => (
+          <button
+           key={option.value}
+           onClick={() => {
+            setPreUploadType(option.value)
+            setUploadMenuOpen(false)
+           }}
+           className={`w-full h-6 px-4 text-left font-black uppercase text-[10px] tracking-widest border-b-[2px] border-black/10 last:border-b-0 hover:bg-gray-50 transition-colors ${option.menuClass}`}>
+           {option.label}
+          </button>
+         ))}
+        </div>
+       )}
+      </div>
+      <button
+       onClick={() => fileInputRef.current?.click()}
+       className="flex-1 min-h-[48px] bg-[#24D3FF] border-[3px] border-black rounded-xl shadow-[4px_4px_0px_0px_black] font-black uppercase text-[12px] tracking-widest flex items-center justify-center gap-3 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_black] transition-all">
+       <Upload size={18} strokeWidth={3} />
+       Upload CSV/ZIP/FOLDER
+      </button>
      </div>
-    </div>
-
-    <div className="p-3 space-y-3 bg-white">
-     <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-      <div className="h-[120px] grid grid-rows-2 gap-2">
-       <button
-        onClick={() => globalSyncData({ batchMode: "initial" })}
-        disabled={isSyncing}
-        className={`border-[3px] border-black rounded-xl bg-[#4FFF5B] shadow-[4px_4px_0px_0px_black] font-[1000] uppercase tracking-tight text-[16px] flex items-center justify-center gap-3 transition-all ${
-         isSyncing
-          ? "opacity-50 cursor-not-allowed translate-x-[2px] translate-y-[2px] shadow-[2px_2px_0px_0px_black]"
-          : "active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_black]"
-        }`}
-       >
-        {isSyncing ? (
-         <RefreshCw size={18} strokeWidth={3} className="animate-spin" />
-        ) : (
-         <RefreshCw size={18} strokeWidth={3} />
-        )}
-        Sync Initial 500
-       </button>
-       <button
-        onClick={() => globalSyncData({ batchMode: "next" })}
-        disabled={isSyncing || !syncBatch.hasMore}
-        className={`border-[3px] border-black rounded-xl bg-[#C9F830] shadow-[4px_4px_0px_0px_black] font-[1000] uppercase tracking-tight text-[14px] flex items-center justify-center gap-2 transition-all ${
-         isSyncing || !syncBatch.hasMore
-          ? "opacity-50 cursor-not-allowed"
-          : "active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_black]"
-        }`}
-       >
-        <Database size={16} strokeWidth={3} />
-        Load Next 250
-       </button>
-      </div>
-
-      <div className="h-[120px] flex flex-col justify-between">
-       <div className="space-y-1">
-        <div className="relative text-black" ref={uploadMenuRef}>
-         <button
-          type="button"
-          onClick={() => setUploadMenuOpen((open) => !open)}
-          className="w-full h-[40px] bg-[#24D3FF] border-[3px] border-black rounded-[10px] px-3 shadow-[2px_2px_0px_0px_black] flex items-center justify-between font-black uppercase text-[12px] tracking-wide"
-          aria-haspopup="listbox"
-          aria-expanded={uploadMenuOpen}
-         >
-          <span>{selectedUploadType.label}</span>
-          <span className="inline-flex items-center justify-center h-[22px] w-[22px] bg-white border-[2px] border-black rounded-md">
-           <ChevronDown
-            size={12}
-            strokeWidth={4}
-            className={`transition-transform ${uploadMenuOpen ? "rotate-180" : ""}`}
-           />
-          </span>
-         </button>
-         {uploadMenuOpen && (
-          <div className="absolute top-full left-0 mt-2 w-full bg-white border-[4px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] overflow-hidden z-40 max-h-[320px] overflow-y-auto">
-           {UPLOAD_TYPE_OPTIONS.map((option, index) => (
-            <button
-             key={option.value}
-             type="button"
-             role="option"
-             aria-selected={option.value === preUploadType}
-             onClick={() => {
-              setPreUploadType(option.value)
-              setUploadMenuOpen(false)
-             }}
-             className={`w-full h-[44px] px-4 text-left font-black uppercase text-[11px] tracking-[0.1em] hover:brightness-95 transition-colors ${option.menuClass} ${
-              index < UPLOAD_TYPE_OPTIONS.length - 1
-               ? "border-b-[3px] border-black/15"
-               : ""
-             }`}
-            >
-             {option.label}
-            </button>
-           ))}
-          </div>
-         )}
-        </div>
-        <div className="text-[10px] font-black uppercase tracking-[0.18em] text-black/40 pl-1">
-         Upload Type
-        </div>
-       </div>
-
-       <button
-        onClick={() => {
-         setUploadMenuOpen(false)
-         fileInputRef.current?.click()
-        }}
-        className="w-full h-[40px] bg-[#24D3FF] border-[3px] border-black rounded-[10px] shadow-[2px_2px_0px_0px_black] font-black uppercase text-[12px] tracking-wide flex items-center justify-center gap-2 active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_black] transition-all"
-       >
-        <Upload size={16} strokeWidth={3} />
-        Upload CSV/ZIP/Folder
-       </button>
-      </div>
-
+     <div className="flex flex-col">
       <button
        onClick={runAnalysis}
        disabled={analysisLoading || filteredUnifiedRows.length === 0}
-       className={`h-[120px] border-[3px] border-black rounded-xl bg-[#FFE357] shadow-[4px_4px_0px_0px_black] font-[1000] uppercase tracking-tight text-[18px] flex items-center justify-center gap-3 transition-all ${
+       className={`w-full h-full min-h-[108px] border-[3px] border-black rounded-xl bg-[#FFE357] shadow-[4px_4px_0px_0px_black] font-[1000] uppercase tracking-tighter text-[18px] flex items-center justify-center gap-4 transition-all ${
         analysisLoading || filteredUnifiedRows.length === 0
-         ? "opacity-50 cursor-not-allowed"
-         : "active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_black]"
-       }`}
-      >
+         ? "opacity-50 cursor-not-allowed translate-x-[2px] translate-y-[2px] shadow-[2px_2px_0px_0px_black]"
+         : "active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_black] hover:-translate-y-1"
+       }`}>
        {analysisLoading ? (
-        <Activity size={20} strokeWidth={3} className="animate-spin" />
+        <Activity size={24} strokeWidth={3.5} className="animate-spin" />
        ) : (
-        <BrainCircuit size={20} strokeWidth={3} />
+        <Zap size={24} strokeWidth={3.5} />
        )}
        Generate Report
       </button>
      </div>
+    </div>
 
-     <div className="border-[3px] border-black rounded-xl h-[48px] bg-[#fcfcfc] flex items-center justify-between px-3 gap-3 overflow-hidden">
-      <div className="flex items-center gap-2 min-w-0">
-       {csvFiles.length === 0 ? (
-        <p className="text-[12px] font-black uppercase tracking-widest text-black/30 truncate">
-         No uploaded data sources yet
-        </p>
-       ) : (
-        <div className="flex items-center gap-2 min-w-0 overflow-hidden">
-         {csvFiles.slice(0, 4).map((file) => (
-          <div
-           key={file.id}
-           className={`inline-flex items-center gap-2 border-[3px] border-black rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider ${getCsvTagColorClass(
-            file.tag,
-           )}`}
-          >
-           <FileText size={12} />
-           <span className="max-w-[220px] truncate">{file.name}</span>
-           <button
-            onClick={() => removeFile(file.id)}
-            className="opacity-80 hover:opacity-100"
-            type="button"
-           >
-            <X size={12} />
-           </button>
-          </div>
-         ))}
-         {csvFiles.length > 4 && (
-          <span className="text-[10px] font-black uppercase tracking-wider text-black/45">
-           +{csvFiles.length - 4} more
-          </span>
-         )}
+    <div className="border-[3px] border-black rounded-xl p-3 bg-white min-h-[50px] flex items-center justify-between">
+     {csvFiles.length === 0 ? (
+      <p className="text-[11px] font-black uppercase tracking-widest text-black/30">
+       NO UPLOADED DATA SOURCES YET
+      </p>
+     ) : (
+      <div className="flex flex-wrap gap-2 flex-1">
+       {csvFiles.map((file) => (
+        <div
+         key={file.id}
+         className={`inline-flex items-center gap-2 border-[2px] border-black rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider ${getCsvTagColorClass(
+          file.tag,
+         )}`}>
+         <span className="max-w-[150px] truncate">{file.name}</span>
+         <button
+          onClick={() => removeFile(file.id)}
+          className="hover:scale-125 transition-transform">
+          <X size={12} strokeWidth={3} />
+         </button>
         </div>
-       )}
+       ))}
       </div>
+     )}
+     <button
+      onClick={clearFiles}
+      className="px-3 py-1.5 border-[2px] border-black rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 flex items-center gap-1 shrink-0 ml-4">
+      <Trash2 size={12} strokeWidth={3} /> Clear All
+     </button>
+    </div>
 
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-y-2 text-[9px] font-black uppercase tracking-widest text-black/40 px-2 mt-2">
+     <p>Data Window: {selectedWindowLabel}</p>
+     <p className="md:text-center">
+      Source Mode: {syncSourceMode.split("_").join(" ")}
+     </p>
+     <p className="md:text-right">
+      Write Target: {storageMode === "both" ? "Sync + Storage" : storageMode}
+     </p>
+     <p>Sync Status: {syncStatus.phase.toUpperCase()}</p>
+     <p className="md:col-span-2 md:text-right">
+      Video Cursor: {syncBatch.cursor.toLocaleString()} · Last Batch:{" "}
+      {syncBatch.lastBatchCount}
+     </p>
+    </div>
+
+    <div className="border-[3px] border-black rounded-xl p-4 bg-white space-y-3">
+     <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-[2px] border-black pb-2 gap-2">
+      <h4 className="text-[11px] font-[1000] uppercase tracking-widest text-black/60">
+       Pipeline Integrity Checks
+      </h4>
       <button
-       onClick={clearFiles}
-       type="button"
-       className="h-[32px] px-4 bg-white border-[3px] border-black rounded-lg text-[10px] font-black uppercase tracking-wider shadow-[2px_2px_0px_0px_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_black] transition-all flex items-center gap-2 shrink-0"
-      >
-       <Trash2 size={14} strokeWidth={3} />
-       Clear All
+       onClick={clearPipelineLogs}
+       className="text-[9px] font-black uppercase tracking-widest opacity-50 hover:opacity-100 flex items-center gap-1">
+       <Trash2 size={10} strokeWidth={3} /> Clear Logs
       </button>
      </div>
 
-     <div className="flex items-center justify-between text-[10px] font-black uppercase text-black/45 tracking-widest px-1 pt-1">
-      <div>
-       Data Window: {selectedWindowLabel}
-       {dataWindowLabel ? ` (${dataWindowLabel})` : ""}
-      </div>
-      <div>
-       Source Mode:{" "}
-       {syncSourceMode === "uploads"
-        ? "Uploads"
-        : syncSourceMode === "api_analytics"
-         ? "API Analytics"
-         : "Both"}
-      </div>
-      <div>
-       Write Target:{" "}
-       {storageMode === "both"
-        ? "Sync + Storage"
-        : storageMode === "sync"
-         ? "Sync"
-         : "Storage"}
-      </div>
-     </div>
-     <div className="flex flex-wrap items-center justify-between text-[10px] font-black uppercase tracking-widest text-black/50 px-1">
-      <span>
-       Sync Status: {syncStatus.phase}
-       {syncStatus.stages.length > 0
-        ? ` · ${syncStatus.stages[syncStatus.stages.length - 1]}`
-        : ""}
-      </span>
-      <span>
-       Video Cursor: {syncBatch.cursor.toLocaleString()} · Last Batch:{" "}
-       {syncBatch.lastBatchCount}
-      </span>
-     </div>
-
-     <div className="border-[3px] border-black rounded-xl p-4 bg-[#fdfdfd] space-y-3">
-      <div className="flex items-center justify-between border-b border-dashed border-black/10 pb-2">
-       <div className="text-[12px] font-black uppercase tracking-widest text-black/55">
-        Pipeline Integrity Checks
-       </div>
-       <button
-        type="button"
-        onClick={clearPipelineLogs}
-        className="text-[10px] font-black uppercase tracking-widest text-black/55 underline flex items-center gap-2"
-       >
-        <Trash2 size={12} strokeWidth={3} />
-        Clear Logs
-       </button>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-       {analyticsGroupStatus.length === 0 ? (
-        <span className="text-[10px] font-black uppercase tracking-widest text-black/35">
-         No integrity checks recorded yet
-        </span>
-       ) : (
-        analyticsGroupStatus.map((group) => (
-         <div
-          key={group.key}
-          title={
-           group.ok
-            ? `${group.key}: OK (${group.metrics.join(", ")})`
-            : `${group.key}: failed (${group.error || "unknown error"})`
-          }
-          className={`px-3 py-1 rounded-lg border-[2px] border-black text-[10px] font-black uppercase tracking-wider shadow-[2px_2px_0px_0px_black] flex items-center gap-2 ${
-           group.ok ? "bg-[#C9F830] text-black" : "bg-[#FF1744] text-white"
-          }`}
-         >
-          {group.ok ? (
-           <Check size={12} strokeWidth={4} />
-          ) : (
-           <X size={12} strokeWidth={4} />
-          )}
-          {group.key.replace(/_/g, " ").toUpperCase()}
-         </div>
-        ))
-       )}
-      </div>
-
-      {analyticsSyncDiagnostics && (
-       <div className="text-[9px] font-black uppercase tracking-wider text-black/55 flex flex-wrap gap-3">
-        <span>
-         Disabled Metrics:{" "}
-         {(analyticsSyncDiagnostics.disabledMetrics || []).length > 0
-          ? (analyticsSyncDiagnostics.disabledMetrics || []).join(", ")
-          : "None"}
-        </span>
-        <span>
-         Failure Events: {(analyticsSyncDiagnostics.failureReasons || []).length}
-        </span>
-        <span>
-         Suppressed Retry Combos:{" "}
-         {(analyticsSyncDiagnostics.knownInvalidCombos || []).length}
-        </span>
-        {impressionsCtrDiagnostic && (
-         <span
-          className={
-           impressionsCtrDiagnostic.status === "error"
-            ? "text-[#b42318]"
-            : "text-[#046c4e]"
-          }
-          title={impressionsCtrDiagnostic.label}
-         >
-          {impressionsCtrDiagnostic.label}
-         </span>
-        )}
-        <span
-         className={
-          videoStatsVerification.mappingStatus === "healthy"
-           ? "text-[#046c4e]"
-           : "text-[#b42318]"
-         }
-         title={`Raw rows: imp ${videoStatsVerification.rawMetricRows.impressions}, ctr ${videoStatsVerification.rawMetricRows.ctr} · mapped rows: imp ${videoStatsVerification.mappedMetricRows.impressions}, ctr ${videoStatsVerification.mappedMetricRows.ctr}`}
-        >
-         Video Stats Check: {verificationStatusLabel(videoStatsVerification.mappingStatus)}
-        </span>
-        <span
-         className={
-          videoStatsVerification.duplicateShortHeaders.length > 0
-           ? "text-[#b42318]"
-           : "text-[#046c4e]"
-         }
-         title={
-          videoStatsVerification.duplicateShortHeaders.length > 0
-           ? `Duplicate short headers: ${videoStatsVerification.duplicateShortHeaders.join(", ")}`
-           : "No duplicate short headers detected."
-         }
-        >
-         Header Dedupe:{" "}
-         {videoStatsVerification.duplicateShortHeaders.length > 0
-         ? videoStatsVerification.duplicateShortHeaders.join(", ")
-         : "OK"}
-        </span>
-        <span
-         className={
-          tableMetricMappingStatus.unmappedMetricKeys.length > 0
-           ? "text-[#b42318]"
-           : "text-[#046c4e]"
-         }
-         title={
-          tableMetricMappingStatus.unmappedMetricKeys.length > 0
-           ? `Unmapped metrics: ${tableMetricMappingStatus.unmappedMetricKeys.join(", ")}`
-           : "All synced metrics are mapped to table headers."
-         }
-        >
-         Mapping:{" "}
-         {tableMetricMappingStatus.unmappedMetricKeys.length > 0
-          ? `${tableMetricMappingStatus.mappedMetricsCount}/${tableMetricMappingStatus.syncedMetricsCount} mapped`
-          : "Complete"}
-        </span>
-        {(videoStatsVerification.mappingStatus === "request_failure" ||
-         videoStatsVerification.mappingStatus === "missing_upstream") && (
-         <span className="text-[#b42318]">
-          CSV Guidance: Import YouTube Studio analytics CSV to fill unavailable thumbnail metrics.
-         </span>
-        )}
-        {creatorContentTypeDiagnostic && (
-         <span
-          className={
-           creatorContentTypeDiagnostic.status === "error"
-            ? "text-[#b42318]"
-            : "text-[#046c4e]"
-          }
-          title={creatorContentTypeDiagnostic.label}
-         >
-          {creatorContentTypeDiagnostic.label}
-         </span>
-        )}
-       </div>
+     <div className="flex flex-wrap gap-2">
+      {analyticsGroupStatus.length === 0 ? (
+       <span className="text-[10px] font-black uppercase tracking-widest text-black/30 italic">
+        No checks performed
+       </span>
+      ) : (
+       analyticsGroupStatus.map((group) => (
+        <div
+         key={group.key}
+         className={`px-3 py-1.5 rounded-lg border-[2px] border-black text-[9px] font-black uppercase tracking-wider flex items-center gap-2 shadow-[2px_2px_0px_0px_black] ${
+          group.ok ? "bg-[#C9F830]" : "bg-[#FF3399] text-white"
+         }`}>
+         {group.ok ? (
+          <Check size={12} strokeWidth={4} />
+         ) : (
+          <X size={12} strokeWidth={4} />
+         )}
+         {group.key.split("_").join(" ")}
+        </div>
+       ))
       )}
      </div>
 
-     <div className="flex items-center justify-end gap-2 text-[10px] font-black uppercase tracking-widest text-black/50 pt-1">
-      <Clock3 size={13} />
-      <span>Last Sync: {formatLastSync(lastSyncComplete)}</span>
+     <div className="mt-4 pt-4 border-t-2 border-black/5">
+      <p className="text-[10px] font-black uppercase tracking-widest text-[#FF3399]">
+       import YouTube studio analytics CSV file to add impressions and click
+       through rates statistics
+      </p>
      </div>
     </div>
+
+    <div className="flex justify-end pt-1">
+     <p className="text-[9px] font-black uppercase tracking-widest text-black/40 flex items-center gap-1">
+      <Clock3 size={10} strokeWidth={3} />
+      LAST SYNC:{" "}
+      {analyticsResult?.meta?.generatedAt
+       ? new Date(analyticsResult.meta.generatedAt).toLocaleString()
+       : "NOT SYNCED YET"}
+     </p>
+    </div>
    </div>
+  )
+ }
 
-  </div>
- )
-
- const renderDataViz = () => {
+const renderDataViz = () => {
   if (filteredUnifiedRows.length === 0 && dailySeries.length === 0) {
    return (
     <div className="border-[4px] border-black rounded-xl bg-white p-10 text-center">
@@ -3558,50 +3375,7 @@ const PerformanceHub: React.FC = () => {
 
  const renderDataTables = () => (
   <div className="space-y-4">
-   <div className="bg-white border-[4px] border-black rounded-2xl overflow-hidden shadow-[8px_8px_0px_0px_black]">
-    <div className="bg-[#EA73E8] border-b-[4px] border-black px-4 py-3 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
-     <div className="flex items-center gap-3">
-      <div className="h-8 w-8 rounded-lg border-[3px] border-black bg-black text-white flex items-center justify-center">
-       <Table2 size={15} />
-      </div>
-      <h3 className="text-2xl font-[1000] uppercase tracking-tight">
-       Master Data Tables
-      </h3>
-     </div>
-     <div className="flex w-full lg:w-auto items-center gap-2">
-      <select
-       value={analyticsWindow}
-       onChange={(event) =>
-        setAnalyticsWindow(event.target.value as AnalyticsWindow)
-       }
-       className="h-10 px-3 border-[3px] border-black rounded-xl text-[10px] font-black uppercase tracking-wider bg-white">
-       <option value="lifetime">Lifetime</option>
-       <option value="365d">365D</option>
-       <option value="90d">90D</option>
-       <option value="28d">28D</option>
-       <option value="7d">7D</option>
-      </select>
-      {activeTableDataset.supportsTagFilter && (
-       <select
-        value={tableTag}
-        onChange={(event) => setTableTag(event.target.value)}
-        className="h-10 px-3 border-[3px] border-black rounded-xl text-[10px] font-black uppercase tracking-wider bg-white">
-        <option value="all">All Tags</option>
-        {distinctTags.map((tag) => (
-         <option key={tag} value={tag}>
-          {tag}
-         </option>
-        ))}
-       </select>
-      )}
-      <input
-       value={tableSearch}
-       onChange={(event) => setTableSearch(event.target.value)}
-       placeholder="Search Data Tables..."
-       className="h-10 w-full lg:w-[280px] px-3 border-[3px] border-black rounded-xl font-black text-xs tracking-wide"
-      />
-     </div>
-    </div>
+
 
     <div className="bg-white border-b-[4px] border-black px-4 py-2 flex flex-wrap items-center gap-2">
      {tableDatasets.map((dataset) => (
@@ -3853,30 +3627,12 @@ const PerformanceHub: React.FC = () => {
      </div>
     </div>
    </div>
-  </div>
- )
+  )
 
  const renderChannelAnalysisToolbox = () => (
   <div className="space-y-6">
-   <SubToolbox
-    title="CHANNEL INTELLIGENCE LAB"
-    icon={<Database size={22} strokeWidth={3} className="text-black" />}
-    headerColor="bg-[#FF3399]"
-    collapsible
-    isOpenInitial
-   >
-    {renderDataManager()}
-   </SubToolbox>
-   <SubToolbox
-    title="MASTER DATA TABLES"
-    icon={<Table2 size={22} strokeWidth={3} className="text-black" />}
-    headerColor="bg-[#EA73E8]"
-    collapsible
-    isOpenInitial
-    unmountOnClose
-   >
-    {renderDataTables()}
-   </SubToolbox>
+   {renderDataManager()}
+   {renderDataTables()}
   </div>
  )
 
@@ -3930,27 +3686,129 @@ const PerformanceHub: React.FC = () => {
       <span>Last sync: {formatLastSync(lastSyncComplete)}</span>
      </div>
     </div>
-   </div>
+  </div>
 
-   <div className="w-full space-y-6">
+  <div className="w-full space-y-8">
     <ToolboxScaffold
-     title="CHANNEL ANALYSIS"
-     icon={<ChartColumnBig size={42} className="text-black" />}
-     headerColor="bg-[#FFB158]"
-     iconBoxColor="bg-[#00CCFF]"
+     title="OMNI-BRAIN MASTER HUB"
+     icon={<BrainCircuit size={42} className="text-[#00CCFF]" />}
+     headerColor="bg-black"
+     textColor="text-[#00CCFF]"
+     iconBoxColor="bg-black"
      collapsible
-     isOpen={openTools.has("channel-analysis")}
+     isOpen={openTools.has("omni-brain")}
      onToggle={() =>
       setOpenTools((previous) => {
        const next = new Set(previous)
-       if (next.has("channel-analysis")) next.delete("channel-analysis")
-       else next.add("channel-analysis")
+       if (next.has("omni-brain")) next.delete("omni-brain")
+       else next.add("omni-brain")
        return next
       })
      }
      disableCollapseAnimation
-     contentClassName="bg-white p-4 md:p-6 lg:p-8 min-h-[620px]">
-     {openTools.has("channel-analysis") && renderChannelAnalysisToolbox()}
+     contentClassName="bg-white p-4 md:p-6 lg:p-8">
+     {openTools.has("omni-brain") && <IntelligenceHub />}
+    </ToolboxScaffold>
+
+    <ToolboxScaffold
+     title="CHANNEL INTELLIGENCE LAB"
+     icon={<Zap size={42} className="text-[#FF3399]" />}
+     headerColor="bg-black"
+     textColor="text-[#FF3399]"
+     iconBoxColor="bg-black"
+     collapsible
+     isOpen={openTools.has("intelligence-lab")}
+     onToggle={() =>
+      setOpenTools((previous) => {
+       const next = new Set(previous)
+       if (next.has("intelligence-lab")) next.delete("intelligence-lab")
+       else next.add("intelligence-lab")
+       return next
+      })
+     }
+     headerActions={
+      <div className="hidden lg:flex items-center gap-4">
+       <CapsuleToggle
+        value={syncSourceMode}
+        options={[
+         { id: "api_analytics", label: "API ANALYTICS" },
+         { id: "uploads", label: "UPLOADS" },
+         { id: "both", label: "BOTH" },
+        ]}
+        onChange={(next) => { setSyncSourceMode(next); setStoredSyncSourceMode(next); }}
+        ariaLabel="Sync Source"
+       />
+       <CapsuleToggle
+        value={storageMode}
+        options={[
+         { id: "sync", label: "SYNC" },
+         { id: "storage", label: "STORAGE" },
+         { id: "both", label: "BOTH" },
+        ]}
+        onChange={(next) => { setStorageMode(next); setStoredStorageMode(next); }}
+        ariaLabel="Write Target"
+       />
+      </div>
+     }
+     disableCollapseAnimation
+     contentClassName="bg-white p-4 md:p-6 lg:p-8">
+     {openTools.has("intelligence-lab") && renderDataManager()}
+    </ToolboxScaffold>
+
+    <ToolboxScaffold
+     title="MASTER DATA TABLES"
+     icon={<Table2 size={42} className="text-black" />}
+     headerColor="bg-[#EA73E8]"
+     iconBoxColor="bg-white"
+     collapsible
+     isOpen={openTools.has("master-tables")}
+     onToggle={() =>
+      setOpenTools((previous) => {
+       const next = new Set(previous)
+       if (next.has("master-tables")) next.delete("master-tables")
+       else next.add("master-tables")
+       return next
+      })
+     }
+     headerActions={
+      <div className="hidden lg:flex items-center gap-2">
+       <select
+        value={analyticsWindow}
+        onChange={(event) =>
+         setAnalyticsWindow(event.target.value as AnalyticsWindow)
+        }
+        className="h-10 px-3 border-[3px] border-black rounded-xl text-[10px] font-black uppercase tracking-wider bg-white">
+        <option value="lifetime">Lifetime</option>
+        <option value="365d">365D</option>
+        <option value="90d">90D</option>
+        <option value="28d">28D</option>
+        <option value="7d">7D</option>
+       </select>
+       {activeTableDataset.supportsTagFilter && (
+        <select
+         value={tableTag}
+         onChange={(event) => setTableTag(event.target.value)}
+         className="h-10 px-3 border-[3px] border-black rounded-xl text-[10px] font-black uppercase tracking-wider bg-white">
+         <option value="all">All Tags</option>
+         {distinctTags.map((tag) => (
+          <option key={tag} value={tag}>
+           {tag}
+          </option>
+         ))}
+        </select>
+       )}
+       <input
+        value={tableSearch}
+        onChange={(event) => setTableSearch(event.target.value)}
+        placeholder="Search Data Tables..."
+        className="h-10 w-full lg:w-[280px] px-3 border-[3px] border-black rounded-xl font-black text-xs tracking-wide"
+       />
+      </div>
+     }
+     disableCollapseAnimation
+     embedded
+     contentClassName="bg-white">
+     {openTools.has("master-tables") && renderDataTables()}
     </ToolboxScaffold>
 
     <ToolboxScaffold

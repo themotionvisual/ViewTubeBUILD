@@ -13,16 +13,87 @@ interface Message {
 
 const STORAGE_KEY = "vt_askme_history"
 
+const FormattedMessage = ({ text }: { text: string }) => {
+ const lines = text.split('\n');
+ const colors = ["#FF3399", "#00D2FF", "#C9F830", "#FFB570", "#4FFF5B", "#B191FF", "#70FFCB"];
+ let catIndex = 0;
+
+ return (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+   {lines.map((line, i) => {
+    let cleanLine = line.trim();
+    if (!cleanLine) return null;
+
+    const mainCatMatch = cleanLine.match(/^\*\*(.+)\*\*$/);
+    if (mainCatMatch) {
+     const color = colors[catIndex % colors.length];
+     catIndex++;
+     const title = mainCatMatch[1].replace(/^\d+\.\s*/, '');
+     return (
+      <div key={i} style={{
+       display: 'inline-flex',
+       alignSelf: 'flex-start',
+       alignItems: 'center',
+       background: color,
+       border: '2px solid #000',
+       borderRadius: '8px',
+       padding: '4px 8px',
+       fontSize: '11px',
+       fontWeight: 900,
+       textTransform: 'uppercase',
+       color: '#000',
+       marginTop: i > 0 ? '6px' : '0',
+       boxShadow: '2px 2px 0 0 rgba(0,0,0,0.25)'
+      }}>
+       {title}
+      </div>
+     );
+    }
+
+    cleanLine = cleanLine.replace(/^[\*\-]\s*/, '');
+
+    const subCatMatch = cleanLine.match(/^\*\*(.+?):\*\*\s*(.*)$/);
+    if (subCatMatch) {
+     const [, subTitle, content] = subCatMatch;
+     const cleanContent = content.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1');
+     return (
+      <div key={i} style={{ fontSize: '11px', lineHeight: 1.4, paddingLeft: '4px' }}>
+       <span style={{ fontWeight: 900, color: 'var(--widget-color, #40C6E9)' }}>{subTitle}: </span>
+       <span style={{ fontWeight: 700, opacity: 0.85 }}>{cleanContent}</span>
+      </div>
+     );
+    }
+
+    const regularClean = cleanLine.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1');
+    return (
+     <div key={i} style={{ fontSize: '11px', fontWeight: 700, opacity: 0.85, lineHeight: 1.4 }}>
+      {regularClean}
+     </div>
+    );
+   })}
+  </div>
+ )
+}
+
 const QUICK_TOPICS = [
  { label: "📈 View Drop-off Analysis", q: "Why are my views dropping? Analyze my recent video performance." },
  { label: "🎬 Hook Strength Audit", q: "Audit the hooks on my top 5 videos. Which ones work and which don't?" },
  { label: "📊 Growth Opportunities", q: "What are my biggest growth opportunities right now based on my analytics?" },
 ]
 
-export const AskMeWidget = ({
- widget, instance, editMode, onToggleCollapse, onCycleSize, onRemove, data,
-}: any) => {
- const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
+export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
+ const common = {
+  widget,
+  instance,
+  editMode,
+  canEdit: true,
+  onToggleCollapse,
+  onCycleSize,
+  onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
+ }
  const ASK_COST = getAiTokenCost("askMeQuestion")
  const entitlement = useEntitlement()
  const canAffordAsk = canAffordAiTokensFromState(entitlement, ASK_COST)
@@ -34,7 +105,7 @@ export const AskMeWidget = ({
  const scrollRef = useRef<HTMLDivElement>(null)
 
  useEffect(() => {
-  scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
+  scrollRef.current?.scrollTo({top: scrollRef.current.scrollHeight, behavior: "smooth", onDecSize, onCycleHeight, onDecHeight})
  }, [messages])
 
  useEffect(() => {
@@ -84,10 +155,11 @@ export const AskMeWidget = ({
         key={i}
         onClick={() => handleSend(t.q)}
         disabled={!canAffordAsk}
+        className="vt-button"
         style={{
-         padding: "8px 10px", background: "#fff", border: "2px solid #000", borderRadius: "8px",
-         fontSize: "11px", fontWeight: 700, cursor: "pointer", textAlign: "left",
-         boxShadow: "2px 2px 0 0 var(--widget-color, rgba(64,198,233,0.3))", transition: "all 0.1s",
+         padding: "8px 10px",
+         fontSize: "11px", fontWeight: 700, textAlign: "left",
+         boxShadow: "2px 2px 0 0 var(--widget-color, rgba(64,198,233,0.3))",
        }}>
         {t.label}
        </button>
@@ -112,9 +184,12 @@ export const AskMeWidget = ({
        borderRadius: "10px",
        fontSize: "11px", fontWeight: 700, lineHeight: 1.4,
        boxShadow: msg.role === "ai" ? "2px 2px 0 0 var(--widget-color, rgba(64,198,233,0.4))" : "2px 2px 0 0 #000",
-       whiteSpace: "pre-wrap",
       }}>
-       {msg.text}
+       {msg.role === "user" ? (
+         <div style={{ whiteSpace: "pre-wrap" }}>{msg.text}</div>
+       ) : (
+         <FormattedMessage text={msg.text} />
+       )}
       </div>
      ))}
      {isThinking && (
@@ -128,7 +203,7 @@ export const AskMeWidget = ({
     {/* Input */}
     <div style={{ display: "flex", gap: "6px", borderTop: "2px solid #000", paddingTop: "8px" }}>
      {messages.length > 0 && (
-      <button onClick={clearHistory} title="Clear history" style={{ width: "32px", height: "36px", border: "2px solid #000", borderRadius: "8px", background: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <button onClick={clearHistory} title="Clear history" className="vt-button" style={{ width: "36px", height: "36px", padding: 0, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
        <Trash2 size={14} opacity={0.5} />
       </button>
      )}
@@ -139,16 +214,16 @@ export const AskMeWidget = ({
       onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend() } }}
       placeholder="Ask anything about your channel..."
       rows={1}
-      style={{ flex: 1, resize: "none", minHeight: "unset" }}
+      style={{ flex: 1, resize: "none", minHeight: "unset", padding: "8px" }}
      />
      <button
       onClick={() => handleSend()}
       disabled={isThinking || !input.trim() || !canAffordAsk}
       title={!canAffordAsk ? (entitlement.tier === "free" ? "Upgrade required for AI." : `Need ${ASK_COST} token.`) : `Ask AI (${ASK_COST}T)`}
+      className="vt-button primary"
       style={{
-       width: "36px", height: "36px", borderRadius: "10px", border: "3px solid #000",
-       background: "var(--widget-color, #40C6E9)", display: "flex", alignItems: "center", justifyContent: "center",
-       cursor: isThinking ? "wait" : "pointer", boxShadow: "2px 2px 0 0 #000", flexShrink: 0,
+       width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center",
+       cursor: isThinking ? "wait" : "pointer", flexShrink: 0, padding: 0,
       }}>
       <Send size={16} />
      </button>

@@ -3,9 +3,58 @@ import { Link } from "react-router-dom"
 import { getMasterRows } from "../services/analyticsSelectors"
 import { applyGlobalRowFilters } from "../services/analyticsRuntime"
 import type { AnalyticsWindow, CanonicalVideoRow } from "../services/analyticsContract"
-import { ShortsRetentionWidgetModule } from "../components/GraphsPageCharts"
+import {
+ ShortsRetentionWidgetModule,
+ SubscribersGained,
+ TopPerformersTrio,
+ VideoValueMatrix,
+ WatchTimeDistribution,
+ RevenueDistribution,
+ Packaging,
+ EngagementMap,
+ PerformanceTrend,
+ DurationSweetSpot,
+ RevenueEfficiency,
+ AudienceGrowth,
+ GoldenRatioRadar,
+ HookEffectiveness,
+ GrowthPulse,
+} from "../components/GraphsPageCharts"
 
 const WINDOWS: AnalyticsWindow[] = ["lifetime", "365d", "90d", "28d", "7d"]
+
+const RevealOnView: React.FC<{ delayMs?: number; children: React.ReactNode }> = ({ delayMs = 0, children }) => {
+ const [visible, setVisible] = useState(false)
+ const [node, setNode] = useState<HTMLDivElement | null>(null)
+
+ useEffect(() => {
+  if (!node) return
+  const observer = new IntersectionObserver(
+   (entries) => {
+    if (entries.some((e) => e.isIntersecting)) {
+     setVisible(true)
+     observer.disconnect()
+    }
+   },
+   { threshold: 0.15 },
+  )
+  observer.observe(node)
+  return () => observer.disconnect()
+ }, [node])
+
+ return (
+  <div
+   ref={setNode}
+   style={{
+    opacity: visible ? 1 : 0,
+    transform: visible ? "translateY(0px)" : "translateY(14px)",
+    transition: `opacity 420ms ease, transform 420ms ease`,
+    transitionDelay: `${delayMs}ms`,
+   }}>
+   {children}
+  </div>
+ )
+}
 
 const GraphsShortsRetentionPage: React.FC = () => {
  const [win, setWin] = useState<AnalyticsWindow>("365d")
@@ -79,11 +128,60 @@ const GraphsShortsRetentionPage: React.FC = () => {
      {error}
     </div>
    ) : (
-    <ShortsRetentionWidgetModule data={data} />
+    <div className="flex flex-col gap-6">
+     <RevealOnView>
+      <ShortsRetentionWidgetModule data={data} />
+     </RevealOnView>
+     <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <RevealOnView delayMs={30}>
+       <VideoValueMatrix data={data} />
+      </RevealOnView>
+      <RevealOnView delayMs={60}>
+       <TopPerformersTrio data={data} />
+      </RevealOnView>
+      <RevealOnView delayMs={90}>
+       <SubscribersGained data={data} />
+      </RevealOnView>
+      <RevealOnView delayMs={120}>
+       <WatchTimeDistribution data={data} />
+      </RevealOnView>
+      <RevealOnView delayMs={150}>
+       <RevenueDistribution data={data} />
+      </RevealOnView>
+     </section>
+     <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <RevealOnView delayMs={180}>
+       <Packaging data={data} />
+      </RevealOnView>
+      <RevealOnView delayMs={210}>
+       <EngagementMap data={data} />
+      </RevealOnView>
+      <RevealOnView delayMs={240}>
+       <PerformanceTrend data={data} />
+      </RevealOnView>
+      <RevealOnView delayMs={270}>
+       <DurationSweetSpot data={data} />
+      </RevealOnView>
+      <RevealOnView delayMs={300}>
+       <RevenueEfficiency data={data} />
+      </RevealOnView>
+      <RevealOnView delayMs={330}>
+       <AudienceGrowth data={data} />
+      </RevealOnView>
+      <RevealOnView delayMs={360}>
+       <GoldenRatioRadar data={data} />
+      </RevealOnView>
+      <RevealOnView delayMs={390}>
+       <HookEffectiveness data={data} />
+      </RevealOnView>
+      <RevealOnView delayMs={420}>
+       <GrowthPulse data={data} />
+      </RevealOnView>
+     </section>
+    </div>
    )}
   </div>
  )
 }
 
 export default GraphsShortsRetentionPage
-

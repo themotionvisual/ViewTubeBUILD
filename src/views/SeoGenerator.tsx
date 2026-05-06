@@ -22,7 +22,8 @@ import { useBrain } from "../context/GlobalDataContext"
 import { ToolboxScaffold } from "../components/Toolbox"
 import { sheetsService } from "../services/sheetsService"
 import { nexusSyncService } from "../services/nexusSyncService"
-import { SubToolbox } from "../components/Toolbox"
+import { SubToolbox, StandardUploadBox, StandardTextArea } from "../components/Toolbox"
+import { PostActionReflection } from "../components/PostActionReflection"
 
 // --- Sub-components (The "Pop" Style) ---
 const CopyBox: React.FC<{
@@ -126,77 +127,64 @@ const ConsolidatedCopyBox: React.FC<{
  )
 }
 
-interface SeoGeneratorProps {
- embedded?: boolean
+// --- Main Page Component ---
+const SeoGenerator: React.FC<{
+ paletteIndex?: number
  collapsible?: boolean
  isOpenInitial?: boolean
- paletteIndex?: number
-}
-
-const SeoGenerator: React.FC<SeoGeneratorProps> = ({
- embedded = false,
+ embedded?: boolean
+}> = ({
+ paletteIndex = 3,
  collapsible = false,
  isOpenInitial = true,
- paletteIndex,
+ embedded = false,
 }) => {
- const basePalette = paletteIndex ?? 0
- const {
-  brain,
-  updateBrain,
-  registerProvider,
-  unregisterProvider,
-  setSeoState,
-  authState,
- } = useBrain()
+ const [isOpen, setIsOpen] = useState(isOpenInitial)
  const [loading, setLoading] = useState(false)
+ const [concept, setConcept] = useState("")
+ const [niche, setNiche] = useState("")
+ const [audience, setAudience] = useState("")
+ const [videoLength, setVideoLength] = useState("")
+ const [channelHandle, setChannelHandle] = useState("")
+ const [durationStats, setDurationStats] = useState("")
+ const [resourceLinks, setResourceLinks] = useState("")
+ const [script, setScript] = useState("")
  const [result, setResult] = useState<SeoResult | null>(null)
+ const [missingFields, setMissingFields] = useState({
+  concept: false,
+  niche: false,
+ })
+ const [formatMode, setFormatMode] = useState<"longform" | "shorts">("longform")
+ const [scopeMode, setScopeMode] = useState<"single" | "bulk">("single")
  const [isExporting, setIsExporting] = useState(false)
  const [isSyncing, setIsSyncing] = useState(false)
  const [exportUrl, setExportUrl] = useState<string | null>(null)
 
- // Local state for the form, but synchronized with Brain where appropriate
- const [concept, setConcept] = useState(brain.coreConcept)
- const [niche, setNiche] = useState(brain.targetNiche)
- const [audience, setAudience] = useState("")
- const [script, setScript] = useState("")
- const [videoLength, setVideoLength] = useState("10:00")
- const [channelHandle, setChannelHandle] = useState("https://youtube.com/@yourchannel")
- const [resourceLinks, setResourceLinks] = useState("")
- const [durationStats, setDurationStats] = useState("Avg. Views")
- const [formatMode, setFormatMode] = useState<"longform" | "shorts">("longform")
- const [scopeMode, setScopeMode] = useState<"single" | "bulk">("single")
- const [isOpen, setIsOpen] = useState(isOpenInitial)
- const [missingFields, setMissingFields] = useState({ concept: false, niche: false })
+ const { setSeoState, authState } = useBrain()
 
- useEffect(() => {
-  registerProvider("SEO_GENERATOR")
-  return () => unregisterProvider("SEO_GENERATOR")
-  // eslint-disable-next-line react-hooks/exhaustive-deps
- }, [])
+ const basePalette = paletteIndex
 
  const handleGenerate = async () => {
-  if (!concept || !niche) {
-   setMissingFields({ concept: !concept, niche: !niche })
+  if (!concept.trim() || !niche.trim()) {
+   setMissingFields({
+    concept: !concept.trim(),
+    niche: !niche.trim(),
+   })
    return
   }
+
   setLoading(true)
   try {
-   // Sync core concept and niche to brain before generating
-   updateBrain({ coreConcept: concept, targetNiche: niche })
-
    const data = await generateSeoData(
     concept,
     niche,
     script,
-    "", // stats
+    durationStats,
     videoLength,
     channelHandle,
     resourceLinks,
-    formatMode === "longform" ? "Longform" : "Shorts",
-    undefined, // plan
-    brain,
+    formatMode === "shorts" ? "Shorts" : "Longform"
    )
-
    setResult(data)
 
    // EXTREMELY CRITICAL: Push "Winning" state to Global Brain
@@ -261,7 +249,7 @@ const SeoGenerator: React.FC<SeoGeneratorProps> = ({
 
  return (
   <ToolboxScaffold
-   title="VIDEO PUBLISHER"
+   title="SEO GENERATOR"
    subtitle="Create SEO optimized titles, descriptions, tags + more for all your new + published content"
    icon={<Zap size={40} strokeWidth={3} className="text-black" />}
    headerColor="bg-[#CCFF00]"
@@ -318,38 +306,30 @@ const SeoGenerator: React.FC<SeoGeneratorProps> = ({
    {!result ? (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-     <SubToolbox
-      title="Video Upload"
-      icon={<Upload size={20} strokeWidth={3} />}
-      paletteIndex={basePalette + 1}
-      collapsible
-      isOpenInitial={true}
-     >
-       <div className="h-[220px] border-[4px] border-black rounded-2xl bg-[#F5F5F5] flex flex-col items-center justify-center text-center">
-        <div className="w-16 h-16 bg-white border-[4px] border-black rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px_black]">
-         <Upload size={30} />
-        </div>
-        <p className="mt-5 font-black uppercase text-2xl tracking-tight">
-         Upload Video
-        </p>
-        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-black/40 mt-2">
-         Supports video/audio (max 15mb)
-        </p>
-       </div>
+      <SubToolbox
+       title="Video Upload"
+       icon={<Upload size={20} strokeWidth={3} />}
+       paletteIndex={basePalette + 1}
+       collapsible
+       isOpenInitial={true}>
+       <StandardUploadBox 
+        label="UPLOAD VIDEO\\nSupports video/audio (max 15mb)" 
+        minHeight="220px" 
+        iconBgColor="#FF3399" 
+       />
       </SubToolbox>
 
-     <SubToolbox
-      title="Video Script"
-      icon={<FileText size={20} strokeWidth={3} />}
-      paletteIndex={basePalette + 2}
-      collapsible
-      isOpenInitial={true}
-     >
-       <textarea
+      <SubToolbox
+       title="Video Script"
+       icon={<FileText size={20} strokeWidth={3} />}
+       paletteIndex={basePalette + 2}
+       collapsible
+       isOpenInitial={true}>
+       <StandardTextArea
         value={script}
         onChange={(e) => setScript(e.target.value)}
         placeholder="Paste your script here..."
-        className="w-full h-56 p-4 border-[4px] border-black rounded-xl font-bold text-sm resize-none outline-none bg-[#F5F5F5] focus:bg-white"
+        minHeight="220px"
        />
       </SubToolbox>
      </div>
@@ -359,8 +339,7 @@ const SeoGenerator: React.FC<SeoGeneratorProps> = ({
       icon={<Sparkles size={20} strokeWidth={3} />}
       paletteIndex={basePalette + 3}
       collapsible
-      isOpenInitial={true}
-     >
+      isOpenInitial={true}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
        <div className="space-y-2">
         <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
@@ -371,7 +350,8 @@ const SeoGenerator: React.FC<SeoGeneratorProps> = ({
          value={concept}
          onChange={(e) => {
           setConcept(e.target.value)
-          if (missingFields.concept) setMissingFields((prev) => ({ ...prev, concept: false }))
+          if (missingFields.concept)
+           setMissingFields((prev) => ({ ...prev, concept: false }))
          }}
          placeholder="What happens in the video?"
          className={`w-full h-12 p-3 border-[3px] border-black rounded-xl font-bold text-sm outline-none bg-[#F5F5F5] ${missingFields.concept ? "ring-4 ring-[#FF8AAF]/60" : ""}`}
@@ -386,7 +366,8 @@ const SeoGenerator: React.FC<SeoGeneratorProps> = ({
          value={niche}
          onChange={(e) => {
           setNiche(e.target.value)
-          if (missingFields.niche) setMissingFields((prev) => ({ ...prev, niche: false }))
+          if (missingFields.niche)
+           setMissingFields((prev) => ({ ...prev, niche: false }))
          }}
          placeholder="History Channel"
          className={`w-full h-12 p-3 border-[3px] border-black rounded-xl font-bold text-sm outline-none bg-[#F5F5F5] ${missingFields.niche ? "ring-4 ring-[#FF8AAF]/60" : ""}`}
@@ -406,7 +387,7 @@ const SeoGenerator: React.FC<SeoGeneratorProps> = ({
        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
        <div className="space-y-2">
         <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
          Video Length
@@ -445,7 +426,7 @@ const SeoGenerator: React.FC<SeoGeneratorProps> = ({
        </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2 mt-4">
        <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
         Description Link
        </label>
@@ -457,22 +438,21 @@ const SeoGenerator: React.FC<SeoGeneratorProps> = ({
         className="w-full h-12 p-3 border-[3px] border-black rounded-xl font-bold text-sm outline-none bg-[#F5F5F5]"
        />
       </div>
-
      </SubToolbox>
 
      {!hasGeminiKey() ? (
-       <button
-        onClick={() => (window.location.href = "/settings")}
-        className="w-full bg-black text-[#FFFF61] border-[4px] border-black h-14 rounded-xl flex items-center justify-center gap-3 font-[1000] uppercase text-lg tracking-tight shadow-[5px_5px_0px_0px_transparent] hover:shadow-[5px_5px_0px_0px_#FFFF61] hover:-translate-y-1 transition-all">
-        <Zap size={24} /> Missing AI Key: Connect in Settings
-       </button>
+      <button
+       onClick={() => (window.location.href = "/settings")}
+       className="w-full bg-black text-[#FFFF61] border-[4px] border-black h-14 rounded-xl flex items-center justify-center gap-3 font-[1000] uppercase text-lg tracking-tight shadow-[5px_5px_0px_0px_transparent] hover:shadow-[5px_5px_0px_0px_#FFFF61] hover:-translate-y-1 transition-all">
+       <Zap size={24} /> Missing AI Key: Connect in Settings
+      </button>
      ) : (
-       <button
-        onClick={handleGenerate}
-        className="w-full bg-[#FF8AAF] text-black border-[4px] border-black h-14 rounded-xl shadow-[5px_5px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex items-center justify-center gap-3 font-[1000] uppercase text-lg tracking-tight">
-        {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
-        {loading ? "Generating..." : "Generate All Assets"}
-       </button>
+      <button
+       onClick={handleGenerate}
+       className="w-full bg-[#FF8AAF] text-black border-[4px] border-black h-14 rounded-xl shadow-[5px_5px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex items-center justify-center gap-3 font-[1000] uppercase text-lg tracking-tight">
+       {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
+       {loading ? "Generating..." : "Generate All Assets"}
+      </button>
      )}
     </div>
    ) : (
@@ -566,6 +546,9 @@ const SeoGenerator: React.FC<SeoGeneratorProps> = ({
        </div>
       </div>
      </div>
+
+     {/* Brain Reflection UI */}
+     <PostActionReflection toolId="SEO_GENERATOR" />
     </div>
    )}
   </ToolboxScaffold>

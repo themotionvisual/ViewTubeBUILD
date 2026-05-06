@@ -10,14 +10,14 @@
 .dashboard-barrier {
   --gap: 12px;
   --padding: 12px;
-  --stroke: 3px;
+  --stroke: 4px;
   --radius: 12px;
   --base-height: 32px;
   --scaffold-stroke: 4px;
   --header-height: 40px;
   --control-height: 40px;
   --rail-size: 40px;
-  --shadow-offset: 4px;
+  --shadow-offset: 6px;
   --transition: 400ms cubic-bezier(0.4, 0, 0.2, 1);
   --bg-page: transparent;
   --bg-scaffold: #ffffff;
@@ -32,8 +32,8 @@
   font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
-/* ═══ SUBTOOLBOX (Canonical Widget Shell) ═══ */
-.dashboard-barrier .subtoolbox {
+/* ═══ VT WIDGET (Canonical Widget Shell) ═══ */
+.dashboard-barrier .vt-widget {
   width: 100%;
   height: 100%;
   background: var(--bg-widget);
@@ -42,29 +42,30 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  /* Dynamic stroke color - 30% darker than base */
-  border: var(--stroke) solid color-mix(in srgb, var(--widget-color, #000) 60%, black);
+  /* 3PX exterior border colored dark based on widget color */
+  border: 3px solid color-mix(in srgb, var(--widget-color, #000) 60%, black);
   border-radius: var(--radius);
   transition: all var(--transition);
-  /* Dynamic shadow */
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px color-mix(in srgb, var(--widget-color, #000) 40%, transparent);
+  /* Dynamic shadow — Color matched to header */
+  box-shadow: 3px 3px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent);
 }
 
-.dashboard-barrier .subtoolbox-header {
+.dashboard-barrier .vt-widget-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: var(--header-height);
   min-height: var(--header-height);
   background-color: var(--widget-color, #40C6E9);
-  border-bottom: var(--stroke) solid color-mix(in srgb, var(--widget-color, #000) 60%, black);
+  /* 3PX interior borders colored dark */
+  border-bottom: 3px solid color-mix(in srgb, var(--widget-color, #000) 60%, black);
   user-select: none;
   position: relative;
   z-index: 20;
   transition: all var(--transition);
 }
 
-.dashboard-barrier .subtoolbox-header .left {
+.dashboard-barrier .vt-widget-header .left {
   display: flex;
   align-items: center;
   height: 100%;
@@ -80,15 +81,16 @@
   justify-content: center;
   /* Lighter version of title box */
   background-color: rgba(255, 255, 255, 0.35);
-  border-right: var(--stroke) solid color-mix(in srgb, var(--widget-color, #000) 60%, black);
+  border-right: 3px solid color-mix(in srgb, var(--widget-color, #000) 60%, black);
   flex-shrink: 0;
+  color: color-mix(in srgb, var(--widget-color, #000) 60%, black);
 }
 
-.dashboard-barrier .subtoolbox-header .title {
+.dashboard-barrier .vt-widget-header .title {
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: -0.04em;
-  color: #000;
+  color: color-mix(in srgb, var(--widget-color, #000) 60%, black);
   line-height: 0.9;
   font-size: 17px;
   padding-left: 10px;
@@ -100,7 +102,7 @@
   height: 100%;
 }
 
-.dashboard-barrier .subtoolbox-header .toggle {
+.dashboard-barrier .vt-widget-header .toggle {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -108,15 +110,15 @@
   height: 100%;
 }
 
-.dashboard-barrier .subtoolbox-content {
-  margin-top: calc(-1 * var(--stroke));
+.dashboard-barrier .vt-widget-content {
+  margin-top: -3px;
   display: flex;
   flex-direction: column;
   flex: 1;
   overflow: hidden;
 }
 
-.dashboard-barrier .subtoolbox-body {
+.dashboard-barrier .vt-widget-body {
   background: var(--bg-widget);
   padding: 10px;
   color: var(--text-main);
@@ -128,13 +130,13 @@
 }
 
 /* Kill ALL scrollbars inside widgets */
-.dashboard-barrier .subtoolbox,
-.dashboard-barrier .subtoolbox * {
+.dashboard-barrier .vt-widget,
+.dashboard-barrier .vt-widget * {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-.dashboard-barrier .subtoolbox::-webkit-scrollbar,
-.dashboard-barrier .subtoolbox *::-webkit-scrollbar {
+.dashboard-barrier .vt-widget::-webkit-scrollbar,
+.dashboard-barrier .vt-widget *::-webkit-scrollbar {
   display: none;
 }
 
@@ -150,21 +152,25 @@
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #000;
-  box-shadow: 2px 2px 0px 0px color-mix(in srgb, var(--widget-color, #000) 40%, black);
+  color: color-mix(in srgb, var(--widget-color, #000) 60%, black);
+  box-shadow: none;
   flex-shrink: 0;
   padding: 0;
 }
 
+.dashboard-barrier .widget-header-btn svg {
+  stroke-width: 2px;
+}
+
 .dashboard-barrier .widget-header-btn:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px 0px color-mix(in srgb, var(--widget-color, #000) 40%, black);
+  transform: none;
   background-color: rgba(255, 255, 255, 0.5);
+  box-shadow: none;
 }
 
 .dashboard-barrier .widget-header-btn:active {
-  transform: translate(1px, 1px);
-  box-shadow: 0px 0px 0px 0px black;
+  transform: scale(0.95);
+  box-shadow: none;
 }
 
 .dashboard-barrier .widget-header-btn.ai-btn {
@@ -175,7 +181,7 @@
   opacity: 0.45;
   cursor: not-allowed;
   transform: none;
-  box-shadow: 1px 1px 0px 0px color-mix(in srgb, var(--widget-color, #000) 40%, black);
+  box-shadow: none;
 }
 
 .dashboard-barrier .widget-ai-cost-chip {
@@ -252,26 +258,150 @@
 
 /* ═══ UNIFIED INPUT SYSTEM ═══ */
 .dashboard-barrier .vt-input,
-.dashboard-barrier .vt-textarea,
-.dashboard-barrier .vt-select {
+.dashboard-barrier .vt-textarea {
+  box-sizing: border-box;
   width: 100%;
-  padding: 8px 10px;
-  border: 3px solid #000;
+  padding: 10px 14px;
+  border: 2px solid var(--widget-color, #00CCFF);
   border-radius: 6px;
   background: #fff;
   font-size: 12px;
   font-weight: 700;
   font-family: inherit;
-  color: #000;
+  color: color-mix(in srgb, var(--widget-color, #000) 60%, black);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .dashboard-barrier .vt-input:focus,
-.dashboard-barrier .vt-textarea:focus,
-.dashboard-barrier .vt-select:focus {
+.dashboard-barrier .vt-textarea:focus {
   border-color: var(--widget-color, #00CCFF);
-  box-shadow: 3px 3px 0 var(--widget-color, #00CCFF);
+  box-shadow: inset 0 0 0 1px var(--widget-color, #00CCFF);
+  outline: none;
+}
+
+.dashboard-barrier .vt-select {
+  width: 100%;
+  height: 28px;
+  padding: 0 10px;
+  border: 2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black);
+  border-radius: 8px;
+  background: var(--widget-color, #00CCFF);
+  color: #000;
+  font-size: 10px;
+  font-weight: 900;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  outline: none;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 0 color-mix(in srgb, var(--widget-color, #000) 40%, transparent);
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 28px;
+}
+
+.dashboard-barrier .vt-select:focus {
+  box-shadow: none;
+  transform: translate(2px, 2px);
+}
+
+/* ═══ CUSTOM DROPDOWN ═══ */
+.dashboard-barrier .vt-dropdown {
+  position: relative;
+  width: 100%;
+  user-select: none;
+}
+
+.dashboard-barrier .vt-dropdown-trigger {
+  height: 28px;
+  width: 100%;
+  border: 2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black);
+  border-radius: 8px;
+  background: var(--widget-color, #00CCFF);
+  color: #000;
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--widget-color, #000) 40%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  cursor: pointer;
+  font: 900 10px/1 "Inter", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  position: relative;
+  z-index: 3;
+  transition: transform 90ms linear, box-shadow 90ms linear;
+}
+
+.dashboard-barrier .vt-dropdown-trigger:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.dashboard-barrier .vt-dropdown.active .vt-dropdown-trigger {
+  box-shadow: none;
+  border-radius: 8px 8px 0 0;
+  transform: none;
+}
+
+.dashboard-barrier .vt-dropdown-menu {
+  position: absolute;
+  top: calc(100% - 2px);
+  left: 0;
+  width: 100%;
+  max-height: 110px;
+  overflow-y: auto;
+  border: 2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black);
+  border-top: 2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black);
+  border-radius: 0 0 8px 8px;
+  background: #fff;
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--widget-color, #000) 40%, transparent);
+  display: none;
+  z-index: 20;
+}
+
+.dashboard-barrier .vt-dropdown.active .vt-dropdown-menu {
+  display: block;
+}
+
+.dashboard-barrier .vt-dropdown-item {
+  min-height: 30px;
+  border-bottom: 1px solid rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font: 900 9px/1 "Inter", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  background: #fff;
+  color: #000;
+}
+
+.dashboard-barrier .vt-dropdown-item:last-child {
+  border-bottom: 0;
+}
+
+.dashboard-barrier .vt-dropdown-item:hover {
+  background: color-mix(in srgb, var(--widget-color, #00CCFF) 35%, #fff 65%);
+}
+
+.dashboard-barrier .vt-dropdown-menu::-webkit-scrollbar {
+  width: 6px;
+}
+.dashboard-barrier .vt-dropdown-menu::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-left: 1px solid rgba(0,0,0,0.1);
+  border-radius: 0 0 8px 0;
+}
+.dashboard-barrier .vt-dropdown-menu::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--widget-color, #00CCFF) 50%, black);
+  border-radius: 4px;
 }
 
 /* CUSTOM RESIZER */
@@ -311,27 +441,28 @@
 .dashboard-barrier .vt-button {
   padding: 8px 16px;
   background: #fff;
-  border: 3px solid #000;
+  border: 2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black);
   border-radius: 6px;
   font-weight: 900;
   text-transform: uppercase;
+  color: color-mix(in srgb, var(--widget-color, #000) 60%, black);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   transition: all 0.2s ease;
-  box-shadow: 3px 3px 0px 0px #000;
+  box-shadow: 3px 3px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent);
 }
 
 .dashboard-barrier .vt-button:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0px 0px #000;
+  transform: translate(1.5px, 1.5px);
+  box-shadow: 1.5px 1.5px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent);
 }
 
 .dashboard-barrier .vt-button:active {
-  transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0px 0px #000;
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent);
 }
 
 /* Primary buttons use the widget's color */
@@ -348,7 +479,7 @@
 .dashboard-barrier .vt-button svg {
   width: 18px;
   height: 18px;
-  stroke-width: 3px;
+  stroke-width: 2px;
 }
 
 .dashboard-barrier .community-post-options .vt-button svg {
@@ -393,7 +524,7 @@
 
 /* ═══ DASHBOARD HEADER MODULE ═══ */
 .dashboard-header {
-  position: sticky;
+  position: relative;
   top: 0;
   z-index: 100;
   display: flex;
@@ -414,22 +545,22 @@
 }
 
 .dashboard-header-bar {
-  height: 96px;
+  height: 110px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 24px;
   background: #fff;
   border-bottom: 3px solid #000;
 }
 
 .dashboard-header-ticker {
-  height: 28px;
+  height: 36px;
   display: flex;
   align-items: center;
   overflow: hidden;
   border-radius: 0 0 9px 9px;
-  background: linear-gradient(90deg, #40C6E9, #579AFF);
+  background: #fff;
 }
 
 .vt-header-btn {
@@ -463,4 +594,43 @@
 @keyframes marqueeScroll {
   0% { transform: translateX(0); }
   100% { transform: translateX(-100%); }
+}
+
+/* ═══ TAB SELECTORS ═══ */
+.dashboard-barrier .vt-tab-group {
+  display: flex;
+  gap: 2px;
+  background: #f5f5f5;
+  padding: 3px;
+  border-radius: 8px;
+  border: 2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black);
+}
+
+.dashboard-barrier .vt-tab-btn {
+  flex: 1;
+  padding: 4px 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 8px;
+  font-weight: 900;
+  text-transform: uppercase;
+  transition: all 0.15s ease;
+  color: color-mix(in srgb, var(--widget-color, #000) 60%, black);
+}
+
+.dashboard-barrier .vt-tab-btn svg {
+  stroke-width: 2px;
+}
+
+.dashboard-barrier .vt-tab-btn.active {
+  background: var(--widget-color, #FFB570);
+  border-color: color-mix(in srgb, var(--widget-color, #000) 60%, black);
+  box-shadow: 1px 1px 0px 0px color-mix(in srgb, var(--widget-color, #000) 60%, black);
 }

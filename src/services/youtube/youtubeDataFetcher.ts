@@ -245,9 +245,15 @@ export const fetchVideoStats = async (
 type VideoDetailsCacheEntry = {
  description: string
  tags: string[]
+ categoryId?: string
+ categoryName?: string
+ defaultLanguage?: string
+ defaultAudioLanguage?: string
+ authScopeUsed?: "public" | "channel_owner" | "content_owner"
  fetchedAt: number
 }
 const VIDEO_DETAILS_CACHE_KEY = "vt_video_details_cache_v1"
+const VIDEO_CATEGORY_TAXONOMY_KEY = "vt_video_category_taxonomy_us"
 const VIDEO_DETAILS_CACHE_LIMIT = 200
 
 const safeParseJson = <T>(raw: string | null, fallback: T): T => {
@@ -286,12 +292,43 @@ const saveVideoDetailsCache = (
 
 export const fetchVideoSnippetDetails = async (
  videoIds: string[],
-): Promise<Record<string, { description: string; tags: string[] }>> => {
+): Promise<
+ Record<
+  string,
+  {
+   description: string
+   tags: string[]
+   categoryId?: string
+   categoryName?: string
+   defaultLanguage?: string
+   defaultAudioLanguage?: string
+   authScopeUsed?: "public" | "channel_owner" | "content_owner"
+  }
+ >
+> => {
  const token = await refreshTokenIfExpired()
  if (!token) return {}
 
  const cache = loadVideoDetailsCache()
- const out: Record<string, { description: string; tags: string[] }> = {}
+ const out: Record<
+  string,
+  {
+   description: string
+   tags: string[]
+   categoryId?: string
+   categoryName?: string
+   defaultLanguage?: string
+   defaultAudioLanguage?: string
+   authScopeUsed?: "public" | "channel_owner" | "content_owner"
+  }
+ > = {}
+
+ let categoryTaxonomy: Record<string, string> = {}
+ try {
+  categoryTaxonomy = JSON.parse(localStorage.getItem(VIDEO_CATEGORY_TAXONOMY_KEY) || "{}") as Record<string, string>
+ } catch {
+  categoryTaxonomy = {}
+ }
 
  const needed = Array.from(
   new Set(videoIds.map((id) => String(id || "").trim()).filter(Boolean)),
@@ -305,7 +342,17 @@ export const fetchVideoSnippetDetails = async (
   const key = String(id || "").trim()
   if (!key) return
   const cached = cache[key]
-  if (cached) out[key] = { description: cached.description, tags: cached.tags }
+  if (cached) {
+   out[key] = {
+    description: cached.description,
+    tags: cached.tags,
+    categoryId: cached.categoryId,
+    categoryName: cached.categoryName,
+    defaultLanguage: cached.defaultLanguage,
+    defaultAudioLanguage: cached.defaultAudioLanguage,
+    authScopeUsed: cached.authScopeUsed || "channel_owner",
+   }
+  }
  })
 
  for (let i = 0; i < needed.length; i += 50) {
@@ -324,13 +371,31 @@ export const fetchVideoSnippetDetails = async (
    const id = String(item.id || "")
    if (!id) return
    const description = String(item.snippet?.description || "")
+   const categoryId = String(item.snippet?.categoryId || "")
    const tags =
     Array.isArray(item.snippet?.tags) ?
      item.snippet.tags.map((t: any) => String(t || "")).filter(Boolean)
     : []
 
-   out[id] = { description, tags }
-   cache[id] = { description, tags, fetchedAt: Date.now() }
+   out[id] = {
+    description,
+    tags,
+    categoryId,
+    categoryName: categoryTaxonomy[categoryId] || undefined,
+    defaultLanguage: item.snippet?.defaultLanguage || undefined,
+    defaultAudioLanguage: item.snippet?.defaultAudioLanguage || undefined,
+    authScopeUsed: "channel_owner",
+   }
+   cache[id] = {
+    description,
+    tags,
+    categoryId,
+    categoryName: categoryTaxonomy[categoryId] || undefined,
+    defaultLanguage: item.snippet?.defaultLanguage || undefined,
+    defaultAudioLanguage: item.snippet?.defaultAudioLanguage || undefined,
+    authScopeUsed: "channel_owner",
+    fetchedAt: Date.now(),
+   }
   })
  }
 
@@ -566,6 +631,65 @@ export const updateVideoThumbnail = async (
  return response.json()
 }
 
+export const uploadVideo = async (file: File, details: any) => {
+ const token = await refreshTokenIfExpired()
+ if (!token) throw new Error("Unauthorized to upload video")
+
+ const metadata = {
+  snippet: {
+   title: details.title || "Untitled Video",
+   description: details.description || "",
+   tags: details.tags || [],
+   categoryId: details.categoryId || "22", // Default to People & Blogs
+   defaultLanguage: details.defaultLanguage || "en",
+   defaultAudioLanguage: details.defaultAudioLanguage || "en",
+  },
+  status: {
+   privacyStatus: details.privacyStatus || "private",
+   madeForKids: details.madeForKids || false,
+   embeddable: details.embeddable !== false,
+   publicStatsViewable: details.publicStatsViewable !== false,
+   license: details.license || "youtube",
+  },
+  recordingDetails: {
+   recordingDate: details.recordingDate || undefined,
+   locationDescription: details.locationDescription || undefined,
+  }
+ }
+
+ const boundary = "-------314159265358979323846"
+ const delimiter = "\r\n--" + boundary + "\r\n"
+ const close_delim = "\r\n--" + boundary + "--"
+
+ const multipartRequestBody =
+  delimiter +
+  "Content-Type: application/json\r\n\r\n" +
+  JSON.stringify(metadata) +
+  delimiter +
+  "Content-Type: " + file.type + "\r\n\r\n"
+
+ // Note: For very large files in the browser, a Resumable Upload is preferred. 
+ // We use multipart here assuming moderate file sizes for the Upload Scheduler UI scope.
+ const blob = new Blob([multipartRequestBody, file, close_delim], { type: 'multipart/related; boundary=' + boundary })
+
+ const response = await proxyFetch(
+  "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=multipart&part=snippet,status,recordingDetails",
+  {
+   method: "POST",
+   headers: {
+    "Content-Type": "multipart/related; boundary=" + boundary,
+    Authorization: `Bearer ${token}`,
+   },
+   body: blob,
+  }
+ )
+
+ if (!response.ok) {
+  await handleYouTubeApiError(response, "Failed to upload video")
+ }
+ return response.json()
+}
+
 export const fetchVideoCategories = async () => {
  const token = await refreshTokenIfExpired()
  const response = await proxyFetch(
@@ -577,10 +701,19 @@ export const fetchVideoCategories = async () => {
  if (!response.ok)
   await handleYouTubeApiError(response, "Failed to fetch categories")
  const data = await response.json()
- return (data.items || []).map((item: any) => ({
+ const categories = (data.items || []).map((item: any) => ({
   id: item.id,
   title: item.snippet.title,
  }))
+ try {
+  const categoryMap = Object.fromEntries(
+   categories.map((item: { id: string; title: string }) => [String(item.id), String(item.title)]),
+  )
+  localStorage.setItem(VIDEO_CATEGORY_TAXONOMY_KEY, JSON.stringify(categoryMap))
+ } catch {
+  // Keep app resilient if storage is unavailable.
+ }
+ return categories
 }
 
 export const fetchUserPlaylists = async () => {

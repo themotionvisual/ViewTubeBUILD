@@ -51,8 +51,8 @@ const ScopeToggleIcon: React.FC<{ open: boolean; size?: number }> = ({
 
 interface MainToolboxProps {
  title: string
- subtitle: string
- icon: React.ReactNode
+ subtitle?: string
+ icon?: React.ReactNode
  scopeId?: string
  headerColor?: string
  iconBoxColor?: string
@@ -62,8 +62,8 @@ interface MainToolboxProps {
 
 export const MainToolbox: React.FC<MainToolboxProps> = ({
  title,
- subtitle,
- icon,
+ subtitle = "",
+ icon = null,
  scopeId,
  headerColor = "bg-[#CCFF00]",
  iconBoxColor = "bg-[#24D3FF]",

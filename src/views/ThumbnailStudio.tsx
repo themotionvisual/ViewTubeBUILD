@@ -13,8 +13,9 @@ import {
 } from "../types"
 import { useBrain } from "../context/GlobalDataContext"
 import { CustomIcon } from "../components/CustomIcon"
-import { AccordionContainer } from "../components/Toolbox"
-import { ToolboxScaffold } from "../components/Toolbox"
+import { ToolboxScaffold, SubToolbox, StandardUploadBox, StandardTextArea } from "../components/Toolbox"
+import { StandardButton } from "../components/StandardButton"
+import { PostActionReflection } from "../components/PostActionReflection"
 
 interface ReferenceImage {
  id: string
@@ -213,7 +214,8 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
         niche: currentSeoResult.niche,
        }
      : undefined
-    const result = await rateThumbnail(base64String, analysisFile.type, brain)
+    const result = await rateThumbnail(base64String, analysisFile.type, { concept: brain.coreConcept, niche: brain.targetNiche });
+
     setAnalysisResult(result)
     setAnalyzeLoading(false)
    }
@@ -225,7 +227,8 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
  }
 
  // Helper for flush buttons in V2.1.2
- const AddButton = ({
+
+ const StudioButton = ({
   onClick,
   color,
   icon,
@@ -236,16 +239,13 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
   icon: string
   label: string
  }) => (
-  <button
+  <StandardButton
+   accentColor={color.replace('bg-[', '').replace(']', '')}
    onClick={onClick}
-   className={`flex items-center w-full h-16 border-[4px] border-black shadow-[8px_8px_0px_0px_black] rounded-[20px] overflow-hidden transition-all active:translate-x-1 active:translate-y-1 active:shadow-none group ${color}`}>
-   <div className="bg-white h-full w-16 flex items-center justify-center border-r-[4px] border-black flex-shrink-0 group-hover:bg-gray-50">
-    <CustomIcon name={icon} size={28} />
-   </div>
-   <span className="flex-1 text-center text-lg font-[1000] uppercase tracking-tighter text-black">
-    {label}
-   </span>
-  </button>
+   className="flex items-center w-full h-12">
+   <CustomIcon name={icon} size={16} className="mr-2" />
+   {label}
+  </StandardButton>
  )
 
  return (
@@ -310,18 +310,20 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch h-full">
      {/* Column 1: Narrower Tool Stack */}
      <div className="flex flex-col h-full gap-6">
-      <AccordionContainer
+      <SubToolbox
+       collapsible
        title="Concept"
-       icon="!!!IDEA"
-       headerColor="bg-[#FFB158]"
-       iconBoxColor="bg-[#FFE357]"
+       icon={<CustomIcon name="!!!IDEA" size={20} />}
+       paletteIndex={2}
        isOpenInitial={true}>
        <div className="space-y-4">
-        <textarea
+        <StandardTextArea
          value={prompt}
          onChange={(e) => setPrompt(e.target.value)}
          placeholder="Describe the image concept..."
-         className="w-full h-28 p-0 text-sm font-bold bg-transparent outline-none resize-none border-none placeholder:text-black/10 text-black leading-tight"
+         minHeight="112px"
+         hasBorder={false}
+         className="w-full p-0 text-sm font-bold bg-transparent outline-none resize-none placeholder:text-black/10 text-black leading-tight"
         />
         <div className="flex justify-end">
          <button
@@ -332,13 +334,13 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
          </button>
         </div>
        </div>
-      </AccordionContainer>
+      </SubToolbox>
 
-      <AccordionContainer
+      <SubToolbox
+       collapsible
        title="Styles"
-       icon="!!!COLLECTION"
-       headerColor="bg-[#FF7497]"
-       iconBoxColor="bg-[#FFB158]">
+       icon={<CustomIcon name="!!!COLLECTION" size={20} />}
+       paletteIndex={1}>
        <div className="grid grid-cols-3 gap-2">
         {THUMBNAIL_STYLES.map((style) => (
          <button
@@ -349,13 +351,13 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
          </button>
         ))}
        </div>
-      </AccordionContainer>
+      </SubToolbox>
 
-      <AccordionContainer
+      <SubToolbox
+       collapsible
        title="Text"
-       icon="!!!TEXT"
-       headerColor="bg-[#CC99FF]"
-       iconBoxColor="bg-[#FF7497]">
+       icon={<CustomIcon name="!!!TEXT" size={20} />}
+       paletteIndex={0}>
        <div className="space-y-4">
         <input
          value={largeText}
@@ -370,27 +372,21 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
          className="pop-input w-full p-3 border-[3px] text-sm rounded-lg"
         />
        </div>
-      </AccordionContainer>
+      </SubToolbox>
 
-      <AccordionContainer
+      <SubToolbox
+       collapsible
        title="Images"
-       icon="image"
-       headerColor="bg-[#00CCFF]"
-       iconBoxColor="bg-[#CC99FF]">
+       icon={<CustomIcon name="image" size={20} />}
+       paletteIndex={5}>
        <div className="space-y-4">
-        <div
-         onDrop={handleDrop}
-         onDragOver={handleDragOver}
-         className="w-full h-28 border-[3px] border-black border-dashed rounded-xl bg-gray-50 flex flex-col items-center justify-center gap-2 group hover:bg-gray-100 transition-colors cursor-pointer"
-         onClick={() => document.getElementById("med-up")?.click()}>
-         <input
-          type="file"
-          multiple
-          id="med-up"
-          className="hidden"
-          onChange={(e) => {
-           if (e.target.files) {
-            const news = Array.from(e.target.files).map((f) => ({
+        <StandardUploadBox
+          label="DROP FILES OR CLICK TO UPLOAD\nUpload Images"
+          minHeight="112px"
+          iconBgColor="#00CCFF"
+          onUpload={(files) => {
+           if (files) {
+            const news = Array.from(files).map((f) => ({
              id: crypto.randomUUID(),
              file: f,
              previewUrl: URL.createObjectURL(f),
@@ -400,18 +396,6 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
            }
           }}
          />
-         <div className="bg-white p-2 rounded-full border-[2px] border-black shadow-[2px_2px_0px_0px_black]">
-          <CustomIcon name="!!!CLOUD" size={20} />
-         </div>
-         <span className="font-black uppercase text-[10px] tracking-tight text-black/30 group-hover:text-black transition-colors">
-          Drop files or Click to Upload
-         </span>
-        </div>
-        <button
-         onClick={() => document.getElementById("med-up")?.click()}
-         className="w-full h-10 bg-[#FCAF57] border-[3px] border-black rounded-xl font-[1000] uppercase text-sm tracking-tighter shadow-[3px_3px_0px_0px_black] hover:shadow-none hover:translate-y-0.5 transition-all flex items-center justify-center gap-2">
-         <CustomIcon name="!!!CLOUD" size={16} /> Upload Images
-        </button>
         <div className="grid grid-cols-1 gap-2">
          {referenceImages.map((img) => (
           <div
@@ -437,13 +421,13 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
          ))}
         </div>
        </div>
-      </AccordionContainer>
+      </SubToolbox>
 
-      <AccordionContainer
+      <SubToolbox
+       collapsible
        title="Palette"
-       icon="!!!PALETTE"
-       headerColor="bg-[#CCFF00]"
-       iconBoxColor="bg-[#00CCFF]">
+       icon={<CustomIcon name="paint-bucket" size={20} />}
+       paletteIndex={4}>
        <div className="flex justify-between items-start gap-3 py-2">
         {palette.map((c, i) => (
          <div key={i} className="flex flex-col items-center gap-2 flex-1">
@@ -477,12 +461,12 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
          </div>
         ))}
        </div>
-      </AccordionContainer>
+      </SubToolbox>
      </div>
 
      {/* Column 2: Canvas (Matched Width) + Controls */}
-     <div className="flex flex-col h-full gap-6 min-h-[520px]">
-      <div className="flex-1 w-full border-[4px] border-black bg-[#f1f5f9] rounded-[48px] shadow-[12px_12px_0px_0px_black] relative flex items-center justify-center p-8 overflow-hidden transition-all duration-700">
+     <div className="flex flex-col h-full gap-6 min-h-0">
+      <div className="flex-1 min-h-0 w-full border-[4px] border-black bg-[#f1f5f9] rounded-[48px] shadow-[12px_12px_0px_0px_black] relative flex items-center justify-center p-8 overflow-hidden transition-all duration-700">
        {generatedImage ? (
         <img
          src={generatedImage}
@@ -565,6 +549,12 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
         </div>
        </button>
       )}
+
+      {generatedImage && (
+        <div className="animate-in slide-in-from-bottom-4 duration-500">
+          <PostActionReflection toolId="THUMBNAIL_STUDIO" />
+        </div>
+      )}
      </div>
     </div>
    </div>
@@ -612,6 +602,7 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
           <p className="font-black mt-4 uppercase">No Media Loaded</p>
          </div>
         )}
+
        </div>
       </div>
       <button
@@ -630,6 +621,11 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
         ? "Running Neural Analysis..."
         : analysisResult || "Upload a thumbnail to see scores."}
       </div>
+      {analysisResult && (
+       <div className="mt-8 animate-in slide-in-from-bottom-4 duration-500">
+        <PostActionReflection toolId="THUMBNAIL_ANALYZER" />
+       </div>
+      )}
      </div>
     </div>
    </div>

@@ -8,18 +8,24 @@ export const RealtimePerformanceWidget = ({
   editMode,
   onToggleCollapse,
   onCycleSize,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
   onRemove,
   data,
 }: any) => {
   const common = {
-    widget,
-    instance,
-    editMode,
-    canEdit: true,
-    onToggleCollapse,
-    onCycleSize,
-    onRemove,
-  }
+  widget,
+  instance,
+  editMode,
+  canEdit: true,
+  onToggleCollapse,
+  onCycleSize,
+  onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
+ }
   const [viewMode, setViewMode] = useState<"48h" | "60m">("48h")
   const [hoveredBar, setHoveredBar] = useState<any>(null)
 

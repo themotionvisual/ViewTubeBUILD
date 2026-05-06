@@ -2,15 +2,7 @@ import React from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Globe, Languages } from "lucide-react"
 
-export const CpmGeoWidget = ({
- widget,
- instance,
- editMode,
- onToggleCollapse,
- onCycleSize,
- onRemove,
- data,
-}: any) => {
+export const CpmGeoWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
  const common = {
   widget,
   instance,
@@ -19,6 +11,9 @@ export const CpmGeoWidget = ({
   onToggleCollapse,
   onCycleSize,
   onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
  }
 
  return (

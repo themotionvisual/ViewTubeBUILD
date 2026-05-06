@@ -3,9 +3,20 @@ import { WidgetShell } from "../WidgetShell"
 import { Images, Upload, Sparkles } from "lucide-react"
 
 export const ABThumbnailWidget = ({
- widget, instance, editMode, onToggleCollapse, onCycleSize, onRemove, data,
+ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data,
 }: any) => {
- const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
+ const common = {
+  widget,
+  instance,
+  editMode,
+  canEdit: true,
+  onToggleCollapse,
+  onCycleSize,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
+  onRemove,
+ }
  const [variants, setVariants] = useState([
   { label: "A", image: null as string | null, title: "", score: 0 },
   { label: "B", image: null as string | null, title: "", score: 0 },
@@ -25,10 +36,7 @@ export const ABThumbnailWidget = ({
   setAnalyzing(true)
   // Simulate AI scoring (replace with Gemini vision API)
   await new Promise(r => setTimeout(r, 1500))
-  setVariants(prev => prev.map(v => ({
-   ...v,
-   score: v.image ? Math.round(30 + Math.random() * 65) : 0,
-  })))
+  setVariants(prev => prev.map(v => ({...v, score: v.image ? Math.round(30 + Math.random() * 65) : 0, onDecSize, onCycleHeight, onDecHeight})))
   setAnalyzing(false)
  }
 

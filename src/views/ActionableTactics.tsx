@@ -21,9 +21,10 @@ import { useBrain } from "../context/GlobalDataContext"
 import { CustomIcon } from "../components/CustomIcon"
 import {
  ToolboxScaffold,
- SubToolbox,
+ Toolbox,
 } from "../components/Toolbox"
 import { toolboxSystem, toolboxActionButton } from "../components/toolboxSystem"
+import { PostActionReflection } from "../components/PostActionReflection"
 
 // --- Sub-components ---
 
@@ -194,10 +195,14 @@ const ActionableTactics: React.FC<{
     <div className={toolboxSystem.shellRow}>
      {/* Left Column: Input Form */}
      <div className={toolboxSystem.inputColumn}>
-      <SubToolbox
+      <Toolbox
+       variant="sub"
        title="Strategy Params"
        icon={<Settings size={20} />}
-       headerColor="bg-[#FFE357]">
+       headerColor="bg-[#CCFF00]"
+       paletteIndex={paletteIndex}
+       collapsible
+       isOpenInitial={true}>
        <div className="space-y-3 p-1">
         <div className="space-y-1">
          <label className={toolboxSystem.label}>Niche</label>
@@ -270,7 +275,7 @@ const ActionableTactics: React.FC<{
          {loading ? "Analyzing..." : "Gen 20 Tactics"}
         </button>
        </div>
-      </SubToolbox>
+       </Toolbox>
      </div>
 
      {/* Right Column: Tactics List */}
@@ -312,6 +317,11 @@ const ActionableTactics: React.FC<{
           setToast={setToast}
          />
         ))}
+        
+        {/* Brain Reflection UI */}
+        <div className="mt-8 animate-in slide-in-from-bottom-4 duration-700">
+          <PostActionReflection toolId="ACTIONABLE_TACTICS" />
+        </div>
        </div>
       ) : (
        <div className="h-96 rounded-[32px] border-[4px] border-black border-dashed flex flex-col items-center justify-center opacity-20 space-y-6">

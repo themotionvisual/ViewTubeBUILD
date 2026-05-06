@@ -2,15 +2,7 @@ import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Share2, FileText } from "lucide-react"
 
-export const SharingDnaWidget = ({
- widget,
- instance,
- editMode,
- onToggleCollapse,
- onCycleSize,
- onRemove,
- data,
-}: any) => {
+export const SharingDnaWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
  const common = {
   widget,
   instance,
@@ -19,6 +11,9 @@ export const SharingDnaWidget = ({
   onToggleCollapse,
   onCycleSize,
   onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
  }
 
  const platforms = [

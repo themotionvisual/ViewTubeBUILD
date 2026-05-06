@@ -54,7 +54,7 @@ const nodeColor = (node: KeywordNode): string => {
 const MetricModeDropdown: React.FC<{
   mode: KeywordMetricMode
   onChange: (mode: KeywordMetricMode) => void
-}> = ({ mode, onChange }) => {
+}> = ({mode, onChange, onDecSize, onCycleHeight, onDecHeight}) => {
   const [open, setOpen] = useState(false)
   return (
     <div style={{ position: "relative" }}>
@@ -128,18 +128,24 @@ export const KeywordOverlapWidget = ({
   editMode,
   onToggleCollapse,
   onCycleSize,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
   onRemove,
   data,
 }: any) => {
   const common = {
-    widget,
-    instance,
-    editMode,
-    canEdit: true,
-    onToggleCollapse,
-    onCycleSize,
-    onRemove,
-  }
+  widget,
+  instance,
+  editMode,
+  canEdit: true,
+  onToggleCollapse,
+  onCycleSize,
+  onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
+ }
 
   const [metricMode, setMetricMode] = useState<KeywordMetricMode>("views")
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([])

@@ -433,7 +433,7 @@ const TrioPieCard = ({
      height="100%"
      data={chart.data}
      options={chartOptions as any}
-     chartEvents={chartEvents}
+     chartEvents={chartEvents as any}
     />
    </div>
    {height !== "200px" && displaySlice && (
@@ -1137,7 +1137,7 @@ const StationCard = ({
            height="100%"
            data={currentData}
            options={{...chartOptions, backgroundColor: 'transparent'}}
-           chartEvents={chartEvents}
+           chartEvents={chartEvents as any}
           />
          </div>
         </div>
@@ -1328,7 +1328,7 @@ const StationCard = ({
           height="100%"
           data={currentData}
           options={chartOptions}
-          chartEvents={chartEvents}
+          chartEvents={chartEvents as any}
          />
          {isEngagementRanker &&
           hovered?.row !== undefined &&

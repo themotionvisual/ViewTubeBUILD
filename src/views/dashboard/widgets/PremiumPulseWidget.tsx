@@ -2,15 +2,7 @@ import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Star, WandSparkles } from "lucide-react"
 
-export const PremiumPulseWidget = ({
- widget,
- instance,
- editMode,
- onToggleCollapse,
- onCycleSize,
- onRemove,
- data,
-}: any) => {
+export const PremiumPulseWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
  const common = {
   widget,
   instance,
@@ -19,6 +11,9 @@ export const PremiumPulseWidget = ({
   onToggleCollapse,
   onCycleSize,
   onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
  }
 
  const [teaser, setTeaser] = useState<string | null>(null)

@@ -13,10 +13,19 @@ const DEFAULT_ITEMS = [
  { text: "Monetization Checks Pass", done: false },
 ]
 
-export const FlightCheckWidget = ({
- widget, instance, editMode, onToggleCollapse, onCycleSize, onRemove, data,
-}: any) => {
- const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
+export const FlightCheckWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
+ const common = {
+  widget,
+  instance,
+  editMode,
+  canEdit: true,
+  onToggleCollapse,
+  onCycleSize,
+  onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
+ }
  const [items, setItems] = useState(() => {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || DEFAULT_ITEMS }
   catch { return DEFAULT_ITEMS }

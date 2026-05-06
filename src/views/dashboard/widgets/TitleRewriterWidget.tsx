@@ -5,6 +5,7 @@ import { Type, Sparkles, Copy, Check, RefreshCw } from "lucide-react"
 import { useBrain } from "../../../context/GlobalDataContext"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
+import { CustomDropdown } from "./DataEditWidget"
 
 const STYLE_PRESETS = [
  { label: "Mr Beast", emoji: "🤯", desc: "Extreme, numbers-heavy" },
@@ -13,11 +14,20 @@ const STYLE_PRESETS = [
  { label: "Curiosity", emoji: "❓", desc: "Gap/intrigue-based" },
 ]
 
-export const TitleRewriterWidget = ({
- widget, instance, editMode, onToggleCollapse, onCycleSize, onRemove, data,
-}: any) => {
+export const TitleRewriterWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
  const { brain } = useBrain()
- const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
+ const common = {
+  widget,
+  instance,
+  editMode,
+  canEdit: true,
+  onToggleCollapse,
+  onCycleSize,
+  onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
+ }
  const TITLE_REWRITE_COST = getAiTokenCost("titleRewrite")
  const entitlement = useEntitlement()
  const canAffordRewrite = canAffordAiTokensFromState(entitlement, TITLE_REWRITE_COST)
@@ -67,19 +77,24 @@ export const TitleRewriterWidget = ({
  return (
   <WidgetShell {...common} icon={<Type size={22} />}>
    <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%" }}>
-    <div style={{ display: "flex", gap: "4px" }}>
-     <select value={selectedVideo} onChange={handleSelect} style={{
-      flex: 2, padding: "6px 8px", background: "#fff", border: "2px solid #000", borderRadius: "8px",
-      fontSize: "11px", fontWeight: 900, outline: "none", boxShadow: "2px 2px 0 0 #000",
-     }}>
-      <option value="" disabled>Select a video...</option>
-      {videos.slice(0, 15).filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase())).map((v: any) => (
-       <option key={v.videoId} value={v.videoId}>{v.title}</option>
-      ))}
-     </select>
-     <input value={videoSearch} onChange={(e) => setVideoSearch(e.target.value)} placeholder="Search..." style={{
-      flex: 1, padding: "6px 8px", background: "#fff", border: "2px solid #000", borderRadius: "8px",
-      fontSize: "10px", fontWeight: 900, outline: "none", boxShadow: "2px 2px 0 0 rgba(0,0,0,0.15)",
+    <div style={{ display: "flex", gap: "4px", zIndex: 10 }}>
+     <div style={{ flex: 2, minWidth: 0 }}>
+      <CustomDropdown 
+       value={selectedVideo} 
+       onChange={(val) => {
+        setSelectedVideo(val);
+        setAlternatives([]);
+        const vid = videos.find((v: any) => v.videoId === val);
+        setOriginalTitle(vid?.title || "");
+       }} 
+       options={[
+        { val: "", lbl: "Select a video..." },
+        ...videos.slice(0, 15).filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase())).map((v: any) => ({val: v.videoId, lbl: v.title, onDecSize, onCycleHeight, onDecHeight}))
+       ]}
+      />
+     </div>
+     <input className="vt-input" value={videoSearch} onChange={(e) => setVideoSearch(e.target.value)} placeholder="Search..." style={{
+      flex: 1, padding: "6px 8px", fontSize: "10px"
      }} />
     </div>
 

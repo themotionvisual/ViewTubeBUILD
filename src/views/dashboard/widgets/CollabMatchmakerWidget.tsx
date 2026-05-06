@@ -3,10 +3,20 @@ import { Users, Mail, Phone, ExternalLink, Sparkles, MessageCircle, ArrowRight, 
 import { WidgetShell } from "../WidgetShell"
 import { generateCollabOpportunities, type CollabPeer } from "../../../services/CollabEngine"
 
-export const CollabMatchmakerWidget: React.FC<any> = ({
-  widget, instance, editMode, onToggleCollapse, onCycleSize, onCycleHeight, onRemove, data, canEdit
-}) => {
-  const common = { widget, instance, editMode, canEdit, onToggleCollapse, onCycleSize, onCycleHeight, onRemove }
+export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMode, onToggleCollapse, onCycleSize, onCycleHeight, onRemove, data, canEdit, onDecSize, onDecHeight}) => {
+  const common = {
+  widget,
+  instance,
+  editMode,
+  canEdit,
+  onToggleCollapse,
+  onCycleSize,
+  onCycleHeight,
+  onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
+ }
   const [peers, setPeers] = useState<CollabPeer[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedPeerId, setSelectedPeerId] = useState<string | null>(null)

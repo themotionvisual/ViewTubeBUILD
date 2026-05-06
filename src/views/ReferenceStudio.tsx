@@ -211,6 +211,8 @@ const DEFAULT_REFERENCE_TAB: ReferenceTab = "toolbox-system"
 const isReferenceTab = (value: string | undefined): value is ReferenceTab =>
  !!value && REFERENCE_TABS.some((tab) => tab.id === value)
 
+import { UI_CONSTANTS } from "../components/ToolboxUISystem"
+
 const ReferenceStudio: React.FC = () => {
  const { brain } = useBrain()
  const navigate = useNavigate()
@@ -716,7 +718,7 @@ const ReferenceStudio: React.FC = () => {
  const ActiveLegacyToolComponent = LEGACY_TOOL_COMPONENTS[activeLegacyTool.id]
 
  const sectionLoadingFallback = (
-  <div className="w-full max-w-[1400px] mx-auto mb-24 bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] p-12 text-center">
+  <div className={`w-full max-w-[1400px] mx-auto mb-24 bg-white ${UI_CONSTANTS.border} ${UI_CONSTANTS.radius} ${UI_CONSTANTS.shadow} p-12 text-center`}>
    <p className="text-xs font-black uppercase tracking-[0.24em] opacity-50">
     Loading section...
    </p>
@@ -770,7 +772,7 @@ const ReferenceStudio: React.FC = () => {
 
    {activeReferenceTab === "analytics-lab" && (
    <div className="w-full max-w-[1400px] mx-auto mb-24 bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] p-6 space-y-6">
-     <div className="h-14 px-4 border-[4px] border-black rounded-xl bg-[#FFB158] flex items-center justify-between">
+     <div className="h-14 px-4 ${UI_CONSTANTS.border} rounded-xl bg-[#FFB158] flex items-center justify-between">
       <h3 className="text-2xl font-[1000] uppercase tracking-tight">
        Reference Analytics Lab
       </h3>
@@ -800,7 +802,7 @@ const ReferenceStudio: React.FC = () => {
       </span>
      </div>
 
-     <div className="border-[4px] border-black rounded-xl overflow-hidden">
+     <div className="${UI_CONSTANTS.border} rounded-xl overflow-hidden">
       <div className="h-10 px-4 bg-[#CCFF00] border-b-[4px] border-black flex items-center justify-between">
        <span className="text-[10px] font-black uppercase tracking-[0.14em]">
         Ingest Source Readiness
@@ -825,7 +827,7 @@ const ReferenceStudio: React.FC = () => {
       </div>
      </div>
 
-     <div className="border-[4px] border-black rounded-xl overflow-hidden">
+     <div className="${UI_CONSTANTS.border} rounded-xl overflow-hidden">
       <div className="h-12 px-4 bg-[#24D3FF] border-b-[4px] border-black flex items-center justify-between">
        <span className="text-[11px] font-black uppercase tracking-[0.14em]">
         1.2 Video Value Matrix
@@ -871,7 +873,7 @@ const ReferenceStudio: React.FC = () => {
        { key: "watch", label: "Total Time" },
        { key: "revenue", label: "Total Revenue" },
       ].map((pie) => (
-       <div key={pie.key} className="border-[4px] border-black rounded-xl overflow-hidden bg-white">
+       <div key={pie.key} className="${UI_CONSTANTS.border} rounded-xl overflow-hidden bg-white">
         <div className="h-10 px-3 bg-[#C9F830] border-b-[4px] border-black flex items-center text-[10px] font-black uppercase tracking-[0.12em]">
          {pie.label}
         </div>
@@ -900,7 +902,7 @@ const ReferenceStudio: React.FC = () => {
       ))}
      </div>
 
-     <div className="border-[4px] border-black rounded-xl overflow-hidden">
+     <div className="${UI_CONSTANTS.border} rounded-xl overflow-hidden">
       <div className="h-12 px-4 bg-[#FCAF57] border-b-[4px] border-black flex flex-wrap items-center justify-between gap-2">
        <span className="text-[11px] font-black uppercase tracking-[0.14em]">
         Engagement Map · Latest 50 Videos
@@ -955,7 +957,7 @@ const ReferenceStudio: React.FC = () => {
 
       <div className="flex items-center gap-6 pr-6">
        {/* Tab Switcher */}
-       <div className="flex bg-white border-[4px] border-black p-1 rounded-xl shadow-[3px_3px_0px_0px_black]">
+       <div className="flex bg-white ${UI_CONSTANTS.border} p-1 rounded-xl shadow-[3px_3px_0px_0px_black]">
         <button
          onClick={() => setActiveTab("generate")}
          className={`px-5 py-2 text-[11px] font-[1000] uppercase tracking-tighter rounded-lg transition-all flex items-center gap-2 ${activeTab === "generate" ? "bg-black text-white" : "text-black/30 hover:text-black"}`}>
@@ -1134,7 +1136,7 @@ const ReferenceStudio: React.FC = () => {
                <div
                 style={{ backgroundColor: c || "#f3f4f6" }}
                 onClick={() => document.getElementById(`cp7-${i}`)?.click()}
-                className="w-full aspect-[2/3] border-[3px] border-black rounded-xl shadow-[4px_4px_0px_0px_black] relative overflow-hidden flex items-center justify-center cursor-pointer group">
+                className="w-full aspect-[2/3] border-[3px] border-black rounded-xl ${UI_CONSTANTS.shadow} relative overflow-hidden flex items-center justify-center cursor-pointer group">
                 <input
                  id={`cp7-${i}`}
                  type="color"
@@ -1168,16 +1170,16 @@ const ReferenceStudio: React.FC = () => {
 
           {/* Column 2: Canvas (Matched Width) + Controls */}
           <div className="flex flex-col h-full gap-6 min-h-[520px]">
-           <div className="flex-1 w-full border-[4px] border-black bg-[#f1f5f9] rounded-[48px] shadow-[12px_12px_0px_0px_black] relative flex items-center justify-center p-8 overflow-hidden transition-all duration-700">
+           <div className="flex-1 w-full ${UI_CONSTANTS.border} bg-[#f1f5f9] rounded-[48px] shadow-[12px_12px_0px_0px_black] relative flex items-center justify-center p-8 overflow-hidden transition-all duration-700">
             {generatedImage ? (
              <img
               src={generatedImage}
               alt="Gen"
-              className="max-w-full max-h-full object-contain border-[4px] border-black rounded-3xl shadow-[8px_8px_0px_0px_black]"
+              className="max-w-full max-h-full object-contain ${UI_CONSTANTS.border} rounded-3xl shadow-[8px_8px_0px_0px_black]"
              />
             ) : (
-             <div className="text-center p-12 bg-white border-[4px] border-black rounded-[48px] shadow-[8px_8px_0px_0px_black] w-full max-w-sm transform hover:scale-[1.02] transition-transform duration-500">
-              <div className="w-20 h-20 bg-[#FF7497] border-[4px] border-black rounded-full mx-auto mb-8 flex items-center justify-center shadow-[6px_6px_0px_0px_black] animate-pulse">
+             <div className="text-center p-12 bg-white ${UI_CONSTANTS.border} rounded-[48px] shadow-[8px_8px_0px_0px_black] w-full max-w-sm transform hover:scale-[1.02] transition-transform duration-500">
+              <div className="w-20 h-20 bg-[#FF7497] ${UI_CONSTANTS.border} rounded-full mx-auto mb-8 flex items-center justify-center shadow-[6px_6px_0px_0px_black] animate-pulse">
                <CustomIcon name="zap" size={32} />
               </div>
               <h3 className="text-4xl font-[1000] uppercase tracking-tighter text-black leading-none mb-4 italic">
@@ -1199,7 +1201,7 @@ const ReferenceStudio: React.FC = () => {
              <select
               value={aspectRatio}
               onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
-              className="pop-input w-full h-[64px] px-6 border-[4px] border-black text-xl rounded-2xl font-[1000] appearance-none bg-white cursor-pointer shadow-[4px_4px_0_0_black] hover:shadow-none transition-all">
+              className="pop-input w-full h-[64px] px-6 ${UI_CONSTANTS.border} text-xl rounded-2xl font-[1000] appearance-none bg-white cursor-pointer shadow-[4px_4px_0_0_black] hover:shadow-none transition-all">
               {Object.values(AspectRatio).map((r) => (
                <option key={r} value={r}>
                 {r}
@@ -1214,7 +1216,7 @@ const ReferenceStudio: React.FC = () => {
              <select
               value={imageSize}
               onChange={(e) => setImageSize(e.target.value as ImageSize)}
-              className="pop-input w-full h-[64px] px-6 border-[4px] border-black text-xl rounded-2xl font-[1000] appearance-none bg-white cursor-pointer shadow-[4px_4px_0_0_black] hover:shadow-none transition-all">
+              className="pop-input w-full h-[64px] px-6 ${UI_CONSTANTS.border} text-xl rounded-2xl font-[1000] appearance-none bg-white cursor-pointer shadow-[4px_4px_0_0_black] hover:shadow-none transition-all">
               {Object.values(ImageSize).map((s) => (
                <option key={s} value={s}>
                 {s}
@@ -1228,7 +1230,7 @@ const ReferenceStudio: React.FC = () => {
            <button
             onClick={handleGenerate}
             disabled={genLoading || !prompt}
-            className="w-full h-14 bg-[#f3f4f6] border-[4px] border-black rounded-2xl overflow-hidden flex items-center group transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed shadow-[6px_6px_0px_0px_black] hover:shadow-none translate-y-0 hover:translate-y-1 hover:translate-x-1">
+            className="w-full h-14 bg-[#f3f4f6] ${UI_CONSTANTS.border} rounded-2xl overflow-hidden flex items-center group transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed shadow-[6px_6px_0px_0px_black] hover:shadow-none translate-y-0 hover:translate-y-1 hover:translate-x-1">
             <div className="bg-gray-200 h-full w-14 flex items-center justify-center border-r-[4px] border-black flex-shrink-0 group-hover:bg-[#FF7497] transition-colors">
              <CustomIcon
               name="zap"
@@ -1253,7 +1255,7 @@ const ReferenceStudio: React.FC = () => {
           <div className="w-full lg:w-1/2 flex flex-col gap-6">
            <div
             onClick={() => fileInputRef.current?.click()}
-            className="w-full border-[4px] border-black bg-white rounded-2xl shadow-[8px_8px_0px_0px_black] group cursor-pointer overflow-hidden">
+            className="w-full ${UI_CONSTANTS.border} bg-white rounded-2xl shadow-[8px_8px_0px_0px_black] group cursor-pointer overflow-hidden">
             <div className="h-14 bg-[#FF7497] border-b-[4px] border-black flex items-center px-6 gap-4">
              <div className="bg-white p-2 rounded-lg border-[2px] border-black shadow-[2px_2px_0px_0px_black]">
               <CustomIcon name="!!!CLOUD" size={20} />
@@ -1281,7 +1283,7 @@ const ReferenceStudio: React.FC = () => {
               <img
                src={analysisPreview}
                alt="Preview"
-               className="h-full object-contain border-[4px] border-black rounded-xl shadow-[6px_6px_0px_0px_black]"
+               className="h-full object-contain ${UI_CONSTANTS.border} rounded-xl shadow-[6px_6px_0px_0px_black]"
               />
              ) : (
               <div className="text-center opacity-20">
@@ -1292,7 +1294,7 @@ const ReferenceStudio: React.FC = () => {
             </div>
            </div>
           </div>
-          <div className="flex-1 bg-gray-50 rounded-2xl border-[4px] border-black p-6">
+          <div className="flex-1 bg-gray-50 rounded-2xl ${UI_CONSTANTS.border} p-6">
            <div className="flex items-center justify-between gap-3 mb-4">
             <h4 className="text-xl font-black uppercase">Analysis Result</h4>
             <button

@@ -12,7 +12,8 @@ import {
  ResponsiveContainer,
 } from "recharts"
 import { Search, Upload, AlignLeft, Target, FileText } from "lucide-react"
-import { ToolboxScaffold, SubToolbox } from "../components/Toolbox"
+import { ToolboxScaffold, SubToolbox, StandardUploadBox, StandardTextArea } from "../components/Toolbox"
+import { PostActionReflection } from "../components/PostActionReflection"
 
 interface MediaAnalyzerProps {
  embedded?: boolean
@@ -144,35 +145,24 @@ const [transcriptResult, setTranscriptResult] = useState("")
       <SubToolbox
        title="VIDEO UPLOAD"
        icon={<Upload size={20} strokeWidth={3} className="text-black" />}
-       paletteIndex={subPalette(0)}
-       contentClassName="p-5 flex flex-col gap-4">
-       <input
-        type="file"
-        ref={fileInputRef}
-        className="hidden"
-        accept="video/*,audio/*"
-        onChange={(e) => setFile(e.target.files?.[0] || null)}
+       paletteIndex={subPalette(0)}>
+       <StandardUploadBox 
+        label={file ? file.name : "UPLOAD VIDEO / AUDIO"} 
+        minHeight="128px" 
+        iconBgColor="#FF3399" 
+        onUpload={(files) => setFile(files?.[0] || null)}
        />
-       <button
-        onClick={() => fileInputRef.current?.click()}
-        className="w-full bg-gray-50 border-[4px] border-dashed border-black/20 rounded-xl p-4 font-black uppercase text-black/50 hover:bg-gray-100 hover:border-black transition-all flex flex-col items-center justify-center gap-2 truncate">
-        <Upload size={24} className="mb-1" />
-        <span className="truncate w-full text-center px-2">
-         {file ? file.name : "UPLOAD VIDEO / AUDIO"}
-        </span>
-       </button>
       </SubToolbox>
 
       <SubToolbox
        title="VIDEO SCRIPT"
        icon={<AlignLeft size={20} strokeWidth={3} className="text-black" />}
-       paletteIndex={subPalette(1)}
-       contentClassName="p-5 flex flex-col gap-3">
-       <textarea
+       paletteIndex={subPalette(1)}>
+       <StandardTextArea
         value={script}
         onChange={(e) => setScript(e.target.value)}
         placeholder="PASTE YOUR SCRIPT HERE..."
-        className="w-full h-32 p-4 border-[4px] border-black rounded-xl font-bold text-sm uppercase resize-none outline-none focus:bg-[#FFB570]/10 transition-colors"
+        minHeight="128px"
        />
       </SubToolbox>
      </div>
@@ -322,6 +312,11 @@ const [transcriptResult, setTranscriptResult] = useState("")
         </div>
        )}
       </div>
+      {analysisResult && (
+       <div className="mt-8 animate-in slide-in-from-bottom-4 duration-700">
+        <PostActionReflection toolId="MEDIA_ANALYZER" />
+       </div>
+      )}
      </SubToolbox>
     </div>
    </div>

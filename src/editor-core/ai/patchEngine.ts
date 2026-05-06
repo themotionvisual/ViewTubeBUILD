@@ -66,10 +66,23 @@ export const applyAIPatchPlan = (
           clipId: operation.clipId,
           color: operation.color,
         });
+      case "setClipProps":
+        return applyTimelineCommand(current, {
+          type: "setClipProps",
+          clipId: operation.clipId,
+          props: operation.props,
+        });
       default:
         return current;
     }
   }, state);
+
+  // Safety check: Don't allow AI to delete more than 50% of clips if there were many clips
+  if (state.clips.length > 2 && nextState.clips.length < state.clips.length / 2) {
+      validation.valid = false;
+      validation.issues.push("AI attempted to delete too many clips. Patch blocked for safety.");
+      return { state, validation };
+  }
 
   return { state: nextState, validation };
 };

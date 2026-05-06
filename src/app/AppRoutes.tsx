@@ -28,6 +28,7 @@ import InternalAnalyticsPanel from "../views/InternalAnalyticsPanel"
 import SimpleAnalytics from "../views/SimpleAnalytics"
 import MediaAnalyzer from "../views/MediaAnalyzer"
 import SeoGenerator from "../views/SeoGenerator"
+import VideoPublisher from "../views/VideoPublisher"
 import HookGenerator from "../views/HookGenerator"
 import ThumbnailStudio from "../views/ThumbnailStudio"
 import AlgorithmArchitect from "../views/AlgorithmArchitect"
@@ -132,6 +133,7 @@ export const AppRoutes: React.FC = () => {
    <Route path="/simple-analytics" element={<SimpleAnalytics />} />
    <Route path="/media-analyzer" element={<MediaAnalyzer />} />
    <Route path="/seo-generator" element={<SeoGenerator />} />
+   <Route path="/video-publisher" element={<VideoPublisher />} />
    <Route path="/hook-generator" element={<HookGenerator />} />
    <Route path="/thumbnail-studio" element={<ThumbnailStudio />} />
    <Route path="/algorithm-architect" element={<AlgorithmArchitect />} />

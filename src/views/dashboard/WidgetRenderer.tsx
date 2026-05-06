@@ -55,6 +55,7 @@ import { CollabMatchmakerWidget } from "./widgets/CollabMatchmakerWidget"
 import { BridgeEfficiencyWidget } from "./widgets/BridgeEfficiencyWidget"
 import { AudienceMatrixWidget } from "./widgets/AudienceMatrixWidget"
 import { GoalsTrackerWidget } from "./widgets/GoalsTrackerWidget"
+import { BrainHubWidget } from "./widgets/BrainHubWidget"
 const formatHumanNumber = (value: unknown): string => {
  const v = Number(value)
  if (isNaN(v)) return "0"
@@ -63,7 +64,9 @@ const formatHumanNumber = (value: unknown): string => {
  return v.toString()
 }
 
-import { PublishingFormatClashChart } from "./PublishingFormatClashChart"
+// import { PublishingFormatClashChart } from "./PublishingFormatClashChart"
+const PublishingFormatClashChart = () => <div className="p-4 border-2 border-dashed border-black/20 rounded-xl text-[10px] font-black uppercase text-black/40 text-center">Format Clash Visualization Pending</div>
+
 import { AudienceRetentionWidget } from "./widgets/AudienceRetentionWidget"
 import { FormatClashWidget } from "./widgets/FormatClashWidget"
 import { CommentReplyWidget } from "./widgets/CommentReplyWidget"
@@ -101,16 +104,7 @@ const AlertsFeedWidget: React.FC<{
  commentsVideoId: string | null
  alerts: string[]
  subscriberCount: number
- common: {
-  widget: WidgetDefinition
-  instance: WidgetInstanceState
-  editMode: boolean
-  canEdit: boolean
-  onToggleCollapse: () => void
-  onCycleSize: () => void
-  onCycleHeight: () => void
-  onRemove: () => void
- }
+ common: CommonWidgetProps
 }> = ({ commentsVideoId, alerts, subscriberCount, common }) => {
  const { comments } = useVideoComments(commentsVideoId)
  const recentComments = comments.slice(0, 3)
@@ -274,16 +268,7 @@ const AlertsFeedWidget: React.FC<{
 
 const SuperfanCardWidget: React.FC<{
   data: DashboardData
-  common: {
-    widget: WidgetDefinition
-    instance: WidgetInstanceState
-    editMode: boolean
-    canEdit: boolean
-    onToggleCollapse: () => void
-    onCycleSize: () => void
-    onCycleHeight: () => void
-    onRemove: () => void
-  }
+  common: CommonWidgetProps
 }> = ({ data, common }) => {
   const recentVideoId = data.canonicalRows[0]?.videoId || null
   const { comments, loading } = useVideoComments(recentVideoId)
@@ -359,7 +344,7 @@ const SuperfanCardWidget: React.FC<{
 
 const RevenueMomentumWidget: React.FC<{
   data: DashboardData
-  common: any
+  common: CommonWidgetProps
 }> = ({ data, common }) => {
   const [metric, setMetric] = useState<"revenue" | "views" | "subscribers">("revenue")
   
@@ -430,19 +415,30 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   onNavigate,
   onToggleCollapse,
   onCycleSize,
+  onDecSize,
   onCycleHeight,
+  onDecHeight,
   onRemoveWidget,
   dashboardControls
 }) => {
   const { brain } = useBrain();
+
+  // FORCE ROW 1 WIDGETS TO BE TALL
+  const overrideInstance = {
+    ...instance,
+    height: ["kpi-cluster", "community-post", "comment-replier"].includes(widget.id) ? "tall" : instance.height
+  } as any;
+
   const common = {
   widget,
-  instance,
+  instance: overrideInstance,
   editMode,
   canEdit,
   onToggleCollapse: () => onToggleCollapse(widget.id),
   onCycleSize: () => onCycleSize(widget.id),
+  onDecSize: () => onDecSize(widget.id),
   onCycleHeight: () => onCycleHeight(widget.id),
+  onDecHeight: () => onDecHeight(widget.id),
   onRemove: () => onRemoveWidget(widget.id),
  }
 
@@ -576,7 +572,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   if (widget.id === "consistency-heatmap") {
    const cDays = data.consistencyDays || []
    return (
-    <WidgetShell {...common} title="UPLOAD CADENCE" icon={<CalendarDays size={22} />}>
+    <WidgetShell {...common} icon={<CalendarDays size={22} />}>
      <div style={{ display: "flex", flexDirection: "column", height: "100%", justifyContent: "center", padding: "4px" }}>
       <span style={{ fontSize: "10px", fontWeight: 800, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>
        Last 21 Days
@@ -686,114 +682,158 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  // 1. CHANNEL OVERVIEW
   if (widget.id === "kpi-cluster") {
    const avatar = data.avatarUrl || ""
-   const isSmall = instance.size === "quarter" || instance.size === "third"
-   
+   const isQuarter = instance.size === "quarter"
+   const isThird = instance.size === "third"
+   const isHalf = instance.size === "half"
+   const isSmall = isQuarter || isThird || isHalf
+
    return (
     <WidgetShell {...common} icon={<TrendingUp size={22} />}>
-     <div style={{ display: "flex", gap: "6px", height: "100%", overflow: "hidden" }}>
-       {/* Circular Avatar Sidebar - Hidden on small sizes to prioritize stats */}
-       {!isSmall && (
-         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "6px", flexShrink: 0, width: "170px", padding: "2px", marginLeft: "-8px" }}>
-          <div style={{ width: "150px", height: "150px", borderRadius: "50%", border: "3px solid #000", overflow: "hidden", background: "#eee" }}>
-           {avatar ? <img src={avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <UserCircle2 size={56} strokeWidth={1} style={{ margin: "47px" }} />}
-          </div>
-          <div style={{ textAlign: "center", width: "100%" }}>
-           <div style={{ fontSize: "11px", fontWeight: 800, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {data.brain?.channelProfile?.name || data.authState?.channelName || "Your Channel"}
+     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+      <div style={{ display: "flex", gap: "10px", flex: 1, overflow: "hidden", padding: "4px" }}>
+       {/* Circular Avatar Sidebar */}
+       <div style={{ 
+         display: "flex", 
+         flexDirection: "column", 
+         alignItems: "center", 
+         justifyContent: "center", 
+         gap: "8px", 
+         flexShrink: 0, 
+         width: "160px",
+         borderRight: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)",
+         marginRight: "10px",
+         paddingRight: "10px"
+       }}>
+        <div style={{ 
+          width: "120px", 
+          height: "120px", 
+          borderRadius: "50%", 
+          border: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)", 
+          overflow: "hidden", 
+          background: "#eee",
+          boxShadow: "4px 4px 0px 0px rgba(0,0,0,0.1)"
+        }}>
+         {avatar ? (
+           <img src={avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+         ) : (
+           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+             <TrendingUp size={isSmall ? 40 : 60} opacity={0.2} />
            </div>
-           <div style={{ fontSize: "10px", fontWeight: 900, opacity: 0.6 }}>
-            {data.brain?.channelProfile?.channelHandle ? `@${data.brain.channelProfile.channelHandle.replace(/^@/, '')}` : (data.authState?.channelHandle ? `@${data.authState.channelHandle.replace(/^@/, '')}` : `@${(data.authState?.channelName || "handle").replace(/\s+/g, "").toLowerCase()}`)}
-           </div>
-          </div>
-          <a
-           href={`https://youtube.com/${data.brain?.channelProfile?.channelHandle ? '@' + data.brain.channelProfile.channelHandle.replace(/^@/, '') : (data.authState?.channelHandle ? '@' + data.authState.channelHandle.replace(/^@/, '') : "")}`}
-           target="_blank"
-           rel="noreferrer"
-           style={{
-            padding: "4px 10px",
-            background: "#000",
-            color: "#fff",
-            borderRadius: "6px",
-            fontSize: "9px",
-            fontWeight: 800,
-            textDecoration: "none",
-            textTransform: "uppercase",
-            boxShadow: "2px 2px 0 0 rgba(0,0,0,0.2)",
-            marginTop: "2px",
-           }}
-          >
-           Visit Channel
-          </a>
-         </div>
-       )}
+         )}
+        </div>
+       </div>
 
-      {/* Stats Grid - 3x2 on small, 6x1 on large */}
-      <div style={{ 
-        flex: 1, 
-        display: "grid", 
-        gridTemplateColumns: isSmall ? "repeat(3, 1fr)" : "repeat(6, 1fr)", 
-        gridTemplateRows: isSmall ? "repeat(2, 1fr)" : "1fr",
-        gap: "6px" 
-      }}>
-       {data.statBlocks.map((stat, idx) => {
-        const bars = Array.from({ length: 7 }, (_, i) => {
-         const seed = ((idx * 7 + i + 1) * 17) % 100
-         return 40 + (seed % 50)
-        })
-
-        // Trend formatting: truncate to 4 digits, remove decimals if >= 100
-        let cleanTrend = stat.trend || ""
-        if (cleanTrend) {
-         const match = cleanTrend.match(/([+-]?)(\d+(\.\d+)?)%/)
-         if (match) {
-           const sign = match[1]
-           const val = parseFloat(match[2])
-           if (val >= 100) {
-            cleanTrend = `${sign}${Math.round(val).toString().slice(0, 4)}%`
-           } else {
-            cleanTrend = `${sign}${val.toFixed(1).slice(0, 4)}%`
-           }
+       {/* Stats Grid - 3x2 on small, 6x1 on large */}
+       <div style={{ 
+         flex: 1, 
+         display: "grid", 
+         gridTemplateColumns: isSmall ? "repeat(3, 1fr)" : "repeat(6, 1fr)", 
+         gridTemplateRows: isSmall ? "repeat(2, 1fr)" : "1fr",
+         gap: "8px" 
+       }}>
+        {data.statBlocks.map((stat, idx) => {
+         const metricKey = stat.label.toLowerCase().includes("views") ? "views" : 
+                          stat.label.toLowerCase().includes("subscribers") ? "subscribersGained" :
+                          stat.label.toLowerCase().includes("hours") ? "watchHours" :
+                          stat.label.toLowerCase().includes("revenue") ? "revenue" : null
+         
+         let bars = [40, 60, 45, 80, 55, 90, 75]
+         if (metricKey && data.canonicalRows?.length) {
+           const recentValues = data.canonicalRows
+              .slice(0, 7)
+              .map(row => (row.metrics as any)[metricKey]?.value || 0)
+           const maxVal = Math.max(...recentValues, 1)
+           bars = recentValues.map(v => 30 + (v / maxVal) * 70).reverse()
          }
-        }
 
-        return (
-         <div
-          key={idx}
+         let cleanTrend = stat.trend || ""
+         if (cleanTrend) {
+          const match = cleanTrend.match(/([+-]?)(\d+(\.\d+)?)%/)
+          if (match) {
+            const sign = match[1]
+            const val = parseFloat(match[2])
+            cleanTrend = val >= 100 ? `${sign}${Math.round(val).toString().slice(0, 4)}%` : `${sign}${val.toFixed(1).slice(0, 4)}%`
+          }
+         }
+
+           return (
+            <div
+             key={idx}
+             style={{
+              background: "#fff",
+              border: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)",
+              borderRadius: "10px",
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "3px 3px 0px 0px rgba(0,0,0,0.05)"
+             }}>
+             <div
+              style={{
+               background: stat.color,
+               borderBottom: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)",
+               height: "22px",
+               display: "flex",
+               justifyContent: "center",
+               alignItems: "center",
+              }}>
+              <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.02em", color: "#000" }}>
+               {stat.label}
+              </span>
+             </div>
+             <div style={{ padding: "6px 2px 0px", display: "flex", alignItems: "baseline", justifyContent: "center", gap: "2px" }}>
+              <div style={{ fontSize: isSmall ? "18px" : "22px", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1 }}>
+               {stat.value}
+              </div>
+              {stat.trend && <span style={{ fontSize: "8px", fontWeight: 900, color: stat.trend.includes("↑") ? "#008B00" : "#D32F2F" }}>{cleanTrend}</span>}
+             </div>
+             <div style={{ display: "flex", alignItems: "flex-end", gap: "1px", padding: "0 2px 2px", height: "18px", marginTop: "auto" }}>
+              {bars.map((h, i) => (
+               <div key={i} style={{ flex: 1, height: `${h}%`, background: stat.color, opacity: 0.4 + (h / 100) * 0.6, borderRadius: "1px 1px 0 0" }} />
+              ))}
+             </div>
+            </div>
+           )
+        })}
+       </div>
+      </div>
+
+      {/* Full Width Footer */}
+      <div style={{ 
+        borderTop: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)", 
+        background: "#eee", 
+        padding: "8px 12px", 
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "space-between",
+        marginTop: "auto"
+      }}>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ fontSize: "14px", fontWeight: 950, textTransform: "uppercase", tracking: "-0.02em" }}>
+            {data.brain?.channelProfile?.name || data.authState?.channelName || "Your Channel"}
+          </div>
+          <div style={{ fontSize: "10px", fontWeight: 800, opacity: 0.5 }}>
+            @{data.brain?.channelProfile?.channelHandle || data.authState?.channelHandle || "handle"}
+          </div>
+        </div>
+        <a
+          href={`https://youtube.com/${data.brain?.channelProfile?.channelHandle ? '@' + data.brain.channelProfile.channelHandle.replace(/^@/, '') : (data.authState?.channelHandle ? '@' + data.authState.channelHandle.replace(/^@/, '') : "")}`}
+          target="_blank"
+          rel="noreferrer"
+          className="vt-button primary"
           style={{
-           background: "#fff",
-           border: "2px solid #000",
-           borderRadius: "6px",
-           overflow: "hidden",
-           display: "flex",
-           flexDirection: "column",
-          }}>
-          <div
-           style={{
-            background: stat.color,
-            borderBottom: "2px solid #000",
-            height: "22px",
+            height: "32px",
+            padding: "0 16px",
+            fontSize: "11px",
+            fontWeight: 900,
+            textDecoration: "none",
             display: "flex",
-            justifyContent: "center",
             alignItems: "center",
-           }}>
-           <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.02em", color: "#000", lineHeight: 1 }}>
-            {stat.label}
-           </span>
-          </div>
-          <div style={{ padding: "6px 6px 0px", display: "flex", alignItems: "baseline", justifyContent: "center", gap: "6px" }}>
-           <div style={{ fontSize: isSmall ? "22px" : "28px", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1, color: "#000" }}>
-            {stat.value.endsWith("K") ? <>{stat.value.slice(0, -1)}<span style={{ fontSize: "0.6em" }}>K</span></> : stat.value.endsWith("M") ? <>{stat.value.slice(0, -1)}<span style={{ fontSize: "0.6em" }}>M</span></> : stat.value}
-           </div>
-           {stat.trend && <span style={{ fontSize: "10px", fontWeight: 900, color: stat.trend.includes("▲") ? "#008B00" : "#D32F2F" }}>{cleanTrend}</span>}
-          </div>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: "1.5px", padding: "2px 4px 0", height: isSmall ? "25px" : "40px", marginTop: "auto" }}>
-           {bars.map((h, i) => (
-            <div key={i} style={{ flex: 1, height: `${Math.min(100, h * 1.5)}%`, background: stat.color, opacity: 0.3 + (h / 100) * 0.7, borderRadius: "2px 2px 0 0", border: "1px solid rgba(0,0,0,0.15)", borderBottom: "none" }} />
-           ))}
-          </div>
-         </div>
-        )
-       })}
+            justifyContent: "center"
+          }}
+         >
+          VISIT CHANNEL
+        </a>
       </div>
      </div>
     </WidgetShell>
@@ -1193,19 +1233,19 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
       <label style={{ fontSize: "8px", fontWeight: 800, opacity: 0.6 }}>AI API KEY</label>
       <input
        type="password"
-       className="brutal-input"
+       className="vt-input"
        value={apiKey}
        placeholder="••••••••"
        onChange={(e) => { setApiKey(e.target.value); saveSettings(e.target.value, model); }}
-       style={{ height: "28px", fontSize: "10px" }}
+       style={{ height: "28px", fontSize: "10px", padding: "0 8px" }}
       />
 
       <label style={{ fontSize: "8px", fontWeight: 800, opacity: 0.6, marginTop: "4px" }}>MODEL CHOICE</label>
       <select
-       className="brutal-input"
+       className="vt-input"
        value={model}
        onChange={(e) => { setModel(e.target.value); saveSettings(apiKey, e.target.value); }}
-       style={{ height: "28px", fontSize: "10px" }}
+       style={{ height: "28px", fontSize: "10px", padding: "0 8px" }}
       >
        <option value="gemini-1.5-flash">GEMINI 1.5 FLASH</option>
        <option value="gemini-1.5-pro">GEMINI 1.5 PRO</option>
@@ -1216,14 +1256,14 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
      {/* Action Buttons */}
      <div style={{ display: "flex", gap: "6px", marginTop: "auto" }}>
       <button
-       className="brutal-btn"
+       className="vt-button primary"
        style={{ flex: 1, height: "32px", fontSize: "9px", background: "#00D2FF" }}
        onClick={() => { /* Sync logic */ }}
       >
        SYNC CHANNEL
       </button>
       <button
-       className="brutal-btn"
+       className="vt-button"
        style={{ flex: 1, height: "32px", fontSize: "9px", background: "#eee" }}
        onClick={() => { /* Connect logic */ }}
       >
@@ -1250,6 +1290,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  if (widget.id === "burnout-monitor") return <BurnoutMonitorWidget {...common} data={data} />
 
  if (widget.id === "collab-matchmaker") return <CollabMatchmakerWidget {...common} data={data} />
+ if (widget.id === "brain-hub") return <BrainHubWidget {...common} data={data} />
 
  return (
   <WidgetShell {...common}>

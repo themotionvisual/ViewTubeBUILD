@@ -33,6 +33,7 @@ import {
 import { geminiQueue } from "../utils/RequestQueue"
 import { getVaultKey } from "./keyVault"
 import { consumeAiTokens } from "./billingEntitlement"
+import { consultBrainSync, annotateSystemPrompt } from "./brainUtils"
 
 // --- Actionable Tactics Logic ---
 
@@ -45,6 +46,15 @@ export const TACTICS_SYSTEM_INSTRUCTIONS = {
   "You are a Master Storyteller. Focus on psychological hook retention, narrative loops, and emotional resonance. Use advanced storytelling frameworks like the 'Story Circle' or 'Fichtean Curve' adapted for short-form and long-form video.",
  "technical-edge":
   "You are a Cutting-Edge Tech Scout. Focus on the latest AI-assisted editing workflows, custom automation scripts, and technical SEO adjustments that give a 1% edge in the algorithm.",
+}
+
+export interface AIPatchPlan {
+  operations: any[];
+}
+
+export interface OracleState {
+  analysis: any;
+  suggestions: any[];
 }
 
 export const fetchViralTrends = async (query?: string): Promise<Trend[]> => {
@@ -543,13 +553,16 @@ export const generateIdeaSpark = async (topic: string, brain?: any): Promise<str
   items: { type: Type.STRING },
  }
 
- const prompt = `
+  const basePrompt = `
     IDENTITY: You are a viral YouTube strategist.
     CREATOR CONTEXT: ${journalContext}
     TASK: Generate 3 viral, high-CTR YouTube video titles for the core topic: "${topic}".
     The titles should be catchy, intriguing, and optimized for search and browse.
     OUTPUT: A JSON array of exactly 3 strings.
   `
+
+  const brainContext = consultBrainSync("IDEAS_VAULT")
+  const prompt = annotateSystemPrompt(basePrompt, brainContext)
 
  return await executeWithRetry(async () => {
   const modelId = getActiveModel("fast-text")

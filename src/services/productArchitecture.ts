@@ -1,6 +1,7 @@
 export type MasterTableType =
  | "master_channel_identity"
  | "master_video_core"
+ | "master_video_metadata_enriched"
  | "master_audience"
  | "master_geography"
  | "master_traffic"
@@ -112,6 +113,7 @@ export interface MasterTableBundle {
 export const MASTER_TABLE_LABELS: Record<MasterTableType, string> = {
  master_channel_identity: "Channel Identity",
  master_video_core: "Video Core",
+ master_video_metadata_enriched: "Video Metadata Enriched",
  master_audience: "Audience",
  master_geography: "Geography",
  master_traffic: "Traffic",

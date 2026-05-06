@@ -14,6 +14,7 @@ import {
  Sparkles,
 } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
+import { useBrain } from "../context/GlobalDataContext"
 import { unifiedAuth } from "../services/authSession"
 import { getVaultSnapshot, setVaultSnapshot } from "../services/keyVault"
 import { SubToolbox } from "../components/Toolbox"
@@ -41,9 +42,24 @@ import {
 // ... existing code ...
 
 const Settings: React.FC = () => {
- // ... existing code ...
- const [billingStatus, setBillingStatus] = useState<string | null>(null)
- const query = new URLSearchParams(location.search)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { authState } = useBrain()
+  const isAuth = authState.isAuthenticated
+
+  const [geminiKey, setGeminiKey] = useState("")
+  const [showKey, setShowKey] = useState(false)
+  const [modelPreference, setModelPreference] = useState("pro")
+  const [saveStatus, setSaveStatus] = useState<string | null>(null)
+  const [handleInput, setHandleInput] = useState("")
+  const [handleStatus, setHandleStatus] = useState<string | null>(null)
+  const [ingestMode, setIngestMode] = useState<IngestMode>(getStoredIngestMode())
+  const [exportStatus, setExportStatus] = useState<string | null>(null)
+  const [dataResetStatus, setDataResetStatus] = useState<string | null>(null)
+  const [loadingPlan, setLoadingPlan] = useState<SubscriptionPlanId | null>(null)
+  const [billingStatus, setBillingStatus] = useState<string | null>(null)
+
+  const query = new URLSearchParams(location.search)
  const activePanel = query.get("panel")
  const highlightBilling = activePanel === "billing"
  const entitlement = getCurrentEntitlement()

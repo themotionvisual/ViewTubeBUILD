@@ -1,13 +1,56 @@
 import React, { useMemo, useState } from 'react';
 import { CustomIcon } from './CustomIcon';
 import { getToolboxPaletteColors } from '../styles/toolboxPalette';
-import { hexToRgba, CONTROL_SHELL, AnimatedToggleIcon } from './ToolboxUISystem';
+import { hexToRgba, AnimatedToggleIcon } from './ToolboxUISystem';
+import { Cloud, Zap } from 'lucide-react';
+
+// Canonical shell tokens shared by SubToolbox, DropdownControl, and ActionControlButton.
+export const CONTROL_SHELL = {
+  headerHeight: 56, // Header block height; 56 + 4px stroke seam = 60px control rhythm.
+  height: 60,
+  stroke: 4,
+  radius: 16,
+  railSize: 56,
+  shadowOffset: 6,
+  transition: "duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
+} as const;
+
+const resolveSubtoolboxMinHeight = (
+  openUnits: number,
+  heightMode: "standard" | "compact"
+) => {
+  // Target total = openUnits * 60 + (openUnits-1) * 24
+  const gap = 24;
+  const overhead = 60; // 56 header + 2px top + 2px bottom (approx)
+  const computed = openUnits * 60 + (openUnits - 1) * gap - overhead;
+  if (heightMode === "compact") return Math.max(0, Math.min(computed, 144));
+  return Math.max(0, computed);
+};
+
+interface IconRailProps {
+  backgroundColor: string;
+  stroke?: number;
+  children: React.ReactNode;
+}
+
+const IconRail: React.FC<IconRailProps> = ({ backgroundColor, stroke = 2, children }) => (
+  <div
+    className="h-full flex items-center justify-center shrink-0 transition-all duration-500"
+    style={{
+      width: `${CONTROL_SHELL.headerHeight}px`,
+      backgroundColor,
+      borderRight: `${stroke}px solid black`,
+    }}
+  >
+    {children}
+  </div>
+);
 
 export type ToolboxVariant = 'scaffold' | 'accordion' | 'sub' | 'header';
 export type ToolboxIndicator = 'symbols' | 'plusminus' | 'none';
 
 const extractHexFromBgClass = (bgClass: string): string | null => {
-  const match = bgClass.match(/bg-\[#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\]/);
+  const match = bgClass.match(/bg-\[#([0-9a-fA-F]{3,6})\]/);
   if (!match) return null;
   return `#${match[1]}`;
 };
@@ -19,7 +62,8 @@ interface ToolboxProps {
   title: string;
   subtitle?: string;
   icon?: React.ReactNode;
-  headerColor: string;
+  iconName?: string;
+  headerColor?: string;
   iconBoxColor?: string;
   textColor?: string;
   paletteIndex?: number;
@@ -45,7 +89,8 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   variant = 'scaffold',
   title,
   icon,
-  headerColor,
+  iconName,
+  headerColor = 'bg-[#FFDD00]',
   iconBoxColor = 'bg-white',
   textColor = 'text-black',
   paletteIndex,
@@ -83,18 +128,25 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   
   // Canonical colored shadow logic
   const shadowColor = headerHex ? hexToRgba(headerHex, 0.45) : 'rgba(0,0,0,0.45)';
-  const shadowOffset = variant === 'accordion' || variant === 'sub' ? 6 : 10;
+  const shadowOffset = variant === 'accordion' ? 6 : 10;
   
-  const accentShadowStyle = { 
-    boxShadow: `${shadowOffset}px ${shadowOffset}px 0px 0px ${shadowColor}` 
-  };
-
+  // Stroke hierarchy: Scaffold = 4, Accordion = 3, Sub = 2
+  const stroke = variant === 'accordion' ? 3 : (variant === 'scaffold' ? 4 : 4);
+  const radius = variant === 'accordion' ? 12 : 16;
   const finalContentClass = useMemo(() => {
     if (contentClassName) return contentClassName;
     if (variant === 'accordion') return 'p-6 bg-white text-black';
-    if (variant === 'sub') return 'p-6 flex-1 flex flex-col space-y-6';
     return embedded ? 'p-0' : 'p-8';
-  }, [contentClassName, embedded, variant]);
+  }, [contentClassName, variant, embedded]);
+
+  const resolvedIcon = useMemo(() => {
+    if (React.isValidElement(icon)) {
+      return React.cloneElement(icon as React.ReactElement<any>, { size: 56, strokeWidth: 2.0 });
+    }
+    if (icon) return icon;
+    if (iconName) return <CustomIcon name={iconName} size={56} strokeWidth={2.0} />;
+    return null;
+  }, [icon, iconName]);
 
   if (variant === 'header') {
     return (
@@ -107,55 +159,19 @@ export const Toolbox: React.FC<ToolboxProps> = ({
             className={`${iconBoxColor} h-full w-[80px] flex items-center justify-center border-r-[5px] border-black flex-shrink-0`}
             style={iconStyle}
           >
-            {icon}
+            {resolvedIcon}
           </div>
           <h1 className="text-[50px] font-[1000] uppercase tracking-tighter pl-8 leading-none mt-1 select-none pointer-events-none">{title}</h1>
         </div>
-
         <div className="flex items-center gap-6 pr-6">{headerActions}</div>
       </header>
-    );
-  }
-
-  // Common stroke and radius rules
-  const stroke = variant === 'sub' || variant === 'accordion' ? 4 : 5;
-  const radius = 16;
-
-  if (variant === 'sub') {
-    return (
-      <div 
-        className={`bg-white border-black rounded-2xl overflow-hidden flex flex-col h-full self-start ${outerClassName}`}
-        style={{
-          border: `${stroke}px solid black`,
-          borderRadius: `${radius}px`,
-          ...accentShadowStyle
-        }}
-      >
-        <div
-          className={`${headerColor} ${textColor} p-4 flex justify-between items-center select-none`}
-          style={{
-            ...headerStyle,
-            height: '60px',
-            borderBottom: `${stroke}px solid black`
-          }}
-        >
-          <div className="flex items-center h-full flex-1">
-             <div className="h-[60px] w-[60px] flex items-center justify-center shrink-0 border-r-[4px] border-black -ml-4 mr-4" style={iconStyle}>
-               {icon}
-             </div>
-            <span className="font-black uppercase text-2xl tracking-tighter leading-none select-none pointer-events-none">{title}</span>
-          </div>
-          {headerActions}
-        </div>
-        <div className={finalContentClass}>{children}</div>
-      </div>
     );
   }
 
   const frameClass = `w-full bg-white overflow-hidden flex flex-col relative ${outerClassName}`;
   const collapseTransitionClass = disableCollapseAnimation
     ? "duration-0 ease-linear"
-    : CONTROL_SHELL.transition;
+    : "duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)]";
   
   const headerHeight = variant === 'accordion' ? 56 : 80;
 
@@ -168,7 +184,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
           borderRadius: `${radius}px`,
           isolation: 'isolate',
           contain: 'content',
-          ...accentShadowStyle
+          boxShadow: `${shadowOffset}px ${shadowOffset}px 0px 0px ${shadowColor}`
         }}
       >
         <header
@@ -182,14 +198,15 @@ export const Toolbox: React.FC<ToolboxProps> = ({
         >
           <div className="flex items-center h-full flex-1">
             <div
-              className={`${iconBoxColor} flex items-center justify-center border-r-[4px] border-black flex-shrink-0 transition-all`}
+              className={`${iconBoxColor} flex items-center justify-center transition-all`}
               style={{
                 ...iconStyle,
                 height: '100%',
-                width: `${headerHeight}px`
+                width: `${headerHeight}px`,
+                borderRight: `${stroke}px solid black`
               }}
             >
-              {icon}
+              {resolvedIcon}
             </div>
 
             <div className={`flex flex-col pl-4 justify-center pointer-events-none select-none`}>
@@ -206,24 +223,15 @@ export const Toolbox: React.FC<ToolboxProps> = ({
             onClick={(event) => event.stopPropagation()}
           >
             {headerActions}
-            {indicator === 'plusminus' && (
-              <div
-                onClick={setOpen}
-                className="h-full px-2 flex items-center justify-center cursor-pointer border-l-[4px] border-black"
-              >
-                <span className="text-2xl font-black leading-none text-black">{open ? '−' : '+'}</span>
-              </div>
-            )}
             {indicator === 'symbols' && isCollapsible && (
               <div
                 onClick={setOpen}
-                className="h-full px-1 flex items-center justify-center cursor-pointer border-l-[4px] border-black"
-                style={{ width: variant === "accordion" ? "48px" : "64px" }}
+                className="h-full flex items-center justify-center cursor-pointer"
+                style={{ 
+                  width: variant === "accordion" ? "48px" : "64px"
+                }}
               >
-                <AnimatedToggleIcon
-                  open={open}
-                  size={variant === 'accordion' ? 32 : 44}
-                />
+                <AnimatedToggleIcon open={open} size={variant === 'accordion' ? 32 : 44} />
               </div>
             )}
           </div>
@@ -236,7 +244,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
           style={{ marginTop: `-${stroke}px` }}
         >
           <div className="overflow-hidden min-h-0">
-            {(!unmountWhenClosed || open) && <main className={`flex-1 bg-white ${finalContentClass}`}>{children}</main>}
+            {(!unmountWhenClosed || open) && <main className={`flex-1 min-h-0 bg-white ${finalContentClass}`}>{children}</main>}
           </div>
         </div>
       </div>
@@ -301,7 +309,8 @@ export const AccordionContainer: React.FC<AccordionContainerProps> = ({
 interface ToolboxScaffoldProps {
   title: string;
   subtitle?: string;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
+  iconName?: string;
   headerColor?: string;
   iconBoxColor?: string;
   paletteIndex?: number;
@@ -325,6 +334,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
   title,
   subtitle,
   icon,
+  iconName,
   headerColor = "bg-[#FFDD00]",
   iconBoxColor = "bg-[#FF3399]",
   paletteIndex,
@@ -348,6 +358,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
     title={title}
     subtitle={subtitle}
     icon={icon}
+    iconName={iconName}
     headerColor={headerColor}
     iconBoxColor={iconBoxColor}
     paletteIndex={paletteIndex}
@@ -372,7 +383,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
 
 interface SubToolboxProps {
   title: string;
-  icon?: React.ReactNode;
+  icon?: React.ReactNode | string;
   headerColor?: string;
   textColor?: string;
   paletteIndex?: number;
@@ -380,8 +391,12 @@ interface SubToolboxProps {
   actionButton?: React.ReactNode;
   contentClassName?: string;
   collapsible?: boolean;
+  isOpen?: boolean;
   isOpenInitial?: boolean;
+  onToggle?: () => void;
   unmountOnClose?: boolean;
+  openUnits?: number;
+  heightMode?: "standard" | "compact";
 }
 
 export const SubToolbox: React.FC<SubToolboxProps> = ({
@@ -394,125 +409,170 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   actionButton,
   contentClassName,
   collapsible = false,
+  isOpen,
   isOpenInitial = true,
+  onToggle,
   unmountOnClose = false,
-}) => (
-  <SubToolboxInner
-    title={title}
-    icon={icon}
-    headerColor={headerColor}
-    textColor={textColor}
-    paletteIndex={paletteIndex}
-    actionButton={actionButton}
-    contentClassName={contentClassName}
-    collapsible={collapsible}
-    isOpenInitial={isOpenInitial}
-    unmountOnClose={unmountOnClose}
-  >
-    {children}
-  </SubToolboxInner>
-);
-
-const SubToolboxInner: React.FC<SubToolboxProps> = ({
-  title,
-  icon,
-  headerColor = "bg-[#00CCFF]",
-  textColor = "text-black",
-  paletteIndex,
-  children,
-  actionButton,
-  contentClassName,
-  collapsible = false,
-  isOpenInitial = true,
-  unmountOnClose = false,
+  openUnits = 3,
+  heightMode = "standard",
 }) => {
-  const [open, setOpen] = useState(isOpenInitial);
+  const [internalOpen, setInternalOpen] = useState(isOpenInitial);
+  const controlled = typeof isOpen === 'boolean';
+  const open = controlled ? Boolean(isOpen) : internalOpen;
+
+  const setOpen = () => {
+    if (onToggle) {
+      onToggle();
+      return;
+    }
+    if (!controlled) setInternalOpen((prev) => !prev);
+  };
   const palette = paletteIndex !== undefined && paletteIndex !== null ? getToolboxPaletteColors(paletteIndex) : null;
-  const headerStyle = palette ? { backgroundColor: palette.header } : undefined;
-  const iconStyle = palette ? { backgroundColor: palette.icon } : undefined;
-  const headerHex = palette?.header ?? extractHexFromBgClass(headerColor);
+  const headerHex = palette?.header ?? extractHexFromBgClass(headerColor) ?? "#00CCFF";
+  const iconBg = palette?.icon ?? headerHex;
   
-  const shadowColor = headerHex ? hexToRgba(headerHex, 0.45) : 'rgba(0,0,0,0.45)';
-  const shadowOffset = 6;
+  const shadowColor = hexToRgba(headerHex, 0.5);
+  const minInnerHeight = resolveSubtoolboxMinHeight(openUnits, heightMode);
 
-  const content = (
-    <div className={`flex-1 bg-white ${contentClassName || "p-6 flex flex-col space-y-6"}`}>
-      {children}
-    </div>
-  );
+  const contentSizeStyle = heightMode === "compact" ? undefined : { minHeight: `${Math.max(0, minInnerHeight)}px` };
 
-  if (!collapsible) {
-    return (
-      <Toolbox
-        variant="sub"
-        title={title}
-        icon={icon}
-        headerColor={headerColor}
-        textColor={textColor}
-        paletteIndex={paletteIndex}
-        headerActions={actionButton}
-        contentClassName={contentClassName || "p-6 flex-1 flex flex-col space-y-6"}
-      >
-        {children}
-      </Toolbox>
-    );
-  }
+  const finalIcon = React.isValidElement(icon)
+    ? React.cloneElement(icon as React.ReactElement<any>, { size: 40, strokeWidth: 1.75 })
+    : (typeof icon === 'string' ? <CustomIcon name={icon} size={40} strokeWidth={1.75} /> : icon);
 
   return (
     <div
-      className="bg-white overflow-hidden flex flex-col self-start"
+      className="w-full self-start bg-white overflow-hidden relative flex flex-col shrink-0 transition-all duration-300"
       style={{
-        border: '4px solid black',
-        borderRadius: '16px',
-        isolation: 'isolate',
-        contain: 'content',
-        boxShadow: `${shadowOffset}px ${shadowOffset}px 0px 0px ${shadowColor}`
+        border: `4px solid black`,
+        borderRadius: `16px`,
+        boxShadow: `6px 6px 0px 0px ${shadowColor}`,
       }}
     >
       <header
-        className={`${headerColor} ${textColor} flex justify-between items-center select-none cursor-pointer`}
-        onClick={() => setOpen((prev) => !prev)}
+        className={`flex items-center justify-between select-none relative z-20 group ${collapsible ? 'cursor-pointer' : ''}`}
+        onClick={collapsible ? setOpen : undefined}
         style={{
-          ...headerStyle,
-          height: '60px',
-          borderBottom: '4px solid black'
+          height: `${CONTROL_SHELL.headerHeight}px`,
+          minHeight: `${CONTROL_SHELL.headerHeight}px`,
+          backgroundColor: headerHex,
+          borderBottom: `4px solid black`,
         }}
       >
         <div className="flex items-center h-full flex-1">
-          <div 
-            className="h-full w-[60px] flex items-center justify-center shrink-0 border-r-[4px] border-black"
-            style={iconStyle}
-          >
-            {icon}
+          <IconRail backgroundColor={iconBg} stroke={4}>
+            <div className="text-black">{finalIcon}</div>
+          </IconRail>
+
+          <div className="flex items-center pl-2.5 h-full pointer-events-none select-none">
+            <h3 className="font-[900] uppercase tracking-tighter text-black leading-none text-[32px] sm:text-[36px] md:text-[40px]">
+              {title}
+            </h3>
           </div>
-          <span className="font-black uppercase text-2xl tracking-tighter leading-none select-none pointer-events-none pl-4">
-            {title}
-          </span>
         </div>
-        <div className="flex items-center gap-3 pr-4" onClick={(event) => event.stopPropagation()}>
+
+        <div className="flex items-center gap-2 pr-3 h-full" onClick={e => e.stopPropagation()}>
           {actionButton}
-          <div
-            onClick={() => setOpen((prev) => !prev)}
-            className={`h-full w-[56px] cursor-pointer transition-all duration-700 ease-in-out transform border-l-[4px] border-black flex items-center justify-center ${
-              open ? "rotate-180 scale-110" : "rotate-0 scale-100"
-            }`}
-          >
-            <CustomIcon
-              name={open ? "SYMBOLS 19" : "SYMBOLS 22"}
-              size={28}
-              className="opacity-80 hover:opacity-100 transition-opacity text-black"
-            />
-          </div>
+          {collapsible && (
+            <div className="h-full flex items-center justify-center" onClick={setOpen}>
+              <AnimatedToggleIcon open={open} size={28} />
+            </div>
+          )}
         </div>
       </header>
+
       <div
-        className={`grid transition-[grid-template-rows,opacity] ${CONTROL_SHELL.transition} ${
-          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-        }`}
+        className={`grid transition-[grid-template-rows] ${CONTROL_SHELL.transition} ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
         style={{ marginTop: "-4px" }}
       >
-        <div className="overflow-hidden min-h-0">{open || !unmountOnClose ? content : null}</div>
+        <div className="overflow-hidden min-h-0">
+          <main
+            className={`bg-white w-full p-4 text-black flex flex-col transition-opacity ${CONTROL_SHELL.transition} ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+            style={contentSizeStyle}
+          >
+            {children}
+          </main>
+        </div>
       </div>
     </div>
+  );
+};
+
+export interface StandardUploadBoxProps {
+  label?: string;
+  icon?: React.ReactNode;
+  iconBgColor?: string;
+  onUpload?: (files: FileList | null) => void;
+  minHeight?: string;
+}
+
+export const StandardUploadBox: React.FC<StandardUploadBoxProps> = ({
+  label = "DROP FILES OR CLICK TO UPLOAD",
+  icon,
+  iconBgColor = "#FF3399",
+  onUpload,
+  minHeight = "220px",
+}) => {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  return (
+    <div
+      className="w-full border-[4px] border-black bg-white rounded-2xl flex-1 flex flex-col items-center justify-center p-3 relative overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
+      style={{
+        minHeight,
+        boxShadow: `6px 6px 0px 0px ${hexToRgba(iconBgColor, 0.5)}`,
+      }}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        className="hidden"
+        onChange={(e) => onUpload?.(e.target.files)}
+      />
+      <div
+        onClick={() => inputRef.current?.click()}
+        className="w-full h-full border-[3px] border-[#9ca3af] border-dashed rounded-2xl bg-gray-100 flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-gray-200 transition-colors"
+      >
+        <div className="w-16 h-16 border-[3px] border-black rounded-full bg-white flex items-center justify-center">
+          {icon || <Zap size={32} strokeWidth={2.5} className="text-black" style={{ color: iconBgColor }} />}
+        </div>
+        <h3 className="text-[32px] sm:text-[42px] font-[1000] uppercase tracking-tighter text-black leading-none text-center">
+          {label.includes('\\n') ? (
+            label.split('\\n').map((line, i) => (
+              <React.Fragment key={i}>
+                {line}
+                {i < label.split('\\n').length - 1 && <br />}
+              </React.Fragment>
+            ))
+          ) : (
+            <>CANVAS<br />STANDBY</>
+          )}
+        </h3>
+        <p className="font-black text-black/40 uppercase tracking-[0.18em] text-[11px] text-center">
+          {label.replace('\\n', ' ')}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export interface StandardTextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  minHeight?: string;
+  hasBorder?: boolean;
+}
+
+export const StandardTextArea: React.FC<StandardTextAreaProps> = ({
+  className,
+  minHeight = "88px",
+  hasBorder = true,
+  ...props
+}) => {
+  return (
+    <textarea
+      className={`w-full text-sm font-bold outline-none resize-none placeholder:text-black/20 text-black leading-tight ${hasBorder ? "p-4 rounded-2xl border-[4px] bg-white border-black" : "p-0 bg-transparent border-none"} ${className || ""}`}
+      style={{ minHeight }}
+      {...props}
+    />
   );
 };

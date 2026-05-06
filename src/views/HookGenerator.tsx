@@ -6,8 +6,9 @@ import {
 } from "../services/gemini"
 import type { HookResult } from "../types"
 import { Magnet } from "lucide-react"
-import { ToolboxScaffold } from "../components/Toolbox"
+import { ToolboxScaffold, Toolbox, SubToolbox, StandardTextArea } from "../components/Toolbox"
 import { useBrain } from "../context/GlobalDataContext"
+import { PostActionReflection } from "../components/PostActionReflection"
 
 interface HookGeneratorProps {
  globalScript?: string
@@ -152,30 +153,34 @@ const HookGenerator: React.FC<HookGeneratorProps> = ({
    contentClassName={embedded ? "p-0" : "p-8"}>
    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <div className="lg:col-span-1 space-y-6 flex flex-col h-full">
-     <div className="bg-white border-[4px] border-black rounded-[24px] shadow-[8px_8px_0px_0px_black] sticky top-4 overflow-hidden">
-      <div className="bg-[#00CCFF] p-4 border-b-[4px] border-black font-black uppercase text-black text-xl tracking-tighter">
-       Input Data
-      </div>
-      <div className="p-6 space-y-6">
+     <SubToolbox
+      title="Input Data"
+      icon={<Magnet size={20} strokeWidth={3} />}
+      paletteIndex={paletteIndex}
+      collapsible
+      isOpenInitial={true}
+     >
+      <div className="p-6 space-y-6 bg-white">
        <div className="space-y-2">
         <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
          Script Intro / Concept
         </label>
-        <textarea
+        <StandardTextArea
          value={localScript}
          onChange={(e) => setLocalScript(e.target.value)}
          placeholder="PASTE YOUR SCRIPT INTRO HERE..."
-         className="w-full h-40 p-4 border-[4px] border-black rounded-xl font-bold text-sm uppercase resize-none outline-none focus:bg-[#FF7497]/10 transition-colors"
+         minHeight="160px"
+         className="uppercase focus:bg-gray-50"
         />
        </div>
        <button
         onClick={handleGenerate}
         disabled={loading || !localScript.trim()}
-        className="w-full bg-[#FF7497] border-[4px] border-black p-4 font-black uppercase text-xl rounded-xl shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50">
+        className="w-full bg-[#FF7497] border-[4px] border-black p-4 font-black uppercase text-xl rounded-xl shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-y-0.5 transition-all disabled:opacity-50">
         {loading ? "TUNING HOOKS..." : "GENERATE HOOKS"}
        </button>
       </div>
-     </div>
+     </SubToolbox>
     </div>
 
     <div className="lg:col-span-1 space-y-6 flex flex-col h-full">
@@ -225,6 +230,11 @@ const HookGenerator: React.FC<HookGeneratorProps> = ({
          </div>
         </div>
        ))}
+
+       {/* Brain Reflection UI */}
+       <div className="animate-in slide-in-from-bottom-4 duration-700">
+         <PostActionReflection toolId="HOOK_GENERATOR" />
+       </div>
       </div>
      ) : (
       <div className="h-full min-h-[400px] flex flex-col items-center justify-center border-[4px] border-dashed border-black/20 rounded-[32px] bg-gray-50 p-8 text-center">

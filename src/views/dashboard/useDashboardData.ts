@@ -56,6 +56,16 @@ export const useDashboardData = () => {
   const avgCtr = summary28d.averages.ctr
   const avgAvd = summary28d.averages.avdSeconds
 
+  const dataDaysCount = (globalSyncData?.dailyMetrics as any)?.rows?.length || 28
+
+  const rawMetrics = {
+    subsTotal,
+    subscribers28d,
+    views28d,
+    revenue28d,
+    dataDaysCount
+  }
+
   const formatAvd = (seconds: number | null) => {
     if (!seconds || seconds <= 0) return "0:00"
     const m = Math.floor(seconds / 60)
@@ -184,6 +194,7 @@ export const useDashboardData = () => {
     channelHandle,
     globalSyncData,
     statBlocks,
+    rawMetrics,
     upcomingDays,
     todayTasks,
     recentUploads,

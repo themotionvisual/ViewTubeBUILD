@@ -9,10 +9,19 @@ interface BurnoutState {
  streakStart: string | null
 }
 
-export const BurnoutMonitorWidget = ({
- widget, instance, editMode, onToggleCollapse, onCycleSize, onRemove, data,
-}: any) => {
- const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
+export const BurnoutMonitorWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
+ const common = {
+  widget,
+  instance,
+  editMode,
+  canEdit: true,
+  onToggleCollapse,
+  onCycleSize,
+  onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
+ }
  const [state, setState] = useState<BurnoutState>(() => {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{"restDays":[],"streakStart":null}') }
   catch { return { restDays: [], streakStart: null } }
@@ -83,7 +92,7 @@ export const BurnoutMonitorWidget = ({
 
  const markRestDay = () => {
   if (!state.restDays.includes(todayKey)) {
-   setState(prev => ({ ...prev, restDays: [...prev.restDays, todayKey] }))
+   setState(prev => ({...prev, restDays: [...prev.restDays, todayKey], onDecSize, onCycleHeight, onDecHeight}))
   }
  }
 

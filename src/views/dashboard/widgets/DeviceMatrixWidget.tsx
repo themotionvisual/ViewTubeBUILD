@@ -2,15 +2,7 @@ import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Monitor, Smartphone, Tv } from "lucide-react"
 
-export const DeviceMatrixWidget = ({
- widget,
- instance,
- editMode,
- onToggleCollapse,
- onCycleSize,
- onRemove,
- data,
-}: any) => {
+export const DeviceMatrixWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
  const common = {
   widget,
   instance,
@@ -19,6 +11,9 @@ export const DeviceMatrixWidget = ({
   onToggleCollapse,
   onCycleSize,
   onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
  }
 
  const [device, setDevice] = useState<"mobile" | "desktop" | "tv">("mobile")

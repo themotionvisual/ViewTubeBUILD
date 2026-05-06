@@ -139,6 +139,17 @@ export const nextSizeBucket = (widgetId: string, current: DashboardSizeBucket): 
   return SIZE_BUCKET_ORDER[next]
 }
 
+export const prevSizeBucket = (widgetId: string, current: DashboardSizeBucket): DashboardSizeBucket => {
+  const widget = DASHBOARD_WIDGET_BY_ID[widgetId]
+  if (!widget) return current
+  const minIdx = SIZE_TO_INDEX[widget.minSize]
+  const maxIdx = SIZE_TO_INDEX[widget.maxSize]
+  const idx = SIZE_TO_INDEX[current]
+  const candidate = idx <= minIdx ? maxIdx : idx - 1
+  const next = Math.min(maxIdx, Math.max(minIdx, candidate))
+  return SIZE_BUCKET_ORDER[next]
+}
+
 export const nextHeightBucket = (widgetId: string, current: DashboardHeightBucket): DashboardHeightBucket => {
   const widget = DASHBOARD_WIDGET_BY_ID[widgetId]
   if (!widget) return current
@@ -146,6 +157,17 @@ export const nextHeightBucket = (widgetId: string, current: DashboardHeightBucke
   const maxIdx = HEIGHT_TO_INDEX[widget.maxHeight]
   const idx = HEIGHT_TO_INDEX[current]
   const candidate = idx >= maxIdx ? minIdx : idx + 1
+  const next = Math.min(maxIdx, Math.max(minIdx, candidate))
+  return HEIGHT_BUCKET_ORDER[next]
+}
+
+export const prevHeightBucket = (widgetId: string, current: DashboardHeightBucket): DashboardHeightBucket => {
+  const widget = DASHBOARD_WIDGET_BY_ID[widgetId]
+  if (!widget) return current
+  const minIdx = HEIGHT_TO_INDEX[widget.minHeight]
+  const maxIdx = HEIGHT_TO_INDEX[widget.maxHeight]
+  const idx = HEIGHT_TO_INDEX[current]
+  const candidate = idx <= minIdx ? maxIdx : idx - 1
   const next = Math.min(maxIdx, Math.max(minIdx, candidate))
   return HEIGHT_BUCKET_ORDER[next]
 }
@@ -164,6 +186,7 @@ export const heightBucketClassName = (height: DashboardHeightBucket): string => 
   if (height === "medium") return "h-[250px]"
   if (height === "tall") return "h-[350px]"
   if (height === "xtall") return "h-[450px]"
+  if (height === "massive") return "h-[850px]"
   return "h-[250px]"
 }
 

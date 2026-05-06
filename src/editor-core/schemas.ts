@@ -70,6 +70,22 @@ export const TimelinePatchSchema = z.discriminatedUnion("op", [
   z.object({ op: z.literal("setTransition"), transition: EditorTransitionSchema }),
   z.object({ op: z.literal("setKeyframe"), keyframe: EditorKeyframeSchema }),
   z.object({ op: z.literal("setClipColor"), clipId: z.string().min(1), color: z.string().min(1) }),
+  z.object({
+    op: z.literal("setClipProps"),
+    clipId: z.string().min(1),
+    props: z.object({
+      title: z.string().optional(),
+      text: z.string().optional(),
+      x: z.number().optional(),
+      y: z.number().optional(),
+      scale: z.number().optional(),
+      rotation: z.number().optional(),
+      opacity: z.number().optional(),
+      volume: z.number().optional(),
+      muted: z.boolean().optional(),
+      color: z.string().optional(),
+    }),
+  }),
 ]);
 
 export const AIPatchPlanSchema = z.object({

@@ -9,7 +9,7 @@ interface ChatMessage {
 }
 
 export const SidebarChatbot: React.FC = () => {
-  const { authState } = useBrain();
+  const { authState, emitSignal } = useBrain();
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'model', text: 'AI Strategy Proxy connected. Ready.' }
   ]);
@@ -30,6 +30,9 @@ export const SidebarChatbot: React.FC = () => {
     setInput('');
     setMessages(prev => [...prev, { role: 'user', text: userText }]);
     setIsTyping(true);
+
+    // [BRAIN: INWARD LOOP] Emit signal so Brain learns from Journal interactions
+    emitSignal('AI_JOURNAL', 'USER_MESSAGE', { text: userText }).catch((e: any) => console.warn(e));
 
     const systemPrompt = `
       IDENTITY: You are the ViewTube Creator OS embedded AI Strategy Chatbot.

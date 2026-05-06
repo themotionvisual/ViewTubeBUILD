@@ -11,6 +11,7 @@ import { CommunityPostGenerator } from "../components/CommunityPostGenerator"
 import { CommentResponder } from "../components/CommentResponder"
 import { EndScreenTool } from "../components/EndScreenTool"
 import VideoManager from "./VideoManager"
+import { IntelligenceHub } from "./IntelligenceHub"
 
 const StudioHub: React.FC = () => {
  const [states, setStates] = useState({
@@ -23,7 +24,7 @@ const StudioHub: React.FC = () => {
   setStates((prev) => ({ ...prev, [id]: !(prev as any)[id] }))
 
  return (
-  <div className="flex flex-col space-y-2 max-w-7xl mx-auto pb-24">
+  <div className="flex flex-col space-y-6 max-w-[1500px] mx-auto pb-24">
    {/* Page Header */}
    <div className="mb-10 px-2 mt-4 text-center">
     <h2 className="text-7xl font-[1000] uppercase tracking-[calc(-0.06em)] leading-none text-black">
@@ -36,6 +37,9 @@ const StudioHub: React.FC = () => {
 
    {/* Accordion Modules */}
    <div className="space-y-6">
+    {/* Brain Core */}
+    <IntelligenceHub collapsible isOpenInitial={true} paletteIndex={11} />
+
     {/* Natively Supported Tools */}
     <VideoManager collapsible isOpenInitial={true} paletteIndex={0} />
     <ActionableTactics collapsible isOpenInitial={false} paletteIndex={1} />

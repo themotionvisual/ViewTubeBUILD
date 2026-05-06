@@ -9,15 +9,7 @@ import type { TagSuggestion } from "../../../services/gemini"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
 
-export const TagGeneratorWidget = ({
- widget,
- instance,
- editMode,
- onToggleCollapse,
- onCycleSize,
- onRemove,
- data,
-}: any) => {
+export const TagGeneratorWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
  const { brain } = useBrain()
  const common = {
   widget,
@@ -27,6 +19,9 @@ export const TagGeneratorWidget = ({
   onToggleCollapse,
   onCycleSize,
   onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
  }
  const [selectedVideo, setSelectedVideo] = useState<string>("")
  const [selectedTitle, setSelectedTitle] = useState<string>("")

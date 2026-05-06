@@ -94,14 +94,24 @@ export interface PointerActionState {
   initialTrackId?: string;
 }
 
+export interface EditorSeam {
+  id: string;
+  leftClipId: string;
+  rightClipId: string;
+  kind: "cut" | "transition" | "link";
+  transition?: EditorTransition;
+}
+
 export interface TimelineState {
   fps: number;
   tracks: EditorTrack[];
   clips: EditorClip[];
   keyframes: EditorKeyframe[];
   transitions: EditorTransition[];
+  seams: EditorSeam[];
   effects: EditorEffect[];
   selectedClipId: string | null;
+  selectedClipIds: string[];
   playheadFrame: number;
   zoom: number;
   snapping: boolean;
@@ -227,7 +237,26 @@ export type TimelinePatchOp =
   | { op: "deleteClip"; clipId: string }
   | { op: "setTransition"; transition: EditorTransition }
   | { op: "setKeyframe"; keyframe: EditorKeyframe }
-  | { op: "setClipColor"; clipId: string; color: string };
+  | { op: "setClipColor"; clipId: string; color: string }
+  | {
+      op: "setClipProps";
+      clipId: string;
+      props: Partial<
+        Pick<
+          EditorClip,
+          | "title"
+          | "text"
+          | "x"
+          | "y"
+          | "scale"
+          | "rotation"
+          | "opacity"
+          | "volume"
+          | "muted"
+          | "color"
+        >
+      >;
+    };
 
 export interface AIPatchPlan {
   reason: string;
@@ -242,6 +271,7 @@ export interface AIPatchValidationResult {
 export type TimelineCommand =
   | { type: "insertClip"; clip: EditorClip }
   | { type: "moveClip"; clipId: string; trackId: string; startFrame: number; endFrame: number }
+  | { type: "moveClips"; moves: { clipId: string; trackId: string; startFrame: number; endFrame: number }[] }
   | { type: "trimClipStart"; clipId: string; startFrame: number }
   | { type: "trimClipEnd"; clipId: string; endFrame: number }
   | { type: "splitClip"; clipId: string; frame: number; newClipId: string }
@@ -256,6 +286,7 @@ export type TimelineCommand =
   | { type: "setSnapping"; enabled: boolean }
   | { type: "setSnapStep"; frames: number }
   | { type: "selectClip"; clipId: string | null }
+  | { type: "selectClips"; clipIds: string[] }
   | { type: "setClipColor"; clipId: string; color: string }
   | { type: "setClipSpeed"; clipId: string; speed: number }
   | {
@@ -278,6 +309,8 @@ export type TimelineCommand =
       >;
     }
   | { type: "setTrackViewportState"; trackId: string; viewportState: TrackViewportState }
+  | { type: "setSeamKind"; seamId: string; kind: EditorSeam["kind"] }
+  | { type: "updateSeamTransition"; seamId: string; transition: EditorTransition }
   | { type: "beginPointerAction"; action: PointerActionState }
   | { type: "cancelPointerAction" }
   | { type: "commitPointerAction" }

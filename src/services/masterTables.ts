@@ -15,6 +15,7 @@ import {
 const EMPTY_TABLES = (): Record<MasterTableType, DomainTableRow[]> => ({
  master_channel_identity: [],
  master_video_core: [],
+ master_video_metadata_enriched: [],
  master_audience: [],
  master_geography: [],
  master_traffic: [],
@@ -161,6 +162,9 @@ const ingestModeToSourceMode = (mode: IngestMode): "api" | "csv" | "hybrid" => {
  return "api"
 }
 
+const VIDEO_DETAILS_CACHE_KEY = "vt_video_details_cache_v1"
+const VIDEO_CATEGORY_TAXONOMY_KEY = "vt_video_category_taxonomy_us"
+
 export const buildMasterTableBundle = (
  window: AnalyticsWindow = "lifetime",
  ingestMode: IngestMode = getStoredIngestMode(),
@@ -221,6 +225,52 @@ export const buildMasterTableBundle = (
     sampledAt,
    },
   ]
+ })
+
+ let videoDetailsCache: Record<string, Record<string, unknown>> = {}
+ let categoryTaxonomy: Record<string, string> = {}
+ try {
+  videoDetailsCache = JSON.parse(localStorage.getItem(VIDEO_DETAILS_CACHE_KEY) || "{}") as Record<
+   string,
+   Record<string, unknown>
+  >
+ } catch {
+  videoDetailsCache = {}
+ }
+ try {
+  categoryTaxonomy = JSON.parse(localStorage.getItem(VIDEO_CATEGORY_TAXONOMY_KEY) || "{}") as Record<
+   string,
+   string
+  >
+ } catch {
+  categoryTaxonomy = {}
+ }
+
+ tables.master_video_metadata_enriched = normalizedMasterRows.map((row, index) => {
+  const details = videoDetailsCache[row.videoId] || {}
+  const categoryId = textValue(details.categoryId)
+  const categoryName =
+   categoryId && categoryTaxonomy[String(categoryId)]
+    ? categoryTaxonomy[String(categoryId)]
+    : textValue(details.categoryName)
+  return {
+   canonicalKey: `video_metadata_${index}`,
+   displayName: `Video metadata: ${row.title || row.videoId || index + 1}`,
+   source: "youtube_data_api_v3",
+   scope: "video_shared",
+   accuracyClass: categoryId ? "exact" : "unavailable",
+   value: categoryName || categoryId || null,
+   sampledFrom: row.videoId,
+   sampledAt: new Date().toISOString(),
+   "Video ID": row.videoId,
+   "Video title": row.title,
+   category_id: categoryId,
+   category_name: categoryName || null,
+   default_language: textValue(details.defaultLanguage) || null,
+   default_audio_language: textValue(details.defaultAudioLanguage) || null,
+   tags: Array.isArray(details.tags) ? (details.tags as unknown[]).join("|") : "",
+   source_scope: textValue(details.authScopeUsed) || "channel_owner",
+  }
  })
 
  const ytCache = getCanonicalAnalyticsCache() as Record<string, unknown>

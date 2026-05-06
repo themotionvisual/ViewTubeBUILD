@@ -15,7 +15,7 @@ const AlgorithmArchitect = React.lazy(() => import('../AlgorithmArchitect'));
 const StoryboardStudio = React.lazy(() => import('../StoryboardStudio'));
 const LegacyStudio = React.lazy(() => import('../ReferenceStudio'));
 
-export type BenchTag = 'UI' | 'WIDGET' | 'CHART' | 'ANALYTICS' | 'LAB';
+export type BenchTag = 'UI' | 'WIDGET' | 'CHART' | 'ANALYTICS' | 'LAB' | 'SOURCE';
 
 export interface BenchEntry {
   id: string;

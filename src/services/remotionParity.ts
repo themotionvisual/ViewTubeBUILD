@@ -1,5 +1,5 @@
-import type { EditorEngineState } from "./editorEngine";
-import type { RemotionCompositionSpec } from "./timelineToRemotionCompiler";
+import type { CompositionSpec } from "../editor-core/compiler/timelineToComposition";
+import type { TimelineState } from "../editor-core/contracts";
 
 export interface RemotionParityDrift {
   clipId: string;
@@ -19,12 +19,16 @@ export interface RemotionParityReport {
 }
 
 export const buildRemotionParityReport = (
-  timelineState: EditorEngineState,
-  composition: RemotionCompositionSpec,
+  timelineState: TimelineState,
+  composition: CompositionSpec,
 ): RemotionParityReport => {
   const frameDrift: RemotionParityDrift[] = [];
   const easingMismatches: RemotionParityDrift[] = [];
   const transitionMismatches: RemotionParityDrift[] = [];
+
+  const transitionByFromClip = new Map(
+    timelineState.transitions.map((transition) => [transition.fromClipId, transition]),
+  );
 
   timelineState.clips.forEach((clip) => {
     const sequence = composition.sequences.find((item) => item.clipId === clip.id);
@@ -38,8 +42,8 @@ export const buildRemotionParityReport = (
       return;
     }
 
-    const expectedFrames = Math.round((clip.end - clip.start) * composition.fps);
-    if (Math.abs(sequence.durationInFrames - expectedFrames) > 1) {
+    const expectedFrames = clip.endFrame - clip.startFrame;
+    if (Math.abs(sequence.durationInFrames - expectedFrames) > 0) {
       frameDrift.push({
         clipId: clip.id,
         type: "timing",
@@ -48,18 +52,19 @@ export const buildRemotionParityReport = (
       });
     }
 
-    const expectedEasing = clip.keyframes.find((keyframe) => keyframe.easing)?.easing || "linear";
-    if (sequence.style.easing !== expectedEasing && !(expectedEasing === "linear" && sequence.style.easing === "linear")) {
+    const firstKeyframe = timelineState.keyframes.find(kf => kf.clipId === clip.id);
+    const expectedEasing = firstKeyframe?.easing || "linear";
+    if (sequence.easing !== expectedEasing) {
       easingMismatches.push({
         clipId: clip.id,
         type: "easing",
         expected: expectedEasing,
-        actual: sequence.style.easing,
+        actual: sequence.easing,
       });
     }
 
-    const expectedTransition = clip.transitionToNext?.type || "none";
-    const actualTransition = sequence.transitionToNext?.type || "none";
+    const expectedTransition = transitionByFromClip.get(clip.id)?.type || "none";
+    const actualTransition = sequence.transitionType || "none";
     if (expectedTransition !== actualTransition) {
       transitionMismatches.push({
         clipId: clip.id,

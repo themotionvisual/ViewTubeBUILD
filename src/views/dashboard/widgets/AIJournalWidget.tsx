@@ -15,16 +15,25 @@ const CATEGORIES = [
   { id: "projects", label: "Projects", color: "#70FFCB" },
 ]
 
-export const AIJournalWidget: React.FC<any> = ({ 
-  widget, instance, editMode, onToggleCollapse, onCycleSize, onRemove 
-}) => {
+export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onToggleCollapse, onCycleSize, onRemove, onDecSize, onCycleHeight, onDecHeight}) => {
   const { brain, addJournalEntry, addFollowUp, answerFollowUp, answerMicroPoll, setMicroPolls } = useBrain()
   const [content, setContent] = useState("")
   const [category, setCategory] = useState<any>("content")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGeneratingPulse, setIsGeneratingPulse] = useState(false)
 
-  const common = { widget, instance, editMode, canEdit: true, onToggleCollapse, onCycleSize, onRemove }
+  const common = {
+  widget,
+  instance,
+  editMode,
+  canEdit: true,
+  onToggleCollapse,
+  onCycleSize,
+  onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
+ }
 
   // Generate initial micro-polls if empty
   useEffect(() => {
@@ -69,15 +78,14 @@ export const AIJournalWidget: React.FC<any> = ({
       <div className="flex flex-col gap-4" style={{ height: "100%", overflowY: "auto" }}>
         {/* ENTRY SECTION */}
         <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap gap-1.5">
+          <div className="vt-tab-group" style={{ flexWrap: "wrap", padding: 0 }}>
             {CATEGORIES.map(cat => (
               <button
                 key={cat.id}
                 onClick={() => setCategory(cat.id)}
-                className={`px-2 py-0.5 rounded-md border-2 border-black text-[9px] font-black uppercase transition-all shadow-[1px_1px_0px_0px_#000] hover:translate-y-[1px] hover:shadow-none`}
+                className={`vt-tab-btn ${category === cat.id ? 'active' : ''}`}
                 style={{ 
-                  backgroundColor: category === cat.id ? cat.color : "#fff",
-                  opacity: category === cat.id ? 1 : 0.6
+                  backgroundColor: category === cat.id ? cat.color : undefined,
                 }}
               >
                 {cat.label}
@@ -90,12 +98,14 @@ export const AIJournalWidget: React.FC<any> = ({
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="What's on your mind? Visions, goals, style updates..."
-              className="w-full h-24 p-3 border-[3px] border-black rounded-xl text-[11px] font-bold focus:outline-none focus:shadow-[4px_4px_0px_0px_#000] transition-all resize-none"
+              className="vt-input"
+              style={{ width: "100%", height: "96px", resize: "none", padding: "12px", paddingBottom: "40px" }}
             />
             <button
               onClick={handleSubmit}
               disabled={isSubmitting || !content.trim()}
-              className="absolute bottom-3 right-3 w-8 h-8 bg-black text-white rounded-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all disabled:opacity-30"
+              className="vt-button primary absolute bottom-2 right-2"
+              style={{ width: "32px", height: "32px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
             >
               <Send size={14} />
             </button>
@@ -116,7 +126,8 @@ export const AIJournalWidget: React.FC<any> = ({
                   <div className="flex gap-2">
                     <input 
                       type="text"
-                      className="flex-1 bg-white border-2 border-black rounded-lg px-2 py-1 text-[10px] font-bold outline-none"
+                      className="vt-input flex-1"
+                      style={{ padding: "4px 8px", fontSize: "10px", minHeight: "28px" }}
                       placeholder="Optional reply..."
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -129,7 +140,8 @@ export const AIJournalWidget: React.FC<any> = ({
                         const input = (e.currentTarget.previousSibling as HTMLInputElement)
                         answerFollowUp(f.id, input.value || "Acknowledged")
                       }}
-                      className="w-7 h-7 bg-black text-white rounded-lg flex items-center justify-center flex-shrink-0"
+                      className="vt-button primary flex-shrink-0"
+                      style={{ width: "28px", height: "28px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
                     >
                       <Plus size={14} />
                     </button>

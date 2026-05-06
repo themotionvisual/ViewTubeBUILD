@@ -20,7 +20,8 @@ const formatHumanNumber = (value: unknown): string => {
   return Math.round(parsed).toLocaleString()
 }
 
-export const BridgeEfficiencyWidget: React.FC<any> = ({
+export const BridgeEfficiencyWidget: React.FC<any> = ({widget, instance, editMode, canEdit, onToggleCollapse, onCycleSize, onCycleHeight, onRemove, data, onDecSize, onDecHeight}) => {
+  const common = {
   widget,
   instance,
   editMode,
@@ -29,9 +30,10 @@ export const BridgeEfficiencyWidget: React.FC<any> = ({
   onCycleSize,
   onCycleHeight,
   onRemove,
-  data,
-}) => {
-  const common = { widget, instance, editMode, canEdit, onToggleCollapse, onCycleSize, onCycleHeight, onRemove }
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
+ }
   
   const funnelData = useMemo(() => {
     // We grab actual impressions and views from the data layer if available,
@@ -101,7 +103,7 @@ export const BridgeEfficiencyWidget: React.FC<any> = ({
               />
               <Tooltip
                 cursor={{ fill: "transparent" }}
-                content={({ active, payload }) => {
+                content={({active, payload, onDecSize, onCycleHeight, onDecHeight}) => {
                   if (active && payload && payload.length) {
                     return (
                       <div style={{

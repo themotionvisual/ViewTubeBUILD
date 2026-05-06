@@ -2,15 +2,7 @@ import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Filter } from "lucide-react"
 
-export const TrafficSourcesWidget = ({
- widget,
- instance,
- editMode,
- onToggleCollapse,
- onCycleSize,
- onCycleHeight,
- onRemove,
-}: any) => {
+export const TrafficSourcesWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onCycleHeight, onDecSize, onDecHeight, onRemove }: any) => {
  const common = {
   widget,
   instance,
@@ -20,6 +12,9 @@ export const TrafficSourcesWidget = ({
   onCycleSize,
   onCycleHeight,
   onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
  }
 
  const [tooltip, setTooltip] = useState<{
@@ -58,23 +53,13 @@ export const TrafficSourcesWidget = ({
      onMouseEnter={(e) => {
       const rect = (e.target as SVGElement).closest("svg")?.getBoundingClientRect()
       if (rect) {
-       setTooltip({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-        label: src.label,
-        pct: src.pct,
-       })
+       setTooltip({x: e.clientX - rect.left, y: e.clientY - rect.top, label: src.label, pct: src.pct, onDecSize, onCycleHeight, onDecHeight})
       }
      }}
      onMouseMove={(e) => {
       const rect = (e.target as SVGElement).closest("svg")?.getBoundingClientRect()
       if (rect) {
-       setTooltip({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-        label: src.label,
-        pct: src.pct,
-       })
+       setTooltip({x: e.clientX - rect.left, y: e.clientY - rect.top, label: src.label, pct: src.pct, onDecSize, onCycleHeight, onDecHeight})
       }
      }}
      onMouseLeave={() => setTooltip(null)}

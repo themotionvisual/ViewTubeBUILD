@@ -1,5 +1,5 @@
 export type DashboardSizeBucket = "full" | "three-quarters" | "two-thirds" | "half" | "third" | "quarter"
-export type DashboardHeightBucket = "short" | "medium" | "tall" | "xtall"
+export type DashboardHeightBucket = "short" | "medium" | "tall" | "xtall" | "massive"
 
 export type DashboardWidgetCategory =
   | "core"
@@ -7,6 +7,7 @@ export type DashboardWidgetCategory =
   | "ai"
   | "system"
   | "community"
+  | "creation"
 
 export type WidgetDependency =
   | "youtube_data_v3"
@@ -14,6 +15,7 @@ export type WidgetDependency =
   | "google_search_console"
   | "csv"
   | "google_sheets"
+  | "gemini_api"
   | "none"
 
 export interface WidgetDefinition {
@@ -52,6 +54,21 @@ export interface DashboardLayoutState {
 export interface WidgetRenderCallbacks {
   onToggleCollapse: (widgetId: string) => void
   onCycleSize: (widgetId: string) => void
+  onDecSize: (widgetId: string) => void
   onCycleHeight: (widgetId: string) => void
+  onDecHeight: (widgetId: string) => void
   onRemoveWidget: (widgetId: string) => void
+}
+
+export interface CommonWidgetProps {
+  widget: WidgetDefinition
+  instance: WidgetInstanceState
+  editMode: boolean
+  canEdit: boolean
+  onToggleCollapse: () => void
+  onCycleSize: () => void
+  onDecSize: () => void
+  onCycleHeight: () => void
+  onDecHeight: () => void
+  onRemove: () => void
 }

@@ -263,7 +263,7 @@ export const ChannelyticsChartToolbox: React.FC<ChannelyticsChartToolboxProps> =
           Number(durationMin.toFixed(2)),
           Number(avp.toFixed(2)),
           `${title}\nLEN: ${durationMin.toFixed(2)}m\nAPV: ${avp.toFixed(1)}%\nPROFILE: ${cliffLabel}`,
-        ];
+        ] as [number, number, string];
       })
       .filter((point) => point[0] > 0 && point[1] > 0);
     return rows.length > 0 ? [header, ...rows] : [header, [0, 0, 'No Data']];
@@ -313,7 +313,7 @@ export const ChannelyticsChartToolbox: React.FC<ChannelyticsChartToolboxProps> =
           format,
           Number(Math.max(1, apv).toFixed(3)),
           `${title}\nINTENT: ${score}\nCTR: ${ctr.toFixed(2)}%\nAPV: ${apv.toFixed(1)}%`,
-        ];
+        ] as [string, number, number, string, number, string];
       })
       .filter((entry) => entry[2] > 0);
     return rows.length > 0 ? [header, ...rows] : [header, ['', 0, 0, 'No Data', 1, 'No Data']];
@@ -321,7 +321,12 @@ export const ChannelyticsChartToolbox: React.FC<ChannelyticsChartToolboxProps> =
 
   const loyaltyFunnelData = useMemo(() => {
     const header = ['Stage', 'Audience'];
-    const totals = selectedRows.reduce(
+    const totals = selectedRows.reduce<{
+      views: number;
+      engaged: number;
+      community: number;
+      subscribers: number;
+    }>(
       (acc, row) => {
         const views = getViews(row);
         const apv = getAvp(row);

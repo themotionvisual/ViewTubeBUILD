@@ -16,4 +16,4 @@ export const DASHBOARD_TOKENS = {
 } as const
 
 export const SIZE_BUCKET_ORDER = ["quarter", "third", "half", "two-thirds", "three-quarters", "full"] as const
-export const HEIGHT_BUCKET_ORDER = ["short", "medium", "tall", "xtall"] as const
+export const HEIGHT_BUCKET_ORDER = ["short", "medium", "tall", "xtall", "massive"] as const

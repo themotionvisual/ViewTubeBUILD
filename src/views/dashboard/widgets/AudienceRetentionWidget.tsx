@@ -2,14 +2,7 @@ import React from "react"
 import { WidgetShell } from "../WidgetShell"
 import { TrendingDown } from "lucide-react"
 
-export const AudienceRetentionWidget = ({
- widget,
- instance,
- editMode,
- onToggleCollapse,
- onCycleSize,
- onRemove,
-}: any) => {
+export const AudienceRetentionWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove }: any) => {
  const common = {
   widget,
   instance,
@@ -18,6 +11,9 @@ export const AudienceRetentionWidget = ({
   onToggleCollapse,
   onCycleSize,
   onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
  }
 
  // A mock SV curve for audience retention

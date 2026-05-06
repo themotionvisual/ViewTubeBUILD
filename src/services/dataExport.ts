@@ -1,7 +1,14 @@
 import JSZip from "jszip"
 import { buildMasterTableBundle } from "./masterTables"
+import { getMasterRows } from "./analyticsSelectors"
 import type { AnalyticsWindow } from "./analyticsContract"
 import type { IngestMode, MasterTableType } from "./productArchitecture"
+import type { CsvFileWithTag } from "../types"
+import {
+ buildUnifiedLedger,
+ buildYouTubeStyleProjection,
+ selectAuthoritativeOwnerRows,
+} from "./unifiedSourceOfTruth"
 
 export interface ExportManifest {
  version: string
@@ -24,7 +31,7 @@ const csvEscape = (value: unknown): string => {
  return text
 }
 
-const rowsToCsv = (rows: Record<string, unknown>[]): string => {
+export const rowsToCsv = (rows: Record<string, unknown>[]): string => {
  if (rows.length === 0) return ""
  const headers = Array.from(
   rows.reduce((set, row) => {
@@ -39,6 +46,17 @@ const rowsToCsv = (rows: Record<string, unknown>[]): string => {
   lines.push(headers.map((header) => csvEscape(row[header])).join(","))
  }
  return lines.join("\n")
+}
+
+const UPLOAD_CACHE_FILES_KEY = "vt_uploaded_csv_cache"
+
+const readUploadedCsvFiles = (): CsvFileWithTag[] => {
+ try {
+  const parsed = JSON.parse(localStorage.getItem(UPLOAD_CACHE_FILES_KEY) || "[]") as CsvFileWithTag[]
+  return Array.isArray(parsed) ? parsed : []
+ } catch {
+  return []
+ }
 }
 
 const buildTrustReport = (manifest: ExportManifest): string => {
@@ -91,6 +109,8 @@ export const createExportBundle = async (
    "Coverage registry snapshot",
    "Window sync diagnostics",
    "Trust report",
+   "YouTube-style projection tables (Table/Chart/Totals)",
+   "Unified source-of-truth reconciliation artifacts",
   ],
  }
 
@@ -125,6 +145,28 @@ export const createExportBundle = async (
   zip.file(`tables/${tableName}.json`, JSON.stringify(rows, null, 2))
   zip.file(`tables/${tableName}.csv`, rowsToCsv(rows))
  }
+
+ const uploadedCsvFiles = readUploadedCsvFiles()
+ const apiRows = getMasterRows(analyticsWindow, "api")
+ const ownerRows = getMasterRows(analyticsWindow, "csv", uploadedCsvFiles)
+ const authoritativeOwnerRows = selectAuthoritativeOwnerRows(ownerRows)
+ const channelId = ((JSON.parse(ytCacheRaw) as { profile?: { id?: string } }).profile?.id ||
+  "channel_unknown") as string
+ const unifiedLedger = buildUnifiedLedger({
+  channelId,
+  window: analyticsWindow,
+  apiRows,
+  ownerRows: authoritativeOwnerRows,
+ })
+ const sourceMode = ingestMode === "import" ? "csv" : ingestMode === "hybrid" ? "hybrid" : "api"
+ const projectionRows = getMasterRows(analyticsWindow, sourceMode, uploadedCsvFiles)
+ const projection = buildYouTubeStyleProjection(projectionRows, "engagedViews")
+
+ zip.file("projections/Table data.csv", rowsToCsv(projection.tableRows))
+ zip.file("projections/Chart data.csv", rowsToCsv(projection.chartRows))
+ zip.file("projections/Totals.csv", rowsToCsv(projection.totalsRows as Record<string, unknown>[]))
+ zip.file("unified/facts.json", JSON.stringify(unifiedLedger.facts, null, 2))
+ zip.file("unified/conflicts.json", JSON.stringify(unifiedLedger.conflicts, null, 2))
 
  const blob = await zip.generateAsync({ type: "blob" })
  const timestamp = new Date().toISOString().replace(/[:.]/g, "-")

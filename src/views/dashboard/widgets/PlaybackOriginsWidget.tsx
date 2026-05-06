@@ -2,15 +2,7 @@ import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Database, Zap } from "lucide-react"
 
-export const PlaybackOriginsWidget = ({
- widget,
- instance,
- editMode,
- onToggleCollapse,
- onCycleSize,
- onRemove,
- data,
-}: any) => {
+export const PlaybackOriginsWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
  const common = {
   widget,
   instance,
@@ -19,6 +11,9 @@ export const PlaybackOriginsWidget = ({
   onToggleCollapse,
   onCycleSize,
   onRemove,
+  onDecSize,
+  onCycleHeight,
+  onDecHeight,
  }
 
  const [source, setSource] = useState("Search")
