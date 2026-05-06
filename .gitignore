@@ -14,6 +14,8 @@
 # ================================
 docs/
 docs/**/*
+Roo-Code/
+.billing/
 
 # ================================
 # DUPLICATE/COPY FOLDERS
