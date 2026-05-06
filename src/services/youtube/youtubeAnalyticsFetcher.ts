@@ -1491,3 +1491,22 @@ export const fetchSingleVideoAnalytics = async (videoId: string) => {
  }
  return null
 }
+
+export const createReportingJob = async (
+ startDate: string,
+ endDate: string,
+) => {
+ const token = await refreshTokenIfExpired()
+ if (!token) throw new Error("Missing YouTube token")
+ 
+ const url = `${ANALYTICS_URL}/jobs?ids=channel==MINE&startDate=${startDate}&endDate=${endDate}`
+ const response = await proxyFetch(url, {
+  method: 'POST',
+  headers: { 
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  },
+ })
+ if (!response.ok) await handleYouTubeApiError(response, "Failed to create reporting job")
+ return response.json()
+}
