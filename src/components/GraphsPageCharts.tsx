@@ -10,6 +10,7 @@ import type { CanonicalVideoRow } from "../services/analyticsContract"
 import { resolveMetricNumber } from "../services/canonicalMetricResolver"
 import { UnifiedChartModule } from "./UnifiedChartModule"
 import { CustomIcon } from "./CustomIcon"
+import { StableChartFrame } from "./StableChartFrame"
 
 const mv = (row: CanonicalVideoRow, key: string): number =>
  resolveMetricNumber(row, key as any).value || 0
@@ -147,9 +148,9 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
      <div className="flex items-center gap-1">Bubble size = Views</div>
     </div>
    }>
-   <div className="p-6 h-[420px] relative">
-    <ResponsiveContainer width="100%" height="100%">
-     <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 10 }}>
+  <div className="p-6 h-[420px] relative">
+   <StableChartFrame minHeightClassName="min-h-[300px]">
+    <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 10 }}>
       <ReferenceArea x1={0} x2={ctrMid} y1={0} y2={retMid} fill="#F5F5F5" fillOpacity={0.6} />
       <ReferenceArea x1={ctrMid} x2={Math.ceil(maxCtr * 1.15)} y1={0} y2={retMid} fill="#EEF9FF" fillOpacity={0.6} />
       <ReferenceArea x1={0} x2={ctrMid} y1={retMid} y2={Math.ceil(maxRet * 1.1)} fill="#FFF4F8" fillOpacity={0.6} />
@@ -166,7 +167,7 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
       <Scatter name="Long-form" data={longs} fill="#00E5FF" fillOpacity={0.8} stroke="#fff" strokeWidth={1}
        onMouseEnter={(d:any)=>setHovered(d)} onMouseLeave={()=>setHovered(null)} />
      </ScatterChart>
-    </ResponsiveContainer>
+    </StableChartFrame>
    </div>
   </UnifiedChartModule>
  )
@@ -298,13 +299,13 @@ export const TopPerformersTrio: React.FC<GChartProps> = ({ data }) => {
      <div key={card.label} className="border-[3px] border-black rounded-xl bg-white p-2">
       <div className="text-[10px] font-black uppercase tracking-[0.12em] mb-1">{card.label}</div>
       <div className="h-[200px] border-[2px] border-black rounded-lg bg-[#F4F4F5] p-1">
-       <ResponsiveContainer width="100%" height="100%">
+       <StableChartFrame minHeightClassName="min-h-[160px]">
         <PieChart>
          <Pie data={card.rows} dataKey="value" nameKey="name" innerRadius={40} outerRadius={72} stroke="#111827" strokeWidth={1} isAnimationActive animationDuration={700} animationBegin={idx * 120}>
           {card.rows.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
          </Pie>
         </PieChart>
-       </ResponsiveContainer>
+       </StableChartFrame>
       </div>
       <div className="mt-2 h-10 border-[2px] border-black rounded-md bg-[#00CCFF] text-black px-2 flex items-center justify-between">
        <span className="text-[8px] font-black uppercase tracking-[0.1em]">#1</span>
@@ -612,16 +613,16 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
    keys={[]}
    stats={[]}
    controls={
-    <div ref={modeMenuRef} className="relative w-[144px] bg-black text-[#CCFF00] border-[2px] border-black rounded-[8px] px-2 py-1 inline-flex flex-col items-center justify-center gap-1 leading-none">
-      <span className="text-[40px] font-[1000] leading-none">{cd.points.length}</span>
+    <div ref={modeMenuRef} className="relative w-[144px] bg-black text-[#CCFF00] border-[2px] border-black rounded-[8px] p-2 flex flex-col items-center gap-0">
+      <span className="text-[32px] font-[1000] leading-none">{cd.points.length}</span>
       <button
        type="button"
        onClick={() => setModeMenuOpen((prev) => !prev)}
-       className="h-6 w-full px-2 bg-white text-black border-[2px] border-black rounded-[4px] text-[8px] font-black uppercase tracking-[0.08em] inline-flex items-center justify-between gap-2 transition-colors duration-200 hover:bg-[#EEF7FF]">
+       className="w-full mt-1 mb-1 px-2 py-1 bg-white text-black border-[2px] border-black rounded-[4px] text-[10px] font-black uppercase tracking-[0.08em] inline-flex items-center justify-center gap-1 transition-colors duration-200 hover:bg-[#EEF7FF]">
        <span className="truncate">{mode === "most-recent" ? "Recent" : "Top"}</span>
-       <span className={`text-[9px] transition-transform duration-200 ${modeMenuOpen ? "rotate-180" : ""}`}>▼</span>
+       <span className={`text-[8px] transition-transform duration-200 ${modeMenuOpen ? "rotate-180" : ""}`}>▼</span>
       </button>
-      <span className="text-[8px] font-black uppercase tracking-[0.12em]">videos</span>
+      <span className="text-[12px] font-black uppercase tracking-[0.12em]">VIDEOS</span>
       <div className={`absolute right-[-2px] top-[calc(100%-2px)] w-[calc(100%+4px)] bg-white border-[3px] border-black border-t-0 rounded-b-[6px] overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] z-30 origin-top transition-all duration-200 ${modeMenuOpen ? "opacity-100 scale-y-100 pointer-events-auto" : "opacity-0 scale-y-95 pointer-events-none"}`}>
        <button
         type="button"
@@ -971,12 +972,12 @@ export const GoldenRatioRadar: React.FC<GChartProps> = ({ data }) => {
     <span className="font-[900] text-lg uppercase text-[#00E5FF]">GOLDEN RATIO RADAR</span>
    </div>
    <div className="p-4 h-[360px]">
-    <ResponsiveContainer width="100%" height="100%">
+    <StableChartFrame minHeightClassName="min-h-[260px]">
      <RadarChart cx="50%" cy="50%" outerRadius="80%" data={rd}>
       <PolarGrid stroke="#444"/><PolarAngleAxis dataKey="subject" tick={{fill:"#fff",fontSize:10,fontWeight:900}}/>
       <PolarRadiusAxis tick={{fill:"#666"}}/><Radar name="Avg" dataKey="A" stroke="#00E5FF" fill="#00E5FF" fillOpacity={0.5}/>
      </RadarChart>
-    </ResponsiveContainer>
+    </StableChartFrame>
    </div>
   </div>
  )
@@ -1008,7 +1009,7 @@ export const GrowthPulse: React.FC<GChartProps> = ({ data }) => {
     <span className="text-[10px] text-gray-500 font-bold">Views × Subs × Revenue × Shares — Last 14</span>
    </div>
    <div className="p-4 h-[360px]">
-    <ResponsiveContainer width="100%" height="100%">
+    <StableChartFrame minHeightClassName="min-h-[260px]">
      <LineChart data={cd} margin={{top:10,right:10,left:-10,bottom:0}}>
       <CartesianGrid strokeDasharray="3 3" stroke="#333"/><XAxis dataKey="title" tick={{fill:"#666",fontSize:8,fontWeight:900}}/>
       <YAxis tick={{fill:"#666",fontSize:10}}/><Tooltip content={<ChartTip/>}/>
@@ -1018,7 +1019,7 @@ export const GrowthPulse: React.FC<GChartProps> = ({ data }) => {
       <Line type="monotone" dataKey="shares" stroke="#CCFF00" strokeWidth={3} dot={false} name="Shares"/>
       <Legend wrapperStyle={{fontSize:"10px",fontWeight:900}}/>
      </LineChart>
-    </ResponsiveContainer>
+    </StableChartFrame>
    </div>
   </div>
  )
