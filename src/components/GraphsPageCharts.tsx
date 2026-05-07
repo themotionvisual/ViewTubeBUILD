@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
+import "./marquee.css"
 import {
  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
  BarChart, Bar, ScatterChart, Scatter, ZAxis, Legend, Cell,
@@ -403,27 +404,26 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
  }
 
  return (
-  <div className="bg-white border-[4px] border-black rounded-2xl shadow-[8px_8px_0px_0px_black] overflow-hidden flex flex-col">
-   <div className="border-b-[4px] border-black px-5 py-3 flex justify-between items-center gap-3 bg-[#CCFF00]">
+  <div className="bg-white border-[4px] border-black rounded-[8px] shadow-[8px_8px_0px_0px_black] overflow-hidden flex flex-col">
+   <div className="border-b-[4px] border-black px-4 py-2 flex justify-between items-center gap-2 bg-[#CCFF00]">
     <div>
-     <span className="font-[900] text-lg uppercase tracking-tight">SHORTS RETENTION</span>
-     <span className="block text-[10px] font-bold opacity-60 uppercase">AVD% × Duration</span>
+     <span className="font-[900] text-base uppercase tracking-tight">SHORTS RETENTION</span>
+     <span className="block text-[9px] font-bold opacity-60 uppercase">AVD% × Duration</span>
     </div>
     <div className="flex items-center gap-2">
      <select
       value={mode}
       onChange={(e) => setMode(e.target.value as "top-performing" | "most-recent")}
-      className="h-8 px-2 bg-white border-[3px] border-black rounded-md text-[10px] font-black uppercase">
+      className="h-7 px-2 bg-white border-[2px] border-black rounded-[4px] text-[9px] font-black uppercase">
       <option value="top-performing">Top Performing</option>
       <option value="most-recent">Most Recent</option>
      </select>
-     <span className="text-xs font-black uppercase">TOP AVG % {cd.yTop}</span>
-     <span className="text-sm font-black">{cd.points.length} SHOWN</span>
-     <div className="w-7 h-7 bg-[#004D40] rounded border-2 border-black flex items-center justify-center cursor-pointer text-white text-xs">⤢</div>
+     <span className="text-[10px] font-black uppercase">TOP AVG % {cd.yTop}</span>
+     <span className="text-[10px] font-black">{cd.points.length} SHOWN</span>
     </div>
    </div>
-   <div className="flex-1 p-4 min-h-[320px]">
-    <ResponsiveContainer width="100%" height={300}>
+   <div className="flex-1 p-2 min-h-[300px]">
+    <ResponsiveContainer width="100%" height={280}>
      <ScatterChart
       margin={{top:10,right:10,bottom:10,left:-10}}
       onMouseMove={(state: any) => {
@@ -687,41 +687,10 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
     </div>
    }
    footer={
-    <div className="relative bg-black border-t-[2px] border-black px-4 py-2 flex items-center justify-between gap-3">
-      <div className="flex items-center gap-2">
-        <button
-         type="button"
-         onClick={() =>
-          setInsightOpen((prev) => (prev === "general" ? "none" : "general"))
-         }
-         className="h-7 px-2 border-[2px] border-white/70 rounded-[4px] text-[9px] font-black uppercase tracking-[0.1em] text-white">
-         Chart Insight
-        </button>
-        <button
-         type="button"
-         onClick={() =>
-          setInsightOpen((prev) => (prev === "personal" ? "none" : "personal"))
-         }
-         className="h-7 px-2 border-[2px] border-white/70 rounded-[4px] text-[9px] font-black uppercase tracking-[0.1em] text-white">
-         Personal Insight
-        </button>
+    <div className="marquee-container">
+      <div className="marquee-track">
+        <span className="marquee-item">{shortsInsight}</span>
       </div>
-      <div className="flex items-center gap-2">
-        <span className="w-5 h-5 rounded-full border border-white bg-[#00CCFF] text-[9px] font-black inline-flex items-center justify-center text-black">
-         V
-        </span>
-        <span className="w-5 h-5 rounded-full border border-white bg-[#FF7497] text-[9px] font-black inline-flex items-center justify-center text-black">
-         R
-        </span>
-        <span className="w-5 h-5 rounded-full border border-white bg-[#CCFF00] text-[9px] font-black inline-flex items-center justify-center text-black">
-         S
-        </span>
-      </div>
-      {insightOpen !== "none" && (
-       <div className="absolute left-6 right-6 -translate-y-[115%] bg-black/95 border-[2px] border-white/40 rounded-[6px] px-3 py-2 text-[10px] font-black tracking-[0.04em] text-white uppercase">
-        {insightOpen === "general" ? generalInsight : shortsInsight}
-       </div>
-      )}
     </div>
    }
   >
