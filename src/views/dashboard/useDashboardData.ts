@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { useBrain } from "../../context/GlobalDataContext"
+import { useBrain } from "../../context/useBrain"
 import { getMasterRows, getMetricSummary, metricCellValue } from "../../services/analyticsSelectors"
 
 const formatHumanNumber = (value: unknown): string => {

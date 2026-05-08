@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useBrain } from '../context/GlobalDataContext';
+import { useBrain } from '../context/useBrain';
 import { CustomIcon } from './CustomIcon';
 import { AccordionContainer } from './Toolbox';
 import {

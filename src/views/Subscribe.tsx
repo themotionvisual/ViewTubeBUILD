@@ -11,30 +11,50 @@ import {
 const plans: Array<{
  id: SubscriptionPlanId
  tierLabel: string
+ description: string
  price: string
  bullets: string[]
  cta: string
 }> = [
  {
-  id: "starter",
-  tierLabel: "Free",
+  id: "basic",
+  tierLabel: "Basic",
+  description: "Experience the core tools of ViewTube with foundational access to your channel's essential data.",
   price: "$0",
   bullets: ["Public handle mode", "CSV/import workflows", "Core dashboard views"],
-  cta: "Stay Free",
+  cta: "Stay Basic",
+ },
+ {
+  id: "creator",
+  tierLabel: "Creator",
+  description: "Jumpstart your channel’s growth with increased limits and expanded insights for dedicated creators.",
+  price: "$9.99/mo",
+  bullets: ["Included AI credits", "Advanced dashboards + tools", "48-hour trial"],
+  cta: "Start Creator",
  },
  {
   id: "creator_plus",
-  tierLabel: "Medium",
-  price: "$29/mo",
-  bullets: ["Token meter", "Monthly pool + daily accrual", "Advanced dashboards + tools"],
-  cta: "Start Medium",
+  tierLabel: "Creator Plus",
+  description: "Accelerate your content strategy with deeper analytics and higher data capacity to sustain consistent channel development.",
+  price: "$19.99/mo",
+  bullets: ["More included AI credits", "Priority generation capacity", "48-hour trial"],
+  cta: "Start Creator Plus",
  },
  {
-  id: "business_team",
-  tierLabel: "Large",
-  price: "$99/mo",
-  bullets: ["Unlimited AI prompts", "Unlimited generations", "Top-tier access + team surface"],
-  cta: "Start Large",
+  id: "creator_pro",
+  tierLabel: "Creator Pro",
+  description: "Master your algorithm performance with advanced intelligence tools designed to scale your reach and maximize engagement.",
+  price: "$39.99/mo",
+  bullets: ["Highest capped creator credits", "Full strategy stack", "48-hour trial"],
+  cta: "Start Creator Pro",
+ },
+ {
+  id: "executive",
+  tierLabel: "Executive",
+  description: "Command your entire ecosystem with unrestricted access, custom integrations, and total strategic authority over your video business.",
+  price: "$69.99/mo",
+  bullets: ["Unlimited AI generation", "Executive priority", "48-hour trial"],
+  cta: "Start Executive",
  },
 ]
 
@@ -49,8 +69,8 @@ const Subscribe: React.FC = () => {
  const entitlement = getCurrentEntitlement()
 
  const onChoosePlan = async (planId: SubscriptionPlanId) => {
-  if (planId === "starter") {
-   updatePlanEntitlement("starter")
+  if (planId === "basic") {
+   updatePlanEntitlement("basic")
    setStatus("Free plan active. You can keep exploring now.")
    return
   }
@@ -64,14 +84,6 @@ const Subscribe: React.FC = () => {
     successUrl: `${window.location.origin}${from}`,
     cancelUrl: `${window.location.origin}/subscribe`,
    })
-
-   if (session.checkoutUrl.startsWith(window.location.origin)) {
-    // Dev fallback path when billing backend is not wired yet.
-    updatePlanEntitlement(planId)
-    setStatus(`Dev mode checkout complete. ${planId} activated.`)
-    window.location.href = from
-    return
-   }
 
    window.location.href = session.checkoutUrl
   } catch (error) {
@@ -114,6 +126,7 @@ const Subscribe: React.FC = () => {
         {active && <CheckCircle2 size={20} strokeWidth={3} />}
        </div>
        <h2 className="text-3xl font-black uppercase tracking-tight">{plan.price}</h2>
+       <p className="text-sm font-bold opacity-70 italic">{plan.description}</p>
        <ul className="space-y-2">
         {plan.bullets.map((bullet) => (
          <li key={bullet} className="font-bold text-sm uppercase">• {bullet}</li>

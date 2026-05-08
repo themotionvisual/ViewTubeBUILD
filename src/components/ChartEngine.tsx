@@ -178,7 +178,7 @@ export const TrioPieCard = ({ chart, colors, pieStartAngle = 0, height = "240px"
             {chart.title}
           </span>
         </div>
-        <Chart chartType="PieChart" width="100%" height="100%" data={chart.data} options={chartOptions as any} chartEvents={chartEvents} />
+        <MemoizedGoogleChart chartType="PieChart" width="100%" height="100%" data={chart.data} options={chartOptions as any} chartEvents={chartEvents} version="current" />
       </div>
       {height !== "200px" && displaySlice && (
         <div className="flex flex-col items-center justify-center -mt-16 px-4">
@@ -208,6 +208,8 @@ export const RenderChart: React.FC<{
 }) => {
     const chartData = (data && data.length > 0) ? data : fallbackData;
     const rawType = String(chart.type || "").trim().toLowerCase();
+    const provider = String(chart.provider || "google").toLowerCase();
+    const isKnownProvider = provider === "google" || provider === "recharts";
 
     // 1. ELITE HTML TABLE OVERRIDE
     if (rawType === "table") {
@@ -244,7 +246,7 @@ export const RenderChart: React.FC<{
 
     // 2. DATA LOAD VERIFICATION
     if (!chartData || chartData.length === 0) {
-      if (chart.provider === "google") {
+      if (provider === "google" || provider === "recharts" || !chart.provider) {
         const checkData = (typeof chart.data === "function" ? chart.data() : []);
         if (checkData.length <= 1) return <div className="p-8 text-center font-black opacity-20 uppercase">Station Idle: No Dataset</div>;
       } else {
@@ -255,10 +257,10 @@ export const RenderChart: React.FC<{
     return (
       <div className={`w-full flex flex-col ${isModal ? "h-full" : "h-[450px] mt-6 bg-white border-[4px] border-black rounded-2xl shadow-[8px_8px_0px_0px_black] overflow-hidden"}`}>
         <div className="flex-1 min-h-0">
-          {chart.provider === "google" ? (
+          {isKnownProvider ? (
             <RenderGoogleChart chart={chart} data={chartData} />
           ) : (
-            <div className="p-8 text-center font-black">Unknown Provider</div>
+            <div className="p-8 text-center font-black">Unknown Provider: {provider}</div>
           )}
         </div>
 

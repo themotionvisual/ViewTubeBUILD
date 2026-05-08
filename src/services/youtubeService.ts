@@ -85,3 +85,7 @@ export const youtubeService = new YouTubeService()
 export * from "./youtube/youtubeApiClient"
 export * from "./youtube/youtubeDataFetcher"
 export * from "./youtube/youtubeAnalyticsFetcher"
+export * from "./youtube/youtubeDataAdapter"
+export * from "./youtube/youtubeAnalyticsAdapter"
+export * from "./youtube/youtubeReportingAdapter"
+export * from "./youtube/apiCapabilityRegistry"

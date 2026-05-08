@@ -61,7 +61,7 @@ describe("billing entitlement runtime", () => {
 
  it("applies daily accrual without exceeding monthly cap", () => {
   const start = new Date("2026-03-01T08:00:00.000Z")
-  const state = applyPlanToEntitlement(createDefaultEntitlement(start), "pro_intelligence", start)
+  const state = applyPlanToEntitlement(createDefaultEntitlement(start), "creator_pro", start)
   const drained = consumeEntitlementTokens(state, 11_900, new Date("2026-03-01T09:00:00.000Z"))
 
   expect(drained.next.tokenBalance).toBe(100)
@@ -82,7 +82,7 @@ describe("billing entitlement runtime", () => {
  it("allows unlimited usage on large tier", () => {
   const state = applyPlanToEntitlement(
    createDefaultEntitlement(new Date("2026-03-10T00:00:00.000Z")),
-   "business_team",
+   "creator_pro",
    new Date("2026-03-10T00:00:00.000Z"),
   )
 

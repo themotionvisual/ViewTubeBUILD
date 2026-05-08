@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useMemo, useState, useEffect } from "react"
 import {
  Check,
  Zap,
@@ -12,9 +12,13 @@ import {
  ShieldCheck,
  Lock,
  Sparkles,
+ BookOpen,
+ User,
+ Mail,
+ Bell,
 } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
-import { useBrain } from "../context/GlobalDataContext"
+import { useBrain } from "../context/useBrain"
 import { unifiedAuth } from "../services/authSession"
 import { getVaultSnapshot, setVaultSnapshot } from "../services/keyVault"
 import { SubToolbox } from "../components/Toolbox"
@@ -35,11 +39,59 @@ import { googleService } from "../services/googleService"
 import {
  createCheckoutSession,
  getCurrentEntitlement,
+ isOwnerEmail,
+ TOPUP_DEFINITIONS,
  updatePlanEntitlement,
  fetchEntitlementFromServer,
 } from "../services/billingEntitlement"
+import { GUIDE_LAST_UPDATED, GUIDE_PROTOCOL_VERSION } from "../content/userGuideContent"
 
-// ... existing code ...
+const SUBSCRIPTION_PLANS_UI: {
+ id: SubscriptionPlanId
+ tierLabel: string
+ price: string
+ bullets: string[]
+ cta: string
+}[] = [
+ {
+  id: "basic",
+  tierLabel: "Basic",
+  price: "$0",
+  bullets: ["Core tools", "Manual sync", "Basic analytics"],
+  cta: "Upgrade",
+ },
+ {
+  id: "creator_plus",
+  tierLabel: "Creator",
+  price: "$9.99/mo",
+  bullets: ["48-hour trial", "Included AI credits", "Advanced dashboards"],
+  cta: "Upgrade",
+ },
+ {
+  id: "creator_pro",
+  tierLabel: "Creator Plus",
+  price: "$19.99/mo",
+  bullets: ["48-hour trial", "More included AI credits", "Priority generation capacity"],
+  cta: "Upgrade",
+ },
+ {
+  id: "executive",
+  tierLabel: "Creator Pro",
+  price: "$39.99/mo",
+  bullets: ["48-hour trial", "Highest capped creator credits", "Full strategy stack"],
+  cta: "Upgrade",
+ },
+ {
+  id: "executive",
+  tierLabel: "Executive",
+  price: "$69.99/mo",
+  bullets: ["48-hour trial", "Unlimited AI generation", "Executive priority"],
+  cta: "Upgrade",
+ },
+]
+
+const canonicalButtonClass =
+ "rounded-xl border-[3px] border-black shadow-[3px_3px_0px_0px_black] hover:translate-y-0.5 hover:shadow-[1.5px_1.5px_0px_0px_black] transition-all font-black uppercase"
 
 const Settings: React.FC = () => {
   const navigate = useNavigate()
@@ -58,23 +110,63 @@ const Settings: React.FC = () => {
   const [dataResetStatus, setDataResetStatus] = useState<string | null>(null)
   const [loadingPlan, setLoadingPlan] = useState<SubscriptionPlanId | null>(null)
   const [billingStatus, setBillingStatus] = useState<string | null>(null)
+  const [currentEmail, setCurrentEmail] = useState("")
+  const [profileName, setProfileName] = useState("")
+  const [profileHandle, setProfileHandle] = useState("")
+  const [notifyBilling, setNotifyBilling] = useState(true)
 
   const query = new URLSearchParams(location.search)
  const activePanel = query.get("panel")
  const highlightBilling = activePanel === "billing"
  const entitlement = getCurrentEntitlement()
+ const canViewGeminiKey = entitlement.tier === "large" || isOwnerEmail(currentEmail)
+ const isBasicPlan = entitlement.subscriptionPlanId === "basic"
+ const meterTotal = useMemo(
+  () =>
+   Math.max(
+    1,
+    Math.floor(
+     entitlement.rolloverCap || entitlement.monthlyCreditGrant || entitlement.creditBalance || 1,
+    ),
+   ),
+  [entitlement.creditBalance, entitlement.monthlyCreditGrant, entitlement.rolloverCap],
+ )
+ const meterLeft = useMemo(
+  () => Math.max(0, Math.floor(entitlement.creditBalance || 0)),
+  [entitlement.creditBalance],
+ )
+ const meterUsed = Math.max(0, meterTotal - meterLeft)
+ const meterPct = entitlement.tier === "large" ? 100 : Math.max(0, Math.min(100, Math.round((meterLeft / meterTotal) * 100)))
+
+ useEffect(() => {
+  const vault = getVaultSnapshot()
+  setGeminiKey(vault.gemini || "")
+  setModelPreference(localStorage.getItem("yt_model_preference") || "pro")
+  setProfileName(authState.channelName || "")
+  setProfileHandle(authState.channelHandle || "")
+ }, [authState.channelHandle, authState.channelName])
 
  useEffect(() => {
   const syncBilling = async () => {
-   if (isAuth) {
-    try {
+   const authReady = isAuth && unifiedAuth.isAuthenticated()
+   if (!authReady) {
+    setBillingStatus("Sign in to sync billing entitlements.")
+    return
+   }
+   try {
      const userInfo = await googleService.getUserInfo()
+     setCurrentEmail((userInfo.email || "").toLowerCase())
      await fetchEntitlementFromServer(userInfo.email)
      setBillingStatus("Entitlements synced with server.")
-    } catch (e) {
-     console.error("Billing sync failed", e)
-     setBillingStatus("Failed to sync billing.")
+   } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
+    if (message.toLowerCase().includes("not authenticated")) {
+     console.info("Billing sync skipped: not authenticated.")
+     setBillingStatus("Sign in to sync billing entitlements.")
+     return
     }
+    console.error("Billing sync failed", e)
+    setBillingStatus("Failed to sync billing.")
    }
   }
   syncBilling()
@@ -133,8 +225,8 @@ const Settings: React.FC = () => {
  }
 
  const handleChoosePlan = async (planId: SubscriptionPlanId) => {
-  if (planId === "starter") {
-   updatePlanEntitlement("starter")
+  if (planId === "basic") {
+   updatePlanEntitlement("basic")
    setBillingStatus("Free plan active. You can browse normally.")
    return
   }
@@ -142,19 +234,12 @@ const Settings: React.FC = () => {
   try {
    setLoadingPlan(planId)
    setBillingStatus("Creating secure checkout session...")
-   const session = await createCheckoutSession({
+  const session = await createCheckoutSession({
     planId,
     userId: "local-user",
-    successUrl: `${window.location.origin}/settings?panel=billing`,
-    cancelUrl: `${window.location.origin}/settings?panel=billing`,
+    successUrl: `${window.location.origin}/account?panel=billing`,
+    cancelUrl: `${window.location.origin}/account?panel=billing`,
    })
-
-   if (session.checkoutUrl.startsWith(window.location.origin)) {
-    // Dev fallback path when billing backend is not wired yet.
-    updatePlanEntitlement(planId)
-    setBillingStatus(`Dev mode checkout complete. ${planId} activated.`)
-    return
-   }
 
    window.location.href = session.checkoutUrl
   } catch (error) {
@@ -165,24 +250,133 @@ const Settings: React.FC = () => {
   }
  }
 
+ const handleTopup = async (topupSku: string) => {
+  try {
+   setBillingStatus("Creating top-up checkout session...")
+   const session = await createCheckoutSession({
+    planId: "creator_plus",
+    userId: "local-user",
+    successUrl: `${window.location.origin}/account?panel=billing`,
+    cancelUrl: `${window.location.origin}/account?panel=billing`,
+    mode: "topup",
+    topupSku,
+   })
+   window.location.href = session.checkoutUrl
+  } catch (error) {
+   const message = error instanceof Error ? error.message : String(error)
+   setBillingStatus(`Top-up failed: ${message}`)
+  }
+ }
+
  return (
-  <div className="max-w-5xl mx-auto pb-32 animate-fade-in px-4 space-y-8">
+  <div className="max-w-[1400px] mx-auto pb-32 animate-fade-in px-4 space-y-10">
    <div className="flex justify-between items-end border-b-[4px] border-black pb-4">
     <div>
      <h1 className="text-5xl font-black uppercase tracking-tighter text-black">
-      Settings
+      Account Settings
      </h1>
+     <p className="font-bold text-gray-700 uppercase tracking-wide text-xs mt-1">
+      Unified account, billing, workspace, and data controls
+     </p>
     </div>
    <div className="bg-[#FF83EA] text-black p-3 rounded-xl border-[4px] border-black shadow-[4px_4px_0px_0px_black] rotate-2">
      <SettingsIcon size={32} />
    </div>
   </div>
 
+   <div id="account-profile">
+   <SubToolbox
+    title="Account Profile"
+    icon={<User size={20} strokeWidth={3} className="text-black" />}
+    paletteIndex={5}
+    contentClassName="p-6 space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+     <div className="space-y-2">
+      <label className="text-xs font-black uppercase tracking-wider">Display Name</label>
+      <input
+       value={profileName}
+       readOnly
+       className="w-full p-3 border-[3px] border-black rounded-xl font-bold bg-[#f3f4f6] text-gray-700"
+       placeholder="Loaded from YouTube"
+      />
+     </div>
+     <div className="space-y-2">
+      <label className="text-xs font-black uppercase tracking-wider">Channel Handle</label>
+      <input
+       value={profileHandle}
+       readOnly
+       className="w-full p-3 border-[3px] border-black rounded-xl font-bold bg-[#f3f4f6] text-gray-700"
+       placeholder="Loaded from YouTube"
+      />
+     </div>
+    </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+     <div className="space-y-2">
+      <label className="text-xs font-black uppercase tracking-wider">Email</label>
+      <div className="w-full p-3 border-[3px] border-black rounded-xl font-bold bg-white flex items-center gap-2">
+       <Mail size={15} />
+       {currentEmail || "Sign in to load email"}
+      </div>
+     </div>
+     <div className="space-y-2">
+      <label className="text-xs font-black uppercase tracking-wider">Notifications</label>
+      <button
+       onClick={() => setNotifyBilling((prev) => !prev)}
+       className={`${canonicalButtonClass} w-full py-3 text-sm ${notifyBilling ? "bg-[#CCFF00]" : "bg-white"}`}>
+       <Bell size={14} className="inline mr-2" />
+       {notifyBilling ? "Billing alerts on" : "Billing alerts off"}
+      </button>
+     </div>
+    </div>
+    <p className="text-[11px] font-black uppercase tracking-[0.1em] text-gray-600">
+     Channel title and handle are read-only and synced from your connected YouTube identity.
+    </p>
+   </SubToolbox>
+   </div>
+
+   <div id="guide-protocols">
+   <SubToolbox
+    title="User Guide & Protocols"
+    icon={<BookOpen size={20} strokeWidth={3} className="text-black" />}
+    paletteIndex={6}
+    contentClassName="p-6 space-y-4">
+    <p className="font-bold text-gray-700">
+     Step-by-step help for launch-critical tasks: account setup, billing and credits, sync/data sources, and graph troubleshooting.
+    </p>
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+     <button
+      onClick={() => navigate("/user-guide")}
+      className={`${canonicalButtonClass} bg-[#40C6E9] text-black px-4 py-4 text-sm w-full`}>
+      Open Full User Guide
+     </button>
+     <button
+      onClick={() => navigate("/user-guide#billing")}
+      className={`${canonicalButtonClass} bg-white text-black px-4 py-4 text-xs w-full`}>
+      Billing + Credits Help
+     </button>
+     <button
+      onClick={() => navigate("/user-guide#sync")}
+      className={`${canonicalButtonClass} bg-white text-black px-4 py-4 text-xs w-full`}>
+      Connect + Sync Data Help
+     </button>
+     <button
+      onClick={() => navigate("/user-guide#graphs")}
+      className={`${canonicalButtonClass} bg-white text-black px-4 py-4 text-xs w-full`}>
+      Graph QA + Troubleshooting
+     </button>
+    </div>
+    <p className="text-xs font-black uppercase tracking-[0.15em] text-gray-600">
+     Protocol {GUIDE_PROTOCOL_VERSION} • Updated {GUIDE_LAST_UPDATED}
+    </p>
+   </SubToolbox>
+   </div>
+
+   <div id="billing-meter">
    <SubToolbox
     title="Billing & Subscription"
     icon={<Lock size={20} strokeWidth={3} className="text-black" />}
     paletteIndex={0}
-    contentClassName={`p-6 space-y-5 ${highlightBilling ? "ring-4 ring-[#CCFF00]" : ""}`}>
+    contentClassName={`p-6 space-y-6 ${highlightBilling ? "ring-4 ring-[#CCFF00]" : ""}`}>
     <div className="flex flex-wrap items-center justify-between gap-3">
      <div>
       <h2 className="text-2xl font-black uppercase tracking-tighter">Subscription Controls</h2>
@@ -191,37 +385,115 @@ const Settings: React.FC = () => {
        <span className="uppercase">{entitlement.subscriptionPlanId}</span>
       </p>
       <p className="font-bold text-gray-700">
-       Tokens:{" "}
+       Credits:{" "}
        <span className="uppercase">
-        {Number.isFinite(entitlement.tokenBalance)
-         ? Math.max(0, Math.floor(entitlement.tokenBalance)).toLocaleString()
+        {Number.isFinite(entitlement.creditBalance)
+         ? Math.max(0, Math.floor(entitlement.creditBalance)).toLocaleString()
          : "Unlimited"}
        </span>
       </p>
+      <p className="font-bold text-gray-700">
+       Monthly Refill:{" "}
+       <span className="uppercase">
+        {Math.max(0, Math.floor(entitlement.monthlyCreditGrant || 0)).toLocaleString()}
+       </span>{" "}
+       • Rollover Cap:{" "}
+       <span className="uppercase">
+        {Math.max(0, Math.floor(entitlement.rolloverCap || 0)).toLocaleString()}
+       </span>
+      </p>
+      <p className="font-bold text-gray-700">
+       Next Refill:{" "}
+       <span className="uppercase">
+        {entitlement.nextRefillIso
+         ? new Date(entitlement.nextRefillIso).toLocaleString()
+         : "N/A"}
+       </span>
+      </p>
+      <p className="mt-2">
+       <button
+        onClick={() => navigate("/user-guide#billing")}
+        className="text-xs font-black uppercase underline underline-offset-2">
+        Need Billing Help?
+       </button>
+      </p>
      </div>
      <button
-      onClick={() => navigate("/settings?panel=billing")}
+      onClick={() => navigate("/account?panel=billing")}
       className="px-4 py-2 border-[3px] border-black rounded-xl bg-[#CCFF00] font-black uppercase shadow-[3px_3px_0px_0px_black]">
       Billing Panel
      </button>
     </div>
 
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="border-[4px] border-black rounded-2xl bg-white p-5 shadow-[4px_4px_0px_0px_black] space-y-3">
+     <div className="flex items-end justify-between gap-4">
+      <div>
+       <p className="text-xs font-black uppercase tracking-[0.14em] text-gray-700">Credit Meter</p>
+       <h3 className="text-3xl font-black uppercase tracking-tight">
+        {entitlement.tier === "large" ? "Unlimited" : `${meterLeft.toLocaleString()} left`}
+       </h3>
+      </div>
+      <div className="text-right">
+       <p className="text-xs font-black uppercase tracking-[0.14em] text-gray-700">Total</p>
+       <p className="text-2xl font-black">{entitlement.tier === "large" ? "∞" : meterTotal.toLocaleString()}</p>
+      </div>
+     </div>
+     <div className="h-6 border-[3px] border-black rounded-full bg-[#e5e7eb] overflow-hidden">
+      <div
+       style={{
+        width: `${meterPct}%`,
+        height: "100%",
+        transition: "width 280ms ease",
+        background:
+         entitlement.tier === "large"
+          ? "#4FFF5B"
+          : meterPct > 65
+            ? "#4FFF5B"
+            : meterPct > 30
+              ? "#FFE357"
+              : "#FF8AAF",
+       }}
+      />
+     </div>
+     <div className="flex items-center justify-between text-xs font-black uppercase tracking-wide text-gray-700">
+      <span>{entitlement.tier === "large" ? "Unlimited Plan Active" : `${meterUsed.toLocaleString()} used`}</span>
+      <span>{entitlement.tier === "large" ? "100%" : `${meterPct}% remaining`}</span>
+     </div>
+    </div>
+
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+     {SUBSCRIPTION_PLANS_UI.map((plan) => {
+      const active = entitlement.subscriptionPlanId === plan.id
+      return (
+       <div
+        key={`badge-${plan.id}`}
+        className={`border-[2px] rounded-xl px-3 py-2 text-center font-black uppercase text-[10px] tracking-wider ${
+         active ? "bg-[#CCFF00] border-black shadow-[2px_2px_0px_0px_black]" : "bg-white border-black"
+        }`}>
+        {plan.tierLabel}
+       </div>
+      )
+     })}
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-5 items-stretch">
      {SUBSCRIPTION_PLANS_UI.map((plan) => {
       const active = entitlement.subscriptionPlanId === plan.id
       const loading = loadingPlan === plan.id
       return (
        <div
         key={plan.id}
-        className="border-[4px] border-black rounded-2xl bg-white p-5 shadow-[6px_6px_0px_0px_black] flex flex-col gap-4">
+        className="h-full min-w-0 border-[4px] border-black rounded-2xl bg-white p-5 shadow-[6px_6px_0px_0px_black] flex flex-col gap-4">
         <div className="flex items-center justify-between">
          <p className="text-xs font-black uppercase tracking-[0.2em]">{plan.tierLabel}</p>
          {active ? <Check size={18} strokeWidth={3} /> : null}
         </div>
-        <h3 className="text-3xl font-black uppercase tracking-tight">{plan.price}</h3>
+        <h3 className="text-[2.15rem] leading-none font-black uppercase tracking-tight whitespace-nowrap">
+         {plan.price}
+        </h3>
         <ul className="space-y-2">
          {plan.bullets.map((bullet) => (
-          <li key={bullet} className="font-bold text-sm uppercase">• {bullet}</li>
+          <li key={bullet} className="font-bold text-[1rem] uppercase">• {bullet}</li>
          ))}
         </ul>
         <button
@@ -236,18 +508,35 @@ const Settings: React.FC = () => {
     </div>
 
     <div className="border-[3px] border-black rounded-xl bg-[#E5E7EB] p-4 font-bold">
-     <div className="flex items-center gap-2 text-sm uppercase">
-      <Sparkles size={16} /> Referral rewards
-     </div>
+      <div className="flex items-center gap-2 text-sm uppercase">
+        <Sparkles size={16} /> Referral rewards
+      </div>
      <p className="mt-2 text-sm">
       Referral conversion rule active: one free month is earned after each referred customer makes their first successful payment.
      </p>
     </div>
 
-    {billingStatus ? <p className="text-sm font-black uppercase">{billingStatus}</p> : null}
+    <div className="border-[3px] border-black rounded-xl bg-white p-4 space-y-3">
+     <h3 className="font-black uppercase text-sm">Top-Up Credits</h3>
+     <div className="flex flex-wrap gap-2">
+      {TOPUP_DEFINITIONS.map((topup) => (
+       <button
+        key={topup.sku}
+        onClick={() => handleTopup(topup.sku)}
+        className="border-[2px] border-black rounded-xl px-3 py-2 bg-[#40C6E9] font-black uppercase text-xs shadow-[2px_2px_0px_0px_black]">
+        ${topup.priceUsd} • {topup.creditAmount.toLocaleString()} credits
+       </button>
+      ))}
+     </div>
+    </div>
+
+   {billingStatus ? <p className="text-sm font-black uppercase">{billingStatus}</p> : null}
    </SubToolbox>
+   </div>
 
    {/* Gemini API Key */}
+   {canViewGeminiKey ? (
+   <div id="api-keys">
    <SubToolbox
     title="Gemini API Key"
     icon={<KeyRound size={20} strokeWidth={3} className="text-black" />}
@@ -256,9 +545,15 @@ const Settings: React.FC = () => {
     <p className="font-bold text-gray-700">
      Use your own key so generations run on your quota and billing.
     </p>
+    <button
+      onClick={() => navigate("/user-guide#sync")}
+      className="self-start text-xs font-black uppercase underline underline-offset-2">
+      API Key Setup Help
+    </button>
     <form onSubmit={(e) => e.preventDefault()} className="relative">
      <input
-      type={showKey ? "text" : "password"}
+     type={showKey ? "text" : "password"}
+      autoComplete="new-password"
       value={geminiKey}
       onChange={(e) => setGeminiKey(e.target.value)}
       placeholder="Enter your Gemini API Key..."
@@ -272,6 +567,8 @@ const Settings: React.FC = () => {
      </button>
     </form>
    </SubToolbox>
+   </div>
+   ) : null}
 
    {/* Gemini Preference - Full Width */}
    <SubToolbox
@@ -325,13 +622,14 @@ const Settings: React.FC = () => {
    </SubToolbox>
 
    {/* Combined Advanced Workspace & Data Module */}
+   <div id="workspace-data">
    <SubToolbox
     title="Advanced Workspace & Data"
     icon={<ShieldCheck size={20} strokeWidth={3} className="text-black" />}
     paletteIndex={1}
     contentClassName="p-8 space-y-12">
     
-    {/* Row 1: Connection & Handle */}
+    {/* Row 1: Channel Link + Public Handle */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
      {/* YouTube Workspace Link */}
      <div className="space-y-4">
@@ -340,7 +638,7 @@ const Settings: React.FC = () => {
        <h2 className="text-2xl font-black uppercase tracking-tighter">Workspace Link</h2>
       </div>
       <p className="text-sm font-bold text-gray-600">
-       Link your channel via OAuth to unlock uploads, analytics, and metadata updates.
+       Connect your workspace channel to unlock uploads, analytics, and metadata controls.
       </p>
       {isAuth ? (
        <button
@@ -366,35 +664,49 @@ const Settings: React.FC = () => {
        <Eye size={20} strokeWidth={3} />
        <h2 className="text-2xl font-black uppercase tracking-tighter">Public Handle</h2>
       </div>
-      <p className="text-sm font-bold text-gray-600">
-       No OAuth required: resolve a public handle and load public-only stats.
+     <p className="text-sm font-bold text-gray-600">
+       {isBasicPlan
+        ? "Basic plan can load public-only analytics without OAuth by resolving a channel handle or URL."
+        : "Public handle mode is reserved for Basic plan. Creator plans should use connected sync."}
       </p>
       <div className="flex gap-3">
        <input
         value={handleInput}
         onChange={(event) => setHandleInput(event.target.value)}
         placeholder="@channelhandle or channel URL"
-        className="flex-1 p-4 border-[3px] border-black rounded-xl font-bold outline-none"
+        disabled={!isBasicPlan}
+        className="flex-1 p-4 border-[3px] border-black rounded-xl font-bold outline-none disabled:bg-[#ececec] disabled:text-gray-500"
        />
        <button
         onClick={handlePublicResolve}
-        className={`${canonicalButtonClass} bg-[#96F5A6] text-black px-6 py-4 text-sm whitespace-nowrap`}>
+        disabled={!isBasicPlan}
+        className={`${canonicalButtonClass} bg-[#96F5A6] text-black px-6 py-4 text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed`}>
         Resolve
        </button>
       </div>
+      {!isBasicPlan ? (
+       <p className="text-xs font-black uppercase tracking-wide text-gray-600">
+        Switch to Basic plan to use public-handle-only mode.
+       </p>
+      ) : null}
       {handleStatus ? <p className="text-sm font-bold text-gray-700">{handleStatus}</p> : null}
      </div>
     </div>
 
-    {/* Row 2: Ingest Mode (Full Width but Symmetrical) */}
+    {/* Row 2: Ingest Mode */}
     <div className="space-y-4 border-t-[3px] border-black pt-10">
      <div className="flex items-center gap-2">
       <Zap size={20} strokeWidth={3} />
       <h3 className="text-xl font-black uppercase tracking-tighter">Ingest Mode</h3>
      </div>
-     <p className="font-bold text-gray-700 text-sm">
+    <p className="font-bold text-gray-700 text-sm">
       Select how ViewTube should source data for analytics and master tables.
      </p>
+     <button
+      onClick={() => navigate("/user-guide#sync")}
+      className="self-start text-xs font-black uppercase underline underline-offset-2">
+      Ingest Mode Help
+     </button>
      <div className="flex flex-wrap gap-3">
       {(["connected", "import", "hybrid", "public_handle"] as IngestMode[]).map(
        (mode) => (
@@ -413,7 +725,7 @@ const Settings: React.FC = () => {
      </div>
     </div>
 
-    {/* Row 3: Data Mgmt & Trust */}
+    {/* Row 3: Data Management + Trust/Export */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t-[3px] border-black pt-10">
      {/* Data Management */}
      <div className="space-y-4">
@@ -484,6 +796,7 @@ const Settings: React.FC = () => {
      </button>
     </div>
    </SubToolbox>
+   </div>
   </div>
  )
 }

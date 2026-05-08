@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react"
-import { useBrain } from "../context/GlobalDataContext"
+import { useBrain } from "../context/useBrain"
 import { NavLink, useNavigate } from "react-router-dom"
 import { SidebarChatbot } from "./SidebarChatbot"
 import Icons from "./Icons"
@@ -15,6 +15,7 @@ export const Sidebar: React.FC = () => {
     event as CustomEvent<{
      profile?: {
       name?: string
+      channelHandle?: string | null
       profilePictureUrl?: string
       subscriberCount?: string | number
       totalViews?: string | number
@@ -24,6 +25,7 @@ export const Sidebar: React.FC = () => {
    if (data && data.profile) {
     setAuthState({
      channelName: data.profile.name,
+     channelHandle: data.profile.channelHandle || null,
      channelThumbnail: data.profile.profilePictureUrl,
      subscriberCount: Number(data.profile.subscriberCount || 0),
      totalViews: Number(data.profile.totalViews || 0),
@@ -47,6 +49,7 @@ export const Sidebar: React.FC = () => {
    { id: "ANALYTICS", path: "/performance", label: "Analytics", color: "#4FFF5B" },
    { id: "EDITOR", path: "/editor-v1", label: "Editor", color: "#579AFF" },
    { id: "SETTINGS", path: "/settings", label: "Settings", color: "#CC00FF" },
+   { id: "USER_GUIDE", path: "/user-guide", label: "User Guide", color: "#40C6E9" },
   ]
 
  const handleHiddenAnalyticsClick = () => {

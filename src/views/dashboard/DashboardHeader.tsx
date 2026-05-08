@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react"
 import { Edit3, Lock, LockOpen, Layers, RotateCcw, Download, Upload, Settings, Play, UserCircle2, Sparkles, ChevronDown } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 import { DashboardData } from "./useDashboardData"
+import { useEntitlement } from "../../app/AppShell"
+import { useBrain } from "../../context/useBrain"
 
 interface DashboardHeaderProps {
  dashboardControls: {
@@ -17,6 +20,9 @@ interface DashboardHeaderProps {
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardControls, data }) => {
+ const navigate = useNavigate()
+ const entitlement = useEntitlement()
+ const { authState, login, logout, globalSyncData } = useBrain()
  const [title, setTitle] = useState(() => localStorage.getItem("vt-dashboard-title") || "WIDGET LAB")
  const [isEditingTitle, setIsEditingTitle] = useState(false)
  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -71,12 +77,14 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
  )
 
  const avatar = data.avatarUrl || ""
- const handleText = data.brain?.channelProfile?.channelHandle 
-  ? `@${data.brain.channelProfile.channelHandle.replace(/^@/, '')}` 
-  : (data.authState?.channelHandle 
-     ? `@${data.authState.channelHandle.replace(/^@/, '')}` 
-     : `@${(data.authState?.channelName || "handle").replace(/\s+/g, "").toLowerCase()}`)
+ const rawHandle =
+  data.brain?.channelProfile?.channelHandle || data.authState?.channelHandle || ""
+ const normalizedHandle = String(rawHandle || "").trim().replace(/^@/, "")
+ const handleText = normalizedHandle ? `@${normalizedHandle}` : "@connect-channel"
  const channelName = data.brain?.channelProfile?.name || data.authState?.channelName || "Your Channel"
+ const creditsLeft = Math.max(0, Math.floor(entitlement.creditBalance || 0))
+ const creditCap = Math.max(1, Math.floor(entitlement.rolloverCap || entitlement.monthlyCreditGrant || 1))
+ const meterPct = entitlement.tier === "large" ? 100 : Math.max(0, Math.min(100, Math.round((creditsLeft / creditCap) * 100)))
 
  const renderKpiCards = () => (
   <div className="flex items-center gap-1.5 flex-1 px-4 justify-center">
@@ -119,12 +127,29 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
 
  const renderTokenSettings = () => (
   <div className="relative">
-   <button 
+   <button
     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
     className="flex items-center gap-2 bg-white border-[2px] border-black rounded-[6px] px-3 py-1 shadow-[2px_2px_0_0_#000] hover:-translate-y-[1px] hover:shadow-[3px_3px_0_0_#000] active:translate-y-[1px] active:shadow-[1px_1px_0_0_#000] transition-all ml-2">
     <Sparkles size={12} className="text-black" />
-    <span className="font-black text-[9px] tracking-widest uppercase">Free | 0 Tokens</span>
-    <div className="bg-[#FF1744] text-white font-black text-[8px] px-2 py-0.5 rounded border border-black tracking-widest leading-none">UPGRADE</div>
+    <div className="flex flex-col gap-1">
+     <span className="font-black text-[9px] tracking-widest uppercase">
+      {entitlement.subscriptionPlanId.replace(/_/g, " ")} |{" "}
+      {entitlement.tier === "large" ? "UNLIMITED" : `${creditsLeft.toLocaleString()} CREDITS`}
+     </span>
+     <div className="w-[132px] h-[7px] border border-black rounded-full bg-white overflow-hidden">
+      <div
+       style={{
+        width: `${meterPct}%`,
+        height: "100%",
+        background: entitlement.tier === "large" ? "#4FFF5B" : meterPct > 65 ? "#4FFF5B" : meterPct > 30 ? "#FFE357" : "#FF8AAF",
+        transition: "width 280ms ease",
+       }}
+      />
+     </div>
+    </div>
+    {entitlement.tier !== "large" ? (
+     <div className="bg-[#FF1744] text-white font-black text-[8px] px-2 py-0.5 rounded border border-black tracking-widest leading-none">UPGRADE</div>
+    ) : null}
     <ChevronDown size={12} strokeWidth={3} className="ml-0.5 opacity-50" />
    </button>
    
@@ -134,21 +159,86 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
       <div className="w-10 h-10 rounded-full border-[2.5px] border-black bg-white overflow-hidden shadow-[2px_2px_0_0_#000]">
        {avatar ? <img src={avatar} className="w-full h-full object-cover" /> : <UserCircle2 size={24} />}
       </div>
-      <div className="flex flex-col">
+     <div className="flex flex-col">
        <span className="font-black text-[12px] uppercase leading-tight tracking-tight whitespace-nowrap overflow-hidden text-ellipsis w-[140px]">{channelName}</span>
        <span className="font-black text-[9px] opacity-60 uppercase leading-tight">{handleText}</span>
-      </div>
+       <div className="mt-1 flex items-center gap-2">
+        <div className="w-[86px] h-[6px] border border-black rounded-full bg-white overflow-hidden">
+         <div
+          style={{
+           width: `${meterPct}%`,
+           height: "100%",
+           background: entitlement.tier === "large" ? "#4FFF5B" : meterPct > 65 ? "#4FFF5B" : meterPct > 30 ? "#FFE357" : "#FF8AAF",
+           transition: "width 280ms ease",
+          }}
+         />
+        </div>
+        <span className="font-black text-[8px] uppercase tracking-wider">
+         {entitlement.tier === "large" ? "UNL" : `${meterPct}%`}
+        </span>
+       </div>
+     </div>
      </div>
      <div className="flex flex-col p-2 gap-1 bg-white">
-      <button className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-black rounded transition-colors">Connect Channel</button>
-      <button className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-black rounded transition-colors">Run Sync</button>
+      <button
+       onClick={async () => {
+        setIsDropdownOpen(false)
+        if (!authState.isAuthenticated) {
+         await login()
+         return
+        }
+        navigate("/account#workspace-data")
+       }}
+       className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-black rounded transition-colors">
+       Connect Channel
+      </button>
+      <button
+       onClick={async () => {
+        setIsDropdownOpen(false)
+        if (!authState.isAuthenticated) {
+         await login()
+         return
+        }
+        await globalSyncData({ batchMode: "initial" })
+       }}
+       className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-black rounded transition-colors">
+       Run Sync
+      </button>
       <div className="h-[2px] bg-black/10 my-1 mx-2"></div>
-      <button className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-black rounded transition-colors">Account Settings</button>
-      <button className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#FF83EA] border-2 border-transparent hover:border-black rounded transition-colors">Billing & Tokens</button>
-      <button className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#24D3FF] border-2 border-transparent hover:border-black rounded transition-colors">API Keys</button>
+      <button
+       onClick={() => {
+        setIsDropdownOpen(false)
+        navigate("/account#account-profile")
+       }}
+       className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-black rounded transition-colors">
+       Account Settings
+      </button>
+      <button
+       onClick={() => {
+        setIsDropdownOpen(false)
+        navigate("/account#billing-meter")
+       }}
+       className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#FF83EA] border-2 border-transparent hover:border-black rounded transition-colors">
+       Billing & Meter
+      </button>
+      <button
+       onClick={() => {
+        setIsDropdownOpen(false)
+        navigate("/account#api-keys")
+       }}
+       className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#24D3FF] border-2 border-transparent hover:border-black rounded transition-colors">
+       API Keys
+      </button>
      </div>
      <div className="border-t-[2px] border-black p-2 bg-[#eee]">
-      <button className="w-full text-center px-3 py-2 font-black text-[11px] uppercase tracking-wider bg-white border-[2px] border-black shadow-[2px_2px_0_0_#000] rounded hover:bg-[#FF1744] hover:text-white transition-colors">Sign Out</button>
+      <button
+       onClick={() => {
+        setIsDropdownOpen(false)
+        logout()
+       }}
+       className="w-full text-center px-3 py-2 font-black text-[11px] uppercase tracking-wider bg-white border-[2px] border-black shadow-[2px_2px_0_0_#000] rounded hover:bg-[#FF1744] hover:text-white transition-colors">
+       Sign Out
+      </button>
      </div>
     </div>
    )}
@@ -169,7 +259,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
     {/* Identity Zone & Token Settings */}
     <div className="flex items-center gap-3">
      <div className="flex flex-col justify-center text-right">
-      <a href={`https://youtube.com/${handleText}`} target="_blank" rel="noreferrer" className="font-black text-[14px] uppercase tracking-[-0.02em] leading-none hover:underline cursor-pointer decoration-2 underline-offset-2">
+      <a href={normalizedHandle ? `https://youtube.com/@${normalizedHandle}` : "https://youtube.com"} target="_blank" rel="noreferrer" className="font-black text-[14px] uppercase tracking-[-0.02em] leading-none hover:underline cursor-pointer decoration-2 underline-offset-2">
        {channelName}
       </a>
       <div className="font-black text-[10px] opacity-60 leading-none mt-1">{handleText}</div>

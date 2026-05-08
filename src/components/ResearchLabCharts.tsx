@@ -1,4 +1,4 @@
-import React, { useMemo } from "react"
+import React, { useMemo, useState } from "react"
 import {
  AreaChart,
  Area,
@@ -14,8 +14,10 @@ import {
  ZAxis,
  Legend,
 } from "recharts"
+import { Search, MapPin, Globe, Loader2, Play } from "lucide-react"
 import type { CanonicalVideoRow } from "../services/analyticsContract"
 import { resolveMetricNumber } from "../services/canonicalMetricResolver"
+import { youtubeApiClient } from "../services/youtube/youtubeApiClient"
 
 const metricValue = (row: CanonicalVideoRow, metricKey: string): number => {
  return resolveMetricNumber(row, metricKey as any).value || 0
@@ -23,6 +25,135 @@ const metricValue = (row: CanonicalVideoRow, metricKey: string): number => {
 
 interface ChartProps {
  data: CanonicalVideoRow[]
+}
+
+export const YouTubeVideoSearch: React.FC = () => {
+ const [query, setQuery] = useState("")
+ const [location, setLocation] = useState("")
+ const [radius, setRadius] = useState("50km")
+ const [results, setResults] = useState<any[]>([])
+ const [loading, setLoading] = useState(false)
+ const [showFilters, setShowFilters] = useState(false)
+
+ const handleSearch = async (e: React.FormEvent) => {
+  e.preventDefault()
+  if (!query) return
+  setLoading(true)
+  try {
+   const data = await youtubeApiClient.searchVideos(query, {
+    location: location || undefined,
+    locationRadius: location ? radius : undefined,
+   })
+   setResults(data.items || [])
+  } catch (e) {
+   console.error("Search failed:", e)
+  } finally {
+   setLoading(false)
+  }
+ }
+
+ return (
+  <div className="bg-white border-[4px] border-black rounded-2xl shadow-[8px_8px_0px_0px_black] overflow-hidden flex flex-col min-h-[500px]">
+   <div className="bg-[#B14AED] text-white px-4 py-3 border-b-[4px] border-black flex justify-between items-center">
+    <div className="flex items-center gap-2">
+     <Search size={20} />
+     <span className="font-[1000] uppercase tracking-tighter">Competitor Search Lab</span>
+    </div>
+    <button
+     onClick={() => setShowFilters(!showFilters)}
+     className={`text-[10px] font-black uppercase px-2 py-1 border-2 border-white/30 rounded flex items-center gap-1 ${showFilters ? "bg-white text-black" : ""}`}
+    >
+     <MapPin size={10} />
+     Geo-Filters
+    </button>
+   </div>
+
+   <div className="p-4 bg-gray-50 border-b-[4px] border-black">
+    <form onSubmit={handleSearch} className="flex flex-col gap-3">
+     <div className="flex gap-2">
+      <input
+       type="text"
+       value={query}
+       onChange={(e) => setQuery(e.target.value)}
+       placeholder="SEARCH TOPICS, COMPETITORS, OR TRENDS..."
+       className="flex-1 border-[3px] border-black p-3 font-bold uppercase text-sm rounded-xl outline-none focus:bg-[#B14AED]/5"
+      />
+      <button
+       type="submit"
+       disabled={loading || !query}
+       className="bg-[#CCFF00] border-[3px] border-black px-6 font-black uppercase text-sm rounded-xl shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50"
+      >
+       {loading ? <Loader2 className="animate-spin" /> : "Analyze"}
+      </button>
+     </div>
+
+     {showFilters && (
+      <div className="flex gap-2 animate-in slide-in-from-top-2 duration-300">
+       <div className="flex-1 relative">
+        <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-black/40" />
+        <input
+         type="text"
+         value={location}
+         onChange={(e) => setLocation(e.target.value)}
+         placeholder="COORDINATES (E.G. 37.423021,-122.083739)"
+         className="w-full border-[3px] border-black pl-10 pr-4 py-2 font-bold uppercase text-[10px] rounded-xl outline-none"
+        />
+       </div>
+       <select
+        value={radius}
+        onChange={(e) => setRadius(e.target.value)}
+        className="border-[3px] border-black px-3 py-2 font-bold uppercase text-[10px] rounded-xl outline-none bg-white"
+       >
+        <option value="10km">10KM</option>
+        <option value="50km">50KM</option>
+        <option value="100km">100KM</option>
+        <option value="500km">500KM</option>
+       </select>
+      </div>
+     )}
+    </form>
+   </div>
+
+   <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+    {loading ? (
+     <div className="h-full flex items-center justify-center">
+      <Loader2 size={40} className="animate-spin text-[#B14AED]" />
+     </div>
+    ) : results.length > 0 ? (
+     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {results.map((video) => (
+       <div key={video.id.videoId} className="border-[3px] border-black p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+        <div className="relative aspect-video border-[3px] border-black rounded-lg overflow-hidden mb-3">
+         <img
+          src={video.snippet.thumbnails.high.url}
+          alt={video.snippet.title}
+          className="w-full h-full object-cover"
+         />
+         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <a
+           href={`https://youtube.com/watch?v=${video.id.videoId}`}
+           target="_blank"
+           rel="noopener noreferrer"
+           className="bg-white text-black p-3 rounded-full border-[3px] border-black shadow-[4px_4px_0px_0px_black]"
+          >
+           <Play fill="black" size={20} />
+          </a>
+         </div>
+        </div>
+        <h4 className="font-black text-xs uppercase line-clamp-2 mb-1">{video.snippet.title}</h4>
+        <p className="text-[10px] font-bold text-black/40 uppercase">{video.snippet.channelTitle}</p>
+       </div>
+      ))}
+     </div>
+    ) : (
+     <div className="h-full flex flex-col items-center justify-center opacity-20">
+      <Globe size={60} className="mb-4" />
+      <p className="font-black uppercase text-xl">Awaiting Inquiry</p>
+     </div>
+    )}
+   </div>
+  </div>
+ )
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {

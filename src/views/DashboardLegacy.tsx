@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
-import { useBrain } from "../context/GlobalDataContext"
+import { useBrain } from "../context/useBrain"
 import { CustomIcon } from "../components/CustomIcon"
 import { DailyAdviceWidget } from "../components/DailyAdviceWidget"
 import { getMetricSummary, getMasterRows } from "../services/analyticsSelectors"

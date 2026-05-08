@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { BookOpen, Send, Sparkles, Zap, Check, X, MessageSquare, Plus } from "lucide-react"
-import { useBrain } from "../../../context/GlobalDataContext"
+import { useBrain } from "../../../context/useBrain"
 import { generateJournalFollowUps, generateInfiniteMicroPolls } from "../../../services/gemini"
 
 const CATEGORIES = [

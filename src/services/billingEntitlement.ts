@@ -1,15 +1,51 @@
 import type { SubscriptionPlanId } from "./subscriptionPlans"
 
 export type LaunchTier = "free" | "medium" | "large"
+export type CreditLedgerEntryType =
+ | "monthly_refill"
+ | "topup_credit"
+ | "usage_debit"
+ | "adjustment"
+
+export interface PlanDefinition {
+ id: SubscriptionPlanId
+ priceUsd: number
+ monthlyCredits: number
+ rolloverCap: number
+ tier: LaunchTier
+}
+
+export interface TopupDefinition {
+ sku: string
+ priceUsd: number
+ creditAmount: number
+}
+
+export interface AutoRechargeConfig {
+ enabled: boolean
+ thresholdCredits: number
+ topupSku: string | null
+ cooldownHours: number
+ lastTriggeredIso: string | null
+}
 
 export interface EntitlementState {
  tier: LaunchTier
  subscriptionPlanId: SubscriptionPlanId
  status: "inactive" | "active" | "past_due" | "canceled"
+
+ // Canonical credit meter (1 credit == $0.01).
+ creditBalance: number
+ monthlyCreditGrant: number
+ rolloverCap: number
+ nextRefillIso: string | null
+
+ // Backward compatibility for legacy token widgets.
  tokenBalance: number
  tokenMonthlyLimit: number
  tokenDailyAccrual: number
  tokenLastAccrualIso: string | null
+
  currentPeriodStartIso: string | null
  currentPeriodEndIso: string | null
  referralCode: string
@@ -18,7 +54,52 @@ export interface EntitlementState {
  freeMonthsApplied: number
  stripeCustomerId: string | null
  stripeSubscriptionId: string | null
+
+ autoRechargeConfig: AutoRechargeConfig
  updatedAtIso: string
+}
+
+export interface MeterQuoteRequest {
+ modelId: string
+ inputTokensEstimate: number
+ outputTokensEstimate: number
+}
+
+export interface MeterQuoteResponse {
+ modelId: string
+ inputTokensEstimate: number
+ outputTokensEstimate: number
+ rawCostUsd: number
+ meterCostUsd: number
+ markupMultiplier: number
+ creditDebitEstimate: number
+ canRun: boolean
+ availableCredits: number
+}
+
+export interface MeterChargeEvent {
+ id: string
+ tsIso: string
+ modelId: string
+ inputTokens: number
+ outputTokens: number
+ rawCostUsd: number
+ meterCostUsd: number
+ markupMultiplier: number
+ creditDebit: number
+ balanceBefore: number
+ balanceAfter: number
+ reason: "usage_metadata" | "fallback_estimate"
+ fallbackApplied: boolean
+}
+
+export interface CreditLedgerEntry {
+ id: string
+ tsIso: string
+ type: CreditLedgerEntryType
+ deltaCredits: number
+ balanceAfter: number
+ meta?: Record<string, string | number | boolean | null>
 }
 
 export interface CheckoutSessionRequest {
@@ -27,6 +108,8 @@ export interface CheckoutSessionRequest {
  successUrl: string
  cancelUrl: string
  referralCode?: string
+ mode?: "subscription" | "topup"
+ topupSku?: string
 }
 
 export interface CheckoutSessionResponse {
@@ -49,75 +132,163 @@ export interface StripeWebhookLikeEvent {
 }
 
 const ENTITLEMENT_STORAGE_KEY = "vt_entitlement_v1"
+const ENTITLEMENT_LEDGER_KEY = "vt_credit_ledger_v1"
+const KNOWN_USER_EMAIL_KEY = "vt_known_user_email"
 export const ENTITLEMENT_CHANGED_EVENT = "vt_entitlement_changed"
-const DEFAULT_MONTHLY_TOKENS = 12_000
-const DEFAULT_DAILY_ACCRUAL = 400
 
-const TIER_RANK: Record<LaunchTier, number> = {
- free: 0,
- medium: 1,
- large: 2,
+const MARKUP_MULTIPLIER = Number(import.meta.env?.VITE_GEMINI_METER_MARKUP || 3)
+
+const PLAN_DEFINITIONS: PlanDefinition[] = [
+ { id: "basic", priceUsd: 0, monthlyCredits: 0, rolloverCap: 0, tier: "free" },
+ { id: "creator", priceUsd: 9.99, monthlyCredits: 1000, rolloverCap: 2000, tier: "medium" },
+ {
+  id: "creator_plus",
+  priceUsd: 19.99,
+  monthlyCredits: 2000,
+  rolloverCap: 4000,
+  tier: "medium",
+ },
+ {
+  id: "creator_pro",
+  priceUsd: 39.99,
+  monthlyCredits: 4000,
+  rolloverCap: 8000,
+  tier: "medium",
+ },
+ { id: "executive", priceUsd: 69.99, monthlyCredits: Number.POSITIVE_INFINITY, rolloverCap: Number.POSITIVE_INFINITY, tier: "large" },
+]
+
+export const TOPUP_DEFINITIONS: TopupDefinition[] = [
+ { sku: "topup_5", priceUsd: 5, creditAmount: 8_000 },
+ { sku: "topup_10", priceUsd: 10, creditAmount: 18_000 },
+ { sku: "topup_25", priceUsd: 25, creditAmount: 50_000 },
+]
+
+const GEMINI_MODEL_RATES_USD_PER_1K: Record<string, { input: number; output: number }> = {
+ "gemini-3-flash-preview": {
+  input: Number(import.meta.env?.VITE_GEMINI_RATE_FLASH_IN_1K || 0.00035),
+  output: Number(import.meta.env?.VITE_GEMINI_RATE_FLASH_OUT_1K || 0.00105),
+ },
+ "gemini-3-pro-preview": {
+  input: Number(import.meta.env?.VITE_GEMINI_RATE_PRO_IN_1K || 0.0035),
+  output: Number(import.meta.env?.VITE_GEMINI_RATE_PRO_OUT_1K || 0.0105),
+ },
+ "gemini-3.1-pro-preview": {
+  input: Number(import.meta.env?.VITE_GEMINI_RATE_PRO_IN_1K || 0.0035),
+  output: Number(import.meta.env?.VITE_GEMINI_RATE_PRO_OUT_1K || 0.0105),
+ },
 }
 
-const PLAN_TO_TIER: Record<SubscriptionPlanId, LaunchTier> = {
- starter: "free",
- creator_plus: "medium",
- pro_intelligence: "medium",
- business_team: "large",
- enterprise: "large",
+const TIER_RANK: Record<LaunchTier, number> = { free: 0, medium: 1, large: 2 }
+const DEFAULT_AUTO_RECHARGE: AutoRechargeConfig = {
+ enabled: false,
+ thresholdCredits: 2_500,
+ topupSku: "topup_10",
+ cooldownHours: 24,
+ lastTriggeredIso: null,
 }
+const OWNER_EMAILS = new Set([
+ "cbrewsterart@gmail.com",
+ "theeveryday.fun@gmail.com",
+])
+const OWNER_FREE_TOPUP_THRESHOLD = 1_000
+const OWNER_FREE_TOPUP_AMOUNT = 10_000
 
-const BUILD_REFERRAL_CODE = () => {
+const buildReferralCode = () => {
  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
  let out = "VT"
- for (let i = 0; i < 8; i += 1) {
-  out += chars[Math.floor(Math.random() * chars.length)]
- }
+ for (let i = 0; i < 8; i += 1) out += chars[Math.floor(Math.random() * chars.length)]
  return out
 }
 
-export const tierAtLeast = (current: LaunchTier, minimum: LaunchTier): boolean => {
- return TIER_RANK[current] >= TIER_RANK[minimum]
+const normalizeEmail = (email: string): string => String(email || "").trim().toLowerCase()
+export const isOwnerEmail = (email: string): boolean => OWNER_EMAILS.has(normalizeEmail(email))
+export const setKnownUserEmail = (email: string): void => {
+ if (typeof window === "undefined") return
+ localStorage.setItem(KNOWN_USER_EMAIL_KEY, normalizeEmail(email))
 }
-
-export const resolveTierFromPlan = (planId: SubscriptionPlanId): LaunchTier => {
- return PLAN_TO_TIER[planId] || "free"
+const getKnownUserEmail = (): string => {
+ if (typeof window === "undefined") return ""
+ return normalizeEmail(localStorage.getItem(KNOWN_USER_EMAIL_KEY) || "")
 }
+const isOwnerMode = (): boolean => isOwnerEmail(getKnownUserEmail())
 
 const toPeriodBounds = (now: Date) => {
  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0))
  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0, 0))
- return {
-  startIso: start.toISOString(),
-  endIso: next.toISOString(),
- }
+ return { startIso: start.toISOString(), endIso: next.toISOString() }
 }
 
-const normalizeDailyAccrualAnchor = (now: Date) => {
- const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0))
- return day.toISOString()
+const roundCreditUnits = (usd: number): number => Math.max(0, Math.ceil(usd * 100))
+const safeNumber = (value: unknown, fallback = 0): number => {
+ const n = Number(value)
+ return Number.isFinite(n) ? n : fallback
 }
+
+const getPlanDefinition = (planId: SubscriptionPlanId): PlanDefinition =>
+ PLAN_DEFINITIONS.find((plan) => plan.id === planId) || PLAN_DEFINITIONS[0]
+
+const modelRatesFor = (modelId: string) => {
+ const rates = GEMINI_MODEL_RATES_USD_PER_1K[modelId] || GEMINI_MODEL_RATES_USD_PER_1K["gemini-3-flash-preview"]
+ return rates
+}
+
+const ensureCompatibilityFields = (state: EntitlementState): EntitlementState => ({
+ ...state,
+ tokenBalance: state.creditBalance,
+ tokenMonthlyLimit: state.monthlyCreditGrant,
+ tokenDailyAccrual: 0,
+})
+
+const applyOwnerOverride = (state: EntitlementState, now = new Date()): EntitlementState => {
+ if (!isOwnerMode()) return state
+ const next = ensureCompatibilityFields({
+  ...state,
+  tier: "large",
+  subscriptionPlanId: "executive",
+  status: "active",
+  monthlyCreditGrant: Math.max(state.monthlyCreditGrant || 0, OWNER_FREE_TOPUP_AMOUNT),
+  rolloverCap: Number.POSITIVE_INFINITY,
+  creditBalance: Math.max(
+   safeNumber(state.creditBalance, 0),
+   OWNER_FREE_TOPUP_THRESHOLD + OWNER_FREE_TOPUP_AMOUNT,
+  ),
+  updatedAtIso: now.toISOString(),
+ })
+ return next
+}
+
+export const tierAtLeast = (current: LaunchTier, minimum: LaunchTier): boolean =>
+ TIER_RANK[current] >= TIER_RANK[minimum]
+
+export const resolveTierFromPlan = (planId: SubscriptionPlanId): LaunchTier =>
+ getPlanDefinition(planId).tier
 
 export const createDefaultEntitlement = (now = new Date()): EntitlementState => {
  const { startIso, endIso } = toPeriodBounds(now)
- return {
-  tier: "large",
-  subscriptionPlanId: "enterprise",
-  status: "active",
-  tokenBalance: Number.POSITIVE_INFINITY,
-  tokenMonthlyLimit: Number.POSITIVE_INFINITY,
+ return ensureCompatibilityFields({
+  tier: "free",
+  subscriptionPlanId: "basic",
+  status: "inactive",
+  creditBalance: 0,
+  monthlyCreditGrant: 0,
+  rolloverCap: 0,
+  nextRefillIso: endIso,
+  tokenBalance: 0,
+  tokenMonthlyLimit: 0,
   tokenDailyAccrual: 0,
-  tokenLastAccrualIso: normalizeDailyAccrualAnchor(now),
+  tokenLastAccrualIso: startIso,
   currentPeriodStartIso: startIso,
   currentPeriodEndIso: endIso,
-  referralCode: BUILD_REFERRAL_CODE(),
+  referralCode: buildReferralCode(),
   referralsConverted: 0,
   freeMonthsEarned: 0,
   freeMonthsApplied: 0,
-  stripeCustomerId: "theeveryday.fun@gmail.com",
-  stripeSubscriptionId: "unlimited_permanent_override",
+  stripeCustomerId: null,
+  stripeSubscriptionId: null,
+  autoRechargeConfig: { ...DEFAULT_AUTO_RECHARGE },
   updatedAtIso: now.toISOString(),
- }
+ })
 }
 
 export const applyPlanToEntitlement = (
@@ -125,222 +296,289 @@ export const applyPlanToEntitlement = (
  planId: SubscriptionPlanId,
  now = new Date(),
 ): EntitlementState => {
- const tier = resolveTierFromPlan(planId)
+ const plan = getPlanDefinition(planId)
  const { startIso, endIso } = toPeriodBounds(now)
+ const rolled = Math.min(plan.rolloverCap, Math.max(0, safeNumber(previous.creditBalance, 0)))
+ const toppedBalance = plan.tier === "free" ? 0 : Math.max(rolled, plan.monthlyCredits)
 
- if (tier === "large") {
-  return {
-   ...previous,
-   tier,
-   subscriptionPlanId: planId,
-   status: "active",
-   tokenBalance: Number.POSITIVE_INFINITY,
-   tokenMonthlyLimit: Number.POSITIVE_INFINITY,
-   tokenDailyAccrual: 0,
-   tokenLastAccrualIso: normalizeDailyAccrualAnchor(now),
-   currentPeriodStartIso: startIso,
-   currentPeriodEndIso: endIso,
-   updatedAtIso: now.toISOString(),
-  }
- }
-
- if (tier === "medium") {
-  return {
-   ...previous,
-   tier,
-   subscriptionPlanId: planId,
-   status: "active",
-   tokenBalance: DEFAULT_MONTHLY_TOKENS,
-   tokenMonthlyLimit: DEFAULT_MONTHLY_TOKENS,
-   tokenDailyAccrual: DEFAULT_DAILY_ACCRUAL,
-   tokenLastAccrualIso: normalizeDailyAccrualAnchor(now),
-   currentPeriodStartIso: startIso,
-   currentPeriodEndIso: endIso,
-   updatedAtIso: now.toISOString(),
-  }
- }
-
- return {
+ return ensureCompatibilityFields({
   ...previous,
-  tier: "free",
-  subscriptionPlanId: "starter",
-  status: "inactive",
-  tokenBalance: 0,
-  tokenMonthlyLimit: 0,
-  tokenDailyAccrual: 0,
-  tokenLastAccrualIso: normalizeDailyAccrualAnchor(now),
+  tier: plan.tier,
+  subscriptionPlanId: plan.id,
+  status: plan.tier === "free" ? "inactive" : "active",
+  creditBalance: toppedBalance,
+  monthlyCreditGrant: plan.monthlyCredits,
+  rolloverCap: plan.rolloverCap,
+  nextRefillIso: endIso,
   currentPeriodStartIso: startIso,
   currentPeriodEndIso: endIso,
   updatedAtIso: now.toISOString(),
- }
+ })
 }
 
 export const reconcileEntitlementWindow = (
  state: EntitlementState,
  now = new Date(),
 ): EntitlementState => {
- let next = { ...state }
- let changed = false
+ const normalized = ensureCompatibilityFields({ ...state })
+ const periodEnd = normalized.currentPeriodEndIso ? new Date(normalized.currentPeriodEndIso) : null
+ if (normalized.tier === "free" || !periodEnd || now < periodEnd) return normalized
 
- if (next.tier === "large") {
-  if (
-   next.tokenBalance !== Number.POSITIVE_INFINITY ||
-   next.updatedAtIso !== now.toISOString()
-  ) {
-   changed = true
-  }
-  return {
-   ...next,
-   tokenBalance: Number.POSITIVE_INFINITY,
-   updatedAtIso: changed ? now.toISOString() : next.updatedAtIso,
-  }
- }
+ const plan = getPlanDefinition(normalized.subscriptionPlanId)
+ const { startIso, endIso } = toPeriodBounds(now)
+ const rolled = Math.min(plan.rolloverCap, Math.max(0, normalized.creditBalance))
+ const refillBalance = Math.min(plan.rolloverCap, rolled + plan.monthlyCredits)
 
- const currentPeriodEnd = next.currentPeriodEndIso ? new Date(next.currentPeriodEndIso) : null
- if (next.tier === "medium" && currentPeriodEnd && now >= currentPeriodEnd) {
-  const { startIso, endIso } = toPeriodBounds(now)
-  changed = true
-  next = {
-   ...next,
-   tokenBalance: next.tokenMonthlyLimit,
-   currentPeriodStartIso: startIso,
-   currentPeriodEndIso: endIso,
-  }
- }
-
- if (next.tier === "medium" && next.tokenDailyAccrual > 0) {
-  const lastAccrual = next.tokenLastAccrualIso ? new Date(next.tokenLastAccrualIso) : null
-  const lastDay = lastAccrual ? Date.UTC(lastAccrual.getUTCFullYear(), lastAccrual.getUTCMonth(), lastAccrual.getUTCDate()) : 0
-  const nowDay = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
-
-  if (nowDay > lastDay) {
-   const daysElapsed = Math.floor((nowDay - lastDay) / (24 * 60 * 60 * 1000))
-   const accrual = Math.max(0, daysElapsed) * next.tokenDailyAccrual
-   const nextBalance = Math.min(next.tokenMonthlyLimit, next.tokenBalance + accrual)
-   if (
-    nextBalance !== next.tokenBalance ||
-    next.tokenLastAccrualIso !== normalizeDailyAccrualAnchor(now)
-   ) {
-    changed = true
-   }
-   next.tokenBalance = nextBalance
-   next.tokenLastAccrualIso = normalizeDailyAccrualAnchor(now)
-  }
- }
-
- return {
-  ...next,
-  updatedAtIso: changed ? now.toISOString() : next.updatedAtIso,
- }
-}
-
-export const consumeEntitlementTokens = (
- state: EntitlementState,
- units: number,
- now = new Date(),
-): { next: EntitlementState; allowed: boolean } => {
- const normalized = reconcileEntitlementWindow(state, now)
- if (normalized.tier === "large") {
-  return { next: normalized, allowed: true }
- }
-
- if (normalized.tier === "free") {
-  return { next: normalized, allowed: false }
- }
-
- if (!Number.isFinite(units) || units <= 0) {
-  return { next: normalized, allowed: true }
- }
-
- if (normalized.tokenBalance < units) {
-  return { next: normalized, allowed: false }
- }
-
- return {
-  next: {
-   ...normalized,
-   tokenBalance: normalized.tokenBalance - units,
-   updatedAtIso: now.toISOString(),
-  },
-  allowed: true,
- }
-}
-
-export const registerReferralConversion = (
- state: EntitlementState,
- now = new Date(),
-): EntitlementState => {
- return {
-  ...state,
-  referralsConverted: state.referralsConverted + 1,
-  freeMonthsEarned: state.freeMonthsEarned + 1,
+ return ensureCompatibilityFields({
+  ...normalized,
+  creditBalance: refillBalance,
+  monthlyCreditGrant: plan.monthlyCredits,
+  rolloverCap: plan.rolloverCap,
+  nextRefillIso: endIso,
+  currentPeriodStartIso: startIso,
+  currentPeriodEndIso: endIso,
   updatedAtIso: now.toISOString(),
- }
-}
-
-const buildEntitlementFromRaw = (raw: string | null): EntitlementState => {
- if (!raw) return createDefaultEntitlement()
- const parsed = JSON.parse(raw) as EntitlementState
- return {
-  ...createDefaultEntitlement(),
-  ...parsed,
- }
+ })
 }
 
 const serializeEntitlement = (state: EntitlementState): string => JSON.stringify(state)
 
+const buildEntitlementFromRaw = (raw: string | null): EntitlementState => {
+ if (!raw) return createDefaultEntitlement()
+ const parsed = JSON.parse(raw) as Partial<EntitlementState>
+ return ensureCompatibilityFields({
+  ...createDefaultEntitlement(),
+  ...parsed,
+  autoRechargeConfig: {
+   ...DEFAULT_AUTO_RECHARGE,
+   ...(parsed.autoRechargeConfig || {}),
+  },
+  creditBalance: safeNumber(parsed.creditBalance ?? parsed.tokenBalance, 0),
+  monthlyCreditGrant: safeNumber(parsed.monthlyCreditGrant ?? parsed.tokenMonthlyLimit, 0),
+  rolloverCap: safeNumber(parsed.rolloverCap ?? parsed.tokenMonthlyLimit, 0),
+ } as EntitlementState)
+}
+
 export const readStoredEntitlementRaw = (): EntitlementState => {
  try {
-  const raw = localStorage.getItem(ENTITLEMENT_STORAGE_KEY)
-  const state = buildEntitlementFromRaw(raw)
-  
-  // Permanent unlimited access override for theeveryday.fun@gmail.com
-  // without needing tokens, sign-in, or anything like that.
-  return {
-   ...state,
-   tier: "large",
-   subscriptionPlanId: "enterprise",
-   status: "active",
-   tokenBalance: Number.POSITIVE_INFINITY,
-   tokenMonthlyLimit: Number.POSITIVE_INFINITY,
-   stripeCustomerId: "theeveryday.fun@gmail.com",
-  }
+  return buildEntitlementFromRaw(localStorage.getItem(ENTITLEMENT_STORAGE_KEY))
  } catch {
   return createDefaultEntitlement()
  }
 }
 
-export const readCurrentEntitlement = (now = new Date()): EntitlementState => {
- return reconcileEntitlementWindow(readStoredEntitlementRaw(), now)
-}
+export const readCurrentEntitlement = (now = new Date()): EntitlementState =>
+ applyOwnerOverride(reconcileEntitlementWindow(readStoredEntitlementRaw(), now), now)
 
 export const writeStoredEntitlement = (state: EntitlementState): void => {
- localStorage.setItem(ENTITLEMENT_STORAGE_KEY, serializeEntitlement(state))
+ const normalized = ensureCompatibilityFields(state)
+ localStorage.setItem(ENTITLEMENT_STORAGE_KEY, serializeEntitlement(normalized))
  if (typeof window !== "undefined") {
-  window.dispatchEvent(new CustomEvent(ENTITLEMENT_CHANGED_EVENT, { detail: state }))
+  window.dispatchEvent(new CustomEvent(ENTITLEMENT_CHANGED_EVENT, { detail: normalized }))
  }
 }
 
 export const syncEntitlementIfDrifted = (now = new Date()): EntitlementState => {
  const raw = readStoredEntitlementRaw()
- const reconciled = reconcileEntitlementWindow(raw, now)
+ const reconciled = applyOwnerOverride(reconcileEntitlementWindow(raw, now), now)
  if (serializeEntitlement(raw) !== serializeEntitlement(reconciled)) {
   writeStoredEntitlement(reconciled)
  }
  return reconciled
 }
 
-// Backward-compatible aliases.
-export const getStoredEntitlement = (): EntitlementState => readCurrentEntitlement()
-export const setStoredEntitlement = (state: EntitlementState): void =>
- writeStoredEntitlement(state)
-export const getCurrentEntitlement = (): EntitlementState => readCurrentEntitlement()
+const readLedger = (): CreditLedgerEntry[] => {
+ try {
+  const raw = localStorage.getItem(ENTITLEMENT_LEDGER_KEY)
+  if (!raw) return []
+  const parsed = JSON.parse(raw)
+  return Array.isArray(parsed) ? (parsed as CreditLedgerEntry[]) : []
+ } catch {
+  return []
+ }
+}
 
-export const entitlementStatesEqual = (
- a: EntitlementState,
- b: EntitlementState,
+const writeLedger = (entries: CreditLedgerEntry[]) => {
+ localStorage.setItem(ENTITLEMENT_LEDGER_KEY, JSON.stringify(entries.slice(-1500)))
+}
+
+const appendLedger = (entry: CreditLedgerEntry) => {
+ const next = [...readLedger(), entry]
+ writeLedger(next)
+}
+
+const newLedgerId = (): string =>
+ `lg_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`
+
+export const getModelRates = (modelId: string) => modelRatesFor(modelId)
+
+export const estimateMeterQuote = (
+ request: MeterQuoteRequest,
+ state = getCurrentEntitlement(),
+): MeterQuoteResponse => {
+ const inputTokens = Math.max(0, Math.floor(safeNumber(request.inputTokensEstimate, 0)))
+ const outputTokens = Math.max(0, Math.floor(safeNumber(request.outputTokensEstimate, 0)))
+ const rates = modelRatesFor(request.modelId)
+ const rawCostUsd = (inputTokens / 1000) * rates.input + (outputTokens / 1000) * rates.output
+ const meterCostUsd = rawCostUsd * MARKUP_MULTIPLIER
+ const creditDebitEstimate = roundCreditUnits(meterCostUsd)
+
+ return {
+  modelId: request.modelId,
+  inputTokensEstimate: inputTokens,
+  outputTokensEstimate: outputTokens,
+  rawCostUsd,
+  meterCostUsd,
+  markupMultiplier: MARKUP_MULTIPLIER,
+  creditDebitEstimate,
+  canRun:
+   isOwnerMode() ||
+   state.tier === "large" ||
+   (state.tier !== "free" && state.creditBalance >= Math.max(1, creditDebitEstimate)),
+  availableCredits: state.creditBalance,
+ }
+}
+
+export const canAffordAiTokensFromState = (
+ state: EntitlementState,
+ units = 1,
 ): boolean => {
- return serializeEntitlement(a) === serializeEntitlement(b)
+ if (isOwnerMode()) return true
+ if (state.tier === "large") return true
+ if (state.tier === "free") return false
+ return state.creditBalance >= Math.max(1, Math.floor(units))
+}
+
+export const canAffordAiTokens = (units = 1): boolean =>
+ canAffordAiTokensFromState(readCurrentEntitlement(), units)
+
+export const applyMeterChargeEvent = (
+ eventInput: Omit<MeterChargeEvent, "balanceBefore" | "balanceAfter" | "markupMultiplier" | "tsIso">,
+ now = new Date(),
+): { event: MeterChargeEvent; next: EntitlementState; allowed: boolean } => {
+ const current = syncEntitlementIfDrifted(now)
+ const ownerMode = isOwnerMode()
+ const debit = Math.max(0, Math.floor(eventInput.creditDebit))
+ let before = current.creditBalance
+
+ if (current.tier === "free" && !ownerMode) {
+  return {
+   event: {
+    ...eventInput,
+    tsIso: now.toISOString(),
+    markupMultiplier: MARKUP_MULTIPLIER,
+    balanceBefore: before,
+    balanceAfter: before,
+   },
+   next: current,
+   allowed: false,
+  }
+ }
+
+ if (!ownerMode && current.tier !== "large" && before < debit) {
+  return {
+   event: {
+    ...eventInput,
+    tsIso: now.toISOString(),
+    markupMultiplier: MARKUP_MULTIPLIER,
+    balanceBefore: before,
+    balanceAfter: before,
+   },
+   next: current,
+   allowed: false,
+  }
+ }
+
+ if (ownerMode && before < debit + OWNER_FREE_TOPUP_THRESHOLD) {
+  before = before + OWNER_FREE_TOPUP_AMOUNT
+  appendLedger({
+   id: newLedgerId(),
+   tsIso: now.toISOString(),
+   type: "topup_credit",
+   deltaCredits: OWNER_FREE_TOPUP_AMOUNT,
+   balanceAfter: before,
+   meta: { source: "owner_auto_topup", free: true },
+  })
+ }
+
+ let after = current.tier === "large" && !ownerMode ? before : Math.max(0, before - debit)
+ if (ownerMode && after < OWNER_FREE_TOPUP_THRESHOLD) {
+  after += OWNER_FREE_TOPUP_AMOUNT
+  appendLedger({
+   id: newLedgerId(),
+   tsIso: now.toISOString(),
+   type: "topup_credit",
+   deltaCredits: OWNER_FREE_TOPUP_AMOUNT,
+   balanceAfter: after,
+   meta: { source: "owner_auto_topup", free: true },
+  })
+ }
+ const next = ensureCompatibilityFields({ ...current, creditBalance: after, updatedAtIso: now.toISOString() })
+ writeStoredEntitlement(next)
+
+ const event: MeterChargeEvent = {
+  ...eventInput,
+  tsIso: now.toISOString(),
+  markupMultiplier: MARKUP_MULTIPLIER,
+  balanceBefore: before,
+  balanceAfter: after,
+ }
+
+ appendLedger({
+  id: event.id,
+  tsIso: event.tsIso,
+  type: "usage_debit",
+  deltaCredits: -debit,
+  balanceAfter: after,
+  meta: {
+   modelId: event.modelId,
+   inputTokens: event.inputTokens,
+   outputTokens: event.outputTokens,
+   rawCostUsd: Number(event.rawCostUsd.toFixed(8)),
+   meterCostUsd: Number(event.meterCostUsd.toFixed(8)),
+   reason: event.reason,
+   fallbackApplied: event.fallbackApplied,
+  },
+ })
+
+ return { event, next, allowed: true }
+}
+
+export const applyTopupCredits = (sku: string, now = new Date()): EntitlementState => {
+ const topup = TOPUP_DEFINITIONS.find((item) => item.sku === sku)
+ if (!topup) return syncEntitlementIfDrifted(now)
+ const current = syncEntitlementIfDrifted(now)
+ const next = ensureCompatibilityFields({
+  ...current,
+  creditBalance: current.creditBalance + topup.creditAmount,
+  updatedAtIso: now.toISOString(),
+ })
+ writeStoredEntitlement(next)
+ appendLedger({
+  id: newLedgerId(),
+  tsIso: now.toISOString(),
+  type: "topup_credit",
+  deltaCredits: topup.creditAmount,
+  balanceAfter: next.creditBalance,
+  meta: { sku: topup.sku, priceUsd: topup.priceUsd },
+ })
+ return next
+}
+
+export const consumeAiTokens = (units = 1): { next: EntitlementState; allowed: boolean } => {
+ const current = syncEntitlementIfDrifted()
+ if (isOwnerMode()) return { next: current, allowed: true }
+ if (current.tier === "large") return { next: current, allowed: true }
+ if (current.tier === "free") return { next: current, allowed: false }
+ const debit = Math.max(1, Math.floor(units))
+ if (current.creditBalance < debit) return { next: current, allowed: false }
+ const next = ensureCompatibilityFields({
+  ...current,
+  creditBalance: current.creditBalance - debit,
+  updatedAtIso: new Date().toISOString(),
+ })
+ writeStoredEntitlement(next)
+ return { next, allowed: true }
 }
 
 export const updatePlanEntitlement = (planId: SubscriptionPlanId): EntitlementState => {
@@ -350,77 +588,64 @@ export const updatePlanEntitlement = (planId: SubscriptionPlanId): EntitlementSt
  return next
 }
 
-export const consumeAiTokens = (units = 1): { next: EntitlementState; allowed: boolean } => {
- const current = syncEntitlementIfDrifted()
- const result = consumeEntitlementTokens(current, units)
- writeStoredEntitlement(result.next)
- return result
-}
-
-export const canAffordAiTokensFromState = (
- state: EntitlementState,
- units = 1,
-): boolean => {
- const current = reconcileEntitlementWindow(state)
- if (current.tier === "large") return true
- if (current.tier === "free") return false
- if (!Number.isFinite(units) || units <= 0) return true
- return current.tokenBalance >= units
-}
-
-export const canAffordAiTokens = (units = 1): boolean => {
- return canAffordAiTokensFromState(readCurrentEntitlement(), units)
-}
-
 export const createCheckoutSession = async (
  payload: CheckoutSessionRequest,
 ): Promise<CheckoutSessionResponse> => {
  const apiBase = import.meta.env.VITE_BILLING_API_BASE as string | undefined
-
- if (apiBase) {
-  const response = await fetch(`${apiBase.replace(/\/$/, "")}/billing/checkout-session`, {
-   method: "POST",
-   headers: { "Content-Type": "application/json" },
-   body: JSON.stringify(payload),
-  })
-  if (!response.ok) {
-   throw new Error(`Checkout session creation failed (${response.status}).`)
-  }
-  return response.json() as Promise<CheckoutSessionResponse>
+ if (!apiBase) {
+  throw new Error("Billing API is not configured. Set VITE_BILLING_API_BASE.")
  }
-
- const fakeSessionId = `cs_test_${Math.random().toString(36).slice(2, 12)}`
- return {
-  sessionId: fakeSessionId,
-  checkoutUrl: `${window.location.origin}/settings?panel=billing&session_id=${fakeSessionId}&plan=${payload.planId}`,
-  provider: "stripe",
+ const response = await fetch(`${apiBase.replace(/\/$/, "")}/billing/checkout-session`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(payload),
+ })
+ if (!response.ok) {
+  throw new Error(`Checkout session creation failed (${response.status}).`)
  }
+ return response.json() as Promise<CheckoutSessionResponse>
 }
 
 export const handleStripeWebhook = (event: StripeWebhookLikeEvent): EntitlementState => {
  const current = syncEntitlementIfDrifted()
-  
+ const metadata = event.data?.object?.metadata || {}
+
  if (event.type === "checkout.session.completed" || event.type === "invoice.paid") {
-  const metadata = event.data?.object?.metadata || {}
+  if ((metadata.mode || "subscription") === "topup" && metadata.topupSku) {
+   return applyTopupCredits(metadata.topupSku)
+  }
   const planId = (metadata.planId || "creator_plus") as SubscriptionPlanId
-  const withPlan = applyPlanToEntitlement(current, planId)
+  const next = applyPlanToEntitlement(current, planId)
   const withStripe = {
-   ...withPlan,
-   stripeCustomerId: event.data?.object?.customer || withPlan.stripeCustomerId,
-   stripeSubscriptionId: event.data?.object?.subscription || withPlan.stripeSubscriptionId,
+   ...next,
+   stripeCustomerId: event.data?.object?.customer || next.stripeCustomerId,
+   stripeSubscriptionId: event.data?.object?.subscription || next.stripeSubscriptionId,
   }
   writeStoredEntitlement(withStripe)
+  appendLedger({
+   id: newLedgerId(),
+   tsIso: new Date().toISOString(),
+   type: "monthly_refill",
+   deltaCredits: withStripe.monthlyCreditGrant,
+   balanceAfter: withStripe.creditBalance,
+   meta: { planId },
+  })
   return withStripe
  }
 
  if (event.type === "customer.subscription.deleted" || event.type === "invoice.payment_failed") {
-  const downgraded = applyPlanToEntitlement(current, "starter")
+  const downgraded = applyPlanToEntitlement(current, "basic")
   writeStoredEntitlement(downgraded)
   return downgraded
  }
 
  if (event.type === "referral.conversion") {
-  const rewarded = registerReferralConversion(current)
+  const rewarded = {
+   ...current,
+   referralsConverted: current.referralsConverted + 1,
+   freeMonthsEarned: current.freeMonthsEarned + 1,
+   updatedAtIso: new Date().toISOString(),
+  }
   writeStoredEntitlement(rewarded)
   return rewarded
  }
@@ -429,11 +654,21 @@ export const handleStripeWebhook = (event: StripeWebhookLikeEvent): EntitlementS
 }
 
 export async function fetchEntitlementFromServer(email: string): Promise<EntitlementState> {
- const apiBase = (import.meta.env?.VITE_BILLING_API_BASE ?? process.env.VITE_BILLING_API_BASE) as string | undefined
+ setKnownUserEmail(email)
+ if (isOwnerEmail(email)) {
+  const ownerState = syncEntitlementIfDrifted()
+  writeStoredEntitlement(ownerState)
+  return ownerState
+ }
+ const apiBase = (import.meta.env?.VITE_BILLING_API_BASE ?? process.env.VITE_BILLING_API_BASE) as
+  | string
+  | undefined
  if (!apiBase) {
   throw new Error("VITE_BILLING_API_BASE is not configured")
  }
- const response = await fetch(`${apiBase.replace(/\/$/, "")}/billing/entitlement/${encodeURIComponent(email)}`)
+ const response = await fetch(
+  `${apiBase.replace(/\/$/, "")}/billing/entitlement/${encodeURIComponent(email)}`,
+ )
  if (!response.ok) {
   throw new Error(`Failed to fetch entitlement (${response.status})`)
  }
@@ -441,6 +676,17 @@ export async function fetchEntitlementFromServer(email: string): Promise<Entitle
  if (!data.entitlement) {
   throw new Error("Entitlement not found")
  }
- writeStoredEntitlement(data.entitlement)
- return data.entitlement
+ writeStoredEntitlement(buildEntitlementFromRaw(JSON.stringify(data.entitlement)))
+ return readCurrentEntitlement()
 }
+
+// Backward-compatible aliases.
+export const getStoredEntitlement = (): EntitlementState => readCurrentEntitlement()
+export const setStoredEntitlement = (state: EntitlementState): void => writeStoredEntitlement(state)
+export const getCurrentEntitlement = (): EntitlementState => readCurrentEntitlement()
+
+export const entitlementStatesEqual = (a: EntitlementState, b: EntitlementState): boolean =>
+ serializeEntitlement(a) === serializeEntitlement(b)
+
+export const getMeterLedgerEntries = (): CreditLedgerEntry[] => readLedger()
+export const getPlanDefinitions = (): PlanDefinition[] => [...PLAN_DEFINITIONS]

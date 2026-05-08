@@ -176,14 +176,34 @@ export interface LaunchEditorProjectV1 {
 
 export interface RenderJobRequest {
   projectId: string;
-  format: "mp4" | "mov";
+  format: "mp4" | "mov" | "webp";
   resolutionProfile: "720" | "1080" | "1k" | "2k" | "4k";
   aspect: "16:9" | "9:16";
+  renderMode?: "realtime" | "quality" | "frame-perfect";
+  qualityProfile?: "draft" | "preview" | "final" | "prores" | "webp-archive";
+  codecProfile?: {
+    videoCodec?: string;
+    audioCodec?: string;
+    pixelFormat?: string;
+    bitrateMbps?: number;
+    alpha?: boolean;
+  };
+  propsResolutionTrace?: {
+    defaultProps: Record<string, unknown>;
+    inputProps: Record<string, unknown>;
+    resolvedProps: Record<string, unknown>;
+    metadataSource: "default-props" | "input-props" | "calculate-metadata" | "fallback";
+  };
+  frameAuditConfig?: {
+    enabled: boolean;
+    sampleEveryNFrames?: number;
+  };
   compositionSpec: {
     fps: number;
     width: number;
     height: number;
     durationInFrames: number;
+    durationInSeconds?: number;
   };
 }
 
@@ -193,6 +213,18 @@ export interface RenderJobStatus {
   progress?: number;
   outputUrl?: string;
   error?: string;
+  errorCode?:
+    | "contract_invalid"
+    | "asset_missing"
+    | "codec_failed"
+    | "ffmpeg_failed"
+    | "api_unavailable"
+    | "job_not_found";
+  diagnostics?: {
+    renderMode?: "realtime" | "quality" | "frame-perfect";
+    qualityProfile?: "draft" | "preview" | "final" | "prores" | "webp-archive";
+    issues?: string[];
+  };
 }
 
 export interface TemplatePresetV1 {

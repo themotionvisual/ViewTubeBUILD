@@ -166,7 +166,7 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
       ))}
       {!canAffordAsk && (
        <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>
-        {entitlement.tier === "free" ? "Upgrade for AskMe AI." : `Need ${ASK_COST} token.`}
+        {entitlement.tier === "free" ? "Upgrade for AskMe AI." : `Need ${ASK_COST} credits.`}
        </div>
       )}
      </div>
@@ -219,7 +219,7 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
      <button
       onClick={() => handleSend()}
       disabled={isThinking || !input.trim() || !canAffordAsk}
-      title={!canAffordAsk ? (entitlement.tier === "free" ? "Upgrade required for AI." : `Need ${ASK_COST} token.`) : `Ask AI (${ASK_COST}T)`}
+      title={!canAffordAsk ? (entitlement.tier === "free" ? "Upgrade required for AI." : `Need ${ASK_COST} credits.`) : `Ask AI (${ASK_COST}C)`}
       className="vt-button primary"
       style={{
        width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center",

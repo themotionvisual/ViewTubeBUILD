@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
-import { useBrain } from "../context/GlobalDataContext"
+import { useBrain } from "../context/useBrain"
 import { generateTimelinePatch } from "../services/gemini"
 import {
  FEATURE_REGISTRY,

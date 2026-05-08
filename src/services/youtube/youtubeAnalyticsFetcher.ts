@@ -55,12 +55,29 @@ const ANALYTICS_VIDEO_PAGE_SIZE = 200
 const MAX_ANALYTICS_VIDEO_PAGES = 50
 const MAX_VIDEO_IDS_PER_FILTER = 25
 
+const chunkArray = <T>(items: T[], chunkSize: number): T[][] => {
+ if (chunkSize <= 0) return [items]
+ const chunks: T[][] = []
+ for (let index = 0; index < items.length; index += chunkSize) {
+  chunks.push(items.slice(index, index + chunkSize))
+ }
+ return chunks
+}
+
 const unsupportedVideoAnalyticsMetrics = new Set<string>()
 const disabledAnalyticsGroups = new Set<AnalyticsMetricGroupName>()
 let creatorContentTypeFetchDisabled = false
 const metricCapabilityByMetric = new Map<
  string,
- { status: "available" | "unsupported"; reasonCode?: string }
+ {
+  status:
+   | "available"
+   | "unsupported_for_dimension"
+   | "missing_scope"
+   | "temporarily_blocked"
+   | "api_request_failed"
+  reasonCode?: string
+ }
 >()
 
 const VIDEO_METRIC_GROUPS: Record<AnalyticsMetricGroupName, string[]> = {
@@ -205,9 +222,14 @@ export const fetchAnalytics = async (
  const runDisabledMetrics = new Set<string>()
  const runMetricCapabilities = new Map<
   string,
-  {
+ {
    metric: string
-   status: "available" | "unsupported"
+   status:
+    | "available"
+    | "unsupported_for_dimension"
+    | "missing_scope"
+    | "temporarily_blocked"
+    | "api_request_failed"
    reasonCode?: string
    source: "api"
   }
@@ -677,7 +699,7 @@ export const fetchAnalytics = async (
    filteredMetricGroups.impressions_ctr.forEach((metric) => {
     runMetricCapabilities.set(metric, {
      metric,
-     status: "unsupported",
+     status: "temporarily_blocked",
      reasonCode: "blocked_by_missing_video_ids",
      source: "api",
     })
@@ -887,18 +909,32 @@ export const fetchAnalytics = async (
          attemptedShape: baseAttemptShape,
         })
        metricCapabilityByMetric.set(metric, {
-        status: "unsupported",
+        status:
+         metricStatus === 400
+          ? "temporarily_blocked"
+          : metricStatus === 403
+           ? "missing_scope"
+           : "api_request_failed",
         reasonCode:
          metricStatus === 400
-          ? "temporarily_unavailable_due_to_request_shape"
+          ? "temporarily_blocked"
+          : metricStatus === 403
+           ? "missing_scope"
           : "api_request_failed",
        })
        runMetricCapabilities.set(metric, {
         metric,
-        status: "unsupported",
+        status:
+         metricStatus === 400
+          ? "temporarily_blocked"
+          : metricStatus === 403
+           ? "missing_scope"
+           : "api_request_failed",
         reasonCode:
          metricStatus === 400
-          ? "temporarily_unavailable_due_to_request_shape"
+          ? "temporarily_blocked"
+          : metricStatus === 403
+           ? "missing_scope"
           : "api_request_failed",
         source: "api",
        })
@@ -997,13 +1033,13 @@ export const fetchAnalytics = async (
        unsupportedVideoAnalyticsMetrics.add(metric)
        runDisabledMetrics.add(metric)
        metricCapabilityByMetric.set(metric, {
-        status: "unsupported",
-        reasonCode: "api_unsupported",
+        status: "unsupported_for_dimension",
+        reasonCode: "unsupported_for_dimension",
        })
        runMetricCapabilities.set(metric, {
         metric,
-        status: "unsupported",
-        reasonCode: "api_unsupported",
+        status: "unsupported_for_dimension",
+        reasonCode: "unsupported_for_dimension",
         source: "api",
        })
        knownInvalidCombos.add(`${groupName}::${ids}::${metric}`)
@@ -1385,15 +1421,91 @@ export const fetchGeographyAnalytics = async (
    "Your YouTube session has expired or is invalid. Please reconnect your channel in Settings.",
    401,
    "authError",
-  )
+ )
  const idParam = channelId ? `channel==${channelId}` : "channel==MINE"
- const url = `${ANALYTICS_URL}/reports?ids=${idParam}&startDate=${startDate}&endDate=${endDate}&metrics=views,estimatedMinutesWatched,averageViewDuration&dimensions=country`
- const response = await proxyFetch(url, {
-  headers: { Authorization: `Bearer ${token}` },
+ const metricGroups = [
+  ["views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage"],
+  ["engagedViews", "likes", "dislikes", "comments", "shares"],
+  ["subscribersGained", "subscribersLost"],
+  ["estimatedRevenue", "estimatedAdRevenue", "grossRevenue"],
+  ["adImpressions", "monetizedPlaybacks", "cpm", "playbackBasedCpm"],
+ ] as const
+
+ const mergedHeaders: Array<{ name: string }> = [{ name: "country" }]
+ const headerNameSet = new Set(["country"])
+ const rowByCountry = new Map<string, Record<string, number | string>>()
+
+ const ensureCountryRow = (country: string) => {
+  if (!rowByCountry.has(country)) {
+   rowByCountry.set(country, { country })
+  }
+  return rowByCountry.get(country) as Record<string, number | string>
+ }
+
+ let successCount = 0
+ for (const metrics of metricGroups) {
+  const url =
+   `${ANALYTICS_URL}/reports?ids=${idParam}&startDate=${startDate}&endDate=${endDate}` +
+   `&metrics=${metrics.join(",")}&dimensions=country`
+  const response = await proxyFetch(url, {
+   headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!response.ok) {
+   continue
+  }
+  const payload = (await response.json()) as {
+   columnHeaders?: Array<{ name?: string }>
+   rows?: Array<Array<string | number>>
+  }
+  const headers = payload.columnHeaders || []
+  const rows = payload.rows || []
+  const countryIdx = headers.findIndex((header) => header?.name === "country")
+  if (countryIdx < 0) continue
+  successCount += 1
+
+  headers.forEach((header) => {
+   const name = header?.name || ""
+   if (!name || headerNameSet.has(name)) return
+   headerNameSet.add(name)
+   mergedHeaders.push({ name })
+  })
+
+  rows.forEach((row) => {
+   const country = String(row[countryIdx] ?? "").trim()
+   if (!country) return
+   const target = ensureCountryRow(country)
+   headers.forEach((header, index) => {
+    const name = header?.name || ""
+    if (!name || name === "country") return
+    const value = row[index]
+    const numeric = Number(value)
+    target[name] = Number.isFinite(numeric) ? numeric : String(value ?? "")
+   })
+  })
+ }
+
+ if (successCount === 0) {
+  throw new YouTubeApiError("Failed to fetch geography analytics", 400, "badRequest")
+ }
+
+ const headerIndex = new Map(mergedHeaders.map((header, index) => [header.name, index]))
+ const resultRows: Array<Array<string | number>> = []
+ rowByCountry.forEach((row) => {
+  const out = new Array<string | number>(mergedHeaders.length).fill(0)
+  out[0] = String(row.country || "")
+  Object.entries(row).forEach(([key, value]) => {
+   if (key === "country") return
+   const idx = headerIndex.get(key)
+   if (idx === undefined) return
+   out[idx] = value as string | number
+  })
+  resultRows.push(out)
  })
- if (!response.ok)
-  await handleYouTubeApiError(response, "Failed to fetch geography analytics")
- return response.json()
+
+ return {
+  columnHeaders: mergedHeaders,
+  rows: resultRows,
+ }
 }
 
 // --- Additional Analytics Methods from YouTubeService ---
@@ -1441,21 +1553,29 @@ export const getVideoAnalytics = async (
  const metrics =
   "views,estimatedMinutesWatched,averageViewDuration,likes,subscribersGained,estimatedRevenue,videoThumbnailImpressions,videoThumbnailImpressionsClickRate,adImpressions,cpm,monetizedPlaybacks"
 
- const url =
-  `${ANALYTICS_URL}/reports?` +
-  `ids=channel==MINE&` +
-  `startDate=${startDate}&` +
-  `endDate=${endDate}&` +
-  `metrics=${metrics}&` +
-  `filters=${encodeURIComponent(`video==${videoIds.join(",")}`)}&` +
-  `dimensions=video`
- 
- const token = await refreshTokenIfExpired()
- const response = await proxyFetch(url, {
-  headers: token ? { Authorization: `Bearer ${token}` } : {},
- })
- if (!response.ok) await handleYouTubeApiError(response, "Failed to fetch video analytics")
- return response.json()
+ const chunks = chunkArray(videoIds, 250);
+ const results = await Promise.all(
+  chunks.map(async (chunk) => {
+   const url =
+    `${ANALYTICS_URL}/reports?` +
+    `ids=channel==MINE&` +
+    `startDate=${startDate}&` +
+    `endDate=${endDate}&` +
+    `metrics=${metrics}&` +
+    `filters=${encodeURIComponent(`video==${chunk.join(",")}`)}&` +
+    `dimensions=video`;
+
+   const token = await refreshTokenIfExpired();
+   const response = await proxyFetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+   });
+   if (!response.ok) await handleYouTubeApiError(response, "Failed to fetch video analytics");
+   return response.json();
+  })
+ );
+
+ const aggregatedRows = results.flatMap((res) => res.rows || []);
+ return { rows: aggregatedRows };
 }
 
 export const fetchSingleVideoAnalytics = async (videoId: string) => {
@@ -1493,20 +1613,48 @@ export const fetchSingleVideoAnalytics = async (videoId: string) => {
 }
 
 export const createReportingJob = async (
- startDate: string,
- endDate: string,
+ reportTypeId: string,
+ name: string,
 ) => {
  const token = await refreshTokenIfExpired()
  if (!token) throw new Error("Missing YouTube token")
  
- const url = `${ANALYTICS_URL}/jobs?ids=channel==MINE&startDate=${startDate}&endDate=${endDate}`
+ const url = `${ANALYTICS_URL}/jobs?ids=channel==MINE`
  const response = await proxyFetch(url, {
   method: 'POST',
   headers: { 
     Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json'
   },
+  body: JSON.stringify({
+   reportTypeId,
+   name,
+  }),
  })
  if (!response.ok) await handleYouTubeApiError(response, "Failed to create reporting job")
+ return response.json()
+}
+
+export const listReportingJobs = async () => {
+ const token = await refreshTokenIfExpired()
+ if (!token) throw new Error("Missing YouTube token")
+
+ const url = `${ANALYTICS_URL}/jobs?ids=channel==MINE`
+ const response = await proxyFetch(url, {
+  headers: { Authorization: `Bearer ${token}` },
+ })
+ if (!response.ok) await handleYouTubeApiError(response, "Failed to list reporting jobs")
+ return response.json()
+}
+
+export const listReports = async (jobId: string) => {
+ const token = await refreshTokenIfExpired()
+ if (!token) throw new Error("Missing YouTube token")
+
+ const url = `${ANALYTICS_URL}/jobs/${encodeURIComponent(jobId)}/reports?ids=channel==MINE`
+ const response = await proxyFetch(url, {
+  headers: { Authorization: `Bearer ${token}` },
+ })
+ if (!response.ok) await handleYouTubeApiError(response, "Failed to list reporting reports")
  return response.json()
 }

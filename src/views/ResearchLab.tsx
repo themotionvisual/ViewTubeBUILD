@@ -11,7 +11,7 @@ import type {
  ChartConfig,
  AnalysisSection,
 } from "../types"
-import { useBrain } from "../context/GlobalDataContext"
+import { useBrain } from "../context/useBrain"
 import {
  getMasterRows,
  canonicalRowsToMasterTableRows,
@@ -466,6 +466,8 @@ const RenderChart: React.FC<{
  dataDateRange = "",
 }) => {
  const chartData = data && data.length > 0 ? data : fallbackData
+ const provider = String(chart.provider || "google").toLowerCase()
+ const isKnownProvider = provider === "google" || provider === "recharts"
  const missingMetrics = chart.missingMetrics || []
  const hasMissingRequiredMetrics =
   Array.isArray(chart.requiredMetrics) && missingMetrics.length > 0
@@ -534,7 +536,7 @@ const RenderChart: React.FC<{
 
  // 2. DATA LOAD VERIFICATION
  if (!chartData || chartData.length === 0) {
-  if (chart.provider === "google") {
+  if (provider === "google" || provider === "recharts" || !chart.provider) {
    const checkData = typeof chart.data === "function" ? chart.data() : []
    if (checkData.length <= 1)
     return (
@@ -555,9 +557,9 @@ const RenderChart: React.FC<{
   <div
    className={`w-full flex flex-col ${isModal ? "h-full" : "h-[450px] mt-6 bg-white border-3 border-black rounded-2xl shadow-[8px_8px_0px_0px_black] overflow-hidden"}`}>
    <div className="flex-1 min-h-0">
-    {chart.provider === "google" ?
+    {isKnownProvider ?
      <RenderGoogleChart chart={chart} data={chartData} />
-    : <div className="p-8 text-center font-black">Unknown Provider</div>}
+    : <div className="p-8 text-center font-black">Unknown Provider: {provider}</div>}
    </div>
 
    <div className="bg-black text-white px-4 py-2 text-[10px] font-black uppercase tracking-widest flex justify-between items-center border-t-2 border-black">

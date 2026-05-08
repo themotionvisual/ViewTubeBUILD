@@ -87,12 +87,12 @@ export const HashtagAnalyzerWidget = ({ widget, instance, editMode, onToggleColl
       color: "#fff", fontSize: "9px", fontWeight: 1000, textTransform: "uppercase",
       cursor: analyzing ? "wait" : "pointer", boxShadow: "2px 2px 0 0 #000",
      }}>
-      {analyzing ? "..." : <><Sparkles size={14} /> {HASHTAG_ANALYZE_COST}T</>}
+      {analyzing ? "..." : <><Sparkles size={14} /> {HASHTAG_ANALYZE_COST}C</>}
      </button>
     </div>
     {!canAffordAnalyze && (
       <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>
-        {entitlement.tier === "free" ? "Upgrade for hashtag AI." : `Need ${HASHTAG_ANALYZE_COST} token.`}
+        {entitlement.tier === "free" ? "Upgrade for hashtag AI." : `Need ${HASHTAG_ANALYZE_COST} credits.`}
       </div>
     )}
 

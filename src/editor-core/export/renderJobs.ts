@@ -10,6 +10,17 @@ type LocalRenderJob = {
 
 const LOCAL_RENDER_JOBS = new Map<string, LocalRenderJob>();
 
+const validateJobRequest = (request: RenderJobRequest): string[] => {
+  const issues: string[] = [];
+  if (!request.projectId) issues.push("projectId is required");
+  if (!request.compositionSpec) issues.push("compositionSpec is required");
+  if ((request.compositionSpec?.fps ?? 0) <= 0) issues.push("compositionSpec.fps must be > 0");
+  if ((request.compositionSpec?.width ?? 0) <= 0) issues.push("compositionSpec.width must be > 0");
+  if ((request.compositionSpec?.height ?? 0) <= 0) issues.push("compositionSpec.height must be > 0");
+  if ((request.compositionSpec?.durationInFrames ?? 0) <= 0) issues.push("compositionSpec.durationInFrames must be > 0");
+  return issues;
+};
+
 const asLocalProgress = (elapsedMs: number): number => {
   if (elapsedMs < 1000) return 0.05;
   if (elapsedMs < 2500) return 0.35;
@@ -41,6 +52,21 @@ const buildLocalRenderArtifactUrl = (
 const enqueueLocalRenderJob = (
   request: RenderJobRequest,
 ): RenderJobStatus => {
+  const issues = validateJobRequest(request);
+  if (issues.length) {
+    return {
+      jobId: `local-render-${Date.now()}`,
+      status: "failed",
+      progress: 1,
+      errorCode: "contract_invalid",
+      error: `Invalid render request: ${issues.join("; ")}`,
+      diagnostics: {
+        renderMode: request.renderMode,
+        qualityProfile: request.qualityProfile,
+        issues,
+      },
+    };
+  }
   const jobId = `local-render-${Date.now()}`;
   LOCAL_RENDER_JOBS.set(jobId, {
     request,
@@ -57,6 +83,7 @@ const pollLocalRenderJob = (jobId: string): RenderJobStatus => {
       jobId,
       status: "failed",
       error: "Local render job not found.",
+      errorCode: "job_not_found",
       progress: 1,
     };
   }
@@ -106,7 +133,17 @@ export const enqueueRemotionRenderJob = async (
       if (response.status === 404) {
         return enqueueLocalRenderJob(request);
       }
-      throw new Error(`Render queue failed (${response.status})`);
+      return {
+        jobId: `remote-failed-${Date.now()}`,
+        status: "failed",
+        progress: 1,
+        errorCode: "ffmpeg_failed",
+        error: `Render queue failed (${response.status})`,
+        diagnostics: {
+          renderMode: request.renderMode,
+          qualityProfile: request.qualityProfile,
+        },
+      };
     }
 
     const data = (await response.json()) as RenderJobStatus;
@@ -147,6 +184,7 @@ export const pollRemotionRenderJob = async (
           jobId,
           status: "failed",
           progress: 1,
+          errorCode: "api_unavailable",
           error:
             "Render API route not found. Start backend API server or use local fallback by re-queueing.",
         };

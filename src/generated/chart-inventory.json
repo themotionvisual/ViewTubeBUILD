@@ -1,140 +1,3127 @@
 {
-  "generatedAt": "2026-04-15T10:17:09.677Z",
-  "primaryScopeRoutes": [
-    "/performance",
-    "/legacy/channelytics",
-    "/legacy/research-lab",
-    "/legacy/data-vizualizations",
-    "/studio/internal-analytics",
-    "/charts-gallery/master-graphs",
-    "/charts-gallery/toolbox-preview"
-  ],
-  "viewNowLinks": [
-    "/performance",
-    "/legacy/channelytics",
-    "/legacy/research-lab",
-    "/legacy/data-vizualizations",
-    "/studio/internal-analytics",
-    "/charts-gallery/master-graphs",
-    "/charts-gallery/toolbox-preview"
-  ],
+  "generatedAt": "2026-05-06T13:12:17.476Z",
+  "scope": "viewtubeX/src",
+  "totals": {
+    "chartFiles": 75,
+    "uniqueRouteSurfaces": 17,
+    "rolloutCharts": 40,
+    "readyForRollout": 2,
+    "notReady": 38
+  },
   "entries": [
     {
-      "route": "/performance",
-      "component": "PerformanceHub",
-      "pageSection": "Performance Hub",
-      "toolbox": "CHANNEL ANALYSIS + CHANNEL",
-      "provider": "recharts + custom svg",
-      "dataSource": "canonical selectors (api/csv/hybrid)",
-      "timeWindowBehavior": "lifetime default, user-selectable windows",
-      "metricDependencies": [
+      "file": "src/app/AppRoutes.tsx",
+      "chartComponent": "AppRoutes",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "retention",
+        "views"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": "import ChartsGalleryHome from \"../views/ChartsGallery/ChartsGalleryHome\""
+    },
+    {
+      "file": "src/chartSystem/unifiedChartSpec.ts",
+      "chartComponent": "unifiedChartSpec",
+      "chartTypes": [
+        "GoogleChart",
+        "ScatterChart",
+        "LineChart",
+        "BarChart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
         "views",
         "watchHours",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
         "likes",
         "comments",
         "shares",
-        "subs",
-        "ctr",
+        "avd",
+        "avp",
+        "country",
+        "device",
+        "contentType"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
         "retention",
-        "impressions"
-      ]
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#00CCFF",
+        "#CCFF00",
+        "#FFDD00",
+        "#FFB158",
+        "#FF7497",
+        "#FF3399",
+        "#B14AED",
+        "#000000",
+        "#FF9900",
+        "bg-[#00CCFF]",
+        "bg-[#FF3399]",
+        "bg-[#CCFF00]",
+        "bg-[#FFDD00]",
+        "bg-[#FFB158]",
+        "bg-[#FF7497]",
+        "bg-[#B14AED]"
+      ],
+      "evidenceSnippet": "export type UnifiedChartId ="
     },
     {
-      "route": "/legacy/channelytics",
-      "component": "Channelytics",
-      "pageSection": "Channelytics",
-      "toolbox": "Channel Intelligence Lab",
-      "provider": "ChartEngine (google)",
-      "dataSource": "canonical selectors + uploaded csv",
-      "timeWindowBehavior": "lifetime-focused",
-      "metricDependencies": [
+      "file": "src/components/ChannelyticsChartToolbox.tsx",
+      "chartComponent": "ChannelyticsChartToolbox",
+      "chartTypes": [
+        "ChartEngine"
+      ],
+      "rendererFamily": "GoogleChart",
+      "dataKeys": [
         "views",
         "watchHours",
-        "subs",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments",
+        "shares",
+        "avd",
+        "avp",
+        "country",
+        "device"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "duration",
+        "retention",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#000",
+        "#efefef",
+        "#B14AED",
+        "#FF7497",
+        "#00CCFF",
+        "#CCFF00",
+        "#FFDD00",
+        "#FFB158",
+        "#EA73E8",
+        "#ECEFF2",
+        "#F7F7F7",
+        "bg-[#FFDD00]",
+        "bg-[#CCFF00]",
+        "bg-[#00CCFF]",
+        "bg-[#FFB158]",
+        "bg-[#EA73E8]",
+        "bg-[#B14AED]",
+        "bg-[#FF7497]",
+        "border-[4px]",
+        "bg-[#ECEFF2]",
+        "text-[10px]",
+        "border-[3px]",
+        "bg-[#F7F7F7]",
+        "text-[11px]"
+      ],
+      "evidenceSnippet": "import type { ChartConfig } from '../types';"
+    },
+    {
+      "file": "src/components/ChartEngine.tsx",
+      "chartComponent": "ChartEngine",
+      "chartTypes": [
+        "Chart",
+        "LineChart",
+        "BarChart",
+        "ScatterChart",
+        "PieChart"
+      ],
+      "rendererFamily": "GoogleChart",
+      "dataKeys": [
+        "revenue",
+        "ctr",
+        "contentType"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "ctr",
+        "watch"
+      ],
+      "styleTokens": [
+        "#FF7497",
+        "#f5f5f5",
+        "#FFDD00",
+        "border-[4px]",
+        "text-[#FF7497]",
+        "text-[14px]",
+        "text-[12px]",
+        "text-[20px]",
+        "text-[11px]",
+        "bg-[#FFDD00]",
+        "text-[10px]",
+        "text-[#FFDD00]"
+      ],
+      "evidenceSnippet": "import { Chart } from \"react-google-charts\";"
+    },
+    {
+      "file": "src/components/GraphsPageCharts.tsx",
+      "chartComponent": "GraphsPageCharts",
+      "chartTypes": [
+        "AreaChart",
+        "BarChart",
+        "ScatterChart",
+        "LineChart",
+        "PieChart",
+        "ComposedChart",
+        "RadarChart",
+        "Chart"
+      ],
+      "rendererFamily": "Recharts",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments",
+        "shares",
+        "avd",
+        "avp"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "yaxis",
+        "duration",
+        "retention",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#FF3399",
+        "#00E5FF",
+        "#CCFF00",
+        "#FF9900",
+        "#9933FF",
+        "#33FF99",
+        "#FF7497",
+        "#24D3FF",
+        "#FFB158",
+        "#FFEA00",
+        "#F5F5F5",
+        "#EEF9FF",
+        "#FFF4F8",
+        "#F4FFF4",
+        "#e5e7eb",
+        "#000",
+        "#fff",
+        "#EEF7FF",
+        "#F4F4F5",
+        "#111827",
+        "#00CCFF",
+        "#004D40",
+        "#24BCFF",
+        "#45DDB0"
+      ],
+      "evidenceSnippet": "AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,"
+    },
+    {
+      "file": "src/components/Icons.tsx",
+      "chartComponent": "Icons",
+      "chartTypes": [
+        "PieChart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "watch"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": "import { Shield, Sparkles, Zap, FileText, BarChart2, PieChart, UploadCloud, Search, LayoutDashboard, Settings, ChevronRight, Menu, X, Download, Trash2, RefreshCw, AlertCircle, CheckCircle, Info, ArrowRight, ArrowLeft, Play, Pause, Image as ImageIcon, Video, Music, File, Folder, Star, Heart, Share2, MessageSquare, Eye, Clock, Calendar, MapPin, Link, ExternalLink, Globe, Mail, Phone, Camera, Mic, Speaker, Bell, Lock, Unlock, Key, User, Users, Briefcase, Home, Activity, TrendingUp, TrendingDown, DollarSign, Percent, Hash, AtSign, Command, Command as Apple, Monitor, Smartphone, Tablet, Laptop, Watch, Tv, Wifi, Bluetooth, Battery, BatteryCharging, Power, Plus, Minus, X as Close, Check, ChevronUp, ChevronDown, ChevronLeft, ArrowUp, ArrowDown, ArrowUpRight, ArrowDownRight, ArrowDownLeft, ArrowUpLeft, CornerUpLeft, CornerUpRight, CornerDownRight, CornerDownLeft, CornerLeftUp, CornerLeftDown, CornerRightDown, CornerRightUp, Maximize, Minimize, Maximize2, Minimize2, ZoomIn, ZoomOut, Search as MagnifyingGlass, Filter, Sliders, Menu as Hamburger, MoreHorizontal, MoreVertical, Grid, List, AlignLeft, AlignCenter, AlignRight, AlignJustify, Type, Bold, Italic, Underline, Strikethrough, Code, Terminal, Edit, Edit2, Edit3, PenTool, Copy, Scissors, Save, FolderPlus, FolderMinus, FilePlus, FileMinus, FileText as Document, File as BlankFile, FileImage, FileVideo, FileAudio, FileArchive, FileCode, FileDigit, FileSpreadsheet, FileJson, FileSymlink, FileWarning, FileQuestion, FileSearch, FileLock, FileKey, FileCheck, FileX, FileMinus as FileRemove, FilePlus as FileAdd, FileText as FileLines, File as FileEmpty, FileImage as FilePicture, FileVideo as FileMovie, FileAudio as FileSound, FileArchive as FileZip, FileCode as FileHtml, FileDigit as FileNumber, FileSpreadsheet as FileExcel, FileJson as FileData, FileSymlink as FileShortcut, FileWarning as FileAlert, FileQuestion as FileHelp, FileSearch as FileFind, FileLock as FileSecure, FileKey as FilePassword, FileCheck as FileValid, FileX as FileInvalid } from 'lucide-react';"
+    },
+    {
+      "file": "src/components/IntelligenceHub/intelligence.ts",
+      "chartComponent": "intelligence",
+      "chartTypes": [
+        "Chart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "duration",
+        "retention",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": "1. THE HONEST SCALE: Analyze Impressions vs CTR. Chart: quadrant type, xAxisKey=\"Impressions\", dataKeys=[\"Impressions click-through rate (%)\"], sortType=\"highest_rated\"."
+    },
+    {
+      "file": "src/components/IntelligenceHub/IntelligenceChart.tsx",
+      "chartComponent": "IntelligenceChart",
+      "chartTypes": [
+        "BarChart",
+        "LineChart",
+        "ScatterChart",
+        "RadarChart",
+        "PieChart",
+        "Chart"
+      ],
+      "rendererFamily": "Recharts",
+      "dataKeys": [],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "yaxis"
+      ],
+      "styleTokens": [
+        "#FF3399",
+        "#33FF00",
+        "#00FFFF",
+        "#FFB158",
+        "#9D4EDD",
+        "#FF0000",
+        "#eee",
+        "#ccc",
+        "#8884d8",
+        "text-[10px]"
+      ],
+      "evidenceSnippet": "BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,"
+    },
+    {
+      "file": "src/components/IntelligenceHub/IntelligenceHub.tsx",
+      "chartComponent": "IntelligenceHub",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "ctr",
+        "comments"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "retention",
+        "ctr"
+      ],
+      "styleTokens": [
+        "#00CCFF",
+        "#FFDD00",
+        "#FF3399",
+        "#CCFF00",
+        "#9D4EDD",
+        "#FFB158",
+        "bg-[#00CCFF]",
+        "text-[10px]",
+        "border-[#00CCFF]",
+        "text-[#00CCFF]",
+        "text-[#FFDD00]",
+        "bg-[#FFDD00]",
+        "bg-[#FF3399]",
+        "bg-[#CCFF00]",
+        "bg-[#9D4EDD]",
+        "bg-[#FFB158]"
+      ],
+      "evidenceSnippet": "import { IntelligenceChart } from './IntelligenceChart';"
+    },
+    {
+      "file": "src/components/IntelligenceHub/types.ts",
+      "chartComponent": "types",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "ctr"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "duration",
+        "retention",
+        "ctr"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": "export interface ChartConfig {"
+    },
+    {
+      "file": "src/components/MobileLookChart.tsx",
+      "chartComponent": "MobileLookChart",
+      "chartTypes": [
+        "AreaChart"
+      ],
+      "rendererFamily": "Recharts",
+      "dataKeys": [],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "yaxis"
+      ],
+      "styleTokens": [
+        "#ff3399"
+      ],
+      "evidenceSnippet": "AreaChart,"
+    },
+    {
+      "file": "src/components/NativeUIKit.tsx",
+      "chartComponent": "NativeUIKit",
+      "chartTypes": [
+        "Chart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#CCFF00",
+        "#00CCFF",
+        "#FFDD00",
+        "#FF3399",
+        "#FFB158",
+        "#E8E8E8",
+        "#E5E7EB",
+        "#999",
+        "#666",
+        "#DDD",
+        "#333",
+        "text-[10px]",
+        "bg-[#CCFF00]",
+        "bg-[#00CCFF]",
+        "bg-[#FFDD00]",
+        "border-[4px]",
+        "bg-[#FF3399]",
+        "bg-[#FFB158]",
+        "text-[#CCFF00]",
+        "border-[3px]",
+        "text-[9px]",
+        "border-[2px]",
+        "border-[#00CCFF]",
+        "text-[#FFDD00]"
+      ],
+      "evidenceSnippet": "export const BarChartDemo = () => {"
+    },
+    {
+      "file": "src/components/ReportViewer.tsx",
+      "chartComponent": "ReportViewer",
+      "chartTypes": [
+        "ChartEngine"
+      ],
+      "rendererFamily": "GoogleChart",
+      "dataKeys": [],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
+        "retention"
+      ],
+      "styleTokens": [
+        "#f8f8f8",
+        "#CCFF00",
+        "#FF3399",
+        "#00CCFF",
+        "#FFDD00",
+        "bg-[#f8f8f8]",
+        "border-[6px]",
+        "text-[10px]",
+        "text-[#CCFF00]",
+        "text-[#FF3399]",
+        "bg-[#00CCFF]",
+        "border-[4px]",
+        "bg-[#CCFF00]",
+        "border-[#FF3399]",
+        "border-[5px]",
+        "bg-[#FF3399]",
+        "bg-[#FFDD00]",
+        "text-[#00CCFF]",
+        "border-[3px]",
+        "text-[11px]",
+        "text-[9px]"
+      ],
+      "evidenceSnippet": "import type { AnalyticsResult, ChartConfig } from '../types';"
+    },
+    {
+      "file": "src/components/ResearchLabCharts.tsx",
+      "chartComponent": "ResearchLabCharts",
+      "chartTypes": [
+        "AreaChart",
+        "BarChart",
+        "ScatterChart"
+      ],
+      "rendererFamily": "Recharts",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments",
+        "shares",
+        "avd"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "yaxis",
+        "duration",
+        "retention",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#B14AED",
+        "#CCFF00",
+        "#00CCFF",
+        "#00000015",
+        "#000",
+        "#0000000a",
+        "#FF7497",
+        "#FFDD00",
+        "#FFB158",
+        "border-[4px]",
+        "bg-[#B14AED]",
+        "text-[10px]",
+        "border-[3px]",
+        "bg-[#CCFF00]",
+        "text-[#B14AED]",
+        "text-[12px]",
+        "text-[11px]",
+        "text-[#00CCFF]"
+      ],
+      "evidenceSnippet": "AreaChart,"
+    },
+    {
+      "file": "src/components/SimpleAnalyticsChart.tsx",
+      "chartComponent": "SimpleAnalyticsChart",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
         "likes",
         "comments",
         "shares"
-      ]
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "border-[5px]",
+        "border-[3px]",
+        "text-[10px]"
+      ],
+      "evidenceSnippet": "const SimpleAnalyticsChart: React.FC = () => {"
     },
     {
-      "route": "/legacy/research-lab",
-      "component": "ResearchLab",
-      "pageSection": "Research Lab",
-      "toolbox": "Legacy Lab Charts",
-      "provider": "google + recharts + custom",
-      "dataSource": "canonical selectors + cache adapters",
-      "timeWindowBehavior": "window-selectable",
-      "metricDependencies": [
+      "file": "src/components/ToolboxUISystem copy.tsx",
+      "chartComponent": "ToolboxUISystem copy",
+      "chartTypes": [
+        "LineChart",
+        "AreaChart",
+        "BarChart",
+        "PieChart",
+        "ScatterChart",
+        "Chart"
+      ],
+      "rendererFamily": "Recharts",
+      "dataKeys": [
+        "views",
+        "revenue",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments",
+        "shares",
+        "avp"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "yaxis",
+        "duration",
+        "retention",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#FCAF57",
+        "#FFE357",
+        "#FF7497",
+        "#C9F830",
+        "#24D3FF",
+        "#CC99FF",
+        "#4ADE80",
+        "#FFFFFF",
+        "#CCFF00",
+        "#E4E7EB",
+        "#9ca3af",
+        "#f3f4f6",
+        "#ffffff",
+        "#FF00FF",
+        "#f5f5f5",
+        "#FF3399",
+        "#00D2FF",
+        "#00CCFF",
+        "#FFDD00",
+        "#FFB158",
+        "#FF83EA",
+        "#FF8AAF",
+        "#FFB570",
+        "#FFFF61"
+      ],
+      "evidenceSnippet": "LineChart,"
+    },
+    {
+      "file": "src/components/ToolboxUISystem.tsx",
+      "chartComponent": "ToolboxUISystem",
+      "chartTypes": [
+        "LineChart",
+        "AreaChart",
+        "BarChart",
+        "PieChart",
+        "ScatterChart",
+        "Chart"
+      ],
+      "rendererFamily": "Recharts",
+      "dataKeys": [
+        "views",
+        "revenue",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments",
+        "shares",
+        "avp"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "yaxis",
+        "duration",
+        "retention",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#FCAF57",
+        "#FFE357",
+        "#FF7497",
+        "#C9F830",
+        "#24D3FF",
+        "#CC99FF",
+        "#4ADE80",
+        "#FFFFFF",
+        "#CCFF00",
+        "#E4E7EB",
+        "#9ca3af",
+        "#f3f4f6",
+        "#ffffff",
+        "#FF00FF",
+        "#f5f5f5",
+        "#FF3399",
+        "#00D2FF",
+        "#00CCFF",
+        "#FFDD00",
+        "#FFB158",
+        "#FF83EA",
+        "#FF8AAF",
+        "#FFB570",
+        "#FFFF61"
+      ],
+      "evidenceSnippet": "LineChart,"
+    },
+    {
+      "file": "src/components/UIReferenceLibraryContent.tsx",
+      "chartComponent": "UIReferenceLibraryContent",
+      "chartTypes": [
+        "PieChart",
+        "Chart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "avd",
+        "device"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
+        "retention",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#FF3399",
+        "#CCFF00",
+        "#00CCFF",
+        "#FFDD00",
+        "#B14AED",
+        "#333",
+        "#F8FAFC",
+        "#f8fafc",
+        "#0b1220",
+        "#e8f7ff",
+        "#ff7497",
+        "#111827",
+        "#FFB158",
+        "#ff3399",
+        "#ccff00",
+        "#00ccff",
+        "#ffdd00",
+        "#000000",
+        "#ffffff",
+        "#00d2ff",
+        "#FF7497",
+        "#ffb158",
+        "#b14aed",
+        "#00ff99"
+      ],
+      "evidenceSnippet": "BarChart3,"
+    },
+    {
+      "file": "src/content/userGuideContent.ts",
+      "chartComponent": "userGuideContent",
+      "chartTypes": [
+        "Chart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "revenue",
+        "ctr",
+        "comments",
+        "avd"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
+        "retention",
+        "ctr",
+        "views"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": "\"Chart cards render with no zero-size container warnings.\","
+    },
+    {
+      "file": "src/data/ApiStatisticsCatalog.ts",
+      "chartComponent": "ApiStatisticsCatalog",
+      "chartTypes": [
+        "Chart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments",
+        "shares",
+        "engagedViews",
+        "country",
+        "device",
+        "trafficSource",
+        "contentType"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
+        "retention",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": "{ name: \"Chart\", canonical: \"Chart\" },"
+    },
+    {
+      "file": "src/data/liveCanvasRegistry.tsx",
+      "chartComponent": "liveCanvasRegistry",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "views"
+      ],
+      "styleTokens": [
+        "#00CCFF",
+        "#CCFF00",
+        "#FF3399",
+        "bg-[#00CCFF]",
+        "bg-[#CCFF00]",
+        "border-[5px]",
+        "bg-[#FF3399]",
+        "border-[3px]",
+        "text-[10px]"
+      ],
+      "evidenceSnippet": "import { MobileLookChart } from '../components/MobileLookChart';"
+    },
+    {
+      "file": "src/data/referenceStudioImports.ts",
+      "chartComponent": "referenceStudioImports",
+      "chartTypes": [
+        "Chart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "retention",
+        "views"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": "{ category: \"Chart Language\", chosen: \"Graph & Chart Sandbox + neo-brutalist/charts.tsx\", source: \"b_n4 style pack\", status: \"integrated\" },"
+    },
+    {
+      "file": "src/services/__tests__/unifiedSourceOfTruth.test.ts",
+      "chartComponent": "unifiedSourceOfTruth.test",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments",
+        "shares",
+        "avd",
+        "avp",
+        "engagedViews"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": ""
+    },
+    {
+      "file": "src/services/analyticsSelectors.ts",
+      "chartComponent": "analyticsSelectors",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments",
+        "avd",
+        "avp",
+        "contentType"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": ""
+    },
+    {
+      "file": "src/services/canonicalAnalyticsStore.ts",
+      "chartComponent": "canonicalAnalyticsStore",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "ctr",
+        "impressions",
+        "contentType"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "impressions",
+        "ctr"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": "export interface ChartDefinition {"
+    },
+    {
+      "file": "src/services/csvImportUtils.ts",
+      "chartComponent": "csvImportUtils",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "likes",
+        "comments",
+        "country"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#FF7497",
+        "#00CCFF",
+        "#CCFF00",
+        "#FFB158",
+        "#B14AED",
+        "#FFDD00",
+        "#24D3FF",
+        "#FFE357",
+        "#F8FAFC",
+        "bg-[#FF7497]",
+        "bg-[#00CCFF]",
+        "bg-[#CCFF00]",
+        "bg-[#FFB158]",
+        "bg-[#B14AED]",
+        "bg-[#FFDD00]",
+        "bg-[#24D3FF]",
+        "bg-[#FFE357]",
+        "bg-[#F8FAFC]"
+      ],
+      "evidenceSnippet": ""
+    },
+    {
+      "file": "src/services/DataEngine.ts",
+      "chartComponent": "DataEngine",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments",
+        "shares",
+        "avd",
+        "avp",
+        "engagedViews",
+        "country"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
+        "retention",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#FF7497",
+        "#00CCFF",
+        "#CCFF00",
+        "#FFB158",
+        "#B14AED",
+        "#FFDD00",
+        "#24D3FF",
+        "#FFE357",
+        "#F8FAFC",
+        "bg-[#FF7497]",
+        "bg-[#00CCFF]",
+        "bg-[#CCFF00]",
+        "bg-[#FFB158]",
+        "bg-[#B14AED]",
+        "bg-[#FFDD00]",
+        "bg-[#24D3FF]",
+        "bg-[#FFE357]",
+        "bg-[#F8FAFC]"
+      ],
+      "evidenceSnippet": ""
+    },
+    {
+      "file": "src/services/dataExport.ts",
+      "chartComponent": "dataExport",
+      "chartTypes": [
+        "Chart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "engagedViews"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "views"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": "\"YouTube-style projection tables (Table/Chart/Totals)\","
+    },
+    {
+      "file": "src/services/gemini.ts",
+      "chartComponent": "gemini",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "likes",
+        "comments",
+        "avd"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "x-axis",
+        "y-axis",
+        "duration",
+        "retention",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#FF8AAF",
+        "#579AFF",
+        "#FFFF61",
+        "#40C6E9",
+        "#FF83EA",
+        "#CCFF00"
+      ],
+      "evidenceSnippet": ""
+    },
+    {
+      "file": "src/services/prompts.ts",
+      "chartComponent": "prompts",
+      "chartTypes": [
+        "Chart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments",
+        "shares",
+        "avd",
+        "avp",
+        "device",
+        "contentType"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "yaxis",
+        "duration",
+        "retention",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#FF0000"
+      ],
+      "evidenceSnippet": "- Chart Spec: { type: \"scatter\", title: \"The Honesty Scale\", xAxisKey: \"CTR (%)\", yAxisKey: \"AVP (%)\", bubbleKey: \"Views\" }"
+    },
+    {
+      "file": "src/services/subscriptionPlans.ts",
+      "chartComponent": "subscriptionPlans",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "device"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "retention"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": ""
+    },
+    {
+      "file": "src/services/unifiedSourceOfTruth.ts",
+      "chartComponent": "unifiedSourceOfTruth",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
         "views",
         "watchHours",
         "revenue",
         "ctr",
         "impressions",
-        "retention",
-        "demographics"
-      ]
-    },
-    {
-      "route": "/legacy/data-vizualizations",
-      "component": "DataVisualizations",
-      "pageSection": "Data Visualizations",
-      "toolbox": "Graph Catalog",
-      "provider": "custom svg",
-      "dataSource": "canonical selectors",
-      "timeWindowBehavior": "lifetime",
-      "metricDependencies": [
-        "views",
+        "engagedViews"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
         "impressions",
         "ctr",
-        "retention",
-        "revenue"
-      ]
-    },
-    {
-      "route": "/studio/internal-analytics",
-      "component": "InternalAnalyticsPanel",
-      "pageSection": "Internal Analytics",
-      "toolbox": "KPI Panel",
-      "provider": "recharts + tables",
-      "dataSource": "canonical selectors",
-      "timeWindowBehavior": "lifetime + selectable",
-      "metricDependencies": [
-        "coverage",
-        "availability",
-        "window sync diagnostics"
-      ]
-    },
-    {
-      "route": "/charts-gallery/master-graphs",
-      "component": "MasterGraphsPage",
-      "pageSection": "Master Graphs Gallery",
-      "toolbox": "Charts Gallery",
-      "provider": "recharts",
-      "dataSource": "canonical selectors",
-      "timeWindowBehavior": "lifetime",
-      "metricDependencies": [
         "views",
-        "retention",
-        "ctr",
-        "impressions",
-        "revenue"
-      ]
+        "watch"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": ""
     },
     {
-      "route": "/charts-gallery/toolbox-preview",
-      "component": "ToolboxPreviewPage",
-      "pageSection": "Toolbox Preview",
-      "toolbox": "ChannelyticsChartToolbox + ChartEngine",
-      "provider": "google + custom",
-      "dataSource": "canonical selectors + fixtures",
-      "timeWindowBehavior": "toggle by source dataset",
-      "metricDependencies": [
+      "file": "src/services/youtubeDataFetcher.ts",
+      "chartComponent": "youtubeDataFetcher",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "revenue",
+        "subscribers",
+        "impressions",
+        "likes",
+        "comments",
+        "shares",
+        "country",
+        "device",
+        "trafficSource"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
+        "retention",
+        "impressions",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": ""
+    },
+    {
+      "file": "src/types.ts",
+      "chartComponent": "types",
+      "chartTypes": [
+        "LineChart",
+        "BarChart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
         "views",
         "watchHours",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "device",
+        "trafficSource"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "duration",
+        "retention",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": "export interface ChartConfig {"
+    },
+    {
+      "file": "src/views/AlgorithmArchitect.tsx",
+      "chartComponent": "AlgorithmArchitect",
+      "chartTypes": [
+        "Chart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "ctr",
+        "likes",
+        "comments",
+        "avd"
+      ],
+      "routeSurface": "/algorithm-architect",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
+        "retention",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#CCFF00",
+        "#ff3399",
+        "#FFDD00",
+        "#FF3399",
+        "#00CCFF",
+        "#f0f9ff",
+        "#fff7ed",
+        "border-[5px]",
+        "bg-[#CCFF00]",
+        "text-[#CCFF00]",
+        "text-[50px]",
+        "border-[4px]",
+        "text-[10px]",
+        "bg-[#ff3399]",
+        "bg-[#FFDD00]",
+        "border-[3px]",
+        "bg-[#FF3399]",
+        "bg-[#00CCFF]",
+        "text-[#00CCFF]",
+        "bg-[#f0f9ff]",
+        "bg-[#fff7ed]",
+        "text-[11px]",
+        "border-[#CCFF00]"
+      ],
+      "evidenceSnippet": "{/* Velocity Chart */}"
+    },
+    {
+      "file": "src/views/bench/AnalyticsHubBench.tsx",
+      "chartComponent": "AnalyticsHubBench",
+      "chartTypes": [
+        "PieChart",
+        "ChartRendererSurface"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#FFE357",
+        "#CCFF00",
+        "#00CCFF",
+        "#FF7497",
+        "#FFB158",
+        "#24D3FF",
+        "#B14AED",
+        "bg-[#FFE357]",
+        "bg-[#CCFF00]",
+        "bg-[#00CCFF]",
+        "bg-[#FF7497]",
+        "bg-[#FFB158]",
+        "border-[4px]",
+        "text-[10px]",
+        "border-[2px]",
+        "bg-[#24D3FF]",
+        "bg-[#B14AED]",
+        "border-[3px]"
+      ],
+      "evidenceSnippet": "import { BarChart3, TrendingUp, PieChart, Info, Blocks } from 'lucide-react';"
+    },
+    {
+      "file": "src/views/bench/benchRegistry.ts",
+      "chartComponent": "benchRegistry",
+      "chartTypes": [
+        "Chart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [],
+      "styleTokens": [
+        "#24D3FF",
+        "#FF3399",
+        "#CCFF00",
+        "#B14AED",
+        "#FFE357",
+        "#00CCFF",
+        "#FF7497",
+        "#FFB158",
+        "bg-[#24D3FF]",
+        "bg-[#FF3399]",
+        "bg-[#CCFF00]",
+        "bg-[#B14AED]",
+        "bg-[#FFE357]",
+        "bg-[#00CCFF]",
+        "bg-[#FF7497]",
+        "bg-[#FFB158]"
+      ],
+      "evidenceSnippet": "const ChartCatalogV2 = React.lazy(() => import('../referenceStudio/ChartCatalogV2'));"
+    },
+    {
+      "file": "src/views/Channelytics.tsx",
+      "chartComponent": "Channelytics",
+      "chartTypes": [
+        "ChartEngine",
+        "Chart"
+      ],
+      "rendererFamily": "GoogleChart",
+      "dataKeys": [
+        "views",
+        "subscribers"
+      ],
+      "routeSurface": "/legacy/channelytics",
+      "pageFamily": "Legacy Channelytics",
+      "axes": [
+        "duration",
+        "views"
+      ],
+      "styleTokens": [
+        "#ccff00",
+        "#00ccff",
+        "#ff3399",
+        "#ffb158",
+        "#00CCFF",
+        "#FF7497",
+        "#CCFF00",
+        "border-[5px]",
+        "bg-[#ccff00]",
+        "bg-[#00ccff]",
+        "text-[50px]",
+        "border-[4px]",
+        "bg-[#ff3399]",
+        "bg-[#ffb158]",
+        "border-[3px]",
+        "text-[#00CCFF]",
+        "text-[10px]",
+        "bg-[#FF7497]",
+        "bg-[#00CCFF]",
+        "text-[#ffb158]",
+        "text-[#ccff00]",
+        "text-[9px]",
+        "text-[#ff3399]",
+        "border-[#ff3399]"
+      ],
+      "evidenceSnippet": "import type { CsvFileWithTag, ChartConfig, CsvUploadType } from '../types';"
+    },
+    {
+      "file": "src/views/ChartsGallery/ChartsGalleryHome.tsx",
+      "chartComponent": "ChartsGalleryHome",
+      "chartTypes": [
+        "ChartEngine",
+        "Chart"
+      ],
+      "rendererFamily": "GoogleChart",
+      "dataKeys": [
+        "revenue",
+        "device"
+      ],
+      "routeSurface": "/charts-gallery",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration"
+      ],
+      "styleTokens": [
+        "#CCFF00",
+        "#00CCFF",
+        "#FF3399",
+        "#FFB158",
+        "#B14AED",
+        "#FFDD00",
+        "#f0f0f0",
+        "#f4f4f0",
+        "border-[5px]",
+        "border-[3px]",
+        "bg-[#CCFF00]",
+        "bg-[#00CCFF]",
+        "bg-[#FF3399]",
+        "bg-[#FFB158]",
+        "bg-[#B14AED]",
+        "bg-[#FFDD00]",
+        "bg-[#f0f0f0]",
+        "bg-[#f4f4f0]",
+        "border-[4px]",
+        "text-[10px]"
+      ],
+      "evidenceSnippet": "BarChart3,"
+    },
+    {
+      "file": "src/views/ChartsGallery/MasterGraphsPage.tsx",
+      "chartComponent": "MasterGraphsPage",
+      "chartTypes": [
+        "PieChart",
+        "ScatterChart",
+        "Chart"
+      ],
+      "rendererFamily": "Recharts",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers",
         "ctr",
         "impressions",
+        "avp",
+        "device"
+      ],
+      "routeSurface": "/charts-gallery/master-graphs",
+      "pageFamily": "Charts Gallery",
+      "axes": [
+        "xaxis",
+        "yaxis",
+        "retention",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#00CCFF",
+        "#CCFF00",
+        "#FFDD00",
+        "#FFB158",
+        "#FF7497",
+        "#B14AED",
+        "#000000",
+        "#FFFFFF",
+        "#f4f4f0",
+        "#000",
+        "#FF3399",
+        "border-[5px]",
+        "border-[3px]",
+        "bg-[#f4f4f0]",
+        "bg-[#CCFF00]",
+        "border-[2px]",
+        "bg-[#FFDD00]",
+        "bg-[#00CCFF]",
+        "bg-[#FF3399]",
+        "bg-[#B14AED]",
+        "bg-[#FFB158]",
+        "bg-[#FF7497]"
+      ],
+      "evidenceSnippet": "PieChart as RePieChart,"
+    },
+    {
+      "file": "src/views/ChartsGallery/ToolboxPreviewPage.tsx",
+      "chartComponent": "ToolboxPreviewPage",
+      "chartTypes": [
+        "ChartEngine"
+      ],
+      "rendererFamily": "GoogleChart",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments",
+        "shares",
+        "avp"
+      ],
+      "routeSurface": "/charts-gallery/toolbox-preview",
+      "pageFamily": "Charts Gallery Toolbox",
+      "axes": [
+        "xaxis",
+        "retention",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#f4f4f0",
+        "bg-[#f4f4f0]",
+        "border-[3px]",
+        "text-[10px]",
+        "border-[4px]"
+      ],
+      "evidenceSnippet": "import type { ChartConfig } from \"../../types\""
+    },
+    {
+      "file": "src/views/dashboard/WidgetRegistry.ts",
+      "chartComponent": "WidgetRegistry",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "avd",
+        "device"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "retention",
+        "impressions",
+        "ctr",
+        "views"
+      ],
+      "styleTokens": [
+        "#C9F830",
+        "#FFE357",
+        "#FF83EA",
+        "#FFB570",
+        "#FFD8A8",
+        "#4FFF5B",
+        "#B9FFBE",
+        "#579AFF",
+        "#BBD4FF",
+        "#FFB3F0",
+        "#FF1744",
+        "#FF8AAF",
+        "#40C6E9",
+        "#FF3399",
+        "#00D2FF",
+        "#24D3FF",
+        "#FF00FF",
+        "#00CCFF",
+        "#CCFF00",
+        "#000000",
+        "#FFFF61",
+        "#CC00FF",
+        "#B191FF",
+        "#70FFCB"
+      ],
+      "evidenceSnippet": ""
+    },
+    {
+      "file": "src/views/dashboard/WidgetRenderer.tsx",
+      "chartComponent": "WidgetRenderer",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "comments",
+        "trafficSource"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "retention",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#f3f4f6",
+        "#4FFF5B",
+        "#FFE357",
+        "#24D3FF",
+        "#FF83EA",
+        "#FFB570",
+        "#f0f0f0",
+        "#000",
+        "#FF3399",
+        "#fff",
+        "#FF1744",
+        "#00D2FF",
+        "#eee",
+        "#f2f2f2",
+        "#C9F830",
+        "#00CCFF",
+        "#FF00FF",
+        "#888",
+        "#f5f5f5",
+        "#FFE32E",
+        "#008B00",
+        "#D32F2F",
+        "#FFD8B3",
+        "#579AFF"
+      ],
+      "evidenceSnippet": "import { RevenueChartWidget } from \"./widgets/RevenueChartWidget\""
+    },
+    {
+      "file": "src/views/dashboard/widgets/AudienceMatrixWidget.tsx",
+      "chartComponent": "AudienceMatrixWidget",
+      "chartTypes": [
+        "Chart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "ctr",
+        "device"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "ctr",
+        "views"
+      ],
+      "styleTokens": [
+        "#4FFF5B",
+        "#C9F830",
+        "#24D3FF",
+        "#FF83EA",
+        "#eee",
+        "#000000",
+        "#FFB570",
+        "#000"
+      ],
+      "evidenceSnippet": "{/* Chart Grid */}"
+    },
+    {
+      "file": "src/views/dashboard/widgets/BridgeEfficiencyWidget.tsx",
+      "chartComponent": "BridgeEfficiencyWidget",
+      "chartTypes": [
+        "BarChart"
+      ],
+      "rendererFamily": "Recharts",
+      "dataKeys": [
+        "views",
+        "impressions"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "yaxis",
+        "impressions",
+        "views"
+      ],
+      "styleTokens": [
+        "#000000",
+        "#4FFF5B",
+        "#C9F830",
+        "#FFE357",
+        "#FF83EA",
+        "#000",
+        "#fff"
+      ],
+      "evidenceSnippet": "BarChart,"
+    },
+    {
+      "file": "src/views/dashboard/widgets/FormatClashWidget.tsx",
+      "chartComponent": "FormatClashWidget",
+      "chartTypes": [
+        "PieChart",
+        "Chart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers",
+        "ctr"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#FF00FF",
+        "#00D2FF",
+        "#000"
+      ],
+      "evidenceSnippet": "import { PieChart } from \"lucide-react\""
+    },
+    {
+      "file": "src/views/dashboard/widgets/KeywordOverlapWidget.tsx",
+      "chartComponent": "KeywordOverlapWidget",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "ctr",
+        "likes",
+        "comments",
+        "shares"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "ctr",
+        "views"
+      ],
+      "styleTokens": [
+        "#000",
+        "#fff",
+        "#F5F5F5",
+        "#ECECEC",
+        "#F8F8F8",
+        "#F6F6F6"
+      ],
+      "evidenceSnippet": ""
+    },
+    {
+      "file": "src/views/dashboard/widgets/RetentionSimWidget.tsx",
+      "chartComponent": "RetentionSimWidget",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "ctr"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
+        "retention",
+        "ctr"
+      ],
+      "styleTokens": [
+        "#000",
+        "#f5f5f5",
+        "#00D2FF",
+        "#FF1744",
+        "#FFE357",
+        "#4FFF5B",
+        "#fff"
+      ],
+      "evidenceSnippet": "import { BarChart3, AlertTriangle, Sparkles, Upload } from \"lucide-react\""
+    },
+    {
+      "file": "src/views/dashboard/widgets/RevenueChartWidget.tsx",
+      "chartComponent": "RevenueChartWidget",
+      "chartTypes": [
+        "Chart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "revenue"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "y-axis"
+      ],
+      "styleTokens": [
+        "#00D2FF",
+        "#7B2CBF",
+        "#9D4EDD",
+        "#C77DFF",
+        "#000",
+        "#fff",
+        "#C9F830",
+        "#FFE357",
+        "#f5f5f5"
+      ],
+      "evidenceSnippet": "import { DollarSign, BarChart2 } from \"lucide-react\""
+    },
+    {
+      "file": "src/views/dashboard/widgets/TrafficSourcesWidget.tsx",
+      "chartComponent": "TrafficSourcesWidget",
+      "chartTypes": [
+        "Chart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "trafficSource"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [],
+      "styleTokens": [
+        "#C9F830",
+        "#40C6E9",
+        "#FF83EA",
+        "#9D4EDD",
+        "#FF1744",
+        "#000",
+        "#fff"
+      ],
+      "evidenceSnippet": "{/* Chart */}"
+    },
+    {
+      "file": "src/views/dashboard/WidgetShell.tsx",
+      "chartComponent": "WidgetShell",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "comments",
+        "device"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "retention",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "text-[8px]"
+      ],
+      "evidenceSnippet": ""
+    },
+    {
+      "file": "src/views/DataVizualizations.tsx",
+      "chartComponent": "DataVizualizations",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "revenue",
+        "ctr",
+        "impressions",
+        "avp",
+        "device"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
+        "retention",
+        "impressions",
+        "ctr",
+        "views"
+      ],
+      "styleTokens": [
+        "#FF3399",
+        "#e5e7eb",
+        "#00CCFF",
+        "#FFDD00",
+        "#f4f4f0",
+        "#CCFF00",
+        "border-[4px]",
+        "text-[10px]",
+        "border-[2px]",
+        "bg-[#f4f4f0]",
+        "bg-[#CCFF00]",
+        "bg-[#FFDD00]",
+        "bg-[#00CCFF]"
+      ],
+      "evidenceSnippet": "import { CHART_THEME, getChartSpecById } from '../chartSystem/unifiedChartSpec';"
+    },
+    {
+      "file": "src/views/GraphsPage.tsx",
+      "chartComponent": "GraphsPage",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "revenue",
+        "subscribers"
+      ],
+      "routeSurface": "/graphs",
+      "pageFamily": "Graphs Page",
+      "axes": [
+        "duration",
+        "retention",
+        "watch"
+      ],
+      "styleTokens": [
+        "#FF7497",
+        "#CCFF00",
+        "#FFDD00",
+        "border-[4px]",
+        "text-[#FF7497]",
+        "text-[11px]",
+        "text-[14px]",
+        "bg-[#CCFF00]",
+        "bg-[#FFDD00]"
+      ],
+      "evidenceSnippet": "} from \"../components/GraphsPageCharts\""
+    },
+    {
+      "file": "src/views/GraphsShortsRetentionPage.tsx",
+      "chartComponent": "GraphsShortsRetentionPage",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "revenue",
+        "subscribers"
+      ],
+      "routeSurface": "/graphs/shorts-retention",
+      "pageFamily": "Graphs Shorts Retention",
+      "axes": [
+        "duration",
+        "retention",
+        "watch"
+      ],
+      "styleTokens": [
+        "#FF7497",
+        "#CCFF00",
+        "#FFDD00",
+        "border-[4px]",
+        "text-[#FF7497]",
+        "text-[11px]",
+        "text-[12px]",
+        "bg-[#CCFF00]",
+        "bg-[#FFDD00]"
+      ],
+      "evidenceSnippet": "} from \"../components/GraphsPageCharts\""
+    },
+    {
+      "file": "src/views/MediaAnalyzer.tsx",
+      "chartComponent": "MediaAnalyzer",
+      "chartTypes": [
+        "LineChart"
+      ],
+      "rendererFamily": "Recharts",
+      "dataKeys": [],
+      "routeSurface": "/media-analyzer",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "yaxis",
+        "duration",
         "retention"
-      ]
+      ],
+      "styleTokens": [
+        "#FFB158",
+        "#FFDD00",
+        "#CCFF00",
+        "#FF3399",
+        "#FFB570",
+        "#00CCFF",
+        "#FF7497",
+        "#e5e7eb",
+        "#000",
+        "#fff",
+        "bg-[#FFB158]",
+        "bg-[#FFDD00]",
+        "border-[4px]",
+        "bg-[#CCFF00]",
+        "text-[10px]",
+        "bg-[#FFB570]",
+        "bg-[#00CCFF]",
+        "text-[#FF7497]"
+      ],
+      "evidenceSnippet": "LineChart,"
+    },
+    {
+      "file": "src/views/PerformanceHub.tsx",
+      "chartComponent": "PerformanceHub",
+      "chartTypes": [
+        "LineChart",
+        "BarChart",
+        "AreaChart",
+        "PieChart",
+        "ScatterChart"
+      ],
+      "rendererFamily": "Recharts",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments",
+        "shares",
+        "avd",
+        "avp",
+        "engagedViews",
+        "country",
+        "device",
+        "trafficSource",
+        "contentType"
+      ],
+      "routeSurface": "/performance",
+      "pageFamily": "Performance Hub",
+      "axes": [
+        "xaxis",
+        "yaxis",
+        "duration",
+        "retention",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#00CCFF",
+        "#CCFF00",
+        "#FF7497",
+        "#FFB158",
+        "#B366FF",
+        "#FFDD00",
+        "#6BD8FF",
+        "#E6FF75",
+        "#FF95B1",
+        "#FFC884",
+        "#B14AED",
+        "#4FFF5B",
+        "#24D3FF",
+        "#FFE357",
+        "#C9F830",
+        "#FF3399",
+        "#FFE066",
+        "#FF9D1A",
+        "#d1d5db",
+        "#000",
+        "#B5E81C",
+        "#FFD400",
+        "#dbeafe",
+        "#dcfce7"
+      ],
+      "evidenceSnippet": "ChartColumnBig,"
+    },
+    {
+      "file": "src/views/performanceHub40/__tests__/capability.test.ts",
+      "chartComponent": "capability.test",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments",
+        "shares",
+        "avd",
+        "avp",
+        "engagedViews",
+        "device"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": "import { evaluateChartCapability40 } from \"../capability\""
+    },
+    {
+      "file": "src/views/performanceHub40/capability.ts",
+      "chartComponent": "capability",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments",
+        "shares",
+        "avd",
+        "avp",
+        "engagedViews",
+        "country",
+        "device",
+        "trafficSource",
+        "contentType"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": "import type { ChartReadiness40, ChartSpec40, MetricKey40 } from \"./chartSpec40\""
+    },
+    {
+      "file": "src/views/performanceHub40/chartRegistry.ts",
+      "chartComponent": "chartRegistry",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "ctr",
+        "impressions"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "impressions",
+        "ctr"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": "import type { ChartSpec40 } from \"./chartSpec40\""
+    },
+    {
+      "file": "src/views/performanceHub40/chartSpec40.ts",
+      "chartComponent": "chartSpec40",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments",
+        "shares",
+        "avd",
+        "avp",
+        "engagedViews",
+        "country",
+        "device",
+        "trafficSource",
+        "contentType"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
+        "retention",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [],
+      "evidenceSnippet": "import type { ChartCardSize, ChartClassKey } from \"../referenceStudio/chartSystem\""
+    },
+    {
+      "file": "src/views/performanceHub40/PerformanceHubChartRollout.tsx",
+      "chartComponent": "PerformanceHubChartRollout",
+      "chartTypes": [
+        "ChartRendererSurface"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "retention",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#CCFF00",
+        "#FFE357",
+        "#FF7497",
+        "#00CCFF",
+        "bg-[#CCFF00]",
+        "bg-[#FFE357]",
+        "bg-[#FF7497]",
+        "border-[3px]",
+        "text-[10px]",
+        "border-[2px]",
+        "text-[9px]",
+        "bg-[#00CCFF]",
+        "text-[11px]"
+      ],
+      "evidenceSnippet": "import { ChartRendererSurface, getSpanClassForChartSize } from \"../referenceStudio/chartSystem\""
+    },
+    {
+      "file": "src/views/ReferenceStudio.tsx",
+      "chartComponent": "ReferenceStudio",
+      "chartTypes": [
+        "LineChart",
+        "BarChart",
+        "ScatterChart",
+        "PieChart"
+      ],
+      "rendererFamily": "Recharts",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "likes",
+        "comments",
+        "shares",
+        "avp",
+        "contentType"
+      ],
+      "routeSurface": "/render-bench/reference-studio/:tabId",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "yaxis",
+        "duration",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#00CCFF",
+        "#CCFF00",
+        "#FF7497",
+        "#FFDD00",
+        "#FFB158",
+        "#24D3FF",
+        "#FFE357",
+        "#B14AED",
+        "#C9F830",
+        "#f3f4f6",
+        "#f5f6f8",
+        "#d1d5db",
+        "#000",
+        "#9ca3af",
+        "#FCAF57",
+        "#ffffff",
+        "#f1f5f9",
+        "bg-[#24D3FF]",
+        "bg-[#FFE357]",
+        "bg-[#00CCFF]",
+        "bg-[#B14AED]",
+        "bg-[#CCFF00]",
+        "bg-[#C9F830]",
+        "bg-[#FFB158]"
+      ],
+      "evidenceSnippet": "LineChart,"
+    },
+    {
+      "file": "src/views/referenceStudio/ChartCatalog.tsx",
+      "chartComponent": "ChartCatalog",
+      "chartTypes": [
+        "ChartRendererSurface"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [],
+      "styleTokens": [
+        "#CCFF00",
+        "#24D3FF",
+        "#FFE357",
+        "#FFB158",
+        "#B14AED",
+        "bg-[#CCFF00]",
+        "bg-[#24D3FF]",
+        "bg-[#FFE357]",
+        "bg-[#FFB158]",
+        "border-[3px]",
+        "bg-[#B14AED]"
+      ],
+      "evidenceSnippet": "import { BarChart3, Network, PieChartIcon, TrendingUp } from \"lucide-react\""
+    },
+    {
+      "file": "src/views/referenceStudio/ChartCatalogV2.tsx",
+      "chartComponent": "ChartCatalogV2",
+      "chartTypes": [
+        "ChartRendererSurface"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [],
+      "styleTokens": [
+        "#CCFF00",
+        "#24D3FF",
+        "#FFE357",
+        "#FFB158",
+        "#B14AED",
+        "bg-[#CCFF00]",
+        "bg-[#24D3FF]",
+        "bg-[#FFE357]",
+        "bg-[#FFB158]",
+        "border-[3px]",
+        "bg-[#B14AED]"
+      ],
+      "evidenceSnippet": "import { BarChart3, Network, PieChartIcon, TrendingUp } from \"lucide-react\""
+    },
+    {
+      "file": "src/views/referenceStudio/ChartSpecImplementation.tsx",
+      "chartComponent": "ChartSpecImplementation",
+      "chartTypes": [
+        "ChartRendererSurface",
+        "Chart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers",
+        "country"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#CCFF00",
+        "#24D3FF",
+        "#FFE357",
+        "#FF7497",
+        "#FFB158",
+        "bg-[#CCFF00]",
+        "bg-[#24D3FF]",
+        "border-[2px]",
+        "text-[10px]",
+        "bg-[#FFE357]",
+        "border-[3px]",
+        "bg-[#FF7497]",
+        "bg-[#FFB158]"
+      ],
+      "evidenceSnippet": "ChartRendererSurface,"
+    },
+    {
+      "file": "src/views/referenceStudio/ChartSpecImplementationV2.tsx",
+      "chartComponent": "ChartSpecImplementationV2",
+      "chartTypes": [
+        "ChartRendererSurface"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#CCFF00",
+        "#24D3FF",
+        "#FFE357",
+        "#FF7497",
+        "#FFB158",
+        "bg-[#CCFF00]",
+        "bg-[#24D3FF]",
+        "border-[2px]",
+        "text-[10px]",
+        "bg-[#FFE357]",
+        "border-[3px]",
+        "bg-[#FF7497]",
+        "bg-[#FFB158]"
+      ],
+      "evidenceSnippet": "ChartRendererSurface,"
+    },
+    {
+      "file": "src/views/referenceStudio/chartSystem.tsx",
+      "chartComponent": "chartSystem",
+      "chartTypes": [
+        "LineChart",
+        "AreaChart",
+        "BarChart",
+        "ScatterChart",
+        "PieChart",
+        "ComposedChart",
+        "Treemap",
+        "ChartRendererSurface"
+      ],
+      "rendererFamily": "Recharts",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "likes",
+        "comments",
+        "shares",
+        "avp"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "yaxis",
+        "retention",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#d1d5db",
+        "#6b7280",
+        "#000",
+        "#fff",
+        "#24D3FF",
+        "#CCFF00",
+        "#FFE357",
+        "#FFB158",
+        "#FF7497",
+        "#B14AED",
+        "#f3f4f6",
+        "#eef2f7",
+        "#111",
+        "#f9fafb",
+        "#4c7ce5",
+        "#84a3ee",
+        "border-[2px]",
+        "text-[7px]",
+        "text-[10px]",
+        "bg-[#f3f4f6]",
+        "bg-[#f9fafb]",
+        "text-[9px]",
+        "bg-[#24D3FF]",
+        "bg-[#CCFF00]"
+      ],
+      "evidenceSnippet": "LineChart,"
+    },
+    {
+      "file": "src/views/referenceStudio/ToolboxRecreation.tsx",
+      "chartComponent": "ToolboxRecreation",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "views"
+      ],
+      "styleTokens": [
+        "#24D3FF",
+        "#FFE357",
+        "#FFB158",
+        "#FF7497",
+        "#CCFF00",
+        "bg-[#24D3FF]",
+        "bg-[#FFE357]",
+        "bg-[#FFB158]",
+        "border-[3px]",
+        "bg-[#FF7497]",
+        "bg-[#CCFF00]",
+        "text-[10px]"
+      ],
+      "evidenceSnippet": "BarChart3,"
+    },
+    {
+      "file": "src/views/ReferenceStudioV2.tsx",
+      "chartComponent": "ReferenceStudioV2",
+      "chartTypes": [
+        "PieChart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [],
+      "routeSurface": "/reference-studio-v2",
+      "pageFamily": "Reference Studio V2",
+      "axes": [],
+      "styleTokens": [
+        "#e5e5e5",
+        "#CCFF00",
+        "bg-[#e5e5e5]",
+        "text-[#CCFF00]",
+        "border-[8px]",
+        "border-[4px]",
+        "border-[3px]",
+        "text-[10px]",
+        "border-[5px]"
+      ],
+      "evidenceSnippet": "import { LayoutGrid, ArrowUpRight, Zap, Boxes, Microscope, PieChart, Info } from 'lucide-react';"
+    },
+    {
+      "file": "src/views/ResearchLab.tsx",
+      "chartComponent": "ResearchLab",
+      "chartTypes": [
+        "LineChart",
+        "BarChart",
+        "ScatterChart",
+        "RadarChart",
+        "Chart",
+        "PieChart",
+        "Treemap",
+        "AreaChart"
+      ],
+      "rendererFamily": "Recharts+GoogleChart",
+      "dataKeys": [
+        "views",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments",
+        "shares",
+        "avd",
+        "country",
+        "device",
+        "trafficSource",
+        "contentType"
+      ],
+      "routeSurface": "/legacy/research-lab",
+      "pageFamily": "Legacy Research Lab",
+      "axes": [
+        "xaxis",
+        "yaxis",
+        "duration",
+        "retention",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#FF7497",
+        "#00CCFF",
+        "#CCFF00",
+        "#FFDD00",
+        "#FFB158",
+        "#f5f5f5",
+        "#10B981",
+        "#4F46E5",
+        "#B14AED",
+        "#FF87F3",
+        "#000000",
+        "#f0f0f0",
+        "#000",
+        "#FF6321",
+        "#00FF00",
+        "#555",
+        "#6366F1",
+        "#00FF9D",
+        "#f3f3f3",
+        "#666",
+        "#D1D5DB",
+        "#9CA3AF",
+        "#6EE7B7",
+        "#059669"
+      ],
+      "evidenceSnippet": "ChartConfig,"
+    },
+    {
+      "file": "src/views/SimpleAnalytics.tsx",
+      "chartComponent": "SimpleAnalytics",
+      "chartTypes": [
+        "LineChart",
+        "BarChart",
+        "PieChart",
+        "ScatterChart"
+      ],
+      "rendererFamily": "Recharts",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "subscribers",
+        "ctr",
+        "likes",
+        "comments",
+        "shares",
+        "avp"
+      ],
+      "routeSurface": "/simple-analytics",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "xaxis",
+        "yaxis",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#24D3FF",
+        "#C9F830",
+        "#FFE357",
+        "#FFB158",
+        "#FF7497",
+        "#B14AED",
+        "#d1d5db",
+        "border-[3px]",
+        "border-[4px]",
+        "text-[10px]"
+      ],
+      "evidenceSnippet": "LineChart,"
+    },
+    {
+      "file": "src/views/StoryboardStudio.tsx",
+      "chartComponent": "StoryboardStudio",
+      "chartTypes": [
+        "AreaChart"
+      ],
+      "rendererFamily": "Recharts",
+      "dataKeys": [],
+      "routeSurface": "/storyboard-studio",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
+        "retention"
+      ],
+      "styleTokens": [
+        "#FFB158",
+        "#FF6666",
+        "#00d2ff",
+        "#00ff99",
+        "#ccff00",
+        "#e5e7eb",
+        "#ff3399",
+        "#f3f4f6",
+        "#000",
+        "#fff",
+        "bg-[#FFB158]",
+        "bg-[#FF6666]",
+        "border-[3px]",
+        "bg-[#00d2ff]",
+        "text-[#00ff99]",
+        "bg-[#ccff00]",
+        "text-[#ff3399]",
+        "text-[#ccff00]",
+        "bg-[#f3f4f6]",
+        "text-[#00d2ff]",
+        "text-[10px]",
+        "border-[#ccff00]",
+        "bg-[#00ff99]",
+        "border-[2px]"
+      ],
+      "evidenceSnippet": "import { ResponsiveContainer, AreaChart, Area, Tooltip } from \"recharts\""
+    },
+    {
+      "file": "src/views/Stuff.tsx",
+      "chartComponent": "Stuff",
+      "chartTypes": [
+        "Chart"
+      ],
+      "rendererFamily": "Custom",
+      "dataKeys": [],
+      "routeSurface": "/stuff/:tabId",
+      "pageFamily": "Shared/Internal",
+      "axes": [],
+      "styleTokens": [
+        "#FFB158",
+        "#B14AED",
+        "#CCFF00",
+        "#FF7497",
+        "#00CCFF",
+        "#FFE357",
+        "#f3f4f6",
+        "#FF3399",
+        "bg-[#FFB158]",
+        "bg-[#B14AED]",
+        "bg-[#CCFF00]",
+        "bg-[#FF7497]",
+        "bg-[#00CCFF]",
+        "bg-[#FFE357]",
+        "border-[6px]",
+        "bg-[#f3f4f6]",
+        "border-[5px]",
+        "border-[3px]",
+        "text-[11px]",
+        "border-[4px]",
+        "bg-[#FF3399]"
+      ],
+      "evidenceSnippet": "const ChartCatalog = React.lazy("
+    },
+    {
+      "file": "src/views/VideoManager.tsx",
+      "chartComponent": "VideoManager",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views",
+        "watchHours",
+        "revenue",
+        "ctr",
+        "impressions",
+        "likes",
+        "comments",
+        "shares",
+        "contentType"
+      ],
+      "routeSurface": "internal/shared",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
+        "impressions",
+        "ctr",
+        "views",
+        "watch"
+      ],
+      "styleTokens": [
+        "#00CCFF",
+        "#ccff00",
+        "#ffdd00",
+        "#ff3399",
+        "#E5E7EB",
+        "#FFFFFF",
+        "#40C6E9",
+        "#B9FF58",
+        "#FF83EA",
+        "#FFFF61",
+        "#FFB570",
+        "#5EE4FF",
+        "#FF8AAF",
+        "#4FFF5B",
+        "#FFE357",
+        "#FFDD00",
+        "#FF3399",
+        "#CC99FF",
+        "#111",
+        "#ffb158",
+        "#00ff99",
+        "#CCFF00",
+        "border-[4px]",
+        "text-[10px]"
+      ],
+      "evidenceSnippet": "BarChart3,"
+    },
+    {
+      "file": "src/views/VideoPublisher.tsx",
+      "chartComponent": "VideoPublisher",
+      "chartTypes": [],
+      "rendererFamily": "Custom",
+      "dataKeys": [
+        "views"
+      ],
+      "routeSurface": "/video-publisher",
+      "pageFamily": "Shared/Internal",
+      "axes": [
+        "duration",
+        "views"
+      ],
+      "styleTokens": [
+        "#ccff00",
+        "#00d2ff",
+        "#CCFF00",
+        "#00FF99",
+        "#FF3399",
+        "#F5F5F5",
+        "#FF8AAF",
+        "#FFFF61",
+        "#FFDD00",
+        "#ff3399",
+        "bg-[#ccff00]",
+        "border-[4px]",
+        "bg-[#00d2ff]",
+        "text-[10px]",
+        "bg-[#CCFF00]",
+        "bg-[#00FF99]",
+        "text-[11px]",
+        "border-[3px]",
+        "bg-[#F5F5F5]",
+        "text-[#FFFF61]",
+        "bg-[#FF8AAF]",
+        "bg-[#FFDD00]",
+        "text-[#FFDD00]",
+        "border-[#FFDD00]"
+      ],
+      "evidenceSnippet": "BarChart3,"
+    }
+  ],
+  "onboarding": [
+    {
+      "chartId": "video-value-matrix",
+      "inUnifiedSpec": true,
+      "lifecycleStage": "candidate",
+      "analyticsReady": true,
+      "onboardingStatus": "ready_for_rollout",
+      "notes": "Validated in studio; safe for controlled promotion."
+    },
+    {
+      "chartId": "algorithm-trigger-matrix",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "candidate",
+      "analyticsReady": true,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Depends on impressions+CTR consistency checks."
+    },
+    {
+      "chartId": "top-performers-trio",
+      "inUnifiedSpec": true,
+      "lifecycleStage": "production",
+      "analyticsReady": true,
+      "onboardingStatus": "ready_for_rollout",
+      "notes": "Core launch chart. Keep stable and verify on each sync change."
+    },
+    {
+      "chartId": "global-footprint",
+      "inUnifiedSpec": true,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_data",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "discovery-radar",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "golden-ratio-dashboard",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "retention-triangle",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "geo-high-cpm",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "engagement-scatter",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "viral-trajectory",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "views-revenue-dual",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "subs-ctr-dual",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "daily-performance-stack",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "seasonal-rpm-pulse",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "ad-format-dominance",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "premium-standard-monetization",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "viewer-loyalty-index",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "publish-time-momentum",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "best-upload-grid",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "source-retention-timeline",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "thumbnail-ab-pulse",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "momentum-tracker",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "packaging-score-tile",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "title-stats-mini",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "keyword-engine-mini",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "device-immersion-mini",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "os-revenue-mix-mini",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "content-breakdown-mini",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "duration-sweet-spot-mini",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "revenue-efficiency-mini",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "end-screen-actions-mini",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "solo-impressions-funnel-mini",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "narrative-dna",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Exploratory semantics; keep in sunset incubator for now."
+    },
+    {
+      "chartId": "hook-to-binge-funnel",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Needs stronger metric contract before promotion."
+    },
+    {
+      "chartId": "playback-cpm-density",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "interaction-density-index",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "long-tail-shelf-life",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "series-consistency-box",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "audience-overlap-live-vod-shorts",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
+    },
+    {
+      "chartId": "conversion-power-of-views",
+      "inUnifiedSpec": false,
+      "lifecycleStage": "incubator",
+      "analyticsReady": false,
+      "onboardingStatus": "not_ready_contract",
+      "notes": "Missing registry entry. Add chartRegistry mapping before promotion."
     }
   ]
 }

@@ -7,6 +7,7 @@ import { evaluateChartCapability40 } from "./capability"
 import { CHART_PACK_LABELS_40, CHART_SPECS_40, type ChartPack40 } from "./chartSpec40"
 import { CHART_REGISTRY_40, getChartLifecycleStage } from "./chartRegistry"
 import { buildPromotionSnapshot } from "./promotionAdapter"
+import { buildChartBinding40 } from "./chartIntegration"
 
 const PACK_ORDER: ChartPack40[] = [
   "revenue",
@@ -30,11 +31,15 @@ export const PerformanceHubChartRollout: React.FC = () => {
   const snapshot = useMemo(() => buildPromotionSnapshot(analytics), [analytics])
 
   const charts = useMemo(() => {
-    return CHART_SPECS_40.map((spec) => ({
-      spec,
-      card: toChartCard40(spec),
-      capability: evaluateChartCapability40(spec, analytics),
-    }))
+    return CHART_SPECS_40.map((spec) => {
+      const capability = evaluateChartCapability40(spec, analytics)
+      return {
+        spec,
+        card: toChartCard40(spec),
+        capability,
+        binding: buildChartBinding40(spec, capability),
+      }
+    })
   }, [analytics])
 
   const packCharts = charts.filter((entry) => entry.spec.pack === activePack)
@@ -133,11 +138,17 @@ export const PerformanceHubChartRollout: React.FC = () => {
                 ) : null}
               </div>
               <div className={`h-[260px] border-[3px] border-black rounded-xl p-2 ${statusTone(readiness)}`}>
-                {readiness === "unavailable" ? (
+                {readiness === "unavailable" || entry.binding.onboardingStatus === "not_ready_contract" ? (
                   <div className="h-full w-full border-[2px] border-black rounded-lg bg-white p-4">
-                    <div className="text-[11px] font-black uppercase">Missing Required Metrics</div>
+                    <div className="text-[11px] font-black uppercase">
+                      {entry.binding.onboardingStatus === "not_ready_contract"
+                        ? "Missing Contract Mapping"
+                        : "Missing Required Metrics"}
+                    </div>
                     <div className="mt-2 text-[10px] font-bold">
-                      {missingHard.join(", ") || "Unavailable"}
+                      {entry.binding.onboardingStatus === "not_ready_contract"
+                        ? entry.binding.missingContractTerms.join(", ")
+                        : missingHard.join(", ") || "Unavailable"}
                     </div>
                   </div>
                 ) : (
@@ -156,6 +167,9 @@ export const PerformanceHubChartRollout: React.FC = () => {
                 {CHART_REGISTRY_40.find((item) => item.chartId === entry.spec.id)
                   ?.sourceRoute || "/reference-studio"}
               </div>
+              <div className="text-[9px] font-black uppercase tracking-[0.12em] text-black/65">
+                Onboarding: {entry.binding.onboardingStatus} · Fallback: {entry.binding.fallbackBehavior}
+              </div>
             </div>
           )
         })}
@@ -163,4 +177,3 @@ export const PerformanceHubChartRollout: React.FC = () => {
     </div>
   )
 }
-

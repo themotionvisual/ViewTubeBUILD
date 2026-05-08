@@ -13,7 +13,7 @@ import {
  Cloud,
 } from "lucide-react"
 import { ResponsiveContainer, AreaChart, Area, Tooltip } from "recharts"
-import { useBrain } from "../context/GlobalDataContext"
+import { useBrain } from "../context/useBrain"
 import { CustomIcon } from "../components/CustomIcon"
 import { SprocketHoles } from "../components/SprocketHoles"
 import { ToolboxScaffold } from "../components/Toolbox"

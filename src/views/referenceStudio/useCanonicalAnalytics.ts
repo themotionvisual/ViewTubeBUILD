@@ -5,7 +5,7 @@ import type {
  CanonicalVideoRow,
 } from "../../services/analyticsContract"
 import { getMasterRows, getMetricSummary } from "../../services/analyticsSelectors"
-import { useBrain } from "../../context/GlobalDataContext"
+import { useBrain } from "../../context/useBrain"
 
 const metricValue = (
  row: CanonicalVideoRow,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useBrain } from '../context/GlobalDataContext';
+import { useBrain } from '../context/useBrain';
 import { generateChatResponse, hasGeminiKey } from '../services/gemini';
 import { ArrowRight, Sparkles, Loader2, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';

@@ -1,0 +1,94 @@
+{
+ "version": "2026-05-06.v1",
+ "generatedAt": "2026-05-06T00:00:00.000Z",
+ "capabilities": [
+  {
+   "key": "data.channel.profile",
+   "family": "youtube_data_v3",
+   "sampleAction": "channels.list(mine=true)",
+   "endpointPattern": "/youtube/v3/channels",
+   "requiredScopes": ["youtube.readonly"],
+   "supportedAccountContexts": ["creator", "content_owner", "unknown"],
+   "tools": ["settings", "channel-analysis", "performance-hub"],
+   "fallbackBehavior": "degraded: cached profile",
+   "enabled": true
+  },
+  {
+   "key": "data.videos.list",
+   "family": "youtube_data_v3",
+   "sampleAction": "videos.list",
+   "endpointPattern": "/youtube/v3/videos",
+   "requiredScopes": ["youtube.readonly"],
+   "supportedAccountContexts": ["creator", "content_owner", "unknown"],
+   "tools": ["video-manager", "performance-hub", "research-lab"],
+   "fallbackBehavior": "degraded: reduced columns",
+   "enabled": true
+  },
+  {
+   "key": "data.playlistItems.list",
+   "family": "youtube_data_v3",
+   "sampleAction": "playlistItems.list",
+   "endpointPattern": "/youtube/v3/playlistItems",
+   "requiredScopes": ["youtube.readonly"],
+   "supportedAccountContexts": ["creator", "content_owner", "unknown"],
+   "tools": ["video-manager", "performance-hub"],
+   "fallbackBehavior": "fallback search path",
+   "enabled": true
+  },
+  {
+   "key": "data.comments.manage",
+   "family": "youtube_data_v3",
+   "sampleAction": "comments.insert/update",
+   "endpointPattern": "/youtube/v3/comments",
+   "requiredScopes": ["youtube.force-ssl"],
+   "supportedAccountContexts": ["creator", "unknown"],
+   "tools": ["video-manager", "engagement-tools"],
+   "fallbackBehavior": "unsupported: hide comment write actions",
+   "enabled": true
+  },
+  {
+   "key": "data.uploads.manage",
+   "family": "youtube_data_v3",
+   "sampleAction": "videos.insert/thumbnails.set",
+   "endpointPattern": "/upload/youtube/v3",
+   "requiredScopes": ["youtube.upload"],
+   "supportedAccountContexts": ["creator", "unknown"],
+   "tools": ["video-publisher", "video-manager"],
+   "fallbackBehavior": "auth_required",
+   "enabled": true
+  },
+  {
+   "key": "analytics.reports.video",
+   "family": "youtube_analytics_v2",
+   "sampleAction": "reports.query(dimensions=video)",
+   "endpointPattern": "/v2/reports",
+   "requiredScopes": ["yt-analytics.readonly"],
+   "supportedAccountContexts": ["creator", "content_owner", "unknown"],
+   "tools": ["performance-hub", "analytics-sync"],
+   "fallbackBehavior": "degraded: partial metric groups",
+   "enabled": true
+  },
+  {
+   "key": "analytics.reports.channel",
+   "family": "youtube_analytics_v2",
+   "sampleAction": "reports.query(dimensions=day)",
+   "endpointPattern": "/v2/reports",
+   "requiredScopes": ["yt-analytics.readonly"],
+   "supportedAccountContexts": ["creator", "content_owner", "unknown"],
+   "tools": ["performance-hub", "channel-analysis"],
+   "fallbackBehavior": "degraded: historical only",
+   "enabled": true
+  },
+  {
+   "key": "reporting.jobs.manage",
+   "family": "youtube_reporting_v1",
+   "sampleAction": "jobs.list/jobs.create/reports.list",
+   "endpointPattern": "/v1/jobs",
+   "requiredScopes": ["yt-analytics-monetary.readonly"],
+   "supportedAccountContexts": ["content_owner"],
+   "tools": ["performance-hub", "data-transparency-center"],
+   "fallbackBehavior": "unsupported for creator accounts",
+   "enabled": true
+  }
+ ]
+}

@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { useBrain } from "../../../context/GlobalDataContext"
+import { useBrain } from "../../../context/useBrain"
 import { WidgetShell } from "../WidgetShell"
 import { useEntitlement } from "../../../app/AppShell"
 import { Sparkles, Save, Check, Tag } from "lucide-react"
@@ -337,11 +337,11 @@ export const TagGeneratorWidget = ({ widget, instance, editMode, onToggleCollaps
              }}
              />
             : <Sparkles size={14} fill="#fff" />}
-            {isGenerating ? "Analyzing..." : `Generate Tags (${TAG_SUGGEST_COST}T)`}
+            {isGenerating ? "Analyzing..." : `Generate Tags (${TAG_SUGGEST_COST}C)`}
            </button>
            {!canAffordTagSuggestions && (
             <div style={{ marginTop: "8px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>
-             {entitlement.tier === "free" ? "Upgrade for AI tags." : `Need ${TAG_SUGGEST_COST} token.`}
+             {entitlement.tier === "free" ? "Upgrade for AI tags." : `Need ${TAG_SUGGEST_COST} credits.`}
             </div>
            )}
           </div>

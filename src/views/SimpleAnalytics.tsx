@@ -22,7 +22,7 @@ import type {
  CanonicalVideoRow,
 } from "../services/analyticsContract"
 import { getMasterRows, getMetricSummary } from "../services/analyticsSelectors"
-import { useBrain } from "../context/GlobalDataContext"
+import { useBrain } from "../context/useBrain"
 
 const WINDOW_OPTIONS: AnalyticsWindow[] = ["28d", "7d", "90d", "365d", "lifetime"]
 

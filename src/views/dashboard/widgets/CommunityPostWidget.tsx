@@ -14,7 +14,7 @@ import {
 } from "lucide-react"
 import { VTLottie } from "../../../components/VTLottie"
 import { refineCommunityPost } from "../../../services/gemini"
-import { useBrain } from "../../../context/GlobalDataContext"
+import { useBrain } from "../../../context/useBrain"
 
 type PostType = "text" | "image" | "poll" | "image-poll" | "video"
 

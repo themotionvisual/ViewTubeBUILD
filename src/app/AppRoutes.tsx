@@ -19,6 +19,7 @@ import ComponentGridView from "../views/ComponentGridView"
 import BenchExplorer from "../views/bench/BenchExplorer"
 import StandaloneBench from "../views/bench/StandaloneBench"
 import EditorV1Page from "../views/EditorV1Page"
+import EditorV1LegacyPage from "../views/EditorV1LegacyPage"
 import ProjectCalendarPage from "../views/ProjectCalendarPage"
 import ChartsGalleryHome from "../views/ChartsGallery/ChartsGalleryHome"
 import MasterGraphsPage from "../views/ChartsGallery/MasterGraphsPage"
@@ -37,14 +38,7 @@ import { ComponentGridLab } from "../components/ComponentGridLab"
 import { IntegratedRemotionEditor } from "../editor-ui/IntegratedRemotionEditor"
 import GraphsPage from "../views/GraphsPage"
 import GraphsShortsRetentionPage from "../views/GraphsShortsRetentionPage"
-
-const Placeholder = ({ title }: { title: string }) => (
- <div className="flex items-center justify-center h-full">
-  <div className="pop-box p-10 text-4xl font-black uppercase tracking-tighter shadow-[10px_10px_0px_0px_black]">
-   {title} Initializing...
-  </div>
- </div>
-)
+import UserGuide from "../views/UserGuide"
 
 export const AppRoutes: React.FC = () => {
  return (
@@ -60,13 +54,17 @@ export const AppRoutes: React.FC = () => {
    <Route path="/graphs/shorts-retention" element={<GraphsShortsRetentionPage />} />
    <Route path="/legacy/data-vizualizations" element={<DataVisualizations />} />
    <Route path="/studio/internal-analytics" element={<InternalAnalyticsPanel />} />
+   <Route path="/account" element={<Settings />} />
    <Route path="/settings" element={<Settings />} />
-   <Route path="/subscribe" element={<Navigate to="/settings?panel=billing" replace />} />
+   <Route path="/subscribe" element={<Navigate to="/account?panel=billing" replace />} />
    <Route path="/data-transparency" element={<DataTransparencyCenter />} />
 
    <Route path="/shorts" element={<Navigate to="/editor-v1" replace />} />
    <Route path="/editor" element={<Navigate to="/editor-v1" replace />} />
    <Route path="/editor-v1" element={<EditorV1Page />} />
+   {import.meta.env.DEV && (
+    <Route path="/internal/editor-v1-legacy" element={<EditorV1LegacyPage />} />
+   )}
    {import.meta.env.DEV && (
     <Route path="/internal/editor-dev" element={<IntegratedRemotionEditor mode="full" />} />
    )}
@@ -92,7 +90,7 @@ export const AppRoutes: React.FC = () => {
    />
    <Route path="/render-bench/reference-studio/:tabId" element={<ReferenceStudio />} />
    <Route path="/render-bench/:benchId" element={<StandaloneBench />} />
-   <Route path="/user-guide" element={<Placeholder title="User Guide" />} />
+   <Route path="/user-guide" element={<UserGuide />} />
 
    {/* Charts Gallery Routes */}
    <Route path="/charts-gallery" element={<ChartsGalleryHome />} />

@@ -6,7 +6,7 @@ import {
  generateThumbnailConcept,
 } from "../services/gemini"
 import { AspectRatio, ImageSize, type ThumbnailHistoryItem } from "../types"
-import { useBrain } from "../context/GlobalDataContext"
+import { useBrain } from "../context/useBrain"
 import { CustomIcon } from "../components/CustomIcon"
 import { AccordionContainer } from "../components/Toolbox"
 import { EXTERNAL_INGEST_SOURCES } from "../services/externalIngestSources"

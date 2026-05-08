@@ -1,11 +1,11 @@
 import type { MasterTableType } from "./productArchitecture"
 
 export type SubscriptionPlanId =
- | "starter"
+ | "basic"
+ | "creator"
  | "creator_plus"
- | "pro_intelligence"
- | "business_team"
- | "enterprise"
+ | "creator_pro"
+ | "executive"
 
 export interface SubscriptionPlanCapabilityMatrix {
  id: SubscriptionPlanId
@@ -23,8 +23,8 @@ export interface SubscriptionPlanCapabilityMatrix {
 
 export const SUBSCRIPTION_PLANS: SubscriptionPlanCapabilityMatrix[] = [
  {
-  id: "starter",
-  label: "Starter (Free/Public)",
+  id: "basic",
+  label: "Basic (Free)",
   modes: ["public_handle", "import"],
   tables: [
    "master_channel_identity",
@@ -42,8 +42,8 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanCapabilityMatrix[] = [
   includesCustomConnectors: false,
  },
  {
-  id: "creator_plus",
-  label: "Creator Plus",
+  id: "creator",
+  label: "Creator",
   modes: ["connected", "import", "hybrid", "public_handle"],
   tables: [
    "master_channel_identity",
@@ -63,8 +63,8 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanCapabilityMatrix[] = [
   includesCustomConnectors: false,
  },
  {
-  id: "pro_intelligence",
-  label: "Pro Intelligence",
+  id: "creator_plus",
+  label: "Creator Plus",
   modes: ["connected", "import", "hybrid", "public_handle"],
   tables: [
    "master_channel_identity",
@@ -87,8 +87,8 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanCapabilityMatrix[] = [
   includesCustomConnectors: false,
  },
  {
-  id: "business_team",
-  label: "Business / Team",
+  id: "creator_pro",
+  label: "Creator Pro",
   modes: ["connected", "import", "hybrid", "public_handle"],
   tables: [
    "master_channel_identity",
@@ -112,8 +112,8 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanCapabilityMatrix[] = [
   includesCustomConnectors: false,
  },
  {
-  id: "enterprise",
-  label: "Enterprise",
+  id: "executive",
+  label: "Executive",
   modes: ["connected", "import", "hybrid", "public_handle"],
   tables: [
    "master_channel_identity",

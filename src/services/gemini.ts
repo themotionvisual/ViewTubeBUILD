@@ -32,7 +32,11 @@ import {
 } from "@/services/prompts"
 import { geminiQueue } from "../utils/RequestQueue"
 import { getVaultKey } from "./keyVault"
-import { consumeAiTokens } from "./billingEntitlement"
+import {
+ applyMeterChargeEvent,
+ estimateMeterQuote,
+ getCurrentEntitlement,
+} from "./billingEntitlement"
 import { consultBrainSync, annotateSystemPrompt } from "./brainUtils"
 
 // --- Actionable Tactics Logic ---
@@ -308,7 +312,64 @@ export const getAiClient = () => {
    "Gemini API key is missing. Open System Settings -> Key Vault and set Gemini AI API Key.",
   )
  }
- return new GoogleGenAI({ apiKey })
+ const baseClient = new GoogleGenAI({ apiKey })
+ const generateContent = baseClient.models.generateContent.bind(baseClient.models)
+
+ baseClient.models.generateContent = (async (...args: any[]) => {
+  const modelId = String(args?.[0]?.model || "gemini-3-flash-preview")
+  const promptText = JSON.stringify(args?.[0]?.contents || "")
+  const entitlement = getCurrentEntitlement()
+  const quote = estimateMeterQuote(
+   {
+    modelId,
+    inputTokensEstimate: Math.max(80, Math.ceil(promptText.length / 4)),
+    outputTokensEstimate: 350,
+   },
+   entitlement,
+  )
+
+  if (!quote.canRun) {
+   if (entitlement.tier === "free") {
+    throw new Error(
+     "AI generation requires a paid plan. Upgrade to a paid plan in /settings?panel=billing.",
+    )
+   }
+   throw new Error(
+    `Not enough credits. Need ~${quote.creditDebitEstimate}, have ${Math.max(0, Math.floor(entitlement.creditBalance))}.`,
+   )
+  }
+
+  const response: any = await (generateContent as any)(...args)
+  const usage = response?.usageMetadata || {}
+  const inputTokens = Number(usage.promptTokenCount ?? usage.inputTokenCount ?? 0)
+  const outputTokens = Number(
+   usage.candidatesTokenCount ?? usage.outputTokenCount ?? usage.totalTokenCount ?? 0,
+  )
+  const finalQuote = estimateMeterQuote({
+   modelId,
+   inputTokensEstimate: inputTokens > 0 ? inputTokens : quote.inputTokensEstimate,
+   outputTokensEstimate: outputTokens > 0 ? outputTokens : quote.outputTokensEstimate,
+  })
+  const charge = applyMeterChargeEvent({
+   id: `chg_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`,
+   modelId,
+   inputTokens: inputTokens > 0 ? inputTokens : quote.inputTokensEstimate,
+   outputTokens: outputTokens > 0 ? outputTokens : quote.outputTokensEstimate,
+   rawCostUsd: finalQuote.rawCostUsd,
+   meterCostUsd: finalQuote.meterCostUsd,
+   creditDebit: finalQuote.creditDebitEstimate,
+   reason: inputTokens > 0 || outputTokens > 0 ? "usage_metadata" : "fallback_estimate",
+   fallbackApplied: !(inputTokens > 0 || outputTokens > 0),
+  })
+
+  if (!charge.allowed) {
+   throw new Error("Insufficient credits after metering. Please top up and try again.")
+  }
+
+  return response
+ }) as any
+
+ return baseClient
 }
 
 export const hasGeminiKey = (): boolean => {
@@ -354,30 +415,13 @@ export const getActiveModel = (
  * Universal Retry Wrapper with Exponential Backoff
  */
 export const executeWithRetry = async <T>(fn: () => Promise<T>): Promise<T> => {
- return queueGeminiTask(fn, { tokenCost: 1 })
-}
-
-type GeminiQueueOptions = {
- tokenCost?: number
+ return queueGeminiTask(fn)
 }
 
 const queueGeminiTask = async <T>(
  fn: () => Promise<T>,
- options: GeminiQueueOptions = {},
 ): Promise<T> => {
- const tokenCost = options.tokenCost ?? 1
  return geminiQueue.add(async () => {
-  const usage = consumeAiTokens(tokenCost)
-  if (!usage.allowed) {
-   if (usage.next.tier === "free") {
-    throw new Error(
-     "AI generation requires a paid plan. Upgrade to Medium or Large in /settings?panel=billing.",
-    )
-   }
-   throw new Error(
-    `Not enough AI tokens. Required ${tokenCost}, available ${Math.max(0, Math.floor(usage.next.tokenBalance))}. Upgrade or wait for daily refill.`,
-   )
-  }
   return fn()
  })
 }
@@ -2259,6 +2303,19 @@ export const analyzeChannelData = async (
  )
 
  let lastError: any
+ let lastTransientRetryDelayMs = 0
+
+ const parseRetryDelayMs = (message: string): number => {
+  const fromSeconds = message.match(/retry in\s+([0-9]+(?:\.[0-9]+)?)s/i)
+  if (fromSeconds?.[1]) {
+   return Math.max(0, Math.ceil(Number(fromSeconds[1]) * 1000))
+  }
+  const fromMs = message.match(/retry in\s+([0-9]+)\s*ms/i)
+  if (fromMs?.[1]) {
+   return Math.max(0, Number(fromMs[1]))
+  }
+  return 0
+ }
 
  for (const model of modelsToTry) {
   console.log(`DEBUG: Starting analysis with model ${model}`)
@@ -2338,6 +2395,14 @@ export const analyzeChannelData = async (
      errorMessage.includes("503") ||
      errorMessage.includes("429") ||
      errorMessage.includes("UNAVAILABLE")
+    const isInputTooLarge =
+     (errorCode === 400 &&
+      (errorStatus.includes("INVALID_ARGUMENT") ||
+       errorMessage.toLowerCase().includes("invalid_argument")) &&
+      (errorMessage.toLowerCase().includes("input token count exceeds") ||
+       errorMessage.toLowerCase().includes("maximum number of tokens allowed") ||
+       errorMessage.toLowerCase().includes("too large"))) ||
+     errorMessage.toLowerCase().includes("csv data too large")
 
     // If we got partial stream text, try to salvage it before failing.
     if (fullText.trim()) {
@@ -2353,9 +2418,17 @@ export const analyzeChannelData = async (
      }
     }
 
+    if (isInputTooLarge) {
+     throw new Error(
+      "CSV data too large. Please upload a smaller timeframe or fewer columns.",
+     )
+    }
+
     const isLastAttempt = attempt >= maxRetries
     if (isTransient && !isLastAttempt) {
-     const backoff = Math.pow(2, attempt) * 1000
+     const hintedDelay = parseRetryDelayMs(errorMessage)
+     const backoff = Math.max(Math.pow(2, attempt) * 1000, hintedDelay)
+     if (hintedDelay > 0) lastTransientRetryDelayMs = hintedDelay
      console.warn(
       `Attempt ${attempt} failed for model ${model} with transient error. Retrying in ${backoff}ms...`,
       errorMessage,
@@ -2388,10 +2461,28 @@ export const analyzeChannelData = async (
   "All models failed for Channel Analysis. Last error:",
   resolvedError,
  )
- if (lastError?.message?.includes("INVALID_ARGUMENT")) {
+ if (
+  lastError?.message?.includes("INVALID_ARGUMENT") ||
+  String(lastError?.message || "")
+   .toLowerCase()
+   .includes("input token count exceeds")
+ ) {
   throw new Error(
    "CSV data too large. Please upload a smaller timeframe or fewer columns.",
   )
+ }
+ const lastMessage = String(lastError?.message || "")
+ if (
+  Number(lastError?.code || lastError?.error?.code || 0) === 429 ||
+  lastMessage.includes("RESOURCE_EXHAUSTED") ||
+  lastMessage.includes("429")
+ ) {
+  const hintedDelay = parseRetryDelayMs(lastMessage) || lastTransientRetryDelayMs
+  const retrySuffix =
+   hintedDelay > 0 ?
+    ` Retry after ~${Math.max(1, Math.ceil(hintedDelay / 1000))}s.` :
+    ""
+  throw new Error(`Gemini quota temporarily exhausted.${retrySuffix}`)
  }
  throw resolvedError
 }

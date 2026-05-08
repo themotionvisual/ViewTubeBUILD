@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { useBrain } from "../context/GlobalDataContext"
+import { useBrain } from "../context/useBrain"
 import { StandardButton } from "./StandardButton"
 
 export const SyncButton: React.FC = () => {

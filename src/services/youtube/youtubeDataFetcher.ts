@@ -16,6 +16,21 @@ import { getCanonicalAnalyticsCache } from "../canonicalAnalyticsStore"
  * Handles fetching video and channel metadata from YouTube Data API v3.
  */
 
+const normalizeHandle = (raw: unknown): string | null => {
+ const value = String(raw || "").trim()
+ if (!value) return null
+ return value.replace(/^@/, "")
+}
+
+const resolveChannelHandle = (channel: any): string | null => {
+ return (
+  normalizeHandle(channel?.handle) ||
+  normalizeHandle(channel?.snippet?.customUrl) ||
+  normalizeHandle(channel?.brandingSettings?.channel?.customUrl) ||
+  null
+ )
+}
+
 export const fetchChannelProfile = async (): Promise<ChannelProfile> => {
  const token = await refreshTokenIfExpired()
  if (!token)
@@ -26,7 +41,7 @@ export const fetchChannelProfile = async (): Promise<ChannelProfile> => {
   )
 
  const response = await proxyFetch(
-  "https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&mine=true",
+  "https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails,brandingSettings&mine=true",
   {
    headers: { Authorization: `Bearer ${token}` },
   },
@@ -42,10 +57,12 @@ export const fetchChannelProfile = async (): Promise<ChannelProfile> => {
  }
 
  const channel = data.items[0]
+ const channelHandle = resolveChannelHandle(channel)
 
  return {
   id: channel.id,
-  name: channel.snippet.title, channelHandle: channel.snippet.customUrl || null,
+  name: channel.snippet.title,
+  channelHandle,
   subscriberCount: channel.statistics.subscriberCount,
   totalViews: channel.statistics.viewCount,
   totalVideos: channel.statistics.videoCount,
@@ -531,7 +548,7 @@ export const getChannelOverview = async () => {
   id: channel.id,
   title: channel.snippet.title,
   description: channel.snippet.description,
-  customUrl: channel.snippet.customUrl,
+  customUrl: resolveChannelHandle(channel),
   thumbnail: channel.snippet.thumbnails.high.url,
   stats: {
    viewCount: parseInt(channel.statistics.viewCount),

@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { useEntitlement } from "../../../app/AppShell"
 import { Type, Sparkles, Copy, Check, RefreshCw } from "lucide-react"
-import { useBrain } from "../../../context/GlobalDataContext"
+import { useBrain } from "../../../context/useBrain"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
 import { CustomDropdown } from "./DataEditWidget"
@@ -122,11 +122,11 @@ export const TitleRewriterWidget = ({ widget, instance, editMode, onToggleCollap
        boxShadow: "2px 2px 0 0 #000",
       }}>
        {generating ? <RefreshCw size={12} style={{ animation: "spin 1s linear infinite" }} /> : <Sparkles size={12} />}
-       {generating ? "Rewriting..." : `Generate 5 Titles (${TITLE_REWRITE_COST}T)`}
+       {generating ? "Rewriting..." : `Generate 5 Titles (${TITLE_REWRITE_COST}C)`}
       </button>
       {!canAffordRewrite && (
        <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>
-        {entitlement.tier === "free" ? "Upgrade for title AI." : `Need ${TITLE_REWRITE_COST} token.`}
+        {entitlement.tier === "free" ? "Upgrade for title AI." : `Need ${TITLE_REWRITE_COST} credits.`}
        </div>
       )}
 

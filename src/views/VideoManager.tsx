@@ -21,7 +21,7 @@ import type {
  Playlist,
  PlaylistMembership,
 } from "../services/youtubeService"
-import { useBrain } from "../context/GlobalDataContext"
+import { useBrain } from "../context/useBrain"
 // Removed isChannelConnected import
 import {
  generateTagSuggestions,
@@ -695,8 +695,25 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   return num.toString()
  }
 
-  const formatDuration = (secondsStr: string) => {
-  const totalSeconds = parseInt(secondsStr, 10)
+ const parseNumeric = (value: unknown): number => {
+  const n = Number(String(value ?? "").replace(/[^0-9.-]/g, ""))
+  return Number.isFinite(n) ? n : 0
+ }
+
+ const parseIsoDurationToSeconds = (iso: string): number => {
+  if (!iso || typeof iso !== "string") return 0
+  const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)
+  if (!match) return 0
+  const hours = Number(match[1] || 0)
+  const minutes = Number(match[2] || 0)
+  const seconds = Number(match[3] || 0)
+  return hours * 3600 + minutes * 60 + seconds
+ }
+
+ const formatDuration = (durationValue: string) => {
+  const totalSeconds = /^\d+$/.test(String(durationValue))
+   ? parseInt(String(durationValue), 10)
+   : parseIsoDurationToSeconds(String(durationValue))
   if (isNaN(totalSeconds)) return "0:00"
   const h = Math.floor(totalSeconds / 3600)
   const m = Math.floor((totalSeconds % 3600) / 60)
@@ -709,6 +726,10 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  const selectedVideoMetrics = React.useMemo(() => {
   if (!selectedVideoId) {
    return {
+    views: 0,
+    likes: 0,
+    comments: 0,
+    shares: 0,
     watchHours: 0,
     impressions: 0,
     ctr: 0,
@@ -716,7 +737,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
     endScreenClickRate: 0,
     cardClickRate: 0,
     isShort: false,
-    revenue: Number(videoAnalytics?.estimatedRevenue || 0),
+    revenue: parseNumeric(videoAnalytics?.estimatedRevenue || 0),
    }
   }
 
@@ -773,12 +794,22 @@ const VideoManager: React.FC<VideoManagerProps> = ({
      "CTR (%)",
      "Impressions click-through rate (%)",
      "impressionClickThroughRate",
-    ]) || Number(String(videoAnalytics?.clickThroughRate || "0").replace("%", ""))
+    ]) || parseNumeric(videoAnalytics?.clickThroughRate || "0")
 
    return {
+    views:
+     parseNumeric(videoStats?.views || 0) ||
+     getRowValue(["Views", "views"]),
+    likes:
+     parseNumeric(videoStats?.likes || 0) ||
+     getRowValue(["Likes", "likes"]),
+    comments:
+     parseNumeric(videoStats?.comments || 0) ||
+     getRowValue(["Comments", "comments"]),
+    shares: getRowValue(["Shares", "shares"]) || parseNumeric(videoAnalytics?.shares || 0),
     watchHours,
     impressions: getRowValue(["Impressions", "impressions"]),
-    ctr,
+    ctr: Number.isFinite(ctr) ? ctr : 0,
     stw: getRowValue(["STW %", "Stayed to watch (%)"]),
     endScreenClickRate: getRowValue([
      "End screen click rate",
@@ -795,9 +826,13 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    }
   } catch {
    return {
+    views: parseNumeric(videoStats?.views || 0),
+    likes: parseNumeric(videoStats?.likes || 0),
+    comments: parseNumeric(videoStats?.comments || 0),
+    shares: parseNumeric(videoAnalytics?.shares || 0),
     watchHours: 0,
     impressions: 0,
-    ctr: Number(String(videoAnalytics?.clickThroughRate || "0").replace("%", "")),
+    ctr: parseNumeric(videoAnalytics?.clickThroughRate || "0"),
     stw: 0,
     endScreenClickRate: 0,
     cardClickRate: 0,
@@ -806,6 +841,65 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    }
   }
  }, [selectedVideoId, videoStats, videoAnalytics, cacheTick])
+
+ const kpiCards = [
+  {
+   key: "views",
+   label: "Views",
+   value: formatViews(String(selectedVideoMetrics.views || 0)),
+   tone: "bg-[#40C6E9]",
+  },
+  {
+   key: "watch",
+   label: "Watch Hrs",
+   value: selectedVideoMetrics.watchHours.toFixed(2),
+   tone: "bg-[#B9FF58]",
+  },
+  {
+   key: "likes",
+   label: "Likes",
+   value: formatViews(String(selectedVideoMetrics.likes || 0)),
+   tone: "bg-[#FF83EA]",
+  },
+  {
+   key: "comments",
+   label: "Comments",
+   value: formatViews(String(selectedVideoMetrics.comments || 0)),
+   tone: "bg-[#FFFF61]",
+  },
+  {
+   key: "shares",
+   label: "Shares",
+   value: formatViews(String(selectedVideoMetrics.shares || 0)),
+   tone: "bg-[#FFB570]",
+  },
+  {
+   key: "impressions",
+   label: "Impressions",
+   value: formatViews(String(selectedVideoMetrics.impressions || 0)),
+   tone: "bg-[#5EE4FF]",
+  },
+  {
+   key: "ctr",
+   label: selectedVideoMetrics.isShort ? "STW %" : "CTR",
+   value: selectedVideoMetrics.isShort
+    ? `${selectedVideoMetrics.stw.toFixed(1)}%`
+    : `${selectedVideoMetrics.ctr.toFixed(1)}%`,
+   tone: "bg-[#FF8AAF]",
+  },
+  {
+   key: "revenue",
+   label: "Revenue",
+   value: `$${selectedVideoMetrics.revenue.toFixed(2)}`,
+   tone: "bg-[#4FFF5B]",
+  },
+  {
+   key: "length",
+   label: "Length",
+   value: formatDuration(videoStats?.duration || "0"),
+   tone: "bg-[#FFE357]",
+  },
+ ]
 
  if (!connected) {
   return (
@@ -1147,119 +1241,30 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       </div>
       {/* Main Editor Elements */}
       {/* Stats & Thumbnail Row */}
-      <div className="grid grid-cols-1 xl:grid-cols-[4fr_7fr] gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-[4fr_7fr] gap-6 items-stretch">
        <SubToolbox
         title="Video Stats"
         icon={<BarChart3 size={20} strokeWidth={3} />}
         paletteIndex={basePalette + 1}
         collapsible
         isOpenInitial={true}
-        contentClassName="p-4 flex-1 flex flex-col space-y-3"
+        contentClassName="p-4 flex-1 h-full flex flex-col space-y-3"
        >
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-         <div className="bg-gray-50 border-[3px] border-black rounded-xl px-2 py-1.5 flex flex-col items-center justify-center text-center hover:bg-[#40C6E9] hover:text-black transition-colors group h-16">
-          <Eye
-           className="text-[#40C6E9] group-hover:text-black mb-1"
-           size={20}
-           strokeWidth={3}
-          />
-          <span className="font-[1000] text-lg">
-           {formatViews(videoStats?.views || "0")}
-          </span>
-          <span className="text-[8px] font-black uppercase tracking-widest text-black/40 group-hover:text-black/60">
-           Views
-          </span>
-         </div>
-         <div className="bg-gray-50 border-[3px] border-black rounded-xl px-2 py-1.5 flex flex-col items-center justify-center text-center hover:bg-[#B9FF58] hover:text-black transition-colors group h-16">
-          <Clock className="text-[#B9FF58] group-hover:text-black mb-1" size={20} strokeWidth={3} />
-          <span className="font-[1000] text-lg">
-           {selectedVideoMetrics.watchHours.toFixed(2)}
-          </span>
-          <span className="text-[8px] font-black uppercase tracking-widest text-black/40 group-hover:text-black/60">
-           Watch Hrs
-          </span>
-         </div>
-         <div className="bg-gray-50 border-[3px] border-black rounded-xl px-2 py-1.5 flex flex-col items-center justify-center text-center hover:bg-[#FF83EA] hover:text-black transition-colors group h-16">
-          <ThumbsUp
-           className="text-[#FF83EA] group-hover:text-black mb-1"
-           size={20}
-           strokeWidth={3}
-          />
-          <span className="font-[1000] text-lg">
-           {formatViews(videoStats?.likes || "0")}
-          </span>
-          <span className="text-[8px] font-black uppercase tracking-widest text-black/40 group-hover:text-black/60">
-           Likes
-          </span>
-         </div>
-         <div className="bg-gray-50 border-[3px] border-black rounded-xl px-2 py-1.5 flex flex-col items-center justify-center text-center hover:bg-[#FFFF61] hover:text-black transition-colors group h-16">
-          <MessageSquare
-           className="text-[#FFFF61] group-hover:text-black mb-1"
-           size={20}
-           strokeWidth={3}
-          />
-          <span className="font-[1000] text-lg">
-           {formatViews(videoStats?.comments || "0")}
-          </span>
-          <span className="text-[8px] font-black uppercase tracking-widest text-black/40 group-hover:text-black/60">
-           Comments
-          </span>
-         </div>
-         <div className="bg-gray-50 border-[3px] border-black rounded-xl px-2 py-1.5 flex flex-col items-center justify-center text-center hover:bg-[#FFB570] hover:text-black transition-colors group h-16">
-          <Share2
-           className="text-[#FFB570] group-hover:text-black mb-1"
-           size={20}
-           strokeWidth={3}
-          />
-          <span className="font-[1000] text-lg">
-           {formatViews(videoAnalytics?.shares || "0")}
-          </span>
-          <span className="text-[8px] font-black uppercase tracking-widest text-black/40 group-hover:text-black/60">
-           Shares
-          </span>
-         </div>
-         <div className="bg-gray-50 border-[3px] border-black rounded-xl px-2 py-1.5 flex flex-col items-center justify-center text-center hover:bg-[#5EE4FF] hover:text-black transition-colors group h-16">
-          <Eye className="text-[#5EE4FF] group-hover:text-black mb-1" size={20} strokeWidth={3} />
-          <span className="font-[1000] text-lg">
-           {formatViews(String(selectedVideoMetrics.impressions || 0))}
-          </span>
-          <span className="text-[8px] font-black uppercase tracking-widest text-black/40 group-hover:text-black/60">
-           Impressions
-          </span>
-         </div>
-         <div className="bg-gray-50 border-[3px] border-black rounded-xl px-2 py-1.5 flex flex-col items-center justify-center text-center hover:bg-[#FF8AAF] hover:text-black transition-colors group h-16">
-          <MousePointerClick
-           className="text-[#FF8AAF] group-hover:text-black mb-1"
-           size={20}
-           strokeWidth={3}
-          />
-          <span className="font-[1000] text-lg">
-           {selectedVideoMetrics.isShort
-            ? `${selectedVideoMetrics.stw.toFixed(1)}%`
-            : `${selectedVideoMetrics.ctr.toFixed(1)}%`}
-          </span>
-          <span className="text-[8px] font-black uppercase tracking-widest text-black/40 group-hover:text-black/60">
-           {selectedVideoMetrics.isShort ? "STW %" : "CTR"}
-          </span>
-         </div>
-         <div className="bg-gray-50 border-[3px] border-black rounded-xl px-2 py-1.5 flex flex-col items-center justify-center text-center hover:bg-[#4FFF5B] hover:text-black transition-colors group h-16">
-          <DollarSign
-           className="text-[#4FFF5B] group-hover:text-black mb-1"
-           size={20}
-           strokeWidth={3}
-          />
-          <span className="font-[1000] text-lg">
-           ${selectedVideoMetrics.revenue.toFixed(2)}
-          </span>
-          <span className="text-[8px] font-black uppercase tracking-widest text-black/40 group-hover:text-black/60">
-           Revenue
-          </span>
-         </div>
-         <div className="bg-gray-50 border-[3px] border-black rounded-xl px-2 py-1.5 flex flex-col items-center justify-center text-center hover:bg-[#FFE357] hover:text-black transition-colors group h-16">
-          <Clock className="text-[#FFE357] group-hover:text-black mb-1" size={20} strokeWidth={3} />
-          <span className="font-[1000] text-lg">{formatDuration(videoStats?.duration || "0")}</span>
-          <span className="text-[8px] font-black uppercase tracking-widest text-black/40 group-hover:text-black/60">Length</span>
-         </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+         {kpiCards.map((card) => (
+          <div
+           key={card.key}
+           className="rounded-xl border-[3px] border-black bg-white shadow-[2px_2px_0px_0px_black] overflow-hidden"
+          >
+           <div className={`h-3 border-b-[2px] border-black ${card.tone}`} />
+           <div className="px-3 py-2 min-h-[56px] flex flex-col items-center justify-center text-center">
+            <span className="font-[1000] text-[22px] leading-none">{card.value}</span>
+            <span className="text-[9px] font-black uppercase tracking-[0.18em] text-black/50 mt-1">
+             {card.label}
+            </span>
+           </div>
+          </div>
+         ))}
         </div>
        </SubToolbox>
 
@@ -1269,10 +1274,10 @@ const VideoManager: React.FC<VideoManagerProps> = ({
         paletteIndex={basePalette + 2}
         collapsible
         isOpenInitial={true}
-        contentClassName="p-4 flex-1 flex flex-col space-y-3"
+        contentClassName="p-4 flex-1 h-full flex flex-col space-y-3"
        >
         <div
-         className={`flex-1 relative rounded-xl border-[4px] border-dashed flex flex-col items-center justify-center p-4 transition-all overflow-hidden min-h-[180px] ${isDraggingThumbnail ? "border-[#FF83EA] bg-[#FF83EA]/10" : "border-black/20 bg-gray-50"}`}
+         className={`h-full relative rounded-xl border-[4px] border-dashed flex flex-col items-center justify-center p-4 transition-all overflow-hidden min-h-[232px] ${isDraggingThumbnail ? "border-[#FF83EA] bg-[#FF83EA]/10" : "border-black/20 bg-gray-50"}`}
          onDragOver={(e) => {
           e.preventDefault()
           setIsDraggingThumbnail(true)

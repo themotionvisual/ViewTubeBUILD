@@ -17,7 +17,7 @@ import {
   fetchAllCommentThreads,
 } from "../../../services/youtube/youtubeDataFetcher"
 import { generatePerfectReply } from "../../../services/gemini"
-import { useBrain } from "../../../context/GlobalDataContext"
+import { useBrain } from "../../../context/useBrain"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
 
@@ -386,7 +386,7 @@ export const CommentReplyWidget = ({
           <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>
             {entitlement.tier === "free"
               ? "Upgrade for AI reply drafts."
-              : `Need ${selectedDraftCost} tokens for selected drafts.`}
+              : `Need ${selectedDraftCost} credits for selected drafts.`}
           </div>
         )}
       </div>

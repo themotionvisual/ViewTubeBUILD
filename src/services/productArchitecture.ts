@@ -59,6 +59,9 @@ export interface SyncDiagnosticsFailure {
  status?: number
  reason: string
  requestClass?: string
+ capabilityKey?: string
+ reasonCode?: string
+ accountContext?: "creator" | "content_owner" | "unknown"
  attemptedShape?: {
   dimensions?: string
   includesSort?: boolean

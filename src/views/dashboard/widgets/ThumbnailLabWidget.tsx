@@ -46,8 +46,8 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
     if ((mode === "analyze" || mode === "abtest") && !selectedVideo) return "Select video first."
     if (mode === "abtest" && !variants.some((v) => v.image)) return "Upload at least one variant."
     if (!canAffordModeCost) {
-      if (entitlement.tier === "free") return "Upgrade to Medium or Large to use AI."
-      return `Need ${modeTokenCost} tokens for this action.`
+      if (entitlement.tier === "free") return "Upgrade to a paid plan to use AI."
+      return `Need ${modeTokenCost} credits for this action.`
     }
     return null
   })()
@@ -170,7 +170,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
               disabled={isProcessing || !prompt.trim() || !canAffordModeCost}
               style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", background: "#FF83EA", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", cursor: "pointer", boxShadow: "2px 2px 0 0 #000", opacity: !prompt.trim() ? 0.5 : 1 }}>
               {isProcessing ? <div style={{ width: "12px", height: "12px", border: "2px solid rgba(0,0,0,0.2)", borderTop: "2px solid #000", borderRadius: "50%", animation: "spin 1s linear infinite" }} /> : <Sparkles size={14} />}
-              {isProcessing ? "Generating..." : `Generate Concept (${modeTokenCost}T)`}
+              {isProcessing ? "Generating..." : `Generate Concept (${modeTokenCost}C)`}
             </button>
           </div>
         )}
@@ -188,7 +188,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
                     disabled={isProcessing || !canAffordModeCost}
                     style={{ width: "100%", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", background: "#00D2FF", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", cursor: "pointer", boxShadow: "2px 2px 0 0 #000" }}>
                     {isProcessing ? <div style={{ width: "12px", height: "12px", border: "2px solid rgba(0,0,0,0.2)", borderTop: "2px solid #000", borderRadius: "50%", animation: "spin 1s linear infinite" }} /> : <Search size={14} />}
-                    {isProcessing ? "Analyzing..." : `Analyze Thumbnail (${modeTokenCost}T)`}
+                    {isProcessing ? "Analyzing..." : `Analyze Thumbnail (${modeTokenCost}C)`}
                   </button>
                 </div>
               </div>
@@ -255,7 +255,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
                 boxShadow: "3px 3px 0 0 #000",
               }}>
-              <Sparkles size={14} /> {abAnalyzing ? "Analyzing..." : `Predict CTR (${modeTokenCost}T)`}
+              <Sparkles size={14} /> {abAnalyzing ? "Analyzing..." : `Predict CTR (${modeTokenCost}C)`}
             </button>
           </div>
         )}

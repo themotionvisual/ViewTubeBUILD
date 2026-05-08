@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useState } from "react"
+import React from "react"
 import {
- ResponsiveContainer,
  LineChart,
  Line,
  AreaChart,
@@ -20,6 +19,7 @@ import {
  Treemap,
 } from "recharts"
 import type { CanonicalAnalyticsView } from "./useCanonicalAnalytics"
+import { StableChartFrame } from "../../components/StableChartFrame"
 
 export type ChartCardSize = "full" | "half" | "third"
 
@@ -86,41 +86,7 @@ const TOOLTIP_STYLE = {
 const COLORS = ["#24D3FF", "#CCFF00", "#FFE357", "#FFB158", "#FF7497", "#B14AED"]
 
 const SafeResponsiveContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
- const hostRef = useRef<HTMLDivElement | null>(null)
- const [ready, setReady] = useState(false)
-
- useEffect(() => {
-  const host = hostRef.current
-  if (!host) return
-
-  const update = () => {
-   const rect = host.getBoundingClientRect()
-   const ok = rect.width > 1 && rect.height > 1
-   setReady(ok)
-  }
-
-  update()
-  let observer: ResizeObserver | null = null
-  if (typeof ResizeObserver !== "undefined") {
-   observer = new ResizeObserver(update)
-   observer.observe(host)
-  }
-  window.addEventListener("resize", update)
-  return () => {
-   observer?.disconnect()
-   window.removeEventListener("resize", update)
-  }
- }, [])
-
- return (
-  <div ref={hostRef} className="h-full w-full min-h-[1px] min-w-[1px]">
-   {ready ? (
-    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-     {children}
-    </ResponsiveContainer>
-   ) : null}
-  </div>
- )
+ return <StableChartFrame minHeightClassName="min-h-[240px]">{children}</StableChartFrame>
 }
 
 type ChartRenderContext = {

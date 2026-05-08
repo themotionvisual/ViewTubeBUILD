@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useBrain } from '../context/GlobalDataContext';
+import { useBrain } from '../context/useBrain';
 import { CustomIcon } from './CustomIcon';
 import { Sparkles, X, ChevronDown } from 'lucide-react';
 

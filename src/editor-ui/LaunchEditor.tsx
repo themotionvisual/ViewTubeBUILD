@@ -101,7 +101,8 @@ export const LaunchEditor: React.FC = () => {
   const [selectedTrackId, setSelectedTrackId] = useState("video-1");
   const [aspect, setAspect] = useState<"16:9" | "9:16">("16:9");
   const [resolutionProfile, setResolutionProfile] = useState<"720" | "1080" | "1k" | "2k" | "4k">("1080");
-  const [renderFormat, setRenderFormat] = useState<"mp4" | "mov">("mp4");
+  const [renderFormat, setRenderFormat] = useState<"mp4" | "mov" | "webp">("mp4");
+  const [renderMode, setRenderMode] = useState<"realtime" | "quality" | "frame-perfect">("quality");
   const [urlInput, setUrlInput] = useState("");
   const [status, setStatus] = useState<string>("");
   const [renderJobs, setRenderJobs] = useState<RenderJobStatus[]>([]);
@@ -410,6 +411,7 @@ export const LaunchEditor: React.FC = () => {
         format: renderFormat,
         resolutionProfile,
         aspect,
+        renderMode,
       });
       const request = createRenderJobRequestFromBridgePayload(payload, `launch-${Date.now()}`);
       const queued = await enqueueRemotionRenderJob(API_BASE, request);
@@ -441,6 +443,7 @@ export const LaunchEditor: React.FC = () => {
       format: renderFormat,
       resolutionProfile,
       aspect,
+      renderMode,
     });
     const json = serializeRemotionRenderJobPayload(payload);
     const blob = new Blob([json], { type: "application/json" });
@@ -740,9 +743,15 @@ export const LaunchEditor: React.FC = () => {
                 </select>
               </div>
               <div className="mb-2 grid grid-cols-2 gap-2">
-                <select className="border-[2px] px-2 py-1 text-xs font-bold" style={{ borderColor: COLORS.black }} value={renderFormat} onChange={(e) => setRenderFormat(e.target.value as "mp4" | "mov")}>
+                <select className="border-[2px] px-2 py-1 text-xs font-bold" style={{ borderColor: COLORS.black }} value={renderFormat} onChange={(e) => setRenderFormat(e.target.value as "mp4" | "mov" | "webp")}>
                   <option value="mp4">MP4</option>
                   <option value="mov">MOV</option>
+                  <option value="webp">WEBP</option>
+                </select>
+                <select className="border-[2px] px-2 py-1 text-xs font-bold" style={{ borderColor: COLORS.black }} value={renderMode} onChange={(e) => setRenderMode(e.target.value as "realtime" | "quality" | "frame-perfect")}>
+                  <option value="realtime">Realtime</option>
+                  <option value="quality">Quality</option>
+                  <option value="frame-perfect">Frame-Perfect</option>
                 </select>
                 <button className="border-[2px] px-2 py-1 text-xs font-black" style={{ borderColor: COLORS.black, background: COLORS.orange }} onClick={() => void queueRender()}>Queue Render</button>
               </div>

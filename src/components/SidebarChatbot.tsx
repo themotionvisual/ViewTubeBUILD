@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useBrain } from '../context/GlobalDataContext';
+import { useBrain } from '../context/useBrain';
 import { generateChatResponse, hasGeminiKey } from '../services/gemini';
 import { Send, Zap, User } from 'lucide-react';
 

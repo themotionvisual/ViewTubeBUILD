@@ -1,7 +1,6 @@
 // src/context/GlobalDataContext.tsx
 import React, {
  createContext,
- useContext,
  useState,
  useCallback,
  useEffect,
@@ -270,10 +269,10 @@ const loadPersistedAuth = (): AuthState => {
  return { ...defaultAuthState, isAuthenticated: unifiedAuth.isAuthenticated() }
 }
 
-const GlobalDataContext = createContext<GlobalDataContextProps | undefined>(
+export const GlobalDataContext = createContext<GlobalDataContextProps | undefined>(
  undefined,
 )
-const fallbackContext: GlobalDataContextProps = {
+export const fallbackContext: GlobalDataContextProps = {
  brain: defaultBrain,
  updateBrain: () => {},
  registerProvider: () => {},
@@ -711,18 +710,6 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
     reflectAndCompress,
    }}>
    {children}
-  </GlobalDataContext.Provider>
+ </GlobalDataContext.Provider>
  )
-}
-
-// eslint-disable-next-line react-refresh/only-export-components
-export const useBrain = () => {
- const context = useContext(GlobalDataContext)
- if (!context) {
-  console.warn(
-   "useBrain fallback used (likely HMR boundary mismatch). Reloading the page will restore provider state.",
-  )
-  return fallbackContext
- }
- return context
 }

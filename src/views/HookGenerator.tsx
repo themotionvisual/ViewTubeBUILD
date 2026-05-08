@@ -7,7 +7,7 @@ import {
 import type { HookResult } from "../types"
 import { Magnet } from "lucide-react"
 import { ToolboxScaffold, Toolbox, SubToolbox, StandardTextArea } from "../components/Toolbox"
-import { useBrain } from "../context/GlobalDataContext"
+import { useBrain } from "../context/useBrain"
 import { PostActionReflection } from "../components/PostActionReflection"
 
 interface HookGeneratorProps {

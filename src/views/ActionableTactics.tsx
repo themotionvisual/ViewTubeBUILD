@@ -17,7 +17,7 @@ import {
  TACTICS_SYSTEM_INSTRUCTIONS,
 } from "../services/gemini"
 import type { Tactic, CreatorStrategyInput } from "../types"
-import { useBrain } from "../context/GlobalDataContext"
+import { useBrain } from "../context/useBrain"
 import { CustomIcon } from "../components/CustomIcon"
 import {
  ToolboxScaffold,

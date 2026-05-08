@@ -11,7 +11,7 @@ import {
   X,
   Database
 } from 'lucide-react';
-import { useBrain } from '../context/GlobalDataContext';
+import { useBrain } from '../context/useBrain';
 import { analyzeChannelData } from '../services/gemini';
 import type { CsvFileWithTag, ChartConfig, CsvUploadType } from '../types';
 import ReportViewer from '../components/ReportViewer';

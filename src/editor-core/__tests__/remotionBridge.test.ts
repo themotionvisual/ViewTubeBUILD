@@ -30,14 +30,16 @@ describe("remotion bridge", () => {
       format: "mp4",
       resolutionProfile: "1080",
       aspect: "16:9",
+      renderMode: "quality",
     });
 
     expect(payload.kind).toBe("remotionRender");
-    expect(payload.schemaVersion).toBe("EditorProjectV3");
-    expect(payload.composition.fps).toBe(30);
-    expect(payload.composition.durationInSeconds).toBe(5);
-    expect(payload.composition.width).toBe(1920);
-    expect(payload.composition.height).toBe(1080);
+    expect(payload.schemaVersion).toBe("RenderRequestV2");
+    expect(payload.compositionMeta.fps).toBe(30);
+    expect(payload.compositionMeta.durationInSeconds).toBe(5);
+    expect(payload.compositionMeta.width).toBe(1920);
+    expect(payload.compositionMeta.height).toBe(1080);
+    expect(payload.validation.valid).toBe(true);
   });
 
   it("builds render-job request from remotion payload", () => {
@@ -61,17 +63,20 @@ describe("remotion bridge", () => {
 
     const payload = createRemotionRenderJobPayload({
       state,
-      format: "mov",
+      format: "webp",
       resolutionProfile: "720",
       aspect: "9:16",
+      renderMode: "frame-perfect",
     });
     const request = createRenderJobRequestFromBridgePayload(payload, "launch-1");
 
     expect(request.projectId).toBe("launch-1");
-    expect(request.format).toBe("mov");
+    expect(request.format).toBe("webp");
     expect(request.aspect).toBe("9:16");
     expect(request.compositionSpec.durationInFrames).toBe(240);
     expect(request.compositionSpec.width).toBe(720);
     expect(request.compositionSpec.height).toBe(1280);
+    expect(request.renderMode).toBe("frame-perfect");
+    expect(request.frameAuditConfig?.enabled).toBe(true);
   });
 });

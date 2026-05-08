@@ -1,5 +1,5 @@
 import React from 'react';
-import { useBrain } from '../context/GlobalDataContext';
+import { useBrain } from '../context/useBrain';
 import {
   LayoutTemplate,
   Search,

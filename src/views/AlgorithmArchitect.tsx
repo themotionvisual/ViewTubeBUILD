@@ -8,7 +8,7 @@ import type {
   DailyBrief
 } from '../types';
 import { Zap } from 'lucide-react';
-import { useBrain } from '../context/GlobalDataContext';
+import { useBrain } from '../context/useBrain';
 import { PostActionReflection } from '../components/PostActionReflection';
 
 const AlgorithmArchitect: React.FC = () => {

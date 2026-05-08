@@ -49,6 +49,25 @@ export type CanonicalMetricKey =
  | "annotationClicks"
  | "annotationCloses"
  | "redWatchHours"
+ | "estimatedAdRevenue"
+ | "grossRevenue"
+ | "playbackBasedCpm"
+ | "adImpressions"
+ | "monetizedPlaybacks"
+ | "estimatedPremiumRevenue"
+ | "endScreenElementClicks"
+ | "endScreenElementsShown"
+ | "clicksPerEndScreenElementShown"
+ | "cardClicks"
+ | "cardsShown"
+ | "clicksPerCardShown"
+ | "hypes"
+ | "hypePoints"
+ | "remixCount"
+ | "remixesOfYourContent"
+ | "remixViews"
+ | "shortsFunnelPercentWatched"
+ | "shortsFunnelSwipeAwayRate"
 
 export interface MetricCell {
  value: number | null
@@ -592,6 +611,196 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
    rawPolicy: "derived_ok",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
   },
+  estimatedAdRevenue: {
+   key: "estimatedAdRevenue",
+   label: "Estimated Ad Revenue",
+   unit: "currency",
+   apiFieldName: "estimatedAdRevenue",
+   displayVariants: { tableHeader: "Estimated Ad Revenue", commonName: "Estimated Ad Revenue", nickname: "Ad Revenue" },
+   aliases: ["Estimated Ad Revenue", "estimatedAdRevenue"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  grossRevenue: {
+   key: "grossRevenue",
+   label: "Gross Revenue",
+   unit: "currency",
+   apiFieldName: "grossRevenue",
+   displayVariants: { tableHeader: "Gross Revenue", commonName: "Gross Revenue", nickname: "Gross Revenue" },
+   aliases: ["Gross Revenue", "grossRevenue"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  playbackBasedCpm: {
+   key: "playbackBasedCpm",
+   label: "Playback Based CPM",
+   unit: "currency",
+   apiFieldName: "playbackBasedCpm",
+   displayVariants: { tableHeader: "Playback Based CPM", commonName: "Playback Based CPM", nickname: "Playback CPM" },
+   aliases: ["Playback Based CPM", "playbackBasedCpm"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  adImpressions: {
+   key: "adImpressions",
+   label: "Ad Impressions",
+   unit: "count",
+   apiFieldName: "adImpressions",
+   displayVariants: { tableHeader: "Ad Impressions", commonName: "Ad Impressions", nickname: "Ad Impr" },
+   aliases: ["Ad Impressions", "adImpressions"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  monetizedPlaybacks: {
+   key: "monetizedPlaybacks",
+   label: "Monetized Playbacks",
+   unit: "count",
+   apiFieldName: "monetizedPlaybacks",
+   displayVariants: { tableHeader: "Monetized Playbacks", commonName: "Monetized Playbacks", nickname: "Monetized" },
+   aliases: ["Monetized Playbacks", "monetizedPlaybacks"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  estimatedPremiumRevenue: {
+   key: "estimatedPremiumRevenue",
+   label: "Estimated Premium Revenue",
+   unit: "currency",
+   apiFieldName: "estimatedRedPartnerRevenue",
+   displayVariants: { tableHeader: "Estimated Premium Revenue", commonName: "Estimated Premium Revenue", nickname: "Premium Revenue" },
+   aliases: ["Estimated Premium Revenue", "estimatedRedPartnerRevenue"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  endScreenElementClicks: {
+   key: "endScreenElementClicks",
+   label: "End screen element clicks",
+   unit: "count",
+   apiFieldName: "endScreenClicks",
+   displayVariants: { tableHeader: "End screen element clicks", commonName: "End screen element clicks", nickname: "ES Element Clicks" },
+   aliases: ["End screen element clicks", "endScreenElementClicks", "endScreenClicks"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  endScreenElementsShown: {
+   key: "endScreenElementsShown",
+   label: "End screen elements shown",
+   unit: "count",
+   apiFieldName: "endScreenImpressions",
+   displayVariants: { tableHeader: "End screen elements shown", commonName: "End screen elements shown", nickname: "ES Elements Shown" },
+   aliases: ["End screen elements shown", "endScreenElementsShown", "endScreenImpressions"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  clicksPerEndScreenElementShown: {
+   key: "clicksPerEndScreenElementShown",
+   label: "Clicks per end screen element shown (%)",
+   unit: "percent",
+   apiFieldName: "clicksPerEndScreenElementShown",
+   displayVariants: { tableHeader: "Clicks per end screen element shown (%)", commonName: "Clicks per end screen element shown (%)", nickname: "ES Element CTR" },
+   aliases: ["Clicks per end screen element shown (%)", "clicksPerEndScreenElementShown"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  cardClicks: {
+   key: "cardClicks",
+   label: "Card clicks",
+   unit: "count",
+   apiFieldName: "cardClicks",
+   displayVariants: { tableHeader: "Card clicks", commonName: "Card clicks", nickname: "Card Clicks" },
+   aliases: ["Card clicks", "cardClicks"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  cardsShown: {
+   key: "cardsShown",
+   label: "Cards shown",
+   unit: "count",
+   apiFieldName: "cardImpressions",
+   displayVariants: { tableHeader: "Cards shown", commonName: "Cards shown", nickname: "Cards Shown" },
+   aliases: ["Cards shown", "cardImpressions", "Card impressions"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  clicksPerCardShown: {
+   key: "clicksPerCardShown",
+   label: "Clicks per card shown (%)",
+   unit: "percent",
+   apiFieldName: "cardClickRate",
+   displayVariants: { tableHeader: "Clicks per card shown (%)", commonName: "Clicks per card shown (%)", nickname: "Card CTR" },
+   aliases: ["Clicks per card shown (%)", "cardClickRate", "Card click rate"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  hypes: {
+   key: "hypes",
+   label: "Hypes",
+   unit: "count",
+   apiFieldName: "hypes",
+   displayVariants: { tableHeader: "Hypes", commonName: "Hypes", nickname: "Hypes" },
+   aliases: ["Hypes", "hypes"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  hypePoints: {
+   key: "hypePoints",
+   label: "Hype points",
+   unit: "count",
+   apiFieldName: "hypePoints",
+   displayVariants: { tableHeader: "Hype points", commonName: "Hype points", nickname: "Hype Pts" },
+   aliases: ["Hype points", "hypePoints"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  remixCount: {
+   key: "remixCount",
+   label: "Remix count",
+   unit: "count",
+   apiFieldName: "remixCount",
+   displayVariants: { tableHeader: "Remix count", commonName: "Remix count", nickname: "Remix Cnt" },
+   aliases: ["Remix count", "remixCount"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  remixesOfYourContent: {
+   key: "remixesOfYourContent",
+   label: "Remixes of Your Content",
+   unit: "count",
+   apiFieldName: "remixesOfYourContent",
+   displayVariants: { tableHeader: "Remixes of Your Content", commonName: "Remixes of Your Content", nickname: "Remixes" },
+   aliases: ["Remixes of Your Content", "remixesOfYourContent"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  remixViews: {
+   key: "remixViews",
+   label: "Remix views",
+   unit: "count",
+   apiFieldName: "remixViews",
+   displayVariants: { tableHeader: "Remix views", commonName: "Remix views", nickname: "Remix Views" },
+   aliases: ["Remix views", "remixViews"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  shortsFunnelPercentWatched: {
+   key: "shortsFunnelPercentWatched",
+   label: "Shorts Funnel Percent Watched",
+   unit: "percent",
+   apiFieldName: "shortsFunnelPercentWatched",
+   displayVariants: { tableHeader: "Shorts Funnel Percent Watched", commonName: "Shorts Funnel Percent Watched", nickname: "Shorts Watched %" },
+   aliases: ["Shorts Funnel Percent Watched", "shortsFunnelPercentWatched"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  shortsFunnelSwipeAwayRate: {
+   key: "shortsFunnelSwipeAwayRate",
+   label: "Shorts Funnel Swipe Away Rate",
+   unit: "percent",
+   apiFieldName: "shortsFunnelSwipeAwayRate",
+   displayVariants: { tableHeader: "Shorts Funnel Swipe Away Rate", commonName: "Shorts Funnel Swipe Away Rate", nickname: "Shorts Swipe %" },
+   aliases: ["Shorts Funnel Swipe Away Rate", "shortsFunnelSwipeAwayRate"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
 }
 
 export const canonicalMetricOrder: CanonicalMetricKey[] = [
@@ -628,6 +837,25 @@ export const canonicalMetricOrder: CanonicalMetricKey[] = [
  "endScreenImpressions",
  "endScreenClicks",
  "redWatchHours",
+ "estimatedAdRevenue",
+ "grossRevenue",
+ "playbackBasedCpm",
+ "adImpressions",
+ "monetizedPlaybacks",
+ "estimatedPremiumRevenue",
+ "endScreenElementClicks",
+ "endScreenElementsShown",
+ "clicksPerEndScreenElementShown",
+ "cardClicks",
+ "cardsShown",
+ "clicksPerCardShown",
+ "hypes",
+ "hypePoints",
+ "remixCount",
+ "remixesOfYourContent",
+ "remixViews",
+ "shortsFunnelPercentWatched",
+ "shortsFunnelSwipeAwayRate",
  "likes",
  "dislikes",
  "avp",

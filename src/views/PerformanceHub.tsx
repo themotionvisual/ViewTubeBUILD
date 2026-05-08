@@ -39,10 +39,9 @@ import {
   ZAxis,
  } from "recharts"
  import { SubToolbox, ToolboxScaffold } from "../components/Toolbox"
- import { useBrain } from "../context/GlobalDataContext"
+ import { useBrain } from "../context/useBrain"
  import type { AnalyticsResult, CsvFileWithTag, CsvUploadType } from "../types"
- import { analyzeChannelData, hasGeminiKey } from "../services/gemini"
- import ReportViewer from "../components/ReportViewer"
+ import { hasGeminiKey } from "../services/gemini"
 import {
  buildCsvFilesWithTags,
  expandCsvAndZipFiles,
@@ -88,14 +87,10 @@ import {
  resolveCtrPercent,
  resolveImpressions,
 } from "../services/metricAliasResolver"
-import {
- CHANNEL_ORACLE_PROMPT_VERSION,
- buildChannelOracleInput,
- buildChannelOracleSystemPrompt,
-} from "../services/channelOracle"
 import type { AnalyticsWindow } from "../services/analyticsContract"
 import type { CanonicalMetricKey, MetricCell } from "../services/analyticsContract"
 import {
+ buildDatasetCoverageSummary,
  buildTableMetricMappingStatus,
  buildVideoStatsVerificationSummary,
  canonicalRowsToMasterTableRows,
@@ -126,11 +121,23 @@ import {
  getMasterColumnVisibilityRule,
  getVideoMetricRuntimeStatus,
 } from "../services/analyticsCapabilityMatrix"
+import {
+ evaluateToolCapabilityStatus,
+} from "../services/youtube/apiCapabilityRegistry"
 import { PerformanceHubChartRollout } from "./performanceHub40/PerformanceHubChartRollout"
 import IntelligenceHub from "../components/IntelligenceHub/IntelligenceHub"
 
-type PerformanceTool = "intelligence-lab" | "master-tables" | "channel" | "omni-brain"
+type PerformanceTool =
+ | "intelligence-lab"
+ | "master-tables"
+ | "channel"
 type DataSource = "csv" | "api" | "hybrid"
+type TrafficDatasetMode =
+ | "all"
+ | "youtube_traffic"
+ | "external"
+ | "suggested_videos"
+ | "youtube_search"
 
 type DailyPoint = {
  label: string
@@ -238,12 +245,21 @@ type TableDatasetContract = {
  columns: string[]
 }
 
+const ULTIMATE_REPORT_EVENT = "vt_generate_ultimate_report"
+
 const TABLE_DATASET_CONTRACTS: Record<TableDatasetId, TableDatasetContract> = {
  master: {
   id: "master",
   label: "Master Video Table",
   supportsTagFilter: true,
-  columns: ["Video title", "Video ID", "Format", "Date", ...MASTER_VIDEO_TABLE_HEADERS],
+  columns: [
+   "Video title",
+   "Video ID",
+   "Upload date",
+   "Length",
+   "Format",
+   ...MASTER_VIDEO_TABLE_HEADERS,
+  ],
  },
  daily: {
   id: "daily",
@@ -252,20 +268,22 @@ const TABLE_DATASET_CONTRACTS: Record<TableDatasetId, TableDatasetContract> = {
   columns: [
    "Date",
    "Views",
-   "Watch Hrs",
+   "Watch time (hours)",
+   "Average view duration",
+   "Average percentage viewed (%)",
+   "Engaged views",
+   "Impressions",
+   "Impressions click-through rate (%)",
    "Likes",
    "Comments",
    "Shares",
-   "Subscribers Gained",
-   "Impressions",
-   "CTR",
-   "Revenue",
+   "Subscribers gained",
+   "Subscribers lost",
+   "Estimated revenue (USD)",
+   "Ad Impressions",
+   "Monetized Playbacks",
    "CPM",
    "RPM",
-   "Engaged",
-   "Eng Rate",
-   "AVD",
-   "AVP %",
   ],
  },
  traffic: {
@@ -274,16 +292,22 @@ const TABLE_DATASET_CONTRACTS: Record<TableDatasetId, TableDatasetContract> = {
   supportsTagFilter: false,
   columns: [
    "Traffic source",
+   "Source type",
+   "Source title",
    "Viewer %",
    "Views",
    "Watch Hrs",
-   "Likes",
-   "Comments",
-   "Shares",
-   "Subscribers Gained",
+   "Watch time (hours)",
+   "Engaged views",
+   "Average view duration",
+   "Average percentage viewed (%)",
    "Impressions",
-   "CTR",
-   "Revenue",
+   "Impressions click-through rate (%)",
+   "Playlist watch time (hours)",
+   "Views from playlist",
+   "Views per playlist start",
+   "YouTube Premium views",
+   "YouTube Premium watch time (hours)",
   ],
  },
  audience: {
@@ -291,19 +315,10 @@ const TABLE_DATASET_CONTRACTS: Record<TableDatasetId, TableDatasetContract> = {
   label: "Audience",
   supportsTagFilter: false,
   columns: [
-   "Age Group",
-   "Gender",
-   "Views",
-   "Watch Hrs",
-   "New Viewers",
-   "Returning Viewers",
-   "Casual viewers",
-   "Regular viewers",
-   "Unique viewers",
-   "Engaged",
-   "Eng Rate",
-   "AVD",
-   "AVP %",
+   "Viewer age",
+   "Viewer gender",
+   "Views (%)",
+   "Watch time (hours) (%)",
   ],
  },
  country: {
@@ -312,12 +327,21 @@ const TABLE_DATASET_CONTRACTS: Record<TableDatasetId, TableDatasetContract> = {
   supportsTagFilter: false,
   columns: [
    "Country",
-   "Geography",
    "Viewer %",
    "Views",
    "Watch Hrs",
-   "Subscribers Gained",
-   "Revenue",
+   "Engaged views",
+   "Average view duration",
+   "Average percentage viewed (%)",
+   "Stayed to watch (%)",
+   "Subscribers gained",
+   "Subscribers lost",
+   "Subscribers",
+   "Likes",
+   "Dislikes",
+   "Shares",
+   "Comments added",
+   "Estimated revenue (USD)",
   ],
  },
  device: {
@@ -367,6 +391,25 @@ const MASTER_HEADER_TO_CANONICAL: Partial<Record<string, CanonicalMetricKey>> = 
  "Ann Clicks": "annotationClicks",
  "Ann Closes": "annotationCloses",
  "Red Hrs": "redWatchHours",
+ "Estimated Ad Revenue": "estimatedAdRevenue",
+ "Gross Revenue": "grossRevenue",
+ "Playback Based CPM": "playbackBasedCpm",
+ "Ad Impressions": "adImpressions",
+ "Monetized Playbacks": "monetizedPlaybacks",
+ "Estimated Premium Revenue": "estimatedPremiumRevenue",
+ "End screen element clicks": "endScreenElementClicks",
+ "End screen elements shown": "endScreenElementsShown",
+ "Clicks per end screen element shown (%)": "clicksPerEndScreenElementShown",
+ "Card clicks": "cardClicks",
+ "Cards shown": "cardsShown",
+ "Clicks per card shown (%)": "clicksPerCardShown",
+ Hypes: "hypes",
+ "Hype points": "hypePoints",
+ "Remix count": "remixCount",
+ "Remixes of Your Content": "remixesOfYourContent",
+ "Remix views": "remixViews",
+ "Shorts Funnel Percent Watched": "shortsFunnelPercentWatched",
+ "Shorts Funnel Swipe Away Rate": "shortsFunnelSwipeAwayRate",
 }
 
 const metricCellToProvenance = (
@@ -385,6 +428,12 @@ const METRIC_APPLICABILITY_RULES: Record<string, MetricApplicabilityRule> = {
  "End Screen %": "long-only",
  "Card %": "long-only",
 }
+
+const MASTER_ALWAYS_VISIBLE_HEADERS = new Set<string>([
+ "Impressions",
+ "CTR %",
+ "STW %",
+])
 
 const HEADER_LABELS: Record<string, string> = {
  "Video title": "Title",
@@ -553,6 +602,23 @@ const formatMetricDisplay = (
  return Math.round(value).toLocaleString()
 }
 
+const formatDateAsMmDdYy = (value: unknown): string => {
+ const raw = textFromUnknown(value)
+ if (!raw || raw === "-") return raw || "-"
+ const parsed = new Date(raw)
+ if (Number.isNaN(parsed.getTime())) return raw
+ const mm = String(parsed.getMonth() + 1).padStart(2, "0")
+ const dd = String(parsed.getDate()).padStart(2, "0")
+ const yy = String(parsed.getFullYear()).slice(-2)
+ return `${mm}/${dd}/${yy}`
+}
+
+const formatNumberMax2 = (value: number): string => {
+ if (!Number.isFinite(value)) return "-"
+ if (Number.isInteger(value)) return value.toLocaleString()
+ return value.toLocaleString(undefined, { maximumFractionDigits: 2 })
+}
+
 const pickCtrPercent = (row: Record<string, unknown>): number => {
  const resolved = resolveCtrPercent(row)
  return resolved.value && Number.isFinite(resolved.value) ? resolved.value : 0
@@ -675,7 +741,7 @@ const PerformanceHub: React.FC = () => {
  } = brainContext
 
  const [openTools, setOpenTools] = useState<Set<PerformanceTool>>(
-  () => new Set<PerformanceTool>(["omni-brain", "intelligence-lab", "master-tables"]),
+  () => new Set<PerformanceTool>(["intelligence-lab", "master-tables"]),
  )
  const [analysisLoading, setAnalysisLoading] = useState(false)
  const [pipelineLogTick, setPipelineLogTick] = useState(0)
@@ -688,6 +754,9 @@ const PerformanceHub: React.FC = () => {
  const [tableSearch, setTableSearch] = useState("")
  const [tableTag, setTableTag] = useState("all")
  const [tableDataset, setTableDataset] = useState<TableDatasetId>("master")
+ const [trafficDatasetMode, setTrafficDatasetMode] =
+  useState<TrafficDatasetMode>("all")
+ const [tableColumnOrder, setTableColumnOrder] = useState<string[]>([])
  const [tableLimit, setTableLimit] = useState(500)
  const [sortColumn, setSortColumn] = useState<string | null>(null)
  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc")
@@ -774,7 +843,6 @@ const PerformanceHub: React.FC = () => {
   () => getMetricSummary(analyticsWindow, dataSource, csvFiles),
   [lastSyncComplete, analyticsWindow, dataSource, csvFiles],
  )
-
  const apiRows = useMemo(() => {
   const canonicalRows = canonicalRowsToMasterTableRows(canonicalApiRows)
   return canonicalRows as unknown as UnifiedRow[]
@@ -873,6 +941,48 @@ const PerformanceHub: React.FC = () => {
  return cache.analyticsByWindow?.[analyticsWindow]?.syncDiagnostics || null
  }, [lastSyncComplete, analyticsWindow, pipelineLogTick, readYouTubeAnalyticsCache])
 
+ const ultimateAutoContext = useMemo(() => {
+  const topRows = effectiveCanonicalRows.slice(0, 12)
+  const rowSummary = topRows
+   .map((row, index) => {
+    const title = textFromUnknown(row.title || row.videoId || `video-${index + 1}`)
+    const views = getViews(row as unknown as UnifiedRow)
+    const ctr = getCtr(row as unknown as UnifiedRow)
+    const avp = getAvpPercent(row as unknown as UnifiedRow)
+    return `${index + 1}. ${title} | views=${Math.round(views)} | ctr=${ctr.toFixed(2)} | avp=${avp.toFixed(2)}`
+   })
+   .join("\n")
+  const metricSummary = selectedMetricSummary
+   ? JSON.stringify(selectedMetricSummary).slice(0, 1800)
+   : "none"
+  const diagnosticsSummary = analyticsSyncDiagnostics
+   ? JSON.stringify(analyticsSyncDiagnostics).slice(0, 1800)
+   : "none"
+  return [
+   `Window: ${analyticsWindow}`,
+   `Data source mode: ${dataSource}`,
+   `Canonical rows: ${effectiveCanonicalRows.length}`,
+   `CSV files: ${csvFiles.length}`,
+   `Top canonical rows:\n${rowSummary}`,
+   `Metric summary:\n${metricSummary}`,
+   `Sync diagnostics:\n${diagnosticsSummary}`,
+   "Generate a complete 14-block creator-focused channel analysis report with actionable recommendations.",
+  ].join("\n\n")
+ }, [
+  effectiveCanonicalRows,
+  selectedMetricSummary,
+  analyticsSyncDiagnostics,
+  analyticsWindow,
+  dataSource,
+  csvFiles.length,
+ ])
+ const ultimateDataSources = useMemo(() => {
+  const sources = ["youtube-analytics-cache", "canonical-master-rows", "ultimate-report-engine"]
+  if (csvFiles.length > 0) sources.push("csv-uploads")
+  if (syncSourceMode === "api_analytics" || syncSourceMode === "both") sources.push("youtube-api")
+  return sources
+ }, [csvFiles.length, syncSourceMode])
+
  const creatorContentTypeDiagnostic = useMemo(() => {
   const cache = readYouTubeAnalyticsCache() as {
    videoContentTypeStatus?: {
@@ -899,7 +1009,7 @@ const PerformanceHub: React.FC = () => {
   }
  }, [lastSyncComplete, pipelineLogTick, readYouTubeAnalyticsCache])
 
- const impressionsCtrDiagnostic = useMemo(() => {
+const impressionsCtrDiagnostic = useMemo(() => {
  if (!analyticsSyncDiagnostics) return null
   const impressionsStatus = getVideoMetricRuntimeStatus(
    "videoThumbnailImpressions",
@@ -944,8 +1054,23 @@ const PerformanceHub: React.FC = () => {
   return {
    status: "error" as const,
    label: `Impressions/CTR Sync: ${code} · ${reason}`,
-  }
- }, [analyticsSyncDiagnostics, effectiveCanonicalRows.length])
+ }
+}, [analyticsSyncDiagnostics, effectiveCanonicalRows.length])
+
+ const toolCapabilityHealth = useMemo(() => {
+  const accountContext = "creator" as const
+  const tools = [
+   "performance-hub",
+   "analytics-sync",
+   "video-manager",
+   "video-publisher",
+   "channel",
+  ]
+  return tools.map((toolId) => ({
+   toolId,
+   status: evaluateToolCapabilityStatus(toolId, accountContext),
+  }))
+ }, [])
 
  useEffect(() => {
   setTableLimit(500)
@@ -1109,94 +1234,18 @@ const PerformanceHub: React.FC = () => {
  }
 
  const runAnalysis = async () => {
-  if (filteredUnifiedRows.length === 0) return
   if (!hasGeminiKey()) {
-   alert(
-    "Gemini key missing. Open System -> Key Vault and save your Gemini API key.",
-   )
+   alert("Gemini key missing. Open System -> Key Vault and save your Gemini API key.")
    return
   }
   setAnalysisLoading(true)
   try {
-   const reportRows = filteredUnifiedRows.slice(0, 500)
-   const csvContent = buildCsvFromRows(reportRows)
-   const cache = readYouTubeAnalyticsCache() as Record<string, unknown>
-   const channelOracleInput = buildChannelOracleInput({
-    analyticsWindow,
-    fullChannelStats: {
-     views: selectedMetricSummary.totals.views ?? 0,
-     watchHours: selectedMetricSummary.totals.watchHours ?? 0,
-     subscribers: selectedMetricSummary.totals.subscribersGained ?? 0,
-     revenue: selectedMetricSummary.totals.revenue ?? 0,
-     rpm:
-      selectedMetricSummary.averages.rpm ??
-      ((selectedMetricSummary.totals.views || 0) > 0
-       ? ((selectedMetricSummary.totals.revenue || 0) /
-          (selectedMetricSummary.totals.views || 1)) *
-         1000
-       : 0),
-     ctr: selectedMetricSummary.averages.ctr ?? 0,
-    },
-    trafficSources: cache["trafficSources"],
-    geography: cache["geography"] || cache["countryAnalytics"] || cache["audienceByCountry"],
-    demographics: cache["demographics"],
-    dailyMetrics: cache["dailyMetrics"],
-    topVideos: reportRows as Array<Record<string, unknown>>,
-   })
-   const customSystemPrompt = buildChannelOracleSystemPrompt(channelOracleInput)
-   const inputBytes = new TextEncoder().encode(JSON.stringify(channelOracleInput)).length
-   const resultPromise = analyzeChannelData(csvContent, customSystemPrompt, (partial) => {
-    const merged = {
-     ...(brain.channelyticsState.analyticsResult || {}),
-     ...(partial || {}),
-    } as AnalyticsResult
-    setUnifiedAnalysisResult(merged)
-   })
-   const timeoutPromise = new Promise<never>((_, reject) => {
-    window.setTimeout(() => reject(new Error("Report generation timed out after 120s")), 120000)
-   })
-   const result = (await Promise.race([resultPromise, timeoutPromise])) as AnalyticsResult
-   setUnifiedAnalysisResult({
-    ...result,
-    meta: {
-     ...(result.meta || {}),
-     oraclePromptVersion: CHANNEL_ORACLE_PROMPT_VERSION,
-     inputBytes,
-     generatedAt: new Date().toISOString(),
-    },
-   })
    setOpenTools((previous) => {
     const next = new Set(previous)
-    next.add("channel-analysis")
+    next.add("intelligence-lab")
     return next
    })
-  } catch (error) {
-   console.error("Channel analysis failed", error)
-   const fallback: AnalyticsResult = {
-    executiveSummary:
-     "Oracle report generation failed. Sync data is still available in visualizations and tables.",
-    stats: {
-     views: selectedMetricSummary.totals.views ?? 0,
-     watchTime: selectedMetricSummary.totals.watchHours ?? 0,
-     revenue: selectedMetricSummary.totals.revenue ?? 0,
-     subscribers: selectedMetricSummary.totals.subscribersGained ?? 0,
-     rpm: selectedMetricSummary.averages.rpm ?? 0,
-     ctr: selectedMetricSummary.averages.ctr ?? 0,
-    },
-    sections: [
-     {
-      title: "Report Generation Error",
-      content: `Reason: ${error instanceof Error ? error.message : "Unknown error"}. You can retry report generation; synced channel analytics remain available.`,
-     },
-    ],
-    meta: {
-      oraclePromptVersion: CHANNEL_ORACLE_PROMPT_VERSION,
-      generatedAt: new Date().toISOString(),
-      warnings: ["Fallback report emitted due to model/runtime failure."],
-    },
-   }
-   setUnifiedAnalysisResult(fallback)
-   alert("Channel analysis failed. A fallback report summary was generated.")
+   window.dispatchEvent(new Event(ULTIMATE_REPORT_EVENT))
   } finally {
    setAnalysisLoading(false)
   }
@@ -1951,15 +2000,36 @@ const PerformanceHub: React.FC = () => {
   index: number,
   datasetId: TableDatasetId,
  ): string => {
-  const formatValue = textFromUnknown(
-   row["Format"] || row["Type"] || row["type"],
-  ).toLowerCase()
-  const isShortFormat = formatValue.includes("short")
-  const applicability = METRIC_APPLICABILITY_RULES[header] || "all"
-  if (datasetId === "master") {
-   if (applicability === "shorts-only" && !isShortFormat) return "N/A"
-   if (applicability === "long-only" && isShortFormat) return "N/A"
-  }
+ const formatValue = textFromUnknown(
+  row["Format"] || row["Type"] || row["type"],
+ ).toLowerCase()
+ const isShortFormat = formatValue.includes("short")
+ const hasCsvAnalytics = csvFiles.length > 0
+ const applicability = METRIC_APPLICABILITY_RULES[header] || "all"
+ if (datasetId === "master") {
+  if (applicability === "shorts-only" && !isShortFormat) return "=="
+  if (applicability === "long-only" && isShortFormat) return "=="
+ }
+
+ if (datasetId === "master" && header === "Impressions") {
+  if (!hasCsvAnalytics) return "-"
+  if (isShortFormat) return "=="
+  const impressions = getImpressions(row)
+  return impressions > 0 ? impressions.toLocaleString() : "-"
+ }
+
+ if (datasetId === "master" && (header === "CTR %" || header === "CTR")) {
+  if (!hasCsvAnalytics) return "-"
+  if (isShortFormat) return "=="
+  const ctr = getCtr(row)
+  return ctr > 0 ? `${ctr.toFixed(2)}%` : "-"
+ }
+
+ if (datasetId === "master" && header === "STW %") {
+  if (!isShortFormat) return "=="
+  const stw = getMetric(row, ["STW %", "Stayed to watch (%)"])
+  return stw > 0 ? `${stw.toFixed(2)}%` : "-"
+ }
 
   const metricCell = getHeaderMetricCell(row as Record<string, unknown>, header)
   if (metricCell) {
@@ -2010,9 +2080,7 @@ const PerformanceHub: React.FC = () => {
     return `${m}:${String(s).padStart(2, "0")}`
    }
 
-   return Number.isInteger(value)
-    ? value.toLocaleString()
-    : value.toLocaleString(undefined, { maximumFractionDigits: 3 })
+   return formatNumberMax2(value)
   }
 
   if (
@@ -2042,16 +2110,10 @@ const PerformanceHub: React.FC = () => {
    return textFromUnknown(row["Format"] || row["Type"] || row["type"] || "-")
   if (header === "Upload date") {
    const val = textFromUnknown(row["Upload date"] || row["Video publish time"] || row["Date"] || "-")
-   if (val !== "-") {
-    const rawDate = new Date(val)
-    if (!isNaN(rawDate.getTime())) {
-     return `${String(rawDate.getMonth() + 1).padStart(2, "0")}/${String(rawDate.getDate()).padStart(2, "0")}/${String(rawDate.getFullYear()).slice(-2)}`
-    }
-   }
-   return val
+   return formatDateAsMmDdYy(val)
   }
-  if (header === "Date" || header === "Video publish time")
-   return getDateLabel(row)
+  if (header === "Date" || header === "Day" || header === "Video publish time")
+   return formatDateAsMmDdYy(getDateLabel(row))
   if (header === "Views") return getViews(row).toLocaleString()
   if (header === "Impressions") return getImpressions(row).toLocaleString()
   if (header === "Engaged" || header === "Engaged views")
@@ -2064,9 +2126,7 @@ const PerformanceHub: React.FC = () => {
     getMetric(row, ["Subs +", "Subscribers Gained", "Subscribers"]),
    ).toLocaleString()
   if (header === "CPM")
-   return getMetric(row, ["CPM", "CPM (USD)"]).toLocaleString(undefined, {
-    maximumFractionDigits: 3,
-   })
+   return formatNumberMax2(getMetric(row, ["CPM", "CPM (USD)"]))
   if (header === "Duration (sec)") {
    const duration = numberFromUnknown(
     row["Duration (sec)"] || row["durationSeconds"] || row["Duration"],
@@ -2111,9 +2171,7 @@ const PerformanceHub: React.FC = () => {
     maximumFractionDigits: 2,
    })
   if (header === "Subscribers Gained" || header === "Subscribers")
-   return getSubscribers(row).toLocaleString(undefined, {
-    maximumFractionDigits: 3,
-   })
+   return formatNumberMax2(getSubscribers(row))
   if (
    header === "CTR %" ||
    header === "CTR" ||
@@ -2121,7 +2179,7 @@ const PerformanceHub: React.FC = () => {
    header === "Impressions click-through rate (%)" ||
    header === "Click-Through Rate (CTR)"
   )
-   return getCtr(row).toLocaleString(undefined, { maximumFractionDigits: 3 })
+   return formatNumberMax2(getCtr(row))
   if ((header === "Data Provenance" || header === "Data Src") && datasetId === "master") {
    const cells = (row as Partial<MasterTableRow>).__metricCells
    if (!cells) return "Unavailable"
@@ -2253,11 +2311,136 @@ const PerformanceHub: React.FC = () => {
    header === "Your estimated revenue (USD)"
   )
    return `$${getRevenue(row).toFixed(2)}`
-  if (header === "RPM")
-   return getRpm(row).toLocaleString(undefined, { maximumFractionDigits: 3 })
+ if (header === "RPM")
+   return formatNumberMax2(getRpm(row))
 
   const raw = textFromUnknown(row[header])
-  return raw === "" ? "-" : raw
+  if (raw === "") return "-"
+  const numericRaw = Number(raw.replace(/,/g, ""))
+  if (Number.isFinite(numericRaw) && /^-?[\d,.]+(\.\d+)?$/.test(raw.trim())) {
+   return formatNumberMax2(numericRaw)
+  }
+  return raw
+ }
+
+const normalizeCountryKey = (value: unknown): string =>
+  textFromUnknown(value).trim().toUpperCase()
+
+const COUNTRY_CODE_ALIASES: Record<string, string> = {
+ UK: "GB",
+ USA: "US",
+}
+
+const countryDisplayNames =
+ typeof Intl !== "undefined" && typeof Intl.DisplayNames === "function"
+  ? new Intl.DisplayNames(["en"], { type: "region" })
+  : null
+
+const toCountryFullName = (value: unknown): string => {
+ const raw = textFromUnknown(value).trim()
+ if (!raw) return ""
+ const clean = raw.replace(/\s+/g, " ").trim()
+ const upper = clean.toUpperCase()
+ const alias = COUNTRY_CODE_ALIASES[upper] || upper
+ if (/^[A-Z]{2}$/.test(alias)) {
+  const fromCode = countryDisplayNames?.of(alias)
+  if (fromCode) return fromCode
+ }
+ return clean
+}
+
+const isTotalLikeLabel = (value: unknown): boolean => {
+ const normalized = textFromUnknown(value).trim().toLowerCase()
+ return (
+  normalized === "total" ||
+  normalized === "totals" ||
+  normalized === "all" ||
+  normalized === "all countries"
+ )
+}
+
+const normalizeDateKey = (value: unknown): string => {
+  const text = textFromUnknown(value).trim()
+  if (!text) return ""
+  const direct = text.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (direct) return direct[0]
+  const date = new Date(text)
+  if (Number.isNaN(date.getTime())) return text
+  const y = date.getUTCFullYear()
+  const m = String(date.getUTCMonth() + 1).padStart(2, "0")
+  const d = String(date.getUTCDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
+ }
+
+ const normalizeSourceText = (value: unknown): string =>
+  textFromUnknown(value).trim().toLowerCase()
+
+const classifyTrafficCategory = (
+ sourceType: unknown,
+ sourceTitle: unknown,
+ trafficSource: unknown,
+): TrafficDatasetMode | "other" => {
+ const sourceTypeText = normalizeSourceText(sourceType)
+ const sourceTitleText = normalizeSourceText(sourceTitle)
+ const trafficSourceText = normalizeSourceText(trafficSource)
+ const haystack = [sourceTypeText, sourceTitleText, trafficSourceText].join(" ")
+
+ if (
+  trafficSourceText.startsWith("yt_related.") ||
+  sourceTypeText === "content" ||
+  haystack.includes("suggested videos")
+ ) {
+  return "suggested_videos"
+ }
+
+ if (
+  trafficSourceText.startsWith("yt_search.") ||
+  haystack.includes("youtube search") ||
+  haystack.includes("search terms") ||
+  haystack.includes("search term")
+ ) {
+  return "youtube_search"
+ }
+ if (
+  trafficSourceText.startsWith("ext_url.") ||
+  haystack.includes("external") ||
+  haystack.includes("website") ||
+  haystack.includes("app")
+ ) {
+  return "external"
+ }
+ if (
+  haystack.includes("shorts feed") ||
+  haystack.includes("browse features") ||
+  haystack.includes("channel pages") ||
+  haystack.includes("other youtube features") ||
+  haystack.includes("notifications") ||
+  haystack.includes("playlists") ||
+  haystack.includes("direct or unknown")
+ ) {
+  return "youtube_traffic"
+ }
+ return "other"
+}
+
+ type GeographyCsvRow = {
+  countryKey: string
+  row: Record<string, unknown>
+ }
+
+type AudienceGrowthCsvRow = {
+ dateKey: string
+ row: Record<string, unknown>
+}
+
+type AudienceDemographicsCsvRow = {
+ row: Record<string, unknown>
+}
+
+ type CsvSignatureRule = {
+  id: string
+  requiredHeaders: string[]
+  family: "traffic" | "geography" | "growth" | "retention"
  }
 
  const tableDatasets = useMemo<
@@ -2280,6 +2463,107 @@ const PerformanceHub: React.FC = () => {
     normalizeAndEnrichRow(row as Record<string, unknown>),
    ) as UnifiedRow[]
 
+  const geographyCsvRows: GeographyCsvRow[] = []
+  const growthCsvRows: AudienceGrowthCsvRow[] = []
+  const audienceDemographicsCsvRows: AudienceDemographicsCsvRow[] = []
+  const audienceRetentionRows: UnifiedRow[] = []
+  const csvSignatureRules: CsvSignatureRule[] = [
+   { id: "traffic_legacy_5", family: "traffic", requiredHeaders: ["Traffic source", "Views", "Watch time (hours)", "Impressions", "Impressions click-through rate (%)"] },
+   { id: "traffic_enriched_13", family: "traffic", requiredHeaders: ["Traffic source", "Engaged views", "Average view duration", "Average percentage viewed (%)", "Views", "Watch time (hours)", "Impressions", "Impressions click-through rate (%)"] },
+   { id: "traffic_detail_12", family: "traffic", requiredHeaders: ["Traffic source", "Source type", "Source title", "Views", "Watch time (hours)", "Impressions", "Impressions click-through rate (%)"] },
+   { id: "traffic_detail_10", family: "traffic", requiredHeaders: ["Traffic source", "Source type", "Source title", "Views", "Watch time (hours)"] },
+   { id: "traffic_compact_7", family: "traffic", requiredHeaders: ["Traffic source", "Source type", "Source title", "Views", "Watch time (hours)", "Impressions", "Impressions click-through rate (%)"] },
+  ]
+
+  csvFiles.forEach((file) => {
+   const rows = Array.isArray(file.data) ? (file.data as Record<string, unknown>[]) : []
+   if (rows.length === 0) return
+   const headers = new Set(Object.keys(rows[0]))
+
+   const isGeographyCsv =
+    headers.has("Geography") &&
+    (headers.has("Views") || headers.has("Watch time (hours)"))
+   if (isGeographyCsv) {
+    rows.forEach((row) => {
+      const country = row["Geography"] || row["Country"] || row["country"]
+      const countryKey = normalizeCountryKey(country)
+      if (!countryKey || countryKey === "TOTAL") return
+      geographyCsvRows.push({ countryKey, row })
+    })
+    return
+   }
+
+   const isDateGrowthCsv = headers.has("Date")
+   if (isDateGrowthCsv) {
+    rows.forEach((row) => {
+      const dateKey = normalizeDateKey(row["Date"])
+      if (!dateKey) return
+      growthCsvRows.push({ dateKey, row })
+    })
+    return
+   }
+
+   const isAudienceDemographicsCsv =
+    headers.has("Viewer age") &&
+    headers.has("Viewer gender") &&
+    headers.has("Views (%)") &&
+    headers.has("Watch time (hours) (%)")
+   if (isAudienceDemographicsCsv) {
+    rows.forEach((row) => {
+     const age = textFromUnknown(row["Viewer age"])
+     const gender = textFromUnknown(row["Viewer gender"])
+     if (!age && !gender) return
+     audienceDemographicsCsvRows.push({ row })
+    })
+    return
+   }
+
+   const isRetentionCsv =
+    headers.has("Video position (%)") &&
+    (headers.has("Absolute audience retention (%)") ||
+     headers.has("Number of times each moment was seen"))
+   if (isRetentionCsv) {
+    rows.forEach((row, index) => {
+      const position = numberFromUnknown(row["Video position (%)"])
+      const retention = numberFromUnknown(row["Absolute audience retention (%)"])
+      const audienceType =
+       textFromUnknown(
+        row["Audience by watch behavior"] ||
+         row["New and Returning Viewers"] ||
+         row["Subscription status"] ||
+         row["Audience type"],
+       ) || "All"
+      audienceRetentionRows.push({
+       ...normalizeAndEnrichRow(row),
+       _id: `${file.id}-retention-${index}`,
+       _sourceFile: file.name,
+       _userTag: file.tag,
+       Date: `${position}%`,
+       "Video position (%)": position,
+       "Absolute audience retention (%)": retention,
+       "Compared to other videos (%)": numberFromUnknown(row["Compared to other videos (%)"]),
+       "Started watching": numberFromUnknown(row["Started watching"]),
+       "Stopped watching": numberFromUnknown(row["Stopped watching"]),
+       "Number of times each moment was seen": numberFromUnknown(row["Number of times each moment was seen"]),
+       "Audience by watch behavior": textFromUnknown(row["Audience by watch behavior"]),
+       "New and Returning Viewers": textFromUnknown(row["New and Returning Viewers"]),
+       "Subscription status": textFromUnknown(row["Subscription status"]),
+       "Audience Type": audienceType,
+      } as UnifiedRow)
+    })
+   }
+  })
+
+  const geographyCsvByCountry = new Map<string, Record<string, unknown>>()
+  geographyCsvRows.forEach(({ countryKey, row }) => {
+   geographyCsvByCountry.set(countryKey, row)
+  })
+  const growthCsvByDate = new Map<string, Record<string, unknown>>()
+  growthCsvRows.forEach(({ dateKey, row }) => {
+   const existing = growthCsvByDate.get(dateKey) || {}
+   growthCsvByDate.set(dateKey, { ...existing, ...row })
+  })
+
   const dailyRows = normalizedReportRows(cache?.dailyMetrics, "daily", "Daily Metrics").map(
    (row, index) => {
     const views = getViews(row)
@@ -2290,6 +2574,10 @@ const PerformanceHub: React.FC = () => {
     const ctr = getCtr(row)
     const rpm = getRpm(row)
     const cpm = impressions > 0 && revenue > 0 ? (revenue / impressions) * 1000 : 0
+    const dateKey = normalizeDateKey(
+     row["Date"] || row["day"] || row["Day"] || row["Upload date"],
+    )
+    const growthRow = growthCsvByDate.get(dateKey) || {}
 
     return {
      ...row,
@@ -2297,23 +2585,57 @@ const PerformanceHub: React.FC = () => {
       textFromUnknown(
        row["Date"] || row["day"] || row["Day"] || row["Upload date"],
       ) || `Day ${index + 1}`,
-    Views: views,
-    Likes: getLikes(row),
-    Comments: getComments(row),
-    Shares: getShares(row),
-    "Watch Hrs": watchHours,
-    "Subscribers Gained": subscribers,
-    "Subs +": subscribers,
-    Impressions: impressions,
-    Revenue: revenue,
-    RPM: rpm > 0 ? rpm : views > 0 && revenue > 0 ? (revenue / views) * 1000 : 0,
-    CPM: cpm,
-    CTR: ctr,
+     Day: textFromUnknown(row["Day"] || row["day"] || ""),
+     Views: views,
+     Likes: getLikes(row),
+     Dislikes: getMetric(row, ["Dislikes", "dislikes"]),
+     Comments: getComments(row),
+     Shares: getShares(row),
+     "Watch Hrs": watchHours,
+     "Watch time (hours)": watchHours,
+     "Watch Time Minutes": watchHours * 60,
+     "Average view duration": getAvdSeconds(row),
+     "Average percentage viewed (%)": getAvpPercent(row),
+     "Engaged views": getMetric(row, ["Engaged views", "engagedViews"]),
+     "Subscribers Gained": subscribers,
+     "Subscribers gained": subscribers,
+     "Subscribers lost": getMetric(row, ["Subscribers lost", "subscribersLost"]),
+     "Subs +": subscribers,
+     Impressions: impressions,
+     "Impressions click-through rate (%)": ctr,
+     Revenue: revenue,
+     "Estimated revenue (USD)": revenue,
+     "Estimated Revenue": revenue,
+     "Estimated Ad Revenue": getMetric(row, ["Estimated Ad Revenue", "estimatedAdRevenue"]),
+     "Gross Revenue": getMetric(row, ["Gross Revenue", "grossRevenue"]),
+     "Ad Impressions": getMetric(row, ["Ad Impressions", "adImpressions"]),
+     "Monetized Playbacks": getMetric(row, ["Monetized Playbacks", "monetizedPlaybacks"]),
+     RPM:
+      rpm > 0 ? rpm : views > 0 && revenue > 0 ? (revenue / views) * 1000 : 0,
+     CPM: cpm,
+     CTR: ctr,
+     "Peak Concurrent Viewers": getMetric(row, ["Peak Concurrent Viewers", "peakConcurrentViewers"]),
+     "Average Concurrent Viewers": getMetric(row, ["Average Concurrent Viewers", "averageConcurrentViewers"]),
+     "Transaction Revenue": getMetric(row, ["Transaction Revenue", "transactionRevenue"]),
+     "Reserved Ad Revenue": getMetric(row, ["Reserved Ad Revenue", "reservedAdRevenue"]),
+     "Auction Ad Revenue": getMetric(row, ["Auction Ad Revenue", "auctionAdRevenue"]),
+     new_viewers: getMetric(row, ["new_viewers", "newViewers"]),
+     casual_viewers: getMetric(row, ["casual_viewers", "casualViewers"]),
+     regular_viewers: getMetric(row, ["regular_viewers", "regularViewers"]),
+     subscribers: getMetric(row, ["subscribers", "subscribersGained"]),
+     "Monthly audience": numberFromUnknown(growthRow["Monthly audience"]),
+     "28-day new viewers": numberFromUnknown(growthRow["28-day new viewers"]),
+     "28-day casual viewers": numberFromUnknown(growthRow["28-day casual viewers"]),
+     "28-day regular viewers": numberFromUnknown(growthRow["28-day regular viewers"]),
+     Subscribers:
+      numberFromUnknown(growthRow["Subscribers"]) ||
+      numberFromUnknown(growthRow["subscribers"]) ||
+      getMetric(row, ["subscribers", "Subscribers"]),
     } as UnifiedRow
    },
   ).reverse()
 
-  const trafficRowsRaw = normalizedReportRows(
+  const apiTrafficRows = normalizedReportRows(
    cache?.trafficSources,
    "traffic",
    "Traffic Sources",
@@ -2326,32 +2648,150 @@ const PerformanceHub: React.FC = () => {
       row["trafficSource"] ||
       row["Dimension"],
     ) || `Source ${index + 1}`,
+   "Source type": textFromUnknown(row["Source type"] || row["sourceType"]),
+   "Source title": textFromUnknown(row["Source title"] || row["sourceTitle"]),
    Views: getViews(row),
-   Likes: getLikes(row),
-   Comments: getComments(row),
-   Shares: getShares(row),
    "Watch Hrs": getWatchHours(row),
-   "Subscribers Gained": getSubscribers(row),
-   Revenue: getRevenue(row),
+   "Watch time (hours)": getWatchHours(row),
+   "Engaged views": getMetric(row, ["Engaged views", "engagedViews"]),
+   "Average view duration":
+    row["Average view duration"] || row["averageViewDuration"] || "-",
+   "Average percentage viewed (%)":
+    getMetric(row, ["Average percentage viewed (%)", "averageViewPercentage"]),
    Impressions: getImpressions(row),
-   CTR: getCtr(row),
-  })) as UnifiedRow[]
+   "Impressions click-through rate (%)": getCtr(row),
+   "Playlist watch time (hours)": getMetric(row, ["Playlist watch time (hours)"]),
+   "Views from playlist": getMetric(row, ["Views from playlist"]),
+   "Views per playlist start": getMetric(row, ["Views per playlist start"]),
+   "YouTube Premium views": getMetric(row, ["YouTube Premium views"]),
+   "YouTube Premium watch time (hours)": getMetric(row, ["YouTube Premium watch time (hours)"]),
+   __trafficCategory: "other",
+  })) as (UnifiedRow & { __trafficCategory?: string })[]
 
-  const trafficTotalViews = trafficRowsRaw.reduce((sum, row) => sum + (row["Views"] as number || 0), 0)
-  
-  const trafficRows = trafficRowsRaw.map(row => ({
-   ...row,
-   "Viewer %": trafficTotalViews > 0 ? ((row["Views"] as number || 0) / trafficTotalViews) * 100 : 0
-  })).sort((a, b) => ((b["Views"] as number) || 0) - ((a["Views"] as number) || 0))
+  const trafficCsvRows = csvFiles.flatMap((file) => {
+   const rows = Array.isArray(file.data) ? (file.data as Record<string, unknown>[]) : []
+   if (rows.length === 0) return []
+   const first = rows[0] || {}
+   const headerList = Object.keys(first)
+   const matchedTrafficSignature = csvSignatureRules.find(
+    (signature) =>
+     signature.family === "traffic" &&
+     signature.requiredHeaders.every((header) => headerList.includes(header)),
+   )
+   if (!matchedTrafficSignature) return []
+
+   return rows
+    .filter((row) => normalizeSourceText(row["Traffic source"]) !== "total")
+    .map((row, index) => {
+     const trafficSource = textFromUnknown(row["Traffic source"])
+     const sourceType = textFromUnknown(row["Source type"])
+     const sourceTitle = textFromUnknown(row["Source title"])
+     const signatureCategory: TrafficDatasetMode | null =
+      matchedTrafficSignature.id === "traffic_enriched_13" ? "youtube_traffic"
+      : matchedTrafficSignature.id === "traffic_detail_12" ? "external"
+      : matchedTrafficSignature.id === "traffic_detail_10" ? "suggested_videos"
+      : matchedTrafficSignature.id === "traffic_compact_7" ? "youtube_search"
+      : null
+     const category =
+      signatureCategory ||
+      classifyTrafficCategory(sourceType, sourceTitle, trafficSource)
+     return {
+      ...normalizeAndEnrichRow(row),
+      _id: `${file.id}-traffic-${index}`,
+      _sourceFile: file.name,
+      _userTag: "traffic",
+      _window: file.analyticsWindow || "unknown",
+      "Traffic source": trafficSource || `Source ${index + 1}`,
+      "Source type": sourceType,
+      "Source title": sourceTitle,
+      Views: numberFromUnknown(row["Views"]),
+      "Watch Hrs": numberFromUnknown(row["Watch time (hours)"]),
+      "Watch time (hours)": numberFromUnknown(row["Watch time (hours)"]),
+      "Engaged views": numberFromUnknown(row["Engaged views"]),
+      "Average view duration": row["Average view duration"] || "-",
+      "Average percentage viewed (%)": numberFromUnknown(row["Average percentage viewed (%)"]),
+      Impressions: numberFromUnknown(row["Impressions"]),
+      "Impressions click-through rate (%)": numberFromUnknown(row["Impressions click-through rate (%)"]),
+      "Playlist watch time (hours)": numberFromUnknown(row["Playlist watch time (hours)"]),
+      "Views from playlist": numberFromUnknown(row["Views from playlist"]),
+      "Views per playlist start": numberFromUnknown(row["Views per playlist start"]),
+      "YouTube Premium views": numberFromUnknown(row["YouTube Premium views"]),
+      "YouTube Premium watch time (hours)": numberFromUnknown(row["YouTube Premium watch time (hours)"]),
+      __trafficCategory: category,
+     } as UnifiedRow & { __trafficCategory?: string; _window?: string }
+    })
+  })
+
+  const mergedTrafficByKey = new Map<string, UnifiedRow & { __trafficCategory?: string }>()
+  const stableTrafficKey = (row: Record<string, unknown>) =>
+   [
+    textFromUnknown(row["_window"] || "unknown"),
+    normalizeSourceText(row["Traffic source"]),
+    normalizeSourceText(row["Source type"]),
+    normalizeSourceText(row["Source title"]),
+   ].join("|")
+
+  ;[...apiTrafficRows, ...trafficCsvRows].forEach((row) => {
+   const sourceCategory = classifyTrafficCategory(
+    row["Source type"],
+    row["Source title"],
+    row["Traffic source"],
+   )
+   const key = stableTrafficKey(row)
+   const existing = mergedTrafficByKey.get(key)
+   if (!existing) {
+    mergedTrafficByKey.set(key, {
+     ...row,
+     __trafficCategory:
+      textFromUnknown(row.__trafficCategory) || sourceCategory || "other",
+    })
+    return
+   }
+   const merged = { ...row, ...existing } as UnifiedRow & { __trafficCategory?: string }
+   const numericFields = [
+    "Views",
+    "Watch Hrs",
+    "Watch time (hours)",
+    "Engaged views",
+    "Impressions",
+    "Impressions click-through rate (%)",
+   ] as const
+   numericFields.forEach((field) => {
+    const existingValue = numberFromUnknown(existing[field])
+    const rowValue = numberFromUnknown(row[field])
+    merged[field] = existingValue > 0 ? existingValue : rowValue
+   })
+   merged.__trafficCategory =
+    textFromUnknown(existing.__trafficCategory) ||
+    textFromUnknown(row.__trafficCategory) ||
+    sourceCategory ||
+    "other"
+   mergedTrafficByKey.set(key, merged)
+  })
+
+  const trafficRowsRaw = Array.from(mergedTrafficByKey.values())
+  const trafficTotalViews = trafficRowsRaw.reduce(
+   (sum, row) => sum + (numberFromUnknown(row["Views"]) || 0),
+   0,
+  )
+  const trafficRows = trafficRowsRaw
+   .map((row) => ({
+    ...row,
+    "Viewer %":
+     trafficTotalViews > 0
+      ? (numberFromUnknown(row["Views"]) / trafficTotalViews) * 100
+      : 0,
+   }))
+   .sort((a, b) => numberFromUnknown(b["Views"]) - numberFromUnknown(a["Views"]))
 
   const geographyReport =
    cache?.geography ||
    cache?.countryAnalytics ||
    cache?.audienceByCountry ||
    cache?.demographics
-  let countryRows = normalizedReportRows(geographyReport, "country", "Geography").map(
-   (row, index) => {
-    const countryLabel =
+  let countryRows = normalizedReportRows(geographyReport, "country", "Geography")
+   .map((row, index) => {
+    const countryLabelRaw =
      textFromUnknown(
       row["Country"] || row["country"] || row["Geography"] || row["Dimension"],
      ) ||
@@ -2359,24 +2799,74 @@ const PerformanceHub: React.FC = () => {
       .filter(Boolean)
       .join(" · ") ||
      `Segment ${index + 1}`
+    if (isTotalLikeLabel(countryLabelRaw)) return null
+    const countryLabel = toCountryFullName(countryLabelRaw)
 
+    const csvGeo = geographyCsvByCountry.get(normalizeCountryKey(countryLabel)) || {}
     return {
      ...row,
+     ...csvGeo,
      Country: countryLabel,
      Geography: countryLabel,
      "Viewer %": numberFromUnknown(
-      row["Viewer percentage"] ||
-       row["viewerPercentage"] ||
-       row["viewer_percentage"] ||
-       row["Views"],
+      row["Viewer percentage"] || row["viewerPercentage"] || row["viewer_percentage"],
      ),
      Views: getViews(row),
      "Watch Hrs": getWatchHours(row),
      Revenue: getRevenue(row),
      "Subscribers Gained": getSubscribers(row),
+     "Engaged views":
+      numberFromUnknown(row["Engaged views"]) ||
+      numberFromUnknown(csvGeo["Engaged views"]),
+     "Average view duration":
+      row["Average view duration"] || csvGeo["Average view duration"] || "-",
+     "Average percentage viewed (%)":
+      numberFromUnknown(row["Average percentage viewed (%)"]) ||
+      numberFromUnknown(csvGeo["Average percentage viewed (%)"]),
+     "Stayed to watch (%)":
+      numberFromUnknown(row["Stayed to watch (%)"]) ||
+      numberFromUnknown(csvGeo["Stayed to watch (%)"]),
+     "Subscribers gained":
+      numberFromUnknown(row["Subscribers gained"]) ||
+      numberFromUnknown(csvGeo["Subscribers gained"]),
+     "Subscribers lost":
+      numberFromUnknown(row["Subscribers lost"]) ||
+      numberFromUnknown(csvGeo["Subscribers lost"]),
+     "Comments added":
+      numberFromUnknown(row["Comments added"]) ||
+      numberFromUnknown(csvGeo["Comments added"]),
+     "Estimated revenue (USD)":
+      numberFromUnknown(row["Estimated revenue (USD)"]) ||
+      numberFromUnknown(csvGeo["Estimated revenue (USD)"]),
+     Subscribers:
+      numberFromUnknown(row["Subscribers"]) ||
+      numberFromUnknown(csvGeo["Subscribers"]),
     } as UnifiedRow
-   },
-  )
+   })
+   .filter(Boolean) as UnifiedRow[]
+
+  if (countryRows.length === 0 && geographyCsvRows.length > 0) {
+   countryRows = geographyCsvRows
+    .filter(({ row, countryKey }) => {
+     const rawLabel = row["Geography"] || row["Country"] || countryKey
+     return !isTotalLikeLabel(rawLabel)
+    })
+    .map(({ countryKey, row }, index) => ({
+    ...normalizeAndEnrichRow(row),
+    _id: `country-csv-${index}`,
+    _sourceFile: "Geography CSV",
+    _userTag: "geo",
+    Country: toCountryFullName(row["Geography"] || row["Country"] || countryKey),
+    Geography: toCountryFullName(row["Geography"] || row["Country"] || countryKey),
+    "Viewer %": numberFromUnknown(
+     row["Viewer percentage"] || row["viewerPercentage"] || row["viewer_percentage"],
+    ),
+    Views: numberFromUnknown(row["Views"]),
+    "Watch Hrs": numberFromUnknown(row["Watch time (hours)"]),
+    "Subscribers Gained": numberFromUnknown(row["Subscribers gained"]),
+    Revenue: numberFromUnknown(row["Estimated revenue (USD)"]),
+   })) as UnifiedRow[]
+  }
 
   if (countryRows.length === 0 && filteredUnifiedRows.length > 0) {
    const formatTotals = filteredUnifiedRows.reduce(
@@ -2392,11 +2882,53 @@ const PerformanceHub: React.FC = () => {
     _id: `country-fallback-${index}`,
     _sourceFile: "Derived Geography",
     _userTag: "analytics",
-    Country: segment.toUpperCase(),
-    Geography: segment.toUpperCase(),
+    Country: toCountryFullName(segment),
+    Geography: toCountryFullName(segment),
     Views: views,
     "Viewer %": totalViews > 0 ? (views / totalViews) * 100 : 0,
    })) as UnifiedRow[]
+  }
+
+  if (countryRows.length > 0) {
+   const totalViews = countryRows.reduce(
+    (sum, row) => sum + Math.max(0, numberFromUnknown(row["Views"])),
+    0,
+   )
+   countryRows = countryRows
+    .map((row) => {
+     const currentViewerPct = numberFromUnknown(row["Viewer %"])
+     const views = Math.max(0, numberFromUnknown(row["Views"]))
+     const normalizedViewerPct =
+      totalViews > 0 &&
+      (!Number.isFinite(currentViewerPct) || currentViewerPct <= 0 || currentViewerPct > 100)
+       ? (views / totalViews) * 100
+       : currentViewerPct
+     return {
+      ...row,
+     "Viewer %": normalizedViewerPct,
+     }
+    })
+    .filter((row) => {
+     const statsToCheck = [
+      "Views",
+      "Watch Hrs",
+      "Engaged views",
+      "Average view duration",
+      "Average percentage viewed (%)",
+      "Shares",
+      "Likes",
+      "Dislikes",
+      "Estimated revenue (USD)",
+      "Viewer %",
+     ] as const
+     return statsToCheck.some((metric) => {
+      const raw = row[metric]
+      if (typeof raw === "string") return textFromUnknown(raw).trim() !== "" && raw !== "-"
+      const numeric = numberFromUnknown(raw)
+      return Number.isFinite(numeric) && Math.abs(numeric) > 0
+     })
+    })
+    .sort((a, b) => numberFromUnknown(b["Views"]) - numberFromUnknown(a["Views"]))
   }
 
   const deviceRows = normalizedReportRows(
@@ -2414,27 +2946,95 @@ const PerformanceHub: React.FC = () => {
    ),
   })) as UnifiedRow[]
 
-  const audienceRows = normalizedReportRows(
+  let audienceRows = normalizedReportRows(
    cache?.audienceMetrics || cache?.demographics || cache?.audienceSegments,
    "audience",
    "Audience",
   ).map((row, index) => ({
    ...row,
+   Date: textFromUnknown(row["Date"] || row["day"] || row["Day"] || ""),
    "Age Group":
     textFromUnknown(row["Age Group"] || row["ageGroup"]) || `Age Segment ${index + 1}`,
    Gender: textFromUnknown(row["Gender"] || row["gender"]) || "Unknown",
-   Views: getViews(row),
-   "Watch Hrs": getWatchHours(row),
-   "New Viewers": getMetric(row, ["New Viewers", "newViewers"]),
-   "Returning Viewers": getMetric(row, ["Returning Viewers", "returningViewers"]),
+   "Audience Type": textFromUnknown(row["Audience Type"] || row["audienceType"]),
+   "Viewer Percentage": getMetric(row, ["Viewer Percentage", "viewerPercentage"]),
+   "Subscribed Status": textFromUnknown(row["Subscribed Status"] || row["subscribedStatus"]),
+   "Unique viewers": getMetric(row, ["Unique viewers", "uniqueViewers"]),
+   "New viewers": getMetric(row, ["New viewers", "newViewers"]),
    "Casual viewers": getMetric(row, ["Casual viewers", "casualViewers"]),
    "Regular viewers": getMetric(row, ["Regular viewers", "regularViewers"]),
-   "Unique viewers": getMetric(row, ["Unique viewers", "uniqueViewers"]),
+   "Returning viewers": getMetric(row, ["Returning viewers", "returningViewers"]),
+   "Audience Watch Ratio": getMetric(row, ["Audience Watch Ratio", "audienceWatchRatio"]),
+   "GA4 Age Groups": textFromUnknown(row["GA4 Age Groups"]),
+   "GA4 Users": getMetric(row, ["GA4 Users"]),
+   "GA4 Sessions": getMetric(row, ["GA4 Sessions"]),
+   "GA4 Engaged Sessions": getMetric(row, ["GA4 Engaged Sessions"]),
+   "GA4 Avg Session Duration": getMetric(row, ["GA4 Avg Session Duration"]),
+   "Comment Likes and Dislikes History": textFromUnknown(row["Comment Likes and Dislikes History"]),
+   "Comments and Replies History": textFromUnknown(row["Comments and Replies History"]),
+   "Community Post Interactions": textFromUnknown(row["Community Post Interactions"]),
+   "User Feedback Not Interested": textFromUnknown(row["User Feedback Not Interested"]),
+   "Video Likes and Dislikes History": textFromUnknown(row["Video Likes and Dislikes History"]),
+   Views: getViews(row),
+   "Watch Hrs": getWatchHours(row),
    Engaged: getMetric(row, ["Engaged views", "engagedViews"]),
    "Eng Rate": getMetric(row, ["Engagement Rate", "engagementRate"]),
    AVD: getAvdSeconds(row),
    "AVP %": getAvpPercent(row),
   })) as UnifiedRow[]
+
+  audienceRows = audienceRows.map((row) => {
+   const growthRow = growthCsvByDate.get(normalizeDateKey(row["Date"])) || {}
+   return {
+    ...row,
+    "Monthly audience": numberFromUnknown(growthRow["Monthly audience"]),
+    "28-day new viewers": numberFromUnknown(growthRow["28-day new viewers"]),
+    "28-day casual viewers": numberFromUnknown(growthRow["28-day casual viewers"]),
+    "28-day regular viewers": numberFromUnknown(growthRow["28-day regular viewers"]),
+    Subscribers:
+     numberFromUnknown(growthRow["Subscribers"]) ||
+     numberFromUnknown(growthRow["subscribers"]) ||
+     numberFromUnknown(row["Subscribers"]),
+   } as UnifiedRow
+  })
+
+  if (audienceRows.length === 0 && audienceRetentionRows.length > 0) {
+   audienceRows = audienceRetentionRows
+  } else if (audienceRetentionRows.length > 0) {
+   audienceRows = [...audienceRows, ...audienceRetentionRows]
+  }
+
+  if (audienceDemographicsCsvRows.length > 0) {
+   audienceRows = audienceDemographicsCsvRows.map(({ row }, index) => ({
+    ...normalizeAndEnrichRow(row),
+    _id: `audience-demographics-csv-${index}`,
+    _sourceFile: "Audience demographics CSV",
+    _userTag: "audience",
+    "Viewer age": textFromUnknown(row["Viewer age"]),
+    "Viewer gender": textFromUnknown(row["Viewer gender"]),
+    "Views (%)": numberFromUnknown(row["Views (%)"]),
+    "Watch time (hours) (%)": numberFromUnknown(row["Watch time (hours) (%)"]),
+   })) as UnifiedRow[]
+  }
+
+  if (audienceRows.length > 0) {
+   audienceRows = audienceRows.map((row, index) => ({
+    ...row,
+    "Viewer age":
+     textFromUnknown(
+      row["Viewer age"] || row["Age Group"] || row["ageGroup"] || row["Dimension"],
+     ) || `Age Segment ${index + 1}`,
+    "Viewer gender": textFromUnknown(row["Viewer gender"] || row["Gender"] || row["gender"]),
+    "Views (%)":
+     numberFromUnknown(row["Views (%)"]) ||
+     numberFromUnknown(row["Viewer Percentage"]) ||
+     numberFromUnknown(row["viewerPercentage"]),
+    "Watch time (hours) (%)":
+     numberFromUnknown(row["Watch time (hours) (%)"]) ||
+     numberFromUnknown(row["Watch time percentage"]) ||
+     numberFromUnknown(row["watchTimePercentage"]),
+   })) as UnifiedRow[]
+  }
 
   return [
    {
@@ -2482,7 +3082,7 @@ const PerformanceHub: React.FC = () => {
     columns: TABLE_DATASET_CONTRACTS.device.columns,
    },
   ]
- }, [masterTableRows, filteredUnifiedRows, lastSyncComplete])
+ }, [masterTableRows, filteredUnifiedRows, lastSyncComplete, csvFiles])
 
  const activeTableDataset =
   tableDatasets.find((dataset) => dataset.id === tableDataset) ||
@@ -2501,10 +3101,91 @@ const PerformanceHub: React.FC = () => {
    const canonical = activeTableDataset.columns.map((header) =>
     getCanonicalMasterHeader(header),
    )
-   return Array.from(new Set(canonical))
+   const unique = Array.from(new Set(canonical))
+   const identityHeaders = new Set([
+    "Video title",
+    "Video ID",
+    "Upload date",
+    "Length",
+    "Format",
+    "Date",
+   ])
+   return unique.filter((header) => {
+   if (identityHeaders.has(header)) return true
+    if (MASTER_ALWAYS_VISIBLE_HEADERS.has(header)) return true
+    return activeTableDataset.rows.some((row) => {
+     const raw = (row as Record<string, unknown>)[header]
+     if (raw !== undefined && raw !== null && textFromUnknown(raw).trim() !== "") {
+      return true
+     }
+     const cell = getHeaderMetricCell(row as Record<string, unknown>, header)
+     return !!(
+      cell &&
+      cell.value !== null &&
+      cell.value !== undefined &&
+      Number.isFinite(Number(cell.value))
+     )
+    })
+   })
+  }
+  if (activeTableDataset.id === "daily") {
+   const unique = Array.from(new Set(activeTableDataset.columns))
+   return unique.filter((header) => {
+    return activeTableDataset.rows.some((row, rowIndex) => {
+     const raw = (row as Record<string, unknown>)[header]
+     if (raw !== undefined && raw !== null && textFromUnknown(raw).trim() !== "") {
+      return true
+     }
+     const rendered = getTableCellValue(row, header, rowIndex, "daily")
+     return rendered !== "" && rendered !== "-" && rendered !== "=="
+    })
+   })
+  }
+  if (activeTableDataset.id === "country") {
+   const unique = Array.from(new Set(activeTableDataset.columns))
+   const geographyRequireNonZero = new Set([
+    "Stayed to watch (%)",
+    "Subscribers gained",
+    "Subscribers lost",
+    "Subscribers",
+    "Comments added",
+   ])
+   return unique.filter((header) => {
+    if (geographyRequireNonZero.has(header)) {
+     const hasSignal = activeTableDataset.rows.some((row) => {
+      const numeric = numberFromUnknown((row as Record<string, unknown>)[header])
+      return Number.isFinite(numeric) && Math.abs(numeric) > 0
+     })
+     if (!hasSignal) return false
+    }
+    return activeTableDataset.rows.some((row, rowIndex) => {
+     const raw = (row as Record<string, unknown>)[header]
+     if (raw !== undefined && raw !== null && textFromUnknown(raw).trim() !== "") {
+      return true
+     }
+     const rendered = getTableCellValue(row, header, rowIndex, "country")
+     return rendered !== "" && rendered !== "-" && rendered !== "=="
+    })
+   })
   }
   return activeTableDataset.columns
- }, [activeTableDataset])
+}, [activeTableDataset])
+
+ useEffect(() => {
+  setTableColumnOrder((prev) => {
+   if (!prev.length) return [...tableHeaders]
+   const kept = prev.filter((header) => tableHeaders.includes(header))
+   const missing = tableHeaders.filter((header) => !kept.includes(header))
+   return [...kept, ...missing]
+  })
+ }, [tableHeaders])
+
+ const orderedTableHeaders = useMemo(() => {
+  if (!tableColumnOrder.length) return tableHeaders
+  const kept = tableColumnOrder.filter((header) => tableHeaders.includes(header))
+  const missing = tableHeaders.filter((header) => !kept.includes(header))
+  return [...kept, ...missing]
+ }, [tableColumnOrder, tableHeaders])
 
  const videoStatsVerification = useMemo(() => {
   const cache = readYouTubeAnalyticsCache() as {
@@ -2553,14 +3234,45 @@ const PerformanceHub: React.FC = () => {
   pipelineLogTick,
  ])
 
- const tableMetricMappingStatus = useMemo<TableMetricMappingStatus>(
+const tableMetricMappingStatus = useMemo<TableMetricMappingStatus>(
   () =>
    buildTableMetricMappingStatus({
     masterRows: canonicalApiRows,
     visibleHeaders: tableHeaders,
     duplicateHeaderKeys: duplicateShortHeaders,
    }),
-  [canonicalApiRows, tableHeaders, duplicateShortHeaders],
+ [canonicalApiRows, tableHeaders, duplicateShortHeaders],
+)
+
+ const datasetCoverageSummaries = useMemo(() => {
+  const visibleByDataset = new Map<TableDatasetId, string[]>()
+  visibleByDataset.set(activeTableDataset.id, tableHeaders)
+  return tableDatasets.map((dataset) =>
+   buildDatasetCoverageSummary({
+    datasetId: dataset.id,
+    requestedHeaders: dataset.columns,
+    visibleHeaders: visibleByDataset.get(dataset.id) || dataset.columns,
+    rows: dataset.rows as Array<Record<string, unknown>>,
+   }),
+  )
+ }, [tableDatasets, activeTableDataset.id, tableHeaders])
+
+const activeDatasetCoverageSummary = useMemo(
+  () =>
+   datasetCoverageSummaries.find(
+    (summary) => summary.datasetId === activeTableDataset.id,
+   ) || datasetCoverageSummaries[0],
+  [datasetCoverageSummaries, activeTableDataset.id],
+ )
+
+ const coverageManifest = useMemo(
+  () => ({
+   generatedAt: new Date().toISOString(),
+   window: analyticsWindow,
+   dataset: activeTableDataset.id,
+   summaries: datasetCoverageSummaries,
+  }),
+  [analyticsWindow, activeTableDataset.id, datasetCoverageSummaries],
  )
 
  useEffect(() => {
@@ -2608,6 +3320,10 @@ const PerformanceHub: React.FC = () => {
    ) {
     return false
    }
+   if (activeTableDataset.id === "traffic" && trafficDatasetMode !== "all") {
+    const category = textFromUnknown((row as Record<string, unknown>).__trafficCategory).toLowerCase()
+    if (category !== trafficDatasetMode) return false
+   }
    if (!search) return true
    return tableHeaders.some((header) =>
     getTableCellValue(row, header, 0, activeTableDataset.id)
@@ -2615,13 +3331,24 @@ const PerformanceHub: React.FC = () => {
      .includes(search),
    )
   })
- }, [activeTableDataset, tableHeaders, tableSearch, tableTag])
+ }, [activeTableDataset, tableHeaders, tableSearch, tableTag, trafficDatasetMode])
 
  const sortedTableRows = useMemo(() => {
   if (!sortColumn) return filteredTableRows
+  const isDateColumn =
+   sortColumn === "Date" ||
+   sortColumn === "Upload date" ||
+   sortColumn === "Video publish time"
   const textColumns = new Set(["Video title", "Video ID", "Format", "Upload date", "Date", "Type", "Dimension"])
   const isText = textColumns.has(sortColumn)
   const sorted = [...filteredTableRows].sort((a, b) => {
+   if (isDateColumn) {
+    const aVal = getTableCellValue(a, sortColumn, 0, activeTableDataset.id)
+    const bVal = getTableCellValue(b, sortColumn, 0, activeTableDataset.id)
+    const aTs = parseDate(aVal)?.getTime() || 0
+    const bTs = parseDate(bVal)?.getTime() || 0
+    return sortDir === "asc" ? aTs - bTs : bTs - aTs
+   }
    if (isText) {
     const aVal = getTableCellValue(a, sortColumn, 0, activeTableDataset.id).toLowerCase()
     const bVal = getTableCellValue(b, sortColumn, 0, activeTableDataset.id).toLowerCase()
@@ -2633,6 +3360,17 @@ const PerformanceHub: React.FC = () => {
   })
   return sorted
  }, [filteredTableRows, sortColumn, sortDir, activeTableDataset])
+
+ useEffect(() => {
+  if (tableDataset === "daily" && !sortColumn) {
+   setSortColumn("Date")
+   setSortDir("desc")
+  }
+  if (tableDataset === "country" && !sortColumn) {
+   setSortColumn("Views")
+   setSortDir("desc")
+  }
+ }, [tableDataset, sortColumn])
 
  const tableRows = useMemo(
   () => sortedTableRows.slice(0, tableLimit),
@@ -2935,8 +3673,24 @@ const PerformanceHub: React.FC = () => {
          )}
          {group.key.split("_").join(" ")}
         </div>
-       ))
+      ))
       )}
+     </div>
+
+     <div className="flex flex-wrap gap-2 pt-2 border-t border-black/10">
+      {toolCapabilityHealth.map((entry) => (
+       <div
+        key={entry.toolId}
+        className={`px-2 py-1 rounded border-2 border-black text-[8px] font-black uppercase tracking-wider ${
+         entry.status === "full"
+          ? "bg-[#C9F830]"
+          : entry.status === "partial"
+           ? "bg-[#FFE066]"
+           : "bg-[#FF3399] text-white"
+        }`}>
+        {entry.toolId}: {entry.status}
+       </div>
+      ))}
      </div>
 
      <div className="mt-4 pt-4 border-t-2 border-black/5">
@@ -3347,28 +4101,17 @@ const renderDataViz = () => {
  }
 
  const renderAnalysis = () => {
-  if (!analyticsResult) {
-   return (
-    <div className="border-[4px] border-black rounded-xl bg-white p-10 text-center">
-     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-black/40">
-      Channel Analysis
-     </p>
-     <p className="text-2xl font-[1000] uppercase tracking-tight mt-2">
-      No report generated yet
-     </p>
-     <button
-      onClick={runAnalysis}
-      disabled={analysisLoading || filteredUnifiedRows.length === 0}
-      className="mt-6 bg-black text-[#FFDD00] px-5 py-3 rounded-xl border-[3px] border-black font-black uppercase text-[10px] tracking-widest shadow-[4px_4px_0px_0px_#FFB158] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50">
-      {analysisLoading ? "Generating..." : "Generate Full Report"}
-     </button>
-    </div>
-   )
-  }
-
   return (
-   <div className="border-[4px] border-black rounded-xl overflow-hidden">
-    <ReportViewer result={analyticsResult} data={filteredUnifiedRows} />
+   <div className="border-[4px] border-black rounded-xl bg-white p-8 text-center">
+    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-black/40">
+     Unified Report Pipeline
+    </p>
+    <p className="text-2xl font-[1000] uppercase tracking-tight mt-2">
+     Channel report generation now routes into the Ultimate Channel Report toolbox.
+    </p>
+    <p className="mt-4 text-[10px] font-black uppercase tracking-[0.16em] text-black/55">
+     Use the Ultimate Channel Report toolbox above to generate the full report.
+    </p>
    </div>
   )
  }
@@ -3377,26 +4120,44 @@ const renderDataViz = () => {
   <div className="space-y-4">
 
 
-    <div className="bg-white border-b-[4px] border-black px-4 py-2 flex flex-wrap items-center gap-2">
+    <div className="bg-[#CCFF00] border-b-[4px] border-black px-4 py-2 flex flex-wrap items-center gap-2">
      {tableDatasets.map((dataset) => (
-      <button
-       key={dataset.id}
+      <div key={dataset.id} className="inline-flex items-center gap-2">
+       <button
        onClick={() => {
-        setTableDataset(dataset.id)
-        setSelectedRowIds(new Set())
+       setTableDataset(dataset.id)
+       setSelectedRowIds(new Set())
+       if (dataset.id === "daily") {
+         setSortColumn("Date")
+         setSortDir("desc")
+        } else if (dataset.id === "country") {
+         setSortColumn("Views")
+         setSortDir("desc")
+        }
        }}
-       className={`px-3 py-2 border-[3px] border-black rounded-lg text-[10px] font-black uppercase tracking-wider ${
-        tableDataset === dataset.id
-         ? "bg-black text-white"
-         : "bg-white text-black"
-       }`}>
-       {dataset.label}
-      </button>
+        className={`px-3 py-2 border-[3px] border-black rounded-lg text-[10px] font-black uppercase tracking-wider ${
+         tableDataset === dataset.id
+          ? "bg-black text-white"
+          : "bg-white text-black"
+        }`}>
+        {dataset.label}
+       </button>
+       {dataset.id === "traffic" && tableDataset === "traffic" && (
+        <select
+         value={trafficDatasetMode}
+         onChange={(event) =>
+          setTrafficDatasetMode(event.target.value as TrafficDatasetMode)
+         }
+         className="px-2 py-2 border-[3px] border-[#0055CC] rounded-lg bg-white text-[10px] font-black uppercase tracking-[0.08em]">
+         <option value="all">All Traffic Sources</option>
+         <option value="youtube_traffic">YouTube Traffic</option>
+         <option value="external">External Traffic Sources</option>
+         <option value="suggested_videos">Suggested Videos</option>
+         <option value="youtube_search">YouTube Search</option>
+        </select>
+       )}
+      </div>
      ))}
-    </div>
-
-    <div className="bg-[#CCFF00] border-b-[4px] border-black px-4 py-2 text-center text-[12px] font-black uppercase tracking-[0.14em]">
-     {activeTableDataset.label}
     </div>
 
     <div className="overflow-auto max-h-[620px]">
@@ -3405,10 +4166,10 @@ const renderDataViz = () => {
        No table data available for {activeTableDataset.label}
       </div>
      ) : (
-      <table className="w-full border-collapse whitespace-nowrap">
+      <table className="w-max border-collapse whitespace-nowrap">
        <thead className="sticky top-0 bg-[#EDEDED] text-black z-10">
         <tr>
-         <th className="p-2 border-b-[3px] border-black border-r border-black/20 w-12 text-center">
+         <th className="p-2 border-b-[3px] border-black border-r border-black/20 w-12 text-center bg-[#EDEDED]">
           <input
            type="checkbox"
            checked={allVisibleSelected}
@@ -3419,27 +4180,56 @@ const renderDataViz = () => {
           />
          </th>
          <th
-          className="p-2 border-b-[3px] border-black border-r border-black/20 w-8 text-center"
+          className="p-2 border-b-[3px] border-black border-r border-black/20 w-8 text-center bg-[#EDEDED]"
           title="Exclude from Analytics">
           <span className="text-[10px] font-black uppercase text-black">
            EX
           </span>
          </th>
          <th
-          className="p-2 border-b-[3px] border-black border-r border-black/20 w-8 text-center"
+          className="p-2 border-b-[3px] border-black border-r border-black/20 w-8 text-center bg-[#EDEDED]"
           title="Include Only (Global Whitelist)">
           <span className="text-[10px] font-black uppercase text-[#00CCFF]">
            IN
           </span>
          </th>
 
-          {tableHeaders.map((header) => {
+          {orderedTableHeaders.map((header) => {
            const isSorted = sortColumn === header
            const arrow = isSorted ? (sortDir === "desc" ? " ▼" : " ▲") : ""
+           const headerLabel = toDisplayHeaderLabel(header)
+           const headerWords = headerLabel.split(/\s+/).filter(Boolean)
+           const hasMultipleWords = headerWords.length >= 2
+           const midpoint = Math.ceil(headerWords.length / 2)
+           const headerLine1 = hasMultipleWords ? headerWords.slice(0, midpoint).join(" ") : headerLabel
+           const headerLine2 = hasMultipleWords ? headerWords.slice(midpoint).join(" ") : ""
            return (
             <th
              key={header}
+             draggable
              title={`Sort by ${header}`}
+             onDragStart={(event) => {
+              event.dataTransfer.setData("text/plain", header)
+              event.dataTransfer.effectAllowed = "move"
+             }}
+             onDragOver={(event) => {
+              event.preventDefault()
+              event.dataTransfer.dropEffect = "move"
+             }}
+             onDrop={(event) => {
+              event.preventDefault()
+              const draggedHeader = event.dataTransfer.getData("text/plain")
+              if (!draggedHeader || draggedHeader === header) return
+              setTableColumnOrder((prev) => {
+               const base = prev.length ? [...prev] : [...orderedTableHeaders]
+               const from = base.indexOf(draggedHeader)
+               const to = base.indexOf(header)
+               if (from < 0 || to < 0) return base
+               const [moved] = base.splice(from, 1)
+               base.splice(to, 0, moved)
+               return base
+              })
+             }}
              onClick={() => {
               if (sortColumn === header) {
                if (sortDir === "desc") setSortDir("asc")
@@ -3452,11 +4242,12 @@ const renderDataViz = () => {
                setSortDir("desc")
               }
              }}
-             className={`p-2 text-[10px] font-black uppercase tracking-widest border-b-[3px] border-black border-r border-black/20 align-middle cursor-pointer select-none transition-colors hover:bg-[#CCFF00]/30 ${
+             className={`p-2 text-[10px] font-black uppercase tracking-widest border-b-[3px] border-black border-r border-black/20 align-middle cursor-move select-none transition-colors bg-[#EDEDED] hover:bg-[#CCFF00]/30 ${
               isSorted ? "bg-[#CCFF00]/50" : ""
              }`}>
-             <span className="block max-w-[120px] truncate">
-              {toDisplayHeaderLabel(header)}
+             <span className="block leading-tight text-center whitespace-normal break-words mx-auto">
+              {headerLine1}
+              {headerLine2 ? <><br />{headerLine2}</> : null}
               {arrow}
              </span>
             </th>
@@ -3519,7 +4310,7 @@ const renderDataViz = () => {
              className="h-4 w-4 border-[2px] border-black accent-[#00CCFF] cursor-pointer"
             />
            </td>
-           {tableHeaders.map((header) => {
+           {orderedTableHeaders.map((header) => {
             const cellValue = getTableCellValue(
              row,
              header,
@@ -3544,13 +4335,13 @@ const renderDataViz = () => {
                  title="Open video on YouTube">
                  <ExternalLink size={10} strokeWidth={3} className="-mt-0.5 ml-0.5" />
                 </a>
-                <span className="block truncate max-w-[290px]">
+                <span className="block">
                  {cellValue}
                 </span>
                </div>
               ) : (
                <span
-                className={`block truncate ${isTitle ? "max-w-[320px]" : "max-w-[110px]"}`}>
+                className="block">
                 {cellValue}
                </span>
               )}
@@ -3659,15 +4450,6 @@ const renderDataViz = () => {
    >
     {renderDataViz()}
    </SubToolbox>
-   <SubToolbox
-    title="CHANNEL ANALYSIS REPORT"
-    icon={<BrainCircuit size={22} strokeWidth={3} className="text-black" />}
-    headerColor="bg-[#FFDD00]"
-    collapsible
-    isOpenInitial={false}
-   >
-    {renderAnalysis()}
-   </SubToolbox>
   </div>
  )
 
@@ -3690,32 +4472,11 @@ const renderDataViz = () => {
 
   <div className="w-full space-y-8">
     <ToolboxScaffold
-     title="OMNI-BRAIN MASTER HUB"
-     icon={<BrainCircuit size={42} className="text-[#00CCFF]" />}
-     headerColor="bg-black"
-     textColor="text-[#00CCFF]"
-     iconBoxColor="bg-black"
-     collapsible
-     isOpen={openTools.has("omni-brain")}
-     onToggle={() =>
-      setOpenTools((previous) => {
-       const next = new Set(previous)
-       if (next.has("omni-brain")) next.delete("omni-brain")
-       else next.add("omni-brain")
-       return next
-      })
-     }
-     disableCollapseAnimation
-     contentClassName="bg-white p-4 md:p-6 lg:p-8">
-     {openTools.has("omni-brain") && <IntelligenceHub />}
-    </ToolboxScaffold>
-
-    <ToolboxScaffold
      title="CHANNEL INTELLIGENCE LAB"
-     icon={<Zap size={42} className="text-[#FF3399]" />}
-     headerColor="bg-black"
-     textColor="text-[#FF3399]"
-     iconBoxColor="bg-black"
+     icon={<Zap size={42} className="text-black" />}
+     headerColor="bg-[#FF3399]"
+     textColor="text-black"
+     iconBoxColor="bg-[#FFDD00]"
      collapsible
      isOpen={openTools.has("intelligence-lab")}
      onToggle={() =>
@@ -3752,14 +4513,23 @@ const renderDataViz = () => {
      }
      disableCollapseAnimation
      contentClassName="bg-white p-4 md:p-6 lg:p-8">
-     {openTools.has("intelligence-lab") && renderDataManager()}
+     {openTools.has("intelligence-lab") && (
+      <div className="space-y-8">
+       <IntelligenceHub
+        mode="ultimate"
+        autoContext={ultimateAutoContext}
+        dataSources={ultimateDataSources}
+       />
+       {renderDataManager()}
+      </div>
+     )}
     </ToolboxScaffold>
 
     <ToolboxScaffold
      title="MASTER DATA TABLES"
      icon={<Table2 size={42} className="text-black" />}
      headerColor="bg-[#EA73E8]"
-     iconBoxColor="bg-white"
+     iconBoxColor="bg-[#CCFF00]"
      collapsible
      isOpen={openTools.has("master-tables")}
      onToggle={() =>

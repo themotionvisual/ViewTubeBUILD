@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { ArrowLeft, LayoutGrid, Layers, RadioTower } from "lucide-react"
-import { useBrain } from "../../context/GlobalDataContext"
+import { useBrain } from "../../context/useBrain"
 import type { ChartConfig } from "../../types"
 import { getMasterRows } from "../../services/analyticsSelectors"
 import { ChannelyticsChartToolbox } from "../../components/ChannelyticsChartToolbox"

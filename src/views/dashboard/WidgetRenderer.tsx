@@ -72,7 +72,7 @@ import { FormatClashWidget } from "./widgets/FormatClashWidget"
 import { CommentReplyWidget } from "./widgets/CommentReplyWidget"
 import { AIJournalWidget } from "./widgets/AIJournalWidget"
 import { WidgetShell } from "./WidgetShell"
-import { useBrain } from "../../context/GlobalDataContext"
+import { useBrain } from "../../context/useBrain"
 
  interface WidgetRendererProps extends WidgetRenderCallbacks {
   widget: WidgetDefinition
@@ -808,32 +808,43 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
         justifyContent: "space-between",
         marginTop: "auto"
       }}>
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ fontSize: "14px", fontWeight: 950, textTransform: "uppercase", tracking: "-0.02em" }}>
-            {data.brain?.channelProfile?.name || data.authState?.channelName || "Your Channel"}
-          </div>
-          <div style={{ fontSize: "10px", fontWeight: 800, opacity: 0.5 }}>
-            @{data.brain?.channelProfile?.channelHandle || data.authState?.channelHandle || "handle"}
-          </div>
-        </div>
-        <a
-          href={`https://youtube.com/${data.brain?.channelProfile?.channelHandle ? '@' + data.brain.channelProfile.channelHandle.replace(/^@/, '') : (data.authState?.channelHandle ? '@' + data.authState.channelHandle.replace(/^@/, '') : "")}`}
-          target="_blank"
-          rel="noreferrer"
-          className="vt-button primary"
-          style={{
-            height: "32px",
-            padding: "0 16px",
-            fontSize: "11px",
-            fontWeight: 900,
-            textDecoration: "none",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center"
-          }}
-         >
-          VISIT CHANNEL
-        </a>
+        {(() => {
+          const rawHandle =
+            data.brain?.channelProfile?.channelHandle || data.authState?.channelHandle || ""
+          const normalizedHandle = String(rawHandle || "").trim().replace(/^@/, "")
+          const displayHandle = normalizedHandle ? `@${normalizedHandle}` : "@connect-channel"
+          const href = normalizedHandle ? `https://youtube.com/@${normalizedHandle}` : "https://youtube.com"
+          return (
+            <>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <div style={{ fontSize: "14px", fontWeight: 950, textTransform: "uppercase", tracking: "-0.02em" }}>
+                  {data.brain?.channelProfile?.name || data.authState?.channelName || "Your Channel"}
+                </div>
+                <div style={{ fontSize: "10px", fontWeight: 800, opacity: 0.5 }}>
+                  {displayHandle}
+                </div>
+              </div>
+              <a
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                className="vt-button primary"
+                style={{
+                  height: "32px",
+                  padding: "0 16px",
+                  fontSize: "11px",
+                  fontWeight: 900,
+                  textDecoration: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+               >
+                VISIT CHANNEL
+              </a>
+            </>
+          )
+        })()}
       </div>
      </div>
     </WidgetShell>

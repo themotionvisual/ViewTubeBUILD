@@ -188,6 +188,16 @@ export type TableMetricMappingStatus = {
  unavailableByReason: Record<string, number>
 }
 
+export type DatasetCoverageSummary = {
+ datasetId: string
+ requested: number
+ fetched: number
+ mapped: number
+ visible: number
+ unavailable: number
+ reasons: Record<string, number>
+}
+
 const resolveAnalyticsCache = (): AnalyticsCache => {
   return getCanonicalAnalyticsCache() as AnalyticsCache
 }
@@ -1406,5 +1416,53 @@ export const buildTableMetricMappingStatus = ({
   unmappedMetricKeys,
   duplicateHeaderKeys,
   unavailableByReason,
+ }
+}
+
+export const buildDatasetCoverageSummary = ({
+ datasetId,
+ requestedHeaders,
+ visibleHeaders,
+ rows,
+}: {
+ datasetId: string
+ requestedHeaders: string[]
+ visibleHeaders: string[]
+ rows: Array<Record<string, unknown>>
+}): DatasetCoverageSummary => {
+ const requested = requestedHeaders.length
+ const visible = visibleHeaders.length
+ const mapped = visibleHeaders.length
+
+ let fetched = 0
+ visibleHeaders.forEach((header) => {
+  const hasData = rows.some((row) => {
+   const raw = row[header]
+   if (raw !== undefined && raw !== null && text(raw) !== "") return true
+   const metricCell = getHeaderMetricCell(row, header)
+   return !!(metricCell && metricCell.value !== null)
+  })
+  if (hasData) fetched += 1
+ })
+
+ const reasons: Record<string, number> = {}
+ rows.forEach((row) => {
+  visibleHeaders.forEach((header) => {
+   const metricCell = getHeaderMetricCell(row, header)
+   if (!metricCell || metricCell.status !== "unavailable") return
+   const reason = (metricCell.reasonCode || "unavailable_unknown").trim()
+   reasons[reason] = (reasons[reason] || 0) + 1
+  })
+ })
+
+ const unavailable = Math.max(0, requested - fetched)
+ return {
+  datasetId,
+  requested,
+  fetched,
+  mapped,
+  visible,
+  unavailable,
+  reasons,
  }
 }

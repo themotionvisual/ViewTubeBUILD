@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { useEntitlement } from "../../../app/AppShell"
 import { Sparkles, Zap, ArrowRight, Check, RefreshCw } from "lucide-react"
-import { useBrain } from "../../../context/GlobalDataContext"
+import { useBrain } from "../../../context/useBrain"
 import { generateOracleAdvice } from "../../../services/gemini"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
@@ -188,7 +188,7 @@ export const DailyOracleWidget = ({ widget, instance, editMode, onToggleCollapse
    hasAI
    aiCost={ORACLE_COST}
    aiDisabled={!canAffordOracle || isGenerating}
-   aiDisabledReason={!canAffordOracle ? (entitlement.tier === "free" ? "Upgrade required for Oracle AI." : `Need ${ORACLE_COST} token.`) : undefined}
+   aiDisabledReason={!canAffordOracle ? (entitlement.tier === "free" ? "Upgrade required for Oracle AI." : `Need ${ORACLE_COST} credits.`) : undefined}
    onRegenerate={regenerate}>
    <div style={{ display: "flex", flexDirection: "column", gap: "10px", height: "100%", overflowY: "auto", paddingBottom: "12px" }}>
     {/* Header Row */}
@@ -215,7 +215,7 @@ export const DailyOracleWidget = ({ widget, instance, editMode, onToggleCollapse
     </div>
     {!canAffordOracle && (
      <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6, flexShrink: 0 }}>
-      {entitlement.tier === "free" ? "Upgrade for Oracle AI." : `Need ${ORACLE_COST} token.`}
+      {entitlement.tier === "free" ? "Upgrade for Oracle AI." : `Need ${ORACLE_COST} credits.`}
      </div>
     )}
 
