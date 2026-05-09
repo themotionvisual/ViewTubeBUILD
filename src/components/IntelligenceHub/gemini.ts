@@ -9,8 +9,7 @@ export async function callGemini(prompt: string, systemPrompt: string) {
     throw new Error('Gemini API Key missing. Add VITE_GEMINI_API_KEY to your .env file.');
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${API_KEY}`;
-  
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;  
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

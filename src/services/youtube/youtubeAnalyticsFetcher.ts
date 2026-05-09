@@ -147,7 +147,11 @@ export const buildScopedVideoMetricGroups = (): Record<
   "youtube_analytics_v2",
   "video",
  ),
- impressions_ctr: [...VIDEO_METRIC_GROUPS.impressions_ctr],
+ impressions_ctr: filterSupportedMetrics(
+  VIDEO_METRIC_GROUPS.impressions_ctr,
+  "youtube_analytics_v2",
+  "video",
+ ),
  monetization: filterSupportedMetrics(
   VIDEO_METRIC_GROUPS.monetization,
   "youtube_analytics_v2",
@@ -197,6 +201,7 @@ const THUMBNAIL_VIDEO_METRICS = new Set<string>([
  "videoThumbnailImpressions",
  "videoThumbnailImpressionsClickRate",
 ])
+const SESSION_KNOWN_INVALID_COMBOS = new Set<string>()
 
 export const shouldForceViewsMetric = (
  ids: string,
@@ -234,7 +239,8 @@ export const fetchAnalytics = async (
    source: "api"
   }
  >()
- const knownInvalidCombos = new Set<string>()
+ const knownInvalidCombos = new Set<string>(SESSION_KNOWN_INVALID_COMBOS)
+ let suppressedInvalidComboCount = 0
  const diagnosticsFailures: SyncDiagnostics["failureReasons"] = []
  // Impressions + CTR are now required for video sync attempts.
  // Keep option parsing for compatibility, but do not skip the group.
@@ -727,6 +733,7 @@ export const fetchAnalytics = async (
     const comboKey = `${shapeKey}::${activeMetrics.join(",")}`
     const cachedShape = impressionsProbeCache.get(shapeKey)
     if (knownInvalidCombos.has(comboKey)) {
+      suppressedInvalidComboCount += 1
       recordFailure({
       group: groupName,
       ids,
@@ -787,6 +794,7 @@ export const fetchAnalytics = async (
        attemptedShape: baseAttemptShape,
       })
       if (groupStatus === 400) {
+       SESSION_KNOWN_INVALID_COMBOS.add(comboKey)
        impressionsProbeCache.set(shapeKey, {
         groupedSupported: false,
         minimalPagingSupported: false,
@@ -832,6 +840,7 @@ export const fetchAnalytics = async (
          },
         })
         if (minimalStatus === 400) {
+         SESSION_KNOWN_INVALID_COMBOS.add(comboKey)
          impressionsProbeCache.set(shapeKey, {
           groupedSupported: false,
           minimalPagingSupported: false,
@@ -862,6 +871,7 @@ export const fetchAnalytics = async (
        if (!shouldTryPerMetric) continue
        const metricComboKey = `${groupName}::${ids}::${metric}`
       if (knownInvalidCombos.has(metricComboKey)) {
+       suppressedInvalidComboCount += 1
        recordFailure({
         group: groupName,
         ids,
@@ -939,7 +949,8 @@ export const fetchAnalytics = async (
         source: "api",
        })
        if (metricStatus === 400) {
-        knownInvalidCombos.add(metricComboKey)
+       knownInvalidCombos.add(metricComboKey)
+        SESSION_KNOWN_INVALID_COMBOS.add(metricComboKey)
        }
       }
      }
@@ -963,8 +974,9 @@ export const fetchAnalytics = async (
       })
      } else {
       groupResults[groupName].ok = false
-      if (groupStatus === 400) {
-       knownInvalidCombos.add(comboKey)
+     if (groupStatus === 400) {
+      knownInvalidCombos.add(comboKey)
+      SESSION_KNOWN_INVALID_COMBOS.add(comboKey)
       }
      }
      if (metricWarnings.length > 0) {
@@ -998,7 +1010,10 @@ export const fetchAnalytics = async (
      requestClass: getAnalyticsRequestClass(ids, activeMetrics),
      outcome: "failed",
     })
-    if (status === 400) knownInvalidCombos.add(comboKey)
+    if (status === 400) {
+     knownInvalidCombos.add(comboKey)
+     SESSION_KNOWN_INVALID_COMBOS.add(comboKey)
+    }
     if (activeMetrics.length <= 1) {
      if (status === 400)
       activeMetrics.forEach((metric) => runDisabledMetrics.add(metric))
@@ -1043,6 +1058,7 @@ export const fetchAnalytics = async (
         source: "api",
        })
        knownInvalidCombos.add(`${groupName}::${ids}::${metric}`)
+       SESSION_KNOWN_INVALID_COMBOS.add(`${groupName}::${ids}::${metric}`)
       }
      }
     }
@@ -1070,6 +1086,13 @@ export const fetchAnalytics = async (
   if (!groupResults[groupName].ok)
    groupResults[groupName].error =
     errors[errors.length - 1] || "No successful response"
+ }
+ if (suppressedInvalidComboCount > 0) {
+  const note = `Suppressed ${suppressedInvalidComboCount} known-invalid YouTube Analytics combinations in this sync.`
+  const existing = groupResults.impressions_ctr.warnings || []
+  groupResults.impressions_ctr.warnings = existing.includes(note)
+   ? existing
+   : [...existing, note]
  }
 
  const byVideo = new Map<string, Record<string, unknown>>()
@@ -1207,7 +1230,7 @@ export const fetchVideoContentType = async (
   let data: any = null
   let lastFailureReason = "Creator content type report returned no rows."
   for (const idParam of idCandidates) {
-   const url = `https://youtubeanalytics.googleapis.com/v2/reports?ids=${idParam}&startDate=${startDate}&endDate=${endDate}&metrics=views&dimensions=video,creatorContentType&maxResults=200&sort=-views`
+   const url = `https://youtubeanalytics.googleapis.com/v2/reports?ids=${idParam}&startDate=${startDate}&endDate=${endDate}&metrics=views&dimensions=creatorContentType&maxResults=200&sort=-views`
    const response = await proxyFetch(url, {
     headers: { Authorization: `Bearer ${token}` },
    })

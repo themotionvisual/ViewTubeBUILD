@@ -31,6 +31,14 @@ const resolveChannelHandle = (channel: any): string | null => {
  )
 }
 
+const youtubeDataAccessWarnings = new Set<string>()
+
+const warnYouTubeDataAccessOnce = (key: string, message: string) => {
+ if (youtubeDataAccessWarnings.has(key)) return
+ youtubeDataAccessWarnings.add(key)
+ console.warn(message)
+}
+
 export const fetchChannelProfile = async (): Promise<ChannelProfile> => {
  const token = await refreshTokenIfExpired()
  if (!token)
@@ -715,8 +723,25 @@ export const fetchVideoCategories = async () => {
    headers: token ? { Authorization: `Bearer ${token}` } : {},
   },
  )
- if (!response.ok)
+ if (!response.ok) {
+  if (response.status === 403) {
+   console.warn("[YouTube API Diagnostic] 403 Forbidden. Checking token scopes...", {
+     tokenPreview: token ? token.substring(0, 10) + "..." : "missing",
+     url: `${BASE_URL}/videoCategories?part=snippet&regionCode=US`
+   });
+   fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${token}`)
+     .then(res => res.json())
+     .then(info => console.info("[YouTube API Diagnostic] Token Info:", info))
+     .catch(err => console.error("[YouTube API Diagnostic] Failed to fetch token info:", err));
+     
+   warnYouTubeDataAccessOnce(
+    "videoCategories403",
+    "[YouTube Data] videoCategories denied (403). Continuing in degraded mode.",
+   )
+   return []
+  }
   await handleYouTubeApiError(response, "Failed to fetch categories")
+ }
  const data = await response.json()
  const categories = (data.items || []).map((item: any) => ({
   id: item.id,
@@ -741,8 +766,16 @@ export const fetchUserPlaylists = async () => {
    headers: token ? { Authorization: `Bearer ${token}` } : {},
   },
  )
- if (!response.ok)
+ if (!response.ok) {
+  if (response.status === 403) {
+   warnYouTubeDataAccessOnce(
+    "userPlaylists403",
+    "[YouTube Data] playlists.mine denied (403). Continuing in degraded mode.",
+   )
+   return []
+  }
   await handleYouTubeApiError(response, "Failed to fetch playlists")
+ }
  const data = await response.json()
  return (data.items || []).map((item: any) => ({
   id: item.id,

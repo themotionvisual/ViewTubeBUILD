@@ -1208,7 +1208,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  // 14. SETTINGS (merged: system + sync)
  if (widget.id === "system-micro-stack") {
   const [apiKey, setApiKey] = useState(localStorage.getItem("GEMINI_API_KEY") || "")
-  const [model, setModel] = useState(localStorage.getItem("GEMINI_MODEL") || "gemini-1.5-flash")
+  const [model, setModel] = useState(localStorage.getItem("GEMINI_MODEL") || "gemini-2.0-flash")
 
   const saveSettings = (k: string, m: string) => {
    localStorage.setItem("GEMINI_API_KEY", k)
