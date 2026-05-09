@@ -1,6 +1,6 @@
-import { BrainSignal, ContextPacket, BrainMemorySchema } from "../types"
-import { getAiClient, getActiveModel, executeWithRetry, cleanJsonString } from "./gemini"
-import * as db from "./brainPersistence"
+import { BrainSignal, ContextPacket, BrainMemorySchema } from "../../types"
+import { getAiClient, getActiveModel, executeWithRetry, cleanJsonString } from "../gemini"
+import * as db from "./Persistence"
 
 let brainCache: BrainMemorySchema | null = null;
 
@@ -18,7 +18,6 @@ export const getBrainMemory = (): BrainMemorySchema => {
  return brainCache || DEFAULT_SCHEMA;
 }
 
-// Initialization call - should be called at app boot
 export const initializeBrain = async () => {
  try {
   const saved = await db.getBrainSchemaDB();
@@ -55,7 +54,6 @@ export const emitSignal = async (toolId: string, action: string, payload: any) =
 
  const TIME_THRESHOLD = 24 * 60 * 60 * 1000
  if (schema.interactionCount >= 5 || (Date.now() - schema.lastReflection > TIME_THRESHOLD)) {
-  // Trigger asynchronously
   setTimeout(() => {
    reflectAndCompress().catch(e => console.error("Reflection background task failed:", e))
   }, 0)
@@ -75,21 +73,6 @@ export const consultBrain = async (toolId: string, requestDetails?: any): Promis
  }
  
  return packet
-}
-
-export const annotateSystemPrompt = (basePrompt: string, packet: ContextPacket): string => {
- return `
-${basePrompt}
-
---- [GLOBAL USER CONTEXT / BRAIN INJECTION] ---
-IDENTITY & ASPIRATIONS: ${packet.identityAndAspirations}
-CONTENT DNA: ${packet.contentDNA}
-PERFORMANCE LEDGER: ${packet.performanceLedger}
-FUTURE STATE MAP: ${packet.futureStateMap}
-LEARNED PREFERENCES: ${packet.learnedPreferences}
-${packet.strategicAdvice ? `STRATEGIC ADVICE: ${packet.strategicAdvice}` : ""}
------------------------------------------------
-`
 }
 
 export const reflectAndCompress = async () => {

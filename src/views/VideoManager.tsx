@@ -312,7 +312,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   setError(null)
   try {
    const results = await Promise.allSettled([
-    fetchVideoList(50),
+    Promise.resolve(getCachedVideos()),
     fetchVideoCategories(),
     fetchUserPlaylists(),
    ])
@@ -321,10 +321,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
     throw results[0].reason;
    }
 
-   const apiVideoList = results[0].value || [];
-   const cacheVideoList = getCachedVideos()
-   const videoList =
-    apiVideoList.length > 0 ? apiVideoList : cacheVideoList
+   const videoList = results[0].value || [];
    const categoryList = results[1].status === "fulfilled" ? results[1].value : [];
    const playlists = results[2].status === "fulfilled" ? results[2].value : [];
 
@@ -333,14 +330,13 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    setUserPlaylists(playlists)
    setHasLoadedInitialData(true)
    setVideoListLoadState(videoList.length === 0 ? "empty" : "success")
-   if (apiVideoList.length === 0 && videoList.length > 0) {
+   if (videoList.length > 0) {
     console.info("[VideoManager] Hydrated videos from analytics cache", {
      source: "yt_analytics_cache.videos",
      count: videoList.length,
     })
-   }
-   if (videoList.length === 0 && connected) {
-    console.info("[VideoManager] Empty video list after initial sync", {
+   } else if (connected) {
+    console.info("[VideoManager] Empty video list after initial load", {
      isAuthenticated: connected,
      maxResults: 50,
      query: null,
@@ -356,57 +352,48 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   }
  }
 
- const loadVideos = async (
-  query?: string,
-  options?: { background?: boolean; searching?: boolean },
- ) => {
-  if (!query) setVideoListLoadState("loading")
-  if (!options?.background) setLoading(true)
-  if (options?.searching) setIsSearchingVideos(true)
-  try {
-   const data = await fetchVideoList(50, query)
-   const fallbackCacheVideos = !query && data.length === 0 ? getCachedVideos() : []
-   const finalVideos =
-    !query && fallbackCacheVideos.length > 0 ? fallbackCacheVideos : data
-   setVideos(finalVideos)
-   if (!query) {
-    setVideoListLoadState(finalVideos.length === 0 ? "empty" : "success")
-    if (data.length === 0 && fallbackCacheVideos.length > 0) {
-     console.info("[VideoManager] Reload hydrated videos from analytics cache", {
-      source: "yt_analytics_cache.videos",
-      count: fallbackCacheVideos.length,
-     })
+  const loadVideos = async (
+   query?: string,
+   options?: { background?: boolean; searching?: boolean },
+  ) => {
+   if (!query) setVideoListLoadState("loading")
+   if (!options?.background) setLoading(true)
+   if (options?.searching) setIsSearchingVideos(true)
+   try {
+    const data = query ? await fetchVideoList(50, query) : getCachedVideos()
+    setVideos(data)
+    if (!query) {
+     setVideoListLoadState(data.length === 0 ? "empty" : "success")
+     if (data.length > 0) {
+      console.info("[VideoManager] Reload hydrated videos from analytics cache", {
+       source: "yt_analytics_cache.videos",
+       count: data.length,
+      })
+     } else if (connected) {
+      console.info("[VideoManager] Empty video list after reload", {
+       isAuthenticated: connected,
+      })
+     }
     }
-    if (finalVideos.length === 0 && connected) {
-     console.info("[VideoManager] Empty video list after reload", {
-      isAuthenticated: connected,
-      maxResults: 50,
-      query: null,
-     })
-    }
+   } catch (err: any) {
+    setError(formatVideoLoadError(err))
+    if (!query) setVideoListLoadState("error")
+   } finally {
+    if (options?.searching) setIsSearchingVideos(false)
+    if (!options?.background) setLoading(false)
    }
-  } catch (err: any) {
-   setError(formatVideoLoadError(err))
-   if (!query) setVideoListLoadState("error")
-  } finally {
-   if (options?.searching) setIsSearchingVideos(false)
-   if (!options?.background) setLoading(false)
   }
- }
 
  const refreshVideosAfterSync = useCallback(async () => {
   if (!connected) return
   try {
    setVideoListLoadState("loading")
-   const data = await fetchVideoList(50)
    const cacheVideos = getCachedVideos()
-   const merged = data.length > 0 ? data : cacheVideos
-   setVideos(merged)
+   setVideos(cacheVideos)
    setHasLoadedInitialData(true)
-   setVideoListLoadState(merged.length === 0 ? "empty" : "success")
+   setVideoListLoadState(cacheVideos.length === 0 ? "empty" : "success")
    setError(null)
    console.info("[VideoManager] Sync refresh complete", {
-    apiCount: data.length,
     cacheCount: cacheVideos.length,
     finalCount: merged.length,
    })

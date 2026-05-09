@@ -13,6 +13,12 @@ export const STRIPE_CONFIG = {
     creator_plus: "feat_REPLACE_ME", // Add feature ID from Stripe
     creator_pro: "feat_REPLACE_ME",
     executive: "feat_REPLACE_ME",
+  },
+  prices: {
+    creator: "price_1TUJJPEZmsBpdBohCKL9ByvV",
+    creator_plus: "price_1TUJMgEZmsBpdBohabs1udnE",
+    creator_pro: "price_1TUJO9EZmsBpdBohHK6bYUW5",
+    executive: "price_1TUJOaEZmsBpdBoh5Ai1Tcyh",
   }
 } as const;
 

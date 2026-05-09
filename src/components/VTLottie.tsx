@@ -10,6 +10,8 @@ interface VTLottieProps {
   style?: React.CSSProperties;
 }
 
+const FAILED_LOTTIE_URLS = new Set<string>()
+
 export const VTLottie: React.FC<VTLottieProps> = ({
   animationUrl,
   loop = true,
@@ -19,15 +21,71 @@ export const VTLottie: React.FC<VTLottieProps> = ({
   style,
 }) => {
   const [animationData, setAnimationData] = React.useState<any>(null);
+  const [failed, setFailed] = React.useState(false);
 
   React.useEffect(() => {
+    let active = true
+    setAnimationData(null)
+    setFailed(false)
+    if (FAILED_LOTTIE_URLS.has(animationUrl)) {
+      setFailed(true)
+      return () => {
+        active = false
+      }
+    }
     fetch(animationUrl)
-      .then((res) => res.json())
-      .then((data) => setAnimationData(data))
-      .catch((err) => console.error('Failed to load Lottie animation:', err));
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const contentType = String(res.headers.get("content-type") || "").toLowerCase()
+        if (!contentType.includes("json")) {
+          throw new Error(`Unexpected content-type: ${contentType || "unknown"}`)
+        }
+        return res.json()
+      })
+      .then((data) => {
+        if (!active) return
+        setAnimationData(data)
+      })
+      .catch((err) => {
+        if (!active) return
+        setFailed(true)
+        FAILED_LOTTIE_URLS.add(animationUrl)
+        void err
+      });
+    return () => {
+      active = false
+    }
   }, [animationUrl]);
 
-  if (!animationData) return <div style={{ width: size, height: size, ...style }} className={className} />;
+  if (!animationData) {
+    return (
+      <div
+        style={{
+          width: size,
+          height: size,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          ...style,
+        }}
+        className={className}
+      >
+        {failed ? (
+          <span
+            aria-hidden="true"
+            style={{
+              width: Math.max(8, Math.floor(size * 0.4)),
+              height: Math.max(8, Math.floor(size * 0.4)),
+              borderRadius: "999px",
+              background: "#111",
+              opacity: 0.35,
+              display: "inline-block",
+            }}
+          />
+        ) : null}
+      </div>
+    )
+  }
 
   return (
     <div 

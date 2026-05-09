@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useBrain } from '../context/useBrain';
-import { reflectAndCompress } from '../services/brainEngine';
+import { reflectAndCompress } from '../services/brain';
 import { ToolboxScaffold, SubToolbox } from '../components/Toolbox';
 import { Brain, Sparkles, Dna, BarChart3, Map, MessageSquare, Send, Zap } from 'lucide-react';
 

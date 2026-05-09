@@ -732,20 +732,6 @@ export const fetchAnalytics = async (
     const shapeKey = `${options.window || "lifetime"}::${groupName}::${ids}`
     const comboKey = `${shapeKey}::${activeMetrics.join(",")}`
     const cachedShape = impressionsProbeCache.get(shapeKey)
-    if (knownInvalidCombos.has(comboKey)) {
-      suppressedInvalidComboCount += 1
-      recordFailure({
-      group: groupName,
-      ids,
-      metrics: activeMetrics,
-      status: 400,
-      reason:
-       "Suppressed known-invalid top-videos impressions/CTR request for this sync.",
-      requestClass: "video_top_videos_channel_filter",
-      outcome: "suppressed",
-      })
-      continue
-    }
     const baseAttemptShape = {
      dimensions: "video",
      includesSort: false,
@@ -753,47 +739,63 @@ export const fetchAnalytics = async (
      includesMaxResults: true,
      includeContentType: false,
     }
-    try {
-      const payload = await fetchVideoReportWithSplitRetries(
-       ids,
-       activeMetrics,
-       0,
-       false,
-       {
-        includeSort: false,
-        includeStartIndex: false,
-        includeMaxResults: true,
-       },
-      )
-      impressionsProbeCache.set(shapeKey, {
-       groupedSupported: true,
-       minimalPagingSupported: true,
-      })
-      aggregatedPayloads.push(filterPayloadToTargetVideos(payload))
-     activeMetrics.forEach((metric) => {
-      metricCapabilityByMetric.set(metric, { status: "available" })
-      runMetricCapabilities.set(metric, {
-       metric,
-       status: "available",
-       source: "api",
-      })
-     })
-     groupResults[groupName].ok = true
-    } catch (groupError) {
-      const groupErrorMessage =
-       groupError instanceof Error ? groupError.message : String(groupError)
-      const groupStatus = getErrorStatus(groupError)
-      recordFailure({
-       group: groupName,
-       ids,
-       metrics: activeMetrics,
-       status: groupStatus,
-       reason: groupErrorMessage,
-       requestClass: "video_top_videos_channel_filter",
-       outcome: groupStatus === 400 ? "quarantined" : "failed",
-       attemptedShape: baseAttemptShape,
-      })
-      if (groupStatus === 400) {
+    
+    let groupStatus: number | undefined = undefined;
+    let groupError: any = null;
+    let payload: any = null;
+    let skippedGroupedRequest = false;
+
+    if (knownInvalidCombos.has(comboKey)) {
+      suppressedInvalidComboCount += 1
+      skippedGroupedRequest = true;
+      groupStatus = 400;
+    } else {
+      try {
+        payload = await fetchVideoReportWithSplitRetries(
+         ids,
+         activeMetrics,
+         0,
+         false,
+         {
+          includeSort: false,
+          includeStartIndex: false,
+          includeMaxResults: true,
+         },
+        )
+        impressionsProbeCache.set(shapeKey, {
+         groupedSupported: true,
+         minimalPagingSupported: true,
+        })
+        aggregatedPayloads.push(filterPayloadToTargetVideos(payload))
+        activeMetrics.forEach((metric) => {
+         metricCapabilityByMetric.set(metric, { status: "available" })
+         runMetricCapabilities.set(metric, {
+          metric,
+          status: "available",
+          source: "api",
+         })
+        })
+        groupResults[groupName].ok = true
+      } catch (err) {
+        groupError = err;
+        const groupErrorMessage =
+         groupError instanceof Error ? groupError.message : String(groupError)
+        groupStatus = getErrorStatus(groupError)
+        recordFailure({
+         group: groupName,
+         ids,
+         metrics: activeMetrics,
+         status: groupStatus,
+         reason: groupErrorMessage,
+         requestClass: "video_top_videos_channel_filter",
+         outcome: groupStatus === 400 ? "quarantined" : "failed",
+         attemptedShape: baseAttemptShape,
+        })
+      }
+    }
+
+    if (!groupResults[groupName].ok) {
+      if (groupStatus === 400 && !skippedGroupedRequest) {
        SESSION_KNOWN_INVALID_COMBOS.add(comboKey)
        impressionsProbeCache.set(shapeKey, {
         groupedSupported: false,
@@ -802,7 +804,7 @@ export const fetchAnalytics = async (
       }
 
       let groupedMinimalPayload: any | null = null
-      if (groupStatus === 400) {
+      if (groupStatus === 400 && !skippedGroupedRequest) {
        try {
         groupedMinimalPayload = await fetchVideoReportWithSplitRetries(
          ids,
@@ -1327,7 +1329,7 @@ export const fetchChannelAnalytics = async (
   )
  const idParam = channelId ? `channel==${channelId}` : "channel==MINE"
  const metrics =
-  "views,estimatedMinutesWatched,subscribersGained,likes,comments,shares,estimatedRevenue,adImpressions,cpm,monetizedPlaybacks,playbackBasedCpm"
+  "views,estimatedMinutesWatched,averageViewDuration,subscribersGained,subscribersLost,likes,comments,shares,estimatedRevenue"
  const url = `${ANALYTICS_URL}/reports?ids=${idParam}&startDate=${startDate}&endDate=${endDate}&metrics=${metrics}&dimensions=day`
  const response = await proxyFetch(url, {
   headers: { Authorization: `Bearer ${token}` },
@@ -1398,7 +1400,7 @@ export const fetchDailyAnalytics = async (
   )
  const idParam = channelId ? `channel==${channelId}` : "channel==MINE"
  const metrics =
-  "views,estimatedMinutesWatched,subscribersGained,estimatedRevenue,likes,comments,shares,adImpressions,cpm,monetizedPlaybacks"
+  "views,estimatedMinutesWatched,averageViewDuration,subscribersGained,subscribersLost,estimatedRevenue,likes,comments,shares"
  const url = `${ANALYTICS_URL}/reports?ids=${idParam}&startDate=${startDate}&endDate=${endDate}&metrics=${metrics}&dimensions=day`
  const response = await proxyFetch(url, {
   headers: { Authorization: `Bearer ${token}` },
@@ -1545,10 +1547,6 @@ export const getChannelAnalytics = async (startDate: string, endDate: string) =>
   "comments",
   "shares",
   "estimatedRevenue",
-  "monetizedPlaybacks",
-  "adImpressions",
-  "cpm",
-  "playbackBasedCpm",
  ].join(",")
 
  const url =

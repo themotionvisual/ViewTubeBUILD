@@ -2,7 +2,11 @@ import React, { useState, useEffect } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { BookOpen, Send, Sparkles, Zap, Check, X, MessageSquare, Plus } from "lucide-react"
 import { useBrain } from "../../../context/useBrain"
-import { generateJournalFollowUps, generateInfiniteMicroPolls } from "../../../services/gemini"
+import {
+  generateJournalFollowUps,
+  generateInfiniteMicroPolls,
+  isGeminiConfigured,
+} from "../../../services/gemini"
 
 const CATEGORIES = [
   { id: "site", label: "Site", color: "#4FFF5B" },
@@ -21,6 +25,7 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
   const [category, setCategory] = useState<any>("content")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGeneratingPulse, setIsGeneratingPulse] = useState(false)
+  const geminiReady = isGeminiConfigured()
 
   const common = {
   widget,
@@ -35,18 +40,14 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
   onDecHeight,
  }
 
-  // Generate initial micro-polls if empty
-  useEffect(() => {
-    if (brain.microPolls.length === 0 && !isGeneratingPulse) {
-      refreshPulse()
-    }
-  }, [brain.microPolls.length])
-
   const refreshPulse = async () => {
+    if (!geminiReady) return
     setIsGeneratingPulse(true)
     try {
       const polls = await generateInfiniteMicroPolls(brain)
       setMicroPolls(polls)
+    } catch (error) {
+      console.warn("[AIJournalWidget] Pulse generation skipped:", error)
     } finally {
       setIsGeneratingPulse(false)
     }
@@ -60,11 +61,11 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
       setContent("")
       
       // Generate follow-ups
-      const questions = await generateJournalFollowUps(content, brain)
+      const questions = geminiReady ? await generateJournalFollowUps(content, brain) : []
       questions.forEach(q => addFollowUp(entry.id, q))
       
       // Refresh pulse while we're at it to stay fresh
-      refreshPulse()
+      if (geminiReady) refreshPulse()
     } finally {
       setIsSubmitting(false)
     }
@@ -113,6 +114,11 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
         </div>
 
         {/* REFLECTIONS (FOLLOW-UPS) */}
+        {!geminiReady && (
+          <div className="rounded-xl border-2 border-black bg-[#fff7db] p-3 text-[10px] font-black uppercase tracking-wide">
+            Gemini key missing. Add it in Settings - Key Vault to enable AI journal generation.
+          </div>
+        )}
         {pendingFollowUps.length > 0 && (
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">

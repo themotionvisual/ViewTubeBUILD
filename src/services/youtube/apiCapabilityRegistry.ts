@@ -145,6 +145,23 @@ export const VIDEO_DIMENSION_UNSUPPORTED_METRICS = new Set<string>([
  "impressions",
  "impressionClickThroughRate",
  "estimatedRevenuePer1000Views",
+ "videosAddedToPlaylists",
+ "videosRemovedFromPlaylists",
+ "annotationClickThroughRate",
+ "annotationCloseRate",
+ "annotationImpressions",
+ "annotationClickableImpressions",
+ "annotationClosableImpressions",
+ "annotationClicks",
+ "annotationCloses",
+ "cardClickRate",
+ "cardImpressions",
+ "cardClicks",
+ "cardTeaserImpressions",
+ "cardTeaserClicks",
+ "cardTeaserClickRate",
+ "videoThumbnailImpressions",
+ "videoThumbnailImpressionsClickRate",
 ])
 
 export const validateAnalyticsVideoRequest = (

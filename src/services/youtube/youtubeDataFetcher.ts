@@ -725,15 +725,6 @@ export const fetchVideoCategories = async () => {
  )
  if (!response.ok) {
   if (response.status === 403) {
-   console.warn("[YouTube API Diagnostic] 403 Forbidden. Checking token scopes...", {
-     tokenPreview: token ? token.substring(0, 10) + "..." : "missing",
-     url: `${BASE_URL}/videoCategories?part=snippet&regionCode=US`
-   });
-   fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${token}`)
-     .then(res => res.json())
-     .then(info => console.info("[YouTube API Diagnostic] Token Info:", info))
-     .catch(err => console.error("[YouTube API Diagnostic] Failed to fetch token info:", err));
-     
    warnYouTubeDataAccessOnce(
     "videoCategories403",
     "[YouTube Data] videoCategories denied (403). Continuing in degraded mode.",

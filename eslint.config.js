@@ -9,6 +9,7 @@ export default defineConfig([
   globalIgnores([
     'dist',
     'docs/**',
+    '_quarantine/**',
     // keep generated / non-runtime experiments out of the lint surface area
     '**/*.bak',
   ]),
@@ -23,6 +24,14 @@ export default defineConfig([
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+    },
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: ['_quarantine/*', '**/_quarantine/*'],
+        },
+      ],
     },
   },
 ])

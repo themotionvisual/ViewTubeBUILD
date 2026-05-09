@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react"
 import { Users, Mail, Phone, ExternalLink, Sparkles, MessageCircle, ArrowRight, UserPlus } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
 import { generateCollabOpportunities, type CollabPeer } from "../../../services/CollabEngine"
+import { isGeminiConfigured } from "../../../services/gemini"
 
 export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMode, onToggleCollapse, onCycleSize, onCycleHeight, onRemove, data, canEdit, onDecSize, onDecHeight}) => {
   const common = {
@@ -21,8 +22,10 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
   const [loading, setLoading] = useState(false)
   const [selectedPeerId, setSelectedPeerId] = useState<string | null>(null)
   const [copySuccess, setCopySuccess] = useState<string | null>(null)
+  const geminiReady = isGeminiConfigured()
 
   const findPeers = async () => {
+    if (!geminiReady) return
     setLoading(true)
     try {
       const myName = data.authState.channelName || "My Channel"
@@ -37,13 +40,6 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
       setLoading(false)
     }
   }
-
-  useEffect(() => {
-    // Auto-load on first mount if empty
-    if (peers.length === 0 && !loading) {
-      findPeers()
-    }
-  }, [])
 
   const selectedPeer = peers.find(p => p.id === selectedPeerId)
 
@@ -62,13 +58,18 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
           <span style={{ fontSize: "10px", fontWeight: 800, opacity: 0.6 }}>PEER NETWORK</span>
           <button 
             onClick={findPeers}
-            disabled={loading}
+            disabled={loading || !geminiReady}
             className="widget-control-btn" 
             style={{ padding: "2px 8px", height: "22px", background: "#4FFF5B" }}
           >
-            {loading ? "SEARCHING..." : "REFRESH LIST"}
+            {loading ? "SEARCHING..." : geminiReady ? "REFRESH LIST" : "GEMINI KEY REQUIRED"}
           </button>
         </div>
+        {!geminiReady && (
+          <div style={{ padding: "8px", border: "2px solid #000", borderRadius: "8px", background: "#fff7db", fontSize: "10px", fontWeight: 800 }}>
+            Gemini key missing. Set it in Settings - Key Vault to enable collab generation.
+          </div>
+        )}
 
         <div style={{ display: "flex", flex: 1, gap: "8px", overflow: "hidden" }}>
           {/* List Side */}

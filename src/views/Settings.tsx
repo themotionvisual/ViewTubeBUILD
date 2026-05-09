@@ -37,9 +37,17 @@ import {
 import type { SubscriptionPlanId } from "../services/subscriptionPlans"
 import { googleService } from "../services/googleService"
 import {
+ applyCustomTopupCredits,
+ applyTopupCredits,
  createCheckoutSession,
  getCurrentEntitlement,
+  getReferralCode,
+  getReferralRedemptionCode,
  isOwnerEmail,
+ saveReferralRedemptionCode,
+ setCustomReferralCodeOnce,
+ simulateMeterRefill,
+ simulateMeterUsage,
  TOPUP_DEFINITIONS,
  updatePlanEntitlement,
  fetchEntitlementFromServer,
@@ -61,21 +69,21 @@ const SUBSCRIPTION_PLANS_UI: {
   cta: "Upgrade",
  },
  {
-  id: "creator_plus",
+  id: "creator",
   tierLabel: "Creator",
   price: "$9.99/mo",
   bullets: ["48-hour trial", "Included AI credits", "Advanced dashboards"],
   cta: "Upgrade",
  },
  {
-  id: "creator_pro",
+  id: "creator_plus",
   tierLabel: "Creator Plus",
   price: "$19.99/mo",
   bullets: ["48-hour trial", "More included AI credits", "Priority generation capacity"],
   cta: "Upgrade",
  },
  {
-  id: "executive",
+  id: "creator_pro",
   tierLabel: "Creator Pro",
   price: "$39.99/mo",
   bullets: ["48-hour trial", "Highest capped creator credits", "Full strategy stack"],
@@ -89,6 +97,14 @@ const SUBSCRIPTION_PLANS_UI: {
   cta: "Upgrade",
  },
 ]
+
+const PLAN_THEME: Record<SubscriptionPlanId, { accent: string; shadow: string; tint: string }> = {
+ basic: { accent: "#C9F830", shadow: "rgba(201, 248, 48, 0.45)", tint: "#F4FFD0" },
+ creator: { accent: "#40C6E9", shadow: "rgba(64, 198, 233, 0.45)", tint: "#D9F6FF" },
+ creator_plus: { accent: "#FFE357", shadow: "rgba(255, 227, 87, 0.45)", tint: "#FFF7CC" },
+ creator_pro: { accent: "#FFB570", shadow: "rgba(255, 181, 112, 0.45)", tint: "#FFE9D2" },
+ executive: { accent: "#FF83EA", shadow: "rgba(255, 131, 234, 0.45)", tint: "#FFDDF7" },
+}
 
 const canonicalButtonClass =
  "rounded-xl border-[3px] border-black shadow-[3px_3px_0px_0px_black] hover:translate-y-0.5 hover:shadow-[1.5px_1.5px_0px_0px_black] transition-all font-black uppercase"
@@ -114,6 +130,9 @@ const Settings: React.FC = () => {
   const [profileName, setProfileName] = useState("")
   const [profileHandle, setProfileHandle] = useState("")
   const [notifyBilling, setNotifyBilling] = useState(true)
+ const [referralInput, setReferralInput] = useState("")
+ const [customReferralCode, setCustomReferralCode] = useState("")
+ const [customTopupAmount, setCustomTopupAmount] = useState("50")
 
   const query = new URLSearchParams(location.search)
  const activePanel = query.get("panel")
@@ -171,6 +190,10 @@ const Settings: React.FC = () => {
   }
   syncBilling()
  }, [isAuth])
+
+ useEffect(() => {
+  setReferralInput(getReferralRedemptionCode())
+ }, [])
 
  // ... existing code ...
 
@@ -244,7 +267,12 @@ const Settings: React.FC = () => {
    window.location.href = session.checkoutUrl
   } catch (error) {
    const message = error instanceof Error ? error.message : String(error)
-   setBillingStatus(`Checkout failed: ${message}`)
+   if (message.includes("not configured") || message.includes("failed (404)")) {
+    updatePlanEntitlement(planId)
+    setBillingStatus("Demo checkout applied locally (billing server not connected).")
+   } else {
+    setBillingStatus(`Checkout failed: ${message}`)
+   }
   } finally {
    setLoadingPlan(null)
   }
@@ -264,12 +292,48 @@ const Settings: React.FC = () => {
    window.location.href = session.checkoutUrl
   } catch (error) {
    const message = error instanceof Error ? error.message : String(error)
-   setBillingStatus(`Top-up failed: ${message}`)
+   if (message.includes("not configured") || message.includes("failed (404)")) {
+    applyTopupCredits(topupSku)
+    setBillingStatus("Demo top-up applied locally (billing server not connected).")
+   } else {
+    setBillingStatus(`Top-up failed: ${message}`)
+   }
+  }
+ }
+
+ const handleCustomTopup = async () => {
+  const amountUsd = Math.max(0, Number(customTopupAmount) || 0)
+  if (amountUsd <= 0) {
+   setBillingStatus("Enter a valid top-up amount.")
+   return
+  }
+  try {
+   setBillingStatus("Creating custom top-up checkout session...")
+   const session = await createCheckoutSession({
+    planId: "creator_plus",
+    userId: "local-user",
+    successUrl: `${window.location.origin}/account?panel=billing`,
+    cancelUrl: `${window.location.origin}/account?panel=billing`,
+    mode: "topup",
+    topupSku: `custom_${amountUsd.toFixed(2)}`,
+   })
+   window.location.href = session.checkoutUrl
+  } catch (error) {
+   const message = error instanceof Error ? error.message : String(error)
+   if (message.includes("not configured") || message.includes("failed (404)")) {
+    const result = applyCustomTopupCredits(amountUsd)
+    const bonusLabel = result.bonusCredits > 0 ? ` (+${result.bonusCredits.toLocaleString()} bonus)` : ""
+    setBillingStatus(
+     `Demo custom top-up applied: ${result.creditsGranted.toLocaleString()} credits${bonusLabel}.`,
+    )
+   } else {
+    setBillingStatus(`Custom top-up failed: ${message}`)
+   }
   }
  }
 
  return (
-  <div className="max-w-[1400px] mx-auto pb-32 animate-fade-in px-4 space-y-10">
+  <div className="max-w-[1400px] mx-auto pb-32 animate-fade-in px-4 space-y-14">
    <div className="flex justify-between items-end border-b-[4px] border-black pb-4">
     <div>
      <h1 className="text-5xl font-black uppercase tracking-tighter text-black">
@@ -284,7 +348,7 @@ const Settings: React.FC = () => {
    </div>
   </div>
 
-   <div id="account-profile">
+   <div id="account-profile" className="pt-1">
    <SubToolbox
     title="Account Profile"
     icon={<User size={20} strokeWidth={3} className="text-black" />}
@@ -334,7 +398,7 @@ const Settings: React.FC = () => {
    </SubToolbox>
    </div>
 
-   <div id="guide-protocols">
+   <div id="guide-protocols" className="pt-1">
    <SubToolbox
     title="User Guide & Protocols"
     icon={<BookOpen size={20} strokeWidth={3} className="text-black" />}
@@ -371,71 +435,69 @@ const Settings: React.FC = () => {
    </SubToolbox>
    </div>
 
-   <div id="billing-meter">
+   <div id="billing-meter" className="pt-1">
    <SubToolbox
     title="Billing & Subscription"
     icon={<Lock size={20} strokeWidth={3} className="text-black" />}
     paletteIndex={0}
-    contentClassName={`p-6 space-y-6 ${highlightBilling ? "ring-4 ring-[#CCFF00]" : ""}`}>
-    <div className="flex flex-wrap items-center justify-between gap-3">
-     <div>
-      <h2 className="text-2xl font-black uppercase tracking-tighter">Subscription Controls</h2>
-      <p className="font-bold text-gray-700 mt-1">
-       Current tier: <span className="uppercase">{entitlement.tier}</span> • Plan:{" "}
-       <span className="uppercase">{entitlement.subscriptionPlanId}</span>
-      </p>
-      <p className="font-bold text-gray-700">
-       Credits:{" "}
-       <span className="uppercase">
-        {Number.isFinite(entitlement.creditBalance)
-         ? Math.max(0, Math.floor(entitlement.creditBalance)).toLocaleString()
-         : "Unlimited"}
-       </span>
-      </p>
-      <p className="font-bold text-gray-700">
-       Monthly Refill:{" "}
-       <span className="uppercase">
-        {Math.max(0, Math.floor(entitlement.monthlyCreditGrant || 0)).toLocaleString()}
-       </span>{" "}
-       • Rollover Cap:{" "}
-       <span className="uppercase">
-        {Math.max(0, Math.floor(entitlement.rolloverCap || 0)).toLocaleString()}
-       </span>
-      </p>
-      <p className="font-bold text-gray-700">
-       Next Refill:{" "}
-       <span className="uppercase">
-        {entitlement.nextRefillIso
-         ? new Date(entitlement.nextRefillIso).toLocaleString()
-         : "N/A"}
-       </span>
-      </p>
-      <p className="mt-2">
+    contentClassName={`p-7 space-y-10 ${highlightBilling ? "ring-4 ring-[#CCFF00]" : ""}`}>
+    <div className="space-y-6">
+     <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="space-y-2">
+       <h2 className="text-[30px] leading-none font-black uppercase tracking-tight">Subscription Controls</h2>
+       <p className="text-sm font-bold text-gray-700">
+        Manage plans, credits, referral rewards, and one-time top-ups from one place.
+       </p>
+      </div>
+      <div className="flex gap-2">
        <button
         onClick={() => navigate("/user-guide#billing")}
-        className="text-xs font-black uppercase underline underline-offset-2">
-        Need Billing Help?
+        className="px-4 py-2 border-[2px] border-black rounded-xl bg-white font-black uppercase text-xs shadow-[2px_2px_0px_0px_black]">
+        Billing Help
        </button>
-      </p>
+       <button
+        onClick={() => navigate("/account?panel=billing")}
+        className="px-4 py-2 border-[3px] border-black rounded-xl bg-[#CCFF00] font-black uppercase shadow-[3px_3px_0px_0px_black]">
+        Billing Panel
+       </button>
+      </div>
      </div>
-     <button
-      onClick={() => navigate("/account?panel=billing")}
-      className="px-4 py-2 border-[3px] border-black rounded-xl bg-[#CCFF00] font-black uppercase shadow-[3px_3px_0px_0px_black]">
-      Billing Panel
-     </button>
+
     </div>
 
-    <div className="border-[4px] border-black rounded-2xl bg-white p-5 shadow-[4px_4px_0px_0px_black] space-y-3">
-     <div className="flex items-end justify-between gap-4">
-      <div>
+    <div className="border-[4px] border-black rounded-2xl bg-white p-5 shadow-[4px_4px_0px_0px_black] space-y-4">
+     <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="min-w-[260px]">
        <p className="text-xs font-black uppercase tracking-[0.14em] text-gray-700">Credit Meter</p>
        <h3 className="text-3xl font-black uppercase tracking-tight">
         {entitlement.tier === "large" ? "Unlimited" : `${meterLeft.toLocaleString()} left`}
        </h3>
       </div>
-      <div className="text-right">
-       <p className="text-xs font-black uppercase tracking-[0.14em] text-gray-700">Total</p>
-       <p className="text-2xl font-black">{entitlement.tier === "large" ? "∞" : meterTotal.toLocaleString()}</p>
+      <div className="flex flex-wrap justify-end gap-2">
+       <div className="border-[2px] border-black rounded-xl px-3 py-2 min-w-[120px]" style={{ backgroundColor: "#D9F6FF", boxShadow: "3px 3px 0px 0px rgba(64, 198, 233, 0.45)" }}>
+        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-gray-700">Plan</p>
+        <p className="text-sm font-black uppercase">{entitlement.subscriptionPlanId}</p>
+       </div>
+       <div className="border-[2px] border-black rounded-xl px-3 py-2 min-w-[100px]" style={{ backgroundColor: "#FFDDF7", boxShadow: "3px 3px 0px 0px rgba(255, 131, 234, 0.45)" }}>
+        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-gray-700">Tier</p>
+        <p className="text-sm font-black uppercase">{entitlement.tier}</p>
+       </div>
+       <div className="border-[2px] border-black rounded-xl px-3 py-2 min-w-[120px]" style={{ backgroundColor: "#FFF7CC", boxShadow: "3px 3px 0px 0px rgba(255, 227, 87, 0.45)" }}>
+        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-gray-700">Refill</p>
+        <p className="text-sm font-black uppercase">
+         {Math.max(0, Math.floor(entitlement.monthlyCreditGrant || 0)).toLocaleString()}
+        </p>
+       </div>
+       <div className="border-[2px] border-black rounded-xl px-3 py-2 min-w-[120px]" style={{ backgroundColor: "#FFE9D2", boxShadow: "3px 3px 0px 0px rgba(255, 181, 112, 0.45)" }}>
+        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-gray-700">Next</p>
+        <p className="text-sm font-black uppercase">
+         {entitlement.nextRefillIso ? new Date(entitlement.nextRefillIso).toLocaleDateString() : "N/A"}
+        </p>
+       </div>
+       <div className="border-[2px] border-black rounded-xl px-3 py-2 min-w-[100px] text-right" style={{ backgroundColor: "#F4FFD0", boxShadow: "3px 3px 0px 0px rgba(201, 248, 48, 0.45)" }}>
+        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-gray-700">Total</p>
+        <p className="text-lg font-black">{entitlement.tier === "large" ? "∞" : meterTotal.toLocaleString()}</p>
+       </div>
       </div>
      </div>
      <div className="h-6 border-[3px] border-black rounded-full bg-[#e5e7eb] overflow-hidden">
@@ -459,78 +521,155 @@ const Settings: React.FC = () => {
       <span>{entitlement.tier === "large" ? "Unlimited Plan Active" : `${meterUsed.toLocaleString()} used`}</span>
       <span>{entitlement.tier === "large" ? "100%" : `${meterPct}% remaining`}</span>
      </div>
+     <div className="grid grid-cols-1 xl:grid-cols-[1fr_auto] gap-3 pt-1 items-start">
+      <div className="flex flex-wrap gap-3">
+       {TOPUP_DEFINITIONS.map((topup) => (
+        <button
+         key={`meter-topup-${topup.sku}`}
+         onClick={() => handleTopup(topup.sku)}
+         className="border-[3px] border-black rounded-xl px-4 py-3 bg-[#40C6E9] font-black uppercase text-sm shadow-[3px_3px_0px_0px_black]">
+         ${topup.priceUsd} • {topup.creditAmount.toLocaleString()} credits
+        </button>
+       ))}
+      </div>
+      <div className="flex flex-wrap xl:flex-nowrap items-center gap-2">
+       <input
+        type="number"
+        min={1}
+        step="1"
+        value={customTopupAmount}
+        onChange={(event) => setCustomTopupAmount(event.target.value)}
+        className="w-[140px] border-[3px] border-black rounded-xl px-3 py-3 font-black text-sm bg-white"
+        placeholder="Amount USD"
+       />
+       <button
+        onClick={handleCustomTopup}
+        className="border-[3px] border-black rounded-xl px-4 py-3 bg-[#CCFF00] font-black uppercase text-sm shadow-[3px_3px_0px_0px_black] whitespace-nowrap">
+        Custom top-up (+25% on $50+)
+       </button>
+      </div>
+     </div>
+     {isOwnerEmail(currentEmail) ? (
+      <div className="flex flex-wrap gap-2">
+       <button
+        onClick={() => {
+         simulateMeterUsage(2500)
+         setBillingStatus("Meter simulation: consumed 2,500 credits.")
+        }}
+        className="border-[2px] border-black rounded-xl px-3 py-2 bg-[#FFE357] font-black uppercase text-xs shadow-[2px_2px_0px_0px_black]">
+        Test Drain
+       </button>
+       <button
+        onClick={() => {
+         simulateMeterRefill(10000)
+         setBillingStatus("Meter simulation: added 10,000 credits.")
+        }}
+        className="border-[2px] border-black rounded-xl px-3 py-2 bg-[#4FFF5B] font-black uppercase text-xs shadow-[2px_2px_0px_0px_black]">
+        Test Refill
+       </button>
+      </div>
+     ) : null}
     </div>
 
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-     {SUBSCRIPTION_PLANS_UI.map((plan) => {
-      const active = entitlement.subscriptionPlanId === plan.id
-      return (
-       <div
-        key={`badge-${plan.id}`}
-        className={`border-[2px] rounded-xl px-3 py-2 text-center font-black uppercase text-[10px] tracking-wider ${
-         active ? "bg-[#CCFF00] border-black shadow-[2px_2px_0px_0px_black]" : "bg-white border-black"
-        }`}>
-        {plan.tierLabel}
-       </div>
-      )
-     })}
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-5 items-stretch">
+    <div className="space-y-3">
+     <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-600">Choose Plan</p>
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6 items-stretch">
      {SUBSCRIPTION_PLANS_UI.map((plan) => {
       const active = entitlement.subscriptionPlanId === plan.id
       const loading = loadingPlan === plan.id
+      const theme = PLAN_THEME[plan.id]
       return (
        <div
         key={plan.id}
-        className="h-full min-w-0 border-[4px] border-black rounded-2xl bg-white p-5 shadow-[6px_6px_0px_0px_black] flex flex-col gap-4">
-        <div className="flex items-center justify-between">
+        className="h-full min-w-0 border-[4px] border-black rounded-2xl bg-white p-5 flex flex-col gap-4"
+        style={{
+         boxShadow: `6px 6px 0px 0px ${theme.shadow}`,
+        }}>
+        <div
+         className="border-[2px] border-black rounded-xl px-3 py-2 flex items-center justify-between"
+         style={{ backgroundColor: theme.tint }}>
          <p className="text-xs font-black uppercase tracking-[0.2em]">{plan.tierLabel}</p>
          {active ? <Check size={18} strokeWidth={3} /> : null}
         </div>
-        <h3 className="text-[2.15rem] leading-none font-black uppercase tracking-tight whitespace-nowrap">
+        <h3 className="text-[2.05rem] leading-none font-black uppercase tracking-tight whitespace-nowrap">
          {plan.price}
         </h3>
         <ul className="space-y-2">
          {plan.bullets.map((bullet) => (
-          <li key={bullet} className="font-bold text-[1rem] uppercase">• {bullet}</li>
+          <li key={bullet} className="font-bold text-[0.95rem] uppercase">• {bullet}</li>
          ))}
         </ul>
         <button
          onClick={() => handleChoosePlan(plan.id)}
          disabled={loading}
-         className="mt-auto border-[3px] border-black rounded-xl px-4 py-3 bg-[#FF8AAF] font-black uppercase text-sm shadow-[4px_4px_0px_0px_black] disabled:opacity-60">
+         className="mt-auto border-[3px] border-black rounded-xl px-4 py-3 font-black uppercase text-sm disabled:opacity-60"
+         style={{
+          backgroundColor: theme.accent,
+          boxShadow: `4px 4px 0px 0px ${theme.shadow}`,
+         }}>
          {loading ? "Working..." : plan.cta}
         </button>
        </div>
       )
      })}
     </div>
+    </div>
 
-    <div className="border-[3px] border-black rounded-xl bg-[#E5E7EB] p-4 font-bold">
+    <div className="border-[3px] border-black rounded-xl bg-[#E5E7EB] p-4 font-bold space-y-3 mt-4">
       <div className="flex items-center gap-2 text-sm uppercase">
         <Sparkles size={16} /> Referral rewards
       </div>
      <p className="mt-2 text-sm">
-      Referral conversion rule active: one free month is earned after each referred customer makes their first successful payment.
+      Generate your referral code and share it. New users can enter a referral code at signup.
      </p>
-    </div>
-
-    <div className="border-[3px] border-black rounded-xl bg-white p-4 space-y-3">
-     <h3 className="font-black uppercase text-sm">Top-Up Credits</h3>
-     <div className="flex flex-wrap gap-2">
-      {TOPUP_DEFINITIONS.map((topup) => (
+     <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      <div className="border-[2px] border-black rounded-xl bg-white px-3 py-2">
+       <p className="text-[10px] font-black uppercase tracking-[0.12em] text-gray-600">Your referral code</p>
+       <p className="text-lg font-black tracking-[0.08em]">{getReferralCode()}</p>
+       <p className="text-[10px] font-black uppercase tracking-[0.1em] text-gray-500 mt-1">
+        {entitlement.referralCodeLocked ? "Locked permanently" : "You can set this once"}
+       </p>
+      </div>
+      <div className="flex gap-2">
+       <input
+        value={referralInput}
+        onChange={(event) => setReferralInput(event.target.value.toUpperCase())}
+        placeholder="Enter referral code"
+        className="flex-1 border-[2px] border-black rounded-xl px-3 py-2 font-black uppercase bg-white"
+       />
        <button
-        key={topup.sku}
-        onClick={() => handleTopup(topup.sku)}
-        className="border-[2px] border-black rounded-xl px-3 py-2 bg-[#40C6E9] font-black uppercase text-xs shadow-[2px_2px_0px_0px_black]">
-        ${topup.priceUsd} • {topup.creditAmount.toLocaleString()} credits
+        onClick={() => {
+         saveReferralRedemptionCode(referralInput)
+         setBillingStatus("Referral code saved for signup.")
+        }}
+        className="border-[2px] border-black rounded-xl px-3 py-2 bg-[#CCFF00] font-black uppercase text-xs shadow-[2px_2px_0px_0px_black]">
+        Save
        </button>
-      ))}
+      </div>
      </div>
+     {!entitlement.referralCodeLocked ? (
+      <div className="flex flex-wrap items-center gap-2">
+       <input
+        value={customReferralCode}
+        onChange={(event) => setCustomReferralCode(event.target.value.toUpperCase())}
+        placeholder="Set your own referral code (one-time)"
+        className="w-full md:w-[360px] border-[2px] border-black rounded-xl px-3 py-2 font-black uppercase bg-white"
+       />
+       <button
+        onClick={() => {
+         const result = setCustomReferralCodeOnce(customReferralCode)
+         setBillingStatus(result.ok ? "Referral code set and locked." : result.reason || "Could not set referral code.")
+        }}
+        className="border-[2px] border-black rounded-xl px-3 py-2 bg-[#CCFF00] font-black uppercase text-xs shadow-[2px_2px_0px_0px_black]">
+        Set Code
+       </button>
+      </div>
+     ) : null}
     </div>
 
-   {billingStatus ? <p className="text-sm font-black uppercase">{billingStatus}</p> : null}
+   {billingStatus && !billingStatus.toLowerCase().includes("entitlements synced with server")
+    ? <p className="text-sm font-black uppercase">{billingStatus}</p>
+    : null}
    </SubToolbox>
    </div>
 
@@ -551,6 +690,15 @@ const Settings: React.FC = () => {
       API Key Setup Help
     </button>
     <form onSubmit={(e) => e.preventDefault()} className="relative">
+     <input
+      type="text"
+      autoComplete="username"
+      tabIndex={-1}
+      aria-hidden="true"
+      className="absolute h-0 w-0 opacity-0 pointer-events-none"
+      value="gemini-user"
+      readOnly
+     />
      <input
      type={showKey ? "text" : "password"}
       autoComplete="new-password"
@@ -622,7 +770,7 @@ const Settings: React.FC = () => {
    </SubToolbox>
 
    {/* Combined Advanced Workspace & Data Module */}
-   <div id="workspace-data">
+   <div id="workspace-data" className="pt-1">
    <SubToolbox
     title="Advanced Workspace & Data"
     icon={<ShieldCheck size={20} strokeWidth={3} className="text-black" />}
@@ -792,7 +940,19 @@ const Settings: React.FC = () => {
       onClick={handleSave}
       className={`${canonicalButtonClass} bg-[#FFFF61] text-black px-16 py-5 text-2xl w-full md:w-auto flex items-center justify-center gap-4`}>
       {saveStatus ? <Check size={28} /> : <Zap size={28} />}
-      {saveStatus || "Save All Settings"}
+     {saveStatus || "Save All Settings"}
+     </button>
+    </div>
+
+    <div className="border-t-[3px] border-black pt-8 space-y-3">
+     <h3 className="text-xl font-black uppercase tracking-tighter">Account & Billing Links</h3>
+     <p className="text-sm font-bold text-gray-700">
+      Open quick-access pages for signup flows, billing actions, and public route checks.
+     </p>
+     <button
+      onClick={() => navigate("/all-links")}
+      className={`${canonicalButtonClass} bg-[#40C6E9] text-black px-8 py-4 text-sm`}>
+      Open All Links Page
      </button>
     </div>
    </SubToolbox>

@@ -4,7 +4,12 @@ import { CheckCircle2, Lock, Sparkles } from "lucide-react"
 import type { SubscriptionPlanId } from "../services/subscriptionPlans"
 import {
  createCheckoutSession,
+ fetchEntitlementFromServer,
+ getReferralRedemptionCode,
+ saveReferralRedemptionCode,
  getCurrentEntitlement,
+ isOwnerEmail,
+ setKnownUserEmail,
  updatePlanEntitlement,
 } from "../services/billingEntitlement"
 
@@ -65,10 +70,34 @@ const Subscribe: React.FC = () => {
  const need = query.get("need") || "free"
  const [loadingPlan, setLoadingPlan] = useState<SubscriptionPlanId | null>(null)
  const [status, setStatus] = useState("")
+ const [referralCode, setReferralCode] = useState(() => getReferralRedemptionCode())
+ const [signupEmail, setSignupEmail] = useState(
+  () => String(localStorage.getItem("vt_signup_email") || "").trim().toLowerCase(),
+ )
 
  const entitlement = getCurrentEntitlement()
 
+ const persistSignupEmail = async (): Promise<string | null> => {
+  const normalized = String(signupEmail || "").trim().toLowerCase()
+  if (!normalized || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+   setStatus("Enter a valid email to continue signup.")
+   return null
+  }
+  localStorage.setItem("vt_signup_email", normalized)
+  setKnownUserEmail(normalized)
+  if (isOwnerEmail(normalized)) {
+   await fetchEntitlementFromServer(normalized)
+   setStatus("Owner account recognized. You can continue signup or checkout.")
+  } else {
+   setStatus("Email saved. Continue with plan selection.")
+  }
+  return normalized
+ }
+
  const onChoosePlan = async (planId: SubscriptionPlanId) => {
+  const userEmail = await persistSignupEmail()
+  if (!userEmail) return
+
   if (planId === "basic") {
    updatePlanEntitlement("basic")
    setStatus("Free plan active. You can keep exploring now.")
@@ -80,9 +109,10 @@ const Subscribe: React.FC = () => {
    setStatus("Creating secure checkout session...")
    const session = await createCheckoutSession({
     planId,
-    userId: "local-user",
+    userId: userEmail,
     successUrl: `${window.location.origin}${from}`,
     cancelUrl: `${window.location.origin}/subscribe`,
+    referralCode: referralCode || undefined,
    })
 
    window.location.href = session.checkoutUrl
@@ -104,11 +134,41 @@ const Subscribe: React.FC = () => {
       <p className="font-bold mt-3">
        Required tier for this route: <span className="uppercase">{need}</span>
       </p>
-      <p className="font-bold mt-1">
+     <p className="font-bold mt-1">
        Current tier: <span className="uppercase">{entitlement.tier}</span>
       </p>
      </div>
      <Lock size={36} strokeWidth={3} />
+    </div>
+    <div className="mt-4 flex flex-wrap items-center gap-2">
+      <input
+       type="email"
+       value={signupEmail}
+       onChange={(e) => setSignupEmail(e.target.value.toLowerCase())}
+       placeholder="Email for account signup"
+       className="w-full max-w-[360px] border-[3px] border-black rounded-xl px-3 py-2 font-black"
+      />
+      <button
+       onClick={() => void persistSignupEmail()}
+       className="border-[3px] border-black rounded-xl px-4 py-2 bg-white font-black uppercase text-xs shadow-[3px_3px_0px_0px_black]">
+       Continue Signup
+      </button>
+    </div>
+    <div className="mt-4 flex flex-wrap items-center gap-2">
+      <input
+       value={referralCode}
+       onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+       placeholder="Referral code (optional)"
+       className="w-full max-w-[320px] border-[3px] border-black rounded-xl px-3 py-2 font-black uppercase"
+      />
+      <button
+       onClick={() => {
+        saveReferralRedemptionCode(referralCode)
+        setStatus("Referral code saved.")
+       }}
+       className="border-[3px] border-black rounded-xl px-4 py-2 bg-white font-black uppercase text-xs shadow-[3px_3px_0px_0px_black]">
+       Apply Code
+      </button>
     </div>
    </div>
 

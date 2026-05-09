@@ -1,5 +1,5 @@
 import { ContextPacket } from "../types"
-import { getBrainMemory } from "./brainEngine"
+import { getBrainMemory } from "./Core"
 
 export const consultBrainSync = (toolId: string): ContextPacket => {
  const schema = getBrainMemory()

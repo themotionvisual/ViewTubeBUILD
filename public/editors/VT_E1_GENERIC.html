@@ -170,14 +170,12 @@
     }
 
     .checker {
-      background-color: rgba(17, 17, 17, 0.5);
+      background-color: #6b6b6b;
       background-image:
-        linear-gradient(45deg, rgba(42, 42, 42, 0.5) 25%, transparent 25%),
-        linear-gradient(-45deg, rgba(42, 42, 42, 0.5) 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, rgba(42, 42, 42, 0.5) 75%),
-        linear-gradient(-45deg, transparent 75%, rgba(42, 42, 42, 0.5) 75%);
-      background-size: 48px 48px;
-      background-position: 0 0, 0 24px, 24px -24px, -24px 0;
+        linear-gradient(0deg, rgba(255,255,255,0.14) 50%, transparent 50%),
+        linear-gradient(90deg, rgba(255,255,255,0.14) 50%, transparent 50%);
+      background-size: 40px 40px;
+      background-position: 0 0, 20px 20px;
     }
 
     .timeline-label {
@@ -506,7 +504,7 @@
   <div id="root"></div>
 
   <script type="text/babel" data-type="module">
-    import React, { useEffect, useMemo, useRef, useState } from 'react';
+    import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
     import { createRoot } from 'react-dom/client';
     import * as LucideIcons from 'lucide-react';
     import {
@@ -519,6 +517,9 @@
     const VT_E1_EXPORT_SCHEMA_VERSION = 'VT_E1_EditorProjectV3';
     const LEGACY_STORAGE_KEY = 'codex_editor_x_v1_v2_project';
     const MANUAL_SESSION_KEY = 'codex_editor_x_v1_manual_session_v4_0153d';
+    const PROJECT_API_BASE = (window.location.origin || 'http://localhost:3000').replace(/\/$/, '');
+    const KNOWN_USER_EMAIL_KEY = 'vt_known_user_email';
+    const SIGNUP_USER_EMAIL_KEY = 'vt_signup_email';
     const REMOTION_SKILL_RULE_STATUS = Object.freeze([
       { id: 'composition-mapping', status: 'implemented', note: 'Export metadata is resolved and validated before every export.' },
       { id: 'animation-translation', status: 'implemented', note: 'Timeline keyframe easing/curves are deterministic for preview/export.' },
@@ -1526,6 +1527,14 @@
       layerId,
       start,
       end,
+      startFrame: Math.max(0, Math.round(Number(start || 0) * 30)),
+      durationInFrames: Math.max(1, Math.round(Math.max(0.05, Number((end || 0) - (start || 0)) * 30))),
+      type: 'video',
+      source: '',
+      transform: { scale: 1, x: 0, y: 0, rotation: 0, opacity: 1 },
+      effects: [],
+      muted: false,
+      locked: false,
       color,
       introAnimationId: null,
       introDurationSec: 0,
@@ -1951,10 +1960,10 @@
           ...basePayload('shape', 0),
           layerName: 'VIEWTUBE_BG',
           x: 0,
-          y: 0,
-          width: 76,
-          height: 26,
-          cornerRadius: 8,
+          y: 28,
+          width: 440,
+          height: 112,
+          cornerRadius: 56,
           shape: 'rect',
           fillColor: '#40C6E9',
           strokeColor: '#111111',
@@ -1971,8 +1980,8 @@
           layerName: 'VIEWTUBE_TEXT',
           text: 'VIEWTUBE',
           x: 0,
-          y: 0,
-          fontSize: 64,
+          y: -8,
+          fontSize: 122,
           fillColor: '#000000',
           strokeWidth: 0,
           fontFamily: 'Outfit'
@@ -2124,16 +2133,22 @@
         },
         tracks,
         layers: layers.map((layer, i) => ({ ...layer, payload: normalizeLayerPayload(layer, i) })),
-        clips: clips.map((clip) => ({
-          ...clip,
-          introAnimationId: normalizeAnimId(clip.introAnimationId),
-          introDurationSec: normalizeAnimDuration(clip.introDurationSec),
-          introLevel: normalizeAnimLevel(clip.introLevel),
-          outroAnimationId: normalizeAnimId(clip.outroAnimationId),
-          outroDurationSec: normalizeAnimDuration(clip.outroDurationSec),
-          outroLevel: normalizeAnimLevel(clip.outroLevel),
-          keyframes: Array.isArray(clip.keyframes) ? clip.keyframes : []
-        })),
+        clips: clips.map((clip) => {
+          const normalizedClip = normalizeClipFrameFields(clip, source.meta?.fps || fallback.meta.fps || 30);
+          const layer = layers.find((l) => l.id === normalizedClip.layerId);
+          return {
+            ...normalizedClip,
+            type: normalizedClip.type || clipTimelineTypeForLayer(layer?.type),
+            source: normalizedClip.source || String(layer?.payload?.mediaUrl || ''),
+            introAnimationId: normalizeAnimId(clip.introAnimationId),
+            introDurationSec: normalizeAnimDuration(clip.introDurationSec),
+            introLevel: normalizeAnimLevel(clip.introLevel),
+            outroAnimationId: normalizeAnimId(clip.outroAnimationId),
+            outroDurationSec: normalizeAnimDuration(clip.outroDurationSec),
+            outroLevel: normalizeAnimLevel(clip.outroLevel),
+            keyframes: Array.isArray(clip.keyframes) ? clip.keyframes : []
+          };
+        }),
         transitions: Array.isArray(source.transitions) ? source.transitions : [],
         seamLinks: Array.isArray(source.seamLinks) ? source.seamLinks : [],
         trackUiState: source.trackUiState && typeof source.trackUiState === 'object' ? source.trackUiState : {},
@@ -2145,12 +2160,80 @@
       };
     };
 
-    const durationOf = (clip) => Math.max(0.05, clip.end - clip.start);
+    const secToFrame = (sec, fps) => Math.max(0, Math.round(Number(sec || 0) * Math.max(1, Number(fps || 30))));
+    const frameToSec = (frame, fps) => Math.max(0, Number(frame || 0) / Math.max(1, Number(fps || 30)));
+    const frameToTimecode = (frame, fps) => formatHMS(frameToSec(frame, fps));
+    const durationOf = (clip, fps = 30) => {
+      if (Number.isFinite(Number(clip?.durationInFrames)) && Number(clip.durationInFrames) > 0) {
+        return frameToSec(Number(clip.durationInFrames), Number(fps || 30));
+      }
+      return Math.max(0.05, Number(clip?.end || 0) - Number(clip?.start || 0));
+    };
+    const stableHash = (input) => {
+      const str = String(input || '');
+      let h = 2166136261 >>> 0;
+      for (let i = 0; i < str.length; i += 1) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h >>> 0;
+    };
+    const deterministicSeedForClip = (projectId, clipId) => stableHash(`${projectId || 'vt-e1'}::${clipId || 'clip'}`);
+
+    const normalizeClipFrameFields = (clip, fps) => {
+      const safeFps = Math.max(1, Number(fps || 30));
+      const startFrame = Number.isFinite(Number(clip?.startFrame))
+        ? Math.max(0, Math.round(Number(clip.startFrame)))
+        : secToFrame(Number(clip?.start || 0), safeFps);
+      const durationInFrames = Number.isFinite(Number(clip?.durationInFrames))
+        ? Math.max(1, Math.round(Number(clip.durationInFrames)))
+        : Math.max(1, secToFrame(Math.max(0.05, Number(clip?.end || 0) - Number(clip?.start || 0)), safeFps));
+      const start = frameToSec(startFrame, safeFps);
+      const end = frameToSec(startFrame + durationInFrames, safeFps);
+      return {
+        ...clip,
+        startFrame,
+        durationInFrames,
+        start,
+        end,
+        type: clip?.type || 'video',
+        source: typeof clip?.source === 'string' ? clip.source : '',
+        transform: {
+          scale: Number(clip?.transform?.scale ?? 1),
+          x: Number(clip?.transform?.x ?? 0),
+          y: Number(clip?.transform?.y ?? 0),
+          rotation: Number(clip?.transform?.rotation ?? 0),
+          opacity: clamp(Number(clip?.transform?.opacity ?? 1), 0, 1)
+        },
+        effects: Array.isArray(clip?.effects) ? clip.effects : [],
+        muted: Boolean(clip?.muted),
+        locked: Boolean(clip?.locked)
+      };
+    };
+    const clipTimelineTypeForLayer = (layerType) => {
+      if (layerType === 'audio') return 'audio';
+      if (layerType === 'text') return 'text';
+      if (layerType === 'shape') return 'fx';
+      return 'video';
+    };
     const isVideoLikeUrl = (url) => /\.(mp4|webm|mov|m4v|ogg)(\?|#|$)/i.test(String(url || ''));
     const isGifLikeUrl = (url) => /\.(gif|webp)(\?|#|$)/i.test(String(url || ''));
 
-    const clipLocalToAbs = (clip, offsetSec) => clip.start + offsetSec;
-    const clipAbsToLocal = (clip, absSec) => clamp(absSec - clip.start, 0, durationOf(clip));
+    const clipLocalToAbs = (clip, offsetSec) => Number(clip.start || 0) + offsetSec;
+    const clipAbsToLocal = (clip, absSec) => clamp(absSec - Number(clip.start || 0), 0, durationOf(clip));
+    const frameNativeClipTiming = (startSec, endSec, fps) => {
+      const safeFps = Math.max(1, Number(fps || 30));
+      const startFrame = Math.max(0, secToFrame(startSec, safeFps));
+      const endFrame = Math.max(startFrame + 1, secToFrame(endSec, safeFps));
+      const durationInFrames = Math.max(1, endFrame - startFrame);
+      return {
+        startFrame,
+        durationInFrames,
+        start: frameToSec(startFrame, safeFps),
+        end: frameToSec(startFrame + durationInFrames, safeFps)
+      };
+    };
+    const normalizeClipsFrameNative = (clips, fps) => (clips || []).map((clip) => normalizeClipFrameFields(clip, fps));
 
     const hasOverlap = (clips, trackId, start, end, ignoreId = null) => {
       return clips.some((c) => {
@@ -2275,6 +2358,7 @@
       const [selectedClipId, setSelectedClipId] = useState(null);
       const [selectedClipIds, setSelectedClipIds] = useState([]);
       const [selectedLayerId, setSelectedLayerId] = useState(null);
+      const [showStageTransformUi, setShowStageTransformUi] = useState(false);
       const [selectedLayerUrlMode, setSelectedLayerUrlMode] = useState({});
       const [durationInput, setDurationInput] = useState('0:00:30');
       const [historyVersion, setHistoryVersion] = useState(0);
@@ -2317,6 +2401,16 @@
       const [boxSelect, setBoxSelect] = useState(null);
       const [showStartupRestore, setShowStartupRestore] = useState(false);
       const [showTemplateCreator, setShowTemplateCreator] = useState(false);
+      const [showProjectPicker, setShowProjectPicker] = useState(false);
+      const [projectPickerSearch, setProjectPickerSearch] = useState('');
+      const [projectList, setProjectList] = useState([]);
+      const [cloudProjectApiAvailable, setCloudProjectApiAvailable] = useState(true);
+      const [activeProjectId, setActiveProjectId] = useState(null);
+      const [projectOwnerId, setProjectOwnerId] = useState('local-user');
+      const [projectSaveState, setProjectSaveState] = useState('saved'); // saved | saving | unsaved | failed
+      const [projectSaveError, setProjectSaveError] = useState('');
+      const [projectRevision, setProjectRevision] = useState(1);
+      const [projectEtag, setProjectEtag] = useState('');
       const [tplCreatorStep, setTplCreatorStep] = useState(1);
       const [tplCreatorStyle, setTplCreatorStyle] = useState('neo-brutalist');
       const [tplCreatorIcon, setTplCreatorIcon] = useState('sparkles');
@@ -2382,6 +2476,27 @@
         setProviderStatus({ mode: 'disabled', message });
         return false;
       };
+      const resolveProjectOwnerId = () => {
+        try {
+          const a = String(localStorage.getItem(KNOWN_USER_EMAIL_KEY) || '').trim().toLowerCase();
+          if (a) return a;
+          const b = String(localStorage.getItem(SIGNUP_USER_EMAIL_KEY) || '').trim().toLowerCase();
+          if (b) return b;
+        } catch {}
+        return 'local-user';
+      };
+      const getScopedManualSessionKey = (ownerId, projectId) => `${MANUAL_SESSION_KEY}:${String(ownerId || 'local-user')}:${String(projectId || 'draft')}`;
+      const validateCloudProjectEnvelope = (record) => {
+        const projectData = record?.projectData;
+        if (!projectData || typeof projectData !== 'object') return { valid: false, reason: 'missing projectData' };
+        const cm = projectData?.compositionMeta || {};
+        const w = Number(cm.compositionWidth ?? cm.width);
+        const h = Number(cm.compositionHeight ?? cm.height);
+        const fps = Number(cm.fps);
+        const frames = Number(cm.durationInFrames);
+        if (!(w > 0 && h > 0 && fps > 0 && frames > 0)) return { valid: false, reason: 'invalid composition metadata' };
+        return { valid: true, reason: '' };
+      };
       const projectHash = useMemo(() => JSON.stringify(project), [project]);
       const compileSnapshotHash = useMemo(() => simpleHash(projectHash), [projectHash]);
       const isDirty = featureFlags.dirtyStatus ? (lastSavedHash && projectHash !== lastSavedHash) : false;
@@ -2424,6 +2539,13 @@
       const timelineRef = useRef(null);
       const timelineContentRef = useRef(null);
       const tracksRegionRef = useRef(null);
+      const stageSlotRef = useRef(null);
+      const [stageFitEpoch, setStageFitEpoch] = useState(0);
+      const bindStageSlotRef = useCallback((node) => {
+        stageSlotRef.current = node;
+        setStageFitEpoch((v) => v + 1);
+      }, []);
+      const stageViewportRef = useRef(null);
       const rafRef = useRef(null);
       const dragRef = useRef({ type: null });
       const cutHoldRef = useRef(null);
@@ -2440,11 +2562,18 @@
       const dockRetreatTimerRef = useRef(null);
       const topDockGroupRef = useRef(null);
       const bottomDockGroupRef = useRef(null);
+      const autosaveCloudTimerRef = useRef(null);
 
       useEffect(() => {
         try {
           localStorage.removeItem(LEGACY_STORAGE_KEY);
         } catch {}
+      }, []);
+
+      useEffect(() => {
+        const ownerId = resolveProjectOwnerId();
+        setProjectOwnerId(ownerId);
+        fetchProjectList(ownerId).catch(() => {});
       }, []);
 
       useEffect(() => {
@@ -2521,6 +2650,39 @@
           setLastSavedHash(projectHash);
         }
       }, [lastSavedHash, projectHash]);
+
+      useEffect(() => {
+        if (!featureFlags.dirtyStatus) return;
+        if (!lastSavedHash) return;
+        setProjectSaveState(projectHash === lastSavedHash ? 'saved' : 'unsaved');
+      }, [projectHash, lastSavedHash, featureFlags.dirtyStatus]);
+
+      useEffect(() => {
+        if (!activeProjectId) return;
+        if (projectSaveState !== 'unsaved') return;
+        if (autosaveCloudTimerRef.current) window.clearTimeout(autosaveCloudTimerRef.current);
+        autosaveCloudTimerRef.current = window.setTimeout(() => {
+          saveProjectToCloud({ explicit: false }).catch((error) => {
+            setProjectSaveState('failed');
+            setProjectSaveError(String(error?.message || error || 'Autosave failed.'));
+          });
+        }, 1600);
+        return () => {
+          if (autosaveCloudTimerRef.current) window.clearTimeout(autosaveCloudTimerRef.current);
+        };
+      }, [activeProjectId, projectSaveState, projectHash]);
+
+      useEffect(() => {
+        const onBeforeUnload = () => {
+          try {
+            const ownerId = resolveProjectOwnerId();
+            const localKey = getScopedManualSessionKey(ownerId, activeProjectId || 'draft');
+            localStorage.setItem(localKey, JSON.stringify(project));
+          } catch {}
+        };
+        window.addEventListener('beforeunload', onBeforeUnload);
+        return () => window.removeEventListener('beforeunload', onBeforeUnload);
+      }, [activeProjectId, project]);
 
       useEffect(() => {
         if (historyIndexRef.current < 0) {
@@ -2787,6 +2949,15 @@
         () => project.transitions?.find((t) => t.id === selectedTransitionId) || null,
         [project.transitions, selectedTransitionId]
       );
+      const selectedTransitionClampWarning = useMemo(() => {
+        if (!selectedTransition) return null;
+        const left = project.clips.find((c) => c.id === selectedTransition.leftClipId);
+        const right = project.clips.find((c) => c.id === selectedTransition.rightClipId);
+        const window = computeTransitionWindow(left, right, selectedTransition, Number(project.meta?.fps || 30));
+        if (!window || !window.clamped) return null;
+        const requested = Math.max(1, Math.round(Number(selectedTransition.durationSec || 0.35) * Math.max(1, Number(project.meta?.fps || 30))));
+        return `Transition auto-clamped to ${window.durationInFrames}f (requested ${requested}f) due to short adjacent clips.`;
+      }, [selectedTransition, project.clips, project.meta?.fps]);
       const timelineMarkers = useMemo(
         () => (Array.isArray(project.meta?.timelineMarkers) ? [...project.meta.timelineMarkers].sort((a, b) => a.timeSec - b.timeSec) : []),
         [project.meta?.timelineMarkers]
@@ -2921,6 +3092,10 @@
 
       const updateMeta = (patch) => setProject((prev) => ({ ...prev, meta: { ...prev.meta, ...patch } }));
       const startNewProjectFromMeta = () => {
+        if (projectSaveState === 'unsaved') {
+          const shouldDiscard = window.confirm('You have unsaved changes. Press OK to discard and create a new project, or Cancel to stay.');
+          if (!shouldDiscard) return;
+        }
         const fresh = defaultProject();
         const nextMeta = {
           ...fresh.meta,
@@ -2938,6 +3113,16 @@
         setSelectedClipId(null);
         setSelectedClipIds([]);
         setSelectedLayerId(null);
+        setActiveProjectId(null);
+        setProjectRevision(1);
+        setProjectEtag('');
+        setProjectSaveState('unsaved');
+        window.setTimeout(() => {
+          saveProjectToCloud({ explicit: true, saveAs: true }).catch((error) => {
+            setProjectSaveState('failed');
+            setProjectSaveError(String(error?.message || error || 'Could not create project.'));
+          });
+        }, 0);
       };
       const updateCamera = (patch) => setProject((prev) => {
         const tolerance = 0.03;
@@ -3763,31 +3948,40 @@
 
       const splitClipAt = (clip, cutTimeAbs, mode) => {
         if (cutTimeAbs <= clip.start || cutTimeAbs >= clip.end) return;
-        const cutOffset = clipAbsToLocal(clip, cutTimeAbs);
 
         setProject((prev) => {
+          const safeFps = Math.max(1, Number(prev.meta?.fps || 30));
+          const baseClip = prev.clips.find((c) => c.id === clip.id);
+          if (!baseClip) return prev;
+          const normalizedBase = normalizeClipFrameFields(baseClip, safeFps);
+          const cutFrameAbs = clamp(secToFrame(cutTimeAbs, safeFps), normalizedBase.startFrame + 1, normalizedBase.startFrame + normalizedBase.durationInFrames - 1);
+          const cutOffsetFrame = cutFrameAbs - normalizedBase.startFrame;
+          const cutOffsetSec = frameToSec(cutOffsetFrame, safeFps);
           const others = prev.clips.filter((c) => c.id !== clip.id);
 
-          const left = {
-            ...clip,
-            id: uid('clipL'),
-            end: cutTimeAbs,
-            keyframes: clip.keyframes
-              .filter((kf) => kf.offsetSec <= cutOffset)
-              .map((kf) => ({ ...kf, id: uid('kf') }))
-          };
+          const leftTiming = frameNativeClipTiming(normalizedBase.start, frameToSec(cutFrameAbs, safeFps), safeFps);
+          const rightTiming = frameNativeClipTiming(frameToSec(cutFrameAbs, safeFps), normalizedBase.end, safeFps);
 
-          const right = {
-            ...clip,
+          const left = normalizeClipFrameFields({
+            ...normalizedBase,
+            id: uid('clipL'),
+            ...leftTiming,
+            keyframes: (normalizedBase.keyframes || [])
+              .filter((kf) => kf.offsetSec <= cutOffsetSec)
+              .map((kf) => ({ ...kf, id: uid('kf') }))
+          }, safeFps);
+
+          const right = normalizeClipFrameFields({
+            ...normalizedBase,
             id: uid('clipR'),
-            start: cutTimeAbs,
-            keyframes: clip.keyframes
-              .filter((kf) => kf.offsetSec >= cutOffset)
-              .map((kf) => ({ ...kf, id: uid('kf'), offsetSec: kf.offsetSec - cutOffset }))
-          };
+            ...rightTiming,
+            keyframes: (normalizedBase.keyframes || [])
+              .filter((kf) => kf.offsetSec >= cutOffsetSec)
+              .map((kf) => ({ ...kf, id: uid('kf'), offsetSec: Math.max(0, kf.offsetSec - cutOffsetSec) }))
+          }, safeFps);
 
           const next = mode === 'keep-left' ? [left] : mode === 'keep-right' ? [right] : [left, right];
-          return { ...prev, clips: [...others, ...next] };
+          return { ...prev, clips: normalizeClipsFrameNative([...others, ...next], safeFps) };
         });
       };
 
@@ -3892,7 +4086,9 @@
           const left = prev.clips.find((c) => c.id === leftClipId);
           const right = prev.clips.find((c) => c.id === rightClipId);
           if (!left || !right) return prev;
-          const maxDur = Math.max(0.05, Math.min(durationOf(left), durationOf(right), 8));
+          const safeFps = Math.max(1, Number(prev.meta?.fps || 30));
+          const maxTransitionFrames = Math.max(1, Math.min(Number(left.durationInFrames || secToFrame(durationOf(left, safeFps), safeFps)), Number(right.durationInFrames || secToFrame(durationOf(right, safeFps), safeFps))));
+          const maxDur = Math.max(0.05, Math.min(maxTransitionFrames / safeFps, 8));
           const existing = prev.transitions.find((t) => t.leftClipId === leftClipId && t.rightClipId === rightClipId);
           if (existing) {
             const next = prev.transitions.map((t) => {
@@ -3950,12 +4146,14 @@
         setProject((prev) => {
           const clip = prev.clips.find((c) => c.id === clipId);
           if (!clip) return prev;
-          const len = durationOf(clip);
+          const safeFps = Math.max(1, Number(prev.meta?.fps || 30));
+          const len = durationOf(clip, safeFps);
           const start = nearestFreeStart(prev.clips, nextTrackId, desiredStart, len, clip.id);
           const end = start + len;
+          const nextClips = prev.clips.map((c) => c.id === clipId ? normalizeClipFrameFields({ ...c, trackId: nextTrackId, ...frameNativeClipTiming(start, end, safeFps) }, safeFps) : c);
           return {
             ...prev,
-            clips: prev.clips.map((c) => c.id === clipId ? { ...c, trackId: nextTrackId, start, end } : c),
+            clips: normalizeClipsFrameNative(nextClips, safeFps),
             layers: prev.layers.map((l) => l.id === clip.layerId ? { ...l, trackId: nextTrackId } : l),
             meta: { ...prev.meta, durationSec: Math.max(prev.meta.durationSec, end + 1) }
           };
@@ -4009,12 +4207,14 @@
         setProject((prev) => {
           const clip = prev.clips.find((c) => c.id === clipId);
           if (!clip) return prev;
-          const len = Math.max(0.05, nextEnd - nextStart);
+          const safeFps = Math.max(1, Number(prev.meta?.fps || 30));
+          const len = Math.max(frameToSec(1, safeFps), nextEnd - nextStart);
           const start = nearestFreeStart(prev.clips, clip.trackId, nextStart, len, clip.id);
           const end = start + len;
+          const nextClips = prev.clips.map((c) => c.id === clipId ? normalizeClipFrameFields({ ...c, ...frameNativeClipTiming(start, end, safeFps) }, safeFps) : c);
           return {
             ...prev,
-            clips: prev.clips.map((c) => c.id === clipId ? { ...c, start, end } : c),
+            clips: normalizeClipsFrameNative(nextClips, safeFps),
             meta: { ...prev.meta, durationSec: Math.max(prev.meta.durationSec, end + 1) }
           };
         });
@@ -4024,49 +4224,50 @@
         setProject((prev) => {
           const clip = prev.clips.find((c) => c.id === clipId);
           if (!clip) return prev;
-          const oldStart = clip.start;
-          const start = clamp(newStart, 0, clip.end - 0.05);
-          const shift = oldStart - start;
-          const len = clip.end - start;
-          const fixedStart = nearestFreeStart(prev.clips, clip.trackId, start, len, clip.id);
+          const safeFps = Math.max(1, Number(prev.meta?.fps || 30));
+          const normalized = normalizeClipFrameFields(clip, safeFps);
+          const oldStart = normalized.start;
+          const minDurSec = frameToSec(1, safeFps);
+          const start = clamp(newStart, 0, normalized.end - minDurSec);
+          const len = normalized.end - start;
+          const fixedStart = nearestFreeStart(prev.clips, normalized.trackId, start, len, normalized.id);
           const deltaApplied = oldStart - fixedStart;
-          return {
-            ...prev,
-            clips: prev.clips.map((c) => {
-              if (c.id !== clipId) return c;
-              const end = c.end;
-              const dur = end - fixedStart;
-              const keyframes = c.keyframes.map((kf) => ({
-                ...kf,
-                offsetSec: clamp(kf.offsetSec + deltaApplied, 0, dur)
-              }));
-              return { ...c, start: fixedStart, keyframes };
-            })
-          };
+          const nextClips = prev.clips.map((c) => {
+            if (c.id !== clipId) return c;
+            const dur = normalized.end - fixedStart;
+            const keyframes = (c.keyframes || []).map((kf) => ({
+              ...kf,
+              offsetSec: clamp(kf.offsetSec + deltaApplied, 0, dur)
+            }));
+            return normalizeClipFrameFields({ ...c, ...frameNativeClipTiming(fixedStart, normalized.end, safeFps), keyframes }, safeFps);
+          });
+          return { ...prev, clips: normalizeClipsFrameNative(nextClips, safeFps) };
         });
       };
 
       const applyRightTrim = (clipId, newEnd) => {
-        setProject((prev) => ({
-          ...prev,
-          clips: prev.clips.map((c) => {
+        setProject((prev) => {
+          const safeFps = Math.max(1, Number(prev.meta?.fps || 30));
+          const nextClips = prev.clips.map((c) => {
             if (c.id !== clipId) return c;
             const maxBlockedEnd = prev.clips
               .filter((o) => o.trackId === c.trackId && o.id !== c.id && o.start >= c.start)
               .reduce((min, o) => Math.min(min, o.start), Number.POSITIVE_INFINITY);
             const hardMax = Number.isFinite(maxBlockedEnd) ? maxBlockedEnd : (prev.meta.durationSec + 120);
-            const end = clamp(newEnd, c.start + 0.05, hardMax);
+            const minDurSec = frameToSec(1, safeFps);
+            const end = clamp(newEnd, c.start + minDurSec, hardMax);
             const dur = end - c.start;
-            return {
-              ...c,
-              end,
-              keyframes: c.keyframes
-                .filter((kf) => kf.offsetSec <= dur)
-                .map((kf) => ({ ...kf, offsetSec: clamp(kf.offsetSec, 0, dur) }))
-            };
-          }),
-          meta: { ...prev.meta, durationSec: Math.max(prev.meta.durationSec, newEnd + 1) }
-        }));
+            const keyframes = (c.keyframes || [])
+              .filter((kf) => kf.offsetSec <= dur)
+              .map((kf) => ({ ...kf, offsetSec: clamp(kf.offsetSec, 0, dur) }));
+            return normalizeClipFrameFields({ ...c, ...frameNativeClipTiming(c.start, end, safeFps), keyframes }, safeFps);
+          });
+          return {
+            ...prev,
+            clips: normalizeClipsFrameNative(nextClips, safeFps),
+            meta: { ...prev.meta, durationSec: Math.max(prev.meta.durationSec, newEnd + 1) }
+          };
+        });
       };
 
       const toggleGroupClips = () => {
@@ -4125,6 +4326,7 @@
         setActiveTab('layerSettings');
       };
       const beginStageMediaMove = (event, layer, clip, payload, stageScale = 1) => {
+        setShowStageTransformUi(true);
         if (!layer || !['media', 'text', 'shape', 'template'].includes(layer.type)) return;
         event.preventDefault();
         event.stopPropagation();
@@ -4141,6 +4343,160 @@
             x: Math.round((baseX + dx) * 100) / 100,
             y: Math.round((baseY + dy) * 100) / 100
           });
+        };
+        const onUp = () => {
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+        };
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+      };
+      const worldToScreenPoint = (world, stageRect, camera) => {
+        if (!stageRect) return { x: 0, y: 0 };
+        const camScale = Math.max(0.0001, Number(camera?.scale || 1));
+        const camRotateDeg = Number(camera?.rotate || 0) + Number(camera?.extraRotate || 0);
+        const theta = (camRotateDeg * Math.PI) / 180;
+        const cos = Math.cos(theta);
+        const sin = Math.sin(theta);
+        const rx = (world.x * cos) - (world.y * sin);
+        const ry = (world.x * sin) + (world.y * cos);
+        return {
+          x: stageRect.left + (stageRect.width / 2) + (Number(camera?.x || 0)) + (rx * camScale),
+          y: stageRect.top + (stageRect.height / 2) + (Number(camera?.y || 0)) + (ry * camScale)
+        };
+      };
+      const screenToWorldPoint = (screen, stageRect, camera) => {
+        if (!stageRect) return { x: 0, y: 0 };
+        const camScale = Math.max(0.0001, Number(camera?.scale || 1));
+        const camRotateDeg = Number(camera?.rotate || 0) + Number(camera?.extraRotate || 0);
+        const theta = (camRotateDeg * Math.PI) / 180;
+        const cos = Math.cos(theta);
+        const sin = Math.sin(theta);
+        const vx = (screen.x - stageRect.left - (stageRect.width / 2) - Number(camera?.x || 0)) / camScale;
+        const vy = (screen.y - stageRect.top - (stageRect.height / 2) - Number(camera?.y || 0)) / camScale;
+        return {
+          x: (vx * cos) + (vy * sin),
+          y: (-vx * sin) + (vy * cos)
+        };
+      };
+      const projectOverlayPose = (entry, stageRect, camera) => {
+        if (!entry || !stageRect) return null;
+        const payload = entry.payload || {};
+        const width = Math.max(1, Number(payload.width || (entry.layer?.type === 'shape' ? 260 : 960)));
+        const height = Math.max(1, Number(payload.height || (entry.layer?.type === 'shape' ? 140 : 540)));
+        const scale = Math.max(0.0001, Number(payload.scale || 1));
+        const rotationDeg = Number(payload.rotation || 0);
+        const theta = (rotationDeg * Math.PI) / 180;
+        const cos = Math.cos(theta);
+        const sin = Math.sin(theta);
+        const hx = (width / 2) * scale;
+        const hy = (height / 2) * scale;
+        const centerWorld = { x: Number(payload.x || 0), y: Number(payload.y || 0) };
+        const localCorners = [
+          { x: -hx, y: -hy },
+          { x: hx, y: -hy },
+          { x: hx, y: hy },
+          { x: -hx, y: hy }
+        ];
+        const worldCorners = localCorners.map((corner) => ({
+          x: centerWorld.x + (corner.x * cos) - (corner.y * sin),
+          y: centerWorld.y + (corner.x * sin) + (corner.y * cos)
+        }));
+        const screenCorners = worldCorners.map((corner) => worldToScreenPoint(corner, stageRect, camera));
+        const topMidWorld = {
+          x: (worldCorners[0].x + worldCorners[1].x) / 2,
+          y: (worldCorners[0].y + worldCorners[1].y) / 2
+        };
+        const topMidScreen = worldToScreenPoint(topMidWorld, stageRect, camera);
+        const centerScreen = worldToScreenPoint(centerWorld, stageRect, camera);
+        const camScale = Math.max(0.0001, Number(camera?.scale || 1));
+        return {
+          layerId: entry.layer?.id,
+          clipId: entry.clip?.id || null,
+          screenCx: centerScreen.x - stageRect.left,
+          screenCy: centerScreen.y - stageRect.top,
+          screenWidth: width * scale * camScale,
+          screenHeight: height * scale * camScale,
+          screenRotationDeg: rotationDeg + Number(camera?.rotate || 0) + Number(camera?.extraRotate || 0),
+          screenCorners: screenCorners.map((pt) => ({ x: pt.x - stageRect.left, y: pt.y - stageRect.top })),
+          topMidScreen: { x: topMidScreen.x - stageRect.left, y: topMidScreen.y - stageRect.top },
+          visible: true
+        };
+      };
+      const beginOverlayMove = (event, entry, stageRect, camera) => {
+        if (!entry?.layer || !stageRect) return;
+        event.preventDefault();
+        event.stopPropagation();
+        focusStageLayer(entry.layer, entry.clip);
+        event.currentTarget?.setPointerCapture?.(event.pointerId);
+        const payload = entry.payload || {};
+        const baseX = Number(payload.x || 0);
+        const baseY = Number(payload.y || 0);
+        const startWorld = screenToWorldPoint({ x: event.clientX, y: event.clientY }, stageRect, camera);
+        const onMove = (ev) => {
+          const nextWorld = screenToWorldPoint({ x: ev.clientX, y: ev.clientY }, stageRect, camera);
+          updateLayerPayload(entry.layer.id, {
+            x: Math.round((baseX + (nextWorld.x - startWorld.x)) * 100) / 100,
+            y: Math.round((baseY + (nextWorld.y - startWorld.y)) * 100) / 100
+          });
+        };
+        const onUp = () => {
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+        };
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+      };
+      const beginOverlayScale = (event, entry, stageRect, camera, corner) => {
+        if (!entry?.layer || !stageRect) return;
+        event.preventDefault();
+        event.stopPropagation();
+        focusStageLayer(entry.layer, entry.clip);
+        event.currentTarget?.setPointerCapture?.(event.pointerId);
+        const payload = entry.payload || {};
+        const baseScale = Math.max(0.0001, Number(payload.scale || 1));
+        const baseW = Math.max(1, Number(payload.width || (entry.layer?.type === 'shape' ? 260 : 960)));
+        const baseH = Math.max(1, Number(payload.height || (entry.layer?.type === 'shape' ? 140 : 540)));
+        const center = { x: Number(payload.x || 0), y: Number(payload.y || 0) };
+        const rotationDeg = Number(payload.rotation || 0);
+        const theta = (rotationDeg * Math.PI) / 180;
+        const cos = Math.cos(theta);
+        const sin = Math.sin(theta);
+        const sign = corner === 'br' ? { x: 1, y: 1 } : corner === 'bl' ? { x: -1, y: 1 } : corner === 'tr' ? { x: 1, y: -1 } : { x: -1, y: -1 };
+        const onMove = (ev) => {
+          const pointerWorld = screenToWorldPoint({ x: ev.clientX, y: ev.clientY }, stageRect, camera);
+          const dx = pointerWorld.x - center.x;
+          const dy = pointerWorld.y - center.y;
+          const localX = (dx * cos) + (dy * sin);
+          const localY = (-dx * sin) + (dy * cos);
+          const scaledX = Math.max(0.0001, Math.abs(localX) / Math.max(0.5, baseW / 2));
+          const scaledY = Math.max(0.0001, Math.abs(localY) / Math.max(0.5, baseH / 2));
+          const signedBias = sign.x * localX + sign.y * localY;
+          const nextScaleRaw = signedBias < 0 ? Math.min(scaledX, scaledY) : Math.max(scaledX, scaledY);
+          const nextScale = clamp(Math.round(nextScaleRaw * 1000) / 1000, 0.05, 20);
+          updateLayerPayload(entry.layer.id, { scale: nextScale });
+        };
+        const onUp = () => {
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+        };
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+      };
+      const beginOverlayRotate = (event, entry, stageRect, camera) => {
+        if (!entry?.layer || !stageRect) return;
+        event.preventDefault();
+        event.stopPropagation();
+        focusStageLayer(entry.layer, entry.clip);
+        event.currentTarget?.setPointerCapture?.(event.pointerId);
+        const payload = entry.payload || {};
+        const baseRotation = Number(payload.rotation || 0);
+        const centerScreen = worldToScreenPoint({ x: Number(payload.x || 0), y: Number(payload.y || 0) }, stageRect, camera);
+        const startAngle = Math.atan2(event.clientY - centerScreen.y, event.clientX - centerScreen.x);
+        const onMove = (ev) => {
+          const nextAngle = Math.atan2(ev.clientY - centerScreen.y, ev.clientX - centerScreen.x);
+          const deltaDeg = (nextAngle - startAngle) * (180 / Math.PI);
+          updateLayerPayload(entry.layer.id, { rotation: Math.round((baseRotation + deltaDeg) * 100) / 100 });
         };
         const onUp = () => {
           window.removeEventListener('pointermove', onMove);
@@ -4667,7 +5023,17 @@
           validation,
           compositionMeta: resolvedMeta,
           propsResolutionTrace: buildPropsResolutionTrace(resolvedMeta),
-          project
+          project: {
+            ...project,
+            clips: (project.clips || []).map((clip) => ({
+              ...clip,
+              deterministicSeed: deterministicSeedForClip(project.id, clip.id),
+              effectSeeds: (Array.isArray(clip.effects) ? clip.effects : []).map((fx, idx) => ({
+                effectId: String(fx?.id || `effect_${idx}`),
+                seed: deterministicSeedForClip(project.id, `${clip.id}:${String(fx?.id || idx)}`)
+              }))
+            }))
+          }
         };
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
         const u = URL.createObjectURL(blob);
@@ -4803,8 +5169,18 @@
       const exportRemotionJob = (format = 'mp4') => {
         const resolvedMeta = buildResolvedCompositionMeta();
         const validation = validateExportContract(resolvedMeta);
-        if (!validation.valid) {
-          alert(`Remotion job export blocked:\n${validation.errors.join('\n')}`);
+        const clipContractErrors = (project.clips || []).flatMap((clip) => {
+          const errs = [];
+          const startFrame = Number(clip.startFrame);
+          const durationInFrames = Number(clip.durationInFrames);
+          if (!Number.isFinite(startFrame) || !Number.isFinite(durationInFrames) || durationInFrames <= 0) errs.push(`${clip.id}: invalid frame bounds`);
+          if (startFrame < 0) errs.push(`${clip.id}: startFrame < 0`);
+          if ((startFrame + durationInFrames) > Number(resolvedMeta.durationInFrames || 0)) errs.push(`${clip.id}: exceeds composition duration`);
+          return errs;
+        });
+        if (!validation.valid || clipContractErrors.length) {
+          const errors = [...(validation.errors || []), ...clipContractErrors];
+          alert(`Remotion job export blocked:\n${errors.join('\n')}`);
           return;
         }
         const compileSnapshotRef = {
@@ -4840,7 +5216,17 @@
           },
           exportProfile: resolvedMeta.resolutionProfile,
           projectSchemaVersion: project.schemaVersion,
-          project
+          project: {
+            ...project,
+            clips: (project.clips || []).map((clip) => ({
+              ...clip,
+              deterministicSeed: deterministicSeedForClip(project.id, clip.id),
+              effectSeeds: (Array.isArray(clip.effects) ? clip.effects : []).map((fx, idx) => ({
+                effectId: String(fx?.id || `effect_${idx}`),
+                seed: deterministicSeedForClip(project.id, `${clip.id}:${String(fx?.id || idx)}`)
+              }))
+            }))
+          }
         };
 
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -4854,10 +5240,16 @@
 
       const runParitySmoke = () => {
         const dims = getExportDims();
+        const fitRatio = Number(stageFitBox.renderWidth || 0) / Math.max(1, Number(stageFitBox.renderHeight || 1));
+        const compositionRatio = Number(stageFitBox.compositionWidth || 0) / Math.max(1, Number(stageFitBox.compositionHeight || 1));
         const sampleTimes = renderMode === 'frame-perfect'
           ? Array.from({ length: Math.max(1, Math.ceil(project.meta.durationSec * Number(project.meta?.fps || 30))) }, (_, frame) => frame / Math.max(1, Number(project.meta?.fps || 30)))
           : [0, project.meta.durationSec / 2, Math.max(0, project.meta.durationSec - (1 / 30))];
         const issues = [];
+        if (!(stageFitBox.renderWidth > 0 && stageFitBox.renderHeight > 0)) issues.push('fit: render box is empty');
+        if (!(stageFitBox.slotWidth > 0 && stageFitBox.slotHeight > 0)) issues.push('fit: slot box is empty');
+        if (Math.abs(fitRatio - compositionRatio) > 0.015) issues.push(`fit: ratio drift ${fitRatio.toFixed(4)} vs ${compositionRatio.toFixed(4)}`);
+        if (Number(stageFitBox.renderWidth || 0) - Number(stageFitBox.slotWidth || 0) > 1 || Number(stageFitBox.renderHeight || 0) - Number(stageFitBox.slotHeight || 0) > 1) issues.push('fit: render box exceeds slot bounds');
         const byTrack = Object.fromEntries(sortedTracks.map((t, i) => [t.id, i]));
         sampleTimes.forEach((tAbs) => {
           const active = [];
@@ -4892,11 +5284,21 @@
           });
         });
         const report = {
+          variant: 'generic',
           snapshotHash: compileSnapshotHash,
           profile: renderProfile,
           sampleTimes,
           issueCount: issues.length,
           issues: issues.slice(0, 20),
+          fit: {
+            slotWidth: Math.round(stageFitBox.slotWidth),
+            slotHeight: Math.round(stageFitBox.slotHeight),
+            compositionWidth: stageFitBox.compositionWidth,
+            compositionHeight: stageFitBox.compositionHeight,
+            renderWidth: Math.round(stageFitBox.renderWidth),
+            renderHeight: Math.round(stageFitBox.renderHeight),
+            mode: stageFitBox.mode
+          },
           generatedAt: new Date().toISOString()
         };
         setParityReport(report);
@@ -4929,6 +5331,19 @@
         }
         alert(`One-frame sanity found ${issues.length} issue(s):\n${issues.slice(0, 10).join('\n')}`);
       };
+      useEffect(() => {
+        const fps = Math.max(1, Number(project.meta?.fps || 30));
+        const needsNormalize = (project.clips || []).some((clip) => {
+          const normalized = normalizeClipFrameFields(clip, fps);
+          return normalized.startFrame !== clip.startFrame || normalized.durationInFrames !== clip.durationInFrames || Math.abs(Number(normalized.start || 0) - Number(clip.start || 0)) > 1e-4 || Math.abs(Number(normalized.end || 0) - Number(clip.end || 0)) > 1e-4;
+        });
+        if (!needsNormalize) return;
+        setProject((prev) => ({
+          ...prev,
+          clips: (prev.clips || []).map((clip) => normalizeClipFrameFields(clip, fps))
+        }));
+      }, [project.clips, project.meta?.fps]);
+
       const runPreflightDiagnostics = () => {
         const issues = [];
         const warnings = [];
@@ -4943,8 +5358,14 @@
         (project.clips || []).forEach((clip) => {
           if (!layerIds.has(clip.layerId)) issues.push(`Clip ${clip.id}: missing layer`);
           if (!trackIds.has(clip.trackId)) issues.push(`Clip ${clip.id}: missing track`);
+          if (!Number.isFinite(Number(clip.startFrame)) || !Number.isFinite(Number(clip.durationInFrames)) || Number(clip.durationInFrames) <= 0) {
+            issues.push(`Clip ${clip.id}: invalid frame timing`);
+          }
           if (!Number.isFinite(Number(clip.start)) || !Number.isFinite(Number(clip.end)) || Number(clip.end) <= Number(clip.start)) {
-            issues.push(`Clip ${clip.id}: invalid timing`);
+            issues.push(`Clip ${clip.id}: invalid second timing`);
+          }
+          if ((Number(clip.startFrame) + Number(clip.durationInFrames)) > Number(resolvedMeta.durationInFrames || 0)) {
+            issues.push(`Clip ${clip.id}: out of composition frame bounds`);
           }
         });
         (project.layers || []).forEach((layer) => {
@@ -5712,8 +6133,160 @@
         });
       };
 
+      const composeV3ProjectPayload = () => {
+        const resolvedMeta = buildResolvedCompositionMeta(project);
+        return {
+          version: 'EditorProjectV3',
+          sourceEditor: 'VT_E1',
+          schemaVersion: VT_E1_EXPORT_SCHEMA_VERSION,
+          compositionMeta: resolvedMeta,
+          propsResolutionTrace: buildPropsResolutionTrace(resolvedMeta),
+          timeline: clone(project),
+          exportMeta: {
+            profile: project.meta?.exportProfile || '1080',
+            aspect: project.meta?.aspectRatio || '16:9',
+            generatedAt: new Date().toISOString()
+          }
+        };
+      };
+
+      const mapV3ToEditorProject = (projectData) => {
+        const timeline = clone(projectData?.timeline || projectData?.project || {});
+        const normalized = normalizeProject(timeline);
+        return normalized;
+      };
+
+      const cloudProjectApiCheckedRef = useRef(false);
+      const ensureProjectApiAvailable = async () => {
+        if (cloudProjectApiCheckedRef.current) return cloudProjectApiAvailable;
+        try {
+          const probe = await fetch(`${PROJECT_API_BASE}/api/projects`, { method: 'OPTIONS' });
+          const ok = probe.status !== 404;
+          cloudProjectApiCheckedRef.current = true;
+          setCloudProjectApiAvailable(ok);
+          return ok;
+        } catch {
+          cloudProjectApiCheckedRef.current = true;
+          setCloudProjectApiAvailable(false);
+          return false;
+        }
+      };
+
+      const fetchProjectList = async (ownerId = projectOwnerId) => {
+        if (!(await ensureProjectApiAvailable())) return [];
+        const res = await fetch(`${PROJECT_API_BASE}/api/projects?userId=${encodeURIComponent(ownerId)}`);
+        if (!res.ok) throw new Error(`Project list failed (${res.status})`);
+        const data = await res.json();
+        const items = Array.isArray(data?.projects) ? data.projects : [];
+        setProjectList(items);
+        return items;
+      };
+
+      const saveProjectToCloud = async ({ explicit = false, saveAs = false } = {}) => {
+        if (!(await ensureProjectApiAvailable())) {
+          setProjectSaveState('failed');
+          setProjectSaveError('Cloud API unavailable. Local save is still available.');
+          return null;
+        }
+        const ownerId = resolveProjectOwnerId();
+        setProjectOwnerId(ownerId);
+        setProjectSaveState('saving');
+        setProjectSaveError('');
+        const payload = {
+          ownerUserId: ownerId,
+          name: project.meta?.projectName || 'UNTITLED PROJECT',
+          sourceEditor: 'VT_E1',
+          schemaVersion: 'EditorProjectV3',
+          editorVersion: 'VT_E1',
+          status: explicit ? 'saved' : 'draft',
+          projectData: composeV3ProjectPayload()
+        };
+        const isCreate = saveAs || !activeProjectId;
+        const targetUrl = isCreate
+          ? `${PROJECT_API_BASE}/api/projects`
+          : `${PROJECT_API_BASE}/api/projects/${encodeURIComponent(activeProjectId)}?userId=${encodeURIComponent(ownerId)}`;
+        const method = isCreate ? 'POST' : 'PUT';
+        const headers = { 'Content-Type': 'application/json' };
+        if (!isCreate && projectEtag) headers['If-Match'] = projectEtag;
+
+        const res = await fetch(targetUrl, { method, headers, body: JSON.stringify(payload) });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 409 && data?.error === 'PROJECT_CONFLICT') {
+          const useLocal = window.confirm('Cloud project changed in another session. Use LOCAL version and overwrite cloud?');
+          if (!useLocal) {
+            setProjectSaveState('failed');
+            setProjectSaveError('Conflict: user kept cloud copy.');
+            return null;
+          }
+          const forceRes = await fetch(targetUrl, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          const forceData = await forceRes.json();
+          if (!forceRes.ok) throw new Error(forceData?.error || `Cloud save failed (${forceRes.status})`);
+          const record = forceData?.project;
+          setActiveProjectId(record?.projectId || activeProjectId || null);
+          setProjectRevision(Number(record?.revision || projectRevision || 1));
+          setProjectEtag(String(record?.etag || ''));
+          setProjectSaveState('saved');
+          setLastSavedAt(new Date());
+          markSaved(project);
+          await fetchProjectList(ownerId);
+          return record;
+        }
+        if (!res.ok) throw new Error(data?.error || `Cloud save failed (${res.status})`);
+        const record = data?.project;
+        setActiveProjectId(record?.projectId || activeProjectId || null);
+        setProjectRevision(Number(record?.revision || projectRevision || 1));
+        setProjectEtag(String(record?.etag || ''));
+        setProjectSaveState('saved');
+        setLastSavedAt(new Date());
+        markSaved(project);
+        await fetchProjectList(ownerId);
+        return record;
+      };
+
+      const loadProjectFromCloud = async (projectId) => {
+        if (!(await ensureProjectApiAvailable())) throw new Error('Cloud API unavailable.');
+        const ownerId = resolveProjectOwnerId();
+        const res = await fetch(`${PROJECT_API_BASE}/api/projects/${encodeURIComponent(projectId)}?userId=${encodeURIComponent(ownerId)}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || `Load failed (${res.status})`);
+        const record = data?.project;
+        const validation = validateCloudProjectEnvelope(record);
+        if (!validation.valid) throw new Error(`Project payload invalid: ${validation.reason}`);
+        const normalized = mapV3ToEditorProject(record.projectData);
+        setProject(normalized);
+        setActiveProjectId(record.projectId);
+        setProjectRevision(Number(record.revision || 1));
+        setProjectEtag(String(record.etag || ''));
+        setProjectSaveState('saved');
+        setLastSavedAt(new Date());
+        setSelectedClipId(normalized.clips[0]?.id || null);
+        setSelectedClipIds(normalized.clips[0]?.id ? [normalized.clips[0].id] : []);
+        setSelectedLayerId(normalized.layers[0]?.id || null);
+        setPlayhead(0);
+        markSaved(normalized);
+      };
+
+      const duplicateCloudProject = async () => {
+        if (!(await ensureProjectApiAvailable())) throw new Error('Cloud API unavailable.');
+        if (!activeProjectId) return await saveProjectToCloud({ explicit: true, saveAs: true });
+        const ownerId = resolveProjectOwnerId();
+        const res = await fetch(`${PROJECT_API_BASE}/api/projects/${encodeURIComponent(activeProjectId)}/duplicate?userId=${encodeURIComponent(ownerId)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: `${project.meta?.projectName || 'Untitled'} (Copy)` })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || `Duplicate failed (${res.status})`);
+        const record = data?.project;
+        await loadProjectFromCloud(record.projectId);
+        await fetchProjectList(ownerId);
+      };
+
       const saveManualSession = () => {
         try {
+          const ownerId = resolveProjectOwnerId();
+          const localKey = getScopedManualSessionKey(ownerId, activeProjectId || 'draft');
+          localStorage.setItem(localKey, JSON.stringify(project));
           localStorage.setItem(MANUAL_SESSION_KEY, JSON.stringify(project));
           markSaved(project);
           alert('Session saved locally.');
@@ -5724,7 +6297,9 @@
 
       const restoreManualSession = () => {
         try {
-          const raw = localStorage.getItem(MANUAL_SESSION_KEY);
+          const ownerId = resolveProjectOwnerId();
+          const scoped = localStorage.getItem(getScopedManualSessionKey(ownerId, activeProjectId || 'draft'));
+          const raw = scoped || localStorage.getItem(MANUAL_SESSION_KEY);
           if (!raw) {
             alert('No saved manual session found.');
             return;
@@ -5748,6 +6323,8 @@
 
       const clearManualSession = () => {
         try {
+          const ownerId = resolveProjectOwnerId();
+          localStorage.removeItem(getScopedManualSessionKey(ownerId, activeProjectId || 'draft'));
           localStorage.removeItem(MANUAL_SESSION_KEY);
           alert('Saved manual session cleared.');
         } catch {
@@ -5967,29 +6544,56 @@
           : []
       });
 
+      const computeTransitionWindow = (leftClip, rightClip, transition, fps) => {
+        if (!leftClip || !rightClip || !transition) return null;
+        const safeFps = Math.max(1, Number(fps || 30));
+        const seamFrame = Number(leftClip.startFrame || 0) + Number(leftClip.durationInFrames || 0);
+        const desiredFrames = Math.max(1, Math.round(Number(transition.durationSec || 0.35) * safeFps));
+        const leftMax = Math.max(1, Number(leftClip.durationInFrames || 1));
+        const rightMax = Math.max(1, Number(rightClip.durationInFrames || 1));
+        const maxBySides = Math.max(1, Math.min(leftMax, rightMax));
+        const durationInFrames = Math.max(1, Math.min(desiredFrames, maxBySides));
+        const leftHalfFrames = Math.max(1, Math.floor(durationInFrames / 2));
+        const rightHalfFrames = Math.max(1, durationInFrames - leftHalfFrames);
+        const startFrame = seamFrame - leftHalfFrames;
+        const endFrameExclusive = seamFrame + rightHalfFrames;
+        return {
+          seamFrame,
+          startFrame,
+          endFrameExclusive,
+          leftHalfFrames,
+          rightHalfFrames,
+          durationInFrames,
+          clamped: durationInFrames !== desiredFrames
+        };
+      };
+
       const transitionInfluence = (clip) => {
-        if (!clip) return { opacity: 1, transformExtra: '', filterExtra: '' };
+        if (!clip) return { opacity: 1, transformExtra: '', filterExtra: '', window: null };
+        const safeFps = Math.max(1, Number(project?.meta?.fps || 30));
+        const frameNow = secToFrame(previewSec, safeFps);
         const candidates = (project.transitions || []).filter((t) => t.leftClipId === clip.id || t.rightClipId === clip.id);
-        if (!candidates.length) return { opacity: 1, transformExtra: '', filterExtra: '' };
+        if (!candidates.length) return { opacity: 1, transformExtra: '', filterExtra: '', window: null };
         for (const transition of candidates) {
           const left = project.clips.find((c) => c.id === transition.leftClipId);
           const right = project.clips.find((c) => c.id === transition.rightClipId);
-          if (!left || !right) continue;
-          const d = Math.max(0.05, Number(transition.durationSec || 0.35));
+          const window = computeTransitionWindow(left, right, transition, safeFps);
+          if (!window) continue;
+          if (frameNow < window.startFrame || frameNow >= window.endFrameExclusive) continue;
           const params = normalizeTransitionParams(transition.params || {});
           const intensity = params.intensity;
           const amount = params.amount;
           const isLeft = clip.id === left.id;
-          const dirSignX = params.direction === 'right' ? 1 : params.direction === 'left' ? -1 : (isLeft ? -1 : 1);
-          const dirSignY = params.direction === 'down' ? 1 : params.direction === 'up' ? -1 : (isLeft ? -1 : 1);
-          const start = isLeft ? (left.end - d) : (right.start - d);
-          const end = isLeft ? left.end : right.start;
-          if (previewSec < start || previewSec > end) continue;
-          const p = clamp((previewSec - start) / d, 0, 1);
+          const localFrame = frameNow - window.startFrame;
+          const pLeft = clamp(localFrame / Math.max(1, window.leftHalfFrames), 0, 1);
+          const pRight = clamp((localFrame - window.leftHalfFrames) / Math.max(1, window.rightHalfFrames), 0, 1);
+          const p = isLeft ? pLeft : pRight;
           const fadeOut = 1 - p;
           const fadeIn = p;
           const opacityBase = isLeft ? fadeOut : fadeIn;
           const opacity = transition.type === 'fade' && !isLeft ? 1 : opacityBase;
+          const dirSignX = params.direction === 'right' ? 1 : params.direction === 'left' ? -1 : (isLeft ? -1 : 1);
+          const dirSignY = params.direction === 'down' ? 1 : params.direction === 'up' ? -1 : (isLeft ? -1 : 1);
           const dir = isLeft ? -1 : 1;
           const amt = (1 - p) * intensity * amount;
           const effectForType = (type) => {
@@ -6040,7 +6644,7 @@
             }
           };
           const primary = effectForType(transition.type);
-          if (!params.blendTypes?.length) return primary;
+          if (!params.blendTypes?.length) return { ...primary, window };
           const blend = params.blendTypes
             .map((blendType) => effectForType(blendType))
             .reduce((acc, item) => ({
@@ -6048,9 +6652,9 @@
               transformExtra: `${acc.transformExtra || ''}${item.transformExtra || ''}`,
               filterExtra: `${acc.filterExtra || ''} ${item.filterExtra || ''}`.trim()
             }), primary);
-          return blend;
+          return { ...blend, window };
         }
-        return { opacity: 1, transformExtra: '', filterExtra: '' };
+        return { opacity: 1, transformExtra: '', filterExtra: '', window: null };
       };
 
       const easeByName = (t, name) => {
@@ -6220,6 +6824,16 @@
             return a.clip.start - b.clip.start;
           });
       }, [project.layers, project.clips, project.transitions, previewSec, sortedTracks, activeTrackIds]);
+      const selectedStageEntry = useMemo(() => (
+        stageLayers.find((entry) => entry.layer?.id === selectedLayerId && (!selectedClipId || entry.clip?.id === selectedClipId))
+        || stageLayers.find((entry) => entry.layer?.id === selectedLayerId)
+        || null
+      ), [stageLayers, selectedLayerId, selectedClipId]);
+      const selectedOverlayPose = useMemo(() => {
+        const stageRect = stageViewportRef.current?.getBoundingClientRect?.();
+        if (!stageRect || !selectedStageEntry) return null;
+        return projectOverlayPose(selectedStageEntry, stageRect, { ...cam, extraRotate: mirrorFeedExtraRotate });
+      }, [selectedStageEntry, cam.x, cam.y, cam.scale, cam.rotate, mirrorFeedExtraRotate, previewSec, historyVersion]);
       const activeMirrorOverlay = useMemo(() => {
         const mirrorEntry = stageLayers.find((entry) => entry?.payload?.overlayKind === 'mirror-matrix');
         if (!mirrorEntry) return null;
@@ -6357,6 +6971,58 @@
         return `rgba(${r}, ${g}, ${b}, ${clamp(alpha, 0, 1)})`;
       };
       const isVerticalAspect = project.meta.aspectRatio === '9:16';
+      const [stageFitBox, setStageFitBox] = useState({
+        slotWidth: 0,
+        slotHeight: 0,
+        compositionWidth: isVerticalAspect ? 1080 : 1920,
+        compositionHeight: isVerticalAspect ? 1920 : 1080,
+        renderWidth: 0,
+        renderHeight: 0,
+        offsetX: 0,
+        offsetY: 0,
+        mode: 'contain'
+      });
+      const updateStageFitBox = useCallback(() => {
+        const slot = stageSlotRef.current;
+        if (!slot) return;
+        const rect = slot.getBoundingClientRect();
+        const slotWidth = Math.max(1, rect.width);
+        const slotHeight = Math.max(1, rect.height);
+        const compositionWidth = isVerticalAspect ? 1080 : 1920;
+        const compositionHeight = isVerticalAspect ? 1920 : 1080;
+        const scale = Math.max(0.0001, Math.min(slotWidth / compositionWidth, slotHeight / compositionHeight));
+        const renderWidth = Math.max(1, Math.floor(compositionWidth * scale));
+        const renderHeight = Math.max(1, Math.floor(compositionHeight * scale));
+        const offsetX = Math.floor((slotWidth - renderWidth) / 2);
+        const offsetY = Math.floor((slotHeight - renderHeight) / 2);
+        setStageFitBox({
+          slotWidth,
+          slotHeight,
+          compositionWidth,
+          compositionHeight,
+          renderWidth,
+          renderHeight,
+          offsetX,
+          offsetY,
+          mode: 'contain'
+        });
+      }, [isVerticalAspect]);
+      useEffect(() => {
+        updateStageFitBox();
+        const slot = stageSlotRef.current;
+        if (!slot) return undefined;
+        let ro = null;
+        if (typeof ResizeObserver !== 'undefined') {
+          ro = new ResizeObserver(() => updateStageFitBox());
+          ro.observe(slot);
+        }
+        const onWindowResize = () => updateStageFitBox();
+        window.addEventListener('resize', onWindowResize);
+        return () => {
+          if (ro) ro.disconnect();
+          window.removeEventListener('resize', onWindowResize);
+        };
+      }, [updateStageFitBox, stageFitEpoch]);
 
       const timelineTrackHeight = sortedTracks.length <= 2 ? TRACK_HEIGHT_LARGE : TRACK_HEIGHT_SMALL;
       const cameraTrackHeight = Math.max(24, Math.round(timelineTrackHeight * 0.35));
@@ -6903,43 +7569,62 @@
         { id: 'toggle-snap', label: `Snap ${snapEnabled ? 'Off' : 'On'}`, run: () => setSnapEnabled((v) => !v) }
       ];
       const filteredCommandActions = commandActions.filter((item) => item.label.toLowerCase().includes(paletteQuery.trim().toLowerCase()));
-      const baseTabs = useEdtrTabs ? [
-        { id: 'video', icon: Layers, label: 'LAYERS', color: COLORS.pink, level: 'simple', fallbackTab: 'media', section: 'top' },
-        { id: 'text', icon: Type, label: 'TEXT', color: COLORS.orange, level: 'simple', fallbackTab: 'layerSettings', section: 'top' },
-        { id: 'audio', icon: Music2, label: 'AUDIO', color: COLORS.yellow, level: 'simple', fallbackTab: 'media', section: 'top' },
-        { id: 'captions', icon: MessageSquare, label: 'CAPTIONS', color: COLORS.green, level: 'simple', fallbackTab: 'layerSettings', section: 'top' },
-        { id: 'image', icon: Image, label: 'IMAGE', color: COLORS.cyan, level: 'simple', fallbackTab: 'media', section: 'top' },
-        { id: 'files', icon: FolderOpen, label: 'FILES', color: COLORS.blue, level: 'simple', fallbackTab: 'media', section: 'top' },
-        { id: 'templates', icon: Sparkles, label: 'TEMPLATES', color: COLORS.purple, level: 'simple', fallbackTab: 'templates', section: 'top' },
-        { id: 'export', icon: Camera, label: 'EXPORT', color: COLORS.magenta, level: 'simple', fallbackTab: 'export', section: 'bottom' },
-        { id: 'code', icon: Code2, label: 'CODE', color: COLORS.white, level: 'pro', fallbackTab: 'code', section: 'bottom' },
-        { id: 'settings', icon: Settings, label: 'SETTINGS', color: COLORS.cyan, level: 'simple', fallbackTab: 'project', section: 'bottom' }
-      ] : [
-        { id: 'layers', icon: Layers, label: 'LAYERS', color: COLORS.pink, level: 'simple' },
-        { id: 'fx', icon: Filter, label: 'FX', color: COLORS.green, level: 'pro' },
-        { id: 'settings', icon: Camera, label: 'SETTINGS', color: COLORS.cyan, level: 'simple' },
-        { id: 'code', icon: Code2, label: 'CODE', color: COLORS.magenta, level: 'pro' },
+      const EditorPageId = Object.freeze({
+        MEDIA_LAYERS: 'media-layers',
+        TEXT_CAPTIONS: 'text-captions',
+        AUDIO: 'audio',
+        IMAGE_VAULT: 'image-vault',
+        TRANSITIONS_EFFECTS: 'transitions-effects',
+        PROJECT_CAMERA_SAVE: 'project-camera-save',
+        EXPORT_RENDER: 'export-render',
+        CODE_JSON: 'code-json'
+      });
+      const navTabs = [
+        { id: EditorPageId.MEDIA_LAYERS, icon: Layers, label: 'MEDIA', color: COLORS.pink, level: 'simple', fallbackTab: 'media', tool: 'video', order: 1 },
+        { id: EditorPageId.TEXT_CAPTIONS, icon: Type, label: 'TEXT', color: COLORS.orange, level: 'simple', fallbackTab: 'layerSettings', tool: 'text', order: 2 },
+        { id: EditorPageId.AUDIO, icon: Music2, label: 'AUDIO', color: COLORS.yellow, level: 'simple', fallbackTab: 'media', tool: 'audio', order: 3 },
+        { id: EditorPageId.IMAGE_VAULT, icon: Image, label: 'IMAGE', color: COLORS.green, level: 'simple', fallbackTab: 'media', tool: 'image', order: 4 },
+        { id: EditorPageId.TRANSITIONS_EFFECTS, icon: Wand2, label: 'TRANSITIONS', color: COLORS.cyan, level: 'simple', fallbackTab: 'transitions', tool: 'video', order: 5 },
+        { id: EditorPageId.PROJECT_CAMERA_SAVE, icon: Settings, label: 'PROJECT', color: COLORS.blue, level: 'simple', fallbackTab: 'project', tool: 'video', order: 6 },
+        { id: EditorPageId.EXPORT_RENDER, icon: Camera, label: 'EXPORT', color: COLORS.purple, level: 'simple', fallbackTab: 'export', tool: 'video', order: 7 },
+        { id: EditorPageId.CODE_JSON, icon: Code2, label: 'CODE', color: COLORS.magenta, level: 'pro', fallbackTab: 'code', tool: 'video', order: 8 }
       ];
-      const tabsToRender = baseTabs;
-      const topNavTabs = tabsToRender.filter((tab) => tab.section !== 'bottom');
-      const bottomNavTabs = tabsToRender.filter((tab) => tab.section === 'bottom');
+      const PAGE_MODULE_LAYOUT = Object.freeze({
+        [EditorPageId.MEDIA_LAYERS]: [
+          { id: 'project', label: 'Start', color: COLORS.yellow },
+          { id: 'search', label: 'Search', color: COLORS.cyan },
+          { id: 'addMedia', label: 'Add Media', color: COLORS.pink },
+          { id: 'settings', label: 'Layer Settings', color: COLORS.orange },
+          { id: 'camera', label: 'Quick Transform', color: COLORS.green }
+        ],
+        [EditorPageId.TEXT_CAPTIONS]: PANEL_MODULE_LAYOUT.text || [],
+        [EditorPageId.AUDIO]: PANEL_MODULE_LAYOUT.audio || [],
+        [EditorPageId.IMAGE_VAULT]: PANEL_MODULE_LAYOUT.image || [],
+        [EditorPageId.TRANSITIONS_EFFECTS]: [{ id: 'fx', label: 'Transitions + FX', color: COLORS.cyan }],
+        [EditorPageId.PROJECT_CAMERA_SAVE]: [{ id: 'project', label: 'Project + Camera + Save', color: COLORS.blue }],
+        [EditorPageId.EXPORT_RENDER]: [{ id: 'project', label: 'Export + Render', color: COLORS.purple }],
+        [EditorPageId.CODE_JSON]: [{ id: 'project', label: 'Code + JSON', color: COLORS.magenta }]
+      });
+      const tabsToRender = navTabs;
       const setActiveToolTab = (tabId) => {
         const tabEntry = tabsToRender.find((tab) => tab.id === tabId);
         const nextTab = tabEntry?.fallbackTab || tabId;
+        const nextTool = tabEntry?.tool || tabId;
         setEditorShellState((prev) => ({
           ...prev,
-          activeTool: tabId,
+          activeTool: nextTool,
           lastPanelByTool: {
             ...prev.lastPanelByTool,
             [prev.activeTool]: {
               panelWidth: prev.panelWidth
             }
           },
-          panelWidth: prev.lastPanelByTool?.[tabId]?.panelWidth || prev.panelWidth
+          panelWidth: prev.lastPanelByTool?.[nextTool]?.panelWidth || prev.panelWidth
         }));
         setActiveTab(nextTab);
       };
-      const activePanelModules = PANEL_MODULE_LAYOUT[editorShellState.activeTool] || [];
+      const activeNavTabId = tabsToRender.find((tab) => tab.fallbackTab === activeTab)?.id || EditorPageId.MEDIA_LAYERS;
+      const activePanelModules = PAGE_MODULE_LAYOUT[activeNavTabId] || PANEL_MODULE_LAYOUT[editorShellState.activeTool] || [];
       const isModuleVisible = (moduleId) => {
         const toolId = editorShellState.activeTool;
         if (!toolId || !panelModuleVisibility[toolId]) return true;
@@ -7001,8 +7686,8 @@
           setDockHoverState({ section: null, pointerY: null, near: false });
         }, delayMs);
       };
-      const getDockButtonStyle = (section, index, color, isActive) => {
-        const near = dockHoverState.near && dockHoverState.section === section;
+      const getDockButtonStyle = (index, color, isActive) => {
+        const near = dockHoverState.near;
         const pointerY = near ? Number(dockHoverState.pointerY ?? 0.5) : null;
         const center = (index + 0.5);
         const pointerIndex = pointerY === null ? -999 : pointerY;
@@ -7018,14 +7703,14 @@
           zIndex: near ? Math.round(8 + gaussian * 20) : 3
         };
       };
-      const handleDockMouseMove = (section, tabs, event) => {
+      const handleDockMouseMove = (tabs, event) => {
         clearDockRetreat();
         const node = event.currentTarget;
         const rect = node.getBoundingClientRect();
         const y = event.clientY - rect.top;
         const slot = rect.height / Math.max(1, tabs.length);
         const indexFloat = clamp((y / Math.max(1, slot)), 0, Math.max(0, tabs.length - 0.001));
-        setDockHoverState({ section, pointerY: indexFloat, near: true });
+        setDockHoverState({ section: 'main', pointerY: indexFloat, near: true });
       };
       const handleDockVicinityMove = (event) => {
         const aside = event.currentTarget;
@@ -7037,17 +7722,12 @@
           return;
         }
         clearDockRetreat();
-        const topRect = topDockGroupRef.current?.getBoundingClientRect?.();
-        const bottomRect = bottomDockGroupRef.current?.getBoundingClientRect?.();
-        const inTop = topRect && event.clientY >= topRect.top && event.clientY <= topRect.bottom;
-        const inBottom = bottomRect && event.clientY >= bottomRect.top && event.clientY <= bottomRect.bottom;
-        const section = inBottom ? 'bottom' : 'top';
-        const activeRect = (section === 'bottom' ? bottomRect : topRect) || rect;
-        const tabs = section === 'bottom' ? bottomNavTabs : topNavTabs;
+        const activeRect = topDockGroupRef.current?.getBoundingClientRect?.() || rect;
+        const tabs = tabsToRender;
         const slot = activeRect.height / Math.max(1, tabs.length);
         const localY = clamp(event.clientY - activeRect.top, 0, Math.max(1, activeRect.height - 1));
         const indexFloat = clamp((localY / Math.max(1, slot)), 0, Math.max(0, tabs.length - 0.001));
-        setDockHoverState({ section, pointerY: indexFloat, near: true });
+        setDockHoverState({ section: 'main', pointerY: indexFloat, near: true });
       };
       const handleDockMouseLeave = (event) => {
         scheduleDockRetreat(700);
@@ -7146,32 +7826,19 @@
               </div>
             </div>
             <div className="grid flex-1 min-h-0" style={{ gridTemplateColumns: editorShellState.railCollapsed ? '14px' : '14px 1fr' }}>
-          <nav className="dock-nav h-full flex flex-col items-center justify-between py-2">
+          <nav className="dock-nav h-full flex flex-col items-center py-2">
             <div
               ref={topDockGroupRef}
               className="flex flex-col items-center gap-4"
+              onMouseMove={(event) => handleDockMouseMove(tabsToRender, event)}
             >
-            {topNavTabs.map((tab) => (
+            {tabsToRender.map((tab, idx) => (
               <button
                 key={tab.id}
                 className="neo-btn dock-btn flex items-center justify-center"
-                style={getDockButtonStyle('top', topNavTabs.findIndex((entry) => entry.id === tab.id), tab.color, editorShellState.activeTool === tab.id)}
+                style={getDockButtonStyle(idx, tab.color, activeNavTabId === tab.id)}
                 onClick={() => setActiveToolTab(tab.id)}
-              >
-                <tab.icon size={20} />
-              </button>
-            ))}
-            </div>
-            <div
-              ref={bottomDockGroupRef}
-              className="flex flex-col items-center gap-4 pb-1"
-            >
-            {bottomNavTabs.map((tab) => (
-              <button
-                key={tab.id}
-                className="neo-btn dock-btn flex items-center justify-center"
-                style={getDockButtonStyle('bottom', bottomNavTabs.findIndex((entry) => entry.id === tab.id), tab.color, editorShellState.activeTool === tab.id)}
-                onClick={() => setActiveToolTab(tab.id)}
+                title={tab.label}
               >
                 <tab.icon size={20} />
               </button>
@@ -7200,6 +7867,31 @@
               
               {(activeTab === 'layers' || activeTab === 'media' || activeTab === 'layerSettings') && (
                 <>
+                  {activeNavTabId === EditorPageId.MEDIA_LAYERS && (
+                    <div className="neo-card p-3 space-y-2 relative">
+                      {renderModuleBadge('project')}
+                      <div className="text-xs font-black uppercase">Start New Project</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button className="neo-btn w-full" style={{ background: COLORS.yellow }} onClick={startNewProjectFromMeta}>+ New Project</button>
+                        <button className="neo-btn w-full" style={{ background: COLORS.cyan }} onClick={() => setShowProjectPicker(true)}>Open / Load</button>
+                        <button className="neo-btn w-full col-span-2" style={{ background: COLORS.white }} onClick={() => setActiveTab('project')}>Go to Project Settings</button>
+                      </div>
+                      <div className="text-[10px] font-black uppercase opacity-70">Recent Projects</div>
+                      <div className="max-h-[120px] overflow-y-auto neo-scroll border-2 border-black rounded-md p-1 bg-white">
+                        {(projectList || []).slice(0, 6).map((entry) => (
+                          <button
+                            key={entry.projectId}
+                            className="neo-btn w-full !min-h-0 px-2 py-1 text-[10px] justify-between mb-1"
+                            onClick={() => loadProjectFromCloud(entry.projectId).catch((error) => setProjectSaveError(String(error?.message || error || 'Could not load project.')))}
+                          >
+                            <span>{String(entry.name || 'Untitled').slice(0, 20)}</span>
+                            <span>{new Date(entry.updatedAt || Date.now()).toLocaleDateString()}</span>
+                          </button>
+                        ))}
+                        {!projectList.length && <div className="text-[10px] font-black opacity-60 px-1 py-1">No recent projects.</div>}
+                      </div>
+                    </div>
+                  )}
                   {isModuleVisible('search') && (
                   <div className="neo-card p-2 space-y-2 relative">
                     {renderModuleBadge('search')}
@@ -7366,6 +8058,52 @@
                         <button className="neo-btn !min-h-0 px-2 py-1" style={{ background: project.meta.aspectRatio === '9:16' ? '#111' : '#fff', color: project.meta.aspectRatio === '9:16' ? '#fff' : '#111' }} onClick={() => { updateMeta({ aspectRatio: '9:16' }); resetCameraNeutral(); }}>9:16</button>
                       </div>
                     </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        className="neo-btn w-full"
+                        style={{ background: COLORS.green }}
+                        onClick={() => {
+                          saveProjectToCloud({ explicit: true }).catch((error) => {
+                            setProjectSaveState('failed');
+                            setProjectSaveError(String(error?.message || error || 'Save failed.'));
+                          });
+                        }}
+                      >
+                        <Save size={14} /> Save Project
+                      </button>
+                      <button className="neo-btn w-full" style={{ background: COLORS.cyan }} onClick={() => setShowProjectPicker(true)}>
+                        <FolderOpen size={14} /> Load Project
+                      </button>
+                      <button
+                        className="neo-btn w-full"
+                        style={{ background: COLORS.white }}
+                        onClick={() => {
+                          saveProjectToCloud({ explicit: true, saveAs: true }).catch((error) => {
+                            setProjectSaveState('failed');
+                            setProjectSaveError(String(error?.message || error || 'Save As failed.'));
+                          });
+                        }}
+                      >
+                        <FileCode size={14} /> Save As
+                      </button>
+                      <button
+                        className="neo-btn w-full"
+                        style={{ background: COLORS.magenta }}
+                        onClick={() => {
+                          duplicateCloudProject().catch((error) => {
+                            setProjectSaveState('failed');
+                            setProjectSaveError(String(error?.message || error || 'Duplicate failed.'));
+                          });
+                        }}
+                      >
+                        <Copy size={14} /> Duplicate
+                      </button>
+                    </div>
+                    <div className="text-[10px] font-black uppercase">
+                      Status: {projectSaveState === 'saving' ? 'Saving…' : projectSaveState === 'unsaved' ? 'Unsaved changes' : projectSaveState === 'failed' ? 'Save failed' : 'Saved'}
+                      {activeProjectId ? ` • ${activeProjectId.slice(0, 12)}` : ' • New Draft'}
+                    </div>
+                    {projectSaveError ? <div className="text-[10px] font-black text-red-600">{projectSaveError}</div> : null}
                     <button className="neo-btn w-full" style={{ background: COLORS.yellow }} onClick={startNewProjectFromMeta}>
                       <Plus size={14} /> Add New Project
                     </button>
@@ -8480,6 +9218,8 @@
 
               {(activeTab === 'settings' || activeTab === 'project' || activeTab === 'transitions' || activeTab === 'export') && (
                 <div className="neo-card p-3 space-y-2">
+                  {(activeTab === 'project' || activeTab === 'settings') && (
+                  <>
                   <div className="text-xs font-black uppercase">Timeline Markers</div>
                   <div className="grid grid-cols-2 gap-2">
                     <select className="w-full border-2 border-black p-1 text-[10px] font-black bg-white" value={markerTypeDraft} onChange={(e) => setMarkerTypeDraft(e.target.value)}>
@@ -8579,6 +9319,10 @@
                     }}
                   >Add Camera Keyframe</button>
                   <div className="border-t-4 border-black pt-2 mt-2" />
+                  </>
+                  )}
+                  {activeTab === 'transitions' && (
+                  <>
                   <div className="text-xs font-black uppercase">Transitions</div>
                   {!selectedTransition ? (
                     <div className="text-xs font-black opacity-60">Click a seam badge on timeline to edit transition.</div>
@@ -8647,6 +9391,9 @@
                       <div className="text-[10px] font-black opacity-70">
                         Blend: {(selectedTransition.params?.blendTypes || []).length ? (selectedTransition.params?.blendTypes || []).map((type) => TRANSITION_TYPE_LABELS[type] || type).join(' + ') : 'None'}
                       </div>
+                      {selectedTransitionClampWarning && (
+                        <div className="text-[10px] font-black" style={{ color: COLORS.magenta }}>{selectedTransitionClampWarning}</div>
+                      )}
                       <SpringToggle
                         label="durationSec"
                         min={0.05}
@@ -8712,6 +9459,10 @@
                     </>
                   )}
                   <div className="border-t-4 border-black pt-2 mt-2" />
+                  </>
+                  )}
+                  {activeTab === 'export' && (
+                  <>
                   <div className="text-xs font-black uppercase">Export + Import</div>
                   <div className="text-xs font-black uppercase">Render Profile</div>
                   <div className="grid grid-cols-2 gap-2">
@@ -8785,10 +9536,13 @@
                   {parityReport && (
                     <div className="border-2 border-black rounded-md p-2 bg-white text-[10px] font-black space-y-1">
                       <div className="uppercase">Last Parity Report</div>
+                      <div>Variant: {String(parityReport.variant || 'generic').toUpperCase()}</div>
                       <div>Snapshot: {parityReport.snapshotHash}</div>
                       <div>Issues: {parityReport.issueCount}</div>
                       <div>Samples: {parityReport.sampleTimes.map((sec) => formatHMS(sec)).join(' · ')}</div>
                     </div>
+                  )}
+                  </>
                   )}
                 </div>
               )}
@@ -8799,18 +9553,29 @@
           </aside>
           )}
 
-          <main className="h-full min-h-0 grid gap-2" style={{ gridTemplateRows: 'minmax(0, 1fr) auto' }}>
-            <section className="neo-card outer-frame p-2 overflow-hidden flex flex-col min-h-0">
-              <div className={`flex-1 min-h-0 flex items-stretch overflow-hidden ${isVerticalAspect ? 'justify-end' : 'justify-center'}`}>
+          <main
+            className="h-full min-h-0 grid gap-2"
+            style={isVerticalAspect && !focusMode
+              ? { gridTemplateColumns: 'minmax(0, 1fr) minmax(300px, 38%)', gridTemplateRows: 'minmax(0, 1fr)' }
+              : { gridTemplateRows: 'minmax(0, 1fr) auto' }}
+          >
+            <section
+              className="neo-card outer-frame p-2 overflow-hidden flex flex-col min-h-0"
+              style={isVerticalAspect && !focusMode ? { gridColumn: 2, gridRow: 1 } : undefined}
+            >
+              <div ref={bindStageSlotRef} className="flex-1 min-h-0 relative overflow-hidden">
                 <div
-                  className={`relative ${project.meta.chromaEnabled ? '' : 'checker'}`}
+                  ref={stageViewportRef}
+                  className={`absolute ${project.meta.chromaEnabled ? '' : 'checker'}`}
+                  onPointerDown={(e) => {
+                    if (e.target !== e.currentTarget) return;
+                    setShowStageTransformUi(false);
+                  }}
                   style={{
-                    aspectRatio: isVerticalAspect ? '9 / 16' : '16 / 9',
-                    width: isVerticalAspect ? 'auto' : '100%',
-                    height: isVerticalAspect ? '100%' : 'auto',
-                    maxWidth: '100%',
-                    maxHeight: '100%',
-                    marginLeft: isVerticalAspect ? 'auto' : '0',
+                    left: `${stageFitBox.offsetX}px`,
+                    top: `${stageFitBox.offsetY}px`,
+                    width: `${Math.max(1, stageFitBox.renderWidth)}px`,
+                    height: `${Math.max(1, stageFitBox.renderHeight)}px`,
                     border: '4px solid #111',
                     borderRadius: '8px',
                     background: project.meta.chromaEnabled ? project.meta.chromaColor : undefined,
@@ -8881,27 +9646,6 @@
                           : undefined,
                         ...dnaStyle.style
                       };
-                      const isStageSelected = selectedLayerId === layer.id || (clip?.id && (selectedClipId === clip.id || selectedClipIds.includes(clip.id)));
-                      const stageHandles = isStageSelected ? (
-                        <>
-                          <div style={{ position: 'absolute', inset: 0, border: '2px solid rgba(87,154,255,0.95)', boxShadow: '0 0 0 1px #fff inset', pointerEvents: 'none' }} />
-                          <div style={{ position: 'absolute', left: '50%', top: '-64px', width: '5px', height: '44px', background: '#111', transform: 'translateX(-50%)', pointerEvents: 'none', borderRadius: '4px' }} />
-                          <button
-                            type="button"
-                            onPointerDown={(e) => beginStageMediaRotate(e, layer, clip, payload, e.currentTarget.parentElement?.getBoundingClientRect?.())}
-                            style={{ position: 'absolute', left: '50%', top: '-88px', width: '38px', height: '38px', border: '3px solid #111', borderRadius: '9999px', background: '#40C6E9', boxShadow: '0 4px 0 #111', transform: 'translateX(-50%)', cursor: 'grab', zIndex: 3 }}
-                            title="Rotate"
-                          />
-                          <button type="button" onPointerDown={(e) => beginStageMediaScale(e, layer, clip, payload, 'tl')} style={{ position: 'absolute', left: '-20px', top: '-20px', width: '40px', height: '40px', border: '4px solid #111', borderRadius: '8px', background: '#fff', cursor: 'nwse-resize', zIndex: 3 }} title="Scale" />
-                          <button type="button" onPointerDown={(e) => beginStageMediaScale(e, layer, clip, payload, 'tr')} style={{ position: 'absolute', right: '-20px', top: '-20px', width: '40px', height: '40px', border: '4px solid #111', borderRadius: '8px', background: '#fff', cursor: 'nesw-resize', zIndex: 3 }} title="Scale" />
-                          <button type="button" onPointerDown={(e) => beginStageMediaScale(e, layer, clip, payload, 'bl')} style={{ position: 'absolute', left: '-20px', bottom: '-20px', width: '40px', height: '40px', border: '4px solid #111', borderRadius: '8px', background: '#fff', cursor: 'nesw-resize', zIndex: 3 }} title="Scale" />
-                          <button type="button" onPointerDown={(e) => beginStageMediaScale(e, layer, clip, payload, 'br')} style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '40px', height: '40px', border: '4px solid #111', borderRadius: '8px', background: '#fff', cursor: 'nwse-resize', zIndex: 3 }} title="Scale" />
-                          <button type="button" onPointerDown={(e) => beginStageMediaRotate(e, layer, clip, payload, e.currentTarget.parentElement?.getBoundingClientRect?.())} style={{ position: 'absolute', left: '-38px', top: '-38px', width: '30px', height: '30px', border: '2px solid #111', borderRadius: '9999px', background: 'rgba(64,198,233,0.45)', cursor: 'crosshair', zIndex: 3 }} title="Rotate" />
-                          <button type="button" onPointerDown={(e) => beginStageMediaRotate(e, layer, clip, payload, e.currentTarget.parentElement?.getBoundingClientRect?.())} style={{ position: 'absolute', right: '-38px', top: '-38px', width: '30px', height: '30px', border: '2px solid #111', borderRadius: '9999px', background: 'rgba(64,198,233,0.45)', cursor: 'crosshair', zIndex: 3 }} title="Rotate" />
-                          <button type="button" onPointerDown={(e) => beginStageMediaRotate(e, layer, clip, payload, e.currentTarget.parentElement?.getBoundingClientRect?.())} style={{ position: 'absolute', left: '-38px', bottom: '-38px', width: '30px', height: '30px', border: '2px solid #111', borderRadius: '9999px', background: 'rgba(64,198,233,0.45)', cursor: 'crosshair', zIndex: 3 }} title="Rotate" />
-                          <button type="button" onPointerDown={(e) => beginStageMediaRotate(e, layer, clip, payload, e.currentTarget.parentElement?.getBoundingClientRect?.())} style={{ position: 'absolute', right: '-38px', bottom: '-38px', width: '30px', height: '30px', border: '2px solid #111', borderRadius: '9999px', background: 'rgba(64,198,233,0.45)', cursor: 'crosshair', zIndex: 3 }} title="Rotate" />
-                        </>
-                      ) : null;
 
                       if (layer.type === 'template' && payload.motionAsset) {
                         return renderTemplateAsset(layer, payload, clip, common);
@@ -9151,14 +9895,13 @@
                               paintOrder: 'stroke fill',
                               cursor: 'move',
                               touchAction: 'none',
-                              overflow: 'visible'
-                            }}
-                            onPointerDown={(e) => beginStageMediaMove(e, layer, clip, payload, cam.scale)}
-                          >
-                            {payload.text || payload.layerName}
-                            {stageHandles}
-                          </div>
-                        );
+                            overflow: 'visible'
+                          }}
+                          onPointerDown={(e) => beginStageMediaMove(e, layer, clip, payload, cam.scale)}
+                        >
+                          {payload.text || payload.layerName}
+                        </div>
+                      );
                       }
 
                       if (layer.type === 'shape') {
@@ -9181,13 +9924,12 @@
                               boxSizing: 'border-box',
                               cursor: 'move',
                               touchAction: 'none',
-                              overflow: 'visible'
-                            }}
-                            onPointerDown={(e) => beginStageMediaMove(e, layer, clip, payload, cam.scale)}
-                          >
-                            {stageHandles}
-                          </div>
-                        );
+                            overflow: 'visible'
+                          }}
+                          onPointerDown={(e) => beginStageMediaMove(e, layer, clip, payload, cam.scale)}
+                        >
+                        </div>
+                      );
                       }
 
                       const background = payload.mediaUrl
@@ -9221,12 +9963,78 @@
                                 : <img src={payload.mediaUrl} alt={payload.layerName || 'media'} style={{ width: '100%', height: '100%', objectFit: payload.fit || 'cover', pointerEvents: 'none' }} />
                             ) : payload.layerName}
                           </div>
-                          {stageHandles}
                         </div>
                       );
                     })}
                     </div>
                   </div>
+                  {showStageTransformUi && selectedOverlayPose?.visible && selectedStageEntry && (
+                    <div style={{ position: 'absolute', inset: 0, zIndex: 80, pointerEvents: 'none' }}>
+                      <button
+                        type="button"
+                        onPointerDown={(e) => beginOverlayMove(e, selectedStageEntry, stageViewportRef.current?.getBoundingClientRect?.(), { ...cam, extraRotate: mirrorFeedExtraRotate })}
+                        title="Move"
+                        style={{
+                          position: 'absolute',
+                          left: `${selectedOverlayPose.screenCx}px`,
+                          top: `${selectedOverlayPose.screenCy}px`,
+                          width: `${Math.max(8, selectedOverlayPose.screenWidth)}px`,
+                          height: `${Math.max(8, selectedOverlayPose.screenHeight)}px`,
+                          transform: `translate(-50%, -50%) rotate(${selectedOverlayPose.screenRotationDeg}deg)`,
+                          border: '2px solid rgba(87,154,255,0.95)',
+                          boxShadow: '0 0 0 1px #fff inset',
+                          background: 'transparent',
+                          cursor: 'move',
+                          pointerEvents: 'auto'
+                        }}
+                      />
+                      <div style={{ position: 'absolute', left: `${selectedOverlayPose.topMidScreen.x}px`, top: `${selectedOverlayPose.topMidScreen.y}px`, width: '3px', height: '24px', background: '#111', transform: 'translate(-50%, -26px)', borderRadius: '999px', pointerEvents: 'none' }} />
+                      <button
+                        type="button"
+                        onPointerDown={(e) => beginOverlayRotate(e, selectedStageEntry, stageViewportRef.current?.getBoundingClientRect?.(), { ...cam, extraRotate: mirrorFeedExtraRotate })}
+                        title="Rotate"
+                        style={{
+                          position: 'absolute',
+                          left: `${selectedOverlayPose.topMidScreen.x}px`,
+                          top: `${selectedOverlayPose.topMidScreen.y}px`,
+                          width: '18px',
+                          height: '18px',
+                          transform: 'translate(-50%, -44px)',
+                          border: '2px solid #111',
+                          borderRadius: '999px',
+                          background: '#40C6E9',
+                          boxShadow: '0 2px 0 #111',
+                          cursor: 'grab',
+                          pointerEvents: 'auto'
+                        }}
+                      />
+                      {['tl', 'tr', 'br', 'bl'].map((corner, idx) => {
+                        const pt = selectedOverlayPose.screenCorners[idx];
+                        const cursor = (corner === 'tl' || corner === 'br') ? 'nwse-resize' : 'nesw-resize';
+                        return (
+                          <button
+                            key={corner}
+                            type="button"
+                            onPointerDown={(e) => beginOverlayScale(e, selectedStageEntry, stageViewportRef.current?.getBoundingClientRect?.(), { ...cam, extraRotate: mirrorFeedExtraRotate }, corner)}
+                            title="Scale"
+                            style={{
+                              position: 'absolute',
+                              left: `${pt.x}px`,
+                              top: `${pt.y}px`,
+                              width: '14px',
+                              height: '14px',
+                              transform: 'translate(-50%, -50%)',
+                              border: '2px solid #111',
+                              borderRadius: '3px',
+                              background: '#fff',
+                              cursor,
+                              pointerEvents: 'auto'
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
                   {activeTab === 'interactive' && effectSession.livePreview && effectSession.activeEffectId === 'noise-surface' && (
                     <svg
                       width="100%"
@@ -9398,11 +10206,8 @@
             </section>
 
             <section
-              className="neo-card outer-frame overflow-hidden flex flex-col"
-              style={isVerticalAspect && !focusMode ? {
-                marginLeft: `-${(editorShellState.railCollapsed ? 74 : Math.max(320, Number(editorShellState.panelWidth || 426))) + 8}px`,
-                width: `calc(100% + ${(editorShellState.railCollapsed ? 74 : Math.max(320, Number(editorShellState.panelWidth || 426))) + 8}px)`
-              } : undefined}
+              className="neo-card outer-frame overflow-hidden flex flex-col h-full min-h-0"
+              style={isVerticalAspect && !focusMode ? { gridColumn: 1, gridRow: 1 } : undefined}
             >
               <div className="p-2 border-b-4 border-black grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                 <div className="flex items-center gap-2 justify-start">
@@ -9765,9 +10570,16 @@
                                 fontWeight: 900,
                                 zIndex: (selected || isPreviewClip) ? 20 : 10,
                                 opacity: isPreviewClip ? 0.92 : 1,
-                                boxShadow: selected
+                              boxShadow: selected
                                   ? 'inset 0 0 0 1px #ffffff, 0 0 20px rgba(87,154,255,0.9)'
                                   : ((flatLeft || flatRight) ? 'inset 0 0 0 1px rgba(87,154,255,0.35)' : 'none')
+                              }}
+                              onDoubleClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedClipIds([clip.id]);
+                                setSelectedClipId(clip.id);
+                                setSelectedLayerId(layer?.id || null);
+                                setShowStageTransformUi(true);
                               }}
                               onPointerDown={(e) => {
                                 e.stopPropagation();
@@ -10236,6 +11048,71 @@
               </div>
             </div>
           )}
+          {showProjectPicker && (
+            <div className="media-popup-overlay" style={{ zIndex: 195 }} onClick={() => setShowProjectPicker(false)}>
+              <div className="media-popup-card" style={{ width: 'min(700px, 92vw)', zIndex: 196 }} onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs font-black uppercase">Load Project</div>
+                  <button className="neo-btn !min-h-0 px-2 py-1" style={{ background: COLORS.white }} onClick={() => {
+                    fetchProjectList(projectOwnerId).catch((error) => setProjectSaveError(String(error?.message || error || 'Could not refresh projects.')));
+                  }}>
+                    Refresh
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 border-2 border-black rounded-md p-2 bg-white mb-2">
+                  <Search size={14} />
+                  <input
+                    className="w-full text-xs font-black outline-none"
+                    placeholder="Search projects..."
+                    value={projectPickerSearch}
+                    onChange={(e) => setProjectPickerSearch(e.target.value)}
+                  />
+                </div>
+                <div className="max-h-[320px] overflow-y-auto neo-scroll space-y-1 mb-2">
+                  {projectList
+                    .filter((entry) => {
+                      const q = projectPickerSearch.trim().toLowerCase();
+                      if (!q) return true;
+                      return String(entry?.name || '').toLowerCase().includes(q) || String(entry?.projectId || '').toLowerCase().includes(q);
+                    })
+                    .map((entry) => (
+                      <button
+                        key={entry.projectId}
+                        className="neo-btn w-full justify-between"
+                        style={{ background: entry.projectId === activeProjectId ? COLORS.yellow : COLORS.white }}
+                        onClick={() => {
+                          loadProjectFromCloud(entry.projectId).then(() => setShowProjectPicker(false)).catch((error) => {
+                            setProjectSaveState('failed');
+                            setProjectSaveError(String(error?.message || error || 'Load failed.'));
+                          });
+                        }}
+                      >
+                        <span className="truncate max-w-[65%]">{entry.name || 'Untitled Project'}</span>
+                        <span className="text-[10px]">{entry.updatedAt ? new Date(entry.updatedAt).toLocaleString() : ''}</span>
+                      </button>
+                    ))}
+                  {!projectList.length && (
+                    <div className="text-[11px] font-black opacity-70">No cloud projects yet. Save one first.</div>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button className="neo-btn" style={{ background: COLORS.white }} onClick={() => setShowProjectPicker(false)}>Close</button>
+                  <button
+                    className="neo-btn"
+                    style={{ background: COLORS.green }}
+                    onClick={() => {
+                      saveProjectToCloud({ explicit: true }).catch((error) => {
+                        setProjectSaveState('failed');
+                        setProjectSaveError(String(error?.message || error || 'Save failed.'));
+                      });
+                    }}
+                  >
+                    Save Current First
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {featureFlags.restorePicker && showRestorePicker && autosaveSnapshots.length > 0 && (
             <div className="media-popup-overlay" style={{ zIndex: 195 }} onClick={() => setShowRestorePicker(false)}>
               <div className="media-popup-card" style={{ width: 'min(600px, 92vw)', zIndex: 196 }} onClick={(e) => e.stopPropagation()}>
@@ -10297,13 +11174,13 @@
           {showOnboarding && (
             <div className="media-popup-overlay" style={{ zIndex: 210 }} onClick={() => setShowOnboarding(false)}>
               <div className="media-popup-card" style={{ width: 'min(560px, 92vw)', zIndex: 211 }} onClick={(e) => e.stopPropagation()}>
-                <div className="text-xs font-black uppercase mb-2">Quickstart</div>
+                <div className="text-xs font-black uppercase mb-2">Quickstart Guide</div>
                 <div className="text-[11px] font-black leading-5 border-2 border-black rounded-md p-2 bg-white mb-2">
-                  <div>1) Add layer from left panel.</div>
-                  <div>2) Select clip, drag or split at playhead.</div>
-                  <div>3) Use markers + search for fast navigation.</div>
-                  <div>4) Export panel: run one-frame sanity + preflight.</div>
-                  <div>5) Use focus mode for timeline-only editing.</div>
+                  <div>1) Add media, text, shape, or template from the left panel.</div>
+                  <div>2) Click media in the viewer or double-click a clip to open transform controls.</div>
+                  <div>3) Drag clips on the timeline to time your edit and stack layers.</div>
+                  <div>4) Use Project controls for New, Save, Load, Save As, and Duplicate.</div>
+                  <div>5) Run Preflight + one-frame sanity before export.</div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <button className="neo-btn" style={{ background: COLORS.white }} onClick={() => setShowOnboarding(false)}>Close</button>

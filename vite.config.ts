@@ -19,4 +19,7 @@ export default defineConfig({
       usePolling: true, // Ensures hot-reloading detects file saves reliably through the Docker volume
     },
   },
+  test: {
+    environment: 'jsdom',
+  },
 })

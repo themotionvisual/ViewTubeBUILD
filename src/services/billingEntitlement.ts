@@ -49,6 +49,7 @@ export interface EntitlementState {
  currentPeriodStartIso: string | null
  currentPeriodEndIso: string | null
  referralCode: string
+ referralCodeLocked: boolean
  referralsConverted: number
  freeMonthsEarned: number
  freeMonthsApplied: number
@@ -134,6 +135,8 @@ export interface StripeWebhookLikeEvent {
 const ENTITLEMENT_STORAGE_KEY = "vt_entitlement_v1"
 const ENTITLEMENT_LEDGER_KEY = "vt_credit_ledger_v1"
 const KNOWN_USER_EMAIL_KEY = "vt_known_user_email"
+const REFERRAL_REDEMPTION_KEY = "vt_referral_redemption_v1"
+const OWNER_METER_SIMULATION_KEY = "vt_owner_meter_simulation_v1"
 export const ENTITLEMENT_CHANGED_EVENT = "vt_entitlement_changed"
 
 const MARKUP_MULTIPLIER = Number(import.meta.env?.VITE_GEMINI_METER_MARKUP || 3)
@@ -193,6 +196,7 @@ const OWNER_EMAILS = new Set([
 ])
 const OWNER_FREE_TOPUP_THRESHOLD = 1_000
 const OWNER_FREE_TOPUP_AMOUNT = 10_000
+const OWNER_SIM_DEFAULT_MONTHLY_PLAN: SubscriptionPlanId = "creator_plus"
 
 const buildReferralCode = () => {
  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -212,6 +216,14 @@ const getKnownUserEmail = (): string => {
  return normalizeEmail(localStorage.getItem(KNOWN_USER_EMAIL_KEY) || "")
 }
 const isOwnerMode = (): boolean => isOwnerEmail(getKnownUserEmail())
+const isOwnerMeterSimulationEnabled = (): boolean => {
+ if (typeof window === "undefined") return false
+ const raw = localStorage.getItem(OWNER_METER_SIMULATION_KEY)
+ if (raw === null) return true
+ return raw !== "0" && raw !== "false"
+}
+const getOwnerSimulationPlan = (): PlanDefinition =>
+ getPlanDefinition(OWNER_SIM_DEFAULT_MONTHLY_PLAN)
 
 const toPeriodBounds = (now: Date) => {
  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0))
@@ -242,18 +254,38 @@ const ensureCompatibilityFields = (state: EntitlementState): EntitlementState =>
 
 const applyOwnerOverride = (state: EntitlementState, now = new Date()): EntitlementState => {
  if (!isOwnerMode()) return state
- const next = ensureCompatibilityFields({
-  ...state,
-  tier: "large",
-  subscriptionPlanId: "executive",
-  status: "active",
-  monthlyCreditGrant: Math.max(state.monthlyCreditGrant || 0, OWNER_FREE_TOPUP_AMOUNT),
-  rolloverCap: Number.POSITIVE_INFINITY,
-  creditBalance: Math.max(
+ const simulationEnabled = isOwnerMeterSimulationEnabled()
+ const simPlan = getOwnerSimulationPlan()
+ const nextTier: LaunchTier = "large"
+ const nextPlan: SubscriptionPlanId = "executive"
+ const nextStatus: EntitlementState["status"] = "active"
+ const nextGrant = simulationEnabled
+  ? simPlan.monthlyCredits
+  : Math.max(state.monthlyCreditGrant || 0, OWNER_FREE_TOPUP_AMOUNT)
+ const nextCap = simulationEnabled ? simPlan.rolloverCap : Number.POSITIVE_INFINITY
+ const nextBalance = simulationEnabled
+  ? Math.max(0, Math.min(safeNumber(state.creditBalance, 0), nextCap))
+  : Math.max(
    safeNumber(state.creditBalance, 0),
    OWNER_FREE_TOPUP_THRESHOLD + OWNER_FREE_TOPUP_AMOUNT,
-  ),
-  updatedAtIso: now.toISOString(),
+  )
+ const changed =
+  state.tier !== nextTier ||
+  state.subscriptionPlanId !== nextPlan ||
+  state.status !== nextStatus ||
+  state.monthlyCreditGrant !== nextGrant ||
+  state.rolloverCap !== nextCap ||
+  state.creditBalance !== nextBalance
+
+ const next = ensureCompatibilityFields({
+  ...state,
+  tier: nextTier,
+  subscriptionPlanId: nextPlan,
+  status: nextStatus,
+  monthlyCreditGrant: nextGrant,
+  rolloverCap: nextCap,
+  creditBalance: nextBalance,
+  updatedAtIso: changed ? now.toISOString() : state.updatedAtIso,
  })
  return next
 }
@@ -281,6 +313,7 @@ export const createDefaultEntitlement = (now = new Date()): EntitlementState => 
   currentPeriodStartIso: startIso,
   currentPeriodEndIso: endIso,
   referralCode: buildReferralCode(),
+  referralCodeLocked: false,
   referralsConverted: 0,
   freeMonthsEarned: 0,
   freeMonthsApplied: 0,
@@ -489,7 +522,8 @@ export const applyMeterChargeEvent = (
   }
  }
 
- if (ownerMode && before < debit + OWNER_FREE_TOPUP_THRESHOLD) {
+ const ownerSimulationEnabled = ownerMode && isOwnerMeterSimulationEnabled()
+ if (ownerMode && !ownerSimulationEnabled && before < debit + OWNER_FREE_TOPUP_THRESHOLD) {
   before = before + OWNER_FREE_TOPUP_AMOUNT
   appendLedger({
    id: newLedgerId(),
@@ -502,7 +536,19 @@ export const applyMeterChargeEvent = (
  }
 
  let after = current.tier === "large" && !ownerMode ? before : Math.max(0, before - debit)
- if (ownerMode && after < OWNER_FREE_TOPUP_THRESHOLD) {
+ if (ownerSimulationEnabled && after <= 0) {
+  const refill = getOwnerSimulationPlan().monthlyCredits
+  after = refill
+  appendLedger({
+   id: newLedgerId(),
+   tsIso: now.toISOString(),
+   type: "monthly_refill",
+   deltaCredits: refill,
+   balanceAfter: after,
+   meta: { source: "owner_sim_auto_refill" },
+  })
+ }
+ if (ownerMode && !ownerSimulationEnabled && after < OWNER_FREE_TOPUP_THRESHOLD) {
   after += OWNER_FREE_TOPUP_AMOUNT
   appendLedger({
    id: newLedgerId(),
@@ -565,6 +611,88 @@ export const applyTopupCredits = (sku: string, now = new Date()): EntitlementSta
  return next
 }
 
+export const applyCustomTopupCredits = (
+ amountUsd: number,
+ now = new Date(),
+): { next: EntitlementState; creditsGranted: number; bonusCredits: number } => {
+ const current = syncEntitlementIfDrifted(now)
+ const normalizedAmount = Math.max(0, Number(amountUsd) || 0)
+ const baseCredits = Math.floor(normalizedAmount * 1000)
+ const bonusCredits = normalizedAmount >= 50 ? Math.floor(baseCredits * 0.25) : 0
+ const creditsGranted = baseCredits + bonusCredits
+ const nextBalance = safeNumber(current.creditBalance, 0) + creditsGranted
+ const next = ensureCompatibilityFields({
+  ...current,
+  creditBalance: nextBalance,
+  updatedAtIso: now.toISOString(),
+ })
+ writeStoredEntitlement(next)
+ appendLedger({
+  id: newLedgerId(),
+  tsIso: now.toISOString(),
+  type: "topup_credit",
+  deltaCredits: creditsGranted,
+  balanceAfter: nextBalance,
+  meta: {
+   source: "custom_topup",
+   amountUsd: Number(normalizedAmount.toFixed(2)),
+   bonusCredits,
+  },
+ })
+ return { next, creditsGranted, bonusCredits }
+}
+
+export const simulateMeterUsage = (creditsToConsume: number, now = new Date()): EntitlementState => {
+ const current = syncEntitlementIfDrifted(now)
+ const debit = Math.max(0, Math.floor(creditsToConsume))
+ const nextBalance = Math.max(0, safeNumber(current.creditBalance, 0) - debit)
+ const next = ensureCompatibilityFields({
+  ...current,
+  creditBalance: nextBalance,
+  updatedAtIso: now.toISOString(),
+ })
+ writeStoredEntitlement(next)
+ appendLedger({
+  id: newLedgerId(),
+  tsIso: now.toISOString(),
+  type: "usage_debit",
+  deltaCredits: -debit,
+  balanceAfter: nextBalance,
+  meta: { source: "manual_meter_simulation" },
+ })
+ return next
+}
+
+export const simulateMeterRefill = (creditsToAdd: number, now = new Date()): EntitlementState => {
+ const current = syncEntitlementIfDrifted(now)
+ const delta = Math.max(0, Math.floor(creditsToAdd))
+ const nextBalance = safeNumber(current.creditBalance, 0) + delta
+ const next = ensureCompatibilityFields({
+  ...current,
+  creditBalance: nextBalance,
+  updatedAtIso: now.toISOString(),
+ })
+ writeStoredEntitlement(next)
+ appendLedger({
+  id: newLedgerId(),
+  tsIso: now.toISOString(),
+  type: "topup_credit",
+  deltaCredits: delta,
+  balanceAfter: nextBalance,
+  meta: { source: "manual_meter_refill" },
+ })
+ return next
+}
+
+export const getReferralCode = (): string => readCurrentEntitlement().referralCode
+
+export const saveReferralRedemptionCode = (code: string): void => {
+ localStorage.setItem(REFERRAL_REDEMPTION_KEY, String(code || "").trim().toUpperCase())
+}
+
+export const getReferralRedemptionCode = (): string =>
+ String(localStorage.getItem(REFERRAL_REDEMPTION_KEY) || "").trim().toUpperCase()
+
 export const consumeAiTokens = (units = 1): { next: EntitlementState; allowed: boolean } => {
  const current = syncEntitlementIfDrifted()
  if (isOwnerMode()) return { next: current, allowed: true }
@@ -591,16 +719,29 @@ export const updatePlanEntitlement = (planId: SubscriptionPlanId): EntitlementSt
 export const createCheckoutSession = async (
  payload: CheckoutSessionRequest,
 ): Promise<CheckoutSessionResponse> => {
- const apiBase = import.meta.env.VITE_BILLING_API_BASE as string | undefined
+ const configuredBase = import.meta.env.VITE_BILLING_API_BASE as string | undefined
+ const inferredBase =
+  typeof window !== "undefined" && window.location?.origin
+   ? window.location.origin
+   : ""
+ const apiBase = String(configuredBase || inferredBase).trim()
  if (!apiBase) {
-  throw new Error("Billing API is not configured. Set VITE_BILLING_API_BASE.")
+  throw new Error(
+   "Billing API is not configured. Set VITE_BILLING_API_BASE or run with a valid window origin.",
+  )
  }
- const response = await fetch(`${apiBase.replace(/\/$/, "")}/billing/checkout-session`, {
+ const checkoutUrl = `${apiBase.replace(/\/$/, "")}/billing/checkout-session`
+ const response = await fetch(checkoutUrl, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify(payload),
  })
  if (!response.ok) {
+  if (response.status === 404 || response.status >= 500) {
+   throw new Error(
+    `Billing server unavailable at ${apiBase}. Start the billing server or update VITE_BILLING_API_BASE.`,
+   )
+  }
   throw new Error(`Checkout session creation failed (${response.status}).`)
  }
  return response.json() as Promise<CheckoutSessionResponse>
@@ -690,3 +831,31 @@ export const entitlementStatesEqual = (a: EntitlementState, b: EntitlementState)
 
 export const getMeterLedgerEntries = (): CreditLedgerEntry[] => readLedger()
 export const getPlanDefinitions = (): PlanDefinition[] => [...PLAN_DEFINITIONS]
+
+const sanitizeReferralCode = (raw: string): string =>
+ String(raw || "")
+  .toUpperCase()
+  .replace(/[^A-Z0-9_-]/g, "")
+  .slice(0, 24)
+
+export const setCustomReferralCodeOnce = (
+ rawCode: string,
+ now = new Date(),
+): { ok: boolean; reason?: string; state: EntitlementState } => {
+ const current = syncEntitlementIfDrifted(now)
+ if (current.referralCodeLocked) {
+  return { ok: false, reason: "Referral code is already set and locked.", state: current }
+ }
+ const code = sanitizeReferralCode(rawCode)
+ if (code.length < 4) {
+  return { ok: false, reason: "Referral code must be at least 4 characters.", state: current }
+ }
+ const next = ensureCompatibilityFields({
+  ...current,
+  referralCode: code,
+  referralCodeLocked: true,
+  updatedAtIso: now.toISOString(),
+ })
+ writeStoredEntitlement(next)
+ return { ok: true, state: next }
+}

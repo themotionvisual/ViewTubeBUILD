@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Brain, Zap, FileText, TrendingUp, Eye, Target, Loader2 } from 'lucide-react';
 import type { OracleReport, AlgorithmDiagnosis, KeywordAnalysis, UltimateChannelReport } from './types';
 import { IntelligenceChart } from './IntelligenceChart';
-import { emitSignal } from '../../services/brainEngine';
+import { emitSignal } from '../../services/brain';
 import { generateUltimateChannelReport } from './ultimateReport';
 
 const ULTIMATE_REPORT_STORAGE_KEY = "vt_ultimate_channel_report_v1";

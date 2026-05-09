@@ -22,7 +22,7 @@ import {
  fetchDailyMetrics,
  fetchRetentionCurve,
 } from "../services/youtubeDataFetcher"
-import { emitSignal, consultBrain, getBrainMemory, reflectAndCompress, initializeBrain } from "../services/brainEngine"
+import { emitSignal, consultBrain, getBrainMemory, reflectAndCompress, initializeBrain } from "../services/brain"
 
 const STORAGE_KEY = "vt_workspace_brain"
 const AUTH_STORAGE_KEY = "vt_auth_state"

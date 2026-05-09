@@ -1,6 +1,6 @@
 
 import { SYSTEM_PROMPTS } from './intelligence';
-import { consultBrain, annotateSystemPrompt } from '../../services/brainEngine';
+import { consultBrain, annotateSystemPrompt } from '../../services/brain';
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 

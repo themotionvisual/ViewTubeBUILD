@@ -1,0 +1,33 @@
+{
+  "routing-shell": {
+    "canonical": [
+      "src/app/AppShell.tsx",
+      "src/app/AppRoutes.tsx"
+    ],
+    "notes": "All route/shell changes land here first."
+  },
+  "ui-toolbox-primitives": {
+    "canonical": [
+      "src/components/Toolbox.tsx",
+      "src/components/ToolboxUISystem.tsx",
+      "src/components/ui"
+    ],
+    "notes": "Variant copies must be harvested into these modules only."
+  },
+  "analytics-contracts-services": {
+    "canonical": [
+      "src/services/analyticsContract.ts",
+      "src/services/canonicalMetricResolver.ts",
+      "src/services/analyticsSelectors.ts",
+      "src/services/youtube"
+    ],
+    "notes": "Single source of truth for metric mappings and fetch adapters."
+  },
+  "editor-core": {
+    "canonical": [
+      "src/editor-core",
+      "src/editor-ui/IntegratedRemotionEditor.tsx"
+    ],
+    "notes": "VT_E1 feature work must route through editor-core contracts."
+  }
+}

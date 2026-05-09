@@ -118,6 +118,12 @@ desktop.ini
 # ================================
 logs/
 *.log
+
+# ================================
+# QUARANTINE (INTENTIONALLY TRACKABLE)
+# ================================
+!_quarantine/
+!_quarantine/**/*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -377,3 +383,5 @@ web_modules/
 .gemini/
 gha-creds-*.json
 .worktrees/
+file_list.txt
+standalone-chart-dashboard.html

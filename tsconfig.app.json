@@ -30,5 +30,5 @@
     "noUncheckedSideEffectImports": true
   },
   "include": ["src"],
-  "exclude": ["src/_parking/**/*"]
+  "exclude": ["src/_parking/**/*", "_quarantine/**/*"]
 }

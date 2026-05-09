@@ -177,12 +177,6 @@ export const loginWithImplicitPopup = async (): Promise<void> => {
         return;
       }
 
-      if (popup.closed) {
-        cleanup();
-        reject(new Error('Authentication window was closed before completion.'));
-        return;
-      }
-
       if (Date.now() - authStartedAt > maxAuthWaitMs) {
         cleanup();
         reject(new Error('Authentication timed out. Please try again.'));

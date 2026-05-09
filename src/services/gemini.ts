@@ -37,7 +37,7 @@ import {
  estimateMeterQuote,
  getCurrentEntitlement,
 } from "./billingEntitlement"
-import { consultBrainSync, annotateSystemPrompt } from "./brainUtils"
+import { consultBrainSync, annotateSystemPrompt } from "./brain/Utils";
 
 // --- Actionable Tactics Logic ---
 
@@ -302,6 +302,10 @@ const resolveGeminiApiKey = (): string => {
  const { customKey } = getAiSettings()
  const key = String(customKey || "").trim() || getEnvGeminiKey()
  return key
+}
+
+export const isGeminiConfigured = (): boolean => {
+ return resolveGeminiApiKey().length > 0
 }
 
 // Helper to get the AI client

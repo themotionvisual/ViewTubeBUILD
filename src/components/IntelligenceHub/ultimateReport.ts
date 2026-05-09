@@ -1,7 +1,9 @@
 import { generateArchitectDiagnosis, generateKeywordResearch, generateOracleReport } from "./gemini";
 import type {
   AlgorithmDiagnosis,
+  ChartConfig,
   KeywordAnalysis,
+  OracleSection,
   OracleReport,
   UltimateChannelReport,
   UltimateReportBlock,
@@ -14,10 +16,179 @@ type GenerateUltimateReportInput = {
   dataSources?: string[];
 };
 
+const toRecord = (value: unknown): Record<string, unknown> =>
+  value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+
+const toFiniteNumber = (value: unknown, fallback = 0): number => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+};
+
+const toChartSuggestion = (value: unknown): ChartConfig | undefined => {
+  const raw = toRecord(value);
+  if (!raw.type || !raw.title || !raw.xAxisKey || !Array.isArray(raw.dataKeys)) return undefined;
+  return {
+    type: String(raw.type) as ChartConfig["type"],
+    title: String(raw.title),
+    xAxisKey: String(raw.xAxisKey),
+    dataKeys: raw.dataKeys.map((entry) => String(entry)),
+    description: raw.description ? String(raw.description) : undefined,
+    provider: raw.provider === "google" ? "google" : "recharts",
+    zAxisKey: raw.zAxisKey ? String(raw.zAxisKey) : undefined,
+    videoCount: raw.videoCount ? toFiniteNumber(raw.videoCount) : undefined,
+    sortType: raw.sortType as ChartConfig["sortType"] | undefined,
+    durationType: raw.durationType as ChartConfig["durationType"] | undefined,
+  };
+};
+
+const normalizeOracleSection = (value: unknown): OracleSection | null => {
+  const raw = toRecord(value);
+  const title = String(raw.title || raw.heading || "");
+  const content = String(raw.content || raw.summary || raw.body || "");
+  if (!title && !content) return null;
+  return {
+    title: title || "Untitled Section",
+    content,
+    chartSuggestion: toChartSuggestion(raw.chartSuggestion),
+  };
+};
+
+const normalizeOracleReport = (input: unknown): OracleReport => {
+  const raw = toRecord(input);
+  const directSections = Array.isArray(raw.sections) ? raw.sections : [];
+  const blockSections = Array.isArray(raw.blocks)
+    ? raw.blocks.map((block) => {
+        const entry = toRecord(block);
+        return {
+          title: entry.title || entry.heading || "Block",
+          content: entry.summary || entry.content || "",
+          chartSuggestion: entry.chartSuggestion,
+        };
+      })
+    : [];
+  const insightSections = Array.isArray(raw.insights)
+    ? raw.insights.map((entry) => {
+        const insight = toRecord(entry);
+        return {
+          title: insight.title || insight.name || "Insight",
+          content: insight.content || insight.summary || "",
+          chartSuggestion: insight.chartSuggestion,
+        };
+      })
+    : [];
+  const mergedSections = [...directSections, ...blockSections, ...insightSections]
+    .map(normalizeOracleSection)
+    .filter((section): section is OracleSection => Boolean(section));
+
+  if (!Array.isArray(raw.sections)) {
+    console.warn("[UltimateReport] Oracle response missing sections; using fallback shape.");
+  }
+
+  const statsRaw = toRecord(raw.stats);
+  const stats = Object.fromEntries(
+    Object.entries(statsRaw).map(([key, value]) => [key, toFiniteNumber(value)]),
+  ) as Record<string, number>;
+
+  return {
+    executiveSummary: String(raw.executiveSummary || raw.summary || ""),
+    sections: mergedSections,
+    stats,
+  };
+};
+
+const normalizeDiagnosis = (input: unknown): AlgorithmDiagnosis => {
+  const raw = toRecord(input);
+  const dailyBriefRaw = toRecord(raw.dailyBrief);
+  const stepsRaw = Array.isArray(dailyBriefRaw.steps)
+    ? dailyBriefRaw.steps.map((step) => String(step).trim()).filter(Boolean)
+    : [];
+  const audienceDNA = Array.isArray(raw.audienceDNA)
+    ? raw.audienceDNA
+        .map((entry) => {
+          const point = toRecord(entry);
+          return {
+            interest: String(point.interest || point.label || ""),
+            overlap: toFiniteNumber(point.overlap),
+          };
+        })
+        .filter((entry) => entry.interest.length > 0)
+    : [];
+  return {
+    clusterCenter: String(raw.clusterCenter || "Unknown"),
+    nicheAuthority: toFiniteNumber(raw.nicheAuthority),
+    audienceDNA,
+    hiddenStory: String(raw.hiddenStory || raw.summary || ""),
+    dailyBrief: {
+      priority: String(dailyBriefRaw.priority || "No priority generated."),
+      impact: String(dailyBriefRaw.impact || "No impact summary generated."),
+      steps: stepsRaw,
+    },
+  };
+};
+
+const normalizeKeywordAnalysis = (input: unknown): KeywordAnalysis => {
+  const raw = toRecord(input);
+  const rowsOf = (value: unknown): Array<Record<string, unknown>> =>
+    Array.isArray(value) ? value.map(toRecord) : [];
+  return {
+    marketAnalysis: String(raw.marketAnalysis || raw.summary || ""),
+    trendData: rowsOf(raw.trendData).map((entry) => ({
+      month: String(entry.month || ""),
+      google: toFiniteNumber(entry.google),
+      youtube: toFiniteNumber(entry.youtube),
+    })),
+    keywordMetrics: rowsOf(raw.keywordMetrics).map((entry) => ({
+      keyword: String(entry.keyword || ""),
+      volume: toFiniteNumber(entry.volume),
+      difficulty: toFiniteNumber(entry.difficulty),
+      relevance: toFiniteNumber(entry.relevance),
+    })),
+    contentFormats: rowsOf(raw.contentFormats).map((entry) => ({
+      name: String(entry.name || entry.format || ""),
+      percentage: toFiniteNumber(entry.percentage),
+    })),
+    sentimentAnalysis: rowsOf(raw.sentimentAnalysis).map((entry) => ({
+      emotion: String(entry.emotion || ""),
+      score: toFiniteNumber(entry.score),
+    })),
+    demographics: rowsOf(raw.demographics).map((entry) => ({
+      group: String(entry.group || ""),
+      percentage: toFiniteNumber(entry.percentage),
+    })),
+    lsiKeywords: Array.isArray(raw.lsiKeywords) ? raw.lsiKeywords.map((entry) => String(entry)) : [],
+    longTailKeywords: Array.isArray(raw.longTailKeywords)
+      ? raw.longTailKeywords.map((entry) => String(entry))
+      : [],
+    searchIntent: rowsOf(raw.searchIntent).map((entry) => ({
+      query: String(entry.query || ""),
+      intent: String(entry.intent || ""),
+      contentAngle: String(entry.contentAngle || ""),
+    })),
+    viralHooks: Array.isArray(raw.viralHooks) ? raw.viralHooks.map((entry) => String(entry)) : [],
+    retentionForecast: rowsOf(raw.retentionForecast).map((entry) => ({
+      second: toFiniteNumber(entry.second),
+      user: toFiniteNumber(entry.user),
+      average: toFiniteNumber(entry.average),
+    })),
+    competitorScores: rowsOf(raw.competitorScores).map((entry) => ({
+      metric: String(entry.metric || ""),
+      user: toFiniteNumber(entry.user),
+      competitor: toFiniteNumber(entry.competitor),
+    })),
+    ctrPowerWords: Array.isArray(raw.ctrPowerWords) ? raw.ctrPowerWords.map((entry) => String(entry)) : [],
+    formatRoi: rowsOf(raw.formatRoi).map((entry) => ({
+      format: String(entry.format || ""),
+      effort: toFiniteNumber(entry.effort),
+      potential: toFiniteNumber(entry.potential),
+    })),
+  };
+};
+
 const sectionByMatch = (report: OracleReport, ...tokens: string[]) => {
   const upperTokens = tokens.map((token) => token.toUpperCase());
-  return report.sections.find((section) =>
-    upperTokens.some((token) => section.title.toUpperCase().includes(token)),
+  const sections = report.sections ?? [];
+  return sections.find((section) =>
+    upperTokens.some((token) => String(section.title || "").toUpperCase().includes(token)),
   );
 };
 
@@ -238,11 +409,14 @@ export async function generateUltimateChannelReport(
     : manualIntent || autoContext || "Build a complete strategic channel analysis from available channel signals.";
   const contextMode = manualIntent && autoContext ? "hybrid" : manualIntent ? "manual" : "auto";
 
-  const [diagnosis, oracle, keyword] = await Promise.all([
+  const [diagnosisRaw, oracleRaw, keywordRaw] = await Promise.all([
     generateArchitectDiagnosis(resolvedContext),
     generateOracleReport(resolvedContext),
     generateKeywordResearch(resolvedContext, "Auto-Detected Niche"),
   ]);
+  const diagnosis = normalizeDiagnosis(diagnosisRaw);
+  const oracle = normalizeOracleReport(oracleRaw);
+  const keyword = normalizeKeywordAnalysis(keywordRaw);
 
   const report: UltimateChannelReport = {
     meta: {
@@ -258,3 +432,10 @@ export async function generateUltimateChannelReport(
 
   return { report, diagnosis, oracle, keyword, resolvedContext };
 }
+
+export const __test__ = {
+  normalizeOracleReport,
+  normalizeDiagnosis,
+  normalizeKeywordAnalysis,
+  sectionByMatch,
+};

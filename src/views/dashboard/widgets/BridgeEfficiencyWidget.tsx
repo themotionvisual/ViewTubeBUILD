@@ -2,7 +2,6 @@ import React, { useMemo } from "react"
 import { Filter, MousePointerClick } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
 import {
-  ResponsiveContainer,
   BarChart,
   Bar,
   XAxis,
@@ -10,6 +9,7 @@ import {
   Tooltip,
   Cell,
 } from "recharts"
+import { StableChartFrame } from "../../../components/StableChartFrame"
 
 const formatHumanNumber = (value: unknown): string => {
   const parsed = Number(value)
@@ -86,8 +86,8 @@ export const BridgeEfficiencyWidget: React.FC<any> = ({widget, instance, editMod
           <MousePointerClick size={16} opacity={0.3} />
         </div>
 
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <ResponsiveContainer width="100%" height="100%">
+        <div style={{ flex: 1, minHeight: 0, minWidth: 0 }}>
+          <StableChartFrame minHeightClassName="min-h-[180px]">
             <BarChart
               data={funnelData}
               layout="vertical"
@@ -129,7 +129,7 @@ export const BridgeEfficiencyWidget: React.FC<any> = ({widget, instance, editMod
                 ))}
               </Bar>
             </BarChart>
-          </ResponsiveContainer>
+          </StableChartFrame>
         </div>
       </div>
     </WidgetShell>

@@ -1116,14 +1116,14 @@ export const METRIC_CAPABILITY_REGISTRY: MetricCapabilityRegistry = {
  videoThumbnailImpressions: {
   metric: "videoThumbnailImpressions",
   source: "youtube_analytics_v2",
-  allowedDimensions: ["video", "day", "channel"],
+  allowedDimensions: ["day", "channel"],
   applicability: "shared",
   enabled: true,
  },
  videoThumbnailImpressionsClickRate: {
   metric: "videoThumbnailImpressionsClickRate",
   source: "youtube_analytics_v2",
-  allowedDimensions: ["video", "day", "channel"],
+  allowedDimensions: ["day", "channel"],
   applicability: "shared",
   enabled: true,
  },

@@ -34,12 +34,22 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         entitlementStatesEqual(previous, next) ? previous : next,
       );
     };
+    const onEntitlementChanged = (event: Event) => {
+      const detail = (event as CustomEvent<EntitlementState>).detail;
+      if (!detail) {
+        sync();
+        return;
+      }
+      setEntitlement((previous) =>
+        entitlementStatesEqual(previous, detail) ? previous : detail,
+      );
+    };
     sync();
     window.addEventListener("storage", sync);
-    window.addEventListener(ENTITLEMENT_CHANGED_EVENT, sync as EventListener);
+    window.addEventListener(ENTITLEMENT_CHANGED_EVENT, onEntitlementChanged as EventListener);
     return () => {
       window.removeEventListener("storage", sync);
-      window.removeEventListener(ENTITLEMENT_CHANGED_EVENT, sync as EventListener);
+      window.removeEventListener(ENTITLEMENT_CHANGED_EVENT, onEntitlementChanged as EventListener);
     };
   }, []);
 

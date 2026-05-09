@@ -4,7 +4,7 @@ import { WidgetShell } from "../WidgetShell"
 import type { CommonWidgetProps } from "../types"
 import type { DashboardData } from "../useDashboardData"
 import { useBrain } from "../../../context/useBrain"
-import { reflectAndCompress } from "../../../services/brainEngine"
+import { reflectAndCompress } from "../../../services/brain"
 
 interface BrainHubWidgetProps extends CommonWidgetProps {
   data: DashboardData
