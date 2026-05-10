@@ -1,6 +1,7 @@
 import React, { useMemo } from "react"
 import { Globe } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
+import { formatTrafficSourceNickname } from "../../../services/dataUtils"
 
 export const AudienceMatrixWidget: React.FC<any> = ({widget, instance, editMode, canEdit, onToggleCollapse, onCycleSize, onCycleHeight, onRemove, data, onDecSize, onDecHeight}) => {
   const common = {
@@ -13,7 +14,6 @@ export const AudienceMatrixWidget: React.FC<any> = ({widget, instance, editMode,
   onCycleHeight,
   onRemove,
   onDecSize,
-  onCycleHeight,
   onDecHeight,
  }
 
@@ -31,6 +31,20 @@ export const AudienceMatrixWidget: React.FC<any> = ({widget, instance, editMode,
       }
     }
 
+    const trafficSources = data?.trafficSources || []
+    const origins = trafficSources.length > 0
+      ? trafficSources.slice(0, 4).map((s: any, idx: number) => ({
+          name: formatTrafficSourceNickname(s.label),
+          value: s.pct,
+          color: ["#FF83EA", "#24D3FF", "#C9F830", "#eee"][idx] || "#eee"
+        }))
+      : [
+          { name: "Browse", value: baseViews * 0.45, color: "#FF83EA" },
+          { name: "Suggested", value: baseViews * 0.30, color: "#24D3FF" },
+          { name: "Search", value: baseViews * 0.15, color: "#C9F830" },
+          { name: "External", value: baseViews * 0.10, color: "#eee" },
+        ]
+
     return {
       geo: [
         { name: "US", value: baseViews * 0.42, color: "#4FFF5B" },
@@ -45,12 +59,7 @@ export const AudienceMatrixWidget: React.FC<any> = ({widget, instance, editMode,
         { name: "TV", value: baseViews * 0.12, color: "#FFB570" },
         { name: "Tablet", value: baseViews * 0.03, color: "#eee" },
       ],
-      origins: [
-        { name: "Browse", value: baseViews * 0.45, color: "#FF83EA" },
-        { name: "Suggested", value: baseViews * 0.30, color: "#24D3FF" },
-        { name: "Search", value: baseViews * 0.15, color: "#C9F830" },
-        { name: "External", value: baseViews * 0.10, color: "#eee" },
-      ],
+      origins,
       sharing: [
         { name: "WhatsApp", value: baseViews * 0.05 * 0.4, color: "#4FFF5B" },
         { name: "Twitter/X", value: baseViews * 0.05 * 0.3, color: "#000000" },

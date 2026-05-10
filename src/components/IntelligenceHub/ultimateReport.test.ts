@@ -1,12 +1,27 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./gemini", () => ({
+vi.mock("@/services/gemini", () => ({
   generateArchitectDiagnosis: vi.fn(),
   generateOracleReport: vi.fn(),
   generateKeywordResearch: vi.fn(),
 }));
+vi.mock("@/services/analyticsSelectors", () => ({
+  getMetricSummary: vi.fn(() => ({
+    totals: { views: 1200, revenue: 15, subscribersGained: 12, watchHours: 95 },
+    averages: { ctr: 0, rpm: 0 },
+  })),
+  getMasterRows: vi.fn(() => [
+    {
+      title: "Video A",
+      metrics: {
+        views: { value: 1200 },
+        ctr: { value: 4.5 },
+      },
+    },
+  ]),
+}));
 
-import { generateArchitectDiagnosis, generateKeywordResearch, generateOracleReport } from "./gemini";
+import { generateArchitectDiagnosis, generateKeywordResearch, generateOracleReport } from "@/services/gemini";
 import { __test__, generateUltimateChannelReport } from "./ultimateReport";
 
 describe("ultimateReport normalization", () => {
@@ -48,6 +63,30 @@ describe("ultimateReport normalization", () => {
 });
 
 describe("ultimateReport generation integration", () => {
+  const storage: Record<string, string> = {};
+  beforeEach(() => {
+    Object.keys(storage).forEach((key) => delete storage[key]);
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => storage[key] ?? null,
+      setItem: (key: string, value: string) => {
+        storage[key] = value;
+      },
+      removeItem: (key: string) => {
+        delete storage[key];
+      },
+    });
+    globalThis.localStorage.setItem("vt_ultimate_tool_context_pack_v1", "brain ok");
+    globalThis.localStorage.setItem(
+      "yt_analytics_cache",
+      JSON.stringify({
+        profile: { id: "chan_1" },
+        videos: [{ id: "v1" }],
+        lastSynced: new Date().toISOString(),
+      }),
+    );
+    globalThis.localStorage.setItem("vt_auth_state", JSON.stringify({ isAuthenticated: true }));
+  });
+
   it("generates 14 blocks even when oracle has no sections", async () => {
     vi.mocked(generateArchitectDiagnosis).mockResolvedValue({
       clusterCenter: "History",
@@ -83,6 +122,29 @@ describe("ultimateReport generation integration", () => {
     const result = await generateUltimateChannelReport({ autoContext: "ctx" });
     expect(result.report.blocks).toHaveLength(14);
     expect(result.report.executiveSummary).toBe("Executive summary only");
-    expect(result.oracle.sections).toEqual([]);
+    expect(result.oracle.sections).toHaveLength(9);
+  });
+
+  it("blocks generation when required sources are missing", async () => {
+    globalThis.localStorage.removeItem("vt_ultimate_tool_context_pack_v1");
+    globalThis.localStorage.removeItem("yt_analytics_cache");
+    globalThis.localStorage.removeItem("vt_auth_state");
+    await expect(generateUltimateChannelReport({ autoContext: "ctx" })).rejects.toThrow(
+      /REPORT_PREFLIGHT_BLOCKED::/,
+    );
+  });
+
+  it("passes user_profile check via auth state when cache profile is missing", async () => {
+    globalThis.localStorage.setItem(
+      "yt_analytics_cache",
+      JSON.stringify({
+        videos: [{ id: "v1" }],
+        lastSynced: new Date().toISOString(),
+      }),
+    );
+    globalThis.localStorage.setItem("vt_auth_state", JSON.stringify({ isAuthenticated: true }));
+    const result = await generateUltimateChannelReport({ autoContext: "ctx" });
+    const profileGate = result.report.meta.diagnostics.preflight?.requiredSources.find((item) => item.key === "user_profile");
+    expect(profileGate?.present).toBe(true);
   });
 });

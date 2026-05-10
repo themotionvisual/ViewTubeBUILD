@@ -42,7 +42,7 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
  const videos = data.canonicalRows || []
  
  // --- Modes & Navigation ---
- const [workflowMode, setWorkflowMode] = useState<"upload" | "edit">("edit")
+ const [workflowMode, setWorkflowMode] = useState<"upload" | "edit">("upload")
  const [page, setPage] = useState<"main" | "options" | "suitability">("main")
 
  // --- Core Metadata (Main) ---
@@ -84,7 +84,7 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
  const [eduExam, setEduExam] = useState("")
 
  // --- Ad Suitability ---
- const [adSuitability, setAdSuitability] = useState<Record<string, string>>({onDecSize, onCycleHeight, onDecHeight})
+ const [adSuitability, setAdSuitability] = useState<Record<string, string>>({})
  const [noneOfTheAbove, setNoneOfTheAbove] = useState(false)
  const [ratingSubmitted, setRatingSubmitted] = useState(false)
 
@@ -129,7 +129,7 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
   setCategoryId(localCache.categoryId || "")
   setPrivacyStatus(localCache.privacyStatus || "public")
   
-  setOriginalData({title: t, description: d, tags: [], onDecSize, onCycleHeight, onDecHeight})
+  setOriginalData({title: t, description: d, tags: []})
   try {
    const details = await fetchVideoSnippetDetails([vidId])
    const fetched = details[vidId]
@@ -137,7 +137,7 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
     setTags(fetched.tags || [])
     setDescription(fetched.description || d)
     setCategoryId(fetched.categoryId || localCache.categoryId || "")
-    setOriginalData({title: t, description: fetched.description || d, tags: fetched.tags || [], categoryId: fetched.categoryId, onDecSize, onCycleHeight, onDecHeight})
+    setOriginalData({title: t, description: fetched.description || d, tags: fetched.tags || [], categoryId: fetched.categoryId})
    }
   } catch { setTags([]) }
  }
@@ -155,7 +155,7 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
     if (selectedVideo) {
      await updateVideo(selectedVideo, payload)
      // Save extra local metadata
-     localStorage.setItem(STORAGE_KEY + "_" + selectedVideo, JSON.stringify({categoryId, privacyStatus, gameTitle, eduType, noneOfTheAbove, adSuitability, onDecSize, onCycleHeight, onDecHeight}))
+     localStorage.setItem(STORAGE_KEY + "_" + selectedVideo, JSON.stringify({categoryId, privacyStatus, gameTitle, eduType, noneOfTheAbove, adSuitability}))
     }
    } else {
     // Upload Mode (Mocked file upload since we don't have a real file object here, we just fake the API success)
@@ -240,7 +240,7 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
     <div style={{ position: "relative", marginBottom: "6px" }}>
      <input className="vt-input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Video Title" style={{
-      background: "#FFFF61", paddingRight: "80px"
+      background: "#fff", paddingRight: "80px"
      }} />
      <div style={{ position: "absolute", right: "4px", top: "4px", bottom: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
       <span style={{ fontSize: "8px", fontWeight: 900, opacity: 0.5, marginRight: "4px" }}>{title.length}/100</span>
@@ -304,7 +304,7 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
       <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6, marginBottom: "2px", display: "block" }}>Playlist</span>
       {renderSelect(playlistId, setPlaylistId, [
        {val: "", lbl: "None"},
-       ...playlists.map(p => ({val: p.id, lbl: p.title, onDecSize, onCycleHeight, onDecHeight}))
+       ...playlists.map(p => ({val: p.id, lbl: p.title}))
       ])}
      </div>
     </div>
@@ -348,7 +348,7 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
        <span style={{ fontSize: "10px", fontWeight: 800, display: "block", marginBottom: "4px" }}>Video language</span>
        {renderSelect(language, setLanguage, [
         "Not applicable", "Abkhazian", "Afar", "Afrikaans", "Akan", "Akkadian", "Albanian", "American Sign Language", "Amharic", "Arabic", "Aramaic", "Armenian", "Arpitan", "Assamese", "Aymara", "Azerbaijani", "Bambara", "Bangla", "Bangla (India)", "Bashkir", "Basque", "Belarusian", "Bhojpuri", "Bislama", "Bodo", "Bosnian", "Breton", "Bulgarian", "Burmese", "Cantonese", "Cantonese (Hong Kong)", "Catalan", "Cherokee", "Chinese", "Chinese (China)", "Chinese (Hong Kong)", "Chinese (Simplified)", "Chinese (Singapore)", "Chinese (Taiwan)", "Chinese (Traditional)", "Choctaw", "Coptic", "Corsican", "Cree", "Croatian", "Czech", "Danish", "Dogri", "Dutch", "Dutch (Belgium)", "Dutch (Netherlands)", "Dzongkha", "English", "English (Australia)", "English (Canada)", "English (India)", "English (Ireland)", "English (United Kingdom)", "English (United States)", "Esperanto", "Estonian", "Ewe", "Faroese", "Fijian", "Filipino", "Finnish", "French", "French (Belgium)", "French (Canada)", "French (France)", "French (Switzerland)", "Fula", "Galician", "Ganda", "Georgian", "German", "German (Austria)", "German (Germany)", "German (Switzerland)", "Greek", "Guarani", "Gujarati", "Gusii", "Haitian Creole", "Hakka Chinese", "Hakka Chinese (Taiwan)", "Haryanvi", "Hausa", "Hawaiian", "Hebrew", "Hindi", "Hindi (Latin)", "Hiri Motu", "Hungarian", "Icelandic", "Igbo", "Indonesian", "Interlingua", "Interlingue", "Inuktitut", "Inupiaq", "Irish", "Italian", "Japanese", "Javanese", "Kalaallisut", "Kalenjin", "Kamba", "Kannada", "Kashmiri", "Kazakh", "Khmer", "Kikuyu", "Kinyarwanda", "Klingon", "Konkani", "Korean", "Kurdish", "Kyrgyz", "Ladino", "Lao", "Latin", "Latvian", "Lingala", "Lithuanian", "Lojban", "Lower Sorbian", "Luba-Katanga", "Luo", "Luxembourgish", "Luyia", "Macedonian", "Maithili", "Malagasy", "Malay", "Malay (Singapore)", "Malayalam", "Maltese", "Manipuri", "Māori", "Marathi", "Masai", "Meru", "Min Nan Chinese", "Min Nan Chinese (Taiwan)", "Mixe", "Mizo", "Mongolian", "Mongolian (Mongolian)", "Nauru", "Navajo", "Nepali", "Nigerian Pidgin", "North Ndebele", "Northern Sotho", "Norwegian", "Occitan", "Odia", "Oromo", "Papiamento", "Pashto", "Persian", "Persian (Afghanistan)", "Persian (Iran)", "Polish", "Portuguese", "Portuguese (Brazil)", "Portuguese (Portugal)", "Punjabi", "Quechua", "Romanian", "Romanian (Moldova)", "Romansh", "Rundi", "Russian", "Russian (Latin)", "Samoan", "Sango", "Sanskrit", "Santali", "Sardinian", "Scottish Gaelic", "Serbian", "Serbian (Cyrillic)", "Serbian (Latin)", "Serbo-Croatian", "Sherdukpen", "Shona", "Sicilian", "Sindhi", "Sinhala", "Slovak", "Slovenian", "Somali", "South Ndebele", "Southern Sotho", "Spanish", "Spanish (Latin America)", "Spanish (Mexico)", "Spanish (Spain)", "Spanish (United States)", "Sundanese", "Swahili", "Swati", "Swedish", "Tagalog", "Tajik", "Tamil", "Tatar", "Telugu", "Thai", "Tibetan", "Tigrinya", "Tok Pisin", "Toki Pona", "Tongan", "Tsonga", "Tswana", "Turkish", "Turkmen", "Twi", "Ukrainian", "Upper Sorbian", "Urdu", "Uyghur", "Uzbek", "Venda", "Vietnamese", "Volapük", "Võro", "Walloon", "Welsh", "Western Frisian", "Wolaytta", "Wolof", "Xhosa", "Yiddish", "Yoruba", "Zulu"
-       ].map(lang => ({val: lang, lbl: lang, onDecSize, onCycleHeight, onDecHeight})))}
+       ].map(lang => ({val: lang, lbl: lang})))}
       </div>
       <div style={{ flex: 1 }}>
        <span style={{ fontSize: "10px", fontWeight: 800, display: "block", marginBottom: "4px" }}>Caption certification</span>
@@ -508,7 +508,7 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
         onChange={handleSelect} 
         options={[
          { val: "", lbl: "Select a video..." },
-         ...videos.slice(0, 15).filter((v: any) => !videoSearch || (v.title || v.videoId)?.toLowerCase().includes(videoSearch.toLowerCase())).map((v: any) => ({val: v.videoId, lbl: v.title || v.videoId, onDecSize, onCycleHeight, onDecHeight}))
+         ...videos.slice(0, 15).filter((v: any) => !videoSearch || (v.title || v.videoId)?.toLowerCase().includes(videoSearch.toLowerCase())).map((v: any) => ({val: v.videoId, lbl: v.title || v.videoId}))
         ]} 
        />
       </div>

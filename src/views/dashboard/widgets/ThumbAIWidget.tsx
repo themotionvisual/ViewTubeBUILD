@@ -19,6 +19,7 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
   const [mode, setMode] = useState<"generate" | "analyze">("generate")
   const [prompt, setPrompt] = useState("")
   const [selectedVideo, setSelectedVideo] = useState("")
+  const [videoSearch, setVideoSearch] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
   const [result, setResult] = useState<any>(null)
 
@@ -107,16 +108,28 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
           {/* ANALYZE MODE */}
           {!result && mode === "analyze" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%" }}>
-              <select
-                value={selectedVideo}
-                onChange={(e) => setSelectedVideo(e.target.value)}
-                style={{ width: "100%", padding: "8px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "12px", fontWeight: 900, outline: "none" }}
-              >
-                <option value="" disabled>Select a video to analyze...</option>
-                {videos.map((v: any) => (
-                  <option key={v.videoId} value={v.videoId}>{v.title || v.id}</option>
-                ))}
-              </select>
+              <div style={{ display: "flex", gap: "4px" }}>
+               <select
+                 value={selectedVideo}
+                 onChange={(e) => setSelectedVideo(e.target.value)}
+                 style={{ flex: 2, padding: "8px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "12px", fontWeight: 900, outline: "none" }}
+               >
+                 <option value="" disabled>Select a video to analyze...</option>
+                 {videos
+                  .filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase()))
+                  .slice(0, 15)
+                  .map((v: any) => (
+                   <option key={v.videoId} value={v.videoId}>{v.title || v.id}</option>
+                 ))}
+               </select>
+               <input
+                className="vt-input"
+                value={videoSearch}
+                onChange={(e) => setVideoSearch(e.target.value)}
+                placeholder="Search..."
+                style={{ flex: 1, padding: "8px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "12px", fontWeight: 900, outline: "none" }}
+               />
+              </div>
               
               {activeVideo && (
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px", background: "#f5f5f5", border: "2px solid #000", borderRadius: "8px", overflow: "hidden" }}>

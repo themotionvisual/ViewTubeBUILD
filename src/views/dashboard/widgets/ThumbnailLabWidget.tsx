@@ -24,6 +24,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   const [mode, setMode] = useState<TabMode>("generate")
   const [prompt, setPrompt] = useState("")
   const [selectedVideo, setSelectedVideo] = useState("")
+  const [videoSearch, setVideoSearch] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
   const [result, setResult] = useState<any>(null)
 
@@ -132,15 +133,28 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
 
   // Video dropdown (shared by analyze + abtest)
   const videoDropdown = (
-    <select
-      className="vt-select"
-      value={selectedVideo}
-      onChange={(e) => setSelectedVideo(e.target.value)}>
-      <option value="" disabled>Select a video...</option>
-      {videos.map((v: any) => (
-        <option key={v.videoId} value={v.videoId}>{v.title || v.id}</option>
-      ))}
-    </select>
+    <div style={{ display: "flex", gap: "4px" }}>
+      <select
+        className="vt-select"
+        value={selectedVideo}
+        onChange={(e) => setSelectedVideo(e.target.value)}
+        style={{ flex: 2 }}>
+        <option value="" disabled>Select a video...</option>
+        {videos
+         .filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase()))
+         .slice(0, 15)
+         .map((v: any) => (
+          <option key={v.videoId} value={v.videoId}>{v.title || v.id}</option>
+        ))}
+      </select>
+      <input
+        className="vt-input"
+        value={videoSearch}
+        onChange={(e) => setVideoSearch(e.target.value)}
+        placeholder="Search..."
+        style={{ flex: 1, fontSize: "10px" }}
+      />
+    </div>
   )
 
   return (

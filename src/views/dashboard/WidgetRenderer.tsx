@@ -74,6 +74,33 @@ import { AIJournalWidget } from "./widgets/AIJournalWidget"
 import { WidgetShell } from "./WidgetShell"
 import { useBrain } from "../../context/useBrain"
 
+const THUMBNAIL_WARNINGS = new Set<string>()
+
+const withYouTubeThumbFallback = (
+ event: React.SyntheticEvent<HTMLImageElement, Event>,
+ videoId?: string,
+) => {
+ if (!videoId) return
+ const target = event.currentTarget
+ const current = String(target.src || "")
+ if (current.includes("maxresdefault.jpg")) {
+  target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+  return
+ }
+ if (current.includes("hqdefault.jpg")) {
+  target.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
+  return
+ }
+ if (current.includes("mqdefault.jpg")) {
+  if (!THUMBNAIL_WARNINGS.has(videoId)) {
+   THUMBNAIL_WARNINGS.add(videoId)
+   console.warn(`[WidgetRenderer] Thumbnail missing for video ${videoId}; fallback placeholder used.`)
+  }
+  target.src =
+   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 180'%3E%3Crect width='320' height='180' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23111' font-family='Arial' font-size='16'%3EThumbnail unavailable%3C/text%3E%3C/svg%3E"
+ }
+}
+
  interface WidgetRendererProps extends WidgetRenderCallbacks {
   widget: WidgetDefinition
   instance: WidgetInstanceState
@@ -1037,9 +1064,10 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
         <img
          src={
           video.thumbnailUrl ||
-          `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`
+          `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`
          }
          className="w-full h-full object-cover"
+         onError={(event) => withYouTubeThumbFallback(event, video.videoId)}
         />
        </div>
        <div style={{ flex: 1, minWidth: 0 }}>
@@ -1092,9 +1120,10 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
        <img
         src={
          data.topPerformer.thumbnailUrl ||
-         `https://img.youtube.com/vi/${data.topPerformer.videoId}/mqdefault.jpg`
+         `https://img.youtube.com/vi/${data.topPerformer.videoId}/maxresdefault.jpg`
         }
         style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        onError={(event) => withYouTubeThumbFallback(event, data.topPerformer.videoId)}
        />
       </div>
       <div

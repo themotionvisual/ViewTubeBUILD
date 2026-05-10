@@ -13,7 +13,7 @@ import {
  Check,
 } from "lucide-react"
 import { VTLottie } from "../../../components/VTLottie"
-import { refineCommunityPost } from "../../../services/gemini"
+import { refineCommunityPost, generateInterestSeeding } from "../../../services/gemini"
 import { useBrain } from "../../../context/useBrain"
 
 type PostType = "text" | "image" | "poll" | "image-poll" | "video"
@@ -49,49 +49,50 @@ export const CommunityPostWidget = ({
  const [pollOptions, setPollOptions] = useState<string[]>(["", ""])
  const [isGenerating, setIsGenerating] = useState(false)
  const [copied, setCopied] = useState(false)
+ const [selectedVideo, setSelectedVideo] = useState<string>("")
+ const [videoSearch, setVideoSearch] = useState("")
 
- const videos = data.brain?.canonicalRows || []
+ const videos = data.canonicalRows || data.brain?.canonicalRows || []
 
- const handleGenerate = async () => {
+  const handleGenerate = async () => {
   setIsGenerating(true)
   try {
    const hasInput = content.trim() || pollOptions.some((o) => o.trim())
    const niche = data.brain?.channelProfile?.name || "Content Creation"
    const recentTitles = videos.slice(0, 5).map((v: any) => v.title)
-
-   if (!hasInput) {
-    // Auto-draft from scratch
-    let upcomingTopic = "some exciting new ideas"
-    if (data.brain?.calendarState?.dayTasks) {
-     for (let i = 1; i <= 7; i++) {
-      const d = new Date()
-      d.setDate(d.getDate() + i)
-      const key = d.toISOString().split("T")[0]
-      const tasks = data.brain.calendarState.dayTasks[key] || []
-      if (tasks.length > 0) {
-       upcomingTopic = tasks[0].text
-       break
-      }
+   
+   let contextTopic = "some exciting new ideas"
+   if (data.brain?.calendarState?.dayTasks) {
+    for (let i = 1; i <= 7; i++) {
+     const d = new Date()
+     d.setDate(d.getDate() + i)
+     const key = d.toISOString().split("T")[0]
+     const tasks = data.brain.calendarState.dayTasks[key] || []
+     if (tasks.length > 0) {
+      contextTopic = tasks[0].text
+      break
      }
     }
-    setContent(
-     `Based on the intense reaction to my latest video "${videos[0]?.title || "my recent upload"}", I'm cooking up something special. My next upload is taking a deep dive into ${upcomingTopic}. Drop a comment if there's a specific question you want me to answer in it! 👇`,
+   }
+
+   if (postType.includes("poll") && !hasInput) {
+    // Use the Interest Seeding process from prompts
+    const seeding = await generateInterestSeeding(
+     contextTopic,
+     niche,
+     "Core loyal viewers and potential new subscribers interested in " + contextTopic,
+     data.brain?.algorithmDiagnosis,
+     brain
     )
-    if (postType.includes("poll")) {
-     setPollOptions([
-      "Yes, sounds awesome!",
-      "I'd rather see something else",
-      "Include a tutorial section",
-      "Just upload it already",
-     ])
-    }
+    setContent(seeding.question)
+    setPollOptions(seeding.options)
    } else {
-    // Real AI refinement via Gemini
-    const refined = await refineCommunityPost(content, niche, recentTitles, brain)
+    // Real AI refinement or generation via Gemini
+    const refined = await refineCommunityPost(content || contextTopic, niche, recentTitles, brain)
     setContent(refined)
    }
   } catch (e) {
-   console.error("Refine failed:", e)
+   console.error("AI Generation failed:", e)
   } finally {
    setIsGenerating(false)
   }
@@ -216,18 +217,32 @@ export const CommunityPostWidget = ({
      )}
 
      {postType === "video" && (
-      <select
-       className="vt-select"
-       style={{ width: "100%" }}>
-       <option value="" disabled selected>
-        Select an existing video...
-       </option>
-       {videos.map((v: any) => (
-        <option key={v.videoId} value={v.videoId}>
-         {v.title || v.id}
+      <div style={{ display: "flex", gap: "4px" }}>
+       <select
+        className="vt-select"
+        value={selectedVideo}
+        onChange={(e) => setSelectedVideo(e.target.value)}
+        style={{ flex: 2 }}>
+        <option value="" disabled>
+         Select an existing video...
         </option>
-       ))}
-      </select>
+        {videos
+         .filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase()))
+         .slice(0, 15)
+         .map((v: any) => (
+          <option key={v.videoId} value={v.videoId}>
+           {v.title || v.id}
+          </option>
+         ))}
+       </select>
+       <input
+        className="vt-input"
+        value={videoSearch}
+        onChange={(e) => setVideoSearch(e.target.value)}
+        placeholder="Search..."
+        style={{ flex: 1, fontSize: "10px" }}
+       />
+      </div>
      )}
 
      {postType === "image" && (
@@ -267,6 +282,7 @@ export const CommunityPostWidget = ({
       className="vt-button secondary"
       onClick={handleGenerate}
       disabled={isGenerating}
+      title="Generate a post based on brain info and current selection"
       style={{ flex: 1, height: "32px", fontSize: "10px", padding: "0 8px" }}>
       {isGenerating ? (
        <div
@@ -280,18 +296,16 @@ export const CommunityPostWidget = ({
         }}
        />
       ) : (
-       <VTLottie 
-        animationUrl="https://assets3.lottiefiles.com/packages/lf20_m6cu8sh9.json" 
-        size={16} 
-       />
+       <Sparkles size={14} />
       )}
-      {isGenerating ? "REFINING..." : "REFINE"}
+      {isGenerating ? "GENERATING..." : "GENERATE POST"}
      </button>
      <button
       className="vt-button primary"
       onClick={handlePublish}
-      style={{ flex: 1.5, height: "32px", fontSize: "10px", padding: "0 8px" }}>
-      <Send size={14} /> PUBLISH
+      title="Post the created content to your channel"
+      style={{ flex: 1, height: "32px", fontSize: "10px", padding: "0 8px" }}>
+      <Send size={14} /> POST TO CHANNEL
      </button>
     </div>
    </div>

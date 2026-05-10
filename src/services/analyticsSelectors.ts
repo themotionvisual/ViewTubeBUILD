@@ -1135,11 +1135,11 @@ export const getMetricSummary = (
  }
 
  const resolvedTotals = {
-  views: views > 0 ? views : totalsFallback.views,
-  watchHours: watchHours > 0 ? watchHours : totalsFallback.watchHours,
+  views: totalsFallback.views > 0 ? totalsFallback.views : views,
+  watchHours: totalsFallback.watchHours > 0 ? totalsFallback.watchHours : watchHours,
   subscribersGained:
-   subscribersGained > 0 ? subscribersGained : totalsFallback.subscribersGained,
-  revenue: revenue > 0 ? revenue : totalsFallback.revenue,
+   totalsFallback.subscribersGained !== 0 ? totalsFallback.subscribersGained : subscribersGained,
+  revenue: totalsFallback.revenue > 0 ? totalsFallback.revenue : revenue,
  }
 
  return {

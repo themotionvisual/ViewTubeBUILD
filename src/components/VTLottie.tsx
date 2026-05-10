@@ -11,6 +11,7 @@ interface VTLottieProps {
 }
 
 const FAILED_LOTTIE_URLS = new Set<string>()
+const REPORTED_LOTTIE_URLS = new Set<string>()
 
 export const VTLottie: React.FC<VTLottieProps> = ({
   animationUrl,
@@ -33,6 +34,18 @@ export const VTLottie: React.FC<VTLottieProps> = ({
         active = false
       }
     }
+    if (/assets3\.lottiefiles\.com/i.test(animationUrl)) {
+      if (!REPORTED_LOTTIE_URLS.has(animationUrl)) {
+        REPORTED_LOTTIE_URLS.add(animationUrl)
+        console.warn(`[VTLottie] Remote animation blocked, using fallback for ${animationUrl}`)
+      }
+      setFailed(true)
+      FAILED_LOTTIE_URLS.add(animationUrl)
+      return () => {
+        active = false
+      }
+    }
+
     fetch(animationUrl)
       .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -50,6 +63,10 @@ export const VTLottie: React.FC<VTLottieProps> = ({
         if (!active) return
         setFailed(true)
         FAILED_LOTTIE_URLS.add(animationUrl)
+        if (!REPORTED_LOTTIE_URLS.has(animationUrl)) {
+          REPORTED_LOTTIE_URLS.add(animationUrl)
+          console.warn(`[VTLottie] Failed to load animation (${animationUrl}). Fallback placeholder enabled.`)
+        }
         void err
       });
     return () => {

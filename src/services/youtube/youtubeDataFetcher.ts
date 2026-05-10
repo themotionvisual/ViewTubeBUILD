@@ -268,16 +268,18 @@ export const fetchVideoStats = async (
 }
 
 type VideoDetailsCacheEntry = {
- description: string
- tags: string[]
- categoryId?: string
- categoryName?: string
- defaultLanguage?: string
- defaultAudioLanguage?: string
- authScopeUsed?: "public" | "channel_owner" | "content_owner"
- fetchedAt: number
+  title: string
+  thumbnail: string
+  description: string
+  tags: string[]
+  categoryId?: string
+  categoryName?: string
+  defaultLanguage?: string
+  defaultAudioLanguage?: string
+  authScopeUsed?: "public" | "channel_owner" | "content_owner"
+  fetchedAt: number
 }
-const VIDEO_DETAILS_CACHE_KEY = "vt_video_details_cache_v1"
+const VIDEO_DETAILS_CACHE_KEY = "vt_video_details_cache_v2"
 const VIDEO_CATEGORY_TAXONOMY_KEY = "vt_video_category_taxonomy_us"
 const VIDEO_DETAILS_CACHE_LIMIT = 200
 
@@ -316,37 +318,41 @@ const saveVideoDetailsCache = (
 }
 
 export const fetchVideoSnippetDetails = async (
- videoIds: string[],
+  videoIds: string[],
 ): Promise<
- Record<
-  string,
-  {
-   description: string
-   tags: string[]
-   categoryId?: string
-   categoryName?: string
-   defaultLanguage?: string
-   defaultAudioLanguage?: string
-   authScopeUsed?: "public" | "channel_owner" | "content_owner"
-  }
- >
+  Record<
+    string,
+    {
+      title: string
+      thumbnail: string
+      description: string
+      tags: string[]
+      categoryId?: string
+      categoryName?: string
+      defaultLanguage?: string
+      defaultAudioLanguage?: string
+      authScopeUsed?: "public" | "channel_owner" | "content_owner"
+    }
+  >
 > => {
  const token = await refreshTokenIfExpired()
  if (!token) return {}
 
  const cache = loadVideoDetailsCache()
- const out: Record<
-  string,
-  {
-   description: string
-   tags: string[]
-   categoryId?: string
-   categoryName?: string
-   defaultLanguage?: string
-   defaultAudioLanguage?: string
-   authScopeUsed?: "public" | "channel_owner" | "content_owner"
-  }
- > = {}
+  const out: Record<
+    string,
+    {
+      title: string
+      thumbnail: string
+      description: string
+      tags: string[]
+      categoryId?: string
+      categoryName?: string
+      defaultLanguage?: string
+      defaultAudioLanguage?: string
+      authScopeUsed?: "public" | "channel_owner" | "content_owner"
+    }
+  > = {}
 
  let categoryTaxonomy: Record<string, string> = {}
  try {
@@ -369,6 +375,8 @@ export const fetchVideoSnippetDetails = async (
   const cached = cache[key]
   if (cached) {
    out[key] = {
+    title: cached.title,
+    thumbnail: cached.thumbnail,
     description: cached.description,
     tags: cached.tags,
     categoryId: cached.categoryId,
@@ -395,6 +403,8 @@ export const fetchVideoSnippetDetails = async (
   ;(data.items || []).forEach((item: any) => {
    const id = String(item.id || "")
    if (!id) return
+   const title = String(item.snippet?.title || "")
+   const thumbnail = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`
    const description = String(item.snippet?.description || "")
    const categoryId = String(item.snippet?.categoryId || "")
    const tags =
@@ -403,6 +413,8 @@ export const fetchVideoSnippetDetails = async (
     : []
 
    out[id] = {
+    title,
+    thumbnail,
     description,
     tags,
     categoryId,
@@ -412,6 +424,8 @@ export const fetchVideoSnippetDetails = async (
     authScopeUsed: "channel_owner",
    }
    cache[id] = {
+    title,
+    thumbnail,
     description,
     tags,
     categoryId,

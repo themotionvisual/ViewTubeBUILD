@@ -42,3 +42,27 @@ export const parseDurationSeconds = (value: unknown): number => {
 
  return toNumber(raw)
 }
+
+export const formatTrafficSourceNickname = (canonical: string): string => {
+ const map: Record<string, string> = {
+  SHORTS: "Shorts feed",
+  SUBSCRIBER: "Browse features",
+  YT_SEARCH: "YouTube search",
+  EXT_URL: "External",
+  YT_CHANNEL: "Channel pages",
+  RELATED_VIDEO: "Suggested videos",
+  YT_OTHER_PAGE: "Other YouTube features",
+  PLAYLIST: "Playlists",
+  NO_LINK_OTHER: "Direct or unknown",
+  NOTIFICATION: "Notifications",
+  SOUND_PAGE: "Sound pages",
+  SHORTS_CONTENT_LINKS: "Related Shorts",
+  END_SCREEN: "End screens",
+  HASHTAGS: "Hashtag pages",
+  ANNOTATION: "Video cards and annotations",
+  IMMERSIVE_LIVE: "Vertical live feed",
+  ADVERTISING: "YouTube advertising",
+ }
+ const upper = (canonical || "").trim().toUpperCase()
+ return map[upper] || canonical
+}

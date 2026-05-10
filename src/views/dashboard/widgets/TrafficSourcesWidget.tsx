@@ -1,8 +1,9 @@
-import React, { useState } from "react"
+import React, { useState, useMemo } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Filter } from "lucide-react"
+import { formatTrafficSourceNickname } from "../../../services/dataUtils"
 
-export const TrafficSourcesWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onCycleHeight, onDecSize, onDecHeight, onRemove }: any) => {
+export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggleCollapse, onCycleSize, onCycleHeight, onDecSize, onDecHeight, onRemove }: any) => {
  const common = {
   widget,
   instance,
@@ -13,7 +14,6 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, onToggleColla
   onCycleHeight,
   onRemove,
   onDecSize,
-  onCycleHeight,
   onDecHeight,
  }
 
@@ -24,13 +24,25 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, onToggleColla
   pct: number
  } | null>(null)
 
- const sources = [
-  { label: "Browse features", pct: 45, color: "#C9F830" },
-  { label: "YouTube search", pct: 25, color: "#40C6E9" },
-  { label: "Suggested videos", pct: 15, color: "#FF83EA" },
-  { label: "External", pct: 10, color: "#9D4EDD" },
-  { label: "Other", pct: 5, color: "#FF1744" },
- ]
+ const COLORS = ["#C9F830", "#40C6E9", "#FF83EA", "#9D4EDD", "#FF1744"]
+
+ const sources = useMemo(() => {
+  const rawSources = data?.trafficSources || []
+  if (rawSources.length === 0) {
+   return [
+    { label: "Browse features", pct: 45, color: "#C9F830" },
+    { label: "YouTube search", pct: 25, color: "#40C6E9" },
+    { label: "Suggested videos", pct: 15, color: "#FF83EA" },
+    { label: "External", pct: 10, color: "#9D4EDD" },
+    { label: "Other", pct: 5, color: "#FF1744" },
+   ]
+  }
+  return rawSources.map((s: any, idx: number) => ({
+   label: formatTrafficSourceNickname(s.label),
+   pct: s.pct,
+   color: COLORS[idx % COLORS.length]
+  }))
+ }, [data?.trafficSources])
 
  const renderPieSlices = () => {
   let accumulatedPct = 0
@@ -53,13 +65,13 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, onToggleColla
      onMouseEnter={(e) => {
       const rect = (e.target as SVGElement).closest("svg")?.getBoundingClientRect()
       if (rect) {
-       setTooltip({x: e.clientX - rect.left, y: e.clientY - rect.top, label: src.label, pct: src.pct, onDecSize, onCycleHeight, onDecHeight})
+       setTooltip({x: e.clientX - rect.left, y: e.clientY - rect.top, label: src.label, pct: src.pct})
       }
      }}
      onMouseMove={(e) => {
       const rect = (e.target as SVGElement).closest("svg")?.getBoundingClientRect()
       if (rect) {
-       setTooltip({x: e.clientX - rect.left, y: e.clientY - rect.top, label: src.label, pct: src.pct, onDecSize, onCycleHeight, onDecHeight})
+       setTooltip({x: e.clientX - rect.left, y: e.clientY - rect.top, label: src.label, pct: src.pct})
       }
      }}
      onMouseLeave={() => setTooltip(null)}

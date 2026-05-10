@@ -87,16 +87,10 @@ const DataDashboard: React.FC = () => {
  const stats = useMemo<DashboardStats>(() => {
   const filteredRows = applyGlobalRowFilters(rows).rows
   const summary = getMetricSummary(windowKey, "api")
-  const totalViews = filteredRows.reduce((sum, row) => sum + (metricValue(row, "views") || 0), 0)
-  const totalWatchTimeHours = filteredRows.reduce(
-   (sum, row) => sum + (metricValue(row, "watchHours") || 0),
-   0,
-  )
-  const totalRevenue = filteredRows.reduce((sum, row) => sum + (metricValue(row, "revenue") || 0), 0)
-  const totalSubscribers = filteredRows.reduce(
-   (sum, row) => sum + (metricValue(row, "subscribersGained") || 0),
-   0,
-  )
+  const totalViews = summary.totals.views
+  const totalWatchTimeHours = summary.totals.watchHours
+  const totalRevenue = summary.totals.revenue
+  const totalSubscribers = summary.totals.subscribersGained
   const topVideos = [...rows]
    .map((row) => ({
     videoId: row.videoId,

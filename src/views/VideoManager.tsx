@@ -254,7 +254,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
      videoId: String(record.videoId || "").trim(),
      title: String(record.title || "").trim(),
      publishedAt: String(record.publishedAt || ""),
-     thumbnail: String(record.thumbnail || ""),
+     thumbnail: `https://img.youtube.com/vi/${String(record.videoId || "").trim()}/maxresdefault.jpg`,
     }
    })
    .filter((video) => video.videoId.length > 0)
@@ -395,7 +395,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    setError(null)
    console.info("[VideoManager] Sync refresh complete", {
     cacheCount: cacheVideos.length,
-    finalCount: merged.length,
+    finalCount: cacheVideos.length,
    })
   } catch (err: any) {
    console.error("[VideoManager] Sync refresh failed", err)
@@ -1204,6 +1204,12 @@ const VideoManager: React.FC<VideoManagerProps> = ({
                 src={video.thumbnail}
                 alt={video.title}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                 const target = e.target as HTMLImageElement;
+                 if (!target.src.includes('mqdefault.jpg')) {
+                  target.src = `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`;
+                 }
+                }}
                />
               </div>
               <div className="flex-1 min-w-0">

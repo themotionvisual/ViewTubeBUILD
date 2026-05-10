@@ -10,16 +10,25 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
-  MoreHorizontal
+  MoreHorizontal,
+  Loader2
 } from "lucide-react"
 import {
   postCommentReply,
   fetchAllCommentThreads,
+  fetchVideoSnippetDetails
 } from "../../../services/youtube/youtubeDataFetcher"
 import { generatePerfectReply } from "../../../services/gemini"
 import { useBrain } from "../../../context/useBrain"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
+
+const htmlDecode = (input: string) => {
+  const doc = new DOMParser().parseFromString(input, "text/html")
+  return doc.documentElement.textContent || input
+}
+
+const THUMBNAIL_WARNINGS = new Set<string>()
 
 export const CommentReplyWidget = ({
   widget,
@@ -54,9 +63,10 @@ export const CommentReplyWidget = ({
   const [replyText, setReplyText] = useState<Record<string, string>>({})
   const [isGenerating, setIsGenerating] = useState<Record<string, boolean>>({})
   const [successId, setSuccessId] = useState<string | null>(null)
-  const [currentPage, setCurrentPage] = useState(1)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const itemsPerPage = 3
+  const [fetchedVideoData, setFetchedVideoData] = useState<Record<string, any>>({})
+  const [isSyncingMetadata, setIsSyncingMetadata] = useState(false)
+  
   const REPLY_DRAFT_COST = getAiTokenCost("commentMagicDraftPerThread")
   const entitlement = useEntitlement()
   const selectedDraftCost = selectedIds.size * REPLY_DRAFT_COST
@@ -64,15 +74,40 @@ export const CommentReplyWidget = ({
     selectedIds.size === 0 ? true : canAffordAiTokensFromState(entitlement, selectedDraftCost)
 
   const channelId = data.brain?.channelProfile?.id || data.authState?.channelId || ""
-  const videos = useMemo(() => data.canonicalRows || data.brain?.canonicalRows || [], [data])
+  const canonicalVideos = useMemo(() => data.canonicalRows || data.brain?.canonicalRows || [], [data])
+
+  const syncMetadata = async (threads: any[]) => {
+    if (isSyncingMetadata) return
+    setIsSyncingMetadata(true)
+    try {
+      const videoIds = Array.from(new Set(threads.map((t: any) => t.snippet.videoId).filter(Boolean)))
+      const missingIds = videoIds.filter(id => {
+        const inCanonical = canonicalVideos.find((v: any) => v.videoId === id)
+        const inFetched = fetchedVideoData[id]
+        return (!inCanonical || !inCanonical.title || inCanonical.title === "Unknown Video") && 
+               (!inFetched || !inFetched.title || inFetched.title === "Unknown Video")
+      })
+      
+      if (missingIds.length > 0) {
+        console.info(`[CommentResponder] Fetching metadata for ${missingIds.length} missing videos...`)
+        const details = await fetchVideoSnippetDetails(missingIds as string[])
+        setFetchedVideoData(prev => ({...prev, ...details}))
+      }
+    } catch (e) {
+      console.warn("[CommentResponder] Metadata sync failed", e)
+    } finally {
+      setIsSyncingMetadata(false)
+    }
+  }
 
   useEffect(() => {
     const load = async () => {
       setLoading(true)
       setError(null)
       try {
-        const threads = await fetchAllCommentThreads(40, channelId)
+        const threads = await fetchAllCommentThreads(100, channelId)
         setAllThreads(threads)
+        await syncMetadata(threads)
       } catch (e: any) {
         console.error("Comment fetch failed:", e)
         setError(e.message || "Failed to load comments")
@@ -81,7 +116,7 @@ export const CommentReplyWidget = ({
       }
     }
     load()
-  }, [channelId])
+  }, [channelId, canonicalVideos.length])
 
   const unreplied = allThreads.filter((thread: any) => {
     const replies = thread.replies?.comments || []
@@ -98,14 +133,8 @@ export const CommentReplyWidget = ({
   })
 
   const displayComments = tab === "unreplied" ? unreplied : replied
-  const totalPages = Math.ceil(displayComments.length / itemsPerPage)
-  const paginatedComments = displayComments.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  )
 
   useEffect(() => {
-    setCurrentPage(1)
     setSelectedIds(new Set())
   }, [tab])
 
@@ -114,10 +143,10 @@ export const CommentReplyWidget = ({
     const totalCost = commentIds.length * REPLY_DRAFT_COST
     if (!canAffordAiTokensFromState(entitlement, totalCost)) return
     
-    commentIds.forEach(id => setIsGenerating(prev => ({...prev, [id]: true, onDecSize, onCycleHeight, onDecHeight})))
+    commentIds.forEach(id => setIsGenerating(prev => ({...prev, [id]: true})))
     
     try {
-      const available = videos.map((r: any) => ({title: r.title, id: r.videoId, onDecSize, onCycleHeight, onDecHeight}))
+      const available = canonicalVideos.map((r: any) => ({title: r.title, id: r.videoId}))
 
       const promises = commentIds.map(async (id) => {
         const thread = allThreads.find(t => t.id === id)
@@ -138,23 +167,23 @@ export const CommentReplyWidget = ({
       })
 
       const results = await Promise.all(promises)
-      results.forEach(({id, reply, onDecSize, onCycleHeight, onDecHeight}) => {
-        setReplyText(prev => ({...prev, [id]: reply, onDecSize, onCycleHeight, onDecHeight}))
+      results.forEach(({id, reply}) => {
+        setReplyText(prev => ({...prev, [id]: reply}))
       })
     } catch (e) {
       console.error(e)
     } finally {
-      commentIds.forEach(id => setIsGenerating(prev => ({...prev, [id]: false, onDecSize, onCycleHeight, onDecHeight})))
+      commentIds.forEach(id => setIsGenerating(prev => ({...prev, [id]: false})))
     }
   }
 
   const handleSuggestVideoBulk = (commentIds: string[]) => {
-    if (videos.length === 0 || commentIds.length === 0) return
+    if (canonicalVideos.length === 0 || commentIds.length === 0) return
     
     commentIds.forEach(id => {
-      const randomVideo = videos[Math.floor(Math.random() * videos.length)]
+      const randomVideo = canonicalVideos[Math.floor(Math.random() * canonicalVideos.length)]
       const suggestion = `\n\nI think you'd love this one too: https://youtu.be/${randomVideo.videoId}`
-      setReplyText(prev => ({...prev, [id]: (prev[id] || "") + suggestion, onDecSize, onCycleHeight, onDecHeight}))
+      setReplyText(prev => ({...prev, [id]: (prev[id] || "") + suggestion}))
     })
   }
 
@@ -217,23 +246,7 @@ export const CommentReplyWidget = ({
   }
 
   const headerContent = (
-    <div style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", justifyContent: "center" }}>
-      {/* Pagination Arrows */}
-      <div style={{ display: "flex", gap: "4px" }}>
-        <button 
-          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-          disabled={currentPage === 1}
-          style={{ background: "none", border: "none", cursor: currentPage === 1 ? "default" : "pointer", opacity: currentPage === 1 ? 0.3 : 1 }}>
-          <ChevronLeft size={20} />
-        </button>
-        <button 
-          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-          disabled={currentPage === totalPages}
-          style={{ background: "none", border: "none", cursor: currentPage === totalPages ? "default" : "pointer", opacity: currentPage === totalPages ? 0.3 : 1 }}>
-          <ChevronRight size={20} />
-        </button>
-      </div>
-
+    <div style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", justifyContent: "center", position: "relative" }}>
       {/* Tabs / Toggles — Standardized vt-tab-group */}
       <div className="vt-tab-group" style={{ width: "90px", padding: "2px" }}>
         <button
@@ -251,6 +264,30 @@ export const CommentReplyWidget = ({
           OLD
         </button>
       </div>
+
+      <button 
+        onClick={() => syncMetadata(allThreads)}
+        disabled={isSyncingMetadata || loading}
+        title="Sync missing video titles/thumbnails"
+        className="vt-header-action-btn"
+        style={{ 
+          position: "absolute", 
+          right: "-10px", 
+          top: "50%", 
+          transform: "translateY(-50%)",
+          background: isSyncingMetadata ? "#4FFF5B" : "transparent",
+          borderRadius: "50%",
+          width: "24px",
+          height: "24px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          border: "2.5px solid #000",
+          cursor: "pointer"
+        }}
+      >
+        <Sparkles size={14} className={isSyncingMetadata ? "animate-spin" : ""} />
+      </button>
     </div>
   )
 
@@ -258,18 +295,24 @@ export const CommentReplyWidget = ({
     <WidgetShell {...common} headerContent={headerContent} icon={<MessageSquare size={22} />}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "10px" }}>
         
-        {/* Comment List */}
-        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px" }}>
+        {/* Comment List - Now fully scrollable, no pagination */}
+        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px", paddingRight: "4px" }}>
           {loading && allThreads.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px", opacity: 0.4, fontWeight: 900, fontSize: "12px" }}>SYNCING...</div>
-          ) : paginatedComments.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px", opacity: 0.4, fontWeight: 900, fontSize: "12px" }}>
+              <Loader2 size={24} className="animate-spin mx-auto mb-2" />
+              SYNCING COMMENTS...
+            </div>
+          ) : displayComments.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px", opacity: 0.3, fontWeight: 900, fontSize: "11px" }}>NO COMMENTS FOUND.</div>
           ) : (
-            paginatedComments.map((thread) => {
+            displayComments.map((thread) => {
               const c = thread.snippet.topLevelComment.snippet
-              const authorHandle = c.authorDisplayName.replace(/^@+/, "@")
+              const authorHandle = htmlDecode(c.authorDisplayName.replace(/^@+/, "@"))
               const videoId = thread.snippet.videoId
-              const video = videos.find((v: any) => v.videoId === videoId)
+              // Check canonical first, then fetchedVideoData
+              const videoCandidate = canonicalVideos.find((v: any) => v.videoId === videoId)
+              const fetched = fetchedVideoData[videoId]
+              const video = (fetched && fetched.title && fetched.title !== "Unknown Video") ? fetched : videoCandidate
               const threadId = thread.id
               const currentReply = replyText[threadId] || ""
               const isSelected = selectedIds.has(threadId)
@@ -280,73 +323,121 @@ export const CommentReplyWidget = ({
                   style={{ 
                     border: "3px solid #000", 
                     borderRadius: "12px", 
-                    padding: "6px", 
+                    padding: "10px", 
                     background: "#fff", 
                     display: "flex", 
-                    alignItems: "center",
-                    gap: "10px",
+                    flexDirection: "column",
+                    gap: "8px",
                     boxShadow: "3px 3px 0 0 rgba(0,0,0,0.05)"
                   }}
                 >
-                  {/* Purple Thumb */}
-                  <div style={{ width: "50px", flexShrink: 0 }}>
-                    <div style={{ width: "100%", aspectRatio: "16/9", background: "#E0B0FF", border: "2px solid #000", borderRadius: "4px", overflow: "hidden" }}>
-                      {video && <img src={video.thumbnail} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                    {/* Thumbnail container inspired by VideoManager */}
+                    <div style={{ width: "80px", flexShrink: 0 }}>
+                      <div style={{ 
+                        width: "100%", 
+                        aspectRatio: "16/9", 
+                        background: "#000", 
+                        border: "3px solid #000", 
+                        borderRadius: "8px", 
+                        overflow: "hidden",
+                        boxShadow: "2px 2px 0 0 rgba(0,0,0,0.5)"
+                      }}>
+                        {videoId ? (
+                            <img 
+                              src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`} 
+                              onError={(e) => { 
+                                const target = e.target as HTMLImageElement;
+                                if (target.src.includes('maxresdefault.jpg')) {
+                                  target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                                } else if (target.src.includes('hqdefault.jpg')) {
+                                  target.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+                                } else if (target.src.includes('mqdefault.jpg')) {
+                                  if (!THUMBNAIL_WARNINGS.has(videoId)) {
+                                    THUMBNAIL_WARNINGS.add(videoId)
+                                    console.warn(`[CommentReplyWidget] Thumbnail missing for video ${videoId}; using placeholder.`)
+                                  }
+                                  target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 180'%3E%3Crect width='320' height='180' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23111' font-family='Arial' font-size='16'%3EThumbnail unavailable%3C/text%3E%3C/svg%3E";
+                                }
+                              }}
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                              alt="thumbnail" 
+                            />
+                        ) : (
+                          <div style={{ width: "100%", height: "100%", background: "#E0B0FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Loader2 size={16} className="animate-spin text-black/20" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                        <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#FFB570", border: "1.5px solid #000", flexShrink: 0, overflow: "hidden" }}>
+                          <img src={c.authorProfileImageUrl} style={{ width: "100%", height: "100%" }} />
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          <span style={{ fontSize: "10px", fontWeight: 1000, color: "#FF3399", textTransform: "uppercase", lineHeight: 1 }}>
+                            {authorHandle}
+                          </span>
+                          <span style={{ fontSize: "8px", fontWeight: 900, color: "#FF1744", textTransform: "uppercase" }}>
+                            {new Date(c.publishedAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Video Title - Now decoded and shows title from fetched data */}
+                      <div style={{ fontSize: "9px", fontWeight: 900, color: "#00D2FF", textTransform: "uppercase", marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {video?.title && video.title !== "Unknown Video" ? htmlDecode(video.title) : `[${videoId}]`}
+                      </div>
+                    </div>
+
+                    {/* Black Checkbox */}
+                    <div 
+                      onClick={() => toggleSelection(threadId)}
+                      style={{ 
+                        width: "22px", 
+                        height: "22px", 
+                        border: "3px solid #000", 
+                        borderRadius: "6px", 
+                        background: isSelected ? "#000" : "#fff",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#fff",
+                        flexShrink: 0
+                      }}
+                    >
+                      {isSelected && <Sparkles size={12} />}
                     </div>
                   </div>
 
-                  {/* Orange PFP */}
-                  <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#FFB570", border: "1.5px solid #000", flexShrink: 0, overflow: "hidden" }}>
-                    <img src={c.authorProfileImageUrl} style={{ width: "100%", height: "100%" }} />
+                  {/* Comment Text - Full, no truncation, decoded HTML entities */}
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", lineHeight: 1.2, padding: "4px 0" }}>
+                    {htmlDecode(c.textDisplay)}
                   </div>
 
-                  {/* Pink Handle + Info */}
-                  <div style={{ width: "80px", flexShrink: 0 }}>
-                    <div style={{ fontSize: "8.5px", fontWeight: 1000, color: "#FF3399", textTransform: "uppercase", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {authorHandle}
-                    </div>
-                    <div style={{ fontSize: "7px", fontWeight: 900, color: "#FF1744", textTransform: "uppercase" }}>
-                      {new Date(c.publishedAt).toLocaleDateString()}
-                    </div>
-                  </div>
-
-                  {/* Comment Text */}
-                  <div style={{ flex: 1, minWidth: 0, fontSize: "9px", fontWeight: 700, color: "#000", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: 1.1 }}>
-                    {c.textDisplay}
-                  </div>
-
-                  {/* Blue Reply Input */}
+                  {/* Blue Reply Input - Beneath, thinner */}
                   {tab === "unreplied" && (
-                    <div style={{ width: "120px", flexShrink: 0 }}>
+                    <div style={{ width: "100%" }}>
                       <textarea
                         className="vt-textarea"
                         value={currentReply}
-                        onChange={(e) => setReplyText(prev => ({...prev, [threadId]: e.target.value, onDecSize, onCycleHeight, onDecHeight}))}
+                        onChange={(e) => setReplyText(prev => ({...prev, [threadId]: e.target.value}))}
                         placeholder="REPLY..."
-                        style={{ width: "100%", height: "120px", padding: 0, border: "2px solid #00D2FF", resize: "none", fontSize: "9px" }}
+                        style={{ 
+                          width: "100%", 
+                          height: "50px", 
+                          padding: "6px", 
+                          border: "2px solid #00D2FF", 
+                          resize: "none", 
+                          fontSize: "10px",
+                          boxSizing: "border-box"
+                        }}
                       />
                     </div>
                   )}
-
-                  {/* Black Checkbox */}
-                  <div 
-                    onClick={() => toggleSelection(threadId)}
-                    style={{ 
-                      width: "18px", 
-                      height: "18px", 
-                      border: "2.5px solid #000", 
-                      borderRadius: "4px", 
-                      background: isSelected ? "#000" : "#fff",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#fff",
-                      flexShrink: 0
-                    }}
-                  >
-                    {isSelected && <Sparkles size={10} />}
-                  </div>
                 </div>
               )
             })

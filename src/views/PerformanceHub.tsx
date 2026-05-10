@@ -87,6 +87,7 @@ import {
  resolveCtrPercent,
  resolveImpressions,
 } from "../services/metricAliasResolver"
+import { formatTrafficSourceNickname } from "../services/dataUtils"
 import type { AnalyticsWindow } from "../services/analyticsContract"
 import type { CanonicalMetricKey, MetricCell } from "../services/analyticsContract"
 import {
@@ -2642,12 +2643,14 @@ type AudienceDemographicsCsvRow = {
   ).map((row, index) => ({
    ...row,
    "Traffic source":
-    textFromUnknown(
-     row["Traffic source"] ||
-      row["insightTrafficSourceType"] ||
-      row["trafficSource"] ||
-      row["Dimension"],
-    ) || `Source ${index + 1}`,
+    formatTrafficSourceNickname(
+     textFromUnknown(
+      row["Traffic source"] ||
+       row["insightTrafficSourceType"] ||
+       row["trafficSource"] ||
+       row["Dimension"],
+     ) || `Source ${index + 1}`,
+    ),
    "Source type": textFromUnknown(row["Source type"] || row["sourceType"]),
    "Source title": textFromUnknown(row["Source title"] || row["sourceTitle"]),
    Views: getViews(row),
@@ -4107,10 +4110,10 @@ const renderDataViz = () => {
      Unified Report Pipeline
     </p>
     <p className="text-2xl font-[1000] uppercase tracking-tight mt-2">
-     Channel report generation now routes into the Ultimate Channel Report toolbox.
+     Ultimate report authority is now consolidated on /performance.
     </p>
     <p className="mt-4 text-[10px] font-black uppercase tracking-[0.16em] text-black/55">
-     Use the Ultimate Channel Report toolbox above to generate the full report.
+     Use the Performance Ultimate Report toolbox above to generate the full report.
     </p>
    </div>
   )
@@ -4472,7 +4475,7 @@ const renderDataViz = () => {
 
   <div className="w-full space-y-8">
     <ToolboxScaffold
-     title="CHANNEL INTELLIGENCE LAB"
+     title="PERFORMANCE ULTIMATE REPORT / CHANNEL INTELLIGENCE LAB"
      icon={<Zap size={42} className="text-black" />}
      headerColor="bg-[#FF3399]"
      textColor="text-black"

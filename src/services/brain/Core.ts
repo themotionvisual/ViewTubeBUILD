@@ -1,5 +1,5 @@
 import { BrainSignal, ContextPacket, BrainMemorySchema } from "../../types"
-import { getAiClient, getActiveModel, executeWithRetry, cleanJsonString } from "../gemini"
+import { getAiClient, getActiveModel, executeWithRetry, cleanJsonString, hasGeminiKey } from "../gemini"
 import * as db from "./Persistence"
 
 let brainCache: BrainMemorySchema | null = null;
@@ -54,6 +54,9 @@ export const emitSignal = async (toolId: string, action: string, payload: any) =
 
  const TIME_THRESHOLD = 24 * 60 * 60 * 1000
  if (schema.interactionCount >= 5 || (Date.now() - schema.lastReflection > TIME_THRESHOLD)) {
+  if (!hasGeminiKey()) {
+   return
+  }
   setTimeout(() => {
    reflectAndCompress().catch(e => console.error("Reflection background task failed:", e))
   }, 0)
@@ -138,6 +141,10 @@ export const reflectAndCompress = async () => {
   await saveBrainMemory(newSchema)
   await db.clearBrainSignalsDB();
  } catch (error) {
+  const reason = error instanceof Error ? error.message : String(error)
+  if (/requires a paid plan|Gemini API key is missing/i.test(reason)) {
+   return
+  }
   console.error("[BrainEngine] Reflection failed:", error)
  }
 }

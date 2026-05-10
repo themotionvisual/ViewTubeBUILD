@@ -29,6 +29,15 @@ import {
  HOOK_GENERATION_INSTRUCTIONS,
  ALGORITHM_DIAGNOSIS_INSTRUCTIONS,
  DAILY_COMMAND_INSTRUCTIONS,
+ COMMUNITY_POST_REFINEMENT_PROMPT,
+ COMMENT_REPLY_SYSTEM_PROMPT,
+ ORACLE_INSTRUCTIONS,
+ STRATEGY_INSTRUCTIONS,
+ TITLE_REWRITE_INSTRUCTIONS,
+ ORACLE_ANALYSIS_INSTRUCTIONS,
+ ALGORITHM_ARCHITECT_INSTRUCTIONS,
+ KEYWORD_LAB_INSTRUCTIONS,
+ END_SCREEN_CONCEPT_INSTRUCTIONS,
 } from "@/services/prompts"
 import { geminiQueue } from "../utils/RequestQueue"
 import { getVaultKey } from "./keyVault"
@@ -304,13 +313,22 @@ const resolveGeminiApiKey = (): string => {
  return key
 }
 
+const resolveGeminiKeyMeta = (): { apiKey: string; keySource: "custom" | "env" | "none" } => {
+ const { customKey } = getAiSettings()
+ const custom = String(customKey || "").trim()
+ if (custom.length > 0) return { apiKey: custom, keySource: "custom" }
+ const envKey = getEnvGeminiKey()
+ if (envKey.length > 0) return { apiKey: envKey, keySource: "env" }
+ return { apiKey: "", keySource: "none" }
+}
+
 export const isGeminiConfigured = (): boolean => {
  return resolveGeminiApiKey().length > 0
 }
 
 // Helper to get the AI client
 export const getAiClient = () => {
- const apiKey = resolveGeminiApiKey()
+ const { apiKey, keySource } = resolveGeminiKeyMeta()
  if (!apiKey) {
   throw new Error(
    "Gemini API key is missing. Open System Settings -> Key Vault and set Gemini AI API Key.",
@@ -332,7 +350,21 @@ export const getAiClient = () => {
    entitlement,
   )
 
-  if (!quote.canRun) {
+ if (!quote.canRun) {
+   if (keySource === "custom") {
+    // BYO key policy: allow authenticated users to run with their own key without paid-plan lock.
+    let isAuthenticated = false
+    try {
+      const authStateRaw = localStorage.getItem("vt_auth_state")
+      const authState = authStateRaw ? JSON.parse(authStateRaw) : {}
+      isAuthenticated = Boolean((authState as { isAuthenticated?: unknown }).isAuthenticated)
+    } catch {
+      isAuthenticated = false
+    }
+    if (!isAuthenticated) {
+      throw new Error("AI generation with custom key requires signed-in account context. Please sign in and retry.")
+    }
+   } else
    if (entitlement.tier === "free") {
     throw new Error(
      "AI generation requires a paid plan. Upgrade to a paid plan in /settings?panel=billing.",
@@ -349,25 +381,27 @@ export const getAiClient = () => {
   const outputTokens = Number(
    usage.candidatesTokenCount ?? usage.outputTokenCount ?? usage.totalTokenCount ?? 0,
   )
-  const finalQuote = estimateMeterQuote({
-   modelId,
-   inputTokensEstimate: inputTokens > 0 ? inputTokens : quote.inputTokensEstimate,
-   outputTokensEstimate: outputTokens > 0 ? outputTokens : quote.outputTokensEstimate,
-  })
-  const charge = applyMeterChargeEvent({
-   id: `chg_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`,
-   modelId,
-   inputTokens: inputTokens > 0 ? inputTokens : quote.inputTokensEstimate,
-   outputTokens: outputTokens > 0 ? outputTokens : quote.outputTokensEstimate,
-   rawCostUsd: finalQuote.rawCostUsd,
-   meterCostUsd: finalQuote.meterCostUsd,
-   creditDebit: finalQuote.creditDebitEstimate,
-   reason: inputTokens > 0 || outputTokens > 0 ? "usage_metadata" : "fallback_estimate",
-   fallbackApplied: !(inputTokens > 0 || outputTokens > 0),
-  })
+  if (keySource !== "custom") {
+   const finalQuote = estimateMeterQuote({
+    modelId,
+    inputTokensEstimate: inputTokens > 0 ? inputTokens : quote.inputTokensEstimate,
+    outputTokensEstimate: outputTokens > 0 ? outputTokens : quote.outputTokensEstimate,
+   })
+   const charge = applyMeterChargeEvent({
+    id: `chg_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`,
+    modelId,
+    inputTokens: inputTokens > 0 ? inputTokens : quote.inputTokensEstimate,
+    outputTokens: outputTokens > 0 ? outputTokens : quote.outputTokensEstimate,
+    rawCostUsd: finalQuote.rawCostUsd,
+    meterCostUsd: finalQuote.meterCostUsd,
+    creditDebit: finalQuote.creditDebitEstimate,
+    reason: inputTokens > 0 || outputTokens > 0 ? "usage_metadata" : "fallback_estimate",
+    fallbackApplied: !(inputTokens > 0 || outputTokens > 0),
+   })
 
-  if (!charge.allowed) {
-   throw new Error("Insufficient credits after metering. Please top up and try again.")
+   if (!charge.allowed) {
+    throw new Error("Insufficient credits after metering. Please top up and try again.")
+   }
   }
 
   return response
@@ -2643,8 +2677,9 @@ export const generateInterestSeeding = async (
  brain?: any,
 ): Promise<PollBlueprint> => {
  const ai = getAiClient()
- const journalContext = getJournalKnowledge(brain)
-
+ 
+ const brainPacket = consultBrainSync("INTEREST_SEEDING")
+ 
  const responseSchema: any = {
   type: Type.OBJECT,
   properties: {
@@ -2658,34 +2693,30 @@ export const generateInterestSeeding = async (
  const contextPrompt =
   diagnosis ?
    `
-    CHANNEL CONTEXT (Algorithmic Fingerprint):
+    ALGORITHMIC FINGERPRINT:
     - Cluster Center: ${diagnosis.clusterCenter}
     - Audience DNA: ${diagnosis.audienceDNA.map((d) => `${d.interest} (${d.overlap}%)`).join(", ")}
     - Authority Score: ${diagnosis.nicheAuthority}%
-    - Creator Vision: ${journalContext}
   `
-  : `Creator Vision: ${journalContext}`
+  : ""
 
- const prompt = `
-    IDENTITY: YouTube Algorithm Specialist.
-    TASK: Generate an "Interest Seeding" poll blueprint. 
-    GOAL: Create a community tab poll that primes the algorithm and audience for an upcoming video on: "${topic}" in the "${niche}" niche.
+ const basePrompt = `
+    ${INTEREST_SEEDING_INSTRUCTIONS}
+    
+    TOPIC: "${topic}"
+    NICHE: "${niche}"
     TARGET AUDIENCE: ${targetAudience}
     ${contextPrompt}
 
-    CRITICAL: Use the Channel Context to ensure the poll aligns with the existing "Cluster Center" while bridging into the new topic.
-
-    The poll should:
-    1. Be highly engaging (high vote count).
-    2. Naturally use keywords related to the upcoming video.
-    3. Include a "Strategy" explanation of how this poll "seeds" the recommendation engine.
+    TASK: Generate an "Interest Seeding" poll blueprint that aligns with the channel's DNA while bridging into the new topic.
     
     OUTPUT: JSON with 'question', 'options' (max 4), and 'strategy'.
   `
+ const prompt = annotateSystemPrompt(basePrompt, brainPacket)
 
  return await executeWithRetry(async () => {
   const modelId = getActiveModel("text")
-  const result = await getAiClient().models.generateContent({
+  const result = await ai.models.generateContent({
    model: modelId,
    contents: [{ role: "user", parts: [{ text: prompt }] }],
    config: {
@@ -2935,7 +2966,7 @@ export const generateOracleAdvice = async (
   brain?: any,
 ): Promise<OracleState> => {
   const ai = getAiClient()
-  const journalContext = getJournalKnowledge(brain)
+  const brainPacket = consultBrainSync("ORACLE")
   
   const responseSchema: any = {
     type: Type.OBJECT,
@@ -2972,27 +3003,14 @@ export const generateOracleAdvice = async (
     required: ["priorities", "quickWins"],
   }
 
-  const prompt = `
-    IDENTITY: Master YouTube Oracle & Channel Strategist.
-    TASK: Generate a set of "Strategic Priorities" and "Quick Wins" for the creator.
-    
-    CREATOR VISION (The Brain):
-    ${journalContext}
+  const basePrompt = `
+    ${ORACLE_INSTRUCTIONS}
 
     CHANNEL DATA SNAPSHOT:
     ${JSON.stringify(data.statBlocks || [])}
     Recent Titles: ${JSON.stringify((data.canonicalRows || []).slice(0, 5).map((r: any) => r.title))}
-
-    RULES:
-    1. Provide 2-3 Priorities (long-term, high impact).
-    2. Provide 3 Quick Wins (low effort, immediate execution).
-    3. Use vibrant Neo-Brutalist colors for "color" (e.g., #FF8AAF, #579AFF, #FFFF61, #40C6E9, #FF83EA, #CCFF00).
-    4. "timeframe" should be short (e.g., "Today", "20 min", "This Week").
-    5. "action" should be a single imperative word.
-    6. Ensure advice is SPECIFIC to the Creator Vision in the Journal. If they want to be a tech reviewer, don't give gaming advice.
-    
-    OUTPUT: JSON matching the schema.
   `
+  const prompt = annotateSystemPrompt(basePrompt, brainPacket)
 
   return await executeWithRetry(async () => {
     const result = await ai.models.generateContent({
@@ -3298,34 +3316,28 @@ export const generatePerfectReply = async (
   brain?: any,
 ): Promise<{ reply: string; suggestedVideoId?: string }> => {
   const ai = getAiClient()
-  const journalContext = getJournalKnowledge(brain)
- const prompt = `
-  IDENTITY: Elite Community Manager & YouTube Strategist.
-  TASK: Draft the perfect reply to a viewer comment.
+  
+  const brainPacket = consultBrainSync("COMMENT_REPLY")
+  const basePrompt = `
+  ${COMMENT_REPLY_SYSTEM_PROMPT}
   
   CONTEXT:
   Viewer (@${authorName}): "${commentText}"
   Channel Focus: ${channelContext}
   My Videos: ${JSON.stringify(availableVideos.slice(0, 10))}
-  CREATOR VISION: ${journalContext}
+  `
+  const prompt = annotateSystemPrompt(basePrompt, brainPacket)
 
-  GOAL:
-  1. Be genuine, brief, and high-energy, with a slightly provocative, curious, or opinionated tone to spark debate.
-  2. Ask a follow-up question to encourage further discourse and engagement.
-  3. Format as valid JSON.
+  return await executeWithRetry(async () => {
+    const result = await ai.models.generateContent({
+      model: getActiveModel("text"),
+      contents: prompt,
+      config: { responseMimeType: "application/json" },
+    })
 
-  OUTPUT SCHEMA:
-  { "reply": "string", "suggestedVideoId": "string | null" }
- `
-
- const result = await ai.models.generateContent({
-  model: getActiveModel("text"),
-  contents: prompt,
-  config: { responseMimeType: "application/json" },
- })
-
- const json = JSON.parse(result.text || "{}")
- return json
+    const json = JSON.parse(cleanJsonString(result.text || "{}"))
+    return json
+  })
 }
 
 export const refineCommunityPost = async (
@@ -3335,34 +3347,27 @@ export const refineCommunityPost = async (
   brain?: any,
 ): Promise<string> => {
   const ai = getAiClient()
-  const journalContext = getJournalKnowledge(brain)
- const prompt = `
-  IDENTITY: Elite YouTube Community Manager & Growth Strategist.
-  TASK: Refine this community post draft to maximize engagement & algorithm signal.
+  
+  const brainPacket = consultBrainSync("COMMUNITY_POST")
+  const basePrompt = `
+  ${COMMUNITY_POST_REFINEMENT_PROMPT}
 
   CHANNEL: ${channelName}
   RECENT VIDEOS: ${recentVideoTitles.slice(0, 5).join(", ")}
-  CREATOR VISION: ${journalContext}
 
-  DRAFT:
-  "${draftText}"
+  DRAFT CONTENT TO REFINE:
+  "${draftText || "Generate a new engaging post from scratch based on the channel context."}"
+  `
+  const prompt = annotateSystemPrompt(basePrompt, brainPacket)
 
-  RULES:
-  1. Keep the creator's voice and core message intact.
-  2. Sharpen the hook — first line must stop the scroll.
-  3. Add a clear call-to-action (question, poll prompt, or opinion ask).
-  4. Use strategic emoji placement (2-3 max, not excessive).
-  5. If mentioning a video, make it sound exclusive or urgent.
-  6. Keep it under 300 characters if the draft is short, or under 500 if longer.
-  7. Return ONLY the refined text, no explanations or meta-commentary.
- `
+  return await executeWithRetry(async () => {
+    const result = await ai.models.generateContent({
+      model: getActiveModel("text"),
+      contents: prompt,
+    })
 
- const result = await ai.models.generateContent({
-  model: getActiveModel("text"),
-  contents: prompt,
- })
-
- return result.text?.trim() || draftText
+    return result.text?.trim() || draftText
+  })
 }
 
 export const askChannelQuestion = async (
@@ -3371,30 +3376,25 @@ export const askChannelQuestion = async (
  brain?: any,
 ): Promise<string> => {
  const ai = getAiClient()
- const journalContext = getJournalKnowledge(brain)
+ const brainPacket = consultBrainSync("STRATEGY_CHAT")
 
- const finalPrompt = `
+ const basePrompt = `
+    ${STRATEGY_INSTRUCTIONS}
+
     THE USER QUESTION: "${question}"
 
-    DETAILED BRAIN CONTEXT:
+    DETAILED CHANNEL CONTEXT:
     ${context}
-
-    CREATOR INTENT (From AI Journal):
-    ${journalContext}
-
-    GOAL: Provide a direct, tactical, and expert response. 
-    Use the Context provided as the primary source of truth.
-    Base your answer on actual metrics and creator goals.
-    Provide a concise, highly actionable response.
-    Use formatting (bolding, lists, emojis) to make your answer scannable.
-    Focus strictly on growing the channel and increasing views/revenue based on the context.
   `
+ const prompt = annotateSystemPrompt(basePrompt, brainPacket)
  
- const result = await ai.models.generateContent({
-  model: getActiveModel("text"),
-  contents: finalPrompt,
+ return await executeWithRetry(async () => {
+  const result = await ai.models.generateContent({
+   model: getActiveModel("text"),
+   contents: prompt,
+  })
+  return result.text?.trim() || "Sorry, I couldn't process that right now."
  })
- return result.text?.trim() || "Sorry, I couldn't process that right now."
 }
 
 export const rewriteTitle = async (
@@ -3403,7 +3403,8 @@ export const rewriteTitle = async (
   brain?: any,
 ): Promise<{ title: string; score: number }[]> => {
   const ai = getAiClient()
-  const journalContext = getJournalKnowledge(brain)
+  const brainPacket = consultBrainSync("TITLE_REWRITE")
+
  const schema = {
   type: Type.ARRAY,
   items: {
@@ -3415,35 +3416,38 @@ export const rewriteTitle = async (
    required: ["title", "score"]
   }
  }
- const prompt = `
-  Rewrite the YouTube video title: "${originalTitle}"
-  Target Style: ${style}
-  CREATOR VISION: ${journalContext}
+ const basePrompt = `
+  ${TITLE_REWRITE_INSTRUCTIONS}
+
+  ORIGINAL TITLE: "${originalTitle}"
+  TARGET STYLE: ${style}
   
   Generate 5 highly clickable alternatives.
-  Each title should be under 65 characters if possible.
-  Score each title (0-100) based on its estimated click-through-rate potential.
  `
- const result = await ai.models.generateContent({
-  model: getActiveModel("text"),
-  contents: prompt,
-  config: {
-   responseMimeType: "application/json",
-   responseSchema: schema as any
+ const prompt = annotateSystemPrompt(basePrompt, brainPacket)
+
+ return await executeWithRetry(async () => {
+  const result = await ai.models.generateContent({
+   model: getActiveModel("text"),
+   contents: prompt,
+   config: {
+    responseMimeType: "application/json",
+    responseSchema: schema as any
+   }
+  })
+  try {
+   const parsed = JSON.parse(cleanJsonString(result.text || "[]"))
+   return parsed.slice(0, 5)
+  } catch (e) {
+   return [
+    { title: `${originalTitle} (That Nobody Expected)`, score: 82 },
+    { title: `I Tested ${originalTitle} — Here's What Happened`, score: 78 },
+    { title: `The Truth About ${originalTitle.split(" ").slice(0, 4).join(" ")}...`, score: 74 },
+    { title: `Why ${originalTitle} Changes Everything`, score: 70 },
+    { title: `${originalTitle} — The Ultimate Breakdown`, score: 66 },
+   ]
   }
  })
- try {
-  const parsed = JSON.parse(result.text || "[]")
-  return parsed.slice(0, 5)
- } catch (e) {
-  return [
-   { title: `${originalTitle} (That Nobody Expected)`, score: 82 },
-   { title: `I Tested ${originalTitle} — Here's What Happened`, score: 78 },
-   { title: `The Truth About ${originalTitle.split(" ").slice(0, 4).join(" ")}...`, score: 74 },
-   { title: `Why ${originalTitle} Changes Everything`, score: 70 },
-   { title: `${originalTitle} — The Ultimate Breakdown`, score: 66 },
-  ]
- }
 }
 
 /**
@@ -3492,12 +3496,11 @@ export const generateJournalFollowUps = async (entry: string, brain?: any): Prom
     required: ["questions"]
   };
 
-  const prompt = `
+  const brainPacket = consultBrainSync("JOURNAL_FOLLOW_UP")
+  
+  const basePrompt = `
     THE CREATOR JUST WROTE THIS IN THEIR JOURNAL:
     "${entry}"
-
-    WHAT WE ALREADY KNOW ABOUT THE CREATOR (Brain Context):
-    ${journalContext}
 
     TASK: Generate 1 to 3 thoughtful, open-ended follow-up questions that invite 
     the creator to elaborate on their vision, style, or specific details. 
@@ -3505,6 +3508,8 @@ export const generateJournalFollowUps = async (entry: string, brain?: any): Prom
     Be encouraging, elite, and focused on growth.
     DO NOT be repetitive. DO NOT offer advice yet. ONLY ask questions.
   `;
+  const prompt = annotateSystemPrompt(basePrompt, brainPacket)
+
 
   try {
     const result = await ai.models.generateContent({
@@ -3550,10 +3555,9 @@ export const generateInfiniteMicroPolls = async (brain: any): Promise<any[]> => 
     required: ["polls"]
   };
 
-  const prompt = `
-    CURRENT CREATOR KNOWLEDGE:
-    ${context}
-
+  const brainPacket = consultBrainSync("MICRO_POLLS")
+  
+  const basePrompt = `
     TASK: Identify "knowledge gaps" in the creator's profile and generate 5 rapid-fire questions.
     RULES:
     1. Questions must be VERY short (max 8 words).
@@ -3561,6 +3565,8 @@ export const generateInfiniteMicroPolls = async (brain: any): Promise<any[]> => 
     3. Focus on: Thumbnail style, Editing pace, Audience age, Upload frequency, Content tone, Collaboration interest.
     4. DO NOT repeat what we already know from the context.
   `;
+  const prompt = annotateSystemPrompt(basePrompt, brainPacket)
+
 
   try {
     const result = await ai.models.generateContent({
@@ -3580,4 +3586,182 @@ export const generateInfiniteMicroPolls = async (brain: any): Promise<any[]> => 
       { id: "2", question: "Is your audience primarily mobile?", type: "binary" }
     ];
   }
+}
+
+/**
+ * END SCREEN ARCHITECT: CONCEPT GENERATOR
+ */
+export const generateEndScreenConcept = async (
+  baseConcept: string,
+  brain?: any,
+): Promise<{ prompt: string; aspectRatio: AspectRatio }> => {
+  const ai = getAiClient()
+  const brainPacket = consultBrainSync("END_SCREEN")
+  const basePrompt = `
+    ${END_SCREEN_CONCEPT_INSTRUCTIONS}
+    
+    USER CONCEPT: "${baseConcept}"
+  `
+  const prompt = annotateSystemPrompt(basePrompt, brainPacket)
+
+  const schema = {
+    type: Type.OBJECT,
+    properties: {
+      prompt: { type: Type.STRING },
+      aspectRatio: { type: Type.STRING }
+    },
+    required: ["prompt", "aspectRatio"]
+  }
+
+  return await executeWithRetry(async () => {
+    const result = await ai.models.generateContent({
+      model: getActiveModel("text"),
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: schema as any
+      }
+    })
+
+    const parsed = JSON.parse(cleanJsonString(result.text || "{}"))
+    return {
+      prompt: parsed.prompt || baseConcept,
+      aspectRatio: parsed.aspectRatio || AspectRatio.LANDSCAPE_16_9,
+    }
+  })
+}
+
+/**
+ * END SCREEN ARCHITECT: IMAGE GENERATOR
+ */
+export const generateEndScreenImage = async (
+  prompt: string,
+  aspectRatio: AspectRatio,
+  imageSize: ImageSize,
+  largeText?: string,
+  smallText?: string,
+): Promise<string> => {
+  if (window.aistudio) {
+    const hasKey = await window.aistudio.hasSelectedApiKey()
+    if (!hasKey) {
+      await window.aistudio.openSelectKey()
+    }
+  }
+
+  const ai = getAiClient()
+
+  let textInstruction = ""
+  if (largeText || smallText) {
+    textInstruction = `\n\nCRITICAL TEXT INSTRUCTIONS: You MUST include the following text EXACTLY as written. Do NOT add any other text or words to the image.`
+    if (largeText)
+      textInstruction += `\n- Large Text: "${largeText}" (Make this very prominent and large)`
+    if (smallText)
+      textInstruction += `\n- Small Text: "${smallText}" (Make this smaller and secondary)`
+  }
+
+  const response = await ai.models.generateContent({
+    model: getActiveModel("image"),
+    contents: {
+      parts: [
+        {
+          text: `A high quality, professional YouTube end screen template background. It must have empty space or subtle placeholders (like glowing rectangles or empty frames) for video thumbnails, and a subtle circle placeholder for the channel profile picture. Theme: ${prompt}${textInstruction}`,
+        },
+      ],
+    },
+    config: {
+      imageConfig: {
+        aspectRatio: aspectRatio,
+        imageSize: imageSize,
+      },
+    },
+  })
+
+  for (const part of response.candidates?.[0]?.content?.parts || []) {
+    if (part.inlineData) {
+      return `data:image/png;base64,${part.inlineData.data}`
+    }
+  }
+
+  throw new Error("No image generated")
+}
+
+/**
+ * INTELLIGENCE HUB: ORACLE REPORT
+ */
+export async function generateOracleReport(data: string, brain?: any): Promise<any> {
+  const ai = getAiClient()
+  const brainPacket = consultBrainSync("ORACLE_REPORT")
+  
+  const basePrompt = `
+    ${ORACLE_ANALYSIS_INSTRUCTIONS}
+    
+    CHANNEL PERFORMANCE DATA:
+    ${data}
+  `
+  const prompt = annotateSystemPrompt(basePrompt, brainPacket)
+
+  return await executeWithRetry(async () => {
+    const result = await ai.models.generateContent({
+      model: getActiveModel("text"),
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        responseMimeType: "application/json",
+      },
+    })
+    return JSON.parse(cleanJsonString(result.text || "{}"))
+  })
+}
+
+/**
+ * INTELLIGENCE HUB: ALGORITHM ARCHITECT DIAGNOSIS
+ */
+export async function generateArchitectDiagnosis(context: string, brain?: any): Promise<any> {
+  const ai = getAiClient()
+  const brainPacket = consultBrainSync("ARCHITECT_DIAGNOSIS")
+  
+  const basePrompt = `
+    ${ALGORITHM_ARCHITECT_INSTRUCTIONS}
+    
+    PERFORMANCE CONTEXT:
+    ${context}
+  `
+  const prompt = annotateSystemPrompt(basePrompt, brainPacket)
+
+  return await executeWithRetry(async () => {
+    const result = await ai.models.generateContent({
+      model: getActiveModel("text"),
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        responseMimeType: "application/json",
+      },
+    })
+    return JSON.parse(cleanJsonString(result.text || "{}"))
+  })
+}
+
+/**
+ * INTELLIGENCE HUB: KEYWORD RESEARCH LAB
+ */
+export async function generateKeywordResearch(concept: string, niche: string, brain?: any): Promise<any> {
+  const ai = getAiClient()
+  const brainPacket = consultBrainSync("KEYWORD_RESEARCH")
+  
+  const basePrompt = `
+    ${KEYWORD_LAB_INSTRUCTIONS}
+    
+    TARGET TOPIC: ${concept}
+    CHANNEL NICHE: ${niche}
+  `
+  const prompt = annotateSystemPrompt(basePrompt, brainPacket)
+
+  return await executeWithRetry(async () => {
+    const result = await ai.models.generateContent({
+      model: getActiveModel("text"),
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        responseMimeType: "application/json",
+      },
+    })
+    return JSON.parse(cleanJsonString(result.text || "{}"))
+  })
 }

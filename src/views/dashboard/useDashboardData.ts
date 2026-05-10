@@ -1,6 +1,7 @@
 import { useMemo } from "react"
 import { useBrain } from "../../context/useBrain"
 import { getMasterRows, getMetricSummary, metricCellValue } from "../../services/analyticsSelectors"
+import { readYouTubeAnalyticsCache } from "../../services/canonicalAnalyticsStore"
 
 const formatHumanNumber = (value: unknown): string => {
   const parsed = Number(value)
@@ -186,6 +187,33 @@ export const useDashboardData = () => {
     value: Math.max(8, Math.round((revenue28d / 100) * (base / 10))),
   }))
 
+  const trafficSources = useMemo(() => {
+    const cache = readYouTubeAnalyticsCache()
+    const report = cache.trafficSources as any
+    if (!report || !Array.isArray(report.rows)) return []
+
+    const headers = (report.columnHeaders || []).map((h: any) => String(h.name || "").toLowerCase())
+    const typeIdx = headers.indexOf("insighttrafficsourcetype")
+    const viewsIdx = headers.indexOf("views")
+
+    if (typeIdx < 0 || viewsIdx < 0) return []
+
+    const totalViews = report.rows.reduce((acc: number, row: any[]) => acc + (Number(row[viewsIdx]) || 0), 0)
+    if (totalViews <= 0) return []
+
+    return report.rows
+      .map((row: any[]) => ({
+        label: String(row[typeIdx] || "Other"),
+        views: Number(row[viewsIdx]) || 0,
+      }))
+      .sort((a: any, b: any) => b.views - a.views)
+      .map((item: any) => ({
+        ...item,
+        pct: Math.round((item.views / totalViews) * 100),
+      }))
+      .slice(0, 5)
+  }, [lastSyncComplete])
+
   return {
     brain,
     authState,
@@ -203,6 +231,7 @@ export const useDashboardData = () => {
     consistencyDays,
     alerts,
     revenueMomentum,
+    trafficSources,
     revenueByWeek: Array.from(canonicalRows.reduce((acc, row) => {
       const dt = new Date(row.uploadDate)
       if (Number.isNaN(dt.getTime())) return acc
