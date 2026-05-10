@@ -10,7 +10,7 @@
     "billing:check-env": "node scripts/check-billing-env.mjs",
     "billing:prep": "cp -n .env.billing.example .env.local && npm run billing:check-env",
     "dev:staging": "vite --mode staging",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "typecheck": "tsc -b",
     "lint": "eslint .",
     "test": "vitest run",
