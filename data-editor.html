@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ViewTube | DATA EDITOR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f4f4f0;
+      --fg: #000000;
+      --primary: #FF83EA;
+      --secondary: #FFB570;
+      --shadow: #000000;
+      --shadow-offset: 4px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    header {
+      padding: 24px;
+      border-bottom: 4px solid var(--fg);
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+    .back-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--fg);
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 14px;
+      padding: 8px 16px;
+      border: 3px solid var(--fg);
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 3px 3px 0 0 var(--fg);
+      transition: all 0.2s;
+    }
+    .back-link:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 0 var(--fg);
+    }
+    .content-area {
+      flex: 1;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      overflow-y: auto;
+    }
+    .grid-editor {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border: 4px solid var(--fg);
+      border-radius: 20px;
+      background: #fff;
+      overflow: hidden;
+      box-shadow: 8px 8px 0 0 var(--fg);
+    }
+    th {
+      background: var(--secondary);
+      padding: 15px;
+      text-align: left;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 12px;
+      border-bottom: 3px solid var(--fg);
+      border-right: 3px solid var(--fg);
+    }
+    td {
+      padding: 10px;
+      border-bottom: 2px solid var(--fg);
+      border-right: 2px solid var(--fg);
+    }
+    td:last-child, th:last-child { border-right: none; }
+    tr:last-child td { border-bottom: none; }
+
+    .brutal-input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 13px;
+      outline: none;
+    }
+    .brutal-input:focus {
+      border-color: var(--primary);
+      background: rgba(255, 131, 234, 0.05);
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 15px;
+      background: #fff;
+      border: 4px solid var(--fg);
+      padding: 15px;
+      border-radius: 16px;
+      box-shadow: 5px 5px 0 0 var(--fg);
+    }
+    .tool-btn {
+      padding: 10px 20px;
+      border: 3px solid var(--fg);
+      border-radius: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .tool-btn:hover {
+      transform: translateY(-2px);
+    }
+    .status-capsule {
+      font-size: 10px;
+      font-weight: 900;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 2px solid var(--fg);
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="widget-preview.html" class="back-link">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Dashboard
+    </a>
+    <div style="font-weight: 900; font-size: 24px; text-transform: uppercase;">Heavy <span style="color:var(--primary)">Data Editor</span></div>
+    <div style="width:100px;"></div>
+  </header>
+
+  <div class="content-area">
+    <div class="toolbar">
+      <button class="tool-btn" style="background:#4FFF5B;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save All</button>
+      <button class="tool-btn" style="background:#fff;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Row</button>
+      <button class="tool-btn" style="background:#fff;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> Bulk Delete</button>
+      <div style="flex:1;"></div>
+      <div class="status-capsule" style="background:var(--secondary);">6 Videos Loaded</div>
+    </div>
+
+    <table class="grid-editor">
+      <thead>
+        <tr>
+          <th width="50">#</th>
+          <th>Title</th>
+          <th width="150">Category</th>
+          <th>Tags (Comma separated)</th>
+          <th width="100">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="font-weight:900; text-align:center;">1</td>
+          <td><input class="brutal-input" value="Best Budget Laptops 2026 — Full Comparison"></td>
+          <td><input class="brutal-input" value="Science & Tech"></td>
+          <td><input class="brutal-input" value="laptops, tech, 2026, budget"></td>
+          <td><span class="status-capsule" style="background:#4FFF5B;">Live</span></td>
+        </tr>
+        <tr>
+          <td style="font-weight:900; text-align:center;">2</td>
+          <td><input class="brutal-input" value="Why I Switched to Neo-Brutalism for my IDE"></td>
+          <td><input class="brutal-input" value="Education"></td>
+          <td><input class="brutal-input" value="design, coding, ui, trendy"></td>
+          <td><span class="status-capsule" style="background:#4FFF5B;">Live</span></td>
+        </tr>
+        <tr>
+          <td style="font-weight:900; text-align:center;">3</td>
+          <td><input class="brutal-input" value="AI Video Editing is finally here (REMOTION)"></td>
+          <td><input class="brutal-input" value="Science & Tech"></td>
+          <td><input class="brutal-input" value="ai, video, remotion, react"></td>
+          <td><span class="status-capsule" style="background:#FFE357;">Draft</span></td>
+        </tr>
+        <tr>
+          <td style="font-weight:900; text-align:center;">4</td>
+          <td><input class="brutal-input" value="How to use Gemini 2.5 flash in VS Code"></td>
+          <td><input class="brutal-input" value="Education"></td>
+          <td><input class="brutal-input" value="gemini, ai, coding, google"></td>
+          <td><span class="status-capsule" style="background:#4FFF5B;">Live</span></td>
+        </tr>
+        <tr>
+          <td style="font-weight:900; text-align:center;">5</td>
+          <td><input class="brutal-input" value="Shorts Studio Pro — Behind the Scenes"></td>
+          <td><input class="brutal-input" value="Entertainment"></td>
+          <td><input class="brutal-input" value="shorts, studio, vtube, dev"></td>
+          <td><span class="status-capsule" style="background:#FF1744; color:#fff;">Private</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,1086 @@
+>>>>1
+
+
+
+Live Timeline / Display
+Ai Director
+4k export
+Playable timeline
+Properties
+Physics animation-Does;t apply
+
+
+
+>>>>2
+Auto Captions
+Brainstorm
+
+
+
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Play, Pause, FastForward, Rewind, Wand2, 
+  Layers, Settings, Type, Sparkles, Image as ImageIcon,
+  Activity, ArrowRight, Zap, GripVertical
+} from 'lucide-react';
+
+// --- TYPES ---
+type LayerType = 'video' | 'image' | 'text' | 'sticker';
+
+interface Layer {
+  id: string;
+  name: string;
+  type: LayerType;
+  content: string; // URL for media, text string for text
+  start: number;
+  end: number;
+  style?: React.CSSProperties;
+  variantPreset: 'smooth' | 'aggressive' | 'float' | 'glitch' | 'pop';
+  zIndex: number;
+}
+
+// --- FRAMER MOTION VARIANTS (The "Physics" Engine) ---
+const layerVariants = {
+  smooth: {
+    initial: { opacity: 0, scale: 0.9, filter: 'blur(10px)' },
+    animate: { opacity: 1, scale: 1, filter: 'blur(0px)', transition: { duration: 0.8, ease: 'easeOut' } },
+    exit: { opacity: 0, scale: 1.1, filter: 'blur(10px)', transition: { duration: 0.5 } }
+  },
+  aggressive: {
+    initial: { opacity: 0, scale: 0.2, rotate: -15 },
+    animate: { opacity: 1, scale: 1, rotate: 0, transition: { type: 'spring', stiffness: 400, damping: 15 } },
+    exit: { opacity: 0, scale: 0.5, rotate: 45, transition: { duration: 0.2 } }
+  },
+  float: {
+    initial: { opacity: 0, y: 50 },
+    animate: { opacity: 1, y: [0, -20, 0], transition: { opacity: { duration: 0.5 }, y: { repeat: Infinity, duration: 4, ease: 'easeInOut' } } },
+    exit: { opacity: 0, y: -50, transition: { duration: 0.5 } }
+  },
+  pop: {
+    initial: { opacity: 0, scale: 0 },
+    animate: { opacity: 1, scale: [1.2, 1], transition: { type: 'spring', stiffness: 500, damping: 10 } },
+    exit: { opacity: 0, scale: 0, transition: { duration: 0.2 } }
+  },
+  glitch: {
+    initial: { opacity: 0, x: -20 },
+    animate: { 
+      opacity: 1, 
+      x: [-5, 5, -5, 5, 0], 
+      skewX: [10, -10, 5, -5, 0],
+      transition: { duration: 0.4 } 
+    },
+    exit: { opacity: 0, scale: 0.9, transition: { duration: 0.2 } }
+  }
+};
+
+const MAX_TIME = 15; // 15 seconds timeline
+
+// --- MAIN COMPONENT ---
+export default function App() {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [time, setTime] = useState(0);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedLayer, setSelectedLayer] = useState<string | null>('layer-1');
+  
+  // Initial Timeline State
+  const [layers, setLayers] = useState<Layer[]>([
+    {
+      id: 'bg-1',
+      name: 'Cyberpunk City',
+      type: 'image',
+      content: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=1000&auto=format&fit=crop',
+      start: 0,
+      end: 15,
+      variantPreset: 'smooth',
+      zIndex: 0,
+    },
+    {
+      id: 'layer-1',
+      name: 'Title Text',
+      type: 'text',
+      content: 'NEO BRUTALISM',
+      start: 1.5,
+      end: 6.5,
+      variantPreset: 'aggressive',
+      zIndex: 10,
+      style: { top: '30%', left: '0', right: '0', textAlign: 'center', fontSize: '3rem', fontWeight: 900, color: '#00E5FF', WebkitTextStroke: '2px black', textShadow: '4px 4px 0px #000' }
+    },
+    {
+      id: 'sticker-1',
+      name: 'Warning Label',
+      type: 'sticker',
+      content: '🔥',
+      start: 2,
+      end: 6,
+      variantPreset: 'pop',
+      zIndex: 11,
+      style: { top: '20%', right: '10%', fontSize: '4rem' }
+    }
+  ]);
+
+  // --- PLAYBACK ENGINE ---
+  useEffect(() => {
+    let req: number;
+    let lastTime = performance.now();
+    
+    const loop = (now: number) => {
+      if (isPlaying) {
+        const dt = (now - lastTime) / 1000;
+        setTime(prevTime => {
+          let newTime = prevTime + dt;
+          if (newTime >= MAX_TIME) {
+            setIsPlaying(false);
+            return 0; // Loop or stop. Stopping for now.
+          }
+          return newTime;
+        });
+      }
+      lastTime = now;
+      req = requestAnimationFrame(loop);
+    };
+    
+    req = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(req);
+  }, [isPlaying]);
+
+  // --- ACTIONS ---
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTime(parseFloat(e.target.value));
+  };
+
+  const handleAiGenerate = () => {
+    if (!aiPrompt) return;
+    setIsGenerating(true);
+    setIsPlaying(false);
+    
+    // Simulate AI Latency
+    setTimeout(() => {
+      const newLayer: Layer = {
+        id: `ai-gen-${Date.now()}`,
+        name: `AI: ${aiPrompt.substring(0, 10)}...`,
+        type: 'text',
+        content: aiPrompt.toUpperCase(),
+        start: time,
+        end: Math.min(time + 4, MAX_TIME),
+        variantPreset: 'glitch',
+        zIndex: 20 + layers.length,
+        style: { 
+          top: `${Math.floor(Math.random() * 60) + 20}%`, 
+          left: '5%', right: '5%',
+          textAlign: 'center', 
+          fontSize: '2.5rem', 
+          fontWeight: 900, 
+          color: '#FFD700', 
+          backgroundColor: '#000',
+          padding: '10px',
+          border: '4px solid #FF3399',
+          boxShadow: '6px 6px 0px 0px #FF3399',
+          transform: `rotate(${Math.floor(Math.random() * 20) - 10}deg)`
+        }
+      };
+      setLayers(prev => [...prev, newLayer]);
+      setAiPrompt('');
+      setIsGenerating(false);
+      setTime(time); // trigger re-eval
+    }, 1200);
+  };
+
+  const activeLayers = layers.filter(l => time >= l.start && time <= l.end).sort((a,b) => a.zIndex - b.zIndex);
+
+  return (
+    <div className="min-h-screen bg-[#f4f4f0] text-black font-sans selection:bg-[#FF3399] selection:text-white flex flex-col overflow-hidden">
+      
+      {/* HEADER */}
+      <header className="border-b-4 border-black bg-white p-4 flex items-center justify-between shrink-0 z-50">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-[#FF3399] border-4 border-black flex items-center justify-center shadow-[4px_4px_0px_0px_#000]">
+            <Zap size={24} className="text-white fill-white" />
+          </div>
+          <h1 className="text-2xl font-black uppercase tracking-tighter">Shorts<span className="text-[#00E5FF]">OS</span></h1>
+        </div>
+        <div className="flex gap-4">
+          <button className="px-6 py-2 bg-[#FFD700] border-4 border-black font-bold uppercase hover:bg-yellow-300 shadow-[4px_4px_0px_0px_#000] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all">
+            Export 4K
+          </button>
+        </div>
+      </header>
+
+      {/* MAIN WORKSPACE */}
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        
+        {/* LEFT: CANVAS AREA */}
+        <section className="flex-1 border-r-4 border-black bg-[#e0e0e0] flex flex-col relative shrink-0 min-w-[400px]">
+          
+          {/* Top Canvas Controls */}
+          <div className="absolute top-4 left-4 right-4 flex justify-between z-10 pointer-events-none">
+             <div className="bg-black text-[#00E5FF] px-3 py-1 border-2 border-[#00E5FF] font-mono font-bold text-sm pointer-events-auto">
+               9:16 VERTICAL
+             </div>
+             <div className="bg-white text-black px-3 py-1 border-4 border-black font-mono font-bold text-sm shadow-[4px_4px_0px_0px_#FF3399] pointer-events-auto">
+               FPS: 60 | HQ
+             </div>
+          </div>
+
+          {/* The Actual Player Canvas */}
+          <div className="flex-1 flex items-center justify-center p-8 overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+            <div className="relative w-[360px] h-[640px] bg-black border-4 border-black shadow-[16px_16px_0px_0px_#000] overflow-hidden">
+              <AnimatePresence>
+                {activeLayers.map(layer => (
+                  <motion.div
+                    key={layer.id}
+                    variants={layerVariants[layer.variantPreset]}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    className="absolute inset-0"
+                    style={{ zIndex: layer.zIndex, ...(layer.type === 'text' || layer.type === 'sticker' ? layer.style : {}) }}
+                  >
+                    {layer.type === 'image' && (
+                      <img src={layer.content} alt={layer.name} className="w-full h-full object-cover" />
+                    )}
+                    {layer.type === 'video' && (
+                      <div className="w-full h-full bg-blue-900 flex items-center justify-center text-white">Video Placeholder</div>
+                    )}
+                    {layer.type === 'text' && (
+                      <div className="absolute w-full px-4">{layer.content}</div>
+                    )}
+                    {layer.type === 'sticker' && (
+                      <div className="absolute">{layer.content}</div>
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              
+              {/* Playhead Overlay Indicator (Optional) */}
+              {!isPlaying && (
+                <div className="absolute inset-0 bg-black/20 flex items-center justify-center z-50 pointer-events-none">
+                  <Play size={64} className="text-white opacity-50 fill-white" />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Transport Controls */}
+          <div className="border-t-4 border-black bg-white p-4 flex items-center gap-4 justify-center">
+             <button onClick={() => setTime(0)} className="p-3 border-4 border-black hover:bg-gray-100 active:bg-gray-200">
+               <Rewind size={20} />
+             </button>
+             <button 
+               onClick={() => setIsPlaying(!isPlaying)} 
+               className="p-4 border-4 border-black bg-[#FF3399] text-white shadow-[4px_4px_0px_0px_#000] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+             >
+               {isPlaying ? <Pause size={24} className="fill-white" /> : <Play size={24} className="fill-white" />}
+             </button>
+             <button onClick={() => setTime(MAX_TIME)} className="p-3 border-4 border-black hover:bg-gray-100 active:bg-gray-200">
+               <FastForward size={20} />
+             </button>
+             
+             <div className="ml-4 font-mono font-bold text-xl bg-black text-[#FFD700] px-4 py-2 border-4 border-black">
+               {time.toFixed(2)}s
+             </div>
+          </div>
+        </section>
+
+        {/* RIGHT: AI ORCHESTRATOR & PROPERTIES */}
+        <section className="w-full lg:w-[450px] bg-white flex flex-col overflow-hidden shrink-0">
+          
+          {/* AI Prompt Area */}
+          <div className="p-6 border-b-4 border-black bg-[#00E5FF]">
+            <h2 className="text-xl font-black uppercase mb-4 flex items-center gap-2"><Sparkles size={20} /> AI Director</h2>
+            <div className="relative">
+              <textarea 
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="E.g., Add a massive bouncing text saying 'SUBSCRIBE' at 5 seconds..."
+                className="w-full h-32 p-4 border-4 border-black font-bold resize-none shadow-[6px_6px_0px_0px_#000] focus:outline-none focus:shadow-[2px_2px_0px_0px_#000] focus:translate-y-1 focus:translate-x-1 transition-all"
+                disabled={isGenerating}
+              />
+              <button 
+                onClick={handleAiGenerate}
+                disabled={isGenerating || !aiPrompt}
+                className="absolute bottom-4 right-4 bg-black text-white px-4 py-2 font-bold uppercase border-2 border-black hover:bg-gray-800 disabled:opacity-50 flex items-center gap-2"
+              >
+                {isGenerating ? 'Synthesizing...' : 'Execute'} <ArrowRight size={16} />
+              </button>
+            </div>
+            {/* Simulated Audiophonic EQ Visualizer */}
+            <div className="mt-6 border-4 border-black bg-black p-3 flex items-end gap-1 h-16 w-full">
+               {[...Array(20)].map((_, i) => (
+                 <motion.div 
+                   key={i} 
+                   className="flex-1 bg-[#FF3399]"
+                   animate={{ height: isPlaying ? [`${Math.random() * 20 + 10}%`, `${Math.random() * 80 + 20}%`, `${Math.random() * 20 + 10}%`] : '10%' }}
+                   transition={{ repeat: Infinity, duration: Math.random() * 0.5 + 0.2 }}
+                 />
+               ))}
+            </div>
+          </div>
+
+          {/* Layer Properties */}
+          <div className="flex-1 overflow-y-auto p-6 bg-white">
+            <h2 className="text-xl font-black uppercase mb-4 flex items-center gap-2"><Settings size={20} /> Properties</h2>
+            
+            {selectedLayer ? (
+              <div className="space-y-4">
+                {layers.filter(l => l.id === selectedLayer).map(layer => (
+                  <div key={layer.id} className="border-4 border-black p-4 bg-[#f4f4f0] shadow-[4px_4px_0px_0px_#000]">
+                    <div className="font-bold text-sm text-gray-500 uppercase mb-1">{layer.type} Layer</div>
+                    <input 
+                      type="text" 
+                      value={layer.name} 
+                      readOnly 
+                      className="w-full font-black text-lg bg-transparent border-b-4 border-black outline-none mb-4"
+                    />
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block font-bold text-sm uppercase mb-1">Physics Preset</label>
+                        <select className="w-full p-2 border-4 border-black bg-white font-bold outline-none" value={layer.variantPreset} readOnly>
+                          <option value="smooth">Smooth Tween</option>
+                          <option value="aggressive">Aggressive Spring</option>
+                          <option value="pop">Scale Pop</option>
+                          <option value="glitch">Digital Glitch</option>
+                          <option value="float">Parallax Float</option>
+                        </select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                           <label className="block font-bold text-sm uppercase mb-1">Start (s)</label>
+                           <input type="number" value={layer.start} className="w-full p-2 border-4 border-black bg-white font-bold" readOnly />
+                        </div>
+                        <div>
+                           <label className="block font-bold text-sm uppercase mb-1">End (s)</label>
+                           <input type="number" value={layer.end} className="w-full p-2 border-4 border-black bg-white font-bold" readOnly />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center p-8 border-4 border-dashed border-black text-gray-500 font-bold uppercase">
+                Select a layer in timeline
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+
+      {/* FOOTER: TIMELINE */}
+      <footer className="h-64 border-t-4 border-black bg-white flex flex-col shrink-0">
+        {/* Timeline Ruler */}
+        <div className="h-8 border-b-4 border-black bg-[#f4f4f0] relative flex items-center">
+           {[...Array(MAX_TIME + 1)].map((_, i) => (
+             <div key={i} className="absolute h-full border-l-2 border-black flex items-end p-1 text-xs font-bold" style={{ left: `${(i / MAX_TIME) * 100}%` }}>
+               {i}s
+             </div>
+           ))}
+        </div>
+
+        <div className="flex-1 flex overflow-hidden relative">
+          {/* Layer Headers */}
+          <div className="w-48 border-r-4 border-black bg-white shrink-0 overflow-y-auto z-20 shadow-[4px_0px_0px_0px_#000]">
+            {layers.slice().reverse().map(layer => (
+              <div 
+                key={`header-${layer.id}`} 
+                onClick={() => setSelectedLayer(layer.id)}
+                className={`h-12 border-b-4 border-black p-2 flex items-center gap-2 cursor-pointer transition-colors ${selectedLayer === layer.id ? 'bg-[#FFD700]' : 'hover:bg-gray-100'}`}
+              >
+                <GripVertical size={16} className="text-gray-400" />
+                {layer.type === 'image' || layer.type === 'video' ? <ImageIcon size={16} /> : layer.type === 'text' ? <Type size={16} /> : <Activity size={16} />}
+                <span className="font-bold text-sm truncate">{layer.name}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Tracks Area */}
+          <div className="flex-1 bg-gray-100 relative overflow-y-auto overflow-x-hidden">
+            
+            {/* Grid lines */}
+            <div className="absolute inset-0 pointer-events-none opacity-20">
+               {[...Array(MAX_TIME + 1)].map((_, i) => (
+                 <div key={`grid-${i}`} className="absolute top-0 bottom-0 border-l border-black" style={{ left: `${(i / MAX_TIME) * 100}%` }} />
+               ))}
+            </div>
+
+            {/* Playhead Line */}
+            <div 
+              className="absolute top-0 bottom-0 w-1 bg-[#FF3399] z-30 pointer-events-none shadow-[0px_0px_10px_rgba(255,51,153,0.5)]"
+              style={{ left: `${(time / MAX_TIME) * 100}%` }}
+            >
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#FF3399] border-2 border-black rotate-45" />
+            </div>
+
+            {/* Scrub Overlay Input */}
+            <input 
+              type="range" 
+              min={0} 
+              max={MAX_TIME} 
+              step={0.01} 
+              value={time} 
+              onChange={handleSeek}
+              className="absolute top-0 w-full h-full opacity-0 z-40 cursor-col-resize"
+            />
+
+            {/* Layer Blocks */}
+            <div className="relative pt-0">
+              {layers.slice().reverse().map(layer => (
+                <div key={`track-${layer.id}`} className="h-12 border-b-2 border-gray-300 relative">
+                  <motion.div 
+                    layoutId={`clip-${layer.id}`}
+                    className={`absolute top-1 bottom-1 border-4 border-black flex items-center px-2 cursor-pointer ${
+                      selectedLayer === layer.id 
+                        ? 'bg-[#00E5FF] shadow-[2px_2px_0px_0px_#000] z-10' 
+                        : 'bg-white z-0'
+                    }`}
+                    style={{ 
+                      left: `${(layer.start / MAX_TIME) * 100}%`, 
+                      width: `${((layer.end - layer.start) / MAX_TIME) * 100}%` 
+                    }}
+                    onClick={() => setSelectedLayer(layer.id)}
+                  >
+                    <span className="font-bold text-xs truncate select-none">{layer.content.length > 20 ? layer.content.substring(0,20)+'...' : layer.content}</span>
+                    
+                    {/* Handles (Visual only for prototype) */}
+                    <div className="absolute left-0 top-0 bottom-0 w-2 bg-black/20 hover:bg-black/40 cursor-ew-resize" />
+                    <div className="absolute right-0 top-0 bottom-0 w-2 bg-black/20 hover:bg-black/40 cursor-ew-resize" />
+                  </motion.div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+
+
+
+
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Play, Pause, FastForward, Rewind, Wand2, 
+  Layers, Settings, Type, Sparkles, Image as ImageIcon,
+  Activity, ArrowRight, Zap, GripVertical
+} from 'lucide-react';
+
+// --- TYPES ---
+type LayerType = 'video' | 'image' | 'text' | 'sticker';
+
+interface Layer {
+  id: string;
+  name: string;
+  type: LayerType;
+  content: string; // URL for media, text string for text
+  start: number;
+  end: number;
+  style?: React.CSSProperties;
+  variantPreset: 'smooth' | 'aggressive' | 'float' | 'glitch' | 'pop';
+  zIndex: number;
+}
+
+// --- GEMINI API UTILITY ---
+const callGemini = async (prompt: string, systemInstruction: string, schema?: any) => {
+  const apiKey = "";
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+  const payload: any = {
+    contents: [{ parts: [{ text: prompt }] }],
+    systemInstruction: { parts: [{ text: systemInstruction }] },
+  };
+
+  if (schema) {
+    payload.generationConfig = {
+      responseMimeType: "application/json",
+      responseSchema: schema
+    };
+  }
+
+  let retries = 0;
+  const delays = [1000, 2000, 4000, 8000, 16000];
+
+  while (retries < 5) {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (schema) {
+        return JSON.parse(text);
+      }
+      return text;
+
+    } catch (error) {
+      if (retries === 4) throw error;
+      await new Promise(res => setTimeout(res, delays[retries]));
+      retries++;
+    }
+  }
+};
+
+// --- FRAMER MOTION VARIANTS (The "Physics" Engine) ---
+const layerVariants = {
+  smooth: {
+    initial: { opacity: 0, scale: 0.9, filter: 'blur(10px)' },
+    animate: { opacity: 1, scale: 1, filter: 'blur(0px)', transition: { duration: 0.8, ease: 'easeOut' } },
+    exit: { opacity: 0, scale: 1.1, filter: 'blur(10px)', transition: { duration: 0.5 } }
+  },
+  aggressive: {
+    initial: { opacity: 0, scale: 0.2, rotate: -15 },
+    animate: { opacity: 1, scale: 1, rotate: 0, transition: { type: 'spring', stiffness: 400, damping: 15 } },
+    exit: { opacity: 0, scale: 0.5, rotate: 45, transition: { duration: 0.2 } }
+  },
+  float: {
+    initial: { opacity: 0, y: 50 },
+    animate: { opacity: 1, y: [0, -20, 0], transition: { opacity: { duration: 0.5 }, y: { repeat: Infinity, duration: 4, ease: 'easeInOut' } } },
+    exit: { opacity: 0, y: -50, transition: { duration: 0.5 } }
+  },
+  pop: {
+    initial: { opacity: 0, scale: 0 },
+    animate: { opacity: 1, scale: [1.2, 1], transition: { type: 'spring', stiffness: 500, damping: 10 } },
+    exit: { opacity: 0, scale: 0, transition: { duration: 0.2 } }
+  },
+  glitch: {
+    initial: { opacity: 0, x: -20 },
+    animate: { 
+      opacity: 1, 
+      x: [-5, 5, -5, 5, 0], 
+      skewX: [10, -10, 5, -5, 0],
+      transition: { duration: 0.4 } 
+    },
+    exit: { opacity: 0, scale: 0.9, transition: { duration: 0.2 } }
+  }
+};
+
+const MAX_TIME = 15; // 15 seconds timeline
+
+// --- MAIN COMPONENT ---
+export default function App() {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [time, setTime] = useState(0);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isCaptioning, setIsCaptioning] = useState(false);
+  const [isBrainstorming, setIsBrainstorming] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [selectedLayer, setSelectedLayer] = useState<string | null>('layer-1');
+  
+  // Initial Timeline State
+  const [layers, setLayers] = useState<Layer[]>([
+    {
+      id: 'bg-1',
+      name: 'Cyberpunk City',
+      type: 'image',
+      content: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=1000&auto=format&fit=crop',
+      start: 0,
+      end: 15,
+      variantPreset: 'smooth',
+      zIndex: 0,
+    },
+    {
+      id: 'layer-1',
+      name: 'Title Text',
+      type: 'text',
+      content: 'NEO BRUTALISM',
+      start: 1.5,
+      end: 6.5,
+      variantPreset: 'aggressive',
+      zIndex: 10,
+      style: { top: '30%', left: '0', right: '0', textAlign: 'center', fontSize: '3rem', fontWeight: 900, color: '#00E5FF', WebkitTextStroke: '2px black', textShadow: '4px 4px 0px #000' }
+    },
+    {
+      id: 'sticker-1',
+      name: 'Warning Label',
+      type: 'sticker',
+      content: '🔥',
+      start: 2,
+      end: 6,
+      variantPreset: 'pop',
+      zIndex: 11,
+      style: { top: '20%', right: '10%', fontSize: '4rem' }
+    }
+  ]);
+
+  // --- PLAYBACK ENGINE ---
+  useEffect(() => {
+    let req: number;
+    let lastTime = performance.now();
+    
+    const loop = (now: number) => {
+      if (isPlaying) {
+        const dt = (now - lastTime) / 1000;
+        setTime(prevTime => {
+          let newTime = prevTime + dt;
+          if (newTime >= MAX_TIME) {
+            setIsPlaying(false);
+            return 0; // Loop or stop. Stopping for now.
+          }
+          return newTime;
+        });
+      }
+      lastTime = now;
+      req = requestAnimationFrame(loop);
+    };
+    
+    req = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(req);
+  }, [isPlaying]);
+
+  // --- ACTIONS ---
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTime(parseFloat(e.target.value));
+  };
+
+  const handleAiGenerate = async () => {
+    if (!aiPrompt) return;
+    setIsGenerating(true);
+    setIsPlaying(false);
+    setErrorMsg(null);
+    
+    try {
+      const systemInstruction = "You are an AI video editor. Translate the user's request into video layers. The timeline is 0 to 15 seconds. Return valid JSON only.";
+      const schema = {
+        type: "OBJECT",
+        properties: {
+          layers: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                name: { type: "STRING" },
+                type: { type: "STRING", description: "Must be 'text' or 'sticker'" },
+                content: { type: "STRING", description: "Text content, or a single emoji for stickers" },
+                start: { type: "NUMBER", description: "Start time in seconds (0-15)" },
+                end: { type: "NUMBER", description: "End time in seconds (0-15)" },
+                variantPreset: { type: "STRING", description: "Must be one of: smooth, aggressive, float, glitch, pop" },
+                color: { type: "STRING", description: "Hex color code, e.g., #00E5FF or #FFD700" }
+              },
+              required: ["name", "type", "content", "start", "end", "variantPreset", "color"]
+            }
+          }
+        }
+      };
+
+      const response = await callGemini(aiPrompt, systemInstruction, schema);
+      
+      if (response && response.layers) {
+        const newLayers: Layer[] = response.layers.map((l: any, i: number) => ({
+          id: `ai-gen-${Date.now()}-${i}`,
+          name: l.name || `AI Layer ${i}`,
+          type: (l.type === 'text' || l.type === 'sticker') ? l.type : 'text',
+          content: l.content,
+          start: l.start || time,
+          end: l.end || Math.min(time + 3, MAX_TIME),
+          variantPreset: ['smooth', 'aggressive', 'float', 'glitch', 'pop'].includes(l.variantPreset) ? l.variantPreset : 'glitch',
+          zIndex: 20 + layers.length + i,
+          style: {
+            top: `${Math.floor(Math.random() * 40) + 30}%`, 
+            left: '5%', right: '5%',
+            textAlign: 'center', 
+            fontSize: l.type === 'sticker' ? '5rem' : '3rem', 
+            fontWeight: 900, 
+            color: l.color || '#FFD700', 
+            WebkitTextStroke: '2px black',
+            textShadow: '4px 4px 0px #000',
+            transform: `rotate(${Math.floor(Math.random() * 10) - 5}deg)`
+          }
+        }));
+
+        setLayers(prev => [...prev, ...newLayers]);
+        setAiPrompt('');
+      }
+    } catch (err) {
+      setErrorMsg("Failed to generate layer. Try again.");
+      console.error(err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleAutoCaptions = async () => {
+    const topic = aiPrompt || "a hype motivational video";
+    setIsCaptioning(true);
+    setIsPlaying(false);
+    setErrorMsg(null);
+
+    try {
+      const systemInstruction = "You are a master scriptwriter. Write a 15-second fast-paced script about the user's topic. Break it down into 4-6 sequential captions. Return valid JSON only.";
+      const schema = {
+        type: "OBJECT",
+        properties: {
+          layers: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                content: { type: "STRING", description: "1 to 4 words max for punchy captions" },
+                start: { type: "NUMBER", description: "Start time (0-15)" },
+                end: { type: "NUMBER", description: "End time (0-15)" }
+              },
+              required: ["content", "start", "end"]
+            }
+          }
+        }
+      };
+
+      const response = await callGemini(`Topic: ${topic}`, systemInstruction, schema);
+      
+      if (response && response.layers) {
+        const newLayers: Layer[] = response.layers.map((l: any, i: number) => ({
+          id: `caption-${Date.now()}-${i}`,
+          name: `Caption ${i + 1}`,
+          type: 'text',
+          content: l.content.toUpperCase(),
+          start: l.start,
+          end: l.end,
+          variantPreset: 'pop',
+          zIndex: 50 + i,
+          style: {
+            bottom: '15%', left: '5%', right: '5%',
+            textAlign: 'center', 
+            fontSize: '2.5rem', 
+            fontWeight: 900, 
+            color: '#FFFFFF', 
+            backgroundColor: '#000000',
+            padding: '10px',
+            border: '4px solid black',
+            boxShadow: '4px 4px 0px 0px #FF3399'
+          }
+        }));
+
+        setLayers(prev => [...prev, ...newLayers]);
+        setAiPrompt('');
+      }
+    } catch (err) {
+      setErrorMsg("Failed to generate captions.");
+      console.error(err);
+    } finally {
+      setIsCaptioning(false);
+    }
+  };
+
+  const handleBrainstorm = async () => {
+    setIsBrainstorming(true);
+    setErrorMsg(null);
+    try {
+      const prompt = "Give me a 1-sentence, wild, extremely creative idea for a YouTube short video. Just the raw idea, no quotes, no conversational filler. Example: A documentary about a time-traveling pigeon stealing pizza.";
+      const response = await callGemini(prompt, "You are a creative director.");
+      if (response) setAiPrompt(response.trim());
+    } catch (err) {
+      setErrorMsg("Failed to brainstorm.");
+    } finally {
+      setIsBrainstorming(false);
+    }
+  };
+
+  const activeLayers = layers.filter(l => time >= l.start && time <= l.end).sort((a,b) => a.zIndex - b.zIndex);
+
+  return (
+    <div className="min-h-screen bg-[#f4f4f0] text-black font-sans selection:bg-[#FF3399] selection:text-white flex flex-col overflow-hidden">
+      
+      {/* HEADER */}
+      <header className="border-b-4 border-black bg-white p-4 flex items-center justify-between shrink-0 z-50">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-[#FF3399] border-4 border-black flex items-center justify-center shadow-[4px_4px_0px_0px_#000]">
+            <Zap size={24} className="text-white fill-white" />
+          </div>
+          <h1 className="text-2xl font-black uppercase tracking-tighter">Shorts<span className="text-[#00E5FF]">OS</span></h1>
+        </div>
+        <div className="flex gap-4">
+          <button className="px-6 py-2 bg-[#FFD700] border-4 border-black font-bold uppercase hover:bg-yellow-300 shadow-[4px_4px_0px_0px_#000] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all">
+            Export 4K
+          </button>
+        </div>
+      </header>
+
+      {/* MAIN WORKSPACE */}
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        
+        {/* LEFT: CANVAS AREA */}
+        <section className="flex-1 border-r-4 border-black bg-[#e0e0e0] flex flex-col relative shrink-0 min-w-[400px]">
+          
+          {/* Top Canvas Controls */}
+          <div className="absolute top-4 left-4 right-4 flex justify-between z-10 pointer-events-none">
+             <div className="bg-black text-[#00E5FF] px-3 py-1 border-2 border-[#00E5FF] font-mono font-bold text-sm pointer-events-auto">
+               9:16 VERTICAL
+             </div>
+             <div className="bg-white text-black px-3 py-1 border-4 border-black font-mono font-bold text-sm shadow-[4px_4px_0px_0px_#FF3399] pointer-events-auto">
+               FPS: 60 | HQ
+             </div>
+          </div>
+
+          {/* The Actual Player Canvas */}
+          <div className="flex-1 flex items-center justify-center p-8 overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+            <div className="relative w-[360px] h-[640px] bg-black border-4 border-black shadow-[16px_16px_0px_0px_#000] overflow-hidden">
+              <AnimatePresence>
+                {activeLayers.map(layer => (
+                  <motion.div
+                    key={layer.id}
+                    variants={layerVariants[layer.variantPreset]}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    className="absolute inset-0"
+                    style={{ zIndex: layer.zIndex, ...(layer.type === 'text' || layer.type === 'sticker' ? layer.style : {}) }}
+                  >
+                    {layer.type === 'image' && (
+                      <img src={layer.content} alt={layer.name} className="w-full h-full object-cover" />
+                    )}
+                    {layer.type === 'video' && (
+                      <div className="w-full h-full bg-blue-900 flex items-center justify-center text-white">Video Placeholder</div>
+                    )}
+                    {layer.type === 'text' && (
+                      <div className="absolute w-full px-4">{layer.content}</div>
+                    )}
+                    {layer.type === 'sticker' && (
+                      <div className="absolute">{layer.content}</div>
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              
+              {/* Playhead Overlay Indicator (Optional) */}
+              {!isPlaying && (
+                <div className="absolute inset-0 bg-black/20 flex items-center justify-center z-50 pointer-events-none">
+                  <Play size={64} className="text-white opacity-50 fill-white" />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Transport Controls */}
+          <div className="border-t-4 border-black bg-white p-4 flex items-center gap-4 justify-center">
+             <button onClick={() => setTime(0)} className="p-3 border-4 border-black hover:bg-gray-100 active:bg-gray-200">
+               <Rewind size={20} />
+             </button>
+             <button 
+               onClick={() => setIsPlaying(!isPlaying)} 
+               className="p-4 border-4 border-black bg-[#FF3399] text-white shadow-[4px_4px_0px_0px_#000] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+             >
+               {isPlaying ? <Pause size={24} className="fill-white" /> : <Play size={24} className="fill-white" />}
+             </button>
+             <button onClick={() => setTime(MAX_TIME)} className="p-3 border-4 border-black hover:bg-gray-100 active:bg-gray-200">
+               <FastForward size={20} />
+             </button>
+             
+             <div className="ml-4 font-mono font-bold text-xl bg-black text-[#FFD700] px-4 py-2 border-4 border-black">
+               {time.toFixed(2)}s
+             </div>
+          </div>
+        </section>
+
+        {/* RIGHT: AI ORCHESTRATOR & PROPERTIES */}
+        <section className="w-full lg:w-[450px] bg-white flex flex-col overflow-hidden shrink-0">
+          
+          {/* AI Prompt Area */}
+          <div className="p-6 border-b-4 border-black bg-[#00E5FF]">
+            <h2 className="text-xl font-black uppercase mb-4 flex items-center gap-2"><Sparkles size={20} /> AI Director</h2>
+            <div className="relative">
+              <textarea 
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="E.g., Add a massive bouncing text saying 'SUBSCRIBE' at 5 seconds..."
+                className="w-full h-32 p-4 border-4 border-black font-bold resize-none shadow-[6px_6px_0px_0px_#000] focus:outline-none focus:shadow-[2px_2px_0px_0px_#000] focus:translate-y-1 focus:translate-x-1 transition-all"
+                disabled={isGenerating || isCaptioning || isBrainstorming}
+              />
+            </div>
+            
+            {errorMsg && (
+              <div className="mt-2 bg-white border-2 border-red-500 text-red-500 font-bold p-2 text-sm uppercase">
+                {errorMsg}
+              </div>
+            )}
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button 
+                onClick={handleAiGenerate}
+                disabled={isGenerating || !aiPrompt}
+                className="flex-1 bg-black text-white px-4 py-3 font-bold uppercase border-4 border-black hover:bg-gray-800 disabled:opacity-50 flex items-center justify-center gap-2 shadow-[4px_4px_0px_0px_#FF3399] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+              >
+                {isGenerating ? 'Synthesizing...' : 'Execute'} <ArrowRight size={16} />
+              </button>
+            </div>
+            <div className="mt-2 flex gap-2">
+              <button 
+                onClick={handleAutoCaptions}
+                disabled={isCaptioning}
+                className="flex-1 bg-white text-black px-2 py-2 text-sm font-bold uppercase border-2 border-black hover:bg-gray-100 disabled:opacity-50 shadow-[2px_2px_0px_0px_#000] active:translate-y-1 active:shadow-none"
+              >
+                {isCaptioning ? '...' : '✨ Auto-Captions'}
+              </button>
+              <button 
+                onClick={handleBrainstorm}
+                disabled={isBrainstorming}
+                className="flex-1 bg-white text-black px-2 py-2 text-sm font-bold uppercase border-2 border-black hover:bg-gray-100 disabled:opacity-50 shadow-[2px_2px_0px_0px_#000] active:translate-y-1 active:shadow-none"
+              >
+                {isBrainstorming ? '...' : '✨ Brainstorm'}
+              </button>
+            </div>
+
+            {/* Simulated Audiophonic EQ Visualizer */}
+            <div className="mt-6 border-4 border-black bg-black p-3 flex items-end gap-1 h-16 w-full">
+               {[...Array(20)].map((_, i) => (
+                 <motion.div 
+                   key={i} 
+                   className="flex-1 bg-[#FF3399]"
+                   animate={{ height: isPlaying ? [`${Math.random() * 20 + 10}%`, `${Math.random() * 80 + 20}%`, `${Math.random() * 20 + 10}%`] : '10%' }}
+                   transition={{ repeat: Infinity, duration: Math.random() * 0.5 + 0.2 }}
+                 />
+               ))}
+            </div>
+          </div>
+
+          {/* Layer Properties */}
+          <div className="flex-1 overflow-y-auto p-6 bg-white">
+            <h2 className="text-xl font-black uppercase mb-4 flex items-center gap-2"><Settings size={20} /> Properties</h2>
+            
+            {selectedLayer ? (
+              <div className="space-y-4">
+                {layers.filter(l => l.id === selectedLayer).map(layer => (
+                  <div key={layer.id} className="border-4 border-black p-4 bg-[#f4f4f0] shadow-[4px_4px_0px_0px_#000]">
+                    <div className="font-bold text-sm text-gray-500 uppercase mb-1">{layer.type} Layer</div>
+                    <input 
+                      type="text" 
+                      value={layer.name} 
+                      readOnly 
+                      className="w-full font-black text-lg bg-transparent border-b-4 border-black outline-none mb-4"
+                    />
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block font-bold text-sm uppercase mb-1">Physics Preset</label>
+                        <select className="w-full p-2 border-4 border-black bg-white font-bold outline-none" value={layer.variantPreset} readOnly>
+                          <option value="smooth">Smooth Tween</option>
+                          <option value="aggressive">Aggressive Spring</option>
+                          <option value="pop">Scale Pop</option>
+                          <option value="glitch">Digital Glitch</option>
+                          <option value="float">Parallax Float</option>
+                        </select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                           <label className="block font-bold text-sm uppercase mb-1">Start (s)</label>
+                           <input type="number" value={layer.start} className="w-full p-2 border-4 border-black bg-white font-bold" readOnly />
+                        </div>
+                        <div>
+                           <label className="block font-bold text-sm uppercase mb-1">End (s)</label>
+                           <input type="number" value={layer.end} className="w-full p-2 border-4 border-black bg-white font-bold" readOnly />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center p-8 border-4 border-dashed border-black text-gray-500 font-bold uppercase">
+                Select a layer in timeline
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+
+      {/* FOOTER: TIMELINE */}
+      <footer className="h-64 border-t-4 border-black bg-white flex flex-col shrink-0">
+        {/* Timeline Ruler */}
+        <div className="h-8 border-b-4 border-black bg-[#f4f4f0] relative flex items-center">
+           {[...Array(MAX_TIME + 1)].map((_, i) => (
+             <div key={i} className="absolute h-full border-l-2 border-black flex items-end p-1 text-xs font-bold" style={{ left: `${(i / MAX_TIME) * 100}%` }}>
+               {i}s
+             </div>
+           ))}
+        </div>
+
+        <div className="flex-1 flex overflow-hidden relative">
+          {/* Layer Headers */}
+          <div className="w-48 border-r-4 border-black bg-white shrink-0 overflow-y-auto z-20 shadow-[4px_0px_0px_0px_#000]">
+            {layers.slice().reverse().map(layer => (
+              <div 
+                key={`header-${layer.id}`} 
+                onClick={() => setSelectedLayer(layer.id)}
+                className={`h-12 border-b-4 border-black p-2 flex items-center gap-2 cursor-pointer transition-colors ${selectedLayer === layer.id ? 'bg-[#FFD700]' : 'hover:bg-gray-100'}`}
+              >
+                <GripVertical size={16} className="text-gray-400" />
+                {layer.type === 'image' || layer.type === 'video' ? <ImageIcon size={16} /> : layer.type === 'text' ? <Type size={16} /> : <Activity size={16} />}
+                <span className="font-bold text-sm truncate">{layer.name}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Tracks Area */}
+          <div className="flex-1 bg-gray-100 relative overflow-y-auto overflow-x-hidden">
+            
+            {/* Grid lines */}
+            <div className="absolute inset-0 pointer-events-none opacity-20">
+               {[...Array(MAX_TIME + 1)].map((_, i) => (
+                 <div key={`grid-${i}`} className="absolute top-0 bottom-0 border-l border-black" style={{ left: `${(i / MAX_TIME) * 100}%` }} />
+               ))}
+            </div>
+
+            {/* Playhead Line */}
+            <div 
+              className="absolute top-0 bottom-0 w-1 bg-[#FF3399] z-30 pointer-events-none shadow-[0px_0px_10px_rgba(255,51,153,0.5)]"
+              style={{ left: `${(time / MAX_TIME) * 100}%` }}
+            >
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#FF3399] border-2 border-black rotate-45" />
+            </div>
+
+            {/* Scrub Overlay Input */}
+            <input 
+              type="range" 
+              min={0} 
+              max={MAX_TIME} 
+              step={0.01} 
+              value={time} 
+              onChange={handleSeek}
+              className="absolute top-0 w-full h-full opacity-0 z-40 cursor-col-resize"
+            />
+
+            {/* Layer Blocks */}
+            <div className="relative pt-0">
+              {layers.slice().reverse().map(layer => (
+                <div key={`track-${layer.id}`} className="h-12 border-b-2 border-gray-300 relative">
+                  <motion.div 
+                    layoutId={`clip-${layer.id}`}
+                    className={`absolute top-1 bottom-1 border-4 border-black flex items-center px-2 cursor-pointer ${
+                      selectedLayer === layer.id 
+                        ? 'bg-[#00E5FF] shadow-[2px_2px_0px_0px_#000] z-10' 
+                        : 'bg-white z-0'
+                    }`}
+                    style={{ 
+                      left: `${(layer.start / MAX_TIME) * 100}%`, 
+                      width: `${((layer.end - layer.start) / MAX_TIME) * 100}%` 
+                    }}
+                    onClick={() => setSelectedLayer(layer.id)}
+                  >
+                    <span className="font-bold text-xs truncate select-none">{layer.content.length > 20 ? layer.content.substring(0,20)+'...' : layer.content}</span>
+                    
+                    {/* Handles (Visual only for prototype) */}
+                    <div className="absolute left-0 top-0 bottom-0 w-2 bg-black/20 hover:bg-black/40 cursor-ew-resize" />
+                    <div className="absolute right-0 top-0 bottom-0 w-2 bg-black/20 hover:bg-black/40 cursor-ew-resize" />
+                  </motion.div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

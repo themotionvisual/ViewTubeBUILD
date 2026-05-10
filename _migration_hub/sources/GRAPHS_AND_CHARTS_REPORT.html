@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ViewTube Charts and Graphs Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .neo-border { border: 5px solid #000; }
+        .neo-border-sm { border: 4px solid #000; }
+        .neo-shadow { box-shadow: 12px 12px 0px 0px #000; }
+        .neo-shadow-sm { box-shadow: 6px 6px 0px 0px #000; }
+        .neo-rounded-xl { border-radius: 48px; }
+        .neo-rounded { border-radius: 24px; }
+        .neo-rounded-sm { border-radius: 16px; }
+        .neo-btn { transition: all 0.1s ease; }
+        .neo-btn:hover { transform: translate(2px, 2px); box-shadow: 4px 4px 0px 0px #000; }
+        .neo-btn:active { transform: translate(6px, 6px); box-shadow: none; }
+        .flush-header { margin: -1.5rem -1.5rem 1.5rem -1.5rem; padding: 1rem 1.5rem; }
+        .chart-preview { background: white; border: 3px solid #000; border-radius: 12px; overflow: hidden; position: relative; }
+        .chart-bar { transition: all 0.3s ease; border: 2px solid #000; }
+        .chart-bar:hover { filter: brightness(1.1); transform: scaleY(1.05); }
+        .chart-line { fill: none; stroke-width: 3; stroke-linecap: round; }
+        .chart-point { stroke: #000; stroke-width: 2; }
+        .neo-tab { border: 3px solid #000; border-bottom: none; border-radius: 12px 12px 0 0; padding: 8px 16px; font-weight: 900; font-size: 11px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+        .neo-tab.active { background: #000; color: white; }
+        .neo-tab:not(.active):hover { background: #f0f0f0; }
+        .neo-badge { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; border: 2px solid #000; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-in { animation: slideIn 0.5s ease-out; }
+    </style>
+</head>
+<body class="bg-[#f4f4f0] min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="bg-white neo-border neo-rounded-xl neo-shadow overflow-hidden">
+            <div class="flush-header bg-[#ccff00] border-b-[5px] border-black">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-[#00ccff] w-16 h-16 flex items-center justify-center neo-border-sm neo-rounded-sm">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                                <path d="M3 3v18h18M18 17V9M13 17V5M8 17v-3"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-5xl font-black uppercase tracking-tighter text-black">Charts and Graphs</h1>
+                            <p class="text-sm font-black uppercase tracking-widest text-black/60 mt-1">Complete Visual Reference - 62 Unique Visualizations</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="neo-badge bg-[#ff3399] text-white">Research Lab: 34</span>
+                        <span class="neo-badge bg-[#00ccff] text-white">Performance: 8</span>
+                        <span class="neo-badge bg-[#ccff00] text-black">Channelytics: 6</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-[#ff3399] neo-border-sm neo-rounded-sm p-4 text-center neo-shadow-sm">
+                        <div class="text-3xl font-black text-white">62</div>
+                        <div class="text-xs font-black uppercase text-white/80 tracking-widest">Total Charts</div>
+                    </div>
+                    <div class="bg-[#00ccff] neo-border-sm neo-rounded-sm p-4 text-center neo-shadow-sm">
+                        <div class="text-3xl font-black text-white">15</div>
+                        <div class="text-xs font-black uppercase text-white/80 tracking-widest">Chart Types</div>
+                    </div>
+                    <div class="bg-[#ccff00] neo-border-sm neo-rounded-sm p-4 text-center neo-shadow-sm">
+                        <div class="text-3xl font-black text-black">7</div>
+                        <div class="text-xs font-black uppercase text-black/60 tracking-widest">Core Graphs</div>
+                    </div>
+                    <div class="bg-[#ffdd00] neo-border-sm neo-rounded-sm p-4 text-center neo-shadow-sm">
+                        <div class="text-3xl font-black text-black">3</div>
+                        <div class="text-xs font-black uppercase text-black/60 tracking-widest">Libraries</div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mb-6" id="chartTabs">
+                    <button class="neo-tab active" data-tab="all">All Charts</button>
+                    <button class="neo-tab" data-tab="research">Research Lab (34)</button>
+                    <button class="neo-tab" data-tab="performance">Performance Hub (8)</button>
+                    <button class="neo-tab" data-tab="channelytics">Channelytics (6)</button>
+                    <button class="neo-tab" data-tab="dataviz">Data Viz (4)</button>
+                    <button class="neo-tab" data-tab="master">Master Catalog (7)</button>
+                </div>
+
+                <div id="chartContent" class="space-y-8"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chartData = {
+            master: [
+                { id: 'top-performers-trio', name: 'Top Performers Trio', type: 'PieChart (Donut)', category: 'master', purpose: 'Heartbeat KPI overview - Revenue, Watch Hours, Subscribers', colors: ['#00CCFF', '#CCFF00', '#FFDD00'], preview: 'donut', data: [45, 30, 25] },
+                { id: 'video-value-matrix', name: 'Video Value Matrix', type: 'BubbleChart', category: 'master', purpose: 'CTR percent x Retention percent with bubble size = Views', colors: ['#FF7497', '#00CCFF'], preview: 'bubble', data: [{x: 3, y: 45, r: 8}, {x: 5, y: 65, r: 12}, {x: 8, y: 40, r: 6}, {x: 9, y: 80, r: 15}] },
+                { id: 'discovery-radar', name: 'Discovery Radar', type: 'SteppedAreaChart', category: 'master', purpose: 'Traffic origin flow - Browse vs Search vs Suggested', colors: ['#00CCFF', '#CCFF00', '#FF7497'], preview: 'area', data: [30, 45, 55, 70, 65, 80, 75, 90] },
+                { id: 'algorithm-trigger', name: 'Algorithm Trigger', type: 'ScatterChart', category: 'master', purpose: 'Impressions vs CTR - Maps viral momentum tipping points', colors: ['#FF7497'], preview: 'scatter', data: [{x: 2, y: 100}, {x: 4, y: 300}, {x: 6, y: 250}, {x: 8, y: 500}, {x: 10, y: 450}] },
+                { id: 'device-immersion', name: 'Device Immersion', type: 'PieChart (3D)', category: 'master', purpose: 'Mobile vs TV vs Desktop consumption breakdown', colors: ['#FF3399', '#00CCFF', '#CCFF00'], preview: 'pie', data: [65, 25, 10] },
+                { id: 'narrative-dna', name: 'Narrative DNA', type: 'WordTree', category: 'master', purpose: 'Semantic topic clustering from video titles', colors: ['#00CCFF'], preview: 'tree', data: ['Napoleon', 'Marshals', 'Battle', 'Strategy'] },
+                { id: 'global-footprint', name: 'Global Footprint', type: 'GeoChart', category: 'master', purpose: 'Views/Revenue by geographic region - CPM optimization', colors: ['#00CCFF', '#CCFF00', '#FFDD00', '#FFB158', '#FF7497'], preview: 'geo', data: [80, 60, 40, 30, 20] }
+            ],
+            research: [
+                { id: 'shorts-retention', name: 'Shorts Retention', type: 'ScatterChart', category: 'research', purpose: 'AVD percent x Duration analysis for Shorts format', colors: ['#00CCFF', '#FF7497'], preview: 'scatter', data: [{x: 15, y: 70, r: 4}, {x: 30, y: 55, r: 6}, {x: 45, y: 80, r: 5}, {x: 60, y: 45, r: 8}] },
+                { id: 'packaging', name: 'Packaging', type: 'BubbleChart', category: 'research', purpose: 'CTR x Impressions momentum mapping', colors: ['#CCFF00', '#FFB158'], preview: 'bubble', data: [{x: 2, y: 50, r: 5}, {x: 5, y: 200, r: 10}, {x: 8, y: 150, r: 7}, {x: 11, y: 400, r: 15}] },
+                { id: 'engagement-map', name: 'Engagement Map', type: 'LineChart', category: 'research', purpose: 'Top 50 recent videos by engagement metric', colors: ['#FF7497'], preview: 'line', data: [20, 35, 45, 60, 55, 70, 65, 80, 75, 90, 85, 95] },
+                { id: 'keyword-engine', name: 'Keyword Engine', type: 'BarChart', category: 'research', purpose: 'Title Words x Performance correlation', colors: ['#00CCFF', '#CCFF00', '#FF7497', '#FFDD00'], preview: 'bar-horizontal', data: [{label: 'Napoleon', value: 850}, {label: 'Battle', value: 720}, {label: 'Strategy', value: 650}, {label: 'History', value: 580}] },
+                { id: 'performance-stack', name: 'Performance Stack', type: 'SteppedAreaChart', category: 'research', purpose: 'Viral DNA Pulse - Cumulative performance', colors: ['#00CCFF'], preview: 'area', data: [10, 25, 45, 70, 95, 120, 150, 180, 210, 240] },
+                { id: 'viewer-loyalty', name: 'Viewer Loyalty', type: 'BubbleChart', category: 'research', purpose: 'New vs Returning Viewers analysis', colors: ['#00CCFF', '#CCFF00'], preview: 'bubble', data: [{x: 20, y: 30, r: 8}, {x: 40, y: 50, r: 12}, {x: 60, y: 40, r: 6}, {x: 80, y: 70, r: 15}] },
+                { id: 'title-stats', name: 'Title Stats', type: 'ScatterChart', category: 'research', purpose: 'CTR x Keywords/Title Length correlation', colors: ['#FFB158'], preview: 'scatter', data: [{x: 3, y: 5}, {x: 5, y: 8}, {x: 7, y: 6}, {x: 9, y: 10}, {x: 11, y: 7}] },
+                { id: 'audience-geography', name: 'Audience Geography', type: 'GeoChart', category: 'research', purpose: 'Views x Global Reach visualization', colors: ['#00CCFF', '#CCFF00', '#FFDD00', '#FF7497'], preview: 'geo', data: [100, 80, 60, 40, 20] },
+                { id: 'hook-to-binge', name: 'Hook-to-Binge Funnel', type: 'Sankey Diagram', category: 'research', purpose: 'Views to Watch to Subs to Shares conversion flow', colors: ['#00CCFF', '#CCFF00', '#FF7497'], preview: 'funnel', data: [1000, 600, 120, 30] },
+                { id: 'best-upload-day', name: 'Best Upload Day', type: 'ColumnChart', category: 'research', purpose: 'Weekday x Avg Views optimization', colors: ['#CCFF00', '#00CCFF', '#FF7497', '#FFDD00', '#FFB158', '#B14AED', '#FF3399'], preview: 'bar-vertical', data: [450, 520, 480, 610, 580, 720, 680] },
+                { id: 'duration-sweet-spot', name: 'Duration Sweet Spot', type: 'BarChart', category: 'research', purpose: 'Video Length x Avg Views optimization', colors: ['#00CCFF', '#CCFF00', '#FF7497', '#FFDD00'], preview: 'bar-horizontal', data: [{label: '0-5 min', value: 320}, {label: '5-10 min', value: 480}, {label: '10-20 min', value: 650}, {label: '20+ min', value: 420}] },
+                { id: 'revenue-calendar', name: 'Revenue Calendar', type: 'Calendar Chart', category: 'research', purpose: 'Top 5 Days Per Month revenue tracking', colors: ['#CCFF00', '#FFDD00', '#FFB158', '#FF7497'], preview: 'calendar', data: [5, 12, 19, 26, 8, 15, 22, 29] },
+                { id: 'milestone-progression', name: 'Milestone Progression', type: 'SteppedAreaChart', category: 'research', purpose: 'Cumulative Views growth tracking', colors: ['#B14AED'], preview: 'area', data: [100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3250] },
+                { id: 'momentum-tracker', name: 'Momentum Tracker', type: 'LineChart', category: 'research', purpose: '30-Day Rolling Average trend analysis', colors: ['#00CCFF', '#FF7497'], preview: 'line', data: [30, 35, 42, 38, 45, 52, 48, 55, 62, 58, 65, 72] },
+                { id: 'growth-pulse', name: 'Growth Pulse', type: 'ComboChart', category: 'research', purpose: 'Views vs Subs trends comparison', colors: ['#00CCFF', '#CCFF00'], preview: 'combo', data: [{views: 500, subs: 20}, {views: 650, subs: 35}, {views: 480, subs: 25}, {views: 720, subs: 45}] },
+                { id: 'published-momentum', name: 'Published Momentum', type: 'ScatterChart', category: 'research', purpose: 'Upload 24/7 Grid Heatmap', colors: ['#CCFF00'], preview: 'heatmap', data: [[20, 30, 45, 60, 55, 40, 25], [15, 25, 40, 55, 50, 35, 20], [10, 20, 35, 50, 45, 30, 15]] },
+                { id: 'revenue-efficiency', name: 'Revenue Efficiency', type: 'ScatterChart', category: 'research', purpose: 'Earn x Duration ROI analysis', colors: ['#FFDD00'], preview: 'scatter', data: [{x: 5, y: 100}, {x: 10, y: 250}, {x: 15, y: 300}, {x: 20, y: 280}, {x: 25, y: 350}] },
+                { id: 'performance-trend', name: 'Performance Trend', type: 'ComboChart', category: 'research', purpose: 'Impressions x Views x Hours multi-metric', colors: ['#00CCFF', '#FF7497', '#CCFF00'], preview: 'combo', data: [{imp: 1000, views: 500, hours: 200}, {imp: 1200, views: 650, hours: 280}, {imp: 900, views: 480, hours: 190}] },
+                { id: 'seasonal-rpm', name: 'Seasonal RPM Pulse', type: 'ColumnChart', category: 'research', purpose: 'Monthly Revenue Efficiency tracking', colors: ['#CCFF00'], preview: 'bar-vertical', data: [3.2, 3.5, 4.1, 3.8, 4.5, 5.2, 4.8, 5.5, 4.2, 3.9, 4.8, 5.8] },
+                { id: 'geography-cpm', name: 'Geography of High CPMs', type: 'GeoChart', category: 'research', purpose: 'Global Revenue Intelligence mapping', colors: ['#00CCFF', '#CCFF00', '#FFDD00', '#FFB158', '#FF7497'], preview: 'geo', data: [120, 95, 75, 55, 35] },
+                { id: 'category-volume', name: 'Category Volume', type: 'TreeMap', category: 'research', purpose: 'Keyword x Reach hierarchical view', colors: ['#00CCFF', '#CCFF00', '#FF7497', '#FFDD00', '#FFB158'], preview: 'treemap', data: [{label: 'History', size: 40}, {label: 'War', size: 30}, {label: 'Biography', size: 20}, {label: 'Strategy', size: 10}] },
+                { id: 'series-consistency', name: 'Series Consistency', type: 'CandlestickChart', category: 'research', purpose: 'Performance Spread Box Plot', colors: ['#00CCFF', '#FF7497'], preview: 'candlestick', data: [{open: 300, high: 500, low: 200, close: 450}, {open: 400, high: 600, low: 350, close: 550}] },
+                { id: 'long-tail-shelf', name: 'Long-Tail Shelf Life', type: 'LineChart', category: 'research', purpose: 'Cumulative Views normalized to Day 0', colors: ['#B14AED'], preview: 'line', data: [0, 50, 120, 200, 300, 420, 560, 720, 900, 1100, 1320, 1560] },
+                { id: 'golden-ratio', name: 'Golden Ratio Radar', type: 'ColumnChart', category: 'research', purpose: 'Benchmark Engagement Signature', colors: ['#000000', '#CCFF00'], preview: 'bar-vertical', data: [5.2, 40, 2.1, 0.5] },
+                { id: 'audience-growth', name: 'Audience Growth', type: 'ScatterChart', category: 'research', purpose: 'Views x Subs correlation analysis', colors: ['#00CCFF'], preview: 'scatter', data: [{x: 1000, y: 50}, {x: 2000, y: 120}, {x: 3000, y: 180}, {x: 4000, y: 250}, {x: 5000, y: 320}] },
+                { id: 'os-revenue-mix', name: 'OS Revenue Mix', type: 'PieChart', category: 'research', purpose: 'Mobile vs Desktop Performance breakdown', colors: ['#00CCFF', '#CCFF00', '#FFDD00', '#FF7497'], preview: 'pie', data: [45, 32, 18, 5] },
+                { id: 'historical-pulse', name: 'Historical Pulse', type: 'AreaChart', category: 'research', purpose: 'Daily Reach Intensity tracking', colors: ['#00CCFF'], preview: 'area', data: [120, 145, 130, 180, 165, 200, 190, 220, 185, 240, 210, 260] },
+                { id: 'end-screen-funnel', name: 'End Screen Funnel', type: 'SteppedAreaChart', category: 'research', purpose: 'Retention to Clicks conversion analysis', colors: ['#00CCFF', '#CCFF00'], preview: 'funnel', data: [1000, 120, 6] },
+                { id: 'solo-impressions', name: 'Solo Impressions Funnel', type: 'SteppedAreaChart', category: 'research', purpose: 'Single Video Conversion Flow', colors: ['#00CCFF'], preview: 'funnel', data: [50000, 8000, 1200] },
+                { id: 'solo-end-screen', name: 'Solo End Screen Actions', type: 'BarChart', category: 'research', purpose: 'Elements Shown vs Clicks comparison', colors: ['#FF7497', '#CCFF00'], preview: 'bar-vertical', data: [1200, 60] },
+                { id: 'thumbnail-ab', name: 'Thumbnail A/B Pulse', type: 'LineChart', category: 'research', purpose: 'CTR x Views Annotated Timeline', colors: ['#CCFF00', '#00CCFF'], preview: 'line', data: [5.2, 6.1, 5.8, 7.2, 6.5, 8.1, 7.8, 9.2, 8.5, 10.1] },
+                { id: 'algorithm-trigger-2', name: 'Algorithm Trigger', type: 'ScatterChart', category: 'research', purpose: 'Impressions vs CTR Momentum', colors: ['#FF7497'], preview: 'scatter', data: [{x: 2, y: 500}, {x: 4, y: 1200}, {x: 6, y: 800}, {x: 8, y: 2000}, {x: 10, y: 1500}] }
+            ],
+            performance: [
+                { id: 'daily-performance', name: 'Daily Performance', type: 'LineChart', category: 'performance', purpose: 'Views + Watch Hours trends over 30 days', colors: ['#00CCFF', '#FF3399'], preview: 'line', data: [120, 145, 130, 180, 165, 200, 190, 220, 185, 240, 210, 260] },
+                { id: 'views-by-format', name: 'Views by Format', type: 'BarChart', category: 'performance', purpose: 'Views grouped by content format', colors: ['#CCFF00'], preview: 'bar-vertical', data: [45000, 32000, 8000] },
+                { id: 'views-revenue', name: 'Views + Revenue', type: 'AreaChart', category: 'performance', purpose: 'Dual-area trends comparison', colors: ['#00CCFF', '#FFB158'], preview: 'area', data: [500, 650, 480, 720, 580, 800, 650, 900, 720, 980] },
+                { id: 'subscribers-ctr', name: 'Subscribers + CTR', type: 'LineChart (Dual-Axis)', category: 'performance', purpose: 'Subscribers (left) + CTR percent (right)', colors: ['#CCFF00', '#FF7497'], preview: 'line', data: [30, 45, 38, 52, 48, 60, 55, 68, 62, 75] },
+                { id: 'top-views-ladder', name: 'Top Views Ladder', type: 'BarChart', category: 'performance', purpose: 'Top 10 videos ranked by views', colors: ['#00CCFF'], preview: 'bar-horizontal', data: [{label: 'Video 1', value: 850}, {label: 'Video 2', value: 720}, {label: 'Video 3', value: 650}, {label: 'Video 4', value: 580}] },
+                { id: 'revenue-by-format', name: 'Revenue by Format', type: 'BarChart', category: 'performance', purpose: 'Revenue comparison across formats', colors: ['#FFB158'], preview: 'bar-vertical', data: [1200, 850, 320] },
+                { id: 'format-share', name: 'Format Share', type: 'PieChart (Donut)', category: 'performance', purpose: 'Percentage distribution by format', colors: ['#00CCFF', '#CCFF00', '#FF7497'], preview: 'donut', data: [52, 35, 13] },
+                { id: 'engagement-scatter', name: 'Engagement Scatter', type: 'ScatterChart', category: 'performance', purpose: 'Views (X) vs Likes (Y) correlation', colors: ['#FF7497'], preview: 'scatter', data: [{x: 1000, y: 50}, {x: 2000, y: 120}, {x: 3000, y: 180}, {x: 4000, y: 250}, {x: 5000, y: 320}] }
+            ],
+            channelytics: [
+                { id: 'top-trio', name: 'Top Performers Trio', type: 'PieChart (Google)', category: 'channelytics', purpose: 'Revenue/Watch/Subs leaders', colors: ['#00CCFF', '#CCFF00', '#FFDD00'], preview: 'donut', data: [45, 30, 25] },
+                { id: 'value-matrix', name: 'Video Value Matrix', type: 'BubbleChart (Google)', category: 'channelytics', purpose: 'CTR x Retention x Views', colors: ['#00CCFF', '#FF7497'], preview: 'bubble', data: [{x: 3, y: 45, r: 8}, {x: 5, y: 65, r: 12}, {x: 8, y: 40, r: 6}, {x: 9, y: 80, r: 15}] },
+                { id: 'trigger', name: 'Algorithm Trigger', type: 'ScatterChart (Google)', category: 'channelytics', purpose: 'Impressions vs CTR momentum', colors: ['#FF7497'], preview: 'scatter', data: [{x: 2, y: 100}, {x: 4, y: 300}, {x: 6, y: 250}, {x: 8, y: 500}, {x: 10, y: 450}] },
+                { id: 'device', name: 'Device Immersion', type: 'PieChart 3D (Google)', category: 'channelytics', purpose: 'Consumption environment breakdown', colors: ['#00CCFF', '#CCFF00', '#FFDD00'], preview: 'pie', data: [65, 25, 10] },
+                { id: 'footprint', name: 'Global Footprint', type: 'GeoChart (Google)', category: 'channelytics', purpose: 'Market heat map', colors: ['#00CCFF', '#CCFF00', '#FFDD00', '#FFB158', '#FF7497'], preview: 'geo', data: [100, 80, 60, 40, 20] },
+                { id: 'narrative', name: 'Narrative DNA', type: 'WordTree (Google)', category: 'channelytics', purpose: 'Semantic topic clustering', colors: ['#00CCFF'], preview: 'tree', data: ['Napoleon', 'Marshals', 'Battle', 'Strategy'] }
+            ],
+            dataviz: [
+                { id: 'custom-scatter', name: 'Custom Scatter/Bubble', type: 'SVG', category: 'dataviz', purpose: 'Video Value Matrix, Algorithm Trigger', colors: ['#FF3399', '#00CCFF'], preview: 'scatter', data: [{x: 3, y: 45}, {x: 5, y: 65}, {x: 8, y: 40}, {x: 9, y: 80}] },
+                { id: 'custom-bar', name: 'Custom Bar Chart', type: 'SVG (Horizontal)', category: 'dataviz', purpose: 'Device Immersion, Global Footprint', colors: ['#FF3399', '#00CCFF', '#CCFF00'], preview: 'bar-horizontal', data: [{label: 'Mobile', value: 65}, {label: 'Desktop', value: 25}, {label: 'Tablet', value: 10}] },
+                { id: 'kpi-cards', name: 'Top Performers KPI Cards', type: 'Custom Stat Cards', category: 'dataviz', purpose: 'Total Revenue, Views, Retention', colors: ['#CCFF00', '#00CCFF', '#FF7497'], preview: 'kpi', data: [12500, 450000, 62] },
+                { id: 'chart-shell', name: 'Chart Container Shell', type: 'Neo-Brutalist Wrapper', category: 'dataviz', purpose: 'Unified styling for all charts', colors: ['#000000', '#FFFFFF'], preview: 'shell', data: [] }
+            ]
+        };
+
+        function renderChartPreview(type, data, colors, w, h, p) {
+            w = w || 280; h = h || 160; p = p || 20;
+            switch(type) {
+                case 'bar-vertical': {
+                    const maxVal = Math.max(...data);
+                    const barWidth = (w - p * 2) / data.length - 4;
+                    let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+                    data.forEach((val, i) => {
+                        const barHeight = ((val / maxVal) * (h - p * 2 - 20));
+                        const x = p + i * (barWidth + 4);
+                        const y = h - p - barHeight;
+                        svg += '<rect class="chart-bar" x="' + x + '" y="' + y + '" width="' + barWidth + '" height="' + barHeight + '" fill="' + colors[i % colors.length] + '" rx="3"/>';
+                    });
+                    return svg + '</svg>';
+                }
+                case 'bar-horizontal': {
+                    const maxVal = Math.max(...data.map(d => d.value));
+                    const barHeight = 20;
+                    let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+                    data.forEach((item, i) => {
+                        const barWidth = ((item.value / maxVal) * (w - p * 2 - 60));
+                        const y = p + i * (barHeight + 8);
+                        svg += '<rect class="chart-bar" x="' + (p + 55) + '" y="' + y + '" width="' + barWidth + '" height="' + barHeight + '" fill="' + colors[i % colors.length] + '" rx="3"/>';
+                        svg += '<text x="' + (p + 50) + '" y="' + (y + 14) + '" text-anchor="end" font-size="8" font-weight="900" fill="#000">' + item.label.substring(0, 8) + '</text>';
+                    });
+                    return svg + '</svg>';
+                }
+                case 'line': {
+                    const maxVal = Math.max(...data);
+                    const minVal = Math.min(...data);
+                    const range = maxVal - minVal || 1;
+                    const points = data.map((val, i) => {
+                        const x = p + (i / (data.length - 1)) * (w - p * 2);
+                        const y = h - p - ((val - minVal) / range) * (h - p * 2);
+                        return x + ',' + y;
+                    }).join(' ');
+                    let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+                    svg += '<polyline class="chart-line" points="' + points + '" stroke="' + colors[0] + '"/>';
+                    data.forEach((val, i) => {
+                        const x = p + (i / (data.length - 1)) * (w - p * 2);
+                        const y = h - p - ((val - minVal) / range) * (h - p * 2);
+                        svg += '<circle class="chart-point" cx="' + x + '" cy="' + y + '" r="4" fill="' + colors[0] + '"/>';
+                    });
+                    return svg + '</svg>';
+                }
+                case 'area': {
+                    const maxVal = Math.max(...data);
+                    const minVal = Math.min(...data);
+                    const range = maxVal - minVal || 1;
+                    const linePoints = data.map((val, i) => {
+                        const x = p + (i / (data.length - 1)) * (w - p * 2);
+                        const y = h - p - ((val - minVal) / range) * (h - p * 2);
+                        return x + ',' + y;
+                    }).join(' ');
+                    const areaPoints = p + ',' + (h - p) + ' ' + linePoints + ' ' + (w - p) + ',' + (h - p);
+                    let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+                    svg += '<defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + colors[0] + '" stop-opacity="0.4"/><stop offset="100%" stop-color="' + colors[0] + '" stop-opacity="0.05"/></linearGradient></defs>';
+                    svg += '<polygon points="' + areaPoints + '" fill="url(#areaGrad)"/>';
+                    svg += '<polyline class="chart-line" points="' + linePoints + '" stroke="' + colors[0] + '"/>';
+                    return svg + '</svg>';
+                }
+                case 'scatter': {
+                    const maxX = Math.max(...data.map(d => d.x));
+                    const maxY = Math.max(...data.map(d => d.y));
+                    let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+                    svg += '<line x1="' + p + '" y1="' + (h - p) + '" x2="' + (w - p) + '" y2="' + (h - p) + '" stroke="#000" stroke-width="1"/>';
+                    svg += '<line x1="' + p + '" y1="' + p + '" x2="' + p + '" y2="' + (h - p) + '" stroke="#000" stroke-width="1"/>';
+                    data.forEach(point => {
+                        const x = p + (point.x / maxX) * (w - p * 2);
+                        const y = h - p - (point.y / maxY) * (h - p * 2);
+                        svg += '<circle class="chart-point" cx="' + x + '" cy="' + y + '" r="5" fill="' + colors[0] + '"/>';
+                    });
+                    return svg + '</svg>';
+                }
+                case 'bubble': {
+                    const maxX = Math.max(...data.map(d => d.x));
+                    const maxY = Math.max(...data.map(d => d.y));
+                    const maxR = Math.max(...data.map(d => d.r));
+                    let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+                    svg += '<line x1="' + p + '" y1="' + (h - p) + '" x2="' + (w - p) + '" y2="' + (h - p) + '" stroke="#000" stroke-width="1"/>';
+                    svg += '<line x1="' + p + '" y1="' + p + '" x2="' + p + '" y2="' + (h - p) + '" stroke="#000" stroke-width="1"/>';
+                    data.forEach((point, i) => {
+                        const x = p + (point.x / maxX) * (w - p * 2);
+                        const y = h - p - (point.y / maxY) * (h - p * 2);
+                        const r = (point.r / maxR) * 12 + 3;
+                        svg += '<circle class="chart-point" cx="' + x + '" cy="' + y + '" r="' + r + '" fill="' + colors[i % colors.length] + '"/>';
+                    });
+                    return svg + '</svg>';
+                }
+                case 'pie': case 'donut': {
+                    const total = data.reduce((a, b) => a + b, 0);
+                    const cx = w / 2;
+                    const cy = h / 2 + 5;
+                    const r = Math.min(w, h) / 2 - p - 10;
+                    const innerR = type === 'donut' ? r * 0.5 : 0;
+                    let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+                    let startAngle = -90;
+                    data.forEach((val, i) => {
+                        const angle = (val / total) * 360;
+                        const endAngle = startAngle + angle;
+                        const outerX1 = cx + r * Math.cos((startAngle * Math.PI) / 180);
+                        const outerY1 = cy + r * Math.sin((startAngle * Math.PI) / 180);
+                        const outerX2 = cx + r * Math.cos((endAngle * Math.PI) / 180);
+                        const outerY2 = cy + r * Math.sin((endAngle * Math.PI) / 180);
+                        const color = colors[i % colors.length];
+                        const largeArc = angle > 180 ? 1 : 0;
+                        if (type === 'donut') {
+                            const innerX1 = cx + innerR * Math.cos((endAngle * Math.PI) / 180);
+                            const innerY1 = cy + innerR * Math.sin((endAngle * Math.PI) / 180);
+                            const innerX2 = cx + innerR * Math.cos((startAngle * Math.PI) / 180);
+                            const innerY2 = cy + innerR * Math.sin((startAngle * Math.PI) / 180);
+                            svg += '<path d="M ' + outerX1 + ' ' + outerY1 + ' A ' + r + ' ' + r + ' 0 ' + largeArc + ' 1 ' + outerX2 + ' ' + outerY2 + ' L ' + innerX1 + ' ' + innerY1 + ' A ' + innerR + ' ' + innerR + ' 0 ' + largeArc + ' 0 ' + innerX2 + ' ' + innerY2 + ' Z" fill="' + color + '" stroke="#000" stroke-width="2"/>';
+                        } else {
+                            svg += '<path d="M ' + cx + ' ' + cy + ' L ' + outerX1 + ' ' + outerY1 + ' A ' + r + ' ' + r + ' 0 ' + largeArc + ' 1 ' + outerX2 + ' ' + outerY2 + ' Z" fill="' + color + '" stroke="#000" stroke-width="2"/>';
+                        }
+                        startAngle = endAngle;
+                    });
+                    if (type === 'donut') svg += '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="900" fill="#000">' + total + '%</text>';
+                    return svg + '</svg>';
+                }
+                case 'funnel': {
+                    const maxVal = data[0];
+                    const barHeight = (h - p * 2) / data.length - 4;
+                    let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+                    data.forEach((val, i) => {
+                        const barWidth = ((val / maxVal) * (w - p * 2));
+                        const x = (w - barWidth) / 2;
+                        const y = p + i * (barHeight + 4);
+                        svg += '<rect class="chart-bar" x="' + x + '" y="' + y + '" width="' + barWidth + '" height="' + barHeight + '" fill="' + colors[i % colors.length] + '" rx="4" stroke="#000" stroke-width="2"/>';
+                        svg += '<text x="' + (w / 2) + '" y="' + (y + barHeight / 2 + 4) + '" text-anchor="middle" font-size="10" font-weight="900" fill="#000">' + val.toLocaleString() + '</text>';
+                    });
+                    return svg + '</svg>';
+                }
+                case 'heatmap': {
+                    const flatData = data.flat();
+                    const maxVal = Math.max(...flatData);
+                    const cols = data[0].length;
+                    const rows = data.length;
+                    const cellW = (w - p * 2) / cols;
+                    const cellH = (h - p * 2) / rows;
+                    let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+                    data.forEach((row, ri) => {
+                        row.forEach((val, ci) => {
+                            const opacity = (val / maxVal) * 0.9 + 0.1;
+                            const x = p + ci * cellW;
+                            const y = p + ri * cellH;
+                            svg += '<rect x="' + (x + 1) + '" y="' + (y + 1) + '" width="' + (cellW - 2) + '" height="' + (cellH - 2) + '" fill="' + colors[0] + '" fill-opacity="' + opacity + '" stroke="#000" stroke-width="0.5" rx="2"/>';
+                        });
+                    });
+                    return svg + '</svg>';
+                }
+                case 'combo': {
+                    const maxVal = Math.max(...data.map(d => d.views || d.imp || 0));
+                    const barWidth = (w - p * 2) / data.length / 2 - 2;
+                    let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+                    data.forEach((item, i) => {
+                        const x = p + i * (barWidth * 2 + 4) + 2;
+                        if (item.views !== undefined) {
+                            const barH = ((item.views / maxVal) * (h - p * 2 - 20));
+                            svg += '<rect x="' + x + '" y="' + (h - p - barH) + '" width="' + barWidth + '" height="' + barH + '" fill="' + colors[0] + '" stroke="#000" stroke-width="1" rx="2"/>';
+                        }
+                        if (item.subs !== undefined) {
+                            const barH = ((item.subs / 50) * (h - p * 2 - 20));
+                            svg += '<rect x="' + (x + barWidth + 2) + '" y="' + (h - p - barH) + '" width="' + barWidth + '" height="' + barH + '" fill="' + colors[1] + '" stroke="#000" stroke-width="1" rx="2"/>';
+                        }
+                    });
+                    return svg + '</svg>';
+                }
+                case 'treemap': {
+                    const total = data.reduce((a, b) => a + b.size, 0);
+                    let x = p;
+                    let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+                    data.forEach((item, i) => {
+                        const width = ((item.size / total) * (w - p * 2));
+                        svg += '<rect x="' + x + '" y="' + p + '" width="' + (width - 2) + '" height="' + (h - p * 2 - 2) + '" fill="' + colors[i % colors.length] + '" stroke="#000" stroke-width="2" rx="4"/>';
+                        svg += '<text x="' + (x + 5) + '" y="' + (p + 15) + '" font-size="8" font-weight="900" fill="#000">' + item.label + '</text>';
+                        x += width;
+                    });
+                    return svg + '</svg>';
+                }
+                case 'candlestick': {
+                    const allVals = data.flatMap(d => [d.open, d.high, d.low, d.close]);
+                    const maxVal = Math.max(...allVals);
+                    const minVal = Math.min(...allVals);
+                    const range = maxVal - minVal;
+                    const candleW = 30;
+                    let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+                    data.forEach((candle, i) => {
+                        const x = p + 30 + i * 80;
+                        const openY = h - p - ((candle.open - minVal) / range) * (h - p * 2);
+                        const closeY = h - p - ((candle.close - minVal) / range) * (h - p * 2);
+                        const highY = h - p - ((candle.high - minVal) / range) * (h - p * 2);
+                        const lowY = h - p - ((candle.low - minVal) / range) * (h - p * 2);
+                        const isGreen = candle.close >= candle.open;
+                        const color = isGreen ? colors[0] : colors[1];
+                        svg += '<line x1="' + (x + candleW / 2) + '" y1="' + highY + '" x2="' + (x + candleW / 2) + '" y2="' + lowY + '" stroke="#000" stroke-width="1"/>';
+                        const bodyTop = Math.min(openY, closeY);
+                        const bodyHeight = Math.abs(closeY - openY) || 2;
+                        svg += '<rect x="' + x + '" y="' + bodyTop + '" width="' + candleW + '" height="' + bodyHeight + '" fill="' + color + '" stroke="#000" stroke-width="2"/>';
+                    });
+                    return svg + '</svg>';
+                }
+                case 'geo': {
+                    let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+                    svg += '<rect x="' + p + '" y="' + p + '" width="' + (w - p * 2) + '" height="' + (h - p * 2) + '" fill="#e5e7eb" rx="4"/>';
+                    const regions = [
+                        { x: p + 20, y: p + 20, w: 60, h: 40, color: colors[0] },
+                        { x: p + 50, y: p + 70, w: 30, h: 50, color: colors[1] },
+                        { x: p + 90, y: p + 25, w: 40, h: 35, color: colors[2] },
+                        { x: p + 95, y: p + 65, w: 45, h: 50, color: colors[3] },
+                        { x: p + 140, y: p + 20, w: 70, h: 60, color: colors[4] },
+                        { x: p + 160, y: p + 90, w: 30, h: 25, color: colors[0] }
+                    ];
+                    regions.forEach(region => {
+                        svg += '<rect x="' + region.x + '" y="' + region.y + '" width="' + region.w + '" height="' + region.h + '" fill="' + region.color + '" stroke="#000" stroke-width="1" rx="3" opacity="0.8"/>';
+                    });
+                    return svg + '</svg>';
+                }
+                case 'tree': {
+                    const rootX = w / 2;
+                    const rootY = p + 15;
+                    let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+                    svg += '<circle cx="' + rootX + '" cy="' + rootY + '" r="12" fill="' + colors[0] + '" stroke="#000" stroke-width="2"/>';
+                    svg += '<text x="' + rootX + '" y="' + (rootY + 4) + '" text-anchor="middle" font-size="7" font-weight="900" fill="#000">' + data[0].substring(0, 4) + '</text>';
+                    const branchSpacing = (w - p * 2) / (data.length);
+                    data.slice(1).forEach((item, i) => {
+                        const x = p + branchSpacing * (i + 0.5);
+                        const y = h - p - 15;
+                        svg += '<line x1="' + rootX + '" y1="' + (rootY + 12) + '" x2="' + x + '" y2="' + (y - 10) + '" stroke="#000" stroke-width="1.5"/>';
+                        svg += '<circle cx="' + x + '" cy="' + y + '" r="10" fill="' + colors[0] + '" fill-opacity="0.6" stroke="#000" stroke-width="2"/>';
+                        svg += '<text x="' + x + '" y="' + (y + 4) + '" text-anchor="middle" font-size="6" font-weight="900" fill="#000">' + item.substring(0, 4) + '</text>';
+                    });
+                    return svg + '</svg>';
+                }
+                case 'kpi': {
+                    const cardW = (w - p * 2 - 16) / 3;
+                    let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+                    const labels = ['Revenue', 'Views', 'Retention'];
+                    data.forEach((val, i) => {
+                        const x = p + i * (cardW + 8);
+                        svg += '<rect x="' + x + '" y="' + p + '" width="' + cardW + '" height="' + (h - p * 2) + '" fill="' + colors[i % colors.length] + '" stroke="#000" stroke-width="2" rx="8"/>';
+                        let displayVal = val;
+                        if (val >= 1000000) displayVal = (val / 1000000).toFixed(1) + 'M';
+                        else if (val >= 1000) displayVal = (val / 1000).toFixed(1) + 'K';
+                        svg += '<text x="' + (x + cardW / 2) + '" y="' + (h / 2 - 5) + '" text-anchor="middle" font-size="20" font-weight="900" fill="#000">' + displayVal + '</text>';
+                        svg += '<text x="' + (x + cardW / 2) + '" y="' + (h - p + 5) + '" text-anchor="middle" font-size="7" font-weight="900" fill="#000" opacity="0.6">' + labels[i] + '</text>';
+                    });
+                    return svg + '</svg>';
+                }
+                default: {
+                    let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+                    svg += '<rect x="2" y="2" width="' + (w - 4) + '" height="' + (h - 4) + '" fill="white" stroke="#000" stroke-width="4" rx="12"/>';
+                    svg += '<rect x="10" y="10" width="' + (w - 20) + '" height="' + (h - 20) + '" fill="none" stroke="#000" stroke-width="1" stroke-dasharray="4 4" rx="8" opacity="0.3"/>';
+                    svg += '<text x="' + (w / 2) + '" y="' + (h / 2) + '" text-anchor="middle" font-size="10" font-weight="900" fill="#000" opacity="0.4">CHART</text>';
+                    return svg + '</svg>';
+                }
+            }
+        }
+
+        function renderChartCard(chart) {
+            return '<div class="chart-card bg-white neo-border-sm neo-rounded-sm neo-shadow-sm p-4 slide-in" data-category="' + chart.category + '">' +
+                '<div class="flex items-start justify-between mb-3">' +
+                '<div class="flex-1">' +
+                '<div class="flex items-center gap-2 mb-1">' +
+                '<h3 class="text-lg font-black uppercase tracking-tighter">' + chart.name + '</h3>' +
+                '<span class="neo-badge bg-black text-white text-[8px]">' + chart.type + '</span>' +
+                '</div>' +
+                '<p class="text-xs font-bold text-black/60">' + chart.purpose + '</p>' +
+                '</div>' +
+                '<div class="flex gap-1 ml-2">' +
+                chart.colors.map(c => '<div class="w-4 h-4 rounded-full border-2 border-black" style="background:' + c + '"></div>').join('') +
+                '</div>' +
+                '</div>' +
+                '<div class="chart-preview h-40">' +
+                renderChartPreview(chart.preview, chart.data, chart.colors) +
+                '</div>' +
+                '</div>';
+        }
+
+        function renderSection(title, charts, color) {
+            return '<div class="section" data-section="' + (charts[0] ? charts[0].category : 'all') + '">' +
+                '<div class="flush-header ' + color + ' neo-border-sm neo-rounded-t-sm border-b-[4px] border-black px-4 py-3">' +
+                '<h2 class="text-2xl font-black uppercase tracking-tighter text-black">' + title + '</h2>' +
+                '<p class="text-xs font-black uppercase tracking-widest text-black/60 mt-1">' + charts.length + ' Charts</p>' +
+                '</div>' +
+                '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-gray-50">' +
+                charts.map(renderChartCard).join('') +
+                '</div>' +
+                '</div>';
+        }
+
+        function filterCharts(category) {
+            const cards = document.querySelectorAll('.chart-card');
+            cards.forEach(card => {
+                if (category === 'all' || card.dataset.category === category) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function init() {
+            const content = document.getElementById('chartContent');
+            const sections = [
+                { title: 'Master Graph Catalog', charts: chartData.master, color: 'bg-[#ccff00]' },
+                { title: 'Research Lab Gallery', charts: chartData.research, color: 'bg-[#ff3399]' },
+                { title: 'Performance Hub', charts: chartData.performance, color: 'bg-[#00ccff]' },
+                { title: 'Channelytics Toolbox', charts: chartData.channelytics, color: 'bg-[#ffb158]' },
+                { title: 'Data Visualizations', charts: chartData.dataviz, color: 'bg-[#b14aed]' }
+            ];
+            content.innerHTML = sections.map(s => renderSection(s.title, s.charts, s.color)).join('');
+            document.querySelectorAll('.neo-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.neo-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    filterCharts(tab.dataset.tab);
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

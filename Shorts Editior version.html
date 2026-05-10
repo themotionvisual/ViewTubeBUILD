@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator Shorts - AI Editor</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            lime: '#C9F830',
+                            cyan: '#24D3FF',
+                            pink: '#FF7497',
+                            orange: '#FCAF57',
+                            purple: '#D1A3FF',
+                            bg: '#E5E7EB'
+                        }
+                    },
+                    boxShadow: {
+                        'brutal': '6px 6px 0px 0px rgba(0,0,0,1)',
+                        'brutal-sm': '3px 3px 0px 0px rgba(0,0,0,1)',
+                        'brutal-inset': 'inset 4px 4px 0px rgba(0,0,0,0.1)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for in-browser JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Phosphor Icons (Lucide alternative that works well via script tag) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        body { background-color: #E5E7EB; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; }
+        .canvas-bg { background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px; background-color: #f3f4f6; }
+        
+        /* Custom Scrollbar for timeline */
+        ::-webkit-scrollbar { height: 12px; width: 12px; }
+        ::-webkit-scrollbar-track { background: #E5E7EB; border: 3px solid black; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb { background: #24D3FF; border: 3px solid black; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #FF7497; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, createContext, useContext, useMemo } = React;
+
+        // ==========================================
+        // 1. MICRO-REMOTION ENGINE (Math & Context)
+        // ==========================================
+        
+        const VideoContext = createContext({ frame: 0, fps: 30, durationInFrames: 300 });
+        const SequenceContext = createContext({ relativeFrame: 0 });
+
+        const useCurrentFrame = () => {
+            const seqCtx = useContext(SequenceContext);
+            const vidCtx = useContext(VideoContext);
+            // If inside a sequence, return relative frame. Otherwise global frame.
+            return seqCtx.relativeFrame !== undefined ? seqCtx.relativeFrame : vidCtx.frame;
+        };
+
+        const useVideoConfig = () => useContext(VideoContext);
+
+        // Core calculation: Interpolate
+        const interpolate = (frame, inputRange, outputRange, options = {}) => {
+            const [inMin, inMax] = inputRange;
+            const [outMin, outMax] = outputRange;
+            let progress = (frame - inMin) / (inMax - inMin);
+            
+            if (options.extrapolateLeft === 'clamp' && progress < 0) progress = 0;
+            if (options.extrapolateRight === 'clamp' && progress > 1) progress = 1;
+            
+            return outMin + progress * (outMax - outMin);
+        };
+
+        // Core calculation: Simplified Spring (Physics)
+        const spring = ({ frame, fps, config }) => {
+            const durationFrames = fps * 0.6; // 0.6 second spring
+            let progress = frame / durationFrames;
+            if (progress < 0) progress = 0;
+            if (progress > 1) progress = 1;
+            
+            // Pseudo-spring math for a nice bouncy pop
+            if (progress === 1) return 1;
+            const p = progress;
+            return Math.sin(p * Math.PI * 1.5) * Math.pow(1 - p, 2) + p;
+        };
+
+        // Sequence Component (Acts as a timeline layer)
+        const Sequence = ({ from, durationInFrames, children }) => {
+            const { frame } = useContext(VideoContext);
+            
+            // If we are outside the bounds of this sequence, don't render it
+            if (frame < from || frame >= from + durationInFrames) return null;
+
+            return (
+                <SequenceContext.Provider value={{ relativeFrame: frame - from }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+                        {children}
+                    </div>
+                </SequenceContext.Provider>
+            );
+        };
+
+        // ==========================================
+        // 2. TEMPLATE LIBRARY (Visual Components)
+        // ==========================================
+
+        // Template A: Bouncy Kinetic Title
+        const KineticTitle = ({ text, color }) => {
+            const frame = useCurrentFrame();
+            const { fps } = useVideoConfig();
+            
+            const scale = spring({ frame, fps, config: {} });
+            const rotate = interpolate(frame, [0, 15], [-10, 0], { extrapolateRight: 'clamp' });
+
+            return (
+                <div className="w-full h-full flex items-center justify-center pointer-events-none">
+                    <h1 
+                        className="font-black text-6xl text-center px-8 uppercase"
+                        style={{ 
+                            color: color,
+                            textShadow: '6px 6px 0px #000, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000, 2px 2px 0px #000',
+                            transform: `scale(${scale}) rotate(${rotate}deg)`
+                        }}
+                    >
+                        {text}
+                    </h1>
+                </div>
+            );
+        };
+
+        // Template B: SVG High-Tech Scanner Overlay
+        const SvgScanner = ({ color }) => {
+            const frame = useCurrentFrame();
+            const scanY = interpolate(frame % 60, [0, 60], [0, 100]); // Loops every 60 frames
+            const opacity = interpolate(frame, [0, 10], [0, 1], { extrapolateRight: 'clamp' });
+
+            return (
+                <div className="w-full h-full p-4 pointer-events-none" style={{ opacity }}>
+                    <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        {/* Target Reticles */}
+                        <path d="M 10 20 L 10 10 L 20 10" fill="none" stroke={color} strokeWidth="2" />
+                        <path d="M 90 20 L 90 10 L 80 10" fill="none" stroke={color} strokeWidth="2" />
+                        <path d="M 10 80 L 10 90 L 20 90" fill="none" stroke={color} strokeWidth="2" />
+                        <path d="M 90 80 L 90 90 L 80 90" fill="none" stroke={color} strokeWidth="2" />
+                        
+                        {/* Moving Scan Line */}
+                        <line x1="5" y1={scanY} x2="95" y2={scanY} stroke={color} strokeWidth="1" opacity="0.8" />
+                        <rect x="5" y={scanY - 5} width="90" height="10" fill={color} opacity="0.1" />
+                    </svg>
+                </div>
+            );
+        };
+
+        // Template C: Simulated B-Roll (Parallax abstract art to simulate footage)
+        const SimulatedBRoll = ({ baseColor }) => {
+            const frame = useCurrentFrame();
+            // Slow cinematic zoom
+            const scale = interpolate(frame, [0, 300], [1, 1.2]);
+            const rotation = interpolate(frame, [0, 300], [0, 5]);
+
+            return (
+                <div className="w-full h-full overflow-hidden bg-black flex items-center justify-center">
+                    <div 
+                        className="w-[150%] h-[150%] flex items-center justify-center"
+                        style={{ 
+                            backgroundColor: baseColor,
+                            transform: `scale(${scale}) rotate(${rotation}deg)`,
+                            backgroundImage: `radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.8) 100%)`
+                        }}
+                    >
+                        {/* Abstract shapes moving to simulate footage depth */}
+                        <div className="w-64 h-64 border-[8px] border-black/20 rounded-full absolute" 
+                             style={{ transform: `translate(${interpolate(frame, [0, 300], [0, 100])}px, ${interpolate(frame, [0, 300], [0, -50])}px)`}}></div>
+                        <div className="w-96 h-96 bg-black/10 absolute rotate-45" 
+                             style={{ transform: `translate(${interpolate(frame, [0, 300], [0, -100])}px, ${interpolate(frame, [0, 300], [0, 150])}px)`}}></div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Template D: Brutalist Notification Pop
+        const NotificationPop = ({ title, message, color }) => {
+            const frame = useCurrentFrame();
+            const { fps } = useVideoConfig();
+            
+            // Slide up and bounce
+            const translateY = spring({ frame, fps, config: {} });
+            const yPos = interpolate(translateY, [0, 1], [200, 0]);
+            const opacity = interpolate(frame, [0, 10], [0, 1], { extrapolateRight: 'clamp' });
+
+            return (
+                <div className="w-full h-full flex items-end justify-center pb-20 pointer-events-none z-50">
+                    <div 
+                        className="w-[85%] border-[4px] border-black bg-white rounded-2xl shadow-brutal flex flex-col overflow-hidden"
+                        style={{ transform: `translateY(${yPos}px)`, opacity }}
+                    >
+                        <div className="px-4 py-2 border-b-[4px] border-black font-black uppercase text-xs" style={{ backgroundColor: color }}>
+                            {title}
+                        </div>
+                        <div className="p-4 font-bold text-sm leading-tight text-center">
+                            {message}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Template E: Animated Bar Chart
+        const AnimatedChart = ({ label, color1, color2 }) => {
+            const frame = useCurrentFrame();
+            
+            // Staggered bar growth
+            const h1 = interpolate(frame, [0, 30], [0, 60], { extrapolateRight: 'clamp' });
+            const h2 = interpolate(frame, [10, 40], [0, 100], { extrapolateRight: 'clamp' });
+            const h3 = interpolate(frame, [20, 50], [0, 80], { extrapolateRight: 'clamp' });
+
+            return (
+                <div className="w-full h-full flex flex-col items-center justify-center pointer-events-none p-8 gap-4 z-40">
+                    <div className="w-full h-48 border-[4px] border-black bg-white rounded-xl shadow-brutal p-4 flex items-end justify-around gap-2">
+                        <div className="w-10 border-[3px] border-black border-b-0 rounded-t-md" style={{ height: `${h1}%`, backgroundColor: color1 }}></div>
+                        <div className="w-10 border-[3px] border-black border-b-0 rounded-t-md" style={{ height: `${h2}%`, backgroundColor: color2 }}></div>
+                        <div className="w-10 border-[3px] border-black border-b-0 rounded-t-md" style={{ height: `${h3}%`, backgroundColor: color1 }}></div>
+                    </div>
+                    <div className="font-black text-3xl uppercase text-white" style={{ textShadow: '4px 4px 0px #000' }}>
+                        {label}
+                    </div>
+                </div>
+            );
+        };
+
+
+        // ==========================================
+        // 3. MAIN APPLICATION & STATE (JSON Schema)
+        // ==========================================
+
+        const App = () => {
+            // -- Core Player State --
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [currentFrame, setCurrentFrame] = useState(0);
+            const fps = 30;
+            const durationInFrames = 150; // 5 second short
+            
+            const requestRef = useRef();
+            const previousTimeRef = useRef();
+
+            // -- Selection State --
+            const [selectedItemId, setSelectedItemId] = useState(null);
+
+            // -- The Video Timeline JSON State --
+            const [timeline, setTimeline] = useState([
+                {
+                    id: 'track-1-broll',
+                    name: 'Background Media',
+                    color: 'bg-brand-lime',
+                    items: [
+                        { id: 'b1', type: 'broll', from: 0, duration: 75, props: { baseColor: '#FF7497' } },
+                        { id: 'b2', type: 'broll', from: 75, duration: 75, props: { baseColor: '#24D3FF' } }
+                    ]
+                },
+                {
+                    id: 'track-2-gfx',
+                    name: 'Motion Graphics',
+                    color: 'bg-brand-cyan',
+                    items: [
+                        { id: 'g1', type: 'scanner', from: 0, duration: 150, props: { color: '#C9F830' } },
+                    ]
+                },
+                {
+                    id: 'track-3-text',
+                    name: 'Kinetic Captions',
+                    color: 'bg-brand-pink',
+                    items: [
+                        { id: 't1', type: 'title', from: 10, duration: 60, props: { text: 'AI EDITING', color: '#FFE357' } },
+                        { id: 't2', type: 'title', from: 80, duration: 60, props: { text: 'IS HERE.', color: '#FFFFFF' } }
+                    ]
+                }
+            ]);
+
+            // -- AI Prompt State --
+            const [promptText, setPromptText] = useState("");
+            const [isGenerating, setIsGenerating] = useState(false);
+
+            // Helper to get selected item and track
+            let selectedItem = null;
+            let selectedTrackId = null;
+            timeline.forEach(track => {
+                const item = track.items.find(i => i.id === selectedItemId);
+                if (item) {
+                    selectedItem = item;
+                    selectedTrackId = track.id;
+                }
+            });
+
+            // Helper to update item props dynamically
+            const updateItemProp = (propKey, value) => {
+                if (!selectedItemId) return;
+                setTimeline(prev => prev.map(track => {
+                    if (track.id !== selectedTrackId) return track;
+                    return {
+                        ...track,
+                        items: track.items.map(item => {
+                            if (item.id !== selectedItemId) return item;
+                            return { ...item, props: { ...item.props, [propKey]: value } };
+                        })
+                    };
+                }));
+            };
+
+            const updateItemDuration = (newDuration) => {
+                if (!selectedItemId) return;
+                setTimeline(prev => prev.map(track => {
+                    if (track.id !== selectedTrackId) return track;
+                    return {
+                        ...track,
+                        items: track.items.map(item => {
+                            if (item.id !== selectedItemId) return item;
+                            return { ...item, duration: parseInt(newDuration, 10) || 30 };
+                        })
+                    };
+                }));
+            };
+
+            // -- Playback Engine --
+            const animate = time => {
+                if (previousTimeRef.current != undefined) {
+                    const deltaTime = time - previousTimeRef.current;
+                    // Move frame based on time elapsed
+                    setCurrentFrame(prevFrame => {
+                        const framesToAdvance = (deltaTime / 1000) * fps;
+                        let nextFrame = prevFrame + framesToAdvance;
+                        if (nextFrame >= durationInFrames) {
+                            nextFrame = 0; // Loop
+                        }
+                        return nextFrame;
+                    });
+                }
+                previousTimeRef.current = time;
+                requestRef.current = requestAnimationFrame(animate);
+            };
+
+            useEffect(() => {
+                if (isPlaying) {
+                    requestRef.current = requestAnimationFrame(animate);
+                } else {
+                    cancelAnimationFrame(requestRef.current);
+                    previousTimeRef.current = undefined;
+                }
+                return () => cancelAnimationFrame(requestRef.current);
+            }, [isPlaying]);
+
+            // -- AI Prompt Logic (Simulated LLM JSON Parser) --
+            const handleAiPrompt = () => {
+                if(!promptText) return;
+                setIsGenerating(true);
+                
+                // Simulate network request
+                setTimeout(() => {
+                    const lower = promptText.toLowerCase();
+                    const newTimeline = [...timeline];
+                    
+                    // Simple color extraction mapping
+                    const colors = { red: '#FF7497', blue: '#24D3FF', yellow: '#FFE357', green: '#C9F830', purple: '#D1A3FF' };
+                    let detectedColor = '#C9F830';
+                    for (const [name, hex] of Object.entries(colors)) {
+                        if (lower.includes(name)) detectedColor = hex;
+                    }
+                    
+                    // Smarter pseudo-LLM matching logic mapped to our new templates
+                    let newItemId = 'item_' + Date.now();
+
+                    if (lower.includes('chart') || lower.includes('graph') || lower.includes('data')) {
+                        newTimeline[1].items.push({
+                            id: newItemId, type: 'chart', from: Math.floor(currentFrame), duration: 90,
+                            props: { label: 'GROWTH', color1: detectedColor, color2: '#FFFFFF' }
+                        });
+                        setSelectedItemId(newItemId);
+                    } else if (lower.includes('alert') || lower.includes('notification') || lower.includes('pop')) {
+                        newTimeline[2].items.push({
+                            id: newItemId, type: 'notification', from: Math.floor(currentFrame), duration: 60,
+                            props: { title: 'NEW ALERT', message: promptText.replace(/add an alert|add a notification/gi, '').trim() || 'System update required.', color: detectedColor }
+                        });
+                        setSelectedItemId(newItemId);
+                    } else if (lower.includes('text') || lower.includes('title')) {
+                        newTimeline[2].items.push({
+                            id: newItemId, type: 'title', from: Math.floor(currentFrame), duration: 45,
+                            props: { text: promptText.replace(/add a title|add text/gi, '').trim().toUpperCase() || 'NEW TITLE!', color: detectedColor }
+                        });
+                        setSelectedItemId(newItemId);
+                    } else if (lower.includes('scan') || lower.includes('hud') || lower.includes('overlay')) {
+                        newTimeline[1].items.push({
+                            id: newItemId, type: 'scanner', from: Math.floor(currentFrame), duration: 60,
+                            props: { color: detectedColor }
+                        });
+                        setSelectedItemId(newItemId);
+                    } else {
+                        // Default fallback
+                        newTimeline[2].items.push({
+                            id: newItemId, type: 'title', from: Math.floor(currentFrame), duration: 30,
+                            props: { text: promptText.toUpperCase(), color: detectedColor }
+                        });
+                        setSelectedItemId(newItemId);
+                    }
+
+                    setTimeline(newTimeline);
+                    setPromptText("");
+                    setIsGenerating(false);
+                }, 800);
+            };
+
+            return (
+                <div className="h-screen w-screen flex flex-col p-4 gap-4 box-border">
+                    
+                    {/* Header */}
+                    <header className="flex justify-between items-center bg-white border-[4px] border-black rounded-xl p-4 shadow-brutal shrink-0">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-brand-lime border-[3px] border-black rounded-full flex items-center justify-center shadow-brutal-sm">
+                                <i className="ph-fill ph-video-camera text-xl"></i>
+                            </div>
+                            <h1 className="font-black text-2xl uppercase tracking-tighter">Creator Studio</h1>
+                        </div>
+                        <div className="flex gap-4">
+                            <div className="px-4 py-2 border-[3px] border-black font-bold uppercase text-xs rounded-lg bg-gray-100 flex items-center gap-2">
+                                <span className="w-2 h-2 bg-brand-cyan rounded-full animate-pulse"></span>
+                                Cloud Sync
+                            </div>
+                            <button className="px-6 py-2 bg-brand-purple border-[3px] border-black shadow-brutal-sm font-black uppercase text-sm rounded-lg hover:-translate-y-1 hover:shadow-brutal transition-all active:translate-y-1 active:shadow-none">
+                                Render MP4
+                            </button>
+                        </div>
+                    </header>
+
+                    {/* Main Workspace */}
+                    <div className="flex flex-1 gap-4 overflow-hidden">
+                        
+                        {/* Left Sidebar: AI Agent */}
+                        <aside className="w-80 flex flex-col gap-4 shrink-0">
+                            
+                            <div className="flex-1 bg-white border-[4px] border-black rounded-xl p-4 shadow-brutal flex flex-col">
+                                <div className="border-b-[3px] border-black pb-3 mb-4 flex items-center gap-2">
+                                    <i className="ph-fill ph-robot text-brand-orange text-2xl"></i>
+                                    <h2 className="font-black uppercase text-sm">AI Copilot</h2>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto mb-4 flex flex-col gap-3">
+                                    {/* Chat Bubbles */}
+                                    <div className="bg-gray-100 border-[2px] border-black rounded-lg p-3 text-xs font-medium">
+                                        Hello! I'm your video agent. Type a prompt below to add a <b>Zod Schema</b> template to the timeline.
+                                    </div>
+                                    <div className="bg-brand-lime/30 border-[2px] border-black rounded-lg p-3 text-xs font-medium">
+                                        Try: <br/><i>"Add a pink scanner"</i><br/><i>"Add a blue data chart"</i><br/><i>"Add a notification Hello World"</i>
+                                    </div>
+                                </div>
+
+                                <div className="mt-auto flex flex-col gap-2">
+                                    <textarea 
+                                        className="w-full h-24 border-[3px] border-black rounded-lg p-2 font-mono text-xs resize-none focus:outline-none focus:bg-brand-cyan/10"
+                                        placeholder="Prompt to timeline..."
+                                        value={promptText}
+                                        onChange={e => setPromptText(e.target.value)}
+                                        onKeyDown={e => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAiPrompt(); } }}
+                                    ></textarea>
+                                    <button 
+                                        onClick={handleAiPrompt}
+                                        disabled={isGenerating}
+                                        className="w-full py-3 bg-brand-orange border-[3px] border-black rounded-lg font-black uppercase text-sm shadow-brutal-sm hover:bg-yellow-400 active:translate-y-1 active:shadow-none transition-all disabled:opacity-50 flex justify-center items-center gap-2"
+                                    >
+                                        {isGenerating ? <i className="ph ph-spinner animate-spin text-xl"></i> : <><i className="ph-bold ph-magic-wand"></i> Generate Edit</>}
+                                    </button>
+                                </div>
+                            </div>
+
+                        </aside>
+
+                        {/* Center: The Canvas (Video Player) */}
+                        <main className="flex-1 bg-white border-[4px] border-black rounded-xl p-4 shadow-brutal flex flex-col items-center justify-center canvas-bg relative">
+                            
+                            {/* The 9:16 Video Container */}
+                            <div 
+                                className="relative bg-black border-[6px] border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,0.2)] rounded-3xl overflow-hidden flex-shrink-0"
+                                style={{ width: '315px', height: '560px' }} // Exactly 9:16 ratio scaled down
+                            >
+                                <VideoContext.Provider value={{ frame: currentFrame, fps, durationInFrames }}>
+                                    
+                                    {/* Render all tracks and items from the JSON Schema */}
+                                    {timeline.map(track => (
+                                        track.items.map(item => (
+                                            <Sequence key={item.id} from={item.from} durationInFrames={item.duration}>
+                                                {item.type === 'broll' && <SimulatedBRoll {...item.props} />}
+                                                {item.type === 'scanner' && <SvgScanner {...item.props} />}
+                                                {item.type === 'title' && <KineticTitle {...item.props} />}
+                                                {item.type === 'notification' && <NotificationPop {...item.props} />}
+                                                {item.type === 'chart' && <AnimatedChart {...item.props} />}
+                                            </Sequence>
+                                        ))
+                                    ))}
+
+                                </VideoContext.Provider>
+                            </div>
+
+                            {/* Frame Counter overlay */}
+                            <div className="absolute top-6 right-6 bg-black text-brand-lime font-mono font-black border-[3px] border-black shadow-brutal px-3 py-1 rounded-md text-sm">
+                                F: {Math.floor(currentFrame)} / {durationInFrames}
+                            </div>
+
+                        </main>
+
+                        {/* Right Sidebar: Properties Inspector */}
+                        <aside className="w-80 flex flex-col gap-4 shrink-0">
+                            <div className="flex-1 bg-white border-[4px] border-black rounded-xl p-4 shadow-brutal flex flex-col overflow-y-auto">
+                                <div className="border-b-[3px] border-black pb-3 mb-4 flex items-center gap-2">
+                                    <i className="ph-fill ph-sliders text-brand-cyan text-2xl"></i>
+                                    <h2 className="font-black uppercase text-sm">Inspector</h2>
+                                </div>
+
+                                {!selectedItem ? (
+                                    <div className="flex flex-col items-center justify-center h-full text-center opacity-50 gap-2">
+                                        <i className="ph ph-cursor-click text-4xl"></i>
+                                        <p className="font-bold text-xs">Select an item on the timeline to edit its properties.</p>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col gap-4">
+                                        <div className="bg-gray-100 border-[2px] border-black rounded-lg p-2 flex justify-between items-center">
+                                            <span className="font-black text-xs uppercase text-gray-500">{selectedItem.type}</span>
+                                            <span className="font-mono text-xs font-bold">{selectedItem.id}</span>
+                                        </div>
+
+                                        {/* Global Props */}
+                                        <div className="flex flex-col gap-1">
+                                            <label className="font-black text-[10px] uppercase">Duration (Frames)</label>
+                                            <input 
+                                                type="number" 
+                                                className="w-full border-[3px] border-black rounded-md p-2 font-bold text-sm focus:outline-none focus:bg-brand-lime/20"
+                                                value={selectedItem.duration}
+                                                onChange={(e) => updateItemDuration(e.target.value)}
+                                            />
+                                        </div>
+
+                                        <hr className="border-black border-t-[2px] my-2" />
+
+                                        {/* Dynamic Props (Automatically mapped from template Schema) */}
+                                        {Object.keys(selectedItem.props).map(propKey => {
+                                            const val = selectedItem.props[propKey];
+                                            const isColor = typeof val === 'string' && val.startsWith('#');
+                                            
+                                            return (
+                                                <div key={propKey} className="flex flex-col gap-1">
+                                                    <label className="font-black text-[10px] uppercase">{propKey}</label>
+                                                    {isColor ? (
+                                                        <div className="flex gap-2">
+                                                            <input 
+                                                                type="color" 
+                                                                className="w-10 h-10 border-[3px] border-black rounded-md cursor-pointer p-0"
+                                                                value={val}
+                                                                onChange={(e) => updateItemProp(propKey, e.target.value)}
+                                                            />
+                                                            <input 
+                                                                type="text" 
+                                                                className="flex-1 border-[3px] border-black rounded-md p-2 font-bold text-sm focus:outline-none focus:bg-brand-lime/20 uppercase"
+                                                                value={val}
+                                                                onChange={(e) => updateItemProp(propKey, e.target.value)}
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <input 
+                                                            type="text" 
+                                                            className="w-full border-[3px] border-black rounded-md p-2 font-bold text-sm focus:outline-none focus:bg-brand-lime/20"
+                                                            value={val}
+                                                            onChange={(e) => updateItemProp(propKey, e.target.value)}
+                                                        />
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </aside>
+
+                    </div>
+
+                    {/* Bottom: The Timeline UI */}
+                    <footer className="h-64 bg-white border-[4px] border-black rounded-xl shadow-brutal shrink-0 flex flex-col">
+                        
+                        {/* Timeline Toolbar */}
+                        <div className="h-12 border-b-[3px] border-black flex items-center px-4 justify-between bg-gray-50 rounded-t-lg">
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => setIsPlaying(!isPlaying)}
+                                    className="w-8 h-8 bg-brand-pink border-[2px] border-black rounded-full flex items-center justify-center shadow-[2px_2px_0px_0px_black] active:translate-y-1 active:shadow-none"
+                                >
+                                    <i className={`ph-fill ${isPlaying ? 'ph-pause' : 'ph-play'} text-black`}></i>
+                                </button>
+                                <button 
+                                    onClick={() => setCurrentFrame(0)}
+                                    className="w-8 h-8 bg-white border-[2px] border-black rounded-full flex items-center justify-center shadow-[2px_2px_0px_0px_black] active:translate-y-1 active:shadow-none"
+                                >
+                                    <i className="ph-bold ph-skip-back text-black"></i>
+                                </button>
+                            </div>
+
+                            <div className="flex-1 px-8 relative">
+                                {/* Scrubber line background */}
+                                <div className="w-full h-2 bg-gray-300 rounded-full border-[2px] border-black cursor-pointer"
+                                     onClick={(e) => {
+                                        const rect = e.currentTarget.getBoundingClientRect();
+                                        const percent = (e.clientX - rect.left) / rect.width;
+                                        setCurrentFrame(percent * durationInFrames);
+                                     }}
+                                >
+                                    {/* Scrubber Knob */}
+                                    <div 
+                                        className="absolute top-1/2 w-4 h-6 bg-brand-cyan border-[2px] border-black shadow-[2px_2px_0px_0px_black] rounded-sm transform -translate-y-1/2 -translate-x-1/2 pointer-events-none"
+                                        style={{ left: `${(currentFrame / durationInFrames) * 100}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Tracks Area */}
+                        <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 flex flex-col gap-2 relative">
+                            
+                            {/* The vertical playhead line indicating current frame */}
+                            <div 
+                                className="absolute top-0 bottom-0 w-[2px] bg-red-500 z-50 pointer-events-none"
+                                style={{ left: `calc(150px + ${(currentFrame / durationInFrames) * calcTimelineWidth()}px)` }}
+                            >
+                                <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-red-500 transform -translate-x-[5px]"></div>
+                            </div>
+
+                            {timeline.map(track => (
+                                <div key={track.id} className="flex items-center h-12 bg-gray-100 border-[2px] border-black rounded-lg">
+                                    
+                                    {/* Track Header */}
+                                    <div className={`w-[150px] h-full ${track.color} border-r-[3px] border-black rounded-l-md px-3 flex items-center font-black text-xs uppercase shrink-0`}>
+                                        {track.name}
+                                    </div>
+                                    
+                                    {/* Track Items Container */}
+                                    <div className="flex-1 h-full relative" style={{ backgroundImage: 'linear-gradient(90deg, #d1d5db 1px, transparent 1px)', backgroundSize: '10% 100%' }}>
+                                        {track.items.map(item => {
+                                            const leftPercent = (item.from / durationInFrames) * 100;
+                                            const widthPercent = (item.duration / durationInFrames) * 100;
+                                            const isSelected = selectedItemId === item.id;
+                                            
+                                            return (
+                                                <div 
+                                                    key={item.id}
+                                                    onClick={() => setSelectedItemId(item.id)}
+                                                    className={`absolute h-8 top-2 bg-white border-[2px] border-black rounded-md shadow-[2px_2px_0px_0px_black] flex items-center px-2 overflow-hidden text-[10px] font-bold cursor-pointer transition-transform ${isSelected ? 'ring-2 ring-offset-2 ring-black scale-105 z-10' : 'hover:scale-[1.02]'}`}
+                                                    style={{ 
+                                                        left: `${leftPercent}%`, 
+                                                        width: `${widthPercent}%`,
+                                                        backgroundColor: item.props.color || item.props.baseColor || item.props.color1 || '#FFF'
+                                                    }}
+                                                >
+                                                    {item.type.toUpperCase()}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                </div>
+                            ))}
+
+                        </div>
+                    </footer>
+                </div>
+            );
+
+            // Helper to calculate pixel width for playhead positioning relative to track content
+            function calcTimelineWidth() {
+                // In a real app we'd use a ResizeObserver on the track container.
+                // For this demo, we estimate based on viewport width - 150px sidebar - padding.
+                return window.innerWidth - 150 - 48; 
+            }
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
