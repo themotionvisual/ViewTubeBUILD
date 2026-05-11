@@ -90,11 +90,10 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data, editMode, 
         )}
 
         {/* Memory Sections */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridAutoRows: "1fr", gap: "10px" }}>
           {MEMORY_SECTIONS.map(({ key, label, icon: Icon, color }) => {
             const value = (memory as any)[key] || "Awaiting data..."
             const isExpanded = expandedSection === key
-            const truncated = value.length > 60 ? value.slice(0, 60) + "…" : value
 
             return (
               <div
@@ -104,17 +103,18 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data, editMode, 
                   background: isExpanded ? "#f9f9f9" : "#fff",
                   border: "2.5px solid #000",
                   borderRadius: "10px",
-                  padding: "8px",
+                  padding: "12px",
                   cursor: "pointer",
                   transition: "all 0.15s",
-                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "4px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
                   <div style={{
-                    width: "18px",
-                    height: "18px",
-                    borderRadius: "5px",
+                    width: "22px",
+                    height: "22px",
+                    borderRadius: "6px",
                     background: color,
                     border: "1.5px solid #000",
                     display: "flex",
@@ -122,10 +122,10 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data, editMode, 
                     justifyContent: "center",
                     flexShrink: 0,
                   }}>
-                    <Icon size={10} color="#000" />
+                    <Icon size={12} color="#000" />
                   </div>
                   <span style={{
-                    fontSize: "8px",
+                    fontSize: "10px",
                     fontWeight: 900,
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
@@ -134,20 +134,13 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data, editMode, 
                   </span>
                 </div>
                 <div style={{
-                  fontSize: "9px",
+                  fontSize: "11px",
                   fontWeight: 700,
                   lineHeight: 1.4,
-                  opacity: 0.7,
-                  overflow: "hidden",
-                  ...(isExpanded
-                    ? {}
-                    : {
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical" as any,
-                      }),
+                  opacity: 0.8,
+                  flex: 1,
                 }}>
-                  {isExpanded ? value : truncated}
+                  {value}
                 </div>
               </div>
             )

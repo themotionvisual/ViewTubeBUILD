@@ -21,8 +21,8 @@ export const AudienceMatrixWidget: React.FC<any> = ({widget, instance, editMode,
   const matrixData = useMemo(() => {
     let baseViews = 10000
 
-    if (data && data.statBlocks) {
-      const viewsBlock = data.statBlocks.find((b: any) => b.label.toLowerCase().includes("views"))
+    if (data && data.statBlocks28d) {
+      const viewsBlock = data.statBlocks28d.find((b: any) => b.label.toLowerCase().includes("views"))
       if (viewsBlock) {
         const valStr = String(viewsBlock.value).replace(/,/g, "")
         if (valStr.includes("K")) baseViews = parseFloat(valStr) * 1000

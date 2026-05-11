@@ -3007,7 +3007,7 @@ export const generateOracleAdvice = async (
     ${ORACLE_INSTRUCTIONS}
 
     CHANNEL DATA SNAPSHOT:
-    ${JSON.stringify(data.statBlocks || [])}
+    ${JSON.stringify(data.statBlocks28d || [])}
     Recent Titles: ${JSON.stringify((data.canonicalRows || []).slice(0, 5).map((r: any) => r.title))}
   `
   const prompt = annotateSystemPrompt(basePrompt, brainPacket)

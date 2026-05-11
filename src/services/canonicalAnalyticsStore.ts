@@ -169,6 +169,42 @@ export const writeYouTubeAnalyticsCache = (cache: RawAnalyticsCache): void => {
  * The dominant method to record API data.
  * Differentiates metrics with same names by namespacing the dimension.
  */
+export const updateCanonicalAnalyticsCache = async (updates: Partial<RawAnalyticsCache>): Promise<void> => {
+  const cache = readYouTubeAnalyticsCache()
+  const next = { ...cache, ...updates }
+  writeYouTubeAnalyticsCache(next)
+}
+
+/**
+ * Commits raw API or CSV data into the canonical storage.
+ * This ensures that for any channel, the 'Ground Truth' data is saved properly.
+ */
+export const commitToCanonicalAnalyticsStore = (
+  channelId: string, 
+  data: any, 
+  source: 'api' | 'csv' = 'api'
+) => {
+  console.log(`[Store] Committing ${source} data for channel: ${channelId}`);
+  
+  // Logic to merge data into the global state/ledger
+  const timestamp = new Date().toISOString();
+  
+  // Standardizing the payload
+  const payload = {
+    ...data,
+    lastUpdated: timestamp,
+    dataSource: source
+  };
+
+  // Dispatch global event for UI components to listen to
+  window.dispatchEvent(new CustomEvent('canonical_store_updated', {
+    detail: { channelId, payload }
+  }));
+
+  // If using localStorage as a backup
+  localStorage.setItem(`yt_canonical_${channelId}`, JSON.stringify(payload));
+};
+
 export const commitToLedger = (entry: Omit<LedgerEntry, "syncedAt">): void => {
  const cache = readYouTubeAnalyticsCache()
  const ledger = cache.ledger || {}

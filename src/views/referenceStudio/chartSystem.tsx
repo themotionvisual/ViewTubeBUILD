@@ -90,7 +90,19 @@ const SafeResponsiveContainer: React.FC<{ children: React.ReactNode }> = ({ chil
 }
 
 type ChartRenderContext = {
- timeline: Array<{ date: string; views: number; watchHours: number; revenue: number; subscribers: number }>
+ timeline: Array<{
+  date: string
+  views: number
+  watchHours: number
+  revenue: number
+  subscribers: number
+  likes?: number
+  dislikes?: number
+  comments?: number
+  shares?: number
+  impressions?: number
+  ctr?: number
+ }>
  topRows: CanonicalAnalyticsView["topRows"]
  formatBreakdown: CanonicalAnalyticsView["formatBreakdown"]
  summary: CanonicalAnalyticsView["summary"]
@@ -108,9 +120,11 @@ const compactTitle = (value: string) => (value.length > 22 ? `${value.slice(0, 2
 
 const safeContext = (analytics: CanonicalAnalyticsView): ChartRenderContext => {
  const timeline =
-  analytics.timelineSeries.length > 0
-   ? analytics.timelineSeries
-   : [{ date: "N/A", views: 0, watchHours: 0, revenue: 0, subscribers: 0 }]
+  analytics.channelDailySeries.length > 0
+   ? analytics.channelDailySeries
+   : analytics.timelineSeries.length > 0
+     ? analytics.timelineSeries
+     : [{ date: "N/A", views: 0, watchHours: 0, revenue: 0, subscribers: 0 }]
 
  const topRows: CanonicalAnalyticsView["topRows"] =
   analytics.topRows.length > 0

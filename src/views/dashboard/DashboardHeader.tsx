@@ -88,7 +88,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
 
  const renderKpiCards = () => (
   <div className="flex items-center gap-1.5 flex-1 px-4 justify-center">
-   {data.statBlocks.map((stat, idx) => {
+   {data.statBlocks28d.map((stat, idx) => {
     const bars = Array.from({ length: 7 }, (_, i) => {
      const seed = ((idx * 7 + i + 1) * 17) % 100
      return 40 + (seed % 50)

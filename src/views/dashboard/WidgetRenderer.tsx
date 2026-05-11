@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react"
+import React, { useState, useMemo, useEffect } from "react"
 import {
   Activity,
   Bell,
@@ -433,6 +433,203 @@ const RevenueMomentumWidget: React.FC<{
   )
 }
 
+const ChannelOverviewWidget: React.FC<{
+  instance: any;
+  data: DashboardData;
+  common: any;
+}> = ({ instance, data, common }) => {
+  const [window, setWindow] = useState<"lifetime" | "28d">(() => {
+    const saved = localStorage.getItem("viewtube_overview_window");
+    return (saved === "lifetime" || saved === "28d") ? saved : "lifetime";
+  });
+
+  const statBlocks = data.statBlocksLifetime;
+  const avatar = data.avatarUrl || ""
+
+  return (
+    <WidgetShell {...common} icon={<TrendingUp size={22} />}>
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+          {/* Circular Avatar Sidebar */}
+          <div style={{ 
+            display: "flex", 
+            flexDirection: "column", 
+            alignItems: "center", 
+            justifyContent: "center", 
+            gap: "6px", 
+            flexShrink: 0, 
+            width: "200px",
+            padding: "2px 0"
+          }}>
+            <div style={{ 
+              fontSize: "32px", 
+              fontWeight: 950, 
+              textTransform: "uppercase", 
+              textAlign: "center",
+              lineHeight: 1.0,
+              marginBottom: "4px"
+            }}>
+              {data.brain?.channelProfile?.name || data.authState?.channelName || "Your Channel"}
+            </div>
+
+            <div style={{ 
+              width: "180px", 
+              height: "180px", 
+              borderRadius: "50%", 
+              border: "5px solid #000", 
+              overflow: "hidden", 
+              background: "#eee",
+              boxShadow: "8px 8px 0px 0px rgba(0,0,0,0.15)",
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}>
+              {avatar ? (
+                <img src={avatar} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              ) : (
+                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <TrendingUp size={90} opacity={0.2} />
+                </div>
+              )}
+            </div>
+
+            {(() => {
+              const rawHandle = data.brain?.channelProfile?.channelHandle || data.authState?.channelHandle || ""
+              const normalizedHandle = String(rawHandle || "").trim().replace(/^@/, "")
+              const displayHandle = normalizedHandle ? `@${normalizedHandle}` : "@connect-channel"
+              const href = normalizedHandle ? `https://youtube.com/@${normalizedHandle}` : "https://youtube.com"
+              return (
+                <>
+                  <div style={{ 
+                    fontSize: "24px", 
+                    fontWeight: 950, 
+                    opacity: 0.9, 
+                    textAlign: "center",
+                    marginBottom: "8px",
+                    textTransform: "lowercase",
+                    lineHeight: 1
+                  }}>
+                    {displayHandle}
+                  </div>
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="vt-button primary"
+                    style={{
+                      height: "38px",
+                      minWidth: "120px",
+                      width: "auto",
+                      padding: "0 16px",
+                      fontSize: "11px",
+                      fontWeight: 950,
+                      textDecoration: "none",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      textTransform: "uppercase",
+                      backgroundColor: "#C9F830",
+                      color: "#000",
+                      border: "3px solid #000",
+                      boxShadow: "3px 3px 0 0 #000"
+                    }}
+                  >
+                    Visit Channel
+                  </a>
+                </>
+              )
+            })()}
+          </div>
+
+          {/* Stats Grid - 3x3 */}
+          <div style={{ 
+            flex: 1, 
+            display: "grid", 
+            gridTemplateColumns: "repeat(3, 1fr)", 
+            gridTemplateRows: "repeat(3, 1fr)",
+            gap: "2px",
+            padding: "0px"
+          }}>
+            {statBlocks.map((stat, idx) => {
+              const metricKey = stat.label.toLowerCase().includes("views") ? "views" : 
+                               stat.label.toLowerCase().includes("subscribers") ? "subscribersGained" :
+                               stat.label.toLowerCase().includes("hours") ? "watchHours" :
+                               stat.label.toLowerCase().includes("revenue") ? "revenue" : null
+              
+              let bars = [40, 60, 45, 80, 55, 90, 75]
+              if (metricKey && data.canonicalRows?.length) {
+                const recentValues = data.canonicalRows
+                   .slice(0, 7)
+                   .map(row => (row.metrics as any)[metricKey]?.value || 0)
+                const maxVal = Math.max(...recentValues, 1)
+                bars = recentValues.map(v => 30 + (v / maxVal) * 70).reverse()
+              }
+
+              const isNegative = stat.trend?.includes("▼") || stat.trend?.includes("-")
+              const trendColor = isNegative ? "#FF1744" : "#008B00"
+
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    background: "#fff",
+                    border: "3px solid #000",
+                    borderRadius: "10px",
+                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
+                    boxShadow: "3px 3px 0px 0px rgba(0,0,0,0.05)"
+                  }}
+                >
+                  <div
+                    style={{
+                      background: stat.color,
+                      borderBottom: "3px solid #000",
+                      height: "26px",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      width: "100%"
+                    }}
+                  >
+                    <span style={{ fontSize: "11px", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.02em", color: "#000", textAlign: "center", width: "100%" }}>
+                      {stat.label}
+                    </span>
+                  </div>
+                  <div style={{ 
+                    padding: "10px 4px 2px", 
+                    display: "flex", 
+                    flexDirection: "column",
+                    alignItems: "center", 
+                    justifyContent: "center", 
+                    gap: "2px",
+                    flex: 1
+                  }}>
+                    <div style={{ fontSize: "28px", fontWeight: 950, letterSpacing: "-0.04em", lineHeight: 1, textAlign: "center" }}>
+                      {stat.value}
+                    </div>
+                    {stat.trend && (
+                      <span style={{ fontSize: "10px", fontWeight: 950, color: trendColor, display: "flex", alignItems: "center", gap: "2px" }}>
+                        {stat.trend}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "flex-end", gap: "1px", padding: "0", height: "20px", marginTop: "auto" }}>
+                    {bars.map((h, i) => (
+                      <div key={i} style={{ flex: 1, height: `${h}%`, background: stat.color, opacity: 0.4 + (h / 100) * 0.6, borderRadius: "0" }} />
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </WidgetShell>
+  );
+};
+
 export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   widget,
   instance,
@@ -674,10 +871,10 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
    }
 
  if (widget.id === "ad-stack-intelligence") {
-  const revenueBlock = data.statBlocks.find((s) => s.label.toLowerCase().includes("revenue"))
+  const revenueBlock = data.statBlocks28d.find((s) => s.label.toLowerCase().includes("revenue"))
   const revenue = revenueBlock?.value || "0.00"
   const revNum = parseFloat(revenue.replace(/[^0-9.]/g, "")) || 0
-  const viewsBlock = data.statBlocks.find((s) => s.label.toLowerCase().includes("views"))
+  const viewsBlock = data.statBlocks28d.find((s) => s.label.toLowerCase().includes("views"))
   const viewsNum = parseFloat((viewsBlock?.value || "0").replace(/[^0-9.]/g, "")) || 0
   const viewsMultiplier = (viewsBlock?.value || "").includes("M") ? 1000000 : (viewsBlock?.value || "").includes("K") ? 1000 : 1
   const totalViews = viewsNum * viewsMultiplier
@@ -708,174 +905,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
 
  // 1. CHANNEL OVERVIEW
   if (widget.id === "kpi-cluster") {
-   const avatar = data.avatarUrl || ""
-   const isQuarter = instance.size === "quarter"
-   const isThird = instance.size === "third"
-   const isHalf = instance.size === "half"
-   const isSmall = isQuarter || isThird || isHalf
-
-   return (
-    <WidgetShell {...common} icon={<TrendingUp size={22} />}>
-     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-      <div style={{ display: "flex", gap: "10px", flex: 1, overflow: "hidden", padding: "4px" }}>
-       {/* Circular Avatar Sidebar */}
-       <div style={{ 
-         display: "flex", 
-         flexDirection: "column", 
-         alignItems: "center", 
-         justifyContent: "center", 
-         gap: "8px", 
-         flexShrink: 0, 
-         width: "160px",
-         borderRight: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)",
-         marginRight: "10px",
-         paddingRight: "10px"
-       }}>
-        <div style={{ 
-          width: "120px", 
-          height: "120px", 
-          borderRadius: "50%", 
-          border: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)", 
-          overflow: "hidden", 
-          background: "#eee",
-          boxShadow: "4px 4px 0px 0px rgba(0,0,0,0.1)"
-        }}>
-         {avatar ? (
-           <img src={avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-         ) : (
-           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-             <TrendingUp size={isSmall ? 40 : 60} opacity={0.2} />
-           </div>
-         )}
-        </div>
-       </div>
-
-       {/* Stats Grid - 3x2 on small, 6x1 on large */}
-       <div style={{ 
-         flex: 1, 
-         display: "grid", 
-         gridTemplateColumns: isSmall ? "repeat(3, 1fr)" : "repeat(6, 1fr)", 
-         gridTemplateRows: isSmall ? "repeat(2, 1fr)" : "1fr",
-         gap: "8px" 
-       }}>
-        {data.statBlocks.map((stat, idx) => {
-         const metricKey = stat.label.toLowerCase().includes("views") ? "views" : 
-                          stat.label.toLowerCase().includes("subscribers") ? "subscribersGained" :
-                          stat.label.toLowerCase().includes("hours") ? "watchHours" :
-                          stat.label.toLowerCase().includes("revenue") ? "revenue" : null
-         
-         let bars = [40, 60, 45, 80, 55, 90, 75]
-         if (metricKey && data.canonicalRows?.length) {
-           const recentValues = data.canonicalRows
-              .slice(0, 7)
-              .map(row => (row.metrics as any)[metricKey]?.value || 0)
-           const maxVal = Math.max(...recentValues, 1)
-           bars = recentValues.map(v => 30 + (v / maxVal) * 70).reverse()
-         }
-
-         let cleanTrend = stat.trend || ""
-         if (cleanTrend) {
-          const match = cleanTrend.match(/([+-]?)(\d+(\.\d+)?)%/)
-          if (match) {
-            const sign = match[1]
-            const val = parseFloat(match[2])
-            cleanTrend = val >= 100 ? `${sign}${Math.round(val).toString().slice(0, 4)}%` : `${sign}${val.toFixed(1).slice(0, 4)}%`
-          }
-         }
-
-           return (
-            <div
-             key={idx}
-             style={{
-              background: "#fff",
-              border: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)",
-              borderRadius: "10px",
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column",
-              boxShadow: "3px 3px 0px 0px rgba(0,0,0,0.05)"
-             }}>
-             <div
-              style={{
-               background: stat.color,
-               borderBottom: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)",
-               height: "22px",
-               display: "flex",
-               justifyContent: "center",
-               alignItems: "center",
-              }}>
-              <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.02em", color: "#000" }}>
-               {stat.label}
-              </span>
-             </div>
-             <div style={{ padding: "6px 2px 0px", display: "flex", alignItems: "baseline", justifyContent: "center", gap: "2px" }}>
-              <div style={{ fontSize: isSmall ? "18px" : "22px", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1 }}>
-               {stat.value}
-              </div>
-              {stat.trend && <span style={{ fontSize: "8px", fontWeight: 900, color: stat.trend.includes("↑") ? "#008B00" : "#D32F2F" }}>{cleanTrend}</span>}
-             </div>
-             <div style={{ display: "flex", alignItems: "flex-end", gap: "1px", padding: "0 2px 2px", height: "18px", marginTop: "auto" }}>
-              {bars.map((h, i) => (
-               <div key={i} style={{ flex: 1, height: `${h}%`, background: stat.color, opacity: 0.4 + (h / 100) * 0.6, borderRadius: "1px 1px 0 0" }} />
-              ))}
-             </div>
-            </div>
-           )
-        })}
-       </div>
-      </div>
-
-      {/* Full Width Footer */}
-      <div style={{ 
-        borderTop: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)", 
-        background: "#eee", 
-        padding: "8px 12px", 
-        display: "flex", 
-        alignItems: "center", 
-        justifyContent: "space-between",
-        marginTop: "auto"
-      }}>
-        {(() => {
-          const rawHandle =
-            data.brain?.channelProfile?.channelHandle || data.authState?.channelHandle || ""
-          const normalizedHandle = String(rawHandle || "").trim().replace(/^@/, "")
-          const displayHandle = normalizedHandle ? `@${normalizedHandle}` : "@connect-channel"
-          const href = normalizedHandle ? `https://youtube.com/@${normalizedHandle}` : "https://youtube.com"
-          return (
-            <>
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <div style={{ fontSize: "14px", fontWeight: 950, textTransform: "uppercase", tracking: "-0.02em" }}>
-                  {data.brain?.channelProfile?.name || data.authState?.channelName || "Your Channel"}
-                </div>
-                <div style={{ fontSize: "10px", fontWeight: 800, opacity: 0.5 }}>
-                  {displayHandle}
-                </div>
-              </div>
-              <a
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                className="vt-button primary"
-                style={{
-                  height: "32px",
-                  padding: "0 16px",
-                  fontSize: "11px",
-                  fontWeight: 900,
-                  textDecoration: "none",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center"
-                }}
-               >
-                VISIT CHANNEL
-              </a>
-            </>
-          )
-        })()}
-      </div>
-     </div>
-    </WidgetShell>
-   )
+    return <ChannelOverviewWidget instance={instance} data={data} common={common} />
   }
 
  // 2. SOCIAL CHANNELS (was Channel Overview)

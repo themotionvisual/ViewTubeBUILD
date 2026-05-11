@@ -133,7 +133,19 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
               
               {activeVideo && (
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px", background: "#f5f5f5", border: "2px solid #000", borderRadius: "8px", overflow: "hidden" }}>
-                  <img src={activeVideo.thumbnailUrl || `https://i.ytimg.com/vi/${activeVideo.videoId}/maxresdefault.jpg`} alt="Thumbnail Preview" style={{ width: "100%", height: "120px", objectFit: "cover", borderBottom: "2px solid #000" }} />
+                  <img 
+                    src={activeVideo.thumbnailUrl || `https://i.ytimg.com/vi/${activeVideo.videoId}/maxresdefault.jpg`} 
+                    alt="Thumbnail Preview" 
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (target.src.includes('maxresdefault.jpg')) {
+                        target.src = target.src.replace('maxresdefault.jpg', 'hqdefault.jpg');
+                      } else if (target.src.includes('hqdefault.jpg')) {
+                        target.src = target.src.replace('hqdefault.jpg', 'mqdefault.jpg');
+                      }
+                    }}
+                    style={{ width: "100%", height: "120px", objectFit: "cover", borderBottom: "2px solid #000" }} 
+                  />
                   <div style={{ padding: "8px" }}>
                      <button
                         onClick={handleAnalyze}

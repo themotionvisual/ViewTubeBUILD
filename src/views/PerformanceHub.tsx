@@ -39,6 +39,7 @@ import {
   ZAxis,
  } from "recharts"
  import { SubToolbox, ToolboxScaffold } from "../components/Toolbox"
+ import { InsightMarquee } from '../components/InsightMarquee';
  import { useBrain } from "../context/useBrain"
  import type { AnalyticsResult, CsvFileWithTag, CsvUploadType } from "../types"
  import { hasGeminiKey } from "../services/gemini"
@@ -63,6 +64,7 @@ import {
  getComments,
  getCtr,
  getDateLabel,
+ getDislikes,
  getImpressions,
  getLikes,
  getMetric,
@@ -127,11 +129,12 @@ import {
 } from "../services/youtube/apiCapabilityRegistry"
 import { PerformanceHubChartRollout } from "./performanceHub40/PerformanceHubChartRollout"
 import IntelligenceHub from "../components/IntelligenceHub/IntelligenceHub"
+import { ShortsRetentionToolboxContent } from "../components/ShortsRetentionToolboxContent"
 
 type PerformanceTool =
  | "intelligence-lab"
  | "master-tables"
- | "channel"
+ | "shorts-retention"
 type DataSource = "csv" | "api" | "hybrid"
 type TrafficDatasetMode =
  | "all"
@@ -276,6 +279,7 @@ const TABLE_DATASET_CONTRACTS: Record<TableDatasetId, TableDatasetContract> = {
    "Impressions",
    "Impressions click-through rate (%)",
    "Likes",
+   "Dislikes",
    "Comments",
    "Shares",
    "Subscribers gained",
@@ -734,6 +738,7 @@ const PerformanceHub: React.FC = () => {
   setResearchLabState,
   videoFlags,
   setVideoFlags,
+  authState,
   globalSyncData,
   isSyncing,
   lastSyncComplete,
@@ -2120,6 +2125,7 @@ const impressionsCtrDiagnostic = useMemo(() => {
   if (header === "Engaged" || header === "Engaged views")
    return getMetric(row, ["Engaged views", "Engaged Views"]).toLocaleString()
   if (header === "Likes" || header === "Likes +") return getLikes(row).toLocaleString()
+  if (header === "Dislikes" || header === "Likes -") return getDislikes(row).toLocaleString()
   if (header === "Comments") return getComments(row).toLocaleString()
   if (header === "Shares") return getShares(row).toLocaleString()
   if (header === "Subs +")
@@ -3559,7 +3565,7 @@ const activeDatasetCoverageSummary = useMemo(
         />
        </button>
        {uploadMenuOpen && (
-        <div className="absolute top-full left-0 mt-2 w-full bg-white border-[4px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] overflow-hidden z-40 max-h-[280px] overflow-y-auto">
+        <div className="absolute top-full left-0 mt-2 w-full bg-white border-[4px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] overflow-hidden z-40 min-h-[70px] max-h-[280px] overflow-y-auto">
          {UPLOAD_TYPE_OPTIONS.map((option) => (
           <button
            key={option.value}
@@ -3638,10 +3644,10 @@ const activeDatasetCoverageSummary = useMemo(
      <p className="md:text-right">
       Write Target: {storageMode === "both" ? "Sync + Storage" : storageMode}
      </p>
-     <p>Sync Status: {syncStatus.phase.toUpperCase()}</p>
+     <p>Sync Status: {(syncStatus.phase || "idle").toUpperCase()}</p>
      <p className="md:col-span-2 md:text-right">
-      Video Cursor: {syncBatch.cursor.toLocaleString()} · Last Batch:{" "}
-      {syncBatch.lastBatchCount}
+      Video Cursor: {(syncBatch.cursor ?? 0).toLocaleString()} · Last Batch:{" "}
+      {syncBatch.lastBatchCount ?? 0}
      </p>
     </div>
 
@@ -4011,16 +4017,29 @@ const renderDataViz = () => {
        CTR × Retention × Views
       </span>
      </div>
-     <div className="h-[42px] border-b-[3px] border-black px-4 flex items-center justify-between">
-      <div className="text-[20px] font-[1000] uppercase tracking-tight truncate">
+     <div className="h-[48px] border-b-[3px] border-black px-4 flex items-center justify-between bg-[#F8F8F8]">
+      <div className="text-[22px] font-[1000] uppercase tracking-tight truncate max-w-[500px]">
        {activeValueMatrixPoint?.title || "Hover over a bubble"}
       </div>
-      <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-wider">
-       <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-[#FF7497] border border-black/20" />Shorts</span>
-       <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-full bg-[#00CCFF] border border-black/20" />Long-Form</span>
-       <span>CTR {activeValueMatrixPoint?.ctr.toFixed(2) || "0.00"}%</span>
-       <span>RET {activeValueMatrixPoint?.retention.toFixed(1) || "0.0"}%</span>
-       <span>VIEWS {(activeValueMatrixPoint?.views || 0).toLocaleString()}</span>
+      <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-wider">
+       <div className="flex flex-col items-end leading-none">
+         <span className="text-[14px] font-[1000]">{activeValueMatrixPoint?.ctr.toFixed(2)}%</span>
+         <span className="text-[7px] opacity-60">CTR</span>
+       </div>
+       <div className="flex flex-col items-end leading-none">
+         <span className="text-[14px] font-[1000]">{activeValueMatrixPoint?.retention.toFixed(1)}%</span>
+         <span className="text-[7px] opacity-60">RET</span>
+       </div>
+       <div className="flex flex-col items-end leading-none">
+         <span className="text-[14px] font-[1000]">{(activeValueMatrixPoint?.views || 0).toLocaleString()}</span>
+         <span className="text-[7px] opacity-60">VIEWS</span>
+       </div>
+       {activeValueMatrixPoint?.likes !== undefined && (
+        <div className="flex flex-col items-end leading-none">
+          <span className="text-[14px] font-[1000] text-[#FF7497]">{activeValueMatrixPoint.likes.toLocaleString()}</span>
+          <span className="text-[7px] opacity-60">LIKES</span>
+        </div>
+       )}
       </div>
      </div>
      <div className="p-4 relative">
@@ -4098,6 +4117,12 @@ const renderDataViz = () => {
       <div className="absolute left-8 bottom-8 text-[10px] font-black uppercase tracking-[0.18em] text-black/30">Need Work</div>
       <div className="absolute right-8 bottom-8 text-[10px] font-black uppercase tracking-[0.18em] text-black/30">Clickbait</div>
      </div>
+     <div className="h-10 bg-white border-t-[4px] border-black flex items-center px-4 overflow-hidden">
+      <InsightMarquee 
+       chartInsight="Value Matrix identifies quadrants of growth: Hidden Gems vs Gold Mines."
+       personalInsight="Check 'Clickbait' (Bottom Right) videos — they have CTR but fail to hold attention. Fix the content."
+      />
+     </div>
     </div>
    </div>
   )
@@ -4163,7 +4188,28 @@ const renderDataViz = () => {
      ))}
     </div>
 
-    <div className="overflow-auto max-h-[620px]">
+    {tableDataset === "master" && (
+     <div className="bg-[#E6FF99] border-b-[4px] border-black p-4 flex flex-wrap items-center justify-around gap-4">
+      <div className="flex flex-col items-center">
+       <span className="text-[10px] font-black uppercase tracking-widest text-black/50">Lifetime Channel Views</span>
+       <span className="text-3xl font-[1000] tracking-tight">{authState.fastAnalytics?.lifetimeViews?.toLocaleString() || authState.totalViews?.toLocaleString() || "0"}</span>
+      </div>
+      <div className="flex flex-col items-center">
+       <span className="text-[10px] font-black uppercase tracking-widest text-black/50">Lifetime Channel Watch Hrs</span>
+       <span className="text-3xl font-[1000] tracking-tight">{authState.fastAnalytics?.lifetimeWatchMinutes ? (authState.fastAnalytics.lifetimeWatchMinutes / 60).toLocaleString(undefined, {maximumFractionDigits: 1}) : "0"}</span>
+      </div>
+      <div className="flex flex-col items-center">
+       <span className="text-[10px] font-black uppercase tracking-widest text-black/50">Current Subscribers</span>
+       <span className="text-3xl font-[1000] tracking-tight">{authState.subscriberCount?.toLocaleString() || "0"}</span>
+      </div>
+      <div className="flex flex-col items-center">
+       <span className="text-[10px] font-black uppercase tracking-widest text-black/50">Lifetime Channel Revenue</span>
+       <span className="text-3xl font-[1000] tracking-tight">${authState.fastAnalytics?.lifetimeRevenue?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || "0.00"}</span>
+      </div>
+     </div>
+    )}
+
+    <div className="overflow-auto max-h-[620px] relative rounded-b-xl" style={{ counterReset: "v-row" }}>
      {tableHeaders.length === 0 ? (
       <div className="p-8 text-center text-sm font-black uppercase tracking-wider text-black/35">
        No table data available for {activeTableDataset.label}
@@ -4172,7 +4218,12 @@ const renderDataViz = () => {
       <table className="w-max border-collapse whitespace-nowrap">
        <thead className="sticky top-0 bg-[#EDEDED] text-black z-10">
         <tr>
-         <th className="p-2 border-b-[3px] border-black border-r border-black/20 w-12 text-center bg-[#EDEDED]">
+         <th className="p-1 border-b-[3px] border-black border-r border-black/20 w-8 text-center bg-[#EDEDED] sticky left-0 top-0 z-[4000000]">
+          <span className="text-[10px] font-black uppercase text-black">
+           #
+          </span>
+         </th>
+         <th className="p-1 border-b-[3px] border-black border-r border-black/20 w-12 text-center bg-[#EDEDED]">
           <input
            type="checkbox"
            checked={allVisibleSelected}
@@ -4183,14 +4234,14 @@ const renderDataViz = () => {
           />
          </th>
          <th
-          className="p-2 border-b-[3px] border-black border-r border-black/20 w-8 text-center bg-[#EDEDED]"
+          className="p-1 border-b-[3px] border-black border-r border-black/20 w-8 text-center bg-[#EDEDED]"
           title="Exclude from Analytics">
           <span className="text-[10px] font-black uppercase text-black">
            EX
           </span>
          </th>
          <th
-          className="p-2 border-b-[3px] border-black border-r border-black/20 w-8 text-center bg-[#EDEDED]"
+          className="p-1 border-b-[3px] border-black border-r border-black/20 w-8 text-center bg-[#EDEDED]"
           title="Include Only (Global Whitelist)">
           <span className="text-[10px] font-black uppercase text-[#00CCFF]">
            IN
@@ -4245,7 +4296,7 @@ const renderDataViz = () => {
                setSortDir("desc")
               }
              }}
-             className={`p-2 text-[10px] font-black uppercase tracking-widest border-b-[3px] border-black border-r border-black/20 align-middle cursor-move select-none transition-colors bg-[#EDEDED] hover:bg-[#CCFF00]/30 ${
+             className={`p-1 text-[10px] font-black uppercase tracking-widest border-b-[3px] border-black border-r border-black/20 align-middle cursor-move select-none transition-colors bg-[#EDEDED] hover:bg-[#CCFF00]/30 ${
               isSorted ? "bg-[#CCFF00]/50" : ""
              }`}>
              <span className="block leading-tight text-center whitespace-normal break-words mx-auto">
@@ -4271,8 +4322,12 @@ const renderDataViz = () => {
            key={row._id}
            className={
             isSelected ? "bg-[#FFF2A8]" : "odd:bg-white even:bg-gray-50"
-           }>
-           <td className="p-2 border-r border-black/10 border-b border-black/10 text-center">
+           }
+           style={{ counterIncrement: "v-row" }}>
+           <td className="p-1 border-r border-black border-b border-black/10 text-center sticky left-0 z-10 bg-[#CCFF00] font-black text-xl leading-none min-w-[32px]">
+            <span className="before:content-[counter(v-row)]" />
+           </td>
+           <td className="p-1 border-r border-black/10 border-b border-black/10 text-center">
             <input
              type="checkbox"
              checked={isSelected}
@@ -4280,7 +4335,7 @@ const renderDataViz = () => {
              className="h-4 w-4 border-[2px] border-black accent-black cursor-pointer"
             />
            </td>
-           <td className="p-2 border-r border-black/10 border-b border-black/10 text-center">
+           <td className="p-1 border-r border-black/10 border-b border-black/10 text-center">
            <input
              type="checkbox"
              title="Exclude from Analytics"
@@ -4294,7 +4349,7 @@ const renderDataViz = () => {
              className="h-4 w-4 border-[2px] border-black accent-black cursor-pointer"
             />
            </td>
-           <td className="p-2 border-r border-black/10 border-b border-black/10 text-center">
+           <td className="p-1 border-r border-black/10 border-b border-black/10 text-center">
             <input
              type="checkbox"
              title="Include Only (Global)"
@@ -4327,7 +4382,7 @@ const renderDataViz = () => {
              <td
               key={`${row._id}-${header}`}
               title={cellValue}
-              className={`p-2 text-xs font-bold border-r border-black/10 border-b border-black/10 ${!isTextColumn ? "text-right pr-4" : "text-left pl-2"}`}>
+              className={`p-1 text-xs font-bold border-r border-black/10 border-b border-black/10 ${!isTextColumn ? "text-right pr-2" : "text-left pl-1"} ${isTitle ? "max-w-[400px] overflow-hidden text-ellipsis" : ""}`}>
               {isTitle && videoIdentity && looksLikeVideoId(videoIdentity) ? (
                <div className="flex items-center gap-2">
                 <a
@@ -4430,31 +4485,7 @@ const renderDataViz = () => {
   </div>
  )
 
- const renderChannelToolbox = () => (
-  <div className="space-y-6">
-   <SubToolbox
-    title="CHART ROLLOUT 40"
-    icon={<ChartColumnBig size={22} strokeWidth={3} className="text-black" />}
-    headerColor="bg-[#00CCFF]"
-    collapsible
-    isOpenInitial
-    unmountOnClose
-   >
-    <PerformanceHubChartRollout />
-   </SubToolbox>
-   <SubToolbox
-    key={`data-viz-${dataVizAutoOpenTick}`}
-    title="DATA VISUALIZATIONS"
-    icon={<ChartColumnBig size={22} strokeWidth={3} className="text-black" />}
-    headerColor="bg-[#CCFF00]"
-    collapsible
-    isOpenInitial
-    unmountOnClose
-   >
-    {renderDataViz()}
-   </SubToolbox>
-  </div>
- )
+
 
  return (
   <div className="flex flex-col space-y-6 max-w-[1500px] mx-auto pb-24">
@@ -4585,23 +4616,23 @@ const renderDataViz = () => {
     </ToolboxScaffold>
 
     <ToolboxScaffold
-     title="CHANNEL"
+     title="SHORTS RETENTION MODULE"
      icon={<Activity size={42} className="text-black" />}
-     headerColor="bg-[#FFDD00]"
-     iconBoxColor="bg-[#CCFF00]"
+     headerColor="bg-[#FF7497]"
+     iconBoxColor="bg-white"
      collapsible
-     isOpen={openTools.has("channel")}
+     isOpen={openTools.has("shorts-retention")}
      onToggle={() =>
       setOpenTools((previous) => {
        const next = new Set(previous)
-       if (next.has("channel")) next.delete("channel")
-       else next.add("channel")
+       if (next.has("shorts-retention")) next.delete("shorts-retention")
+       else next.add("shorts-retention")
        return next
       })
      }
      disableCollapseAnimation
-     contentClassName="bg-white p-4 md:p-6 lg:p-8 min-h-[620px]">
-     {openTools.has("channel") && renderChannelToolbox()}
+     contentClassName="bg-[#F8F8F8] p-4 md:p-6 lg:p-8 min-h-[620px]">
+     {openTools.has("shorts-retention") && <ShortsRetentionToolboxContent />}
     </ToolboxScaffold>
    </div>
 

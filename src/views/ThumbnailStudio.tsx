@@ -340,7 +340,8 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
        collapsible
        title="Styles"
        icon={<CustomIcon name="!!!COLLECTION" size={20} />}
-       paletteIndex={1}>
+       paletteIndex={1}
+       isOpenInitial={false}>
        <div className="grid grid-cols-3 gap-2">
         {THUMBNAIL_STYLES.map((style) => (
          <button
@@ -357,7 +358,8 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
        collapsible
        title="Text"
        icon={<CustomIcon name="!!!TEXT" size={20} />}
-       paletteIndex={0}>
+       paletteIndex={0}
+       isOpenInitial={false}>
        <div className="space-y-4">
         <input
          value={largeText}
@@ -378,7 +380,8 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
        collapsible
        title="Images"
        icon={<CustomIcon name="image" size={20} />}
-       paletteIndex={5}>
+       paletteIndex={5}
+       isOpenInitial={false}>
        <div className="space-y-4">
         <StandardUploadBox
           label="DROP FILES OR CLICK TO UPLOAD\nUpload Images"
@@ -427,7 +430,8 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
        collapsible
        title="Palette"
        icon={<CustomIcon name="paint-bucket" size={20} />}
-       paletteIndex={4}>
+       paletteIndex={4}
+       isOpenInitial={false}>
        <div className="flex justify-between items-start gap-3 py-2">
         {palette.map((c, i) => (
          <div key={i} className="flex flex-col items-center gap-2 flex-1">

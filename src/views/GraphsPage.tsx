@@ -8,6 +8,9 @@ import {
  ShortsRetention, Packaging, EngagementMap, PerformanceTrend, DurationSweetSpot,
  RevenueEfficiency, AudienceGrowth, GoldenRatioRadar, HookEffectiveness, GrowthPulse,
 } from "../components/GraphsPageCharts"
+import { SubToolbox, ToolboxScaffold } from "../components/Toolbox"
+import { Activity, ChartColumnBig } from "lucide-react"
+import { PerformanceHubChartRollout } from "./performanceHub40/PerformanceHubChartRollout"
 
 const WINDOWS: AnalyticsWindow[] = ["lifetime", "365d", "90d", "28d", "7d"]
 
@@ -42,7 +45,7 @@ const GraphsPage: React.FC = () => {
  const data = useMemo(() => rows, [rows])
 
  return (
-  <div className="p-8 max-w-[1600px] mx-auto flex flex-col gap-8">
+  <div className="p-8 max-w-[1600px] mx-auto flex flex-col gap-8 pb-24">
    {/* Header */}
    <header className="bg-white border-[4px] border-black rounded-2xl shadow-[8px_8px_0px_0px_black] p-6 flex flex-col md:flex-row items-center justify-between gap-4">
     <div>
@@ -55,9 +58,9 @@ const GraphsPage: React.FC = () => {
     </div>
     <div className="flex items-center gap-3">
      <Link
-      to="/graphs/shorts-retention"
-      className="h-12 px-4 bg-white text-black rounded-xl text-[11px] font-black uppercase tracking-wider border-[4px] border-black inline-flex items-center">
-      Shorts Retention Page
+      to="/performance"
+      className="h-12 px-4 bg-[#FF7497] text-white rounded-xl text-[11px] font-black uppercase tracking-wider border-[4px] border-black inline-flex items-center shadow-[4px_4px_0px_0px_black]">
+      Shorts Performance
      </Link>
      <span className="text-[11px] font-black uppercase text-black/60">Timeframe:</span>
      <select value={win} onChange={e => setWin(e.target.value as AnalyticsWindow)}
@@ -81,29 +84,63 @@ const GraphsPage: React.FC = () => {
      {error}
     </div>
    ) : (
-    <>
-     {/* Full-width: Video Value Matrix */}
-     <VideoValueMatrix data={data} />
+    <ToolboxScaffold
+     title="CHANNEL"
+     icon={<Activity size={42} className="text-black" />}
+     headerColor="bg-[#FFDD00]"
+     iconBoxColor="bg-[#CCFF00]"
+     collapsible
+     isOpen={true}
+     disableCollapseAnimation
+     contentClassName="bg-white p-4 md:p-6 lg:p-8 min-h-[620px]">
+     <div className="space-y-6">
+      <SubToolbox
+       title="CHART ROLLOUT 40"
+       icon={<ChartColumnBig size={22} strokeWidth={3} className="text-black" />}
+       headerColor="bg-[#00CCFF]"
+       collapsible
+       isOpenInitial
+       unmountOnClose
+      >
+       <PerformanceHubChartRollout />
+      </SubToolbox>
+      
+      <SubToolbox
+       title="DATA VISUALIZATIONS"
+       icon={<ChartColumnBig size={22} strokeWidth={3} className="text-black" />}
+       headerColor="bg-[#CCFF00]"
+       collapsible
+       isOpenInitial
+       unmountOnClose
+      >
+       <div className="flex flex-col gap-8">
+        {/* Full-width: Video Value Matrix */}
+        <VideoValueMatrix data={data} />
 
-     {/* 2-col grid */}
-     <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-      <RevenueDistribution data={data} />
-      <WatchTimeDistribution data={data} />
-      <SubscribersGained data={data} />
-      <HookEffectiveness data={data} />
-      <ShortsRetention data={data} />
-      <Packaging data={data} />
-      <EngagementMap data={data} />
-      <PerformanceTrend data={data} />
-      <DurationSweetSpot data={data} />
-      <RevenueEfficiency data={data} />
-      <AudienceGrowth data={data} />
-      <GoldenRatioRadar data={data} />
+        {/* 2-col grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+         <RevenueDistribution data={data} />
+         <WatchTimeDistribution data={data} />
+         <SubscribersGained data={data} />
+         <HookEffectiveness data={data} />
+         <ShortsRetention data={data} />
+         <Packaging data={data} />
+         <EngagementMap data={data} />
+         <PerformanceTrend data={data} />
+         <DurationSweetSpot data={data} />
+         <AudienceGrowth data={data} />
+         <GoldenRatioRadar data={data} />
+        </div>
+
+        {/* Full-width: Revenue Efficiency */}
+        <RevenueEfficiency data={data} />
+
+        {/* Full-width: Growth Pulse */}
+        <GrowthPulse data={data} />
+       </div>
+      </SubToolbox>
      </div>
-
-     {/* Full-width: Growth Pulse */}
-     <GrowthPulse data={data} />
-    </>
+    </ToolboxScaffold>
    )}
   </div>
  )

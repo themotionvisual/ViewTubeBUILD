@@ -801,7 +801,7 @@ export async function fetchEntitlementFromServer(email: string): Promise<Entitle
   writeStoredEntitlement(ownerState)
   return ownerState
  }
- const apiBase = (import.meta.env?.VITE_BILLING_API_BASE ?? process.env.VITE_BILLING_API_BASE) as
+ const apiBase = (import.meta.env?.VITE_BILLING_API_BASE) as
   | string
   | undefined
  if (!apiBase) {

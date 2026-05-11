@@ -7,6 +7,7 @@ import {
  EngagementMapChart,
  ValueMatrixChart,
  AudienceGrowthChart,
+ YouTubeVideoSearch,
 } from "../components/ResearchLabCharts"
 
 const WINDOW_OPTIONS: AnalyticsWindow[] = ["lifetime", "365d", "90d", "28d", "7d"]
@@ -95,6 +96,9 @@ const ResearchLabToolbox: React.FC = () => {
       <EngagementMapChart data={data} />
       <ValueMatrixChart data={data} />
       <AudienceGrowthChart data={data} />
+      <div className="xl:col-span-2">
+        <YouTubeVideoSearch />
+      </div>
      </div>
     )}
    </main>

@@ -22,7 +22,7 @@ const normalizeHandle = (raw: unknown): string | null => {
  return value.replace(/^@/, "")
 }
 
-const resolveChannelHandle = (channel: any): string | null => {
+export const parseChannelHandleFromApi = (channel: any): string | null => {
  return (
   normalizeHandle(channel?.handle) ||
   normalizeHandle(channel?.snippet?.customUrl) ||
@@ -30,6 +30,36 @@ const resolveChannelHandle = (channel: any): string | null => {
   null
  )
 }
+
+/**
+ * Resolves a YouTube handle or custom URL to a Channel ID.
+ * Required for components that allow searching by handle.
+ */
+export const resolveChannelHandle = async (handle: string): Promise<string | null> => {
+  const token = await refreshTokenIfExpired();
+  if (!token) return null;
+
+  // Clean the handle string (strip @ if present)
+  const cleanHandle = handle.startsWith('@') ? handle.substring(1) : handle;
+
+  try {
+    const url = `${BASE_URL}/channels?forHandle=${encodeURIComponent(cleanHandle)}&part=id`;
+    const res = await proxyFetch(url, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    if (data.items && data.items.length > 0) {
+      return data.items[0].id;
+    }
+    return null;
+  } catch (error) {
+    console.error("[youtubeDataFetcher] resolveChannelHandle failed:", error);
+    return null;
+  }
+};
 
 const youtubeDataAccessWarnings = new Set<string>()
 
@@ -65,7 +95,7 @@ export const fetchChannelProfile = async (): Promise<ChannelProfile> => {
  }
 
  const channel = data.items[0]
- const channelHandle = resolveChannelHandle(channel)
+ const channelHandle = parseChannelHandleFromApi(channel)
 
  return {
   id: channel.id,
@@ -459,7 +489,7 @@ export const fetchVideoMetadata = async (
  >()
 
  for (const batch of batches) {
-  const url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${batch.join(",")}&key=${process.env.YOUTUBE_API_KEY}`
+  const url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${batch.join(",")}`
 
   try {
    const response = await proxyFetch(url, {
@@ -570,7 +600,7 @@ export const getChannelOverview = async () => {
   id: channel.id,
   title: channel.snippet.title,
   description: channel.snippet.description,
-  customUrl: resolveChannelHandle(channel),
+  customUrl: parseChannelHandleFromApi(channel),
   thumbnail: channel.snippet.thumbnails.high.url,
   stats: {
    viewCount: parseInt(channel.statistics.viewCount),
@@ -977,8 +1007,17 @@ export const fetchAllCommentThreads = async (maxResults = 20, channelId?: string
   `${BASE_URL}/commentThreads?part=snippet,replies&allThreadsRelatedToChannelId=${resolvedChannelId}&maxResults=${maxResults}&order=time`,
   { headers: { Authorization: `Bearer ${token}` } },
  )
- if (!response.ok)
-  await handleYouTubeApiError(response, "Failed to fetch comment threads")
+  if (!response.ok) {
+   if (response.status === 403) {
+    warnYouTubeDataAccessOnce(
+     "comments403",
+     "[YouTube Data] Comments denied (403). Continuing in degraded mode.",
+    )
+    return []
+   }
+   await handleYouTubeApiError(response, "Failed to fetch comment threads")
+  }
+
  const data = await response.json()
  return data.items || []
 }

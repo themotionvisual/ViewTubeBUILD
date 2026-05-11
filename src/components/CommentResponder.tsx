@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import { MessageCircle, Sparkles, Loader2, Copy, Check } from "lucide-react"
 import { PostActionReflection } from "./PostActionReflection"
 import { generateCommentResponses } from "../services/gemini"
+import { youtubeApiClient } from "../services/youtube/youtubeApiClient"
 import Markdown from "react-markdown"
 import { Toolbox } from "./Toolbox"
 
@@ -9,7 +10,9 @@ export const CommentResponder: React.FC = () => {
  const [comments, setComments] = useState("")
  const [result, setResult] = useState("")
  const [loading, setLoading] = useState(false)
+ const [fetching, setFetching] = useState(false)
  const [copied, setCopied] = useState(false)
+ const [fetchedThreads, setFetchedThreads] = useState<any[]>([])
 
  const handleGenerate = async () => {
   if (!comments) return
@@ -26,6 +29,22 @@ export const CommentResponder: React.FC = () => {
   } finally {
    setLoading(false)
   }
+ }
+
+ const handleFetchComments = async () => {
+  setFetching(true)
+  try {
+   const response = await youtubeApiClient.fetchCommentThreads({ allThreads: true })
+   setFetchedThreads(response.items || [])
+  } catch (e) {
+   console.error("Failed to fetch comments:", e)
+  } finally {
+   setFetching(false)
+  }
+ }
+
+ const selectComment = (text: string) => {
+  setComments(text)
  }
 
  const handleCopy = () => {
@@ -45,17 +64,46 @@ export const CommentResponder: React.FC = () => {
      collapsible
      isOpenInitial={true}
      >
-     <div className="space-y-2">
-      <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
-       Paste Recent Comments
-      </label>
-      <textarea
-       value={comments}
-       onChange={(e) => setComments(e.target.value)}
-       placeholder="PASTE COMMENTS HERE..."
-       className="w-full h-40 p-4 border-[4px] border-black rounded-xl font-bold text-sm uppercase outline-none focus:bg-[#FF3399]/10 transition-colors resize-none"
-      />
-     </div>
+      <div className="space-y-4">
+       <div className="flex items-center justify-between">
+        <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
+         Paste Recent Comments
+        </label>
+        <button 
+         onClick={handleFetchComments}
+         disabled={fetching}
+         className="text-[10px] font-black underline uppercase tracking-widest text-[#FF3399] hover:text-[#FF3399]/70 disabled:opacity-50"
+        >
+         {fetching ? "FETCHING..." : "FETCH REAL COMMENTS"}
+        </button>
+       </div>
+
+       {fetchedThreads.length > 0 && (
+        <div className="max-h-48 overflow-y-auto border-[4px] border-black rounded-xl p-2 space-y-2 bg-gray-50 custom-scrollbar">
+         {fetchedThreads.map((thread) => {
+          const text = thread.snippet.topLevelComment.snippet.textDisplay
+          const author = thread.snippet.topLevelComment.snippet.authorDisplayName
+          return (
+           <button
+            key={thread.id}
+            onClick={() => selectComment(text)}
+            className="w-full text-left p-2 hover:bg-[#FF3399]/10 rounded-lg transition-colors border-2 border-transparent hover:border-black/10"
+           >
+            <div className="text-[9px] font-black uppercase opacity-50">{author}</div>
+            <div className="text-xs font-bold line-clamp-2">{text}</div>
+           </button>
+          )
+         })}
+        </div>
+       )}
+
+       <textarea
+        value={comments}
+        onChange={(e) => setComments(e.target.value)}
+        placeholder="PASTE COMMENTS HERE OR FETCH REAL ONES..."
+        className="w-full h-40 p-4 border-[4px] border-black rounded-xl font-bold text-sm uppercase outline-none focus:bg-[#FF3399]/10 transition-colors resize-none"
+       />
+      </div>
      <button
       onClick={handleGenerate}
       disabled={loading || !comments}

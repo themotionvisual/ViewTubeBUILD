@@ -1,71 +1,64 @@
 import { getAccessToken } from "../authSession"
 
-export interface UploadMetadata {
+interface UploadMetadata {
  title: string
  description: string
- privacyStatus: "public" | "unlisted" | "private"
- tags?: string[]
  categoryId?: string
+ tags?: string[]
+ privacyStatus?: "public" | "private" | "unlisted"
 }
 
 export class YouTubeUploadService {
- private static UPLOAD_URL =
-  "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status"
+ private static UPLOAD_BASE_URL = "https://www.googleapis.com/upload/youtube/v3/videos"
 
  /**
-  * Initiates a resumable upload and returns the upload URI.
+  * Uploads a video blob to YouTube using the resumable upload protocol.
   */
- public static async getUploadUri(
+ public static async uploadVideo(
+  file: Blob,
   metadata: UploadMetadata,
-  fileSize: number,
-  fileType: string,
- ): Promise<string> {
-  const token = getAccessToken()
-  if (!token) throw new Error("Not authenticated")
+  onProgress?: (progress: number) => void
+ ): Promise<any> {
+  const token = await getAccessToken()
+  if (!token) throw new Error("No access token available")
 
-  const response = await fetch(this.UPLOAD_URL, {
+  // 1. Initial request to get resumable session URL
+  const initialResponse = await fetch(`${this.UPLOAD_BASE_URL}?uploadType=resumable&part=snippet,status`, {
    method: "POST",
    headers: {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
-    "X-Upload-Content-Length": fileSize.toString(),
-    "X-Upload-Content-Type": fileType,
+    "X-Upload-Content-Length": file.size.toString(),
+    "X-Upload-Content-Type": file.type || "video/*",
    },
    body: JSON.stringify({
     snippet: {
      title: metadata.title,
      description: metadata.description,
-     tags: metadata.tags,
      categoryId: metadata.categoryId || "22", // Default to People & Blogs
+     tags: metadata.tags || [],
     },
     status: {
-     privacyStatus: metadata.privacyStatus,
+     privacyStatus: metadata.privacyStatus || "private",
     },
    }),
   })
 
-  if (!response.ok) {
-   const error = await response.json()
-   throw new Error(`Failed to initiate upload: ${error.error?.message || response.statusText}`)
+  if (!initialResponse.ok) {
+   const error = await initialResponse.json()
+   throw new Error(`Failed to initiate upload: ${JSON.stringify(error)}`)
   }
 
-  const uploadUri = response.headers.get("Location")
-  if (!uploadUri) throw new Error("No upload URI returned from YouTube")
+  const uploadUrl = initialResponse.headers.get("Location")
+  if (!uploadUrl) throw new Error("No upload URL returned from YouTube")
 
-  return uploadUri
- }
-
- /**
-  * Uploads the actual video file to the resumable URI.
-  */
- public static async uploadFile(
-  uploadUri: string,
-  file: Blob,
-  onProgress?: (progress: number) => void,
- ): Promise<any> {
+  // 2. Perform the actual upload
+  // Note: For simplicity in this first version, we'll upload in one chunk.
+  // Resumable uploads allow splitting, but browser blobs are easy to send whole.
   return new Promise((resolve, reject) => {
    const xhr = new XMLHttpRequest()
-   xhr.open("PUT", uploadUri, true)
+   xhr.open("PUT", uploadUrl, true)
+   xhr.setRequestHeader("Content-Type", file.type || "video/*")
 
    if (xhr.upload && onProgress) {
     xhr.upload.onprogress = (e) => {
@@ -77,10 +70,14 @@ export class YouTubeUploadService {
    }
 
    xhr.onload = () => {
-    if (xhr.status >= 200 && xhr.status < 300) {
-     resolve(JSON.parse(xhr.responseText))
+    if (xhr.status === 200 || xhr.status === 201) {
+     try {
+      resolve(JSON.parse(xhr.responseText))
+     } catch (e) {
+      resolve(xhr.responseText)
+     }
     } else {
-     reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.statusText}`))
+     reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.responseText}`))
     }
    }
 

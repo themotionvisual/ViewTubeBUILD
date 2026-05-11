@@ -170,26 +170,26 @@ export const MASTER_VIDEO_TABLE_HEADERS: string[] = [
  "Shares",
  "Comments",
  "Watch Hrs",
- "CTR %",
- "Impressions",
  "Revenue",
- "Estimated Ad Revenue",
- "Gross Revenue",
  "RPM",
- "CPM",
- "Playback Based CPM",
- "Ad Impressions",
- "Monetized Playbacks",
  "Estimated Premium Revenue",
  "AVD",
  "AVP %",
- "STW %",
  "Engaged",
  "Unique",
  "New",
  "Casual",
  "Returning",
  "Regular",
+ "Estimated Ad Revenue",
+ "Gross Revenue",
+ "Impressions",
+ "CTR %",
+ "CPM",
+ "Playback Based CPM",
+ "Ad Impressions",
+ "Monetized Playbacks",
+ "STW %",
  "End screen element clicks",
  "End screen elements shown",
  "Clicks per end screen element shown (%)",
@@ -379,6 +379,12 @@ export const getLikes = (row: Record<string, unknown>): number => {
  const likes = getMetric(row, ["Likes", "likeCount", "Likes count"])
  if (likes > 0) return likes
  return getMetricByPattern(row, [], ["like"])
+}
+
+export const getDislikes = (row: Record<string, unknown>): number => {
+ const dislikes = getMetric(row, ["Dislikes", "dislikeCount", "Dislikes count"])
+ if (dislikes > 0) return dislikes
+ return getMetricByPattern(row, [], ["dislike"])
 }
 
 export const getComments = (row: Record<string, unknown>): number => {

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { useBrain } from "../context/useBrain"
 import { generateTimelinePatch } from "../services/gemini"
+import { youtubeApiClient } from "../services/youtube/youtubeApiClient"
 import {
  FEATURE_REGISTRY,
  applyAIPatchPlan,
@@ -124,6 +125,8 @@ export const IntegratedRemotionEditor: React.FC<Props> = ({
  const [exportFormat, setExportFormat] = useState<RenderFormat>("mp4")
  const [parityReport, setParityReport] = useState<RemotionParityReport | null>(null)
  const [showParityPanel, setShowParityPanel] = useState(false)
+ const [uploading, setUploading] = useState(false)
+ const [uploadProgress, setUploadProgress] = useState(0)
 
  const timelineRef = useRef<HTMLDivElement | null>(null)
  const holdTimerRef = useRef<number | null>(null)
@@ -516,6 +519,34 @@ export const IntegratedRemotionEditor: React.FC<Props> = ({
   setJobs((prev) => [completed, ...prev])
  }
 
+ const handlePublishToYouTube = async () => {
+  if (jobs.length === 0) {
+   alert("Please export a project first.")
+   return
+  }
+  
+  const lastJob = jobs[0]
+  const blob = await fetch(lastJob.artifacts[0].downloadUrl).then(r => r.blob())
+  
+  setUploading(true)
+  setUploadProgress(0)
+  try {
+   const response = await youtubeApiClient.uploadVideo(blob, {
+    title: `ViewTube Export - ${new Date().toLocaleDateString()}`,
+    description: `Created with ViewTubeX Editor.\n\nProject JSON:\n${buildProjectJson(state)}`,
+    privacyStatus: "private"
+   }, (progress) => {
+    setUploadProgress(Math.round(progress))
+   })
+   alert(`Successfully published! Video ID: ${response.id}`)
+  } catch (e) {
+   console.error(e)
+   alert(`Publish failed: ${(e as Error).message}`)
+  } finally {
+   setUploading(false)
+  }
+ }
+
  const adjacent =
   selectedClip ? getAdjacentClipOnTrack(state, selectedClip.id) : {}
 
@@ -738,6 +769,12 @@ export const IntegratedRemotionEditor: React.FC<Props> = ({
          onClick={runExport}>
          Queue Export
         </button>
+        <button
+          disabled={uploading || jobs.length === 0}
+          className={`mb-2 w-full border-[2px] border-black p-2 text-xs font-black flex items-center justify-center gap-2 ${uploading ? "bg-gray-200" : "bg-[#FF3399] text-white"}`}
+          onClick={handlePublishToYouTube}>
+          {uploading ? `UPLOADING ${uploadProgress}%` : "Publish to YouTube"}
+         </button>
         <div className="max-h-24 overflow-auto border-[2px] border-black bg-[#fafafa] p-1 text-[10px] font-bold">
          {jobs.map((job) => (
           <div key={job.id} className="mb-1 border-b border-black/20 pb-1">

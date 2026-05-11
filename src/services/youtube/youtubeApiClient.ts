@@ -9,9 +9,11 @@ import {
 } from "../authSession"
 import { clearAnalyticsStateForFreshSync } from "../localDataReset"
 import { GoogleService } from "../googleService"
+import { YouTubeUploadService } from "./youtubeUploadService"
 
 export const BASE_URL = "https://www.googleapis.com/youtube/v3"
 export const ANALYTICS_URL = "https://youtubeanalytics.googleapis.com/v2"
+export const REPORTING_URL = "https://youtubereporting.googleapis.com/v1"
 
 export class YouTubeApiError extends Error {
  code?: number
@@ -199,6 +201,46 @@ export class YouTubeApiClient extends GoogleService {
 
  public async requestAnalytics(endpoint: string, options: RequestInit = {}) {
   return this.request(ANALYTICS_URL, endpoint, options)
+ }
+
+ public async fetchCommentThreads(options: { videoId?: string; allThreads?: boolean } = {}) {
+  const params = new URLSearchParams({
+   part: "snippet,replies",
+   maxResults: "50",
+  });
+  if (options.videoId) params.append("videoId", options.videoId);
+  else if (options.allThreads) params.append("allThreadsRelatedToChannelId", "");
+
+  return this.requestYouTube(`/commentThreads?${params.toString()}`);
+ }
+
+ public async searchVideos(query: string, options: { location?: string; locationRadius?: string } = {}) {
+  const params = new URLSearchParams({
+   part: "snippet",
+   q: query,
+   type: "video",
+   maxResults: "25",
+  });
+  if (options.location) params.append("location", options.location);
+  if (options.locationRadius) params.append("locationRadius", options.locationRadius);
+
+  return this.requestYouTube(`/search?${params.toString()}`);
+ }
+
+ public async insertComment(parentId: string, text: string) {
+  return this.requestYouTube("/comments?part=snippet", {
+   method: "POST",
+   body: JSON.stringify({
+    snippet: {
+     parentId: parentId,
+     textOriginal: text
+    }
+   })
+  });
+ }
+
+ public async uploadVideo(file: Blob, metadata: { title: string; description: string; privacyStatus?: "public" | "private" | "unlisted" }, onProgress?: (p: number) => void) {
+  return YouTubeUploadService.uploadVideo(file, metadata, onProgress);
  }
 }
 

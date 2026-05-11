@@ -34,7 +34,12 @@ export async function generateCodeChallenge(codeVerifier: string) {
   const encoder = new TextEncoder();
   const data = encoder.encode(codeVerifier);
   const digest = await window.crypto.subtle.digest('SHA-256', data);
-  return btoa(String.fromCharCode.apply(null, [...new Uint8Array(digest)]))
+  const digestArray = new Uint8Array(digest);
+  let binary = '';
+  for (let i = 0; i < digestArray.byteLength; i++) {
+    binary += String.fromCharCode(digestArray[i]);
+  }
+  return btoa(binary)
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '');
@@ -115,6 +120,7 @@ export const loginWithImplicitPopup = async (): Promise<void> => {
     const scopes = [
       'https://www.googleapis.com/auth/youtube',
       'https://www.googleapis.com/auth/youtube.readonly',
+      'https://www.googleapis.com/auth/youtube.force-ssl',
       'https://www.googleapis.com/auth/yt-analytics.readonly',
       'https://www.googleapis.com/auth/yt-analytics-monetary.readonly',
       'openid',

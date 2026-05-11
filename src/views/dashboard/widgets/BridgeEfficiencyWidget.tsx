@@ -41,8 +41,8 @@ export const BridgeEfficiencyWidget: React.FC<any> = ({widget, instance, editMod
     let baseViews = 10000
     let baseImpressions = 100000
 
-    if (data && data.statBlocks) {
-      const viewsBlock = data.statBlocks.find((b: any) => b.label.toLowerCase().includes("views"))
+    if (data && data.statBlocks28d) {
+      const viewsBlock = data.statBlocks28d.find((b: any) => b.label.toLowerCase().includes("views"))
       if (viewsBlock) {
         // Unformat the string "10.5K" back to roughly number
         const valStr = String(viewsBlock.value).replace(/,/g, "")

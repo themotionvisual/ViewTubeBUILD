@@ -55,8 +55,8 @@ export const StableChartFrame: React.FC<StableChartFrameProps> = ({
   <div
    ref={hostRef}
    className={`relative h-full w-full min-w-[1px] ${minHeightClassName} ${className}`}>
-   {size.width > 1 && size.height > 1 ? (
-    <ResponsiveContainer width={size.width} height={size.height} minWidth={1} minHeight={1}>
+   {size.width > 0 && size.height > 0 ? (
+    <ResponsiveContainer width={size.width} height={size.height}>
      {children}
     </ResponsiveContainer>
    ) : null}

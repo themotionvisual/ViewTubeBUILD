@@ -68,6 +68,7 @@ export const AppRoutes: React.FC = () => {
    {import.meta.env.DEV && (
     <Route path="/internal/editor-dev" element={<IntegratedRemotionEditor mode="full" />} />
    )}
+   <Route path="/projects" element={<ProjectCalendarPage />} />
    <Route path="/project-calendar" element={<ProjectCalendarPage />} />
    <Route
     path="/reference-studio"

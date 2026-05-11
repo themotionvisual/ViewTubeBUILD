@@ -6,6 +6,8 @@ import type {
 } from "../../services/analyticsContract"
 import { getMasterRows, getMetricSummary } from "../../services/analyticsSelectors"
 import { useBrain } from "../../context/useBrain"
+import { readYouTubeAnalyticsCache } from "../../services/canonicalAnalyticsStore"
+import { reportToRows } from "../performanceHubUtils"
 
 const metricValue = (
  row: CanonicalVideoRow,
@@ -40,6 +42,19 @@ export interface CanonicalAnalyticsView {
   watchHours: number
   revenue: number
   subscribers: number
+ }>
+ channelDailySeries: Array<{
+  date: string
+  views: number
+  watchHours: number
+  revenue: number
+  subscribers: number
+  likes: number
+  dislikes: number
+  comments: number
+  shares: number
+  impressions: number
+  ctr: number
  }>
 }
 
@@ -119,12 +134,34 @@ export const useCanonicalAnalytics = (
    .map(([date, bucket]) => ({ date, ...bucket }))
  }, [rows])
 
+ const channelDailySeries = useMemo(() => {
+  const cache = readYouTubeAnalyticsCache()
+  const report = cache.dailyMetrics as any
+  if (!report || !Array.isArray(report.rows)) return []
+  const dailyRows = reportToRows(report, "daily", "YouTube API")
+  
+  return dailyRows.map(row => ({
+   date: String(row["Date"] || row["Day"] || ""),
+   views: Number(row["Views"] || 0),
+   watchHours: Number(row["Watch time (hours)"] || 0),
+   revenue: Number(row["Estimated revenue (USD)"] || 0),
+   subscribers: Number(row["Subscribers gained"] || 0),
+   likes: Number(row["Likes"] || 0),
+   dislikes: Number(row["Dislikes"] || 0),
+   comments: Number(row["Comments"] || 0),
+   shares: Number(row["Shares"] || 0),
+   impressions: Number(row["Impressions"] || 0),
+   ctr: Number(row["Impressions click-through rate (%)"] || 0),
+  })).sort((a, b) => a.date.localeCompare(b.date))
+ }, [lastSyncComplete])
+
  return {
   rows,
   summary,
   topRows,
   formatBreakdown,
   timelineSeries,
+  channelDailySeries,
  }
 }
 

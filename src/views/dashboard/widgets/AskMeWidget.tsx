@@ -113,7 +113,7 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
  }, [messages])
 
  const buildContext = () => {
-  const stats = data.statBlocks?.map((s: any) => `${s.label}: ${s.value}`).join(", ") || "No stats"
+  const stats = data.statBlocks28d?.map((s: any) => `${s.label}: ${s.value}`).join(", ") || "No stats"
   const topVideos = (data.canonicalRows || []).slice(0, 5).map((v: any) => v.title).join(", ") || "No videos"
   const subs = data.brain?.recentMetrics?.currentSubscribers || 0
   return `Channel stats (28d): ${stats}. Subscribers: ${subs}. Recent videos: ${topVideos}.`
@@ -236,7 +236,7 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
 /** Local fallback when Gemini unavailable */
 function generateLocalResponse(question: string, data: any): string {
  const q = question.toLowerCase()
- const stats = data.statBlocks || []
+ const stats = data.statBlocks28d || []
  const views = stats.find((s: any) => s.label.toLowerCase().includes("views"))?.value || "0"
  const subs = stats.find((s: any) => s.label.toLowerCase().includes("subscribers"))?.value || "0"
  const revenue = stats.find((s: any) => s.label.toLowerCase().includes("revenue"))?.value || "$0"

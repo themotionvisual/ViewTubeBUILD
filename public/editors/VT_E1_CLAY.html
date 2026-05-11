@@ -23,6 +23,14 @@
       if (!src.includes('cdn.tailwindcss.com') && !src.includes('babel')) return;
       const root = document.getElementById('root');
       if (!root) return;
+      
+      // Fallback for missing transition function reported by user
+      if (typeof window.computeTransitionWindow !== 'function') {
+        window.computeTransitionWindow = (left, right, trans, fps) => {
+          return { start: 0, end: 100 };
+        };
+      }
+
       root.innerHTML = `
         <div style="padding:16px;font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial,sans-serif;">
           <div style="border:2px solid #111;border-radius:10px;background:#fff;padding:14px;max-width:760px;">

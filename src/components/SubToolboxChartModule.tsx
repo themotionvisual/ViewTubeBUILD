@@ -28,6 +28,8 @@ export interface SubToolboxStat {
   label: string
   value: string
   tone?: Tone
+  onClick?: () => void
+  isActive?: boolean
 }
 
 export interface SubToolboxMetricBadge {
@@ -43,7 +45,7 @@ export interface SubToolboxChartModuleProps {
     headerStyle?: "subtoolbox" | "classic"
   }
   controlBox?: {
-    count: number
+    count: number | string
     countLabel?: string
     countUnit?: string
     dropdown?: {
@@ -56,8 +58,12 @@ export interface SubToolboxChartModuleProps {
     extraActions?: React.ReactNode
   }
   activeContext?: {
-    title: string
-    stats: SubToolboxStat[]
+    title?: React.ReactNode
+    stats?: SubToolboxStat[]
+    leftTitle?: string
+    leftStats?: SubToolboxStat[]
+    rightTitle?: string
+    rightStats?: SubToolboxStat[]
   } | null
   layout?: {
     moduleWidth?: string
@@ -154,63 +160,77 @@ export const SubToolboxChartModule: React.FC<
 
           {controlBox ? (
             <div
-              className="relative w-[80px] h-full min-h-[72px] border-l-[4px] border-l-black rounded-none px-1 py-0 flex flex-col items-center justify-between gap-0.5 shrink-0"
-              style={{ background: "#CCFF00", color: "#000000" }}
+              className="relative w-fit h-full min-h-[70px] border-l-[4px] border-l-black rounded-none px-0 py-0 flex flex-col items-center justify-start gap-0 shrink-0 overflow-visible"
+              style={{ background: tokens.iconBlockBg, color: "#000000" }}
             >
-              <span className="text-[32px] font-[1000] leading-[0.95] text-center w-full pt-0.5">{controlBox.count}</span>
-              <div className="mt-auto mb-0 -mx-1 w-[calc(100%+8px)] flex py-1 items-center justify-center h-full overflow-hidden border-y-[4px] border-x-[4px] border-black bg-black">
-                {controlBox.dropdown ? (
-                  <button
-                    type="button"
-                    onClick={controlBox.dropdown.onToggle}
-                    className="h-8 px-1 w-full bg-black text-[#CCFF00] text-[14px] font-black uppercase tracking-[0.01em] inline-flex items-center justify-center gap-1 shrink-0"
-                  >
-                    <span
-                      className={`text-[14px] leading-none transition-transform duration-150 ${
-                        controlBox.dropdown.isOpen ? "rotate-180" : ""
-                      }`}
+                <span className={`font-[1000] leading-[0.9] text-center w-full pt-1 px-1 break-all ${String(controlBox.count).length > 5 ? 'text-[24px]' : 'text-[32px]'}`}>
+                  {controlBox.count}
+                </span>
+                <div className="mt-auto mb-0 w-full flex items-center justify-center border-y-[2px] border-black bg-black h-[22px] shrink-0 overflow-hidden">
+                  {controlBox.dropdown ? (
+                    <button
+                      type="button"
+                      onClick={controlBox.dropdown.onToggle}
+                      className="h-full px-2 w-full bg-black text-[#CCFF00] text-[18px] font-black uppercase tracking-[0.01em] inline-flex items-center justify-center gap-1 shrink-0"
                     >
-                      ▼
+                      <span
+                        className={`text-[12px] leading-none transition-transform duration-150 ${
+                          controlBox.dropdown.isOpen ? "rotate-180" : ""
+                        }`}
+                      >
+                        ▼
+                      </span>
+                      <span className="truncate text-center">
+                        {controlBox.dropdown.options.find(
+                          (o) => o.value === controlBox.dropdown?.value,
+                        )?.label ?? controlBox.dropdown.value}
+                      </span>
+                    </button>
+                  ) : (
+                    <span className="text-[14px] font-black uppercase tracking-[0.01em] text-center leading-none w-full px-2">
+                      {controlBox.countLabel ?? "TOP PERFORMING"}
                     </span>
-                    <span className="truncate text-center">
-                      {controlBox.dropdown.options.find(
-                        (o) => o.value === controlBox.dropdown?.value,
-                      )?.label ?? controlBox.dropdown.value}
-                    </span>
-                  </button>
-                ) : (
-                  <span className="text-[14px] font-black uppercase tracking-[0.01em] text-center leading-none w-full">
-                    {controlBox.countLabel ?? "TOP PERFORMING"}
+                  )}
+                </div>
+                <div className="flex-1 w-full flex items-center justify-center">
+                  <span className="text-[16px] text-center font-black uppercase tracking-[0.01em] leading-none">
+                    {controlBox.countUnit ?? "VIDEOS"}
                   </span>
-                )}
-              </div>
-              <span className="text-[14px] text-center font-black uppercase tracking-[0.01em] leading-none pb-0.5">
-                {controlBox.countUnit ?? "VIDEOS"}
-              </span>
+                </div>
               {controlBox.dropdown ? (
                 <div
-                  className={`absolute left-1/2 -translate-x-1/2 top-[calc(100%+6px)] w-[88px] bg-white border-[3px] border-black rounded-[10px] overflow-hidden z-30 origin-top transition-all duration-200 ${
+                  className={`absolute left-0 right-0 top-[calc(100%+6px)] bg-white border-[4px] border-black rounded-[10px] overflow-hidden z-30 origin-top transition-all duration-200 ${
                     controlBox.dropdown.isOpen
                       ? "opacity-100 scale-y-100 pointer-events-auto"
                       : "opacity-0 scale-y-95 pointer-events-none"
                   }`}
                 >
-                  {controlBox.dropdown.options.map((option, idx) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => controlBox.dropdown?.onSelect(option.value)}
-                      className={`w-full h-5 px-3 text-center text-[10px] font-black uppercase tracking-[0.06em] whitespace-nowrap hover:bg-[#CCFF00]/20 ${
-                        idx === 0 ? "" : "border-t-[3px] border-black"
-                      } ${
-                        controlBox.dropdown?.value === option.value
-                          ? "bg-[#CCFF00]/10"
-                          : ""
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
+                  {controlBox.dropdown.options.map((option, idx) => {
+                    const isActive = controlBox.dropdown?.value === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => controlBox.dropdown?.onSelect(option.value)}
+                        style={{ 
+                          backgroundColor: isActive ? tokens.iconBlockBg : 'white' 
+                        }}
+                        className={`w-full h-8 px-3 text-center text-[12px] font-[1000] uppercase tracking-[0.06em] whitespace-nowrap border-black flex items-center justify-center transition-colors duration-150 ${
+                          idx === 0 ? "" : "border-t-[4px]"
+                        }`}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = tokens.iconBlockBg;
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isActive) {
+                            e.currentTarget.style.backgroundColor = 'white';
+                          }
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
                 </div>
               ) : null}
               {controlBox.extraActions}
@@ -220,35 +240,110 @@ export const SubToolboxChartModule: React.FC<
       </div>
 
       {activeContext ? (
-        <div className="border-b-[4px] border-black px-0 py-0 bg-[#F8F8F8]">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-            <div
-              className="flex items-center justify-start text-left font-[1000] uppercase tracking-tight h-6 text-[28px] leading-[0.9] pl-2"
-              style={{
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-              }}
-            >
-              {activeContext.title}
+        <div className="border-b-[4px] border-black px-0 py-0 bg-white h-10 overflow-hidden">
+          <div className="flex items-stretch h-full w-full justify-between">
+            {/* Left Section */}
+            <div className="flex items-stretch h-full overflow-hidden shrink-0">
+              {activeContext.leftTitle && (
+                <div className="px-2 flex items-center justify-center font-[1000] text-[18px] border-r-[4px] border-black bg-white shrink-0">
+                  {activeContext.leftTitle}
+                </div>
+              )}
+              {activeContext.leftStats && (
+                <div className="flex items-stretch h-full">
+                  {activeContext.leftStats.map((item) => (
+                    <button
+                      key={item.label}
+                      onClick={item.onClick}
+                      disabled={!item.onClick}
+                      className={`h-full w-auto px-0.5 inline-flex flex-col items-stretch justify-start tabular-nums leading-none border-r-[4px] border-black overflow-hidden transition-colors ${
+                        item.onClick ? 'cursor-pointer hover:bg-gray-50' : 'cursor-default'
+                      } ${item.isActive ? 'bg-white' : 'bg-gray-100 grayscale-[0.5]'}`}
+                    >
+                      <span className={`h-5 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 ${item.isActive ? 'text-black' : 'text-black/40'}`}>
+                        {item.value}
+                      </span>
+                      <span
+                        className={`h-5 text-[11px] font-black tracking-tight uppercase inline-flex items-center justify-center w-full ${toneClass(item.tone)} ${item.isActive ? 'opacity-100' : 'opacity-40 grayscale'}`}
+                      >
+                        {item.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="grid grid-flow-col auto-cols-[60px] h-10 items-stretch gap-0 text-[11px] font-black uppercase tracking-[0.12em] text-black/75 border-[2px] border-black overflow-hidden">
-              {activeContext.stats.map((item) => (
-                <span
-                  key={item.label}
-                  className="h-full w-[60px] inline-flex flex-col items-stretch justify-start tabular-nums leading-none overflow-hidden border-l-[3px] first:border-l-0 border-black rounded-none"
-                >
-                  <span className="h-5 text-[14px] bg-white font-[1000] tracking-tight text-black inline-flex items-center justify-center">
-                    {item.value}
-                  </span>
-                  <span
-                    className={`h-5 text-[9px] font-black tracking-[0.11em] uppercase inline-flex items-center justify-center ${toneClass(item.tone)}`}
-                  >
-                    {item.label}
-                  </span>
-                </span>
-              ))}
+
+            {/* Middle Section (Filler / Title) */}
+            <div className="flex-1 bg-white flex items-stretch h-full overflow-hidden min-w-0">
+              {activeContext.title && (
+                <div className={`flex items-stretch flex-1 min-w-0 ${activeContext.leftStats || activeContext.leftTitle ? 'border-l-[4px]' : ''} ${activeContext.rightStats || activeContext.rightTitle || activeContext.stats ? 'border-r-[4px]' : ''} border-black`}>
+                  {typeof activeContext.title === 'string' ? (
+                    <div className="flex items-center px-2 font-[1000] text-[22px] leading-tight flex-1 truncate">
+                      {activeContext.title}
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex items-stretch min-w-0">
+                      {activeContext.title}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Right Section */}
+            <div className="flex items-stretch h-full overflow-hidden shrink-0">
+              {activeContext.rightStats && (
+                <div className="flex items-stretch h-full">
+                  {activeContext.rightStats.map((item) => (
+                    <button
+                      key={item.label}
+                      onClick={item.onClick}
+                      disabled={!item.onClick}
+                      className={`h-full w-auto px-0.5 inline-flex flex-col items-stretch justify-start tabular-nums leading-none border-l-[4px] border-black overflow-hidden transition-colors ${
+                        item.onClick ? 'cursor-pointer hover:bg-gray-50' : 'cursor-default'
+                      } ${item.isActive ? 'bg-white' : 'bg-gray-100 grayscale-[0.5]'}`}
+                    >
+                      <span className={`h-5 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 ${item.isActive ? 'text-black' : 'text-black/40'}`}>
+                        {item.value}
+                      </span>
+                      <span
+                        className={`h-5 text-[11px] font-[1000] tracking-tight uppercase inline-flex items-center justify-center w-full ${toneClass(item.tone)} ${item.isActive ? 'opacity-100' : 'opacity-40 grayscale'}`}
+                      >
+                        {item.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {activeContext.rightTitle && (
+                <div className="px-2 flex items-center justify-center font-[1000] text-[18px] border-l-[4px] border-black bg-white shrink-0">
+                  {activeContext.rightTitle}
+                </div>
+              )}
+              {!activeContext.rightStats && activeContext.stats && (
+                <div className="flex items-stretch h-full">
+                  {activeContext.stats.map((item) => (
+                    <button
+                      key={item.label}
+                      onClick={item.onClick}
+                      disabled={!item.onClick}
+                      className={`h-full w-auto px-0.5 inline-flex flex-col items-stretch justify-start tabular-nums leading-none border-l-[4px] border-black overflow-hidden transition-colors ${
+                        item.onClick ? 'cursor-pointer hover:bg-gray-50' : 'cursor-default'
+                      } ${item.isActive ? 'bg-white' : 'bg-gray-100 grayscale-[0.5]'}`}
+                    >
+                      <span className={`h-5 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 ${item.isActive ? 'text-black' : 'text-black/40'}`}>
+                        {item.value}
+                      </span>
+                      <span
+                        className={`h-5 text-[11px] font-[1000] tracking-tight uppercase inline-flex items-center justify-center w-full ${toneClass(item.tone)} ${item.isActive ? 'opacity-100' : 'opacity-40 grayscale'}`}
+                      >
+                        {item.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -259,7 +354,7 @@ export const SubToolboxChartModule: React.FC<
       </div>
 
       {(legendLayout?.left || legendLayout?.center || legendLayout?.right) && (
-        <div className="px-4 py-2 border-t-[2px] border-black bg-[#F8F8F8]">
+        <div className="px-4 py-2 border-t-[4px] border-black bg-[#F8F8F8]">
           <div className="grid grid-cols-3 items-center gap-2 text-[10px] font-black uppercase tracking-[0.08em]">
             <div className="justify-self-start">{legendLayout.left}</div>
             <div className="justify-self-center">{legendLayout.center}</div>
@@ -268,7 +363,11 @@ export const SubToolboxChartModule: React.FC<
         </div>
       )}
 
-      {footer ? footer : null}
+      {footer ? (
+        <div className="border-t-[4px] border-black bg-black">
+          {footer}
+        </div>
+      ) : null}
     </div>
   )
 }

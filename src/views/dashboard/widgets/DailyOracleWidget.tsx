@@ -26,7 +26,7 @@ interface OracleState {
 
 function generateAdvice(data: any, { onDecSize, onCycleHeight, onDecHeight }: any): OracleState {
  const rows = data.canonicalRows || []
- const stats = data.statBlocks || []
+ const stats = data.statBlocks28d || []
  const viewsBlock = stats.find((s: any) => s.label.toLowerCase().includes("views"))
  const revenueBlock = stats.find((s: any) => s.label.toLowerCase().includes("revenue"))
  const subsBlock = stats.find((s: any) => s.label.toLowerCase().includes("subscribers"))

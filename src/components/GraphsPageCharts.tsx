@@ -3,7 +3,7 @@ import "./marquee.css"
 import {
  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
  BarChart, Bar, ScatterChart, Scatter, ZAxis, Legend, Cell,
- LineChart, Line, PieChart, Pie, ComposedChart, ReferenceLine, ReferenceArea,
+ LineChart, Line, PieChart, Pie, Label, ComposedChart, ReferenceLine, ReferenceArea,
  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
  Customized,
 } from "recharts"
@@ -117,64 +117,75 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
  const maxRet = useMemo(() => Math.max(100, ...all.map((p) => p.ret)), [all])
  const ctrMid = maxCtr * 0.5
  const retMid = maxRet * 0.5
+ const activePoint = hovered || topPoint
 
  return (
-  <UnifiedChartModule
-   title="VIDEO VALUE MATRIX"
-   subtitle="CTR × RETENTION × VIEWS"
-   headerIcon={<CustomIcon name="target" size={18} />}
-   headerColor="#FFEA00"
-   stats={[{ label: "VIDEOS", value: String(total) }]}
-   activeVideo={
-    hovered
-     ? {
-        title: hovered.title,
-        stats: [
-         { label: "CTR", value: `${hovered.ctr.toFixed(2)}%`, tone: "cyan" },
-         { label: "RET", value: `${hovered.ret.toFixed(2)}%`, tone: "pink" },
-         { label: "VIEWS", value: hovered.views.toLocaleString(), tone: "yellow" },
-        ],
-       }
-     : topPoint
-       ? {
-          title: topPoint.title,
-          stats: [
-           { label: "CTR", value: `${topPoint.ctr.toFixed(2)}%`, tone: "cyan" },
-           { label: "RET", value: `${topPoint.ret.toFixed(2)}%`, tone: "pink" },
-           { label: "VIEWS", value: topPoint.views.toLocaleString(), tone: "yellow" },
-          ],
-         }
-       : null
+  <SubToolboxChartModule
+   header={{
+    title: "VIDEO VALUE MATRIX",
+    subtitle: "CTR × RETENTION × VIEWS",
+    icon: <CustomIcon name="target" size={18} />,
+    headerStyle: "subtoolbox",
+   }}
+   theme={{
+    headerBandBg: "#FFEA00",
+    iconBlockBg: "#FF7497",
+    shadowColor: "rgba(255,234,0,0.45)",
+   }}
+   layout={{ moduleMinHeight: "420px", moduleWidth: "100%" }}
+   controlBox={{
+    count: total,
+    countUnit: "VIDEOS",
+   }}
+   activeContext={{
+    title: activePoint?.title?.toUpperCase().slice(0, 30) || "SELECT VIDEO",
+    stats: activePoint ? [
+     { label: "CTR", value: `${activePoint.ctr.toFixed(2)}%`, tone: "cyan" },
+     { label: "RET", value: `${activePoint.ret.toFixed(2)}%`, tone: "pink" },
+     { label: "VIEWS", value: activePoint.views.toLocaleString(), tone: "yellow" },
+    ] : [],
+   }}
+   legendLayout={{
+    left: (
+     <div className="flex items-center gap-4 px-1 py-1 text-[10px] font-black text-black/65 uppercase tracking-[0.1em]">
+      <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#FF7497] border border-black"/>Shorts</div>
+      <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#00E5FF] border border-black"/>Long</div>
+      <div className="flex items-center gap-1">Bubble size = Views</div>
+     </div>
+    ),
+   }}
+   footer={
+    <InsightMarquee
+     mode="insight-lock"
+     segments={[
+      { badge: "Chart Insight", text: "Video Value Matrix segments your content into four performance quadrants.", badgeTone: "cyan" },
+      { badge: "Personal Insight", text: "Focus on 'Hidden Gems' (Top Left) — high retention videos that need better CTR/Thumbnails.", badgeTone: "lime" },
+     ]}
+    />
    }
-   visualLegend={
-    <div className="flex items-center gap-4 px-1 py-1 text-[10px] font-black text-black/65 uppercase tracking-[0.1em]">
-     <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#FF7497] border border-black"/>Shorts</div>
-     <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#00E5FF] border border-black"/>Long</div>
-     <div className="flex items-center gap-1">Bubble size = Views</div>
+  >
+   <div className="p-6 h-[420px] relative">
+    <StableChartFrame minHeightClassName="min-h-[300px]">
+     <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 10 }}>
+       <ReferenceArea x1={0} x2={ctrMid} y1={0} y2={retMid} fill="#F5F5F5" fillOpacity={0.6} />
+       <ReferenceArea x1={ctrMid} x2={Math.ceil(maxCtr * 1.15)} y1={0} y2={retMid} fill="#EEF9FF" fillOpacity={0.6} />
+       <ReferenceArea x1={0} x2={ctrMid} y1={retMid} y2={Math.ceil(maxRet * 1.1)} fill="#FFF4F8" fillOpacity={0.6} />
+       <ReferenceArea x1={ctrMid} x2={Math.ceil(maxCtr * 1.15)} y1={retMid} y2={Math.ceil(maxRet * 1.1)} fill="#F4FFF4" fillOpacity={0.75} />
+       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+       <XAxis type="number" dataKey="ctr" name="CTR" unit="%" domain={[0, Math.ceil(maxCtr * 1.15)]} tick={{fontWeight:900,fontSize:11}} axisLine={{ stroke: '#000', strokeWidth: 3 }} />
+       <YAxis type="number" dataKey="ret" name="Retention" unit="%" domain={[0, Math.ceil(maxRet * 1.1)]} tick={{fontWeight:900,fontSize:11}} axisLine={{ stroke: '#000', strokeWidth: 3 }} />
+       <ZAxis type="number" dataKey="views" range={[30,600]} />
+       <ReferenceLine x={ctrMid} stroke="#000" strokeWidth={1} />
+       <ReferenceLine y={retMid} stroke="#000" strokeWidth={1} />
+       <Tooltip content={<ChartTip />} />
+       <Scatter name="Shorts" data={shorts} fill="#FF7497" fillOpacity={0.8} stroke="#fff" strokeWidth={1}
+        onMouseEnter={(d:any)=>setHovered(d)} onMouseLeave={()=>setHovered(null)} />
+       <Scatter name="Long-form" data={longs} fill="#00E5FF" fillOpacity={0.8} stroke="#fff" strokeWidth={1}
+        onMouseEnter={(d:any)=>setHovered(d)} onMouseLeave={()=>setHovered(null)} />
+      </ScatterChart>
+     </StableChartFrame>
     </div>
-   }>
-  <div className="p-6 h-[420px] relative">
-   <StableChartFrame minHeightClassName="min-h-[300px]">
-    <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 10 }}>
-      <ReferenceArea x1={0} x2={ctrMid} y1={0} y2={retMid} fill="#F5F5F5" fillOpacity={0.6} />
-      <ReferenceArea x1={ctrMid} x2={Math.ceil(maxCtr * 1.15)} y1={0} y2={retMid} fill="#EEF9FF" fillOpacity={0.6} />
-      <ReferenceArea x1={0} x2={ctrMid} y1={retMid} y2={Math.ceil(maxRet * 1.1)} fill="#FFF4F8" fillOpacity={0.6} />
-      <ReferenceArea x1={ctrMid} x2={Math.ceil(maxCtr * 1.15)} y1={retMid} y2={Math.ceil(maxRet * 1.1)} fill="#F4FFF4" fillOpacity={0.75} />
-      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-      <XAxis type="number" dataKey="ctr" name="CTR" unit="%" domain={[0, Math.ceil(maxCtr * 1.15)]} tick={{fontWeight:900,fontSize:11}} />
-      <YAxis type="number" dataKey="ret" name="Retention" unit="%" domain={[0, Math.ceil(maxRet * 1.1)]} tick={{fontWeight:900,fontSize:11}} />
-      <ZAxis type="number" dataKey="views" range={[30,600]} />
-      <ReferenceLine x={ctrMid} stroke="#000" strokeWidth={1} />
-      <ReferenceLine y={retMid} stroke="#000" strokeWidth={1} />
-      <Tooltip content={<ChartTip />} />
-      <Scatter name="Shorts" data={shorts} fill="#FF7497" fillOpacity={0.8} stroke="#fff" strokeWidth={1}
-       onMouseEnter={(d:any)=>setHovered(d)} onMouseLeave={()=>setHovered(null)} />
-      <Scatter name="Long-form" data={longs} fill="#00E5FF" fillOpacity={0.8} stroke="#fff" strokeWidth={1}
-       onMouseEnter={(d:any)=>setHovered(d)} onMouseLeave={()=>setHovered(null)} />
-     </ScatterChart>
-    </StableChartFrame>
-   </div>
-  </UnifiedChartModule>
+  </SubToolboxChartModule>
  )
 }
 
@@ -182,11 +193,49 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
 export const RevenueDistribution: React.FC<GChartProps> = ({ data }) => {
  const cd = useMemo(() => [...data].sort((a,b) => mv(b,"revenue")-mv(a,"revenue")).slice(0,10)
   .map(r => ({ name: r.title.substring(0,25), value: +mv(r,"revenue").toFixed(2) })).filter(d=>d.value>0), [data])
+ const total = useMemo(() => cd.reduce((s, d) => s + d.value, 0), [cd])
  return (
-  <Card title="REVENUE DISTRIBUTION" subtitle="Top 10 — Last 90 Days" headerColor="#CCFF00" count={cd.length} icon={<CustomIcon name="!!!REVENUE" size={18} />}>
-   <PieChart><Pie data={cd} innerRadius="30%" outerRadius="90%" dataKey="value" stroke="#fff" strokeWidth={2} label={({name,value})=>`$${value}`}>
-    {cd.map((_,i)=><Cell key={i} fill={COLORS[i%COLORS.length]}/>)}</Pie><Tooltip content={<ChartTip/>}/></PieChart>
-  </Card>
+  <SubToolboxChartModule
+   header={{
+    title: "REVENUE DISTRIBUTION",
+    subtitle: `TOP ${cd.length} — LAST 90 DAYS`,
+    icon: <CustomIcon name="analytics" size={18} />,
+    headerStyle: "subtoolbox",
+   }}
+   theme={{
+    headerBandBg: "#CCFF00",
+    iconBlockBg: "#00E5FF",
+    shadowColor: "rgba(204,255,0,0.45)",
+   }}
+   layout={{ moduleMinHeight: "340px", moduleWidth: "100%" }}
+   controlBox={{ count: cd.length, countUnit: "VIDEOS" }}
+   activeContext={{
+    title: cd[0]?.name?.toUpperCase() || "NO DATA",
+    stats: [
+     { label: "TOP", value: `$${cd[0]?.value?.toFixed(2) ?? 0}`, tone: "lime" },
+     { label: "TOTAL", value: `$${total.toFixed(2)}`, tone: "cyan" },
+    ],
+   }}
+   footer={
+    <InsightMarquee
+     mode="insight-lock"
+     segments={[
+      { badge: "Revenue", text: "Revenue distribution shows which videos generate the most income — focus on creating more of your top earners.", badgeTone: "lime" },
+     ]}
+    />
+   }
+  >
+   <div className="h-[340px] p-4">
+    <StableChartFrame minHeightClassName="min-h-[300px]">
+     <PieChart>
+      <Pie data={cd} innerRadius="30%" outerRadius="90%" dataKey="value" stroke="#fff" strokeWidth={2} label={({value})=>`$${value}`}>
+       {cd.map((_,i)=><Cell key={i} fill={COLORS[i%COLORS.length]}/>)}
+      </Pie>
+      <Tooltip content={<ChartTip/>}/>
+     </PieChart>
+    </StableChartFrame>
+   </div>
+  </SubToolboxChartModule>
  )
 }
 
@@ -194,27 +243,57 @@ export const RevenueDistribution: React.FC<GChartProps> = ({ data }) => {
 export const WatchTimeDistribution: React.FC<GChartProps> = ({ data }) => {
  const cd = useMemo(() => [...data].sort((a,b) => mv(b,"watchHours")-mv(a,"watchHours")).slice(0,10)
   .map(r => ({ name: r.title.substring(0,25), value: +mv(r,"watchHours").toFixed(1) })).filter(d=>d.value>0), [data])
+ const total = useMemo(() => cd.reduce((s, d) => s + d.value, 0), [cd])
  return (
-  <Card title="WATCH TIME DISTRIBUTION" headerColor="#FFEA00" count={cd.length} icon={<CustomIcon name="calendar" size={18} />}>
-   <PieChart><Pie data={cd} innerRadius="20%" outerRadius="90%" dataKey="value" stroke="#fff" strokeWidth={2}>
-    {cd.map((_,i)=><Cell key={i} fill={COLORS[i%COLORS.length]}/>)}</Pie><Tooltip content={<ChartTip/>}/></PieChart>
-  </Card>
+  <SubToolboxChartModule
+   header={{
+    title: "WATCH TIME DISTRIBUTION",
+    subtitle: "CANONICAL METRIC VIEW",
+    icon: <CustomIcon name="calendar" size={18} />,
+    headerStyle: "subtoolbox",
+   }}
+   theme={{
+    headerBandBg: "#FFEA00",
+    iconBlockBg: "#FF7497",
+    shadowColor: "rgba(255,234,0,0.45)",
+   }}
+   layout={{ moduleMinHeight: "340px", moduleWidth: "100%" }}
+   controlBox={{ count: cd.length, countUnit: "VIDEOS" }}
+   activeContext={{
+    title: cd[0]?.name?.toUpperCase() || "NO DATA",
+    stats: [
+     { label: "TOP", value: `${cd[0]?.value ?? 0}h`, tone: "pink" },
+     { label: "TOTAL", value: `${total.toFixed(1)}h`, tone: "yellow" },
+    ],
+   }}
+   footer={
+    <InsightMarquee
+     mode="insight-lock"
+     segments={[
+      { badge: "Watch Time", text: "Watch time distribution reveals which videos keep viewers engaged longest — a key factor in algorithmic promotion.", badgeTone: "yellow" },
+     ]}
+    />
+   }
+  >
+   <div className="h-[340px] p-4">
+    <StableChartFrame minHeightClassName="min-h-[300px]">
+     <PieChart>
+      <Pie data={cd} innerRadius="20%" outerRadius="90%" dataKey="value" stroke="#fff" strokeWidth={2}>
+       {cd.map((_,i)=><Cell key={i} fill={COLORS[i%COLORS.length]}/>)}
+      </Pie>
+      <Tooltip content={<ChartTip/>}/>
+     </PieChart>
+    </StableChartFrame>
+   </div>
+  </SubToolboxChartModule>
  )
 }
 
 /* 4. Subscribers Gained */
 export const SubscribersGained: React.FC<GChartProps> = ({ data }) => {
  const [mode, setMode] = useState<"subs" | "views" | "watch">("subs")
- const [open, setOpen] = useState(false)
- const menuRef = useRef<HTMLDivElement | null>(null)
- useEffect(() => {
-  const handler = (event: MouseEvent) => {
-   if (!menuRef.current) return
-   if (!menuRef.current.contains(event.target as Node)) setOpen(false)
-  }
-  window.addEventListener("mousedown", handler)
-  return () => window.removeEventListener("mousedown", handler)
- }, [])
+ const [modeMenuOpen, setModeMenuOpen] = useState(false)
+ const modeLabel = mode === "subs" ? "SUBSCRIBERS" : mode === "views" ? "VIEWS" : "WATCH HOURS"
  const cd = useMemo(() => {
   const metric = mode === "views" ? "views" : mode === "watch" ? "watchHours" : "subscribersGained"
   return [...data]
@@ -224,50 +303,62 @@ export const SubscribersGained: React.FC<GChartProps> = ({ data }) => {
    .filter((d) => d.value > 0)
  }, [data, mode])
  return (
-  <UnifiedChartModule
-   title="SUBSCRIBERS GAINED"
-   subtitle="RANKED VIDEO PERFORMANCE"
-   headerIcon={<CustomIcon name="!!!SUBSCRIBERS" size={18} />}
-   headerColor="#FFEA00"
-   controls={
-    <div ref={menuRef} className="relative w-[144px] bg-black text-[#CCFF00] border-[2px] border-black rounded-[8px] px-2 py-1 inline-flex flex-col items-center justify-center gap-1 leading-none">
-     <span className="text-[40px] font-[1000] leading-none">{cd.length}</span>
-     <button
-      type="button"
-      onClick={() => setOpen((v) => !v)}
-      className="h-6 w-full px-2 bg-white text-black border-[2px] border-black rounded-[4px] text-[8px] font-black uppercase tracking-[0.08em] inline-flex items-center justify-between">
-      <span>{mode === "subs" ? "Subs" : mode === "views" ? "Views" : "Watch"}</span>
-      <span className={`text-[9px] transition-transform duration-200 ${open ? "rotate-180" : ""}`}>▼</span>
-     </button>
-     <span className="text-[8px] font-black uppercase tracking-[0.12em]">videos</span>
-     <div className={`absolute right-[-2px] top-[calc(100%-2px)] w-[calc(100%+4px)] bg-white border-[3px] border-black border-t-0 rounded-b-[6px] overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] z-30 origin-top transition-all duration-200 ${open ? "opacity-100 scale-y-100 pointer-events-auto" : "opacity-0 scale-y-95 pointer-events-none"}`}>
-      {[
-       { key: "subs", label: "Subscribers" },
-       { key: "views", label: "Views" },
-       { key: "watch", label: "Watch Hours" },
-      ].map((opt) => (
-       <button
-        key={opt.key}
-        type="button"
-        onClick={() => {
-         setMode(opt.key as any)
-         setOpen(false)
-        }}
-        className="w-full h-8 px-2 text-left text-[9px] font-black uppercase tracking-[0.06em] whitespace-nowrap hover:bg-[#EEF7FF] border-t-[2px] border-black/10 first:border-t-0">
-        {mode === (opt.key as any) ? "✓ " : ""}{opt.label}
-       </button>
-      ))}
-     </div>
-    </div>
+  <SubToolboxChartModule
+   header={{
+    title: "SUBSCRIBERS GAINED",
+    subtitle: `RANKED BY ${modeLabel}`,
+    icon: <CustomIcon name="analytics" size={18} />,
+    headerStyle: "subtoolbox",
+   }}
+   theme={{
+    headerBandBg: "#FFEA00",
+    iconBlockBg: "#00E5FF",
+    shadowColor: "rgba(255,234,0,0.45)",
+   }}
+   layout={{ moduleMinHeight: "340px", moduleWidth: "100%" }}
+   controlBox={{
+    count: cd.length,
+    countUnit: "VIDEOS",
+    dropdown: {
+     value: mode,
+     isOpen: modeMenuOpen,
+     onToggle: () => setModeMenuOpen((prev) => !prev),
+     onSelect: (value) => { setMode(value as any); setModeMenuOpen(false) },
+     options: [
+      { value: "subs", label: "SUBS" },
+      { value: "views", label: "VIEWS" },
+      { value: "watch", label: "WATCH" },
+     ],
+    },
+   }}
+   activeContext={{
+    title: cd[0]?.name?.toUpperCase() || "NO DATA",
+    stats: [
+     { label: "#1", value: String(cd[0]?.value ?? 0), tone: "cyan" },
+     { label: "TOTAL", value: String(cd.reduce((s, d) => s + d.value, 0)), tone: "lime" },
+    ],
+   }}
+   footer={
+    <InsightMarquee
+     mode="insight-lock"
+     segments={[
+      { badge: "Growth", text: "Subscriber acquisition reveals which videos convert viewers into fans — double down on these formats.", badgeTone: "cyan" },
+     ]}
+    />
    }
-   stats={[]}
   >
-   <div className="mx-auto max-w-[1020px] border-[3px] border-black rounded-[8px] bg-white p-2">
-   <BarChart data={cd} margin={{top:10,right:10,left:-20,bottom:40}}>
-    <CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="name" tick={{fontSize:8,fontWeight:900}} interval={0} angle={-45} textAnchor="end"/>
-    <YAxis tick={{fontSize:10,fontWeight:900}}/><Tooltip content={<ChartTip/>}/><Bar dataKey="value" fill="#00E5FF" radius={[4,4,0,0]}/></BarChart>
+   <div className="h-[340px] p-4">
+    <StableChartFrame minHeightClassName="min-h-[300px]">
+     <BarChart data={cd} margin={{top:10,right:10,left:-20,bottom:40}}>
+      <CartesianGrid strokeDasharray="3 3" vertical={false}/>
+      <XAxis dataKey="name" tick={{fontSize:8,fontWeight:900}} interval={0} angle={-45} textAnchor="end" axisLine={{ stroke: '#000', strokeWidth: 3 }}/>
+      <YAxis tick={{fontSize:10,fontWeight:900}} axisLine={{ stroke: '#000', strokeWidth: 3 }}/>
+      <Tooltip content={<ChartTip/>}/>
+      <Bar dataKey="value" fill="#00E5FF" radius={[4,4,0,0]}/>
+     </BarChart>
+    </StableChartFrame>
    </div>
-  </UnifiedChartModule>
+  </SubToolboxChartModule>
  )
 }
 
@@ -499,6 +590,7 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
 /* 5b. Shorts Retention - Widget Module (no tooltip, subtitle rail) */
 export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => {
  const [mode, setMode] = useState<"top-performing" | "most-recent">("top-performing")
+ const [sortMetric, setSortMetric] = useState<"avd" | "estIncome" | "dur" | "views">("avd")
  const [modeMenuOpen, setModeMenuOpen] = useState(false)
  const [activeKey, setActiveKey] = useState<string | null>(null)
  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
@@ -520,7 +612,7 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
 
   const ranked = mode === "most-recent"
    ? [...shorts].sort((a, b) => b.uploadTs - a.uploadTs)
-   : [...shorts].sort((a, b) => b.views - a.views)
+   : [...shorts].sort((a, b) => b[sortMetric] - a[sortMetric])
 
   const top100 = ranked.slice(0, 100)
   const maxA = Math.max(1, ...top100.map((d) => d.avd))
@@ -641,35 +733,19 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
         setModeMenuOpen(false)
       },
       options: [
-        { value: "top-performing", label: "best" },
-        { value: "most-recent", label: "last" },
+        { value: "top-performing", label: "TOP PERFORMING" },
+        { value: "most-recent", label: "MOST RECENT" },
       ],
     },
    }}
    activeContext={{
-    title: activePoint?.title || "No video selected",
-    stats: [
-      {
-       label: "AVD%",
-       value: activePoint ? activePoint.avd.toFixed(2) : "0.00",
-       tone: "lime",
-      },
-      {
-       label: "REV",
-       value: `$${activePoint ? activePoint.estIncome.toFixed(2) : "0.00"}`,
-       tone: "cyan",
-      },
-      {
-       label: "LENGTH",
-       value: `${activePoint ? Math.round(activePoint.dur) : 0}s`,
-       tone: "yellow",
-      },
-      {
-       label: "VIEWS",
-       value: activePoint ? Math.round(activePoint.views).toLocaleString() : "0",
-       tone: "white",
-      },
-    ],
+     title: activePoint?.title?.toUpperCase() || "NO VIDEO SELECTED",
+     stats: [
+      { label: "AVD%", value: activePoint ? activePoint.avd.toFixed(2) : "0.00", tone: "lime", onClick: () => setSortMetric("avd"), isActive: sortMetric === "avd" },
+      { label: "REV", value: `$${activePoint ? activePoint.estIncome.toFixed(2) : "0.00"}`, tone: "cyan", onClick: () => setSortMetric("estIncome"), isActive: sortMetric === "estIncome" },
+      { label: "LENGTH", value: `${activePoint ? Math.round(activePoint.dur) : 0}s`, tone: "yellow", onClick: () => setSortMetric("dur"), isActive: sortMetric === "dur" },
+      { label: "VIEWS", value: activePoint ? Math.round(activePoint.views).toLocaleString() : "0", tone: "white", onClick: () => setSortMetric("views"), isActive: sortMetric === "views" },
+     ],
    }}
    metricBadges={[
     { label: "AVD%", tone: "lime" },
@@ -787,28 +863,444 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
       }} />
       </ScatterChart>
      </StableChartFrame>
-     <div className="absolute bottom-[4px] left-[14px] right-[14px] grid grid-cols-3 items-center pointer-events-none">
+     <div className="absolute bottom-[0px] left-[14px] right-[14px] grid grid-cols-3 items-center pointer-events-none">
       <div className="flex items-center gap-2 justify-self-end">
         <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Revenue</span>
-        <div className="w-36 h-6 border-[0px] border-black rounded-[2px] bg-gradient-to-r from-[#24BCFF] via-[#45DDB0] to-[#66FF8A]" />
+        <div className="w-[155px] h-6 border-[2px] border-black rounded-[2px] bg-gradient-to-r from-[#24BCFF] via-[#45DDB0] to-[#66FF8A]" />
       </div>
-      <span
-       className="justify-self-center uppercase tracking-[0.1em] text-black"
-       style={{ fontWeight: 1000, fontSize: 14, letterSpacing: "0.1em" }}
-      >
-       Shorts Length
-      </span>
+      <div className="justify-self-center flex items-center gap-3">
+        <span className="text-black font-[1000] text-[16px] leading-none">◀</span>
+        <span
+          className="uppercase tracking-[0.1em] text-black"
+          style={{ fontWeight: 1000, fontSize: 14, letterSpacing: "0.1em" }}
+        >
+          Shorts Length
+        </span>
+        <span className="text-black font-[1000] text-[16px] leading-none">▶</span>
+      </div>
       <div className="flex items-center gap-2 justify-self-start">
         <div className="flex items-center gap-2">
-          <span className="w-2 aspect-square shrink-0 box-border rounded-full bg-white border border-[#24BCFF]" />
-          <span className="w-3 aspect-square shrink-0 box-border rounded-full bg-white border border-[#2FC8EF]" />
-          <span className="w-4 aspect-square shrink-0 box-border rounded-full bg-white border border-[#3AD4DF]" />
-          <span className="w-5 aspect-square shrink-0 box-border rounded-full bg-white border border-[#45DDB0]" />
-          <span className="w-6 aspect-square shrink-0 box-border rounded-full bg-white border border-[#66FF8A]" />
+          <div className="flex items-center justify-between w-[115px]">
+            <span className="w-2 aspect-square shrink-0 box-border rounded-full bg-[#24BCFF] opacity-[0.75]" />
+            <span className="w-3 aspect-square shrink-0 box-border rounded-full bg-[#2FC8EF] opacity-[0.75]" />
+            <span className="w-4 aspect-square shrink-0 box-border rounded-full bg-[#3AD4DF] opacity-[0.75]" />
+            <span className="w-5 aspect-square shrink-0 box-border rounded-full bg-[#45DDB0] opacity-[0.75]" />
+            <span className="w-6 aspect-square shrink-0 box-border rounded-full bg-[#66FF8A] opacity-[0.75]" />
+          </div>
           <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Views</span>
         </div>
       </div>
      </div>
+    </div>
+   </div>
+  </SubToolboxChartModule>
+ )
+}
+
+/* 5c. Algorithm Trigger Module (CTR × Impressions - SubToolbox) */
+export const AlgorithmTriggerModule: React.FC<GChartProps> = ({ data }) => {
+ const [mode, setMode] = useState<"top-performing" | "most-recent">("top-performing")
+ const [sortMetric, setSortMetric] = useState<"ctr" | "impressions" | "views">("impressions")
+ const [modeMenuOpen, setModeMenuOpen] = useState(false)
+ const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+
+ const cd = useMemo(() => {
+  const all = data
+   .map((r) => ({
+    title: r.title,
+    ctr: +ctrPct(r).toFixed(2),
+    impressions: mv(r, "impressions"),
+    views: mv(r, "views"),
+    format: r.format,
+    uploadTs: new Date(String(r.uploadDate || "")).getTime() || 0,
+   }))
+   .filter((d) => d.ctr > 0 && d.impressions > 0)
+
+  const ranked = mode === "most-recent"
+   ? [...all].sort((a, b) => b.uploadTs - a.uploadTs)
+   : [...all].sort((a, b) => b[sortMetric] - a[sortMetric])
+
+  const top50 = ranked.slice(0, 50)
+  const maxImp = Math.max(1, ...top50.map((d) => d.impressions))
+  const minImp = Math.min(...top50.map((d) => d.impressions))
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+
+  return top50.map((d) => {
+   const key = `${d.title}-${d.uploadTs}-${d.impressions}`
+   const impT = maxImp > minImp ? (d.impressions - minImp) / (maxImp - minImp) : 0.5
+   const radius = lerp(4, 22, Math.pow(impT, 0.5))
+   const color = d.format === "shorts" ? "#00CCFF" : "#FF3399"
+   return { ...d, key, radius, color }
+  })
+ }, [data, mode, sortMetric])
+
+ const bubbleShape = (props: any) => {
+  const { cx, cy, payload } = props
+  const isActive = hoveredKey === payload.key
+  const scale = isActive ? 1.25 : 1
+  return (
+   <circle
+    cx={cx}
+    cy={cy}
+    r={payload.radius * scale}
+    fill={payload.color}
+    fillOpacity={0.75}
+    stroke={payload.color}
+    strokeWidth={isActive ? 2 : 0}
+    onMouseEnter={() => setHoveredKey(payload.key)}
+    style={{
+     shapeRendering: "geometricPrecision",
+     transitionProperty: "r, stroke-width, fill-opacity",
+     transitionDuration: isActive ? "750ms" : "350ms",
+     transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+     cursor: "pointer",
+    }}
+   />
+  )
+ }
+
+ const activePoint = cd.find((p) => p.key === hoveredKey) || cd[0]
+
+ return (
+  <SubToolboxChartModule
+   header={{
+    title: "ALGORITHM TRIGGER",
+    subtitle: `TOP 50 ${mode === "most-recent" ? "RECENT" : "PERFORMING"} BY ${sortMetric.toUpperCase()}`,
+    icon: <CustomIcon name="analytics" size={18} />,
+    headerStyle: "subtoolbox",
+   }}
+   theme={{
+    headerBandBg: "#B14AED",
+    iconBlockBg: "#CCFF00",
+    shadowColor: "rgba(177,74,237,0.45)",
+   }}
+   layout={{ moduleMinHeight: "420px", moduleWidth: "100%" }}
+   controlBox={{
+    count: cd.length,
+    countUnit: "VIDEOS",
+    dropdown: {
+     value: mode,
+     isOpen: modeMenuOpen,
+     onToggle: () => setModeMenuOpen((prev) => !prev),
+     onSelect: (value) => {
+      setMode(value as any)
+      setModeMenuOpen(false)
+     },
+     options: [
+      { value: "top-performing", label: "TOP PERFORMING" },
+      { value: "most-recent", label: "MOST RECENT" },
+     ],
+    },
+   }}
+   activeContext={{
+    title: activePoint?.title?.toUpperCase() || "SELECT DATA POINT",
+    stats: [
+     { label: "CTR", value: `${activePoint?.ctr ?? 0}%`, tone: "lime", onClick: () => setSortMetric("ctr"), isActive: sortMetric === "ctr" },
+     { label: "IMPRESSIONS", value: activePoint ? (activePoint.impressions >= 1000000 ? `${(activePoint.impressions / 1000000).toFixed(1)}M` : activePoint.impressions >= 1000 ? `${(activePoint.impressions / 1000).toFixed(0)}K` : String(activePoint.impressions)) : "0", tone: "purple", onClick: () => setSortMetric("impressions"), isActive: sortMetric === "impressions" },
+     { label: "VIEWS", value: activePoint ? Math.round(activePoint.views).toLocaleString() : "0", tone: "white", onClick: () => setSortMetric("views"), isActive: sortMetric === "views" },
+    ],
+   }}
+   metricBadges={[
+    { label: "CTR%", tone: "lime" },
+    { label: "IMP", tone: "purple" },
+    { label: "VIEWS", tone: "white" },
+   ]}
+   footer={
+    <InsightMarquee
+     mode="insight-lock"
+     segments={[
+      { badge: "Chart Insight", text: "Algorithm Trigger maps CTR against total impressions to reveal which thumbnails and titles earn the most algorithmic distribution.", badgeTone: "cyan" },
+      { badge: "Personal Insight", text: cd.length > 0 ? `Your top-impression video hit ${cd[0]?.impressions >= 1000000 ? `${(cd[0].impressions / 1000000).toFixed(1)}M` : `${(cd[0].impressions / 1000).toFixed(0)}K`} impressions at ${cd[0]?.ctr}% CTR — that's your packaging blueprint.` : "Sync data to unlock trigger insights.", badgeTone: "lime" },
+     ]}
+    />
+   }
+  >
+   <div className="min-h-[400px] w-full border-[0px] border-black rounded-none bg-white p-0 overflow-hidden flex flex-col">
+    <div className="h-[400px] relative">
+     <StableChartFrame minHeightClassName="min-h-[400px]">
+      <ResponsiveContainer width="100%" height="100%">
+       <ScatterChart
+        className="[&_svg]:outline-none [&_*:focus]:outline-none [&_*:focus-visible]:outline-none"
+        margin={{ top: 20, right: 30, bottom: 28, left: 10 }}
+        onMouseLeave={() => setHoveredKey(null)}
+       >
+        <CartesianGrid stroke="rgba(0,0,0,0.06)" vertical={true} />
+        <XAxis
+         type="number"
+         dataKey="ctr"
+         name="CTR %"
+         tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
+         axisLine={{ stroke: '#000', strokeWidth: 3 }}
+         tickLine={false}
+         tickFormatter={(v) => `${v}%`}
+        />
+        <YAxis
+         type="number"
+         dataKey="impressions"
+         name="Impressions"
+         tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
+         axisLine={{ stroke: '#000', strokeWidth: 3 }}
+         tickLine={false}
+         tickFormatter={(v) => v >= 1000000 ? `${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v}
+         label={{
+          value: 'IMPRESSIONS',
+          angle: -90,
+          position: 'insideLeft',
+          offset: 15,
+          style: { fontWeight: 1000, fontSize: 14, fill: '#000', letterSpacing: '0.1em', textAnchor: 'middle' },
+         }}
+        />
+        <Tooltip content={<ChartTip />} />
+        <Scatter data={cd} shape={bubbleShape} />
+        <Customized component={({ offset, width }: any) => {
+         if (!offset) return null
+         const left = offset.left
+         const right = offset.left + offset.width
+         const top = offset.top
+         const bottom = offset.top + offset.height
+         return (
+          <g pointerEvents="none">
+           <line x1={left} y1={top} x2={left} y2={0} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
+           <line x1={right} y1={bottom} x2={width} y2={bottom} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
+          </g>
+         )
+        }} />
+       </ScatterChart>
+      </ResponsiveContainer>
+     </StableChartFrame>
+     <div className="absolute bottom-[0px] left-[14px] right-[14px] grid grid-cols-3 items-center pointer-events-none">
+      <div className="flex items-center gap-2 justify-self-end">
+       <div className="flex items-center gap-1.5">
+        <div className="w-4 h-4 rounded-full bg-[#FF3399] border-[2px] border-black" />
+        <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Long</span>
+       </div>
+      </div>
+      <div className="justify-self-center flex items-center gap-3">
+       <span className="text-black font-[1000] text-[16px] leading-none">◀</span>
+       <span className="uppercase tracking-[0.1em] text-black" style={{ fontWeight: 1000, fontSize: 14, letterSpacing: "0.1em" }}>
+        Click-Through Rate
+       </span>
+       <span className="text-black font-[1000] text-[16px] leading-none">▶</span>
+      </div>
+      <div className="flex items-center gap-2 justify-self-start">
+       <div className="flex items-center gap-1.5">
+        <div className="w-4 h-4 rounded-full bg-[#00CCFF] border-[2px] border-black" />
+        <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Shorts</span>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+  </SubToolboxChartModule>
+ )
+}
+
+/* 5d. Engagement Lines Module (Comments/Likes/Shares/Subs - SubToolbox) */
+const ENGAGEMENT_METRICS = [
+ { key: "comments", label: "COMMENTS", color: "#00E5FF", tone: "cyan" as const },
+ { key: "likes", label: "LIKES", color: "#FF7497", tone: "pink" as const },
+ { key: "shares", label: "SHARES", color: "#FFE357", tone: "yellow" as const },
+ { key: "subscribersGained", label: "SUBSCRIBERS", color: "#CCFF00", tone: "lime" as const },
+] as const
+
+export const EngagementLinesModule: React.FC<GChartProps> = ({ data }) => {
+ const [sortMetric, setSortMetric] = useState<string>("likes")
+ const [mode, setMode] = useState<"top-performing" | "most-recent">("most-recent")
+ const [modeMenuOpen, setModeMenuOpen] = useState(false)
+ const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+ const [animKey, setAnimKey] = useState(0)
+
+ const cd = useMemo(() => {
+  const mapped = data.map((r) => ({
+   title: r.title,
+   comments: mv(r, "comments"),
+   likes: mv(r, "likes"),
+   shares: mv(r, "shares"),
+   subscribersGained: mv(r, "subscribersGained"),
+   uploadTs: new Date(String(r.uploadDate || "")).getTime() || 0,
+  }))
+
+  const sorted = mode === "most-recent"
+   ? [...mapped].sort((a, b) => b.uploadTs - a.uploadTs)
+   : [...mapped].sort((a, b) => (b as any)[sortMetric] - (a as any)[sortMetric])
+
+  return sorted.slice(0, 50).map((d, i) => ({
+   ...d,
+   idx: i,
+   name: String(i + 1),
+  }))
+ }, [data, sortMetric, mode])
+
+ // Fixed dual-axis: LEFT = comments/shares/subs, RIGHT = likes (always)
+ const { leftMax, rightMax } = useMemo(() => {
+  const leftKeys = ["comments", "shares", "subscribersGained"]
+  const leftVals = cd.flatMap((d) => leftKeys.map((k) => (d as any)[k] as number))
+  const rightVals = cd.map((d) => d.likes)
+  const ceilNice = (v: number) => {
+   if (v <= 0) return 10
+   const mag = Math.pow(10, Math.floor(Math.log10(v)))
+   return Math.ceil(v / mag) * mag || 10
+  }
+  return {
+   leftMax: ceilNice(Math.max(1, ...leftVals)),
+   rightMax: ceilNice(Math.max(1, ...rightVals)),
+  }
+ }, [cd])
+
+ const handleSortChange = (key: string) => {
+  setSortMetric(key)
+  setAnimKey((k) => k + 1)
+ }
+
+ const handleModeChange = (value: string) => {
+  setMode(value as any)
+  setModeMenuOpen(false)
+  setAnimKey((k) => k + 1)
+ }
+
+ const sortLabel = ENGAGEMENT_METRICS.find((m) => m.key === sortMetric)?.label || "LIKES"
+ const activeRow = hoveredIdx !== null ? cd[hoveredIdx] : cd[0]
+
+ return (
+  <SubToolboxChartModule
+   header={{
+    title: "ENGAGEMENT PULSE",
+    subtitle: `TOP ${cd.length} ${mode === "most-recent" ? "RECENT" : "PERFORMING"} BY ${sortLabel}`,
+    icon: <CustomIcon name="analytics" size={18} />,
+    headerStyle: "subtoolbox",
+   }}
+   theme={{
+    headerBandBg: "#FFB158",
+    iconBlockBg: "#FF7497",
+    shadowColor: "rgba(255,177,88,0.45)",
+   }}
+   layout={{ moduleMinHeight: "420px", moduleWidth: "100%" }}
+   controlBox={{
+    count: cd.length,
+    countUnit: "VIDEOS",
+    dropdown: {
+     value: mode,
+     isOpen: modeMenuOpen,
+     onToggle: () => setModeMenuOpen((prev) => !prev),
+     onSelect: handleModeChange,
+     options: [
+      { value: "most-recent", label: "MOST RECENT" },
+      { value: "top-performing", label: "TOP PERFORMING" },
+     ],
+    },
+   }}
+   activeContext={{
+    title: activeRow?.title?.toUpperCase().slice(0, 40) || "SELECT VIDEO",
+    stats: [
+     { label: "LIKES", value: String(activeRow?.likes ?? 0), tone: "pink", onClick: () => handleSortChange("likes"), isActive: sortMetric === "likes" },
+     { label: "COMMENTS", value: String(activeRow?.comments ?? 0), tone: "cyan", onClick: () => handleSortChange("comments"), isActive: sortMetric === "comments" },
+     { label: "SHARES", value: String(activeRow?.shares ?? 0), tone: "yellow", onClick: () => handleSortChange("shares"), isActive: sortMetric === "shares" },
+     { label: "SUBS", value: String(activeRow?.subscribersGained ?? 0), tone: "lime", onClick: () => handleSortChange("subscribersGained"), isActive: sortMetric === "subscribersGained" },
+    ],
+   }}
+   legendLayout={{
+    left: (
+     <div className="flex items-center gap-4 px-1 py-1 text-[10px] font-black text-black/65 uppercase tracking-[0.1em]">
+      {ENGAGEMENT_METRICS.map((m) => (
+       <div key={m.key} className="flex items-center gap-1">
+        <div className="w-2.5 h-2.5 rounded-full border-[2px] border-black" style={{ backgroundColor: m.color }} />
+        <span>{m.label}</span>
+       </div>
+      ))}
+     </div>
+    ),
+   }}
+   footer={
+    <InsightMarquee
+     mode="insight-lock"
+     segments={[
+      { badge: "Chart Insight", text: "Engagement Pulse reveals how each video drives different interaction types — spot which content triggers comments vs. passive likes.", badgeTone: "cyan" },
+      { badge: "Personal Insight", text: cd.length > 0 ? `Sorted by ${sortLabel.toLowerCase()}: your #1 video pulled ${(activeRow as any)?.[sortMetric] ?? 0} ${sortLabel.toLowerCase()}.` : "Sync data to unlock engagement insights.", badgeTone: "lime" },
+     ]}
+    />
+   }
+  >
+   <div className="min-h-[400px] w-full bg-white p-0 overflow-hidden flex flex-col">
+    <div className="h-[400px] relative">
+     <StableChartFrame minHeightClassName="min-h-[400px]">
+      <ResponsiveContainer width="100%" height="100%">
+       <LineChart
+        data={cd}
+        margin={{ top: 20, right: 60, bottom: 20, left: 20 }}
+        onMouseMove={(state: any) => {
+         if (state?.activeTooltipIndex !== undefined) setHoveredIdx(state.activeTooltipIndex)
+        }}
+        onMouseLeave={() => setHoveredIdx(null)}
+       >
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
+        <XAxis
+         dataKey="name"
+         tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
+         axisLine={{ stroke: '#000', strokeWidth: 3 }}
+         tickLine={false}
+        />
+        <YAxis
+         yAxisId="left"
+         domain={[0, leftMax]}
+         tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
+         axisLine={{ stroke: '#000', strokeWidth: 3 }}
+         tickLine={false}
+         label={{
+          value: 'COMMENTS • SHARES • SUBS',
+          angle: -90,
+          position: 'insideLeft',
+          offset: 5,
+          style: { fontWeight: 1000, fontSize: 10, fill: '#000', letterSpacing: '0.05em', textAnchor: 'middle' },
+         }}
+        />
+        <YAxis
+         yAxisId="right"
+         orientation="right"
+         domain={[0, rightMax]}
+         tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
+         axisLine={{ stroke: '#000', strokeWidth: 3 }}
+         tickLine={false}
+         label={{
+          value: 'LIKES',
+          angle: 90,
+          position: 'insideRight',
+          offset: 15,
+          style: { fontWeight: 1000, fontSize: 12, fill: '#FF7497', letterSpacing: '0.05em', textAnchor: 'middle' },
+         }}
+        />
+        <Tooltip content={<ChartTip />} />
+        <g key={animKey}>
+         {ENGAGEMENT_METRICS.map((m, i) => (
+          <Line
+           key={`${m.key}-${animKey}`}
+           yAxisId={m.key === "likes" ? "right" : "left"}
+           type="monotone"
+           dataKey={m.key}
+           name={m.label}
+           stroke={m.color}
+           strokeWidth={m.key === sortMetric ? 3 : 2}
+           dot={m.key === sortMetric ? { r: 4, fill: m.color, stroke: '#000', strokeWidth: 2 } : false}
+           activeDot={{ r: 6, fill: m.color, stroke: '#000', strokeWidth: 2 }}
+           className={`engagement-line-reveal engagement-line-delay-${i}`}
+          />
+         ))}
+        </g>
+        <Customized component={({ offset, width }: any) => {
+         if (!offset) return null
+         const left = offset.left
+         const right = offset.left + offset.width
+         const top = offset.top
+         const bottom = offset.top + offset.height
+         return (
+          <g pointerEvents="none">
+           <line x1={left} y1={top} x2={left} y2={0} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
+           <line x1={right} y1={bottom} x2={width} y2={bottom} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
+          </g>
+         )
+        }} />
+       </LineChart>
+      </ResponsiveContainer>
+     </StableChartFrame>
     </div>
    </div>
   </SubToolboxChartModule>
@@ -937,20 +1429,6 @@ export const DurationSweetSpot: React.FC<GChartProps> = ({ data }) => {
  )
 }
 
-/* 10. Revenue Efficiency */
-export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
- const cd = useMemo(() => data.map(r => ({
-  title: r.title, wh: +mv(r,"watchHours").toFixed(1), rpm: +(mv(r,"revenue")/(mv(r,"views")/1000||1)).toFixed(2)
- })).filter(d=>d.wh>0&&d.rpm>0), [data])
- return (
-  <Card title="REVENUE EFFICIENCY" subtitle="Watch Hours × RPM" headerColor="#FFEA00">
-   <ScatterChart margin={{top:10,right:10,bottom:10,left:-10}}>
-    <CartesianGrid strokeDasharray="3 3"/><XAxis type="number" dataKey="wh" name="Watch Hours" tick={{fontWeight:900,fontSize:10}}/>
-    <YAxis type="number" dataKey="rpm" name="RPM $" tick={{fontWeight:900,fontSize:10}}/>
-    <Tooltip content={<ChartTip/>}/><Scatter data={cd} fill="#FFEA00" stroke="#000" strokeWidth={2}/></ScatterChart>
-  </Card>
- )
-}
 
 /* 11. Audience Growth */
 export const AudienceGrowth: React.FC<GChartProps> = ({ data }) => {
@@ -1001,12 +1479,48 @@ export const HookEffectiveness: React.FC<GChartProps> = ({ data }) => {
  const cd = useMemo(() => [...data].sort((a,b)=>mv(b,"avp")-mv(a,"avp")).slice(0,10)
   .map(r => ({ name: r.title.substring(0,20), avp: +mv(r,"avp").toFixed(1) })).filter(d=>d.avp>0), [data])
  return (
-  <Card title="HOOK EFFECTIVENESS" subtitle="30-Second Retention" headerColor="#CCFF00" count={cd.length}>
-   <BarChart data={cd} layout="vertical" margin={{top:10,right:30,left:10,bottom:5}}>
-    <CartesianGrid strokeDasharray="3 3" horizontal={false}/><XAxis type="number" domain={[0,100]} unit="%"/>
-    <YAxis dataKey="name" type="category" tick={{fontWeight:900,fontSize:9}} width={120}/>
-    <Tooltip content={<ChartTip/>}/><Bar dataKey="avp" fill="#33FF99" name="AVP %" radius={[0,4,4,0]}/></BarChart>
-  </Card>
+  <SubToolboxChartModule
+   header={{
+    title: "HOOK EFFECTIVENESS",
+    subtitle: "30-SECOND RETENTION",
+    icon: <CustomIcon name="analytics" size={18} />,
+    headerStyle: "subtoolbox",
+   }}
+   theme={{
+    headerBandBg: "#CCFF00",
+    iconBlockBg: "#33FF99",
+    shadowColor: "rgba(204,255,0,0.45)",
+   }}
+   layout={{ moduleMinHeight: "340px", moduleWidth: "100%" }}
+   controlBox={{ count: cd.length, countUnit: "VIDEOS" }}
+   activeContext={{
+    title: cd[0]?.name?.toUpperCase() || "NO DATA",
+    stats: [
+     { label: "BEST", value: `${cd[0]?.avp ?? 0}%`, tone: "lime" },
+     { label: "AVG", value: `${cd.length > 0 ? (cd.reduce((s, d) => s + d.avp, 0) / cd.length).toFixed(1) : 0}%`, tone: "cyan" },
+    ],
+   }}
+   footer={
+    <InsightMarquee
+     mode="insight-lock"
+     segments={[
+      { badge: "Hook", text: "Hook effectiveness measures how well your first 30 seconds retain viewers — the #1 factor for Shorts virality.", badgeTone: "lime" },
+     ]}
+    />
+   }
+  >
+   <div className="h-[340px] p-4">
+    <StableChartFrame minHeightClassName="min-h-[300px]">
+     <BarChart data={cd} layout="vertical" margin={{top:10,right:30,left:10,bottom:5}}>
+      <CartesianGrid strokeDasharray="3 3" horizontal={false}/>
+      <XAxis type="number" domain={[0,100]} unit="%" tick={{fontWeight:900,fontSize:11}} axisLine={{ stroke: '#000', strokeWidth: 3 }}/>
+      <YAxis dataKey="name" type="category" tick={{fontWeight:900,fontSize:9}} width={120} axisLine={{ stroke: '#000', strokeWidth: 3 }}/>
+      <Tooltip content={<ChartTip/>}/>
+      <Bar dataKey="avp" fill="#33FF99" name="AVP %" radius={[0,4,4,0]}/>
+     </BarChart>
+    </StableChartFrame>
+   </div>
+  </SubToolboxChartModule>
  )
 }
 
@@ -1036,4 +1550,685 @@ export const GrowthPulse: React.FC<GChartProps> = ({ data }) => {
    </div>
   </div>
  )
+ }
+
+/* 15. Stacked Engagement Pulse */
+export const StackedEngagementPulse: React.FC<GChartProps> = ({ data }) => {
+ const [mode, setMode] = useState<"top-performing" | "most-recent">("top-performing")
+ const [modeMenuOpen, setModeMenuOpen] = useState(false)
+ const [activeKey, setActiveKey] = useState<string | null>(null)
+
+ const cd = useMemo(() => {
+  const sorted = mode === "most-recent"
+   ? [...data].sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime())
+   : [...data].sort((a, b) => mv(b, "views") - mv(a, "views"))
+
+  return sorted
+   .slice(0, 50)
+   .map((r, idx) => {
+    const key = `${r.title}-${idx}`
+    return {
+     key,
+     title: r.title,
+     views: mv(r, "views"),
+     likes: mv(r, "likes"),
+     shares: mv(r, "shares"),
+     comments: mv(r, "comments"),
+     subs: mv(r, "subscribersGained"),
+    }
+   })
+ }, [data, mode])
+
+ useEffect(() => {
+  if (cd.length > 0 && !activeKey) {
+   setActiveKey(cd[0].key)
+  }
+ }, [cd, activeKey])
+
+ const activePoint = useMemo(
+  () => cd.find((p) => p.key === activeKey) || cd[0] || null,
+  [cd, activeKey]
+ )
+
+ return (
+  <SubToolboxChartModule
+   header={{
+    title: "STACKED ENGAGEMENT PULSE",
+    subtitle: "LIKES • SHARES • COMMENTS • SUBS",
+    headerStyle: "subtoolbox",
+    icon: <CustomIcon name="target" size={18} />,
+   }}
+   theme={{
+    headerBandBg: "#FFE357",
+    iconBlockBg: "#FF7497",
+    shadowColor: "rgba(255, 227, 87, 0.4)",
+   }}
+   layout={{ moduleMinHeight: "360px", moduleWidth: "100%" }}
+   controlBox={{
+    count: cd.length,
+    countUnit: "VIDEOS",
+    dropdown: {
+     value: mode,
+     isOpen: modeMenuOpen,
+     onToggle: () => setModeMenuOpen((prev) => !prev),
+     onSelect: (value) => {
+      setMode(value as "top-performing" | "most-recent")
+      setModeMenuOpen(false)
+     },
+     options: [
+      { value: "top-performing", label: "best" },
+      { value: "most-recent", label: "last" },
+     ],
+    },
+   }}
+   activeContext={{
+    title: activePoint?.title?.toUpperCase() || "NO VIDEO SELECTED",
+    stats: [
+     { label: "LIKES", value: activePoint?.likes.toLocaleString() || "0", tone: "pink" },
+     { label: "SHARES", value: activePoint?.shares.toLocaleString() || "0", tone: "yellow" },
+     { label: "COMMENTS", value: activePoint?.comments.toLocaleString() || "0", tone: "lime" },
+     { label: "SUBS", value: activePoint?.subs.toLocaleString() || "0", tone: "orange" },
+    ],
+   }}
+   footer={
+    <InsightMarquee 
+      chartInsight="Stacked engagement pulse reveals the compound interaction signature of your top content."
+      personalInsight="Focus on videos where 'Shares' (Yellow) spiked early to identify viral potential."
+     />
+   }
+  >
+   <div className="p-0 bg-white h-[360px] flex flex-col">
+     <div className="flex-1 min-h-0 relative">
+      <StableChartFrame minHeightClassName="min-h-[300px]">
+       <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={cd} margin={{ top: 20, right: 10, left: 30, bottom: 40 }}>
+         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+         <XAxis 
+          dataKey="title" 
+          hide={false} 
+          tick={false} 
+          axisLine={{ stroke: '#000', strokeWidth: 3 }}
+          tickLine={false}
+         />
+         <YAxis 
+          axisLine={{ stroke: '#000', strokeWidth: 3 }}
+          tickLine={false}
+          tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }} 
+          label={{ 
+           value: 'ENGAGEMENT', 
+           angle: -90, 
+           position: 'insideLeft', 
+           offset: 15, 
+           style: { fontWeight: 1000, fontSize: 14, fill: '#000', textAnchor: 'middle' } 
+          }}
+         />
+         <Tooltip content={<ChartTip />} cursor={{ fill: 'rgba(0,0,0,0.05)' }} />
+         <Bar dataKey="likes" stackId="a" fill="#FF7497" onMouseEnter={(d) => setActiveKey(d.key)} />
+         <Bar dataKey="shares" stackId="a" fill="#FFE357" onMouseEnter={(d) => setActiveKey(d.key)} />
+         <Bar dataKey="comments" stackId="a" fill="#C9F830" onMouseEnter={(d) => setActiveKey(d.key)} />
+         <Bar dataKey="subs" stackId="a" fill="#FFB158" onMouseEnter={(d) => setActiveKey(d.key)} radius={[4, 4, 0, 0]} />
+        </BarChart>
+       </ResponsiveContainer>
+      </StableChartFrame>
+      <div className="absolute bottom-[0px] left-[14px] right-[14px] grid grid-cols-3 items-center pointer-events-none">
+         <div className="flex items-center gap-2 justify-self-end">
+            <div className="flex items-center gap-1.5">
+              <div className="w-10 h-6 bg-[#FF7497] rounded-[2px] border-[0px] border-black" />
+              <span className="font-[1000] text-[14px] tracking-tight uppercase">LIKES</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-10 h-6 bg-[#FFE357] rounded-[2px] border-[0px] border-black" />
+              <span className="font-[1000] text-[14px] tracking-tight uppercase">SHARES</span>
+            </div>
+         </div>
+         <span className="justify-self-center uppercase tracking-[0.1em] text-black" style={{ fontWeight: 1000, fontSize: 14, letterSpacing: "0.1em" }}>
+           Engagement Pulse
+         </span>
+         <div className="flex items-center gap-2 justify-self-start">
+            <div className="flex items-center gap-1.5">
+              <div className="w-10 h-6 bg-[#C9F830] rounded-[2px] border-[0px] border-black" />
+              <span className="font-[1000] text-[14px] tracking-tight uppercase">COMMENTS</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-10 h-6 bg-[#FFB158] rounded-[2px] border-[0px] border-black" />
+              <span className="font-[1000] text-[14px] tracking-tight uppercase">SUBS</span>
+            </div>
+         </div>
+      </div>
+     </div>
+    </div>
+  </SubToolboxChartModule>
+ )
+}
+
+/* 16. Format Comparison Donuts */
+export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data }) => {
+ const [localWindow, setLocalWindow] = useState<"28d" | "90d" | "lifetime">("lifetime")
+ const [windowOpen, setWindowOpen] = useState(false)
+
+ const filteredData = useMemo(() => {
+  if (localWindow === "lifetime") return data
+  const now = new Date().getTime()
+  const days = localWindow === "28d" ? 28 : 90
+  const threshold = now - (days * 24 * 60 * 60 * 1000)
+  return data.filter((r) => new Date(r.uploadDate || 0).getTime() > threshold)
+ }, [data, localWindow])
+
+ const cd = useMemo(() => {
+  const metrics = [
+   { key: "watchHours", label: "Watch Time" },
+   { key: "revenue", label: "Revenue" },
+   { key: "subscribersGained", label: "Subscribers" },
+   { key: "views", label: "Views" },
+  ]
+
+  return metrics.map((m) => {
+   const longTotal = filteredData
+    .filter((r) => r.format === "long" || r.format === "unknown")
+    .reduce((acc, r) => acc + mv(r, m.key), 0)
+   const shortsTotal = filteredData
+    .filter((r) => r.format === "shorts")
+    .reduce((acc, r) => acc + mv(r, m.key), 0)
+
+   const total = longTotal + shortsTotal
+   const longRatio = total > 0 ? longTotal / total : 0.5
+   const startAngle = 90 + (longRatio * 360) / 2
+
+   return {
+    label: m.label,
+    key: m.key,
+    startAngle,
+    data: [
+     { name: "Longform", value: longTotal, fill: "#00E5FF" },
+     { name: "Shorts", value: shortsTotal, fill: "#FF7497" },
+    ],
+    total,
+   }
+  })
+ }, [filteredData])
+
+ const longStats = cd.map(m => ({ label: m.label.toUpperCase(), value: Math.round(m.data[0].value).toLocaleString(), tone: "cyan" as const }))
+ const shortsStats = cd.map(m => ({ label: m.label.toUpperCase(), value: Math.round(m.data[1].value).toLocaleString(), tone: "pink" as const }))
+
+ return (
+  <SubToolboxChartModule
+   header={{
+    title: "FORMAT DOMINANCE",
+    subtitle: "LONGFORM VS SHORTS SPLIT",
+    headerStyle: "subtoolbox",
+    icon: <CustomIcon name="layers" size={18} />,
+   }}
+   theme={{
+    headerBandBg: "#CCFF00",
+    iconBlockBg: "#00E5FF",
+    shadowColor: "rgba(204, 255, 0, 0.4)",
+   }}
+   layout={{ moduleMinHeight: "360px", moduleWidth: "100%" }}
+   activeContext={{
+    title: (
+      <div className="flex items-center justify-center h-full px-3 bg-black text-white font-[1000] text-[18px] uppercase tracking-wider flex-1 min-w-0">
+        FORMAT SPLIT
+      </div>
+    ),
+    leftTitle: "LONGFORM",
+    leftStats: longStats,
+    rightTitle: "SHORTS",
+    rightStats: shortsStats
+   }}
+   controlBox={{
+    count: filteredData.length,
+    countUnit: "VIDEOS",
+    dropdown: {
+     value: localWindow,
+     isOpen: windowOpen,
+     onToggle: () => setWindowOpen(!windowOpen),
+     onSelect: (v) => {
+      setLocalWindow(v as any)
+      setWindowOpen(false)
+     },
+     options: [
+      { value: "28d", label: "28 DAYS" },
+      { value: "90d", label: "90 DAYS" },
+      { value: "lifetime", label: "LIFETIME" },
+     ],
+    },
+   }}
+   footer={
+    <InsightMarquee 
+      chartInsight="Analyzes the split between high-retention Shorts and high-value Longform content."
+      personalInsight="Look for metrics where Longform (Cyan) exceeds 50% to identify core audience anchors."
+     />
+   }
+  >
+   <div className="flex flex-row items-stretch justify-center gap-2 p-2 bg-white h-[280px] overflow-hidden">
+    {cd.map((metric) => (
+     <div key={metric.key} className="flex-1 aspect-square h-full min-w-0 relative bg-white flex flex-col">
+      <div className="flex-1 min-h-0 relative">
+       <StableChartFrame minHeightClassName="min-h-[240px]">
+        <ResponsiveContainer width="100%" height="100%">
+         <PieChart>
+          <Pie
+           data={metric.data}
+           dataKey="value"
+           nameKey="name"
+           cx="50%"
+           cy="50%"
+           innerRadius="45%"
+           outerRadius="75%"
+           stroke="none"
+           startAngle={metric.startAngle}
+           endAngle={metric.startAngle - 360}
+           isAnimationActive
+           labelLine={false}
+           label={({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
+            const RADIAN = Math.PI / 180
+            const radius = Number(innerRadius) + (Number(outerRadius) - Number(innerRadius)) * 0.5
+            const x = cx + radius * Math.cos(-midAngle * RADIAN)
+            const y = cy + radius * Math.sin(-midAngle * RADIAN)
+            return (
+             <text
+              x={x}
+              y={y}
+              fill="white"
+              textAnchor="middle"
+              dominantBaseline="central"
+              className="text-[14px] font-[1000] tabular-nums"
+             >
+              {Math.round(value).toLocaleString()}
+             </text>
+            )
+           }}
+          >
+           {metric.data.map((entry, index) => (
+            <Cell key={index} fill={entry.fill} />
+           ))}
+           <Label
+            position="center"
+            content={({ viewBox }: any) => {
+             const { cx, cy } = viewBox
+             const words = metric.label.toUpperCase().split(' ')
+             return (
+              <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" className="text-[10px] font-[1000] fill-black">
+               {words.map((word, i) => (
+                <tspan x={cx} dy={i === 0 ? -4 : 10} key={i}>{word}</tspan>
+               ))}
+              </text>
+             )
+            }}
+           />
+          </Pie>
+          <Tooltip content={<ChartTip />} />
+         </PieChart>
+        </ResponsiveContainer>
+       </StableChartFrame>
+      </div>
+     </div>
+    ))}
+   </div>
+  </SubToolboxChartModule>
+ )
+}
+
+/* ═══════════════════════════════════════════════
+   14b. REVENUE EFFICIENCY (UPGRADED BUBBLE)
+   ═══════════════════════════════════════════════ */
+export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
+  const [mode, setMode] = useState<"top-performing" | "most-recent">("top-performing")
+  const [modeMenuOpen, setModeMenuOpen] = useState(false)
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+
+  const cd = useMemo(() => {
+    const raw = data
+      .map(r => ({
+        title: r.title,
+        wh: +mv(r, "watchHours").toFixed(1),
+        rpm: +(mv(r, "revenue") / (mv(r, "views") / 1000 || 1)).toFixed(2),
+        views: mv(r, "views"),
+        rev: mv(r, "revenue"),
+        uploadTs: new Date(String(r.uploadDate || "")).getTime() || 0,
+      }))
+      .filter(d => d.wh > 0 && d.rpm > 0)
+
+    const points = mode === "most-recent" 
+      ? [...raw].sort((a, b) => b.uploadTs - a.uploadTs).slice(0, 50)
+      : [...raw].sort((a, b) => b.rev - a.rev).slice(0, 50)
+
+    const maxRev = Math.max(1, ...points.map(d => d.rev))
+    const minRev = Math.min(...points.map(d => d.rev))
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+
+    return points.map(d => {
+      const key = `${d.title}-${d.uploadTs}-${d.rev}`
+      const revT = maxRev > minRev ? (d.rev - minRev) / (maxRev - minRev) : 0.5
+      const radius = lerp(4, 25, Math.pow(revT, 0.5))
+      const c = {
+        r: Math.round(lerp(0, 204, revT)),
+        g: Math.round(lerp(229, 255, revT)),
+        b: Math.round(lerp(255, 0, revT)),
+      }
+
+      return {
+        ...d,
+        key,
+        radius,
+        color: `rgb(${c.r}, ${c.g}, ${c.b})`
+      }
+    })
+  }, [data, mode])
+
+  const bubbleShape = (props: any) => {
+    const { cx, cy, payload } = props
+    const isActive = hoveredKey === payload.key
+    const scale = isActive ? 1.25 : 1
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={payload.radius * scale}
+        fill={payload.color}
+        fillOpacity={0.75}
+        stroke={payload.color}
+        strokeWidth={isActive ? 2 : 0}
+        onMouseEnter={() => setHoveredKey(payload.key)}
+        style={{
+          shapeRendering: "geometricPrecision",
+          transitionProperty: "r, stroke-width, fill-opacity",
+          transitionDuration: isActive ? "750ms" : "350ms",
+          transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+          cursor: "pointer",
+        }}
+      />
+    )
+  }
+
+  const activePoint = cd.find(p => p.key === hoveredKey) || cd[0]
+
+  return (
+    <SubToolboxChartModule
+      header={{
+        title: "REVENUE EFFICIENCY",
+        subtitle: "WATCH HOURS × RPM DYNAMICS",
+        headerStyle: "subtoolbox",
+        icon: <CustomIcon name="analytics" size={18} />,
+      }}
+      theme={{
+        headerBandBg: "#FFD700",
+        iconBlockBg: "#CCFF00",
+        shadowColor: "rgba(255, 215, 0, 0.45)",
+      }}
+      layout={{ moduleMinHeight: "420px", moduleWidth: "100%" }}
+      controlBox={{
+        count: cd.length,
+        countUnit: "VIDEOS",
+        dropdown: {
+          value: mode,
+          isOpen: modeMenuOpen,
+          onToggle: () => setModeMenuOpen((prev) => !prev),
+          onSelect: (val) => {
+            setMode(val as any)
+            setModeMenuOpen(false)
+          },
+          options: [
+            { value: "top-performing", label: "BEST" },
+            { value: "most-recent", label: "LAST" }
+          ]
+        }
+      }}
+      activeContext={{
+        title: activePoint?.title?.toUpperCase() || "SELECT DATA POINT",
+        stats: [
+          { label: "RPM", value: `$${activePoint?.rpm.toFixed(2)}`, tone: "lime" },
+          { label: "WATCH HRS", value: activePoint?.wh.toLocaleString(), tone: "cyan" },
+          { label: "TOTAL REVENUE", value: `$${activePoint?.rev.toFixed(2)}`, tone: "yellow" }
+        ]
+      }}
+      footer={
+        <InsightMarquee 
+          chartInsight="Efficiency measures how effectively watch time converts into revenue based on your niche RPM."
+          personalInsight="Target high-RPM niches (Yellow) with high-retention topics to maximize your earnings per hour."
+        />
+      }
+    >
+      <div className="min-h-[400px] w-full border-[0px] border-black rounded-none bg-white p-0 overflow-hidden flex flex-col">
+        <div className="h-[400px] relative">
+          <StableChartFrame minHeightClassName="min-h-[400px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart 
+                margin={{ top: 20, right: 30, bottom: 28, left: 10 }}
+                onMouseLeave={() => setHoveredKey(null)}
+              >
+                <CartesianGrid stroke="rgba(0,0,0,0.06)" vertical={true} />
+                <XAxis 
+                  type="number" 
+                  dataKey="wh" 
+                  name="Watch Hours" 
+                  tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
+                  axisLine={{ stroke: '#000', strokeWidth: 3 }}
+                  tickLine={false}
+                />
+                <YAxis 
+                  type="number" 
+                  dataKey="rpm" 
+                  name="RPM" 
+                  tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
+                  axisLine={{ stroke: '#000', strokeWidth: 3 }}
+                  tickLine={false}
+                  label={{ 
+                    value: 'RPM ($)', 
+                    angle: -90, 
+                    position: 'insideLeft', 
+                    offset: 15, 
+                    style: { fontWeight: 1000, fontSize: 14, fill: '#000', letterSpacing: '0.1em', textAnchor: 'middle' } 
+                  }}
+                />
+                <Tooltip content={<ChartTip />} />
+                <Scatter data={cd} shape={bubbleShape} />
+                <Customized component={({ offset, width, height }: any) => {
+                  if (!offset) return null
+                  const left = offset.left
+                  const top = offset.top
+                  const right = offset.left + offset.width
+                  const bottom = offset.top + offset.height
+                  return (
+                    <g pointerEvents="none">
+                      <line x1={left} y1={top} x2={left} y2={0} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
+                      <line x1={right} y1={bottom} x2={width} y2={bottom} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
+                    </g>
+                  )
+                }} />
+              </ScatterChart>
+            </ResponsiveContainer>
+          </StableChartFrame>
+          
+          <div className="absolute bottom-[0px] left-[14px] right-[14px] grid grid-cols-3 items-center pointer-events-none">
+            <div className="flex items-center gap-2 justify-self-end">
+              <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Revenue</span>
+              <div className="w-36 h-6 border-[2px] border-black rounded-[2px] bg-[#CCFF00]" />
+            </div>
+            <div className="justify-self-center flex items-center gap-3">
+              <span className="text-black font-[1000] text-[16px] leading-none">◀</span>
+              <span className="uppercase tracking-[0.1em] text-black" style={{ fontWeight: 1000, fontSize: 14, letterSpacing: "0.1em" }}>
+                Watch Hours
+              </span>
+              <span className="text-black font-[1000] text-[16px] leading-none">▶</span>
+            </div>
+            <div className="flex items-center gap-2 justify-self-start">
+              <div className="flex items-center gap-2">
+                <span className="w-2 aspect-square shrink-0 box-border rounded-full bg-white border border-[#00E5FF]" />
+                <span className="w-3 aspect-square shrink-0 box-border rounded-full bg-white border border-[#66FF8A]" />
+                <span className="w-4 aspect-square shrink-0 box-border rounded-full bg-white border border-[#CCFF00]" />
+                <span className="w-5 aspect-square shrink-0 box-border rounded-full bg-white border border-[#EBE357]" />
+                <span className="w-6 aspect-square shrink-0 box-border rounded-full bg-white border border-[#FFD700]" />
+                <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Views</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </SubToolboxChartModule>
+  )
+}
+
+/* ═══════════════════════════════════════════════
+   15. COMBO CHANNEL PROGRESS
+   ═══════════════════════════════════════════════ */
+export const ComboChannelProgress: React.FC<GChartProps> = ({ data }) => {
+  const [metric, setMetric] = useState<string>("views")
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  const formatK = (val: number, isRevenue: boolean) => {
+    if (isRevenue) return val.toFixed(2);
+    if (val >= 10000) {
+      return (val / 1000).toFixed(1) + "K";
+    }
+    return Math.round(val).toLocaleString();
+  };
+
+  const chartData = useMemo(() => {
+    const now = new Date()
+    const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
+    
+    // Filter for shorts in the last year
+    const shorts = data.filter(r => {
+      const d = new Date(String(r.uploadDate || ""))
+      return r.format === "shorts" && d >= oneYearAgo && d <= now
+    })
+
+    // Create 26 buckets of 14 days
+    const buckets = Array.from({ length: 26 }, (_, i) => {
+      const start = new Date(oneYearAgo.getTime() + i * 14 * 24 * 60 * 60 * 1000)
+      return {
+        start,
+        name: start.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+        periodAmount: 0,
+        totalProgress: 0
+      }
+    })
+
+    shorts.forEach(r => {
+      const d = new Date(String(r.uploadDate || ""))
+      const diff = d.getTime() - oneYearAgo.getTime()
+      const idx = Math.floor(diff / (14 * 24 * 60 * 60 * 1000))
+      if (idx >= 0 && idx < 26) {
+        buckets[idx].periodAmount += mv(r, metric)
+      }
+    })
+
+    let runningTotal = 0
+    return buckets.map(b => {
+      runningTotal += b.periodAmount
+      return { ...b, totalProgress: runningTotal }
+    })
+  }, [data, metric])
+
+  const METRIC_OPTIONS = [
+    { value: "views", label: "VIEWS", tone: "cyan" as const },
+    { value: "subscribersGained", label: "SUBS", tone: "pink" as const },
+    { value: "watchHours", label: "WATCH", tone: "yellow" as const },
+    { value: "revenue", label: "REVENUE", tone: "lime" as const },
+  ]
+
+  const activeMetric = METRIC_OPTIONS.find(o => o.value === metric) || METRIC_OPTIONS[0]
+
+  return (
+    <SubToolboxChartModule
+      header={{
+        title: "CHANNEL PROGRESS",
+        subtitle: "2-WEEK DELTA × CUMULATIVE TOTAL",
+        icon: <CustomIcon name="analytics" size={18} />,
+      }}
+      theme={{
+        headerBandBg: "#FF82B0",
+        iconBlockBg: "#26C7EC",
+        shadowColor: "rgba(255,130,176,0.45)",
+      }}
+      controlBox={{
+        count: formatK(chartData.reduce((acc, curr) => acc + curr.periodAmount, 0), metric === "revenue"),
+        countUnit: "TOTAL",
+        dropdown: {
+          value: metric,
+          isOpen: menuOpen,
+          onToggle: () => setMenuOpen(!menuOpen),
+          onSelect: (val) => {
+            setMetric(val)
+            setMenuOpen(false)
+          },
+          options: METRIC_OPTIONS.map(o => ({ value: o.value, label: o.label }))
+        }
+      }}
+      activeContext={{
+        leftTitle: (
+          <div className="flex items-center gap-2 h-full">
+            <span className="text-[14px] font-[1000] tracking-tight">{activeMetric.label} DELTA</span>
+          </div>
+        ),
+        leftStats: [
+          { 
+            label: "PERIOD AVG", 
+            value: formatK(chartData.reduce((acc, curr) => acc + curr.periodAmount, 0) / 26, metric === "revenue"),
+            tone: activeMetric.tone 
+          },
+          { 
+            label: "PEAK DELTA", 
+            value: formatK(Math.max(...chartData.map(d => d.periodAmount)), metric === "revenue"),
+            tone: "white" 
+          }
+        ],
+        rightStats: [
+          { 
+            label: "CUMULATIVE", 
+            value: formatK(chartData[chartData.length - 1]?.totalProgress || 0, metric === "revenue"),
+            tone: "lime" 
+          }
+        ]
+      }}
+      footer={
+        <InsightMarquee 
+          chartInsight="Cumulative growth tracking identifies the long-term compound value of your content periods."
+          personalInsight="Watch for periods where Period Delta (Cyan) remains consistent while Total (Pink) curves up."
+        />
+      }
+    >
+      <div className="p-4 h-[400px] relative">
+        <StableChartFrame minHeightClassName="min-h-[360px]">
+          <ComposedChart data={chartData} margin={{ top: 20, right: 10, bottom: 40, left: 10 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+            <XAxis dataKey="name" tick={{ fontWeight: 900, fontSize: 10 }} axisLine={{ stroke: '#000', strokeWidth: 3 }} />
+            <YAxis yAxisId="left" tick={{ fontWeight: 900, fontSize: 10 }} axisLine={{ stroke: '#000', strokeWidth: 3 }} label={{ value: 'PERIOD AMOUNT', angle: -90, position: 'insideLeft', offset: 15, style: { fontWeight: 1000, fontSize: 12, fill: '#000' } }} />
+            <YAxis yAxisId="right" orientation="right" tick={{ fontWeight: 900, fontSize: 10 }} axisLine={{ stroke: '#000', strokeWidth: 3 }} label={{ value: 'PROGRESS', angle: 90, position: 'insideRight', offset: 15, style: { fontWeight: 1000, fontSize: 12, fill: '#000' } }} />
+            <Tooltip content={<ChartTip />} />
+            <Bar yAxisId="left" dataKey="periodAmount" fill="#00E5FF" radius={[2, 2, 0, 0]} stroke="#000" strokeWidth={2} />
+            <Line yAxisId="right" type="monotone" dataKey="totalProgress" stroke="#FF7497" strokeWidth={5} dot={{ r: 5, fill: "#FF7497", stroke: "#000", strokeWidth: 2 }} activeDot={{ r: 7, stroke: "#000", strokeWidth: 3 }} />
+          </ComposedChart>
+        </StableChartFrame>
+
+        <div className="absolute bottom-[0px] left-[14px] right-[14px] flex flex-col pointer-events-none">
+          <div className="grid grid-cols-3 items-center h-8">
+            <div className="flex items-center gap-2 justify-self-end">
+              <span className="font-[1000] text-[14px] tracking-tight uppercase">TIME</span>
+              <div className="w-[155px] h-6 bg-[#00E5FF] rounded-[2px] border-[2px] border-black" />
+            </div>
+            <div className="justify-self-center flex items-center gap-3">
+              <span className="text-black font-[1000] text-[16px] leading-none">◀</span>
+              <span className="uppercase tracking-[0.1em] text-black font-[1000] text-[14px]">
+                Channel Growth
+              </span>
+              <span className="text-black font-[1000] text-[16px] leading-none">▶</span>
+            </div>
+            <div className="flex items-center gap-2 justify-self-start">
+              <div className="relative flex items-center h-6 w-[115px]">
+                <div className="absolute left-[2px] right-[2px] top-1/2 -translate-y-1/2 h-2 bg-[#FF7497]" />
+                <div className="flex items-center justify-between w-full relative z-10">
+                  <div className="w-5 h-5 bg-[#FF7497] border-[3px] rounded-full border-black" />
+                  <div className="w-5 h-5 bg-[#FF7497] border-[3px] rounded-full border-black" />
+                  <div className="w-5 h-5 bg-[#FF7497] border-[3px] rounded-full border-black" />
+                </div>
+              </div>
+              <span className="font-[1000] text-[14px] tracking-tight uppercase">TOTAL</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </SubToolboxChartModule>
+  )
 }

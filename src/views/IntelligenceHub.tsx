@@ -124,14 +124,14 @@ export const IntelligenceHub: React.FC<{ collapsible?: boolean; isOpenInitial?: 
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <BrainSection 
-            title="Identity & Aspirations" 
+            title="Channel ID" 
             content={memory.identityAndAspirations}
             icon={<Sparkles size={20} strokeWidth={3} />}
             paletteIndex={0}
             sectionKey="identityAndAspirations"
           />
           <BrainSection 
-            title="Content DNA" 
+            title="Content Style" 
             content={memory.contentDNA}
             icon={<Dna size={20} strokeWidth={3} />}
             paletteIndex={1}
@@ -141,14 +141,14 @@ export const IntelligenceHub: React.FC<{ collapsible?: boolean; isOpenInitial?: 
         
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <BrainSection 
-            title="Performance Ledger" 
+            title="Performance" 
             content={memory.performanceLedger}
             icon={<BarChart3 size={20} strokeWidth={3} />}
             paletteIndex={2}
             sectionKey="performanceLedger"
           />
           <BrainSection 
-            title="Future-State Map" 
+            title="Outlook" 
             content={memory.futureStateMap}
             icon={<Map size={20} strokeWidth={3} />}
             paletteIndex={3}

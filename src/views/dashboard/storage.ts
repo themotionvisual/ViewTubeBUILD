@@ -173,12 +173,14 @@ export const prevHeightBucket = (widgetId: string, current: DashboardHeightBucke
 }
 
 export const sizeBucketClassName = (size: DashboardSizeBucket): string => {
-  if (size === "full") return "col-span-12"
-  if (size === "three-quarters") return "col-span-12 md:col-span-9"
-  if (size === "two-thirds") return "col-span-12 md:col-span-8"
-  if (size === "half") return "col-span-12 md:col-span-6"
-  if (size === "third") return "col-span-12 md:col-span-4"
-  return "col-span-12 md:col-span-3"
+  if (size === "full") return "col-span-24"
+  if (size === "three-quarters") return "col-span-24 md:col-span-18"
+  if (size === "two-thirds") return "col-span-24 md:col-span-16"
+  if (size === "half") return "col-span-24 md:col-span-12"
+  if (size === "between") return "col-span-24 md:col-span-10"
+  if (size === "third") return "col-span-24 md:col-span-8"
+  if (size === "companion") return "col-span-24 md:col-span-7"
+  return "col-span-24 md:col-span-6"
 }
 
 export const heightBucketClassName = (height: DashboardHeightBucket): string => {

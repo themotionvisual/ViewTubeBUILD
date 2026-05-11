@@ -133,3 +133,17 @@
   0% { transform: translate(0, 0); }
   100% { transform: translate(-100%, 0); }
 }
+
+@keyframes engagementLineReveal {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.engagement-line-reveal {
+  opacity: 0;
+  animation: engagementLineReveal 600ms ease forwards;
+}
+.engagement-line-delay-0 { animation-delay: 0ms; }
+.engagement-line-delay-1 { animation-delay: 200ms; }
+.engagement-line-delay-2 { animation-delay: 400ms; }
+.engagement-line-delay-3 { animation-delay: 600ms; }

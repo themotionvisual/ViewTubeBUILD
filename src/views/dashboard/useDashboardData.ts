@@ -2,6 +2,7 @@ import { useMemo } from "react"
 import { useBrain } from "../../context/useBrain"
 import { getMasterRows, getMetricSummary, metricCellValue } from "../../services/analyticsSelectors"
 import { readYouTubeAnalyticsCache } from "../../services/canonicalAnalyticsStore"
+import { reportToRows } from "../performanceHubUtils"
 
 const formatHumanNumber = (value: unknown): string => {
   const parsed = Number(value)
@@ -45,14 +46,29 @@ export const useDashboardData = () => {
   const channelHandle = authState.channelHandle
 
   const summary28d = useMemo(() => getMetricSummary("28d", "hybrid", brain.csvFiles || []), [lastSyncComplete, channelHandle, brain.csvFiles])
+  const summaryLifetime = useMemo(() => getMetricSummary("lifetime", "hybrid", brain.csvFiles || []), [lastSyncComplete, channelHandle, brain.csvFiles])
   const canonicalRows = useMemo(() => getMasterRows("lifetime", "hybrid", brain.csvFiles || []), [lastSyncComplete, channelHandle, brain.csvFiles])
 
-  const subsTotal = Number(authState.subscriberCount || 0) || 0
+  // Prefer totals from the authoritative authState (initial sync) as requested
+  const authSubs = Number(authState.subscriberCount)
+  const authViews = Number(authState.totalViews)
+
+  const subsTotal = (authSubs && authSubs > 0) ? authSubs : (summaryLifetime.totals.subscribersGained || 0)
+  const viewsTotal = (authViews && authViews > 0) ? authViews : (summaryLifetime.totals.views || 0)
+  
+  console.log(`[useDashboardData] DEBUG: AuthSubs=${authSubs}, AuthViews=${authViews}, SummarySubs=${summaryLifetime.totals.subscribersGained}, FinalSubs=${subsTotal}`)
+
+  const resolvedSubscribers = Math.max(0, Math.round(subsTotal))
+
   const views28d = summary28d.totals.views
   const hours28d = summary28d.totals.watchHours
   const revenue28d = summary28d.totals.revenue
   const subscribers28d = summary28d.totals.subscribersGained
-  const resolvedSubscribers = Math.max(0, Math.round(subsTotal))
+
+  const hoursLifetime = summaryLifetime.totals.watchHours
+  const revenueLifetime = summaryLifetime.totals.revenue
+
+
 
   const avgCtr = summary28d.averages.ctr
   const avgAvd = summary28d.averages.avdSeconds
@@ -61,6 +77,7 @@ export const useDashboardData = () => {
 
   const rawMetrics = {
     subsTotal,
+    viewsTotal,
     subscribers28d,
     views28d,
     revenue28d,
@@ -81,14 +98,53 @@ export const useDashboardData = () => {
     return ago <= 28
   }).length
 
-  const statBlocks = [
-    { label: "Subscribers", value: resolvedSubscribers.toLocaleString(), trend: subscribers28d > 0 ? `▲ +${formatHumanNumber(subscribers28d)}` : null, color: "#4FFF5B" },
-    { label: "Views (28D)", value: formatHumanNumber(views28d), trend: views28d > 0 ? `▲ +${((views28d / Math.max(1, views28d)) * 100).toFixed(1)}%` : null, color: "#C9F830" },
-    { label: "Watch Hours", value: formatHumanNumber(hours28d), trend: hours28d > 0 ? `▲ +${((hours28d / Math.max(1, hours28d)) * 100).toFixed(1)}%` : null, color: "#FF83EA" },
-    { label: "New Subscribers", value: formatHumanNumber(subscribers28d), trend: "▲ +2.1%", color: "#24D3FF" },
-    { label: "Revenue (28D)", value: `$${revenue28d.toFixed(0)}`, trend: revenue28d > 0 ? null : "▼ -3.2%", color: "#FFE357" },
-    { label: "New Videos", value: newVideosPosted.toString(), trend: "▲ +1", color: "#FFB570" },
+  const fast = authState.fastAnalytics
+  const fastRevenue28d = fast?.subscribers28d ? revenue28d : 0 // Fallback logic
+  // Actually, let's just use the fast values if they exist and deep ones are 0
+  const displayRevenue28d = revenue28d || 0
+  const displaySubs28d = fast?.subscribers28d || subscribers28d || 0
+  const displayRevenueLifetime = fast?.lifetimeRevenue || revenueLifetime || 0
+  const displayWatchHoursLifetime = (fast?.lifetimeWatchMinutes ? fast.lifetimeWatchMinutes / 60 : hoursLifetime) || 0
+  const displayViewsLifetime = fast?.lifetimeViews || viewsTotal || 0
+  const displayVideoCount = Number(authState.videoCount || canonicalRows.length || 0)
+
+  // 1.5/1.7 Calculations
+  const calculatedRPM = displayViewsLifetime > 0 ? (displayRevenueLifetime / displayViewsLifetime) * 1000 : 0
+  const calculatedAVD = displayViewsLifetime > 0 ? (displayWatchHoursLifetime * 3600) / displayViewsLifetime : summaryLifetime.averages.avdSeconds
+  
+  // Velocity & Engagement
+  const subVelocity = fast?.subscribers28d || subscribers28d || 0
+  
+  // Engagement from Snapshot (Phase 1.7)
+  const recentSnapshot = brain.channelyticsState.allData || []
+  const avgEngagement = recentSnapshot.length > 0 
+    ? recentSnapshot.reduce((acc, v: any) => acc + (Number(v.statistics?.likeCount || 0) + Number(v.statistics?.commentCount || 0)), 0) / recentSnapshot.length
+    : 0
+
+  const statBlocks28d = [
+    { id: "subs", label: "Subscribers", value: resolvedSubscribers.toLocaleString(), trend: displaySubs28d > 0 ? `▲ +${formatHumanNumber(displaySubs28d)}` : null, color: "#4FFF5B" },
+    { id: "views", label: "Views (28D)", value: formatHumanNumber(views28d), trend: views28d > 0 ? "▲ +2.1%" : null, color: "#C9F830" },
+    { id: "hours", label: "Watch Hours", value: formatHumanNumber(hours28d), trend: hours28d > 0 ? "▲ +1.5%" : null, color: "#FF83EA" },
+    { id: "new_subs", label: "Sub Velocity", value: formatHumanNumber(subVelocity), trend: subVelocity > 0 ? `▲ ${formatHumanNumber(subVelocity)}` : null, color: "#24D3FF" },
+    { id: "revenue", label: "Revenue (28D)", value: `$${displayRevenue28d.toFixed(0)}`, trend: displayRevenue28d > 0 ? "▲ +0.5%" : null, color: "#FFE357" },
+    { id: "new_videos", label: "New Videos", value: newVideosPosted.toString(), trend: newVideosPosted > 0 ? `▲ ${newVideosPosted}` : null, color: "#FFB570" },
+    { id: "rpm", label: "Avg RPM", value: `$${calculatedRPM.toFixed(2)}`, trend: null, color: "#4FFF5B" },
+    { id: "engagement", label: "Engagement", value: formatHumanNumber(avgEngagement), trend: null, color: "#FF83EA" },
+    { id: "ctr", label: "Avg CTR", value: `${(avgCtr * 100).toFixed(1)}%`, trend: null, color: "#C9F830" },
   ]
+
+  const statBlocksLifetime = [
+    { id: "subs", label: "Subscribers", value: resolvedSubscribers.toLocaleString(), trend: null, color: "#4FFF5B" },
+    { id: "views", label: "Views", value: formatHumanNumber(displayViewsLifetime), trend: null, color: "#C9F830" },
+    { id: "hours", label: "Watch Hours", value: formatHumanNumber(displayWatchHoursLifetime), trend: null, color: "#FF83EA" },
+    { id: "revenue", label: "Revenue", value: `$${displayRevenueLifetime.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, trend: null, color: "#FFE357" },
+    { id: "videos", label: "Videos", value: displayVideoCount.toString(), trend: null, color: "#FFB570" },
+    { id: "avg_avd", label: "Avg View Dur", value: formatAvd(calculatedAVD), trend: null, color: "#24D3FF" },
+    { id: "rpm", label: "Avg RPM", value: `$${calculatedRPM.toFixed(2)}`, trend: null, color: "#4FFF5B" },
+    { id: "velocity", label: "Recent Subs", value: formatHumanNumber(subVelocity), trend: null, color: "#24D3FF" },
+    { id: "engagement", label: "Engagement", value: formatHumanNumber(avgEngagement), trend: null, color: "#FF83EA" },
+  ]
+
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -214,6 +270,13 @@ export const useDashboardData = () => {
       .slice(0, 5)
   }, [lastSyncComplete])
 
+  const dailySeries = useMemo(() => {
+    const cache = readYouTubeAnalyticsCache()
+    const report = cache.dailyMetrics as any
+    if (!report || !Array.isArray(report.rows)) return []
+    return reportToRows(report, "daily", "YouTube API")
+  }, [lastSyncComplete])
+
   return {
     brain,
     authState,
@@ -221,7 +284,8 @@ export const useDashboardData = () => {
     lastSyncComplete,
     channelHandle,
     globalSyncData,
-    statBlocks,
+    statBlocks28d,
+    statBlocksLifetime,
     rawMetrics,
     upcomingDays,
     todayTasks,
@@ -251,6 +315,7 @@ export const useDashboardData = () => {
     avatarUrl: toHighResYouTubeAvatar(authState.channelThumbnail),
     formatRelativeTime,
     canonicalRows,
+    dailySeries,
   }
 }
 

@@ -92,7 +92,7 @@ const TagBadge: React.FC<{
      setShowTooltip(true)
     }}
     onMouseLeave={() => setShowTooltip(false)}
-   className="inline-flex items-center gap-1 px-3 py-1 text-xs font-[900] uppercase border-[4px] border-black rounded-full shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)] transition-all hover:-translate-y-0.5 active:translate-y-0"
+   className="inline-flex items-center px-3 py-1 text-xs font-[900] uppercase border-[4px] border-black rounded-full shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)] transition-all hover:-translate-y-0.5 active:translate-y-0"
     style={{
      backgroundColor: isAdded
       ? "#E5E7EB"
@@ -102,10 +102,11 @@ const TagBadge: React.FC<{
      opacity: isAdded ? 0.65 : 1,
      cursor: isAdded ? "not-allowed" : "pointer",
     }}>
-    <span className="max-w-[140px] truncate text-black">{tag}</span>
+    <span className="whitespace-nowrap text-black">{tag}</span>
+    {analysis && <span className="ml-1 font-[1000] text-black">#{analysis.rank}</span>}
     {(onRemove || (isSuggested && !isAdded)) && (
      <span
-      className="w-4 h-4 flex items-center justify-center rounded-full bg-black text-white"
+      className="w-4 h-4 flex shrink-0 items-center justify-center rounded-full bg-black text-white ml-2"
       onClick={(e) => {
        e.stopPropagation()
        if (onRemove) onRemove()
@@ -592,7 +593,12 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    .map((t) => t.trim())
    .filter(Boolean)
   if (!current.map((t) => t.toLowerCase()).includes(trimmed.toLowerCase())) {
-   setEditTags([...current, trimmed].join(", "))
+   const newTags = [...current, trimmed].join(", ")
+   if (newTags.length > 499) {
+    alert("Character limit exceeded! Tags must be 499 characters or less.")
+    return
+   }
+   setEditTags(newTags)
    if (analysis) setExistingTagAnalysis((prev) => [...prev, analysis])
   }
   setTagInput("")
@@ -1117,6 +1123,15 @@ const VideoManager: React.FC<VideoManagerProps> = ({
           <img
            src={selectedVideo.thumbnail}
            alt={selectedVideo.title}
+           onError={(e) => {
+             const target = e.currentTarget;
+             const videoId = selectedVideo.videoId;
+             if (target.src.includes('maxresdefault.jpg')) {
+               target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+             } else if (target.src.includes('hqdefault.jpg')) {
+               target.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+             }
+           }}
            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
           />
          </div>
@@ -1234,7 +1249,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       </div>
       {/* Main Editor Elements */}
       {/* Stats & Thumbnail Row */}
-      <div className="grid grid-cols-1 xl:grid-cols-[4fr_7fr] gap-6 items-stretch">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch min-h-[400px]">
        <SubToolbox
         title="Video Stats"
         icon={<BarChart3 size={20} strokeWidth={3} />}
@@ -1242,19 +1257,21 @@ const VideoManager: React.FC<VideoManagerProps> = ({
         collapsible
         isOpenInitial={true}
         contentClassName="p-4 flex-1 h-full flex flex-col space-y-3"
+        shellClassName="h-full"
        >
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 h-full">
          {kpiCards.map((card) => (
           <div
            key={card.key}
-           className="rounded-xl border-[3px] border-black bg-white shadow-[2px_2px_0px_0px_black] overflow-hidden"
+           className="rounded-xl border-[3px] border-black bg-white shadow-[2px_2px_0px_0px_black] overflow-hidden flex flex-col"
           >
-           <div className={`h-3 border-b-[2px] border-black ${card.tone}`} />
-           <div className="px-3 py-2 min-h-[56px] flex flex-col items-center justify-center text-center">
-            <span className="font-[1000] text-[22px] leading-none">{card.value}</span>
-            <span className="text-[9px] font-black uppercase tracking-[0.18em] text-black/50 mt-1">
+           <div className={`py-1 border-b-[2px] border-black ${card.tone} shrink-0 flex items-center justify-center`}>
+            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-black">
              {card.label}
             </span>
+           </div>
+           <div className="px-3 py-2 flex-1 flex flex-col items-center justify-center text-center">
+            <span className="font-[1000] text-[32px] leading-none tracking-tighter">{card.value}</span>
            </div>
           </div>
          ))}
@@ -1268,9 +1285,10 @@ const VideoManager: React.FC<VideoManagerProps> = ({
         collapsible
         isOpenInitial={true}
         contentClassName="p-4 flex-1 h-full flex flex-col space-y-3"
+        shellClassName="h-full"
        >
         <div
-         className={`h-full relative rounded-xl border-[4px] border-dashed flex flex-col items-center justify-center p-4 transition-all overflow-hidden min-h-[232px] ${isDraggingThumbnail ? "border-[#FF83EA] bg-[#FF83EA]/10" : "border-black/20 bg-gray-50"}`}
+         className={`h-full relative rounded-xl border-[4px] border-dashed flex flex-col items-center justify-center p-4 transition-all overflow-hidden ${isDraggingThumbnail ? "border-[#FF83EA] bg-[#FF83EA]/10" : "border-black/20 bg-gray-50"}`}
          onDragOver={(e) => {
           e.preventDefault()
           setIsDraggingThumbnail(true)
@@ -1283,7 +1301,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
            handleThumbnailChange(e.dataTransfer.files[0])
          }}>
          {thumbnailPreview || selectedVideo.thumbnail ? (
-          <div className="relative w-full h-full group">
+          <div className="relative w-full aspect-video group">
            <img
             src={thumbnailPreview || selectedVideo.thumbnail}
             alt="Preview"
@@ -1326,6 +1344,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
        paletteIndex={basePalette + 3}
        collapsible
        isOpenInitial={true}
+       overflowVisible={true}
       >
        <div className="space-y-6">
         <div className="space-y-2">
@@ -1350,16 +1369,118 @@ const VideoManager: React.FC<VideoManagerProps> = ({
           placeholder="DESCRIPTION..."
          />
         </div>
-        <div className="space-y-2">
-         <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">
-          Tags
-         </label>
-         <input
-          value={editTags}
-          onChange={(e) => setEditTags(e.target.value)}
-          className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-5 font-black uppercase text-sm focus:bg-white focus:border-[#00CCFF] focus:shadow-[4px_4px_0px_0px_#00CCFF] outline-none transition-all"
-          placeholder="TAG ONE, TAG TWO, TAG THREE..."
-         />
+        {/* NEW TAGS MANAGER INTEGRATION */}
+        <div className="border-[4px] border-black rounded-[24px] overflow-hidden bg-white shadow-[6px_6px_0px_0px_black] mt-6">
+         <div className="bg-[#4FFF5B] px-6 py-4 border-b-[4px] border-black flex items-center justify-between">
+          <div className="flex items-center gap-3">
+           <Tag size={24} strokeWidth={3} className="text-black" />
+           <h3 className="text-3xl font-[1000] uppercase tracking-tighter leading-none mt-1">Video Tags</h3>
+          </div>
+          <div className="flex items-center gap-4">
+           <span className={`font-black text-sm uppercase px-3 py-1 rounded-lg border-2 ${editTags.length >= 499 ? "bg-[#FF3399] text-white border-black" : "bg-white/50 text-black/50 border-black/20"}`}>
+             {editTags.length} / 499
+           </span>
+           <button
+            onClick={handleRankTags}
+            disabled={isAnalyzingTags || !editTags}
+            className="flex items-center gap-2 bg-[#CCFF00] border-[3px] border-black text-black px-4 py-2 rounded-xl font-black uppercase shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50">
+            {isAnalyzingTags ? (
+             <Loader2 size={14} className="animate-spin" />
+            ) : (
+             <BarChart3 size={14} />
+            )}{" "}
+            Rank Tags
+           </button>
+           <button
+            onClick={() => setIsTagsExpanded(!isTagsExpanded)}
+            className="bg-black text-white p-2 rounded-lg hover:bg-white hover:text-black transition-colors">
+            <ChevronDown
+             size={16}
+             className={`transition-transform ${isTagsExpanded ? "rotate-180" : ""}`}
+            />
+           </button>
+          </div>
+         </div>
+         
+         <div className={`transition-all duration-300 ease-in-out ${isTagsExpanded ? "opacity-100" : "h-0 opacity-0 overflow-hidden"}`}>
+          <div className="p-6 bg-white space-y-6">
+           <div className="flex gap-4">
+            <input
+             value={tagInput}
+             onChange={(e) => setTagInput(e.target.value)}
+             onKeyDown={(e) => e.key === "Enter" && handleAddTag(tagInput)}
+             className="flex-1 bg-gray-50 border-[4px] border-black rounded-xl p-5 font-black uppercase text-lg focus:bg-white outline-none"
+             placeholder="ADD TAG..."
+             maxLength={499 - editTags.length}
+            />
+            <button
+             onClick={() => handleAddTag(tagInput)}
+             disabled={editTags.length >= 499}
+             className="bg-black text-white px-10 font-black uppercase rounded-xl border-[4px] border-black shadow-[6px_6px_0px_0px_#FF3399] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_#FF3399] transition-all text-xl disabled:opacity-50">
+             ADD
+            </button>
+           </div>
+           
+           <div
+            className={`w-full border-[4px] border-black rounded-2xl bg-white p-3 flex flex-wrap gap-2 content-start transition-all min-h-[132px]`}>
+            {editTags ? (
+             editTags
+              .split(",")
+              .map((t) => t.trim())
+              .filter(Boolean)
+              .map((t) => (
+               <TagBadge
+                key={t}
+                tag={t}
+                onRemove={() => handleRemoveTag(t)}
+                analysis={existingTagAnalysis.find(
+                 (a) => a.tag.toLowerCase() === t.toLowerCase(),
+                )}
+               />
+              ))
+            ) : (
+             <p className="text-black/30 font-black uppercase text-sm w-full text-center py-6">
+              No tags populated...
+             </p>
+            )}
+           </div>
+
+           <div className="space-y-6 pt-6 border-t-[4px] border-dashed border-black/10">
+            <button
+             onClick={handleGenerateTags}
+             disabled={isGeneratingTags || editTags.length >= 499}
+             className="w-full bg-[#FF3399] text-white p-6 rounded-2xl border-[4px] border-black font-[1000] uppercase text-2xl flex items-center justify-center gap-4 shadow-[8px_8px_0px_0px_black] hover:translate-y-1 hover:shadow-none transition-all disabled:opacity-50">
+             {isGeneratingTags ? (
+              <Loader2 size={32} className="animate-spin" />
+             ) : (
+              <Sparkles size={32} />
+             )}
+             {isGeneratingTags
+              ? "Scanning Market..."
+              : "Generate Algorithm Suggestions"}
+            </button>
+            {suggestedTags.length > 0 && (
+             <div className="space-y-4">
+              <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">
+               Ranked Suggestions
+              </label>
+              <div className="flex flex-wrap gap-2 p-6 border-[4px] border-black rounded-xl bg-white shadow-[inset_0_4px_10px_rgba(0,0,0,0.05)]">
+               {suggestedTags.map((st) => (
+                <TagBadge
+                 key={st.tag}
+                 tag={st.tag}
+                 isSuggested
+                 isAdded={editTags.toLowerCase().includes(st.tag.toLowerCase())}
+                 onAdd={() => handleAddTag(st.tag, st)}
+                 analysis={st}
+                />
+               ))}
+              </div>
+             </div>
+            )}
+           </div>
+          </div>
+         </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1440,114 +1561,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
        </div>
       </SubToolbox>
 
-      {/* Tag Manager */}
-      <SubToolbox
-       title="Video Tags"
-       icon={<Tag size={20} strokeWidth={3} />}
-       paletteIndex={basePalette + 4}
-       collapsible
-       isOpenInitial={false}
-       actionButton={
-        <div className="flex gap-2">
-         <button
-          onClick={handleRankTags}
-          disabled={isAnalyzingTags || !editTags}
-          className="flex items-center gap-2 bg-[#CCFF00] border-[3px] border-black text-black px-4 py-2 rounded-xl font-black uppercase shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50">
-          {isAnalyzingTags ? (
-           <Loader2 size={14} className="animate-spin" />
-          ) : (
-           <BarChart3 size={14} />
-          )}{" "}
-          Rank Tags
-         </button>
-         <button
-          onClick={() => setIsTagsExpanded(!isTagsExpanded)}
-          className="bg-black text-white p-2 rounded-lg hover:bg-white hover:text-black transition-colors">
-          <ChevronDown
-           size={16}
-           className={`transition-transform ${isTagsExpanded ? "rotate-180" : ""}`}
-          />
-         </button>
-        </div>
-       }>
-       <div className="space-y-6">
-        <div className="flex gap-4">
-         <input
-          value={tagInput}
-          onChange={(e) => setTagInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleAddTag(tagInput)}
-          className="flex-1 bg-gray-50 border-[4px] border-black rounded-xl p-5 font-black uppercase text-lg focus:bg-white outline-none"
-          placeholder="ADD TAG..."
-         />
-         <button
-          onClick={() => handleAddTag(tagInput)}
-          className="bg-black text-white px-10 font-black uppercase rounded-xl border-[4px] border-black shadow-[6px_6px_0px_0px_#FF3399] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_#FF3399] transition-all text-xl">
-          ADD
-         </button>
-        </div>
-
-        <div
-         className={`w-full border-[4px] border-black rounded-2xl bg-white p-3 flex flex-wrap gap-2 content-start transition-all ${isTagsExpanded ? "min-h-[132px]" : "min-h-[92px]"}`}>
-         {editTags ? (
-          editTags
-           .split(",")
-           .map((t) => t.trim())
-           .filter(Boolean)
-           .map((t) => (
-            <TagBadge
-             key={t}
-             tag={t}
-             onRemove={() => handleRemoveTag(t)}
-             analysis={existingTagAnalysis.find(
-              (a) => a.tag.toLowerCase() === t.toLowerCase(),
-             )}
-            />
-           ))
-         ) : (
-          <p className="text-black/30 font-black uppercase text-sm w-full text-center py-6">
-           No tags populated...
-          </p>
-         )}
-        </div>
-
-        {isTagsExpanded && (
-         <div className="space-y-6 pt-6 border-t-[4px] border-dashed border-black/10">
-          <button
-           onClick={handleGenerateTags}
-           disabled={isGeneratingTags}
-           className="w-full bg-[#FF3399] text-white p-6 rounded-2xl border-[4px] border-black font-[1000] uppercase text-2xl flex items-center justify-center gap-4 shadow-[8px_8px_0px_0px_black] hover:translate-y-1 hover:shadow-none transition-all disabled:opacity-50">
-           {isGeneratingTags ? (
-            <Loader2 size={32} className="animate-spin" />
-           ) : (
-            <Sparkles size={32} />
-           )}
-           {isGeneratingTags
-            ? "Scanning Market..."
-            : "Generate Algorithm Suggestions"}
-          </button>
-          {suggestedTags.length > 0 && (
-           <div className="space-y-4">
-            <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">
-             Ranked Suggestions
-            </label>
-            <div className="flex flex-wrap gap-2 p-6 border-[4px] border-black rounded-xl bg-white shadow-[inset_0_4px_10px_rgba(0,0,0,0.05)]">
-             {suggestedTags.map((st) => (
-              <TagBadge
-               key={st.tag}
-               tag={st.tag}
-               isSuggested
-               isAdded={editTags.toLowerCase().includes(st.tag.toLowerCase())}
-               onAdd={() => handleAddTag(st.tag, st)}
-               analysis={st}
-              />
-             ))}
-            </div>
-           </div>
-          )}
-         </div>
-        )}
-       </div>
-      </SubToolbox>
+      {/* End Tag Manager removed as it is now integrated into Video Details */}
 
       {/* Update Button */}
       <button

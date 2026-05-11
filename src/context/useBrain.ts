@@ -1,5 +1,5 @@
 import { useContext } from "react"
-import { GlobalDataContext, fallbackContext } from "./GlobalDataContext"
+import { GlobalDataContext, fallbackContext } from "./GlobalDataContextTypes"
 
 let hasWarnedFallback = false
 

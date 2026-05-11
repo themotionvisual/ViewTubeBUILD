@@ -57,6 +57,8 @@ type ReportStepResult = {
   timedOut: boolean;
   failed: boolean;
   reason?: string;
+  elapsedMs?: number;
+  retryCount?: number;
 };
 
 const ULTIMATE_PROMPT_PACK_VERSION = "ultimate_fusion_v1";
@@ -77,6 +79,12 @@ const ULTIMATE_SECTION_ORDER = [
   "Risk Flags & Guardrails",
   "Execution Queue + Progress Delta",
 ] as const;
+const SECTION_TIMEOUTS_MS = {
+  diagnosis: 18000,
+  keyword: 18000,
+  stageA: 42000,
+  stageB: 42000,
+} as const;
 const PREFERRED_WINDOWS = ["28d", "90d", "365d", "lifetime", "7d"] as const;
 
 const toRecord = (value: unknown): Record<string, unknown> =>
@@ -538,6 +546,17 @@ const enforceNineSections = (sections: OracleSection[]): OracleSection[] => {
   return normalized;
 };
 
+const buildSlimContext = (resolvedContext: string): string => {
+  const lines = resolvedContext.split("\n");
+  const filtered = lines.filter(
+    (line) =>
+      !line.includes("[MASTER DATA TABLES]") &&
+      !line.includes("[API STORAGE SNAPSHOT]") &&
+      !line.includes("[AI JOURNAL]"),
+  );
+  return filtered.join("\n").slice(0, 6000);
+};
+
 const buildStageAContext = (resolvedContext: string): string =>
   [
     `PROMPT_VERSION: ${LEGACY_PROMPT_VERSION}`,
@@ -924,13 +943,14 @@ const persistGenerationRecord = (record: GenerationRecord): void => {
 
 const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<ReportStepResult> => {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  const startedAt = Date.now();
   try {
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => reject(new Error(`${label} timed out after ${timeoutMs}ms`)), timeoutMs);
     });
     const value = await Promise.race([promise, timeoutPromise]);
     if (timeoutId) clearTimeout(timeoutId);
-    return { value, timedOut: false, failed: false };
+    return { value, timedOut: false, failed: false, elapsedMs: Date.now() - startedAt, retryCount: 0 };
   } catch (error) {
     if (timeoutId) clearTimeout(timeoutId);
     const reason = error instanceof Error ? error.message : String(error);
@@ -939,9 +959,36 @@ const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, label: str
       timedOut: /timed out/i.test(reason),
       failed: true,
       reason,
+      elapsedMs: Date.now() - startedAt,
+      retryCount: 0,
     };
   }
 };
+
+const withTimeoutRetry = async <T>(
+  producer: (compact: boolean) => Promise<T>,
+  timeoutMs: number,
+  label: string,
+): Promise<ReportStepResult> => {
+  const first = await withTimeout(producer(false), timeoutMs, label);
+  if (!first.failed) return first;
+  const second = await withTimeout(producer(true), Math.floor(timeoutMs * 0.7), `${label} retry`);
+  if (!second.failed) return { ...second, retryCount: 1 };
+  return {
+    ...second,
+    reason: `${first.reason || label}; retry failed: ${second.reason || label}`,
+    elapsedMs: (first.elapsedMs || 0) + (second.elapsedMs || 0),
+    retryCount: 1,
+  };
+};
+
+const sectionHasRenderableContent = (section: ReportSectionState): boolean =>
+  Boolean(section.summary?.trim()) ||
+  (section.metrics?.length || 0) > 0 ||
+  ((section.tableSpec?.rows?.length || 0) > 0 && (section.tableSpec?.headers?.length || 0) > 0) ||
+  Boolean(section.chartSpec) ||
+  (section.actions?.length || 0) > 0 ||
+  (section.bullets?.length || 0) > 0;
 
 const resolveBestAnalyticsSnapshot = (): {
   window: "lifetime" | "365d" | "90d" | "28d" | "7d";
@@ -995,7 +1042,7 @@ export async function generateUltimateChannelReport(
 
   const bestSnapshot = resolveBestAnalyticsSnapshot();
   const summary = bestSnapshot.summary;
-  const topRows = bestSnapshot.rows.slice(0, 30);
+  const topRows = bestSnapshot.rows.slice(0, 18);
 
   const analyticsSnapshot = `
 [CHANNEL SUMMARY DATA]
@@ -1052,7 +1099,6 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
     .join("\n\n");
 
   const contextMode = manualIntent && autoContext ? "hybrid" : manualIntent ? "manual" : "auto";
-  const stepTimeoutMs = 25000;
   const stageAStartReason = "Stage A (legacy analysis) started.";
   const stageBStartReason = "Stage B (oracle refinement) started.";
   input.onSectionUpdate?.(
@@ -1075,9 +1121,21 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
   );
 
   const [diagnosisStep, stageAStep, keywordStep] = await Promise.all([
-    withTimeout(generateArchitectDiagnosis(resolvedContext), stepTimeoutMs, "architect diagnosis"),
-    withTimeout(generateOracleReport(buildStageAContext(resolvedContext)), stepTimeoutMs, "stage A report"),
-    withTimeout(generateKeywordResearch(resolvedContext, "YouTube Channel"), stepTimeoutMs, "keyword research"),
+    withTimeoutRetry(
+      async (compact) => generateArchitectDiagnosis(compact ? buildSlimContext(resolvedContext) : resolvedContext),
+      SECTION_TIMEOUTS_MS.diagnosis,
+      "architect diagnosis",
+    ),
+    withTimeoutRetry(
+      async (compact) => generateOracleReport(buildStageAContext(compact ? buildSlimContext(resolvedContext) : resolvedContext)),
+      SECTION_TIMEOUTS_MS.stageA,
+      "stage A report",
+    ),
+    withTimeoutRetry(
+      async (compact) => generateKeywordResearch(compact ? buildSlimContext(resolvedContext) : resolvedContext, "YouTube Channel"),
+      SECTION_TIMEOUTS_MS.keyword,
+      "keyword research",
+    ),
   ]);
 
   const stageAOracle = normalizeOracleReport(stageAStep.value, resolvedContext);
@@ -1131,9 +1189,12 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
     { sectionId: "stageB", status: "running", ts: new Date().toISOString(), note: stageBStartReason },
   );
 
-  const stageBStep = await withTimeout(
-    generateOracleReport(buildStageBContext(resolvedContext, stageA)),
-    stepTimeoutMs,
+  const stageBStep = await withTimeoutRetry(
+    async (compact) =>
+      generateOracleReport(
+        buildStageBContext(compact ? buildSlimContext(resolvedContext) : resolvedContext, stageA),
+      ),
+    SECTION_TIMEOUTS_MS.stageB,
     "stage B report",
   );
   const stageBOracle = normalizeOracleReport(stageBStep.value, resolvedContext);
@@ -1196,9 +1257,31 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
   };
 
   const generationDiagnostics: GenerationDiagnostics = {
-    stageA: { status: stageAStep.failed ? "failed" : "complete", reason: stageAStep.reason },
-    stageB: { status: stageBStep.failed ? "failed" : "complete", reason: stageBStep.reason },
-    fusion: { status: "complete" },
+    stageA: {
+      status: stageAStep.failed ? "failed" : "complete",
+      reason: stageAStep.reason,
+      elapsedMs: stageAStep.elapsedMs,
+      retryCount: stageAStep.retryCount,
+    },
+    stageB: {
+      status: stageBStep.failed ? "failed" : "complete",
+      reason: stageBStep.reason,
+      elapsedMs: stageBStep.elapsedMs,
+      retryCount: stageBStep.retryCount,
+    },
+    diagnosis: {
+      status: diagnosisStep.failed ? "failed" : "complete",
+      reason: diagnosisStep.reason,
+      elapsedMs: diagnosisStep.elapsedMs,
+      retryCount: diagnosisStep.retryCount,
+    },
+    keyword: {
+      status: keywordStep.failed ? "failed" : "complete",
+      reason: keywordStep.reason,
+      elapsedMs: keywordStep.elapsedMs,
+      retryCount: keywordStep.retryCount,
+    },
+    fusion: { status: "complete", elapsedMs: 0, retryCount: 0 },
   };
 
   const report: UltimateChannelReport = {
@@ -1260,13 +1343,22 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
 
     let nextStatus: SectionGenerationStatus = "complete";
     const nextFlags: string[] = [];
-    if (!section.summary?.trim()) {
+    const stageAFailed = stageAStep.failed;
+    const stageBFailed = stageBStep.failed;
+    const bothStagesFailed = stageAFailed && stageBFailed;
+    const hasRenderable = sectionHasRenderableContent(section);
+    if (!hasRenderable) {
       nextStatus = "failed";
-      nextFlags.push("missing_summary");
+      nextFlags.push("failed_invalid_payload");
+      nextFlags.push("no_renderable_content");
       failedCount += 1;
-    } else if (section.sourceLabels.length < 3) {
+    } else if (bothStagesFailed) {
+      nextStatus = "failed";
+      nextFlags.push("source_stage_failed");
+      failedCount += 1;
+    } else if (stageAFailed || stageBFailed || section.sourceLabels.length < 3) {
       nextStatus = "degraded";
-      nextFlags.push("partial_sources");
+      nextFlags.push(stageAFailed || stageBFailed ? "source_stage_partial" : "partial_sources");
       degradedCount += 1;
     } else {
       completedCount += 1;
@@ -1301,7 +1393,12 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
     return {
       ...section,
       status: (finalEvent?.status as SectionGenerationStatus) || "queued",
-      qualityFlags: finalEvent?.status === "degraded" ? ["partial_sources"] : finalEvent?.status === "failed" ? ["missing_summary"] : [],
+      qualityFlags:
+        finalEvent?.status === "degraded"
+          ? ["partial_sources"]
+          : finalEvent?.status === "failed"
+            ? ["failed_invalid_payload"]
+            : [],
     };
   });
   report.generationEvents = generationEvents;
@@ -1310,6 +1407,7 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
   report.meta.completedCount = completedCount;
   report.meta.failedCount = failedCount;
   report.meta.degradedCount = degradedCount;
+  report.meta.partialRender = failedCount > 0 || degradedCount > 0;
 
   const generationRecord: GenerationRecord = {
     id: generationId,

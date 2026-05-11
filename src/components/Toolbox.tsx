@@ -390,6 +390,7 @@ interface SubToolboxProps {
   children: React.ReactNode;
   actionButton?: React.ReactNode;
   contentClassName?: string;
+  shellClassName?: string;
   collapsible?: boolean;
   isOpen?: boolean;
   isOpenInitial?: boolean;
@@ -397,6 +398,7 @@ interface SubToolboxProps {
   unmountOnClose?: boolean;
   openUnits?: number;
   heightMode?: "standard" | "compact";
+  overflowVisible?: boolean;
 }
 
 export const SubToolbox: React.FC<SubToolboxProps> = ({
@@ -408,6 +410,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   children,
   actionButton,
   contentClassName,
+  shellClassName = "",
   collapsible = false,
   isOpen,
   isOpenInitial = true,
@@ -415,6 +418,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   unmountOnClose = false,
   openUnits = 3,
   heightMode = "standard",
+  overflowVisible = false,
 }) => {
   const [internalOpen, setInternalOpen] = useState(isOpenInitial);
   const controlled = typeof isOpen === 'boolean';
@@ -442,7 +446,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
 
   return (
     <div
-      className="w-full self-start bg-white overflow-hidden relative flex flex-col shrink-0 transition-all duration-300"
+      className={`w-full bg-white relative flex flex-col transition-all duration-300 ${overflowVisible ? "" : "overflow-hidden"} ${shellClassName}`}
       style={{
         border: `4px solid black`,
         borderRadius: `16px`,
@@ -482,10 +486,10 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
       </header>
 
       <div
-        className={`grid transition-[grid-template-rows] ${CONTROL_SHELL.transition} ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+        className={`grid transition-[grid-template-rows] ${CONTROL_SHELL.transition} ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr] overflow-hidden"}`}
         style={{ marginTop: "-4px" }}
       >
-        <div className="overflow-hidden min-h-0">
+        <div className={`${overflowVisible ? "" : "overflow-hidden"} min-h-0`}>
           <main
             className={`bg-white w-full p-4 text-black flex flex-col transition-opacity ${CONTROL_SHELL.transition} ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
             style={contentSizeStyle}

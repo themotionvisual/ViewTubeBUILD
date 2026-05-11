@@ -199,6 +199,7 @@ export interface UltimateChannelReport {
     startedAt?: string;
     finishedAt?: string;
     overallStatus?: "running" | "complete" | "degraded" | "failed";
+    partialRender?: boolean;
     completedCount?: number;
     failedCount?: number;
     degradedCount?: number;
@@ -235,8 +236,10 @@ export interface UltimateChannelReport {
 }
 
 export interface GenerationDiagnostics {
-  stageA: { status: "complete" | "degraded" | "failed"; reason?: string };
-  stageB: { status: "complete" | "degraded" | "failed"; reason?: string };
-  fusion: { status: "complete" | "degraded" | "failed"; reason?: string };
+  stageA: { status: "complete" | "degraded" | "failed"; reason?: string; elapsedMs?: number; retryCount?: number };
+  stageB: { status: "complete" | "degraded" | "failed"; reason?: string; elapsedMs?: number; retryCount?: number };
+  diagnosis?: { status: "complete" | "degraded" | "failed"; reason?: string; elapsedMs?: number; retryCount?: number };
+  keyword?: { status: "complete" | "degraded" | "failed"; reason?: string; elapsedMs?: number; retryCount?: number };
+  fusion: { status: "complete" | "degraded" | "failed"; reason?: string; elapsedMs?: number; retryCount?: number };
   blocked?: boolean;
 }

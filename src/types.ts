@@ -393,6 +393,14 @@ export interface AuthState {
  channelThumbnail: string | null
  subscriberCount: number | null
  totalViews: number | null
+ videoCount: number | null
+ fastAnalytics?: {
+  lifetimeRevenue: number
+  lifetimeWatchMinutes: number
+  lifetimeViews: number
+  subscribers28d: number
+  lastSyncedAt: string
+ }
 }
 
 export interface ProjectPlan {

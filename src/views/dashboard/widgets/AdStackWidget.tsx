@@ -27,7 +27,7 @@ export const AdStackWidget = ({
   onDecHeight,
  }
 
- const currentRev = parseFloat(data.statBlocks.find((s: any) => s.label.toLowerCase() === "revenue")?.value.replace(/[^0-9.]/g, "") || "0.00")
+ const currentRev = parseFloat(data.statBlocks28d.find((s: any) => s.label.toLowerCase() === "revenue")?.value.replace(/[^0-9.]/g, "") || "0.00")
  const [target, setTarget] = useState("5000")
 
  const cpm = 12.40;

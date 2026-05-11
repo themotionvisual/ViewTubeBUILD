@@ -16,6 +16,12 @@ import {
  isChannelConnected,
  disconnectChannel,
 } from "./youtubeService"
+import {
+  syncCoreLifetimeData,
+  syncDeepVideoData,
+  CORE_METRICS,
+  type CoreSyncResult,
+} from "./youtube/coreLifetimeSync"
 import { ga4Service, type GA4Property } from "./ga4Service"
 import { commitToLedger } from "./canonicalAnalyticsStore"
 import { parseDurationSeconds } from "./dataUtils"
@@ -349,6 +355,10 @@ export class SyncCoordinator {
    lastError: null,
   })
 
+  // Yield to main thread to allow React to paint the loading state
+  // before we block the thread with the massive JSON parse.
+  await new Promise((r) => setTimeout(r, 10))
+
   let prevCache: Record<string, any> = {}
   let prevCacheRaw = "{}"
   try {
@@ -387,66 +397,77 @@ export class SyncCoordinator {
 
   try {
    resetYouTubeApiCallCounts()
-   const profile = await ytApiQueue.add(() => fetchChannelProfile())
-   cacheData.profile = profile
 
+   // ── Core Lifetime Sync (Fast Boot) ──────────────────────────────
+   // Runs the 3-phase pipeline: channel stats → video inventory → core analytics.
+   // Each phase emits progressive CustomEvents so the UI renders incrementally.
+   this.emitSyncStatus({
+    ...syncStatusBase,
+    phase: "syncing",
+    completedAt: null,
+    lastError: null,
+    stages: ["Running Core Lifetime Sync (Fast Boot)"],
+   })
+
+   const batchState = this.loadVideoSyncBatchState()
+   const isNextBatch = options.batchMode === "next"
+   const maxVideos = isNextBatch
+    ? batchState.cursor + batchState.incrementSize
+    : batchState.initialLimit
+
+   let coreSyncResult: CoreSyncResult | null = null
+   try {
+    coreSyncResult = await syncCoreLifetimeData(maxVideos)
+   } catch (coreSyncError: any) {
+    console.warn("Core Lifetime Sync failed, falling back to legacy sync:", coreSyncError?.message || coreSyncError)
+   }
+
+   // ── Populate cacheData from core sync results ──────────────────
+   let profile: any
    let videos: any[] = []
    let stats: Record<string, any> =
     !shouldStartFresh && cacheData.stats && typeof cacheData.stats === "object"
      ? (cacheData.stats as Record<string, any>)
      : {}
 
-   try {
-    const batchState = this.loadVideoSyncBatchState()
-    const isNextBatch = options.batchMode === "next"
+   if (coreSyncResult) {
+    // Core sync succeeded — build profile from core sync fields + previous cache
+    profile = {
+     id: coreSyncResult.channelId,
+     statistics: coreSyncResult.channelStats,
+     uploadsPlaylistId: coreSyncResult.uploadsPlaylistId,
+     ...(prevCache.profile || {}),
+    }
+    cacheData.profile = profile
+
+    // Convert CoreVideoBaseline to the existing cache format
     const existingVideos =
      !shouldStartFresh && Array.isArray(prevCache.videos) ? prevCache.videos : []
-    const batchLimit = isNextBatch
-     ? batchState.cursor + batchState.incrementSize
-     : batchState.initialLimit
-    const incrementalMax =
-     existingVideos.length > 0
-      ? Math.max(batchLimit, existingVideos.length)
-      : batchLimit
-    this.emitSyncStatus({
-     ...syncStatusBase,
-     phase: "syncing",
-     completedAt: null,
-     lastError: null,
-     stages: [
-      "Fetching profile",
-      `Fetching videos (${isNextBatch ? "next +250" : "initial 500"})`,
-     ],
-    })
-    const fetchedVideos = await ytApiQueue.add(() =>
-     fetchVideoList(incrementalMax, undefined, profile.uploadsPlaylistId, {
-      allowSearchFallback: false,
-     }),
-    )
+    const coreVideos = coreSyncResult.videoBaseline.map((v) => ({
+     videoId: v.videoId,
+     title: v.title,
+     publishedAt: v.publishedAt,
+     thumbnail: v.thumbnail,
+    }))
 
-    if (existingVideos.length > 0 && fetchedVideos.length === 0) {
-     videos = existingVideos
-    } else if (existingVideos.length > 0 && fetchedVideos.length > 0) {
+    // Merge with existing videos (preserve any not in current fetch)
+    if (existingVideos.length > 0 && coreVideos.length > 0) {
      const byId = new Map<string, any>()
      existingVideos.forEach((v: any) => {
       const id = String(v?.videoId || "").trim()
       if (id) byId.set(id, v)
      })
-
-     fetchedVideos.forEach((v: any) => {
+     coreVideos.forEach((v: any) => {
       const id = String(v?.videoId || "").trim()
       if (!id) return
       const prev = byId.get(id) || {}
       byId.set(id, { ...prev, ...v })
      })
-
      const fetchedIds = new Set<string>(
-      fetchedVideos
-       .map((v: any) => String(v?.videoId || "").trim())
-       .filter(Boolean),
+      coreVideos.map((v: any) => String(v?.videoId || "").trim()).filter(Boolean),
      )
      const merged: any[] = []
-     fetchedVideos.forEach((v: any) => {
+     coreVideos.forEach((v: any) => {
       const id = String(v?.videoId || "").trim()
       if (!id) return
       merged.push(byId.get(id))
@@ -457,62 +478,197 @@ export class SyncCoordinator {
       merged.push(v)
      })
      videos = merged
+    } else if (coreVideos.length > 0) {
+     videos = coreVideos
     } else {
-     videos = fetchedVideos
+     videos = existingVideos
     }
-
-    const nextBatchState: VideoSyncBatchState = {
-     ...batchState,
-     cursor: videos.length,
-     lastBatchCount: Math.max(0, videos.length - existingVideos.length),
-     hasMore: fetchedVideos.length >= incrementalMax,
-    }
-    this.persistVideoSyncBatchState(nextBatchState)
-    cacheData.videoSyncBatch = nextBatchState
 
     if (videos.length > 0) cacheData.videos = videos
 
-    const videoIds = videos.map((v) => v.videoId)
-    if (videoIds.length > 0) {
-     const missingIds = videoIds.filter((id: string) => !stats?.[id])
-     const recentCutoff = new Date()
-     recentCutoff.setDate(recentCutoff.getDate() - 30)
-     const recentIds = videos
-      .filter((v) => {
-       const publishedAt = new Date(v?.publishedAt || "")
-       if (Number.isNaN(publishedAt.getTime())) return false
-       return publishedAt >= recentCutoff
-      })
-      .map((v) => v.videoId)
+    // Populate stats map from core sync unified records
+    coreSyncResult.videoBaseline.forEach((v) => {
+     const existing = stats[v.videoId] || {}
+     stats[v.videoId] = {
+      ...existing,
+      viewCount: String(v.dataApiStats.views),
+      likeCount: String(v.dataApiStats.likes),
+      commentCount: String(v.dataApiStats.comments),
+      durationSeconds: v.duration,
+      durationRaw: v.durationRaw,
+      privacyStatus: v.privacyStatus,
+      isShort: v.isShort,
+      format: v.format,
+      hasAnalytics: v.hasAnalytics,
+      subscriberCount: v.dataApiStats.subscribers,
+      ...(v.analyticsMetrics || {}),
+     }
+    })
+    if (Object.keys(stats).length > 0) cacheData.stats = stats
 
-     const idsToFetch = Array.from(
-      new Set<string>([...missingIds, ...recentIds].filter(Boolean)),
-     )
-     const [rawStats, shortsPlaylistIds] = await Promise.all([
-      ytApiQueue.add(() =>
-       idsToFetch.length > 0 ? fetchVideoStats(idsToFetch) : Promise.resolve([]),
-      ),
-      ytApiQueue.add(() => fetchShortsPlaylistIds(profile.id)),
-     ])
-
-     rawStats.forEach((s) => {
-      const existing = stats[s.videoId] || {}
-      const durationSeconds = parseDurationSeconds(s.duration)
-      stats[s.videoId] = {
-       ...existing,
-       viewCount: s.views,
-       likeCount: s.likes,
-       commentCount: s.comments,
-       durationSeconds: durationSeconds,
-       durationRaw: s.duration,
-       privacyStatus: s.privacyStatus || "",
-       isShort: shortsPlaylistIds.has(s.videoId) || s.isShort === true,
-      }
+    // Commit core analytics to the canonical ledger
+    if (coreSyncResult.analytics.videos?.rows?.length > 0) {
+     commitToLedger({
+      source: "youtube_analytics_v2",
+      context: "video",
+      dimensions: ["video"],
+      metrics: (coreSyncResult.analytics.videos.columnHeaders || []).map((h: any) => h.name),
+      payload: coreSyncResult.analytics.videos,
+      window: "lifetime",
      })
-     if (Object.keys(stats).length > 0) cacheData.stats = stats
     }
-   } catch (e) {
-    console.warn("Video list or public stats fetch failed:", e)
+    if (coreSyncResult.analytics.channel?.rows?.length > 0) {
+     commitToLedger({
+      source: "youtube_analytics_v2",
+      context: "channel",
+      dimensions: [],
+      metrics: (coreSyncResult.analytics.channel.columnHeaders || []).map((h: any) => h.name),
+      payload: coreSyncResult.analytics.channel,
+      window: "lifetime",
+     })
+     cacheData.globalLifetime = coreSyncResult.analytics.channel
+    }
+
+    // Update batch state
+    const nextBatchState: VideoSyncBatchState = {
+     ...batchState,
+     cursor: videos.length,
+     lastBatchCount: Math.max(0, coreSyncResult.videoBaseline.length),
+     hasMore: coreSyncResult.videoBaseline.length >= maxVideos,
+    }
+    this.persistVideoSyncBatchState(nextBatchState)
+    cacheData.videoSyncBatch = nextBatchState
+    cacheData.coreSyncTiming = coreSyncResult.timing
+
+    this.emitSyncStatus({
+     ...syncStatusBase,
+     phase: "syncing",
+     completedAt: null,
+     lastError: null,
+     stages: [
+      `Core sync complete (${coreSyncResult.timing.phase1Ms}ms)`,
+      "Proceeding to window-based analytics",
+     ],
+    })
+   } else {
+    // Fallback: core sync failed, use legacy fetch path
+    profile = await ytApiQueue.add(() => fetchChannelProfile())
+    cacheData.profile = profile
+
+    try {
+     const existingVideos =
+      !shouldStartFresh && Array.isArray(prevCache.videos) ? prevCache.videos : []
+     const batchLimit = isNextBatch
+      ? batchState.cursor + batchState.incrementSize
+      : batchState.initialLimit
+     const incrementalMax =
+      existingVideos.length > 0
+       ? Math.max(batchLimit, existingVideos.length)
+       : batchLimit
+     this.emitSyncStatus({
+      ...syncStatusBase,
+      phase: "syncing",
+      completedAt: null,
+      lastError: null,
+      stages: [
+       "Fetching profile (legacy fallback)",
+       `Fetching videos (${isNextBatch ? "next +250" : "initial 500"})`,
+      ],
+     })
+     const fetchedVideos = await ytApiQueue.add(() =>
+      fetchVideoList(incrementalMax, undefined, profile.uploadsPlaylistId, {
+       allowSearchFallback: false,
+      }),
+     )
+
+     if (existingVideos.length > 0 && fetchedVideos.length === 0) {
+      videos = existingVideos
+     } else if (existingVideos.length > 0 && fetchedVideos.length > 0) {
+      const byId = new Map<string, any>()
+      existingVideos.forEach((v: any) => {
+       const id = String(v?.videoId || "").trim()
+       if (id) byId.set(id, v)
+      })
+      fetchedVideos.forEach((v: any) => {
+       const id = String(v?.videoId || "").trim()
+       if (!id) return
+       const prev = byId.get(id) || {}
+       byId.set(id, { ...prev, ...v })
+      })
+      const fetchedIds = new Set<string>(
+       fetchedVideos
+        .map((v: any) => String(v?.videoId || "").trim())
+        .filter(Boolean),
+      )
+      const merged: any[] = []
+      fetchedVideos.forEach((v: any) => {
+       const id = String(v?.videoId || "").trim()
+       if (!id) return
+       merged.push(byId.get(id))
+      })
+      existingVideos.forEach((v: any) => {
+       const id = String(v?.videoId || "").trim()
+       if (!id || fetchedIds.has(id)) return
+       merged.push(v)
+      })
+      videos = merged
+     } else {
+      videos = fetchedVideos
+     }
+
+     const nextBatchState: VideoSyncBatchState = {
+      ...batchState,
+      cursor: videos.length,
+      lastBatchCount: Math.max(0, videos.length - existingVideos.length),
+      hasMore: fetchedVideos.length >= incrementalMax,
+     }
+     this.persistVideoSyncBatchState(nextBatchState)
+     cacheData.videoSyncBatch = nextBatchState
+
+     if (videos.length > 0) cacheData.videos = videos
+
+     const videoIds = videos.map((v) => v.videoId)
+     if (videoIds.length > 0) {
+      const missingIds = videoIds.filter((id: string) => !stats?.[id])
+      const recentCutoff = new Date()
+      recentCutoff.setDate(recentCutoff.getDate() - 30)
+      const recentIds = videos
+       .filter((v) => {
+        const publishedAt = new Date(v?.publishedAt || "")
+        if (Number.isNaN(publishedAt.getTime())) return false
+        return publishedAt >= recentCutoff
+       })
+       .map((v) => v.videoId)
+
+      const idsToFetch = Array.from(
+       new Set<string>([...missingIds, ...recentIds].filter(Boolean)),
+      )
+      const [rawStats, shortsPlaylistIds] = await Promise.all([
+       ytApiQueue.add(() =>
+        idsToFetch.length > 0 ? fetchVideoStats(idsToFetch) : Promise.resolve([]),
+       ),
+       ytApiQueue.add(() => fetchShortsPlaylistIds(profile.id)),
+      ])
+
+      rawStats.forEach((s) => {
+       const existing = stats[s.videoId] || {}
+       const durationSeconds = parseDurationSeconds(s.duration)
+       stats[s.videoId] = {
+        ...existing,
+        viewCount: s.views,
+        likeCount: s.likes,
+        commentCount: s.comments,
+        durationSeconds: durationSeconds,
+        durationRaw: s.duration,
+        privacyStatus: s.privacyStatus || "",
+        isShort: shortsPlaylistIds.has(s.videoId) || s.isShort === true,
+       }
+      })
+      if (Object.keys(stats).length > 0) cacheData.stats = stats
+     }
+    } catch (e) {
+     console.warn("Video list or public stats fetch failed:", e)
+    }
    }
 
    const now = new Date()

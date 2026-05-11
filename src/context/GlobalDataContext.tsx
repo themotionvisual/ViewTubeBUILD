@@ -1,6 +1,5 @@
 // src/context/GlobalDataContext.tsx
 import React, {
- createContext,
  useState,
  useCallback,
  useEffect,
@@ -18,130 +17,23 @@ import type {
 } from "../types"
 import { unifiedAuth } from "../services/authSession"
 import { clearAnalyticsStateForFreshSync } from "../services/localDataReset"
+import { readYouTubeAnalyticsCache } from "../services/canonicalAnalyticsStore"
 import {
  fetchDailyMetrics,
  fetchRetentionCurve,
 } from "../services/youtubeDataFetcher"
+import {
+ STORAGE_KEY,
+ AUTH_STORAGE_KEY,
+ defaultBrain,
+ defaultAuthState,
+ defaultSyncStatus,
+ defaultSyncBatch,
+ GlobalDataContext,
+} from "./GlobalDataContextTypes"
+import type { GlobalDataContextProps } from "./GlobalDataContextTypes"
 import { emitSignal, consultBrain, getBrainMemory, reflectAndCompress, initializeBrain } from "../services/brain"
 
-const STORAGE_KEY = "vt_workspace_brain"
-const AUTH_STORAGE_KEY = "vt_auth_state"
-
-interface GlobalDataContextProps {
- brain: WorkspaceBrain
- updateBrain: (updates: Partial<WorkspaceBrain>) => void
- registerProvider: (tool: AppTool) => void
- unregisterProvider: (tool: AppTool) => void
- setSeoState: (updates: Partial<WorkspaceBrain["seoState"]>) => void
- setStoryboardState: (
-  updates: Partial<WorkspaceBrain["storyboardState"]>,
- ) => void
- setThumbnailState: (updates: Partial<WorkspaceBrain["thumbnailState"]>) => void
- addProject: (project: Project) => void
- updateProject: (id: string, updates: Partial<Project>) => void
- deleteProject: (id: string) => void
- setActiveProject: (id: string | null) => void
- setCalendarState: (updates: Partial<WorkspaceBrain["calendarState"]>) => void
- setChannelHub: (updates: Partial<WorkspaceBrain["channelHub"]>) => void
- setVideoFlags: (
-  videoId: string,
-  flags: {
-   excludeAnalysis?: boolean
-   includeOnly?: boolean
-   priorityAnalysis?: boolean
-  },
- ) => void
- authState: AuthState
- setAuthState: (updates: Partial<AuthState>) => void
- researchLabState: WorkspaceBrain["researchLabState"]
- setResearchLabState: (
-  updates: Partial<WorkspaceBrain["researchLabState"]>,
- ) => void
- login: () => void
- logout: () => void
- addJournalEntry: (content: string, category: any) => void
- addFollowUp: (id: string, q: string) => void
- answerFollowUp: (id: string, a: string) => void
- answerMicroPoll: (id: string, opt: string) => void
- setMicroPolls: (p: any[]) => void
- isSyncing: boolean
- lastSyncComplete: string | null
- syncStatus: ChannelAnalysisSyncStatus
- globalSyncData: (options?: { batchMode?: "initial" | "next" }) => Promise<void>
- syncMetrics: (force?: boolean) => Promise<void>
- emitSignal: (toolId: string, action: string, payload: any) => Promise<void>
- consultBrain: (toolId: string, requestDetails?: any) => Promise<any>
- getBrainMemory: () => BrainMemorySchema
- reflectAndCompress: () => Promise<void>
-}
-
-const defaultBrain: WorkspaceBrain = {
- activeProviders: [],
- activeProjectId: null,
- projects: [],
- channelProfile: null,
- recentMetrics: null,
- csvFiles: [],
- coreConcept: "",
- targetNiche: "",
- seoState: {
-  winningTitle: null,
-  winningKeywords: [],
-  descriptionDraft: "",
-  results: [],
- },
- storyboardState: {
-  scenes: [],
-  estimatedDuration: 0,
-  pacingHealth: "Warning",
- },
- thumbnailState: {
-  selectedStyle: "default",
-  activeImageUrl: null,
-  prompt: "",
- },
- analyticalConstraints: {
-  provenFormats: [],
-  forbiddenTopics: [],
- },
- calendarState: { dayTasks: {} },
- channelHub: { toDos: [], goals: [] },
- channelyticsState: { csvFiles: [], allData: [], analyticsResult: null },
- researchLabState: { csvFiles: [], allData: [], analyticsResult: null },
- videoFlags: {},
- journalEntries: [],
- journalFollowUps: [],
- microPolls: [],
- creatorPreferences: {},
- lastSyncDate: null,
- retentionCache: {},
-}
-
-
-const defaultAuthState: AuthState = {
- isAuthenticated: false,
- channelName: null,
- channelHandle: null,
- channelThumbnail: null,
- subscriberCount: null,
- totalViews: null,
-}
-
-const defaultSyncStatus: ChannelAnalysisSyncStatus = {
- phase: "idle",
- startedAt: null,
- completedAt: null,
- lastError: null,
- stages: [],
-}
-
-const defaultSyncBatch: VideoSyncBatchState = {
- initialLimit: 500,
- incrementSize: 250,
- cursor: 0,
- hasMore: true,
- lastBatchCount: 0,
-}
 
 const loadPersistedBrain = (): WorkspaceBrain => {
  try {
@@ -269,46 +161,7 @@ const loadPersistedAuth = (): AuthState => {
  return { ...defaultAuthState, isAuthenticated: unifiedAuth.isAuthenticated() }
 }
 
-export const GlobalDataContext = createContext<GlobalDataContextProps | undefined>(
- undefined,
-)
-export const fallbackContext: GlobalDataContextProps = {
- brain: defaultBrain,
- updateBrain: () => {},
- registerProvider: () => {},
- unregisterProvider: () => {},
- setSeoState: () => {},
- setStoryboardState: () => {},
- setThumbnailState: () => {},
- setCalendarState: () => {},
- setChannelHub: () => {},
- setVideoFlags: () => {},
- addProject: () => {},
- updateProject: () => {},
- deleteProject: () => {},
- setActiveProject: () => {},
- authState: defaultAuthState,
- setAuthState: () => {},
- researchLabState: defaultBrain.researchLabState,
- setResearchLabState: () => {},
- login: () => {},
- logout: () => {},
- isSyncing: false,
- lastSyncComplete: null,
- syncStatus: defaultSyncStatus,
- syncBatch: defaultSyncBatch,
- globalSyncData: async () => {},
- syncMetrics: async () => {},
- addJournalEntry: () => {},
- addFollowUp: () => {},
- answerFollowUp: () => {},
- answerMicroPoll: () => {},
- setMicroPolls: () => {},
- emitSignal: async () => {},
- consultBrain: async () => ({}),
- getBrainMemory: getBrainMemory as () => BrainMemorySchema,
- reflectAndCompress: async () => {},
-}
+// ... moved fallbackContext to types file ...
 
 export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
  children,
@@ -349,8 +202,24 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
      batchMode: options?.batchMode || "initial",
     })
     setLastSyncComplete(new Date().toISOString())
-    try {
-     const raw = localStorage.getItem("vt_video_sync_batch_state")
+     
+     // Update auth state with latest channel stats from sync
+     try {
+       const cache = readYouTubeAnalyticsCache()
+       if (cache.profile?.statistics) {
+         setAuthStateRaw(prev => ({
+           ...prev,
+           subscriberCount: cache.profile.statistics.subscriberCount || prev.subscriberCount,
+           totalViews: cache.profile.statistics.viewCount || prev.totalViews,
+           videoCount: cache.profile.statistics.videoCount || prev.videoCount
+         }))
+       }
+     } catch (err) {
+       console.warn("Failed to update auth state from sync cache:", err)
+     }
+
+     try {
+       const raw = localStorage.getItem("vt_video_sync_batch_state")
      if (raw) {
       setSyncBatch({
        ...defaultSyncBatch,
@@ -433,20 +302,105 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
   ],
  )
 
- useEffect(() => {
-  const onStatus = (event: Event) => {
-   const detail = (event as CustomEvent<ChannelAnalysisSyncStatus>).detail
-   if (!detail) return
-   setSyncStatus(detail)
-  }
-  window.addEventListener("vt_channel_sync_status", onStatus as EventListener)
-  return () => {
-   window.removeEventListener(
-    "vt_channel_sync_status",
-    onStatus as EventListener,
-   )
-  }
- }, [])
+  useEffect(() => {
+    const onStatus = (event: Event) => {
+      const detail = (event as CustomEvent<ChannelAnalysisSyncStatus>).detail
+      if (!detail) return
+      setSyncStatus(detail)
+    }
+    const onAuthMetadata = (event: Event) => {
+      const detail = (event as CustomEvent<any>).detail
+      if (!detail || !detail.statistics) return
+      
+      console.log("[GlobalData] Authoritative metadata received. Updating UI widgets.")
+      setAuthStateRaw(prev => ({
+        ...prev,
+        channelName: detail.title || prev.channelName,
+        channelHandle: detail.customUrl || prev.channelHandle,
+        channelThumbnail: detail.thumbnail || prev.channelThumbnail,
+        subscriberCount: Number(detail.statistics.subscriberCount),
+        totalViews: Number(detail.statistics.viewCount),
+        videoCount: Number(detail.statistics.videoCount)
+      }))
+    }
+    const onFastAnalytics = (event: Event) => {
+      const detail = (event as CustomEvent<any>).detail
+      if (!detail) return
+      
+      console.log("[GlobalData] Fast analytics received. Updating revenue widgets.")
+      setAuthStateRaw(prev => ({
+        ...prev,
+        fastAnalytics: detail
+      }))
+    }
+    const onRecentVideos = (event: Event) => {
+      const detail = (event as CustomEvent<any>).detail
+      if (!Array.isArray(detail)) return
+      
+      console.log(`[GlobalData] Recent videos snapshot received (${detail.length}). Updating brain.`)
+      setBrain(prev => ({
+        ...prev,
+        channelyticsState: {
+          ...prev.channelyticsState,
+          allData: detail // Initial snapshot
+        }
+      }))
+    }
+
+    window.addEventListener("vt_channel_sync_status", onStatus as EventListener)
+    window.addEventListener("yt_channel_metadata_synced", onAuthMetadata as EventListener)
+    window.addEventListener("yt_fast_analytics_synced", onFastAnalytics as EventListener)
+    window.addEventListener("yt_recent_videos_synced", onRecentVideos as EventListener)
+    const onDeepSegments = (event: Event) => {
+      const detail = (event as CustomEvent<any>).detail
+      console.log(`[GlobalData] Deep segments received. Updating brain.`)
+      setBrain(prev => ({
+        ...prev,
+        channelyticsState: {
+          ...prev.channelyticsState,
+          deepSegments: detail
+        }
+      }))
+    }
+    window.addEventListener("yt_deep_segments_synced", onDeepSegments as EventListener)
+    
+    return () => {
+      window.removeEventListener("vt_channel_sync_status", onStatus as EventListener)
+      window.removeEventListener("yt_channel_metadata_synced", onAuthMetadata as EventListener)
+      window.removeEventListener("yt_fast_analytics_synced", onFastAnalytics as EventListener)
+      window.removeEventListener("yt_recent_videos_synced", onRecentVideos as EventListener)
+      window.removeEventListener("yt_deep_segments_synced", onDeepSegments as EventListener)
+    }
+  }, [])
+
+  // Auto-Restore Fast Boot Data (Step 1.5 & 1.7)
+  // Triggers if authenticated but missing financial totals or recent videos.
+  useEffect(() => {
+    if (!authState.isAuthenticated) return
+
+    const restoreFastBoot = async () => {
+      const lastSync = authState.fastAnalytics?.lastSyncedAt || authState.syncedAt
+      const isStale = lastSync ? (Date.now() - new Date(lastSync).getTime() > 4 * 60 * 60 * 1000) : true
+      const hasFastAnalytics = !!authState.fastAnalytics
+      const hasRecentVideos = brain.channelyticsState.allData.length > 0
+
+      if (!hasFastAnalytics || !hasRecentVideos || isStale) {
+        console.log(`♻️ AUTH RESTORE: Data is ${isStale ? "STALE" : "MISSING"}. Triggering Auto-Restore...`)
+        try {
+          const { syncAuthoritativeMetadata, syncFastAnalyticsTotals, syncRecentVideoSnapshot } = await import("../services/youtube/coreLifetimeSync")
+          const meta = await syncAuthoritativeMetadata()
+          await syncFastAnalyticsTotals()
+          if (meta.uploadsPlaylistId) {
+            await syncRecentVideoSnapshot(meta.uploadsPlaylistId)
+          }
+        } catch (err) {
+          console.warn("Auto-restore fast boot failed:", err)
+        }
+      }
+    }
+
+    restoreFastBoot()
+  }, [authState.isAuthenticated])
 
  useEffect(() => {
   // Keep last sync timestamp in sync with any cache reset actions.
@@ -621,12 +575,24 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
   try {
    await unifiedAuth.login()
    setAuthStateRaw((prev) => ({ ...prev, isAuthenticated: true }))
-   // Automatically sync all data upon login
-   await globalSyncData({ batchMode: "initial" })
+   // Fast Boot: Only sync channel metadata on login.
+    // Full video + analytics sync requires manual "Sync Data" click.
+    try {
+     const { syncAuthoritativeMetadata, syncFastAnalyticsTotals, syncRecentVideoSnapshot } = await import("../services/youtube/coreLifetimeSync")
+     const meta = await syncAuthoritativeMetadata()
+     await syncFastAnalyticsTotals()
+     
+     // Step 1.7: Recent Video Snapshot
+     if (meta.uploadsPlaylistId) {
+        await syncRecentVideoSnapshot(meta.uploadsPlaylistId)
+     }
+    } catch (metaErr) {
+    console.warn("Fast boot metadata sync failed:", metaErr)
+   }
   } catch (err) {
    console.warn("User aborted login or auth failed", err)
   }
- }, [globalSyncData])
+ }, [])
 
  const logout = useCallback(() => {
   setAuthStateRaw(defaultAuthState)
