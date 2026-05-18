@@ -5,6 +5,7 @@ import {
  generateThumbnailConcept,
  hasGeminiKey,
 } from "../services/gemini"
+import type { ThumbnailConceptResult } from "../services/gemini"
 import {
  AspectRatio,
  ImageSize,
@@ -13,7 +14,16 @@ import {
 } from "../types"
 import { useBrain } from "../context/useBrain"
 import { CustomIcon } from "../components/CustomIcon"
-import { ToolboxScaffold, SubToolbox, StandardUploadBox, StandardTextArea } from "../components/Toolbox"
+import {
+ ToolboxScaffold,
+ SubToolbox,
+ StandardInput,
+ StandardUploadBox,
+ StandardTextArea,
+ SubToolboxActionButton,
+ SubToolboxGridActionButton,
+ SubToolboxDropdownControl,
+} from "../components/Toolbox"
 import { StandardButton } from "../components/StandardButton"
 import { PostActionReflection } from "../components/PostActionReflection"
 
@@ -50,20 +60,24 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
 
  // Core States
  const [prompt, setPrompt] = useState("")
- const [largeText, setLargeText] = useState("")
- const [smallText, setSmallText] = useState("")
+ const [hookText, setHookText] = useState("")
  const [aspectRatio, setAspectRatio] = useState<AspectRatio>(
   AspectRatio.LANDSCAPE_16_9,
  )
  const [imageSize, setImageSize] = useState<ImageSize>(ImageSize.SIZE_1K)
  const [generatedImage, setGeneratedImage] = useState<string | null>(null)
  const [history, setHistory] = useState<ThumbnailHistoryItem[]>([])
+ const [surfaceMode, setSurfaceMode] = useState<"mobile" | "ctv">("mobile")
+ const [expression, setExpression] = useState<string>("none")
+ const [aiHookText, setAiHookText] = useState("")
+ const [aiExpression, setAiExpression] = useState("")
+ const [aiColorStrategy, setAiColorStrategy] = useState("")
+ const [showSquintTest, setShowSquintTest] = useState(false)
 
- // Feature Toggles (V2.1.2)
- const [useText, setUseText] = useState<boolean>(false)
- const [useReferenceImages, setUseReferenceImages] = useState<boolean>(true) // Default open in some views
+ // Feature Toggles
+ const [useReferenceImages, setUseReferenceImages] = useState<boolean>(true)
  const [usePalette, setUsePalette] = useState<boolean>(false)
- const [useStyles, setUseStyles] = useState<boolean>(true) // Default open
+ const [useStyles, setUseStyles] = useState<boolean>(true)
 
  // Advanced States
  const [selectedStyles, setSelectedStyles] = useState<string[]>([])
@@ -83,26 +97,33 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
  const fileInputRef = useRef<HTMLInputElement>(null)
 
  const THUMBNAIL_STYLES = [
-  "Educational",
-  "Clickbait",
+  "Authentic/Candid",
+  "Lo-Fi",
+  "Uncanny/Liminal",
+  "Proof of Human",
   "Cinematic",
-  "Graphic",
-  "Simplified",
-  "Mysterious",
+  "Documentary",
   "Minimalist",
-  "Vibrant",
   "Dark & Moody",
+  "High Contrast",
+  "Educational",
+  "Graphic",
+  "Mysterious",
+  "Vibrant",
   "Retro/Vintage",
   "Futuristic",
-  "Hand-drawn",
   "3D Rendered",
   "Photorealistic",
   "Surreal",
-  "Comic Book",
   "Neon/Cyberpunk",
   "Watercolor",
-  "High Contrast",
-  "Documentary",
+ ]
+
+ const EXPRESSIONS = [
+  { id: "surprise", label: "Surprise", emoji: "😲", stat: "+35% CTR", niche: "Entertainment" },
+  { id: "concern", label: "Concern", emoji: "😟", stat: "2.3M avg views", niche: "Documentary" },
+  { id: "focus", label: "Focus", emoji: "🧐", stat: "+12% CTR", niche: "Tech/Gaming" },
+  { id: "smile", label: "Smile", emoji: "😊", stat: "+23% CTR", niche: "Tutorials" },
  ]
 
  const currentSeoResult = brain.seoState?.results?.[0] || null
@@ -111,13 +132,19 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
   if (!currentSeoResult && !prompt) return
   setConceptLoading(true)
   try {
-   const concept = await generateThumbnailConcept(
+   const concept: ThumbnailConceptResult = await generateThumbnailConcept(
     currentSeoResult || undefined,
     prompt,
     brain,
+    expression !== "none" ? expression : undefined,
+    surfaceMode,
    )
    setPrompt(concept.prompt)
    setAspectRatio(concept.aspectRatio)
+   setAiHookText(concept.hookText)
+   setAiExpression(concept.expression)
+   setAiColorStrategy(concept.colorStrategy)
+   if (concept.hookText && !hookText) setHookText(concept.hookText)
   } catch (e) {
    alert("Failed to generate concept.")
   } finally {
@@ -168,9 +195,10 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
   setGenLoading(true)
   try {
    const activeColors = palette.filter((c) => c.trim() !== "")
+   const paletteWeights = ["60%", "30%", "10%"]
    const paletteContext =
     usePalette && activeColors.length > 0
-     ? `\n\nCRITICAL COLOR PALETTE: You MUST strictly use this color palette: ${activeColors.join(", ")}.`
+     ? `\n\nCRITICAL COLOR PALETTE: Strictly follow the 60-30-10 distribution: ${activeColors.map((c, i) => `${c} (${paletteWeights[i] || "accent"})`).join(", ")}.`
      : ""
    const styleContext =
     useStyles && selectedStyles.length > 0
@@ -181,9 +209,8 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
     finalPrompt,
     aspectRatio,
     imageSize,
-    useText ? largeText : "",
-    useText ? smallText : "",
-    brain,
+    hookText || undefined,
+    surfaceMode,
    )
    setGeneratedImage(img)
    const newItem: ThumbnailHistoryItem = {
@@ -325,13 +352,24 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
          hasBorder={false}
          className="w-full p-0 text-sm font-bold bg-transparent outline-none resize-none placeholder:text-black/10 text-black leading-tight"
         />
+        {aiColorStrategy && (
+         <div className="bg-gray-50 border-[2px] border-black rounded-lg p-3 space-y-1">
+          <p className="text-[9px] font-[1000] uppercase tracking-wider text-black/40">AI INTELLIGENCE</p>
+          {aiHookText && <p className="text-xs font-black"><span className="text-black/40">Hook:</span> "{aiHookText}"</p>}
+          {aiExpression && aiExpression !== "none" && <p className="text-xs font-black"><span className="text-black/40">Expression:</span> {aiExpression}</p>}
+          {aiColorStrategy && <p className="text-xs font-black"><span className="text-black/40">Color:</span> {aiColorStrategy}</p>}
+         </div>
+        )}
         <div className="flex justify-end">
-         <button
-          onClick={handleManualConceptGen}
-          disabled={conceptLoading}
-          className="bg-[#C9F830] text-[10px] font-black uppercase text-black px-4 py-1.5 rounded-lg border-[2px] border-black shadow-[2px_2px_0px_0px_black] hover:shadow-none hover:translate-y-0.5 transition-all">
-          {conceptLoading ? "REFRESHING..." : "✨ AUTO-REFINE"}
-         </button>
+         <div className="w-full max-w-[240px]">
+          <SubToolboxActionButton
+           label={conceptLoading ? "Refreshing..." : "Auto-Refine"}
+           iconName="sparkles"
+           tone="yellow"
+           onClick={handleManualConceptGen}
+           disabled={conceptLoading}
+          />
+         </div>
         </div>
        </div>
       </SubToolbox>
@@ -356,23 +394,53 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
 
       <SubToolbox
        collapsible
-       title="Text"
+       title="Expression"
+       icon={<span className="text-lg">😲</span>}
+       paletteIndex={3}
+       isOpenInitial={false}>
+       <div className="grid grid-cols-2 gap-2">
+        {EXPRESSIONS.map((expr) => (
+         <button
+          key={expr.id}
+          onClick={() => setExpression(expression === expr.id ? "none" : expr.id)}
+          className={`p-3 border-[2px] border-black rounded-lg text-left transition-all active:translate-y-0.5 active:shadow-none ${expression === expr.id ? "bg-[#FFE357] shadow-[3px_3px_0px_0px_black]" : "bg-white shadow-[2px_2px_0px_0px_black]"}`}>
+          <div className="flex items-center gap-2 mb-1">
+           <span className="text-xl">{expr.emoji}</span>
+           <span className="font-[1000] uppercase text-[10px] tracking-tight">{expr.label}</span>
+          </div>
+          <p className="text-[8px] font-black text-black/40 uppercase">{expr.stat} · {expr.niche}</p>
+         </button>
+        ))}
+       </div>
+      </SubToolbox>
+
+      <SubToolbox
+       collapsible
+       title="Hook Text"
        icon={<CustomIcon name="!!!TEXT" size={20} />}
        paletteIndex={0}
        isOpenInitial={false}>
-       <div className="space-y-4">
-        <input
-         value={largeText}
-         onChange={(e) => setLargeText(e.target.value)}
-         placeholder="TITLE"
-         className="pop-input w-full p-3 border-[3px] text-sm rounded-lg"
+       <div className="space-y-2">
+        <StandardInput
+         value={hookText}
+         onChange={(e) => {
+          const words = e.target.value.trim().split(/\s+/).filter(Boolean)
+          if (words.length <= 3 || e.target.value.length < hookText.length) {
+           setHookText(e.target.value)
+          }
+         }}
+         placeholder="HOOK (MAX 3 WORDS)"
+         className="text-base"
         />
-        <input
-         value={smallText}
-         onChange={(e) => setSmallText(e.target.value)}
-         placeholder="SUBTITLE"
-         className="pop-input w-full p-3 border-[3px] text-sm rounded-lg"
-        />
+        <div className="flex justify-between items-center">
+         <p className="text-[9px] font-[1000] uppercase tracking-wider text-black/30">
+          {hookText.trim().split(/\s+/).filter(Boolean).length}/3 words
+         </p>
+         {hookText.trim().split(/\s+/).filter(Boolean).length > 3 && (
+          <p className="text-[9px] font-[1000] uppercase text-red-500">TOO MANY WORDS</p>
+         )}
+        </div>
+        <p className="text-[8px] font-bold text-black/20 uppercase">Open a curiosity gap. Never repeat the title.</p>
        </div>
       </SubToolbox>
 
@@ -409,7 +477,7 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
             className="w-10 h-10 object-cover border-[2px] border-black rounded-md"
             alt="ref"
            />
-           <select className="pop-input flex-1 p-1 text-[9px] font-black uppercase border-[2px] rounded-md">
+           <select className="vt-input-standard flex-1 p-1 text-[9px] font-black uppercase border-[2px] rounded-md">
             <option>Background</option>
             <option>Subject</option>
            </select>
@@ -428,42 +496,48 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
 
       <SubToolbox
        collapsible
-       title="Palette"
+       title="Palette (60-30-10)"
        icon={<CustomIcon name="paint-bucket" size={20} />}
        paletteIndex={4}
        isOpenInitial={false}>
        <div className="flex justify-between items-start gap-3 py-2">
-        {palette.map((c, i) => (
-         <div key={i} className="flex flex-col items-center gap-2 flex-1">
-          <div
-           style={{ backgroundColor: c || "#f3f4f6" }}
-           onClick={() => document.getElementById(`cp7-${i}`)?.click()}
-           className="w-full aspect-[2/3] border-[3px] border-black rounded-xl shadow-[4px_4px_0px_0px_black] relative overflow-hidden flex items-center justify-center cursor-pointer group">
+        {palette.map((c, i) => {
+         const weightLabels = ["60%", "30%", "10%", "+", "+"]
+         const roleLabels = ["Background", "Subject", "Accent", "Optional", "Optional"]
+         return (
+          <div key={i} className="flex flex-col items-center gap-2 flex-1">
+           <p className={`text-[10px] font-[1000] uppercase ${i < 3 ? 'text-black' : 'text-black/20'}`}>{weightLabels[i]}</p>
+           <div
+            style={{ backgroundColor: c || "#f3f4f6" }}
+            onClick={() => document.getElementById(`cp7-${i}`)?.click()}
+            className="w-full aspect-[2/3] border-[3px] border-black rounded-xl shadow-[4px_4px_0px_0px_black] relative overflow-hidden flex items-center justify-center cursor-pointer group">
+            <input
+             id={`cp7-${i}`}
+             type="color"
+             value={c || "#ffffff"}
+             onChange={(e) => {
+              const n = [...palette]
+              n[i] = e.target.value
+              setPalette(n)
+             }}
+             className="absolute inset-0 opacity-0 pointer-events-none"
+            />
+            {!c && <span className="text-black/10 font-black text-lg">+</span>}
+           </div>
            <input
-            id={`cp7-${i}`}
-            type="color"
-            value={c || "#ffffff"}
+            value={c}
             onChange={(e) => {
              const n = [...palette]
              n[i] = e.target.value
              setPalette(n)
             }}
-            className="absolute inset-0 opacity-0 pointer-events-none"
+            className="vt-input-standard w-full p-1.5 text-xs font-mono text-center border-[2px] rounded-md uppercase font-black"
+            maxLength={7}
            />
-           {!c && <span className="text-black/10 font-black text-lg">+</span>}
+           <p className="text-[7px] font-bold text-black/20 uppercase">{roleLabels[i]}</p>
           </div>
-          <input
-           value={c}
-           onChange={(e) => {
-            const n = [...palette]
-            n[i] = e.target.value
-            setPalette(n)
-           }}
-           className="pop-input w-full p-1.5 text-xs font-mono text-center border-[2px] rounded-md uppercase font-black"
-           maxLength={7}
-          />
-         </div>
-        ))}
+         )
+        })}
        </div>
       </SubToolbox>
      </div>
@@ -472,11 +546,25 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
      <div className="flex flex-col h-full gap-6 min-h-0">
       <div className="flex-1 min-h-0 w-full border-[4px] border-black bg-[#f1f5f9] rounded-[48px] shadow-[12px_12px_0px_0px_black] relative flex items-center justify-center p-8 overflow-hidden transition-all duration-700">
        {generatedImage ? (
-        <img
-         src={generatedImage}
-         alt="Gen"
-         className="max-w-full max-h-full object-contain border-[4px] border-black rounded-3xl shadow-[8px_8px_0px_0px_black]"
-        />
+        <>
+         <img
+          src={generatedImage}
+          alt="Gen"
+          className="max-w-full max-h-full object-contain border-[4px] border-black rounded-3xl shadow-[8px_8px_0px_0px_black]"
+         />
+         {showSquintTest && (
+          <div className="absolute top-4 right-4 bg-white border-[3px] border-black rounded-xl p-2 shadow-[4px_4px_0px_0px_black] z-10">
+           <p className="text-[8px] font-[1000] uppercase text-center mb-1 tracking-wider">SQUINT TEST (130px)</p>
+           <img
+            src={generatedImage}
+            alt="Squint"
+            style={{ width: "130px", filter: "blur(0.5px)" }}
+            className="border-[2px] border-black rounded-md"
+           />
+           <p className="text-[7px] font-bold text-black/40 text-center mt-1 uppercase">Can you read it?</p>
+          </div>
+         )}
+        </>
        ) : (
         <div className="text-center p-12 bg-white border-[4px] border-black rounded-[48px] shadow-[8px_8px_0px_0px_black] w-full max-w-sm transform hover:scale-[1.02] transition-transform duration-500">
          <div className="w-20 h-20 bg-[#FF7497] border-[4px] border-black rounded-full mx-auto mb-8 flex items-center justify-center shadow-[6px_6px_0px_0px_black] animate-pulse">
@@ -492,38 +580,49 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
        )}
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
-       <div className="space-y-2">
-        <label className="text-[10px] font-black uppercase text-black/20 tracking-[0.2em] pl-1">
-         Vibe Ratio
-        </label>
-        <select
+      <div className="grid grid-cols-3 gap-4 items-end">
+       <div>
+        <SubToolboxDropdownControl
+         label="Ratio"
          value={aspectRatio}
-         onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
-         className="pop-input w-full h-[64px] px-6 border-[4px] border-black text-xl rounded-2xl font-[1000] appearance-none bg-white cursor-pointer shadow-[4px_4px_0_0_black] hover:shadow-none transition-all">
-         {Object.values(AspectRatio).map((r) => (
-          <option key={r} value={r}>
-           {r}
-          </option>
-         ))}
-        </select>
+         options={Object.values(AspectRatio)}
+         onChange={(value) => setAspectRatio(value as AspectRatio)}
+         tone="green"
+        />
        </div>
-       <div className="space-y-2">
-        <label className="text-[10px] font-black uppercase text-black/20 tracking-[0.2em] pl-1">
-         Resolution
-        </label>
-        <select
+       <div>
+        <SubToolboxDropdownControl
+         label="Size"
          value={imageSize}
-         onChange={(e) => setImageSize(e.target.value as ImageSize)}
-         className="pop-input w-full h-[64px] px-6 border-[4px] border-black text-xl rounded-2xl font-[1000] appearance-none bg-white cursor-pointer shadow-[4px_4px_0_0_black] hover:shadow-none transition-all">
-         {Object.values(ImageSize).map((s) => (
-          <option key={s} value={s}>
-           {s}
-          </option>
-         ))}
-        </select>
+         options={Object.values(ImageSize)}
+         onChange={(value) => setImageSize(value as ImageSize)}
+         tone="green"
+        />
+       </div>
+       <div>
+        <p className="text-[9px] font-[1000] uppercase tracking-wider text-black/40 mb-1">Surface</p>
+        <div className="flex bg-white border-[3px] border-black rounded-lg overflow-hidden shadow-[3px_3px_0px_0px_black]">
+         <button
+          onClick={() => setSurfaceMode("mobile")}
+          className={`flex-1 py-2.5 text-[9px] font-[1000] uppercase tracking-tight transition-all ${surfaceMode === "mobile" ? "bg-black text-white" : "text-black/30 hover:text-black"}`}>
+          📱 Mobile
+         </button>
+         <button
+          onClick={() => setSurfaceMode("ctv")}
+          className={`flex-1 py-2.5 text-[9px] font-[1000] uppercase tracking-tight transition-all ${surfaceMode === "ctv" ? "bg-black text-white" : "text-black/30 hover:text-black"}`}>
+          📺 CTV
+         </button>
+        </div>
        </div>
       </div>
+
+      {generatedImage && (
+       <button
+        onClick={() => setShowSquintTest(!showSquintTest)}
+        className={`w-full py-3 border-[3px] border-black rounded-xl font-[1000] text-[11px] uppercase tracking-tight transition-all shadow-[3px_3px_0px_0px_black] active:translate-y-0.5 active:shadow-none ${showSquintTest ? "bg-[#00CCFF] text-black" : "bg-white text-black/50 hover:text-black"}`}>
+        📱 {showSquintTest ? "HIDE SQUINT TEST" : "SQUINT TEST (130px)"}
+       </button>
+      )}
 
       {!hasGeminiKey() ? (
        <button
@@ -535,23 +634,13 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
         </span>
        </button>
       ) : (
-       <button
+       <SubToolboxGridActionButton
+        label={genLoading ? "Creating..." : "Generate Art"}
+        iconName="zap"
+        tone="yellow"
         onClick={handleGenerate}
         disabled={genLoading || !prompt}
-        className="w-full h-14 bg-[#f3f4f6] border-[4px] border-black rounded-2xl overflow-hidden flex items-center group transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed shadow-[6px_6px_0px_0px_black] hover:shadow-none translate-y-0 hover:translate-y-1 hover:translate-x-1">
-        <div className="bg-gray-200 h-full w-14 flex items-center justify-center border-r-[4px] border-black flex-shrink-0 group-hover:bg-[#FF7497] transition-colors">
-         <CustomIcon
-          name="zap"
-          size={32}
-          className="opacity-40 group-hover:opacity-100 transition-opacity"
-         />
-        </div>
-        <div className="flex-1 flex items-center justify-center pr-14">
-         <span className="text-[36px] font-[1000] uppercase tracking-tighter text-black/30 group-hover:text-black transition-colors leading-none mt-[-2px]">
-          {genLoading ? "CREATING..." : "GENERATE ART"}
-         </span>
-        </div>
-       </button>
+       />
       )}
 
       {generatedImage && (

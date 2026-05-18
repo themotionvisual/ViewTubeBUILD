@@ -1,24 +1,20 @@
 import React, { useState } from "react"
 import { ToolboxScaffold } from "../components/Toolbox"
 import { CustomIcon } from "../components/CustomIcon"
-import SeoGenerator from "./SeoGenerator"
+import VideoPublisher from "./VideoPublisher"
 import ThumbnailStudio from "./ThumbnailStudio"
 import MediaAnalyzer from "./MediaAnalyzer"
 import HookGenerator from "./HookGenerator"
 import ActionableTactics from "./ActionableTactics"
 import PreLaunchPriming from "../components/PreLaunchPriming"
+import VideoManager from "./VideoManager"
 import { CommunityPostGenerator } from "../components/CommunityPostGenerator"
 import { CommentResponder } from "../components/CommentResponder"
-import { EndScreenTool } from "../components/EndScreenTool"
-import VideoManager from "./VideoManager"
-import { IntelligenceHub } from "./IntelligenceHub"
 
 const StudioHub: React.FC = () => {
  const [states, setStates] = useState({
   posts: false,
   comments: false,
-  endscreen: false,
-  tactics: false,
  })
  const toggle = (id: string) =>
   setStates((prev) => ({ ...prev, [id]: !(prev as any)[id] }))
@@ -37,32 +33,27 @@ const StudioHub: React.FC = () => {
 
    {/* Accordion Modules */}
    <div className="space-y-6">
-    {/* Brain Core */}
-    <IntelligenceHub collapsible isOpenInitial={true} paletteIndex={11} />
-
     {/* Natively Supported Tools */}
     <VideoManager collapsible isOpenInitial={true} paletteIndex={0} />
-    <ActionableTactics collapsible isOpenInitial={false} paletteIndex={1} />
-    <SeoGenerator collapsible isOpenInitial={false} paletteIndex={2} />
+    <VideoPublisher collapsible isOpenInitial={false} paletteIndex={1} />
+    <MediaAnalyzer collapsible isOpenInitial={false} paletteIndex={2} />
     <ThumbnailStudio collapsible isOpenInitial={false} paletteIndex={3} />
-    <MediaAnalyzer collapsible isOpenInitial={false} paletteIndex={4} />
-    <HookGenerator collapsible isOpenInitial={false} paletteIndex={5} />
-    <PreLaunchPriming collapsible isOpenInitial={false} paletteIndex={6} />
 
-    {/* ToolboxScaffold Wrappers for Un-migrated Sub-Tools */}
-
+    {/* Community + comment modules use dashboard-grade widget feature set */}
     <ToolboxScaffold
      title="Community Posts"
      subtitle="Create polls + community updates to keep viewers engaged between uploads"
      headerColor="bg-[#CCFF00]"
      icon={<CustomIcon name="!!!TEXT" size={40} />}
      iconBoxColor="bg-[#00CCFF]"
-     paletteIndex={7}
+     paletteIndex={4}
      collapsible={true}
      isOpen={states.posts}
      onToggle={() => toggle("posts")}
      helpText="Generate community tab posts to promote your video and keep engagement active.">
-     <CommunityPostGenerator />
+     <div className="bg-white rounded-2xl">
+      <CommunityPostGenerator />
+     </div>
     </ToolboxScaffold>
 
     <ToolboxScaffold
@@ -71,27 +62,19 @@ const StudioHub: React.FC = () => {
      headerColor="bg-[#FFDD00]"
      icon={<CustomIcon name="!!!IDEA" size={40} />}
      iconBoxColor="bg-[#CCFF00]"
-     paletteIndex={8}
+     paletteIndex={5}
      collapsible={true}
      isOpen={states.comments}
      onToggle={() => toggle("comments")}
      helpText="Draft fast, on-brand replies to comments and plan a strong pinned comment.">
-     <CommentResponder />
+     <div className="bg-white rounded-2xl">
+      <CommentResponder />
+     </div>
     </ToolboxScaffold>
 
-    <ToolboxScaffold
-     title="End-Screen Architect"
-     subtitle="Design end-screen layouts + outro scripts to push viewers to the next video"
-     headerColor="bg-[#FFB158]"
-     icon={<CustomIcon name="!!!POST-VIDEO" size={40} />}
-     iconBoxColor="bg-[#FFDD00]"
-     paletteIndex={9}
-     collapsible={true}
-     isOpen={states.endscreen}
-     onToggle={() => toggle("endscreen")}
-     helpText="Design your end screen flow and write an outro that pushes viewers to the next video.">
-     <EndScreenTool />
-    </ToolboxScaffold>
+    <PreLaunchPriming collapsible isOpenInitial={false} paletteIndex={6} />
+    <HookGenerator collapsible isOpenInitial={false} paletteIndex={7} />
+    <ActionableTactics collapsible isOpenInitial={false} paletteIndex={8} />
    </div>
   </div>
  )

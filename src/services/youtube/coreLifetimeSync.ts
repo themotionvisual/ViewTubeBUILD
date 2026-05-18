@@ -475,6 +475,7 @@ export const syncCoreLifetimeData = async (maxVideos: number = Infinity): Promis
       const heightMatch = embedHtml.match(/height="(\d+)"/)
       if (widthMatch && heightMatch) {
         const w = parseInt(widthMatch[1], 10)
+
         const h = parseInt(heightMatch[1], 10)
         isVertical = h > w
       }
@@ -623,7 +624,7 @@ export const syncCoreLifetimeData = async (maxVideos: number = Infinity): Promis
 
   // ── PHASE 4: Deep Segments (Audience/Traffic/Geo) ───────────────
   try {
-    await syncDeepSegments(channelId, epoch, yesterday)
+    await syncDeepSegments(channelId, epoch, endDateStr)
   } catch (deepErr) {
     console.warn("⚠️ Phase 4 (Deep Segments) failed but continuing...", deepErr)
   }

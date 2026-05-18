@@ -1,0 +1,4 @@
+interface:
+  display_name: "ViewTube Brain Loop"
+  short_description: "Rewrite loop for Brain + reports"
+  default_prompt: "Use $viewtube-brain-loop to plan and execute a phased rewrite of ViewTube Brain ingestion, prompt-context rewriting, and Ultimate Report synthesis."

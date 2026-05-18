@@ -271,6 +271,7 @@ export interface TagSuggestion {
 export interface MediaAnalysisResult {
  analysis: string
  strategicAnalysis?: string
+ suggestions?: string[]
  retentionCurve?: {
   timePoint: string
   retention: number

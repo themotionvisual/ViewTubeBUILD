@@ -1,387 +1,47 @@
-# ==========================================
-# VIEWTUBE MINIMAL REPOSITORY .GITIGNORE
-# ==========================================
-# 
-# This .gitignore keeps docs locally but excludes them from version control
-# to minimize repository size for GitHub/Replit/Firebase deployment
-#
-# ESSENTIAL: Run this command if docs were previously committed:
-# git rm -r --cached docs/ && git commit -m "Remove docs from tracking"
-# ==========================================
+# ViewTube: keep repository focused on shippable source
 
-# ================================
-# DOCS - KEPT LOCALLY, NOT TRACKED
-# ================================
-docs/
-docs/**/*
-Roo-Code/
-.billing/
-
-# ================================
-# DUPLICATE/COPY FOLDERS
-# ================================
-src copy/
-docs/src copy/
-scratch/
-
-# ================================
-# BACKUP AND TEMPORARY FILES
-# ================================
-*.bak
-*.backup
-*.fullbak
-*.bak.*
-*.backup.*
-*.orig
-*.tmp
-*.temp
-* copy.*
-* copy
-* copy 2.*
-* copy 3.*
-* copy 4.*
-* copy 5.*
-* copy 6.*
-* copy 7.*
-* copy 8.*
-* copy 9.*
-
-# ================================
-# DEPENDENCIES AND BUILD OUTPUT
-# ================================
+# Dependencies and build output
 node_modules/
 dist/
 build/
 out/
-*.tgz
-
-# ================================
-# VITE AND BUILD TOOLS
-# ================================
 .vite/
-.vitest/
-.parcel-cache/
-.webpack-cache/
-.terser-cache/
-.storybook/
+coverage/
 
-# ================================
-# ENVIRONMENT AND CONFIG
-# ================================
+# Environment and local secrets
 .env
-.env.local
-.env.*.local
-.env.development
-.env.production
-.env.staging
-.env.test
+.env.*
+!.env.example
+*.pem
+*.key
 
-# ================================
-# OS GENERATED FILES
-# ================================
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-desktop.ini
+# Local tool/state folders
+.claude/
+.gemini/
+.worktrees/
 
-# ================================
-# EDITOR AND IDE FILES
-# ================================
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-!.vscode/launch.json
-!.vscode/tasks.json
-!.vscode/*.code-snippets
-.idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-*.swp
-*.swo
-*.swn
-*.swn
-*.swm
-*.sublime-project
-*.sublime-workspace
-*.tmproj
-*.code-workspace
-
-# ================================
-# LOGS AND CACHE
-# ================================
+# Logs and temp files
 logs/
 *.log
-
-# ================================
-# QUARANTINE (INTENTIONALLY TRACKABLE)
-# ================================
-!_quarantine/
-!_quarantine/**/*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
-
-.cache/
-.eslintcache
-.stylelintcache
-.nyc_output/
-.parcel-cache/
-.webpack-cache/
-.terser-cache/
-.storybook/
-
-# ================================
-# TYPESCRIPT CACHE
-# ================================
-*.tsbuildinfo
-tsconfig.tsbuildinfo
-
-# ================================
-# OPTIONAL NPM/YARN FILES
-# ================================
-.npm
-.yarn-integrity
-.yarn/
-.pnp.*
-
-# ================================
-# TESTING AND COVERAGE
-# ================================
-coverage/
-*.lcov
-.pytest_cache/
-.coverage
-htmlcov/
-.mypy_cache/
-.tox/
-.nox/
-test-results/
-playwright-report/
-html-report/
-
-# ================================
-# TEMPORARY AND MISCELLANEOUS
-# ================================
+*.tmp
+*.temp
 tmp/
 temp/
-*.pid
-*.seed
-*.pid.lock
-replay_pid*
-hs_err_pid*
 
-# ================================
-# DATABASE AND LOCAL STORAGE
-# ================================
-*.db
-*.sqlite
-*.sqlite3
-*.db-shm
-*.db-wal
-*.sql
+# OS/editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# ================================
-# PYTHON (if any Python tools used)
-# ================================
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-*.manifest
-*.spec
-pip-log.txt
-pip-delete-this-directory.txt
-.venv/
-venv/
-ENV/
-env/
-.pytest_cache/
-
-# ================================
-# RUBY (if any Ruby tools used)
-# ================================
-*.gem
-*.rbc
-.bundle/
-vendor/bundle
-.config
-coverage/
-InstalledFiles
-lib/bundler/man
-pkg/
-rdoc/
-spec/
-tmp/
-*.erb
-*.lock
-*.rbuild
-*.rbw
-*.rbx
-.ruby-version
-.ruby-gemset
-.rvmrc
-.byebug_history
-
-# ================================
-# JAVA (if any Java tools used)
-# ================================
-*.class
-*.log
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
-hs_err_pid*
-replay_pid*
-
-# ================================
-# C/C++ (if any native modules)
-# ================================
-*.o
-*.obj
-*.so
-*.dylib
-*.dll
-*.exe
-*.out
-*.app
-*.lib
-*.a
-*.la
-*.lo
-*.gcda
-*.gcno
-*.gcov
-*.gch
-*.pch
-
-# ================================
-# SWIFT/OBJECTIVE-C (if any iOS tools)
-# ================================
-*.pbxuser
-*.mode1v3
-*.mode2v3
-*.perspectivev3
-*.xcuserstate
-*.xccheckout
-*.moved-aside
-DerivedData/
-*.hmap
-*.ipa
-*.dSYM.zip
-*.dSYM
-*.xcworkspace
-*.xcuserdata
-
-# ================================
-# NUGET (if any .NET tools)
-# ================================
-**/[Bb]in/
-**/[Oo]bj/
-**/[Bb]uild/
-.nuget/
-*.nupkg
-*.snupkg
-*.symbols.nupkg
-
-# ================================
-# JUPYTER NOTEBOOKS
-# ================================
-.ipynb_checkpoints
-
-# ================================
-# IPYTHON
-# ================================
-profile_default/
-ipython_config.py
-
-# ================================
-# R STATISTICS
-# ================================
-.Rhistory
-.Rapp.history
-.RData
-.Ruserdata
-
-# ================================
-# JULIA
-# ================================
-*.ji
-*.jicache
-
-# ================================
-# GO
-# ================================
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-*.test
-*.out
-vendor/
-
-# ================================
-# RUST
-# ================================
-target/
-**/*.rs.bk
-*.pdb
-
-# ================================
-# SENTRY
-# ================================
-.sentryclirc
-sentry.properties
-
-# ================================
-# DEPENDENCY DIRECTORIES
-# ================================
-jspm_packages/
-web_modules/
-
-# ================================
-# OPTIONAL STYLELINT
-# ================================
-.stylelintcache
-.stylelintignore
-
-# ================================
-# MISC
-# ================================
-*.pid
-*.seed
-*.pid.lock
-.gemini/
-gha-creds-*.json
-.worktrees/
+# Local generated artifacts
+build_log.txt
 file_list.txt
 standalone-chart-dashboard.html

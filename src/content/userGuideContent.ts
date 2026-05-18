@@ -436,12 +436,12 @@ export const userGuideSections: GuideSection[] = [
     id: "editor",
     title: "Editor and Creative Runtime",
     audience: "Users working on timeline/video-editing surfaces.",
-    routeRefs: ["/editor-v1"],
+    routeRefs: ["/editor"],
     tools: [
       {
         toolId: "EDITOR_V1",
         toolName: "Editor V1",
-        routeRef: "/editor-v1",
+        routeRef: "/editor",
         whatItDoes: "Primary editing surface for clip sequencing and composition workflows.",
         howToSteps: [
           "Open Editor from sidebar.",

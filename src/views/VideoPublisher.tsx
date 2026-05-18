@@ -19,10 +19,12 @@ import type { SeoResult } from "../types"
 import Markdown from "react-markdown"
 import JSZip from "jszip"
 import { useBrain } from "../context/useBrain"
-import { ToolboxScaffold, Toolbox, SubToolbox, StandardUploadBox, StandardTextArea, StandardInput, StandardButton } from "../components/Toolbox"
+import { ToolboxScaffold, Toolbox, SubToolbox, StandardUploadBox, StandardTextArea, StandardInput, SubToolboxGridActionButton } from "../components/Toolbox"
 import { sheetsService } from "../services/sheetsService"
 import { nexusSyncService } from "../services/nexusSyncService"
 import { PostActionReflection } from "../components/PostActionReflection"
+import { getToolboxPaletteColors } from "../styles/toolboxPalette"
+import { hexToRgba } from "../components/ToolboxUISystem"
 
 // --- Sub-components (The "Pop" Style) ---
 const CopyBox: React.FC<{
@@ -140,6 +142,7 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({
  paletteIndex,
 }) => {
  const basePalette = paletteIndex ?? 0
+ const generateAssetsPalette = getToolboxPaletteColors(basePalette + 3)
  const {
   brain,
   updateBrain,
@@ -167,11 +170,43 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({
  const [scopeMode, setScopeMode] = useState<"single" | "bulk">("single")
  const [isOpen, setIsOpen] = useState(isOpenInitial)
  const [missingFields, setMissingFields] = useState({ concept: false, niche: false })
+ const [insightsImported, setInsightsImported] = useState(false)
 
  useEffect(() => {
   registerProvider("VIDEO_PUBLISHER")
   return () => unregisterProvider("VIDEO_PUBLISHER")
   // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [])
+
+ useEffect(() => {
+  const applyPrefill = (payload: any) => {
+   if (!payload) return
+   if (payload.concept) setConcept(payload.concept)
+   if (payload.niche) setNiche(payload.niche)
+   if (payload.audience) setAudience(payload.audience)
+   if (payload.script) setScript(payload.script)
+   const insightsChunk = [payload.analysis, payload.strategicAnalysis].filter(Boolean).join("\n\n")
+   if (insightsChunk) {
+    setResourceLinks((prev) =>
+     [prev, `AI INSIGHTS:\n${insightsChunk}`].filter(Boolean).join("\n\n"),
+    )
+   }
+   setInsightsImported(true)
+  }
+
+  const onInsights = (event: Event) => {
+   const detail = (event as CustomEvent<any>).detail
+   applyPrefill(detail)
+  }
+
+  window.addEventListener("vt_media_analysis_insights_ready", onInsights as EventListener)
+  try {
+   const cached = localStorage.getItem("vt_video_publisher_prefill")
+   if (cached) applyPrefill(JSON.parse(cached))
+  } catch {}
+
+  return () =>
+   window.removeEventListener("vt_media_analysis_insights_ready", onInsights as EventListener)
  }, [])
 
  const handleGenerate = async () => {
@@ -317,6 +352,11 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({
    {/* Main UI Layout */}
    {!result ? (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+     {insightsImported && (
+      <div className="p-3 border-[3px] border-black rounded-xl bg-[#CCFF00] text-[11px] font-black uppercase tracking-wide">
+       AI insights imported from Content Analysis and added to publishing context.
+      </div>
+     )}
      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
      <SubToolbox
       title="Video Upload"
@@ -335,23 +375,28 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({
      <SubToolbox
       title="Video Script"
       icon={<FileText size={20} strokeWidth={3} />}
-      paletteIndex={basePalette + 2}
+      paletteIndex={basePalette + 1}
       collapsible
       isOpenInitial={true}
+      shellClassName="h-full"
+      contentClassName="p-5 h-full flex flex-col"
      >
+      <div className="flex flex-col h-full">
        <StandardTextArea
         value={script}
         onChange={(e) => setScript(e.target.value)}
         placeholder="Paste your script here..."
-        minHeight="224px"
+        sizeMode="fill"
+        className="text-base"
        />
+      </div>
       </SubToolbox>
      </div>
 
      <SubToolbox
       title="Video Info"
       icon={<Sparkles size={20} strokeWidth={3} />}
-      paletteIndex={basePalette + 3}
+      paletteIndex={basePalette + 2}
       collapsible
       isOpenInitial={true}
      >
@@ -360,7 +405,7 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({
         <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
          Video Concept
         </label>
-        <input
+        <StandardInput
          type="text"
          value={concept}
          onChange={(e) => {
@@ -368,14 +413,14 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({
           if (missingFields.concept) setMissingFields((prev) => ({ ...prev, concept: false }))
          }}
          placeholder="What happens in the video?"
-         className={`w-full h-12 p-3 border-[3px] border-black rounded-xl font-bold text-sm outline-none bg-[#F5F5F5] ${missingFields.concept ? "ring-4 ring-[#FF8AAF]/60" : ""}`}
+         className={missingFields.concept ? "ring-4 ring-[#FF8AAF]/60" : ""}
         />
        </div>
        <div className="space-y-2">
         <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
          Target Niche
         </label>
-        <input
+        <StandardInput
          type="text"
          value={niche}
          onChange={(e) => {
@@ -383,19 +428,18 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({
           if (missingFields.niche) setMissingFields((prev) => ({ ...prev, niche: false }))
          }}
          placeholder="History Channel"
-         className={`w-full h-12 p-3 border-[3px] border-black rounded-xl font-bold text-sm outline-none bg-[#F5F5F5] ${missingFields.niche ? "ring-4 ring-[#FF8AAF]/60" : ""}`}
+         className={missingFields.niche ? "ring-4 ring-[#FF8AAF]/60" : ""}
         />
        </div>
        <div className="space-y-2">
         <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
          Intended Audience
         </label>
-        <input
+        <StandardInput
          type="text"
          value={audience}
          onChange={(e) => setAudience(e.target.value)}
          placeholder="History fans, age 18-34"
-         className="w-full h-12 p-3 border-[3px] border-black rounded-xl font-bold text-sm outline-none bg-[#F5F5F5]"
         />
        </div>
       </div>
@@ -405,36 +449,34 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({
         <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
          Video Length
         </label>
-        <input
+        <StandardInput
          type="text"
          value={videoLength}
          onChange={(e) => setVideoLength(e.target.value)}
          placeholder="10:45"
-         className="w-full h-12 p-3 border-[3px] border-black rounded-xl font-bold text-sm text-center outline-none bg-[#F5F5F5]"
+         className="text-center"
         />
        </div>
        <div className="space-y-2">
         <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
          Channel URL
         </label>
-        <input
+        <StandardInput
          type="text"
          value={channelHandle}
          onChange={(e) => setChannelHandle(e.target.value)}
          placeholder="https://youtube.com/@yourchannel"
-         className="w-full h-12 p-3 border-[3px] border-black rounded-xl font-bold text-sm outline-none bg-[#F5F5F5]"
         />
        </div>
        <div className="space-y-2">
         <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
          Current Stats
         </label>
-        <input
+        <StandardInput
          type="text"
          value={durationStats}
          onChange={(e) => setDurationStats(e.target.value)}
          placeholder="50k subs"
-         className="w-full h-12 p-3 border-[3px] border-black rounded-xl font-bold text-sm outline-none bg-[#F5F5F5]"
         />
        </div>
       </div>
@@ -443,12 +485,11 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({
        <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
         Description Link
        </label>
-       <input
+       <StandardInput
         type="text"
         value={resourceLinks}
         onChange={(e) => setResourceLinks(e.target.value)}
         placeholder="Paste the link to include at the bottom of your description..."
-        className="w-full h-12 p-3 border-[3px] border-black rounded-xl font-bold text-sm outline-none bg-[#F5F5F5]"
        />
       </div>
 
@@ -461,12 +502,17 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({
         <Zap size={24} /> Missing AI Key: Connect in Settings
        </button>
      ) : (
-       <button
-        onClick={handleGenerate}
-        className="w-full bg-[#FF8AAF] text-black border-[4px] border-black h-14 rounded-xl shadow-[5px_5px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex items-center justify-center gap-3 font-[1000] uppercase text-lg tracking-tight">
-        {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
-        {loading ? "Generating..." : "Generate All Assets"}
-       </button>
+      <SubToolboxGridActionButton
+       onClick={handleGenerate}
+       disabled={loading}
+       tone="yellow"
+       surfaceColor={generateAssetsPalette.header}
+       controlColor={generateAssetsPalette.icon}
+       shadowColor={hexToRgba(generateAssetsPalette.header, 0.45)}
+       iconName="zap"
+       showIconSection
+       label={loading ? "Generating..." : "Generate All Assets"}
+      />
      )}
     </div>
    ) : (

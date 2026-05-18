@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { DashboardData } from "./useDashboardData"
 import { useEntitlement } from "../../app/AppShell"
 import { useBrain } from "../../context/useBrain"
+import { AIModelSelector } from "../../components/ui/AIModelSelector"
 
 interface DashboardHeaderProps {
  dashboardControls: {
@@ -251,6 +252,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
     {/* Controls Zone */}
     <div className="flex items-center gap-2">
      {renderControls()}
+     <div className="h-6 w-[2px] bg-black/10 mx-1"></div>
+     <AIModelSelector compact />
     </div>
 
     {/* KPI Row */}

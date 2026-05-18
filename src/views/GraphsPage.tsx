@@ -6,7 +6,7 @@ import type { AnalyticsWindow, CanonicalVideoRow } from "../services/analyticsCo
 import {
  VideoValueMatrix, RevenueDistribution, WatchTimeDistribution, SubscribersGained,
  ShortsRetention, Packaging, EngagementMap, PerformanceTrend, DurationSweetSpot,
- RevenueEfficiency, AudienceGrowth, GoldenRatioRadar, HookEffectiveness, GrowthPulse,
+ RevenueEfficiency, AudienceGrowth, GoldenRatioRadar, HookEffectiveness, GrowthPulse, TopPerformersTrio,
 } from "../components/GraphsPageCharts"
 import { SubToolbox, ToolboxScaffold } from "../components/Toolbox"
 import { Activity, ChartColumnBig } from "lucide-react"
@@ -124,12 +124,6 @@ const GraphsPage: React.FC = () => {
          <SubscribersGained data={data} />
          <HookEffectiveness data={data} />
          <ShortsRetention data={data} />
-         <Packaging data={data} />
-         <EngagementMap data={data} />
-         <PerformanceTrend data={data} />
-         <DurationSweetSpot data={data} />
-         <AudienceGrowth data={data} />
-         <GoldenRatioRadar data={data} />
         </div>
 
         {/* Full-width: Revenue Efficiency */}
@@ -137,6 +131,27 @@ const GraphsPage: React.FC = () => {
 
         {/* Full-width: Growth Pulse */}
         <GrowthPulse data={data} />
+       </div>
+      </SubToolbox>
+
+      <SubToolbox
+       title="EXTENDED VISUALS"
+       icon={<ChartColumnBig size={22} strokeWidth={3} className="text-black" />}
+       headerColor="bg-[#FFB158]"
+       collapsible
+       isOpenInitial
+       unmountOnClose
+      >
+       <div className="flex flex-col gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+         <TopPerformersTrio data={data} />
+         <Packaging data={data} />
+         <EngagementMap data={data} />
+         <PerformanceTrend data={data} />
+         <DurationSweetSpot data={data} />
+         <AudienceGrowth data={data} />
+         <GoldenRatioRadar data={data} />
+        </div>
        </div>
       </SubToolbox>
      </div>

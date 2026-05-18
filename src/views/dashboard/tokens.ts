@@ -1,5 +1,5 @@
-export const DASHBOARD_SCHEMA_VERSION = 6
-export const DASHBOARD_LAYOUT_STORAGE_KEY = "vt_dashboard_layout_v6"
+export const DASHBOARD_SCHEMA_VERSION = 7
+export const DASHBOARD_LAYOUT_STORAGE_KEY = "vt_dashboard_layout_v7"
 
 export const DASHBOARD_TOKENS = {
   strokeLevel1: 4,

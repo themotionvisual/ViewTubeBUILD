@@ -324,6 +324,7 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
     "CTR (%)",
     "CTR",
     "ctr",
+    "Impressions click-through rate",
     "Impressions click-through rate (%)",
     "videoThumbnailImpressionsClickRate",
     "Click-Through Rate (CTR)",

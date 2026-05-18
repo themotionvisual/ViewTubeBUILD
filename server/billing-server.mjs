@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { handleCompressAnalysisRoute } from "./media-compression.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -593,6 +594,10 @@ const server = http.createServer(async (req, res) => {
 
     if (method === "POST" && pathname === "/api/projects") {
       return await handleCreateProject(req, res);
+    }
+
+    if (method === "POST" && pathname === "/api/media/compress-analysis") {
+      return await handleCompressAnalysisRoute(req, res);
     }
 
     if (pathname.startsWith("/api/projects/")) {

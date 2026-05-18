@@ -1,0 +1,2108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>UsTube UI Kit v2</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Barlow+Condensed:wght@400;600;700;800;900;1000&display=swap');
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   TOKENS — 6 brand colors + system
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+:root {
+  --cyan:    #00CCFF;
+  --lime:    #CCFF00;
+  --yellow:  #FFD600;
+  --orange:  #FFB158;
+  --pink:    #FF3399;
+  --purple:  #9B59FF;
+  --black:   #000000;
+  --white:   #FFFFFF;
+  --gray-bg: #E8E8E8;
+  --gray-light: #F0F0F0;
+  --gray-mid:   #AAAAAA;
+
+  /* Box system rules */
+  --box-border: 5px solid var(--black);
+  --box-radius: 1rem;          /* rounded-2xl = 16px */
+  --box-shadow: 12px 12px 0px 0px var(--black);
+  --box-shadow-sm: 8px 8px 0px 0px var(--black);
+  --box-shadow-xs: 4px 4px 0px 0px var(--black);
+  --inner-border: 4px solid var(--black);
+  --bar-border:  3px solid var(--black);
+  --tag-border:  2px solid var(--black);
+
+  --font-head: 'Barlow Condensed', sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--gray-bg);
+  font-family: var(--font-body);
+  color: var(--black);
+  padding: 32px 28px;
+  max-width: 1200px;
+}
+
+/* ━━━━ SECTION LABEL ━━━━ */
+.section-label {
+  font-family: var(--font-head);
+  font-size: 10px; font-weight: 900;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--gray-mid);
+  margin: 56px 0 18px;
+  padding-bottom: 8px;
+  border-bottom: 3px solid var(--black);
+}
+.page-title {
+  font-family: var(--font-head);
+  font-size: 56px; font-weight: 1000;
+  letter-spacing: -0.02em; text-transform: uppercase;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.page-sub {
+  font-family: var(--font-head);
+  font-size: 14px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--gray-mid); margin-bottom: 40px;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   THE BOX  — master container rule
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.box {
+  width: 100%;
+  background: var(--white);
+  border: var(--box-border);
+  border-radius: var(--box-radius);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.7s;
+  margin-bottom: 48px;
+}
+.box-sm { box-shadow: var(--box-shadow-sm); margin-bottom: 24px; }
+
+/* ── Box Header ── */
+.box-header {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: all 0.7s;
+}
+.box-header-left {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+.box-icon {
+  height: 100%;
+  width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 5px solid var(--black);
+  flex-shrink: 0;
+  font-size: 28px;
+}
+.box-title {
+  font-family: var(--font-head);
+  font-size: clamp(22px, 4vw, 48px);
+  font-weight: 1000;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  padding-left: 28px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--black);
+}
+.box-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-right: 20px;
+  flex-shrink: 0;
+}
+/* Header accent colors */
+.bh-cyan    { background: var(--cyan); }
+.bh-lime    { background: var(--lime); }
+.bh-yellow  { background: var(--yellow); }
+.bh-orange  { background: var(--orange); }
+.bh-pink    { background: var(--pink); }
+.bh-purple  { background: var(--purple); }
+.bh-black   { background: var(--black); color: var(--white); }
+.bh-black .box-title { color: var(--white); }
+
+/* Box Icon bg */
+.bi-orange  { background: var(--orange); }
+.bi-pink    { background: var(--pink); }
+.bi-lime    { background: var(--lime); }
+.bi-cyan    { background: var(--cyan); }
+.bi-yellow  { background: var(--yellow); }
+.bi-purple  { background: var(--purple); }
+.bi-black   { background: var(--black); color: var(--white); }
+.bi-white   { background: var(--white); }
+
+/* ── Box Body ── */
+.box-body { padding: 28px; background: var(--gray-light); }
+.box-body-white { background: var(--white); }
+
+/* ── Collapsible ── */
+.box-collapsible .box-body { transition: all 0.7s; }
+.box-collapsible.collapsed .box-body { display: none; }
+
+/* ━━━━ OPEN/CLOSE PILL BTN ━━━━ */
+.open-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  background: var(--lime);
+  border: var(--tag-border);
+  border-radius: 8px;
+  font-family: var(--font-head);
+  font-size: 12px; font-weight: 900;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--black);
+  transition: box-shadow 0.1s, transform 0.1s;
+  white-space: nowrap;
+}
+.open-btn:hover { box-shadow: none; transform: translate(2px,2px); }
+.open-btn.cyan { background: var(--cyan); }
+.open-btn.pink { background: var(--pink); color: var(--white); }
+.open-btn.yellow { background: var(--yellow); }
+.open-btn.white { background: var(--white); }
+
+/* Plus/collapse btn top-right */
+.toggle-btn {
+  width: 36px; height: 36px;
+  border: var(--tag-border);
+  border-radius: 8px;
+  background: rgba(0,0,0,0.12);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 900;
+  transition: background 0.15s;
+  flex-shrink: 0;
+  color: var(--black);
+  font-family: var(--font-head);
+}
+.toggle-btn:hover { background: rgba(0,0,0,0.25); }
+.bh-black .toggle-btn { background: rgba(255,255,255,0.15); color: var(--white); }
+.bh-black .toggle-btn:hover { background: rgba(255,255,255,0.3); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   INNER SECTION (sub-box inside box-body)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.inner-box {
+  border: var(--inner-border);
+  border-radius: var(--box-radius);
+  overflow: hidden;
+  background: var(--white);
+  box-shadow: var(--box-shadow-xs);
+  margin-bottom: 16px;
+}
+.inner-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 4px solid var(--black);
+  font-family: var(--font-head);
+  font-size: 11px; font-weight: 900;
+  letter-spacing: 0.14em; text-transform: uppercase;
+}
+.inner-header .dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--black);
+  margin-right: 8px;
+}
+.inner-body { padding: 16px; }
+.ih-cyan  { background: var(--cyan); }
+.ih-lime  { background: var(--lime); }
+.ih-yellow{ background: var(--yellow); }
+.ih-orange{ background: var(--orange); }
+.ih-pink  { background: var(--pink); }
+.ih-black { background: var(--black); color: var(--white); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   BUTTONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 20px;
+  border: var(--tag-border);
+  border-radius: 8px;
+  font-family: var(--font-head);
+  font-size: 13px; font-weight: 900;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer;
+  transition: box-shadow 0.1s, transform 0.1s;
+  box-shadow: var(--box-shadow-xs);
+  background: var(--white);
+  color: var(--black);
+  white-space: nowrap;
+}
+.btn:hover { box-shadow: none; transform: translate(3px,3px); }
+.btn:active { box-shadow: none; transform: translate(4px,4px); }
+.btn-black  { background: var(--black); color: var(--white); }
+.btn-black:hover { box-shadow: none; }
+.btn-cyan   { background: var(--cyan); }
+.btn-lime   { background: var(--lime); }
+.btn-yellow { background: var(--yellow); }
+.btn-orange { background: var(--orange); }
+.btn-pink   { background: var(--pink); color: var(--white); }
+.btn-purple { background: var(--purple); color: var(--white); }
+.btn-sm { padding: 5px 12px; font-size: 11px; box-shadow: 2px 2px 0 var(--black); }
+.btn-lg { padding: 16px 32px; font-size: 16px; }
+.btn-pill { border-radius: 999px; }
+.btn-icon { padding: 10px; width: 42px; height: 42px; }
+.btn-ghost { background: transparent; box-shadow: none; border-color: transparent; }
+.btn-ghost:hover { background: var(--gray-light); transform: none; }
+.btn-outline { background: transparent; }
+.btn-disabled { opacity: 0.4; pointer-events: none; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CHIPS / FILTER TAGS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  padding: 6px 14px;
+  border: var(--tag-border);
+  border-radius: 6px;
+  font-family: var(--font-head);
+  font-size: 11px; font-weight: 900;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer;
+  background: var(--white);
+  transition: background 0.1s, box-shadow 0.1s, transform 0.08s;
+  box-shadow: 2px 2px 0 var(--black);
+  color: var(--black);
+}
+.chip:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--black); }
+.chip.on { background: var(--black); color: var(--white); }
+.chip.on-cyan   { background: var(--cyan); }
+.chip.on-lime   { background: var(--lime); }
+.chip.on-yellow { background: var(--yellow); }
+.chip.on-pink   { background: var(--pink); color: var(--white); }
+.chip.on-purple { background: var(--purple); color: var(--white); }
+.chip.on-orange { background: var(--orange); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   COLOR PALETTE SELECTOR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.palette-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.swatch-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.swatch {
+  width: 60px; height: 60px;
+  border: 3px solid var(--black);
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 var(--black);
+  transition: transform 0.1s, box-shadow 0.1s;
+  position: relative;
+}
+.swatch:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--black); }
+.swatch.sel::after {
+  content: '✓'; position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 900;
+}
+.swatch-hex {
+  font-family: var(--font-head); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.swatch-add {
+  width: 60px; height: 60px;
+  border: 3px dashed var(--black);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 900; color: var(--gray-mid);
+  transition: color 0.1s, border-color 0.1s;
+}
+.swatch-add:hover { border-color: var(--pink); color: var(--pink); }
+.cp-grid { display: grid; grid-template-columns: repeat(8,1fr); gap: 6px; margin-top: 12px; }
+.cp-dot {
+  aspect-ratio: 1; border-radius: 4px; cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.1s, border-color 0.1s;
+}
+.cp-dot:hover { transform: scale(1.15); border-color: var(--black); }
+.cp-dot.sel { border-color: var(--black); box-shadow: 0 0 0 2px var(--black); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   TOGGLES / CHECKBOXES / RADIO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.toggle-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.tlabel { font-family: var(--font-head); font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+.toggle {
+  width: 50px; height: 26px;
+  border: 3px solid var(--black);
+  border-radius: 999px;
+  background: var(--gray-light);
+  cursor: pointer;
+  position: relative;
+  box-shadow: 2px 2px 0 var(--black);
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.toggle::after {
+  content: '';
+  position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  background: var(--black);
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.toggle.on { background: var(--lime); }
+.toggle.on-cyan  { background: var(--cyan); }
+.toggle.on-pink  { background: var(--pink); }
+.toggle.on-yellow{ background: var(--yellow); }
+.toggle.on::after,.toggle.on-cyan::after,.toggle.on-pink::after,.toggle.on-yellow::after {
+  transform: translateX(24px);
+}
+
+.check-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; cursor: pointer; }
+.checkbox {
+  width: 22px; height: 22px;
+  border: 3px solid var(--black);
+  border-radius: 5px;
+  background: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 2px 2px 0 var(--black);
+  flex-shrink: 0;
+  font-size: 13px; font-weight: 900;
+  transition: background 0.1s;
+}
+.checkbox.on { background: var(--black); color: var(--white); }
+.checkbox.on-lime   { background: var(--lime); color: var(--black); }
+.checkbox.on-pink   { background: var(--pink); color: var(--white); }
+.checkbox.on-cyan   { background: var(--cyan); color: var(--black); }
+.clabel { font-family: var(--font-head); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.clabel.done { text-decoration: line-through; color: var(--gray-mid); }
+
+.radio-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; cursor: pointer; }
+.radio {
+  width: 22px; height: 22px;
+  border: 3px solid var(--black);
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 2px 2px 0 var(--black);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.radio.on::after { content: ''; width: 10px; height: 10px; background: var(--black); border-radius: 50%; display: block; }
+.radio.on-cyan::after { content: ''; width: 10px; height: 10px; background: var(--cyan); border-radius: 50%; display: block; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   INPUTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.field-label {
+  font-family: var(--font-head); font-size: 10px; font-weight: 900;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--gray-mid);
+}
+.input {
+  width: 100%; padding: 10px 14px;
+  border: 3px solid var(--black);
+  border-radius: 8px;
+  background: var(--white);
+  font-family: var(--font-body); font-size: 14px;
+  color: var(--black); outline: none;
+  box-shadow: 3px 3px 0 var(--black);
+  transition: box-shadow 0.1s, border-color 0.1s;
+}
+.input:focus { box-shadow: 4px 4px 0 var(--cyan); border-color: var(--cyan); }
+.input::placeholder { color: var(--gray-mid); }
+textarea.input { min-height: 90px; resize: vertical; }
+.select {
+  width: 100%; padding: 10px 14px;
+  border: 3px solid var(--black); border-radius: 8px;
+  background: var(--white);
+  font-family: var(--font-head); font-size: 13px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--black); outline: none;
+  box-shadow: 3px 3px 0 var(--black);
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: calc(100% - 12px) center; padding-right: 36px;
+}
+.select:focus { box-shadow: 4px 4px 0 var(--cyan); border-color: var(--cyan); }
+.input-row { display: flex; gap: 8px; }
+.input-row .input { flex: 1; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SLIDERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.slider-wrap { margin-bottom: 16px; }
+.slider-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.slider-name { font-family: var(--font-head); font-size: 12px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.slider-val  { font-family: var(--font-head); font-size: 14px; font-weight: 900; }
+input[type=range] {
+  -webkit-appearance: none; width: 100%; height: 10px;
+  background: var(--gray-light); border: 3px solid var(--black);
+  border-radius: 5px; cursor: pointer; outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 24px; height: 24px;
+  background: var(--black); border: 3px solid var(--black);
+  border-radius: 6px; cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+  transition: background 0.1s;
+}
+input[type=range].r-cyan::-webkit-slider-thumb   { background: var(--cyan); }
+input[type=range].r-lime::-webkit-slider-thumb   { background: var(--lime); }
+input[type=range].r-pink::-webkit-slider-thumb   { background: var(--pink); }
+input[type=range].r-yellow::-webkit-slider-thumb { background: var(--yellow); }
+input[type=range].r-orange::-webkit-slider-thumb { background: var(--orange); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PROGRESS BARS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.pb-wrap { margin-bottom: 14px; }
+.pb-top { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.pb-name { font-family: var(--font-head); font-size: 12px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.pb-pct  { font-family: var(--font-head); font-size: 12px; font-weight: 900; }
+.pb-track { height: 14px; border: 3px solid var(--black); border-radius: 5px; background: var(--gray-light); overflow: hidden; box-shadow: 3px 3px 0 var(--black); }
+.pb-fill { height: 100%; border-radius: 2px; transition: width 0.7s cubic-bezier(.4,0,.2,1); position: relative; overflow: hidden; background: var(--black); }
+.pb-fill::after { content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%; background: linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent); animation: shimmer 1.8s infinite; }
+@keyframes shimmer { to { left: 200%; } }
+.pf-cyan   { background: var(--cyan); }
+.pf-lime   { background: var(--lime); }
+.pf-pink   { background: var(--pink); }
+.pf-yellow { background: var(--yellow); }
+.pf-orange { background: var(--orange); }
+.pf-purple { background: var(--purple); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PROGRESS RINGS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ring-label { font-family: var(--font-head); font-size: 10px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-mid); }
+svg.ring { filter: drop-shadow(3px 3px 0 var(--black)); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   LOADING SKELETONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.skeleton {
+  background: linear-gradient(90deg, var(--gray-light) 25%, #DDDDD5 50%, var(--gray-light) 75%);
+  background-size: 400% 100%;
+  animation: skelpulse 1.4s ease infinite;
+  border-radius: 6px; border: 3px solid #DDDDDD;
+}
+@keyframes skelpulse { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+.sk-line { height: 14px; width: 100%; margin-bottom: 8px; }
+.sk-line.s { width: 55%; }
+.sk-line.m { width: 75%; }
+.sk-avatar { width: 52px; height: 52px; border-radius: 8px; margin-bottom: 8px; }
+.sk-block { height: 88px; width: 100%; border-radius: 8px; margin-bottom: 10px; }
+.sk-thumb { width: 100%; height: 140px; border-radius: 10px; }
+
+/* Loading bar */
+.loading-bar { height: 8px; border: 3px solid var(--black); border-radius: 4px; overflow: hidden; background: var(--gray-light); box-shadow: 2px 2px 0 var(--black); margin-bottom: 10px; }
+.lb-inner { height: 100%; background: repeating-linear-gradient(90deg,var(--black) 0,var(--black) 18px,var(--cyan) 18px,var(--cyan) 36px); background-size: 36px 100%; animation: lbmove 0.6s linear infinite; width: 65%; }
+@keyframes lbmove { from { background-position: 0; } to { background-position: 36px; } }
+.dot-row { display: flex; gap: 8px; align-items: center; }
+.dot { width: 12px; height: 12px; border: 3px solid var(--black); border-radius: 50%; animation: dotb 0.9s ease infinite; }
+.dot:nth-child(1) { background: var(--black); }
+.dot:nth-child(2) { background: var(--cyan); animation-delay: 0.15s; }
+.dot:nth-child(3) { background: var(--lime); animation-delay: 0.3s; }
+@keyframes dotb { 0%,80%,100% { transform: scale(0.6); opacity: 0.5; } 40% { transform: scale(1.1); opacity: 1; } }
+.spinner { width: 36px; height: 36px; border: 4px solid var(--gray-light); border-top-color: var(--black); border-radius: 50%; animation: spin 0.8s linear infinite; }
+.sp-cyan { border-top-color: var(--cyan); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CHARTS — BAR (HTML/CSS ENGINE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.chart-subheader {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--black); color: var(--white);
+  padding: 12px 16px;
+  border: var(--inner-border); border-radius: var(--box-radius);
+  box-shadow: var(--box-shadow-xs);
+  margin-bottom: 16px;
+}
+.chart-sh-title {
+  font-family: var(--font-head); font-size: 11px; font-weight: 900;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--cyan);
+}
+.bar-chart {
+  height: 180px;
+  display: flex; align-items: flex-end; gap: 8px;
+  border-bottom: 4px solid var(--black);
+  border-left: 4px solid var(--black);
+  padding: 0 4px 4px 8px;
+  position: relative;
+}
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.bar {
+  width: 100%;
+  border: 3px solid var(--black);
+  border-radius: 6px 6px 0 0;
+  transition: height 0.5s cubic-bezier(.4,0,.2,1), background 0.2s;
+  position: relative;
+  cursor: pointer;
+}
+.bar:hover { filter: brightness(1.1); }
+.bar-tip {
+  position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: var(--black); color: var(--white);
+  font-family: var(--font-head); font-size: 10px; font-weight: 900;
+  padding: 3px 7px; border-radius: 5px; border: 2px solid var(--black);
+  opacity: 0; pointer-events: none; transition: opacity 0.15s; white-space: nowrap;
+  box-shadow: 2px 2px 0 var(--lime);
+}
+.bar:hover .bar-tip { opacity: 1; }
+.bar-label { font-family: var(--font-head); font-size: 9px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-mid); }
+
+/* Stacked bar */
+.sbar { display: flex; flex-direction: column-reverse; height: 100%; border-radius: 6px 6px 0 0; overflow: hidden; border: 3px solid var(--black); cursor: pointer; }
+.sbar-seg { width: 100%; transition: flex 0.5s; }
+
+/* Scatter matrix */
+.scatter {
+  height: 180px; border: var(--inner-border); border-radius: var(--box-radius);
+  background: var(--gray-light); position: relative; overflow: hidden;
+  box-shadow: var(--box-shadow-xs);
+}
+.scatter-label {
+  position: absolute; top: 10px; left: 12px;
+  font-family: var(--font-head); font-size: 10px; font-weight: 900;
+  letter-spacing: 0.1em; text-transform: uppercase; color: rgba(0,0,0,0.3);
+}
+.sc-dot {
+  position: absolute; width: 22px; height: 22px;
+  border-radius: 50%; border: 3px solid var(--black);
+  box-shadow: 2px 2px 0 var(--black);
+  transform: translate(-50%,50%);
+  cursor: pointer; transition: transform 0.15s;
+}
+.sc-dot:hover { transform: translate(-50%,50%) scale(1.3); }
+
+/* SVG line chart */
+.line-chart { border: var(--inner-border); border-radius: var(--box-radius); overflow: hidden; }
+
+/* Donut */
+.donut-row { display: flex; align-items: center; gap: 20px; }
+.donut-legend { display: flex; flex-direction: column; gap: 7px; }
+.dl-item { display: flex; align-items: center; gap: 8px; font-family: var(--font-head); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+.dl-dot { width: 14px; height: 14px; border: 2px solid var(--black); border-radius: 3px; flex-shrink: 0; }
+
+/* Radar / Spider chart (SVG) */
+.radar-wrap { display: flex; justify-content: center; padding: 8px 0; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   TABLES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.table-wrap { overflow-x: auto; }
+table.tbl {
+  width: 100%; border-collapse: collapse;
+  border: var(--inner-border); border-radius: var(--box-radius);
+  overflow: hidden; font-family: var(--font-head);
+  font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+}
+table.tbl th {
+  padding: 11px 14px; text-align: left;
+  background: var(--black); color: var(--white);
+  font-size: 10px; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase;
+  border-bottom: var(--inner-border); border-right: 2px solid rgba(255,255,255,0.1);
+}
+table.tbl td { padding: 10px 14px; border-bottom: 2px solid var(--gray-light); border-right: 2px solid var(--gray-light); }
+table.tbl tr:last-child td { border-bottom: none; }
+table.tbl tr:hover td { background: #F5F5EE; }
+table.tbl tr.sub td { background: var(--gray-light); padding-left: 28px; font-size: 11px; color: var(--gray-mid); }
+table.tbl tr.subsub td { background: #E8E8E0; padding-left: 44px; font-size: 10px; color: var(--gray-mid); }
+table.tbl tr.hl-cyan td { background: rgba(0,204,255,0.12); }
+table.tbl tr.hl-lime td { background: rgba(204,255,0,0.15); }
+table.tbl-sm th, table.tbl-sm td { padding: 7px 10px; font-size: 11px; }
+.ex-btn { cursor: pointer; font-weight: 900; margin-right: 6px; transition: transform 0.15s; display: inline-block; }
+.ex-btn.open { transform: rotate(90deg); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CALENDAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.cal-title { font-family: var(--font-head); font-size: 16px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.cal-arr { width: 32px; height: 32px; border: 3px solid var(--black); border-radius: 6px; background: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 900; box-shadow: 2px 2px 0 var(--black); transition: background 0.1s; }
+.cal-arr:hover { background: var(--lime); }
+.cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+.cal-daylabel { font-family: var(--font-head); font-size: 9px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; text-align: center; color: var(--gray-mid); padding-bottom: 6px; }
+.cal-cell {
+  aspect-ratio: 1; border: 2px solid var(--gray-light); border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-head); font-size: 12px; font-weight: 700;
+  cursor: pointer; background: var(--white); position: relative;
+  transition: background 0.1s, border-color 0.1s;
+}
+.cal-cell:hover { border-color: var(--black); background: var(--gray-light); }
+.cal-cell.today { border: 3px solid var(--black); background: var(--lime); font-weight: 900; }
+.cal-cell.sel { background: var(--black); color: var(--white); border-color: var(--black); }
+.cal-cell.event::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; background: var(--pink); border-radius: 50%; }
+.cal-cell.other { color: var(--gray-mid); background: var(--gray-light); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   COLLAPSIBLE TREE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.tree-item { border-left: 4px solid var(--black); padding-left: 14px; margin-bottom: 5px; }
+.tree-hdr {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border: 3px solid var(--black); border-radius: 6px;
+  cursor: pointer; font-family: var(--font-head); font-size: 13px; font-weight: 900;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  background: var(--white); box-shadow: 3px 3px 0 var(--black);
+  transition: background 0.1s;
+}
+.tree-hdr:hover { background: var(--gray-light); }
+.tree-hdr.open { background: var(--lime); }
+.tree-chev { font-size: 11px; transition: transform 0.2s; margin-left: auto; }
+.tree-chev.open { transform: rotate(90deg); }
+.tree-kids { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
+.tree-kids.open { max-height: 800px; }
+.tree-leaf {
+  margin-top: 5px; padding: 7px 12px;
+  border: 2px solid var(--gray-light); border-radius: 5px;
+  font-family: var(--font-head); font-size: 12px; font-weight: 700;
+  color: var(--gray-mid); background: var(--gray-light); cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.tree-leaf:hover { background: var(--cyan); color: var(--black); border-color: var(--black); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MENUS / TABS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.menu-wrap { position: relative; display: inline-block; }
+.menu-drop {
+  position: absolute; top: calc(100% + 6px); left: 0;
+  min-width: 200px; background: var(--white);
+  border: var(--inner-border); border-radius: var(--box-radius);
+  box-shadow: var(--box-shadow-sm); z-index: 99; overflow: hidden;
+  animation: menuIn 0.12s ease; display: none;
+}
+.menu-drop.open { display: block; }
+@keyframes menuIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+.menu-group { padding: 6px 14px 3px; font-family: var(--font-head); font-size: 9px; font-weight: 900; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gray-mid); background: var(--gray-light); }
+.menu-item {
+  padding: 11px 16px; font-family: var(--font-head); font-size: 13px; font-weight: 800;
+  letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 2px solid var(--gray-light);
+  transition: background 0.08s;
+}
+.menu-item:last-child { border-bottom: none; }
+.menu-item:hover { background: var(--lime); }
+.menu-item.danger:hover { background: var(--pink); color: var(--white); }
+.mi-short { margin-left: auto; font-size: 10px; color: var(--gray-mid); font-weight: 600; }
+
+.tab-nav { display: flex; border-bottom: 4px solid var(--black); margin-bottom: 16px; }
+.tab-btn {
+  padding: 10px 18px;
+  font-family: var(--font-head); font-size: 12px; font-weight: 900;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; border: none; background: none;
+  color: var(--gray-mid); border-bottom: 4px solid transparent; margin-bottom: -4px;
+  transition: color 0.1s, border-color 0.1s;
+}
+.tab-btn.active { color: var(--black); border-bottom-color: var(--black); }
+.tab-btn:hover:not(.active) { color: var(--black); }
+
+.pill-nav { display: flex; gap: 6px; background: var(--gray-light); padding: 4px; border-radius: 10px; border: 3px solid var(--black); margin-bottom: 16px; }
+.pill-btn {
+  flex: 1; padding: 7px 12px; border-radius: 7px;
+  font-family: var(--font-head); font-size: 11px; font-weight: 900;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; border: none; background: transparent; color: var(--gray-mid);
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.pill-btn.active { background: var(--black); color: var(--white); box-shadow: 2px 2px 0 rgba(0,0,0,0.3); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   BADGES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border: var(--tag-border); border-radius: 5px;
+  font-family: var(--font-head); font-size: 10px; font-weight: 900;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  box-shadow: 2px 2px 0 var(--black);
+}
+.bg-cyan   { background: var(--cyan); }
+.bg-lime   { background: var(--lime); }
+.bg-yellow { background: var(--yellow); }
+.bg-orange { background: var(--orange); }
+.bg-pink   { background: var(--pink); color: var(--white); }
+.bg-purple { background: var(--purple); color: var(--white); }
+.bg-black  { background: var(--black); color: var(--white); }
+.bg-white  { background: var(--white); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   DIVIDERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.divider { border: none; border-top: 3px solid var(--black); margin: 16px 0; }
+.divider-dash { border-top: 3px dashed var(--black); }
+.divider-label {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-head); font-size: 9px; font-weight: 900;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--gray-mid); margin: 16px 0;
+}
+.divider-label::before,.divider-label::after { content: ''; flex: 1; border-top: 2px solid var(--black); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MODAL / TOAST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 999; backdrop-filter: blur(2px);
+  animation: fadeIn 0.15s ease; display: none;
+}
+.overlay.open { display: flex; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  width: 440px; max-width: 92vw;
+  background: var(--white);
+  border: var(--box-border); border-radius: var(--box-radius);
+  box-shadow: var(--box-shadow); overflow: hidden;
+  animation: slideUp 0.2s ease;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-hdr { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: var(--inner-border); background: var(--cyan); }
+.modal-title { font-family: var(--font-head); font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; }
+.modal-close { background: var(--black); color: var(--white); border: 2px solid var(--black); border-radius: 6px; width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; }
+.modal-body { padding: 20px; }
+.modal-foot { padding: 16px 20px; border-top: var(--inner-border); display: flex; justify-content: flex-end; gap: 10px; }
+
+.toast {
+  padding: 13px 18px; border: 3px solid var(--black); border-radius: 8px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: var(--box-shadow-xs); font-family: var(--font-head);
+  font-size: 13px; font-weight: 800; letter-spacing: 0.04em; max-width: 360px;
+  animation: toastIn 0.25s ease;
+}
+@keyframes toastIn { from { transform: translateX(16px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.toast-ok   { background: var(--lime); }
+.toast-err  { background: var(--pink); color: var(--white); }
+.toast-info { background: var(--cyan); }
+.toast-warn { background: var(--yellow); }
+.toast-close { margin-left: auto; cursor: pointer; font-size: 14px; opacity: 0.6; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   TOOLTIP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.tip-wrap { position: relative; display: inline-block; }
+.tip-bubble {
+  position: absolute; bottom: calc(100% + 9px); left: 50%; transform: translateX(-50%) translateY(4px);
+  background: var(--black); color: var(--white);
+  font-family: var(--font-head); font-size: 11px; font-weight: 800; letter-spacing: 0.06em;
+  padding: 6px 11px; border-radius: 6px; white-space: nowrap;
+  box-shadow: 3px 3px 0 var(--black); opacity: 0; pointer-events: none;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.tip-wrap:hover .tip-bubble { opacity: 1; transform: translateX(-50%) translateY(0); }
+.tip-bubble::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--black); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   RATINGS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.star-row { display: flex; align-items: center; gap: 5px; }
+.star { font-size: 24px; cursor: pointer; color: var(--gray-light); transition: color 0.1s, transform 0.1s; }
+.star.on { color: var(--yellow); text-shadow: 1px 1px 0 var(--black); }
+.star:hover { transform: scale(1.2); }
+.star-val { font-family: var(--font-head); font-size: 16px; font-weight: 900; margin-left: 8px; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   COPY BUTTON / CODE BLOCK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.code-wrap { position: relative; }
+.code-block {
+  padding: 14px 44px 14px 14px; background: var(--black);
+  color: var(--lime); border: var(--inner-border); border-radius: 8px;
+  font-family: monospace; font-size: 13px;
+  box-shadow: var(--box-shadow-xs); overflow-x: auto; white-space: pre;
+}
+.copy-btn {
+  position: absolute; top: 9px; right: 9px;
+  padding: 5px 10px; background: var(--cyan);
+  border: var(--tag-border); border-radius: 5px;
+  font-family: var(--font-head); font-size: 10px; font-weight: 900;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: background 0.1s;
+}
+.copy-btn:hover { background: var(--lime); }
+.copy-ok { background: var(--lime) !important; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   HOVER CARDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.hover-card {
+  padding: 18px; border: var(--inner-border); border-radius: var(--box-radius);
+  background: var(--white); box-shadow: var(--box-shadow-sm);
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+  cursor: pointer; font-family: var(--font-head); font-size: 14px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.hover-card:hover { transform: translate(-3px,-3px); box-shadow: 11px 11px 0 var(--black); background: var(--lime); }
+.hc-pink:hover   { background: var(--pink); color: var(--white); }
+.hc-cyan:hover   { background: var(--cyan); }
+.hc-yellow:hover { background: var(--yellow); }
+.hc-shake:hover  { animation: shake 0.3s ease; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ANIMATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.anim-box { width: 60px; height: 60px; border: var(--inner-border); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: var(--box-shadow-xs); }
+.a-pulse   { animation: pulse 1.5s ease infinite; }
+.a-bounce  { animation: abounce 0.8s ease infinite alternate; }
+.a-spin    { animation: spin 1.4s linear infinite; }
+.a-wiggle  { animation: wiggle 0.6s ease infinite; }
+.a-float   { animation: afloat 2.5s ease-in-out infinite; }
+.a-flicker { animation: flicker 1.1s linear infinite; }
+.a-ping    { animation: ping 1.2s ease infinite; }
+@keyframes pulse  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+@keyframes abounce{ from{transform:translateY(0)} to{transform:translateY(-12px)} }
+@keyframes wiggle { 0%,100%{transform:rotate(-6deg)} 50%{transform:rotate(6deg)} }
+@keyframes afloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+@keyframes flicker{ 0%,100%{opacity:1} 50%{opacity:0.5} }
+@keyframes ping   { 0%{transform:scale(1);opacity:1} 75%,100%{transform:scale(1.5);opacity:0} }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   KPI / STAT CARDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.stat {
+  padding: 16px; border: var(--inner-border); border-radius: var(--box-radius);
+  box-shadow: var(--box-shadow-xs); min-width: 140px;
+}
+.stat-label { font-family: var(--font-head); font-size: 10px; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(0,0,0,0.5); margin-bottom: 4px; }
+.stat-val   { font-family: var(--font-head); font-size: 38px; font-weight: 1000; line-height: 1; }
+.stat-delta { font-family: var(--font-head); font-size: 11px; font-weight: 900; margin-top: 4px; }
+.up   { color: #1AAA55; }
+.down { color: var(--pink); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   VIDEO CARD (UsTube style)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.vid-card {
+  border: var(--inner-border); border-radius: var(--box-radius);
+  overflow: hidden; background: var(--white);
+  box-shadow: var(--box-shadow-sm); transition: transform 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+}
+.vid-card:hover { transform: translate(-3px,-3px); box-shadow: 11px 11px 0 var(--black); }
+.vid-thumb { width: 100%; height: 120px; background: var(--gray-light); position: relative; border-bottom: 3px solid var(--black); }
+.vid-thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vid-thumb-placeholder { width: 100%; height: 100%; background: linear-gradient(135deg, var(--cyan), var(--lime)); display: flex; align-items: center; justify-content: center; font-size: 32px; }
+.vid-duration {
+  position: absolute; bottom: 7px; right: 7px;
+  background: var(--black); color: var(--white);
+  font-family: var(--font-head); font-size: 10px; font-weight: 900;
+  padding: 2px 7px; border-radius: 4px; border: 2px solid var(--black);
+}
+.vid-info { padding: 10px 12px; }
+.vid-title { font-family: var(--font-head); font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.3; margin-bottom: 6px; }
+.vid-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+.vid-stat { font-family: var(--font-head); font-size: 10px; font-weight: 800; color: var(--gray-mid); letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CHANNEL STATUS CARD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.channel-card {
+  border: var(--inner-border); border-radius: var(--box-radius);
+  background: var(--white); padding: 18px;
+  box-shadow: var(--box-shadow-xs);
+}
+.channel-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.channel-avatar { width: 56px; height: 56px; border: 3px solid var(--black); border-radius: 50%; overflow: hidden; box-shadow: 3px 3px 0 var(--black); flex-shrink: 0; background: var(--cyan); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.channel-name { font-family: var(--font-head); font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; }
+.channel-subs { font-family: var(--font-head); font-size: 12px; font-weight: 700; color: var(--gray-mid); letter-spacing: 0.06em; text-transform: uppercase; }
+.channel-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+.ch-stat-label { font-family: var(--font-head); font-size: 9px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray-mid); margin-bottom: 2px; }
+.ch-stat-val   { font-family: var(--font-head); font-size: 22px; font-weight: 1000; }
+.sync-dot { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-head); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 12px; }
+.sync-dot::before { content: ''; width: 8px; height: 8px; background: var(--lime); border-radius: 50%; border: 2px solid var(--black); animation: pulse 1.5s ease infinite; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SIDEBAR NAV (UsTube style)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sidebar { width: 220px; display: flex; flex-direction: column; gap: 8px; }
+.sidebar-logo { font-family: var(--font-head); font-size: 32px; font-weight: 1000; text-transform: uppercase; letter-spacing: -0.02em; margin-bottom: 8px; }
+.sidebar-badges { display: flex; gap: 6px; margin-bottom: 20px; }
+.sidebar-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px; border: 3px solid var(--black);
+  border-radius: 10px; background: var(--white);
+  font-family: var(--font-head); font-size: 14px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  cursor: pointer; transition: background 0.1s, box-shadow 0.1s;
+  box-shadow: 3px 3px 0 var(--black);
+  text-decoration: none; color: var(--black);
+}
+.sidebar-link:hover { background: var(--gray-light); }
+.sidebar-link.active { background: var(--lime); box-shadow: 4px 4px 0 var(--black); }
+.sidebar-link .sl-icon { width: 24px; text-align: center; font-size: 16px; flex-shrink: 0; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   VALUE MATRIX (scatter quadrant)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.quadrant { position: relative; border: var(--inner-border); border-radius: var(--box-radius); overflow: hidden; background: var(--black); }
+.q-axis-x { position: absolute; bottom: 30px; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.2); }
+.q-axis-y { position: absolute; top: 0; bottom: 30px; left: 45%; width: 2px; background: rgba(255,255,255,0.2); }
+.q-label { position: absolute; font-family: var(--font-head); font-size: 9px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+.q-dot { position: absolute; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); transform: translate(-50%, 50%); cursor: pointer; transition: transform 0.15s; }
+.q-dot:hover { transform: translate(-50%,50%) scale(1.5); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   HOOK / HORIZONTAL BAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.hbar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.hbar-label { font-family: var(--font-head); font-size: 10px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; width: 32px; text-align: right; flex-shrink: 0; color: var(--gray-mid); }
+.hbar-track { flex: 1; height: 14px; border: 3px solid var(--black); border-radius: 4px; background: var(--gray-light); overflow: hidden; box-shadow: 2px 2px 0 var(--black); }
+.hbar-fill { height: 100%; background: var(--lime); border-radius: 2px; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+.hbar-fill.c-cyan   { background: var(--cyan); }
+.hbar-fill.c-pink   { background: var(--pink); }
+.hbar-fill.c-yellow { background: var(--yellow); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ICON GRID
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.icon-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.icon-tile {
+  width: 56px; height: 56px;
+  border: 3px solid var(--black); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--white); box-shadow: 3px 3px 0 var(--black);
+  cursor: pointer; transition: background 0.1s, transform 0.1s; font-size: 24px;
+}
+.icon-tile:hover { background: var(--lime); transform: translate(-2px,-2px); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   GRID UTILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.grid  { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.flex  { display: flex; }
+.gap-8 { gap: 8px; } .gap-12 { gap: 12px; } .gap-16 { gap: 16px; }
+.col   { flex-direction: column; }
+.items-center { align-items: center; }
+.jc-between   { justify-content: space-between; }
+.w-full { width: 100%; }
+.mt-8 { margin-top: 8px; } .mb-8 { margin-bottom: 8px; }
+.mt-12 { margin-top: 12px; } .mb-12 { margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<div class="page-title">USTUBE <span style="color:var(--cyan)">UI</span> KIT</div>
+<p class="page-sub">v2 · 6-color system · Full component library · All interactive</p>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">00 — The Box System</div>
+
+<div class="box">
+  <div class="box-header bh-cyan">
+    <div class="box-header-left">
+      <div class="box-icon bi-orange">📊</div>
+      <h1 class="box-title">Graph &amp; Chart Sandbox</h1>
+    </div>
+    <div class="box-header-right">
+      <button class="open-btn" onclick="toggleBox(this)">↕ Open</button>
+      <button class="toggle-btn" onclick="toggleBoxCollapse(this)">+</button>
+    </div>
+  </div>
+  <div class="box-body">
+    <div class="chart-subheader">
+      <h4 class="chart-sh-title">HTML/CSS Bar Chart Engine</h4>
+      <button class="btn btn-cyan btn-sm" onclick="randomizeBars()">Randomize</button>
+    </div>
+    <div class="bar-chart" id="main-bar-chart">
+      <!-- rendered by JS -->
+    </div>
+    <div style="display:flex;gap:6px;margin-top:6px;margin-bottom:24px;">
+      <div class="bar-label">MON</div><div class="bar-label" style="flex:1;text-align:center;">TUE</div>
+      <div class="bar-label" style="flex:1;text-align:center;">WED</div><div class="bar-label" style="flex:1;text-align:center;">THU</div>
+      <div class="bar-label" style="flex:1;text-align:center;">FRI</div><div class="bar-label" style="flex:1;text-align:center;">SAT</div>
+      <div class="bar-label" style="flex:1;text-align:center;">SUN</div><div class="bar-label" style="flex:1;text-align:right;">MON</div>
+    </div>
+    <div class="scatter">
+      <div class="scatter-label">Scatter Matrix</div>
+      <div class="sc-dot" style="left:7%;bottom:42%;background:var(--cyan);width:22px;height:22px;"></div>
+      <div class="sc-dot" style="left:19%;bottom:68%;background:var(--cyan);width:22px;height:22px;"></div>
+      <div class="sc-dot" style="left:31%;bottom:47%;background:var(--cyan);width:22px;height:22px;"></div>
+      <div class="sc-dot" style="left:43%;bottom:88%;background:var(--cyan);width:22px;height:22px;"></div>
+      <div class="sc-dot" style="left:56%;bottom:63%;background:var(--cyan);width:22px;height:22px;"></div>
+      <div class="sc-dot" style="left:68%;bottom:78%;background:var(--cyan);width:22px;height:22px;"></div>
+      <div class="sc-dot" style="left:80%;bottom:53%;background:var(--cyan);width:22px;height:22px;"></div>
+      <div class="sc-dot" style="left:91%;bottom:92%;background:var(--cyan);width:22px;height:22px;"></div>
+      <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;" preserveAspectRatio="none">
+        <polyline points="7%,58% 19%,32% 31%,53% 43%,12% 56%,37% 68%,22% 80%,47% 91%,8%" fill="none" stroke="black" stroke-width="3" stroke-linejoin="round" stroke-dasharray="8 8" opacity="0.25"/>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- Research Lab accordion boxes -->
+<div class="box">
+  <div class="box-header bh-cyan">
+    <div class="box-header-left">
+      <div class="box-icon bi-orange">📈</div>
+      <h1 class="box-title">Analytics</h1>
+    </div>
+    <div class="box-header-right">
+      <button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button>
+    </div>
+  </div>
+  <div class="box-body box-body-white">
+    <div class="channel-card">
+      <div class="channel-top">
+        <div class="channel-avatar">⚔️</div>
+        <div>
+          <div class="channel-name">The Motion Visual History</div>
+          <div class="channel-subs">4,010 Subscribers · <span style="color:var(--gray-mid);font-size:10px;">LAST SYNCED: 191M AGO</span></div>
+        </div>
+        <button class="btn btn-sm btn-black" style="margin-left:auto;">Disconnect</button>
+      </div>
+      <div class="channel-stats">
+        <div><div class="ch-stat-label">Views (28D)</div><div class="ch-stat-val">56,640</div></div>
+        <div><div class="ch-stat-label">Watch Time (28D)</div><div class="ch-stat-val">0h</div></div>
+        <div><div class="ch-stat-label">Revenue (28D)</div><div class="ch-stat-val">$0.00</div></div>
+        <div><div class="ch-stat-label">New Subs (28D)</div><div class="ch-stat-val" style="color:var(--lime)">+0</div></div>
+      </div>
+      <div class="sync-dot">Live Sync Active</div>
+    </div>
+    <div class="flex gap-12 mt-12">
+      <button class="btn btn-lime" style="flex:1;">Sync Now</button>
+      <select class="select" style="flex:1;"><option>Combined View</option><option>Channel Only</option><option>Shorts Only</option></select>
+      <button class="btn btn-yellow" style="flex:1;">Generate Report</button>
+    </div>
+  </div>
+</div>
+
+<div class="box">
+  <div class="box-header bh-lime">
+    <div class="box-header-left">
+      <div class="box-icon bi-pink">⚡</div>
+      <h1 class="box-title">Analytics Oracle</h1>
+    </div>
+    <div class="box-header-right">
+      <button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button>
+    </div>
+  </div>
+  <div class="box-body">
+    <div class="inner-box">
+      <div class="inner-header ih-black">
+        <span>Analytics Oracle V16 · <span style="font-weight:600;opacity:0.6;">Advanced Algorithmic Fingerprinting &amp; Strategy</span></span>
+        <button class="btn btn-lime btn-sm">Invoke Oracle Analysis</button>
+      </div>
+      <div class="inner-body">
+        <p style="font-family:var(--font-head);font-size:12px;font-weight:700;color:var(--gray-mid);letter-spacing:0.06em;text-transform:uppercase;">Ready to analyze channel telemetry. Upload CSV or sync live data to begin fingerprinting.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="box">
+  <div class="box-header bh-yellow">
+    <div class="box-header-left">
+      <div class="box-icon bi-cyan">🧠</div>
+      <h1 class="box-title">Algorithm Architect</h1>
+    </div>
+    <div class="box-header-right">
+      <button class="toggle-btn" onclick="toggleBoxCollapse(this)">+</button>
+    </div>
+  </div>
+  <div class="box-body" style="display:none;">
+    <p style="font-family:var(--font-head);font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Content collapsed — click + to expand.</p>
+  </div>
+</div>
+
+<div class="box">
+  <div class="box-header bh-orange">
+    <div class="box-header-left">
+      <div class="box-icon bi-white">🔍</div>
+      <h1 class="box-title">Keyword Research</h1>
+    </div>
+    <div class="box-header-right">
+      <button class="toggle-btn" onclick="toggleBoxCollapse(this)">+</button>
+    </div>
+  </div>
+  <div class="box-body" style="display:none;"></div>
+</div>
+
+<div class="box">
+  <div class="box-header bh-pink">
+    <div class="box-header-left">
+      <div class="box-icon bi-lime">💬</div>
+      <h1 class="box-title">Strategy Chat</h1>
+    </div>
+    <div class="box-header-right">
+      <button class="toggle-btn" onclick="toggleBoxCollapse(this)">+</button>
+    </div>
+  </div>
+  <div class="box-body" style="display:none;"></div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">01 — Buttons (all 6 colors + variants)</div>
+<div class="grid">
+  <button class="btn btn-black">◆ Primary</button>
+  <button class="btn btn-cyan">→ Cyan</button>
+  <button class="btn btn-lime">↗ Lime</button>
+  <button class="btn btn-yellow">★ Yellow</button>
+  <button class="btn btn-orange">▲ Orange</button>
+  <button class="btn btn-pink">⚡ Pink</button>
+  <button class="btn btn-purple">◎ Purple</button>
+  <button class="btn">◻ Default</button>
+  <button class="btn btn-outline">◯ Outline</button>
+  <button class="btn btn-ghost">Ghost</button>
+  <button class="btn btn-cyan btn-pill">● Pill</button>
+  <button class="btn btn-sm btn-lime">SM</button>
+  <button class="btn btn-lg btn-yellow">Large</button>
+  <button class="btn btn-icon btn-black">⚡</button>
+  <button class="btn btn-disabled btn-black">Disabled</button>
+  <button class="open-btn">↕ OPEN</button>
+  <button class="open-btn cyan">↗ OPEN</button>
+  <button class="open-btn pink">⚡ OPEN</button>
+  <button class="open-btn yellow">★ OPEN</button>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">02 — Style Chips & Filters</div>
+<div class="box box-sm">
+  <div class="box-header bh-cyan" style="height:60px;">
+    <div class="box-header-left">
+      <div class="box-icon bi-black" style="width:60px;font-size:20px;">◈</div>
+      <h1 class="box-title" style="font-size:24px;">Styles</h1>
+    </div>
+    <div class="box-header-right">
+      <button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button>
+    </div>
+  </div>
+  <div class="box-body">
+    <div class="chip-row" id="style-chips">
+      <div class="chip" onclick="cycleChip(this)">Educational</div>
+      <div class="chip on-pink" onclick="cycleChip(this)">Graphic</div>
+      <div class="chip" onclick="cycleChip(this)">Clickbait</div>
+      <div class="chip on-lime" onclick="cycleChip(this)">Minimalist</div>
+      <div class="chip" onclick="cycleChip(this)">Cinematic</div>
+      <div class="chip on-pink" onclick="cycleChip(this)">Mysterious</div>
+      <div class="chip on-lime" onclick="cycleChip(this)">Vibrant</div>
+      <div class="chip" onclick="cycleChip(this)">Dark &amp; Moody</div>
+      <div class="chip" onclick="cycleChip(this)">Retro/Vintage</div>
+      <div class="chip" onclick="cycleChip(this)">Simplified</div>
+      <div class="chip" onclick="cycleChip(this)">Futuristic</div>
+      <div class="chip" onclick="cycleChip(this)">Hand-Drawn</div>
+      <div class="chip on-cyan" onclick="cycleChip(this)">Educational</div>
+      <div class="chip on-yellow" onclick="cycleChip(this)">Clickbait</div>
+      <div class="chip on-orange" onclick="cycleChip(this)">Cinematic</div>
+      <div class="chip on-purple" onclick="cycleChip(this)">Futuristic</div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">03 — Color Palette Selector</div>
+<div class="box box-sm">
+  <div class="box-header bh-pink" style="height:60px;">
+    <div class="box-header-left">
+      <div class="box-icon bi-black" style="width:60px;font-size:20px;">◉</div>
+      <h1 class="box-title" style="font-size:24px;">Palette</h1>
+    </div>
+    <div class="box-header-right">
+      <button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button>
+    </div>
+  </div>
+  <div class="box-body">
+    <div class="palette-row" id="pal-row">
+      <div class="swatch-col"><div class="swatch sel" style="background:#CCFF00;" data-hex="#CCFF00" onclick="selSwatch(this)"></div><div class="swatch-hex">#CCFF00</div></div>
+      <div class="swatch-col"><div class="swatch" style="background:#FF3399;" data-hex="#FF3399" onclick="selSwatch(this)"></div><div class="swatch-hex">#FF3399</div></div>
+      <div class="swatch-col"><div class="swatch" style="background:#00CCFF;" data-hex="#00CCFF" onclick="selSwatch(this)"></div><div class="swatch-hex">#00CCFF</div></div>
+      <div class="swatch-col"><div class="swatch" style="background:#FFD600;" data-hex="#FFD600" onclick="selSwatch(this)"></div><div class="swatch-hex">#FFD600</div></div>
+      <div class="swatch-col"><div class="swatch" style="background:#FFB158;" data-hex="#FFB158" onclick="selSwatch(this)"></div><div class="swatch-hex">#FFB158</div></div>
+      <div class="swatch-col"><div class="swatch" style="background:#9B59FF;" data-hex="#9B59FF" onclick="selSwatch(this)"></div><div class="swatch-hex">#9B59FF</div></div>
+      <div class="swatch-col"><div class="swatch" style="background:#000000;" data-hex="#000000" onclick="selSwatch(this)"></div><div class="swatch-hex">#000000</div></div>
+      <div class="swatch-col"><div class="swatch-add" onclick="addSwatch()">+</div><div class="swatch-hex">Add</div></div>
+    </div>
+    <div class="flex gap-8 mt-12 items-center">
+      <input type="color" id="cp-native" value="#CCFF00" style="width:46px;height:40px;border:3px solid black;border-radius:6px;padding:2px;cursor:pointer;box-shadow:2px 2px 0 black;">
+      <input class="input" id="hex-in" value="#CCFF00" style="width:120px;" placeholder="#HEX" oninput="syncHex(this)">
+      <button class="btn btn-black btn-sm" onclick="copyHex()">Copy HEX</button>
+    </div>
+    <div class="cp-grid" id="cp-grid"></div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">04 — Toggles · Checkboxes · Radios</div>
+<div class="grid">
+  <div class="box box-sm" style="min-width:230px;flex:1;">
+    <div class="box-header bh-lime" style="height:60px;">
+      <div class="box-header-left"><div class="box-icon bi-black" style="width:60px;font-size:18px;">◈</div><h1 class="box-title" style="font-size:22px;">Toggles</h1></div>
+      <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+    </div>
+    <div class="box-body box-body-white">
+      <div class="toggle-row"><div class="toggle on" onclick="tw(this)"></div><span class="tlabel">Live Mode</span><span class="badge bg-lime" style="margin-left:auto;">ON</span></div>
+      <div class="toggle-row"><div class="toggle on-cyan" onclick="tw(this)"></div><span class="tlabel">Auto-Refine</span></div>
+      <div class="toggle-row"><div class="toggle on-pink" onclick="tw(this)"></div><span class="tlabel">Notifications</span></div>
+      <div class="toggle-row"><div class="toggle on-yellow" onclick="tw(this)"></div><span class="tlabel">Revenue</span></div>
+      <div class="toggle-row"><div class="toggle" onclick="tw(this)"></div><span class="tlabel">Analytics</span></div>
+    </div>
+  </div>
+  <div class="box box-sm" style="min-width:230px;flex:1;">
+    <div class="box-header bh-yellow" style="height:60px;">
+      <div class="box-header-left"><div class="box-icon bi-black" style="width:60px;font-size:18px;">✓</div><h1 class="box-title" style="font-size:22px;">Checkboxes</h1></div>
+      <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+    </div>
+    <div class="box-body box-body-white">
+      <div class="check-row" onclick="ck(this)"><div class="checkbox on">✓</div><span class="clabel">Reach 10K Subs</span></div>
+      <div class="check-row" onclick="ck(this)"><div class="checkbox on-pink">✓</div><span class="clabel done">Optimize CTR</span></div>
+      <div class="check-row" onclick="ck(this)"><div class="checkbox on-lime">✓</div><span class="clabel">Post Monday</span></div>
+      <div class="check-row" onclick="ck(this)"><div class="checkbox on-cyan">✓</div><span class="clabel">Edit Thumbnail</span></div>
+      <div class="check-row" onclick="ck(this)"><div class="checkbox"></div><span class="clabel">Write Script</span></div>
+    </div>
+  </div>
+  <div class="box box-sm" style="min-width:200px;flex:1;">
+    <div class="box-header bh-orange" style="height:60px;">
+      <div class="box-header-left"><div class="box-icon bi-black" style="width:60px;font-size:18px;">◎</div><h1 class="box-title" style="font-size:22px;">Radio</h1></div>
+      <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+    </div>
+    <div class="box-body box-body-white">
+      <div class="radio-row" onclick="rdo(this,'rg1')"><div class="radio on" id="rg1-0"></div><span class="tlabel">Channel</span></div>
+      <div class="radio-row" onclick="rdo(this,'rg1')"><div class="radio" id="rg1-1"></div><span class="tlabel">Projects</span></div>
+      <div class="radio-row" onclick="rdo(this,'rg1')"><div class="radio" id="rg1-2"></div><span class="tlabel">Analytics</span></div>
+      <div class="radio-row" onclick="rdo(this,'rg1')"><div class="radio on-cyan" id="rg1-3"></div><span class="tlabel">Shorts</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">05 — Text Inputs & Form Fields</div>
+<div class="box box-sm">
+  <div class="box-header bh-black" style="height:60px;">
+    <div class="box-header-left"><div class="box-icon bi-cyan" style="width:60px;font-size:18px;">✎</div><h1 class="box-title" style="font-size:22px;color:white;">Form Fields</h1></div>
+    <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+  </div>
+  <div class="box-body box-body-white">
+    <div class="grid2">
+      <div>
+        <div class="field"><div class="field-label">Channel URL</div><input class="input" type="text" placeholder="https://youtube.com/…"></div>
+        <div class="field"><div class="field-label">Channel Goal</div><input class="input" type="text" value="Reach 10K Subscribers"></div>
+        <div class="field"><div class="field-label">Category</div><select class="select"><option>Growth</option><option>Analytics</option><option>Content</option><option>Monetization</option></select></div>
+      </div>
+      <div>
+        <div class="field"><div class="field-label">Description / Concept</div><textarea class="input">High-energy thumbnail for the new video drop. Bold, vibrant, eye-catching.</textarea></div>
+        <div class="field"><div class="field-label">Add Manual Task</div><div class="input-row"><input class="input" type="text" placeholder="Add task…"><button class="btn btn-black" style="white-space:nowrap;">+</button></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">06 — Sliders</div>
+<div class="box box-sm">
+  <div class="box-header bh-cyan" style="height:60px;">
+    <div class="box-header-left"><div class="box-icon bi-black" style="width:60px;font-size:18px;">⇔</div><h1 class="box-title" style="font-size:22px;">Sliders</h1></div>
+    <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+  </div>
+  <div class="box-body box-body-white">
+    <div class="grid2">
+      <div>
+        <div class="slider-wrap"><div class="slider-top"><span class="slider-name">Brightness</span><span class="slider-val" id="sv1">72</span></div><input type="range" min="0" max="100" value="72" oninput="document.getElementById('sv1').textContent=this.value"></div>
+        <div class="slider-wrap"><div class="slider-top"><span class="slider-name">Saturation</span><span class="slider-val" id="sv2">58</span></div><input type="range" class="r-pink" min="0" max="100" value="58" oninput="document.getElementById('sv2').textContent=this.value"></div>
+        <div class="slider-wrap"><div class="slider-top"><span class="slider-name">Contrast</span><span class="slider-val" id="sv3">41</span></div><input type="range" class="r-lime" min="0" max="100" value="41" oninput="document.getElementById('sv3').textContent=this.value"></div>
+      </div>
+      <div>
+        <div class="slider-wrap"><div class="slider-top"><span class="slider-name">Opacity</span><span class="slider-val" id="sv4">85</span></div><input type="range" class="r-cyan" min="0" max="100" value="85" oninput="document.getElementById('sv4').textContent=this.value"></div>
+        <div class="slider-wrap"><div class="slider-top"><span class="slider-name">Temperature</span><span class="slider-val" id="sv5">6500K</span></div><input type="range" class="r-yellow" min="2000" max="10000" value="6500" oninput="document.getElementById('sv5').textContent=this.value+'K'"></div>
+        <div class="slider-wrap"><div class="slider-top"><span class="slider-name">Resolution</span><span class="slider-val" id="sv6">1K</span></div><input type="range" class="r-orange" min="0" max="3" value="1" oninput="document.getElementById('sv6').textContent=['480p','1K','2K','4K'][this.value]"><div style="display:flex;justify-content:space-between;font-family:var(--font-head);font-size:9px;font-weight:900;letter-spacing:0.06em;color:var(--gray-mid);"><span>480p</span><span>1K</span><span>2K</span><span>4K</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">07 — Progress Bars & Rings</div>
+<div class="grid">
+  <div class="box box-sm" style="flex:1;min-width:300px;">
+    <div class="box-header bh-pink" style="height:60px;">
+      <div class="box-header-left"><div class="box-icon bi-black" style="width:60px;font-size:18px;">▓</div><h1 class="box-title" style="font-size:22px;">Progress</h1></div>
+      <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+    </div>
+    <div class="box-body box-body-white">
+      <div class="pb-wrap"><div class="pb-top"><span class="pb-name">Subscribers</span><span class="pb-pct">78%</span></div><div class="pb-track"><div class="pb-fill pf-pink" style="width:78%"></div></div></div>
+      <div class="pb-wrap"><div class="pb-top"><span class="pb-name">CTR Goal</span><span class="pb-pct">62%</span></div><div class="pb-track"><div class="pb-fill pf-lime" style="width:62%"></div></div></div>
+      <div class="pb-wrap"><div class="pb-top"><span class="pb-name">Watch Time</span><span class="pb-pct">45%</span></div><div class="pb-track"><div class="pb-fill pf-cyan" style="width:45%"></div></div></div>
+      <div class="pb-wrap"><div class="pb-top"><span class="pb-name">Revenue</span><span class="pb-pct">91%</span></div><div class="pb-track"><div class="pb-fill pf-yellow" style="width:91%"></div></div></div>
+      <div class="pb-wrap"><div class="pb-top"><span class="pb-name">Engagement</span><span class="pb-pct">34%</span></div><div class="pb-track"><div class="pb-fill pf-purple" style="width:34%"></div></div></div>
+    </div>
+  </div>
+  <div class="box box-sm" style="flex:1;min-width:280px;">
+    <div class="box-header bh-lime" style="height:60px;">
+      <div class="box-header-left"><div class="box-icon bi-black" style="width:60px;font-size:18px;">◎</div><h1 class="box-title" style="font-size:22px;">Rings</h1></div>
+      <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+    </div>
+    <div class="box-body box-body-white">
+      <div class="flex gap-16" style="justify-content:center;flex-wrap:wrap;">
+        <div class="ring-wrap"><svg class="ring" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#E8E8E8" stroke-width="10"/><circle cx="50" cy="50" r="38" fill="none" stroke="#FF3399" stroke-width="10" stroke-dasharray="239" stroke-dashoffset="53" transform="rotate(-90 50 50)" stroke-linecap="round"/><text x="50" y="55" text-anchor="middle" font-family="Barlow Condensed" font-weight="1000" font-size="20" fill="black">78%</text></svg><div class="ring-label">Subs</div></div>
+        <div class="ring-wrap"><svg class="ring" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#E8E8E8" stroke-width="10"/><circle cx="50" cy="50" r="38" fill="none" stroke="#CCFF00" stroke-width="10" stroke-dasharray="239" stroke-dashoffset="91" transform="rotate(-90 50 50)" stroke-linecap="round"/><text x="50" y="55" text-anchor="middle" font-family="Barlow Condensed" font-weight="1000" font-size="20" fill="black">62%</text></svg><div class="ring-label">CTR</div></div>
+        <div class="ring-wrap"><svg class="ring" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#E8E8E8" stroke-width="10"/><circle cx="50" cy="50" r="38" fill="none" stroke="#00CCFF" stroke-width="10" stroke-dasharray="239" stroke-dashoffset="131" transform="rotate(-90 50 50)" stroke-linecap="round"/><text x="50" y="55" text-anchor="middle" font-family="Barlow Condensed" font-weight="1000" font-size="20" fill="black">45%</text></svg><div class="ring-label">Views</div></div>
+        <div class="ring-wrap"><svg class="ring" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#E8E8E8" stroke-width="10"/><circle cx="50" cy="50" r="38" fill="none" stroke="#9B59FF" stroke-width="10" stroke-dasharray="239" stroke-dashoffset="159" transform="rotate(-90 50 50)" stroke-linecap="round"/><text x="50" y="55" text-anchor="middle" font-family="Barlow Condensed" font-weight="1000" font-size="20" fill="black">34%</text></svg><div class="ring-label">Engage</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">08 — Charts: Bar, Stacked, Line, Donut, Scatter, Radar</div>
+
+<!-- Line chart -->
+<div class="box box-sm">
+  <div class="box-header bh-lime" style="height:60px;">
+    <div class="box-header-left"><div class="box-icon bi-black" style="width:60px;font-size:18px;">∿</div><h1 class="box-title" style="font-size:22px;">Impressions Trend</h1></div>
+    <div class="box-header-right"><span style="font-family:var(--font-head);font-size:10px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;margin-right:8px;">182 Most Recent Videos</span><button class="open-btn cyan">↗ Open</button><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+  </div>
+  <div class="box-body" style="padding:0;">
+    <svg width="100%" height="200" viewBox="0 0 800 200" preserveAspectRatio="none" style="display:block;" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="lgrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00CCFF" stop-opacity="0.3"/><stop offset="100%" stop-color="#00CCFF" stop-opacity="0"/></linearGradient></defs>
+      <rect width="800" height="200" fill="black"/>
+      <line x1="0" y1="50" x2="800" y2="50" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <line x1="0" y1="100" x2="800" y2="100" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <line x1="0" y1="150" x2="800" y2="150" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <path d="M0,180 L40,175 L80,170 L120,165 L160,160 L200,150 L240,145 L280,140 L320,130 L360,110 L400,60 L440,140 L480,130 L520,40 L560,120 L600,115 L640,110 L680,105 L720,100 L800,95 L800,200 L0,200 Z" fill="url(#lgrad)"/>
+      <path d="M0,180 L40,175 L80,170 L120,165 L160,160 L200,150 L240,145 L280,140 L320,130 L360,110 L400,60 L440,140 L480,130 L520,40 L560,120 L600,115 L640,110 L680,105 L720,100 L800,95" fill="none" stroke="#00CCFF" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <text x="10" y="195" font-family="Barlow Condensed" font-size="10" font-weight="900" fill="rgba(255,255,255,0.4)">DATE →</text>
+      <text x="10" y="110" font-family="Barlow Condensed" font-size="10" font-weight="900" fill="rgba(255,255,255,0.4)" transform="rotate(-90 10 110)">IMPR.</text>
+    </svg>
+  </div>
+</div>
+
+<!-- Views histogram & Video Value Matrix row -->
+<div class="grid2">
+  <div class="box box-sm">
+    <div class="box-header bh-lime" style="height:60px;">
+      <div class="box-header-left"><div class="box-icon bi-black" style="width:60px;font-size:18px;">▦</div><h1 class="box-title" style="font-size:20px;">Views Histogram</h1></div>
+      <div class="box-header-right"><button class="open-btn cyan">↗ Open</button><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+    </div>
+    <div class="box-body" style="padding:0;">
+      <svg width="100%" height="180" viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" style="display:block;background:#000;">
+        <text x="10" y="175" font-family="Barlow Condensed" font-size="10" font-weight="900" fill="rgba(255,255,255,0.35)">VIEWS →</text>
+        <text x="10" y="90" font-family="Barlow Condensed" font-size="10" font-weight="900" fill="rgba(255,255,255,0.35)" transform="rotate(-90 10 90)">FREQ.</text>
+        <!-- bars -->
+        <rect x="40" y="20" width="38" height="140" fill="#00CCFF" stroke="black" stroke-width="2" rx="3"/>
+        <rect x="86" y="110" width="38" height="50" fill="#00CCFF" stroke="black" stroke-width="2" rx="3"/>
+        <rect x="132" y="135" width="38" height="25" fill="#00CCFF" stroke="black" stroke-width="2" rx="3"/>
+        <rect x="178" y="148" width="38" height="12" fill="#00CCFF" stroke="black" stroke-width="2" rx="3"/>
+        <rect x="224" y="153" width="38" height="7" fill="#00CCFF" stroke="black" stroke-width="2" rx="3"/>
+        <rect x="270" y="156" width="38" height="4" fill="#00CCFF" stroke="black" stroke-width="2" rx="3"/>
+        <text x="44" y="16" font-family="Barlow Condensed" font-size="10" font-weight="900" fill="white">200</text>
+        <line x1="38" y1="160" x2="360" y2="160" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="box box-sm">
+    <div class="box-header bh-black" style="height:60px;">
+      <div class="box-header-left"><div class="box-icon bi-pink" style="width:60px;font-size:16px;">●</div><h1 class="box-title" style="font-size:20px;color:white;">Video Value Matrix</h1></div>
+      <div class="box-header-right"><button class="open-btn">↗ Open</button><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+    </div>
+    <div class="box-body" style="padding:0;background:var(--black);">
+      <div style="display:flex;justify-content:space-between;padding:4px 12px;background:black;">
+        <span style="font-family:var(--font-head);font-size:10px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.5);">HIDDEN GEM</span>
+        <span style="font-family:var(--font-head);font-size:10px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.5);">GOLD MINE</span>
+      </div>
+      <div class="quadrant" style="height:160px;border:none;border-radius:0;">
+        <div class="q-axis-x" style="bottom:25px;"></div>
+        <div class="q-axis-y" style="left:50%;bottom:25px;top:0;"></div>
+        <div class="q-label" style="top:5px;left:5px;">RETENTION %</div>
+        <div class="q-label" style="bottom:5px;right:8px;">CTR %</div>
+        <!-- scatter dots -->
+        <div class="q-dot" style="left:15%;bottom:50%;width:10px;height:10px;background:var(--pink);"></div>
+        <div class="q-dot" style="left:28%;bottom:70%;width:12px;height:12px;background:var(--pink);"></div>
+        <div class="q-dot" style="left:60%;bottom:75%;width:11px;height:11px;background:var(--cyan);"></div>
+        <div class="q-dot" style="left:75%;bottom:65%;width:10px;height:10px;background:var(--cyan);"></div>
+        <div class="q-dot" style="left:55%;bottom:40%;width:14px;height:14px;background:var(--pink);"></div>
+        <div class="q-dot" style="left:80%;bottom:55%;width:10px;height:10px;background:var(--cyan);"></div>
+        <div class="q-dot" style="left:35%;bottom:30%;width:10px;height:10px;background:var(--pink);"></div>
+        <div class="q-dot" style="left:90%;bottom:80%;width:12px;height:12px;background:var(--cyan);"></div>
+        <div class="q-label" style="bottom:5px;left:5px;font-size:8px;color:rgba(255,255,255,0.25);">GRAVEYARD</div>
+        <div class="q-label" style="bottom:5px;right:5px;font-size:8px;color:rgba(255,255,255,0.25);">CLICK BAIT</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:4px 12px;background:black;border-top:2px solid rgba(255,255,255,0.1);">
+        <span style="font-family:var(--font-head);font-size:9px;font-weight:900;color:rgba(255,255,255,0.4);letter-spacing:0.08em;text-transform:uppercase;">128 Videos · Highest Rated</span>
+        <span style="font-family:var(--font-head);font-size:9px;font-weight:900;color:rgba(255,255,255,0.4);letter-spacing:0.08em;text-transform:uppercase;">Both</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Donut & Stacked bar row -->
+<div class="grid2">
+  <div class="box box-sm">
+    <div class="box-header bh-yellow" style="height:60px;">
+      <div class="box-header-left"><div class="box-icon bi-black" style="width:60px;font-size:18px;">◉</div><h1 class="box-title" style="font-size:20px;">Revenue Dist.</h1></div>
+      <div class="box-header-right"><button class="open-btn">↗ Open</button><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+    </div>
+    <div class="box-body box-body-white">
+      <div class="donut-row">
+        <svg width="130" height="130" viewBox="0 0 130 130" style="filter:drop-shadow(4px 4px 0 black);flex-shrink:0;">
+          <circle cx="65" cy="65" r="48" fill="none" stroke="#E8E8E8" stroke-width="22"/>
+          <circle cx="65" cy="65" r="48" fill="none" stroke="#FF3399" stroke-width="22" stroke-dasharray="100 201" stroke-dashoffset="0" transform="rotate(-90 65 65)"/>
+          <circle cx="65" cy="65" r="48" fill="none" stroke="#CCFF00" stroke-width="22" stroke-dasharray="72 229" stroke-dashoffset="-100" transform="rotate(-90 65 65)"/>
+          <circle cx="65" cy="65" r="48" fill="none" stroke="#00CCFF" stroke-width="22" stroke-dasharray="55 246" stroke-dashoffset="-172" transform="rotate(-90 65 65)"/>
+          <circle cx="65" cy="65" r="48" fill="none" stroke="#FFD600" stroke-width="22" stroke-dasharray="39 262" stroke-dashoffset="-227" transform="rotate(-90 65 65)"/>
+          <circle cx="65" cy="65" r="48" fill="none" stroke="#FFB158" stroke-width="22" stroke-dasharray="35 266" stroke-dashoffset="-266" transform="rotate(-90 65 65)"/>
+          <circle cx="65" cy="65" r="36" fill="white" stroke="black" stroke-width="3"/>
+          <text x="65" y="61" text-anchor="middle" font-family="Barlow Condensed" font-size="18" font-weight="1000" fill="black">$1.98</text>
+          <text x="65" y="75" text-anchor="middle" font-family="Barlow Condensed" font-size="9" font-weight="900" fill="#AAAAAA">TOP VIDEO</text>
+        </svg>
+        <div class="donut-legend">
+          <div class="dl-item"><div class="dl-dot" style="background:var(--pink)"></div>Napoleon's Guard 33%</div>
+          <div class="dl-item"><div class="dl-dot" style="background:var(--lime)"></div>Battle Pyramids 24%</div>
+          <div class="dl-item"><div class="dl-dot" style="background:var(--cyan)"></div>Austerlitz 18%</div>
+          <div class="dl-item"><div class="dl-dot" style="background:var(--yellow)"></div>Marshals 13%</div>
+          <div class="dl-item"><div class="dl-dot" style="background:var(--orange)"></div>Other 12%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box box-sm">
+    <div class="box-header bh-lime" style="height:60px;">
+      <div class="box-header-left"><div class="box-icon bi-black" style="width:60px;font-size:18px;">▦</div><h1 class="box-title" style="font-size:20px;">Performance Stack</h1></div>
+      <div class="box-header-right">
+        <div class="chip-row"><div class="chip on" onclick="cycleChip(this)">All</div><div class="chip" onclick="cycleChip(this)">Long</div><div class="chip" onclick="cycleChip(this)">Shorts</div></div>
+        <button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button>
+      </div>
+    </div>
+    <div class="box-body box-body-white">
+      <!-- Stacked bar chart -->
+      <div class="bar-chart">
+        <div class="bar-col"><div class="sbar" style="height:90%;"><div class="sbar-seg" style="flex:0.4;background:var(--cyan);border-bottom:3px solid black;"></div><div class="sbar-seg" style="flex:0.35;background:var(--pink);border-bottom:3px solid black;"></div><div class="sbar-seg" style="flex:0.25;background:var(--yellow);"></div></div><div class="bar-label">V1</div></div>
+        <div class="bar-col"><div class="sbar" style="height:70%;"><div class="sbar-seg" style="flex:0.3;background:var(--cyan);border-bottom:3px solid black;"></div><div class="sbar-seg" style="flex:0.45;background:var(--pink);border-bottom:3px solid black;"></div><div class="sbar-seg" style="flex:0.25;background:var(--yellow);"></div></div><div class="bar-label">V2</div></div>
+        <div class="bar-col"><div class="sbar" style="height:85%;"><div class="sbar-seg" style="flex:0.5;background:var(--cyan);border-bottom:3px solid black;"></div><div class="sbar-seg" style="flex:0.2;background:var(--pink);border-bottom:3px solid black;"></div><div class="sbar-seg" style="flex:0.3;background:var(--yellow);"></div></div><div class="bar-label">V3</div></div>
+        <div class="bar-col"><div class="sbar" style="height:60%;"><div class="sbar-seg" style="flex:0.2;background:var(--cyan);border-bottom:3px solid black;"></div><div class="sbar-seg" style="flex:0.5;background:var(--pink);border-bottom:3px solid black;"></div><div class="sbar-seg" style="flex:0.3;background:var(--yellow);"></div></div><div class="bar-label">V4</div></div>
+        <div class="bar-col"><div class="sbar" style="height:95%;"><div class="sbar-seg" style="flex:0.4;background:var(--cyan);border-bottom:3px solid black;"></div><div class="sbar-seg" style="flex:0.35;background:var(--pink);border-bottom:3px solid black;"></div><div class="sbar-seg" style="flex:0.25;background:var(--yellow);"></div></div><div class="bar-label">V5</div></div>
+        <div class="bar-col"><div class="sbar" style="height:50%;"><div class="sbar-seg" style="flex:0.35;background:var(--cyan);border-bottom:3px solid black;"></div><div class="sbar-seg" style="flex:0.3;background:var(--pink);border-bottom:3px solid black;"></div><div class="sbar-seg" style="flex:0.35;background:var(--yellow);"></div></div><div class="bar-label">V6</div></div>
+      </div>
+      <div class="flex gap-12 mt-8" style="flex-wrap:wrap;">
+        <div class="dl-item"><div class="dl-dot" style="background:var(--cyan)"></div>CTR</div>
+        <div class="dl-item"><div class="dl-dot" style="background:var(--pink)"></div>STW</div>
+        <div class="dl-item"><div class="dl-dot" style="background:var(--yellow)"></div>APV</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Radar / Spider + Hook retention -->
+<div class="grid2">
+  <div class="box box-sm">
+    <div class="box-header bh-black" style="height:60px;">
+      <div class="box-header-left"><div class="box-icon bi-cyan" style="width:60px;font-size:16px;">◈</div><h1 class="box-title" style="font-size:20px;color:white;">Bingeability Vectors</h1></div>
+      <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+    </div>
+    <div class="box-body" style="background:white;">
+      <div class="radar-wrap">
+        <svg width="280" height="280" viewBox="-140 -140 280 280" xmlns="http://www.w3.org/2000/svg">
+          <!-- rings -->
+          <polygon points="0,-100 86.6,-50 86.6,50 0,100 -86.6,50 -86.6,-50" fill="none" stroke="#E8E8E8" stroke-width="1.5"/>
+          <polygon points="0,-75 65,-37.5 65,37.5 0,75 -65,37.5 -65,-37.5" fill="none" stroke="#E8E8E8" stroke-width="1.5"/>
+          <polygon points="0,-50 43.3,-25 43.3,25 0,50 -43.3,25 -43.3,-25" fill="none" stroke="#E8E8E8" stroke-width="1.5"/>
+          <polygon points="0,-25 21.6,-12.5 21.6,12.5 0,25 -21.6,12.5 -21.6,-12.5" fill="none" stroke="#E8E8E8" stroke-width="1.5"/>
+          <!-- spokes -->
+          <line x1="0" y1="0" x2="0" y2="-100" stroke="#ddd" stroke-width="1"/>
+          <line x1="0" y1="0" x2="86.6" y2="-50" stroke="#ddd" stroke-width="1"/>
+          <line x1="0" y1="0" x2="86.6" y2="50" stroke="#ddd" stroke-width="1"/>
+          <line x1="0" y1="0" x2="0" y2="100" stroke="#ddd" stroke-width="1"/>
+          <line x1="0" y1="0" x2="-86.6" y2="50" stroke="#ddd" stroke-width="1"/>
+          <line x1="0" y1="0" x2="-86.6" y2="-50" stroke="#ddd" stroke-width="1"/>
+          <!-- data -->
+          <polygon points="0,-85 55,-28 60,38 0,65 -48,30 -70,-42" fill="#00CCFF" fill-opacity="0.35" stroke="#00CCFF" stroke-width="3"/>
+          <polygon points="0,-55 38,-18 40,22 0,42 -30,18 -48,-28" fill="#FF3399" fill-opacity="0.25" stroke="#FF3399" stroke-width="2.5" stroke-dasharray="6 3"/>
+          <!-- labels -->
+          <text x="0" y="-108" text-anchor="middle" font-family="Barlow Condensed" font-size="9" font-weight="900" fill="#888">HOOK</text>
+          <text x="94" y="-54" text-anchor="start" font-family="Barlow Condensed" font-size="9" font-weight="900" fill="#888">PACING</text>
+          <text x="94" y="58" text-anchor="start" font-family="Barlow Condensed" font-size="9" font-weight="900" fill="#888">THUMBNL</text>
+          <text x="0" y="116" text-anchor="middle" font-family="Barlow Condensed" font-size="9" font-weight="900" fill="#888">TITLE</text>
+          <text x="-94" y="58" text-anchor="end" font-family="Barlow Condensed" font-size="9" font-weight="900" fill="#888">CTR</text>
+          <text x="-94" y="-54" text-anchor="end" font-family="Barlow Condensed" font-size="9" font-weight="900" fill="#888">RETEN.</text>
+        </svg>
+      </div>
+      <div class="flex gap-16 mt-8" style="justify-content:center;">
+        <div class="dl-item"><div class="dl-dot" style="background:var(--cyan)"></div>Avg Duration</div>
+        <div class="dl-item"><div class="dl-dot" style="background:var(--pink)"></div>Avg % Viewed</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box box-sm">
+    <div class="box-header bh-lime" style="height:60px;">
+      <div class="box-header-left"><div class="box-icon bi-black" style="width:60px;font-size:16px;">↔</div><h1 class="box-title" style="font-size:20px;">Hook: 30s Retention</h1></div>
+      <div class="box-header-right"><button class="open-btn">↗ Open</button><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+    </div>
+    <div class="box-body" style="background:black;padding:16px;">
+      <div class="hbar-row"><div class="hbar-label" style="color:rgba(255,255,255,0.5);">N.</div><div class="hbar-track" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);"><div class="hbar-fill c-lime" style="width:92%;background:#CCFF00;"></div></div></div>
+      <div class="hbar-row"><div class="hbar-label" style="color:rgba(255,255,255,0.5);">B.</div><div class="hbar-track" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);"><div class="hbar-fill c-lime" style="width:87%;background:#CCFF00;"></div></div></div>
+      <div class="hbar-row"><div class="hbar-label" style="color:rgba(255,255,255,0.5);">Q.</div><div class="hbar-track" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);"><div class="hbar-fill c-lime" style="width:78%;background:#CCFF00;"></div></div></div>
+      <div class="hbar-row"><div class="hbar-label" style="color:rgba(255,255,255,0.5);">A.</div><div class="hbar-track" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);"><div class="hbar-fill c-lime" style="width:65%;background:#CCFF00;"></div></div></div>
+      <div class="hbar-row"><div class="hbar-label" style="color:rgba(255,255,255,0.5);">M.</div><div class="hbar-track" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);"><div class="hbar-fill c-lime" style="width:55%;background:#CCFF00;"></div></div></div>
+      <div class="hbar-row"><div class="hbar-label" style="color:rgba(255,255,255,0.5);">S.</div><div class="hbar-track" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);"><div class="hbar-fill c-lime" style="width:44%;background:#CCFF00;"></div></div></div>
+      <div style="font-family:var(--font-head);font-size:9px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.35);text-align:center;margin-top:8px;">PERCENTAGE STILL WATCHING AT 0:30 →</div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">09 — KPI Stat Cards</div>
+<div class="grid">
+  <div class="stat" style="background:var(--pink);"><div class="stat-label">Subscribers</div><div class="stat-val">9.3K</div><div class="stat-delta up">↑ 12% this week</div></div>
+  <div class="stat" style="background:var(--lime);"><div class="stat-label">Avg CTR</div><div class="stat-val">6.8%</div><div class="stat-delta up">↑ 0.4%</div></div>
+  <div class="stat" style="background:var(--cyan);"><div class="stat-label">Watch Time</div><div class="stat-val">4.2h</div><div class="stat-delta down">↓ 5%</div></div>
+  <div class="stat" style="background:var(--yellow);"><div class="stat-label">Revenue</div><div class="stat-val">$912</div><div class="stat-delta up">↑ 18%</div></div>
+  <div class="stat" style="background:var(--orange);"><div class="stat-label">Impressions</div><div class="stat-val">56K</div><div class="stat-delta up">↑ 8%</div></div>
+  <div class="stat" style="background:var(--purple);color:white;"><div class="stat-label" style="color:rgba(255,255,255,0.6);">Videos</div><div class="stat-val">248</div><div class="stat-delta" style="color:rgba(255,255,255,0.5);">All time</div></div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">10 — Tables with expandable sub-rows</div>
+<div class="box box-sm">
+  <div class="box-header bh-black" style="height:60px;">
+    <div class="box-header-left"><div class="box-icon bi-lime" style="width:60px;font-size:18px;">≡</div><h1 class="box-title" style="font-size:22px;color:white;">Content Table</h1></div>
+    <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+  </div>
+  <div class="box-body" style="padding:0;background:white;">
+    <div class="table-wrap">
+      <table class="tbl">
+        <thead><tr><th></th><th>Title</th><th>Status</th><th>Views</th><th>CTR</th><th>Date</th></tr></thead>
+        <tbody>
+          <tr><td><span class="ex-btn open" onclick="expandRow(this)">▶</span></td><td><strong>Summer Vlog Series</strong></td><td><span class="badge bg-lime">LIVE</span></td><td>47.2K</td><td>8.1%</td><td>May 18</td></tr>
+          <tr class="sub"><td></td><td>Episode 1: Beach Day</td><td><span class="badge bg-lime">LIVE</span></td><td>22.1K</td><td>9.3%</td><td>May 15</td></tr>
+          <tr class="sub"><td><span class="ex-btn" onclick="expandRow(this)">▶</span></td><td>Episode 2: Sunset Hike</td><td><span class="badge bg-lime">LIVE</span></td><td>25.1K</td><td>6.8%</td><td>May 18</td></tr>
+          <tr class="subsub"><td></td><td colspan="2">Chapters: Intro / Trail / Summit / Outro</td><td colspan="3">Avg watch 4:12</td></tr>
+          <tr><td></td><td><strong>AI Tools Review</strong></td><td><span class="badge bg-yellow">SCHED</span></td><td>—</td><td>—</td><td>May 25</td></tr>
+          <tr class="hl-lime"><td></td><td><strong>Channel Rebrand Announcement</strong></td><td><span class="badge bg-pink">DRAFT</span></td><td>—</td><td>—</td><td>TBD</td></tr>
+          <tr class="hl-cyan"><td></td><td><strong>Algorithm Secrets Exposed</strong></td><td><span class="badge bg-cyan">UPLOADING</span></td><td>—</td><td>—</td><td>Today</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Mini table -->
+<div class="box box-sm" style="max-width:480px;">
+  <div class="box-header bh-cyan" style="height:52px;">
+    <div class="box-header-left"><div class="box-icon bi-black" style="width:52px;font-size:16px;">□</div><h1 class="box-title" style="font-size:18px;">Daily Stats</h1></div>
+    <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+  </div>
+  <div class="box-body" style="padding:0;background:white;">
+    <table class="tbl tbl-sm" style="width:100%;">
+      <thead><tr><th>Metric</th><th>Today</th><th>Δ</th></tr></thead>
+      <tbody>
+        <tr><td>Views</td><td>3,214</td><td class="up">+14%</td></tr>
+        <tr><td>Clicks</td><td>261</td><td class="up">+7%</td></tr>
+        <tr><td>Watch Time</td><td>2.1h</td><td class="down">-3%</td></tr>
+        <tr><td>Revenue</td><td>$48</td><td class="up">+21%</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">11 — Calendar</div>
+<div class="box box-sm" style="max-width:420px;">
+  <div class="box-header bh-lime" style="height:60px;">
+    <div class="box-header-left"><div class="box-icon bi-black" style="width:60px;font-size:18px;">📅</div><h1 class="box-title" style="font-size:20px;">Content Calendar</h1></div>
+    <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+  </div>
+  <div class="box-body box-body-white">
+    <div class="cal-nav">
+      <button class="cal-arr" onclick="calMove(-1)">◀</button>
+      <div class="cal-title" id="cal-title">MAY 2025</div>
+      <button class="cal-arr" onclick="calMove(1)">▶</button>
+    </div>
+    <div class="cal-grid">
+      <div class="cal-daylabel">S</div><div class="cal-daylabel">M</div><div class="cal-daylabel">T</div><div class="cal-daylabel">W</div><div class="cal-daylabel">T</div><div class="cal-daylabel">F</div><div class="cal-daylabel">S</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="flex gap-12 mt-8">
+      <div style="display:flex;align-items:center;gap:4px;font-family:var(--font-head);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;"><div style="width:10px;height:10px;background:var(--pink);border-radius:50%;border:2px solid black;"></div>Post Day</div>
+      <div style="display:flex;align-items:center;gap:4px;font-family:var(--font-head);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;"><div style="width:10px;height:10px;background:var(--lime);border-radius:50%;border:2px solid black;"></div>Today</div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">12 — Skeletons & Loaders</div>
+<div class="grid">
+  <div class="box box-sm" style="flex:1;min-width:280px;">
+    <div class="box-header bh-black" style="height:60px;">
+      <div class="box-header-left"><div class="box-icon bi-cyan" style="width:60px;font-size:18px;">↻</div><h1 class="box-title" style="font-size:22px;color:white;">Skeletons</h1></div>
+      <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+    </div>
+    <div class="box-body box-body-white">
+      <div class="sk-thumb skeleton mb-12"></div>
+      <div class="flex gap-8 items-center mb-8"><div class="skeleton sk-avatar"></div><div style="flex:1;"><div class="skeleton sk-line"></div><div class="skeleton sk-line s"></div></div></div>
+      <div class="skeleton sk-line"></div>
+      <div class="skeleton sk-line m"></div>
+      <div class="skeleton sk-line s"></div>
+    </div>
+  </div>
+  <div class="box box-sm" style="flex:1;min-width:240px;">
+    <div class="box-header bh-orange" style="height:60px;">
+      <div class="box-header-left"><div class="box-icon bi-black" style="width:60px;font-size:18px;">⧗</div><h1 class="box-title" style="font-size:22px;">Loaders</h1></div>
+      <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+    </div>
+    <div class="box-body box-body-white">
+      <div class="field-label mb-8">Striped bar</div>
+      <div class="loading-bar mb-12"><div class="lb-inner"></div></div>
+      <div class="loading-bar mb-12" style="height:12px;"><div class="lb-inner" style="background:repeating-linear-gradient(90deg,var(--lime) 0,var(--lime) 18px,black 18px,black 36px);"></div></div>
+      <div class="flex gap-12 items-center mb-12">
+        <div class="spinner"></div>
+        <div class="spinner sp-cyan"></div>
+        <div class="spinner" style="border-top-color:var(--lime);"></div>
+        <div class="spinner" style="border-top-color:var(--pink);"></div>
+      </div>
+      <div class="dot-row">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <span style="font-family:var(--font-head);font-size:11px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-mid);margin-left:6px;">Loading…</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">13 — Sidebar Navigation</div>
+<div class="box box-sm" style="max-width:260px;">
+  <div class="box-header bh-black" style="height:60px;">
+    <div class="box-header-left"><div class="box-icon bi-lime" style="width:60px;font-size:16px;">☰</div><h1 class="box-title" style="font-size:22px;color:white;">Sidebar</h1></div>
+    <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+  </div>
+  <div class="box-body box-body-white" style="padding:16px;">
+    <div class="sidebar-logo">UsTube</div>
+    <div class="sidebar-badges">
+      <span class="badge bg-lime">AI Powered</span>
+      <span class="badge bg-black">Beta</span>
+    </div>
+    <div class="sidebar">
+      <a class="sidebar-link" onclick="setSidebarActive(this)"><span class="sl-icon">📊</span>Studio Hub</a>
+      <a class="sidebar-link active" onclick="setSidebarActive(this)"><span class="sl-icon">🔬</span>Research Lab</a>
+      <a class="sidebar-link" onclick="setSidebarActive(this)"><span class="sl-icon">🎬</span>Video Manager</a>
+      <a class="sidebar-link" onclick="setSidebarActive(this)"><span class="sl-icon">⚡</span>Growth Ideas</a>
+      <a class="sidebar-link" onclick="setSidebarActive(this)"><span class="sl-icon">📈</span>Dashboard</a>
+      <a class="sidebar-link" onclick="setSidebarActive(this)"><span class="sl-icon">📖</span>User Guide</a>
+      <a class="sidebar-link" onclick="setSidebarActive(this)"><span class="sl-icon">⚙</span>Settings</a>
+    </div>
+    <div style="margin-top:20px;">
+      <div class="badge bg-lime" style="width:100%;justify-content:center;padding:10px;">● GEMINI API ACTIVE</div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">14 — Collapsible Tree</div>
+<div class="box box-sm" style="max-width:400px;">
+  <div class="box-header bh-orange" style="height:60px;">
+    <div class="box-header-left"><div class="box-icon bi-black" style="width:60px;font-size:18px;">⊞</div><h1 class="box-title" style="font-size:22px;">Channel Tree</h1></div>
+    <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+  </div>
+  <div class="box-body box-body-white">
+    <div class="tree-item">
+      <div class="tree-hdr open" onclick="treeToggle(this)">📁 Channel Assets <span class="tree-chev open">▶</span></div>
+      <div class="tree-kids open">
+        <div class="tree-item mt-8">
+          <div class="tree-hdr" onclick="treeToggle(this)">🎬 Videos <span class="tree-chev">▶</span></div>
+          <div class="tree-kids">
+            <div class="tree-leaf">Episode 1 — Beach Day</div>
+            <div class="tree-leaf">Episode 2 — Sunset Hike</div>
+            <div class="tree-leaf">AI Tools Review (Draft)</div>
+          </div>
+        </div>
+        <div class="tree-item mt-8">
+          <div class="tree-hdr" onclick="treeToggle(this)">🖼 Thumbnails <span class="tree-chev">▶</span></div>
+          <div class="tree-kids">
+            <div class="tree-leaf">thumb_ep1_v3.png</div>
+            <div class="tree-leaf">thumb_ep2_final.png</div>
+          </div>
+        </div>
+        <div class="tree-leaf mt-8">📊 Analytics Export</div>
+        <div class="tree-leaf">📝 Script Templates</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">15 — Tabs, Menus & Pills</div>
+<div class="grid">
+  <div class="box box-sm" style="flex:1;min-width:300px;">
+    <div class="box-header bh-cyan" style="height:60px;">
+      <div class="box-header-left"><div class="box-icon bi-black" style="width:60px;font-size:18px;">⇥</div><h1 class="box-title" style="font-size:22px;">Tabs & Pills</h1></div>
+      <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+    </div>
+    <div class="box-body box-body-white">
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="tabClick(this)">Studio</button>
+        <button class="tab-btn" onclick="tabClick(this)">Analyzer</button>
+        <button class="tab-btn" onclick="tabClick(this)">History</button>
+        <button class="tab-btn" onclick="tabClick(this)">Archive</button>
+      </div>
+      <p style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--gray-mid);text-transform:uppercase;letter-spacing:0.06em;">Tab content renders here</p>
+      <div class="mt-12">
+        <div class="pill-nav">
+          <button class="pill-btn active" onclick="pillClick(this)">All</button>
+          <button class="pill-btn" onclick="pillClick(this)">Long</button>
+          <button class="pill-btn" onclick="pillClick(this)">Shorts</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box box-sm" style="flex:1;min-width:260px;">
+    <div class="box-header bh-black" style="height:60px;">
+      <div class="box-header-left"><div class="box-icon bi-lime" style="width:60px;font-size:18px;">☰</div><h1 class="box-title" style="font-size:22px;color:white;">Dropdown</h1></div>
+      <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+    </div>
+    <div class="box-body box-body-white">
+      <div class="menu-wrap">
+        <button class="btn btn-black" onclick="toggleMenu('dmenu')">☰ Actions ▾</button>
+        <div class="menu-drop" id="dmenu">
+          <div class="menu-group">Actions</div>
+          <div class="menu-item">✎ Edit Channel<span class="mi-short">⌘E</span></div>
+          <div class="menu-item">⊕ New Video<span class="mi-short">⌘N</span></div>
+          <div class="menu-item">⬆ Upload CSV<span class="mi-short">⌘U</span></div>
+          <div class="menu-group">Data</div>
+          <div class="menu-item">↓ Export<span class="mi-short">⌘S</span></div>
+          <div class="menu-item danger">✕ Delete<span class="mi-short">⌫</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">16 — Badges, Dividers & Copy</div>
+<div class="grid mb-12" style="gap:8px;">
+  <span class="badge bg-pink">● Live</span>
+  <span class="badge bg-lime">✓ Published</span>
+  <span class="badge bg-yellow">⚑ Scheduled</span>
+  <span class="badge bg-cyan">↗ Trending</span>
+  <span class="badge bg-orange">▲ Featured</span>
+  <span class="badge bg-purple">◎ Pinned</span>
+  <span class="badge bg-black">★ Top</span>
+  <span class="badge bg-white">◯ Draft</span>
+</div>
+<hr class="divider">
+<hr class="divider-dash">
+<div class="divider-label">OR</div>
+<div class="box box-sm" style="max-width:460px;">
+  <div class="box-header bh-black" style="height:52px;">
+    <div class="box-header-left"><div class="box-icon bi-lime" style="width:52px;font-size:14px;">&lt;/&gt;</div><h1 class="box-title" style="font-size:18px;color:white;">Copy Button</h1></div>
+    <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+  </div>
+  <div class="box-body box-body-white">
+    <div class="code-wrap">
+      <div class="code-block">const channel = 'ustube-neo-brutalist';</div>
+      <button class="copy-btn" onclick="doCopy(this,'const channel = \'ustube-neo-brutalist\';')">COPY</button>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">17 — Ratings, Tooltips & Toasts</div>
+<div class="grid">
+  <div class="box box-sm" style="min-width:220px;">
+    <div class="box-header bh-yellow" style="height:52px;">
+      <div class="box-header-left"><div class="box-icon bi-black" style="width:52px;font-size:16px;">★</div><h1 class="box-title" style="font-size:18px;">Rating</h1></div>
+      <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+    </div>
+    <div class="box-body box-body-white">
+      <div class="star-row" id="stars">
+        <span class="star on" onclick="rate(1)">★</span>
+        <span class="star on" onclick="rate(2)">★</span>
+        <span class="star on" onclick="rate(3)">★</span>
+        <span class="star on" onclick="rate(4)">★</span>
+        <span class="star" onclick="rate(5)">★</span>
+        <span class="star-val">4 / 5</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="box box-sm" style="min-width:220px;">
+    <div class="box-header bh-cyan" style="height:52px;">
+      <div class="box-header-left"><div class="box-icon bi-black" style="width:52px;font-size:16px;">💬</div><h1 class="box-title" style="font-size:18px;">Tooltips</h1></div>
+      <div class="box-header-right"><button class="toggle-btn" onclick="toggleBoxCollapse(this)">−</button></div>
+    </div>
+    <div class="box-body box-body-white">
+      <div class="flex gap-12">
+        <div class="tip-wrap"><button class="btn btn-pink">⚡ Generate</button><div class="tip-bubble">AI-powered daily actions</div></div>
+        <div class="tip-wrap"><button class="btn btn-lime">↗ Sync</button><div class="tip-bubble">Sync channel data now</div></div>
+        <div class="tip-wrap"><button class="btn btn-black">Copy</button><div class="tip-bubble">Copies to clipboard</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <div class="toast toast-ok"><span>✓</span>Video published successfully!<span class="toast-close">✕</span></div>
+    <div class="toast toast-err"><span>✕</span>Upload failed. Try again.<span class="toast-close">✕</span></div>
+    <div class="toast toast-info"><span>ℹ</span>AI tactics generated.<span class="toast-close">✕</span></div>
+    <div class="toast toast-warn"><span>⚠</span>CTR below target.<span class="toast-close">✕</span></div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">18 — Modal Dialog</div>
+<button class="btn btn-pink btn-lg" onclick="document.getElementById('modal-overlay').classList.add('open')">Open Modal ↗</button>
+<div class="overlay" id="modal-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">⚡ Generate Tactics</div>
+      <button class="modal-close" onclick="document.getElementById('modal-overlay').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-family:var(--font-head);font-size:14px;font-weight:700;letter-spacing:0.04em;line-height:1.6;margin-bottom:16px;">AI will scan your channel telemetry and generate personalized daily success actions based on your goals.</p>
+      <div class="field"><div class="field-label">Focus Area</div><select class="select"><option>Growth</option><option>Monetization</option><option>Engagement</option></select></div>
+      <div class="toggle-row mt-8"><div class="toggle on-cyan" onclick="tw(this)"></div><span class="tlabel">Include competitor analysis</span></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="document.getElementById('modal-overlay').classList.remove('open')">Cancel</button>
+      <button class="btn btn-pink">⚡ Generate</button>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">19 — Hover Cards</div>
+<div class="grid">
+  <div class="hover-card" style="width:140px;">↗ Default Lime</div>
+  <div class="hover-card hc-pink" style="width:140px;">⚡ Pink Lift</div>
+  <div class="hover-card hc-cyan" style="width:140px;">→ Cyan Lift</div>
+  <div class="hover-card hc-yellow" style="width:140px;">★ Yellow Lift</div>
+  <div class="hover-card hc-shake" style="width:140px;">↔ Shake</div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">20 — Animations</div>
+<div class="grid">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div class="anim-box a-pulse" style="background:var(--pink);">💥</div><div style="font-family:var(--font-head);font-size:9px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-mid);">Pulse</div></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div class="anim-box a-bounce" style="background:var(--lime);">🚀</div><div style="font-family:var(--font-head);font-size:9px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-mid);">Bounce</div></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div class="anim-box a-spin" style="background:var(--cyan);">⚙</div><div style="font-family:var(--font-head);font-size:9px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-mid);">Spin</div></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div class="anim-box a-wiggle" style="background:var(--yellow);">🔔</div><div style="font-family:var(--font-head);font-size:9px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-mid);">Wiggle</div></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div class="anim-box a-float" style="background:var(--black);color:var(--lime);">⭐</div><div style="font-family:var(--font-head);font-size:9px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-mid);">Float</div></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div class="anim-box a-flicker" style="background:var(--orange);">⚡</div><div style="font-family:var(--font-head);font-size:9px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-mid);">Flicker</div></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;"><div class="anim-box" style="background:var(--purple);color:white;">●<div style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:10px;background:var(--purple);opacity:0.4;animation:ping 1.2s ease infinite;border:var(--inner-border);"></div></div><div style="font-family:var(--font-head);font-size:9px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-mid);">Ping</div></div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">21 — Icons</div>
+<div class="icon-grid">
+  <div class="icon-tile">⚡</div><div class="icon-tile">◎</div><div class="icon-tile">▦</div>
+  <div class="icon-tile">✕</div><div class="icon-tile">↗</div><div class="icon-tile">⊕</div>
+  <div class="icon-tile">✎</div><div class="icon-tile">☰</div><div class="icon-tile">★</div>
+  <div class="icon-tile">◈</div><div class="icon-tile">⧖</div><div class="icon-tile">⬆</div>
+  <div class="icon-tile">◆</div><div class="icon-tile">▲</div><div class="icon-tile">◉</div>
+  <div class="icon-tile">⊞</div><div class="icon-tile">∿</div><div class="icon-tile">⇔</div>
+  <div class="icon-tile">📅</div><div class="icon-tile">🎬</div><div class="icon-tile">📊</div>
+  <div class="icon-tile">🔔</div><div class="icon-tile">🚀</div><div class="icon-tile">💡</div>
+  <div class="icon-tile">🧠</div><div class="icon-tile">🔬</div><div class="icon-tile">🌍</div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="section-label">22 — Video Cards</div>
+<div class="grid3">
+  <div class="vid-card">
+    <div class="vid-thumb"><div class="vid-thumb-placeholder">🏖</div><div class="vid-duration">22:14</div></div>
+    <div class="vid-info">
+      <div class="vid-title">Napoleon's Irish General 🇮🇪</div>
+      <div class="vid-meta"><span class="vid-stat">22.1K views</span><span class="vid-stat">9.3% CTR</span><span class="badge bg-lime" style="font-size:9px;">LIVE</span></div>
+    </div>
+  </div>
+  <div class="vid-card">
+    <div class="vid-thumb" style="background:linear-gradient(135deg,#9B59FF,#FF3399);"><div class="vid-thumb-placeholder" style="background:transparent;font-size:40px;">⚔️</div><div class="vid-duration">35:07</div></div>
+    <div class="vid-info">
+      <div class="vid-title">Battle of Pyramids 🔥🔥</div>
+      <div class="vid-meta"><span class="vid-stat">47.2K views</span><span class="vid-stat">8.1% CTR</span><span class="badge bg-yellow" style="font-size:9px;">SCHED</span></div>
+    </div>
+  </div>
+  <div class="vid-card">
+    <div class="vid-thumb" style="background:linear-gradient(135deg,var(--black),#333);"><div class="vid-thumb-placeholder" style="background:transparent;font-size:40px;">👑</div><div class="vid-duration">41:22</div></div>
+    <div class="vid-info">
+      <div class="vid-title">Austerlitz — 3 Emperors</div>
+      <div class="vid-meta"><span class="vid-stat">—</span><span class="vid-stat">—</span><span class="badge bg-pink" style="font-size:9px;">DRAFT</span></div>
+    </div>
+  </div>
+</div>
+
+<div style="height:80px;"></div>
+
+<script>
+/* ─── BAR CHART INIT ─── */
+const barColors = ['#FF3399','#00CCFF','#CCFF00','#FF3399','#FFD600','#FFB158','#9B59FF','#FF3399'];
+const barVals = [40,70,45,90,65,80,55,95];
+function renderBars(vals) {
+  const c = document.getElementById('main-bar-chart');
+  c.innerHTML = '';
+  vals.forEach((v,i) => {
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    col.innerHTML = `<div class="bar" style="height:${v}%;background:${barColors[i]};border:3px solid black;" data-val="${v}%"><div class="bar-tip">${v}%</div></div>`;
+    c.appendChild(col);
+  });
+}
+renderBars(barVals);
+function randomizeBars() {
+  const r = barVals.map(() => Math.round(20 + Math.random()*75));
+  renderBars(r);
+}
+
+/* ─── BOX COLLAPSE ─── */
+function toggleBoxCollapse(btn) {
+  const body = btn.closest('.box').querySelector('.box-body');
+  if (!body) return;
+  const hidden = body.style.display === 'none';
+  body.style.display = hidden ? '' : 'none';
+  btn.textContent = hidden ? '−' : '+';
+}
+function toggleBox(btn) { toggleBoxCollapse(btn.nextElementSibling || btn.parentElement.querySelector('.toggle-btn')); }
+
+/* ─── CHIPS ─── */
+const chipCycles = ['on-cyan','on-lime','on-yellow','on-pink','on-purple','on-orange','on'];
+function cycleChip(c) {
+  const curr = chipCycles.find(cls => c.classList.contains(cls));
+  if (curr) c.classList.remove(curr);
+  else c.classList.add('on-cyan');
+}
+
+/* ─── PALETTE ─── */
+function selSwatch(sw) {
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('sel'));
+  sw.classList.add('sel');
+  const h = sw.dataset.hex;
+  document.getElementById('hex-in').value = h;
+  document.getElementById('cp-native').value = h;
+}
+function addSwatch() {
+  const h = document.getElementById('cp-native').value;
+  const row = document.getElementById('pal-row');
+  const add = row.querySelector('.swatch-col:last-child');
+  const col = document.createElement('div'); col.className = 'swatch-col';
+  col.innerHTML = `<div class="swatch" style="background:${h};" data-hex="${h}" onclick="selSwatch(this)"></div><div class="swatch-hex">${h}</div>`;
+  row.insertBefore(col, add);
+}
+function syncHex(i) { if(/^#[0-9A-Fa-f]{6}$/.test(i.value)) document.getElementById('cp-native').value = i.value; }
+function copyHex() { navigator.clipboard?.writeText(document.getElementById('hex-in').value); }
+const cpColors = ['#FF3399','#FF7A1A','#FFD600','#CCFF00','#00CCFF','#000000','#FFFFFF','#FF6B9D',
+  '#FFA040','#F0E040','#80C830','#40B8E0','#444444','#AAAAAA','#9B59FF','#3498DB',
+  '#27AE60','#E74C3C','#1ABC9C','#F39C12','#8E44AD','#2980B9','#27AE60','#C0392B'];
+const cpGrid = document.getElementById('cp-grid');
+cpColors.forEach(c => {
+  const d = document.createElement('div'); d.className = 'cp-dot'; d.style.background = c;
+  d.onclick = () => { document.querySelectorAll('.cp-dot').forEach(x=>x.classList.remove('sel')); d.classList.add('sel'); document.getElementById('hex-in').value = c; document.getElementById('cp-native').value = c; };
+  cpGrid.appendChild(d);
+});
+
+/* ─── TOGGLES / CHECKBOXES / RADIO ─── */
+function tw(el) {
+  const cls = ['on','on-cyan','on-pink','on-yellow'];
+  const cur = cls.find(c => el.classList.contains(c));
+  if (cur) el.classList.remove(cur); else el.classList.add('on');
+}
+function ck(row) {
+  const box = row.querySelector('.checkbox'), label = row.querySelector('.clabel');
+  const isOn = ['on','on-lime','on-pink','on-cyan'].some(c => box.classList.contains(c));
+  ['on','on-lime','on-pink','on-cyan'].forEach(c => box.classList.remove(c));
+  box.textContent = '';
+  label.classList.remove('done');
+  if (!isOn) { box.classList.add('on'); box.textContent = '✓'; label.classList.add('done'); }
+}
+function rdo(row, grp) {
+  document.querySelectorAll(`[id^="${grp}-"]`).forEach(r => { r.classList.remove('on','on-cyan'); r.innerHTML = ''; });
+  const r = row.querySelector('.radio'); r.classList.add('on');
+}
+
+/* ─── MENUS ─── */
+function toggleMenu(id) {
+  const m = document.getElementById(id);
+  m.classList.toggle('open');
+}
+document.addEventListener('click', e => { if (!e.target.closest('.menu-wrap')) document.querySelectorAll('.menu-drop').forEach(m => m.classList.remove('open')); });
+
+/* ─── TABS / PILLS ─── */
+function tabClick(btn) { btn.closest('.tab-nav').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+function pillClick(btn) { btn.closest('.pill-nav').querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+
+/* ─── SIDEBAR ─── */
+function setSidebarActive(el) { el.closest('.sidebar').querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active')); el.classList.add('active'); }
+
+/* ─── TABLE EXPAND ─── */
+function expandRow(btn) {
+  btn.classList.toggle('open');
+  const open = btn.classList.contains('open');
+  let row = btn.closest('tr').nextElementSibling;
+  while (row && (row.classList.contains('sub') || row.classList.contains('subsub'))) {
+    row.style.display = open ? '' : 'none';
+    row = row.nextElementSibling;
+  }
+}
+
+/* ─── TREE ─── */
+function treeToggle(hdr) {
+  const kids = hdr.nextElementSibling;
+  const chev = hdr.querySelector('.tree-chev');
+  const open = kids.classList.contains('open');
+  kids.classList.toggle('open', !open);
+  chev.classList.toggle('open', !open);
+  hdr.classList.toggle('open', !open);
+}
+
+/* ─── CALENDAR ─── */
+let calOff = 0;
+const evDays = [3,7,12,18,22,25];
+function renderCal() {
+  const now = new Date();
+  const d = new Date(now.getFullYear(), now.getMonth() + calOff, 1);
+  document.getElementById('cal-title').textContent = d.toLocaleString('default',{month:'long'}).toUpperCase() + ' ' + d.getFullYear();
+  const g = document.getElementById('cal-grid'); g.innerHTML = '';
+  const start = d.getDay();
+  const dim = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+  const today = new Date();
+  for (let i = 0; i < start; i++) { const c = document.createElement('div'); c.className = 'cal-cell other'; c.textContent = new Date(d.getFullYear(), d.getMonth(), 0).getDate() - start + i + 1; g.appendChild(c); }
+  for (let day = 1; day <= dim; day++) {
+    const c = document.createElement('div'); c.className = 'cal-cell';
+    c.textContent = day;
+    if (calOff === 0 && day === today.getDate()) c.classList.add('today');
+    if (evDays.includes(day)) c.classList.add('event');
+    c.onclick = () => { document.querySelectorAll('.cal-cell').forEach(x => x.classList.remove('sel')); c.classList.add('sel'); };
+    g.appendChild(c);
+  }
+}
+function calMove(d) { calOff += d; renderCal(); }
+renderCal();
+
+/* ─── RATING ─── */
+function rate(n) {
+  document.querySelectorAll('#stars .star').forEach((s,i) => s.classList.toggle('on', i < n));
+  document.querySelector('.star-val').textContent = `${n} / 5`;
+}
+
+/* ─── COPY ─── */
+function doCopy(btn, text) {
+  navigator.clipboard?.writeText(text);
+  btn.textContent = 'DONE!'; btn.classList.add('copy-ok');
+  setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copy-ok'); }, 1500);
+}
+</script>
+</body>
+</html>

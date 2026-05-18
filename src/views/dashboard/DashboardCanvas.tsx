@@ -16,8 +16,19 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { Download, Edit3, Lock, LockOpen, RotateCcw, Upload } from "lucide-react"
+import { Download, Edit3, Lock, LockOpen, RotateCcw, Upload, Layers, Settings, ChevronDown } from "lucide-react"
+import { motion } from "framer-motion"
 import { DashboardBarrier } from "./DashboardBarrier"
+import { useDashboard } from "../../context/DashboardContext"
+import { useBrain } from "../../context/useBrain"
+import { useEntitlement } from "../../app/AppShell"
+import { hasCompletedAiBrainContext } from "../../services/aiBrainContext"
+import {
+  hasFirstSync,
+  isChecklistComplete,
+  readOnboardingState,
+  updateOnboardingState,
+} from "../../services/onboardingState"
 import { DASHBOARD_WIDGET_REGISTRY, DASHBOARD_WIDGET_BY_ID } from "./WidgetRegistry"
 import { WidgetPickerPanel } from "./WidgetPickerPanel"
 import {
@@ -35,12 +46,47 @@ import {
 } from "./storage"
 import type { DashboardLayoutState } from "./types"
 import type { DashboardData } from "./useDashboardData"
-import { DashboardHeader } from "./DashboardHeader"
 import { WidgetRenderer } from "./WidgetRenderer"
+import { WidgetErrorBoundary } from "./WidgetErrorBoundary"
+import type { WidgetDefinition } from "./types"
 
 interface DashboardCanvasProps {
   data: DashboardData
   onNavigate: (to: string) => void
+}
+
+const CANONICAL_WIDGET_THEME_SEQUENCE: Array<{ headerColor: string; iconRailColor: string }> = [
+  // Retro Palette #6 (18 swatches) with custom edits:
+  // - removed one duplicate pink
+  // - removed one duplicate blue
+  // - added solid yellow + solid purple
+  { headerColor: "#FF4081", iconRailColor: "#FF78AB" }, // 1 hot pink
+  { headerColor: "#FF3B8D", iconRailColor: "#FF76B4" }, // 2 pink-magenta
+  { headerColor: "#FF488F", iconRailColor: "#FF84B9" }, // 3 rose
+  { headerColor: "#FF698E", iconRailColor: "#FFA7BB" }, // 4 coral pink
+  { headerColor: "#FF865B", iconRailColor: "#FFB892" }, // 5 orange coral
+  { headerColor: "#FFB65B", iconRailColor: "#FFD39E" }, // 6 orange
+  { headerColor: "#FFD400", iconRailColor: "#FFE45F" }, // 7 solid yellow (added)
+  { headerColor: "#FFE950", iconRailColor: "#FFF28C" }, // 8 lemon
+  { headerColor: "#FFEB61", iconRailColor: "#FFF59B" }, // 9 light yellow
+  { headerColor: "#CBEE62", iconRailColor: "#E1F69D" }, // 10 lime
+  { headerColor: "#6CEB8C", iconRailColor: "#A7F3BE" }, // 11 mint green
+  { headerColor: "#29EBFF", iconRailColor: "#92F4FF" }, // 12 cyan
+  { headerColor: "#2979F6", iconRailColor: "#92BAFF" }, // 13 azure
+  { headerColor: "#2975E6", iconRailColor: "#8FAEFF" }, // 14 blue
+  { headerColor: "#2979FF", iconRailColor: "#9CB9FF" }, // 15 vivid blue
+  { headerColor: "#3F66E8", iconRailColor: "#A5B7FF" }, // 16 indigo-blue
+  { headerColor: "#7A2BFF", iconRailColor: "#B990FF" }, // 17 solid purple (added)
+  { headerColor: "#9B4DFF", iconRailColor: "#CAAFFF" }, // 18 violet
+]
+
+const withCanonicalWidgetTheme = (widget: WidgetDefinition, position: number): WidgetDefinition => {
+  const theme = CANONICAL_WIDGET_THEME_SEQUENCE[position % CANONICAL_WIDGET_THEME_SEQUENCE.length]
+  return {
+    ...widget,
+    headerColor: theme.headerColor,
+    iconRailColor: theme.iconRailColor,
+  }
 }
 
 const SortableWidgetItem: React.FC<{
@@ -54,29 +100,81 @@ const SortableWidgetItem: React.FC<{
     listeners,
     setNodeRef,
     transform,
-    transition,
     isDragging,
   } = useSortable({ id, disabled })
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.62 : 1,
     zIndex: isDragging ? 20 : undefined,
+    position: "relative",
   }
 
   return (
-    <div ref={setNodeRef} style={style} className={className} data-widget-id={id} {...attributes} {...listeners}>
+    <motion.div 
+      ref={setNodeRef} 
+      layout
+      transition={{
+        layout: { type: "spring", stiffness: 300, damping: 30 },
+        opacity: { duration: 0.2 }
+      }}
+      style={style} 
+      className={`${className} ${isDragging ? 'opacity-60' : 'opacity-100'}`} 
+      data-widget-id={id} 
+      {...attributes} 
+      {...listeners}
+    >
       {children}
-    </div>
+    </motion.div>
   )
 }
 
 export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNavigate }) => {
+  const { 
+    editMode, setEditMode, 
+    isLocked, setIsLocked, 
+    pickerOpen, setPickerOpen, 
+    registerActions 
+  } = useDashboard()
   const [layout, setLayout] = useState<DashboardLayoutState>(() => loadDashboardLayout())
-  const [editMode, setEditMode] = useState(false)
-  const [pickerOpen, setPickerOpen] = useState(false)
+  const [isControlsOpen, setIsControlsOpen] = useState(false)
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState<boolean>(() => {
+    const params = new URLSearchParams(window.location.search)
+    return params.get("onboarding") === "welcome"
+  })
+  const entitlement = useEntitlement()
+  const { globalSyncData } = useBrain()
+  const onboarding = readOnboardingState()
+  const firstSyncDone = hasFirstSync({
+    isAuthenticated: data.authState.isAuthenticated,
+    syncedAt: data.lastSyncComplete,
+    fastAnalytics: data.authState.fastAnalytics || null,
+  })
+  const checklistDone = isChecklistComplete({
+    authConnected: data.authState.isAuthenticated,
+    hasFirstSync: firstSyncDone,
+    billingConfirmed: onboarding.billingConfirmed || entitlement.subscriptionPlanId !== "basic",
+    hasBrainIntake: hasCompletedAiBrainContext(),
+    firstToolOpened: onboarding.firstToolOpened,
+  })
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    registerActions({
+      exportLayout: handleExport,
+      importLayout: handleImportClick,
+      resetLayout: () => setLayout(resetDashboardLayout())
+    });
+  }, [layout]);
+
+  useEffect(() => {
+    setIsLocked(layout.locked);
+  }, [layout.locked]);
+
+  useEffect(() => {
+    if (isLocked !== layout.locked) {
+      setLayout(prev => ({ ...prev, locked: isLocked }));
+    }
+  }, [isLocked]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -263,27 +361,98 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
          className="hidden"
        />
 
-       <DashboardHeader 
-         data={data}
-         dashboardControls={{
-           editMode,
-           setEditMode,
-           locked: layout.locked,
-           toggleLock: () => setLayout(prev => ({ ...prev, locked: !prev.locked })),
-           openPicker: () => setPickerOpen(true),
-           resetLayout: () => setLayout(resetDashboardLayout()),
-           handleExport,
-           handleImportClick
-         }}
-       />
+
+      {showWelcomeBanner && (
+        <div className="mb-4 border-[3px] border-black rounded-2xl bg-[#4FFF5B] px-4 py-3 shadow-[4px_4px_0_0_#000] flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm md:text-base font-black uppercase">You’re set. Next: Connect channel.</p>
+          <button
+            onClick={() => setShowWelcomeBanner(false)}
+            className="border-[2px] border-black rounded-lg bg-white px-3 py-1 text-[10px] font-black uppercase"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+      {!onboarding.checklistDismissed && !checklistDone && (
+        <section className="mb-5 border-[3px] border-black rounded-2xl bg-white p-4 shadow-[4px_4px_0_0_#000]">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg md:text-xl font-black uppercase tracking-tight">Get Started</h2>
+            <button
+              onClick={() => updateOnboardingState({ checklistDismissed: true })}
+              className="border-[2px] border-black rounded-lg bg-[#f3f4f6] px-3 py-1 text-[10px] font-black uppercase"
+            >
+              Hide
+            </button>
+          </div>
+          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+            <div className="border-[2px] border-black rounded-xl p-3 bg-[#f3f4f6]">
+              <p className="text-[10px] font-black uppercase">Connect channel</p>
+              <p className="text-xs font-bold mt-1">{data.authState.isAuthenticated ? "Connected" : "Not connected"}</p>
+              <button
+                onClick={() => onNavigate("/account#workspace-data")}
+                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#4FFF5B] px-2 py-1 text-[10px] font-black uppercase"
+              >
+                {data.authState.isAuthenticated ? "Open" : "Connect"}
+              </button>
+            </div>
+            <div className="border-[2px] border-black rounded-xl p-3 bg-[#f3f4f6]">
+              <p className="text-[10px] font-black uppercase">Run first sync</p>
+              <p className="text-xs font-bold mt-1">{firstSyncDone ? "Synced" : "Not synced"}</p>
+              <button
+                onClick={() => void globalSyncData({ batchMode: "initial" })}
+                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#40C6E9] px-2 py-1 text-[10px] font-black uppercase"
+              >
+                {firstSyncDone ? "Sync now" : "Run first sync"}
+              </button>
+            </div>
+            <div className="border-[2px] border-black rounded-xl p-3 bg-[#f3f4f6]">
+              <p className="text-[10px] font-black uppercase">Confirm billing/credits</p>
+              <p className="text-xs font-bold mt-1">{onboarding.billingConfirmed || entitlement.subscriptionPlanId !== "basic" ? "Billing active" : "Needs review"}</p>
+              <button
+                onClick={() => {
+                  updateOnboardingState({ billingConfirmed: true })
+                  onNavigate("/account?panel=billing")
+                }}
+                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#FFE357] px-2 py-1 text-[10px] font-black uppercase"
+              >
+                Open billing
+              </button>
+            </div>
+            <div className="border-[2px] border-black rounded-xl p-3 bg-[#f3f4f6]">
+              <p className="text-[10px] font-black uppercase">Complete AI Brain intake</p>
+              <p className="text-xs font-bold mt-1">{hasCompletedAiBrainContext() ? "Completed" : "Pending"}</p>
+              <button
+                onClick={() => onNavigate("/account#ai-brain-context")}
+                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#FF83EA] px-2 py-1 text-[10px] font-black uppercase"
+              >
+                Open intake
+              </button>
+            </div>
+            <div className="border-[2px] border-black rounded-xl p-3 bg-[#f3f4f6]">
+              <p className="text-[10px] font-black uppercase">Open first recommended tool</p>
+              <p className="text-xs font-bold mt-1">{onboarding.firstToolOpened ? "Done" : "Pending"}</p>
+              <button
+                onClick={() => {
+                  updateOnboardingState({ firstToolOpened: true })
+                  onNavigate(entitlement.subscriptionPlanId === "basic" ? "/studio" : "/performance")
+                }}
+                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#579AFF] text-white px-2 py-1 text-[10px] font-black uppercase"
+              >
+                Open tool
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={visibleWidgetIds} strategy={rectSortingStrategy}>
            <div className="grid grid-cols-[repeat(24,minmax(0,1fr))] gap-4 md:gap-5">
-             {visibleWidgetIds.map((widgetId) => {
+             {visibleWidgetIds.map((widgetId, visibleIndex) => {
                const widget = DASHBOARD_WIDGET_BY_ID[widgetId]
                const instance = layout.instances[widgetId]
                if (!widget || !instance) return null
+               const themedWidget = withCanonicalWidgetTheme(widget, visibleIndex)
 
                return (
                  <SortableWidgetItem
@@ -291,30 +460,32 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
                    id={widgetId}
                    disabled={!canDrag}
                    className={`${sizeBucketClassName(instance.size)} ${heightBucketClassName(instance.height)} transition-all duration-300`}>
-                    <WidgetRenderer
-                      widget={widget}
-                      instance={instance}
-                      editMode={editMode}
-                      canEdit={canDrag}
-                      data={data}
-                      onNavigate={onNavigate}
-                      onToggleCollapse={onToggleCollapse}
-                      onCycleSize={onCycleSize}
-                      onDecSize={onDecSize}
-                      onCycleHeight={onCycleHeight}
-                      onDecHeight={onDecHeight}
-                      onRemoveWidget={onRemoveWidget}
-                      dashboardControls={{
-                        editMode,
-                        setEditMode,
-                        locked: layout.locked,
-                        toggleLock: () => setLayout(prev => ({ ...prev, locked: !prev.locked })),
-                        openPicker: () => setPickerOpen(true),
-                        resetLayout: () => setLayout(resetDashboardLayout()),
-                        handleExport,
-                        handleImportClick
-                      }}
-                    />
+                    <WidgetErrorBoundary widgetId={widgetId}>
+                      <WidgetRenderer
+                        widget={themedWidget}
+                        instance={instance}
+                        editMode={editMode}
+                        canEdit={canDrag}
+                        data={data}
+                        onNavigate={onNavigate}
+                        onToggleCollapse={onToggleCollapse}
+                        onCycleSize={onCycleSize}
+                        onDecSize={onDecSize}
+                        onCycleHeight={onCycleHeight}
+                        onDecHeight={onDecHeight}
+                        onRemoveWidget={onRemoveWidget}
+                        dashboardControls={{
+                          editMode,
+                          setEditMode,
+                          locked: layout.locked,
+                          toggleLock: () => setLayout(prev => ({ ...prev, locked: !prev.locked })),
+                          openPicker: () => setPickerOpen(true),
+                          resetLayout: () => setLayout(resetDashboardLayout()),
+                          handleExport,
+                          handleImportClick
+                        }}
+                      />
+                    </WidgetErrorBoundary>
                  </SortableWidgetItem>
                )
              })}

@@ -1,0 +1,266 @@
+import React from "react"
+import { Toolbox } from "./Toolbox"
+
+interface ToolboxScaffoldProps {
+ title: string
+ icon: React.ReactNode
+ headerColor: string
+ iconBoxColor: string
+ collapsible?: boolean
+ isOpen?: boolean
+ onToggle?: () => void
+ unmountWhenClosed?: boolean
+ embedded?: boolean
+ outerClassName?: string
+ shellClassName?: string
+ contentClassName?: string
+ disableCollapseAnimation?: boolean
+ headerActions?: React.ReactNode
+ children: React.ReactNode
+}
+
+export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
+ title,
+ icon,
+ headerColor,
+ iconBoxColor,
+ collapsible = false,
+ isOpen = true,
+ onToggle,
+ unmountWhenClosed = true,
+ embedded = false,
+ outerClassName = "",
+ shellClassName = "",
+ contentClassName = "",
+ disableCollapseAnimation: _disableCollapseAnimation = false,
+ headerActions,
+ children,
+}) => (
+ // Deprecated wrapper: routed through canonical Toolbox primitive.
+ <Toolbox
+  variant="scaffold"
+  title={title}
+  icon={icon}
+  headerColor={headerColor}
+  iconBoxColor={iconBoxColor}
+  collapsible={collapsible}
+  isOpen={isOpen}
+  onToggle={onToggle}
+  unmountWhenClosed={unmountWhenClosed}
+  embedded={embedded}
+  outerClassName={outerClassName}
+  shellClassName={shellClassName}
+  contentClassName={contentClassName || (embedded ? "p-0" : "p-8")}
+  headerActions={headerActions}
+  indicator={collapsible ? "symbols" : "none"}
+ >
+  {children}
+ </Toolbox>
+)
+import React, { useMemo, useState } from 'react';
+import { CustomIcon } from './CustomIcon';
+
+export type ToolboxVariant = 'scaffold' | 'accordion' | 'sub' | 'header';
+export type ToolboxIndicator = 'symbols' | 'plusminus' | 'none';
+
+interface ToolboxProps {
+  variant?: ToolboxVariant;
+  title: string;
+  subtitle?: string;
+  icon?: React.ReactNode;
+  headerColor: string;
+  iconBoxColor?: string;
+  textColor?: string;
+  collapsible?: boolean;
+  isOpen?: boolean;
+  isOpenInitial?: boolean;
+  onToggle?: () => void;
+  unmountWhenClosed?: boolean;
+  headerActions?: React.ReactNode;
+  indicator?: ToolboxIndicator;
+  outerClassName?: string;
+  shellClassName?: string;
+  contentClassName?: string;
+  embedded?: boolean;
+  children?: React.ReactNode;
+}
+
+export const Toolbox: React.FC<ToolboxProps> = ({
+  variant = 'scaffold',
+  title,
+  subtitle,
+  icon,
+  headerColor,
+  iconBoxColor = 'bg-white',
+  textColor = 'text-black',
+  collapsible = false,
+  isOpen,
+  isOpenInitial = true,
+  onToggle,
+  unmountWhenClosed = true,
+  headerActions,
+  indicator = 'symbols',
+  outerClassName = '',
+  shellClassName = '',
+  contentClassName = '',
+  embedded = false,
+  children,
+}) => {
+  const [internalOpen, setInternalOpen] = useState(isOpenInitial);
+  const controlled = typeof isOpen === 'boolean';
+  const open = controlled ? Boolean(isOpen) : internalOpen;
+
+  const setOpen = () => {
+    if (onToggle) {
+      onToggle();
+      return;
+    }
+    if (!controlled) setInternalOpen((prev) => !prev);
+  };
+
+  const isCollapsible = collapsible || indicator === 'plusminus' || indicator === 'symbols';
+
+  const finalContentClass = useMemo(() => {
+    if (contentClassName) return contentClassName;
+    if (variant === 'accordion') return 'p-6 bg-white text-black';
+    if (variant === 'sub') return 'p-6 flex-1 flex flex-col space-y-6';
+    return embedded ? 'p-0' : 'p-8';
+  }, [contentClassName, embedded, variant]);
+
+  if (variant === 'header') {
+    return (
+      <header
+        className={`${headerColor} ${textColor} h-[80px] flex items-center justify-between px-0 overflow-hidden border-b-[5px] border-black rounded-t-2xl mb-0 ${outerClassName}`}
+      >
+        <div className="flex items-center h-full">
+          <div className={`${iconBoxColor} h-full w-[80px] flex items-center justify-center border-r-[5px] border-black flex-shrink-0`}>
+            {icon}
+          </div>
+          <h1 className="text-[50px] font-[1000] uppercase tracking-tighter pl-8 leading-none mt-1">{title}</h1>
+        </div>
+
+        <div className="flex items-center gap-6 pr-6">{headerActions}</div>
+      </header>
+    );
+  }
+
+  if (variant === 'sub') {
+    return (
+      <div className={`bg-white border-[5px] border-black rounded-2xl shadow-[8px_8px_0px_0px_black] overflow-hidden flex flex-col h-full ${outerClassName}`}>
+        <div className={`${headerColor} ${textColor} p-4 border-b-[5px] border-black flex justify-between items-center`}>
+          <span className="font-black uppercase text-xl tracking-tighter leading-none">{title}</span>
+          {headerActions}
+        </div>
+        <div className={finalContentClass}>{children}</div>
+      </div>
+    );
+  }
+
+  const frameClass =
+    variant === 'accordion'
+      ? 'w-full border-[4px] border-black rounded-2xl bg-white overflow-hidden shadow-[6px_6px_0px_0px_black]'
+      : 'w-full bg-white border-[5px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] flex flex-col overflow-hidden transition-all duration-1000';
+
+  const headerClass =
+    variant === 'accordion'
+      ? `${headerColor} ${textColor} h-14 flex items-center justify-between select-none relative z-20 border-b-[4px] border-black`
+      : `${headerColor} ${textColor} h-[80px] flex items-center justify-between overflow-hidden relative z-20 border-b-[5px] border-black`;
+
+  const contentAnimClass =
+    variant === 'accordion'
+      ? `grid transition-[grid-template-rows,opacity] duration-500 ease-in-out ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`
+      : `grid transition-[grid-template-rows,opacity] duration-700 ease-in-out ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`;
+
+  return (
+    <div className={`w-full ${shellClassName} ${outerClassName}`}>
+      <div className={frameClass}>
+        <header className={headerClass}>
+          <div
+            onClick={isCollapsible ? setOpen : undefined}
+            className={`flex items-center h-full flex-1 ${isCollapsible ? 'cursor-pointer' : ''}`}
+          >
+            <div
+              className={`${iconBoxColor} ${
+                variant === 'accordion' ? 'h-full aspect-square' : 'h-full w-[80px]'
+              } flex items-center justify-center ${
+                variant === 'accordion' ? 'border-r-[4px]' : 'border-r-[5px]'
+              } border-black flex-shrink-0`}
+            >
+              {icon}
+            </div>
+
+            <div className={`flex flex-col ${variant === 'accordion' ? 'pl-4 justify-center' : 'pl-8'}`}>
+              {variant === 'accordion' ? (
+                <h3 className="text-[32px] font-[900] uppercase tracking-tighter leading-none mt-0.5">{title}</h3>
+              ) : (
+                <h1 className="text-[50px] font-[1000] uppercase tracking-tighter leading-none mt-1">{title}</h1>
+              )}
+              {subtitle ? (
+                <span className="text-[10px] font-black uppercase tracking-widest text-black/50 leading-none mt-0.5">
+                  {subtitle}
+                </span>
+              ) : null}
+            </div>
+          </div>
+
+          <div className={`flex items-center ${variant === 'accordion' ? 'gap-3 pr-4' : 'gap-6 pr-6'} h-full`}>
+            {headerActions}
+            {indicator === 'plusminus' && (
+              <div onClick={setOpen} className="h-full px-2 flex items-center justify-center cursor-pointer">
+                <span className="text-2xl font-black leading-none text-black">{open ? '−' : '+'}</span>
+              </div>
+            )}
+            {indicator === 'symbols' && isCollapsible && (
+              <div
+                onClick={setOpen}
+                className={`cursor-pointer transition-all duration-1000 ease-in-out transform ${open ? 'rotate-180 scale-110' : 'rotate-0 scale-100'}`}
+              >
+                <CustomIcon
+                  name={open ? 'SYMBOLS 19' : 'SYMBOLS 22'}
+                  size={variant === 'accordion' ? 32 : 48}
+                  className="opacity-80 hover:opacity-100 transition-opacity text-black"
+                />
+              </div>
+            )}
+          </div>
+        </header>
+
+        <div className={contentAnimClass}>
+          <div className="overflow-hidden">
+            {(!unmountWhenClosed || open) && <main className={`flex-1 bg-white ${finalContentClass}`}>{children}</main>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+import React from "react"
+import { Toolbox } from "./Toolbox"
+
+interface SubToolboxProps {
+ title: string
+ headerColor?: string
+ textColor?: string
+ children: React.ReactNode
+ actionButton?: React.ReactNode
+}
+
+export const SubToolbox: React.FC<SubToolboxProps> = ({
+ title,
+ headerColor = "bg-[#00CCFF]",
+ textColor = "text-black",
+ children,
+ actionButton,
+}) => (
+ // Deprecated wrapper: routed through canonical Toolbox primitive.
+ <Toolbox
+  variant="sub"
+  title={title}
+  headerColor={headerColor}
+  textColor={textColor}
+  headerActions={actionButton}
+  contentClassName="p-6 flex-1 flex flex-col space-y-6"
+ >
+  {children}
+ </Toolbox>
+)

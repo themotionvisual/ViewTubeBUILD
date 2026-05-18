@@ -880,7 +880,10 @@ export const removeFromPlaylist = async (playlistItemId: string) => {
  return response.status === 204 ? { success: true } : response.json()
 }
 
+let commentThreadsForbiddenForSession = false
+
 export const fetchVideoComments = async (videoId: string, maxResults = 5) => {
+ if (commentThreadsForbiddenForSession) return []
  const token = await refreshTokenIfExpired()
  if (!token) return []
  const url = `${BASE_URL}/commentThreads?part=snippet,replies&videoId=${videoId}&maxResults=${maxResults}&order=time`
@@ -888,7 +891,12 @@ export const fetchVideoComments = async (videoId: string, maxResults = 5) => {
   headers: token ? { Authorization: `Bearer ${token}` } : {},
  })
 
- if (response.status === 403 || response.status === 404) {
+ if (response.status === 403) {
+  commentThreadsForbiddenForSession = true
+  return []
+ }
+
+ if (response.status === 404) {
   return []
  }
 

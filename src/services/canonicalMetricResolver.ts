@@ -25,6 +25,33 @@ const numeric = (value: unknown): number | null => {
  return null
 }
 
+const normalizeKey = (value: string): string =>
+ value
+  .toLowerCase()
+  .replace(/\ufeff/g, "")
+  .replace(/[%()]/g, "")
+  .replace(/[_-]/g, " ")
+  .replace(/\s+/g, " ")
+  .trim()
+
+const normalizedRowValue = (
+ row: Record<string, unknown>,
+ aliases: string[],
+): number | null => {
+ const direct = aliases
+  .map((key) => numeric(row[key]))
+  .find((value): value is number => value !== null)
+ if (direct !== undefined) return direct
+
+ const aliasSet = new Set(aliases.map(normalizeKey))
+ for (const [key, value] of Object.entries(row)) {
+  if (!aliasSet.has(normalizeKey(key))) continue
+  const parsed = numeric(value)
+  if (parsed !== null) return parsed
+ }
+ return null
+}
+
 const derive = (row: CanonicalVideoRow, metricKey: CanonicalMetricKey): number | null => {
  if (metricKey === "watchHours") {
   const avdCell = row.metrics.avdSeconds
@@ -71,9 +98,10 @@ export const resolveMetricNumber = (
   }
  }
 
- const fallbackFromRow = (METRIC_REGISTRY[metricKey]?.aliases || [])
-  .map((key) => numeric((row as unknown as Record<string, unknown>)[key]))
-  .find((value): value is number => value !== null)
+ const fallbackFromRow = normalizedRowValue(
+  row as unknown as Record<string, unknown>,
+  METRIC_REGISTRY[metricKey]?.aliases || [],
+ )
  if (fallbackFromRow !== undefined) {
   if (metricKey === "watchHours") {
    const looksLikeMinutes = fallbackFromRow > 24 * 365

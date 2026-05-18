@@ -3,14 +3,14 @@ import {
  StyleChipRow,
  Toggle,
  Checkbox,
- Radio,
+ RadioGroup,
  FormField,
  KPIStatRow,
  DailyStats,
  Sidebar,
  ChannelTree,
- TooltipSimple,
- Modal,
+ Tooltip,
+ Dialog,
  VideoCardGrid,
 } from "./ui"
 import {
@@ -19,7 +19,7 @@ import {
 } from "../views/referenceStudio/ReferenceStudioPrimitives"
 
 export const ComponentGridLab: React.FC = () => {
- const [isModalOpen, setIsModalOpen] = useState(false)
+ const [isDialogOpen, setIsDialogOpen] = useState(false)
 
  return (
   <div className="min-h-screen bg-[#E8E8E8] p-8 font-sans">
@@ -77,7 +77,7 @@ export const ComponentGridLab: React.FC = () => {
 
       {/* Section 4 — Interactive Controls */}
       <SectionCard
-       title="04 — Toggles & Radios"
+       title="04 — Toggles & RadioGroups"
        subtitle="Binary and group selection inputs"
        headerColor="bg-[#CCFF00]">
        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -94,8 +94,8 @@ export const ComponentGridLab: React.FC = () => {
           active={true}
           done={true}
          />
-         <Radio label="Channel" groupName="lab_rg" active={true} />
-         <Radio label="Shorts" groupName="lab_rg" color="cyan" />
+         <RadioGroup label="Channel" groupName="lab_rg" active={true} />
+         <RadioGroup label="Shorts" groupName="lab_rg" color="cyan" />
         </div>
        </div>
       </SectionCard>
@@ -219,27 +219,27 @@ export const ComponentGridLab: React.FC = () => {
        subtitle="Hover information feedback"
        headerColor="bg-[#CCFF00]">
        <div className="flex gap-6 py-4">
-        <TooltipSimple content="AI-powered daily actions">
+        <Tooltip content="AI-powered daily actions">
          <button className="px-5 py-2 bg-[#FF3399] text-white border-[3px] border-black rounded-md font-black text-[13px] uppercase shadow-[4px_4px_0_black]">
           ⚡ Generate
          </button>
-        </TooltipSimple>
-        <TooltipSimple content="Sync channel data now">
+        </Tooltip>
+        <Tooltip content="Sync channel data now">
          <button className="px-5 py-2 bg-[#CCFF00] border-[3px] border-black rounded-md font-black text-[13px] uppercase shadow-[4px_4px_0_black]">
           ↗ Sync
          </button>
-        </TooltipSimple>
+        </Tooltip>
        </div>
       </SectionCard>
 
-      {/* Section 18 — Modal Launch */}
+      {/* Section 18 — Dialog Launch */}
       <SectionCard
-       title="18 — Modal Dialog"
+       title="18 — Dialog Dialog"
        subtitle="Interruptive confirmation UI"
        headerColor="bg-[#FF3399]">
        <div className="py-2">
         <button
-         onClick={() => setIsModalOpen(true)}
+         onClick={() => setIsDialogOpen(true)}
          className="px-8 py-4 bg-[#FF3399] text-white border-[4px] border-black rounded-[16px] font-black uppercase text-[16px] shadow-[8px_8px_0_black] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all">
          Launch Dialog ↗
         </button>
@@ -276,20 +276,20 @@ export const ComponentGridLab: React.FC = () => {
      </div>
     </MainToolbox>
 
-    <Modal
-     isOpen={isModalOpen}
-     onClose={() => setIsModalOpen(false)}
+    <Dialog
+     isOpen={isDialogOpen}
+     onClose={() => setIsDialogOpen(false)}
      title="⚡ Generate Tactics"
      headerColor="pink"
      footer={
       <>
        <button
-        onClick={() => setIsModalOpen(false)}
+        onClick={() => setIsDialogOpen(false)}
         className="px-5 py-2.5 bg-white border-[3px] border-black rounded-md font-black text-[13px] uppercase tracking-wide shadow-[3px_3px_0_black] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all">
         Cancel
        </button>
        <button
-        onClick={() => setIsModalOpen(false)}
+        onClick={() => setIsDialogOpen(false)}
         className="px-5 py-2.5 bg-[#FF3399] text-white border-[3px] border-black rounded-md font-black text-[13px] uppercase tracking-wide shadow-[3px_3px_0_black] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all">
         ⚡ Generate
        </button>
@@ -309,7 +309,7 @@ export const ComponentGridLab: React.FC = () => {
      <div className="mt-4">
       <Toggle label="Include competitor analysis" color="cyan" active={true} />
      </div>
-    </Modal>
+    </Dialog>
 
     <div className="h-20" />
    </div>

@@ -143,6 +143,7 @@ const MARKUP_MULTIPLIER = Number(import.meta.env?.VITE_GEMINI_METER_MARKUP || 3)
 
 const PLAN_DEFINITIONS: PlanDefinition[] = [
  { id: "basic", priceUsd: 0, monthlyCredits: 0, rolloverCap: 0, tier: "free" },
+ { id: "beta", priceUsd: 0, monthlyCredits: 0, rolloverCap: 0, tier: "large" },
  { id: "creator", priceUsd: 9.99, monthlyCredits: 1000, rolloverCap: 2000, tier: "medium" },
  {
   id: "creator_plus",
@@ -168,19 +169,16 @@ export const TOPUP_DEFINITIONS: TopupDefinition[] = [
 ]
 
 const GEMINI_MODEL_RATES_USD_PER_1K: Record<string, { input: number; output: number }> = {
- "gemini-3-flash-preview": {
-  input: Number(import.meta.env?.VITE_GEMINI_RATE_FLASH_IN_1K || 0.00035),
-  output: Number(import.meta.env?.VITE_GEMINI_RATE_FLASH_OUT_1K || 0.00105),
- },
- "gemini-3-pro-preview": {
-  input: Number(import.meta.env?.VITE_GEMINI_RATE_PRO_IN_1K || 0.0035),
-  output: Number(import.meta.env?.VITE_GEMINI_RATE_PRO_OUT_1K || 0.0105),
- },
- "gemini-3.1-pro-preview": {
-  input: Number(import.meta.env?.VITE_GEMINI_RATE_PRO_IN_1K || 0.0035),
-  output: Number(import.meta.env?.VITE_GEMINI_RATE_PRO_OUT_1K || 0.0105),
- },
+ "gemini-3.1-pro-preview": { input: 0.0035, output: 0.0105 },
+ "gemini-3.1-flash-lite": { input: 0.0001, output: 0.0003 },
+ "gemini-3.1-flash-image-preview": { input: 0.001, output: 0.005 },
+ "gemini-3-flash-preview": { input: 0.0004, output: 0.0012 },
+ "gemini-3.1-pro": { input: 0.0035, output: 0.0105 },
+ "gemini-3.1-flash": { input: 0.00035, output: 0.00105 },
+ "gemini-3.0-pro": { input: 0.003, output: 0.009 },
+ "gemini-3.0-flash": { input: 0.0003, output: 0.0009 },
 }
+
 
 const TIER_RANK: Record<LaunchTier, number> = { free: 0, medium: 1, large: 2 }
 const DEFAULT_AUTO_RECHARGE: AutoRechargeConfig = {
@@ -241,7 +239,7 @@ const getPlanDefinition = (planId: SubscriptionPlanId): PlanDefinition =>
  PLAN_DEFINITIONS.find((plan) => plan.id === planId) || PLAN_DEFINITIONS[0]
 
 const modelRatesFor = (modelId: string) => {
- const rates = GEMINI_MODEL_RATES_USD_PER_1K[modelId] || GEMINI_MODEL_RATES_USD_PER_1K["gemini-3-flash-preview"]
+ const rates = GEMINI_MODEL_RATES_USD_PER_1K[modelId] || GEMINI_MODEL_RATES_USD_PER_1K["gemini-3.1-flash"]
  return rates
 }
 
@@ -737,11 +735,19 @@ export const createCheckoutSession = async (
   body: JSON.stringify(payload),
  })
  if (!response.ok) {
+  let apiError = ""
+  try {
+   const parsed = (await response.json()) as { error?: string; details?: string }
+   apiError = String(parsed?.error || parsed?.details || "").trim()
+  } catch {
+   // Ignore malformed error body.
+  }
   if (response.status === 404 || response.status >= 500) {
    throw new Error(
     `Billing server unavailable at ${apiBase}. Start the billing server or update VITE_BILLING_API_BASE.`,
    )
   }
+  if (apiError) throw new Error(apiError)
   throw new Error(`Checkout session creation failed (${response.status}).`)
  }
  return response.json() as Promise<CheckoutSessionResponse>

@@ -155,11 +155,11 @@ export const KeywordEngineWidget = ({
         overflow: "hidden",
        }}>
        <div
-        style={{
-         width: `${widthPct}%`,
-         minWidth: "fit-content",
-         height: "100%",
-         background: "#4FFF5B",
+       style={{
+        width: `${widthPct}%`,
+        minWidth: "fit-content",
+        height: "100%",
+         background: "var(--widget-color, #4FFF5B)",
          borderRadius: "24px",
          display: "flex",
          justifyContent: "space-between",

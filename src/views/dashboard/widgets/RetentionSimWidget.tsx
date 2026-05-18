@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { BarChart3, AlertTriangle, Sparkles, Upload } from "lucide-react"
 import { CustomDropdown } from "./DataEditWidget"
+import { compressMediaForAnalysis } from "../../../services/analysisCompression"
 
 const STORAGE_KEY = "vt_retention_reports"
 
@@ -30,6 +31,9 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
  })
  const [analysis, setAnalysis] = useState<{ zones: { time: string; severity: string; fix: string }[]; hookScore: number; estimatedLift: number } | null>(null)
  const fileRef = useRef<HTMLInputElement>(null)
+ const [compressing, setCompressing] = useState(false)
+ const [compressionError, setCompressionError] = useState("")
+ const [compressionStats, setCompressionStats] = useState<{ originalBytes: number; compressedBytes: number; reductionRatio: number } | null>(null)
 
  const allVideos = useMemo(() => [...syntheticVideos, ...videos], [syntheticVideos, videos])
  const selectedData = useMemo(() => allVideos.find((v: any) => v.videoId === selectedVideo), [selectedVideo, allVideos])
@@ -80,9 +84,27 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
 
  const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`
 
- const handleUpload = (e: any) => {
+ const handleUpload = async (e: any) => {
   const file = e.target.files?.[0]
   if (!file) return
+  setCompressionError("")
+  setCompressionStats(null)
+  setCompressing(true)
+  try {
+   const compressed = await compressMediaForAnalysis(file)
+   setCompressionStats({
+    originalBytes: compressed.originalBytes,
+    compressedBytes: compressed.compressedBytes,
+    reductionRatio: compressed.reductionRatio,
+   })
+  } catch (err) {
+   setCompressionError(err instanceof Error ? err.message : "Compression failed for analysis upload.")
+   setCompressing(false)
+   if (fileRef.current) fileRef.current.value = ""
+   return
+  } finally {
+   setCompressing(false)
+  }
   const fakeId = "local_" + Date.now()
   const fakeVideo = { videoId: fakeId, title: "[Local] " + file.name, durationSeconds: Math.floor(Math.random() * 600) + 60 }
   setSyntheticVideos(prev => [...prev, fakeVideo])
@@ -90,9 +112,27 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
   if (fileRef.current) fileRef.current.value = ""
  }
 
- return (
+  return (
   <WidgetShell {...common} icon={<BarChart3 size={22} />}>
    <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%", overflowY: "auto", paddingBottom: "8px" }}>
+     <div style={{ padding: "8px", border: "2px solid #000", borderRadius: "8px", background: "rgba(204,255,0,0.16)", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", lineHeight: 1.35 }}>
+      Analysis-only upload policy active: local videos are compressed before analysis to reduce AI processing cost.
+     </div>
+     {compressing && (
+      <div style={{ padding: "8px", border: "2px solid #000", borderRadius: "8px", background: "rgba(36,211,255,0.15)", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" }}>
+       Compressing upload for analysis...
+      </div>
+     )}
+     {compressionError && (
+      <div style={{ padding: "8px", border: "2px solid #000", borderRadius: "8px", background: "rgba(255,23,68,0.15)", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" }}>
+       {compressionError}
+      </div>
+     )}
+     {compressionStats && (
+      <div style={{ padding: "8px", border: "2px solid #000", borderRadius: "8px", background: "rgba(79,255,91,0.14)", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" }}>
+       Compressed: {Math.round(compressionStats.originalBytes / 1024 / 1024)}MB to {Math.max(1, Math.round(compressionStats.compressedBytes / 1024 / 1024))}MB ({Math.round(compressionStats.reductionRatio * 100)}% smaller)
+      </div>
+     )}
      <div style={{ display: "flex", gap: "4px", zIndex: 10 }}>
       <div style={{ flex: 2, minWidth: 0 }}>
        <CustomDropdown 
@@ -113,7 +153,8 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
       />
       <button 
        className="vt-button" 
-       onClick={() => fileRef.current?.click()} 
+       onClick={() => fileRef.current?.click()}
+       disabled={compressing}
        title="Upload Local Video"
        style={{ width: "32px", height: "32px", flexShrink: 0, padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
        <Upload size={14} />
@@ -187,4 +228,3 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
   </WidgetShell>
  )
 }
-

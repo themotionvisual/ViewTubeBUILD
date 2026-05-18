@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { Activity } from "lucide-react"
+import { Activity, Plus } from "lucide-react"
 
 export const RealtimePerformanceWidget = ({
   widget,
@@ -67,8 +67,37 @@ export const RealtimePerformanceWidget = ({
   const maxHour = Math.max(...hoursData.map((d) => d.val), 1)
   const maxMin = Math.max(...minsData.map((d) => d.val), 1)
 
+  const headerContent = (
+    <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "center" }}>
+      <button 
+        onClick={() => {}} // Placeholder for Create action
+        className="vt-header-action-btn"
+        title="Create New Content"
+      >
+        <Plus size={14} strokeWidth={3} />
+      </button>
+
+      <div className="vt-tab-group" style={{ width: "100px", padding: "2px" }}>
+        <button
+          onClick={() => setViewMode("48h")}
+          className={`vt-tab-btn ${viewMode === "48h" ? 'active' : ''}`}
+          style={{ padding: "4px", fontSize: "8px" }}
+        >
+          48H
+        </button>
+        <button
+          onClick={() => setViewMode("60m")}
+          className={`vt-tab-btn ${viewMode === "60m" ? 'active' : ''}`}
+          style={{ padding: "4px", fontSize: "8px" }}
+        >
+          60M
+        </button>
+      </div>
+    </div>
+  )
+
   return (
-    <WidgetShell {...common} icon={<Activity size={22} />}>
+    <WidgetShell {...common} icon={<Activity size={22} />} headerContent={headerContent}>
       <div
         style={{
           display: "flex",
@@ -85,7 +114,7 @@ export const RealtimePerformanceWidget = ({
             gap: "6px",
             fontSize: "10px",
             fontWeight: 700,
-            color: "#40C6E9",
+            color: "var(--widget-color, #40C6E9)",
             padding: "10px 12px 0 12px",
           }}
         >
@@ -94,53 +123,14 @@ export const RealtimePerformanceWidget = ({
               width: "6px",
               height: "6px",
               borderRadius: "50%",
-              background: "#40C6E9",
+              background: "var(--widget-color, #40C6E9)",
               animation: "pulse 2s infinite",
             }}
           />
           <span>Updating live</span>
-          <div
-            style={{
-              marginLeft: "auto",
-              display: "flex",
-              background: "#eee",
-              borderRadius: "8px",
-              border: "2px solid #000",
-              overflow: "hidden",
-            }}
-          >
-            <button
-              onClick={() => setViewMode("48h")}
-              style={{
-                padding: "2px 8px",
-                fontSize: "8px",
-                fontWeight: 1000,
-                background: viewMode === "48h" ? "#000" : "transparent",
-                color: viewMode === "48h" ? "#fff" : "#000",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              48H
-            </button>
-            <button
-              onClick={() => setViewMode("60m")}
-              style={{
-                padding: "2px 8px",
-                fontSize: "8px",
-                fontWeight: 1000,
-                background: viewMode === "60m" ? "#000" : "transparent",
-                color: viewMode === "60m" ? "#fff" : "#000",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              60M
-            </button>
-          </div>
         </div>
 
-        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
           {(() => {
             const activeData = viewMode === "48h" ? hoursData : minsData
             const activeMax = viewMode === "48h" ? maxHour : maxMin
@@ -163,20 +153,32 @@ export const RealtimePerformanceWidget = ({
                     justifyContent: "space-between",
                     alignItems: "flex-start",
                     padding: "0 12px",
+                    marginTop: "-2px",
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      color: "rgba(0,0,0,0.6)",
-                    }}
-                  >
-                    {activeLabel}
-                  </span>
-                  <span style={{ fontSize: "16px", fontWeight: 900 }}>
-                    {activeTotal.toLocaleString()}
-                  </span>
+                  <div style={{ display: "flex", flexDirection: "column", maxWidth: "65%" }}>
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: 900,
+                        color: hoveredBar ? "#000" : "rgba(0,0,0,0.6)",
+                        textTransform: "uppercase",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {hoveredBar ? hoveredBar.label : activeLabel}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", lineHeight: 1 }}>
+                    <span style={{ fontSize: "12px", fontWeight: 1000, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.75 }}>
+                      Views
+                    </span>
+                    <span style={{ fontSize: "19px", fontWeight: 1000 }}>
+                      {(hoveredBar ? hoveredBar.val : activeTotal).toLocaleString()}
+                    </span>
+                  </div>
                 </div>
                 <div
                   style={{
@@ -184,8 +186,9 @@ export const RealtimePerformanceWidget = ({
                     display: "flex",
                     alignItems: "flex-end",
                     gap: "6px",
-                    margin: "12px 0 -12px 0",
-                    height: "80px",
+                    margin: "6px 0 -10px 0",
+                    height: "100%",
+                    minHeight: "110px",
                   }}
                 >
                   {activeData.map((d: any, i: number) => (
@@ -196,8 +199,8 @@ export const RealtimePerformanceWidget = ({
                       style={{
                         flex: 1,
                         height: `${(d.val / activeMax) * 100}%`,
-                        background: "#40C6E9",
-                        opacity: 0.3 + (d.val / activeMax) * 0.7,
+                        background: i % 3 === 0 ? "var(--widget-color, #40C6E9)" : "color-mix(in srgb, var(--widget-color, #40C6E9) 55%, white)",
+                        opacity: 0.5 + (d.val / activeMax) * 0.5,
                         minWidth: "0",
                         transition: "height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
                         cursor: "crosshair",
@@ -208,31 +211,6 @@ export const RealtimePerformanceWidget = ({
                     />
                   ))}
                 </div>
-
-                {hoveredBar && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "8px",
-                      left: "8px",
-                      background: "white",
-                      border: "3px solid black",
-                      padding: "10px",
-                      boxShadow: "4px 4px 0px 0px black",
-                      borderRadius: "8px",
-                      fontWeight: "bold",
-                      zIndex: 50,
-                      pointerEvents: "none",
-                      minWidth: "130px",
-                      textAlign: "left"
-                    }}
-                  >
-                    <p style={{ marginBottom: "4px", fontSize: "12px", fontWeight: 900, borderBottom: "1px solid black", paddingBottom: "4px", textTransform: "uppercase" }}>{hoveredBar.label}</p>
-                    <p style={{ fontSize: "11px", color: "black", margin: 0 }}>
-                      <span style={{ textTransform: "uppercase" }}>VIEWS:</span> {hoveredBar.val.toLocaleString()}
-                    </p>
-                  </div>
-                )}
               </div>
             )
           })()}

@@ -57,14 +57,14 @@ import {
  StyleChipRow,
  Toggle,
  Checkbox,
- Radio,
+ RadioGroup,
  FormField,
  KPIStatRow,
  DailyStats,
  Sidebar,
  ChannelTree,
- TooltipSimple,
- Modal,
+ Tooltip,
+ Dialog,
  VideoCardGrid,
 } from "./ui"
 import { StandardInput } from "./StandardInput"
@@ -736,7 +736,7 @@ const DialoguePopouts = () => {
    <button
     onClick={() => setShowDialog(true)}
     className="bg-[#FF3399] text-white border-[4px] border-black px-10 py-5 rounded-2xl font-[1000] text-2xl uppercase tracking-tighter shadow-[8px_8px_0_0_black] hover:translate-y-1 hover:shadow-none transition-all">
-    Trigger Modal
+    Trigger Dialog
    </button>
 
    {showDialog && (
@@ -778,13 +778,13 @@ const DialoguePopouts = () => {
 }
 
 export const UIReferenceLibraryContent: React.FC = () => {
- const [isModalOpen, setIsModalOpen] = useState(false)
+ const [isDialogOpen, setIsDialogOpen] = useState(false)
  const [isChecked1, setIsChecked1] = useState(true)
  const [isChecked2, setIsChecked2] = useState(false)
  const [isToggled, setIsToggled] = useState(true)
  const [dropdownValue, setDropdownValue] = useState("option1")
  const [sliderValue, setSliderValue] = useState(75)
- const [radioSelection, setRadioSelection] = useState("Standard")
+ const [radioSelection, setRadioGroupSelection] = useState("Standard")
  const [activeTab, setActiveTab] = useState("Weekly")
  const [libraryManifest, setLibraryManifest] = useState<LibraryManifest | null>(
   null,
@@ -1571,11 +1571,11 @@ export const UIReferenceLibraryContent: React.FC = () => {
     {/* --- OVERLAYS & MODALS --- */}
     <div className="space-y-8 pb-40">
      <h2 className="text-3xl font-[1000] uppercase tracking-tighter">
-      Modals & Overlays
+      Dialogs & Overlays
      </h2>
      <div className="bg-white border-[4px] border-black rounded-3xl p-12 text-center shadow-[8px_8px_0px_0px_black]">
       <button
-       onClick={() => setIsModalOpen(true)}
+       onClick={() => setIsDialogOpen(true)}
        className="bg-[#B14AED] text-white px-10 py-4 rounded-xl border-[4px] border-black shadow-[6px_6px_0_0_black] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[3px_3px_0px_0px_black] transition-all font-black uppercase text-lg">
        Trigger Pop-Up Box
       </button>
@@ -1584,11 +1584,11 @@ export const UIReferenceLibraryContent: React.FC = () => {
    </div>
 
    {/* --- MODAL IMPLEMENTATION --- */}
-   {isModalOpen && (
+   {isDialogOpen && (
     <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-6 backdrop-blur-sm animate-fade-in">
      <div className="bg-white border-[6px] border-black rounded-[3rem] w-full max-w-2xl flex flex-col shadow-[20px_20px_0px_0px_#ccff00] transform animate-in zoom-in-95 duration-200">
       <button
-       onClick={() => setIsModalOpen(false)}
+       onClick={() => setIsDialogOpen(false)}
        className="absolute -top-6 -right-6 bg-[#ff3399] text-white p-3 rounded-full border-[4px] border-black hover:rotate-90 transition-all z-50 shadow-[4px_4px_0px_0px_black]">
        <X size={24} strokeWidth={4} />
       </button>
@@ -1608,7 +1608,7 @@ export const UIReferenceLibraryContent: React.FC = () => {
 
       <div className="p-8 border-t-[4px] border-black bg-gray-50 rounded-b-[2.6rem] flex justify-end gap-4">
        <button
-        onClick={() => setIsModalOpen(false)}
+        onClick={() => setIsDialogOpen(false)}
         className="pop-button bg-black text-[#ccff00] px-8 py-3 rounded-xl border-[3px] border-black shadow-[4px_4px_0_0_#ccff00] hover:translate-y-1 hover:shadow-none transition-all font-black uppercase text-sm">
         Confirm
        </button>
@@ -2675,9 +2675,9 @@ export const UIReferenceLibraryContent: React.FC = () => {
       </div>
      </EliteToolBlock>
 
-     {/* 04 - Toggles, Checkboxes, Radios */}
+     {/* 04 - Toggles, Checkboxes, RadioGroups */}
      <EliteToolBlock
-      title="04 — Toggles · Checkboxes · Radios"
+      title="04 — Toggles · Checkboxes · RadioGroups"
       icon={Settings2}
       headerColor="bg-[#CCFF00]"
       iconBgColor="bg-black">
@@ -2708,16 +2708,16 @@ export const UIReferenceLibraryContent: React.FC = () => {
         </div>
        </div>
 
-       {/* Radios Column */}
+       {/* RadioGroups Column */}
        <div className="bg-white border-[4px] border-black rounded-2xl p-6 shadow-[6px_6px_0px_0px_black]">
         <div className="font-black uppercase text-sm mb-4 text-center border-b-[3px] border-black pb-2">
-         Radios
+         RadioGroups
         </div>
         <div className="space-y-3">
-         <Radio active={true} groupName="rg1" color="pink" />
-         <Radio active={true} groupName="rg1" color="lime" />
-         <Radio active={true} groupName="rg1" color="cyan" />
-         <Radio active={false} groupName="rg1" color="white" />
+         <RadioGroup active={true} groupName="rg1" color="pink" />
+         <RadioGroup active={true} groupName="rg1" color="lime" />
+         <RadioGroup active={true} groupName="rg1" color="cyan" />
+         <RadioGroup active={false} groupName="rg1" color="white" />
         </div>
        </div>
       </div>
@@ -2935,52 +2935,52 @@ export const UIReferenceLibraryContent: React.FC = () => {
       iconBgColor="bg-black"
       headerText="text-white">
       <div className="flex flex-wrap gap-6 justify-center">
-       <TooltipSimple content="AI-powered daily actions">
+       <Tooltip content="AI-powered daily actions">
         <button className="px-5 py-2.5 bg-[#FF3399] text-white border-[3px] border-black rounded-md font-black text-[13px] uppercase tracking-wide shadow-[4px_4px_0_black] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all">
          ⚡ Generate
         </button>
-       </TooltipSimple>
-       <TooltipSimple content="Sync channel data now">
+       </Tooltip>
+       <Tooltip content="Sync channel data now">
         <button className="px-5 py-2.5 bg-[#CCFF00] border-[3px] border-black rounded-md font-black text-[13px] uppercase tracking-wide shadow-[4px_4px_0_black] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all">
          ↗ Sync
         </button>
-       </TooltipSimple>
-       <TooltipSimple content="Copies to clipboard">
+       </Tooltip>
+       <Tooltip content="Copies to clipboard">
         <button className="px-5 py-2.5 bg-black text-white border-[3px] border-black rounded-md font-black text-[13px] uppercase tracking-wide shadow-[4px_4px_0_black] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all">
          Copy
         </button>
-       </TooltipSimple>
+       </Tooltip>
       </div>
      </EliteToolBlock>
 
-     {/* 18 - Modal */}
+     {/* 18 - Dialog */}
      <EliteToolBlock
-      title="18 — Modal Dialog"
+      title="18 — Dialog Dialog"
       icon={MessageSquare}
       headerColor="bg-[#FF3399]"
       iconBgColor="bg-[#00CCFF]"
       headerText="text-white">
       <div className="text-center">
        <button
-        onClick={() => setIsModalOpen(true)}
+        onClick={() => setIsDialogOpen(true)}
         className="px-8 py-4 bg-[#FF3399] text-white border-[4px] border-black rounded-[16px] font-black text-[16px] uppercase tracking-wide shadow-[8px_8px_0_black] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all">
-        Open Modal ↗
+        Open Dialog ↗
        </button>
 
-       <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+       <Dialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
         title="⚡ Generate Tactics"
         headerColor="pink"
         footer={
          <>
           <button
-           onClick={() => setIsModalOpen(false)}
+           onClick={() => setIsDialogOpen(false)}
            className="px-5 py-2.5 bg-white border-[3px] border-black rounded-md font-black text-[13px] uppercase tracking-wide shadow-[3px_3px_0_black] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all">
            Cancel
           </button>
           <button
-           onClick={() => setIsModalOpen(false)}
+           onClick={() => setIsDialogOpen(false)}
            className="px-5 py-2.5 bg-[#FF3399] text-white border-[3px] border-black rounded-md font-black text-[13px] uppercase tracking-wide shadow-[3px_3px_0_black] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all">
            ⚡ Generate
           </button>
@@ -3002,7 +3002,7 @@ export const UIReferenceLibraryContent: React.FC = () => {
           active={true}
          />
         </div>
-       </Modal>
+       </Dialog>
       </div>
      </EliteToolBlock>
 

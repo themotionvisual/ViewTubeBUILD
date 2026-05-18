@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useRef, useState } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Image as ImageIcon, Sparkles, Download, Search, CheckCircle2, AlertTriangle, XCircle, ArrowRight } from "lucide-react"
 
@@ -18,6 +18,16 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
   
   const [mode, setMode] = useState<"generate" | "analyze">("generate")
   const [prompt, setPrompt] = useState("")
+  const [concept, setConcept] = useState("")
+  const [largeText, setLargeText] = useState("")
+  const [smallText, setSmallText] = useState("")
+  const [stylePreset, setStylePreset] = useState("neo-brutalist")
+  const [palette, setPalette] = useState("neon")
+  const [resolution, setResolution] = useState("2K")
+  const [aspectRatio, setAspectRatio] = useState("16:9")
+  const [referenceImage, setReferenceImage] = useState<string | null>(null)
+  const [isDragImage, setIsDragImage] = useState(false)
+  const refImageInputRef = useRef<HTMLInputElement | null>(null)
   const [selectedVideo, setSelectedVideo] = useState("")
   const [videoSearch, setVideoSearch] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
@@ -88,6 +98,90 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
           {/* GENERATE MODE */}
           {!result && mode === "generate" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%" }}>
+              <input
+                value={concept}
+                onChange={(e) => setConcept(e.target.value)}
+                placeholder="Concept..."
+                style={{ padding: "8px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "11px", fontWeight: 800, outline: "none" }}
+              />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+                <input value={largeText} onChange={(e) => setLargeText(e.target.value)} placeholder="Large text..." style={{ padding: "8px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "11px", fontWeight: 800, outline: "none" }} />
+                <input value={smallText} onChange={(e) => setSmallText(e.target.value)} placeholder="Small text..." style={{ padding: "8px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "11px", fontWeight: 800, outline: "none" }} />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "6px" }}>
+                <select value={stylePreset} onChange={(e) => setStylePreset(e.target.value)} style={{ padding: "6px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 800 }}>
+                  <option value="neo-brutalist">Style</option>
+                  <option value="neo-brutalist">Neo Brutalist</option>
+                  <option value="cinematic">Cinematic</option>
+                  <option value="minimal">Minimal</option>
+                  <option value="dramatic">Dramatic</option>
+                </select>
+                <select value={palette} onChange={(e) => setPalette(e.target.value)} style={{ padding: "6px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 800 }}>
+                  <option value="neon">Palette</option>
+                  <option value="neon">Neon</option>
+                  <option value="warm">Warm</option>
+                  <option value="cool">Cool</option>
+                  <option value="mono">Mono</option>
+                </select>
+                <select value={resolution} onChange={(e) => setResolution(e.target.value)} style={{ padding: "6px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 800 }}>
+                  <option value="1K">1K</option>
+                  <option value="2K">2K</option>
+                  <option value="4K">4K</option>
+                </select>
+                <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)} style={{ padding: "6px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 800 }}>
+                  <option value="16:9">16:9</option>
+                  <option value="1:1">1:1</option>
+                  <option value="9:16">9:16</option>
+                </select>
+              </div>
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  setIsDragImage(true)
+                }}
+                onDragLeave={() => setIsDragImage(false)}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  setIsDragImage(false)
+                  const file = e.dataTransfer.files?.[0]
+                  if (!file || !file.type.startsWith("image/")) return
+                  const reader = new FileReader()
+                  reader.onload = () => setReferenceImage(reader.result as string)
+                  reader.readAsDataURL(file)
+                }}
+                style={{
+                  border: "2px dashed #000",
+                  borderRadius: "8px",
+                  minHeight: "74px",
+                  background: isDragImage ? "rgba(0,210,255,0.15)" : "#f7f7f7",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
+                }}>
+                {referenceImage ? (
+                  <img src={referenceImage} alt="reference" style={{ width: "100%", height: "74px", objectFit: "cover" }} />
+                ) : (
+                  <button
+                    onClick={() => refImageInputRef.current?.click()}
+                    style={{ fontSize: "10px", fontWeight: 900, opacity: 0.7, textTransform: "uppercase", border: "2px solid #000", borderRadius: "6px", padding: "6px 8px", background: "#fff" }}>
+                    Drag/drop image or upload reference
+                  </button>
+                )}
+                <input
+                  ref={refImageInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    const reader = new FileReader()
+                    reader.onload = () => setReferenceImage(reader.result as string)
+                    reader.readAsDataURL(file)
+                  }}
+                />
+              </div>
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
@@ -96,8 +190,9 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
               />
               <button
                 onClick={handleGenerate}
-                disabled={isProcessing || !prompt.trim()}
-                style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", background: "#FF83EA", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", cursor: "pointer", boxShadow: "2px 2px 0 0 #000", opacity: !prompt.trim() ? 0.5 : 1 }}
+                disabled={isProcessing || !(prompt.trim() || concept.trim())}
+                className="vt-button primary"
+                style={{ height: "36px", width: "100%", opacity: !(prompt.trim() || concept.trim()) ? 0.5 : 1 }}
               >
                 {isProcessing ? <div style={{ width: "12px", height: "12px", border: "2px solid rgba(0,0,0,0.2)", borderTop: "2px solid #000", borderRadius: "50%", animation: "spin 1s linear infinite" }} /> : <Sparkles size={14} />}
                 {isProcessing ? "Generating..." : "Generate Concept"}
@@ -150,7 +245,8 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
                      <button
                         onClick={handleAnalyze}
                         disabled={isProcessing}
-                        style={{ width: "100%", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", background: "#00D2FF", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", cursor: "pointer", boxShadow: "2px 2px 0 0 #000" }}
+                        className="vt-button primary"
+                        style={{ width: "100%", height: "36px" }}
                       >
                         {isProcessing ? <div style={{ width: "12px", height: "12px", border: "2px solid rgba(0,0,0,0.2)", borderTop: "2px solid #000", borderRadius: "50%", animation: "spin 1s linear infinite" }} /> : <Search size={14} />}
                         {isProcessing ? "Analyzing..." : "Analyze Thumbnail"}
@@ -166,8 +262,8 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%" }}>
                <img src={result.imageUrl} alt="Generated" style={{ width: "100%", height: "160px", objectFit: "cover", border: "2px solid #000", borderRadius: "8px", flexShrink: 0 }} />
                <div style={{ display: "flex", gap: "6px", marginTop: "auto" }}>
-                 <button onClick={reset} style={{ flex: 1, padding: "8px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", cursor: "pointer", boxShadow: "2px 2px 0 0 #000" }}>Back</button>
-                 <button style={{ flex: 2, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "8px", background: "#C9F830", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", cursor: "pointer", boxShadow: "2px 2px 0 0 #000" }}>
+                 <button onClick={reset} className="vt-button" style={{ flex: 1 }}>Back</button>
+                 <button className="vt-button primary" style={{ flex: 2 }}>
                    <Download size={14} /> Download
                  </button>
                </div>
@@ -197,7 +293,7 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
                     ))}
                  </div>
               </div>
-              <button onClick={reset} style={{ display: "flex", gap: "4px", alignItems: "center", justifyContent: "center", padding: "8px", background: "#f0f0f0", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", cursor: "pointer" }}>
+              <button onClick={reset} className="vt-button" style={{ width: "100%" }}>
                 <ArrowRight size={14} style={{ transform: "rotate(180deg)" }} /> Back to Editor
               </button>
             </div>

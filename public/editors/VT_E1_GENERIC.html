@@ -24,12 +24,6 @@
       const root = document.getElementById('root');
       if (!root) return;
       
-      // Fallback for missing transition function reported by user
-      if (typeof window.computeTransitionWindow !== 'function') {
-        window.computeTransitionWindow = (left, right, trans, fps) => {
-          return { start: 0, end: 100 };
-        };
-      }
 
       root.innerHTML = `
         <div style="padding:16px;font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial,sans-serif;">
@@ -2399,6 +2393,8 @@
       const [showPatchDiff, setShowPatchDiff] = useState(false);
       const [aiCostLedger, setAiCostLedger] = useState([]);
       const [selectedTransitionId, setSelectedTransitionId] = useState(null);
+      const [transitionDiagnostics, setTransitionDiagnostics] = useState([]);
+      const MAX_TRANSITION_DIAGNOSTICS = 20;
       const [timelineViewport, setTimelineViewport] = useState({ start: 0, end: 12 });
       const [hoverTrackId, setHoverTrackId] = useState(null);
       const [dividerCue, setDividerCue] = useState({ index: null, flash: false });
@@ -2957,6 +2953,15 @@
         () => project.transitions?.find((t) => t.id === selectedTransitionId) || null,
         [project.transitions, selectedTransitionId]
       );
+      const pushTransitionDiagnostic = useCallback((entry) => {
+        const normalized = {
+          lastErrorAt: new Date().toISOString(),
+          clipId: entry?.clipId || null,
+          transitionId: entry?.transitionId || null,
+          reason: String(entry?.reason || 'unknown transition runtime failure')
+        };
+        setTransitionDiagnostics((prev) => [normalized, ...(prev || [])].slice(0, MAX_TRANSITION_DIAGNOSTICS));
+      }, []);
       const selectedTransitionClampWarning = useMemo(() => {
         if (!selectedTransition) return null;
         const left = project.clips.find((c) => c.id === selectedTransition.leftClipId);
@@ -4093,26 +4098,70 @@
         setProject((prev) => {
           const left = prev.clips.find((c) => c.id === leftClipId);
           const right = prev.clips.find((c) => c.id === rightClipId);
-          if (!left || !right) return prev;
+          const diagnostic = (reason, transitionId = null, clipId = leftClipId || rightClipId || null) => {
+            pushTransitionDiagnostic({ reason, transitionId, clipId });
+          };
+          if (!left || !right) {
+            diagnostic('transition guard: missing left/right clip');
+            return prev;
+          }
+          if (left.trackId !== right.trackId) {
+            diagnostic('transition guard: clips are not on same track');
+            return prev;
+          }
           const safeFps = Math.max(1, Number(prev.meta?.fps || 30));
-          const maxTransitionFrames = Math.max(1, Math.min(Number(left.durationInFrames || secToFrame(durationOf(left, safeFps), safeFps)), Number(right.durationInFrames || secToFrame(durationOf(right, safeFps), safeFps))));
-          const maxDur = Math.max(0.05, Math.min(maxTransitionFrames / safeFps, 8));
+          const leftStart = Number(left.startFrame);
+          const rightStart = Number(right.startFrame);
+          const leftDur = Number(left.durationInFrames);
+          const rightDur = Number(right.durationInFrames);
+          if (!Number.isFinite(leftStart) || !Number.isFinite(rightStart) || !Number.isFinite(leftDur) || !Number.isFinite(rightDur) || leftDur <= 0 || rightDur <= 0) {
+            diagnostic('transition guard: invalid frame-domain clip bounds');
+            return prev;
+          }
+
+          const seamCandidates = [...(prev.clips || [])]
+            .filter((c) => c.trackId === left.trackId)
+            .sort((a, b) => {
+              const af = Number.isFinite(Number(a.startFrame)) ? Number(a.startFrame) : secToFrame(Number(a.start || 0), safeFps);
+              const bf = Number.isFinite(Number(b.startFrame)) ? Number(b.startFrame) : secToFrame(Number(b.start || 0), safeFps);
+              return af - bf;
+            });
+          const leftIdx = seamCandidates.findIndex((c) => c.id === leftClipId);
+          const isAdjacentSeam = leftIdx >= 0 && seamCandidates[leftIdx + 1]?.id === rightClipId;
+          if (!isAdjacentSeam) {
+            diagnostic('transition guard: clips are not adjacent seam candidates');
+            return prev;
+          }
+
           const existing = prev.transitions.find((t) => t.leftClipId === leftClipId && t.rightClipId === rightClipId);
+          const requestedDuration = Number(patch.durationSec ?? existing?.durationSec ?? 0.35);
+          if (!Number.isFinite(requestedDuration) || requestedDuration <= 0) {
+            diagnostic('transition guard: invalid durationSec', existing?.id || null);
+            return prev;
+          }
+
+          const maxTransitionFrames = Math.max(1, Math.min(
+            Number(left.durationInFrames || secToFrame(durationOf(left, safeFps), safeFps)),
+            Number(right.durationInFrames || secToFrame(durationOf(right, safeFps), safeFps))
+          ));
+          const maxDur = Math.max(0.05, Math.min(maxTransitionFrames / safeFps, 8));
+
           if (existing) {
             const next = prev.transitions.map((t) => {
               if (t.id !== existing.id) return t;
-              const durationSec = clamp(Number(patch.durationSec ?? t.durationSec ?? 0.35), 0.05, maxDur);
+              const durationSec = clamp(requestedDuration, 0.05, maxDur);
               const type = patch.type || t.type || 'cut';
               const params = normalizeTransitionParams({ ...(t.params || {}), ...(patch.params || {}) });
               return { ...t, ...patch, params, type, durationSec };
             });
             return { ...prev, transitions: next };
           }
+
           const nextTr = makeTransition(
             leftClipId,
             rightClipId,
             patch.type || 'fade',
-            clamp(Number(patch.durationSec ?? 0.35), 0.05, maxDur),
+            clamp(requestedDuration, 0.05, maxDur),
             normalizeTransitionParams({ intensity: 1, amount: 1, blurPx: 12, rotateDeg: 42, direction: 'left', frequency: 80, ...(patch.params || {}) })
           );
           return { ...prev, transitions: [...(prev.transitions || []), nextTr] };
@@ -5097,7 +5146,7 @@
           const oy = height / 2 + Number(p.y || 0);
           const w = Number(p.width || 0);
           const h = Number(p.height || 0);
-          const transFx = transitionInfluence(clip || { id: '' });
+          const transFx = safeTransitionInfluence(clip || { id: '' }, { clipId: clip?.id || null, surface: 'svg' });
           const animFx = clipEntryExitInfluence(clip || null);
           const tx = `${transFx.transformExtra || ''} ${animFx.transformExtra || ''}`;
           const extraX = Number((tx.match(/translateX\(([-\d.]+)px\)/) || [])[1] || 0);
@@ -5381,6 +5430,12 @@
             issues.push(`${layer.payload?.layerName || layer.id}: missing media URL`);
           }
         });
+        if (transitionDiagnostics.length) {
+          warnings.push(`Transition runtime warnings captured: ${transitionDiagnostics.length}`);
+          transitionDiagnostics.slice(0, 3).forEach((entry, idx) => {
+            warnings.push(`Transition diag ${idx + 1}: clip=${entry.clipId || 'n/a'} transition=${entry.transitionId || 'n/a'} reason=${entry.reason}`);
+          });
+        }
         if (!issues.length && !warnings.length) {
           alert('Preflight diagnostics passed: no missing assets or contract issues found.');
           return;
@@ -5482,7 +5537,7 @@
               const cy = height / 2 + Number(p.y || 0);
               const w = Number(p.width || 0);
               const h = Number(p.height || 0);
-              const transFx = transitionInfluence(clip || { id: '' });
+              const transFx = safeTransitionInfluence(clip || { id: '' }, { clipId: clip?.id || null, surface: 'svg' });
               const animFx = clipEntryExitInfluence(clip || null);
               const op = clamp(Number(p.opacity || 1) * (transFx.opacity ?? 1) * (animFx.opacity ?? 1), 0, 1);
 
@@ -6552,13 +6607,23 @@
           : []
       });
 
-      const computeTransitionWindow = (leftClip, rightClip, transition, fps) => {
+      function computeTransitionWindow(leftClip, rightClip, transition, fps) {
         if (!leftClip || !rightClip || !transition) return null;
-        const safeFps = Math.max(1, Number(fps || 30));
-        const seamFrame = Number(leftClip.startFrame || 0) + Number(leftClip.durationInFrames || 0);
-        const desiredFrames = Math.max(1, Math.round(Number(transition.durationSec || 0.35) * safeFps));
-        const leftMax = Math.max(1, Number(leftClip.durationInFrames || 1));
-        const rightMax = Math.max(1, Number(rightClip.durationInFrames || 1));
+        const safeFpsRaw = Number(fps || 30);
+        if (!Number.isFinite(safeFpsRaw) || safeFpsRaw <= 0) return null;
+        const safeFps = Math.max(1, safeFpsRaw);
+        const leftStartFrame = Number(leftClip.startFrame);
+        const leftDurationFrames = Number(leftClip.durationInFrames);
+        const rightDurationFrames = Number(rightClip.durationInFrames);
+        const transitionDurationSec = Number(transition.durationSec ?? 0.35);
+        if (!Number.isFinite(leftStartFrame) || !Number.isFinite(leftDurationFrames) || !Number.isFinite(rightDurationFrames)) return null;
+        if (leftDurationFrames <= 0 || rightDurationFrames <= 0) return null;
+        if (!Number.isFinite(transitionDurationSec) || transitionDurationSec <= 0) return null;
+
+        const seamFrame = leftStartFrame + leftDurationFrames;
+        const desiredFrames = Math.max(1, Math.round(transitionDurationSec * safeFps));
+        const leftMax = Math.max(1, Math.round(leftDurationFrames));
+        const rightMax = Math.max(1, Math.round(rightDurationFrames));
         const maxBySides = Math.max(1, Math.min(leftMax, rightMax));
         const durationInFrames = Math.max(1, Math.min(desiredFrames, maxBySides));
         const leftHalfFrames = Math.max(1, Math.floor(durationInFrames / 2));
@@ -6574,7 +6639,7 @@
           durationInFrames,
           clamped: durationInFrames !== desiredFrames
         };
-      };
+      }
 
       const transitionInfluence = (clip) => {
         if (!clip) return { opacity: 1, transformExtra: '', filterExtra: '', window: null };
@@ -6663,6 +6728,20 @@
           return { ...blend, window };
         }
         return { opacity: 1, transformExtra: '', filterExtra: '', window: null };
+      };
+
+      const safeTransitionInfluence = (clip, context = {}) => {
+        try {
+          return transitionInfluence(clip);
+        } catch (error) {
+          const transitionId = context.transitionId || ((project.transitions || []).find((t) => t.leftClipId === clip?.id || t.rightClipId === clip?.id)?.id || null);
+          pushTransitionDiagnostic({
+            clipId: context.clipId || clip?.id || null,
+            transitionId,
+            reason: `transition runtime: ${error?.message || 'unknown error'}`
+          });
+          return { opacity: 1, transformExtra: '', filterExtra: '', window: null };
+        }
       };
 
       const easeByName = (t, name) => {
@@ -9639,7 +9718,7 @@
                       }}
                     >
                     {stageLayers.map(({ layer, clip, payload }) => {
-                      const transFx = transitionInfluence(clip || { id: '' });
+                      const transFx = safeTransitionInfluence(clip || { id: '' }, { clipId: clip?.id || null, surface: 'svg' });
                       const animFx = clipEntryExitInfluence(clip || null);
                       const dnaStyle = resolveDnaStyle(project.meta.visualDNA, layer.type, payload);
                       const common = {

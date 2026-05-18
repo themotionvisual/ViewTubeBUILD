@@ -1,7 +1,20 @@
 import React, { useState, useRef, useEffect } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { useEntitlement } from "../../../app/AppShell"
-import { MessageSquare, Send, Sparkles, Bookmark, Trash2 } from "lucide-react"
+import {
+ MessageSquare,
+ Send,
+ Sparkles,
+ Trash2,
+ TrendingDown,
+ Clapperboard,
+ BarChart3,
+ Lightbulb,
+ Image,
+ CalendarClock,
+ MessagesSquare,
+ HandCoins,
+} from "lucide-react"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
 
@@ -76,9 +89,62 @@ const FormattedMessage = ({ text }: { text: string }) => {
 }
 
 const QUICK_TOPICS = [
- { label: "📈 View Drop-off Analysis", q: "Why are my views dropping? Analyze my recent video performance." },
- { label: "🎬 Hook Strength Audit", q: "Audit the hooks on my top 5 videos. Which ones work and which don't?" },
- { label: "📊 Growth Opportunities", q: "What are my biggest growth opportunities right now based on my analytics?" },
+ {
+  label: "View Drop-Off",
+  q: "Why are my views dropping? Analyze my recent video performance.",
+  Icon: TrendingDown,
+  color: "#4FFF5B",
+  shadow: "rgba(79,255,91,0.55)",
+ },
+ {
+  label: "Hook Audit",
+  q: "Audit the hooks on my top 5 videos. Which ones work and which don't?",
+  Icon: Clapperboard,
+  color: "#00D2FF",
+  shadow: "rgba(0,210,255,0.55)",
+ },
+ {
+  label: "Growth Plan",
+  q: "What are my biggest growth opportunities right now based on my analytics?",
+  Icon: BarChart3,
+  color: "#579AFF",
+  shadow: "rgba(87,154,255,0.55)",
+ },
+ {
+  label: "Video Ideas",
+  q: "Give me 10 high-potential video ideas based on my recent performance.",
+  Icon: Lightbulb,
+  color: "#D074FF",
+  shadow: "rgba(208,116,255,0.55)",
+ },
+ {
+  label: "Thumbnail Test",
+  q: "What thumbnail concepts should I A/B test next and why?",
+  Icon: Image,
+  color: "#FF83EA",
+  shadow: "rgba(255,131,234,0.55)",
+ },
+ {
+  label: "Weekly Plan",
+  q: "Build a simple 7-day action plan to increase views and subscribers this week.",
+  Icon: CalendarClock,
+  color: "#FFB570",
+  shadow: "rgba(255,181,112,0.55)",
+ },
+ {
+  label: "Community Boost",
+  q: "What community posts should I publish this week to improve engagement?",
+  Icon: MessagesSquare,
+  color: "#FFE35C",
+  shadow: "rgba(255,227,92,0.55)",
+ },
+ {
+  label: "Revenue Levers",
+  q: "What are my fastest practical revenue improvements over the next 30 days?",
+  Icon: HandCoins,
+  color: "#C9F830",
+  shadow: "rgba(201,248,48,0.55)",
+ },
 ]
 
 export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
@@ -148,22 +214,38 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
    <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px" }}>
     {/* Quick Topics */}
    {messages.length === 0 && (
-     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
       <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.4 }}>Quick Topics</span>
-      {QUICK_TOPICS.map((t, i) => (
-       <button
-        key={i}
-        onClick={() => handleSend(t.q)}
-        disabled={!canAffordAsk}
-        className="vt-button"
-        style={{
-         padding: "8px 10px",
-         fontSize: "11px", fontWeight: 700, textAlign: "left",
-         boxShadow: "2px 2px 0 0 var(--widget-color, rgba(64,198,233,0.3))",
+      <div
+       style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+        gap: "6px",
        }}>
-        {t.label}
-       </button>
-      ))}
+       {QUICK_TOPICS.map((t, i) => (
+        <button
+         key={i}
+         onClick={() => handleSend(t.q)}
+         disabled={!canAffordAsk}
+         className="vt-button"
+         style={{
+          padding: "7px 8px",
+          fontSize: "10px",
+          fontWeight: 900,
+          textAlign: "left",
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          background: t.color,
+          color: "#3f3f3f",
+          border: "none",
+          boxShadow: `2px 2px 0 0 ${t.shadow}`,
+         }}>
+         <t.Icon size={13} />
+         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.label}</span>
+        </button>
+       ))}
+      </div>
       {!canAffordAsk && (
        <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>
         {entitlement.tier === "free" ? "Upgrade for AskMe AI." : `Need ${ASK_COST} credits.`}
@@ -201,7 +283,7 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
     </div>
 
     {/* Input */}
-    <div style={{ display: "flex", gap: "6px", borderTop: "2px solid #000", paddingTop: "8px" }}>
+    <div style={{ display: "flex", gap: "6px", paddingTop: "8px" }}>
      {messages.length > 0 && (
       <button onClick={clearHistory} title="Clear history" className="vt-button" style={{ width: "36px", height: "36px", padding: 0, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
        <Trash2 size={14} opacity={0.5} />
@@ -213,8 +295,8 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
       onChange={(e) => setInput(e.target.value)}
       onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend() } }}
       placeholder="Ask anything about your channel..."
-      rows={1}
-      style={{ flex: 1, resize: "none", minHeight: "unset", padding: "8px" }}
+      rows={3}
+      style={{ flex: 1, minHeight: "88px", padding: "10px 12px", resize: "none" }}
      />
      <button
       onClick={() => handleSend()}

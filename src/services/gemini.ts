@@ -295,8 +295,111 @@ const getAiSettings = () => {
   localStorage.getItem("gemini_api_key") ||
   localStorage.getItem("google_api_key") ||
   ""
- const modelPreference = localStorage.getItem("yt_model_preference") || "pro" // Default to pro
+ const modelPreference = localStorage.getItem("vt_ai_model") || "gemini-3.1-flash"
  return { customKey, modelPreference }
+}
+
+const CANONICAL_MODELS = [
+ "gemini-3.1-pro-preview",
+ "gemini-3.1-flash-lite",
+ "gemini-3-flash-preview",
+ "gemini-3.1-flash-image-preview",
+ "gemini-3.1-flash",
+ "gemini-3.1-pro",
+ "gemini-3.0-flash",
+ "gemini-3.0-pro",
+] as const
+
+type CanonicalModelId = (typeof CANONICAL_MODELS)[number]
+
+const isCanonicalModel = (value: string): value is CanonicalModelId =>
+ (CANONICAL_MODELS as readonly string[]).includes(value)
+
+const toCanonicalModel = (value: string): CanonicalModelId => {
+ if (isCanonicalModel(value)) return value
+ const normalized = value.toLowerCase()
+ if (normalized.includes("3.1") && normalized.includes("pro")) return "gemini-3.1-pro-preview"
+ if (normalized.includes("lite")) return "gemini-3.1-flash-lite"
+ if (normalized.includes("image")) return "gemini-3.1-flash-image-preview"
+ if (normalized.includes("3.1") && normalized.includes("flash")) return "gemini-3.1-flash-lite"
+ if (normalized.includes("3.0") && normalized.includes("flash")) return "gemini-3-flash-preview"
+ if (normalized.includes("3-flash")) return "gemini-3-flash-preview"
+ if (normalized.includes("pro")) return "gemini-3.1-pro-preview"
+ return "gemini-3.1-flash-lite"
+}
+
+const getFallbackChain = (sourceModel: CanonicalModelId): CanonicalModelId[] => {
+ const [_, family, tier] = sourceModel.match(/^gemini-(3\.[01])-(flash|pro)$/) || []
+ if (!family || !tier) return ["gemini-3.1-flash", "gemini-3.1-pro", "gemini-3.0-flash", "gemini-3.0-pro"]
+ const altTier = tier === "flash" ? "pro" : "flash"
+ const nearFamily = family === "3.1" ? "3.0" : "3.1"
+ return [
+  `gemini-${family}-${altTier}`,
+  `gemini-${nearFamily}-${tier}`,
+  `gemini-${nearFamily}-${altTier}`,
+ ].map((m) => toCanonicalModel(m))
+}
+
+const PROVIDER_COMPATIBILITY_MAP: Record<CanonicalModelId, string[]> = {
+ "gemini-3.1-pro-preview": ["gemini-3.1-pro-preview", "gemini-3.1-pro", "gemini-2.5-pro", "gemini-1.5-pro-latest"],
+ "gemini-3.1-flash-lite": ["gemini-3.1-flash-lite", "gemini-3.1-flash", "gemini-2.5-flash", "gemini-1.5-flash-latest"],
+ "gemini-3.1-flash-image-preview": ["gemini-3.1-flash-image-preview", "gemini-3.1-flash", "gemini-2.5-flash"],
+ "gemini-3-flash-preview": ["gemini-3-flash-preview", "gemini-3.1-flash-lite", "gemini-2.5-flash"],
+ "gemini-3.1-pro": ["gemini-3.1-pro", "gemini-2.5-pro", "gemini-1.5-pro-latest"],
+ "gemini-3.1-flash": ["gemini-3.1-flash", "gemini-2.5-flash", "gemini-1.5-flash-latest"],
+ "gemini-3.0-pro": ["gemini-3.0-pro", "gemini-2.5-pro", "gemini-1.5-pro-latest"],
+ "gemini-3.0-flash": ["gemini-3.0-flash", "gemini-2.5-flash", "gemini-1.5-flash-latest"],
+}
+
+const getProviderModelSequence = (canonical: CanonicalModelId): string[] => {
+ const canonicalChain = [canonical, ...getFallbackChain(canonical)]
+ const out: string[] = []
+ for (const c of canonicalChain) {
+  const providerCandidates = PROVIDER_COMPATIBILITY_MAP[c] || [c]
+  for (const p of providerCandidates) {
+   if (!out.includes(p)) out.push(p)
+  }
+ }
+ return out
+}
+
+const inferCanonicalFromProvider = (providerModel: string): CanonicalModelId => {
+ const normalized = String(providerModel || "").toLowerCase()
+ if (normalized.includes("pro") && normalized.includes("3.1")) return "gemini-3.1-pro-preview"
+ if (normalized.includes("lite")) return "gemini-3.1-flash-lite"
+ if (normalized.includes("image")) return "gemini-3.1-flash-image-preview"
+ if (normalized.includes("flash") && normalized.includes("3-")) return "gemini-3-flash-preview"
+ if (normalized.includes("pro")) return "gemini-3.1-pro-preview"
+ return "gemini-3.1-flash-lite"
+}
+
+const isModel404 = (error: any): boolean => {
+ const text = String(error?.message || error || "")
+ return (
+  text.includes("404") ||
+  text.includes("NOT_FOUND") ||
+  text.includes("is not found for API version") ||
+  text.includes("not supported for generateContent")
+ )
+}
+
+const emitModelFallbackEvent = (payload: {
+ sourceModel: string
+ fallbackModel: string
+ reason: string
+ tool: string
+ effectiveModel?: string
+}) => {
+ try {
+  window.dispatchEvent(
+   new CustomEvent("vt_ai_model_fallback", {
+    detail: { ...payload, timestamp: Date.now() },
+   }),
+  )
+ } catch {
+  // no-op
+ }
+ console.warn("[Gemini Fallback]", payload)
 }
 
 const getEnvGeminiKey = (): string => {
@@ -336,11 +439,48 @@ export const getAiClient = () => {
  }
  const baseClient = new GoogleGenAI({ apiKey })
  const generateContent = baseClient.models.generateContent.bind(baseClient.models)
+ const generateContentStream = baseClient.models.generateContentStream.bind(baseClient.models)
+
+  const withCanonicalModel = async <T>(
+  op: "generateContent" | "generateContentStream",
+  args: any[],
+  run: (nextArgs: any[]) => Promise<T>,
+ ): Promise<T> => {
+  const requestedModel = toCanonicalModel(String(args?.[0]?.model || "gemini-3.1-flash"))
+  const modelSequence = getProviderModelSequence(requestedModel)
+  let lastError: any
+  for (const modelId of modelSequence) {
+   try {
+    const nextArgs = [...args]
+    nextArgs[0] = { ...(nextArgs[0] || {}), model: modelId }
+    return await run(nextArgs)
+   } catch (error: any) {
+    lastError = error
+    if (!isModel404(error)) throw error
+    const nextFallback = modelSequence[modelSequence.indexOf(modelId) + 1]
+    if (nextFallback) {
+     emitModelFallbackEvent({
+      sourceModel: modelId,
+      fallbackModel: nextFallback,
+      reason: "404_model_not_found",
+      tool: op,
+      effectiveModel: nextFallback,
+     })
+    }
+   }
+  }
+  throw lastError
+ }
 
  baseClient.models.generateContent = (async (...args: any[]) => {
-  const modelId = String(args?.[0]?.model || "gemini-3-flash-preview")
+  const modelId = toCanonicalModel(String(args?.[0]?.model || "gemini-3.1-flash"))
   const promptText = JSON.stringify(args?.[0]?.contents || "")
   const entitlement = getCurrentEntitlement()
+  if (entitlement.subscriptionPlanId === "beta" && keySource !== "custom") {
+   throw new Error(
+    "Beta Version requires your own Gemini API Key. Please set it in System Settings -> Key Vault.",
+   )
+  }
   const quote = estimateMeterQuote(
    {
     modelId,
@@ -375,7 +515,11 @@ export const getAiClient = () => {
    )
   }
 
-  const response: any = await (generateContent as any)(...args)
+ const response: any = await withCanonicalModel("generateContent", args, (nextArgs) =>
+   (generateContent as any)(...nextArgs),
+  )
+  const effectiveProviderModel = String(response?.modelVersion || args?.[0]?.model || modelId)
+  const effectiveCanonicalModel = inferCanonicalFromProvider(effectiveProviderModel)
   const usage = response?.usageMetadata || {}
   const inputTokens = Number(usage.promptTokenCount ?? usage.inputTokenCount ?? 0)
   const outputTokens = Number(
@@ -383,13 +527,13 @@ export const getAiClient = () => {
   )
   if (keySource !== "custom") {
    const finalQuote = estimateMeterQuote({
-    modelId,
+    modelId: effectiveCanonicalModel,
     inputTokensEstimate: inputTokens > 0 ? inputTokens : quote.inputTokensEstimate,
     outputTokensEstimate: outputTokens > 0 ? outputTokens : quote.outputTokensEstimate,
    })
    const charge = applyMeterChargeEvent({
     id: `chg_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`,
-    modelId,
+    modelId: effectiveCanonicalModel,
     inputTokens: inputTokens > 0 ? inputTokens : quote.inputTokensEstimate,
     outputTokens: outputTokens > 0 ? outputTokens : quote.outputTokensEstimate,
     rawCostUsd: finalQuote.rawCostUsd,
@@ -405,6 +549,18 @@ export const getAiClient = () => {
   }
 
   return response
+ }) as any
+
+ baseClient.models.generateContentStream = (async (...args: any[]) => {
+  const entitlement = getCurrentEntitlement()
+  if (entitlement.subscriptionPlanId === "beta" && keySource !== "custom") {
+   throw new Error(
+    "Beta Version requires your own Gemini API Key. Please set it in System Settings -> Key Vault.",
+   )
+  }
+  return await withCanonicalModel("generateContentStream", args, (nextArgs) =>
+   (generateContentStream as any)(...nextArgs),
+  )
  }) as any
 
  return baseClient
@@ -428,23 +584,15 @@ export const getActiveModel = (
   | "live" = "text",
 ): string => {
  const { modelPreference } = getAiSettings()
-
+ const selected = toCanonicalModel(modelPreference)
+ 
+ // HYBRID STRATEGY (MAY 2026)
+ if (capability === "thinking" || capability === "analysis") return "gemini-3.1-pro-preview"
  if (capability === "image") return "gemini-3.1-flash-image-preview"
- if (capability === "video") return "veo-3.1-fast-generate-preview"
- if (capability === "fast-text") return "gemini-3.1-flash-lite-preview"
- if (capability === "audio") return "gemini-2.5-flash-preview-tts"
- if (capability === "tts") return "gemini-2.5-flash-preview-tts"
- if (capability === "live")
-  return "gemini-2.5-flash-native-audio-preview-12-2025"
-
- if (modelPreference === "flash") {
-  return "gemini-3-flash-preview"
- }
-
- // Pro preference
- if (capability === "analysis") return "gemini-3-flash-preview" // Use flash for large JSON generation to avoid timeouts
- if (capability === "thinking") return "gemini-3.1-pro-preview"
- return "gemini-3.1-pro-preview"
+ if (capability === "video" || capability === "audio") return "gemini-3-flash-preview"
+ if (capability === "fast-text" || capability === "text") return "gemini-3.1-flash-lite"
+ 
+ return selected
 }
 
 // --- HARBOR PILOT: RELIABILITY HELPERS ---
@@ -813,9 +961,7 @@ export const generateSeoData = async (
  const preferred = getActiveModel("analysis")
 
  const modelsToTry = [preferred]
- if (preferred !== "gemini-3-flash-preview") {
-  modelsToTry.push("gemini-3-flash-preview")
- }
+ 
 
  for (const modelId of modelsToTry) {
   try {
@@ -1133,12 +1279,22 @@ export const generateKeywordAnalysis = async (
  })
 }
 
-// --- Thumbnail Studio (Pro Image) ---
+// --- Thumbnail Studio v3 (2026 Strategic Clarity) ---
+export type ThumbnailConceptResult = {
+ prompt: string
+ aspectRatio: AspectRatio
+ hookText: string
+ expression: string
+ colorStrategy: string
+}
+
 export const generateThumbnailConcept = async (
   seoResult?: SeoResult | null,
   currentPrompt?: string,
   brain?: any,
-): Promise<{ prompt: string; aspectRatio: AspectRatio }> => {
+  expression?: string,
+  surfaceMode?: "mobile" | "ctv",
+): Promise<ThumbnailConceptResult> => {
   const ai = getAiClient()
   const journalContext = getJournalKnowledge(brain)
 
@@ -1148,26 +1304,69 @@ export const generateThumbnailConcept = async (
    visualPrompt: {
     type: Type.STRING,
     description:
-     "A highly detailed text-to-image prompt optimized for high CTR.",
+     "A highly detailed text-to-image prompt optimized for 2026 Quality CTR. Prioritize authentic, natural lighting over synthetic AI polish.",
+   },
+   hookText: {
+    type: Type.STRING,
+    description:
+     "Exactly 0-3 words that open a curiosity gap. NEVER repeat the video title. Examples: '$0 to $10K', 'NOT AGAIN', 'They Lied'.",
+   },
+   expression: {
+    type: Type.STRING,
+    enum: ["surprise", "concern", "focus", "smile", "none"],
+    description:
+     "The recommended facial micro-expression for the subject. 'concern' achieves highest avg views (2.3M) due to rarity. 'surprise' is most common (+35% CTR in entertainment).",
+   },
+   colorStrategy: {
+    type: Type.STRING,
+    description:
+     "A brief description of the 60-30-10 color allocation. Example: '60% deep navy background, 30% warm skin tones, 10% bright yellow accent text'.",
    },
    aspectRatio: {
     type: Type.STRING,
     enum: ["16:9", "9:16"],
     description:
-     "The optimal aspect ratio based on if the content implies Shorts or Long-form.",
+     "The optimal aspect ratio. 16:9 for Long-form, 9:16 for Shorts.",
    },
   },
-  required: ["visualPrompt", "aspectRatio"],
+  required: ["visualPrompt", "hookText", "expression", "colorStrategy", "aspectRatio"],
  }
 
+ const surfaceContext = surfaceMode === "ctv"
+  ? "SURFACE: Connected TV (CTV). Design for living room viewing. Use liquid highlights, hyper-realism, and episodic series styling."
+  : "SURFACE: Mobile-first (70% of views). Design for 130px width readability. Shoulder-up framing for faces. Keep bottom-right clear for duration badge."
+
+ const expressionContext = expression && expression !== "none"
+  ? `REQUESTED EXPRESSION: The creator wants a '${expression}' micro-expression. Incorporate this into the visual prompt.`
+  : ""
+
  const prompt = `
-    IDENTITY: You are a world-class YouTube Thumbnail Artist.
-    CREATOR VISION: ${journalContext}
-    ${seoResult ? `INPUT: Concept: ${seoResult.concept}, Niche: ${seoResult.niche}, Title: ${seoResult.titleSets?.[0]?.title}.` : ""}
-    ${currentPrompt ? `CURRENT DRAFT PROMPT TO REFINE: "${currentPrompt}"` : ""}
-    TASK: Create a visual prompt for a generative AI model. ${currentPrompt ? "Refine and improve the CURRENT DRAFT PROMPT to make it more professional and effective." : ""}
-    RULES: Subject focus, Rule of Thirds, Minimal Text (2-3 words), High Saturation, 16:9 default unless Shorts.
-    OUTPUT: JSON with 'visualPrompt' and 'aspectRatio'.
+<role>
+You are a world-class YouTube Thumbnail Strategist optimized for 2026 algorithmic performance.
+Your designs prioritize "Quality CTR" — clicks that lead to high watch-time retention, not just raw clicks.
+</role>
+
+<context>
+CREATOR VISION: ${journalContext}
+${seoResult ? `INPUT: Concept: ${seoResult.concept}, Niche: ${seoResult.niche}, Title: ${seoResult.titleSets?.[0]?.title}.` : ""}
+${currentPrompt ? `CURRENT DRAFT PROMPT TO REFINE: "${currentPrompt}"` : ""}
+${surfaceContext}
+${expressionContext}
+</context>
+
+<rules>
+1. PROOF OF HUMAN: Prioritize natural lighting and genuine micro-expressions over polished synthetic faces. Avoid "plastic" AI skin textures. Viewers in 2026 exhibit "glossy blindness" — they skip over-polished visuals.
+2. 3-FOCAL-POINT CONSTRAINT: Maximum 3 focal points. Use Rule of Thirds to place the primary subject off-center. More than 3 focal points causes a 42% retention drop.
+3. TEXT HOOK (0-3 WORDS): Generate exactly 0-3 words that open a "curiosity gap." NEVER repeat the video title. The text must survive compression to 130px width.
+4. COLOR HIERARCHY (60-30-10): Apply the 60-30-10 rule — 60% dominant background, 30% secondary subject, 10% high-intensity accent. Bright yellow (#FFE500) performs best for dark mode backgrounds.
+5. MOBILE-FIRST: Subject framing must be shoulder-up for face thumbnails. Eyes positioned in the upper third of the frame. Bottom-right must remain clear for the duration badge overlay.
+6. EXPRESSION: Recommend the most effective micro-expression for this niche. "Concern/Sadness" = 2.3M avg views (rare, high curiosity). "Surprise" = +35% CTR (entertainment). "Focus" = +12% (tech/gaming). "Smile" = +23% (tutorials/vlogs).
+</rules>
+
+<task>
+${currentPrompt ? "Refine and improve the CURRENT DRAFT PROMPT using the 2026 rules above. Make it more authentic, focused, and high-converting." : "Create a visual prompt for a generative AI model that follows all 2026 performance rules above."}
+Return JSON with 'visualPrompt', 'hookText', 'expression', 'colorStrategy', and 'aspectRatio'.
+</task>
   `
 
  return await executeWithRetry(async () => {
@@ -1190,6 +1389,9 @@ export const generateThumbnailConcept = async (
 
    return {
     prompt: data.visualPrompt,
+    hookText: data.hookText || "",
+    expression: data.expression || "none",
+    colorStrategy: data.colorStrategy || "",
     aspectRatio:
      data.aspectRatio === "9:16" ?
       AspectRatio.PORTRAIT_9_16
@@ -1202,6 +1404,9 @@ export const generateThumbnailConcept = async (
    const corrected = await selfCorrectJson(text, responseSchema)
    return {
     prompt: corrected.visualPrompt,
+    hookText: corrected.hookText || "",
+    expression: corrected.expression || "none",
+    colorStrategy: corrected.colorStrategy || "",
     aspectRatio:
      corrected.aspectRatio === "9:16" ?
       AspectRatio.PORTRAIT_9_16
@@ -1244,7 +1449,7 @@ export const transcribeAudio = async (
  return queueGeminiTask(async () => {
   const ai = getAiClient()
   const response = await ai.models.generateContent({
-   model: "gemini-3-flash-preview",
+   model: "gemini-3.1-flash",
    contents: [
     {
      parts: [
@@ -1272,7 +1477,7 @@ export const generateVideo = async (
  const ai = getAiClient()
 let operation = await queueGeminiTask(() =>
   ai.models.generateVideos({
-   model: "veo-3.1-fast-generate-preview",
+   model: getActiveModel("video"),
    prompt: prompt,
    config: {
     numberOfVideos: 1,
@@ -1301,7 +1506,7 @@ export const analyzeImage = async (
  return queueGeminiTask(async () => {
   const ai = getAiClient()
   const response = await ai.models.generateContent({
-   model: "gemini-3.1-pro-preview",
+   model: "gemini-3.1-pro",
    contents: {
     parts: [
      {
@@ -1328,7 +1533,7 @@ export const generateImage = async (
  return queueGeminiTask(async () => {
   const ai = getAiClient()
   const response = await ai.models.generateContent({
-   model: "gemini-3-pro-image-preview",
+   model: "gemini-3.1-pro",
    contents: {
     parts: [{ text: prompt }],
    },
@@ -1382,7 +1587,7 @@ export const analyzeVideo = async (
 ): Promise<string> => {
  const ai = getAiClient()
  const response = await ai.models.generateContent({
-  model: "gemini-3.1-pro-preview",
+  model: "gemini-3.1-pro",
   contents: {
    parts: [
     {
@@ -1404,8 +1609,8 @@ export const generateThumbnail = async (
  prompt: string,
  aspectRatio: AspectRatio,
  imageSize: ImageSize,
- largeText?: string,
- smallText?: string,
+ hookText?: string,
+ surfaceMode: "mobile" | "ctv" = "mobile",
 ): Promise<string> => {
  if (window.aistudio) {
   const hasKey = await window.aistudio.hasSelectedApiKey()
@@ -1417,20 +1622,20 @@ export const generateThumbnail = async (
  const ai = getAiClient()
 
  let textInstruction = ""
- if (largeText || smallText) {
-  textInstruction = `\n\nCRITICAL TEXT INSTRUCTIONS: You MUST include the following text EXACTLY as written. Do NOT add any other text or words to the image.`
-  if (largeText)
-   textInstruction += `\n- Large Text: "${largeText}" (Make this very prominent and large)`
-  if (smallText)
-   textInstruction += `\n- Small Text: "${smallText}" (Make this smaller and secondary)`
+ if (hookText && hookText.trim()) {
+  textInstruction = `\n\nCRITICAL TEXT: Use only bold sans-serif fonts (weight 700+) with high-contrast outlines. Include "${hookText}" exactly as written. Do NOT add any other text or words. Text must cover 20-30% of the frame for mobile legibility.`
  }
+
+ const surfaceDirective = surfaceMode === "ctv"
+  ? "\nCTV PREMIUM: Use liquid highlights, hyper-realism, and episodic series styling for living room viewing. Higher gloss is acceptable for CTV surfaces."
+  : "\nMOBILE-FIRST: Subject must be shoulder-up (head and neck focus) for small-screen visibility. Eyes in upper third. Keep bottom-right clear for duration badge."
 
  const response = await ai.models.generateContent({
   model: getActiveModel("image"),
   contents: {
    parts: [
     {
-     text: `A high quality, click-baity, vibrant YouTube thumbnail: ${prompt}${textInstruction}`,
+     text: `A high-fidelity, high-contrast 1080p YouTube thumbnail in sRGB color profile: ${prompt}\n\nANTI-PLASTIC DIRECTIVE: Avoid synthetic AI skin textures. Use natural skin micro-expressions and cinematic lighting. Prioritize "Proof of Human" authenticity over polished perfection.${surfaceDirective}${textInstruction}`,
     },
    ],
   },
@@ -1464,20 +1669,30 @@ export const rateThumbnail = async (
   : "CONTEXT: No specific video topic provided. Judge based on general YouTube best practices."
 
  const prompt = `
-    ${contextPrompt}
-    TASK: Analyze thumbnail for CTR.
-    OUTPUT: 
-    1. Viral Score (0-100)
-    2. Analysis (2 sentences)
-    3. Strengths
-    4. Critical Fixes
+<role>You are a 2026 YouTube Thumbnail Performance Analyst. You evaluate thumbnails using data-driven criteria from the latest platform research.</role>
+
+${contextPrompt}
+
+<task>
+Analyze this thumbnail across the following 2026 performance dimensions. Be specific, actionable, and cite which rule each score is based on.
+
+SCORING DIMENSIONS:
+1. **Face Presence & Expression** (0-100) — Is there a clear human face? Rate the emotional trigger strength. Micro-expressions beat polished poses. "Concern" = highest avg views (2.3M), "Surprise" = +35% CTR.
+2. **Text Clarity Index** (0-100) — Is text readable at 130px width (mobile)? 0-3 words only. Bold sans-serif with high-contrast outlines? Does it open a curiosity gap or just repeat the title?
+3. **Color Contrast Ratio** (0-100) — Does it follow the 60-30-10 rule? Does it stand out in both light and dark mode feeds? Are muted/muddy colors avoided?
+4. **Composition Balance** (0-100) — Rule of Thirds applied? Max 3 focal points? Bottom-right clear for duration badge? Subject off-center?
+5. **Overall Quality CTR Score** (0-100) — Weighted composite. Would this thumbnail earn clicks that lead to watch-time, not just raw CTR?
+
+ADDITIONAL OUTPUT:
+- **Top 3 Strengths**: What this thumbnail does well.
+- **Top 3 Critical Fixes**: Specific, actionable changes with reasoning.
+- **Squint Test Verdict**: PASS or FAIL — Is the core concept identifiable when viewed at 130px width?
+- **Surface Recommendation**: Is this optimized for Mobile, CTV, or Both?
+</task>
   `
 
  const preferred = getActiveModel("analysis")
  const modelsToTry = [preferred]
- if (preferred !== "gemini-3-flash-preview") {
-  modelsToTry.push("gemini-3-flash-preview")
- }
 
  let lastError: any
 
@@ -1523,9 +1738,7 @@ export const generateStrategyResponse = async (
  const ai = getAiClient()
  const preferred = getActiveModel("thinking")
  const modelsToTry = [preferred]
- if (preferred !== "gemini-3-flash-preview") {
-  modelsToTry.push("gemini-3-flash-preview")
- }
+ 
 
  let lastError: any
 
@@ -1718,12 +1931,8 @@ export const generateTagSuggestions = async (
 
  const preferred = getActiveModel("fast-text")
  const modelsToTry = [preferred]
- if (preferred !== "gemini-3-flash-preview") {
-  modelsToTry.push("gemini-3-flash-preview")
- }
- if (!modelsToTry.includes("gemini-3.1-pro-preview")) {
-  modelsToTry.push("gemini-3.1-pro-preview")
- }
+ 
+ 
 
  let lastError: any
 
@@ -1826,12 +2035,8 @@ export const analyzeExistingTags = async (
 
  const preferred = getActiveModel("fast-text")
  const modelsToTry = [preferred]
- if (preferred !== "gemini-3-flash-preview") {
-  modelsToTry.push("gemini-3-flash-preview")
- }
- if (!modelsToTry.includes("gemini-3.1-pro-preview")) {
-  modelsToTry.push("gemini-3.1-pro-preview")
- }
+ 
+ 
 
  let lastError: any
 
@@ -1979,6 +2184,7 @@ export const analyzeMediaContent = async (
  mimeType: string,
  prompt: string,
  brain?: any,
+ metadata?: { compressedForAnalysis?: boolean; compressionProfile?: string },
 ): Promise<MediaAnalysisResult> => {
  const ai = getAiClient()
  const journalContext = getJournalKnowledge(brain)
@@ -1994,6 +2200,12 @@ export const analyzeMediaContent = async (
     type: Type.STRING,
     description:
      "Phase 1 Strategic Analysis: Gap, Search Intent, Verbal SEO, Retention Spike suggestions.",
+   },
+   suggestions: {
+    type: Type.ARRAY,
+    items: { type: Type.STRING },
+    description:
+     "5 concise, actionable creator checklist suggestions based on this media analysis.",
    },
    retentionCurve: {
     type: Type.ARRAY,
@@ -2020,9 +2232,10 @@ export const analyzeMediaContent = async (
 
  const preferred = getActiveModel("text")
  const modelsToTry = [preferred]
- if (preferred !== "gemini-3-flash-preview") {
-  modelsToTry.push("gemini-3-flash-preview")
- }
+ const compressionDirective = metadata?.compressedForAnalysis
+  ? `\nCompression Metadata: compressedForAnalysis=true; compressionProfile=${metadata?.compressionProfile || "unknown"}`
+  : ""
+ 
 
  let lastError: any
 
@@ -2039,7 +2252,13 @@ export const analyzeMediaContent = async (
        },
       },
       {
-       text: `Analyze the media content based on this prompt: ${prompt}. Creator Context: ${journalContext}\n\nAdditionally, provide a retention curve prediction based on video pacing, topic complexity, and audience engagement signals identified in the content.\n\nFinally, provide a Strategic Analysis section detailing Gap, Search Intent, Verbal SEO, and Retention Spike suggestions.`,
+       text: `Analyze the media content based on this prompt: ${prompt}. Creator Context: ${journalContext}${compressionDirective}
+
+Return:
+1) CONTENT OVERVIEW summary.
+2) STRATEGIC ANALYSIS with clearly labeled sections: Gap, Search Intent, Verbal SEO, Retention Spike Suggestions.
+3) A separate suggestions array with exactly 5 short, actionable checklist items.
+4) Retention curve prediction that is intentionally conservative/harsh (assume stronger drop-off risk after each transition, avoid optimistic plateaus).`,
       },
      ],
     },
@@ -2052,7 +2271,19 @@ export const analyzeMediaContent = async (
    const text = response.text
    if (!text) throw new Error("Could not analyze content.")
    const jsonStr = cleanJsonString(text)
-   return JSON.parse(jsonStr) as MediaAnalysisResult
+   const parsed = JSON.parse(jsonStr) as MediaAnalysisResult
+   if (Array.isArray(parsed.retentionCurve) && parsed.retentionCurve.length > 0) {
+    parsed.retentionCurve = parsed.retentionCurve.map((point, index, arr) => {
+     const progress = arr.length > 1 ? index / (arr.length - 1) : 0
+     const harsherPenalty = 4 + progress * 12
+     const harshValue = Math.max(18, Math.min(100, point.retention - harsherPenalty))
+     return {
+      ...point,
+      retention: Math.round(harshValue),
+     }
+    })
+   }
+   return parsed
   } catch (error: any) {
    console.warn(`Media Analysis failed with model ${model}:`, error.message)
    lastError = error
@@ -2075,15 +2306,17 @@ export const transcribeMediaContent = async (
  fileBase64: string,
  mimeType: string,
  brain?: any,
+ metadata?: { compressedForAnalysis?: boolean; compressionProfile?: string },
 ): Promise<string> => {
  const ai = getAiClient()
  const journalContext = getJournalKnowledge(brain)
 
  const preferred = getActiveModel("text")
  const modelsToTry = [preferred]
- if (preferred !== "gemini-3-flash-preview") {
-  modelsToTry.push("gemini-3-flash-preview")
- }
+ const compressionDirective = metadata?.compressedForAnalysis
+  ? ` Compression Metadata: compressedForAnalysis=true; compressionProfile=${metadata?.compressionProfile || "unknown"}.`
+  : ""
+ 
 
  let lastError: any
 
@@ -2099,7 +2332,7 @@ export const transcribeMediaContent = async (
         mimeType: mimeType,
        },
       },
-      { text: `Transcribe audio verbatim. No timestamps. Raw text only. Creator Context: ${journalContext}` },
+      { text: `Transcribe audio verbatim. No timestamps. Raw text only. Creator Context: ${journalContext}.${compressionDirective}` },
      ],
     },
    })
@@ -2176,9 +2409,7 @@ export const generateHook = async (
 
  const preferred = getActiveModel("analysis")
  const modelsToTry = [preferred]
- if (preferred !== "gemini-3-flash-preview") {
-  modelsToTry.push("gemini-3-flash-preview")
- }
+ 
 
  let lastError: any
 
@@ -2335,8 +2566,8 @@ export const analyzeChannelData = async (
  const modelsToTry = Array.from(
   new Set([
    preferred,
-   "gemini-3-flash-preview",
-   "gemini-3.1-flash-lite-preview",
+   "gemini-3.1-flash",
+   "gemini-3.1-flash",
   ]),
  )
 

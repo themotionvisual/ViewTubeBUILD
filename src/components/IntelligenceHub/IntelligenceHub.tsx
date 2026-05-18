@@ -14,6 +14,9 @@ import type {
  KeywordAnalysis,
  UltimateChannelReport,
  ReportSectionPayload,
+ ReportPreflightResult,
+ ReportSectionState,
+ SectionGenerationEvent,
 } from "./types"
 import { IntelligenceChart } from "./IntelligenceChart"
 import { emitSignal } from "../../services/brain"
@@ -27,12 +30,14 @@ type IntelligenceHubProps = {
  autoContext?: string
  dataSources?: string[]
  mode?: "full" | "ultimate"
+ embedded?: boolean
 }
 
 const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
  autoContext = "",
  dataSources = [],
  mode = "full",
+ embedded = false,
 }) => {
  const triggerRef = useRef<() => Promise<void>>(async () => {})
  const [loading, setLoading] = useState(false)
@@ -48,12 +53,31 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
     return null
    }
   })
- const [nexusContext, setNexusContext] = useState("")
- const [activeSectionIdx, setActiveSectionIdx] = useState(0)
+const [nexusContext, setNexusContext] = useState("")
+const [activeSectionIdx, setActiveSectionIdx] = useState(0)
+ const [generationStatus, setGenerationStatus] = useState<string | null>(null)
+ const [sectionStates, setSectionStates] = useState<ReportSectionState[]>([])
+ const [generationEvents, setGenerationEvents] = useState<SectionGenerationEvent[]>([])
+ const [preflight, setPreflight] = useState<ReportPreflightResult | null>(null)
+ const [sessionMeta, setSessionMeta] = useState<{
+  generationId: string
+  startedAt: string
+  finishedAt?: string
+  overallStatus: "running" | "complete" | "degraded" | "failed"
+  completedCount: number
+  failedCount: number
+  degradedCount: number
+  totalCount: number
+ } | null>(null)
  const showFullSurface = mode === "full"
 
  const runOmniBrain = async () => {
   setLoading(true)
+  setGenerationStatus("Generating report...")
+  setGenerationEvents([])
+  setSectionStates([])
+  setSessionMeta(null)
+  setPreflight(null)
   emitSignal("omni-brain", "SYNC_DNA_RUN", {
    context: nexusContext || autoContext || "AUTO_CONTEXT",
   }).catch(console.error)
@@ -67,11 +91,31 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
     manualIntent: nexusContext,
     autoContext,
     dataSources,
+    onSessionUpdate: (meta) => setSessionMeta(meta),
+    onSectionUpdate: (section, event) => {
+      setSectionStates((prev) => {
+       const next = [...prev]
+       const idx = next.findIndex((entry) => entry.id === section.id)
+       if (idx >= 0) next[idx] = section
+       else next.push(section)
+       next.sort((a, b) => a.order - b.order)
+       return next
+      })
+      setGenerationEvents((prev) => [event, ...prev].slice(0, 100))
+    },
    })
    setDiagnosis(diagRes)
    setReport(oracleRes)
    setKeywordData(kwRes)
    setUltimateReport(unifiedReport)
+   setGenerationStatus(
+    unifiedReport.meta.overallStatus === "degraded" || unifiedReport.meta.overallStatus === "failed"
+     ? "Report generated in partial/degraded mode. Review failed sections in timeline."
+     : "Report generated successfully."
+   )
+   setSectionStates(unifiedReport.sectionStates || [])
+   setGenerationEvents(unifiedReport.generationEvents || [])
+   setPreflight(unifiedReport.meta.diagnostics.preflight || null)
    localStorage.setItem(
     ULTIMATE_REPORT_STORAGE_KEY,
     JSON.stringify(unifiedReport),
@@ -93,6 +137,21 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
    setActiveSectionIdx(0)
   } catch (e) {
    console.error(e)
+   const msg = e instanceof Error ? e.message : "Ultimate report generation failed."
+   if (msg.startsWith("REPORT_PREFLIGHT_BLOCKED::")) {
+    try {
+     const parsed = JSON.parse(msg.replace("REPORT_PREFLIGHT_BLOCKED::", "")) as {
+      message?: string
+      preflight?: ReportPreflightResult
+     }
+     setGenerationStatus(parsed.message || "Generation blocked by required source gate.")
+     setPreflight(parsed.preflight || null)
+    } catch {
+     setGenerationStatus("Generation blocked by preflight gate.")
+    }
+   } else {
+    setGenerationStatus(msg)
+   }
   } finally {
    setLoading(false)
   }
@@ -175,8 +234,82 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
   )
  }
 
+ const numberLike = (value: unknown): number => {
+  const numeric = Number(String(value ?? "").replace(/[^0-9.-]/g, ""))
+  return Number.isFinite(numeric) ? numeric : 0
+ }
+
+ const deriveChartData = (
+  blockTitle: string,
+  tableSpec?: { headers: string[]; rows: Array<Array<string | number>> },
+  chartSpec?: { xAxisKey: string; dataKeys: string[] },
+ ): Array<Record<string, unknown>> => {
+  const upperTitle = String(blockTitle || "").toUpperCase()
+
+  const keywordMatrixRows = ultimateReport?.keywordComparisonTable?.rows || []
+  const keywordMatrixHeaders = ultimateReport?.keywordComparisonTable?.headers || []
+  const keywordMatrixData = keywordMatrixRows.map((row) => {
+   const record: Record<string, unknown> = {}
+   keywordMatrixHeaders.forEach((h, i) => {
+    record[String(h)] = row[i]
+   })
+   const keyword = String(row[0] || "")
+   record.keyword = keyword
+   record.avgViews = numberLike(row[1])
+   record.avgRetention = numberLike(row[2])
+   record.avgSubs = numberLike(row[3])
+   record.efficiencyScore = numberLike(row[4])
+   return record
+  })
+
+  if (upperTitle.includes("ENGAGEMENT MATRIX") && keywordMatrixData.length > 0) {
+   return keywordMatrixData.map((row) => ({
+    keyword: row.keyword,
+    avgRetention: numberLike(row.avgRetention),
+    avgSubs: numberLike(row.avgSubs),
+    efficiencyScore: numberLike(row.efficiencyScore),
+   }))
+  }
+
+  if (upperTitle.includes("KEYWORD") && keywordMatrixData.length > 0) {
+   return keywordMatrixData.map((row) => ({
+    keyword: row.keyword,
+    avgViews: numberLike(row.avgViews),
+    avgRetention: numberLike(row.avgRetention),
+    avgSubs: numberLike(row.avgSubs),
+    efficiencyScore: numberLike(row.efficiencyScore),
+   }))
+  }
+
+  if (upperTitle.includes("COMPARATIVE") && tableSpec?.headers?.length && tableSpec?.rows?.length) {
+   return tableSpec.rows.map((row) => ({
+    dimension: String(row[0] || ""),
+    value: numberLike(row[1]),
+   }))
+  }
+
+  if (tableSpec?.headers?.length && tableSpec?.rows?.length && chartSpec) {
+   const headers = tableSpec.headers.map((h) => String(h || "").trim())
+   return tableSpec.rows.map((row) => {
+    const obj: Record<string, unknown> = {}
+    headers.forEach((header, idx) => {
+      obj[header] = row[idx]
+    })
+    if (!(chartSpec.xAxisKey in obj) && headers[0]) obj[chartSpec.xAxisKey] = row[0]
+    chartSpec.dataKeys.forEach((key, idx) => {
+      if (!(key in obj) && headers[idx + 1]) obj[key] = row[idx + 1]
+    })
+    return obj
+   })
+  }
+  return keywordData?.keywordMetrics || []
+ }
+
  return (
-  <div className="animate-fade-in max-w-[1500px] mx-auto pb-24">
+  <div
+   className={`animate-fade-in max-w-[1500px] mx-auto ${
+    embedded ? "pb-0" : "pb-24"
+   }`}>
    {showFullSurface ?
     <div className="border-4 border-black bg-white rounded-3xl overflow-hidden shadow-[8px_8px_0px_0px_black] mb-12">
      <div className="bg-[#00CCFF] border-b-4 border-black px-6 py-4 flex items-center justify-between">
@@ -190,19 +323,19 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
        Strategy DNA Broadcast
       </span>
      </div>
-     <div className="p-6 bg-black flex flex-col md:flex-row gap-4">
+     <div className="p-6 bg-[#F4F7F8] flex flex-col md:flex-row gap-4">
       <input
        type="text"
        value={nexusContext}
        onChange={(e) => setNexusContext(e.target.value)}
        placeholder="INPUT STRATEGIC INTENT OR PASTE CHANNEL METRICS..."
-       className="flex-1 bg-transparent border-2 border-[#00CCFF] text-[#00CCFF] p-4 font-black text-sm uppercase tracking-widest outline-none placeholder:text-[#00CCFF]/30 rounded-xl"
+       className="flex-1 bg-white border-2 border-black/25 text-black p-4 font-black text-sm uppercase tracking-widest outline-none placeholder:text-black/35 rounded-xl"
        disabled={loading}
       />
       <button
        onClick={runOmniBrain}
        disabled={loading}
-       className="bg-[#00CCFF] text-black font-[1000] text-xl uppercase px-12 py-4 rounded-xl border-2 border-[#00CCFF] hover:bg-white hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+       className="bg-[#00CCFF] text-black font-[1000] text-xl uppercase px-12 py-4 rounded-xl border-2 border-black hover:bg-white hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
        {loading ?
         <>
          <Loader2 className="animate-spin" size={24} /> CALIBRATING...
@@ -211,25 +344,32 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
       </button>
      </div>
     </div>
-   : <div className="border-4 border-black bg-white rounded-3xl overflow-hidden shadow-[8px_8px_0px_0px_black] mb-12">
-     <div className="bg-[#CCFF00] border-b-4 border-black px-6 py-4 flex items-center justify-between">
-      <div className="flex items-center gap-3">
-       <FileText size={24} className="text-black" />
-       <span className="text-2xl font-[1000] uppercase tracking-tight text-black">
-        Performance Ultimate Report Generator
+   : <div
+     className={
+      embedded ?
+       "border-0 bg-transparent rounded-none overflow-visible shadow-none mb-0"
+      : "border-4 border-black bg-white rounded-3xl overflow-hidden shadow-[8px_8px_0px_0px_black] mb-12"
+     }>
+     {!embedded && (
+      <div className="bg-[#CCFF00] border-b-4 border-black px-6 py-4 flex items-center justify-between">
+       <div className="flex items-center gap-3">
+        <FileText size={24} className="text-black" />
+        <span className="text-2xl font-[1000] uppercase tracking-tight text-black">
+         Intelligence Report Generator
+        </span>
+       </div>
+       <span className="text-[10px] font-black opacity-60 tracking-widest uppercase">
+        Optional Context
        </span>
       </div>
-      <span className="text-[10px] font-black opacity-60 tracking-widest uppercase">
-       No Required Manual Input
-      </span>
-     </div>
-     <div className="p-6 bg-black flex flex-col md:flex-row gap-4">
+     )}
+     <div className={`bg-[#F4F7F8] flex flex-col md:flex-row gap-4 ${embedded ? "p-0" : "p-6"}`}>
       <input
        type="text"
        value={nexusContext}
        onChange={(e) => setNexusContext(e.target.value)}
        placeholder="OPTIONAL: ADD EXTRA STRATEGIC CONTEXT"
-       className="flex-1 bg-transparent border-2 border-[#CCFF00] text-[#CCFF00] p-4 font-black text-sm uppercase tracking-widest outline-none placeholder:text-[#CCFF00]/35 rounded-xl"
+       className="flex-1 bg-white border-2 border-black/25 text-black p-4 font-black text-sm uppercase tracking-widest outline-none placeholder:text-black/35 rounded-xl"
        disabled={loading}
       />
       <button
@@ -240,7 +380,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
         <>
          <Loader2 className="animate-spin" size={24} /> GENERATING...
         </>
-       : "GENERATE ULTIMATE REPORT"}
+       : "CONNECT TO CREATE"}
       </button>
      </div>
     </div>
@@ -260,6 +400,21 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
       </span>
      </div>
      <div className="p-6 md:p-8 bg-[#f5f5f5] space-y-6">
+      {generationStatus && (
+       <div className="border-3 border-black rounded-2xl bg-[#FFF2A8] px-4 py-3">
+        <p className="text-[11px] font-black uppercase tracking-[0.12em] text-black">{generationStatus}</p>
+       </div>
+      )}
+      {preflight && !preflight.ok && (
+       <div className="border-3 border-black rounded-2xl bg-[#FFE3E8] px-4 py-3 space-y-2">
+        <p className="text-[11px] font-black uppercase tracking-[0.12em] text-black">Generation Blocked · Required Sources Missing</p>
+        <ul className="text-xs font-bold list-disc ml-5">
+         {preflight.blockers.map((blocker) => (
+          <li key={blocker}>{blocker}</li>
+         ))}
+        </ul>
+       </div>
+      )}
       <div className="border-3 border-black bg-white rounded-2xl p-4 md:p-6">
        <h3 className="text-xl font-[1000] uppercase mb-2">
         Executive Command Snapshot
@@ -271,7 +426,49 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
        <p className="text-sm font-bold whitespace-pre-wrap">
         {ultimateReport.executiveSummary}
        </p>
+       {(ultimateReport.meta.overallStatus || sessionMeta?.overallStatus) && (
+        <div className="mt-4 border-2 border-black rounded-xl bg-[#f8f8f8] p-3">
+         <p className="text-[10px] font-black uppercase tracking-[0.12em]">
+          Run Health · {(ultimateReport.meta.overallStatus || sessionMeta?.overallStatus || "running").toUpperCase()}
+         </p>
+         <p className="text-[10px] font-bold mt-1">
+          Completed: {ultimateReport.meta.completedCount || 0} · Degraded: {ultimateReport.meta.degradedCount || 0} · Failed: {ultimateReport.meta.failedCount || 0}
+         </p>
+        </div>
+       )}
       </div>
+      {sectionStates.length > 0 && (
+       <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
+        <aside className="xl:col-span-3 border-3 border-black rounded-2xl bg-white p-4">
+         <h4 className="font-[1000] uppercase text-sm mb-3">Section Timeline</h4>
+         <div className="space-y-2 max-h-[420px] overflow-auto pr-1">
+          {sectionStates.map((section) => (
+           <div key={`timeline-${section.id}`} className="border-2 border-black rounded-lg p-2 bg-[#f8f8f8]">
+            <div className="flex items-center justify-between gap-2">
+             <span className="text-[10px] font-black uppercase">{section.order}. {section.title}</span>
+             <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded border border-black">{section.status}</span>
+            </div>
+           </div>
+          ))}
+         </div>
+        </aside>
+        <aside className="xl:col-span-9 border-3 border-black rounded-2xl bg-white p-4">
+         <h4 className="font-[1000] uppercase text-sm mb-3">Generation Stream</h4>
+         <div className="space-y-2 max-h-[420px] overflow-auto pr-1">
+          {generationEvents.length === 0 ? (
+           <p className="text-xs font-bold text-black/50">No section events yet.</p>
+          ) : (
+           generationEvents.map((event, idx) => (
+            <div key={`event-${idx}`} className="border-2 border-black rounded-lg p-2 bg-[#f8f8f8]">
+             <p className="text-[9px] font-black uppercase">{event.sectionId} · {event.status}</p>
+             <p className="text-[10px] font-bold">{event.note}</p>
+            </div>
+           ))
+          )}
+         </div>
+        </aside>
+       </div>
+      )}
       <div className="grid grid-cols-1 gap-5">
        {ultimateReport.blocks.map((block) => (
         <section
@@ -294,15 +491,27 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
          </header>
          <div className="p-4 md:p-5 space-y-4">
           <p className="text-sm font-bold leading-relaxed whitespace-pre-wrap">
-           {block.summary}
+           {block.summary || "Section generated without summary. Review diagnostics in timeline."}
           </p>
           {renderPayload(block.payload)}
           {block.chartSuggestion && (
            <div className="border-2 border-black rounded-xl bg-gray-50 p-4 overflow-x-auto">
-            <IntelligenceChart
-             config={block.chartSuggestion}
-             data={keywordData?.keywordMetrics || []}
-            />
+            {(() => {
+             const sectionChartData = deriveChartData(block.title, block.tableSpec, block.chartSuggestion)
+             if (!sectionChartData.length) {
+              return (
+               <p className="text-xs font-bold">
+                Chart data unavailable for this section in current run.
+               </p>
+              )
+             }
+             return (
+              <IntelligenceChart
+               config={block.chartSuggestion}
+               data={sectionChartData}
+              />
+             )
+            })()}
            </div>
           )}
           {block.tableSpec && (

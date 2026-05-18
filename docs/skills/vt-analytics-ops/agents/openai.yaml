@@ -1,0 +1,4 @@
+interface:
+  display_name: "VT Analytics Ops"
+  short_description: "ViewTube analytics sync and chart operations"
+  default_prompt: "Use this skill to troubleshoot and optimize ViewTube analytics sync, diagnostics, chart contracts, and PerformanceHub validation with API-compatible request shapes."

@@ -229,7 +229,7 @@ const AlgorithmArchitect: React.FC = () => {
                     <select
                       value={targetVideoId}
                       onChange={(e) => setTargetVideoId(e.target.value)}
-                      className="w-full pop-input p-5 text-lg font-black uppercase tracking-tighter"
+                      className="w-full vt-input-standard p-5 text-lg font-black uppercase tracking-tighter"
                     >
                       <option value="">— SELECT PRODUCTION TRACK —</option>
                       {recentVideos.map((v) => (

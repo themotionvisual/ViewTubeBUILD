@@ -145,7 +145,7 @@ export const DailyOracleWidget = ({ widget, instance, editMode, onToggleCollapse
      opacity: advice.completed ? 0.5 : 1, transition: "all 0.2s",
     }}>
     {isPriority && <div style={{ width: "6px", background: advice.color, flexShrink: 0 }} />}
-    {!isPriority && <div style={{ width: "10px", height: "36px", borderRadius: "999px", border: "2px solid #000", background: advice.color, flexShrink: 0, margin: "auto 0 auto 12px" }} />}
+    {!isPriority && <div style={{ width: "8px", borderRadius: "999px", background: advice.color, flexShrink: 0, margin: "8px 0 8px 10px" }} />}
     <div style={{ flex: 1, padding: isPriority ? "12px" : "10px 12px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
      <div style={{ flex: 1 }}>
       <div style={{
@@ -184,12 +184,7 @@ export const DailyOracleWidget = ({ widget, instance, editMode, onToggleCollapse
  return (
   <WidgetShell
    {...common}
-   icon={<Sparkles size={22} />}
-   hasAI
-   aiCost={ORACLE_COST}
-   aiDisabled={!canAffordOracle || isGenerating}
-   aiDisabledReason={!canAffordOracle ? (entitlement.tier === "free" ? "Upgrade required for Oracle AI." : `Need ${ORACLE_COST} credits.`) : undefined}
-   onRegenerate={regenerate}>
+   icon={<Sparkles size={22} />}>
    <div style={{ display: "flex", flexDirection: "column", gap: "10px", height: "100%", overflowY: "auto", paddingBottom: "12px" }}>
     {/* Header Row */}
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>

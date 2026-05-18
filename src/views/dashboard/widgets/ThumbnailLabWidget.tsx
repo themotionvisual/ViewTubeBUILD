@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { useEntitlement } from "../../../app/AppShell"
 import { Image as ImageIcon, Sparkles, Download, Search, CheckCircle2, AlertTriangle, Upload, ArrowRight } from "lucide-react"
@@ -27,6 +27,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   const [videoSearch, setVideoSearch] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
   const [result, setResult] = useState<any>(null)
+  const [inboundImageUrl, setInboundImageUrl] = useState<string | null>(null)
 
   // A/B Test state
   const [variants, setVariants] = useState([
@@ -95,14 +96,32 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   }
 
   const reset = () => { setResult(null); setPrompt(""); setSelectedVideo("") }
-  const bestIdx = variants.reduce((best, v, i) => v.score > variants[best].score ? i : best, 0)
 
-  const triggerHeaderAi = () => {
-    if (modeGuardReason || isProcessing || abAnalyzing) return
-    if (mode === "generate") handleGenerate()
-    if (mode === "analyze") handleAnalyze()
-    if (mode === "abtest") void analyzeThumbnails()
-  }
+  useEffect(() => {
+    const applyImage = (payload: any) => {
+      if (!payload?.imageUrl) return
+      setMode("analyze")
+      setInboundImageUrl(payload.imageUrl)
+      setResult({
+        type: "generation",
+        imageUrl: payload.imageUrl,
+      })
+    }
+
+    const onBridge = (event: Event) => {
+      const detail = (event as CustomEvent<any>).detail
+      if (!detail || detail.targetWidget !== "thumb-ai") return
+      applyImage(detail)
+    }
+
+    window.addEventListener("vt_dashboard_generated_image", onBridge as EventListener)
+    try {
+      const cached = localStorage.getItem("vt_bridge_image_thumb-ai")
+      if (cached) applyImage(JSON.parse(cached))
+    } catch {}
+    return () => window.removeEventListener("vt_dashboard_generated_image", onBridge as EventListener)
+  }, [])
+  const bestIdx = variants.reduce((best, v, i) => v.score > variants[best].score ? i : best, 0)
 
   const TABS: { id: TabMode; label: string; color: string }[] = [
     { id: "generate", label: "Generate", color: "#FF83EA" },
@@ -161,11 +180,6 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
     <WidgetShell
       {...common}
       icon={<ImageIcon size={22} />}
-      hasAI
-      aiCost={modeTokenCost}
-      aiDisabled={Boolean(modeGuardReason) || isProcessing || abAnalyzing}
-      aiDisabledReason={modeGuardReason || undefined}
-      onRegenerate={triggerHeaderAi}
       headerContent={modeTabBar}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px", overflowY: "auto" }}>
 
@@ -182,9 +196,10 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
             <button
               onClick={handleGenerate}
               disabled={isProcessing || !prompt.trim() || !canAffordModeCost}
-              style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", background: "#FF83EA", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", cursor: "pointer", boxShadow: "2px 2px 0 0 #000", opacity: !prompt.trim() ? 0.5 : 1 }}>
+              className="vt-button primary"
+              style={{ height: "36px", width: "100%", opacity: !prompt.trim() ? 0.5 : 1 }}>
               {isProcessing ? <div style={{ width: "12px", height: "12px", border: "2px solid rgba(0,0,0,0.2)", borderTop: "2px solid #000", borderRadius: "50%", animation: "spin 1s linear infinite" }} /> : <Sparkles size={14} />}
-              {isProcessing ? "Generating..." : `Generate Concept (${modeTokenCost}C)`}
+              {isProcessing ? "Generating..." : "Generate Concept"}
             </button>
           </div>
         )}
@@ -192,6 +207,14 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
         {/* ANALYZE MODE */}
         {mode === "analyze" && !result && (
           <div style={{ display: "flex", flexDirection: "column", gap: "8px", flex: 1 }}>
+            {inboundImageUrl && (
+              <div style={{ border: "2px solid #000", borderRadius: "8px", overflow: "hidden", background: "#fff" }}>
+                <img src={inboundImageUrl} alt="Inbound generated asset" style={{ width: "100%", height: "100px", objectFit: "cover", borderBottom: "2px solid #000" }} />
+                <div style={{ padding: "4px 8px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.7 }}>
+                  Incoming Generated Image
+                </div>
+              </div>
+            )}
             {videoDropdown}
             {activeVideo && (
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px", background: "#f5f5f5", border: "2px solid #000", borderRadius: "8px", overflow: "hidden" }}>
@@ -212,9 +235,10 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
                   <button
                     onClick={handleAnalyze}
                     disabled={isProcessing || !canAffordModeCost}
-                    style={{ width: "100%", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", background: "#00D2FF", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", cursor: "pointer", boxShadow: "2px 2px 0 0 #000" }}>
+                    className="vt-button primary"
+                    style={{ width: "100%", height: "36px" }}>
                     {isProcessing ? <div style={{ width: "12px", height: "12px", border: "2px solid rgba(0,0,0,0.2)", borderTop: "2px solid #000", borderRadius: "50%", animation: "spin 1s linear infinite" }} /> : <Search size={14} />}
-                    {isProcessing ? "Analyzing..." : `Analyze Thumbnail (${modeTokenCost}C)`}
+                    {isProcessing ? "Analyzing..." : "Analyze Thumbnail"}
                   </button>
                 </div>
               </div>
@@ -274,14 +298,11 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
             <button
               onClick={analyzeThumbnails}
               disabled={abAnalyzing || !variants.some(v => v.image) || !canAffordModeCost}
+              className={`vt-button ${abAnalyzing ? "" : "primary"}`}
               style={{
-                height: "36px", border: "2px solid #000", borderRadius: "10px",
-                background: abAnalyzing ? "#eee" : "#C9F830", fontSize: "10px", fontWeight: 1000,
-                textTransform: "uppercase", cursor: abAnalyzing ? "wait" : "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-                boxShadow: "3px 3px 0 0 #000",
+                height: "36px", width: "100%"
               }}>
-              <Sparkles size={14} /> {abAnalyzing ? "Analyzing..." : `Predict CTR (${modeTokenCost}C)`}
+              <Sparkles size={14} /> {abAnalyzing ? "Analyzing..." : "Predict CTR"}
             </button>
           </div>
         )}
@@ -291,8 +312,8 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
           <div style={{ display: "flex", flexDirection: "column", gap: "8px", flex: 1 }}>
             <img src={result.imageUrl} alt="Generated" style={{ width: "100%", height: "160px", objectFit: "cover", border: "2px solid #000", borderRadius: "8px", flexShrink: 0 }} />
             <div style={{ display: "flex", gap: "6px", marginTop: "auto" }}>
-              <button onClick={reset} style={{ flex: 1, padding: "8px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", cursor: "pointer", boxShadow: "2px 2px 0 0 #000" }}>Back</button>
-              <button style={{ flex: 2, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "8px", background: "#C9F830", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", cursor: "pointer", boxShadow: "2px 2px 0 0 #000" }}>
+              <button onClick={reset} className="vt-button" style={{ flex: 1 }}>Back</button>
+              <button className="vt-button primary" style={{ flex: 2 }}>
                 <Download size={14} /> Download
               </button>
             </div>
@@ -323,7 +344,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
                 ))}
               </div>
             </div>
-            <button onClick={reset} style={{ display: "flex", gap: "4px", alignItems: "center", justifyContent: "center", padding: "8px", background: "#f0f0f0", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", cursor: "pointer" }}>
+            <button onClick={reset} className="vt-button" style={{ width: "100%" }}>
               <ArrowRight size={14} style={{ transform: "rotate(180deg)" }} /> Back to Editor
             </button>
           </div>

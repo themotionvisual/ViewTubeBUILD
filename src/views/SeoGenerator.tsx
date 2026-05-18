@@ -249,8 +249,8 @@ const SeoGenerator: React.FC<{
 
  return (
   <ToolboxScaffold
-   title="SEO GENERATOR"
-   subtitle="Create SEO optimized titles, descriptions, tags + more for all your new + published content"
+   title="VIDEO PUBLISHER"
+   subtitle="Create optimized titles, descriptions, tags + assets for new + published videos"
    icon={<Zap size={40} strokeWidth={3} className="text-black" />}
    headerColor="bg-[#CCFF00]"
    iconBoxColor="bg-[#00FF99]"
@@ -322,7 +322,7 @@ const SeoGenerator: React.FC<{
       <SubToolbox
        title="Video Script"
        icon={<FileText size={20} strokeWidth={3} />}
-       paletteIndex={basePalette + 2}
+       paletteIndex={basePalette + 1}
        collapsible
        isOpenInitial={true}>
        <StandardTextArea
@@ -548,7 +548,7 @@ const SeoGenerator: React.FC<{
      </div>
 
      {/* Brain Reflection UI */}
-     <PostActionReflection toolId="SEO_GENERATOR" />
+     <PostActionReflection toolId="VIDEO_PUBLISHER" />
     </div>
    )}
   </ToolboxScaffold>

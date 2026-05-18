@@ -16,6 +16,7 @@ import {
  User,
  Mail,
  Bell,
+ Coins,
 } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { useBrain } from "../context/useBrain"
@@ -23,6 +24,7 @@ import { unifiedAuth } from "../services/authSession"
 import { getVaultSnapshot, setVaultSnapshot } from "../services/keyVault"
 import { SubToolbox } from "../components/Toolbox"
 import { resolvePublicChannel } from "../services/publicHandleMode"
+import { AIModelSelector } from "../components/ui/AIModelSelector"
 import {
  getStoredIngestMode,
  setStoredIngestMode,
@@ -53,6 +55,11 @@ import {
  fetchEntitlementFromServer,
 } from "../services/billingEntitlement"
 import { GUIDE_LAST_UPDATED, GUIDE_PROTOCOL_VERSION } from "../content/userGuideContent"
+import {
+  loadAiBrainContext,
+  saveAiBrainContext,
+  type BrainPrimaryGoal,
+} from "../services/aiBrainContext"
 
 const SUBSCRIPTION_PLANS_UI: {
  id: SubscriptionPlanId
@@ -67,6 +74,13 @@ const SUBSCRIPTION_PLANS_UI: {
   price: "$0",
   bullets: ["Core tools", "Manual sync", "Basic analytics"],
   cta: "Upgrade",
+ },
+ {
+  id: "beta",
+  tierLabel: "Beta (BYOK)",
+  price: "$0",
+  bullets: ["Unlimited AI (BYOK)", "Full strategy stack", "Community-driven"],
+  cta: "Switch to Beta",
  },
  {
   id: "creator",
@@ -100,6 +114,7 @@ const SUBSCRIPTION_PLANS_UI: {
 
 const PLAN_THEME: Record<SubscriptionPlanId, { accent: string; shadow: string; tint: string }> = {
  basic: { accent: "#C9F830", shadow: "rgba(201, 248, 48, 0.45)", tint: "#F4FFD0" },
+ beta: { accent: "#FF5733", shadow: "rgba(255, 87, 51, 0.45)", tint: "#FFD5CC" },
  creator: { accent: "#40C6E9", shadow: "rgba(64, 198, 233, 0.45)", tint: "#D9F6FF" },
  creator_plus: { accent: "#FFE357", shadow: "rgba(255, 227, 87, 0.45)", tint: "#FFF7CC" },
  creator_pro: { accent: "#FFB570", shadow: "rgba(255, 181, 112, 0.45)", tint: "#FFE9D2" },
@@ -109,15 +124,23 @@ const PLAN_THEME: Record<SubscriptionPlanId, { accent: string; shadow: string; t
 const canonicalButtonClass =
  "rounded-xl border-[3px] border-black shadow-[3px_3px_0px_0px_black] hover:translate-y-0.5 hover:shadow-[1.5px_1.5px_0px_0px_black] transition-all font-black uppercase"
 
+const isTopupStripeConfigError = (message: string): boolean => {
+ const lower = String(message || "").toLowerCase()
+ return (
+  lower.includes("missing stripe price env for top-up") ||
+  lower.includes("missing stripe price env for topup") ||
+  lower.includes("no such price")
+ )
+}
+
 const Settings: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { authState } = useBrain()
+  const { authState, updateBrain } = useBrain()
   const isAuth = authState.isAuthenticated
 
   const [geminiKey, setGeminiKey] = useState("")
   const [showKey, setShowKey] = useState(false)
-  const [modelPreference, setModelPreference] = useState("pro")
   const [saveStatus, setSaveStatus] = useState<string | null>(null)
   const [handleInput, setHandleInput] = useState("")
   const [handleStatus, setHandleStatus] = useState<string | null>(null)
@@ -133,6 +156,9 @@ const Settings: React.FC = () => {
  const [referralInput, setReferralInput] = useState("")
  const [customReferralCode, setCustomReferralCode] = useState("")
  const [customTopupAmount, setCustomTopupAmount] = useState("50")
+ const [brainWhatNext, setBrainWhatNext] = useState("")
+ const [brainPrimaryGoal, setBrainPrimaryGoal] = useState<BrainPrimaryGoal>("views")
+ const [brainAudienceNiche, setBrainAudienceNiche] = useState("")
 
   const query = new URLSearchParams(location.search)
  const activePanel = query.get("panel")
@@ -160,9 +186,12 @@ const Settings: React.FC = () => {
  useEffect(() => {
   const vault = getVaultSnapshot()
   setGeminiKey(vault.gemini || "")
-  setModelPreference(localStorage.getItem("yt_model_preference") || "pro")
   setProfileName(authState.channelName || "")
   setProfileHandle(authState.channelHandle || "")
+  const brainContext = loadAiBrainContext()
+  setBrainWhatNext(brainContext.whatNext)
+  setBrainPrimaryGoal(brainContext.primaryGoal)
+  setBrainAudienceNiche(brainContext.audienceNiche)
  }, [authState.channelHandle, authState.channelName])
 
  useEffect(() => {
@@ -202,7 +231,6 @@ const Settings: React.FC = () => {
   setVaultSnapshot({
    gemini: geminiKey,
   })
-  localStorage.setItem("yt_model_preference", modelPreference)
   setSaveStatus("Settings Saved!")
   setTimeout(() => setSaveStatus(null), 2500)
   window.dispatchEvent(new Event("yt_settings_updated"))
@@ -292,6 +320,10 @@ const Settings: React.FC = () => {
    window.location.href = session.checkoutUrl
   } catch (error) {
    const message = error instanceof Error ? error.message : String(error)
+   if (isTopupStripeConfigError(message)) {
+    setBillingStatus("Top-up checkout is not configured yet. Add Stripe top-up price IDs in billing env.")
+    return
+   }
    if (message.includes("not configured") || message.includes("failed (404)")) {
     applyTopupCredits(topupSku)
     setBillingStatus("Demo top-up applied locally (billing server not connected).")
@@ -320,6 +352,10 @@ const Settings: React.FC = () => {
    window.location.href = session.checkoutUrl
   } catch (error) {
    const message = error instanceof Error ? error.message : String(error)
+   if (isTopupStripeConfigError(message)) {
+    setBillingStatus("Custom top-up checkout is not configured yet. Add Stripe top-up price IDs in billing env.")
+    return
+   }
    if (message.includes("not configured") || message.includes("failed (404)")) {
     const result = applyCustomTopupCredits(amountUsd)
     const bonusLabel = result.bonusCredits > 0 ? ` (+${result.bonusCredits.toLocaleString()} bonus)` : ""
@@ -330,6 +366,23 @@ const Settings: React.FC = () => {
     setBillingStatus(`Custom top-up failed: ${message}`)
    }
   }
+ }
+
+ const handleSaveBrainContext = () => {
+  const saved = saveAiBrainContext({
+   whatNext: brainWhatNext,
+   primaryGoal: brainPrimaryGoal,
+   audienceNiche: brainAudienceNiche,
+  })
+  updateBrain({
+   creatorPreferences: {
+    what_next_goal: saved.whatNext,
+    primary_channel_goal: saved.primaryGoal,
+    audience_niche: saved.audienceNiche,
+   },
+  })
+  setSaveStatus("AI Brain context saved.")
+  setTimeout(() => setSaveStatus(null), 2500)
  }
 
  return (
@@ -398,6 +451,58 @@ const Settings: React.FC = () => {
    </SubToolbox>
    </div>
 
+   <div id="ai-brain-context" className="pt-1">
+    <SubToolbox
+     title="AI Brain Context"
+     icon={<Zap size={20} strokeWidth={3} className="text-black" />}
+     paletteIndex={1}
+     contentClassName="p-6 space-y-4">
+     <p className="font-bold text-gray-700">
+      Set your immediate channel goals so the AI tools start with relevant context.
+     </p>
+     <div className="space-y-2">
+      <label className="text-xs font-black uppercase tracking-wider">What are you trying to achieve next?</label>
+      <textarea
+       value={brainWhatNext}
+       onChange={(event) => setBrainWhatNext(event.target.value)}
+       placeholder="Example: increase average views per upload and improve retention."
+       className="w-full min-h-[90px] p-3 border-[3px] border-black rounded-xl font-bold"
+      />
+     </div>
+     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-2">
+       <label className="text-xs font-black uppercase tracking-wider">Primary channel goal</label>
+       <select
+        value={brainPrimaryGoal}
+        onChange={(event) => setBrainPrimaryGoal(event.target.value as BrainPrimaryGoal)}
+        className="w-full h-11 px-3 border-[3px] border-black rounded-xl bg-white font-black uppercase">
+        <option value="views">Views</option>
+        <option value="subscribers">Subscribers</option>
+        <option value="revenue">Revenue</option>
+        <option value="retention">Retention</option>
+        <option value="consistency">Consistency</option>
+       </select>
+      </div>
+      <div className="space-y-2">
+       <label className="text-xs font-black uppercase tracking-wider">Audience + niche</label>
+       <input
+        value={brainAudienceNiche}
+        onChange={(event) => setBrainAudienceNiche(event.target.value)}
+        placeholder="Example: educational history audience, 18-34."
+        className="w-full h-11 px-3 border-[3px] border-black rounded-xl font-bold"
+       />
+      </div>
+     </div>
+     <div className="flex justify-end">
+      <button
+       onClick={handleSaveBrainContext}
+       className={`${canonicalButtonClass} bg-[#4FFF5B] px-4 py-3 text-sm`}>
+       Save Brain Context
+      </button>
+     </div>
+    </SubToolbox>
+   </div>
+
    <div id="guide-protocols" className="pt-1">
    <SubToolbox
     title="User Guide & Protocols"
@@ -440,8 +545,8 @@ const Settings: React.FC = () => {
     title="Billing & Subscription"
     icon={<Lock size={20} strokeWidth={3} className="text-black" />}
     paletteIndex={0}
-    contentClassName={`p-7 space-y-10 ${highlightBilling ? "ring-4 ring-[#CCFF00]" : ""}`}>
-    <div className="space-y-6">
+    contentClassName={`p-8 space-y-12 ${highlightBilling ? "ring-4 ring-[#CCFF00]" : ""}`}>
+    <div className="space-y-7">
      <div className="flex flex-wrap items-start justify-between gap-4">
       <div className="space-y-2">
        <h2 className="text-[30px] leading-none font-black uppercase tracking-tight">Subscription Controls</h2>
@@ -465,7 +570,7 @@ const Settings: React.FC = () => {
 
     </div>
 
-    <div className="border-[4px] border-black rounded-2xl bg-white p-5 shadow-[4px_4px_0px_0px_black] space-y-4">
+    <div className="border-[4px] border-black rounded-2xl bg-white p-6 shadow-[4px_4px_0px_0px_black] space-y-5">
      <div className="flex flex-wrap items-start justify-between gap-4">
       <div className="min-w-[260px]">
        <p className="text-xs font-black uppercase tracking-[0.14em] text-gray-700">Credit Meter</p>
@@ -571,9 +676,9 @@ const Settings: React.FC = () => {
      ) : null}
     </div>
 
-    <div className="space-y-3">
+    <div className="space-y-4">
      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-600">Choose Plan</p>
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6 items-stretch">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-7 items-stretch">
      {SUBSCRIPTION_PLANS_UI.map((plan) => {
       const active = entitlement.subscriptionPlanId === plan.id
       const loading = loadingPlan === plan.id
@@ -718,56 +823,58 @@ const Settings: React.FC = () => {
    </div>
    ) : null}
 
-   {/* Gemini Preference - Full Width */}
-   <SubToolbox
-    title="Gemini Preference"
-    icon={<Zap size={20} strokeWidth={3} className="text-black" />}
-    paletteIndex={7}
-    contentClassName="p-6 space-y-6">
-    <p className="font-bold text-gray-700">
-     Choose speed or depth. Switch anytime and keep your workflow flexible.
-    </p>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-     <button
-      onClick={() => setModelPreference("flash")}
-      className={`flex flex-col items-start p-6 border-[4px] border-black rounded-2xl transition-all ${
-       modelPreference === "flash"
-        ? "bg-[#FFB570] shadow-[4px_4px_0px_0px_black] -translate-y-1"
-        : "bg-white hover:bg-gray-50"
-      }`}>
-      <div className="flex items-center gap-2 mb-2">
-       <span className="text-2xl font-black uppercase">Flash</span>
-       {modelPreference === "flash" && (
-        <span className="bg-black text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase">
-         Active
-        </span>
-       )}
+     <SubToolbox
+      title="AI Model Orchestration"
+      icon={<Zap size={20} strokeWidth={3} className="text-black" />}
+      paletteIndex={7}
+      contentClassName="p-6 space-y-8">
+      <div className="space-y-4">
+        <p className="font-bold text-gray-700">
+          Select your primary brain. Pro models provide maximum reasoning for complex creative tasks, while Flash models optimize speed and minimize credit depletion.
+        </p>
+        <AIModelSelector />
       </div>
-      <p className="text-sm font-bold text-gray-600 text-left">
-       Fast, lighter responses for quick ideas, bulk work, and rapid iteration.
-      </p>
-     </button>
-     <button
-      onClick={() => setModelPreference("pro")}
-      className={`flex flex-col items-start p-6 border-[4px] border-black rounded-2xl transition-all ${
-       modelPreference === "pro"
-        ? "bg-[#FFFF61] shadow-[4px_4px_0px_0px_black] -translate-y-1"
-        : "bg-white hover:bg-gray-50"
-      }`}>
-      <div className="flex items-center gap-2 mb-2">
-       <span className="text-2xl font-black uppercase">Pro</span>
-       {modelPreference === "pro" && (
-        <span className="bg-black text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase">
-         Active
-        </span>
-       )}
+
+      {/* Credit Usage Explanation Module */}
+      <div className="bg-gray-50 border-[3px] border-black rounded-2xl p-6 shadow-[4px_4px_0_0_rgba(0,0,0,0.1)]">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="bg-[#FFFF61] border-2 border-black p-2 rounded-lg">
+            <Coins size={20} strokeWidth={3} />
+          </div>
+          <h3 className="text-xl font-black uppercase tracking-tighter">Credit Economy Guide</h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+           {[
+             { label: '3.0 FLASH', multiplier: '1.0X', desc: 'Baseline Efficiency', color: 'bg-white' },
+             { label: '3.1 FLASH', multiplier: '1.5X', desc: 'Balanced IQ', color: 'bg-[#C9F830]' },
+             { id: '3.0-PRO', label: '3.0 PRO', multiplier: '10.0X', desc: 'Heavy Reasoning', color: 'bg-[#FFDD00]' },
+             { id: '3.1-PRO', label: '3.1 PRO', multiplier: '15.0X', desc: 'Elite Intelligence', color: 'bg-[#FF3399]', textColor: 'text-white' }
+           ].map((m) => (
+             <div key={m.label} className={`p-4 border-[3px] border-black rounded-xl shadow-[3px_3px_0_0_black] ${m.color} ${m.textColor || 'text-black'}`}>
+               <p className="text-[10px] font-black uppercase tracking-widest opacity-60">{m.label}</p>
+               <p className="text-2xl font-[1000] tracking-tighter leading-none mt-1">{m.multiplier}</p>
+               <p className="text-[9px] font-bold uppercase mt-2 opacity-50">{m.desc}</p>
+             </div>
+           ))}
+        </div>
+
+        <div className="space-y-4">
+           <div className="flex items-start gap-3">
+              <div className="mt-1"><Zap size={14} className="text-black" /></div>
+              <p className="text-xs font-bold text-gray-600 uppercase leading-relaxed">
+                Credits are consumed based on the model tier and the length of generation. Using a <span className="text-black font-black">Pro</span> model for simple tasks like title generation will deplete your balance <span className="text-[#FF3399] font-black">10-15x faster</span> than Flash models.
+              </p>
+           </div>
+           <div className="flex items-start gap-3">
+              <div className="mt-1"><Coins size={14} className="text-black" /></div>
+              <p className="text-xs font-bold text-gray-600 uppercase leading-relaxed">
+                Tokens are calculated per <span className="text-black font-black">1,000 characters</span>. Input context (like your channel DNA) and Output generation (like scripts) both contribute to the final quote.
+              </p>
+           </div>
+        </div>
       </div>
-      <p className="text-sm font-bold text-gray-600 text-left">
-       Deeper reasoning, longer context, and higher‑quality strategic outputs.
-      </p>
-     </button>
-    </div>
-   </SubToolbox>
+     </SubToolbox>
 
    {/* Combined Advanced Workspace & Data Module */}
    <div id="workspace-data" className="pt-1">

@@ -6,7 +6,6 @@ import {
  updateVideoThumbnail,
  fetchVideoStats,
  fetchSingleVideoAnalytics,
- fetchVideoCategories,
  fetchUserPlaylists,
  fetchVideoPlaylistMemberships,
  addToPlaylist,
@@ -17,7 +16,6 @@ import type {
  VideoDetails,
  VideoStats,
  SingleVideoAnalytics,
- VideoCategory,
  Playlist,
  PlaylistMembership,
 } from "../services/youtubeService"
@@ -46,7 +44,6 @@ import {
  Clock,
  Upload,
  Trash2,
- Save,
  ChevronDown,
  Sparkles,
  BarChart3,
@@ -56,8 +53,19 @@ import {
  AlignLeft,
  Edit,
  ExternalLink,
+ Settings,
 } from "lucide-react"
-import { ToolboxScaffold, SubToolbox } from "../components/Toolbox"
+import {
+ StandardInput,
+ StandardTextArea,
+ SubToolboxGridActionButton,
+ SubToolboxInnerActionButton,
+ ToolboxScaffold,
+ SubToolbox,
+ SubToolboxDropdownTopTitleControl,
+} from "../components/Toolbox"
+import { getToolboxPaletteColors } from "../styles/toolboxPalette"
+import { hexToRgba } from "../components/ToolboxUISystem"
 
 const TagBadge: React.FC<{
  tag: string
@@ -69,36 +77,45 @@ const TagBadge: React.FC<{
 }> = ({ tag, analysis, onRemove, onAdd, isSuggested, isAdded }) => {
  const [showTooltip, setShowTooltip] = useState(false)
  const [tooltipPos, setTooltipPos] = useState<{ left: number; top: number } | null>(null)
+ const [isHovered, setIsHovered] = useState(false)
  const badgeRef = useRef<HTMLButtonElement>(null)
 
- const getScoreColor = (score: number) => {
-  if (score >= 90) return "#00CCFF"
-  if (score >= 80) return "#ccff00"
-  if (score >= 70) return "#ffdd00"
-  return "#ff3399"
+ const getRankColor = (rank?: number) => {
+  if (typeof rank !== "number") return "#ffffff"
+  if (rank >= 1 && rank <= 10) return "#45C8E9" // cyan
+  if (rank >= 11 && rank <= 20) return "#57F15C" // green
+  if (rank >= 21 && rank <= 30) return "#F9F36B" // yellow
+  if (rank >= 31 && rank <= 40) return "#FFB158" // orange
+  return "#FF7497" // red
  }
 
  return (
   <div className="relative group">
    <button
     ref={badgeRef}
-    type="button"
+   type="button"
     onClick={isAdded ? undefined : onAdd || onRemove}
     onMouseEnter={() => {
+      setIsHovered(true)
      if (badgeRef.current) {
       const rect = badgeRef.current.getBoundingClientRect()
       setTooltipPos({ left: rect.left + rect.width / 2, top: rect.top })
      }
      setShowTooltip(true)
     }}
-    onMouseLeave={() => setShowTooltip(false)}
-   className="inline-flex items-center px-3 py-1 text-xs font-[900] uppercase border-[4px] border-black rounded-full shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)] transition-all hover:-translate-y-0.5 active:translate-y-0"
+    onMouseLeave={() => {
+      setShowTooltip(false)
+      setIsHovered(false)
+    }}
+   className="inline-flex items-center px-3 py-1 text-xs font-[900] uppercase border-[3px] border-black rounded-full shadow-[3px_3px_0px_0px_var(--vt-subtoolbox-shadow,rgba(0,0,0,0.35))]"
     style={{
      backgroundColor: isAdded
       ? "#E5E7EB"
-      : analysis
-        ? getScoreColor(analysis.score)
-        : "#FFFFFF",
+      : isHovered
+        ? "#FFFFFF"
+        : analysis
+          ? getRankColor(analysis.rank)
+          : "#FFFFFF",
      opacity: isAdded ? 0.65 : 1,
      cursor: isAdded ? "not-allowed" : "pointer",
     }}>
@@ -106,7 +123,7 @@ const TagBadge: React.FC<{
     {analysis && <span className="ml-1 font-[1000] text-black">#{analysis.rank}</span>}
     {(onRemove || (isSuggested && !isAdded)) && (
      <span
-      className="w-4 h-4 flex shrink-0 items-center justify-center rounded-full bg-black text-white ml-2"
+      className="w-4 h-4 flex shrink-0 items-center justify-center rounded-full bg-black text-white ml-2 border border-transparent hover:bg-[#ff3b30] hover:text-black hover:border-transparent"
       onClick={(e) => {
        e.stopPropagation()
        if (onRemove) onRemove()
@@ -125,7 +142,7 @@ const TagBadge: React.FC<{
        <span className="text-black/60">SEO Metrics</span>
        <span
         className="text-black px-2 py-0.5 rounded-full font-black border border-black"
-        style={{ backgroundColor: getScoreColor(analysis.score) }}>
+        style={{ backgroundColor: getRankColor(analysis.rank) }}>
         {analysis.score}
        </span>
       </div>
@@ -171,7 +188,7 @@ interface VideoManagerProps {
 }
 
 type VideoListLoadState = "idle" | "loading" | "success" | "empty" | "error"
-
+const MAX_TAG_CHARS = 500
 const VideoManager: React.FC<VideoManagerProps> = ({
  embedded = false,
  collapsible = false,
@@ -196,8 +213,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  const [dropdownOpen, setDropdownOpen] = useState(false)
  const dropdownRef = useRef<HTMLDivElement>(null)
  const lastSearchRef = useRef("")
- const [playlistMenuOpen, setPlaylistMenuOpen] = useState(false)
- const playlistMenuRef = useRef<HTMLDivElement>(null)
 
  // Edit State
  const [editTitle, setEditTitle] = useState("")
@@ -207,7 +222,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  const [editCategoryId, setEditCategoryId] = useState("27")
 
  // Playlists
- const [categories, setCategories] = useState<VideoCategory[]>([])
  const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([])
  const [currentPlaylists, setCurrentPlaylists] = useState<PlaylistMembership[]>(
   [],
@@ -235,6 +249,8 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  const [videoListLoadState, setVideoListLoadState] =
   useState<VideoListLoadState>("idle")
  const hasTriggeredInitialLoadRef = useRef(false)
+ const chooseVideoPalette = getToolboxPaletteColors(basePalette + 1)
+ const updateDetailsPalette = getToolboxPaletteColors(basePalette + 5)
 
  const connected = authState.isAuthenticated
  const showHeaderLoadAssetsButton = videos.length === 0
@@ -251,12 +267,12 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   input
    .map((video) => {
     const record = (video || {}) as Record<string, unknown>
-    return {
-     videoId: String(record.videoId || "").trim(),
-     title: String(record.title || "").trim(),
-     publishedAt: String(record.publishedAt || ""),
-     thumbnail: `https://img.youtube.com/vi/${String(record.videoId || "").trim()}/maxresdefault.jpg`,
-    }
+     return {
+      videoId: String(record.videoId || "").trim(),
+      title: String(record.title || "").trim(),
+      publishedAt: String(record.publishedAt || ""),
+      thumbnail: `https://img.youtube.com/vi/${String(record.videoId || "").trim()}/hqdefault.jpg`,
+     }
    })
    .filter((video) => video.videoId.length > 0)
 
@@ -280,7 +296,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       ...(videoDetails ?? {}),
      } as VideoSnippet & Partial<VideoDetails>)
    : null
-
  useEffect(() => {
   const handleClickOutside = (event: MouseEvent) => {
    if (
@@ -294,18 +309,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   return () => document.removeEventListener("mousedown", handleClickOutside)
  }, [])
 
- useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-   if (
-    playlistMenuRef.current &&
-    !playlistMenuRef.current.contains(event.target as Node)
-   ) {
-    setPlaylistMenuOpen(false)
-   }
-  }
-  document.addEventListener("mousedown", handleClickOutside)
-  return () => document.removeEventListener("mousedown", handleClickOutside)
- }, [])
 
  const loadInitialData = async () => {
   setVideoListLoadState("loading")
@@ -313,8 +316,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   setError(null)
   try {
    const results = await Promise.allSettled([
-    Promise.resolve(getCachedVideos()),
-    fetchVideoCategories(),
+   Promise.resolve(getCachedVideos()),
     fetchUserPlaylists(),
    ])
 
@@ -323,11 +325,9 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    }
 
    const videoList = results[0].value || [];
-   const categoryList = results[1].status === "fulfilled" ? results[1].value : [];
-   const playlists = results[2].status === "fulfilled" ? results[2].value : [];
+   const playlists = results[1].status === "fulfilled" ? results[1].value : [];
 
    setVideos(videoList)
-   setCategories(categoryList)
    setUserPlaylists(playlists)
    setHasLoadedInitialData(true)
    setVideoListLoadState(videoList.length === 0 ? "empty" : "success")
@@ -547,6 +547,10 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  }
 
  const handleRankTags = async () => {
+  if (existingTagAnalysis.length > 0) {
+   setShowRankDetails(true)
+   return
+  }
   if (!editTags) return
   setIsAnalyzingTags(true)
   try {
@@ -592,15 +596,18 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    .split(",")
    .map((t) => t.trim())
    .filter(Boolean)
-  if (!current.map((t) => t.toLowerCase()).includes(trimmed.toLowerCase())) {
-   const newTags = [...current, trimmed].join(", ")
-   if (newTags.length > 499) {
-    alert("Character limit exceeded! Tags must be 499 characters or less.")
-    return
-   }
-   setEditTags(newTags)
-   if (analysis) setExistingTagAnalysis((prev) => [...prev, analysis])
+  const normalizedCurrent = current.map((t) => t.toLowerCase())
+  if (normalizedCurrent.includes(trimmed.toLowerCase())) {
+   setTagInput("")
+   return
   }
+  const prospective = [...current, trimmed].join(", ")
+  if (prospective.length > MAX_TAG_CHARS) {
+   alert("Character limit exceeded. Tags must be 500 characters or less including spaces.")
+   return
+  }
+  setEditTags(prospective)
+  if (analysis) setExistingTagAnalysis((prev) => [...prev, analysis])
   setTagInput("")
  }
 
@@ -711,10 +718,23 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   const h = Math.floor(totalSeconds / 3600)
   const m = Math.floor((totalSeconds % 3600) / 60)
   const s = totalSeconds % 60
-  if (h > 0)
+ if (h > 0)
    return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
   return `${m}:${s.toString().padStart(2, "0")}`
  }
+
+ const selectedVideoPublishedDate = selectedVideo?.publishedAt
+  ? new Date(selectedVideo.publishedAt).toLocaleDateString()
+  : "NO DATE"
+ const selectedVideoLength =
+  videoStats?.duration && videoStats.duration !== "0"
+   ? formatDuration(videoStats.duration)
+   : "--:--"
+ const pendingTagCount = tagInput
+  .split(",")
+  .map((t) => t.trim())
+  .filter(Boolean).length
+ const addTagButtonLabel = pendingTagCount <= 1 ? "Add Tag" : "Add Tags"
 
  const selectedVideoMetrics = React.useMemo(() => {
   if (!selectedVideoId) {
@@ -835,7 +855,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   }
  }, [selectedVideoId, videoStats, videoAnalytics, cacheTick])
 
- const kpiCards = [
+  const kpiCards = [
   {
    key: "views",
    label: "Views",
@@ -867,20 +887,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    tone: "bg-[#FFB570]",
   },
   {
-   key: "impressions",
-   label: "Impressions",
-   value: formatViews(String(selectedVideoMetrics.impressions || 0)),
-   tone: "bg-[#5EE4FF]",
-  },
-  {
-   key: "ctr",
-   label: selectedVideoMetrics.isShort ? "STW %" : "CTR",
-   value: selectedVideoMetrics.isShort
-    ? `${selectedVideoMetrics.stw.toFixed(1)}%`
-    : `${selectedVideoMetrics.ctr.toFixed(1)}%`,
-   tone: "bg-[#FF8AAF]",
-  },
-  {
    key: "revenue",
    label: "Revenue",
    value: `$${selectedVideoMetrics.revenue.toFixed(2)}`,
@@ -892,13 +898,84 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    value: formatDuration(videoStats?.duration || "0"),
    tone: "bg-[#FFE357]",
   },
+  {
+   key: "end-screen",
+   label: "End Screen %",
+   value: `${selectedVideoMetrics.endScreenClickRate.toFixed(1)}%`,
+   tone: "bg-[#9CEBFF]",
+  },
+  ]
+
+ const categoryOptions = [
+  { value: "2", label: "Autos & Vehicles" },
+  { value: "23", label: "Comedy" },
+  { value: "27", label: "Education" },
+  { value: "24", label: "Entertainment" },
+  { value: "1", label: "Film & Animation" },
+  { value: "20", label: "Gaming" },
+  { value: "26", label: "Howto & Style" },
+  { value: "10", label: "Music" },
+  { value: "25", label: "News & Politics" },
+  { value: "29", label: "Nonprofits & Activism" },
+  { value: "22", label: "People & Blogs" },
+  { value: "15", label: "Pets & Animals" },
+  { value: "28", label: "Science & Technology" },
+  { value: "17", label: "Sports" },
+  { value: "19", label: "Travel & Events" },
  ]
+ const selectedCategoryLabel =
+  categoryOptions.find((option) => option.value === editCategoryId)?.label ||
+  "Select Category"
+
+ const [subtitleStep, setSubtitleStep] = useState(0)
+ const subtitleBase =
+  "Generate titles, descriptions, tags, and everything else you need to publish your video with just a simple click of a button all you need to do is upload the video!"
+ const subtitleAdditions = [
+  "If you don't have a video just upload a script!",
+  "And if you don't have that we can create it all from a concept!",
+  "If you don't have a concept, we can still build the whole thing with you.",
+  "If you have no idea what you wanna create we can help with that too.",
+ ]
+ const subtitleButtonLabels = [
+  "don't have a video?",
+  "don't have a script?",
+  "don't have a concept?",
+ ]
+ const subtitleHelpRail = (
+  <div className="flex flex-wrap items-center gap-2">
+   <span className="uppercase tracking-[0.12em]">{subtitleBase}</span>
+   {subtitleStep > 0 && (
+    <span className="uppercase tracking-[0.12em]">{subtitleAdditions[0]}</span>
+   )}
+   {subtitleStep > 1 && (
+    <span className="uppercase tracking-[0.12em]">{subtitleAdditions[1]}</span>
+   )}
+   {subtitleStep > 2 && (
+    <span className="uppercase tracking-[0.12em]">{subtitleAdditions[2]}</span>
+   )}
+   {subtitleStep > 3 && (
+    <span className="uppercase tracking-[0.12em]">{subtitleAdditions[3]}</span>
+   )}
+   {subtitleStep < subtitleButtonLabels.length && (
+    <button
+     type="button"
+     onClick={(event) => {
+      event.stopPropagation()
+      setSubtitleStep((prev) => Math.min(prev + 1, subtitleButtonLabels.length + 1))
+     }}
+     className="h-7 px-3 rounded-full border-[3px] border-black bg-white text-[9px] font-black uppercase tracking-[0.12em] shadow-[2px_2px_0px_0px_black] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all"
+    >
+     {subtitleButtonLabels[subtitleStep]}
+    </button>
+   )}
+  </div>
+ )
 
  if (!connected) {
   return (
    <ToolboxScaffold
     title="VIDEO MANAGER"
-    subtitle="Manage + Edit all the titles, details, thumbnails + more of your published videos"
+    subtitle={subtitleBase}
     icon={<FileVideo size={40} strokeWidth={3} className="text-black" />}
     headerColor="bg-[#00CCFF]"
     iconBoxColor="bg-[#FFDD00]"
@@ -907,7 +984,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
     isOpen={isOpen}
     onToggle={() => setIsOpen(!isOpen)}
     embedded={embedded}
-    helpText="Manage existing videos in one place. Update titles, descriptions, tags, playlists, and thumbnails without leaving the app."
+    helpText={subtitleHelpRail}
     shellClassName="animate-fade-in"
     contentClassName={embedded ? "p-0" : "p-8"}>
     <div className="flex flex-col items-center justify-center p-20 text-center space-y-6">
@@ -936,7 +1013,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  return (
  <ToolboxScaffold
    title="VIDEO MANAGER"
-   subtitle="Manage + Edit all the titles, details, thumbnails + more of your published videos"
+   subtitle={subtitleBase}
    icon={<FileVideo size={40} strokeWidth={3} className="text-black" />}
    headerColor="bg-[#00CCFF]"
    iconBoxColor="bg-[#CC99FF]"
@@ -945,7 +1022,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    isOpen={isOpen}
    onToggle={() => setIsOpen(!isOpen)}
    embedded={embedded}
-   helpText="Manage existing videos in one place. Update titles, descriptions, tags, playlists, and thumbnails without leaving the app."
+   helpText={subtitleHelpRail}
    headerActions={
     showHeaderLoadAssetsButton ? (
      <button
@@ -1035,7 +1112,21 @@ const VideoManager: React.FC<VideoManagerProps> = ({
             <td className="p-2 text-xs font-black">
              {analysis.competition.toLocaleString()}
             </td>
-            <td className="p-2 text-xs font-black">#{analysis.rank}</td>
+            <td className="p-2 text-xs font-black">
+             <span
+              className="px-2 py-0.5 rounded-md border border-black"
+              style={{
+               backgroundColor:
+                analysis.rank <= 10
+                 ? "#ccff00"
+                 : analysis.rank <= 20
+                  ? "#ffdd00"
+                  : "#ffffff",
+              }}
+             >
+              #{analysis.rank}
+             </span>
+            </td>
             <td className="p-2 text-xs font-black">
              {analysis.tripleKeyword ? "YES" : "NO"}
             </td>
@@ -1113,316 +1204,297 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       </div>
     ) : selectedVideo ? (
      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* V3 Dropdown Selector */}
-      <div className="relative z-40" ref={dropdownRef}>
-       <div
-       onClick={() => setDropdownOpen(!dropdownOpen)}
-        className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-6 p-6 rounded-[24px] border-[4px] border-black transition-all cursor-pointer group ${dropdownOpen ? "bg-gray-100 shadow-none translate-y-1" : "bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)] hover:bg-gray-50"}`}>
-        <div className="flex gap-6 items-center flex-1 min-w-0">
-         <div className="relative flex-shrink-0 w-56 aspect-video rounded-xl border-[3px] border-black overflow-hidden bg-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)]">
-          <img
-           src={selectedVideo.thumbnail}
-           alt={selectedVideo.title}
-           onError={(e) => {
-             const target = e.currentTarget;
-             const videoId = selectedVideo.videoId;
-             if (target.src.includes('maxresdefault.jpg')) {
-               target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-             } else if (target.src.includes('hqdefault.jpg')) {
-               target.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
-             }
+      <div className={`relative ${dropdownOpen ? "z-[120]" : "z-10"} space-y-2`}>
+       <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">Choose Video</label>
+       <div className="relative" ref={dropdownRef}>
+          <button
+           onClick={() => setDropdownOpen((prev) => !prev)}
+           className={`group w-full border-[3px] border-black overflow-hidden transition-[border-radius] duration-300 ease-out block appearance-none p-0 ${
+            dropdownOpen ? "rounded-t-[16px] rounded-b-none" : "rounded-[16px]"
+           }`}
+           style={{
+            backgroundColor: chooseVideoPalette.header,
+            boxShadow: "4px 4px 0px 0px rgba(0,0,0,0.25)",
+            height: "100px",
            }}
-           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-          />
+          >
+           <div className="h-full flex items-stretch">
+            <div className="w-[56px] h-full border-r-[3px] border-black flex items-center justify-center" style={{ backgroundColor: chooseVideoPalette.icon }}>
+             <FileVideo size={20} strokeWidth={3} className="text-black" />
+            </div>
+            <div className="flex-1 h-full flex items-center gap-3 px-3 pr-10">
+             <div className="h-14 w-24 shrink-0 rounded-md border-[3px] border-black overflow-hidden bg-black">
+              <img
+               src={selectedVideo?.thumbnail}
+               alt={selectedVideo?.title || "Selected video thumbnail"}
+               className="w-full h-full object-cover"
+              />
+             </div>
+             <div className="min-w-0 text-left">
+              <div className="flex items-center justify-between gap-3">
+               <p className="text-[8px] font-black uppercase tracking-[0.14em] text-black/60 shrink-0">Selected Video</p>
+               <p className="text-[9px] font-black uppercase tracking-[0.1em] text-black/55 truncate">
+                <a
+                 href={`https://youtube.com/watch?v=${selectedVideo.videoId}`}
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 onClick={(event) => event.stopPropagation()}
+                 className="inline-flex items-center gap-1 text-[#00CCFF] hover:text-[#FF3399] transition-colors mr-2"
+                >
+                 View on YouTube <ExternalLink size={12} strokeWidth={3} />
+                </a>
+                {selectedVideoPublishedDate} • {selectedVideoLength}
+               </p>
+              </div>
+              <p className="font-[1000] uppercase tracking-tighter text-[20px] leading-[1] truncate text-black mt-0.5">
+               {selectedVideo?.title || "Select video"}
+              </p>
+             </div>
+            </div>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+             <ChevronDown
+              size={20}
+              strokeWidth={3}
+              className={`text-black transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
+             />
+            </div>
+           </div>
+          </button>
+          {dropdownOpen && (
+           <div className="absolute left-0 right-0 top-full bg-white border-x-[3px] border-b-[3px] border-black rounded-b-[16px] shadow-[4px_4px_0px_0px_rgba(252,175,87,0.45)] max-h-[460px] overflow-y-auto z-[160] p-3 space-y-3">
+            <div className="relative">
+             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-black/40" />
+             <input
+              value={videoSearchQuery}
+              onChange={(e) => setVideoSearchQuery(e.target.value)}
+              placeholder="Search videos..."
+              className="w-full pl-9 pr-3 py-2 bg-gray-50 border-[3px] border-black rounded-lg font-black uppercase text-xs outline-none focus:border-[#00CCFF] focus:bg-white"
+             />
+            </div>
+            {isSearchingVideos && (
+             <p className="text-[10px] font-black uppercase tracking-[0.12em] text-black/50">Searching...</p>
+            )}
+            <div className="space-y-2">
+             {videos.map((video) => (
+              <button
+               key={video.videoId}
+               onClick={() => {
+                handleSelectVideo(video.videoId)
+                setDropdownOpen(false)
+               }}
+               className={`w-full text-left p-2 rounded-xl border-[3px] transition-all ${
+                selectedVideoId === video.videoId
+                 ? "border-[#00CCFF] bg-[#00CCFF]/10 shadow-[2px_2px_0px_0px_#00CCFF]"
+                 : "border-black bg-white hover:bg-gray-100"
+               }`}
+              >
+               <div className="flex items-start gap-3">
+                <img
+                 src={video.thumbnail}
+                 alt={video.title}
+                 className="w-20 h-12 object-cover rounded-md border-[2px] border-black bg-black"
+                />
+                <div className="min-w-0">
+                 <p className="font-black uppercase text-[11px] leading-tight line-clamp-2">{video.title}</p>
+                 <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-black/50 mt-1">
+                  {video.publishedAt ? new Date(video.publishedAt).toLocaleDateString() : "NO DATE"}
+                 </p>
+                </div>
+               </div>
+              </button>
+             ))}
+            </div>
+           </div>
+          )}
          </div>
-         <div className="flex-1 min-w-0">
-          <h2 className="text-3xl font-[1000] uppercase leading-tight line-clamp-2 mb-2 group-hover:text-[#FF3399] transition-colors tracking-tighter">
-           {selectedVideo.title}
-          </h2>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3">
-           <a
-            href={`https://youtube.com/watch?v=${selectedVideo.videoId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1 text-xs font-black uppercase tracking-widest text-[#00CCFF] hover:text-[#FF3399] transition-colors">
-            View on YouTube <ExternalLink size={14} strokeWidth={3} />
-           </a>
-          </div>
-         </div>
-        </div>
-        <div className="flex items-center justify-center pl-4 group-hover:scale-110 transition-transform">
-         <ChevronDown
-          size={48}
-          strokeWidth={3}
-          className={`text-black transition-transform duration-300 ${dropdownOpen ? "rotate-180 text-[#FF3399]" : ""}`}
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch">
+       <SubToolbox
+        title="Video Details"
+        icon={<Settings size={20} strokeWidth={3} />}
+        paletteIndex={basePalette + 1}
+        collapsible
+        isOpenInitial={true}
+        shellClassName="h-full"
+        contentClassName="p-4 h-full flex flex-col gap-4"
+       >
+        <div className="space-y-2">
+         <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">Title</label>
+         <StandardInput
+          value={editTitle}
+          onChange={(e) => setEditTitle(e.target.value)}
+          className="w-full"
+          placeholder="TITLE..."
          />
         </div>
-       </div>
 
-       {dropdownOpen && (
-        <div className="absolute left-0 right-0 top-full mt-0 z-[260] bg-white border-[5px] border-black border-t-0 rounded-b-[24px] shadow-[10px_10px_0px_0px_rgba(0,0,0,0.5)] overflow-hidden">
-         <div className="bg-[#00CCFF] p-6 border-b-[5px] border-black flex flex-col md:flex-row justify-between items-center gap-4">
-          <span className="font-[1000] text-3xl uppercase tracking-tighter text-black whitespace-nowrap">
-           Videos
-          </span>
-          <div className="relative w-full max-w-md">
-           <Search
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-black/40"
-            size={24}
-           />
-           <input
-            type="text"
-            placeholder="SEARCH VIDEOS..."
-            value={videoSearchQuery}
-            onChange={(e) => setVideoSearchQuery(e.target.value)}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full pl-14 pr-4 py-4 bg-white border-[4px] border-black rounded-xl font-black uppercase text-lg outline-none focus:bg-[#00CCFF]/10 transition-colors"
+        <div className="space-y-2">
+         <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">Video Stats</label>
+         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {kpiCards.map((card) => (
+           <div
+            key={card.key}
+            className="rounded-xl border-[3px] border-black bg-white shadow-[2px_2px_0px_0px_black] overflow-hidden flex flex-col min-h-[106px]"
+           >
+            <div className={`py-1 border-b-[2px] border-black ${card.tone} shrink-0 flex items-center justify-center`}>
+             <span className="text-[10px] font-black uppercase tracking-[0.1em] text-black">
+              {card.label}
+             </span>
+            </div>
+            <div className="px-2 py-2 flex-1 flex flex-col items-center justify-center text-center">
+             <span className="font-[1000] text-[28px] leading-none tracking-tighter">{card.value}</span>
+            </div>
+           </div>
+          ))}
+         </div>
+        </div>
+
+        <div className="space-y-2">
+         <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">Publishing Controls</label>
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+           <SubToolboxDropdownTopTitleControl
+            label="PRIVACY"
+            value={editPrivacy}
+            options={[
+             { value: "public", label: "public" },
+             { value: "unlisted", label: "unlisted" },
+             { value: "private", label: "private" },
+            ]}
+            onChange={setEditPrivacy}
+            tone="green"
+            borderWidth={3}
            />
           </div>
-          <div className="flex gap-4">
-           <button
-            onClick={(e) => {
-             e.stopPropagation()
-             lastSearchRef.current = videoSearchQuery.trim()
-             loadVideos(videoSearchQuery || undefined, {
-              background: true,
-              searching: true,
-             })
-            }}
-         className="bg-white text-black border-[4px] border-black px-6 py-4 rounded-xl font-black uppercase tracking-widest hover:scale-105 transition-transform shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)]">
-            Refresh
-           </button>
+
+          <div className="space-y-2">
+           <SubToolboxDropdownTopTitleControl
+            label="CATEGORY"
+            value={selectedCategoryLabel}
+            options={categoryOptions.map((option) => ({ value: option.value, label: option.label }))}
+            onChange={setEditCategoryId}
+            tone="green"
+            borderWidth={3}
+           />
+          </div>
+
+          <div className="space-y-2">
+           <SubToolboxDropdownTopTitleControl
+            label="PLAYLISTS"
+            value={selectedPlaylistIds.length === 0 ? "NONE SELECTED" : `${selectedPlaylistIds.length} LINKED`}
+            options={userPlaylists.map((playlist) => ({ value: playlist.id, label: playlist.title }))}
+            onChange={togglePlaylist}
+            multiSelect
+            selectedValues={selectedPlaylistIds}
+            tone="green"
+            borderWidth={3}
+           />
           </div>
          </div>
-         <div className="max-h-[60vh] overflow-y-auto custom-scrollbar bg-gray-50">
-          {isSearchingVideos ? (
-           <div className="flex justify-center items-center py-20">
-            <Loader2 className="animate-spin text-black" size={48} />
-           </div>
-          ) : videos.length === 0 ? (
-           <div className="text-center py-20 font-black text-black/30 uppercase tracking-widest text-xl">
-            No videos found matching "{videoSearchQuery}"
+        </div>
+       </SubToolbox>
+
+       <SubToolbox
+        title="Thumbnail"
+        icon={<ImageIcon size={20} strokeWidth={3} />}
+        paletteIndex={basePalette + 1}
+        collapsible
+        isOpenInitial={true}
+        shellClassName="h-full"
+        contentClassName="p-4 h-full flex flex-col"
+       >
+        <div className="space-y-2 h-full flex flex-col">
+         <div className="flex items-center justify-between gap-3 px-1">
+          <span className="text-[10px] font-black uppercase tracking-[0.12em] text-black/50 ml-auto">Drag + Drop to Replace</span>
+         </div>
+         <div
+          className={`relative rounded-xl border-[4px] border-dashed flex-1 flex flex-col items-center justify-center p-4 transition-all overflow-hidden min-h-[220px] ${isDraggingThumbnail ? "border-[#FF83EA] bg-[#FF83EA]/10" : "border-black/20 bg-gray-50"}`}
+          onDragOver={(e) => {
+           e.preventDefault()
+           setIsDraggingThumbnail(true)
+          }}
+          onDragLeave={() => setIsDraggingThumbnail(false)}
+          onDrop={(e) => {
+           e.preventDefault()
+           setIsDraggingThumbnail(false)
+           if (e.dataTransfer.files[0]) handleThumbnailChange(e.dataTransfer.files[0])
+          }}>
+          {thumbnailPreview || selectedVideo.thumbnail ? (
+           <div className="relative w-full aspect-video group">
+            <img
+             src={thumbnailPreview || selectedVideo.thumbnail}
+             alt="Preview"
+             className="w-full h-full object-cover rounded-lg"
+            />
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 rounded-lg backdrop-blur-sm">
+             <button
+              onClick={() => fileInputRef.current?.click()}
+              className="bg-[#FFFF61] p-4 rounded-xl border-[4px] border-black hover:scale-110 transition-transform">
+              <Upload size={24} strokeWidth={3} />
+             </button>
+             {thumbnailPreview && (
+              <button
+               onClick={() => {
+                setThumbnailFile(null)
+                setThumbnailPreview(null)
+               }}
+               className="bg-[#FF83EA] text-white p-4 rounded-xl border-[4px] border-black hover:scale-110 transition-transform">
+               <Trash2 size={24} strokeWidth={3} />
+              </button>
+             )}
+            </div>
            </div>
           ) : (
-           <div className="grid grid-cols-1 divide-y-[4px] divide-black/10">
-            {videos.map((video) => (
-             <div
-              key={video.videoId}
-              onClick={(e) => {
-               e.stopPropagation()
-               handleSelectVideo(video.videoId)
-              }}
-              className={`group relative flex items-center gap-6 p-4 cursor-pointer transition-all duration-300 hover:bg-white ${selectedVideo?.videoId === video.videoId ? "bg-[#CCFF00]/20" : ""}`}>
-              <div className="w-32 aspect-video rounded-lg border-[3px] border-black overflow-hidden bg-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] group-hover:scale-105 transition-transform">
-               <img
-                src={video.thumbnail}
-                alt={video.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                 const target = e.target as HTMLImageElement;
-                 if (!target.src.includes('mqdefault.jpg')) {
-                  target.src = `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`;
-                 }
-                }}
-               />
-              </div>
-              <div className="flex-1 min-w-0">
-               <h3 className="font-[1000] text-xl uppercase tracking-tighter line-clamp-2 group-hover:text-[#FF3399] transition-colors">
-                {video.title}
-               </h3>
-              <div className="flex items-center gap-4 mt-2">
-                {selectedVideo?.videoId === video.videoId && (
-                 <span className="bg-white text-black border-[2px] border-black px-3 py-1 rounded-md text-[10px] font-black uppercase">
-                  Active
-                 </span>
-                )}
-               </div>
-              </div>
-             </div>
-            ))}
+           <div className="text-center">
+            <Upload size={48} className="mx-auto mb-4 text-black/20" />
+            <p className="font-black uppercase text-sm text-black/40">Drag Image Here</p>
            </div>
           )}
          </div>
         </div>
-       )}
-      </div>
-      {/* Main Editor Elements */}
-      {/* Stats & Thumbnail Row */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch min-h-[400px]">
-       <SubToolbox
-        title="Video Stats"
-        icon={<BarChart3 size={20} strokeWidth={3} />}
-        paletteIndex={basePalette + 1}
-        collapsible
-        isOpenInitial={true}
-        contentClassName="p-4 flex-1 h-full flex flex-col space-y-3"
-        shellClassName="h-full"
-       >
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 h-full">
-         {kpiCards.map((card) => (
-          <div
-           key={card.key}
-           className="rounded-xl border-[3px] border-black bg-white shadow-[2px_2px_0px_0px_black] overflow-hidden flex flex-col"
-          >
-           <div className={`py-1 border-b-[2px] border-black ${card.tone} shrink-0 flex items-center justify-center`}>
-            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-black">
-             {card.label}
-            </span>
-           </div>
-           <div className="px-3 py-2 flex-1 flex flex-col items-center justify-center text-center">
-            <span className="font-[1000] text-[32px] leading-none tracking-tighter">{card.value}</span>
-           </div>
-          </div>
-         ))}
-        </div>
-       </SubToolbox>
-
-       <SubToolbox
-        title="Thumbnail Asset"
-        icon={<ImageIcon size={20} strokeWidth={3} />}
-        paletteIndex={basePalette + 2}
-        collapsible
-        isOpenInitial={true}
-        contentClassName="p-4 flex-1 h-full flex flex-col space-y-3"
-        shellClassName="h-full"
-       >
-        <div
-         className={`h-full relative rounded-xl border-[4px] border-dashed flex flex-col items-center justify-center p-4 transition-all overflow-hidden ${isDraggingThumbnail ? "border-[#FF83EA] bg-[#FF83EA]/10" : "border-black/20 bg-gray-50"}`}
-         onDragOver={(e) => {
-          e.preventDefault()
-          setIsDraggingThumbnail(true)
-         }}
-         onDragLeave={() => setIsDraggingThumbnail(false)}
-         onDrop={(e) => {
-          e.preventDefault()
-          setIsDraggingThumbnail(false)
-          if (e.dataTransfer.files[0])
-           handleThumbnailChange(e.dataTransfer.files[0])
-         }}>
-         {thumbnailPreview || selectedVideo.thumbnail ? (
-          <div className="relative w-full aspect-video group">
-           <img
-            src={thumbnailPreview || selectedVideo.thumbnail}
-            alt="Preview"
-            className="w-full h-full object-cover rounded-lg"
-           />
-           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 rounded-lg backdrop-blur-sm">
-            <button
-             onClick={() => fileInputRef.current?.click()}
-             className="bg-[#FFFF61] p-4 rounded-xl border-[4px] border-black hover:scale-110 transition-transform">
-             <Upload size={24} strokeWidth={3} />
-            </button>
-            {thumbnailPreview && (
-             <button
-              onClick={() => {
-               setThumbnailFile(null)
-               setThumbnailPreview(null)
-              }}
-              className="bg-[#FF83EA] text-white p-4 rounded-xl border-[4px] border-black hover:scale-110 transition-transform">
-              <Trash2 size={24} strokeWidth={3} />
-             </button>
-            )}
-           </div>
-          </div>
-         ) : (
-          <div className="text-center">
-           <Upload size={48} className="mx-auto mb-4 text-black/20" />
-           <p className="font-black uppercase text-sm text-black/40">
-            Drag Image Here
-           </p>
-          </div>
-         )}
-        </div>
        </SubToolbox>
       </div>
 
-      {/* Video Details */}
+      <SubToolbox title="Description" icon={<AlignLeft size={18} strokeWidth={3} />} paletteIndex={basePalette + 3} collapsible isOpenInitial={true}>
+       <StandardTextArea
+        value={editDescription}
+        onChange={(e) => setEditDescription(e.target.value)}
+        className="h-80 text-base vm-scrollless"
+        placeholder="DESCRIPTION..."
+       />
+      </SubToolbox>
       <SubToolbox
-       title="Video Details"
-       icon={<AlignLeft size={20} strokeWidth={3} />}
-       paletteIndex={basePalette + 3}
+       title="Video Tags"
+       icon={<Tag size={20} strokeWidth={3} />}
+       paletteIndex={basePalette + 4}
        collapsible
-       isOpenInitial={true}
-       overflowVisible={true}
+       isOpen={isTagsExpanded}
+       onToggle={() => setIsTagsExpanded((prev) => !prev)}
       >
-       <div className="space-y-6">
-        <div className="space-y-2">
-         <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">
-          Video Title
-         </label>
-         <input
-          value={editTitle}
-          onChange={(e) => setEditTitle(e.target.value)}
-          className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-5 font-black uppercase text-xl focus:bg-white focus:border-[#00CCFF] focus:shadow-[4px_4px_0px_0px_#00CCFF] outline-none transition-all"
-          placeholder="TITLE..."
-         />
-        </div>
-        <div className="space-y-2">
-         <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">
-          Description
-         </label>
-         <textarea
-          value={editDescription}
-          onChange={(e) => setEditDescription(e.target.value)}
-          className="w-full h-80 bg-gray-50 border-[4px] border-black rounded-xl p-5 font-bold text-base focus:bg-white focus:border-[#00CCFF] focus:shadow-[4px_4px_0px_0px_#00CCFF] outline-none resize-none transition-all"
-          placeholder="DESCRIPTION..."
-         />
-        </div>
-        {/* NEW TAGS MANAGER INTEGRATION */}
-        <div className="border-[4px] border-black rounded-[24px] overflow-hidden bg-white shadow-[6px_6px_0px_0px_black] mt-6">
-         <div className="bg-[#4FFF5B] px-6 py-4 border-b-[4px] border-black flex items-center justify-between">
-          <div className="flex items-center gap-3">
-           <Tag size={24} strokeWidth={3} className="text-black" />
-           <h3 className="text-3xl font-[1000] uppercase tracking-tighter leading-none mt-1">Video Tags</h3>
-          </div>
-          <div className="flex items-center gap-4">
-           <span className={`font-black text-sm uppercase px-3 py-1 rounded-lg border-2 ${editTags.length >= 499 ? "bg-[#FF3399] text-white border-black" : "bg-white/50 text-black/50 border-black/20"}`}>
-             {editTags.length} / 499
-           </span>
-           <button
-            onClick={handleRankTags}
-            disabled={isAnalyzingTags || !editTags}
-            className="flex items-center gap-2 bg-[#CCFF00] border-[3px] border-black text-black px-4 py-2 rounded-xl font-black uppercase shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50">
-            {isAnalyzingTags ? (
-             <Loader2 size={14} className="animate-spin" />
-            ) : (
-             <BarChart3 size={14} />
-            )}{" "}
-            Rank Tags
-           </button>
-           <button
-            onClick={() => setIsTagsExpanded(!isTagsExpanded)}
-            className="bg-black text-white p-2 rounded-lg hover:bg-white hover:text-black transition-colors">
-            <ChevronDown
-             size={16}
-             className={`transition-transform ${isTagsExpanded ? "rotate-180" : ""}`}
-            />
-           </button>
-          </div>
-         </div>
-         
-         <div className={`transition-all duration-300 ease-in-out ${isTagsExpanded ? "opacity-100" : "h-0 opacity-0 overflow-hidden"}`}>
-          <div className="p-6 bg-white space-y-6">
+       <div>
+        <div className="p-6 bg-white space-y-6">
            <div className="flex gap-4">
-            <input
+            <StandardInput
              value={tagInput}
              onChange={(e) => setTagInput(e.target.value)}
              onKeyDown={(e) => e.key === "Enter" && handleAddTag(tagInput)}
-             className="flex-1 bg-gray-50 border-[4px] border-black rounded-xl p-5 font-black uppercase text-lg focus:bg-white outline-none"
+             className="flex-1"
              placeholder="ADD TAG..."
-             maxLength={499 - editTags.length}
+             maxLength={MAX_TAG_CHARS}
             />
-            <button
-             onClick={() => handleAddTag(tagInput)}
-             disabled={editTags.length >= 499}
-             className="bg-black text-white px-10 font-black uppercase rounded-xl border-[4px] border-black shadow-[6px_6px_0px_0px_#FF3399] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_#FF3399] transition-all text-xl disabled:opacity-50">
-             ADD
-            </button>
+            <div className="w-[168px]">
+            <SubToolboxInnerActionButton
+              onClick={() => handleAddTag(tagInput)}
+              disabled={[...editTags.split(",").map((t) => t.trim()).filter(Boolean), tagInput.trim()].filter(Boolean).join(", ").length > MAX_TAG_CHARS}
+              className="!transition-none hover:!translate-y-0 active:!translate-y-0"
+              label={addTagButtonLabel}
+             />
+            </div>
            </div>
            
            <div
-            className={`w-full border-[4px] border-black rounded-2xl bg-white p-3 flex flex-wrap gap-2 content-start transition-all min-h-[132px]`}>
+            className={`relative w-full border-[3px] border-black rounded-2xl bg-white p-3 pb-9 flex flex-wrap gap-2 content-start min-h-[132px] shadow-[3px_3px_0px_0px_var(--vt-subtoolbox-shadow,rgba(0,0,0,0.28))]`}>
             {editTags ? (
              editTags
               .split(",")
@@ -1438,27 +1510,33 @@ const VideoManager: React.FC<VideoManagerProps> = ({
                 )}
                />
               ))
-            ) : (
+           ) : (
              <p className="text-black/30 font-black uppercase text-sm w-full text-center py-6">
               No tags populated...
              </p>
             )}
+            <span className="absolute right-3 bottom-2 text-[11px] font-black uppercase tracking-[0.08em] text-black/55">
+             {editTags.length}/{MAX_TAG_CHARS}
+            </span>
            </div>
 
-           <div className="space-y-6 pt-6 border-t-[4px] border-dashed border-black/10">
-            <button
+           <div className="pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_220px] gap-4">
+             <SubToolboxInnerActionButton
              onClick={handleGenerateTags}
-             disabled={isGeneratingTags || editTags.length >= 499}
-             className="w-full bg-[#FF3399] text-white p-6 rounded-2xl border-[4px] border-black font-[1000] uppercase text-2xl flex items-center justify-center gap-4 shadow-[8px_8px_0px_0px_black] hover:translate-y-1 hover:shadow-none transition-all disabled:opacity-50">
-             {isGeneratingTags ? (
-              <Loader2 size={32} className="animate-spin" />
-             ) : (
-              <Sparkles size={32} />
-             )}
-             {isGeneratingTags
-              ? "Scanning Market..."
-              : "Generate Algorithm Suggestions"}
-            </button>
+             disabled={isGeneratingTags || editTags.length >= MAX_TAG_CHARS}
+             className="!transition-none hover:!translate-y-0 active:!translate-y-0"
+             label={isGeneratingTags ? "Scanning Market..." : "Generate High Ranking Video Tags"}
+             />
+             <button
+              type="button"
+              onClick={handleRankTags}
+              disabled={isAnalyzingTags || !editTags}
+              className="h-[60px] px-4 rounded-[16px] border-[3px] border-black bg-white text-black text-[12px] font-black uppercase tracking-[0.08em] disabled:opacity-50 disabled:cursor-not-allowed"
+             >
+              {isAnalyzingTags ? "Ranking..." : existingTagAnalysis.length > 0 ? "View Rankings" : "Rank Tags"}
+             </button>
+            </div>
             {suggestedTags.length > 0 && (
              <div className="space-y-4">
               <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">
@@ -1479,102 +1557,23 @@ const VideoManager: React.FC<VideoManagerProps> = ({
              </div>
             )}
            </div>
-          </div>
-         </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <div className="space-y-2">
-          <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">
-           Privacy
-          </label>
-          <select
-           value={editPrivacy}
-           onChange={(e) => setEditPrivacy(e.target.value)}
-           className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase outline-none text-lg focus:shadow-[4px_4px_0px_0px_black]">
-           <option value="public">Public</option>
-           <option value="unlisted">Unlisted</option>
-           <option value="private">Private</option>
-          </select>
-         </div>
-         <div className="space-y-2">
-          <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">
-           Category
-          </label>
-          <select
-           value={editCategoryId}
-           onChange={(e) => setEditCategoryId(e.target.value)}
-           className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase outline-none text-lg focus:shadow-[4px_4px_0px_0px_black]">
-           {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-             {c.title}
-            </option>
-           ))}
-          </select>
-         </div>
-         <div className="space-y-2">
-          <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">
-           Playlists
-          </label>
-          <div className="relative" ref={playlistMenuRef}>
-           <button
-            onClick={(e) => {
-             e.stopPropagation()
-             setPlaylistMenuOpen(!playlistMenuOpen)
-            }}
-            className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase flex justify-between items-center hover:bg-gray-100 transition-colors text-lg">
-            <span className="truncate">
-             {selectedPlaylistIds.length === 0
-              ? "None Selected"
-              : `${selectedPlaylistIds.length} Linked`}
-            </span>
-            <ChevronDown size={20} />
-           </button>
-           {playlistMenuOpen && (
-            <div className="absolute left-0 right-0 top-full mt-2 bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] max-h-72 overflow-y-auto z-50 p-3 space-y-2">
-             {userPlaylists.length > 0 ? (
-              userPlaylists.map((p) => (
-               <label
-                key={p.id}
-                className={`flex items-center gap-4 p-4 rounded-xl border-[4px] cursor-pointer transition-all ${selectedPlaylistIds.includes(p.id) ? "border-[#00CCFF] bg-[#00CCFF]/10" : "border-black hover:bg-gray-100"}`}>
-                <input
-                 type="checkbox"
-                 checked={selectedPlaylistIds.includes(p.id)}
-                 onChange={() => togglePlaylist(p.id)}
-                 className="w-6 h-6 border-[4px] border-black accent-black"
-                />
-                <span className="font-black text-sm uppercase truncate">
-                 {p.title}
-                </span>
-               </label>
-              ))
-             ) : (
-              <p className="font-bold text-sm uppercase text-center py-6 text-black/40">
-               No Playlists Found
-              </p>
-             )}
-            </div>
-           )}
-          </div>
-         </div>
         </div>
        </div>
       </SubToolbox>
 
       {/* End Tag Manager removed as it is now integrated into Video Details */}
 
-      {/* Update Button */}
-      <button
+      <SubToolboxGridActionButton
        onClick={handleSave}
        disabled={saving}
-       className="w-full bg-[#FFFF61] border-[6px] border-black text-black p-8 rounded-[32px] font-[1000] uppercase text-4xl tracking-tighter shadow-[16px_16px_0px_0px_black] hover:translate-x-1 hover:translate-y-1 hover:shadow-[8px_8px_0px_0px_black] active:translate-y-3 active:shadow-none transition-all flex items-center justify-center gap-6 disabled:opacity-50 mt-8">
-       {saving ? (
-        <Loader2 className="animate-spin" size={40} />
-       ) : (
-        <Save size={40} strokeWidth={3} />
-       )}
-       {saving ? "Transmitting to Server..." : "UPDATE VIDEO DETAILS"}
-      </button>
+       tone="blue"
+       surfaceColor={updateDetailsPalette.header}
+       controlColor={updateDetailsPalette.icon}
+       shadowColor={hexToRgba(updateDetailsPalette.header, 0.45)}
+       iconName="settings"
+       showIconSection
+       label={saving ? "Transmitting to Server..." : "Update Video Details"}
+      />
      </div>
     ) : (
      <div className="h-[500px] flex flex-col items-center justify-center gap-5 font-black uppercase text-3xl tracking-tighter text-black/20">

@@ -580,7 +580,7 @@ export const ProjectStudio: React.FC = () => {
                                                     onChange={(e) => setNewTodoInput(e.target.value)}
                                                     onKeyDown={(e) => e.key === 'Enter' && handleAddTodo()}
                                                     placeholder="Add a channel task..."
-                                                    className="pop-input w-full p-3 border-[3px] text-sm rounded-lg"
+                                                    className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase text-lg focus:bg-white focus:border-[#00CCFF] outline-none transition-all"
                                                 />
                                                 <button onClick={handleAddTodo} className="bg-black text-white px-4 rounded-xl font-black shadow-[2px_2px_0px_0px_black]"><Plus /></button>
                                             </div>
@@ -618,7 +618,7 @@ export const ProjectStudio: React.FC = () => {
                                                     onChange={(e) => setNewGoalInput(e.target.value)}
                                                     onKeyDown={(e) => e.key === 'Enter' && handleAddGoal()}
                                                     placeholder="Add a channel goal..."
-                                                    className="pop-input w-full p-3 border-[3px] text-sm rounded-lg"
+                                                    className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase text-lg focus:bg-white focus:border-[#00CCFF] outline-none transition-all"
                                                 />
                                                 <button onClick={handleAddGoal} className="bg-black text-white px-4 rounded-xl font-black shadow-[2px_2px_0px_0px_black]"><Plus /></button>
                                             </div>
@@ -720,7 +720,7 @@ export const ProjectStudio: React.FC = () => {
                                                             <div className="flex-1">
                                                                 <span className="text-[10px] font-black uppercase text-black/30 tracking-[0.2em] pl-1">STATUS</span>
                                                                 <select
-                                                                    className="pop-input w-full p-3 border-[3px] text-xs font-black uppercase rounded-lg bg-white shadow-[2px_2px_0px_0px_black] outline-none cursor-pointer"
+                                                                    className="vt-input-standard w-full p-3 border-[3px] text-xs font-black uppercase rounded-lg bg-white shadow-[2px_2px_0px_0px_black] outline-none cursor-pointer"
                                                                     value={activeProject?.status}
                                                                     onChange={(e) => updateProject(activeProject!.id, { status: e.target.value as any })}
                                                                 >
@@ -733,7 +733,7 @@ export const ProjectStudio: React.FC = () => {
                                                                 <span className="text-[10px] font-black uppercase text-black/30 tracking-[0.2em] pl-1">PUBLISH DATE</span>
                                                                 <input
                                                                     type="date"
-                                                                    className="pop-input w-full p-3 border-[3px] text-xs font-black uppercase rounded-lg bg-white shadow-[2px_2px_0px_0px_black] outline-none cursor-pointer"
+                                                                    className="vt-input-standard w-full p-3 border-[3px] text-xs font-black uppercase rounded-lg bg-white shadow-[2px_2px_0px_0px_black] outline-none cursor-pointer"
                                                                     value={activeProject?.publishDate}
                                                                     onChange={(e) => updateProject(activeProject!.id, { publishDate: e.target.value })}
                                                                 />
@@ -764,7 +764,7 @@ export const ProjectStudio: React.FC = () => {
                                                         </div>
                                                         <div className="mt-4 pt-4 border-t-[2px] border-dashed border-black/10 flex gap-2 shrink-0">
                                                             <input
-                                                                className="pop-input w-full p-3 border-[3px] text-sm rounded-lg"
+                                                                className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase text-lg focus:bg-white focus:border-[#00CCFF] outline-none transition-all"
                                                                 placeholder="Add next step..."
                                                                 onKeyDown={(e) => {
                                                                     if (e.key === 'Enter') {

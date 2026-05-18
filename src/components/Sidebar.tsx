@@ -4,7 +4,11 @@ import { NavLink, useNavigate } from "react-router-dom"
 import { SidebarChatbot } from "./SidebarChatbot"
 import Icons from "./Icons"
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+ onHide?: () => void
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ onHide }) => {
  const navigate = useNavigate()
  const { authState, setAuthState, login, globalSyncData, isSyncing } = useBrain()
  const clickTimesRef = useRef<number[]>([])
@@ -42,13 +46,13 @@ export const Sidebar: React.FC = () => {
  }, [setAuthState])
 
   const tools = [
-   { id: "DASHBOARD", path: "/", label: "Dashboard", color: "#FF8AAF" },
-   { id: "STUDIO", path: "/studio", label: "Studio", color: "#FFB570" },
-   { id: "PROJECTS", path: "/projects", label: "Projects", color: "#FFFF61" },
-   { id: "ANALYTICS", path: "/performance", label: "Analytics", color: "#4FFF5B" },
-   { id: "EDITOR", path: "/editor-v1", label: "Editor", color: "#579AFF" },
-   { id: "SETTINGS", path: "/settings", label: "Settings", color: "#CC00FF" },
-   { id: "USER_GUIDE", path: "/user-guide", label: "User Guide", color: "#40C6E9" },
+    { id: "DASHBOARD", path: "/", label: "Dashboard", color: "#FF83EA" },
+    { id: "STUDIO", path: "/studio", label: "Studio", color: "#FF8AAF" },
+    { id: "PROJECTS", path: "/projects", label: "Projects", color: "#FFB570" },
+    { id: "ANALYTICS", path: "/performance", label: "Analytics", color: "#FFFF61" },
+    { id: "EDITOR", path: "/editor", label: "Editor", color: "#4FFF5B" },
+    { id: "SETTINGS", path: "/settings", label: "Settings", color: "#40C6E9" },
+    { id: "USER_GUIDE", path: "/user-guide", label: "User Guide", color: "#579AFF" },
   ]
 
  const handleHiddenAnalyticsClick = () => {
@@ -62,41 +66,27 @@ export const Sidebar: React.FC = () => {
  }
 
  return (
-  <aside className="w-[236px] bg-[#f3f4f6] h-screen flex flex-col py-4 pr-4 pl-3 z-50 overflow-y-auto custom-scrollbar">
-   {/* Brand Header */}
-   <div className="mb-8 flex flex-col gap-2 relative">
-    <h1 className="text-4xl font-[1000] uppercase tracking-tighter leading-none flex items-center gap-1">
-     <span className="text-black">VIEW</span>
-     <span className="text-[#00CCFF]">TUBE</span>
-    </h1>
-    <button
-     type="button"
-     onClick={handleHiddenAnalyticsClick}
-     aria-label="Hidden internal analytics access trigger"
-     className="absolute left-[76px] top-[16px] h-4 w-4 rounded-full bg-transparent border-0 cursor-default"
-    />
-   </div>
+  <aside className="w-[220px] bg-[#f3f4f6] h-screen flex flex-col py-4 pl-3 pr-4 z-50 overflow-y-auto overflow-x-visible custom-scrollbar">
 
    {/* Stacked Navigation */}
-   <nav className="mb-6 z-10 shrink-0">
+   <nav className="mb-6 z-10 shrink-0 overflow-visible">
     <div className="flex flex-col gap-[4px]">
      {tools.map((t) => (
       <NavLink
        key={t.id}
        to={t.path}
-       className={({ isActive }) =>
-        `transition-all relative w-[calc(100%+40px)] -ml-[40px] border-[2px] border-black rounded-r-[14px] rounded-l-none ${
-         isActive ? "translate-x-4" : "hover:translate-x-1"
-        }`
-       }>
-       {() => (
+       className="transition-all relative w-[calc(100%+20px)] -ml-[20px] overflow-visible">
+       {({ isActive }) => (
         <div
-         className="flex items-center justify-end w-full h-[26px]"
+         className={`flex items-center justify-center w-full h-[30px] border-[2px] border-black rounded-[14px] transition-all ${
+          isActive
+           ? "translate-x-[8px] shadow-[3px_0px_0px_0px_black]"
+           : "translate-x-0 hover:translate-x-[4px] hover:shadow-[2px_0px_0px_0px_black]"
+         }`}
          style={{
           backgroundColor: t.color,
           color: "#000000",
-          padding: "0 14px",
-          borderRadius: "0 10px 10px 0",
+          padding: "0 12px",
          }}
         >
          <span className="font-[800] uppercase text-sm tracking-tighter leading-none whitespace-nowrap">
@@ -109,19 +99,24 @@ export const Sidebar: React.FC = () => {
 
      {/* Connect YouTube (Moved up into Main Nav) */}
      <button
-      onClick={() => (!authState.isAuthenticated ? login() : void globalSyncData())}
+     onClick={() => (!authState.isAuthenticated ? login() : void globalSyncData())}
       disabled={isSyncing}
-      className={`transition-all relative w-[calc(100%+40px)] -ml-[40px] border-[2px] border-black rounded-r-[14px] rounded-l-none outline-none ${
-       isSyncing ? "opacity-50 cursor-not-allowed" : "hover:translate-x-1"
+      className={`transition-all relative w-[calc(100%+20px)] -ml-[20px] outline-none ${
+       isSyncing
+        ? "opacity-50 cursor-not-allowed"
+        : ""
       }`}
      >
       <div
-       className="flex items-center justify-end w-full h-[26px]"
+       className={`flex items-center justify-center w-full h-[30px] border-[2px] border-black rounded-[14px] transition-all ${
+        isSyncing
+         ? "translate-x-0"
+         : "translate-x-0 hover:translate-x-[4px] hover:shadow-[2px_0px_0px_0px_black]"
+       }`}
        style={{
         backgroundColor: "#CC00FF",
         color: "#000000",
-        padding: "0 14px",
-        borderRadius: "0 10px 10px 0",
+        padding: "0 12px",
        }}
       >
        <span className="font-[800] uppercase text-sm tracking-tighter leading-none whitespace-nowrap flex items-center">
@@ -142,51 +137,20 @@ export const Sidebar: React.FC = () => {
     </div>
    </nav>
 
-   {/* Sidebar Chatbot Slot */}
-   <div className="flex-1 min-h-0 mt-2">
-     <SidebarChatbot />
+   <div className="mt-auto pr-1 pb-2 shrink-0">
+    <button
+     type="button"
+     onClick={onHide}
+     className="w-full h-[34px] border-[2px] border-black rounded-[10px] bg-white text-[11px] font-black uppercase tracking-wide shadow-[2px_2px_0px_0px_black] hover:translate-y-[1px] hover:shadow-none transition-all"
+    >
+     Hide Sidebar
+    </button>
    </div>
 
-   <NavLink
-   to="/reference-studio/toolbox-system"
-   className={({ isActive }) =>
-     `mt-6 mb-2 w-[calc(100%+40px)] -ml-[40px] border-[2px] border-black rounded-r-[14px] rounded-l-none transition-all ${
-      isActive ? "translate-x-4" : "hover:translate-x-1"
-     }`
-    }>
-    {() => (
-     <div
-      className="w-full h-[26px] px-3 flex items-center font-[800] uppercase tracking-tighter text-[12px]"
-      style={{
-       backgroundColor: "#CC00FF",
-       color: "#000",
-       borderRadius: "0 10px 10px 0",
-      }}
-     >
-      Reference Studio
-     </div>
-    )}
-   </NavLink>
-    <NavLink
-    to="/data-transparency"
-    className={({ isActive }) =>
-      `mb-6 w-[calc(100%+40px)] -ml-[40px] border-[2px] border-black rounded-r-[14px] rounded-l-none transition-all ${
-       isActive ? "translate-x-4" : "hover:translate-x-1"
-      }`
-     }>
-     {() => (
-      <div
-       className="w-full h-[26px] px-3 flex items-center font-[800] uppercase tracking-tighter text-[12px]"
-       style={{
-        backgroundColor: "#40C6E9",
-        color: "#000",
-        borderRadius: "0 10px 10px 0",
-       }}
-      >
-       Data Transparency
-      </div>
-     )}
-    </NavLink>
+   {/* Sidebar Chatbot Slot */}
+   <div className="shrink-0 mt-2">
+     <SidebarChatbot />
+   </div>
    </aside>
  )
 }

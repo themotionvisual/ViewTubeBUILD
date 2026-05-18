@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react"
+import React, { useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 
 const UIReferenceLibraryContent = React.lazy(
@@ -64,11 +64,11 @@ const Stuff: React.FC = () => {
 		</div>
 	)
 
-	useState(() => {
+	useEffect(() => {
 		if (!isStuffTab(tabId)) {
 			navigate(`/stuff/${DEFAULT_STUFF_TAB}`, { replace: true })
 		}
-	})
+	}, [navigate, tabId])
 
 	const openStuffTab = (tab: StuffTab) => {
 		navigate(`/stuff/${tab}`)

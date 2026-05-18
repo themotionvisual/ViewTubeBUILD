@@ -1,0 +1,554 @@
+import React, { useState } from 'react';
+import { 
+  X, Minus, Square, Gamepad2, Skull, Heart, Sword, 
+  Play, Pause, FastForward, Rewind, Music, Volume2,
+  Activity, Zap, SquareSplitHorizontal, Plus
+} from 'lucide-react';
+
+// ==========================================
+// 8-BIT PIXEL STYLES INJECTION
+// ==========================================
+const PixelStyles = () => (
+  <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    
+    .font-pixel {
+      font-family: 'Press Start 2P', monospace;
+      text-transform: uppercase;
+      line-height: 1.5;
+    }
+
+    /* Chunky Retro OS Bevels (Win95/Classic Mac style) */
+    .pixel-bevel-outset {
+      box-shadow: 
+        inset 4px 4px 0px 0px #ffffff,
+        inset -4px -4px 0px 0px #808080,
+        0 0 0 4px #000000;
+      background-color: #c0c0c0;
+    }
+    .pixel-bevel-inset {
+      box-shadow: 
+        inset 4px 4px 0px 0px #808080,
+        inset -4px -4px 0px 0px #ffffff,
+        0 0 0 4px #000000;
+      background-color: #ffffff;
+    }
+    .pixel-button:active {
+      box-shadow: 
+        inset 4px 4px 0px 0px #808080,
+        inset -4px -4px 0px 0px #ffffff,
+        0 0 0 4px #000000;
+      padding-top: 2px;
+      padding-left: 2px;
+    }
+
+    /* Synthwave Pastel OS */
+    .vaporwave-outset {
+      box-shadow: 
+        inset 4px 4px 0px 0px #ffb3d9,
+        inset -4px -4px 0px 0px #b366ff,
+        0 0 0 4px #000000;
+      background-color: #e6ccff;
+    }
+
+    /* Strategy JRPG Gold Frame */
+    .gold-portrait-frame {
+      box-shadow: 
+        inset 4px 4px 0px #fef08a,
+        inset -4px -4px 0px #b45309,
+        0 0 0 4px #000,
+        0 0 0 8px #f59e0b,
+        0 0 0 12px #000;
+      background-color: #1e3a8a;
+    }
+
+    /* Classic Blue JRPG Dialogue Box */
+    .jrpg-dialogue-box {
+      background-color: #2563eb;
+      border: 6px solid #ffffff;
+      outline: 6px solid #000000;
+      box-shadow: inset 0 0 0 6px #000000;
+      position: relative;
+    }
+    .jrpg-corner {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background-color: #3b82f6;
+      border: 4px solid #ffffff;
+      outline: 4px solid #000000;
+    }
+
+    /* CRT Arcade Screen Effect */
+    .crt-screen {
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+      background-size: 100% 4px, 6px 100%;
+      box-shadow: inset 0 0 40px rgba(0,255,150,0.4);
+    }
+    .neon-text {
+      text-shadow: 2px 2px 0px #ff00ff, -2px -2px 0px #00ffff;
+    }
+    
+    /* Blinking Caret */
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+    .animate-blink { animation: blink 1s step-end infinite; }
+    
+    /* Equalizer Bars */
+    @keyframes eq-bounce-pixel { 0%, 100% { height: 20%; } 50% { height: 100%; } }
+    .eq-bar-pixel { animation: eq-bounce-pixel 0.5s step-end infinite alternate; width: 100%; border: 2px solid #000; }
+    .eq-bar-pixel:nth-child(odd) { background: #00ffff; box-shadow: 2px 2px 0 #ff00ff; }
+    .eq-bar-pixel:nth-child(even) { background: #ff00ff; box-shadow: 2px 2px 0 #00ffff; }
+    .eq-bar-pixel:nth-child(1) { animation-delay: 0.1s; }
+    .eq-bar-pixel:nth-child(2) { animation-delay: 0.3s; }
+    .eq-bar-pixel:nth-child(3) { animation-delay: 0.0s; }
+    .eq-bar-pixel:nth-child(4) { animation-delay: 0.4s; }
+    .eq-bar-pixel:nth-child(5) { animation-delay: 0.2s; }
+    .eq-bar-pixel:nth-child(6) { animation-delay: 0.5s; }
+    .eq-bar-pixel:nth-child(7) { animation-delay: 0.15s; }
+    .eq-bar-pixel:nth-child(8) { animation-delay: 0.35s; }
+    .eq-bar-pixel:nth-child(9) { animation-delay: 0.25s; }
+    .eq-bar-pixel:nth-child(10) { animation-delay: 0.45s; }
+
+    /* Pixel Slider */
+    .pixel-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 16px; background: #000; outline: none; border: 2px solid #fff; box-shadow: 0 0 0 2px #000;}
+    .pixel-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 28px; background: #c0c0c0; border: 2px solid #fff; outline: 2px solid #000; cursor: pointer; box-shadow: inset -2px -2px #808080; }
+  `}</style>
+);
+
+// ==========================================
+// 8-BIT WRAPPER COMPONENTS
+// ==========================================
+
+const PixelButton = ({ children, color = "gray", onClick, className = "" }) => {
+  const baseClass = color === "vaporwave" ? "vaporwave-outset text-purple-900" : "pixel-bevel-outset text-black";
+  return (
+    <button 
+      onClick={onClick}
+      className={`font-pixel text-[10px] sm:text-xs px-4 py-3 m-1 pixel-button outline-none transition-none flex flex-col items-center justify-center gap-2 ${baseClass} ${className}`}
+    >
+      {children}
+    </button>
+  );
+};
+
+const RetroOSWindow = ({ title, children, isVaporwave = false }) => {
+  const outsetClass = isVaporwave ? "vaporwave-outset" : "pixel-bevel-outset";
+  const titleBg = isVaporwave ? "bg-gradient-to-r from-pink-500 to-purple-500" : "bg-blue-800";
+  const textCol = isVaporwave ? "text-white" : "text-white";
+
+  return (
+    <div className={`w-full p-1 pb-4 flex flex-col h-full ${outsetClass}`}>
+      <div className={`w-full h-8 flex items-center justify-between px-2 mb-2 ${titleBg} border-[2px] border-black`}>
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1">
+            <div className="w-4 h-1 bg-white/50" />
+            <div className="w-4 h-1 bg-white/50" />
+          </div>
+          <span className={`font-pixel text-[8px] sm:text-[10px] ${textCol} tracking-widest`}>{title}</span>
+        </div>
+        <div className="flex gap-1 h-full py-1">
+          <button className="h-full aspect-square pixel-bevel-outset flex items-center justify-center pixel-button text-black"><Minus size={12} strokeWidth={4} /></button>
+          <button className="h-full aspect-square pixel-bevel-outset flex items-center justify-center pixel-button text-black"><Square size={10} strokeWidth={4} /></button>
+          <button className="h-full aspect-square pixel-bevel-outset flex items-center justify-center pixel-button text-black"><X size={14} strokeWidth={4} /></button>
+        </div>
+      </div>
+      <div className="mx-2 flex-1 pixel-bevel-inset p-4 bg-[#c0c0c0]">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+// ==========================================
+// DATA VISUALIZATIONS & PRIMITIVES
+// ==========================================
+
+const PixelBarChart = ({ data, colors }) => (
+  <div className="h-40 w-full flex items-end gap-2 p-2 pixel-bevel-inset bg-[#008080] relative border-2 border-black">
+    {data.map((val, i) => (
+      <div key={i} className="flex-1 border-2 border-black relative group" style={{ height: `${val}%`, backgroundColor: colors[i % colors.length], boxShadow: 'inset 2px 2px rgba(255,255,255,0.5), inset -2px -2px rgba(0,0,0,0.5)' }}>
+         <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-pixel px-1 py-0.5 opacity-0 group-hover:opacity-100">{val}%</div>
+      </div>
+    ))}
+  </div>
+);
+
+const PixelRadial = ({ percentage, color, label }) => (
+  <div className="relative w-32 h-32 flex flex-col items-center justify-center">
+    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="40" fill="transparent" stroke="#000" strokeWidth="12" />
+      <circle cx="50" cy="50" r="40" fill="transparent" stroke={color} strokeWidth="8" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * percentage) / 100} strokeLinecap="square" />
+    </svg>
+    <div className="absolute inset-0 flex flex-col items-center justify-center mt-2">
+      <span className="text-xl font-pixel text-white neon-text">{percentage}</span>
+      <span className="text-[6px] font-pixel uppercase text-white/70 mt-1">{label}</span>
+    </div>
+  </div>
+);
+
+// ==========================================
+// MODULE COMPONENTS
+// ==========================================
+
+const JRPGDialogue = ({ speakerA, textA, speakerB, textB }) => {
+  return (
+    <div className="w-full flex flex-col gap-6 p-4">
+      <div className="flex justify-between items-end gap-4 px-4 sm:px-12 relative z-10">
+        <div className="w-24 h-24 sm:w-32 sm:h-32 gold-portrait-frame flex items-center justify-center relative overflow-hidden">
+          <div className="absolute bottom-0 w-16 h-20 bg-blue-500 border-4 border-black" />
+          <div className="absolute top-4 w-12 h-12 bg-pink-300 border-4 border-black" />
+          <div className="absolute top-8 left-10 w-2 h-2 bg-black" />
+          <div className="absolute top-8 right-10 w-2 h-2 bg-black" />
+        </div>
+        <div className="w-24 h-24 sm:w-32 sm:h-32 gold-portrait-frame flex items-center justify-center relative overflow-hidden">
+          <div className="absolute bottom-0 w-16 h-20 bg-red-600 border-4 border-black" />
+          <div className="absolute top-4 w-12 h-12 bg-orange-200 border-4 border-black" />
+          <div className="absolute top-8 left-10 w-2 h-2 bg-black" />
+          <div className="absolute top-8 right-10 w-2 h-2 bg-black" />
+        </div>
+      </div>
+      <div className="w-full jrpg-dialogue-box p-6 sm:p-8 mt-[-30px] z-20 min-h-[160px] flex flex-col justify-between">
+        <div className="jrpg-corner -top-2 -left-2" />
+        <div className="jrpg-corner -top-2 -right-2" />
+        <div className="jrpg-corner -bottom-2 -left-2" />
+        <div className="jrpg-corner -bottom-2 -right-2" />
+        <div className="grid grid-cols-2 gap-4 h-full">
+          <div className="flex flex-col gap-2">
+            <span className="font-pixel text-[12px] sm:text-[14px] text-[#fde047]">{speakerA}:</span>
+            <p className="font-pixel text-[10px] sm:text-[12px] text-white leading-loose whitespace-pre-wrap">{textA}</p>
+          </div>
+          <div className="flex flex-col gap-2 border-l-4 border-dashed border-white/30 pl-4">
+             <span className="font-pixel text-[12px] sm:text-[14px] text-[#fde047]">{speakerB}:</span>
+             <p className="font-pixel text-[10px] sm:text-[12px] text-white leading-loose whitespace-pre-wrap">{textB}</p>
+          </div>
+        </div>
+        <div className="absolute bottom-4 right-4 animate-blink">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#fde047"><path d="M12 24 L24 12 H16 V0 H8 V12 H0 Z"/></svg>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ColorMatrix = () => {
+  const [hueVal, setHueVal] = useState(60);
+  return (
+    <div className="w-full jrpg-dialogue-box p-6 min-h-[160px] flex flex-col gap-4 mt-8">
+      <div className="jrpg-corner -top-2 -left-2" />
+      <div className="jrpg-corner -top-2 -right-2" />
+      <div className="jrpg-corner -bottom-2 -left-2" />
+      <div className="jrpg-corner -bottom-2 -right-2" />
+      <span className="font-pixel text-[12px] sm:text-[14px] text-[#fde047]">DYE STATION:</span>
+      <div className="grid grid-cols-5 gap-2">
+        {['#ef4444', '#eab308', '#22c55e', '#3b82f6', '#d946ef'].map((col, idx) => (
+          <button 
+            key={idx} 
+            className="aspect-square border-4 border-black hover:scale-105 active:scale-95 transition-transform" 
+            style={{ backgroundColor: col, boxShadow: 'inset 4px 4px 0 rgba(255,255,255,0.4), inset -4px -4px 0 rgba(0,0,0,0.4)' }} 
+          />
+        ))}
+      </div>
+      <div className="flex flex-col gap-2 mt-2">
+        <div className="flex justify-between font-pixel text-[10px] text-white">
+          <span>HUE SHIFT</span>
+          <span>{Math.floor((hueVal / 100) * 360)}°</span>
+        </div>
+        <div className="relative">
+           <div className="absolute inset-0 h-4 border-2 border-white pointer-events-none mt-[6px]" style={{ background: 'linear-gradient(90deg, red, yellow, lime, cyan, blue, magenta, red)', boxShadow: '0 0 0 2px #000' }} />
+           <input type="range" min="0" max="100" value={hueVal} onChange={(e) => setHueVal(e.target.value)} className="pixel-slider relative z-10 bg-transparent shadow-none w-full" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const BoomboxEqualizer = () => {
+  const [resGrid, setResGrid] = useState(Array(16).fill(false));
+  const toggleRes = (i) => {
+      const newGrid = [...resGrid];
+      newGrid[i] = !newGrid[i];
+      setResGrid(newGrid);
+  };
+  const [trimVal, setTrimVal] = useState(45);
+
+  return (
+      <RetroOSWindow title="D:\BOOMBOX_EQ.EXE" isVaporwave={true}>
+         <div className="flex flex-col gap-6">
+            <div className="p-4 pixel-bevel-inset bg-[#222] border-4 border-black flex flex-col gap-4 relative">
+              <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1 flex flex-col gap-2">
+                     <div className="h-32 pixel-bevel-inset border-2 border-[#00ffff] bg-black p-2 flex items-end gap-1 relative overflow-hidden">
+                       <div className="absolute top-1 left-1 bg-[#ff00ff] text-white font-pixel text-[6px] px-1 py-0.5 z-20">VELOCITY</div>
+                       <div className="absolute inset-0 crt-screen z-10 pointer-events-none opacity-40"></div>
+                       {[...Array(10)].map((_, i) => (
+                          <div key={i} className="eq-bar-pixel flex-1" style={{ height: `${Math.random() * 80 + 20}%` }} />
+                       ))}
+                     </div>
+                     <div className="grid grid-cols-4 gap-2">
+                        {['APX', 'TKN', 'SYS', 'NET'].map((lbl, idx) => (
+                          <div key={idx} className="pixel-bevel-outset border-2 border-black flex flex-col items-center justify-center p-2 bg-gray-300">
+                             <span className="font-pixel text-[6px]">{lbl}</span>
+                             <span className="font-pixel text-[8px] text-blue-800 mt-2">{(Math.random() * 20 + 80).toFixed(0)}%</span>
+                          </div>
+                        ))}
+                     </div>
+                  </div>
+                  
+                  <div className="sm:w-[35%] flex flex-col gap-2">
+                     <div className="pixel-bevel-outset p-2 border-2 border-black bg-[#dfdfdf] flex flex-col gap-2 flex-1">
+                        <div className="font-pixel text-[6px] border-b-2 border-gray-500 pb-1">RESONANCE</div>
+                        <div className="grid grid-cols-4 gap-1 flex-1">
+                          {resGrid.map((active, i) => (
+                            <div key={i} onClick={() => toggleRes(i)} className={`w-full h-full min-h-[20px] border-2 border-black cursor-pointer ${active ? 'bg-[#ff00ff] pixel-bevel-inset' : 'bg-[#00ffff] pixel-bevel-outset'}`} />
+                          ))}
+                        </div>
+                     </div>
+                     <div className="pixel-bevel-outset p-2 border-2 border-black bg-[#C9F830]">
+                         <input type="range" className="pixel-slider w-full" defaultValue="75" />
+                     </div>
+                  </div>
+              </div>
+            </div>
+
+            <div className="pixel-bevel-outset border-4 border-black p-4 bg-[#FCAF57] flex flex-col sm:flex-row gap-4 items-center">
+               <div className="flex-1 w-full pixel-bevel-inset border-2 border-black p-4 bg-white relative">
+                  <input type="range" className="pixel-slider w-full" value={trimVal} onChange={(e)=>setTrimVal(e.target.value)} />
+                  <div className="absolute top-1 right-2 font-pixel text-[6px] bg-black text-[#FCAF57] px-1 py-0.5 border-2 border-white">
+                     TC: 01:24:{Math.floor(trimVal).toString().padStart(2, '0')}
+                  </div>
+               </div>
+               <div className="flex gap-2 w-full sm:w-auto">
+                  <PixelButton color="vaporwave" className="flex-1"><SquareSplitHorizontal size={16} strokeWidth={3} /> TRIM</PixelButton>
+                  <PixelButton color="vaporwave" className="flex-1"><Plus size={16} strokeWidth={4} /> MARK</PixelButton>
+               </div>
+            </div>
+         </div>
+      </RetroOSWindow>
+  );
+};
+
+const MediaEngine = () => (
+  <RetroOSWindow title="C:\TOOLS\MEDIA_PLAYER.EXE">
+     <div className="flex flex-col gap-4">
+       <div className="w-full aspect-video border-4 border-black bg-black relative flex items-center justify-center overflow-hidden">
+          <div className="absolute inset-0 crt-screen z-10 pointer-events-none" />
+          <div className="absolute inset-0 bg-blue-900 animate-pulse" style={{ backgroundImage: 'linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000), linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000)', backgroundSize: '16px 16px', backgroundPosition: '0 0, 8px 8px' }} />
+          
+          <div className="w-20 h-20 rounded-full border-4 border-black bg-gray-400 flex items-center justify-center relative shadow-[inset_4px_4px_0_#fff,inset_-4px_-4px_0_#808080]">
+             <div className="w-8 h-8 rounded-full border-2 border-black bg-black flex items-center justify-center">
+               <Music size={12} className="text-white" />
+             </div>
+          </div>
+          <div className="absolute bottom-2 left-2 font-pixel text-[8px] text-white z-20 bg-black px-1">TRACK 01 [PLAYING]</div>
+       </div>
+
+       <div className="flex gap-2 h-10">
+          <PixelButton color="gray"><Rewind size={16} strokeWidth={3} /></PixelButton>
+          <PixelButton color="gray"><Pause size={16} strokeWidth={3} /></PixelButton>
+          <PixelButton color="gray"><Play size={16} strokeWidth={3} /></PixelButton>
+          <PixelButton color="gray"><FastForward size={16} strokeWidth={3} /></PixelButton>
+          <div className="flex-1" />
+          <PixelButton color="gray"><Volume2 size={16} strokeWidth={3} /></PixelButton>
+       </div>
+     </div>
+  </RetroOSWindow>
+);
+
+const PerformanceCore = () => (
+  <RetroOSWindow title="C:\ANALYTICS\PERF_CORE.EXE">
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 gap-4">
+           <div className="pixel-bevel-inset border-2 border-black p-4 flex flex-col bg-white">
+             <span className="text-[8px] font-pixel text-black leading-loose">WATCH TIME (HRS)</span>
+             <span className="text-xl font-pixel text-blue-800 mt-2">14.2K</span>
+             <div className="h-3 w-full bg-black border-2 border-white p-[1px] mt-2"><div className="h-full bg-[#FF7497] w-[75%]" /></div>
+           </div>
+           <div className="pixel-bevel-outset border-2 border-black p-4 flex flex-col bg-[#FFE357]">
+             <span className="text-[8px] font-pixel text-black leading-loose">ENGAGEMENT RATE</span>
+             <span className="text-xl font-pixel text-black mt-2">8.4%</span>
+             <div className="h-3 w-full bg-black border-2 border-white p-[1px] mt-2"><div className="h-full bg-[#00ffff] w-[45%]" /></div>
+           </div>
+        </div>
+        <div className="pixel-bevel-outset border-2 border-black p-2 bg-[#dfdfdf]">
+          <div className="bg-blue-800 text-white px-2 py-1 text-[8px] font-pixel flex justify-between mb-2">
+            <span>REGIONAL DIST.</span>
+            <span className="text-[#00ffff] animate-blink">LIVE</span>
+          </div>
+          <PixelBarChart data={[40, 70, 45, 90, 60, 30]} colors={['#FF7497', '#24D3FF', '#FFE357', '#C9F830', '#FCAF57']} />
+        </div>
+      </div>
+  </RetroOSWindow>
+);
+
+const TokyoPopHub = () => (
+  <RetroOSWindow title="A:\TOKYO_POP.EXE" isVaporwave={true}>
+       <div className="space-y-6">
+         <div className="flex items-center justify-between border-4 border-[#00ffff] p-4 bg-black shadow-[4px_4px_0_0_#ff00ff]">
+           <div className="flex flex-col gap-2">
+             <span className="text-[#ff00ff] font-pixel text-[8px]">SYSTEM STATUS</span>
+             <span className="text-[#00ffff] text-lg font-pixel neon-text">OVERDRIVE</span>
+           </div>
+           <Activity className="text-[#00ffff] animate-pulse" size={32} />
+         </div>
+         
+         <div className="grid grid-cols-2 gap-4">
+            <div className="border-4 border-[#ff00ff] bg-black p-4 flex items-center justify-center pixel-bevel-inset">
+              <PixelRadial percentage={88} color="#ff00ff" label="CPU Load" />
+            </div>
+            <div className="border-4 border-[#00ffff] bg-black p-4 flex flex-col justify-center gap-6 pixel-bevel-inset">
+               <input type="range" className="pixel-slider" defaultValue="90" style={{'--track-color': '#00ffff'}}/>
+               <input type="range" className="pixel-slider" defaultValue="40" style={{'--track-color': '#ff00ff'}}/>
+               <input type="range" className="pixel-slider" defaultValue="65" style={{'--track-color': '#24D3FF'}}/>
+            </div>
+         </div>
+       </div>
+  </RetroOSWindow>
+);
+
+const ArcadeScreen = ({ children }) => (
+  <div className="w-full bg-[#111] p-8 border-8 border-[#333] rounded-[32px] shadow-[0_0_0_8px_#000] relative overflow-hidden mt-8">
+    <div className="absolute inset-0 bg-pink-900/20" />
+    <div className="absolute inset-0 crt-screen pointer-events-none z-50" />
+    <div className="relative z-10 w-full h-full border-4 border-cyan-400 p-6 flex flex-col shadow-[0_0_20px_#00ffff,inset_0_0_20px_#00ffff]">
+      {children}
+    </div>
+  </div>
+);
+
+// ==========================================
+// MAIN APPLICATION
+// ==========================================
+
+export default function PixelStudio8Bit() {
+  const [dialogueText] = useState({
+    a: "Marshal Lannes! Your V Corps will lead the vanguard.\nSeize that bridgehead!",
+    b: "Oui, Sire! The bridge will be ours!\nWe shall clear a path for the army!"
+  });
+
+  return (
+    <div className="min-h-screen bg-[#222] p-4 md:p-8 flex flex-col items-center gap-12 custom-scrollbar overflow-x-hidden"
+         style={{ backgroundImage: 'radial-gradient(#444 10%, transparent 11%)', backgroundSize: '20px 20px' }}>
+      <PixelStyles />
+
+      {/* HEADER */}
+      <div className="text-center space-y-4 my-8">
+        <h1 className="font-pixel text-4xl sm:text-6xl text-white neon-text tracking-widest uppercase">
+          Retro Studio Deck
+        </h1>
+        <p className="font-pixel text-yellow-400 text-[10px] tracking-[0.3em] animate-blink">
+          INSERT COIN TO CONTINUE
+        </p>
+      </div>
+
+      <div className="w-full max-w-6xl flex flex-col gap-12">
+        
+        {/* ROW 1: THE TACTICAL CAMPAIGN & DYE STATION (JRPG Style) */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-end">
+          <div className="flex flex-col w-full h-full justify-end">
+             <JRPGDialogue speakerA="NAPOLEON" textA={dialogueText.a} speakerB="LANNES" textB={dialogueText.b} />
+          </div>
+          <div className="flex flex-col w-full">
+             <ColorMatrix />
+          </div>
+        </div>
+
+        {/* ROW 2: VAPORWAVE BOOMBOX & MEDIA ENGINE */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+           <BoomboxEqualizer />
+           <MediaEngine />
+        </div>
+
+        {/* ROW 3: MEDIA ANALYTICS */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+           <PerformanceCore />
+           <TokyoPopHub />
+        </div>
+
+        {/* ROW 4: VAPORWAVE OS & SYSTEM 95 */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <RetroOSWindow title="AESTHETIC_CTRL.EXE" isVaporwave={true}>
+            <div className="flex flex-col gap-6 h-full p-2">
+              <div className="flex gap-4 items-center">
+                <div className="w-16 h-16 bg-pink-400 border-[4px] border-black flex items-center justify-center shadow-[4px_4px_0_0_#9333ea]">
+                  <Heart size={32} fill="white" strokeWidth={2} />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div className="font-pixel text-[10px] text-purple-900 tracking-widest">HP Level</div>
+                  <div className="w-full h-4 bg-gray-300 border-[2px] border-black p-[2px]">
+                    <div className="w-[75%] h-full bg-pink-500" />
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1 border-[4px] border-black bg-cyan-100 p-4">
+                <div className="font-pixel text-[8px] sm:text-[10px] text-black leading-loose whitespace-pre-wrap">
+                  {`> BOOT SEQUENCE INITIATED...
+> LOADING SYNTHWAVE_WAVEFORMS...
+> DIRECTORY [A:\\] FOUND.
+> WAITING FOR USER INPUT _`}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <PixelButton color="vaporwave">Execute</PixelButton>
+                <PixelButton color="vaporwave">Format Disk</PixelButton>
+              </div>
+            </div>
+          </RetroOSWindow>
+
+          <RetroOSWindow title="C:\WINDOWS\SYSTEM32\TOOLS">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 pixel-bevel-outset flex items-center justify-center border-[2px] border-black">
+                  <Sword strokeWidth={3} className="text-black" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="font-pixel text-[10px] text-black">Inventory Slots</span>
+                  <span className="font-pixel text-xs font-bold text-blue-800">14 / 20</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-2 bg-gray-200 border-[2px] border-black p-2">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="aspect-square pixel-bevel-inset border border-black cursor-pointer hover:bg-yellow-200 flex items-center justify-center">
+                    {i === 2 && <Skull size={20} />}
+                    {i === 5 && <Heart size={20} />}
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 flex gap-2">
+                 <PixelButton>Save State</PixelButton>
+                 <PixelButton>Load State</PixelButton>
+              </div>
+            </div>
+          </RetroOSWindow>
+        </div>
+
+        {/* ROW 5: ARCADE CABINET (Neon CRT Style) */}
+        <ArcadeScreen>
+          <div className="flex justify-between items-center border-b-4 border-cyan-400 pb-4 mb-6">
+             <span className="font-pixel text-pink-500 text-sm sm:text-xl neon-text">PLAYER 1</span>
+             <span className="font-pixel text-yellow-400 text-xl sm:text-3xl">HI-SCORE: 999,990</span>
+             <span className="font-pixel text-cyan-400 text-sm sm:text-xl neon-text">CREDIT: 04</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center flex-1">
+             <div className="flex flex-col items-center gap-6 p-4 border-4 border-dashed border-pink-500/50 hover:bg-pink-500/20 cursor-pointer">
+                <Gamepad2 size={64} className="text-cyan-400" />
+                <span className="font-pixel text-white text-xs leading-loose">PVP BATTLE<br/>ARENA</span>
+             </div>
+             <div className="flex flex-col items-center gap-6 p-4 border-4 border-dashed border-yellow-400/50 hover:bg-yellow-400/20 cursor-pointer bg-yellow-400/10">
+                <Skull size={64} className="text-pink-500" />
+                <span className="font-pixel text-white text-xs leading-loose">BOSS RUSH<br/>MODE</span>
+                <span className="font-pixel text-yellow-400 text-[10px] animate-blink">SELECTED</span>
+             </div>
+             <div className="flex flex-col items-center gap-6 p-4 border-4 border-dashed border-cyan-400/50 hover:bg-cyan-400/20 cursor-pointer">
+                <Heart size={64} className="text-yellow-400" />
+                <span className="font-pixel text-white text-xs leading-loose">SURVIVAL<br/>GAUNTLET</span>
+             </div>
+          </div>
+          <div className="w-full text-center mt-10">
+            <span className="font-pixel text-cyan-400 text-xl animate-blink">PRESS START BUTTON</span>
+          </div>
+        </ArcadeScreen>
+
+      </div>
+    </div>
+  );
+}

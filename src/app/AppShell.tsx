@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import { Sparkles, Crown } from "lucide-react";
 import { Sidebar } from "../components/Sidebar";
+import { TopBar } from "../components/TopBar";
+import { DashboardProvider } from "../context/DashboardContext";
 import {
   ENTITLEMENT_CHANGED_EVENT,
   entitlementStatesEqual,
@@ -26,6 +26,10 @@ export const useEntitlement = (): EntitlementState => {
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const location = useLocation();
   const [entitlement, setEntitlement] = useState<EntitlementState>(() => readCurrentEntitlement());
+  const [sidebarHidden, setSidebarHidden] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("vt_sidebar_hidden") === "1";
+  });
 
   useEffect(() => {
     const sync = () => {
@@ -53,24 +57,36 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     };
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("vt_sidebar_hidden", sidebarHidden ? "1" : "0");
+  }, [sidebarHidden]);
+
   const isLarge = entitlement.tier === "large";
   const isFree = entitlement.tier === "free";
   const isEditorSurface =
-    location.pathname === "/editor-v1" || location.pathname === "/internal/editor-v1-legacy";
+    location.pathname === "/editor" || location.pathname === "/editor-v1";
   const tokenText =
     isLarge ? "UNLIMITED" : `${Math.max(0, Math.floor(entitlement.creditBalance)).toLocaleString()} CREDITS`;
 
   return (
-    <div className="flex h-screen w-screen bg-[#f3f4f6] overflow-hidden font-sans">
-      <Sidebar />
-      <main
-        className={`flex-1 h-full overflow-y-auto overflow-x-hidden relative ${
-          isEditorSurface ? "p-2 pb-2" : "p-8 pb-96"
-        }`}
-      >
-
-        <EntitlementContext.Provider value={entitlement}>{children}</EntitlementContext.Provider>
-      </main>
-    </div>
+    <DashboardProvider>
+      <div className="flex flex-col h-screen w-screen bg-[#f3f4f6] overflow-hidden font-sans">
+        <TopBar
+          sidebarHidden={sidebarHidden}
+          onToggleSidebar={() => setSidebarHidden((value) => !value)}
+        />
+        <div className="flex flex-1 h-0 w-full overflow-visible relative">
+          {!sidebarHidden ? <Sidebar onHide={() => setSidebarHidden(true)} /> : null}
+          <main
+            className={`flex-1 h-full overflow-y-auto overflow-x-hidden relative ${
+              isEditorSurface ? "p-2 pb-2" : "p-8 pb-96"
+            }`}
+          >
+            <EntitlementContext.Provider value={entitlement}>{children}</EntitlementContext.Provider>
+          </main>
+        </div>
+      </div>
+    </DashboardProvider>
   );
 };

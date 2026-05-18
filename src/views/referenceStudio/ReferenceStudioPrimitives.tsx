@@ -1,14 +1,5 @@
 import React, { useMemo, useState } from "react"
-
-const zoomIn35 = new URL(
- "../../assets/icons/toolbox-toggle/zoom-in-35.png",
- import.meta.url,
-).href
-
-const zoomOut35 = new URL(
- "../../assets/icons/toolbox-toggle/zoom-out-35.png",
- import.meta.url,
-).href
+import { Expand, Shrink } from "lucide-react"
 
 const RS_TRANSITION = "duration-1000 ease-in-out"
 
@@ -35,15 +26,15 @@ const ScopeToggleIcon: React.FC<{ open: boolean; size?: number }> = ({
   style={{ width: size, height: size }}>
   <div
    className={`absolute inset-0 w-full h-full transition-all ${RS_TRANSITION} rotate-45 ${open ? "scale-90" : "scale-100"} group-hover:scale-110 group-active:scale-95`}>
-   <img
-    alt="Open toolbox"
-    src={zoomOut35}
-    className={`absolute inset-0 w-full h-full inline-block select-none pointer-events-none transition-all ${RS_TRANSITION} ${open ? "opacity-0 rotate-180 scale-75" : "opacity-80 rotate-0 scale-100 group-hover:opacity-100"}`}
+   <Expand
+    size={size}
+    strokeWidth={2.8}
+    className={`absolute inset-0 m-auto text-black inline-block select-none pointer-events-none transition-all ${RS_TRANSITION} ${open ? "opacity-0 rotate-180 scale-75" : "opacity-80 rotate-0 scale-100 group-hover:opacity-100"}`}
    />
-   <img
-    alt="Close toolbox"
-    src={zoomIn35}
-    className={`absolute inset-0 w-full h-full inline-block select-none pointer-events-none transition-all ${RS_TRANSITION} ${open ? "opacity-80 rotate-180 scale-100 group-hover:opacity-100" : "opacity-0 rotate-0 scale-75"}`}
+   <Shrink
+    size={size}
+    strokeWidth={2.8}
+    className={`absolute inset-0 m-auto text-black inline-block select-none pointer-events-none transition-all ${RS_TRANSITION} ${open ? "opacity-80 rotate-180 scale-100 group-hover:opacity-100" : "opacity-0 rotate-0 scale-75"}`}
    />
   </div>
  </div>

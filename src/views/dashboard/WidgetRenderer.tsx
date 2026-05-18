@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react"
+import React, { useState, useMemo } from "react"
 import {
   Activity,
   Bell,
@@ -56,6 +56,7 @@ import { BridgeEfficiencyWidget } from "./widgets/BridgeEfficiencyWidget"
 import { AudienceMatrixWidget } from "./widgets/AudienceMatrixWidget"
 import { GoalsTrackerWidget } from "./widgets/GoalsTrackerWidget"
 import { BrainHubWidget } from "./widgets/BrainHubWidget"
+import { ImageGeneratorWidget } from "./widgets/ImageGeneratorWidget"
 const formatHumanNumber = (value: unknown): string => {
  const v = Number(value)
  if (isNaN(v)) return "0"
@@ -73,33 +74,6 @@ import { CommentReplyWidget } from "./widgets/CommentReplyWidget"
 import { AIJournalWidget } from "./widgets/AIJournalWidget"
 import { WidgetShell } from "./WidgetShell"
 import { useBrain } from "../../context/useBrain"
-
-const THUMBNAIL_WARNINGS = new Set<string>()
-
-const withYouTubeThumbFallback = (
- event: React.SyntheticEvent<HTMLImageElement, Event>,
- videoId?: string,
-) => {
- if (!videoId) return
- const target = event.currentTarget
- const current = String(target.src || "")
- if (current.includes("maxresdefault.jpg")) {
-  target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
-  return
- }
- if (current.includes("hqdefault.jpg")) {
-  target.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
-  return
- }
- if (current.includes("mqdefault.jpg")) {
-  if (!THUMBNAIL_WARNINGS.has(videoId)) {
-   THUMBNAIL_WARNINGS.add(videoId)
-   console.warn(`[WidgetRenderer] Thumbnail missing for video ${videoId}; fallback placeholder used.`)
-  }
-  target.src =
-   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 180'%3E%3Crect width='320' height='180' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23111' font-family='Arial' font-size='16'%3EThumbnail unavailable%3C/text%3E%3C/svg%3E"
- }
-}
 
  interface WidgetRendererProps extends WidgetRenderCallbacks {
   widget: WidgetDefinition
@@ -433,203 +407,6 @@ const RevenueMomentumWidget: React.FC<{
   )
 }
 
-const ChannelOverviewWidget: React.FC<{
-  instance: any;
-  data: DashboardData;
-  common: any;
-}> = ({ instance, data, common }) => {
-  const [window, setWindow] = useState<"lifetime" | "28d">(() => {
-    const saved = localStorage.getItem("viewtube_overview_window");
-    return (saved === "lifetime" || saved === "28d") ? saved : "lifetime";
-  });
-
-  const statBlocks = data.statBlocksLifetime;
-  const avatar = data.avatarUrl || ""
-
-  return (
-    <WidgetShell {...common} icon={<TrendingUp size={22} />}>
-      <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-          {/* Circular Avatar Sidebar */}
-          <div style={{ 
-            display: "flex", 
-            flexDirection: "column", 
-            alignItems: "center", 
-            justifyContent: "center", 
-            gap: "6px", 
-            flexShrink: 0, 
-            width: "200px",
-            padding: "2px 0"
-          }}>
-            <div style={{ 
-              fontSize: "32px", 
-              fontWeight: 950, 
-              textTransform: "uppercase", 
-              textAlign: "center",
-              lineHeight: 1.0,
-              marginBottom: "4px"
-            }}>
-              {data.brain?.channelProfile?.name || data.authState?.channelName || "Your Channel"}
-            </div>
-
-            <div style={{ 
-              width: "180px", 
-              height: "180px", 
-              borderRadius: "50%", 
-              border: "5px solid #000", 
-              overflow: "hidden", 
-              background: "#eee",
-              boxShadow: "8px 8px 0px 0px rgba(0,0,0,0.15)",
-              flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center"
-            }}>
-              {avatar ? (
-                <img src={avatar} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-              ) : (
-                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <TrendingUp size={90} opacity={0.2} />
-                </div>
-              )}
-            </div>
-
-            {(() => {
-              const rawHandle = data.brain?.channelProfile?.channelHandle || data.authState?.channelHandle || ""
-              const normalizedHandle = String(rawHandle || "").trim().replace(/^@/, "")
-              const displayHandle = normalizedHandle ? `@${normalizedHandle}` : "@connect-channel"
-              const href = normalizedHandle ? `https://youtube.com/@${normalizedHandle}` : "https://youtube.com"
-              return (
-                <>
-                  <div style={{ 
-                    fontSize: "24px", 
-                    fontWeight: 950, 
-                    opacity: 0.9, 
-                    textAlign: "center",
-                    marginBottom: "8px",
-                    textTransform: "lowercase",
-                    lineHeight: 1
-                  }}>
-                    {displayHandle}
-                  </div>
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="vt-button primary"
-                    style={{
-                      height: "38px",
-                      minWidth: "120px",
-                      width: "auto",
-                      padding: "0 16px",
-                      fontSize: "11px",
-                      fontWeight: 950,
-                      textDecoration: "none",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      textTransform: "uppercase",
-                      backgroundColor: "#C9F830",
-                      color: "#000",
-                      border: "3px solid #000",
-                      boxShadow: "3px 3px 0 0 #000"
-                    }}
-                  >
-                    Visit Channel
-                  </a>
-                </>
-              )
-            })()}
-          </div>
-
-          {/* Stats Grid - 3x3 */}
-          <div style={{ 
-            flex: 1, 
-            display: "grid", 
-            gridTemplateColumns: "repeat(3, 1fr)", 
-            gridTemplateRows: "repeat(3, 1fr)",
-            gap: "2px",
-            padding: "0px"
-          }}>
-            {statBlocks.map((stat, idx) => {
-              const metricKey = stat.label.toLowerCase().includes("views") ? "views" : 
-                               stat.label.toLowerCase().includes("subscribers") ? "subscribersGained" :
-                               stat.label.toLowerCase().includes("hours") ? "watchHours" :
-                               stat.label.toLowerCase().includes("revenue") ? "revenue" : null
-              
-              let bars = [40, 60, 45, 80, 55, 90, 75]
-              if (metricKey && data.canonicalRows?.length) {
-                const recentValues = data.canonicalRows
-                   .slice(0, 7)
-                   .map(row => (row.metrics as any)[metricKey]?.value || 0)
-                const maxVal = Math.max(...recentValues, 1)
-                bars = recentValues.map(v => 30 + (v / maxVal) * 70).reverse()
-              }
-
-              const isNegative = stat.trend?.includes("▼") || stat.trend?.includes("-")
-              const trendColor = isNegative ? "#FF1744" : "#008B00"
-
-              return (
-                <div
-                  key={idx}
-                  style={{
-                    background: "#fff",
-                    border: "3px solid #000",
-                    borderRadius: "10px",
-                    overflow: "hidden",
-                    display: "flex",
-                    flexDirection: "column",
-                    boxShadow: "3px 3px 0px 0px rgba(0,0,0,0.05)"
-                  }}
-                >
-                  <div
-                    style={{
-                      background: stat.color,
-                      borderBottom: "3px solid #000",
-                      height: "26px",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      width: "100%"
-                    }}
-                  >
-                    <span style={{ fontSize: "11px", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.02em", color: "#000", textAlign: "center", width: "100%" }}>
-                      {stat.label}
-                    </span>
-                  </div>
-                  <div style={{ 
-                    padding: "10px 4px 2px", 
-                    display: "flex", 
-                    flexDirection: "column",
-                    alignItems: "center", 
-                    justifyContent: "center", 
-                    gap: "2px",
-                    flex: 1
-                  }}>
-                    <div style={{ fontSize: "28px", fontWeight: 950, letterSpacing: "-0.04em", lineHeight: 1, textAlign: "center" }}>
-                      {stat.value}
-                    </div>
-                    {stat.trend && (
-                      <span style={{ fontSize: "10px", fontWeight: 950, color: trendColor, display: "flex", alignItems: "center", gap: "2px" }}>
-                        {stat.trend}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ display: "flex", alignItems: "flex-end", gap: "1px", padding: "0", height: "20px", marginTop: "auto" }}>
-                    {bars.map((h, i) => (
-                      <div key={i} style={{ flex: 1, height: `${h}%`, background: stat.color, opacity: 0.4 + (h / 100) * 0.6, borderRadius: "0" }} />
-                    ))}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-    </WidgetShell>
-  );
-};
-
 export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   widget,
   instance,
@@ -871,10 +648,10 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
    }
 
  if (widget.id === "ad-stack-intelligence") {
-  const revenueBlock = data.statBlocks28d.find((s) => s.label.toLowerCase().includes("revenue"))
+  const revenueBlock = data.statBlocks.find((s) => s.label.toLowerCase().includes("revenue"))
   const revenue = revenueBlock?.value || "0.00"
   const revNum = parseFloat(revenue.replace(/[^0-9.]/g, "")) || 0
-  const viewsBlock = data.statBlocks28d.find((s) => s.label.toLowerCase().includes("views"))
+  const viewsBlock = data.statBlocks.find((s) => s.label.toLowerCase().includes("views"))
   const viewsNum = parseFloat((viewsBlock?.value || "0").replace(/[^0-9.]/g, "")) || 0
   const viewsMultiplier = (viewsBlock?.value || "").includes("M") ? 1000000 : (viewsBlock?.value || "").includes("K") ? 1000 : 1
   const totalViews = viewsNum * viewsMultiplier
@@ -905,7 +682,178 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
 
  // 1. CHANNEL OVERVIEW
   if (widget.id === "kpi-cluster") {
-    return <ChannelOverviewWidget instance={instance} data={data} common={common} />
+   const shellWidget = {
+    ...widget,
+    headerColor: "#d8d8d8",
+    iconRailColor: "#efefef",
+   }
+   const avatar = data.avatarUrl || ""
+   const isSmall = instance.size === "quarter" || instance.size === "third" || instance.size === "half"
+   const rainbowKpiColors = [
+    "#40C6E9", // cyan
+    "#579AFF", // blue
+    "#7A2BFF", // purple
+    "#FF83EA", // pink
+    "#FF4D4D", // red
+    "#FFB570", // orange
+    "#FFE357", // yellow
+    "#4FFF5B", // green
+    "#3FE0C5", // turquoise
+   ]
+
+   return (
+    <WidgetShell {...common} widget={shellWidget} icon={<TrendingUp size={22} />}>
+     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+      <div style={{ display: "flex", gap: "6px", flex: 1, overflow: "hidden", padding: "2px" }}>
+       {/* Circular Avatar Sidebar */}
+       <div style={{ 
+         display: "flex", 
+         flexDirection: "column", 
+         alignItems: "center", 
+         justifyContent: "center", 
+         gap: "6px", 
+         flexShrink: 0, 
+         width: "160px",
+         marginRight: "4px",
+         paddingRight: "2px"
+       }}>
+        <div style={{ 
+          width: "120px", 
+          height: "120px", 
+          borderRadius: "50%", 
+          border: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)", 
+          overflow: "hidden", 
+          background: "#eee",
+          boxShadow: "4px 4px 0px 0px rgba(0,0,0,0.1)"
+        }}>
+         {avatar ? (
+           <img src={avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+         ) : (
+           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+             <TrendingUp size={isSmall ? 40 : 60} opacity={0.2} />
+           </div>
+         )}
+        </div>
+       </div>
+
+       {/* Stats Grid - 3x2 on small, 6x1 on large */}
+       <div style={{
+         flex: 1,
+         display: "grid",
+         gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+         gridTemplateRows: "repeat(3, minmax(0, 1fr))",
+         gap: "4px"
+       }}>
+        {data.statBlocks.map((stat, idx) => {
+         const metricKey = stat.label.toLowerCase().includes("views") ? "views" : 
+                          stat.label.toLowerCase().includes("subscribers") ? "subscribersGained" :
+                          stat.label.toLowerCase().includes("hours") ? "watchHours" :
+                          stat.label.toLowerCase().includes("revenue") ? "revenue" : null
+         
+         let bars = [40, 60, 45, 80, 55, 90, 75]
+         if (metricKey && data.canonicalRows?.length) {
+           const recentValues = data.canonicalRows
+              .slice(0, 7)
+              .map(row => (row.metrics as any)[metricKey]?.value || 0)
+           const maxVal = Math.max(...recentValues, 1)
+           bars = recentValues.map(v => 30 + (v / maxVal) * 70).reverse()
+         }
+
+         let cleanTrend = stat.trend || ""
+         if (cleanTrend) {
+          const match = cleanTrend.match(/([+-]?)(\d+(\.\d+)?)%/)
+          if (match) {
+            const sign = match[1]
+            const val = parseFloat(match[2])
+            cleanTrend = val >= 100 ? `${sign}${Math.round(val).toString().slice(0, 4)}%` : `${sign}${val.toFixed(1).slice(0, 4)}%`
+          }
+         }
+
+         const cardColor = rainbowKpiColors[idx % rainbowKpiColors.length]
+
+           return (
+            <div
+             key={idx}
+             style={{
+              background: "#fff",
+              border: "2px solid #000",
+              borderRadius: "8px",
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              minHeight: 0,
+              boxShadow: `2px 2px 0px 0px ${cardColor}`
+             }}>
+             <div
+              style={{
+               background: cardColor,
+               borderBottom: "2px solid #000",
+               height: "20px",
+               display: "flex",
+               justifyContent: "center",
+               alignItems: "center",
+              }}>
+              <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.02em", color: "#000" }}>
+               {stat.label}
+              </span>
+             </div>
+             <div style={{ padding: "2px 2px 0px", display: "flex", alignItems: "baseline", justifyContent: "center", gap: "2px" }}>
+              <div style={{ fontSize: "22px", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1 }}>
+               {stat.value}
+              </div>
+              {stat.trend && <span style={{ fontSize: "8px", fontWeight: 900, color: stat.trend.includes("↑") ? "#008B00" : "#D32F2F" }}>{cleanTrend}</span>}
+             </div>
+             <div style={{ display: "flex", alignItems: "flex-end", gap: "1px", padding: "0 2px 0", height: "14px", marginTop: "auto" }}>
+              {bars.map((h, i) => (
+               <div key={i} style={{ flex: 1, height: `${h}%`, background: cardColor, opacity: 0.4 + (h / 100) * 0.6, borderRadius: "1px 1px 0 0" }} />
+              ))}
+             </div>
+            </div>
+           )
+        })}
+       </div>
+      </div>
+
+      {/* Full Width Footer */}
+      <div style={{ 
+        borderTop: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)", 
+        background: "#eee", 
+        padding: "8px 12px", 
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "space-between",
+        marginTop: "auto"
+      }}>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ fontSize: "14px", fontWeight: 950, textTransform: "uppercase", tracking: "-0.02em" }}>
+            {data.brain?.channelProfile?.name || data.authState?.channelName || "Your Channel"}
+          </div>
+          <div style={{ fontSize: "10px", fontWeight: 800, opacity: 0.5 }}>
+            @{data.brain?.channelProfile?.channelHandle || data.authState?.channelHandle || "handle"}
+          </div>
+        </div>
+        <a
+          href={`https://youtube.com/${data.brain?.channelProfile?.channelHandle ? '@' + data.brain.channelProfile.channelHandle.replace(/^@/, '') : (data.authState?.channelHandle ? '@' + data.authState.channelHandle.replace(/^@/, '') : "")}`}
+          target="_blank"
+          rel="noreferrer"
+          className="vt-button primary"
+          style={{
+            height: "32px",
+            padding: "0 16px",
+            fontSize: "11px",
+            fontWeight: 900,
+            textDecoration: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}
+         >
+          VISIT CHANNEL
+        </a>
+      </div>
+     </div>
+    </WidgetShell>
+   )
   }
 
  // 2. SOCIAL CHANNELS (was Channel Overview)
@@ -1094,10 +1042,9 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
         <img
          src={
           video.thumbnailUrl ||
-          `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`
+          `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`
          }
          className="w-full h-full object-cover"
-         onError={(event) => withYouTubeThumbFallback(event, video.videoId)}
         />
        </div>
        <div style={{ flex: 1, minWidth: 0 }}>
@@ -1150,10 +1097,9 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
        <img
         src={
          data.topPerformer.thumbnailUrl ||
-         `https://img.youtube.com/vi/${data.topPerformer.videoId}/maxresdefault.jpg`
+         `https://img.youtube.com/vi/${data.topPerformer.videoId}/mqdefault.jpg`
         }
         style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        onError={(event) => withYouTubeThumbFallback(event, data.topPerformer.videoId)}
        />
       </div>
       <div
@@ -1266,78 +1212,71 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
 
  // 14. SETTINGS (merged: system + sync)
  if (widget.id === "system-micro-stack") {
-  const [apiKey, setApiKey] = useState(localStorage.getItem("GEMINI_API_KEY") || "")
-  const [model, setModel] = useState(localStorage.getItem("GEMINI_MODEL") || "gemini-2.0-flash")
-
-  const saveSettings = (k: string, m: string) => {
-   localStorage.setItem("GEMINI_API_KEY", k)
-   localStorage.setItem("GEMINI_MODEL", m)
-   window.dispatchEvent(new Event("storage"))
-  }
-
+  const model = localStorage.getItem("GEMINI_MODEL") || "gemini-3.0-flash"
   const isConnected = data.authState.isAuthenticated
   const lastSync = data.formatRelativeTime(data.lastSyncComplete)
-  const storagePct = Math.min(100, Math.round((JSON.stringify(data.brain).length / 500000) * 100))
+  const planId = String(localStorage.getItem("vt_last_plan") || "basic").toUpperCase()
+  const currentModelLabel =
+   model === "gemini-3.1-pro-preview"
+    ? "GEMINI 3.1 PRO PREVIEW"
+    : model === "gemini-3.1-flash-lite"
+     ? "GEMINI 3.1 FLASH LITE"
+     : model === "gemini-3-flash-preview"
+      ? "GEMINI 3 FLASH PREVIEW"
+      : model === "gemini-3.1-flash-image-preview"
+       ? "GEMINI 3.1 FLASH IMAGE"
+       : "GEMINI 3.1 FLASH LITE"
 
   return (
    <WidgetShell {...common} icon={<Database size={22} />}>
-    <div style={{ display: "flex", flexDirection: "column", gap: "4px", height: "100%" }}>
-     {/* Status Row */}
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%" }}>
      <div style={{ display: "flex", gap: "6px" }}>
-      <div style={{ flex: 1, border: "2px solid #000", borderRadius: "8px", padding: "4px 8px", background: isConnected ? "#4FFF5B" : "#FF1744" }}>
-       <div style={{ fontSize: "8px", fontWeight: 800, opacity: 0.6 }}>STATUS</div>
-       <div style={{ fontSize: "10px", fontWeight: 800 }}>{isConnected ? "CONNECTED" : "OFFLINE"}</div>
+      <div style={{ flex: 1, border: "2px solid #000", borderRadius: "8px", padding: "6px 8px", background: isConnected ? "#4FFF5B" : "#FF1744" }}>
+       <div style={{ fontSize: "8px", fontWeight: 900, opacity: 0.7, textTransform: "uppercase" }}>Channel</div>
+       <div style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase" }}>{isConnected ? "Connected" : "Not connected"}</div>
       </div>
-      <div style={{ flex: 1, border: "2px solid #000", borderRadius: "8px", padding: "4px 8px", background: "#fff" }}>
-       <div style={{ fontSize: "8px", fontWeight: 800, opacity: 0.6 }}>STORAGE</div>
-       <div style={{ fontSize: "10px", fontWeight: 800 }}>{storagePct}% USED</div>
+      <div style={{ flex: 1, border: "2px solid #000", borderRadius: "8px", padding: "6px 8px", background: "#fff" }}>
+       <div style={{ fontSize: "8px", fontWeight: 900, opacity: 0.7, textTransform: "uppercase" }}>Last Sync</div>
+       <div style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase" }}>{isConnected ? lastSync : "Never"}</div>
       </div>
      </div>
 
-     <div style={{ fontSize: "9px", fontWeight: 800, opacity: 0.5, marginTop: "-4px" }}>
-      CHANNEL: {data.authState.channelName || "NOT LINKED"} • LAST SYNC: {lastSync}
+     <div style={{ border: "2px solid #000", borderRadius: "8px", padding: "6px 8px", background: "#fff", display: "flex", flexDirection: "column", gap: "4px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+       <span style={{ fontSize: "8px", fontWeight: 900, opacity: 0.7, textTransform: "uppercase" }}>Active AI Brain</span>
+       <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", border: "2px solid #000", borderRadius: "6px", padding: "1px 6px", background: "#f3f4f6" }}>{currentModelLabel}</span>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+       <span style={{ fontSize: "8px", fontWeight: 900, opacity: 0.7, textTransform: "uppercase" }}>Plan</span>
+       <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", border: "2px solid #000", borderRadius: "6px", padding: "1px 6px", background: "#f3f4f6" }}>{planId}</span>
+      </div>
      </div>
 
-     {/* Config Section */}
-     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-      <label style={{ fontSize: "8px", fontWeight: 800, opacity: 0.6 }}>AI API KEY</label>
-      <input
-       type="password"
-       className="vt-input"
-       value={apiKey}
-       placeholder="••••••••"
-       onChange={(e) => { setApiKey(e.target.value); saveSettings(e.target.value, model); }}
-       style={{ height: "28px", fontSize: "10px", padding: "0 8px" }}
-      />
-
-      <label style={{ fontSize: "8px", fontWeight: 800, opacity: 0.6, marginTop: "4px" }}>MODEL CHOICE</label>
-      <select
-       className="vt-input"
-       value={model}
-       onChange={(e) => { setModel(e.target.value); saveSettings(apiKey, e.target.value); }}
-       style={{ height: "28px", fontSize: "10px", padding: "0 8px" }}
-      >
-       <option value="gemini-1.5-flash">GEMINI 1.5 FLASH</option>
-       <option value="gemini-1.5-pro">GEMINI 1.5 PRO</option>
-       <option value="gemini-2.0-flash">GEMINI 2.0 FLASH</option>
-      </select>
-     </div>
-
-     {/* Action Buttons */}
      <div style={{ display: "flex", gap: "6px", marginTop: "auto" }}>
       <button
        className="vt-button primary"
        style={{ flex: 1, height: "32px", fontSize: "9px", background: "#00D2FF" }}
-       onClick={() => { /* Sync logic */ }}
+       onClick={async () => {
+        if (isConnected) await data.globalSyncData({ batchMode: "initial" })
+        else onNavigate("/connect")
+       }}
       >
-       SYNC CHANNEL
+       {isConnected ? "SYNC NOW" : "CONNECT"}
       </button>
       <button
        className="vt-button"
        style={{ flex: 1, height: "32px", fontSize: "9px", background: "#eee" }}
-       onClick={() => { /* Connect logic */ }}
+       onClick={() => onNavigate("/account")}
       >
-       RE-CONNECT
+       ACCOUNT
+      </button>
+     </div>
+     <div style={{ display: "flex", gap: "6px" }}>
+      <button className="vt-button" style={{ flex: 1, height: "30px", fontSize: "9px", background: "#f3f4f6" }} onClick={() => onNavigate("/account?panel=billing")}>
+       BILLING
+      </button>
+      <button className="vt-button" style={{ flex: 1, height: "30px", fontSize: "9px", background: "#f3f4f6" }} onClick={() => onNavigate("/user-guide")}>
+       USER GUIDE
       </button>
      </div>
     </div>
@@ -1358,6 +1297,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  if (widget.id === "upload-scheduler") return <UploadSchedulerWidget {...common} data={data} />
  if (widget.id === "hashtag-analyzer") return <HashtagAnalyzerWidget {...common} data={data} />
  if (widget.id === "burnout-monitor") return <BurnoutMonitorWidget {...common} data={data} />
+ if (widget.id === "image-generator") return <ImageGeneratorWidget {...common} data={data} />
 
  if (widget.id === "collab-matchmaker") return <CollabMatchmakerWidget {...common} data={data} />
  if (widget.id === "brain-hub") return <BrainHubWidget {...common} data={data} />

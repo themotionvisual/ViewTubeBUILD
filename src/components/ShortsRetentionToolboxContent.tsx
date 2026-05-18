@@ -1,34 +1,56 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { getMasterRows } from "../services/analyticsSelectors"
 import { applyGlobalRowFilters } from "../services/analyticsRuntime"
+import type { AnalyticsSourceMode } from "../services/analyticsSelectors"
 import type {
  AnalyticsWindow,
  CanonicalVideoRow,
 } from "../services/analyticsContract"
+import type { CsvFileWithTag } from "../types"
+import {
+ getStoredSyncSourceMode,
+ UPLOAD_CACHE_FILES_KEY,
+} from "../services/analyticsRuntime"
 import {
  ShortsRetentionWidgetModule,
  AlgorithmTriggerModule,
  EngagementLinesModule,
  SubscribersGained,
- TopPerformersTrio,
  VideoValueMatrix,
  WatchTimeDistribution,
  RevenueDistribution,
- Packaging,
- EngagementMap,
- PerformanceTrend,
- DurationSweetSpot,
  RevenueEfficiency,
- AudienceGrowth,
- GoldenRatioRadar,
  HookEffectiveness,
  GrowthPulse,
- StackedEngagementPulse,
  FormatComparisonDonuts,
  ComboChannelProgress,
+ TrafficSourceEvolutionModule,
+ KeywordTreemapModule,
+ KeywordVennModule,
+ UploadTimeHeatmapModule,
+ ConversionFunnelModule,
+ PerformanceGaugesModule,
+ LissajousWebModule,
+ OrbitalModule,
 } from "../components/GraphsPageCharts"
 
-const WINDOWS: AnalyticsWindow[] = ["lifetime", "365d", "90d", "28d", "7d"]
+const readUploadedCsvFiles = (): CsvFileWithTag[] => {
+ try {
+  const parsed = JSON.parse(
+   localStorage.getItem(UPLOAD_CACHE_FILES_KEY) || "[]",
+  ) as CsvFileWithTag[]
+  return Array.isArray(parsed) ? parsed : []
+ } catch {
+  return []
+ }
+}
+
+const getEffectiveSourceMode = (): AnalyticsSourceMode => {
+ const mode = getStoredSyncSourceMode()
+ if (mode === "api_analytics") return "api"
+ if (mode === "uploads") return "csv"
+ return "hybrid"
+}
 
 export const RevealOnView: React.FC<{
  delayMs?: number
@@ -66,16 +88,27 @@ export const RevealOnView: React.FC<{
  )
 }
 
-export const ShortsRetentionToolboxContent: React.FC = () => {
- const [win, setWin] = useState<AnalyticsWindow>("365d")
+export const ShortsRetentionToolboxContent: React.FC<{
+ isActive?: boolean
+ windowValue?: AnalyticsWindow
+ reloadNonce?: number
+}> = ({
+ isActive = true,
+ windowValue,
+ reloadNonce = 0,
+}) => {
+ const win = windowValue ?? "lifetime"
  const [rows, setRows] = useState<CanonicalVideoRow[]>([])
  const [loading, setLoading] = useState(false)
  const [error, setError] = useState<string | null>(null)
+ const [mountedCharts, setMountedCharts] = useState(4)
 
  const refresh = () => {
   setLoading(true)
   try {
-   const next = getMasterRows(win, "api")
+   const sourceMode = getEffectiveSourceMode()
+   const csvFiles = readUploadedCsvFiles()
+   const next = getMasterRows(win, sourceMode, csvFiles)
    const effective = applyGlobalRowFilters(next).rows
    setRows(effective)
    setError(
@@ -96,33 +129,28 @@ export const ShortsRetentionToolboxContent: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
  }, [win])
 
+ useEffect(() => {
+  refresh()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [reloadNonce])
+
+ useEffect(() => {
+  if (!isActive || loading || !!error) return
+  const steps = 17
+  setMountedCharts(4)
+  let index = 4
+  const timer = window.setInterval(() => {
+   index += 1
+   setMountedCharts(Math.min(index, steps))
+   if (index >= steps) window.clearInterval(timer)
+  }, 120)
+  return () => window.clearInterval(timer)
+ }, [isActive, loading, error, win, rows.length])
+
  const data = useMemo(() => rows, [rows])
 
  return (
   <div className="flex flex-col gap-6">
-   <div className="flex items-center justify-between bg-gray-100 p-4 rounded-xl border-[3px] border-black">
-    <div className="text-[12px] font-black uppercase tracking-widest text-black/60">
-      Data Controls • {data.length} videos loaded
-    </div>
-    <div className="flex items-center gap-3">
-     <select
-      value={win}
-      onChange={(e) => setWin(e.target.value as AnalyticsWindow)}
-      className="h-11 px-3 border-[4px] border-black rounded-xl text-[12px] font-black uppercase tracking-wider bg-[#CCFF00] outline-none cursor-pointer">
-      {WINDOWS.map((w) => (
-       <option key={w} value={w} className="bg-white">
-        {w}
-       </option>
-      ))}
-     </select>
-     <button
-      onClick={refresh}
-      className="h-11 px-5 bg-black text-white rounded-xl text-[12px] font-black uppercase tracking-wider border-[4px] border-black hover:bg-[#FFDD00] hover:text-black transition-colors">
-      Refresh
-     </button>
-    </div>
-   </div>
-
    {loading ? (
     <div className="flex items-center justify-center p-20 text-2xl font-black uppercase tracking-tighter opacity-30 bg-white border-[4px] border-black rounded-2xl border-dashed">
      Loading Canonical Matrix...
@@ -133,70 +161,66 @@ export const ShortsRetentionToolboxContent: React.FC = () => {
     </div>
    ) : (
     <div className="flex flex-col gap-8">
-     <RevealOnView>
-      <ShortsRetentionWidgetModule data={data} />
-     </RevealOnView>
-     <RevealOnView delayMs={25}>
-      <AlgorithmTriggerModule data={data} />
-     </RevealOnView>
-     <RevealOnView delayMs={35}>
-      <EngagementLinesModule data={data} />
-     </RevealOnView>
-     <RevealOnView delayMs={50}>
+     {mountedCharts >= 1 && <RevealOnView>
       <ComboChannelProgress data={data} />
-     </RevealOnView>
-     <RevealOnView delayMs={100}>
-      <StackedEngagementPulse data={data} />
-     </RevealOnView>
-     <RevealOnView delayMs={150}>
+     </RevealOnView>}
+     {mountedCharts >= 2 && <RevealOnView delayMs={25}>
+      <EngagementLinesModule data={data} />
+     </RevealOnView>}
+     {mountedCharts >= 3 && <RevealOnView delayMs={35}>
       <FormatComparisonDonuts data={data} />
-     </RevealOnView>
-     <RevealOnView delayMs={175}>
+     </RevealOnView>}
+     {mountedCharts >= 4 && <RevealOnView delayMs={50}>
+      <ShortsRetentionWidgetModule data={data} />
+     </RevealOnView>}
+     {mountedCharts >= 5 && <RevealOnView delayMs={100}>
+      <AlgorithmTriggerModule data={data} />
+     </RevealOnView>}
+     {mountedCharts >= 6 && <RevealOnView delayMs={175}>
       <RevenueEfficiency data={data} />
-     </RevealOnView>
-     <section className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-      <RevealOnView delayMs={200}>
-       <HookEffectiveness data={data} />
-      </RevealOnView>
-      <RevealOnView delayMs={250}>
-       <RevenueDistribution data={data} />
-      </RevealOnView>
-      <RevealOnView delayMs={300}>
-       <SubscribersGained data={data} />
-      </RevealOnView>
-      <RevealOnView delayMs={350}>
-       <WatchTimeDistribution data={data} />
-      </RevealOnView>
-     </section>
-     <RevealOnView delayMs={400}>
+     </RevealOnView>}
+     {mountedCharts >= 7 && <RevealOnView delayMs={200}>
+      <HookEffectiveness data={data} />
+     </RevealOnView>}
+     {mountedCharts >= 7 && <RevealOnView delayMs={250}>
+      <RevenueDistribution data={data} />
+     </RevealOnView>}
+     {mountedCharts >= 7 && <RevealOnView delayMs={300}>
+      <SubscribersGained data={data} />
+     </RevealOnView>}
+     {mountedCharts >= 7 && <RevealOnView delayMs={350}>
+      <WatchTimeDistribution data={data} />
+     </RevealOnView>}
+     {mountedCharts >= 8 && <RevealOnView delayMs={400}>
       <VideoValueMatrix data={data} />
-     </RevealOnView>
-     <section className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-      <RevealOnView delayMs={450}>
-       <TopPerformersTrio data={data} />
-      </RevealOnView>
-      <RevealOnView delayMs={500}>
-       <Packaging data={data} />
-      </RevealOnView>
-      <RevealOnView delayMs={550}>
-       <EngagementMap data={data} />
-      </RevealOnView>
-      <RevealOnView delayMs={600}>
-       <PerformanceTrend data={data} />
-      </RevealOnView>
-      <RevealOnView delayMs={650}>
-       <DurationSweetSpot data={data} />
-      </RevealOnView>
-      <RevealOnView delayMs={700}>
-       <AudienceGrowth data={data} />
-      </RevealOnView>
-      <RevealOnView delayMs={750}>
-       <GoldenRatioRadar data={data} />
-      </RevealOnView>
-      <RevealOnView delayMs={800}>
-       <GrowthPulse data={data} />
-      </RevealOnView>
-     </section>
+     </RevealOnView>}
+     {mountedCharts >= 9 && <RevealOnView delayMs={450}>
+      <GrowthPulse data={data} />
+     </RevealOnView>}
+     {mountedCharts >= 10 && <RevealOnView delayMs={500}>
+      <TrafficSourceEvolutionModule data={data} />
+     </RevealOnView>}
+     {mountedCharts >= 11 && <RevealOnView delayMs={560}>
+      <KeywordTreemapModule data={data} />
+     </RevealOnView>}
+     {mountedCharts >= 11 && <RevealOnView delayMs={610}>
+      <KeywordVennModule data={data} />
+     </RevealOnView>}
+     {mountedCharts >= 11 && <RevealOnView delayMs={670}>
+      <UploadTimeHeatmapModule data={data} />
+     </RevealOnView>}
+     {mountedCharts >= 11 && <RevealOnView delayMs={720}>
+      <ConversionFunnelModule data={data} />
+     </RevealOnView>}
+     {mountedCharts >= 12 && <RevealOnView delayMs={760}>
+      <PerformanceGaugesModule data={data} />
+     </RevealOnView>}
+     {mountedCharts >= 12 && <RevealOnView delayMs={800}>
+      <LissajousWebModule data={data} />
+     </RevealOnView>}
+     {mountedCharts >= 12 && <RevealOnView delayMs={840}>
+      <OrbitalModule data={data} />
+     </RevealOnView>}
     </div>
    )}
   </div>

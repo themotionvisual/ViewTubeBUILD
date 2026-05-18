@@ -474,9 +474,8 @@ export const fetchAnalytics = async (
   const maxResultsParam = includeMaxResults
    ? `&maxResults=${ANALYTICS_VIDEO_PAGE_SIZE}`
    : ""
-  const startIndexParam = !isVideoFilter && includeStartIndex ? `&startIndex=${startIndex}` : ""
   const sortParam = !isVideoFilter && includeSort ? "&sort=-views" : ""
-  const url = `https://youtubeanalytics.googleapis.com/v2/reports?ids=${urlIds}&startDate=${startDate}&endDate=${endDate}&metrics=${safeMetrics.join(",")}&dimensions=${dims}${filters}${maxResultsParam}${startIndexParam}${sortParam}`
+  const url = `https://youtubeanalytics.googleapis.com/v2/reports?ids=${urlIds}&startDate=${startDate}&endDate=${endDate}&metrics=${safeMetrics.join(",")}&dimensions=${dims}${filters}${maxResultsParam}${sortParam}`
   requestCharCounts.push(url.length)
   const token = await refreshTokenIfExpired()
   const response = await proxyFetch(url, {

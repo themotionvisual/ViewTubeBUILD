@@ -1,0 +1,247 @@
+# task.md - Consolidated
+
+> [!NOTE]
+> This file consolidates 62 version(s) into a unified to-do list.
+
+## Completed Tasks
+- [x] Decrease header height to make titles and headers shorter and thinner.
+- [x] Restyle the 'Expand' button to be smaller, with a full border, and evenly padded within the top-right corner.
+- [x] Ensure subtitle is positioned directly beneath the main title on the left.
+- [x] Add metric labels to the large statistics on the right side of the legend bar.
+- [x] Increase border thicknesses for the station frames to match reference image (e.g., `border-[6px]`).
+- [x] Make chart legend text and axis labels bolder and slightly larger.
+- [x] Refine Engagement Map Layout:
+    - [x] Move sorting buttons to chart footer.
+    - [x] Restyle hover banner (stacked numbers + labels, no dots).
+    - [x] Increase video title font size in hover banner.
+    - [x] Fix Y-axis numeric truncation ('...' bug) by adjusting margins.
+    - [x] Increase chart height by reducing internal vertical padding.
+    - [x] Add labels to the banner stats (L, C, S, V) beneath numbers.
+    - [x] Fix cutoff buttons by refactoring internal card layout.
+- [x] Update Dashboard Engineering
+  - [x] WidgetRenderer.tsx (or WidgetRegistry.ts) setup
+- [x] Enhance Existing Tools
+  - [x] CommunityPostWidget.tsx (Prime Algorithm)
+  - [x] CommentReplyWidget.tsx (Provocative Reply)
+  - [x] Goals Tracker
+- [x] Create New Widgets (Inputs, Action buttons, Mini-tools)
+  - [x] ReachFunnelWidget.tsx (CTR Simulator)
+  - [x] AlgoBenchmarkWidget.tsx (Retention Diagnostic)
+  - [x] AdStackWidget.tsx (Yield Predictor)
+  - [x] PremiumPulseWidget.tsx (Member Teaser Tool)
+  - [x] DeviceMatrixWidget.tsx (Multi-Preview)
+  - [x] SharingDnaWidget.tsx (Viral Link Forge)
+  - [x] BridgeEfficiencyWidget.tsx (Link Logic Optimizer)
+  - [x] CpmGeoWidget.tsx (Global Expand Tool)
+  - [x] PlaybackOriginsWidget.tsx (Traffic Source Attack Plan)
+  - [x] GuestRatioWidget.tsx (Conversion CTA Smith)
+- [x] Phase 1: Fix Comment Reply (broken API)
+  - [x] Fix `fetchAllCommentThreads` — pass real channelId
+  - [x] Rename "Community Loop" → "Comment Responder" in registry
+  - [x] Fix `px: "12px"` bug in CommentReplyWidget
+  - [x] History tab: show all threads with replies visible
+- [x] Phase 2: Community Post real refinement
+  - [x] Add `refineCommunityPost()` to gemini.ts
+  - [x] "Prime Algorithm" → "Refine Post", call Gemini when content exists
+- [x] Phase 3: Revenue + Traffic fixes
+  - [x] RevenueChartWidget: 2 decimals, hover tooltip div, ad/gross toggle
+  - [x] TrafficSourcesWidget: bigger chart, custom tooltip, legend, time period
+  - [x] FormatClashWidget: time period subtitle
+- [x] Phase 4: Tag Generator + Publish Momentum
+  - [x] TagGeneratorWidget: fetch real tags via `fetchVideoSnippetDetails`, use `generateTagSuggestions`
+  - [x] PublishMomentumWidget: rename header, better subtitle, custom tooltip
+- [x] Phase 5: Goals Tracker concentric rings
+  - [x] Category buttons (Subs/Views/Revenue/Other)
+  - [x] Concentric SVG rings
+  - [x] localStorage persistence per category + duration
+- [x] Phase 6: Widget cleanup
+  - [x] Delete `upload-cadence` from registry + renderer
+  - [x] Merge `sync-connection` into `system-micro-stack` → rename "Settings"
+  - [x] Superfan: improve data labels
+- [x] Create `viewtubeX` directory
+- [x] Move app folders (`src`, `public`, `scripts`)
+- [x] Move app config (`package.json`, `package-lock.json`, `vite.config.ts`, `tsconfig*`, `eslint.config.js`, `index.html`)
+- [x] Verify root cleanup (ensure `archives`, `docs`, `scratch`, `apps`, `standalone` and research files are in root)
+- [x] Verify app builds in new location
+- [x] Move Git and IDE metadata (`.git`, `.gitignore`, `.vscode`, `.gitignore`)
+- [x] Update `WidgetRegistry.ts` dimensions for all widgets (min/max size and height)
+- [x] Update `src/types.ts` with Journal and MicroPoll interfaces
+- [x] Update `GlobalDataContext.tsx` to handle Journal and MicroPoll state
+- [x] Implement AI services in `gemini.ts` (Follow-ups and Pulse)
+- [x] Build `AIJournalWidget.tsx` UI
+- [x] Register `AIJournalWidget` in `WidgetRegistry.ts`
+- [x] Integrate context injection in `gemini.ts` and `channelOracle.ts`
+- [x] Final verification of AI data flow
+- [x] Add ICON_LIBRARY + TEMPLATE_COMBO_PRESETS constants (~L380)
+- [x] Add new state variables (~L1293)
+- [x] Add 6th TEMPLATE button to ADD MEDIA grid (~L4204)
+- [x] Replace icon text input with select dropdown in Template Runtime (~L4271)
+- [x] Add addTemplateToTimeline() + openTemplateCreator() + selectTemplateCombo() functions (~L2005)
+- [x] Add Template Creator modal (before closing div ~L5959)
+- [x] Create `DashboardHeader.tsx` component
+  - [x] Implement slide-in animation layout
+  - [x] Add logo and editable dashboard title
+  - [x] Add control buttons (Rearrange, Lock, Widgets, Reset, Export, Import, Settings)
+  - [x] Implement ticker strip with continuous marquee
+  - [x] Add styling for `.dashboard-header`, `.dashboard-header-bar`, `.dashboard-header-ticker`
+  - [x] Add `headerSlideIn` keyframes
+- [x] Integrate into `DashboardCanvas.tsx`
+  - [x] Render `<DashboardHeader />` above the grid
+  - [x] Extract dashboard controls logic to pass to the header
+- [x] Refactor `WidgetRenderer.tsx`
+  - [x] Remove dashboard controls from `system-micro-stack`
+  - [x] Remove `alerts-ticker` widget logic
+- [x] Create `VT_E1_SoftFlow.html` combining NEOBRUTALIST_VT_EDITOR layout with iPod.HTML style
+- [x] Verify HTML file locally
+- [x] Create walkthrough artifact
+- [x] Export `rowsToCsv` in `src/services/dataExport.ts`
+- [x] Add "Export CSV" to `UniversalDataTable.tsx`
+- [x] Add "Download Report" to `ReportViewer.tsx`
+- [x] Add "Data Transparency" link to `Sidebar.tsx`
+- [x] Verify all download triggers
+- [x] Final Verification
+    - [x] Check browser console for Recharts warnings
+    - [x] Visual alignment check for Row 1
+- [x] **Update WidgetRenderer.tsx**
+  - [x] Ensure all Row 1 widgets (`channel-overview`, `community-post`, `comment-responder`) are explicitly forced into the `tall` height bucket.
+  - [x] Standardize Profile Picture size in KPI Cluster (Row 1).
+- [x] **Update CommunityPostWidget.tsx**
+  - [x] Standardize button heights to 32px.
+  - [x] Remove horizontal dividers between input and buttons to match industrial Neo-Brutalist look.
+  - [x] Align tab selector icons inline with text.
+- [x] **Update CommentReplierWidget.tsx**
+  - [x] Apply the 120px height bucket profile.
+  - [x] Adjust "Send Reply" / "Draft" buttons to exactly match 32px height constraint.
+  - [x] Remove padding around textareas to let industrial borders form the layout boundaries.
+- [x] **Update UploadSchedulerWidget.tsx**
+  - [x] Ensure standard 120px label row constraints are applied, mirroring GoalsTracker structure.
+  - [x] Remove legacy drop shadows on form fields.
+  - [x] Integrate active toggle styles established in Neo-Brutalist standard. borders
+- [x] **RetentionSimWidget.tsx**
+  - [x] Add `onCycleHeight` and `onDecHeight` to props.
+  - [x] Fix scrolling by moving `overflowY: "auto"` to the outermost wrapper.
+  - [x] Implement `localStorage` state for saving past synthetic reports.
+  - [x] Add hidden file upload and "UPLOAD" button for un-published videos.
+  - [x] Standardize top bar dropdown and search to `.vt-input` / `.vt-button`.
+  - [x] Replace stretched SVG `<circle>` nodes with absolute HTML `<div>` nodes.
+- [x] **WidgetRenderer.tsx** (Settings)
+  - [x] Change `brutal-btn` to `.vt-button primary` (SYNC) and `.vt-button` (RE-CONNECT).
+  - [x] Change `brutal-input` to `.vt-input`.
+- [x] **DailyOracleWidget.tsx**
+  - [x] Fix flex container layouts in `renderAdviceCard` to allow text expansion and remove vertical truncation.
+- [x] **AskMeWidget.tsx**
+  - [x] Convert `vt-textarea` to `.vt-input`.
+  - [x] Strip inline CSS from Quick Topics buttons and apply `.vt-button`.
+- [x] **AIJournalWidget.tsx**
+  - [x] Convert main textarea from Tailwind classes to `.vt-input`.
+  - [x] Convert submit button to `.vt-button primary`.
+  - [x] Convert category pill tabs to `.vt-tab-group` and `.vt-tab-btn`.
+- [x] **1. Reorder Dashboard Widgets (`WidgetRegistry.ts`)**
+  - [x] Move `ai-journal` to Row 3.
+  - [x] Set `defaultSize` to `"third"` for `kpi-cluster`, `community-post`, `comment-replier`, `daily-oracle`, `ask-me`, `ai-journal`.
+  - [x] Set `defaultSize` to `"quarter"` for `upload-cadence` (consistency-heatmap), `realtime-performance`, `goals-tracker`, `keyword-engine`.
+- [x] **2. Expose Raw Metrics (`useDashboardData.ts`)**
+  - [x] Export a `rawMetrics` object containing `subsTotal`, `subscribers28d`, `views28d`, `revenue28d`, and the exact number of days present in the dataset.
+- [x] **3. Fix & Reformat Goals Tracker (`GoalsTrackerWidget.tsx`)**
+  - [x] Use `rawMetrics` for accurate numbers.
+  - [x] Compute daily average by dividing total gained by the exact number of days in the dataset.
+  - [x] Rebuild the "Set Goal" inner panel UI to exactly match the provided reference screenshot using `.vt-button`, `.vt-input`, and `.vt-tab-group`.
+- [x] Update `youtubeDataFetcher.ts` with `uploadVideo` (multipart upload)
+- [x] Refine `UploadSchedulerWidget.tsx` to hide drag-and-drop zone upon upload
+- [x] Rewrite `DataEditWidget.tsx` architecture
+  - [x] Add `Upload New` vs `Edit Existing` toggle state
+  - [x] Implement Main Details Page (Title, Description, Tags, Playlists, Category, Privacy)
+  - [x] Migrate AI integrations from `TitleRewriter`, `TagGenerator`, `DescriptionEditor`
+  - [x] Implement Additional Options Page (Audience, Disclosures, Collaboration, Automatic Settings, Recording Info, Shorts Remixing, etc.)
+  - [x] Add dynamic Category Metadata fields (Gaming, Education)
+  - [x] Implement Ad Suitability Page (Questionnaire + Safe for Ads submission)
+  - [x] Implement mock save / actual API call based on mode
+- [x] Verify UI flows and cross-widget navigation
+
+## Incomplete Tasks
+- [ ] Expand Chart Collection (10 New Styles):
+    - [ ] 1. Geography of High CPMs (GeoChart Map)
+    - [ ] 2. Published Time vs. Momentum (Heatmap Grid)
+    - [ ] 3. End Screen Effectiveness (Funnel Chart)
+    - [ ] 4. Series vs. Standalone Performance (Box Plot)
+    - [ ] 5. Seasonal RPM Radar (Spider Chart)
+    - [ ] 6. Thumbnail A/B Test (Annotated Line)
+    - [ ] 7. Algorithm Trigger Matrix (Dual-Axis)
+    - [ ] 8. OS Revenue vs Volume (Nested Donut)
+    - [ ] 9. Long-Tail Shelf Life (Normalized Line)
+    - [ ] 10. Golden Ratio Dashboard (Overlay Radar)
+- [ ] Move Git and IDE metadata (`.git`, `.github`, `.vscode`, `.gitignore`)
+- [ ] Verify dashboard allows cycling through all sizes in UI
+- [ ] Add `.vt-input`, `.vt-textarea`, `.vt-select` unified classes
+- [ ] Add `.widget-header-btn` (34×34) class
+- [ ] Remove `.toggle-icon` styles
+- [ ] Remove header cursor:pointer for collapse
+- [ ] Remove `onToggleCollapse` prop + header click handler
+- [ ] Remove `collapsed` gating on content
+- [ ] Remove `toggle-icon` div
+- [ ] Add `hasAI` prop → show ✦ button
+- [ ] Add `?` help button on all widgets
+- [ ] AskMeWidget — textarea + input
+- [ ] AIJournalWidget — textarea + inputs
+- [ ] GoalsTrackerWidget — number input
+- [ ] CommentReplyWidget — textarea
+- [ ] CommunityPostWidget — textarea
+- [ ] TagGeneratorWidget — input
+- [ ] TitleRewriterWidget — input
+- [ ] HashtagAnalyzerWidget — input
+- [ ] Create ThumbnailLabWidget (3-way toggle)
+- [ ] Delete ABThumbnailWidget reference
+- [ ] Update WidgetRenderer
+- [ ] Update WidgetRegistry
+- [ ] Create DescriptionEditorWidget
+- [ ] Register in WidgetRegistry
+- [ ] Add render branch in WidgetRenderer
+- [ ] Build check (npm run dev)
+- [ ] No TypeScript errors
+- [ ] Update CSS styles in `VT_E1.html` (Fonts, Neo-shadows, Glitch)
+- [ ] Implement enhanced `renderTemplateAsset` JSX logic for all 14 styles
+- [ ] Refine `templateAnimInfluence` animation curves
+- [ ] Verify visual parity via screenshots
+- [ ] Add addTemplateToTimeline() function (~L2005)
+- [ ] Add Template Creator modal (before closing modals ~L5821)
+- [ ] **1. `youtubeAnalyticsFetcher.ts`** — Expand `VIDEO_METRIC_GROUPS` with all missing metrics
+- [ ] **2. `analyticsContract.ts`** — Register all new metrics
+- [ ] **3. `analyticsContract.ts`** — Add `filterSupportedMetrics` entries for new metrics
+- [ ] **4. Verify** — Build check
+- [ ] Update `toolboxWidgetSystem.css`
+- [ ] (Optional) Create `TickerConfigModal.tsx` for configuring ticker sources
+- [ ] 1. Update `WidgetRegistry.ts` — default sizes + new prioritized order
+- [ ] 2. Add `.vt-tab-btn` / `.vt-tab-group` CSS to `toolboxWidgetSystem.css`
+- [ ] 3. Fix `CommunityPostWidget.tsx` — standardize buttons/inputs, fix props, lock layout
+- [ ] 4. Fix `CommentReplyWidget.tsx` — standardize buttons/inputs, fix props
+- [ ] 5. Build verification — `npm run build`
+- [ ] Unified Input Styles in `toolboxWidgetSystem.css` (Remove shadows)
+- [ ] Refactor `WidgetShell.tsx` (Remove Lottie, add Sparkles icon)
+- [ ] Standardize Heights in `storage.ts`
+- [ ] Fix Channel Overview (KPI Cluster) in `WidgetRenderer.tsx`
+    - [ ] Thicker borders (4px)
+    - [ ] Larger Profile Picture
+    - [ ] Narrower KPI cards
+    - [ ] Channel Footer + Visit Button
+- [ ] Refine `CommunityPostWidget.tsx`
+    - [ ] Inline Icon + Title in Selection
+    - [ ] Remove Dividers
+    - [ ] 32px Button height
+- [ ] Standardize Pie Charts
+    - [ ] `AudienceMatrixWidget.tsx` (Add black strokes)
+    - [ ] `FormatClashWidget.tsx` (Match AudienceMatrix style)
+    - [ ] `TrafficSourcesWidget.tsx` (Add SVG strokes)
+- [ ] Stabilize Chart Containers (Fix console warnings)
+    - [ ] `BridgeEfficiencyWidget.tsx`
+    - [ ] `KeywordOverlapWidget.tsx`
+- [ ] Standardize Row 1 Widgets (KPI Cluster, Community Post, Comment Responder)
+    - [ ] Force Row 1 widgets into `tall` height bucket in `WidgetRenderer.tsx`
+    - [ ] Update Profile Picture size and KPI card widths in `WidgetRenderer.tsx`
+    - [ ] Polish `CommunityPostWidget.tsx` (button heights, tab styles, remove dividers)
+- [ ] Standardize Chart Widgets
+    - [ ] Fix `ResponsiveContainer` warnings in `BridgeEfficiencyWidget.tsx`
+    - [ ] Standardize `FormatClashWidget.tsx` pie charts (conic-gradient + stroke)
+    - [ ] Standardize `AudienceMatrixWidget.tsx` pie charts (conic-gradient + stroke)
+    - [ ] Standardize `TrafficSourcesWidget.tsx` pie charts (conic-gradient + stroke)
+- [ ] Standardize Miscellaneous Widgets
+    - [ ] Update `TagGeneratorWidget.tsx` button heights and borders

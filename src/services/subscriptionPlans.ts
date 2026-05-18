@@ -2,6 +2,7 @@ import type { MasterTableType } from "./productArchitecture"
 
 export type SubscriptionPlanId =
  | "basic"
+ | "beta"
  | "creator"
  | "creator_plus"
  | "creator_pro"
@@ -40,6 +41,31 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanCapabilityMatrix[] = [
   includesExternalSignals: false,
   includesTeamWorkspaces: false,
   includesCustomConnectors: false,
+ },
+ {
+  id: "beta",
+  label: "Beta (BYOK)",
+  modes: ["connected", "import", "hybrid", "public_handle"],
+  tables: [
+   "master_channel_identity",
+   "master_video_core",
+   "master_audience",
+   "master_geography",
+   "master_traffic",
+   "master_device_playback",
+   "master_retention",
+   "master_monetization",
+   "master_external_signals",
+   "master_formula_metrics",
+   "master_coverage_registry",
+  ],
+  maxHistoryDays: 3650,
+  formulaComplexityTier: 5,
+  chartTier: 5,
+  includesScheduledExports: true,
+  includesExternalSignals: true,
+  includesTeamWorkspaces: true,
+  includesCustomConnectors: true,
  },
  {
   id: "creator",

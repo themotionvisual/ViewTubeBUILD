@@ -58,6 +58,8 @@ export interface GlobalDataContextProps {
  consultBrain: (toolId: string, requestDetails?: any) => Promise<any>
  getBrainMemory: () => BrainMemorySchema
  reflectAndCompress: () => Promise<void>
+ aiModel: string
+ setAiModel: (modelId: string) => void
 }
 
 export const GlobalDataContext = createContext<GlobalDataContextProps | undefined>(
@@ -180,4 +182,6 @@ export const fallbackContext: GlobalDataContextProps = {
  consultBrain: async () => ({}),
  getBrainMemory: getBrainMemory as () => BrainMemorySchema,
  reflectAndCompress: async () => {},
+ aiModel: 'gemini-3.1-flash-lite',
+ setAiModel: () => {},
 }

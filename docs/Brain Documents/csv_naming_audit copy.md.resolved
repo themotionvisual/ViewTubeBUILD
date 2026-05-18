@@ -1,0 +1,246 @@
+# ViewTube — CSV & Analytics Naming Audit
+
+Audit of all CSV header names, metric names, tag types, and CSV-related logic found across 6 old ViewTube repo copies that are missing, incomplete, or not properly wired into the current viewtube production codebase. Organized by category: HEADER_MAP gaps, CSV tag/type names, format-detection column names, Shorts-specific signals, dataPipeline metric references, and API metric names used in old youtubeService versions.
+
+## Comparing old repo copies vs current `/Users/cwb/Downloads/viewtube`
+
+**Repos scanned:** viewtube copy 2, copy 3, copy 4, copy 7, ustube-CHARTS, copy-of-ustube-x  
+**Focus:** CSV column names, header maps, metric aliases, tag types, detection logic
+
+---
+
+## ✅ STATUS KEY
+- ✅ In current `viewtube` and working
+- ⚠️ Partially present (alias missing or mapped wrong)
+- ❌ Found in old copies, missing or broken in current
+
+---
+
+## 1. HEADER_MAP — Column Names (`dataNormalization.ts`)
+
+These are the exact CSV column headers YouTube Studio exports. All copies agree on the base set. Current `viewtube` is **identical** to copies 2, 3, 4, 7 on the core map — **no entries were lost here.**
+
+### Confirmed Present in All Versions ✅
+| CSV Column Name | Maps To |
+|---|---|
+| `Video title` | `Dimension` |
+| `Title` | `Dimension` |
+| `Video` | `Dimension` |
+| `Geography` | `Dimension` |
+| `Traffic source` | `Dimension` |
+| `Device type` | `Dimension` |
+| `Subscription status` | `Dimension` |
+| `Viewer age` | `Dimension` |
+| `Viewer gender` | `Dimension` |
+| `Date` | `Date` |
+| `Views` | `Views` |
+| `View count` | `Views` |
+| `Watch time (hours)` | `Watch Time (Hours)` |
+| `Watch Time (Hours)` | `Watch Time (Hours)` |
+| `Estimated revenue` | `Revenue` |
+| `Estimated revenue (USD)` | `Revenue` |
+| `Estimated revenue (Local)` | `Revenue` |
+| `estimatedRevenue` | `Revenue` |
+| `Revenue` | `Revenue` |
+| `Your estimated revenue (USD)` | `Revenue` |
+| `RPM` | `RPM` |
+| `RPM (USD)` | `RPM` |
+| `CPM` | `CPM` |
+| `CPM (USD)` | `CPM` |
+| `Subscribers` | `Subscribers Gained` |
+| `Subscribers gained` | `Subscribers Gained` |
+| `subscribersGained` | `Subscribers Gained` |
+| `Impressions` | `Impressions` |
+| `Impressions click-through rate (%)` | `CTR (%)` |
+| `impressionClickThroughRate` | `CTR (%)` |
+| `CTR (%)` | `CTR (%)` |
+| `Average view duration` | `AVD (Sec)` |
+| `averageViewDuration` | `AVD (Sec)` |
+| `Average view percentage (%)` | `AVP (%)` |
+| `averageViewPercentage` | `AVP (%)` |
+| `AVP (%)` | `AVP (%)` |
+| `estimatedMinutesWatched` | `Watch Time (Hours)` |
+| `Likes` | `Likes` |
+| `Dislikes` | `Dislikes` |
+| `Comments` | `Comments` |
+| `Comments added` | `Comments` |
+| `Shares` | `Shares` |
+| `Hypes` | `Hypes` |
+| `Hype points` | `Hype Points` |
+| `Unique viewers` | `Unique Viewers` |
+| `New viewers` | `New Viewers` |
+| `Returning viewers` | `Returning Viewers` |
+| `Casual viewers` | `Casual Viewers` |
+| `Regular viewers` | `Regular Viewers` |
+| `Average views per viewer` | `Avg Views Per Viewer` |
+| `Members gained` | `Members Gained` |
+| `Members lost` | `Members Lost` |
+| `Total members` | `Total Members` |
+| `Product clicks` | `Product Clicks` |
+| `Orders` | `Orders` |
+
+### ⚠️ Added in THIS session (were missing until today)
+| CSV / API Name | Maps To | Status |
+|---|---|---|
+| `videoThumbnailImpressions` | `Impressions` | ⚠️ Added today |
+| `videoThumbnailImpressionsClickRate` | `CTR (%)` | ⚠️ Added today |
+| `impressions` (lowercase) | `Impressions` | ⚠️ Added today |
+| `shares` (lowercase) | `Shares` | ⚠️ Added today |
+| `likes` (lowercase) | `Likes` | ⚠️ Added today |
+| `comments` (lowercase) | `Comments` | ⚠️ Added today |
+| `dislikes` (lowercase) | `Dislikes` | ⚠️ Added today |
+
+---
+
+## 2. CSV Export Column Names — Found in Old `dataPipeline.ts` Only
+These exist in old copies' `dataPipeline.ts` header maps but are **NOT in current `dataNormalization.ts`**:
+
+| CSV Column (Exact) | Should Map To | Found In | Current Status |
+|---|---|---|---|
+| `Stayed to watch (%)` | `STW %` | copy 2, 3, 7 dataPipeline | ❌ Missing from HEADER_MAP |
+| `Stayed to watch at 0:30 (%)` | `STW %` | copy 2, 3, 7 csvImportUtils | ❌ Missing from HEADER_MAP |
+| `End screen elements shown` | (format detection only) | copy 2, 3, 7 csvImportUtils | ❌ Not mapped at all |
+| `Clicks per end screen element shown (%)` | `End screen click rate` | old dataPipeline | ❌ Missing from HEADER_MAP |
+| `End screen click rate` | `End screen click rate` | analyticsContract aliases | ⚠️ In contract but not HEADER_MAP |
+| `Card click rate` | `Card click rate` | analyticsContract aliases | ⚠️ In contract but not HEADER_MAP |
+| `annotationClickThroughRate` | `Card click rate` | old youtubeService | ⚠️ In contract aliases, not HEADER_MAP |
+| `Engaged views` | `Engaged views` | copy 3, 7 dataForge | ⚠️ In contract aliases, not HEADER_MAP |
+| `engagedViews` | `Engaged views` | copy 7 analyticsSelectors | ⚠️ In contract aliases, not HEADER_MAP |
+| `Views from Shorts feed` | (format detection only) | copy 2, 3, 7 | ❌ Never mapped to a metric |
+| `Shorts feed views` | (format detection only) | copy 2, 3, 7 | ❌ Never mapped to a metric |
+| `Subscribers lost` | `Subscribers Lost` | old dataPipeline | ❌ Missing from HEADER_MAP |
+| `subscribersLost` | `Subscribers Lost` | copy 3, 7 youtubeService | ❌ Missing from HEADER_MAP |
+
+---
+
+## 3. CSV Tag / Upload Type Names
+These are the `CsvTag` / `CsvUploadType` values used to classify uploaded CSVs.
+
+### Confirmed in all versions ✅
+| Tag Value | Meaning |
+|---|---|
+| `auto` | Auto-detect |
+| `long` | Long-form video table |
+| `shorts` | Shorts video table |
+| `single_long_video` | Single long video CSV |
+| `single_short_video` | Single short video CSV |
+| `traffic` | Traffic sources table |
+| `audience` | Audience demographics table |
+| `geo` | Geography/country table |
+| `daily` | Daily metrics chart |
+| `search` | Search terms table |
+| `combined` / `mixed` | Mixed/combined export |
+| `external` | External traffic source |
+| `other` | Unclassified |
+
+### ❌ Missing tag — found only in older copies
+| Tag Value | Meaning | Found In |
+|---|---|---|
+| `channel` | Channel-wide totals (not per-video) | copy 2 dataPipeline tag detection |
+
+---
+
+## 4. Format Detection Column Names (in `csvImportUtils.detectContentTagFromRows`)
+These column names are used to sniff whether a CSV is Shorts or Long — **not mapped to metrics** but critical for correct tagging:
+
+| Column Name | Purpose | Status |
+|---|---|---|
+| `Stayed to watch (%)` | Shorts signal | ✅ Present in detection logic |
+| `Stayed to watch at 0:30 (%)` | Shorts signal (alt name) | ✅ Present in detection logic |
+| `End screen elements shown` | Long-form signal | ✅ Present in detection logic |
+| `Views from Shorts feed` | Shorts signal | ✅ Present in detection logic |
+| `Shorts feed views` | Shorts signal (alt name) | ✅ Present in detection logic |
+| `Average view duration` | Duration-based detection | ✅ Present in detection logic |
+| `Duration` | Duration-based detection | ✅ Present in detection logic |
+
+---
+
+## 5. `inferTagFromPath` — Filename Keywords Used for Auto-Detection
+
+All copies have identical path-sniffing keywords. Current `viewtube` ✅ matches.
+
+| Keyword in filename | Detected Tag |
+|---|---|
+| `traffic`, `source` | `traffic` |
+| `audience`, `viewer`, `subscriber` | `audience` |
+| `geography`, `location`, `country` | `geo` |
+| `external` | `external` |
+| `search term`, `search` | `search` |
+| `daily`, `date` | `daily` |
+| `short` | `shorts` |
+| `long`, `video` | `long` |
+| `total`, `channel`, `all` | `mixed` |
+| (fallback) | `other` |
+
+---
+
+## 6. `classifyCsvExportKind` — Export Kind Detection (copy 7 only, ✅ in current)
+
+These column names are used to detect whether a CSV is table data, a chart export, or totals:
+
+| Column Checked | Purpose |
+|---|---|
+| `Video title`, `Video ID`, `video`, `Dimension` | Flags as `table_data` |
+| `Date`, `Day` | Flags as `chart` |
+| `Views`, `Watch Time (Hours)`, `Likes`, `Comments` | Core metrics presence check |
+| `linechart`, `trend`, `time series` | Flags as `chart` |
+
+---
+
+## 7. API Metric Names Used in Old `youtubeService.ts` That Were Removed
+
+These were in older `youtubeService` files and were **removed** in the current version (correctly or incorrectly):
+
+| Old API Metric | Old Group | Correctly Removed? | Notes |
+|---|---|---|---|
+| `stayedToWatch` | engagement | ✅ Yes — invalid with `dimensions=video` | CSV-only metric |
+| `stayedToWatch0:30` | engagement | ✅ Yes — not a real API metric name | |
+| `annotationClickThroughRate` | engagement | ✅ Yes — deprecated/removed by YouTube | Legacy annotations gone |
+| `clicksPerEndScreenElementShown` | engagement | ✅ Yes — not valid API metric | CSV-only |
+| `estimatedRevenuePer1000Views` | monetization | ✅ Yes — doesn't exist | Wrong name for RPM |
+| `uniqueViewers` | audience_mix | ✅ Yes — not valid with `dimensions=video` | |
+| `newViewers` | audience_mix | ✅ Yes — not valid with `dimensions=video` | |
+| `returningViewers` | audience_mix | ✅ Yes — not valid with `dimensions=video` | |
+| `casualViewers` | audience_mix | ✅ Yes — not valid with `dimensions=video` | |
+| `regularViewers` | audience_mix | ✅ Yes — not valid with `dimensions=video` | |
+
+---
+
+## 8. ⚠️ Metrics in `analyticsContract.ts` Registry With MISSING `HEADER_MAP` Entries
+
+These metrics exist in `analyticsContract` (so they work for API responses) but have **no entry in `dataNormalization.ts` HEADER_MAP** — meaning if they appear as *CSV column headers* they will not be normalized:
+
+| Contract Key | Label | CSV Column Name Needed in HEADER_MAP |
+|---|---|---|
+| `engagedViews` | Engaged views | `Engaged views`, `Engaged Views` |
+| `stw` | STW % | `Stayed to watch (%)`, `Stayed to watch at 0:30 (%)` |
+| `endScreenClickRate` | End screen click rate | `End screen click rate`, `Clicks per end screen element shown (%)` |
+| `cardClickRate` | Card click rate | `Card click rate`, `annotationClickThroughRate` |
+| `newViewers` | New Viewers | Already in HEADER_MAP ✅ |
+| `returningViewers` | Returning Viewers | Already in HEADER_MAP ✅ |
+| `casualViewers` | Casual viewers | Already in HEADER_MAP ✅ |
+| `regularViewers` | Regular viewers | Already in HEADER_MAP ✅ |
+| `uniqueViewers` | Unique viewers | Already in HEADER_MAP ✅ |
+| `subscribersGained` | Subscribers Gained | Already in HEADER_MAP ✅ |
+
+---
+
+## 9. SUMMARY — What Needs to Be Added to `dataNormalization.ts` `HEADER_MAP`
+
+These are the confirmed gaps. Adding them would make CSV uploads of YouTube Studio exports fully normalize into the analytics pipeline:
+
+```typescript
+// Engagement — CSV export column names not yet in HEADER_MAP
+"Stayed to watch (%)": "STW %",
+"Stayed to watch at 0:30 (%)": "STW %",
+"Clicks per end screen element shown (%)": "End screen click rate",
+"End screen click rate": "End screen click rate",
+"Card click rate": "Card click rate",
+"Engaged views": "Engaged views",
+"Engaged Views": "Engaged views",
+engagedViews: "Engaged views",
+"Views from Shorts feed": "Shorts feed views",
+"Shorts feed views": "Shorts feed views",
+"Subscribers lost": "Subscribers Lost",
+subscribersLost: "Subscribers Lost",
+```

@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Pencil, Save, RotateCcw, ChevronDown, ChevronUp, ArrowRight, Settings, ShieldCheck, Upload, PlayCircle, Plus } from "lucide-react"
 import { fetchVideoSnippetDetails, updateVideo, fetchVideoCategories, fetchUserPlaylists, uploadVideo } from "../../../services/youtube/youtubeDataFetcher"
 
 const STORAGE_KEY = "vt_data_edit_state"
+const YT_STANDARD_CATEGORY_IDS = new Set([
+ "1","2","10","15","17","19","20","22","23","24","25","26","27","28","29",
+])
 
 export const CustomDropdown = ({ value, onChange, options }: { value: string, onChange: (val: string) => void, options: {val: string, lbl: string}[] }) => {
  const [isOpen, setIsOpen] = useState(false)
@@ -93,8 +96,12 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
  const [expandedSection, setExpandedSection] = useState<string | null>("title")
  const [saving, setSaving] = useState(false)
  const [saved, setSaved] = useState(false)
+ const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
+ const [isDraggingThumb, setIsDraggingThumb] = useState(false)
  const [categories, setCategories] = useState<{id: string, title: string}[]>([])
  const [playlists, setPlaylists] = useState<{id: string, title: string}[]>([])
+ const supportDataFetchedRef = useRef(false)
+ const thumbInputRef = useRef<HTMLInputElement | null>(null)
 
  // Listen for navigation from upload scheduler
  useEffect(() => {
@@ -109,11 +116,33 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
   return () => window.removeEventListener("vt_navigate_widget", handleNav)
  }, [])
 
- // Fetch categories
  useEffect(() => {
-  fetchVideoCategories().then(c => setCategories(c)).catch(() => {})
-  fetchUserPlaylists().then(p => setPlaylists(p)).catch(() => {})
+  const onBridge = (event: Event) => {
+   const payload = (event as CustomEvent<any>).detail
+   if (!payload?.imageUrl) return
+   if (payload.targetWidget && payload.targetWidget !== "data-edit") return
+   setThumbnailPreview(payload.imageUrl)
+  }
+  window.addEventListener("vt_dashboard_generated_image", onBridge as EventListener)
+  try {
+   const cached = localStorage.getItem("vt_bridge_image_data-edit")
+   if (cached) {
+    const payload = JSON.parse(cached)
+    if (payload?.imageUrl) setThumbnailPreview(payload.imageUrl)
+   }
+  } catch {}
+  return () => window.removeEventListener("vt_dashboard_generated_image", onBridge as EventListener)
  }, [])
+
+ // Fetch categories/playlists once, and only for authenticated users.
+ useEffect(() => {
+  if (!data?.authState?.isAuthenticated) return
+  if (supportDataFetchedRef.current) return
+  supportDataFetchedRef.current = true
+
+  fetchVideoCategories().then(c => setCategories(c.filter((cat: any) => YT_STANDARD_CATEGORY_IDS.has(String(cat.id))))).catch(() => {})
+  fetchUserPlaylists().then(p => setPlaylists(p)).catch(() => {})
+ }, [data?.authState?.isAuthenticated])
 
  const handleSelect = async (vidId: string) => {
   setSelectedVideo(vidId)
@@ -238,13 +267,73 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
  // --- Pages ---
  const renderMainPage = () => (
    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
-    <div style={{ position: "relative", marginBottom: "6px" }}>
-     <input className="vt-input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Video Title" style={{
-      background: "#fff", paddingRight: "80px"
-     }} />
-     <div style={{ position: "absolute", right: "4px", top: "4px", bottom: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
-      <span style={{ fontSize: "8px", fontWeight: 900, opacity: 0.5, marginRight: "4px" }}>{title.length}/100</span>
-      <button className="vt-button" style={{ padding: "0 8px", height: "100%", fontSize: "9px", background: "#fff" }}><Settings size={12} style={{ marginRight: "4px"}} /> AI Rewrite</button>
+    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "6px", marginBottom: "6px" }}>
+     <div style={{ position: "relative" }}>
+      <input className="vt-input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Video Title" style={{
+       background: "#fff", paddingRight: "80px"
+      }} />
+       <div style={{ position: "absolute", right: "4px", top: "4px", bottom: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
+        <span style={{ fontSize: "8px", fontWeight: 900, opacity: 0.5, marginRight: "4px" }}>{title.length}/100</span>
+        <button className="vt-button secondary" style={{ height: "100%", fontSize: "9px" }}><Settings size={12} style={{ marginRight: "4px"}} /> AI Rewrite</button>
+       </div>
+     </div>
+     <div
+      style={{
+       border: "2px dashed #000",
+       borderRadius: "8px",
+       background: isDraggingThumb ? "rgba(87,154,255,0.2)" : "#f8f8f8",
+       minHeight: "52px",
+       padding: "4px",
+       display: "flex",
+       alignItems: "center",
+       justifyContent: "space-between",
+       gap: "4px",
+      }}
+      onDragOver={(e) => {
+       e.preventDefault()
+       setIsDraggingThumb(true)
+      }}
+      onDragLeave={() => setIsDraggingThumb(false)}
+      onDrop={(e) => {
+       e.preventDefault()
+       setIsDraggingThumb(false)
+       const file = e.dataTransfer.files?.[0]
+       if (!file || !file.type.startsWith("image/")) return
+       const reader = new FileReader()
+       reader.onload = () => setThumbnailPreview(reader.result as string)
+       reader.readAsDataURL(file)
+      }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "4px", minWidth: 0 }}>
+       {thumbnailPreview ? (
+        <img src={thumbnailPreview} alt="thumb" style={{ width: "52px", height: "28px", objectFit: "cover", borderRadius: "4px", border: "1px solid #000" }} />
+       ) : (
+        <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>Thumbnail</span>
+       )}
+      </div>
+      <div style={{ display: "flex", gap: "4px" }}>
+       <button className="vt-button secondary" style={{ height: "28px", fontSize: "8px", padding: "0 6px" }} onClick={() => thumbInputRef.current?.click()}>
+        <Upload size={10} /> Upload
+       </button>
+       <button
+        className="vt-button secondary"
+        style={{ height: "28px", fontSize: "8px", padding: "0 6px" }}
+        onClick={() => window.dispatchEvent(new CustomEvent("vt_navigate_widget", { detail: { targetWidget: "thumb-ai" } }))}>
+        Go Thumb AI
+       </button>
+      </div>
+      <input
+       ref={thumbInputRef}
+       type="file"
+       accept="image/*"
+       style={{ display: "none" }}
+       onChange={(e) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        const reader = new FileReader()
+        reader.onload = () => setThumbnailPreview(reader.result as string)
+       reader.readAsDataURL(file)
+       }}
+      />
      </div>
     </div>
 
@@ -309,9 +398,9 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
      </div>
     </div>
    
-   <button className="vt-button primary" onClick={() => { setPage("options"); setExpandedSection("audience") }} style={{ marginTop: "8px", padding: "8px", fontSize: "10px", background: "#fff" }}>
-    Additional Options <ArrowRight size={12} strokeWidth={3} />
-   </button>
+    <button className="vt-button primary" onClick={() => { setPage("options"); setExpandedSection("audience") }} style={{ marginTop: "8px", height: "36px" }}>
+     Additional Options <ArrowRight size={12} strokeWidth={3} />
+    </button>
   </div>
  )
 
@@ -423,8 +512,8 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
     )}
 
     <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}>
-     <button className="vt-button" onClick={() => setPage("main")} style={{ flex: 1, padding: "8px", fontSize: "10px" }}>Back to Details</button>
-     <button className="vt-button primary" onClick={() => setPage("suitability")} style={{ flex: 1, padding: "8px", fontSize: "10px", background: "#fff" }}>
+     <button className="vt-button" onClick={() => setPage("main")} style={{ flex: 1, height: "36px" }}>Back to Details</button>
+     <button className="vt-button primary" onClick={() => setPage("suitability")} style={{ flex: 1, height: "36px" }}>
       Ad Suitability <ArrowRight size={12} strokeWidth={3} />
      </button>
     </div>
@@ -463,10 +552,10 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
       <span style={{ fontSize: "9px", opacity: 0.7, display: "block" }}>How you rated your video overall:</span>
       <span style={{ fontSize: "12px", fontWeight: 900, color: "#4FFF5B", display: "block", margin: "4px 0 8px 0" }}>Safe for ads</span>
       <button 
-       className="vt-button" 
+       className={`vt-button ${ratingSubmitted ? "" : "primary"}`}
        onClick={() => setRatingSubmitted(true)}
        disabled={ratingSubmitted}
-       style={{ background: ratingSubmitted ? "#333" : "#fff", color: ratingSubmitted ? "#888" : "#000", width: "100%", padding: "6px", fontSize: "10px", fontWeight: 900, borderRadius: "6px", border: "none", cursor: "pointer" }}
+       style={{ width: "100%", height: "32px", fontSize: "10px" }}
       >
        {ratingSubmitted ? "Rating Submitted" : "Submit Rating"}
       </button>
@@ -474,7 +563,7 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
     )}
 
     <div style={{ display: "flex", gap: "6px", marginTop: "auto", paddingTop: "8px" }}>
-     <button className="vt-button" onClick={() => setPage("options")} style={{ flex: 1, padding: "8px", fontSize: "10px" }}>Back to Options</button>
+     <button className="vt-button" onClick={() => setPage("options")} style={{ flex: 1, height: "32px" }}>Back to Options</button>
     </div>
    </div>
   )
@@ -486,15 +575,15 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
     
     {/* Mode Toggle & Progress Bar */}
     <div style={{ display: "flex", gap: "4px" }}>
-     <button onClick={() => { setWorkflowMode("upload"); setPage("main") }} className="vt-tab-button" style={{
-      flex: 1, padding: "6px", fontSize: "9px", fontWeight: 900, background: workflowMode === "upload" ? "#000" : "#fff", color: workflowMode === "upload" ? "#fff" : "#000",
-      border: "2px solid #000", borderRadius: "6px", cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", gap: "4px"
+     <button onClick={() => { setWorkflowMode("upload"); setPage("main") }} className="vt-button" style={{
+      flex: 1, height: "28px", background: workflowMode === "upload" ? "#000" : "#fff", color: workflowMode === "upload" ? "#fff" : "#000",
+      fontSize: "9px"
      }}>
       <Upload size={12} strokeWidth={3} /> UPLOAD NEW
      </button>
-     <button onClick={() => { setWorkflowMode("edit"); setPage("main") }} className="vt-tab-button" style={{
-      flex: 1, padding: "6px", fontSize: "9px", fontWeight: 900, background: workflowMode === "edit" ? "#000" : "#fff", color: workflowMode === "edit" ? "#fff" : "#000",
-      border: "2px solid #000", borderRadius: "6px", cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", gap: "4px"
+     <button onClick={() => { setWorkflowMode("edit"); setPage("main") }} className="vt-button" style={{
+      flex: 1, height: "28px", background: workflowMode === "edit" ? "#000" : "#fff", color: workflowMode === "edit" ? "#fff" : "#000",
+      fontSize: "9px"
      }}>
       <PlayCircle size={12} strokeWidth={3} /> EDIT PUBLISHED
      </button>
@@ -539,17 +628,13 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
 
       {/* Global Action Bar */}
       <div style={{ display: "flex", gap: "6px", marginTop: "auto", borderTop: "2px solid rgba(0,0,0,0.1)", paddingTop: "8px" }}>
-       <button onClick={handleSave} disabled={saving} style={{
-        flex: 1, height: "32px", background: saved ? "#4FFF5B" : (workflowMode === "upload" ? "#579AFF" : "#C9F830"), 
-        border: "2px solid #000", borderRadius: "8px", color: workflowMode === "upload" && !saved ? "#fff" : "#000",
-        fontSize: "10px", fontWeight: 1000, textTransform: "uppercase", cursor: "pointer",
-        display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", boxShadow: "2px 2px 0 0 #000",
+       <button onClick={handleSave} disabled={saving} className="vt-button primary" style={{
+        flex: 1, height: "36px"
        }}>
         <Save size={12} /> {saved ? (workflowMode === "upload" ? "Published!" : "Saved!") : saving ? "Saving..." : (workflowMode === "upload" ? "Publish Video" : "Save Changes")}
        </button>
-       <button onClick={handleReset} title="Revert Changes" style={{
-        width: "32px", height: "32px", border: "2px solid #000", borderRadius: "8px", background: "#fff", cursor: "pointer",
-        display: "flex", alignItems: "center", justifyContent: "center",
+       <button onClick={handleReset} title="Revert Changes" className="vt-button" style={{
+        width: "36px", height: "36px", padding: 0
        }}>
         <RotateCcw size={12} strokeWidth={2.5} />
        </button>

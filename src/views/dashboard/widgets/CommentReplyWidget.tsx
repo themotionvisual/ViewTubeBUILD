@@ -66,6 +66,7 @@ export const CommentReplyWidget = ({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [fetchedVideoData, setFetchedVideoData] = useState<Record<string, any>>({})
   const [isSyncingMetadata, setIsSyncingMetadata] = useState(false)
+  const [inboundImageUrl, setInboundImageUrl] = useState<string | null>(null)
   
   const REPLY_DRAFT_COST = getAiTokenCost("commentMagicDraftPerThread")
   const entitlement = useEntitlement()
@@ -117,6 +118,24 @@ export const CommentReplyWidget = ({
     }
     load()
   }, [channelId, canonicalVideos.length])
+
+  useEffect(() => {
+    const applyImage = (payload: any) => {
+      if (!payload?.imageUrl) return
+      setInboundImageUrl(payload.imageUrl)
+    }
+    const onBridge = (event: Event) => {
+      const detail = (event as CustomEvent<any>).detail
+      if (!detail || detail.targetWidget !== "comment-replier") return
+      applyImage(detail)
+    }
+    window.addEventListener("vt_dashboard_generated_image", onBridge as EventListener)
+    try {
+      const cached = localStorage.getItem("vt_bridge_image_comment-replier")
+      if (cached) applyImage(JSON.parse(cached))
+    } catch {}
+    return () => window.removeEventListener("vt_dashboard_generated_image", onBridge as EventListener)
+  }, [])
 
   const unreplied = allThreads.filter((thread: any) => {
     const replies = thread.replies?.comments || []
@@ -265,35 +284,24 @@ export const CommentReplyWidget = ({
         </button>
       </div>
 
-      <button 
-        onClick={() => syncMetadata(allThreads)}
-        disabled={isSyncingMetadata || loading}
-        title="Sync missing video titles/thumbnails"
-        className="vt-header-action-btn"
-        style={{ 
-          position: "absolute", 
-          right: "-10px", 
-          top: "50%", 
-          transform: "translateY(-50%)",
-          background: isSyncingMetadata ? "#4FFF5B" : "transparent",
-          borderRadius: "50%",
-          width: "24px",
-          height: "24px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          border: "2.5px solid #000",
-          cursor: "pointer"
-        }}
-      >
-        <Sparkles size={14} className={isSyncingMetadata ? "animate-spin" : ""} />
-      </button>
     </div>
   )
 
   return (
     <WidgetShell {...common} headerContent={headerContent} icon={<MessageSquare size={22} />}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "10px" }}>
+        {inboundImageUrl && (
+          <div style={{ border: "2px solid #000", borderRadius: "8px", padding: "6px 8px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+            <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.7 }}>Image received from generator</span>
+            <button
+              className="vt-button"
+              style={{ height: "24px", fontSize: "8px", padding: "0 8px" }}
+              onClick={() => navigator.clipboard?.writeText(inboundImageUrl)}
+            >
+              COPY URL
+            </button>
+          </div>
+        )}
         
         {/* Comment List - Now fully scrollable, no pagination */}
         <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px", paddingRight: "4px" }}>
@@ -316,6 +324,9 @@ export const CommentReplyWidget = ({
               const threadId = thread.id
               const currentReply = replyText[threadId] || ""
               const isSelected = selectedIds.has(threadId)
+              const existingChannelReplies = (thread.replies?.comments || []).filter(
+                (reply: any) => reply.snippet.authorChannelId?.value === channelId
+              )
 
               return (
                 <div 
@@ -345,12 +356,10 @@ export const CommentReplyWidget = ({
                       }}>
                         {videoId ? (
                             <img 
-                              src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`} 
+                              src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`} 
                               onError={(e) => { 
                                 const target = e.target as HTMLImageElement;
-                                if (target.src.includes('maxresdefault.jpg')) {
-                                  target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-                                } else if (target.src.includes('hqdefault.jpg')) {
+                                if (target.src.includes('hqdefault.jpg')) {
                                   target.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
                                 } else if (target.src.includes('mqdefault.jpg')) {
                                   if (!THUMBNAIL_WARNINGS.has(videoId)) {
@@ -418,14 +427,40 @@ export const CommentReplyWidget = ({
                     {htmlDecode(c.textDisplay)}
                   </div>
 
-                  {/* Blue Reply Input - Beneath, thinner */}
-                  {tab === "unreplied" && (
+                  {/* Existing Channel Replies (History mode) */}
+                  {tab === "history" && existingChannelReplies.length > 0 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.65 }}>
+                        Previous Replies
+                      </div>
+                      {existingChannelReplies.map((reply: any, idx: number) => (
+                        <div
+                          key={`${threadId}-reply-${idx}`}
+                          style={{
+                            border: "2px solid #000",
+                            borderRadius: "8px",
+                            background: "#F4F4F4",
+                            padding: "6px 8px",
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            lineHeight: 1.3,
+                            color: "#000",
+                          }}
+                        >
+                          {htmlDecode(reply.snippet.textDisplay || "")}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Reply Input - available for NEW and OLD */}
+                  {(
                     <div style={{ width: "100%" }}>
                       <textarea
                         className="vt-textarea"
                         value={currentReply}
                         onChange={(e) => setReplyText(prev => ({...prev, [threadId]: e.target.value}))}
-                        placeholder="REPLY..."
+                        placeholder={tab === "history" ? "ADD FOLLOW-UP REPLY..." : "REPLY..."}
                         style={{ 
                           width: "100%", 
                           height: "50px", 
@@ -445,7 +480,7 @@ export const CommentReplyWidget = ({
         </div>
 
         {/* Global Action Buttons */}
-        {tab === "unreplied" && (
+        {(
           <div style={{ display: "flex", gap: "8px", padding: "4px 0" }}>
             <button
               onClick={() => handleMagicDraft(Array.from(selectedIds))}
@@ -473,7 +508,7 @@ export const CommentReplyWidget = ({
             </button>
           </div>
         )}
-        {tab === "unreplied" && selectedIds.size > 0 && !canAffordSelectedDrafts && (
+        {selectedIds.size > 0 && !canAffordSelectedDrafts && (
           <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>
             {entitlement.tier === "free"
               ? "Upgrade for AI reply drafts."

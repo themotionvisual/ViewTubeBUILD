@@ -276,13 +276,13 @@ export const EndScreenTool: React.FC = () => {
                 value={largeText}
                 onChange={(e) => setLargeText(e.target.value)}
                 placeholder="TITLE (e.g. WATCH NEXT)"
-                className="pop-input w-full p-3 border-[3px] text-sm rounded-lg"
+                className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase text-lg focus:bg-white focus:border-[#00CCFF] outline-none transition-all"
               />
               <input
                 value={smallText}
                 onChange={(e) => setSmallText(e.target.value)}
                 placeholder="SUBTITLE (e.g. Subscribe for more)"
-                className="pop-input w-full p-3 border-[3px] text-sm rounded-lg"
+                className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase text-lg focus:bg-white focus:border-[#00CCFF] outline-none transition-all"
               />
             </div>
           </SubToolbox>
@@ -319,7 +319,7 @@ export const EndScreenTool: React.FC = () => {
                       n[i] = e.target.value
                       setPalette(n)
                     }}
-                    className="pop-input w-full p-1.5 text-xs font-mono text-center border-[2px] rounded-md uppercase font-black"
+                    className="vt-input-standard w-full p-1.5 text-xs font-mono text-center border-[2px] rounded-md uppercase font-black"
                     maxLength={7}
                   />
                 </div>
@@ -359,7 +359,7 @@ export const EndScreenTool: React.FC = () => {
                       className="w-10 h-10 object-cover border-[2px] border-black rounded-md"
                       alt="ref"
                     />
-                    <select className="pop-input flex-1 p-1 text-[9px] font-black uppercase border-[2px] rounded-md">
+                    <select className="vt-input-standard flex-1 p-1 text-[9px] font-black uppercase border-[2px] rounded-md">
                       <option>Style Reference</option>
                       <option>Background</option>
                     </select>

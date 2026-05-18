@@ -86,6 +86,7 @@ const SECTION_TIMEOUTS_MS = {
   stageB: 42000,
 } as const;
 const PREFERRED_WINDOWS = ["28d", "90d", "365d", "lifetime", "7d"] as const;
+const warningOnce = new Set<string>();
 
 const toRecord = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" ? (value as Record<string, unknown>) : {};
@@ -184,7 +185,8 @@ const normalizeOracleReport = (input: unknown, csvContext = ""): OracleReport =>
     .map(normalizeOracleSection)
     .filter((section): section is OracleSection => Boolean(section));
 
-  if (!Array.isArray(raw.sections)) {
+  if (!Array.isArray(raw.sections) && !warningOnce.has("missing_sections")) {
+    warningOnce.add("missing_sections");
     console.warn("[UltimateReport] Oracle response missing sections; using fallback shape.");
   }
 
@@ -316,6 +318,30 @@ const antiGenericSummary = (value: string): string => {
     .replace(/STRICT OUTPUT CONSTRAINTS:[\s\S]*?(?=\n\n|$)/gi, "")
     .trim();
   return cleaned;
+};
+
+const containsPromptLeakage = (value: string): boolean =>
+  /(PROMPT_VERSION|STRICT OUTPUT CONSTRAINTS|STAGE_A_INPUT_JSON|IDENTITY:|TASK:|Return JSON only\.)/i.test(
+    value,
+  );
+
+const sanitizeOracleReport = (report: OracleReport): OracleReport => {
+  const sections = (report.sections || [])
+    .map((section) => ({
+      ...section,
+      title: antiGenericSummary(section.title || "").slice(0, 120) || "Untitled Section",
+      content: antiGenericSummary(section.content || "").slice(0, 2400),
+    }))
+    .filter((section) => section.title.trim() || section.content.trim());
+
+  return {
+    ...report,
+    executiveSummary: antiGenericSummary(report.executiveSummary || "").slice(0, 1200),
+    sections: sections.map((section) => ({
+      ...section,
+      content: containsPromptLeakage(section.content) ? "" : section.content,
+    })),
+  };
 };
 
 const buildComparativeGrid = (report: OracleReport, keywordData: KeywordAnalysis): UnifiedTableSpec => {
@@ -823,6 +849,14 @@ const mapToBlocks = (
       summary: "Comparative matrix for weekly prioritization and report-to-report deltas.",
       recommendations: ["Use this grid to rank what to fix, scale, and retire."],
       tableSpec: buildComparativeGrid(report, keywordData),
+      chartSuggestion: {
+        type: "bar",
+        title: "Comparative Value by Dimension",
+        xAxisKey: "dimension",
+        dataKeys: ["value"],
+        description: "Cross-metric normalization view for rapid prioritization.",
+        provider: "recharts",
+      },
     },
     {
       id: "12",
@@ -832,6 +866,14 @@ const mapToBlocks = (
       summary: keywordData.marketAnalysis || "Keyword intelligence unavailable.",
       recommendations: keywordData.longTailKeywords.slice(0, 4).map((keyword) => `Test long-tail: ${keyword}`),
       tableSpec: report.keywordComparisonTable || opportunityTable,
+      chartSuggestion: {
+        type: "bar",
+        title: "Keyword Efficiency Scoreboard",
+        xAxisKey: "keyword",
+        dataKeys: ["efficiencyScore"],
+        description: "Top keyword opportunities by modeled efficiency.",
+        provider: "recharts",
+      },
     },
     {
       id: "13",
@@ -843,9 +885,9 @@ const mapToBlocks = (
       chartSuggestion: {
         type: "scatter",
         title: "Engagement Matrix",
-        xAxisKey: "relevance",
-        dataKeys: ["difficulty"],
-        description: "Proxy engagement matrix for discovery and conversion quality.",
+        xAxisKey: "avgRetention",
+        dataKeys: ["avgSubs"],
+        description: "Retention versus subscriber conversion by keyword cluster.",
         provider: "recharts",
       },
     },
@@ -1140,7 +1182,7 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
 
   const stageAOracle = normalizeOracleReport(stageAStep.value, resolvedContext);
   const stageA: StageAReport = {
-    ...stageAOracle,
+    ...sanitizeOracleReport(stageAOracle),
     stage: "A",
     promptVersion: LEGACY_PROMPT_VERSION,
     sections: enforceNineSections(stageAOracle.sections || []),
@@ -1199,7 +1241,7 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
   );
   const stageBOracle = normalizeOracleReport(stageBStep.value, resolvedContext);
   const stageB: StageBRefinement = {
-    ...stageBOracle,
+    ...sanitizeOracleReport(stageBOracle),
     stage: "B",
     promptVersion: ORACLE_REFINEMENT_VERSION,
     sections: enforceNineSections(stageBOracle.sections || []),
@@ -1230,7 +1272,7 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
   );
 
   const diagnosis = normalizeDiagnosis(diagnosisStep.value);
-  const fused = fuseStageReports(stageA, stageB);
+  const fused = sanitizeOracleReport(fuseStageReports(stageA, stageB)) as FusionReport;
   const oracle = fused;
   const keyword = normalizeKeywordAnalysis(keywordStep.value);
 
@@ -1424,12 +1466,15 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
   persistGenerationRecord(generationRecord);
 
   if (diagnosisStep.failed || stageAStep.failed || stageBStep.failed || keywordStep.failed) {
+    if (!warningOnce.has(`degraded_${generationId}`)) {
+      warningOnce.add(`degraded_${generationId}`);
     console.warn("[UltimateReport] Generation degraded mode", {
       diagnosis: diagnosisStep.reason,
       stageA: stageAStep.reason,
       stageB: stageBStep.reason,
       keyword: keywordStep.reason,
     });
+    }
   }
 
   input.onSessionUpdate?.({

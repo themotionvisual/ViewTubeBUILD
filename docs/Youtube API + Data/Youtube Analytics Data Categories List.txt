@@ -1,0 +1,97 @@
+
+Full List of All Youtube API 
+Analytics Data + Statistics Categories Available 
+
+
+Core Dimensions (Subject to the Deprecation Policy)
+	•	ageGroup (age_group) 
+	•	channel (channel_id) 
+	•	country (country_code) 
+	•	day (date) 
+	•	gender (gender) 
+	•	month (month) 
+	•	sharingService (sharing_service) 
+	•	uploaderType (uploader_type) 
+	•	video (video_id) 
+Additional Dimensions
+	•	adType 
+	•	asset_id (Reporting API only) 
+	•	audienceType (audience_retention_type) 
+	•	claimedStatus (claimed_status) 
+	•	creatorContentType (Analytics API only) 
+	•	deviceType (device_type) 
+	•	elapsedVideoTimeRatio 
+	•	insightPlaybackLocationDetail 
+	•	insightPlaybackLocationType 
+	•	insightTrafficSourceDetail 
+	•	insightTrafficSourceType 
+	•	liveOrOnDemand (live_or_on_demand) 
+	•	operatingSystem (operating_system) 
+	•	playbackLocationDetail (playback_location_detail) 
+	•	playbackLocationType (playback_location_type) 
+	•	playlist (playlist_id) 
+	•	province (province_code) 
+	•	subscribedStatus (subscribed_status) 
+	•	trafficSourceDetail (traffic_source_detail) 
+	•	trafficSourceType (traffic_source_type) 
+	•	youtubeProduct  
+Core Metrics (Subject to the Deprecation Policy)
+	•	annotationClickThroughRate (annotation_click_through_rate) 
+	•	annotationCloseRate (annotation_close_rate) 
+	•	averageViewDuration (average_view_duration_seconds) 
+	•	comments (comments) 
+	•	dislikes (dislikes) 
+	•	engagedViews (engaged_views) 
+	•	estimatedMinutesWatched (watch_time_minutes) 
+	•	estimatedRevenue (estimated_partner_revenue) 
+	•	likes (likes) 
+	•	shares (shares) 
+	•	subscribersGained (subscribers_gained) 
+	•	subscribersLost (subscribers_lost) 
+	•	viewerPercentage (views_percentage) 
+	•	views (views) 
+Reach, View, and Watch Time Metrics
+	•	audienceWatchRatio (audience_retention_percentage) 
+	•	averageViewPercentage (average_view_duration_percentage) 
+	•	estimatedRedMinutesWatched (red_watch_time_minutes) 
+	•	playlistViews 
+	•	redViews (red_views) 
+	•	relativeRetentionPerformance 
+	•	videoThumbnailImpressions (video_thumbnail_impressions) 
+	•	videoThumbnailImpressionsClickRate (video_thumbnail_impressions_ctr) 
+Engagement and Playlist Metrics
+	•	averageTimeInPlaylist 
+	•	membershipsCancellationSurveyResponses 
+	•	playlistAverageViewDuration 
+	•	playlistEstimatedMinutesWatched 
+	•	playlistSaves (playlist_saves_added, playlist_saves_removed) 
+	•	playlistStarts (playlist_starts) 
+	•	videosAddedToPlaylists 
+	•	videosRemovedFromPlaylists 
+	•	viewsPerPlaylistStart 
+Annotation and Card Metrics
+	•	annotationClickableImpressions (annotation_clickable_impressions) 
+	•	annotationClicks (annotation_clicks) 
+	•	annotationClosableImpressions (annotation_closable_impressions) 
+	•	annotationCloses (annotation_closes) 
+	•	annotationImpressions (annotation_impressions) 
+	•	cardClickRate (card_click_rate) 
+	•	cardClicks (card_clicks) 
+	•	cardImpressions (card_impressions) 
+	•	cardTeaserClickRate 
+	•	cardTeaserClicks 
+	•	cardTeaserImpressions 
+Livestream Metrics
+	•	averageConcurrentViewers 
+	•	peakConcurrentViewers  
+Financial and Ad Performance Metrics
+	•	adImpressions (ad_impressions) 
+	•	cpm 
+	•	estimatedAdRevenue 
+	•	estimatedRedPartnerRevenue (estimated_partner_red_revenue) 
+	•	grossRevenue 
+	•	monetizedPlaybacks 
+	•	playbackBasedCpm 
+	•	estimated_partner_ad_auction_revenue (Reporting API only) 
+	•	estimated_partner_ad_reserved_revenue (Reporting API only) 
+	•	estimated_partner_transaction_revenue (Reporting API only) 

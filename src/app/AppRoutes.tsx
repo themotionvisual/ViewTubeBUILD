@@ -10,20 +10,11 @@ import ResearchLab from "../views/ResearchLab"
 import DataVisualizations from "../views/DataVizualizations"
 import Settings from "../views/Settings"
 import ReferenceStudio from "../views/ReferenceStudio"
-import ReferenceStudioV2 from "../views/ReferenceStudioV2"
-import Stuff from "../views/Stuff"
 import ResearchLabToolbox from "../views/ResearchLabToolbox"
-import SourcesLabView from "../views/SourcesLabView"
-import ComponentCatalogView from "../views/ComponentCatalogView"
-import ComponentGridView from "../views/ComponentGridView"
 import BenchExplorer from "../views/bench/BenchExplorer"
 import StandaloneBench from "../views/bench/StandaloneBench"
 import EditorV1Page from "../views/EditorV1Page"
-import EditorV1LegacyPage from "../views/EditorV1LegacyPage"
 import ProjectCalendarPage from "../views/ProjectCalendarPage"
-import ChartsGalleryHome from "../views/ChartsGallery/ChartsGalleryHome"
-import MasterGraphsPage from "../views/ChartsGallery/MasterGraphsPage"
-import ToolboxPreviewPage from "../views/ChartsGallery/ToolboxPreviewPage"
 import DataTransparencyCenter from "../views/DataTransparencyCenter"
 import InternalAnalyticsPanel from "../views/InternalAnalyticsPanel"
 import SimpleAnalytics from "../views/SimpleAnalytics"
@@ -31,14 +22,14 @@ import MediaAnalyzer from "../views/MediaAnalyzer"
 import SeoGenerator from "../views/SeoGenerator"
 import VideoPublisher from "../views/VideoPublisher"
 import HookGenerator from "../views/HookGenerator"
-import ThumbnailStudio from "../views/ThumbnailStudio"
 import AlgorithmArchitect from "../views/AlgorithmArchitect"
 import StoryboardStudio from "../views/StoryboardStudio"
 import { ComponentGridLab } from "../components/ComponentGridLab"
-import { IntegratedRemotionEditor } from "../editor-ui/IntegratedRemotionEditor"
 import GraphsPage from "../views/GraphsPage"
 import GraphsShortsRetentionPage from "../views/GraphsShortsRetentionPage"
 import UserGuide from "../views/UserGuide"
+import ComponentAudit from "../views/debug/ComponentAudit"
+import Subscribe from "../views/Subscribe"
 
 export const AppRoutes: React.FC = () => {
  return (
@@ -56,18 +47,14 @@ export const AppRoutes: React.FC = () => {
    <Route path="/studio/internal-analytics" element={<InternalAnalyticsPanel />} />
    <Route path="/account" element={<Settings />} />
    <Route path="/settings" element={<Settings />} />
-   <Route path="/subscribe" element={<Navigate to="/account?panel=billing" replace />} />
+   <Route path="/subscribe" element={<Subscribe />} />
    <Route path="/data-transparency" element={<DataTransparencyCenter />} />
 
-   <Route path="/shorts" element={<Navigate to="/editor-v1" replace />} />
-   <Route path="/editor" element={<Navigate to="/editor-v1" replace />} />
-   <Route path="/editor-v1" element={<EditorV1Page />} />
-   {import.meta.env.DEV && (
-    <Route path="/internal/editor-v1-legacy" element={<EditorV1LegacyPage />} />
-   )}
-   {import.meta.env.DEV && (
-    <Route path="/internal/editor-dev" element={<IntegratedRemotionEditor mode="full" />} />
-   )}
+   <Route path="/shorts" element={<Navigate to="/editor" replace />} />
+   <Route path="/editor" element={<EditorV1Page />} />
+   <Route path="/editor-v1" element={<Navigate to="/editor" replace />} />
+   <Route path="/internal/editor-v1-legacy" element={<Navigate to="/editor" replace />} />
+   <Route path="/internal/editor-dev" element={<Navigate to="/editor" replace />} />
    <Route path="/projects" element={<ProjectCalendarPage />} />
    <Route path="/project-calendar" element={<ProjectCalendarPage />} />
    <Route
@@ -75,15 +62,12 @@ export const AppRoutes: React.FC = () => {
     element={<Navigate to="/reference-studio/toolbox-system" replace />}
    />
    <Route path="/reference-studio/:tabId" element={<ReferenceStudio />} />
-   <Route path="/reference-studio-v2" element={<ReferenceStudioV2 />} />
-   <Route
-    path="/stuff"
-    element={<Navigate to="/stuff/sources-lab" replace />}
-   />
-   <Route path="/stuff/:tabId" element={<Stuff />} />
-   <Route path="/sources-lab" element={<SourcesLabView />} />
-   <Route path="/component-catalog" element={<ComponentCatalogView />} />
-   <Route path="/component-grid" element={<ComponentGridView />} />
+   <Route path="/reference-studio-v2" element={<Navigate to="/reference-studio/charts-gallery" replace />} />
+   <Route path="/stuff" element={<Navigate to="/reference-studio/stuff" replace />} />
+   <Route path="/stuff/:tabId" element={<Navigate to="/reference-studio/stuff" replace />} />
+   <Route path="/sources-lab" element={<Navigate to="/reference-studio/stuff" replace />} />
+   <Route path="/component-catalog" element={<Navigate to="/reference-studio/component-catalog" replace />} />
+   <Route path="/component-grid" element={<Navigate to="/reference-studio/component-grid" replace />} />
    <Route path="/bench/:benchId" element={<BenchExplorer />} />
    <Route
     path="/render-bench/reference-studio"
@@ -93,13 +77,10 @@ export const AppRoutes: React.FC = () => {
    <Route path="/render-bench/:benchId" element={<StandaloneBench />} />
    <Route path="/user-guide" element={<UserGuide />} />
 
-   {/* Charts Gallery Routes */}
-   <Route path="/charts-gallery" element={<ChartsGalleryHome />} />
-   <Route path="/charts-gallery/master-graphs" element={<MasterGraphsPage />} />
-   <Route
-    path="/charts-gallery/toolbox-preview"
-    element={<ToolboxPreviewPage />}
-   />
+   {/* Charts Gallery aliases -> Reference Studio */}
+   <Route path="/charts-gallery" element={<Navigate to="/reference-studio/charts-gallery" replace />} />
+   <Route path="/charts-gallery/master-graphs" element={<Navigate to="/reference-studio/charts-master" replace />} />
+   <Route path="/charts-gallery/toolbox-preview" element={<Navigate to="/reference-studio/charts-toolbox-preview" replace />} />
    <Route
     path="/charts-gallery/research-lab"
     element={<Navigate to="/legacy/research-lab" replace />}
@@ -134,10 +115,11 @@ export const AppRoutes: React.FC = () => {
    <Route path="/seo-generator" element={<SeoGenerator />} />
    <Route path="/video-publisher" element={<VideoPublisher />} />
    <Route path="/hook-generator" element={<HookGenerator />} />
-   <Route path="/thumbnail-studio" element={<ThumbnailStudio />} />
+   <Route path="/thumbnail-studio" element={<Navigate to="/reference-studio/thumbnail-studio" replace />} />
    <Route path="/algorithm-architect" element={<AlgorithmArchitect />} />
    <Route path="/storyboard-studio" element={<StoryboardStudio />} />
    <Route path="/component-grid-lab" element={<ComponentGridLab />} />
+   <Route path="/audit" element={<ComponentAudit />} />
 
    <Route path="*" element={<Navigate to="/" replace />} />
   </Routes>

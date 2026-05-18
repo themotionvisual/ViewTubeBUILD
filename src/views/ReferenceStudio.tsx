@@ -10,6 +10,7 @@ import { useBrain } from "../context/useBrain"
 import { CustomIcon } from "../components/CustomIcon"
 import { AccordionContainer } from "../components/Toolbox"
 import { EXTERNAL_INGEST_SOURCES } from "../services/externalIngestSources"
+import { UI_TOKEN_SCALE } from "../styles/uiTokenScale"
 import {
  ResponsiveContainer,
  LineChart,
@@ -36,6 +37,26 @@ const ToolboxUISystem = React.lazy(
 const WidgetLab = React.lazy(
  () => import("./referenceStudio/WidgetLab"),
 )
+const Stuff = React.lazy(() => import("./Stuff"))
+const ChartsGalleryHome = React.lazy(
+ () => import("./ChartsGallery/ChartsGalleryHome"),
+)
+const MasterGraphsPage = React.lazy(
+ () => import("./ChartsGallery/MasterGraphsPage"),
+)
+const ToolboxPreviewPage = React.lazy(
+ () => import("./ChartsGallery/ToolboxPreviewPage"),
+)
+const UIReferenceLibraryContent = React.lazy(
+ () => import("../components/UIReferenceLibraryContent"),
+)
+const NativeUIKit = React.lazy(() =>
+ import("../components/NativeUIKit").then((module) => ({
+  default: module.NativeUIKit,
+ })),
+)
+const ComponentCatalogView = React.lazy(() => import("./ComponentCatalogView"))
+const ThumbnailStudio = React.lazy(() => import("./ThumbnailStudio"))
 
 const LEGACY_TOOL_TAB_REGISTRY: LegacyToolTabDefinition[] = [
  {
@@ -83,6 +104,14 @@ type ReferenceTab =
  | "analytics-lab"
  | "thumbnail"
  | "widget-lab"
+ | "stuff"
+ | "charts-gallery"
+ | "charts-master"
+ | "charts-toolbox-preview"
+ | "ui-library"
+ | "native-kit"
+ | "component-catalog"
+ | "thumbnail-studio"
  | "legacy"
 
 type LegacyToolTabId =
@@ -97,6 +126,14 @@ interface LegacyToolTabDefinition {
  label: string
  loader: () => Promise<{ default: React.ComponentType<any> }>
  status: "active" | "legacy"
+}
+
+interface ReferenceStudioTabDefinition {
+ id: ReferenceTab
+ label: string
+ accent: string
+ visible: boolean
+ legacy: boolean
 }
 
 interface ReferenceImage {
@@ -197,13 +234,39 @@ const BEST_COMPONENTS = [
  },
 ]
 
-const REFERENCE_TABS: { id: ReferenceTab; label: string; accent: string }[] = [
- { id: "toolbox-system", label: "Toolbox UI System", accent: "bg-[#24D3FF]" },
- { id: "component-grid", label: "Component Grid", accent: "bg-[#C9F830]" },
- { id: "analytics-lab", label: "Analytics Lab", accent: "bg-[#FFB158]" },
- { id: "thumbnail", label: "Thumbnail", accent: "bg-[#FFE357]" },
- { id: "widget-lab", label: "Widget Lab", accent: "bg-[#B14AED]" },
- { id: "legacy", label: "Legacy Tools", accent: "bg-[#FF7497]" },
+const REFERENCE_TABS: ReferenceStudioTabDefinition[] = [
+ { id: "toolbox-system", label: "Toolbox UI System", accent: "bg-[#24D3FF]", visible: true, legacy: false },
+ { id: "component-grid", label: "Component Grid", accent: "bg-[#C9F830]", visible: true, legacy: false },
+ { id: "analytics-lab", label: "Analytics Lab", accent: "bg-[#FFB158]", visible: true, legacy: false },
+ { id: "thumbnail", label: "Thumbnail", accent: "bg-[#FFE357]", visible: true, legacy: false },
+ { id: "widget-lab", label: "Widget Lab", accent: "bg-[#B14AED]", visible: true, legacy: false },
+ { id: "stuff", label: "Stuff", accent: "bg-[#FFB158]", visible: true, legacy: false },
+ { id: "charts-gallery", label: "Charts Gallery", accent: "bg-[#00CCFF]", visible: true, legacy: false },
+ { id: "charts-master", label: "Master Graphs", accent: "bg-[#CCFF00]", visible: true, legacy: false },
+ {
+  id: "charts-toolbox-preview",
+  label: "Charts Toolbox QA",
+  accent: "bg-[#FFE357]",
+  visible: true,
+  legacy: false,
+ },
+ { id: "ui-library", label: "UI Library", accent: "bg-[#B14AED]", visible: true, legacy: false },
+ { id: "native-kit", label: "Native Kit", accent: "bg-[#CCFF00]", visible: true, legacy: false },
+ {
+  id: "component-catalog",
+  label: "Component Catalog",
+  accent: "bg-[#B14AED]",
+  visible: true,
+  legacy: false,
+ },
+ {
+  id: "thumbnail-studio",
+  label: "Thumbnail Studio",
+  accent: "bg-[#FFE357]",
+  visible: true,
+  legacy: false,
+ },
+ { id: "legacy", label: "Legacy Archive", accent: "bg-[#FF7497]", visible: false, legacy: true },
 ]
 
 const DEFAULT_REFERENCE_TAB: ReferenceTab = "toolbox-system"
@@ -727,9 +790,9 @@ const ReferenceStudio: React.FC = () => {
 
  return (
   <div className="min-h-screen w-full bg-[#f3f4f6] flex flex-col p-4 overflow-y-auto custom-scrollbar animate-fade-in">
-   <div className="w-full max-w-[1400px] mx-auto mb-10 bg-white border-[5px] border-black rounded-2xl shadow-[8px_8px_0px_0px_black] p-4">
-    <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
-     {REFERENCE_TABS.map((tab) => {
+    <div className={`w-full max-w-[1400px] mx-auto mb-10 bg-white ${UI_TOKEN_SCALE.borders.standard} ${UI_TOKEN_SCALE.radius.card} ${UI_TOKEN_SCALE.shadows.standard} ${UI_TOKEN_SCALE.spacing.control}`}>
+    <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
+     {REFERENCE_TABS.filter((tab) => tab.visible).map((tab) => {
       const isActive = activeReferenceTab === tab.id
       return (
        <button
@@ -746,8 +809,7 @@ const ReferenceStudio: React.FC = () => {
      })}
     </div>
     <p className="mt-3 text-[9px] font-black uppercase tracking-[0.2em] opacity-50 text-center">
-     Tip: Open <span className="opacity-100">Library</span> to browse the
-     reference code sections.
+     Experimental surfaces are centralized here. Legacy tooling remains available through a hidden archive route.
     </p>
    </div>
 
@@ -767,6 +829,54 @@ const ReferenceStudio: React.FC = () => {
    {activeReferenceTab === "widget-lab" && (
     <React.Suspense fallback={sectionLoadingFallback}>
      <WidgetLab />
+    </React.Suspense>
+   )}
+
+   {activeReferenceTab === "stuff" && (
+    <React.Suspense fallback={sectionLoadingFallback}>
+     <Stuff />
+    </React.Suspense>
+   )}
+
+   {activeReferenceTab === "charts-gallery" && (
+    <React.Suspense fallback={sectionLoadingFallback}>
+     <ChartsGalleryHome />
+    </React.Suspense>
+   )}
+
+   {activeReferenceTab === "charts-master" && (
+    <React.Suspense fallback={sectionLoadingFallback}>
+     <MasterGraphsPage />
+    </React.Suspense>
+   )}
+
+   {activeReferenceTab === "charts-toolbox-preview" && (
+    <React.Suspense fallback={sectionLoadingFallback}>
+     <ToolboxPreviewPage />
+    </React.Suspense>
+   )}
+
+   {activeReferenceTab === "ui-library" && (
+    <React.Suspense fallback={sectionLoadingFallback}>
+     <UIReferenceLibraryContent />
+    </React.Suspense>
+   )}
+
+   {activeReferenceTab === "native-kit" && (
+    <React.Suspense fallback={sectionLoadingFallback}>
+     <NativeUIKit />
+    </React.Suspense>
+   )}
+
+   {activeReferenceTab === "component-catalog" && (
+    <React.Suspense fallback={sectionLoadingFallback}>
+     <ComponentCatalogView />
+    </React.Suspense>
+   )}
+
+   {activeReferenceTab === "thumbnail-studio" && (
+    <React.Suspense fallback={sectionLoadingFallback}>
+     <ThumbnailStudio />
     </React.Suspense>
    )}
 
@@ -1044,13 +1154,13 @@ const ReferenceStudio: React.FC = () => {
               value={largeText}
               onChange={(e) => setLargeText(e.target.value)}
               placeholder="TITLE"
-              className="pop-input w-full p-3 border-[3px] text-sm rounded-lg"
+              className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase text-lg focus:bg-white focus:border-[#00CCFF] outline-none transition-all"
              />
              <input
               value={smallText}
               onChange={(e) => setSmallText(e.target.value)}
               placeholder="SUBTITLE"
-              className="pop-input w-full p-3 border-[3px] text-sm rounded-lg"
+              className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase text-lg focus:bg-white focus:border-[#00CCFF] outline-none transition-all"
              />
             </div>
            </AccordionContainer>
@@ -1106,7 +1216,7 @@ const ReferenceStudio: React.FC = () => {
                  className="w-10 h-10 object-cover border-[2px] border-black rounded-md"
                  alt="ref"
                 />
-                <select className="pop-input flex-1 p-1 text-[9px] font-black uppercase border-[2px] rounded-md">
+                <select className="vt-input-standard flex-1 p-1 text-[9px] font-black uppercase border-[2px] rounded-md">
                  <option>Background</option>
                  <option>Subject</option>
                 </select>
@@ -1159,7 +1269,7 @@ const ReferenceStudio: React.FC = () => {
                  n[i] = e.target.value
                  setPalette(n)
                 }}
-                className="pop-input w-full p-1.5 text-xs font-mono text-center border-[2px] rounded-md uppercase font-black"
+                className="vt-input-standard w-full p-1.5 text-xs font-mono text-center border-[2px] rounded-md uppercase font-black"
                 maxLength={7}
                />
               </div>
@@ -1201,7 +1311,7 @@ const ReferenceStudio: React.FC = () => {
              <select
               value={aspectRatio}
               onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
-              className="pop-input w-full h-[64px] px-6 ${UI_CONSTANTS.border} text-xl rounded-2xl font-[1000] appearance-none bg-white cursor-pointer shadow-[4px_4px_0_0_black] hover:shadow-none transition-all">
+              className="vt-input-standard w-full h-[64px] px-6 ${UI_CONSTANTS.border} text-xl rounded-2xl font-[1000] appearance-none bg-white cursor-pointer shadow-[4px_4px_0_0_black] hover:shadow-none transition-all">
               {Object.values(AspectRatio).map((r) => (
                <option key={r} value={r}>
                 {r}
@@ -1216,7 +1326,7 @@ const ReferenceStudio: React.FC = () => {
              <select
               value={imageSize}
               onChange={(e) => setImageSize(e.target.value as ImageSize)}
-              className="pop-input w-full h-[64px] px-6 ${UI_CONSTANTS.border} text-xl rounded-2xl font-[1000] appearance-none bg-white cursor-pointer shadow-[4px_4px_0_0_black] hover:shadow-none transition-all">
+              className="vt-input-standard w-full h-[64px] px-6 ${UI_CONSTANTS.border} text-xl rounded-2xl font-[1000] appearance-none bg-white cursor-pointer shadow-[4px_4px_0_0_black] hover:shadow-none transition-all">
               {Object.values(ImageSize).map((s) => (
                <option key={s} value={s}>
                 {s}

@@ -5792,7 +5792,7 @@ const ResearchLab: React.FC = () => {
             "bg-gray-100 text-gray-400 cursor-not-allowed"
            : "bg-[#FFDD00] text-black hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_black]"
           }`}>
-          {analyticsLoading ? "Crunching..." : "Generate Report"}
+          {analyticsLoading ? "Crunching..." : "Connect to Create"}
          </button>
         </div>
        </div>

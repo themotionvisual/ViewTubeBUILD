@@ -134,16 +134,44 @@
   100% { transform: translate(-100%, 0); }
 }
 
-@keyframes engagementLineReveal {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+@keyframes engagementLineRevealPrimary {
+  0% {
+    opacity: 0;
+    transform: scaleX(0);
+    transform-origin: right center;
+  }
+  100% {
+    opacity: 1;
+    transform: scaleX(1);
+    transform-origin: right center;
+  }
+}
+
+@keyframes engagementLineRevealSecondary {
+  0% {
+    opacity: 0;
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  100% {
+    opacity: 1;
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
 }
 
 .engagement-line-reveal {
   opacity: 0;
-  animation: engagementLineReveal 600ms ease forwards;
 }
-.engagement-line-delay-0 { animation-delay: 0ms; }
-.engagement-line-delay-1 { animation-delay: 200ms; }
-.engagement-line-delay-2 { animation-delay: 400ms; }
-.engagement-line-delay-3 { animation-delay: 600ms; }
+
+.engagement-line-primary {
+  animation-name: engagementLineRevealPrimary;
+  animation-fill-mode: forwards;
+  animation-timing-function: ease-out;
+}
+
+.engagement-line-secondary {
+  animation-name: engagementLineRevealSecondary;
+  animation-fill-mode: forwards;
+  animation-timing-function: ease-out;
+}

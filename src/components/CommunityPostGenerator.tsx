@@ -50,7 +50,7 @@ export const CommunityPostGenerator: React.FC = () => {
        value={schedule}
        onChange={(e) => setSchedule(e.target.value)}
        placeholder="E.G. UPLOADING A MINECRAFT VIDEO FRIDAY..."
-       className="w-full h-40 p-4 border-[5px] border-black rounded-xl font-bold text-sm uppercase outline-none focus:bg-[#FFDD00]/10 transition-colors resize-none"
+       className="vt-textarea-standard h-40 border-[5px] focus:bg-[#FFDD00]/10"
       />
      </div>
      <button

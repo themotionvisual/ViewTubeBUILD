@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Layers, X, GripVertical, ChevronsUpDown, ChevronsLeftRight, Sparkles } from "lucide-react"
+import { Layers, X, GripVertical, ChevronsUpDown, ChevronsLeftRight, Sparkles, CircleQuestionMark, Minus } from "lucide-react"
 import { VTLottie } from "../../components/VTLottie"
 import type { WidgetDefinition, WidgetInstanceState } from "./types"
 
@@ -198,8 +198,12 @@ export const WidgetShell: React.FC<{
    detailed: "Ensure every video has optimal SEO, links, and settings before going live. Use this as a final safety net for every release."
   },
   "data-edit": {
-   short: "RAPID METADATA EDITOR FOR QUICK ADJUSTMENTS.",
-   detailed: "A streamlined interface for updating titles and descriptions. Use this for quick tweaks when you notice a trending keyword."
+   short: "VIDEO MANAGER FOR UPLOAD + PUBLISHED VIDEO WORKFLOWS.",
+   detailed: "Manage upload and edit flows in one place. Update titles, descriptions, tags, metadata, and publishing options quickly."
+  },
+  "image-generator": {
+   short: "GENERATE THUMBNAIL + END SCREEN IMAGES WITH AI.",
+   detailed: "Create images with style controls and send outputs directly to Community Post, Comment Responder, Thumb AI, and Video Manager."
   },
   "title-rewriter": {
    short: "AI-POWERED TITLE VARIATIONS AND CTR OPTIMIZATION.",
@@ -255,75 +259,104 @@ export const WidgetShell: React.FC<{
      </div>
     )}
 
-    <div className="toggle" onClick={(e) => e.stopPropagation()}>
+    <div className="toggle flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
      {canEdit && editMode ?
-      <div className="flex items-center gap-1.5 mr-2">
-       <div className="flex flex-col gap-1 mr-1">
-        <div className="flex items-center gap-1">
-         <button
-          onClick={onCycleSize}
-          className="widget-header-btn"
-          title="Go Wider">
-          <span className="text-[8px] font-black">+W</span>
-         </button>
-         <button
-          onClick={onDecSize}
-          className="widget-header-btn"
-          title="Go Smaller">
-          <span className="text-[8px] font-black">-W</span>
-         </button>
-        </div>
-        <div className="flex items-center gap-1">
-         <button
-          onClick={onCycleHeight}
-          className="widget-header-btn"
-          title="Go Taller">
-          <span className="text-[8px] font-black">+H</span>
-         </button>
-         <button
-          onClick={onDecHeight}
-          className="widget-header-btn"
-          title="Go Shorter">
-          <span className="text-[8px] font-black">-H</span>
-         </button>
-        </div>
+      <div className="flex flex-col gap-1 mr-1">
+       <div className="flex items-center gap-1">
+        <button
+         onClick={onCycleSize}
+         className="widget-header-btn"
+         title="Go Wider">
+         <span className="text-[8px] font-black">+W</span>
+        </button>
+        <button
+         onClick={onDecSize}
+         className="widget-header-btn"
+         title="Go Smaller">
+         <span className="text-[8px] font-black">-W</span>
+        </button>
        </div>
-       <button
-        onClick={onRemove}
-        className="widget-header-btn"
-        title="Remove widget">
-        <X size={12} strokeWidth={3} />
-       </button>
-       <div className="widget-header-btn cursor-grab active:cursor-grabbing" title="Drag to reorder">
-        <GripVertical size={12} strokeWidth={3} />
+       <div className="flex items-center gap-1">
+        <button
+         onClick={onCycleHeight}
+         className="widget-header-btn"
+         title="Go Taller">
+         <span className="text-[8px] font-black">+H</span>
+        </button>
+        <button
+         onClick={onDecHeight}
+         className="widget-header-btn"
+         title="Go Shorter">
+         <span className="text-[8px] font-black">-H</span>
+        </button>
        </div>
       </div>
      : null}
-     <div className="flex items-center gap-1.5">
-      {hasAI && (
-       <>
-        {typeof aiCost === "number" && (
-         <span className="widget-ai-cost-chip">{aiCost}T</span>
-        )}
-        <button
-         className="widget-header-btn ai-btn"
-         title={aiDisabled && aiDisabledReason ? aiDisabledReason : "Regenerate with AI"}
-         onClick={onRegenerate}
-         disabled={aiDisabled}>
-         <VTLottie
-          animationUrl="https://assets3.lottiefiles.com/packages/lf20_m6cu8sh9.json"
-          size={16}
-         />
-        </button>
-       </>
-      )}
+     
+     {hasAI && (
+      <div className="flex items-center gap-1.5 mr-1">
+       {typeof aiCost === "number" && (
+        <span className="widget-ai-cost-chip">{aiCost}T</span>
+       )}
        <button
-        className={`widget-header-btn toggle-btn ${isSubtitleOpen ? 'open' : 'closed'}`}
-        onClick={() => setIsSubtitleOpen(!isSubtitleOpen)}
-        title="Toggle Info">
-        <div className="icon">
-         <Sparkles size={18} strokeWidth={3} />
-        </div>
+        className="widget-header-btn ai-btn"
+        title={aiDisabled && aiDisabledReason ? aiDisabledReason : "Regenerate with AI"}
+        onClick={onRegenerate}
+        disabled={aiDisabled}>
+        <VTLottie
+         animationUrl="https://assets3.lottiefiles.com/packages/lf20_m6cu8sh9.json"
+         size={16}
+        />
+       </button>
+      </div>
+     )}
+
+     <div className="grid grid-cols-2 grid-rows-2 gap-[3px]">
+       <button
+         type="button"
+         onClick={() => setIsSubtitleOpen(!isSubtitleOpen)}
+         className={`w-[22px] h-[22px] rounded-[5px] border-[2px] border-black flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${isSubtitleOpen ? 'bg-black text-white' : 'bg-white text-black'}`}
+         aria-label="Help"
+         title="Toggle Info"
+       >
+         <CircleQuestionMark size={12} strokeWidth={2.8} />
+       </button>
+       
+       {canEdit && editMode ? (
+         <button
+           type="button"
+           onClick={onRemove}
+           className="w-[22px] h-[22px] rounded-[5px] border-[2px] border-black bg-white flex items-center justify-center transition-all hover:bg-red-100 hover:scale-110 active:scale-95 text-black"
+           aria-label="Close"
+           title="Remove widget"
+         >
+           <X size={12} strokeWidth={3} />
+         </button>
+       ) : (
+         <div className="w-[22px] h-[22px]" />
+       )}
+       
+       {canEdit && editMode ? (
+         <button
+           type="button"
+           className="w-[22px] h-[22px] rounded-[5px] border-[2px] border-black bg-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-grab active:cursor-grabbing text-black"
+           aria-label="Drag"
+           title="Drag to reorder"
+         >
+           <GripVertical size={12} strokeWidth={2.8} />
+         </button>
+       ) : (
+         <div className="w-[22px] h-[22px]" />
+       )}
+       
+       <button
+         type="button"
+         onClick={onToggleCollapse}
+         className={`w-[22px] h-[22px] rounded-[5px] border-[2px] border-black bg-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 text-black`}
+         aria-label="Minimize"
+         title="Toggle Collapse"
+       >
+         <Minus size={12} strokeWidth={3} />
        </button>
      </div>
     </div>

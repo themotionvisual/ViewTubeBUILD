@@ -30,6 +30,7 @@ export interface SubToolboxStat {
   tone?: Tone
   onClick?: () => void
   isActive?: boolean
+  lockTone?: boolean
 }
 
 export interface SubToolboxMetricBadge {
@@ -56,6 +57,7 @@ export interface SubToolboxChartModuleProps {
       onSelect: (value: string) => void
     }
     extraActions?: React.ReactNode
+    rightInlineControls?: React.ReactNode
   }
   activeContext?: {
     title?: React.ReactNode
@@ -83,6 +85,8 @@ export interface SubToolboxChartModuleProps {
     chartInsight: string
     personalInsight: string
   }
+  disableActiveContextBottomBorder?: boolean
+  footerBorderless?: boolean
 }
 
 const toneClass = (tone?: Tone): string => {
@@ -93,6 +97,34 @@ const toneClass = (tone?: Tone): string => {
   if (tone === "purple") return "bg-[#B14AED]"
   if (tone === "orange") return "bg-[#FFB158]"
   return "bg-[#E5E7EB]"
+}
+
+const toneForMetricLabel = (label: string, fallback?: Tone): Tone => {
+  const normalized = label.trim().toUpperCase()
+  if (normalized.includes("CTR")) return "cyan"
+  if (normalized === "RET" || normalized.includes("RETENTION")) return "pink"
+  if (normalized.includes("LIKE")) return "pink"
+  if (normalized.includes("COMMENT")) return "cyan"
+  if (normalized.includes("SHARE")) return "lime"
+  if (normalized.includes("SUB")) return "lime"
+  if (normalized.includes("REVENUE") || normalized === "REV" || normalized.includes("RPM")) return "cyan"
+  if (normalized.includes("VIEWS")) return "yellow"
+  if (normalized.includes("LENGTH") || normalized.includes("WATCH")) return "yellow"
+  if (normalized.includes("AVD")) return "lime"
+  if (normalized.includes("IMP")) return "purple"
+  return fallback ?? "white"
+}
+
+const statButtonClass = (clickable: boolean): string =>
+  `h-full w-auto min-w-[84px] px-0 inline-flex flex-col items-stretch justify-start tabular-nums leading-none overflow-hidden transition-colors ${
+    clickable ? "cursor-pointer hover:bg-gray-50" : "cursor-default"
+  } bg-white`
+
+const normalizeStatLabel = (label: string): string => {
+  const normalized = label.trim().toUpperCase()
+  if (normalized.includes("IMPRESSION")) return "IMPRSNS"
+  if (normalized === "SUBSCRIBERS" || normalized === "SUBSCRIPTIONS") return "SUBS"
+  return label
 }
 
 export const SubToolboxChartModule: React.FC<
@@ -108,6 +140,8 @@ export const SubToolboxChartModule: React.FC<
   footer,
   children,
   metricBadges = [],
+  disableActiveContextBottomBorder = false,
+  footerBorderless = false,
 }) => {
   const tokens = {
     frameBg: theme?.frameBg ?? "#FFFFFF",
@@ -158,6 +192,12 @@ export const SubToolboxChartModule: React.FC<
             </div>
           </div>
 
+          {controlBox?.rightInlineControls ? (
+            <div className="flex items-center justify-end gap-2 pr-2 py-2">
+              {controlBox.rightInlineControls}
+            </div>
+          ) : null}
+
           {controlBox ? (
             <div
               className="relative w-fit h-full min-h-[70px] border-l-[4px] border-l-black rounded-none px-0 py-0 flex flex-col items-center justify-start gap-0 shrink-0 overflow-visible"
@@ -166,29 +206,29 @@ export const SubToolboxChartModule: React.FC<
                 <span className={`font-[1000] leading-[0.9] text-center w-full pt-1 px-1 break-all ${String(controlBox.count).length > 5 ? 'text-[24px]' : 'text-[32px]'}`}>
                   {controlBox.count}
                 </span>
-                <div className="mt-auto mb-0 w-full flex items-center justify-center border-y-[2px] border-black bg-black h-[22px] shrink-0 overflow-hidden">
+                <div className="mt-auto mb-0 w-full flex items-center justify-center h-[22px] shrink-0 overflow-hidden px-1">
                   {controlBox.dropdown ? (
                     <button
                       type="button"
                       onClick={controlBox.dropdown.onToggle}
-                      className="h-full px-2 w-full bg-black text-[#CCFF00] text-[18px] font-black uppercase tracking-[0.01em] inline-flex items-center justify-center gap-1 shrink-0"
+                      className="h-full px-2 w-full bg-white border-[2px] border-black rounded-md text-black text-[11px] font-black uppercase tracking-[0.08em] inline-flex items-center justify-center gap-1 shrink-0"
                     >
-                      <span
-                        className={`text-[12px] leading-none transition-transform duration-150 ${
-                          controlBox.dropdown.isOpen ? "rotate-180" : ""
-                        }`}
-                      >
-                        ▼
-                      </span>
                       <span className="truncate text-center">
                         {controlBox.dropdown.options.find(
                           (o) => o.value === controlBox.dropdown?.value,
                         )?.label ?? controlBox.dropdown.value}
                       </span>
+                      <span
+                        className={`text-[10px] leading-none transition-transform duration-150 ${
+                          controlBox.dropdown.isOpen ? "rotate-180" : ""
+                        }`}
+                      >
+                        ▾
+                      </span>
                     </button>
                   ) : (
-                    <span className="text-[14px] font-black uppercase tracking-[0.01em] text-center leading-none w-full px-2">
-                      {controlBox.countLabel ?? "TOP PERFORMING"}
+                    <span className="text-[14px] font-black uppercase tracking-[0.01em] text-center leading-none w-full px-2" style={{ color: tokens.iconBlockBg }}>
+                      {controlBox.countLabel ?? "BEST"}
                     </span>
                   )}
                 </div>
@@ -215,7 +255,7 @@ export const SubToolboxChartModule: React.FC<
                         style={{ 
                           backgroundColor: isActive ? tokens.iconBlockBg : 'white' 
                         }}
-                        className={`w-full h-8 px-3 text-center text-[12px] font-[1000] uppercase tracking-[0.06em] whitespace-nowrap border-black flex items-center justify-center transition-colors duration-150 ${
+                        className={`w-full h-8 px-3 text-center text-[11px] font-[1000] uppercase tracking-[0.08em] whitespace-nowrap border-black flex items-center justify-center transition-colors duration-150 ${
                           idx === 0 ? "" : "border-t-[4px]"
                         }`}
                         onMouseEnter={(e) => {
@@ -240,7 +280,7 @@ export const SubToolboxChartModule: React.FC<
       </div>
 
       {activeContext ? (
-        <div className="border-b-[4px] border-black px-0 py-0 bg-white h-10 overflow-hidden">
+        <div className={`${disableActiveContextBottomBorder ? "" : "border-b-[4px] border-black"} px-0 py-0 bg-white h-10 overflow-hidden`}>
           <div className="flex items-stretch h-full w-full justify-between">
             {/* Left Section */}
             <div className="flex items-stretch h-full overflow-hidden shrink-0">
@@ -250,23 +290,21 @@ export const SubToolboxChartModule: React.FC<
                 </div>
               )}
               {activeContext.leftStats && (
-                <div className="flex items-stretch h-full">
+                <div className="flex items-stretch h-full divide-x-[4px] divide-black border-r-[4px] border-black">
                   {activeContext.leftStats.map((item) => (
                     <button
                       key={item.label}
                       onClick={item.onClick}
                       disabled={!item.onClick}
-                      className={`h-full w-auto px-0.5 inline-flex flex-col items-stretch justify-start tabular-nums leading-none border-r-[4px] border-black overflow-hidden transition-colors ${
-                        item.onClick ? 'cursor-pointer hover:bg-gray-50' : 'cursor-default'
-                      } ${item.isActive ? 'bg-white' : 'bg-gray-100 grayscale-[0.5]'}`}
+                      className={statButtonClass(Boolean(item.onClick))}
                     >
-                      <span className={`h-5 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 ${item.isActive ? 'text-black' : 'text-black/40'}`}>
+                      <span className="h-8 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 text-black leading-none px-1">
                         {item.value}
                       </span>
                       <span
-                        className={`h-5 text-[11px] font-black tracking-tight uppercase inline-flex items-center justify-center w-full ${toneClass(item.tone)} ${item.isActive ? 'opacity-100' : 'opacity-40 grayscale'}`}
+                        className={`h-5 text-[11px] font-black tracking-[0.11em] uppercase inline-flex items-center justify-center w-full ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
                       >
-                        {item.label}
+                        {normalizeStatLabel(item.label)}
                       </span>
                     </button>
                   ))}
@@ -293,52 +331,48 @@ export const SubToolboxChartModule: React.FC<
 
             {/* Right Section */}
             <div className="flex items-stretch h-full overflow-hidden shrink-0">
-              {activeContext.rightStats && (
-                <div className="flex items-stretch h-full">
-                  {activeContext.rightStats.map((item) => (
-                    <button
-                      key={item.label}
-                      onClick={item.onClick}
-                      disabled={!item.onClick}
-                      className={`h-full w-auto px-0.5 inline-flex flex-col items-stretch justify-start tabular-nums leading-none border-l-[4px] border-black overflow-hidden transition-colors ${
-                        item.onClick ? 'cursor-pointer hover:bg-gray-50' : 'cursor-default'
-                      } ${item.isActive ? 'bg-white' : 'bg-gray-100 grayscale-[0.5]'}`}
-                    >
-                      <span className={`h-5 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 ${item.isActive ? 'text-black' : 'text-black/40'}`}>
-                        {item.value}
-                      </span>
-                      <span
-                        className={`h-5 text-[11px] font-[1000] tracking-tight uppercase inline-flex items-center justify-center w-full ${toneClass(item.tone)} ${item.isActive ? 'opacity-100' : 'opacity-40 grayscale'}`}
-                      >
-                        {item.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
               {activeContext.rightTitle && (
                 <div className="px-2 flex items-center justify-center font-[1000] text-[18px] border-l-[4px] border-black bg-white shrink-0">
                   {activeContext.rightTitle}
                 </div>
               )}
+              {activeContext.rightStats && (
+                <div className="flex items-stretch h-full divide-x-[4px] divide-black">
+                  {activeContext.rightStats.map((item) => (
+                    <button
+                      key={item.label}
+                      onClick={item.onClick}
+                      disabled={!item.onClick}
+                      className={statButtonClass(Boolean(item.onClick))}
+                    >
+                      <span className="h-8 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 text-black leading-none px-1">
+                        {item.value}
+                      </span>
+                      <span
+                        className={`h-5 text-[11px] font-[1000] tracking-[0.11em] uppercase inline-flex items-center justify-center w-full ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
+                      >
+                        {normalizeStatLabel(item.label)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
               {!activeContext.rightStats && activeContext.stats && (
-                <div className="flex items-stretch h-full">
+                <div className="flex items-stretch h-full divide-x-[4px] divide-black">
                   {activeContext.stats.map((item) => (
                     <button
                       key={item.label}
                       onClick={item.onClick}
                       disabled={!item.onClick}
-                      className={`h-full w-auto px-0.5 inline-flex flex-col items-stretch justify-start tabular-nums leading-none border-l-[4px] border-black overflow-hidden transition-colors ${
-                        item.onClick ? 'cursor-pointer hover:bg-gray-50' : 'cursor-default'
-                      } ${item.isActive ? 'bg-white' : 'bg-gray-100 grayscale-[0.5]'}`}
+                      className={statButtonClass(Boolean(item.onClick))}
                     >
-                      <span className={`h-5 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 ${item.isActive ? 'text-black' : 'text-black/40'}`}>
+                      <span className="h-8 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 text-black leading-none px-1">
                         {item.value}
                       </span>
                       <span
-                        className={`h-5 text-[11px] font-[1000] tracking-tight uppercase inline-flex items-center justify-center w-full ${toneClass(item.tone)} ${item.isActive ? 'opacity-100' : 'opacity-40 grayscale'}`}
+                        className={`h-5 text-[11px] font-[1000] tracking-[0.11em] uppercase inline-flex items-center justify-center w-full ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
                       >
-                        {item.label}
+                        {normalizeStatLabel(item.label)}
                       </span>
                     </button>
                   ))}
@@ -349,7 +383,10 @@ export const SubToolboxChartModule: React.FC<
         </div>
       ) : null}
 
-      <div className="flex-1 p-0" style={{ minHeight: layout?.moduleMinHeight ?? "420px" }}>
+      <div
+        className="flex-1 p-0 vt-chart-interior"
+        style={{ minHeight: layout?.moduleMinHeight ?? "420px" }}
+      >
         {content}
       </div>
 
@@ -364,7 +401,7 @@ export const SubToolboxChartModule: React.FC<
       )}
 
       {footer ? (
-        <div className="border-t-[4px] border-black bg-black">
+        <div className={`${footerBorderless ? "" : "border-t-[4px] border-black"} bg-black`}>
           {footer}
         </div>
       ) : null}

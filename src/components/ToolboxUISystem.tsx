@@ -39,6 +39,8 @@ import {
  EyeOff,
  Tag,
  Wrench,
+ Expand,
+ Shrink,
 } from "lucide-react"
 
 import {
@@ -84,26 +86,6 @@ import {
  AreaChartDemo,
 } from "./NativeUIKit"
 import { getPaletteColor } from "../styles/toolboxPalette"
-
-const zoomIn35 = new URL(
- "../assets/toolbox-toggle/zoom-in-35.png",
- import.meta.url,
-).href
-
-const zoomIn50 = new URL(
- "../assets/toolbox-toggle/zoom-in-50.png",
- import.meta.url,
-).href
-
-const zoomOut35 = new URL(
- "../assets/toolbox-toggle/zoom-out-35.png",
- import.meta.url,
-).href
-
-const zoomOut50 = new URL(
- "../assets/toolbox-toggle/zoom-out-50.png",
- import.meta.url,
-).href
 
 const closeIcon21 = new URL(
  "../assets/icons/close_21dp_1F1F1F_FILL0_wght700_GRAD200_opsz20.png",
@@ -436,24 +418,21 @@ export const AnimatedToggleIcon: React.FC<{ open: boolean; size?: number }> = ({
 
  size = 36,
 }) => {
- const openActionIcon = size >= 44 ? zoomOut50 : zoomOut35
- const closeActionIcon = size >= 44 ? zoomIn50 : zoomIn35
-
  return (
   <div
    className="relative group flex items-center justify-center shrink-0 cursor-pointer"
    style={{ width: size, height: size }}>
    <div
     className={`absolute inset-0 w-full h-full transition-all duration-1000 ease-in-out rotate-45 ${open ? "scale-90" : "scale-100"} group-hover:scale-110 group-active:scale-95`}>
-    <img
-     alt="Open toolbox"
-     src={openActionIcon}
-     className={`absolute inset-0 w-full h-full inline-block select-none pointer-events-none transition-all duration-1000 ease-in-out ${open ? "opacity-0 rotate-180 scale-75" : "opacity-80 rotate-0 scale-100 group-hover:opacity-100"}`}
+    <Expand
+     size={size}
+     strokeWidth={2.8}
+     className={`absolute inset-0 m-auto text-black inline-block select-none pointer-events-none transition-all duration-1000 ease-in-out ${open ? "opacity-0 rotate-180 scale-75" : "opacity-80 rotate-0 scale-100 group-hover:opacity-100"}`}
     />
-    <img
-     alt="Close toolbox"
-     src={closeActionIcon}
-     className={`absolute inset-0 w-full h-full inline-block select-none pointer-events-none transition-all duration-1000 ease-in-out ${open ? "opacity-80 rotate-180 scale-100 group-hover:opacity-100" : "opacity-0 rotate-0 scale-75"}`}
+    <Shrink
+     size={size}
+     strokeWidth={2.8}
+     className={`absolute inset-0 m-auto text-black inline-block select-none pointer-events-none transition-all duration-1000 ease-in-out ${open ? "opacity-80 rotate-180 scale-100 group-hover:opacity-100" : "opacity-0 rotate-0 scale-75"}`}
     />
    </div>
   </div>
@@ -1812,13 +1791,13 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
              value={titleText}
              onChange={(e) => setTitleText(e.target.value)}
              placeholder="TITLE"
-             className="pop-input w-full p-3 border-[3px] text-sm rounded-lg"
+             className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase text-lg focus:bg-white focus:border-[#00CCFF] outline-none transition-all"
             />
             <input
              value={hookText}
              onChange={(e) => setHookText(e.target.value)}
              placeholder="SUBTITLE"
-             className="pop-input w-full p-3 border-[3px] text-sm rounded-lg"
+             className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase text-lg focus:bg-white focus:border-[#00CCFF] outline-none transition-all"
             />
            </div>
           </SubToolbox>
@@ -1904,7 +1883,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
                 next[index] = e.target.value
                 setColors(next)
                }}
-               className="pop-input w-full p-1.5 text-xs font-mono text-center border-[2px] rounded-md uppercase font-black"
+               className="vt-input-standard w-full p-1.5 text-xs font-mono text-center border-[2px] rounded-md uppercase font-black"
                maxLength={7}
               />
              </div>

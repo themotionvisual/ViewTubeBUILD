@@ -4,7 +4,7 @@ import { PostActionReflection } from "./PostActionReflection"
 import { generateCommentResponses } from "../services/gemini"
 import { youtubeApiClient } from "../services/youtube/youtubeApiClient"
 import Markdown from "react-markdown"
-import { Toolbox } from "./Toolbox"
+import { SubToolbox } from "./Toolbox"
 
 export const CommentResponder: React.FC = () => {
  const [comments, setComments] = useState("")
@@ -56,14 +56,12 @@ export const CommentResponder: React.FC = () => {
  return (
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full p-8 animate-fade-in bg-white">
    <div className="flex flex-col h-full space-y-6">
-    <Toolbox
-     variant="sub"
+    <SubToolbox
      title="Input Comments"
      icon={<MessageCircle size={24} />}
      headerColor="bg-[#FF3399]"
      collapsible
-     isOpenInitial={true}
-     >
+     isOpenInitial={true}>
       <div className="space-y-4">
        <div className="flex items-center justify-between">
         <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
@@ -101,7 +99,7 @@ export const CommentResponder: React.FC = () => {
         value={comments}
         onChange={(e) => setComments(e.target.value)}
         placeholder="PASTE COMMENTS HERE OR FETCH REAL ONES..."
-        className="w-full h-40 p-4 border-[4px] border-black rounded-xl font-bold text-sm uppercase outline-none focus:bg-[#FF3399]/10 transition-colors resize-none"
+        className="vt-textarea-standard h-40"
        />
       </div>
      <button
@@ -111,26 +109,24 @@ export const CommentResponder: React.FC = () => {
       {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
       Generate Replies
      </button>
-    </Toolbox>
+    </SubToolbox>
    </div>
 
      <div className="flex flex-col h-full space-y-6">
      {result ? (
-     <Toolbox
-      variant="sub"
+     <SubToolbox
       title="Generated Replies"
       icon={<Sparkles size={24} />}
       headerColor="bg-[#FFB158]"
       collapsible
-      isOpenInitial={true}
-      >
+      isOpenInitial={true}>
       <div className="prose prose-sm max-w-none font-bold text-black/80 prose-headings:font-black prose-headings:uppercase overflow-y-auto max-h-[400px] custom-scrollbar pr-4">
        <Markdown>{result}</Markdown>
       </div>
       <div className="mt-8 pt-6 border-t-[4px] border-black/10 animate-in slide-in-from-bottom-4 duration-700">
        <PostActionReflection toolId="COMMENT_RESPONDER" />
       </div>
-     </Toolbox>
+     </SubToolbox>
      ) : (
      <div className="h-full min-h-[400px] flex flex-col items-center justify-center border-[4px] border-dashed border-black/20 rounded-[32px] bg-gray-50 p-8 text-center">
       <MessageCircle size={80} className="mb-6 text-black/20" />

@@ -1,0 +1,53 @@
+---
+name: vt-e1-visual-fx-studio
+description: Build and evolve VT_E1 Unified FX Studio with live preview, clip-first apply, and overlay clip generation contracts.
+---
+
+# VT_E1 Visual FX Studio
+
+Use this skill when:
+- Adding or modifying any effect in Unified FX Studio.
+- Building effect panels, parameter schemas, live previews, or overlay clip creation.
+- Integrating Remotion visual effects (noise, glitch, leaks, starburst, shader-like visuals).
+
+Primary references:
+- `/Users/cwb/Downloads/viewtube/REMOTION_EDITOR_MASTER_SPEC.md` (FX contracts)
+- `/Users/cwb/Downloads/viewtube/docs/VIDEO_EDITOR/Editor Research/VIEWTUBE_VIDEO_EDITOR_UNIFIED_INTENT.md` (UX simplicity rules)
+- `/Users/cwb/Downloads/viewtube/docs/VIDEO_EDITOR/Editor Research/VT_E1_MASTERPLAN_100_PLUS.md` (feature priorities)
+
+## Core Contract
+Implement effects via a registry-driven model:
+- `EffectDefinition`
+- `EffectParamDefinition`
+- `EffectSessionState`
+- `OverlayEffectPayload`
+
+One active effect editor at a time. Live preview always reflects current active effect.
+
+## Workflow
+1. **Register effect** with id/label/category/defaults/param ranges.
+2. **Bind preview renderer** to active session values.
+3. **Expose target mode** (`selected-clip` or `new-overlay-clip`) with clip-first default.
+4. **Implement apply mapper** for:
+   - effect stack update on selected clip,
+   - transparent overlay clip creation.
+5. **Validate timeline behavior** (move/resize/reorder overlay clips).
+
+## UI Rules
+- Keep parameter controls consistent across effects.
+- Show concise "what this changes" summary.
+- Use one unified action row (apply/create).
+- Avoid duplicate buttons and mixed terminology.
+
+## Technical Rules
+- Deterministic seeded randomness only.
+- No heavy filter work outside active preview needs.
+- Effect defaults should be visible and meaningful.
+- Max settings should produce clearly stronger output without clipping artifacts.
+
+## Validation Checklist
+- Live preview updates on every parameter change.
+- Switching effect resets visible controls to active effect only.
+- Overlay clips render with transparent payload and expected blend mode.
+- Saved presets restore exact values.
+- Fixed seed yields reproducible frame output.

@@ -44,7 +44,7 @@ const SYNC_MERGE_POLICY_KEY = "vt_sync_merge_policy"
 const OPTIONAL_VIDEO_METRICS_STORAGE_KEY = "vt_optional_video_metrics_enabled"
 
 const DEFAULT_VIDEO_SYNC_BATCH_STATE: VideoSyncBatchState = {
- initialLimit: 500,
+ initialLimit: Infinity,
  incrementSize: 250,
  cursor: 0,
  hasMore: true,
@@ -387,13 +387,11 @@ export class SyncCoordinator {
    return
   }
 
-  const shouldStartFresh = mergePolicy === "latest_only"
-  let cacheData: Record<string, any> = shouldStartFresh
-   ? { lastSynced: null }
-   : {
-      ...prevCache,
-      lastSynced: prevCache.lastSynced || null,
-     }
+   const shouldStartFresh = mergePolicy === "latest_only"
+   let cacheData: Record<string, any> = {
+    ...prevCache,
+    lastSynced: prevCache.lastSynced || null,
+   }
 
   try {
    resetYouTubeApiCallCounts()
@@ -413,7 +411,7 @@ export class SyncCoordinator {
    const isNextBatch = options.batchMode === "next"
    const maxVideos = isNextBatch
     ? batchState.cursor + batchState.incrementSize
-    : batchState.initialLimit
+    : Infinity
 
    let coreSyncResult: CoreSyncResult | null = null
    try {
@@ -442,7 +440,7 @@ export class SyncCoordinator {
 
     // Convert CoreVideoBaseline to the existing cache format
     const existingVideos =
-     !shouldStartFresh && Array.isArray(prevCache.videos) ? prevCache.videos : []
+     Array.isArray(prevCache.videos) ? prevCache.videos : []
     const coreVideos = coreSyncResult.videoBaseline.map((v) => ({
      videoId: v.videoId,
      title: v.title,
@@ -557,10 +555,10 @@ export class SyncCoordinator {
 
     try {
      const existingVideos =
-      !shouldStartFresh && Array.isArray(prevCache.videos) ? prevCache.videos : []
+      Array.isArray(prevCache.videos) ? prevCache.videos : []
      const batchLimit = isNextBatch
       ? batchState.cursor + batchState.incrementSize
-      : batchState.initialLimit
+      : Infinity
      const incrementalMax =
       existingVideos.length > 0
        ? Math.max(batchLimit, existingVideos.length)
@@ -572,7 +570,7 @@ export class SyncCoordinator {
       lastError: null,
       stages: [
        "Fetching profile (legacy fallback)",
-       `Fetching videos (${isNextBatch ? "next +250" : "initial 500"})`,
+       `Fetching videos (${isNextBatch ? "next +250" : "all available"})`,
       ],
      })
      const fetchedVideos = await ytApiQueue.add(() =>
@@ -691,22 +689,14 @@ export class SyncCoordinator {
     .map((video) => String(video?.videoId || "").trim())
     .filter(Boolean)
 
-   cacheData.analyticsByWindow = shouldStartFresh
-    ? {}
-    : { ...(cacheData.analyticsByWindow || {}) }
-   cacheData.availabilityByWindow = shouldStartFresh
-    ? {}
-    : {
+   cacheData.analyticsByWindow = { ...(cacheData.analyticsByWindow || {}) }
+   cacheData.availabilityByWindow = {
        ...(cacheData.availabilityByWindow || {}),
       }
-   cacheData.metricCapabilitiesByWindow = shouldStartFresh
-    ? {}
-    : {
+   cacheData.metricCapabilitiesByWindow = {
        ...(cacheData.metricCapabilitiesByWindow || {}),
       }
-   cacheData.lastSyncedByWindow = shouldStartFresh
-    ? {}
-    : {
+   cacheData.lastSyncedByWindow = {
        ...(cacheData.lastSyncedByWindow || {}),
       }
 

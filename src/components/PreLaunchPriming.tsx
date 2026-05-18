@@ -153,7 +153,7 @@ const PreLaunchPriming: React.FC<PreLaunchPrimingProps> = ({
             setInputData({ ...inputData, topic: e.target.value })
            }
            placeholder="E.G. HOW TO PLAN A WEEKLY CONTENT SYSTEM"
-           className="pop-input w-full p-4 font-black uppercase text-sm border-[4px] border-black"
+           className="vt-input-standard w-full p-4 font-black uppercase text-sm border-[4px] border-black"
           />
          </div>
          <div className="space-y-2">
@@ -167,7 +167,7 @@ const PreLaunchPriming: React.FC<PreLaunchPrimingProps> = ({
             setInputData({ ...inputData, niche: e.target.value })
            }
            placeholder="E.G. CREATOR EDUCATION"
-           className="pop-input w-full p-4 font-black uppercase text-sm border-[4px] border-black"
+           className="vt-input-standard w-full p-4 font-black uppercase text-sm border-[4px] border-black"
           />
          </div>
         </div>
@@ -183,7 +183,7 @@ const PreLaunchPriming: React.FC<PreLaunchPrimingProps> = ({
             setInputData({ ...inputData, audience: e.target.value })
            }
            placeholder="E.G. HISTORY BUFFS"
-           className="pop-input w-full p-4 font-black uppercase text-sm border-[4px] border-black"
+           className="vt-input-standard w-full p-4 font-black uppercase text-sm border-[4px] border-black"
           />
          </div>
         ) : (
@@ -198,7 +198,7 @@ const PreLaunchPriming: React.FC<PreLaunchPrimingProps> = ({
             setInputData({ ...inputData, longFormTitle: e.target.value })
            }
            placeholder="E.G. THE BATTLE OF WATERLOO"
-           className="pop-input w-full p-4 font-black uppercase text-sm border-[4px] border-black"
+           className="vt-input-standard w-full p-4 font-black uppercase text-sm border-[4px] border-black"
           />
          </div>
         )}

@@ -56,8 +56,6 @@ export const useDashboardData = () => {
   const subsTotal = (authSubs && authSubs > 0) ? authSubs : (summaryLifetime.totals.subscribersGained || 0)
   const viewsTotal = (authViews && authViews > 0) ? authViews : (summaryLifetime.totals.views || 0)
   
-  console.log(`[useDashboardData] DEBUG: AuthSubs=${authSubs}, AuthViews=${authViews}, SummarySubs=${summaryLifetime.totals.subscribersGained}, FinalSubs=${subsTotal}`)
-
   const resolvedSubscribers = Math.max(0, Math.round(subsTotal))
 
   const views28d = summary28d.totals.views
@@ -179,6 +177,10 @@ export const useDashboardData = () => {
     { label: "Studio Hub", to: "/studio" },
     { label: "Schedule", to: "/project-calendar" },
     { label: "Settings", to: "/settings" },
+    { label: "AI Journal", to: "/studio" },
+    { label: "Comment Responder", to: "/studio" },
+    { label: "Brain Hub", to: "/performance" },
+    { label: "Subscription", to: "/subscribe" },
   ]
 
   const todayTasks = upcomingDays.find((d) => d.isToday)?.tasks || []
@@ -284,6 +286,7 @@ export const useDashboardData = () => {
     lastSyncComplete,
     channelHandle,
     globalSyncData,
+    statBlocks: statBlocks28d,
     statBlocks28d,
     statBlocksLifetime,
     rawMetrics,

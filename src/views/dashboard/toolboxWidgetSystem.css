@@ -276,7 +276,7 @@
 .dashboard-barrier .vt-input:focus,
 .dashboard-barrier .vt-textarea:focus {
   border-color: var(--widget-color, #00CCFF);
-  box-shadow: inset 0 0 0 1px var(--widget-color, #00CCFF);
+  box-shadow: none;
   outline: none;
 }
 
@@ -455,6 +455,14 @@
   box-shadow: 3px 3px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent);
 }
 
+.dashboard-barrier .vt-button.primary {
+  background: var(--widget-color, #4FFF5B);
+}
+
+.dashboard-barrier .vt-button.secondary {
+  background: color-mix(in srgb, var(--widget-color, #000) 30%, white);
+}
+
 .dashboard-barrier .vt-button:hover {
   transform: translate(1.5px, 1.5px);
   box-shadow: 1.5px 1.5px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent);
@@ -463,15 +471,6 @@
 .dashboard-barrier .vt-button:active {
   transform: translate(3px, 3px);
   box-shadow: 0px 0px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent);
-}
-
-/* Primary buttons use the widget's color */
-.dashboard-barrier .vt-button.primary {
-  background: var(--widget-color, #4FFF5B);
-}
-
-.dashboard-barrier .vt-button.secondary {
-  background: color-mix(in srgb, var(--widget-color, #000) 30%, white);
 }
 
 /* Enlarged Button Icons */
@@ -596,7 +595,6 @@
   100% { transform: translateX(-100%); }
 }
 
-/* ═══ TAB SELECTORS ═══ */
 .dashboard-barrier .vt-tab-group {
   display: flex;
   gap: 2px;

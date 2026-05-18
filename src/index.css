@@ -39,3 +39,169 @@ body,
   scrollbar-width: auto;
   scrollbar-color: #000 #fff;
 }
+/* Video manager description: hide scrollbar chrome while keeping scroll + resize handle */
+.vm-scrollless {
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.vm-scrollless::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Canonical text input + textarea surface (matches Video Manager title/description style) */
+.vt-input-standard {
+  width: 100%;
+  background: color-mix(in srgb, var(--vt-subtoolbox-fill, #f6f6f6) 16%, #ffffff);
+  border: 3px solid #000;
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 0 var(--vt-subtoolbox-shadow, rgb(0 0 0 / 0.25));
+  padding: 0.75rem;
+  font-weight: 800;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  text-transform: uppercase;
+  outline: none;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.12s ease;
+}
+
+.vt-input-standard[data-border-width="4"] {
+  border-width: 4px;
+}
+
+.vt-input-standard:focus {
+  border-color: #24d3ff;
+  background: color-mix(in srgb, var(--vt-subtoolbox-fill, #ffffff) 10%, #ffffff);
+}
+
+.vt-textarea-standard {
+  min-height: 116px;
+  padding: 1rem;
+  resize: vertical;
+}
+
+.vt-textarea-standard:focus {
+  border-color: #24d3ff;
+  background: #fff;
+}
+
+/* Shared layout variants for standardized field sizing behavior */
+.vt-field-fill {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  resize: vertical;
+}
+
+.vt-field-content {
+  width: 100%;
+  min-height: 96px;
+}
+
+/* Global hierarchy tiers */
+.vt-main-toolbox-content {
+  --vt-level1-stroke: 4px;
+  --vt-level1-shadow: 6px;
+}
+
+.vt-subtoolbox-content {
+  --vt-inner-stroke: 3px;
+  --vt-inner-shadow: 4px;
+}
+
+/* Optional shared utility surfaces for first-level and inner components */
+.vt-level1-surface {
+  border: var(--vt-level1-stroke, 4px) solid #000;
+  border-radius: 16px;
+  box-shadow: var(--vt-level1-shadow, 6px) var(--vt-level1-shadow, 6px) 0 0 var(--vt-level1-shadow-color, rgb(0 0 0 / 0.35));
+}
+
+.vt-inner-surface {
+  border: var(--vt-inner-stroke, 3px) solid #000;
+  border-radius: 12px;
+  box-shadow: var(--vt-inner-shadow, 4px) var(--vt-inner-shadow, 4px) 0 0 var(--vt-subtoolbox-shadow, rgb(0 0 0 / 0.3));
+  background: color-mix(in srgb, var(--vt-subtoolbox-fill, #fff) 14%, #fff);
+}
+
+/* Global field normalization: unified placeholder + black-to-blue focus outline */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+textarea,
+select {
+  outline: none;
+  border-color: #000;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus,
+textarea:focus,
+select:focus {
+  border-color: #24d3ff !important;
+  box-shadow: 0 0 0 2px rgb(36 211 255 / 0.2);
+  background-color: var(--vt-field-bg, #fff) !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"])::placeholder,
+textarea::placeholder {
+  color: rgb(0 0 0 / 0.35);
+  font-weight: 700;
+}
+
+/* Chart interior hard isolation: prevents cross-toolbox UI styles from leaking into Data Visuals modules */
+.vt-chart-interior,
+.vt-chart-interior * {
+  font-family: inherit;
+}
+
+.vt-chart-interior {
+  isolation: isolate;
+  --vt-field-bg: #fff;
+  text-transform: none;
+  letter-spacing: normal;
+  word-spacing: normal;
+  font-variant-ligatures: normal;
+  font-variant-numeric: normal;
+}
+
+.vt-chart-interior .recharts-wrapper,
+.vt-chart-interior .recharts-surface,
+.vt-chart-interior svg,
+.vt-chart-interior canvas {
+  max-width: 100%;
+}
+
+.vt-chart-interior .recharts-tooltip-wrapper * {
+  text-transform: none;
+}
+
+.vt-chart-interior .recharts-cartesian-axis-tick-value,
+.vt-chart-interior .recharts-text,
+.vt-chart-interior .recharts-legend-item-text {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.vt-chart-interior svg,
+.vt-chart-interior svg * {
+  filter: none;
+  backdrop-filter: none;
+  mix-blend-mode: normal;
+}
+
+.vt-chart-interior button,
+.vt-chart-interior input,
+.vt-chart-interior textarea,
+.vt-chart-interior select {
+  box-shadow: none;
+}
+
+.vt-chart-interior [class*="shadow-"] {
+  filter: none;
+}

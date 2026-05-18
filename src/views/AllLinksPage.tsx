@@ -34,7 +34,7 @@ const sections: Array<{ title: string; items: Array<{ label: string; href: strin
   title: "Hidden Tool Routes",
   items: [
    { label: "Media Analyzer", href: "/media-analyzer", note: "Asset and content diagnostics" },
-   { label: "SEO Generator", href: "/seo-generator", note: "Title/description optimization" },
+   { label: "Video Publisher", href: "/seo-generator", note: "Title/description optimization" },
    { label: "Video Publisher", href: "/video-publisher", note: "Publishing workflow" },
    { label: "Hook Generator", href: "/hook-generator", note: "Hook ideation and testing" },
    { label: "Thumbnail Studio", href: "/thumbnail-studio", note: "Thumbnail creation and analysis" },

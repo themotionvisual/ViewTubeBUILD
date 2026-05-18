@@ -3,6 +3,7 @@ import React, {
  useState,
  useCallback,
  useEffect,
+ useRef,
 } from "react"
 import type { ReactNode } from "react"
 import type {
@@ -34,6 +35,7 @@ import {
 import type { GlobalDataContextProps } from "./GlobalDataContextTypes"
 import { emitSignal, consultBrain, getBrainMemory, reflectAndCompress, initializeBrain } from "../services/brain"
 
+let lastAuthAbortLogAt = 0
 
 const loadPersistedBrain = (): WorkspaceBrain => {
  try {
@@ -178,24 +180,31 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
  const [syncStatus, setSyncStatus] =
   useState<ChannelAnalysisSyncStatus>(defaultSyncStatus)
  const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
-  try {
-   const raw = localStorage.getItem("vt_video_sync_batch_state")
-   if (!raw) return defaultSyncBatch
-   return {
-    ...defaultSyncBatch,
-    ...(JSON.parse(raw) as Partial<VideoSyncBatchState>),
+   try {
+    const raw = localStorage.getItem("vt_video_sync_batch_state")
+    if (!raw) return defaultSyncBatch
+    return {
+     ...defaultSyncBatch,
+     ...(JSON.parse(raw) as Partial<VideoSyncBatchState>),
+    }
+   } catch {
+    return defaultSyncBatch
    }
-  } catch {
-   return defaultSyncBatch
-  }
- })
+  })
+  const [aiModel, setAiModel] = useState<string>(() => localStorage.getItem("vt_ai_model") || "gemini-3.1-flash-lite")
+  const autoRestoreInFlightRef = useRef(false)
+  const lastAutoRestoreAtRef = useRef(0)
+
+  useEffect(() => {
+    localStorage.setItem("vt_ai_model", aiModel)
+  }, [aiModel])
 
  const globalSyncData = useCallback(
   async (options?: { batchMode?: "initial" | "next" }) => {
    setIsSyncing(true)
    try {
     if ((options?.batchMode || "initial") === "initial") {
-     await clearAnalyticsStateForFreshSync()
+     // await clearAnalyticsStateForFreshSync() // Stop depopulation, keep old data until new data arrives
     }
     const { syncCoordinator } = await import("../services/SyncCoordinator")
     await syncCoordinator.syncYouTube(true, {
@@ -379,12 +388,17 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
     if (!authState.isAuthenticated) return
 
     const restoreFastBoot = async () => {
+      if (autoRestoreInFlightRef.current) return
       const lastSync = authState.fastAnalytics?.lastSyncedAt || authState.syncedAt
       const isStale = lastSync ? (Date.now() - new Date(lastSync).getTime() > 4 * 60 * 60 * 1000) : true
       const hasFastAnalytics = !!authState.fastAnalytics
       const hasRecentVideos = brain.channelyticsState.allData.length > 0
 
       if (!hasFastAnalytics || !hasRecentVideos || isStale) {
+        const now = Date.now()
+        if (now - lastAutoRestoreAtRef.current < 60_000) return
+        autoRestoreInFlightRef.current = true
+        lastAutoRestoreAtRef.current = now
         console.log(`♻️ AUTH RESTORE: Data is ${isStale ? "STALE" : "MISSING"}. Triggering Auto-Restore...`)
         try {
           const { syncAuthoritativeMetadata, syncFastAnalyticsTotals, syncRecentVideoSnapshot } = await import("../services/youtube/coreLifetimeSync")
@@ -395,6 +409,8 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
           }
         } catch (err) {
           console.warn("Auto-restore fast boot failed:", err)
+        } finally {
+          autoRestoreInFlightRef.current = false
         }
       }
     }
@@ -590,7 +606,11 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
     console.warn("Fast boot metadata sync failed:", metaErr)
    }
   } catch (err) {
-   console.warn("User aborted login or auth failed", err)
+   const now = Date.now()
+   if (now - lastAuthAbortLogAt > 8000) {
+    lastAuthAbortLogAt = now
+    console.warn("User aborted login or auth failed", err)
+   }
   }
  }, [])
 
@@ -674,6 +694,8 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
     consultBrain,
     getBrainMemory,
     reflectAndCompress,
+    aiModel,
+    setAiModel,
    }}>
    {children}
  </GlobalDataContext.Provider>
