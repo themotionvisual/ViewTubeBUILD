@@ -45,3 +45,6 @@ desktop.ini
 build_log.txt
 file_list.txt
 standalone-chart-dashboard.html
+
+# Local nested repo (exclude from deploy)
+Roo-Code/
