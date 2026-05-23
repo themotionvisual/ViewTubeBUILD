@@ -20,8 +20,8 @@ import type {
  AnalyticsWindow,
  CanonicalMetricKey,
  CanonicalVideoRow,
-} from "../services/analyticsContract"
-import { getMasterRows, getMetricSummary } from "../services/analyticsSelectors"
+} from "../services/analytics/DataStore"
+import { getMasterRows, getMetricSummary } from "../services/analytics/Selectors"
 import { useBrain } from "../context/useBrain"
 
 const WINDOW_OPTIONS: AnalyticsWindow[] = ["28d", "7d", "90d", "365d", "lifetime"]

@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import { useBrain } from "../../context/useBrain"
-import { getMasterRows, getMetricSummary, metricCellValue } from "../../services/analyticsSelectors"
-import { readYouTubeAnalyticsCache } from "../../services/canonicalAnalyticsStore"
+import { getMasterRows, getMetricSummary, metricCellValue } from "../../services/analytics/Selectors"
+import { readYouTubeAnalyticsCache } from "../../services/analytics/DataStore"
 import { reportToRows } from "../performanceHubUtils"
 
 const formatHumanNumber = (value: unknown): string => {

@@ -472,4 +472,8 @@ This roadmap provides a comprehensive implementation strategy for ViewTube Creat
 
 **Document Version:** 1.0  
 **Last Updated:** April 8, 2026  
+<<<<<<< ours
 **Next Review:** Weekly during implementation
+=======
+**Next Review:** Weekly during implementation
+>>>>>>> theirs

@@ -3,10 +3,10 @@ import type {
  AnalyticsWindow,
  CanonicalMetricKey,
  CanonicalVideoRow,
-} from "../../services/analyticsContract"
-import { getMasterRows, getMetricSummary } from "../../services/analyticsSelectors"
+} from "../../services/analytics/DataStore"
+import { getMasterRows, getMetricSummary } from "../../services/analytics/Selectors"
 import { useBrain } from "../../context/useBrain"
-import { readYouTubeAnalyticsCache } from "../../services/canonicalAnalyticsStore"
+import { readYouTubeAnalyticsCache } from "../../services/analytics/DataStore"
 import { reportToRows } from "../performanceHubUtils"
 
 const metricValue = (

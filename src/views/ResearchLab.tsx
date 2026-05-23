@@ -15,11 +15,11 @@ import { useBrain } from "../context/useBrain"
 import {
  getMasterRows,
  canonicalRowsToMasterTableRows,
-} from "../services/analyticsSelectors"
+} from "../services/analytics/Selectors"
 import {
  collectAvailableCanonicalStats,
  type CanonicalStatKey,
-} from "../services/canonicalStatsEngine"
+} from "../services/analytics/DataStore"
 import { UniversalDataTable } from "../components/UniversalDataTable"
 import { Database } from "lucide-react"
 import {

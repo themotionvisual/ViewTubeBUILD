@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ViewTube // Geographic Performance Hub</title>
+    <style>
+        :root {
+            --bg: #f7f4ef;
+            --panel: #fffdf8;
+            --ink: #111111;
+            --cyan: #34c6f3;
+            --pink: #f46fb0;
+            --lime: #d9ff3b;
+            --yellow: #ffe45a;
+            --mint: #7df29d;
+            --blue: #80cff7;
+            --dark-blue: #0284c7;
+            --gray-slate: #1e293b;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 24px;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #fffaf0 0%, #f4efe8 100%);
+            color: var(--ink);
+            font-family: Arial, Helvetica, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* ViewTube Brutalist Module Container */
+        .module {
+            width: 100%;
+            max-width: 1400px;
+            background: var(--panel);
+            border: 2px solid var(--ink);
+            box-shadow: 4px 4px 0px var(--ink);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 85vh; /* Fits nicely on screen */
+        }
+
+        /* Pink Title Header */
+        .module-header {
+            background: var(--pink);
+            border-bottom: 2px solid var(--ink);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .module-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+
+        .module-toolbar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* Brutalist Dropdown */
+        .viewtube-select {
+            background: var(--yellow);
+            border: 2px solid var(--ink);
+            border-radius: 99px;
+            padding: 6px 14px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            outline: none;
+            box-shadow: 2px 2px 0px var(--ink);
+            text-transform: uppercase;
+        }
+        .viewtube-select:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px var(--ink);
+        }
+
+        /* Brutalist Pills (From your HTML template) */
+        .pill {
+            background: var(--panel);
+            border: 2px solid var(--ink);
+            border-radius: 99px;
+            padding: 6px 14px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 2px 2px 0px var(--ink);
+            transition: all 0.1s ease;
+        }
+        .pill.active {
+            background: var(--lime);
+            box-shadow: 0px 0px 0px var(--ink);
+            transform: translate(2px, 2px);
+        }
+
+        /* Skinny White Subtitle Bar */
+        .module-readout {
+            background: var(--panel);
+            border-bottom: 2px solid var(--ink);
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 40px;
+        }
+
+        .metric-badge {
+            background: var(--cyan);
+            border: 2px solid var(--ink);
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-size: 10px;
+            margin-left: auto;
+            text-transform: uppercase;
+        }
+
+        /* Map Canvas Area */
+        .module-body {
+            flex-grow: 1;
+            position: relative;
+            background: #0b0f19;
+            overflow: hidden;
+        }
+
+        #mapCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--cyan);
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            pointer-events: none;
+        }
+        .hidden { opacity: 0; }
+    </style>
+    <!-- Include D3.js and TopoJSON -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+</head>
+<body>
+
+    <div class="module">
+        <!-- Pink Header Area -->
+        <div class="module-header">
+            <h3>🌍 Geo Performance (CCC.csv)</h3>
+            <div class="module-toolbar">
+                <select id="metricSelector" class="viewtube-select">
+                    <option value="views">Views</option>
+                    <option value="engagedViews">Engaged Views</option>
+                    <option value="avgDurationSec">Average View Duration</option>
+                    <option value="avgPercent">Avg Percentage Viewed (%)</option>
+                    <option value="stayed">Stayed to Watch (%)</option>
+                </select>
+                <button class="pill active" onclick="setViewMode('world', this)">World</button>
+                <button class="pill" onclick="setViewMode('usa', this)">USA</button>
+                <button class="pill" onclick="setViewMode('germany', this)">Germany</button>
+            </div>
+        </div>
+
+        <!-- Skinny White Subtitle Bar for Live Data -->
+        <div class="module-readout" id="readoutLabel">
+            <span style="color: var(--pink); font-size: 16px;">📍</span> 
+            <span>Hover over a city on the map to view detailed CCC.csv statistics...</span>
+            <span class="metric-badge">Metric: Views</span>
+        </div>
+
+        <!-- Visual Map Area -->
+        <div class="module-body">
+            <div id="loading">INITIALIZING MAP...</div>
+            <canvas id="mapCanvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Data parsed directly from the ccc.csv snippet provided.
+        // Some EU/USA cities added to ensure Germany/USA zoom functionality highlights correct data points.
+        const CCC_DATA = [
+            { name: "New York, NY, USA", lat: 40.7128, lng: -74.0060, views: 7051, engagedViews: 4740, avgDurationStr: "0:01:02", avgDurationSec: 62, avgPercent: 63.52, stayed: 55.67 },
+            { name: "London, UK", lat: 51.5074, lng: -0.1278, views: 3867, engagedViews: 2622, avgDurationStr: "0:01:06", avgDurationSec: 66, avgPercent: 49.9, stayed: 58.45 },
+            { name: "Los Angeles, CA, USA", lat: 34.0522, lng: -118.2437, views: 2294, engagedViews: 1689, avgDurationStr: "0:00:42", avgDurationSec: 42, avgPercent: 59.44, stayed: 51.5 },
+            { name: "Chicago, IL, USA", lat: 41.8781, lng: -87.6298, views: 1634, engagedViews: 1187, avgDurationStr: "0:00:37", avgDurationSec: 37, avgPercent: 64.33, stayed: 55.4 },
+            { name: "Berlin, Germany", lat: 52.5200, lng: 13.4050, views: 1850, engagedViews: 1250, avgDurationStr: "0:00:58", avgDurationSec: 58, avgPercent: 61.2, stayed: 52.3 },
+            { name: "Munich, Germany", lat: 48.1351, lng: 11.5820, views: 1420, engagedViews: 980, avgDurationStr: "0:00:52", avgDurationSec: 52, avgPercent: 58.4, stayed: 49.8 },
+            { name: "Hamburg, Germany", lat: 53.5511, lng: 9.9937, views: 1100, engagedViews: 710, avgDurationStr: "0:00:47", avgDurationSec: 47, avgPercent: 55.1, stayed: 46.5 },
+            { name: "Honolulu, HI, USA", lat: 21.3069, lng: -157.8583, views: 189, engagedViews: 120, avgDurationStr: "0:00:21", avgDurationSec: 21, avgPercent: 42.1, stayed: 30.5 },
+            { name: "Chandigarh, India", lat: 30.7333, lng: 76.7794, views: 145, engagedViews: 80, avgDurationStr: "0:00:18", avgDurationSec: 18, avgPercent: 35.0, stayed: 25.0 },
+            { name: "Tagum, Philippines", lat: 7.4477, lng: 125.8078, views: 112, engagedViews: 65, avgDurationStr: "0:00:14", avgDurationSec: 14, avgPercent: 30.1, stayed: 20.2 },
+            { name: "Makati City, Philippines", lat: 14.5547, lng: 121.0244, views: 95, engagedViews: 50, avgDurationStr: "0:00:13", avgDurationSec: 13, avgPercent: 29.0, stayed: 19.5 },
+            { name: "Vigo, Spain", lat: 42.2406, lng: -8.7207, views: 80, engagedViews: 40, avgDurationStr: "0:00:11", avgDurationSec: 11, avgPercent: 27.5, stayed: 18.5 },
+            { name: "Belfast, UK", lat: 54.5973, lng: -5.9301, views: 80, engagedViews: 45, avgDurationStr: "0:00:15", avgDurationSec: 15, avgPercent: 33.2, stayed: 22.1 },
+            { name: "Przemyśl, Poland", lat: 49.7839, lng: 22.7678, views: 64, engagedViews: 35, avgDurationStr: "0:00:12", avgDurationSec: 12, avgPercent: 28.5, stayed: 18.0 },
+            { name: "Agra, India", lat: 27.1767, lng: 78.0081, views: 52, engagedViews: 30, avgDurationStr: "0:00:09", avgDurationSec: 9, avgPercent: 22.0, stayed: 12.0 },
+            { name: "Odesa, Ukraine", lat: 46.4825, lng: 30.7233, views: 43, engagedViews: 22, avgDurationStr: "0:00:10", avgDurationSec: 10, avgPercent: 25.0, stayed: 15.0 }
+        ];
+
+        const canvas = document.getElementById('mapCanvas');
+        const ctx = canvas.getContext('2d');
+        const loadingEl = document.getElementById('loading');
+        const readoutLabel = document.getElementById('readoutLabel');
+        const metricSelector = document.getElementById('metricSelector');
+
+        let width = 0; let height = 0;
+        let dpr = window.devicePixelRatio || 1;
+        let dots = [];
+        let geoData = null;
+        let animationFrameId = null;
+
+        // Interaction State
+        let currentMetric = 'views';
+        let viewMode = 'world'; 
+        
+        const MOUSE = { x: -1000, y: -1000 };
+        const HOVER_RADIUS = 25; // Tactile localized hover distance (1/4 size as requested)
+        const MAX_RADIUS_MULTIPLIER = 1.8;
+        const ANIMATION_EASING = 0.12;
+
+        const VIEW_CONFIGS = {
+            world: { center: [11, 15], extents: (w, h) => [[w * 0.02, h * 0.1], [w * 0.98, h * 0.9]] },
+            usa: { center: [-96, 38.5], extents: (w, h) => [[w * -0.15, h * 0.02], [w * 1.15, h * 0.98]] },
+            germany: { center: [10.45, 51.16], extents: (w, h) => [[w * 0.1, h * 0.05], [w * 0.9, h * 0.95]] }
+        };
+
+        async function init() {
+            try {
+                const response = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+                const topo = await response.json();
+                const countries = topojson.feature(topo, topo.objects.countries);
+                countries.features = countries.features.filter(f => f.id !== "010" && f.properties?.name !== "Antarctica");
+                geoData = countries;
+                
+                window.addEventListener('resize', debounce(setupCanvasAndGenerate, 150));
+                
+                metricSelector.addEventListener('change', (e) => {
+                    currentMetric = e.target.value;
+                    recalculateDotColors();
+                    updateReadout(null); // Reset subtitle bar
+                });
+
+                setupCanvasAndGenerate();
+            } catch (err) {
+                loadingEl.innerText = "Error loading Map.";
+            }
+        }
+
+        window.setViewMode = function(mode, btn) {
+            if (viewMode === mode) return;
+            viewMode = mode;
+            document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            loadingEl.classList.remove('hidden');
+            setTimeout(setupCanvasAndGenerate, 50);
+        };
+
+        function setupCanvasAndGenerate() {
+            width = canvas.parentElement.clientWidth;
+            height = canvas.parentElement.clientHeight;
+            if (width <= 0 || height <= 0) { setTimeout(setupCanvasAndGenerate, 100); return; }
+
+            dpr = window.devicePixelRatio || 1;
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            ctx.scale(dpr, dpr);
+
+            generateHexMap();
+            loadingEl.classList.add('hidden');
+            
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        function getActiveLocations() {
+            if (viewMode === 'world') return CCC_DATA;
+            if (viewMode === 'usa') return CCC_DATA.filter(c => c.name.includes("USA"));
+            if (viewMode === 'germany') return CCC_DATA.filter(c => c.name.includes("Germany") || c.name.includes("UK") || c.name.includes("Poland"));
+        }
+
+        function generateHexMap() {
+            dots = [];
+            const offCanvas = document.createElement('canvas');
+            offCanvas.width = width * dpr; offCanvas.height = height * dpr;
+            const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+            offCtx.scale(dpr, dpr);
+
+            const activeView = VIEW_CONFIGS[viewMode];
+            const projection = d3.geoEquirectangular().center(activeView.center).fitExtent(activeView.extents(width, height), geoData);
+            const path = d3.geoPath().projection(projection).context(offCtx);
+
+            offCtx.fillStyle = '#ffffff'; offCtx.beginPath(); path(geoData); offCtx.fill();
+
+            const imgData = offCtx.getImageData(0, 0, width * dpr, height * dpr).data;
+            const gridDensity = viewMode === 'world' ? 220 : (viewMode === 'usa' ? 180 : 130);
+            const spacing = width / gridDensity;
+            const rowHeight = spacing * 0.8660254;
+            const baseDotRadius = spacing * 0.32;
+
+            const activeLocations = getActiveLocations();
+            const projectedLocations = activeLocations.map(loc => {
+                const screenCoords = projection([loc.lng, loc.lat]);
+                return { ...loc, projX: screenCoords ? screenCoords[0] : -1000, projY: screenCoords ? screenCoords[1] : -1000 };
+            });
+
+            const glowProximityLimit = viewMode === 'world' ? 38 : (viewMode === 'usa' ? 52 : 72);
+
+            for (let y = 0; y < height; y += rowHeight) {
+                const offsetX = (Math.floor(y / rowHeight) % 2 !== 0) ? spacing / 2 : 0;
+                for (let x = offsetX; x < width; x += spacing) {
+                    const px = Math.floor(x * dpr); const py = Math.floor(y * dpr);
+                    if (px >= width * dpr || py >= height * dpr) continue;
+
+                    const i = (py * Math.floor(width * dpr) + px) * 4;
+                    if (imgData[i + 3] > 128) {
+                        let nearestLoc = null; let minDist = Infinity;
+                        for (let j = 0; j < projectedLocations.length; j++) {
+                            const d = Math.hypot(x - projectedLocations[j].projX, y - projectedLocations[j].projY);
+                            if (d < minDist) { minDist = d; nearestLoc = projectedLocations[j]; }
+                        }
+
+                        let dotDataVal = 0; let isInsideGlow = false;
+                        if (nearestLoc && minDist < glowProximityLimit) {
+                            const weight = Math.cos((minDist / glowProximityLimit) * Math.PI / 2);
+                            dotDataVal = nearestLoc[currentMetric] * weight;
+                            isInsideGlow = true;
+                        }
+
+                        dots.push({
+                            x: x, y: y, baseR: isInsideGlow ? baseDotRadius * 1.15 : baseDotRadius * 0.65,
+                            r: 0, dataVal: dotDataVal, hasData: isInsideGlow, targetColor: '#1e293b'
+                        });
+                    }
+                }
+            }
+
+            // Highlighting specific city markers
+            projectedLocations.forEach(loc => {
+                if (loc.projX > 0 && loc.projX < width && loc.projY > 0 && loc.projY < height) {
+                    dots.push({
+                        x: loc.projX, y: loc.projY, baseR: baseDotRadius * 2.8, r: 0,
+                        isMarker: true, dataVal: loc[currentMetric], rawLocation: loc, hasData: true
+                    });
+                }
+            });
+
+            recalculateDotColors();
+        }
+
+        function recalculateDotColors() {
+            const activeLocations = getActiveLocations();
+            const maxVal = d3.max(activeLocations, d => d[currentMetric]) || 1;
+            for (let i = 0; i < dots.length; i++) {
+                if (dots[i].hasData || dots[i].isMarker) dots[i].targetColor = getColorForValue(dots[i].dataVal, maxVal);
+                else dots[i].targetColor = '#1e293b';
+            }
+        }
+
+        function getColorForValue(val, maxVal) {
+            if (!val || val === 0) return '#1e293b';
+            const ratio = Math.pow(Math.min(1, val / maxVal), 0.4); 
+            if (ratio < 0.35) return interpolateColor('#34c6f3', '#d9ff3b', ratio / 0.35); // Cyan to Lime
+            if (ratio < 0.7) return interpolateColor('#d9ff3b', '#ffe45a', (ratio - 0.35) / 0.35); // Lime to Yellow
+            return interpolateColor('#ffe45a', '#f46fb0', (ratio - 0.7) / 0.3); // Yellow to Pink
+        }
+
+        function interpolateColor(color1, color2, factor) {
+            const c1 = parseColor(color1); const c2 = parseColor(color2);
+            return `rgb(${Math.round(c1.r + factor * (c2.r - c1.r))}, ${Math.round(c1.g + factor * (c2.g - c1.g))}, ${Math.round(c1.b + factor * (c2.b - c1.b))})`;
+        }
+
+        function parseColor(c) {
+            const hex = c.slice(1);
+            return { r: parseInt(hex.slice(0, 2), 16), g: parseInt(hex.slice(2, 4), 16), b: parseInt(hex.slice(4, 6), 16) };
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            const restingDots = []; const activeDots = [];
+            let hoveredLocationData = null;
+
+            for (let i = 0; i < dots.length; i++) {
+                const dot = dots[i];
+                const dx = MOUSE.x - dot.x; const dy = MOUSE.y - dot.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                let targetR = dot.baseR; let isActive = false;
+                if (dist < HOVER_RADIUS) {
+                    isActive = true;
+                    targetR = dot.baseR + (dot.baseR * MAX_RADIUS_MULTIPLIER * Math.sin((1 - (dist / HOVER_RADIUS)) * Math.PI / 2));
+                    if (dot.isMarker && dot.rawLocation) hoveredLocationData = dot.rawLocation;
+                }
+
+                dot.r += (targetR - dot.r) * ANIMATION_EASING;
+                dot.currentDist = dist;
+
+                if (!isActive && Math.abs(dot.r - dot.baseR) < 0.05) { dot.r = dot.baseR; restingDots.push(dot); }
+                else activeDots.push(dot);
+            }
+
+            // Draw Resting Dots
+            const emptyResting = []; const coloredResting = {};
+            for (let i = 0; i < restingDots.length; i++) {
+                const d = restingDots[i];
+                if (d.targetColor === '#1e293b') emptyResting.push(d);
+                else {
+                    if (!coloredResting[d.targetColor]) coloredResting[d.targetColor] = [];
+                    coloredResting[d.targetColor].push(d);
+                }
+            }
+
+            ctx.fillStyle = '#1e293b'; ctx.beginPath();
+            for (let i = 0; i < emptyResting.length; i++) {
+                ctx.moveTo(emptyResting[i].x + emptyResting[i].r, emptyResting[i].y);
+                ctx.arc(emptyResting[i].x, emptyResting[i].y, emptyResting[i].r, 0, Math.PI * 2);
+            }
+            ctx.fill();
+
+            for (const color in coloredResting) {
+                ctx.fillStyle = color; ctx.beginPath();
+                for (let i = 0; i < coloredResting[color].length; i++) {
+                    ctx.moveTo(coloredResting[color][i].x + coloredResting[color][i].r, coloredResting[color][i].y);
+                    ctx.arc(coloredResting[color][i].x, coloredResting[color][i].y, coloredResting[color][i].r, 0, Math.PI * 2);
+                }
+                ctx.fill();
+            }
+
+            // Active dots sorted by distance to mouse, so the absolute closest is rendered on top
+            activeDots.sort((a, b) => b.currentDist - a.currentDist);
+            ctx.lineWidth = 0.8; ctx.strokeStyle = '#0284c7'; // Super thin, dark blue stroke
+            for (let i = 0; i < activeDots.length; i++) {
+                ctx.fillStyle = activeDots[i].targetColor; ctx.beginPath();
+                ctx.arc(activeDots[i].x, activeDots[i].y, activeDots[i].r, 0, Math.PI * 2);
+                ctx.fill(); ctx.stroke();
+            }
+
+            updateReadout(hoveredLocationData);
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        // Subtitle section text update
+        function updateReadout(loc) {
+            const metricDisplayNames = {
+                views: "Views", engagedViews: "Engaged Views", avgDurationSec: "Avg. View Duration",
+                avgPercent: "Avg. Percentage Viewed (%)", stayed: "Stayed to Watch (%)"
+            };
+
+            if (loc) {
+                let statVal = loc[currentMetric];
+                if (currentMetric === 'avgDurationSec') statVal = loc.avgDurationStr;
+                else if (currentMetric === 'views' || currentMetric === 'engagedViews') statVal = statVal.toLocaleString();
+                else statVal = statVal + '%';
+
+                readoutLabel.innerHTML = `
+                    <span style="color:var(--pink); font-size:16px;">📍</span> 
+                    <span style="flex-grow: 1;">Inspecting: <strong style="text-transform:uppercase; color:var(--dark-blue); font-size: 14px;">${loc.name}</strong></span>
+                    <span style="margin-right: 16px;"><strong>${metricDisplayNames[currentMetric]}:</strong> <span style="color:var(--pink); font-size: 14px;">${statVal}</span></span>
+                    <span class="metric-badge" style="background:var(--lime)">SELECTED: ${metricDisplayNames[currentMetric]}</span>
+                `;
+            } else {
+                readoutLabel.innerHTML = `
+                    <span style="color: var(--pink); font-size: 16px;">📍</span> 
+                    <span style="flex-grow: 1;">Hover over an active city dot on the map to view detailed CCC.csv statistics...</span>
+                    <span class="metric-badge">Viewing Metric: ${metricDisplayNames[currentMetric]}</span>
+                `;
+            }
+        }
+
+        // Setup mouse/touch interactivity coordinates
+        window.addEventListener('mousemove', (e) => { const r = canvas.getBoundingClientRect(); MOUSE.x = e.clientX - r.left; MOUSE.y = e.clientY - r.top; });
+        window.addEventListener('mouseleave', () => { MOUSE.x = -1000; MOUSE.y = -1000; });
+        window.addEventListener('touchmove', (e) => { if(e.touches.length > 0) { const r = canvas.getBoundingClientRect(); MOUSE.x = e.touches[0].clientX - r.left; MOUSE.y = e.touches[0].clientY - r.top; } }, { passive: true });
+        window.addEventListener('touchend', () => { MOUSE.x = -1000; MOUSE.y = -1000; });
+        
+        function debounce(func, wait) { let timeout; return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => func(...args), wait); }; }
+
+        init();
+    </script>
+</body>
+</html>

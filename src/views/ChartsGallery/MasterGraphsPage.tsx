@@ -27,8 +27,8 @@ import {
  CartesianGrid,
  ReferenceLine,
 } from "recharts"
-import { getMasterRows } from "../../services/analyticsSelectors"
-import { resolveMetricNumber } from "../../services/canonicalMetricResolver"
+import { getMasterRows } from "../../services/analytics/Selectors"
+import { resolveMetricNumber } from "../../services/analytics/MetricRegistry"
 
 // Neo-brutalist color palette
 const COLORS = {

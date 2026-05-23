@@ -3861,4 +3861,8 @@ export const ShortsStudio = () => \{\
   );\
 \};\
 \
+<<<<<<< ours
 export default function App() \{ return <ShortsStudio />; \}}
+=======
+export default function App() \{ return <ShortsStudio />; \}}
+>>>>>>> theirs

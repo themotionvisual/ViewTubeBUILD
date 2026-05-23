@@ -1,0 +1,174 @@
+{
+  "generatedAt": "2026-04-15T10:17:09.730Z",
+  "totalHits": 28,
+  "hits": [
+    {
+      "file": "src/components/CommentResponder.tsx",
+      "line": 17,
+      "classification": "legacy-only",
+      "snippet": "const cache = JSON.parse(localStorage.getItem(\"yt_analytics_cache\") || \"{}\")"
+    },
+    {
+      "file": "src/components/CommunityPostGenerator.tsx",
+      "line": 17,
+      "classification": "legacy-only",
+      "snippet": "const cache = JSON.parse(localStorage.getItem(\"yt_analytics_cache\") || \"{}\")"
+    },
+    {
+      "file": "src/components/EndScreenTool.tsx",
+      "line": 17,
+      "classification": "legacy-only",
+      "snippet": "const cache = JSON.parse(localStorage.getItem(\"yt_analytics_cache\") || \"{}\")"
+    },
+    {
+      "file": "src/services/analyticsSelectors.ts",
+      "line": 133,
+      "classification": "canonical",
+      "snippet": "markDeprecatedLocalStorageRead(\"analyticsSelectors.parseCache\", \"yt_analytics_cache\")"
+    },
+    {
+      "file": "src/services/analyticsSync.ts",
+      "line": 182,
+      "classification": "legacy-only",
+      "snippet": "localStorage.removeItem(\"yt_analytics_cache\")"
+    },
+    {
+      "file": "src/services/analyticsSync.ts",
+      "line": 268,
+      "classification": "legacy-only",
+      "snippet": "prevCacheRaw = localStorage.getItem(\"yt_analytics_cache\") || \"{}\""
+    },
+    {
+      "file": "src/services/analyticsSync.ts",
+      "line": 271,
+      "classification": "legacy-only",
+      "snippet": "console.warn(\"Analytics Sync: Corrupt yt_analytics_cache, resetting.\", error)"
+    },
+    {
+      "file": "src/services/analyticsSync.ts",
+      "line": 273,
+      "classification": "legacy-only",
+      "snippet": "localStorage.removeItem(\"yt_analytics_cache\")"
+    },
+    {
+      "file": "src/services/analyticsSync.ts",
+      "line": 722,
+      "classification": "legacy-only",
+      "snippet": "localStorage.setItem(\"yt_analytics_cache\", nextRaw)"
+    },
+    {
+      "file": "src/services/analyticsSync.ts",
+      "line": 739,
+      "classification": "legacy-only",
+      "snippet": "localStorage.setItem(\"yt_analytics_cache\", JSON.stringify(minimalCache))"
+    },
+    {
+      "file": "src/services/analyticsSync.ts",
+      "line": 743,
+      "classification": "legacy-only",
+      "snippet": "console.warn(\"Failed to write minimal yt_analytics_cache snapshot:\", e2)"
+    },
+    {
+      "file": "src/services/authSession.ts",
+      "line": 251,
+      "classification": "legacy-only",
+      "snippet": "localStorage.removeItem('yt_analytics_cache');"
+    },
+    {
+      "file": "src/services/canonicalAnalyticsStore.ts",
+      "line": 61,
+      "classification": "canonical",
+      "snippet": "const YT_ANALYTICS_CACHE_KEY = \"yt_analytics_cache\""
+    },
+    {
+      "file": "src/services/dataCoverageInventory.ts",
+      "line": 380,
+      "classification": "legacy-only",
+      "snippet": "markDeprecatedLocalStorageRead(\"dataCoverageInventory.build\", \"yt_analytics_cache\")"
+    },
+    {
+      "file": "src/services/dataExport.ts",
+      "line": 102,
+      "classification": "legacy-only",
+      "snippet": "const ytCacheRaw = localStorage.getItem(\"yt_analytics_cache\") || \"{}\""
+    },
+    {
+      "file": "src/services/dataExport.ts",
+      "line": 107,
+      "classification": "legacy-only",
+      "snippet": "zip.file(\"raw/yt_analytics_cache.json\", ytCacheRaw)"
+    },
+    {
+      "file": "src/services/localDataInspector.ts",
+      "line": 118,
+      "classification": "legacy-only",
+      "snippet": "\"yt_analytics_cache\","
+    },
+    {
+      "file": "src/services/localDataReset.ts",
+      "line": 15,
+      "classification": "legacy-only",
+      "snippet": "\"yt_analytics_cache\","
+    },
+    {
+      "file": "src/views/AlgorithmArchitect.tsx",
+      "line": 28,
+      "classification": "legacy-only",
+      "snippet": "const cache = JSON.parse(localStorage.getItem('yt_analytics_cache') || '{}');"
+    },
+    {
+      "file": "src/views/AlgorithmArchitect.tsx",
+      "line": 36,
+      "classification": "legacy-only",
+      "snippet": "const cachedData = localStorage.getItem('yt_analytics_cache') || 'No data synced yet.';"
+    },
+    {
+      "file": "src/views/AlgorithmArchitect.tsx",
+      "line": 60,
+      "classification": "legacy-only",
+      "snippet": "const cache = JSON.parse(localStorage.getItem('yt_analytics_cache') || '{}');"
+    },
+    {
+      "file": "src/views/Channelytics.tsx",
+      "line": 116,
+      "classification": "legacy-only",
+      "snippet": "} catch (e) { console.error(\"Failed to parse yt_analytics_cache\", e); }"
+    },
+    {
+      "file": "src/views/ReferenceStudio.tsx",
+      "line": 425,
+      "classification": "legacy-only",
+      "snippet": "const cacheRaw = localStorage.getItem(\"yt_analytics_cache\")"
+    },
+    {
+      "file": "src/views/Settings.tsx",
+      "line": 259,
+      "classification": "legacy-only",
+      "snippet": "Safe clear includes: `yt_analytics_cache`, `vt_uploaded_csv_cache`, GA4 caches, and video-details snippet cache."
+    },
+    {
+      "file": "src/views/VideoManager.tsx",
+      "line": 263,
+      "classification": "legacy-only",
+      "snippet": "const raw = localStorage.getItem(\"yt_analytics_cache\")"
+    },
+    {
+      "file": "src/views/VideoManager.tsx",
+      "line": 337,
+      "classification": "legacy-only",
+      "snippet": "source: \"yt_analytics_cache.videos\","
+    },
+    {
+      "file": "src/views/VideoManager.tsx",
+      "line": 375,
+      "classification": "legacy-only",
+      "snippet": "source: \"yt_analytics_cache.videos\","
+    },
+    {
+      "file": "src/views/VideoManager.tsx",
+      "line": 723,
+      "classification": "legacy-only",
+      "snippet": "const cacheRaw = localStorage.getItem(\"yt_analytics_cache\")"
+    }
+  ]
+}

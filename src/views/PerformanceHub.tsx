@@ -1,7 +1,15 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import React, {
+ Suspense,
+ lazy,
+ useCallback,
+ useEffect,
+ useLayoutEffect,
+ useMemo,
+ useRef,
+ useState,
+} from "react"
  import {
   Activity,
-  Database,
   ChartColumnBig,
   BrainCircuit,
   Table2,
@@ -9,13 +17,9 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
   Upload,
   Trash2,
   X,
-  FileText,
   Clock3,
   ChevronDown,
-  RefreshCw,
   ExternalLink,
-  Check,
-  ShieldCheck,
  } from "lucide-react"
 import {
  LineChart,
@@ -33,21 +37,33 @@ import {
  Cell,
  ScatterChart,
   Scatter,
-  ResponsiveContainer,
   ReferenceArea,
   ReferenceLine,
   ZAxis,
  } from "recharts"
  import { SubToolbox, ToolboxScaffold } from "../components/Toolbox"
+ import { StableChartFrame } from "../components/StableChartFrame"
  import { InsightMarquee } from '../components/InsightMarquee';
+ import { ChannelDataSyncControls } from "./components/ChannelDataSyncControls"
+ import ChannelDataGuidePanel from "./components/ChannelDataGuidePanel"
  import { useBrain } from "../context/useBrain"
- import type { AnalyticsResult, CsvFileWithTag, CsvUploadType } from "../types"
+ import type {
+  AnalyticsResult,
+  CsvDetectedCategory,
+  CsvFileWithTag,
+  CsvUploadType,
+ } from "../types"
  import { hasGeminiKey } from "../services/gemini"
 import {
  buildCsvFilesWithTags,
  expandCsvAndZipFiles,
  getCsvTagColorClass,
 } from "../services/DataEngine"
+import {
+ CSV_MAJOR_FAMILY_STYLES,
+ CSV_UPLOAD_TYPE_OPTIONS,
+ getCsvUploadTypeStyle,
+} from "../services/csvTaxonomy"
 import {
  mergeAndDedupeRows,
  normalizeAndEnrichRow,
@@ -80,17 +96,16 @@ import {
  parseDate,
  reportToRows,
  getShortMasterHeader,
- MASTER_VIDEO_TABLE_HEADERS,
  textFromUnknown,
 } from "./performanceHubUtils"
 import type { UnifiedRow } from "./performanceHubUtils"
 import {
  getAvpRawPercent,
  resolveCtrPercent,
-} from "../services/metricAliasResolver"
+} from "../services/analytics/MetricRegistry"
 import { formatTrafficSourceNickname } from "../services/dataUtils"
-import type { AnalyticsWindow } from "../services/analyticsContract"
-import type { CanonicalMetricKey, MetricCell } from "../services/analyticsContract"
+import type { AnalyticsWindow } from "../services/analytics/DataStore"
+import type { CanonicalMetricKey, MetricCell } from "../services/analytics/DataStore"
 import {
  buildDatasetCoverageSummary,
  buildTableMetricMappingStatus,
@@ -102,11 +117,26 @@ import {
  type MasterTableRow,
  type TableMetricMappingStatus,
  type VideoStatsVerificationSummary,
-} from "../services/analyticsSelectors"
+} from "../services/analytics/Selectors"
+import {
+ MASTER_API_CORE_VISIBLE_HEADERS,
+ buildProjectedDailyMetricFields,
+ getMasterVideoColumnDefinition,
+ getMasterVideoDedupeKey,
+ getMasterVideoIdentityHeaders,
+ getMasterVideoSourceEligibleHeaders,
+ PERFORMANCE_HUB_DATASET_PROFILES,
+ PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS,
+ shouldUseCompactHeaderLabels,
+ type PerformanceHubTableDatasetId as TableDatasetId,
+} from "../services/performanceHubTableRegistry"
+import {
+ resolvePerformanceHubThumbnailUrl,
+ resolvePerformanceHubVideoIdentity,
+} from "../services/performanceHubTablePresentation"
 import {
  readYouTubeAnalyticsCache,
- writeYouTubeAnalyticsCache,
-} from "../services/canonicalAnalyticsStore"
+} from "../services/analytics/DataStore"
 import {
  UPLOAD_CACHE_FILES_KEY,
  applyGlobalRowFilters,
@@ -118,17 +148,15 @@ import {
  toStorageIdentity,
  type StorageMode,
  type SyncSourceMode,
-} from "../services/analyticsRuntime"
+} from "../services/analytics/SyncPipeline"
 import {
- getMasterColumnVisibilityRule,
  getVideoMetricRuntimeStatus,
-} from "../services/analyticsCapabilityMatrix"
-import {
- evaluateToolCapabilityStatus,
-} from "../services/youtube/apiCapabilityRegistry"
+} from "../services/analytics/SyncPipeline"
 import { PerformanceHubChartRollout } from "./performanceHub40/PerformanceHubChartRollout"
 import IntelligenceReportGenerator from "../components/IntelligenceHub/IntelligenceHub"
-import { ShortsRetentionToolboxContent } from "../components/ShortsRetentionToolboxContent"
+const PerformanceHubVisualLabPanel = lazy(
+ () => import("./components/PerformanceHubVisualLabPanel"),
+)
 
 type PerformanceTool =
  | "intelligence-hub"
@@ -136,9 +164,15 @@ type PerformanceTool =
  | "master-tables"
  | "shorts-retention"
 type DataSource = "csv" | "api" | "hybrid"
+const EMPTY_UNIFIED_ROWS: UnifiedRow[] = []
 type TrafficDatasetMode =
  | "all"
  | "total"
+ | "overview"
+ | "daily_by_source"
+ | "video_by_source"
+ | "detail"
+ | "reporting_bulk"
  | "youtube_traffic"
  | "external"
  | "suggested_videos"
@@ -168,6 +202,7 @@ type TopRow = {
 }
 
 type EngagementMapPoint = {
+ key: string
  index: number
  label: string
  videoId: string
@@ -233,13 +268,6 @@ type TopPerformerDonut = {
  highestValue: number
 }
 
-type TableDatasetId =
- | "master"
- | "daily"
- | "traffic"
- | "audience"
- | "country"
- | "device"
 type TableRow = UnifiedRow | MasterTableRow
 type DatasetTypeTag =
  | "master"
@@ -252,209 +280,7 @@ type SourceModeTag = "Merged" | "API" | "CSV"
 
 type MetricApplicabilityRule = "all" | "shorts-only" | "long-only"
 
-type TableDatasetContract = {
- id: TableDatasetId
- label: string
- supportsTagFilter: boolean
- columns: string[]
-}
-
-type DatasetProfile = {
- allowedColumns: string[]
- requiredColumns: string[]
- dedupeAliases?: Record<string, string>
- defaultSort?: { column: string; dir: "asc" | "desc" }
- totalsBehavior: "sum" | "weighted" | "none" | "compact"
- sparseLayout: boolean
-}
-
 const ULTIMATE_REPORT_EVENT = "vt_generate_ultimate_report"
-
-const TABLE_DATASET_CONTRACTS: Record<TableDatasetId, TableDatasetContract> = {
- master: {
-  id: "master",
-  label: "Master Video Table",
-  supportsTagFilter: true,
-  columns: [
-   "Video title",
-   "Video ID",
-   "Upload date",
-   "Length",
-   "Format",
-   ...MASTER_VIDEO_TABLE_HEADERS,
-  ],
- },
- daily: {
-  id: "daily",
-  label: "Daily Metrics",
-  supportsTagFilter: false,
-  columns: [
-   "Date",
-   "Views",
-   "Watch time (hours)",
-   "Average view duration",
-   "Average percentage viewed (%)",
-   "Engaged views",
-   "Impressions",
-   "Impressions click-through rate (%)",
-   "Likes",
-   "Dislikes",
-   "Comments",
-   "Shares",
-   "Subscribers gained",
-   "Subscribers lost",
-   "Estimated revenue (USD)",
-   "Ad Impressions",
-   "Monetized Playbacks",
-   "CPM",
-   "RPM",
-  ],
- },
- traffic: {
-  id: "traffic",
-  label: "Traffic Sources",
-  supportsTagFilter: false,
- columns: [
-   "Traffic group",
-   "Data source",
-   "Traffic source",
-   "Source type",
-   "Source title",
-   "Viewer %",
-   "Views",
-   "Watch Hrs",
-   "Watch time (hours)",
-   "Engaged views",
-   "Average view duration",
-   "Average percentage viewed (%)",
-   "Impressions",
-   "Impressions click-through rate (%)",
-   "Playlist watch time (hours)",
-   "Views from playlist",
-   "Views per playlist start",
-   "YouTube Premium views",
-   "YouTube Premium watch time (hours)",
-  ],
- },
- audience: {
-  id: "audience",
-  label: "Audience",
-  supportsTagFilter: false,
-  columns: [
-   "Viewer age",
-   "Viewer gender",
-   "Views (%)",
-   "Watch time (hours) (%)",
-  ],
- },
- country: {
-  id: "country",
-  label: "Geography",
-  supportsTagFilter: false,
-  columns: [
-   "Country",
-   "Viewer %",
-   "Views",
-   "Watch Hrs",
-   "Engaged views",
-   "Average view duration",
-   "Average percentage viewed (%)",
-   "Stayed to watch (%)",
-   "Subscribers gained",
-   "Subscribers lost",
-   "Subscribers",
-   "Likes",
-   "Dislikes",
-   "Shares",
-   "Comments added",
-   "Estimated revenue (USD)",
-  ],
- },
- device: {
-  id: "device",
-  label: "Audience Devices",
-  supportsTagFilter: false,
-  columns: [
-   "Device type",
-   "Viewer %",
-   "Views",
-   "Watch Hrs",
-   "Subscribers Gained",
-   "Revenue",
-  ],
- },
-}
-
-const DATASET_PROFILES: Record<TableDatasetId, DatasetProfile> = {
- master: {
-  allowedColumns: TABLE_DATASET_CONTRACTS.master.columns,
-  requiredColumns: ["Video title", "Video ID", "Views", "Watch Hrs", "Impressions"],
-  dedupeAliases: {
-   "Watch time (hours)": "Watch Hrs",
-   "Impressions click-through rate (%)": "CTR",
-   "Average view duration": "AVD",
-   "Average percentage viewed (%)": "AVP %",
-  },
-  defaultSort: { column: "Views", dir: "desc" },
-  totalsBehavior: "compact",
-  sparseLayout: false,
- },
- daily: {
-  allowedColumns: TABLE_DATASET_CONTRACTS.daily.columns,
-  requiredColumns: ["Date", "Views", "Watch time (hours)", "Impressions"],
-  dedupeAliases: {
-   "Watch time (hours)": "Watch Hrs",
-   "Impressions click-through rate (%)": "CTR",
-   "Average percentage viewed (%)": "AVP %",
-  },
-  defaultSort: { column: "Date", dir: "desc" },
-  totalsBehavior: "sum",
-  sparseLayout: true,
- },
- traffic: {
-  allowedColumns: TABLE_DATASET_CONTRACTS.traffic.columns,
-  requiredColumns: [
-   "Traffic source",
-   "Traffic group",
-   "Data source",
-   "Views",
-   "Watch Hrs",
-   "Impressions",
-  ],
-  dedupeAliases: {
-   "Watch time (hours)": "Watch Hrs",
-   "Impressions click-through rate (%)": "CTR",
-   "Average percentage viewed (%)": "AVP %",
-  },
-  defaultSort: { column: "Views", dir: "desc" },
-  totalsBehavior: "weighted",
-  sparseLayout: false,
- },
- audience: {
-  allowedColumns: TABLE_DATASET_CONTRACTS.audience.columns,
-  requiredColumns: ["Viewer age", "Viewer gender", "Views (%)", "Watch time (hours) (%)"],
-  totalsBehavior: "none",
-  sparseLayout: true,
- },
- country: {
-  allowedColumns: TABLE_DATASET_CONTRACTS.country.columns,
-  requiredColumns: ["Country", "Viewer %", "Views", "Watch Hrs"],
-  dedupeAliases: {
-   "Average percentage viewed (%)": "AVP %",
-   "Average view duration": "AVD",
-  },
-  defaultSort: { column: "Views", dir: "desc" },
-  totalsBehavior: "sum",
-  sparseLayout: true,
- },
- device: {
-  allowedColumns: TABLE_DATASET_CONTRACTS.device.columns,
-  requiredColumns: ["Device type", "Viewer %", "Views", "Watch Hrs"],
-  defaultSort: { column: "Views", dir: "desc" },
-  totalsBehavior: "sum",
-  sparseLayout: true,
- },
-}
 
 const MASTER_HEADER_TO_CANONICAL: Partial<Record<string, CanonicalMetricKey>> = {
  Views: "views",
@@ -488,11 +314,13 @@ const MASTER_HEADER_TO_CANONICAL: Partial<Record<string, CanonicalMetricKey>> = 
  "Ann Clicks": "annotationClicks",
  "Ann Closes": "annotationCloses",
  "Red Hrs": "redWatchHours",
+ "Ad Revenue": "estimatedAdRevenue",
  "Estimated Ad Revenue": "estimatedAdRevenue",
  "Gross Revenue": "grossRevenue",
  "Playback Based CPM": "playbackBasedCpm",
  "Ad Impressions": "adImpressions",
  "Monetized Playbacks": "monetizedPlaybacks",
+ "Premium Revenue": "estimatedPremiumRevenue",
  "Estimated Premium Revenue": "estimatedPremiumRevenue",
  "End screen element clicks": "endScreenElementClicks",
  "End screen elements shown": "endScreenElementsShown",
@@ -521,12 +349,43 @@ const metricCellToProvenance = (
 }
 
 const METRIC_APPLICABILITY_RULES: Record<string, MetricApplicabilityRule> = {
+ "Impressions": "long-only",
+ "CTR": "long-only",
+ "CTR %": "long-only",
+ "CTR (%)": "long-only",
+ "Click-Through Rate (CTR)": "long-only",
+ "Impressions click-through rate (%)": "long-only",
  "STW %": "shorts-only",
+ "Stayed to watch (%)": "shorts-only",
  "End Screen %": "long-only",
+ "Clicks per end screen element shown (%)": "long-only",
  "Card %": "long-only",
+ "Clicks per card shown (%)": "long-only",
+ "Card clicks": "long-only",
+ "Cards shown": "long-only",
+ "Teaser %": "long-only",
+ "Teaser clicks per card teaser shown (%)": "long-only",
+ "Card teaser clicks": "long-only",
+ "Card teasers shown": "long-only",
 }
 
 const MASTER_ALWAYS_VISIBLE_HEADERS = new Set<string>([])
+const MASTER_VISIBILITY_PRIORITY_HEADERS = [
+ "Impressions",
+ "Impressions click-through rate (%)",
+ "Stayed to watch (%)",
+ "Subscribers gained",
+ "Subscribers lost",
+ "Subscribers net",
+ "Unique viewers",
+ "Average views per viewer",
+ "Unique reach",
+ "New viewers",
+ "Returning viewers",
+ "Casual viewers",
+ "Regular viewers",
+ "Likes (vs. dislikes) (%)",
+] as const
 
 const HEADER_LABELS: Record<string, string> = {
  "Video title": "Title",
@@ -585,6 +444,11 @@ const HEADER_LABELS: Record<string, string> = {
  "Unique viewers": "Unique",
  "Unique Viewers": "Unique",
  uniqueViewers: "Unique",
+ "Average views per viewer": "Avg/View",
+ averageViewsPerViewer: "Avg/View",
+ "Unique reach": "Reach",
+ uniqueReach: "Reach",
+ "Likes (vs. dislikes) (%)": "Like %",
  "Engaged views": "Engaged",
  engagedViews: "Engaged",
  "Engagement Rate": "Eng Rate",
@@ -600,6 +464,9 @@ const HEADER_LABELS: Record<string, string> = {
  "Subscribers Gained": "Subs +",
  "Subscribers Lost": "Subs -",
  Subscribers: "Subscribers",
+ "Subscribers net": "Subs Net",
+ "Subscribers Net": "Subs Net",
+ subscribersNet: "Subs Net",
  subscribersGained: "Subs +",
  subscribersLost: "Subs -",
  newViewers: "New",
@@ -617,6 +484,10 @@ const HEADER_LABELS: Record<string, string> = {
  Shares: "Shares",
  shareCount: "Shares",
  Revenue: "Revenue",
+ "Ad Revenue": "Ad Revenue",
+ "Estimated Ad Revenue": "Ad Revenue",
+ "Premium Revenue": "Premium Revenue",
+ "Estimated Premium Revenue": "Premium Revenue",
  "Estimated revenue": "Revenue",
  "Estimated revenue (USD)": "Revenue",
  "Your estimated revenue (USD)": "Revenue",
@@ -732,9 +603,6 @@ const pickRetentionPercent = (row: Record<string, unknown>): number => {
   "Average percentage viewed",
   "averageViewPercentage",
   "averagePercentageViewed",
-  "STW %",
-  "Stayed to watch (%)",
-  "stayedToWatch",
  ]
  for (const key of aliases) {
   const raw = numberFromUnknown(row[key])
@@ -855,33 +723,6 @@ const VALUE_MATRIX_THRESHOLDS: ValueMatrixThresholds = {
  retention: 75,
 }
 
-const UPLOAD_TYPE_OPTIONS: Array<{
- value: CsvUploadType
- label: string
- menuClass: string
-}> = [
-  { value: "auto", label: "Auto Detect", menuClass: "bg-white text-black" },
-  { value: "long", label: "Long Format (Content)", menuClass: "bg-[#00CCFF] text-black" },
-  { value: "traffic", label: "Traffic", menuClass: "bg-[#CCFF00] text-black" },
-  { value: "combined", label: "Combined", menuClass: "bg-[#FFDD00] text-black" },
-  { value: "audience", label: "Audience", menuClass: "bg-[#FFB158] text-black" },
-  { value: "shorts", label: "Shorts (Content)", menuClass: "bg-[#FF7497] text-black" },
- { value: "geo", label: "Geo", menuClass: "bg-[#B14AED] text-white" },
- {
-  value: "single_long_video",
-  label: "Long Single",
-  menuClass: "bg-[#00CCFF] text-black",
- },
- { value: "daily", label: "Daily", menuClass: "bg-[#CCFF00] text-black" },
- { value: "search", label: "Search", menuClass: "bg-[#FFDD00] text-black" },
- { value: "other", label: "Other", menuClass: "bg-[#FFB158] text-black" },
- {
- value: "single_short_video",
- label: "Short Single",
- menuClass: "bg-[#FF7497] text-black",
- },
-]
-
 const formatBytes = (bytes: number): string => {
  if (!Number.isFinite(bytes) || bytes <= 0) return "0 B"
  const units = ["B", "KB", "MB", "GB"]
@@ -929,6 +770,41 @@ const dedupeCsvFilesForMerge = (files: CsvFileWithTag[]): CsvFileWithTag[] => {
  return output
 }
 
+const isRecognizedCsvCategory = (
+ category: CsvDetectedCategory | undefined,
+ confidence: "high" | "medium" | "low" | undefined,
+): boolean => {
+ if (!category || category === "unknown") return false
+ return confidence === "high" || confidence === "medium" || confidence === undefined
+}
+
+const canonicalCsvCoverageCategory = (
+ category: CsvDetectedCategory | undefined,
+): CsvDetectedCategory | "unknown" => {
+ switch (category) {
+  case "content_performance":
+   return "content_channel_all"
+  case "traffic_report":
+   return "traffic_overview"
+  case "youtube_search_terms":
+   return "traffic_youtube_search"
+  case "external_sources":
+   return "traffic_external"
+  case "suggested_videos_related":
+   return "traffic_suggested_videos"
+  case "shorts_content_links":
+   return "traffic_shorts_feed"
+  case "geography":
+   return "geography_country"
+  case "retention_curve":
+   return "audience_retention_single_video"
+  case "stw_procedure":
+   return "content_shorts"
+  default:
+   return category || "unknown"
+ }
+}
+
 const PerformanceHub: React.FC = () => {
  const brainContext = useBrain() as ReturnType<typeof useBrain> & {
   videoFlags?: Record<
@@ -943,7 +819,6 @@ const PerformanceHub: React.FC = () => {
  const {
   brain,
   updateBrain,
-  setResearchLabState,
   videoFlags,
   setVideoFlags,
   authState,
@@ -953,24 +828,33 @@ const PerformanceHub: React.FC = () => {
   syncStatus,
   syncBatch,
  } = brainContext
+ const savedWorkflow = brain.performanceHubState
 
  const [openTools, setOpenTools] = useState<Set<PerformanceTool>>(
   () => new Set<PerformanceTool>(["channel-data", "master-tables"]),
  )
+ const isChannelDataOpen = openTools.has("channel-data")
+ const isTablesOpen = openTools.has("master-tables")
+ const isVisualLabOpen = openTools.has("shorts-retention")
  const [analysisLoading, setAnalysisLoading] = useState(false)
- const [pipelineLogTick, setPipelineLogTick] = useState(0)
  const [syncSourceMode, setSyncSourceMode] = useState<SyncSourceMode>(
-  getStoredSyncSourceMode(),
+  savedWorkflow.syncSourceMode || getStoredSyncSourceMode(),
  )
- const [storageMode, setStorageMode] = useState<StorageMode>(getStoredStorageMode())
- const [analyticsWindow, setAnalyticsWindow] = useState<AnalyticsWindow>("lifetime")
+ const [storageMode, setStorageMode] = useState<StorageMode>(
+  savedWorkflow.storageMode || getStoredStorageMode(),
+ )
+ const [analyticsWindow, setAnalyticsWindow] = useState<AnalyticsWindow>(
+  savedWorkflow.analyticsWindow || "lifetime",
+ )
  const [preUploadType, setPreUploadType] = useState<CsvUploadType>("auto")
- const [tableSearch, setTableSearch] = useState("")
- const [tableTag, setTableTag] = useState("all")
+ const [tableSearch, setTableSearch] = useState(savedWorkflow.tableSearch || "")
+ const [tableTag, setTableTag] = useState(savedWorkflow.tableTag || "all")
  const [dataVisualWindow, setDataVisualWindow] =
   useState<AnalyticsWindow>("lifetime")
  const [dataVisualReloadNonce, setDataVisualReloadNonce] = useState(0)
- const [tableDataset, setTableDataset] = useState<TableDatasetId>("master")
+ const [tableDataset, setTableDataset] = useState<TableDatasetId>(
+  (savedWorkflow.tableDataset as TableDatasetId) || "master",
+ )
  const [trafficDatasetMode, setTrafficDatasetMode] =
   useState<TrafficDatasetMode>("all")
  const [stableTableRowsByDataset, setStableTableRowsByDataset] = useState<
@@ -980,7 +864,7 @@ const PerformanceHub: React.FC = () => {
  const [sortColumn, setSortColumn] = useState<string | null>(null)
  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc")
  const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(
-  () => new Set(),
+  () => new Set(savedWorkflow.selectedRowIds || []),
  )
  const [engagementSortMetric, setEngagementSortMetric] =
   useState<EngagementSortMetric>("comments")
@@ -1007,11 +891,18 @@ const PerformanceHub: React.FC = () => {
  const uploadMenuRef = useRef<HTMLDivElement>(null)
 
  const readCachedUploadFiles = (): CsvFileWithTag[] => {
-  try {
+ try {
    const parsed = JSON.parse(
     localStorage.getItem(UPLOAD_CACHE_FILES_KEY) || "[]",
    ) as CsvFileWithTag[]
-   return Array.isArray(parsed) ? parsed : []
+   if (!Array.isArray(parsed)) return []
+   return parsed.map((file) => ({
+    ...file,
+    byteSize:
+     numberFromUnknown((file as Record<string, unknown>).byteSize) ||
+     numberFromUnknown(file.file?.size) ||
+     0,
+   }))
   } catch {
    return []
   }
@@ -1027,7 +918,45 @@ const [cachedUploadFiles, setCachedUploadFiles] = useState<CsvFileWithTag[]>(
   window.dispatchEvent(new Event("vt_upload_cache_updated"))
  }
 
-const storedCsvFiles = brain.channelyticsState.csvFiles || []
+ // Keep legacy Channelytics state updated for compatibility, but /performance
+ // owns the workflow controls through performanceHubState.
+ const storedCsvFiles = brain.channelyticsState.csvFiles || []
+
+ useEffect(() => {
+  const persistedRowIds = Array.from(selectedRowIds).sort()
+  const savedRowIds = [...(brain.performanceHubState.selectedRowIds || [])].sort()
+  const isUnchanged =
+   brain.performanceHubState.analyticsWindow === analyticsWindow &&
+   brain.performanceHubState.syncSourceMode === syncSourceMode &&
+   brain.performanceHubState.storageMode === storageMode &&
+   brain.performanceHubState.tableDataset === tableDataset &&
+   brain.performanceHubState.tableSearch === tableSearch &&
+   brain.performanceHubState.tableTag === tableTag &&
+   JSON.stringify(savedRowIds) === JSON.stringify(persistedRowIds)
+  if (isUnchanged) return
+  updateBrain({
+   performanceHubState: {
+    analyticsWindow,
+    syncSourceMode,
+    storageMode,
+    tableDataset,
+    tableSearch,
+    tableTag,
+    selectedRowIds: persistedRowIds,
+   },
+  })
+ }, [
+  analyticsWindow,
+  brain.performanceHubState,
+  selectedRowIds,
+  storageMode,
+  syncSourceMode,
+  tableDataset,
+  tableSearch,
+  tableTag,
+  updateBrain,
+ ])
+
  useEffect(() => {
   const handleUploadCacheUpdate = () => {
    setCachedUploadFiles(readCachedUploadFiles())
@@ -1056,9 +985,17 @@ const storedCsvFiles = brain.channelyticsState.csvFiles || []
 
  const csvFiles = useMemo(() => {
   if (storageMode === "sync") return cachedUploadFiles
-  if (storageMode === "storage") return storedCsvFiles
-  return dedupeCsvFilesForMerge([...storedCsvFiles, ...cachedUploadFiles])
- }, [storageMode, storedCsvFiles, cachedUploadFiles])
+ if (storageMode === "storage") return storedCsvFiles
+ return dedupeCsvFilesForMerge([...storedCsvFiles, ...cachedUploadFiles])
+}, [storageMode, storedCsvFiles, cachedUploadFiles])
+
+ const recognizedCsvFiles = useMemo(
+  () =>
+   csvFiles.filter((file) =>
+    isRecognizedCsvCategory(file.detectedCategory, file.detectionConfidence),
+   ),
+  [csvFiles],
+ )
 
  const dataSource: DataSource =
   syncSourceMode === "api_analytics"
@@ -1066,28 +1003,29 @@ const storedCsvFiles = brain.channelyticsState.csvFiles || []
    : syncSourceMode === "uploads"
     ? "csv"
     : "hybrid"
- const csvRows = useMemo(() => flattenCsvRows(csvFiles), [csvFiles])
+ const csvRows = useMemo(() => flattenCsvRows(recognizedCsvFiles), [recognizedCsvFiles])
 
  const canonicalApiRows = useMemo(
   () => getMasterRows(analyticsWindow, "api"),
   [lastSyncComplete, analyticsWindow],
  )
  const canonicalMasterRows = useMemo(
-  () => getMasterRows(analyticsWindow, dataSource, csvFiles),
-  [lastSyncComplete, analyticsWindow, dataSource, csvFiles],
+  () => getMasterRows(analyticsWindow, dataSource, recognizedCsvFiles),
+  [lastSyncComplete, analyticsWindow, dataSource, recognizedCsvFiles],
  )
- const effectiveCanonicalRows = useMemo(
-  () => applyGlobalRowFilters(canonicalMasterRows).rows,
+ const effectiveCanonicalRowState = useMemo(
+  () => applyGlobalRowFilters(canonicalMasterRows),
   [canonicalMasterRows],
  )
+ const effectiveCanonicalRows = effectiveCanonicalRowState.rows
  const masterTableRows = useMemo(() => {
-  const baseRows = canonicalRowsToMasterTableRows(effectiveCanonicalRows)
+  const baseRows = canonicalRowsToMasterTableRows(canonicalMasterRows)
   return baseRows.filter(
    (row) => getMasterRowDropReason(row as Record<string, unknown>) === null,
   )
- }, [effectiveCanonicalRows])
+ }, [canonicalMasterRows])
  const masterRowDropDiagnostics = useMemo(() => {
-  const baseRows = canonicalRowsToMasterTableRows(effectiveCanonicalRows)
+  const baseRows = canonicalRowsToMasterTableRows(canonicalMasterRows)
   const dropped = {
    non_video_dimension: 0,
    traffic_signature: 0,
@@ -1102,10 +1040,10 @@ const storedCsvFiles = brain.channelyticsState.csvFiles || []
    outputRows: masterTableRows.length,
    dropped,
   }
- }, [effectiveCanonicalRows, masterTableRows])
+ }, [canonicalMasterRows, masterTableRows])
  const selectedMetricSummary = useMemo(
-  () => getMetricSummary(analyticsWindow, dataSource, csvFiles),
-  [lastSyncComplete, analyticsWindow, dataSource, csvFiles],
+  () => getMetricSummary(analyticsWindow, dataSource, recognizedCsvFiles),
+  [lastSyncComplete, analyticsWindow, dataSource, recognizedCsvFiles],
  )
  const apiRows = useMemo(() => {
   const canonicalRows = canonicalRowsToMasterTableRows(canonicalApiRows)
@@ -1144,31 +1082,43 @@ const storedCsvFiles = brain.channelyticsState.csvFiles || []
    return allowed.has(identity)
   })
  }, [unifiedRows, effectiveCanonicalRows])
+ const analyticsDisplayRows = filteredUnifiedRows
+ const visualRows = isVisualLabOpen ? filteredUnifiedRows : EMPTY_UNIFIED_ROWS
+ const chartScopeDiagnostics = useMemo(
+  () => ({
+   apiRows: apiRows.length,
+   csvRows: csvRows.length,
+   mergedRows: unifiedRows.length,
+   finalChartRows: analyticsDisplayRows.length,
+   includeOnlyActive: effectiveCanonicalRowState.includeOnlyActive,
+   includeOnlyCount: effectiveCanonicalRowState.includedCount,
+   excludedCount: effectiveCanonicalRowState.excludedCount,
+  }),
+  [
+   apiRows.length,
+   csvRows.length,
+   unifiedRows.length,
+   analyticsDisplayRows.length,
+   effectiveCanonicalRowState,
+  ],
+ )
+ const clearAnalysisFilters = useCallback(() => {
+  Object.keys(videoFlags || {}).forEach((identity) => {
+   setVideoFlags?.(identity, {
+    excludeAnalysis: false,
+    includeOnly: false,
+    priorityAnalysis: false,
+   })
+  })
+ }, [setVideoFlags, videoFlags])
 
  const analyticsResult = brain.channelyticsState.analyticsResult
  const selectedUploadType =
-  UPLOAD_TYPE_OPTIONS.find((option) => option.value === preUploadType) ||
-  UPLOAD_TYPE_OPTIONS[0]
+  CSV_UPLOAD_TYPE_OPTIONS.find((option) => option.value === preUploadType) ||
+  CSV_UPLOAD_TYPE_OPTIONS[0]
+ const selectedUploadStyle = getCsvUploadTypeStyle(preUploadType)
  const selectedWindowLabel =
   analyticsWindow === "lifetime" ? "Lifetime" : analyticsWindow.toUpperCase()
-
- const analyticsGroupStatus = useMemo<
-  Array<{ key: string; ok: boolean; metrics: string[]; error?: string }>
- >(() => {
-  const cache = readYouTubeAnalyticsCache() as {
-   analyticsByWindow?: Record<
-    AnalyticsWindow,
-    { groups?: Record<string, { ok?: boolean; metrics?: string[]; error?: string }> }
-   >
-  }
-  const groups = cache.analyticsByWindow?.[analyticsWindow]?.groups || {}
-  return Object.entries(groups).map(([key, group]) => ({
-   key,
-   ok: group?.ok === true,
-   metrics: Array.isArray(group?.metrics) ? group.metrics : [],
-   error: group?.error,
-  }))
- }, [lastSyncComplete, analyticsWindow, pipelineLogTick, readYouTubeAnalyticsCache])
 
  const analyticsSyncDiagnostics = useMemo(() => {
   const cache = readYouTubeAnalyticsCache() as {
@@ -1203,7 +1153,7 @@ const storedCsvFiles = brain.channelyticsState.csvFiles || []
    >
   }
  return cache.analyticsByWindow?.[analyticsWindow]?.syncDiagnostics || null
- }, [lastSyncComplete, analyticsWindow, pipelineLogTick, readYouTubeAnalyticsCache])
+ }, [lastSyncComplete, analyticsWindow, readYouTubeAnalyticsCache])
 
  const ultimateAutoContext = useMemo(() => {
   const topRows = effectiveCanonicalRows.slice(0, 12)
@@ -1271,7 +1221,7 @@ const storedCsvFiles = brain.channelyticsState.csvFiles || []
    status: "error" as const,
    label: `Format Mapping: Degraded · ${reason}`,
   }
- }, [lastSyncComplete, pipelineLogTick, readYouTubeAnalyticsCache])
+ }, [lastSyncComplete, readYouTubeAnalyticsCache])
 
 const impressionsCtrDiagnostic = useMemo(() => {
  if (!analyticsSyncDiagnostics) return null
@@ -1321,20 +1271,143 @@ const impressionsCtrDiagnostic = useMemo(() => {
  }
 }, [analyticsSyncDiagnostics, effectiveCanonicalRows.length])
 
- const toolCapabilityHealth = useMemo(() => {
-  const accountContext = "creator" as const
-  const tools = [
-   "performance-hub",
-   "analytics-sync",
-   "video-manager",
-   "video-publisher",
-   "channel",
+ const uploadCategoryCoverage = useMemo(() => {
+  const counts = recognizedCsvFiles.reduce<Record<string, number>>((acc, file) => {
+   const key = canonicalCsvCoverageCategory(file.detectedCategory)
+   acc[key] = (acc[key] || 0) + 1
+   return acc
+  }, {})
+  const unknownCount = csvFiles.filter(
+   (file) => !isRecognizedCsvCategory(file.detectedCategory, file.detectionConfidence),
+  ).length
+  return { counts, unknownCount }
+ }, [recognizedCsvFiles, csvFiles])
+
+ const channelDataFamilyCoverage = useMemo(() => {
+  const buildFamilyCoverage = (
+   majorFamily: keyof typeof CSV_MAJOR_FAMILY_STYLES,
+   count: number,
+   detail: string,
+   apiSupport = false,
+  ) => {
+   const status: "ready" | "partial" | "missing" =
+    count > 0 ? "ready" : apiSupport && chartScopeDiagnostics.apiRows > 0 ? "partial" : "missing"
+   return {
+    majorFamily,
+    label: CSV_MAJOR_FAMILY_STYLES[majorFamily].label,
+    status,
+    count,
+    detail,
+   }
+  }
+
+  const contentCount =
+   Number(uploadCategoryCoverage.counts.content_channel_all || 0) +
+   Number(uploadCategoryCoverage.counts.content_shorts || 0) +
+   Number(uploadCategoryCoverage.counts.content_longform || 0)
+  const trafficCount =
+   Number(uploadCategoryCoverage.counts.traffic_overview || 0) +
+   Number(uploadCategoryCoverage.counts.traffic_youtube_search || 0) +
+   Number(uploadCategoryCoverage.counts.traffic_external || 0) +
+   Number(uploadCategoryCoverage.counts.traffic_youtube_features || 0) +
+   Number(uploadCategoryCoverage.counts.traffic_suggested_videos || 0) +
+   Number(uploadCategoryCoverage.counts.traffic_shorts_feed || 0)
+  const geographyCount =
+   Number(uploadCategoryCoverage.counts.geography_country || 0) +
+   Number(uploadCategoryCoverage.counts.geography_city || 0)
+  const audienceCount =
+   Number(uploadCategoryCoverage.counts.audience_demographics || 0) +
+   Number(uploadCategoryCoverage.counts.audience_growth || 0) +
+   Number(uploadCategoryCoverage.counts.audience_retention_single_video || 0)
+
+  return [
+   buildFamilyCoverage("video_data", contentCount, contentCount > 0 ? `${contentCount} content uploads matched` : "Needs sync or content CSV uploads", true),
+   buildFamilyCoverage("daily_metrics", Number(uploadCategoryCoverage.counts.daily_channel_metrics || 0), "Daily metrics and channel windows", true),
+   buildFamilyCoverage("traffic", trafficCount, trafficCount > 0 ? `${trafficCount} traffic exports matched` : "Traffic CSVs improve impressions and CTR", true),
+   buildFamilyCoverage("geography", geographyCount, geographyCount > 0 ? `${geographyCount} geography exports matched` : "Country and city views live here", true),
+   buildFamilyCoverage("audience", audienceCount, audienceCount > 0 ? `${audienceCount} audience exports matched` : "Audience, retention, and viewer-type CSVs enrich this family", true),
+   buildFamilyCoverage("surfaces_discovery", 0, "Playback, posts, playlists, cards, and end screens are usually deeper exports"),
+   buildFamilyCoverage("revenue_monetization", 0, "Revenue details can come from sync, but some cuts still need exports", true),
   ]
- return tools.map((toolId) => ({
-   toolId,
-   status: evaluateToolCapabilityStatus(toolId, accountContext),
-  }))
- }, [])
+ }, [uploadCategoryCoverage.counts, chartScopeDiagnostics.apiRows])
+
+ const channelDataNextActions = useMemo(() => {
+  const actions: Array<{
+   id: string
+   title: string
+   body: string
+   majorFamily: keyof typeof CSV_MAJOR_FAMILY_STYLES
+  }> = []
+
+  if (chartScopeDiagnostics.apiRows === 0) {
+   actions.push({
+    id: "sync-core-first",
+    title: "Sync Core Video Data First",
+    body: "Start with the main API sync so ViewTube has baseline channel and video statistics to build from.",
+    majorFamily: "video_data",
+   })
+  }
+
+  if (Number(uploadCategoryCoverage.counts.content_channel_all || 0) === 0) {
+   actions.push({
+    id: "upload-content-channel-all",
+    title: "Upload A Content Channel All Export",
+    body: "This is the strongest CSV package for matching the channel-wide content table to synced rows.",
+    majorFamily: "video_data",
+   })
+  }
+
+  if (
+   !filteredUnifiedRows
+    .filter((row) => {
+     const formatText = textFromUnknown(
+      row.Format || row.Type || row.format || row.type,
+     ).toLowerCase()
+     return !formatText.includes("short")
+    })
+    .some((row) => getImpressions(row) > 0 && getCtr(row) > 0) ||
+   (impressionsCtrDiagnostic?.status === "error" && csvFiles.length === 0)
+  ) {
+   actions.push({
+    id: "upload-traffic-overview",
+    title: "Upload Traffic Overview For Impressions And CTR",
+    body: "The traffic overview CSV is the clearest way to add impressions, click-through rate, and related reach metrics.",
+    majorFamily: "traffic",
+   })
+  }
+
+  if (
+   chartScopeDiagnostics.includeOnlyActive ||
+   chartScopeDiagnostics.excludedCount > 0
+  ) {
+   actions.push({
+    id: "clear-analysis-filters",
+    title: "Clear Analysis Filters",
+    body: "Restore the full row set before comparing sync results, uploads, and table coverage.",
+    majorFamily: "unknown",
+   })
+  }
+
+  if (actions.length < 4 && uploadCategoryCoverage.unknownCount > 0) {
+   actions.push({
+    id: "review-unknown-uploads",
+    title: "Review Unknown Uploads",
+    body: "Some files did not map cleanly to a known export family. ZIP or full-folder uploads usually detect better.",
+    majorFamily: "unknown",
+   })
+  }
+
+  return actions.slice(0, 4)
+ }, [
+  chartScopeDiagnostics.apiRows,
+  chartScopeDiagnostics.includeOnlyActive,
+  chartScopeDiagnostics.excludedCount,
+  uploadCategoryCoverage.counts,
+  uploadCategoryCoverage.unknownCount,
+  impressionsCtrDiagnostic?.status,
+  csvFiles.length,
+  filteredUnifiedRows,
+ ])
  useEffect(() => {
   if (!openTools.has("shorts-retention")) return
   const timeoutId = window.setTimeout(() => {
@@ -1414,7 +1487,6 @@ const impressionsCtrDiagnostic = useMemo(() => {
     csvFiles: deduped,
    },
   })
-  setResearchLabState({ csvFiles: deduped })
  }
 
  const setUnifiedAnalysisResult = (nextResult: AnalyticsResult | null) => {
@@ -1424,7 +1496,6 @@ const impressionsCtrDiagnostic = useMemo(() => {
     analyticsResult: nextResult,
    },
   })
-  setResearchLabState({ analyticsResult: nextResult })
  }
 
  const ingestUploadedFiles = useCallback(
@@ -1435,7 +1506,7 @@ const impressionsCtrDiagnostic = useMemo(() => {
    const tagged = await buildCsvFilesWithTags(expanded, preUploadType)
    if (storageMode === "storage" || storageMode === "both") {
     setUnifiedCsvFiles(
-     dedupeCsvFilesForMerge([...(brain.channelyticsState.csvFiles || []), ...tagged]),
+     dedupeCsvFilesForMerge([...(storedCsvFiles || []), ...tagged]),
     )
    }
    if (storageMode === "sync" || storageMode === "both") {
@@ -1445,9 +1516,9 @@ const impressionsCtrDiagnostic = useMemo(() => {
    }
   },
   [
-   brain.channelyticsState.csvFiles,
    cachedUploadFiles,
    preUploadType,
+   storedCsvFiles,
    storageMode,
    persistCachedUploadFiles,
   ],
@@ -1483,27 +1554,9 @@ const impressionsCtrDiagnostic = useMemo(() => {
  }
 
  const removeFile = (id: string) => {
-  const next = (brain.channelyticsState.csvFiles || []).filter(
-   (file) => file.id !== id,
-  )
+  const next = storedCsvFiles.filter((file) => file.id !== id)
   setUnifiedCsvFiles(next)
   persistCachedUploadFiles((cachedUploadFiles || []).filter((file) => file.id !== id))
- }
-
- const clearPipelineLogs = () => {
-  const cache = readYouTubeAnalyticsCache() as any
-  if (cache?.analyticsByWindow?.[analyticsWindow]) {
-   if (cache.analyticsByWindow[analyticsWindow].groups) {
-    delete cache.analyticsByWindow[analyticsWindow].groups
-   }
-   if (cache.analyticsByWindow[analyticsWindow].syncDiagnostics) {
-    // Keep disabledMetrics as "truth", but drop noisy run events.
-    cache.analyticsByWindow[analyticsWindow].syncDiagnostics.failureReasons = []
-    cache.analyticsByWindow[analyticsWindow].syncDiagnostics.knownInvalidCombos = []
-   }
-  }
-  writeYouTubeAnalyticsCache(cache)
-  setPipelineLogTick((value) => value + 1)
  }
 
  const runAnalysis = async () => {
@@ -1762,7 +1815,13 @@ const hasVisualizationData = useMemo(
     const formatValue = textFromUnknown(
      row["Format"] || row["Type"] || row["type"] || row._userTag || "",
     ).toLowerCase()
+    const seriesKey = `${toStorageIdentity(
+     textFromUnknown(
+      row["Video ID"] || row.videoId || row.Content || row.content || row.Dimension || getTitle(row, index),
+     ),
+    ) || "engagement-point"}-${index}`
     return {
+     key: seriesKey,
      index,
      label: `${index + 1}`,
      videoId: toStorageIdentity(
@@ -2283,12 +2342,125 @@ const valueMatrixMissingSummary = useMemo(() => {
      likes: getLikes(row),
     }))
     .filter((row) => row.views > 0 || row.likes > 0),
-  [filteredUnifiedRows],
- )
+ [filteredUnifiedRows],
+)
+
+ const getMasterSupplementalValue = (
+  row: TableRow,
+  header: string,
+ ): unknown => {
+  const source = (row as Record<string, unknown>)._supplementalData as
+   | Record<string, unknown>
+   | undefined
+  const original = (row as Record<string, unknown>)._originalData as
+   | Record<string, unknown>
+   | undefined
+  const column = getMasterVideoColumnDefinition(header)
+  const probes = [
+   row[header],
+   source?.[header],
+   original?.[header],
+   ...(column?.aliases || []).flatMap((alias) => [source?.[alias], original?.[alias]]),
+  ]
+ return probes.find((value) => {
+  if (value === undefined || value === null) return false
+  return textFromUnknown(value).trim() !== ""
+ })
+}
+
+ const hasMasterColumnSignal = (row: TableRow, header: string): boolean => {
+  const metricCell = getHeaderMetricCell(row as Record<string, unknown>, header)
+  if (metricCell && metricCell.status !== "unavailable" && metricCell.value !== null) {
+   return true
+  }
+
+  const supplementalValue = getMasterSupplementalValue(row, header)
+  if (supplementalValue !== undefined) return true
+
+ const directValue = (row as Record<string, unknown>)[header]
+ if (directValue === undefined || directValue === null) return false
+ return textFromUnknown(directValue).trim() !== ""
+}
+
+const getMasterNumericFromHeader = (row: TableRow, header: string): number => {
+ const column = getMasterVideoColumnDefinition(header)
+ if (column) {
+  const probes = [column.header, ...column.aliases]
+  return getMetric(row as Record<string, unknown>, probes)
+ }
+ return getMetric(row as Record<string, unknown>, [header])
+}
+
+ const formatMasterScalar = (header: string, rawValue: unknown): string => {
+  const currencyHeaders = new Set([
+   "Estimated revenue (USD)",
+   "YouTube ad revenue (USD)",
+   "YouTube Premium (USD)",
+   "Transaction revenue (USD)",
+   "Revenue per transaction (USD)",
+   "Watch Page ads (USD)",
+   "Estimated DoubleClick revenue (USD)",
+   "Estimated AdSense revenue (USD)",
+   "RPM (USD)",
+   "CPM (USD)",
+   "Playback-based CPM (USD)",
+  ])
+  const percentHeaders = new Set([
+   "Average percentage viewed (%)",
+   "Stayed to watch (%)",
+   "Likes (vs. dislikes) (%)",
+   "Impressions click-through rate (%)",
+   "Clicks per end screen element shown (%)",
+   "Clicks per card shown (%)",
+   "Teaser clicks per card teaser shown (%)",
+  ])
+  const durationHoursHeaders = new Set([
+   "Watch time (hours)",
+   "YouTube Premium watch time (hours)",
+   "Playlist watch time (hours)",
+  ])
+
+  if (header === "Average view duration") {
+   const durationText = textFromUnknown(rawValue)
+   if (/^\d+:\d{1,2}(?::\d{1,2})?$/.test(durationText)) return durationText
+   const totalSec = Math.round(numberFromUnknown(rawValue))
+   if (totalSec <= 0) return "-"
+   const h = Math.floor(totalSec / 3600)
+   const m = Math.floor((totalSec % 3600) / 60)
+   const s = totalSec % 60
+   return h > 0
+    ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+    : `${m}:${String(s).padStart(2, "0")}`
+  }
+  if (currencyHeaders.has(header)) return `$${numberFromUnknown(rawValue).toFixed(2)}`
+  if (percentHeaders.has(header)) {
+   return `${numberFromUnknown(rawValue).toLocaleString(undefined, {
+    maximumFractionDigits: 2,
+   })}%`
+  }
+  if (durationHoursHeaders.has(header)) {
+   return numberFromUnknown(rawValue).toLocaleString(undefined, {
+    maximumFractionDigits: 2,
+   })
+  }
+  const numericText = textFromUnknown(rawValue).replace(/,/g, "").replace(/%/g, "").trim()
+  if (numericText && !Number.isNaN(Number(numericText))) {
+   const numeric = Number(numericText)
+   return numeric.toLocaleString(undefined, {
+    maximumFractionDigits: Number.isInteger(numeric) ? 0 : 2,
+   })
+  }
+  return textFromUnknown(rawValue) || "-"
+ }
 
  const getNumericValue = (row: TableRow, header: string): number => {
   const metricCell = getHeaderMetricCell(row as Record<string, unknown>, header)
   if (metricCell?.value !== undefined && metricCell.value !== null) return metricCell.value
+  const supplementalValue = getMasterSupplementalValue(row, header)
+  if (supplementalValue !== undefined) {
+   const numeric = numberFromUnknown(supplementalValue)
+   if (numeric !== 0 || textFromUnknown(supplementalValue).trim() === "0") return numeric
+  }
   
  if (header === "Views") return getViews(row)
  if (header === "Watch Hrs") return getWatchHours(row)
@@ -2313,34 +2485,40 @@ const valueMatrixMissingSummary = useMemo(() => {
   datasetId: TableDatasetId,
  ): string => {
  const formatValue = textFromUnknown(
-  row["Format"] || row["Type"] || row["type"],
+  row["Format"] || row["Type"] || row["type"] || row._userTag || (row as any).format || "",
  ).toLowerCase()
- const isShortFormat = formatValue.includes("short")
- const hasCsvAnalytics = csvFiles.length > 0
+ const hasStwData = getMetric(row as Record<string, unknown>, ["STW %", "Stayed to watch (%)"]) > 0
+ const isShortFormat = formatValue.includes("short") || hasStwData || inferValueMatrixFormat(row as Record<string, unknown>) === "shorts"
  const applicability = METRIC_APPLICABILITY_RULES[header] || "all"
+ const coverageState = textFromUnknown((row as Record<string, unknown>)._coverageState)
  if (datasetId === "master") {
-  if (applicability === "shorts-only" && !isShortFormat) return "=="
-  if (applicability === "long-only" && isShortFormat) return "=="
+  if (applicability === "shorts-only" && !isShortFormat) return "N/A"
+  if (applicability === "long-only" && isShortFormat) return "N/A"
  }
 
  if (datasetId === "master" && header === "Impressions") {
-  if (!hasCsvAnalytics) return "-"
-  if (isShortFormat) return "=="
+  if (isShortFormat) return "N/A"
   const impressions = getImpressions(row)
-  return impressions > 0 ? impressions.toLocaleString() : "-"
+  if (hasMasterColumnSignal(row, header)) return impressions.toLocaleString()
+  return coverageState === "hybrid_partial" ? "Partial" : "-"
  }
 
- if (datasetId === "master" && (header === "CTR %" || header === "CTR")) {
-  if (!hasCsvAnalytics) return "-"
-  if (isShortFormat) return "=="
+ if (datasetId === "master" && (header === "CTR %" || header === "CTR" || header === "CTR (%)" || header === "Impressions click-through rate (%)" || header === "Click-Through Rate (CTR)")) {
+  if (isShortFormat) return "N/A"
   const ctr = getCtr(row)
-  return ctr > 0 ? `${ctr.toFixed(2)}%` : "-"
+  if (hasMasterColumnSignal(row, "Impressions click-through rate (%)")) {
+   return `${ctr.toFixed(2)}%`
+  }
+  return coverageState === "hybrid_partial" ? "Partial" : "-"
  }
 
- if (datasetId === "master" && header === "STW %") {
-  if (!isShortFormat) return "=="
+ if (datasetId === "master" && (header === "STW %" || header === "Stayed to watch (%)")) {
+  if (!isShortFormat) return "N/A"
   const stw = getMetric(row, ["STW %", "Stayed to watch (%)"])
-  return stw > 0 ? `${stw.toFixed(2)}%` : "-"
+  if (hasMasterColumnSignal(row, "Stayed to watch (%)")) {
+   return `${stw.toFixed(2)}%`
+  }
+  return coverageState === "hybrid_partial" ? "Partial" : "-"
  }
 
   const metricCell = getHeaderMetricCell(row as Record<string, unknown>, header)
@@ -2350,21 +2528,31 @@ const valueMatrixMissingSummary = useMemo(() => {
    }
 
    const value = metricCell.value
+   if (value === 0 && !hasMasterColumnSignal(row, header)) {
+    return "-"
+   }
+
    const percentHeaders = new Set([
     "CTR %",
+    "CTR (%)",
+    "Impressions click-through rate (%)",
+    "Click-Through Rate (CTR)",
     "STW %",
+    "Stayed to watch (%)",
     "End Screen %",
     "Card %",
     "Teaser %",
+    "AVP %",
+    "Average percentage viewed (%)",
+    "Average percentage viewed",
    ])
    if (percentHeaders.has(header)) return `${value.toFixed(2)}%`
-   if (header === "AVP %") return `${Math.round(value)}%`
 
-   if (header === "Revenue" || header === "Estimated revenue") {
+   if (header === "Revenue" || header === "Estimated revenue" || header === "Estimated revenue (USD)") {
     return `$${value.toFixed(2)}`
    }
-   if (header === "CPM" || header === "RPM") {
-    if (header === "CPM" && isShortFormat) return "-"
+   if (header === "CPM" || header === "RPM" || header === "CPM (USD)" || header === "RPM (USD)") {
+    if ((header === "CPM" || header === "CPM (USD)") && isShortFormat) return "-"
     return `$${value.toFixed(2)}`
    }
    if (
@@ -2374,13 +2562,14 @@ const valueMatrixMissingSummary = useMemo(() => {
    ) {
     return value.toFixed(2)
    }
-   if (header === "Subs +" || header === "Subs -") {
+   if (header === "Subs +" || header === "Subs -" || header === "Subs Net") {
     return Math.round(value).toLocaleString()
    }
    if (
     header === "AVD" ||
     header === "AVD (Average View Duration)" ||
-    header === "AVD (Sec)"
+    header === "AVD (Sec)" ||
+    header === "Average view duration"
    ) {
     const totalSec = Math.round(value)
     const h = Math.floor(totalSec / 3600)
@@ -2404,7 +2593,7 @@ const valueMatrixMissingSummary = useMemo(() => {
    return getTitle(row, index)
   if (header === "Video ID")
    return textFromUnknown(
-    firstDefined(row, ["Video ID", "Dimension", "videoId"]),
+    firstDefined(row, ["Video ID", "videoId", "Content"]),
    )
   if (header === "Length" || header === "Duration") {
    const length = numberFromUnknown(
@@ -2419,13 +2608,21 @@ const valueMatrixMissingSummary = useMemo(() => {
     : `${m}:${String(s).padStart(2, "0")}`
   }
   if (header === "Format")
-   return textFromUnknown(row["Format"] || row["Type"] || row["type"] || "-")
+   return textFromUnknown(
+    row["Format"] || row["Type"] || row["type"] || row._userTag || "-",
+   )
   if (header === "Upload date") {
    const val = textFromUnknown(row["Upload date"] || row["Video publish time"] || row["Date"] || "-")
    return formatDateAsMmDdYy(val)
   }
   if (header === "Date" || header === "Day" || header === "Video publish time")
    return formatDateAsMmDdYy(getDateLabel(row))
+  if (datasetId === "master") {
+   const supplementalValue = getMasterSupplementalValue(row, header)
+   if (supplementalValue !== undefined) {
+    return formatMasterScalar(header, supplementalValue)
+   }
+  }
   if (header === "Views") return getViews(row).toLocaleString()
   if (header === "Impressions") return getImpressions(row).toLocaleString()
   if (header === "Engaged" || header === "Engaged views")
@@ -2436,8 +2633,10 @@ const valueMatrixMissingSummary = useMemo(() => {
   if (header === "Shares") return getShares(row).toLocaleString()
   if (header === "Subs +")
    return Math.round(
-    getMetric(row, ["Subs +", "Subscribers Gained", "Subscribers"]),
+    getMetric(row, ["Subs +", "Subscribers Gained", "Subscribers gained"]),
    ).toLocaleString()
+  if (header === "Subscribers net" || header === "Subscribers Net" || header === "Subs Net")
+   return formatNumberMax2(numberFromUnknown(row["Subscribers net"] || row["Subscribers"] || row["subscribersNet"] || row["Subs Net"]))
   if (header === "CPM")
    return formatNumberMax2(getMetric(row, ["CPM", "CPM (USD)"]))
   if (header === "Duration (sec)") {
@@ -2483,7 +2682,7 @@ const valueMatrixMissingSummary = useMemo(() => {
    return getAvpPercent(row).toLocaleString(undefined, {
     maximumFractionDigits: 2,
    })
-  if (header === "Subscribers Gained" || header === "Subscribers")
+  if (header === "Subscribers Gained")
    return formatNumberMax2(getSubscribers(row))
   if (
    header === "CTR %" ||
@@ -2510,16 +2709,29 @@ const valueMatrixMissingSummary = useMemo(() => {
    }
    return "Unavailable"
   }
-  if (header === "New Viewers")
-   return getMetric(row, ["New Viewers"]).toLocaleString()
-  if (header === "Returning Viewers")
-   return getMetric(row, ["Returning Viewers"]).toLocaleString()
-  if (header === "Casual viewers")
-   return getMetric(row, ["Casual viewers", "Casual Viewers"]).toLocaleString()
-  if (header === "Regular viewers")
-   return getMetric(row, ["Regular viewers", "Regular Viewers"]).toLocaleString()
-  if (header === "Unique viewers")
-   return getMetric(row, ["Unique viewers", "Unique Viewers"]).toLocaleString()
+  if (
+   header === "New viewers" ||
+   header === "New Viewers" ||
+   header === "Returning viewers" ||
+   header === "Returning Viewers" ||
+   header === "Casual viewers" ||
+   header === "Regular viewers" ||
+   header === "Unique viewers" ||
+   header === "Average views per viewer" ||
+   header === "Unique reach"
+  ) {
+   const value = getMasterNumericFromHeader(row, header)
+   return value.toLocaleString(undefined, {
+    maximumFractionDigits:
+     header === "Average views per viewer" ? 2 : 0,
+   })
+  }
+  if (header === "Likes (vs. dislikes) (%)") {
+   const likePct = getMasterNumericFromHeader(row, header)
+   return `${likePct.toLocaleString(undefined, {
+    maximumFractionDigits: 2,
+   })}%`
+  }
   if (header === "AVD (Average View Duration)") {
    const totalSec = Math.round(getAvdSeconds(row))
    const h = Math.floor(totalSec / 3600)
@@ -2529,9 +2741,11 @@ const valueMatrixMissingSummary = useMemo(() => {
     ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
     : `${m}:${String(s).padStart(2, "0")}`
   }
-  if (header === "STW %") {
-   const stw = getMetric(row, ["STW %", "Stayed to watch (%)"])
-   return stw > 0 ? `${stw.toFixed(2)}%` : "-"
+  if (header === "STW %" || header === "Stayed to watch (%)") {
+   const stw = getMasterNumericFromHeader(row, "Stayed to watch (%)")
+   return hasMasterColumnSignal(row, "Stayed to watch (%)")
+    ? `${stw.toFixed(2)}%`
+    : "-"
   }
   if (header === "End Screen %" || header === "End screen click rate") {
    const endRate = getMetric(row, [
@@ -2950,6 +3164,10 @@ type AudienceDemographicsCsvRow = {
      row["Date"] || row["day"] || row["Day"] || row["Upload date"],
     )
     const growthRow = growthCsvByDate.get(dateKey) || {}
+    const projectedDailyFields = buildProjectedDailyMetricFields(
+     row as Record<string, unknown>,
+     growthRow,
+    )
 
     return {
      ...row,
@@ -3003,9 +3221,10 @@ type AudienceDemographicsCsvRow = {
       numberFromUnknown(growthRow["Subscribers"]) ||
       numberFromUnknown(growthRow["subscribers"]) ||
       getMetric(row, ["subscribers", "Subscribers"]),
+     ...projectedDailyFields,
      } as UnifiedRow
    },
-  ).reverse()
+  )
 
   const apiTrafficRows = normalizedReportRows(
    cache?.trafficSources,
@@ -3468,48 +3687,46 @@ type AudienceDemographicsCsvRow = {
 
   return [
    {
-    id: TABLE_DATASET_CONTRACTS.master.id,
-    label: TABLE_DATASET_CONTRACTS.master.label,
+    id: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.master.id,
+    label: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.master.label,
     rows: contractedMasterRows,
-    supportsTagFilter: TABLE_DATASET_CONTRACTS.master.supportsTagFilter,
-    columns: TABLE_DATASET_CONTRACTS.master.columns.filter(
-     (column) => getMasterColumnVisibilityRule(column) !== "import_only",
-    ),
+    supportsTagFilter: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.master.supportsTagFilter,
+    columns: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.master.columns,
    },
    {
-    id: TABLE_DATASET_CONTRACTS.daily.id,
-    label: TABLE_DATASET_CONTRACTS.daily.label,
+    id: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.daily.id,
+    label: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.daily.label,
     rows: contractedDailyRows,
-    supportsTagFilter: TABLE_DATASET_CONTRACTS.daily.supportsTagFilter,
-    columns: TABLE_DATASET_CONTRACTS.daily.columns,
+    supportsTagFilter: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.daily.supportsTagFilter,
+    columns: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.daily.columns,
    },
    {
-    id: TABLE_DATASET_CONTRACTS.traffic.id,
-    label: TABLE_DATASET_CONTRACTS.traffic.label,
+    id: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.traffic.id,
+    label: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.traffic.label,
     rows: contractedTrafficRows,
-    supportsTagFilter: TABLE_DATASET_CONTRACTS.traffic.supportsTagFilter,
-    columns: TABLE_DATASET_CONTRACTS.traffic.columns,
+    supportsTagFilter: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.traffic.supportsTagFilter,
+    columns: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.traffic.columns,
    },
    {
-    id: TABLE_DATASET_CONTRACTS.audience.id,
-    label: TABLE_DATASET_CONTRACTS.audience.label,
+    id: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.audience.id,
+    label: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.audience.label,
     rows: contractedAudienceRows,
-    supportsTagFilter: TABLE_DATASET_CONTRACTS.audience.supportsTagFilter,
-    columns: TABLE_DATASET_CONTRACTS.audience.columns,
+    supportsTagFilter: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.audience.supportsTagFilter,
+    columns: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.audience.columns,
    },
    {
-    id: TABLE_DATASET_CONTRACTS.country.id,
-    label: TABLE_DATASET_CONTRACTS.country.label,
+    id: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.country.id,
+    label: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.country.label,
     rows: contractedCountryRows,
-    supportsTagFilter: TABLE_DATASET_CONTRACTS.country.supportsTagFilter,
-    columns: TABLE_DATASET_CONTRACTS.country.columns,
+    supportsTagFilter: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.country.supportsTagFilter,
+    columns: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.country.columns,
    },
    {
-    id: TABLE_DATASET_CONTRACTS.device.id,
-    label: TABLE_DATASET_CONTRACTS.device.label,
+    id: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.device.id,
+    label: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.device.label,
     rows: contractedDeviceRows,
-    supportsTagFilter: TABLE_DATASET_CONTRACTS.device.supportsTagFilter,
-    columns: TABLE_DATASET_CONTRACTS.device.columns,
+    supportsTagFilter: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.device.supportsTagFilter,
+    columns: PERFORMANCE_HUB_TABLE_DATASET_CONTRACTS.device.columns,
    },
   ]
  }, [masterTableRows, filteredUnifiedRows, lastSyncComplete, csvFiles, dataSource])
@@ -3566,65 +3783,80 @@ type AudienceDemographicsCsvRow = {
  )
 
  const tableHeaders = useMemo(() => {
-  const profile = DATASET_PROFILES[activeTableDataset.id]
-  const candidateHeaders = activeTableDataset.columns.filter((header) =>
-   profile.allowedColumns.includes(header),
-  )
+  const profile = PERFORMANCE_HUB_DATASET_PROFILES[activeTableDataset.id]
+  const candidateHeaders =
+   activeTableDataset.id === "master"
+    ? activeTableDataset.columns
+    : activeTableDataset.columns.filter((header) =>
+       profile.allowedColumns.includes(header),
+      )
 
-  if (activeTableDataset.id === "master") {
+ if (activeTableDataset.id === "master") {
    const canonical = candidateHeaders.map((header) =>
     getCanonicalMasterHeader(header),
    )
    const unique = Array.from(new Set(canonical))
-   const identityHeaders = new Set([
-    "Video title",
-    "Video ID",
-    "Upload date",
-    "Length",
-    "Format",
-    "Date",
-   ])
-   const seenMetricKeys = new Set<string>()
-   const seenLabels = new Set<string>()
+   const identityHeaders = new Set(getMasterVideoIdentityHeaders())
+   const sourceEligible = new Set(
+    getMasterVideoSourceEligibleHeaders(syncSourceMode),
+   )
+   const seenDedupeKeys = new Set<string>()
+   const isApiSyncPreset = syncSourceMode === "api_analytics"
 
    const hasRenderableSignal = (header: string): boolean =>
     activeTableDataset.rows.some((row, rowIndex) => {
+     if (hasMasterColumnSignal(row, header)) return true
      const rendered = getTableCellValue(row, header, rowIndex, "master").trim()
-     if (rendered === "" || rendered === "-" || rendered === "==") return false
-
-     const numericToken = rendered
-      .replace(/\$/g, "")
-      .replace(/,/g, "")
-      .replace(/%/g, "")
-      .trim()
-     const parsed = Number(numericToken)
-     if (Number.isFinite(parsed)) return Math.abs(parsed) > 0
+     if (rendered === "" || rendered === "-" || rendered === "==" || rendered === "N/A") return false
      return true
     })
 
-   const filtered = unique.filter((header) => {
+   const eligibleHeaders = unique.filter((header) => {
     if (identityHeaders.has(header)) return true
-    if (MASTER_ALWAYS_VISIBLE_HEADERS.has(header)) return true
+    return sourceEligible.has(header)
+   })
+
+   const filtered = eligibleHeaders.filter((header) => {
+    if (identityHeaders.has(header)) return true
+    const columnDef = getMasterVideoColumnDefinition(header)
+    if (
+     MASTER_ALWAYS_VISIBLE_HEADERS.has(header) ||
+     columnDef?.preserveWhenEmpty ||
+     (isApiSyncPreset && MASTER_API_CORE_VISIBLE_HEADERS.includes(header))
+    ) {
+     return true
+    }
     if (!hasRenderableSignal(header)) return false
 
-    const metricKey = MASTER_HEADER_TO_CANONICAL[header]
-    if (metricKey) {
-      if (seenMetricKeys.has(metricKey)) return false
-      seenMetricKeys.add(metricKey)
-    }
-
-    const labelKey = toDisplayHeaderLabel(header).toLowerCase()
-    if (seenLabels.has(labelKey)) return false
-    seenLabels.add(labelKey)
+    const dedupeKey = getMasterVideoDedupeKey(header)
+    if (seenDedupeKeys.has(dedupeKey)) return false
+    seenDedupeKeys.add(dedupeKey)
     return true
+   })
+   const priorityOrder = isApiSyncPreset
+    ? MASTER_API_CORE_VISIBLE_HEADERS
+    : MASTER_VISIBILITY_PRIORITY_HEADERS
+   const priorityIndex = new Map(
+    priorityOrder.map((header, index) => [header, index]),
+   )
+   const prioritized = [...filtered].sort((a, b) => {
+    const aIndex = priorityIndex.get(a)
+    const bIndex = priorityIndex.get(b)
+    if (aIndex === undefined && bIndex === undefined) return 0
+    if (aIndex === undefined) return 1
+    if (bIndex === undefined) return -1
+    return aIndex - bIndex
    })
    const required = new Set(profile.requiredColumns)
    const requiredVisible = profile.requiredColumns.filter((header) =>
-    filtered.includes(header),
+    prioritized.includes(header),
    )
-   return filtered.filter((header) => filtered.includes(header) || required.has(header)).length
-    ? Array.from(new Set([...requiredVisible, ...filtered]))
-    : filtered
+   return prioritized.filter((header) => prioritized.includes(header) || required.has(header)).length
+    ? Array.from(new Set([...requiredVisible, ...prioritized]))
+    : prioritized
+  }
+  if (activeTableDataset.id === "daily") {
+   return candidateHeaders
   }
   const unique = Array.from(new Set(candidateHeaders))
   const dedupeAliases = profile.dedupeAliases || {}
@@ -3641,14 +3873,18 @@ type AudienceDemographicsCsvRow = {
      return true
     }
     const rendered = getTableCellValue(row, header, rowIndex, activeTableDataset.id)
-    return rendered !== "" && rendered !== "-" && rendered !== "=="
+    return rendered !== "" && rendered !== "-" && rendered !== "==" && rendered !== "N/A"
    })
 
   const filtered = unique.filter((header) => {
    if (profile.requiredColumns.includes(header)) return true
    if (!hasSignal(header)) return false
    const alias = dedupeAliases[header] || header
-   const labelBucket = toDisplayHeaderLabel(alias).toLowerCase()
+   const labelBucket = (
+    shouldUseCompactHeaderLabels(activeTableDataset.id)
+     ? toDisplayHeaderLabel(alias)
+     : alias
+   ).toLowerCase()
    if (seenLabelBuckets.has(labelBucket)) return false
    seenLabelBuckets.add(labelBucket)
    return true
@@ -3658,16 +3894,18 @@ type AudienceDemographicsCsvRow = {
    unique.includes(header),
   )
   return Array.from(new Set([...requiredVisible, ...filtered]))
-}, [activeTableDataset])
+}, [activeTableDataset, syncSourceMode])
 
  useEffect(() => {
   setTableColumnOrder((prev) => {
+   if (activeTableDataset.id === "master") return [...tableHeaders]
+   if (activeTableDataset.id === "daily") return [...tableHeaders]
    if (!prev.length) return [...tableHeaders]
    const kept = prev.filter((header) => tableHeaders.includes(header))
    const missing = tableHeaders.filter((header) => !kept.includes(header))
    return [...kept, ...missing]
   })
- }, [tableHeaders])
+ }, [tableHeaders, activeTableDataset.id])
 
  const orderedTableHeaders = useMemo(() => {
   if (!tableColumnOrder.length) return tableHeaders
@@ -3727,7 +3965,6 @@ type AudienceDemographicsCsvRow = {
   canonicalApiRows,
   duplicateShortHeaders,
   lastSyncComplete,
-  pipelineLogTick,
  ])
 
 const tableMetricMappingStatus = useMemo<TableMetricMappingStatus>(
@@ -3739,6 +3976,38 @@ const tableMetricMappingStatus = useMemo<TableMetricMappingStatus>(
    }),
  [canonicalApiRows, tableHeaders, duplicateShortHeaders],
 )
+
+ const mergeContractSummary = useMemo(() => {
+  const precedenceLabel =
+   dataSource === "api" ?
+    "Synced YouTube analytics only"
+   : dataSource === "csv" ?
+    "Recognized CSV uploads only"
+   : "Hybrid merge: canonical API rows with recognized CSV supplements"
+  const authoritativeMetricSource =
+   dataSource === "csv" ? "CSV exports" : "Synced API metrics"
+  return {
+   precedenceLabel,
+   authoritativeMetricSource,
+   recognizedUploads: recognizedCsvFiles.length,
+   uploadedRows: csvRows.length,
+   canonicalApiRows: canonicalApiRows.length,
+   mergedCanonicalRows: canonicalMasterRows.length,
+   visibleMasterRows: masterTableRows.length,
+   unmappedMetrics: tableMetricMappingStatus.unmappedMetricKeys.length,
+   lastFailure:
+    analyticsSyncDiagnostics?.failureReasons?.find((reason) => reason.status) || null,
+  }
+ }, [
+  analyticsSyncDiagnostics,
+  canonicalApiRows.length,
+  canonicalMasterRows.length,
+  csvRows.length,
+  dataSource,
+  masterTableRows.length,
+  recognizedCsvFiles.length,
+  tableMetricMappingStatus.unmappedMetricKeys.length,
+ ])
 
  const datasetCoverageSummaries = useMemo(() => {
   const visibleByDataset = new Map<TableDatasetId, string[]>()
@@ -3762,22 +4031,72 @@ const activeDatasetCoverageSummary = useMemo(
  )
 
  const columnProfileDiagnostics = useMemo(() => {
-  const profile = DATASET_PROFILES[activeTableDataset.id]
+  const profile = PERFORMANCE_HUB_DATASET_PROFILES[activeTableDataset.id]
   const input = activeTableDataset.columns
   const visible = new Set(tableHeaders)
-  const dropped: Array<{ header: string; reason: "empty" | "duplicate" | "non_profiled" }> = []
+  const dropped: Array<{
+   header: string
+   reason:
+    | "empty"
+    | "duplicate"
+    | "non_profiled"
+    | "hidden_by_applicability"
+    | "hidden_by_signal"
+   hasSupplementalData?: boolean
+   hasMetricCell?: boolean
+  }> = []
   const labelSeen = new Set<string>()
   input.forEach((header) => {
    if (!profile.allowedColumns.includes(header)) {
     dropped.push({ header, reason: "non_profiled" })
-    return
+     return
    }
    if (visible.has(header)) return
+   const applicability = METRIC_APPLICABILITY_RULES[header] || "all"
+   const hasApplicableRows =
+    applicability === "all"
+     ? true
+     : activeTableDataset.rows.some((row) => {
+        const formatValue = textFromUnknown(
+         row["Format"] || row["Type"] || row["type"] || row._userTag || "",
+        ).toLowerCase()
+        const isShortFormat = formatValue.includes("short")
+        if (applicability === "shorts-only") return isShortFormat
+        if (applicability === "long-only") return !isShortFormat
+        return true
+       })
+   const hasSupplementalData = activeTableDataset.rows.some((row) => {
+    const value = getMasterSupplementalValue(row, header)
+    return value !== undefined
+   })
+   const hasMetricCell = activeTableDataset.rows.some((row) => {
+    const cell = getHeaderMetricCell(row as Record<string, unknown>, header)
+    return !!cell && cell.status !== "unavailable" && cell.value !== null
+   })
+   if (!hasApplicableRows) {
+    dropped.push({
+     header,
+     reason: "hidden_by_applicability",
+     hasSupplementalData,
+     hasMetricCell,
+    })
+    return
+   }
    const label = toDisplayHeaderLabel(header).toLowerCase()
    if (labelSeen.has(label)) {
-    dropped.push({ header, reason: "duplicate" })
+    dropped.push({
+     header,
+     reason: "duplicate",
+     hasSupplementalData,
+     hasMetricCell,
+    })
    } else {
-    dropped.push({ header, reason: "empty" })
+    dropped.push({
+     header,
+     reason: hasSupplementalData || hasMetricCell ? "hidden_by_signal" : "empty",
+     hasSupplementalData,
+     hasMetricCell,
+    })
    }
    labelSeen.add(label)
   })
@@ -4058,12 +4377,11 @@ const filteredTableRows = useMemo(() => {
  }, [filteredTableRows, sortColumn, sortDir, activeTableDataset])
 
  useEffect(() => {
-  if (sortColumn) return
-  const profile = DATASET_PROFILES[tableDataset]
+  const profile = PERFORMANCE_HUB_DATASET_PROFILES[tableDataset]
   if (!profile.defaultSort) return
   setSortColumn(profile.defaultSort.column)
   setSortDir(profile.defaultSort.dir)
- }, [tableDataset, sortColumn])
+ }, [tableDataset])
 
  const tableRows = useMemo(() => sortedTableRows, [sortedTableRows])
  const [visibleRowCount, setVisibleRowCount] = useState(200)
@@ -4114,17 +4432,6 @@ const filteredTableRows = useMemo(() => {
   () => displayedTableRows.map((row) => row._id),
   [displayedTableRows],
  )
- const visibleVideoIdentities = useMemo(
-  () =>
-   displayedTableRows.map((row, index) =>
-    toStorageIdentity(
-     textFromUnknown(
-      row["Video ID"] || row.Dimension || row.videoId || getTitle(row, index),
-     ),
-    ),
-   ),
-  [displayedTableRows],
- )
  const selectedVisibleCount = useMemo(
   () => visibleRowIds.filter((id) => selectedRowIds.has(id)).length,
   [visibleRowIds, selectedRowIds],
@@ -4166,7 +4473,11 @@ const filteredTableRows = useMemo(() => {
     ),
    )
    if (!identity) return
-   setVideoFlags?.(identity, { excludeAnalysis: true, includeOnly: false })
+   setVideoFlags?.(identity, {
+    excludeAnalysis: true,
+    includeOnly: false,
+    priorityAnalysis: false,
+   })
   })
  }
 
@@ -4179,12 +4490,22 @@ const filteredTableRows = useMemo(() => {
     ),
    )
    if (!identity) return
-   setVideoFlags?.(identity, { includeOnly: true, excludeAnalysis: false })
+   setVideoFlags?.(identity, {
+    includeOnly: true,
+    priorityAnalysis: true,
+    excludeAnalysis: false,
+   })
   })
  }
 
- const clearFlagsOnVisible = () => {
-  visibleVideoIdentities.forEach((identity) => {
+ const clearSelectedFlags = () => {
+  tableRows.forEach((row, index) => {
+   if (!selectedRowIds.has(row._id)) return
+   const identity = toStorageIdentity(
+    textFromUnknown(
+     row["Video ID"] || row.Dimension || row.videoId || getTitle(row, index),
+    ),
+   )
    if (!identity) return
    setVideoFlags?.(identity, {
     excludeAnalysis: false,
@@ -4195,7 +4516,7 @@ const filteredTableRows = useMemo(() => {
  }
 
  const useSparseTableLayout = useMemo(() => {
-  const profile = DATASET_PROFILES[activeTableDataset.id]
+  const profile = PERFORMANCE_HUB_DATASET_PROFILES[activeTableDataset.id]
   return profile.sparseLayout && orderedTableHeaders.length <= 10
  }, [activeTableDataset.id, orderedTableHeaders.length])
 
@@ -4240,7 +4561,6 @@ const filteredTableRows = useMemo(() => {
  )
 
  const renderDataManager = () => {
-  const stats = selectedMetricSummary
   const longRows = filteredUnifiedRows.filter((row) => {
    const formatText = textFromUnknown(
     row.Format || row.Type || row.format || row.type,
@@ -4253,108 +4573,102 @@ const filteredTableRows = useMemo(() => {
   const shouldShowCsvNeedHint =
    !hasLongImpressionsCtr ||
    (impressionsCtrDiagnostic?.status === "error" && csvFiles.length === 0)
+  const sourceModeLabel =
+   syncSourceMode === "both"
+    ? "API + uploads"
+    : syncSourceMode === "api_analytics"
+     ? "API only"
+     : "Uploads only"
+  const detectedCategoriesLabel = Array.from(
+   new Set(csvFiles.map((file) => (file.detectedCategory || "unknown").replace(/_/g, " "))),
+  ).join(", ")
+
   return (
    <div className="space-y-6">
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-     <div className="space-y-3 flex flex-col">
-      <button
-       onClick={() => globalSyncData({ batchMode: "initial" })}
-       disabled={isSyncing}
-       className={`flex-1 min-h-[48px] border-[3px] border-black rounded-xl bg-[#4FFF5B] shadow-[4px_4px_0px_0px_black] font-[1000] uppercase tracking-tight text-[13px] flex items-center justify-center gap-2 transition-all ${
-        isSyncing
-         ? "opacity-50 cursor-not-allowed translate-x-[2px] translate-y-[2px] shadow-[2px_2px_0px_0px_black]"
-         : "active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_black] hover:-translate-y-0.5"
-       }`}>
-       {isSyncing ? (
-        <RefreshCw size={18} strokeWidth={3} className="animate-spin" />
-       ) : (
-        <RefreshCw size={18} strokeWidth={3} />
-       )}
-       Full Sync
-      </button>
-      <button
-       onClick={() => globalSyncData({ batchMode: "append" })}
-       disabled={isSyncing}
-       className={`flex-1 min-h-[48px] border-[3px] border-black rounded-xl bg-[#CCFF00] shadow-[4px_4px_0px_0px_black] font-[1000] uppercase tracking-tight text-[13px] flex items-center justify-center gap-2 transition-all ${
-        isSyncing
-         ? "opacity-50 cursor-not-allowed translate-x-[2px] translate-y-[2px] shadow-[2px_2px_0px_0px_black]"
-         : "active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_black] hover:-translate-y-0.5"
-       }`}>
-       <Database size={16} strokeWidth={3} />
-       Load Next 250
-      </button>
-     </div>
-     <div className="space-y-3 flex flex-col">
-      <div className="relative text-black flex-1 min-h-[48px]" ref={uploadMenuRef}>
+    <div className="space-y-4">
+     <ChannelDataSyncControls
+      isSyncing={isSyncing}
+      lastSyncComplete={lastSyncComplete}
+      globalSyncData={globalSyncData}
+     />
+     <div className="grid grid-cols-1 lg:grid-cols-[minmax(260px,1fr)_minmax(260px,1fr)] xl:grid-cols-[minmax(300px,1fr)_minmax(280px,0.85fr)] gap-4">
+      <div className="space-y-3 flex flex-col">
+       <div className="relative text-black flex-1 min-h-[48px]" ref={uploadMenuRef}>
+        <button
+         type="button"
+         onClick={() => setUploadMenuOpen((open) => !open)}
+         className={`w-full h-full border-[3px] border-black rounded-xl px-4 shadow-[4px_4px_0px_0px_black] flex items-center justify-between font-black uppercase text-[12px] tracking-wide hover:-translate-y-0.5 transition-all ${selectedUploadStyle}`}>
+         <span>{selectedUploadType.label}</span>
+         <ChevronDown
+          size={14}
+          strokeWidth={4}
+          className={uploadMenuOpen ? "rotate-180" : ""}
+         />
+        </button>
+        {uploadMenuOpen && (
+         <div className="absolute top-full left-0 mt-2 w-full bg-white border-[4px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] overflow-hidden z-40 min-h-[70px] max-h-[280px] overflow-y-auto">
+          {CSV_UPLOAD_TYPE_OPTIONS.map((option) => (
+           <button
+            key={option.value}
+            onClick={() => {
+             setPreUploadType(option.value)
+             setUploadMenuOpen(false)
+            }}
+            className={`w-full h-6 px-4 text-left font-black uppercase text-[10px] tracking-widest border-b-[2px] border-black/10 last:border-b-0 hover:bg-gray-50 transition-colors ${option.menuClass}`}>
+            {option.label}
+           </button>
+          ))}
+         </div>
+        )}
+       </div>
        <button
-        type="button"
-        onClick={() => setUploadMenuOpen((open) => !open)}
-        className="w-full h-full bg-[#24D3FF] border-[3px] border-black rounded-xl px-4 shadow-[4px_4px_0px_0px_black] flex items-center justify-between font-black uppercase text-[12px] tracking-wide hover:-translate-y-0.5 transition-all">
-        <span>{selectedUploadType.label}</span>
-        <ChevronDown
-         size={14}
-         strokeWidth={4}
-         className={uploadMenuOpen ? "rotate-180" : ""}
-        />
+        onClick={() => fileInputRef.current?.click()}
+        className="flex-1 min-h-[48px] bg-[#24D3FF] border-[3px] border-black rounded-xl shadow-[4px_4px_0px_0px_black] font-black uppercase text-[12px] tracking-widest flex items-center justify-center gap-3 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_black] transition-all">
+        <Upload size={18} strokeWidth={3} />
+        Upload CSV/ZIP/FOLDER
        </button>
-       {uploadMenuOpen && (
-        <div className="absolute top-full left-0 mt-2 w-full bg-white border-[4px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] overflow-hidden z-40 min-h-[70px] max-h-[280px] overflow-y-auto">
-         {UPLOAD_TYPE_OPTIONS.map((option) => (
-          <button
-           key={option.value}
-           onClick={() => {
-            setPreUploadType(option.value)
-            setUploadMenuOpen(false)
-           }}
-           className={`w-full h-6 px-4 text-left font-black uppercase text-[10px] tracking-widest border-b-[2px] border-black/10 last:border-b-0 hover:bg-gray-50 transition-colors ${option.menuClass}`}>
-           {option.label}
-          </button>
-         ))}
+       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[9px] font-black uppercase tracking-widest">
+        <div className="border-[2px] border-black rounded-lg bg-[#4FFF5B] px-3 py-2">
+         Best: Upload ZIP or full export folder
         </div>
-       )}
+        <div className="border-[2px] border-black rounded-lg bg-[#FFFF61] px-3 py-2">
+         Good: Upload extracted folder
+        </div>
+        <div className="border-[2px] border-black rounded-lg bg-white px-3 py-2 text-black/55">
+         Weak: Single CSV only
+        </div>
+       </div>
       </div>
-      <button
-       onClick={() => fileInputRef.current?.click()}
-       className="flex-1 min-h-[48px] bg-[#24D3FF] border-[3px] border-black rounded-xl shadow-[4px_4px_0px_0px_black] font-black uppercase text-[12px] tracking-widest flex items-center justify-center gap-3 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_black] transition-all">
-       <Upload size={18} strokeWidth={3} />
-       Upload CSV/ZIP/FOLDER
-      </button>
-     </div>
-     <div className="flex flex-col">
-      <button
-       onClick={runAnalysis}
-       disabled={analysisLoading || filteredUnifiedRows.length === 0}
-       className={`w-full h-full min-h-[108px] border-[3px] border-black rounded-xl bg-[#FFE357] shadow-[4px_4px_0px_0px_black] font-[1000] uppercase tracking-tighter text-[18px] flex items-center justify-center gap-4 transition-all ${
-        analysisLoading || filteredUnifiedRows.length === 0
-         ? "opacity-50 cursor-not-allowed translate-x-[2px] translate-y-[2px] shadow-[2px_2px_0px_0px_black]"
-         : "active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_black] hover:-translate-y-1"
-       }`}>
-       {analysisLoading ? (
-        <Activity size={24} strokeWidth={3.5} className="animate-spin" />
-       ) : (
-        <Zap size={24} strokeWidth={3.5} />
-       )}
-       Connect to Create
-      </button>
+      <div
+       className={`border-[3px] border-black rounded-xl p-4 min-h-[108px] flex flex-col justify-center transition-colors ${
+        isDropActive ? "bg-[#EFFFFA]" : "bg-white"
+       }`}
+       onDragOver={(event) => {
+        event.preventDefault()
+        setIsDropActive(true)
+       }}
+       onDragLeave={(event) => {
+        if (event.currentTarget.contains(event.relatedTarget as Node | null)) return
+        setIsDropActive(false)
+       }}
+       onDrop={handleDropUpload}>
+       <p className="text-[10px] font-black uppercase tracking-widest text-black/45 text-center">
+        Drag and drop folders, zips, and files
+       </p>
+       <p className="text-[9px] font-black uppercase tracking-wider text-black/35 text-center mt-2">
+        Package upload keeps table, chart, and totals files matched together
+       </p>
+       <p className="text-[10px] font-black uppercase tracking-wider text-black/55 text-center mt-3">
+        Uploaded: {csvFiles.length} file{csvFiles.length === 1 ? "" : "s"}
+       </p>
+      </div>
      </div>
     </div>
 
-    <div
-     className={`border-[3px] border-black rounded-xl p-3 min-h-[50px] flex items-center justify-between gap-3 transition-colors ${
-      isDropActive ? "bg-[#EFFFFA]" : "bg-white"
-     }`}
-     onDragOver={(event) => {
-      event.preventDefault()
-      setIsDropActive(true)
-     }}
-     onDragLeave={(event) => {
-      if (event.currentTarget.contains(event.relatedTarget as Node | null)) return
-      setIsDropActive(false)
-     }}
-     onDrop={handleDropUpload}>
+    <div className="border-[3px] border-black rounded-xl p-3 min-h-[50px] flex items-center justify-between gap-3 bg-white">
      {csvFiles.length === 0 ? (
       <p className="text-[11px] font-black uppercase tracking-widest text-black/30">
-       Drop CSV/ZIP/FOLDER here or use Upload CSV/ZIP/FOLDER
+       No files uploaded yet. Use upload button or drag/drop panel above.
       </p>
      ) : (
       <div className="flex flex-wrap gap-2 flex-1">
@@ -4362,10 +4676,18 @@ const filteredTableRows = useMemo(() => {
         <div
          key={file.id}
          className={`inline-flex items-center gap-2 border-[2px] border-black rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider ${getCsvTagColorClass(
-         file.tag,
+          file.tag,
          )}`}>
          <span className="max-w-[150px] truncate">{file.name}</span>
-         <span className="opacity-70">{formatBytes(file.file?.size || 0)}</span>
+         <span className="opacity-70">
+          {file.byteSize && file.byteSize > 0 ? formatBytes(file.byteSize) : "Unknown size"}
+         </span>
+         <span className="opacity-70 text-[8px]">
+          {(file.detectedCategory || "unknown").replace(/_/g, " ")}
+         </span>
+         <span className="opacity-70 text-[8px]">
+          {(file.mergeTargetDataset || "ignore").replace(/_/g, " ")}
+         </span>
          <button
           onClick={() => removeFile(file.id)}
           className="hover:scale-125 transition-transform">
@@ -4381,20 +4703,23 @@ const filteredTableRows = useMemo(() => {
       <Trash2 size={12} strokeWidth={3} /> Clear All
      </button>
     </div>
+
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 -mt-1 px-2">
      <p className="text-[10px] font-black uppercase tracking-wider text-black/45">
-      Uploaded badges now include file size for transparency.
+      Upload summary: {csvFiles.length} files ·{" "}
+      {formatBytes(
+       csvFiles.reduce((sum, file) => sum + (file.byteSize || numberFromUnknown(file.file?.size) || 0), 0),
+      )}{" "}
+      total.
      </p>
      <p className="text-[10px] font-black uppercase tracking-wider text-black/45 md:text-right">
-      Drag and drop supports multiple CSV files and zip exports in one pass.
+      Detected categories: {detectedCategoriesLabel || "none"}.
      </p>
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-y-2 text-[9px] font-black uppercase tracking-widest text-black/40 px-2 mt-2">
      <p>Data Window: {selectedWindowLabel}</p>
-     <p className="md:text-center">
-      Source Mode: {syncSourceMode.split("_").join(" ")}
-     </p>
+     <p className="md:text-center">Source Mode: {sourceModeLabel}</p>
      <p className="md:text-right">
       Write Target: {autoStorageMode === "both" ? "Auto (Sync + Local)" : "Auto (Sync Server)"}
      </p>
@@ -4405,66 +4730,111 @@ const filteredTableRows = useMemo(() => {
      </p>
     </div>
 
-    <div className="border-[3px] border-black rounded-xl p-4 bg-white space-y-3">
-     <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-[2px] border-black pb-2 gap-2">
-      <h4 className="text-[11px] font-[1000] uppercase tracking-widest text-black/60">
-       Pipeline Integrity Checks
-      </h4>
-      <button
-       onClick={clearPipelineLogs}
-       className="text-[9px] font-black uppercase tracking-widest opacity-50 hover:opacity-100 flex items-center gap-1">
-       <Trash2 size={10} strokeWidth={3} /> Clear Logs
-      </button>
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+     <div className="border-[3px] border-black rounded-xl bg-[#CCFF00] p-3">
+      <p className="text-[9px] font-black uppercase tracking-widest text-black/55">Sync Status</p>
+      <p className="text-[18px] font-[1000] uppercase leading-none mt-1">
+       {(syncStatus.phase || "idle").replace(/_/g, " ")}
+      </p>
+      <p className="text-[9px] font-black uppercase tracking-wider mt-2">
+       API rows {chartScopeDiagnostics.apiRows.toLocaleString()}
+      </p>
      </div>
-
-     <div className="flex flex-wrap gap-2">
-      {analyticsGroupStatus.length === 0 ? (
-       <span className="text-[10px] font-black uppercase tracking-widest text-black/30 italic">
-        No checks performed
-       </span>
-      ) : (
-       analyticsGroupStatus.map((group) => (
-        <div
-         key={group.key}
-         className={`px-3 py-1.5 rounded-lg border-[2px] border-black text-[9px] font-black uppercase tracking-wider flex items-center gap-2 shadow-[2px_2px_0px_0px_black] ${
-          group.ok ? "bg-[#C9F830]" : "bg-[#FF3399] text-white"
-         }`}>
-         {group.ok ? (
-          <Check size={12} strokeWidth={4} />
-         ) : (
-          <X size={12} strokeWidth={4} />
-         )}
-         {group.key.split("_").join(" ")}
-        </div>
-      ))
-      )}
+     <div className="border-[3px] border-black rounded-xl bg-[#24D3FF] p-3">
+      <p className="text-[9px] font-black uppercase tracking-widest text-black/55">Uploads Matched</p>
+      <p className="text-[18px] font-[1000] uppercase leading-none mt-1">
+       {recognizedCsvFiles.length}/{csvFiles.length}
+      </p>
+      <p className="text-[9px] font-black uppercase tracking-wider mt-2">
+       Unknown {uploadCategoryCoverage.unknownCount}
+      </p>
      </div>
-
-     <div className="flex flex-wrap gap-2 pt-2 border-t border-black/10">
-      {toolCapabilityHealth.map((entry) => (
-       <div
-        key={entry.toolId}
-        className={`px-2 py-1 rounded border-2 border-black text-[8px] font-black uppercase tracking-wider ${
-         entry.status === "full"
-          ? "bg-[#C9F830]"
-          : entry.status === "partial"
-           ? "bg-[#FFE066]"
-           : "bg-[#FF3399] text-white"
-        }`}>
-        {entry.toolId}: {entry.status}
-       </div>
-      ))}
+     <div className="border-[3px] border-black rounded-xl bg-[#FFE357] p-3">
+      <p className="text-[9px] font-black uppercase tracking-widest text-black/55">Rows Ready</p>
+      <p className="text-[18px] font-[1000] uppercase leading-none mt-1">
+       {chartScopeDiagnostics.mergedRows.toLocaleString()}
+      </p>
+      <p className="text-[9px] font-black uppercase tracking-wider mt-2">
+       {sourceModeLabel}
+      </p>
      </div>
+     <div className={`border-[3px] border-black rounded-xl p-3 ${
+      chartScopeDiagnostics.includeOnlyActive ? "bg-[#FFB3C7]" : "bg-white"
+     }`}>
+      <p className="text-[9px] font-black uppercase tracking-widest text-black/55">Chart Scope</p>
+      <p className="text-[18px] font-[1000] uppercase leading-none mt-1">
+       {chartScopeDiagnostics.finalChartRows.toLocaleString()}
+      </p>
+      <p className="text-[9px] font-black uppercase tracking-wider mt-2">
+       {chartScopeDiagnostics.includeOnlyActive
+        ? `Include-only ${chartScopeDiagnostics.includeOnlyCount}`
+        : `Excluded ${chartScopeDiagnostics.excludedCount}`}
+      </p>
+     </div>
+     <button
+      onClick={clearAnalysisFilters}
+      disabled={!chartScopeDiagnostics.includeOnlyActive && chartScopeDiagnostics.excludedCount === 0}
+      className="border-[3px] border-black rounded-xl bg-white p-3 text-left shadow-[4px_4px_0px_0px_black] disabled:opacity-50 disabled:shadow-none disabled:translate-x-[2px] disabled:translate-y-[2px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_black]">
+      <p className="text-[9px] font-black uppercase tracking-widest text-black/55">Clear Analysis Filters</p>
+      <p className="text-[16px] font-[1000] uppercase leading-none mt-1">
+       Clear Analysis Filters
+      </p>
+      <p className="text-[9px] font-black uppercase tracking-wider mt-2">
+       Restores all chart rows
+      </p>
+     </button>
+    </div>
 
-     {shouldShowCsvNeedHint && (
-      <div className="mt-4 pt-4 border-t-2 border-black/5">
-       <p className="text-[10px] font-black uppercase tracking-widest text-[#FF3399]">
-        Import YouTube Studio Analytics CSV file to add impressions and click
-        through rate statistics
+    <div className="border-[3px] border-black rounded-xl bg-white p-4 space-y-3">
+     <div className="flex flex-wrap items-start justify-between gap-3">
+      <div>
+       <p className="text-[9px] font-black uppercase tracking-widest text-black/45">
+        Canonical Merge Contract
+       </p>
+       <p className="text-[20px] font-[1000] uppercase leading-none mt-1">
+        {mergeContractSummary.precedenceLabel}
        </p>
       </div>
+      <div className="text-right">
+       <p className="text-[9px] font-black uppercase tracking-widest text-black/45">
+        Authoritative metrics
+       </p>
+       <p className="text-[12px] font-black uppercase tracking-wider mt-1">
+        {mergeContractSummary.authoritativeMetricSource}
+       </p>
+      </div>
+     </div>
+     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 text-[10px] font-black uppercase tracking-wider">
+      <div className="border-[2px] border-black rounded-lg px-3 py-2 bg-[#F6F6F6]">
+       API canonical rows: {mergeContractSummary.canonicalApiRows.toLocaleString()}
+      </div>
+      <div className="border-[2px] border-black rounded-lg px-3 py-2 bg-[#F6F6F6]">
+       Recognized uploads: {mergeContractSummary.recognizedUploads.toLocaleString()} files / {mergeContractSummary.uploadedRows.toLocaleString()} rows
+      </div>
+      <div className="border-[2px] border-black rounded-lg px-3 py-2 bg-[#F6F6F6]">
+       Merged master rows: {mergeContractSummary.mergedCanonicalRows.toLocaleString()} input / {mergeContractSummary.visibleMasterRows.toLocaleString()} visible
+      </div>
+      <div className="border-[2px] border-black rounded-lg px-3 py-2 bg-[#F6F6F6]">
+       Unmapped metrics: {mergeContractSummary.unmappedMetrics.toLocaleString()}
+      </div>
+     </div>
+     <p className="text-[10px] font-black uppercase tracking-wider text-black/55">
+      Master data tables always render from canonical selector output. Chart rows can be narrower than the table when include-only or exclusion filters are active.
+     </p>
+     {mergeContractSummary.lastFailure && (
+      <p className="text-[10px] font-black uppercase tracking-wider text-[#C52121]">
+       Last sync blocker: {mergeContractSummary.lastFailure.requestClass || "request"} · {mergeContractSummary.lastFailure.reason || "unknown failure"}
+      </p>
      )}
     </div>
+
+    <ChannelDataGuidePanel
+     nextActions={channelDataNextActions}
+     familyCoverage={channelDataFamilyCoverage}
+     showCsvNeedHint={shouldShowCsvNeedHint}
+     detectedCategoriesLabel={detectedCategoriesLabel}
+     selectedWindowLabel={selectedWindowLabel}
+    />
 
     <div className="flex justify-end pt-1">
      <p className="text-[9px] font-black uppercase tracking-widest text-black/40 flex items-center gap-1">
@@ -4594,7 +4964,7 @@ const renderDataViz = () => {
           }}>
           {engagementMapSeries.map((point, idx) => (
            <div
-            key={`eng-zone-highlight-${point.videoId || point.label}`}
+            key={`eng-zone-highlight-${point.key}`}
             className="h-full transition-opacity duration-200 ease-out"
             style={{
              opacity: idx === engagementHoverIndex ? 1 : 0,
@@ -4607,7 +4977,7 @@ const renderDataViz = () => {
        )}
 
        <div className="relative z-10 h-full">
-        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+        <StableChartFrame minHeightClassName="min-h-[1px]">
          <LineChart
           data={engagementMapSeries}
           margin={{ top: 8, right: 22, left: 10, bottom: 20 }}>
@@ -4710,7 +5080,7 @@ const renderDataViz = () => {
            />
           )}
          </LineChart>
-        </ResponsiveContainer>
+        </StableChartFrame>
        </div>
 
        {engagementMapSeries.length > 0 && (
@@ -4723,7 +5093,7 @@ const renderDataViz = () => {
           }}>
           {engagementMapSeries.map((point, idx) => (
            <button
-            key={`eng-zone-${point.videoId || point.label}`}
+            key={`eng-zone-${point.key}`}
             type="button"
             onMouseEnter={() => setEngagementHoverIndex(idx)}
             className="h-full w-full bg-transparent border-0 p-0 m-0"
@@ -4800,7 +5170,7 @@ const renderDataViz = () => {
      </div>
      <div className="p-4 relative">
      <div className="h-[290px]">
-      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+      <StableChartFrame minHeightClassName="min-h-[1px]">
         <ScatterChart
          margin={{ top: 8, right: 20, bottom: 8, left: 8 }}
          onMouseMove={(state: { activePayload?: Array<{ payload?: EngagementMapPoint }> }) => {
@@ -4842,10 +5212,10 @@ const renderDataViz = () => {
             fillOpacity={0.8}
             stroke="none"
            />
-          ))}
-         </Scatter>
+         ))}
+        </Scatter>
        </ScatterChart>
-      </ResponsiveContainer>
+      </StableChartFrame>
      </div>
       {valueMatrixSeries.length === 0 && (
        <div className="absolute inset-0 p-6 flex items-center justify-center pointer-events-none">
@@ -4980,12 +5350,10 @@ const renderDataViz = () => {
         <tr>
          <td style={{ width: trafficHeaderWidths[0] || 32 }} className="p-1 border-r border-black/20 bg-white text-[10px] font-black uppercase text-center">#</td>
          <td style={{ width: trafficHeaderWidths[1] || 48 }} className="p-1 border-r border-black/20 bg-white text-[10px] font-black uppercase text-center">-</td>
-         <td style={{ width: trafficHeaderWidths[2] || 32 }} className="p-1 border-r border-black/20 bg-white text-[10px] font-black uppercase text-center">-</td>
-         <td style={{ width: trafficHeaderWidths[3] || 32 }} className="p-1 border-r border-black/20 bg-white text-[10px] font-black uppercase text-center">-</td>
          {orderedTableHeaders.map((header, idx) => (
           <td
            key={`traffic-total-strip-${header}`}
-           style={{ width: trafficHeaderWidths[idx + 4] || undefined }}
+           style={{ width: trafficHeaderWidths[idx + 2] || undefined }}
            className="p-1 text-[10px] font-black border-r border-black/10 bg-white">
            <span className="block leading-tight whitespace-nowrap">
             {trafficTotalsCellValue(header)}
@@ -5050,31 +5418,12 @@ const renderDataViz = () => {
            className="h-4 w-4 border-[2px] border-black accent-black"
           />
          </th>
-         <th
-          ref={(node) => {
-           if (activeTableDataset.id === "traffic") trafficHeaderCellRefs.current[2] = node
-          }}
-          className="p-1 border-b-[3px] border-black border-r border-black/20 w-8 text-center bg-[#EDEDED]"
-          title="Exclude from Analytics">
-          <span className="text-[10px] font-black uppercase text-black">
-           EX
-          </span>
-         </th>
-         <th
-          ref={(node) => {
-           if (activeTableDataset.id === "traffic") trafficHeaderCellRefs.current[3] = node
-          }}
-          className="p-1 border-b-[3px] border-black border-r border-black/20 w-8 text-center bg-[#EDEDED]"
-          title="Include Only (Global Whitelist)">
-          <span className="text-[10px] font-black uppercase text-[#00CCFF]">
-           IN
-          </span>
-         </th>
-
           {orderedTableHeaders.map((header, idx) => {
            const isSorted = sortColumn === header
            const arrow = isSorted ? (sortDir === "desc" ? " ▼" : " ▲") : ""
-           const headerLabel = toDisplayHeaderLabel(header)
+           const headerLabel = shouldUseCompactHeaderLabels(activeTableDataset.id)
+            ? toDisplayHeaderLabel(header)
+            : header
            const headerWords = headerLabel.split(/\s+/).filter(Boolean)
            const hasMultipleWords = headerWords.length >= 2
            const midpoint = Math.ceil(headerWords.length / 2)
@@ -5084,7 +5433,7 @@ const renderDataViz = () => {
             <th
              key={header}
              ref={(node) => {
-              if (activeTableDataset.id === "traffic") trafficHeaderCellRefs.current[idx + 4] = node
+              if (activeTableDataset.id === "traffic") trafficHeaderCellRefs.current[idx + 2] = node
              }}
              draggable
              title={`Sort by ${header}`}
@@ -5138,11 +5487,6 @@ const renderDataViz = () => {
        <tbody>
         {displayedTableRows.map((row, rowIndex) => {
          const isSelected = selectedRowIds.has(row._id)
-         const videoIdentity = toStorageIdentity(
-          textFromUnknown(
-           row["Video ID"] || row.Dimension || row.videoId || getTitle(row, rowIndex),
-          ),
-         )
          return (
           <tr
            key={row._id}
@@ -5154,46 +5498,13 @@ const renderDataViz = () => {
             <span className="before:content-[counter(v-row)]" />
            </td>
            <td className="p-1 border-r border-black/10 border-b border-black/10 text-center">
-            <input
-             type="checkbox"
-             checked={isSelected}
-             onChange={() => toggleRowSelection(row._id)}
-             className="h-4 w-4 border-[2px] border-black accent-black cursor-pointer"
-            />
-           </td>
-           <td className="p-1 border-r border-black/10 border-b border-black/10 text-center">
            <input
-             type="checkbox"
-             title="Exclude from Analytics"
-             checked={videoFlags?.[videoIdentity]?.excludeAnalysis || false}
-             onChange={(e) =>
-              setVideoFlags?.(videoIdentity, {
-               excludeAnalysis: e.target.checked,
-               includeOnly: false,
-              })
-             }
-             className="h-4 w-4 border-[2px] border-black accent-black cursor-pointer"
-            />
-           </td>
-           <td className="p-1 border-r border-black/10 border-b border-black/10 text-center">
-            <input
-             type="checkbox"
-             title="Include Only (Global)"
-             checked={
-              videoFlags?.[videoIdentity]?.includeOnly ||
-              videoFlags?.[videoIdentity]?.priorityAnalysis ||
-              false
-             }
-             onChange={(e) =>
-              setVideoFlags?.(videoIdentity, {
-               includeOnly: e.target.checked,
-               priorityAnalysis: e.target.checked,
-               excludeAnalysis: false,
-              })
-             }
-             className="h-4 w-4 border-[2px] border-black accent-[#00CCFF] cursor-pointer"
-            />
-           </td>
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => toggleRowSelection(row._id)}
+            className="h-4 w-4 border-[2px] border-black accent-black cursor-pointer"
+           />
+          </td>
            {orderedTableHeaders.map((header) => {
             const cellValue = getTableCellValue(
              row,
@@ -5203,22 +5514,41 @@ const renderDataViz = () => {
             )
             const isTitle = header === "Video title" || header === "Video"
             const isTextColumn = ["Video title", "Video", "Video ID", "Format", "Upload date", "Date", "Type", "Dimension", "Title"].includes(header)
+            const thumbnailUrl = isTitle
+             ? resolvePerformanceHubThumbnailUrl(row as Record<string, unknown>)
+             : ""
+            const youtubeIdentity = isTitle
+             ? resolvePerformanceHubVideoIdentity(
+                row as Record<string, unknown>,
+                cellValue,
+               )
+             : ""
 
             return (
              <td
               key={`${row._id}-${header}`}
               title={cellValue}
               className={`p-1 text-xs font-bold border-r border-black/10 border-b border-black/10 ${!isTextColumn ? "text-right pr-2" : "text-left pl-1"} ${isTitle ? "max-w-[400px] overflow-hidden text-ellipsis" : ""}`}>
-              {isTitle && videoIdentity && looksLikeVideoId(videoIdentity) ? (
+              {isTitle && (thumbnailUrl || (youtubeIdentity && looksLikeVideoId(youtubeIdentity))) ? (
                <div className="flex items-center gap-2">
-                <a
-                 href={`https://www.youtube.com/watch?v=${videoIdentity}`}
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 className="flex-shrink-0 inline-flex items-center justify-center h-5 w-5 border-[2px] border-black rounded bg-white text-black hover:bg-black hover:text-[#CCFF00] hover:scale-110 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all font-black"
-                 title="Open video on YouTube">
-                 <ExternalLink size={10} strokeWidth={3} className="-mt-0.5 ml-0.5" />
-                </a>
+                {thumbnailUrl ? (
+                 <img
+                  src={thumbnailUrl}
+                  alt=""
+                  className="h-9 w-16 flex-shrink-0 rounded border-[2px] border-black object-cover bg-[#EDEDED]"
+                  loading="lazy"
+                 />
+                ) : null}
+                {youtubeIdentity && looksLikeVideoId(youtubeIdentity) ? (
+                 <a
+                  href={`https://www.youtube.com/watch?v=${youtubeIdentity}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-shrink-0 inline-flex items-center justify-center h-5 w-5 border-[2px] border-black rounded bg-white text-black hover:bg-black hover:text-[#CCFF00] hover:scale-110 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all font-black"
+                  title="Open video on YouTube">
+                  <ExternalLink size={10} strokeWidth={3} className="-mt-0.5 ml-0.5" />
+                 </a>
+                ) : null}
                 <span className="block">
                  {cellValue}
                 </span>
@@ -5268,18 +5598,19 @@ const renderDataViz = () => {
        onClick={applySelectedToExclude}
        disabled={selectedRowIds.size === 0}
        className="px-3 py-2 border-[3px] border-black rounded-lg bg-[#FF7497] text-[10px] font-black uppercase tracking-wider disabled:opacity-50">
-       Apply Selected → Exclude
+       Exclude Selected
       </button>
       <button
        onClick={applySelectedToIncludeOnly}
        disabled={selectedRowIds.size === 0}
        className="px-3 py-2 border-[3px] border-black rounded-lg bg-[#00CCFF] text-[10px] font-black uppercase tracking-wider disabled:opacity-50">
-       Apply Selected → Include Only
+       Include Only Selected
       </button>
       <button
-       onClick={clearFlagsOnVisible}
+       onClick={clearSelectedFlags}
+       disabled={selectedRowIds.size === 0}
        className="px-3 py-2 border-[3px] border-black rounded-lg bg-[#E5E7EB] text-[10px] font-black uppercase tracking-wider">
-       Clear Visible Flags
+       Clear Selected Flags
       </button>
      </div>
      <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-wider text-black/65">
@@ -5358,7 +5689,7 @@ const renderDataViz = () => {
      textColor="text-black"
      iconBoxColor="bg-[#00CCFF]"
      collapsible
-     isOpen={openTools.has("channel-data")}
+     isOpen={isChannelDataOpen}
      onToggle={() =>
       setOpenTools((previous) => {
        const next = new Set(previous)
@@ -5369,7 +5700,6 @@ const renderDataViz = () => {
      }
      headerActions={
       <div className="hidden lg:flex items-center gap-3">
-       <span className="text-[10px] font-black uppercase tracking-wider text-black/70">Data [ API sync - CSV files - merged ]</span>
        <CapsuleToggle
         value={syncSourceMode}
         options={[
@@ -5384,7 +5714,7 @@ const renderDataViz = () => {
      }
      disableCollapseAnimation
      contentClassName="bg-white p-4 md:p-6 lg:p-8">
-     {openTools.has("channel-data") && renderDataManager()}
+     {isChannelDataOpen && renderDataManager()}
     </ToolboxScaffold>
 
     <ToolboxScaffold
@@ -5393,7 +5723,7 @@ const renderDataViz = () => {
      headerColor="bg-[#EA73E8]"
      iconBoxColor="bg-[#CCFF00]"
      collapsible
-     isOpen={openTools.has("master-tables")}
+     isOpen={isTablesOpen}
      onToggle={() =>
       setOpenTools((previous) => {
        const next = new Set(previous)
@@ -5440,7 +5770,7 @@ const renderDataViz = () => {
      disableCollapseAnimation
      embedded
      contentClassName="bg-white">
-     {openTools.has("master-tables") && renderDataTables()}
+     {isTablesOpen && renderDataTables()}
     </ToolboxScaffold>
 
     <ToolboxScaffold
@@ -5450,7 +5780,7 @@ const renderDataViz = () => {
      iconBoxColor="bg-[#00CCFF]"
      paletteIndex={7}
      collapsible
-     isOpen={openTools.has("shorts-retention")}
+     isOpen={isVisualLabOpen}
      onToggle={() =>
       setOpenTools((previous) => {
        const next = new Set(previous)
@@ -5482,15 +5812,20 @@ const renderDataViz = () => {
       </div>
      }
      contentClassName="bg-[#F8F8F8] p-4 md:p-6 lg:p-8">
-     {openTools.has("shorts-retention") && (
-      <div className="space-y-6">
-       <ShortsRetentionToolboxContent
-        isActive={openTools.has("shorts-retention")}
+     {isVisualLabOpen && (
+      <Suspense
+       fallback={
+        <div className="border-[3px] border-black rounded-xl bg-white p-6 text-[11px] font-black uppercase tracking-widest text-black/45">
+         Loading data visuals...
+        </div>
+       }>
+       <PerformanceHubVisualLabPanel
+        isActive={isVisualLabOpen}
         windowValue={dataVisualWindow}
-        reloadNonce={dataVisualReloadNonce}
-       />
-       {renderDataViz()}
-      </div>
+        reloadNonce={dataVisualReloadNonce}>
+        {renderDataViz()}
+       </PerformanceHubVisualLabPanel>
+      </Suspense>
      )}
     </ToolboxScaffold>
    </div>

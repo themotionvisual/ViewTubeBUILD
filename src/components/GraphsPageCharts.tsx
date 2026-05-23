@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useId, useMemo, useRef, useState } from "react"
 import "./marquee.css"
 import {
  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -7,15 +7,26 @@ import {
  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
  Customized,
 } from "recharts"
-import type { CanonicalVideoRow } from "../services/analyticsContract"
-import { resolveMetricNumber } from "../services/canonicalMetricResolver"
+import type { CanonicalVideoRow } from "../services/analytics/DataStore"
+import { resolveMetricNumber } from "../services/analytics/MetricRegistry"
 import type { CsvFileWithTag } from "../types"
 import { UnifiedChartModule } from "./UnifiedChartModule"
 import { CustomIcon } from "./CustomIcon"
 import { StableChartFrame } from "./StableChartFrame"
 import { SubToolboxChartModule, subToolboxChartPresets } from "./SubToolboxChartModule"
 import { InsightMarquee } from "./InsightMarquee"
-import { UPLOAD_CACHE_FILES_KEY } from "../services/analyticsRuntime"
+import { UPLOAD_CACHE_FILES_KEY } from "../services/analytics/SyncPipeline"
+import {
+  buildKeywordClustersFromMasterRows,
+  buildKeywordSelectionSummary,
+  buildKeywordCombinationStats,
+  toggleKeywordSelection,
+  getKeywordMetricDefinition,
+  formatKeywordMetricValue,
+  KEYWORD_VENN_METRIC_OPTIONS,
+  buildKeywordVideoRows,
+  type KeywordMetricKey,
+} from "../services/keywordVennAnalysis"
 
 const mv = (row: CanonicalVideoRow, key: string): number =>
  resolveMetricNumber(row, key as any).value || 0
@@ -69,6 +80,12 @@ const retentionPct = (row: CanonicalVideoRow): number => {
   if (raw <= 150) return raw
   const normalized = raw / 100
   if (normalized > 0 && normalized <= 150) return normalized
+ }
+ const views = mv(row, "views")
+ const engagedViews = mv(row, "engagedViews")
+ if (views > 0 && engagedViews > 0) {
+  const derived = (engagedViews / views) * 100
+  if (Number.isFinite(derived) && derived > 0 && derived <= 150) return derived
  }
  return 0
 }
@@ -2399,7 +2416,6 @@ type TrafficTimelinePoint = {
 }
 
 type KeywordNode = { keyword: string; value: number }
-type KeywordOverlapNode = { a: string; b: string; c?: string; overlap: number }
 type HeatmapBin = { dow: number; hour: number; value: number; count: number }
 type FunnelStage = { name: string; value: number; tone: "cyan" | "lime" | "yellow" | "pink" | "white" }
 type GaugeTuple = { label: string; value: number; target: number; tone: string }
@@ -2409,7 +2425,6 @@ type OrbitalPoint = { name: string; orbit: number; angle: number; x: number; y: 
 type ExpansionDatasets = {
  trafficTimeline: TrafficTimelinePoint[]
  keywordNodes: KeywordNode[]
- keywordOverlaps: KeywordOverlapNode[]
  heatmapBins: HeatmapBin[]
  funnelStages: FunnelStage[]
  gauges: GaugeTuple[]
@@ -2446,13 +2461,6 @@ const csvSourceGroup = (sourceRaw: string): string => {
 }
 
 const monthBucket = (d: Date): string => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
-
-const tokenizeTitle = (title: string): string[] =>
- title
-  .toLowerCase()
-  .replace(/[^a-z0-9\s]/g, " ")
-  .split(/\s+/)
-  .filter((w) => w.length >= 4 && !["with", "that", "this", "from", "your", "video", "shorts"].includes(w))
 
 const buildExpansionDatasets = (rows: CanonicalVideoRow[]): ExpansionDatasets => {
  const csvRows = parseCsvRows()
@@ -2497,32 +2505,13 @@ const buildExpansionDatasets = (rows: CanonicalVideoRow[]): ExpansionDatasets =>
    return { bucket, timestamp: new Date(`${bucket}-01`).getTime(), shares, totalViews }
   })
 
- const keywordMap = new Map<string, number>()
- for (const r of rows) {
-  const w = mv(r, "views")
-  for (const token of tokenizeTitle(String(r.title || ""))) {
-   keywordMap.set(token, (keywordMap.get(token) || 0) + w)
-  }
- }
- const keywordNodes = Array.from(keywordMap.entries())
-  .map(([keyword, value]) => ({ keyword, value }))
-  .sort((a, b) => b.value - a.value)
-  .slice(0, 24)
-
- const top = keywordNodes.slice(0, 9).map((k) => k.keyword)
- const keywordOverlaps: KeywordOverlapNode[] = []
- for (let i = 0; i < top.length; i += 3) {
-  const a = top[i]
-  const b = top[i + 1]
-  const c = top[i + 2]
-  if (!a || !b) continue
-  const overlap = rows.filter((r) => {
-   const t = String(r.title || "").toLowerCase()
-   const ab = t.includes(a) && t.includes(b)
-   return c ? ab && t.includes(c) : ab
-  }).length
-  keywordOverlaps.push({ a, b, c, overlap })
- }
+ const keywordNodes = buildKeywordClustersFromMasterRows(rows as unknown as Record<string, unknown>[], "views", {
+  minSupport: 2,
+  maxKeywords: 24,
+ }).map((entry) => ({
+  keyword: entry.word,
+  value: entry.metrics.views,
+ }))
 
  const heat = new Map<string, HeatmapBin>()
  for (const r of rows) {
@@ -2602,7 +2591,6 @@ const buildExpansionDatasets = (rows: CanonicalVideoRow[]): ExpansionDatasets =>
  return {
   trafficTimeline,
   keywordNodes,
-  keywordOverlaps,
   heatmapBins,
   funnelStages,
   gauges,
@@ -2687,96 +2675,707 @@ export const KeywordTreemapModule: React.FC<GChartProps> = ({ data }) => {
  )
 }
 
+const KEYWORD_VENN_COLORS = ["#F28CB2", "#73FFFF", "#FFFF80"]
+const KEYWORD_VENN_STROKES = [
+ "rgba(218, 100, 184, 0.78)",
+ "rgba(110, 172, 232, 0.78)",
+ "rgba(225, 221, 92, 0.78)",
+]
+const KEYWORD_VENN_FILLS = ["#F28CB2", "#73FFFF", "#FFFF80"]
+const KEYWORD_VENN_OVERLAPS = {
+ purple: "#C97DFF",
+ orange: "#FFCC8C",
+ green: "#CCFF99",
+ white: "#FFFFFF",
+}
+
+const keywordVennStatTone = (metricKey: KeywordMetricKey): "pink" | "cyan" | "lime" | "yellow" | "white" => {
+ if (metricKey === "revenue" || metricKey === "rpm") return "cyan"
+ if (metricKey === "averageViewDuration" || metricKey === "averageViewPercentage") return "yellow"
+ if (metricKey === "subscribersGained") return "lime"
+ if (metricKey === "engagedViews") return "pink"
+ return "white"
+}
+
+const keywordMetricBadgeLabel = (metricKey: KeywordMetricKey): string => {
+ if (metricKey === "averageViewDuration") return "AVG DUR"
+ if (metricKey === "averageViewPercentage") return "AVP %"
+ if (metricKey === "subscribersGained") return "SUBS"
+ if (metricKey === "engagedViews") return "ENGAGED"
+ if (metricKey === "impressions") return "IMPRSNS"
+ if (metricKey === "revenue") return "REV"
+ return getKeywordMetricDefinition(metricKey).label
+}
+
+const keywordBadgeStyle = (index: number, active: boolean): React.CSSProperties => ({
+ background: active ? KEYWORD_VENN_COLORS[index % KEYWORD_VENN_COLORS.length] : "#fff",
+ boxShadow: active ? "2px 2px 0 0 #000" : "1px 1px 0 0 rgba(0,0,0,0.18)",
+})
+
+const keywordColorIndexForSelection = (selected: string[], keyword: string, fallback = 0): number => {
+ const selectedIndex = selected.indexOf(keyword)
+ return selectedIndex >= 0 ? selectedIndex : fallback
+}
+
+const keywordVennBadge = (label: string, index: number) => (
+ <span
+  key={`${label}-${index}`}
+  className="inline-flex items-center h-6 px-2.5 border-[2px] border-black rounded-md text-[10px] font-black uppercase tracking-[0.08em]"
+  style={{ background: KEYWORD_VENN_COLORS[index % KEYWORD_VENN_COLORS.length] }}
+ >
+  {label}
+ </span>
+)
+
+const VennValueLabel: React.FC<{
+  x: number
+  y: number
+  title?: string
+  count: number
+  metricValue: number
+  metricKey: KeywordMetricKey
+  small?: boolean
+  intersection?: boolean
+}> = ({ x, y, title, count, metricValue, metricKey, small = false, intersection = false }) => (
+ <g>
+  {title ? (
+   <text
+    x={x}
+    y={y - (small ? 16 : 24)}
+    textAnchor="middle"
+    style={{ fontSize: small ? 16 : 22, fontWeight: 900, fill: "#000" }}
+   >
+    {title}
+   </text>
+  ) : null}
+  <text
+   x={x}
+   y={y + (intersection ? -4 : small ? 4 : 0)}
+   textAnchor="middle"
+   style={{ fontSize: small ? 22 : 34, fontWeight: 1000, fill: "#000" }}
+  >
+   {intersection ? count : `${count} videos`}
+  </text>
+  <text
+   x={x}
+   y={y + (intersection ? 18 : small ? 24 : 26)}
+   textAnchor="middle"
+   style={{ fontSize: small ? 12 : 15, fontWeight: 800, fill: "rgba(0,0,0,0.68)" }}
+  >
+   {intersection
+    ? formatKeywordMetricValue(metricKey, metricValue)
+    : `${getKeywordMetricDefinition(metricKey).label}: ${formatKeywordMetricValue(metricKey, metricValue)}`}
+  </text>
+ </g>
+)
+
 export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
- const ds = useMemo(() => buildExpansionDatasets(data), [data])
+ const vennId = useId()
  const [selected, setSelected] = useState<string[]>([])
- const topKeywords = ds.keywordNodes.slice(0, 15)
- const toggle = (kw: string) => {
-  setSelected((prev) => {
-   if (prev.includes(kw)) return prev.filter((p) => p !== kw)
-   if (prev.length >= 3) return prev
-   return [...prev, kw]
-  })
- }
- const selectedSet = new Set(selected)
- const ranked = topKeywords
+ const [metricMode, setMetricMode] = useState<KeywordMetricKey>("views")
+ const [metricMenuOpen, setMetricMenuOpen] = useState(false)
+ const [rankedByMode, setRankedByMode] = useState<"average" | "total">("average")
+
+ const ranked = useMemo(
+  () =>
+   buildKeywordClustersFromMasterRows(
+    data as unknown as Record<string, unknown>[],
+    metricMode,
+    { minSupport: 2, maxKeywords: 15 },
+   ),
+  [data, metricMode],
+ )
+ const summary = useMemo(
+  () =>
+   buildKeywordSelectionSummary(
+    data as unknown as Record<string, unknown>[],
+    selected,
+    metricMode,
+   ),
+  [data, selected, metricMode],
+ )
+ const combinationRows = useMemo(
+  () =>
+   buildKeywordCombinationStats(
+    data as unknown as Record<string, unknown>[],
+    selected,
+    metricMode,
+   ),
+  [data, selected, metricMode],
+ )
+ const topKeywords = ranked.slice(0, 15)
+ const selectedMetric = getKeywordMetricDefinition(metricMode)
  const a = selected[0]
  const b = selected[1]
  const c = selected[2]
- const countFor = (k1?: string, k2?: string, k3?: string) => {
-  if (!k1) return 0
-  return data.filter((r) => {
-   const t = String(r.title || "").toLowerCase()
-   const h1 = t.includes(k1)
-   const h2 = k2 ? t.includes(k2) : true
-   const h3 = k3 ? t.includes(k3) : true
-   return h1 && h2 && h3
-  }).length
+ const singles = combinationRows.filter((item) => item.keywords.length === 1)
+ const pairs = combinationRows.filter((item) => item.keywords.length === 2)
+ const triple = combinationRows.find((item) => item.keywords.length === 3) || null
+ const pairAB = pairs.find((item) => item.keywords[0] === a && item.keywords[1] === b) || null
+ const pairAC = pairs.find((item) => item.keywords[0] === a && item.keywords[1] === c) || null
+ const pairBC = pairs.find((item) => item.keywords[0] === b && item.keywords[1] === c) || null
+ const singleA = singles.find((item) => item.keywords[0] === a) || null
+ const singleB = singles.find((item) => item.keywords[0] === b) || null
+ const singleC = singles.find((item) => item.keywords[0] === c) || null
+ const rankedMax = Math.max(1, ranked[0]?.metricValue || 1)
+ const totalBreakdownRow = useMemo(() => {
+  if (selected.length === 0) return null
+  const selectedSingles = selected
+   .map((keyword) => singles.find((item) => item.keywords[0] === keyword) || null)
+   .filter(Boolean) as typeof singles
+  if (selectedSingles.length === 0) return null
+  const aggregation = selectedMetric.aggregation
+  const totalMetricValue =
+   aggregation === "sum"
+    ? selectedSingles.reduce((sum, item) => sum + item.metricValue, 0)
+    : selectedSingles.reduce((sum, item) => sum + item.metricValue, 0) / selectedSingles.length
+  return {
+   keywords: [...selected],
+   videoCount: selectedSingles.reduce((sum, item) => sum + item.videoCount, 0),
+   metricValue: totalMetricValue,
+  }
+ }, [selected, singles, selectedMetric.aggregation])
+ const breakdownRows = useMemo(() => {
+  const sortedPairs = [...pairs].sort((left, right) => {
+   const leftLength = left.keywords.join("").length
+   const rightLength = right.keywords.join("").length
+   if (rightLength !== leftLength) return rightLength - leftLength
+   return left.keywords.join("|").localeCompare(right.keywords.join("|"))
+  })
+  const sortedSingles = [...singles].sort((left, right) => {
+   const leftWord = left.keywords[0] || ""
+   const rightWord = right.keywords[0] || ""
+   if (rightWord.length !== leftWord.length) return rightWord.length - leftWord.length
+   return leftWord.localeCompare(rightWord)
+  })
+  return [
+   ...(totalBreakdownRow ? [{ kind: "total" as const, key: `total:${selected.join("|")}`, ...totalBreakdownRow }] : []),
+   ...(triple ? [{ kind: "triple" as const, key: `triple:${triple.keywords.join("|")}`, ...triple }] : []),
+   ...sortedPairs.map((row) => ({ kind: "pair" as const, key: `pair:${row.keywords.join("|")}`, ...row })),
+   ...sortedSingles.map((row) => ({ kind: "single" as const, key: `single:${row.keywords.join("|")}`, ...row })),
+  ]
+ }, [pairs, singles, totalBreakdownRow, triple])
+ const visibleBreakdownRows = selected.length > 0 ? breakdownRows : []
+ const breakdownSelectionKey = selected.length > 0 ? selected.join("|") : "empty"
+ const toggle = (keyword: string) => {
+  setSelected((prev) => toggleKeywordSelection(prev, keyword, 3))
  }
+
+ const top10Videos = useMemo(() => {
+  if (selected.length === 0) return []
+  const allVideos = buildKeywordVideoRows(data as unknown as Record<string, unknown>[])
+  const matched = allVideos.filter(v => selected.every(k => v.keywords.includes(k)))
+  return matched.sort((a, b) => b.metrics[metricMode] - a.metrics[metricMode]).slice(0, 10)
+ }, [data, selected, metricMode])
+
  return (
-  <SubToolboxChartModule header={{ title: "KEYWORD VENN", subtitle: "TITLE KEYWORD OVERLAP × PERFORMANCE STATS", icon: <CustomIcon name="analytics" size={18} /> }} theme={{ headerBandBg: "#CCFF00", iconBlockBg: "#FF7497", shadowColor: "rgba(204,255,0,0.45)" }}>
-   <div className="min-h-[400px] w-full bg-white p-0 overflow-hidden flex flex-col">{topKeywords.length === 0 ? <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} /> : (
-    <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] h-full divide-x-[3px] divide-black">
-     <div className="p-4 flex flex-col gap-3">
-      <div className="border-[3px] border-black rounded-xl bg-[#fafafa] h-[420px] relative overflow-hidden">
-       <svg viewBox="0 0 560 420" className="w-full h-full">
-        {a && <circle cx="280" cy="140" r="120" fill="rgba(255,116,151,0.45)" stroke="#FF7497" strokeWidth="5" />}
-        {b && <circle cx="210" cy="270" r="120" fill="rgba(0,229,255,0.45)" stroke="#00E5FF" strokeWidth="5" />}
-        {c && <circle cx="350" cy="270" r="120" fill="rgba(204,255,0,0.45)" stroke="#CCFF00" strokeWidth="5" />}
-        {a && <text x="280" y="84" textAnchor="middle" style={{ fontWeight: 900, fontSize: 26 }}>{a.toUpperCase()}</text>}
-        {b && <text x="210" y="338" textAnchor="middle" style={{ fontWeight: 900, fontSize: 26 }}>{b.toUpperCase()}</text>}
-        {c && <text x="350" y="338" textAnchor="middle" style={{ fontWeight: 900, fontSize: 26 }}>{c.toUpperCase()}</text>}
-        {a && <text x="280" y="172" textAnchor="middle" style={{ fontWeight: 900, fontSize: 36 }}>{countFor(a)}</text>}
-        {b && <text x="210" y="250" textAnchor="middle" style={{ fontWeight: 900, fontSize: 30 }}>{countFor(b)}</text>}
-        {c && <text x="350" y="250" textAnchor="middle" style={{ fontWeight: 900, fontSize: 30 }}>{countFor(c)}</text>}
-        {a && b && <text x="245" y="210" textAnchor="middle" style={{ fontWeight: 900, fontSize: 28 }}>{countFor(a, b)}</text>}
-        {a && c && <text x="315" y="210" textAnchor="middle" style={{ fontWeight: 900, fontSize: 28 }}>{countFor(a, c)}</text>}
-        {a && b && c && <text x="280" y="250" textAnchor="middle" style={{ fontWeight: 900, fontSize: 30 }}>{countFor(a, b, c)}</text>}
+  <SubToolboxChartModule
+   header={{
+    title: "KEYWORD VENN",
+    subtitle: "MASTER TABLE TITLE OVERLAP × LIVE PERFORMANCE STATS",
+    icon: <CustomIcon name="analytics" size={18} />,
+    headerStyle: "subtoolbox",
+   }}
+   theme={{
+    headerBandBg: "#CCFF00",
+    iconBlockBg: "#FF7497",
+    shadowColor: "rgba(204,255,0,0.45)",
+   }}
+   layout={{ moduleMinHeight: "820px", moduleWidth: "100%" }}
+   controlBox={{
+    count: selected.length,
+    countUnit: "KEYWORDS",
+    dropdown: {
+     value: metricMode,
+     isOpen: metricMenuOpen,
+     onToggle: () => setMetricMenuOpen((prev) => !prev),
+     onSelect: (value) => {
+      setMetricMode(value as KeywordMetricKey)
+      setMetricMenuOpen(false)
+     },
+     options: KEYWORD_VENN_METRIC_OPTIONS.map((option) => ({
+      value: option,
+      label: getKeywordMetricDefinition(option).label,
+     })),
+    },
+   }}
+   activeContext={{
+    title:
+     selected.length > 0
+      ? `${selected.join(" + ").toUpperCase()}`
+      : "SELECT UP TO 3 KEYWORDS FROM THE MASTER VIDEO TABLE",
+    stats: summary
+     ? [
+        { label: "Videos", value: String(summary.videoCount), tone: "white" },
+        {
+         label: keywordMetricBadgeLabel(metricMode),
+         value: formatKeywordMetricValue(metricMode, summary.metricValue),
+         tone: keywordVennStatTone(metricMode),
+        },
+       ]
+     : [
+        { label: "Videos", value: String(data.filter((row) => String(row.title || "").trim()).length), tone: "white" },
+       ],
+   }}
+   footer={
+    <InsightMarquee
+     mode="insight-lock"
+     segments={[
+      {
+       badge: "Chart",
+       text: "Keyword venn pulls only from titles in the loaded master video table and updates live with the selected statistic.",
+       badgeTone: "cyan",
+      },
+      {
+       badge: "Action",
+       text:
+        selected.length > 0 && summary
+         ? `${selected.join(" + ")} maps to ${summary.videoCount} videos and ${selectedMetric.label.toLowerCase()} ${formatKeywordMetricValue(metricMode, summary.metricValue)}.`
+         : "Select up to 3 recurring title keywords to compare individual and overlap performance.",
+       badgeTone: "lime",
+      },
+     ]}
+    />
+   }
+  >
+   <div className="w-full bg-white p-2 overflow-hidden flex flex-col h-[820px]">
+    {topKeywords.length === 0 ? (
+     <EmptyState missing={["keywords", "title_rows"]} rows={data.length} />
+    ) : (
+     <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-2 h-full min-h-0">
+      <div className="flex flex-col gap-2 min-h-0 overflow-y-auto pr-1 pb-4">
+      
+      {/* 1. VENN CIRCLE */}
+      <div className="border-[3px] border-black rounded-xl bg-[#FAFAFA] overflow-hidden shrink-0 h-[460px] flex items-center justify-center">
+       <svg viewBox="0 0 620 520" className="max-w-[700px] h-full object-contain">
+        <defs>
+         <clipPath id={`${vennId}-two-a`}>
+          <circle cx="185" cy="260" r="190" />
+         </clipPath>
+         <clipPath id={`${vennId}-two-b`}>
+          <circle cx="435" cy="260" r="190" />
+         </clipPath>
+         <clipPath id={`${vennId}-three-a`}>
+          <circle cx="310" cy="165" r="160" />
+         </clipPath>
+         <clipPath id={`${vennId}-three-b`}>
+          <circle cx="190" cy="350" r="160" />
+         </clipPath>
+         <clipPath id={`${vennId}-three-c`}>
+          <circle cx="430" cy="350" r="160" />
+         </clipPath>
+        </defs>
+        {selected.length === 0 ? (
+         <>
+          <text x="310" y="236" textAnchor="middle" style={{ fontWeight: 1000, fontSize: 34, fill: "rgba(0,0,0,0.28)" }}>
+           SELECT UP TO 3 KEYWORDS
+          </text>
+          <text x="310" y="274" textAnchor="middle" style={{ fontWeight: 800, fontSize: 16, fill: "rgba(0,0,0,0.34)" }}>
+           Data is derived from titles in the loaded master video table.
+          </text>
+        </>
+        ) : null}
+
+        {selected.length === 1 && singleA ? (
+         <>
+          <circle cx="310" cy="260" r="182" fill={KEYWORD_VENN_FILLS[0]} stroke={KEYWORD_VENN_STROKES[0]} strokeWidth="6" />
+          <VennValueLabel
+           x={310}
+           y={260}
+           title={a.toUpperCase()}
+           count={singleA.videoCount}
+           metricValue={singleA.metricValue}
+           metricKey={metricMode}
+          />
+         </>
+        ) : null}
+
+        {selected.length === 2 ? (
+         <>
+          <circle cx="185" cy="260" r="190" fill={KEYWORD_VENN_FILLS[0]} />
+          <circle cx="435" cy="260" r="190" fill={KEYWORD_VENN_FILLS[1]} />
+          <g clipPath={`url(#${vennId}-two-a)`}>
+           <circle cx="435" cy="260" r="190" fill={KEYWORD_VENN_OVERLAPS.purple} />
+          </g>
+          <circle cx="185" cy="260" r="190" fill="none" stroke={KEYWORD_VENN_STROKES[0]} strokeWidth="5" />
+          <circle cx="435" cy="260" r="190" fill="none" stroke={KEYWORD_VENN_STROKES[1]} strokeWidth="5" />
+          {singleA ? (
+           <VennValueLabel
+            x={108}
+            y={260}
+            title={a.toUpperCase()}
+            count={singleA.videoCount}
+            metricValue={singleA.metricValue}
+            metricKey={metricMode}
+            small
+           />
+          ) : null}
+          {singleB ? (
+           <VennValueLabel
+            x={512}
+            y={260}
+            title={b.toUpperCase()}
+            count={singleB.videoCount}
+            metricValue={singleB.metricValue}
+            metricKey={metricMode}
+            small
+           />
+          ) : null}
+          {pairAB ? (
+           <VennValueLabel
+            x={310}
+            y={260}
+            count={pairAB.videoCount}
+            metricValue={pairAB.metricValue}
+            metricKey={metricMode}
+            small
+            intersection
+           />
+          ) : null}
+         </>
+        ) : null}
+
+        {selected.length === 3 ? (
+         <>
+          <circle cx="310" cy="165" r="160" fill={KEYWORD_VENN_FILLS[0]} />
+          <circle cx="190" cy="350" r="160" fill={KEYWORD_VENN_FILLS[1]} />
+          <circle cx="430" cy="350" r="160" fill={KEYWORD_VENN_FILLS[2]} />
+          <g clipPath={`url(#${vennId}-three-a)`}>
+           <circle cx="190" cy="350" r="160" fill={KEYWORD_VENN_OVERLAPS.purple} />
+          </g>
+          <g clipPath={`url(#${vennId}-three-a)`}>
+           <circle cx="430" cy="350" r="160" fill={KEYWORD_VENN_OVERLAPS.orange} />
+          </g>
+          <g clipPath={`url(#${vennId}-three-b)`}>
+           <circle cx="430" cy="350" r="160" fill={KEYWORD_VENN_OVERLAPS.green} />
+          </g>
+          <g clipPath={`url(#${vennId}-three-a)`}>
+           <g clipPath={`url(#${vennId}-three-b)`}>
+            <circle cx="430" cy="350" r="160" fill={KEYWORD_VENN_OVERLAPS.white} />
+           </g>
+          </g>
+          <circle cx="310" cy="165" r="160" fill="none" stroke={KEYWORD_VENN_STROKES[0]} strokeWidth="5" />
+          <circle cx="190" cy="350" r="160" fill="none" stroke={KEYWORD_VENN_STROKES[1]} strokeWidth="5" />
+          <circle cx="430" cy="350" r="160" fill="none" stroke={KEYWORD_VENN_STROKES[2]} strokeWidth="5" />
+          {singleA ? (
+           <VennValueLabel
+            x={310}
+            y={116}
+            title={a.toUpperCase()}
+            count={singleA.videoCount}
+            metricValue={singleA.metricValue}
+            metricKey={metricMode}
+            small
+           />
+          ) : null}
+          {singleB ? (
+           <VennValueLabel
+            x={110}
+            y={400}
+            title={b.toUpperCase()}
+            count={singleB.videoCount}
+            metricValue={singleB.metricValue}
+            metricKey={metricMode}
+            small
+           />
+          ) : null}
+          {singleC ? (
+           <VennValueLabel
+            x={510}
+            y={400}
+            title={c.toUpperCase()}
+            count={singleC.videoCount}
+            metricValue={singleC.metricValue}
+            metricKey={metricMode}
+            small
+           />
+          ) : null}
+          {pairAB ? (
+           <VennValueLabel
+            x={250}
+            y={252}
+            count={pairAB.videoCount}
+            metricValue={pairAB.metricValue}
+            metricKey={metricMode}
+            small
+            intersection
+           />
+          ) : null}
+          {pairAC ? (
+           <VennValueLabel
+            x={370}
+            y={252}
+            count={pairAC.videoCount}
+            metricValue={pairAC.metricValue}
+            metricKey={metricMode}
+            small
+            intersection
+           />
+          ) : null}
+          {pairBC ? (
+           <VennValueLabel
+            x={310}
+            y={352}
+            count={pairBC.videoCount}
+            metricValue={pairBC.metricValue}
+            metricKey={metricMode}
+            small
+            intersection
+           />
+          ) : null}
+          {triple ? (
+           <VennValueLabel
+            x={310}
+            y={286}
+            count={triple.videoCount}
+            metricValue={triple.metricValue}
+            metricKey={metricMode}
+            small
+            intersection
+           />
+          ) : null}
+         </>
+        ) : null}
        </svg>
       </div>
-      <div className="border-[3px] border-black rounded-xl overflow-hidden">
-       <div className="bg-black text-[#CCFF00] px-4 py-2 text-[10px] font-black uppercase tracking-[0.12em]">Combination Breakdown</div>
-       <div className="divide-y-[2px] divide-black">
-        {selected.length === 0 ? <div className="px-4 py-3 text-[11px] font-black uppercase opacity-60">Select up to 3 keywords</div> : selected.map((k, i) => (
-         <div key={k} className="flex items-center justify-between px-4 py-2 text-[12px] font-black uppercase" style={{ background: `rgba(${i === 0 ? "255,116,151" : i === 1 ? "0,229,255" : "204,255,0"},0.22)` }}>
-          <span>{k}</span>
-          <span>{countFor(k)} vids</span>
-         </div>
-        ))}
-       </div>
-      </div>
-     </div>
-     <div className="p-4 flex flex-col gap-3">
-      <div className="text-[10px] font-black uppercase tracking-[0.15em] opacity-50">Selected: {selected.join(" × ") || "none"}</div>
-      <div className="border-[3px] border-black rounded-xl overflow-hidden flex-1">
-       <div className="bg-black text-[#CCFF00] px-4 py-2 text-[10px] font-black uppercase tracking-[0.12em]">Top Keywords — Click To Select</div>
-       <div className="p-3 flex flex-wrap gap-2">
-        {topKeywords.map((kw, i) => (
-         <button key={kw.keyword} onClick={() => toggle(kw.keyword)} className="text-[11px] font-black uppercase px-2 py-1 border-[2px] border-black rounded-xl"
-          style={{ background: selectedSet.has(kw.keyword) ? COLORS[i % COLORS.length] : "#fff", boxShadow: selectedSet.has(kw.keyword) ? "2px 2px 0 0 #000" : "1px 1px 0 0 rgba(0,0,0,0.2)" }}>
-          {kw.keyword} <span className="opacity-60 text-[9px]">{Math.round(kw.value / 1000)}K</span>
+
+      {/* 2. SIDE-BY-SIDE: Click to Select & Combination Breakdown */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 shrink-0">
+       
+       {/* Click To Select */}
+       <div className="border-[3px] border-black rounded-xl overflow-hidden bg-white flex flex-col h-[280px]">
+        <div className="bg-[#BFF8FF] text-black px-4 py-2 border-b-[3px] border-black flex items-center justify-between gap-3 shrink-0">
+         <span className="text-[10px] font-black uppercase tracking-[0.12em]">
+          Top Keywords - Click To Select
+         </span>
+         <button
+          onClick={() => setSelected([])}
+          className="h-6 px-2.5 border-[2px] border-black rounded-md bg-white text-[10px] font-black uppercase tracking-[0.12em]"
+         >
+          Clear
          </button>
-        ))}
+        </div>
+        <div className="p-2 flex flex-wrap gap-1.5 overflow-y-auto">
+         {topKeywords.map((item) => {
+          const activeIndex = selected.indexOf(item.word)
+          const active = activeIndex >= 0
+         return (
+           <button
+            key={item.word}
+            onClick={() => toggle(item.word)}
+            className="inline-flex items-center gap-1.5 h-6 px-2.5 border-[2px] border-black rounded-md text-[10px] font-black uppercase tracking-[0.08em]"
+            style={keywordBadgeStyle(keywordColorIndexForSelection(selected, item.word, item.rank - 1), active)}
+           >
+            {item.word}
+            <span className="ml-1 opacity-60 text-[9px]">
+             {formatKeywordMetricValue(metricMode, item.metricValue)}
+            </span>
+           </button>
+          )
+         })}
+        </div>
        </div>
-      </div>
-      <div className="border-[3px] border-black rounded-xl overflow-hidden">
-       <div className="bg-black text-[#CCFF00] px-4 py-2 text-[10px] font-black uppercase tracking-[0.12em]">Ranked By Reach</div>
-       <div className="max-h-[200px] overflow-y-auto divide-y-[2px] divide-black">
-        {ranked.map((kw, i) => (
-         <div key={kw.keyword} className="px-3 py-2 flex items-center gap-3">
-          <span className="w-6 text-[10px] font-black opacity-50">#{i + 1}</span>
-          <div className="flex-1">
-           <div className="text-[11px] font-black uppercase">{kw.keyword}</div>
-           <div className="h-1.5 rounded-full bg-black/10 overflow-hidden mt-1"><div className="h-full bg-black" style={{ width: `${(kw.value / Math.max(1, ranked[0]?.value || 1)) * 100}%` }} /></div>
+
+       {/* Combination Breakdown */}
+       <div className="border-[3px] border-black rounded-xl overflow-hidden bg-white flex flex-col h-[280px]">
+        <div className="bg-[#E9FF93] text-black px-4 py-2 text-[10px] font-black uppercase tracking-[0.12em] border-b-[3px] border-black shrink-0">
+         Combination Breakdown
+        </div>
+        <div key={breakdownSelectionKey} className="divide-y-[2px] divide-black overflow-y-auto bg-white">
+         {visibleBreakdownRows.length === 0 ? (
+          <div className="px-4 py-2 text-[11px] font-black uppercase opacity-60">
+           Select up to 3 keywords to see single and overlap performance.
           </div>
-          <span className="text-[11px] font-black">{formatCompact(kw.value)}</span>
+         ) : (
+          visibleBreakdownRows.map((row) => (
+           <div
+            key={row.key}
+            className="px-4 py-2 flex items-center justify-between gap-3"
+            style={{
+             background:
+              row.kind === "total"
+               ? "rgba(255,216,230,0.5)"
+               :
+              row.keywords.length === 1
+               ? "rgba(255,255,255,1)"
+               : row.keywords.length === 2
+               ? "rgba(0,0,0,0.04)"
+               : "rgba(177,74,237,0.12)",
+            }}
+           >
+            <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+             {row.kind === "total" ? (
+              <span className="inline-flex items-center h-6 px-2.5 border-[2px] border-black rounded-md text-[10px] font-black uppercase tracking-[0.08em] bg-white">
+               Total
+              </span>
+             ) : null}
+             {row.keywords.map((keyword, index) =>
+              keywordVennBadge(
+               keyword.toUpperCase(),
+               keywordColorIndexForSelection(selected, keyword, index),
+              ),
+             )}
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+             <span className="text-[11px] font-black uppercase">{row.videoCount} videos</span>
+             <span className="text-[11px] font-black uppercase">
+              {row.kind === "total" ? "Total" : selectedMetric.label}: {formatKeywordMetricValue(metricMode, row.metricValue)}
+             </span>
+            </div>
+           </div>
+          ))
+         )}
+        </div>
+       </div>
+
+      </div>
+
+      {/* 3. NEW MODULE: Top 10 Videos */}
+      <div className="border-[3px] border-black rounded-xl overflow-hidden bg-white shrink-0 flex flex-col">
+       <div className="bg-[#FFD8E6] text-black px-4 py-2 text-[11px] font-black uppercase tracking-[0.12em] border-b-[3px] border-black shrink-0">
+        Top 10 Videos {selected.length > 0 ? `Matching: ${selected.join(" + ").toUpperCase()}` : ""} — Ranked By {selectedMetric.label}
+       </div>
+       <div className="divide-y-[2px] divide-black">
+        {top10Videos.length === 0 ? (
+         <div className="px-4 py-6 text-[11px] font-black uppercase opacity-60 text-center">
+          {selected.length === 0 ? "Select keywords to view top videos" : "No videos found for this combination"}
          </div>
-        ))}
+        ) : (
+         top10Videos.map((video, idx) => (
+          <div key={video.rowId} className="px-4 py-3 flex items-center gap-3 bg-white">
+           <div className="w-6 h-6 shrink-0 rounded-full border-[2px] border-black bg-[#CCFF00] flex items-center justify-center text-[10px] font-black">
+            {idx + 1}
+           </div>
+           <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <div className="text-[11px] font-black uppercase tracking-[0.05em] text-black leading-[1.6]">
+             {(() => {
+              if (selected.length === 0) return video.title;
+              const sorted = [...selected].sort((a, b) => b.length - a.length);
+              const regex = new RegExp(`\\b(${sorted.map(k => k.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')).join("|")})\\b`, 'gi');
+              const parts = video.title.split(regex);
+              return parts.map((part, i) => {
+               const lower = part.toLowerCase();
+               const matchIndex = selected.indexOf(lower);
+               if (matchIndex >= 0) {
+                const badgeColorIndex = keywordColorIndexForSelection(selected, lower, matchIndex);
+                return (
+                 <span
+                  key={i}
+                  className="inline-flex items-center mx-1 align-middle h-5 px-2 rounded-md text-[11px] font-black uppercase tracking-[0.05em]"
+                  style={{ background: KEYWORD_VENN_COLORS[badgeColorIndex % KEYWORD_VENN_COLORS.length] }}
+                 >
+                  {part.toUpperCase()}
+                 </span>
+                );
+               }
+               return <span key={i}>{part}</span>;
+              });
+             })()}
+            </div>
+           </div>
+           <div className="shrink-0 text-right">
+            <p className="text-[16px] font-[1000]">{formatKeywordMetricValue(metricMode, video.metrics[metricMode])}</p>
+            <p className="text-[9px] font-black uppercase opacity-60">{selectedMetric.label}</p>
+           </div>
+          </div>
+         ))
+        )}
        </div>
       </div>
+
+      </div>
+
+      {/* 4. RIGHT SIDEBAR: Ranked By */}
+      <div className="flex flex-col gap-2 min-h-0">
+       <div className="border-[3px] border-black rounded-xl overflow-hidden bg-white flex-1 min-h-0 flex flex-col">
+        <div className="bg-[#FFD8E6] text-black px-4 py-2 text-[10px] font-black uppercase tracking-[0.12em] border-b-[3px] border-black flex justify-between items-center">
+         <span>Ranked By {selectedMetric.label}</span>
+         <div className="flex border-[2px] border-black rounded-md overflow-hidden bg-white shrink-0">
+          <button onClick={() => setRankedByMode("average")} className={`px-2 py-0.5 ${rankedByMode === "average" ? "bg-[#CCFF00]" : ""}`}>AVG</button>
+          <button onClick={() => setRankedByMode("total")} className={`px-2 py-0.5 border-l-[2px] border-black ${rankedByMode === "total" ? "bg-[#CCFF00]" : ""}`}>TOTAL</button>
+         </div>
+        </div>
+        <div className="flex-1 min-h-0 overflow-y-auto divide-y-[2px] divide-black">
+         {ranked.map((item, index) => {
+         const activeIndex = selected.indexOf(item.word)
+          const active = activeIndex >= 0
+          const badgeColorIndex = keywordColorIndexForSelection(selected, item.word, item.rank - 1)
+          
+          const getValue = (key: KeywordMetricKey) => {
+             const def = getKeywordMetricDefinition(key)
+             if (def.aggregation === "average" || def.aggregation === "derived_average") {
+                 return item.metrics[key]
+             }
+             if (rankedByMode === "average") {
+                 return item.metrics[key] / item.videoCount
+             }
+             return item.metrics[key]
+          }
+
+          const renderStat = (key: KeywordMetricKey, label: string) => (
+             <div key={key} className="flex flex-col border border-black/10 rounded p-1 bg-[#FAFAFA]">
+               <span className="text-[8px] opacity-60 uppercase font-black">{label}</span>
+               <span className="text-[10px] font-black">{formatKeywordMetricValue(key, getValue(key))}</span>
+             </div>
+          )
+
+         return (
+           <div
+            key={item.word}
+            className="px-2 py-3 flex flex-col gap-2"
+            style={{ background: active ? `${KEYWORD_VENN_COLORS[badgeColorIndex % KEYWORD_VENN_COLORS.length]}30` : "#fff" }}
+           >
+             <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+               <span className="text-[11px] font-black opacity-55">{index + 1}</span>
+               <span
+                className="inline-flex items-center h-6 px-2.5 border-[2px] border-black rounded-md text-[10px] font-black uppercase tracking-[0.08em]"
+                style={keywordBadgeStyle(badgeColorIndex, active)}
+               >
+                {item.word}
+                <span className="ml-1 opacity-60 text-[9px]">
+                 {formatKeywordMetricValue(metricMode, item.metricValue)}
+                </span>
+               </span>
+              </div>
+              <div className="shrink-0 text-right text-[9px] font-black uppercase opacity-60 whitespace-nowrap">
+               {item.videoCount} videos · {item.coveragePct.toFixed(1)}% coverage
+              </div>
+             </div>
+             
+             <div className="grid grid-cols-4 gap-1">
+               {renderStat("impressions", "IMPR")}
+               {renderStat("views", "VIEWS")}
+               {renderStat("engagedViews", "ENG")}
+               {renderStat("subscribersGained", "SUBS")}
+               {renderStat("likes", "LIKES")}
+               {renderStat("comments", "CMNTS")}
+               {renderStat("shares", "SHARE")}
+               {renderStat("revenue", "REV")}
+               {renderStat("averageViewDuration", "AVD")}
+               {renderStat("averageViewPercentage", "AVP")}
+               {renderStat("rpm", "RPM")}
+             </div>
+
+             <div className="h-2 rounded-full bg-black/10 overflow-hidden mt-1">
+              <div
+               className="h-full"
+               style={{
+                width: `${(item.metricValue / rankedMax) * 100}%`,
+                background: active ? KEYWORD_VENN_COLORS[badgeColorIndex % KEYWORD_VENN_COLORS.length] : "#000",
+               }}
+              />
+             </div>
+           </div>
+          )
+         })}
+        </div>
+       </div>
+      </div>
+
      </div>
-    </div>
-   )}</div>
+    )}
+   </div>
   </SubToolboxChartModule>
  )
 }

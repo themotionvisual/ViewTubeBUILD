@@ -1,0 +1,381 @@
+import React, { useState } from "react"
+import { Layers, X, GripVertical, ChevronsUpDown, ChevronsLeftRight, Sparkles, CircleQuestionMark, Minus } from "lucide-react"
+import { VTLottie } from "../../components/VTLottie"
+import type { WidgetDefinition, WidgetInstanceState } from "./types"
+
+export const WidgetShell: React.FC<{
+ widget: WidgetDefinition
+ instance: WidgetInstanceState
+ editMode: boolean
+ canEdit: boolean
+ onToggleCollapse?: () => void
+ onCycleSize?: () => void
+ onDecSize?: () => void
+ onCycleHeight?: () => void
+ onDecHeight?: () => void
+ onRemove?: () => void
+ children: React.ReactNode
+ icon?: React.ReactNode
+ headerContent?: React.ReactNode
+ hasAI?: boolean
+ onRegenerate?: () => void
+ aiCost?: number
+ aiDisabled?: boolean
+ aiDisabledReason?: string
+}> = ({
+ widget,
+ editMode,
+ canEdit,
+ onToggleCollapse = () => {},
+ onCycleSize = () => {},
+ onDecSize = () => {},
+ onCycleHeight = () => {},
+ onDecHeight = () => {},
+ onRemove = () => {},
+ children,
+ icon,
+ headerContent,
+ hasAI,
+ onRegenerate,
+ aiCost,
+ aiDisabled,
+ aiDisabledReason,
+}) => {
+ const [isSubtitleOpen, setIsSubtitleOpen] = useState(false);
+
+ const words = widget.title.split(" ");
+ const formattedTitle = words.length >= 2 ? (
+  <>
+   {words[0]}<br/>{words.slice(1).join(" ")}
+  </>
+ ) : (
+  widget.title
+ );
+
+ const WIDGET_DESCRIPTIONS: Record<string, { short: string, detailed: string }> = {
+  "kpi-cluster": {
+   short: "REAL-TIME CHANNEL VITALS AND CORE GROWTH METRICS.",
+   detailed: "Monitor subscribers, views, and revenue in a dense, at-a-glance cluster. Best used for high-level health checks."
+  },
+  "channel-overview": {
+   short: "HIGH-LEVEL SUMMARY OF YOUR CHANNEL'S 28-DAY PERFORMANCE.",
+   detailed: "A holistic view of your channel's reach and engagement. Use this to identify long-term trends and seasonality."
+  },
+  "realtime-performance": {
+   short: "MONITOR LIVE CONCURRENT VIEWERS AND TRAFFIC VELOCITY.",
+   detailed: "See exactly who is watching and where they come from in real time. Perfect for monitoring the first 48 hours of a launch."
+  },
+  "alerts-feed": {
+   short: "INSTANT NOTIFICATIONS FOR MILESTONES AND CRITICAL EVENTS.",
+   detailed: "Stay updated on major subscriber jumps, revenue spikes, or policy alerts. Check daily to catch urgent channel changes."
+  },
+  "system-micro-stack": {
+   short: "MINIATURE CONTROL CENTER FOR QUICK CHANNEL ACTIONS.",
+   detailed: "A compact stack for toggling visibility or quick settings. Keep this pinned for rapid-fire channel management."
+  },
+  "recent-uploads": {
+   short: "PERFORMANCE AUDIT OF YOUR MOST RECENT VIDEO RELEASES.",
+   detailed: "Compare your latest videos side-by-side. Use this to spot which topics or thumbnails are currently resonating."
+  },
+  "consistency-heatmap": {
+   short: "VISUALIZE YOUR POSTING FREQUENCY AND CONSISTENCY.",
+   detailed: "A calendar-style heat map of your uploads. Use it to ensure you aren't leaving gaps that hurt algorithmic reach."
+  },
+  "task-stack": {
+   short: "TODO LIST FOR PRODUCTION MILESTONES AND CREATIVE GOALS.",
+   detailed: "Manage your production pipeline from ideation to publish. Best used to keep track of multiple edits simultaneously."
+  },
+  "community-post": {
+   short: "AI-POWERED GENERATOR FOR ENGAGING COMMUNITY UPDATES.",
+   detailed: "Draft polls, images, and text posts optimized for reach. Best used to prime the algorithm between major video uploads."
+  },
+  "description-editor": {
+   short: "STANDARDIZE AND REFINE YOUR VIDEO METADATA AT SCALE.",
+   detailed: "Bulk edit or template your descriptions with SEO-ready blocks. Use snippets to keep your links and socials consistent."
+  },
+  "tag-generator": {
+   short: "AI-EXTRACTED KEYWORD CLUSTERS FOR MAXIMUM SEO REACH.",
+   detailed: "Generate high-ranking tags based on your video content. Best used to discover niche keywords you might have missed."
+  },
+  "thumb-ai": {
+   short: "AI-DRIVEN THUMBNAIL ANALYSIS AND VARIATION GENERATOR.",
+   detailed: "Evaluate thumbnail CTR potential and generate variations. Use it to test different emotional hooks before you publish."
+  },
+  "top-performer": {
+   short: "DEEP DIVE INTO THE VIDEOS DRIVING YOUR CHANNEL GROWTH.",
+   detailed: "Analyze your #1 videos to find the 'secret sauce' of their success. Replicate these patterns in your future content."
+  },
+  "revenue-momentum": {
+   short: "ANALYZE EARNING VELOCITY AND FUTURE REVENUE PROJECTIONS.",
+   detailed: "Track how fast you're making money and where it peaks. Use this to plan high-budget productions around revenue spikes."
+  },
+  "revenue-chart": {
+   short: "DETAILED DAILY BREAKDOWN OF YOUR CHANNEL'S EARNINGS.",
+   detailed: "A granular chart of your RPM, CPM, and total revenue. Best used to track the impact of ad-friendly content shifts."
+  },
+  "keyword-engine": {
+   short: "SEARCH VOLUME AND COMPETITION ANALYSIS FOR NEW TOPICS.",
+   detailed: "Find what viewers are searching for before you hit record. Use it to pick high-demand, low-competition video ideas."
+  },
+  "traffic-sources": {
+   short: "MAP WHERE YOUR VIEWERS ARE DISCOVERING YOUR CONTENT.",
+   detailed: "Identify if your views come from Search, Suggested, or External. Use this to tailor your titles for specific surfaces."
+  },
+  "audience-retention": {
+   short: "DIAGNOSE EXACTLY WHERE VIEWERS STOP WATCHING VIDEOS.",
+   detailed: "View second-by-second drop-off points. Use these insights to fix pacing issues and improve your video hooks."
+  },
+  "shorts-vs-long": {
+   short: "COMPARE PERFORMANCE ACROSS DIFFERENT VIDEO FORMATS.",
+   detailed: "Analyze which format drives more subs vs more revenue. Use this to balance your content strategy for maximum growth."
+  },
+  "superfan-card": {
+   short: "IDENTIFY AND REWARD YOUR MOST LOYAL COMMUNITY MEMBERS.",
+   detailed: "Track your top 10% of commenters and subscribers. Use this to engage directly with your most valuable 'inner circle.'"
+  },
+  "comment-replier": {
+   short: "AI-ASSISTED REPLIES TO BOOST ENGAGEMENT AND RETENTION.",
+   detailed: "Craft provocative, algorithm-priming replies to comments. Use it to spark longer conversations in your comment section."
+  },
+  "ai-prompt-box": {
+   short: "DIRECT COMMAND LINE FOR CHANNEL-WIDE AI OPERATIONS.",
+   detailed: "Execute complex data queries or content tasks via text. Best used for advanced batch-processing or deep data analysis."
+  },
+  "ask-me": {
+   short: "NATURAL LANGUAGE CHAT FOR INSTANT CHANNEL INSIGHTS.",
+   detailed: "Ask anything about your data and get an immediate answer. Best used for 'Why?' questions that charts can't explain."
+  },
+  "daily-oracle": {
+   short: "STRATEGIC AI ADVICE TAILORED TO YOUR CURRENT GROWTH.",
+   detailed: "Receive a daily 'prediction' or strategic tip for your channel. Use this for a fresh perspective on your content direction."
+  },
+  "ai-journal": {
+   short: "CREATIVE LOG FOR TRACKING EXPERIMENTS AND STRATEGIES.",
+   detailed: "Document what works and what doesn't in your content journey. Best used to build a personalized 'Creator Playbook.'"
+  },
+  "mini-calendar": {
+   short: "PRODUCTION SCHEDULE AND UPCOMING MILESTONE TRACKER.",
+   detailed: "A compact view of your upcoming tasks and deadlines. Use it to plan your week and avoid production bottlenecks."
+  },
+  "quick-actions": {
+   short: "PRIMARY NAVIGATION LAUNCHERS FOR CORE TOOLS.",
+   detailed: "Quickly jump to the most common dashboard surfaces. Use this as your home base for navigating the ViewTube ecosystem."
+  },
+  "goals-tracker": {
+   short: "TRACK PROGRESS TOWARDS YOUR CHANNEL MILESTONES.",
+   detailed: "Set and monitor goals for subscribers, views, or revenue. Use it to stay motivated and hit your growth targets."
+  },
+  "alerts-ticker": {
+   short: "REAL-TIME TICKER OF CRITICAL CHANNEL EVENTS.",
+   detailed: "A scrolling feed of live alerts and performance spikes. Keep an eye on this for immediate algorithmic signals."
+  },
+  "publish-momentum": {
+   short: "HEATMAP ANALYSIS OF OPTIMAL PUBLISH TIMES.",
+   detailed: "Visualize when your audience is most active. Use this to time your uploads for maximum initial velocity."
+  },
+  "reach-funnel": {
+   short: "VISUALIZE YOUR CTR CONVERSION AND REACH EFFICIENCY.",
+   detailed: "Track how impressions turn into views and watch time. Use this to identify if your titles or thumbnails are leaking traffic."
+  },
+  "relative-retention-benchmark": {
+   short: "BENCHMARK YOUR PERFORMANCE AGAINST PLATFORM AVERAGES.",
+   detailed: "See how your video retention compares to similar channels. Use this to understand if you are beating the algorithm's expectations."
+  },
+  "ad-stack-intelligence": {
+   short: "ADVANCED MONETIZATION AND CPM ANALYSIS.",
+   detailed: "Deep dive into your ad performance and monetized playbacks. Use this to optimize your content for higher-paying demographics."
+  },
+  "audience-matrix": {
+   short: "MULTI-DIMENSIONAL VIEW OF YOUR VIEWERSHIP.",
+   detailed: "Analyze geo, device, and sharing data in a unified matrix. Use this to identify new international or mobile-first growth opportunities."
+  },
+  "bridge-efficiency": {
+   short: "MEASURE THE IMPACT OF CROSS-VIDEO PROMOTION.",
+   detailed: "Track how well your end screens and cards convert viewers. Use this to build a 'bridge' that keeps viewers on your channel."
+  },
+  "flight-check": {
+   short: "PRE-PUBLISH CHECKLIST FOR PERFECT UPLOADS.",
+   detailed: "Ensure every video has optimal SEO, links, and settings before going live. Use this as a final safety net for every release."
+  },
+  "data-edit": {
+   short: "VIDEO MANAGER FOR UPLOAD + PUBLISHED VIDEO WORKFLOWS.",
+   detailed: "Manage upload and edit flows in one place. Update titles, descriptions, tags, metadata, and publishing options quickly."
+  },
+  "image-generator": {
+   short: "GENERATE THUMBNAIL + END SCREEN IMAGES WITH AI.",
+   detailed: "Create images with style controls and send outputs directly to Community Post, Comment Responder, Thumb AI, and Video Manager."
+  },
+  "title-rewriter": {
+   short: "AI-POWERED TITLE VARIATIONS AND CTR OPTIMIZATION.",
+   detailed: "Generate dozens of title alternatives based on your video's core hook. Use this to test different angles before settling on a winner."
+  },
+  "retention-sim": {
+   short: "SIMULATE VIEWERSHIP BEHAVIOR AND PREDICT DROPOFF.",
+   detailed: "Analyze potential 'danger zones' in your video's pacing. Use this during the edit to cut out boring segments before you publish."
+  },
+  "upload-scheduler": {
+   short: "7-DAY CONTENT PLANNER AND UPLOAD QUEUE.",
+   detailed: "Map out your next week of content and schedule your drops. Use this to maintain a consistent rhythm without the stress."
+  },
+  "hashtag-analyzer": {
+   short: "DEEP ANALYSIS OF HASHTAG REACH AND COMPETITION.",
+   detailed: "See which hashtags are trending and which are oversaturated. Use this to pick the perfect set of 3 tags for every video."
+  },
+  "burnout-monitor": {
+   short: "PACING TRACKER TO ENSURE CREATIVE LONGEVITY.",
+   detailed: "Monitor your output vs your recovery time. Use this to avoid 'creator burnout' by identifying when you need a break."
+  },
+  "collab-matchmaker": {
+   short: "FIND PEERS AND GENERATE COLLAB PITCHES.",
+   detailed: "Discover creators with similar audiences and get AI-drafted reach-out scripts. Use this to grow your community through partnership."
+  },
+  "brain-hub": {
+   short: "YOUR AI BRAIN'S MEMORY, DIRECTIVES, AND STRATEGIC ADVICE.",
+   detailed: "View the Brain's evolved understanding of your channel identity, content DNA, performance, and goals. Trigger reflection cycles to update the Brain's strategic OODA directive."
+  },
+ };
+
+ const description = WIDGET_DESCRIPTIONS[widget.id] || {
+  short: "INTERACTIVE SOURCE PREVIEW RETAINED AS IDEA-BANK.",
+  detailed: "View raw data streams and historical references before promoting components to the main dashboard."
+ };
+
+ return (
+  <div
+   className="vt-widget open"
+   style={{ "--widget-color": widget.headerColor } as any}
+  >
+   <div className="vt-widget-header">
+    <div className="left">
+     <div className="icon-rail">
+      {icon || <Layers size={22} />}
+     </div>
+     <span className="title">{formattedTitle}</span>
+    </div>
+
+    {headerContent && (
+     <div className="header-extra" onClick={(e) => e.stopPropagation()} style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+      {headerContent}
+     </div>
+    )}
+
+    <div className="toggle flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+     {canEdit && editMode ?
+      <div className="flex flex-col gap-1 mr-1">
+       <div className="flex items-center gap-1">
+        <button
+         onClick={onCycleSize}
+         className="widget-header-btn"
+         title="Go Wider">
+         <span className="text-[8px] font-black">+W</span>
+        </button>
+        <button
+         onClick={onDecSize}
+         className="widget-header-btn"
+         title="Go Smaller">
+         <span className="text-[8px] font-black">-W</span>
+        </button>
+       </div>
+       <div className="flex items-center gap-1">
+        <button
+         onClick={onCycleHeight}
+         className="widget-header-btn"
+         title="Go Taller">
+         <span className="text-[8px] font-black">+H</span>
+        </button>
+        <button
+         onClick={onDecHeight}
+         className="widget-header-btn"
+         title="Go Shorter">
+         <span className="text-[8px] font-black">-H</span>
+        </button>
+       </div>
+      </div>
+     : null}
+     
+     {hasAI && (
+      <div className="flex items-center gap-1.5 mr-1">
+       {typeof aiCost === "number" && (
+        <span className="widget-ai-cost-chip">{aiCost}T</span>
+       )}
+       <button
+        className="widget-header-btn ai-btn"
+        title={aiDisabled && aiDisabledReason ? aiDisabledReason : "Regenerate with AI"}
+        onClick={onRegenerate}
+        disabled={aiDisabled}>
+        <VTLottie
+         animationUrl="https://assets3.lottiefiles.com/packages/lf20_m6cu8sh9.json"
+         size={16}
+        />
+       </button>
+      </div>
+     )}
+
+     <div className="grid grid-cols-2 grid-rows-2 gap-[3px]">
+       <button
+         type="button"
+         onClick={() => setIsSubtitleOpen(!isSubtitleOpen)}
+         className={`w-[22px] h-[22px] rounded-[5px] border-[2px] border-black flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${isSubtitleOpen ? 'bg-black text-white' : 'bg-white text-black'}`}
+         aria-label="Help"
+         title="Toggle Info"
+       >
+         <CircleQuestionMark size={12} strokeWidth={2.8} />
+       </button>
+       
+       {canEdit && editMode ? (
+         <button
+           type="button"
+           onClick={onRemove}
+           className="w-[22px] h-[22px] rounded-[5px] border-[2px] border-black bg-white flex items-center justify-center transition-all hover:bg-red-100 hover:scale-110 active:scale-95 text-black"
+           aria-label="Close"
+           title="Remove widget"
+         >
+           <X size={12} strokeWidth={3} />
+         </button>
+       ) : (
+         <div className="w-[22px] h-[22px]" />
+       )}
+       
+       {canEdit && editMode ? (
+         <button
+           type="button"
+           className="w-[22px] h-[22px] rounded-[5px] border-[2px] border-black bg-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-grab active:cursor-grabbing text-black"
+           aria-label="Drag"
+           title="Drag to reorder"
+         >
+           <GripVertical size={12} strokeWidth={2.8} />
+         </button>
+       ) : (
+         <div className="w-[22px] h-[22px]" />
+       )}
+       
+       <button
+         type="button"
+         onClick={onToggleCollapse}
+         className={`w-[22px] h-[22px] rounded-[5px] border-[2px] border-black bg-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 text-black`}
+         aria-label="Minimize"
+         title="Toggle Collapse"
+       >
+         <Minus size={12} strokeWidth={3} />
+       </button>
+     </div>
+    </div>
+   </div>
+
+   <div className={`widget-subtitle ${isSubtitleOpen ? 'open' : ''}`}>
+    <div className="widget-subtitle-content" style={{ flexDirection: "column", alignItems: "flex-start", gap: "2px" }}>
+     <div style={{ fontWeight: 900, textTransform: "uppercase", fontSize: "12px", lineHeight: 1.2 }}>
+      {description.short}
+     </div>
+     <div style={{ fontWeight: 600, fontSize: "11px", opacity: 0.7, lineHeight: 1.3, textTransform: "none" }}>
+      {description.detailed}
+     </div>
+    </div>
+   </div>
+
+   <div className="vt-widget-content">
+    <div className="vt-widget-body">{children}</div>
+   </div>
+  </div>
+ )
+}

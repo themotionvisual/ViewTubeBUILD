@@ -6,7 +6,7 @@ import {
   getAvpRawPercent,
   resolveCtrPercent,
   resolveImpressions,
-} from '../services/metricAliasResolver';
+} from '../services/analytics/MetricRegistry';
 
 type Rows = Array<Record<string, unknown>>;
 

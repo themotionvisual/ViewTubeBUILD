@@ -65,18 +65,294 @@ export type CsvTag =
  | "other"
  | "unknown"
 
-export type CsvUploadType = "auto" | CsvTag
+export type CsvMajorFamily =
+ | "video_data"
+ | "daily_metrics"
+ | "traffic"
+ | "geography"
+ | "audience"
+ | "surfaces_discovery"
+ | "revenue_monetization"
+ | "unknown"
+
+export type CsvUploadType = "auto" | CsvTag | Exclude<CsvMajorFamily, "unknown">
+
+export type CsvDetectedCategory =
+ | "content_performance"
+ | "content_channel_all"
+ | "video_content_all"
+ | "content_shorts"
+ | "video_content_shorts"
+ | "content_longform"
+ | "video_content_longform"
+ | "video_content_type"
+ | "daily_metrics"
+ | "daily_channel_metrics"
+ | "traffic_report"
+ | "traffic_overview"
+ | "traffic_youtube_search"
+ | "traffic_external"
+ | "traffic_youtube_features"
+ | "traffic_suggested_videos"
+ | "traffic_shorts_feed"
+ | "youtube_search_terms"
+ | "suggested_videos_related"
+ | "external_sources"
+ | "shorts_content_links"
+ | "audience_demographics"
+ | "audience_growth"
+ | "audience_age"
+ | "audience_gender"
+ | "audience_age_gender"
+ | "audience_size_growth"
+ | "audience_new_returning"
+ | "audience_watch_behavior"
+ | "audience_retention_single_video"
+ | "audience_retention_segment"
+ | "audience_retention_curve"
+ | "audience_retention_activity"
+ | "geography"
+ | "geography_country"
+ | "geography_city"
+ | "audience_devices"
+ | "surface_playback_location"
+ | "surface_subscription_status"
+ | "surface_subscription_source"
+ | "surface_sharing_service"
+ | "surface_playlist"
+ | "surface_post"
+ | "surface_card"
+ | "surface_card_type"
+ | "surface_end_screen"
+ | "surface_end_screen_type"
+ | "surface_subtitles_cc"
+ | "surface_translation_use"
+ | "surface_video_info_language"
+ | "monetization_revenue_source"
+ | "monetization_ad_type"
+ | "retention_curve"
+ | "stw_procedure"
+ | "reflection_rate_checks"
+ | "unknown"
+
+export type CsvMergeTargetDataset =
+ | "master"
+ | "traffic"
+ | "geography"
+ | "audience"
+ | "retention"
+ | "daily"
+ | "video_master"
+ | "video_content_breakdown"
+ | "daily_metrics"
+ | "traffic_summary"
+ | "traffic_detail"
+ | "geography_country"
+ | "geography_city"
+ | "audience_demographics"
+ | "audience_growth"
+ | "audience_behavior"
+ | "audience_devices"
+ | "audience_retention"
+ | "surfaces_discovery"
+ | "monetization"
+ | "ignore"
+
+export type CsvMergeKeyStrategy =
+ | "video_id_title_date"
+ | "traffic_source"
+ | "traffic_source_detail"
+ | "geography_key"
+ | "audience_dimension"
+ | "video_position"
+ | "date"
+ | "video_identity"
+ | "daily_date"
+ | "traffic_summary_source"
+ | "traffic_detail_source_title"
+ | "country_name"
+ | "city_name_plus_country_if_present"
+ | "age_band"
+ | "gender"
+ | "age_gender_pair"
+ | "retention_position"
+ | "surface_dimension_member"
+ | "monetization_dimension_member"
+ | "package_only"
+ | "none"
+
+export type CsvCapabilitySource =
+ | "analytics_api"
+ | "reporting_api"
+ | "data_api"
+ | "csv_only"
+
+export type CsvFreshnessClass =
+ | "stable"
+ | "ninety_day_limited"
+ | "single_video"
+ | "bulk_delayed"
+ | "manual_only"
+
+export type CsvSubtableId =
+ | "all_videos"
+ | "shorts"
+ | "long_form"
+ | "content_type"
+ | "daily_channel_metrics"
+ | "all_traffic_sources"
+ | "youtube_search_terms"
+ | "external_sources"
+ | "suggested_videos"
+ | "shorts_feed_links"
+ | "youtube_features"
+ | "countries"
+ | "cities"
+ | "age"
+ | "gender"
+ | "age_gender"
+ | "size_growth"
+ | "new_returning"
+ | "watch_behavior"
+ | "devices"
+ | "retention"
+ | "playback_location"
+ | "subscription_status"
+ | "subscription_source"
+ | "sharing_service"
+ | "playlists"
+ | "posts"
+ | "cards"
+ | "card_types"
+ | "end_screens"
+ | "end_screen_types"
+ | "subtitles_cc"
+ | "translation_use"
+ | "video_info_language"
+ | "revenue_source"
+ | "ad_type"
+ | "unknown"
+
+export type CsvPackageMemberRole =
+ | "table_data"
+ | "chart_data"
+ | "totals"
+ | "retention_member"
+ | "loose_table_data"
+ | "unknown"
+
+export interface CsvPackageMember {
+ fileName: string
+ relativePath: string
+ exportKind: "table_data" | "totals" | "chart" | "unknown"
+ role: CsvPackageMemberRole
+ category: CsvDetectedCategory
+}
+
+export interface CsvImportPackage {
+ packageId: string
+ packageName: string
+ packageFingerprint: string
+ sourceGroup: string
+ category: CsvDetectedCategory
+ majorFamily: CsvMajorFamily
+ mergeTargetDataset: CsvMergeTargetDataset
+ mergeKeyStrategy: CsvMergeKeyStrategy
+ memberRole: CsvPackageMemberRole
+ members: CsvPackageMember[]
+ capabilitySources: CsvCapabilitySource[]
+ freshnessClass: CsvFreshnessClass
+ channelLabel?: string
+ dateRange?: string
+}
+
+export interface CsvMergeDirective {
+ packageId: string
+ packageFingerprint: string
+ majorFamily: CsvMajorFamily
+ subtableId: CsvSubtableId
+ mergeTargetDataset: CsvMergeTargetDataset
+ mergeKeyStrategy: CsvMergeKeyStrategy
+ memberRole: CsvPackageMemberRole
+ capabilitySources: CsvCapabilitySource[]
+ freshnessClass: CsvFreshnessClass
+ sourcePriority: "primary" | "auxiliary" | "fallback"
+ isPrimaryMergeSource: boolean
+ isAuxiliaryMember: boolean
+}
 
 export interface CsvFileWithTag {
  id: string
  name: string
  tag: CsvTag
  file?: File
+ byteSize?: number
  data?: any[]
+ detectedCategory?: CsvDetectedCategory
+ detectionConfidence?: "high" | "medium" | "low"
+ signatureId?: string
+ detectionWarnings?: string[]
+ sourceGroup?: string
+ mergeTargetDataset?: CsvMergeTargetDataset
+ mergeKeyStrategy?: CsvMergeKeyStrategy
+ majorFamily?: CsvMajorFamily
+ subtableId?: CsvSubtableId
+ capabilitySources?: CsvCapabilitySource[]
+ freshnessClass?: CsvFreshnessClass
+ packageId?: string
+ packageName?: string
+ packageFingerprint?: string
+ channelLabel?: string
+ packageVariant?: string
+ packageMemberRole?: CsvPackageMemberRole
  dateRange?: string
  featureName?: string
  analyticsWindow?: "7d" | "28d" | "90d" | "365d" | "lifetime"
  exportKind?: "table_data" | "totals" | "chart" | "unknown"
+ mergeDirective?: CsvMergeDirective
+ packageMemberCount?: number
+ packageHasPrimaryTableData?: boolean
+ packageHasAuxiliaryMembers?: boolean
+}
+
+export interface AnalyticsDatasetSourcePolicy {
+ id: string
+ label: string
+ sourceType:
+  | "youtube_data_api"
+  | "youtube_analytics_api"
+  | "youtube_reporting_api"
+  | "studio_csv"
+ speedClass: "fast" | "medium" | "bulk_delayed" | "manual_csv_only"
+ requiresOAuth: boolean
+ bestFor: string
+ guidance: string
+}
+
+export interface AnalyticsDatasetFamilyRegistryRow {
+ majorFamily: CsvMajorFamily
+ label: string
+ subtableIds: CsvSubtableId[]
+ syncActionLabels: string[]
+ sourcePriority: AnalyticsDatasetSourcePolicy["sourceType"][]
+ csvOnlyGaps: string[]
+}
+
+export interface PerformanceHubTableSchema {
+ datasetId: string
+ label: string
+ defaultSort?: { column: string; dir: "asc" | "desc" }
+ columns: string[]
+}
+
+export interface ChartScopeStatus {
+ rawApiRows: number
+ rawCsvRows: number
+ mergedRows: number
+ includeOnlyRows: number
+ excludedRows: number
+ finalChartRows: number
+ includeOnlyActive: boolean
 }
 
 export interface ChartConfig {
@@ -395,6 +671,7 @@ export interface AuthState {
  subscriberCount: number | null
  totalViews: number | null
  videoCount: number | null
+ syncedAt?: string | null
  fastAnalytics?: {
   lifetimeRevenue: number
   lifetimeWatchMinutes: number
@@ -488,6 +765,16 @@ export interface WorkspaceBrain {
   oraclePromptVersion?: ChannelOraclePromptVersion
   syncBatch?: VideoSyncBatchState
   syncStatus?: ChannelAnalysisSyncStatus
+ }
+
+ performanceHubState: {
+  analyticsWindow: "7d" | "28d" | "90d" | "365d" | "lifetime"
+  syncSourceMode: "api_analytics" | "uploads" | "both"
+  storageMode: "sync" | "storage" | "both"
+  tableDataset: string
+  tableSearch: string
+  tableTag: string
+  selectedRowIds: string[]
  }
 
  researchLabState: {

@@ -7,6 +7,9 @@ const QUARANTINE_DIR = path.join(ROOT, '_quarantine');
 const SELF_PATH = fileURLToPath(import.meta.url);
 const ACTIVE_DIRS = ['src', 'public', 'server', 'scripts'];
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
+const QUARANTINE_CHECKER_ALLOWLIST = new Set([
+  path.join(ROOT, 'scripts', 'check-src-governance.mjs'),
+]);
 
 function walk(dir, out = []) {
   if (!fs.existsSync(dir)) return out;
@@ -23,6 +26,7 @@ for (const folder of ACTIVE_DIRS) {
   const files = walk(path.join(ROOT, folder));
   for (const file of files) {
     if (file === SELF_PATH) continue;
+    if (QUARANTINE_CHECKER_ALLOWLIST.has(file)) continue;
     const ext = path.extname(file);
     if (!SOURCE_EXTENSIONS.has(ext)) continue;
     const text = fs.readFileSync(file, 'utf8');

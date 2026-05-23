@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useBrain } from "../context/useBrain"
 import { CustomIcon } from "../components/CustomIcon"
 import { DailyAdviceWidget } from "../components/DailyAdviceWidget"
-import { getMetricSummary, getMasterRows } from "../services/analyticsSelectors"
+import { getMetricSummary, getMasterRows } from "../services/analytics/Selectors"
 
 const formatHumanNumber = (value: unknown): string => {
  const parsed = Number(value)

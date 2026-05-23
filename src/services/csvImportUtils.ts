@@ -1,6 +1,8 @@
 import JSZip from "jszip"
 import type { CsvFileWithTag, CsvTag, CsvUploadType } from '../types';
-import type { AnalyticsWindow } from './analyticsContract';
+import type { AnalyticsWindow } from './analytics/DataStore';
+import { getCanonicalAnalyticsCache, updateCanonicalAnalyticsCache } from './analytics/DataStore';
+import { uploadTypeToCsvTag } from './csvTaxonomy';
 
 const ZIP_MIME_TYPES = new Set([
   'application/zip',
@@ -296,8 +298,9 @@ export const buildCsvFilesWithTags = async (
       const data = parseCSV(text);
 
       let tag: CsvTag;
-      if (uploadType !== 'auto') {
-        tag = uploadType;
+      const manualTag = uploadTypeToCsvTag(uploadType);
+      if (manualTag) {
+        tag = manualTag;
       } else {
         const detected = detectContentTagFromRows(data);
         tag = detected ?? inferTagFromPath(getFilePath(file));
@@ -306,6 +309,32 @@ export const buildCsvFilesWithTags = async (
       const filePath = getFilePath(file);
       const inferredWindow = inferAnalyticsWindowFromName(filePath);
       const exportKind = classifyCsvExportKind(filePath, data);
+
+      // Permanently link video ID to the shorts format if "Stayed to watch (%)" is present
+      const cache = getCanonicalAnalyticsCache();
+      const updates: Record<string, string> = { ...cache.videoContentType };
+      let hasUpdates = false;
+
+      data.forEach((row) => {
+        const videoId = String(row['Video'] ?? row['Video title'] ?? row['Video ID'] ?? '');
+        if (!videoId || videoId.toLowerCase() === 'total' || videoId.length < 8) return;
+
+        const stayedToWatch =
+          typeof row['Stayed to watch (%)'] === 'number'
+            ? row['Stayed to watch (%)']
+            : Number(row['Stayed to watch (%)'] ?? row['Stayed to watch at 0:30 (%)'] ?? 0);
+
+        if (stayedToWatch > 0) {
+          updates[videoId] = 'shorts';
+          hasUpdates = true;
+        }
+      });
+
+      if (hasUpdates) {
+        updateCanonicalAnalyticsCache({ videoContentType: updates }).catch((err) => {
+          console.error('[CSV Ingestion Utils] Failed to update video format cache:', err);
+        });
+      }
 
       return {
         id: crypto.randomUUID(),

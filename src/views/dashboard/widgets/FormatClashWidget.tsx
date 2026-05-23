@@ -1,7 +1,7 @@
 import React, { useMemo } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { PieChart } from "lucide-react"
-import { metricCellValue } from "../../../services/analyticsSelectors"
+import { metricCellValue } from "../../../services/analytics/Selectors"
 
 export const FormatClashWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onCycleHeight, onDecSize, onDecHeight, onRemove, data }: any) => {
  const common = {

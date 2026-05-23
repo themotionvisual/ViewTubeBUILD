@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
-import { getMasterRows } from "../services/analyticsSelectors"
-import { applyGlobalRowFilters } from "../services/analyticsRuntime"
-import type { AnalyticsWindow, CanonicalVideoRow } from "../services/analyticsContract"
+import { getMasterRows } from "../services/analytics/Selectors"
+import { applyGlobalRowFilters, UPLOAD_CACHE_FILES_KEY } from "../services/analytics/SyncPipeline"
+import type { AnalyticsWindow, CanonicalVideoRow } from "../services/analytics/DataStore"
 import {
  VideoValueMatrix, RevenueDistribution, WatchTimeDistribution, SubscribersGained,
  ShortsRetention, Packaging, EngagementMap, PerformanceTrend, DurationSweetSpot,
@@ -10,20 +10,90 @@ import {
 } from "../components/GraphsPageCharts"
 import { SubToolbox, ToolboxScaffold } from "../components/Toolbox"
 import { Activity, ChartColumnBig } from "lucide-react"
-import { PerformanceHubChartRollout } from "./performanceHub40/PerformanceHubChartRollout"
+import { useBrain } from "../context/useBrain"
+import type { CsvDetectedCategory, CsvFileWithTag } from "../types"
 
 const WINDOWS: AnalyticsWindow[] = ["lifetime", "365d", "90d", "28d", "7d"]
 
+const csvSchemaSignature = (rows: unknown[]): string => {
+ if (!Array.isArray(rows) || rows.length === 0) return "no_rows"
+ const first = rows[0]
+ if (!first || typeof first !== "object" || Array.isArray(first)) return "non_object_rows"
+ return Object.keys(first as Record<string, unknown>).sort().join("|")
+}
+
+const csvFileMergeKey = (file: CsvFileWithTag): string => {
+ const rowCount = Array.isArray(file.data) ? file.data.length : 0
+ const schema = csvSchemaSignature(file.data || [])
+ return [
+  String(file.name || "").toLowerCase().trim(),
+  String(file.tag || "").toLowerCase().trim(),
+  String(file.dateRange || "").toLowerCase().trim(),
+  String(file.featureName || "").toLowerCase().trim(),
+  String(file.analyticsWindow || "").toLowerCase().trim(),
+  String(file.exportKind || "").toLowerCase().trim(),
+  String(rowCount),
+  schema,
+ ].join("::")
+}
+
+const dedupeCsvFilesForGraphs = (files: CsvFileWithTag[]): CsvFileWithTag[] => {
+ const seen = new Set<string>()
+ const output: CsvFileWithTag[] = []
+ for (const file of files) {
+  const key = csvFileMergeKey(file)
+  if (seen.has(key)) continue
+  seen.add(key)
+  output.push(file)
+ }
+ return output
+}
+
+const isRecognizedCsvCategory = (
+ category: CsvDetectedCategory | undefined,
+ confidence: "high" | "medium" | "low" | undefined,
+): boolean => {
+ if (!category || category === "unknown") return false
+ return confidence === "high" || confidence === "medium" || confidence === undefined
+}
+
+const readCachedUploadFiles = (): CsvFileWithTag[] => {
+ try {
+  const parsed = JSON.parse(localStorage.getItem(UPLOAD_CACHE_FILES_KEY) || "[]") as CsvFileWithTag[]
+  return Array.isArray(parsed) ? parsed : []
+ } catch {
+  return []
+ }
+}
+
 const GraphsPage: React.FC = () => {
+ const { brain, lastSyncComplete } = useBrain()
  const [win, setWin] = useState<AnalyticsWindow>("365d")
  const [rows, setRows] = useState<CanonicalVideoRow[]>([])
  const [loading, setLoading] = useState(false)
  const [error, setError] = useState<string | null>(null)
+ const [cachedUploadFiles, setCachedUploadFiles] = useState<CsvFileWithTag[]>(() =>
+  readCachedUploadFiles(),
+ )
+
+ const storedCsvFiles = brain.channelyticsState.csvFiles || []
+ const csvFiles = useMemo(
+  () => dedupeCsvFilesForGraphs([...storedCsvFiles, ...cachedUploadFiles]),
+  [storedCsvFiles, cachedUploadFiles],
+ )
+ const recognizedCsvFiles = useMemo(
+  () =>
+   csvFiles.filter((file) =>
+    isRecognizedCsvCategory(file.detectedCategory, file.detectionConfidence),
+   ),
+  [csvFiles],
+ )
+ const dataSource = recognizedCsvFiles.length > 0 ? "hybrid" : "api"
 
  const refresh = () => {
   setLoading(true)
   try {
-   const next = getMasterRows(win, "api")
+   const next = getMasterRows(win, dataSource, recognizedCsvFiles)
    const effective = applyGlobalRowFilters(next).rows
    setRows(effective)
    setError(effective.length === 0 ? "No analytics cache. Run Sync first." : null)
@@ -35,12 +105,20 @@ const GraphsPage: React.FC = () => {
  }
 
  useEffect(() => {
+  const handleUploadCacheUpdate = () => {
+   setCachedUploadFiles(readCachedUploadFiles())
+  }
+  window.addEventListener("vt_upload_cache_updated", handleUploadCacheUpdate)
+  return () => window.removeEventListener("vt_upload_cache_updated", handleUploadCacheUpdate)
+ }, [])
+
+ useEffect(() => {
   refresh()
   const h = () => refresh()
   window.addEventListener("yt_analytics_synced", h)
   return () => window.removeEventListener("yt_analytics_synced", h)
   // eslint-disable-next-line react-hooks/exhaustive-deps
- }, [win])
+ }, [win, recognizedCsvFiles, dataSource, lastSyncComplete])
 
  const data = useMemo(() => rows, [rows])
 
@@ -94,17 +172,6 @@ const GraphsPage: React.FC = () => {
      disableCollapseAnimation
      contentClassName="bg-white p-4 md:p-6 lg:p-8 min-h-[620px]">
      <div className="space-y-6">
-      <SubToolbox
-       title="CHART ROLLOUT 40"
-       icon={<ChartColumnBig size={22} strokeWidth={3} className="text-black" />}
-       headerColor="bg-[#00CCFF]"
-       collapsible
-       isOpenInitial
-       unmountOnClose
-      >
-       <PerformanceHubChartRollout />
-      </SubToolbox>
-      
       <SubToolbox
        title="DATA VISUALIZATIONS"
        icon={<ChartColumnBig size={22} strokeWidth={3} className="text-black" />}

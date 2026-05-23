@@ -3,10 +3,10 @@ import type {
  AnalyticsWindow,
  CanonicalMetricKey,
  CanonicalVideoRow,
-} from "../services/analyticsContract"
-import { getMasterRows, getMetricSummary } from "../services/analyticsSelectors"
-import { applyGlobalRowFilters } from "../services/analyticsRuntime"
-import { resolveMetricNumber } from "../services/canonicalMetricResolver"
+} from "../services/analytics/DataStore"
+import { getMasterRows, getMetricSummary } from "../services/analytics/Selectors"
+import { applyGlobalRowFilters } from "../services/analytics/SyncPipeline"
+import { resolveMetricNumber } from "../services/analytics/MetricRegistry"
 
 type DashboardStats = {
  totalViews: number

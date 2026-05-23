@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { getMasterRows } from "../services/analyticsSelectors"
-import { applyGlobalRowFilters } from "../services/analyticsRuntime"
-import type { AnalyticsWindow, CanonicalVideoRow } from "../services/analyticsContract"
+import { getMasterRows } from "../services/analytics/Selectors"
+import { applyGlobalRowFilters } from "../services/analytics/SyncPipeline"
+import type { AnalyticsWindow, CanonicalVideoRow } from "../services/analytics/DataStore"
 import {
  PerformanceTrendChart,
  EngagementMapChart,

@@ -6,7 +6,7 @@ import {
  type DataCoverageRow,
  type DataCoverageScope,
  type DataCoverageStatus,
-} from "../services/dataCoverageInventory"
+} from "../services/analytics/MetricRegistry"
 
 interface SystemStatisticsSubToolboxProps {
  masterTableRows: Array<Record<string, unknown>>

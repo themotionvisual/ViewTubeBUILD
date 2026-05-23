@@ -2,7 +2,7 @@ import React, { useMemo } from "react"
 import DataDashboard from "../components/DataDashboard"
 import SimpleAnalyticsChart from "../components/SimpleAnalyticsChart"
 import { SystemStatisticsSubToolbox } from "../components/SystemStatisticsSubToolbox"
-import { canonicalRowsToMasterTableRows, getMasterRows } from "../services/analyticsSelectors"
+import { canonicalRowsToMasterTableRows, getMasterRows } from "../services/analytics/Selectors"
 
 const InternalAnalyticsPanel: React.FC = () => {
  const [refreshCount, setRefreshCount] = React.useState(0)

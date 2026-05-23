@@ -1,0 +1,1516 @@
+import type { CsvDetectedCategory, CsvFileWithTag } from "../types"
+import { normalizeRow } from "./dataNormalization"
+import {
+  ANALYTICS_WINDOWS,
+  type AnalyticsWindow,
+  type CanonicalFormatConfidence,
+  type CanonicalMetricKey,
+  type CanonicalVideoRow,
+  type CanonicalRowCoverageState,
+  type CanonicalRowMatchConfidence,
+  type MasterMetricArbitrationPolicy,
+  type MetricSource,
+  METRIC_REGISTRY,
+  getMetricByAliases,
+  getDisplayLabel,
+  buildActualMetricCell,
+  buildDerivedMetricCell,
+  buildUnavailableMetricCell,
+  canonicalMetricOrder,
+  emptyMetricCells,
+} from "./analyticsContract"
+import {
+  readYouTubeAnalyticsCache,
+  writeYouTubeAnalyticsCache,
+  getCanonicalAnalyticsCache,
+  type RawAnalyticsCache,
+  type MetricCell,
+} from "./canonicalAnalyticsStore"
+import {
+  classifyCsvExportKind,
+  inferAnalyticsWindowFromName,
+  isLikelyTotalCsvRow,
+} from "./DataEngine"
+import {
+ getMasterVideoColumnDefinition,
+ MASTER_VIDEO_COLUMNS,
+} from "./performanceHubTableRegistry"
+
+console.log("[AnalyticsSelectors] Module evaluated.")
+
+export type AnalyticsSourceMode = "api" | "csv" | "hybrid"
+
+type AnalyticsReport = {
+  columnHeaders?: Array<{ name?: string }>
+  rows?: unknown[]
+}
+
+type AnalyticsGroupResult = {
+  ok: boolean
+  metrics: string[]
+  idsTried: string[]
+  error?: string
+}
+
+type AnalyticsWindowBundle = {
+  window: AnalyticsWindow
+  startDate: string
+  endDate: string
+  fetchedAt: number
+  report: AnalyticsReport
+  groups?: Record<string, AnalyticsGroupResult>
+}
+
+type CachedVideo = {
+  videoId?: string
+  title?: string
+  publishedAt?: string
+  thumbnail?: string
+  thumbnailUrl?: string
+  aspectRatioBucket?: "portrait" | "square" | "landscape" | "unknown"
+  aspectRatioWidth?: number
+  aspectRatioHeight?: number
+  aspectRatioSource?: "playerEmbed" | "contentDetails" | "unknown"
+}
+
+type CachedVideoStat = {
+  viewCount?: unknown
+  likeCount?: unknown
+  commentCount?: unknown
+  isShort?: boolean
+  durationSeconds?: unknown
+  durationRaw?: unknown
+  contentType?: string
+  privacyStatus?: string
+  title?: string
+  publishedAt?: string
+  thumbnail?: string
+  thumbnailUrl?: string
+  aspectRatioBucket?: "portrait" | "square" | "landscape" | "unknown"
+  aspectRatioWidth?: number
+  aspectRatioHeight?: number
+  aspectRatioSource?: "playerEmbed" | "contentDetails" | "unknown"
+  description?: string
+  tags?: unknown
+}
+
+type AnalyticsCache = RawAnalyticsCache & {
+  videos?: CachedVideo[]
+  stats?: Record<string, CachedVideoStat>
+  analyticsByWindow?: Partial<
+    Record<
+      AnalyticsWindow,
+      {
+        startDate?: string
+        endDate?: string
+        fetchedAt?: number
+        report?: any
+        syncDiagnostics?: SyncDiagnosticsShape
+      }
+    >
+  >
+  availabilityByWindow?: Partial<
+    Record<AnalyticsWindow, Partial<Record<CanonicalMetricKey, boolean>>>
+  >
+  lastSyncedByWindow?: Partial<Record<AnalyticsWindow, number>>
+  videoContentType?: Record<string, string>
+  analytics?: AnalyticsReport
+  channelAnalytics?: AnalyticsReport
+  dailyMetrics?: AnalyticsReport
+  globalLifetime?: AnalyticsReport
+}
+
+type SyncDiagnosticsShape = {
+  failureReasons?: Array<{
+    group?: string
+    metrics?: string[]
+    status?: number
+    reason?: string
+    requestClass?: string
+  }>
+}
+
+export interface WindowTotals {
+  views: number
+  watchHours: number
+  subscribersGained: number
+  revenue: number
+  impressions: number
+  ctr: number | null
+}
+
+export interface MetricSummary {
+  rowCount: number
+  totals: {
+    views: number
+    watchHours: number
+    subscribersGained: number
+    revenue: number
+  }
+  averages: {
+    ctr: number | null
+    rpm: number | null
+    cpm: number | null
+    avdSeconds: number | null
+    avp: number | null
+  }
+}
+
+export interface MetricAvailability {
+  metricKey: CanonicalMetricKey
+  window: AnalyticsWindow
+  sourceMode: AnalyticsSourceMode
+  actualCount: number
+  derivedCount: number
+  unavailableCount: number
+  availableCount: number
+  coveragePct: number
+  bySource: {
+    api: number
+    csv_table: number
+    hybrid: number
+  }
+}
+
+export type VideoStatsVerificationSummary = {
+  window: AnalyticsWindow
+  reportRowCount: number
+  masterRowCount: number
+  rawMetricRows: {
+    impressions: number
+    ctr: number
+  }
+  mappedMetricRows: {
+    impressions: number
+    ctr: number
+  }
+  lastFailure: {
+    requestClass?: string
+    reason?: string
+    status?: number
+  } | null
+  mappingStatus:
+    | "healthy"
+    | "request_failure"
+    | "missing_upstream"
+    | "mapping_failure"
+  duplicateShortHeaders: string[]
+}
+
+export type MasterTableRow = Record<string, unknown> & {
+  _id: string
+  _sourceFile: string
+  _userTag: string
+  __canonical: CanonicalVideoRow
+  __metricCells: Record<CanonicalMetricKey, MetricCell>
+}
+
+export type TableMetricMappingStatus = {
+  syncedMetricsCount: number
+  mappedMetricsCount: number
+  mappedMetricKeys: CanonicalMetricKey[]
+  unmappedMetricKeys: CanonicalMetricKey[]
+  duplicateHeaderKeys: string[]
+  unavailableByReason: Record<string, number>
+}
+
+export type DatasetCoverageSummary = {
+  datasetId: string
+  requested: number
+  fetched: number
+  mapped: number
+  visible: number
+  unavailable: number
+  reasons: Record<string, number>
+}
+
+// Helpers
+const resolveAnalyticsCache = (): AnalyticsCache => {
+  return getCanonicalAnalyticsCache() as AnalyticsCache
+}
+
+const text = (value: unknown): string => {
+  if (typeof value === "string") return value.trim()
+  if (typeof value === "number" && Number.isFinite(value)) return String(value)
+  if (typeof value === "boolean") return value ? "true" : "false"
+  return ""
+}
+
+const toNumber = (value: unknown): number | null => {
+  if (typeof value === "number" && Number.isFinite(value)) return value
+  if (typeof value !== "string") return null
+  const trimmed = value.trim()
+  if (!trimmed || trimmed === "-" || trimmed.toLowerCase() === "n/a") return null
+  const cleaned = trimmed.replace(/,/g, "").replace(/%/g, "")
+  if (!cleaned) return null
+  const parsed = Number(cleaned)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+const canonicalizeTextKey = (value: string): string =>
+  value.toLowerCase().replace(/[^a-z0-9]/g, "")
+
+const looksLikeVideoId = (value: string): boolean =>
+  /^[A-Za-z0-9_-]{8,}$/.test(value) && !value.includes(" ")
+
+export const parseDurationSeconds = (value: unknown): number => {
+  if (typeof value === "number" && Number.isFinite(value))
+    return Math.max(0, value)
+  const raw = text(value)
+  if (!raw) return 0
+
+  if (/^PT/.test(raw)) {
+    const match = raw.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)
+    if (!match) return 0
+    const hours = Number(match[1] || 0)
+    const minutes = Number(match[2] || 0)
+    const seconds = Number(match[3] || 0)
+    return hours * 3600 + minutes * 60 + seconds
+  }
+
+  if (raw.includes(":")) {
+    const parts = raw.split(":").map((part) => Number(part) || 0)
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
+    if (parts.length === 2) return parts[0] * 60 + parts[1]
+  }
+
+  const parsed = toNumber(raw)
+  return parsed !== null ? Math.max(0, parsed) : 0
+}
+
+const nonNegative = (value: number | null): number =>
+  value !== null && Number.isFinite(value) && value > 0 ? value : 0
+
+const hasMetadataShortSignal = (
+  title: string,
+  description: string,
+  tags: string[],
+): boolean => {
+  const merged = `${title} ${description}`.toLowerCase()
+  if (merged.includes("#shorts")) return true
+  return tags.some((tag) => tag.toLowerCase().includes("short"))
+}
+
+const hasNonEmptyValue = (value: unknown): boolean => {
+  if (value === null || value === undefined) return false
+  if (typeof value === "string") {
+    const trimmed = value.trim()
+    return trimmed !== "" && trimmed !== "-" && trimmed.toLowerCase() !== "n/a"
+  }
+  return true
+}
+
+const rowHasAnyValue = (
+  row: Record<string, unknown>,
+  keys: string[],
+): boolean => keys.some((key) => hasNonEmptyValue(row[key]))
+
+const aspectRatioBucketFromEvidence = (
+  bucket: unknown,
+  width: unknown,
+  height: unknown,
+  aspectRatio?: string,
+): "portrait" | "square" | "landscape" | "unknown" => {
+  const normalizedBucket = text(bucket).toLowerCase()
+  if (normalizedBucket === "portrait") return "portrait"
+  if (normalizedBucket === "square") return "square"
+  if (normalizedBucket === "landscape") return "landscape"
+
+  const parsedWidth = Number(width)
+  const parsedHeight = Number(height)
+  if (Number.isFinite(parsedWidth) && Number.isFinite(parsedHeight) && parsedWidth > 0 && parsedHeight > 0) {
+    const ratio = parsedWidth / parsedHeight
+    if (Math.abs(ratio - 1) <= 0.03) return "square"
+    return parsedHeight > parsedWidth ? "portrait" : "landscape"
+  }
+
+  const normalizedAspect = text(aspectRatio).toLowerCase()
+  if (normalizedAspect === "9:16" || normalizedAspect === "portrait") return "portrait"
+  if (normalizedAspect === "1:1" || normalizedAspect === "square") return "square"
+  if (normalizedAspect === "16:9" || normalizedAspect === "4:3" || normalizedAspect === "landscape") return "landscape"
+  const ratioMatch = normalizedAspect.match(/^(\d+(?:\.\d+)?):(\d+(?:\.\d+)?)$/)
+  if (ratioMatch) {
+    const ratioWidth = Number(ratioMatch[1])
+    const ratioHeight = Number(ratioMatch[2])
+    if (Number.isFinite(ratioWidth) && Number.isFinite(ratioHeight) && ratioWidth > 0 && ratioHeight > 0) {
+      const ratio = ratioWidth / ratioHeight
+      if (Math.abs(ratio - 1) <= 0.03) return "square"
+      return ratioHeight > ratioWidth ? "portrait" : "landscape"
+    }
+  }
+
+  return "unknown"
+}
+
+const resolveCanonicalVideoFormatEvidence = (
+  contentTypeValue: string,
+  durationSeconds: number,
+  shortsPlaylistSignal: boolean,
+  metadataShortSignal: boolean,
+  tagHint: string,
+  metadataAspectRatio?: string,
+  rowEvidence?: Record<string, unknown>,
+): {
+  format: CanonicalVideoRow["format"]
+  evidence: string[]
+  confidence: CanonicalFormatConfidence
+} => {
+  const normalizedType = contentTypeValue.toLowerCase()
+  const normalizedHint = tagHint.toLowerCase()
+  const aspectBucket = aspectRatioBucketFromEvidence(metadataAspectRatio, undefined, undefined, metadataAspectRatio)
+  const evidence: string[] = []
+  const hasLongSignals = !!rowEvidence && rowHasAnyValue(rowEvidence, [
+    "End screen element clicks",
+    "End screen elements shown",
+    "Card clicks",
+    "Cards shown",
+  ])
+  const hasShortsSignals = !!rowEvidence && rowHasAnyValue(rowEvidence, [
+    "Stayed to watch (%)",
+    "STW %",
+    "stayedToWatch",
+    "Views from Shorts feed",
+    "Shorts feed views",
+  ])
+
+  if (normalizedType.includes("live")) return { format: "live", evidence: ["content_type_live"], confidence: "high" }
+  if (normalizedType.includes("story")) return { format: "story", evidence: ["content_type_story"], confidence: "high" }
+  if (normalizedType.includes("short")) return { format: "shorts", evidence: ["content_type_short"], confidence: "high" }
+  if (hasLongSignals) {
+    evidence.push("long_form_metrics_present")
+    return { format: "long", evidence, confidence: "high" }
+  }
+  if (hasShortsSignals) {
+    evidence.push("shorts_only_metrics_present")
+    return { format: "shorts", evidence, confidence: "high" }
+  }
+  if (shortsPlaylistSignal) return { format: "shorts", evidence: ["shorts_playlist_signal"], confidence: "high" }
+  if (aspectBucket === "portrait") return { format: "shorts", evidence: ["portrait_aspect_ratio"], confidence: "medium" }
+  if (metadataShortSignal) return { format: "shorts", evidence: ["metadata_short_signal"], confidence: "medium" }
+  if (normalizedHint.includes("short")) return { format: "shorts", evidence: ["tag_hint_short"], confidence: "medium" }
+  if (
+    normalizedType.includes("long") ||
+    normalizedType.includes("video_on_demand") ||
+    normalizedType === "video"
+  )
+    return { format: "long", evidence: ["content_type_long"], confidence: "high" }
+
+  if (normalizedHint.includes("long")) return { format: "long", evidence: ["tag_hint_long"], confidence: "medium" }
+  if (normalizedHint.includes("live")) return { format: "live", evidence: ["tag_hint_live"], confidence: "medium" }
+  if (normalizedHint.includes("story")) return { format: "story", evidence: ["tag_hint_story"], confidence: "medium" }
+
+  if (durationSeconds > 180) return { format: "long", evidence: ["duration_gt_180"], confidence: "low" }
+  if (durationSeconds > 0 && durationSeconds <= 70) {
+    return { format: "shorts", evidence: ["duration_lte_70"], confidence: "low" }
+  }
+  if (durationSeconds > 0) return { format: "long", evidence: ["duration_fallback"], confidence: "low" }
+  return { format: "unknown", evidence: [], confidence: "unknown" }
+}
+
+export const resolveCanonicalVideoFormat = (
+  contentTypeValue: string,
+  durationSeconds: number,
+  shortsPlaylistSignal: boolean,
+  metadataShortSignal: boolean,
+  tagHint: string,
+  metadataAspectRatio?: string,
+  rowEvidence?: Record<string, unknown>,
+): CanonicalVideoRow["format"] =>
+  resolveCanonicalVideoFormatEvidence(
+    contentTypeValue,
+    durationSeconds,
+    shortsPlaylistSignal,
+    metadataShortSignal,
+    tagHint,
+    metadataAspectRatio,
+    rowEvidence,
+  ).format
+
+const percentLikeMetrics = new Set<CanonicalMetricKey>([
+  "ctr",
+  "avp",
+  "stw",
+  "endScreenClickRate",
+  "cardClickRate",
+])
+
+const normalizeMetricValue = (
+  metricKey: CanonicalMetricKey,
+  value: number,
+): number => {
+  if (percentLikeMetrics.has(metricKey) && value > 0 && value <= 1) {
+    return value * 100
+  }
+  return value
+}
+
+const METRIC_ARBITRATION_POLICY: Record<CanonicalMetricKey, MasterMetricArbitrationPolicy> = {
+  views: "api_authoritative",
+  watchHours: "api_authoritative",
+  likes: "api_authoritative",
+  dislikes: "api_authoritative",
+  comments: "api_authoritative",
+  shares: "api_authoritative",
+  subscribersGained: "api_authoritative",
+  subscribersLost: "api_authoritative",
+  subscribersNet: "net_from_csv",
+  impressions: "api_authoritative",
+  revenue: "api_authoritative",
+  cpm: "api_authoritative",
+  rpm: "api_authoritative",
+  ctr: "api_authoritative",
+  newViewers: "csv_authoritative",
+  returningViewers: "csv_authoritative",
+  casualViewers: "csv_authoritative",
+  regularViewers: "csv_authoritative",
+  uniqueViewers: "csv_authoritative",
+  avdSeconds: "api_authoritative",
+  avp: "api_authoritative",
+  engagedViews: "api_authoritative",
+  stw: "csv_authoritative",
+  endScreenClickRate: "api_authoritative",
+  endScreenClicks: "api_authoritative",
+  endScreenImpressions: "api_authoritative",
+  cardClickRate: "api_authoritative",
+  cardTeaserClickRate: "api_authoritative",
+  cardTeaserClicks: "api_authoritative",
+  cardTeaserImpressions: "api_authoritative",
+  annotationImpressions: "api_authoritative",
+  annotationClickableImpressions: "api_authoritative",
+  annotationClosableImpressions: "api_authoritative",
+  annotationClicks: "api_authoritative",
+  annotationCloses: "api_authoritative",
+  redWatchHours: "api_authoritative",
+  estimatedAdRevenue: "api_authoritative",
+  grossRevenue: "api_authoritative",
+  playbackBasedCpm: "api_authoritative",
+  adImpressions: "api_authoritative",
+  monetizedPlaybacks: "api_authoritative",
+  estimatedPremiumRevenue: "api_authoritative",
+  endScreenElementClicks: "api_authoritative",
+  endScreenElementsShown: "api_authoritative",
+  clicksPerEndScreenElementShown: "api_authoritative",
+  cardClicks: "api_authoritative",
+  cardsShown: "api_authoritative",
+  clicksPerCardShown: "api_authoritative",
+  hypes: "api_authoritative",
+  hypePoints: "api_authoritative",
+  remixCount: "api_authoritative",
+  remixesOfYourContent: "api_authoritative",
+  remixViews: "api_authoritative",
+  shortsFunnelPercentWatched: "compare_only",
+  shortsFunnelSwipeAwayRate: "compare_only",
+}
+
+const sourceFromCells = (
+  cells: Array<MetricCell | null | undefined>,
+): MetricSource => {
+  const sources = new Set<MetricSource>()
+  cells.forEach((cell) => {
+    if (!cell || cell.status === "unavailable") return
+    sources.add(cell.source)
+  })
+  if (sources.size === 0) return "hybrid"
+  if (sources.size === 1) return Array.from(sources)[0]
+  return "hybrid"
+}
+
+export const metricCellValue = (cell: MetricCell | undefined): number | null => {
+  if (!cell || cell.status === "unavailable") return null
+  return typeof cell.value === "number" && Number.isFinite(cell.value)
+    ? cell.value
+    : null
+}
+
+const enrichDerivedMetricCells = (
+  row: CanonicalVideoRow,
+  durationSeconds: number,
+): CanonicalVideoRow => {
+  const next = {
+    ...row,
+    metrics: { ...row.metrics },
+  }
+
+  const viewsCell = next.metrics.views
+  const impressionsCell = next.metrics.impressions
+  const revenueCell = next.metrics.revenue
+  const avdCell = next.metrics.avdSeconds
+
+  const views = metricCellValue(viewsCell)
+  const impressions = metricCellValue(impressionsCell)
+  const revenue = metricCellValue(revenueCell)
+  const avdSeconds = metricCellValue(avdCell)
+
+  if (
+    next.metrics.watchHours.status === "unavailable" &&
+    views !== null &&
+    avdSeconds !== null
+  ) {
+    const derivedHours = (views * avdSeconds) / 3600
+    next.metrics.watchHours = buildDerivedMetricCell(
+      Number(derivedHours.toFixed(3)),
+      sourceFromCells([viewsCell, avdCell]),
+    )
+  }
+
+  if (
+    next.metrics.ctr.status === "unavailable" &&
+    views !== null &&
+    impressions !== null &&
+    impressions > 0
+  ) {
+    next.metrics.ctr = buildDerivedMetricCell(
+      Number(((views / impressions) * 100).toFixed(3)),
+      sourceFromCells([viewsCell, impressionsCell]),
+    )
+  }
+
+  if (
+    next.metrics.rpm.status === "unavailable" &&
+    revenue !== null &&
+    views !== null &&
+    views > 0
+  ) {
+    next.metrics.rpm = buildDerivedMetricCell(
+      Number(((revenue / views) * 1000).toFixed(3)),
+      sourceFromCells([revenueCell, viewsCell]),
+    )
+  }
+
+  if (
+    next.metrics.cpm.status === "unavailable" &&
+    revenue !== null &&
+    impressions !== null &&
+    impressions > 0
+  ) {
+    next.metrics.cpm = buildDerivedMetricCell(
+      Number(((revenue / impressions) * 1000).toFixed(3)),
+      sourceFromCells([revenueCell, impressionsCell]),
+    )
+  }
+
+  if (
+    next.metrics.avp.status === "unavailable" &&
+    avdSeconds !== null &&
+    durationSeconds > 0
+  ) {
+    next.metrics.avp = buildDerivedMetricCell(
+      Number(((avdSeconds / durationSeconds) * 100).toFixed(1)),
+      sourceFromCells([avdCell]),
+    )
+  }
+
+  return next
+}
+
+// Core Selectors
+export function getMetricSummary(
+  window: AnalyticsWindow,
+  source: MetricSource = "hybrid",
+  csvFiles: CsvFileWithTag[] = [],
+): MetricSummary {
+  const cache = readYouTubeAnalyticsCache() as AnalyticsCache
+  const rows = getMasterRows(window, source as AnalyticsSourceMode, csvFiles)
+  const totalsFallback = resolveWindowTotals(cache, window)
+
+  let views = 0
+  let watchHours = 0
+  let subscribersGained = 0
+  let revenue = 0
+
+  const ctrValues: number[] = []
+  const rpmValues: number[] = []
+  const cpmValues: number[] = []
+  const avdValues: number[] = []
+  const avpValues: number[] = []
+
+  rows.forEach((row) => {
+    const viewsValue = metricCellValue(row.metrics.views)
+    const watchHoursValue = metricCellValue(row.metrics.watchHours)
+    const subsValue = metricCellValue(row.metrics.subscribersGained)
+    const revenueValue = metricCellValue(row.metrics.revenue)
+
+    if (viewsValue !== null) views += viewsValue
+    if (watchHoursValue !== null) watchHours += watchHoursValue
+    if (subsValue !== null) subscribersGained += subsValue
+    if (revenueValue !== null) revenue += revenueValue
+
+    const ctr = metricCellValue(row.metrics.ctr)
+    const rpm = metricCellValue(row.metrics.rpm)
+    const cpm = metricCellValue(row.metrics.cpm)
+    const avd = metricCellValue(row.metrics.avdSeconds)
+    const avp = metricCellValue(row.metrics.avp)
+
+    if (ctr !== null) ctrValues.push(ctr)
+    if (rpm !== null) rpmValues.push(rpm)
+    if (cpm !== null) cpmValues.push(cpm)
+    if (avd !== null) avdValues.push(avd)
+    if (avp !== null) avpValues.push(avp)
+  })
+
+  const avg = (values: number[]): number | null => {
+    if (values.length === 0) return null
+    return values.reduce((sum, value) => sum + value, 0) / values.length
+  }
+
+  return {
+    rowCount: rows.length,
+    totals: {
+      views: totalsFallback.views > 0 ? totalsFallback.views : views,
+      watchHours: totalsFallback.watchHours > 0 ? totalsFallback.watchHours : watchHours,
+      subscribersGained: totalsFallback.subscribersGained !== 0 ? totalsFallback.subscribersGained : subscribersGained,
+      revenue: totalsFallback.revenue > 0 ? totalsFallback.revenue : revenue,
+    },
+    averages: {
+      ctr: avg(ctrValues),
+      rpm: avg(rpmValues),
+      cpm: avg(cpmValues),
+      avdSeconds: avg(avdValues),
+      avp: avg(avpValues),
+    },
+  }
+}
+
+export function getMasterRows(
+  window: AnalyticsWindow,
+  sourceMode: AnalyticsSourceMode = "hybrid",
+  csvFiles: CsvFileWithTag[] = [],
+): CanonicalVideoRow[] {
+  const cache = readYouTubeAnalyticsCache() as AnalyticsCache
+
+  if (sourceMode === "api") {
+    return apiRowsForWindow(cache, window)
+  }
+  if (sourceMode === "csv") {
+    return csvRowsForWindow(csvFiles, window)
+  }
+
+  // Hybrid
+  const apiRows = apiRowsForWindow(cache, window)
+  const csvRows = csvRowsForWindow(csvFiles, window)
+  return mergeRowsForHybrid(apiRows, csvRows)
+}
+
+
+function resolveWindowTotals(
+  cache: AnalyticsCache,
+  window: AnalyticsWindow,
+): WindowTotals {
+  const ledger = cache.ledger || {}
+  const windowLedgerKey = `youtube_analytics_v2::channel::::${window}`
+  const windowLedgerEntry = ledger[windowLedgerKey]
+  const windowReport = windowLedgerEntry?.payload
+
+  if (windowReport) {
+    const fromWindow = sumTotalsFromReport(windowReport)
+    if (fromWindow.views > 0 || fromWindow.watchHours > 0 || fromWindow.revenue > 0) {
+      return fromWindow
+    }
+  }
+
+  const bundle = getBundleForWindow(cache, window)
+  if (bundle?.report) {
+    const fromBundle = sumTotalsFromReport(bundle.report)
+    if (fromBundle.views > 0 || fromBundle.watchHours > 0 || fromBundle.revenue > 0) {
+      return fromBundle
+    }
+  }
+
+  const dailyLedgerKey = `youtube_analytics_v2::channel::day::lifetime`
+  const dailyLedgerEntry = ledger[dailyLedgerKey]
+  const dailyReport = dailyLedgerEntry?.payload || cache.dailyMetrics
+  const fromDaily = sumTotalsFromReport(dailyReport)
+  if (fromDaily.views > 0 || fromDaily.watchHours > 0 || fromDaily.revenue > 0) {
+    return fromDaily
+  }
+
+  const fromChannel = sumTotalsFromReport(cache.channelAnalytics)
+  return fromChannel
+}
+
+function sumTotalsFromReport(
+  report: AnalyticsReport | undefined,
+): WindowTotals {
+  if (!report) return { views: 0, watchHours: 0, subscribersGained: 0, revenue: 0, impressions: 0, ctr: null }
+  
+  const objects = reportRowsToObjects(report).map(toNormalizedRow)
+  if (objects.length === 0) {
+    return { views: 0, watchHours: 0, subscribersGained: 0, revenue: 0, impressions: 0, ctr: null }
+  }
+
+  let views = 0
+  let watchHours = 0
+  let subscribersGained = 0
+  let revenue = 0
+  let impressions = 0
+  const ctrValues: number[] = []
+
+  objects.forEach((row) => {
+    const vMatch = getMetricByAliases(row, "views")
+    views += nonNegative(vMatch.value)
+    
+    const watchCell = getMetricByAliases(row, "watchHours").value
+    const watchMinutes = toNumber((row as any).estimatedMinutesWatched)
+    watchHours += nonNegative(watchCell) + (watchCell === null && watchMinutes ? watchMinutes / 60 : 0)
+    
+    subscribersGained += nonNegative(getMetricByAliases(row, "subscribersGained").value)
+    revenue += nonNegative(getMetricByAliases(row, "revenue").value)
+    impressions += nonNegative(getMetricByAliases(row, "impressions").value)
+    
+    const ctr = getMetricByAliases(row, "ctr").value
+    if (ctr !== null && Number.isFinite(ctr) && ctr > 0) {
+      ctrValues.push(normalizeMetricValue("ctr", ctr))
+    }
+  })
+
+  if (revenue > 0 && views === 0) {
+    console.warn("[sumTotalsFromReport] Data Parity Alert: Revenue > 0 ($" + revenue + ") but Views = 0. Headers:", (report.columnHeaders || []).map(h => h.name));
+    console.log("[sumTotalsFromReport] Sample Object:", JSON.stringify(objects[0]));
+  }
+
+  const ctr = impressions > 0 && views > 0 ? (views / impressions) * 100 : (ctrValues.length > 0 ? ctrValues.reduce((a, b) => a + b, 0) / ctrValues.length : null)
+  return { views, watchHours, subscribersGained, revenue, impressions, ctr }
+}
+
+const getBundleForWindow = (
+  cache: AnalyticsCache,
+  window: AnalyticsWindow,
+): AnalyticsWindowBundle | null => {
+  const ledger = cache.ledger || {}
+  const ledgerKey = `youtube_analytics_v2::video::video::${window}`
+  const ledgerEntry = ledger[ledgerKey]
+  if (ledgerEntry && ledgerEntry.payload) {
+    return {
+      window,
+      startDate: "",
+      endDate: "",
+      fetchedAt: ledgerEntry.syncedAt,
+      report: ledgerEntry.payload as AnalyticsReport,
+    }
+  }
+
+  const bundle = cache.analyticsByWindow?.[window]
+  if (bundle?.report) return bundle
+
+  if (window === "lifetime" && cache.analytics) {
+    return {
+      window,
+      startDate: "",
+      endDate: "",
+      fetchedAt: Date.now(),
+      report: cache.analytics,
+    }
+  }
+
+  return null
+}
+
+// Canonical logic
+const metricPriority = (cell: MetricCell): number => {
+  if (cell.status === "actual") return 3
+  if (cell.status === "derived") return 2
+  return 1
+}
+
+const chooseBetterMetricCell = (
+  metricKey: CanonicalMetricKey,
+  existing: MetricCell,
+  incoming: MetricCell,
+): MetricCell => {
+  const policy = METRIC_ARBITRATION_POLICY[metricKey]
+  if (policy === "csv_authoritative" && incoming.source === "csv_table" && incoming.status !== "unavailable") {
+    return incoming
+  }
+  if (policy === "net_from_csv" && incoming.source === "csv_table" && incoming.status !== "unavailable") {
+    return incoming
+  }
+  if (policy === "api_authoritative" && existing.source === "api" && existing.status !== "unavailable") {
+    return existing
+  }
+  if (policy === "api_authoritative" && incoming.source === "api" && incoming.status !== "unavailable") {
+    return incoming
+  }
+
+  const existingPriority = metricPriority(existing)
+  const incomingPriority = metricPriority(incoming)
+
+  if (incomingPriority > existingPriority) return incoming
+  if (incomingPriority < existingPriority) return existing
+
+  if (existing.status === "unavailable") return incoming
+  if (incoming.status === "unavailable") return existing
+
+  const existingValue = metricCellValue(existing)
+  const incomingValue = metricCellValue(incoming)
+
+  if (existingValue === null && incomingValue !== null) return incoming
+  if (incomingValue === null) return existing
+  if (existingValue === 0 && incomingValue !== 0) return incoming
+  if (incoming.source === "api" && existing.source !== "api") return incoming
+
+  return existing
+}
+
+const mergeCanonicalRowMetrics = (
+  existing: CanonicalVideoRow,
+  incoming: CanonicalVideoRow,
+  matchConfidence: CanonicalRowMatchConfidence = "exact_video_id",
+): CanonicalVideoRow => {
+  const existingOriginal = existing.originalData || {}
+  const incomingOriginal = incoming.originalData || {}
+  const existingSupplemental = existing.supplementalData || existingOriginal
+  const incomingSupplemental = incoming.supplementalData || incomingOriginal
+  const apiPresent = existing.apiPresent === true || incoming.apiPresent === true || existing.sourceMode === "api" || incoming.sourceMode === "api"
+  const csvPresent = existing.csvPresent === true || incoming.csvPresent === true || existing.sourceMode === "csv_table" || incoming.sourceMode === "csv_table"
+  const coverageState: CanonicalRowCoverageState =
+    apiPresent && csvPresent
+      ? (matchConfidence === "exact_video_id" ? "hybrid_complete" : "hybrid_partial")
+      : apiPresent
+        ? "api_only"
+        : "csv_only"
+  const merged: CanonicalVideoRow = {
+    ...existing,
+    title: existing.title || incoming.title,
+    uploadDate: existing.uploadDate || incoming.uploadDate,
+    durationSeconds: existing.durationSeconds || incoming.durationSeconds,
+    format:
+      incoming.formatConfidence === "high" && existing.formatConfidence !== "high"
+        ? incoming.format
+        : existing.format !== "unknown"
+          ? existing.format
+          : incoming.format,
+    sourceMode:
+      existing.sourceMode === incoming.sourceMode ? existing.sourceMode : "hybrid",
+    coverageState,
+    apiPresent,
+    csvPresent,
+    rowMatchConfidence: matchConfidence,
+    formatEvidence: Array.from(new Set([...(existing.formatEvidence || []), ...(incoming.formatEvidence || [])])),
+    formatConfidence:
+      existing.formatConfidence === "high" || incoming.formatConfidence === "high"
+        ? "high"
+        : existing.formatConfidence === "medium" || incoming.formatConfidence === "medium"
+          ? "medium"
+          : existing.formatConfidence || incoming.formatConfidence || "unknown",
+    metrics: { ...existing.metrics },
+    originalData: {
+      ...existingOriginal,
+      ...incomingOriginal,
+    },
+    supplementalData: {
+      ...existingSupplemental,
+      ...incomingSupplemental,
+    },
+  }
+
+  canonicalMetricOrder.forEach((metricKey) => {
+    merged.metrics[metricKey] = chooseBetterMetricCell(
+      metricKey,
+      existing.metrics[metricKey],
+      incoming.metrics[metricKey],
+    )
+  })
+
+  return merged
+}
+
+const rowIdentityKey = (
+  row: Pick<CanonicalVideoRow, "videoId" | "title">,
+): string => {
+  const videoId = text(row.videoId)
+  if (videoId) return `id:${videoId}`
+  return `title:${canonicalizeTextKey(text(row.title))}`
+}
+
+const getRowMatchConfidence = (
+  left: Pick<CanonicalVideoRow, "videoId" | "title">,
+  right: Pick<CanonicalVideoRow, "videoId" | "title">,
+): CanonicalRowMatchConfidence | null => {
+  const leftVideoId = text(left.videoId)
+  const rightVideoId = text(right.videoId)
+  if (leftVideoId && rightVideoId) {
+    return leftVideoId === rightVideoId ? "exact_video_id" : null
+  }
+  if (!leftVideoId && !rightVideoId) {
+    const leftTitle = canonicalizeTextKey(text(left.title))
+    const rightTitle = canonicalizeTextKey(text(right.title))
+    return leftTitle && leftTitle === rightTitle ? "title_only_fallback" : null
+  }
+  return null
+}
+
+const dedupeCanonicalRows = (
+  rows: CanonicalVideoRow[],
+): CanonicalVideoRow[] => {
+  const map = new Map<string, CanonicalVideoRow>()
+
+  rows.forEach((row) => {
+    const key = rowIdentityKey(row)
+    const existing = map.get(key)
+    if (!existing) {
+      map.set(key, row)
+      return
+    }
+    map.set(
+      key,
+      mergeCanonicalRowMetrics(
+        existing,
+        row,
+        getRowMatchConfidence(existing, row) || "unmatched",
+      ),
+    )
+  })
+
+  return Array.from(map.values())
+}
+
+const reportRowsToObjects = (
+  report?: AnalyticsReport | null,
+): Record<string, unknown>[] => {
+  if (!report || !Array.isArray(report.rows) || report.rows.length === 0)
+    return []
+
+  const headerNames = (report.columnHeaders || []).map((header) =>
+    String(header?.name || ""),
+  )
+
+  return report.rows
+    .map((row) => {
+      if (Array.isArray(row)) {
+        const rowObj: Record<string, unknown> = {}
+        headerNames.forEach((header, index) => {
+          if (!header) return
+          rowObj[header] = row[index]
+        })
+        return rowObj
+      }
+
+      if (row && typeof row === "object") {
+        const input = row as Record<string, unknown>
+        const byHeader = headerNames.reduce(
+          (acc, header) => {
+            if (!header) return acc
+            if (acc[header] === undefined && input[header] !== undefined) {
+              acc[header] = input[header]
+            }
+            return acc
+          },
+          {} as Record<string, unknown>,
+        )
+
+        return {
+          ...input,
+          ...byHeader,
+        }
+      }
+
+      return null
+    })
+    .filter((row): row is Record<string, unknown> => !!row)
+}
+
+const extractVideoIdCandidates = (row: Record<string, unknown>): string[] => {
+  const candidates = [
+    text(row.Content),
+    text(row.content),
+    text(row.video),
+    text(row.videoId),
+    text(row["Video ID"]),
+    text(row.Dimension),
+    text(row.dimension),
+  ]
+  return candidates.filter((candidate) => looksLikeVideoId(candidate))
+}
+
+const extractTitleCandidates = (row: Record<string, unknown>): string[] => {
+  const candidates = [
+    text(row["Video title"]),
+    text(row.title),
+    text(row.Video),
+    text(row.Dimension),
+    text(row.video),
+  ]
+  return candidates.filter(
+    (candidate) => !!candidate && !looksLikeVideoId(candidate),
+  )
+}
+
+const toNormalizedRow = (
+  input: Record<string, unknown>,
+): Record<string, unknown> => {
+  const normalized = normalizeRow(input as Record<string, any>)
+  return {
+    ...input,
+    ...normalized,
+  }
+}
+
+const inferMetricCellsFromRow = (
+  row: Record<string, unknown>,
+  source: MetricSource,
+): Record<CanonicalMetricKey, MetricCell> => {
+  const metrics = emptyMetricCells(source)
+
+  canonicalMetricOrder.forEach((metricKey) => {
+    const match = getMetricByAliases(row, metricKey)
+    if (!match.found || match.value === null) {
+      metrics[metricKey] = buildUnavailableMetricCell(source)
+      return
+    }
+
+    metrics[metricKey] = buildActualMetricCell(
+      normalizeMetricValue(metricKey, match.value),
+      source,
+    )
+  })
+
+  return metrics
+}
+
+const applyStatsFallback = (
+  row: CanonicalVideoRow,
+  stats: CachedVideoStat,
+): CanonicalVideoRow => {
+  const next = {
+    ...row,
+    metrics: { ...row.metrics },
+  }
+
+  const statViews = toNumber(stats.viewCount)
+  const statLikes = toNumber(stats.likeCount)
+  const statComments = toNumber(stats.commentCount)
+
+  if (next.metrics.views.status === "unavailable" && statViews !== null) {
+    next.metrics.views = buildActualMetricCell(statViews, "api")
+  }
+  if (next.metrics.likes.status === "unavailable" && statLikes !== null) {
+    next.metrics.likes = buildActualMetricCell(statLikes, "api")
+  }
+  if (next.metrics.comments.status === "unavailable" && statComments !== null) {
+    next.metrics.comments = buildActualMetricCell(statComments, "api")
+  }
+
+  return next
+}
+
+const apiRowsForWindow = (
+  cache: AnalyticsCache,
+  window: AnalyticsWindow,
+): CanonicalVideoRow[] => {
+  const bundle = getBundleForWindow(cache, window)
+  const report = bundle?.report
+  const reportRows = reportRowsToObjects(report).map(toNormalizedRow)
+
+  const ledger = cache.ledger || {}
+  const analyticsById = new Map<string, Record<string, unknown>>()
+  const analyticsByTitle = new Map<string, Record<string, unknown>>()
+
+  reportRows.forEach((row) => {
+    extractVideoIdCandidates(row).forEach((videoId) => {
+      analyticsById.set(videoId, row)
+    })
+    extractTitleCandidates(row).forEach((titleCandidate) => {
+      analyticsByTitle.set(canonicalizeTextKey(titleCandidate), row)
+    })
+  })
+
+  const videos = Array.isArray(cache.videos) ? cache.videos : []
+  const stats = cache.stats || {}
+  const contentTypeMap = cache.videoContentType || {}
+  const metadataByVideoId = new Map<string, CachedVideo & CachedVideoStat>()
+
+  videos.forEach((v) => {
+    const vid = text(v.videoId)
+    if (!vid) return
+    metadataByVideoId.set(vid, { ...v, ...(stats[vid] || {}) })
+  })
+
+  Object.entries(ledger).forEach(([key, entry]) => {
+    if (entry.source === "youtube_data_v3" && entry.context === "video") {
+      const videoId = entry.dimensions[0]
+      if (videoId && entry.payload) {
+        const existing = metadataByVideoId.get(videoId) || {}
+        metadataByVideoId.set(videoId, { ...existing, ...entry.payload })
+      }
+    }
+  })
+
+  const canonicalRows: CanonicalVideoRow[] = []
+  metadataByVideoId.forEach((meta, videoId) => {
+    const title = text(meta.title) || `Video ${videoId}`
+    const uploadDate = text(meta.publishedAt)
+    const thumbnailUrl = text(meta.thumbnailUrl || meta.thumbnail)
+
+    const analyticsRow =
+      analyticsById.get(videoId) ||
+      analyticsByTitle.get(canonicalizeTextKey(title)) ||
+      {}
+
+    const metricCells = inferMetricCellsFromRow(analyticsRow, "api")
+    const durationSeconds = parseDurationSeconds(
+      meta.durationSeconds ?? meta.durationRaw ?? analyticsRow["Duration (sec)"] ?? analyticsRow.Duration,
+    )
+
+    const contentType = text(contentTypeMap[videoId] ?? meta.contentType)
+    const isShortSignal = meta.isShort === true
+    const metadataTags = Array.isArray(meta.tags) ? meta.tags.map((tag) => text(tag)).filter(Boolean) : []
+    const metadataShortSignal = hasMetadataShortSignal(text(meta.title) || title, text(meta.description), metadataTags)
+    const aspectRatioBucket = aspectRatioBucketFromEvidence(
+      meta.aspectRatioBucket,
+      meta.aspectRatioWidth,
+      meta.aspectRatioHeight,
+    )
+    const formatResolution = resolveCanonicalVideoFormatEvidence(
+      contentType,
+      durationSeconds,
+      isShortSignal,
+      metadataShortSignal,
+      "",
+      aspectRatioBucket,
+      analyticsRow,
+    )
+
+    let row: CanonicalVideoRow = {
+      id: `api-${videoId}`,
+      videoId,
+      title,
+      thumbnailUrl,
+      uploadDate,
+      format: formatResolution.format,
+      durationSeconds,
+      aspectRatioBucket,
+      aspectRatioWidth: Number(meta.aspectRatioWidth) || undefined,
+      aspectRatioHeight: Number(meta.aspectRatioHeight) || undefined,
+      aspectRatioSource: meta.aspectRatioSource || "unknown",
+      formatDiagnostics: {
+        durationSeconds,
+        contentType,
+        shortsPlaylistSignal: isShortSignal,
+        metadataShortSignal,
+        aspectRatioBucket,
+        finalFormat: formatResolution.format,
+      },
+      coverageState: "api_only",
+      apiPresent: true,
+      csvPresent: false,
+      apiSnapshotTimestamp: bundle?.fetchedAt,
+      formatEvidence: formatResolution.evidence,
+      formatConfidence: formatResolution.confidence,
+      rowMatchConfidence: "exact_video_id",
+      sourceMode: "api",
+      metrics: metricCells,
+    }
+    row.originalData = analyticsRow
+    row = applyStatsFallback(row, meta)
+    row = enrichDerivedMetricCells(row, durationSeconds)
+    canonicalRows.push(row)
+  })
+
+  reportRows.forEach((rawRow, index) => {
+    const candidateVideoId = extractVideoIdCandidates(rawRow)[0] || ""
+    const titleCandidate = extractTitleCandidates(rawRow)[0] || (candidateVideoId ? `Unknown Title (${candidateVideoId})` : `Analytics Row ${index + 1}`)
+    const key = candidateVideoId || canonicalizeTextKey(titleCandidate)
+    const alreadyIncluded = canonicalRows.some((row) => candidateVideoId ? row.videoId === candidateVideoId : canonicalizeTextKey(row.title) === key)
+    if (alreadyIncluded) return
+
+    const durationSeconds = parseDurationSeconds(rawRow["Duration (sec)"] ?? rawRow.Duration ?? rawRow.duration)
+    let row: CanonicalVideoRow = {
+      id: `api-report-${candidateVideoId || key}`,
+      videoId: candidateVideoId,
+      title: titleCandidate,
+      uploadDate: text(rawRow.Date || rawRow.day || rawRow["Upload date"]),
+      format: resolveCanonicalVideoFormat(text(rawRow.creatorContentType), durationSeconds, false, hasMetadataShortSignal(text(rawRow["Video title"] ?? rawRow.title), text(rawRow.description), Array.isArray(rawRow.tags) ? rawRow.tags.map((tag) => text(tag)).filter(Boolean) : []), "", undefined, rawRow),
+      durationSeconds,
+      coverageState: "api_only",
+      apiPresent: true,
+      csvPresent: false,
+      apiSnapshotTimestamp: bundle?.fetchedAt,
+      rowMatchConfidence: candidateVideoId ? "exact_video_id" : "unmatched",
+      sourceMode: "api",
+      metrics: inferMetricCellsFromRow(rawRow, "api"),
+    }
+    row.originalData = rawRow
+    row.supplementalData = rawRow
+    row = enrichDerivedMetricCells(row, durationSeconds)
+    canonicalRows.push(row)
+  })
+
+  const deduped = dedupeCanonicalRows(canonicalRows)
+  return deduped.map((row) => enrichDerivedMetricCells(row, row.durationSeconds))
+}
+
+const csvRowsForWindow = (csvFiles: CsvFileWithTag[], window: AnalyticsWindow): CanonicalVideoRow[] => {
+  if (!Array.isArray(csvFiles) || csvFiles.length === 0) return []
+  const VIDEO_SAFE_CSV_CATEGORIES: ReadonlySet<CsvDetectedCategory> = new Set([
+    "content_performance",
+    "content_channel_all",
+    "video_content_all",
+    "content_shorts",
+    "video_content_shorts",
+    "content_longform",
+    "video_content_longform",
+    "video_content_type",
+    "daily_metrics",
+    "daily_channel_metrics",
+    "reflection_rate_checks",
+    "retention_curve",
+    "audience_retention_curve",
+    "stw_procedure",
+  ])
+  const filesWithRows = csvFiles.filter((file) => Array.isArray(file.data) && file.data.length > 0)
+  const scopedFiles = filesWithRows.filter((file) => {
+    const explicit = (file as any).analyticsWindow
+    const fileWindow = (explicit && ANALYTICS_WINDOWS.includes(explicit)) ? explicit : inferAnalyticsWindowFromName(file.name || "")
+    if (window === "lifetime") return fileWindow === null || fileWindow === "lifetime"
+    return fileWindow === window
+  })
+  if (scopedFiles.length === 0) return []
+
+  const categorized = scopedFiles.map((file) => ({ file, kind: classifyCsvExportKind(file.name || "", (file.data || []) as Record<string, unknown>[]), rows: (file.data || []) as Record<string, unknown>[] }))
+  const hasTableData = categorized.some((entry) => entry.kind === "table_data")
+  const filesToUse = categorized.filter((entry) => {
+    const category = (entry.file.detectedCategory || "unknown") as CsvDetectedCategory
+    if (!VIDEO_SAFE_CSV_CATEGORIES.has(category)) return false
+    if (entry.kind === "totals" || entry.kind === "chart") return false
+    if (hasTableData) return entry.kind === "table_data"
+    return entry.kind === "unknown" || entry.kind === "table_data"
+  })
+
+  const out: CanonicalVideoRow[] = []
+  filesToUse.forEach(({ file, rows }) => {
+    rows.forEach((rawRow, index) => {
+      if (!rawRow || typeof rawRow !== "object" || isLikelyTotalCsvRow(rawRow)) return
+      const normalized = toNormalizedRow(rawRow)
+      const videoId = extractVideoIdCandidates(normalized)[0] || ""
+      const title = extractTitleCandidates(normalized)[0] || text(normalized.Dimension) || text(normalized.Video)
+      if (!videoId && !title) return
+      const durationSeconds = parseDurationSeconds(normalized["Duration (sec)"] ?? normalized.Duration ?? normalized.Length)
+      const formatResolution = resolveCanonicalVideoFormatEvidence(
+        text(normalized.Format ?? normalized.Type ?? normalized.contentType ?? normalized.creatorContentType),
+        durationSeconds,
+        false,
+        false,
+        text(file.tag),
+        undefined,
+        normalized,
+      )
+      let row: CanonicalVideoRow = {
+        id: `csv-${file.id}-${index}`,
+        videoId,
+        title: title || `CSV Row ${index + 1}`,
+        uploadDate: text(normalized["Upload date"] || normalized.Date || normalized["Video publish time"]),
+        format: formatResolution.format,
+        durationSeconds,
+        coverageState: "csv_only",
+        apiPresent: false,
+        csvPresent: true,
+        formatEvidence: formatResolution.evidence,
+        formatConfidence: formatResolution.confidence,
+        rowMatchConfidence: videoId ? "exact_video_id" : "unmatched",
+        sourceMode: "csv_table",
+        metrics: inferMetricCellsFromRow(normalized, "csv_table"),
+      }
+      row.originalData = normalized
+      row.supplementalData = normalized
+      row = enrichDerivedMetricCells(row, durationSeconds)
+      out.push(row)
+    })
+  })
+  return dedupeCanonicalRows(out)
+}
+
+const mergeRowsForHybrid = (apiRows: CanonicalVideoRow[], csvRows: CanonicalVideoRow[]): CanonicalVideoRow[] => {
+  if (apiRows.length === 0) return csvRows
+  if (csvRows.length === 0) return apiRows
+  const mergedMap = new Map<string, CanonicalVideoRow>()
+  apiRows.forEach((row) => mergedMap.set(rowIdentityKey(row), row))
+  csvRows.forEach((csvRow) => {
+    const key = rowIdentityKey(csvRow)
+    const existing = mergedMap.get(key)
+    if (!existing) { mergedMap.set(key, csvRow); return; }
+    const matchConfidence = getRowMatchConfidence(existing, csvRow)
+    if (!matchConfidence) {
+      mergedMap.set(`csv-unmatched:${key}:${csvRow.id}`, csvRow)
+      return
+    }
+    mergedMap.set(key, mergeCanonicalRowMetrics(existing, csvRow, matchConfidence))
+  })
+  return Array.from(mergedMap.values()).map((row) => ({ ...row, sourceMode: "hybrid" }))
+}
+
+export const getMetricAvailability = (metricKey: CanonicalMetricKey, window: AnalyticsWindow = "lifetime", sourceMode: AnalyticsSourceMode = "api", csvFiles: CsvFileWithTag[] = []): MetricAvailability => {
+  const rows = getMasterRows(window, sourceMode as any, csvFiles as any)
+  let actualCount = 0, derivedCount = 0, unavailableCount = 0, apiCount = 0, csvCount = 0, hybridCount = 0
+  rows.forEach((row) => {
+    const cell = row.metrics[metricKey]
+    if (cell.status === "actual") actualCount += 1
+    else if (cell.status === "derived") derivedCount += 1
+    else unavailableCount += 1
+    if (cell.status !== "unavailable") {
+      if (cell.source === "api") apiCount += 1
+      else if (cell.source === "csv_table") csvCount += 1
+      else hybridCount += 1
+    }
+  })
+  const availableCount = actualCount + derivedCount
+  return { metricKey, window, sourceMode, actualCount, derivedCount, unavailableCount, availableCount, coveragePct: rows.length > 0 ? (availableCount / rows.length) * 100 : 0, bySource: { api: apiCount, csv_table: csvCount, hybrid: hybridCount } }
+}
+
+export const MASTER_TABLE_HEADER_TO_METRIC_KEY: Record<string, CanonicalMetricKey> =
+ canonicalMetricOrder.reduce((acc, metricKey) => {
+  const metricDef = METRIC_REGISTRY[metricKey]
+  const tokens = [
+   getDisplayLabel(metricKey, "tableHeader"),
+   metricDef?.label,
+   metricKey,
+   ...(metricDef?.aliases || []),
+  ].filter(Boolean) as string[]
+  tokens.forEach((token) => {
+   acc[token] = metricKey
+  })
+  return acc
+ }, {} as Record<string, CanonicalMetricKey>)
+
+export const canonicalRowsToMasterTableRows = (rows: CanonicalVideoRow[]): MasterTableRow[] => {
+  return rows.map((row, index) => {
+    const supplementalData = row.supplementalData || row.originalData || {}
+    const lockedCoreHeaders = new Set([
+      "Video title",
+      "Video ID",
+      "Upload date",
+      "Format",
+      "Length",
+    ])
+    const base: MasterTableRow = {
+      _id: row.id || `canonical-${index}`,
+      _sourceFile:
+        row.coverageState === "hybrid_complete"
+          ? "YouTube API + CSV"
+          : row.coverageState === "hybrid_partial"
+            ? "Partial Merge"
+            : row.sourceMode === "api"
+              ? "YouTube API"
+              : "CSV Upload",
+      _userTag: row.format,
+      "Video title": row.title,
+      "Video ID": row.videoId,
+      Thumbnail: row.thumbnailUrl || "",
+      "Upload date": row.uploadDate,
+      Date: row.uploadDate,
+      Format: row.format,
+      Length: row.durationSeconds > 0 ? row.durationSeconds : null,
+      "Duration (sec)": row.durationSeconds > 0 ? row.durationSeconds : null,
+      titleLength: row.title.length,
+      __canonical: row,
+      __metricCells: row.metrics,
+      _coverageState: row.coverageState || (row.sourceMode === "api" ? "api_only" : row.sourceMode === "csv_table" ? "csv_only" : "hybrid_partial"),
+      _rowMatchConfidence: row.rowMatchConfidence || "unmatched",
+      _formatEvidence: (row.formatEvidence || []).join(", "),
+      _formatConfidence: row.formatConfidence || "unknown",
+      _apiPresent: row.apiPresent === true ? "yes" : "no",
+      _csvPresent: row.csvPresent === true ? "yes" : "no",
+      _apiSnapshotTimestamp: row.apiSnapshotTimestamp || null,
+      _csvImportTimestamp: row.csvImportTimestamp || null,
+      _originalData: (row as any).originalData || {},
+      _supplementalData: supplementalData,
+    }
+
+    MASTER_VIDEO_COLUMNS.forEach((column) => {
+      if (lockedCoreHeaders.has(column.header)) return
+      if (column.canonicalMetricKey) {
+        const cell = row.metrics[column.canonicalMetricKey]
+        base[column.header] =
+          cell?.status === "unavailable" ? null : cell?.value ?? null
+        return
+      }
+      const value = column.aliases
+        .map((alias) => supplementalData[alias])
+        .find((candidate) => candidate !== undefined && candidate !== null && text(candidate) !== "")
+      base[column.header] = value ?? null
+    })
+
+    canonicalMetricOrder.forEach((metricKey) => {
+      const header = getDisplayLabel(metricKey, "tableHeader")
+      if (header) base[header] = row.metrics[metricKey].status === "unavailable" ? null : row.metrics[metricKey].value
+    })
+
+    base["Watch Time (Hours)"] = base["Watch time (hours)"]
+    base["Watch Hrs"] = base["Watch time (hours)"]
+    base["Subs Net"] = base["Subscribers net"]
+    base["AVD (Average View Duration)"] = base["Average view duration"]
+    base["AVD (Sec)"] = base["Average view duration"]
+    base["AVD"] = base["Average view duration"]
+    base["AVP (%)"] = base["Average percentage viewed (%)"]
+    base["AVP %"] = base["Average percentage viewed (%)"]
+    base["Click-Through Rate (CTR)"] = base["Impressions click-through rate (%)"]
+    base["CTR (%)"] = base["Impressions click-through rate (%)"]
+    base["CTR %"] = base["Impressions click-through rate (%)"]
+    base["CTR"] = base["Impressions click-through rate (%)"]
+    base["Engaged"] = base["Engaged views"]
+    base["End screen click rate"] = base["Clicks per end screen element shown (%)"]
+    base["End Screen %"] = base["Clicks per end screen element shown (%)"]
+    base["Card click rate"] = base["Clicks per card shown (%)"]
+    base["Card %"] = base["Clicks per card shown (%)"]
+    base["Card teaser click rate"] = base["Teaser clicks per card teaser shown (%)"]
+    base["Teaser %"] = base["Teaser clicks per card teaser shown (%)"]
+    base["Teaser Clicks"] = base["Card teaser clicks"]
+    base["Teaser Impr"] = base["Card teasers shown"]
+    base["Data Provenance"] = base["Data Src"]
+    base["Estimated revenue"] = base["Estimated revenue (USD)"]
+    base.Revenue = base["Estimated revenue (USD)"]
+    base["Ad Revenue"] = base["YouTube ad revenue (USD)"]
+    base["Premium Revenue"] = base["YouTube Premium (USD)"]
+    base["Red Hrs"] = base["YouTube Premium watch time (hours)"]
+    base["Playback Based CPM"] = base["Playback-based CPM (USD)"]
+    base["Ad Impressions"] = base["Ad impressions"]
+    base["Monetized Playbacks"] = base["Estimated monetized playbacks"]
+    return base
+  })
+}
+
+export const buildVideoStatsVerificationSummary = ({ window, reportRows, masterRows, diagnostics, duplicateShortHeaders = [] }: { window: AnalyticsWindow, reportRows: Record<string, unknown>[], masterRows: CanonicalVideoRow[], diagnostics?: SyncDiagnosticsShape | null, duplicateShortHeaders?: string[] }): VideoStatsVerificationSummary => {
+  const rawImpressions = reportRows.filter((row) => getMetricByAliases(row, "impressions").found).length
+  const rawCtr = reportRows.filter((row) => getMetricByAliases(row, "ctr").found).length
+  const mappedImpressions = masterRows.filter((row) => row.metrics.impressions.status !== "unavailable" && row.metrics.impressions.value !== null).length
+  const mappedCtr = masterRows.filter((row) => row.metrics.ctr.status !== "unavailable" && row.metrics.ctr.value !== null).length
+  const lastFailure = (diagnostics?.failureReasons || []).filter((f) => f?.group === "impressions_ctr" || (f?.metrics || []).some((m) => m === "videoThumbnailImpressions" || m === "videoThumbnailImpressionsClickRate")).slice(-1)[0] || null
+  let mappingStatus: VideoStatsVerificationSummary["mappingStatus"] = "healthy"
+  if (lastFailure && rawImpressions === 0 && rawCtr === 0) mappingStatus = "request_failure"
+  else if (rawImpressions === 0 && rawCtr === 0) mappingStatus = "missing_upstream"
+  else if ((rawImpressions > 0 && mappedImpressions === 0) || (rawCtr > 0 && mappedCtr === 0)) mappingStatus = "mapping_failure"
+  return { window, reportRowCount: reportRows.length, masterRowCount: masterRows.length, rawMetricRows: { impressions: rawImpressions, ctr: rawCtr }, mappedMetricRows: { impressions: mappedImpressions, ctr: mappedCtr }, lastFailure: lastFailure ? { requestClass: lastFailure.requestClass, reason: lastFailure.reason, status: lastFailure.status } : null, mappingStatus, duplicateShortHeaders }
+}
+
+export const getVideoStatsVerificationSummary = (window: AnalyticsWindow, duplicateShortHeaders: string[] = []): VideoStatsVerificationSummary => {
+  const cache = resolveAnalyticsCache()
+  const bundle = getBundleForWindow(cache, window)
+  const reportRows = reportRowsToObjects(bundle?.report).map(toNormalizedRow)
+  const masterRows = getMasterRows(window, "api" as any)
+  const diagnostics = cache.analyticsByWindow?.[window]?.syncDiagnostics || null
+  return buildVideoStatsVerificationSummary({ window, reportRows, masterRows, diagnostics, duplicateShortHeaders })
+}
+
+export const getHeaderMetricCell = (row: Record<string, unknown>, header: string): MetricCell | null => {
+  const masterRow = row as Partial<MasterTableRow>
+  if (!masterRow.__metricCells) return null
+  const metricKey = MASTER_TABLE_HEADER_TO_METRIC_KEY[header]
+  return metricKey ? masterRow.__metricCells[metricKey] || null : null
+}
+
+export const buildTableMetricMappingStatus = ({ masterRows, visibleHeaders, duplicateHeaderKeys = [] }: { masterRows: CanonicalVideoRow[], visibleHeaders: string[], duplicateHeaderKeys?: string[] }): TableMetricMappingStatus => {
+  const syncedMetricKeys = canonicalMetricOrder.filter((metricKey) => masterRows.some((row) => row.metrics[metricKey]?.status !== "unavailable"))
+  const mappedMetricKeys = visibleHeaders.map((header) => MASTER_TABLE_HEADER_TO_METRIC_KEY[header]).filter((k): k is CanonicalMetricKey => Boolean(k))
+  const mappedKeySet = new Set<CanonicalMetricKey>(mappedMetricKeys), syncedKeySet = new Set<CanonicalMetricKey>(syncedMetricKeys)
+  const unmappedMetricKeys = Array.from(syncedKeySet).filter((k) => !mappedKeySet.has(k))
+  const unavailableByReason: Record<string, number> = {}
+  masterRows.forEach((row) => canonicalMetricOrder.forEach((k) => { if (row.metrics[k].status === "unavailable") { const r = (row.metrics[k].reasonCode || "unavailable_unknown").trim(); unavailableByReason[r] = (unavailableByReason[r] || 0) + 1 } }))
+  return { syncedMetricsCount: syncedKeySet.size, mappedMetricsCount: mappedKeySet.size, mappedMetricKeys: Array.from(mappedKeySet), unmappedMetricKeys, duplicateHeaderKeys, unavailableByReason }
+}
+
+export const buildDatasetCoverageSummary = ({ datasetId, requestedHeaders, visibleHeaders, rows }: { datasetId: string, requestedHeaders: string[], visibleHeaders: string[], rows: Array<Record<string, unknown>> }): DatasetCoverageSummary => {
+  let fetched = 0
+  visibleHeaders.forEach((h) => { if (rows.some((r) => r[h] !== undefined && r[h] !== null && text(r[h]) !== "" || !!(getHeaderMetricCell(r, h)?.value !== null))) fetched += 1 })
+  const reasons: Record<string, number> = {}
+  rows.forEach((r) => visibleHeaders.forEach((h) => { const c = getHeaderMetricCell(r, h); if (c?.status === "unavailable") { const rs = (c.reasonCode || "unavailable_unknown").trim(); reasons[rs] = (reasons[rs] || 0) + 1 } }))
+  return { datasetId, requested: requestedHeaders.length, fetched, mapped: visibleHeaders.length, visible: visibleHeaders.length, unavailable: Math.max(0, requestedHeaders.length - fetched), reasons }
+}

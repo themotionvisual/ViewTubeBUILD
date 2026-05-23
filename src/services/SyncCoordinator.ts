@@ -7,7 +7,6 @@ import {
  fetchShortsPlaylistIds,
  fetchVideoContentType,
  fetchDemographicAnalytics,
- fetchTrafficSourceAnalytics,
  fetchDailyAnalytics,
  fetchGeographyAnalytics,
  fetchGlobalLifetimeAnalytics,
@@ -18,12 +17,11 @@ import {
 } from "./youtubeService"
 import {
   syncCoreLifetimeData,
-  syncDeepVideoData,
-  CORE_METRICS,
   type CoreSyncResult,
 } from "./youtube/coreLifetimeSync"
+import { syncTrafficAnalytics } from "./youtube/trafficAnalyticsSync"
 import { ga4Service, type GA4Property } from "./ga4Service"
-import { commitToLedger } from "./canonicalAnalyticsStore"
+import { commitToLedger } from "./analytics/DataStore"
 import { parseDurationSeconds } from "./dataUtils"
 import { ytApiQueue } from "../utils/RequestQueue"
 import {
@@ -31,7 +29,7 @@ import {
  type AnalyticsWindow,
  canonicalMetricOrder,
  getMetricByAliases,
-} from "./analyticsContract"
+} from "./analytics/DataStore"
 import type { ChannelAnalysisSyncStatus, VideoSyncBatchState } from "../types"
 
 const YT_ANALYTICS_CACHE_KEY = "yt_analytics_cache"
@@ -43,8 +41,20 @@ const VIDEO_SYNC_BATCH_STATE_KEY = "vt_video_sync_batch_state"
 const SYNC_MERGE_POLICY_KEY = "vt_sync_merge_policy"
 const OPTIONAL_VIDEO_METRICS_STORAGE_KEY = "vt_optional_video_metrics_enabled"
 
+export type YouTubeSyncEnrichmentMode =
+ | "core"
+ | "video_metrics"
+ | "traffic"
+ | "segments"
+ | "all"
+
+export type YouTubeSyncOptions = {
+ batchMode?: "initial" | "next"
+ enrichmentMode?: YouTubeSyncEnrichmentMode
+}
+
 const DEFAULT_VIDEO_SYNC_BATCH_STATE: VideoSyncBatchState = {
- initialLimit: Infinity,
+ initialLimit: 500,
  incrementSize: 250,
  cursor: 0,
  hasMore: true,
@@ -86,6 +96,7 @@ export interface GA4SyncState {
 export class SyncCoordinator {
  private static instance: SyncCoordinator
  private syncInterval: any = null
+ private youtubeSyncPromise: Promise<void> | null = null
 
  private constructor() {}
 
@@ -327,8 +338,25 @@ export class SyncCoordinator {
 
  public async syncYouTube(
   force = false,
-  options: { batchMode?: "initial" | "next" } = {},
- ) {
+  options: YouTubeSyncOptions = {},
+): Promise<void> {
+  if (this.youtubeSyncPromise) {
+   console.log("YouTube sync already in progress. Reusing active run.")
+   return this.youtubeSyncPromise
+  }
+
+  this.youtubeSyncPromise = this.runYouTubeSync(force, options)
+  try {
+   await this.youtubeSyncPromise
+  } finally {
+   this.youtubeSyncPromise = null
+  }
+ }
+
+ private async runYouTubeSync(
+  force = false,
+  options: YouTubeSyncOptions = {},
+): Promise<void> {
   console.log(
    "syncYouTube called, force:",
    force,
@@ -409,13 +437,24 @@ export class SyncCoordinator {
 
    const batchState = this.loadVideoSyncBatchState()
    const isNextBatch = options.batchMode === "next"
+   const enrichmentMode = options.enrichmentMode || "core"
+   const shouldSyncVideoMetrics =
+    enrichmentMode === "video_metrics" || enrichmentMode === "all"
+   const shouldSyncTraffic =
+    enrichmentMode === "traffic" ||
+    enrichmentMode === "segments" ||
+    enrichmentMode === "all"
+   const shouldSyncSegments =
+    enrichmentMode === "segments" || enrichmentMode === "all"
    const maxVideos = isNextBatch
     ? batchState.cursor + batchState.incrementSize
-    : Infinity
+    : batchState.initialLimit
 
    let coreSyncResult: CoreSyncResult | null = null
    try {
-    coreSyncResult = await syncCoreLifetimeData(maxVideos)
+    coreSyncResult = await syncCoreLifetimeData(maxVideos, {
+     includeVideoAnalytics: true,
+    })
    } catch (coreSyncError: any) {
     console.warn("Core Lifetime Sync failed, falling back to legacy sync:", coreSyncError?.message || coreSyncError)
    }
@@ -446,6 +485,11 @@ export class SyncCoordinator {
      title: v.title,
      publishedAt: v.publishedAt,
      thumbnail: v.thumbnail,
+     thumbnailUrl: v.thumbnail,
+     aspectRatioBucket: v.aspectRatioBucket,
+     aspectRatioWidth: v.aspectRatioWidth,
+     aspectRatioHeight: v.aspectRatioHeight,
+     aspectRatioSource: v.aspectRatioSource,
     }))
 
     // Merge with existing videos (preserve any not in current fetch)
@@ -492,11 +536,19 @@ export class SyncCoordinator {
       viewCount: String(v.dataApiStats.views),
       likeCount: String(v.dataApiStats.likes),
       commentCount: String(v.dataApiStats.comments),
+      title: v.title,
+      publishedAt: v.publishedAt,
+      thumbnail: v.thumbnail,
+      thumbnailUrl: v.thumbnail,
       durationSeconds: v.duration,
       durationRaw: v.durationRaw,
       privacyStatus: v.privacyStatus,
       isShort: v.isShort,
       format: v.format,
+      aspectRatioBucket: v.aspectRatioBucket,
+      aspectRatioWidth: v.aspectRatioWidth,
+      aspectRatioHeight: v.aspectRatioHeight,
+      aspectRatioSource: v.aspectRatioSource,
       hasAnalytics: v.hasAnalytics,
       subscriberCount: v.dataApiStats.subscribers,
       ...(v.analyticsMetrics || {}),
@@ -537,15 +589,29 @@ export class SyncCoordinator {
     this.persistVideoSyncBatchState(nextBatchState)
     cacheData.videoSyncBatch = nextBatchState
     cacheData.coreSyncTiming = coreSyncResult.timing
+    cacheData.lastSynced = Date.now()
+
+    try {
+     localStorage.setItem(YT_ANALYTICS_CACHE_KEY, JSON.stringify(cacheData))
+     localStorage.setItem("yt_analytics_last_sync", new Date().toISOString())
+     window.dispatchEvent(new CustomEvent("vt_local_data_changed"))
+     window.dispatchEvent(
+      new CustomEvent("yt_analytics_synced", { detail: cacheData }),
+     )
+    } catch (e) {
+     console.warn("Core sync cache checkpoint failed:", e)
+    }
 
     this.emitSyncStatus({
      ...syncStatusBase,
-     phase: "syncing",
+     phase: "partial",
      completedAt: null,
      lastError: null,
      stages: [
-      `Core sync complete (${coreSyncResult.timing.phase1Ms}ms)`,
-      "Proceeding to window-based analytics",
+      `Core-ready baseline cached (${coreSyncResult.timing.phase1Ms}ms)`,
+      enrichmentMode === "core"
+       ? "Optional enrichment deferred until manually requested"
+       : "Manual analytics enrichment starting",
      ],
     })
    } else {
@@ -702,91 +768,106 @@ export class SyncCoordinator {
 
    const optionalMetricsEnabled = this.isOptionalVideoMetricsEnabled()
 
-   for (const window of ANALYTICS_WINDOWS) {
-    const range = windowRanges[window]
-    try {
-     this.emitSyncStatus({
-      ...syncStatusBase,
-      phase: "syncing",
-      completedAt: null,
-      lastError: null,
-      stages: ["Fetching video analytics", `Window ${window.toUpperCase()}`],
-     })
-     const analytics = await ytApiQueue.add(() =>
-      fetchAnalytics(range.startDate, range.endDate, profile.id, {
-       window,
-       targetVideoIds,
-       optionalMetricsEnabled,
-      }),
-     )
-
-     if (analytics?.report) {
-      commitToLedger({
-       source: "youtube_analytics_v2",
-       context: "video",
-       dimensions: ["video"],
-       metrics: (analytics.report.columnHeaders || []).map((h: any) => h.name),
-       payload: analytics.report,
-       window: window,
+   if (shouldSyncVideoMetrics) {
+    for (const window of ANALYTICS_WINDOWS) {
+     const range = windowRanges[window]
+     try {
+      this.emitSyncStatus({
+       ...syncStatusBase,
+       phase: "syncing",
+       completedAt: null,
+       lastError: null,
+       stages: ["Fetching video analytics", `Window ${window.toUpperCase()}`],
       })
-     }
+      const analytics = await ytApiQueue.add(() =>
+       fetchAnalytics(range.startDate, range.endDate, profile.id, {
+        window,
+        targetVideoIds,
+        optionalMetricsEnabled,
+        batchMode: "next",
+       }),
+      )
 
-     if (window === "lifetime") {
-      try {
-       const globalLifetime = await ytApiQueue.add(() =>
-        fetchGlobalLifetimeAnalytics(range.startDate, range.endDate, profile.id),
-       )
-       if (globalLifetime) {
-        commitToLedger({
-         source: "youtube_analytics_v2",
-         context: "channel",
-         dimensions: [],
-         metrics: (globalLifetime.columnHeaders || []).map((h: any) => h.name),
-         payload: globalLifetime,
-         window: "lifetime",
-        })
-        cacheData.globalLifetime = globalLifetime
-       }
-      } catch (e) {
-       console.warn("Global lifetime analytics fetch failed:", e)
+      if (analytics?.report) {
+       commitToLedger({
+        source: "youtube_analytics_v2",
+        context: "video",
+        dimensions: ["video"],
+        metrics: (analytics.report.columnHeaders || []).map((h: any) => h.name),
+        payload: analytics.report,
+        window: window,
+       })
       }
-     }
 
-     const report = analytics?.report || analytics
-     cacheData.analyticsByWindow[window] = {
-      window,
-      startDate: range.startDate,
-      endDate: range.endDate,
-      fetchedAt: Date.now(),
-      report,
-      groups: analytics?.groups || {},
-      metricCapabilities: analytics?.metricCapabilities || [],
-      syncDiagnostics: analytics?.syncDiagnostics || {
-       attemptedGroups: {},
-       disabledMetrics: [],
-       failureReasons: [],
-       knownInvalidCombos: [],
-       splitRetries: 0,
-       maxRequestChars: 0,
-       requestCharCounts: [],
-      },
-     }
-     cacheData.availabilityByWindow[window] = this.computeMetricAvailability(report)
-     cacheData.metricCapabilitiesByWindow[window] = Array.isArray(
-      analytics?.metricCapabilities,
-     )
-      ? analytics.metricCapabilities
-      : []
-     cacheData.lastSyncedByWindow[window] = Date.now()
+      if (window === "lifetime") {
+       try {
+        const globalLifetime = await ytApiQueue.add(() =>
+         fetchGlobalLifetimeAnalytics(range.startDate, range.endDate, profile.id),
+        )
+        if (globalLifetime) {
+         commitToLedger({
+          source: "youtube_analytics_v2",
+          context: "channel",
+          dimensions: [],
+          metrics: (globalLifetime.columnHeaders || []).map((h: any) => h.name),
+          payload: globalLifetime,
+          window: "lifetime",
+         })
+         cacheData.globalLifetime = globalLifetime
+        }
+       } catch (e) {
+        console.warn("Global lifetime analytics fetch failed:", e)
+       }
+      }
 
-     if (window === "lifetime") {
-      cacheData.analytics = report
+      const report = analytics?.report || analytics
+      cacheData.analyticsByWindow[window] = {
+       window,
+       startDate: range.startDate,
+       endDate: range.endDate,
+       fetchedAt: Date.now(),
+       report,
+       groups: analytics?.groups || {},
+       metricCapabilities: analytics?.metricCapabilities || [],
+       syncDiagnostics: analytics?.syncDiagnostics || {
+        attemptedGroups: {},
+        disabledMetrics: [],
+        failureReasons: [],
+        knownInvalidCombos: [],
+        splitRetries: 0,
+        maxRequestChars: 0,
+        requestCharCounts: [],
+       },
+      }
+      cacheData.availabilityByWindow[window] = this.computeMetricAvailability(report)
+      cacheData.metricCapabilitiesByWindow[window] = Array.isArray(
+       analytics?.metricCapabilities,
+      )
+       ? analytics.metricCapabilities
+       : []
+      cacheData.lastSyncedByWindow[window] = Date.now()
+
+      if (window === "lifetime") {
+       cacheData.analytics = report
+      }
+     } catch (e: any) {
+      console.error(
+       `Video-level Analytics API ERROR (${window}):`,
+       e?.message || e,
+      )
      }
-    } catch (e: any) {
-     console.error(
-      `Video-level Analytics API ERROR (${window}):`,
-      e?.message || e,
-     )
+    }
+    cacheData.videoMetricEnrichmentStatus = {
+     status: "complete",
+     mode: enrichmentMode,
+     fetchedAt: Date.now(),
+    }
+   } else {
+    cacheData.videoMetricEnrichmentStatus = {
+     status: "deferred",
+     mode: enrichmentMode,
+     reason: "Core sync keeps optional video analytics out of the initial table-ready path.",
+     fetchedAt: Date.now(),
     }
    }
 
@@ -794,160 +875,218 @@ export class SyncCoordinator {
    const startDate = overviewRange.startDate
    const endDate = overviewRange.endDate
 
-   try {
-    const contentTypeRange = windowRanges["lifetime"]
-    const contentTypeResult = await ytApiQueue.add(() =>
-     fetchVideoContentType(
-      contentTypeRange.startDate,
-      contentTypeRange.endDate,
-      profile.id,
-     ),
-    )
-    cacheData.videoContentTypeStatus = contentTypeResult.status
-    if (contentTypeResult.map.size > 0) {
-     cacheData.videoContentType = Object.fromEntries(contentTypeResult.map)
+   if (shouldSyncVideoMetrics) {
+    try {
+     const contentTypeRange = windowRanges["lifetime"]
+     const contentTypeResult = await ytApiQueue.add(() =>
+      fetchVideoContentType(
+       contentTypeRange.startDate,
+       contentTypeRange.endDate,
+       profile.id,
+      ),
+     )
+     cacheData.videoContentTypeStatus = contentTypeResult.status
+     if (contentTypeResult.map.size > 0) {
+      cacheData.videoContentType = Object.fromEntries(contentTypeResult.map)
+     }
+    } catch (e: any) {
+     console.warn("Video content type detection failed:", e?.message || e)
+     cacheData.videoContentTypeStatus = {
+      status: "quarantined",
+      requestClass: "channel_creator_content_type",
+      idsTried: profile?.id ? [`channel==${profile.id}`, "channel==MINE"] : ["channel==MINE"],
+      disabledForSession: true,
+      rowCount: 0,
+      reason: e?.message || String(e),
+      fetchedAt: Date.now(),
+     }
     }
-   } catch (e: any) {
-    console.warn("Video content type detection failed:", e?.message || e)
-    cacheData.videoContentTypeStatus = {
-     status: "quarantined",
-     requestClass: "channel_creator_content_type",
-     idsTried: profile?.id ? [`channel==${profile.id}`, "channel==MINE"] : ["channel==MINE"],
-     disabledForSession: true,
-     rowCount: 0,
-     reason: e?.message || String(e),
+   }
+
+   if (shouldSyncVideoMetrics) {
+    try {
+     this.emitSyncStatus({
+      ...syncStatusBase,
+      phase: "syncing",
+      completedAt: null,
+      lastError: null,
+      stages: ["Fetching channel-level analytics"],
+     })
+     const channelAnalytics = await ytApiQueue.add(() =>
+      fetchChannelAnalytics(startDate, endDate, profile.id),
+     )
+     if (channelAnalytics) {
+      commitToLedger({
+       source: "youtube_analytics_v2",
+       context: "channel",
+       dimensions: ["day"],
+       metrics: (channelAnalytics.columnHeaders || []).map((h: any) => h.name),
+       payload: channelAnalytics,
+       window: "lifetime",
+      })
+      cacheData.channelAnalytics = channelAnalytics
+     }
+    } catch (e: any) {
+     console.error("Channel-level Analytics API ERROR:", e?.message || e)
+    }
+   }
+
+   if (shouldSyncSegments) {
+    try {
+     this.emitSyncStatus({
+      ...syncStatusBase,
+      phase: "syncing",
+      completedAt: null,
+      lastError: null,
+      stages: ["Fetching demographics"],
+     })
+     const demographics = await ytApiQueue.add(() =>
+      fetchDemographicAnalytics(startDate, endDate, profile.id),
+     )
+     if (demographics) {
+      commitToLedger({
+       source: "youtube_analytics_v2",
+       context: "demographics",
+       dimensions: ["ageGroup", "gender"],
+       metrics: (demographics.columnHeaders || []).map((h: any) => h.name),
+       payload: demographics,
+       window: "lifetime",
+      })
+      cacheData.demographics = demographics
+     }
+    } catch (e: any) {
+     console.error("Demographic Analytics API ERROR:", e?.message || e)
+    }
+
+    if (shouldSyncTraffic) try {
+     this.emitSyncStatus({
+      ...syncStatusBase,
+      phase: "syncing",
+      completedAt: null,
+      lastError: null,
+      stages: ["Fetching full traffic analytics"],
+     })
+     const trafficResult = await ytApiQueue.add(() =>
+      syncTrafficAnalytics({
+       startDate,
+       endDate,
+       channelId: profile.id,
+       targetVideoIds: videos
+        .map((video: any) => String(video?.videoId || "").trim())
+        .filter(Boolean)
+        .slice(0, 50),
+       includeReporting: false,
+       reportingMode: "diagnose",
+      }),
+     )
+     if (trafficResult) {
+      commitToLedger({
+       source: "youtube_analytics_v2",
+       context: "traffic_source",
+       dimensions: ["insightTrafficSourceType"],
+       metrics: (trafficResult.rawReports.overview?.columnHeaders || []).map((h: any) => h.name),
+       payload: trafficResult.rawReports.overview,
+       window: "lifetime",
+      })
+      if (trafficResult.rawReports.dailyByType) {
+       commitToLedger({
+        source: "youtube_analytics_v2",
+        context: "traffic_daily",
+        dimensions: ["day", "insightTrafficSourceType"],
+        metrics: (trafficResult.rawReports.dailyByType.columnHeaders || []).map((h: any) => h.name),
+        payload: trafficResult.rawReports.dailyByType,
+        window: "lifetime",
+       })
+      }
+      if (trafficResult.rawReports.videoByType) {
+       commitToLedger({
+        source: "youtube_analytics_v2",
+        context: "traffic_video",
+        dimensions: ["video", "insightTrafficSourceType"],
+        metrics: Array.isArray(trafficResult.rawReports.videoByType)
+         ? ["views", "estimatedMinutesWatched", "averageViewDuration"]
+         : (trafficResult.rawReports.videoByType.columnHeaders || []).map((h: any) => h.name),
+        payload: trafficResult.rawReports.videoByType,
+        window: "lifetime",
+       })
+      }
+      cacheData.trafficSources = trafficResult.rawReports.overview
+      cacheData.trafficOverview = trafficResult.trafficOverview
+      cacheData.trafficDailyByType = trafficResult.trafficDailyByType
+      cacheData.trafficVideoByType = trafficResult.trafficVideoByType
+      cacheData.trafficDetailByType = trafficResult.trafficDetailByType
+      cacheData.trafficReportingBulk = trafficResult.trafficReportingBulk
+      cacheData.trafficDiagnostics = trafficResult.trafficDiagnostics
+     }
+    } catch (e: any) {
+     console.error("Traffic Source Analytics API ERROR:", e?.message || e)
+    }
+
+    try {
+     this.emitSyncStatus({
+      ...syncStatusBase,
+      phase: "syncing",
+      completedAt: null,
+      lastError: null,
+      stages: ["Fetching geography analytics"],
+     })
+     const geography = await ytApiQueue.add(() =>
+      fetchGeographyAnalytics(startDate, endDate, profile.id),
+     )
+     if (geography) {
+      commitToLedger({
+       source: "youtube_analytics_v2",
+       context: "geography",
+       dimensions: ["country"],
+       metrics: (geography.columnHeaders || []).map((h: any) => h.name),
+       payload: geography,
+       window: "lifetime",
+      })
+      cacheData.geography = geography
+     }
+    } catch (e: any) {
+     console.error("Geography Analytics API ERROR:", e?.message || e)
+    }
+    cacheData.deepSegmentsStatus = {
+     status: "complete",
+     mode: enrichmentMode,
+     fetchedAt: Date.now(),
+    }
+   } else {
+    cacheData.deepSegmentsStatus = {
+     status: "deferred",
+     mode: enrichmentMode,
+     reason: "Traffic, audience, and geography are manual enrichment passes.",
      fetchedAt: Date.now(),
     }
    }
 
-   try {
-    this.emitSyncStatus({
-     ...syncStatusBase,
-     phase: "syncing",
-     completedAt: null,
-     lastError: null,
-     stages: ["Fetching channel-level analytics"],
-    })
-    const channelAnalytics = await ytApiQueue.add(() =>
-     fetchChannelAnalytics(startDate, endDate, profile.id),
-    )
-    if (channelAnalytics) {
-     commitToLedger({
-      source: "youtube_analytics_v2",
-      context: "channel",
-      dimensions: ["day"],
-      metrics: (channelAnalytics.columnHeaders || []).map((h: any) => h.name),
-      payload: channelAnalytics,
-      window: "lifetime",
+   if (shouldSyncVideoMetrics) {
+    try {
+     this.emitSyncStatus({
+      ...syncStatusBase,
+      phase: "syncing",
+      completedAt: null,
+      lastError: null,
+      stages: ["Fetching daily metrics"],
      })
-     cacheData.channelAnalytics = channelAnalytics
+     const dailyMetrics = await ytApiQueue.add(() =>
+      fetchDailyAnalytics(startDate, endDate, profile.id),
+     )
+     if (dailyMetrics) {
+      commitToLedger({
+       source: "youtube_analytics_v2",
+       context: "channel",
+       dimensions: ["day"],
+       metrics: (dailyMetrics.columnHeaders || []).map((h: any) => h.name),
+       payload: dailyMetrics,
+       window: "lifetime",
+      })
+      cacheData.dailyMetrics = dailyMetrics
+     }
+    } catch (e: any) {
+     console.error("Daily Metrics API ERROR:", e?.message || e)
     }
-   } catch (e: any) {
-    console.error("Channel-level Analytics API ERROR:", e?.message || e)
-   }
-
-   try {
-    this.emitSyncStatus({
-     ...syncStatusBase,
-     phase: "syncing",
-     completedAt: null,
-     lastError: null,
-     stages: ["Fetching demographics"],
-    })
-    const demographics = await ytApiQueue.add(() =>
-     fetchDemographicAnalytics(startDate, endDate, profile.id),
-    )
-    if (demographics) {
-     commitToLedger({
-      source: "youtube_analytics_v2",
-      context: "demographics",
-      dimensions: ["ageGroup", "gender"],
-      metrics: (demographics.columnHeaders || []).map((h: any) => h.name),
-      payload: demographics,
-      window: "lifetime",
-     })
-     cacheData.demographics = demographics
-    }
-   } catch (e: any) {
-    console.error("Demographic Analytics API ERROR:", e?.message || e)
-   }
-
-   try {
-    this.emitSyncStatus({
-     ...syncStatusBase,
-     phase: "syncing",
-     completedAt: null,
-     lastError: null,
-     stages: ["Fetching traffic sources"],
-    })
-    const trafficSources = await ytApiQueue.add(() =>
-     fetchTrafficSourceAnalytics(startDate, endDate, profile.id),
-    )
-    if (trafficSources) {
-     commitToLedger({
-      source: "youtube_analytics_v2",
-      context: "traffic_source",
-      dimensions: ["insightTrafficSourceType"],
-      metrics: (trafficSources.columnHeaders || []).map((h: any) => h.name),
-      payload: trafficSources,
-      window: "lifetime",
-     })
-     cacheData.trafficSources = trafficSources
-    }
-   } catch (e: any) {
-    console.error("Traffic Source Analytics API ERROR:", e?.message || e)
-   }
-
-   try {
-    this.emitSyncStatus({
-     ...syncStatusBase,
-     phase: "syncing",
-     completedAt: null,
-     lastError: null,
-     stages: ["Fetching geography analytics"],
-    })
-    const geography = await ytApiQueue.add(() =>
-     fetchGeographyAnalytics(startDate, endDate, profile.id),
-    )
-    if (geography) {
-     commitToLedger({
-      source: "youtube_analytics_v2",
-      context: "geography",
-      dimensions: ["country"],
-      metrics: (geography.columnHeaders || []).map((h: any) => h.name),
-      payload: geography,
-      window: "lifetime",
-     })
-     cacheData.geography = geography
-    }
-   } catch (e: any) {
-    console.error("Geography Analytics API ERROR:", e?.message || e)
-   }
-
-   try {
-    this.emitSyncStatus({
-     ...syncStatusBase,
-     phase: "syncing",
-     completedAt: null,
-     lastError: null,
-     stages: ["Fetching daily metrics"],
-    })
-    const dailyMetrics = await ytApiQueue.add(() =>
-     fetchDailyAnalytics(startDate, endDate, profile.id),
-    )
-    if (dailyMetrics) {
-     commitToLedger({
-      source: "youtube_analytics_v2",
-      context: "channel",
-      dimensions: ["day"],
-      metrics: (dailyMetrics.columnHeaders || []).map((h: any) => h.name),
-      payload: dailyMetrics,
-      window: "lifetime",
-     })
-     cacheData.dailyMetrics = dailyMetrics
-    }
-   } catch (e: any) {
-    console.error("Daily Metrics API ERROR:", e?.message || e)
    }
 
    if (cacheData.videoContentType) {

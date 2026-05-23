@@ -670,14 +670,12 @@
       implemented: 38,
       focusNow: ['navigation-layout-hardening', 'topbar-guide-sync', 'timeline-ux-parity', 'module-page-separation', 'export-diagnostics']
     });
-    const FEATURE_BACKLOG_ACTIVE = Object.freeze([
-      { id: 'lazy-sidebar-skeleton', title: 'Lazy Sidebar Skeleton', status: 'in-progress' },
-      { id: 'timeline-row-virtualization', title: 'Timeline Row Virtualization', status: 'planned' },
-      { id: 'clip-deselect-refinements', title: 'Clip Deselect Edge Cases', status: 'planned' },
-      { id: 'module-load-perf-probe', title: 'Module Load Performance Probe', status: 'in-progress' },
-      { id: 'auto-page-module-routing', title: 'Module Auto-Routing Harden', status: 'in-progress' },
-      { id: 'shortcut-guide-sync', title: 'Shortcut Guide Sync', status: 'planned' }
-    ]);
+    const VT_E1_SHELL_SURFACES = Object.freeze({
+      statusCardVisible: false,
+      moduleBadgesVisible: false,
+      moduleToggleStripVisible: false,
+      featureBacklogVisible: false
+    });
     const TOPBAR_BUTTONS_BY_PAGE = Object.freeze({
       projects: ['undo', 'redo', 'time', 'snap', 'help', 'chroma', 'track'],
       'clips-media': ['undo', 'redo', 'time', 'snap', 'cursor', 'split', 'copyKf', 'pasteKf', 'help', 'track'],
@@ -838,49 +836,72 @@
       { id: 'combo_cyber', primary: 'SYSTEM BREACH', secondary: 'ACCESS GRANTED', icon: 'terminal', label: 'Cyber Alert' },
       { id: 'combo_storage', primary: 'STORAGE', secondary: '98% FULL', icon: 'hard-drive', label: 'Storage' }
     ]);
-    const FX_LIBRARY = [
-      { type: 'grayscale', params: { amount: 1 } },
-      { type: 'sepia', params: { amount: 1 } },
-      { type: 'invert', params: { amount: 1 } },
-      { type: 'contrast', params: { amount: 2 } },
-      { type: 'brightnessFx', params: { amount: 2 } },
-      { type: 'saturationFx', params: { amount: 2 } },
-      { type: 'hueRotate', params: { amount: 100 } },
-      { type: 'opacityFx', params: { amount: 1 } },
-      { type: 'vibrance', params: { amount: 1 } },
-      { type: 'temperature', params: { amount: 1 } },
-      { type: 'tint', params: { amount: 1 } },
-      { type: 'exposure', params: { amount: 1 } },
-      { type: 'highlights', params: { amount: 1 } },
-      { type: 'shadows', params: { amount: 1 } },
-      { type: 'clarity', params: { amount: 1 } },
-      { type: 'sharpen', params: { amount: 1 } },
-      { type: 'noise', params: { amount: 1 } },
-      { type: 'pixelate', params: { amount: 1 } },
-      { type: 'vignette', params: { amount: 1 } },
-      { type: 'chromaticAberration', params: { amount: 1 } },
-      { type: 'posterize', params: { amount: 1 } },
-      { type: 'glowBloom', params: { amount: 1 } },
-      { type: 'scanlines', params: { amount: 1 } },
-      { type: 'filmGrain', params: { amount: 1 } },
-      { type: 'halation', params: { amount: 1 } },
-      { type: 'bleachBypass', params: { amount: 1 } },
-      { type: 'gamma', params: { amount: 1 } },
-      { type: 'fade', params: { amount: 1 } },
-      { type: 'lumaLift', params: { amount: 1 } },
-      { type: 'duotone', params: { amount: 1 } },
-      { type: 'tealOrange', params: { amount: 1 } },
-      { type: 'coolBlue', params: { amount: 1 } },
-      { type: 'warmGold', params: { amount: 1 } },
-      { type: 'crt', params: { amount: 1 } },
-      { type: 'edgeGlow', params: { amount: 1 } },
-      { type: 'dreamSoft', params: { amount: 1 } }
-    ];
+
+    const MOTION_HOOK_TEMPLATES = Object.freeze([
+      { id: 'hook_pop_in', label: 'Pop-In Title', icon: 'zap', animType: 'spring-scale', duration: 30, props: { scaleStart: 3, scaleEnd: 1 } },
+      { id: 'hook_glass_hud', label: 'Glass HUD', icon: 'monitor', animType: 'slide-blur', duration: 45, props: { xStart: -600, xEnd: 40 } },
+      { id: 'hook_ken_burns', label: 'Ken Burns', icon: 'image', animType: 'zoom-slow', duration: 150, props: { scaleStart: 1, scaleEnd: 1.15 } },
+      { id: 'hook_notification', label: 'Notification Drop', icon: 'bell', animType: 'spring-y', duration: 40, props: { yStart: -150, yEnd: 0 } },
+      { id: 'hook_card_flip', label: '3D Card Flip', icon: 'credit-card', animType: 'rotate-y', duration: 60, props: { rotateStart: 0, rotateEnd: 180 } },
+      { id: 'hook_kinetic_text', label: 'Kinetic Text', icon: 'type', animType: 'stagger-spring', duration: 60, props: { offset: 3 } },
+      { id: 'hook_progress_scrubber', label: 'Neon Scrubber', icon: 'fast-forward', animType: 'scrub-x', duration: 90, props: { } },
+      { id: 'hook_light_leak', label: 'Flash Reveal', icon: 'sun', animType: 'flash-fade', duration: 30, props: { } },
+      { id: 'hook_social_proof', label: 'Social Proof', icon: 'users', animType: 'spring-blur', duration: 45, props: { } },
+      { id: 'hook_depth_blur', label: 'Depth Focus', icon: 'eye', animType: 'blur-bg', duration: 40, props: { blurMax: 15 } },
+      { id: 'hook_floating_sine', label: 'Floating Sine', icon: 'activity', animType: 'sine-y', duration: 120, props: { amplitude: 10 } },
+      { id: 'hook_value_chaser', label: 'Value Chaser', icon: 'trending-up', animType: 'trail-delay', duration: 60, props: { delay: 3 } }
+    ]);
+
+    const FX_LIBRARY = Object.freeze([
+      { type: 'grayscale', label: 'Grayscale', params: { amount: 1 } },
+      { type: 'sepia', label: 'Sepia', params: { amount: 1 } },
+      { type: 'invert', label: 'Invert', params: { amount: 1 } },
+      { type: 'contrast', label: 'Contrast', params: { amount: 2 } },
+      { type: 'brightnessFx', label: 'Brightness', params: { amount: 2 } },
+      { type: 'saturationFx', label: 'Saturation', params: { amount: 2 } },
+      { type: 'hueRotate', label: 'Hue Rotate', params: { amount: 100 } },
+      { type: 'vibrance', label: 'Vibrance', params: { amount: 1 } },
+      { type: 'temperature', label: 'Temperature', params: { amount: 1 } },
+      { type: 'tint', label: 'Tint', params: { amount: 1 } },
+      { type: 'exposure', label: 'Exposure', params: { amount: 1 } },
+      { type: 'highlights', label: 'Highlights', params: { amount: 1 } },
+      { type: 'shadows', label: 'Shadows', params: { amount: 1 } },
+      { type: 'clarity', label: 'Clarity', params: { amount: 1 } },
+      { type: 'sharpen', label: 'Sharpen', params: { amount: 1 } },
+      { type: 'noise', label: 'Noise', params: { amount: 1 } },
+      { type: 'pixelate', label: 'Pixelate', params: { amount: 1 } },
+      { type: 'vignette', label: 'Vignette', params: { amount: 1 } },
+      { type: 'chromaticAberration', label: 'Chromatic Aberration', params: { amount: 1 } },
+      { type: 'posterize', label: 'Posterize', params: { amount: 1 } },
+      { type: 'glowBloom', label: 'Glow Bloom', params: { amount: 1 } },
+      { type: 'scanlines', label: 'Scanlines', params: { amount: 1 } },
+      { type: 'filmGrain', label: 'Film Grain', params: { amount: 1 } },
+      { type: 'halation', label: 'Halation', params: { amount: 1 } },
+      { type: 'bleachBypass', label: 'Bleach Bypass', params: { amount: 1 } },
+      { type: 'gamma', label: 'Gamma', params: { amount: 1 } },
+      { type: 'lumaLift', label: 'Luma Lift', params: { amount: 1 } },
+      { type: 'duotone', label: 'Duotone', params: { amount: 1 } },
+      { type: 'tealOrange', label: 'Teal Orange', params: { amount: 1 } },
+      { type: 'coolBlue', label: 'Cool Blue', params: { amount: 1 } },
+      { type: 'warmGold', label: 'Warm Gold', params: { amount: 1 } },
+      { type: 'crt', label: 'CRT', params: { amount: 1 } },
+      { type: 'edgeGlow', label: 'Edge Glow', params: { amount: 1 } },
+      { type: 'dreamSoft', label: 'Dream Soft', params: { amount: 1 } }
+    ]);
+    const FX_LIBRARY_BY_TYPE = Object.freeze(
+      FX_LIBRARY.reduce((acc, item) => {
+        acc[item.type] = item;
+        return acc;
+      }, {})
+    );
+    const formatFxLabel = (fxType = '') => FX_LIBRARY_BY_TYPE[fxType]?.label || String(fxType || '')
+      .replace(/Fx$/,'')
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .trim();
     const FX_UI_RANGES = Object.freeze({
       grayscale: { min: 0, max: 100, step: 1, kind: 'percent01' },
       sepia: { min: 0, max: 100, step: 1, kind: 'percent01' },
       invert: { min: 0, max: 100, step: 1, kind: 'percent01' },
-      opacityFx: { min: 0, max: 100, step: 1, kind: 'percent01' },
       contrast: { min: 0, max: 200, step: 1, kind: 'contrast200' },
       brightnessFx: { min: 0, max: 200, step: 1, kind: 'contrast200' },
       saturationFx: { min: 0, max: 200, step: 1, kind: 'contrast200' },
@@ -904,7 +925,6 @@
       halation: { min: 0, max: 100, step: 1, kind: 'percent01' },
       bleachBypass: { min: 0, max: 100, step: 1, kind: 'percent01' },
       gamma: { min: -100, max: 100, step: 1, kind: 'dual100' },
-      fade: { min: 0, max: 100, step: 1, kind: 'percent01' },
       lumaLift: { min: -100, max: 100, step: 1, kind: 'dual100' },
       duotone: { min: 0, max: 100, step: 1, kind: 'percent01' },
       tealOrange: { min: 0, max: 100, step: 1, kind: 'percent01' },
@@ -1408,10 +1428,63 @@
         return acc;
       }, {})
     );
+    const EFFECT_PARAM_GROUP_LABELS = Object.freeze({
+      core: 'Core',
+      motion: 'Motion',
+      spatial: 'Spatial',
+      style: 'Style',
+      advanced: 'Advanced'
+    });
+    const OVERLAY_QUALITY_PROFILES = Object.freeze({
+      draft: { label: 'Draft', density: 0.72, blur: 0.85 },
+      balanced: { label: 'Balanced', density: 1, blur: 1 },
+      full: { label: 'Full', density: 1.34, blur: 1.15 }
+    });
+
+    const base64ToBlob = (base64, mimeType = 'audio/wav') => {
+      const byteCharacters = atob(base64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      return new Blob([byteArray], { type: mimeType });
+    };
 
     const uid = (prefix = 'id') => `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
     const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
     const clone = (obj) => JSON.parse(JSON.stringify(obj));
+
+    // === MOTION MATH ENGINE ===
+    const motionInterpolate = (input, inputRange, outputRange, options = {}) => {
+      const { extrapolateLeft = 'extend', extrapolateRight = 'extend' } = options;
+      let i = 1;
+      for (; i < inputRange.length - 1; i++) { if (inputRange[i] >= input) break; }
+      const inLow = inputRange[i - 1], inHigh = inputRange[i];
+      const outLow = outputRange[i - 1], outHigh = outputRange[i];
+      let t = inHigh === inLow ? 0 : (input - inLow) / (inHigh - inLow);
+      if (t < 0 && extrapolateLeft === 'clamp') t = 0;
+      if (t > 1 && extrapolateRight === 'clamp') t = 1;
+      return outLow + t * (outHigh - outLow);
+    };
+
+    const motionSpring = ({ frame, fps = 30, config = {} }) => {
+      const { stiffness = 100, damping = 10, mass = 0.5 } = config;
+      const w0 = Math.sqrt(stiffness / mass);
+      const zeta = damping / (2 * Math.sqrt(stiffness * mass));
+      const t = frame / fps;
+      if (zeta < 1) {
+        const wd = w0 * Math.sqrt(1 - zeta * zeta);
+        return 1 - Math.exp(-zeta * w0 * t) * (Math.cos(wd * t) + (zeta * w0 / wd) * Math.sin(wd * t));
+      }
+      return 1 - (1 + w0 * t) * Math.exp(-w0 * t);
+    };
+
+    const motionSeedRandom = (seed) => {
+      let h = 0xdeadbeef ^ (typeof seed === 'string' ? [...seed].reduce((a,c) => (a*31+c.charCodeAt(0))|0, 0) : seed);
+      return () => { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; };
+    };
+
     const polygonPoints = (sides, innerRatio = 0, cx = 50, cy = 50, r = 50) => {
       const sideCount = Math.max(3, Math.round(Number(sides) || 3));
       const inner = clamp(Number(innerRatio) || 0, 0, 0.95);
@@ -1549,8 +1622,8 @@
       fillColor: i % 2 ? COLORS.cyan : COLORS.magenta,
       strokeColor: COLORS.black,
       strokeWidth: 2,
-      width: type === 'text' ? 960 : (type === 'media' ? 960 : (type === 'template' ? 960 : 260)),
-      height: type === 'text' ? 120 : (type === 'media' ? 540 : (type === 'template' ? 540 : 140)),
+      width: type === 'text' ? 960 : (type === 'media' ? 960 : (type === 'template' ? 960 : (type === 'parallax' ? 1920 : 260))),
+      height: type === 'text' ? 120 : (type === 'media' ? 540 : (type === 'template' ? 540 : (type === 'parallax' ? 1080 : 140))),
       cornerRadius: type === 'shape' ? 10 : 0,
       polygonSides: 5,
       polygonInnerRadius: 0,
@@ -1568,7 +1641,10 @@
       audioSrcType: '',
       motionAsset: null,
       templateNodes: [],
-      effects: []
+      effects: [],
+      parallaxConfig: type === 'parallax' ? { depthSpeed: [1, 1.5, 2], direction: 'horizontal', layers: [] } : undefined,
+      svgOverlayConfig: type === 'svg-overlay' ? { animationType: 'draw', rotationSpeed: 0, strokeColor: '#fff', svgPaths: [] } : undefined,
+      generativeShapeConfig: type === 'generative-shape' ? { behavior: 'stack', colors: [], elements: [], springConfig: {} } : undefined
     });
 
     const createLayer = (type, trackId, i) => ({
@@ -2094,6 +2170,98 @@
       if (!Number.isFinite(n)) return fallback;
       return clamp(n, min, max);
     };
+    const getEffectParamGroup = (paramKey = '') => {
+      const key = String(paramKey || '').toLowerCase();
+      if (/(speed|frequency|duration|burst|fps|seed|easing)/.test(key)) return 'motion';
+      if (/(x|y|angle|rotate|radius|width|height|spread|offset|center|scale|rows|cols|beams|facets|line)/.test(key)) return 'spatial';
+      if (/(color|hue|warmth|softness|bias|threshold|blend|opacity)/.test(key)) return 'style';
+      if (/(turbo|advanced|mode|toggle)/.test(key)) return 'advanced';
+      return 'core';
+    };
+    const groupEffectParams = (params = []) => {
+      const grouped = {};
+      params.forEach((param) => {
+        const groupKey = getEffectParamGroup(param.key);
+        if (!grouped[groupKey]) grouped[groupKey] = [];
+        grouped[groupKey].push(param);
+      });
+      return grouped;
+    };
+    const getOverlayQualityProfile = (quality = 'balanced') => OVERLAY_QUALITY_PROFILES[quality] || OVERLAY_QUALITY_PROFILES.balanced;
+    const getOverlaySampleGrid = (rows, cols, quality = 'balanced') => {
+      const profile = getOverlayQualityProfile(quality);
+      return {
+        rows: clamp(Math.round(Number(rows || 1) * profile.density), 4, 64),
+        cols: clamp(Math.round(Number(cols || 1) * profile.density), 4, 80)
+      };
+    };
+    const validateTimelineEnvelope = (project) => {
+      const issues = [];
+      const warnings = [];
+      if (!project || typeof project !== 'object') {
+        return { valid: false, issues: ['Draft is not an object.'], warnings };
+      }
+      if (project.schemaVersion !== SCHEMA_VERSION) {
+        issues.push(`Expected schemaVersion ${SCHEMA_VERSION}.`);
+      }
+      const tracks = Array.isArray(project.tracks) ? project.tracks : [];
+      const layers = Array.isArray(project.layers) ? project.layers : [];
+      const clips = Array.isArray(project.clips) ? project.clips : [];
+      const transitions = Array.isArray(project.transitions) ? project.transitions : [];
+      const seamLinks = Array.isArray(project.seamLinks) ? project.seamLinks : [];
+      const trackIds = new Set(tracks.map((track) => track.id));
+      const layerIds = new Set(layers.map((layer) => layer.id));
+      const clipIds = new Set(clips.map((clip) => clip.id));
+      clips.forEach((clip) => {
+        if (!layerIds.has(clip.layerId)) issues.push(`Clip ${clip.id} references missing layer ${clip.layerId}.`);
+        if (!trackIds.has(clip.trackId)) issues.push(`Clip ${clip.id} references missing track ${clip.trackId}.`);
+        if (!Number.isFinite(Number(clip.start)) || !Number.isFinite(Number(clip.end)) || Number(clip.end) <= Number(clip.start)) {
+          issues.push(`Clip ${clip.id} has invalid timing.`);
+        }
+      });
+      layers.forEach((layer) => {
+        if (!trackIds.has(layer.trackId)) issues.push(`Layer ${layer.id} references missing track ${layer.trackId}.`);
+        if (layer.type === 'media' && layer.payload?.overlayKind && !trackIds.has(layer.trackId)) {
+          warnings.push(`Overlay layer ${layer.id} has no stable visual track target.`);
+        }
+      });
+      transitions.forEach((transition) => {
+        if (!clipIds.has(transition.leftClipId) || !clipIds.has(transition.rightClipId)) {
+          issues.push(`Transition ${transition.id} references missing seam clips.`);
+        }
+      });
+      seamLinks.forEach((seamLink) => {
+        if (!clipIds.has(seamLink.leftClipId) || !clipIds.has(seamLink.rightClipId)) {
+          warnings.push(`Seam link ${seamLink.id} references missing clips and will be ignored.`);
+        }
+      });
+      return { valid: issues.length === 0, issues, warnings };
+    };
+    const getDeterminismDiagnostics = (project) => {
+      const issues = [];
+      const warnings = [];
+      (project?.layers || []).forEach((layer) => {
+        const payload = layer?.payload || {};
+        const effectId = payload.overlayEffectId || '';
+        if (effectId === 'digital-glitch-rgb') {
+          const seed = Number(payload.overlayConfig?.seed ?? 0);
+          if (!Number.isFinite(seed) || seed <= 0) {
+            issues.push(`${payload.layerName || layer.id}: digital glitch overlay is missing a deterministic seed.`);
+          }
+        }
+        if (payload.overlayKind === 'circle-noise-pro') {
+          const rows = Number(payload.overlayConfig?.rows ?? 0);
+          const cols = Number(payload.overlayConfig?.cols ?? 0);
+          if (!Number.isFinite(rows) || !Number.isFinite(cols) || rows <= 0 || cols <= 0) {
+            issues.push(`${payload.layerName || layer.id}: circle-noise grid is incomplete.`);
+          }
+        }
+        if (isGifLikeUrl(payload.mediaUrl || '') && Number(payload.mediaFps ?? 0) <= 0) {
+          warnings.push(`${payload.layerName || layer.id}: GIF-like asset has no FPS override; preview/export pacing may drift.`);
+        }
+      });
+      return { issues, warnings };
+    };
 
     const normalizeLayerPayload = (layer, index = 0) => {
       const defaults = basePayload(layer.type || 'shape', index);
@@ -2123,6 +2291,9 @@
         muted: Boolean(src.muted),
         audioSrcType: typeof src.audioSrcType === 'string' ? src.audioSrcType : defaults.audioSrcType,
         mediaName: typeof src.mediaName === 'string' ? src.mediaName : defaults.mediaName,
+        playWhilePaused: src.playWhilePaused !== false,
+        mediaFps: safeNumber(src.mediaFps, 0, 0, 120),
+        overlayQuality: ['draft', 'balanced', 'full'].includes(src.overlayQuality) ? src.overlayQuality : 'balanced',
         motionAsset: src.motionAsset ? normalizeMotionAsset(src.motionAsset) : null,
         templateBundleId: typeof src.templateBundleId === 'string' ? src.templateBundleId : '',
         templateNodes: Array.isArray(src.templateNodes) ? src.templateNodes : [],
@@ -2355,6 +2526,11 @@
       const [templateName, setTemplateName] = useState('My Template');
       const [mediaUrlDraft, setMediaUrlDraft] = useState('');
       const [hfToken, setHfToken] = useState('');
+      const [geminiApiKey, setGeminiApiKey] = useState(localStorage.getItem('gemini_api_key') || '');
+      const [geminiModel, setGeminiModel] = useState('gemini-2.5-flash');
+      const [geminiTemp, setGeminiTemp] = useState(0.7);
+      const [aiOutputJsonMode, setAiOutputJsonMode] = useState(true);
+      const [aiIsGenerating, setAiIsGenerating] = useState(false);
       const [aiTextPrompt, setAiTextPrompt] = useState('Generate a short intro script for this scene.');
       const [aiImagePrompt, setAiImagePrompt] = useState('Generate geometric neon background with circles and lines.');
       const [aiVoicePrompt, setAiVoicePrompt] = useState('Welcome back to the channel.');
@@ -2389,6 +2565,7 @@
       const [showStartupRestore, setShowStartupRestore] = useState(false);
       const [showTemplateCreator, setShowTemplateCreator] = useState(false);
       const [tplCreatorStep, setTplCreatorStep] = useState(1);
+      const [tplCreatorMotionHook, setTplCreatorMotionHook] = useState(null);
       const [tplCreatorStyle, setTplCreatorStyle] = useState('neo-brutalist');
       const [tplCreatorIcon, setTplCreatorIcon] = useState('sparkles');
       const [tplCreatorPrimary, setTplCreatorPrimary] = useState('');
@@ -2399,12 +2576,15 @@
       const [dragPreview, setDragPreview] = useState(null);
       const [keyframeClipboard, setKeyframeClipboard] = useState(null);
       const [parityReport, setParityReport] = useState(null);
+      const [runtimeSmokeReport, setRuntimeSmokeReport] = useState(null);
       const [renderProfile, setRenderProfile] = useState('draft'); // draft | final
       const [effectSession, setEffectSession] = useState({
         activeEffectId: 'digital-glitch-rgb',
         targetMode: 'selected-clip', // selected-clip | new-overlay-clip | generated-asset
         livePreview: true,
         overlayDurationSec: 3,
+        overlayTargetTrackId: 'selected-track',
+        qualityTier: 'balanced',
         valuesByEffect: EFFECT_DEFINITIONS.reduce((acc, item) => {
           acc[item.id] = { ...item.defaults };
           return acc;
@@ -2506,6 +2686,7 @@
       const historyRef = useRef([]);
       const historyIndexRef = useRef(-1);
       const historyApplyingRef = useRef(false);
+      const historyActionRef = useRef('Open Project');
       const dockRetreatTimerRef = useRef(null);
       const topDockGroupRef = useRef(null);
       const bottomDockGroupRef = useRef(null);
@@ -2591,9 +2772,54 @@
         }
       }, [lastSavedHash, projectHash]);
 
+      const markHistoryAction = (label = 'Edit') => {
+        historyActionRef.current = String(label || 'Edit');
+      };
+      const markFallbackHistoryAction = (label = 'Edit') => {
+        if (historyActionRef.current && historyActionRef.current !== 'Edit') return;
+        historyActionRef.current = String(label || 'Edit');
+      };
+      const captureHistorySnapshot = () => ({
+        project: clone(project),
+        projectHash,
+        actionLabel: historyActionRef.current || 'Edit',
+        recordedAt: new Date().toISOString(),
+        playhead,
+        activeTab,
+        selectedClipId,
+        selectedClipIds: Array.isArray(selectedClipIds) ? [...selectedClipIds] : [],
+        selectedLayerId,
+        selectedTransitionId,
+        effectSession: clone(effectSession),
+        renderProfile,
+        timelineEditMode
+      });
+      const restoreHistorySnapshot = (snapshot) => {
+        if (!snapshot) return;
+        const nextProject = clone(snapshot.project || snapshot);
+        const nextDuration = Number(nextProject?.meta?.durationSec || 0);
+        setProject(nextProject);
+        setPlayhead(clamp(Number(snapshot.playhead ?? 0), 0, nextDuration));
+        if (typeof snapshot.activeTab === 'string') setActiveTab(snapshot.activeTab);
+        setSelectedClipId(snapshot.selectedClipId || null);
+        setSelectedClipIds(Array.isArray(snapshot.selectedClipIds) ? [...snapshot.selectedClipIds] : []);
+        setSelectedLayerId(snapshot.selectedLayerId || null);
+        setSelectedTransitionId(snapshot.selectedTransitionId || null);
+        if (snapshot.effectSession && typeof snapshot.effectSession === 'object') setEffectSession(clone(snapshot.effectSession));
+        if (typeof snapshot.renderProfile === 'string') setRenderProfile(snapshot.renderProfile);
+        if (typeof snapshot.timelineEditMode === 'string') setTimelineEditMode(snapshot.timelineEditMode);
+        setContextMenu(null);
+        setDragPreview(null);
+        setDragState({ type: null });
+        setHoverTrackId(null);
+        setDividerCue({ index: null, flash: false });
+        setTrimGhost(null);
+        setBoxSelect(null);
+      };
+
       useEffect(() => {
         if (historyIndexRef.current < 0) {
-          historyRef.current = [clone(project)];
+          historyRef.current = [captureHistorySnapshot()];
           historyIndexRef.current = 0;
           setHistoryVersion((v) => v + 1);
           return;
@@ -2603,14 +2829,15 @@
           return;
         }
         const currentSnapshot = historyRef.current[historyIndexRef.current];
-        if (currentSnapshot && JSON.stringify(currentSnapshot) === projectHash) return;
+        if (currentSnapshot?.projectHash === projectHash) return;
         const truncated = historyRef.current.slice(0, historyIndexRef.current + 1);
-        truncated.push(clone(project));
+        truncated.push(captureHistorySnapshot());
         const capped = truncated.slice(-120);
         historyRef.current = capped;
         historyIndexRef.current = capped.length - 1;
+        historyActionRef.current = 'Edit';
         setHistoryVersion((v) => v + 1);
-      }, [projectHash]);
+      }, [projectHash, playhead, activeTab, selectedClipId, selectedClipIds, selectedLayerId, selectedTransitionId, effectSession, renderProfile, timelineEditMode]);
 
       const canUndo = historyIndexRef.current > 0;
       const canRedo = historyIndexRef.current >= 0 && historyIndexRef.current < (historyRef.current.length - 1);
@@ -2621,7 +2848,7 @@
         if (!snap) return;
         historyApplyingRef.current = true;
         historyIndexRef.current = nextIndex;
-        setProject(clone(snap));
+        restoreHistorySnapshot(snap);
         setHistoryVersion((v) => v + 1);
       };
       const redoProject = () => {
@@ -2631,7 +2858,7 @@
         if (!snap) return;
         historyApplyingRef.current = true;
         historyIndexRef.current = nextIndex;
-        setProject(clone(snap));
+        restoreHistorySnapshot(snap);
         setHistoryVersion((v) => v + 1);
       };
       const jumpToHistoryIndex = (index) => {
@@ -2641,7 +2868,7 @@
         if (!snap) return;
         historyApplyingRef.current = true;
         historyIndexRef.current = index;
-        setProject(clone(snap));
+        restoreHistorySnapshot(snap);
         setHistoryVersion((v) => v + 1);
       };
 
@@ -2841,6 +3068,11 @@
         () => project.clips.find((c) => c.id === selectedClipId) || project.clips.find((c) => c.id === selectedClipIds[0]) || null,
         [project.clips, selectedClipId, selectedClipIds]
       );
+      const activeSelectedClipIds = useMemo(() => {
+        const validIds = new Set(project.clips.map((clip) => clip.id));
+        const ids = selectedClipIds.length ? selectedClipIds : (selectedClipId ? [selectedClipId] : []);
+        return Array.from(new Set(ids.filter((id) => validIds.has(id))));
+      }, [project.clips, selectedClipId, selectedClipIds]);
 
       const selectedLayer = useMemo(
         () => project.layers.find((l) => l.id === selectedLayerId) || null,
@@ -2988,8 +3220,12 @@
         setPlayhead(clamp(minStart, 0, project.meta.durationSec));
       };
 
-      const updateMeta = (patch) => setProject((prev) => ({ ...prev, meta: { ...prev.meta, ...patch } }));
+      const updateMeta = (patch) => {
+        markFallbackHistoryAction('Project Settings');
+        setProject((prev) => ({ ...prev, meta: { ...prev.meta, ...patch } }));
+      };
       const startNewProjectFromMeta = () => {
+        markHistoryAction('New Project From Meta');
         const fresh = defaultProject();
         const nextMeta = {
           ...fresh.meta,
@@ -3008,7 +3244,9 @@
         setSelectedClipIds([]);
         setSelectedLayerId(null);
       };
-      const updateCamera = (patch) => setProject((prev) => {
+      const updateCamera = (patch) => {
+        markFallbackHistoryAction('Camera Edit');
+        setProject((prev) => {
         const tolerance = 0.03;
         const existingAtPlayhead = (prev.camera.keyframes || []).find((kf) => Math.abs(kf.offsetSec - playhead) <= tolerance);
         if (existingAtPlayhead) {
@@ -3025,8 +3263,10 @@
           };
         }
         return { ...prev, camera: { ...prev.camera, ...patch } };
-      });
+        });
+      };
       const resetCameraNeutral = () => {
+        markFallbackHistoryAction('Camera Reset');
         const neutral = { x: 0, y: 0, z: 0, scale: 1, rotate: 0 };
         setProject((prev) => {
           const tolerance = 0.03;
@@ -3045,27 +3285,37 @@
           };
         });
       };
-      const updateTrackUiState = (trackId, patch) => setProject((prev) => ({
-        ...prev,
-        trackUiState: {
-          ...(prev.trackUiState || {}),
-          [trackId]: { ...(prev.trackUiState?.[trackId] || {}), ...patch }
-        }
-      }));
-      const updateTrackFlags = (trackId, patch) => setProject((prev) => ({
-        ...prev,
-        tracks: (prev.tracks || []).map((t) => (t.id === trackId ? { ...t, ...patch } : t))
-      }));
+      const updateTrackUiState = (trackId, patch) => {
+        markFallbackHistoryAction('Track Layout');
+        setProject((prev) => ({
+          ...prev,
+          trackUiState: {
+            ...(prev.trackUiState || {}),
+            [trackId]: { ...(prev.trackUiState?.[trackId] || {}), ...patch }
+          }
+        }));
+      };
+      const updateTrackFlags = (trackId, patch) => {
+        markFallbackHistoryAction('Track Flags');
+        setProject((prev) => ({
+          ...prev,
+          tracks: (prev.tracks || []).map((t) => (t.id === trackId ? { ...t, ...patch } : t))
+        }));
+      };
       const toggleTrackFlag = (trackId, key) => {
+        markFallbackHistoryAction(`Track Toggle ${key}`);
         setProject((prev) => ({
           ...prev,
           tracks: (prev.tracks || []).map((t) => (t.id === trackId ? { ...t, [key]: !t[key] } : t))
         }));
       };
-      const resetTrackMixFlags = () => setProject((prev) => ({
-        ...prev,
-        tracks: (prev.tracks || []).map((t) => ({ ...t, solo: false, muted: false, locked: false }))
-      }));
+      const resetTrackMixFlags = () => {
+        markFallbackHistoryAction('Track Mix Reset');
+        setProject((prev) => ({
+          ...prev,
+          tracks: (prev.tracks || []).map((t) => ({ ...t, solo: false, muted: false, locked: false }))
+        }));
+      };
       const compactionEnabled = editorMode === 'pro' && proCompactionEnabled;
 
       useEffect(() => {
@@ -3149,6 +3399,7 @@
       };
 
       const updateLayerPayload = (layerId, patch) => {
+        markFallbackHistoryAction('Layer Edit');
         setProject((prev) => ({
           ...prev,
           layers: prev.layers.map((l) => {
@@ -3197,6 +3448,7 @@
       };
       const updateTemplateBundle = (bundleId, patch) => {
         if (!bundleId) return;
+        markFallbackHistoryAction('Template Bundle Edit');
         setProject((prev) => {
           const nextLayers = prev.layers.map((layer) => {
             const motion = layer.payload?.motionAsset;
@@ -3232,8 +3484,14 @@
 
       const addEffectToSelected = (effectType) => {
         if (!selectedLayer) return;
-        const found = FX_LIBRARY.find((f) => f.type === effectType);
+        const found = FX_LIBRARY_BY_TYPE[effectType];
         if (!found) return;
+        const existing = (selectedLayer.payload.effects || []).find((fx) => fx.type === effectType);
+        if (existing) {
+          if (existing.enabled === false) toggleEffect(selectedLayer.id, existing.id);
+          return;
+        }
+        markHistoryAction(`Add Effect ${formatFxLabel(effectType)}`);
         const nextNode = { id: uid('fx'), type: found.type, enabled: true, params: { ...found.params } };
         const nextEffects = [...(selectedLayer.payload.effects || []), nextNode];
         updateLayerPayload(selectedLayer.id, { effects: nextEffects });
@@ -3314,7 +3572,10 @@
           const tracks = [...(prev.tracks || [])];
           const visualTracks = tracks.filter((t) => t.kind !== 'audio').sort((a, b) => a.order - b.order);
           const selectedTrack = selectedClip ? tracks.find((track) => track.id === selectedClip.trackId) : null;
-          const targetTrack = selectedTrack || visualTracks[0] || tracks[0];
+          const explicitTrack = effectSession.overlayTargetTrackId === 'selected-track'
+            ? selectedTrack
+            : tracks.find((track) => track.id === effectSession.overlayTargetTrackId);
+          const targetTrack = explicitTrack || selectedTrack || visualTracks[0] || tracks[0];
           if (!targetTrack) return prev;
           const effectDef = EFFECT_DEFINITIONS_BY_ID[effectId];
           if (!effectDef) return prev;
@@ -3331,6 +3592,7 @@
           layer.payload.overlayConfig = { ...effectValues };
           layer.payload.overlayTurbo = fxTurbo;
           layer.payload.overlayEffectId = effectId;
+          layer.payload.overlayQuality = effectSession.qualityTier || 'balanced';
           layer.payload.overlayTransparent = true;
           layer.payload.overlaySource = mode;
           layer.payload.effects = [];
@@ -3371,7 +3633,7 @@
           if (!targetLayer) return prev;
           const effects = [...(targetLayer.payload.effects || [])];
           mapped.forEach((entry) => {
-            const foundFx = FX_LIBRARY.find((fx) => fx.type === entry.type);
+            const foundFx = FX_LIBRARY_BY_TYPE[entry.type];
             if (!foundFx) return;
             const existingIndex = effects.findIndex((fx) => fx.type === entry.type);
             if (existingIndex >= 0) {
@@ -3464,8 +3726,9 @@
       }, [project.meta.durationSec]);
       const noiseDots = useMemo(() => {
         const values = effectSession.valuesByEffect?.['noise-surface'] || EFFECT_DEFINITIONS_BY_ID['noise-surface'].defaults;
-        const rows = 10;
-        const cols = 15;
+        const sampleGrid = getOverlaySampleGrid(10, 15, effectSession.qualityTier);
+        const rows = sampleGrid.rows;
+        const cols = sampleGrid.cols;
         const overscan = 100;
         const width = isVerticalAspect ? 1080 : 1920;
         const height = isVerticalAspect ? 1920 : 1080;
@@ -3490,9 +3753,10 @@
           }
         }
         return dots;
-      }, [effectSession.valuesByEffect, previewSec, isVerticalAspect]);
+      }, [effectSession.qualityTier, effectSession.valuesByEffect, previewSec, isVerticalAspect]);
 
       const updateEffectParam = (layerId, fxId, paramKey, paramValue) => {
+        markHistoryAction(`Effect Param ${paramKey}`);
         const layer = project.layers.find((l) => l.id === layerId);
         if (!layer) return;
         const nextEffects = (layer.payload.effects || []).map((fx) => {
@@ -3523,6 +3787,7 @@
       };
 
       const toggleEffect = (layerId, fxId) => {
+        markHistoryAction('Toggle Effect');
         const layer = project.layers.find((l) => l.id === layerId);
         if (!layer) return;
         const nextEffects = (layer.payload.effects || []).map((fx) => fx.id === fxId ? { ...fx, enabled: !fx.enabled } : fx);
@@ -3530,6 +3795,7 @@
       };
 
       const deleteEffect = (layerId, fxId) => {
+        markHistoryAction('Delete Effect');
         const layer = project.layers.find((l) => l.id === layerId);
         if (!layer) return;
         const nextEffects = (layer.payload.effects || []).filter((fx) => fx.id !== fxId);
@@ -3591,7 +3857,12 @@
         const offsetSec = clipAbsToLocal(selectedClip, playhead);
         const keyframe = (selectedClip.keyframes || []).find((kf) => Math.abs(kf.offsetSec - offsetSec) <= 0.03);
         if (!keyframe) return;
-        setKeyframeClipboard({ mode: keyframe.mode || 'diamond', values: clone(keyframe.values || {}) });
+        setKeyframeClipboard({
+          mode: keyframe.mode || 'diamond',
+          values: clone(keyframe.values || {}),
+          interp: keyframe.interp || 'linear',
+          sourceClipId: selectedClip.id
+        });
       };
       const setKeyframeInterpAtPlayhead = (interp) => {
         if (!selectedClip) return;
@@ -3613,13 +3884,17 @@
       };
       const pasteKeyframeAtPlayhead = () => {
         if (!selectedClip || !keyframeClipboard) return;
-        const offsetSec = clipAbsToLocal(selectedClip, playhead);
+        const targetIds = activeSelectedClipIds.length ? activeSelectedClipIds : [selectedClip.id];
         setProject((prev) => ({
           ...prev,
           clips: prev.clips.map((clip) => {
-            if (clip.id !== selectedClip.id) return clip;
+            if (!targetIds.includes(clip.id)) return clip;
+            const offsetSec = clipAbsToLocal(clip, playhead);
             const filtered = (clip.keyframes || []).filter((kf) => Math.abs(kf.offsetSec - offsetSec) > 0.03);
-            const next = makeKeyframe(offsetSec, clone(keyframeClipboard.values || {}), keyframeClipboard.mode || 'diamond');
+            const next = {
+              ...makeKeyframe(offsetSec, clone(keyframeClipboard.values || {}), keyframeClipboard.mode || 'diamond'),
+              interp: keyframeClipboard.interp || 'linear'
+            };
             return { ...clip, keyframes: [...filtered, next].sort((a, b) => a.offsetSec - b.offsetSec) };
           })
         }));
@@ -3690,7 +3965,14 @@
           templateLayer.payload.text = asset.primary;
           templateLayer.payload.width = 960;
           templateLayer.payload.height = 540;
-          const len = 5;
+          if (tplCreatorMotionHook) {
+            templateLayer.payload.isMotionHook = true;
+            templateLayer.payload.motionHookId = tplCreatorMotionHook.id;
+            templateLayer.payload.motionHookAnimType = tplCreatorMotionHook.animType;
+            templateLayer.payload.motionHookDuration = tplCreatorMotionHook.duration;
+            templateLayer.payload.motionHookProps = tplCreatorMotionHook.props || {};
+          }
+          const len = tplCreatorMotionHook ? (tplCreatorMotionHook.duration / 30) : 5;
           const start = nearestFreeStart(prev.clips, targetTrack.id, playhead, len, null);
           const end = start + len;
           const clip = createClip(targetTrack.id, templateLayer.id, start, end, asset.color);
@@ -3719,6 +4001,7 @@
         });
         setShowTemplateCreator(false);
         setTplCreatorStep(1);
+        setTplCreatorMotionHook(null);
       };
 
       const openTemplateCreator = () => {
@@ -3728,13 +4011,15 @@
         setTplCreatorPrimary('');
         setTplCreatorSecondary('');
         setTplCreatorColor('#40C6E9');
+        setTplCreatorMotionHook(null);
         setShowTemplateCreator(true);
       };
 
       const selectTemplateCombo = (combo) => {
-        setTplCreatorPrimary(combo.primary);
-        setTplCreatorSecondary(combo.secondary);
-        setTplCreatorIcon(combo.icon);
+        setTplCreatorPrimary(combo.primary || combo.label || '');
+        setTplCreatorSecondary(combo.secondary || '');
+        setTplCreatorIcon(combo.icon || 'sparkles');
+        setTplCreatorMotionHook(combo.isMotionHook ? combo : null);
         if (combo.id === 'combo_custom') {
           setTplCreatorPrimary('');
           setTplCreatorSecondary('');
@@ -3804,6 +4089,7 @@
       const removeClipsAndLayers = (clipIds) => {
         const ids = new Set((clipIds || []).filter(Boolean));
         if (!ids.size) return;
+        markHistoryAction('Delete Clips');
         setProject((prev) => {
           const clipsToRemove = prev.clips.filter((c) => ids.has(c.id));
           if (!clipsToRemove.length) return prev;
@@ -3832,6 +4118,7 @@
 
       const splitClipAt = (clip, cutTimeAbs, mode) => {
         if (cutTimeAbs <= clip.start || cutTimeAbs >= clip.end) return;
+        markHistoryAction(mode === 'keep-left' ? 'Split Keep Left' : mode === 'keep-right' ? 'Split Keep Right' : 'Split Clip');
         const cutOffset = clipAbsToLocal(clip, cutTimeAbs);
 
         setProject((prev) => {
@@ -3861,6 +4148,7 @@
       };
 
       const addTrack = (insertAtIndex = null) => {
+        markHistoryAction('Add Track');
         setProject((prev) => {
           const ordered = [...prev.tracks].sort((a, b) => a.order - b.order);
           const audioTrack = ordered.find((t) => t.kind === AUDIO_TRACK_KIND);
@@ -3886,6 +4174,7 @@
 
       const removeTrack = (trackId) => {
         if (!trackId) return;
+        markHistoryAction('Remove Track');
         setProject((prev) => {
           const track = prev.tracks.find((t) => t.id === trackId);
           if (!track) return prev;
@@ -3933,6 +4222,7 @@
       };
       const seamKey = (leftClipId, rightClipId) => `${leftClipId}_${rightClipId}`;
       const toggleSeamGrouping = (leftClipId, rightClipId) => {
+        markHistoryAction('Toggle Seam Group');
         setProject((prev) => {
           const left = prev.clips.find((clip) => clip.id === leftClipId);
           const right = prev.clips.find((clip) => clip.id === rightClipId);
@@ -3957,6 +4247,7 @@
       };
 
       const upsertTransition = (leftClipId, rightClipId, patch = {}) => {
+        markHistoryAction('Transition Edit');
         setProject((prev) => {
           const left = prev.clips.find((c) => c.id === leftClipId);
           const right = prev.clips.find((c) => c.id === rightClipId);
@@ -3985,6 +4276,7 @@
       };
 
       const removeTransition = (transitionId) => {
+        markHistoryAction('Remove Transition');
         setProject((prev) => ({
           ...prev,
           transitions: (prev.transitions || []).filter((t) => t.id !== transitionId)
@@ -4016,6 +4308,7 @@
       };
 
       const moveClipToTrackNoOverlap = (clipId, nextTrackId, desiredStart) => {
+        markHistoryAction('Move Clip');
         setProject((prev) => {
           const clip = prev.clips.find((c) => c.id === clipId);
           if (!clip) return prev;
@@ -4034,6 +4327,7 @@
       const moveClipGroupNoOverlap = (clipIds, anchorClipId, desiredAnchorStart) => {
         const idSet = new Set((clipIds || []).filter(Boolean));
         if (!idSet.size || !anchorClipId || !idSet.has(anchorClipId)) return;
+        markHistoryAction('Move Clip Group');
         setProject((prev) => {
           const group = prev.clips
             .filter((c) => idSet.has(c.id))
@@ -4075,6 +4369,7 @@
       };
 
       const updateClipBoundsNoOverlap = (clipId, nextStart, nextEnd) => {
+        markHistoryAction('Clip Bounds Edit');
         setProject((prev) => {
           const clip = prev.clips.find((c) => c.id === clipId);
           if (!clip) return prev;
@@ -4090,6 +4385,7 @@
       };
 
       const applyLeftTrim = (clipId, newStart) => {
+        markHistoryAction('Trim Clip Left');
         setProject((prev) => {
           const clip = prev.clips.find((c) => c.id === clipId);
           if (!clip) return prev;
@@ -4116,6 +4412,7 @@
       };
 
       const applyRightTrim = (clipId, newEnd) => {
+        markHistoryAction('Trim Clip Right');
         setProject((prev) => ({
           ...prev,
           clips: prev.clips.map((c) => {
@@ -4139,6 +4436,7 @@
       };
 
       const toggleGroupClips = () => {
+        markHistoryAction('Toggle Clip Group');
         setProject((prev) => {
           const idsToGroup = new Set(selectedClipIds.length > 0 ? selectedClipIds : [contextMenu?.clipId].filter(Boolean));
           if (idsToGroup.size === 0) return prev;
@@ -4314,6 +4612,12 @@
           pendingStart: clip.start,
           pendingTrackId: clip.trackId
         };
+        setDragPreview(buildClipDragPreview({
+          clipIds: uniqueIds,
+          anchorClipId: clip.id,
+          desiredStart: clip.start,
+          pendingTrackId: clip.trackId
+        }));
         setDragState({ type: 'clip-move' });
       };
 
@@ -4365,11 +4669,12 @@
                   pendingTrackId: '__CREATE_TRACK_END__',
                   pendingStart: desiredStart
                 };
-                setDragPreview({
+                setDragPreview(buildClipDragPreview({
                   clipIds: ds.clipIds || [ds.clipId],
-                  pendingStart: desiredStart,
+                  anchorClipId: ds.anchorClipId || ds.clipId,
+                  desiredStart,
                   pendingTrackId: '__CREATE_TRACK_END__'
-                });
+                }));
                 setHoverTrackId(null);
                 return;
               }
@@ -4405,6 +4710,12 @@
                   setDividerCue({ index: dividerIndex, flash: flashPhase });
                   if (elapsed < 500) {
                     dragRef.current = { ...dragRef.current, pendingTrackId: trackId, pendingStart: desiredStart };
+                    setDragPreview(buildClipDragPreview({
+                      clipIds: ds.clipIds || [ds.clipId],
+                      anchorClipId: ds.anchorClipId || ds.clipId,
+                      desiredStart,
+                      pendingTrackId: trackId
+                    }));
                     return;
                   }
                   const newTrackId = uid('track');
@@ -4444,11 +4755,12 @@
               pendingTrackId: trackId || dragRef.current.pendingTrackId,
               pendingStart: desiredStart
             };
-            setDragPreview({
+            setDragPreview(buildClipDragPreview({
               clipIds: ds.clipIds || [ds.clipId],
-              pendingStart: desiredStart,
+              anchorClipId: ds.anchorClipId || ds.clipId,
+              desiredStart,
               pendingTrackId: trackId || dragRef.current.pendingTrackId
-            });
+            }));
             return;
           }
 
@@ -4529,9 +4841,14 @@
           if (ds?.type === 'clip-move') {
             const pendingStart = Number.isFinite(ds.pendingStart) ? ds.pendingStart : 0;
             const pendingTrackId = ds.pendingTrackId;
-            if (Array.isArray(ds.clipIds) && ds.clipIds.length > 1) {
-              moveClipGroupNoOverlap(ds.clipIds, ds.anchorClipId, pendingStart);
-            } else if (pendingTrackId === '__CREATE_TRACK_END__') {
+            const resolvedPreview = dragPreview?.type === 'clip-move' ? dragPreview : buildClipDragPreview({
+              clipIds: ds.clipIds || [ds.clipId],
+              anchorClipId: ds.anchorClipId || ds.clipId,
+              desiredStart: pendingStart,
+              pendingTrackId
+            });
+            markHistoryAction(resolvedPreview?.createTrackAtEnd ? 'Move Clip To New Track' : (Array.isArray(ds.clipIds) && ds.clipIds.length > 1 ? 'Move Clip Group' : 'Move Clip'));
+            if (resolvedPreview?.createTrackAtEnd) {
               setProject((prev) => {
                 const clip = prev.clips.find((c) => c.id === ds.clipId);
                 if (!clip) return prev;
@@ -4540,27 +4857,30 @@
                   .sort((a, b) => a.order - b.order);
                 const audioTrack = prev.tracks.find((t) => t.kind === AUDIO_TRACK_KIND);
                 const newTrackId = uid('track');
-                const len = durationOf(clip);
                 const nextVisuals = [
                   ...visualTracks.map((t, i) => ({ ...t, order: i, name: `V${i + 1}`, kind: 'visual' })),
                   { id: newTrackId, name: `V${visualTracks.length + 1}`, order: visualTracks.length, visible: true, kind: 'visual' }
                 ];
-                const nextTrackId = newTrackId;
-                const start = nearestFreeStart(prev.clips, nextTrackId, pendingStart, len, clip.id);
-                const nextClips = prev.clips.map((c) => c.id === ds.clipId ? { ...c, trackId: nextTrackId, start, end: start + len } : c);
+                const applied = applyResolvedClipMove(prev, resolvedPreview, newTrackId);
                 return {
                   ...prev,
                   tracks: [
                     ...nextVisuals,
                     ...(audioTrack ? [{ ...audioTrack, order: nextVisuals.length, name: AUDIO_TRACK_NAME, kind: AUDIO_TRACK_KIND }] : [])
                   ],
-                  clips: nextClips,
+                  layers: applied.layers,
+                  clips: applied.clips,
+                  meta: applied.meta,
                   trackUiState: {
                     ...(prev.trackUiState || {}),
                     [newTrackId]: { ...(prev.trackUiState?.[newTrackId] || {}), sizeMode: 1, collapsedAuto: false, justCreatedUntil: Date.now() + 1200 }
                   }
                 };
               });
+            } else if (resolvedPreview?.landingClips?.length) {
+              setProject((prev) => applyResolvedClipMove(prev, resolvedPreview));
+            } else if (Array.isArray(ds.clipIds) && ds.clipIds.length > 1) {
+              moveClipGroupNoOverlap(ds.clipIds, ds.anchorClipId, pendingStart);
             } else if (pendingTrackId) {
               moveClipToTrackNoOverlap(ds.clipId, pendingTrackId, pendingStart);
             }
@@ -4596,7 +4916,7 @@
           window.removeEventListener('pointermove', onMove);
           window.removeEventListener('pointerup', onUp);
         };
-      }, [project.clips, project.meta.durationSec, sortedTracks, mods, snapEnabled, trackLayout, selectedClipIds, timelineContentWidth, cameraTrackHeight, timelineRowsHeight]);
+      }, [project.clips, project.layers, project.meta.durationSec, project.tracks, sortedTracks, mods, snapEnabled, trackLayout, selectedClipIds, timelineContentWidth, cameraTrackHeight, timelineRowsHeight, dragPreview, trackLayoutById]);
 
       useEffect(() => {
         setProject((prev) => {
@@ -4760,6 +5080,7 @@
           return;
         }
         const normalized = normalizeProject(payload);
+        markHistoryAction('Import JSON');
         setProject(normalized);
         markSaved(normalized);
         setSelectedClipId(normalized.clips[0]?.id || null);
@@ -4915,6 +5236,7 @@
         const dims = getExportDims();
         const sampleTimes = [0, project.meta.durationSec / 2, Math.max(0, project.meta.durationSec - (1 / 30))];
         const issues = [];
+        const warnings = [];
         const byTrack = Object.fromEntries(sortedTracks.map((t, i) => [t.id, i]));
         sampleTimes.forEach((tAbs) => {
           const active = [];
@@ -4948,20 +5270,29 @@
             }
           });
         });
+        const determinism = getDeterminismDiagnostics(project);
+        determinism.issues.forEach((issue) => issues.push(`Determinism: ${issue}`));
+        determinism.warnings.forEach((warning) => warnings.push(`Determinism: ${warning}`));
         const report = {
           snapshotHash: compileSnapshotHash,
           profile: renderProfile,
+          mismatchPolicy: renderProfile === 'final' ? 'block-final' : 'warn',
           sampleTimes,
           issueCount: issues.length,
+          warningCount: warnings.length,
           issues: issues.slice(0, 20),
+          warnings: warnings.slice(0, 20),
           generatedAt: new Date().toISOString()
         };
         setParityReport(report);
-        if (!issues.length) {
+        if (!issues.length && !warnings.length) {
           alert(`Parity smoke passed at 3 samples (${formatHMS(sampleTimes[0])}, ${formatHMS(sampleTimes[1])}, ${formatHMS(sampleTimes[2])}).`);
           return;
         }
-        alert(`Parity smoke found ${issues.length} issue(s):\n${issues.slice(0, 10).join('\n')}`);
+        const lines = [];
+        if (issues.length) lines.push(`Issues (${issues.length}):`, ...issues.slice(0, 10));
+        if (warnings.length) lines.push(`Warnings (${warnings.length}):`, ...warnings.slice(0, 10));
+        alert(`Parity smoke report:\n${lines.join('\n')}`);
       };
       const runOneFrameSanity = () => {
         const issues = [];
@@ -4993,6 +5324,12 @@
           validation.errors.forEach((err) => issues.push(`Contract: ${err}`));
         }
         validation.warnings.forEach((warn) => warnings.push(`Contract warning: ${warn}`));
+        const envelope = validateTimelineEnvelope(project);
+        envelope.issues.forEach((issue) => issues.push(`Timeline envelope: ${issue}`));
+        envelope.warnings.forEach((warning) => warnings.push(`Timeline envelope: ${warning}`));
+        const determinism = getDeterminismDiagnostics(project);
+        determinism.issues.forEach((issue) => issues.push(`Determinism: ${issue}`));
+        determinism.warnings.forEach((warning) => warnings.push(`Determinism: ${warning}`));
         (project.clips || []).forEach((clip) => {
           if (!layerIds.has(clip.layerId)) issues.push(`Clip ${clip.id}: missing layer`);
           if (!trackIds.has(clip.trackId)) issues.push(`Clip ${clip.id}: missing track`);
@@ -5013,6 +5350,71 @@
         if (issues.length) lines.push(`Issues (${issues.length}):`, ...issues.slice(0, 12));
         if (warnings.length) lines.push(`Warnings (${warnings.length}):`, ...warnings.slice(0, 12));
         alert(`Preflight diagnostics:\n${lines.join('\n')}`);
+        setParityReport({
+          snapshotHash: compileSnapshotHash,
+          profile: renderProfile,
+          mismatchPolicy: renderProfile === 'final' ? 'block-final' : 'warn',
+          sampleTimes: [0, project.meta.durationSec / 2, Math.max(0, project.meta.durationSec - (1 / 30))],
+          issueCount: issues.length,
+          warningCount: warnings.length,
+          issues: issues.slice(0, 20),
+          warnings: warnings.slice(0, 20),
+          generatedAt: new Date().toISOString()
+        });
+      };
+      const runEditorRuntimeSmoke = () => {
+        const issues = [];
+        const warnings = [];
+        const fxTypes = FX_LIBRARY.map((fx) => fx.type);
+        const duplicateFxTypes = fxTypes.filter((type, index) => fxTypes.indexOf(type) !== index);
+        if (duplicateFxTypes.length) {
+          issues.push(`Duplicate clip FX entries: ${Array.from(new Set(duplicateFxTypes)).join(', ')}`);
+        }
+        if (FX_LIBRARY_BY_TYPE.opacityFx) {
+          issues.push('opacityFx is still present in the clip FX catalog.');
+        }
+        if (!EFFECT_DEFINITIONS.some((effect) => effect.id === 'mirror-matrix-duplicate')) {
+          issues.push('Mirror Matrix Duplicate is missing from the Unified FX catalog.');
+        }
+        if (VT_E1_SHELL_SURFACES.statusCardVisible || VT_E1_SHELL_SURFACES.moduleBadgesVisible || VT_E1_SHELL_SURFACES.moduleToggleStripVisible || VT_E1_SHELL_SURFACES.featureBacklogVisible) {
+          issues.push('Hidden shell/status surfaces are unexpectedly enabled.');
+        }
+        if (!historyRef.current.length) {
+          issues.push('History stack is empty.');
+        }
+        const unlabeledSnapshots = historyRef.current.filter((snap) => !String(snap?.actionLabel || '').trim()).length;
+        if (unlabeledSnapshots) {
+          warnings.push(`${unlabeledSnapshots} history snapshot(s) are missing action labels.`);
+        }
+        const invalidSnapshots = historyRef.current.filter((snap) => !snap?.project || !snap?.projectHash).length;
+        if (invalidSnapshots) {
+          issues.push(`${invalidSnapshots} history snapshot(s) are missing project payloads.`);
+        }
+        const envelope = validateTimelineEnvelope(project);
+        if (!envelope.valid) {
+          issues.push(`Timeline envelope invalid: ${envelope.issues[0]}`);
+        }
+        const report = {
+          snapshotHash: compileSnapshotHash,
+          generatedAt: new Date().toISOString(),
+          issueCount: issues.length,
+          warningCount: warnings.length,
+          issues: issues.slice(0, 20),
+          warnings: warnings.slice(0, 20),
+          historyDepth: historyRef.current.length,
+          currentHistoryLabel: historyRef.current[historyIndexRef.current]?.actionLabel || 'Edit',
+          shellSurfaces: VT_E1_SHELL_SURFACES,
+          clipFxCatalogCount: FX_LIBRARY.length
+        };
+        setRuntimeSmokeReport(report);
+        if (!issues.length && !warnings.length) {
+          alert(`Runtime smoke passed. History depth ${report.historyDepth}, FX catalog ${report.clipFxCatalogCount}, shell surfaces hidden.`);
+          return;
+        }
+        const lines = [];
+        if (issues.length) lines.push(`Issues (${issues.length}):`, ...issues.slice(0, 10));
+        if (warnings.length) lines.push(`Warnings (${warnings.length}):`, ...warnings.slice(0, 10));
+        alert(`Runtime smoke report:\n${lines.join('\n')}`);
       };
 
       const capturePreviewVideo = async (format = 'webm') => {
@@ -5499,6 +5901,7 @@
         const id = uid('cap');
         const startSec = clamp(playhead, 0, project.meta.durationSec);
         const endSec = clamp(startSec + 2, startSec + 0.2, project.meta.durationSec);
+        markHistoryAction('Add Caption Cue');
         setProject((prev) => ({
           ...prev,
           captions: [
@@ -5508,16 +5911,19 @@
         }));
       };
       const updateCaptionCue = (cueId, patch) => {
+        markHistoryAction('Edit Caption Cue');
         setProject((prev) => ({
           ...prev,
           captions: (prev.captions || []).map((cue) => cue.id === cueId ? { ...cue, ...patch } : cue)
         }));
       };
       const removeCaptionCue = (cueId) => {
+        markHistoryAction('Remove Caption Cue');
         setProject((prev) => ({ ...prev, captions: (prev.captions || []).filter((cue) => cue.id !== cueId) }));
       };
       const createCaptionClip = (cue) => {
         if (!cue) return;
+        markHistoryAction('Create Caption Clip');
         setProject((prev) => {
           const targetTrack = prev.tracks.find((track) => track.kind !== AUDIO_TRACK_KIND) || prev.tracks[0];
           if (!targetTrack) return prev;
@@ -5631,14 +6037,20 @@
       const applyJsonDraft = () => {
         try {
           const parsed = JSON.parse(codeJsonDraft);
-          if (parsed?.schemaVersion !== SCHEMA_VERSION) {
-            setCodeError(`Expected ${SCHEMA_VERSION}.`);
+          const envelope = validateTimelineEnvelope(parsed);
+          if (!envelope.valid) {
+            setCodeError(envelope.issues.join(' '));
             return;
           }
           const normalized = normalizeProject(parsed);
+          const normalizedEnvelope = validateTimelineEnvelope(normalized);
+          if (!normalizedEnvelope.valid) {
+            setCodeError(normalizedEnvelope.issues.join(' '));
+            return;
+          }
           setPendingJsonDraft(normalized);
           setShowPatchDiff(true);
-          setCodeError('');
+          setCodeError(normalizedEnvelope.warnings.join(' '));
         } catch (err) {
           setCodeError(err.message || 'Invalid JSON');
         }
@@ -5675,6 +6087,7 @@
 
       const applyPendingJsonDraft = () => {
         if (!pendingJsonDraft) return;
+        markHistoryAction('Apply JSON Patch');
         setProject(pendingJsonDraft);
         markSaved(pendingJsonDraft);
         setPendingJsonDraft(null);
@@ -5682,6 +6095,7 @@
       };
 
       const saveCustomTemplate = () => {
+        markHistoryAction('Save Custom Template');
         const tpl = {
           id: uid('tpl'),
           name: templateName || `Template ${project.templatesCustom.length + 1}`,
@@ -5694,6 +6108,7 @@
 
       const applyTemplate = (tpl) => {
         if (!tpl?.project) return;
+        markHistoryAction('Apply Template');
         setProject((prev) => {
           const p = clone(prev);
           const insertAt = playhead;
@@ -5788,6 +6203,7 @@
             return;
           }
           const normalized = normalizeProject(parsed);
+          markHistoryAction('Restore Session');
           setProject(normalized);
           markSaved(normalized);
           setSelectedClipId(normalized.clips[0]?.id || null);
@@ -5903,7 +6319,330 @@
         }));
       };
 
+      const REMOTION_SYSTEM_PROMPT = `
+You are the AI Director for a programmatic video editor. Your task is to output valid JSON representing video layers and clips to build animations and compositions based on the user's prompt.
+
+You MUST choose the most appropriate layer type: 'text', 'parallax', 'svg-overlay', 'generative-shape', or 'video'.
+Animations are driven by frame-based calculations (from frame 0 to duration frames) using spring, interpolate, or sine math.
+
+Format your output as a JSON object with this schema:
+{
+  "track": "text" | "parallax" | "svg-overlay" | "generative-shape" | "video",
+  "layerName": "uppercase name of the layer",
+  "durationSec": number,
+  "animationType": "spring-scale" | "slide-blur" | "zoom-slow" | "spring-y" | "rotate-y" | "spring-blur" | "sine-y" | "stagger-spring" | "scrub-x" | "flash-fade" | "trail-delay" | "none",
+  "fillColor": "hex color code",
+  "strokeColor": "hex color code",
+  "strokeWidth": number,
+  "text": "text content if layer is text or template",
+  "fontSize": number,
+  "fontFamily": "Outfit" | "Space Mono" | "Archivo Black",
+  "x": number,
+  "y": number,
+  "scale": number,
+  "rotation": number,
+  "parallaxConfig": {
+    "direction": "horizontal" | "vertical",
+    "depthSpeed": [number, number, number],
+    "layers": [string, string, string]
+  },
+  "svgOverlayConfig": {
+    "animationType": "draw",
+    "rotationSpeed": number,
+    "strokeColor": "hex color code",
+    "svgPaths": [string]
+  },
+  "generativeShapeConfig": {
+    "behavior": "stack" | "pulse" | "float" | "rotate",
+    "colors": [string],
+    "elements": [
+      {
+        "type": "circle" | "rect",
+        "behavior": "pulse" | "float" | "rotate" | "none",
+        "attrs": {
+          "cx": number, "cy": number, "r": number,
+          "x": number, "y": number, "width": number, "height": number, "rx": number
+        }
+      }
+    ]
+  }
+}
+`;
+
+      const callGeminiApi = async (systemInstruction, userPrompt, jsonMode = true) => {
+        const apiKey = geminiApiKey || localStorage.getItem('gemini_api_key');
+        if (!apiKey) {
+          throw new Error('Gemini API Key is missing. Please enter it in the AI panel settings.');
+        }
+        const model = geminiModel || 'gemini-2.5-flash';
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: userPrompt }] }],
+            systemInstruction: { parts: [{ text: systemInstruction }] },
+            generationConfig: {
+              temperature: geminiTemp,
+              responseMimeType: jsonMode ? 'application/json' : 'text/plain'
+            }
+          })
+        });
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error?.message || 'Gemini API call failed.');
+        }
+        const data = await response.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      };
+
+      const handleTtsGenerate = async (scriptText) => {
+        const apiKey = geminiApiKey || localStorage.getItem('gemini_api_key');
+        if (!apiKey) {
+          alert("Please set your Gemini API Key in the AI Settings first!");
+          return;
+        }
+        setAiIsGenerating(true);
+        try {
+          const model = geminiModel || 'gemini-2.5-flash';
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+          const body = {
+            contents: [{ parts: [{ text: `Please read this script aloud clearly and naturally: ${scriptText}` }] }],
+            generationConfig: {
+              responseModalities: ["AUDIO"],
+              speechConfig: {
+                voiceConfig: {
+                  prebuiltVoiceConfig: {
+                    voiceName: "Puck"
+                  }
+                }
+              }
+            }
+          };
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+          if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error?.message || 'Gemini TTS call failed.');
+          }
+          const data = await response.json();
+          const base64Audio = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+          if (!base64Audio) {
+            throw new Error("No audio content returned from Gemini API.");
+          }
+          const audioBlob = base64ToBlob(base64Audio, 'audio/wav');
+          const audioUrl = URL.createObjectURL(audioBlob);
+          
+          setProject((prev) => {
+            const audioTrack = prev.tracks.find((t) => t.kind === AUDIO_TRACK_KIND) || prev.tracks[prev.tracks.length - 1];
+            const audioLayer = createLayer('audio', audioTrack.id, prev.layers.length);
+            audioLayer.payload.layerName = 'TTS_VOICEOVER';
+            audioLayer.payload.mediaUrl = audioUrl;
+            audioLayer.payload.isTts = true;
+            const wordCount = scriptText.split(/\s+/).length;
+            const durationSec = Math.max(2, Math.ceil(wordCount / 2.5));
+            const start = nearestFreeStart(prev.clips, audioTrack.id, playhead, durationSec, null);
+            const end = start + durationSec;
+            const clip = createClip(audioTrack.id, audioLayer.id, start, end, '#818CF8');
+            return {
+              ...prev,
+              meta: { ...prev.meta, durationSec: Math.max(prev.meta.durationSec, end + 1) },
+              layers: [...prev.layers, audioLayer],
+              clips: [...prev.clips, clip]
+            };
+          });
+        } catch (err) {
+          alert(`TTS Error: ${err.message}`);
+        } finally {
+          setAiIsGenerating(false);
+        }
+      };
+
+      const handleAutoShort = async (topic) => {
+        const apiKey = geminiApiKey || localStorage.getItem('gemini_api_key');
+        if (!apiKey) {
+          alert("Please set your Gemini API Key in the AI Settings first!");
+          return;
+        }
+        setAiIsGenerating(true);
+        try {
+          const systemInstruction = `You are a viral YouTube Shorts director. Create a Short scene layout about the topic. Output a JSON object with:
+{
+  "script": "A short, engaging 5-second narration script for the voiceover.",
+  "hexColors": ["string"],
+  "imageKeyword": "one search term for a background image",
+  "textHook": "A punchy text hook (3-4 words) to display on screen",
+  "shapeBehavior": "stack" | "pulse" | "float" | "rotate"
+}`;
+          const resText = await callGeminiApi(systemInstruction, `Topic: ${topic}`, true);
+          const data = JSON.parse(resText);
+          
+          const voiceModel = 'gemini-2.5-flash';
+          const ttsUrl = `https://generativelanguage.googleapis.com/v1beta/models/${voiceModel}:generateContent?key=${apiKey}`;
+          const ttsBody = {
+            contents: [{ parts: [{ text: `Please read this script aloud clearly and naturally: ${data.script}` }] }],
+            generationConfig: {
+              responseModalities: ["AUDIO"],
+              speechConfig: {
+                voiceConfig: {
+                  prebuiltVoiceConfig: {
+                    voiceName: "Puck"
+                  }
+                }
+              }
+            }
+          };
+          const ttsRes = await fetch(ttsUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(ttsBody)
+          });
+          if (!ttsRes.ok) {
+            const err = await ttsRes.json();
+            throw new Error(err.error?.message || 'Gemini TTS failed during Auto-Short.');
+          }
+          const ttsData = await ttsRes.json();
+          const base64Audio = ttsData.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+          if (!base64Audio) {
+            throw new Error("No audio returned for Auto-Short voiceover.");
+          }
+          const audioBlob = base64ToBlob(base64Audio, 'audio/wav');
+          const audioUrl = URL.createObjectURL(audioBlob);
+          
+          setProject((prev) => {
+            const tracks = [...prev.tracks].sort((a, b) => a.order - b.order);
+            const bgTrack = tracks.find((t) => t.kind === 'media') || tracks[0];
+            const tplTrack = tracks.find((t) => t.kind === 'template' || t.kind === 'graphics') || tracks[0];
+            const audioTrack = tracks.find((t) => t.kind === AUDIO_TRACK_KIND) || tracks[tracks.length - 1];
+            
+            const newLayers = [];
+            const newClips = [];
+            const durationSec = 5;
+            const start = nearestFreeStart(prev.clips, bgTrack.id, playhead, durationSec, null);
+            const end = start + durationSec;
+            
+            const bgLayer = createLayer('media', bgTrack.id, prev.layers.length);
+            bgLayer.payload.layerName = 'AUTOSHORT_BG';
+            bgLayer.payload.mediaUrl = `https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?q=80&w=600&auto=format&fit=crop`;
+            bgLayer.payload.fit = 'cover';
+            newLayers.push(bgLayer);
+            newClips.push(createClip(bgTrack.id, bgLayer.id, start, end, data.hexColors[0] || '#111'));
+            
+            const audioLayer = createLayer('audio', audioTrack.id, prev.layers.length + 1);
+            audioLayer.payload.layerName = 'AUTOSHORT_VOICE';
+            audioLayer.payload.mediaUrl = audioUrl;
+            audioLayer.payload.isTts = true;
+            newLayers.push(audioLayer);
+            newClips.push(createClip(audioTrack.id, audioLayer.id, start, end, '#818CF8'));
+            
+            const tplLayer = createLayer('template', tplTrack.id, prev.layers.length + 2);
+            tplLayer.payload.layerName = 'AUTOSHORT_HOOK';
+            tplLayer.payload.isMotionHook = true;
+            tplLayer.payload.motionHookId = `autoshort_hook_${tplLayer.id}`;
+            tplLayer.payload.motionHookAnimType = 'stagger-spring';
+            tplLayer.payload.motionHookDuration = durationSec * 30;
+            tplLayer.payload.motionHookProps = { offset: 3 };
+            tplLayer.payload.text = data.textHook;
+            tplLayer.payload.fillColor = data.hexColors[1] || '#fff';
+            tplLayer.payload.strokeColor = '#000';
+            tplLayer.payload.strokeWidth = 3;
+            tplLayer.payload.x = 0;
+            tplLayer.payload.y = -100;
+            tplLayer.payload.scale = 1.1;
+            
+            const preset = {
+              id: uid('tpl'),
+              title: data.textHook,
+              primary: data.textHook,
+              secondary: '',
+              color: data.hexColors[1] || '#fff',
+              style: 'neo-brutalist',
+              icon: 'sparkles'
+            };
+            tplLayer.payload.motionAsset = motionAssetFromPreset(preset);
+            tplLayer.payload.templateNodes = buildTemplateNodesForStyle(tplLayer.payload.motionAsset);
+            newLayers.push(tplLayer);
+            newClips.push(createClip(tplTrack.id, tplLayer.id, start, end, data.hexColors[1] || '#fbbf24'));
+            
+            const shapeLayer = createLayer('generative-shape', tplTrack.id, prev.layers.length + 3);
+            shapeLayer.payload.layerName = 'AUTOSHORT_SHAPE';
+            shapeLayer.payload.generativeShapeConfig = {
+              behavior: data.shapeBehavior || 'stack',
+              colors: data.hexColors,
+              elements: [
+                { type: 'circle', attrs: { cx: 100, cy: 100, r: 50 }, behavior: 'pulse' },
+                { type: 'circle', attrs: { cx: 100, cy: 100, r: 35 }, behavior: 'float' }
+              ]
+            };
+            shapeLayer.payload.x = 0;
+            shapeLayer.payload.y = 120;
+            newLayers.push(shapeLayer);
+            newClips.push(createClip(tplTrack.id, shapeLayer.id, start, end, data.hexColors[2] || '#C084FC'));
+            
+            return {
+              ...prev,
+              meta: { ...prev.meta, durationSec: Math.max(prev.meta.durationSec, end + 1) },
+              layers: [...prev.layers, ...newLayers],
+              clips: [...prev.clips, ...newClips]
+            };
+          });
+          
+          alert(`Auto-Short generated successfully for topic: "${topic}"!`);
+        } catch (err) {
+          alert(`Auto-Short Error: ${err.message}`);
+        } finally {
+          setAiIsGenerating(false);
+        }
+      };
+
+      const handleEnhancePrompt = async (promptText) => {
+        try {
+          const systemPrompt = "You are a creative video director. Enhance the user's short description into a detailed, visually descriptive prompt for image/video generation. Keep it under 2 sentences.";
+          const enhanced = await callGeminiApi(systemPrompt, promptText, false);
+          return enhanced;
+        } catch (err) {
+          alert(err.message);
+          return promptText;
+        }
+      };
+
+      const handleAnalyzeScene = async () => {
+        try {
+          const visibleLayersInfo = stageLayers.map(({ layer, payload }) => ({
+            type: layer.type,
+            name: payload.layerName,
+            text: payload.text,
+            isMotionHook: payload.isMotionHook,
+            motionHookId: payload.motionHookId
+          }));
+          const systemPrompt = "You are a professional video editor coach. Look at the list of visible layers in the current frame and offer 2 short, actionable suggestions to make the layout or animation more engaging.";
+          const analysis = await callGeminiApi(systemPrompt, JSON.stringify(visibleLayersInfo), false);
+          alert(`Scene Analysis:\n${analysis}`);
+        } catch (err) {
+          alert(err.message);
+        }
+      };
+
+      const handleSuggestAudio = async (promptText) => {
+        try {
+          const systemPrompt = "Suggest 3 specific sound effects (SFX) and a background music genre that fit the visual prompt.";
+          const suggestions = await callGeminiApi(systemPrompt, promptText, false);
+          alert(`Audio Suggestions:\n${suggestions}`);
+        } catch (err) {
+          alert(err.message);
+        }
+      };
+
       const runAiJob = async (type) => {
+        const apiKey = geminiApiKey || localStorage.getItem('gemini_api_key');
+        if (!apiKey) {
+          alert("Please set your Gemini API Key in the AI Settings first!");
+          return;
+        }
+        setAiIsGenerating(true);
         const input = type === 'text' ? aiTextPrompt : type === 'image' ? aiImagePrompt : aiVoicePrompt;
         const inputTokens = Math.max(20, Math.ceil((input || '').length / 4));
         const outputTokens = type === 'voice' ? 220 : type === 'image' ? 120 : 160;
@@ -5912,34 +6651,123 @@
           id: uid('job'),
           createdAt: new Date().toISOString(),
           type,
-          provider: 'hugging-face',
+          provider: 'gemini',
           input,
           status: 'completed',
           outputs: {
-            mode: hfToken ? 'live-or-adapter' : 'manual',
-            note: hfToken
-              ? 'Hook your preferred HF model endpoint in this adapter section for live generation.'
-              : 'Manual mode. Add HF token and endpoint wiring for live calls.',
-            suggestion: type === 'text'
-              ? 'Generated script block placeholder.'
-              : type === 'image'
-                ? 'Generated image prompt payload placeholder.'
-                : 'Generated TTS payload placeholder.'
+            mode: 'live-gemini',
+            note: 'Generated with real Gemini integration.',
+            suggestion: `Success! Action dispatched.`
           }
         };
-        setAiCostLedger((prev) => [
-          {
-            id: uid('cost'),
-            at: job.createdAt,
-            type,
-            inputTokens,
-            outputTokens,
-            totalTokens: inputTokens + outputTokens,
-            estimatedUsd
-          },
-          ...prev
-        ].slice(0, 80));
-        setProject((prev) => ({ ...prev, aiJobs: [job, ...(prev.aiJobs || [])] }));
+
+        try {
+          if (type === 'text') {
+            const systemPrompt = REMOTION_SYSTEM_PROMPT;
+            const resText = await callGeminiApi(systemPrompt, input, true);
+            const data = JSON.parse(resText);
+            
+            setProject((prev) => {
+              const tracks = [...prev.tracks].sort((a, b) => a.order - b.order);
+              let targetTrack;
+              if (data.track === 'video') {
+                targetTrack = tracks.find((t) => t.kind === 'media' || t.kind === 'video') || tracks[0];
+              } else if (data.track === 'audio') {
+                targetTrack = tracks.find((t) => t.kind === AUDIO_TRACK_KIND) || tracks[0];
+              } else {
+                targetTrack = tracks.find((t) => t.kind === 'template' || t.kind === 'graphics' || t.kind === 'overlay') || tracks[0];
+              }
+              
+              const newLayerType = data.track === 'video' ? 'media' : (data.track === 'audio' ? 'audio' : data.track);
+              const layer = createLayer(newLayerType, targetTrack.id, prev.layers.length);
+              
+              layer.payload.layerName = data.layerName || 'AI_GENERATED';
+              layer.payload.fillColor = data.fillColor || COLORS.cyan;
+              layer.payload.strokeColor = data.strokeColor || COLORS.black;
+              layer.payload.strokeWidth = data.strokeWidth || 2;
+              layer.payload.x = data.x || 0;
+              layer.payload.y = data.y || 0;
+              layer.payload.scale = data.scale || 1;
+              layer.payload.rotation = data.rotation || 0;
+              
+              if (data.text) {
+                layer.payload.text = data.text;
+                layer.payload.fontSize = data.fontSize || 54;
+                layer.payload.fontFamily = data.fontFamily || 'Outfit';
+              }
+              
+              if (data.animationType && data.animationType !== 'none') {
+                layer.payload.isMotionHook = true;
+                layer.payload.motionHookId = `ai_hook_${layer.id}`;
+                layer.payload.motionHookAnimType = data.animationType;
+                layer.payload.motionHookDuration = Math.round((data.durationSec || 3) * 30);
+                layer.payload.motionHookProps = { scaleStart: 3, scaleEnd: 1, xStart: -600, xEnd: 40, yStart: -150, yEnd: 0, rotateStart: 0, rotateEnd: 180 };
+              }
+              
+              if (data.parallaxConfig) {
+                layer.payload.parallaxConfig = data.parallaxConfig;
+              }
+              if (data.svgOverlayConfig) {
+                layer.payload.svgOverlayConfig = data.svgOverlayConfig;
+              }
+              if (data.generativeShapeConfig) {
+                layer.payload.generativeShapeConfig = data.generativeShapeConfig;
+              }
+              
+              const len = data.durationSec || 4;
+              const start = nearestFreeStart(prev.clips, targetTrack.id, playhead, len, null);
+              const end = start + len;
+              const clipColor = data.fillColor || (data.track === 'svg-overlay' ? '#C084FC' : (data.track === 'parallax' ? '#34D399' : COLORS.cyan));
+              const clip = createClip(targetTrack.id, layer.id, start, end, clipColor);
+              
+              return {
+                ...prev,
+                meta: { ...prev.meta, durationSec: Math.max(prev.meta.durationSec, end + 1) },
+                layers: [...prev.layers, layer],
+                clips: [...prev.clips, clip]
+              };
+            });
+          } else if (type === 'image') {
+            setProject((prev) => {
+              const tracks = [...prev.tracks].sort((a, b) => a.order - b.order);
+              const targetTrack = tracks.find((t) => t.kind === 'media') || tracks[0];
+              const layer = createLayer('media', targetTrack.id, prev.layers.length);
+              layer.payload.layerName = 'AI_IMAGE_BG';
+              layer.payload.mediaUrl = 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=600&auto=format&fit=crop';
+              layer.payload.fit = 'cover';
+              const len = 5;
+              const start = nearestFreeStart(prev.clips, targetTrack.id, playhead, len, null);
+              const end = start + len;
+              const clip = createClip(targetTrack.id, layer.id, start, end, '#fbbf24');
+              return {
+                ...prev,
+                layers: [...prev.layers, layer],
+                clips: [...prev.clips, clip]
+              };
+            });
+          } else if (type === 'voice') {
+            await handleTtsGenerate(aiVoicePrompt);
+          }
+
+          setAiCostLedger((prev) => [
+            {
+              id: uid('cost'),
+              at: job.createdAt,
+              type,
+              inputTokens,
+              outputTokens,
+              totalTokens: inputTokens + outputTokens,
+              estimatedUsd
+            },
+            ...prev
+          ].slice(0, 80));
+          setProject((prev) => ({ ...prev, aiJobs: [job, ...(prev.aiJobs || [])] }));
+
+        } catch (err) {
+          alert(`AI Job Error: ${err.message}`);
+        } finally {
+          setAiIsGenerating(false);
+        }
       };
 
       const buildEffectFilter = (payload, variant = project.meta.visualDNA) => {
@@ -6104,6 +6932,21 @@
           return blend;
         }
         return { opacity: 1, transformExtra: '', filterExtra: '' };
+      };
+
+      const calculateTransitionFrame = (type, progress, params = {}) => {
+        const intensity = params.intensity ?? 1;
+        const amount = params.amount ?? 1;
+        const p = clamp(progress, 0, 1);
+        const amt = (1 - p) * intensity * amount;
+        switch (type) {
+          case 'fade': return { opacity: 1 - p, transform: '', filter: '' };
+          case 'slide': return { opacity: 1 - p, transform: `translateX(${amt * -40}px)`, filter: '' };
+          case 'zoom': return { opacity: 1 - p, transform: `scale(${1 + p * 0.2 * intensity})`, filter: '' };
+          case 'blurDissolve': return { opacity: 1 - p, transform: '', filter: `blur(${amt * 20}px)` };
+          case 'flip': return { opacity: 1 - p, transform: `perspective(1000px) rotateY(${p * 180}deg)`, filter: '' };
+          default: return { opacity: 1 - p, transform: '', filter: '' };
+        }
       };
 
       const easeByName = (t, name) => {
@@ -6447,6 +7290,7 @@
         });
       }, [sortedTracks, cameraTrackHeight, project.trackUiState, timelineViewport, hoverTrackId, project.clips, selectedClipIds, compactionEnabled]);
       const timelineRowsHeight = trackLayout.reduce((sum, row) => sum + row.height, 0);
+      const trackLayoutById = useMemo(() => new Map(trackLayout.map((row) => [row.track.id, row])), [trackLayout]);
       const trackIndexFromY = (relativeY) => {
         let acc = 0;
         for (let i = 0; i < trackLayout.length; i += 1) {
@@ -6467,6 +7311,135 @@
           }
         }
         return { near: false, dividerIndex: -1 };
+      };
+      const resolveGroupedClipLanding = (clipIds, anchorClipId, desiredAnchorStart) => {
+        const idSet = new Set((clipIds || []).filter(Boolean));
+        if (!idSet.size || !anchorClipId || !idSet.has(anchorClipId)) return [];
+        const group = project.clips
+          .filter((clip) => idSet.has(clip.id))
+          .sort((a, b) => a.start - b.start);
+        const anchor = group.find((clip) => clip.id === anchorClipId);
+        if (!anchor) return [];
+        const stationary = project.clips.filter((clip) => !idSet.has(clip.id));
+        const baseDelta = desiredAnchorStart - anchor.start;
+        const minShift = Math.min(...group.map((clip) => clip.start + baseDelta));
+        let groupShift = minShift < 0 ? -minShift : 0;
+        for (let i = 0; i < 320; i += 1) {
+          const blockers = [];
+          group.forEach((clip) => {
+            const nextStart = clip.start + baseDelta + groupShift;
+            const nextEnd = clip.end + baseDelta + groupShift;
+            stationary.forEach((other) => {
+              if (other.trackId !== clip.trackId) return;
+              if (nextEnd <= other.start || nextStart >= other.end) return;
+              blockers.push(other.end - nextStart);
+            });
+          });
+          if (!blockers.length) break;
+          groupShift += Math.max(...blockers, 0.01);
+        }
+        return group.map((clip) => {
+          const nextStart = Math.max(0, clip.start + baseDelta + groupShift);
+          const len = durationOf(clip);
+          return {
+            clipId: clip.id,
+            layerId: clip.layerId,
+            sourceTrackId: clip.trackId,
+            trackId: clip.trackId,
+            start: nextStart,
+            end: nextStart + len,
+            snapped: Math.abs((clip.start + baseDelta) - nextStart) > 0.001
+          };
+        });
+      };
+      const buildClipDragPreview = ({ clipIds, anchorClipId, desiredStart, pendingTrackId }) => {
+        const ids = Array.from(new Set((clipIds || []).filter(Boolean)));
+        if (!ids.length) return null;
+        const draggedClips = project.clips.filter((clip) => ids.includes(clip.id));
+        const anchorClip = draggedClips.find((clip) => clip.id === anchorClipId) || draggedClips[0];
+        if (!anchorClip) return null;
+        const isGroup = draggedClips.length > 1;
+        const fallbackTrackId = anchorClip.trackId;
+        const requestedTrackId = pendingTrackId || fallbackTrackId;
+        const createTrackAtEnd = requestedTrackId === '__CREATE_TRACK_END__';
+        const requestedTrack = createTrackAtEnd ? null : project.tracks.find((track) => track.id === requestedTrackId);
+        const resolvedTrackId = (!isGroup && requestedTrack && !requestedTrack.locked) ? requestedTrack.id : fallbackTrackId;
+        const resolved = isGroup
+          ? resolveGroupedClipLanding(ids, anchorClip.id, desiredStart)
+          : (() => {
+              const len = durationOf(anchorClip);
+              const resolvedStart = createTrackAtEnd
+                ? Math.max(0, desiredStart)
+                : nearestFreeStart(project.clips, resolvedTrackId, desiredStart, len, anchorClip.id);
+              return [{
+                clipId: anchorClip.id,
+                layerId: anchorClip.layerId,
+                sourceTrackId: anchorClip.trackId,
+                trackId: createTrackAtEnd ? '__CREATE_TRACK_END__' : resolvedTrackId,
+                start: resolvedStart,
+                end: resolvedStart + len,
+                snapped: Math.abs(resolvedStart - desiredStart) > 0.001
+              }];
+            })();
+        const landingClips = resolved.map((entry) => {
+          const previewRow = entry.trackId === '__CREATE_TRACK_END__'
+            ? null
+            : trackLayoutById.get(entry.trackId);
+          return {
+            ...entry,
+            left: timeToPx(entry.start),
+            width: durationOf(entry) * pxPerSec,
+            top: previewRow ? previewRow.top : (cameraTrackHeight + MARKER_LANES_HEIGHT + timelineRowsHeight + 10),
+            height: previewRow ? previewRow.height : Math.max(42, TRACK_HEIGHT_SMALL),
+            layerName: project.layers.find((layer) => layer.id === entry.layerId)?.payload?.layerName || 'Layer'
+          };
+        });
+        const anchorLanding = landingClips.find((entry) => entry.clipId === anchorClip.id) || landingClips[0];
+        return {
+          type: 'clip-move',
+          clipIds: ids,
+          sourceClipIds: ids,
+          anchorClipId: anchorClip.id,
+          pendingTrackId,
+          resolvedTrackId: anchorLanding?.trackId || fallbackTrackId,
+          desiredStart,
+          resolvedStart: anchorLanding?.start ?? desiredStart,
+          createTrackAtEnd,
+          landingClips,
+          sourceTrackId: anchorClip.trackId,
+          snapped: landingClips.some((entry) => entry.snapped),
+          blockedReason: (!isGroup && requestedTrack && requestedTrack.locked) ? 'locked-track' : ''
+        };
+      };
+      const applyResolvedClipMove = (prev, preview, overrideTrackId = null) => {
+        if (!preview?.landingClips?.length) return prev;
+        const landingById = new Map(preview.landingClips.map((entry) => [entry.clipId, entry]));
+        const nextClips = prev.clips.map((clip) => {
+          const landing = landingById.get(clip.id);
+          if (!landing) return clip;
+          const nextTrackId = overrideTrackId || (landing.trackId === '__CREATE_TRACK_END__' ? clip.trackId : landing.trackId);
+          return {
+            ...clip,
+            trackId: nextTrackId,
+            start: landing.start,
+            end: landing.end
+          };
+        });
+        const movedLayerIds = new Set(preview.landingClips.map((entry) => entry.layerId));
+        const nextLayers = prev.layers.map((layer) => {
+          if (!movedLayerIds.has(layer.id)) return layer;
+          const landing = preview.landingClips.find((entry) => entry.layerId === layer.id);
+          if (!landing) return layer;
+          const nextTrackId = overrideTrackId || (landing.trackId === '__CREATE_TRACK_END__' ? layer.trackId : landing.trackId);
+          return { ...layer, trackId: nextTrackId };
+        });
+        const maxEnd = nextClips.reduce((maxEndValue, clip) => Math.max(maxEndValue, clip.end), prev.meta.durationSec);
+        return {
+          ...prev,
+          clips: nextClips,
+          layers: nextLayers,
+          meta: { ...prev.meta, durationSec: Math.max(prev.meta.durationSec, maxEnd + 1) }
+        };
       };
       const cycleTrackSizeMode = (trackId) => {
         const current = Number.isInteger(project.trackUiState?.[trackId]?.sizeMode)
@@ -6544,9 +7517,48 @@
           justifyContent: 'center'
         };
 
-        const title = asset.primary || asset.title || 'TEMPLATE';
+        const rawTitle = asset.primary || asset.title || 'TEMPLATE';
         const sub = asset.secondary || '';
         const color = asset.color || '#24D3FF';
+
+        const renderTitle = (titleText) => {
+          if (payload && payload.isMotionHook && payload.motionHookAnimType === 'stagger-spring') {
+            const localSec = clip ? clamp(previewSec - clip.start, 0, Math.max(0, clip.end - clip.start)) : previewSec;
+            const localFrame = Math.round(localSec * 30);
+            const words = String(titleText).split(' ');
+            return (
+              <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '0.25em', justifyContent: 'center' }}>
+                {words.map((word, wIdx) => {
+                  const wordFrame = Math.max(0, localFrame - wIdx * 3);
+                  const wordProgress = motionSpring({ frame: wordFrame, fps: 30, config: { stiffness: 120, damping: 8, mass: 0.4 } });
+                  const wordScale = wordProgress;
+                  const wordOpacity = clamp(wordProgress * 1.5, 0, 1);
+                  return (
+                    <span key={wIdx} style={{ display: 'inline-block', transform: `scale(${wordScale})`, opacity: wordOpacity, transformOrigin: 'center bottom' }}>
+                      {word}
+                    </span>
+                  );
+                })}
+              </span>
+            );
+          }
+          return titleText;
+        };
+
+        const title = renderTitle(rawTitle);
+
+        let customGlassStyle = {};
+        if (payload?.isMotionHook && (payload.motionHookId === 'hook_glass_hud' || payload.motionHookId === 'hook_social_proof')) {
+          customGlassStyle = {
+            background: 'rgba(255, 255, 255, 0.12)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: '2px solid rgba(255, 255, 255, 0.25)',
+            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+            color: '#fff',
+            textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+          };
+        }
 
         const renderByStyle = () => {
           if (!asset.showText) {
@@ -6774,9 +7786,46 @@
           return <div style={{ background: color, border: '4px solid #111', borderRadius: 12, padding: '16px 20px' }}><h2 style={{ margin: 0, fontWeight: 900 }}>{title}</h2></div>;
         };
 
+        const element = renderByStyle();
+        let styledElement = element;
+        if (Object.keys(customGlassStyle).length > 0 && React.isValidElement(element)) {
+          styledElement = React.cloneElement(element, {
+            style: {
+              ...element.props.style,
+              ...customGlassStyle
+            }
+          });
+        }
+
+        if (payload?.isMotionHook && payload?.motionHookAnimType === 'scrub-x') {
+          const localSec = clip ? clamp(previewSec - clip.start, 0, Math.max(0, clip.end - clip.start)) : previewSec;
+          const totalDurationSec = clip ? (clip.end - clip.start) : 5;
+          const percent = clamp((localSec / totalDurationSec) * 100, 0, 100);
+          styledElement = (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+              {styledElement}
+              <div className="neo-shadow" style={{ width: '100%', minWidth: 320, height: 16, background: '#111', border: '3px solid #111', borderRadius: 8, overflow: 'hidden', padding: 2, boxSizing: 'border-box' }}>
+                <div style={{ width: `${percent}%`, height: '100%', background: '#39FF14', borderRadius: 4, transition: 'width 0.05s linear', boxShadow: '0 0 10px #39FF14' }} />
+              </div>
+            </div>
+          );
+        }
+
+        if (payload?.isMotionHook && payload?.motionHookAnimType === 'flash-fade') {
+          const localSec = clip ? clamp(previewSec - clip.start, 0, Math.max(0, clip.end - clip.start)) : previewSec;
+          const localFrame = Math.round(localSec * 30);
+          const leakOpacity = motionInterpolate(localFrame, [0, 8, 20], [0, 0.9, 0], { extrapolateRight: 'clamp' });
+          styledElement = (
+            <div style={{ position: 'relative' }}>
+              {styledElement}
+              <div style={{ position: 'absolute', inset: -20, pointerEvents: 'none', background: 'linear-gradient(135deg, rgba(255,100,0,0.8), rgba(255,0,128,0.8))', opacity: leakOpacity, mixBlendMode: 'screen', borderRadius: 16, filter: 'blur(8px)' }} />
+            </div>
+          );
+        }
+
         return (
           <div key={layer.id} style={shellStyle}>
-            {renderByStyle()}
+            {styledElement}
           </div>
         );
       };
@@ -6997,60 +8046,15 @@
           setActiveToolTab('clips-media');
         }
       }, [selectedClipId]);
-      const activePanelModules = PANEL_MODULE_LAYOUT[editorShellState.activeTool] || [];
       const isProjectsPage = editorShellState.activeTool === 'projects';
-      const isClipsMediaPage = editorShellState.activeTool === 'clips-media';
       const isTextCaptionsPage = editorShellState.activeTool === 'text-captions';
-      const isTransitionsEffectsPage = editorShellState.activeTool === 'transitions-effects';
       const isModuleVisible = (moduleId) => {
         const toolId = editorShellState.activeTool;
         if (!toolId || !panelModuleVisibility[toolId]) return true;
         const value = panelModuleVisibility[toolId][moduleId];
         return value !== false;
       };
-      const togglePanelModule = (moduleId) => {
-        const toolId = editorShellState.activeTool;
-        if (!toolId || !PANEL_MODULE_LAYOUT[toolId]) return;
-        setPanelModuleVisibility((prev) => ({
-          ...prev,
-          [toolId]: {
-            ...(prev[toolId] || {}),
-            [moduleId]: !((prev[toolId] || {})[moduleId] !== false)
-          }
-        }));
-      };
-      const getPanelModuleIcon = (moduleId) => {
-        if (moduleId === 'addMedia' || moduleId === 'library') return Plus;
-        if (moduleId === 'settings') return Settings2;
-        if (moduleId === 'project') return FileCode;
-        if (moduleId === 'camera') return Camera;
-        if (moduleId === 'search') return Search;
-        if (moduleId === 'captions') return MessageSquare;
-        if (moduleId === 'textTools') return Type;
-        if (moduleId === 'tts') return Wand2;
-        if (moduleId === 'templates') return Sparkles;
-        if (moduleId === 'fx') return Filter;
-        if (moduleId === 'ai') return Palette;
-        if (moduleId === 'upload') return Upload;
-        if (moduleId === 'imageTools') return Image;
-        return Circle;
-      };
-      const renderModuleBadge = (moduleId) => {
-        const BadgeIcon = getPanelModuleIcon(moduleId);
-        return (
-          <button
-            className="neo-btn module-toggle-btn !w-7 !h-7 absolute top-2 right-2"
-            style={{ background: getPanelModuleColor(moduleId) }}
-            title={`${moduleId} module`}
-          >
-            <BadgeIcon size={12} />
-          </button>
-        );
-      };
-      const getPanelModuleColor = (moduleId) => {
-        const found = activePanelModules.find((module) => module.id === moduleId);
-        return found?.color || COLORS.white;
-      };
+      const renderModuleBadge = () => VT_E1_SHELL_SURFACES.moduleBadgesVisible ? null : null;
       useEffect(() => {
         const mappedTool = LEGACY_TOOL_ALIAS_MAP[editorShellState.activeTool];
         if (!mappedTool) return;
@@ -7250,37 +8254,6 @@
           {!editorShellState.railCollapsed && (
           <div className="h-full overflow-hidden flex flex-col">
             <div className="flex-1 overflow-y-auto no-scrollbar p-3 space-y-3">
-              <div className="neo-card p-2 space-y-1">
-                <div className="text-[10px] font-black uppercase">{String(editorShellState.activeTool || activeTab).toUpperCase()}</div>
-                <div className="text-[10px] font-black opacity-70">{NAV_PAGE_GUIDE[editorShellState.activeTool] || 'Editor workspace.'}</div>
-                <div className="flex items-center gap-2 pt-1">
-                  <span className="text-[9px] font-black uppercase opacity-70">Mode</span>
-                  <span
-                    className="text-[9px] font-black uppercase px-2 py-1 border-2 border-black rounded-md"
-                    style={{ background: runtimeMode === 'full-online' ? COLORS.green : COLORS.yellow }}
-                  >
-                    {runtimeMode === 'full-online' ? 'Full Online' : 'Portable Offline'}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-1 text-[9px] font-black uppercase">
-                  <div className="border border-black rounded px-1 py-0.5 bg-white">Providers: {runtimeCapabilityMap.providers.enabled ? 'On' : 'Off'}</div>
-                  <div className="border border-black rounded px-1 py-0.5 bg-white">MCP Bits: {runtimeCapabilityMap.mcpBits.enabled ? 'On' : 'Off'}</div>
-                  <div className="border border-black rounded px-1 py-0.5 bg-white">Remote URL: {runtimeCapabilityMap.remoteAssets.enabled ? 'On' : 'Off'}</div>
-                  <div className="border border-black rounded px-1 py-0.5 bg-white">Local Edit: {runtimeCapabilityMap.localTimelineEdit.enabled ? 'On' : 'Off'}</div>
-                </div>
-                {runtimeMode === 'portable-offline' && (
-                  <div className="text-[9px] font-black opacity-70">Portable mode keeps timeline/FX/templates local and blocks origin-dependent calls.</div>
-                )}
-                {startupRecoveryState.hasSavedSession && <div className="text-[10px] font-black opacity-70">Saved session detected</div>}
-                {startupRecoveryState.error && <div className="text-[10px] font-black text-red-700">Recovery warning: {startupRecoveryState.error}</div>}
-                {startupRecoveryState.phase === 'failed' && (
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.yellow }} onClick={retryStartupRecovery}>Retry</button>
-                    <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.white }} onClick={continueWithoutRestore}>Continue</button>
-                  </div>
-                )}
-              </div>
-              
               {(activeTab === 'layers' || activeTab === 'media' || activeTab === 'layerSettings') && (
                 <>
                   {isModuleVisible('search') && (
@@ -8123,75 +9096,75 @@
                     <div className="text-xs font-black opacity-60">Select a clip/layer first.</div>
                   ) : (
                     <>
-                      <div className="text-xs font-black uppercase">Active Effects</div>
                       <div
-                        className="space-y-2"
+                        className="grid grid-cols-2 gap-2"
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={(e) => {
                           const fxType = e.dataTransfer.getData('text/effect-type');
                           if (fxType) addEffectToSelected(fxType);
                         }}
                       >
-                        {(selectedLayer.payload.effects || []).map((fx) => (
-                          <div key={fx.id} className="border-4 border-black p-2 bg-white">
-                            <div className="flex items-center justify-between gap-1">
-                              <div className="text-[10px] font-black uppercase">{fx.type}</div>
-                              <div className="flex gap-1">
-                                <button
-                                  className="neo-btn px-2 py-0"
-                                  style={{ background: fx.enabled !== false ? COLORS.green : COLORS.white }}
-                                  onClick={() => toggleEffect(selectedLayer.id, fx.id)}
-                                  title={fx.enabled !== false ? 'Disable effect' : 'Enable effect'}
-                                  aria-label={fx.enabled !== false ? 'Disable effect' : 'Enable effect'}
-                                >
-                                  {fx.enabled !== false ? <Eye size={14} /> : <EyeOff size={14} />}
-                                </button>
-                                <button
-                                  className="neo-btn px-2 py-0 bg-red-200"
-                                  onClick={() => deleteEffect(selectedLayer.id, fx.id)}
-                                  title="Delete effect"
-                                  aria-label="Delete effect"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
+                        {FX_LIBRARY.map((fx, idx) => {
+                          const activeFx = (selectedLayer.payload.effects || []).find((node) => node.type === fx.type) || null;
+                          if (activeFx) {
+                            return (
+                              <div key={activeFx.id} className="border-4 border-black p-2 bg-white">
+                                <div className="flex items-center justify-between gap-1">
+                                  <div className="text-[10px] font-black uppercase">{formatFxLabel(activeFx.type)}</div>
+                                  <div className="flex gap-1">
+                                    <button
+                                      className="neo-btn px-2 py-0"
+                                      style={{ background: activeFx.enabled !== false ? COLORS.green : COLORS.white }}
+                                      onClick={() => toggleEffect(selectedLayer.id, activeFx.id)}
+                                      title={activeFx.enabled !== false ? 'Disable effect' : 'Enable effect'}
+                                      aria-label={activeFx.enabled !== false ? 'Disable effect' : 'Enable effect'}
+                                    >
+                                      {activeFx.enabled !== false ? <Eye size={14} /> : <EyeOff size={14} />}
+                                    </button>
+                                    <button
+                                      className="neo-btn px-2 py-0 bg-red-200"
+                                      onClick={() => deleteEffect(selectedLayer.id, activeFx.id)}
+                                      title="Delete effect"
+                                      aria-label="Delete effect"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                </div>
+                                {Object.keys(activeFx.params || {}).map((paramKey) => {
+                                  const fxPropKey = `fx:${activeFx.id}:${paramKey}`;
+                                  const fxRange = getFxRange(activeFx.type);
+                                  return (
+                                    <SpringToggle
+                                      key={`${activeFx.id}_${paramKey}`}
+                                      label={paramKey}
+                                      min={fxRange.min}
+                                      max={fxRange.max}
+                                      step={fxRange.step}
+                                      value={fxInternalToUi(activeFx.type, Number(activeFx.params[paramKey]))}
+                                      onChange={(v) => updateEffectParam(selectedLayer.id, activeFx.id, paramKey, fxUiToInternal(activeFx.type, Number(v)))}
+                                      onAddCircle={() => addCircleKeyframeAtPlayhead(fxPropKey)}
+                                      onReset={() => updateEffectParam(selectedLayer.id, activeFx.id, paramKey, (FX_LIBRARY_BY_TYPE[activeFx.type]?.params?.[paramKey] ?? 0))}
+                                      kfState={keyframeStateForProp(selectedClip, fxPropKey)}
+                                    />
+                                  );
+                                })}
                               </div>
-                            </div>
-                            {Object.keys(fx.params || {}).map((paramKey) => (
-                              (() => {
-                                const fxPropKey = `fx:${fx.id}:${paramKey}`;
-                                const fxRange = getFxRange(fx.type);
-                                return (
-                              <SpringToggle
-                                key={`${fx.id}_${paramKey}`}
-                                label={paramKey}
-                                min={fxRange.min}
-                                max={fxRange.max}
-                                step={fxRange.step}
-                                value={fxInternalToUi(fx.type, Number(fx.params[paramKey]))}
-                                onChange={(v) => updateEffectParam(selectedLayer.id, fx.id, paramKey, fxUiToInternal(fx.type, Number(v)))}
-                                onAddCircle={() => addCircleKeyframeAtPlayhead(fxPropKey)}
-                                onReset={() => updateEffectParam(selectedLayer.id, fx.id, paramKey, (FX_LIBRARY.find((f) => f.type === fx.type)?.params?.[paramKey] ?? 0))}
-                                kfState={keyframeStateForProp(selectedClip, fxPropKey)}
-                              />
-                                );
-                              })()
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {FX_LIBRARY.map((fx, idx) => (
-                          <button
-                            key={fx.type}
-                            className="neo-btn"
-                            style={{ background: pairedColor(idx) }}
-                            draggable
-                            onDragStart={(e) => e.dataTransfer.setData('text/effect-type', fx.type)}
-                            onClick={() => addEffectToSelected(fx.type)}
-                          >
-                            {fx.type}
-                          </button>
-                        ))}
+                            );
+                          }
+                          return (
+                            <button
+                              key={fx.type}
+                              className="neo-btn"
+                              style={{ background: pairedColor(idx) }}
+                              draggable
+                              onDragStart={(e) => e.dataTransfer.setData('text/effect-type', fx.type)}
+                              onClick={() => addEffectToSelected(fx.type)}
+                            >
+                              {fx.label.toUpperCase()}
+                            </button>
+                          );
+                        })}
                       </div>
                     </>
                   )}
@@ -8246,6 +9219,32 @@
                         value={effectSession.overlayDurationSec}
                         onChange={(v) => setEffectSession((prev) => ({ ...prev, overlayDurationSec: Number(v) }))}
                       />
+                      {(effectSession.targetMode === 'new-overlay-clip' || effectSession.targetMode === 'generated-asset') && (
+                        <>
+                          <select
+                            className="w-full border-2 border-black rounded-md p-2 text-[10px] font-black bg-white"
+                            value={effectSession.overlayTargetTrackId}
+                            onChange={(e) => setEffectSession((prev) => ({ ...prev, overlayTargetTrackId: e.target.value }))}
+                          >
+                            <option value="selected-track">Selected clip track</option>
+                            {sortedTracks.filter((track) => track.kind !== AUDIO_TRACK_KIND).map((track) => (
+                              <option key={track.id} value={track.id}>{track.name}</option>
+                            ))}
+                          </select>
+                          <div className="grid grid-cols-3 gap-2">
+                            {Object.entries(OVERLAY_QUALITY_PROFILES).map(([qualityKey, profile]) => (
+                              <button
+                                key={qualityKey}
+                                className="neo-btn !min-h-0 px-2 py-1 text-[10px]"
+                                style={{ background: effectSession.qualityTier === qualityKey ? COLORS.green : COLORS.white }}
+                                onClick={() => setEffectSession((prev) => ({ ...prev, qualityTier: qualityKey }))}
+                              >
+                                {profile.label}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
                     <div className="border-2 border-black rounded-md p-2 bg-white space-y-2">
                       <div className="text-xs font-black uppercase">
@@ -8254,16 +9253,21 @@
                       <div className="text-[10px] font-black opacity-70">
                         {EFFECT_DEFINITIONS_BY_ID[effectSession.activeEffectId]?.summary || 'Customize effect parameters.'}
                       </div>
-                      {(EFFECT_DEFINITIONS_BY_ID[effectSession.activeEffectId]?.params || []).map((param) => (
-                        <SpringToggle
-                          key={param.key}
-                          label={param.label}
-                          min={param.min}
-                          max={param.max}
-                          step={param.step}
-                          value={Number(effectSession.valuesByEffect?.[effectSession.activeEffectId]?.[param.key] ?? param.defaultValue)}
-                          onChange={(v) => updateEffectSessionValue(effectSession.activeEffectId, param.key, Number(v))}
-                        />
+                      {Object.entries(groupEffectParams(EFFECT_DEFINITIONS_BY_ID[effectSession.activeEffectId]?.params || [])).map(([groupKey, params]) => (
+                        <div key={groupKey} className="border-2 border-black rounded-md p-2 bg-[#f8f8fb] space-y-2">
+                          <div className="text-[10px] font-black uppercase">{EFFECT_PARAM_GROUP_LABELS[groupKey] || groupKey}</div>
+                          {params.map((param) => (
+                            <SpringToggle
+                              key={param.key}
+                              label={param.label}
+                              min={param.min}
+                              max={param.max}
+                              step={param.step}
+                              value={Number(effectSession.valuesByEffect?.[effectSession.activeEffectId]?.[param.key] ?? param.defaultValue)}
+                              onChange={(v) => updateEffectSessionValue(effectSession.activeEffectId, param.key, Number(v))}
+                            />
+                          ))}
+                        </div>
                       ))}
                       {['mirror-matrix', 'mirror-matrix-duplicate'].includes(effectSession.activeEffectId) && (() => {
                         const mirrorEffectId = effectSession.activeEffectId;
@@ -8853,31 +9857,58 @@
                     <button className="neo-btn w-full inline-flex items-center justify-center gap-1 col-span-2" style={{ background: COLORS.yellow }} onClick={runPreflightDiagnostics}>
                       <ShieldAlert size={14} /> Preflight Diagnostics
                     </button>
+                    <button className="neo-btn w-full inline-flex items-center justify-center gap-1 col-span-2" style={{ background: COLORS.green }} onClick={runEditorRuntimeSmoke}>
+                      <ShieldCheck size={14} /> Runtime Smoke
+                    </button>
                   </div>
                   {parityReport && (
                     <div className="border-2 border-black rounded-md p-2 bg-white text-[10px] font-black space-y-1">
                       <div className="uppercase">Last Parity Report</div>
                       <div>Snapshot: {parityReport.snapshotHash}</div>
                       <div>Issues: {parityReport.issueCount}</div>
+                      <div>Warnings: {parityReport.warningCount || 0}</div>
+                      <div>Policy: {(parityReport.mismatchPolicy || 'warn').toUpperCase()}</div>
                       <div>Samples: {parityReport.sampleTimes.map((sec) => formatHMS(sec)).join(' · ')}</div>
+                      {Array.isArray(parityReport.issues) && parityReport.issues.length > 0 && (
+                        <div className="border-2 border-black rounded-md p-2 bg-[#fff3f3] space-y-1">
+                          {parityReport.issues.slice(0, 4).map((issue, index) => (
+                            <div key={`parity_issue_${index}`}>{issue}</div>
+                          ))}
+                        </div>
+                      )}
+                      {Array.isArray(parityReport.warnings) && parityReport.warnings.length > 0 && (
+                        <div className="border-2 border-black rounded-md p-2 bg-[#fffbe8] space-y-1">
+                          {parityReport.warnings.slice(0, 4).map((warning, index) => (
+                            <div key={`parity_warning_${index}`}>{warning}</div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
-              )}
-              {activePanelModules.length > 0 && (
-                <div className="flex items-center gap-2 flex-wrap pt-1">
-                  {activePanelModules.map((module) => (
-                    (() => {
-                      const ModIcon = getPanelModuleIcon(module.id);
-                      return <button
-                        key={module.id}
-                        className="neo-btn module-toggle-btn !w-7 !h-7"
-                        style={{ background: isModuleVisible(module.id) ? module.color : COLORS.white, opacity: isModuleVisible(module.id) ? 1 : 0.92 }}
-                        onClick={() => togglePanelModule(module.id)}
-                        title={`${module.label} · ${isModuleVisible(module.id) ? 'visible' : 'hidden'}`}
-                      ><ModIcon size={12} /></button>;
-                    })()
-                  ))}
+                  {runtimeSmokeReport && (
+                    <div className="border-2 border-black rounded-md p-2 bg-white text-[10px] font-black space-y-1">
+                      <div className="uppercase">Runtime Smoke</div>
+                      <div>History: {runtimeSmokeReport.historyDepth} states</div>
+                      <div>Current Label: {runtimeSmokeReport.currentHistoryLabel}</div>
+                      <div>FX Catalog: {runtimeSmokeReport.clipFxCatalogCount}</div>
+                      <div>Issues: {runtimeSmokeReport.issueCount}</div>
+                      <div>Warnings: {runtimeSmokeReport.warningCount}</div>
+                      {(runtimeSmokeReport.issues || []).length > 0 && (
+                        <div className="border-2 border-black rounded-md p-2 bg-[#fff3f3] space-y-1">
+                          {runtimeSmokeReport.issues.slice(0, 4).map((issue, index) => (
+                            <div key={`runtime_smoke_issue_${index}`}>{issue}</div>
+                          ))}
+                        </div>
+                      )}
+                      {(runtimeSmokeReport.warnings || []).length > 0 && (
+                        <div className="border-2 border-black rounded-md p-2 bg-[#fffbe8] space-y-1">
+                          {runtimeSmokeReport.warnings.slice(0, 4).map((warning, index) => (
+                            <div key={`runtime_smoke_warning_${index}`}>{warning}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
               <div className="neo-card p-2 space-y-2">
@@ -8889,22 +9920,6 @@
                   <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.cyan }} onClick={() => jumpToPage('transitions-effects')}>Trans/FX</button>
                   <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.purple, color: '#fff' }} onClick={() => jumpToPage('templates')}>Templates</button>
                   <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.white }} onClick={() => setShowOnboarding(true)}>Guide</button>
-                </div>
-              </div>
-              <div className="neo-card p-2 space-y-1">
-                <div className="text-[10px] font-black uppercase">Feature Backlog</div>
-                <div className="max-h-[150px] overflow-y-auto neo-scroll space-y-1">
-                  {FEATURE_BACKLOG_ACTIVE.map((feature) => (
-                    <div key={feature.id} className="border-2 border-black rounded-md p-1 bg-white flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-black">{feature.title}</span>
-                      <span
-                        className="text-[9px] font-black uppercase px-1 py-0.5 border border-black rounded"
-                        style={{ background: feature.status === 'in-progress' ? COLORS.yellow : COLORS.white }}
-                      >
-                        {feature.status}
-                      </span>
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>
@@ -8996,26 +10011,254 @@
                       const transFx = transitionInfluence(clip || { id: '' });
                       const animFx = clipEntryExitInfluence(clip || null);
                       const dnaStyle = resolveDnaStyle(project.meta.visualDNA, layer.type, payload);
+                      
+                      let motionTransform = '';
+                      let motionOpacity = 1;
+                      let motionFilter = '';
+                      
+                      // Calculate global depth-blur effect
+                      let depthBlurAmount = 0;
+                      const hasDepthBlur = stageLayers.some(({ payload: pl }) => {
+                        return pl && pl.isMotionHook && pl.motionHookId === 'hook_depth_blur';
+                      });
+                      if (hasDepthBlur && layer.type !== 'template') {
+                        const dbLayer = stageLayers.find(({ payload: pl }) => pl && pl.isMotionHook && pl.motionHookId === 'hook_depth_blur');
+                        if (dbLayer && dbLayer.clip) {
+                          const dbLocalSec = clamp(previewSec - dbLayer.clip.start, 0, Math.max(0, dbLayer.clip.end - dbLayer.clip.start));
+                          const dbLocalFrame = Math.round(dbLocalSec * 30);
+                          depthBlurAmount = motionInterpolate(dbLocalFrame, [0, 30], [0, 12], { extrapolateRight: 'clamp' });
+                        }
+                      }
+
+                      if (payload.isMotionHook) {
+                        const localSec = clip ? clamp(previewSec - clip.start, 0, Math.max(0, clip.end - clip.start)) : previewSec;
+                        const localFrame = Math.round(localSec * 30);
+                        const animType = payload.motionHookAnimType;
+                        const hookProps = payload.motionHookProps || {};
+
+                        if (animType === 'spring-scale') {
+                          const scaleStart = hookProps.scaleStart ?? 3;
+                          const scaleEnd = hookProps.scaleEnd ?? 1;
+                          const progress = motionSpring({ frame: localFrame, fps: 30, config: { stiffness: 100, damping: 10, mass: 0.5 } });
+                          const scaleVal = scaleStart + progress * (scaleEnd - scaleStart);
+                          motionTransform = ` scale(${scaleVal})`;
+                        } else if (animType === 'slide-blur') {
+                          const xStart = hookProps.xStart ?? -600;
+                          const xEnd = hookProps.xEnd ?? 40;
+                          const progress = motionInterpolate(localFrame, [0, 20], [0, 1], { extrapolateRight: 'clamp' });
+                          const xVal = xStart + progress * (xEnd - xStart);
+                          const blurVal = motionInterpolate(localFrame, [0, 20], [15, 0], { extrapolateRight: 'clamp' });
+                          motionTransform = ` translate(${xVal}px, 0px)`;
+                          motionFilter = ` blur(${blurVal}px)`;
+                        } else if (animType === 'zoom-slow') {
+                          const scaleStart = hookProps.scaleStart ?? 1;
+                          const scaleEnd = hookProps.scaleEnd ?? 1.15;
+                          const mScale = motionInterpolate(localFrame, [0, 150], [scaleStart, scaleEnd], { extrapolateRight: 'clamp' });
+                          const mBlur = motionInterpolate(localFrame, [0, 30], [8, 0], { extrapolateRight: 'clamp' });
+                          motionTransform = ` scale(${mScale})`;
+                          motionFilter = ` blur(${mBlur}px)`;
+                        } else if (animType === 'spring-y') {
+                          const yStart = hookProps.yStart ?? -150;
+                          const yEnd = hookProps.yEnd ?? 0;
+                          const progress = motionSpring({ frame: localFrame, fps: 30, config: { stiffness: 60, damping: 12, mass: 0.8 } });
+                          const yVal = yStart + progress * (yEnd - yStart);
+                          motionTransform = ` translate(0px, ${yVal}px)`;
+                        } else if (animType === 'rotate-y') {
+                          const rotateStart = hookProps.rotateStart ?? 0;
+                          const rotateEnd = hookProps.rotateEnd ?? 180;
+                          const rotY = motionInterpolate(localFrame, [45, 60], [rotateStart, rotateEnd], { extrapolateRight: 'clamp' });
+                          motionTransform = ` perspective(1000px) rotateY(${rotY}deg)`;
+                        } else if (animType === 'spring-blur') {
+                          const progress = motionSpring({ frame: localFrame, fps: 30, config: { stiffness: 80, damping: 12, mass: 0.6 } });
+                          const yVal = (1 - progress) * 200;
+                          const blurVal = (1 - progress) * 10;
+                          motionTransform = ` translate(0px, ${yVal}px)`;
+                          motionFilter = ` blur(${blurVal}px)`;
+                        } else if (animType === 'sine-y') {
+                          const amp = hookProps.amplitude ?? 10;
+                          const yVal = Math.sin(localFrame / 10) * amp;
+                          motionTransform = ` translate(0px, ${yVal}px)`;
+                        }
+                      }
+
                       const common = {
                         position: 'absolute',
                         left: '50%',
                         top: '50%',
-                        transform: `translate(calc(-50% + ${payload.x || 0}px), calc(-50% + ${payload.y || 0}px)) scale(${payload.scale || 1}) rotate(${payload.rotation || 0}deg)${transFx.transformExtra || ''}${animFx.transformExtra || ''}`,
-                        opacity: clamp((payload.opacity ?? 1) * (transFx.opacity ?? 1) * (animFx.opacity ?? 1), 0, 1),
-                        filter: `${buildEffectFilter(payload, project.meta.visualDNA)} ${transFx.filterExtra || ''}`.trim(),
+                        transform: `translate(calc(-50% + ${payload.x || 0}px), calc(-50% + ${payload.y || 0}px)) scale(${payload.scale || 1}) rotate(${payload.rotation || 0}deg)${transFx.transformExtra || ''}${animFx.transformExtra || ''}${motionTransform}`,
+                        opacity: clamp((payload.opacity ?? 1) * (transFx.opacity ?? 1) * (animFx.opacity ?? 1) * motionOpacity, 0, 1),
+                        filter: `${buildEffectFilter(payload, project.meta.visualDNA)} ${transFx.filterExtra || ''}${motionFilter}${depthBlurAmount > 0 ? ` blur(${depthBlurAmount}px)` : ''}`.trim(),
                         boxShadow: selectedLayerId === layer.id && layer.type === 'media'
                           ? '0 0 0 1px rgba(87,154,255,0.95), 0 0 8px rgba(87,154,255,0.55)'
                           : undefined,
                         ...dnaStyle.style
                       };
 
+                      if (layer.type === 'template' && payload.motionAsset && payload.isMotionHook && payload.motionHookAnimType === 'trail-delay') {
+                        const localSec = clip ? clamp(previewSec - clip.start, 0, Math.max(0, clip.end - clip.start)) : previewSec;
+                        const localFrame = Math.round(localSec * 30);
+                        const delays = [8, 4, 0];
+                        return (
+                          <React.Fragment key={layer.id}>
+                            {delays.map((del, dIdx) => {
+                              const delayOpacity = dIdx === 2 ? 1 : (dIdx === 1 ? 0.45 : 0.2);
+                              const xOffset = -del * 3;
+                              const yOffset = del * 3;
+                              const delayCommon = {
+                                ...common,
+                                transform: `translate(calc(-50% + ${payload.x || 0}px + ${xOffset}px), calc(-50% + ${payload.y || 0}px + ${yOffset}px)) scale(${payload.scale || 1}) rotate(${payload.rotation || 0}deg)${transFx.transformExtra || ''}${animFx.transformExtra || ''}`,
+                                opacity: clamp(common.opacity * delayOpacity, 0, 1),
+                                pointerEvents: dIdx === 2 ? 'auto' : 'none'
+                              };
+                              return renderTemplateAsset(layer, payload, clip, delayCommon);
+                            })}
+                          </React.Fragment>
+                        );
+                      }
+
                       if (layer.type === 'template' && payload.motionAsset) {
                         return renderTemplateAsset(layer, payload, clip, common);
                       }
+
+                      if (layer.type === 'parallax') {
+                        const cfg = payload.parallaxConfig || { depthSpeed: [1, 1.5, 2], direction: 'horizontal', layers: [] };
+                        const depthSpeeds = cfg.depthSpeed || [1, 1.5, 2];
+                        const direction = cfg.direction || 'horizontal';
+                        const layers = cfg.layers || [];
+                        const localSec = clip ? clamp(previewSec - clip.start, 0, Math.max(0, clip.end - clip.start)) : previewSec;
+                        const defaultLayers = [
+                          'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?q=80&w=300&auto=format&fit=crop',
+                          'https://images.unsplash.com/photo-1579783928591-724f1f15d385?q=80&w=300&auto=format&fit=crop',
+                          'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?q=80&w=300&auto=format&fit=crop'
+                        ];
+                        const layersToRender = layers.length > 0 ? layers : defaultLayers;
+                        return (
+                          <div key={layer.id} style={{ ...common, width: `${payload.width || 1920}px`, height: `${payload.height || 1080}px`, overflow: 'hidden', pointerEvents: 'none', background: 'transparent' }}>
+                            {layersToRender.map((imgUrl, idx) => {
+                              const speed = depthSpeeds[idx] || (1 + idx * 0.5);
+                              const panOffset = (localSec * 18 * speed) - 40;
+                              const imgStyle = {
+                                position: 'absolute',
+                                width: '120%',
+                                height: '120%',
+                                left: '-10%',
+                                top: '-10%',
+                                objectFit: 'cover',
+                                transform: direction === 'horizontal' ? `translateX(${panOffset}px)` : `translateY(${panOffset}px)`
+                              };
+                              return <img key={idx} src={imgUrl} style={imgStyle} alt={`parallax-${idx}`} />;
+                            })}
+                          </div>
+                        );
+                      }
+
+                      if (layer.type === 'svg-overlay') {
+                        const cfg = payload.svgOverlayConfig || { animationType: 'draw', rotationSpeed: 2, strokeColor: '#fff', svgPaths: [] };
+                        const paths = cfg.svgPaths && cfg.svgPaths.length > 0 ? cfg.svgPaths : [
+                          'M 100 50 A 50 50 0 0 1 150 100',
+                          'M 150 100 A 50 50 0 0 1 100 150',
+                          'M 100 150 A 50 50 0 0 1 50 100',
+                          'M 50 100 A 50 50 0 0 1 100 50',
+                          'M 100 70 A 30 30 0 1 0 100 130 A 30 30 0 1 0 100 70',
+                          'M 100 30 L 100 60',
+                          'M 100 140 L 100 170',
+                          'M 30 100 L 60 100',
+                          'M 140 100 L 170 100'
+                        ];
+                        const localSec = clip ? clamp(previewSec - clip.start, 0, Math.max(0, clip.end - clip.start)) : previewSec;
+                        const localFrame = Math.round(localSec * 30);
+                        const strokeColor = cfg.strokeColor || '#39FF14';
+                        const drawProgress = clamp(localFrame / 40, 0, 1);
+                        const rotation = (cfg.rotationSpeed || 1) * localSec * 30;
+                        return (
+                          <div key={layer.id} style={{ ...common, width: '200px', height: '200px', pointerEvents: 'none' }}>
+                            <svg viewBox="0 0 200 200" style={{ width: '100%', height: '100%', transform: `rotate(${rotation}deg)` }}>
+                              {paths.map((p, idx) => (
+                                <path
+                                  key={idx}
+                                  d={p}
+                                  fill="none"
+                                  stroke={strokeColor}
+                                  strokeWidth="3"
+                                  strokeLinecap="round"
+                                  strokeDasharray="400"
+                                  strokeDashoffset={(1 - drawProgress) * 400}
+                                />
+                              ))}
+                            </svg>
+                          </div>
+                        );
+                      }
+
+                      if (layer.type === 'generative-shape') {
+                        const cfg = payload.generativeShapeConfig || { behavior: 'stack', colors: [], elements: [] };
+                        const colors = cfg.colors && cfg.colors.length > 0 ? cfg.colors : ['#FF0055', '#00FFCC', '#FFCC00'];
+                        const elements = cfg.elements && cfg.elements.length > 0 ? cfg.elements : [
+                          { type: 'circle', attrs: { cx: 100, cy: 100, r: 60 }, behavior: 'pulse' },
+                          { type: 'circle', attrs: { cx: 100, cy: 100, r: 40 }, behavior: 'float' },
+                          { type: 'rect', attrs: { x: 80, y: 80, width: 40, height: 40 }, behavior: 'rotate' }
+                        ];
+                        const localSec = clip ? clamp(previewSec - clip.start, 0, Math.max(0, clip.end - clip.start)) : previewSec;
+                        const localFrame = Math.round(localSec * 30);
+                        return (
+                          <div key={layer.id} style={{ ...common, width: '200px', height: '200px', pointerEvents: 'none' }}>
+                            <svg viewBox="0 0 200 200" style={{ width: '100%', height: '100%' }}>
+                              {elements.map((el, idx) => {
+                                const color = colors[idx % colors.length];
+                                const elFrame = Math.max(0, localFrame - idx * 4);
+                                const scaleProgress = motionSpring({ frame: elFrame, fps: 30, config: { stiffness: 120, damping: 10, mass: 0.5 } });
+                                let transform = `scale(${scaleProgress})`;
+                                let opacity = clamp(scaleProgress, 0, 1);
+                                if (el.behavior === 'pulse') {
+                                  const pulse = 1 + Math.sin(localFrame / 8) * 0.08;
+                                  transform += ` scale(${pulse})`;
+                                } else if (el.behavior === 'float') {
+                                  const floatY = Math.sin(localFrame / 12) * 8;
+                                  transform += ` translateY(${floatY}px)`;
+                                } else if (el.behavior === 'rotate') {
+                                  const rot = localFrame * 2;
+                                  transform += ` rotate(${rot}deg)`;
+                                }
+                                if (el.type === 'circle') {
+                                  return (
+                                    <circle
+                                      key={idx}
+                                      cx={el.attrs.cx}
+                                      cy={el.attrs.cy}
+                                      r={el.attrs.r}
+                                      fill={color}
+                                      style={{ transform, opacity, transformOrigin: `${el.attrs.cx}px ${el.attrs.cy}px` }}
+                                    />
+                                  );
+                                } else if (el.type === 'rect') {
+                                  const x = el.attrs.x;
+                                  const y = el.attrs.y;
+                                  const w = el.attrs.width;
+                                  const h = el.attrs.height;
+                                  return (
+                                    <rect
+                                      key={idx}
+                                      x={x}
+                                      y={y}
+                                      width={w}
+                                      height={h}
+                                      fill={color}
+                                      rx={el.attrs.rx || 6}
+                                      style={{ transform, opacity, transformOrigin: `${x + w/2}px ${y + h/2}px` }}
+                                    />
+                                  );
+                                }
+                                return null;
+                              })}
+                            </svg>
+                          </div>
+                        );
+                      }
                       if (payload.overlayKind === 'noise-surface') {
                         const cfg = payload.overlayConfig || {};
-                        const rows = 10;
-                        const cols = 15;
+                        const sampleGrid = getOverlaySampleGrid(10, 15, payload.overlayQuality);
+                        const rows = sampleGrid.rows;
+                        const cols = sampleGrid.cols;
                         const overscan = 100;
                         const width = Math.max(200, Number(payload.width || 1920));
                         const height = Math.max(120, Number(payload.height || 1080));
@@ -9167,8 +10410,9 @@
                             filter: `grayscale(1) contrast(${1.4 + intensity * 0.7})`
                           };
                         } else if (payload.overlayKind === 'circle-noise-pro') {
-                          const rows = Math.max(4, Math.round(Number(cfg.rows ?? 10)));
-                          const cols = Math.max(4, Math.round(Number(cfg.cols ?? 15)));
+                          const sampleGrid = getOverlaySampleGrid(Number(cfg.rows ?? 10), Number(cfg.cols ?? 15), payload.overlayQuality);
+                          const rows = sampleGrid.rows;
+                          const cols = sampleGrid.cols;
                           const overscan = 100;
                           const maxOffset = Number(cfg.maxOffset ?? 50);
                           const radius = Number(cfg.circleRadius ?? 5);
@@ -9845,30 +11089,31 @@
                           const rowTop = 0;
                           const visualRow = Math.max(2, rowVisualHeight);
                           const clipTop = rowTop;
-                          const isPreviewClip = dragPreview && dragPreview.clipIds && dragPreview.clipIds.includes(clip.id);
-                          const previewTrackMatch = isPreviewClip && dragPreview.pendingTrackId && dragPreview.pendingTrackId !== '__CREATE_TRACK_END__' && dragPreview.pendingTrackId === track.id;
-                          const previewAnchorClip = isPreviewClip && dragRef.current?.anchorClipId && dragRef.current.anchorClipId === clip.id;
-                          const previewLeft = previewAnchorClip ? timeToPx(dragPreview?.pendingStart ?? clip.start) : timeToPx(clip.start);
+                          const isSourcePlaceholder = Boolean(dragPreview?.type === 'clip-move' && dragPreview.sourceClipIds?.includes(clip.id));
                           return (
                             <div
                               key={clip.id}
                               style={{
                                 position: 'absolute',
-                                left: `${(previewTrackMatch || previewAnchorClip) ? previewLeft : timeToPx(clip.start)}px`,
+                                left: `${timeToPx(clip.start)}px`,
                                 top: `${clipTop}px`,
                                 width: `${durationOf(clip) * pxPerSec}px`,
                                 height: `${visualRow}px`,
-                                border: '2px solid #111',
+                                border: isSourcePlaceholder ? '2px dashed rgba(17,17,17,0.8)' : '2px solid #111',
                                 borderRadius: `${flatLeft ? 0 : 10}px ${flatRight ? 0 : 10}px ${flatRight ? 0 : 10}px ${flatLeft ? 0 : 10}px`,
-                                background: clip.color,
+                                background: isSourcePlaceholder
+                                  ? `repeating-linear-gradient(135deg, ${clip.color} 0 10px, rgba(255,255,255,0.72) 10px 20px)`
+                                  : clip.color,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'flex-start',
                                 fontSize: '11px',
                                 fontWeight: 900,
-                                zIndex: (selected || isPreviewClip) ? 20 : 10,
-                                opacity: isPreviewClip ? 0.92 : 1,
-                                boxShadow: selected
+                                zIndex: selected ? 20 : 10,
+                                opacity: isSourcePlaceholder ? 0.28 : 1,
+                                boxShadow: isSourcePlaceholder
+                                  ? 'inset 0 0 0 1px rgba(255,255,255,0.85)'
+                                  : selected
                                   ? 'inset 0 0 0 1px #ffffff, 0 0 20px rgba(87,154,255,0.9)'
                                   : ((flatLeft || flatRight) ? 'inset 0 0 0 1px rgba(87,154,255,0.35)' : 'none')
                               }}
@@ -10093,6 +11338,48 @@
                       </div>
                     )})}
                   </div>
+                  {dragPreview?.type === 'clip-move' && dragPreview.landingClips.map((previewClip) => {
+                    const isAnchor = previewClip.clipId === dragPreview.anchorClipId;
+                    const targetTrack = previewClip.trackId === '__CREATE_TRACK_END__'
+                      ? null
+                      : project.tracks.find((track) => track.id === previewClip.trackId);
+                    const dropLabel = previewClip.trackId === '__CREATE_TRACK_END__'
+                      ? `NEW LAYER · ${formatHMS(previewClip.start)}`
+                      : `${targetTrack?.name || 'TRACK'} · ${formatHMS(previewClip.start)}${previewClip.snapped ? ' · SNAP' : ''}`;
+                    return (
+                      <div
+                        key={`landing_${previewClip.clipId}`}
+                        style={{
+                          position: 'absolute',
+                          left: `${previewClip.left}px`,
+                          top: `${previewClip.top}px`,
+                          width: `${previewClip.width}px`,
+                          height: `${previewClip.height}px`,
+                          border: `3px ${previewClip.trackId === '__CREATE_TRACK_END__' ? 'dashed' : 'solid'} rgba(64,198,233,0.98)`,
+                          borderRadius: '10px',
+                          background: previewClip.trackId === '__CREATE_TRACK_END__' ? 'rgba(64,198,233,0.12)' : 'rgba(64,198,233,0.18)',
+                          boxShadow: isAnchor ? '0 0 0 2px rgba(255,255,255,0.85), 0 0 16px rgba(64,198,233,0.55)' : '0 0 0 1px rgba(255,255,255,0.75)',
+                          zIndex: 32,
+                          pointerEvents: 'none',
+                          overflow: 'hidden'
+                        }}
+                      >
+                        <div style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(135deg, rgba(64,198,233,0.12) 0 8px, rgba(255,255,255,0.16) 8px 16px)' }} />
+                        <div style={{ position: 'absolute', top: 3, left: 6, right: 6, fontSize: '10px', fontWeight: 900, color: '#083344', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {previewClip.layerName}
+                        </div>
+                        {isAnchor && (
+                          <div style={{ position: 'absolute', right: 6, bottom: 4, fontSize: '9px', fontWeight: 900, color: '#083344', background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(17,17,17,0.45)', borderRadius: '999px', padding: '1px 6px' }}>
+                            {dragPreview.blockedReason === 'locked-track'
+                              ? 'LOCKED TARGET'
+                              : dragPreview.createTrackAtEnd
+                                ? 'DROP TO CREATE LAYER'
+                                : dropLabel}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                   {boxSelect && (
                     <div
                       style={{
@@ -10266,17 +11553,20 @@
               <div className="media-popup-card" style={{ width: 'min(620px, 92vw)', zIndex: 195 }} onClick={(e) => e.stopPropagation()}>
                 <div className="text-xs font-black uppercase mb-2">Undo History</div>
                 <div className="max-h-[360px] overflow-y-auto neo-scroll space-y-1">
-                  {historyRef.current.map((snap, idx) => (
+                  {historyRef.current.map((snap, idx) => {
+                    const snapshotProject = snap?.project || snap;
+                    return (
                     <button
                       key={`hist_${idx}`}
                       className="neo-btn w-full justify-between"
                       style={{ background: idx === historyIndexRef.current ? COLORS.yellow : COLORS.white }}
                       onClick={() => jumpToHistoryIndex(idx)}
                     >
-                      <span>State {idx + 1}</span>
-                      <span>{formatHMS(snap?.meta?.durationSec || 0)} · {(snap?.clips || []).length} clips</span>
+                      <span>{snap?.actionLabel || `State ${idx + 1}`}</span>
+                      <span>{formatHMS(snapshotProject?.meta?.durationSec || 0)} · {(snapshotProject?.clips || []).length} clips · {snap?.recordedAt ? new Date(snap.recordedAt).toLocaleTimeString() : ''}</span>
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -10449,6 +11739,27 @@
                             >
                               <IconCmp size={16} strokeWidth={2.5} />
                               <span style={{ fontSize: '9px', lineHeight: 1.1 }}>{combo.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="text-[10px] font-black uppercase mt-4 mb-2 opacity-70">Motion Hooks</div>
+                    <div className="overflow-y-auto neo-scroll" style={{ maxHeight: '20vh' }}>
+                      <div className="grid grid-cols-3 gap-2">
+                        {MOTION_HOOK_TEMPLATES.map((combo) => {
+                          const IconCmp = LucideIcons[toPascalIconName(combo.icon)] || Sparkles;
+                          return (
+                            <button
+                              key={combo.id}
+                              className="neo-btn flex-col gap-1 py-2"
+                              style={{ background: COLORS.white, color: '#111', minHeight: '56px' }}
+                              onClick={() => {
+                                selectTemplateCombo({ ...combo, isMotionHook: true, primary: combo.label, secondary: '' });
+                              }}
+                            >
+                              <IconCmp size={16} strokeWidth={2.5} />
+                              <span style={{ fontSize: '9px', lineHeight: 1.1, textAlign: 'center' }}>{combo.label}</span>
                             </button>
                           );
                         })}

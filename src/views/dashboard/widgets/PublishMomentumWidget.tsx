@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Grid } from "lucide-react"
-import { metricCellValue } from "../../../services/analyticsSelectors"
+import { metricCellValue } from "../../../services/analytics/Selectors"
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 const TIME_BLOCKS = [

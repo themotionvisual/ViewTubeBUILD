@@ -18,7 +18,7 @@ import type {
 } from "../types"
 import { unifiedAuth } from "../services/authSession"
 import { clearAnalyticsStateForFreshSync } from "../services/localDataReset"
-import { readYouTubeAnalyticsCache } from "../services/canonicalAnalyticsStore"
+import { readYouTubeAnalyticsCache } from "../services/analytics/DataStore"
 import {
  fetchDailyMetrics,
  fetchRetentionCurve,
@@ -111,6 +111,34 @@ const loadPersistedBrain = (): WorkspaceBrain => {
        parsed.channelyticsState.allData
       : [],
      analyticsResult: parsed.channelyticsState?.analyticsResult || null,
+    },
+    performanceHubState: {
+     ...defaultBrain.performanceHubState,
+     ...(parsed.performanceHubState || {}),
+     analyticsWindow:
+      parsed.performanceHubState?.analyticsWindow ||
+      defaultBrain.performanceHubState.analyticsWindow,
+     syncSourceMode:
+      parsed.performanceHubState?.syncSourceMode ||
+      defaultBrain.performanceHubState.syncSourceMode,
+     storageMode:
+      parsed.performanceHubState?.storageMode ||
+      defaultBrain.performanceHubState.storageMode,
+     tableDataset:
+      parsed.performanceHubState?.tableDataset ||
+      defaultBrain.performanceHubState.tableDataset,
+     tableSearch:
+      typeof parsed.performanceHubState?.tableSearch === "string" ?
+       parsed.performanceHubState.tableSearch
+      : defaultBrain.performanceHubState.tableSearch,
+     tableTag:
+      typeof parsed.performanceHubState?.tableTag === "string" ?
+       parsed.performanceHubState.tableTag
+      : defaultBrain.performanceHubState.tableTag,
+     selectedRowIds:
+      Array.isArray(parsed.performanceHubState?.selectedRowIds) ?
+       parsed.performanceHubState.selectedRowIds
+      : defaultBrain.performanceHubState.selectedRowIds,
     },
     researchLabState: {
      ...defaultBrain.researchLabState,
@@ -696,6 +724,22 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
     reflectAndCompress,
     aiModel,
     setAiModel,
+    fetchAndCacheRetention: async (videoId: string) => {
+     if (brain.retentionCache[videoId]) {
+      return brain.retentionCache[videoId]
+     }
+     const { fetchVideoRetention } = await import("../services/youtubeService")
+     const data = await fetchVideoRetention(videoId)
+     if (data) {
+      setBrain((prev) => {
+       const newCache = { ...prev.retentionCache, [videoId]: data }
+       localStorage.setItem("vt_retention_cache", JSON.stringify(newCache))
+       return { ...prev, retentionCache: newCache }
+      })
+      return data
+     }
+     return null
+    },
    }}>
    {children}
  </GlobalDataContext.Provider>

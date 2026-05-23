@@ -1,5 +1,4 @@
-import React, { useEffect } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import React from "react"
 
 const UIReferenceLibraryContent = React.lazy(
 	() => import("../components/UIReferenceLibraryContent"),
@@ -52,9 +51,7 @@ const isStuffTab = (value: string | undefined): value is StuffTab =>
 	!!value && STUFF_TABS.some((tab) => tab.id === value)
 
 const Stuff: React.FC = () => {
-	const navigate = useNavigate()
-	const { tabId } = useParams<{ tabId?: string }>()
-	const activeStuffTab: StuffTab = isStuffTab(tabId) ? tabId : DEFAULT_STUFF_TAB
+	const [activeStuffTab, setActiveStuffTab] = React.useState<StuffTab>(DEFAULT_STUFF_TAB)
 
 	const sectionLoadingFallback = (
 		<div className="w-full max-w-[1400px] mx-auto mb-24 bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] p-12 text-center">
@@ -64,14 +61,8 @@ const Stuff: React.FC = () => {
 		</div>
 	)
 
-	useEffect(() => {
-		if (!isStuffTab(tabId)) {
-			navigate(`/stuff/${DEFAULT_STUFF_TAB}`, { replace: true })
-		}
-	}, [navigate, tabId])
-
 	const openStuffTab = (tab: StuffTab) => {
-		navigate(`/stuff/${tab}`)
+		setActiveStuffTab(tab)
 		window.scrollTo({ top: 0, behavior: "smooth" })
 	}
 

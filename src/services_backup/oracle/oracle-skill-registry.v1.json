@@ -1,0 +1,77 @@
+{
+  "version": "oracle_expert_v1",
+  "surface": "oracle-only",
+  "materialization_default": "hybrid-smart",
+  "skills": [
+    {
+      "skill_id": "hook-strategist-v1",
+      "intent": "Create high-retention opening hooks while preserving creator voice.",
+      "trigger_conditions": ["weak opening", "low early retention", "hook rewrite requested"],
+      "required_inputs": ["channel_voice_dna", "timeline_context", "video_objective"],
+      "tool_permissions": ["propose"],
+      "quality_rubric": "creative-quality-default-v1",
+      "failure_modes": ["generic hook", "promise mismatch", "voice mismatch"],
+      "output_contract": "contracts/oracle/hook-suggestion-v1"
+    },
+    {
+      "skill_id": "story-beat-v1",
+      "intent": "Map story beats to timeline pacing safely.",
+      "trigger_conditions": ["pacing issues", "story restructuring request", "retention drop-off"],
+      "required_inputs": ["timeline_context", "story_goal", "constraints"],
+      "tool_permissions": ["propose", "apply-safe-patch"],
+      "quality_rubric": "creative-quality-default-v1",
+      "failure_modes": ["overlong setup", "weak payoff", "beat monotony"],
+      "output_contract": "contracts/oracle/story-beat-patch-v1"
+    },
+    {
+      "skill_id": "visual-motion-v1",
+      "intent": "Generate motion language variants with readability and continuity safeguards.",
+      "trigger_conditions": ["visual refresh", "intro variant request", "motion block generation"],
+      "required_inputs": ["timeline_context", "style_goals", "channel_visual_dna"],
+      "tool_permissions": ["propose", "apply-safe-patch"],
+      "quality_rubric": "creative-quality-default-v1",
+      "failure_modes": ["effect overload", "visual clutter", "semantic drift"],
+      "output_contract": "contracts/oracle/visual-motion-patch-v1"
+    },
+    {
+      "skill_id": "caption-rhythm-v1",
+      "intent": "Optimize caption rhythm for retention and readability.",
+      "trigger_conditions": ["caption generation", "subtitle cleanup", "readability audit"],
+      "required_inputs": ["transcript", "timeline_context", "reading_speed_profile"],
+      "tool_permissions": ["propose"],
+      "quality_rubric": "creative-quality-default-v1",
+      "failure_modes": ["caption clutter", "late emphasis", "line overflow"],
+      "output_contract": "contracts/oracle/caption-rhythm-plan-v1"
+    },
+    {
+      "skill_id": "audio-energy-v1",
+      "intent": "Shape audio dynamics for energy without harming speech clarity.",
+      "trigger_conditions": ["flat audio", "music/sfx planning", "ducking optimization"],
+      "required_inputs": ["audio_tracks", "speech_regions", "timeline_context"],
+      "tool_permissions": ["propose"],
+      "quality_rubric": "creative-quality-default-v1",
+      "failure_modes": ["voice masking", "energy flatline", "cue spam"],
+      "output_contract": "contracts/oracle/audio-energy-plan-v1"
+    },
+    {
+      "skill_id": "retention-critic-v1",
+      "intent": "Diagnose attention risks and suggest reversible fixes.",
+      "trigger_conditions": ["retention audit", "drop-off investigation", "final quality review"],
+      "required_inputs": ["timeline_context", "engagement_signals", "caption_audio_state"],
+      "tool_permissions": ["read", "propose"],
+      "quality_rubric": "creative-quality-default-v1",
+      "failure_modes": ["false positives", "over-prescriptive edits", "style flattening"],
+      "output_contract": "contracts/oracle/retention-diagnostic-v1"
+    },
+    {
+      "skill_id": "render-optimization-v1",
+      "intent": "Recommend editable vs pre-render output mode for speed and reversibility.",
+      "trigger_conditions": ["heavy scene", "lag mitigation", "export optimization"],
+      "required_inputs": ["asset_complexity", "timeline_context", "render_target"],
+      "tool_permissions": ["read", "propose", "apply-safe-patch"],
+      "quality_rubric": "creative-quality-default-v1",
+      "failure_modes": ["irreversible flattening", "quality loss", "wrong profile"],
+      "output_contract": "contracts/oracle/render-optimization-v1"
+    }
+  ]
+}

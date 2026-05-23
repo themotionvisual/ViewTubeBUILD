@@ -15,9 +15,9 @@ import {
  Legend,
 } from "recharts"
 import { Search, MapPin, Globe, Loader2, Play } from "lucide-react"
-import type { CanonicalVideoRow } from "../services/analyticsContract"
-import { resolveMetricNumber } from "../services/canonicalMetricResolver"
-import { youtubeApiClient } from "../services/youtube/youtubeApiClient"
+import type { CanonicalVideoRow } from "../services/analytics/DataStore"
+import { resolveMetricNumber } from "../services/analytics/MetricRegistry"
+import { youtubeApiClient } from "../services/youtubeService"
 
 const metricValue = (row: CanonicalVideoRow, metricKey: string): number => {
  return resolveMetricNumber(row, metricKey as any).value || 0

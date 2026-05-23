@@ -47,12 +47,16 @@ export interface GlobalDataContextProps {
  addFollowUp: (id: string, q: string) => void
  answerFollowUp: (id: string, a: string) => void
  answerMicroPoll: (id: string, opt: string) => void
+ answerMicroPollRaw?: (id: string, opt: string) => void
  setMicroPolls: (p: any[]) => void
  isSyncing: boolean
  lastSyncComplete: string | null
  syncStatus: ChannelAnalysisSyncStatus
  syncBatch: VideoSyncBatchState
- globalSyncData: (options?: { batchMode?: "initial" | "next" }) => Promise<void>
+ globalSyncData: (options?: {
+ batchMode?: "initial" | "next"
+  enrichmentMode?: "core" | "video_metrics" | "traffic" | "segments" | "all"
+ }) => Promise<void>
  syncMetrics: (force?: boolean) => Promise<void>
  emitSignal: (toolId: string, action: string, payload: any) => Promise<void>
  consultBrain: (toolId: string, requestDetails?: any) => Promise<any>
@@ -60,6 +64,7 @@ export interface GlobalDataContextProps {
  reflectAndCompress: () => Promise<void>
  aiModel: string
  setAiModel: (modelId: string) => void
+ fetchAndCacheRetention: (videoId: string) => Promise<any[] | null>
 }
 
 export const GlobalDataContext = createContext<GlobalDataContextProps | undefined>(
@@ -100,6 +105,15 @@ export const defaultBrain: WorkspaceBrain = {
   viewMode: "month",
   selectedEventId: null,
  },
+ performanceHubState: {
+  analyticsWindow: "lifetime",
+  syncSourceMode: "both",
+  storageMode: "both",
+  tableDataset: "master",
+  tableSearch: "",
+  tableTag: "all",
+  selectedRowIds: [],
+ },
  researchLabState: {
   activeQuery: "",
   results: [],
@@ -124,9 +138,10 @@ export const defaultAuthState: AuthState = {
  channelHandle: null,
  channelName: null,
  channelThumbnail: null,
- subscriberCount: 0,
- totalViews: 0,
- videoCount: 0,
+ subscriberCount: null,
+ totalViews: null,
+ videoCount: null,
+ syncedAt: null,
 }
 
 export const defaultSyncStatus: ChannelAnalysisSyncStatus = {
@@ -176,7 +191,7 @@ export const fallbackContext: GlobalDataContextProps = {
  addFollowUp: () => {},
  answerFollowUp: () => {},
  answerMicroPoll: () => {},
- answerMicroPollRaw: () => {}, 
+ answerMicroPollRaw: () => {},
  setMicroPolls: () => {},
  emitSignal: async () => {},
  consultBrain: async () => ({}),
@@ -184,4 +199,5 @@ export const fallbackContext: GlobalDataContextProps = {
  reflectAndCompress: async () => {},
  aiModel: 'gemini-3.1-flash-lite',
  setAiModel: () => {},
+ fetchAndCacheRetention: async () => null,
 }

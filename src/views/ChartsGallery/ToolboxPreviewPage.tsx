@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 import { ArrowLeft, LayoutGrid, Layers, RadioTower } from "lucide-react"
 import { useBrain } from "../../context/useBrain"
 import type { ChartConfig } from "../../types"
-import { getMasterRows } from "../../services/analyticsSelectors"
+import { getMasterRows } from "../../services/analytics/Selectors"
 import { ChannelyticsChartToolbox } from "../../components/ChannelyticsChartToolbox"
 import { RenderChart } from "../../components/ChartEngine"
 

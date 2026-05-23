@@ -14,17 +14,17 @@ import {
  buildTableMetricMappingStatus,
  getMasterRows,
  getVideoStatsVerificationSummary,
-} from "../services/analyticsSelectors"
+} from "../services/analytics/Selectors"
 import { MASTER_VIDEO_TABLE_HEADERS } from "./performanceHubUtils"
-import { FORMULA_REGISTRY } from "../services/formulaRegistry"
+import { FORMULA_REGISTRY } from "../services/analytics/MetricRegistry"
 import { SUBSCRIPTION_PLANS } from "../services/subscriptionPlans"
 import {
  downloadExportBundle,
  type ExportManifest,
 } from "../services/dataExport"
 import { DEFAULT_NAMING_TABLE } from "../services/namingGovernance"
-import { getStoredSyncSourceMode, getStoredStorageMode } from "../services/analyticsRuntime"
-import { readYouTubeAnalyticsCache } from "../services/canonicalAnalyticsStore"
+import { getStoredSyncSourceMode, getStoredStorageMode } from "../services/analytics/SyncPipeline"
+import { readYouTubeAnalyticsCache } from "../services/analytics/DataStore"
 
 const ingestModes: IngestMode[] = ["connected", "import", "hybrid", "public_handle"]
 const OPTIONAL_VIDEO_METRICS_STORAGE_KEY = "vt_optional_video_metrics_enabled"

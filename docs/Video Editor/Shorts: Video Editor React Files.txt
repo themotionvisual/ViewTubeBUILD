@@ -307,4 +307,8 @@ The 'Director' AI. Excellent at understanding complex JSON structures. Feed it t
 🗄️
 Browser API
 IndexedDB / localForage
+<<<<<<< ours
 Crucial for saving massive video files and audio blobs locally in the browser so the user doesn't lose work on refresh without needing cloud storage.
+=======
+Crucial for saving massive video files and audio blobs locally in the browser so the user doesn't lose work on refresh without needing cloud storage.
+>>>>>>> theirs

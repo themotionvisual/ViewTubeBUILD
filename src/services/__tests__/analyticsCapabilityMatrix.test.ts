@@ -6,7 +6,7 @@ import {
  buildMissingVideoMetricBacklog,
  getVideoMetricRuntimeStatus,
  getMasterColumnVisibilityRule,
-} from "../analyticsCapabilityMatrix"
+} from "../analytics/SyncPipeline"
 
 describe("analytics capability matrix", () => {
  it("flags audience segmentation metrics as import-only", () => {

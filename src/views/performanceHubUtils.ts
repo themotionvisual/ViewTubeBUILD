@@ -6,8 +6,14 @@ import {
 import {
  resolveCtrPercent,
  resolveImpressions,
-} from "../services/metricAliasResolver"
-import { METRIC_REGISTRY, canonicalizeMetricKey } from "../services/analyticsContract"
+} from "../services/analytics/MetricRegistry"
+import { METRIC_REGISTRY, canonicalizeMetricKey } from "../services/analytics/DataStore"
+import {
+ MASTER_VIDEO_COLUMNS,
+ getMasterVideoColumnHeaders,
+ getMasterVideoColumnDefinition,
+ getMasterVideoShortLabel,
+} from "../services/performanceHubTableRegistry"
 
 export type UnifiedRow = DataForgeRow & {
  _id: string
@@ -60,8 +66,8 @@ export const positiveMetric = (value: unknown): number => {
 }
 
 export const MASTER_HEADER_ALIASES: Record<string, string[]> = {
- "Video title": ["videotitle", "video", "dimension", "title", "content"],
- "Video ID": ["videoid", "id"],
+ "Video title": ["videotitle", "title"],
+ "Video ID": ["videoid", "id", "content"],
  Length: ["length", "durationsec", "durationseconds", "duration"],
  Format: ["format", "type", "contenttype", "creatorcontenttype"],
  Date: [
@@ -79,9 +85,7 @@ export const MASTER_HEADER_ALIASES: Record<string, string[]> = {
 
 Object.values(METRIC_REGISTRY).forEach((def) => {
  const header = def.displayVariants.tableHeader
- if (!MASTER_HEADER_ALIASES[header]) {
-  MASTER_HEADER_ALIASES[header] = []
- }
+ if (!MASTER_HEADER_ALIASES[header]) MASTER_HEADER_ALIASES[header] = []
  const normalizedHeader = canonicalizeMetricKey(header)
  if (!MASTER_HEADER_ALIASES[header].includes(normalizedHeader)) {
   MASTER_HEADER_ALIASES[header].push(normalizedHeader)
@@ -98,117 +102,34 @@ Object.values(METRIC_REGISTRY).forEach((def) => {
  }
 })
 
+MASTER_VIDEO_COLUMNS.forEach((column) => {
+ const header = column.header
+ if (!MASTER_HEADER_ALIASES[header]) MASTER_HEADER_ALIASES[header] = []
+ const aliases = [header, column.shortLabel, ...column.aliases]
+ aliases.forEach((alias) => {
+  const normalized = canonicalizeMetricKey(alias)
+  if (normalized && !MASTER_HEADER_ALIASES[header].includes(normalized)) {
+   MASTER_HEADER_ALIASES[header].push(normalized)
+  }
+ })
+})
+
 export const MASTER_TABLE_SHORT_LABELS: Record<string, string> = {
- "Video title": "Title",
- "Video ID": "Video ID",
- Format: "Format",
- Date: "Date",
- Views: "Views",
- "Watch Time (Hours)": "Watch Hrs",
- "Watch Hrs": "Watch Hrs",
- Revenue: "Revenue",
- "Subs +": "Subs +",
- "Subs -": "Subs -",
- "Likes +": "Likes +",
- "Likes -": "Likes -",
- Comments: "CMNTS",
- Shares: "Shares",
- "Engaged views": "Engaged",
- Engaged: "Engaged",
- CPM: "CPM",
- RPM: "RPM",
- Length: "Length",
- "AVD (Average View Duration)": "AVD",
- "AVD (Sec)": "AVD",
- AVD: "AVD",
- "AVP (%)": "AVP %",
- "Click-Through Rate (CTR)": "CTR %",
- "CTR (%)": "CTR %",
- CTR: "CTR %",
- "CTR %": "CTR %",
- "Impressions click-through rate (%)": "CTR %",
- Impressions: "Impressions",
- "Engagement Rate": "Eng Rate",
- "STW %": "STW %",
- "End screen click rate": "End Screen %",
- "End Screen %": "End Screen %",
- "End screen clicks": "ES Clicks",
- "ES Clicks": "ES Clicks",
- "End screen impressions": "ES Impr",
- "ES Impr": "ES Impr",
- "Card click rate": "Card %",
- "Card %": "Card %",
- "Card teaser click rate": "Teaser %",
- "Teaser %": "Teaser %",
- "Card teaser clicks": "Teaser Clicks",
- "Teaser Clicks": "Teaser Clicks",
- "Card teaser impressions": "Teaser Impr",
- "Teaser Impr": "Teaser Impr",
- "Annotation impressions": "Ann Impr",
- "Ann Impr": "Ann Impr",
- "Annotation clickable impressions": "Ann Click Impr",
- "Ann Click Impr": "Ann Click Impr",
- "Annotation closable impressions": "Ann Close Impr",
- "Ann Close Impr": "Ann Close Impr",
- "Annotation clicks": "Ann Clicks",
- "Ann Clicks": "Ann Clicks",
- "Annotation closes": "Ann Closes",
- "Ann Closes": "Ann Closes",
- "YouTube Premium Watch Time": "Red Hrs",
- "Red Hrs": "Red Hrs",
  Duration: "Length",
  "Viewer percentage": "Viewer %",
  "Data Provenance": "Data Src",
 }
 
-export const MASTER_VIDEO_TABLE_HEADERS: string[] = [
- "Views",
- "Subs +",
- "Subs -",
- "Likes +",
- "Likes -",
- "Shares",
- "Comments",
- "Watch Hrs",
- "Revenue",
- "RPM",
- "AVD",
- "AVP %",
- "Engaged",
- "Estimated Ad Revenue",
- "Gross Revenue",
- "Impressions",
- "CPM",
- "STW %",
- "CTR %",
- "Unique",
- "New",
- "Casual",
- "Returning",
- "Regular",
- "Red Hrs",
- "End screen elements shown",
- "End Screen %",
- "Estimated Premium Revenue",
- "Playback Based CPM",
- "Ad Impressions",
- "Monetized Playbacks",
- "End screen element clicks",
- "Card clicks",
- "Cards shown",
- "Clicks per card shown (%)",
- "Card %",
- "Teaser Clicks",
- "Teaser Impr",
- "Teaser %",
- "Hypes",
- "Hype points",
- "Remix count",
- "Remixes of Your Content",
- "Remix views",
- "Shorts Funnel Percent Watched",
- "Shorts Funnel Swipe Away Rate",
-]
+MASTER_VIDEO_COLUMNS.forEach((column) => {
+ MASTER_TABLE_SHORT_LABELS[column.header] = column.shortLabel
+ column.aliases.forEach((alias) => {
+  MASTER_TABLE_SHORT_LABELS[alias] = column.shortLabel
+ })
+})
+
+export const MASTER_VIDEO_TABLE_HEADERS: string[] = getMasterVideoColumnHeaders().filter(
+ (header) => !getMasterVideoColumnDefinition(header)?.preserveWhenEmpty,
+)
 
 const MASTER_HEADER_ALIAS_LOOKUP = (() => {
  const map = new Map<string, string>()
@@ -232,7 +153,12 @@ export const getCanonicalMasterHeader = (header: string): string => {
 
 export const getShortMasterHeader = (header: string): string => {
  const canonical = getCanonicalMasterHeader(header)
- return MASTER_TABLE_SHORT_LABELS[canonical] || MASTER_TABLE_SHORT_LABELS[header] || canonical
+ return (
+  MASTER_TABLE_SHORT_LABELS[canonical] ||
+  MASTER_TABLE_SHORT_LABELS[header] ||
+  getMasterVideoShortLabel(canonical) ||
+  canonical
+ )
 }
 
 export const findDuplicateShortHeaders = (headers: string[]): string[] => {
@@ -334,11 +260,21 @@ export const getSubscribers = (row: Record<string, unknown>): number => {
   [
    "Subscribers Gained",
    "Subscribers gained",
-   "Subscribers",
    "subscribersGained",
   ],
-  ["subscriber"],
+  ["subscribersgained"],
  )
+}
+
+export const getSubscribersNet = (row: Record<string, unknown>): number => {
+ const direct = getMetric(row, ["Subs Net", "Subscribers", "subscribersNet"])
+ const raw = textFromUnknown(
+  firstDefined(row, ["Subs Net", "Subscribers", "subscribersNet"]),
+ ).trim()
+ if (raw !== "" && raw !== "-") {
+  return direct
+ }
+ return 0
 }
 
 export const getRevenue = (row: Record<string, unknown>): number =>

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Search } from "lucide-react"
-import { metricCellValue } from "../../../services/analyticsSelectors"
+import { metricCellValue } from "../../../services/analytics/Selectors"
 
 const STOP_WORDS = new Set([
  "the",

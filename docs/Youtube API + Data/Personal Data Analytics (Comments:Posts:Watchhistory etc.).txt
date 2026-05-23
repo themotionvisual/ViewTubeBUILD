@@ -450,4 +450,8 @@ Privacy & Terms provides more context regarding this Privacy Policy and our Term
 Technologies includes more information about:
 How Google uses cookies
 Technologies used for Advertising
+<<<<<<< ours
 How Google uses information from sites or apps that use our services
+=======
+How Google uses information from sites or apps that use our services
+>>>>>>> theirs

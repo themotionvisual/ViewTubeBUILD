@@ -1,14 +1,14 @@
 import JSZip from "jszip"
 import { buildMasterTableBundle } from "./masterTables"
-import { getMasterRows } from "./analyticsSelectors"
-import type { AnalyticsWindow } from "./analyticsContract"
+import { getMasterRows } from "./analytics/Selectors"
+import type { AnalyticsWindow } from "./analytics/DataStore"
 import type { IngestMode, MasterTableType } from "./productArchitecture"
 import type { CsvFileWithTag } from "../types"
 import {
  buildUnifiedLedger,
  buildYouTubeStyleProjection,
  selectAuthoritativeOwnerRows,
-} from "./unifiedSourceOfTruth"
+} from "./analytics/DataStore"
 
 export interface ExportManifest {
  version: string

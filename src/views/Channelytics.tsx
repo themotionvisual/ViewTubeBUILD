@@ -27,7 +27,7 @@ import { dedupeByVideoDate, normalizeAndEnrichRow } from '../services/DataEngine
 import {
   canonicalRowsToMasterTableRows,
   getMasterRows,
-} from '../services/analyticsSelectors';
+} from '../services/analytics/Selectors';
 
 const Channelytics: React.FC = () => {
   const { brain, updateBrain, registerProvider, unregisterProvider, setResearchLabState } = useBrain();

@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest"
 
-import type { CanonicalVideoRow, MetricCell } from "../analyticsContract"
+import type { CanonicalVideoRow, MetricCell } from "../analytics/DataStore"
 import {
   buildUnifiedLedger,
   buildWindowSignature,
   buildYouTubeStyleProjection,
   selectAuthoritativeOwnerRows,
-} from "../unifiedSourceOfTruth"
+} from "../analytics/DataStore"
 
 const cell = (value: number | null): MetricCell => ({
   value,

@@ -3,7 +3,7 @@ import {
   generateKeywordResearch,
   generateOracleReport,
 } from "@/services/gemini";
-import { getMetricSummary, getMasterRows } from "@/services/analyticsSelectors";
+import { getMetricSummary, getMasterRows } from "@/services/analytics/Selectors";
 import {
   DATA_ANALYSIS_SYSTEM_PROMPT,
   DATA_HANDLING_INSTRUCTIONS,

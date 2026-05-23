@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { getMasterRows } from '../services/analyticsSelectors';
+import { getMasterRows } from '../services/analytics/Selectors';
 import { CHART_THEME, getChartSpecById } from '../chartSystem/unifiedChartSpec';
 
 // --- HELPER COMPONENT: NEO-BRUTALIST CHART SHELL ---

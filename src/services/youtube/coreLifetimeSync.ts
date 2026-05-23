@@ -16,7 +16,10 @@ import {
  fetchShortsPlaylistIds,
  parseChannelHandleFromApi,
 } from "./youtubeDataFetcher"
-import { updateCanonicalAnalyticsCache } from "../canonicalAnalyticsStore"
+import {
+  readYouTubeAnalyticsCache,
+  updateCanonicalAnalyticsCache,
+} from "../analytics/DataStore"
 
 // ============================================================================
 // 1. METRIC DEFINITIONS
@@ -32,16 +35,20 @@ export const CORE_METRICS = [
   "engagedViews",
   "comments",
   "likes",
-  "dislikes",
   "shares",
   "averageViewDuration",
   "averageViewPercentage",
   "subscribersGained",
   "subscribersLost",
+] as const
+
+/**
+ * Optional core metrics: useful when the Analytics API allows them for this
+ * channel/report shape, but they must not block baseline table population.
+ */
+export const CORE_OPTIONAL_METRICS = [
+  "dislikes",
   "estimatedRevenue",
-  "grossRevenue",
-  "cpm",
-  "monetizedPlaybacks",
 ] as const
 
 /**
@@ -64,7 +71,9 @@ export const DEEP_METRICS = [
   "cardTeaserClicks",
 ] as const
 
-export type CoreMetric = (typeof CORE_METRICS)[number]
+export type CoreMetric =
+  | (typeof CORE_METRICS)[number]
+  | (typeof CORE_OPTIONAL_METRICS)[number]
 export type DeepMetric = (typeof DEEP_METRICS)[number]
 
 /** Data API: max 50 IDs per videos?id= call */
@@ -72,6 +81,41 @@ const BATCH_SIZE = 50
 
 /** Analytics API: 25 IDs per filter to avoid URI length issues with many metrics + many IDs */
 const ANALYTICS_BATCH = 25
+
+type AspectRatioBucket = "portrait" | "square" | "landscape" | "unknown"
+type AspectRatioSource = "playerEmbed" | "contentDetails" | "unknown"
+
+const aspectEvidenceFromEmbedHtml = (
+  embedHtml: string,
+): {
+  isPortrait: boolean
+  bucket: AspectRatioBucket
+  width?: number
+  height?: number
+  source: AspectRatioSource
+} => {
+  const widthMatch = embedHtml.match(/width="(\d+)"/)
+  const heightMatch = embedHtml.match(/height="(\d+)"/)
+  const width = parseInt(widthMatch?.[1] || "0", 10)
+  const height = parseInt(heightMatch?.[1] || "0", 10)
+  if (!width || !height) {
+    return { isPortrait: false, bucket: "unknown", source: "unknown" }
+  }
+  const ratio = width / height
+  const bucket: AspectRatioBucket =
+    Math.abs(ratio - 1) <= 0.03
+      ? "square"
+      : height > width
+        ? "portrait"
+        : "landscape"
+  return {
+    isPortrait: bucket === "portrait",
+    bucket,
+    width,
+    height,
+    source: "playerEmbed",
+  }
+}
 
 // ============================================================================
 // 2. TYPES
@@ -93,6 +137,10 @@ export interface CoreVideoBaseline {
   durationRaw: string
   format: "shorts" | "long"
   isShort: boolean
+  aspectRatioBucket?: AspectRatioBucket
+  aspectRatioWidth?: number
+  aspectRatioHeight?: number
+  aspectRatioSource?: AspectRatioSource
   privacyStatus: string
   uploadStatus?: string
   definition?: string
@@ -126,6 +174,10 @@ export interface CoreSyncResult {
   }
 }
 
+export interface CoreLifetimeSyncOptions {
+  includeVideoAnalytics?: boolean
+}
+
 // ============================================================================
 // 3. UTILITIES
 // ============================================================================
@@ -133,11 +185,29 @@ export interface CoreSyncResult {
 /** Robust ISO date string — prevents timezone edge-case API errors */
 const getIsoDate = (date: Date) => date.toISOString().split("T")[0]
 
-const mergeReportPayloads = (
+const buildUnauthorizedSyncError = (
+  stage: string,
+  status: number = 401,
+): Error & { code: number; stage: string } =>
+  Object.assign(
+    new Error(
+      `YouTube authorization expired during ${stage}. Please reconnect your channel and try the sync again.`,
+    ),
+    { code: status, stage },
+  )
+
+const assertAuthorizedResponse = (response: Response, stage: string) => {
+  if (response.status === 401) {
+    throw buildUnauthorizedSyncError(stage, 401)
+  }
+}
+
+const mergeVideoMetricPayloads = (
   payloads: any[],
 ): { columnHeaders: any[]; rows: any[][] } => {
-  let headers: any[] = []
-  const allRows: any[][] = []
+  const metricNames: string[] = []
+  const metricNameSet = new Set<string>()
+  const rowsByVideo = new Map<string, Record<string, unknown>>()
 
   payloads.forEach((payload) => {
     if (
@@ -147,17 +217,42 @@ const mergeReportPayloads = (
     ) {
       return
     }
-    if (headers.length === 0) {
-      headers = payload.columnHeaders.map((h: any) => ({
-        name: String(h?.name || ""),
-      }))
-    }
+
+    const headers = payload.columnHeaders.map((h: any) =>
+      String(h?.name || ""),
+    )
+    const videoIdx = headers.indexOf("video")
+    if (videoIdx < 0) return
+
+    headers.forEach((name: string) => {
+      if (!name || name === "video" || metricNameSet.has(name)) return
+      metricNameSet.add(name)
+      metricNames.push(name)
+    })
+
     payload.rows.forEach((row: any) => {
-      if (Array.isArray(row)) allRows.push(row)
+      if (!Array.isArray(row)) return
+      const videoId = String(row[videoIdx] || "")
+      if (!videoId) return
+
+      const merged = rowsByVideo.get(videoId) || { video: videoId }
+      headers.forEach((name: string, idx: number) => {
+        if (!name || name === "video") return
+        if (row[idx] !== null && row[idx] !== undefined) {
+          merged[name] = row[idx]
+        }
+      })
+      rowsByVideo.set(videoId, merged)
     })
   })
 
-  return { columnHeaders: headers, rows: allRows }
+  const headerNames = ["video", ...metricNames]
+  return {
+    columnHeaders: headerNames.map((name) => ({ name })),
+    rows: Array.from(rowsByVideo.values()).map((row) =>
+      headerNames.map((name) => row[name] ?? null),
+    ),
+  }
 }
 
 // ============================================================================
@@ -260,6 +355,9 @@ export const syncFastAnalyticsTotals = async (): Promise<any> => {
     )
   ])
 
+  assertAuthorizedResponse(lifetimeRes, "fast analytics lifetime totals")
+  assertAuthorizedResponse(d28Res, "fast analytics 28 day subscribers")
+
   const fastData = {
     lifetimeRevenue: 0,
     lifetimeWatchMinutes: 0,
@@ -305,6 +403,8 @@ export const syncFastAnalyticsTotals = async (): Promise<any> => {
 export const syncRecentVideoSnapshot = async (uploadsPlaylistId: string): Promise<CoreVideoBaseline[]> => {
   const token = await refreshTokenIfExpired()
   if (!token) throw new Error("Unauthorized")
+  const analyticsEndDate = getIsoDate(new Date(Date.now() - 24 * 60 * 60 * 1000))
+  const analyticsStartDate = "2005-02-14"
 
   console.log("🎬 PHASE 1.7: FETCHING RECENT VIDEO SNAPSHOT...")
 
@@ -313,6 +413,7 @@ export const syncRecentVideoSnapshot = async (uploadsPlaylistId: string): Promis
     `${BASE_URL}/playlistItems?part=contentDetails&maxResults=50&playlistId=${uploadsPlaylistId}`,
     { headers: { Authorization: `Bearer ${token}` } }
   )
+  assertAuthorizedResponse(playlistRes, "recent video snapshot playlist fetch")
   if (!playlistRes.ok) throw new Error("Failed to fetch recent playlist items")
   
   const playlistData = await playlistRes.json()
@@ -325,18 +426,15 @@ export const syncRecentVideoSnapshot = async (uploadsPlaylistId: string): Promis
     `${BASE_URL}/videos?part=statistics,contentDetails,snippet,status,player&id=${videoIds.join(",")}`,
     { headers: { Authorization: `Bearer ${token}` } }
   )
+  assertAuthorizedResponse(videosRes, "recent video snapshot detail fetch")
   if (!videosRes.ok) throw new Error("Failed to fetch recent video details")
 
   const videosData = await videosRes.json()
   const snapshot: CoreVideoBaseline[] = (videosData.items || []).map((v: any) => {
     const duration = parseDurationSeconds(v.contentDetails?.duration || "")
     
-    // Vertical check
-    let isVertical = false
-    const embedHtml = v.player?.embedHtml || ""
-    const w = parseInt(embedHtml.match(/width="(\d+)"/)?.[1] || "0", 10)
-    const h = parseInt(embedHtml.match(/height="(\d+)"/)?.[1] || "0", 10)
-    if (w && h) isVertical = h > w
+    const aspect = aspectEvidenceFromEmbedHtml(v.player?.embedHtml || "")
+    const isShort = duration > 180 ? false : aspect.isPortrait
 
     return {
       videoId: v.id,
@@ -347,8 +445,12 @@ export const syncRecentVideoSnapshot = async (uploadsPlaylistId: string): Promis
       thumbnail: v.snippet?.thumbnails?.high?.url || v.snippet?.thumbnails?.default?.url || "",
       duration,
       durationRaw: v.contentDetails?.duration || "",
-      format: duration <= 180 ? "shorts" : "long",
-      isShort: duration <= 180 && isVertical,
+      format: isShort ? "shorts" : "long",
+      isShort,
+      aspectRatioBucket: aspect.bucket,
+      aspectRatioWidth: aspect.width,
+      aspectRatioHeight: aspect.height,
+      aspectRatioSource: aspect.source,
       privacyStatus: v.status?.privacyStatus || "",
       uploadStatus: v.status?.uploadStatus || "",
       definition: v.contentDetails?.definition || "sd",
@@ -363,6 +465,176 @@ export const syncRecentVideoSnapshot = async (uploadsPlaylistId: string): Promis
       lastSyncedAt: new Date().toISOString()
     }
   })
+
+  const snapshotAnalyticsPayloads: any[] = []
+  for (let i = 0; i < videoIds.length; i += ANALYTICS_BATCH) {
+    const batch = videoIds.slice(i, i + ANALYTICS_BATCH)
+    const batchNumber = Math.floor(i / ANALYTICS_BATCH) + 1
+    const filterValue = `video==${batch.join(",")}`
+
+    const requiredUrl =
+      `${ANALYTICS_URL}/reports?ids=channel==MINE` +
+      `&startDate=${analyticsStartDate}&endDate=${analyticsEndDate}` +
+      `&metrics=${CORE_METRICS.join(",")}` +
+      `&dimensions=video` +
+      `&filters=${encodeURIComponent(filterValue)}`
+
+    const requiredRes = await proxyFetch(requiredUrl, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    assertAuthorizedResponse(
+      requiredRes,
+      `recent video snapshot required analytics batch ${batchNumber}`,
+    )
+    if (requiredRes.ok) {
+      const payload = await requiredRes.json()
+      if (payload?.rows?.length) snapshotAnalyticsPayloads.push(payload)
+    }
+
+    for (const optionalMetric of CORE_OPTIONAL_METRICS) {
+      const optionalUrl =
+        `${ANALYTICS_URL}/reports?ids=channel==MINE` +
+        `&startDate=${analyticsStartDate}&endDate=${analyticsEndDate}` +
+        `&metrics=${optionalMetric}` +
+        `&dimensions=video` +
+        `&filters=${encodeURIComponent(filterValue)}`
+
+      const optionalRes = await proxyFetch(optionalUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      assertAuthorizedResponse(
+        optionalRes,
+        `recent video snapshot optional analytics batch ${batchNumber} (${optionalMetric})`,
+      )
+      if (!optionalRes.ok) continue
+      const payload = await optionalRes.json()
+      if (payload?.rows?.length) snapshotAnalyticsPayloads.push(payload)
+    }
+  }
+
+  const mergedSnapshotAnalytics = mergeVideoMetricPayloads(snapshotAnalyticsPayloads)
+  const analyticsHeaders = (mergedSnapshotAnalytics.columnHeaders || []).map((h: any) =>
+    String(h?.name || ""),
+  )
+  const analyticsVideoIndex = analyticsHeaders.indexOf("video")
+  const analyticsByVideoId = new Map<string, any[]>()
+  ;(mergedSnapshotAnalytics.rows || []).forEach((row: any) => {
+    if (!Array.isArray(row) || analyticsVideoIndex < 0) return
+    const videoId = String(row[analyticsVideoIndex] || "")
+    if (!videoId) return
+    analyticsByVideoId.set(videoId, row)
+  })
+
+  snapshot.forEach((video) => {
+    const analyticsRow = analyticsByVideoId.get(video.videoId) || null
+    if (!analyticsRow) return
+
+    video.analytics = analyticsRow
+    video.hasAnalytics = true
+
+    const metrics: Partial<Record<CoreMetric, number>> = {}
+    analyticsHeaders.forEach((header, idx) => {
+      if (!header || header === "video") return
+      const value = Number(analyticsRow[idx])
+      if (Number.isFinite(value)) {
+        metrics[header as CoreMetric] = value
+      }
+    })
+    video.analyticsMetrics = metrics
+  })
+
+  try {
+    const cache = readYouTubeAnalyticsCache()
+    const existingVideos = Array.isArray(cache.videos) ? cache.videos : []
+    const nextVideoMap = new Map<string, any>()
+
+    existingVideos.forEach((video: any) => {
+      const id = String(video?.videoId || "").trim()
+      if (id) nextVideoMap.set(id, video)
+    })
+
+    snapshot.forEach((video) => {
+      const prev = nextVideoMap.get(video.videoId) || {}
+      nextVideoMap.set(video.videoId, {
+        ...prev,
+        videoId: video.videoId,
+        title: video.title,
+        publishedAt: video.publishedAt,
+        thumbnail: video.thumbnail,
+        thumbnailUrl: video.thumbnail,
+        aspectRatioBucket: video.aspectRatioBucket,
+        aspectRatioWidth: video.aspectRatioWidth,
+        aspectRatioHeight: video.aspectRatioHeight,
+        aspectRatioSource: video.aspectRatioSource,
+      })
+    })
+
+    const nextStats: Record<string, any> = {
+      ...(cache.stats || {}),
+    }
+
+    snapshot.forEach((video) => {
+      const prev = nextStats[video.videoId] || {}
+      nextStats[video.videoId] = {
+        ...prev,
+        viewCount: String(video.dataApiStats.views),
+        likeCount: String(video.dataApiStats.likes),
+        commentCount: String(video.dataApiStats.comments),
+        title: video.title,
+        publishedAt: video.publishedAt,
+        thumbnail: video.thumbnail,
+        thumbnailUrl: video.thumbnail,
+        durationSeconds: video.duration,
+        durationRaw: video.durationRaw,
+        privacyStatus: video.privacyStatus,
+        uploadStatus: video.uploadStatus || "",
+        definition: video.definition || "",
+        isShort: video.isShort,
+        format: video.format,
+        aspectRatioBucket: video.aspectRatioBucket,
+        aspectRatioWidth: video.aspectRatioWidth,
+        aspectRatioHeight: video.aspectRatioHeight,
+        aspectRatioSource: video.aspectRatioSource,
+        hasAnalytics: video.hasAnalytics,
+        ...(video.analyticsMetrics || {}),
+      }
+    })
+
+    await updateCanonicalAnalyticsCache({
+      videos: Array.from(nextVideoMap.values()),
+      stats: nextStats,
+      analytics: mergedSnapshotAnalytics.rows?.length
+        ? mergedSnapshotAnalytics
+        : cache.analytics,
+      analyticsByWindow: {
+        ...(cache.analyticsByWindow || {}),
+        lifetime: mergedSnapshotAnalytics.rows?.length
+          ? {
+              ...(cache.analyticsByWindow?.lifetime || {}),
+              window: "lifetime",
+              startDate: analyticsStartDate,
+              endDate: analyticsEndDate,
+              fetchedAt: Date.now(),
+              report: mergedSnapshotAnalytics,
+            }
+          : cache.analyticsByWindow?.lifetime,
+      },
+      lastSynced: Date.now(),
+    } as any)
+
+    localStorage.setItem("yt_analytics_last_sync", new Date().toISOString())
+    window.dispatchEvent(new CustomEvent("vt_local_data_changed"))
+    window.dispatchEvent(
+      new CustomEvent("yt_analytics_synced", {
+        detail: readYouTubeAnalyticsCache(),
+      }),
+    )
+  } catch (error) {
+    console.warn(
+      "[CoreSync] Failed to persist recent snapshot analytics into canonical cache:",
+      error,
+    )
+  }
 
   // Dispatch for GlobalDataContext to populate the brain immediately
   window.dispatchEvent(
@@ -382,7 +654,10 @@ export const syncRecentVideoSnapshot = async (uploadsPlaylistId: string): Promis
  * 3. Fetches Core Analytics for Channel & Videos
  * 4. Enriches each video with analytics row (or null fallback for new videos)
  */
-export const syncCoreLifetimeData = async (maxVideos: number = Infinity): Promise<CoreSyncResult> => {
+export const syncCoreLifetimeData = async (
+  maxVideos: number = Infinity,
+  options: CoreLifetimeSyncOptions = {},
+): Promise<CoreSyncResult> => {
   const token = await refreshTokenIfExpired()
   if (!token) throw new Error("Unauthorized")
 
@@ -403,6 +678,7 @@ export const syncCoreLifetimeData = async (maxVideos: number = Infinity): Promis
     `${BASE_URL}/channels?part=contentDetails&mine=true`,
     { headers: { Authorization: `Bearer ${token}` } },
   )
+  assertAuthorizedResponse(channelRes, "core lifetime channel contentDetails fetch")
   if (!channelRes.ok) throw new Error(`Channel contentDetails fetch failed: ${channelRes.status}`)
   const channelData = await channelRes.json()
 
@@ -432,6 +708,7 @@ export const syncCoreLifetimeData = async (maxVideos: number = Infinity): Promis
     const playlistRes = await proxyFetch(playlistUrl, {
       headers: { Authorization: `Bearer ${token}` },
     })
+    assertAuthorizedResponse(playlistRes, "core lifetime uploads playlist fetch")
     if (!playlistRes.ok) break
 
     const playlistData = await playlistRes.json()
@@ -458,6 +735,10 @@ export const syncCoreLifetimeData = async (maxVideos: number = Infinity): Promis
       `${BASE_URL}/videos?part=statistics,contentDetails,snippet,status,player&id=${batch.join(",")}`,
       { headers: { Authorization: `Bearer ${token}` } },
     )
+    assertAuthorizedResponse(
+      videosRes,
+      `core lifetime video metadata batch ${Math.floor(i / BATCH_SIZE) + 1}`,
+    )
     if (!videosRes.ok) {
       console.warn(`[CoreSync] Video stats batch ${Math.floor(i / BATCH_SIZE) + 1} failed: ${videosRes.status}`)
       continue
@@ -468,17 +749,8 @@ export const syncCoreLifetimeData = async (maxVideos: number = Infinity): Promis
       const duration = parseDurationSeconds(v.contentDetails?.duration || "")
       const durationRaw = v.contentDetails?.duration || ""
 
-      // Vertical aspect ratio detection from player embed dimensions
-      let isVertical = false
-      const embedHtml = v.player?.embedHtml || ""
-      const widthMatch = embedHtml.match(/width="(\d+)"/)
-      const heightMatch = embedHtml.match(/height="(\d+)"/)
-      if (widthMatch && heightMatch) {
-        const w = parseInt(widthMatch[1], 10)
-
-        const h = parseInt(heightMatch[1], 10)
-        isVertical = h > w
-      }
+      const aspect = aspectEvidenceFromEmbedHtml(v.player?.embedHtml || "")
+      const isShort = duration > 180 ? false : aspect.isPortrait
 
       videoBaseMap.set(v.id, {
         videoId: v.id,
@@ -490,8 +762,12 @@ export const syncCoreLifetimeData = async (maxVideos: number = Infinity): Promis
           `https://img.youtube.com/vi/${v.id}/hqdefault.jpg`,
         duration,
         durationRaw,
-        format: duration <= 180 ? "shorts" : "long",
-        isShort: duration <= 180 && isVertical, // Preliminary: duration + aspect ratio
+        format: isShort ? "shorts" : "long",
+        isShort,
+        aspectRatioBucket: aspect.bucket,
+        aspectRatioWidth: aspect.width,
+        aspectRatioHeight: aspect.height,
+        aspectRatioSource: aspect.source,
         privacyStatus: v.status?.privacyStatus || "",
         dataApiStats: {
           views: parseInt(v.statistics?.viewCount || "0", 10),
@@ -517,6 +793,7 @@ export const syncCoreLifetimeData = async (maxVideos: number = Infinity): Promis
         video.duration > 180
           ? false
           : isInShortsPlaylist || video.isShort
+      video.format = video.isShort ? "shorts" : "long"
     })
   } catch (e) {
     console.warn("[CoreSync] Shorts playlist cross-ref failed, using duration+aspect only:", e)
@@ -538,12 +815,16 @@ export const syncCoreLifetimeData = async (maxVideos: number = Infinity): Promis
     const coreChannelRes = await proxyFetch(coreChannelUrl, {
       headers: { Authorization: `Bearer ${token}` },
     })
+    assertAuthorizedResponse(coreChannelRes, "core lifetime channel analytics")
     if (coreChannelRes.ok) {
       coreChannelAnalytics = await coreChannelRes.json()
     } else {
       console.warn(`[CoreSync] Step 4 channel analytics failed: ${coreChannelRes.status}`)
     }
   } catch (e) {
+    if ((e as { code?: number })?.code === 401) {
+      throw e
+    }
     console.warn("[CoreSync] Step 4 channel analytics error:", e)
   }
 
@@ -551,15 +832,19 @@ export const syncCoreLifetimeData = async (maxVideos: number = Infinity): Promis
   // Uses 25-ID batches for Analytics API to avoid URI length issues
   // with many metrics + many video IDs in the filter parameter
   const allVideoReportPayloads: any[] = []
-  let allVideoAnalyticsRows: any[][] = []
+  const disabledOptionalVideoMetrics = new Set<string>()
 
-  for (let i = 0; i < allVideoIds.length; i += ANALYTICS_BATCH) {
-    const batch = allVideoIds.slice(i, i + ANALYTICS_BATCH)
+  const fetchVideoMetricPayload = async (
+    batch: string[],
+    metrics: readonly string[],
+    batchNumber: number,
+    label: "required" | "optional",
+  ): Promise<any | null> => {
     const filterValue = `video==${batch.join(",")}`
     const videoAnalyticsUrl =
       `${ANALYTICS_URL}/reports?ids=channel==MINE` +
       `&startDate=${epoch}&endDate=${endDateStr}` +
-      `&metrics=${CORE_METRICS.join(",")}` +
+      `&metrics=${metrics.join(",")}` +
       `&dimensions=video` +
       `&filters=${encodeURIComponent(filterValue)}`
 
@@ -567,28 +852,99 @@ export const syncCoreLifetimeData = async (maxVideos: number = Infinity): Promis
       const videoRes = await proxyFetch(videoAnalyticsUrl, {
         headers: { Authorization: `Bearer ${token}` },
       })
+      assertAuthorizedResponse(
+        videoRes,
+        `core lifetime ${label} video analytics batch ${batchNumber}`,
+      )
       if (!videoRes.ok) {
-        console.warn(`[CoreSync] Step 5 video analytics batch ${Math.floor(i / ANALYTICS_BATCH) + 1} failed: ${videoRes.status}`)
-        continue
+        const metricLabel = metrics.join(",")
+        if (label === "required") {
+          console.warn(
+            `[CoreSync] Step 5 required video analytics batch ${batchNumber} failed (${videoRes.status}) for metrics: ${metricLabel}`,
+          )
+        } else {
+          console.warn(
+            `[CoreSync] Step 5 optional video analytics metric unavailable (${videoRes.status}): ${metricLabel}`,
+          )
+          metrics.forEach((metric) => disabledOptionalVideoMetrics.add(metric))
+        }
+        return null
       }
 
       const payload = await videoRes.json()
-      if (payload && Array.isArray(payload.rows)) {
-        allVideoReportPayloads.push(payload)
-        allVideoAnalyticsRows = [...allVideoAnalyticsRows, ...payload.rows]
-      }
+      return payload && Array.isArray(payload.rows) ? payload : null
     } catch (e: any) {
-      console.warn(`[CoreSync] Step 5 video analytics batch error:`, e?.message || e)
+      if (e?.code === 401) {
+        throw e
+      }
+      const metricLabel = metrics.join(",")
+      console.warn(
+        `[CoreSync] Step 5 ${label} video analytics batch ${batchNumber} error for metrics ${metricLabel}:`,
+        e?.message || e,
+      )
+      if (label === "optional") {
+        metrics.forEach((metric) => disabledOptionalVideoMetrics.add(metric))
+      }
+      return null
     }
   }
+
+  if (options.includeVideoAnalytics === false) {
+    console.log("[CoreSync] Step 5 deferred: initial sync will use Data API baseline while analytics enriches in background.")
+  } else {
+    for (let i = 0; i < allVideoIds.length; i += ANALYTICS_BATCH) {
+      const batch = allVideoIds.slice(i, i + ANALYTICS_BATCH)
+      const batchNumber = Math.floor(i / ANALYTICS_BATCH) + 1
+
+      const requiredPayload = await fetchVideoMetricPayload(
+        batch,
+        CORE_METRICS,
+        batchNumber,
+        "required",
+      )
+      if (requiredPayload) {
+        allVideoReportPayloads.push(requiredPayload)
+      }
+
+      for (const optionalMetric of CORE_OPTIONAL_METRICS) {
+        if (disabledOptionalVideoMetrics.has(optionalMetric)) {
+          continue
+        }
+        const optionalPayload = await fetchVideoMetricPayload(
+          batch,
+          [optionalMetric],
+          batchNumber,
+          "optional",
+        )
+        if (optionalPayload) {
+          allVideoReportPayloads.push(optionalPayload)
+        }
+      }
+    }
+  }
+
+  if (allVideoIds.length > 0 && videoBaseMap.size === 0) {
+    throw new Error(
+      "Core lifetime sync fetched a video inventory but could not load any video metadata baselines.",
+    )
+  }
+
+  if (options.includeVideoAnalytics !== false && !coreChannelAnalytics && allVideoIds.length > 0) {
+    throw new Error(
+      "Core lifetime sync did not load channel analytics for the requested sync window.",
+    )
+  }
+
+  // Merge separate metric reports into one row per video. This keeps title/date/
+  // thumbnail Data API baselines intact even when optional Analytics metrics fail.
+  const mergedVideoReport = mergeVideoMetricPayloads(allVideoReportPayloads)
+  const allVideoAnalyticsRows = mergedVideoReport.rows
 
   // ── STEP 6: Enrich videos with analytics (fallback for new videos) ─
   // If Analytics API hasn't processed a video yet (24-48h lag for new uploads),
   // analytics will be null — UI should fall back to video.dataApiStats
   const columnHeaders =
-    allVideoReportPayloads.length > 0
-      ? (allVideoReportPayloads[0].columnHeaders || []).map((h: any) => String(h?.name || ""))
-      : []
+    mergedVideoReport.columnHeaders.map((h: any) => String(h?.name || ""))
   const videoColIdx = columnHeaders.indexOf("video")
 
   videoBaseMap.forEach((video, videoId) => {
@@ -616,18 +972,8 @@ export const syncCoreLifetimeData = async (maxVideos: number = Infinity): Promis
     ;(video as any).lastSyncedAt = new Date().toISOString()
   })
 
-  // Merge all report payloads into a single unified report
-  const mergedVideoReport = mergeReportPayloads(allVideoReportPayloads)
-
   const phase1Ms = Math.round(performance.now() - t0)
   console.log(`✅ PHASE 1 COMPLETE! Dashboard ready in ${phase1Ms}ms.`)
-
-  // ── PHASE 4: Deep Segments (Audience/Traffic/Geo) ───────────────
-  try {
-    await syncDeepSegments(channelId, epoch, endDateStr)
-  } catch (deepErr) {
-    console.warn("⚠️ Phase 4 (Deep Segments) failed but continuing...", deepErr)
-  }
 
   return {
     channelId,

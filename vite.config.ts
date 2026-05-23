@@ -15,6 +15,11 @@ export default defineConfig({
     host: true, // Listen on all network interfaces (0.0.0.0) so Docker can map the port
     port: 5173,
     strictPort: true,
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      clientPort: 5173,
+    },
     watch: {
       usePolling: true, // Ensures hot-reloading detects file saves reliably through the Docker volume
     },
