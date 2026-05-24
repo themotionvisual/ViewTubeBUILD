@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — ViewTube</title>
+  <meta name="description" content="ViewTube Privacy Policy. Learn how ViewTube accesses, uses, and protects your YouTube data. Compliant with Google API Services User Data Policy.">
+  <link rel="icon" type="image/png" href="/icons/vtx.png">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --border: #1e1e2e;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --accent: #8b5cf6;
+      --accent-dim: rgba(139, 92, 246, 0.15);
+      --link: #a78bfa;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+    .header {
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--surface);
+    }
+    .header-logo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .header-divider {
+      color: var(--text-muted);
+      font-size: 1.25rem;
+    }
+    .header-page {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 3rem 2rem 6rem;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--accent), #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .updated {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .intro {
+      color: var(--text-muted);
+      margin-bottom: 2.5rem;
+      font-size: 1rem;
+    }
+    h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2.5rem 0 1rem;
+      color: var(--text);
+    }
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.75rem;
+      color: var(--text);
+    }
+    p { margin-bottom: 1rem; }
+    a {
+      color: var(--link);
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    a:hover { opacity: 0.8; text-decoration: underline; }
+    ul, ol {
+      margin-bottom: 1rem;
+      padding-left: 1.5rem;
+    }
+    li {
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+    }
+    li strong { color: var(--text); }
+    .callout {
+      background: var(--accent-dim);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .callout p { margin-bottom: 0.5rem; }
+    .callout p:last-child { margin-bottom: 0; }
+    .scope-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0 1.5rem;
+      font-size: 0.9rem;
+    }
+    .scope-table th {
+      text-align: left;
+      padding: 0.75rem;
+      border-bottom: 2px solid var(--border);
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+    .scope-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+    .scope-table code {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.15rem 0.4rem;
+      font-size: 0.85rem;
+      color: var(--accent);
+    }
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2rem 0;
+    }
+    .contact {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-top: 1rem;
+    }
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+    }
+    .footer a { color: var(--link); }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <a href="/" class="header-logo">ViewTube</a>
+  <span class="header-divider">/</span>
+  <span class="header-page">Privacy Policy</span>
+</div>
+
+<div class="container">
+  <h1>Privacy Policy</h1>
+  <p class="updated">Last Updated: May 24, 2026</p>
+
+  <p class="intro">This Privacy Policy explains how ViewTube ("we," "us," or "our") collects, uses, stores, and discloses your information when you use the ViewTube web application at <a href="https://viewtube.live">https://viewtube.live</a> (the "Service"). By using the Service, you agree to the collection and use of information in accordance with this policy.</p>
+
+  <hr>
+
+  <h2>1. Information We Collect</h2>
+
+  <h3>A. Google Account Information</h3>
+  <p>When you sign in with your Google account, we request access to:</p>
+
+  <table class="scope-table">
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Scope</th>
+        <th>Purpose</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Profile info (name, email, photo)</td>
+        <td><code>openid</code> <code>profile</code> <code>email</code></td>
+        <td>Identify your account</td>
+      </tr>
+      <tr>
+        <td>YouTube channel data</td>
+        <td><code>youtube.readonly</code></td>
+        <td>Read channel metadata, video lists, playlists</td>
+      </tr>
+      <tr>
+        <td>YouTube account management</td>
+        <td><code>youtube</code> <code>youtube.force-ssl</code></td>
+        <td>Edit video metadata, upload videos</td>
+      </tr>
+      <tr>
+        <td>YouTube Analytics</td>
+        <td><code>yt-analytics.readonly</code></td>
+        <td>View performance analytics and reports</td>
+      </tr>
+      <tr>
+        <td>YouTube monetary analytics</td>
+        <td><code>yt-analytics-monetary.readonly</code></td>
+        <td>View revenue and ad performance data</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>B. Locally Stored Data</h3>
+  <p>ViewTube is a <strong>client-side web application</strong>. All data processing occurs within your web browser. We store the following in your browser's local storage:</p>
+  <ul>
+    <li><strong>OAuth access tokens</strong> — Used to authenticate API requests to YouTube on your behalf. Tokens expire automatically (typically after 1 hour).</li>
+    <li><strong>Cached analytics data</strong> — Your YouTube Analytics data may be cached in your browser to reduce API requests and improve performance.</li>
+    <li><strong>User preferences</strong> — Settings such as your preferred Gemini API key, display preferences, and tool configurations.</li>
+  </ul>
+
+  <h3>C. Information We Do NOT Collect</h3>
+  <ul>
+    <li>We do <strong>not</strong> operate backend servers that receive, store, or process your YouTube data.</li>
+    <li>We do <strong>not</strong> store your Google access tokens on any server.</li>
+    <li>We do <strong>not</strong> collect your browsing history, IP address, or device fingerprints.</li>
+    <li>We do <strong>not</strong> use cookies for tracking or advertising purposes.</li>
+  </ul>
+
+  <hr>
+
+  <h2>2. How We Use Your Information</h2>
+  <p>We use the data accessed through Google APIs solely to:</p>
+  <ul>
+    <li><strong>Display your YouTube channel analytics</strong> in charts, dashboards, and reports within the Service.</li>
+    <li><strong>Enable video management</strong> features such as editing video metadata, uploading videos, and managing playlists.</li>
+    <li><strong>Provide content creation tools</strong> such as thumbnail analysis, hook generation, and content strategy features.</li>
+    <li><strong>Improve the Service</strong> by understanding which features are used (based on local usage data only, not transmitted to any server).</li>
+  </ul>
+
+  <hr>
+
+  <h2>3. Google API Services User Data Policy</h2>
+  <p>ViewTube's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+
+  <div class="callout">
+    <p><strong>Limited Use Disclosure</strong></p>
+    <p>In accordance with Google's Limited Use requirements, ViewTube:</p>
+    <ol>
+      <li><strong>Only uses Google user data</strong> to provide and improve user-facing features that are prominent in the application's user interface.</li>
+      <li><strong>Does not transfer Google user data to third parties</strong> unless necessary to provide or improve user-facing features, you provide affirmative consent, or it is necessary for security or legal compliance.</li>
+      <li><strong>Does not use Google user data for advertising</strong>, including retargeting, personalized advertising, or interest-based advertising.</li>
+      <li><strong>Does not allow humans to read Google user data</strong> unless we have your affirmative agreement for specific data, it is necessary for security purposes, or it is required by applicable law.</li>
+      <li><strong>Does not use Google user data to train generalized AI or machine learning models</strong> that are not related to providing or improving user-facing features of the Service.</li>
+    </ol>
+  </div>
+
+  <hr>
+
+  <h2>4. Data Storage and Security</h2>
+
+  <h3>Client-Side Architecture</h3>
+  <p>ViewTube operates entirely in your web browser. Your YouTube data:</p>
+  <ul>
+    <li>Is fetched directly from Google's APIs by your browser.</li>
+    <li>Is processed and rendered locally in your browser.</li>
+    <li>Is cached in your browser's <code>localStorage</code> for performance.</li>
+    <li>Is <strong>never transmitted to ViewTube servers</strong> or any third-party servers.</li>
+  </ul>
+
+  <h3>Access Token Security</h3>
+  <ul>
+    <li>OAuth access tokens are stored in your browser's <code>localStorage</code> and expire automatically.</li>
+    <li>Tokens are used only to make authenticated requests to Google APIs from your browser.</li>
+    <li>No refresh tokens are stored server-side.</li>
+  </ul>
+
+  <h3>Third-Party API Keys</h3>
+  <p>If you provide a Gemini API key for AI-powered features, that key is stored only in your browser's <code>localStorage</code> and is sent directly from your browser to Google's Gemini API. ViewTube never transmits or stores your API keys on any server.</p>
+
+  <hr>
+
+  <h2>5. Data Sharing</h2>
+  <p>We do <strong>not</strong> sell, rent, or share your personal information or YouTube data with third parties. Data may only be disclosed:</p>
+  <ul>
+    <li><strong>With your explicit consent.</strong></li>
+    <li><strong>To comply with legal obligations</strong> such as a valid court order, subpoena, or legal process.</li>
+    <li><strong>To protect rights and safety</strong> if we believe disclosure is necessary to protect the rights, property, or safety of ViewTube, our users, or the public.</li>
+  </ul>
+
+  <hr>
+
+  <h2>6. Data Retention and Deletion</h2>
+  <p>Since all data is stored locally in your browser:</p>
+  <ul>
+    <li><strong>You control your data.</strong> You can clear all ViewTube data at any time by clearing your browser's local storage for viewtube.live, or by using the "Disconnect" / "Logout" feature within the Service.</li>
+    <li><strong>Access tokens</strong> expire automatically (typically after 1 hour). Expired tokens are not usable.</li>
+    <li><strong>Cached analytics data</strong> persists in local storage until you clear it or log out.</li>
+  </ul>
+
+  <h3>Revoking Access</h3>
+  <p>You can revoke ViewTube's access to your Google account at any time:</p>
+  <ol>
+    <li>Go to your <a href="https://myaccount.google.com/permissions">Google Account Permissions</a> page.</li>
+    <li>Find "ViewTube" in the list of apps with access to your account.</li>
+    <li>Click "Remove Access."</li>
+  </ol>
+  <p>This immediately invalidates all access tokens and prevents ViewTube from accessing your YouTube data.</p>
+
+  <hr>
+
+  <h2>7. Children's Privacy</h2>
+  <p>The Service is not intended for use by anyone under the age of 13 (or the applicable age of digital consent in your jurisdiction). We do not knowingly collect personal information from children. If we become aware that a child has provided us with personal information, we will take steps to remove such information.</p>
+
+  <hr>
+
+  <h2>8. YouTube Terms of Service</h2>
+  <p>By using ViewTube, you also agree to be bound by the <a href="https://www.youtube.com/t/terms">YouTube Terms of Service</a> and the <a href="https://policies.google.com/privacy">Google Privacy Policy</a>.</p>
+
+  <hr>
+
+  <h2>9. Changes to This Privacy Policy</h2>
+  <p>We may update this Privacy Policy from time to time. When we make changes, we will update the "Last Updated" date at the top of this page. We encourage you to review this Privacy Policy periodically to stay informed about how we protect your information.</p>
+
+  <hr>
+
+  <h2>10. Contact Us</h2>
+  <div class="contact">
+    <p>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us at:</p>
+    <p><strong>Email:</strong> <a href="mailto:webspade.site@gmail.com">webspade.site@gmail.com</a></p>
+    <p><strong>Website:</strong> <a href="https://viewtube.live">https://viewtube.live</a></p>
+  </div>
+</div>
+
+<div class="footer">
+  <p>&copy; 2026 ViewTube. All rights reserved. &nbsp;|&nbsp; <a href="/terms.html">Terms of Service</a> &nbsp;|&nbsp; <a href="/privacy.html">Privacy Policy</a></p>
+</div>
+
+</body>
+</html>

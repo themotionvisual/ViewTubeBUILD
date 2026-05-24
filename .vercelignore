@@ -1,0 +1,16 @@
+# Ignore all non-essential development/backup files for Vercel
+.git
+.worktrees
+node_modules
+Roo-Code
+_quarantine
+_migration_hub
+src copy
+docs
+*.pdf
+*.txt
+*.log
+.claude
+.vscode
+.billing
+pnpm-lock.yaml
