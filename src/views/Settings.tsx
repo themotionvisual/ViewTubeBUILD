@@ -1062,6 +1062,25 @@ const Settings: React.FC = () => {
       Open All Links Page
      </button>
     </div>
+
+    <div className="border-t-[3px] border-black pt-8 space-y-3">
+     <h3 className="text-xl font-black uppercase tracking-tighter">Legal & Policies</h3>
+     <p className="text-sm font-bold text-gray-700">
+      View our privacy policy and terms of service.
+     </p>
+     <div className="flex gap-4">
+      <a
+       href="/privacy.html"
+       className={`${canonicalButtonClass} bg-white text-black px-8 py-4 text-sm inline-block`}>
+       Privacy Policy
+      </a>
+      <a
+       href="/terms.html"
+       className={`${canonicalButtonClass} bg-white text-black px-8 py-4 text-sm inline-block`}>
+       Terms of Service
+      </a>
+     </div>
+    </div>
    </SubToolbox>
    </div>
   </div>
