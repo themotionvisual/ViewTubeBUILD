@@ -141,10 +141,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ onHide }) => {
     <button
      type="button"
      onClick={onHide}
-     className="w-full h-[34px] border-[2px] border-black rounded-[10px] bg-white text-[11px] font-black uppercase tracking-wide shadow-[2px_2px_0px_0px_black] hover:translate-y-[1px] hover:shadow-none transition-all"
+     className="w-full h-[34px] border-[2px] border-black rounded-[10px] bg-white text-[11px] font-black uppercase tracking-wide shadow-[2px_2px_0px_0px_black] hover:translate-y-[1px] hover:shadow-none transition-all mb-3"
     >
      Hide Sidebar
     </button>
+    <div className="flex justify-center gap-3 text-[10px] text-gray-500 font-semibold">
+     <a href="/privacy.html" className="hover:text-black underline">Privacy Policy</a>
+     <span>•</span>
+     <a href="/terms.html" className="hover:text-black underline">Terms of Service</a>
+    </div>
    </div>
 
    {/* Sidebar Chatbot Slot */}
