@@ -11,14 +11,28 @@ import {
   ChevronLeft,
   ChevronRight,
   MoreHorizontal,
-  Loader2
+  Loader2,
+  Wand2,
+  Video,
+  Zap,
+  ThumbsUp,
+  RefreshCw,
+  Target
 } from "lucide-react"
 import {
   postCommentReply,
   fetchAllCommentThreads,
   fetchVideoSnippetDetails
 } from "../../../services/youtubeService"
-import { generatePerfectReply } from "../../../services/gemini"
+import { 
+  generatePerfectReply,
+  generateEnhancedReply,
+  refineUserReply,
+  recommendVideoForComment,
+  type EnhancedReplyResult,
+  type RefinedReplyResult,
+  type VideoRecommendation
+} from "../../../services/gemini"
 import { useBrain } from "../../../context/useBrain"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
@@ -29,6 +43,8 @@ const htmlDecode = (input: string) => {
 }
 
 const THUMBNAIL_WARNINGS = new Set<string>()
+
+type AIMode = "generate" | "refine" | "recommend"
 
 export const CommentReplyWidget = ({
   widget,
@@ -68,6 +84,13 @@ export const CommentReplyWidget = ({
   const [isSyncingMetadata, setIsSyncingMetadata] = useState(false)
   const [inboundImageUrl, setInboundImageUrl] = useState<string | null>(null)
   
+  // NEW: AI Mode states
+  const [aiMode, setAiMode] = useState<AIMode>("generate")
+  const [videoRecommendations, setVideoRecommendations] = useState<Record<string, VideoRecommendation>>({})
+  const [refinementResults, setRefinementResults] = useState<Record<string, RefinedReplyResult>>({})
+  const [toneConfidence, setToneConfidence] = useState<Record<string, number>>({})
+  const [showAdvanced, setShowAdvanced] = useState<Record<string, boolean>>({})
+  
   const REPLY_DRAFT_COST = getAiTokenCost("commentMagicDraftPerThread")
   const entitlement = useEntitlement()
   const selectedDraftCost = selectedIds.size * REPLY_DRAFT_COST
@@ -75,7 +98,23 @@ export const CommentReplyWidget = ({
     selectedIds.size === 0 ? true : canAffordAiTokensFromState(entitlement, selectedDraftCost)
 
   const channelId = data.brain?.channelProfile?.id || data.authState?.channelId || ""
+  const channelName = data.brain?.channelProfile?.name || data.authState?.channelName || "Content Creator"
+  const channelDescription = data.brain?.channelProfile?.description || ""
   const canonicalVideos = useMemo(() => data.canonicalRows || data.brain?.canonicalRows || [], [data])
+
+  // Collect previous replies for tone matching
+  const previousReplies = useMemo(() => {
+    const replies: string[] = []
+    allThreads.forEach((thread: any) => {
+      const threadReplies = thread.replies?.comments || []
+      threadReplies.forEach((reply: any) => {
+        if (reply.snippet.authorChannelId?.value === channelId) {
+          replies.push(htmlDecode(reply.snippet.textDisplay || ""))
+        }
+      })
+    })
+    return replies.slice(0, 10)
+  }, [allThreads, channelId])
 
   const syncMetadata = async (threads: any[]) => {
     if (isSyncingMetadata) return
@@ -157,6 +196,7 @@ export const CommentReplyWidget = ({
     setSelectedIds(new Set())
   }, [tab])
 
+  // ENHANCED: AI Magic Draft with tone matching
   const handleMagicDraft = async (commentIds: string[]) => {
     if (commentIds.length === 0) return
     const totalCost = commentIds.length * REPLY_DRAFT_COST
@@ -165,23 +205,50 @@ export const CommentReplyWidget = ({
     commentIds.forEach(id => setIsGenerating(prev => ({...prev, [id]: true})))
     
     try {
-      const available = canonicalVideos.map((r: any) => ({title: r.title, id: r.videoId}))
+      const available = canonicalVideos.map((r: any) => ({
+        title: r.title, 
+        id: r.videoId,
+        description: r.description || ""
+      }))
+
+      const channelContext = {
+        channelName,
+        channelDescription,
+        previousReplies,
+        communityPosts: [], // Could be fetched from community post history
+      }
 
       const promises = commentIds.map(async (id) => {
         const thread = allThreads.find(t => t.id === id)
         const comment = thread.snippet.topLevelComment
-        const draft = await generatePerfectReply(
+        
+        // Use enhanced reply generation
+        const result = await generateEnhancedReply(
           comment.snippet.textOriginal,
           comment.snippet.authorDisplayName.replace(/@/g, ""),
-          data.brain?.channelProfile?.name || "Content Creation",
+          channelContext,
           available,
           brain
         )
 
-        let finalReply = draft.reply
-        if (draft.suggestedVideoId) {
-          finalReply += `\n\nCheck this out for more details: https://youtu.be/${draft.suggestedVideoId}`
+        let finalReply = result.reply
+        if (result.suggestedVideoId) {
+          finalReply += `\n\nCheck this out: https://youtu.be/${result.suggestedVideoId}`
+          setVideoRecommendations(prev => ({
+            ...prev,
+            [id]: {
+              recommendedVideoId: result.suggestedVideoId!,
+              matchStrength: result.toneConfidence || 0.7,
+              reason: result.videoRecommendationReason || "",
+              bridgePhrase: ""
+            }
+          }))
         }
+        
+        if (result.toneConfidence) {
+          setToneConfidence(prev => ({...prev, [id]: result.toneConfidence!}))
+        }
+        
         return { id, reply: finalReply }
       })
 
@@ -193,6 +260,69 @@ export const CommentReplyWidget = ({
       console.error(e)
     } finally {
       commentIds.forEach(id => setIsGenerating(prev => ({...prev, [id]: false})))
+    }
+  }
+
+  // NEW: Refine user-typed reply
+  const handleRefineReply = async (threadId: string) => {
+    const currentReply = replyText[threadId]
+    if (!currentReply?.trim()) return
+    
+    const thread = allThreads.find(t => t.id === threadId)
+    if (!thread) return
+    
+    setIsGenerating(prev => ({...prev, [threadId]: true}))
+    
+    try {
+      const originalComment = thread.snippet.topLevelComment.snippet.textOriginal
+      const result = await refineUserReply(
+        currentReply,
+        originalComment,
+        { channelName, previousReplies },
+        brain
+      )
+      
+      setReplyText(prev => ({...prev, [threadId]: result.refinedReply}))
+      setRefinementResults(prev => ({...prev, [threadId]: result}))
+    } catch (e) {
+      console.error("Refinement failed:", e)
+    } finally {
+      setIsGenerating(prev => ({...prev, [threadId]: false}))
+    }
+  }
+
+  // NEW: Get video recommendation for a specific comment
+  const handleGetVideoRecommendation = async (threadId: string) => {
+    const thread = allThreads.find(t => t.id === threadId)
+    if (!thread) return
+    
+    setIsGenerating(prev => ({...prev, [threadId]: true}))
+    
+    try {
+      const commentText = thread.snippet.topLevelComment.snippet.textOriginal
+      const available = canonicalVideos.map((r: any) => ({
+        title: r.title,
+        id: r.videoId,
+        description: r.description || "",
+        tags: r.tags || []
+      }))
+      
+      const recommendation = await recommendVideoForComment(commentText, available, brain)
+      
+      if (recommendation.recommendedVideoId) {
+        setVideoRecommendations(prev => ({...prev, [threadId]: recommendation}))
+        
+        // Add to reply text if there's existing content
+        const current = replyText[threadId] || ""
+        const videoLink = `\n\n${recommendation.bridgePhrase || "You might enjoy this"}: https://youtu.be/${recommendation.recommendedVideoId}`
+        if (!current.includes(recommendation.recommendedVideoId)) {
+          setReplyText(prev => ({...prev, [threadId]: current + videoLink}))
+        }
+      }
+    } catch (e) {
+      console.error("Video recommendation failed:", e)
+    } finally {
+      setIsGenerating(prev => ({...prev, [threadId]: false}))
     }
   }
 
@@ -266,7 +396,7 @@ export const CommentReplyWidget = ({
 
   const headerContent = (
     <div style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", justifyContent: "center", position: "relative" }}>
-      {/* Tabs / Toggles — Standardized vt-tab-group */}
+      {/* Tabs / Toggles */}
       <div className="vt-tab-group" style={{ width: "90px", padding: "2px" }}>
         <button
           onClick={() => setTab("unreplied")}
@@ -283,7 +413,6 @@ export const CommentReplyWidget = ({
           OLD
         </button>
       </div>
-
     </div>
   )
 
@@ -303,7 +432,7 @@ export const CommentReplyWidget = ({
           </div>
         )}
         
-        {/* Comment List - Now fully scrollable, no pagination */}
+        {/* Comment List - Now fully scrollable */}
         <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px", paddingRight: "4px" }}>
           {loading && allThreads.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px", opacity: 0.4, fontWeight: 900, fontSize: "12px" }}>
@@ -317,7 +446,6 @@ export const CommentReplyWidget = ({
               const c = thread.snippet.topLevelComment.snippet
               const authorHandle = htmlDecode(c.authorDisplayName.replace(/^@+/, "@"))
               const videoId = thread.snippet.videoId
-              // Check canonical first, then fetchedVideoData
               const videoCandidate = canonicalVideos.find((v: any) => v.videoId === videoId)
               const fetched = fetchedVideoData[videoId]
               const video = (fetched && fetched.title && fetched.title !== "Unknown Video") ? fetched : videoCandidate
@@ -327,6 +455,10 @@ export const CommentReplyWidget = ({
               const existingChannelReplies = (thread.replies?.comments || []).filter(
                 (reply: any) => reply.snippet.authorChannelId?.value === channelId
               )
+              const recommendation = videoRecommendations[threadId]
+              const refinement = refinementResults[threadId]
+              const confidence = toneConfidence[threadId]
+              const isAdvancedOpen = showAdvanced[threadId]
 
               return (
                 <div 
@@ -343,7 +475,7 @@ export const CommentReplyWidget = ({
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                    {/* Thumbnail container inspired by VideoManager */}
+                    {/* Thumbnail */}
                     <div style={{ width: "80px", flexShrink: 0 }}>
                       <div style={{ 
                         width: "100%", 
@@ -395,13 +527,13 @@ export const CommentReplyWidget = ({
                         </div>
                       </div>
                       
-                      {/* Video Title - Now decoded and shows title from fetched data */}
+                      {/* Video Title */}
                       <div style={{ fontSize: "9px", fontWeight: 900, color: "#00D2FF", textTransform: "uppercase", marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {video?.title && video.title !== "Unknown Video" ? htmlDecode(video.title) : `[${videoId}]`}
                       </div>
                     </div>
 
-                    {/* Black Checkbox */}
+                    {/* Checkbox */}
                     <div 
                       onClick={() => toggleSelection(threadId)}
                       style={{ 
@@ -422,7 +554,7 @@ export const CommentReplyWidget = ({
                     </div>
                   </div>
 
-                  {/* Comment Text - Full, no truncation, decoded HTML entities */}
+                  {/* Comment Text */}
                   <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", lineHeight: 1.2, padding: "4px 0" }}>
                     {htmlDecode(c.textDisplay)}
                   </div>
@@ -453,24 +585,108 @@ export const CommentReplyWidget = ({
                     </div>
                   )}
 
-                  {/* Reply Input - available for NEW and OLD */}
-                  {(
-                    <div style={{ width: "100%" }}>
-                      <textarea
-                        className="vt-textarea"
-                        value={currentReply}
-                        onChange={(e) => setReplyText(prev => ({...prev, [threadId]: e.target.value}))}
-                        placeholder={tab === "history" ? "ADD FOLLOW-UP REPLY..." : "REPLY..."}
-                        style={{ 
-                          width: "100%", 
-                          height: "50px", 
-                          padding: "6px", 
-                          border: "2px solid #00D2FF", 
-                          resize: "none", 
-                          fontSize: "10px",
-                          boxSizing: "border-box"
-                        }}
-                      />
+                  {/* Reply Input */}
+                  <div style={{ width: "100%" }}>
+                    <textarea
+                      className="vt-textarea"
+                      value={currentReply}
+                      onChange={(e) => setReplyText(prev => ({...prev, [threadId]: e.target.value}))}
+                      placeholder={tab === "history" ? "ADD FOLLOW-UP REPLY..." : "REPLY..."}
+                      style={{ 
+                        width: "100%", 
+                        height: "50px", 
+                        padding: "6px", 
+                        border: "2px solid #00D2FF", 
+                        resize: "none", 
+                        fontSize: "10px",
+                        boxSizing: "border-box"
+                      }}
+                    />
+                  </div>
+
+                  {/* AI Confidence & Recommendation indicators */}
+                  {(confidence || recommendation) && (
+                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                      {confidence && (
+                        <div style={{ 
+                          fontSize: "8px", 
+                          fontWeight: 900, 
+                          textTransform: "uppercase",
+                          padding: "2px 6px",
+                          background: confidence > 0.7 ? "#C9F830" : confidence > 0.4 ? "#FFE357" : "#FF8AAF",
+                          border: "2px solid #000",
+                          borderRadius: "4px"
+                        }}>
+                          Tone Match: {Math.round(confidence * 100)}%
+                        </div>
+                      )}
+                      {recommendation && (
+                        <div style={{ 
+                          fontSize: "8px", 
+                          fontWeight: 900, 
+                          textTransform: "uppercase",
+                          padding: "2px 6px",
+                          background: "#00D2FF",
+                          border: "2px solid #000",
+                          borderRadius: "4px",
+                          color: "#000"
+                        }}>
+                          <Video size={10} style={{ display: "inline", marginRight: "4px" }} />
+                          Video Suggested
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Per-comment AI actions */}
+                  <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                    <button
+                      onClick={() => handleMagicDraft([threadId])}
+                      disabled={isGenerating[threadId]}
+                      className="vt-button secondary"
+                      style={{ height: "26px", fontSize: "8px", padding: "0 8px", flex: "1 1 auto" }}
+                    >
+                      {isGenerating[threadId] ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                      <span style={{ marginLeft: "4px" }}>GENERATE</span>
+                    </button>
+                    <button
+                      onClick={() => handleRefineReply(threadId)}
+                      disabled={isGenerating[threadId] || !currentReply.trim()}
+                      className="vt-button"
+                      style={{ height: "26px", fontSize: "8px", padding: "0 8px", flex: "1 1 auto" }}
+                    >
+                      <Wand2 size={10} />
+                      <span style={{ marginLeft: "4px" }}>REFINE</span>
+                    </button>
+                    <button
+                      onClick={() => handleGetVideoRecommendation(threadId)}
+                      disabled={isGenerating[threadId]}
+                      className="vt-button"
+                      style={{ height: "26px", fontSize: "8px", padding: "0 8px", flex: "1 1 auto" }}
+                    >
+                      <Target size={10} />
+                      <span style={{ marginLeft: "4px" }}>RECOMMEND</span>
+                    </button>
+                  </div>
+
+                  {/* Refinement feedback */}
+                  {refinement && (
+                    <div style={{ 
+                      fontSize: "8px", 
+                      background: "#F0F0F0", 
+                      padding: "6px", 
+                      borderRadius: "6px",
+                      border: "1px solid #000"
+                    }}>
+                      <div style={{ fontWeight: 900, marginBottom: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
+                        <ThumbsUp size={10} />
+                        ENGAGEMENT SCORE: {refinement.engagementScore}/100
+                      </div>
+                      {refinement.changes.length > 0 && (
+                        <div style={{ opacity: 0.7 }}>
+                          Changes: {refinement.changes.join(", ")}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -480,34 +696,32 @@ export const CommentReplyWidget = ({
         </div>
 
         {/* Global Action Buttons */}
-        {(
-          <div style={{ display: "flex", gap: "8px", padding: "4px 0" }}>
-            <button
-              onClick={() => handleMagicDraft(Array.from(selectedIds))}
-              disabled={selectedIds.size === 0 || loading || !canAffordSelectedDrafts}
-              className="vt-button secondary"
-              style={{ flex: 1, height: "32px", fontSize: "10px", padding: "0 8px", boxSizing: "border-box" }}
-            >
-              <Sparkles size={13} /> DRAFT {selectedIds.size > 0 && `(${selectedIds.size})`}
-            </button>
-            <button
-              onClick={() => handleSendBulk(Array.from(selectedIds))}
-              disabled={selectedIds.size === 0 || loading}
-              className="vt-button primary"
-              style={{ flex: 1, height: "32px", fontSize: "10px", padding: "0 8px", boxSizing: "border-box" }}
-            >
-              <Send size={13} /> POST {selectedIds.size > 0 && `(${selectedIds.size})`}
-            </button>
-            <button
-              onClick={() => handleSuggestVideoBulk(Array.from(selectedIds))}
-              disabled={selectedIds.size === 0 || loading}
-              className="vt-button"
-              style={{ flex: 1, height: "32px", fontSize: "10px", padding: "0 8px", boxSizing: "border-box" }}
-            >
-              + VIDEOS
-            </button>
-          </div>
-        )}
+        <div style={{ display: "flex", gap: "8px", padding: "4px 0" }}>
+          <button
+            onClick={() => handleMagicDraft(Array.from(selectedIds))}
+            disabled={selectedIds.size === 0 || loading || !canAffordSelectedDrafts}
+            className="vt-button secondary"
+            style={{ flex: 1, height: "32px", fontSize: "10px", padding: "0 8px", boxSizing: "border-box" }}
+          >
+            <Sparkles size={13} /> DRAFT {selectedIds.size > 0 && `(${selectedIds.size})`}
+          </button>
+          <button
+            onClick={() => handleSendBulk(Array.from(selectedIds))}
+            disabled={selectedIds.size === 0 || loading}
+            className="vt-button primary"
+            style={{ flex: 1, height: "32px", fontSize: "10px", padding: "0 8px", boxSizing: "border-box" }}
+          >
+            <Send size={13} /> POST {selectedIds.size > 0 && `(${selectedIds.size})`}
+          </button>
+          <button
+            onClick={() => handleSuggestVideoBulk(Array.from(selectedIds))}
+            disabled={selectedIds.size === 0 || loading}
+            className="vt-button"
+            style={{ flex: 1, height: "32px", fontSize: "10px", padding: "0 8px", boxSizing: "border-box" }}
+          >
+            + VIDEOS
+          </button>
+        </div>
         {selectedIds.size > 0 && !canAffordSelectedDrafts && (
           <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>
             {entitlement.tier === "free"

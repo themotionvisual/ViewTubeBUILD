@@ -737,6 +737,22 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
     dependency: ["none"],
     status: "ready",
   },
+  {
+    id: "video-autopsy",
+    title: "Video Autopsy",
+    subtitle: "Deep performance diagnosis",
+    category: "analytics",
+    defaultSize: "half",
+    minSize: "third",
+    maxSize: "full",
+    defaultHeight: "xtall",
+    minHeight: "medium",
+    maxHeight: "massive",
+    headerColor: "#FF1744",
+    iconRailColor: "#C9F830",
+    dependency: ["youtube_analytics_v2", "gemini_api"],
+    status: "ready",
+  },
 ]
 
 const prioritizedOrder = [

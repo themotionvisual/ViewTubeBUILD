@@ -15,13 +15,31 @@ import {
   Link,
   Plus,
   ArrowRight,
+  Clock,
+  Trash2,
+  Edit2,
+  ExternalLink,
+  Loader2,
+  Check,
+  X,
+  AlertTriangle
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { refineCommunityPost, generateInterestSeeding } from "../../../services/gemini"
+import { refineCommunityPost, generateInterestSeeding, generateCommunityPostSchedule } from "../../../services/gemini"
+import { 
+  postCommunityPost, 
+  scheduleCommunityPost, 
+  getScheduledPosts, 
+  deleteScheduledPost,
+  cancelScheduledPost,
+  processScheduledPosts,
+  type ScheduledCommunityPost,
+  type CommunityPostContent
+} from "../../../services/youtubeService"
 import { useBrain } from "../../../context/useBrain"
 
 type PostType = "text" | "image" | "poll" | "image-poll" | "video"
-type ViewMode = "write" | "create"
+type ViewMode = "write" | "create" | "schedule"
 
 export const CommunityPostWidget = ({
   widget,
@@ -62,12 +80,24 @@ export const CommunityPostWidget = ({
   const [prompt, setPrompt] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   
+  // --- Scheduling States ---
+  const [scheduledPosts, setScheduledPosts] = useState<ScheduledCommunityPost[]>([])
+  const [scheduleDate, setScheduleDate] = useState("")
+  const [scheduleTime, setScheduleTime] = useState("")
+  const [isPosting, setIsPosting] = useState(false)
+  const [postResult, setPostResult] = useState<{ success: boolean; message: string } | null>(null)
+  
   // --- Utility States ---
   const [vault, setVault] = useState<any[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const videos = data.canonicalRows || data.brain?.canonicalRows || []
+
+  // --- Load scheduled posts ---
+  useEffect(() => {
+    setScheduledPosts(getScheduledPosts().filter(p => p.status === "scheduled"))
+  }, [viewMode])
 
   // --- Effects ---
   useEffect(() => {
@@ -104,6 +134,35 @@ export const CommunityPostWidget = ({
     return () => window.removeEventListener("vt_dashboard_generated_image", onBridge as EventListener)
   }, [content])
 
+  // --- Check for due scheduled posts periodically ---
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const due = scheduledPosts.filter(p => {
+        const scheduledTime = new Date(p.scheduledAt)
+        return scheduledTime <= new Date() && p.status === "scheduled"
+      })
+      if (due.length > 0) {
+        processScheduledPosts().then(({ processed }) => {
+          if (processed.length > 0) {
+            setScheduledPosts(getScheduledPosts().filter(p => p.status === "scheduled"))
+            setPostResult({ success: true, message: `${processed.length} post(s) published!` })
+          }
+        })
+      }
+    }, 60000) // Check every minute
+    
+    return () => clearInterval(interval)
+  }, [scheduledPosts])
+
+  // --- Build post content object ---
+  const buildPostContent = (): CommunityPostContent => ({
+    type: postType === "image-poll" ? "poll" : postType,
+    text: content,
+    pollOptions: postType.includes("poll") ? pollOptions.filter(o => o.trim()) : undefined,
+    imageUrl: (postType === "image" || postType === "image-poll") ? imageUrl : undefined,
+    videoId: postType === "video" ? selectedVideo : undefined,
+  })
+
   // --- Handlers ---
   const saveToVault = () => {
     if (!content.trim()) return
@@ -128,7 +187,7 @@ export const CommunityPostWidget = ({
       const recentTitles = videos.slice(0, 5).map((v: any) => v.title)
       const refined = await refineCommunityPost(content, niche, recentTitles, brain)
       setContent(refined)
-      setViewMode("write") // Return to write view to see results
+      setViewMode("write")
     } catch (e) {
       console.error("AI Refinement failed:", e)
     } finally {
@@ -142,8 +201,6 @@ export const CommunityPostWidget = ({
     try {
       const niche = data.brain?.channelProfile?.name || "Content Creation"
       const recentTitles = videos.slice(0, 5).map((v: any) => v.title)
-      
-      // Use existing service for now, passing prompt as context
       const generated = await refineCommunityPost(prompt, niche, recentTitles, brain)
       setContent(generated)
       setPrompt("")
@@ -153,6 +210,63 @@ export const CommunityPostWidget = ({
     } finally {
       setIsGenerating(false)
     }
+  }
+
+  const handlePostNow = async () => {
+    if (!content.trim()) return
+    setIsPosting(true)
+    setPostResult(null)
+    
+    try {
+      const postContent = buildPostContent()
+      const result = await postCommunityPost(postContent)
+      
+      if (result.success) {
+        if (result.method === "redirect" && result.url) {
+          // Open YouTube Studio
+          window.open(result.url, "_blank")
+          setPostResult({ 
+            success: true, 
+            message: "Content copied! YouTube Studio opened - paste your post there." 
+          })
+        } else {
+          setPostResult({ success: true, message: "Post published successfully!" })
+          setContent("")
+        }
+      } else {
+        setPostResult({ success: false, message: result.error || "Failed to post" })
+      }
+    } catch (e: any) {
+      setPostResult({ success: false, message: e.message || "Failed to post" })
+    } finally {
+      setIsPosting(false)
+    }
+  }
+
+  const handleSchedulePost = () => {
+    if (!content.trim() || !scheduleDate || !scheduleTime) return
+    
+    const scheduledAt = new Date(`${scheduleDate}T${scheduleTime}`).toISOString()
+    const postContent = buildPostContent()
+    
+    const scheduled = scheduleCommunityPost(postContent, scheduledAt)
+    setScheduledPosts(prev => [...prev, scheduled])
+    
+    // Clear form
+    setContent("")
+    setScheduleDate("")
+    setScheduleTime("")
+    setPostResult({ success: true, message: "Post scheduled!" })
+  }
+
+  const handleCancelScheduled = (postId: string) => {
+    cancelScheduledPost(postId)
+    setScheduledPosts(prev => prev.filter(p => p.id !== postId))
+  }
+
+  const handleDeleteScheduled = (postId: string) => {
+    deleteScheduledPost(postId)
+    setScheduledPosts(prev => prev.filter(p => p.id !== postId))
   }
 
   const handleDrop = (e: React.DragEvent) => {
@@ -191,7 +305,7 @@ export const CommunityPostWidget = ({
               onClick={() => setImageUrl("")}
               className="absolute top-2 right-2 p-1 bg-white border-2 border-black rounded-full shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
             >
-              <ArrowRight className="rotate-45" size={14} />
+              <X size={14} />
             </button>
           </div>
         ) : (
@@ -231,7 +345,7 @@ export const CommunityPostWidget = ({
   )
 
   const headerContent = (
-    <div className="vt-tab-group" style={{ width: "110px", padding: "2px" }}>
+    <div className="vt-tab-group" style={{ width: "160px", padding: "2px" }}>
       <button
         onClick={() => setViewMode("write")}
         className={`vt-tab-btn ${viewMode === "write" ? 'active' : ''}`}
@@ -244,7 +358,14 @@ export const CommunityPostWidget = ({
         className={`vt-tab-btn ${viewMode === "create" ? 'active' : ''}`}
         style={{ padding: "4px", fontSize: "9px" }}
       >
-        CREATE
+        AI
+      </button>
+      <button
+        onClick={() => setViewMode("schedule")}
+        className={`vt-tab-btn ${viewMode === "schedule" ? 'active' : ''}`}
+        style={{ padding: "4px", fontSize: "9px" }}
+      >
+        <Clock size={10} />
       </button>
     </div>
   )
@@ -255,6 +376,29 @@ export const CommunityPostWidget = ({
         layout
         className="flex flex-col h-full gap-3 overflow-hidden"
       >
+        {/* Result Banner */}
+        {postResult && (
+          <div style={{
+            padding: "8px 12px",
+            background: postResult.success ? "#C9F830" : "#FF8AAF",
+            border: "2px solid #000",
+            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            fontSize: "10px",
+            fontWeight: 900
+          }}>
+            {postResult.success ? <Check size={14} /> : <AlertTriangle size={14} />}
+            {postResult.message}
+            <button 
+              onClick={() => setPostResult(null)}
+              style={{ marginLeft: "auto", opacity: 0.6 }}
+            >
+              <X size={12} />
+            </button>
+          </div>
+        )}
 
         <AnimatePresence mode="wait">
           {viewMode === "write" ? (
@@ -347,6 +491,33 @@ export const CommunityPostWidget = ({
                 </div>
               )}
 
+              {/* Schedule Section */}
+              <div className="p-2 bg-gray-50 border-2 border-black rounded-lg">
+                <div className="text-[9px] font-black uppercase opacity-60 mb-2">Schedule for Later</div>
+                <div className="flex gap-2">
+                  <input
+                    type="date"
+                    className="vt-input flex-1 h-7 text-[10px]"
+                    value={scheduleDate}
+                    onChange={(e) => setScheduleDate(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                  />
+                  <input
+                    type="time"
+                    className="vt-input w-20 h-7 text-[10px]"
+                    value={scheduleTime}
+                    onChange={(e) => setScheduleTime(e.target.value)}
+                  />
+                  <button
+                    onClick={handleSchedulePost}
+                    disabled={!content.trim() || !scheduleDate || !scheduleTime}
+                    className="vt-button h-7 text-[9px] px-2"
+                  >
+                    <Clock size={12} />
+                  </button>
+                </div>
+              </div>
+
               {/* Action Toolbar */}
               <div className="flex gap-2 mt-auto pt-2 border-t border-black/10">
                 <button 
@@ -357,23 +528,20 @@ export const CommunityPostWidget = ({
                   <Archive size={16} />
                 </button>
                 <button 
-                  className="p-2 border-2 border-black rounded-lg hover:bg-gray-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
-                  title="Schedule Post"
-                >
-                  <Calendar size={16} />
-                </button>
-                <button 
-                  onClick={async () => {
-                    await navigator.clipboard.writeText(content)
-                    console.log("Copied to clipboard")
-                  }}
+                  onClick={handlePostNow}
+                  disabled={!content.trim() || isPosting}
                   className="vt-button primary flex-1 h-9 gap-2 text-[11px]"
                 >
-                  <Send size={14} /> POST TO CHANNEL
+                  {isPosting ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Send size={14} />
+                  )}
+                  POST NOW
                 </button>
               </div>
             </motion.div>
-          ) : (
+          ) : viewMode === "create" ? (
             <motion.div 
               key="create"
               initial={{ opacity: 0, x: 10 }}
@@ -387,7 +555,7 @@ export const CommunityPostWidget = ({
                   className="vt-textarea flex-1 min-h-[120px] text-[13px] border-[#FF83EA] focus:border-[#FF83EA] placeholder:opacity-30"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="Describe the post you want to create... e.g. 'Write a hype poll about my upcoming gaming marathon, make it funny and uses emojis'"
+                  placeholder="Describe the post you want to create..."
                 />
               </div>
 
@@ -406,7 +574,7 @@ export const CommunityPostWidget = ({
                   className="vt-button primary flex-1 flex-col gap-1 text-[10px]"
                 >
                   {isGenerating ? (
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    <Loader2 size={16} className="animate-spin" />
                   ) : (
                     <Plus size={16} />
                   )}
@@ -419,8 +587,79 @@ export const CommunityPostWidget = ({
                   <Sparkles size={10} /> Pro Tip
                 </h4>
                 <p className="text-[10px] leading-tight opacity-70">
-                  Write a basic idea in <span className="font-bold">WRITE</span> mode, then come here and click <span className="font-bold">REFINE</span> to polish it with your channel's unique voice.
+                  Write a basic idea in <span className="font-bold">WRITE</span> mode, then come here and click <span className="font-bold">REFINE</span> to polish it with your channel&apos;s unique voice.
                 </p>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="schedule"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              className="flex-1 flex flex-col gap-3 overflow-y-auto"
+            >
+              <div className="text-[10px] font-black uppercase opacity-60">
+                Scheduled Posts ({scheduledPosts.length})
+              </div>
+              
+              {scheduledPosts.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center gap-2 opacity-40">
+                  <Clock size={32} />
+                  <span className="text-[10px] font-black uppercase">No scheduled posts</span>
+                  <span className="text-[9px] font-bold">Use the schedule feature in Write mode</span>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {scheduledPosts.map((post) => (
+                    <div
+                      key={post.id}
+                      className="p-3 border-2 border-black rounded-lg bg-white"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[10px] font-bold line-clamp-2">
+                            {post.content.text}
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[8px] font-black uppercase px-2 py-0.5 bg-[#00D2FF] border border-black rounded">
+                              {post.content.type}
+                            </span>
+                            <span className="text-[9px] font-bold opacity-60">
+                              {new Date(post.scheduledAt).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleCancelScheduled(post.id)}
+                            className="p-1 hover:bg-gray-100 rounded"
+                            title="Cancel"
+                          >
+                            <X size={12} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteScheduled(post.id)}
+                            className="p-1 hover:bg-red-100 rounded text-red-500"
+                            title="Delete"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="p-3 bg-[#FFE357]/30 border-2 border-[#FFE357] rounded-lg mt-auto">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
+                  <div className="text-[9px] font-bold">
+                    <strong>Note:</strong> YouTube&apos;s API has limited support for community posts. 
+                    When a scheduled post is due, we&apos;ll open YouTube Studio with your content copied to clipboard.
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}

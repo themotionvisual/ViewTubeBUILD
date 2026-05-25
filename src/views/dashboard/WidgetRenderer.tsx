@@ -57,6 +57,7 @@ import { AudienceMatrixWidget } from "./widgets/AudienceMatrixWidget"
 import { GoalsTrackerWidget } from "./widgets/GoalsTrackerWidget"
 import { BrainHubWidget } from "./widgets/BrainHubWidget"
 import { ImageGeneratorWidget } from "./widgets/ImageGeneratorWidget"
+import { VideoAutopsyWidget } from "./widgets/VideoAutopsyWidget"
 const formatHumanNumber = (value: unknown): string => {
  const v = Number(value)
  if (isNaN(v)) return "0"
@@ -505,11 +506,16 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   return <CommentReplyWidget {...common} data={data} editMode={editMode} />
  }
 
-  if (widget.id === "ai-journal") {
+if (widget.id === "ai-journal") {
     return <AIJournalWidget {...common} editMode={editMode} />
   }
 
- // 28. REACH FUNNEL
+  // VIDEO AUTOPSY - Deep performance diagnosis
+  if (widget.id === "video-autopsy") {
+    return <VideoAutopsyWidget {...common} data={data} editMode={editMode} />
+  }
+  
+  // 28. REACH FUNNEL
  if (widget.id === "reach-funnel") {
   return (
    <WidgetShell {...common} icon={<TrendingUp size={22} />}>
