@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react"
 import { useBrain } from "../context/useBrain"
-import { NavLink, useNavigate } from "react-router-dom"
+import { NavLink, useNavigate, useLocation } from "react-router-dom"
 import { SidebarChatbot } from "./SidebarChatbot"
 import Icons from "./Icons"
 
@@ -10,6 +10,8 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ onHide }) => {
  const navigate = useNavigate()
+ const location = useLocation()
+ const isHomepage = location.pathname === "/"
  const { authState, setAuthState, login, globalSyncData, isSyncing } = useBrain()
  const clickTimesRef = useRef<number[]>([])
 
@@ -145,6 +147,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onHide }) => {
     >
      Hide Sidebar
     </button>
+    {isHomepage && (
+     <div className="flex justify-center gap-3 text-[10px] text-gray-500 font-semibold mt-2">
+      <a href="/privacy.html" className="hover:text-black underline">Privacy Policy</a>
+      <span>•</span>
+      <a href="/terms.html" className="hover:text-black underline">Terms of Service</a>
+     </div>
+    )}
    </div>
 
    {/* Sidebar Chatbot Slot */}

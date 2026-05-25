@@ -85,6 +85,13 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
           >
             <EntitlementContext.Provider value={entitlement}>{children}</EntitlementContext.Provider>
           </main>
+          {location.pathname === "/" && sidebarHidden && (
+            <div className="absolute bottom-4 left-4 z-50 flex gap-3 text-[10px] text-gray-500 font-semibold bg-white/80 backdrop-blur-sm px-2 py-1 rounded border border-black/10">
+              <a href="/privacy.html" className="hover:text-black underline">Privacy Policy</a>
+              <span>•</span>
+              <a href="/terms.html" className="hover:text-black underline">Terms of Service</a>
+            </div>
+          )}
         </div>
       </div>
     </DashboardProvider>
