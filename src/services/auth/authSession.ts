@@ -28,7 +28,7 @@ export interface AuthSessionMeta {
 }
 
 export interface UnifiedAuthContract {
-  login: () => Promise<void>;
+  login: (mode?: 'popup' | 'redirect') => Promise<void>;
   logout: () => void;
   isAuthenticated: () => boolean;
   getAccessToken: () => string | null;
@@ -117,44 +117,47 @@ const setImplicitSession = (accessToken: string, expiresInSeconds: number) => {
 
 /**
  * Implicit Grant Flow — works entirely client-side, no backend needed.
- * Opens a popup, user authenticates, Google redirects back with token in the URL hash.
+ * Opens a popup or redirects to Google, user authenticates, Google redirects back with token in the URL hash.
  */
-export const loginWithImplicitPopup = async (): Promise<void> => {
+export const login = async (mode: 'popup' | 'redirect' = 'redirect'): Promise<void> => {
   migrateLegacySessionIfNeeded();
 
+  const clientId = getConfiguredClientId();
+  if (!clientId) {
+    throw new Error('Google Client ID is not set. Please provide it in Settings.');
+  }
+
+  // Clear any existing token.
+  if (window.name !== 'oauth_popup') {
+    updateAuthObj({ accessToken: null, tokenExpiry: null });
+  }
+
+  const redirectUri = `${window.location.origin}`;
+  const state = generateRandomString(32);
+
+  const scopes = [
+    'openid',
+    'profile',
+    'email',
+    'https://www.googleapis.com/auth/youtube.readonly',
+    'https://www.googleapis.com/auth/yt-analytics.readonly',
+  ].join(' ');
+
+  const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  authUrl.searchParams.append('client_id', clientId);
+  authUrl.searchParams.append('redirect_uri', redirectUri);
+  authUrl.searchParams.append('response_type', 'token');
+  authUrl.searchParams.append('scope', scopes);
+  authUrl.searchParams.append('state', state);
+  authUrl.searchParams.append('include_granted_scopes', 'true');
+  authUrl.searchParams.append('prompt', 'consent');
+
+  if (mode === 'redirect') {
+    window.location.href = authUrl.toString();
+    return new Promise(() => {}); // Will be reloaded by redirect
+  }
+
   return new Promise((resolve, reject) => {
-    const clientId = getConfiguredClientId();
-    if (!clientId) {
-      reject(new Error('Google Client ID is not set. Please provide it in Settings.'));
-      return;
-    }
-
-    // Clear any existing token.
-    // A fresh OAuth round-trip is always required when login() is called.
-    if (window.name !== 'oauth_popup') {
-      updateAuthObj({ accessToken: null, tokenExpiry: null });
-    }
-
-    const redirectUri = `${window.location.origin}`;
-    const state = generateRandomString(32);
-
-    const scopes = [
-      'openid',
-      'profile',
-      'email',
-      'https://www.googleapis.com/auth/youtube.readonly',
-      'https://www.googleapis.com/auth/yt-analytics.readonly',
-    ].join(' ');
-
-    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-    authUrl.searchParams.append('client_id', clientId);
-    authUrl.searchParams.append('redirect_uri', redirectUri);
-    authUrl.searchParams.append('response_type', 'token');
-    authUrl.searchParams.append('scope', scopes);
-    authUrl.searchParams.append('state', state);
-    authUrl.searchParams.append('include_granted_scopes', 'true');
-    authUrl.searchParams.append('prompt', 'consent');
-
     const popup = window.open(authUrl.toString(), 'oauth_popup', 'width=600,height=700');
     if (!popup) {
       reject(new Error('Popup was blocked. Please allow popups for this site.'));
@@ -189,7 +192,7 @@ export const loginWithImplicitPopup = async (): Promise<void> => {
 };
 
 // Keep old export name for compatibility
-export const loginWithPkcePopup = loginWithImplicitPopup;
+export const loginWithPkcePopup = login;
 
 export const getAccessToken = (): string | null => {
   migrateLegacySessionIfNeeded();
@@ -239,7 +242,7 @@ export const getSessionMeta = (): AuthSessionMeta => {
 };
 
 export const unifiedAuth: UnifiedAuthContract = {
-  login: loginWithImplicitPopup,
+  login,
   logout,
   isAuthenticated,
   getAccessToken,
