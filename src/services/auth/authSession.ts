@@ -119,7 +119,7 @@ const setImplicitSession = (accessToken: string, expiresInSeconds: number) => {
  * Implicit Grant Flow — works entirely client-side, no backend needed.
  * Opens a popup or redirects to Google, user authenticates, Google redirects back with token in the URL hash.
  */
-export const login = async (mode: 'popup' | 'redirect' = 'redirect'): Promise<void> => {
+export const login = async (mode: 'popup' | 'redirect' = 'popup'): Promise<void> => {
   migrateLegacySessionIfNeeded();
 
   const clientId = getConfiguredClientId();
