@@ -1,10 +1,14 @@
+
 // src/types.ts
+
+export type SyncPhase = "IDLE" | "PHASE_1" | "PHASE_2" | "COMPLETE";
 
 export interface RetentionDataPoint {
  elapsedVideoTimeRatio: number
  audienceWatchRatio: number
  relativeRetentionPerformance: number
 }
+
 
 export interface VideoRetentionCache {
  [videoId: string]: RetentionDataPoint[]
@@ -68,6 +72,7 @@ export type CsvTag =
 export type CsvMajorFamily =
  | "video_data"
  | "daily_metrics"
+ | "search_intelligence"
  | "traffic"
  | "geography"
  | "audience"
@@ -81,6 +86,8 @@ export type CsvDetectedCategory =
  | "content_performance"
  | "content_channel_all"
  | "video_content_all"
+ | "video_statistics"
+ | "top_videos_by_subscriber_status"
  | "content_shorts"
  | "video_content_shorts"
  | "content_longform"
@@ -88,6 +95,9 @@ export type CsvDetectedCategory =
  | "video_content_type"
  | "daily_metrics"
  | "daily_channel_metrics"
+ | "weekly_statistics"
+ | "monthly_statistics"
+ | "window_statistics"
  | "traffic_report"
  | "traffic_overview"
  | "traffic_youtube_search"
@@ -115,6 +125,8 @@ export type CsvDetectedCategory =
  | "geography_country"
  | "geography_city"
  | "audience_devices"
+ | "audience_operating_system"
+ | "audience_device_operating_system"
  | "surface_playback_location"
  | "surface_subscription_status"
  | "surface_subscription_source"
@@ -130,6 +142,7 @@ export type CsvDetectedCategory =
  | "surface_video_info_language"
  | "monetization_revenue_source"
  | "monetization_ad_type"
+ | "monetization_daily_ad_type"
  | "retention_curve"
  | "stw_procedure"
  | "reflection_rate_checks"
@@ -196,10 +209,14 @@ export type CsvFreshnessClass =
 
 export type CsvSubtableId =
  | "all_videos"
+ | "video_statistics"
  | "shorts"
  | "long_form"
  | "content_type"
  | "daily_channel_metrics"
+ | "weekly_statistics"
+ | "monthly_statistics"
+ | "window_statistics"
  | "all_traffic_sources"
  | "youtube_search_terms"
  | "external_sources"
@@ -215,6 +232,8 @@ export type CsvSubtableId =
  | "new_returning"
  | "watch_behavior"
  | "devices"
+ | "operating_system"
+ | "device_operating_system"
  | "retention"
  | "playback_location"
  | "subscription_status"
@@ -231,6 +250,8 @@ export type CsvSubtableId =
  | "video_info_language"
  | "revenue_source"
  | "ad_type"
+ | "daily_ad_type"
+ | "top_videos_by_subscriber_status"
  | "unknown"
 
 export type CsvPackageMemberRole =
@@ -554,6 +575,100 @@ export interface MediaAnalysisResult {
  }[]
 }
 
+export type ContentAnalysisMode = "new" | "published"
+
+export type ContentAnalysisSource =
+ | "upload_video"
+ | "upload_audio"
+ | "upload_script"
+ | "upload_still"
+ | "published_video"
+ | "transcript"
+ | "retention_measurement"
+ | "retention_prediction"
+ | "channel_history"
+
+export interface PublishedVideoContext {
+ videoId: string
+ title: string
+ publishedAt?: string
+ thumbnail?: string
+ durationSeconds?: number
+ channelTitle?: string
+ selectedAt: string
+}
+
+export interface TranscriptAcquisitionResult {
+ status: "available" | "missing" | "error"
+ source:
+  | "manual_subtitles"
+  | "auto_subtitles"
+  | "server_audio_fallback"
+  | "uploaded_script"
+  | "unknown"
+ languageCode?: string
+ text?: string
+ warning?: string
+ error?: string
+}
+
+export interface AudioAcquisitionResult {
+ status: "available" | "skipped" | "error"
+ mimeType?: string
+ fileName?: string
+ byteSize?: number
+ base64?: string
+ error?: string
+}
+
+export interface RetentionMeasurementResult {
+ sampledPoints: RetentionDataPoint[]
+ introDropoffSummary: string
+ plateauSummary: string
+ outroSummary: string
+ relativePerformanceSummary: string
+ measuredAt: string
+}
+
+export interface RetentionPredictionResult {
+ summary: string
+ confidence: "low" | "medium" | "high"
+ likelyDropoffMoments: string[]
+ likelySpikeMoments: string[]
+ basis: string[]
+}
+
+export interface ToolInspiredPromptPack {
+ publisherPrompt: string
+ managerPrompt: string
+ hookPrompt: string
+ thumbnailPrompt: string
+ tacticsPrompt: string
+}
+
+export interface PredictionAccuracyRecord {
+ videoId: string
+ mode: ContentAnalysisMode
+ predictedAt: string
+ comparedAt?: string
+ summary: string
+ score?: number
+ notes?: string
+}
+
+export interface ContentAnalysisResult extends MediaAnalysisResult {
+ mode: ContentAnalysisMode
+ sourcesUsed: ContentAnalysisSource[]
+ publishedVideo?: PublishedVideoContext
+ transcript?: TranscriptAcquisitionResult
+ audio?: AudioAcquisitionResult
+ retentionMeasurement?: RetentionMeasurementResult
+ retentionPrediction?: RetentionPredictionResult
+ channelHistorySummary?: string
+ inspiredPrompts?: ToolInspiredPromptPack
+ predictionAccuracySeed?: PredictionAccuracyRecord
+}
+
 export interface HookResult {
  styleName: string
  explanation: string
@@ -665,6 +780,7 @@ export interface MicroPoll {
 
 export interface AuthState {
  isAuthenticated: boolean
+ channelId?: string | null
  channelName: string | null
  channelHandle: string | null
  channelThumbnail: string | null
@@ -679,6 +795,36 @@ export interface AuthState {
   subscribers28d: number
   lastSyncedAt: string
  }
+}
+
+export type ChannelBootPhase =
+ | "idle"
+ | "oauth"
+ | "identity"
+ | "lifetime"
+ | "inventory"
+ | "syncing"
+ | "ready"
+ | "error"
+
+export interface ChannelIdentitySnapshot {
+ channelId: string | null
+ name: string | null
+ handle: string | null
+ avatarUrl: string | null
+ subscriberCount: number | null
+ totalViews: number | null
+ videoCount: number | null
+ isVerified: boolean
+ isPartial: boolean
+ lastHydratedAt: string | null
+}
+
+export interface InitialDashboardHydrationStatus {
+ identityReady: boolean
+ lifetimeReady: boolean
+ inventoryReady: boolean
+ lastUpdatedAt: string | null
 }
 
 export interface ProjectPlan {
@@ -724,6 +870,11 @@ export interface WorkspaceBrain {
  channelProfile: any | null
  recentMetrics: any | null
  csvFiles: any[]
+ identityAndAspirations?: string
+ contentDNA?: string
+ performanceLedger?: string
+ futureStateMap?: string
+ strategicAdvice?: string
 
  // 1. The Core Idea
  coreConcept: string
@@ -747,8 +898,11 @@ export interface WorkspaceBrain {
  // 4. Packaging (from ThumbnailStudio)
  thumbnailState: {
   selectedStyle: string
-  activeImageUrl: string | null
+  activeImageUrl?: string | null
   prompt?: string
+  colorPalette?: string
+  conceptDraft?: string
+  variations?: any[]
  }
 
  // 5. Analytical Constraints
@@ -759,12 +913,15 @@ export interface WorkspaceBrain {
 
  // 6. Channelytics & Data
  channelyticsState: {
-  csvFiles: CsvFileWithTag[]
+  csvFiles?: CsvFileWithTag[]
   allData: any[]
-  analyticsResult: AnalyticsResult | null
+  analyticsResult?: AnalyticsResult | null
   oraclePromptVersion?: ChannelOraclePromptVersion
   syncBatch?: VideoSyncBatchState
   syncStatus?: ChannelAnalysisSyncStatus
+  topPerformers?: any[]
+  retentionBenchmarks?: any[]
+  deepSegments?: any
  }
 
  performanceHubState: {
@@ -778,9 +935,12 @@ export interface WorkspaceBrain {
  }
 
  researchLabState: {
-  csvFiles: CsvFileWithTag[]
-  allData: any[] // Store the parsed CSV rows persistently
-  analyticsResult: AnalyticsResult | null
+  csvFiles?: CsvFileWithTag[]
+  allData?: any[] // Store the parsed CSV rows persistently
+  analyticsResult?: AnalyticsResult | null
+  activeQuery?: string
+  results?: any[]
+  history?: any[]
  }
 
  videoFlags: Record<
@@ -794,11 +954,17 @@ export interface WorkspaceBrain {
 
  // 7. Project & Calendar Management
  calendarState: {
-  dayTasks: Record<string, DayTask[]> // dateString -> tasks
+  dayTasks?: Record<string, DayTask[]> // dateString -> tasks
+  events?: any[]
+  viewMode?: string
+  selectedEventId?: string | null
  }
  channelHub: {
-  toDos: { id: string; text: string; completed: boolean }[]
-  goals: { id: string; text: string; category: string; completed: boolean }[]
+  toDos?: { id: string; text: string; completed: boolean }[]
+  goals?: { id: string; text: string; category: string; completed: boolean }[]
+  competitors?: any[]
+  nicheInsights?: any[]
+  opportunityGaps?: any[]
  }
 
  // 8. AI Journal & Creator Knowledge
@@ -808,6 +974,13 @@ export interface WorkspaceBrain {
  creatorPreferences: Record<string, string | boolean>
  lastSyncDate: string | null
  retentionCache: VideoRetentionCache
+ sitewideBrainContext?: string
+ onboarding?: {
+  lastRunId?: string
+  channelId?: string | null
+  status?: BrainOnboardingBootstrapRun["status"]
+  completedAt?: string | null
+ }
 }
 
 // Product + Data Architecture Contracts
@@ -848,6 +1021,8 @@ export interface ContextPacket {
  futureStateMap: string
  learnedPreferences: string
  strategicAdvice?: string
+ sitewideBrainContext?: string
+ toolContextPack?: ToolContextPack
 }
 
 export interface BrainMemorySchema {
@@ -859,4 +1034,377 @@ export interface BrainMemorySchema {
  lastReflection: number
  tools: string[]
  strategicAdvice?: string
+ sitewideBrainContext?: string
+ onboarding?: {
+  lastRunId?: string
+  channelId?: string | null
+  status?: BrainOnboardingBootstrapRun["status"]
+  completedAt?: string | null
+ }
+}
+
+export type BrainConfidenceLevel = "high" | "medium" | "low"
+
+export type BrainOnboardingStage =
+ | "idle"
+ | "core_sync"
+ | "evidence_pack"
+ | "knowledge_model"
+ | "question_set"
+ | "context_pack"
+ | "complete"
+ | "failed"
+
+export interface BrainEvidenceItem {
+ id: string
+ source:
+  | "channel_profile"
+  | "channel_lifetime_metrics"
+  | "video_metadata"
+  | "video_lifetime_metrics"
+  | "comments"
+  | "transcripts"
+  | "media_analysis"
+  | "system"
+ label: string
+ summary: string
+ confidence: BrainConfidenceLevel
+ videoId?: string
+ sourcePath?: string
+ observedAt: string
+}
+
+export interface ChannelEvidencePacket {
+ id: string
+ runId: string
+ channelId: string | null
+ createdAt: string
+ sourceCounts: {
+  videos: number
+  shorts: number
+  longForm: number
+  tags: number
+  descriptions: number
+  thumbnails: number
+  comments: number
+  transcripts: number
+  mediaAnalyses: number
+ }
+ skippedInputs: Array<{
+  source: string
+  reason: string
+  consentRequired?: boolean
+ }>
+ evidence: BrainEvidenceItem[]
+}
+
+export interface ChannelKnowledgeHypothesis {
+ id: string
+ label: string
+ summary: string
+ confidence: BrainConfidenceLevel
+ evidenceIds: string[]
+}
+
+export interface ChannelKnowledgeModel {
+ id: string
+ runId: string
+ channelId: string | null
+ createdAt: string
+ updatedAt: string
+ niche: ChannelKnowledgeHypothesis[]
+ contentFormats: ChannelKnowledgeHypothesis[]
+ audience: ChannelKnowledgeHypothesis[]
+ visualIdentity: ChannelKnowledgeHypothesis[]
+ creatorCommunication: ChannelKnowledgeHypothesis[]
+ growthOpportunities: ChannelKnowledgeHypothesis[]
+ contradictions: ChannelKnowledgeHypothesis[]
+ summary: string
+ confidence: BrainConfidenceLevel
+}
+
+export interface BrainQuestion {
+ id: string
+ question: string
+ category: "universal" | "personalized"
+ reason: string
+ confidence: BrainConfidenceLevel
+ evidenceIds: string[]
+}
+
+export interface BrainQuestionSet {
+ id: string
+ runId: string
+ channelId: string | null
+ createdAt: string
+ universalQuestions: BrainQuestion[]
+ personalizedQuestions: BrainQuestion[]
+}
+
+export interface ToolContextPack {
+ id: string
+ runId: string
+ channelId: string | null
+ createdAt: string
+ promptVersion: string
+ summary: string
+ contextBlock: string
+ evidenceIds: string[]
+ confidence: BrainConfidenceLevel
+ unavailableInputs: string[]
+}
+
+export interface BrainGenerationRecord {
+ id: string
+ runId: string
+ channelId: string | null
+ toolId: string
+ promptVersion: string
+ model: string
+ inputSummary: string
+ outputSummary: string
+ sourceEvidenceIds: string[]
+ createdAt: string
+ tokenUsage?: {
+  input?: number
+  output?: number
+  total?: number
+ }
+ costUsd?: number
+}
+
+export interface BrainOnboardingBootstrapRun {
+ id: string
+ channelId: string | null
+ status: "running" | "complete" | "failed" | "skipped"
+ stage: BrainOnboardingStage
+ startedAt: string
+ completedAt: string | null
+ firstRun: boolean
+ guardKey: string
+ diagnostics: string[]
+ sourceCounts: ChannelEvidencePacket["sourceCounts"]
+ evidencePacketId?: string
+ knowledgeModelId?: string
+ questionSetId?: string
+ toolContextPackId?: string
+ generationRecordIds: string[]
+ error?: string
+}
+
+// --- Super-Tool OS Types ---
+
+export type SuperToolSurface =
+ | "studio"
+ | "projects"
+ | "editor"
+ | "vault"
+ | "analytics"
+ | "dashboard"
+ | "brain"
+ | "workflow"
+
+export type SuperToolId =
+ | "creator-canvas-os"
+ | "audience-loop-studio"
+ | "packaging-lab-pro"
+ | "project-command-kanban"
+ | "series-and-theme-generator"
+ | "publishing-schedule-architect"
+ | "motion-scene-builder"
+ | "timeline-asset-vault-dock"
+ | "template-and-foley-forge"
+ | "caption-and-fx-pipeline"
+ | "shorts-extraction-studio"
+ | "creator-vault-os"
+ | "cinematic-analytics-lab"
+ | "retention-autopsy-experiment-engine"
+ | "brain-command-center"
+ | "workflow-chain-builder"
+
+export type AIProviderId = "gemini" | "openai" | "mock"
+
+export type GenerationStatus =
+ | "pending"
+ | "running"
+ | "complete"
+ | "error"
+ | "cancelled"
+
+export type ToolRunStatus =
+ | "queued"
+ | "running"
+ | "complete"
+ | "error"
+ | "blocked"
+
+export type WorkflowStepStatus =
+ | "pending"
+ | "active"
+ | "complete"
+ | "blocked"
+ | "skipped"
+
+export type VaultAssetKind =
+ | "image"
+ | "video"
+ | "audio"
+ | "font"
+ | "document"
+ | "json"
+ | "template"
+ | "generated"
+ | "other"
+
+export interface GenerationArtifact {
+ id: string
+ kind: VaultAssetKind
+ label: string
+ url?: string | null
+ mimeType?: string | null
+ sourceRecordId?: string | null
+ metadata?: Record<string, unknown>
+}
+
+export interface GenerationRecord {
+ id: string
+ toolId: SuperToolId
+ provider: AIProviderId
+ model: string
+ prompt: string
+ status: GenerationStatus
+ createdAt: number
+ updatedAt: number
+ outputText?: string
+ outputJson?: Record<string, unknown> | unknown[] | null
+ estimatedCostCents?: number | null
+ usage?: {
+  promptTokens?: number
+  completionTokens?: number
+  totalTokens?: number
+ } | null
+ error?: string | null
+ artifacts: GenerationArtifact[]
+ metadata?: Record<string, unknown>
+}
+
+export interface ToolRun {
+ id: string
+ toolId: SuperToolId
+ status: ToolRunStatus
+ startedAt: number
+ updatedAt: number
+ generationId?: string | null
+ workflowId?: string | null
+ summary: string
+ metadata?: Record<string, unknown>
+ error?: string | null
+}
+
+export interface WorkflowStep {
+ id: string
+ title: string
+ status: WorkflowStepStatus
+ ownerSurface: SuperToolSurface
+ details?: string
+ toolId?: SuperToolId | null
+ artifactIds?: string[]
+}
+
+export interface WorkflowChain {
+ id: string
+ title: string
+ goal: string
+ status: WorkflowStepStatus
+ createdAt: number
+ updatedAt: number
+ projectId?: string | null
+ primaryToolId?: SuperToolId | null
+ stepIds: string[]
+ steps: WorkflowStep[]
+ artifactIds: string[]
+ provenance: string[]
+}
+
+export interface VaultAsset {
+ id: string
+ name: string
+ kind: VaultAssetKind
+ source: "local" | "drive" | "generated" | "project" | "imported"
+ createdAt: number
+ updatedAt: number
+ projectId?: string | null
+ projectName?: string | null
+ toolId?: SuperToolId | null
+ generationId?: string | null
+ driveFileId?: string | null
+ folderId?: string | null
+ url?: string | null
+ previewUrl?: string | null
+ mimeType?: string | null
+ tags: string[]
+ metadata?: Record<string, unknown>
+}
+
+export interface StoryNode {
+ id: string
+ title: string
+ beat: "hook" | "context" | "proof" | "pivot" | "payoff" | "cta" | "custom"
+ summary: string
+ sourceIds: string[]
+ linkedSceneIds?: string[]
+}
+
+export interface PublishPlan {
+ id: string
+ projectId?: string | null
+ title: string
+ publishDate?: string | null
+ targetPlatforms: string[]
+ checklist: string[]
+ packagingAssetIds: string[]
+ notes?: string
+}
+
+export interface MotionTemplate {
+ id: string
+ name: string
+ category: "caption" | "transition" | "background" | "scene" | "fx" | "audio-reactive"
+ summary: string
+ editorRoute: "/editor"
+ tags: string[]
+}
+
+export interface InsightArtifact {
+ id: string
+ title: string
+ toolId: SuperToolId
+ createdAt: number
+ metricKeys: string[]
+ summary: string
+ confidence: "high" | "medium" | "low"
+ provenance: string[]
+}
+
+export interface BrainSignalEnvelope {
+ id: string
+ toolId: SuperToolId
+ action: string
+ createdAt: number
+ generationId?: string | null
+ workflowId?: string | null
+ payload: Record<string, unknown>
+}
+
+export interface SuperToolDefinition {
+ id: SuperToolId
+ title: string
+ surface: SuperToolSurface
+ category: string
+ summary: string
+ routes: string[]
+ brainHook: string
+ sourceOfTruth: string
+ status: "live-shell" | "integrating" | "planned"
+ visibility: "public" | "internal_only"
 }
