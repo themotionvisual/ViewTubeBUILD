@@ -1,9 +1,20 @@
 /// <reference types="vite/client" />
 
-const KEY_ACCESS_TOKEN = 'yt_access_token';
-const KEY_TOKEN_EXPIRY = 'yt_token_expiry';
-const KEY_REFRESH_TOKEN = 'yt_refresh_token';
+const KEY_VT_AUTH = 'vt_auth';
 const KEY_SESSION_LEGACY = 'vt_session';
+
+const getAuthObj = () => {
+  try {
+    return JSON.parse(localStorage.getItem(KEY_VT_AUTH) || '{}');
+  } catch {
+    return {};
+  }
+};
+
+const updateAuthObj = (updates: any) => {
+  const current = getAuthObj();
+  localStorage.setItem(KEY_VT_AUTH, JSON.stringify({ ...current, ...updates }));
+};
 
 const LEGACY_CLIENT_ID_FALLBACK = '365513395077-1cpc5mgn763t62ggcujkgbiv11rdbhsv.apps.googleusercontent.com';
 
@@ -58,7 +69,8 @@ const migrateLegacySessionIfNeeded = () => {
   if (hasMigratedLegacySession) return;
   hasMigratedLegacySession = true;
 
-  if (localStorage.getItem(KEY_ACCESS_TOKEN)) return;
+  const currentAuth = getAuthObj();
+  if (currentAuth.accessToken) return;
 
   try {
     const legacyRaw = localStorage.getItem(KEY_SESSION_LEGACY);
@@ -73,17 +85,18 @@ const migrateLegacySessionIfNeeded = () => {
       return;
     }
 
-    localStorage.setItem(KEY_ACCESS_TOKEN, legacy.accessToken);
-    localStorage.setItem(KEY_TOKEN_EXPIRY, String(expiresAt));
+    updateAuthObj({
+      accessToken: legacy.accessToken,
+      tokenExpiry: expiresAt
+    });
   } catch {
     // Ignore malformed legacy payloads.
   }
 };
 
 const getExpiry = (): number => {
-  const raw = localStorage.getItem(KEY_TOKEN_EXPIRY);
-  if (!raw) return 0;
-  const parsed = Number(raw);
+  const auth = getAuthObj();
+  const parsed = Number(auth.tokenExpiry);
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
@@ -96,8 +109,10 @@ const isTokenFresh = (token: string | null) => {
 
 const setImplicitSession = (accessToken: string, expiresInSeconds: number) => {
   const expiryTime = Date.now() + expiresInSeconds * 1000;
-  localStorage.setItem(KEY_ACCESS_TOKEN, accessToken);
-  localStorage.setItem(KEY_TOKEN_EXPIRY, String(expiryTime));
+  updateAuthObj({
+    accessToken,
+    tokenExpiry: expiryTime
+  });
 };
 
 /**
@@ -114,18 +129,21 @@ export const loginWithImplicitPopup = async (): Promise<void> => {
       return;
     }
 
+    // Clear any existing token.
+    // A fresh OAuth round-trip is always required when login() is called.
+    if (window.name !== 'oauth_popup') {
+      updateAuthObj({ accessToken: null, tokenExpiry: null });
+    }
+
     const redirectUri = `${window.location.origin}`;
     const state = generateRandomString(32);
 
     const scopes = [
-      'https://www.googleapis.com/auth/youtube',
-      'https://www.googleapis.com/auth/youtube.readonly',
-      'https://www.googleapis.com/auth/youtube.force-ssl',
-      'https://www.googleapis.com/auth/yt-analytics.readonly',
-      'https://www.googleapis.com/auth/yt-analytics-monetary.readonly',
       'openid',
       'profile',
       'email',
+      'https://www.googleapis.com/auth/youtube.readonly',
+      'https://www.googleapis.com/auth/yt-analytics.readonly',
     ].join(' ');
 
     const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
@@ -135,6 +153,7 @@ export const loginWithImplicitPopup = async (): Promise<void> => {
     authUrl.searchParams.append('scope', scopes);
     authUrl.searchParams.append('state', state);
     authUrl.searchParams.append('include_granted_scopes', 'true');
+    authUrl.searchParams.append('prompt', 'consent');
 
     const popup = window.open(authUrl.toString(), 'oauth_popup', 'width=600,height=700');
     if (!popup) {
@@ -146,8 +165,8 @@ export const loginWithImplicitPopup = async (): Promise<void> => {
 
     const cleanup = () => {
       settled = true;
-      clearInterval(pollTimer);
       window.removeEventListener('message', handleMessage);
+      try { popup.close(); } catch { /* ignore */ }
     };
 
     // Listen for postMessage from the popup
@@ -166,28 +185,6 @@ export const loginWithImplicitPopup = async (): Promise<void> => {
     };
 
     window.addEventListener('message', handleMessage);
-
-    const authStartedAt = Date.now();
-    const maxAuthWaitMs = 2 * 60 * 1000;
-
-    // Poll for auth completion without reading popup.location across origins
-    // to avoid noisy COOP warnings in Chromium.
-    const pollTimer = window.setInterval(() => {
-      if (settled) return;
-
-      const currentToken = localStorage.getItem(KEY_ACCESS_TOKEN);
-      if (isTokenFresh(currentToken)) {
-        cleanup();
-        try { popup.close(); } catch { /* ignore */ }
-        resolve();
-        return;
-      }
-
-      if (Date.now() - authStartedAt > maxAuthWaitMs) {
-        cleanup();
-        reject(new Error('Authentication timed out. Please try again.'));
-      }
-    }, 500);
   });
 };
 
@@ -196,7 +193,7 @@ export const loginWithPkcePopup = loginWithImplicitPopup;
 
 export const getAccessToken = (): string | null => {
   migrateLegacySessionIfNeeded();
-  const token = localStorage.getItem(KEY_ACCESS_TOKEN);
+  const token = getAuthObj().accessToken || null;
   return isTokenFresh(token) ? token : null;
 };
 
@@ -219,9 +216,7 @@ export const isAuthenticated = (): boolean => {
 };
 
 export const logout = (): void => {
-  localStorage.removeItem(KEY_ACCESS_TOKEN);
-  localStorage.removeItem(KEY_TOKEN_EXPIRY);
-  localStorage.removeItem(KEY_REFRESH_TOKEN);
+  localStorage.removeItem(KEY_VT_AUTH);
   localStorage.removeItem('yt_analytics_cache');
   localStorage.removeItem(KEY_SESSION_LEGACY);
 };
@@ -229,9 +224,10 @@ export const logout = (): void => {
 export const getSessionMeta = (): AuthSessionMeta => {
   migrateLegacySessionIfNeeded();
 
-  const token = localStorage.getItem(KEY_ACCESS_TOKEN);
+  const auth = getAuthObj();
+  const token = auth.accessToken || null;
   const expiresAt = getExpiry() || null;
-  const hasRefreshToken = !!localStorage.getItem(KEY_REFRESH_TOKEN);
+  const hasRefreshToken = !!auth.refreshToken;
   const source: AuthSessionMeta['source'] = token ? 'implicit' : null;
 
   return {

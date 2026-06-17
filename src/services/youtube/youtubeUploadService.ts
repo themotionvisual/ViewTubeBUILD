@@ -1,4 +1,4 @@
-import { getAccessToken } from "../authSession"
+import { getAccessToken } from "../auth/authSession"
 
 interface UploadMetadata {
  title: string

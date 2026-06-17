@@ -1,4 +1,4 @@
-import { getAccessToken, logout } from './authSession';
+import { getAccessToken, logout } from './auth/authSession';
 
 /**
  * Google Sheets Service
