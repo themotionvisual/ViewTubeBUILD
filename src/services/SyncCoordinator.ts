@@ -17,9 +17,12 @@ import {
 } from "./youtubeService"
 import {
   syncCoreLifetimeData,
+  CHANNEL_LIFETIME_METRICS,
   type CoreSyncResult,
 } from "./youtube/coreLifetimeSync"
 import { syncTrafficAnalytics } from "./youtube/trafficAnalyticsSync"
+import { SyncMachine } from "./SyncMachine";
+import { googleSearchConsoleService } from "./googleSearchConsoleService"
 import { ga4Service, type GA4Property } from "./ga4Service"
 import { commitToLedger } from "./analytics/DataStore"
 import { parseDurationSeconds } from "./dataUtils"
@@ -29,17 +32,29 @@ import {
  type AnalyticsWindow,
  canonicalMetricOrder,
  getMetricByAliases,
+ readYouTubeAnalyticsCache,
+ writeYouTubeAnalyticsCache,
 } from "./analytics/DataStore"
+import {
+ buildSearchConsoleSearchRows,
+ buildTrafficSearchRows,
+} from "./searchIntelligence"
+import {
+ MASTER_METRIC_AUDIT_RESULTS,
+ MASTER_TABLE_METRIC_AUDIT_CACHE_KEY,
+ MASTER_TABLE_STAGE_RESULTS_CACHE_KEY,
+} from "./masterTable/contracts"
 import type { ChannelAnalysisSyncStatus, VideoSyncBatchState } from "../types"
 
 const YT_ANALYTICS_CACHE_KEY = "yt_analytics_cache"
 const GA4_STORAGE_KEY = "ga4_properties_cache"
 const GA4_DATA_KEY = "ga4_analytics_cache"
 const ANALYTICS_SCHEMA_VERSION_KEY = "vt_analytics_schema_version"
-const ANALYTICS_SCHEMA_VERSION = 4
+const ANALYTICS_SCHEMA_VERSION = 5
 const VIDEO_SYNC_BATCH_STATE_KEY = "vt_video_sync_batch_state"
 const SYNC_MERGE_POLICY_KEY = "vt_sync_merge_policy"
 const OPTIONAL_VIDEO_METRICS_STORAGE_KEY = "vt_optional_video_metrics_enabled"
+const INITIAL_SYNC_VIDEO_LIMIT = Number.POSITIVE_INFINITY
 
 export type YouTubeSyncEnrichmentMode =
  | "core"
@@ -48,14 +63,29 @@ export type YouTubeSyncEnrichmentMode =
  | "segments"
  | "all"
 
+export type YouTubeSyncAction =
+ | "core_video_data"
+ | "daily_metrics"
+ | "google_search"
+ | "video_metrics"
+ | "traffic"
+ | "geography"
+ | "audience"
+ | "surfaces_discovery"
+ | "revenue_monetization"
+ | "reporting_bulk"
+ | "comments"
+ | "deep_data"
+
 export type YouTubeSyncOptions = {
  batchMode?: "initial" | "next"
  enrichmentMode?: YouTubeSyncEnrichmentMode
+ syncAction?: YouTubeSyncAction
 }
 
 const DEFAULT_VIDEO_SYNC_BATCH_STATE: VideoSyncBatchState = {
- initialLimit: 500,
- incrementSize: 250,
+ initialLimit: INITIAL_SYNC_VIDEO_LIMIT,
+ incrementSize: 50,
  cursor: 0,
  hasMore: true,
  lastBatchCount: 0,
@@ -97,8 +127,19 @@ export class SyncCoordinator {
  private static instance: SyncCoordinator
  private syncInterval: any = null
  private youtubeSyncPromise: Promise<void> | null = null
+ private syncMachine: SyncMachine;
 
- private constructor() {}
+ private constructor() {
+  this.syncMachine = new SyncMachine();
+ }
+
+ public triggerAutoLoginSync() {
+  return this.syncMachine.startPhase1();
+ }
+
+ public triggerManualToolboxSync() {
+  return Promise.all([this.syncMachine.startPhase2(), this.syncMachine.startPhase3()]);
+ }
 
  public static getInstance(): SyncCoordinator {
   if (!SyncCoordinator.instance) {
@@ -159,11 +200,12 @@ export class SyncCoordinator {
    const raw = localStorage.getItem(VIDEO_SYNC_BATCH_STATE_KEY)
    if (!raw) return { ...DEFAULT_VIDEO_SYNC_BATCH_STATE }
    const parsed = JSON.parse(raw) as Partial<VideoSyncBatchState>
+   const parsedInitialLimit =
+    typeof parsed.initialLimit === "number" && parsed.initialLimit > 500
+     ? parsed.initialLimit
+     : DEFAULT_VIDEO_SYNC_BATCH_STATE.initialLimit
    return {
-    initialLimit:
-     typeof parsed.initialLimit === "number"
-      ? parsed.initialLimit
-      : DEFAULT_VIDEO_SYNC_BATCH_STATE.initialLimit,
+    initialLimit: parsedInitialLimit,
     incrementSize:
      typeof parsed.incrementSize === "number"
       ? parsed.incrementSize
@@ -246,9 +288,52 @@ export class SyncCoordinator {
     return null
    })
    .filter(
-    (row: Record<string, unknown> | null): row is Record<string, unknown> =>
-     !!row,
+   (row: Record<string, unknown> | null): row is Record<string, unknown> =>
+    !!row,
    )
+ }
+
+ private firstMetricRowToMap(report: any): Record<string, number> {
+  if (!report || !Array.isArray(report.columnHeaders) || !Array.isArray(report.rows)) {
+   return {}
+  }
+  const firstRow = report.rows[0]
+  if (!Array.isArray(firstRow)) return {}
+  return report.columnHeaders.reduce<Record<string, number>>((acc, header: any, index: number) => {
+   const name = String(header?.name || "")
+   if (!name) return acc
+   const value = Number(firstRow[index])
+   if (Number.isFinite(value)) acc[name] = value
+   return acc
+  }, {})
+ }
+
+ private buildChannelLifetimeSummary(profile: any, analyticsReport: any): Record<string, unknown> {
+  const metricMap = this.firstMetricRowToMap(analyticsReport)
+  const statistics = profile?.statistics || {}
+  const currentSubscribers = Number(statistics.subscriberCount || 0) || 0
+  const publicVideoCount = Number(statistics.videoCount || 0) || 0
+  const publicViewCount = Number(statistics.viewCount || 0) || 0
+  const lifetimeWatchMinutes = Number(metricMap.estimatedMinutesWatched || 0) || 0
+  return {
+   channelId: profile?.id || profile?.channelId || null,
+   currentSubscribers,
+   publicVideoCount,
+   publicViewCount,
+   lifetimeViews: Number(metricMap.views || 0) || 0,
+   lifetimeWatchMinutes,
+   lifetimeWatchHours: lifetimeWatchMinutes / 60,
+   lifetimeRevenue: Number(metricMap.estimatedRevenue || 0) || 0,
+   lifetimeLikes: Number(metricMap.likes || 0) || 0,
+   lifetimeComments: Number(metricMap.comments || 0) || 0,
+   lifetimeShares: Number(metricMap.shares || 0) || 0,
+   lifetimeEngagedViews: Number(metricMap.engagedViews || 0) || 0,
+   lifetimeSubscribersGained: Number(metricMap.subscribersGained || 0) || 0,
+   lifetimeSubscribersLost: Number(metricMap.subscribersLost || 0) || 0,
+   averageViewDuration: Number(metricMap.averageViewDuration || 0) || 0,
+   averageViewPercentage: Number(metricMap.averageViewPercentage || 0) || 0,
+   syncedAt: new Date().toISOString(),
+  }
  }
 
  private computeMetricAvailability(
@@ -387,16 +472,13 @@ export class SyncCoordinator {
   // before we block the thread with the massive JSON parse.
   await new Promise((r) => setTimeout(r, 10))
 
-  let prevCache: Record<string, any> = {}
-  let prevCacheRaw = "{}"
-  try {
-   prevCacheRaw = localStorage.getItem(YT_ANALYTICS_CACHE_KEY) || "{}"
-   prevCache = JSON.parse(prevCacheRaw)
-  } catch (error) {
-   console.warn("YouTube Sync: Corrupt yt_analytics_cache, resetting.", error)
-   prevCache = {}
-   localStorage.removeItem(YT_ANALYTICS_CACHE_KEY)
-  }
+   let prevCache: Record<string, any> = {}
+   try {
+    prevCache = readYouTubeAnalyticsCache()
+   } catch (error) {
+    console.warn("YouTube Sync: Corrupt yt_analytics_cache, resetting.", error)
+    prevCache = {}
+   }
 
   const mergePolicy = this.getStoredSyncMergePolicy()
   if (
@@ -438,9 +520,12 @@ export class SyncCoordinator {
    const batchState = this.loadVideoSyncBatchState()
    const isNextBatch = options.batchMode === "next"
    const enrichmentMode = options.enrichmentMode || "core"
+   const requestedAction = options.syncAction || null
+   const shouldSyncSearch = requestedAction === "google_search" || requestedAction === "traffic"
    const shouldSyncVideoMetrics =
     enrichmentMode === "video_metrics" || enrichmentMode === "all"
    const shouldSyncTraffic =
+    shouldSyncSearch ||
     enrichmentMode === "traffic" ||
     enrichmentMode === "segments" ||
     enrichmentMode === "all"
@@ -453,7 +538,7 @@ export class SyncCoordinator {
    let coreSyncResult: CoreSyncResult | null = null
    try {
     coreSyncResult = await syncCoreLifetimeData(maxVideos, {
-     includeVideoAnalytics: true,
+     includeVideoAnalytics: false,
     })
    } catch (coreSyncError: any) {
     console.warn("Core Lifetime Sync failed, falling back to legacy sync:", coreSyncError?.message || coreSyncError)
@@ -467,15 +552,35 @@ export class SyncCoordinator {
      ? (cacheData.stats as Record<string, any>)
      : {}
 
-   if (coreSyncResult) {
-    // Core sync succeeded — build profile from core sync fields + previous cache
-    profile = {
+  if (coreSyncResult) {
+   // Core sync succeeded — build profile from core sync fields + previous cache
+   profile = {
+     ...(prevCache.profile || {}),
+     ...(coreSyncResult.channelBaseline || {}),
      id: coreSyncResult.channelId,
+     channelId: coreSyncResult.channelId,
      statistics: coreSyncResult.channelStats,
      uploadsPlaylistId: coreSyncResult.uploadsPlaylistId,
-     ...(prevCache.profile || {}),
     }
     cacheData.profile = profile
+    cacheData.channelBaseline = profile
+    cacheData.playlistsBaseline = coreSyncResult.playlistsBaseline
+    cacheData.videoCategoryTaxonomy = coreSyncResult.categoryTaxonomy
+    cacheData.channelLifetimeSummary = coreSyncResult.channelLifetimeSummary
+
+    if (coreSyncResult.windowedAnalytics) {
+      for (const [window, report] of Object.entries(coreSyncResult.windowedAnalytics)) {
+        cacheData[`youtube_analytics_v2::channel::::${window}`] = {
+          source: "youtube_analytics_v2",
+          context: "channel",
+          dimensions: [],
+          metrics: [...CHANNEL_LIFETIME_METRICS],
+          window,
+          payload: report,
+          syncedAt: new Date().toISOString()
+        }
+      }
+    }
 
     // Convert CoreVideoBaseline to the existing cache format
     const existingVideos =
@@ -483,13 +588,45 @@ export class SyncCoordinator {
     const coreVideos = coreSyncResult.videoBaseline.map((v) => ({
      videoId: v.videoId,
      title: v.title,
+     description: v.description,
      publishedAt: v.publishedAt,
      thumbnail: v.thumbnail,
      thumbnailUrl: v.thumbnail,
+     thumbnails: v.thumbnails,
+     tags: v.tags,
+     channelId: v.channelId,
+     channelTitle: v.channelTitle,
+     categoryId: v.categoryId,
+     categoryName: v.categoryName,
+     defaultLanguage: v.defaultLanguage,
+     localized: v.localized,
+     localizations: v.localizations,
+     topicDetails: v.topicDetails,
+     privacyStatus: v.privacyStatus,
+     uploadStatus: v.uploadStatus,
+     embeddable: v.embeddable,
+     license: v.license,
+     publicStatsViewable: v.publicStatsViewable,
+     madeForKids: v.madeForKids,
+     selfDeclaredMadeForKids: v.selfDeclaredMadeForKids,
+     definition: v.definition,
+     dimension: v.dimension,
+     caption: v.caption,
+     licensedContent: v.licensedContent,
+     projection: v.projection,
+     durationSeconds: v.duration,
+     durationRaw: v.durationRaw,
+     format: v.format,
+     isShort: v.isShort,
      aspectRatioBucket: v.aspectRatioBucket,
      aspectRatioWidth: v.aspectRatioWidth,
      aspectRatioHeight: v.aspectRatioHeight,
      aspectRatioSource: v.aspectRatioSource,
+     viewCount: String(v.dataApiStats.views),
+     likeCount: String(v.dataApiStats.likes),
+     commentCount: String(v.dataApiStats.comments),
+     subscriberCount: v.dataApiStats.subscribers,
+     analyticsMetrics: v.analyticsMetrics || undefined,
     }))
 
     // Merge with existing videos (preserve any not in current fetch)
@@ -533,23 +670,44 @@ export class SyncCoordinator {
      const existing = stats[v.videoId] || {}
      stats[v.videoId] = {
       ...existing,
-      viewCount: String(v.dataApiStats.views),
-      likeCount: String(v.dataApiStats.likes),
-      commentCount: String(v.dataApiStats.comments),
-      title: v.title,
+     viewCount: String(v.dataApiStats.views),
+     likeCount: String(v.dataApiStats.likes),
+     commentCount: String(v.dataApiStats.comments),
+     title: v.title,
+      description: v.description,
       publishedAt: v.publishedAt,
       thumbnail: v.thumbnail,
       thumbnailUrl: v.thumbnail,
+      thumbnails: v.thumbnails,
+      tags: v.tags,
+      channelId: v.channelId,
+      channelTitle: v.channelTitle,
+      categoryId: v.categoryId,
+      categoryName: v.categoryName,
+      defaultLanguage: v.defaultLanguage,
+      localized: v.localized,
+      localizations: v.localizations,
+      topicDetails: v.topicDetails,
       durationSeconds: v.duration,
       durationRaw: v.durationRaw,
       privacyStatus: v.privacyStatus,
+      uploadStatus: v.uploadStatus || "",
+      embeddable: v.embeddable,
+      license: v.license,
+      publicStatsViewable: v.publicStatsViewable,
+      madeForKids: v.madeForKids,
+      selfDeclaredMadeForKids: v.selfDeclaredMadeForKids,
+      definition: v.definition || "",
+      dimension: v.dimension || "",
+      caption: v.caption || "",
+      licensedContent: v.licensedContent,
+      projection: v.projection || "",
       isShort: v.isShort,
       format: v.format,
       aspectRatioBucket: v.aspectRatioBucket,
       aspectRatioWidth: v.aspectRatioWidth,
       aspectRatioHeight: v.aspectRatioHeight,
       aspectRatioSource: v.aspectRatioSource,
-      hasAnalytics: v.hasAnalytics,
       subscriberCount: v.dataApiStats.subscribers,
       ...(v.analyticsMetrics || {}),
      }
@@ -558,7 +716,7 @@ export class SyncCoordinator {
 
     // Commit core analytics to the canonical ledger
     if (coreSyncResult.analytics.videos?.rows?.length > 0) {
-     commitToLedger({
+     commitToLedger(cacheData, {
       source: "youtube_analytics_v2",
       context: "video",
       dimensions: ["video"],
@@ -568,7 +726,7 @@ export class SyncCoordinator {
      })
     }
     if (coreSyncResult.analytics.channel?.rows?.length > 0) {
-     commitToLedger({
+     commitToLedger(cacheData, {
       source: "youtube_analytics_v2",
       context: "channel",
       dimensions: [],
@@ -577,6 +735,10 @@ export class SyncCoordinator {
       window: "lifetime",
      })
      cacheData.globalLifetime = coreSyncResult.analytics.channel
+     cacheData.channelLifetimeSummary = this.buildChannelLifetimeSummary(
+      profile,
+      coreSyncResult.analytics.channel,
+     )
     }
 
     // Update batch state
@@ -584,15 +746,62 @@ export class SyncCoordinator {
      ...batchState,
      cursor: videos.length,
      lastBatchCount: Math.max(0, coreSyncResult.videoBaseline.length),
-     hasMore: coreSyncResult.videoBaseline.length >= maxVideos,
+     hasMore: coreSyncResult.inventoryHasMore,
     }
     this.persistVideoSyncBatchState(nextBatchState)
     cacheData.videoSyncBatch = nextBatchState
     cacheData.coreSyncTiming = coreSyncResult.timing
     cacheData.lastSynced = Date.now()
+    cacheData[MASTER_TABLE_METRIC_AUDIT_CACHE_KEY] = MASTER_METRIC_AUDIT_RESULTS
+    cacheData[MASTER_TABLE_STAGE_RESULTS_CACHE_KEY] = {
+     channel_bootstrap: {
+      status: "complete",
+      syncedAt: Date.now(),
+      capabilities: ["youtube_data_v3", "youtube_analytics_v2"],
+      diagnostics: [],
+      provenance: ["api"],
+      rowsTouched: 1,
+      fieldsPopulated: [
+       "channelBaseline",
+       "channelLifetimeSummary",
+       "videoCategoryTaxonomy",
+      ],
+     },
+     video_inventory: {
+      status: "complete",
+      syncedAt: Date.now(),
+      capabilities: ["youtube_data_v3"],
+      diagnostics: [],
+      provenance: ["api"],
+      rowsTouched: coreSyncResult.videoBaseline.length,
+      fieldsPopulated: [
+       "videoId",
+       "title",
+       "publishedAt",
+       "durationSeconds",
+       "categoryId",
+       "privacyStatus",
+      ],
+     },
+     analytics_enrichment: {
+      status: "partial",
+      syncedAt: Date.now(),
+      capabilities: ["youtube_analytics_v2"],
+      diagnostics: [
+       enrichmentMode === "core"
+        ? "Core-only baseline cached; CSV-owned and optional enrichments remain deferred."
+        : `Enrichment mode ${enrichmentMode} continues after baseline cache.`,
+      ],
+      provenance: ["api"],
+      rowsTouched: coreSyncResult.analytics.videos?.rows?.length || 0,
+      fieldsPopulated: (coreSyncResult.analytics.videos?.columnHeaders || [])
+       .map((header: any) => String(header?.name || ""))
+       .filter(Boolean),
+     },
+    }
 
     try {
-     localStorage.setItem(YT_ANALYTICS_CACHE_KEY, JSON.stringify(cacheData))
+     writeYouTubeAnalyticsCache(cacheData)
      localStorage.setItem("yt_analytics_last_sync", new Date().toISOString())
      window.dispatchEvent(new CustomEvent("vt_local_data_changed"))
      window.dispatchEvent(
@@ -611,7 +820,9 @@ export class SyncCoordinator {
       `Core-ready baseline cached (${coreSyncResult.timing.phase1Ms}ms)`,
       enrichmentMode === "core"
        ? "Optional enrichment deferred until manually requested"
-       : "Manual analytics enrichment starting",
+       : requestedAction === "daily_metrics"
+         ? "Daily metrics enrichment starting"
+         : "Manual analytics enrichment starting",
      ],
     })
    } else {
@@ -714,6 +925,12 @@ export class SyncCoordinator {
        ytApiQueue.add(() => fetchShortsPlaylistIds(profile.id)),
       ])
 
+      const fetchedAt = new Date()
+      const fetchedAtIso = fetchedAt.toISOString()
+      const fetchedAtLocal = fetchedAt.toLocaleString(undefined, {
+       dateStyle: "medium",
+       timeStyle: "short",
+      } as Intl.DateTimeFormatOptions)
       rawStats.forEach((s) => {
        const existing = stats[s.videoId] || {}
        const durationSeconds = parseDurationSeconds(s.duration)
@@ -726,6 +943,8 @@ export class SyncCoordinator {
         durationRaw: s.duration,
         privacyStatus: s.privacyStatus || "",
         isShort: shortsPlaylistIds.has(s.videoId) || s.isShort === true,
+        dataApiFetchedAt: fetchedAtIso,
+        dataApiFetchedAtLocal: fetchedAtLocal,
        }
       })
       if (Object.keys(stats).length > 0) cacheData.stats = stats
@@ -789,7 +1008,7 @@ export class SyncCoordinator {
       )
 
       if (analytics?.report) {
-       commitToLedger({
+       commitToLedger(cacheData, {
         source: "youtube_analytics_v2",
         context: "video",
         dimensions: ["video"],
@@ -799,24 +1018,30 @@ export class SyncCoordinator {
        })
       }
 
-      if (window === "lifetime") {
+      if (window === "lifetime" || window === "28d" || window === "90d") {
        try {
-        const globalLifetime = await ytApiQueue.add(() =>
+        const globalStats = await ytApiQueue.add(() =>
          fetchGlobalLifetimeAnalytics(range.startDate, range.endDate, profile.id),
         )
-        if (globalLifetime) {
-         commitToLedger({
+        if (globalStats) {
+         commitToLedger(cacheData, {
           source: "youtube_analytics_v2",
           context: "channel",
           dimensions: [],
-          metrics: (globalLifetime.columnHeaders || []).map((h: any) => h.name),
-          payload: globalLifetime,
-          window: "lifetime",
+          metrics: (globalStats.columnHeaders || []).map((h: any) => h.name),
+          payload: globalStats,
+          window: window,
          })
-         cacheData.globalLifetime = globalLifetime
+         if (window === "lifetime") {
+          cacheData.globalLifetime = globalStats
+          cacheData.channelLifetimeSummary = this.buildChannelLifetimeSummary(
+           profile,
+           globalStats,
+          )
+         }
         }
        } catch (e) {
-        console.warn("Global lifetime analytics fetch failed:", e)
+        console.warn(`Channel analytics fetch failed for window ${window}:`, e)
        }
       }
 
@@ -916,7 +1141,7 @@ export class SyncCoordinator {
       fetchChannelAnalytics(startDate, endDate, profile.id),
      )
      if (channelAnalytics) {
-      commitToLedger({
+      commitToLedger(cacheData, {
        source: "youtube_analytics_v2",
        context: "channel",
        dimensions: ["day"],
@@ -944,7 +1169,7 @@ export class SyncCoordinator {
       fetchDemographicAnalytics(startDate, endDate, profile.id),
      )
      if (demographics) {
-      commitToLedger({
+      commitToLedger(cacheData, {
        source: "youtube_analytics_v2",
        context: "demographics",
        dimensions: ["ageGroup", "gender"],
@@ -980,7 +1205,7 @@ export class SyncCoordinator {
       }),
      )
      if (trafficResult) {
-      commitToLedger({
+      commitToLedger(cacheData, {
        source: "youtube_analytics_v2",
        context: "traffic_source",
        dimensions: ["insightTrafficSourceType"],
@@ -989,7 +1214,7 @@ export class SyncCoordinator {
        window: "lifetime",
       })
       if (trafficResult.rawReports.dailyByType) {
-       commitToLedger({
+       commitToLedger(cacheData, {
         source: "youtube_analytics_v2",
         context: "traffic_daily",
         dimensions: ["day", "insightTrafficSourceType"],
@@ -999,7 +1224,7 @@ export class SyncCoordinator {
        })
       }
       if (trafficResult.rawReports.videoByType) {
-       commitToLedger({
+       commitToLedger(cacheData, {
         source: "youtube_analytics_v2",
         context: "traffic_video",
         dimensions: ["video", "insightTrafficSourceType"],
@@ -1011,15 +1236,188 @@ export class SyncCoordinator {
        })
       }
       cacheData.trafficSources = trafficResult.rawReports.overview
-      cacheData.trafficOverview = trafficResult.trafficOverview
-      cacheData.trafficDailyByType = trafficResult.trafficDailyByType
-      cacheData.trafficVideoByType = trafficResult.trafficVideoByType
-      cacheData.trafficDetailByType = trafficResult.trafficDetailByType
-      cacheData.trafficReportingBulk = trafficResult.trafficReportingBulk
-      cacheData.trafficDiagnostics = trafficResult.trafficDiagnostics
+     cacheData.trafficOverview = trafficResult.trafficOverview
+     cacheData.trafficDailyByType = trafficResult.trafficDailyByType
+     cacheData.trafficVideoByType = trafficResult.trafficVideoByType
+     cacheData.trafficDetailByType = trafficResult.trafficDetailByType
+     cacheData.trafficReportingBulk = trafficResult.trafficReportingBulk
+     cacheData.trafficDiagnostics = trafficResult.trafficDiagnostics
+
+      const videoTitleById = Array.isArray(videos)
+       ? videos.reduce<Record<string, string>>((acc, video: any) => {
+          const videoId = String(video?.videoId || "").trim()
+          if (!videoId) return acc
+          acc[videoId] = String(video?.title || "").trim()
+          return acc
+         }, {})
+       : {}
+      const trafficSearchRows = buildTrafficSearchRows(
+       trafficResult.trafficDetailByType,
+       videoTitleById,
+      )
+      const previousSearchRows = Array.isArray(cacheData.searchIntelligenceRows)
+       ? cacheData.searchIntelligenceRows.filter(
+          (row: any) => row?.sourceLane === "google_search_console",
+         )
+       : []
+      cacheData.searchIntelligenceRows = [...previousSearchRows, ...trafficSearchRows]
+      cacheData.searchIntelligenceStatus = {
+       status: "complete",
+       fetchedAt: Date.now(),
+       boundSiteUrl:
+        typeof cacheData.searchConsoleBinding?.siteUrl === "string"
+         ? cacheData.searchConsoleBinding.siteUrl
+         : undefined,
+       searchConsoleRowCount: previousSearchRows.length,
+       youtubeSearchRowCount: trafficSearchRows.filter(
+        (row) => row.sourceLane === "youtube_search_keyword",
+       ).length,
+       googleReferralRowCount: trafficSearchRows.filter(
+        (row) => row.referralClass === "google_search_referral",
+       ).length,
+       externalReferralRowCount: trafficSearchRows.filter(
+        (row) => row.referralClass === "external_referral",
+       ).length,
+      }
      }
     } catch (e: any) {
      console.error("Traffic Source Analytics API ERROR:", e?.message || e)
+    }
+
+    if (shouldSyncSearch) {
+     const storedBinding = googleSearchConsoleService.getStoredBinding()
+     if (!storedBinding?.siteUrl) {
+      cacheData.searchConsoleStatus = {
+       status: "property_missing",
+       fetchedAt: Date.now(),
+       reason: "Bind a Search Console property in Settings before running Google Search sync.",
+      }
+      cacheData.searchIntelligenceStatus = {
+       status: "property_missing",
+       fetchedAt: Date.now(),
+       searchConsoleRowCount: 0,
+       youtubeSearchRowCount: Array.isArray(cacheData.searchIntelligenceRows)
+        ? cacheData.searchIntelligenceRows.filter(
+           (row: any) => row?.sourceLane === "youtube_search_keyword",
+          ).length
+        : 0,
+       googleReferralRowCount: Array.isArray(cacheData.searchIntelligenceRows)
+        ? cacheData.searchIntelligenceRows.filter(
+           (row: any) => row?.referralClass === "google_search_referral",
+          ).length
+        : 0,
+       externalReferralRowCount: Array.isArray(cacheData.searchIntelligenceRows)
+        ? cacheData.searchIntelligenceRows.filter(
+           (row: any) => row?.referralClass === "external_referral",
+          ).length
+        : 0,
+       reason: "No Search Console property is currently bound.",
+      }
+     } else {
+      try {
+       this.emitSyncStatus({
+        ...syncStatusBase,
+        phase: "syncing",
+        completedAt: null,
+        lastError: null,
+        stages: ["Fetching Google Search Console queries"],
+       })
+       cacheData.searchConsoleStatus = {
+        status: "syncing",
+        fetchedAt: Date.now(),
+       }
+       const searchAppearanceOptions = await ytApiQueue.add(() =>
+        googleSearchConsoleService.fetchSearchAppearanceOptions(
+         storedBinding.siteUrl,
+         startDate,
+         endDate,
+        ),
+       )
+       const searchConsoleRows = await ytApiQueue.add(() =>
+        googleSearchConsoleService.fetchQueryRows(
+         storedBinding.siteUrl,
+         startDate,
+         endDate,
+        ),
+       )
+       const normalizedRows = buildSearchConsoleSearchRows(searchConsoleRows)
+       const trafficRows = Array.isArray(cacheData.searchIntelligenceRows)
+        ? cacheData.searchIntelligenceRows.filter(
+           (row: any) => row?.sourceLane !== "google_search_console",
+          )
+        : []
+       cacheData.searchConsoleBinding = {
+        ...storedBinding,
+        lastSyncedAt: new Date().toISOString(),
+       }
+       googleSearchConsoleService.setStoredBinding(cacheData.searchConsoleBinding)
+       cacheData.searchConsoleProperties = [
+        {
+         siteUrl: storedBinding.siteUrl,
+         permissionLevel: storedBinding.permissionLevel,
+        },
+       ]
+       cacheData.searchConsoleAppearanceOptions = searchAppearanceOptions
+       cacheData.searchIntelligenceRows = [...normalizedRows, ...trafficRows]
+       cacheData.searchConsoleStatus = {
+        status: "complete",
+        fetchedAt: Date.now(),
+        rowCount: normalizedRows.length,
+       }
+       cacheData.searchIntelligenceStatus = {
+        status: "complete",
+        fetchedAt: Date.now(),
+        boundSiteUrl: storedBinding.siteUrl,
+        searchConsoleRowCount: normalizedRows.length,
+        youtubeSearchRowCount: trafficRows.filter(
+         (row: any) => row?.sourceLane === "youtube_search_keyword",
+        ).length,
+        googleReferralRowCount: trafficRows.filter(
+         (row: any) => row?.referralClass === "google_search_referral",
+        ).length,
+        externalReferralRowCount: trafficRows.filter(
+         (row: any) => row?.referralClass === "external_referral",
+        ).length,
+       }
+       commitToLedger(cacheData, {
+        source: "google_search_console",
+        context: "search_console",
+        dimensions: ["query", "page", "date", "device", "country", "searchAppearance"],
+        metrics: ["clicks", "impressions", "ctr", "position"],
+        payload: searchConsoleRows,
+        window: "lifetime",
+       })
+      } catch (e: any) {
+       cacheData.searchConsoleStatus = {
+        status: "error",
+        fetchedAt: Date.now(),
+        reason: e?.message || String(e),
+       }
+       cacheData.searchIntelligenceStatus = {
+        status: "error",
+        fetchedAt: Date.now(),
+        boundSiteUrl: storedBinding.siteUrl,
+        searchConsoleRowCount: 0,
+        youtubeSearchRowCount: Array.isArray(cacheData.searchIntelligenceRows)
+         ? cacheData.searchIntelligenceRows.filter(
+            (row: any) => row?.sourceLane === "youtube_search_keyword",
+           ).length
+         : 0,
+        googleReferralRowCount: Array.isArray(cacheData.searchIntelligenceRows)
+         ? cacheData.searchIntelligenceRows.filter(
+            (row: any) => row?.referralClass === "google_search_referral",
+           ).length
+         : 0,
+        externalReferralRowCount: Array.isArray(cacheData.searchIntelligenceRows)
+         ? cacheData.searchIntelligenceRows.filter(
+            (row: any) => row?.referralClass === "external_referral",
+           ).length
+         : 0,
+        reason: e?.message || String(e),
+       }
+       console.error("Search Console sync ERROR:", e?.message || e)
+      }
+     }
     }
 
     try {
@@ -1034,7 +1432,7 @@ export class SyncCoordinator {
       fetchGeographyAnalytics(startDate, endDate, profile.id),
      )
      if (geography) {
-      commitToLedger({
+      commitToLedger(cacheData, {
        source: "youtube_analytics_v2",
        context: "geography",
        dimensions: ["country"],
@@ -1074,7 +1472,7 @@ export class SyncCoordinator {
       fetchDailyAnalytics(startDate, endDate, profile.id),
      )
      if (dailyMetrics) {
-      commitToLedger({
+      commitToLedger(cacheData, {
        source: "youtube_analytics_v2",
        context: "channel",
        dimensions: ["day"],
@@ -1083,9 +1481,47 @@ export class SyncCoordinator {
        window: "lifetime",
       })
       cacheData.dailyMetrics = dailyMetrics
+      cacheData.dailyMetricsStatus = {
+       status: "complete",
+       requestedAction: requestedAction || "video_metrics",
+       enrichmentMode,
+       fetchedAt: Date.now(),
+       rowCount: Array.isArray(dailyMetrics.rows) ? dailyMetrics.rows.length : 0,
+       columnCount: Array.isArray(dailyMetrics.columnHeaders)
+        ? dailyMetrics.columnHeaders.length
+        : 0,
+      }
+      window.dispatchEvent(
+       new CustomEvent("yt_daily_metrics_synced", {
+        detail: cacheData.dailyMetricsStatus,
+       }),
+      )
      }
     } catch (e: any) {
      console.error("Daily Metrics API ERROR:", e?.message || e)
+     cacheData.dailyMetricsStatus = {
+      status: "error",
+      requestedAction: requestedAction || "video_metrics",
+      enrichmentMode,
+      fetchedAt: Date.now(),
+      rowCount: 0,
+      columnCount: 0,
+      reason: e?.message || String(e),
+     }
+    }
+   } else if (requestedAction === "daily_metrics") {
+    cacheData.dailyMetricsStatus = {
+     status: "deferred",
+     requestedAction,
+     enrichmentMode,
+     fetchedAt: Date.now(),
+     rowCount: Array.isArray(cacheData.dailyMetrics?.rows)
+      ? cacheData.dailyMetrics.rows.length
+      : 0,
+     columnCount: Array.isArray(cacheData.dailyMetrics?.columnHeaders)
+      ? cacheData.dailyMetrics.columnHeaders.length
+      : 0,
+     reason: "Daily metrics currently run through the shared video-metrics enrichment path.",
     }
    }
 
@@ -1109,7 +1545,7 @@ export class SyncCoordinator {
 
    const summary = {
     runAt: new Date().toISOString(),
-    cacheBytesBefore: this.byteLength(prevCacheRaw),
+    cacheBytesBefore: 0,
     cacheBytesAfter: 0,
     videoCount: Array.isArray(cacheData.videos) ? cacheData.videos.length : 0,
     statsCount:
@@ -1121,9 +1557,8 @@ export class SyncCoordinator {
    analyticsVerification: this.buildAnalyticsVerificationSnapshot(cacheData),
   }
 
-   let nextRaw = ""
    try {
-    nextRaw = JSON.stringify(cacheData)
+    const nextRaw = JSON.stringify(cacheData)
     summary.cacheBytesAfter = this.byteLength(nextRaw)
     cacheData.syncRunSummary = summary
    } catch {
@@ -1131,30 +1566,10 @@ export class SyncCoordinator {
    }
 
    try {
-    if (!nextRaw) nextRaw = JSON.stringify(cacheData)
-    localStorage.setItem(YT_ANALYTICS_CACHE_KEY, nextRaw)
+    writeYouTubeAnalyticsCache(cacheData)
     localStorage.setItem("yt_analytics_last_sync", new Date().toISOString())
    } catch (e) {
-    if (!this.isQuotaExceededError(e)) throw e
-
-    summary.warning =
-     "Cache too large for localStorage; storing minimal snapshot (profile/videos/lastSynced only)."
-
-    const minimalCache = {
-     profile: cacheData.profile,
-     videos: cacheData.videos,
-     lastSynced: cacheData.lastSynced,
-     lastSyncedByWindow: cacheData.lastSyncedByWindow,
-     videoContentTypeStatus: cacheData.videoContentTypeStatus,
-     syncRunSummary: summary,
-    }
-
-    try {
-     localStorage.setItem(YT_ANALYTICS_CACHE_KEY, JSON.stringify(minimalCache))
-     localStorage.setItem("yt_analytics_last_sync", new Date().toISOString())
-    } catch (e2) {
-     console.warn("Failed to write minimal yt_analytics_cache snapshot:", e2)
-    }
+    console.error("Failed to write final sync cache:", e)
    }
 
    window.dispatchEvent(
@@ -1183,8 +1598,8 @@ export class SyncCoordinator {
     phase: "error",
     completedAt: new Date().toISOString(),
     lastError: isAuthError
-     ? "Authentication required: Please reconnect your channel."
-     : error?.message || "Unknown sync error",
+     ? "Your YouTube connection needs to be reconnected before this sync can continue."
+     : error?.message || "Something interrupted the sync before it could finish.",
     stages: ["YouTube sync failed"],
    })
    throw error
@@ -1251,7 +1666,7 @@ export class SyncCoordinator {
    ])
 
    if (overview) {
-    commitToLedger({
+    commitToLedger(cacheData, {
      source: "ga4",
      context: "channel",
      dimensions: ["day"],

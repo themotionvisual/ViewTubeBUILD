@@ -1,7 +1,7 @@
 
 // src/types.ts
 
-export type SyncPhase = "IDLE" | "PHASE_1" | "PHASE_2" | "COMPLETE";
+export type SyncPhase = "IDLE" | "PHASE_1" | "PHASE_2" | "PHASE_3" | "COMPLETE";
 
 export interface RetentionDataPoint {
  elapsedVideoTimeRatio: number
