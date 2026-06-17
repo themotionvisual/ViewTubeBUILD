@@ -7,6 +7,11 @@ build/
 out/
 .vite/
 coverage/
+.cache/
+.eslintcache
+*.tsbuildinfo
+playwright-report/
+test-results/
 
 # Environment and local secrets
 .env
@@ -18,7 +23,12 @@ coverage/
 # Local tool/state folders
 .claude/
 .gemini/
+.agents/
+.codex/
+.codex_versions/
 .worktrees/
+.vt-e1-render/
+.cursor/
 
 # Logs and temp files
 logs/
@@ -29,6 +39,10 @@ yarn-error.log*
 pnpm-debug.log*
 *.tmp
 *.temp
+*.bak
+*.backup
+*.orig
+*.rej
 tmp/
 temp/
 
@@ -45,6 +59,28 @@ desktop.ini
 build_log.txt
 file_list.txt
 standalone-chart-dashboard.html
+broken_*_start.txt
+damage_report.txt
+formatted_app.txt
+zvt.zip
+*.zip
 
 # Local nested repo (exclude from deploy)
 Roo-Code/
+.vercel
+.aider*
+
+# ViewTube local quarantine and extraction workspaces
+_quarantine/
+_migration_hub/
+docs/
+governance/
+sources/
+src copy/
+src/services_backup/
+
+# One-off local sync/repair scripts generated during recovery passes
+desktop_master_sync*.py
+lifetime_daily_search_geo_experiment*.py
+fix_reorder*.py
+extract_editor.mjs
