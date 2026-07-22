@@ -76,6 +76,25 @@ const parseCookies = (req) => Object.fromEntries(
   }),
 );
 
+const normalizeTrustedHostname = (hostname) => String(hostname || "").replace(/^www\./i, "").toLowerCase();
+const normalizePort = (url) => url.port || (url.protocol === "https:" ? "443" : url.protocol === "http:" ? "80" : "");
+
+export const isTrustedAccountOrigin = (originValue) => {
+  const origin = String(originValue || "").trim();
+  if (!origin) return process.env.NODE_ENV !== "production";
+  try {
+    const requestUrl = new URL(origin);
+    const configuredUrl = new URL(publicOrigin());
+    return (
+      requestUrl.protocol === configuredUrl.protocol &&
+      normalizePort(requestUrl) === normalizePort(configuredUrl) &&
+      normalizeTrustedHostname(requestUrl.hostname) === normalizeTrustedHostname(configuredUrl.hostname)
+    );
+  } catch {
+    return false;
+  }
+};
+
 const sessionCookie = (token, expiresAt) => {
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
   return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax${secure}; Expires=${new Date(expiresAt).toUTCString()}`;
@@ -121,10 +140,7 @@ const readJsonBody = async (req, readBody) => {
 
 const sessionUserId = async (req) => getSessionUserId(parseCookies(req)[SESSION_COOKIE] || "");
 const hasTrustedOrigin = (req) => {
-  const origin = String(req.headers.origin || "").trim();
-  if (!origin) return process.env.NODE_ENV !== "production";
-  try { return new URL(origin).origin === new URL(publicOrigin()).origin; }
-  catch { return false; }
+  return isTrustedAccountOrigin(req.headers.origin);
 };
 
 const buildSnapshot = async (userId) => {
