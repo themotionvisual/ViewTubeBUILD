@@ -1,4 +1,9 @@
-import { accountUrl, isUnifiedAccountServerEnabled } from "../account/accountCoordinator"
+import {
+ accountUrl,
+ isAccountServerUnavailableError,
+ isUnifiedAccountServerEnabled,
+ markUnifiedAccountServerUnavailable,
+} from "../account/accountCoordinator"
 import { getValidAccessToken } from "../auth/authSession"
 
 const TRANSIENT_STATUSES = new Set([429, 500, 502, 503, 504])
@@ -10,13 +15,26 @@ const delay = (milliseconds: number) =>
 
 const runRequest = async (url: string, signal?: AbortSignal): Promise<Response> => {
  if (isUnifiedAccountServerEnabled()) {
-  return fetch(accountUrl("/api/account/google-proxy"), {
-   method: "POST",
-   credentials: "include",
-   headers: { "Content-Type": "application/json", Accept: "application/json" },
-   body: JSON.stringify({ url }),
-   signal,
-  })
+  try {
+   const response = await fetch(accountUrl("/api/account/google-proxy"), {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ url }),
+    signal,
+   })
+   if (response.status === 404) {
+    markUnifiedAccountServerUnavailable()
+    throw new Error("ACCOUNT_SERVER_UNAVAILABLE")
+   }
+   return response
+  } catch (error) {
+   if (isAccountServerUnavailableError(error) || error instanceof Error && error.message === "ACCOUNT_SERVER_UNAVAILABLE") {
+    markUnifiedAccountServerUnavailable()
+   } else {
+    throw error
+   }
+  }
  }
 
  const token = await getValidAccessToken()

@@ -8,10 +8,21 @@ import {
 const SNAPSHOT_CACHE_KEY = "vt_unified_account_snapshot_v1"
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"])
+const ACCOUNT_SERVER_UNAVAILABLE_ERROR = "ACCOUNT_SERVER_UNAVAILABLE"
+
+let unifiedAccountServerUnavailable = false
+
+export const markUnifiedAccountServerUnavailable = (): void => {
+  unifiedAccountServerUnavailable = true
+}
+
+export const isAccountServerUnavailableError = (error: unknown): boolean => {
+  return error instanceof Error && error.message === ACCOUNT_SERVER_UNAVAILABLE_ERROR
+}
 
 export const resolveAccountApiBase = (
-  runtimeHostname = typeof window !== "undefined" ? window.location.hostname : "",
-  runtimeOrigin = typeof window !== "undefined" ? window.location.origin : "",
+  runtimeHostname = typeof window !== "undefined" ? String(window.location.hostname || "") : "",
+  runtimeOrigin = typeof window !== "undefined" ? String(window.location.origin || "") : "",
 ): string => {
   const configuredBase = String(import.meta.env.VITE_ACCOUNT_API_BASE || import.meta.env.VITE_BILLING_API_BASE || "").replace(/\/$/, "")
   const isLocalRuntime = LOCAL_HOSTS.has(runtimeHostname) || runtimeHostname.endsWith(".local")
@@ -23,8 +34,10 @@ export const resolveAccountApiBase = (
 }
 
 export const isUnifiedAccountServerEnabled = (
-  runtimeHostname = typeof window !== "undefined" ? window.location.hostname : "",
+  runtimeHostname = typeof window !== "undefined" ? String(window.location.hostname || "") : "",
 ): boolean => {
+  if (unifiedAccountServerUnavailable) return false
+  if (!runtimeHostname) return false
   const configured = String(import.meta.env.VITE_UNIFIED_ACCOUNT_ENABLED || "").trim().toLowerCase()
   if (configured === "true") return true
   if (configured === "false") {
@@ -101,13 +114,22 @@ export const clearCachedAccountSession = (): void => {
 
 export const fetchUnifiedAccountSnapshot = async (): Promise<UnifiedAccountSnapshot> => {
   if (!isUnifiedAccountServerEnabled()) return readCachedAccountSnapshot()
-  const response = await fetch(accountUrl("/api/account/snapshot"), {
-    credentials: "include",
-    headers: { Accept: "application/json" },
-  })
-  const snapshot = await readJson<UnifiedAccountSnapshot>(response)
-  cacheAccountSnapshot(snapshot)
-  return snapshot
+  try {
+    const response = await fetch(accountUrl("/api/account/snapshot"), {
+      credentials: "include",
+      headers: { Accept: "application/json" },
+    })
+    if (response.status === 404) {
+      markUnifiedAccountServerUnavailable()
+      return readCachedAccountSnapshot()
+    }
+    const snapshot = await readJson<UnifiedAccountSnapshot>(response)
+    cacheAccountSnapshot(snapshot)
+    return snapshot
+  } catch {
+    markUnifiedAccountServerUnavailable()
+    return readCachedAccountSnapshot()
+  }
 }
 
 export const beginAccountIntent = async (
@@ -122,21 +144,36 @@ export const beginAccountIntent = async (
   }
 
   if (!isUnifiedAccountServerEnabled()) {
-    throw new Error("UNIFIED_ACCOUNT_SERVER_DISABLED")
+    throw new Error(ACCOUNT_SERVER_UNAVAILABLE_ERROR)
   }
 
-  const response = await fetch(accountUrl("/api/account/auth/start"), {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({
-      intent,
-      returnTo: sanitizeInternalReturnTo(returnTo),
-    }),
-  })
-  const payload = await readJson<{ authorizationUrl: string }>(response)
-  if (!payload.authorizationUrl) throw new Error("Google authorization URL was not returned.")
-  window.location.assign(payload.authorizationUrl)
+  try {
+    const response = await fetch(accountUrl("/api/account/auth/start"), {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        intent,
+        returnTo: sanitizeInternalReturnTo(returnTo),
+      }),
+    })
+    if (response.status === 404) {
+      markUnifiedAccountServerUnavailable()
+      throw new Error(ACCOUNT_SERVER_UNAVAILABLE_ERROR)
+    }
+    const payload = await readJson<{ authorizationUrl: string }>(response)
+    if (!payload.authorizationUrl) throw new Error("Google authorization URL was not returned.")
+    window.location.assign(payload.authorizationUrl)
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      (error.message === ACCOUNT_SERVER_UNAVAILABLE_ERROR || error.message.includes("Account request failed (404)"))
+    ) {
+      markUnifiedAccountServerUnavailable()
+      throw new Error(ACCOUNT_SERVER_UNAVAILABLE_ERROR)
+    }
+    throw error
+  }
 }
 
 export const signOutUnifiedAccount = async (): Promise<void> => {

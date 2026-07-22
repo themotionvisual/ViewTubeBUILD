@@ -1,6 +1,10 @@
 /// <reference types="vite/client" />
 
-import { beginAccountIntent, isUnifiedAccountServerEnabled } from "../account/accountCoordinator"
+import {
+  beginAccountIntent,
+  isAccountServerUnavailableError,
+  isUnifiedAccountServerEnabled,
+} from "../account/accountCoordinator"
 
 const KEY_VT_AUTH = 'vt_auth';
 const KEY_SESSION_LEGACY = 'vt_session';
@@ -128,8 +132,15 @@ const setImplicitSession = (accessToken: string, expiresInSeconds: number) => {
  */
 export const login = async (mode: 'popup' | 'redirect' = 'popup'): Promise<void> => {
   if (isUnifiedAccountServerEnabled()) {
-    await beginAccountIntent('connect_channel')
-    return
+    try {
+      await beginAccountIntent('connect_channel')
+      return
+    } catch (error) {
+      if (!isAccountServerUnavailableError(error)) {
+        throw error
+      }
+      console.warn("[AuthSession] Unified account server unavailable, falling back to legacy login.")
+    }
   }
   migrateLegacySessionIfNeeded();
 

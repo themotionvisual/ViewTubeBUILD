@@ -4,6 +4,7 @@ import {
   isAccountActionPending,
   resolveAccountActionLabel,
   resolveAccountIntent,
+  sanitizeInternalReturnTo,
   type AccountIntent,
   type UnifiedAccountSnapshot,
 } from "../services/account/accountContracts"
@@ -11,12 +12,13 @@ import {
   beginAccountIntent,
   deleteUnifiedAccount,
   fetchUnifiedAccountSnapshot,
+  isAccountServerUnavailableError,
   isUnifiedAccountServerEnabled,
   readCachedAccountSnapshot,
   revokeUnifiedGoogleConnection,
   signOutUnifiedAccount,
 } from "../services/account/accountCoordinator"
-import { isAuthenticated as isLegacyAuthenticated } from "../services/auth/authSession"
+import { isAuthenticated as isLegacyAuthenticated, login as legacyLogin } from "../services/auth/authSession"
 
 interface UnifiedAccountContextValue {
   snapshot: UnifiedAccountSnapshot
@@ -101,6 +103,20 @@ export const UnifiedAccountProvider: React.FC<{ children: React.ReactNode }> = (
     try {
       await beginAccountIntent(nextIntent, returnTo)
     } catch (error) {
+      if (isAccountServerUnavailableError(error)) {
+        await legacyLogin()
+        setSnapshot((current) => ({
+          ...current,
+          authentication: { status: "authenticated", accountExists: true },
+          google: { ...current.google, status: "connected", youtubeScopesGranted: true },
+          nextIntent: "manage_account",
+          error: null,
+        }))
+        if (returnTo && typeof window !== "undefined") {
+          window.location.assign(sanitizeInternalReturnTo(returnTo))
+        }
+        return
+      }
       setSnapshot((current) => ({
         ...current,
         authentication: {

@@ -19,6 +19,7 @@ import { syncChannelBootstrap } from "../services/canonicalSync/channelBootstrap
 import { unifiedAuth } from "../services/auth/authSession"
 import {
  beginAccountIntent,
+ isAccountServerUnavailableError,
  fetchUnifiedAccountSnapshot,
  isUnifiedAccountServerEnabled,
 } from "../services/account/accountCoordinator"
@@ -1123,9 +1124,14 @@ const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
   if (loginBootPromiseRef.current) return loginBootPromiseRef.current
 
   if (isUnifiedAccountServerEnabled()) {
-   const accountSnapshot = await fetchUnifiedAccountSnapshot()
-   await beginAccountIntent(resolveAccountIntent(accountSnapshot))
-   return
+   try {
+    const accountSnapshot = await fetchUnifiedAccountSnapshot()
+    await beginAccountIntent(resolveAccountIntent(accountSnapshot))
+    return
+   } catch (error) {
+    if (!isAccountServerUnavailableError(error)) throw error
+    console.warn("[GlobalDataContext] Unified account server unavailable, falling back to legacy login.")
+   }
   }
 
   const bootPromise = (async () => {
