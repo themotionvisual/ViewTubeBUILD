@@ -7,13 +7,35 @@ import {
 
 const SNAPSHOT_CACHE_KEY = "vt_unified_account_snapshot_v1"
 
-const configuredBase = (): string =>
-  String(import.meta.env.VITE_ACCOUNT_API_BASE || import.meta.env.VITE_BILLING_API_BASE || "").replace(/\/$/, "")
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"])
 
-export const isUnifiedAccountServerEnabled = (): boolean =>
-  String(import.meta.env.VITE_UNIFIED_ACCOUNT_ENABLED || "false") === "true"
+export const resolveAccountApiBase = (
+  runtimeHostname = typeof window !== "undefined" ? window.location.hostname : "",
+  runtimeOrigin = typeof window !== "undefined" ? window.location.origin : "",
+): string => {
+  const configuredBase = String(import.meta.env.VITE_ACCOUNT_API_BASE || import.meta.env.VITE_BILLING_API_BASE || "").replace(/\/$/, "")
+  const isLocalRuntime = LOCAL_HOSTS.has(runtimeHostname) || runtimeHostname.endsWith(".local")
+  const configuredIsLocal = /localhost|127\.0\.0\.1|::1/.test(configuredBase)
 
-export const accountUrl = (path: string): string => `${configuredBase()}${path}`
+  if (runtimeOrigin && !isLocalRuntime && configuredIsLocal) return runtimeOrigin.replace(/\/$/, "")
+  if (configuredBase) return configuredBase
+  return runtimeOrigin.replace(/\/$/, "")
+}
+
+export const isUnifiedAccountServerEnabled = (
+  runtimeHostname = typeof window !== "undefined" ? window.location.hostname : "",
+): boolean => {
+  const configured = String(import.meta.env.VITE_UNIFIED_ACCOUNT_ENABLED || "").trim().toLowerCase()
+  if (configured === "true") return true
+  if (configured === "false") {
+    const isLocalRuntime = LOCAL_HOSTS.has(runtimeHostname) || runtimeHostname.endsWith(".local")
+    return !isLocalRuntime
+  }
+  const isLocalRuntime = LOCAL_HOSTS.has(runtimeHostname) || runtimeHostname.endsWith(".local")
+  return !isLocalRuntime || Boolean(resolveAccountApiBase(runtimeHostname))
+}
+
+export const accountUrl = (path: string): string => `${resolveAccountApiBase()}${path}`
 
 const readJson = async <T>(response: Response): Promise<T> => {
   const payload = (await response.json().catch(() => null)) as T | { error?: string } | null

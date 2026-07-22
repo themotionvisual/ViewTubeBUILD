@@ -74,27 +74,37 @@ const iconMap: Record<string, string> = {
   'SYMBOLS 22': '*SYMBOLS22.svg'
 };
 
-export const CustomIcon: React.FC<CustomIconProps> = ({ name, size = 24, className = "", animate = true }) => {
-  const [hovered, setHovered] = useState(false);
-  
-  // Resolve filename from map or use name directly
-  let fileName = iconMap[name] || name;
+const iconAssets = import.meta.glob("../assets/icons/*.{svg,png}", {
+  eager: true,
+  import: "default",
+}) as Record<string, string>
+
+const iconUrlMap = Object.fromEntries(
+  Object.entries(iconAssets).map(([modulePath, url]) => {
+    const fileName = modulePath.split("/").pop() || modulePath
+    return [fileName, url]
+  }),
+)
+
+export const resolveCustomIconSrc = (name: IconName, animate = true, hovered = false): string => {
+  let fileName = iconMap[name] || name
   if (!fileName.endsWith('.svg') && !fileName.endsWith('.png')) {
-    fileName += '.svg';
+    fileName += '.svg'
   }
 
-  // Handle animation sequences (e.g., >A1, >A2)
-  // If animate is on and we are hovering, look for the "next" in sequence if it exists
-  const isSequence = name.startsWith('>');
-  let finalPath = `/src/assets/icons/${fileName}`;
-  
-  if (isSequence && animate && hovered) {
-    // Attempt to find #2 in sequence (e.g., >A1 -> >A2)
-    if (name.endsWith('1')) {
-      const altName = name.replace('1', '2');
-      finalPath = `/src/assets/icons/${altName}.svg`;
-    }
+  const isSequence = name.startsWith('>')
+  if (isSequence && animate && hovered && name.endsWith('1')) {
+    const altName = name.replace('1', '2')
+    const altFile = `${altName}.svg`
+    return iconUrlMap[altFile] || iconUrlMap[fileName] || `/icons/${fileName}`
   }
+
+  return iconUrlMap[fileName] || `/icons/${fileName}`
+}
+
+export const CustomIcon: React.FC<CustomIconProps> = ({ name, size = 24, className = "", animate = true }) => {
+  const [hovered, setHovered] = useState(false);
+  const finalPath = resolveCustomIconSrc(name, animate, hovered)
 
   return (
     <img 
