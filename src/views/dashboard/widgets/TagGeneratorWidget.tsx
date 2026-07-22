@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { useBrain } from "../../../context/useBrain"
 import { WidgetShell } from "../WidgetShell"
-import { useEntitlement } from "../../../app/AppShell"
+import { useEntitlement } from "../../../context/entitlementContext"
 import { Sparkles, Save, Check, Tag } from "lucide-react"
 import { fetchVideoSnippetDetails } from "../../../services/youtubeService"
 import { generateTagSuggestions } from "../../../services/gemini"
@@ -37,7 +37,7 @@ export const TagGeneratorWidget = ({ widget, instance, editMode, onToggleCollaps
  const entitlement = useEntitlement()
  const canAffordTagSuggestions = canAffordAiTokensFromState(entitlement, TAG_SUGGEST_COST)
 
- const videos = data.canonicalRows || data.brain?.canonicalRows || []
+ const videos = data.videoAssets || []
 
  const handleSelect = async (e: React.ChangeEvent<HTMLSelectElement>) => {
   const vidId = e.target.value
@@ -141,7 +141,7 @@ export const TagGeneratorWidget = ({ widget, instance, editMode, onToggleCollaps
        <option value="" disabled>
         Select a video...
        </option>
-       {videos.slice(0, 15).filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase())).map((v: any) => (
+       {videos.filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase()) || v.videoId?.toLowerCase().includes(videoSearch.toLowerCase())).slice(0, 50).map((v: any) => (
         <option key={v.videoId} value={v.videoId}>
          {v.title || v.id}
         </option>

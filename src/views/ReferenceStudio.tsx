@@ -57,6 +57,9 @@ const NativeUIKit = React.lazy(() =>
 )
 const ComponentCatalogView = React.lazy(() => import("./ComponentCatalogView"))
 const ThumbnailStudio = React.lazy(() => import("./ThumbnailStudio"))
+const MiniToolboxLab = React.lazy(
+ () => import("./referenceStudio/MiniToolboxLab"),
+)
 
 const LEGACY_TOOL_TAB_REGISTRY: LegacyToolTabDefinition[] = [
  {
@@ -100,6 +103,7 @@ const LEGACY_TOOL_COMPONENTS = Object.fromEntries(
 
 type ReferenceTab =
  | "toolbox-system"
+ | "mini-toolbox-lab"
  | "component-grid"
  | "analytics-lab"
  | "thumbnail"
@@ -236,6 +240,7 @@ const BEST_COMPONENTS = [
 
 const REFERENCE_TABS: ReferenceStudioTabDefinition[] = [
  { id: "toolbox-system", label: "Toolbox UI System", accent: "bg-[#24D3FF]", visible: true, legacy: false },
+ { id: "mini-toolbox-lab", label: "Mini Toolbox Lab", accent: "bg-[#FA618A]", visible: true, legacy: false },
  { id: "component-grid", label: "Component Grid", accent: "bg-[#C9F830]", visible: true, legacy: false },
  { id: "analytics-lab", label: "Analytics Lab", accent: "bg-[#FFB158]", visible: true, legacy: false },
  { id: "thumbnail", label: "Thumbnail", accent: "bg-[#FFE357]", visible: true, legacy: false },
@@ -819,6 +824,12 @@ const ReferenceStudio: React.FC = () => {
     </React.Suspense>
    )}
 
+   {activeReferenceTab === "mini-toolbox-lab" && (
+    <React.Suspense fallback={sectionLoadingFallback}>
+     <MiniToolboxLab />
+    </React.Suspense>
+   )}
+
    {activeReferenceTab === "component-grid" && (
    <React.Suspense fallback={sectionLoadingFallback}>
     <ToolboxUISystem mode="component-grid" />
@@ -887,6 +898,11 @@ const ReferenceStudio: React.FC = () => {
        Reference Analytics Lab
       </h3>
      <div className="flex items-center gap-2">
+       <button
+        onClick={() => navigate("/performance")}
+        className="h-9 px-4 border-[3px] border-black rounded-lg bg-[#FA618A] text-[10px] font-black uppercase shadow-[2px_2px_0_0_black] transition-all hover:translate-x-px hover:translate-y-px hover:shadow-none">
+        Open Performance Hub
+       </button>
        <button
         onClick={() => setAnalyticsRange("lifetime")}
         className={`h-9 px-4 border-[3px] border-black rounded-lg text-[10px] font-black uppercase ${

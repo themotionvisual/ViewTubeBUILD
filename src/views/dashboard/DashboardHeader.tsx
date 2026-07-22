@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react"
 import { Edit3, Lock, LockOpen, Layers, RotateCcw, Download, Upload, Settings, Play, UserCircle2, Sparkles, ChevronDown } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { DashboardData } from "./useDashboardData"
-import { useEntitlement } from "../../app/AppShell"
+import { useEntitlement } from "../../context/entitlementContext"
 import { useBrain } from "../../context/useBrain"
+import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
+import { buildAccountRoute } from "../../services/account/accountContracts"
 import { AIModelSelector } from "../../components/ui/AIModelSelector"
 
 interface DashboardHeaderProps {
@@ -23,7 +25,11 @@ interface DashboardHeaderProps {
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardControls, data }) => {
  const navigate = useNavigate()
  const entitlement = useEntitlement()
- const { authState, login, logout, globalSyncData } = useBrain()
+ const { authState, logout, globalSyncData } = useBrain()
+ const account = useUnifiedAccount()
+ const accountAuthenticated = account.serverEnabled
+  ? account.snapshot.authentication.status === "authenticated"
+  : authState.isAuthenticated
  const [title, setTitle] = useState(() => localStorage.getItem("vt-dashboard-title") || "WIDGET LAB")
  const [isEditingTitle, setIsEditingTitle] = useState(false)
  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -184,20 +190,20 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
       <button
        onClick={async () => {
         setIsDropdownOpen(false)
-        if (!authState.isAuthenticated) {
-         await login()
+        if (!accountAuthenticated) {
+         navigate(buildAccountRoute(account.intent, "/"))
          return
         }
         navigate("/account#workspace-data")
        }}
        className="text-left px-3 py-2 font-black text-[10px] uppercase tracking-wider hover:bg-[#C9F830] border-2 border-transparent hover:border-black rounded transition-colors">
-       Connect Channel
+       {account.label}
       </button>
       <button
        onClick={async () => {
         setIsDropdownOpen(false)
-        if (!authState.isAuthenticated) {
-         await login()
+        if (!accountAuthenticated) {
+         navigate(buildAccountRoute(account.intent, "/"))
          return
         }
         await globalSyncData({ batchMode: "initial" })
@@ -235,7 +241,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
       <button
        onClick={() => {
         setIsDropdownOpen(false)
-        logout()
+        void account.signOut().finally(logout)
        }}
        className="w-full text-center px-3 py-2 font-black text-[11px] uppercase tracking-wider bg-white border-[2px] border-black shadow-[2px_2px_0_0_#000] rounded hover:bg-[#FF1744] hover:text-white transition-colors">
        Sign Out

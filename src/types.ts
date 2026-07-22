@@ -1045,6 +1045,334 @@ export interface BrainMemorySchema {
 
 export type BrainConfidenceLevel = "high" | "medium" | "low"
 
+export type AIBrainLearningCategory =
+ | "correction"
+ | "channel_fact"
+ | "creator_goal"
+ | "content_style"
+ | "audience_insight"
+ | "analytics_insight"
+ | "preference"
+ | "anti_pattern"
+ | "feature_request"
+ | "answer_quality"
+ | "sync_observation"
+ | "tool_workflow"
+
+export type AIBrainLearningStatus =
+ | "captured"
+ | "reflected"
+ | "promoted"
+ | "dismissed"
+
+export interface AIBrainReflectionStep {
+ id: string
+ label: string
+ result: string
+ confidence: BrainConfidenceLevel
+ assumptions: string[]
+ potentialErrors: string[]
+ decision: "proceed" | "ask_user" | "backtrack" | "promote" | "hold"
+}
+
+export interface AIBrainReflectionTrace {
+ id: string
+ learningEntryId: string
+ createdAt: string
+ overallConfidence: BrainConfidenceLevel
+ weakestStep: string
+ steps: AIBrainReflectionStep[]
+ backtracks: string[]
+ finalConclusion: string
+}
+
+export interface AIBrainLearningEntry {
+ id: string
+ channelId: string | null
+ category: AIBrainLearningCategory
+ source:
+  | "copilot"
+  | "feedback"
+  | "journal"
+  | "micro_poll"
+  | "vt_sync"
+  | "generation"
+  | "daily_oracle"
+  | "command_handoff"
+  | "system"
+ summary: string
+ detail: string
+ evidence: string[]
+ confidence: BrainConfidenceLevel
+ status: AIBrainLearningStatus
+ createdAt: string
+ updatedAt: string
+ recurrenceCount: number
+ relatedEntryIds: string[]
+ promotionTarget?: "brain_memory" | "channel_knowledge" | "tool_context_pack"
+ reflectionTrace?: AIBrainReflectionTrace
+ metadata?: Record<string, unknown>
+}
+
+export interface AIBrainSkillResource {
+ id: string
+ title: string
+ sourceSkill: "self-improvement" | "self-improving-agent" | "self-reflecting-chain"
+ summary: string
+ runtimeRules: string[]
+ docPath: string
+ status: "active"
+}
+
+export interface AIBrainPromotionCandidate {
+ entryId: string
+ target: "brain_memory" | "channel_knowledge" | "tool_context_pack"
+ reason: string
+ allowed: boolean
+ confidence: BrainConfidenceLevel
+ blockedBy: string[]
+}
+
+export interface AIBrainFeedbackSignal {
+ messageId: string
+ rating: "helpful" | "not_useful" | "inaccurate" | "save_insight" | "ask_follow_up"
+ userNote?: string
+ createdAt: string
+}
+
+export interface AIBrainConversationDigest {
+ id: string
+ channelId: string | null
+ createdAt: string
+ userIntent: string
+ answerMode:
+  | "strategy_brief"
+  | "analytics_diagnosis"
+  | "seo_keyword_plan"
+  | "video_idea_sprint"
+  | "journal_reflection"
+  | "goal_coach"
+  | "publishing_checklist"
+  | "revenue_levers"
+ keyFacts: string[]
+ unresolvedQuestions: string[]
+ learningEntryIds: string[]
+}
+
+export interface CreatorBrainPromptCard {
+ id: string
+ label: string
+ prompt: string
+ category:
+  | "strategy"
+  | "analytics"
+  | "seo"
+  | "ideas"
+  | "goals"
+  | "revenue"
+  | "publishing"
+  | "audience"
+ color: string
+}
+
+export interface CreatorBrainLearningQuestion {
+ id: string
+ question: string
+ reason: string
+ category: AIBrainLearningCategory
+ confidence: BrainConfidenceLevel
+}
+
+export interface CreatorBrainResponseSection {
+ id: string
+ title: string
+ body: string
+ tone: "green" | "yellow" | "pink" | "blue" | "orange" | "white"
+}
+
+export type AIBrainEvidenceIntent =
+ | "strategy"
+ | "analytics"
+ | "seo"
+ | "audience"
+ | "revenue"
+ | "publishing"
+ | "content_analysis"
+
+export interface AIBrainEvidenceVideo {
+ id: string
+ evidenceId: string
+ title: string
+ publishedAt: string | null
+ format: string | null
+ descriptionSnippet: string | null
+ tags: string[]
+ metrics: {
+  views: number | null
+  watchTime: number | null
+  subscribers: number | null
+  revenue: number | null
+  ctr: number | null
+  averagePercentageViewed: number | null
+ }
+}
+
+export interface AIBrainEvidenceSignal {
+ evidenceId: string
+ label: string
+ value: string
+ views: number | null
+}
+
+export interface AIBrainEvidencePack {
+ promptVersion: "brain-chat-v2"
+ intent: AIBrainEvidenceIntent
+ channelId: string | null
+ channelName: string | null
+ channelDescription: string | null
+ capturedAt: string | null
+ dataStatus: "ready" | "partial" | "missing"
+ topVideos: AIBrainEvidenceVideo[]
+ recentVideos: AIBrainEvidenceVideo[]
+ searchTerms: AIBrainEvidenceSignal[]
+ trafficSources: AIBrainEvidenceSignal[]
+ availableMetrics: string[]
+ missingInputs: string[]
+ evidenceIds: string[]
+ transcriptRouteRequired: boolean
+}
+
+export interface AIBrainAnswerModule {
+ id: string
+ title: string
+ body: string
+ tone: CreatorBrainResponseSection["tone"]
+ actionLabel?: string
+ source?: "growth" | "analytics" | "journal" | "oracle" | "seo" | "memory" | "question"
+}
+
+export interface CreatorInitialInsightDefinition {
+ id: string
+ title: string
+ trigger: string
+ requiredEvidence: string[]
+ outputFormat: string
+ optionalHandoff?: string
+}
+
+export interface CreatorInitialInsight {
+ id: string
+ title: string
+ priority: number
+ reason: string
+ modules: AIBrainAnswerModule[]
+ handoffLabel?: string
+}
+
+/**
+ * A concrete next move the Brain surfaces on its own. Both scores are 1-5 and are
+ * always shown to the creator: the Brain should only raise actions with a strong
+ * result-to-effort ratio.
+ */
+export interface BrainQuickAction {
+ id: string
+ title: string
+ body: string
+ effort: number
+ reward: number
+ route?: string
+ routeLabel?: string
+}
+
+export interface CreatorBrainResponse {
+ id: string
+ mode: AIBrainConversationDigest["answerMode"]
+ body: string
+ evidenceIds: string[]
+ nextAction?: string
+ headline: string
+ keyInsight: string
+ evidenceChips: string[]
+ sections?: CreatorBrainResponseSection[]
+ modules?: AIBrainAnswerModule[]
+ actions: string[]
+ learningSummary: string
+ questions: CreatorBrainLearningQuestion[]
+ confidence: BrainConfidenceLevel
+}
+
+export interface AIBrainQuestionAnswer {
+ id: string
+ questionId: string
+ channelId: string | null
+ question: string
+ answer: string
+ category: AIBrainLearningCategory
+ createdAt: string
+ learningEntryId?: string
+}
+
+export interface AIBrainConversationTurn {
+ id: string
+ threadId: string
+ channelId: string | null
+ createdAt: string
+ userText: string
+ assistantText: string
+ response?: CreatorBrainResponse
+ answerModules: AIBrainAnswerModule[]
+ questionAnswers: AIBrainQuestionAnswer[]
+ feedback?: AIBrainFeedbackSignal
+ learningEntryIds: string[]
+ digest?: AIBrainConversationDigest
+ metadata?: Record<string, unknown>
+}
+
+export interface AIBrainConversationThread {
+ id: string
+ channelId: string | null
+ createdAt: string
+ updatedAt: string
+ title: string
+ turnIds: string[]
+ latestDigest?: AIBrainConversationDigest
+}
+
+export type CreatorGrowthCapabilityStatus = "ready" | "partial" | "missing"
+
+export interface CreatorGrowthContext {
+ profileConfidenceScore: number
+ currentGoal: string
+ inferredNiche: string
+ contentPillars: string[]
+ topPerformerPatterns: string[]
+ audiencePromise: string
+ memoryChanges: string[]
+ newUploadFitChecklist: string[]
+ dailyOracleActions: string[]
+ journalProfileUpdates: string[]
+ goalAwareRecommendations: string[]
+ seoOpportunityQueue: string[]
+ unresolvedQuestions: string[]
+ recentConversationFacts: string[]
+ capabilities: Array<{
+  id:
+   | "profile_confidence"
+   | "creator_confirmation"
+   | "top_performer_patterns"
+   | "audience_promise"
+   | "memory_change_log"
+   | "new_upload_fit"
+   | "daily_oracle"
+   | "journal_profile_updates"
+   | "goal_aware_recommendations"
+   | "seo_opportunity_queue"
+  label: string
+  status: CreatorGrowthCapabilityStatus
+  summary: string
+ }>
+}
+
 export type BrainOnboardingStage =
  | "idle"
  | "core_sync"
@@ -1079,6 +1407,8 @@ export interface ChannelEvidencePacket {
  runId: string
  channelId: string | null
  createdAt: string
+ sourceSnapshotId?: string | null
+ evidenceFingerprint?: string
  sourceCounts: {
   videos: number
   shorts: number
@@ -1096,6 +1426,65 @@ export interface ChannelEvidencePacket {
   consentRequired?: boolean
  }>
  evidence: BrainEvidenceItem[]
+ audienceEvidence?: BrainAudienceEvidencePacket
+}
+
+export type BrainAudienceEvidenceVideoFormat = "long" | "short" | "unknown"
+
+export interface BrainAudienceEvidenceVideoTarget {
+ videoId: string
+ title: string
+ format: BrainAudienceEvidenceVideoFormat
+ reason:
+  | "top_long"
+  | "top_short"
+  | "recent_top_long"
+  | "recent_top_short"
+ views: number | null
+ publishedAt: string | null
+}
+
+export interface BrainAudienceEvidenceComment {
+ id: string
+ videoId: string
+ author: string | null
+ text: string
+ likeCount: number | null
+ publishedAt: string | null
+ replyCount: number | null
+ replies: Array<{
+  id: string
+  author: string | null
+  text: string
+  likeCount: number | null
+  publishedAt: string | null
+ }>
+}
+
+export interface BrainAudienceEvidenceActivity {
+ id: string
+ type: string
+ title: string
+ text: string | null
+ publishedAt: string | null
+}
+
+export interface BrainAudienceEvidencePacket {
+ id: string
+ channelId: string | null
+ createdAt: string
+ targets: BrainAudienceEvidenceVideoTarget[]
+ comments: BrainAudienceEvidenceComment[]
+ activities: BrainAudienceEvidenceActivity[]
+ coverage: {
+  selectedVideos: number
+  commentThreadsPerVideoCap: number
+  activityCap: number
+  commentsCollected: number
+  repliesCollected: number
+  activitiesCollected: number
+  missing: string[]
+ }
 }
 
 export interface ChannelKnowledgeHypothesis {
@@ -1112,12 +1501,29 @@ export interface ChannelKnowledgeModel {
  channelId: string | null
  createdAt: string
  updatedAt: string
+ sourceSnapshotId?: string | null
+ evidenceFingerprint?: string
  niche: ChannelKnowledgeHypothesis[]
+ secondaryNiches?: ChannelKnowledgeHypothesis[]
+ contentPillars?: ChannelKnowledgeHypothesis[]
+ topicClusters?: ChannelKnowledgeHypothesis[]
+ searchLanguage?: ChannelKnowledgeHypothesis[]
  contentFormats: ChannelKnowledgeHypothesis[]
  audience: ChannelKnowledgeHypothesis[]
  visualIdentity: ChannelKnowledgeHypothesis[]
  creatorCommunication: ChannelKnowledgeHypothesis[]
  growthOpportunities: ChannelKnowledgeHypothesis[]
+ successDrivers?: ChannelKnowledgeHypothesis[]
+ topEvidenceVideos?: Array<{
+  videoId: string
+  title: string
+  views?: number | null
+  watchTime?: number | null
+  revenue?: number | null
+  subscribers?: number | null
+  publishedAt?: string | null
+  evidenceId?: string
+ }>
  contradictions: ChannelKnowledgeHypothesis[]
  summary: string
  confidence: BrainConfidenceLevel
@@ -1146,6 +1552,8 @@ export interface ToolContextPack {
  runId: string
  channelId: string | null
  createdAt: string
+ sourceSnapshotId?: string | null
+ evidenceFingerprint?: string
  promptVersion: string
  summary: string
  contextBlock: string
@@ -1182,6 +1590,8 @@ export interface BrainOnboardingBootstrapRun {
  completedAt: string | null
  firstRun: boolean
  guardKey: string
+ sourceSnapshotId?: string | null
+ evidenceFingerprint?: string
  diagnostics: string[]
  sourceCounts: ChannelEvidencePacket["sourceCounts"]
  evidencePacketId?: string

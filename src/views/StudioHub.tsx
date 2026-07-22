@@ -10,11 +10,13 @@ import PreLaunchPriming from "../components/PreLaunchPriming"
 import VideoManager from "./VideoManager"
 import { CommunityPostGenerator } from "../components/CommunityPostGenerator"
 import { CommentResponder } from "../components/CommentResponder"
+import { EndScreenTool } from "../components/EndScreenTool"
 
 const StudioHub: React.FC = () => {
  const [states, setStates] = useState({
   posts: false,
   comments: false,
+  endscreen: false,
  })
  const toggle = (id: string) =>
   setStates((prev) => ({ ...prev, [id]: !(prev as any)[id] }))
@@ -24,7 +26,7 @@ const StudioHub: React.FC = () => {
    {/* Page Header */}
    <div className="mb-10 px-2 mt-4 text-center">
     <h2 className="text-7xl font-[1000] uppercase tracking-[calc(-0.06em)] leading-none text-black">
-     STUDIO <span className="text-[#00CCFF]">HUB</span>
+     STUDIO <span className="text-[#FA618A]">HUB</span>
     </h2>
     <p className="text-[10px] font-black uppercase tracking-[0.4em] text-black/20 mt-4">
      Production & Optimization Suite
@@ -43,9 +45,9 @@ const StudioHub: React.FC = () => {
     <ToolboxScaffold
      title="Community Posts"
      subtitle="Create polls + community updates to keep viewers engaged between uploads"
-     headerColor="bg-[#CCFF00]"
+
      icon={<CustomIcon name="!!!TEXT" size={40} />}
-     iconBoxColor="bg-[#00CCFF]"
+
      paletteIndex={4}
      collapsible={true}
      isOpen={states.posts}
@@ -59,9 +61,9 @@ const StudioHub: React.FC = () => {
     <ToolboxScaffold
      title="Comment Responder"
      subtitle="Draft on-brand replies + pinned comments to boost engagement + watch time"
-     headerColor="bg-[#FFDD00]"
+
      icon={<CustomIcon name="!!!IDEA" size={40} />}
-     iconBoxColor="bg-[#CCFF00]"
+
      paletteIndex={5}
      collapsible={true}
      isOpen={states.comments}
@@ -72,9 +74,23 @@ const StudioHub: React.FC = () => {
      </div>
     </ToolboxScaffold>
 
-    <PreLaunchPriming collapsible isOpenInitial={false} paletteIndex={6} />
-    <HookGenerator collapsible isOpenInitial={false} paletteIndex={7} />
-    <ActionableTactics collapsible isOpenInitial={false} paletteIndex={8} />
+    <ToolboxScaffold
+     title="End-Screen Architect"
+     subtitle="Design end-screen layouts + outro scripts to push viewers to the next video"
+     icon={<CustomIcon name="!!!POST-VIDEO" size={40} />}
+     paletteIndex={6}
+     collapsible={true}
+     isOpen={states.endscreen}
+     onToggle={() => toggle("endscreen")}
+     helpText="Design your end screen flow and write an outro that pushes viewers to the next video.">
+     <div className="bg-white rounded-2xl overflow-hidden">
+      <EndScreenTool />
+     </div>
+    </ToolboxScaffold>
+
+    <PreLaunchPriming collapsible isOpenInitial={false} paletteIndex={7} />
+    <HookGenerator collapsible isOpenInitial={false} paletteIndex={8} />
+    <ActionableTactics collapsible isOpenInitial={false} paletteIndex={9} />
    </div>
   </div>
  )

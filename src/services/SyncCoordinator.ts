@@ -24,7 +24,7 @@ import { syncTrafficAnalytics } from "./youtube/trafficAnalyticsSync"
 import { SyncMachine } from "./SyncMachine";
 import { googleSearchConsoleService } from "./googleSearchConsoleService"
 import { ga4Service, type GA4Property } from "./ga4Service"
-import { commitToLedger } from "./analytics/DataStore"
+import { upsertLedgerEntry } from "./analytics/DataStore"
 import { parseDurationSeconds } from "./dataUtils"
 import { ytApiQueue } from "../utils/RequestQueue"
 import {
@@ -716,7 +716,7 @@ export class SyncCoordinator {
 
     // Commit core analytics to the canonical ledger
     if (coreSyncResult.analytics.videos?.rows?.length > 0) {
-     commitToLedger(cacheData, {
+     cacheData = upsertLedgerEntry(cacheData, {
       source: "youtube_analytics_v2",
       context: "video",
       dimensions: ["video"],
@@ -726,7 +726,7 @@ export class SyncCoordinator {
      })
     }
     if (coreSyncResult.analytics.channel?.rows?.length > 0) {
-     commitToLedger(cacheData, {
+     cacheData = upsertLedgerEntry(cacheData, {
       source: "youtube_analytics_v2",
       context: "channel",
       dimensions: [],
@@ -1008,7 +1008,7 @@ export class SyncCoordinator {
       )
 
       if (analytics?.report) {
-       commitToLedger(cacheData, {
+       cacheData = upsertLedgerEntry(cacheData, {
         source: "youtube_analytics_v2",
         context: "video",
         dimensions: ["video"],
@@ -1024,7 +1024,7 @@ export class SyncCoordinator {
          fetchGlobalLifetimeAnalytics(range.startDate, range.endDate, profile.id),
         )
         if (globalStats) {
-         commitToLedger(cacheData, {
+         cacheData = upsertLedgerEntry(cacheData, {
           source: "youtube_analytics_v2",
           context: "channel",
           dimensions: [],
@@ -1141,7 +1141,7 @@ export class SyncCoordinator {
       fetchChannelAnalytics(startDate, endDate, profile.id),
      )
      if (channelAnalytics) {
-      commitToLedger(cacheData, {
+      cacheData = upsertLedgerEntry(cacheData, {
        source: "youtube_analytics_v2",
        context: "channel",
        dimensions: ["day"],
@@ -1169,7 +1169,7 @@ export class SyncCoordinator {
       fetchDemographicAnalytics(startDate, endDate, profile.id),
      )
      if (demographics) {
-      commitToLedger(cacheData, {
+      cacheData = upsertLedgerEntry(cacheData, {
        source: "youtube_analytics_v2",
        context: "demographics",
        dimensions: ["ageGroup", "gender"],
@@ -1205,7 +1205,7 @@ export class SyncCoordinator {
       }),
      )
      if (trafficResult) {
-      commitToLedger(cacheData, {
+      cacheData = upsertLedgerEntry(cacheData, {
        source: "youtube_analytics_v2",
        context: "traffic_source",
        dimensions: ["insightTrafficSourceType"],
@@ -1214,7 +1214,7 @@ export class SyncCoordinator {
        window: "lifetime",
       })
       if (trafficResult.rawReports.dailyByType) {
-       commitToLedger(cacheData, {
+       cacheData = upsertLedgerEntry(cacheData, {
         source: "youtube_analytics_v2",
         context: "traffic_daily",
         dimensions: ["day", "insightTrafficSourceType"],
@@ -1224,7 +1224,7 @@ export class SyncCoordinator {
        })
       }
       if (trafficResult.rawReports.videoByType) {
-       commitToLedger(cacheData, {
+       cacheData = upsertLedgerEntry(cacheData, {
         source: "youtube_analytics_v2",
         context: "traffic_video",
         dimensions: ["video", "insightTrafficSourceType"],
@@ -1379,7 +1379,7 @@ export class SyncCoordinator {
          (row: any) => row?.referralClass === "external_referral",
         ).length,
        }
-       commitToLedger(cacheData, {
+       cacheData = upsertLedgerEntry(cacheData, {
         source: "google_search_console",
         context: "search_console",
         dimensions: ["query", "page", "date", "device", "country", "searchAppearance"],
@@ -1432,7 +1432,7 @@ export class SyncCoordinator {
       fetchGeographyAnalytics(startDate, endDate, profile.id),
      )
      if (geography) {
-      commitToLedger(cacheData, {
+      cacheData = upsertLedgerEntry(cacheData, {
        source: "youtube_analytics_v2",
        context: "geography",
        dimensions: ["country"],
@@ -1472,7 +1472,7 @@ export class SyncCoordinator {
       fetchDailyAnalytics(startDate, endDate, profile.id),
      )
      if (dailyMetrics) {
-      commitToLedger(cacheData, {
+      cacheData = upsertLedgerEntry(cacheData, {
        source: "youtube_analytics_v2",
        context: "channel",
        dimensions: ["day"],
@@ -1666,13 +1666,14 @@ export class SyncCoordinator {
    ])
 
    if (overview) {
-    commitToLedger(cacheData, {
+    const analyticsCache = upsertLedgerEntry(readYouTubeAnalyticsCache(), {
      source: "ga4",
      context: "channel",
      dimensions: ["day"],
      metrics: (overview.columnHeaders || []).map((h: any) => h.name),
      payload: overview,
     })
+    writeYouTubeAnalyticsCache(analyticsCache)
    }
 
    ga4State.data = {

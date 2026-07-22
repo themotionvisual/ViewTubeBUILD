@@ -67,7 +67,7 @@ export const CommunityPostWidget = ({
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const videos = data.canonicalRows || data.brain?.canonicalRows || []
+  const videos = data.videoAssets || []
 
   // --- Effects ---
   useEffect(() => {
@@ -263,7 +263,7 @@ export const CommunityPostWidget = ({
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 10 }}
-              className="flex-1 flex flex-col gap-2 overflow-y-auto pr-1"
+              className="flex-1 flex flex-col gap-2 overflow-y-auto p-3"
             >
               {/* Type Selector */}
               <div className="vt-tab-group min-h-[36px]">
@@ -333,7 +333,7 @@ export const CommunityPostWidget = ({
                       onChange={(e) => setSelectedVideo(e.target.value)}
                     >
                       <option value="" disabled>Link a video...</option>
-                      {videos.slice(0, 10).map((v: any) => (
+                      {videos.filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase()) || v.videoId?.toLowerCase().includes(videoSearch.toLowerCase())).slice(0, 50).map((v: any) => (
                         <option key={v.videoId} value={v.videoId}>{v.title}</option>
                       ))}
                     </select>
@@ -348,7 +348,7 @@ export const CommunityPostWidget = ({
               )}
 
               {/* Action Toolbar */}
-              <div className="flex gap-2 mt-auto pt-2 border-t border-black/10">
+              <div className="flex gap-2 mt-auto pt-2 border-t border-black/10 mx-[-12px] px-[12px]">
                 <button 
                   onClick={saveToVault}
                   className="p-2 border-2 border-black rounded-lg hover:bg-gray-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
@@ -379,7 +379,7 @@ export const CommunityPostWidget = ({
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
-              className="flex-1 flex flex-col gap-3"
+              className="flex-1 flex flex-col gap-3 p-3"
             >
               <div className="flex-1 flex flex-col gap-2">
                 <label className="text-[10px] font-black uppercase opacity-60">AI Generation Prompt</label>

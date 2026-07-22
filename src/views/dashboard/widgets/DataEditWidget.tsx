@@ -2,13 +2,14 @@ import React, { useState, useEffect, useRef } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Pencil, Save, RotateCcw, ChevronDown, ChevronUp, ArrowRight, Settings, ShieldCheck, Upload, PlayCircle, Plus } from "lucide-react"
 import { fetchVideoSnippetDetails, updateVideo, fetchVideoCategories, fetchUserPlaylists, uploadVideo } from "../../../services/youtubeService"
+import { buildVideoAssetOptions, VIDEO_ASSET_PLACEHOLDER_KEY } from "./videoAssetOptions"
 
 const STORAGE_KEY = "vt_data_edit_state"
 const YT_STANDARD_CATEGORY_IDS = new Set([
  "1","2","10","15","17","19","20","22","23","24","25","26","27","28","29",
 ])
 
-export const CustomDropdown = ({ value, onChange, options }: { value: string, onChange: (val: string) => void, options: {val: string, lbl: string}[] }) => {
+export const CustomDropdown = ({ value, onChange, options }: { value: string, onChange: (val: string) => void, options: {key?: string, val: string, lbl: string}[] }) => {
  const [isOpen, setIsOpen] = useState(false)
  const currentLabel = options.find(o => o.val === value)?.lbl || "Select..."
 
@@ -19,8 +20,8 @@ export const CustomDropdown = ({ value, onChange, options }: { value: string, on
     <ChevronDown size={14} strokeWidth={3} />
    </div>
    <div className="vt-dropdown-menu">
-    {options.map(o => (
-     <div key={o.val} className="vt-dropdown-item" onClick={() => { onChange(o.val); setIsOpen(false) }}>
+    {options.map((o, index) => (
+     <div key={o.key || o.val || `${VIDEO_ASSET_PLACEHOLDER_KEY}_${index}`} className="vt-dropdown-item" onClick={() => { onChange(o.val); setIsOpen(false) }}>
       {o.lbl}
      </div>
     ))}
@@ -42,7 +43,7 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
   onCycleHeight,
   onDecHeight,
  }
- const videos = data.canonicalRows || []
+ const videos = data.videoAssets || []
  
  // --- Modes & Navigation ---
  const [workflowMode, setWorkflowMode] = useState<"upload" | "edit">("upload")
@@ -595,10 +596,7 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
        <CustomDropdown 
         value={selectedVideo} 
         onChange={handleSelect} 
-        options={[
-         { val: "", lbl: "Select a video..." },
-         ...videos.slice(0, 15).filter((v: any) => !videoSearch || (v.title || v.videoId)?.toLowerCase().includes(videoSearch.toLowerCase())).map((v: any) => ({val: v.videoId, lbl: v.title || v.videoId}))
-        ]} 
+       options={buildVideoAssetOptions(videos, videoSearch, 50)}
        />
       </div>
       <input value={videoSearch} onChange={(e) => setVideoSearch(e.target.value)} placeholder="Search..." style={{

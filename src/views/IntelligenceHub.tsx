@@ -35,7 +35,6 @@ const BrainSection: React.FC<BrainSectionProps> = ({ title, content, icon, palet
     <SubToolbox 
       title={title} 
       icon={icon} 
-      paletteIndex={paletteIndex} 
       collapsible 
       isOpenInitial={true}
     >

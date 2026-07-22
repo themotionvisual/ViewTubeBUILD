@@ -43,6 +43,13 @@ export const parseDurationSeconds = (value: unknown): number => {
  return toNumber(raw)
 }
 
+export const getFirstThreeSentences = (value: unknown): string => {
+ const text = toText(value).replace(/\s+/g, " ").trim()
+ if (!text) return ""
+ const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text]
+ return sentences.slice(0, 3).join(" ").trim()
+}
+
 export const formatTrafficSourceNickname = (canonical: string): string => {
  const map: Record<string, string> = {
   SHORTS: "Shorts feed",

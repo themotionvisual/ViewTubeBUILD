@@ -288,7 +288,6 @@ const DataTransparencyCenter: React.FC = () => {
     <SubToolbox
      title="Coverage"
      icon={<Database size={18} strokeWidth={3} />}
-     paletteIndex={0}
      contentClassName="p-4">
      <p className="font-black text-3xl">{totalRows}</p>
      <p className="font-bold text-sm text-gray-600">total canonical rows loaded</p>
@@ -297,7 +296,6 @@ const DataTransparencyCenter: React.FC = () => {
     <SubToolbox
      title="Formula Registry"
      icon={<Info size={18} strokeWidth={3} />}
-     paletteIndex={1}
      contentClassName="p-4">
      <p className="font-black text-3xl">{FORMULA_REGISTRY.length}</p>
      <p className="font-bold text-sm text-gray-600">deterministic formulas registered</p>
@@ -306,7 +304,6 @@ const DataTransparencyCenter: React.FC = () => {
    <SubToolbox
      title="Plan Tiers"
      icon={<ShieldCheck size={18} strokeWidth={3} />}
-     paletteIndex={2}
      contentClassName="p-4">
      <p className="font-black text-3xl">{SUBSCRIPTION_PLANS.length}</p>
      <p className="font-bold text-sm text-gray-600">subscription capability levels</p>
@@ -315,7 +312,6 @@ const DataTransparencyCenter: React.FC = () => {
     <SubToolbox
      title="Sync Diagnostics"
      icon={<Info size={18} strokeWidth={3} />}
-    paletteIndex={6}
     contentClassName="p-4">
      <p className="font-black text-2xl">{syncDiagnostics.windows}</p>
      <p className="font-bold text-xs text-gray-600">
@@ -348,7 +344,6 @@ const DataTransparencyCenter: React.FC = () => {
     <SubToolbox
      title="Video Stats Verification"
      icon={<Info size={18} strokeWidth={3} />}
-     paletteIndex={4}
      contentClassName="p-4 space-y-3">
      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
       <div className="border-[3px] border-black rounded-xl p-3 bg-white">
@@ -420,7 +415,6 @@ const DataTransparencyCenter: React.FC = () => {
     <SubToolbox
      title="What Is Influencing My Tables?"
      icon={<Info size={18} strokeWidth={3} />}
-     paletteIndex={5}
      contentClassName="p-6 space-y-3">
      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
       <div className="border-[3px] border-black rounded-xl p-3 bg-white">
@@ -525,7 +519,6 @@ const DataTransparencyCenter: React.FC = () => {
     <SubToolbox
      title="Sync Merge Policy"
      icon={<Info size={18} strokeWidth={3} />}
-     paletteIndex={3}
      contentClassName="p-6 space-y-3">
      <p className="font-bold text-gray-700">
       Merge keeps prior cache and overwrites by videoId/window (no double counting). Latest-only rebuilds from scratch each run.
@@ -555,7 +548,6 @@ const DataTransparencyCenter: React.FC = () => {
     <SubToolbox
      title="Local Data Inspector"
      icon={<Database size={18} strokeWidth={3} />}
-     paletteIndex={1}
      contentClassName="p-6 space-y-4">
      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs font-black uppercase">
       <div className="border-[3px] border-black rounded-xl p-3 bg-white">
@@ -678,7 +670,6 @@ const DataTransparencyCenter: React.FC = () => {
 	   <SubToolbox
 	    title="Ingest Mode"
 	    icon={<Info size={18} strokeWidth={3} />}
-	    paletteIndex={3}
     contentClassName="p-6 space-y-4">
     <p className="font-bold text-gray-700">
      Choose which pipeline mode the architecture reads from.
@@ -702,7 +693,6 @@ const DataTransparencyCenter: React.FC = () => {
    <SubToolbox
     title="Master Tables"
     icon={<Database size={18} strokeWidth={3} />}
-    paletteIndex={4}
     contentClassName="p-0 overflow-hidden">
     <div className="overflow-x-auto">
      <table className="w-full text-sm">
@@ -727,7 +717,6 @@ const DataTransparencyCenter: React.FC = () => {
    <SubToolbox
     title="Naming Governance"
     icon={<Info size={18} strokeWidth={3} />}
-    paletteIndex={5}
     contentClassName="p-0 overflow-hidden">
     <div className="overflow-x-auto">
      <table className="w-full text-xs">
@@ -756,7 +745,6 @@ const DataTransparencyCenter: React.FC = () => {
    <SubToolbox
     title="Full Export"
     icon={<Download size={18} strokeWidth={3} />}
-    paletteIndex={6}
     contentClassName="p-6 space-y-4">
     <p className="font-bold text-gray-700">
      Download raw cache snapshots, canonical master tables (CSV + JSON), manifest,

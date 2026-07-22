@@ -2,6 +2,7 @@ import React, { useMemo } from "react"
 import { Globe } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
 import { formatTrafficSourceNickname } from "../../../services/dataUtils"
+import { getVtSyncSnapshot } from "../../../features/vt-sync-local"
 
 export const AudienceMatrixWidget: React.FC<any> = ({widget, instance, editMode, canEdit, onToggleCollapse, onCycleSize, onCycleHeight, onRemove, data, onDecSize, onDecHeight}) => {
   const common = {
@@ -31,11 +32,13 @@ export const AudienceMatrixWidget: React.FC<any> = ({widget, instance, editMode,
       }
     }
 
-    const trafficSources = data?.trafficSources || []
-    const origins = trafficSources.length > 0
-      ? trafficSources.slice(0, 4).map((s: any, idx: number) => ({
-          name: formatTrafficSourceNickname(s.label),
-          value: s.pct,
+    const snapshot = getVtSyncSnapshot()
+
+    const ts = snapshot.trafficSources?.length ? snapshot.trafficSources : data?.trafficSources || []
+    const origins = ts.length > 0
+      ? ts.slice(0, 4).map((s: any, idx: number) => ({
+          name: formatTrafficSourceNickname(s.label || s.trafficSource),
+          value: s.viewsPct ?? s.pct ?? Number(s.views) ?? 0,
           color: ["#FF83EA", "#24D3FF", "#C9F830", "#eee"][idx] || "#eee"
         }))
       : [
@@ -45,27 +48,54 @@ export const AudienceMatrixWidget: React.FC<any> = ({widget, instance, editMode,
           { name: "External", value: baseViews * 0.10, color: "#eee" },
         ]
 
-    return {
-      geo: [
+    const geoSrc = snapshot.geography?.length ? snapshot.geography : data?.geography || []
+    const geo = geoSrc.length > 0
+      ? geoSrc.slice(0, 5).map((s: any, idx: number) => ({
+          name: s.label || s.geography,
+          value: s.viewsPct ?? s.pct ?? Number(s.views) ?? 0,
+          color: ["#4FFF5B", "#C9F830", "#24D3FF", "#FF83EA", "#eee"][idx] || "#eee"
+        }))
+      : [
         { name: "US", value: baseViews * 0.42, color: "#4FFF5B" },
         { name: "UK", value: baseViews * 0.18, color: "#C9F830" },
         { name: "CA", value: baseViews * 0.12, color: "#24D3FF" },
         { name: "AU", value: baseViews * 0.08, color: "#FF83EA" },
         { name: "Other", value: baseViews * 0.20, color: "#eee" },
-      ],
-      devices: [
+      ]
+
+    const devSrc = snapshot.devices?.length ? snapshot.devices : data?.devices || []
+    const devices = devSrc.length > 0
+      ? devSrc.slice(0, 4).map((s: any, idx: number) => ({
+          name: s.label || s.device || s.deviceType,
+          value: s.viewsPct ?? s.pct ?? Number(s.views) ?? 0,
+          color: ["#000000", "#4FFF5B", "#FFB570", "#eee"][idx] || "#eee"
+        }))
+      : [
         { name: "Mobile", value: baseViews * 0.65, color: "#000000" },
         { name: "Desktop", value: baseViews * 0.20, color: "#4FFF5B" },
         { name: "TV", value: baseViews * 0.12, color: "#FFB570" },
         { name: "Tablet", value: baseViews * 0.03, color: "#eee" },
-      ],
-      origins,
-      sharing: [
+      ]
+
+    const shareSrc = snapshot.sharingService?.length ? snapshot.sharingService : data?.sharingService || []
+    const sharing = shareSrc.length > 0
+      ? shareSrc.slice(0, 4).map((s: any, idx: number) => ({
+          name: s.label || s.sharingService,
+          value: s.viewsPct ?? s.pct ?? Number(s.views) ?? 0,
+          color: ["#4FFF5B", "#000000", "#24D3FF", "#eee"][idx] || "#eee"
+        }))
+      : [
         { name: "WhatsApp", value: baseViews * 0.05 * 0.4, color: "#4FFF5B" },
         { name: "Twitter/X", value: baseViews * 0.05 * 0.3, color: "#000000" },
         { name: "Facebook", value: baseViews * 0.05 * 0.2, color: "#24D3FF" },
         { name: "Copy Link", value: baseViews * 0.05 * 0.1, color: "#eee" },
       ]
+
+    return {
+      geo,
+      devices,
+      origins,
+      sharing,
     }
   }, [data])
 

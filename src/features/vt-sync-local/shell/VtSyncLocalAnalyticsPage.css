@@ -1,0 +1,12 @@
+@media (max-width: 640px) {
+ .vt-sync-local-page {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  width: 100vw;
+  height: 100dvh;
+  overflow: auto;
+  padding: 12px;
+  overscroll-behavior: contain;
+ }
+}

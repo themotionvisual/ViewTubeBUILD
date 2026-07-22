@@ -21,7 +21,7 @@ import { motion } from "framer-motion"
 import { DashboardBarrier } from "./DashboardBarrier"
 import { useDashboard } from "../../context/DashboardContext"
 import { useBrain } from "../../context/useBrain"
-import { useEntitlement } from "../../app/AppShell"
+import { useEntitlement } from "../../context/entitlementContext"
 import { hasCompletedAiBrainContext } from "../../services/aiBrainContext"
 import {
   hasFirstSync,
@@ -49,39 +49,15 @@ import type { DashboardData } from "./useDashboardData"
 import { WidgetRenderer } from "./WidgetRenderer"
 import { WidgetErrorBoundary } from "./WidgetErrorBoundary"
 import type { WidgetDefinition } from "./types"
+import { getDashboardWidgetPaletteColors } from "../../styles/toolboxPalette"
 
 interface DashboardCanvasProps {
   data: DashboardData
   onNavigate: (to: string) => void
 }
 
-const CANONICAL_WIDGET_THEME_SEQUENCE: Array<{ headerColor: string; iconRailColor: string }> = [
-  // Retro Palette #6 (18 swatches) with custom edits:
-  // - removed one duplicate pink
-  // - removed one duplicate blue
-  // - added solid yellow + solid purple
-  { headerColor: "#FF4081", iconRailColor: "#FF78AB" }, // 1 hot pink
-  { headerColor: "#FF3B8D", iconRailColor: "#FF76B4" }, // 2 pink-magenta
-  { headerColor: "#FF488F", iconRailColor: "#FF84B9" }, // 3 rose
-  { headerColor: "#FF698E", iconRailColor: "#FFA7BB" }, // 4 coral pink
-  { headerColor: "#FF865B", iconRailColor: "#FFB892" }, // 5 orange coral
-  { headerColor: "#FFB65B", iconRailColor: "#FFD39E" }, // 6 orange
-  { headerColor: "#FFD400", iconRailColor: "#FFE45F" }, // 7 solid yellow (added)
-  { headerColor: "#FFE950", iconRailColor: "#FFF28C" }, // 8 lemon
-  { headerColor: "#FFEB61", iconRailColor: "#FFF59B" }, // 9 light yellow
-  { headerColor: "#CBEE62", iconRailColor: "#E1F69D" }, // 10 lime
-  { headerColor: "#6CEB8C", iconRailColor: "#A7F3BE" }, // 11 mint green
-  { headerColor: "#29EBFF", iconRailColor: "#92F4FF" }, // 12 cyan
-  { headerColor: "#2979F6", iconRailColor: "#92BAFF" }, // 13 azure
-  { headerColor: "#2975E6", iconRailColor: "#8FAEFF" }, // 14 blue
-  { headerColor: "#2979FF", iconRailColor: "#9CB9FF" }, // 15 vivid blue
-  { headerColor: "#3F66E8", iconRailColor: "#A5B7FF" }, // 16 indigo-blue
-  { headerColor: "#7A2BFF", iconRailColor: "#B990FF" }, // 17 solid purple (added)
-  { headerColor: "#9B4DFF", iconRailColor: "#CAAFFF" }, // 18 violet
-]
-
 const withCanonicalWidgetTheme = (widget: WidgetDefinition, position: number): WidgetDefinition => {
-  const theme = CANONICAL_WIDGET_THEME_SEQUENCE[position % CANONICAL_WIDGET_THEME_SEQUENCE.length]
+  const theme = getDashboardWidgetPaletteColors(position)
   return {
     ...widget,
     headerColor: theme.headerColor,
@@ -363,7 +339,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
 
 
       {showWelcomeBanner && (
-        <div className="mb-4 border-[3px] border-black rounded-2xl bg-[#4FFF5B] px-4 py-3 shadow-[4px_4px_0_0_#000] flex flex-wrap items-center justify-between gap-2">
+        <div className="mb-4 border-[3px] border-black rounded-2xl bg-[#3FEE56] px-4 py-3 shadow-[4px_4px_0_0_#000] flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm md:text-base font-black uppercase">You’re set. Next: Connect channel.</p>
           <button
             onClick={() => setShowWelcomeBanner(false)}
@@ -390,7 +366,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
               <p className="text-xs font-bold mt-1">{data.authState.isAuthenticated ? "Connected" : "Not connected"}</p>
               <button
                 onClick={() => onNavigate("/account#workspace-data")}
-                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#4FFF5B] px-2 py-1 text-[10px] font-black uppercase"
+                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#FA618A] px-2 py-1 text-[10px] font-black uppercase"
               >
                 {data.authState.isAuthenticated ? "Open" : "Connect"}
               </button>
@@ -400,7 +376,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
               <p className="text-xs font-bold mt-1">{firstSyncDone ? "Synced" : "Not synced"}</p>
               <button
                 onClick={() => void globalSyncData({ batchMode: "initial" })}
-                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#40C6E9] px-2 py-1 text-[10px] font-black uppercase"
+                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#FF7F6B] px-2 py-1 text-[10px] font-black uppercase"
               >
                 {firstSyncDone ? "Sync now" : "Run first sync"}
               </button>
@@ -413,7 +389,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
                   updateOnboardingState({ billingConfirmed: true })
                   onNavigate("/account?panel=billing")
                 }}
-                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#FFE357] px-2 py-1 text-[10px] font-black uppercase"
+                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#FFA85C] px-2 py-1 text-[10px] font-black uppercase"
               >
                 Open billing
               </button>
@@ -422,8 +398,8 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
               <p className="text-[10px] font-black uppercase">Complete AI Brain intake</p>
               <p className="text-xs font-bold mt-1">{hasCompletedAiBrainContext() ? "Completed" : "Pending"}</p>
               <button
-                onClick={() => onNavigate("/account#ai-brain-context")}
-                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#FF83EA] px-2 py-1 text-[10px] font-black uppercase"
+                onClick={() => onNavigate("/ai-brain?intake=1")}
+                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#FFDA47] px-2 py-1 text-[10px] font-black uppercase"
               >
                 Open intake
               </button>
@@ -436,7 +412,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
                   updateOnboardingState({ firstToolOpened: true })
                   onNavigate(entitlement.subscriptionPlanId === "basic" ? "/studio" : "/performance")
                 }}
-                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#579AFF] text-white px-2 py-1 text-[10px] font-black uppercase"
+                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#C0F240] px-2 py-1 text-[10px] font-black uppercase"
               >
                 Open tool
               </button>

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { useEntitlement } from "../../../app/AppShell"
+import { useEntitlement } from "../../../context/entitlementContext"
 import { Image as ImageIcon, Sparkles, Download, Search, CheckCircle2, AlertTriangle, Upload, ArrowRight } from "lucide-react"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
+import { VideoAssetSelect } from "./VideoAssetSelect"
 
 type TabMode = "generate" | "analyze" | "abtest"
 
@@ -37,7 +38,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   ])
   const [abAnalyzing, setAbAnalyzing] = useState(false)
 
-  const videos = data.canonicalRows || []
+  const videos = data.videoAssets || []
   const activeVideo = videos.find((v: any) => v.videoId === selectedVideo)
   const modeTokenCost = mode === "generate" ? 8 : 5
   const entitlement = useEntitlement()
@@ -153,19 +154,15 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   // Video dropdown (shared by analyze + abtest)
   const videoDropdown = (
     <div style={{ display: "flex", gap: "4px" }}>
-      <select
-        className="vt-select"
+      <VideoAssetSelect
+        assets={videos}
         value={selectedVideo}
-        onChange={(e) => setSelectedVideo(e.target.value)}
-        style={{ flex: 2 }}>
-        <option value="" disabled>Select a video...</option>
-        {videos
-         .filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase()))
-         .slice(0, 15)
-         .map((v: any) => (
-          <option key={v.videoId} value={v.videoId}>{v.title || v.id}</option>
-        ))}
-      </select>
+        onChange={setSelectedVideo}
+        query={videoSearch}
+        limit={50}
+        className="vt-select"
+        style={{ flex: 2 }}
+      />
       <input
         className="vt-input"
         value={videoSearch}

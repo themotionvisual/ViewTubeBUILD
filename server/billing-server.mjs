@@ -4,22 +4,34 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { handleCompressAnalysisRoute } from "./media-compression.mjs";
+import { handleYouTubeAcquireRoute } from "./youtube-acquisition.mjs";
+import { getAuthenticatedViewtubeUserId, handleAccountRoute } from "./account-auth.mjs";
+import {
+  appendAiCreditLedgerEntry,
+  claimWebhookEvent,
+  completeWebhookEvent,
+  failWebhookEvent,
+  findServerSubscriptionByStripeCustomerId,
+  getServerSubscription,
+  initAccountStore,
+  setServerSubscription,
+} from "./account-store.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, "..");
 const DATA_DIR = path.join(ROOT, ".billing");
 const ENTITLEMENTS_FILE = path.join(DATA_DIR, "entitlements.json");
-const IDEMPOTENCY_FILE = path.join(DATA_DIR, "idempotency.json");
 const REFERRALS_FILE = path.join(DATA_DIR, "referrals.json");
 const PROJECTS_FILE = path.join(DATA_DIR, "projects.json");
 
 const PORT = Number(process.env.BILLING_PORT || 3000);
-const BILLING_ORIGIN = process.env.BILLING_ORIGIN || "*";
+const BILLING_ORIGIN = process.env.BILLING_ORIGIN || "http://localhost:5173";
 const STRIPE_API_BASE = process.env.STRIPE_API_BASE || "https://api.stripe.com/v1";
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || "";
 const STRIPE_TRIAL_HOURS = Number(process.env.STRIPE_TRIAL_HOURS || 48);
+const ALLOW_LEGACY_BILLING_IDENTITY = process.env.ALLOW_LEGACY_BILLING_IDENTITY === "true";
 
 const PRICE_MAP = {
   creator: process.env.STRIPE_PRICE_CREATOR || "",
@@ -46,13 +58,15 @@ const json = (res, status, payload) => {
     "Access-Control-Allow-Origin": BILLING_ORIGIN,
     "Access-Control-Allow-Headers": "Content-Type, Stripe-Signature",
     "Access-Control-Allow-Methods": "GET,POST,PUT,OPTIONS",
+    "Access-Control-Allow-Credentials": "true",
+    "Cache-Control": "no-store",
   });
   res.end(JSON.stringify(payload));
 };
 
 const ensureDataFiles = async () => {
   await fs.mkdir(DATA_DIR, { recursive: true });
-  for (const target of [ENTITLEMENTS_FILE, IDEMPOTENCY_FILE, REFERRALS_FILE, PROJECTS_FILE]) {
+  for (const target of [ENTITLEMENTS_FILE, REFERRALS_FILE, PROJECTS_FILE]) {
     try {
       await fs.access(target);
     } catch {
@@ -99,7 +113,7 @@ const nowIso = () => new Date().toISOString();
 
 const normalizeOwnerId = (value) => {
   const userId = String(value || "").trim().toLowerCase();
-  return userId || "local-user";
+  return userId;
 };
 
 const readProjectsDb = async () => {
@@ -174,10 +188,11 @@ const createProjectRecord = ({
   };
 };
 
-const handleCreateProject = async (req, res) => {
+const handleCreateProject = async (req, res, authenticatedUserId) => {
   const payload = await parseJsonBody(req, res);
   if (!payload) return;
-  const ownerUserId = normalizeOwnerId(payload.ownerUserId);
+  const ownerUserId = normalizeOwnerId(authenticatedUserId);
+  if (!ownerUserId) return json(res, 401, { error: "Authentication required." });
   const projectData = payload.projectData;
   const validation = validateProjectPayload(projectData);
   if (!validation.valid) {
@@ -199,7 +214,7 @@ const handleCreateProject = async (req, res) => {
 };
 
 const handleListProjects = async (req, res, userId) => {
-  const ownerUserId = normalizeOwnerId(userId || "local-user");
+  const ownerUserId = normalizeOwnerId(userId);
   const db = await readProjectsDb();
   const projects = Object.values(db.records || {})
     .filter((record) => normalizeOwnerId(record.ownerUserId) === ownerUserId)
@@ -209,7 +224,7 @@ const handleListProjects = async (req, res, userId) => {
 };
 
 const handleGetProject = async (req, res, projectId, userId) => {
-  const ownerUserId = normalizeOwnerId(userId || "local-user");
+  const ownerUserId = normalizeOwnerId(userId);
   const db = await readProjectsDb();
   const record = db.records?.[projectId];
   if (!record) return json(res, 404, { error: "PROJECT_NOT_FOUND" });
@@ -221,7 +236,7 @@ const handleGetProject = async (req, res, projectId, userId) => {
 };
 
 const handleUpdateProject = async (req, res, projectId, userId) => {
-  const ownerUserId = normalizeOwnerId(userId || "local-user");
+  const ownerUserId = normalizeOwnerId(userId);
   const payload = await parseJsonBody(req, res);
   if (!payload) return;
   const db = await readProjectsDb();
@@ -270,7 +285,7 @@ const handleUpdateProject = async (req, res, projectId, userId) => {
 };
 
 const handleDuplicateProject = async (req, res, projectId, userId) => {
-  const ownerUserId = normalizeOwnerId(userId || "local-user");
+  const ownerUserId = normalizeOwnerId(userId);
   const payload = await parseJsonBody(req, res);
   if (!payload) return;
   const db = await readProjectsDb();
@@ -349,11 +364,14 @@ const createCheckoutSession = async ({
     ["allow_promotion_codes", true],
     ["automatic_tax[enabled]", true],
     ["subscription_data[trial_end]", shouldApplyTrial ? trialEndUnix : ""],
-    ["client_reference_id", userId || "local-user"],
+    ["subscription_data[metadata][userId]", isTopup ? "" : userId],
+    ["subscription_data[metadata][planId]", isTopup ? "" : normalizedPlan],
+    ["subscription_data[metadata][referralCode]", isTopup ? "" : referralCode || ""],
+    ["client_reference_id", userId],
     ["metadata[mode]", isTopup ? "topup" : "subscription"],
     ["metadata[planId]", normalizedPlan],
     ["metadata[topupSku]", isTopup ? topupSku : ""],
-    ["metadata[userId]", userId || "local-user"],
+    ["metadata[userId]", userId],
     ["metadata[referralCode]", referralCode || ""],
   ]);
 
@@ -376,6 +394,21 @@ const createCheckoutSession = async ({
     checkoutUrl: data.url,
     provider: "stripe",
   };
+};
+
+const createBillingPortalSession = async ({ userId, returnUrl }) => {
+  if (!STRIPE_SECRET_KEY) throw new Error("Missing STRIPE_SECRET_KEY.");
+  const subscription = await getServerSubscription(userId);
+  const customerId = subscription?.stripeCustomerId;
+  if (!customerId) throw new Error("No Stripe customer is linked to this account.");
+  const response = await fetch(`${STRIPE_API_BASE}/billing_portal/sessions`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${STRIPE_SECRET_KEY}`, "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ customer: customerId, return_url: returnUrl }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data?.error?.message || `Stripe portal session failed (${response.status}).`);
+  return { portalUrl: data.url };
 };
 
 const parseStripeSignature = (headerValue) => {
@@ -412,8 +445,12 @@ const verifyStripeSignature = (rawBodyBuffer, signatureHeader) => {
 
 const upsertEntitlementFromEvent = async (event) => {
   const object = event?.data?.object || {};
-  const metadata = object.metadata || {};
-  const userId = metadata.userId || object.client_reference_id || "local-user";
+  const metadata = { ...(object.subscription_details?.metadata || {}), ...(object.metadata || {}) };
+  const linkedSubscription = object.customer
+    ? await findServerSubscriptionByStripeCustomerId(object.customer)
+    : null;
+  const userId = normalizeOwnerId(metadata.userId || object.client_reference_id || linkedSubscription?.viewtubeUserId);
+  if (!userId) throw new Error("Stripe event is missing its ViewTube user id.");
 
   const entitlements = await readJson(ENTITLEMENTS_FILE);
   const current = entitlements[userId] || {
@@ -436,6 +473,12 @@ const upsertEntitlementFromEvent = async (event) => {
         updatedAtIso: new Date().toISOString(),
       };
       await writeJson(ENTITLEMENTS_FILE, entitlements);
+      await appendAiCreditLedgerEntry(userId, {
+        entryType: "purchase",
+        deltaCredits: topupCredits,
+        idempotencyKey: event.id,
+        metadata: { stripeEventType: event.type, topupSku: metadata.topupSku },
+      });
       return;
     }
     const planId = normalizePlanId(metadata.planId || current.planId || "creator_plus");
@@ -455,7 +498,34 @@ const upsertEntitlementFromEvent = async (event) => {
       stripeSubscriptionId: object.subscription || current.stripeSubscriptionId || null,
       updatedAtIso: new Date().toISOString(),
     };
-  } else if (event.type === "customer.subscription.deleted" || event.type === "invoice.payment_failed") {
+    await setServerSubscription(userId, {
+      status: "active",
+      planId,
+      stripeCustomerId: object.customer || current.stripeCustomerId || null,
+      stripeSubscriptionId: object.subscription || current.stripeSubscriptionId || null,
+    });
+    if (planCredits.monthly > 0 && Number.isFinite(planCredits.monthly)) {
+      await appendAiCreditLedgerEntry(userId, {
+        entryType: "grant",
+        deltaCredits: planCredits.monthly,
+        idempotencyKey: event.id,
+        metadata: { stripeEventType: event.type, planId },
+      });
+    }
+  } else if (event.type === "invoice.payment_failed") {
+    entitlements[userId] = {
+      ...current,
+      userId,
+      status: "past_due",
+      updatedAtIso: new Date().toISOString(),
+    };
+    await setServerSubscription(userId, {
+      status: "past_due",
+      planId: current.planId || "basic",
+      stripeCustomerId: object.customer || current.stripeCustomerId || null,
+      stripeSubscriptionId: object.subscription || current.stripeSubscriptionId || null,
+    });
+  } else if (event.type === "customer.subscription.deleted") {
     entitlements[userId] = {
       ...current,
       userId,
@@ -467,6 +537,12 @@ const upsertEntitlementFromEvent = async (event) => {
       rolloverCap: 0,
       updatedAtIso: new Date().toISOString(),
     };
+    await setServerSubscription(userId, {
+      status: "inactive",
+      planId: "basic",
+      stripeCustomerId: object.customer || current.stripeCustomerId || null,
+      stripeSubscriptionId: object.subscription || current.stripeSubscriptionId || null,
+    });
   }
 
   await writeJson(ENTITLEMENTS_FILE, entitlements);
@@ -491,17 +567,6 @@ const upsertEntitlementFromEvent = async (event) => {
   }
 };
 
-const markEventProcessed = async (eventId) => {
-  const ledger = await readJson(IDEMPOTENCY_FILE);
-  ledger[eventId] = { processedAtIso: new Date().toISOString() };
-  await writeJson(IDEMPOTENCY_FILE, ledger);
-};
-
-const isEventProcessed = async (eventId) => {
-  const ledger = await readJson(IDEMPOTENCY_FILE);
-  return Boolean(ledger[eventId]);
-};
-
 const handleWebhook = async (req, res) => {
   const bodyBuffer = await readBody(req);
   const signature = req.headers["stripe-signature"];
@@ -521,17 +586,26 @@ const handleWebhook = async (req, res) => {
     return json(res, 400, { error: "Missing Stripe event id." });
   }
 
-  if (await isEventProcessed(event.id)) {
+  if (!(await claimWebhookEvent(event.id, event.type || "unknown"))) {
     return json(res, 200, { received: true, duplicate: true });
   }
 
-  await upsertEntitlementFromEvent(event);
-  await markEventProcessed(event.id);
+  try {
+    await upsertEntitlementFromEvent(event);
+    await completeWebhookEvent(event.id);
+  } catch (error) {
+    await failWebhookEvent(event.id, error instanceof Error ? error.message : String(error));
+    throw error;
+  }
 
   return json(res, 200, { received: true, eventType: event.type });
 };
 
 const handleCheckout = async (req, res) => {
+  const requestOrigin = String(req.headers.origin || "").trim();
+  if (requestOrigin && requestOrigin !== BILLING_ORIGIN) {
+    return json(res, 403, { error: "Request origin is not allowed." });
+  }
   const raw = await readBody(req);
   let payload;
   try {
@@ -540,9 +614,23 @@ const handleCheckout = async (req, res) => {
     return json(res, 400, { error: "Invalid JSON body." });
   }
 
-  const { planId, userId, successUrl, cancelUrl, referralCode, mode, topupSku } = payload || {};
+  const { planId, successUrl, cancelUrl, referralCode, mode, topupSku } = payload || {};
   if (!planId || !successUrl || !cancelUrl) {
     return json(res, 400, { error: "Missing required fields: planId, successUrl, cancelUrl." });
+  }
+
+  const userId = await getAuthenticatedViewtubeUserId(req);
+  if (!userId) return json(res, 401, { error: "Authentication required for billing." });
+
+  const allowedOrigin = BILLING_ORIGIN === "*" ? String(process.env.ACCOUNT_PUBLIC_ORIGIN || "http://localhost:5173") : BILLING_ORIGIN;
+  for (const candidate of [successUrl, cancelUrl]) {
+    try {
+      if (new URL(candidate).origin !== new URL(allowedOrigin).origin) {
+        return json(res, 400, { error: "Checkout return URL is not allowed." });
+      }
+    } catch {
+      return json(res, 400, { error: "Checkout return URL is invalid." });
+    }
   }
 
   try {
@@ -569,6 +657,21 @@ const handleGetEntitlement = async (req, res, userId) => {
   });
 };
 
+const handlePortalSession = async (req, res) => {
+  const requestOrigin = String(req.headers.origin || "").trim();
+  if (requestOrigin && requestOrigin !== BILLING_ORIGIN) return json(res, 403, { error: "Request origin is not allowed." });
+  const userId = await getAuthenticatedViewtubeUserId(req);
+  if (!userId) return json(res, 401, { error: "Authentication required for billing." });
+  const payload = await parseJsonBody(req, res);
+  if (!payload) return;
+  try {
+    if (new URL(payload.returnUrl).origin !== new URL(BILLING_ORIGIN).origin) return json(res, 400, { error: "Portal return URL is not allowed." });
+    return json(res, 200, await createBillingPortalSession({ userId, returnUrl: payload.returnUrl }));
+  } catch (error) {
+    return json(res, 400, { error: error instanceof Error ? error.message : String(error) });
+  }
+};
+
 const server = http.createServer(async (req, res) => {
   const method = req.method;
   const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
@@ -583,28 +686,41 @@ const server = http.createServer(async (req, res) => {
         "Access-Control-Allow-Origin": BILLING_ORIGIN,
         "Access-Control-Allow-Headers": "Content-Type, Stripe-Signature",
         "Access-Control-Allow-Methods": "GET,POST,PUT,OPTIONS",
+        "Access-Control-Allow-Credentials": "true",
       });
       return res.end();
     }
 
+    if (await handleAccountRoute({ req, res, method, pathname, parsedUrl, json, readBody })) {
+      return;
+    }
+
     if (method === "GET" && pathname === "/api/projects") {
-      const userId = parsedUrl.searchParams.get("userId") || "local-user";
+      const userId = await getAuthenticatedViewtubeUserId(req);
+      if (!userId) return json(res, 401, { error: "Authentication required." });
       return await handleListProjects(req, res, userId);
     }
 
     if (method === "POST" && pathname === "/api/projects") {
-      return await handleCreateProject(req, res);
+      const userId = await getAuthenticatedViewtubeUserId(req);
+      if (!userId) return json(res, 401, { error: "Authentication required." });
+      return await handleCreateProject(req, res, userId);
     }
 
     if (method === "POST" && pathname === "/api/media/compress-analysis") {
       return await handleCompressAnalysisRoute(req, res);
     }
 
+    if (method === "POST" && pathname === "/api/youtube/acquire") {
+      return await handleYouTubeAcquireRoute(req, res);
+    }
+
     if (pathname.startsWith("/api/projects/")) {
       const parts = pathname.split("/").filter(Boolean);
       const projectId = parts[2];
       const suffix = parts[3] || "";
-      const userId = parsedUrl.searchParams.get("userId") || "local-user";
+      const userId = await getAuthenticatedViewtubeUserId(req);
+      if (!userId) return json(res, 401, { error: "Authentication required." });
 
       if (!projectId) return json(res, 400, { error: "PROJECT_ID_REQUIRED" });
 
@@ -623,9 +739,19 @@ const server = http.createServer(async (req, res) => {
       return await handleWebhook(req, res);
     }
 
-    if (method === "GET" && pathname.startsWith("/billing/entitlement/")) {
-      console.log(`[billing] Matched: GET /billing/entitlement/*`);
-      const userId = decodeURIComponent(pathname.split("/").pop() || "");
+    if (method === "POST" && pathname === "/billing/portal-session") {
+      return await handlePortalSession(req, res);
+    }
+
+    if (method === "GET" && pathname === "/billing/entitlement") {
+      const userId = await getAuthenticatedViewtubeUserId(req);
+      if (!userId) return json(res, 401, { error: "Authentication required for billing." });
+      return await handleGetEntitlement(req, res, userId);
+    }
+
+    if (ALLOW_LEGACY_BILLING_IDENTITY && method === "GET" && pathname.startsWith("/billing/entitlement/")) {
+      const userId = normalizeOwnerId(decodeURIComponent(pathname.split("/").pop() || ""));
+      if (!userId) return json(res, 400, { error: "User id is required." });
       return await handleGetEntitlement(req, res, userId);
     }
 
@@ -647,6 +773,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, async () => {
+  await initAccountStore();
   await ensureDataFiles();
   console.log(`[billing] listening on http://localhost:${PORT}`);
 });

@@ -1,6 +1,10 @@
 import { useMemo } from "react"
 import { BrowserRouter, useLocation } from "react-router-dom"
 import { GlobalDataProvider } from "./context/GlobalDataContext"
+import { UnifiedAccountProvider } from "./context/UnifiedAccountContext"
+import { VideoAssetCatalogProvider } from "./context/VideoAssetCatalogContext"
+import { InitialChannelBootstrapProvider } from "./context/InitialChannelBootstrapContext"
+import { GeminiKeyProvider } from "./context/GeminiKeyContext"
 import { AppShell } from "./app/AppShell"
 import { AppRoutes } from "./app/AppRoutes"
 
@@ -66,12 +70,20 @@ function App() {
 
  return (
   <div className={isDarkTheme ? "dark-theme-override" : undefined}>
-   <GlobalDataProvider>
-    <style>{DARK_THEME_CSS}</style>
-    <BrowserRouter>
-     <AppInner />
-    </BrowserRouter>
-   </GlobalDataProvider>
+   <UnifiedAccountProvider>
+    <GeminiKeyProvider>
+     <InitialChannelBootstrapProvider>
+      <VideoAssetCatalogProvider>
+       <GlobalDataProvider>
+        <style>{DARK_THEME_CSS}</style>
+        <BrowserRouter>
+         <AppInner />
+        </BrowserRouter>
+       </GlobalDataProvider>
+      </VideoAssetCatalogProvider>
+     </InitialChannelBootstrapProvider>
+    </GeminiKeyProvider>
+   </UnifiedAccountProvider>
   </div>
  )
 }

@@ -28,11 +28,11 @@ export interface UiTokenScale {
 
 export const UI_TOKEN_SCALE: UiTokenScale = {
  colors: {
-  neonGreen: "#CCFF00",
-  neonMagenta: "#B14AED",
-  neonCyan: "#24D3FF",
-  neonOrange: "#FFB158",
-  neonYellow: "#FFE357",
+  neonGreen: "#00FF00",
+  neonMagenta: "#FF00FF",
+  neonCyan: "#00FFFF",
+  neonOrange: "#FF9933",
+  neonYellow: "#FFFF00",
   black: "#000000",
   white: "#FFFFFF",
  },

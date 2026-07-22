@@ -30,6 +30,9 @@ import GraphsShortsRetentionPage from "../views/GraphsShortsRetentionPage"
 import UserGuide from "../views/UserGuide"
 import ComponentAudit from "../views/debug/ComponentAudit"
 import Subscribe from "../views/Subscribe"
+import VtSyncLocalAnalyticsPage from "../features/vt-sync-local/shell/VtSyncLocalAnalyticsPage"
+import AIBrainCommandInterface from "../views/AIBrainCommandInterface"
+import AccountConnectPage from "../views/AccountConnectPage"
 
 export const AppRoutes: React.FC = () => {
  return (
@@ -46,9 +49,13 @@ export const AppRoutes: React.FC = () => {
    <Route path="/legacy/data-vizualizations" element={<DataVisualizations />} />
    <Route path="/studio/internal-analytics" element={<InternalAnalyticsPanel />} />
    <Route path="/account" element={<Settings />} />
+   <Route path="/account/connect" element={<AccountConnectPage />} />
    <Route path="/settings" element={<Settings />} />
    <Route path="/subscribe" element={<Subscribe />} />
    <Route path="/data-transparency" element={<DataTransparencyCenter />} />
+   <Route path="/ai-brain" element={<AIBrainCommandInterface />} />
+   <Route path="/local-analytics" element={<VtSyncLocalAnalyticsPage />} />
+   <Route path="/vt-sync-local" element={<VtSyncLocalAnalyticsPage />} />
 
    <Route path="/shorts" element={<Navigate to="/editor" replace />} />
    <Route path="/editor" element={<EditorV1Page />} />

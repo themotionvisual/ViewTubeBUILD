@@ -500,6 +500,7 @@ interface SubToolboxProps {
   heightMode?: "standard" | "compact";
   overflowVisible?: boolean;
   helpText?: React.ReactNode;
+  headerStyle?: React.CSSProperties;
 }
 
 export const SubToolbox: React.FC<SubToolboxProps> = ({
@@ -522,6 +523,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   heightMode = "standard",
   overflowVisible = false,
   helpText,
+  headerStyle,
 }) => {
   const paletteCycle = React.useContext(PaletteCycleContext);
   const allocatedPaletteRef = useRef<number | null>(null);
@@ -560,7 +562,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
 
   return (
     <div
-      className={`w-full bg-white relative flex flex-col transition-all duration-300 ${overflowVisible ? "" : "overflow-hidden"} ${shellClassName}`}
+      className={`w-full bg-white relative flex flex-col transition-all duration-300 ${collapsible && !open ? "self-start" : ""} ${overflowVisible ? "" : "overflow-hidden"} ${shellClassName}`}
       style={{
         border: `${SUB_TOOLBOX_STROKE}px solid black`,
         borderRadius: `16px`,
@@ -575,6 +577,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
           minHeight: `${CONTROL_SHELL.headerHeight}px`,
           backgroundColor: headerHex,
           borderBottom: `${SUB_TOOLBOX_INNER_STROKE}px solid black`,
+          ...headerStyle,
         }}
       >
         <div className="flex items-center h-full flex-1">

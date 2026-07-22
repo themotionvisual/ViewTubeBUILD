@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useBrain } from '../context/useBrain';
 import { generateChatResponse, hasGeminiKey } from '../services/gemini';
-import { Send, Zap, User } from 'lucide-react';
+import { buildAIBrainSystemPrompt, queueAIBrainReviewedAction } from '../services/aiBrainCommandInterface';
+import { ArrowRight, Brain, Send, Zap, User } from 'lucide-react';
 
 interface ChatMessage {
   role: 'user' | 'model';
@@ -9,12 +11,13 @@ interface ChatMessage {
 }
 
 export const SidebarChatbot: React.FC = () => {
-  const { authState, emitSignal } = useBrain();
+  const { brain, authState, channelConnection, emitSignal, getBrainMemory } = useBrain();
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'model', text: 'AI Strategy Proxy connected. Ready.' }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [lastCommand, setLastCommand] = useState<{ route: string; title: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const canUseGemini = hasGeminiKey();
@@ -34,27 +37,12 @@ export const SidebarChatbot: React.FC = () => {
     // [BRAIN: INWARD LOOP] Emit signal so Brain learns from Journal interactions
     emitSignal('AI_JOURNAL', 'USER_MESSAGE', { text: userText }).catch((e: any) => console.warn(e));
 
-    const systemPrompt = `
-      IDENTITY: You are the ViewTube Creator OS embedded AI Strategy Chatbot.
-      You exist in the left sidebar of the user's dashboard.
-      Your job is to answer ANY questions about the app's settings, how tools work, and channel strategy.
-      
-      CONTEXT:
-      - App name: ViewTube
-      - Channel: ${authState.channelName || 'Not connected'}
-      - Subs: ${authState.subscriberCount || 0}
-      - Views: ${authState.totalViews || 0}
-      
-      LAYOUT KNOWLEDGE:
-      - Tools in sidebar: Dashboard, Studio, Calendar, Shorts, Performance, Settings.
-      - Settings holds API keys (Gemini, ElevenLabs, etc).
-      - Studio has tools for Upload Generator, Script Analysis, Video Concept generation.
-      - Performance has the metrics and data matrix.
-      - Calendar manages tasks.
-      - Reference Studio is a secret UI component library.
-      
-      Keep answers concise, actionable, and formatted nicely. Be confident and neo-brutalist in tone.
-    `;
+    const systemPrompt = buildAIBrainSystemPrompt({
+      brain,
+      authState,
+      channelConnection,
+      brainMemory: getBrainMemory(),
+    });
 
     try {
       // Map history to the format google gen ai expects: { role, parts: [{ text }] }
@@ -65,6 +53,14 @@ export const SidebarChatbot: React.FC = () => {
 
       // In gemini API, role names are 'user' and 'model'
       const responseText = await generateChatResponse(historyPayload, userText, false, systemPrompt);
+      const handoff = await queueAIBrainReviewedAction({
+        request: userText,
+        response: responseText,
+        channelId: authState.channelHandle || null,
+        priority: "medium",
+        confidence: "medium",
+      });
+      setLastCommand({ route: handoff.route, title: handoff.targetTitle });
       setMessages(prev => [...prev, { role: 'model', text: responseText }]);
     } catch (err: any) {
       setMessages(prev => [...prev, { role: 'model', text: `ERROR: ${err.message}` }]);
@@ -85,6 +81,10 @@ export const SidebarChatbot: React.FC = () => {
       {messages.length <= 1 && (
         <div className="px-4 pb-1">
            <h3 className="font-[1000] text-xl uppercase tracking-tighter">How can I help?</h3>
+           <Link to="/ai-brain" className="mt-2 inline-flex items-center gap-1 rounded-lg border-[2px] border-black bg-[#4FFF5B] px-2 py-1 text-[9px] font-black uppercase tracking-wide shadow-[2px_2px_0_0_#000]">
+            <Brain size={12} />
+            Open AI Brain
+           </Link>
         </div>
       )}
 
@@ -97,6 +97,9 @@ export const SidebarChatbot: React.FC = () => {
             </div>
             <span className="font-black uppercase text-[10px] tracking-widest text-black">AI-SSISTANT</span>
           </div>
+          <Link to="/ai-brain" className="text-xs font-black uppercase tracking-widest text-black/70 hover:text-black">
+             Brain
+          </Link>
           <button 
              onClick={() => setMessages([{ role: 'model', text: 'AI Strategy Proxy connected. Ready.' }])}
              className="text-xs font-black uppercase tracking-widest text-black/40 hover:text-black">
@@ -173,6 +176,12 @@ export const SidebarChatbot: React.FC = () => {
           <Send size={14} />
         </button>
       </div>
+      {lastCommand && (
+        <Link to={lastCommand.route} className="border-t-[3px] border-black bg-[#FFFF61] px-3 py-2 text-[9px] font-black uppercase tracking-[0.1em] text-black flex items-center justify-between gap-2">
+          <span>Open Command: {lastCommand.title}</span>
+          <ArrowRight size={12} />
+        </Link>
+      )}
     </div>
   );
 };

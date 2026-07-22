@@ -77,7 +77,7 @@ export const CommentResponder: React.FC = () => {
        </div>
 
        {fetchedThreads.length > 0 && (
-        <div className="max-h-48 overflow-y-auto border-[4px] border-black rounded-xl p-2 space-y-2 bg-gray-50 custom-scrollbar">
+        <div className="max-h-48 overflow-y-auto border-[2px] border-black rounded-xl p-2 space-y-2 bg-gray-50 custom-scrollbar">
          {fetchedThreads.map((thread) => {
           const text = thread.snippet.topLevelComment.snippet.textDisplay
           const author = thread.snippet.topLevelComment.snippet.authorDisplayName
@@ -105,7 +105,7 @@ export const CommentResponder: React.FC = () => {
      <button
       onClick={handleGenerate}
       disabled={loading || !comments}
-      className="w-full mt-6 bg-[#FFB158] text-black border-[4px] border-black p-4 font-black uppercase text-xl rounded-xl shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-3">
+      className="w-full mt-6 bg-[#FFB158] text-black border-[2px] border-black p-4 font-black uppercase text-xl rounded-xl shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-3">
       {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
       Generate Replies
      </button>
@@ -128,7 +128,7 @@ export const CommentResponder: React.FC = () => {
       </div>
      </SubToolbox>
      ) : (
-     <div className="h-full min-h-[400px] flex flex-col items-center justify-center border-[4px] border-dashed border-black/20 rounded-[32px] bg-gray-50 p-8 text-center">
+     <div className="h-full min-h-[400px] flex flex-col items-center justify-center border-[2px] border-dashed border-black/20 rounded-[32px] bg-gray-50 p-8 text-center">
       <MessageCircle size={80} className="mb-6 text-black/20" />
       <h3 className="text-3xl font-[1000] text-black/40 uppercase tracking-tighter mb-2">
        Awaiting Comments

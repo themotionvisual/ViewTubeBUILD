@@ -205,3 +205,57 @@ textarea::placeholder {
 .vt-chart-interior [class*="shadow-"] {
   filter: none;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   VT-BUTTON BASE & V2 STYLES
+═══════════════════════════════════════════════════════════ */
+.dashboard-barrier .vt-button {
+  background: #ffffff;
+  border: 2px solid #000;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #000;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent);
+  transition: transform 0.1s, box-shadow 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 14px;
+}
+.dashboard-barrier .vt-button.primary { background: var(--widget-color, #4FFF5B); }
+.dashboard-barrier .vt-button.secondary { background: color-mix(in srgb, var(--widget-color, #000) 30%, white); }
+.dashboard-barrier .vt-button:hover { transform: translate(1.5px, 1.5px); box-shadow: 1.5px 1.5px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent); }
+.dashboard-barrier .vt-button:active { transform: translate(3px, 3px); box-shadow: 0px 0px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent); }
+.dashboard-barrier .vt-button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* v2 · square icon buttons — vt-button geometry, any of the 3 fills */
+.dashboard-barrier .vt-button.icon { width: 36px; height: 36px; padding: 0; flex-shrink: 0; font-size: 15px; }
+.dashboard-barrier .vt-button.icon.sm { width: 28px; height: 28px; font-size: 12px; }
+
+/* v2 · large size — bigger face, deeper 4px shadow, same press physics */
+.dashboard-barrier .vt-button.lg { padding: 12px 22px; font-size: 13px; border-radius: 8px;
+  box-shadow: 4px 4px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent); }
+.dashboard-barrier .vt-button.lg:hover { transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent); }
+.dashboard-barrier .vt-button.lg:active { transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent); }
+.dashboard-barrier .vt-button.icon.lg { width: 48px; height: 48px; padding: 0; font-size: 20px; }
+
+/* v2 · split-left — icon cell divided by an ink rule, echoes the header icon-rail */
+.dashboard-barrier .vt-button.split { padding: 0; overflow: hidden; text-align: left; align-items: stretch; gap: 0; }
+.dashboard-barrier .vt-button.split .split-icon {
+  width: 34px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  background: rgba(255,255,255,0.45);
+  border-right: 2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black);
+}
+.dashboard-barrier .vt-button.split:not(.primary):not(.secondary) .split-icon {
+  background: color-mix(in srgb, var(--widget-color, #000) 30%, white);
+}
+.dashboard-barrier .vt-button.split .split-label { padding: 9px 14px 9px 10px; flex: 1; display: flex; align-items: center; gap: 6px; }
+.dashboard-barrier .vt-button.split.lg .split-icon { width: 44px; font-size: 18px; }
+.dashboard-barrier .vt-button.split.lg .split-label { padding: 13px 18px 13px 12px; }

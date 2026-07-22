@@ -1,15 +1,18 @@
 import {
  getAccessToken,
  logout,
- loginWithPkcePopup,
  getValidAccessToken,
  isAuthenticated,
  generateRandomString,
  generateCodeChallenge,
 } from "../auth/authSession"
-import { clearAnalyticsStateForFreshSync } from "../localDataReset"
 import { GoogleService } from "../googleService"
 import { YouTubeUploadService } from "./youtubeUploadService"
+import { isUnifiedAccountServerEnabled } from "../account/accountCoordinator"
+import {
+ authorizedGoogleRead,
+ SERVER_ACCOUNT_SESSION_TOKEN,
+} from "./googleReadTransport"
 
 export const BASE_URL = "https://www.googleapis.com/youtube/v3"
 export const ANALYTICS_URL = "https://youtubeanalytics.googleapis.com/v2"
@@ -204,15 +207,23 @@ export const trackApiCall = (url: string) => {
 
 export const proxyFetch = async (url: string, options: RequestInit = {}) => {
  trackApiCall(url)
+ const method = String(options.method || "GET").toUpperCase()
+ if (isUnifiedAccountServerEnabled() && method === "GET") {
+  return authorizedGoogleRead(url, { signal: options.signal || undefined })
+ }
  return fetch(url, options)
 }
 
 export const connectChannel = async (): Promise<void> => {
- await loginWithPkcePopup()
- await clearAnalyticsStateForFreshSync()
+ throw new YouTubeApiError(
+  "AUTH_REQUIRED: Start channel authorization through the unified account coordinator.",
+  401,
+  "AUTH_REQUIRED",
+ )
 }
 
 export const refreshTokenIfExpired = async (): Promise<string | null> => {
+ if (isUnifiedAccountServerEnabled()) return SERVER_ACCOUNT_SESSION_TOKEN
  const token = await getValidAccessToken()
  if (!token && isAuthenticated()) {
   logout()

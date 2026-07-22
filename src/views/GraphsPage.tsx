@@ -165,6 +165,7 @@ const GraphsPage: React.FC = () => {
     <ToolboxScaffold
      title="CHANNEL"
      icon={<Activity size={42} className="text-black" />}
+     paletteIndex={0}
      headerColor="bg-[#FFDD00]"
      iconBoxColor="bg-[#CCFF00]"
      collapsible

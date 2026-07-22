@@ -2,19 +2,14 @@ import React, { useEffect, useMemo, useState } from "react"
 import { Settings as SettingsIcon } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { useBrain } from "../context/useBrain"
-import { loadAiBrainContext, saveAiBrainContext, type BrainPrimaryGoal } from "../services/aiBrainContext"
-import { unifiedAuth } from "../services/auth/authSession"
 import {
-  applyCustomTopupCredits,
-  applyTopupCredits,
   createCheckoutSession,
+  createBillingPortalSession,
   fetchEntitlementFromServer,
-  getCurrentEntitlement,
   isOwnerEmail,
   setCustomReferralCodeOnce,
   syncReferralCodeToChannelHandle,
   TOPUP_DEFINITIONS,
-  updatePlanEntitlement,
 } from "../services/billingEntitlement"
 import { downloadExportBundle } from "../services/dataExport"
 import { googleService } from "../services/googleService"
@@ -25,6 +20,9 @@ import { resolvePublicChannel } from "../services/publicHandleMode"
 import type { SubscriptionPlanId } from "../services/subscriptionPlans"
 import { SettingsHelpSection } from "./settings/SettingsHelpSection"
 import { UnifiedAccountSettingsSection } from "./settings/UnifiedAccountSettingsSection"
+import { useUnifiedAccount } from "../context/UnifiedAccountContext"
+import { parseAccountIntent, sanitizeInternalReturnTo } from "../services/account/accountContracts"
+import { useEntitlement } from "../context/entitlementContext"
 
 const isTopupStripeConfigError = (message: string): boolean => {
   const lower = String(message || "").toLowerCase()
@@ -38,13 +36,14 @@ const isTopupStripeConfigError = (message: string): boolean => {
 const Settings: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { authState, updateBrain, channelConnection, connectChannel, disconnectChannel } = useBrain()
+  const { authState, channelConnection, connectChannel, disconnectChannel } = useBrain()
+  const account = useUnifiedAccount()
+  const entitlement = useEntitlement()
   const isAuth = authState.isAuthenticated
 
   const [geminiKey, setGeminiKey] = useState("")
   const [showKey, setShowKey] = useState(false)
   const [settingsSaveStatus, setSettingsSaveStatus] = useState<string | null>(null)
-  const [brainSaveStatus, setBrainSaveStatus] = useState<string | null>(null)
   const [handleInput, setHandleInput] = useState("")
   const [handleStatus, setHandleStatus] = useState<string | null>(null)
   const [exportStatus, setExportStatus] = useState<string | null>(null)
@@ -57,13 +56,11 @@ const Settings: React.FC = () => {
   const [notifyBilling, setNotifyBilling] = useState(true)
   const [customReferralCode, setCustomReferralCode] = useState("")
   const [customTopupAmount, setCustomTopupAmount] = useState("50")
-  const [brainWhatNext, setBrainWhatNext] = useState("")
-  const [brainPrimaryGoal, setBrainPrimaryGoal] = useState<BrainPrimaryGoal>("views")
-  const [brainAudienceNiche, setBrainAudienceNiche] = useState("")
 
   const query = new URLSearchParams(location.search)
   const highlightBilling = query.get("panel") === "billing"
-  const entitlement = getCurrentEntitlement()
+  const requestedAccountIntent = parseAccountIntent(query.get("intent"))
+  const requestedReturnTo = sanitizeInternalReturnTo(query.get("returnTo"))
   const canViewGeminiKey = entitlement.tier === "large" || isOwnerEmail(currentEmail)
   const isBasicPlan = entitlement.subscriptionPlanId === "basic"
   const showInternalOpsLink = isOwnerEmail(currentEmail)
@@ -83,28 +80,31 @@ const Settings: React.FC = () => {
     setGeminiKey(vault.gemini || "")
     setProfileName(authState.channelName || "")
     setProfileHandle(authState.channelHandle || "")
-    const brainContext = loadAiBrainContext()
-    setBrainWhatNext(brainContext.whatNext)
-    setBrainPrimaryGoal(brainContext.primaryGoal)
-    setBrainAudienceNiche(brainContext.audienceNiche)
   }, [authState.channelHandle, authState.channelName])
 
   useEffect(() => {
+    if (account.snapshot.profile.email) setCurrentEmail(account.snapshot.profile.email.toLowerCase())
+    if (account.snapshot.profile.displayName) setProfileName(account.snapshot.profile.displayName)
+  }, [account.snapshot.profile.displayName, account.snapshot.profile.email])
+
+  useEffect(() => {
     const syncBilling = async () => {
-      const authReady = isAuth && unifiedAuth.isAuthenticated()
+      const authReady = account.snapshot.authentication.status === "authenticated" || isAuth
       if (!authReady) {
-        setBillingStatus("Sign in to sync billing entitlements.")
+        setBillingStatus("Connect to sync billing entitlements.")
         return
       }
       try {
-        const userInfo = await googleService.getUserInfo()
-        setCurrentEmail((userInfo.email || "").toLowerCase())
-        await fetchEntitlementFromServer(userInfo.email)
+        if (!account.serverEnabled) {
+          const userInfo = await googleService.getUserInfo()
+          setCurrentEmail((userInfo.email || "").toLowerCase())
+        }
+        await fetchEntitlementFromServer()
         setBillingStatus("Entitlements synced with server.")
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         if (message.toLowerCase().includes("not authenticated")) {
-          setBillingStatus("Sign in to sync billing entitlements.")
+          setBillingStatus("Connect to sync billing entitlements.")
           return
         }
         console.error("Billing sync failed", error)
@@ -112,7 +112,22 @@ const Settings: React.FC = () => {
       }
     }
     syncBilling()
-  }, [isAuth])
+  }, [account.serverEnabled, account.snapshot.authentication.status, isAuth])
+
+  const handleAccountAction = async () => {
+    if (account.serverEnabled) {
+      const intent = requestedAccountIntent || account.intent
+      if (intent === "manage_account") return
+      await account.start(intent, requestedReturnTo)
+      return
+    }
+    await connectChannel()
+  }
+
+  const handleDisconnectAccountChannel = async () => {
+    if (account.serverEnabled) await account.disconnectGoogle()
+    disconnectChannel()
+  }
 
   useEffect(() => {
     if (!authState.channelHandle) return
@@ -159,8 +174,7 @@ const Settings: React.FC = () => {
 
   const handleChoosePlan = async (planId: SubscriptionPlanId) => {
     if (planId === "basic") {
-      updatePlanEntitlement("basic")
-      setBillingStatus("Free plan active. You can browse normally.")
+      setBillingStatus("Downgrades are managed securely through the billing portal.")
       return
     }
     try {
@@ -168,21 +182,25 @@ const Settings: React.FC = () => {
       setBillingStatus("Creating secure checkout session...")
       const session = await createCheckoutSession({
         planId,
-        userId: "local-user",
         successUrl: `${window.location.origin}/account?panel=billing`,
         cancelUrl: `${window.location.origin}/account?panel=billing`,
       })
       window.location.href = session.checkoutUrl
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      if (message.includes("not configured") || message.includes("failed (404)")) {
-        updatePlanEntitlement(planId)
-        setBillingStatus("Demo checkout applied locally (billing server not connected).")
-      } else {
-        setBillingStatus(`Checkout failed: ${message}`)
-      }
+      setBillingStatus(`Checkout failed: ${message}`)
     } finally {
       setLoadingPlan(null)
+    }
+  }
+
+  const handleOpenBillingPortal = async () => {
+    try {
+      setBillingStatus("Opening secure billing portal...")
+      const { portalUrl } = await createBillingPortalSession(`${window.location.origin}/account?panel=billing`)
+      window.location.assign(portalUrl)
+    } catch (error) {
+      setBillingStatus(`Billing portal failed: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
@@ -191,7 +209,6 @@ const Settings: React.FC = () => {
       setBillingStatus("Creating top-up checkout session...")
       const session = await createCheckoutSession({
         planId: "creator_plus",
-        userId: "local-user",
         successUrl: `${window.location.origin}/account?panel=billing`,
         cancelUrl: `${window.location.origin}/account?panel=billing`,
         mode: "topup",
@@ -204,12 +221,7 @@ const Settings: React.FC = () => {
         setBillingStatus("Top-up checkout is not configured yet. Add Stripe top-up price IDs in billing env.")
         return
       }
-      if (message.includes("not configured") || message.includes("failed (404)")) {
-        applyTopupCredits(topupSku)
-        setBillingStatus("Demo top-up applied locally (billing server not connected).")
-      } else {
-        setBillingStatus(`Top-up failed: ${message}`)
-      }
+      setBillingStatus(`Top-up failed: ${message}`)
     }
   }
 
@@ -223,7 +235,6 @@ const Settings: React.FC = () => {
       setBillingStatus("Creating custom top-up checkout session...")
       const session = await createCheckoutSession({
         planId: "creator_plus",
-        userId: "local-user",
         successUrl: `${window.location.origin}/account?panel=billing`,
         cancelUrl: `${window.location.origin}/account?panel=billing`,
         mode: "topup",
@@ -236,31 +247,8 @@ const Settings: React.FC = () => {
         setBillingStatus("Custom top-up checkout is not configured yet. Add Stripe top-up price IDs in billing env.")
         return
       }
-      if (message.includes("not configured") || message.includes("failed (404)")) {
-        const result = applyCustomTopupCredits(amountUsd)
-        const bonusLabel = result.bonusCredits > 0 ? ` (+${result.bonusCredits.toLocaleString()} bonus)` : ""
-        setBillingStatus(`Demo custom top-up applied: ${result.creditsGranted.toLocaleString()} credits${bonusLabel}.`)
-      } else {
-        setBillingStatus(`Custom top-up failed: ${message}`)
-      }
+      setBillingStatus(`Custom top-up failed: ${message}`)
     }
-  }
-
-  const handleSaveBrainContext = () => {
-    const saved = saveAiBrainContext({
-      whatNext: brainWhatNext,
-      primaryGoal: brainPrimaryGoal,
-      audienceNiche: brainAudienceNiche,
-    })
-    updateBrain({
-      creatorPreferences: {
-        what_next_goal: saved.whatNext,
-        primary_channel_goal: saved.primaryGoal,
-        audience_niche: saved.audienceNiche,
-      },
-    })
-    setBrainSaveStatus("Brain context saved.")
-    setTimeout(() => setBrainSaveStatus(null), 2500)
   }
 
   const handleRunSoftReset = async () => {
@@ -275,6 +263,18 @@ const Settings: React.FC = () => {
     await factoryResetAll()
     setDataResetStatus("Factory reset complete. Site data cleared.")
     setTimeout(() => setDataResetStatus(null), 3500)
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!confirm("Delete your ViewTube account? Active subscriptions must be canceled first. This cannot be undone.")) return
+    if (!confirm("Final confirmation: permanently delete this ViewTube account and its server-side onboarding and AI-credit records?")) return
+    try {
+      await account.deleteAccount()
+      await clearCachedDataSoft()
+      navigate("/", { replace: true })
+    } catch (error) {
+      setDataResetStatus(`Account deletion failed: ${error instanceof Error ? error.message : String(error)}`)
+    }
   }
 
   return (
@@ -293,10 +293,6 @@ const Settings: React.FC = () => {
 
       <UnifiedAccountSettingsSection
         billingStatus={billingStatus}
-        brainAudienceNiche={brainAudienceNiche}
-        brainPrimaryGoal={brainPrimaryGoal}
-        brainSaveStatus={brainSaveStatus}
-        brainWhatNext={brainWhatNext}
         canResolvePublicHandle={canResolvePublicHandle}
         canViewGeminiKey={canViewGeminiKey}
         currentEmail={currentEmail}
@@ -314,22 +310,21 @@ const Settings: React.FC = () => {
         meterTotal={meterTotal}
         meterUsed={meterUsed}
         notifyBilling={notifyBilling}
-        onBrainAudienceNicheChange={setBrainAudienceNiche}
-        onBrainPrimaryGoalChange={setBrainPrimaryGoal}
-        onBrainWhatNextChange={setBrainWhatNext}
         onChoosePlan={handleChoosePlan}
-        onConnectChannel={connectChannel}
+        onConnectChannel={handleAccountAction}
         onCustomReferralCodeChange={setCustomReferralCode}
         onCustomTopupAmountChange={setCustomTopupAmount}
-        onDisconnectChannel={disconnectChannel}
+        onDisconnectChannel={handleDisconnectAccountChannel}
+        onDeleteAccount={handleDeleteAccount}
         onExport={handleExport}
         onHandleInputChange={setHandleInput}
         onOpenGuide={(hash) => navigate(`/user-guide${hash}`)}
+        onOpenAiBrainIntake={() => navigate("/ai-brain?intake=1")}
+        onOpenBillingPortal={handleOpenBillingPortal}
         onOpenTransparencyCenter={() => navigate("/data-transparency")}
         onPublicResolve={handlePublicResolve}
         onRunFactoryReset={handleRunFactoryReset}
         onRunSoftReset={handleRunSoftReset}
-        onSaveBrainContext={handleSaveBrainContext}
         onSaveGeminiKey={handleSaveGeminiKey}
         onSetCustomReferralCode={() => {
           const result = setCustomReferralCodeOnce(customReferralCode)
@@ -346,7 +341,12 @@ const Settings: React.FC = () => {
         settingsSaveStatus={settingsSaveStatus}
         showInternalOpsLink={showInternalOpsLink}
         showKey={showKey}
-        channelConnection={channelConnection}
+        channelConnection={{
+          ...channelConnection,
+          isConnected: account.snapshot.google.status === "connected" || channelConnection.isConnected,
+          settingsLabel: account.label,
+          state: account.pending ? "authorizing" : channelConnection.state,
+        }}
       />
 
       <SettingsHelpSection onNavigate={navigate} />

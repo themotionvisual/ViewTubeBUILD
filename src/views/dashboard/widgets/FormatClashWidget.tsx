@@ -2,6 +2,8 @@ import React, { useMemo } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { PieChart } from "lucide-react"
 import { metricCellValue } from "../../../services/analytics/Selectors"
+import { useInitialChannelBootstrap } from "../../../context/InitialChannelBootstrapContext"
+import { getVtSyncSnapshot } from "../../../features/vt-sync-local"
 
 export const FormatClashWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onCycleHeight, onDecSize, onDecHeight, onRemove, data }: any) => {
  const common = {
@@ -18,26 +20,35 @@ export const FormatClashWidget = ({ widget, instance, editMode, onToggleCollapse
   onDecHeight,
  }
 
+ const { snapshot: initialBootstrap } = useInitialChannelBootstrap()
+
  const stats = useMemo(() => {
-  const rows = data.canonicalRows || []
+  const snapshot = getVtSyncSnapshot()
+  const syncRows = snapshot?.videos || []
+  const hasViewsInSync = syncRows.length > 0 && typeof syncRows[0]?.metrics?.views === "number"
+  const rows = hasViewsInSync ? syncRows : (initialBootstrap?.videos || data.canonicalRows || data.brain?.canonicalRows || [])
+
   const s = {
    shorts: { views: 0, watch: 0, subs: 0, rev: 0 },
    longs: { views: 0, watch: 0, subs: 0, rev: 0 },
   }
 
   rows.forEach((row: any) => {
-   const isShort = row.format === "shorts"
+   const isShort = row.format === "shorts" || row.duration < 60 || row.duration === "shorts" || row.VideoType === "shorts"
    const target = isShort ? s.shorts : s.longs
 
    const v = row.metrics || {}
-   target.views += metricCellValue(v.views) || 0
-   target.watch += metricCellValue(v.watchHours) || 0
-   target.subs += metricCellValue(v.subscribersGained) || 0
-   target.rev += metricCellValue(v.revenue) || 0
+   const vByWindow = row.metricsByWindow?.lifetime || {}
+
+   // Try to get metrics from VT sync, fallback to canonical
+   target.views += metricCellValue(vByWindow.views) || metricCellValue(v.views) || Number(row.Views) || 0
+   target.watch += metricCellValue(vByWindow.watchTimeHours) || metricCellValue(v.watchHours) || Number(row["Watch time (hours)"]) || 0
+   target.subs += metricCellValue(vByWindow.subscribersGained) || metricCellValue(v.subscribersGained) || Number(row.Subscribers) || 0
+   target.rev += metricCellValue(vByWindow.estimatedRevenue) || metricCellValue(v.revenue) || Number(row["Your estimated revenue (USD)"]) || 0
   })
 
   return s
- }, [data.canonicalRows])
+ }, [data.canonicalRows, data.brain?.canonicalRows, initialBootstrap])
 
   const renderPie = (title: string, shortsVal: number, longsVal: number) => {
     const total = shortsVal + longsVal
@@ -88,10 +99,10 @@ export const FormatClashWidget = ({ widget, instance, editMode, onToggleCollapse
     <WidgetShell {...common} icon={<PieChart size={22} />}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
         {/* Header Key */}
-        <div style={{ 
-          display: "flex", 
-          justifyContent: "space-between", 
-          alignItems: "center", 
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
           padding: "4px 8px"
         }}>
           <div style={{ display: "flex", gap: "8px" }}>

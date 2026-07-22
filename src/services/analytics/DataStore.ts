@@ -56,8 +56,16 @@ const YT_ANALYTICS_CACHE_KEY = "yt_analytics_cache"
 const warnedStorageReads = new Set<string>()
 
 export interface LedgerEntry {
- source: "youtube_analytics_v2" | "youtube_data_v3" | "ga4"
- context: "channel" | "video" | "traffic_source" | "geography" | "demographics"
+ source: "youtube_analytics_v2" | "youtube_data_v3" | "google_search_console" | "ga4"
+ context:
+  | "channel"
+  | "video"
+  | "traffic_source"
+  | "traffic_daily"
+  | "traffic_video"
+  | "search_console"
+  | "geography"
+  | "demographics"
  dimensions: string[]
  metrics: string[]
  payload: any // Exactly as it comes from API
@@ -158,6 +166,29 @@ export const writeYouTubeAnalyticsCache = (cache: RawAnalyticsCache): void => {
  localStorage.setItem(YT_ANALYTICS_CACHE_KEY, JSON.stringify(cache))
 }
 
+export const hasYouTubeAnalyticsCache = (
+ cache: RawAnalyticsCache = readYouTubeAnalyticsCache(),
+): boolean =>
+ Boolean(
+  cache.lastSynced ||
+   (Array.isArray(cache.videos) && cache.videos.length > 0) ||
+   (cache.profile && typeof cache.profile === "object") ||
+   (cache.ledger && Object.keys(cache.ledger).length > 0),
+ )
+
+export const clearYouTubeAnalyticsCache = async (): Promise<void> => {
+ try {
+  localStorage.removeItem(YT_ANALYTICS_CACHE_KEY)
+ } catch {
+  // no-op
+ }
+ try {
+  sessionStorage.removeItem(YT_ANALYTICS_CACHE_KEY)
+ } catch {
+  // no-op
+ }
+}
+
 /**
  * The dominant method to record API data.
  * Differentiates metrics with same names by namespacing the dimension.
@@ -198,13 +229,15 @@ export const commitToCanonicalAnalyticsStore = (
   localStorage.setItem(`yt_canonical_${channelId}`, JSON.stringify(payload));
 };
 
-export const commitToLedger = (entry: Omit<LedgerEntry, "syncedAt">): void => {
- const cache = readYouTubeAnalyticsCache()
- const ledger = cache.ledger || {}
+export const upsertLedgerEntry = (
+ cache: RawAnalyticsCache,
+ entry: Omit<LedgerEntry, "syncedAt">,
+): RawAnalyticsCache => {
+ const ledger = { ...(cache.ledger || {}) }
  const windowPart = entry.window ? `::${entry.window}` : ""
  const key = `${entry.source}::${entry.context}::${entry.dimensions.join(",")}${windowPart}`
  ledger[key] = { ...entry, syncedAt: Date.now() }
- writeYouTubeAnalyticsCache({ ...cache, ledger })
+ return { ...cache, ledger }
 }
 
 export const getWindowCapabilityReason = (

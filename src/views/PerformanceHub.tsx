@@ -5657,6 +5657,7 @@ const renderDataViz = () => {
     <ToolboxScaffold
      title="INTELLIGENCE HUB"
      icon={<BrainCircuit size={42} className="text-black" />}
+     paletteIndex={0}
      headerColor="bg-[#F3F25B]"
      textColor="text-black"
      iconBoxColor="bg-[#BD2EFF]"
@@ -5685,6 +5686,7 @@ const renderDataViz = () => {
     <ToolboxScaffold
      title="CHANNEL DATA"
      icon={<Zap size={42} className="text-black" />}
+     paletteIndex={1}
      headerColor="bg-[#FF7497]"
      textColor="text-black"
      iconBoxColor="bg-[#00CCFF]"
@@ -5720,6 +5722,7 @@ const renderDataViz = () => {
     <ToolboxScaffold
      title="MASTER DATA TABLES"
      icon={<Table2 size={42} className="text-black" />}
+     paletteIndex={2}
      headerColor="bg-[#EA73E8]"
      iconBoxColor="bg-[#CCFF00]"
      collapsible
@@ -5778,7 +5781,7 @@ const renderDataViz = () => {
      icon={<Activity size={42} className="text-black" />}
      headerColor="bg-[#CCFF00]"
      iconBoxColor="bg-[#00CCFF]"
-     paletteIndex={7}
+     paletteIndex={3}
      collapsible
      isOpen={isVisualLabOpen}
      onToggle={() =>

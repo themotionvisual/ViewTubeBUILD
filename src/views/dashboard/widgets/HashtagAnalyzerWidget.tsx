@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { useEntitlement } from "../../../app/AppShell"
+import { useEntitlement } from "../../../context/entitlementContext"
 import { Hash, Sparkles, Copy, Check, TrendingUp, TrendingDown, Minus } from "lucide-react"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"

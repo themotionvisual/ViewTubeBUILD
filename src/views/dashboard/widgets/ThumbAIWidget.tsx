@@ -33,7 +33,7 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
   const [isProcessing, setIsProcessing] = useState(false)
   const [result, setResult] = useState<any>(null)
 
-  const videos = data.canonicalRows || []
+  const videos = data.videoAssets || []
   
   // For fallback analysis mock
   const activeVideo = videos.find((v: any) => v.videoId === selectedVideo)
@@ -212,7 +212,7 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
                  <option value="" disabled>Select a video to analyze...</option>
                  {videos
                   .filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase()))
-                  .slice(0, 15)
+                  .slice(0, 50)
                   .map((v: any) => (
                    <option key={v.videoId} value={v.videoId}>{v.title || v.id}</option>
                  ))}

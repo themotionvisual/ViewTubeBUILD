@@ -1,6 +1,5 @@
 import React, { useCallback, useState, useEffect, useRef } from "react"
 import {
- fetchVideoList,
  fetchVideoDetails,
  updateVideo,
  updateVideoThumbnail,
@@ -19,7 +18,10 @@ import type {
  Playlist,
  PlaylistMembership,
 } from "../services/youtubeService"
-import { useBrain } from "../context/useBrain"
+import { useUnifiedAccount } from "../context/UnifiedAccountContext"
+import { useVideoAssetCatalog } from "../context/VideoAssetCatalogContext"
+import { useNavigate } from "react-router-dom"
+import { buildAccountRoute } from "../services/account/accountContracts"
 // Removed isChannelConnected import
 import {
  generateTagSuggestions,
@@ -189,13 +191,38 @@ interface VideoManagerProps {
 
 type VideoListLoadState = "idle" | "loading" | "success" | "empty" | "error"
 const MAX_TAG_CHARS = 500
+const normalizeVideoSnippets = (input: unknown[]): VideoSnippet[] =>
+ input
+  .map((video) => {
+   const record = (video || {}) as Record<string, unknown>
+   const videoId = String(record.videoId || "").trim()
+   return {
+    videoId,
+    title: String(record.title || "").trim(),
+    publishedAt: String(record.publishedAt || ""),
+    thumbnail: String(
+     record.thumbnailUrl ||
+      record.thumbnail ||
+      `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+    ),
+   }
+  })
+  .filter((video) => video.videoId.length > 0)
+
 const VideoManager: React.FC<VideoManagerProps> = ({
  embedded = false,
  collapsible = false,
  isOpenInitial = true,
  paletteIndex,
 }) => {
- const { authState, login } = useBrain()
+ const account = useUnifiedAccount()
+ const {
+  snapshot: catalogSnapshot,
+  connected,
+  ensure: ensureCatalog,
+  search: searchCatalog,
+ } = useVideoAssetCatalog()
+ const navigate = useNavigate()
  const basePalette = paletteIndex ?? 0
  const [videos, setVideos] = useState<VideoSnippet[]>([])
  const [videoSearchQuery, setVideoSearchQuery] = useState("")
@@ -243,7 +270,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
  const [isDraggingThumbnail, setIsDraggingThumbnail] = useState(false)
-  const [cacheTick, setCacheTick] = useState(0)
  const [isOpen, setIsOpen] = useState(isOpenInitial)
  const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false)
  const [videoListLoadState, setVideoListLoadState] =
@@ -252,7 +278,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  const chooseVideoPalette = getToolboxPaletteColors(basePalette + 1)
  const updateDetailsPalette = getToolboxPaletteColors(basePalette + 5)
 
- const connected = authState.isAuthenticated
  const showHeaderLoadAssetsButton = videos.length === 0
 
  const formatVideoLoadError = (err: any) => {
@@ -261,31 +286,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    return "YouTube session expired. Reconnect your channel in Settings, then reload assets."
   }
   return raw
- }
-
- const normalizeVideoSnippets = (input: unknown[]): VideoSnippet[] =>
-  input
-   .map((video) => {
-    const record = (video || {}) as Record<string, unknown>
-     return {
-      videoId: String(record.videoId || "").trim(),
-      title: String(record.title || "").trim(),
-      publishedAt: String(record.publishedAt || ""),
-      thumbnail: `https://img.youtube.com/vi/${String(record.videoId || "").trim()}/hqdefault.jpg`,
-     }
-   })
-   .filter((video) => video.videoId.length > 0)
-
- const getCachedVideos = (): VideoSnippet[] => {
-  try {
-   const raw = localStorage.getItem("yt_analytics_cache")
-   if (!raw) return []
-   const parsed = JSON.parse(raw) as { videos?: any[] }
-   const fromCache = Array.isArray(parsed?.videos) ? parsed.videos : []
-   return normalizeVideoSnippets(fromCache)
-  } catch {
-   return []
-  }
  }
 
  // Derived: the full selected video object used throughout JSX
@@ -310,13 +310,13 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  }, [])
 
 
- const loadInitialData = async () => {
+ const loadInitialData = useCallback(async (force = false) => {
   setVideoListLoadState("loading")
   setLoading(true)
   setError(null)
   try {
    const results = await Promise.allSettled([
-   Promise.resolve(getCachedVideos()),
+    ensureCatalog({ force, reason: force ? "manual" : "boot" }),
     fetchUserPlaylists(),
    ])
 
@@ -324,16 +324,26 @@ const VideoManager: React.FC<VideoManagerProps> = ({
     throw results[0].reason;
    }
 
-   const videoList = results[0].value || [];
+   const catalogSnapshot = results[0].value
+   const videoList = normalizeVideoSnippets(catalogSnapshot.items)
    const playlists = results[1].status === "fulfilled" ? results[1].value : [];
 
    setVideos(videoList)
    setUserPlaylists(playlists)
    setHasLoadedInitialData(true)
-   setVideoListLoadState(videoList.length === 0 ? "empty" : "success")
+   setVideoListLoadState(
+    catalogSnapshot.status === "confirmed_empty"
+     ? "empty"
+     : catalogSnapshot.status === "error" && videoList.length === 0
+      ? "error"
+      : videoList.length > 0
+       ? "success"
+       : "loading",
+   )
+   setError(catalogSnapshot.error?.message || null)
    if (videoList.length > 0) {
-    console.info("[VideoManager] Hydrated videos from analytics cache", {
-     source: "yt_analytics_cache.videos",
+    console.info("[VideoManager] Hydrated videos from shared asset catalog", {
+     source: catalogSnapshot.source,
      count: videoList.length,
     })
    } else if (connected) {
@@ -351,59 +361,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   } finally {
    setLoading(false)
   }
- }
-
-  const loadVideos = async (
-   query?: string,
-   options?: { background?: boolean; searching?: boolean },
-  ) => {
-   if (!query) setVideoListLoadState("loading")
-   if (!options?.background) setLoading(true)
-   if (options?.searching) setIsSearchingVideos(true)
-   try {
-    const data = query ? await fetchVideoList(50, query) : getCachedVideos()
-    setVideos(data)
-    if (!query) {
-     setVideoListLoadState(data.length === 0 ? "empty" : "success")
-     if (data.length > 0) {
-      console.info("[VideoManager] Reload hydrated videos from analytics cache", {
-       source: "yt_analytics_cache.videos",
-       count: data.length,
-      })
-     } else if (connected) {
-      console.info("[VideoManager] Empty video list after reload", {
-       isAuthenticated: connected,
-      })
-     }
-    }
-   } catch (err: any) {
-    setError(formatVideoLoadError(err))
-    if (!query) setVideoListLoadState("error")
-   } finally {
-    if (options?.searching) setIsSearchingVideos(false)
-    if (!options?.background) setLoading(false)
-   }
-  }
-
- const refreshVideosAfterSync = useCallback(async () => {
-  if (!connected) return
-  try {
-   setVideoListLoadState("loading")
-   const cacheVideos = getCachedVideos()
-   setVideos(cacheVideos)
-   setHasLoadedInitialData(true)
-   setVideoListLoadState(cacheVideos.length === 0 ? "empty" : "success")
-   setError(null)
-   console.info("[VideoManager] Sync refresh complete", {
-    cacheCount: cacheVideos.length,
-    finalCount: cacheVideos.length,
-   })
-  } catch (err: any) {
-   console.error("[VideoManager] Sync refresh failed", err)
-   setError(formatVideoLoadError(err))
-   setVideoListLoadState("error")
-  }
- }, [connected])
+ }, [connected, ensureCatalog])
 
  useEffect(() => {
   const delayDebounceFn = setTimeout(() => {
@@ -411,29 +369,23 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    const nextQuery = videoSearchQuery.trim()
    if (nextQuery === lastSearchRef.current) return
    lastSearchRef.current = nextQuery
-   loadVideos(nextQuery || undefined, { background: true, searching: true })
+   setIsSearchingVideos(true)
+   setVideos(normalizeVideoSnippets(searchCatalog(nextQuery, 50)))
+   setIsSearchingVideos(false)
   }, 260)
   return () => clearTimeout(delayDebounceFn)
- }, [videoSearchQuery, dropdownOpen])
+ }, [dropdownOpen, searchCatalog, videoSearchQuery])
 
  useEffect(() => {
-  const onSynced = (event: Event) => {
-   setCacheTick((v) => v + 1)
-   const detail = (event as CustomEvent<{ videos?: unknown[] }>).detail
-   const syncedVideos = Array.isArray(detail?.videos)
-    ? normalizeVideoSnippets(detail.videos)
-    : []
-   if (syncedVideos.length > 0) {
-    setVideos(syncedVideos)
-    setHasLoadedInitialData(true)
-    setVideoListLoadState("success")
-    setError(null)
-   }
-   void refreshVideosAfterSync()
-  }
-  window.addEventListener("yt_analytics_synced", onSynced)
-  return () => window.removeEventListener("yt_analytics_synced", onSynced)
- }, [refreshVideosAfterSync])
+  const nextVideos = normalizeVideoSnippets(searchCatalog(videoSearchQuery, 50))
+  setVideos(nextVideos)
+  setHasLoadedInitialData(catalogSnapshot.status !== "idle")
+  if (catalogSnapshot.status === "confirmed_empty") setVideoListLoadState("empty")
+  else if (catalogSnapshot.status === "error" && nextVideos.length === 0) setVideoListLoadState("error")
+  else if (nextVideos.length > 0) setVideoListLoadState("success")
+  else if (catalogSnapshot.status === "restoring" || catalogSnapshot.status === "refreshing") setVideoListLoadState("loading")
+  setError(catalogSnapshot.error?.message || null)
+ }, [catalogSnapshot.error, catalogSnapshot.revision, catalogSnapshot.status, searchCatalog, videoSearchQuery])
 
  useEffect(() => {
   if (!connected) {
@@ -445,7 +397,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
 
   hasTriggeredInitialLoadRef.current = true
   loadInitialData()
- }, [connected, hasLoadedInitialData, collapsible, isOpen])
+ }, [collapsible, connected, hasLoadedInitialData, isOpen, loadInitialData])
 
  useEffect(() => {
   if (!connected) return
@@ -455,6 +407,15 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   if (!firstVideoId) return
   handleSelectVideo(firstVideoId, userPlaylists)
  }, [connected, videos, selectedVideoId, userPlaylists])
+
+ useEffect(() => {
+  if (!selectedVideoId) return
+  if (catalogSnapshot.items.some((video) => video.videoId === selectedVideoId)) return
+  setSelectedVideoId(null)
+  setVideoDetails(null)
+  setVideoStats(null)
+  setVideoAnalytics(null)
+ }, [catalogSnapshot.channelId, catalogSnapshot.items, catalogSnapshot.revision, selectedVideoId])
 
  const handleSelectVideo = async (
   videoId: string,
@@ -679,7 +640,10 @@ const VideoManager: React.FC<VideoManagerProps> = ({
 
    setSaveSuccess(true)
    handleSelectVideo(selectedVideoId, userPlaylists)
-   loadVideos(videoSearchQuery || undefined, { background: true }) // refresh title in list
+   setVideos((current) => current.map((video) =>
+    video.videoId === selectedVideoId ? { ...video, title: editTitle } : video,
+   ))
+   void ensureCatalog({ force: true, reason: "manual" })
   } catch (err: any) {
    setError("Save failed: " + err.message)
   } finally {
@@ -853,7 +817,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
     revenue: Number(videoAnalytics?.estimatedRevenue || 0),
    }
   }
- }, [selectedVideoId, videoStats, videoAnalytics, cacheTick])
+ }, [selectedVideoId, videoStats, videoAnalytics, catalogSnapshot.revision])
 
   const kpiCards = [
   {
@@ -1000,9 +964,9 @@ const VideoManager: React.FC<VideoManagerProps> = ({
        metadata, and run AI tag analysis.
       </p>
       <button
-       onClick={login}
+       onClick={() => navigate(buildAccountRoute(account.intent, "/video-manager"))}
        className="w-full bg-[#FF3399] text-white border-[4px] border-black rounded-xl p-4 font-black uppercase text-xl shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex items-center justify-center gap-3">
-       <Sparkles size={24} /> Connect YouTube Account
+       <Sparkles size={24} /> {account.label}
       </button>
      </div>
     </div>
@@ -1031,7 +995,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
        event.stopPropagation()
        lastSearchRef.current = ""
        setVideoSearchQuery("")
-       loadInitialData()
+       void loadInitialData(true)
       }}
       disabled={loading}
       className={`h-[38px] px-4 rounded-[12px] border-[3px] border-black bg-black text-white text-[10px] font-black uppercase tracking-[0.14em] shadow-[2px_2px_0px_0px_black] transition-all ${
@@ -1144,7 +1108,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       <Edit size={100} strokeWidth={1} className="mb-2 opacity-50" />
       Ready To Sync Channel Assets
       <button
-       onClick={loadInitialData}
+       onClick={() => void loadInitialData(true)}
        disabled={loading}
        className="bg-[#CCFF00] text-black px-8 py-4 rounded-xl border-[4px] border-black shadow-[6px_6px_0px_0px_black] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-sm">
        {loading ? "Loading..." : "Load Channel Assets"}
@@ -1168,7 +1132,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
         {error || "We couldn't load your YouTube assets. Try reload, or reconnect your channel in Settings."}
        </p>
        <button
-        onClick={loadInitialData}
+        onClick={() => void loadInitialData(true)}
         disabled={loading}
         className="inline-block w-full bg-[#CCFF00] border-[4px] border-black rounded-xl p-5 font-black uppercase text-xl text-black shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all mt-4 disabled:opacity-50">
         {loading ? "Retrying..." : "Retry Sync"}
@@ -1195,7 +1159,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
          Open YouTube Studio
         </a>
         <button
-         onClick={loadInitialData}
+         onClick={() => void loadInitialData(true)}
          disabled={loading}
          className="inline-block w-full bg-white border-[4px] border-black rounded-xl p-4 font-black uppercase text-sm text-black shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50">
          {loading ? "Syncing..." : "Reload Assets"}
@@ -1313,7 +1277,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
        <SubToolbox
         title="Video Details"
         icon={<Settings size={20} strokeWidth={3} />}
-        paletteIndex={basePalette + 1}
         collapsible
         isOpenInitial={true}
         shellClassName="h-full"
@@ -1398,7 +1361,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
        <SubToolbox
         title="Thumbnail"
         icon={<ImageIcon size={20} strokeWidth={3} />}
-        paletteIndex={basePalette + 1}
         collapsible
         isOpenInitial={true}
         shellClassName="h-full"
@@ -1456,7 +1418,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
        </SubToolbox>
       </div>
 
-      <SubToolbox title="Description" icon={<AlignLeft size={18} strokeWidth={3} />} paletteIndex={basePalette + 3} collapsible isOpenInitial={true}>
+      <SubToolbox title="Description" icon={<AlignLeft size={18} strokeWidth={3} />} collapsible isOpenInitial={true}>
        <StandardTextArea
         value={editDescription}
         onChange={(e) => setEditDescription(e.target.value)}
@@ -1467,7 +1429,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       <SubToolbox
        title="Video Tags"
        icon={<Tag size={20} strokeWidth={3} />}
-       paletteIndex={basePalette + 4}
        collapsible
        isOpen={isTagsExpanded}
        onToggle={() => setIsTagsExpanded((prev) => !prev)}

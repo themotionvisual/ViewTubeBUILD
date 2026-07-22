@@ -54,12 +54,14 @@ interface StoryboardStudioProps {
  embedded?: boolean
  collapsible?: boolean
  isOpenInitial?: boolean
+ paletteIndex?: number
 }
 
 const StoryboardStudio: React.FC<StoryboardStudioProps> = ({
  embedded = false,
  collapsible = false,
  isOpenInitial = true,
+ paletteIndex = 0,
 }) => {
  const audioStatus = getAudioProviderStatus()
  const { brain, registerProvider, unregisterProvider, setStoryboardState } =
@@ -299,6 +301,7 @@ const StoryboardStudio: React.FC<StoryboardStudioProps> = ({
   <ToolboxScaffold
    title="STORYBOARD STUDIO"
    icon={<Video size={40} strokeWidth={3} className="text-black" />}
+   paletteIndex={paletteIndex}
    headerColor="bg-[#FFB158]"
    iconBoxColor="bg-[#FF6666]"
    collapsible={collapsible}

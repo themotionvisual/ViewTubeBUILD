@@ -341,7 +341,6 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
        collapsible
        title="Concept"
        icon={<CustomIcon name="!!!IDEA" size={20} />}
-       paletteIndex={2}
        isOpenInitial={true}>
        <div className="space-y-4">
         <StandardTextArea
@@ -378,7 +377,6 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
        collapsible
        title="Styles"
        icon={<CustomIcon name="!!!COLLECTION" size={20} />}
-       paletteIndex={1}
        isOpenInitial={false}>
        <div className="grid grid-cols-3 gap-2">
         {THUMBNAIL_STYLES.map((style) => (
@@ -396,7 +394,6 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
        collapsible
        title="Expression"
        icon={<span className="text-lg">😲</span>}
-       paletteIndex={3}
        isOpenInitial={false}>
        <div className="grid grid-cols-2 gap-2">
         {EXPRESSIONS.map((expr) => (
@@ -418,7 +415,6 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
        collapsible
        title="Hook Text"
        icon={<CustomIcon name="!!!TEXT" size={20} />}
-       paletteIndex={0}
        isOpenInitial={false}>
        <div className="space-y-2">
         <StandardInput
@@ -448,7 +444,6 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
        collapsible
        title="Images"
        icon={<CustomIcon name="image" size={20} />}
-       paletteIndex={5}
        isOpenInitial={false}>
        <div className="space-y-4">
         <StandardUploadBox
@@ -498,7 +493,6 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
        collapsible
        title="Palette (60-30-10)"
        icon={<CustomIcon name="paint-bucket" size={20} />}
-       paletteIndex={4}
        isOpenInitial={false}>
        <div className="flex justify-between items-start gap-3 py-2">
         {palette.map((c, i) => {

@@ -2,7 +2,7 @@
    TOOLBOX UI SYSTEM — CANONICAL DESIGN TOKENS
    Extracted verbatim from widget-preview copy 9.html
    Source: ToolboxUISystem.tsx CONFIG + CONTROL_SHELL
-   
+
    This file is imported by DashboardBarrier.tsx to provide
    the exact same CSS classes used in widget-preview.html
 ═══════════════════════════════════════════════════════════ */
@@ -120,7 +120,7 @@
 
 .dashboard-barrier .vt-widget-body {
   background: var(--bg-widget);
-  padding: 10px;
+  padding: 0;
   color: var(--text-main);
   transition: all var(--transition);
   display: flex;
@@ -275,9 +275,13 @@
 
 .dashboard-barrier .vt-input:focus,
 .dashboard-barrier .vt-textarea:focus {
-  border-color: var(--widget-color, #00CCFF);
-  box-shadow: none;
-  outline: none;
+  border-color: var(--widget-color, #00CCFF) !important;
+  background: color-mix(in srgb, var(--widget-color, #fff) 6%, white) !important;
+  box-shadow:
+    inset 0 0 0 0 transparent,
+    0 0 0 3px color-mix(in srgb, var(--widget-color, #00CCFF) 35%, transparent),
+    0 0 16px 2px color-mix(in srgb, var(--widget-color, #00CCFF) 55%, transparent) !important;
+  outline: none !important;
 }
 
 .dashboard-barrier .vt-select {
@@ -297,7 +301,7 @@
   cursor: pointer;
   box-shadow: 2px 2px 0 0 color-mix(in srgb, var(--widget-color, #000) 40%, transparent);
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
-  
+
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -412,13 +416,13 @@
 
 .dashboard-barrier .vt-textarea::-webkit-resizer {
   background-image: linear-gradient(
-    135deg, 
-    transparent 50%, 
-    #000 50%, #000 60%, 
-    transparent 60%, transparent 70%, 
-    #000 70%, #000 80%, 
-    transparent 80%, transparent 90%, 
-    #000 90%, #000 100%
+    135deg,
+    transparent 50%,
+    var(--widget-color, #00CCFF) 50%, var(--widget-color, #00CCFF) 60%,
+    transparent 60%, transparent 70%,
+    var(--widget-color, #00CCFF) 70%, var(--widget-color, #00CCFF) 80%,
+    transparent 80%, transparent 90%,
+    var(--widget-color, #00CCFF) 90%, var(--widget-color, #00CCFF) 100%
   );
   background-size: 10px 10px;
   background-repeat: no-repeat;
@@ -427,12 +431,12 @@
 
 .dashboard-barrier .vt-textarea:focus::-webkit-resizer {
   background-image: linear-gradient(
-    135deg, 
-    transparent 50%, 
-    var(--widget-color, #00CCFF) 50%, var(--widget-color, #00CCFF) 60%, 
-    transparent 60%, transparent 70%, 
-    var(--widget-color, #00CCFF) 70%, var(--widget-color, #00CCFF) 80%, 
-    transparent 80%, transparent 90%, 
+    135deg,
+    transparent 50%,
+    var(--widget-color, #00CCFF) 50%, var(--widget-color, #00CCFF) 60%,
+    transparent 60%, transparent 70%,
+    var(--widget-color, #00CCFF) 70%, var(--widget-color, #00CCFF) 80%,
+    transparent 80%, transparent 90%,
     var(--widget-color, #00CCFF) 90%, var(--widget-color, #00CCFF) 100%
   );
 }

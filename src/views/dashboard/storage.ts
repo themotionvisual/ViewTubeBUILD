@@ -14,18 +14,398 @@ const defaultInstanceFor = (widgetId: string): WidgetInstanceState => ({
 })
 
 export const buildDefaultDashboardLayout = (): DashboardLayoutState => {
-  const instances: Record<string, WidgetInstanceState> = {}
-  DEFAULT_DASHBOARD_WIDGET_ORDER.forEach((id) => {
-    instances[id] = defaultInstanceFor(id)
-  })
-
   return {
-    schemaVersion: DASHBOARD_SCHEMA_VERSION,
-    locked: false,
-    order: [...DEFAULT_DASHBOARD_WIDGET_ORDER],
-    hidden: [],
-    instances,
+  "schemaVersion": 7,
+  "locked": false,
+  "order": [
+    "kpi-cluster",
+    "community-post",
+    "comment-replier",
+    "consistency-heatmap",
+    "realtime-performance",
+    "goals-tracker",
+    "keyword-engine",
+    "daily-oracle",
+    "ask-me",
+    "ai-journal",
+    "image-generator",
+    "data-edit",
+    "traffic-sources",
+    "shorts-vs-long",
+    "publish-momentum",
+    "audience-matrix",
+    "system-micro-stack",
+    "brain-hub",
+    "thumb-ai",
+    "quick-actions",
+    "ai-prompt-box",
+    "revenue-momentum",
+    "superfan-card",
+    "keyword-overlap-intelligence",
+    "bridge-efficiency",
+    "retention-sim",
+    "upload-scheduler",
+    "flight-check",
+    "title-rewriter",
+    "description-editor",
+    "hashtag-analyzer",
+    "tag-generator",
+    "reach-funnel",
+    "alerts-feed",
+    "mini-calendar",
+    "task-stack",
+    "collab-matchmaker",
+    "channel-overview",
+    "audience-retention",
+    "relative-retention-benchmark",
+    "ad-stack-intelligence",
+    "revenue-chart",
+    "recent-uploads",
+    "top-performer",
+    "alerts-ticker",
+    "burnout-monitor"
+  ],
+  "hidden": [
+    "top-performer",
+    "recent-uploads",
+    "burnout-monitor",
+    "alerts-ticker",
+    "revenue-chart",
+    "channel-overview",
+    "relative-retention-benchmark",
+    "audience-retention",
+    "ad-stack-intelligence",
+    "reach-funnel",
+    "alerts-feed",
+    "collab-matchmaker",
+    "mini-calendar",
+    "task-stack"
+  ],
+  "instances": {
+    "kpi-cluster": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "third",
+      "height": "tall"
+    },
+    "channel-overview": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "medium"
+    },
+    "mini-calendar": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "half",
+      "height": "medium"
+    },
+    "task-stack": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "medium"
+    },
+    "quick-actions": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "third",
+      "height": "xtall"
+    },
+    "recent-uploads": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "third",
+      "height": "medium"
+    },
+    "top-performer": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "third",
+      "height": "medium"
+    },
+    "alerts-feed": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "half",
+      "height": "medium"
+    },
+    "ai-prompt-box": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "third",
+      "height": "medium"
+    },
+    "revenue-momentum": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "third",
+      "height": "medium"
+    },
+    "superfan-card": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "half",
+      "height": "medium"
+    },
+    "system-micro-stack": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "medium"
+    },
+    "consistency-heatmap": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "medium"
+    },
+    "goals-tracker": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "medium"
+    },
+    "alerts-ticker": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "full",
+      "height": "medium"
+    },
+    "tag-generator": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "medium"
+    },
+    "revenue-chart": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "half",
+      "height": "medium"
+    },
+    "community-post": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "third",
+      "height": "tall"
+    },
+    "thumb-ai": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "half",
+      "height": "medium"
+    },
+    "description-editor": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "medium"
+    },
+    "realtime-performance": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "medium"
+    },
+    "keyword-engine": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "medium"
+    },
+    "keyword-overlap-intelligence": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "medium"
+    },
+    "publish-momentum": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "tall"
+    },
+    "traffic-sources": {
+      "collapsed": true,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "tall"
+    },
+    "audience-retention": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "half",
+      "height": "medium"
+    },
+    "shorts-vs-long": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "tall"
+    },
+    "comment-replier": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "third",
+      "height": "tall"
+    },
+    "reach-funnel": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "half",
+      "height": "medium"
+    },
+    "relative-retention-benchmark": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "half",
+      "height": "medium"
+    },
+    "ad-stack-intelligence": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "half",
+      "height": "medium"
+    },
+    "audience-matrix": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "tall"
+    },
+    "bridge-efficiency": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "companion",
+      "height": "medium"
+    },
+    "ask-me": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "third",
+      "height": "xtall"
+    },
+    "daily-oracle": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "third",
+      "height": "xtall"
+    },
+    "flight-check": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "half",
+      "height": "medium"
+    },
+    "image-generator": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "half",
+      "height": "xtall"
+    },
+    "data-edit": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "half",
+      "height": "xtall"
+    },
+    "title-rewriter": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "medium"
+    },
+    "retention-sim": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "medium"
+    },
+    "upload-scheduler": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "medium"
+    },
+    "hashtag-analyzer": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "quarter",
+      "height": "medium"
+    },
+    "burnout-monitor": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "half",
+      "height": "medium"
+    },
+    "collab-matchmaker": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "half",
+      "height": "medium"
+    },
+    "ai-journal": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "third",
+      "height": "xtall"
+    },
+    "brain-hub": {
+      "collapsed": false,
+      "pinned": false,
+      "focus": false,
+      "size": "half",
+      "height": "xtall"
+    }
   }
+} as unknown as DashboardLayoutState;
 }
 
 const clampSize = (widgetId: string, size: DashboardSizeBucket): DashboardSizeBucket => {

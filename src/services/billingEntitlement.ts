@@ -105,7 +105,6 @@ export interface CreditLedgerEntry {
 
 export interface CheckoutSessionRequest {
  planId: SubscriptionPlanId
- userId: string
  successUrl: string
  cancelUrl: string
  referralCode?: string
@@ -117,6 +116,20 @@ export interface CheckoutSessionResponse {
  sessionId: string
  checkoutUrl: string
  provider: "stripe"
+}
+
+export const createBillingPortalSession = async (returnUrl: string): Promise<{ portalUrl: string }> => {
+ const configuredBase = import.meta.env.VITE_BILLING_API_BASE as string | undefined
+ const apiBase = String(configuredBase || (typeof window !== "undefined" ? window.location.origin : "")).replace(/\/$/, "")
+ const response = await fetch(`${apiBase}/billing/portal-session`, {
+  method: "POST",
+  credentials: "include",
+  headers: { "Content-Type": "application/json", Accept: "application/json" },
+  body: JSON.stringify({ returnUrl }),
+ })
+ const payload = (await response.json().catch(() => ({}))) as { portalUrl?: string; error?: string }
+ if (!response.ok || !payload.portalUrl) throw new Error(payload.error || `Billing portal failed (${response.status}).`)
+ return { portalUrl: payload.portalUrl }
 }
 
 export interface StripeWebhookLikeEvent {
@@ -691,6 +704,25 @@ export const saveReferralRedemptionCode = (code: string): void => {
 export const getReferralRedemptionCode = (): string =>
  String(localStorage.getItem(REFERRAL_REDEMPTION_KEY) || "").trim().toUpperCase()
 
+export const syncReferralCodeToChannelHandle = (
+ rawHandle: string,
+ now = new Date(),
+): EntitlementState => {
+ const current = syncEntitlementIfDrifted(now)
+ if (current.referralCodeLocked) return current
+
+ const code = sanitizeReferralCode(String(rawHandle || "").replace(/^@+/, ""))
+ if (code.length < 3 || code === current.referralCode) return current
+
+ const next = ensureCompatibilityFields({
+  ...current,
+  referralCode: code,
+  updatedAtIso: now.toISOString(),
+ })
+ writeStoredEntitlement(next)
+ return next
+}
+
 export const consumeAiTokens = (units = 1): { next: EntitlementState; allowed: boolean } => {
  const current = syncEntitlementIfDrifted()
  if (isOwnerMode()) return { next: current, allowed: true }
@@ -731,6 +763,7 @@ export const createCheckoutSession = async (
  const checkoutUrl = `${apiBase.replace(/\/$/, "")}/billing/checkout-session`
  const response = await fetch(checkoutUrl, {
   method: "POST",
+  credentials: "include",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify(payload),
  })
@@ -800,21 +833,13 @@ export const handleStripeWebhook = (event: StripeWebhookLikeEvent): EntitlementS
  return current
 }
 
-export async function fetchEntitlementFromServer(email: string): Promise<EntitlementState> {
- setKnownUserEmail(email)
- if (isOwnerEmail(email)) {
-  const ownerState = syncEntitlementIfDrifted()
-  writeStoredEntitlement(ownerState)
-  return ownerState
- }
- const apiBase = (import.meta.env?.VITE_BILLING_API_BASE) as
-  | string
-  | undefined
- if (!apiBase) {
-  throw new Error("VITE_BILLING_API_BASE is not configured")
- }
+export async function fetchEntitlementFromServer(_legacyEmail?: string): Promise<EntitlementState> {
+ const configuredBase = (import.meta.env?.VITE_BILLING_API_BASE) as string | undefined
+ const apiBase = String(configuredBase || (typeof window !== "undefined" ? window.location.origin : "")).trim()
+ if (!apiBase) throw new Error("Billing API is not configured")
  const response = await fetch(
-  `${apiBase.replace(/\/$/, "")}/billing/entitlement/${encodeURIComponent(email)}`,
+  `${apiBase.replace(/\/$/, "")}/billing/entitlement`,
+  { credentials: "include", headers: { Accept: "application/json" } },
  )
  if (!response.ok) {
   throw new Error(`Failed to fetch entitlement (${response.status})`)

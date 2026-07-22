@@ -1,19 +1,26 @@
 /// <reference types="vite/client" />
 
+import { beginAccountIntent, isUnifiedAccountServerEnabled } from "../account/accountCoordinator"
+
 const KEY_VT_AUTH = 'vt_auth';
 const KEY_SESSION_LEGACY = 'vt_session';
+let cachedAuthObj: Record<string, unknown> | null = null;
 
 const getAuthObj = () => {
+  if (cachedAuthObj) return cachedAuthObj;
   try {
-    return JSON.parse(localStorage.getItem(KEY_VT_AUTH) || '{}');
+    cachedAuthObj = JSON.parse(localStorage.getItem(KEY_VT_AUTH) || '{}');
   } catch {
-    return {};
+    cachedAuthObj = {};
   }
+  return cachedAuthObj;
 };
 
 const updateAuthObj = (updates: any) => {
   const current = getAuthObj();
-  localStorage.setItem(KEY_VT_AUTH, JSON.stringify({ ...current, ...updates }));
+  cachedAuthObj = { ...current, ...updates };
+  localStorage.setItem(KEY_VT_AUTH, JSON.stringify(cachedAuthObj));
+  window.dispatchEvent(new Event('vt_auth_changed'));
 };
 
 const LEGACY_CLIENT_ID_FALLBACK = '365513395077-1cpc5mgn763t62ggcujkgbiv11rdbhsv.apps.googleusercontent.com';
@@ -120,6 +127,10 @@ const setImplicitSession = (accessToken: string, expiresInSeconds: number) => {
  * Opens a popup or redirects to Google, user authenticates, Google redirects back with token in the URL hash.
  */
 export const login = async (mode: 'popup' | 'redirect' = 'popup'): Promise<void> => {
+  if (isUnifiedAccountServerEnabled()) {
+    await beginAccountIntent('connect_channel')
+    return
+  }
   migrateLegacySessionIfNeeded();
 
   const clientId = getConfiguredClientId();
@@ -219,9 +230,10 @@ export const isAuthenticated = (): boolean => {
 };
 
 export const logout = (): void => {
+  cachedAuthObj = null;
   localStorage.removeItem(KEY_VT_AUTH);
-  localStorage.removeItem('yt_analytics_cache');
   localStorage.removeItem(KEY_SESSION_LEGACY);
+  window.dispatchEvent(new Event('vt_auth_changed'));
 };
 
 export const getSessionMeta = (): AuthSessionMeta => {
@@ -251,6 +263,9 @@ export const unifiedAuth: UnifiedAuthContract = {
 
 // --- OAUTH REDIRECT LISTENER FOR POPUP (Implicit Flow) ---
 if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event: StorageEvent) => {
+    if (event.key === KEY_VT_AUTH) cachedAuthObj = null;
+  });
   const hash = window.location.hash;
   
   // Check for implicit grant token in hash fragment

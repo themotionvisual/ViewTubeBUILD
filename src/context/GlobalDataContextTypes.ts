@@ -9,7 +9,12 @@ import type {
  VideoSyncBatchState,
  BrainMemorySchema,
  Project,
+ ChannelBootPhase,
+ ChannelIdentitySnapshot,
+ InitialDashboardHydrationStatus,
 } from "../types"
+import type { AnalyticsSyncAction } from "../services/analytics/SyncPipeline"
+import type { ChannelConnectionSnapshot } from "../services/connectionState"
 
 export interface GlobalDataContextProps {
  brain: WorkspaceBrain
@@ -41,8 +46,10 @@ export interface GlobalDataContextProps {
  setResearchLabState: (
   updates: Partial<WorkspaceBrain["researchLabState"]>,
  ) => void
- login: () => void
+ login: () => void | Promise<void>
  logout: () => void
+ connectChannel: () => Promise<void>
+ disconnectChannel: () => void
  addJournalEntry: (content: string, category: any) => void
  addFollowUp: (id: string, q: string) => void
  answerFollowUp: (id: string, a: string) => void
@@ -50,11 +57,26 @@ export interface GlobalDataContextProps {
  answerMicroPollRaw?: (id: string, opt: string) => void
  setMicroPolls: (p: any[]) => void
  isSyncing: boolean
+ isAuthorizing: boolean
  lastSyncComplete: string | null
  syncStatus: ChannelAnalysisSyncStatus
  syncBatch: VideoSyncBatchState
+ activeSyncAction: AnalyticsSyncAction | null
+ activeSyncButtonId: string | null
+ channelConnection: ChannelConnectionSnapshot
+ channelIdentity: ChannelIdentitySnapshot
+ channelBootPhase: ChannelBootPhase
+ initialDashboardHydrationStatus: InitialDashboardHydrationStatus
  globalSyncData: (options?: {
  batchMode?: "initial" | "next"
+  syncAction?: AnalyticsSyncAction
+  syncButtonId?: string
+  enrichmentMode?: "core" | "video_metrics" | "traffic" | "segments" | "all"
+ }) => Promise<void>
+ syncChannelData: (options?: {
+  batchMode?: "initial" | "next"
+  syncAction?: AnalyticsSyncAction
+  syncButtonId?: string
   enrichmentMode?: "core" | "video_metrics" | "traffic" | "segments" | "all"
  }) => Promise<void>
  syncMetrics: (force?: boolean) => Promise<void>
@@ -100,6 +122,10 @@ export const defaultBrain: WorkspaceBrain = {
   conceptDraft: "",
   variations: [],
  },
+ analyticalConstraints: {
+  provenFormats: [],
+  forbiddenTopics: [],
+ },
  calendarState: {
   events: [],
   viewMode: "month",
@@ -124,12 +150,18 @@ export const defaultBrain: WorkspaceBrain = {
   nicheInsights: [],
   opportunityGaps: [],
  },
+ videoFlags: {},
  channelyticsState: {
   allData: [],
   topPerformers: [],
   retentionBenchmarks: [],
   deepSegments: null as any,
  },
+ journalEntries: [],
+ journalFollowUps: [],
+ microPolls: [],
+ creatorPreferences: {},
+ lastSyncDate: null,
  retentionCache: {},
 }
 
@@ -181,11 +213,53 @@ export const fallbackContext: GlobalDataContextProps = {
  setResearchLabState: () => {},
  login: () => {},
  logout: () => {},
+ connectChannel: async () => {},
+ disconnectChannel: () => {},
  isSyncing: false,
+ isAuthorizing: false,
  lastSyncComplete: null,
  syncStatus: defaultSyncStatus,
  syncBatch: defaultSyncBatch,
+ activeSyncAction: null,
+ activeSyncButtonId: null,
+ channelConnection: {
+  state: "disconnected",
+  hasSession: false,
+  isVerified: false,
+  isConnected: false,
+  isSyncing: false,
+  hasLocalData: false,
+  title: "Not connected",
+  subtitle: "Channel not connected",
+  helper: "Connect once, then every channel-linked surface uses the same verified session.",
+  topBarLabel: "Connect Channel",
+  sidebarLabel: "Connect YouTube",
+  settingsLabel: "Connect Channel",
+  statusLabel: "Not connected",
+  channelName: "Not connected",
+  handleText: "@not-connected",
+ },
+ channelIdentity: {
+  channelId: null,
+  name: null,
+  handle: null,
+  avatarUrl: null,
+  subscriberCount: null,
+  totalViews: null,
+  videoCount: null,
+  isVerified: false,
+  isPartial: true,
+  lastHydratedAt: null,
+ },
+ channelBootPhase: "idle",
+ initialDashboardHydrationStatus: {
+  identityReady: false,
+  lifetimeReady: false,
+  inventoryReady: false,
+  lastUpdatedAt: null,
+ },
  globalSyncData: async () => {},
+ syncChannelData: async () => {},
  syncMetrics: async () => {},
  addJournalEntry: () => {},
  addFollowUp: () => {},
@@ -200,4 +274,24 @@ export const fallbackContext: GlobalDataContextProps = {
  aiModel: 'gemini-3.1-flash-lite',
  setAiModel: () => {},
  fetchAndCacheRetention: async () => null,
+}
+
+export const defaultChannelIdentity: ChannelIdentitySnapshot = {
+ channelId: null,
+ name: null,
+ handle: null,
+ avatarUrl: null,
+ subscriberCount: null,
+ totalViews: null,
+ videoCount: null,
+ isVerified: false,
+ isPartial: true,
+ lastHydratedAt: null,
+}
+
+export const defaultInitialDashboardHydrationStatus: InitialDashboardHydrationStatus = {
+ identityReady: false,
+ lifetimeReady: false,
+ inventoryReady: false,
+ lastUpdatedAt: null,
 }

@@ -4,15 +4,14 @@ import { CheckCircle2, Lock, Sparkles } from "lucide-react"
 import type { SubscriptionPlanId } from "../services/subscriptionPlans"
 import {
  createCheckoutSession,
- fetchEntitlementFromServer,
  getReferralRedemptionCode,
  saveReferralRedemptionCode,
- getCurrentEntitlement,
- isOwnerEmail,
- setKnownUserEmail,
- updatePlanEntitlement,
 } from "../services/billingEntitlement"
-import { updateOnboardingState } from "../services/onboardingState"
+import { useUnifiedAccount } from "../context/UnifiedAccountContext"
+import { activateUnifiedFreePlan, updateUnifiedOnboarding } from "../services/account/accountCoordinator"
+import { useBrain } from "../context/useBrain"
+import { buildAccountRoute } from "../services/account/accountContracts"
+import { useEntitlement } from "../context/entitlementContext"
 
 const plans: Array<{
  id: SubscriptionPlanId
@@ -36,7 +35,7 @@ const plans: Array<{
   description: "Community-driven access. Use your own Gemini API key for all AI features. No credit card required.",
   price: "$0",
   bullets: ["Unlimited AI (BYOK)", "Full strategy stack", "No credit card"],
-  cta: "Join Beta",
+  cta: "Connect Beta",
  },
  {
   id: "creator",
@@ -75,6 +74,19 @@ const plans: Array<{
 const Subscribe: React.FC = () => {
  const navigate = useNavigate()
  const location = useLocation()
+ const account = useUnifiedAccount()
+ const entitlement = useEntitlement()
+ const { authState, connectChannel } = useBrain()
+ const accountAuthenticated = account.serverEnabled
+  ? account.snapshot.authentication.status === "authenticated"
+  : authState.isAuthenticated
+ const startAccount = async (pendingPlan?: SubscriptionPlanId | null) => {
+  const resumeQuery = new URLSearchParams(location.search)
+  if (pendingPlan) resumeQuery.set("plan", pendingPlan)
+  const resumePath = `/subscribe${resumeQuery.size ? `?${resumeQuery.toString()}` : ""}`
+  if (account.serverEnabled) navigate(buildAccountRoute(account.intent, resumePath))
+  else await connectChannel()
+ }
  const query = useMemo(() => new URLSearchParams(location.search), [location.search])
  const from = query.get("from") || "/"
  const need = query.get("need") || "free"
@@ -82,42 +94,28 @@ const Subscribe: React.FC = () => {
  const [status, setStatus] = useState("")
  const [referralCode, setReferralCode] = useState(() => getReferralRedemptionCode())
  const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
- const [signupEmail, setSignupEmail] = useState(
-  () => String(localStorage.getItem("vt_signup_email") || "").trim().toLowerCase(),
- )
- const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanId | null>(null)
-
- const entitlement = getCurrentEntitlement()
-
- const persistSignupEmail = async (): Promise<string | null> => {
-  const normalized = String(signupEmail || "").trim().toLowerCase()
-  if (!normalized || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
-   setStatus("Enter a valid email to continue signup.")
-   return null
-  }
-  localStorage.setItem("vt_signup_email", normalized)
-  setKnownUserEmail(normalized)
-  updateOnboardingState({ emailCaptured: true })
-  if (isOwnerEmail(normalized)) {
-   await fetchEntitlementFromServer(normalized)
-   setStatus("Owner account recognized. You can continue signup or checkout.")
-  } else {
-   setStatus("Email saved. Continue with plan selection.")
-  }
-  return normalized
- }
+ const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanId | null>(() => {
+  const plan = query.get("plan") as SubscriptionPlanId | null
+  return plans.some((candidate) => candidate.id === plan) ? plan : null
+ })
 
  const startCheckout = async () => {
   if (!selectedPlan) {
    setStatus("Select a plan to continue.")
    return
   }
-  const userEmail = await persistSignupEmail()
-  if (!userEmail) return
+  if (!accountAuthenticated) {
+   await startAccount(selectedPlan)
+   return
+  }
 
   if (selectedPlan === "basic" || selectedPlan === "beta") {
-   updatePlanEntitlement(selectedPlan)
-   updateOnboardingState({ accountActivated: true, billingConfirmed: true })
+   if (!account.serverEnabled) {
+    setStatus("The unified account server must be enabled before activating a plan.")
+    return
+   }
+   await activateUnifiedFreePlan(selectedPlan)
+   await updateUnifiedOnboarding({ status: "in_progress", nextStep: "first_sync" })
    navigate("/?onboarding=welcome", { replace: true })
    return
   }
@@ -127,7 +125,6 @@ const Subscribe: React.FC = () => {
    setStatus("Creating secure checkout session...")
    const session = await createCheckoutSession({
     planId: selectedPlan,
-    userId: userEmail,
     successUrl: `${window.location.origin}/?onboarding=welcome`,
     cancelUrl: `${window.location.origin}/subscribe`,
     referralCode: referralCode || undefined,
@@ -148,7 +145,7 @@ const Subscribe: React.FC = () => {
 
  const stepTitle =
   step === 1
-   ? "Step 1 • Email"
+   ? "Step 1 • Account"
    : step === 2
    ? "Step 2 • Plan"
    : step === 3
@@ -177,22 +174,22 @@ const Subscribe: React.FC = () => {
       <div className="text-xs font-black uppercase tracking-[0.2em]">{stepTitle}</div>
       {step === 1 && (
         <div className="mt-3 space-y-3">
-          <input
-            type="email"
-            value={signupEmail}
-            onChange={(e) => setSignupEmail(e.target.value.toLowerCase())}
-            placeholder="Email for account signup"
-            className="w-full max-w-[420px] border-[3px] border-black rounded-xl px-3 py-2 font-black"
-          />
+          <p className="max-w-[620px] text-sm font-bold">
+            {accountAuthenticated
+              ? `Signed in as ${account.snapshot.profile.email || "your ViewTube account"}.`
+              : "Create or restore your ViewTube account before selecting a subscription."}
+          </p>
           <button
             onClick={async () => {
-              const ok = await persistSignupEmail()
-              if (!ok) return
+              if (!accountAuthenticated) {
+                await startAccount(selectedPlan)
+                return
+              }
               setStep(2)
             }}
             className="border-[3px] border-black rounded-xl px-4 py-2 bg-[#4FFF5B] font-black uppercase text-xs shadow-[3px_3px_0px_0px_black]"
           >
-            Continue
+            {accountAuthenticated ? "Continue" : account.label}
           </button>
         </div>
       )}
@@ -206,7 +203,7 @@ const Subscribe: React.FC = () => {
                   key={plan.id}
                   onClick={() => {
                     setSelectedPlan(plan.id)
-                    updateOnboardingState({ planSelected: true })
+                    void updateUnifiedOnboarding({ status: "in_progress", nextStep: "referral" })
                   }}
                   className={`text-left border-[3px] rounded-2xl p-3 shadow-[3px_3px_0px_0px_black] ${
                     active ? "border-black bg-[#C9F830]" : "border-black bg-white"
@@ -245,7 +242,7 @@ const Subscribe: React.FC = () => {
             <button
               onClick={() => {
                 saveReferralRedemptionCode(referralCode)
-                updateOnboardingState({ referralStepCompleted: true })
+                void updateUnifiedOnboarding({ status: "in_progress", nextStep: "activate_plan" })
                 setStep(4)
               }}
               className="border-[3px] border-black rounded-xl px-4 py-2 bg-[#4FFF5B] font-black uppercase text-xs shadow-[3px_3px_0px_0px_black]"
@@ -254,7 +251,7 @@ const Subscribe: React.FC = () => {
             </button>
             <button
               onClick={() => {
-                updateOnboardingState({ referralStepCompleted: true })
+                void updateUnifiedOnboarding({ status: "in_progress", nextStep: "activate_plan" })
                 setStep(4)
               }}
               className="border-[3px] border-black rounded-xl px-4 py-2 bg-white font-black uppercase text-xs shadow-[3px_3px_0px_0px_black]"

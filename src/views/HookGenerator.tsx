@@ -156,7 +156,6 @@ const HookGenerator: React.FC<HookGeneratorProps> = ({
      <SubToolbox
       title="Input Data"
       icon={<Magnet size={20} strokeWidth={3} />}
-      paletteIndex={paletteIndex}
       collapsible
       isOpenInitial={true}
      >

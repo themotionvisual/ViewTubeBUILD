@@ -15,7 +15,14 @@ import type {
  VideoRetentionCache,
  Project,
 } from "../types"
+import { syncChannelBootstrap } from "../services/canonicalSync/channelBootstrapSync"
 import { unifiedAuth } from "../services/auth/authSession"
+import {
+ beginAccountIntent,
+ fetchUnifiedAccountSnapshot,
+ isUnifiedAccountServerEnabled,
+} from "../services/account/accountCoordinator"
+import { resolveAccountIntent } from "../services/account/accountContracts"
 import { requestGoogleOAuthTermsConsent } from "../services/googleOAuthConsent"
 import { readYouTubeAnalyticsCache } from "../services/analytics/DataStore"
 import {
@@ -43,6 +50,7 @@ import {
  runFirstRunBrainOnboardingBootstrap,
  refreshToolContextPack,
 } from "../services/brain"
+import { applyVtSyncPrivacyFilters, getVtSyncSnapshot } from "../features/vt-sync-local"
 import { resolveChannelConnectionSnapshot } from "../services/connectionState"
 import type {
  ChannelBootPhase,
@@ -401,7 +409,11 @@ const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
    source: "auth_boot" | "manual_sync" | "event" = "manual_sync",
   ) => {
    try {
-    const snapshot = await runFirstRunBrainOnboardingBootstrap({ cache, source })
+    const snapshot = await runFirstRunBrainOnboardingBootstrap({
+     cache,
+     vtSyncSnapshot: applyVtSyncPrivacyFilters(getVtSyncSnapshot()),
+     source,
+    })
     if (snapshot.toolContextPack) {
      await refreshToolContextPack(snapshot.toolContextPack.channelId)
     }
@@ -1110,58 +1122,42 @@ const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
  const connectChannel = useCallback(async () => {
   if (loginBootPromiseRef.current) return loginBootPromiseRef.current
 
+  if (isUnifiedAccountServerEnabled()) {
+   const accountSnapshot = await fetchUnifiedAccountSnapshot()
+   await beginAccountIntent(resolveAccountIntent(accountSnapshot))
+   return
+  }
+
   const bootPromise = (async () => {
    const acceptedTerms = await requestGoogleOAuthTermsConsent()
    if (!acceptedTerms) return
 
    setIsAuthorizing(true)
-   setIsSyncing(true)
    setChannelBootPhase("oauth")
    setInitialDashboardHydrationStatus(defaultInitialDashboardHydrationStatus)
    try {
     await unifiedAuth.login()
     ensureLoginToken()
     setAuthStateRaw((prev) => ({ ...prev, isAuthenticated: true }))
-    const {
-     syncAuthoritativeMetadata,
-     syncFastAnalyticsTotals,
-     syncFastChannelLifetimeSummary,
-     syncRecentVideoSnapshot,
-    } = await import("../services/youtube/coreLifetimeSync")
-
     setChannelBootPhase("identity")
-    let metadata: Record<string, any>
-    try {
-     metadata = await syncAuthoritativeMetadata()
-    } catch (metadataError) {
-     if (isUnauthorizedError(metadataError)) {
-      unifiedAuth.logout()
-      setAuthStateRaw(defaultAuthState)
-      setChannelIdentity(defaultChannelIdentity)
-      setInitialDashboardHydrationStatus(defaultInitialDashboardHydrationStatus)
-      setChannelBootPhase("idle")
-      console.warn("Channel authorization failed; reconnect required.", metadataError)
-      return
-     }
-     throw metadataError
-    }
+    const { channel: metadata } = await syncChannelBootstrap(`connect-channel::${Date.now()}`)
     const metadataIdentity = {
-     channelId: String(metadata.id || metadata.channelId || "").trim() || null,
+     channelId: String(metadata.channelId || "").trim() || null,
      name: String(metadata.title || "").trim() || null,
-     handle: String(metadata.customUrl || "").trim().replace(/^@/, "") || null,
+     handle: String(metadata.handle || "").trim().replace(/^@/, "") || null,
      avatarUrl:
       String(
-       metadata.thumbnail ||
+       metadata.thumbnails?.high?.url ||
         metadata.thumbnails?.medium?.url ||
         metadata.thumbnails?.default?.url ||
         "",
       ).trim() || null,
      subscriberCount: preferPreciseSubscriberCount(
-      metadata.statistics?.subscriberCount,
+      metadata.currentSubscribers,
       authState.subscriberCount,
      ),
-     totalViews: Number(metadata.statistics?.viewCount || 0) || 0,
-     videoCount: Number(metadata.statistics?.videoCount || 0) || 0,
+     totalViews: metadata.publicViewCount,
+     videoCount: metadata.publicVideoCount,
      isVerified: true,
      isPartial: false,
      lastHydratedAt: String(metadata.syncedAt || new Date().toISOString()),
@@ -1173,42 +1169,13 @@ const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
       lastUpdatedAt: String(metadata.syncedAt || new Date().toISOString()),
     }))
 
-    setChannelBootPhase("lifetime")
-    await Promise.allSettled([
-      syncFastAnalyticsTotals(),
-      syncFastChannelLifetimeSummary(metadata as Record<string, any>),
-    ])
-
-    setChannelBootPhase("inventory")
-    const batchState = {
-      ...defaultSyncBatch,
-      initialLimit: defaultSyncBatch.initialLimit,
-      incrementSize: 50,
-      cursor: 0,
-      hasMore: true,
-      lastBatchCount: 0,
-    }
-    try {
-      localStorage.setItem("vt_video_sync_batch_state", JSON.stringify(batchState))
-    } catch {
-      // no-op
-    }
-    setSyncBatch(batchState)
-
-    if (metadata.uploadsPlaylistId) {
-      await syncRecentVideoSnapshot(String(metadata.uploadsPlaylistId))
-    }
-
-    setChannelBootPhase("syncing")
-    try {
-      await globalSyncData({
-       batchMode: "initial",
-       syncAction: "core_video_data",
-       enrichmentMode: "core",
-      })
-    } catch (syncErr) {
-      console.warn("Auto initial sync after login failed:", syncErr)
-    }
+    setInitialDashboardHydrationStatus({
+     identityReady: true,
+     lifetimeReady: false,
+     inventoryReady: false,
+     lastUpdatedAt: metadata.syncedAt,
+    })
+    hydrateAuthStateFromAnalyticsCache()
     setChannelBootPhase("ready")
    } catch (err) {
     if (isUnauthorizedError(err)) {
@@ -1226,8 +1193,8 @@ const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
      lastAuthAbortLogAt = now
      console.warn(
       isLoginAbortError(err)
-       ? "Channel login was cancelled or timed out."
-       : "Channel login failed.",
+       ? "Channel connection was cancelled or timed out."
+       : "Channel connection failed.",
       err,
      )
     }
@@ -1240,7 +1207,7 @@ const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
 
   loginBootPromiseRef.current = bootPromise
   return bootPromise
- }, [applyChannelIdentity, globalSyncData])
+ }, [applyChannelIdentity, authState.subscriberCount, hydrateAuthStateFromAnalyticsCache])
 
  const disconnectChannel = useCallback(() => {
   setAuthStateRaw(defaultAuthState)

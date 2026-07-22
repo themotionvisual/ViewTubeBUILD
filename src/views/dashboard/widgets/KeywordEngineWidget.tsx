@@ -2,35 +2,11 @@ import React, { useMemo } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Search } from "lucide-react"
 import { metricCellValue } from "../../../services/analytics/Selectors"
+import { useInitialChannelBootstrap } from "../../../context/InitialChannelBootstrapContext"
+import { getVtSyncSnapshot } from "../../../features/vt-sync-local"
 
 const STOP_WORDS = new Set([
- "the",
- "a",
- "an",
- "and",
- "or",
- "but",
- "in",
- "on",
- "with",
- "for",
- "to",
- "of",
- "from",
- "at",
- "by",
- "is",
- "are",
- "was",
- "were",
- "this",
- "that",
- "it",
- "as",
- "be",
- "how",
- "what",
- "why",
+ "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "with", "of", "is", "are", "was", "were", "this", "that", "it", "how", "what", "why", "when", "where", "you", "your", "my", "i",
 ])
 
 export const KeywordEngineWidget = ({
@@ -39,8 +15,8 @@ export const KeywordEngineWidget = ({
  editMode,
  onToggleCollapse,
  onCycleSize,
- onDecSize,
  onCycleHeight,
+ onDecSize,
  onDecHeight,
  onRemove,
  data,
@@ -52,19 +28,28 @@ export const KeywordEngineWidget = ({
   canEdit: true,
   onToggleCollapse,
   onCycleSize,
+  onCycleHeight,
   onRemove,
   onDecSize,
-  onCycleHeight,
   onDecHeight,
  }
 
+ const { snapshot: initialBootstrap } = useInitialChannelBootstrap()
+
  const keywords = useMemo(() => {
-  const rows = data.canonicalRows || []
+  const snapshot = getVtSyncSnapshot()
+  const syncRows = snapshot?.videos || []
+  const hasViewsInSync = syncRows.length > 0 && typeof syncRows[0]?.metrics?.views === "number"
+  const rows = hasViewsInSync ? syncRows : (initialBootstrap?.videos || data.canonicalRows || data.brain?.canonicalRows || [])
+
   const map = new Map<string, { views: number; count: number }>()
 
   rows.forEach((row: any) => {
-   const title = row.title || ""
-   const views = metricCellValue(row.metrics?.views) || 0
+   const originalData = row.originalData || row._originalData || {}
+   const title = row.title || originalData["Video title"] || ""
+   const v = row.metrics || {}
+   const vByWindow = row.metricsByWindow?.lifetime || {}
+   const views = metricCellValue(vByWindow.views) || metricCellValue(v.views) || Number(row.Views) || Number(originalData.Views) || 0
 
    const words = title
     .toLowerCase()
@@ -73,7 +58,7 @@ export const KeywordEngineWidget = ({
    const uniqueWords = Array.from(new Set(words)) // count each word max once per video
 
    uniqueWords.forEach((word) => {
-    if (word.length < 3 || STOP_WORDS.has(word)) return
+    if (typeof word !== "string" || word.length < 3 || STOP_WORDS.has(word)) return
     if (!map.has(word)) map.set(word, { views: 0, count: 0 })
     const stat = map.get(word)!
     stat.views += views
@@ -82,13 +67,13 @@ export const KeywordEngineWidget = ({
   })
 
   const list = Array.from(map.entries())
-   .filter(([_, stat]) => stat.count > 1) // Must be used in >1 video to avoid 1-hit wonder skew
+   .filter(([_, stat]) => stat.count >= 2) // must appear in at least 2 videos
    .map(([word, stat]) => ({word, avgViews: Math.round(stat.views / stat.count), count: stat.count, onDecSize, onCycleHeight, onDecHeight}))
    .sort((a, b) => b.avgViews - a.avgViews)
    .slice(0, 10)
 
   return list
- }, [data.canonicalRows])
+ }, [data.canonicalRows, data.brain?.canonicalRows, initialBootstrap])
 
  const maxViews = Math.max(...keywords.map((k) => k.avgViews), 1)
 

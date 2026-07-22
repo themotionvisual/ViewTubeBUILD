@@ -3,6 +3,7 @@ import { WidgetShell } from "../WidgetShell"
 import { BarChart3, AlertTriangle, Sparkles, Upload } from "lucide-react"
 import { CustomDropdown } from "./DataEditWidget"
 import { compressMediaForAnalysis } from "../../../services/analysisCompression"
+import { buildVideoAssetOptions } from "./videoAssetOptions"
 
 const STORAGE_KEY = "vt_retention_reports"
 
@@ -21,7 +22,7 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
   onCycleHeight,
   onDecHeight,
  }
- const videos = data.canonicalRows || []
+ const videos = data.videoAssets || []
  const [syntheticVideos, setSyntheticVideos] = useState<any[]>([])
  const [selectedVideo, setSelectedVideo] = useState("")
  const [videoSearch, setVideoSearch] = useState("")
@@ -138,10 +139,7 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
        <CustomDropdown 
         value={selectedVideo} 
         onChange={(val) => setSelectedVideo(val)} 
-        options={[
-         { val: "", lbl: "Select a video..." },
-         ...allVideos.slice(0, 15).filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase())).map((v: any) => ({val: v.videoId, lbl: v.title, onDecSize, onCycleHeight, onDecHeight}))
-        ]}
+        options={buildVideoAssetOptions(allVideos, videoSearch, 50)}
        />
       </div>
       <input 

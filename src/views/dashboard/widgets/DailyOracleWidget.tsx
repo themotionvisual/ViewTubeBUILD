@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { useEntitlement } from "../../../app/AppShell"
+import { useEntitlement } from "../../../context/entitlementContext"
 import { Sparkles, Zap, ArrowRight, Check, RefreshCw } from "lucide-react"
 import { useBrain } from "../../../context/useBrain"
 import { generateOracleAdvice } from "../../../services/gemini"

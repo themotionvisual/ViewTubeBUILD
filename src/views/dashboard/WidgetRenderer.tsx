@@ -23,7 +23,15 @@ import {
   Download,
   Settings,
   MoreVertical,
-  Maximize2
+  Maximize2,
+  Image as ImageIcon,
+  MessageSquare,
+  MessageCircle,
+  Monitor,
+  Rocket,
+  Magnet,
+  RefreshCw,
+  BookOpen,
  } from "lucide-react"
 import { useVideoComments, type VideoComment } from "./useVideoComments"
 import type { DashboardData } from "./useDashboardData"
@@ -983,31 +991,69 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  if (widget.id === "quick-actions") {
   return (
    <WidgetShell {...common} icon={<Layers size={22} />}>
-    <div
-     style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(2, 1fr)",
-      gap: "4px",
-     }}>
-     {data.quickActions.map((action, idx) => (
-      <button
-       key={idx}
-       onClick={() => onNavigate(action.to)}
-       style={{
-        height: "40px",
-        border: "2px solid #000",
-        borderRadius: "10px",
-        background: idx % 2 === 0 ? "#4FFF5B" : "#579AFF",
-        fontSize: "9px",
-        fontWeight: 900,
-        textTransform: "uppercase",
-        boxShadow: "2px 2px 0 0 #000",
-        cursor: "pointer",
-       }}>
-       {action.label}
-      </button>
-     ))}
-    </div>
+    {(() => {
+      const pages = data.quickActions.filter((a: any) => !a.isTool);
+      const tools = data.quickActions.filter((a: any) => a.isTool);
+
+      const renderAction = (action: any, idx: number, forcePrimary: boolean) => {
+        let IconComponent = Layers;
+        if (action.icon === "Video") IconComponent = Video;
+        else if (action.icon === "Upload") IconComponent = Upload;
+        else if (action.icon === "Activity") IconComponent = Activity;
+        else if (action.icon === "Image") IconComponent = ImageIcon;
+        else if (action.icon === "MessageSquare") IconComponent = MessageSquare;
+        else if (action.icon === "MessageCircle") IconComponent = MessageCircle;
+        else if (action.icon === "Monitor") IconComponent = Monitor;
+        else if (action.icon === "Rocket") IconComponent = Rocket;
+        else if (action.icon === "Magnet") IconComponent = Magnet;
+        else if (action.icon === "WandSparkles") IconComponent = WandSparkles;
+        else if (action.icon === "Layers") IconComponent = Layers;
+        else if (action.icon === "CalendarDays") IconComponent = CalendarDays;
+        else if (action.icon === "Bot") IconComponent = Bot;
+        else if (action.icon === "RefreshCw") IconComponent = RefreshCw;
+        else if (action.icon === "Edit3") IconComponent = Edit3;
+        else if (action.icon === "Settings") IconComponent = Settings;
+        else if (action.icon === "BookOpen") IconComponent = BookOpen;
+
+        return (
+         <button
+          key={idx}
+          onClick={() => onNavigate(action.to)}
+          className={`vt-button split primary`}
+          style={{
+           "--widget-color": action.color || undefined,
+           fontSize: "12px",
+           border: action.isTool ? "2px solid #000" : undefined,
+           color: action.isTool ? "#000" : undefined,
+          } as React.CSSProperties}
+         >
+          <span className="split-icon" style={{
+              ...(action.iconColor ? { color: action.iconColor } : {}),
+              ...(action.isTool ? { color: "#000", borderRight: "2px solid #000" } : {})
+          }}>
+            <IconComponent size={18} strokeWidth={2.5} />
+          </span>
+          <span className="split-label">{action.label}</span>
+         </button>
+        )
+      }
+
+      return (
+        <div
+         style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, 1fr)",
+          gap: "4px",
+         }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            {pages.map((action: any, idx: number) => renderAction(action, idx, true))}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            {tools.map((action: any, idx: number) => renderAction(action, idx, true))}
+          </div>
+        </div>
+      )
+    })()}
    </WidgetShell>
   )
  }

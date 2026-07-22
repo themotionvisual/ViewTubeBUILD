@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { useEntitlement } from "../../../app/AppShell"
+import { useEntitlement } from "../../../context/entitlementContext"
 import {
  MessageSquare,
  Send,

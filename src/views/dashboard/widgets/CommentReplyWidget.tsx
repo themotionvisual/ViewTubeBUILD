@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { useEntitlement } from "../../../app/AppShell"
+import { useEntitlement } from "../../../context/entitlementContext"
 import {
   MessageSquare,
   Sparkles,
@@ -75,7 +75,7 @@ export const CommentReplyWidget = ({
     selectedIds.size === 0 ? true : canAffordAiTokensFromState(entitlement, selectedDraftCost)
 
   const channelId = data.brain?.channelProfile?.id || data.authState?.channelId || ""
-  const canonicalVideos = useMemo(() => data.canonicalRows || data.brain?.canonicalRows || [], [data])
+  const canonicalVideos = useMemo(() => data.videoAssets || [], [data.videoAssets])
 
   const syncMetadata = async (threads: any[]) => {
     if (isSyncingMetadata) return

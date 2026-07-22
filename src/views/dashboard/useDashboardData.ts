@@ -3,6 +3,9 @@ import { useBrain } from "../../context/useBrain"
 import { getMasterRows, getMetricSummary, metricCellValue } from "../../services/analytics/Selectors"
 import { readYouTubeAnalyticsCache } from "../../services/analytics/DataStore"
 import { reportToRows } from "../performanceHubUtils"
+import { useVideoAssetCatalog } from "../../context/VideoAssetCatalogContext"
+import { useInitialChannelBootstrap } from "../../context/InitialChannelBootstrapContext"
+import { getToolboxPaletteColors, getNavPaletteColor } from "../../styles/toolboxPalette"
 
 const formatHumanNumber = (value: unknown): string => {
   const parsed = Number(value)
@@ -43,6 +46,8 @@ const formatRelativeTime = (timestamp?: number | null) => {
 
 export const useDashboardData = () => {
   const { brain, authState, lastSyncComplete, isSyncing, globalSyncData } = useBrain()
+  const { snapshot: videoAssetCatalog } = useVideoAssetCatalog()
+  const { snapshot: initialBootstrap } = useInitialChannelBootstrap()
   const channelHandle = authState.channelHandle
 
   const summary28d = useMemo(() => getMetricSummary("28d", "hybrid", brain.csvFiles || []), [lastSyncComplete, channelHandle, brain.csvFiles])
@@ -119,16 +124,51 @@ export const useDashboardData = () => {
     ? recentSnapshot.reduce((acc, v: any) => acc + (Number(v.statistics?.likeCount || 0) + Number(v.statistics?.commentCount || 0)), 0) / recentSnapshot.length
     : 0
 
+  const current28 = initialBootstrap?.periods.find((summary) =>
+    summary.window === "28d" && (summary.period || "current") === "current")
+  const previous28 = initialBootstrap?.periods.find((summary) =>
+    summary.window === "28d" && summary.period === "previous")
+  const metric = (key: string): number | null => {
+    const value = current28?.metrics[key]
+    return typeof value === "number" && Number.isFinite(value) ? value : null
+  }
+  const previousMetric = (key: string): number | null => {
+    const value = previous28?.metrics[key]
+    return typeof value === "number" && Number.isFinite(value) ? value : null
+  }
+  const trendFor = (current: number | null, previous: number | null): string | null => {
+    if (current === null || previous === null) return null
+    if (previous === 0) return current > 0 ? "New" : null
+    const change = ((current - previous) / Math.abs(previous)) * 100
+    return `${change >= 0 ? "▲" : "▼"} ${change >= 0 ? "+" : ""}${change.toFixed(1)}%`
+  }
+  const countUploads = (start?: string, end?: string) => {
+    if (!start || !end) return null
+    return (initialBootstrap?.videos || []).filter((video) =>
+      video.privacyStatus === "public" &&
+      video.publishedAt.slice(0, 10) >= start &&
+      video.publishedAt.slice(0, 10) <= end).length
+  }
+  const currentNewVideos = countUploads(current28?.startDate, current28?.endDate)
+  const previousNewVideos = countUploads(previous28?.startDate, previous28?.endDate)
+  const currentViews = metric("views")
+  const currentWatchHours = metric("watchHours")
+  const currentNetSubscribers = metric("netSubscribers")
+  const currentRevenue = metric("revenue")
+  const currentEngagedViews = metric("engagedViews")
+  const formatMetric = (value: number | null) => value === null ? "---" : formatHumanNumber(value)
+  const formatMoney = (value: number | null) => value === null ? "---" : `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+
   const statBlocks28d = [
-    { id: "subs", label: "Subscribers", value: resolvedSubscribers.toLocaleString(), trend: displaySubs28d > 0 ? `▲ +${formatHumanNumber(displaySubs28d)}` : null, color: "#4FFF5B" },
-    { id: "views", label: "Views (28D)", value: formatHumanNumber(views28d), trend: views28d > 0 ? "▲ +2.1%" : null, color: "#C9F830" },
-    { id: "hours", label: "Watch Hours", value: formatHumanNumber(hours28d), trend: hours28d > 0 ? "▲ +1.5%" : null, color: "#FF83EA" },
-    { id: "new_subs", label: "Sub Velocity", value: formatHumanNumber(subVelocity), trend: subVelocity > 0 ? `▲ ${formatHumanNumber(subVelocity)}` : null, color: "#24D3FF" },
-    { id: "revenue", label: "Revenue (28D)", value: `$${displayRevenue28d.toFixed(0)}`, trend: displayRevenue28d > 0 ? "▲ +0.5%" : null, color: "#FFE357" },
-    { id: "new_videos", label: "New Videos", value: newVideosPosted.toString(), trend: newVideosPosted > 0 ? `▲ ${newVideosPosted}` : null, color: "#FFB570" },
-    { id: "rpm", label: "Avg RPM", value: `$${calculatedRPM.toFixed(2)}`, trend: null, color: "#4FFF5B" },
-    { id: "engagement", label: "Engagement", value: formatHumanNumber(avgEngagement), trend: null, color: "#FF83EA" },
-    { id: "ctr", label: "Avg CTR", value: `${(avgCtr * 100).toFixed(1)}%`, trend: null, color: "#C9F830" },
+    { id: "subs", label: "Subscriber Total", value: initialBootstrap?.channel?.currentSubscribers == null ? "---" : initialBootstrap.channel.currentSubscribers.toLocaleString(), trend: null, color: "#4FFF5B" },
+    { id: "views", label: "Views — 28 Days", value: formatMetric(currentViews), trend: trendFor(currentViews, previousMetric("views")), color: "#C9F830" },
+    { id: "hours", label: "Watch Time — 28 Days", value: formatMetric(currentWatchHours), trend: trendFor(currentWatchHours, previousMetric("watchHours")), color: "#FF83EA" },
+    { id: "new_subs", label: "Sub Velocity", value: formatMetric(currentNetSubscribers), trend: trendFor(currentNetSubscribers, previousMetric("netSubscribers")), color: "#24D3FF" },
+    { id: "revenue", label: "Revenue — 28 Days", value: formatMoney(currentRevenue), trend: trendFor(currentRevenue, previousMetric("revenue")), color: "#FFE357" },
+    { id: "new_videos", label: "New Videos", value: currentNewVideos === null ? "---" : String(currentNewVideos), trend: trendFor(currentNewVideos, previousNewVideos), color: "#FFB570" },
+    { id: "engaged_views", label: "Engaged Views — 28 Days", value: formatMetric(currentEngagedViews), trend: trendFor(currentEngagedViews, previousMetric("engagedViews")), color: "#4FFF5B" },
+    { id: "video_count", label: "Video Count", value: initialBootstrap?.channel?.publicVideoCount == null ? "---" : initialBootstrap.channel.publicVideoCount.toLocaleString(), trend: null, color: "#FF83EA" },
+    { id: "last_two_days", label: "Last 2 Complete Days", value: formatMetric(initialBootstrap?.lastTwoCompleteDaysViews ?? null), trend: null, color: "#C9F830" },
   ]
 
   const statBlocksLifetime = [
@@ -169,19 +209,34 @@ export const useDashboardData = () => {
     .sort((a, b) => (b.metrics.views?.value || 0) - (a.metrics.views?.value || 0))[0]
 
   const quickActions = [
-    { label: "Publish Video", to: "/studio" },
-    { label: "Design Thumbnail", to: "/studio" },
-    { label: "Manage Projects", to: "/project-calendar" },
-    { label: "Performance", to: "/performance" },
-    { label: "Shorts Studio", to: "/shorts" },
-    { label: "Studio Hub", to: "/studio" },
-    { label: "Schedule", to: "/project-calendar" },
-    { label: "Settings", to: "/settings" },
-    { label: "AI Journal", to: "/studio" },
-    { label: "Comment Responder", to: "/studio" },
-    { label: "Brain Hub", to: "/performance" },
-    { label: "Subscription", to: "/subscribe" },
-  ]
+    // Tools (2-color palette)
+    { label: "Video Manager", to: "/studio#video-manager", paletteIndex: 0, icon: "Video", isTool: true },
+    { label: "Video Publisher", to: "/studio#video-publisher", paletteIndex: 1, icon: "Upload", isTool: true },
+    { label: "Content Analysis", to: "/studio#content-analysis", paletteIndex: 2, icon: "Activity", isTool: true },
+    { label: "Thumbnail Studio", to: "/studio#thumbnail-studio", paletteIndex: 3, icon: "Image", isTool: true },
+    { label: "Community Posts", to: "/studio#community-posts", paletteIndex: 4, icon: "MessageSquare", isTool: true },
+    { label: "Comment Responder", to: "/studio#comment-responder", paletteIndex: 5, icon: "MessageCircle", isTool: true },
+    { label: "End-Screen Architect", to: "/studio#end-screen-architect", paletteIndex: 6, icon: "Monitor", isTool: true },
+    { label: "Pre-Launch Priming", to: "/studio#pre-launch-priming", paletteIndex: 7, icon: "Rocket", isTool: true },
+    { label: "Hook Generator", to: "/studio#hook-generator", paletteIndex: 8, icon: "Magnet", isTool: true },
+    { label: "Tactics Engine", to: "/studio#tactics-engine", paletteIndex: 9, icon: "WandSparkles", isTool: true },
+
+    // Pages (Single color with light/dark toggle)
+    { label: "Studio", to: "/studio", paletteIndex: 1, icon: "Layers", isTool: false },
+    { label: "Projects", to: "/project-calendar", paletteIndex: 2, icon: "CalendarDays", isTool: false },
+    { label: "Ai Brain", to: "/performance", paletteIndex: 3, icon: "Bot", isTool: false },
+    { label: "VT SYNC", to: "/sync", paletteIndex: 4, icon: "RefreshCw", isTool: false },
+    { label: "Editor", to: "/editor", paletteIndex: 5, icon: "Edit3", isTool: false },
+    { label: "Settings", to: "/settings", paletteIndex: 6, icon: "Settings", isTool: false },
+    { label: "User Guide", to: "/guide", paletteIndex: 7, icon: "BookOpen", isTool: false },
+  ].map(a => {
+    if (a.isTool) {
+      const p = getToolboxPaletteColors(a.paletteIndex);
+      return { ...a, color: p.header, iconColor: p.icon };
+    } else {
+      return { ...a, color: getNavPaletteColor(a.paletteIndex) };
+    }
+  })
 
   const todayTasks = upcomingDays.find((d) => d.isToday)?.tasks || []
 
@@ -318,6 +373,9 @@ export const useDashboardData = () => {
     avatarUrl: toHighResYouTubeAvatar(authState.channelThumbnail),
     formatRelativeTime,
     canonicalRows,
+    videoAssets: videoAssetCatalog.items,
+    videoAssetCatalogStatus: videoAssetCatalog.status,
+    videoAssetCatalogError: videoAssetCatalog.error,
     dailySeries,
   }
 }

@@ -1,0 +1,423 @@
+import { VT_SYNC_LOCAL_SNAPSHOT_KEY, type VtSyncSnapshot, type VtSyncVideoItem } from "./contracts"
+import { VT_SYNC_TABLE_DEFINITIONS } from "../upstream/tableRegistry"
+
+let memorySnapshot: VtSyncSnapshot | null = null
+
+const arrayFields = [
+ "videos",
+ "dailyMetrics",
+ "trafficSources",
+ "searchTerms",
+ "demographics",
+ "geography",
+ "devices",
+ "operatingSystems",
+ "playbackLocations",
+ "subscriptionStatuses",
+ "playlistsData",
+ "adTypes",
+ "cities",
+ "provinces",
+ "dmaRegions",
+ "continentsData",
+ "extWebsites",
+ "suggestedVideos",
+ "hashtags",
+ "soundPages",
+ "creatorContentTypes",
+ "demographicsByAge",
+ "demographicsByGender",
+ "trafficAdvertising",
+ "audienceWatchBehavior",
+ "sharingService",
+ "newReturningViewers",
+ "revenueSource",
+ "subscriptionSource",
+ "trafficChannelPages",
+ "trafficOtherFeatures",
+ "trafficSubscriberData",
+ "trafficShorts",
+ "trafficShortsContentLink",
+ "trafficBrowseFeatures",
+ "trafficCampaignCard",
+ "trafficCard",
+ "trafficEndScreen",
+ "trafficLiveRedirect",
+ "trafficNotification",
+ "trafficNoLinkEmbedded",
+ "trafficNoLinkOther",
+ "trafficPlaylist",
+ "trafficYtPlaylistPage",
+ "retentions",
+] as const
+
+const readStoredSnapshot = (): VtSyncSnapshot | null => {
+ if (typeof window === "undefined") return null
+ if (memorySnapshot) return normalizeVtSyncSnapshot(memorySnapshot)
+ try {
+  const raw = window.localStorage.getItem(VT_SYNC_LOCAL_SNAPSHOT_KEY)
+  if (!raw) return null
+  const parsed = JSON.parse(raw) as Partial<VtSyncSnapshot>
+  return parsed && typeof parsed === "object" ? normalizeVtSyncSnapshot(parsed) : null
+ } catch {
+  return null
+ }
+}
+
+const normalizeFormattedTableExports = (rawTableExports: unknown): Record<string, unknown[]> => {
+ if (!rawTableExports || typeof rawTableExports !== "object") return {}
+ const out: Record<string, unknown[]> = {}
+ Object.entries(rawTableExports as Record<string, unknown>).forEach(([tableId, value]) => {
+  if (Array.isArray(value)) {
+   out[tableId] = value
+   return
+  }
+  if (!value || typeof value !== "object") return
+  const formatted = value as { headers?: unknown; rows?: unknown }
+  const rows = Array.isArray(formatted.rows) ? formatted.rows : []
+  const headers = Array.isArray(formatted.headers) ? formatted.headers.map(String) : []
+  if (!rows.length) {
+   out[tableId] = []
+   return
+  }
+  const table = VT_SYNC_TABLE_DEFINITIONS.find((definition) => definition.id === tableId)
+  const keyByHeader = new Map((table?.columns || []).map((column) => [column.label, column.key]))
+  out[tableId] = rows.map((row) => {
+   if (!Array.isArray(row)) return row as unknown
+   const record: Record<string, unknown> = {}
+   row.forEach((cell, index) => {
+    const header = headers[index] || `column_${index}`
+    record[keyByHeader.get(header) || header] = cell
+   })
+   return record
+  })
+ })
+ return out
+}
+
+const normalizeMetricAliases = (row: Record<string, unknown>): Record<string, unknown> => ({
+ ...row,
+ watchTime: row.watchTime ?? (typeof row.estimatedMinutesWatched === "number" ? row.estimatedMinutesWatched / 60 : undefined),
+ avgDuration: row.avgDuration ?? row.averageViewDuration ?? row.avgViewDuration,
+ avgPercentageViewed: row.avgPercentageViewed ?? row.averageViewPercentage ?? row.averagePercentageViewed,
+ revenue: row.revenue ?? row.estimatedRevenue,
+ youtubePremiumRevenue: row.youtubePremiumRevenue ?? row.estimatedRedPartnerRevenue,
+})
+
+const placeholderVideosFromUploadRows = (rows: unknown[], runId?: string): VtSyncVideoItem[] =>
+ rows
+  .map((row) => {
+   if (typeof row === "string") return row
+   if (!row || typeof row !== "object") return ""
+   const record = row as Record<string, unknown>
+   return String(record.videoId || record.id || record.video || "")
+  })
+  .filter(Boolean)
+  .map((id) => ({
+   id,
+   title: "Metadata pending",
+   thumbnail: "",
+   publishedAt: "",
+   format: "unknown",
+   category: "Metadata pending",
+   tags: [],
+   topics: [],
+   privacyStatus: "Metadata pending",
+   duration: "",
+   definition: "",
+   caption: "",
+   descriptionSnippet: `Upload playlist ID captured for ${id}. Video metadata has not been synced into this snapshot yet.`,
+   metrics: {},
+   vtSyncPlaceholder: true,
+   vtSyncPlaceholderReason: "uploads_playlist_only",
+   vtSyncRunId: runId,
+  } as VtSyncVideoItem))
+
+const normalizeArrayFieldRows = (field: string, value: unknown): unknown[] => {
+ if (!Array.isArray(value)) return []
+ return value.map((entry) => {
+  if (!entry || typeof entry !== "object") return entry
+  const row = normalizeMetricAliases(entry as Record<string, unknown>)
+  if (field === "devices") return { ...row, device: row.device ?? row.deviceType }
+  if (field === "playbackLocations") return { ...row, location: row.location ?? row.insightPlaybackLocationType }
+  if (field === "subscriptionStatuses") return { ...row, status: row.status ?? row.subscribedStatus }
+  if (field === "demographics") {
+    let formattedCohort = row.cohort;
+    if (!formattedCohort) {
+      const g = row.gender ? String(row.gender).charAt(0).toUpperCase() + String(row.gender).slice(1).toLowerCase() : "";
+      const a = row.ageGroup ? String(row.ageGroup).replace("age", "Ages ") : "";
+      if (g && a) formattedCohort = `${g === "User_specified" ? "Other" : g} : ${a}`;
+      else formattedCohort = `${g === "User_specified" ? "Other" : g} ${a}`.trim();
+    }
+    return { ...row, cohort: formattedCohort, viewsPct: row.viewsPct ?? row.viewerPercentage, watchTimePct: row.watchTimePct ?? row.viewerPercentage }
+  }
+  if (field === "demographicsByAge" || field === "demographicsByGender") {
+    let formattedCohort = row.cohort ?? row.ageGroup ?? row.gender;
+    if (typeof formattedCohort === "string") {
+      formattedCohort = formattedCohort.replace("age", "Ages ").replace("user_specified", "Other")
+      if (formattedCohort === "male") formattedCohort = "Male"
+      if (formattedCohort === "female") formattedCohort = "Female"
+    }
+    return { ...row, cohort: formattedCohort, viewsPct: row.viewsPct ?? row.viewerPercentage }
+  }
+  if (field === "dailyMetrics") return { ...row, date: row.date ?? row.day, avgViewDuration: row.avgViewDuration ?? row.averageViewDuration, averagePercentageViewed: row.averagePercentageViewed ?? row.averageViewPercentage }
+  return row
+ })
+}
+
+const storageSafeSnapshot = (snapshot: VtSyncSnapshot): VtSyncSnapshot => ({
+ ...snapshot,
+ videos: snapshot.videos.slice(0, 25),
+ dailyMetrics: snapshot.dailyMetrics.slice(0, 30),
+ trafficSources: snapshot.trafficSources.slice(0, 25),
+ searchTerms: [],
+ demographics: snapshot.demographics.slice(0, 25),
+ geography: snapshot.geography.slice(0, 25),
+ devices: snapshot.devices.slice(0, 25),
+ operatingSystems: snapshot.operatingSystems.slice(0, 25),
+ playbackLocations: snapshot.playbackLocations.slice(0, 25),
+ subscriptionStatuses: snapshot.subscriptionStatuses.slice(0, 25),
+ playlistsData: snapshot.playlistsData.slice(0, 25),
+ adTypes: snapshot.adTypes.slice(0, 25),
+ cities: [],
+ provinces: [],
+ dmaRegions: [],
+ continentsData: [],
+ extWebsites: [],
+ suggestedVideos: [],
+ hashtags: [],
+ soundPages: [],
+ creatorContentTypes: [],
+ demographicsByAge: [],
+ demographicsByGender: [],
+ trafficAdvertising: [],
+ audienceWatchBehavior: [],
+ sharingService: [],
+ newReturningViewers: [],
+ revenueSource: [],
+ subscriptionSource: [],
+ trafficChannelPages: [],
+ trafficOtherFeatures: [],
+ trafficSubscriberData: [],
+ trafficShorts: [],
+ trafficShortsContentLink: [],
+ trafficBrowseFeatures: [],
+ trafficCampaignCard: [],
+ trafficCard: [],
+ trafficEndScreen: [],
+ trafficLiveRedirect: [],
+ trafficNotification: [],
+ trafficNoLinkEmbedded: [],
+ trafficNoLinkOther: [],
+ trafficPlaylist: [],
+ trafficYtPlaylistPage: [],
+ retentions: [],
+ tableExports: {},
+ datasetFreshness: {
+  ...(snapshot.datasetFreshness || {}),
+  storage: {
+   runId: snapshot.syncManifest?.run_id || snapshot.snapshotId,
+   phase: "browser_storage",
+   source: "current_run",
+   status: "partial",
+   rows: snapshot.videos.length,
+   updatedAt: new Date().toISOString(),
+   missingMetrics: ["Full snapshot kept in page memory because localStorage quota was exceeded."],
+  },
+ },
+})
+
+export const saveVtSyncSnapshot = (snapshot: VtSyncSnapshot): void => {
+ if (typeof window === "undefined") return
+ memorySnapshot = normalizeVtSyncSnapshot(snapshot)
+ try {
+  window.localStorage.setItem(VT_SYNC_LOCAL_SNAPSHOT_KEY, JSON.stringify(memorySnapshot))
+ } catch (error) {
+  try {
+   window.localStorage.removeItem(VT_SYNC_LOCAL_SNAPSHOT_KEY)
+   window.localStorage.setItem(VT_SYNC_LOCAL_SNAPSHOT_KEY, JSON.stringify(storageSafeSnapshot(memorySnapshot)))
+   console.warn("VT-SYNC full snapshot exceeded browser localStorage quota; stored a compact recovery snapshot and kept the full snapshot in page memory.", error)
+  } catch (fallbackError) {
+   console.warn("VT-SYNC could not persist even the compact recovery snapshot; keeping the full snapshot in page memory only.", fallbackError)
+  }
+ }
+}
+
+const emptySnapshot = (): VtSyncSnapshot => ({
+ source: "empty",
+ snapshotId: `vt-sync-empty-${Date.now()}`,
+ capturedAt: new Date().toISOString(),
+ selectedTimeWindow: "lifetime",
+ channelName: null,
+ channelDescription: null,
+ channelCustomUrl: null,
+ avatarUrl: null,
+ subscriberCount: null,
+ channelVideoCount: null,
+ channelViewCount: null,
+ channelTotals: null,
+ videos: [],
+ dailyMetrics: [],
+ trafficSources: [],
+ searchTerms: [],
+ demographics: [],
+ geography: [],
+ devices: [],
+ operatingSystems: [],
+ playbackLocations: [],
+ subscriptionStatuses: [],
+ playlistsData: [],
+ adTypes: [],
+ cities: [],
+ provinces: [],
+ dmaRegions: [],
+ continentsData: [],
+ extWebsites: [],
+ suggestedVideos: [],
+ hashtags: [],
+ soundPages: [],
+ creatorContentTypes: [],
+ demographicsByAge: [],
+ demographicsByGender: [],
+ trafficAdvertising: [],
+ audienceWatchBehavior: [],
+ sharingService: [],
+ newReturningViewers: [],
+ revenueSource: [],
+ subscriptionSource: [],
+ trafficChannelPages: [],
+ trafficOtherFeatures: [],
+ trafficSubscriberData: [],
+ trafficShorts: [],
+ trafficShortsContentLink: [],
+ trafficBrowseFeatures: [],
+ trafficCampaignCard: [],
+ trafficCard: [],
+ trafficEndScreen: [],
+ trafficLiveRedirect: [],
+ trafficNotification: [],
+ trafficNoLinkEmbedded: [],
+ trafficNoLinkOther: [],
+ trafficPlaylist: [],
+ trafficYtPlaylistPage: [],
+ retentions: [],
+ syncManifest: null,
+ tableExports: {},
+ datasetFreshness: {},
+})
+
+export const normalizeVtSyncSnapshot = (input?: Partial<VtSyncSnapshot> | Record<string, unknown> | null): VtSyncSnapshot => {
+ const raw = input && typeof input === "object" ? input as Record<string, unknown> : {}
+ const tableExports = normalizeFormattedTableExports(raw.tableExports)
+ if (Array.isArray(raw.channelTotalsData)) tableExports.channel_totals = raw.channelTotalsData as unknown[]
+ if (Array.isArray(raw.retention)) tableExports.retention = raw.retention as unknown[]
+
+ const base = emptySnapshot()
+ const normalized: VtSyncSnapshot = {
+  ...base,
+  ...raw,
+  source: (raw.source === "vt-sync" || raw.source === "viewtubex-cache" || raw.source === "manual" || raw.source === "empty") ? raw.source : "manual",
+  snapshotId: typeof raw.snapshotId === "string" && raw.snapshotId ? raw.snapshotId : `vt-sync-import-${Date.now()}`,
+  capturedAt: typeof raw.capturedAt === "string" && raw.capturedAt ? raw.capturedAt : new Date().toISOString(),
+  channelTotals: (raw.channelTotals || null) as VtSyncSnapshot["channelTotals"],
+  syncManifest: (raw.syncManifest || null) as VtSyncSnapshot["syncManifest"],
+  tableExports,
+  datasetFreshness: (raw.datasetFreshness || {}) as VtSyncSnapshot["datasetFreshness"],
+ }
+
+ arrayFields.forEach((field) => {
+  const value = raw[field] || (
+   field === "extWebsites" ? raw.externalWebsites :
+   field === "playlistsData" ? raw.playlists :
+   field === "retentions" ? raw.retention :
+   undefined
+  )
+  ;(normalized as unknown as Record<string, unknown>)[field] = normalizeArrayFieldRows(field, value)
+ })
+
+ const uploadRows = tableExports.uploads_playlist || []
+ if (normalized.videos.length === 0 && uploadRows.length > 0) {
+  const runId = String(normalized.syncManifest?.run_id || normalized.snapshotId || "")
+  normalized.videos = placeholderVideosFromUploadRows(uploadRows, runId)
+  normalized.datasetFreshness = {
+   ...(normalized.datasetFreshness || {}),
+   videos: {
+    runId,
+    phase: "uploads_playlist",
+    source: "placeholder",
+    status: "placeholder",
+    rows: normalized.videos.length,
+    updatedAt: normalized.capturedAt,
+    missingMetrics: ["snippet", "contentDetails", "statistics", "youtubeAnalytics"],
+   },
+   uploads_playlist: {
+    runId,
+    phase: "uploads_playlist",
+    source: normalized.source === "manual" ? "manual_import" : "current_run",
+    status: "synced",
+    rows: uploadRows.length,
+    updatedAt: normalized.capturedAt,
+   },
+  }
+ }
+
+ return normalized
+}
+
+export const getVtSyncSnapshot = (input?: Partial<VtSyncSnapshot>): VtSyncSnapshot => {
+ const stored = readStoredSnapshot()
+ const base = stored || emptySnapshot()
+ if (!input) return normalizeVtSyncSnapshot(base)
+ return normalizeVtSyncSnapshot({
+  ...base,
+  ...input,
+ })
+}
+
+export const toVtSyncRawAppExport = (snapshot: VtSyncSnapshot): Record<string, unknown> => ({
+ videos: snapshot.videos,
+ dailyMetrics: snapshot.dailyMetrics,
+ trafficSources: snapshot.trafficSources,
+ searchTerms: snapshot.searchTerms,
+ demographics: snapshot.demographics,
+ geography: snapshot.geography,
+ devices: snapshot.devices,
+ operatingSystems: snapshot.operatingSystems,
+ playbackLocations: snapshot.playbackLocations,
+ subscriptionStatuses: snapshot.subscriptionStatuses,
+ playlistsData: snapshot.playlistsData,
+ adTypes: snapshot.adTypes,
+ cities: snapshot.cities,
+ provinces: snapshot.provinces,
+ extWebsites: snapshot.extWebsites,
+ suggestedVideos: snapshot.suggestedVideos,
+ hashtags: snapshot.hashtags,
+ soundPages: snapshot.soundPages,
+ creatorContentTypes: snapshot.creatorContentTypes,
+ demographicsByAge: snapshot.demographicsByAge,
+ demographicsByGender: snapshot.demographicsByGender,
+ trafficAdvertising: snapshot.trafficAdvertising,
+ audienceWatchBehavior: snapshot.audienceWatchBehavior,
+ revenueSource: snapshot.revenueSource,
+ subscriptionSource: snapshot.subscriptionSource,
+ newReturningViewers: snapshot.newReturningViewers,
+ sharingService: snapshot.sharingService,
+ trafficChannelPages: snapshot.trafficChannelPages,
+ trafficOtherFeatures: snapshot.trafficOtherFeatures,
+ trafficSubscriberData: snapshot.trafficSubscriberData,
+ trafficShorts: snapshot.trafficShorts,
+ trafficBrowseFeatures: snapshot.trafficBrowseFeatures,
+ trafficCampaignCard: snapshot.trafficCampaignCard,
+ trafficCard: snapshot.trafficCard,
+ trafficEndScreen: snapshot.trafficEndScreen,
+ trafficLiveRedirect: snapshot.trafficLiveRedirect,
+ trafficNotification: snapshot.trafficNotification,
+ trafficNoLinkEmbedded: snapshot.trafficNoLinkEmbedded,
+ trafficNoLinkOther: snapshot.trafficNoLinkOther,
+ trafficPlaylist: snapshot.trafficPlaylist,
+ trafficYtPlaylistPage: snapshot.trafficYtPlaylistPage,
+ retentions: snapshot.retentions,
+ dmaRegions: snapshot.dmaRegions,
+ continentsData: snapshot.continentsData,
+ channelTotals: snapshot.channelTotals,
+})
