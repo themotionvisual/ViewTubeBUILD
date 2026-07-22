@@ -9,9 +9,22 @@ import { getValidAccessToken } from "../auth/authSession"
 const TRANSIENT_STATUSES = new Set([429, 500, 502, 503, 504])
 const MAX_ATTEMPTS = 3
 export const SERVER_ACCOUNT_SESSION_TOKEN = "__viewtube_server_account_session__"
+const ACCOUNT_PROXY_FALLBACK_PATTERNS = [
+ "Request origin is not allowed",
+ "Authentication required",
+ "Account request failed",
+]
 
 const delay = (milliseconds: number) =>
  new Promise<void>((resolve) => setTimeout(resolve, milliseconds))
+
+const shouldFallbackFromAccountProxy = async (response: Response): Promise<boolean> => {
+ if (response.status === 404) return true
+ if (response.status !== 401 && response.status !== 403) return false
+
+ const bodyText = await response.clone().text().catch(() => "")
+ return ACCOUNT_PROXY_FALLBACK_PATTERNS.some((pattern) => bodyText.includes(pattern))
+}
 
 const runRequest = async (url: string, signal?: AbortSignal): Promise<Response> => {
  if (isUnifiedAccountServerEnabled()) {
@@ -23,7 +36,7 @@ const runRequest = async (url: string, signal?: AbortSignal): Promise<Response> 
     body: JSON.stringify({ url }),
     signal,
    })
-   if (response.status === 404) {
+   if (await shouldFallbackFromAccountProxy(response)) {
     markUnifiedAccountServerUnavailable()
     throw new Error("ACCOUNT_SERVER_UNAVAILABLE")
    }

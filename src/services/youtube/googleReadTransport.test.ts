@@ -61,6 +61,30 @@ describe("authorizedGoogleRead", () => {
   )
  })
 
+ it("falls back to the legacy bearer path when the account proxy rejects the request origin", async () => {
+  mocks.unified = true
+  const fetchMock = vi
+   .spyOn(globalThis, "fetch")
+   .mockResolvedValueOnce(
+    new Response(JSON.stringify({ error: "Request origin is not allowed." }), {
+     status: 403,
+     headers: { "Content-Type": "application/json" },
+    }),
+   )
+   .mockResolvedValueOnce(new Response("{}", { status: 200 }))
+
+  await authorizedGoogleRead("https://www.googleapis.com/youtube/v3/videos?id=one")
+
+  expect(fetchMock).toHaveBeenNthCalledWith(
+   2,
+   "https://www.googleapis.com/youtube/v3/videos?id=one",
+   expect.objectContaining({
+    method: "GET",
+    headers: expect.objectContaining({ Authorization: "Bearer legacy-token" }),
+   }),
+  )
+ })
+
  it("retains the legacy bearer path when unified accounts are disabled", async () => {
   const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 200 }))
 
