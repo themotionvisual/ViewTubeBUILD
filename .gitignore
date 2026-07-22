@@ -1,86 +1,96 @@
-# ViewTube: keep repository focused on shippable source
+# Ignore everything in the root by default to keep the repo absolutely pristine
+/*
 
-# Dependencies and build output
-node_modules/
+# -------------------------------------------------------------------
+# ALLOW-LIST: Only these essential files and directories are tracked
+# -------------------------------------------------------------------
+
+# Essential root directories for the application to run and build
+!/src/
+!/public/
+!/ui/
+!/server/
+!/api/
+!/scripts/
+!/tests/
+
+# Essential root configuration files
+!/package.json
+!/package-lock.json
+!/vite.config.ts
+!/tsconfig.json
+!/tsconfig.app.json
+!/tsconfig.node.json
+!/eslint.config.js
+!/index.html
+!/.gitignore
+!/README.md
+!/.env.billing.example
+!/.vercelignore
+!/skills-lock.json
+
+# -------------------------------------------------------------------
+# IGNORE-LIST: Standard ignores within the allowed directories
+# -------------------------------------------------------------------
+
+# Build output
 dist/
 build/
 out/
-.vite/
 coverage/
-.cache/
-.eslintcache
-*.tsbuildinfo
-playwright-report/
-test-results/
+.vite/
+.vt-e1-render/
 
-# Environment and local secrets
-.env
-.env.*
-!.env.example
-*.pem
-*.key
+# Dependencies
+node_modules/
 
-# Local tool/state folders
-.claude/
-.gemini/
+# Local ViewTube planning/reference material
+# These belong in the parent workspace under /Users/cwb/Downloads/viewtube/docs/
+# or /Users/cwb/Downloads/viewtube/standalone-html/, not in the launchable app repo.
+docs/
+_quarantine/
+_migration_hub/
+sources/
+WORKTREE_TRIAGE_MANIFEST.md
+public/html_hub/
+public/standalone-html/
+public/editors/
+public/*.html
+!public/oauth-callback.html
+src/archive/
+src/standalone/
+src/fix_*.py
+src/remove_subtoolbox*.py
+
+# Local task/workspace/tool caches
+.account/
+.billing/
 .agents/
-.codex/
+.claude/
 .codex_versions/
 .worktrees/
-.vt-e1-render/
-.cursor/
+.aider.tags.cache.v4/
+.venv/
+Roo-Code/
 
-# Logs and temp files
-logs/
+# OS / Editor / Logs
+.DS_Store
+Thumbs.db
 *.log
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
-*.tmp
-*.temp
-*.bak
-*.backup
-*.orig
-*.rej
-tmp/
-temp/
-
-# OS/editor junk
-.DS_Store
-Thumbs.db
-desktop.ini
-.vscode/
-.idea/
 *.swp
 *.swo
+.vscode/
+.idea/
+.cursor/
 
-# Local generated artifacts
-build_log.txt
-file_list.txt
-standalone-chart-dashboard.html
-broken_*_start.txt
-damage_report.txt
-formatted_app.txt
-zvt.zip
-*.zip
-
-# Local nested repo (exclude from deploy)
-Roo-Code/
-.vercel
-.aider*
-
-# ViewTube local quarantine and extraction workspaces
-_quarantine/
-_migration_hub/
-docs/
-governance/
-sources/
-src copy/
-src/services_backup/
-
-# One-off local sync/repair scripts generated during recovery passes
-desktop_master_sync*.py
-lifetime_daily_search_geo_experiment*.py
-fix_reorder*.py
-extract_editor.mjs
+# Local Environment Secrets
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.pem
+*.key
