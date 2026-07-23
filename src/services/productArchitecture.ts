@@ -6,8 +6,17 @@ export type MasterTableType =
  | "master_geography"
  | "master_traffic"
  | "master_device_playback"
+ | "master_device_os"
  | "master_retention"
+ | "master_video_retention"
  | "master_monetization"
+ | "master_ad_type"
+ | "master_content_type"
+ | "master_sharing_service"
+ | "master_subscription_status"
+ | "master_subscriber_source"
+ | "master_playlists"
+ | "master_traffic_by_day"
  | "master_external_signals"
  | "master_formula_metrics"
  | "master_coverage_registry"
@@ -121,8 +130,17 @@ export const MASTER_TABLE_LABELS: Record<MasterTableType, string> = {
  master_geography: "Geography",
  master_traffic: "Traffic",
  master_device_playback: "Device & Playback",
+ master_device_os: "Device × OS",
  master_retention: "Retention",
+ master_video_retention: "Video Retention",
  master_monetization: "Monetization",
+ master_ad_type: "Ad Type",
+ master_content_type: "Content Type & Format",
+ master_sharing_service: "Sharing Service",
+ master_subscription_status: "Subscription Status",
+ master_subscriber_source: "Subscriber Source & Detail",
+ master_playlists: "Playlist Analytics",
+ master_traffic_by_day: "Traffic Source × Day",
  master_external_signals: "External Signals",
  master_formula_metrics: "Formula Metrics",
  master_coverage_registry: "Coverage Registry",

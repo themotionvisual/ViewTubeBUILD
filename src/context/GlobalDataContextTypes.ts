@@ -56,6 +56,7 @@ export interface GlobalDataContextProps {
  globalSyncData: (options?: {
  batchMode?: "initial" | "next"
   enrichmentMode?: "core" | "video_metrics" | "traffic" | "segments" | "all"
+  segmentDatasets?: import("../services/SyncCoordinator").SegmentDatasetId[]
  }) => Promise<void>
  syncMetrics: (force?: boolean) => Promise<void>
  emitSignal: (toolId: string, action: string, payload: any) => Promise<void>

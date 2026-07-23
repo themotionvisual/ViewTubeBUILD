@@ -57,7 +57,23 @@ const warnedStorageReads = new Set<string>()
 
 export interface LedgerEntry {
  source: "youtube_analytics_v2" | "youtube_data_v3" | "ga4"
- context: "channel" | "video" | "traffic_source" | "geography" | "demographics"
+ context:
+  | "channel"
+  | "video"
+  | "traffic_source"
+  | "geography"
+  | "demographics"
+  | "traffic_daily"
+  | "traffic_video"
+  | "device_os"
+  | "ad_type"
+  | "sharing_service"
+  | "subscription_status"
+  | "subscription_source"
+  | "subscriber_detail"
+  | "creator_content_type"
+  | "playlist"
+  | "retention"
  dimensions: string[]
  metrics: string[]
  payload: any // Exactly as it comes from API

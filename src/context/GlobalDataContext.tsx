@@ -228,7 +228,11 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
   }, [aiModel])
 
  const globalSyncData = useCallback(
-  async (options?: { batchMode?: "initial" | "next" }) => {
+  async (options?: {
+   batchMode?: "initial" | "next"
+   enrichmentMode?: "core" | "video_metrics" | "traffic" | "segments" | "all"
+   segmentDatasets?: import("../services/SyncCoordinator").SegmentDatasetId[]
+  }) => {
    setIsSyncing(true)
    try {
     if ((options?.batchMode || "initial") === "initial") {
@@ -237,6 +241,8 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
     const { syncCoordinator } = await import("../services/SyncCoordinator")
     await syncCoordinator.syncYouTube(true, {
      batchMode: options?.batchMode || "initial",
+     enrichmentMode: options?.enrichmentMode,
+     segmentDatasets: options?.segmentDatasets,
     })
     setLastSyncComplete(new Date().toISOString())
      
