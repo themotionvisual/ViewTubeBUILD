@@ -165,6 +165,10 @@
 .vt-sync-pinned-viewport::-webkit-scrollbar { display: none; }
 .vt-sync-main-viewport { flex: 1 1 auto; min-width: 0; overflow: auto; scrollbar-width: none; }
 .vt-sync-main-viewport::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+.vt-sync-toolbox-table.is-demographics .vt-sync-scrollbar,
+.vt-sync-toolbox-table.is-demographics .vt-sync-vertical-scrollbar { display: none !important; }
+
 .vt-sync-data-table { min-width: 100%; border-spacing: 0; border-collapse: separate; table-layout: fixed; background: #fff; font-size: 10px; }
 .vt-sync-data-table th,
 .vt-sync-data-table td { border-right: 2px solid var(--vt-ink); }
@@ -228,7 +232,7 @@
 .vt-sync-toolbox-table .vt-sync-data-table tbody tr.is-selected td { background: rgba(64,198,233,.30) !important; }
 .vt-sync-row-rail-number { height: var(--vt-row-height); min-height: var(--vt-row-height); max-height: var(--vt-row-height); border-bottom-color: var(--vt-ink) !important; font-size: 25px !important; line-height: 1; font-weight: 1000 !important; letter-spacing: -.08em; }
 .vt-sync-cell-text { position: absolute; inset: 0; width: auto; height: auto; min-width: 0; max-height: none; font-size: 16px !important; line-height: 1; font-weight: 1000; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 6px 8px 15px; text-overflow: ellipsis; }
-.vt-sync-zero-seconds { display: inline-block; flex: 0 0 auto; font-size: 12px; line-height: 1; align-self: flex-end; margin-bottom: 4px; position: relative; }
+.vt-sync-zero-seconds { display: inline-block; flex: 0 0 auto; font-size: 10px; line-height: 1; align-self: flex-end; margin-bottom: 4px; position: relative; }
 .vt-sync-api-value { position: absolute; inset: 0; display: flex; min-width: 0; overflow: hidden; flex-direction: column; align-items: flex-start; justify-content: center; padding: 6px 9px; text-align: left; }
 .vt-sync-api-value strong,
 .vt-sync-api-value small { display: block; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -296,11 +300,12 @@
   border: 2px solid var(--vt-ink);
   border-radius: 4px;
   font-family: "Century Gothic", "Helvetica Neue", sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1;
   font-weight: 999;
   letter-spacing: -.03em;
   text-overflow: ellipsis;
+  text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   max-width: 100%;
@@ -308,6 +313,65 @@
 .vt-sync-demographic-badge.is-male { border-color: #22dff3; background: #ddfbff; color: #22cce2; }
 .vt-sync-demographic-badge.is-female { border-color: #ff99b7; background: #ffe0ea; color: #ff6e9c; }
 .vt-sync-demographic-badge.is-other { border-color: #f3c222; background: #fffadd; color: #d6a500; }
+
+/* Demographic overview matrix: column totals are gender-only; row totals are age-only. */
+.vt-sync-demographic-total-label { text-align: left !important; }
+.vt-sync-demographic-total-label strong,
+.vt-sync-demographic-total-label small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vt-sync-demographic-total-label strong { font-size: 16px; line-height: 1; font-weight: 1000; letter-spacing: -.04em; text-transform: uppercase; }
+.vt-sync-demographic-total-label small { margin-top: 4px; font-size: 8px; line-height: 1; font-weight: 850; letter-spacing: .07em; opacity: .58; text-transform: uppercase; }
+.vt-sync-demographic-age { position: absolute; inset: 0; display: flex; min-width: 0; align-items: center; justify-content: center; flex-direction: column; gap: 3px; overflow: hidden; padding: 7px 10px; }
+.vt-sync-demographic-age strong { max-width: 100%; display: block; overflow: hidden; color: #087f91; font-size: 17px; line-height: 1; font-weight: 1000; letter-spacing: -.045em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.vt-sync-demographic-age small { max-width: 100%; overflow: hidden; color: rgba(10,10,10,.52); font-size: 7px; line-height: 1; font-weight: 850; letter-spacing: .08em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.vt-sync-demographic-board-viewport { overflow-x: auto; border-top: 4px solid var(--vt-ink); border-bottom: 4px solid var(--vt-ink); background: #fff; }
+.vt-sync-demographic-board { width: min(1000px, 100%); min-width: 940px; margin: 0 auto; display: grid; grid-template-columns: 200px 220px minmax(520px, 1fr); border-right: 4px solid var(--vt-ink); border-left: 4px solid var(--vt-ink); background: #fff; color: var(--vt-ink); font-variant-numeric: tabular-nums; }
+.vt-sync-demographic-section { min-width: 0; border-right: 5px solid var(--vt-ink); }
+.vt-sync-demographic-section:last-child { border-right: 0; }
+.vt-sync-demographic-section > header { height: 34px; display: grid; place-items: center; border-bottom: 3px solid var(--vt-ink); background: #40c6e9; font-size: 18px; line-height: 1; font-weight: 1000; letter-spacing: -.04em; text-align: center; text-transform: uppercase; }
+.vt-sync-demographic-section.is-age > header { background: #4fff5b; }
+.vt-sync-demographic-section.is-matrix > header { background: #ff83ea; }
+.vt-sync-demographic-subhead,
+.vt-sync-demographic-matrix-head { height: 44px; border-bottom: 3px solid var(--vt-ink); background: var(--vt-ink); color: #fff; }
+.vt-sync-demographic-subhead { display: grid; place-items: center; font-size: 10px; font-weight: 1000; letter-spacing: .08em; text-transform: uppercase; }
+.vt-sync-demographic-gender-stack { height: 448px; display: grid; grid-template-rows: repeat(3, minmax(0, 1fr)); }
+.vt-sync-demographic-gender-stack article { min-height: 0; display: grid; grid-template-rows: 30px minmax(0, 1fr); border-bottom: 3px solid var(--vt-ink); background: color-mix(in srgb, var(--vt-demographic-color) 18%, white); }
+.vt-sync-demographic-gender-stack article:last-child { border-bottom: 0; }
+.vt-sync-demographic-gender-stack article > header { display: grid; place-items: center; border-bottom: 2px solid var(--vt-ink); background: var(--vt-demographic-color); font-size: 12px; font-weight: 1000; letter-spacing: .03em; text-transform: uppercase; }
+.vt-sync-demographic-age-stack,
+.vt-sync-demographic-matrix-body { display: grid; grid-auto-rows: 64px; }
+.vt-sync-demographic-age-stack article { min-width: 0; display: grid; grid-template-columns: minmax(112px, 1fr) 104px; border-bottom: 2px solid var(--vt-ink); background: #fff; }
+.vt-sync-demographic-age-stack article:last-child,
+.vt-sync-demographic-matrix-row:last-child { border-bottom: 0; }
+.vt-sync-demographic-age-stack article > div:first-child { min-width: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 3px; padding: 5px; border-right: 2px solid var(--vt-ink); background: #eef4ff; text-align: center; }
+.vt-sync-demographic-age-stack article > div:first-child strong { max-width: 100%; overflow: hidden; color: #087f91; font-size: 15px; line-height: 1; font-weight: 1000; letter-spacing: -.04em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.vt-sync-demographic-age-stack article > div:first-child small { color: rgba(10,10,10,.55); font-size: 7px; line-height: 1; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.vt-sync-demographic-matrix-head { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.vt-sync-demographic-matrix-head button { position: relative; display: grid; place-items: center; padding: 0; border: 0; border-right: 2px solid var(--vt-ink); background: var(--vt-demographic-color); color: var(--vt-ink); font: inherit; font-size: 13px; font-weight: 1000; text-transform: uppercase; cursor: pointer; }
+.vt-sync-demographic-matrix-head button:last-child { border-right: 0; }
+.vt-sync-demographic-matrix-head button:focus-visible { z-index: 1; outline: 3px solid #fff; outline-offset: -5px; }
+.vt-sync-demographic-matrix-head button span { position: absolute; right: 8px; font-size: 16px; }
+.vt-sync-demographic-matrix-row { min-width: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 2px solid var(--vt-ink); }
+.vt-sync-demographic-matrix-cell { min-width: 0; border-right: 2px solid var(--vt-ink); background: color-mix(in srgb, var(--vt-demographic-color) 20%, white); }
+.vt-sync-demographic-matrix-cell:nth-child(2) { background: color-mix(in srgb, var(--vt-demographic-color) 25%, white); }
+.vt-sync-demographic-matrix-cell:last-child { border-right: 0; }
+.vt-sync-demographic-metric { position: relative; width: 100%; height: 100%; display: grid; place-items: center; padding: 6px 8px 17px; overflow: hidden; }
+.vt-sync-demographic-metric strong { font-size: 20px; line-height: 1; font-weight: 1000; letter-spacing: -.05em; }
+.vt-sync-demographic-metric.is-emphasis strong { font-size: 34px; }
+.vt-sync-demographic-metric strong::first-letter { letter-spacing: -.08em; }
+.vt-sync-demographic-metric > span { position: absolute; right: 8px; bottom: 7px; left: 8px; height: 8px; overflow: hidden; border: 1.5px solid var(--vt-ink); border-radius: 999px; background: #fff; }
+.vt-sync-demographic-metric > span > i { display: block; height: 100%; border-right: 1.5px solid var(--vt-ink); background: var(--vt-demographic-color); }
+.vt-sync-toolbox-table.is-demographics .vt-sync-data-table { font-variant-numeric: tabular-nums; }
+.vt-sync-toolbox-table.is-demographics .vt-sync-data-table th[data-column-key="maleViewerPercentage"] { --vt-header-color: #40c6e9; }
+.vt-sync-toolbox-table.is-demographics .vt-sync-data-table th[data-column-key="femaleViewerPercentage"] { --vt-header-color: #ff83ea; }
+.vt-sync-toolbox-table.is-demographics .vt-sync-data-table th[data-column-key="otherViewerPercentage"] { --vt-header-color: #ffff61; }
+.vt-sync-toolbox-table.is-demographics .vt-sync-data-table th[data-column-key="viewerPercentage"] { --vt-header-color: #4fff5b; }
+.vt-sync-toolbox-table.is-demographics .vt-sync-data-table td[data-format="percent"] .vt-sync-cell-text { padding-bottom: 17px; font-size: 20px !important; letter-spacing: -.05em; }
+.vt-sync-toolbox-table.is-demographics .vt-sync-data-table td[data-format="percent"] .vt-sync-zero-seconds { display: inline; margin-left: 1px; font-size: .56em; line-height: 1; vertical-align: baseline; }
+.vt-sync-toolbox-table.is-demographics .vt-sync-data-table td[data-column-key="viewerPercentage"] { box-shadow: inset 4px 0 0 var(--vt-ink); }
+
+@media (max-width: 760px) {
+ .vt-sync-demographic-board { margin: 0; }
+}
 
 /* URL column — stacked square buttons */
 .vt-sync-url-buttons { position: absolute; inset: 0; display: grid; grid-template-rows: 1fr 1fr; }
@@ -414,7 +478,12 @@
 .vt-sync-toolbox-table.is-compact.no-spark .vt-sync-spectrum-list { flex-wrap: nowrap; }
 .vt-sync-toolbox-table.is-compact.no-spark .vt-sync-spectrum-badge,
 .vt-sync-toolbox-table.is-compact.no-spark .vt-sync-spectrum-list.is-topics .vt-sync-spectrum-badge { height: 10px; }
-.vt-sync-table-footer { min-height: 43px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 20px; border-top: 4px solid var(--vt-ink); background: #ffff61; font-size: 8px; font-weight: 1000; letter-spacing: .1em; text-transform: uppercase; }
+.vt-sync-table-footer { min-height: 56px; display: grid; gap: 6px; padding: 7px 16px 8px; border-top: 4px solid var(--vt-ink); background: #ffff61; font-size: 8px; font-weight: 1000; letter-spacing: .08em; text-transform: uppercase; }
+.vt-sync-table-footer-status,
+.vt-sync-table-footer-provenance { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 18px; }
+.vt-sync-table-footer-provenance { padding-top: 6px; border-top: 2px solid rgba(10,10,10,.38); letter-spacing: .04em; }
+.vt-sync-table-footer-provenance b { margin-right: 4px; font-weight: 1000; }
+.vt-sync-table-footer-provenance time { font: inherit; }
 .vt-sync-toolbox-table.is-focus { position: fixed; inset: 10px; z-index: 9999; width: auto; height: calc(100vh - 20px); overflow: auto; }
 .vt-sync-toast { position: fixed; left: 50%; bottom: 28px; z-index: 10000; max-width: 80vw; padding: 12px 20px; transform: translateX(-50%); border: 3px solid var(--vt-ink); border-radius: 12px; background: #4fff5b; color: var(--vt-ink); box-shadow: 5px 5px 0 rgba(10,10,10,.9); font-size: 13px; font-weight: 1000; letter-spacing: -.01em; text-align: center; text-transform: uppercase; }
 .vt-sync-toast.is-error { background: #ff3b30; }
@@ -488,7 +557,9 @@
  .vt-sync-vertical-scroll-thumb { min-height: 36px; }
  .vt-sync-pinned-viewport { max-width: 58%; border-right-width: 4px; }
  .vt-sync-split-table { max-height: 590px; }
- .vt-sync-table-footer { align-items: flex-start; flex-direction: column; padding: 8px 12px; }
+ .vt-sync-table-footer { padding: 8px 12px; }
+ .vt-sync-table-footer-status,
+ .vt-sync-table-footer-provenance { align-items: flex-start; flex-direction: column; gap: 5px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

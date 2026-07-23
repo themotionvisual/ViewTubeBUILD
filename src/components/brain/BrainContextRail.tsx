@@ -1,6 +1,5 @@
 import React from "react"
-import { Link } from "react-router-dom"
-import { ArrowRight, Brain } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import type {
  BrainQuickAction,
  CreatorBrainLearningQuestion,
@@ -9,7 +8,6 @@ import type {
 } from "../../types"
 import type { AIBrainContextSnapshot } from "../../services/aiBrainCommandInterface"
 import { sanitizeCreatorFacingBrainCopy } from "../../services/aiBrainConversationStore"
-import { BrainConfidenceChip, confidenceForEvidence } from "./BrainConfidenceChip"
 import { BrainQuestionPrompt } from "./BrainQuestionPrompt"
 import { BrainQuickActionCard } from "./BrainAnswerModules"
 
@@ -18,9 +16,9 @@ const Panel: React.FC<{ title: string; tone: string; children: React.ReactNode }
  tone,
  children,
 }) => (
- <section className="overflow-hidden rounded-[12px] border-[3px] border-black bg-white">
+ <section className="overflow-hidden rounded-[10px] border-[2px] border-black bg-white">
   <h3
-   className="border-b-[3px] border-black px-3 py-1.5 text-[10px] font-[1000] uppercase leading-4 tracking-[0.1em]"
+   className="border-b-[2px] border-black px-3 py-1.5 text-[10px] font-[1000] uppercase leading-4 tracking-[0.1em]"
    style={{ backgroundColor: tone }}
   >
    {title}
@@ -56,11 +54,6 @@ export const BrainContextRail: React.FC<{
  onAcceptQuickAction,
  onAnswerQuestion,
 }) => {
- const confidence = confidenceForEvidence({
-  hasProfile: snapshot.inferredProfile.status !== "missing",
-  videoCount: snapshot.inferredProfile.videoCount || snapshot.vtSync.videos,
-  dataStatus: snapshot.evidencePack.dataStatus,
- })
  const goal = sanitizeCreatorFacingBrainCopy(growthContext.currentGoal)
  const clusters = snapshot.inferredProfile.topicClusters.slice(0, 5)
  const topQuestion = questions[0]
@@ -69,7 +62,6 @@ export const BrainContextRail: React.FC<{
  return (
   <aside className="grid content-start gap-2.5" aria-label="What the Brain currently knows">
    <Panel title="Your channel" tone="#3FEE56">
-    <BrainConfidenceChip confidence={confidence} className="w-fit" />
     {clusters.length ? (
      <ul className="flex flex-wrap gap-1">
       {clusters.map((cluster) => (
@@ -94,20 +86,20 @@ export const BrainContextRail: React.FC<{
 
    {quickActions.length ? (
     <Panel title="Do this next" tone="#C0F240">
-     {quickActions.slice(0, 2).map((action, index) => (
+     {quickActions.slice(0, 1).map((action) => (
       <BrainQuickActionCard
        key={action.id}
        action={action}
        onAccept={onAcceptQuickAction}
-       compact={index > 0}
+       compact
       />
      ))}
     </Panel>
    ) : null}
 
-   {insights.length ? (
+   {!topQuestion && insights.length ? (
     <Panel title="Worth a look" tone="#FF7AC8">
-     {insights.slice(0, 3).map((insight) => (
+     {insights.slice(0, 1).map((insight) => (
       <button
        key={insight.id}
        type="button"
@@ -134,36 +126,6 @@ export const BrainContextRail: React.FC<{
      compact
     />
    ) : null}
-
-   <details className="overflow-hidden rounded-[12px] border-[3px] border-black bg-white">
-    <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] hover:bg-[#f8f8f4]">
-     <Brain size={13} />
-     Brain diagnostics
-    </summary>
-    <div className="grid gap-1.5 border-t-[3px] border-black p-2.5">
-     {snapshot.sourceStatuses.map((source) => (
-      <div
-       key={source.id}
-       className="flex items-center justify-between gap-2 rounded-[7px] border-[2px] border-black px-2 py-1"
-      >
-       <span className="text-[9px] font-black uppercase tracking-[0.06em]">{source.label}</span>
-       <span className="rounded-[6px] border-[2px] border-black bg-[#f8f8f4] px-1.5 text-[9px] font-black uppercase">
-        {source.status}
-       </span>
-      </div>
-     ))}
-     <p className="text-[10px] font-bold leading-4 text-black/60">
-      {snapshot.commands.total} reviewed commands · {snapshot.generations.total} saved generations ·{" "}
-      {snapshot.workflows.total} workflow chains
-     </p>
-     <Link
-      to="/data-transparency?internalTool=brain-command-center"
-      className="rounded-[7px] border-[2px] border-black px-2 py-1 text-[9px] font-black uppercase tracking-[0.06em] hover:bg-[#FFDA47]"
-     >
-      Open review queue
-     </Link>
-    </div>
-   </details>
   </aside>
  )
 }

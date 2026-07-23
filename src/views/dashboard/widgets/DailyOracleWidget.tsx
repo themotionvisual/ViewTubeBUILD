@@ -185,7 +185,7 @@ export const DailyOracleWidget = ({ widget, instance, editMode, onToggleCollapse
   <WidgetShell
    {...common}
    icon={<Sparkles size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "10px", height: "100%", overflowY: "auto", paddingBottom: "12px" }}>
+   <div style={{ display: "flex", flexDirection: "column", gap: "10px", height: "100%", overflowY: "auto", padding: "10px" }}>
     {/* Header Row */}
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>

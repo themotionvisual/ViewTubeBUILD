@@ -62,6 +62,131 @@ export const getVtSyncContentTypeLabel = (value: unknown): string => {
  return raw
 }
 
+type VtSyncDemographicGender = "male" | "female" | "other"
+
+const VT_SYNC_DEMOGRAPHIC_AGE_ORDER = [
+ "age13-17",
+ "age18-24",
+ "age25-34",
+ "age35-44",
+ "age45-54",
+ "age55-64",
+ "age65-",
+] as const
+
+const normalizeDemographicGender = (value: unknown): VtSyncDemographicGender | undefined => {
+ const normalized = String(value ?? "").trim().toLowerCase().replace(/[\s-]+/g, "_")
+ if (!normalized) return undefined
+ if (normalized === "male") return "male"
+ if (normalized === "female") return "female"
+ return "other"
+}
+
+const normalizeDemographicAge = (value: unknown): { key: string; label: string; order: number } | undefined => {
+ const raw = String(value ?? "").trim()
+ if (!raw) return undefined
+ const normalized = raw.toLowerCase().replace(/[–—]/g, "-")
+ const match = normalized.match(/(\d{1,2})\s*-\s*(\d{1,2})|(?:age|ages)?\s*(\d{1,2})\s*(?:\+|-\s*)$/)
+ if (!match) return { key: normalized.replace(/\s+/g, "_"), label: raw, order: VT_SYNC_DEMOGRAPHIC_AGE_ORDER.length }
+ const start = match[1] || match[3]
+ const end = match[2]
+ const key = `age${start}-${end || ""}`
+ const knownOrder = VT_SYNC_DEMOGRAPHIC_AGE_ORDER.indexOf(key as (typeof VT_SYNC_DEMOGRAPHIC_AGE_ORDER)[number])
+ return {
+  key,
+  label: end ? `Ages ${start}–${end}` : `Ages ${start}+`,
+  order: knownOrder >= 0 ? knownOrder : VT_SYNC_DEMOGRAPHIC_AGE_ORDER.length,
+ }
+}
+
+const sumAvailable = (values: Array<number | undefined>): number | undefined => {
+ const available = values.filter((value): value is number => value !== undefined)
+ return available.length ? available.reduce((sum, value) => sum + value, 0) : undefined
+}
+
+/**
+ * Converts one authoritative ageGroup × gender viewerPercentage report into a
+ * compact matrix. The body rows are age totals, the three interior columns are
+ * intersections, and column totals are the gender-only rollups.
+ */
+export const buildVtSyncDemographicOverviewRows = (rows: Row[]): Row[] => {
+ const containsMatrixRows = rows.some((row) => [
+  row.maleViewerPercentage,
+  row.femaleViewerPercentage,
+  row.otherViewerPercentage,
+ ].some((value) => num(value) !== undefined))
+
+ if (containsMatrixRows) {
+  return rows.flatMap<Row>((row) => {
+   const age = normalizeDemographicAge(firstValue(row.ageGroup, row.ageGroupLabel, row.cohort))
+   if (!age) return []
+   const maleViewerPercentage = num(row.maleViewerPercentage)
+   const femaleViewerPercentage = num(row.femaleViewerPercentage)
+   const otherViewerPercentage = num(row.otherViewerPercentage)
+   return [{
+    ...row,
+    ageGroup: age.key,
+    ageGroupLabel: age.label,
+    cohort: age.label,
+    ageOrder: age.order,
+    maleViewerPercentage,
+    femaleViewerPercentage,
+    otherViewerPercentage,
+    viewerPercentage: num(row.viewerPercentage) ?? sumAvailable([maleViewerPercentage, femaleViewerPercentage, otherViewerPercentage]),
+   }]
+  }).sort((left, right) => Number(left.ageOrder) - Number(right.ageOrder) || String(left.ageGroupLabel).localeCompare(String(right.ageGroupLabel)))
+ }
+
+ const byAge = new Map<string, {
+  key: string
+  label: string
+  order: number
+  values: Partial<Record<VtSyncDemographicGender, number>>
+ }>()
+ rows.forEach((row) => {
+  const age = normalizeDemographicAge(firstValue(row.ageGroup, row.ageGroupLabel))
+  const gender = normalizeDemographicGender(row.gender)
+  const percentage = num(firstValue(row.viewerPercentage, row.viewsPct))
+  if (!age || !gender || percentage === undefined || percentage < 0) return
+  const bucket = byAge.get(age.key) || { ...age, values: {} }
+  bucket.values[gender] = (bucket.values[gender] ?? 0) + percentage
+  byAge.set(age.key, bucket)
+ })
+
+ return [...byAge.values()]
+  .sort((left, right) => left.order - right.order || left.label.localeCompare(right.label))
+  .map(({ key, label, order, values }) => ({
+   ageGroup: key,
+   ageGroupLabel: label,
+   cohort: label,
+   ageOrder: order,
+   maleViewerPercentage: values.male,
+   femaleViewerPercentage: values.female,
+   otherViewerPercentage: values.other,
+   viewerPercentage: sumAvailable([values.male, values.female, values.other]),
+  }))
+}
+
+const deriveVtSyncDemographicsByAge = (rows: Row[]): Row[] =>
+ buildVtSyncDemographicOverviewRows(rows).map((row) => ({
+  ...row,
+  cohort: row.ageGroupLabel,
+  viewsPct: row.viewerPercentage,
+ }))
+
+const deriveVtSyncDemographicsByGender = (rows: Row[]): Row[] => {
+ const matrix = buildVtSyncDemographicOverviewRows(rows)
+ const definitions: Array<{ key: VtSyncDemographicGender; column: string; label: string }> = [
+  { key: "male", column: "maleViewerPercentage", label: "Male" },
+  { key: "female", column: "femaleViewerPercentage", label: "Female" },
+  { key: "other", column: "otherViewerPercentage", label: "Other" },
+ ]
+ return definitions.flatMap(({ key, column, label }) => {
+  const viewsPct = sumAvailable(matrix.map((row) => num(row[column])))
+  return viewsPct === undefined ? [] : [{ cohort: label, gender: key, viewsPct, viewerPercentage: viewsPct }]
+ })
+}
+
 const uploadPlaceholderVideos = (snapshot: VtSyncSnapshot): Row[] => {
  const uploadRows = snapshot.tableExports?.uploads_playlist || []
  if (!Array.isArray(uploadRows)) return []
@@ -230,7 +355,7 @@ const normalizeRows = (rows: Row[], identity: Record<string, string>): Row[] => 
  ...Object.fromEntries(Object.entries(identity).map(([target, source]) => [target, firstValue(row[target], row[source], row.term, row.source)])),
  cohort: firstValue(row.cohort, `${row.gender || ""} ${row.ageGroup || ""}`.trim(), row.ageGroup, row.gender),
  viewsPct: firstValue(row.viewsPct, row.viewerPercentage),
- watchTimePct: firstValue(row.watchTimePct, row.viewerPercentage),
+ watchTimePct: row.watchTimePct,
 }))
 
 const weekKey = (dateString: string) => {
@@ -279,6 +404,8 @@ const sourceRows = (
  if (table.id === "channel_totals") return channelTotalRows(snapshot)
  if (table.id === "daily") return snapshot.dailyMetrics.map((row) => dailyBase(row as Row))
  if (table.id === "weekly" || table.id === "monthly") return aggregateRows(snapshot.dailyMetrics as Row[], table.id)
+ if (table.id === "demog_age" && snapshot.demographics.length) return snapshot.demographics as Row[]
+ if (table.id === "demog_gender" && snapshot.demographics.length) return snapshot.demographics as Row[]
  const exportedRows = snapshot.tableExports?.[table.id] || snapshot.tableExports?.[table.exportName]
  if (Array.isArray(exportedRows) && exportedRows.length) return exportedRows as Row[]
  if (!table.snapshotKeys?.length) return []
@@ -321,9 +448,13 @@ export const normalizeVtSyncTableRows = (tableId: string, rows: Row[]): Row[] =>
   case "provinces": return normalizeRows(rows, { province: "province" }).map(geographyStateRow)
   case "dma": return normalizeRows(rows, { dma: "dma" }).map(geographyDmaRow)
   case "continents": return normalizeRows(rows, { region: "region" })
-  case "demographics":
-  case "demog_age":
-  case "demog_gender": return normalizeRows(rows, { cohort: "cohort" })
+  case "demographics": return buildVtSyncDemographicOverviewRows(rows)
+  case "demog_age": return rows.some((row) => row.ageGroup && row.gender || row.maleViewerPercentage !== undefined)
+   ? deriveVtSyncDemographicsByAge(rows)
+   : normalizeRows(rows, { cohort: "cohort" })
+  case "demog_gender": return rows.some((row) => row.ageGroup && row.gender || row.maleViewerPercentage !== undefined)
+   ? deriveVtSyncDemographicsByGender(rows)
+   : normalizeRows(rows, { cohort: "cohort" })
   case "audience":
   case "new_returning": return normalizeRows(rows, { term: "audienceType" })
   case "creator": return normalizeRows(rows, { term: "audienceType" }).map((row) => {

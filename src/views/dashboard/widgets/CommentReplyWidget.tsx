@@ -199,10 +199,48 @@ export const CommentReplyWidget = ({
   const handleSuggestVideoBulk = (commentIds: string[]) => {
     if (canonicalVideos.length === 0 || commentIds.length === 0) return
     
+    // Filter to long format videos only
+    const longVideos = canonicalVideos.filter((v: any) => 
+      v.format === "VIDEO_ON_DEMAND" || v.format === "long" || (v.durationSeconds && v.durationSeconds > 65)
+    )
+    const pool = longVideos.length > 0 ? longVideos : canonicalVideos
+
     commentIds.forEach(id => {
-      const randomVideo = canonicalVideos[Math.floor(Math.random() * canonicalVideos.length)]
-      const suggestion = `\n\nI think you'd love this one too: https://youtu.be/${randomVideo.videoId}`
-      setReplyText(prev => ({...prev, [id]: (prev[id] || "") + suggestion}))
+      const thread = allThreads.find(t => t.id === id)
+      const threadVideoId = thread?.snippet?.videoId
+      
+      let relatedVideo = null
+      if (threadVideoId) {
+        // Try to find the original video to get its title
+        const originalVideo = canonicalVideos.find((v: any) => v.videoId === threadVideoId)
+        if (originalVideo && originalVideo.title) {
+          const originalWords = originalVideo.title.toLowerCase().split(/[\W_]+/).filter((w: string) => w.length > 3)
+          
+          let bestScore = -1
+          for (const v of pool) {
+            if (v.videoId === threadVideoId) continue
+            if (!v.title) continue
+            const vWords = v.title.toLowerCase().split(/[\W_]+/)
+            let score = 0
+            for (const w of originalWords) {
+              if (vWords.includes(w)) score++
+            }
+            if (score > bestScore) {
+              bestScore = score
+              relatedVideo = v
+            }
+          }
+        }
+      }
+      
+      if (!relatedVideo) {
+        relatedVideo = pool[Math.floor(Math.random() * pool.length)]
+      }
+      
+      if (relatedVideo) {
+        const suggestion = `\n\nI think you'd love this one too: https://youtu.be/${relatedVideo.videoId}`
+        setReplyText(prev => ({...prev, [id]: (prev[id] || "") + suggestion}))
+      }
     })
   }
 
@@ -291,7 +329,7 @@ export const CommentReplyWidget = ({
     <WidgetShell {...common} headerContent={headerContent} icon={<MessageSquare size={22} />}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "10px" }}>
         {inboundImageUrl && (
-          <div style={{ border: "2px solid #000", borderRadius: "8px", padding: "6px 8px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+          <div style={{ border: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)", borderRadius: "8px", padding: "6px 8px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
             <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.7 }}>Image received from generator</span>
             <button
               className="vt-button"
@@ -304,7 +342,7 @@ export const CommentReplyWidget = ({
         )}
         
         {/* Comment List - Now fully scrollable, no pagination */}
-        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px", paddingRight: "4px" }}>
+        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px" }}>
           {loading && allThreads.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px", opacity: 0.4, fontWeight: 900, fontSize: "12px" }}>
               <Loader2 size={24} className="animate-spin mx-auto mb-2" />
@@ -332,14 +370,15 @@ export const CommentReplyWidget = ({
                 <div 
                   key={threadId} 
                   style={{ 
-                    border: "3px solid #000", 
-                    borderRadius: "12px", 
-                    padding: "10px", 
+                    border: "2px solid var(--widget-border, #000)", 
+                    borderRadius: "8px", 
+                    padding: "8px 10px", 
                     background: "#fff", 
                     display: "flex", 
                     flexDirection: "column",
                     gap: "8px",
-                    boxShadow: "3px 3px 0 0 rgba(0,0,0,0.05)"
+                    width: "100%",
+                    boxSizing: "border-box",
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
@@ -349,10 +388,9 @@ export const CommentReplyWidget = ({
                         width: "100%", 
                         aspectRatio: "16/9", 
                         background: "#000", 
-                        border: "3px solid #000", 
-                        borderRadius: "8px", 
+                        border: "1.5px solid var(--widget-border, #000)", 
+                        borderRadius: "6px", 
                         overflow: "hidden",
-                        boxShadow: "2px 2px 0 0 rgba(0,0,0,0.5)"
                       }}>
                         {videoId ? (
                             <img 
@@ -382,7 +420,7 @@ export const CommentReplyWidget = ({
 
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
-                        <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#FFB570", border: "1.5px solid #000", flexShrink: 0, overflow: "hidden" }}>
+                        <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#FFB570", border: "1.5px solid var(--widget-border, #000)", flexShrink: 0, overflow: "hidden" }}>
                           <img src={c.authorProfileImageUrl} style={{ width: "100%", height: "100%" }} />
                         </div>
                         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -407,9 +445,9 @@ export const CommentReplyWidget = ({
                       style={{ 
                         width: "22px", 
                         height: "22px", 
-                        border: "3px solid #000", 
+                        border: "2px solid var(--widget-border, #000)", 
                         borderRadius: "6px", 
-                        background: isSelected ? "#000" : "#fff",
+                        background: isSelected ? "var(--widget-border, #000)" : "#fff",
                         cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
@@ -437,7 +475,7 @@ export const CommentReplyWidget = ({
                         <div
                           key={`${threadId}-reply-${idx}`}
                           style={{
-                            border: "2px solid #000",
+                            border: "1.5px solid var(--widget-border, #000)",
                             borderRadius: "8px",
                             background: "#F4F4F4",
                             padding: "6px 8px",
@@ -461,15 +499,6 @@ export const CommentReplyWidget = ({
                         value={currentReply}
                         onChange={(e) => setReplyText(prev => ({...prev, [threadId]: e.target.value}))}
                         placeholder={tab === "history" ? "ADD FOLLOW-UP REPLY..." : "REPLY..."}
-                        style={{ 
-                          width: "100%", 
-                          height: "50px", 
-                          padding: "6px", 
-                          border: "2px solid #00D2FF", 
-                          resize: "none", 
-                          fontSize: "10px",
-                          boxSizing: "border-box"
-                        }}
                       />
                     </div>
                   )}
@@ -481,7 +510,7 @@ export const CommentReplyWidget = ({
 
         {/* Global Action Buttons */}
         {(
-          <div style={{ display: "flex", gap: "8px", padding: "4px 0" }}>
+          <div className="vt-full-bleed-bottom border-t-[2px] border-[var(--widget-border,#000)] pt-2.5 pb-2 px-2.5 flex gap-2 bg-[#fff]">
             <button
               onClick={() => handleMagicDraft(Array.from(selectedIds))}
               disabled={selectedIds.size === 0 || loading || !canAffordSelectedDrafts}

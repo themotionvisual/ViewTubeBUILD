@@ -35,6 +35,7 @@ import {
 } from "../features/vt-sync-local/upstream/syncCategoryRegistry"
 import { VT_SYNC_TABLE_DEFINITIONS } from "../features/vt-sync-local/upstream/tableRegistry"
 import {
+ buildAssistantIntelligenceSnapshot,
  queueAssistantCommand,
 } from "./assistantIntelligenceSystem"
 import {
@@ -1005,6 +1006,56 @@ const moduleFor = (
  source,
 })
 
+const compactCount = (value: number): string => {
+ if (Math.abs(value) >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
+ if (Math.abs(value) >= 1_000) return `${Math.round(value / 1_000)}K`
+ return value.toLocaleString()
+}
+
+/**
+ * A creator-readable stat line built only from metrics that actually exist.
+ *
+ * Average percentage viewed above 100 means the average viewer watched more than
+ * once, which is common on Shorts. Reporting that as "2,167% viewed" is noise, so it
+ * is stated as replays instead.
+ */
+const videoStatLine = (video: AIBrainEvidenceVideo): string => {
+ const parts: string[] = []
+ if (video.metrics.views !== null) parts.push(`${compactCount(video.metrics.views)} views`)
+ if (video.metrics.ctr !== null) parts.push(`${video.metrics.ctr.toFixed(1)}% CTR`)
+ const viewed = video.metrics.averagePercentageViewed
+ if (viewed !== null) {
+  parts.push(viewed > 100 ? `${(viewed / 100).toFixed(1)}x replays` : `${Math.round(viewed)}% viewed`)
+ }
+ return parts.join(" · ")
+}
+
+/**
+ * The evidence behind an answer, as ranked rows rather than prose. Returns null when
+ * there is no video evidence, so the module can never invent a ranking.
+ */
+export const buildEvidenceRankingModule = (
+ evidencePack: AIBrainEvidencePack,
+): AIBrainAnswerModule | null => {
+ const videos = evidencePack.topVideos.slice(0, 3)
+ if (!videos.length) return null
+ return {
+  id: "video-evidence-ranking",
+  title: "What I ranked this on",
+  body: "",
+  tone: "blue",
+  source: "analytics",
+  kind: "idea_scorecard",
+  code: `Top ${videos.length}`,
+  data: {
+   items: videos.map((video) => ({
+    title: video.title,
+    detail: videoStatLine(video),
+   })),
+  },
+ }
+}
+
 const formatIntentModules = (input: {
  mode: CreatorBrainResponse["mode"]
  body: string
@@ -1054,6 +1105,8 @@ const formatIntentModules = (input: {
   ]
  }
 
+ const evidenceRanking = buildEvidenceRankingModule(evidencePack)
+
  if (asksBestVideo) {
   return [
    moduleFor(
@@ -1079,6 +1132,7 @@ const formatIntentModules = (input: {
     "green",
     "growth",
    ),
+   ...(evidenceRanking ? [evidenceRanking] : []),
   ]
  }
 
@@ -1094,6 +1148,8 @@ const formatIntentModules = (input: {
    "blue",
    "analytics",
   ))
+  // Show the ranked videos the read is standing on, not just the claim.
+  if (evidenceRanking) modules.push(evidenceRanking)
  }
 
  if (asksBestVideo || mode === "strategy_brief" || mode === "video_idea_sprint") {

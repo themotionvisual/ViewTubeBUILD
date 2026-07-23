@@ -211,9 +211,9 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
 
  return (
   <WidgetShell {...common} icon={<MessageSquare size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px" }}>
+   <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "10px", gap: "8px" }}>
     {/* Quick Topics */}
-   {messages.length === 0 && (
+    {messages.length === 0 && (
      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
       <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.4 }}>Quick Topics</span>
       <div
@@ -255,11 +255,11 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
     )}
 
     {/* Chat History */}
-    <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px", minHeight: "80px" }}>
+    <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px", minHeight: "80px", padding: "2px 2px" }}>
      {messages.map((msg, i) => (
       <div key={i} style={{
        alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-       maxWidth: "85%", padding: "8px 10px",
+       maxWidth: "88%", padding: "8px 10px",
        background: msg.role === "user" ? "var(--widget-color, #579AFF)" : "#fff",
        color: msg.role === "user" ? "#fff" : "#000",
        border: `2px solid ${msg.role === "user" ? "#000" : "#000"}`,

@@ -311,54 +311,66 @@ export const WidgetShell: React.FC<{
       </div>
      )}
 
-     <div className="grid grid-cols-2 grid-rows-2 gap-[3px]">
-       <button
-         type="button"
-         onClick={() => setIsSubtitleOpen(!isSubtitleOpen)}
-         className={`w-[22px] h-[22px] rounded-[5px] border-[2px] border-black flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${isSubtitleOpen ? 'bg-black text-white' : 'bg-white text-black'}`}
-         aria-label="Help"
-         title="Toggle Info"
-       >
-         <CircleQuestionMark size={12} strokeWidth={2.8} />
-       </button>
-       
-       {canEdit && editMode ? (
-         <button
-           type="button"
-           onClick={onRemove}
-           className="w-[22px] h-[22px] rounded-[5px] border-[2px] border-black bg-white flex items-center justify-center transition-all hover:bg-red-100 hover:scale-110 active:scale-95 text-black"
-           aria-label="Close"
-           title="Remove widget"
-         >
-           <X size={12} strokeWidth={3} />
-         </button>
-       ) : (
-         <div className="w-[22px] h-[22px]" />
-       )}
-       
-       {canEdit && editMode ? (
-         <button
-           type="button"
-           className="w-[22px] h-[22px] rounded-[5px] border-[2px] border-black bg-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-grab active:cursor-grabbing text-black"
-           aria-label="Drag"
-           title="Drag to reorder"
-         >
-           <GripVertical size={12} strokeWidth={2.8} />
-         </button>
-       ) : (
-         <div className="w-[22px] h-[22px]" />
-       )}
-       
-       <button
-         type="button"
-         onClick={onToggleCollapse}
-         className={`w-[22px] h-[22px] rounded-[5px] border-[2px] border-black bg-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 text-black`}
-         aria-label="Minimize"
-         title="Toggle Collapse"
-       >
-         <Minus size={12} strokeWidth={3} />
-       </button>
-     </div>
+      <div className="flex flex-row items-center gap-[4px]">
+        <button
+          type="button"
+          onClick={() => setIsSubtitleOpen(!isSubtitleOpen)}
+          className={`w-[22px] h-[22px] rounded-[5px] border-[2px] flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${isSubtitleOpen ? 'bg-black text-white' : 'bg-white'}`}
+          style={{
+            borderColor: "var(--widget-border)",
+            color: isSubtitleOpen ? "#fff" : "var(--widget-border)",
+          }}
+          aria-label="Help"
+          title="Toggle Info"
+        >
+          <CircleQuestionMark size={12} strokeWidth={2.5} />
+        </button>
+        
+        {canEdit && editMode && (
+          <button
+            type="button"
+            onClick={onRemove}
+            className="w-[22px] h-[22px] rounded-[5px] border-[2px] bg-white flex items-center justify-center transition-all hover:bg-red-100 hover:scale-105 active:scale-95"
+            style={{
+              borderColor: "var(--widget-border, #000)",
+              color: "var(--widget-border, #000)",
+            }}
+            aria-label="Close"
+            title="Remove widget"
+          >
+            <X size={12} strokeWidth={2.5} />
+          </button>
+        )}
+        
+        {canEdit && editMode && (
+          <button
+            type="button"
+            className="w-[22px] h-[22px] rounded-[5px] border-[2px] bg-white flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing"
+            style={{
+              borderColor: "var(--widget-border, #000)",
+              color: "var(--widget-border, #000)",
+            }}
+            aria-label="Drag"
+            title="Drag to reorder"
+          >
+            <GripVertical size={12} strokeWidth={2.5} />
+          </button>
+        )}
+        
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className="w-[22px] h-[22px] rounded-[5px] border-[2px] bg-white flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+          style={{
+            borderColor: "var(--widget-border)",
+            color: "var(--widget-border)",
+          }}
+          aria-label="Minimize"
+          title="Toggle Collapse"
+        >
+          <Minus size={12} strokeWidth={2.5} />
+        </button>
+      </div>
     </div>
    </div>
 

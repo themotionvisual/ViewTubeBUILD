@@ -34,10 +34,13 @@ body,
   background: #333;
 }
 
-/* Firefox support */
+/* Firefox / Standard support */
 * {
   scrollbar-width: auto;
-  scrollbar-color: #000 #fff;
+}
+
+[class*="scrollbar-style-"] {
+  scrollbar-color: initial !important;
 }
 /* Video manager description: hide scrollbar chrome while keeping scroll + resize handle */
 .vm-scrollless {
@@ -75,7 +78,8 @@ body,
 }
 
 .vt-input-standard:focus {
-  border-color: #24d3ff;
+  border-color: #000;
+  box-shadow: 2px 2px 0 0 rgba(0,0,0,1);
   background: color-mix(in srgb, var(--vt-subtoolbox-fill, #ffffff) 10%, #ffffff);
 }
 
@@ -86,7 +90,8 @@ body,
 }
 
 .vt-textarea-standard:focus {
-  border-color: #24d3ff;
+  border-color: #000;
+  box-shadow: 2px 2px 0 0 rgba(0,0,0,1);
   background: #fff;
 }
 
@@ -133,19 +138,23 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="
 textarea,
 select {
   outline: none;
-  border-color: #000;
+  border: 2px solid var(--widget-color, #000);
+  background-color: #fff;
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background-color 0.2s ease;
+    border-color 0.15s ease,
+    box-shadow 0.25s ease,
+    background-color 0.25s ease;
+  caret-color: var(--widget-color, #000);
 }
 
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus,
 textarea:focus,
 select:focus {
-  border-color: #24d3ff !important;
-  box-shadow: 0 0 0 2px rgb(36 211 255 / 0.2);
-  background-color: var(--vt-field-bg, #fff) !important;
+  border-color: var(--widget-color, #000);
+  background-color: color-mix(in srgb, var(--widget-color, #fff) 6%, white);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--widget-color, #000) 35%, transparent),
+    0 0 16px 2px color-mix(in srgb, var(--widget-color, #000) 55%, transparent);
 }
 
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"])::placeholder,
@@ -259,3 +268,198 @@ textarea::placeholder {
 .dashboard-barrier .vt-button.split .split-label { padding: 9px 14px 9px 10px; flex: 1; display: flex; align-items: center; gap: 6px; }
 .dashboard-barrier .vt-button.split.lg .split-icon { width: 44px; font-size: 18px; }
 .dashboard-barrier .vt-button.split.lg .split-label { padding: 13px 18px 13px 12px; }
+
+/* Scrollbar Styles: 24px Width, Equal 4px Edge Spacing, Symmetrical 4px Inner Corner Radius & Module Black Border */
+
+/* Style 1: Solid Accent Rectangular Block + Module Black Border */
+.scrollbar-style-1::-webkit-scrollbar,
+.dashboard-barrier .scrollbar-style-1::-webkit-scrollbar { width: 24px !important; display: block !important; }
+.scrollbar-style-1::-webkit-scrollbar-track,
+.dashboard-barrier .scrollbar-style-1::-webkit-scrollbar-track { background: transparent !important; border: none !important; box-shadow: none !important; }
+.scrollbar-style-1::-webkit-scrollbar-thumb,
+.dashboard-barrier .scrollbar-style-1::-webkit-scrollbar-thumb {
+  background: var(--widget-color, #40C6E9) !important;
+  border: 4px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000 !important;
+  border-radius: 8px !important;
+}
+.scrollbar-style-1::-webkit-scrollbar-thumb:hover,
+.dashboard-barrier .scrollbar-style-1::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 80%, black) !important;
+  background-clip: padding-box !important;
+}
+
+/* Style 2: Crisp White Rectangular Block + Module Black Border */
+.scrollbar-style-2::-webkit-scrollbar,
+.dashboard-barrier .scrollbar-style-2::-webkit-scrollbar { width: 24px !important; display: block !important; }
+.scrollbar-style-2::-webkit-scrollbar-track,
+.dashboard-barrier .scrollbar-style-2::-webkit-scrollbar-track { background: transparent !important; border: none !important; box-shadow: none !important; }
+.scrollbar-style-2::-webkit-scrollbar-thumb,
+.dashboard-barrier .scrollbar-style-2::-webkit-scrollbar-thumb {
+  background: #ffffff !important;
+  border: 4px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000 !important;
+  border-radius: 8px !important;
+}
+.scrollbar-style-2::-webkit-scrollbar-thumb:hover,
+.dashboard-barrier .scrollbar-style-2::-webkit-scrollbar-thumb:hover {
+  background: var(--widget-color, #40C6E9) !important;
+  background-clip: padding-box !important;
+}
+
+/* Style 3: Dual-Tone Split Rectangular Block (White Top / Accent Bottom) */
+.scrollbar-style-3::-webkit-scrollbar,
+.dashboard-barrier .scrollbar-style-3::-webkit-scrollbar { width: 24px !important; display: block !important; }
+.scrollbar-style-3::-webkit-scrollbar-track,
+.dashboard-barrier .scrollbar-style-3::-webkit-scrollbar-track { background: transparent !important; border: none !important; box-shadow: none !important; }
+.scrollbar-style-3::-webkit-scrollbar-thumb,
+.dashboard-barrier .scrollbar-style-3::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    #ffffff 50%,
+    var(--widget-color, #40C6E9) 50%
+  ) !important;
+  border: 4px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000 !important;
+  border-radius: 8px !important;
+}
+.scrollbar-style-3::-webkit-scrollbar-thumb:hover,
+.dashboard-barrier .scrollbar-style-3::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    var(--widget-color, #40C6E9) 50%,
+    #000000 50%
+  ) !important;
+  background-clip: padding-box !important;
+}
+
+/* Style 4: Tactile Ridged Rectangular Fader (Accent & Black Ridges) */
+.scrollbar-style-4::-webkit-scrollbar,
+.dashboard-barrier .scrollbar-style-4::-webkit-scrollbar { width: 24px !important; display: block !important; }
+.scrollbar-style-4::-webkit-scrollbar-track,
+.dashboard-barrier .scrollbar-style-4::-webkit-scrollbar-track { background: transparent !important; border: none !important; box-shadow: none !important; }
+.scrollbar-style-4::-webkit-scrollbar-thumb,
+.dashboard-barrier .scrollbar-style-4::-webkit-scrollbar-thumb {
+  background: repeating-linear-gradient(
+    180deg,
+    var(--widget-color, #40C6E9) 0px,
+    var(--widget-color, #40C6E9) 6px,
+    #000000 6px,
+    #000000 10px
+  ) !important;
+  border: 4px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000 !important;
+  border-radius: 8px !important;
+}
+.scrollbar-style-4::-webkit-scrollbar-thumb:hover,
+.dashboard-barrier .scrollbar-style-4::-webkit-scrollbar-thumb:hover {
+  background: repeating-linear-gradient(
+    180deg,
+    #000000 0px,
+    #000000 6px,
+    var(--widget-color, #40C6E9) 6px,
+    var(--widget-color, #40C6E9) 10px
+  ) !important;
+  background-clip: padding-box !important;
+}
+
+/* Style 5: Industrial Hazard Rectangular Block (Black & Accent Stripes) */
+.scrollbar-style-5::-webkit-scrollbar,
+.dashboard-barrier .scrollbar-style-5::-webkit-scrollbar { width: 24px !important; display: block !important; }
+.scrollbar-style-5::-webkit-scrollbar-track,
+.dashboard-barrier .scrollbar-style-5::-webkit-scrollbar-track { background: transparent !important; border: none !important; box-shadow: none !important; }
+.scrollbar-style-5::-webkit-scrollbar-thumb,
+.dashboard-barrier .scrollbar-style-5::-webkit-scrollbar-thumb {
+  background: repeating-linear-gradient(
+    -45deg,
+    #000000 0px,
+    #000000 6px,
+    var(--widget-color, #FF5A5F) 6px,
+    var(--widget-color, #FF5A5F) 12px
+  ) !important;
+  border: 4px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000 !important;
+  border-radius: 8px !important;
+}
+.scrollbar-style-5::-webkit-scrollbar-thumb:hover,
+.dashboard-barrier .scrollbar-style-5::-webkit-scrollbar-thumb:hover {
+  background: repeating-linear-gradient(
+    -45deg,
+    #000000 0px,
+    #000000 6px,
+    #ffffff 6px,
+    #ffffff 12px
+  ) !important;
+  background-clip: padding-box !important;
+}
+
+/* Style 6: Double-Border Inset Box (Style 6 Frame + Style 8 Tint-to-Accent Hover Color Shift) */
+.scrollbar-style-6::-webkit-scrollbar,
+.dashboard-barrier .scrollbar-style-6::-webkit-scrollbar { width: 24px !important; display: block !important; }
+.scrollbar-style-6::-webkit-scrollbar-track,
+.dashboard-barrier .scrollbar-style-6::-webkit-scrollbar-track { background: transparent !important; border: none !important; box-shadow: none !important; }
+.scrollbar-style-6::-webkit-scrollbar-thumb,
+.dashboard-barrier .scrollbar-style-6::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 45%, white) !important;
+  border: 4px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000, inset 0 0 0 4px var(--widget-color, #40C6E9) !important;
+  border-radius: 8px !important;
+}
+.scrollbar-style-6::-webkit-scrollbar-thumb:hover,
+.dashboard-barrier .scrollbar-style-6::-webkit-scrollbar-thumb:hover {
+  background: var(--widget-color, #40C6E9) !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000 !important;
+}
+
+/* Style 7: Inverted Dual-Tone Rectangular Block (Accent Top / White Bottom) */
+.scrollbar-style-7::-webkit-scrollbar,
+.dashboard-barrier .scrollbar-style-7::-webkit-scrollbar { width: 24px !important; display: block !important; }
+.scrollbar-style-7::-webkit-scrollbar-track,
+.dashboard-barrier .scrollbar-style-7::-webkit-scrollbar-track { background: transparent !important; border: none !important; box-shadow: none !important; }
+.scrollbar-style-7::-webkit-scrollbar-thumb,
+.dashboard-barrier .scrollbar-style-7::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    var(--widget-color, #40C6E9) 50%,
+    #ffffff 50%
+  ) !important;
+  border: 4px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000 !important;
+  border-radius: 8px !important;
+}
+.scrollbar-style-7::-webkit-scrollbar-thumb:hover,
+.dashboard-barrier .scrollbar-style-7::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    #000000 50%,
+    var(--widget-color, #40C6E9) 50%
+  ) !important;
+  background-clip: padding-box !important;
+}
+
+/* Style 8: Full Tinted Rectangular Plate + Module Black Border */
+.scrollbar-style-8::-webkit-scrollbar,
+.dashboard-barrier .scrollbar-style-8::-webkit-scrollbar { width: 24px !important; display: block !important; }
+.scrollbar-style-8::-webkit-scrollbar-track,
+.dashboard-barrier .scrollbar-style-8::-webkit-scrollbar-track { background: transparent !important; border: none !important; box-shadow: none !important; }
+.scrollbar-style-8::-webkit-scrollbar-thumb,
+.dashboard-barrier .scrollbar-style-8::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 45%, white) !important;
+  border: 4px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000 !important;
+  border-radius: 8px !important;
+}
+.scrollbar-style-8::-webkit-scrollbar-thumb:hover,
+.dashboard-barrier .scrollbar-style-8::-webkit-scrollbar-thumb:hover {
+  background: var(--widget-color, #40C6E9) !important;
+  background-clip: padding-box !important;
+}

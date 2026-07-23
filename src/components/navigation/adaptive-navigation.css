@@ -355,6 +355,10 @@
 }
 .vt-adaptive-main::-webkit-scrollbar { display: none; }
 .vt-adaptive-main--editor { padding: 8px; }
+.vt-adaptive-main--brain {
+  overflow: hidden;
+  padding: 10px;
+}
 .vt-adaptive-shell[data-layout="top"] > .vt-adaptive-main { grid-area: 2 / 1; }
 .vt-adaptive-shell[data-layout="wide"] > .vt-adaptive-main,
 .vt-adaptive-shell[data-layout="thin"] > .vt-adaptive-main { grid-area: 1 / 2; }
@@ -429,6 +433,7 @@
 .vt-adaptive-nav--mobile .vt-adaptive-nav__account-menu { position: fixed; top: 77px; right: 36px; }
 .vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-main { grid-area: 2 / 1; padding: 20px 16px 300px; }
 .vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-main--editor { padding: 6px; }
+.vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-main--brain { overflow: hidden; padding: 6px; }
 
 .vt-adaptive-nav__drawer-backdrop {
   position: fixed;

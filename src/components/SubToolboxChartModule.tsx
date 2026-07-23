@@ -87,6 +87,8 @@ export interface SubToolboxChartModuleProps {
   }
   disableActiveContextBottomBorder?: boolean
   footerBorderless?: boolean
+  collapsible?: boolean
+  isOpenInitial?: boolean
 }
 
 const toneClass = (tone?: Tone): string => {
@@ -142,7 +144,16 @@ export const SubToolboxChartModule: React.FC<
   metricBadges = [],
   disableActiveContextBottomBorder = false,
   footerBorderless = false,
+  collapsible = false,
+  isOpenInitial = true,
 }) => {
+  const [internalOpen, setInternalOpen] = React.useState(isOpenInitial)
+  const [hasOpened, setHasOpened] = React.useState(isOpenInitial)
+  const setOpen = () => {
+    setInternalOpen((prev) => !prev)
+    setHasOpened(true)
+  }
+
   const tokens = {
     frameBg: theme?.frameBg ?? "#FFFFFF",
     frameBorder: theme?.frameBorder ?? "#000000",
@@ -172,7 +183,10 @@ export const SubToolboxChartModule: React.FC<
         maxWidth: layout?.moduleWidth ?? "100%",
       }}
     >
-      <div className="border-b-[4px] border-black flex items-stretch h-[74px]">
+      <div 
+        className={`border-b-[4px] border-black flex items-stretch h-[74px] ${collapsible ? 'cursor-pointer' : ''}`}
+        onClick={collapsible ? setOpen : undefined}
+      >
         <div
           className="w-[76px] h-full border-r-[4px] border-black flex items-center justify-center shrink-0"
           style={{ background: tokens.iconBlockBg, borderColor: tokens.iconBlockBorder }}
@@ -279,132 +293,136 @@ export const SubToolboxChartModule: React.FC<
         </div>
       </div>
 
-      {activeContext ? (
-        <div className={`${disableActiveContextBottomBorder ? "" : "border-b-[4px] border-black"} px-0 py-0 bg-white h-10 overflow-hidden`}>
-          <div className="flex items-stretch h-full w-full justify-between">
-            {/* Left Section */}
-            <div className="flex items-stretch h-full overflow-hidden shrink-0">
-              {activeContext.leftTitle && (
-                <div className="px-2 flex items-center justify-center font-[1000] text-[18px] border-r-[4px] border-black bg-white shrink-0">
-                  {activeContext.leftTitle}
-                </div>
-              )}
-              {activeContext.leftStats && (
-                <div className="flex items-stretch h-full divide-x-[4px] divide-black border-r-[4px] border-black">
-                  {activeContext.leftStats.map((item) => (
-                    <button
-                      key={item.label}
-                      onClick={item.onClick}
-                      disabled={!item.onClick}
-                      className={statButtonClass(Boolean(item.onClick))}
-                    >
-                      <span className="h-8 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 text-black leading-none px-1">
-                        {item.value}
-                      </span>
-                      <span
-                        className={`h-5 text-[11px] font-black tracking-[0.11em] uppercase inline-flex items-center justify-center w-full ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
-                      >
-                        {normalizeStatLabel(item.label)}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Middle Section (Filler / Title) */}
-            <div className="flex-1 bg-white flex items-stretch h-full overflow-hidden min-w-0">
-              {activeContext.title && (
-                <div className={`flex items-stretch flex-1 min-w-0 ${activeContext.leftStats || activeContext.leftTitle ? 'border-l-[4px]' : ''} ${activeContext.rightStats || activeContext.rightTitle || activeContext.stats ? 'border-r-[4px]' : ''} border-black`}>
-                  {typeof activeContext.title === 'string' ? (
-                    <div className="flex items-center px-2 font-[1000] text-[22px] leading-tight flex-1 truncate">
-                      {activeContext.title}
+      <div className={`grid transition-[grid-template-rows,opacity] duration-300 ${internalOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+        <div className="overflow-hidden flex flex-col relative">
+          {activeContext ? (
+            <div className={`${disableActiveContextBottomBorder ? "" : "border-b-[4px] border-black"} px-0 py-0 bg-white h-10 overflow-hidden`}>
+              <div className="flex items-stretch h-full w-full justify-between">
+                {/* Left Section */}
+                <div className="flex items-stretch h-full overflow-hidden shrink-0">
+                  {activeContext.leftTitle && (
+                    <div className="px-2 flex items-center justify-center font-[1000] text-[18px] border-r-[4px] border-black bg-white shrink-0">
+                      {activeContext.leftTitle}
                     </div>
-                  ) : (
-                    <div className="flex-1 flex items-stretch min-w-0">
-                      {activeContext.title}
+                  )}
+                  {activeContext.leftStats && (
+                    <div className="flex items-stretch h-full divide-x-[4px] divide-black border-r-[4px] border-black">
+                      {activeContext.leftStats.map((item) => (
+                        <button
+                          key={item.label}
+                          onClick={item.onClick}
+                          disabled={!item.onClick}
+                          className={statButtonClass(Boolean(item.onClick))}
+                        >
+                          <span className="h-8 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 text-black leading-none px-1">
+                            {item.value}
+                          </span>
+                          <span
+                            className={`h-5 text-[11px] font-black tracking-[0.11em] uppercase inline-flex items-center justify-center w-full ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
+                          >
+                            {normalizeStatLabel(item.label)}
+                          </span>
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
-              )}
-            </div>
 
-            {/* Right Section */}
-            <div className="flex items-stretch h-full overflow-hidden shrink-0">
-              {activeContext.rightTitle && (
-                <div className="px-2 flex items-center justify-center font-[1000] text-[18px] border-l-[4px] border-black bg-white shrink-0">
-                  {activeContext.rightTitle}
+                {/* Middle Section (Filler / Title) */}
+                <div className="flex-1 bg-white flex items-stretch h-full overflow-hidden min-w-0">
+                  {activeContext.title && (
+                    <div className={`flex items-stretch flex-1 min-w-0 ${activeContext.leftStats || activeContext.leftTitle ? 'border-l-[4px]' : ''} ${activeContext.rightStats || activeContext.rightTitle || activeContext.stats ? 'border-r-[4px]' : ''} border-black`}>
+                      {typeof activeContext.title === 'string' ? (
+                        <div className="flex items-center px-2 font-[1000] text-[22px] leading-tight flex-1 truncate">
+                          {activeContext.title}
+                        </div>
+                      ) : (
+                        <div className="flex-1 flex items-stretch min-w-0">
+                          {activeContext.title}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
-              {activeContext.rightStats && (
-                <div className="flex items-stretch h-full divide-x-[4px] divide-black">
-                  {activeContext.rightStats.map((item) => (
-                    <button
-                      key={item.label}
-                      onClick={item.onClick}
-                      disabled={!item.onClick}
-                      className={statButtonClass(Boolean(item.onClick))}
-                    >
-                      <span className="h-8 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 text-black leading-none px-1">
-                        {item.value}
-                      </span>
-                      <span
-                        className={`h-5 text-[11px] font-[1000] tracking-[0.11em] uppercase inline-flex items-center justify-center w-full ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
-                      >
-                        {normalizeStatLabel(item.label)}
-                      </span>
-                    </button>
-                  ))}
+
+                {/* Right Section */}
+                <div className="flex items-stretch h-full overflow-hidden shrink-0">
+                  {activeContext.rightTitle && (
+                    <div className="px-2 flex items-center justify-center font-[1000] text-[18px] border-l-[4px] border-black bg-white shrink-0">
+                      {activeContext.rightTitle}
+                    </div>
+                  )}
+                  {activeContext.rightStats && (
+                    <div className="flex items-stretch h-full divide-x-[4px] divide-black">
+                      {activeContext.rightStats.map((item) => (
+                        <button
+                          key={item.label}
+                          onClick={item.onClick}
+                          disabled={!item.onClick}
+                          className={statButtonClass(Boolean(item.onClick))}
+                        >
+                          <span className="h-8 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 text-black leading-none px-1">
+                            {item.value}
+                          </span>
+                          <span
+                            className={`h-5 text-[11px] font-[1000] tracking-[0.11em] uppercase inline-flex items-center justify-center w-full ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
+                          >
+                            {normalizeStatLabel(item.label)}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {!activeContext.rightStats && activeContext.stats && (
+                    <div className="flex items-stretch h-full divide-x-[4px] divide-black">
+                      {activeContext.stats.map((item) => (
+                        <button
+                          key={item.label}
+                          onClick={item.onClick}
+                          disabled={!item.onClick}
+                          className={statButtonClass(Boolean(item.onClick))}
+                        >
+                          <span className="h-8 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 text-black leading-none px-1">
+                            {item.value}
+                          </span>
+                          <span
+                            className={`h-5 text-[11px] font-[1000] tracking-[0.11em] uppercase inline-flex items-center justify-center w-full ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
+                          >
+                            {normalizeStatLabel(item.label)}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-              {!activeContext.rightStats && activeContext.stats && (
-                <div className="flex items-stretch h-full divide-x-[4px] divide-black">
-                  {activeContext.stats.map((item) => (
-                    <button
-                      key={item.label}
-                      onClick={item.onClick}
-                      disabled={!item.onClick}
-                      className={statButtonClass(Boolean(item.onClick))}
-                    >
-                      <span className="h-8 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 text-black leading-none px-1">
-                        {item.value}
-                      </span>
-                      <span
-                        className={`h-5 text-[11px] font-[1000] tracking-[0.11em] uppercase inline-flex items-center justify-center w-full ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
-                      >
-                        {normalizeStatLabel(item.label)}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
+              </div>
             </div>
+          ) : null}
+
+          <div
+            className="flex-1 p-0 vt-chart-interior"
+            style={{ minHeight: layout?.moduleMinHeight ?? "420px" }}
+          >
+            {hasOpened ? content : null}
           </div>
-        </div>
-      ) : null}
 
-      <div
-        className="flex-1 p-0 vt-chart-interior"
-        style={{ minHeight: layout?.moduleMinHeight ?? "420px" }}
-      >
-        {content}
+          {(legendLayout?.left || legendLayout?.center || legendLayout?.right) && (
+            <div className="px-4 py-2 border-t-[4px] border-black bg-[#F8F8F8]">
+              <div className="grid grid-cols-3 items-center gap-2 text-[10px] font-black uppercase tracking-[0.08em]">
+                <div className="justify-self-start">{legendLayout.left}</div>
+                <div className="justify-self-center">{legendLayout.center}</div>
+                <div className="justify-self-end">{legendLayout.right}</div>
+              </div>
+            </div>
+          )}
+
+          {footer ? (
+            <div className={`${footerBorderless ? "" : "border-t-[4px] border-black"} bg-black`}>
+              {footer}
+            </div>
+          ) : null}
+        </div>
       </div>
-
-      {(legendLayout?.left || legendLayout?.center || legendLayout?.right) && (
-        <div className="px-4 py-2 border-t-[4px] border-black bg-[#F8F8F8]">
-          <div className="grid grid-cols-3 items-center gap-2 text-[10px] font-black uppercase tracking-[0.08em]">
-            <div className="justify-self-start">{legendLayout.left}</div>
-            <div className="justify-self-center">{legendLayout.center}</div>
-            <div className="justify-self-end">{legendLayout.right}</div>
-          </div>
-        </div>
-      )}
-
-      {footer ? (
-        <div className={`${footerBorderless ? "" : "border-t-[4px] border-black"} bg-black`}>
-          {footer}
-        </div>
-      ) : null}
     </div>
   )
 }

@@ -33,8 +33,12 @@ import {
 } from "./tubeExplorerVisualData"
 
 export interface TubeExplorerVisualProps {
- data: CanonicalVideoRow[]
- csvFiles?: CsvFileWithTag[]
+  data: CanonicalVideoRow[]
+  csvFiles?: CsvFileWithTag[]
+  trafficRows?: any[]
+  geographyRows?: any[]
+  collapsible?: boolean
+  isOpenInitial?: boolean
 }
 
 export interface TubeExplorerVisualModuleEntry {
@@ -59,8 +63,8 @@ const compact = (value: number): string => {
 
 const useExplorerData = (props: TubeExplorerVisualProps): TubeExplorerVisualDataset =>
  useMemo(
-  () => buildTubeExplorerVisualData(props.data, props.csvFiles || []),
-  [props.data, props.csvFiles],
+  () => buildTubeExplorerVisualData(props.data, props.csvFiles || [], props.trafficRows || [], props.geographyRows || []),
+  [props.data, props.csvFiles, props.trafficRows, props.geographyRows],
  )
 
 const ModuleFrame: React.FC<{
@@ -73,9 +77,13 @@ const ModuleFrame: React.FC<{
  insight?: string
  height?: number
  flushShell?: boolean
+ collapsible?: boolean
+ isOpenInitial?: boolean
  children: React.ReactNode
-}> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], insight, height = 320, flushShell = false, children }) => (
+}> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], insight, height = 320, flushShell = false, collapsible = false, isOpenInitial = true, children }) => (
  <SubToolboxChartModule
+  collapsible={collapsible}
+  isOpenInitial={isOpenInitial}
   header={{
    title,
    subtitle,
@@ -100,11 +108,12 @@ const ExplorerCanvas: React.FC<{
  footerLeft?: React.ReactNode
  footerRight?: React.ReactNode
  legendWidthClassName?: string
+ flushContent?: boolean
  children: React.ReactNode
-}> = ({ legend, footerLeft, footerRight, legendWidthClassName = "w-[210px]" , children }) => (
- <div className="flex h-full flex-col overflow-hidden border-[3px] border-black bg-[#f4f1eb]">
-  <div className={`flex min-h-0 flex-1 items-stretch gap-0 bg-[#0a0a1a] p-3 ${footerLeft || footerRight ? "border-b-[3px] border-black" : ""}`}>
-   <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+}> = ({ legend, footerLeft, footerRight, legendWidthClassName = "w-[210px]", flushContent = false, children }) => (
+ <div className={`flex h-full flex-col overflow-hidden border-[3px] border-black ${flushContent ? 'bg-[#0a0a1a]' : 'bg-[#f4f1eb]'}`}>
+  <div className={`flex min-h-0 flex-1 items-stretch gap-0 bg-[#0a0a1a] ${flushContent ? 'p-0' : 'p-3'} ${footerLeft || footerRight ? "border-b-[3px] border-black" : ""}`}>
+   <div className="min-h-0 flex-1 overflow-hidden relative">{children}</div>
    {legend ? <div className={`ml-4 shrink-0 overflow-hidden border-l border-white/10 pl-4 ${legendWidthClassName}`}>{legend}</div> : null}
   </div>
   {(footerLeft || footerRight) ? (
@@ -154,8 +163,18 @@ const Tip = ({ active, payload }: any) => {
  )
 }
 
-const topVideos = (dataset: TubeExplorerVisualDataset, metric: keyof TubeExplorerVideoPoint = "views", limit = 18) =>
- [...dataset.videos].sort((a, b) => Number(b[metric]) - Number(a[metric])).slice(0, limit)
+const topVideos = (
+ dataset: TubeExplorerVisualDataset,
+ metric: keyof TubeExplorerVideoPoint = "views",
+ limit = 18,
+ signed = false,
+) =>
+ [...dataset.videos]
+  .filter((row) => signed ? Number(row[metric]) !== 0 : Number(row[metric]) > 0)
+  .sort((a, b) => signed
+   ? Math.abs(Number(b[metric])) - Math.abs(Number(a[metric]))
+   : Number(b[metric]) - Number(a[metric]))
+  .slice(0, limit)
 
 const VideoBars: React.FC<{ rows: TubeExplorerVideoPoint[]; metric: keyof TubeExplorerVideoPoint; color?: string }> = ({ rows, metric, color = "#FF7497" }) => (
  rows.length === 0 ? <Empty label="No video rows available" /> :
@@ -270,9 +289,69 @@ const TrafficBars: React.FC<{ dataset: TubeExplorerVisualDataset }> = ({ dataset
 }
 
 const GeoBars: React.FC<{ dataset: TubeExplorerVisualDataset }> = ({ dataset }) => {
- const rows = dataset.geography.slice(0, 16)
- if (rows.length === 0) return <Empty label="Import geography/cities CSV data to populate this module" />
- return <VideoBars rows={rows.map((row, index) => ({ ...topVideos(dataset)[0], videoId: String(index + 1), title: row.label, views: row.views, watchHours: row.watchHours, subscribersGained: row.subscribersGained, revenue: row.revenue } as TubeExplorerVideoPoint))} metric="views" color="#B14AED" />
+ const rows = dataset.geography.filter((row) => row.views > 0).slice(0, 16)
+ if (rows.length === 0) return <Empty label="Sync or import geography rows to populate this module" />
+ return (
+  <ResponsiveContainer width="100%" height="100%">
+   <BarChart data={rows} layout="vertical" margin={{ top: 8, right: 20, bottom: 8, left: 116 }}>
+    <CartesianGrid strokeDasharray="4 4" stroke="#000" opacity={0.16} />
+    <XAxis type="number" tickFormatter={compact} tick={{ fontSize: 10, fontWeight: 900 }} />
+    <YAxis type="category" dataKey="label" width={110} tick={{ fontSize: 9, fontWeight: 900 }} />
+    <Tooltip content={<Tip />} />
+    <Bar dataKey="views" fill="#B14AED" stroke="#000" strokeWidth={2} />
+   </BarChart>
+  </ResponsiveContainer>
+ )
+}
+
+const FunnelStages: React.FC<{ dataset: TubeExplorerVisualDataset }> = ({ dataset }) => {
+ const stages = [
+  { label: "Impressions", value: dataset.totals.impressions, color: "#579AFF" },
+  { label: "Views", value: dataset.totals.views, color: "#40C6E9" },
+  { label: "Engaged", value: dataset.totals.engagedViews, color: "#4FFF5B" },
+  { label: "Subscribers", value: dataset.totals.subscribersGained, color: "#FF83EA" },
+ ].filter((stage) => stage.value > 0)
+ if (stages.length === 0) return <Empty label="No conversion-stage metrics are available" />
+ const max = Math.max(...stages.map((stage) => stage.value), 1)
+ return (
+  <div className="flex h-full flex-col justify-center gap-3 p-4">
+   {stages.map((stage) => (
+    <div key={stage.label} className="mx-auto flex h-14 items-center justify-between border-[3px] border-black px-4 font-black uppercase"
+     style={{ width: `${Math.max(28, (stage.value / max) * 100)}%`, background: stage.color }}>
+     <span className="truncate text-[12px]">{stage.label}</span>
+     <span className="ml-3 text-[18px]">{compact(stage.value)}</span>
+    </div>
+   ))}
+  </div>
+ )
+}
+
+const BarcodeFingerprintRenderer: React.FC<{ dataset: TubeExplorerVisualDataset }> = ({ dataset }) => {
+ const rows = topVideos(dataset, "valueScore", 42)
+ if (rows.length === 0) return <Empty label="No non-zero video value metrics are available" />
+ const max = Math.max(...rows.map((row) => row.valueScore), 1)
+ return (
+  <div className="flex h-full items-stretch gap-1 overflow-hidden bg-white p-4" role="img" aria-label="Video value barcode fingerprint">
+   {rows.map((row, index) => {
+    const ratio = row.valueScore / max
+    return (
+     <div key={row.videoId} className="group relative flex min-w-0 flex-1 items-end" title={`${row.title}: ${compact(row.valueScore)}`}>
+      <div
+       className="w-full border-x border-black"
+       style={{
+        height: `${Math.max(8, ratio * 100)}%`,
+        background: TRAFFIC_COLORS[index % TRAFFIC_COLORS.length],
+        opacity: 0.42 + ratio * 0.58,
+       }}
+      />
+      <span className="pointer-events-none absolute bottom-1 left-1/2 hidden -translate-x-1/2 whitespace-nowrap border-2 border-black bg-white px-2 py-1 text-[9px] font-black uppercase group-hover:block">
+       {row.videoId}
+      </span>
+     </div>
+    )
+   })}
+  </div>
+ )
 }
 
 const SvgRadial: React.FC<{ rows: TubeExplorerVideoPoint[]; metric: keyof TubeExplorerVideoPoint }> = ({ rows, metric }) => {
@@ -577,23 +656,18 @@ const SankeyRiverDeltaRenderer: React.FC<{ dataset: TubeExplorerVisualDataset }>
    views: number
   }> = []
 
-  sourceNodes.forEach((source) => {
-   const sourceFraction = source.views / totalSourceViews
-   let cursor = source.x
-   destNodes.forEach((dest) => {
-    const flowViews = sourceFraction * dest.views
-    const flowWidth = Math.max(0.8, (flowViews / totalGeoViews) * usableWidth * 0.82)
-    flows.push({
-     srcX: cursor,
-     srcW: flowWidth,
-     dstX: dest.x + (dest.w * (source.x - pad)) / usableWidth,
-     dstW: flowWidth,
-     color: source.color,
-     srcLabel: source.label,
-     dstLabel: dest.label,
-     views: flowViews,
-    })
-    cursor += flowWidth
+  sourceNodes.slice(0, Math.min(sourceNodes.length, destNodes.length)).forEach((source, index) => {
+   const dest = destNodes[index]
+   const flowWidth = Math.max(0.8, Math.min(source.w, dest.w) * 0.82)
+   flows.push({
+    srcX: source.x + (source.w - flowWidth) / 2,
+    srcW: flowWidth,
+    dstX: dest.x + (dest.w - flowWidth) / 2,
+    dstW: flowWidth,
+    color: source.color,
+    srcLabel: source.label,
+    dstLabel: dest.label,
+    views: Math.min(source.views, dest.views),
    })
   })
 
@@ -615,7 +689,7 @@ const SankeyRiverDeltaRenderer: React.FC<{ dataset: TubeExplorerVisualDataset }>
     <>
      <InsightBadge label="Personal Insight" />
      <span className="text-[11px] font-medium leading-5 text-white/85">
-      Stream width maps view volume from traffic sources into top geography rows. The internal SVG owns its own geometry so outer chart defaults cannot flatten it into bars.
+      River width compares independently queried traffic-source and geography shares by rank. It does not claim source-to-region attribution.
      </span>
     </>
    }
@@ -623,7 +697,7 @@ const SankeyRiverDeltaRenderer: React.FC<{ dataset: TubeExplorerVisualDataset }>
     <>
      <InsightBadge label="Action" tone="#00ccff" />
      <span className="text-[11px] font-medium leading-5 text-white/85">
-      The widest river marks the traffic-to-geography path with the most leverage.
+      Compare the widest ranked bands to see whether acquisition and audience concentration move together.
      </span>
     </>
    }>
@@ -700,6 +774,7 @@ const TitleWordNetworkRenderer: React.FC<{ dataset: TubeExplorerVisualDataset }>
  const height = 340
  return (
   <ExplorerCanvas
+   flushContent
    footerLeft={
     <>
      <InsightBadge label="Personal Insight" />
@@ -708,6 +783,10 @@ const TitleWordNetworkRenderer: React.FC<{ dataset: TubeExplorerVisualDataset }>
      </span>
     </>
    }>
+   <div className="absolute top-4 left-6 pointer-events-none">
+    <h3 className="text-2xl font-[1000] text-white tracking-tight uppercase">Title Word Network</h3>
+    <p className="text-[11px] font-black tracking-[0.14em] text-[#CCFF00] uppercase mt-1">Title Token Network Visualizer</p>
+   </div>
    <svg viewBox={`0 0 ${width} ${height}`} className="h-full w-full" style={{ background: "#050810" }}>
     <defs>
      <filter id="node-glow">
@@ -787,6 +866,8 @@ const createModule = (
    insight={options.insight}
    height={options.height}
    flushShell={options.flushShell}
+   collapsible={props.collapsible}
+   isOpenInitial={props.isOpenInitial}
   >
    {render(dataset)}
   </ModuleFrame>
@@ -805,75 +886,75 @@ export const TubeExplorerChannelHealthRadar = createModule("CHANNEL HEALTH RADAR
  ]
  return <ResponsiveContainer width="100%" height="100%"><RadarChart data={rows}><PolarGrid stroke="#000" /><PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fontWeight: 900 }} /><Radar dataKey="value" fill="#00CCFF" fillOpacity={0.45} stroke="#000" strokeWidth={3} /></RadarChart></ResponsiveContainer>
 }, { color: "#FFB158", badges: [{ label: "HEALTH", tone: "orange" }] })
-export const TubeExplorerRevenueForecast = createModule("REVENUE FORECAST", "MONTHLY REVENUE TRAJECTORY", (d) => <MonthlyArea dataset={d} a="revenue" b="views" />, { color: "#FF7497" })
-export const TubeExplorerTrafficEvolution = createModule("TRAFFIC EVOLUTION", "CSV/API TRAFFIC SOURCES", (d) => <TrafficBars dataset={d} />, { color: "#00CCFF" })
+export const TubeExplorerRevenueForecast = createModule("REVENUE BY UPLOAD COHORT", "LIFETIME REVENUE BY PUBLISH MONTH", (d) => <MonthlyArea dataset={d} a="revenue" b="views" />, { color: "#FF7497" })
+export const TubeExplorerTrafficEvolution = createModule("TRAFFIC SOURCE MIX", "CURRENT VT-SYNC WINDOW", (d) => <TrafficBars dataset={d} />, { color: "#00CCFF" })
 export const TubeExplorerVideoValueMatrix = createModule("VIDEO VALUE MATRIX", "VIEWS VS REVENUE", (d) => <VideoScatter rows={topVideos(d, "valueScore", 80)} x="views" y="revenue" />, { color: "#CCFF00" })
-export const TubeExplorerSubNetFlow = createModule("SUB NET FLOW", "SUBSCRIBER GAIN/LOSS", (d) => <VideoBars rows={topVideos(d, "subscribersGained")} metric="subscribersGained" color="#CCFF00" />, { color: "#FFEA00" })
+export const TubeExplorerSubNetFlow = createModule("SUBSCRIBER NET FLOW", "GAINS MINUS LOSSES BY VIDEO", (d) => <VideoBars rows={topVideos(d, "subscribersNet", 18, true)} metric="subscribersNet" color="#CCFF00" />, { color: "#FFEA00" })
 export const TubeExplorerContentDonut = createModule("CONTENT DONUT", "FORMAT SPLIT", (d) => <Donut rows={[{ name: "Shorts", value: d.shorts.length }, { name: "Long", value: d.longform.length }, { name: "Other", value: d.videos.length - d.shorts.length - d.longform.length }]} />, { color: "#FFB158" })
-export const TubeExplorerPerformanceGauges = createModule("PERFORMANCE GAUGES", "TOP CORE METRIC BARS", (d) => <VideoBars rows={topVideos(d, "views", 12)} metric="views" color="#00CCFF" />, { color: "#B14AED" })
-export const TubeExplorerRevenueWaterfall = createModule("REVENUE WATERFALL", "MONTHLY REVENUE STEPS", (d) => <MonthlyArea dataset={d} a="revenue" b="watchHours" />, { color: "#42FF68" })
-export const TubeExplorerConversionFunnel = createModule("CONVERSION FUNNEL", "IMPRESSIONS TO SUBS", (d) => <Donut rows={[{ name: "Impressions", value: d.totals.impressions }, { name: "Views", value: d.totals.views }, { name: "Engaged", value: d.totals.engagedViews }, { name: "Subs", value: d.totals.subscribersGained }]} />, { color: "#00CCFF" })
+export const TubeExplorerPerformanceGauges = createModule("TOP VIDEO VIEWS", "RANKED CORE METRIC BARS", (d) => <VideoBars rows={topVideos(d, "views", 12)} metric="views" color="#00CCFF" />, { color: "#B14AED" })
+export const TubeExplorerRevenueWaterfall = createModule("REVENUE COHORT AREA", "LIFETIME REVENUE AND WATCH BY PUBLISH MONTH", (d) => <MonthlyArea dataset={d} a="revenue" b="watchHours" />, { color: "#42FF68" })
+export const TubeExplorerConversionFunnel = createModule("CONVERSION FUNNEL", "IMPRESSIONS TO SUBSCRIBERS", (d) => <FunnelStages dataset={d} />, { color: "#00CCFF" })
 export const TubeExplorerUploadHeatmap = createModule("UPLOAD HEATMAP", "UPLOAD DAY VIEW DENSITY", (d) => <HeatGrid cells={["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((label) => ({ label, value: d.videos.filter((v) => v.dayKey === label).reduce((sum, v) => sum + v.views, 0) }))} empty="No dated rows available" />, { color: "#FF7497" })
 
-export const TubeExplorerECGVitalsMonitor = createModule("ECG VITALS", "MONTHLY WATCH SIGNAL", (d) => <MonthlyArea dataset={d} a="watchHours" b="engagement" />, { color: "#FF7497" })
+export const TubeExplorerECGVitalsMonitor = createModule("WATCH BY UPLOAD COHORT", "LIFETIME WATCH BY PUBLISH MONTH", (d) => <MonthlyArea dataset={d} a="watchHours" b="engagement" />, { color: "#FF7497" })
 export const TubeExplorerChronoSpiral = createModule("CHRONO SPIRAL", "DATED VIDEO ORBITS", (d) => <SvgRadial rows={topVideos(d, "views", 32)} metric="views" />, { color: "#CCFF00" })
 export const TubeExplorerContentDNAGel = createModule("CONTENT DNA GEL", "KEYWORD INTENSITY STRIPS", (d) => <KeywordBlocks dataset={d} />, { color: "#B14AED" })
-export const TubeExplorerPerformanceWaveform = createModule("PERFORMANCE WAVEFORM", "MONTHLY VIEWS WAVE", (d) => <MonthlyArea dataset={d} a="views" b="engagement" />, { color: "#00CCFF" })
+export const TubeExplorerPerformanceWaveform = createModule("VIEWS BY UPLOAD COHORT", "LIFETIME VIEWS BY PUBLISH MONTH", (d) => <MonthlyArea dataset={d} a="views" b="engagement" />, { color: "#00CCFF" })
 export const TubeExplorerOrbitalSystem = createModule("ORBITAL SYSTEM", "VALUE SCORE ORBITS", (d) => <SvgRadial rows={topVideos(d, "valueScore", 34)} metric="valueScore" />, { color: "#FFB158" })
 export const TubeExplorerLissajousWeb = createModule("LISSAJOUS WEB", "RETENTION VS ENGAGEMENT", (d) => <VideoScatter rows={topVideos(d, "views", 90)} x="retentionScore" y="engagementRate" />, { color: "#42FF68" })
-export const TubeExplorerKeywordVennChart = createModule("KEYWORD VENN", "OVERLAPPING TITLE TERMS", (d) => <KeywordBlocks dataset={d} />, { color: "#FFE35A" })
+export const TubeExplorerKeywordVennChart = createModule("KEYWORD OVERLAP BLOCKS", "TITLE AND SEARCH TERM INTENSITY", (d) => <KeywordBlocks dataset={d} />, { color: "#FFE35A" })
 
-export const TubeExplorerBarcodeFingerprint = createModule("BARCODE FINGERPRINT", "VIDEO VALUE BARS", (d) => <VideoBars rows={topVideos(d, "valueScore", 28)} metric="valueScore" color="#000" />, { color: "#CCFF00" })
+export const TubeExplorerBarcodeFingerprint = createModule("BARCODE FINGERPRINT", "VIDEO VALUE STRIPES", (d) => <BarcodeFingerprintRenderer dataset={d} />, { color: "#CCFF00" })
 export const TubeExplorerThermalHeatmapGrid = createModule("THERMAL HEATMAP", "MONTHLY VIEW HEAT", (d) => <HeatGrid cells={d.monthly.map((m) => ({ label: m.month, value: m.views }))} empty="No monthly rows available" />, { color: "#FF7497" })
 export const TubeExplorerEmissionSpectrum = createModule("EMISSION SPECTRUM", "GEOGRAPHY SPECTRUM", (d) => <GeoBars dataset={d} />, { color: "#B14AED" })
 export const TubeExplorerStalactiteDrip = createModule("STALACTITE DRIP", "WATCH HOURS DROP LINES", (d) => <VideoBars rows={topVideos(d, "watchHours", 22)} metric="watchHours" color="#00CCFF" />, { color: "#00CCFF" })
-export const TubeExplorerSankeyRiverDelta = createModule("SANKEY RIVER DELTA", "TRAFFIC SOURCE RIVER", (d) => <SankeyRiverDeltaRenderer dataset={d} />, { color: "#42FF68", height: 420 })
-export const TubeExplorerContourDensityMap = createModule("CONTOUR DENSITY", "VIEWS VS RETENTION", (d) => <VideoScatter rows={topVideos(d, "views", 120)} x="views" y="retentionScore" />, { color: "#FFB158" })
-export const TubeExplorerClockRadialBurst = createModule("CLOCK RADIAL BURST", "UPLOAD DAY BURST", (d) => <ClockRadialBurstRenderer dataset={d} />, { color: "#FFE35A", height: 400, flushShell: true })
+export const TubeExplorerSankeyRiverDelta = createModule("SANKEY RIVER DELTA", "INDEPENDENT TRAFFIC + REGION RANKS", (d) => <SankeyRiverDeltaRenderer dataset={d} />, { color: "#42FF68", height: 420 })
+export const TubeExplorerContourDensityMap = createModule("RETENTION SCATTER", "VIEWS VS AVERAGE PERCENTAGE VIEWED", (d) => <VideoScatter rows={topVideos(d, "views", 120)} x="views" y="retentionScore" />, { color: "#FFB158" })
+export const TubeExplorerClockRadialBurst = createModule("CLOCK RADIAL BURST", "TRAFFIC SOURCE BURST", (d) => <ClockRadialBurstRenderer dataset={d} />, { color: "#FFE35A", height: 400, flushShell: true })
 export const TubeExplorerRetentionMosaic = createModule("RETENTION MOSAIC", "AVP/STW TILE MAP", (d) => <HeatGrid cells={topVideos(d, "retentionScore", 28).map((v) => ({ label: v.videoId.slice(0, 5), value: v.retentionScore }))} empty="No retention metrics available" />, { color: "#FF7497" })
 
 export const TubeExplorerPerfectionQuadrant = createModule("PERFECTION QUADRANT", "RETENTION VS REVENUE", (d) => <VideoScatter rows={topVideos(d, "valueScore", 90)} x="retentionScore" y="revenue" />, { color: "#CCFF00" })
-export const TubeExplorerSubscriberWaterfall = createModule("SUBSCRIBER WATERFALL", "MONTHLY SUB GAINS", (d) => <MonthlyArea dataset={d} a="subscribersGained" b="videos" />, { color: "#00CCFF" })
+export const TubeExplorerSubscriberWaterfall = createModule("SUBSCRIBERS BY UPLOAD COHORT", "LIFETIME GAINS BY PUBLISH MONTH", (d) => <MonthlyArea dataset={d} a="subscribersGained" b="videos" />, { color: "#00CCFF" })
 export const TubeExplorerDurationRetentionScatter = createModule("DURATION RETENTION", "LENGTH VS RETENTION", (d) => <VideoScatter rows={topVideos(d, "views", 120)} x="durationSec" y="retentionScore" />, { color: "#FFB158" })
 export const TubeExplorerBeeswarmLikeRate = createModule("BEESWARM LIKE RATE", "LIKE RATE CLUSTERS", (d) => <VideoScatter rows={topVideos(d, "likes", 120)} x="views" y="likeRate" />, { color: "#B14AED" })
 export const TubeExplorerCalendarHeatSignature = createModule("CALENDAR HEAT", "MONTHLY UPLOAD SIGNATURE", (d) => <HeatGrid cells={d.monthly.map((m) => ({ label: m.month, value: m.videos }))} empty="No monthly upload rows available" />, { color: "#42FF68" })
-export const TubeExplorerSearchBubbleUniverse = createModule("SEARCH BUBBLE", "SEARCH KEYWORD UNIVERSE", (d) => <KeywordBlocks dataset={d} />, { color: "#00CCFF" })
-export const TubeExplorerUSStateDotMap = createModule("US STATE DOT MAP", "STATE/CITY GEO DOTS", (d) => <GeoBars dataset={d} />, { color: "#FF7497" })
-export const TubeExplorerTitleWordNetwork = createModule("TITLE WORD NETWORK", "TITLE TOKEN NETWORK", (d) => <TitleWordNetworkRenderer dataset={d} />, { color: "#CCFF00", height: 420 })
+export const TubeExplorerSearchBubbleUniverse = createModule("SEARCH KEYWORD BLOCKS", "SEARCH TERM INTENSITY", (d) => <KeywordBlocks dataset={d} />, { color: "#00CCFF" })
+export const TubeExplorerUSStateDotMap = createModule("REGION RANKING", "COUNTRY, REGION, AND CITY VIEWS", (d) => <GeoBars dataset={d} />, { color: "#FF7497" })
+export const TubeExplorerTitleWordNetwork = createModule("TITLE WORD NETWORK", "TITLE TOKEN NETWORK", (d) => <TitleWordNetworkRenderer dataset={d} />, { color: "#CCFF00", height: 420, flushShell: true })
 
 export const TUBE_EXPLORER_VISUAL_MODULES: TubeExplorerVisualModuleEntry[] = [
  { id: "tube-explorer-keyword-treemap", title: "Keyword Treemap", render: (props) => <TubeExplorerKeywordTreemap {...props} /> },
  { id: "tube-explorer-channel-health-radar", title: "Channel Health Radar", render: (props) => <TubeExplorerChannelHealthRadar {...props} /> },
- { id: "tube-explorer-revenue-forecast", title: "Revenue Forecast", render: (props) => <TubeExplorerRevenueForecast {...props} /> },
- { id: "tube-explorer-traffic-evolution", title: "Traffic Evolution", render: (props) => <TubeExplorerTrafficEvolution {...props} /> },
+ { id: "tube-explorer-revenue-forecast", title: "Revenue by Upload Cohort", render: (props) => <TubeExplorerRevenueForecast {...props} /> },
+ { id: "tube-explorer-traffic-evolution", title: "Traffic Source Mix", render: (props) => <TubeExplorerTrafficEvolution {...props} /> },
  { id: "tube-explorer-video-value-matrix", title: "Video Value Matrix", render: (props) => <TubeExplorerVideoValueMatrix {...props} /> },
- { id: "tube-explorer-sub-net-flow", title: "Sub Net Flow", render: (props) => <TubeExplorerSubNetFlow {...props} /> },
+ { id: "tube-explorer-sub-net-flow", title: "Subscriber Net Flow", render: (props) => <TubeExplorerSubNetFlow {...props} /> },
  { id: "tube-explorer-content-donut", title: "Content Donut", render: (props) => <TubeExplorerContentDonut {...props} /> },
- { id: "tube-explorer-performance-gauges", title: "Performance Gauges", render: (props) => <TubeExplorerPerformanceGauges {...props} /> },
- { id: "tube-explorer-revenue-waterfall", title: "Revenue Waterfall", render: (props) => <TubeExplorerRevenueWaterfall {...props} /> },
+ { id: "tube-explorer-performance-gauges", title: "Top Video Views", render: (props) => <TubeExplorerPerformanceGauges {...props} /> },
+ { id: "tube-explorer-revenue-waterfall", title: "Revenue Cohort Area", render: (props) => <TubeExplorerRevenueWaterfall {...props} /> },
  { id: "tube-explorer-conversion-funnel", title: "Conversion Funnel", render: (props) => <TubeExplorerConversionFunnel {...props} /> },
  { id: "tube-explorer-upload-heatmap", title: "Upload Heatmap", render: (props) => <TubeExplorerUploadHeatmap {...props} /> },
- { id: "tube-explorer-ecg-vitals-monitor", title: "ECG Vitals Monitor", render: (props) => <TubeExplorerECGVitalsMonitor {...props} /> },
+ { id: "tube-explorer-ecg-vitals-monitor", title: "Watch by Upload Cohort", render: (props) => <TubeExplorerECGVitalsMonitor {...props} /> },
  { id: "tube-explorer-chrono-spiral", title: "Chrono Spiral", render: (props) => <TubeExplorerChronoSpiral {...props} /> },
  { id: "tube-explorer-content-dna-gel", title: "Content DNA Gel", render: (props) => <TubeExplorerContentDNAGel {...props} /> },
- { id: "tube-explorer-performance-waveform", title: "Performance Waveform", render: (props) => <TubeExplorerPerformanceWaveform {...props} /> },
+ { id: "tube-explorer-performance-waveform", title: "Views by Upload Cohort", render: (props) => <TubeExplorerPerformanceWaveform {...props} /> },
  { id: "tube-explorer-orbital-system", title: "Orbital System", render: (props) => <TubeExplorerOrbitalSystem {...props} /> },
  { id: "tube-explorer-lissajous-web", title: "Lissajous Web", render: (props) => <TubeExplorerLissajousWeb {...props} /> },
- { id: "tube-explorer-keyword-venn-chart", title: "Keyword Venn Chart", render: (props) => <TubeExplorerKeywordVennChart {...props} /> },
+ { id: "tube-explorer-keyword-venn-chart", title: "Keyword Overlap Blocks", render: (props) => <TubeExplorerKeywordVennChart {...props} /> },
  { id: "tube-explorer-barcode-fingerprint", title: "Barcode Fingerprint", render: (props) => <TubeExplorerBarcodeFingerprint {...props} /> },
  { id: "tube-explorer-thermal-heatmap-grid", title: "Thermal Heatmap Grid", render: (props) => <TubeExplorerThermalHeatmapGrid {...props} /> },
  { id: "tube-explorer-emission-spectrum", title: "Emission Spectrum", render: (props) => <TubeExplorerEmissionSpectrum {...props} /> },
  { id: "tube-explorer-stalactite-drip", title: "Stalactite Drip", render: (props) => <TubeExplorerStalactiteDrip {...props} /> },
  { id: "tube-explorer-sankey-river-delta", title: "Sankey River Delta", render: (props) => <TubeExplorerSankeyRiverDelta {...props} /> },
- { id: "tube-explorer-contour-density-map", title: "Contour Density Map", render: (props) => <TubeExplorerContourDensityMap {...props} /> },
+ { id: "tube-explorer-contour-density-map", title: "Retention Scatter", render: (props) => <TubeExplorerContourDensityMap {...props} /> },
  { id: "tube-explorer-clock-radial-burst", title: "Clock Radial Burst", render: (props) => <TubeExplorerClockRadialBurst {...props} /> },
  { id: "tube-explorer-retention-mosaic", title: "Retention Mosaic", render: (props) => <TubeExplorerRetentionMosaic {...props} /> },
  { id: "tube-explorer-perfection-quadrant", title: "Perfection Quadrant", render: (props) => <TubeExplorerPerfectionQuadrant {...props} /> },
- { id: "tube-explorer-subscriber-waterfall", title: "Subscriber Waterfall", render: (props) => <TubeExplorerSubscriberWaterfall {...props} /> },
+ { id: "tube-explorer-subscriber-waterfall", title: "Subscribers by Upload Cohort", render: (props) => <TubeExplorerSubscriberWaterfall {...props} /> },
  { id: "tube-explorer-duration-retention-scatter", title: "Duration Retention Scatter", render: (props) => <TubeExplorerDurationRetentionScatter {...props} /> },
  { id: "tube-explorer-beeswarm-like-rate", title: "Beeswarm Like Rate", render: (props) => <TubeExplorerBeeswarmLikeRate {...props} /> },
  { id: "tube-explorer-calendar-heat-signature", title: "Calendar Heat Signature", render: (props) => <TubeExplorerCalendarHeatSignature {...props} /> },
- { id: "tube-explorer-search-bubble-universe", title: "Search Bubble Universe", render: (props) => <TubeExplorerSearchBubbleUniverse {...props} /> },
- { id: "tube-explorer-us-state-dot-map", title: "US State Dot Map", render: (props) => <TubeExplorerUSStateDotMap {...props} /> },
+ { id: "tube-explorer-search-bubble-universe", title: "Search Keyword Blocks", render: (props) => <TubeExplorerSearchBubbleUniverse {...props} /> },
+ { id: "tube-explorer-us-state-dot-map", title: "Region Ranking", render: (props) => <TubeExplorerUSStateDotMap {...props} /> },
  { id: "tube-explorer-title-word-network", title: "Title Word Network", render: (props) => <TubeExplorerTitleWordNetwork {...props} /> },
 ]

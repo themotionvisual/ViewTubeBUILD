@@ -4,8 +4,11 @@ import {
  ArrowRight,
  BookOpen,
  Brain,
+ ChevronLeft,
+ ChevronRight,
  HelpCircle,
  MessageSquare,
+ PanelRight,
  Send,
  ThumbsDown,
  ThumbsUp,
@@ -14,7 +17,7 @@ import {
 import { Toolbox } from "../components/Toolbox"
 import { useBrain } from "../context/useBrain"
 import { TOOLBOX_PALETTE } from "../styles/toolboxPalette"
-import { generateChatResponse, hasGeminiKey } from "../services/gemini"
+import { hasGeminiKey } from "../services/gemini"
 import {
  AI_BRAIN_INTAKE_QUESTIONS,
  dismissAiBrainIntake,
@@ -31,7 +34,6 @@ import {
  buildCreatorBrainPromptCards,
  buildCreatorBrainLocalFallback,
  formatCreatorBrainResponse,
- queueAIBrainReviewedAction,
  type AIBrainChatHandoff,
  type AIBrainContextSnapshot,
 } from "../services/aiBrainCommandInterface"
@@ -40,6 +42,7 @@ import {
  buildCreatorGrowthContext,
  formatCreatorGrowthModules,
  listAIBrainConversationTurns,
+ resumeAIBrainThread,
  saveAIBrainConversationTurn,
  sanitizeCreatorFacingBrainCopy,
 } from "../services/aiBrainConversationStore"
@@ -53,6 +56,7 @@ import {
  listAIBrainLearningEntries,
  scoreAIBrainAnswerUsefulness,
 } from "../services/aiBrainSelfImprovement"
+import { runBrainTurn } from "../services/brain/BrainOrchestrator"
 import { BrainAnswerModuleGrid } from "../components/brain/BrainAnswerModules"
 import { BrainConfidenceChip, confidenceForEvidence } from "../components/brain/BrainConfidenceChip"
 import { BrainContextRail } from "../components/brain/BrainContextRail"
@@ -89,11 +93,6 @@ const makeMessageId = () =>
  typeof crypto !== "undefined" && "randomUUID" in crypto
   ? crypto.randomUUID()
   : `${Date.now()}-${Math.random().toString(36).slice(2)}`
-
-const shouldOfferReviewedHandoff = (text: string): boolean =>
- /\b(open|draft|build|create|queue|handoff|canvas|thumbnail|goal tracker|editor|journal|publish checklist|storyboard)\b/i.test(
-  text,
- )
 
 /**
  * The Brain's own opening read. Never an empty box and never a stock greeting: it
@@ -144,6 +143,7 @@ const CreatorResponseCard: React.FC<{
  onFeedback: (message: ChatMessage, rating: AIBrainFeedbackSignal["rating"]) => void
  onAnswerQuestion: (question: CreatorBrainLearningQuestion, answer: string) => void
 }> = ({ message, evidencePack, answeredQuestionIds, onFeedback, onAnswerQuestion }) => {
+ const [modulePage, setModulePage] = useState(0)
  const response = message.response
  if (!response) {
   return (
@@ -163,32 +163,41 @@ const CreatorResponseCard: React.FC<{
      source: "growth" as const,
     }))
  const openQuestions = response.questions.filter((question) => !answeredQuestionIds.has(question.id))
+ const modulePageCount = Math.max(1, Math.ceil(modules.length / 2))
+ const visibleModules = modules.slice(modulePage * 2, modulePage * 2 + 2)
 
  return (
-  <article className="max-w-[96%] overflow-hidden rounded-[12px] border-[2px] border-black bg-white shadow-[4px_4px_0_0_#000]">
-   <div className="border-b-[2px] border-black px-4 py-3" style={{ backgroundColor: TOOLBOX_PALETTE[5] }}>
+  <article className="flex h-full min-h-0 max-w-[96%] flex-col overflow-hidden rounded-[12px] border-[2px] border-black bg-white shadow-[4px_4px_0_0_#000]">
+   <div className="shrink-0 border-b-[2px] border-black px-3 py-2" style={{ backgroundColor: TOOLBOX_PALETTE[5] }}>
     <div className="flex flex-wrap items-center justify-between gap-2">
      <div>
       <div className="text-[9px] font-black uppercase tracking-[0.16em] text-black/55">ViewTube Copilot</div>
-      <h3 className="text-2xl font-[1000] uppercase leading-none">
+      <h3 className="text-lg font-[1000] uppercase leading-none sm:text-xl">
        {sanitizeCreatorFacingBrainCopy(response.headline)}
       </h3>
      </div>
-     <BrainConfidenceChip confidence={response.confidence} />
     </div>
    </div>
-   <div className="grid gap-4 p-4">
-    <p className="text-base font-black leading-7">{sanitizeCreatorFacingBrainCopy(response.keyInsight)}</p>
-    <BrainAnswerModuleGrid modules={modules} />
-    <BrainEvidenceDrawer evidencePack={evidencePack} />
-    {openQuestions.length ? (
-     <div className="grid gap-2">
-      {openQuestions.map((question) => (
-       <BrainQuestionPrompt key={question.id} question={question} onAnswer={onAnswerQuestion} compact />
-      ))}
+   <div className="flex min-h-0 flex-1 flex-col gap-2.5 p-3">
+    <p className="shrink-0 text-sm font-black leading-5">{sanitizeCreatorFacingBrainCopy(response.keyInsight)}</p>
+    <div className="min-h-0 flex-1">
+     <BrainAnswerModuleGrid modules={visibleModules} compact />
+    </div>
+    {modulePageCount > 1 ? (
+     <div className="flex shrink-0 items-center justify-between gap-2">
+      <button type="button" className={kpiButton} disabled={modulePage === 0} onClick={() => setModulePage((page) => Math.max(0, page - 1))}>
+       <ChevronLeft size={13} /> Previous
+      </button>
+      <span className="text-[10px] font-black uppercase">Modules {modulePage + 1} / {modulePageCount}</span>
+      <button type="button" className={kpiButton} disabled={modulePage >= modulePageCount - 1} onClick={() => setModulePage((page) => Math.min(modulePageCount - 1, page + 1))}>
+       Next <ChevronRight size={13} />
+      </button>
      </div>
     ) : null}
-    <div className="flex flex-wrap items-center gap-2">
+    {openQuestions[0] && modulePage === modulePageCount - 1 ? (
+     <BrainQuestionPrompt question={openQuestions[0]} onAnswer={onAnswerQuestion} compact />
+    ) : null}
+    <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-t-[2px] border-black pt-2">
      {(
       [
        ["helpful", <ThumbsUp size={14} key="up" />, "Helpful"],
@@ -196,7 +205,7 @@ const CreatorResponseCard: React.FC<{
        ["inaccurate", <HelpCircle size={14} key="q" />, "Inaccurate"],
        ["save_insight", <BookOpen size={14} key="save" />, "Save insight"],
        ["ask_follow_up", <MessageSquare size={14} key="follow" />, "Ask follow-up"],
-      ] as const
+     ] as const
      ).map(([rating, iconNode, label]) => (
       <button
        key={rating}
@@ -208,6 +217,7 @@ const CreatorResponseCard: React.FC<{
        {label}
       </button>
      ))}
+     <BrainEvidenceDrawer evidencePack={evidencePack} />
      {message.handoff ? (
       <Link
        to={message.handoff.route}
@@ -236,47 +246,59 @@ const CreatorIntakeWizard: React.FC<{
  onSave: () => void
  onDefer: () => void
 }> = ({ context, onChange, onSave, onDefer }) => {
+ const [questionIndex, setQuestionIndex] = useState(0)
  const update = (key: keyof AiBrainContext, value: string) => onChange({ ...context, [key]: value })
+ const question = AI_BRAIN_INTAKE_QUESTIONS[questionIndex]
+ const lastQuestion = questionIndex === AI_BRAIN_INTAKE_QUESTIONS.length - 1
  return (
-  <section className={`${shellCard} overflow-hidden`}>
+  <section className={`${shellCard} flex h-full min-h-0 flex-col overflow-hidden`}>
    <div className="border-b-[4px] border-black bg-[#3FEE56] px-5 py-4">
-    <div className="text-[10px] font-black uppercase tracking-[0.18em] text-black/55">Creator Profile Setup</div>
-    <h2 className="mt-1 text-3xl font-[1000] uppercase leading-none">Help ViewTube Understand Your Channel</h2>
-    <p className="mt-2 max-w-4xl text-sm font-bold leading-6 text-black/70">
-     Answer what you can now. I'll also infer from your channel data, but your answers help me rank goals, content
-     advice, series ideas, and monetization recommendations around what you actually want.
-    </p>
+    <div className="flex items-center justify-between gap-3">
+     <div>
+      <div className="text-[10px] font-black uppercase tracking-[0.18em] text-black/55">Creator Profile Setup</div>
+      <h2 className="mt-1 text-2xl font-[1000] uppercase leading-none sm:text-3xl">Help ViewTube Understand Your Channel</h2>
+     </div>
+     <span className="rounded-[8px] border-[2px] border-black bg-white px-3 py-1 text-xs font-black">
+      {questionIndex + 1} / {AI_BRAIN_INTAKE_QUESTIONS.length}
+     </span>
+    </div>
    </div>
-   <div className="grid gap-4 p-4 lg:grid-cols-2">
-    {AI_BRAIN_INTAKE_QUESTIONS.map((question) => (
-     <label key={question.id} className={`${innerCard} block overflow-hidden`}>
-      <span className="block border-b-[2px] border-black px-3 py-2" style={{ backgroundColor: TOOLBOX_PALETTE[3] }}>
-       <span className="block text-[9px] font-black uppercase tracking-[0.16em] text-black/55">{question.label}</span>
-       <span className="block text-sm font-[1000] leading-5">{question.prompt}</span>
-      </span>
-      <textarea
-       value={String(context[question.id] || "")}
-       onChange={(event) => update(question.id, event.target.value)}
-       placeholder={question.placeholder}
-       className="min-h-[96px] w-full resize-y border-0 bg-white p-3 text-sm font-bold leading-6 outline-none focus:bg-[#FFDA47]/20"
-      />
-     </label>
-    ))}
+   <div className="grid min-h-0 flex-1 place-items-center p-4 sm:p-6">
+    <label key={question.id} className={`${innerCard} block w-full max-w-4xl overflow-hidden`}>
+     <span className="block border-b-[2px] border-black px-4 py-3" style={{ backgroundColor: TOOLBOX_PALETTE[(questionIndex + 2) % TOOLBOX_PALETTE.length] }}>
+      <span className="block text-[9px] font-black uppercase tracking-[0.16em] text-black/55">{question.label}</span>
+      <span className="mt-1 block text-lg font-[1000] leading-6">{question.prompt}</span>
+     </span>
+     <textarea
+      value={String(context[question.id] || "")}
+      onChange={(event) => update(question.id, event.target.value)}
+      placeholder={question.placeholder}
+      className="h-[clamp(150px,28vh,250px)] w-full resize-none border-0 bg-white p-4 text-base font-bold leading-7 outline-none focus:bg-[#FFDA47]/20"
+     />
+    </label>
    </div>
    <div className="border-t-[4px] border-black bg-[#f8f8f4] p-4">
-    <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:items-center">
+    <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto] sm:items-center">
      <p className="text-sm font-bold leading-6 text-black/70">
-      You can skip this and just start talking to me — I'll ask for what I need as it becomes relevant.
+      Answer what you know now. You can skip and continue later.
      </p>
      <button type="button" onClick={onDefer} className={`${kpiButton} justify-center`}>
       Skip for now
      </button>
      <button
       type="button"
-      onClick={onSave}
+      onClick={() => setQuestionIndex((index) => Math.max(0, index - 1))}
+      disabled={questionIndex === 0}
+      className={`${kpiButton} justify-center disabled:opacity-40`}
+     >
+      <ChevronLeft size={14} /> Previous
+     </button>
+     <button
+      type="button"
+      onClick={() => lastQuestion ? onSave() : setQuestionIndex((index) => Math.min(AI_BRAIN_INTAKE_QUESTIONS.length - 1, index + 1))}
       className="inline-flex items-center justify-center gap-2 rounded-[10px] border-[2px] border-black bg-[#3FEE56] px-4 py-3 text-[11px] font-black uppercase tracking-[0.1em] shadow-[3px_3px_0_0_#000]"
      >
-      Save Creator Profile
+      {lastQuestion ? "Save Creator Profile" : "Next Question"}
       <ArrowRight size={15} />
      </button>
     </div>
@@ -308,9 +330,10 @@ const AIBrainCommandInterface: React.FC = () => {
  const [onboardingSnapshot, setOnboardingSnapshot] = useState<BrainOnboardingSnapshot | null>(null)
  const [intakeOpen, setIntakeOpen] = useState(false)
  const [intakeContext, setIntakeContext] = useState<AiBrainContext>(() => loadAiBrainContext())
- const bottomRef = useRef<HTMLDivElement | null>(null)
- const layoutRef = useRef<HTMLDivElement | null>(null)
- const [fittedHeight, setFittedHeight] = useState<number | null>(null)
+ const [selectedTurnIndex, setSelectedTurnIndex] = useState(0)
+ const [contextRailOpen, setContextRailOpen] = useState(false)
+ const [journalOpen, setJournalOpen] = useState(false)
+ const composerRef = useRef<HTMLInputElement | null>(null)
  const canUseGemini = hasGeminiKey()
  const promptCards = useMemo(() => buildCreatorBrainPromptCards(), [])
  const channelId = authState.channelHandle || authState.channelId || null
@@ -351,33 +374,6 @@ const AIBrainCommandInterface: React.FC = () => {
   [initialInsights, quickActions],
  )
 
- /**
-  * Size the workspace to whatever viewport space is left below the app chrome.
-  *
-  * The amount of chrome above this point is not a constant: the top bar, sidebar,
-  * and the Toolbox header (which can expand a help panel) all vary. Measuring the
-  * real offset is the only way the conversation and the rail reliably land on one
-  * screen instead of being clipped by the Toolbox's own overflow.
-  */
- useEffect(() => {
-  const measure = () => {
-   const node = layoutRef.current
-   if (!node || typeof window === "undefined") return
-   if (!window.matchMedia("(min-width: 1280px)").matches) {
-    setFittedHeight(null)
-    return
-   }
-   const documentTop = node.getBoundingClientRect().top + window.scrollY
-   setFittedHeight(Math.max(520, Math.round(window.innerHeight - documentTop - 24)))
-  }
-  const frame = window.requestAnimationFrame(measure)
-  window.addEventListener("resize", measure)
-  return () => {
-   window.cancelAnimationFrame(frame)
-   window.removeEventListener("resize", measure)
-  }
- }, [])
-
  useEffect(() => {
   const query = new URLSearchParams(location.search)
   if (query.get("intake") === "1") {
@@ -402,18 +398,11 @@ const AIBrainCommandInterface: React.FC = () => {
 
  const refreshConversationTurns = async () => {
   try {
-   const turns = await listAIBrainConversationTurns({ channelId, limit: 20 })
+   const resumed = await resumeAIBrainThread(channelId)
+   const turns = resumed.turns.slice().reverse()
    setRecentTurns(turns)
    setQuestionAnswers(turns.flatMap((turn) => turn.questionAnswers || []))
-   const restoredMessages = turns
-    .filter((turn) => turn.response && turn.metadata?.source !== "feedback")
-    .slice()
-    .reverse()
-    .flatMap<ChatMessage>((turn) => [
-     { id: `${turn.id}-user`, role: "user", text: turn.userText },
-     { id: turn.id, role: "model", text: turn.assistantText, response: turn.response, handoff: null },
-    ])
-   setMessages(restoredMessages)
+   setSelectedTurnIndex(0)
   } catch (error) {
    console.warn("[AIBrain] Conversation thread unavailable:", error)
   }
@@ -423,6 +412,24 @@ const AIBrainCommandInterface: React.FC = () => {
   void refreshLearning()
   void refreshConversationTurns()
  }, [channelId])
+
+ const visibleTurns = useMemo(
+  () => recentTurns.filter((turn) => turn.response && !["feedback", "journal", "quick_action", "creator_intake", "question_module"].includes(String(turn.metadata?.source || ""))),
+  [recentTurns],
+ )
+
+ useEffect(() => {
+  if (busy) return
+  const turn = visibleTurns[selectedTurnIndex]
+  if (!turn) {
+   setMessages([])
+   return
+  }
+  setMessages([
+   { id: `${turn.id}-user`, role: "user", text: turn.userText },
+   { id: turn.id, role: "model", text: turn.assistantText, response: turn.response, handoff: null },
+  ])
+ }, [busy, selectedTurnIndex, visibleTurns])
 
  useEffect(() => {
   let active = true
@@ -469,7 +476,7 @@ const AIBrainCommandInterface: React.FC = () => {
   setInput("")
   setBusy(true)
   const userMessage: ChatMessage = { id: makeMessageId(), role: "user", text: userText }
-  setMessages((current) => [...current, userMessage])
+  setMessages([userMessage])
   try {
    const systemPrompt = buildAIBrainSystemPrompt({
     brain,
@@ -480,67 +487,41 @@ const AIBrainCommandInterface: React.FC = () => {
     recentConversationTurns: recentTurns,
     creatorGrowthContext,
    })
-   const historyPayload = messages.map((message) => ({
-    role: message.role,
-    parts: [{ text: message.text }],
-   }))
-   const responseText = canUseGemini
-    ? await generateChatResponse(historyPayload, userText, false, systemPrompt)
-    : buildCreatorBrainLocalFallback(userText, snapshot)
-   const handoff = shouldOfferReviewedHandoff(`${userText} ${responseText}`)
-    ? await queueAIBrainReviewedAction({
-       request: userText,
-       response: responseText,
-       channelId: authState.channelHandle || null,
-      })
-    : null
-   const response = formatCreatorBrainResponse(responseText, snapshot, { requestText: userText })
-   const modules = formatCreatorGrowthModules(response, creatorGrowthContext)
-   const responseWithModules: CreatorBrainResponse = { ...response, modules }
-   setMessages((current) => [
-    ...current,
-    { id: makeMessageId(), role: "model", text: responseText, response: responseWithModules, handoff },
-   ])
-   const learningEntry = await captureLearning({
-    channelId,
-    source: "copilot",
-    summary: `Conversation about: ${userText}`,
-    detail: responseWithModules.keyInsight,
-    category: "preference",
-    confidence: responseWithModules.confidence,
-    evidence: responseWithModules.modules?.map((module) => module.title) || [],
-    metadata: {
-     answerMode: responseWithModules.mode,
-     usefulnessScore: scoreAIBrainAnswerUsefulness({ response: responseWithModules }),
-    },
-   })
-   await saveAIBrainConversationTurn({
+   const historyPayload = recentTurns
+    .filter((turn) => turn.response)
+    .slice(0, 4)
+    .reverse()
+    .flatMap((turn) => [
+     { role: "user", parts: [{ text: turn.userText }] },
+     { role: "model", parts: [{ text: turn.assistantText }] },
+    ])
+   const result = await runBrainTurn({
     channelId,
     userText,
-    assistantText: responseText,
-    response: responseWithModules,
-    answerModules: modules,
-    learningEntryIds: learningEntry ? [learningEntry.id] : [],
-    metadata: handoff ? { handoffRoute: handoff.route, handoffTarget: handoff.targetTitle } : undefined,
+    snapshot,
+    systemPrompt,
+    growthContext: creatorGrowthContext,
+    recentTurns,
+    history: historyPayload,
+    allowModel: canUseGemini,
    })
+   setMessages([
+    userMessage,
+    { id: result.turn.id, role: "model", text: result.turn.assistantText, response: result.response, handoff: null },
+   ])
    await refreshConversationTurns()
   } catch (error) {
    const message = error instanceof Error ? error.message : String(error)
-   const creatorMessage = buildCreatorBrainLocalFallback(userText, snapshot)
-   const response = formatCreatorBrainResponse(creatorMessage, snapshot, { requestText: userText })
    console.warn("[AIBrain] Copilot answer failed:", message)
-   setMessages((current) => [
-    ...current,
-    {
-     id: makeMessageId(),
-     role: "model",
-     text: creatorMessage,
-     response: { ...response, modules: formatCreatorGrowthModules(response, creatorGrowthContext) },
-    },
+   const fallbackText = buildCreatorBrainLocalFallback(userText, snapshot)
+   const fallbackResponse = formatCreatorBrainResponse(fallbackText, snapshot, { requestText: userText })
+   const response = { ...fallbackResponse, modules: formatCreatorGrowthModules(fallbackResponse, creatorGrowthContext) }
+   setMessages([
+    userMessage,
+    { id: makeMessageId(), role: "model", text: fallbackText, response },
    ])
   } finally {
    setBusy(false)
-   window.requestAnimationFrame(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }))
   }
  }
 
@@ -702,163 +683,145 @@ const AIBrainCommandInterface: React.FC = () => {
  }
 
  return (
-  <main className="min-h-screen bg-[#f3f4f6] px-4 py-6 text-black sm:px-6 lg:px-8">
-   <div className="mx-auto max-w-[1700px]">
-    <Toolbox
-     title="ViewTube Brain Hub"
-     subtitle="One assistant for channel strategy, analytics, goals, content planning, SEO, and publishing. It decides what to focus on for you."
-     icon={<Brain />}
-     paletteIndex={5}
-     collapsible={false}
-     contentClassName="bg-[#f3f4f6] p-4 sm:p-6"
-    >
-     <div className="grid gap-5">
-      {intakeOpen ? (
-       <CreatorIntakeWizard
-        context={intakeContext}
-        onChange={setIntakeContext}
-        onSave={handleSaveIntake}
-        onDefer={handleDeferIntake}
-       />
-      ) : null}
-
-      <section className={`${shellCard} overflow-hidden`}>
-       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b-[4px] border-black bg-white px-4 py-3">
-        <h1 className="text-2xl font-[1000] uppercase leading-none sm:text-3xl">Ask ViewTube Copilot Anything</h1>
-        <dl className="flex flex-wrap items-center gap-2">
-         {(
-          [
-           ["Channel", snapshot.channel.label],
-           ["Videos", snapshot.vtSync.videos ? snapshot.vtSync.videos.toLocaleString() : "None synced"],
-           ["Views", metricText(snapshot.channel.totalViews)],
-          ] as const
-         ).map(([label, value]) => (
-          <div
-           key={label}
-           className="flex items-baseline gap-1.5 rounded-[8px] border-[2px] border-black bg-[#f8f8f4] px-2 py-1"
-          >
-           <dt className="text-[9px] font-black uppercase tracking-[0.12em] text-black/45">{label}</dt>
-           <dd className="text-[11px] font-[1000] uppercase leading-4">{value}</dd>
-          </div>
-         ))}
-        </dl>
+  <main className="h-full min-h-0 overflow-hidden bg-[#f3f4f6] text-black">
+   <Toolbox
+    title="ViewTube Brain Hub"
+    subtitle="One assistant for channel strategy, analytics, goals, content planning, SEO, and publishing."
+    icon={<Brain />}
+    paletteIndex={5}
+    collapsible={false}
+    indicator="none"
+    fillAvailable
+    contentClassName="h-full min-h-0 overflow-hidden bg-[#f3f4f6] p-2"
+   >
+    {intakeOpen ? (
+     <CreatorIntakeWizard
+      context={intakeContext}
+      onChange={setIntakeContext}
+      onSave={handleSaveIntake}
+      onDefer={handleDeferIntake}
+     />
+    ) : (
+     <section className={`${shellCard} relative flex h-full min-h-0 flex-col overflow-hidden`}>
+      <header className="flex min-h-[50px] shrink-0 items-center justify-between gap-3 border-b-[4px] border-black bg-white px-3 py-2">
+       <div className="min-w-0">
+        <h1 className="truncate text-lg font-[1000] uppercase leading-none sm:text-2xl">Ask ViewTube Copilot Anything</h1>
+        <p className="mt-1 truncate text-[10px] font-black uppercase text-black/50">
+         {snapshot.channel.label} · {snapshot.vtSync.videos ? `${snapshot.vtSync.videos.toLocaleString()} videos` : "channel data not connected"} · {metricText(snapshot.channel.totalViews)} views
+        </p>
        </div>
+       <div className="flex shrink-0 items-center gap-1.5">
+        {visibleTurns.length ? (
+         <>
+          <button type="button" className={kpiButton} disabled={selectedTurnIndex >= visibleTurns.length - 1} onClick={() => setSelectedTurnIndex((index) => Math.min(visibleTurns.length - 1, index + 1))} title="Older exchange">
+           <ChevronLeft size={14} /><span className="hidden sm:inline">Older</span>
+          </button>
+          <span className="text-[10px] font-black">{selectedTurnIndex + 1}/{visibleTurns.length}</span>
+          <button type="button" className={kpiButton} disabled={selectedTurnIndex === 0} onClick={() => setSelectedTurnIndex((index) => Math.max(0, index - 1))} title="Newer exchange">
+           <span className="hidden sm:inline">Newer</span><ChevronRight size={14} />
+          </button>
+         </>
+        ) : null}
+        <button type="button" className={`${kpiButton} xl:hidden`} onClick={() => setContextRailOpen(true)} aria-label="Open channel context">
+         <PanelRight size={15} />
+        </button>
+       </div>
+      </header>
 
-       <div
-        ref={layoutRef}
-        style={fittedHeight ? { height: `${fittedHeight}px` } : undefined}
-        className="grid gap-3 p-3 xl:grid-cols-[minmax(0,1fr)_330px]"
-       >
-        <div className={`${innerCard} flex min-h-0 flex-col overflow-hidden max-xl:min-h-[520px]`}>
-         <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto bg-white p-4">
-          {messages.length === 0 ? (
-           <OpeningBriefing snapshot={snapshot} />
-          ) : (
-           <div className="grid gap-4">
-            {messages.map((message) =>
-             message.role === "user" ? (
-              <UserMessage key={message.id} text={message.text} />
-             ) : (
-              <CreatorResponseCard
-               key={message.id}
-               message={message}
-               evidencePack={snapshot.evidencePack}
-               answeredQuestionIds={answeredQuestionIds}
-               onFeedback={handleFeedback}
-               onAnswerQuestion={handleAnswerQuestion}
-              />
-             ),
-            )}
-            <div ref={bottomRef} />
-           </div>
-          )}
-         </div>
-
-         <div className="border-t-[4px] border-black bg-[#f8f8f4] p-3">
-          <div className="mb-2 flex flex-wrap gap-1.5">
-           {promptCards.slice(0, 6).map((card) => (
-            <button
-             key={card.id}
-             type="button"
-             onClick={() => void handleSend(card.prompt)}
-             className="rounded-[10px] border-[2px] border-black bg-white px-2 py-1.5 text-[10px] font-black uppercase hover:bg-[#FFDA47]"
-            >
-             {card.label}
-            </button>
+      <div className="grid min-h-0 flex-1 gap-2 p-2 xl:grid-cols-[minmax(0,1fr)_310px]">
+       <div className={`${innerCard} flex min-h-0 flex-col overflow-hidden`}>
+        <div className="grid min-h-0 flex-1 gap-2 bg-white p-2">
+         {messages.length === 0 ? (
+          <div className="grid h-full place-items-center"><OpeningBriefing snapshot={snapshot} /></div>
+         ) : (
+          <div className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-2">
+           {messages.map((message) => message.role === "user" ? (
+            <UserMessage key={message.id} text={message.text} />
+           ) : (
+            <CreatorResponseCard
+             key={message.id}
+             message={message}
+             evidencePack={snapshot.evidencePack}
+             answeredQuestionIds={answeredQuestionIds}
+             onFeedback={handleFeedback}
+             onAnswerQuestion={handleAnswerQuestion}
+            />
            ))}
           </div>
-          <div className="flex flex-col gap-3 md:flex-row">
-           <label className="sr-only" htmlFor="brain-composer">
-            Ask ViewTube Copilot
-           </label>
-           <textarea
-            id="brain-composer"
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            onKeyDown={(event) => {
-             if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) void handleSend()
-            }}
-            placeholder="Ask about CTR, scripts, revenue, retention, goals, thumbnails, SEO, publishing, or your channel direction..."
-            className="min-h-[58px] flex-1 rounded-[12px] border-[3px] border-black bg-white p-2.5 text-sm font-bold leading-6 outline-none focus:bg-[#FFDA47]/25"
-           />
-           <button
-            type="button"
-            onClick={() => void handleSend()}
-            disabled={busy || !input.trim()}
-            className="inline-flex min-h-[58px] items-center justify-center gap-2 rounded-[12px] border-[3px] border-black bg-[#3FEE56] px-5 text-sm font-black uppercase tracking-[0.12em] shadow-[4px_4px_0_0_#000] transition hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none disabled:cursor-not-allowed disabled:opacity-60"
-           >
-            {busy ? <Zap className="animate-pulse" size={18} /> : <Send size={18} />}
-            Send
+         )}
+        </div>
+
+        <footer className="shrink-0 border-t-[4px] border-black bg-[#f8f8f4] p-2">
+         <div className="mb-1.5 flex flex-wrap gap-1">
+          {promptCards.slice(0, 4).map((card) => (
+           <button key={card.id} type="button" onClick={() => void handleSend(card.prompt)} className="rounded-[7px] border-[2px] border-black bg-white px-2 py-1 text-[9px] font-black uppercase hover:bg-[#FFDA47]">
+            {card.label}
            </button>
-          </div>
-
-          <details className="mt-3 overflow-hidden rounded-[10px] border-[2px] border-black bg-white">
-           <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-[0.1em] hover:bg-[#FF7AC8]">
-            <BookOpen size={14} />
-            Save a note to memory
-           </summary>
-           <div className="grid gap-2 border-t-[2px] border-black p-3">
-            <label className="sr-only" htmlFor="brain-journal">
-             Note to save to Brain memory
-            </label>
-            <textarea
-             id="brain-journal"
-             value={journalInput}
-             onChange={(event) => setJournalInput(event.target.value)}
-             placeholder="A goal, a content style note, an audience insight, a constraint — anything you want me to remember."
-             className="min-h-[90px] rounded-[8px] border-[2px] border-black bg-white p-3 text-sm font-bold leading-6 outline-none focus:bg-[#FFDA47]/25"
-            />
-            <button
-             type="button"
-             onClick={handleJournalSave}
-             disabled={!journalInput.trim()}
-             className="inline-flex w-fit items-center gap-2 rounded-[8px] border-[2px] border-black bg-[#3FEE56] px-3 py-2 text-[10px] font-black uppercase tracking-[0.08em] disabled:opacity-50"
-            >
-             <Send size={13} />
-             Remember this
-            </button>
-           </div>
-          </details>
+          ))}
+          <button type="button" onClick={() => composerRef.current?.focus()} className="rounded-[7px] border-[2px] border-black bg-[#FF7AC8] px-2 py-1 text-[9px] font-black uppercase">Growth prompts</button>
+          <button type="button" onClick={() => void handleSend("Run my Daily Oracle and give me one priority, one quick win, and one measurable action for today.")} className="rounded-[7px] border-[2px] border-black bg-[#FFDA47] px-2 py-1 text-[9px] font-black uppercase">Run Daily Oracle</button>
+          <button type="button" onClick={() => setJournalOpen(true)} className="rounded-[7px] border-[2px] border-black bg-[#36E0F6] px-2 py-1 text-[9px] font-black uppercase"><BookOpen size={12} className="mr-1 inline" />AI Journal</button>
          </div>
-        </div>
-
-        <div className="custom-scrollbar min-h-0 xl:overflow-y-auto">
-         <BrainContextRail
-          snapshot={snapshot}
-          growthContext={creatorGrowthContext}
-          insights={railInsights}
-          questions={learningQuestions}
-          quickActions={quickActions}
-          onAskInsight={handleAskInsight}
-          onAcceptQuickAction={handleAcceptQuickAction}
-          onAnswerQuestion={handleAnswerQuestion}
-         />
-        </div>
+         <div className="flex gap-2">
+          <label className="sr-only" htmlFor="brain-composer">Ask ViewTube Copilot</label>
+          <input
+           ref={composerRef}
+           type="text"
+           id="brain-composer"
+           value={input}
+           onChange={(event) => setInput(event.target.value)}
+           onKeyDown={(event) => { if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) void handleSend() }}
+           placeholder="Ask about your next video, audience, analytics, goals, thumbnails, SEO, publishing, or revenue..."
+           className="h-[52px] min-w-0 flex-1 rounded-[9px] border-[2px] border-black bg-white p-2 text-sm font-bold leading-5 outline-none focus:bg-[#FFDA47]/20"
+          />
+          <button type="button" onClick={() => void handleSend()} disabled={busy || !input.trim()} className="inline-flex w-[74px] shrink-0 items-center justify-center gap-1 rounded-[9px] border-[2px] border-black bg-[#3FEE56] text-xs font-black uppercase disabled:opacity-50">
+           {busy ? <Zap className="animate-pulse" size={16} /> : <Send size={16} />} Send
+          </button>
+         </div>
+        </footer>
        </div>
-      </section>
-     </div>
-    </Toolbox>
-   </div>
+
+       <div className="hidden min-h-0 overflow-hidden xl:block">
+        <BrainContextRail
+         snapshot={snapshot}
+         growthContext={creatorGrowthContext}
+         insights={railInsights}
+         questions={learningQuestions}
+         quickActions={quickActions}
+         onAskInsight={handleAskInsight}
+         onAcceptQuickAction={handleAcceptQuickAction}
+         onAnswerQuestion={handleAnswerQuestion}
+        />
+       </div>
+      </div>
+
+      {contextRailOpen ? (
+       <div className="absolute inset-0 z-40 grid bg-white p-3 xl:hidden">
+        <div className="mb-2 flex items-center justify-between border-b-[2px] border-black pb-2">
+         <h2 className="text-lg font-[1000] uppercase">Your Channel Context</h2>
+         <button type="button" className={kpiButton} onClick={() => setContextRailOpen(false)}>Close</button>
+        </div>
+        <BrainContextRail snapshot={snapshot} growthContext={creatorGrowthContext} insights={railInsights} questions={learningQuestions} quickActions={quickActions} onAskInsight={handleAskInsight} onAcceptQuickAction={handleAcceptQuickAction} onAnswerQuestion={handleAnswerQuestion} />
+       </div>
+      ) : null}
+
+      {journalOpen ? (
+       <div className="absolute inset-0 z-50 grid place-items-center bg-black/40 p-4">
+        <section className={`${shellCard} w-full max-w-2xl overflow-hidden`}>
+         <div className="border-b-[2px] border-black bg-[#36E0F6] px-4 py-3"><h2 className="text-xl font-[1000] uppercase">Save To AI Journal</h2></div>
+         <div className="grid gap-3 p-4">
+          <textarea value={journalInput} onChange={(event) => setJournalInput(event.target.value)} placeholder="A goal, content style note, audience insight, constraint, or decision you want the Brain to remember." className="h-[180px] resize-none rounded-[8px] border-[2px] border-black p-3 text-sm font-bold leading-6 outline-none" />
+          <div className="flex justify-end gap-2">
+           <button type="button" className={kpiButton} onClick={() => setJournalOpen(false)}>Cancel</button>
+           <button type="button" className={`${kpiButton} bg-[#3FEE56]`} disabled={!journalInput.trim()} onClick={() => { handleJournalSave(); setJournalOpen(false) }}>Remember this</button>
+          </div>
+         </div>
+        </section>
+       </div>
+      ) : null}
+     </section>
+    )}
+   </Toolbox>
   </main>
  )
 }

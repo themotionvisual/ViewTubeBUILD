@@ -64,6 +64,7 @@ export type VtSyncTableColumnDefinition = {
  format?: "text" | "number" | "percent" | "currency" | "duration" | "durationHours" | "durationMinutes" | "date" | "dateRange" | "dateLocal" | "weekdayLocal" | "timeLocal" | "thumbnail" | "flag" | "json"
  semanticRole?: "identity" | "metric"
  visualization?: "none" | "metric"
+ totalMode?: "sum" | "average" | "none"
  preferredWidth?: number
  textSize?: number
 }

@@ -112,6 +112,7 @@ export const AudienceMatrixWidget: React.FC<any> = ({widget, instance, editMode,
 
     return (
       <div
+        className="tip"
         style={{
           display: "flex",
           alignItems: "center",
@@ -121,7 +122,6 @@ export const AudienceMatrixWidget: React.FC<any> = ({widget, instance, editMode,
           height: "100%",
         }}>
         <div
-          title={chartData.map(d => `${d.name}: ${(d.value/total*100).toFixed(1)}%`).join('\n')}
           style={{
             width: "100%",
             height: "100%",
@@ -147,6 +147,14 @@ export const AudienceMatrixWidget: React.FC<any> = ({widget, instance, editMode,
               {title}
             </span>
           </div>
+        </div>
+        <div className="bub" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px", zIndex: 110 }}>
+          {chartData.map(d => (
+            <div key={d.name} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <div style={{ width: "8px", height: "8px", background: d.color, border: "1px solid #000" }} />
+              <span>{d.name}: {(total > 0 ? (d.value/total*100) : 0).toFixed(1)}%</span>
+            </div>
+          ))}
         </div>
       </div>
     )

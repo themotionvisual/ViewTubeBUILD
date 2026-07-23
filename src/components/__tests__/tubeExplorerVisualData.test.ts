@@ -97,7 +97,7 @@ describe("buildTubeExplorerVisualData", () => {
 })
 
 describe("TUBE_EXPLORER_VISUAL_MODULES", () => {
- it("registers every duplicate Tube Explorer visualization with stable prefixed ids", () => {
+ it("registers the VT-SYNC visualizations with stable prefixed ids", () => {
   expect(TUBE_EXPLORER_VISUAL_MODULES).toHaveLength(34)
   expect(TUBE_EXPLORER_VISUAL_MODULES.every((entry) => entry.id.startsWith("tube-explorer-"))).toBe(true)
   expect(new Set(TUBE_EXPLORER_VISUAL_MODULES.map((entry) => entry.id)).size).toBe(34)

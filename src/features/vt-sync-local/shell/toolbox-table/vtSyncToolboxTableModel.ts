@@ -13,6 +13,7 @@ import {
  type VtSyncDurationFormat,
 } from "../../adapters/tableFormatting"
 import { VT_SYNC_VISIBLE_TABLE_DEFINITIONS } from "../../upstream/tableRegistry"
+import { VT_SYNC_ALL_CATEGORY_OPTIONS } from "../../upstream/syncCategoryRegistry"
 
 export type VtSyncTableRow = Record<string, unknown>
 export type VtSyncSortState = { key: string; direction: "asc" | "desc" }
@@ -25,6 +26,13 @@ export type VtSyncTableTotalContext = {
  channelCustomUrl?: string | null
 }
 export type VtSyncTableTotal = { primary: string; secondary?: string; imageUrl?: string; kind?: "context" | "numeric" | "muted" | "image"; badges?: { value: string; count: number }[] }
+export type VtSyncTableProvenance = {
+ sourceLabel: string
+ updatedAt: string
+ statusLabel: string
+ windowLabel?: string
+ runId?: string
+}
 
 export const VT_SYNC_ROW_NUMBER_WIDTH = 58
 export const VT_SYNC_ROW_BATCH_SIZE = 50
@@ -32,6 +40,13 @@ const VT_SYNC_HALF_SIZE_SECONDS_COLUMNS = new Set(["watchTime", "youtubePremiumW
 const VT_SYNC_VIDEO_COMPOSITE_HIDDEN_COLUMNS = new Set(["videoId", "publishedDay", "publishedTime"])
 export const VT_SYNC_VIDEO_NON_COMPACT_WIDTHS = [91, 325, 97, 68, 132, 82, 92, 238, 79, 69, 80, 68, 68, 78, 79, 65, 79, 82, 73, 68, 72, 68, 75, 74, 69, 81, 68, 72, 68, 78, 68, 76, 68, 68, 68, 69, 68, 64, 78, 68, 68, 72, 82, 89, 82, 74, 81, 74, 73, 68, 68, 73, 68, 68, 91, 85, 85, 78] as const
 export const VT_SYNC_SMALL_TABLE_COLORS = ["#40C6E9", "#4FFF5B", "#FFFF61", "#FFB570", "#FF3B30", "#FF83EA", "#579AFF", "#CC00FF"] as const
+export const VT_SYNC_DEMOGRAPHIC_COLUMN_COLORS: Record<string, string> = {
+ ageGroupLabel: "#40C6E9",
+ maleViewerPercentage: "#40C6E9",
+ femaleViewerPercentage: "#FF83EA",
+ otherViewerPercentage: "#FFFF61",
+ viewerPercentage: "#4FFF5B",
+}
 export const VT_SYNC_SPARK_RANK_PALETTE = ["#40C6E9", "#4FFF5B", "#FFFF61", "#FFB570", "#FF3B30"] as const
 export const VT_SYNC_ALPHABETIC_SPECTRUM_PALETTE = [
  "#FA618A", "#FF7F6B", "#FFA85C", "#FFDA47", "#C0F240", "#3FEE56",
@@ -55,6 +70,63 @@ const VT_SYNC_PRESENTATION_LABELS: Record<string, string> = {
  creator: "Formats",
  daily: "Daily",
  geography: "Countries",
+}
+
+const VT_SYNC_SOURCE_API_LABELS = {
+ youtube_data_v3: "YouTube Data API v3",
+ youtube_analytics_v2: "YouTube Analytics API",
+ google_workspace: "Google Workspace API",
+ derived: "Derived locally",
+ local_import: "Local import",
+} as const
+
+const VT_SYNC_WINDOW_LABELS = {
+ "7d": "7-day window",
+ "28d": "28-day window",
+ "90d": "90-day window",
+ "365d": "365-day window",
+ lifetime: "Lifetime window",
+} as const
+
+export const getVtSyncTableProvenance = (
+ snapshot: VtSyncSnapshot,
+ table: VtSyncTableDefinition,
+ importedAt?: string,
+): VtSyncTableProvenance => {
+ const freshnessCandidates = [table.id, table.performanceHubDatasetId, ...table.categoryIds]
+  .map((key) => snapshot.datasetFreshness?.[key])
+  .filter((value): value is NonNullable<typeof value> => Boolean(value))
+  .sort((left, right) => String(right.updatedAt || "").localeCompare(String(left.updatedAt || "")))
+ const freshness = freshnessCandidates[0]
+ const categoryApis = [...new Set(table.categoryIds.flatMap((categoryId) => {
+  const sourceApi = VT_SYNC_ALL_CATEGORY_OPTIONS.find((category) => category.id === categoryId)?.sourceApi
+  return sourceApi ? [sourceApi] : []
+ }))]
+ const apiLabel = categoryApis.map((sourceApi) => VT_SYNC_SOURCE_API_LABELS[sourceApi]).join(" + ")
+ const derivedFromDaily = table.id === "weekly" || table.id === "monthly"
+ const sourceLabel = importedAt
+  ? "Local CSV import"
+  : snapshot.source === "manual"
+   ? "Manual VT-SYNC snapshot"
+   : derivedFromDaily
+    ? `Derived from daily data · ${apiLabel || VT_SYNC_SOURCE_API_LABELS.derived}`
+    : apiLabel || (snapshot.source === "empty" ? "No dataset loaded" : "VT-SYNC local snapshot")
+ const statusLabel = importedAt
+  ? "Imported"
+  : freshness?.status === "synced" ? "Current"
+   : freshness?.status === "partial" ? "Partial"
+    : freshness?.status === "placeholder" ? "Placeholder"
+     : freshness?.status === "stale" ? "Previous snapshot"
+      : freshness?.status === "failed" ? "Sync failed"
+       : snapshot.source === "empty" ? "No data"
+        : "Snapshot"
+ return {
+  sourceLabel,
+  updatedAt: importedAt || freshness?.updatedAt || snapshot.capturedAt,
+  statusLabel,
+  windowLabel: snapshot.selectedTimeWindow ? VT_SYNC_WINDOW_LABELS[snapshot.selectedTimeWindow] : undefined,
+  runId: freshness?.runId || snapshot.snapshotId,
+ }
 }
 
 export type VtSyncApiValuePresentation = {
@@ -554,6 +626,13 @@ export const getVtSyncNumericRank = (value: number | undefined, sortedValues: nu
  return index === -1 ? 0 : (index + 1) / sortedValues.length
 }
 
+/** Demographic viewer percentages already express their share of the whole audience. */
+export const getVtSyncAbsolutePercentRatio = (value: unknown): number => {
+ const percentage = toVtSyncNumber(value)
+ if (percentage === undefined || percentage <= 0) return 0
+ return Math.min(1, percentage / 100)
+}
+
 export const getVtSyncColumnSortedValues = (
  rows: VtSyncTableRow[],
  column: VtSyncTableColumnDefinition,
@@ -608,12 +687,14 @@ const VT_SYNC_VIDEO_SORT_SEQUENCE: readonly VtSyncSortState[] = [
 ]
 
 const VT_SYNC_PUBLISHED_SORT_SEQUENCE: readonly VtSyncSortState[] = [
- { key: "publishedAt", direction: "desc" },
+ { key: "publishedAt", direction: "asc" },
  { key: "publishedTime", direction: "asc" },
  { key: "publishedDay", direction: "asc" },
- { key: "publishedAt", direction: "asc" },
+ { key: "publishedMonth", direction: "asc" },
+ { key: "publishedAt", direction: "desc" },
  { key: "publishedTime", direction: "desc" },
  { key: "publishedDay", direction: "desc" },
+ { key: "publishedMonth", direction: "desc" },
 ]
 
 const getVtSyncCompositeSortSequence = (tableId: string, columnKey: string): readonly VtSyncSortState[] | undefined => {
@@ -861,7 +942,7 @@ export const formatVtSyncColumnValue = (row: VtSyncTableRow, column: VtSyncTable
  const value = row[column.key]
  if (isVtSyncDurationFormat(column.format)) {
   const seconds = parseVtSyncDurationSeconds(value, column.format)
-  return seconds === 0 ? "" : formatVtSyncTableCellValue(value, column.format)
+  return seconds === 0 ? "-" : formatVtSyncTableCellValue(value, column.format)
  }
  if (column.key === "privacyStatus" && !isMissingVtSyncValue(value)) {
   const text = String(value)
@@ -876,7 +957,7 @@ export const formatVtSyncColumnValue = (row: VtSyncTableRow, column: VtSyncTable
   if (/^(true|yes|1)$/i.test(String(value))) return "Yes"
   if (/^(false|no|0)$/i.test(String(value))) return "No"
  }
- if (["number", "currency", "percent"].includes(column.format || "") && toVtSyncNumber(value) === 0) return ""
+ if (["number", "currency", "percent"].includes(column.format || "") && toVtSyncNumber(value) === 0) return "-"
  return formatVtSyncTableCellValue(value, column.format)
 }
 
@@ -940,16 +1021,23 @@ export const totalVtSyncColumn = (
   }
   if (["privacyStatus", "definition", "caption"].includes(column.key)) return { primary: mode(rows.map((row) => formatVtSyncColumnValue(row, column))), secondary: "Most common", kind: "context" }
   if (isVtSyncDurationFormat(column.format)) {
-   const durations = rows.map((row) => parseVtSyncDurationSeconds(row[column.key], column.format)).filter((v) => v > 0)
+   const durationFormat = column.format
+   const durations = rows
+    .map((row) => parseVtSyncDurationSeconds(row[column.key], durationFormat))
+    .filter((value): value is number => value !== undefined && value > 0)
    return { primary: durations.length ? formatVtSyncDurationSeconds(durations.reduce((sum, value) => sum + value, 0) / durations.length) : "", secondary: "Avg duration", kind: "context" }
   }
  }
- if (column.visualization === "none" || column.semanticRole === "identity") return { primary: "", kind: "muted" }
+ if (column.totalMode === "none") return { primary: "-", kind: "muted" }
+ if (column.visualization === "none" || column.semanticRole === "identity") return { primary: "-", kind: "muted" }
  const values = rows.map((row) => toVtSyncNumber(row[column.key])).filter(isMeaningfulVtSyncNumericValue)
- if (!values.length) return { primary: "", kind: "muted" }
+ if (!values.length) return { primary: "-", kind: "muted" }
  const sum = values.reduce((total, value) => total + value, 0)
  const mean = sum / values.length
- const average = column.format === "percent" || /avg|average|ratio|rate|cpm|rpm|per /i.test(column.label)
+ if (column.totalMode === "sum") {
+  return { primary: formatVtSyncTableCellValue(sum, column.format), secondary: "All ages", kind: "numeric" }
+ }
+ const average = column.totalMode === "average" || column.format === "percent" || /avg|average|ratio|rate|cpm|rpm|per /i.test(column.label)
  return average
   ? { primary: formatVtSyncTableCellValue(mean, column.format), secondary: "Mean avg", kind: "numeric" }
   : { primary: formatVtSyncTableCellValue(sum, column.format), secondary: `Avg ${formatVtSyncTableCellValue(mean, column.format)}`, kind: "numeric" }

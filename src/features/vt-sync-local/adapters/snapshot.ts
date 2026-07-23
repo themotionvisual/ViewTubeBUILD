@@ -149,7 +149,7 @@ const normalizeArrayFieldRows = (field: string, value: unknown): unknown[] => {
       if (g && a) formattedCohort = `${g === "User_specified" ? "Other" : g} : ${a}`;
       else formattedCohort = `${g === "User_specified" ? "Other" : g} ${a}`.trim();
     }
-    return { ...row, cohort: formattedCohort, viewsPct: row.viewsPct ?? row.viewerPercentage, watchTimePct: row.watchTimePct ?? row.viewerPercentage }
+    return { ...row, cohort: formattedCohort, viewsPct: row.viewsPct ?? row.viewerPercentage, watchTimePct: row.watchTimePct }
   }
   if (field === "demographicsByAge" || field === "demographicsByGender") {
     let formattedCohort = row.cohort ?? row.ageGroup ?? row.gender;

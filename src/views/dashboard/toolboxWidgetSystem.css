@@ -43,7 +43,8 @@
   flex-direction: column;
   flex-shrink: 0;
   /* 3PX exterior border colored dark based on widget color */
-  border: 3px solid color-mix(in srgb, var(--widget-color, #000) 60%, black);
+  --widget-border: color-mix(in srgb, var(--widget-color, #000) 60%, black);
+  border: 3px solid var(--widget-border);
   border-radius: var(--radius);
   transition: all var(--transition);
   /* Dynamic shadow — Color matched to header */
@@ -115,29 +116,81 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
+}
+
+.dashboard-barrier .vt-widget,
+.dashboard-barrier .vt-widget-body,
+.dashboard-barrier .vt-widget-content {
+  overflow-x: hidden !important;
 }
 
 .dashboard-barrier .vt-widget-body {
   background: var(--bg-widget);
-  padding: 0;
+  padding: 10px;
   color: var(--text-main);
   transition: all var(--transition);
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
-/* Kill ALL scrollbars inside widgets */
-.dashboard-barrier .vt-widget,
-.dashboard-barrier .vt-widget * {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+/* Full-bleed utilities to let bottom bars, dividers, or edge boxes touch module borders */
+.dashboard-barrier .vt-full-bleed {
+  margin-left: -10px !important;
+  margin-right: -10px !important;
+  width: calc(100% + 20px) !important;
 }
-.dashboard-barrier .vt-widget::-webkit-scrollbar,
+.dashboard-barrier .vt-full-bleed-bottom {
+  margin-left: -10px !important;
+  margin-right: -10px !important;
+  margin-bottom: -10px !important;
+  width: calc(100% + 20px) !important;
+}
+.dashboard-barrier .vt-full-bleed-top {
+  margin-left: -10px !important;
+  margin-right: -10px !important;
+  margin-top: -10px !important;
+  width: calc(100% + 20px) !important;
+}
+
+/* Enable sleek custom scrollbars without extra right margin */
+.dashboard-barrier .vt-widget * {
+  -ms-overflow-style: auto !important;
+  box-sizing: border-box;
+}
+
+.dashboard-barrier .vt-widget *::-webkit-scrollbar:horizontal {
+  display: none !important;
+  height: 0 !important;
+}
+
 .dashboard-barrier .vt-widget *::-webkit-scrollbar {
-  display: none;
+  width: 12px !important;
+  height: 0 !important;
+  display: block !important;
+}
+
+.dashboard-barrier .vt-widget *::-webkit-scrollbar-track {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.dashboard-barrier .vt-widget *::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 50%, white) !important;
+  border: 1.5px solid var(--widget-border, #000000) !important;
+  background-clip: padding-box !important;
+  border-radius: 5px !important;
+  box-shadow: none !important;
+}
+
+.dashboard-barrier .vt-widget *::-webkit-scrollbar-thumb:hover {
+  background: var(--widget-color, #40C6E9) !important;
+  border: 1.5px solid var(--widget-border, #000000) !important;
 }
 
 /* ═══ WIDGET HEADER BUTTONS ═══ */
@@ -256,32 +309,25 @@
   padding: 10px 12px;
 }
 
-/* ═══ UNIFIED INPUT SYSTEM ═══ */
-.dashboard-barrier .vt-input,
-.dashboard-barrier .vt-textarea {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 10px 14px;
-  border: 2px solid var(--widget-color, #00CCFF);
-  border-radius: 6px;
-  background: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  font-family: inherit;
-  color: color-mix(in srgb, var(--widget-color, #000) 60%, black);
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+/* Inputs — v2 ink stroke and neon focus */
+.dashboard-barrier .vt-input, .dashboard-barrier .vt-textarea {
+  box-sizing: border-box; width: 100%; padding: 10px 14px;
+  border: 2px solid var(--widget-color, #000);
+  border-radius: 6px; 
+  background: #fff; 
+  font-size: 12px; font-weight: 700; font-family: inherit;
+  color: #000;
+  outline: none; 
+  transition: border-color 0.15s, box-shadow 0.25s ease, background-color 0.25s;
+  caret-color: var(--widget-color, #000);
 }
-
-.dashboard-barrier .vt-input:focus,
-.dashboard-barrier .vt-textarea:focus {
-  border-color: var(--widget-color, #00CCFF) !important;
-  background: color-mix(in srgb, var(--widget-color, #fff) 6%, white) !important;
+.dashboard-barrier .vt-textarea { resize: vertical; min-height: 60px; }
+.dashboard-barrier .vt-input:focus, .dashboard-barrier .vt-textarea:focus {
+  border-color: var(--widget-color, #000);
+  background: color-mix(in srgb, var(--widget-color, #fff) 6%, white);
   box-shadow:
-    inset 0 0 0 0 transparent,
-    0 0 0 3px color-mix(in srgb, var(--widget-color, #00CCFF) 35%, transparent),
-    0 0 16px 2px color-mix(in srgb, var(--widget-color, #00CCFF) 55%, transparent) !important;
-  outline: none !important;
+    0 0 0 3px color-mix(in srgb, var(--widget-color, #000) 35%, transparent),
+    0 0 16px 2px color-mix(in srgb, var(--widget-color, #000) 55%, transparent);
 }
 
 .dashboard-barrier .vt-select {
@@ -418,11 +464,11 @@
   background-image: linear-gradient(
     135deg,
     transparent 50%,
-    var(--widget-color, #00CCFF) 50%, var(--widget-color, #00CCFF) 60%,
+    color-mix(in srgb, var(--widget-color, #000) 60%, black) 50%, color-mix(in srgb, var(--widget-color, #000) 60%, black) 60%,
     transparent 60%, transparent 70%,
-    var(--widget-color, #00CCFF) 70%, var(--widget-color, #00CCFF) 80%,
+    color-mix(in srgb, var(--widget-color, #000) 60%, black) 70%, color-mix(in srgb, var(--widget-color, #000) 60%, black) 80%,
     transparent 80%, transparent 90%,
-    var(--widget-color, #00CCFF) 90%, var(--widget-color, #00CCFF) 100%
+    color-mix(in srgb, var(--widget-color, #000) 60%, black) 90%, color-mix(in srgb, var(--widget-color, #000) 60%, black) 100%
   );
   background-size: 10px 10px;
   background-repeat: no-repeat;
@@ -433,11 +479,11 @@
   background-image: linear-gradient(
     135deg,
     transparent 50%,
-    var(--widget-color, #00CCFF) 50%, var(--widget-color, #00CCFF) 60%,
+    var(--widget-color, #000) 50%, var(--widget-color, #000) 60%,
     transparent 60%, transparent 70%,
-    var(--widget-color, #00CCFF) 70%, var(--widget-color, #00CCFF) 80%,
+    var(--widget-color, #000) 70%, var(--widget-color, #000) 80%,
     transparent 80%, transparent 90%,
-    var(--widget-color, #00CCFF) 90%, var(--widget-color, #00CCFF) 100%
+    var(--widget-color, #000) 90%, var(--widget-color, #000) 100%
   );
 }
 
@@ -635,4 +681,39 @@
   background: var(--widget-color, #FFB570);
   border-color: color-mix(in srgb, var(--widget-color, #000) 60%, black);
   box-shadow: 1px 1px 0px 0px color-mix(in srgb, var(--widget-color, #000) 60%, black);
+}
+
+/* ═══ TOOLTIPS ═══ */
+.tip {
+  position: relative;
+  display: inline-block;
+}
+.tip .bub {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #000;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 5px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 50;
+}
+.tip .bub::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #000;
+}
+.tip:hover .bub {
+  opacity: 1;
 }

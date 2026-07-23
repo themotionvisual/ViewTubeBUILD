@@ -210,6 +210,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     : Math.max(0, Math.min(100, Math.round((Math.max(0, entitlement.creditBalance) / creditCap) * 100)))
   const canSeeApiKeys = entitlement.subscriptionPlanId === "executive" || isOwnerEmail(knownEmail())
   const shellLayout = mobile ? "mobile" : layout
+  const isBrainWorkspace = location.pathname === "/ai-brain"
 
   const closeAccountMenu = (restoreFocus = false) => {
     setAccountOpen(false)
@@ -525,10 +526,14 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
         </header>
       )}
 
-      <main ref={mainViewportRef} id="main-content" className={`vt-adaptive-main ${isEditorSurface ? "vt-adaptive-main--editor" : ""}`}>
+      <main
+        ref={mainViewportRef}
+        id="main-content"
+        className={`vt-adaptive-main ${isEditorSurface ? "vt-adaptive-main--editor" : ""} ${isBrainWorkspace ? "vt-adaptive-main--brain" : ""}`}
+      >
         {children}
       </main>
-      <ApplicationScrollbar viewportRef={mainViewportRef} />
+      {!isBrainWorkspace ? <ApplicationScrollbar viewportRef={mainViewportRef} /> : null}
 
       {location.pathname === "/" && !mobile && layout === "top" ? (
         <div className="vt-adaptive-legal"><a href="/privacy.html">Privacy Policy</a><span>|</span><a href="/terms.html">Terms of Service</a></div>

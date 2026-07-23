@@ -1,14 +1,22 @@
 import React from "react"
-import { ArrowRight } from "lucide-react"
+import {
+ ArrowRight,
+ BarChart3,
+ BookOpen,
+ Brain,
+ ChevronDown,
+ HelpCircle,
+ Search,
+ Sparkles,
+ TrendingUp,
+ Video,
+} from "lucide-react"
 import type { AIBrainAnswerModule, BrainQuickAction } from "../../types"
 import { sanitizeCreatorFacingBrainCopy } from "../../services/aiBrainConversationStore"
 
 export type { BrainQuickAction }
 
-/**
- * Tone -> palette mapping. Kept semantic (a "green" module renders green) so the
- * same module reads identically in the Brain Hub and the sidebar.
- */
+/** Tone -> palette. Kept semantic so a "green" module renders green everywhere. */
 const MODULE_TONE: Record<AIBrainAnswerModule["tone"], string> = {
  green: "#3FEE56",
  yellow: "#FFDA47",
@@ -18,34 +26,146 @@ const MODULE_TONE: Record<AIBrainAnswerModule["tone"], string> = {
  white: "#FFFFFF",
 }
 
+const SOURCE_ICON: Record<string, React.ReactNode> = {
+ analytics: <BarChart3 size={15} />,
+ growth: <TrendingUp size={15} />,
+ seo: <Search size={15} />,
+ oracle: <Sparkles size={15} />,
+ journal: <BookOpen size={15} />,
+ memory: <Brain size={15} />,
+ question: <HelpCircle size={15} />,
+}
+
 const cardShell = "overflow-hidden rounded-[10px] border-[2px] border-black bg-white"
 
+const DELTA_TONE: Record<string, string> = {
+ up: "bg-[#3FEE56]",
+ down: "bg-[#FA618A]",
+ flat: "bg-white",
+}
+
+const formatMetricValue = (
+ value: number | null | undefined,
+ displayValue?: string,
+): string => {
+ if (displayValue) return displayValue
+ if (typeof value !== "number" || !Number.isFinite(value)) return "—"
+ if (Math.abs(value) >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
+ if (Math.abs(value) >= 1_000) return `${Math.round(value / 1_000)}K`
+ return value.toLocaleString()
+}
+
+/**
+ * A Brain answer module.
+ *
+ * The header carries an icon cell, the module name, and an optional short code chip
+ * so a stack of modules stays scannable. Each module renders whichever structured
+ * payload it actually carries (figures, ranked items) and falls back to prose, which
+ * keeps a module honest: it cannot show a metric row it has no metrics for.
+ * Collapsing uses native <details> so it works with the keyboard and without JS.
+ */
 export const BrainKpiModule: React.FC<{
  module: AIBrainAnswerModule
  compact?: boolean
  className?: string
-}> = ({ module, compact = false, className = "" }) => (
- <section className={`${cardShell} ${className}`}>
-  <div
-   className="border-b-[2px] border-black px-3 py-2"
-   style={{ backgroundColor: MODULE_TONE[module.tone] || MODULE_TONE.white }}
-  >
-   <h4 className="text-[12px] font-[1000] uppercase leading-4 tracking-[0.04em]">
-    {sanitizeCreatorFacingBrainCopy(module.title)}
-   </h4>
-  </div>
-  <div className={compact ? "p-2.5" : "p-3"}>
-   <p className={`font-bold text-black/75 ${compact ? "text-xs leading-5" : "text-sm leading-6"}`}>
-    {sanitizeCreatorFacingBrainCopy(module.body)}
-   </p>
-   {module.actionLabel ? (
-    <div className="mt-3 inline-flex rounded-[8px] border-[2px] border-black bg-white px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em]">
-     {module.actionLabel}
+}> = ({ module, compact = false, className = "" }) => {
+ const metrics = module.data?.metrics || []
+ const items = module.data?.items || []
+ const missingReason = module.data?.missingReason
+ const icon = SOURCE_ICON[module.source || "growth"] || SOURCE_ICON.growth
+
+ return (
+  <article className={`${cardShell} ${className}`}>
+   <details open>
+    <summary
+     className="grid cursor-pointer list-none grid-cols-[32px_minmax(0,1fr)_auto_26px] items-stretch border-b-[2px] border-black"
+     style={{ backgroundColor: MODULE_TONE[module.tone] || MODULE_TONE.white }}
+    >
+     <span className="grid place-items-center border-r-[2px] border-black bg-white">{icon}</span>
+     <h4 className="self-center truncate px-2 text-[11px] font-[1000] uppercase leading-4 tracking-[0.04em]">
+      {sanitizeCreatorFacingBrainCopy(module.title)}
+     </h4>
+     {module.code ? (
+      <span className="my-1 self-center rounded-[5px] border-[2px] border-black bg-white/75 px-1.5 py-0.5 text-[8px] font-[1000] uppercase tracking-[0.06em]">
+       {module.code}
+      </span>
+     ) : (
+      <span />
+     )}
+     <span className="grid place-items-center border-l-[2px] border-black bg-white/30">
+      <ChevronDown size={13} />
+     </span>
+    </summary>
+
+    <div className={`grid gap-2 ${compact ? "p-2" : "p-2.5"}`}>
+     {metrics.length ? (
+      <dl className="grid grid-cols-3 gap-1.5">
+       {metrics.slice(0, 3).map((metric) => (
+        <div key={metric.label} className="rounded-[7px] border-[2px] border-black px-1.5 py-1">
+         <dt className="text-[8px] font-black uppercase tracking-[0.1em] text-black/45">{metric.label}</dt>
+         <dd className="text-sm font-[1000] leading-5 tabular-nums">
+          {formatMetricValue(metric.value, metric.displayValue)}
+         </dd>
+         {typeof metric.change === "number" && Number.isFinite(metric.change) ? (
+          <dd
+           className={`mt-0.5 inline-block rounded-[4px] border-[1.5px] border-black px-1 text-[8px] font-black tabular-nums ${
+            DELTA_TONE[metric.change > 0 ? "up" : metric.change < 0 ? "down" : "flat"]
+           }`}
+          >
+           {metric.change > 0 ? "+" : ""}
+           {metric.change}%
+          </dd>
+         ) : null}
+        </div>
+       ))}
+      </dl>
+     ) : null}
+
+     {items.length ? (
+      <ol className="grid gap-1.5">
+       {items.slice(0, 4).map((item, index) => (
+        <li
+         key={`${item.title}-${index}`}
+         className="grid grid-cols-[22px_minmax(0,1fr)] items-start gap-2 rounded-[7px] border-[2px] border-black px-1.5 py-1"
+        >
+         <span className="grid h-[18px] place-items-center rounded-[4px] border-[1.5px] border-black bg-[#FFDA47] text-[9px] font-[1000] tabular-nums">
+          {index + 1}
+         </span>
+         <span className="min-w-0">
+          <b className="block truncate text-[11px] font-[1000] leading-4">{item.title}</b>
+          {item.detail ? (
+           <span className="block truncate text-[9px] font-bold uppercase tracking-[0.04em] text-black/50">
+            {item.detail}
+           </span>
+          ) : null}
+         </span>
+        </li>
+       ))}
+      </ol>
+     ) : null}
+
+     {module.body ? (
+      <p className={`font-bold text-black/75 ${compact ? "text-[11px] leading-4" : "text-xs leading-5"}`}>
+       {sanitizeCreatorFacingBrainCopy(module.body)}
+      </p>
+     ) : null}
+
+     {missingReason ? (
+      <p className="rounded-[6px] border-[2px] border-black bg-[#FA618A]/20 px-2 py-1 text-[10px] font-bold leading-4">
+       {sanitizeCreatorFacingBrainCopy(missingReason)}
+      </p>
+     ) : null}
+
+     {module.actionLabel ? (
+      <span className="inline-flex w-fit rounded-[7px] border-[2px] border-black px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.06em]">
+       {module.actionLabel}
+      </span>
+     ) : null}
     </div>
-   ) : null}
-  </div>
- </section>
-)
+   </details>
+  </article>
+ )
+}
 
 export const BrainAnswerModuleGrid: React.FC<{
  modules: AIBrainAnswerModule[]
@@ -53,7 +173,7 @@ export const BrainAnswerModuleGrid: React.FC<{
 }> = ({ modules, compact = false }) => {
  if (!modules.length) return null
  return (
-  <div className={`grid gap-3 ${compact ? "" : "lg:grid-cols-2"}`}>
+  <div className={`grid gap-2.5 ${compact ? "" : "sm:grid-cols-2"}`}>
    {modules.map((module) => (
     <BrainKpiModule key={module.id} module={module} compact={compact} />
    ))}
@@ -67,13 +187,12 @@ const REWARD_TEXT = ["", "Marginal", "Useful", "Solid", "Strong", "Channel-movin
 const clampScore = (value: number): number => Math.max(1, Math.min(5, Math.round(value)))
 
 /**
- * The effort x reward card. The Brain only surfaces actions with a strong
- * result-to-effort ratio, so both scores are always visible to the creator.
+ * The effort x reward card. The Brain only raises actions with a strong
+ * result-to-effort ratio, so both scores stay visible to the creator.
  */
 export const BrainQuickActionCard: React.FC<{
  action: BrainQuickAction
  onAccept?: (action: BrainQuickAction) => void
- /** Secondary actions collapse to title + scores so the rail stays scannable. */
  compact?: boolean
 }> = ({ action, onAccept, compact = false }) => {
  const effort = clampScore(action.effort)
@@ -84,13 +203,16 @@ export const BrainQuickActionCard: React.FC<{
    <button
     type="button"
     onClick={() => onAccept?.(action)}
-    className="group flex w-full items-start justify-between gap-2 rounded-[8px] border-[2px] border-black bg-white px-2.5 py-2 text-left transition hover:bg-[#FFDA47]"
+    className="group grid w-full grid-cols-[minmax(0,1fr)_13px] items-start gap-2 rounded-[8px] border-[2px] border-black bg-white px-2.5 py-2 text-left transition hover:bg-[#FFDA47]"
    >
     <span className="min-w-0">
      <span className="block text-[10px] font-[1000] uppercase leading-4">
       {sanitizeCreatorFacingBrainCopy(action.title)}
      </span>
-     <span className="mt-0.5 block text-[9px] font-black uppercase tracking-[0.06em] text-black/45">
+     <span className="mt-1 block line-clamp-2 text-[11px] font-bold leading-4 text-black/65">
+      {sanitizeCreatorFacingBrainCopy(action.body)}
+     </span>
+     <span className="mt-1 block text-[9px] font-black uppercase tracking-[0.06em] text-black/45">
       {EFFORT_TEXT[effort]} · {REWARD_TEXT[reward]} payoff
      </span>
     </span>

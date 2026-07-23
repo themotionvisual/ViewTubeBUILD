@@ -1,187 +1,124 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useBrain } from '../context/useBrain';
-import { generateChatResponse, hasGeminiKey } from '../services/gemini';
-import { buildAIBrainSystemPrompt, queueAIBrainReviewedAction } from '../services/aiBrainCommandInterface';
-import { ArrowRight, Brain, Send, Zap, User } from 'lucide-react';
-
-interface ChatMessage {
-  role: 'user' | 'model';
-  text: string;
-}
+import React, { useEffect, useMemo, useState } from "react"
+import { Link } from "react-router-dom"
+import { ArrowRight, Brain, Send, Zap } from "lucide-react"
+import { useBrain } from "../context/useBrain"
+import { hasGeminiKey } from "../services/gemini"
+import {
+ buildAIBrainContextSnapshot,
+ buildAIBrainSystemPrompt,
+} from "../services/aiBrainCommandInterface"
+import {
+ buildCreatorGrowthContext,
+ resumeAIBrainThread,
+ sanitizeCreatorFacingBrainCopy,
+} from "../services/aiBrainConversationStore"
+import { runBrainTurn } from "../services/brain/BrainOrchestrator"
+import type { AIBrainConversationTurn } from "../types"
+import { BrainAnswerModuleGrid } from "./brain/BrainAnswerModules"
 
 export const SidebarChatbot: React.FC = () => {
-  const { brain, authState, channelConnection, emitSignal, getBrainMemory } = useBrain();
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'model', text: 'AI Strategy Proxy connected. Ready.' }
-  ]);
-  const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [lastCommand, setLastCommand] = useState<{ route: string; title: string } | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
+ const { brain, authState, channelConnection, emitSignal, getBrainMemory } = useBrain()
+ const [input, setInput] = useState("")
+ const [busy, setBusy] = useState(false)
+ const [turns, setTurns] = useState<AIBrainConversationTurn[]>([])
+ const [activeTurn, setActiveTurn] = useState<AIBrainConversationTurn | null>(null)
+ const channelId = authState.channelHandle || authState.channelId || null
 
-  const canUseGemini = hasGeminiKey();
+ const snapshot = useMemo(() => buildAIBrainContextSnapshot({
+  brain,
+  authState,
+  channelConnection,
+  brainMemory: getBrainMemory(),
+  recentConversationTurns: turns,
+ }), [brain, authState, channelConnection, turns])
+ const growthContext = useMemo(() => buildCreatorGrowthContext(snapshot, turns, []), [snapshot, turns])
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+ const restore = async () => {
+  try {
+   const resumed = await resumeAIBrainThread(channelId)
+   const latestFirst = resumed.turns.slice().reverse()
+   setTurns(latestFirst)
+   setActiveTurn(latestFirst.find((turn) => turn.response && turn.metadata?.source !== "feedback") || null)
+  } catch (error) {
+   console.warn("[SidebarCopilot] Shared thread unavailable:", error)
+  }
+ }
 
-  const handleSend = async () => {
-    if (!input.trim() || !canUseGemini) return;
+ useEffect(() => { void restore() }, [channelId])
 
-    const userText = input;
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', text: userText }]);
-    setIsTyping(true);
+ const handleSend = async () => {
+  const userText = input.trim()
+  if (!userText || busy) return
+  setInput("")
+  setBusy(true)
+  void emitSignal("VIEWTUBE_COPILOT", "USER_MESSAGE", { text: userText })
+  try {
+   const systemPrompt = buildAIBrainSystemPrompt({
+    brain,
+    authState,
+    channelConnection,
+    brainMemory: getBrainMemory(),
+    recentConversationTurns: turns,
+    creatorGrowthContext: growthContext,
+   })
+   const result = await runBrainTurn({
+    channelId,
+    userText,
+    snapshot,
+    systemPrompt,
+    growthContext,
+    recentTurns: turns,
+    history: turns.slice(0, 4).reverse().flatMap((turn) => [
+     { role: "user", parts: [{ text: turn.userText }] },
+     { role: "model", parts: [{ text: turn.assistantText }] },
+    ]),
+    allowModel: hasGeminiKey(),
+   })
+   setActiveTurn(result.turn)
+   await restore()
+  } catch (error) {
+   console.warn("[SidebarCopilot] Response unavailable:", error)
+   setInput(userText)
+  } finally {
+   setBusy(false)
+  }
+ }
 
-    // [BRAIN: INWARD LOOP] Emit signal so Brain learns from Journal interactions
-    emitSignal('AI_JOURNAL', 'USER_MESSAGE', { text: userText }).catch((e: any) => console.warn(e));
+ return (
+  <section className="flex max-h-[420px] flex-col overflow-hidden rounded-[14px] border-[2px] border-black bg-white shadow-[4px_4px_0_0_#000]" aria-label="ViewTube Copilot">
+   <header className="flex shrink-0 items-center justify-between gap-2 border-b-[2px] border-black bg-[#C0F240] px-3 py-2">
+    <span className="inline-flex items-center gap-2 text-[10px] font-[1000] uppercase tracking-[0.08em]"><Brain size={15} />ViewTube Copilot</span>
+    <Link to="/ai-brain" className="inline-flex items-center gap-1 text-[9px] font-black uppercase">Open Hub <ArrowRight size={11} /></Link>
+   </header>
 
-    const systemPrompt = buildAIBrainSystemPrompt({
-      brain,
-      authState,
-      channelConnection,
-      brainMemory: getBrainMemory(),
-    });
+   <div className="grid min-h-[132px] flex-1 content-center gap-2 p-3">
+    {activeTurn?.response ? (
+     <>
+      <p className="text-xs font-black leading-5">{sanitizeCreatorFacingBrainCopy(activeTurn.response.keyInsight)}</p>
+      <BrainAnswerModuleGrid modules={(activeTurn.response.modules || []).slice(0, 1)} compact />
+     </>
+    ) : (
+     <div>
+      <h3 className="text-base font-[1000] uppercase">How can I help?</h3>
+      <p className="mt-1 text-[10px] font-bold leading-4 text-black/60">Ask about your next video, audience, analytics, goals, packaging, publishing, or revenue.</p>
+     </div>
+    )}
+    {busy ? <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase"><Zap size={12} className="animate-pulse" />Building a channel-specific answer</span> : null}
+   </div>
 
-    try {
-      // Map history to the format google gen ai expects: { role, parts: [{ text }] }
-      const historyPayload = messages.map(m => ({
-        role: m.role,
-        parts: [{ text: m.text }]
-      }));
-
-      // In gemini API, role names are 'user' and 'model'
-      const responseText = await generateChatResponse(historyPayload, userText, false, systemPrompt);
-      const handoff = await queueAIBrainReviewedAction({
-        request: userText,
-        response: responseText,
-        channelId: authState.channelHandle || null,
-        priority: "medium",
-        confidence: "medium",
-      });
-      setLastCommand({ route: handoff.route, title: handoff.targetTitle });
-      setMessages(prev => [...prev, { role: 'model', text: responseText }]);
-    } catch (err: any) {
-      setMessages(prev => [...prev, { role: 'model', text: `ERROR: ${err.message}` }]);
-    } finally {
-      setIsTyping(false);
-    }
-  };
-
-  return (
-    <div className={`flex flex-col bg-white border-[4px] border-black rounded-[24px] shadow-[6px_6px_0px_0px_black] overflow-hidden group transition-all duration-300 ${messages.length > 1 ? 'h-[400px]' : 'h-auto'}`}>
-      {/* Header text if collapsed */}
-      {messages.length <= 1 && (
-        <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-           <span className="font-black uppercase text-[11px] tracking-widest text-black">AI-SSISTANT</span>
-           {!canUseGemini && <span className="text-[9px] font-bold text-red-500 uppercase">Key Required</span>}
-        </div>
-      )}
-      {messages.length <= 1 && (
-        <div className="px-4 pb-1">
-           <h3 className="font-[1000] text-xl uppercase tracking-tighter">How can I help?</h3>
-           <Link to="/ai-brain" className="mt-2 inline-flex items-center gap-1 rounded-lg border-[2px] border-black bg-[#4FFF5B] px-2 py-1 text-[9px] font-black uppercase tracking-wide shadow-[2px_2px_0_0_#000]">
-            <Brain size={12} />
-            Open AI Brain
-           </Link>
-        </div>
-      )}
-
-      {/* Chat header if expanded */}
-      {messages.length > 1 && (
-        <div className="bg-[#ccff00] px-4 py-3 border-b-[4px] border-black flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="bg-black p-1.5 rounded-lg">
-              <Zap size={16} className="text-[#ccff00]" />
-            </div>
-            <span className="font-black uppercase text-[10px] tracking-widest text-black">AI-SSISTANT</span>
-          </div>
-          <Link to="/ai-brain" className="text-xs font-black uppercase tracking-widest text-black/70 hover:text-black">
-             Brain
-          </Link>
-          <button 
-             onClick={() => setMessages([{ role: 'model', text: 'AI Strategy Proxy connected. Ready.' }])}
-             className="text-xs font-black uppercase tracking-widest text-black/40 hover:text-black">
-             Clear
-          </button>
-        </div>
-      )}
-
-      {/* Messages area (only visible if expanded) */}
-      {messages.length > 1 && (
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-gray-50 flex flex-col justify-start">
-          {!canUseGemini && (
-            <div className="text-[10px] font-bold text-red-500 uppercase text-center p-2 border-2 border-red-500 rounded-lg">
-              API KEY REQUIRED IN SETTINGS
-            </div>
-          )}
-          {messages.slice(1).map((msg, i) => (
-            <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-              {/* Avatar */}
-              <div className={`w-8 h-8 shrink-0 border-[2px] border-black rounded-xl flex items-center justify-center shadow-[2px_2px_0px_0px_black] ${
-                msg.role === 'model' ? 'bg-[#FF3399]' : 'bg-[#00CCFF]'
-              }`}>
-                {msg.role === 'model' ? <Zap size={14} className="text-white" /> : <User size={14} className="text-black" />}
-              </div>
-              
-              {/* Bubble */}
-              <div className={`flex-1 border-[3px] border-black rounded-2xl p-3 relative text-[11px] leading-relaxed shadow-[2px_2px_0px_0px_black] ${
-                msg.role === 'model' 
-                  ? 'bg-black text-[#ccff00] shadow-[2px_2px_0px_0px_#ccff00]' 
-                  : 'bg-white text-black font-bold shadow-[2px_2px_0px_0px_black]'
-              }`}>
-                {msg.text}
-                {/* Tail pointing toward avatar */}
-                {msg.role === 'model' && (
-                  <div className="absolute -left-1.5 top-3 w-3 h-3 bg-black border-l-[3px] border-b-[3px] border-black rotate-45" />
-                )}
-                {msg.role === 'user' && (
-                  <div className="absolute -right-1.5 top-3 w-3 h-3 bg-white border-r-[3px] border-t-[3px] border-black rotate-45" />
-                )}
-              </div>
-            </div>
-          ))}
-          {isTyping && (
-            <div className="flex gap-3">
-               <div className="w-8 h-8 shrink-0 border-[2px] border-black rounded-xl flex items-center justify-center shadow-[2px_2px_0px_0px_black] bg-[#FF3399]">
-                <Zap size={14} className="text-white animate-pulse" />
-              </div>
-               <div className="bg-black text-[#ccff00] border-[3px] border-black rounded-2xl p-3 relative text-[11px] font-black uppercase tracking-widest animate-pulse shadow-[2px_2px_0px_0px_#ccff00]">
-                Processing...
-                <div className="absolute -left-1.5 top-3 w-3 h-3 bg-black border-l-[3px] border-b-[3px] border-black rotate-45" />
-              </div>
-            </div>
-          )}
-          <div ref={bottomRef} />
-        </div>
-      )}
-
-      {/* Input area */}
-      <div className={`bg-white p-3 flex gap-2 ${messages.length > 1 ? 'border-t-[4px] border-black' : ''}`}>
-        <input 
-          type="text" 
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="Ask AI-SSISTANT..."
-          disabled={!canUseGemini}
-          className="flex-1 bg-gray-100 border-[2px] border-black rounded-xl p-2 text-[11px] font-bold outline-none focus:bg-[#CCFF00]/10 shadow-inner"
-        />
-        <button 
-          onClick={handleSend}
-          disabled={!canUseGemini || !input.trim() || isTyping}
-          className="bg-black text-white p-2 rounded-xl border-[2px] border-black shadow-[2px_2px_0px_0px_black] hover:translate-y-[1px] hover:translate-x-[1px] hover:shadow-none active:bg-[#FF3399] disabled:opacity-50 transition-all shrink-0"
-        >
-          <Send size={14} />
-        </button>
-      </div>
-      {lastCommand && (
-        <Link to={lastCommand.route} className="border-t-[3px] border-black bg-[#FFFF61] px-3 py-2 text-[9px] font-black uppercase tracking-[0.1em] text-black flex items-center justify-between gap-2">
-          <span>Open Command: {lastCommand.title}</span>
-          <ArrowRight size={12} />
-        </Link>
-      )}
-    </div>
-  );
-};
+   <div className="flex shrink-0 gap-2 border-t-[2px] border-black bg-[#f8f8f4] p-2">
+    <input
+     type="text"
+     value={input}
+     onChange={(event) => setInput(event.target.value)}
+     onKeyDown={(event) => { if (event.key === "Enter") void handleSend() }}
+     placeholder="Ask ViewTube Copilot..."
+     className="min-w-0 flex-1 rounded-[8px] border-[2px] border-black bg-white px-2 py-1.5 text-[11px] font-bold outline-none focus:bg-[#FFDA47]/20"
+    />
+    <button type="button" onClick={() => void handleSend()} disabled={!input.trim() || busy} className="grid w-9 shrink-0 place-items-center rounded-[8px] border-[2px] border-black bg-[#3FEE56] disabled:opacity-40" aria-label="Send to ViewTube Copilot">
+     <Send size={14} />
+    </button>
+   </div>
+  </section>
+ )
+}

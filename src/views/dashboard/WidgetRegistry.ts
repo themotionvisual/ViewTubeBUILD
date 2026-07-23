@@ -692,6 +692,21 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
     dependency: ["none"],
     status: "ready",
   },
+ {
+  id: "ui-reference-library",
+  title: "UI Reference Library",
+  subtitle: "Component library and scrollbar styles",
+  category: "utility",
+  defaultSize: "half",
+  minSize: "quarter",
+  maxSize: "full",
+  defaultHeight: "xtall",
+  minHeight: "medium",
+  maxHeight: "xtall",
+  ...getDashboardWidgetPaletteColors(7),
+  dependency: ["none"],
+  status: "ready",
+ }
 ]
 
 const prioritizedOrder = [
@@ -725,6 +740,7 @@ const prioritizedOrder = [
   "system-micro-stack",
   "shorts-vs-long",
   "collab-matchmaker",
+  "ui-reference-library",
  ];
 
 export const DEFAULT_DASHBOARD_WIDGET_ORDER = [

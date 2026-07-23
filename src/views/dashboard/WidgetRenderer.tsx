@@ -32,6 +32,8 @@ import {
   Magnet,
   RefreshCw,
   BookOpen,
+  ChevronLeft,
+  ChevronRight,
  } from "lucide-react"
 import { useVideoComments, type VideoComment } from "./useVideoComments"
 import type { DashboardData } from "./useDashboardData"
@@ -42,6 +44,7 @@ import type {
 } from "./types"
 import { TagGeneratorWidget } from "./widgets/TagGeneratorWidget"
 import { RevenueChartWidget } from "./widgets/RevenueChartWidget"
+import UIReferenceLibraryWidget from "./widgets/UIReferenceLibraryWidget"
 import { CommunityPostWidget } from "./widgets/CommunityPostWidget"
 import { ThumbnailLabWidget } from "./widgets/ThumbnailLabWidget"
 import { RealtimePerformanceWidget } from "./widgets/RealtimePerformanceWidget"
@@ -431,6 +434,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   dashboardControls
 }) => {
   const { brain } = useBrain();
+  const timeWindows = ["7 DAYS", "14 DAYS", "28 DAYS", "60 DAYS", "90 DAYS", "180 DAYS", "365 DAYS"];
+  const [kpiTimeWindowIdx, setKpiTimeWindowIdx] = useState(2);
 
   // FORCE ROW 1 WIDGETS TO BE TALL
   const overrideInstance = {
@@ -709,10 +714,30 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
     "#3FE0C5", // turquoise
    ]
 
+   const timeWindowToggle = (
+     <div className="vt-tab-group" style={{ padding: "2px", display: "inline-flex", alignItems: "center" }}>
+       <button 
+         className="vt-tab-btn active" 
+         onClick={(e) => { e.stopPropagation(); setKpiTimeWindowIdx(prev => (prev > 0 ? prev - 1 : timeWindows.length - 1)); }}
+         style={{ padding: "2px", width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+         <ChevronLeft size={14} strokeWidth={3} />
+       </button>
+       <div style={{ fontSize: "10px", fontWeight: 900, padding: "0 10px", letterSpacing: "0.05em", color: "#000" }}>
+         {timeWindows[kpiTimeWindowIdx]}
+       </div>
+       <button 
+         className="vt-tab-btn active" 
+         onClick={(e) => { e.stopPropagation(); setKpiTimeWindowIdx(prev => (prev + 1) % timeWindows.length); }}
+         style={{ padding: "2px", width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+         <ChevronRight size={14} strokeWidth={3} />
+       </button>
+     </div>
+   );
+
    return (
-    <WidgetShell {...common} widget={shellWidget} icon={<TrendingUp size={22} />}>
-     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-      <div style={{ display: "flex", gap: "6px", flex: 1, overflow: "hidden", padding: "2px" }}>
+    <WidgetShell {...common} widget={shellWidget} icon={<TrendingUp size={22} />} headerContent={timeWindowToggle}>
+     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", margin: 0 }}>
+      <div style={{ display: "flex", gap: "6px", flex: 1, overflow: "hidden", padding: "5px" }}>
        {/* Circular Avatar Sidebar */}
        <div style={{ 
          display: "flex", 
@@ -726,8 +751,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
          paddingRight: "2px"
        }}>
         <div style={{ 
-          width: "120px", 
-          height: "120px", 
+          width: "140px", 
+          height: "140px", 
           borderRadius: "50%", 
           border: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)", 
           overflow: "hidden", 
@@ -748,69 +773,71 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
        <div style={{
          flex: 1,
          display: "grid",
-         gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+         gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
          gridTemplateRows: "repeat(3, minmax(0, 1fr))",
          gap: "4px"
        }}>
-        {data.statBlocks.map((stat, idx) => {
-         const metricKey = stat.label.toLowerCase().includes("views") ? "views" : 
-                          stat.label.toLowerCase().includes("subscribers") ? "subscribersGained" :
-                          stat.label.toLowerCase().includes("hours") ? "watchHours" :
-                          stat.label.toLowerCase().includes("revenue") ? "revenue" : null
-         
-         let bars = [40, 60, 45, 80, 55, 90, 75]
-         if (metricKey && data.canonicalRows?.length) {
-           const recentValues = data.canonicalRows
-              .slice(0, 7)
-              .map(row => (row.metrics as any)[metricKey]?.value || 0)
-           const maxVal = Math.max(...recentValues, 1)
-           bars = recentValues.map(v => 30 + (v / maxVal) * 70).reverse()
-         }
+        {data.getKpiStatBlocks(parseInt(timeWindows[kpiTimeWindowIdx])).map((stat: any, idx: number) => {
+          let bars = stat.bars || [40, 60, 45, 80, 55, 90, 75]
 
-         let cleanTrend = stat.trend || ""
-         if (cleanTrend) {
-          const match = cleanTrend.match(/([+-]?)(\d+(\.\d+)?)%/)
-          if (match) {
-            const sign = match[1]
-            const val = parseFloat(match[2])
-            cleanTrend = val >= 100 ? `${sign}${Math.round(val).toString().slice(0, 4)}%` : `${sign}${val.toFixed(1).slice(0, 4)}%`
+          let cleanTrend = stat.trend || ""
+          if (cleanTrend) {
+           const match = cleanTrend.match(/([+-]?)(\d+(\.\d+)?)%/)
+           if (match) {
+             const sign = match[1]
+             const val = parseFloat(match[2])
+             cleanTrend = val >= 100 ? `${sign}${Math.round(val).toString().slice(0, 4)}%` : `${sign}${val.toFixed(1).slice(0, 4)}%`
+           }
           }
-         }
 
-         const cardColor = rainbowKpiColors[idx % rainbowKpiColors.length]
+         const cardColor = stat.color || rainbowKpiColors[idx % rainbowKpiColors.length]
 
            return (
             <div
              key={idx}
              style={{
               background: "#fff",
-              border: "2px solid #000",
+              border: `1px solid rgba(0,0,0,0.1)`,
               borderRadius: "8px",
-              overflow: "hidden",
+              boxShadow: `0px 2px 4px rgba(0,0,0,0.05)`,
               display: "flex",
               flexDirection: "column",
               minHeight: 0,
-              boxShadow: `2px 2px 0px 0px ${cardColor}`
+              overflow: "hidden"
              }}>
              <div
               style={{
                background: cardColor,
-               borderBottom: "2px solid #000",
+               borderBottom: "1px solid rgba(0,0,0,0.1)",
                height: "20px",
                display: "flex",
                justifyContent: "center",
                alignItems: "center",
+               padding: "0 4px",
               }}>
-              <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.02em", color: "#000" }}>
+              <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.02em", color: "#000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                {stat.label}
               </span>
              </div>
-             <div style={{ padding: "2px 2px 0px", display: "flex", alignItems: "baseline", justifyContent: "center", gap: "2px" }}>
-              <div style={{ fontSize: "22px", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1 }}>
-               {stat.value}
+              <div style={{ padding: "2px 4px 0px", display: "flex", alignItems: "baseline", justifyContent: (stat as any).secondaryValue ? "space-between" : "center", gap: "2px" }}>
+               <div style={{ fontSize: "22px", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1 }}>
+                {stat.value}
+               </div>
+               {(stat as any).secondaryValue != null ? (
+                 <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "2px", lineHeight: 1 }}>
+                   <span style={{ fontSize: "16px", fontWeight: 900, color: (stat as any).secondaryIsIncrease ? "#008B00" : "#D32F2F" }}>
+                     {(stat as any).secondaryValue}
+                   </span>
+                   <span style={{ fontSize: "10px", fontWeight: 900, color: (stat as any).secondaryIsIncrease ? "#008B00" : "#D32F2F" }}>
+                     {(stat as any).secondaryIsIncrease ? "▲" : "▼"}
+                   </span>
+                 </div>
+               ) : stat.trend ? (
+                 <span style={{ fontSize: "8px", fontWeight: 900, color: stat.trend.includes("▲") || stat.trend.includes("+") ? "#008B00" : "#D32F2F" }}>
+                   {cleanTrend} {stat.trend.includes("▲") || stat.trend.includes("+") ? "▲" : "▼"}
+                 </span>
+               ) : null}
               </div>
-              {stat.trend && <span style={{ fontSize: "8px", fontWeight: 900, color: stat.trend.includes("↑") ? "#008B00" : "#D32F2F" }}>{cleanTrend}</span>}
-             </div>
              <div style={{ display: "flex", alignItems: "flex-end", gap: "1px", padding: "0 2px 0", height: "14px", marginTop: "auto" }}>
               {bars.map((h, i) => (
                <div key={i} style={{ flex: 1, height: `${h}%`, background: cardColor, opacity: 0.4 + (h / 100) * 0.6, borderRadius: "1px 1px 0 0" }} />
@@ -1347,6 +1374,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
 
  if (widget.id === "collab-matchmaker") return <CollabMatchmakerWidget {...common} data={data} />
  if (widget.id === "brain-hub") return <BrainHubWidget {...common} data={data} />
+ if (widget.id === "ui-reference-library") return <UIReferenceLibraryWidget {...common} data={data} />
 
  return (
   <WidgetShell {...common}>

@@ -38,18 +38,35 @@ export const KeywordEngineWidget = ({
 
  const keywords = useMemo(() => {
   const snapshot = getVtSyncSnapshot()
+   
+  if (snapshot?.searchTerms && snapshot.searchTerms.length > 0) {
+    return snapshot.searchTerms.slice(0, 10).map((term: any) => ({
+      word: term.term || term.label || term.title || term.keyword || "Unknown",
+      avgViews: term.views || 0,
+      count: 1,
+    }))
+  }
+
   const syncRows = snapshot?.videos || []
-  const hasViewsInSync = syncRows.length > 0 && typeof syncRows[0]?.metrics?.views === "number"
+  const hasViewsInSync = syncRows.length > 0 && (typeof syncRows[0]?.metrics?.views === "number" || typeof syncRows[0]?.views === "number")
   const rows = hasViewsInSync ? syncRows : (initialBootstrap?.videos || data.canonicalRows || data.brain?.canonicalRows || [])
 
   const map = new Map<string, { views: number; count: number }>()
 
   rows.forEach((row: any) => {
    const originalData = row.originalData || row._originalData || {}
-   const title = row.title || originalData["Video title"] || ""
+   const title = row.title || row["Video title"] || originalData["Video title"] || ""
    const v = row.metrics || {}
    const vByWindow = row.metricsByWindow?.lifetime || {}
-   const views = metricCellValue(vByWindow.views) || metricCellValue(v.views) || Number(row.Views) || Number(originalData.Views) || 0
+   const views = metricCellValue(vByWindow.views) 
+     || metricCellValue(v.views) 
+     || Number(row.views) 
+     || Number(row.Views) 
+     || Number(row.viewCount) 
+     || Number(row.statistics?.viewCount) 
+     || Number(originalData.Views) 
+     || Number(originalData.views) 
+     || 0
 
    const words = title
     .toLowerCase()
@@ -66,9 +83,14 @@ export const KeywordEngineWidget = ({
    })
   })
 
-  const list = Array.from(map.entries())
-   .filter(([_, stat]) => stat.count >= 2) // must appear in at least 2 videos
-   .map(([word, stat]) => ({word, avgViews: Math.round(stat.views / stat.count), count: stat.count, onDecSize, onCycleHeight, onDecHeight}))
+  let entries = Array.from(map.entries())
+  let filtered = entries.filter(([_, stat]) => stat.count >= 2)
+  if (filtered.length === 0) {
+    filtered = entries.filter(([_, stat]) => stat.count >= 1)
+  }
+
+  const list = filtered
+   .map(([word, stat]) => ({word, avgViews: Math.round(stat.views / Math.max(1, stat.count)), count: stat.count}))
    .sort((a, b) => b.avgViews - a.avgViews)
    .slice(0, 10)
 

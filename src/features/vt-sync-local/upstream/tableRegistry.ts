@@ -13,7 +13,7 @@ const col = (
  format: VtSyncTableColumnDefinition["format"] = "text",
  defaultVisible = true,
  pinned?: "left" | "right",
- options: Partial<Pick<VtSyncTableColumnDefinition, "semanticRole" | "visualization" | "preferredWidth" | "textSize">> = {},
+ options: Partial<Pick<VtSyncTableColumnDefinition, "semanticRole" | "visualization" | "totalMode" | "preferredWidth" | "textSize">> = {},
 ): VtSyncTableColumnDefinition => ({
  key,
  label,
@@ -25,6 +25,7 @@ const col = (
  visibility: "always",
  semanticRole: options.semanticRole ?? (["number", "percent", "currency", "duration", "durationHours", "durationMinutes"].includes(format || "") ? "metric" : "identity"),
  visualization: options.visualization ?? (["number", "percent", "currency", "duration", "durationHours", "durationMinutes"].includes(format || "") ? "metric" : "none"),
+ totalMode: options.totalMode,
  preferredWidth: options.preferredWidth,
  textSize: options.textSize,
 })
@@ -298,10 +299,12 @@ const shortMetricColumns = [
  col("avgPercentageViewed", "Avg % Viewed", "Metrics", "percent"),
 ]
 
-const audienceShareColumns = [
- col("cohort", "Viewers - gender & age", "Audience", "text", true, "left"),
- col("viewsPct", "Views (%)", "Audience", "percent"),
- col("watchTimePct", "Watch Time (%)", "Audience", "percent"),
+const demographicOverviewColumns = [
+ col("ageGroupLabel", "Age Group", "Audience Demographics", "text", true, "left", { preferredWidth: 260 }),
+ col("maleViewerPercentage", "Male", "Audience Demographics", "percent", true, undefined, { totalMode: "sum", preferredWidth: 180 }),
+ col("femaleViewerPercentage", "Female", "Audience Demographics", "percent", true, undefined, { totalMode: "sum", preferredWidth: 180 }),
+ col("otherViewerPercentage", "Other", "Audience Demographics", "percent", true, undefined, { totalMode: "sum", preferredWidth: 180 }),
+ col("viewerPercentage", "All Viewers", "Audience Demographics", "percent", true, undefined, { totalMode: "sum", preferredWidth: 200 }),
 ]
 
 export const VT_SYNC_TABLE_DEFINITIONS: VtSyncTableDefinition[] = [
@@ -327,7 +330,7 @@ export const VT_SYNC_TABLE_DEFINITIONS: VtSyncTableDefinition[] = [
  table({ id: "traffic_yt_playlist_page", mainCategoryId: "traffic", label: "YT Playlist Pages", description: "YouTube playlist page traffic.", snapshotKeys: ["trafficYtPlaylistPage"], categoryIds: ["traffic_yt_playlist_page"], columns: [col("term", "Playlist (ID)", "Identity", "text", true, "left"), col("title", "Playlist Title", "Identity"), ...trafficMetricColumns], datasetId: "traffic_yt_playlist_page" }),
  table({ id: "other_feat", mainCategoryId: "traffic", label: "Other Features", description: "Other feature traffic.", snapshotKeys: ["trafficOtherFeatures"], categoryIds: ["other_features"], columns: [col("term", "Other Feature", "Identity", "text", true, "left"), ...trafficMetricColumns], datasetId: "other_feat" }),
  table({ id: "locations", mainCategoryId: "traffic", label: "Playback Locations", description: "Playback location traffic.", snapshotKeys: ["playbackLocations"], categoryIds: ["playback_location"], columns: [col("location", "Playback Location", "Identity", "text", true, "left"), ...shortMetricColumns], datasetId: "locations" }),
- table({ id: "demographics", mainCategoryId: "demographics", label: "Overview", description: "Audience demographic overview.", snapshotKeys: ["demographics"], categoryIds: ["audience_demographics"], columns: audienceShareColumns, defaultSort: { key: "viewsPct", direction: "desc" }, datasetId: "demographics" }),
+ table({ id: "demographics", mainCategoryId: "demographics", label: "Overview", description: "Age, gender, and age × gender viewer percentages derived from one combined demographic report.", snapshotKeys: ["demographics"], categoryIds: ["audience_demographics"], columns: demographicOverviewColumns, defaultSort: { key: "ageOrder", direction: "asc" }, datasetId: "demographics", layoutMode: "sparse-full" }),
  table({ id: "demog_age", mainCategoryId: "demographics", label: "Age Group", description: "Demographics by age.", snapshotKeys: ["demographicsByAge"], categoryIds: ["demographics_age"], columns: [col("cohort", "Age Group", "Identity", "text", true, "left"), col("viewsPct", "Views (%)", "Audience", "percent")], defaultSort: { key: "viewsPct", direction: "desc" }, datasetId: "demog_age" }),
  table({ id: "demog_gender", mainCategoryId: "demographics", label: "Gender", description: "Demographics by gender.", snapshotKeys: ["demographicsByGender"], categoryIds: ["demographics_gender"], columns: [col("cohort", "Gender", "Identity", "text", true, "left"), col("viewsPct", "Views (%)", "Audience", "percent")], defaultSort: { key: "viewsPct", direction: "desc" }, datasetId: "demog_gender" }),
  table({ id: "audience", mainCategoryId: "demographics", label: "Audience Behavior", description: "Audience behavior rows.", snapshotKeys: ["audienceWatchBehavior"], categoryIds: ["audience_watch_behavior"], columns: [col("term", "Audience Behavior", "Identity", "text", true, "left"), col("views", "Views", "Metrics", "number"), col("engagedViews", "Engaged Views", "Metrics", "number"), col("watchTime", "Watch Time", "Metrics", "durationHours"), col("avgDuration", "Average View Duration", "Metrics", "duration")], datasetId: "audience" }),

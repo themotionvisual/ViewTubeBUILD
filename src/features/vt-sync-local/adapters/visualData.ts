@@ -425,16 +425,40 @@ const toCanonicalVideoRow = (
  }
 }
 
-const metricMap = (row: Row): Record<string, number | null> => ({
- views: numberOrNull(firstValue(row.views, row.playlistViews)),
- watchHours: numberOrNull(row.watchTime),
- engagedViews: numberOrNull(row.engagedViews),
- averageViewDuration: numberOrNull(firstValue(row.avgDuration, row.avgViewDuration, row.averageViewDuration)),
- averagePercentageViewed: numberOrNull(firstValue(row.avgPercentageViewed, row.averagePercentageViewed, row.averageViewPercentage)),
- impressions: numberOrNull(firstValue(row.impressions, row.adImpressions)),
- ctr: numberOrNull(row.ctr),
- revenue: numberOrNull(firstValue(row.revenue, row.estimatedRevenue)),
- subscribersGained: numberOrNull(row.subscribersGained),
+const contextMetricCell = (
+ snapshot: VtSyncSnapshot,
+ value: unknown,
+ sourceField: string,
+): MetricCell => {
+ const numeric = numberOrNull(value)
+ if (numeric === null) {
+  return buildUnavailableMetricCell(visualMetricSource(snapshot), "vt_sync_metric_missing", {
+   sourceClass: sourceClassFor(snapshot),
+   authMode: authModeFor(snapshot),
+   officialStatus: snapshot.source === "manual" ? "imported" : "official",
+  })
+ }
+ return buildActualMetricCell(numeric, visualMetricSource(snapshot), {
+  sourceField,
+  windowScope: (snapshot.selectedTimeWindow || "lifetime") as AnalyticsWindow,
+  sourceClass: sourceClassFor(snapshot),
+  authMode: authModeFor(snapshot),
+  officialStatus: snapshot.source === "manual" ? "imported" : "official",
+  mergedStatus: "finalized",
+  finalizedAt: Date.now(),
+ })
+}
+
+const metricMap = (snapshot: VtSyncSnapshot, row: Row): Record<string, MetricCell> => ({
+ views: contextMetricCell(snapshot, firstValue(row.views, row.playlistViews), "views"),
+ watchHours: contextMetricCell(snapshot, row.watchTime, "watchTime"),
+ engagedViews: contextMetricCell(snapshot, row.engagedViews, "engagedViews"),
+ averageViewDuration: contextMetricCell(snapshot, firstValue(row.avgDuration, row.avgViewDuration, row.averageViewDuration), "averageViewDuration"),
+ averagePercentageViewed: contextMetricCell(snapshot, firstValue(row.avgPercentageViewed, row.averagePercentageViewed, row.averageViewPercentage), "averagePercentageViewed"),
+ impressions: contextMetricCell(snapshot, firstValue(row.impressions, row.adImpressions), "impressions"),
+ ctr: contextMetricCell(snapshot, row.ctr, "ctr"),
+ revenue: contextMetricCell(snapshot, firstValue(row.revenue, row.estimatedRevenue), "revenue"),
+ subscribersGained: contextMetricCell(snapshot, row.subscribersGained, "subscribersGained"),
 })
 
 const trafficRow = (
@@ -463,7 +487,7 @@ const trafficRow = (
   resolvedEntityId: detail || `vt-sync-traffic-${index}`,
   resolvedEntityTitle: title,
   resolvedEntityHandle: text(firstValue(record.handle, record.channelHandle)) || null,
-  metrics: metricMap(record),
+  metrics: metricMap(snapshot, record),
   metricMeta: {},
   syncedAt,
  }
@@ -481,15 +505,18 @@ const addTrafficRows = (
  })
 }
 
-const geographyMetricMap = (row: Row): Record<string, number | null> => ({
- views: numberOrNull(row.views),
- watchHours: numberOrNull(row.watchTime),
- estimatedMinutesWatched:
+const geographyMetricMap = (snapshot: VtSyncSnapshot, row: Row): Record<string, MetricCell> => ({
+ views: contextMetricCell(snapshot, row.views, "views"),
+ watchHours: contextMetricCell(snapshot, row.watchTime, "watchTime"),
+ estimatedMinutesWatched: contextMetricCell(
+  snapshot,
   numberOrNull(row.estimatedMinutesWatched) ??
-  (numberOrNull(row.watchTime) !== null ? (numberOrNull(row.watchTime) || 0) * 60 : null),
- engagedViews: numberOrNull(row.engagedViews),
- subscribersGained: numberOrNull(row.subscribersGained),
- revenue: numberOrNull(firstValue(row.revenue, row.estimatedRevenue)),
+   (numberOrNull(row.watchTime) !== null ? (numberOrNull(row.watchTime) || 0) * 60 : null),
+  "estimatedMinutesWatched",
+ ),
+ engagedViews: contextMetricCell(snapshot, row.engagedViews, "engagedViews"),
+ subscribersGained: contextMetricCell(snapshot, row.subscribersGained, "subscribersGained"),
+ revenue: contextMetricCell(snapshot, firstValue(row.revenue, row.estimatedRevenue), "revenue"),
 })
 
 const toGeographyRow = (
@@ -498,19 +525,24 @@ const toGeographyRow = (
  type: "country" | "city" | "province" | "dma" | "continent",
  index: number,
 ): CanonicalGeographyRow => {
- const label = text(
-  firstValue(row.country, row.city, row.province, row.dma, row.region, row.subContinent),
-  `Unknown ${type} ${index + 1}`,
- )
+ const labelValue =
+  type === "city" ? firstValue(row.city, row.region, row.country) :
+  type === "province" ? firstValue(row.province, row.region, row.country) :
+  type === "dma" ? firstValue(row.dma, row.region, row.province, row.country) :
+  type === "continent" ? firstValue(row.subContinent, row.continent, row.region) :
+  firstValue(row.country, row.region)
+ const label = text(labelValue, `Unknown ${type} ${index + 1}`)
  return {
   channelId: text(snapshot.channelId, "vt-sync-local"),
   entityType: "channel",
   entityId: text(snapshot.channelId, "vt-sync-local"),
   window: (snapshot.selectedTimeWindow || "lifetime") as AnalyticsWindow,
+  geographyLabel: label,
+  geographyType: type,
   country: type === "country" ? label : text(firstValue(row.country, "Unknown")),
   province: type === "province" || type === "dma" ? label : null,
   city: type === "city" ? label : null,
-  metrics: geographyMetricMap(row),
+  metrics: geographyMetricMap(snapshot, row),
   metricMeta: {},
   syncedAt: snapshot.capturedAt,
  }

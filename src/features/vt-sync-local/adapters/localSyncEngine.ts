@@ -872,7 +872,7 @@ const mapSegmentRows = (rows: Record<string, any>[] | null, identityKey: string)
  term: row.term || row[identityKey] || row.audienceType || row.creatorContentType || row.insightTrafficSourceType,
  cohort: row.cohort || `${row.gender || ""} ${row.ageGroup || ""}`.trim() || row.ageGroup || row.gender,
  viewsPct: numberOrZero(row.viewsPct ?? row.viewerPercentage),
- watchTimePct: numberOrZero(row.watchTimePct ?? row.viewerPercentage),
+ watchTimePct: numberOrUndefined(row.watchTimePct),
  device: row.device || row.deviceType,
  location: row.location || row.insightPlaybackLocationType,
  status: row.status || row.subscribedStatus,

@@ -8,7 +8,9 @@ import {
  getCurrentEntitlement,
  registerReferralConversion,
  syncEntitlementIfDrifted,
+ syncReferralCodeToChannelHandle,
  reconcileEntitlementWindow,
+ setCustomReferralCodeOnce,
  writeStoredEntitlement,
  tierAtLeast,
 } from "../billingEntitlement"
@@ -145,5 +147,28 @@ describe("billing entitlement runtime", () => {
    tokenLastAccrualIso: new Date().toISOString(),
   }
   expect(canAffordAiTokensFromState(exhausted, 1)).toBe(false)
+ })
+
+ it("syncs the default referral code from the connected channel handle", () => {
+  const now = new Date("2026-03-10T00:00:00.000Z")
+  writeStoredEntitlement(createDefaultEntitlement(now))
+
+  const next = syncReferralCodeToChannelHandle("@TheMotionVisual", now)
+
+  expect(next.referralCode).toBe("THEMOTIONVISUAL")
+  expect(next.referralCodeLocked).toBe(false)
+  expect(getCurrentEntitlement(now).referralCode).toBe("THEMOTIONVISUAL")
+ })
+
+ it("does not overwrite a locked custom referral code from the channel handle", () => {
+  const now = new Date("2026-03-10T00:00:00.000Z")
+  writeStoredEntitlement(createDefaultEntitlement(now))
+  const custom = setCustomReferralCodeOnce("CUSTOM77", now)
+  expect(custom.ok).toBe(true)
+
+  const next = syncReferralCodeToChannelHandle("@TheMotionVisual", now)
+
+  expect(next.referralCode).toBe("CUSTOM77")
+  expect(next.referralCodeLocked).toBe(true)
  })
 })

@@ -19,6 +19,7 @@ export interface TubeExplorerVideoPoint {
  shares: number
  subscribersGained: number
  subscribersLost: number
+ subscribersNet: number
  revenue: number
  rpm: number
  cpm: number
@@ -177,6 +178,12 @@ const normalizeKey = (value: string): string =>
 const metric = (row: CanonicalVideoRow, key: string): number =>
  resolveMetricNumber(row, key as any).value || 0
 
+const canonicalMetric = (row: Record<string, any>, key: string): number => {
+ const raw = row.metrics?.[key]
+ if (raw && typeof raw === "object" && "value" in raw) return numeric(raw.value)
+ return numeric(raw)
+}
+
 const normalizePercent = (value: number): number => {
  if (!Number.isFinite(value) || value <= 0) return 0
  return value <= 1 ? value * 100 : value
@@ -232,6 +239,7 @@ const toVideoPoint = (row: CanonicalVideoRow): TubeExplorerVideoPoint => {
   shares,
   subscribersGained: metric(row, "subscribersGained"),
   subscribersLost: metric(row, "subscribersLost"),
+  subscribersNet: metric(row, "subscribersGained") - metric(row, "subscribersLost"),
   revenue,
   rpm: metric(row, "rpm"),
   cpm: metric(row, "cpm"),
@@ -415,10 +423,72 @@ const buildMonthly = (videos: TubeExplorerVideoPoint[]): TubeExplorerMonthlyPoin
 export const buildTubeExplorerVisualData = (
  rows: CanonicalVideoRow[],
  csvFiles: CsvFileWithTag[] = [],
+ trafficRows: any[] = [],
+ geographyRows: any[] = []
 ): TubeExplorerVisualDataset => {
  const videos = rows.map(toVideoPoint)
+ const trafficMap = new Map<string, TubeExplorerTrafficPoint>()
  const traffic = buildTrafficRows(csvFiles)
+ for (const r of traffic) {
+   trafficMap.set(r.sourceType + "::" + (r.sourceDetail || r.sourceTitle), r)
+ }
+ for (const r of trafficRows) {
+   const st = String(r.trafficSourceType || "Unknown")
+   const sd = String(r.trafficSourceDetail || "")
+   const key = st + "::" + sd
+   const existing = trafficMap.get(key)
+   if (existing) {
+     existing.views += canonicalMetric(r, "views")
+     existing.watchHours += canonicalMetric(r, "watchHours")
+     existing.engagedViews += canonicalMetric(r, "engagedViews")
+     existing.impressions += canonicalMetric(r, "impressions")
+     existing.avp = Math.max(existing.avp, normalizePercent(canonicalMetric(r, "averagePercentageViewed")))
+     existing.ctr = Math.max(existing.ctr, normalizePercent(canonicalMetric(r, "ctr")))
+   } else {
+     trafficMap.set(key, {
+       sourceType: st,
+       sourceDetail: sd,
+       sourceTitle: String(r.sourceTitle || r.sourceLabel || sd || st),
+       views: canonicalMetric(r, "views"),
+       watchHours: canonicalMetric(r, "watchHours"),
+       engagedViews: canonicalMetric(r, "engagedViews"),
+       avp: normalizePercent(canonicalMetric(r, "averagePercentageViewed")),
+       impressions: canonicalMetric(r, "impressions"),
+       ctr: normalizePercent(canonicalMetric(r, "ctr")),
+       rowCount: 1, sourceOrigin: "cache"
+     })
+   }
+ }
+ const finalTraffic = [...trafficMap.values()].sort((a,b) => b.views - a.views)
+
+ const geoMap = new Map<string, TubeExplorerGeoPoint>()
  const geography = buildGeoRows(csvFiles)
+ for (const r of geography) {
+   geoMap.set(r.label, r)
+ }
+ for (const r of geographyRows) {
+   const label = String(r.geographyLabel || r.city || r.province || r.country || r.geography || "Unknown")
+   const existing = geoMap.get(label)
+   if (existing) {
+     existing.views += canonicalMetric(r, "views")
+     existing.watchHours += canonicalMetric(r, "watchHours")
+     existing.engagedViews += canonicalMetric(r, "engagedViews")
+     existing.subscribersGained += canonicalMetric(r, "subscribersGained")
+     existing.revenue += canonicalMetric(r, "revenue")
+   } else {
+     geoMap.set(label, {
+       label,
+       regionType: r.geographyType === "city" || r.city ? "city" : r.geographyType === "province" || r.geographyType === "dma" || r.province ? "state" : "country",
+       views: canonicalMetric(r, "views"),
+       watchHours: canonicalMetric(r, "watchHours"),
+       engagedViews: canonicalMetric(r, "engagedViews"),
+       subscribersGained: canonicalMetric(r, "subscribersGained"),
+       revenue: canonicalMetric(r, "revenue"),
+       rowCount: 1, sourceOrigin: "cache"
+     })
+   }
+ }
+ const finalGeography = [...geoMap.values()].sort((a,b) => b.views - a.views)
  const keywords = buildKeywords(videos, csvFiles)
  const monthly = buildMonthly(videos)
  const totals = videos.reduce(
@@ -453,14 +523,14 @@ export const buildTubeExplorerVisualData = (
   shorts: videos.filter((video) => video.format === "shorts"),
   longform: videos.filter((video) => video.format === "long"),
   keywords,
-  traffic,
-  geography,
+  traffic: finalTraffic,
+  geography: finalGeography,
   monthly,
   totals,
   coverage: {
    hasVideos: videos.length > 0,
-   hasTraffic: traffic.length > 0,
-   hasGeography: geography.length > 0,
+   hasTraffic: finalTraffic.length > 0,
+   hasGeography: finalGeography.length > 0,
    hasKeywords: keywords.length > 0,
    csvTrafficFiles: csvFiles.filter((file) => file.detectedCategory && TRAFFIC_CATEGORIES.has(file.detectedCategory)).length,
    csvGeoFiles: csvFiles.filter((file) => file.detectedCategory && GEO_CATEGORIES.has(file.detectedCategory)).length,

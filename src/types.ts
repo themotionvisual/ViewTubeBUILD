@@ -1249,6 +1249,60 @@ export interface AIBrainAnswerModule {
  tone: CreatorBrainResponseSection["tone"]
  actionLabel?: string
  source?: "growth" | "analytics" | "journal" | "oracle" | "seo" | "memory" | "question"
+ kind?:
+  | "executive_snapshot"
+  | "metric_comparison"
+  | "trend_chart"
+  | "retention_curve"
+  | "audience_mix"
+  | "recommendation_stack"
+  | "action_table"
+  | "idea_scorecard"
+  | "packaging_board"
+  | "keyword_cluster"
+  | "search_table"
+  | "funnel"
+  | "timeline"
+  | "revenue_lens"
+  | "question"
+  | "handoff"
+ data?: AIBrainAnswerModuleData
+}
+
+export interface AIBrainAnswerModuleData {
+ metrics?: Array<{ label: string; value: number | null; displayValue?: string; change?: number | null }>
+ points?: Array<{ label: string; value: number | null }>
+ rows?: Array<Record<string, string | number | null>>
+ labels?: string[]
+ items?: Array<{ title: string; detail?: string; score?: number | null; status?: string }>
+ questionId?: string
+ route?: string
+ routeLabel?: string
+ missingReason?: string
+}
+
+export interface BrainResponseCitation {
+ id: string
+ title: string
+ url: string
+ source: "wikipedia" | "google" | "viewtube" | "youtube"
+ accessedAt: string
+}
+
+export interface BrainAnswerEvaluation {
+ id: string
+ createdAt: string
+ scores: {
+  creatorSpecificity: number
+  evidenceCoverage: number
+  goalAlignment: number
+  actionability: number
+  novelty: number
+ }
+ passed: boolean
+ repairReasons: string[]
+ unsupportedNumbers: string[]
+ similarTurnIds: string[]
 }
 
 export interface CreatorInitialInsightDefinition {
@@ -1317,6 +1371,8 @@ export interface AIBrainConversationTurn {
  threadId: string
  channelId: string | null
  createdAt: string
+ updatedAt?: string
+ status?: AIBrainConversationTurnStatus
  userText: string
  assistantText: string
  response?: CreatorBrainResponse
@@ -1325,8 +1381,16 @@ export interface AIBrainConversationTurn {
  feedback?: AIBrainFeedbackSignal
  learningEntryIds: string[]
  digest?: AIBrainConversationDigest
+ citations?: BrainResponseCitation[]
+ evaluation?: BrainAnswerEvaluation
  metadata?: Record<string, unknown>
 }
+
+export type AIBrainConversationTurnStatus =
+ | "pending"
+ | "complete"
+ | "fallback"
+ | "interrupted"
 
 export interface AIBrainConversationThread {
  id: string
@@ -1335,7 +1399,124 @@ export interface AIBrainConversationThread {
  updatedAt: string
  title: string
  turnIds: string[]
+ selectedTurnId?: string
+ rollingSummary?: string
  latestDigest?: AIBrainConversationDigest
+}
+
+export interface BrainThreadRepository {
+ beginTurn(input: { channelId?: string | null; userText: string; metadata?: Record<string, unknown> }): Promise<AIBrainConversationTurn>
+ completeTurn(input: {
+  turnId: string
+  status: Exclude<AIBrainConversationTurnStatus, "pending">
+  assistantText: string
+  response?: CreatorBrainResponse
+  answerModules?: AIBrainAnswerModule[]
+  citations?: BrainResponseCitation[]
+  evaluation?: BrainAnswerEvaluation
+  learningEntryIds?: string[]
+  metadata?: Record<string, unknown>
+ }): Promise<AIBrainConversationTurn>
+ resumeThread(channelId?: string | null): Promise<{ thread: AIBrainConversationThread; turns: AIBrainConversationTurn[] }>
+}
+
+export interface NicheKnowledgeSource {
+ id: string
+ title: string
+ url: string
+ source: "wikipedia" | "google"
+ excerpt: string
+ accessedAt: string
+ expiresAt: string
+}
+
+export interface NicheKnowledgeProfile {
+ id: string
+ channelId: string | null
+ canonicalNiche: string
+ evidenceFingerprint: string
+ createdAt: string
+ updatedAt: string
+ evergreenExpiresAt: string
+ currentExpiresAt?: string
+ summary: string
+ terminology: string[]
+ majorSubtopics: string[]
+ adjacentTopics: string[]
+ audienceQuestions: string[]
+ sources: NicheKnowledgeSource[]
+ status: "ready" | "partial" | "missing"
+}
+
+export interface NicheKnowledgeRefreshPolicy {
+ evergreenTtlMs: number
+ currentTtlMs: number
+ refreshOnFingerprintChange: boolean
+}
+
+export interface BrainMemoryClaim {
+ id: string
+ channelId: string | null
+ scope: "creator" | "channel" | "analytics" | "answer_policy" | "workflow"
+ category: AIBrainLearningCategory
+ value: string
+ evidence: string[]
+ confidence: BrainConfidenceLevel
+ source: AIBrainLearningEntry["source"]
+ createdAt: string
+ updatedAt: string
+ validFrom: string
+ validTo?: string | null
+ confirmationState: "explicit" | "inferred" | "confirmed" | "rejected"
+ status: "active" | "superseded" | "undone"
+ supersedesClaimId?: string
+ supersededByClaimId?: string
+ learningEntryIds: string[]
+}
+
+export interface BrainReflectionDecision {
+ learningEntryId: string
+ decision: "promote" | "hold" | "ask_user" | "backtrack" | "supersede"
+ confidence: BrainConfidenceLevel
+ reason: string
+ affectedContextPacks: string[]
+ claimId?: string
+}
+
+export interface BrainContextBudget {
+ maximumCharacters: number
+ systemCharacters: number
+ evidenceCharacters: number
+ memoryCharacters: number
+ knowledgeCharacters: number
+ conversationCharacters: number
+ omittedSections: string[]
+}
+
+export interface BrainCapabilityDefinition {
+ id: string
+ label: string
+ description: string
+ intents: AIBrainEvidenceIntent[]
+ maximumInvocationsPerTurn: number
+ requiresChannelData?: boolean
+ requiresCurrentResearch?: boolean
+}
+
+export interface BrainOrchestratorRequest {
+ channelId?: string | null
+ userText: string
+ allowModel?: boolean
+ metadata?: Record<string, unknown>
+}
+
+export interface BrainOrchestratorResult {
+ turn: AIBrainConversationTurn
+ response: CreatorBrainResponse
+ modules: AIBrainAnswerModule[]
+ capabilities: string[]
+ contextBudget: BrainContextBudget
+ repaired: boolean
 }
 
 export type CreatorGrowthCapabilityStatus = "ready" | "partial" | "missing"

@@ -216,11 +216,11 @@ export const CommunityPostWidget = ({
           </>
         )}
       </div>
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center vt-full-bleed-bottom">
         <div className="flex-1 relative">
           <Link className="absolute left-2 top-1/2 -translate-y-1/2 opacity-40" size={14} />
           <input 
-            className="vt-input pl-8 text-[11px] h-8"
+            className="vt-input pl-8 text-[11px] h-9 border-t-2 border-b-0 border-l-0 border-r-0 border-black rounded-none"
             placeholder="Paste image URL..."
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
@@ -263,7 +263,7 @@ export const CommunityPostWidget = ({
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 10 }}
-              className="flex-1 flex flex-col gap-2 overflow-y-auto p-3"
+              className="flex-1 flex flex-col gap-2 overflow-y-auto"
             >
               {/* Type Selector */}
               <div className="vt-tab-group min-h-[36px]">
@@ -348,17 +348,19 @@ export const CommunityPostWidget = ({
               )}
 
               {/* Action Toolbar */}
-              <div className="flex gap-2 mt-auto pt-2 border-t border-black/10 mx-[-12px] px-[12px]">
+              <div className="flex gap-2 mt-auto pt-2 border-t border-black/10 w-full">
                 <button 
                   onClick={saveToVault}
-                  className="p-2 border-2 border-black rounded-lg hover:bg-gray-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+                  className="vt-button"
                   title="Save to Vault"
+                  style={{ width: "36px", height: "36px", flexShrink: 0, padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
                 >
                   <Archive size={16} />
                 </button>
                 <button 
-                  className="p-2 border-2 border-black rounded-lg hover:bg-gray-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+                  className="vt-button"
                   title="Schedule Post"
+                  style={{ width: "36px", height: "36px", flexShrink: 0, padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
                 >
                   <Calendar size={16} />
                 </button>
@@ -379,7 +381,7 @@ export const CommunityPostWidget = ({
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
-              className="flex-1 flex flex-col gap-3 p-3"
+              className="flex-1 flex flex-col gap-3"
             >
               <div className="flex-1 flex flex-col gap-2">
                 <label className="text-[10px] font-black uppercase opacity-60">AI Generation Prompt</label>

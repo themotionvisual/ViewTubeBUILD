@@ -9,12 +9,15 @@ import type {
  BrainConfidenceLevel,
  CreatorBrainResponse,
 } from "../types"
-import { getBrainMemory, saveBrainMemory } from "./brain/Core"
 import {
  getAIBrainLearningEntryDB,
  listAIBrainLearningEntriesDB,
  saveAIBrainLearningEntryDB,
 } from "./brain/Persistence"
+import {
+ promoteBrainClaim,
+ rebuildAffectedToolContextPacks,
+} from "./brain/BrainMemoryClaims"
 
 const nowIso = () => new Date().toISOString()
 
@@ -210,22 +213,33 @@ export const captureAIBrainLearningEvent = async (input: {
   source: input.source,
   metadata: input.metadata,
  })
+ const summary = normalizeText(input.summary) || "Untitled Brain learning"
+ const detail = normalizeText(input.detail || input.summary)
+ const existing = (await listAIBrainLearningEntriesDB(input.channelId || null)).find((entry) =>
+  entry.category === category
+  && entry.status !== "dismissed"
+  && (entry.summary.toLowerCase() === summary.toLowerCase() || entry.detail.toLowerCase() === detail.toLowerCase()))
+ const strongerConfidence = existing && confidenceRank[existing.confidence] > confidenceRank[input.confidence || "medium"]
+  ? existing.confidence
+  : input.confidence || "medium"
  const entry: AIBrainLearningEntry = {
+  ...(existing || {}),
   id: makeId("learning"),
   channelId: input.channelId || null,
   category,
   source: input.source,
-  summary: normalizeText(input.summary) || "Untitled Brain learning",
-  detail: normalizeText(input.detail || input.summary),
-  evidence: (input.evidence || []).map(normalizeText).filter(Boolean),
-  confidence: input.confidence || "medium",
+  summary,
+  detail,
+  evidence: Array.from(new Set([...(existing?.evidence || []), ...(input.evidence || []).map(normalizeText).filter(Boolean)])),
+  confidence: strongerConfidence,
   status: "captured",
-  createdAt,
+  createdAt: existing?.createdAt || createdAt,
   updatedAt: createdAt,
-  recurrenceCount: 1,
-  relatedEntryIds: [],
-  metadata: input.metadata,
+  recurrenceCount: (existing?.recurrenceCount || 0) + 1,
+  relatedEntryIds: existing?.relatedEntryIds || [],
+  metadata: { ...(existing?.metadata || {}), ...(input.metadata || {}) },
  }
+ if (existing) entry.id = existing.id
  entry.reflectionTrace = buildAIBrainReflectionTrace(entry)
  entry.status = "reflected"
  await saveAIBrainLearningEntryDB(entry)
@@ -256,14 +270,11 @@ export const promoteAIBrainLearning = async (
   }
  }
 
- const blockedBy: string[] = []
- if (!isHighEnoughForPromotion(entry)) blockedBy.push("confidence_below_promotion_threshold")
- if (entry.category === "correction" || entry.category === "answer_quality") {
-  blockedBy.push("feedback_requires_confirmation")
- }
- if (entry.category === "sync_observation" && /fail|missing|unknown/i.test(entry.detail)) {
-  blockedBy.push("sync_observation_is_not_channel_fact")
- }
+ const promotedClaim = await promoteBrainClaim(entry)
+ const blockedBy: string[] = promotedClaim.claim ? [] : [
+  promotedClaim.decision.decision === "ask_user" ? "confidence_below_promotion_threshold" : "feedback_requires_confirmation",
+ ]
+ if (entry.category === "sync_observation") blockedBy.splice(0, blockedBy.length, "sync_observation_is_not_channel_fact")
 
  const candidate: AIBrainPromotionCandidate = {
   entryId: entry.id,
@@ -271,26 +282,17 @@ export const promoteAIBrainLearning = async (
   reason: blockedBy.length
    ? "Learning is retained as evidence until confidence improves."
    : "Learning is high-confidence or recurring and can update Brain context.",
-  allowed: blockedBy.length === 0,
+  allowed: Boolean(promotedClaim.claim),
   confidence: entry.confidence,
   blockedBy,
  }
 
  if (!candidate.allowed) return candidate
 
- const memory = getBrainMemory()
- const learningLine = `${entry.summary}${entry.detail ? ` (${entry.detail})` : ""}`
- const nextMemory = { ...memory }
- if (entry.category === "creator_goal" || entry.category === "channel_fact") {
-  nextMemory.identityAndAspirations = `${memory.identityAndAspirations}\nConfirmed: ${learningLine}`.trim()
- } else if (entry.category === "content_style" || entry.category === "preference" || entry.category === "anti_pattern") {
-  nextMemory.contentDNA = `${memory.contentDNA}\nLearned: ${learningLine}`.trim()
- } else if (entry.category === "analytics_insight") {
-  nextMemory.performanceLedger = `${memory.performanceLedger}\nObserved: ${learningLine}`.trim()
- } else {
-  nextMemory.futureStateMap = `${memory.futureStateMap}\nNext learning: ${learningLine}`.trim()
- }
- await saveBrainMemory(nextMemory)
+ await rebuildAffectedToolContextPacks({
+  channelId: entry.channelId,
+  affectedContextPacks: promotedClaim.decision.affectedContextPacks,
+ })
 
  const promoted: AIBrainLearningEntry = {
   ...entry,

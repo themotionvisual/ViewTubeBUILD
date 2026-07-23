@@ -1,7 +1,9 @@
 import type {
  AIBrainAnswerModule,
  AIBrainConversationDigest,
+ AIBrainConversationThread,
  AIBrainConversationTurn,
+ AIBrainConversationTurnStatus,
  AIBrainLearningEntry,
  AIBrainQuestionAnswer,
  CreatorBrainLearningQuestion,
@@ -10,7 +12,10 @@ import type {
  CreatorGrowthCapabilityStatus,
 } from "../types"
 import {
+ getAIBrainConversationTurnDB,
+ listAIBrainConversationThreadsDB,
  listAIBrainConversationTurnsDB,
+ saveAIBrainConversationThreadDB,
  saveAIBrainConversationTurnDB,
 } from "./brain/Persistence"
 import {
@@ -30,6 +35,20 @@ const makeId = (prefix: string): string => {
 }
 
 const clean = (value: unknown): string => String(value || "").replace(/\s+/g, " ").trim()
+
+const defaultThreadId = (channelId?: string | null): string =>
+ `ai_brain_thread_${channelId || "default"}`
+
+const titleFromPrompt = (value: string): string =>
+ sanitizeCreatorFacingBrainCopy(value).slice(0, 72) || "ViewTube Brain conversation"
+
+const summarizeThread = (turns: AIBrainConversationTurn[]): string =>
+ turns
+  .filter((turn) => turn.status !== "pending")
+  .slice(-4)
+  .map((turn) => `${turn.userText}: ${turn.response?.keyInsight || turn.assistantText}`)
+  .join(" ")
+  .slice(0, 1400)
 
 export const sanitizeCreatorFacingBrainCopy = (value: string): string =>
  clean(value)
@@ -246,31 +265,174 @@ export const saveAIBrainConversationTurn = async (input: {
  learningEntryIds?: string[]
  metadata?: Record<string, unknown>
 }): Promise<AIBrainConversationTurn> => {
+ const pending = await beginAIBrainTurn({
+  channelId: input.channelId,
+  userText: input.userText,
+  metadata: input.metadata,
+ })
+ return completeAIBrainTurn({
+  turnId: pending.id,
+  status: "complete",
+  assistantText: input.assistantText,
+  response: input.response,
+  answerModules: input.answerModules,
+  questionAnswers: input.questionAnswers,
+  feedback: input.feedback,
+  learningEntryIds: input.learningEntryIds,
+  metadata: input.metadata,
+ })
+}
+
+export const beginAIBrainTurn = async (input: {
+ channelId?: string | null
+ userText: string
+ metadata?: Record<string, unknown>
+}): Promise<AIBrainConversationTurn> => {
  const createdAt = nowIso()
  const channelId = input.channelId || null
- const digest: AIBrainConversationDigest = buildConversationAnalyticDigest({
-  channelId,
-  userText: input.userText,
-  response: input.response || input.assistantText,
-  learningEntryIds: input.learningEntryIds || [],
- })
+ const threadId = defaultThreadId(channelId)
+ const existingThread = (await listAIBrainConversationThreadsDB(channelId))
+  .find((thread) => thread.id === threadId)
  const turn: AIBrainConversationTurn = {
   id: makeId("ai_brain_turn"),
-  threadId: `ai_brain_thread_${channelId || "default"}`,
+  threadId,
   channelId,
   createdAt,
+  updatedAt: createdAt,
+  status: "pending",
   userText: sanitizeCreatorFacingBrainCopy(input.userText),
+  assistantText: "",
+  answerModules: [],
+  questionAnswers: [],
+  learningEntryIds: [],
+  metadata: input.metadata,
+ }
+ const thread: AIBrainConversationThread = existingThread || {
+  id: threadId,
+  channelId,
+  createdAt,
+  updatedAt: createdAt,
+  title: titleFromPrompt(input.userText),
+  turnIds: [],
+ }
+ thread.updatedAt = createdAt
+ thread.selectedTurnId = turn.id
+ thread.turnIds = Array.from(new Set([...thread.turnIds, turn.id]))
+ await saveAIBrainConversationTurnDB(turn)
+ await saveAIBrainConversationThreadDB(thread)
+ return turn
+}
+
+export const completeAIBrainTurn = async (input: {
+ turnId: string
+ status: Exclude<AIBrainConversationTurnStatus, "pending">
+ assistantText: string
+ response?: CreatorBrainResponse
+ answerModules?: AIBrainAnswerModule[]
+ questionAnswers?: AIBrainQuestionAnswer[]
+ feedback?: AIBrainConversationTurn["feedback"]
+ learningEntryIds?: string[]
+ citations?: AIBrainConversationTurn["citations"]
+ evaluation?: AIBrainConversationTurn["evaluation"]
+ metadata?: Record<string, unknown>
+}): Promise<AIBrainConversationTurn> => {
+ const existing = await getAIBrainConversationTurnDB(input.turnId)
+ if (!existing) throw new Error(`AI Brain turn not found: ${input.turnId}`)
+ const updatedAt = nowIso()
+ const digest: AIBrainConversationDigest = buildConversationAnalyticDigest({
+  channelId: existing.channelId,
+  userText: existing.userText,
+  response: input.response || input.assistantText,
+  learningEntryIds: input.learningEntryIds || existing.learningEntryIds,
+ })
+ const turn: AIBrainConversationTurn = {
+  ...existing,
+  updatedAt,
+  status: input.status,
   assistantText: sanitizeCreatorFacingBrainCopy(input.assistantText),
   response: input.response,
   answerModules: input.answerModules || input.response?.modules || [],
-  questionAnswers: input.questionAnswers || [],
-  feedback: input.feedback,
-  learningEntryIds: input.learningEntryIds || [],
+  questionAnswers: input.questionAnswers || existing.questionAnswers || [],
+  feedback: input.feedback || existing.feedback,
+  learningEntryIds: input.learningEntryIds || existing.learningEntryIds || [],
+  citations: input.citations,
+  evaluation: input.evaluation,
   digest,
-  metadata: input.metadata,
+  metadata: { ...(existing.metadata || {}), ...(input.metadata || {}) },
  }
  await saveAIBrainConversationTurnDB(turn)
+
+ const allTurns = (await listAIBrainConversationTurnsDB(existing.channelId))
+  .filter((item) => item.threadId === existing.threadId)
+  .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+ const storedThread = (await listAIBrainConversationThreadsDB(existing.channelId))
+  .find((thread) => thread.id === existing.threadId)
+ const thread: AIBrainConversationThread = storedThread || {
+  id: existing.threadId,
+  channelId: existing.channelId,
+  createdAt: existing.createdAt,
+  updatedAt,
+  title: titleFromPrompt(existing.userText),
+  turnIds: [],
+ }
+ thread.updatedAt = updatedAt
+ thread.selectedTurnId = turn.id
+ thread.turnIds = Array.from(new Set([...thread.turnIds, ...allTurns.map((item) => item.id)]))
+ thread.latestDigest = digest
+ thread.rollingSummary = summarizeThread(allTurns)
+ await saveAIBrainConversationThreadDB(thread)
  return turn
+}
+
+export const resumeAIBrainThread = async (
+ channelId?: string | null,
+): Promise<{ thread: AIBrainConversationThread; turns: AIBrainConversationTurn[] }> => {
+ const normalizedChannelId = channelId || null
+ const threadId = defaultThreadId(normalizedChannelId)
+ let turns = (await listAIBrainConversationTurnsDB(normalizedChannelId))
+  .filter((turn) => !turn.threadId || turn.threadId === threadId)
+  .map((turn) => ({
+   ...turn,
+   threadId: turn.threadId || threadId,
+   updatedAt: turn.updatedAt || turn.createdAt,
+   status: turn.status || "complete" as const,
+   answerModules: turn.answerModules || turn.response?.modules || [],
+   questionAnswers: turn.questionAnswers || [],
+   learningEntryIds: turn.learningEntryIds || [],
+  }))
+  .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+
+ const hadPending = turns.some((turn) => turn.status === "pending")
+ for (const turn of turns.filter((item) => item.status === "pending")) {
+  await completeAIBrainTurn({
+   turnId: turn.id,
+   status: "interrupted",
+   assistantText: "That response was interrupted. Send the question again and I will continue from the saved conversation.",
+   metadata: { interruptedOnResume: true },
+  })
+ }
+ if (hadPending) {
+  turns = (await listAIBrainConversationTurnsDB(normalizedChannelId))
+   .filter((turn) => turn.threadId === threadId)
+   .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+ }
+
+ const stored = (await listAIBrainConversationThreadsDB(normalizedChannelId))
+  .find((thread) => thread.id === threadId)
+ const timestamp = turns.at(-1)?.updatedAt || turns.at(-1)?.createdAt || nowIso()
+ const thread: AIBrainConversationThread = stored || {
+  id: threadId,
+  channelId: normalizedChannelId,
+  createdAt: turns[0]?.createdAt || timestamp,
+  updatedAt: timestamp,
+  title: titleFromPrompt(turns[0]?.userText || "ViewTube Brain conversation"),
+  turnIds: turns.map((turn) => turn.id),
+  selectedTurnId: turns.at(-1)?.id,
+  rollingSummary: summarizeThread(turns),
+  latestDigest: turns.at(-1)?.digest,
+ }
+ await saveAIBrainConversationThreadDB(thread)
+ return { thread, turns }
 }
 
 export const listAIBrainConversationTurns = async (input: {
@@ -278,7 +440,14 @@ export const listAIBrainConversationTurns = async (input: {
  limit?: number
 } = {}): Promise<AIBrainConversationTurn[]> => {
  const turns = await listAIBrainConversationTurnsDB(input.channelId)
- return turns.slice(0, input.limit || 20)
+ return turns.map((turn) => ({
+  ...turn,
+  updatedAt: turn.updatedAt || turn.createdAt,
+  status: turn.status || "complete",
+  answerModules: turn.answerModules || turn.response?.modules || [],
+  questionAnswers: turn.questionAnswers || [],
+  learningEntryIds: turn.learningEntryIds || [],
+ })).slice(0, input.limit || 20)
 }
 
 export const answerAIBrainQuestionModule = async (input: {

@@ -18,14 +18,8 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
   onDecHeight,
  }
 
- const [tooltip, setTooltip] = useState<{
-  x: number
-  y: number
-  label: string
-  pct: number
- } | null>(null)
-
- const COLORS = ["#C9F830", "#40C6E9", "#FF83EA", "#9D4EDD", "#FF1744"]
+ 
+  const COLORS = ["#C9F830", "#40C6E9", "#FF83EA", "#9D4EDD", "#FF1744"]
 
  const sources = useMemo(() => {
   const snapshot = getVtSyncSnapshot()
@@ -63,20 +57,6 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
      d={`M 0 0 L ${x1} ${y1} A 1 1 0 ${largeArcFlag} 1 ${x2} ${y2} Z`}
      fill={src.color}
      stroke="none"
-     style={{ cursor: "pointer", transition: "opacity 0.2s" }}
-     onMouseEnter={(e) => {
-      const rect = (e.target as SVGElement).closest("svg")?.getBoundingClientRect()
-      if (rect) {
-       setTooltip({x: e.clientX - rect.left, y: e.clientY - rect.top, label: src.label, pct: src.pct})
-      }
-     }}
-     onMouseMove={(e) => {
-      const rect = (e.target as SVGElement).closest("svg")?.getBoundingClientRect()
-      if (rect) {
-       setTooltip({x: e.clientX - rect.left, y: e.clientY - rect.top, label: src.label, pct: src.pct})
-      }
-     }}
-     onMouseLeave={() => setTooltip(null)}
     />
    )
   })
@@ -105,6 +85,7 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
 
     {/* Chart */}
     <div
+     className="tip"
      style={{
       flex: 1,
       display: "flex",
@@ -117,27 +98,14 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
       style={{ width: "95%", height: "95%", transform: "rotate(-90deg)" }}>
       {renderPieSlices()}
      </svg>
-     {/* Custom Tooltip */}
-     {tooltip && (
-      <div
-       style={{
-        position: "absolute",
-        left: tooltip.x,
-        top: tooltip.y - 36,
-        background: "#000",
-        color: "#fff",
-        padding: "4px 10px",
-        borderRadius: "6px",
-        fontSize: "10px",
-        fontWeight: 900,
-        whiteSpace: "nowrap",
-        zIndex: 50,
-        pointerEvents: "none",
-        transform: "translateX(-50%)",
-       }}>
-       {tooltip.label}: {tooltip.pct}%
-      </div>
-     )}
+     <div className="bub" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px", zIndex: 110 }}>
+       {sources.map(src => (
+         <div key={src.label} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+           <div style={{ width: "8px", height: "8px", background: src.color, border: "1px solid #000" }} />
+           <span>{src.label}: {src.pct}%</span>
+         </div>
+       ))}
+     </div>
     </div>
 
     {/* Legend */}

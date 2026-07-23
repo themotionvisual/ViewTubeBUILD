@@ -2,9 +2,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import { ChartNoAxesCombined } from "lucide-react"
 import { ToolboxScaffold } from "../../../components/Toolbox"
 import type { TubeExplorerVisualProps } from "../../../components/TubeExplorerVisualModules"
-import {
- TUBE_EXPLORER_VISUAL_MODULES,
-} from "../../../components/TubeExplorerVisualModules"
+import { TUBE_EXPLORER_VISUAL_MODULES } from "../../../components/TubeExplorerVisualModules"
 import {
  AlgorithmTriggerModule,
  ComboChannelProgress,
@@ -52,7 +50,18 @@ const CORE_VISUAL_MODULES: VtSyncVisualModuleDefinition[] = [
  { id: "watch-time-distribution", group: "core", delayMs: 350, render: ({ data }) => <WatchTimeDistribution data={data} /> },
  { id: "video-value-matrix", group: "core", delayMs: 400, render: ({ data }) => <VideoValueMatrix data={data} /> },
  { id: "growth-pulse", group: "core", delayMs: 450, render: ({ data }) => <GrowthPulse data={data} /> },
- { id: "traffic-source-evolution", group: "core", delayMs: 500, render: ({ data }) => <TrafficSourceEvolutionModule data={data} /> },
+ {
+ id: "traffic-source-evolution",
+  group: "core",
+  delayMs: 500,
+  render: ({ data, trafficRows }) => (
+   <TrafficSourceEvolutionModule
+    data={data}
+    trafficRows={trafficRows}
+    useVideoTrafficFallback={false}
+   />
+  ),
+ },
  { id: "keyword-treemap", group: "core", delayMs: 560, render: ({ data }) => <KeywordTreemapModule data={data} /> },
  { id: "keyword-venn", group: "core", delayMs: 610, render: ({ data }) => <KeywordVennModule data={data} /> },
  { id: "upload-time-heatmap", group: "core", delayMs: 670, render: ({ data }) => <UploadTimeHeatmapModule data={data} /> },
@@ -83,8 +92,9 @@ const THREE_UP_VISUAL_ROW_IDS = new Set([
 
 const RevealOnView: React.FC<{
  delayMs?: number
+ estimatedHeight?: number
  children: React.ReactNode
-}> = ({ delayMs = 0, children }) => {
+}> = ({ delayMs = 0, estimatedHeight = 360, children }) => {
  const [visible, setVisible] = useState(false)
  const [node, setNode] = useState<HTMLDivElement | null>(null)
 
@@ -97,7 +107,7 @@ const RevealOnView: React.FC<{
      observer.disconnect()
     }
    },
-   { threshold: 0.15 },
+   { threshold: 0.01, rootMargin: "160px 0px" },
   )
   observer.observe(node)
   return () => observer.disconnect()
@@ -107,47 +117,31 @@ const RevealOnView: React.FC<{
   <div
    ref={setNode}
    style={{
-    opacity: visible ? 1 : 0,
+    minHeight: visible ? undefined : estimatedHeight,
+    opacity: 1,
     transform: visible ? "translateY(0px)" : "translateY(14px)",
     transition: "opacity 420ms ease, transform 420ms ease",
     transitionDelay: `${delayMs}ms`,
    }}>
-   {children}
+   {visible ? children : (
+    <div
+     className="flex items-center justify-center border-[3px] border-dashed border-black bg-white text-[11px] font-black uppercase tracking-[0.14em] text-black/35"
+     style={{ minHeight: estimatedHeight }}>
+     Visual loads as it approaches the viewport
+    </div>
+   )}
   </div>
  )
 }
 
 const VtSyncDataVisualsContent: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snapshot }) => {
  const visualData = useMemo(() => buildVtSyncVisualPropsData(snapshot), [snapshot])
- const [mountedCharts, setMountedCharts] = useState(4)
 
  const hasRenderableData =
   visualData.rows.length > 0 ||
   visualData.canonicalContext.trafficRows.length > 0 ||
   visualData.canonicalContext.geographyRows.length > 0
 
- useEffect(() => {
-  if (!hasRenderableData) return
-  let index = 4
-  const timer = window.setInterval(() => {
-   index += 1
-   setMountedCharts(Math.min(index, VISUAL_MODULES.length))
-   if (index >= VISUAL_MODULES.length) window.clearInterval(timer)
-  }, 90)
-  return () => window.clearInterval(timer)
- }, [
-  hasRenderableData,
-  snapshot.snapshotId,
-  snapshot.capturedAt,
-  visualData.rows.length,
-  visualData.canonicalContext.trafficRows.length,
-  visualData.canonicalContext.geographyRows.length,
- ])
-
- const renderedModules = useMemo(
-  () => VISUAL_MODULES.slice(0, mountedCharts),
-  [mountedCharts],
- )
  const firstTubeExplorerIndex = VISUAL_MODULES.findIndex((module) => module.group === "tube-explorer")
 
  const renderedVisualBlocks = useMemo(() => {
@@ -156,14 +150,14 @@ const VtSyncDataVisualsContent: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snap
    | { type: "row"; modules: Array<{ module: VtSyncVisualModuleDefinition; index: number }> }
   > = []
 
-  for (let index = 0; index < renderedModules.length; index += 1) {
-   const module = renderedModules[index]
+  for (let index = 0; index < VISUAL_MODULES.length; index += 1) {
+   const module = VISUAL_MODULES[index]
    if (!THREE_UP_VISUAL_ROW_IDS.has(module.id)) {
     blocks.push({ type: "module", module, index })
     continue
    }
 
-   const rowModules = renderedModules
+   const rowModules = VISUAL_MODULES
     .map((entry, entryIndex) => ({ module: entry, index: entryIndex }))
     .filter((entry) => THREE_UP_VISUAL_ROW_IDS.has(entry.module.id))
 
@@ -173,11 +167,13 @@ const VtSyncDataVisualsContent: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snap
   }
 
   return blocks
- }, [renderedModules])
+ }, [])
 
  const moduleProps: TubeExplorerVisualProps = {
   data: visualData.rows,
   csvFiles: visualData.csvFiles,
+  trafficRows: visualData.canonicalContext.trafficRows,
+  geographyRows: visualData.canonicalContext.geographyRows,
  }
 
  return (
@@ -217,14 +213,19 @@ const VtSyncDataVisualsContent: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snap
         </div>
        ) : null}
        {block.type === "module" ? (
-        <RevealOnView delayMs={block.module.delayMs}>
-         {block.module.render(moduleProps)}
+        <RevealOnView
+         delayMs={block.module.delayMs}
+         estimatedHeight={block.module.group === "core" ? 360 : 80}>
+         {block.module.render({ ...moduleProps, collapsible: true, isOpenInitial: block.index < 3 })}
         </RevealOnView>
        ) : (
         <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-3">
-         {block.modules.map(({ module }) => (
-          <RevealOnView key={module.id} delayMs={module.delayMs}>
-           {module.render(moduleProps)}
+         {block.modules.map(({ module, index }) => (
+          <RevealOnView
+           key={module.id}
+           delayMs={module.delayMs}
+           estimatedHeight={module.group === "core" ? 360 : 80}>
+           {module.render({ ...moduleProps, collapsible: true, isOpenInitial: index < 3 })}
           </RevealOnView>
          ))}
         </div>

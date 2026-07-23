@@ -102,6 +102,7 @@ interface ToolboxProps {
   helpText?: React.ReactNode;
   helpGuide?: string[];
   disableCollapseAnimation?: boolean;
+  fillAvailable?: boolean;
 }
 
 export const Toolbox: React.FC<ToolboxProps> = ({
@@ -129,6 +130,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   embedded = false,
   children,
   disableCollapseAnimation = false,
+  fillAvailable = false,
 }) => {
   const [internalOpen, setInternalOpen] = useState(isOpenInitial);
   const [showHelpRail, setShowHelpRail] = useState(false);
@@ -192,7 +194,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
     );
   }
 
-  const frameClass = `w-full bg-white overflow-hidden flex flex-col relative ${outerClassName}`;
+  const frameClass = `w-full bg-white overflow-hidden flex flex-col relative ${fillAvailable ? 'h-full min-h-0' : ''} ${outerClassName}`;
   const collapseTransitionClass = disableCollapseAnimation
     ? "duration-0 ease-linear"
     : "duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)]";
@@ -216,7 +218,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
 
   return (
     <PaletteCycleContext.Provider value={paletteCycleContextValue}>
-      <div className={`w-full ${shellClassName} ${outerClassName}`}>
+      <div className={`w-full ${fillAvailable ? 'h-full min-h-0' : ''} ${shellClassName} ${outerClassName}`}>
         <div
           className={frameClass}
           style={{
@@ -253,7 +255,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
               {variant === 'accordion' ? (
                 <h3 className="text-[32px] font-[900] uppercase tracking-tighter leading-none mt-0.5">{title}</h3>
               ) : (
-                <h1 className="text-[50px] font-[1000] uppercase tracking-tighter leading-none mt-1">{title}</h1>
+                <h1 className="max-w-full truncate text-[24px] font-[1000] uppercase leading-none mt-1 sm:text-[36px] xl:text-[50px]">{title}</h1>
               )}
             </div>
           </div>
@@ -325,13 +327,13 @@ export const Toolbox: React.FC<ToolboxProps> = ({
         )}
 
         <div
-          className={`grid transition-[grid-template-rows,opacity] ${collapseTransitionClass} ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+          className={`grid transition-[grid-template-rows,opacity] ${collapseTransitionClass} ${fillAvailable ? 'flex-1 min-h-0' : ''} ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
           style={{ marginTop: showHelpRail ? "0px" : `-${stroke}px` }}
         >
-          <div className="overflow-hidden min-h-0">
+          <div className={`overflow-hidden min-h-0 ${fillAvailable ? 'h-full' : ''}`}>
             {(!unmountWhenClosed || open) && (
               <main
-                className={`flex-1 min-h-0 bg-white vt-main-toolbox-content ${finalContentClass}`}
+                className={`flex-1 min-h-0 bg-white vt-main-toolbox-content ${fillAvailable ? 'h-full' : ''} ${finalContentClass}`}
                 style={
                   {
                     ["--vt-level1-stroke" as any]: "4px",

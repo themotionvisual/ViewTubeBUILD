@@ -33,6 +33,7 @@ import {
 } from "../../adapters/privacyPolicy"
 import {
  VT_SYNC_COMPACT_PIN_TABLE_IDS,
+ VT_SYNC_DEMOGRAPHIC_COLUMN_COLORS,
  VT_SYNC_ROW_BATCH_SIZE,
  VT_SYNC_ROW_NUMBER_WIDTH,
  VT_SYNC_SMALL_TABLE_COLORS,
@@ -51,12 +52,14 @@ import {
  getVtSyncCategoryBadgePresentation,
  getVtSyncColumnSortedValues,
  getVtSyncColumnStateKey,
+ getVtSyncAbsolutePercentRatio,
  getVtSyncNumericRank,
  getNextVtSyncCompositeSortState,
  getVtSyncCompositeSortLabel,
  getVtSyncPresentationLabel,
  getVtSyncPresentationColumns,
  getVtSyncTableGeometry,
+ getVtSyncTableProvenance,
  getVtSyncVideoTitleLayout,
  getVisibleVtSyncColumns,
  getVtSyncHoverScrollIntent,
@@ -69,7 +72,6 @@ import {
  resolveVtSyncColumnWidth,
  reorderVtSyncColumnsWithinGroup,
  stableSortVtSyncRows,
- splitVtSyncTrailingZeroSeconds,
  splitVtSyncSpecialCharacters,
  getVtSyncSparkColor,
  getVtSyncSparkFillStyle,
@@ -234,14 +236,51 @@ const WEEKDAY_BADGE_LIBRARY = ["Monday", "Tuesday", "Wednesday", "Thursday", "Fr
 const MONTH_BADGE_LIBRARY = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 const DemographicCohortCell = ({ row, text }: { row: VtSyncTableRow; text: string }) => {
- const g = String(row.gender || row.cohort || "").toLowerCase()
- if (g.includes("male") || g.includes("female") || g.includes("other") || g.includes("user_specified")) {
-  const isFemale = g.includes("female")
-  const isMale = !isFemale && g.includes("male")
-  const colorClass = isMale ? "is-male" : isFemale ? "is-female" : "is-other"
-  return <span className={`vt-sync-demographic-badge ${colorClass}`}>{text}</span>
+ let formattedText = text;
+ let g = String(row.gender || "").toLowerCase();
+ let a = String(row.ageGroup || "").toLowerCase();
+
+ if (!g && !a && row.cohort) {
+   const cohortLower = String(row.cohort).toLowerCase()
+   if (cohortLower.includes("female")) g = "female"
+   else if (cohortLower.includes("male")) g = "male"
+   else if (cohortLower.includes("user_specified")) g = "user_specified"
+
+   const ageMatch = cohortLower.match(/age(\d{2}-\d{2}|\d{2}-)/)
+   if (ageMatch) a = ageMatch[0]
  }
- return <span className="vt-sync-cell-text">{text}</span>
+
+ if (g || a) {
+   const genderDisplay = g === "male" ? "Male" : g === "female" ? "Female" : g === "user_specified" ? "Other" : ""
+   const ageDisplay = a ? a.replace("age", "Ages ") : ""
+   if (genderDisplay && ageDisplay) formattedText = `${genderDisplay} : ${ageDisplay}`
+   else formattedText = `${genderDisplay} ${ageDisplay}`.trim()
+ }
+
+ if (g) {
+  const isFemale = g === "female"
+  const isMale = g === "male"
+  const colorClass = isMale ? "is-male" : isFemale ? "is-female" : "is-other"
+  return <span className={`vt-sync-demographic-badge ${colorClass}`}>{formattedText}</span>
+ }
+ return <span className="vt-sync-cell-text">{formattedText}</span>
+}
+
+const DemographicAgeCell = ({ row, text }: { row: VtSyncTableRow; text: string }) => (
+ <span className="vt-sync-demographic-age" title={`${text} · all genders combined`}>
+  <strong>{text}</strong>
+  <small>All genders</small>
+ </span>
+)
+
+const sumAvailablePercentages = (rows: VtSyncTableRow[], key: string): number | undefined => {
+ const values = rows.map((row) => toVtSyncNumber(row[key])).filter((value): value is number => value !== undefined)
+ return values.length ? values.reduce((sum, value) => sum + value, 0) : undefined
+}
+
+const formatDemographicPercentage = (value: number | undefined): string => {
+ if (value === undefined || value === 0) return "–"
+ return `${Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1)}%`
 }
 
 const VideoIdentityCell = ({ row, title, titleLayout }: { row: VtSyncTableRow; title: string; titleLayout?: { fontSize: number; lineCount: number } }) => {
@@ -260,7 +299,7 @@ const PublishedMomentCell = ({ row }: { row: VtSyncTableRow }) => {
  const month = formatVtSyncLocalMonthValue(row.publishedAt)
  const meridiemMatch = time.match(/\s+(AM|PM)$/i)
  const meridiem = meridiemMatch?.[1]?.toUpperCase()
- const clockTime = meridiem ? time.slice(0, meridiemMatch.index).trim() : time
+ const clockTime = meridiem ? time.slice(0, meridiemMatch?.index ?? time.length).trim() : time
  const weekdayColors = getVtSyncAlphabeticSpectrumColors(weekday, WEEKDAY_BADGE_LIBRARY)
  const monthColors = getVtSyncAlphabeticSpectrumColors(month, MONTH_BADGE_LIBRARY)
  return <span className="vt-sync-published-moment" title={`${date} ${time} — ${weekday}, ${month}`}>
@@ -308,6 +347,7 @@ export const VtSyncToolboxDataTable: React.FC<{
  const [orders, setOrders] = useState<Record<string, string[]>>({})
  const [widths, setWidths] = useState<Record<string, number>>({})
  const [imported, setImported] = useState<VtSyncImportedRows>({})
+ const [importedAt, setImportedAt] = useState<Record<string, string>>({})
  const [selectedKey, setSelectedKey] = useState<string | null>(null)
  const [dragKey, setDragKey] = useState<string | null>(null)
  const [dragOverKey, setDragOverKey] = useState<string | null>(null)
@@ -389,6 +429,31 @@ export const VtSyncToolboxDataTable: React.FC<{
   })
  }, [columnFilters, filterRows, orderedColumns, search, sourceRows, table.id])
  const sortedRows = useMemo(() => stableSortVtSyncRows(filteredRows, sort, orderedColumns.find((column) => column.key === sort.key)), [filteredRows, orderedColumns, sort])
+ const demographicSummary = useMemo(() => {
+  if (table.id !== "demographics") return undefined
+  const genderTotals = [
+   { key: "male", label: "Male", color: VT_SYNC_DEMOGRAPHIC_COLUMN_COLORS.maleViewerPercentage, value: sumAvailablePercentages(sortedRows, "maleViewerPercentage") },
+   { key: "female", label: "Female", color: VT_SYNC_DEMOGRAPHIC_COLUMN_COLORS.femaleViewerPercentage, value: sumAvailablePercentages(sortedRows, "femaleViewerPercentage") },
+   { key: "other", label: "Other", color: VT_SYNC_DEMOGRAPHIC_COLUMN_COLORS.otherViewerPercentage, value: sumAvailablePercentages(sortedRows, "otherViewerPercentage") },
+  ]
+  return { genderTotals }
+ }, [sortedRows, table.id])
+ const tableProvenance = useMemo(
+  () => getVtSyncTableProvenance(snapshot, table, imported[table.id] ? importedAt[table.id] : undefined),
+  [imported, importedAt, snapshot, table],
+ )
+ const provenanceTime = useMemo(() => {
+  const date = new Date(tableProvenance.updatedAt)
+  if (Number.isNaN(date.getTime())) return tableProvenance.updatedAt || "Unknown"
+  return new Intl.DateTimeFormat(undefined, {
+   year: "numeric",
+   month: "short",
+   day: "numeric",
+   hour: "numeric",
+   minute: "2-digit",
+   timeZoneName: "short",
+  }).format(date)
+ }, [tableProvenance.updatedAt])
  const renderedRows = sortedRows.slice(0, rowLimit)
  const numericSorted = useMemo(() => Object.fromEntries(presentationColumns.map((column) => [column.key, getVtSyncColumnSortedValues(sortedRows, column)])), [presentationColumns, sortedRows])
  const totalContext = useMemo(() => table.id === "videos" ? {
@@ -841,17 +906,9 @@ export const VtSyncToolboxDataTable: React.FC<{
   <colgroup><col style={{ width: VT_SYNC_ROW_NUMBER_WIDTH, minWidth: VT_SYNC_ROW_NUMBER_WIDTH, maxWidth: VT_SYNC_ROW_NUMBER_WIDTH }} /></colgroup>
   <thead>
    {tableGeometry.useGroups && <tr className="vt-sync-group-row"><th className="vt-sync-row-rail-head is-blank" aria-hidden="true" /></tr>}
-   <tr className="vt-sync-total-row">
-    <th className="vt-sync-row-rail-head is-totals">
-     {table.mainCategoryId === "demographics" ? (
-      <div className="vt-sync-demographics-filters">
-       <button onClick={() => setTableId("demog_age")} className={table.id === "demog_age" ? "is-active" : ""}>Age</button>
-       <button onClick={() => setTableId("demog_gender")} className={table.id === "demog_gender" ? "is-active" : ""}>Gender</button>
-       <button onClick={() => setTableId("demographics")} className={table.id === "demographics" ? "is-active" : ""}>Overview</button>
-      </div>
-     ) : "Totals"}
-    </th>
-   </tr>
+   {table.id !== "demographics" && <tr className="vt-sync-total-row">
+    <th className="vt-sync-row-rail-head is-totals">Totals</th>
+   </tr>}
    <tr className="vt-sync-column-row"><th className="vt-sync-row-rail-head is-stats">Stats</th></tr>
    {filterRows && <tr className="vt-sync-filter-row"><th className="vt-sync-row-rail-head is-filter" aria-hidden="true" /></tr>}
   </thead>
@@ -879,7 +936,9 @@ export const VtSyncToolboxDataTable: React.FC<{
    : group.columns.map((column) => ({ column, group, isCollapsed: false })))
    .map((entry, index) => ({
     ...entry,
-    color: tableGeometry.useGroups ? entry.group.color : VT_SYNC_SMALL_TABLE_COLORS[index % VT_SYNC_SMALL_TABLE_COLORS.length],
+    color: table.id === "demographics"
+     ? VT_SYNC_DEMOGRAPHIC_COLUMN_COLORS[entry.column.key] || VT_SYNC_SMALL_TABLE_COLORS[index % VT_SYNC_SMALL_TABLE_COLORS.length]
+     : tableGeometry.useGroups ? entry.group.color : VT_SYNC_SMALL_TABLE_COLORS[index % VT_SYNC_SMALL_TABLE_COLORS.length],
    }))
   const renderWidth = ({ column, isCollapsed }: (typeof renderColumns)[number]) => isCollapsed ? 40 : columnWidth(column)
   const tableWidth = renderColumns.reduce((sum, entry) => sum + renderWidth(entry), 0)
@@ -893,7 +952,7 @@ export const VtSyncToolboxDataTable: React.FC<{
       <strong>{group.label}</strong><button type="button" onClick={() => setCollapsed((current) => ({ ...current, [group.label]: true }))} aria-expanded="true" aria-label={`Collapse ${group.label}`}><Minimize2 /></button>
      </th>)}
     </tr>}
-    <tr className="vt-sync-total-row">{renderColumns.map(({ column, group, isCollapsed, color }) => {
+    {table.id !== "demographics" && <tr className="vt-sync-total-row">{renderColumns.map(({ column, group, isCollapsed, color }) => {
      const width = isCollapsed ? 40 : columnWidth(column)
      if (isCollapsed) {
       if (group.label === "Format") {
@@ -915,7 +974,7 @@ export const VtSyncToolboxDataTable: React.FC<{
      }
      const total = totalVtSyncColumn(sortedRows, column, totalContext)
      const totalClock = splitVtSyncSpecialCharacters(total.primary, column.key)
-     return <th className={`is-${total.kind || "numeric"}`} key={`${group.id}-${column.key}`} style={{ width, minWidth: width, maxWidth: width, backgroundColor: tableGeometry.mode === "sparse" ? `${color}33` : undefined }}>
+     return <th className={`is-${total.kind || "numeric"}`} data-column-key={column.key} key={`${group.id}-${column.key}`} style={{ width, minWidth: width, maxWidth: width, backgroundColor: tableGeometry.mode === "sparse" ? `${color}33` : undefined }}>
       {total.badges?.length ? (
        <div className="vt-sync-total-badges">
         {total.badges.map((badge) => {
@@ -939,17 +998,18 @@ export const VtSyncToolboxDataTable: React.FC<{
       ) : column.key === "videoUrl" ? <span className="vt-sync-url-buttons"><button type="button" title="Copy URL" aria-label="Copy channel URL" onClick={(event) => { event.stopPropagation(); void navigator.clipboard?.writeText("https://www.youtube.com/") }}><Copy /></button><a href="https://www.youtube.com/" target="_blank" rel="noreferrer" title="Open channel" aria-label="Open channel" onClick={(event) => event.stopPropagation()}><ExternalLink /></a></span> : total.imageUrl ? <img src={total.imageUrl} alt="Channel thumbnail" /> : <strong>{totalClock.isNegative && "-"}{totalClock.prefix && <span className="vt-sync-zero-seconds">{totalClock.prefix}</span>}{totalClock.value}{totalClock.suffix && <span className="vt-sync-zero-seconds">{totalClock.suffix}</span>}</strong>}
       {total.secondary && !total.badges?.length && <small>{total.secondary}</small>}
      </th>
-    })}</tr>
+    })}</tr>}
     <tr className="vt-sync-column-row">{renderColumns.map(({ column, group, isCollapsed, color }) => {
      const width = isCollapsed ? 40 : columnWidth(column)
      if (isCollapsed) return <th className="is-collapsed" key={`${group.id}-${column.key}`} style={{ background: group.color, width, minWidth: width, maxWidth: width }}>
       <span className="vt-sync-collapsed-group-label" style={{ color: group.color === "#ffff61" || group.color === "#4fff5b" ? "#0a0a0a" : "#0a0a0a" }}>{COLLAPSED_GROUP_DISPLAY_LABELS[group.label] || group.label}</span>
      </th>
-     const [first, second] = splitHeader(DISPLAY_HEADER_LABELS[column.key] || column.label)
+     const demographicHeader = table.id === "demographics" && column.key === "viewerPercentage" ? "Age Total" : undefined
+     const [first, second] = splitHeader(demographicHeader || DISPLAY_HEADER_LABELS[column.key] || column.label)
      const source = dragKey ? orderedColumns.find((candidate) => candidate.key === dragKey) : undefined
      const acceptsDrop = !source || source.group === column.group
      const sortActive = sort.key === column.key || isVtSyncCompositeSortActive(table.id, column.key, sort)
-     return <th key={`${group.id}-${column.key}`} data-group-start={tableGeometry.useGroups ? undefined : "true"} style={{ "--vt-header-color": color, width, minWidth: width, maxWidth: width } as CssVars} draggable aria-grabbed={dragKey === column.key} aria-sort={sortActive ? (sort.direction === "desc" ? "descending" : "ascending") : "none"} className={`${dragKey === column.key ? "is-dragging" : ""} ${dragOverKey === column.key ? "is-drag-over" : ""}`} onDragStart={(event) => startColumnDrag(event, column, color)} onDragEnd={() => { setDragKey(null); setDragOverKey(null); hideDragRect() }} onDragOver={(event) => { if (!acceptsDrop) return; event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDragOverKey(column.key); updateDragRect(event.currentTarget) }} onDragLeave={() => { if (dragOverKey === column.key) setDragOverKey(null) }} onDrop={(event) => { event.preventDefault(); if (dragKey && acceptsDrop) reorderColumn(dragKey, column.key); setDragKey(null); setDragOverKey(null); hideDragRect() }} onKeyDown={(event) => { if (event.altKey && event.key === "ArrowLeft") { event.preventDefault(); moveColumn(column.key, -1) } else if (event.altKey && event.key === "ArrowRight") { event.preventDefault(); moveColumn(column.key, 1) } }} onClick={() => sortColumn(column)} tabIndex={0}>
+     return <th key={`${group.id}-${column.key}`} data-column-key={column.key} data-group-start={tableGeometry.useGroups ? undefined : "true"} style={{ "--vt-header-color": color, width, minWidth: width, maxWidth: width } as CssVars} draggable aria-grabbed={dragKey === column.key} aria-sort={sortActive ? (sort.direction === "desc" ? "descending" : "ascending") : "none"} className={`${dragKey === column.key ? "is-dragging" : ""} ${dragOverKey === column.key ? "is-drag-over" : ""}`} onDragStart={(event) => startColumnDrag(event, column, color)} onDragEnd={() => { setDragKey(null); setDragOverKey(null); hideDragRect() }} onDragOver={(event) => { if (!acceptsDrop) return; event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDragOverKey(column.key); updateDragRect(event.currentTarget) }} onDragLeave={() => { if (dragOverKey === column.key) setDragOverKey(null) }} onDrop={(event) => { event.preventDefault(); if (dragKey && acceptsDrop) reorderColumn(dragKey, column.key); setDragKey(null); setDragOverKey(null); hideDragRect() }} onKeyDown={(event) => { if (event.altKey && event.key === "ArrowLeft") { event.preventDefault(); moveColumn(column.key, -1) } else if (event.altKey && event.key === "ArrowRight") { event.preventDefault(); moveColumn(column.key, 1) } }} onClick={() => sortColumn(column)} tabIndex={0}>
       <span>{first}{second && <><br />{second}</>}</span><b className="vt-sync-sort-arrow">{sortActive ? (sort.direction === "desc" ? "↓" : "↑") : ""}{sortActive && (() => { const label = getVtSyncCompositeSortLabel(table.id, column.key, sort); return label ? <small className="vt-sync-sort-label">{label}</small> : null })()}</b>
       <i className="vt-sync-resize" onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); event.currentTarget.setPointerCapture(event.pointerId); document.body.style.userSelect = "none"; resizeRef.current = { key: widthKey(column), start: event.clientX, width: columnWidth(column), pointerId: event.pointerId, target: event.currentTarget } }} />
      </th>
@@ -981,7 +1041,12 @@ export const VtSyncToolboxDataTable: React.FC<{
       const badgeValues = table.id === "videos" && (column.key === "tags" || column.key === "topics") ? getVtSyncBadgeValues(raw) : []
       const apiValuePresentation = getVtSyncApiValuePresentation(table.id, column.key, raw)
       const visualizesMetrics = column.visualization !== "none" && column.semanticRole !== "identity"
-      const rank = visualizesMetrics ? getVtSyncNumericRank(numericColumnValue(row, column), numericSorted[column.key]) * 100 : 0
+      const numericValue = numericColumnValue(row, column)
+      const rank = visualizesMetrics
+       ? (table.id === "demographics" && column.format === "percent"
+        ? getVtSyncAbsolutePercentRatio(numericValue)
+        : getVtSyncNumericRank(numericValue, numericSorted[column.key])) * 100
+       : 0
       const { style, className: heatmapClassName } = cellStyle(row, column, color)
       const titleLayout = table.id === "videos" && column.key === "title"
        ? getVtSyncVideoTitleLayout(text, effectiveCompact, measureVideoTitle?.(text), Math.max(40, width - 38))
@@ -989,20 +1054,25 @@ export const VtSyncToolboxDataTable: React.FC<{
       const tableTextStyle: React.CSSProperties | undefined = column.textSize ? { fontSize: `${column.textSize}px`, WebkitLineClamp: table.id === "playlists" && column.key === "title" ? 2 : 1 } : undefined
       const cellFill = cellFillEnabled ? style.backgroundImage : undefined
       const cellFillTextColor = (color === "#ffff61" || color === "#4fff5b") ? "#0a0a0a" : "#ffffff"
+      const demographicTint = table.id === "demographics" ? `${color}${index % 2 ? "24" : "3D"}` : undefined
       return (
        <td
         key={`${rowKey}-${column.key}`}
-        className={`is-${column.kind || "numeric"} ${tableGeometry.mode === "sparse" ? "is-sparse-cell" : ""} ${cellFill ? "is-filled-cell" : ""} ${heatmapClassName || ""}`}
+        data-column-key={column.key}
+        data-format={column.format}
+        className={`is-${column.semanticRole || "numeric"} ${tableGeometry.mode === "sparse" ? "is-sparse-cell" : ""} ${cellFill ? "is-filled-cell" : ""} ${heatmapClassName || ""}`}
         style={{
          ...style,
          width,
          minWidth: width,
          maxWidth: width,
-         backgroundColor: cellFill && !compact && tableGeometry.mode === "dense" ? cellFill : heatmapEnabled ? style.backgroundColor : tableGeometry.mode === "sparse" ? `${color}11` : undefined,
-         color: cellFill && !compact && tableGeometry.mode === "dense" && cellFillTextColor ? cellFillTextColor : undefined,
+         backgroundColor: table.id === "demographics"
+          ? demographicTint
+          : heatmapEnabled ? style.backgroundColor : demographicTint ?? (tableGeometry.mode === "sparse" ? `${color}11` : undefined),
+         color: cellFill && !effectiveCompact && cellFillTextColor ? cellFillTextColor : undefined,
         }}
        >
-       {table.id === "videos" && column.key === "title" ? <VideoIdentityCell row={row} title={text} titleLayout={titleLayout} /> : table.id === "videos" && column.key === "publishedAt" ? <PublishedMomentCell row={row} /> : table.mainCategoryId === "demographics" && column.key === "cohort" ? <DemographicCohortCell row={row} text={text} /> : column.format === "thumbnail" && !isMissingVtSyncValue(raw) ? <img className="vt-sync-thumbnail" src={String(raw)} alt="" /> : column.format === "flag" && !isMissingVtSyncValue(raw) ? <span className="vt-sync-flag-thumbnail" role="img" aria-label={`${String(row.countryName || row.countryCode || "Region")} flag`}><span className={`fi fi-${text}`} aria-hidden="true" /></span> : column.key === "videoUrl" && !isMissingVtSyncValue(raw) ? <span className="vt-sync-url-buttons"><button type="button" title="Copy URL" aria-label="Copy video URL" onClick={(event) => { event.stopPropagation(); void navigator.clipboard?.writeText(String(raw)) }}><Copy /></button><a href={String(raw)} target="_blank" rel="noreferrer" title="Open video" aria-label="Open video" onClick={(event) => event.stopPropagation()}><ExternalLink /></a></span> : column.key === "format" && !isMissingVtSyncValue(raw) ? <span className={`vt-sync-format-badge is-${String(raw).toLowerCase()}`}>{text}</span> : table.id === "videos" && column.key === "category" && !isMissingVtSyncValue(raw) ? <CategoryBadge value={raw} /> : badgeValues.length ? <SpectrumBadgeList values={badgeValues} library={spectrumBadgeLibrary} kind={column.key as "tags" | "topics"} /> : apiValuePresentation ? <span className="vt-sync-api-value"><strong>{apiValuePresentation.title}</strong><small>{apiValuePresentation.apiValue}</small></span> : <span className={`vt-sync-cell-text ${titleLayout ? "is-video-title" : ""} ${tableTextStyle ? "is-table-sized-text" : ""}`} style={titleLayout ? { fontSize: `${titleLayout.fontSize}px`, WebkitLineClamp: titleLayout.lineCount } : tableTextStyle}>{clockText.isNegative && "-"}{clockText.prefix && <span className="vt-sync-zero-seconds">{clockText.prefix}</span>}{clockText.value}{clockText.suffix && <span className="vt-sync-zero-seconds">{clockText.suffix}</span>}</span>}
+       {table.id === "videos" && column.key === "title" ? <VideoIdentityCell row={row} title={text} titleLayout={titleLayout} /> : table.id === "videos" && column.key === "publishedAt" ? <PublishedMomentCell row={row} /> : table.id === "demographics" && column.key === "ageGroupLabel" ? <DemographicAgeCell row={row} text={text} /> : table.mainCategoryId === "demographics" && column.key === "cohort" ? <DemographicCohortCell row={row} text={text} /> : column.format === "thumbnail" && !isMissingVtSyncValue(raw) ? <img className="vt-sync-thumbnail" src={String(raw)} alt="" /> : column.format === "flag" && !isMissingVtSyncValue(raw) ? <span className="vt-sync-flag-thumbnail" role="img" aria-label={`${String(row.countryName || row.countryCode || "Region")} flag`}><span className={`fi fi-${text}`} aria-hidden="true" /></span> : column.key === "videoUrl" && !isMissingVtSyncValue(raw) ? <span className="vt-sync-url-buttons"><button type="button" title="Copy URL" aria-label="Copy video URL" onClick={(event) => { event.stopPropagation(); void navigator.clipboard?.writeText(String(raw)) }}><Copy /></button><a href={String(raw)} target="_blank" rel="noreferrer" title="Open video" aria-label="Open video" onClick={(event) => event.stopPropagation()}><ExternalLink /></a></span> : column.key === "format" && !isMissingVtSyncValue(raw) ? <span className={`vt-sync-format-badge is-${String(raw).toLowerCase()}`}>{text}</span> : table.id === "videos" && column.key === "category" && !isMissingVtSyncValue(raw) ? <CategoryBadge value={raw} /> : badgeValues.length ? <SpectrumBadgeList values={badgeValues} library={spectrumBadgeLibrary} kind={column.key as "tags" | "topics"} /> : apiValuePresentation ? <span className="vt-sync-api-value"><strong>{apiValuePresentation.title}</strong><small>{apiValuePresentation.apiValue}</small></span> : <span className={`vt-sync-cell-text ${titleLayout ? "is-video-title" : ""} ${tableTextStyle ? "is-table-sized-text" : ""}`} style={titleLayout ? { fontSize: `${titleLayout.fontSize}px`, WebkitLineClamp: titleLayout.lineCount } : tableTextStyle}>{clockText.isNegative && "-"}{clockText.prefix && <span className="vt-sync-zero-seconds">{clockText.prefix}</span>}{clockText.value}{clockText.suffix && <span className="vt-sync-zero-seconds">{clockText.suffix}</span>}</span>}
        {sparklinesEnabled && visualizesMetrics && rank > 0 && column.format !== "thumbnail" && column.format !== "flag" && <span className={`vt-sync-spark color-${sparkColorMode} shape-${sparkShape} ${sparkOpposite ? "is-opposite" : ""} ${sparkStroke ? "" : "no-stroke"}`}><i style={getVtSyncSparkFillStyle(rank / 100, sparkColorMode === "spectrum" ? getVtSyncSparkGradient(sparkOpposite) : getVtSyncSparkColor(color, rank / 100, sparkColorMode, sparkOpposite), sparkColorMode)} /></span>}
        </td>
       )
@@ -1010,6 +1080,67 @@ export const VtSyncToolboxDataTable: React.FC<{
     </tr>
    })}</tbody>
   </table>
+ }
+
+ const renderDemographicMetric = (value: number | undefined, color: string, emphasis = false) => (
+  <div className={`vt-sync-demographic-metric${emphasis ? " is-emphasis" : ""}`} style={{ "--vt-demographic-color": color } as CssVars}>
+   <strong>{formatDemographicPercentage(value)}</strong>
+   <span aria-hidden="true"><i style={{ width: `${getVtSyncAbsolutePercentRatio(value) * 100}%` }} /></span>
+  </div>
+ )
+
+ const renderDemographicTable = () => {
+  if (!demographicSummary) return null
+  const metricColumns = [
+   { key: "maleViewerPercentage", label: "Male", color: VT_SYNC_DEMOGRAPHIC_COLUMN_COLORS.maleViewerPercentage },
+   { key: "femaleViewerPercentage", label: "Female", color: VT_SYNC_DEMOGRAPHIC_COLUMN_COLORS.femaleViewerPercentage },
+   { key: "otherViewerPercentage", label: "Other", color: VT_SYNC_DEMOGRAPHIC_COLUMN_COLORS.otherViewerPercentage },
+  ] as const
+  const columnByKey = new Map(orderedColumns.map((column) => [column.key, column]))
+
+  return <div className="vt-sync-demographic-board-viewport">
+   <section className="vt-sync-demographic-board" aria-label="Audience demographics overview">
+    <section className="vt-sync-demographic-section is-gender" aria-labelledby="vt-sync-gender-totals">
+     <header id="vt-sync-gender-totals">Gender Totals</header>
+     <div className="vt-sync-demographic-subhead">All age groups</div>
+     <div className="vt-sync-demographic-gender-stack">
+      {demographicSummary.genderTotals.map((item) => <article key={item.key} style={{ "--vt-demographic-color": item.color } as CssVars}>
+       <header>{item.label}</header>
+       {renderDemographicMetric(item.value, item.color, true)}
+      </article>)}
+     </div>
+    </section>
+    <section className="vt-sync-demographic-section is-age" aria-labelledby="vt-sync-age-groups">
+     <header id="vt-sync-age-groups">Age Groups</header>
+     <div className="vt-sync-demographic-subhead">All genders</div>
+     <div className="vt-sync-demographic-age-stack">
+      {renderedRows.map((row) => <article key={String(row.ageGroup || row.ageGroupLabel)}>
+       <div><strong>{String(row.ageGroupLabel || row.ageGroup || "Age group")}</strong><small>All genders</small></div>
+       {renderDemographicMetric(toVtSyncNumber(row.viewerPercentage), "#4fff5b")}
+      </article>)}
+     </div>
+    </section>
+    <section className="vt-sync-demographic-section is-matrix" aria-labelledby="vt-sync-age-gender-matrix">
+     <header id="vt-sync-age-gender-matrix">Age × Gender</header>
+     <div className="vt-sync-demographic-matrix-head">
+      {metricColumns.map((metric) => {
+       const column = columnByKey.get(metric.key)
+       const active = sort.key === metric.key
+       return <button key={metric.key} type="button" style={{ "--vt-demographic-color": metric.color } as CssVars} onClick={() => column && sortColumn(column)} aria-label={`Sort by ${metric.label}`} aria-pressed={active}>
+        {metric.label}<span aria-hidden="true">{active ? (sort.direction === "desc" ? "↓" : "↑") : ""}</span>
+       </button>
+      })}
+     </div>
+     <div className="vt-sync-demographic-matrix-body">
+      {renderedRows.map((row) => <div className="vt-sync-demographic-matrix-row" key={String(row.ageGroup || row.ageGroupLabel)}>
+       {metricColumns.map((metric) => <div className="vt-sync-demographic-matrix-cell" key={metric.key} style={{ "--vt-demographic-color": metric.color } as CssVars}>
+        {renderDemographicMetric(toVtSyncNumber(row[metric.key]), metric.color)}
+       </div>)}
+      </div>)}
+     </div>
+    </section>
+   </section>
+  </div>
  }
 
  const pinnedTableWidth = useMemo(() => pinnedColumns.reduce((sum, column) => sum + (sparseColumnWidths[column.key] ?? baseColumnWidths[column.key] ?? 0), 0), [pinnedColumns, sparseColumnWidths, baseColumnWidths])
@@ -1020,12 +1151,12 @@ export const VtSyncToolboxDataTable: React.FC<{
   "--vt-active-shadow": category.colors.shadow,
   "--vt-row-height": `${tableGeometry.rowHeight}px`,
   "--vt-group-header-height": `${tableGeometry.useGroups ? 30 : 0}px`,
-  "--vt-total-height": `${tableGeometry.totalsHeight}px`,
+  "--vt-total-height": `${table.id === "demographics" ? 0 : tableGeometry.totalsHeight}px`,
   "--vt-column-header-height": `${tableGeometry.columnHeaderHeight}px`,
   "--vt-pinned-offset": `${32 + 58 + (pinCount > 0 ? pinnedTableWidth : 0)}px`,
  }
 
- return <section className={`vt-sync-toolbox-table is-${tableGeometry.mode}-table ${focus ? "is-focus" : ""} ${dark ? "is-dark" : ""} ${effectiveCompact ? "is-compact" : ""} ${cellFillEnabled ? "has-cell-fill" : ""} ${sparklinesEnabled ? "" : "no-spark"}`} style={rootStyle}>
+ return <section className={`vt-sync-toolbox-table is-${tableGeometry.mode}-table ${focus ? "is-focus" : ""} ${dark ? "is-dark" : ""} ${effectiveCompact ? "is-compact" : ""} ${cellFillEnabled ? "has-cell-fill" : ""} ${sparklinesEnabled ? "" : "no-spark"} ${table.mainCategoryId === "demographics" ? "is-demographics" : ""}`} style={rootStyle}>
   {toast && <div className={`vt-sync-toast ${toast.ok ? "is-ok" : "is-error"}`} role="status">{toast.message}</div>}
   <div ref={dragRectRef} className="vt-sync-column-drag-rect" aria-hidden="true" />
   <header className="vt-sync-title-rail"><div>{categoryIcon(category.id)}</div><h2>MASTER DATA TABLES</h2><button type="button" className="vt-sync-collapse-button" aria-label={tableOpen ? "Collapse master data tables" : "Expand master data tables"} aria-expanded={tableOpen} aria-controls="vt-sync-table-content" onClick={() => { setTableOpen((open) => !open); setSettingsOpen(false) }}><AnimatedToggleIcon open={tableOpen} size={44} /></button></header>
@@ -1061,7 +1192,9 @@ export const VtSyncToolboxDataTable: React.FC<{
      const entries = Object.entries(importedRows)
      if (!entries.length || entries.every(([, rows]) => !rows.length)) showToast("CSV had no recognized data rows", false)
      else {
-      setImported((current) => ({ ...current, ...importedRows }))
+     setImported((current) => ({ ...current, ...importedRows }))
+      const importedTimestamp = new Date().toISOString()
+      setImportedAt((current) => ({ ...current, ...Object.fromEntries(entries.map(([id]) => [id, importedTimestamp])) }))
       setSelectedKey(null)
       setSort(table.defaultSort)
       showToast(`Imported ${entries.reduce((sum, [, rows]) => sum + rows.length, 0)} rows`)
@@ -1113,15 +1246,20 @@ export const VtSyncToolboxDataTable: React.FC<{
    </div>
   </div>
 
-  {renderScrollbar("top")}
-  <div className="vt-sync-split-table">
-   {renderVerticalScrollbar()}
-   <div className="vt-sync-row-rail-viewport" ref={rowRailScrollRef} onScroll={(event) => { if (mainScrollRef.current && mainScrollRef.current.scrollTop !== event.currentTarget.scrollTop) mainScrollRef.current.scrollTop = event.currentTarget.scrollTop }}>{renderRowRail()}</div>
-   {pinCount > 0 && <div className="vt-sync-pinned-viewport" ref={pinnedScrollRef}>{renderTable(pinnedGroups, true)}</div>}
-   <div className="vt-sync-main-viewport" ref={mainScrollRef} onScroll={updateScrollState} onPointerMove={onHoverScroll} onPointerLeave={() => { hoverRef.current = { direction: 0, speed: 1 } }}>{renderTable(mainGroups, false)}</div>
-  </div>
-  {renderScrollbar("bottom")}
-  <footer className="vt-sync-table-footer"><span>{getVtSyncPresentationLabel(table.id, table.label)}</span><span>Showing {renderedRows.length.toLocaleString()} of {sortedRows.length.toLocaleString()} rows</span><span>{presentationColumns.length} columns · {pinCount ? `${pinCount} pinned` : "not pinned"}</span><span>{renderedRows.length < sortedRows.length ? "Scroll for the next 50 rows" : "Complete visible dataset"}</span></footer>
+  {table.id === "demographics" ? renderDemographicTable() : <>
+   {renderScrollbar("top")}
+   <div className="vt-sync-split-table">
+    {renderVerticalScrollbar()}
+    <div className="vt-sync-row-rail-viewport" ref={rowRailScrollRef} onScroll={(event) => { if (mainScrollRef.current && mainScrollRef.current.scrollTop !== event.currentTarget.scrollTop) mainScrollRef.current.scrollTop = event.currentTarget.scrollTop }}>{renderRowRail()}</div>
+    {pinCount > 0 && <div className="vt-sync-pinned-viewport" ref={pinnedScrollRef}>{renderTable(pinnedGroups, true)}</div>}
+    <div className="vt-sync-main-viewport" ref={mainScrollRef} onScroll={updateScrollState} onPointerMove={onHoverScroll} onPointerLeave={() => { hoverRef.current = { direction: 0, speed: 1 } }}>{renderTable(mainGroups, false)}</div>
+   </div>
+   {renderScrollbar("bottom")}
+  </>}
+  <footer className="vt-sync-table-footer">
+   <div className="vt-sync-table-footer-status"><span>{getVtSyncPresentationLabel(table.id, table.label)}</span><span>Showing {renderedRows.length.toLocaleString()} of {sortedRows.length.toLocaleString()} rows</span><span>{table.id === "demographics" ? "3 sections · 3 gender metrics" : `${presentationColumns.length} columns · ${pinCount ? `${pinCount} pinned` : "not pinned"}`}</span><span>{renderedRows.length < sortedRows.length ? "Scroll for the next 50 rows" : "Complete visible dataset"}</span></div>
+   <div className="vt-sync-table-footer-provenance"><span><b>Source</b> {tableProvenance.sourceLabel}</span><span><b>Updated</b> <time dateTime={tableProvenance.updatedAt}>{provenanceTime}</time></span>{tableProvenance.windowLabel && <span><b>Coverage</b> {tableProvenance.windowLabel}</span>}<span><b>Status</b> {tableProvenance.statusLabel}</span></div>
+  </footer>
   </div></div>
  </section>
 }
