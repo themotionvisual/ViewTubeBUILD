@@ -4,7 +4,6 @@ import { Brain, Database, Download, FileJson, GitBranch, ShieldCheck, Upload, Za
 import { useBrain } from "../../../context/useBrain"
 import { legacyAccountBridge } from "../../../services/account/legacyAccountBridge"
 import { useUnifiedAccount } from "../../../context/UnifiedAccountContext"
-import { buildAccountRoute } from "../../../services/account/accountContracts"
 import {
  VT_SYNC_LOCAL_ANALYTICS_FLAG,
  VT_SYNC_UPSTREAM_REPO_PATH,
@@ -121,7 +120,7 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
   setBusy(true)
   setSyncError("")
   try {
-   if (account.serverEnabled) navigate(buildAccountRoute(account.intent, "/local-analytics"))
+   if (account.serverEnabled) await account.start(account.intent, "/local-analytics")
    else await legacyAccountBridge.login()
    setAuthTick((tick) => tick + 1)
   } catch (error) {
@@ -131,7 +130,7 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
   }
  }
 
- const startSync = async (categoryIds: string[]) => {
+ const startSync = async (categoryIds: string[], retentionVideoIds?: string[]) => {
   setBusy(true)
   setSyncError("")
   try {
@@ -140,8 +139,8 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
     : legacyAccountBridge.getAccessToken()
    if (!token) {
     if (account.serverEnabled) {
-     navigate(buildAccountRoute(account.intent, "/local-analytics"))
-     return
+      await account.start(account.intent, "/local-analytics")
+      return
     }
     await legacyAccountBridge.login()
     token = legacyAccountBridge.getAccessToken()
@@ -151,6 +150,7 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
    const next = await runVtSyncLocalSync({
     token,
    selectedCategories: categoryIds,
+   retentionVideoIds,
    previousSnapshot: snapshot,
    onProgress: setSyncProgress,
    onSnapshotCommit: publishSnapshot,
@@ -279,7 +279,14 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
      </section>
     ) : null}
 
-    <VtSyncControllerPanel isAuthenticated={authReady} isSyncing={busy} onLogin={login} onStartSync={startSync} />
+    <VtSyncControllerPanel
+     isAuthenticated={authReady}
+     isSyncing={busy}
+     videos={snapshot.videos.map((video) => ({ id: video.id, title: video.title, thumbnail: video.thumbnail, views: video.metrics?.views || 0 }))}
+     datasetFreshness={snapshot.datasetFreshness}
+     onLogin={login}
+     onStartSync={startSync}
+    />
     <ProgressRail progress={syncProgress} />
     <VtSyncToolboxDataTable snapshot={snapshot} privacyFilters={privacyFilters} onPrivacyFiltersChange={updatePrivacyFilters} />
     <VtSyncDataVisualsToolbox snapshot={consumerSnapshot} />

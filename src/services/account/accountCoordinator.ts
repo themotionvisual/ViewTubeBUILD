@@ -6,6 +6,8 @@ import {
 } from "./accountContracts"
 
 const SNAPSHOT_CACHE_KEY = "vt_unified_account_snapshot_v1"
+const ACCOUNT_POPUP_NAME = "vt_unified_account_popup"
+const ACCOUNT_POPUP_FEATURES = "popup=yes,width=560,height=720,menubar=no,toolbar=no,location=yes,status=no,resizable=yes,scrollbars=yes"
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"])
 const ACCOUNT_SERVER_UNAVAILABLE_ERROR = "ACCOUNT_SERVER_UNAVAILABLE"
@@ -49,6 +51,65 @@ export const isUnifiedAccountServerEnabled = (
 }
 
 export const accountUrl = (path: string): string => `${resolveAccountApiBase()}${path}`
+
+const openAccountPopup = (): Window => {
+  if (typeof window === "undefined") throw new Error("Account popup requires a browser window.")
+  const popup = window.open("about:blank", ACCOUNT_POPUP_NAME, ACCOUNT_POPUP_FEATURES)
+  if (!popup) throw new Error("Popup was blocked. Please allow popups for this site.")
+  return popup
+}
+
+const waitForAccountPopupMessage = (
+  popup: Window,
+  expectedReturnTo: string,
+): Promise<void> => new Promise((resolve, reject) => {
+  let settled = false
+  let closedPoll: number | null = null
+
+  const cleanup = () => {
+    if (settled) return
+    settled = true
+    window.removeEventListener("message", handleMessage)
+    if (closedPoll !== null) window.clearInterval(closedPoll)
+    try {
+      popup.close()
+    } catch {
+      // ignore popup close failures
+    }
+  }
+
+  const fail = (message: string) => {
+    cleanup()
+    reject(new Error(message))
+  }
+
+  const handleMessage = (event: MessageEvent) => {
+    if (settled) return
+    if (event.origin !== window.location.origin) return
+    const data = event.data as Record<string, unknown> | null
+    if (!data || typeof data !== "object") return
+    if (data.type === "VT_UNIFIED_ACCOUNT_AUTH_SUCCESS") {
+      cleanup()
+      window.dispatchEvent(new CustomEvent("vt_account_auth_popup_success", {
+        detail: {
+          returnTo: typeof data.returnTo === "string" ? data.returnTo : expectedReturnTo,
+        },
+      }))
+      resolve()
+      return
+    }
+    if (data.type === "VT_UNIFIED_ACCOUNT_AUTH_ERROR") {
+      fail(String(data.error || "Account authorization failed."))
+    }
+  }
+
+  closedPoll = window.setInterval(() => {
+    if (!popup.closed) return
+    fail("Account popup closed before authorization completed.")
+  }, 400)
+
+  window.addEventListener("message", handleMessage)
+})
 
 const readJson = async <T>(response: Response): Promise<T> => {
   const payload = (await response.json().catch(() => null)) as T | { error?: string } | null
@@ -147,6 +208,7 @@ export const beginAccountIntent = async (
     throw new Error(ACCOUNT_SERVER_UNAVAILABLE_ERROR)
   }
 
+  const popup = openAccountPopup()
   try {
     const response = await fetch(accountUrl("/api/account/auth/start"), {
       method: "POST",
@@ -163,8 +225,14 @@ export const beginAccountIntent = async (
     }
     const payload = await readJson<{ authorizationUrl: string }>(response)
     if (!payload.authorizationUrl) throw new Error("Google authorization URL was not returned.")
-    window.location.assign(payload.authorizationUrl)
+    popup.location.href = payload.authorizationUrl
+    await waitForAccountPopupMessage(popup, sanitizeInternalReturnTo(returnTo))
   } catch (error) {
+    try {
+      popup.close()
+    } catch {
+      // ignore popup close failures
+    }
     if (
       error instanceof Error &&
       (error.message === ACCOUNT_SERVER_UNAVAILABLE_ERROR || error.message.includes("Account request failed (404)"))

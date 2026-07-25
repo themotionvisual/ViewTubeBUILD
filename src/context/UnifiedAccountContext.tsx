@@ -102,6 +102,7 @@ export const UnifiedAccountProvider: React.FC<{ children: React.ReactNode }> = (
     }))
     try {
       await beginAccountIntent(nextIntent, returnTo)
+      await refresh()
     } catch (error) {
       if (isAccountServerUnavailableError(error)) {
         await legacyLogin()
@@ -112,9 +113,6 @@ export const UnifiedAccountProvider: React.FC<{ children: React.ReactNode }> = (
           nextIntent: "manage_account",
           error: null,
         }))
-        if (returnTo && typeof window !== "undefined") {
-          window.location.assign(sanitizeInternalReturnTo(returnTo))
-        }
         return
       }
       setSnapshot((current) => ({
@@ -131,7 +129,7 @@ export const UnifiedAccountProvider: React.FC<{ children: React.ReactNode }> = (
       }))
       throw error
     }
-  }, [snapshot])
+  }, [refresh, snapshot])
 
   const signOut = useCallback(async () => {
     await signOutUnifiedAccount()

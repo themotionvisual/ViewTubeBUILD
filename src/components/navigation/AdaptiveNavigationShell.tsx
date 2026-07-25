@@ -6,7 +6,6 @@ import {
   Menu,
   PanelLeft,
   PanelTop,
-  UserCircle2,
   X,
 } from "lucide-react"
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
@@ -14,6 +13,7 @@ import { useDashboard } from "../../context/DashboardContext"
 import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
 import { useBrain } from "../../context/useBrain"
 import { isOwnerEmail, type EntitlementState } from "../../services/billingEntitlement"
+import { resolveAccountChipLabel } from "../../services/account/accountContracts"
 import { formatSyncLabel, getSyncTimestamp } from "../../services/onboardingState"
 import { getNavPaletteColor, VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
 import { AccountActionButton } from "../account/AccountActionButton"
@@ -188,17 +188,22 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   const drawerRef = useRef<HTMLDivElement | null>(null)
   const mainViewportRef = useRef<HTMLElement | null>(null)
 
-  const isConnected = account.snapshot.google.status === "connected" || channelConnection.isConnected
-  const channelName = channelIdentity.name || channelConnection.channelName || "Not connected"
-  const handleText = channelIdentity.handle
-    ? `@${String(channelIdentity.handle).replace(/^@/, "")}`
-    : channelConnection.handleText || "@not-connected"
-  const channelAvatar = channelIdentity.avatarUrl || authState.channelThumbnail
+  const isConnected = account.snapshot.authentication.status === "authenticated" && (account.snapshot.google.status === "connected" || channelConnection.isConnected)
+  const accountChipLabel = resolveAccountChipLabel(account.snapshot)
+  const channelName = isConnected
+    ? channelIdentity.name || channelConnection.channelName || "Connected"
+    : accountChipLabel
+  const handleText = isConnected && (channelIdentity.handle || channelConnection.handleText)
+    ? `@${String(channelIdentity.handle || channelConnection.handleText || "").replace(/^@/, "")}`
+    : ""
+  const channelAvatar = isConnected ? channelIdentity.avatarUrl || authState.channelThumbnail : null
   const syncLabel = channelConnection.state === "connected_verified"
     ? formatSyncLabel(getSyncTimestamp(authState))
     : channelConnection.state === "syncing"
       ? "Syncing now"
-      : channelConnection.statusLabel || "Ready to connect"
+      : isConnected
+        ? channelConnection.statusLabel || "Ready to connect"
+        : accountChipLabel
   const label = planLabel(entitlement.subscriptionPlanId)
   const unlimited = entitlement.tier === "large"
   const credits = unlimited
@@ -375,12 +380,14 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
         {channelAvatar ? (
           <img src={channelAvatar} alt="" width="38" height="38" />
         ) : (
-          <UserCircle2 aria-hidden="true" />
+          <span className="rounded-full border-[2px] border-black bg-white px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0_0_#000]">
+            {accountChipLabel}
+          </span>
         )}
       </span>
       <span className="vt-adaptive-nav__account-copy">
         <strong>{channelName}</strong>
-        <span>{isConnected ? `${handleText} | ${syncLabel}` : "Ready to connect"}</span>
+        <span>{isConnected && handleText ? `${handleText} | ${syncLabel}` : "Tap to open login popup"}</span>
       </span>
       <span className="vt-adaptive-nav__meter">
         <span><b>{label}</b><b>{credits}</b></span>
@@ -401,9 +408,13 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     >
       <div className="vt-adaptive-nav__menu-status">
         <span className="vt-adaptive-nav__avatar">
-          {channelAvatar ? <img src={channelAvatar} alt="" width="38" height="38" /> : <UserCircle2 aria-hidden="true" />}
+          {channelAvatar ? <img src={channelAvatar} alt="" width="38" height="38" /> : (
+            <span className="rounded-full border-[2px] border-black bg-white px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0_0_#000]">
+              {accountChipLabel}
+            </span>
+          )}
         </span>
-        <span><strong>{channelName}</strong><small>{isConnected ? `${handleText} | ${syncLabel}` : "Channel workspace | Not connected"}</small></span>
+        <span><strong>{channelName}</strong><small>{isConnected && handleText ? `${handleText} | ${syncLabel}` : "Popup login opens from any connect action"}</small></span>
         <b>{label} | {unlimited ? "Unlimited" : Math.max(0, Math.floor(entitlement.creditBalance)).toLocaleString()}</b>
       </div>
 

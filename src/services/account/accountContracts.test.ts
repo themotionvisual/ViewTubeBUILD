@@ -4,6 +4,7 @@ import {
   buildAccountRoute,
   parseAccountIntent,
   resolveAccountActionLabel,
+  resolveAccountChipLabel,
   resolveAccountSurfaceLabel,
   resolveAccountIntent,
   sanitizeInternalReturnTo,
@@ -24,15 +25,17 @@ const snapshot = (overrides: Partial<UnifiedAccountSnapshot>): UnifiedAccountSna
 })
 
 describe("unified account copy", () => {
-  it("uses Connect for a new or unknown user", () => {
-    expect(resolveAccountActionLabel(ANONYMOUS_ACCOUNT_SNAPSHOT)).toBe("Connect")
+  it("uses Sign up for a new or unknown user", () => {
+    expect(resolveAccountActionLabel(ANONYMOUS_ACCOUNT_SNAPSHOT)).toBe("Sign up")
+    expect(resolveAccountChipLabel(ANONYMOUS_ACCOUNT_SNAPSHOT)).toBe("Sign up")
   })
 
-  it("uses Connect for a recognized signed-out account", () => {
+  it("uses Sign in for a recognized signed-out account", () => {
     const state = snapshot({ authentication: { status: "anonymous", accountExists: true } })
     expect(resolveAccountIntent(state)).toBe("log_in")
-    expect(resolveAccountActionLabel(state)).toBe("Connect")
-    expect(resolveAccountSurfaceLabel(state, "settings")).toBe("Connect to ViewTube")
+    expect(resolveAccountActionLabel(state)).toBe("Sign in")
+    expect(resolveAccountChipLabel(state)).toBe("Sign in")
+    expect(resolveAccountSurfaceLabel(state, "settings")).toBe("Sign in to ViewTube")
   })
 
   it("uses channel-specific actions after authentication", () => {
@@ -50,9 +53,20 @@ describe("unified account copy", () => {
       google: { status: "connected", youtubeScopesGranted: true, channelId: "UC123" },
     })
     expect(resolveAccountActionLabel(connected)).toBe("Account")
+    expect(resolveAccountChipLabel(connected)).toBe("Connected")
     expect(resolveAccountSurfaceLabel(connected, "topbar")).toBe("Connected")
     expect(resolveAccountSurfaceLabel(connected, "sidebar")).toBe("Sync Data")
     expect(resolveAccountSurfaceLabel(connected, "settings")).toBe("Connected")
+  })
+
+  it("shows connecting copy while auth is pending", () => {
+    const connecting = snapshot({
+      authentication: { status: "pending", accountExists: true },
+      nextIntent: "connect_channel",
+    })
+    expect(resolveAccountActionLabel(connecting)).toBe("Connecting…")
+    expect(resolveAccountChipLabel(connecting)).toBe("Connecting…")
+    expect(resolveAccountSurfaceLabel(connecting, "settings")).toBe("Connecting…")
   })
 
   it("rejects external return destinations", () => {

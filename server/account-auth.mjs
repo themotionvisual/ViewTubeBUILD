@@ -284,6 +284,56 @@ const redirectWithError = (res, returnTo, code) => {
   res.end();
 };
 
+const popupCompletionHtml = (payload, fallbackUrl) => {
+  const serializedPayload = JSON.stringify(payload).replace(/</g, "\\u003c");
+  const serializedFallback = JSON.stringify(fallbackUrl).replace(/</g, "\\u003c");
+  const serializedOrigin = JSON.stringify(publicOrigin()).replace(/</g, "\\u003c");
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ViewTube Account</title>
+    <style>
+      :root { color-scheme: light; }
+      body { margin: 0; font: 600 14px/1.4 system-ui, sans-serif; background: #fff8d6; color: #111; }
+      main { min-height: 100vh; display: grid; place-items: center; padding: 24px; text-align: center; }
+      .card { max-width: 420px; border: 4px solid #000; box-shadow: 6px 6px 0 #000; background: #fff; padding: 20px; }
+      h1 { margin: 0 0 8px; font-size: 24px; line-height: 1; text-transform: uppercase; }
+      p { margin: 0; }
+      .hint { margin-top: 12px; font-size: 12px; text-transform: uppercase; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="card">
+        <h1>Account connected</h1>
+        <p>Closing popup and returning to ViewTube.</p>
+        <p class="hint">If this window stays open, you can close it manually.</p>
+      </div>
+    </main>
+    <script>
+      (function () {
+        const payload = ${serializedPayload};
+        const fallbackUrl = ${serializedFallback};
+        const origin = ${serializedOrigin};
+        try {
+          if (window.opener && !window.opener.closed) {
+            window.opener.postMessage(payload, origin);
+            window.close();
+            return;
+          }
+        } catch (error) {
+          console.warn("[account] popup completion relay failed", error);
+        }
+        window.location.replace(fallbackUrl);
+      })();
+    </script>
+  </body>
+</html>`;
+};
+
 export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl, json, readBody }) => {
   const aliases = new Map([
     ["/api/auth/session", "/api/account/snapshot"],
@@ -361,8 +411,16 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
       const session = await createAccountSession(userId);
       const destination = new URL(saved.returnTo, publicOrigin());
       destination.searchParams.set("account", channel ? "connected" : "authenticated");
-      res.writeHead(302, { Location: destination.toString(), "Set-Cookie": sessionCookie(session.token, session.expiresAt), "Cache-Control": "no-store" });
-      res.end();
+      res.writeHead(200, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Set-Cookie": sessionCookie(session.token, session.expiresAt),
+        "Cache-Control": "no-store",
+      });
+      res.end(popupCompletionHtml({
+        type: "VT_UNIFIED_ACCOUNT_AUTH_SUCCESS",
+        returnTo: destination.toString(),
+        accountStatus: channel ? "connected" : "authenticated",
+      }, destination.toString()));
     } catch (error) {
       console.error("[account] OAuth callback failed:", error instanceof Error ? error.message : String(error));
       redirectWithError(res, saved.returnTo, "authorization_failed");

@@ -22,6 +22,7 @@ import { DashboardBarrier } from "./DashboardBarrier"
 import { useDashboard } from "../../context/DashboardContext"
 import { useBrain } from "../../context/useBrain"
 import { useEntitlement } from "../../context/entitlementContext"
+import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
 import { hasCompletedAiBrainContext } from "../../services/aiBrainContext"
 import {
   hasFirstSync,
@@ -119,6 +120,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
   })
   const entitlement = useEntitlement()
   const { globalSyncData } = useBrain()
+  const account = useUnifiedAccount()
   const onboarding = readOnboardingState()
   const firstSyncDone = hasFirstSync({
     isAuthenticated: data.authState.isAuthenticated,
@@ -328,7 +330,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
 
   return (
     <DashboardBarrier>
-    <div className="w-full max-w-[1720px] mx-auto pb-24 px-4 md:px-6 xl:px-8">
+    <div className="w-full max-w-[1720px] mx-auto py-[10px]">
        <input
          ref={fileInputRef}
          type="file"
@@ -365,10 +367,10 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
               <p className="text-[10px] font-black uppercase">Connect channel</p>
               <p className="text-xs font-bold mt-1">{data.authState.isAuthenticated ? "Connected" : "Not connected"}</p>
               <button
-                onClick={() => onNavigate("/account#workspace-data")}
+                onClick={() => void account.start(account.intent, window.location.pathname + window.location.search + window.location.hash)}
                 className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#FA618A] px-2 py-1 text-[10px] font-black uppercase"
               >
-                {data.authState.isAuthenticated ? "Open" : "Connect"}
+                {account.label}
               </button>
             </div>
             <div className="border-[2px] border-black rounded-xl p-3 bg-[#f3f4f6]">

@@ -8,6 +8,8 @@ export type AccountIntent =
 
 export type AccountActionLabel =
   | "Connect"
+  | "Sign in"
+  | "Sign up"
   | "Connect Channel"
   | "Reconnect Channel"
   | "Account"
@@ -118,10 +120,21 @@ export const resolveAccountActionLabel = (
   }
 
   const intent = resolveAccountIntent(snapshot)
-  if (intent === "sign_up" || intent === "log_in") return "Connect"
+  if (intent === "sign_up") return "Sign up"
+  if (intent === "log_in") return "Sign in"
   if (intent === "connect_channel") return "Connect Channel"
   if (intent === "reconnect_channel") return "Reconnect Channel"
   return "Account"
+}
+
+export const resolveAccountChipLabel = (snapshot: UnifiedAccountSnapshot): string => {
+  if (snapshot.authentication.status === "pending") return "Connecting…"
+  const intent = resolveAccountIntent(snapshot)
+  if (intent === "sign_up") return "Sign up"
+  if (intent === "log_in") return "Sign in"
+  if (intent === "connect_channel") return "Connect Channel"
+  if (intent === "reconnect_channel") return "Reconnect Channel"
+  return "Connected"
 }
 
 export const resolveAccountSurfaceLabel = (
@@ -132,6 +145,8 @@ export const resolveAccountSurfaceLabel = (
   if (channelSyncing) return surface === "settings" ? "Syncing Channel Data…" : "Syncing…"
   const base = resolveAccountActionLabel(snapshot)
   if (base !== "Account") {
+    if (surface === "settings" && base === "Sign in") return "Sign in to ViewTube"
+    if (surface === "settings" && base === "Sign up") return "Sign up for ViewTube"
     if (surface === "settings" && base === "Connect") return "Connect to ViewTube"
     if (surface === "settings" && base === "Connect Channel") return "Connect YouTube Channel"
     return base

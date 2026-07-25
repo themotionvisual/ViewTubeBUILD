@@ -21,7 +21,6 @@ import type {
 import { useUnifiedAccount } from "../context/UnifiedAccountContext"
 import { useVideoAssetCatalog } from "../context/VideoAssetCatalogContext"
 import { useNavigate } from "react-router-dom"
-import { buildAccountRoute } from "../services/account/accountContracts"
 // Removed isChannelConnected import
 import {
  generateTagSuggestions,
@@ -964,7 +963,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
        metadata, and run AI tag analysis.
       </p>
       <button
-       onClick={() => navigate(buildAccountRoute(account.intent, "/video-manager"))}
+       onClick={() => void account.start(account.intent, "/video-manager")}
        className="w-full bg-[#FF3399] text-white border-[4px] border-black rounded-xl p-4 font-black uppercase text-xl shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex items-center justify-center gap-3">
        <Sparkles size={24} /> {account.label}
       </button>

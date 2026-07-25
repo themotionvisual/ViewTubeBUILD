@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react"
-import { Edit3, Lock, LockOpen, Layers, RotateCcw, Download, Upload, Settings, Play, UserCircle2, Sparkles, ChevronDown } from "lucide-react"
+import { Edit3, Lock, LockOpen, Layers, RotateCcw, Download, Upload, Settings, Sparkles, ChevronDown } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { DashboardData } from "./useDashboardData"
 import { useEntitlement } from "../../context/entitlementContext"
 import { useBrain } from "../../context/useBrain"
 import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
-import { buildAccountRoute } from "../../services/account/accountContracts"
+import { resolveAccountChipLabel } from "../../services/account/accountContracts"
 import { AIModelSelector } from "../../components/ui/AIModelSelector"
 
 interface DashboardHeaderProps {
@@ -27,9 +27,12 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
  const entitlement = useEntitlement()
  const { authState, logout, globalSyncData } = useBrain()
  const account = useUnifiedAccount()
- const accountAuthenticated = account.serverEnabled
-  ? account.snapshot.authentication.status === "authenticated"
-  : authState.isAuthenticated
+ const isConnected =
+  account.snapshot.authentication.status === "authenticated" &&
+  account.snapshot.google.status === "connected" &&
+  account.snapshot.google.youtubeScopesGranted
+ const accountAuthenticated = isConnected || authState.isAuthenticated
+ const accountActionLabel = resolveAccountChipLabel(account.snapshot)
  const [title, setTitle] = useState(() => localStorage.getItem("vt-dashboard-title") || "WIDGET LAB")
  const [isEditingTitle, setIsEditingTitle] = useState(false)
  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -83,12 +86,15 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
   </div>
  )
 
- const avatar = data.avatarUrl || ""
- const rawHandle =
-  data.brain?.channelProfile?.channelHandle || data.authState?.channelHandle || ""
+ const avatar = accountAuthenticated ? data.avatarUrl || "" : ""
+ const rawHandle = accountAuthenticated
+  ? data.brain?.channelProfile?.channelHandle || data.authState?.channelHandle || ""
+  : ""
  const normalizedHandle = String(rawHandle || "").trim().replace(/^@/, "")
- const handleText = normalizedHandle ? `@${normalizedHandle}` : "@connect-channel"
- const channelName = data.brain?.channelProfile?.name || data.authState?.channelName || "Your Channel"
+ const handleText = normalizedHandle ? `@${normalizedHandle}` : ""
+ const channelName = accountAuthenticated
+  ? data.brain?.channelProfile?.name || data.authState?.channelName || "Your Channel"
+  : accountActionLabel
  const creditsLeft = Math.max(0, Math.floor(entitlement.creditBalance || 0))
  const creditCap = Math.max(1, Math.floor(entitlement.rolloverCap || entitlement.monthlyCreditGrant || 1))
  const meterPct = entitlement.tier === "large" ? 100 : Math.max(0, Math.min(100, Math.round((creditsLeft / creditCap) * 100)))
@@ -163,12 +169,12 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
    {isDropdownOpen && (
     <div className="absolute right-0 top-[calc(100%+8px)] w-[240px] bg-white border-[3px] border-black shadow-[4px_4px_0_0_#000] rounded-[8px] z-50 flex flex-col overflow-hidden">
      <div className="p-4 border-b-[2px] border-black bg-[#eee] flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full border-[2.5px] border-black bg-white overflow-hidden shadow-[2px_2px_0_0_#000]">
-       {avatar ? <img src={avatar} className="w-full h-full object-cover" /> : <UserCircle2 size={24} />}
+      <div className="w-10 h-10 rounded-full border-[2.5px] border-black bg-white overflow-hidden shadow-[2px_2px_0_0_#000] flex items-center justify-center">
+       {avatar ? <img src={avatar} className="w-full h-full object-cover" /> : <span className="px-1 text-[8px] font-black uppercase leading-none text-center">{accountActionLabel}</span>}
       </div>
      <div className="flex flex-col">
        <span className="font-black text-[12px] uppercase leading-tight tracking-tight whitespace-nowrap overflow-hidden text-ellipsis w-[140px]">{channelName}</span>
-       <span className="font-black text-[9px] opacity-60 uppercase leading-tight">{handleText}</span>
+       <span className="font-black text-[9px] opacity-60 uppercase leading-tight">{accountAuthenticated ? (handleText || "Connected") : "Popup login"}</span>
        <div className="mt-1 flex items-center gap-2">
         <div className="w-[86px] h-[6px] border border-black rounded-full bg-white overflow-hidden">
          <div
@@ -191,7 +197,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
        onClick={async () => {
         setIsDropdownOpen(false)
         if (!accountAuthenticated) {
-         navigate(buildAccountRoute(account.intent, "/"))
+         await account.start(account.intent, "/")
          return
         }
         navigate("/account#workspace-data")
@@ -203,7 +209,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
        onClick={async () => {
         setIsDropdownOpen(false)
         if (!accountAuthenticated) {
-         navigate(buildAccountRoute(account.intent, "/"))
+         await account.start(account.intent, "/")
          return
         }
         await globalSyncData({ batchMode: "initial" })
@@ -268,13 +274,25 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
     {/* Identity Zone & Token Settings */}
     <div className="flex items-center gap-3">
      <div className="flex flex-col justify-center text-right">
-      <a href={normalizedHandle ? `https://youtube.com/@${normalizedHandle}` : "https://youtube.com"} target="_blank" rel="noreferrer" className="font-black text-[14px] uppercase tracking-[-0.02em] leading-none hover:underline cursor-pointer decoration-2 underline-offset-2">
-       {channelName}
-      </a>
-      <div className="font-black text-[10px] opacity-60 leading-none mt-1">{handleText}</div>
+      {accountAuthenticated ? (
+       <a href={normalizedHandle ? `https://youtube.com/@${normalizedHandle}` : "https://youtube.com"} target="_blank" rel="noreferrer" className="font-black text-[14px] uppercase tracking-[-0.02em] leading-none hover:underline cursor-pointer decoration-2 underline-offset-2">
+        {channelName}
+       </a>
+      ) : (
+       <span className="font-black text-[14px] uppercase tracking-[-0.02em] leading-none">
+        {channelName}
+       </span>
+      )}
+      <div className="font-black text-[10px] opacity-60 leading-none mt-1">{accountAuthenticated ? (handleText || "Connected") : "Popup login"}</div>
      </div>
      <div className="w-10 h-10 rounded-full border-[2.5px] border-black bg-white overflow-hidden flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-      {avatar ? <img src={avatar} className="w-full h-full object-cover" /> : <UserCircle2 size={24} strokeWidth={1.5} />}
+      {avatar ? (
+       <img src={avatar} className="w-full h-full object-cover" />
+      ) : (
+       <span className="px-1 text-[8px] font-black uppercase leading-none text-center">
+        {accountActionLabel}
+       </span>
+      )}
      </div>
      
      <div className="w-[2px] h-6 bg-black/20 mx-1"></div>

@@ -2,7 +2,6 @@ import React from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
 import {
-  buildAccountRoute,
   resolveAccountSurfaceLabel,
   type AccountSurface,
 } from "../../services/account/accountContracts"
@@ -40,7 +39,7 @@ export const AccountActionButton: React.FC<AccountActionButtonProps> = ({
       return
     }
     const destination = returnTo || `${location.pathname}${location.search}${location.hash}`
-    navigate(buildAccountRoute(account.intent, destination))
+    await account.start(account.intent, destination)
   }
 
   return (

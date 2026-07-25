@@ -54,6 +54,7 @@ describe("resolveChannelConnectionSnapshot", () => {
   expect(snapshot.topBarLabel).toBe("Reconnect Channel")
   expect(snapshot.sidebarLabel).toBe("Reconnect Channel")
   expect(snapshot.statusLabel).toBe("Local data ready")
+  expect(snapshot.handleText).toBe("@cachedchannel")
  })
 
  it("keeps verified live sessions connected", () => {
@@ -76,9 +77,10 @@ describe("resolveChannelConnectionSnapshot", () => {
    syncStatus: defaultSyncStatus,
   })
 
- expect(snapshot.state).toBe("connected_verified")
+  expect(snapshot.state).toBe("connected_verified")
   expect(snapshot.isConnected).toBe(true)
   expect(snapshot.topBarLabel).toBe("Connected")
+  expect(snapshot.handleText).toBe("@livechannel")
  })
 
  it("prefers canonical terminal truth over stale syncing events", () => {

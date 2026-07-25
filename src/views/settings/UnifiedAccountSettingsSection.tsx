@@ -230,7 +230,7 @@ export const UnifiedAccountSettingsSection: React.FC<UnifiedAccountSettingsSecti
             )}
             {!channelConnection.isConnected && (
               <p className="text-[11px] font-black uppercase tracking-[0.12em] text-gray-700">
-                Connecting opens Google OAuth after you acknowledge ViewTube Terms and Privacy Policy.
+                Connecting opens the popup login flow after you acknowledge ViewTube Terms and Privacy Policy.
               </p>
             )}
             <button

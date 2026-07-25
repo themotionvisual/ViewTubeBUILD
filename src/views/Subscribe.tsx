@@ -10,7 +10,6 @@ import {
 import { useUnifiedAccount } from "../context/UnifiedAccountContext"
 import { activateUnifiedFreePlan, updateUnifiedOnboarding } from "../services/account/accountCoordinator"
 import { useBrain } from "../context/useBrain"
-import { buildAccountRoute } from "../services/account/accountContracts"
 import { useEntitlement } from "../context/entitlementContext"
 
 const plans: Array<{
@@ -84,7 +83,7 @@ const Subscribe: React.FC = () => {
   const resumeQuery = new URLSearchParams(location.search)
   if (pendingPlan) resumeQuery.set("plan", pendingPlan)
   const resumePath = `/subscribe${resumeQuery.size ? `?${resumeQuery.toString()}` : ""}`
-  if (account.serverEnabled) navigate(buildAccountRoute(account.intent, resumePath))
+  if (account.serverEnabled) await account.start(account.intent, resumePath)
   else await connectChannel()
  }
  const query = useMemo(() => new URLSearchParams(location.search), [location.search])

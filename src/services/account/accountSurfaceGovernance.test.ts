@@ -6,7 +6,7 @@ const root = process.cwd()
 const read = (relativePath: string) => fs.readFileSync(path.join(root, relativePath), "utf8")
 
 describe("unified account surface governance", () => {
-  it("uses Connect instead of signup or login copy in active application code", () => {
+  it("uses popup-first copy in active application code", () => {
     const activeFiles = [
       "src/components/navigation/AdaptiveNavigationShell.tsx",
       "src/views/Settings.tsx",
@@ -17,18 +17,32 @@ describe("unified account surface governance", () => {
     ]
     const source = activeFiles.map(read).join("\n")
     expect(source).not.toContain("Continue with Google")
-    expect(source).not.toMatch(/Sign Up|Sign In|Log In/)
-    expect(read("src/services/account/accountContracts.ts")).toContain('"Connect"')
+    expect(source).toContain("account.start")
+    expect(read("src/services/account/accountContracts.ts")).toContain('"Sign in"')
+    expect(read("src/services/account/accountContracts.ts")).toContain('"Sign up"')
   })
 
-  it("routes secondary prompts through the account page", () => {
+  it("routes primary account CTAs through the shared popup launcher", () => {
     for (const relativePath of [
+      "src/views/Settings.tsx",
       "src/views/Subscribe.tsx",
       "src/views/VideoManager.tsx",
+      "src/views/dashboard/DashboardCanvas.tsx",
       "src/views/dashboard/DashboardHeader.tsx",
       "src/features/vt-sync-local/shell/VtSyncLocalAnalyticsPage.tsx",
     ]) {
-      expect(read(relativePath), relativePath).toContain("buildAccountRoute")
+      const source = read(relativePath)
+      expect(source, relativePath).toContain("account.start")
+      expect(source, relativePath).not.toContain("navigate(buildAccountRoute")
+    }
+    for (const relativePath of [
+      "src/components/account/AccountActionButton.tsx",
+      "src/components/navigation/AdaptiveNavigationShell.tsx",
+      "src/views/settings/UnifiedAccountSettingsSection.tsx",
+    ]) {
+      const source = read(relativePath)
+      expect(source, relativePath).toContain("AccountActionButton")
+      expect(source, relativePath).not.toContain("navigate(buildAccountRoute")
     }
   })
 

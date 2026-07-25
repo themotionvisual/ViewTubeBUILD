@@ -136,13 +136,9 @@ export const resolveChannelConnectionSnapshot = (input: {
     : "Not connected")
 
  const handleSource = clean(channelIdentity?.handle) || clean(authState.channelHandle)
- const handleText = handleSource
+const handleText = handleSource
   ? `@${handleSource.replace(/^@/, "")}`
-  : state === "disconnected"
-   ? "@not-connected"
-   : state === "cached_disconnected"
-    ? "@cached-channel"
-   : "@channel-linked"
+  : ""
 
  if (state === "disconnected") {
   return {
@@ -154,7 +150,7 @@ export const resolveChannelConnectionSnapshot = (input: {
    hasLocalData: false,
    title: "Not connected",
    subtitle: "Channel not connected",
-   helper: "Connect once, then every channel-linked surface uses the same verified session.",
+   helper: "Open popup login once, then every verified surface shares the same session.",
    topBarLabel: "Connect Channel",
    sidebarLabel: "Connect YouTube",
    settingsLabel: "Connect Channel",
