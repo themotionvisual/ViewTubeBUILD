@@ -1,4 +1,5 @@
 import React from "react"
+import { VisualModuleController, type ControllerRow } from "./VisualModuleController"
 
 type Tone = "pink" | "cyan" | "lime" | "yellow" | "purple" | "orange" | "white"
 
@@ -28,9 +29,13 @@ export interface SubToolboxStat {
   label: string
   value: string
   tone?: Tone
+  valueTone?: string
+  backgroundTone?: string
+  labelText?: string
   onClick?: () => void
   isActive?: boolean
   lockTone?: boolean
+  compact?: boolean
 }
 
 export interface SubToolboxMetricBadge {
@@ -46,10 +51,20 @@ export interface SubToolboxChartModuleProps {
     headerStyle?: "subtoolbox" | "classic"
   }
   controlBox?: {
-    count: number | string
+    count?: number | string
     countLabel?: string
     countUnit?: string
+    onCountPrev?: () => void
+    onCountNext?: () => void
     dropdown?: {
+      value: string
+      options: ControlBoxDropdownOption[]
+      isOpen: boolean
+      onToggle: () => void
+      onSelect: (value: string) => void
+    }
+    /** A second dropdown rendered immediately after the first */
+    dropdown2?: {
       value: string
       options: ControlBoxDropdownOption[]
       isOpen: boolean
@@ -59,6 +74,9 @@ export interface SubToolboxChartModuleProps {
     extraActions?: React.ReactNode
     rightInlineControls?: React.ReactNode
   }
+  controllerRows?: ControllerRow[]
+  controllerWidth?: number
+  controllerDensity?: "normal" | "compact"
   activeContext?: {
     title?: React.ReactNode
     stats?: SubToolboxStat[]
@@ -66,6 +84,7 @@ export interface SubToolboxChartModuleProps {
     leftStats?: SubToolboxStat[]
     rightTitle?: string
     rightStats?: SubToolboxStat[]
+    bgTone?: string
   } | null
   layout?: {
     moduleWidth?: string
@@ -89,6 +108,11 @@ export interface SubToolboxChartModuleProps {
   footerBorderless?: boolean
   collapsible?: boolean
   isOpenInitial?: boolean
+  /** Standard two-column insight / action row rendered below chart content */
+  insight?: {
+    personalInsight: string
+    actionInsight?: string
+  }
 }
 
 const toneClass = (tone?: Tone): string => {
@@ -117,10 +141,10 @@ const toneForMetricLabel = (label: string, fallback?: Tone): Tone => {
   return fallback ?? "white"
 }
 
-const statButtonClass = (clickable: boolean): string =>
-  `h-full w-auto min-w-[84px] px-0 inline-flex flex-col items-stretch justify-start tabular-nums leading-none overflow-hidden transition-colors ${
+const statButtonClass = (clickable: boolean, compact?: boolean): string =>
+  `h-full ${compact ? "w-[76px]" : "w-[88px]"} flex-none px-0 inline-flex flex-col items-stretch justify-start tabular-nums leading-none overflow-hidden transition-colors ${
     clickable ? "cursor-pointer hover:bg-gray-50" : "cursor-default"
-  } bg-white`
+  }`
 
 const normalizeStatLabel = (label: string): string => {
   const normalized = label.trim().toUpperCase()
@@ -129,11 +153,18 @@ const normalizeStatLabel = (label: string): string => {
   return label
 }
 
+const statValueTone = (item: SubToolboxStat): string => item.valueTone ?? item.tone ?? "#000000"
+const toneBackgroundStyle = (tone?: string): React.CSSProperties | undefined =>
+  typeof tone === "string" && tone.startsWith("#") ? { background: tone } : undefined
+
 export const SubToolboxChartModule: React.FC<
   React.PropsWithChildren<SubToolboxChartModuleProps>
 > = ({
   header,
   controlBox,
+  controllerRows,
+  controllerWidth,
+  controllerDensity,
   activeContext,
   layout,
   theme,
@@ -146,6 +177,7 @@ export const SubToolboxChartModule: React.FC<
   footerBorderless = false,
   collapsible = false,
   isOpenInitial = true,
+  insight,
 }) => {
   const [internalOpen, setInternalOpen] = React.useState(isOpenInitial)
   const [hasOpened, setHasOpened] = React.useState(isOpenInitial)
@@ -172,6 +204,8 @@ export const SubToolboxChartModule: React.FC<
       : activeContext?.stats?.length
         ? activeContext.stats.slice(0, 4).map((s) => ({ label: s.label, tone: s.tone }))
         : []
+  const headerBorderClass = collapsible && !internalOpen ? "" : "border-b-[4px] border-black"
+  const interiorMinHeight = collapsible && !internalOpen ? 0 : (layout?.moduleMinHeight ?? "420px")
 
   return (
     <div
@@ -184,143 +218,109 @@ export const SubToolboxChartModule: React.FC<
       }}
     >
       <div 
-        className={`border-b-[4px] border-black flex items-stretch h-[74px] ${collapsible ? 'cursor-pointer' : ''}`}
+        className={`${headerBorderClass} flex items-stretch min-h-[76px] ${collapsible ? 'cursor-pointer' : ''}`}
         onClick={collapsible ? setOpen : undefined}
       >
+        {/* self-stretch fills the header's full height (no white frame showing beneath),
+            and aspect-square drives the width off that height so the block stays square. */}
         <div
-          className="w-[76px] h-full border-r-[4px] border-black flex items-center justify-center shrink-0"
+          className="self-stretch aspect-square min-w-[76px] shrink-0 flex-none border-r-[4px] border-black flex items-center justify-center"
           style={{ background: tokens.iconBlockBg, borderColor: tokens.iconBlockBorder }}
         >
-          <span className="[&_svg]:h-9 [&_svg]:w-9">{header.icon}</span>
+          <span className="[&_svg]:h-8 [&_svg]:w-8">{header.icon}</span>
         </div>
         <div
           className="flex-1 min-w-0 pl-3 pr-0 py-0 flex items-stretch justify-between gap-0"
           style={{ background: tokens.headerBandBg }}
         >
           <div className="min-w-0 py-2 flex flex-col justify-center">
-            <div className="font-[1000] text-[42px] leading-[0.85] uppercase tracking-[0em]">
+            <div className="max-w-full font-[1000] text-[clamp(24px,3.5vw,42px)] leading-[0.88] uppercase tracking-[0em] break-words">
               {header.title}
             </div>
-            <div className="text-[14px] font-black uppercase tracking-[0.069em] opacity-80 truncate">
+            <div className="max-w-full text-[clamp(10px,1.1vw,14px)] font-black uppercase tracking-[0.069em] opacity-80 truncate">
               {header.subtitle}
             </div>
           </div>
 
-          {controlBox?.rightInlineControls ? (
-            <div className="flex items-center justify-end gap-2 pr-2 py-2">
-              {controlBox.rightInlineControls}
-            </div>
-          ) : null}
+          <div className="flex shrink-0 items-stretch" onClick={(event) => event.stopPropagation()}>
+            {controlBox?.rightInlineControls ? (
+              <div className="flex items-center justify-end gap-2 pr-2 py-2">
+                {controlBox.rightInlineControls}
+              </div>
+            ) : null}
 
-          {controlBox ? (
-            <div
-              className="relative w-fit h-full min-h-[70px] border-l-[4px] border-l-black rounded-none px-0 py-0 flex flex-col items-center justify-start gap-0 shrink-0 overflow-visible"
-              style={{ background: tokens.iconBlockBg, color: "#000000" }}
-            >
-                <span className={`font-[1000] leading-[0.9] text-center w-full pt-1 px-1 break-all ${String(controlBox.count).length > 5 ? 'text-[24px]' : 'text-[32px]'}`}>
-                  {controlBox.count}
-                </span>
-                <div className="mt-auto mb-0 w-full flex items-center justify-center h-[22px] shrink-0 overflow-hidden px-1">
-                  {controlBox.dropdown ? (
-                    <button
-                      type="button"
-                      onClick={controlBox.dropdown.onToggle}
-                      className="h-full px-2 w-full bg-white border-[2px] border-black rounded-md text-black text-[11px] font-black uppercase tracking-[0.08em] inline-flex items-center justify-center gap-1 shrink-0"
-                    >
-                      <span className="truncate text-center">
-                        {controlBox.dropdown.options.find(
-                          (o) => o.value === controlBox.dropdown?.value,
-                        )?.label ?? controlBox.dropdown.value}
-                      </span>
-                      <span
-                        className={`text-[10px] leading-none transition-transform duration-150 ${
-                          controlBox.dropdown.isOpen ? "rotate-180" : ""
-                        }`}
-                      >
-                        ▾
-                      </span>
-                    </button>
-                  ) : (
-                    <span className="text-[14px] font-black uppercase tracking-[0.01em] text-center leading-none w-full px-2" style={{ color: tokens.iconBlockBg }}>
-                      {controlBox.countLabel ?? "BEST"}
-                    </span>
-                  )}
-                </div>
-                <div className="flex-1 w-full flex items-center justify-center">
-                  <span className="text-[16px] text-center font-black uppercase tracking-[0.01em] leading-none">
-                    {controlBox.countUnit ?? "VIDEOS"}
-                  </span>
-                </div>
-              {controlBox.dropdown ? (
-                <div
-                  className={`absolute left-0 right-0 top-[calc(100%+6px)] bg-white border-[4px] border-black rounded-[10px] overflow-hidden z-30 origin-top transition-all duration-200 ${
-                    controlBox.dropdown.isOpen
-                      ? "opacity-100 scale-y-100 pointer-events-auto"
-                      : "opacity-0 scale-y-95 pointer-events-none"
-                  }`}
-                >
-                  {controlBox.dropdown.options.map((option, idx) => {
-                    const isActive = controlBox.dropdown?.value === option.value;
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => controlBox.dropdown?.onSelect(option.value)}
-                        style={{ 
-                          backgroundColor: isActive ? tokens.iconBlockBg : 'white' 
-                        }}
-                        className={`w-full h-8 px-3 text-center text-[11px] font-[1000] uppercase tracking-[0.08em] whitespace-nowrap border-black flex items-center justify-center transition-colors duration-150 ${
-                          idx === 0 ? "" : "border-t-[4px]"
-                        }`}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = tokens.iconBlockBg;
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isActive) {
-                            e.currentTarget.style.backgroundColor = 'white';
-                          }
-                        }}
-                      >
-                        {option.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : null}
-              {controlBox.extraActions}
-            </div>
-          ) : null}
+            {controllerRows ? (
+              <VisualModuleController rows={controllerRows} width={controllerWidth ?? 195} density={controllerDensity ?? "normal"} />
+            ) : controlBox ? (
+              <div className="flex shrink-0 relative h-full">
+                <VisualModuleController width={controllerWidth ?? 195} density={controllerDensity ?? "normal"} rows={[
+                  ...(controlBox.count !== undefined ? [
+                    { type: "number" as const, value: controlBox.count, bgTone: tokens.iconBlockBg, fgTone: "#000000", onPrev: controlBox.onCountPrev, onNext: controlBox.onCountNext }
+                  ] : []),
+                  ...(controlBox.dropdown ? [{
+                     type: "dropdown" as const,
+                     value: controlBox.dropdown.value,
+                     options: controlBox.dropdown.options,
+                     onSelect: controlBox.dropdown.onSelect,
+                     bgTone: "#FFFFFF",
+                     fgTone: "#000000"
+                  }] : (controlBox.count !== undefined ? [{ type: "label" as const, value: controlBox.countLabel ?? "BEST", bgTone: "#FFFFFF", fgTone: tokens.iconBlockBg }] : [])),
+                  ...(controlBox.dropdown2 ? [{
+                     type: "dropdown" as const,
+                     value: controlBox.dropdown2.value,
+                     options: controlBox.dropdown2.options,
+                     onSelect: controlBox.dropdown2.onSelect,
+                     bgTone: "#FFFFFF",
+                     fgTone: "#000000"
+                  }] : []),
+                  { type: "label" as const, value: controlBox.countUnit ?? "VIDEOS", bgTone: "#FFFFFF", fgTone: "#000000" }
+                ]} />
+                {controlBox.extraActions}
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 
       <div className={`grid transition-[grid-template-rows,opacity] duration-300 ${internalOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
         <div className="overflow-hidden flex flex-col relative">
           {activeContext ? (
-            <div className={`${disableActiveContextBottomBorder ? "" : "border-b-[4px] border-black"} px-0 py-0 bg-white h-10 overflow-hidden`}>
+            <div
+              className={`${disableActiveContextBottomBorder ? "" : "border-b-[4px] border-black"} px-0 py-0 h-[34px] overflow-hidden`}
+              style={{ background: activeContext.bgTone ?? "#FFFFFF" }}
+            >
               <div className="flex items-stretch h-full w-full justify-between">
                 {/* Left Section */}
                 <div className="flex items-stretch h-full overflow-hidden shrink-0">
                   {activeContext.leftTitle && (
-                    <div className="px-2 flex items-center justify-center font-[1000] text-[18px] border-r-[4px] border-black bg-white shrink-0">
+                    <div
+                      className="px-2 flex items-center justify-center font-[1000] text-[13px] border-r-[4px] border-black shrink-0"
+                      style={{ background: activeContext.bgTone ?? "#FFFFFF" }}
+                    >
                       {activeContext.leftTitle}
                     </div>
                   )}
                   {activeContext.leftStats && (
                     <div className="flex items-stretch h-full divide-x-[4px] divide-black border-r-[4px] border-black">
-                      {activeContext.leftStats.map((item) => (
+                      {activeContext.leftStats.map((item, index) => (
                         <button
-                          key={item.label}
+                          key={`${item.label}-${index}`}
                           onClick={item.onClick}
                           disabled={!item.onClick}
-                          className={statButtonClass(Boolean(item.onClick))}
+                          className={statButtonClass(Boolean(item.onClick), item.compact)}
+                          style={{ background: item.backgroundTone ?? "#EDEDED" }}
                         >
-                          <span className="h-8 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 text-black leading-none px-1">
+                          <span
+                            className="h-[18px] text-[11px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0 leading-none px-1"
+                            style={{ color: statValueTone(item) }}
+                          >
                             {item.value}
                           </span>
                           <span
-                            className={`h-5 text-[11px] font-black tracking-[0.11em] uppercase inline-flex items-center justify-center w-full ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
+                            className={`h-[12px] text-[8px] font-black tracking-[0.11em] uppercase inline-flex items-center justify-center w-full whitespace-nowrap ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
+                            style={toneBackgroundStyle(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}
                           >
-                            {normalizeStatLabel(item.label)}
+                            {item.labelText ?? normalizeStatLabel(item.label)}
                           </span>
                         </button>
                       ))}
@@ -329,11 +329,11 @@ export const SubToolboxChartModule: React.FC<
                 </div>
 
                 {/* Middle Section (Filler / Title) */}
-                <div className="flex-1 bg-white flex items-stretch h-full overflow-hidden min-w-0">
+                <div className="flex-1 flex items-stretch h-full overflow-hidden min-w-0" style={{ background: activeContext.bgTone ?? "#FFFFFF" }}>
                   {activeContext.title && (
                     <div className={`flex items-stretch flex-1 min-w-0 ${activeContext.leftStats || activeContext.leftTitle ? 'border-l-[4px]' : ''} ${activeContext.rightStats || activeContext.rightTitle || activeContext.stats ? 'border-r-[4px]' : ''} border-black`}>
                       {typeof activeContext.title === 'string' ? (
-                        <div className="flex items-center px-2 font-[1000] text-[22px] leading-tight flex-1 truncate">
+                        <div className="flex items-center px-2 font-[1000] text-[clamp(13px,1.4vw,18px)] leading-tight flex-1 truncate">
                           {activeContext.title}
                         </div>
                       ) : (
@@ -348,26 +348,34 @@ export const SubToolboxChartModule: React.FC<
                 {/* Right Section */}
                 <div className="flex items-stretch h-full overflow-hidden shrink-0">
                   {activeContext.rightTitle && (
-                    <div className="px-2 flex items-center justify-center font-[1000] text-[18px] border-l-[4px] border-black bg-white shrink-0">
+                    <div
+                      className="px-2 flex items-center justify-center font-[1000] text-[13px] border-l-[4px] border-black shrink-0"
+                      style={{ background: activeContext.bgTone ?? "#FFFFFF" }}
+                    >
                       {activeContext.rightTitle}
                     </div>
                   )}
                   {activeContext.rightStats && (
                     <div className="flex items-stretch h-full divide-x-[4px] divide-black">
-                      {activeContext.rightStats.map((item) => (
+                      {activeContext.rightStats.map((item, index) => (
                         <button
-                          key={item.label}
+                          key={`${item.label}-${index}`}
                           onClick={item.onClick}
                           disabled={!item.onClick}
-                          className={statButtonClass(Boolean(item.onClick))}
+                          className={statButtonClass(Boolean(item.onClick), item.compact)}
+                          style={{ background: item.backgroundTone ?? "#EDEDED" }}
                         >
-                          <span className="h-8 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 text-black leading-none px-1">
+                          <span
+                            className="h-[18px] text-[11px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0 leading-none px-1"
+                            style={{ color: statValueTone(item) }}
+                          >
                             {item.value}
                           </span>
                           <span
-                            className={`h-5 text-[11px] font-[1000] tracking-[0.11em] uppercase inline-flex items-center justify-center w-full ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
+                            className={`h-[12px] text-[8px] font-[1000] tracking-[0.11em] uppercase inline-flex items-center justify-center w-full whitespace-nowrap ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
+                            style={toneBackgroundStyle(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}
                           >
-                            {normalizeStatLabel(item.label)}
+                            {item.labelText ?? normalizeStatLabel(item.label)}
                           </span>
                         </button>
                       ))}
@@ -375,20 +383,25 @@ export const SubToolboxChartModule: React.FC<
                   )}
                   {!activeContext.rightStats && activeContext.stats && (
                     <div className="flex items-stretch h-full divide-x-[4px] divide-black">
-                      {activeContext.stats.map((item) => (
+                      {activeContext.stats.map((item, index) => (
                         <button
-                          key={item.label}
+                          key={`${item.label}-${index}`}
                           onClick={item.onClick}
                           disabled={!item.onClick}
-                          className={statButtonClass(Boolean(item.onClick))}
+                          className={statButtonClass(Boolean(item.onClick), item.compact)}
+                          style={{ background: item.backgroundTone ?? "#EDEDED" }}
                         >
-                          <span className="h-8 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 text-black leading-none px-1">
+                          <span
+                            className="h-[18px] text-[11px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0 leading-none px-1"
+                            style={{ color: statValueTone(item) }}
+                          >
                             {item.value}
                           </span>
                           <span
-                            className={`h-5 text-[11px] font-[1000] tracking-[0.11em] uppercase inline-flex items-center justify-center w-full ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
+                            className={`h-[12px] text-[8px] font-[1000] tracking-[0.11em] uppercase inline-flex items-center justify-center w-full whitespace-nowrap ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
+                            style={toneBackgroundStyle(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}
                           >
-                            {normalizeStatLabel(item.label)}
+                            {item.labelText ?? normalizeStatLabel(item.label)}
                           </span>
                         </button>
                       ))}
@@ -401,7 +414,7 @@ export const SubToolboxChartModule: React.FC<
 
           <div
             className="flex-1 p-0 vt-chart-interior"
-            style={{ minHeight: layout?.moduleMinHeight ?? "420px" }}
+            style={{ minHeight: interiorMinHeight }}
           >
             {hasOpened ? content : null}
           </div>
@@ -421,6 +434,25 @@ export const SubToolboxChartModule: React.FC<
               {footer}
             </div>
           ) : null}
+
+          {insight ? (
+            <div className="border-t-[4px] border-black bg-[#0c0c14] text-white flex items-stretch">
+              <div className="flex flex-1 min-h-[56px] items-center gap-3 border-r border-white/10 px-4 py-3">
+                <span className="shrink-0 border border-black px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-black bg-[#CCFF00] whitespace-nowrap">
+                  INSIGHT
+                </span>
+                <span className="text-[11px] font-medium leading-5 text-white/75">{insight.personalInsight}</span>
+              </div>
+              {insight.actionInsight ? (
+                <div className="flex flex-1 min-h-[56px] items-center gap-3 px-4 py-3">
+                  <span className="shrink-0 border border-black px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-black bg-[#00CCFF] whitespace-nowrap">
+                    ACTION
+                  </span>
+                  <span className="text-[11px] font-medium leading-5 text-white/75">{insight.actionInsight}</span>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
@@ -435,6 +467,8 @@ export const subToolboxChartPresets = {
       headerStyle: "subtoolbox" as const,
     },
     layout: { moduleMinHeight: "420px" },
+    videoCountOptions: [25, 50, 75, 100, 200],
+    formatOptions: ["All", "Shorts", "Long"] as string[],
   },
   videoValueMatrixStarter: {
     header: {
@@ -442,6 +476,8 @@ export const subToolboxChartPresets = {
       subtitle: "CTR × RETENTION × VIEWS",
       headerStyle: "subtoolbox" as const,
     },
+    videoCountOptions: [10, 15, 20, 25, 50, 100],
+    formatOptions: ["All", "Long"] as string[],
   },
   packagingStarter: {
     header: {
@@ -449,6 +485,8 @@ export const subToolboxChartPresets = {
       subtitle: "CTR × IMPRESSIONS",
       headerStyle: "subtoolbox" as const,
     },
+    videoCountOptions: [10, 15, 20, 25, 50],
+    formatOptions: ["All", "Shorts", "Long"] as string[],
   },
   engagementMapStarter: {
     header: {
@@ -456,5 +494,7 @@ export const subToolboxChartPresets = {
       subtitle: "TOP RECENT BY COMMENTS",
       headerStyle: "subtoolbox" as const,
     },
+    videoCountOptions: [10, 15, 20, 25, 50],
+    formatOptions: ["All", "Shorts", "Long"] as string[],
   },
 }

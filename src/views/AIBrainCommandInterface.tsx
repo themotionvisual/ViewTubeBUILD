@@ -94,6 +94,12 @@ const makeMessageId = () =>
   ? crypto.randomUUID()
   : `${Date.now()}-${Math.random().toString(36).slice(2)}`
 
+/** Opening prompts seeded from `?ask=` when a legacy route redirects into the hub. */
+const ASK_SEED_PROMPTS: Record<string, string> = {
+ "algorithm-diagnosis":
+  "Give me an algorithm diagnosis: walk through why my views are moving the way they are across impressions, click-through, and watch time, and tell me the one thing to test next.",
+}
+
 /**
  * The Brain's own opening read. Never an empty box and never a stock greeting: it
  * is composed from whatever real evidence exists, and names what is missing when
@@ -334,6 +340,7 @@ const AIBrainCommandInterface: React.FC = () => {
  const [contextRailOpen, setContextRailOpen] = useState(false)
  const [journalOpen, setJournalOpen] = useState(false)
  const composerRef = useRef<HTMLInputElement | null>(null)
+ const askSeededRef = useRef(false)
  const canUseGemini = hasGeminiKey()
  const promptCards = useMemo(() => buildCreatorBrainPromptCards(), [])
  const channelId = authState.channelHandle || authState.channelId || null
@@ -524,6 +531,20 @@ const AIBrainCommandInterface: React.FC = () => {
    setBusy(false)
   }
  }
+
+ // Legacy routes fold into the one conversation by seeding an opening question the
+ // Brain then routes internally, rather than selecting a mode. `/algorithm-architect`
+ // redirects here with `?ask=algorithm-diagnosis`.
+ useEffect(() => {
+  if (askSeededRef.current) return
+  const ask = new URLSearchParams(location.search).get("ask")
+  if (!ask) return
+  askSeededRef.current = true
+  const seed = ASK_SEED_PROMPTS[ask]
+  if (seed && messages.length === 0) void handleSend(seed)
+  navigate("/ai-brain", { replace: true })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [location.search])
 
  const handleFeedback = (message: ChatMessage, rating: AIBrainFeedbackSignal["rating"]) => {
   void (async () => {

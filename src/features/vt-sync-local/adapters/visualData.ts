@@ -204,6 +204,7 @@ export type VtSyncVisualPropsData = {
  rows: CanonicalVideoRow[]
  csvFiles: []
  canonicalContext: TubeExplorerCanonicalContext
+ trafficByDay: Array<Record<string, unknown>>
  diagnostics: {
   videos: number
   trafficRows: number
@@ -578,6 +579,12 @@ export const buildVtSyncVisualPropsData = (
  addTrafficRows(snapshot, trafficRows, snapshot.trafficYtPlaylistPage, "traffic_detail", "YT_PLAYLIST_PAGE")
  addTrafficRows(snapshot, trafficRows, snapshot.playbackLocations as VtSyncTrafficRow[], "traffic_playback_location", "PLAYBACK_LOCATION")
 
+ const trafficByDay = Array.isArray(snapshot.trafficByDay) && snapshot.trafficByDay.length > 0
+  ? snapshot.trafficByDay
+  : Array.isArray(snapshot.tableExports?.traffic_day)
+   ? snapshot.tableExports.traffic_day
+   : []
+
  const geographyRows = [
   ...snapshot.geography.map((row, index) => toGeographyRow(snapshot, row, "country", index)),
   ...snapshot.cities.map((row, index) => toGeographyRow(snapshot, row, "city", index)),
@@ -589,6 +596,7 @@ export const buildVtSyncVisualPropsData = (
  return {
   rows,
   csvFiles: [],
+  trafficByDay,
   canonicalContext: {
    trafficRows,
    geographyRows,

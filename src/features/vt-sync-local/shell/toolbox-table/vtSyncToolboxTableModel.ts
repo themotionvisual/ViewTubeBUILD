@@ -36,8 +36,49 @@ export type VtSyncTableProvenance = {
 
 export const VT_SYNC_ROW_NUMBER_WIDTH = 58
 export const VT_SYNC_ROW_BATCH_SIZE = 50
+
+const getVtSyncVideoIdFromUrl = (value: unknown): string | undefined => {
+ if (typeof value !== "string" || !value.trim()) return undefined
+ try {
+  const url = new URL(value)
+  const queryId = url.searchParams.get("v")?.trim()
+  if (queryId) return queryId
+  const pathParts = url.pathname.split("/").filter(Boolean)
+  if (url.hostname === "youtu.be") return pathParts[0]
+  const videoPathIndex = pathParts.findIndex((part) => part === "shorts" || part === "embed")
+  return videoPathIndex >= 0 ? pathParts[videoPathIndex + 1] : undefined
+ } catch {
+  return undefined
+ }
+}
+
+export const indexVtSyncVideoRowsById = (rows: VtSyncTableRow[]): Map<string, VtSyncTableRow> => {
+ const index = new Map<string, VtSyncTableRow>()
+ const metadataScore = (row: VtSyncTableRow): number => {
+  const title = String(row.title ?? "").trim()
+  const titleIsUseful = Boolean(title && !/^(metadata pending|video metadata unavailable|unknown title)/i.test(title))
+  return (titleIsUseful ? 4 : 0)
+   + (String(row.thumbnail ?? row.thumbnailUrl ?? "").trim() ? 2 : 0)
+   + (String(row.descriptionSnippet ?? row.description ?? "").trim() ? 1 : 0)
+ }
+ rows.forEach((row) => {
+  const ids = [row.videoId, row.id, getVtSyncVideoIdFromUrl(row.videoUrl), getVtSyncVideoIdFromUrl(row.url)]
+  ids.forEach((value) => {
+   const id = typeof value === "string" ? value.trim().replace(/^["']|["']$/g, "") : ""
+   if (!id) return
+   const current = index.get(id)
+   if (!current || metadataScore(row) > metadataScore(current)) index.set(id, row)
+   const normalizedId = id.toLocaleLowerCase()
+   const normalizedCurrent = index.get(normalizedId)
+   if (!normalizedCurrent || metadataScore(row) > metadataScore(normalizedCurrent)) index.set(normalizedId, row)
+  })
+ })
+ return index
+}
+
 const VT_SYNC_HALF_SIZE_SECONDS_COLUMNS = new Set(["watchTime", "youtubePremiumWatchTime", "estimatedRedMinutesWatched"])
 const VT_SYNC_VIDEO_COMPOSITE_HIDDEN_COLUMNS = new Set(["videoId", "publishedDay", "publishedTime"])
+const VT_SYNC_CHANNEL_PAGE_COMPOSITE_HIDDEN_COLUMNS = new Set(["title", "handle"])
 export const VT_SYNC_VIDEO_NON_COMPACT_WIDTHS = [91, 325, 97, 68, 132, 82, 92, 238, 79, 69, 80, 68, 68, 78, 79, 65, 79, 82, 73, 68, 72, 68, 75, 74, 69, 81, 68, 72, 68, 78, 68, 76, 68, 68, 68, 69, 68, 64, 78, 68, 68, 72, 82, 89, 82, 74, 81, 74, 73, 68, 68, 73, 68, 68, 91, 85, 85, 78] as const
 export const VT_SYNC_SMALL_TABLE_COLORS = ["#40C6E9", "#4FFF5B", "#FFFF61", "#FFB570", "#FF3B30", "#FF83EA", "#579AFF", "#CC00FF"] as const
 export const VT_SYNC_DEMOGRAPHIC_COLUMN_COLORS: Record<string, string> = {
@@ -200,6 +241,45 @@ const VT_SYNC_AD_TYPE_LABELS: Record<string, string> = {
  unknown: "Unknown Ad Type",
 }
 
+export const VT_SYNC_DEVICE_TYPE_LABELS: Record<string, string> = {
+ DESKTOP: "Desktop",
+ MOBILE: "Mobile Phone",
+ TABLET: "Tablet",
+ TV: "TV",
+ GAME_CONSOLE: "Game Console",
+ AUTOMOTIVE: "Automotive",
+ WEARABLE: "Wearable",
+ UNKNOWN_PLATFORM: "Unknown",
+}
+
+export const VT_SYNC_OPERATING_SYSTEM_LABELS: Record<string, string> = {
+ ANDROID: "Android",
+ IOS: "iOS",
+ WINDOWS: "Windows",
+ MACINTOSH: "macOS",
+ LINUX: "Linux",
+ CHROMECAST: "Chromecast",
+ SMART_TV: "Smart TV",
+ TIZEN: "Tizen",
+ WEBOS: "webOS",
+ PLAYSTATION: "PlayStation",
+ PLAYSTATION_VITA: "PS Vita",
+ XBOX: "Xbox",
+ NINTENDO_3DS: "Nintendo 3DS",
+ WII: "Wii",
+ SYMBIAN: "Symbian",
+ BLACKBERRY: "BlackBerry",
+ BADA: "Bada",
+ MEEGO: "MeeGo",
+ HIPTOP: "Hiptop",
+ KAIOS: "KaiOS",
+ FIREFOX: "Firefox OS",
+ REALMEDIA: "RealMedia",
+ DOCOMO: "DoCoMo",
+ VIDAA: "VIDAA",
+ OTHER: "Other",
+}
+
 /**
  * Adds human-readable UI copy for opaque YouTube API dimension values without
  * changing the registry-backed value used by snapshots, sorting, or exports.
@@ -213,7 +293,7 @@ export const getVtSyncApiValuePresentation = (
  const apiValue = String(value).trim()
  let title: string | undefined
 
- if (tableId === "traffic" && columnKey === "source") {
+ if ((tableId === "traffic" && columnKey === "source") || (tableId === "traffic_day" && columnKey === "term")) {
   title = VT_SYNC_TRAFFIC_SOURCE_LABELS[apiValue.toUpperCase()]
  } else if (tableId === "traffic_subscribers" && columnKey === "term") {
   const detailValue = apiValue.replace(/^SUBSCRIBER\./i, "").toLowerCase()
@@ -222,6 +302,10 @@ export const getVtSyncApiValuePresentation = (
   title = VT_SYNC_PLAYBACK_LOCATION_LABELS[apiValue.toUpperCase()]
  } else if (tableId === "ads" && columnKey === "adType") {
   title = VT_SYNC_AD_TYPE_LABELS[apiValue.toLowerCase()]
+ } else if ((tableId === "devices" || tableId === "device_os") && columnKey === "device") {
+  title = VT_SYNC_DEVICE_TYPE_LABELS[apiValue.toUpperCase()]
+ } else if ((tableId === "os" || tableId === "device_os") && columnKey === "operatingSystem") {
+  title = VT_SYNC_OPERATING_SYSTEM_LABELS[apiValue.toUpperCase()]
  }
 
  return title ? { title, apiValue } : null
@@ -534,11 +618,11 @@ export type VtSyncToolboxCategory = {
 }
 
 export const VT_SYNC_TOOLBOX_CATEGORIES: VtSyncToolboxCategory[] = [
- { id: "content", label: "Content", tableIds: ["videos", "playlists", "creator", "locations"], colors: { icon: "#ff83ea", label: "#40c6e9", shadow: "rgba(64,198,233,.52)" } },
+ { id: "content", label: "Content", tableIds: ["videos", "playlists", "creator", "locations", "retentions", "shares"], colors: { icon: "#ff83ea", label: "#40c6e9", shadow: "rgba(64,198,233,.52)" } },
  { id: "daily", label: "Daily", tableIds: ["daily", "weekly", "monthly"], colors: { icon: "#40c6e9", label: "#4fff5b", shadow: "rgba(79,255,91,.52)" } },
  { id: "channel", label: "Channel", tableIds: ["channel_totals"], colors: { icon: "#ffb570", label: "#579aff", shadow: "rgba(87,154,255,.52)" } },
- { id: "traffic", label: "Traffic", tableIds: ["traffic", "search", "ext_web", "suggested", "chan_page", "hashtags", "sound", "adv", "other_feat"], colors: { icon: "#ffff61", label: "#4fff5b", shadow: "rgba(79,255,91,.52)" } },
- { id: "audience", label: "Audience", tableIds: ["demographics", "subs", "devices", "os"], colors: { icon: "#cc00ff", label: "#ffff61", shadow: "rgba(255,255,97,.52)" } },
+ { id: "traffic", label: "Traffic", tableIds: ["traffic", "search", "ext_web", "suggested", "chan_page", "hashtags", "sound", "adv", "other_feat", "traffic_subscribers", "traffic_day"], colors: { icon: "#ffff61", label: "#4fff5b", shadow: "rgba(79,255,91,.52)" } },
+ { id: "audience", label: "Audience", tableIds: ["demographics", "subs", "sub_source", "devices", "os", "device_os"], colors: { icon: "#cc00ff", label: "#ffff61", shadow: "rgba(255,255,97,.52)" } },
  { id: "global", label: "Global", tableIds: ["geography", "cities", "provinces", "dma"], colors: { icon: "#4fff5b", label: "#ff83ea", shadow: "rgba(255,131,234,.52)" } },
  { id: "revenue", label: "Revenue", tableIds: ["ads"], colors: { icon: "#579aff", label: "#ff83ea", shadow: "rgba(255,131,234,.52)" } },
 ]
@@ -576,6 +660,294 @@ export const toVtSyncNumber = (value: unknown): number | undefined => {
  if (typeof value !== "string" || !value.trim()) return undefined
  const parsed = Number(value.replace(/[$,% ,]/g, ""))
  return Number.isFinite(parsed) ? parsed : undefined
+}
+
+export type VtSyncTrafficDaySourceRow = {
+ id: string
+ day: string
+ source: string
+ sourceLabel: string
+ sourceApiValue: string
+ row: VtSyncTableRow
+}
+
+export type VtSyncTrafficDayGroup = {
+ id: string
+ day: string
+ sortTime: number
+ totals: VtSyncTableRow
+ sources: VtSyncTrafficDaySourceRow[]
+}
+
+const getVtSyncTrafficDaySource = (row: VtSyncTableRow): string =>
+ String(row.term ?? row.source ?? row.insightTrafficSourceType ?? "Unknown").trim() || "Unknown"
+
+const getVtSyncTrafficDaySortTime = (day: string): number => {
+ const parsed = parseVtSyncDateValue(day)
+ if (parsed !== undefined) return parsed
+ const fallback = Date.parse(day)
+ return Number.isFinite(fallback) ? fallback : 0
+}
+
+const sumVtSyncTrafficDayMetric = (rows: VtSyncTableRow[], key: string): number | undefined => {
+ const values = rows.map((row) => toVtSyncNumber(row[key])).filter((value): value is number => value !== undefined)
+ return values.length ? values.reduce((sum, value) => sum + value, 0) : undefined
+}
+
+const weightedVtSyncTrafficDayMetric = (rows: VtSyncTableRow[], key: string): number | undefined => {
+ let totalWeight = 0
+ let weightedTotal = 0
+ rows.forEach((row) => {
+  const value = toVtSyncNumber(row[key])
+  const views = toVtSyncNumber(row.views)
+  if (value === undefined || views === undefined || views <= 0) return
+  weightedTotal += value * views
+  totalWeight += views
+ })
+ return totalWeight > 0 ? weightedTotal / totalWeight : undefined
+}
+
+export const buildVtSyncTrafficDayGroups = (
+ rows: VtSyncTableRow[],
+ columns: VtSyncTableColumnDefinition[] = [],
+): VtSyncTrafficDayGroup[] => {
+ const groups = new Map<string, VtSyncTableRow[]>()
+ rows.forEach((row) => {
+  const day = String(row.day ?? row.date ?? "").trim() || "Unknown Day"
+  groups.set(day, [...(groups.get(day) || []), row])
+ })
+
+ return [...groups.entries()].map(([day, dayRows]) => {
+  const totals: VtSyncTableRow = { day, term: day }
+  columns.forEach((column) => {
+   if (column.key === "term") totals.term = day
+   else if (column.key === "day") totals.day = day
+   else if (["views", "engagedViews", "watchTime", "trafficViewShare", "trafficWatchTimeShare"].includes(column.key)) {
+    totals[column.key] = sumVtSyncTrafficDayMetric(dayRows, column.key)
+   } else if (["avgDuration", "averageViewDuration", "avgPercentageViewed", "averagePercentageViewed"].includes(column.key)) {
+    totals[column.key] = weightedVtSyncTrafficDayMetric(dayRows, column.key)
+   }
+  })
+
+  return {
+   id: day,
+   day,
+   sortTime: getVtSyncTrafficDaySortTime(day),
+   totals,
+   sources: [...dayRows].sort((left, right) => (toVtSyncNumber(right.views) || 0) - (toVtSyncNumber(left.views) || 0)).map((row, index) => {
+    const source = getVtSyncTrafficDaySource(row)
+    const presentation = getVtSyncApiValuePresentation("traffic_day", "term", source)
+    return {
+     id: `${day}::${source}::${index}`,
+     day,
+     source,
+     sourceLabel: presentation?.title || source,
+     sourceApiValue: presentation?.apiValue || source,
+     row,
+    }
+   }),
+  }
+ }).sort((left, right) => {
+  if (left.sortTime !== right.sortTime) return right.sortTime - left.sortTime
+  return right.day.localeCompare(left.day)
+ })
+}
+
+export type VtSyncDeviceOsDeviceRow = {
+ id: string
+ os: string
+ device: string
+ deviceLabel: string
+ row: VtSyncTableRow
+}
+
+export type VtSyncDeviceOsGroup = {
+ id: string
+ os: string
+ osLabel: string
+ totals: VtSyncTableRow
+ devices: VtSyncDeviceOsDeviceRow[]
+}
+
+export const buildVtSyncDeviceOsGroups = (
+ rows: VtSyncTableRow[],
+ columns: VtSyncTableColumnDefinition[] = [],
+): VtSyncDeviceOsGroup[] => {
+ const groups = new Map<string, VtSyncTableRow[]>()
+ rows.forEach((row) => {
+  const os = String(row.operatingSystem ?? "Unknown").trim() || "Unknown"
+  groups.set(os, [...(groups.get(os) || []), row])
+ })
+
+ return [...groups.entries()].map(([os, osRows]) => {
+  const osPresentation = getVtSyncApiValuePresentation("device_os", "operatingSystem", os)
+  const osLabel = osPresentation?.title || os
+  const totals: VtSyncTableRow = { operatingSystem: os }
+  columns.forEach((column) => {
+   if (["views", "watchTime"].includes(column.key)) {
+    totals[column.key] = sumVtSyncTrafficDayMetric(osRows, column.key)
+   } else if (["avgDuration", "avgPercentageViewed"].includes(column.key)) {
+    totals[column.key] = weightedVtSyncTrafficDayMetric(osRows, column.key)
+   }
+  })
+
+  return {
+   id: os,
+   os,
+   osLabel,
+   totals,
+   devices: [...osRows].sort((left, right) => (toVtSyncNumber(right.views) || 0) - (toVtSyncNumber(left.views) || 0)).map((row, index) => {
+    const device = String(row.device ?? "Unknown").trim() || "Unknown"
+    const presentation = getVtSyncApiValuePresentation("device_os", "device", device)
+    return {
+     id: `${os}::${device}::${index}`,
+     os,
+     device,
+     deviceLabel: presentation?.title || device,
+     row,
+    }
+   }),
+  }
+ }).sort((left, right) => (toVtSyncNumber(right.totals.views) || 0) - (toVtSyncNumber(left.totals.views) || 0))
+}
+
+export type VtSyncRetentionPointRow = {
+ id: string
+ elapsed: number | undefined
+ row: VtSyncTableRow
+}
+
+export type VtSyncRetentionVideoGroup = {
+ id: string
+ videoId: string
+ summary: VtSyncTableRow
+ points: VtSyncRetentionPointRow[]
+}
+
+export type VtSyncRetentionVisualPoint = {
+ pointNumber: number
+ elapsedRatio: number
+ audienceRatio: number | undefined
+ relativePerformance: number | undefined
+ change: number | undefined
+ timestampSeconds: number | undefined
+ row: VtSyncTableRow
+}
+
+export type VtSyncRetentionVisualSegment = {
+ id: string
+ label: string
+ startPoint: number
+ endPoint: number
+ averageAudienceRatio: number | undefined
+ averageRelativePerformance: number | undefined
+}
+
+export type VtSyncRetentionVisualEvent = {
+ id: string
+ pointNumber: number
+ timestampSeconds: number | undefined
+ type: "drop" | "replay"
+ change: number
+ audienceRatio: number | undefined
+}
+
+export type VtSyncRetentionVisualModel = {
+ points: VtSyncRetentionVisualPoint[]
+ segments: VtSyncRetentionVisualSegment[]
+ events: VtSyncRetentionVisualEvent[]
+}
+
+const averageAvailableVtSyncValues = (rows: VtSyncTableRow[], key: string): number | undefined => {
+ const values = rows.map((row) => toVtSyncNumber(row[key])).filter((value): value is number => value !== undefined)
+ return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : undefined
+}
+
+export const buildVtSyncRetentionVideoGroups = (
+ rows: VtSyncTableRow[],
+): VtSyncRetentionVideoGroup[] => {
+ const groups = new Map<string, VtSyncTableRow[]>()
+ rows.forEach((row) => {
+  const videoId = String(row.videoId ?? "").trim() || "Unknown Video"
+  const group = groups.get(videoId)
+  if (group) group.push(row)
+  else groups.set(videoId, [row])
+ })
+
+ return [...groups.entries()].map(([videoId, videoRows]) => {
+  const points = videoRows.map((row, index) => ({
+   id: `${videoId}::${String(row.elapsedVideoTimeRatio ?? "unknown")}::${index}`,
+   elapsed: toVtSyncNumber(row.elapsedVideoTimeRatio),
+   row,
+  })).sort((left, right) => {
+   if (left.elapsed === undefined && right.elapsed === undefined) return left.id.localeCompare(right.id)
+   if (left.elapsed === undefined) return 1
+   if (right.elapsed === undefined) return -1
+   return left.elapsed - right.elapsed || left.id.localeCompare(right.id)
+  })
+  return {
+   id: videoId,
+   videoId,
+   summary: {
+    videoId,
+    audienceWatchRatio: averageAvailableVtSyncValues(videoRows, "audienceWatchRatio"),
+    relativeRetentionPerformance: averageAvailableVtSyncValues(videoRows, "relativeRetentionPerformance"),
+   },
+   points,
+  }
+ }).sort((left, right) => left.videoId.localeCompare(right.videoId))
+}
+
+export const buildVtSyncRetentionVisualModel = (
+ group: VtSyncRetentionVideoGroup,
+ durationSeconds?: number,
+): VtSyncRetentionVisualModel => {
+ const points = group.points.map((point, index): VtSyncRetentionVisualPoint => {
+  const elapsedRatio = point.elapsed ?? (index + 1) / Math.max(1, group.points.length)
+  const audienceRatio = toVtSyncNumber(point.row.audienceWatchRatio)
+  const previousAudience = index > 0 ? toVtSyncNumber(group.points[index - 1].row.audienceWatchRatio) : undefined
+  return {
+   pointNumber: Math.max(1, Math.min(100, Math.round(elapsedRatio * 100))),
+   elapsedRatio,
+   audienceRatio,
+   relativePerformance: toVtSyncNumber(point.row.relativeRetentionPerformance),
+   change: audienceRatio === undefined || previousAudience === undefined ? undefined : audienceRatio - previousAudience,
+   timestampSeconds: durationSeconds === undefined ? undefined : durationSeconds * elapsedRatio,
+   row: point.row,
+  }
+ })
+ const segmentLabels = ["Opening", "Early", "Middle", "Late", "Finish"]
+ const segments = segmentLabels.map((label, index): VtSyncRetentionVisualSegment => {
+  const startPoint = index * 20 + 1
+  const endPoint = (index + 1) * 20
+  const segmentPoints = points.filter((point) => point.pointNumber >= startPoint && point.pointNumber <= endPoint)
+  const average = (key: "audienceRatio" | "relativePerformance") => {
+   const values = segmentPoints.map((point) => point[key]).filter((value): value is number => value !== undefined)
+   return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : undefined
+  }
+  return {
+   id: `${group.id}::segment-${index + 1}`,
+   label,
+   startPoint,
+   endPoint,
+   averageAudienceRatio: average("audienceRatio"),
+   averageRelativePerformance: average("relativePerformance"),
+  }
+ })
+ const events = points
+  .filter((point): point is VtSyncRetentionVisualPoint & { change: number } => point.change !== undefined && point.change !== 0)
+  .sort((left, right) => Math.abs(right.change) - Math.abs(left.change) || left.pointNumber - right.pointNumber)
+  .slice(0, 5)
+  .sort((left, right) => left.pointNumber - right.pointNumber)
+  .map((point): VtSyncRetentionVisualEvent => ({
+   id: `${group.id}::event-${point.pointNumber}`,
+   pointNumber: point.pointNumber,
+   timestampSeconds: point.timestampSeconds,
+   type: point.change < 0 ? "drop" : "replay",
+   change: point.change,
+   audienceRatio: point.audienceRatio,
+  }))
+ return { points, segments, events }
 }
 
 export const toVtSyncDurationSeconds = (value: unknown): number | undefined =>
@@ -675,9 +1047,11 @@ export const getVisibleVtSyncColumns = (
 export const getVtSyncPresentationColumns = (
  tableId: string,
  columns: VtSyncTableColumnDefinition[],
-): VtSyncTableColumnDefinition[] => tableId === "videos"
- ? columns.filter((column) => !VT_SYNC_VIDEO_COMPOSITE_HIDDEN_COLUMNS.has(column.key))
- : columns
+): VtSyncTableColumnDefinition[] => {
+ if (tableId === "videos") return columns.filter((column) => !VT_SYNC_VIDEO_COMPOSITE_HIDDEN_COLUMNS.has(column.key))
+ if (tableId === "chan_page") return columns.filter((column) => !VT_SYNC_CHANNEL_PAGE_COMPOSITE_HIDDEN_COLUMNS.has(column.key))
+ return columns
+}
 
 const VT_SYNC_VIDEO_SORT_SEQUENCE: readonly VtSyncSortState[] = [
  { key: "title", direction: "asc" },
@@ -889,7 +1263,7 @@ const parseImportedValue = (value: unknown, column: VtSyncTableColumnDefinition)
  return trimmed
 }
 
-export const mapVtSyncCsvRowsToTable = (
+const mapVtSyncCsvRowsToTableFields = (
  table: VtSyncTableDefinition,
  rows: VtSyncTableRow[],
 ): VtSyncTableRow[] => {
@@ -907,8 +1281,13 @@ export const mapVtSyncCsvRowsToTable = (
   })
   return mapped
  }).filter((row) => Object.keys(row).length > 0)
- return normalizeVtSyncTableRows(table.id, mappedRows)
+ return mappedRows
 }
+
+export const mapVtSyncCsvRowsToTable = (
+ table: VtSyncTableDefinition,
+ rows: VtSyncTableRow[],
+): VtSyncTableRow[] => normalizeVtSyncTableRows(table.id, mapVtSyncCsvRowsToTableFields(table, rows))
 
 const tableForCsv = (fileName: string, rows: VtSyncTableRow[], fallbackTableId?: string): VtSyncTableDefinition | undefined => {
  const normalizedName = fileName.replace(/\.csv$/i, "").replace(/^viewtube-/i, "").replace(/-\d{4}-\d{2}-\d{2}$/i, "")
@@ -933,9 +1312,14 @@ export const importVtSyncCsvFiles = async (
  for (const file of Array.from(files)) {
   const parsed = parseVtSyncCsvText(await file.text())
   const table = tableForCsv(file.name, parsed, fallbackTableId)
-  if (table) imported[table.id] = mapVtSyncCsvRowsToTable(table, parsed)
+  if (table) imported[table.id] = [
+   ...(imported[table.id] || []),
+   ...mapVtSyncCsvRowsToTableFields(table, parsed),
+  ]
  }
- return imported
+ return Object.fromEntries(
+  Object.entries(imported).map(([tableId, rows]) => [tableId, normalizeVtSyncTableRows(tableId, rows)]),
+ )
 }
 
 export const formatVtSyncColumnValue = (row: VtSyncTableRow, column: VtSyncTableColumnDefinition): string => {

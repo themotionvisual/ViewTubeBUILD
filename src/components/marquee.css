@@ -175,3 +175,12 @@
   animation-fill-mode: forwards;
   animation-timing-function: ease-out;
 }
+
+/*
+ * Rounds the stacked block in TRAFFIC SOURCE EVOLUTION. Every area layer shares one
+ * clip rect (published by TrafficPlotClipDefs and sized to the plot area), so the
+ * union of the bands gets soft corners rather than each band rounding on its own.
+ */
+.tse-plot .recharts-area {
+  clip-path: url(#tse-plot-clip);
+}

@@ -8,11 +8,14 @@ import {
 import {
  buildVtSyncInventoryId,
  clearVtSyncLocalDb,
+ deleteVtSyncDatasetTableRows,
  getVtSyncChannelIndex,
  getVtSyncKnownVideoIds,
+ listVtSyncDatasetTableRows,
  listVtSyncVideoInventory,
  openVtSyncLocalDb,
  putVtSyncChannelIndex,
+ putVtSyncDatasetTableRows,
  putVtSyncVideoInventoryRecords,
 } from "./localDbRepository"
 
@@ -30,6 +33,31 @@ describe("VT Sync local IndexedDB repository", () => {
    expect(db.objectStoreNames.contains(storeName)).toBe(true)
   })
   db.close()
+ })
+
+ it("persists and clears stable per-table manual CSV records", async () => {
+  await putVtSyncDatasetTableRows({
+   id: "manual_import::creator",
+   runId: "manual_import::creator",
+   datasetId: "creator",
+   phase: "manual_import",
+   capturedAt: "2026-07-28T08:00:00.000Z",
+   rows: [{ term: "Shorts", views: 12 }],
+   provenance: "csv",
+   filenames: ["formats-a.csv", "formats-b.csv"],
+  })
+
+  expect(await listVtSyncDatasetTableRows()).toEqual([
+   expect.objectContaining({
+    id: "manual_import::creator",
+    datasetId: "creator",
+    filenames: ["formats-a.csv", "formats-b.csv"],
+    rows: [{ term: "Shorts", views: 12 }],
+   }),
+  ])
+
+  await deleteVtSyncDatasetTableRows("manual_import::creator")
+  expect(await listVtSyncDatasetTableRows()).toEqual([])
  })
 
  it("stores channel inventory by channel-scoped video IDs", async () => {

@@ -139,6 +139,12 @@ describe("Brain personalization and autonomous intent routing", () => {
   expect(analyticsTitles).toContain("Why This Is Happening")
   expect(revenueTitles).toContain("Revenue Lever")
   expect(analyticsTitles).not.toEqual(revenueTitles)
+
+  // An analytics answer carries the ranked video evidence it stands on, built
+  // from the channel's real top videos rather than prose.
+  const evidence = analytics.modules?.find((module) => module.id === "video-evidence-ranking")
+  expect(evidence?.data?.items?.[0]?.title).toBe("Restoring a Rusted Victorian Anvil")
+  expect(evidence?.data?.items?.[0]?.detail).toMatch(/views/)
  })
 
  it("binds what it says to the creator's own channel, not a reusable template", () => {
@@ -175,6 +181,33 @@ describe("Brain personalization and autonomous intent routing", () => {
 
   const ratios = actions.map((action) => action.reward / action.effort)
   expect(ratios).toEqual([...ratios].sort((left, right) => right - left))
+ })
+
+ it("grounds a would-be generic answer in the creator's real evidence", () => {
+  const snapshot = contextFor(syncedSnapshot(FORGE))
+
+  // A model reply that mentions none of the channel's specifics.
+  const response = formatCreatorBrainResponse(
+   "Focus on strong hooks and consistent uploads to grow your channel.",
+   snapshot,
+   { requestText: "How do I grow?" },
+  )
+
+  const text = `${response.keyInsight} ${response.body}`
+  // The floor injects a reference to the channel's strongest real signal.
+  expect(text).toContain("Restoring a Rusted Victorian Anvil")
+ })
+
+ it("does not double-anchor an answer that already cites the channel", () => {
+  const snapshot = contextFor(syncedSnapshot(FORGE))
+  const response = formatCreatorBrainResponse(
+   'Your video "Restoring a Rusted Victorian Anvil" shows the pattern to repeat.',
+   snapshot,
+   { requestText: "What worked?" },
+  )
+
+  const mentions = (response.body.match(/Restoring a Rusted Victorian Anvil/g) || []).length
+  expect(mentions).toBe(1)
  })
 
  it("names what is missing instead of inventing specifics for an empty channel", () => {

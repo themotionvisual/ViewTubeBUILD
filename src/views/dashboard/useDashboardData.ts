@@ -5,6 +5,7 @@ import { readYouTubeAnalyticsCache } from "../../services/analytics/DataStore"
 import { reportToRows } from "../performanceHubUtils"
 import { useVideoAssetCatalog } from "../../context/VideoAssetCatalogContext"
 import { useInitialChannelBootstrap } from "../../context/InitialChannelBootstrapContext"
+import { getVtSyncSnapshot } from "../../features/vt-sync-local/adapters/snapshot"
 import { getToolboxPaletteColors, getNavPaletteColor } from "../../styles/toolboxPalette"
 
 const formatHumanNumber = (value: unknown): string => {
@@ -24,11 +25,9 @@ const toSafeTimestamp = (value: unknown): number => {
 
 const toHighResYouTubeAvatar = (url?: string | null) => {
   if (!url) return ""
-  if (url.includes("googleusercontent.com")) {
-    return url
-      .replace(/=s\d+-c-k-c0x00ffffff-no-rj/, "=s800-c-k-c0x00ffffff-no-rj")
-      .replace(/=s\d+-c-k-c0x00ffffff-no-nd-rj/, "=s800-c-k-c0x00ffffff-no-nd-rj")
-      .replace(/=s\d+$/, "=s800")
+  // Google and YouTube image URLs (googleusercontent.com, yt3.ggpht.com) use =s[size] for scaling
+  if (url.includes("googleusercontent.com") || url.includes("yt3.ggpht.com") || url.includes("ggpht.com")) {
+    return url.replace(/=s\d+/, "=s800")
   }
   return url
 }
@@ -52,31 +51,95 @@ export const useDashboardData = () => {
 
   const summary28d = useMemo(() => getMetricSummary("28d", "hybrid", brain.csvFiles || []), [lastSyncComplete, channelHandle, brain.csvFiles])
   const summaryLifetime = useMemo(() => getMetricSummary("lifetime", "hybrid", brain.csvFiles || []), [lastSyncComplete, channelHandle, brain.csvFiles])
-  const canonicalRows = useMemo(() => getMasterRows("lifetime", "hybrid", brain.csvFiles || []), [lastSyncComplete, channelHandle, brain.csvFiles])
+  
+  const vtSyncSnapshot = useMemo(() => getVtSyncSnapshot(), [lastSyncComplete, isSyncing])
+  const canonicalRows = useMemo(() => {
+    const rows = getMasterRows("lifetime", "hybrid", brain.csvFiles || [])
+    if (rows.length === 0 && vtSyncSnapshot.videos.length > 0) {
+      // Map vt-sync video snapshot to canonical row shape as a fallback
+      return vtSyncSnapshot.videos.map(v => ({
+        videoId: v.id,
+        title: v.title,
+        uploadDate: v.publishedAt || "",
+        thumbnailUrl: v.thumbnail || "",
+        durationSec: 0,
+        views: v.metrics?.views || 0,
+        metrics: v.metrics,
+        originalData: v,
+      })) as any[]
+    }
+    return rows
+  }, [lastSyncComplete, channelHandle, brain.csvFiles, vtSyncSnapshot.videos])
 
-  // Prefer totals from the authoritative authState (initial sync) as requested
-  const authSubs = Number(authState.subscriberCount)
-  const authViews = Number(authState.totalViews)
+  // Prefer totals from the authoritative authState (initial sync) as requested, with fallback to vtSyncSnapshot, then summaryLifetime
+  const authSubs = Number(authState.subscriberCount || vtSyncSnapshot.subscriberCount || 0)
+  const authViews = Number(authState.totalViews || vtSyncSnapshot.channelViewCount || 0)
 
   const subsTotal = (authSubs && authSubs > 0) ? authSubs : (summaryLifetime.totals.subscribersGained || 0)
   const viewsTotal = (authViews && authViews > 0) ? authViews : (summaryLifetime.totals.views || 0)
   
   const resolvedSubscribers = Math.max(0, Math.round(subsTotal))
 
-  const views28d = summary28d.totals.views
-  const hours28d = summary28d.totals.watchHours
-  const revenue28d = summary28d.totals.revenue
-  const subscribers28d = summary28d.totals.subscribersGained
+  // Fallback: if getMetricSummary('28d') returned zeros, try initialBootstrap periods
+  const bootstrap28d = initialBootstrap?.periods?.find((s) =>
+    s.window === "28d" && (s.period || "current") === "current")
+  const bootstrapMetric = (key: string): number => {
+    const v = bootstrap28d?.metrics?.[key]
+    return typeof v === "number" && Number.isFinite(v) ? v : 0
+  }
+
+  const cache28dCheck = readYouTubeAnalyticsCache()
+
+  const dailySeries = useMemo(() => {
+    const ledgerPayload = cache28dCheck?.ledger?.["youtube_analytics_v2::channel::day::lifetime"]?.payload
+    const report = (ledgerPayload || cache28dCheck?.dailyMetrics) as any
+    if (report && Array.isArray(report.rows) && report.rows.length > 0) {
+      return reportToRows(report, "daily", "YouTube API")
+    }
+    
+    if (vtSyncSnapshot.dailyMetrics && vtSyncSnapshot.dailyMetrics.length > 0) {
+      return vtSyncSnapshot.dailyMetrics
+    }
+    
+    return (brain.channelHub as any)?.historicalSeries?.daily || []
+  }, [lastSyncComplete, vtSyncSnapshot.dailyMetrics, brain.channelHub, cache28dCheck])
+
+  const sortedDaily = [...dailySeries].sort((a, b) => {
+    const tA = new Date(a.date || a.day || a.Date || a.Day || 0).getTime()
+    const tB = new Date(b.date || b.day || b.Date || b.Day || 0).getTime()
+    return tB - tA
+  })
+  const last28 = sortedDaily.slice(0, 28)
+
+  const getRowMetricVal = (row: any, ...keys: string[]) => {
+    for (const k of keys) {
+      if (row && row[k] !== undefined && row[k] !== null && row[k] !== "") {
+        const val = Number(row[k])
+        if (!isNaN(val)) return val
+      }
+    }
+    return 0
+  }
+
+  const fallbackSum = (key1: string, key2?: string) => {
+    return last28.reduce((sum, row) => sum + getRowMetricVal(row, key1, key2 || ""), 0)
+  }
+
+  const views28d = summary28d.totals.views || bootstrapMetric("views") || fallbackSum("views")
+  const hours28d = summary28d.totals.watchHours || bootstrapMetric("watchHours") || (fallbackSum("watchTime", "estimatedMinutesWatched") / 60)
+  const revenue28d = summary28d.totals.revenue || bootstrapMetric("revenue") || fallbackSum("revenue", "estimatedRevenue")
+  const subscribers28d = summary28d.totals.subscribersGained || bootstrapMetric("netSubscribers") || bootstrapMetric("subscribersGained") || fallbackSum("subscribersGained", "subscribers")
 
   const hoursLifetime = summaryLifetime.totals.watchHours
   const revenueLifetime = summaryLifetime.totals.revenue
 
-
-
   const avgCtr = summary28d.averages.ctr
   const avgAvd = summary28d.averages.avdSeconds
 
-  const dataDaysCount = (globalSyncData?.dailyMetrics as any)?.rows?.length || 28
+  const dataDaysCount = (cache28dCheck?.ledger?.["youtube_analytics_v2::channel::day::lifetime"]?.payload as any)?.rows?.length
+    || (cache28dCheck?.dailyMetrics as any)?.rows?.length
+    || vtSyncSnapshot.dailyMetrics?.length
+    || 28
 
   const rawMetrics = {
     subsTotal,
@@ -103,13 +166,17 @@ export const useDashboardData = () => {
 
   const fast = authState.fastAnalytics
   const fastRevenue28d = fast?.subscribers28d ? revenue28d : 0 // Fallback logic
-  // Actually, let's just use the fast values if they exist and deep ones are 0
   const displayRevenue28d = revenue28d || 0
   const displaySubs28d = fast?.subscribers28d || subscribers28d || 0
-  const displayRevenueLifetime = fast?.lifetimeRevenue || revenueLifetime || 0
-  const displayWatchHoursLifetime = (fast?.lifetimeWatchMinutes ? fast.lifetimeWatchMinutes / 60 : hoursLifetime) || 0
+  
+  // Try to sum lifetime watch hours and revenue from vtSyncSnapshot if summaryLifetime is empty
+  const vtSyncLifetimeWatchHours = vtSyncSnapshot.videos?.reduce((acc, v) => acc + (v.metrics?.watchTime || 0), 0) || 0
+  const vtSyncLifetimeRevenue = vtSyncSnapshot.videos?.reduce((acc, v) => acc + (v.metrics?.revenue || 0), 0) || 0
+
+  const displayRevenueLifetime = fast?.lifetimeRevenue || revenueLifetime || vtSyncLifetimeRevenue || 0
+  const displayWatchHoursLifetime = (fast?.lifetimeWatchMinutes ? fast.lifetimeWatchMinutes / 60 : hoursLifetime) || vtSyncLifetimeWatchHours || 0
   const displayViewsLifetime = fast?.lifetimeViews || viewsTotal || 0
-  const displayVideoCount = Number(authState.videoCount || canonicalRows.length || 0)
+  const displayVideoCount = Number(authState.videoCount || vtSyncSnapshot.channelVideoCount || canonicalRows.length || 0)
 
   // 1.5/1.7 Calculations
   const calculatedRPM = displayViewsLifetime > 0 ? (displayRevenueLifetime / displayViewsLifetime) * 1000 : 0
@@ -166,30 +233,6 @@ export const useDashboardData = () => {
   const formatMetric = (value: number | null) => (value === null || value === undefined || isNaN(value)) ? "---" : formatHumanNumber(value)
   const formatMoney = (value: number | null) => (value === null || value === undefined || isNaN(value)) ? "---" : `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
 
-  const dailySeries = useMemo(() => {
-    const cache = readYouTubeAnalyticsCache()
-    const report = (globalSyncData?.dailyMetrics || cache?.dailyMetrics) as any
-    if (!report || !Array.isArray(report.rows)) return []
-    return reportToRows(report, "daily", "YouTube API")
-  }, [lastSyncComplete, globalSyncData])
-
-  const sortedDaily = [...dailySeries].sort((a, b) => {
-    const tA = new Date(a.date || a.day || a.Date || a.Day || 0).getTime()
-    const tB = new Date(b.date || b.day || b.Date || b.Day || 0).getTime()
-    return tB - tA
-  })
-  const last28 = sortedDaily.slice(0, 28)
-
-  const getRowMetricVal = (row: any, ...keys: string[]) => {
-    for (const k of keys) {
-      if (row && row[k] !== undefined && row[k] !== null && row[k] !== "") {
-        const val = metricCellValue(row[k]) ?? Number(row[k])
-        if (!isNaN(val)) return val
-      }
-    }
-    return 0
-  }
-
   const getTrendBars = (metricKeys: string[], days: number, data: any[]) => {
     if (data.length === 0) return [40, 60, 45, 80, 55, 90, 75]
     const chunks = [0, 0, 0, 0, 0, 0, 0]
@@ -214,7 +257,7 @@ export const useDashboardData = () => {
       const chunkIdx = Math.floor(i / chunkSize)
       if (chunkIdx < 7) {
         chunksViews[chunkIdx] += getRowMetricVal(row, "views", "Views")
-        const mins = getRowMetricVal(row, "estimatedMinutesWatched") || (getRowMetricVal(row, "watchHours", "Watch time (hours)") * 60)
+        const mins = getRowMetricVal(row, "estimatedMinutesWatched") || (getRowMetricVal(row, "watchTime", "watchHours", "Watch time (hours)") * 60)
         chunksMins[chunkIdx] += mins
       }
     })
@@ -248,27 +291,47 @@ export const useDashboardData = () => {
   const getKpiStatBlocks = (days: number) => {
     const currentData = sortedDaily.slice(0, days)
     const previousData = sortedDaily.slice(days, days * 2)
+    const hasDailySeries = currentData.length > 0
 
     const sumMetricKeys = (data: any[], ...keys: string[]) => data.reduce((acc, row) => acc + getRowMetricVal(row, ...keys), 0)
 
+    // If daily series is empty, use initialBootstrap period data as fallback
+    const windowKey = days <= 7 ? "7d" : days <= 28 ? "28d" : days <= 90 ? "90d" : days <= 365 ? "365d" : "lifetime"
+    const bootstrapCurrent = initialBootstrap?.periods?.find((s) =>
+      s.window === windowKey && (s.period || "current") === "current")
+    const bootstrapPrevious = initialBootstrap?.periods?.find((s) =>
+      s.window === windowKey && s.period === "previous")
+    const bm = (summary: typeof bootstrapCurrent, key: string): number => {
+      const v = summary?.metrics?.[key]
+      return typeof v === "number" && Number.isFinite(v) ? v : 0
+    }
+
     const curSubsGained = sumMetricKeys(currentData, "subscribersGained", "Subscribers gained", "subscribers", "Subscribers")
     const curSubsLost = sumMetricKeys(currentData, "subscribersLost", "Subscribers lost")
-    const curSubs = curSubsGained - curSubsLost
+    let curSubs = curSubsGained - curSubsLost
+    if (!hasDailySeries && curSubs === 0) curSubs = bm(bootstrapCurrent, "netSubscribers") || bm(bootstrapCurrent, "subscribersGained")
 
     const prevSubsGained = sumMetricKeys(previousData, "subscribersGained", "Subscribers gained", "subscribers", "Subscribers")
     const prevSubsLost = sumMetricKeys(previousData, "subscribersLost", "Subscribers lost")
-    const prevSubs = prevSubsGained - prevSubsLost
+    let prevSubs = prevSubsGained - prevSubsLost
+    if (!hasDailySeries && prevSubs === 0) prevSubs = bm(bootstrapPrevious, "netSubscribers") || bm(bootstrapPrevious, "subscribersGained")
 
-    const curViews = sumMetricKeys(currentData, "views", "Views")
-    const prevViews = sumMetricKeys(previousData, "views", "Views")
+    let curViews = sumMetricKeys(currentData, "views", "Views")
+    let prevViews = sumMetricKeys(previousData, "views", "Views")
+    if (!hasDailySeries && curViews === 0) curViews = bm(bootstrapCurrent, "views")
+    if (!hasDailySeries && prevViews === 0) prevViews = bm(bootstrapPrevious, "views")
 
-    const curMins = sumMetricKeys(currentData, "estimatedMinutesWatched") || (sumMetricKeys(currentData, "watchHours", "Watch time (hours)") * 60)
-    const prevMins = sumMetricKeys(previousData, "estimatedMinutesWatched") || (sumMetricKeys(previousData, "watchHours", "Watch time (hours)") * 60)
-    const curWatchHours = curMins / 60
-    const prevWatchHours = prevMins / 60
+    const curMins = sumMetricKeys(currentData, "estimatedMinutesWatched") || (sumMetricKeys(currentData, "watchTime", "watchHours", "Watch time (hours)") * 60)
+    const prevMins = sumMetricKeys(previousData, "estimatedMinutesWatched") || (sumMetricKeys(previousData, "watchTime", "watchHours", "Watch time (hours)") * 60)
+    let curWatchHours = curMins / 60
+    let prevWatchHours = prevMins / 60
+    if (!hasDailySeries && curWatchHours === 0) curWatchHours = bm(bootstrapCurrent, "watchHours")
+    if (!hasDailySeries && prevWatchHours === 0) prevWatchHours = bm(bootstrapPrevious, "watchHours")
 
-    const curRev = sumMetricKeys(currentData, "estimatedRevenue", "revenue", "Estimated revenue (USD)", "Your estimated revenue (USD)")
-    const prevRev = sumMetricKeys(previousData, "estimatedRevenue", "revenue", "Estimated revenue (USD)", "Your estimated revenue (USD)")
+    let curRev = sumMetricKeys(currentData, "estimatedRevenue", "revenue", "Estimated revenue (USD)", "Your estimated revenue (USD)")
+    let prevRev = sumMetricKeys(previousData, "estimatedRevenue", "revenue", "Estimated revenue (USD)", "Your estimated revenue (USD)")
+    if (!hasDailySeries && curRev === 0) curRev = bm(bootstrapCurrent, "revenue")
+    if (!hasDailySeries && prevRev === 0) prevRev = bm(bootstrapPrevious, "revenue")
 
     const curAVD = curViews > 0 ? (curWatchHours * 3600) / curViews : 0
     const prevAVD = prevViews > 0 ? (prevWatchHours * 3600) / prevViews : 0
@@ -312,7 +375,7 @@ export const useDashboardData = () => {
         secondaryIsIncrease: curWatchHours >= prevWatchHours,
         trend: null, 
         color: "#FFE357", 
-        bars: getTrendBars(["estimatedMinutesWatched", "watchHours", "Watch time (hours)"], days, currentData) 
+        bars: getTrendBars(["estimatedMinutesWatched", "watchTime", "watchHours", "Watch time (hours)"], days, currentData) 
       },
       { 
         id: "avg_avd", 
@@ -543,7 +606,9 @@ export const useDashboardData = () => {
       bucket.revenue += revenue
       return acc
     }, new Map<string, {month: string, week: string, revenue: number}>()).values()).slice(0, 12).reverse(),
-    avatarUrl: toHighResYouTubeAvatar(authState.channelThumbnail),
+    avatarUrl: toHighResYouTubeAvatar(authState.channelThumbnail || vtSyncSnapshot.avatarUrl),
+    channelTitle: authState.channelTitle || vtSyncSnapshot.channelName || "Your Channel",
+    channelCustomUrl: authState.channelCustomUrl || vtSyncSnapshot.channelCustomUrl || "@handle",
     formatRelativeTime,
     canonicalRows,
     videoAssets: videoAssetCatalog.items,

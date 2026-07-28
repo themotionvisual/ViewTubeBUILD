@@ -22,12 +22,12 @@ import MediaAnalyzer from "../views/MediaAnalyzer"
 import SeoGenerator from "../views/SeoGenerator"
 import VideoPublisher from "../views/VideoPublisher"
 import HookGenerator from "../views/HookGenerator"
-import AlgorithmArchitect from "../views/AlgorithmArchitect"
 import StoryboardStudio from "../views/StoryboardStudio"
 import { ComponentGridLab } from "../components/ComponentGridLab"
 import GraphsPage from "../views/GraphsPage"
 import GraphsShortsRetentionPage from "../views/GraphsShortsRetentionPage"
 import UserGuide from "../views/UserGuide"
+import About from "../views/About"
 import ComponentAudit from "../views/debug/ComponentAudit"
 import Subscribe from "../views/Subscribe"
 import VtSyncLocalAnalyticsPage from "../features/vt-sync-local/shell/VtSyncLocalAnalyticsPage"
@@ -83,6 +83,7 @@ export const AppRoutes: React.FC = () => {
    <Route path="/render-bench/reference-studio/:tabId" element={<ReferenceStudio />} />
    <Route path="/render-bench/:benchId" element={<StandaloneBench />} />
    <Route path="/user-guide" element={<UserGuide />} />
+   <Route path="/about" element={<About />} />
 
    {/* Charts Gallery aliases -> Reference Studio */}
    <Route path="/charts-gallery" element={<Navigate to="/reference-studio/charts-gallery" replace />} />
@@ -123,7 +124,9 @@ export const AppRoutes: React.FC = () => {
    <Route path="/video-publisher" element={<VideoPublisher />} />
    <Route path="/hook-generator" element={<HookGenerator />} />
    <Route path="/thumbnail-studio" element={<Navigate to="/reference-studio/thumbnail-studio" replace />} />
-   <Route path="/algorithm-architect" element={<AlgorithmArchitect />} />
+   {/* Algorithm Architect is now an evidence-backed mode of the Brain, not a
+       separate page. The component still exists for Reference Studio / bench. */}
+   <Route path="/algorithm-architect" element={<Navigate to="/ai-brain?ask=algorithm-diagnosis" replace />} />
    <Route path="/storyboard-studio" element={<StoryboardStudio />} />
    <Route path="/component-grid-lab" element={<ComponentGridLab />} />
    <Route path="/audit" element={<ComponentAudit />} />

@@ -1,12 +1,10 @@
-import React, { useMemo, useRef, useState } from "react"
+import React, { useLayoutEffect, useMemo, useRef, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { Brain, Database, Download, FileJson, GitBranch, ShieldCheck, Upload, Zap } from "lucide-react"
+import { Brain, Copy, Download, FileJson, ShieldCheck, Upload, Zap } from "lucide-react"
 import { useBrain } from "../../../context/useBrain"
 import { legacyAccountBridge } from "../../../services/account/legacyAccountBridge"
 import { useUnifiedAccount } from "../../../context/UnifiedAccountContext"
 import {
- VT_SYNC_LOCAL_ANALYTICS_FLAG,
- VT_SYNC_UPSTREAM_REPO_PATH,
  buildVtSyncBrainContext,
  buildVtSyncBrainContextText,
  getVtSyncSnapshot,
@@ -15,62 +13,335 @@ import {
  saveVtSyncSnapshot,
  toVtSyncRawAppExport,
  type VtSyncBrainContext,
+ type VtSyncCategoryDefinition,
+ type VtSyncDatasetFreshness,
  type VtSyncLocalSyncProgress,
  type VtSyncSnapshot,
  VT_SYNC_SERVER_ACCOUNT_TOKEN,
+ VT_SYNC_CATEGORY_OPTIONS,
+ expandVtSyncCategoryDependencies,
+ getVtSyncDefaultCategoryIds,
  applyVtSyncPrivacyFilters,
  readVtSyncPrivacyFilters,
  type VtSyncPrivacyFilters,
 } from ".."
+import { ToolboxScaffold } from "../../../components/Toolbox"
 import { VtSyncControllerPanel } from "./VtSyncControllerPanel"
+import { buildVtSyncCreatorHeroModel, VtSyncCreatorHero } from "./VtSyncCreatorHero"
 import { VtSyncToolboxDataTable } from "./toolbox-table/VtSyncToolboxDataTable"
 import "./VtSyncLocalAnalyticsPage.css"
 import { VtSyncDataVisualsToolbox } from "./VtSyncDataVisualsToolbox"
 
-const viteEnv = (import.meta as unknown as { env?: Record<string, string | undefined> }).env || {}
-const flagEnabled = String(viteEnv.VITE_USE_VT_SYNC_LOCAL_ANALYTICS || "false") === "true"
-
 const shellCard = "rounded-[22px] border-[4px] border-black bg-white shadow-[8px_8px_0_0_#000]"
 const pill = "rounded-full border-[3px] border-black px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-black"
 
-const numberText = (value: unknown): string => {
- if (typeof value === "number" && Number.isFinite(value)) return value.toLocaleString()
- if (typeof value === "string" && value.trim()) return value
- return "0"
+const syncStatusLabel = (status?: string) => {
+ switch (status) {
+  case "idle": return "Waiting"
+  case "pending": return "Waiting"
+  case "running": return "Syncing"
+  case "complete": return "Complete"
+  case "synced": return "Synced"
+  case "partial": return "Partial: Saved What YouTube Returned"
+  case "failed": return "Failed: Check Message"
+  case "skipped": return "Skipped"
+  case "stale": return "Previous Snapshot"
+  case "placeholder": return "Waiting"
+  case "never": return "Never Synced"
+  default: return String(status || "Unknown")
+ }
 }
 
-const VtSyncStatCard: React.FC<{ label: string; value: React.ReactNode; tone: string; sub?: string }> = ({ label, value, tone, sub }) => (
- <section className={`${shellCard} p-5`} style={{ backgroundColor: tone }}>
-  <div className="text-[11px] font-black uppercase tracking-[0.2em] text-black/60">{label}</div>
-  <div className="mt-2 text-3xl font-black uppercase tracking-[-0.05em] text-black">{value}</div>
-  {sub ? <div className="mt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-black/60">{sub}</div> : null}
- </section>
-)
+const syncStatusTone = (status?: string) => {
+ if (status === "complete" || status === "synced") return "#4FFF5B"
+ if (status === "partial") return "#FFDA47"
+ if (status === "failed") return "#FA618A"
+ if (status === "running") return "#FFFF61"
+ if (status === "skipped" || status === "stale" || status === "placeholder") return "#FFA85C"
+ if (status === "never") return "#e9eaec"
+ return "#ffffff"
+}
 
-const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null }> = ({ progress }) => {
- if (!progress) return null
+const freshnessStatusRank: Record<string, number> = { failed: 4, partial: 3, placeholder: 2, stale: 1, synced: 0 }
+
+const sourceApiLabel = (value: string) => ({
+ youtube_data_v3: "YouTube Data API v3",
+ youtube_analytics_v2: "YouTube Analytics API",
+ google_workspace: "Google Workspace API",
+ derived: "Derived locally",
+ local_import: "Local import",
+}[value] || value.replace(/_/g, " "))
+
+const formatRelativeTime = (iso?: string): string => {
+ if (!iso) return "Never"
+ const ms = Date.now() - new Date(iso).getTime()
+ if (!Number.isFinite(ms)) return "Never"
+ if (ms < 0 || ms < 60_000) return "Just now"
+ const min = Math.floor(ms / 60_000)
+ if (min < 60) return `${min}m ago`
+ const hr = Math.floor(min / 60)
+ if (hr < 24) return `${hr}h ago`
+ const day = Math.floor(hr / 24)
+ if (day < 30) return `${day}d ago`
+ return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+}
+
+type DatasetStatusRow = {
+ category: VtSyncCategoryDefinition
+ status: string
+ rows: number
+ updatedAt?: string
+ missingMetrics: string[]
+ source: string
+}
+
+const summarizeDatasetFreshness = (
+ freshness: VtSyncDatasetFreshness | undefined,
+ category: VtSyncCategoryDefinition,
+): DatasetStatusRow => {
+ const entries = Object.values(freshness || {}).filter((entry) => entry.phase === category.id)
+ if (entries.length === 0) {
+  return {
+   category,
+   status: "never",
+   rows: 0,
+   updatedAt: undefined,
+   missingMetrics: [],
+   source: sourceApiLabel(category.sourceApi),
+  }
+ }
+ const status = entries.reduce((worst, entry) => {
+  const candidate = entry.status || "synced"
+  return (freshnessStatusRank[candidate] ?? -1) > (freshnessStatusRank[worst] ?? -1) ? candidate : worst
+ }, entries[0].status || "synced")
+ const updatedAt = entries.reduce<string | undefined>(
+  (latest, entry) => (entry.updatedAt && (!latest || entry.updatedAt > latest) ? entry.updatedAt : latest),
+  undefined,
+ )
+ return {
+  category,
+  status,
+  rows: Math.max(...entries.map((entry) => entry.rows || 0)),
+  updatedAt,
+  missingMetrics: entries.flatMap((entry) => entry.missingMetrics || []),
+  source: sourceApiLabel(category.sourceApi),
+ }
+}
+
+const writeClipboardText = async (text: string) => {
+ if (navigator.clipboard?.writeText) {
+  await navigator.clipboard.writeText(text)
+  return
+ }
+ const textarea = document.createElement("textarea")
+ textarea.value = text
+ textarea.setAttribute("readonly", "true")
+ textarea.style.position = "fixed"
+ textarea.style.left = "-9999px"
+ document.body.appendChild(textarea)
+ textarea.select()
+ document.execCommand("copy")
+ document.body.removeChild(textarea)
+}
+
+export type VtSyncUnifiedProgressRow = ReturnType<typeof summarizeDatasetFreshness> & {
+ phaseLabel: string
+ displayStatus: string
+ displayRows: number
+ message: string
+}
+
+export const claimVtSyncSyncRequest = (lock: { current: boolean }): boolean => {
+ if (lock.current) return false
+ lock.current = true
+ return true
+}
+
+export const buildVtSyncUnifiedProgressRows = (
+ progress: VtSyncLocalSyncProgress | null,
+ datasetFreshness?: VtSyncDatasetFreshness,
+): VtSyncUnifiedProgressRow[] => {
+ const liveByPhase = new Map((progress?.phases || []).map((phase) => [phase.id, phase]))
+ const requested = new Set(progress?.requestedCategoryIds || [])
+ const requestedPhaseCounts = new Map<string, number>()
+ VT_SYNC_CATEGORY_OPTIONS.forEach((category) => {
+  if (!requested.has(category.id)) return
+  requestedPhaseCounts.set(category.runtimePhaseId, (requestedPhaseCounts.get(category.runtimePhaseId) || 0) + 1)
+ })
+ return VT_SYNC_CATEGORY_OPTIONS.map((category) => {
+  const stored = summarizeDatasetFreshness(datasetFreshness, category)
+  const live = liveByPhase.get(category.runtimePhaseId)
+  const isLiveRequest = Boolean(progress?.status === "running" && requested.has(category.id) && live)
+  const hasDedicatedLiveRowCount = requestedPhaseCounts.get(category.runtimePhaseId) === 1
+  const displayStatus = isLiveRequest ? live!.status : stored.status
+  return {
+   ...stored,
+   phaseLabel: live?.label || category.phase.replace(/_/g, " "),
+   displayStatus,
+   displayRows: isLiveRequest && hasDedicatedLiveRowCount ? live!.rows : stored.rows,
+   message: isLiveRequest
+    ? live!.error || live!.message || (live!.status === "pending" ? "Waiting for prerequisite phases." : "Sync is active.")
+    : stored.missingMetrics.length
+     ? `Missing: ${stored.missingMetrics.join(", ")}`
+     : stored.updatedAt ? "Stored dataset is available." : "This dataset has not been synced yet.",
+  }
+ })
+}
+
+const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; datasetFreshness?: VtSyncDatasetFreshness }> = ({ progress, datasetFreshness }) => {
+ const [copyStatus, setCopyStatus] = useState("")
+ const phases = progress?.phases || []
+ const unifiedRows = useMemo(
+  () => buildVtSyncUnifiedProgressRows(progress, datasetFreshness),
+  [datasetFreshness, progress],
+ )
+ const datasetRows = useMemo(
+  () => unifiedRows.map(({ phaseLabel: _phaseLabel, displayStatus: _displayStatus, displayRows: _displayRows, message: _message, ...row }) => row),
+  [unifiedRows],
+ )
+ const latestDatasetAt = useMemo(
+  () => [...datasetRows]
+   .sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())
+   .find((row) => row.updatedAt)?.updatedAt,
+  [datasetRows],
+ )
+ const visibleUnifiedRows = useMemo(
+  () => [...unifiedRows].sort((left, right) => {
+   const leftRequested = progress?.requestedCategoryIds.includes(left.category.id) ? 1 : 0
+   const rightRequested = progress?.requestedCategoryIds.includes(right.category.id) ? 1 : 0
+   return rightRequested - leftRequested || new Date(right.updatedAt || 0).getTime() - new Date(left.updatedAt || 0).getTime()
+  }),
+  [progress?.requestedCategoryIds, unifiedRows],
+ )
+ const datasetTally = datasetRows.reduce<Record<string, number>>((acc, row) => {
+  acc[row.status] = (acc[row.status] || 0) + 1
+  return acc
+ }, {})
+ const datasetTotalRows = datasetRows.reduce((sum, row) => sum + row.rows, 0)
+ const copyProgressSummary = async () => {
+  const datasetLines = [
+   "",
+   "Stored dataset status",
+   `Latest dataset update: ${formatRelativeTime(latestDatasetAt)}`,
+   `Stored rows shown by dataset cards: ${datasetTotalRows.toLocaleString()}`,
+   `Successes: ${(datasetTally.synced || 0).toLocaleString()}`,
+   `Partials: ${(datasetTally.partial || 0).toLocaleString()}`,
+   `Failures: ${(datasetTally.failed || 0).toLocaleString()}`,
+   `Never synced: ${(datasetTally.never || 0).toLocaleString()}`,
+   "",
+   ...visibleUnifiedRows.map((row) => [
+    `- ${row.category.label}`,
+    `  Phase: ${row.phaseLabel}`,
+    `  Status: ${syncStatusLabel(row.displayStatus)}`,
+    `  Rows: ${row.displayRows.toLocaleString()}`,
+    `  Updated: ${row.updatedAt ? new Date(row.updatedAt).toLocaleString() : "Never"}`,
+    `  Message: ${row.message}`,
+   ].join("\n")),
+  ]
+  const lines = progress ? [
+   "ViewTube VT-SYNC Progress Summary",
+   `Run ID: ${progress.runId}`,
+   `Started: ${new Date(progress.startedAt).toLocaleString()}`,
+   `Status: ${syncStatusLabel(progress.status)}`,
+   progress.completedAt ? `Completed: ${new Date(progress.completedAt).toLocaleString()}` : "Completed: not yet",
+   "",
+   ...datasetLines,
+  ] : [
+   "ViewTube VT-SYNC Progress Summary",
+   "Status: No active sync yet.",
+   "Next step: Choose datasets in YouTube Data Sync, then start a sync.",
+   ...datasetLines,
+  ]
+  try {
+   await writeClipboardText(lines.join("\n"))
+   setCopyStatus("Sync progress summary copied.")
+  } catch {
+   setCopyStatus("Could not copy sync progress.")
+  }
+ }
  return (
-  <section className={`${shellCard} bg-white p-5`}>
-   <div className="mb-4 flex items-center justify-between gap-3">
-    <div>
-     <h2 className="text-2xl font-black uppercase tracking-[-0.04em]">Sync Progress</h2>
-     <p className="mt-1 text-xs font-bold uppercase tracking-[0.1em] text-black/55">Run ID: {progress.runId}</p>
+  <ToolboxScaffold
+   title="SYNC PROGRESS"
+   subtitle="Dataset history, sync outcomes, rows, and recent updates."
+   iconName="analytics"
+   headerColor="bg-[#C0F240]"
+   iconBoxColor="bg-[#36E0F6]"
+   paletteIndex={3}
+   embedded
+   fillAvailable
+   shellClassName="h-full"
+   contentClassName="flex min-h-0 flex-1 flex-col bg-white p-4"
+   headerActions={
+    <div className="flex flex-wrap items-center gap-2">
+     <span className="rounded-full border-[2px] border-black bg-[#FFDA47] px-3 py-1 text-[10px] font-black uppercase leading-none tabular-nums">{phases.length} phases</span>
+     <span className="rounded-full border-[2px] border-black px-3 py-1 text-[10px] font-black uppercase leading-none" style={{ backgroundColor: syncStatusTone(progress?.status || "idle") }}>{syncStatusLabel(progress?.status || "idle")}</span>
+     <span className="rounded-full border-[2px] border-black bg-white px-3 py-1 text-[10px] font-black uppercase leading-none tabular-nums">{datasetTotalRows.toLocaleString()} rows</span>
     </div>
-    <span className={`rounded-full border-[3px] border-black px-4 py-2 text-[10px] font-black uppercase ${progress.status === "complete" ? "bg-[#4FFF5B]" : progress.status === "failed" ? "bg-[#FF8AAF]" : "bg-[#FFFF61]"}`}>{progress.status}</span>
-   </div>
-   <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-    {progress.phases.map((phase) => (
-     <div key={phase.id} className="rounded-[16px] border-[3px] border-black bg-[#f3f4f6] p-3">
-      <div className="text-xs font-black uppercase tracking-[0.08em]">{phase.label}</div>
-      <div className="mt-2 flex items-center justify-between gap-2 text-[10px] font-black uppercase tracking-[0.08em]">
-       <span className={`rounded-full border-[2px] border-black px-2 py-1 ${phase.status === "complete" ? "bg-[#4FFF5B]" : phase.status === "failed" ? "bg-[#FF8AAF]" : phase.status === "running" ? "bg-[#FFFF61]" : "bg-white"}`}>{phase.status}</span>
-       <span>{phase.rows} rows</span>
-      </div>
-      {phase.error || phase.message ? <div className="mt-2 text-[10px] font-bold uppercase leading-relaxed tracking-[0.05em] text-black/60">{phase.error || phase.message}</div> : null}
+   }
+  >
+   <div className="flex min-h-0 w-full flex-1 flex-col bg-white">
+    <div className="mb-3 flex flex-wrap items-center gap-2">
+     <button type="button" onClick={copyProgressSummary} className={`${pill} bg-[#FF83EA] shadow-[3px_3px_0_0_#000]`}>
+      <Copy className="mr-1.5 inline h-4 w-4" aria-hidden="true" />
+      Copy Sync Summary
+     </button>
+    </div>
+   <div className="sr-only" aria-live="polite">{copyStatus}</div>
+   {copyStatus ? <p className="mb-3 rounded-[12px] border-[2px] border-black bg-[#FFFF61] px-3 py-2 text-[10px] font-black uppercase tracking-[0.06em]">{copyStatus}</p> : null}
+   <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[16px] border-[3px] border-black bg-[#f3f4f6]">
+    <header className="flex flex-wrap items-center justify-between gap-2 border-b-[3px] border-black bg-[#36E0F6] px-3.5 py-3">
+     <div>
+      <h3 className="text-[15px] font-black uppercase tracking-[-0.01em]">Dataset and Phase Status</h3>
+      <p className="mt-1 text-[10px] font-black uppercase tracking-[0.08em] text-black/55">Live phase state takes precedence; stored freshness remains visible between runs.</p>
      </div>
-    ))}
+     <span className="rounded-full border-[2px] border-black bg-white px-3 py-1 text-[10px] font-black uppercase leading-none">{formatRelativeTime(latestDatasetAt)}</span>
+    </header>
+    <div className="grid gap-2 p-3 sm:grid-cols-2 xl:grid-cols-4">
+     {[
+      ["Synced", datasetTally.synced || 0, "#4FFF5B"],
+      ["Partial", datasetTally.partial || 0, "#FFDA47"],
+      ["Failed", datasetTally.failed || 0, "#FA618A"],
+      ["Never", datasetTally.never || 0, "#e9eaec"],
+     ].map(([label, value, tone]) => (
+      <div key={String(label)} className="rounded-[12px] border-[2px] border-black bg-white p-3 shadow-[2px_2px_0_0_#000]">
+       <span className="text-[9px] font-black uppercase tracking-[0.14em] text-black/45">{label}</span>
+       <strong className="mt-1 block text-2xl font-black tabular-nums">{Number(value).toLocaleString()}</strong>
+       <span className="mt-1 block h-2 rounded-full border border-black" style={{ backgroundColor: String(tone) }} />
+      </div>
+     ))}
+    </div>
+    <div className="min-h-0 flex-1 overflow-auto border-t-[3px] border-black bg-white custom-scrollbar">
+     <table className="w-full border-collapse text-left font-black uppercase tabular-nums">
+      <thead className="sticky top-0 z-10 bg-black text-[9.5px] tracking-[0.08em] text-[#FFFF61]">
+       <tr>
+        <th scope="col" className="px-3 py-2.5">Dataset</th>
+        <th scope="col" className="px-3 py-2.5">Phase</th>
+        <th scope="col" className="px-3 py-2.5">Status</th>
+        <th scope="col" className="px-3 py-2.5 text-right">Rows</th>
+        <th scope="col" className="px-3 py-2.5">Updated</th>
+        <th scope="col" className="px-3 py-2.5">Message</th>
+       </tr>
+      </thead>
+      <tbody className="text-[10.5px]">
+       {visibleUnifiedRows.map((row) => (
+        <tr key={row.category.id} className="border-t-[2px] border-black align-top">
+         <th scope="row" className="px-3 py-2.5">
+          <span className="block text-[11px] tracking-[-0.01em]">{row.category.label}</span>
+          <span className="mt-0.5 block text-[9px] tracking-[0.08em] text-black/45">{row.source}</span>
+         </th>
+         <td className="px-3 py-2.5 text-black/65">{row.phaseLabel}</td>
+         <td className="px-3 py-2.5"><span className="inline-flex rounded-full border-[2px] border-black px-2.5 py-1 text-[9px] leading-none" style={{ backgroundColor: syncStatusTone(row.displayStatus) }}>{syncStatusLabel(row.displayStatus)}</span></td>
+         <td className="px-3 py-2.5 text-right">{row.displayRows.toLocaleString()}</td>
+         <td className="px-3 py-2.5 text-black/60">{formatRelativeTime(row.updatedAt)}</td>
+         <td className="max-w-[260px] px-3 py-2.5 text-black/60">{row.message}</td>
+        </tr>
+       ))}
+      </tbody>
+     </table>
+    </div>
+   </section>
    </div>
-  </section>
+  </ToolboxScaffold>
  )
 }
 
@@ -90,7 +361,25 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
  const [syncError, setSyncError] = useState<string>("")
  const [busy, setBusy] = useState(false)
  const [authTick, setAuthTick] = useState(0)
+ const [controllerPanelHeight, setControllerPanelHeight] = useState<number>()
  const jsonInputRef = useRef<HTMLInputElement | null>(null)
+ const controllerPanelRef = useRef<HTMLDivElement | null>(null)
+ const progressPanelRef = useRef<HTMLDivElement | null>(null)
+ const syncRequestActiveRef = useRef(false)
+
+ useLayoutEffect(() => {
+  const node = controllerPanelRef.current
+  if (!node) return
+  const updateHeight = () => {
+   const nextHeight = Math.ceil(node.getBoundingClientRect().height)
+   setControllerPanelHeight((current) => current === nextHeight ? current : nextHeight)
+  }
+  updateHeight()
+  if (typeof ResizeObserver === "undefined") return
+  const observer = new ResizeObserver(updateHeight)
+  observer.observe(node)
+  return () => observer.disconnect()
+ }, [])
 
  const authReady = useMemo(
   () => account.serverEnabled
@@ -98,7 +387,19 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
    : legacyAccountBridge.isAuthenticated(),
   [account.serverEnabled, account.snapshot.authentication.status, account.snapshot.google.youtubeScopesGranted, authTick],
  )
- const sessionMeta = useMemo(() => legacyAccountBridge.getSessionMeta(), [authTick])
+ const creatorHeroModel = useMemo(() => buildVtSyncCreatorHeroModel({
+  authReady,
+  snapshot,
+  visibleVideos: consumerSnapshot.videos,
+  progress: syncProgress,
+  syncError,
+ }), [authReady, consumerSnapshot.videos, snapshot, syncError, syncProgress])
+
+ const scrollToPanel = (node: HTMLElement | null) => {
+  if (!node) return
+  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+  node.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" })
+ }
 
  const publishSnapshot = (next: VtSyncSnapshot) => {
   setSnapshot(next)
@@ -131,6 +432,7 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
  }
 
  const startSync = async (categoryIds: string[], retentionVideoIds?: string[]) => {
+  if (!claimVtSyncSyncRequest(syncRequestActiveRef)) return
   setBusy(true)
   setSyncError("")
   try {
@@ -147,9 +449,10 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
     setAuthTick((tick) => tick + 1)
    }
    if (!token) throw new Error("No valid Google access token is available after authorization.")
+   const requestedCategoryIds = expandVtSyncCategoryDependencies(categoryIds)
    const next = await runVtSyncLocalSync({
     token,
-   selectedCategories: categoryIds,
+   selectedCategories: requestedCategoryIds,
    retentionVideoIds,
    previousSnapshot: snapshot,
    onProgress: setSyncProgress,
@@ -158,13 +461,14 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
    publishSnapshot(next)
    await emitSignal("vt-sync-local-analytics", "local_sync_complete", {
     snapshotId: next.snapshotId,
-    categories: categoryIds,
+    categories: requestedCategoryIds,
     manifest: next.syncManifest,
     note: "Local VT-SYNC page sync only. No canonical sink or Performance Hub writes.",
    })
   } catch (error) {
    setSyncError(error instanceof Error ? error.message : String(error))
   } finally {
+   syncRequestActiveRef.current = false
    setBusy(false)
   }
  }
@@ -231,63 +535,33 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
  return (
   <div className="vt-sync-local-page min-h-screen bg-[#f3f4f6] px-4 py-6 text-black sm:px-6 lg:px-8">
    <div className="mx-auto max-w-[1500px] space-y-6">
-    <header className={`${shellCard} overflow-hidden bg-[#C9F830]`}>
-     <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
-      <div className="p-6 sm:p-8">
-       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <span className={`${pill} bg-white`}>VT-SYNC LOCAL</span>
-        <span className={`${pill} ${flagEnabled ? "bg-[#4FFF5B]" : "bg-[#FFE357]"}`}>{flagEnabled ? "FLAG ON" : "FLAG OFF"}</span>
-        <span className={`${pill} bg-[#FF8AAF]`}>NO CANONICAL WRITES</span>
-       </div>
-       <h1 className="max-w-4xl text-5xl font-black uppercase leading-[0.85] tracking-[-0.08em] sm:text-7xl">
-        VT-SYNC Tools Page
-       </h1>
-       <p className="mt-5 max-w-3xl text-sm font-bold uppercase leading-relaxed tracking-[0.08em]">
-        This page runs VT-SYNC sync tools, data tables, diagnostics, and Brain context locally first. It uses the Google OAuth token for YouTube APIs but does not write into canonical analytics or alter Performance Hub behavior.
-       </p>
-      </div>
-      <div className="border-t-[4px] border-black bg-white p-6 lg:border-l-[4px] lg:border-t-0">
-       <div className="grid gap-3 text-xs font-black uppercase tracking-[0.14em]">
-        <div className="flex items-center gap-3 rounded-[16px] border-[3px] border-black bg-[#59BFFF] p-4">
-         <GitBranch className="h-5 w-5" />
-         <span>Upstream: {VT_SYNC_UPSTREAM_REPO_PATH}</span>
-        </div>
-        <div className="flex items-center gap-3 rounded-[16px] border-[3px] border-black bg-[#FF83EA] p-4">
-         <ShieldCheck className="h-5 w-5" />
-         <span>OAuth: {authReady ? "Connected" : "Not connected"}</span>
-        </div>
-        <div className="flex items-center gap-3 rounded-[16px] border-[3px] border-black bg-[#FFFF61] p-4">
-         <Database className="h-5 w-5" />
-         <span>Storage: VT-SYNC local snapshot only</span>
-        </div>
-       </div>
-      </div>
-     </div>
-    </header>
-
-    <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-     <VtSyncStatCard label="Channel" value={snapshot.channelName || "No Channel"} tone="#ffffff" sub={snapshot.channelCustomUrl || snapshot.source} />
-     <VtSyncStatCard label="Videos" value={consumerSnapshot.videos.length.toLocaleString()} tone="#59BFFF" sub="privacy-filtered rows" />
-     <VtSyncStatCard label="Subscribers" value={numberText(snapshot.subscriberCount)} tone="#FF83EA" sub="Data API metadata" />
-     <VtSyncStatCard label="Total Views" value={numberText(snapshot.channelViewCount || (snapshot.channelTotals as any)?.lifetime?.views)} tone="#FFFF61" sub="Channel overview input" />
-     <VtSyncStatCard label="Session" value={authReady ? "Ready" : "Needed"} tone="#4FFF5B" sub={account.serverEnabled ? "HttpOnly account session" : sessionMeta.expiresAt ? `expires ${new Date(sessionMeta.expiresAt).toLocaleTimeString()}` : "Legacy OAuth migration"} />
-    </section>
-
-    {syncError ? (
-     <section className={`${shellCard} bg-[#FF8AAF] p-5 text-sm font-black uppercase tracking-[0.1em]`}>
-      {syncError}
-     </section>
-    ) : null}
-
-    <VtSyncControllerPanel
-     isAuthenticated={authReady}
-     isSyncing={busy}
-     videos={snapshot.videos.map((video) => ({ id: video.id, title: video.title, thumbnail: video.thumbnail, views: video.metrics?.views || 0 }))}
-     datasetFreshness={snapshot.datasetFreshness}
-     onLogin={login}
-     onStartSync={startSync}
+    <VtSyncCreatorHero
+     model={creatorHeroModel}
+     onConnect={() => { void login() }}
+     onRecommendedSync={() => { void startSync(getVtSyncDefaultCategoryIds()) }}
+     onChooseDatasets={() => scrollToPanel(controllerPanelRef.current)}
+     onViewProgress={() => scrollToPanel(progressPanelRef.current)}
     />
-    <ProgressRail progress={syncProgress} />
+
+    <section className="grid items-start gap-6 md:grid-cols-2">
+     <div ref={controllerPanelRef} className="min-w-0">
+      <VtSyncControllerPanel
+       isAuthenticated={authReady}
+       isSyncing={busy}
+       activeCategoryIds={syncProgress?.status === "running" ? syncProgress.requestedCategoryIds : []}
+       videos={snapshot.videos.map((video) => ({ id: video.id, title: video.title, thumbnail: video.thumbnail, views: video.metrics?.views || 0 }))}
+       onLogin={login}
+       onStartSync={startSync}
+      />
+     </div>
+     <div
+      ref={progressPanelRef}
+      className="vt-sync-progress-height-match min-h-0 min-w-0"
+      style={controllerPanelHeight ? ({ "--vt-sync-controller-height": `${controllerPanelHeight}px` } as React.CSSProperties) : undefined}
+     >
+      <ProgressRail progress={syncProgress} datasetFreshness={snapshot.datasetFreshness} />
+     </div>
+    </section>
     <VtSyncToolboxDataTable snapshot={snapshot} privacyFilters={privacyFilters} onPrivacyFiltersChange={updatePrivacyFilters} />
     <VtSyncDataVisualsToolbox snapshot={consumerSnapshot} />
 

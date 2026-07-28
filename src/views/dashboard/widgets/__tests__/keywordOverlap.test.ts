@@ -22,7 +22,7 @@ describe("tokenizeTitleKeywords", () => {
   })
 
   it("deduplicates repeated keywords per title", () => {
-    expect(tokenizeTitleKeywords("Cavalry cavalry CAVALRY tactics")).toEqual(["cavalry", "tactics"])
+    expect(tokenizeTitleKeywords("Cavalry cavalry CAVALRY tactics")).toEqual(["cavalry", "tactic"])
   })
 })
 
@@ -81,7 +81,7 @@ describe("buildKeywordSelectionSummary", () => {
   it("two keyword selection matches AND combination", () => {
     const summary = buildKeywordSelectionSummary(rows, ["brunswick", "black"], "views")
     expect(summary).not.toBeNull()
-    expect(summary?.videoCount).toBe(1)
+    expect(summary?.videoCount).toBe(2)
   })
 
   it("selection is capped logically at 3 keywords", () => {

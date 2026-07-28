@@ -327,7 +327,7 @@ export const CommentReplyWidget = ({
 
   return (
     <WidgetShell {...common} headerContent={headerContent} icon={<MessageSquare size={22} />}>
-      <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "10px" }}>
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "10px", minHeight: 0 }}>
         {inboundImageUrl && (
           <div style={{ border: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)", borderRadius: "8px", padding: "6px 8px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
             <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.7 }}>Image received from generator</span>
@@ -342,7 +342,7 @@ export const CommentReplyWidget = ({
         )}
         
         {/* Comment List - Now fully scrollable, no pagination */}
-        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div className="vt-widget-fill-body" style={{ gap: "10px", padding: "6px 0" }}>
           {loading && allThreads.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px", opacity: 0.4, fontWeight: 900, fontSize: "12px" }}>
               <Loader2 size={24} className="animate-spin mx-auto mb-2" />
@@ -381,21 +381,23 @@ export const CommentReplyWidget = ({
                     boxSizing: "border-box",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                    {/* Thumbnail container inspired by VideoManager */}
-                    <div style={{ width: "80px", flexShrink: 0 }}>
-                      <div style={{ 
-                        width: "100%", 
-                        aspectRatio: "16/9", 
-                        background: "#000", 
-                        border: "1.5px solid var(--widget-border, #000)", 
-                        borderRadius: "6px", 
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    {/* Alignment row: thumbnail bottom-aligned with the pp */}
+                    <div style={{ display: "flex", alignItems: "flex-end", gap: "10px" }}>
+                      {/* Thumbnail */}
+                      <div style={{
+                        width: "120px",
+                        flexShrink: 0,
+                        aspectRatio: "16/9",
+                        background: "#000",
+                        border: "2px solid var(--widget-border, #000)",
+                        borderRadius: "6px",
                         overflow: "hidden",
                       }}>
                         {videoId ? (
-                            <img 
-                              src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`} 
-                              onError={(e) => { 
+                            <img
+                              src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+                              onError={(e) => {
                                 const target = e.target as HTMLImageElement;
                                 if (target.src.includes('hqdefault.jpg')) {
                                   target.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
@@ -407,8 +409,8 @@ export const CommentReplyWidget = ({
                                   target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 180'%3E%3Crect width='320' height='180' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23111' font-family='Arial' font-size='16'%3EThumbnail unavailable%3C/text%3E%3C/svg%3E";
                                 }
                               }}
-                              style={{ width: "100%", height: "100%", objectFit: "cover" }} 
-                              alt="thumbnail" 
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                              alt="thumbnail"
                             />
                         ) : (
                           <div style={{ width: "100%", height: "100%", background: "#E0B0FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -416,53 +418,72 @@ export const CommentReplyWidget = ({
                           </div>
                         )}
                       </div>
-                    </div>
 
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
-                        <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#FFB570", border: "1.5px solid var(--widget-border, #000)", flexShrink: 0, overflow: "hidden" }}>
-                          <img src={c.authorProfileImageUrl} style={{ width: "100%", height: "100%" }} />
+                      {/* Right column: title on top (no gap below), then pp bottom-aligned with the thumbnail */}
+                      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "0" }}>
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                          {/* Video Title - top row of the right column, clamped to 3 lines */}
+                          <div style={{
+                            flex: 1,
+                            minWidth: 0,
+                            fontSize: "9px",
+                            fontWeight: 900,
+                            color: "#00D2FF",
+                            textTransform: "uppercase",
+                            lineHeight: 1.25,
+                            display: "-webkit-box",
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}>
+                            {video?.title && video.title !== "Unknown Video" ? htmlDecode(video.title) : `[${videoId}]`}
+                          </div>
+
+                          {/* Checkbox */}
+                          <div
+                            onClick={() => toggleSelection(threadId)}
+                            style={{
+                              width: "22px",
+                              height: "22px",
+                              border: "2px solid var(--widget-border, #000)",
+                              borderRadius: "6px",
+                              background: isSelected ? "var(--widget-border, #000)" : "#fff",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0
+                            }}
+                          >
+                            {isSelected && (
+                              <div style={{ width: "12px", height: "12px", borderRadius: "3px", background: "var(--widget-color, #000)" }} />
+                            )}
+                          </div>
                         </div>
-                        <div style={{ display: "flex", flexDirection: "column" }}>
-                          <span style={{ fontSize: "10px", fontWeight: 1000, color: "#FF3399", textTransform: "uppercase", lineHeight: 1 }}>
-                            {authorHandle}
-                          </span>
-                          <span style={{ fontSize: "8px", fontWeight: 900, color: "#FF1744", textTransform: "uppercase" }}>
-                            {new Date(c.publishedAt).toLocaleDateString()}
-                          </span>
+
+                        {/* Profile picture, bottom-aligned with the thumbnail; handle/date/comment to its right */}
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "#FFB570", border: "2px solid var(--widget-border, #000)", flexShrink: 0, overflow: "hidden" }}>
+                            <img src={c.authorProfileImageUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <div style={{ display: "flex", alignItems: "baseline", gap: "6px", flexWrap: "wrap" }}>
+                              <span style={{ fontSize: "10px", fontWeight: 1000, color: "#FF3399", textTransform: "uppercase", lineHeight: 1 }}>
+                                {authorHandle}
+                              </span>
+                              <span style={{ fontSize: "8px", fontWeight: 900, color: "#FF1744", textTransform: "uppercase" }}>
+                                {new Date(c.publishedAt).toLocaleDateString()}
+                              </span>
+                            </div>
+
+                            {/* Comment Text - Full, no truncation, decoded HTML entities */}
+                            <div style={{ fontSize: "12px", fontWeight: 700, color: "#000", lineHeight: 1.25 }}>
+                              {htmlDecode(c.textDisplay)}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      
-                      {/* Video Title - Now decoded and shows title from fetched data */}
-                      <div style={{ fontSize: "9px", fontWeight: 900, color: "#00D2FF", textTransform: "uppercase", marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {video?.title && video.title !== "Unknown Video" ? htmlDecode(video.title) : `[${videoId}]`}
-                      </div>
                     </div>
-
-                    {/* Black Checkbox */}
-                    <div 
-                      onClick={() => toggleSelection(threadId)}
-                      style={{ 
-                        width: "22px", 
-                        height: "22px", 
-                        border: "2px solid var(--widget-border, #000)", 
-                        borderRadius: "6px", 
-                        background: isSelected ? "var(--widget-border, #000)" : "#fff",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "#fff",
-                        flexShrink: 0
-                      }}
-                    >
-                      {isSelected && <Sparkles size={12} />}
-                    </div>
-                  </div>
-
-                  {/* Comment Text - Full, no truncation, decoded HTML entities */}
-                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#000", lineHeight: 1.2, padding: "4px 0" }}>
-                    {htmlDecode(c.textDisplay)}
                   </div>
 
                   {/* Existing Channel Replies (History mode) */}
@@ -496,6 +517,7 @@ export const CommentReplyWidget = ({
                     <div style={{ width: "100%" }}>
                       <textarea
                         className="vt-textarea"
+                        style={{ minHeight: "39px" }}
                         value={currentReply}
                         onChange={(e) => setReplyText(prev => ({...prev, [threadId]: e.target.value}))}
                         placeholder={tab === "history" ? "ADD FOLLOW-UP REPLY..." : "REPLY..."}
@@ -510,7 +532,7 @@ export const CommentReplyWidget = ({
 
         {/* Global Action Buttons */}
         {(
-          <div className="vt-full-bleed-bottom border-t-[2px] border-[var(--widget-border,#000)] pt-2.5 pb-2 px-2.5 flex gap-2 bg-[#fff]">
+          <div className="vt-full-bleed-bottom border-t-[3px] border-[var(--widget-border,#000)] pt-2.5 pb-2 px-2.5 flex gap-2 bg-[#fff]">
             <button
               onClick={() => handleMagicDraft(Array.from(selectedIds))}
               disabled={selectedIds.size === 0 || loading || !canAffordSelectedDrafts}

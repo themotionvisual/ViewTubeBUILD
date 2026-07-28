@@ -48,7 +48,7 @@ export const AdStackWidget = ({
     </div>
 
     {/* TARGET SIMULATOR */}
-    <div className="flex flex-col gap-1 border-t-[3px] border-black pt-2">
+    <div className="flex flex-col gap-1 border-t-[3px] border-[var(--widget-border,#000)] pt-2">
      <span className="text-[9px] font-black uppercase">Revenue Yield Target</span>
      <div className="flex gap-2 items-center">
       <div className="flex-1 flex items-center bg-white border-[3px] border-black rounded-lg px-2">

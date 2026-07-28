@@ -17,6 +17,8 @@ export interface TubeExplorerVideoPoint {
  dislikes: number
  comments: number
  shares: number
+ /** Playlist adds, surfaced by the API as videosAddedToPlaylists. */
+ saves: number
  subscribersGained: number
  subscribersLost: number
  subscribersNet: number
@@ -237,6 +239,7 @@ const toVideoPoint = (row: CanonicalVideoRow): TubeExplorerVideoPoint => {
   dislikes: metric(row, "dislikes"),
   comments,
   shares,
+  saves: metric(row, "videosAddedToPlaylists"),
   subscribersGained: metric(row, "subscribersGained"),
   subscribersLost: metric(row, "subscribersLost"),
   subscribersNet: metric(row, "subscribersGained") - metric(row, "subscribersLost"),

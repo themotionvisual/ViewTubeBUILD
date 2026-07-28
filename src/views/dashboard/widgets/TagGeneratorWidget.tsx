@@ -130,6 +130,7 @@ export const TagGeneratorWidget = ({ widget, instance, editMode, onToggleCollaps
      flexDirection: "column",
      gap: "12px",
      height: "100%",
+     minHeight: 0,
     }}>
     {/* Video Selector */}
      <div style={{ display: "flex", gap: "4px" }}>
@@ -200,7 +201,7 @@ export const TagGeneratorWidget = ({ widget, instance, editMode, onToggleCollaps
          display: "flex",
          flexWrap: "wrap",
          gap: "6px",
-         alignContent: "flex-start",
+         alignContent: "center",
         }}>
         {tagsLoading ?
          <div style={{ fontSize: "10px", opacity: 0.5, width: "100%", textAlign: "center", marginTop: "20px" }}>
@@ -275,7 +276,7 @@ export const TagGeneratorWidget = ({ widget, instance, editMode, onToggleCollaps
          display: "flex",
          flexWrap: "wrap",
          gap: "6px",
-         alignContent: "flex-start",
+         alignContent: "center",
         }}>
         {suggestedTags.length > 0 ?
          suggestedTags.map((t, i) => (

@@ -73,10 +73,9 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
 
         <div style={{ display: "flex", flex: 1, gap: "8px", overflow: "hidden" }}>
           {/* List Side */}
-          <div style={{ 
-            flex: 1, 
-            overflowY: "auto", 
-            paddingRight: "4px",
+          <div style={{
+            flex: 1,
+            overflowY: "auto",
             display: "flex",
             flexDirection: "column",
             gap: "4px"

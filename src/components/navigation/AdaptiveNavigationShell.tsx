@@ -6,6 +6,7 @@ import {
   Menu,
   PanelLeft,
   PanelTop,
+  Sparkles,
   X,
 } from "lucide-react"
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
@@ -24,6 +25,7 @@ import {
   parseNavigationLayout,
   type NavigationLayout,
 } from "./navigationContract"
+import { useNavLayoutMorph } from "./useNavLayoutMorph"
 import "./adaptive-navigation.css"
 
 interface AdaptiveNavigationShellProps {
@@ -229,6 +231,13 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     setAnnouncement(`${nextLayout === "top" ? "Top bar" : nextLayout === "wide" ? "Wide sidebar" : "Thin sidebar"} navigation active`)
   }
 
+  const { shellRef, registerLink, registerControl, animateToSidebar, animateToTop } = useNavLayoutMorph({
+    mainViewportRef,
+    accountButtonRef,
+    layout,
+    setLayout,
+  })
+
   useEffect(() => {
     localStorage.setItem(NAVIGATION_STORAGE_KEY, layout)
   }, [layout])
@@ -335,6 +344,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
         <NavLink
           key={item.id}
           to={item.path}
+          ref={mobileDrawer ? undefined : registerLink(item.id)}
           onClick={() => {
             if (mobileDrawer) setDrawerOpen(false)
             closeAccountMenu()
@@ -349,8 +359,8 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   )
 
   const renderLayoutControls = () => (
-    <div className="vt-adaptive-nav__layout-controls" role="group" aria-label="Navigation layout">
-      <button type="button" onClick={() => setLayout("top")} aria-label="Use top bar" aria-pressed={layout === "top"} title="Top bar">
+    <div ref={registerControl} className="vt-adaptive-nav__layout-controls" role="group" aria-label="Navigation layout">
+      <button type="button" onClick={animateToTop} aria-label="Use top bar" aria-pressed={layout === "top"} title="Top bar">
         <PanelTop aria-hidden="true" />
       </button>
       <button type="button" onClick={() => setLayout("wide")} aria-label="Use wide sidebar" aria-pressed={layout === "wide"} title="Wide sidebar">
@@ -362,7 +372,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     </div>
   )
 
-  const accountTrigger = (
+  const accountTrigger = isConnected ? (
     <button
       ref={accountButtonRef}
       type="button"
@@ -387,13 +397,29 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
       </span>
       <span className="vt-adaptive-nav__account-copy">
         <strong>{channelName}</strong>
-        <span>{isConnected && handleText ? `${handleText} | ${syncLabel}` : "Tap to open login popup"}</span>
+        <span>{handleText ? `${handleText} | ${syncLabel}` : syncLabel}</span>
       </span>
       <span className="vt-adaptive-nav__meter">
         <span><b>{label}</b><b>{credits}</b></span>
         <i><i style={{ width: `${creditPercent}%` }} /></i>
       </span>
       <ChevronDown className="vt-adaptive-nav__account-chevron" aria-hidden="true" />
+    </button>
+  ) : (
+    <button
+      ref={accountButtonRef}
+      type="button"
+      className="vt-adaptive-nav__account-trigger vt-adaptive-nav__account-trigger--signup"
+      onClick={() => void account.start(account.intent, window.location.pathname + window.location.search + window.location.hash)}
+    >
+      <span className="vt-adaptive-nav__avatar">
+        <Sparkles aria-hidden="true" />
+      </span>
+      <span className="vt-adaptive-nav__account-copy">
+        <strong>Join ViewTube</strong>
+        <span>Free — connect your channel</span>
+      </span>
+      <span className="vt-adaptive-nav__signup-cta" aria-hidden="true">Sign Up</span>
     </button>
   )
 
@@ -438,6 +464,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
           <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/account?panel=billing")}><span>Billing & Credits</span><ChevronRight aria-hidden="true" /></button>
           <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/reference-studio/toolbox-system")}><span>Reference Studio</span><ChevronRight aria-hidden="true" /></button>
           <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/user-guide")}><span>User Guide</span><ChevronRight aria-hidden="true" /></button>
+          <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/about")}><span>About ViewTube</span><ChevronRight aria-hidden="true" /></button>
         </section>
 
         <section aria-label="Tools and layout">
@@ -485,7 +512,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   )
 
   return (
-    <div className="vt-adaptive-shell" data-layout={shellLayout}>
+    <div className="vt-adaptive-shell" data-layout={shellLayout} ref={shellRef}>
       {mobile ? (
         <>
           <header className="vt-adaptive-nav vt-adaptive-nav--mobile">
@@ -527,7 +554,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
           {renderPrimaryNavigation()}
           <div className="vt-adaptive-nav__utilities">
             {layout === "top" ? (
-              <button type="button" className="vt-adaptive-nav__enter-sidebar" onClick={() => setLayout("wide")} aria-label="Use wide sidebar" title="Wide sidebar">
+              <button ref={registerControl} type="button" className="vt-adaptive-nav__enter-sidebar" onClick={animateToSidebar} aria-label="Use wide sidebar" title="Wide sidebar">
                 <PanelLeft aria-hidden="true" />
               </button>
             ) : renderLayoutControls()}

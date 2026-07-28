@@ -1276,6 +1276,62 @@ export const buildBrainLearningQuestions = (
  return questions.slice(0, 2)
 }
 
+/**
+ * Distinctive words from a phrase, for loose matching. A title is "referenced" if
+ * the answer mentions the title itself or one of its distinctive words, so we don't
+ * demand an exact quote to count an answer as grounded.
+ */
+const distinctiveWords = (phrase: string): string[] =>
+ cleanProfileText(phrase)
+  .toLowerCase()
+  .replace(/[^a-z0-9 ]+/g, " ")
+  .split(/\s+/)
+  .filter((word) => word.length >= 5 && !PROFILE_STOP_WORDS.has(word))
+
+/**
+ * The anti-generic guarantee.
+ *
+ * When the channel has concrete evidence (a real top video, topic clusters, search
+ * terms), an answer must reference at least one of those specifics rather than
+ * reading like advice that would fit any channel. When there is no evidence, the
+ * answer must instead name what is missing. This is what stops the Brain from
+ * repeating the same anecdote to every creator.
+ */
+export const bindResponseToEvidence = (
+ keyInsight: string,
+ body: string,
+ snapshot: AIBrainContextSnapshot,
+ evidencePack: AIBrainEvidencePack,
+): { keyInsight: string; body: string } => {
+ const topVideo = evidencePack.topVideos[0]?.title || snapshot.inferredProfile.topEvidenceVideos[0]?.title || ""
+ const clusters = snapshot.inferredProfile.topicClusters.slice(0, 5).filter(Boolean)
+ const searchTerms = evidencePack.searchTerms.map((term) => term.value).filter(Boolean)
+ const specifics = [topVideo, ...clusters, ...searchTerms].filter(Boolean)
+ const combined = `${keyInsight} ${body}`.toLowerCase()
+
+ if (specifics.length) {
+  const alreadyGrounded = specifics.some((specific) => {
+   const lower = specific.toLowerCase()
+   if (combined.includes(lower)) return true
+   return distinctiveWords(specific).some((word) => combined.includes(word))
+  })
+  if (alreadyGrounded) return { keyInsight, body }
+
+  const anchor = topVideo
+   ? `Working from your channel, "${topVideo}" is the strongest signal I have to build on.`
+   : `Working from your channel, ${readableList(clusters.length ? clusters : searchTerms)} is where the clearest signal sits.`
+  return { keyInsight, body: `${anchor}\n\n${body}`.trim() }
+ }
+
+ // No specifics available: make sure the answer admits it instead of bluffing.
+ const missing = evidencePack.missingInputs[0]
+ if (missing && !/\b(connect|sync|don'?t have|need|missing|once i|tell me)\b/i.test(combined)) {
+  const note = `I don't have ${missing} yet, so treat this as general guidance until we connect it.`
+  return { keyInsight, body: `${body}\n\n${note}`.trim() }
+ }
+ return { keyInsight, body }
+}
+
 export const formatCreatorBrainResponse = (
  rawText: string,
  snapshot: AIBrainContextSnapshot,
@@ -1313,6 +1369,9 @@ export const formatCreatorBrainResponse = (
   questionSeen = true
   return "?"
  })
+ const provisionalKeyInsight = splitSentences(body)[0] || body
+ const grounded = bindResponseToEvidence(provisionalKeyInsight, body, snapshot, evidencePack)
+ body = grounded.body
  const sentences = splitSentences(body)
  const keyInsight = sentences[0] || body
  const actions = sentences

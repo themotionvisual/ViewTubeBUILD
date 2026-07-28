@@ -72,8 +72,8 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
 
   return (
     <WidgetShell {...common} icon={<ImageIcon size={22} />}>
-      <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px" }}>
-        
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px", minHeight: 0 }}>
+
         {/* Mode Tabs */}
         {!result && (
           <div style={{ display: "flex", gap: "4px", background: "#f5f5f5", padding: "4px", borderRadius: "8px", border: "2px solid #000" }}>
@@ -93,7 +93,7 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
         )}
 
         {/* Dynamic Content Area */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px", overflowY: "auto" }}>
+        <div className="vt-widget-fill-body" style={{ gap: "8px" }}>
           
           {/* GENERATE MODE */}
           {!result && mode === "generate" && (

@@ -57,8 +57,8 @@ export const SettingsHelpSection: React.FC<SettingsHelpSectionProps> = ({ onNavi
         <button onClick={() => onNavigate("/user-guide")} className={`${canonicalButtonClass} bg-[#40C6E9] text-black px-6 py-4 text-sm`}>
           Open full user guide
         </button>
-        <button onClick={() => onNavigate("/all-links")} className={`${canonicalButtonClass} bg-white text-black px-6 py-4 text-sm`}>
-          Account links page
+        <button onClick={() => onNavigate("/about")} className={`${canonicalButtonClass} bg-white text-black px-6 py-4 text-sm`}>
+          About ViewTube
         </button>
         <div className="flex flex-wrap gap-3 lg:justify-end">
           <a href="/privacy.html" className={`${canonicalButtonClass} bg-white text-black px-6 py-4 text-sm inline-block`}>

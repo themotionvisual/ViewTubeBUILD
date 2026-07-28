@@ -115,7 +115,7 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
 
   return (
   <WidgetShell {...common} icon={<BarChart3 size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%", overflowY: "auto", paddingBottom: "8px" }}>
+   <div className="vt-widget-fill-body" style={{ gap: "8px" }}>
      <div style={{ padding: "8px", border: "2px solid #000", borderRadius: "8px", background: "rgba(204,255,0,0.16)", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", lineHeight: 1.35 }}>
       Analysis-only upload policy active: local videos are compressed before analysis to reduce AI processing cost.
      </div>

@@ -48,6 +48,7 @@ const arrayFields = [
  "trafficNoLinkOther",
  "trafficPlaylist",
  "trafficYtPlaylistPage",
+ "trafficByDay",
  "retentions",
 ] as const
 
@@ -211,6 +212,7 @@ const storageSafeSnapshot = (snapshot: VtSyncSnapshot): VtSyncSnapshot => ({
  trafficNoLinkOther: [],
  trafficPlaylist: [],
  trafficYtPlaylistPage: [],
+ trafficByDay: snapshot.trafficByDay.slice(0, 5000),
  retentions: [],
  tableExports: {},
  datasetFreshness: {
@@ -255,6 +257,7 @@ const emptySnapshot = (): VtSyncSnapshot => ({
  subscriberCount: null,
  channelVideoCount: null,
  channelViewCount: null,
+ channelPublishedAt: null,
  channelTotals: null,
  videos: [],
  dailyMetrics: [],
@@ -264,6 +267,8 @@ const emptySnapshot = (): VtSyncSnapshot => ({
  geography: [],
  devices: [],
  operatingSystems: [],
+ deviceOs: [],
+ trafficByDay: [],
  playbackLocations: [],
  subscriptionStatuses: [],
  playlistsData: [],
@@ -416,6 +421,7 @@ export const toVtSyncRawAppExport = (snapshot: VtSyncSnapshot): Record<string, u
  trafficNoLinkOther: snapshot.trafficNoLinkOther,
  trafficPlaylist: snapshot.trafficPlaylist,
  trafficYtPlaylistPage: snapshot.trafficYtPlaylistPage,
+ trafficByDay: snapshot.trafficByDay,
  retentions: snapshot.retentions,
  dmaRegions: snapshot.dmaRegions,
  continentsData: snapshot.continentsData,

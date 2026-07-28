@@ -199,7 +199,7 @@ export const UploadSchedulerWidget = ({ widget, instance, editMode, onToggleColl
 
  return (
   <WidgetShell {...common} icon={<Calendar size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "6px", height: "100%" }}>
+   <div style={{ display: "flex", flexDirection: "column", gap: "6px", height: "100%", minHeight: 0 }}>
 
     {/* Tab Bar */}
     <div style={{ display: "flex", gap: "4px" }}>

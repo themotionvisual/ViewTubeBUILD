@@ -43,7 +43,7 @@ export const FlightCheckWidget = ({ widget, instance, editMode, onToggleCollapse
 
  return (
   <WidgetShell {...common} icon={<Check size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%" }}>
+   <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%", minHeight: 0 }}>
     {/* Progress Bar */}
     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
      <div style={{ flex: 1, height: "14px", background: "#eee", borderRadius: "7px", border: "2px solid #000", overflow: "hidden" }}>
@@ -53,7 +53,7 @@ export const FlightCheckWidget = ({ widget, instance, editMode, onToggleCollapse
     </div>
 
     {/* Checklist */}
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
+    <div className="vt-widget-fill-body" style={{ gap: "4px" }}>
      {items.map((item: any, idx: number) => (
       <div
        key={idx}

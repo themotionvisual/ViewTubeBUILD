@@ -16,10 +16,158 @@ export type GuideSection = {
   tools: GuideToolEntry[]
 }
 
-export const GUIDE_PROTOCOL_VERSION = "v2.2"
-export const GUIDE_LAST_UPDATED = "2026-05-06"
+export const GUIDE_PROTOCOL_VERSION = "v2.3"
+export const GUIDE_LAST_UPDATED = "2026-07-28"
 
 export const userGuideSections: GuideSection[] = [
+  {
+    id: "dashboard",
+    title: "Dashboard",
+    audience: "Everyone — the home surface after signing in.",
+    routeRefs: ["/"],
+    tools: [
+      {
+        toolId: "DASHBOARD_WIDGETS",
+        toolName: "Widget Dashboard",
+        routeRef: "/",
+        whatItDoes:
+          "A grid of independent widgets — Channel Overview, Community Post, Comment Responder, Upload Cadence, Realtime, Goals Tracker, Keyword Engine, Daily Oracle, Ask Me, AI Journal, and more — each pulling from your synced channel data. You can rearrange, resize, hide, and re-add widgets to match how you actually work.",
+        howToSteps: [
+          "Connect your channel and run a sync so widgets have real data instead of placeholders.",
+          "Open Widget Options from the account menu to toggle which widgets are visible.",
+          "Enable Rearrange Widgets to drag widgets into a new order or resize them, then lock the layout when you're happy with it.",
+        ],
+        troubleshooting: [
+          "If a widget shows zeros or an empty state, you haven't synced yet, or that widget's data category isn't selected in VT Sync.",
+          "If the layout looks wrong after an update, use Reset Layout from Widget Options to restore the default arrangement.",
+        ],
+        qaChecks: [
+          "Channel Overview shows your real avatar, channel name, and stats once synced.",
+          "Dragging a widget in edit mode persists its new position after a refresh.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "projects",
+    title: "Projects",
+    audience: "Creators planning uploads and tracking channel-wide to-dos.",
+    routeRefs: ["/projects"],
+    tools: [
+      {
+        toolId: "PROJECT_STUDIO",
+        toolName: "Project Calendar",
+        routeRef: "/projects",
+        whatItDoes:
+          "A weekly calendar for scheduling video projects, plus a channel-wide to-do list and goals list that live outside any single project.",
+        howToSteps: [
+          "Switch between the Channel view (to-dos and goals) and the Projects view (calendar) at the top of the page.",
+          "Create a project with a name, target date, and color, then add its own to-dos.",
+          "Use the week navigation to move forward/back and plan upload cadence over time.",
+        ],
+        troubleshooting: [
+          "If a project doesn't appear on the date you expect, confirm the calendar's week offset — you may be viewing a different week.",
+          "If AI suggestions don't generate, confirm your API key and credit balance in Settings.",
+        ],
+        qaChecks: [
+          "New projects appear on their assigned date with the chosen color.",
+          "Channel to-dos and goals persist independently of any single project.",
+        ],
+      },
+      {
+        toolId: "STORYBOARD_STUDIO_PROJECTS",
+        toolName: "Storyboard Studio (collapsed panel)",
+        routeRef: "/projects",
+        whatItDoes: "The same storyboard/scene-planning tool from Studio, embedded here collapsed by default so it's available without leaving the planning view.",
+        howToSteps: [
+          "Expand the Storyboard Studio panel at the bottom of the Projects page.",
+          "Set objective and format, then generate a scene sequence for the project you're planning.",
+        ],
+        troubleshooting: [
+          "If it stays collapsed after generating, click its header to expand and view the result.",
+        ],
+        qaChecks: [
+          "Panel expands/collapses without losing generated content.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "ai-brain",
+    title: "AI Brain",
+    audience: "Creators who want one conversation instead of a menu of separate AI tools.",
+    routeRefs: ["/ai-brain"],
+    tools: [
+      {
+        toolId: "AI_BRAIN_INTERFACE",
+        toolName: "AI Brain",
+        routeRef: "/ai-brain",
+        whatItDoes:
+          "The flagship surface: one ongoing conversation, not a mode picker. You ask a question in plain language and the Brain decides what to pull from your channel's real data to answer it — every claim is grounded in your actual videos, search terms, and goals, or it names what's missing. A context rail alongside the conversation shows the channel state it's reasoning from.",
+        howToSteps: [
+          "Open AI Brain from the nav.",
+          "Ask a direct question (\"why did views drop last week\", \"what should I upload next\", \"write titles for this video\") — no need to pick a tool or mode first.",
+          "Check the context rail to see what channel data the answer is grounded in, and open the diagnostics disclosure if you want to see exactly what was used.",
+        ],
+        troubleshooting: [
+          "If answers feel generic or unmoored from your channel, make sure you've connected your channel and run a sync — the Brain needs real data to reason from.",
+          "If a claim seems wrong, open the diagnostics disclosure rather than guessing — it shows the underlying data the answer used.",
+        ],
+        qaChecks: [
+          "Answers reference specific videos, numbers, or dates from your own channel, not generic advice.",
+          "The Brain explicitly names missing data instead of fabricating an answer.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "vt-sync",
+    title: "VT Sync",
+    audience: "Creators who want direct access to every synced YouTube dataset and table.",
+    routeRefs: ["/local-analytics"],
+    tools: [
+      {
+        toolId: "VT_SYNC_TOOLS_PAGE",
+        toolName: "VT Sync Tools Page",
+        routeRef: "/local-analytics",
+        whatItDoes:
+          "Runs the sync that pulls your channel's data from the YouTube Data and Analytics APIs into local tables — videos, traffic sources, demographics, geography, devices and operating systems, revenue, and more — plus a full data-table browser for inspecting every dataset directly.",
+        howToSteps: [
+          "Connect your channel if you haven't, then choose which datasets to sync (Core Only, Recommended, or pick individual categories).",
+          "Run the sync and watch each phase's status (never synced, syncing, synced, partial, or failed) in the progress panel.",
+          "Open the data table browser below and pick a category tab (e.g. Devices & OS, Demographics, Traffic) to inspect the raw synced rows.",
+        ],
+        troubleshooting: [
+          "If a category stays 'Never Synced', confirm it's selected before starting the sync — unselected categories are skipped.",
+          "If a phase shows 'Partial', ViewTube saved whatever YouTube returned; re-run the sync for that category to retry the rest.",
+          "If a phase shows 'Failed', check the message on that row — quota limits and expired auth are the most common causes.",
+        ],
+        qaChecks: [
+          "Selected categories move from 'Never Synced' to 'Synced' after a successful run.",
+          "Data tables show the row counts that match what the progress panel reported.",
+        ],
+      },
+      {
+        toolId: "VT_SYNC_DEVICE_OS_TABLE",
+        toolName: "Device × OS Table",
+        routeRef: "/local-analytics",
+        whatItDoes:
+          "Shows device and operating system traffic three ways at once: an Operating Systems list, a Devices list, and a combined Device × OS breakdown where each OS row expands to show the views, watch time, average duration, and average percentage viewed for every device on that OS.",
+        howToSteps: [
+          "Open the Devices & OS category, then the 'Device x OS' tab.",
+          "Click any operating system row to expand it and see its per-device breakdown.",
+          "Click a column header to sort the OS rows (and the devices within them) by that metric.",
+        ],
+        troubleshooting: [
+          "If the table is empty, sync the 'Device x OS' category (under Devices & OS) first.",
+        ],
+        qaChecks: [
+          "Expanding an OS row reveals up to four device rows with their own metric values.",
+          "Sorting by a metric column reorders both the OS rows and the devices inside each expanded row.",
+        ],
+      },
+    ],
+  },
   {
     id: "performance",
     title: "Performance Hub",

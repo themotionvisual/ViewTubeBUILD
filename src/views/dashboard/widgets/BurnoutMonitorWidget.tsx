@@ -100,7 +100,7 @@ export const BurnoutMonitorWidget = ({ widget, instance, editMode, onToggleColla
 
  return (
   <WidgetShell {...common} icon={<Heart size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%", alignItems: "center" }}>
+   <div className="vt-widget-fill" style={{ gap: "8px", alignItems: "center" }}>
     {/* Gauge */}
     <div style={{ position: "relative", width: "100px", height: "60px" }}>
      <svg width="100" height="60" viewBox="0 0 100 60">

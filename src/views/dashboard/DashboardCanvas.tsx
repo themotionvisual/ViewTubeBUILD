@@ -20,16 +20,6 @@ import { Download, Edit3, Lock, LockOpen, RotateCcw, Upload, Layers, Settings, C
 import { motion } from "framer-motion"
 import { DashboardBarrier } from "./DashboardBarrier"
 import { useDashboard } from "../../context/DashboardContext"
-import { useBrain } from "../../context/useBrain"
-import { useEntitlement } from "../../context/entitlementContext"
-import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
-import { hasCompletedAiBrainContext } from "../../services/aiBrainContext"
-import {
-  hasFirstSync,
-  isChecklistComplete,
-  readOnboardingState,
-  updateOnboardingState,
-} from "../../services/onboardingState"
 import { DASHBOARD_WIDGET_REGISTRY, DASHBOARD_WIDGET_BY_ID } from "./WidgetRegistry"
 import { WidgetPickerPanel } from "./WidgetPickerPanel"
 import {
@@ -117,22 +107,6 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
   const [showWelcomeBanner, setShowWelcomeBanner] = useState<boolean>(() => {
     const params = new URLSearchParams(window.location.search)
     return params.get("onboarding") === "welcome"
-  })
-  const entitlement = useEntitlement()
-  const { globalSyncData } = useBrain()
-  const account = useUnifiedAccount()
-  const onboarding = readOnboardingState()
-  const firstSyncDone = hasFirstSync({
-    isAuthenticated: data.authState.isAuthenticated,
-    syncedAt: data.lastSyncComplete,
-    fastAnalytics: data.authState.fastAnalytics || null,
-  })
-  const checklistDone = isChecklistComplete({
-    authConnected: data.authState.isAuthenticated,
-    hasFirstSync: firstSyncDone,
-    billingConfirmed: onboarding.billingConfirmed || entitlement.subscriptionPlanId !== "basic",
-    hasBrainIntake: hasCompletedAiBrainContext(),
-    firstToolOpened: onboarding.firstToolOpened,
   })
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -351,78 +325,6 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
           </button>
         </div>
       )}
-      {!onboarding.checklistDismissed && !checklistDone && (
-        <section className="mb-5 border-[3px] border-black rounded-2xl bg-white p-4 shadow-[4px_4px_0_0_#000]">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-lg md:text-xl font-black uppercase tracking-tight">Get Started</h2>
-            <button
-              onClick={() => updateOnboardingState({ checklistDismissed: true })}
-              className="border-[2px] border-black rounded-lg bg-[#f3f4f6] px-3 py-1 text-[10px] font-black uppercase"
-            >
-              Hide
-            </button>
-          </div>
-          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
-            <div className="border-[2px] border-black rounded-xl p-3 bg-[#f3f4f6]">
-              <p className="text-[10px] font-black uppercase">Connect channel</p>
-              <p className="text-xs font-bold mt-1">{data.authState.isAuthenticated ? "Connected" : "Not connected"}</p>
-              <button
-                onClick={() => void account.start(account.intent, window.location.pathname + window.location.search + window.location.hash)}
-                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#FA618A] px-2 py-1 text-[10px] font-black uppercase"
-              >
-                {account.label}
-              </button>
-            </div>
-            <div className="border-[2px] border-black rounded-xl p-3 bg-[#f3f4f6]">
-              <p className="text-[10px] font-black uppercase">Run first sync</p>
-              <p className="text-xs font-bold mt-1">{firstSyncDone ? "Synced" : "Not synced"}</p>
-              <button
-                onClick={() => void globalSyncData({ batchMode: "initial" })}
-                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#FF7F6B] px-2 py-1 text-[10px] font-black uppercase"
-              >
-                {firstSyncDone ? "Sync now" : "Run first sync"}
-              </button>
-            </div>
-            <div className="border-[2px] border-black rounded-xl p-3 bg-[#f3f4f6]">
-              <p className="text-[10px] font-black uppercase">Confirm billing/credits</p>
-              <p className="text-xs font-bold mt-1">{onboarding.billingConfirmed || entitlement.subscriptionPlanId !== "basic" ? "Billing active" : "Needs review"}</p>
-              <button
-                onClick={() => {
-                  updateOnboardingState({ billingConfirmed: true })
-                  onNavigate("/account?panel=billing")
-                }}
-                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#FFA85C] px-2 py-1 text-[10px] font-black uppercase"
-              >
-                Open billing
-              </button>
-            </div>
-            <div className="border-[2px] border-black rounded-xl p-3 bg-[#f3f4f6]">
-              <p className="text-[10px] font-black uppercase">Complete AI Brain intake</p>
-              <p className="text-xs font-bold mt-1">{hasCompletedAiBrainContext() ? "Completed" : "Pending"}</p>
-              <button
-                onClick={() => onNavigate("/ai-brain?intake=1")}
-                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#FFDA47] px-2 py-1 text-[10px] font-black uppercase"
-              >
-                Open intake
-              </button>
-            </div>
-            <div className="border-[2px] border-black rounded-xl p-3 bg-[#f3f4f6]">
-              <p className="text-[10px] font-black uppercase">Open first recommended tool</p>
-              <p className="text-xs font-bold mt-1">{onboarding.firstToolOpened ? "Done" : "Pending"}</p>
-              <button
-                onClick={() => {
-                  updateOnboardingState({ firstToolOpened: true })
-                  onNavigate(entitlement.subscriptionPlanId === "basic" ? "/studio" : "/performance")
-                }}
-                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#C0F240] px-2 py-1 text-[10px] font-black uppercase"
-              >
-                Open tool
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
-
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={visibleWidgetIds} strategy={rectSortingStrategy}>
            <div className="grid grid-cols-[repeat(24,minmax(0,1fr))] gap-4 md:gap-5">

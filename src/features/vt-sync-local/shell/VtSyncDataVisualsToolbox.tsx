@@ -51,13 +51,14 @@ const CORE_VISUAL_MODULES: VtSyncVisualModuleDefinition[] = [
  { id: "video-value-matrix", group: "core", delayMs: 400, render: ({ data }) => <VideoValueMatrix data={data} /> },
  { id: "growth-pulse", group: "core", delayMs: 450, render: ({ data }) => <GrowthPulse data={data} /> },
  {
- id: "traffic-source-evolution",
+  id: "traffic-source-evolution",
   group: "core",
   delayMs: 500,
-  render: ({ data, trafficRows }) => (
+  render: ({ data, trafficRows, trafficByDay }) => (
    <TrafficSourceEvolutionModule
     data={data}
     trafficRows={trafficRows}
+    trafficByDay={trafficByDay}
     useVideoTrafficFallback={false}
    />
   ),
@@ -173,6 +174,7 @@ const VtSyncDataVisualsContent: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snap
   data: visualData.rows,
   csvFiles: visualData.csvFiles,
   trafficRows: visualData.canonicalContext.trafficRows,
+  trafficByDay: visualData.trafficByDay,
   geographyRows: visualData.canonicalContext.geographyRows,
  }
 

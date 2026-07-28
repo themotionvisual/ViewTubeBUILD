@@ -185,7 +185,7 @@ export const DailyOracleWidget = ({ widget, instance, editMode, onToggleCollapse
   <WidgetShell
    {...common}
    icon={<Sparkles size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "10px", height: "100%", overflowY: "auto", padding: "10px" }}>
+   <div style={{ display: "flex", flexDirection: "column", gap: "10px", height: "100%", minHeight: 0 }}>
     {/* Header Row */}
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -194,13 +194,13 @@ export const DailyOracleWidget = ({ widget, instance, editMode, onToggleCollapse
      </div>
      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
       <span style={{ fontSize: "8px", fontWeight: 900, opacity: 0.4 }}>{completedCount}/{totalCount}</span>
-       <button 
-        onClick={regenerate} 
+       <button
+        onClick={regenerate}
         disabled={isGenerating || !canAffordOracle}
-        title="Regenerate advice" 
-        style={{ 
-          width: "24px", height: "24px", border: "2px solid #000", borderRadius: "6px", 
-          background: "#fff", cursor: isGenerating ? "wait" : "pointer", 
+        title="Regenerate advice"
+        style={{
+          width: "24px", height: "24px", border: "2px solid #000", borderRadius: "6px",
+          background: "#fff", cursor: isGenerating ? "wait" : "pointer",
           display: "flex", alignItems: "center", justifyContent: "center",
           opacity: isGenerating ? 0.5 : 1
         }}>
@@ -214,17 +214,20 @@ export const DailyOracleWidget = ({ widget, instance, editMode, onToggleCollapse
      </div>
     )}
 
-    {/* Priorities */}
-    {oracle.priorities.map((p, i) => renderAdviceCard(p, i, "priorities"))}
+    {/* Scrollable card list — grows to fill remaining space, centers when content is short */}
+    <div className="vt-widget-fill-body" style={{ gap: "10px" }}>
+     {/* Priorities */}
+     {oracle.priorities.map((p, i) => renderAdviceCard(p, i, "priorities"))}
 
-    {/* Quick Wins Header */}
-    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px", flexShrink: 0 }}>
-     <Zap size={14} color="#4FFF5B" />
-     <span style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", opacity: 0.5 }}>Quick Wins (20-30 min)</span>
+     {/* Quick Wins Header */}
+     <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px", flexShrink: 0 }}>
+      <Zap size={14} color="#4FFF5B" />
+      <span style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", opacity: 0.5 }}>Quick Wins (20-30 min)</span>
+     </div>
+
+     {/* Quick Wins */}
+     {oracle.quickWins.map((w, i) => renderAdviceCard(w, i, "quickWins"))}
     </div>
-
-    {/* Quick Wins */}
-    {oracle.quickWins.map((w, i) => renderAdviceCard(w, i, "quickWins"))}
    </div>
   </WidgetShell>
  )

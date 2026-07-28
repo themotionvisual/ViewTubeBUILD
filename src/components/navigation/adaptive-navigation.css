@@ -85,16 +85,16 @@
   grid-area: 1 / 1;
   grid-template-columns: 210px minmax(0, 1fr) auto;
   height: var(--vt-nav-top-height);
-  border-bottom: var(--vt-nav-stroke) solid var(--vt-nav-ink);
+  background: var(--vt-nav-paper);
 }
 
 .vt-adaptive-shell[data-layout="wide"] > .vt-adaptive-nav,
 .vt-adaptive-shell[data-layout="thin"] > .vt-adaptive-nav {
   grid-area: 1 / 1;
-  grid-template-rows: 74px auto auto minmax(0, 1fr);
+  grid-template-rows: var(--vt-nav-top-height) auto auto minmax(0, 1fr);
   width: 100%;
   height: 100dvh;
-  border-right: var(--vt-nav-stroke) solid var(--vt-nav-ink);
+  background: var(--vt-nav-paper);
 }
 
 .vt-adaptive-nav__brand {
@@ -136,6 +136,7 @@
 }
 
 .vt-adaptive-nav__link {
+  position: relative;
   display: flex;
   min-width: 0;
   height: 74px;
@@ -162,6 +163,63 @@
 .vt-adaptive-nav__link:hover { transform: translateY(-1px); box-shadow: 0 2px 0 #000; }
 .vt-adaptive-nav__link:active { transform: translateY(1px); box-shadow: none; }
 .vt-adaptive-nav__link.active { box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .82); }
+
+/* White shine sweeps across a nav button on hover/focus, and across a flight clone mid-animation. */
+.vt-adaptive-nav__link::before,
+.vt-nav-flight-clone::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, .78);
+  transform: translateX(-115%) skewX(-20deg);
+  opacity: .58;
+  transition: transform .45s cubic-bezier(.2, .8, .2, 1);
+  z-index: -1;
+  pointer-events: none;
+}
+.vt-adaptive-nav__link:hover::before,
+.vt-adaptive-nav__link:focus-visible::before,
+.vt-nav-flight-clone.is-shining::before {
+  transform: translateX(115%) skewX(-20deg);
+}
+
+/* Flight-clone based morph animation between the topbar and sidebar layouts (see useNavLayoutMorph). */
+.vt-adaptive-shell.vt-nav-transitioning { pointer-events: none; }
+.vt-adaptive-shell.vt-nav-transitioning .vt-adaptive-nav { overflow: visible; }
+/* The page-content transform can momentarily place main-content's old top-left corner underneath the
+   nav chrome (e.g. sliding out from behind the topbar's height) — float it above the nav during the
+   transition so it's never clipped/hidden behind it, while the flight-layer (z-index 99999) still wins. */
+.vt-adaptive-shell.vt-nav-transitioning .vt-adaptive-main { position: relative; z-index: 130; }
+.vt-nav-flight-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  overflow: visible;
+  pointer-events: none;
+}
+.vt-nav-flight-clone {
+  position: fixed;
+  display: flex;
+  box-sizing: border-box;
+  margin: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: var(--vt-nav-control-stroke) solid #000;
+  border-radius: var(--vt-nav-radius);
+  color: #000;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+  isolation: isolate;
+  box-shadow: 0 2px 0 #000;
+  will-change: transform, width, height, left, top;
+  transition: color .35s ease, background-color .35s ease;
+}
+.vt-nav-source-hidden { visibility: hidden !important; }
 
 .vt-adaptive-nav__utilities {
   position: relative;
@@ -266,6 +324,32 @@
 .vt-adaptive-nav__meter > span { display: flex; justify-content: space-between; gap: 5px; font-size: 8px; text-transform: uppercase; }
 .vt-adaptive-nav__meter > i { display: block; height: 9px; overflow: hidden; border: 2px solid #000; border-radius: 5px; background: #fff; }
 .vt-adaptive-nav__meter > i > i { display: block; height: 100%; background: #3fee56; }
+
+/* Signed-out account trigger: a direct, one-tap sign-up CTA instead of an empty avatar + credits meter. */
+.vt-adaptive-nav__account-trigger--signup {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  transition: transform 110ms ease, box-shadow 110ms ease;
+}
+.vt-adaptive-nav__account-trigger--signup:hover { transform: translateY(-1px); box-shadow: 0 2px 0 #000; }
+.vt-adaptive-nav__account-trigger--signup:active { transform: translateY(1px); box-shadow: none; }
+.vt-adaptive-nav__account-trigger--signup .vt-adaptive-nav__avatar { background: #000; color: #c0f240; flex-shrink: 0; }
+.vt-adaptive-nav__account-trigger--signup .vt-adaptive-nav__account-copy { flex: 1 1 auto; }
+.vt-adaptive-nav__signup-cta {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border: var(--vt-nav-control-stroke) solid #000;
+  border-radius: 999px;
+  background: #000;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
 .vt-adaptive-nav__account-chevron { width: 17px; height: 17px; stroke-width: 3; }
 
 .vt-adaptive-nav__account-menu {
@@ -350,8 +434,14 @@
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  padding: 32px 32px 384px;
+  /* Right padding reserves room for the fixed .vt-app-scroll-track (28px wide) so content never
+     renders underneath it — matters most in wide/thin sidebar mode where the content column is
+     narrower and has less incidental margin than top mode's wider, auto-centered column. */
+  padding: 10px 38px 384px 10px;
   scrollbar-width: none;
+  /* Coordinated settle for any box-model change while the nav layout morph animation runs. */
+  transition: margin .9s cubic-bezier(.22, .72, .18, 1), padding .9s cubic-bezier(.22, .72, .18, 1),
+    width .9s cubic-bezier(.22, .72, .18, 1), max-width .9s cubic-bezier(.22, .72, .18, 1);
 }
 .vt-adaptive-main::-webkit-scrollbar { display: none; }
 .vt-adaptive-main--editor { padding: 8px; }
@@ -363,10 +453,19 @@
 .vt-adaptive-shell[data-layout="wide"] > .vt-adaptive-main,
 .vt-adaptive-shell[data-layout="thin"] > .vt-adaptive-main { grid-area: 1 / 2; }
 
+/* Keep the ViewTube logo anchored at the exact same top-left size in every desktop layout, so only the
+   nav buttons/utilities/page content need to animate between top and sidebar — the logo never moves. */
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__brand,
-.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__brand { height: 74px; padding: 5px 10px; }
-.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__logo span { font-size: 31px; }
-.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__logo span { font-size: 24px; }
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__brand {
+  width: 210px;
+  height: var(--vt-nav-top-height);
+  padding: 4px 12px;
+  align-self: start;
+}
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__logo,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__logo { height: 100%; }
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__logo span,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__logo span { font-size: 38px; }
 
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__links,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__links {
@@ -374,14 +473,13 @@
   flex-direction: column;
   gap: 4px;
   align-items: stretch;
-  padding: 5px 9px 8px 0;
+  padding: 5px 9px 8px;
 }
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__link,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link {
-  width: calc(100% + 10px);
-  height: 32px;
-  min-height: 32px;
-  border-radius: 0 14px 14px 0;
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
   font-size: 13px;
 }
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link { font-size: 11px; }
@@ -402,6 +500,7 @@
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__meter,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__meter { display: none; }
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-copy { display: none; }
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__signup-cta { display: none; }
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-trigger { grid-template-columns: 38px 18px; justify-content: space-between; }
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__account-menu,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-menu {
@@ -500,4 +599,5 @@
 @media (prefers-reduced-motion: reduce) {
   .vt-adaptive-nav *,
   .vt-adaptive-nav__drawer * { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+  .vt-nav-flight-layer { display: none; }
 }

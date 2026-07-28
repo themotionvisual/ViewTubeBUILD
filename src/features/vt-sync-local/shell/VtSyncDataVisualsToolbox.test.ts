@@ -51,14 +51,16 @@ describe("VT-SYNC data visual module registry", () => {
    expect(source).toContain(`<${name}`)
   })
 
-  expect(explorerSource).toContain(
-   'createModule("SANKEY RIVER DELTA", "INDEPENDENT TRAFFIC + REGION RANKS", (d) => <SankeyRiverDeltaRenderer dataset={d} />',
-  )
+  expect(explorerSource).toContain('const SankeyRiverDeltaRenderer')
+  expect(explorerSource).toContain('export const TubeExplorerSankeyRiverDelta: React.FC<TubeExplorerVisualProps>')
+  expect(explorerSource).toContain('"RIVER DELTA"')
+  expect(explorerSource).toContain('<SankeyRiverDeltaRenderer dataset={dataset} sourceLimit={sourceLimit} geoLimit={geoLimit} minGeoViews={minGeoViews} />')
  })
 
  it("feeds the custom traffic evolution visual from VT-SYNC rows without video fallback", () => {
-  expect(source).toContain("<TrafficSourceEvolutionModule")
-  expect(source).toContain("trafficRows={trafficRows}")
+ expect(source).toContain("<TrafficSourceEvolutionModule")
+ expect(source).toContain("trafficRows={trafficRows}")
+  expect(source).toContain("trafficByDay={trafficByDay}")
   expect(source).toContain("useVideoTrafficFallback={false}")
   expect(graphSource).toContain('row.datasetKind === "traffic_summary"')
   expect(graphSource).toContain('row.datasetKind === "traffic_detail"')

@@ -106,8 +106,8 @@
 .dashboard-barrier .vt-widget-header .toggle {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding-right: 8px;
+  gap: 9px;
+  padding-right: 9px;
   height: 100%;
 }
 
@@ -157,6 +157,42 @@
   width: calc(100% + 20px) !important;
 }
 
+/* Fills the widget body height and centers short static content. No
+   overflow/scroll is set here on purpose — these widgets never scrolled
+   before, so this must not introduce a scrollbar. Use on a widget's root div
+   when it has no pinned header of its own and no scrollable region. */
+.dashboard-barrier .vt-widget-fill {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Same as .vt-widget-fill, but for a root div that DID already scroll before
+   (a genuine list/feed with no separate pinned header) — keeps overflow-y:auto
+   so long content still scrolls, only adding fill+center for short content. */
+.dashboard-barrier .vt-widget-fill-scroll {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow-y: auto;
+}
+
+/* Same behavior as .vt-widget-fill, but sized to fill remaining space as a
+   flex child — use on the scrollable body region of a widget that has a
+   pinned header/toolbar (flexShrink:0) above it. */
+.dashboard-barrier .vt-widget-fill-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow-y: auto;
+}
+
 /* Enable sleek custom scrollbars without extra right margin */
 .dashboard-barrier .vt-widget * {
   -ms-overflow-style: auto !important;
@@ -169,28 +205,37 @@
 }
 
 .dashboard-barrier .vt-widget *::-webkit-scrollbar {
-  width: 12px !important;
+  -webkit-appearance: none !important;
+  width: 28px !important;
   height: 0 !important;
   display: block !important;
 }
 
 .dashboard-barrier .vt-widget *::-webkit-scrollbar-track {
+  -webkit-appearance: none !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .dashboard-barrier .vt-widget *::-webkit-scrollbar-thumb {
+  -webkit-appearance: none !important;
   background: color-mix(in srgb, var(--widget-color, #40C6E9) 50%, white) !important;
-  border: 1.5px solid var(--widget-border, #000000) !important;
+  border: 4px solid transparent !important;
   background-clip: padding-box !important;
-  border-radius: 5px !important;
-  box-shadow: none !important;
+  border-radius: 8px !important;
+  box-shadow: inset 0 0 0 3px var(--widget-border, #000000) !important;
+  min-height: 30px !important;
 }
 
 .dashboard-barrier .vt-widget *::-webkit-scrollbar-thumb:hover {
   background: var(--widget-color, #40C6E9) !important;
-  border: 1.5px solid var(--widget-border, #000000) !important;
+  border: 4px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 3px var(--widget-border, #000000) !important;
 }
 
 /* ═══ WIDGET HEADER BUTTONS ═══ */
@@ -228,6 +273,15 @@
 
 .dashboard-barrier .widget-header-btn.ai-btn {
   background-color: rgba(255, 255, 255, 0.5);
+}
+
+.dashboard-barrier .widget-header-btn.is-active {
+  background-color: #000;
+  color: #fff;
+}
+
+.dashboard-barrier .widget-header-btn.is-danger:hover {
+  background-color: #FA618A;
 }
 
 .dashboard-barrier .widget-header-btn:disabled {

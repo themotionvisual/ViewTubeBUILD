@@ -220,7 +220,7 @@ export const CommunityPostWidget = ({
         <div className="flex-1 relative">
           <Link className="absolute left-2 top-1/2 -translate-y-1/2 opacity-40" size={14} />
           <input 
-            className="vt-input pl-8 text-[11px] h-9 border-t-2 border-b-0 border-l-0 border-r-0 border-black rounded-none"
+            className="vt-input pl-8 text-[11px] h-9 border-t-[3px] border-b-0 border-l-0 border-r-0 border-[var(--widget-border,#000)] rounded-none"
             placeholder="Paste image URL..."
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
@@ -251,20 +251,21 @@ export const CommunityPostWidget = ({
 
   return (
     <WidgetShell {...common} headerContent={headerContent} icon={<Users size={22} />}>
-      <motion.div 
+      <motion.div
         layout
-        className="flex flex-col h-full gap-3 overflow-hidden"
+        className="flex flex-col h-full gap-3"
       >
 
         <AnimatePresence mode="wait">
           {viewMode === "write" ? (
-            <motion.div 
+            <motion.div
               key="write"
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 10 }}
-              className="flex-1 flex flex-col gap-2 overflow-y-auto"
+              className="flex-1 flex flex-col gap-2 min-h-0"
             >
+              <div className="flex-1 flex flex-col gap-2 overflow-y-auto min-h-0">
               {/* Type Selector */}
               <div className="vt-tab-group min-h-[36px]">
                 {[
@@ -347,9 +348,11 @@ export const CommunityPostWidget = ({
                 </div>
               )}
 
+              </div>
+
               {/* Action Toolbar */}
-              <div className="flex gap-2 mt-auto pt-2 border-t border-black/10 w-full">
-                <button 
+              <div className="vt-full-bleed-bottom border-t-[3px] border-[var(--widget-border,#000)] pt-2.5 pb-2 px-2.5 flex gap-2 bg-[#fff]">
+                <button
                   onClick={saveToVault}
                   className="vt-button"
                   title="Save to Vault"
@@ -357,14 +360,14 @@ export const CommunityPostWidget = ({
                 >
                   <Archive size={16} />
                 </button>
-                <button 
+                <button
                   className="vt-button"
                   title="Schedule Post"
                   style={{ width: "36px", height: "36px", flexShrink: 0, padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
                 >
                   <Calendar size={16} />
                 </button>
-                <button 
+                <button
                   onClick={async () => {
                     await navigator.clipboard.writeText(content)
                     console.log("Copied to clipboard")

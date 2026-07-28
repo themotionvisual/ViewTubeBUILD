@@ -15,12 +15,12 @@ import { CustomIcon } from "./CustomIcon"
 import { StableChartFrame } from "./StableChartFrame"
 import { SubToolboxChartModule, subToolboxChartPresets } from "./SubToolboxChartModule"
 import { InsightMarquee } from "./InsightMarquee"
+import { VT_SPECTRUM_PALETTE_06, VT_NAV_PALETTE_12 } from "../styles/toolboxPalette"
 import { UPLOAD_CACHE_FILES_KEY } from "../services/analytics/SyncPipeline"
 import {
   buildKeywordClustersFromMasterRows,
   buildKeywordSelectionSummary,
   buildKeywordCombinationStats,
-  toggleKeywordSelection,
   getKeywordMetricDefinition,
   formatKeywordMetricValue,
   KEYWORD_VENN_METRIC_OPTIONS,
@@ -34,6 +34,7 @@ const mv = (row: CanonicalVideoRow, key: string): number =>
 export interface GChartProps {
  data: CanonicalVideoRow[]
  trafficRows?: Array<Record<string, unknown>>
+ trafficByDay?: Array<Record<string, unknown>>
  useVideoTrafficFallback?: boolean
 }
 
@@ -42,6 +43,157 @@ const ctrPct = (row: CanonicalVideoRow): number => {
  const raw = mv(row, "ctr")
  if (!Number.isFinite(raw)) return 0
  return raw <= 1 ? raw * 100 : raw
+}
+
+type DistributionFormatKey = "videos" | "shorts" | "longform"
+type DistributionWindowKey = "7d" | "28d" | "90d" | "365d" | "lifetime"
+
+const DISTRIBUTION_COUNT_VALUES = [5, 10, 15, 20]
+const DISTRIBUTION_FORMAT_VALUES: DistributionFormatKey[] = ["videos", "shorts", "longform"]
+const DISTRIBUTION_WINDOW_VALUES: Array<{ value: DistributionWindowKey; label: string }> = [
+ { value: "7d", label: "7 DAYS" },
+ { value: "28d", label: "28 DAYS" },
+ { value: "90d", label: "90 DAYS" },
+ { value: "365d", label: "365 DAYS" },
+ { value: "lifetime", label: "LIFETIME" },
+]
+
+const getDistributionFormatLabel = (value: DistributionFormatKey): string => {
+ if (value === "shorts") return "SHORTS"
+ if (value === "longform") return "LONG FORMAT"
+ return "VIDEOS"
+}
+
+const cycleDistributionValue = <T,>(values: readonly T[], current: T, dir: 1 | -1): T => {
+ const idx = values.indexOf(current)
+ const nextIdx = (idx + dir + values.length) % values.length
+ return values[nextIdx]
+}
+
+const getRowUploadTimestamp = (row: CanonicalVideoRow): number => {
+ const uploadValue = String(row.uploadDate || "")
+ const parsed = new Date(uploadValue).getTime()
+ return Number.isFinite(parsed) ? parsed : 0
+}
+
+const isShortDistributionRow = (row: CanonicalVideoRow): boolean => {
+ const format = String(row.format || "").toLowerCase()
+ return format.includes("short") || parseDurationSeconds((row as any).durationSeconds) <= 180
+}
+
+const matchesDistributionFormat = (row: CanonicalVideoRow, format: DistributionFormatKey): boolean => {
+ if (format === "videos") return true
+ const isShort = isShortDistributionRow(row)
+ return format === "shorts" ? isShort : !isShort
+}
+
+const matchesDistributionWindow = (row: CanonicalVideoRow, windowKey: DistributionWindowKey): boolean => {
+ if (windowKey === "lifetime") return true
+ const uploadTs = getRowUploadTimestamp(row)
+ if (!uploadTs) return true
+ const days = Number(windowKey.replace("d", ""))
+ const threshold = Date.now() - days * 24 * 60 * 60 * 1000
+ return uploadTs >= threshold
+}
+
+const getDistributionWindowLabel = (value: DistributionWindowKey): string =>
+ DISTRIBUTION_WINDOW_VALUES.find((option) => option.value === value)?.label || "LIFETIME"
+
+const getTrafficSourceFormatLabel = (value: DistributionFormatKey): string => {
+ if (value === "shorts") return "ALL CHANNEL SHORTS"
+ if (value === "longform") return "ALL LONGFORM VIDEOS"
+ return "ALL CHANNEL VIDEOS"
+}
+
+const buildDistributionControllerRows = (config: {
+ count: number
+ onCountPrev: () => void
+ onCountNext: () => void
+ leadLabel: string
+ leadTone: string
+ format: DistributionFormatKey
+ onFormatPrev: () => void
+ onFormatNext: () => void
+ formatTone: string
+ window: DistributionWindowKey
+ onWindowSelect: (value: DistributionWindowKey) => void
+}) => [
+ { type: "number" as const, value: config.count, bgTone: "#33FF99", onPrev: config.onCountPrev, onNext: config.onCountNext },
+ {
+  type: "split" as const,
+  bgTone: "#000000",
+  leftBgTone: "#000000",
+  leftFgTone: config.leadTone,
+  rightBgTone: config.formatTone,
+  rightFgTone: "#000000",
+  leftValue: config.leadLabel,
+  rightValue: getDistributionFormatLabel(config.format),
+  onPrev: config.onFormatPrev,
+  onNext: config.onFormatNext,
+ },
+ {
+  type: "dropdown" as const,
+  value: config.window,
+  labelPrefix: "WINDOW",
+  options: DISTRIBUTION_WINDOW_VALUES,
+  onSelect: config.onWindowSelect,
+  bgTone: "#FFFFFF",
+  fgTone: "#000000",
+ },
+]
+
+const EngagementKeyItem: React.FC<{ label: string; tone: string }> = ({ label, tone }) => (
+ <div className="flex items-center gap-2 min-w-0">
+  <div className="relative flex items-center h-5 w-[90px] shrink-0">
+   <div className="absolute left-[2px] right-[2px] top-1/2 -translate-y-1/2 h-2" style={{ background: tone }} />
+   <div className="flex items-center justify-between w-full relative z-10">
+    <div className="w-4 h-4 border-[2px] rounded-full border-black" style={{ background: tone }} />
+    <div className="w-4 h-4 border-[2px] rounded-full border-black" style={{ background: tone }} />
+    <div className="w-4 h-4 border-[2px] rounded-full border-black" style={{ background: tone }} />
+   </div>
+  </div>
+  <span className="text-[10px] font-black uppercase tracking-[0.08em] whitespace-nowrap" style={{ color: tone }}>
+   {label}
+  </span>
+ </div>
+)
+
+const EngagementLeftAxisLabel: React.FC<{ viewBox?: { x: number; y: number; width: number; height: number } }> = ({ viewBox }) => {
+ if (!viewBox) return null
+ const x = viewBox.x + 2
+ const y = viewBox.y + viewBox.height / 2
+ return (
+  <g transform={`translate(${x},${y}) rotate(-90)`}>
+   <text
+    textAnchor="middle"
+    dominantBaseline="middle"
+    style={{ fontWeight: 1000, fontSize: 14, letterSpacing: "0.08em" }}
+   >
+    <tspan fill="#00E5FF">COMMENTS</tspan>
+    <tspan fill="#000000"> • </tspan>
+    <tspan fill="#FFE357">SHARES</tspan>
+    <tspan fill="#000000"> • </tspan>
+    <tspan fill="#CCFF00">SUBS</tspan>
+   </text>
+  </g>
+ )
+}
+
+const EngagementRightAxisLabel: React.FC<{ viewBox?: { x: number; y: number; width: number; height: number } }> = ({ viewBox }) => {
+ if (!viewBox) return null
+ const x = viewBox.x + viewBox.width - 2
+ const y = viewBox.y + viewBox.height / 2
+ return (
+  <g transform={`translate(${x},${y}) rotate(90)`}>
+   <text
+    textAnchor="middle"
+    dominantBaseline="middle"
+    style={{ fontWeight: 1000, fontSize: 15, letterSpacing: "0.08em", fill: "#FF7497" }}
+   >
+    LIKES
+   </text>
+  </g>
+ )
 }
 
 const formatCompact = (value: number): string => {
@@ -125,14 +277,15 @@ const ChartTip = ({ active, payload }: any) => {
 
 /* ── Chart card shell ── */
 const Card: React.FC<{
- title: string; subtitle?: string; headerColor?: string; count?: number; icon?: React.ReactNode; children: React.ReactNode
-}> = ({ title, subtitle = "CANONICAL METRIC VIEW", headerColor = "#FFEA00", count, icon = <CustomIcon name="analytics" size={18} />, children }) => (
+ title: string; subtitle?: string; headerColor?: string; count?: number; icon?: React.ReactNode; controls?: React.ReactNode; children: React.ReactNode
+}> = ({ title, subtitle = "CANONICAL METRIC VIEW", headerColor = "#FFEA00", count, icon = <CustomIcon name="analytics" size={18} />, controls, children }) => (
  <UnifiedChartModule
   title={title}
   subtitle={subtitle}
   headerIcon={icon}
   headerColor={headerColor}
   stats={count !== undefined ? [{ label: "VIDEOS", value: String(count), tone: "white" }] : []}
+  controls={controls}
  >
   <div className="mx-auto max-w-[1020px] border-[3px] border-black rounded-[8px] bg-white p-2 h-[332px]">
    <StableChartFrame minHeightClassName="min-h-[320px]">
@@ -148,12 +301,28 @@ const Card: React.FC<{
 export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
  const [mode, setMode] = useState<"top-performing" | "most-recent">("top-performing")
  const [modeMenuOpen, setModeMenuOpen] = useState(false)
+ const [selectedCount, setSelectedCount] = useState(25)
+ const [countMenuOpen, setCountMenuOpen] = useState(false)
+ const [selectedFormat, setSelectedFormat] = useState("All")
  const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+
+ const COUNT_VALUES = [10, 15, 20, 25, 50, 100]
+ const COUNT_OPTIONS = COUNT_VALUES.map((n) => ({ value: String(n), label: `TOP ${n}` }))
+ const cycleCount = (dir: 1 | -1) => {
+  const idx = COUNT_VALUES.indexOf(selectedCount)
+  const nextIdx = (idx + dir + COUNT_VALUES.length) % COUNT_VALUES.length
+  setSelectedCount(COUNT_VALUES[nextIdx])
+  setHoveredKey(null)
+ }
 
  const matrix = useMemo(() => {
   const missing = new Set<string>()
   const warnings = new Set<string>()
-  const allLongRows = data.filter((row) => isLongFormForValueMatrix(row))
+  const allLongRows = data.filter((row) => {
+   if (selectedFormat === "Long") return isLongFormForValueMatrix(row)
+   // "All" includes both long-form and short-form videos
+   return true
+  })
 
   const points = allLongRows
    .map((row, index) => {
@@ -187,13 +356,13 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
    mode === "most-recent"
     ? [...points].sort((a, b) => b.uploadTs - a.uploadTs)
     : [...points].sort((a, b) => b.views - a.views)
-  const top100 = sorted.slice(0, 100)
+  const topN = sorted.slice(0, selectedCount)
 
-  const inRangeCtr = top100.map((point) => point.ctr).filter((value) => value > 0 && value <= 20)
+  const inRangeCtr = topN.map((point) => point.ctr).filter((value) => value > 0 && value <= 20)
   const ctrCeilCandidate = inRangeCtr.length > 0 ? Math.max(...inRangeCtr) * 1.1 : 10
   const ctrDomainMax = Math.max(10, Math.min(20, Math.ceil(ctrCeilCandidate)))
-  const plotted = top100.filter((point) => point.ctr <= ctrDomainMax)
-  if (plotted.length < top100.length) warnings.add("ctr_outliers_excluded_from_plot")
+  const plotted = topN.filter((point) => point.ctr <= ctrDomainMax)
+  if (plotted.length < topN.length) warnings.add("ctr_outliers_excluded_from_plot")
 
   const maxViews = Math.max(1, ...plotted.map((point) => point.views))
   const minViews = Math.max(1, Math.min(...plotted.map((point) => point.views)))
@@ -205,7 +374,7 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
 
   return {
    points: plotted.map((point) => ({ ...point, bubble: bubbleSize(point.views) })),
-   count: top100.length,
+   count: topN.length,
    ctrDomainMax,
    retentionDomainMax: 150,
    thresholds: { ctr: 5, retention: 75 },
@@ -214,7 +383,7 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
    qualityWarnings: Array.from(warnings).sort(),
    totalLongRows: allLongRows.length,
   }
- }, [data, mode])
+ }, [data, mode, selectedCount, selectedFormat])
 
  const activePoint = useMemo(() => {
   if (matrix.points.length === 0) return null
@@ -226,7 +395,7 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
     title: "VIDEO VALUE MATRIX",
-    subtitle: `TOP 100 ${mode === "most-recent" ? "RECENT" : "PERFORMING"} LONG FORM`,
+    subtitle: `TOP ${selectedCount} ${mode === "most-recent" ? "RECENT" : "PERFORMING"} ${selectedFormat === "All" ? "VIDEOS" : selectedFormat.toUpperCase() + " FORM"}`,
     icon: <CustomIcon name="target" size={18} />,
     headerStyle: "subtoolbox",
    }}
@@ -239,23 +408,36 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
    controlBox={{
     count: matrix.count,
     countUnit: "VIDEOS",
-    countLabel: matrix.totalLongRows <= 100 ? "ALL LONG FORM" : "BEST",
-    dropdown:
-     matrix.totalLongRows > 100
+    countLabel: matrix.totalLongRows <= selectedCount ? "ALL" : "TOP",
+    onCountPrev: () => cycleCount(-1),
+    onCountNext: () => cycleCount(1),
+    dropdown: {
+      value: String(selectedCount),
+      isOpen: countMenuOpen,
+      onToggle: () => setCountMenuOpen((prev) => !prev),
+      onSelect: (value) => {
+       setSelectedCount(Number(value))
+       setCountMenuOpen(false)
+       setHoveredKey(null)
+      },
+      options: COUNT_OPTIONS,
+    },
+    dropdown2:
+     matrix.totalLongRows > selectedCount
       ? {
-         value: mode,
-         isOpen: modeMenuOpen,
-         onToggle: () => setModeMenuOpen((prev) => !prev),
-         onSelect: (value) => {
-          setMode(value as "top-performing" | "most-recent")
-          setModeMenuOpen(false)
-          setHoveredKey(null)
-         },
-         options: [
-          { value: "top-performing", label: "100 BEST" },
-          { value: "most-recent", label: "100 LAST" },
-         ],
-        }
+          value: mode,
+          isOpen: modeMenuOpen,
+          onToggle: () => setModeMenuOpen((prev) => !prev),
+          onSelect: (value) => {
+           setMode(value as "top-performing" | "most-recent")
+           setModeMenuOpen(false)
+           setHoveredKey(null)
+          },
+          options: [
+           { value: "top-performing", label: "BEST" },
+           { value: "most-recent", label: "LAST" },
+          ],
+         }
       : undefined,
    }}
    activeContext={{
@@ -316,7 +498,7 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
     <div className="h-[320px] relative">
      <StableChartFrame minHeightClassName="min-h-[320px]">
       <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-       <ScatterChart margin={{ top: 10, right: 20, bottom: 8, left: 8 }}>
+       <ScatterChart margin={{ top: 10, right: 8, bottom: 8, left: 8 }}>
         <ReferenceArea x1={0} x2={matrix.thresholds.ctr} y1={matrix.thresholds.retention} y2={matrix.retentionDomainMax} fill="#dbeafe" fillOpacity={0.16} />
         <ReferenceArea x1={matrix.thresholds.ctr} x2={matrix.ctrDomainMax} y1={matrix.thresholds.retention} y2={matrix.retentionDomainMax} fill="#dcfce7" fillOpacity={0.16} />
         <ReferenceArea x1={0} x2={matrix.thresholds.ctr} y1={0} y2={matrix.thresholds.retention} fill="#fee2e2" fillOpacity={0.16} />
@@ -391,14 +573,37 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
 }
 /* 2. Revenue Distribution */
 export const RevenueDistribution: React.FC<GChartProps> = ({ data }) => {
- const cd = useMemo(() => [...data].sort((a,b) => mv(b,"revenue")-mv(a,"revenue")).slice(0,10)
-  .map(r => ({ name: r.title.substring(0,25), value: +mv(r,"revenue").toFixed(2) })).filter(d=>d.value>0), [data])
+ const [selectedCount, setSelectedCount] = useState(10)
+ const [selectedFormat, setSelectedFormat] = useState<DistributionFormatKey>("videos")
+ const [selectedWindow, setSelectedWindow] = useState<DistributionWindowKey>("lifetime")
+ const cycleCount = (dir: 1 | -1) => {
+  setSelectedCount(cycleDistributionValue(DISTRIBUTION_COUNT_VALUES, selectedCount, dir))
+ }
+ const cycleFormat = (dir: 1 | -1) => {
+  setSelectedFormat(cycleDistributionValue(DISTRIBUTION_FORMAT_VALUES, selectedFormat, dir))
+ }
+ const filtered = useMemo(() => data.filter((row) => matchesDistributionFormat(row, selectedFormat) && matchesDistributionWindow(row, selectedWindow) && mv(row, "revenue") > 0), [data, selectedFormat, selectedWindow])
+ const cd = useMemo(() => [...filtered].sort((a,b) => mv(b,"revenue")-mv(a,"revenue")).slice(0,selectedCount)
+  .map(r => ({ name: r.title.substring(0,25), value: +mv(r,"revenue").toFixed(2) })).filter(d=>d.value>0), [filtered, selectedCount])
  const total = useMemo(() => cd.reduce((s, d) => s + d.value, 0), [cd])
+ const controllerRows = buildDistributionControllerRows({
+  count: cd.length,
+  onCountPrev: () => cycleCount(-1),
+  onCountNext: () => cycleCount(1),
+  leadLabel: "HIGHEST EARNING",
+  leadTone: "#CCFF00",
+  format: selectedFormat,
+  onFormatPrev: () => cycleFormat(-1),
+  onFormatNext: () => cycleFormat(1),
+  formatTone: "#FF7497",
+  window: selectedWindow,
+  onWindowSelect: (value) => setSelectedWindow(value),
+ })
  return (
   <SubToolboxChartModule
    header={{
     title: "REVENUE DISTRIBUTION",
-    subtitle: `TOP ${cd.length} — LAST 90 DAYS`,
+    subtitle: `TOP ${cd.length} • ${getDistributionFormatLabel(selectedFormat)} • ${getDistributionWindowLabel(selectedWindow)}`,
     icon: <CustomIcon name="analytics" size={18} />,
     headerStyle: "subtoolbox",
    }}
@@ -408,7 +613,7 @@ export const RevenueDistribution: React.FC<GChartProps> = ({ data }) => {
     shadowColor: "rgba(204,255,0,0.45)",
    }}
    layout={{ moduleMinHeight: "340px", moduleWidth: "100%" }}
-   controlBox={{ count: cd.length, countUnit: "VIDEOS" }}
+   controllerRows={controllerRows}
    activeContext={{
     title: cd[0]?.name?.toUpperCase() || "NO DATA",
     stats: [
@@ -425,7 +630,7 @@ export const RevenueDistribution: React.FC<GChartProps> = ({ data }) => {
     />
    }
   >
-   <div className="h-[340px] p-4">
+   <div className="h-[340px] px-3 pb-3 pt-1">
     <StableChartFrame minHeightClassName="min-h-[300px]">
      <PieChart>
       <Pie data={cd} innerRadius="30%" outerRadius="90%" dataKey="value" stroke="#fff" strokeWidth={2} label={({value})=>`$${value}`}>
@@ -441,14 +646,37 @@ export const RevenueDistribution: React.FC<GChartProps> = ({ data }) => {
 
 /* 3. Watch Time Distribution */
 export const WatchTimeDistribution: React.FC<GChartProps> = ({ data }) => {
- const cd = useMemo(() => [...data].sort((a,b) => mv(b,"watchHours")-mv(a,"watchHours")).slice(0,10)
-  .map(r => ({ name: r.title.substring(0,25), value: +mv(r,"watchHours").toFixed(1) })).filter(d=>d.value>0), [data])
+ const [selectedCount, setSelectedCount] = useState(10)
+ const [selectedFormat, setSelectedFormat] = useState<DistributionFormatKey>("videos")
+ const [selectedWindow, setSelectedWindow] = useState<DistributionWindowKey>("lifetime")
+ const cycleCount = (dir: 1 | -1) => {
+  setSelectedCount(cycleDistributionValue(DISTRIBUTION_COUNT_VALUES, selectedCount, dir))
+ }
+ const cycleFormat = (dir: 1 | -1) => {
+  setSelectedFormat(cycleDistributionValue(DISTRIBUTION_FORMAT_VALUES, selectedFormat, dir))
+ }
+ const filtered = useMemo(() => data.filter((row) => matchesDistributionFormat(row, selectedFormat) && matchesDistributionWindow(row, selectedWindow) && mv(row, "watchHours") > 0), [data, selectedFormat, selectedWindow])
+ const cd = useMemo(() => [...filtered].sort((a,b) => mv(b,"watchHours")-mv(a,"watchHours")).slice(0,selectedCount)
+  .map(r => ({ name: r.title.substring(0,25), value: +mv(r,"watchHours").toFixed(1) })).filter(d=>d.value>0), [filtered, selectedCount])
  const total = useMemo(() => cd.reduce((s, d) => s + d.value, 0), [cd])
+ const controllerRows = buildDistributionControllerRows({
+  count: cd.length,
+  onCountPrev: () => cycleCount(-1),
+  onCountNext: () => cycleCount(1),
+  leadLabel: "HIGHEST WATCH TIME",
+  leadTone: "#FFEA00",
+  format: selectedFormat,
+  onFormatPrev: () => cycleFormat(-1),
+  onFormatNext: () => cycleFormat(1),
+  formatTone: "#00E5FF",
+  window: selectedWindow,
+  onWindowSelect: (value) => setSelectedWindow(value),
+ })
  return (
   <SubToolboxChartModule
    header={{
     title: "WATCH TIME DISTRIBUTION",
-    subtitle: "CANONICAL METRIC VIEW",
+    subtitle: `TOP ${cd.length} • ${getDistributionFormatLabel(selectedFormat)} • ${getDistributionWindowLabel(selectedWindow)}`,
     icon: <CustomIcon name="calendar" size={18} />,
     headerStyle: "subtoolbox",
    }}
@@ -458,7 +686,7 @@ export const WatchTimeDistribution: React.FC<GChartProps> = ({ data }) => {
     shadowColor: "rgba(255,234,0,0.45)",
    }}
    layout={{ moduleMinHeight: "340px", moduleWidth: "100%" }}
-   controlBox={{ count: cd.length, countUnit: "VIDEOS" }}
+   controllerRows={controllerRows}
    activeContext={{
     title: cd[0]?.name?.toUpperCase() || "NO DATA",
     stats: [
@@ -475,7 +703,7 @@ export const WatchTimeDistribution: React.FC<GChartProps> = ({ data }) => {
     />
    }
   >
-   <div className="h-[340px] p-4">
+   <div className="h-[340px] px-3 pb-3 pt-1">
     <StableChartFrame minHeightClassName="min-h-[300px]">
      <PieChart>
       <Pie data={cd} innerRadius="20%" outerRadius="90%" dataKey="value" stroke="#fff" strokeWidth={2}>
@@ -491,22 +719,39 @@ export const WatchTimeDistribution: React.FC<GChartProps> = ({ data }) => {
 
 /* 4. Subscribers Gained */
 export const SubscribersGained: React.FC<GChartProps> = ({ data }) => {
- const [mode, setMode] = useState<"subs" | "views" | "watch">("subs")
- const [modeMenuOpen, setModeMenuOpen] = useState(false)
- const modeLabel = mode === "subs" ? "SUBSCRIBERS" : mode === "views" ? "VIEWS" : "WATCH HOURS"
- const cd = useMemo(() => {
-  const metric = mode === "views" ? "views" : mode === "watch" ? "watchHours" : "subscribersGained"
-  return [...data]
-   .sort((a, b) => mv(b, metric) - mv(a, metric))
-   .slice(0, 10)
-   .map((r) => ({ name: r.title.substring(0, 18), value: mv(r, metric) }))
-   .filter((d) => d.value > 0)
- }, [data, mode])
+ const [selectedCount, setSelectedCount] = useState(10)
+ const [selectedFormat, setSelectedFormat] = useState<DistributionFormatKey>("videos")
+ const [selectedWindow, setSelectedWindow] = useState<DistributionWindowKey>("lifetime")
+ const cycleCount = (dir: 1 | -1) => {
+  setSelectedCount(cycleDistributionValue(DISTRIBUTION_COUNT_VALUES, selectedCount, dir))
+ }
+ const cycleFormat = (dir: 1 | -1) => {
+  setSelectedFormat(cycleDistributionValue(DISTRIBUTION_FORMAT_VALUES, selectedFormat, dir))
+ }
+ const filtered = useMemo(() => data.filter((row) => matchesDistributionFormat(row, selectedFormat) && matchesDistributionWindow(row, selectedWindow) && mv(row, "subscribersGained") > 0), [data, selectedFormat, selectedWindow])
+ const cd = useMemo(() => [...filtered]
+  .sort((a, b) => mv(b, "subscribersGained") - mv(a, "subscribersGained"))
+  .slice(0, selectedCount)
+  .map((r) => ({ name: r.title.substring(0, 18), value: mv(r, "subscribersGained") }))
+  .filter((d) => d.value > 0), [filtered, selectedCount])
+ const controllerRows = buildDistributionControllerRows({
+  count: cd.length,
+  onCountPrev: () => cycleCount(-1),
+  onCountNext: () => cycleCount(1),
+  leadLabel: "HIGHEST SUBS",
+  leadTone: "#00E5FF",
+  format: selectedFormat,
+  onFormatPrev: () => cycleFormat(-1),
+  onFormatNext: () => cycleFormat(1),
+  formatTone: "#FF7497",
+  window: selectedWindow,
+  onWindowSelect: (value) => setSelectedWindow(value),
+ })
  return (
   <SubToolboxChartModule
    header={{
     title: "SUBSCRIBERS GAINED",
-    subtitle: `RANKED BY ${modeLabel}`,
+    subtitle: `TOP ${cd.length} • ${getDistributionFormatLabel(selectedFormat)} • ${getDistributionWindowLabel(selectedWindow)}`,
     icon: <CustomIcon name="analytics" size={18} />,
     headerStyle: "subtoolbox",
    }}
@@ -516,21 +761,7 @@ export const SubscribersGained: React.FC<GChartProps> = ({ data }) => {
     shadowColor: "rgba(255,234,0,0.45)",
    }}
    layout={{ moduleMinHeight: "340px", moduleWidth: "100%" }}
-   controlBox={{
-    count: 50,
-    countUnit: "VIDEOS",
-    dropdown: {
-     value: mode,
-     isOpen: modeMenuOpen,
-     onToggle: () => setModeMenuOpen((prev) => !prev),
-     onSelect: (value) => { setMode(value as any); setModeMenuOpen(false) },
-     options: [
-      { value: "subs", label: "SUBS" },
-      { value: "views", label: "VIEWS" },
-      { value: "watch", label: "WATCH" },
-     ],
-    },
-   }}
+   controllerRows={controllerRows}
    activeContext={{
     title: cd[0]?.name?.toUpperCase() || "NO DATA",
     stats: [
@@ -547,7 +778,7 @@ export const SubscribersGained: React.FC<GChartProps> = ({ data }) => {
     />
    }
   >
-   <div className="h-[340px] p-4">
+   <div className="h-[340px] px-3 pb-3 pt-1">
     <StableChartFrame minHeightClassName="min-h-[300px]">
      <BarChart data={cd} margin={{top:10,right:10,left:-20,bottom:40}}>
       <CartesianGrid strokeDasharray="3 3" vertical={false}/>
@@ -619,12 +850,18 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
  const [mode, setMode] = useState<"top-performing" | "most-recent">("top-performing")
  const [hoveredKey, setHoveredKey] = useState<string | null>(null)
  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
+ const [selectedCount, setSelectedCount] = useState(100)
+ const [selectedFormat, setSelectedFormat] = useState<"All" | "Shorts" | "Long">("All")
  const cd = useMemo(() => {
   const isShortRow = (r: CanonicalVideoRow) =>
    String(r.format || "").toLowerCase().includes("short") ||
    (r.durationSeconds > 0 && r.durationSeconds <= 180)
   const shorts = data
-   .filter((r) => isShortRow(r))
+   .filter((r) => {
+    if (selectedFormat === "Shorts") return isShortRow(r)
+    if (selectedFormat === "Long") return !isShortRow(r)
+    return true
+   })
    .map((r) => ({
     title: r.title,
     dur: r.durationSeconds,
@@ -639,7 +876,7 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
    ? [...shorts].sort((a, b) => b.uploadTs - a.uploadTs)
    : [...shorts].sort((a, b) => b.views - a.views)
 
-  const top100 = ranked.slice(0, 100)
+  const top100 = ranked.slice(0, selectedCount)
   const yTop = 300
   if (top100.length === 0) {
    return { points: [], yTop }
@@ -683,7 +920,7 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
    points: [...points].sort((a, b) => b.radius - a.radius),
    yTop,
   }
- }, [data, mode])
+ }, [data, mode, selectedCount, selectedFormat])
 
  const bubbleShape = (props: any) => {
   const { cx, cy, payload } = props
@@ -726,6 +963,22 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
       className="h-7 px-2 bg-white border-[2px] border-black rounded-[4px] text-[9px] font-black uppercase">
       <option value="top-performing">Top Performing</option>
       <option value="most-recent">Most Recent</option>
+     </select>
+     <select
+      value={selectedCount}
+      onChange={(e) => setSelectedCount(Number(e.target.value))}
+      className="h-7 px-2 bg-white border-[2px] border-black rounded-[4px] text-[9px] font-black uppercase">
+      {[25, 50, 75, 100, 200].map((n) => (
+       <option key={n} value={n}>TOP {n}</option>
+      ))}
+     </select>
+     <select
+      value={selectedFormat}
+      onChange={(e) => setSelectedFormat(e.target.value as "All" | "Shorts" | "Long")}
+      className="h-7 px-2 bg-white border-[2px] border-black rounded-[4px] text-[9px] font-black uppercase">
+      {["All", "Shorts", "Long"].map((f) => (
+       <option key={f} value={f}>{f.toUpperCase()}</option>
+      ))}
      </select>
      <span className="text-[10px] font-black uppercase">TOP AVG % {cd.yTop}</span>
      <span className="text-[10px] font-black">{cd.points.length} SHOWN</span>
@@ -793,14 +1046,22 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
 }
 
 /* 5b. Shorts Retention - Widget Module (no tooltip, subtitle rail) */
+const SHORTS_RETENTION_COUNT_VALUES = [25, 50, 75, 100, 200]
+
 export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => {
  const [mode, setMode] = useState<"top-performing" | "most-recent">("top-performing")
  const [sortMetric, setSortMetric] = useState<"avd" | "estIncome" | "dur" | "views">("avd")
  const [modeMenuOpen, setModeMenuOpen] = useState(false)
  const [activeKey, setActiveKey] = useState<string | null>(null)
  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
+ const [selectedCount, setSelectedCount] = useState(100)
  const rafMouseRef = useRef<number | null>(null)
  const pendingMouseRef = useRef<{ x: number; y: number } | null>(null)
+ const cycleCount = (dir: 1 | -1) => {
+  const idx = SHORTS_RETENTION_COUNT_VALUES.indexOf(selectedCount)
+  const nextIdx = (idx + dir + SHORTS_RETENTION_COUNT_VALUES.length) % SHORTS_RETENTION_COUNT_VALUES.length
+  setSelectedCount(SHORTS_RETENTION_COUNT_VALUES[nextIdx])
+ }
 
  const cd = useMemo(() => {
   const isShortRow = (r: CanonicalVideoRow) =>
@@ -822,7 +1083,7 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
    ? [...shorts].sort((a, b) => b.uploadTs - a.uploadTs)
    : [...shorts].sort((a, b) => b[sortMetric] - a[sortMetric])
 
-  const top100 = ranked.slice(0, 100)
+  const top100 = ranked.slice(0, selectedCount)
   const yTop = 300
   const minViews = Math.min(...top100.map((d) => d.views))
   const maxViews = Math.max(...top100.map((d) => d.views))
@@ -862,7 +1123,7 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
    points: [...points].sort((a, b) => b.radius - a.radius),
    yTop,
   }
- }, [data, mode, sortMetric])
+ }, [data, mode, sortMetric, selectedCount])
 
  useEffect(() => {
   if (cd.points.length === 0) {
@@ -931,6 +1192,8 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
    controlBox={{
     count: cd.points.length,
     countUnit: "VIDEOS",
+    onCountPrev: () => cycleCount(-1),
+    onCountNext: () => cycleCount(1),
     dropdown: {
       value: mode,
       isOpen: modeMenuOpen,
@@ -948,14 +1211,14 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
    activeContext={{
      title: activePoint?.title?.toUpperCase() || "NO VIDEO SELECTED",
      stats: [
-      { label: "AVD%", value: activePoint ? activePoint.avd.toFixed(2) : "0.00", tone: "lime", onClick: () => setSortMetric("avd"), isActive: sortMetric === "avd" },
+      { label: "AVP%", value: activePoint ? activePoint.avd.toFixed(2) : "0.00", tone: "lime", onClick: () => setSortMetric("avd"), isActive: sortMetric === "avd" },
       { label: "REV", value: `$${activePoint ? activePoint.estIncome.toFixed(2) : "0.00"}`, tone: "cyan", onClick: () => setSortMetric("estIncome"), isActive: sortMetric === "estIncome" },
       { label: "LENGTH", value: `${activePoint ? Math.round(activePoint.dur) : 0}s`, tone: "yellow", onClick: () => setSortMetric("dur"), isActive: sortMetric === "dur" },
       { label: "VIEWS", value: activePoint ? Math.round(activePoint.views).toLocaleString() : "0", tone: "white", onClick: () => setSortMetric("views"), isActive: sortMetric === "views" },
      ],
    }}
    metricBadges={[
-    { label: "AVD%", tone: "lime" },
+    { label: "AVP%", tone: "lime" },
     { label: "REV", tone: "cyan" },
     { label: "VIEWS", tone: "white" },
    ]}
@@ -1020,7 +1283,7 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
         }}
        />
        <Scatter data={cd.points} shape={bubbleShape} name="Income Gradient" />
-      <Customized component={({ offset }: any) => {
+      <Customized component={({ offset, width }: any) => {
         if (!mousePos || !offset) return null
         const left = offset.left
         const top = offset.top
@@ -1109,11 +1372,19 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
 }
 
 /* 5c. Algorithm Trigger Module (CTR × Impressions - SubToolbox) */
+const ALGORITHM_TRIGGER_COUNT_VALUES = [25, 50, 75, 100]
+
 export const AlgorithmTriggerModule: React.FC<GChartProps> = ({ data }) => {
  const [mode, setMode] = useState<"top-performing" | "most-recent">("top-performing")
  const [sortMetric, setSortMetric] = useState<"ctr" | "impressions" | "views">("impressions")
  const [modeMenuOpen, setModeMenuOpen] = useState(false)
  const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+ const [selectedCount, setSelectedCount] = useState(50)
+ const cycleCount = (dir: 1 | -1) => {
+  const idx = ALGORITHM_TRIGGER_COUNT_VALUES.indexOf(selectedCount)
+  const nextIdx = (idx + dir + ALGORITHM_TRIGGER_COUNT_VALUES.length) % ALGORITHM_TRIGGER_COUNT_VALUES.length
+  setSelectedCount(ALGORITHM_TRIGGER_COUNT_VALUES[nextIdx])
+ }
 
  const cd = useMemo(() => {
   const all = data
@@ -1144,7 +1415,7 @@ export const AlgorithmTriggerModule: React.FC<GChartProps> = ({ data }) => {
    ? [...all].sort((a, b) => b.uploadTs - a.uploadTs)
    : [...all].sort((a, b) => b[sortMetric] - a[sortMetric])
 
-  const top50 = ranked.slice(0, 50)
+  const top50 = ranked.slice(0, selectedCount)
   const maxImp = Math.max(1, ...top50.map((d) => d.impressions))
   const minImp = Math.min(...top50.map((d) => d.impressions))
   const lerp = (a: number, b: number, t: number) => a + (b - a) * t
@@ -1156,7 +1427,7 @@ export const AlgorithmTriggerModule: React.FC<GChartProps> = ({ data }) => {
    const color = d.format === "shorts" ? "#00CCFF" : "#FF3399"
    return { ...d, key, radius, color }
   })
- }, [data, mode, sortMetric])
+ }, [data, mode, sortMetric, selectedCount])
 
  const bubbleShape = (props: any) => {
   const { cx, cy, payload } = props
@@ -1189,7 +1460,7 @@ export const AlgorithmTriggerModule: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
     title: "ALGORITHM TRIGGER",
-    subtitle: `TOP 50 ${mode === "most-recent" ? "RECENT" : "PERFORMING"} BY ${sortMetric.toUpperCase()}`,
+    subtitle: `TOP ${selectedCount} ${mode === "most-recent" ? "RECENT" : "PERFORMING"} BY ${sortMetric.toUpperCase()}`,
     icon: <CustomIcon name="analytics" size={18} />,
     headerStyle: "subtoolbox",
    }}
@@ -1202,6 +1473,8 @@ export const AlgorithmTriggerModule: React.FC<GChartProps> = ({ data }) => {
    controlBox={{
     count: cd.length,
     countUnit: "VIDEOS",
+    onCountPrev: () => cycleCount(-1),
+    onCountNext: () => cycleCount(1),
     dropdown: {
      value: mode,
      isOpen: modeMenuOpen,
@@ -1323,15 +1596,32 @@ const ENGAGEMENT_METRICS = [
  { key: "likes", label: "LIKES", color: "#FF7497", tone: "pink" as const },
 ] as const
 
+const ENGAGEMENT_PULSE_COUNT_OPTIONS = [10, 15, 20, 25, 50]
+
 export const EngagementLinesModule: React.FC<GChartProps> = ({ data }) => {
  const [sortMetric, setSortMetric] = useState<string>("likes")
  const [mode, setMode] = useState<"top-performing" | "most-recent">("most-recent")
- const [modeMenuOpen, setModeMenuOpen] = useState(false)
+ const [format, setFormat] = useState<"shorts" | "longform" | "combined">("combined")
+ const [selectedCount, setSelectedCount] = useState(25)
+ const [hoveredBucketKey, setHoveredBucketKey] = useState<string | null>(null)
  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
  const [animKey, setAnimKey] = useState(0)
+ const [rankMenuOpen, setRankMenuOpen] = useState(false)
+
+ const cycleCount = (dir: 1 | -1) => {
+  const idx = ENGAGEMENT_PULSE_COUNT_OPTIONS.indexOf(selectedCount)
+  const nextIdx = (idx + dir + ENGAGEMENT_PULSE_COUNT_OPTIONS.length) % ENGAGEMENT_PULSE_COUNT_OPTIONS.length
+  setSelectedCount(ENGAGEMENT_PULSE_COUNT_OPTIONS[nextIdx])
+  setAnimKey((k) => k + 1)
+ }
 
  const cd = useMemo(() => {
-  const mapped = data.map((r) => ({
+  const filteredByFormat = data.filter((r) => {
+   if (format === "shorts") return r.format === "shorts"
+   if (format === "longform") return r.format !== "shorts"
+   return true
+  })
+  const mapped = filteredByFormat.map((r) => ({
    title: r.title,
    comments: mv(r, "comments"),
    likes: mv(r, "likes"),
@@ -1345,15 +1635,15 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data }) => {
 
   const sorted =
    mode === "most-recent"
-    ? sortedByMetric([...mapped].sort((a, b) => b.uploadTs - a.uploadTs).slice(0, 25))
+    ? sortedByMetric([...mapped].sort((a, b) => b.uploadTs - a.uploadTs).slice(0, selectedCount))
     : sortedByMetric(mapped)
 
-  return sorted.slice(0, 25).map((d, i) => ({
+  return sorted.slice(0, selectedCount).map((d, i) => ({
    ...d,
    idx: i,
    name: String(i + 1),
   }))
- }, [data, sortMetric, mode])
+ }, [data, sortMetric, mode, format, selectedCount])
 
  // Fixed dual-axis: LEFT = comments/shares/subs, RIGHT = likes (always)
  const { leftMax, rightMax } = useMemo(() => {
@@ -1378,11 +1668,20 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data }) => {
 
  const handleModeChange = (value: string) => {
   setMode(value as any)
-  setModeMenuOpen(false)
   setAnimKey((k) => k + 1)
  }
 
+ const cycleFormat = () => {
+  setFormat((prev) => (prev === "combined" ? "shorts" : prev === "shorts" ? "longform" : "combined"))
+ }
+
+ const toggleMode = () => {
+  handleModeChange(mode === "most-recent" ? "top-performing" : "most-recent")
+ }
+
  const sortLabel = ENGAGEMENT_METRICS.find((m) => m.key === sortMetric)?.label || "LIKES"
+ const modeLabel = mode === "most-recent" ? "NEWEST" : "BEST"
+ const formatLabel = format === "shorts" ? "SHORTS" : format === "longform" ? "LONGFORMAT" : "VIDEOS"
  const activeRow = hoveredIdx !== null ? cd[hoveredIdx] : cd[0]
  const renderOrder = useMemo(() => {
   const preferredOrder = ["comments", "subscribersGained", "shares", "likes"]
@@ -1429,59 +1728,59 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data }) => {
      { label: "SUBS", value: String(activeRow?.subscribersGained ?? 0), tone: "lime", onClick: () => handleSortChange("subscribersGained"), isActive: sortMetric === "subscribersGained" },
     ],
    }}
-   controlBox={{
-    count: cd.length,
-    countUnit: "VIDEOS",
-    rightInlineControls: (
-     <div className="grid grid-cols-2 gap-1 mr-1">
-      {ENGAGEMENT_METRICS.map((m) => (
-       <button
-        key={m.key}
-        type="button"
-        onClick={() => handleSortChange(m.key)}
-        className={`h-6 px-2 rounded-md border-[2px] text-[9px] font-black uppercase tracking-[0.08em] inline-flex items-center gap-1 ${
-         sortMetric === m.key ? "border-black bg-white" : "border-black/40 bg-white/75"
-        }`}>
-        <span className="w-2 h-2 rounded-full border border-black" style={{ backgroundColor: m.color }} />
-        <span>{m.label}</span>
-       </button>
-      ))}
-     </div>
-    ),
-    dropdown: {
-     value: mode,
-     isOpen: modeMenuOpen,
-     onToggle: () => setModeMenuOpen((prev) => !prev),
-     onSelect: handleModeChange,
-     options: [
-      { value: "most-recent", label: "LAST" },
-      { value: "top-performing", label: "BEST" },
-     ],
+   controllerRows={[
+    { type: "number", value: cd.length, bgTone: "#33FF99", onPrev: () => cycleCount(-1), onNext: () => cycleCount(1) },
+    {
+      type: "split",
+      bgTone: "#FFEA00",
+      leftBgTone: "#FF7497",
+      leftFgTone: "#000000",
+      rightBgTone: "#B14AED",
+      rightFgTone: "#000000",
+      leftValue: modeLabel,
+      rightValue: formatLabel,
+      onPrev: toggleMode,
+      onNext: cycleFormat,
     },
-   }}
-   legendLayout={{
-    right: (
-     <div className="flex items-center gap-2 justify-self-start">
-      <div className="relative flex items-center h-5 w-[90px]">
-       <div className="absolute left-[2px] right-[2px] top-1/2 -translate-y-1/2 h-2 bg-[#FF7497]" />
-       <div className="flex items-center justify-between w-full relative z-10">
-        <div className="w-4 h-4 bg-[#FF7497] border-[2px] rounded-full border-black" />
-        <div className="w-4 h-4 bg-[#FF7497] border-[2px] rounded-full border-black" />
-        <div className="w-4 h-4 bg-[#FF7497] border-[2px] rounded-full border-black" />
-       </div>
-      </div>
-      <span className="font-[1000] text-[12px] tracking-tight uppercase">Selected</span>
-     </div>
-    ),
-   }}
+    {
+      type: "rankedBy",
+      bgTone: "#FFFFFF",
+      label: "BY",
+      value: sortLabel,
+      open: rankMenuOpen,
+      onToggle: () => setRankMenuOpen((prev) => !prev),
+      options: ENGAGEMENT_METRICS.map((m) => ({
+       key: m.key,
+       label: m.label,
+       active: sortMetric === m.key,
+       onSelect: () => {
+        handleSortChange(m.key)
+        setRankMenuOpen(false)
+       },
+      })),
+    },
+   ]}
+   footerBorderless
    footer={
-    <InsightMarquee
-     mode="insight-lock"
-     segments={[
-      { badge: "Chart Insight", text: "Engagement Pulse reveals how each video drives different interaction types — spot which content triggers comments vs. passive likes.", badgeTone: "cyan" },
-      { badge: "Personal Insight", text: cd.length > 0 ? `Sorted by ${sortLabel.toLowerCase()}: your #1 video pulled ${(activeRow as any)?.[sortMetric] ?? 0} ${sortLabel.toLowerCase()}. Switch metric chips to rearrange the full ranking.` : "Sync data to unlock engagement insights.", badgeTone: "lime" },
-     ]}
-    />
+    <div className="bg-black text-white">
+     <div className="flex items-stretch gap-3 px-4 py-2">
+      <div className="flex flex-1 items-center justify-between gap-4">
+       <EngagementKeyItem label="LIKES" tone="#FF7497" />
+       <EngagementKeyItem label="COMMENTS" tone="#00E5FF" />
+      </div>
+      <div className="flex flex-1 items-center justify-between gap-4">
+       <EngagementKeyItem label="SHARES" tone="#FFE357" />
+       <EngagementKeyItem label="SUBS" tone="#CCFF00" />
+      </div>
+     </div>
+     <InsightMarquee
+      mode="insight-lock"
+      segments={[
+       { badge: "Chart Insight", text: "Engagement Pulse reveals how each video drives different interaction types — spot which content triggers comments vs. passive likes.", badgeTone: "cyan" },
+       { badge: "Personal Insight", text: cd.length > 0 ? `Sorted by ${sortLabel.toLowerCase()}: your #1 video pulled ${(activeRow as any)?.[sortMetric] ?? 0} ${sortLabel.toLowerCase()}. Switch metric chips to rearrange the full ranking.` : "Sync data to unlock engagement insights.", badgeTone: "lime" },
+      ]}
+     />
+    </div>
    }
   >
    <div className="min-h-[400px] w-full bg-white p-0 overflow-hidden flex flex-col">
@@ -1510,11 +1809,7 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data }) => {
          axisLine={{ stroke: '#000', strokeWidth: 3 }}
          tickLine={false}
          label={{
-          value: 'COMMENTS • SHARES • SUBS',
-          angle: -90,
-          position: 'insideLeft',
-          offset: 5,
-          style: { fontWeight: 1000, fontSize: 10, fill: '#000', letterSpacing: '0.05em', textAnchor: 'middle' },
+          content: (props: any) => <EngagementLeftAxisLabel {...props} />,
          }}
         />
         <YAxis
@@ -1525,11 +1820,7 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data }) => {
          axisLine={{ stroke: '#000', strokeWidth: 3 }}
          tickLine={false}
          label={{
-          value: 'LIKES',
-          angle: 90,
-          position: 'insideRight',
-          offset: 15,
-          style: { fontWeight: 1000, fontSize: 12, fill: '#FF7497', letterSpacing: '0.05em', textAnchor: 'middle' },
+          content: (props: any) => <EngagementRightAxisLabel {...props} />,
          }}
         />
         <g key={animKey}>
@@ -1579,13 +1870,51 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data }) => {
 }
 
 /* 6. Packaging */
+const CHART_SELECT_CLASS = "h-7 px-2 bg-white border-[2px] border-black rounded-[4px] text-[9px] font-black uppercase"
+
 export const Packaging: React.FC<GChartProps> = ({ data }) => {
- const cd = useMemo(() => [...data].slice(0,20).map(r => ({
-  title: r.title, imp: mv(r,"impressions"), ctr: +mv(r,"ctr").toFixed(1), views: mv(r,"views"),
-  format: r.format
- })).filter(d=>d.imp>0&&d.ctr>0), [data])
+ const [selectedCount, setSelectedCount] = useState(20)
+ const [selectedFormat, setSelectedFormat] = useState<"All" | "Shorts" | "Long">("All")
+ const cd = useMemo(() => {
+  const filtered = data.filter((r) => {
+   if (selectedFormat === "Shorts") return r.format === "shorts"
+   if (selectedFormat === "Long") return r.format !== "shorts"
+   return true
+  })
+  return [...filtered].slice(0, selectedCount).map(r => ({
+   title: r.title, imp: mv(r,"impressions"), ctr: +mv(r,"ctr").toFixed(1), views: mv(r,"views"),
+   format: r.format
+  })).filter(d=>d.imp>0&&d.ctr>0)
+ }, [data, selectedCount, selectedFormat])
  return (
-  <Card title="PACKAGING" subtitle="CTR × Impressions" headerColor="#FFEA00" count={cd.length}>
+  <Card
+   title="PACKAGING"
+   subtitle="CTR × Impressions"
+   headerColor="#FFEA00"
+   count={cd.length}
+   controls={
+    <div className="flex items-center gap-2">
+     <select
+      value={selectedCount}
+      onChange={(e) => setSelectedCount(Number(e.target.value))}
+      className={CHART_SELECT_CLASS}
+     >
+      {[10, 15, 20, 25, 50].map((n) => (
+       <option key={n} value={n}>TOP {n}</option>
+      ))}
+     </select>
+     <select
+      value={selectedFormat}
+      onChange={(e) => setSelectedFormat(e.target.value as "All" | "Shorts" | "Long")}
+      className={CHART_SELECT_CLASS}
+     >
+      {["All", "Shorts", "Long"].map((f) => (
+       <option key={f} value={f}>{f.toUpperCase()}</option>
+      ))}
+     </select>
+    </div>
+   }
+  >
    <ScatterChart margin={{top:10,right:10,bottom:10,left:-10}}>
     <CartesianGrid strokeDasharray="3 3"/><XAxis type="number" dataKey="imp" name="Impressions" tick={{fontWeight:900,fontSize:10}} tickFormatter={v=>v>1000?`${(v/1000).toFixed(0)}K`:v}/>
     <YAxis type="number" dataKey="ctr" name="CTR %" tick={{fontWeight:900,fontSize:10}}/>
@@ -1600,19 +1929,26 @@ export const Packaging: React.FC<GChartProps> = ({ data }) => {
 
 /* 7. Engagement Map */
 export const EngagementMap: React.FC<GChartProps> = ({ data }) => {
- const cd = useMemo(
-  () =>
-   [...data]
-    .sort((a, b) => mv(b, "likes") - mv(a, "likes"))
-    .slice(0, 15)
-    .map((r) => ({
-     name: r.title.substring(0, 28),
-     likes: mv(r, "likes"),
-     comments: mv(r, "comments"),
-     shares: mv(r, "shares"),
-    })),
-  [data],
- )
+ const [selectedCount, setSelectedCount] = useState(15)
+ const [selectedFormat, setSelectedFormat] = useState<"All" | "Shorts" | "Long">("All")
+ const [sortBy, setSortBy] = useState<"best" | "newest">("best")
+ const cd = useMemo(() => {
+  const filtered = data.filter((r) => {
+   if (selectedFormat === "Shorts") return r.format === "shorts"
+   if (selectedFormat === "Long") return r.format !== "shorts"
+   return true
+  })
+  const sorted =
+   sortBy === "newest"
+    ? [...filtered].sort((a, b) => new Date(String(b.uploadDate || "")).getTime() - new Date(String(a.uploadDate || "")).getTime())
+    : [...filtered].sort((a, b) => mv(b, "likes") - mv(a, "likes"))
+  return sorted.slice(0, selectedCount).map((r) => ({
+   name: r.title.substring(0, 28),
+   likes: mv(r, "likes"),
+   comments: mv(r, "comments"),
+   shares: mv(r, "shares"),
+  }))
+ }, [data, selectedCount, selectedFormat, sortBy])
  const top = cd[0]
  return (
   <UnifiedChartModule
@@ -1641,6 +1977,36 @@ export const EngagementMap: React.FC<GChartProps> = ({ data }) => {
     ],
    }}
    insight="Compares social interaction signatures across recent top-comment videos."
+   controls={
+    <div className="flex items-center gap-2">
+     <select
+      value={sortBy}
+      onChange={(e) => setSortBy(e.target.value as "best" | "newest")}
+      className={CHART_SELECT_CLASS}
+     >
+      <option value="best">Best</option>
+      <option value="newest">Newest</option>
+     </select>
+     <select
+      value={selectedCount}
+      onChange={(e) => setSelectedCount(Number(e.target.value))}
+      className={CHART_SELECT_CLASS}
+     >
+      {[10, 15, 20, 25, 50].map((n) => (
+       <option key={n} value={n}>TOP {n}</option>
+      ))}
+     </select>
+     <select
+      value={selectedFormat}
+      onChange={(e) => setSelectedFormat(e.target.value as "All" | "Shorts" | "Long")}
+      className={CHART_SELECT_CLASS}
+     >
+      {["All", "Shorts", "Long"].map((f) => (
+       <option key={f} value={f}>{f.toUpperCase()}</option>
+      ))}
+     </select>
+    </div>
+   }
   >
    <ResponsiveContainer width="100%" height={300} minWidth={1} minHeight={1}>
     <BarChart data={cd} margin={{ top: 10, right: 10, left: -20, bottom: 40 }}>
@@ -1747,8 +2113,12 @@ export const GoldenRatioRadar: React.FC<GChartProps> = ({ data }) => {
 
 /* 13. Hook Effectiveness (30s retention) */
 export const HookEffectiveness: React.FC<GChartProps> = ({ data }) => {
- const cd = useMemo(() => [...data].sort((a,b)=>mv(b,"avp")-mv(a,"avp")).slice(0,10)
-  .map(r => ({ name: r.title.substring(0,20), avp: +mv(r,"avp").toFixed(1) })).filter(d=>d.avp>0), [data])
+ const [selectedCount, setSelectedCount] = useState(10)
+ const cycleCount = (dir: 1 | -1) => {
+  setSelectedCount(cycleDistributionValue(DISTRIBUTION_COUNT_VALUES, selectedCount, dir))
+ }
+ const cd = useMemo(() => [...data].sort((a,b)=>mv(b,"avp")-mv(a,"avp")).slice(0,selectedCount)
+  .map(r => ({ name: r.title.substring(0,20), avp: +mv(r,"avp").toFixed(1) })).filter(d=>d.avp>0), [data, selectedCount])
  return (
   <SubToolboxChartModule
    header={{
@@ -1763,7 +2133,7 @@ export const HookEffectiveness: React.FC<GChartProps> = ({ data }) => {
     shadowColor: "rgba(204,255,0,0.45)",
    }}
    layout={{ moduleMinHeight: "340px", moduleWidth: "100%" }}
-   controlBox={{ count: cd.length, countUnit: "VIDEOS" }}
+   controlBox={{ count: cd.length, countUnit: "VIDEOS", onCountPrev: () => cycleCount(-1), onCountNext: () => cycleCount(1) }}
    activeContext={{
     title: cd[0]?.name?.toUpperCase() || "NO DATA",
     stats: [
@@ -1797,31 +2167,204 @@ export const HookEffectiveness: React.FC<GChartProps> = ({ data }) => {
 
 /* 14. Growth Pulse */
 export const GrowthPulse: React.FC<GChartProps> = ({ data }) => {
- const cd = useMemo(() => [...data].sort((a,b) => new Date(a.uploadDate).getTime()-new Date(b.uploadDate).getTime())
-  .slice(-14).map(r => ({ title: r.title.substring(0,15), views: mv(r,"views"),
-   subs: mv(r,"subscribersGained"), rev: +mv(r,"revenue").toFixed(2), shares: mv(r,"shares") })), [data])
+ const METRIC_OPTIONS = [
+  { value: "subscribersGained", label: "SUBSCRIBERS", tone: "lime" as const, isRevenue: false },
+  { value: "revenue", label: "REVENUE", tone: "yellow" as const, isRevenue: true },
+  { value: "videoCount", label: "VIDEO COUNT", tone: "white" as const, isRevenue: false },
+  { value: "views", label: "VIEWS", tone: "pink" as const, isRevenue: false },
+  { value: "watchHours", label: "WATCH HRS", tone: "cyan" as const, isRevenue: false },
+ ] as const
+ const TIME_RANGE_OPTIONS = [
+  { value: "2y", label: "TWO YEARS", months: 24 },
+  { value: "1y", label: "ONE YEAR", months: 12 },
+  { value: "6m", label: "SIX MONTHS", months: 6 },
+  { value: "3m", label: "THREE MONTHS", months: 3 },
+ ] as const
+
+ const [metric, setMetric] = useState<(typeof METRIC_OPTIONS)[number]["value"]>("views")
+ const [timeRange, setTimeRange] = useState<(typeof TIME_RANGE_OPTIONS)[number]["value"]>("1y")
+ const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+
+ const activeMetric = METRIC_OPTIONS.find((o) => o.value === metric) || METRIC_OPTIONS[3]
+ const activeTimeRange = TIME_RANGE_OPTIONS.find((o) => o.value === timeRange) || TIME_RANGE_OPTIONS[1]
+
+ const formatMetricValue = (key: (typeof METRIC_OPTIONS)[number]["value"], value: number) => {
+  if (key === "revenue") return `$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+  if (key === "watchHours") return `${formatCompact(value)}h`
+  if (key === "videoCount") return formatCompact(value)
+  return formatCompact(value)
+ }
+
+ const formatRange = (start: Date, end: Date) =>
+  `${start.toLocaleDateString(undefined, { month: "numeric", day: "numeric", year: "2-digit" })} - ${end.toLocaleDateString(undefined, { month: "numeric", day: "numeric", year: "2-digit" })}`
+
+ const scopedRows = useMemo(() => {
+  const now = new Date()
+  const rangeStart = new Date(now)
+  rangeStart.setMonth(rangeStart.getMonth() - activeTimeRange.months)
+  return data.filter((r) => {
+   const d = new Date(String(r.uploadDate || ""))
+   return d >= rangeStart && d <= now
+  })
+ }, [data, activeTimeRange.months])
+
+ const chartData = useMemo(() => {
+  const now = new Date()
+  const rangeStart = new Date(now)
+  rangeStart.setMonth(rangeStart.getMonth() - activeTimeRange.months)
+
+  const bucketCount = 24
+  const bucketMs = Math.max(1, (now.getTime() - rangeStart.getTime()) / bucketCount)
+  const buckets = Array.from({ length: bucketCount }, (_, i) => {
+   const start = new Date(rangeStart.getTime() + i * bucketMs)
+   const end = new Date(rangeStart.getTime() + (i + 1) * bucketMs)
+   return {
+    start,
+    end,
+    name: start.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+    periodAmount: 0,
+    totalProgress: 0,
+   }
+  })
+
+  scopedRows.forEach((r) => {
+   const d = new Date(String(r.uploadDate || ""))
+   const diff = d.getTime() - rangeStart.getTime()
+   const idx = Math.min(bucketCount - 1, Math.max(0, Math.floor(diff / bucketMs)))
+   if (idx >= 0 && idx < bucketCount) {
+    buckets[idx].periodAmount += metric === "videoCount" ? 1 : mv(r, metric)
+   }
+  })
+
+  let runningTotal = 0
+  return buckets.map((b) => {
+   runningTotal += b.periodAmount
+   return { ...b, totalProgress: runningTotal }
+  })
+ }, [activeTimeRange.months, metric, scopedRows])
+
+ const selectedWindowStats = useMemo(
+  () => METRIC_OPTIONS.map((option) => {
+   const total = scopedRows.reduce((sum, row) => sum + (option.value === "videoCount" ? 1 : mv(row, option.value)), 0)
+   return {
+    label: option.label,
+    value: formatMetricValue(option.value, total),
+    tone: option.tone,
+    lockTone: true,
+    compact: true,
+   }
+  }),
+  [scopedRows],
+ )
+
+ const hoveredPeriod = hoveredIdx !== null ? chartData[hoveredIdx] ?? null : null
+ const hoveredStats = hoveredPeriod ? [
+  {
+   label: activeMetric.label,
+   value: formatMetricValue(activeMetric.value, hoveredPeriod.periodAmount),
+   tone: activeMetric.tone,
+   lockTone: true,
+   compact: true,
+  },
+  {
+   label: "AREA",
+   value: formatMetricValue(activeMetric.value, hoveredPeriod.totalProgress),
+   tone: "cyan" as const,
+   lockTone: true,
+   compact: true,
+  },
+ ] : null
+
+ const periodRangeLabel = useMemo(() => {
+  if (chartData.length === 0) return "NO PERIOD RANGE"
+  const start = chartData[0]?.start
+  const end = chartData[chartData.length - 1]?.end
+  if (!(start instanceof Date) || !(end instanceof Date)) return "NO PERIOD RANGE"
+  return formatRange(start, end)
+ }, [chartData])
+
+ const activeContextStats = hoveredStats || selectedWindowStats
+
  return (
-  <div className="bg-[#111] border-[4px] border-black rounded-2xl shadow-[8px_8px_0px_0px_black] overflow-hidden">
-   <div className="border-b-[4px] border-black px-5 py-3 bg-black flex justify-between items-center">
-    <span className="font-[900] text-lg uppercase text-[#CCFF00]">GROWTH PULSE</span>
-    <span className="text-[10px] text-gray-500 font-bold">Views × Subs × Revenue × Shares — Last 14</span>
-   </div>
+  <SubToolboxChartModule
+   header={{
+    title: "GROWTH PULSE",
+    subtitle: "PERIOD AMOUNT • RUNNING TOTAL",
+    icon: <CustomIcon name="analytics" size={18} />,
+   }}
+   theme={{
+    headerBandBg: "#FF82B0",
+    iconBlockBg: "#26C7EC",
+    shadowColor: "rgba(255,130,176,0.45)",
+   }}
+   controllerRows={[
+    {
+      type: "label",
+      value: "CHANNEL TOTALS FOR",
+      bgTone: "#000000",
+      fgTone: "#CCFF00",
+    },
+    {
+      type: "dropdown",
+      value: metric,
+      options: METRIC_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+      onSelect: (v) => setMetric(v as (typeof METRIC_OPTIONS)[number]["value"]),
+      bgTone: "#FF7497",
+      fgTone: "#000000",
+    },
+    {
+      type: "text",
+      value: TIME_RANGE_OPTIONS.find((o) => o.value === timeRange)?.label || timeRange,
+      onPrev: () => {
+       const idx = TIME_RANGE_OPTIONS.findIndex((o) => o.value === timeRange)
+       setTimeRange(TIME_RANGE_OPTIONS[(idx - 1 + TIME_RANGE_OPTIONS.length) % TIME_RANGE_OPTIONS.length].value)
+      },
+      onNext: () => {
+       const idx = TIME_RANGE_OPTIONS.findIndex((o) => o.value === timeRange)
+       setTimeRange(TIME_RANGE_OPTIONS[(idx + 1) % TIME_RANGE_OPTIONS.length].value)
+      },
+      bgTone: "#FFEA00",
+      fgTone: "#000000",
+    },
+   ]}
+   activeContext={{
+    title: hoveredPeriod ? formatRange(hoveredPeriod.start, hoveredPeriod.end) : periodRangeLabel,
+    stats: activeContextStats,
+   }}
+   footer={
+    <InsightMarquee
+     chartInsight="Cumulative growth tracking identifies the long-term compound value of your content periods."
+     personalInsight="Watch for periods where Period Delta (Cyan) remains consistent while Total (Pink) curves up."
+    />
+   }
+  >
    <div className="p-4 h-[360px]">
     <StableChartFrame minHeightClassName="min-h-[260px]">
-     <LineChart data={cd} margin={{top:10,right:10,left:-10,bottom:0}}>
-      <CartesianGrid strokeDasharray="3 3" stroke="#333"/><XAxis dataKey="title" tick={{fill:"#666",fontSize:8,fontWeight:900}}/>
-      <YAxis tick={{fill:"#666",fontSize:10}}/><Tooltip content={<ChartTip/>}/>
-      <Line type="monotone" dataKey="views" stroke="#FF7497" strokeWidth={3} dot={false} name="Views"/>
-      <Line type="monotone" dataKey="subs" stroke="#00E5FF" strokeWidth={3} dot={false} name="Subs"/>
-      <Line type="monotone" dataKey="rev" stroke="#FFEA00" strokeWidth={3} dot={false} name="Revenue"/>
-      <Line type="monotone" dataKey="shares" stroke="#CCFF00" strokeWidth={3} dot={false} name="Shares"/>
-      <Legend wrapperStyle={{fontSize:"10px",fontWeight:900}}/>
+     <LineChart
+      data={chartData}
+      margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+      onMouseMove={(state: any) => {
+       if (typeof state?.activeTooltipIndex === "number") {
+        setHoveredIdx(state.activeTooltipIndex)
+       }
+      }}
+      onMouseLeave={() => setHoveredIdx(null)}
+     >
+      <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+      <XAxis dataKey="title" tick={{ fill: "#666", fontSize: 8, fontWeight: 900 }} />
+      <YAxis tick={{ fill: "#666", fontSize: 10 }} />
+      <Tooltip content={<ChartTip />} />
+      <Line type="monotone" dataKey="views" stroke="#FF7497" strokeWidth={3} dot={false} name="Views" />
+      <Line type="monotone" dataKey="subs" stroke="#00E5FF" strokeWidth={3} dot={false} name="Subs" />
+      <Line type="monotone" dataKey="rev" stroke="#FFEA00" strokeWidth={3} dot={false} name="Revenue" />
+      <Line type="monotone" dataKey="shares" stroke="#CCFF00" strokeWidth={3} dot={false} name="Shares" />
+      <Legend wrapperStyle={{ fontSize: "10px", fontWeight: 900 }} />
      </LineChart>
     </StableChartFrame>
    </div>
-  </div>
+  </SubToolboxChartModule>
  )
- }
+}
 
 export const StackedEngagementPulse = EngagementLinesModule
 
@@ -1997,10 +2540,18 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data }) => {
 /* ═══════════════════════════════════════════════
    14b. REVENUE EFFICIENCY (UPGRADED BUBBLE)
    ═══════════════════════════════════════════════ */
+const REVENUE_EFFICIENCY_COUNT_VALUES = [25, 50, 75, 100]
+
 export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
   const [mode, setMode] = useState<"top-performing" | "most-recent">("top-performing")
   const [modeMenuOpen, setModeMenuOpen] = useState(false)
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+  const [selectedCount, setSelectedCount] = useState(50)
+  const cycleCount = (dir: 1 | -1) => {
+    const idx = REVENUE_EFFICIENCY_COUNT_VALUES.indexOf(selectedCount)
+    const nextIdx = (idx + dir + REVENUE_EFFICIENCY_COUNT_VALUES.length) % REVENUE_EFFICIENCY_COUNT_VALUES.length
+    setSelectedCount(REVENUE_EFFICIENCY_COUNT_VALUES[nextIdx])
+  }
 
   const cd = useMemo(() => {
     const raw = data
@@ -2014,9 +2565,9 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
       }))
       .filter(d => d.wh > 0 && d.rpm > 0)
 
-    const points = mode === "most-recent" 
-      ? [...raw].sort((a, b) => b.uploadTs - a.uploadTs).slice(0, 50)
-      : [...raw].sort((a, b) => b.rev - a.rev).slice(0, 50)
+    const points = mode === "most-recent"
+      ? [...raw].sort((a, b) => b.uploadTs - a.uploadTs).slice(0, selectedCount)
+      : [...raw].sort((a, b) => b.rev - a.rev).slice(0, selectedCount)
 
     const maxRev = Math.max(1, ...points.map(d => d.rev))
     const minRev = Math.min(...points.map(d => d.rev))
@@ -2039,7 +2590,7 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
         color: `rgb(${c.r}, ${c.g}, ${c.b})`
       }
     })
-  }, [data, mode])
+  }, [data, mode, selectedCount])
 
   const bubbleShape = (props: any) => {
     const { cx, cy, payload } = props
@@ -2085,6 +2636,8 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
       controlBox={{
         count: cd.length,
         countUnit: "VIDEOS",
+        onCountPrev: () => cycleCount(-1),
+        onCountNext: () => cycleCount(1),
         dropdown: {
           value: mode,
           isOpen: modeMenuOpen,
@@ -2218,24 +2771,33 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data }) => {
   const activeMetric = METRIC_OPTIONS.find((o) => o.value === metric) || METRIC_OPTIONS[0]
   const activeTimeRange = TIME_RANGE_OPTIONS.find((o) => o.value === timeRange) || TIME_RANGE_OPTIONS[1]
 
-  const formatMetricValue = (val: number) => {
-    if (activeMetric.isRevenue) {
+  const formatMetricValue = (key: (typeof METRIC_OPTIONS)[number]["value"], val: number) => {
+    const option = METRIC_OPTIONS.find((o) => o.value === key) || activeMetric
+    if (option.isRevenue) {
       if (!Number.isFinite(val)) return "$0.00"
       return `$${val.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
     }
+    if (option.value === "watchHours") return `${formatCompact(val)}h`
     return formatCompact(val)
   }
+
+  const formatRange = (start: Date, end: Date) =>
+    `${start.toLocaleDateString(undefined, { month: "numeric", day: "numeric", year: "2-digit" })} - ${end.toLocaleDateString(undefined, { month: "numeric", day: "numeric", year: "2-digit" })}`
+
+  const scopedRows = useMemo(() => {
+    const now = new Date()
+    const rangeStart = new Date(now)
+    rangeStart.setMonth(rangeStart.getMonth() - activeTimeRange.months)
+    return data.filter((r) => {
+      const d = new Date(String(r.uploadDate || ""))
+      return d >= rangeStart && d <= now
+    })
+  }, [data, activeTimeRange.months])
 
   const chartData = useMemo(() => {
     const now = new Date()
     const rangeStart = new Date(now)
     rangeStart.setMonth(rangeStart.getMonth() - activeTimeRange.months)
-    
-    // Filter rows inside selected window
-    const scopedRows = data.filter(r => {
-      const d = new Date(String(r.uploadDate || ""))
-      return d >= rangeStart && d <= now
-    })
 
     // Always render 24 buckets, regardless of chosen window.
     const bucketCount = 24
@@ -2266,15 +2828,32 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data }) => {
       runningTotal += b.periodAmount
       return { ...b, totalProgress: runningTotal }
     })
-  }, [data, metric, activeTimeRange.months])
+  }, [metric, scopedRows, activeTimeRange.months])
+
+  const selectedWindowStats = useMemo(
+    () =>
+      METRIC_OPTIONS.map((option) => {
+        const total = scopedRows.reduce(
+          (sum, row) => sum + (option.value === "videoCount" ? 1 : mv(row, option.value)),
+          0,
+        )
+        return {
+          label: option.label,
+          value: formatMetricValue(option.value, total),
+          tone: option.tone,
+          lockTone: true,
+          compact: true,
+        }
+      }),
+    [scopedRows, metric],
+  )
 
   const periodRangeLabel = useMemo(() => {
-    if (chartData.length === 0) return "No period range"
+    if (chartData.length === 0) return "NO PERIOD RANGE"
     const start = chartData[0]?.start
-    const end = chartData[chartData.length - 1]?.start
-    if (!(start instanceof Date) || !(end instanceof Date)) return "No period range"
-    const fmt = (d: Date) => d.toLocaleDateString(undefined, { month: "long", day: "numeric" })
-    return `${fmt(start)} through ${fmt(end)}`
+    const end = chartData[chartData.length - 1]?.end
+    if (!(start instanceof Date) || !(end instanceof Date)) return "NO PERIOD RANGE"
+    return formatRange(start, end)
   }, [chartData])
 
   const periodAverage = useMemo(() => {
@@ -2283,16 +2862,39 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data }) => {
     return total / chartData.length
   }, [chartData])
 
-  const selectedTotal = useMemo(
-    () => chartData[chartData.length - 1]?.totalProgress || 0,
-    [chartData],
-  )
+  const hoveredPeriod = hoveredIdx !== null ? chartData[hoveredIdx] ?? null : null
+  const hoveredStats = hoveredPeriod
+    ? [
+        {
+          label: activeMetric.label,
+          value: formatMetricValue(activeMetric.value, hoveredPeriod.periodAmount),
+          tone: activeMetric.tone,
+          lockTone: true,
+          compact: true,
+        },
+        {
+          label: "TOTAL",
+          value: formatMetricValue(activeMetric.value, hoveredPeriod.totalProgress),
+          tone: "pink" as const,
+          lockTone: true,
+          compact: true,
+        },
+        {
+          label: "AVG",
+          value: formatMetricValue(activeMetric.value, periodAverage),
+          tone: "cyan" as const,
+          lockTone: true,
+          compact: true,
+        },
+      ]
+    : null
+  const activePeriodLabel = hoveredPeriod ? formatRange(hoveredPeriod.start, hoveredPeriod.end) : periodRangeLabel
 
   return (
-    <SubToolboxChartModule
+      <SubToolboxChartModule
       header={{
         title: "CHANNEL PROGRESS",
-        subtitle: "",
+        subtitle: "PERIOD AMOUNT • RUNNING TOTAL",
         icon: <CustomIcon name="analytics" size={18} />,
       }}
       theme={{
@@ -2300,57 +2902,37 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data }) => {
         iconBlockBg: "#26C7EC",
         shadowColor: "rgba(255,130,176,0.45)",
       }}
-      controlBox={{
-        count: data.length,
-        countLabel: "CHANNEL TOTAL",
-        countUnit: "VIDEOS",
-        rightInlineControls: (
-         <div className="flex flex-col gap-1 mr-1 w-[210px] max-w-full">
-          <select
-            value={metric}
-            onChange={(e) => setMetric(e.target.value)}
-            className="h-7 px-2 rounded-md border-[2px] border-black bg-white text-[9px] font-black uppercase tracking-[0.08em]"
-          >
-            {METRIC_OPTIONS.map((m) => (
-              <option key={m.value} value={m.value}>{m.label}</option>
-            ))}
-          </select>
-          <select
-            value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value as "2y" | "1y" | "6m" | "3m")}
-            className="h-7 px-2 rounded-md border-[2px] border-black bg-white text-[9px] font-black uppercase tracking-[0.08em]"
-          >
-            {TIME_RANGE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-         </div>
-        ),
-      }}
+      controllerRows={[
+        {
+          type: "label",
+          value: "CHANNEL TOTALS FOR",
+          bgTone: "#000000",
+          fgTone: "#CCFF00",
+        },
+        {
+          type: "dropdown",
+          value: metric,
+          options: METRIC_OPTIONS,
+          onSelect: (v) => setMetric(v),
+          bgTone: "#FF7497"
+        },
+        {
+          type: "text",
+          value: TIME_RANGE_OPTIONS.find(o => o.value === timeRange)?.label || timeRange,
+          onPrev: () => {
+             const idx = TIME_RANGE_OPTIONS.findIndex(o => o.value === timeRange)
+             setTimeRange(TIME_RANGE_OPTIONS[(idx - 1 + TIME_RANGE_OPTIONS.length) % TIME_RANGE_OPTIONS.length].value as "2y" | "1y" | "6m" | "3m")
+          },
+          onNext: () => {
+             const idx = TIME_RANGE_OPTIONS.findIndex(o => o.value === timeRange)
+             setTimeRange(TIME_RANGE_OPTIONS[(idx + 1) % TIME_RANGE_OPTIONS.length].value as "2y" | "1y" | "6m" | "3m")
+          },
+          bgTone: "#FFEA00"
+        }
+      ]}
       activeContext={{
-        title: (
-          <div className="flex items-center justify-between h-full px-2 w-full gap-3">
-            <div className="flex items-center min-w-0">
-              <span className="text-[13px] font-[1000] uppercase tracking-[0.08em]">TIME PERIOD</span>
-              <span className="mx-2 h-6 border-r-[3px] border-black" />
-              <span className="text-[15px] font-[1000] uppercase tracking-tight truncate">
-                {hoveredIdx !== null
-                  ? `${chartData[hoveredIdx]?.name || ""} through ${chartData[hoveredIdx]?.end?.toLocaleDateString(undefined, { month: "short", day: "numeric" }) || ""}`
-                  : periodRangeLabel}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <div className="h-7 px-2 border-[2px] border-black rounded-md bg-white text-[10px] font-black uppercase tracking-[0.08em] inline-flex items-center gap-2">
-                <span>PERIOD AVG</span>
-                <span>{formatMetricValue(periodAverage)}</span>
-              </div>
-              <div className="h-7 px-2 border-[2px] border-black rounded-md bg-white text-[10px] font-black uppercase tracking-[0.08em] inline-flex items-center gap-2">
-                <span>TOTAL</span>
-                <span>{formatMetricValue(selectedTotal)}</span>
-              </div>
-            </div>
-          </div>
-        ),
+        title: activePeriodLabel,
+        stats: hoveredStats || selectedWindowStats,
       }}
       footer={
         <InsightMarquee 
@@ -2373,8 +2955,8 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data }) => {
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
             <XAxis dataKey="name" tick={{ fontWeight: 900, fontSize: 10 }} axisLine={{ stroke: '#000', strokeWidth: 3 }} />
-            <YAxis yAxisId="left" tick={{ fontWeight: 900, fontSize: 10 }} tickFormatter={(v) => formatMetricValue(Number(v || 0))} axisLine={{ stroke: '#000', strokeWidth: 3 }} />
-            <YAxis yAxisId="right" orientation="right" tick={{ fontWeight: 900, fontSize: 10 }} tickFormatter={(v) => formatMetricValue(Number(v || 0))} axisLine={{ stroke: '#000', strokeWidth: 3 }} label={{ value: `${activeMetric.label} PROGRESS`, angle: 90, position: 'insideRight', offset: 15, style: { fontWeight: 1000, fontSize: 12, fill: '#000' } }} />
+            <YAxis yAxisId="left" tick={{ fontWeight: 900, fontSize: 10 }} tickFormatter={(v) => formatMetricValue(activeMetric.value, Number(v || 0))} axisLine={{ stroke: '#000', strokeWidth: 3 }} />
+            <YAxis yAxisId="right" orientation="right" tick={{ fontWeight: 900, fontSize: 10 }} tickFormatter={(v) => formatMetricValue(activeMetric.value, Number(v || 0))} axisLine={{ stroke: '#000', strokeWidth: 3 }} label={{ value: `${activeMetric.label} PROGRESS`, angle: 90, position: 'insideRight', offset: 15, style: { fontWeight: 1000, fontSize: 12, fill: '#000' } }} />
             <Tooltip content={<ChartTip />} />
             <Bar yAxisId="left" dataKey="periodAmount" fill="#00E5FF" radius={[2, 2, 0, 0]} stroke="#000" strokeWidth={2} />
             <Line yAxisId="right" type="monotone" dataKey="totalProgress" stroke="#FF7497" strokeWidth={5} dot={{ r: 5, fill: "#FF7497", stroke: "#000", strokeWidth: 2 }} activeDot={{ r: 7, stroke: "#000", strokeWidth: 3 }} />
@@ -2456,12 +3038,214 @@ const toNum = (v: unknown): number => {
 }
 
 const csvSourceGroup = (sourceRaw: string): string => {
+ const sourceLabels: Record<string, string> = {
+  SHORTS: "Shorts Feed",
+  SUBSCRIBER: "Subscribers Feed",
+  YT_SEARCH: "YouTube Search",
+  EXT_URL: "External Websites",
+  YT_CHANNEL: "Channel Pages",
+  RELATED_VIDEO: "Suggested Videos",
+  YT_OTHER_PAGE: "Other YouTube Features",
+  PLAYLIST: "YouTube Playlists",
+  NO_LINK_OTHER: "Direct / Unknown",
+  NOTIFICATION: "Notifications",
+  SOUND_PAGE: "Audio Pages",
+  SHORTS_CONTENT_LINKS: "Shorts Links",
+  END_SCREEN: "End Screens",
+  HASHTAGS: "Hashtag Pages",
+  ANNOTATION: "Annotations",
+  IMMERSIVE_LIVE: "Live Streams",
+ }
  const s = sourceRaw.toUpperCase()
- if (s.startsWith("EXT_URL.")) return "External"
- if (s.startsWith("YT_SEARCH.")) return "YouTube Search"
- if (s.startsWith("YT_RELATED.")) return "Suggested Videos"
- if (s.startsWith("SHORTS_CONTENT_LINKS.")) return "Shorts Links"
+ if (s.startsWith("EXT_URL.")) return sourceLabels.EXT_URL
+ if (s.startsWith("YT_SEARCH.")) return sourceLabels.YT_SEARCH
+ if (s.startsWith("YT_RELATED.")) return sourceLabels.RELATED_VIDEO
+ if (s.startsWith("SHORTS_CONTENT_LINKS.")) return sourceLabels.SHORTS_CONTENT_LINKS
+ if (sourceLabels[s]) return sourceLabels[s]
  return sourceRaw || "Other"
+}
+
+const normalizeTrafficSourceKey = (source: string): string => {
+ const prefix = String(source || "").trim().toUpperCase().split(".")[0] || "UNKNOWN"
+ return TRAFFIC_SOURCE_ALIASES[prefix] || prefix
+}
+
+const trafficSourceDisplayName = (value: string): string => {
+ const raw = String(value || "").trim()
+ if (!raw) return "Unknown"
+ const prefix = normalizeTrafficSourceKey(raw)
+ const sourceLabels: Record<string, string> = {
+  SHORTS: "Shorts Feed",
+  SUBSCRIBER: "Subscribers Feed",
+  YT_SEARCH: "YouTube Search",
+  EXT_URL: "External Websites",
+  YT_CHANNEL: "Channel Pages",
+  RELATED_VIDEO: "Suggested Videos",
+  YT_OTHER_PAGE: "Other YouTube Features",
+  PLAYLIST: "YouTube Playlists",
+  NO_LINK_OTHER: "Direct / Unknown",
+  NOTIFICATION: "Notifications",
+  SOUND_PAGE: "Audio Pages",
+  SHORTS_CONTENT_LINKS: "Shorts Links",
+  END_SCREEN: "End Screens",
+  HASHTAGS: "Hashtag Pages",
+  ADVERTISING: "Advertising",
+  LIVE_REDIRECT: "Live Streams",
+  BROWSE: "Browse Features",
+  CAMPAIGN_CARD: "Campaign Card",
+  CARD: "Cards",
+  YT_PLAYLIST_PAGE: "Playlist Page",
+  NO_LINK_EMBEDDED: "Embedded / Unknown",
+  ANNOTATION: "Annotations",
+ }
+ return sourceLabels[prefix] || raw
+}
+
+const TRAFFIC_SOURCE_ALIASES: Record<string, string> = {
+ SHORTS_CONTENT_LINK: "SHORTS_CONTENT_LINKS",
+ SHORTS_CONTENT_LINKS: "SHORTS_CONTENT_LINKS",
+ LIVE_REDIRECT: "LIVE_REDIRECT",
+ IMMERSIVE_LIVE: "LIVE_REDIRECT",
+ ADVERTISING: "ADVERTISING",
+ BROWSE: "BROWSE",
+ CAMPAIGN_CARD: "CAMPAIGN_CARD",
+ CARD: "CARD",
+ YT_PLAYLIST_PAGE: "YT_PLAYLIST_PAGE",
+ NO_LINK_EMBEDDED: "NO_LINK_EMBEDDED",
+}
+
+const TRAFFIC_SOURCE_ORDER = [
+ "SHORTS",
+ "SUBSCRIBER",
+ "YT_SEARCH",
+ "EXT_URL",
+ "YT_CHANNEL",
+ "RELATED_VIDEO",
+ "YT_OTHER_PAGE",
+ "PLAYLIST",
+ "NO_LINK_OTHER",
+ "NOTIFICATION",
+ "SOUND_PAGE",
+ "SHORTS_CONTENT_LINKS",
+ "END_SCREEN",
+ "HASHTAGS",
+ "ADVERTISING",
+ "LIVE_REDIRECT",
+ "BROWSE",
+ "CAMPAIGN_CARD",
+ "CARD",
+ "YT_PLAYLIST_PAGE",
+ "NO_LINK_EMBEDDED",
+] as const
+
+const TRAFFIC_SOURCE_TONES: Record<string, string> = TRAFFIC_SOURCE_ORDER.reduce((acc, key, index) => {
+ acc[key] = VT_SPECTRUM_PALETTE_06[index % VT_SPECTRUM_PALETTE_06.length]
+ return acc
+}, {} as Record<string, string>)
+
+const TRAFFIC_SOURCE_SHORT_LABELS: Record<string, string> = {
+ SHORTS: "SHORTS FEED",
+ SUBSCRIBER: "SUBSCRIBERS",
+ YT_SEARCH: "SEARCH",
+ EXT_URL: "EXT. SITES",
+ YT_CHANNEL: "CHANNEL",
+ RELATED_VIDEO: "SUGGESTED",
+ YT_OTHER_PAGE: "OTHER",
+ PLAYLIST: "PLAYLISTS",
+ NO_LINK_OTHER: "DIRECT",
+ NOTIFICATION: "NOTIFICATIONS",
+ SOUND_PAGE: "AUDIO",
+ SHORTS_CONTENT_LINKS: "SHORTS LINKS",
+ END_SCREEN: "END SCREEN",
+ HASHTAGS: "HASHTAGS",
+ ADVERTISING: "ADVERTISING",
+ LIVE_REDIRECT: "LIVE",
+ BROWSE: "BROWSE",
+ CAMPAIGN_CARD: "CAMPAIGN",
+ CARD: "CARDS",
+ YT_PLAYLIST_PAGE: "PLAYLIST PAGE",
+ NO_LINK_EMBEDDED: "EMBEDDED",
+ ANNOTATION: "ANNOTATIONS",
+}
+
+const trafficSourceTone = (source: string, fallbackIndex: number): string => {
+ const normalized = normalizeTrafficSourceKey(source)
+ return TRAFFIC_SOURCE_TONES[normalized] || VT_SPECTRUM_PALETTE_06[fallbackIndex % VT_SPECTRUM_PALETTE_06.length]
+}
+
+const trafficSourceSubtitleLabel = (source: string): string => {
+ const normalized = normalizeTrafficSourceKey(source)
+ return TRAFFIC_SOURCE_SHORT_LABELS[normalized] || trafficSourceDisplayName(source).toUpperCase()
+}
+
+const trafficSourceLegendLabel = (source: string): string => trafficSourceDisplayName(source)
+
+/**
+ * Every traffic source the evolution legend lists, whether or not the current
+ * window actually charts it. Order is fixed so a source keeps the same swatch
+ * colour and legend slot as the window/format selection changes.
+ */
+const TRAFFIC_SOURCE_LEGEND_KEYS: readonly string[] = [
+ "SHORTS",
+ "SUBSCRIBER",
+ "YT_SEARCH",
+ "YT_CHANNEL",
+ "EXT_URL",
+ "YT_OTHER_PAGE",
+ "RELATED_VIDEO",
+ "NOTIFICATION",
+ "PLAYLIST",
+ "SOUND_PAGE",
+ "NO_LINK_OTHER",
+ "SHORTS_CONTENT_LINKS",
+ "END_SCREEN",
+ "HASHTAGS",
+ "ANNOTATION",
+ "ADVERTISING",
+ "LIVE_REDIRECT",
+]
+
+/**
+ * Timeline rows carry display names ("Shorts Feed"), not registry keys ("SHORTS"),
+ * so the canonical lookup has to go through the display label as well.
+ */
+const TRAFFIC_SOURCE_CANONICAL_BY_DISPLAY: Record<string, string> = TRAFFIC_SOURCE_LEGEND_KEYS.reduce(
+ (acc, key) => {
+  acc[trafficSourceDisplayName(key).toUpperCase()] = key
+  return acc
+ },
+ {} as Record<string, string>,
+)
+
+const trafficSourceCanonicalKey = (source: string): string => {
+ const raw = String(source || "").trim().toUpperCase()
+ return TRAFFIC_SOURCE_CANONICAL_BY_DISPLAY[raw] || normalizeTrafficSourceKey(source)
+}
+
+/** Stack rank drives the colour: rose is the largest/bottom band, then coral, orange, and on down the spectrum. */
+const trafficRankTone = (rank: number): string =>
+ VT_SPECTRUM_PALETTE_06[rank % VT_SPECTRUM_PALETTE_06.length]
+
+type TrafficPlotOffset = { top?: number; left?: number; width?: number; height?: number }
+
+/**
+ * Publishes a rounded clip rect matching the plot area, which `.tse-plot .recharts-area`
+ * consumes so the stacked block gets soft corners. Always emits a shape - an unresolved
+ * clip-path reference would blank the areas out.
+ */
+const TrafficPlotClipDefs: React.FC<{ offset?: TrafficPlotOffset }> = ({ offset }) => {
+ const width = offset?.width ?? 0
+ const height = offset?.height ?? 0
+ const measured = width > 0 && height > 0
+ return (
+  <defs>
+   <clipPath id="tse-plot-clip">
+    {measured
+     ? <rect x={offset?.left ?? 0} y={offset?.top ?? 0} width={width} height={height} rx={7} ry={7} />
+     : <rect x={0} y={0} width={100000} height={100000} />}
+   </clipPath>
+  </defs>
+ )
 }
 
 const monthBucket = (d: Date): string => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
@@ -2633,15 +3417,17 @@ const canonicalTrafficTimeline = (rows: Array<Record<string, unknown>>) => {
    ? detailRows
    : rows.filter((row) => row.datasetKind !== "traffic_playback_location")
  const buckets = new Map<string, Record<string, number>>()
- comparableRows.forEach((row) => {
+  comparableRows.forEach((row) => {
   const rawDate = String(row.syncedAt || "")
   const bucket = /^\d{4}-\d{2}/.test(rawDate) ? rawDate.slice(0, 7) : "Current"
   const source = String(
-   row.sourceTitle ||
-   row.sourceLabel ||
-   row.trafficSourceDetail ||
-   row.trafficSourceType ||
-   "Unknown",
+   trafficSourceDisplayName(
+    row.sourceTitle ||
+    row.sourceLabel ||
+    row.trafficSourceDetail ||
+    row.trafficSourceType ||
+    "Unknown",
+   ),
   )
   const views = canonicalTrafficMetric(row, "views")
   if (views <= 0) return
@@ -2650,24 +3436,212 @@ const canonicalTrafficTimeline = (rows: Array<Record<string, unknown>>) => {
   buckets.set(bucket, shares)
  })
  return [...buckets.entries()]
-  .sort(([a], [b]) => a.localeCompare(b))
+ .sort(([a], [b]) => a.localeCompare(b))
   .map(([bucket, shares]) => ({ bucket, shares }))
+}
+
+type TrafficDayPoint = {
+ bucket: string
+ bucketLabel: string
+ timestamp: number
+ source: string
+ views: number
+ engagedViews: number
+ watchTime: number
+ avgDuration: number
+ avgPercentageViewed: number
+}
+
+const parseTrafficDayTimestamp = (value: unknown): number => {
+ if (typeof value === "number" && Number.isFinite(value)) return value
+ if (typeof value !== "string") return 0
+ const raw = value.trim()
+ if (!raw) return 0
+ const direct = new Date(raw).getTime()
+ if (Number.isFinite(direct)) return direct
+ const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/)
+ if (!m) return 0
+ const month = Number(m[1]) - 1
+ const day = Number(m[2])
+ const year = Number(m[3].length === 2 ? `20${m[3]}` : m[3])
+ const ts = new Date(year, month, day).getTime()
+ return Number.isFinite(ts) ? ts : 0
+}
+
+const formatTrafficDayBucketKey = (timestamp: number): string => {
+ const date = new Date(timestamp)
+ return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+}
+
+const formatTrafficDayAxisLabel = (bucket: string | number): string => {
+ const parsed = typeof bucket === "number" ? new Date(bucket) : new Date(bucket)
+ if (!Number.isFinite(parsed.getTime())) return String(bucket)
+ return `${parsed.getMonth() + 1}/${parsed.getDate()}`
+}
+
+const TRAFFIC_MONTH_LABELS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
+
+/** Long-range windows get month sections with week-1..4 subdivisions instead of a dense day scale. */
+const TRAFFIC_SECTIONED_AXIS_WINDOWS = new Set<DistributionWindowKey>(["90d", "365d", "lifetime"])
+
+/** Week 1 starts on the 1st (shown as the month dash); weeks 2-4 get the shorter dashes. */
+const TRAFFIC_WEEK_START_DAYS = [8, 15, 22]
+
+type TrafficAxisTickKind = "month" | "week" | null
+
+const trafficAxisTickKind = (bucket: string): TrafficAxisTickKind => {
+ const parsed = new Date(bucket)
+ if (!Number.isFinite(parsed.getTime())) return null
+ const day = parsed.getDate()
+ if (day === 1) return "month"
+ return TRAFFIC_WEEK_START_DAYS.includes(day) ? "week" : null
+}
+
+const TrafficSectionedAxisTick: React.FC<{
+ x?: number
+ y?: number
+ payload?: { value?: string }
+}> = ({ x = 0, y = 0, payload }) => {
+ const bucket = String(payload?.value ?? "")
+ const kind = trafficAxisTickKind(bucket)
+ if (!kind) return <g />
+ const parsed = new Date(bucket)
+ const isMonth = kind === "month"
+ return (
+  <g transform={`translate(${x},${y})`}>
+   <line x1={0} x2={0} y1={0} y2={isMonth ? 12 : 5} stroke="#8087a2" strokeWidth={isMonth ? 1.5 : 1} />
+   {isMonth ? (
+    <text x={0} y={24} textAnchor="middle" fill="#dfe4ff" fontSize={10} fontWeight={900}>
+     {TRAFFIC_MONTH_LABELS[parsed.getMonth()]}
+    </text>
+   ) : null}
+  </g>
+ )
+}
+
+const normalizeTrafficDayRows = (rows: Array<Record<string, unknown>>): TrafficDayPoint[] =>
+ rows
+  .map((row) => {
+   const timestamp = parseTrafficDayTimestamp(row.day || row.Day || row.date || row.bucket || row.syncedAt)
+   if (!timestamp) return null
+  const source = String(
+    trafficSourceDisplayName(
+      row["Traffic Source"] ||
+      row.term ||
+      row.sourceTitle ||
+      row.sourceLabel ||
+      row.trafficSourceType ||
+      row.insightTrafficSourceType ||
+      "Unknown",
+    ),
+   )
+   const views = Number(row.views || row.Views || row.viewCount || row.metricValue || 0)
+   if (!Number.isFinite(views) || views <= 0) return null
+   return {
+    bucket: formatTrafficDayBucketKey(timestamp),
+    bucketLabel: formatTrafficDayAxisLabel(timestamp),
+    timestamp,
+    source,
+    views,
+    engagedViews: Number(row["Engaged Views"] || row.engagedViews || row.engagedViewCount || 0) || 0,
+    watchTime: Number(row["Watch Time"] || row.watchTime || row.estimatedMinutesWatched || 0) || 0,
+    avgDuration: Number(row["Average View Duration"] || row.avgDuration || row.averageViewDuration || 0) || 0,
+    avgPercentageViewed: Number(row["Average Percentage Viewed (%)"] || row.avgPercentageViewed || row.averageViewPercentage || 0) || 0,
+   }
+  })
+  .filter((row): row is TrafficDayPoint => Boolean(row))
+
+const trafficFormatMatches = (source: string, format: DistributionFormatKey): boolean => {
+ if (format === "videos") return true
+ const isShort = source.toUpperCase().includes("SHORT")
+ return format === "shorts" ? isShort : !isShort
+}
+
+const trafficWindowThreshold = (windowKey: DistributionWindowKey): number => {
+ if (windowKey === "lifetime") return 0
+ const days = Number(windowKey.replace("d", ""))
+ return Number.isFinite(days) && days > 0 ? Date.now() - days * 24 * 60 * 60 * 1000 : 0
 }
 
 export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
  data,
  trafficRows,
+ trafficByDay,
  useVideoTrafficFallback = true,
 }) => {
  const ds = useMemo(() => buildExpansionDatasets(data), [data])
+ const [selectedFormat, setSelectedFormat] = useState<DistributionFormatKey>("videos")
+ const [selectedWindow, setSelectedWindow] = useState<DistributionWindowKey>("365d")
+ const [hoveredBucketKey, setHoveredBucketKey] = useState<string | null>(null)
+ const hoverHostRef = useRef<HTMLDivElement | null>(null)
+ const hoverLineRef = useRef<HTMLDivElement | null>(null)
+ const hoverLabelRef = useRef<HTMLDivElement | null>(null)
+ const hoverFrameRef = useRef<number | null>(null)
+ const pendingBucketRef = useRef<string | null>(null)
+ useEffect(() => () => {
+  if (hoverFrameRef.current !== null) cancelAnimationFrame(hoverFrameRef.current)
+ }, [])
+ const csvTrafficDayRows = useMemo(() => normalizeTrafficDayRows(parseCsvRows()), [])
+ const dayPoints = useMemo(() => normalizeTrafficDayRows(trafficByDay || []), [trafficByDay])
+ const trafficDayPoints = dayPoints.length > 0 ? dayPoints : csvTrafficDayRows
  const canonicalTimeline = useMemo(
   () => canonicalTrafficTimeline(trafficRows || []),
   [trafficRows],
  )
- const trafficTimeline = canonicalTimeline.length > 0 || !useVideoTrafficFallback
-  ? canonicalTimeline
-  : ds.trafficTimeline
- const keys = Array.from(new Set(trafficTimeline.flatMap((t) => Object.keys(t.shares)))).slice(0, 5)
+ const trafficTimeline = useMemo(() => {
+  if (trafficDayPoints.length > 0) {
+   const threshold = trafficWindowThreshold(selectedWindow)
+   const windowed = trafficDayPoints.filter((row) => !threshold || row.timestamp >= threshold)
+   const formatFiltered = windowed.filter((row) => trafficFormatMatches(row.source, selectedFormat))
+   const buckets = new Map<string, Record<string, number>>()
+   formatFiltered.forEach((row) => {
+    const bucket = row.bucket
+    const shares = buckets.get(bucket) || {}
+    shares[row.source] = (shares[row.source] || 0) + row.views
+    buckets.set(bucket, shares)
+   })
+   return [...buckets.entries()]
+   .sort(([a], [b]) => a.localeCompare(b))
+    .map(([bucket, shares]) => ({ bucket, shares }))
+  }
+
+  if (canonicalTimeline.length > 0) return canonicalTimeline
+  return useVideoTrafficFallback ? ds.trafficTimeline : []
+ }, [canonicalTimeline, ds.trafficTimeline, selectedFormat, selectedWindow, trafficDayPoints, useVideoTrafficFallback])
+
+ const keys = Array.from(new Set(trafficTimeline.flatMap((t) => Object.keys(t.shares))))
+  .map((key) => ({
+   key,
+   total: trafficTimeline.reduce((sum, bucket) => sum + (bucket.shares[key] || 0), 0),
+  }))
+ .sort((a, b) => b.total - a.total || a.key.localeCompare(b.key))
+  .filter((entry) => entry.total > 0)
+  .map((entry) => entry.key)
+ const controllerRows = [
+  {
+   type: "label" as const,
+   value: "TRAFFIC SOURCES FOR",
+   bgTone: "#000000",
+   fgTone: "#CCFF00",
+  },
+  {
+   type: "dropdown" as const,
+   value: selectedFormat,
+   options: DISTRIBUTION_FORMAT_VALUES.map((value) => ({ value, label: getTrafficSourceFormatLabel(value) })),
+   onSelect: (value) => setSelectedFormat(value as DistributionFormatKey),
+   bgTone: "#FF7497",
+   fgTone: "#000000",
+  },
+  {
+   type: "dropdown" as const,
+   value: selectedWindow,
+   options: DISTRIBUTION_WINDOW_VALUES,
+   onSelect: (value) => setSelectedWindow(value),
+   bgTone: "#FFEA00",
+   fgTone: "#000000",
+  },
+ ]
+
  const areaData = trafficTimeline.map((t) => {
   const total = Math.max(1, Object.values(t.shares).reduce((a, b) => a + b, 0))
   const out: Record<string, string | number> = { bucket: t.bucket }
@@ -2676,42 +3650,231 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
   })
   return out
  })
- const latest = areaData[areaData.length - 1] as Record<string, number | string> | undefined
- const previous = areaData[areaData.length - 2] as Record<string, number | string> | undefined
- const subtitle = trafficTimeline.length > 1 ? "SOURCE MIX OVER TIME" : "CURRENT SOURCE MIX"
+ const windowTotals = trafficTimeline.reduce((acc, bucket) => {
+  keys.forEach((key) => {
+   acc[key] = (acc[key] || 0) + (bucket.shares[key] || 0)
+  })
+  return acc
+ }, {} as Record<string, number>)
+ const visibleKeys = keys.filter((key) => (windowTotals[key] || 0) > 0)
+ const visibleSourceMeta = visibleKeys.map((key, index) => ({
+  key,
+  tone: trafficRankTone(index),
+  subtitleLabel: trafficSourceSubtitleLabel(key),
+  legendLabel: trafficSourceLegendLabel(key),
+ }))
+ const useSectionedAxis = TRAFFIC_SECTIONED_AXIS_WINDOWS.has(selectedWindow)
+ // The legend is a fixed roster: charted sources first in stack order so swatch
+ // colours line up with the bands, then whatever this window did not chart.
+ const chartedCanonicalKeys = new Set(visibleKeys.map(trafficSourceCanonicalKey))
+ const legendSourceMeta = [
+  ...visibleSourceMeta.map((entry) => ({
+   key: entry.key,
+   tone: entry.tone,
+   legendLabel: entry.legendLabel,
+   charted: true,
+  })),
+  ...TRAFFIC_SOURCE_LEGEND_KEYS
+   .filter((key) => !chartedCanonicalKeys.has(key))
+   .map((key, index) => ({
+    key,
+    tone: trafficRankTone(visibleSourceMeta.length + index),
+    legendLabel: trafficSourceLegendLabel(key),
+    charted: false,
+   })),
+ ]
+ const legendColumnCount = Math.ceil(legendSourceMeta.length / 2)
+ const hoveredDateLabel = (bucket: string): string => {
+  const parsed = new Date(bucket)
+  if (!Number.isFinite(parsed.getTime())) return bucket
+  return `${TRAFFIC_MONTH_LABELS[parsed.getMonth()]} ${parsed.getDate()}, ${parsed.getFullYear()}`
+ }
+ const hoveredBucket = hoveredBucketKey ? trafficTimeline.find((bucket) => bucket.bucket === hoveredBucketKey) || null : null
+ const activeSourceTotals = hoveredBucket?.shares || windowTotals
+ const activeSourceTotal = Math.max(1, Object.values(activeSourceTotals).reduce((sum, value) => sum + value, 0))
+ const activeContextStats = [
+  {
+   label: hoveredBucket ? "DAY TOTAL" : "WINDOW TOTAL",
+   value: formatCompact(activeSourceTotal),
+   tone: "white" as any,
+   valueTone: "#000000",
+   backgroundTone: "#E5E7EB",
+   labelText: hoveredBucket ? "DAY TOTAL" : "WINDOW TOTAL",
+   lockTone: true,
+   compact: true,
+  },
+  ...visibleSourceMeta.map((entry) => ({
+   label: entry.subtitleLabel,
+   value: `${(((activeSourceTotals[entry.key] || 0) / activeSourceTotal) * 100).toFixed(0)}%`,
+   tone: entry.tone as any,
+   valueTone: entry.tone,
+   backgroundTone: "#E5E7EB",
+   labelText: entry.subtitleLabel,
+   lockTone: true,
+   compact: true,
+  })),
+ ]
+ const activeContextTitle = hoveredBucket
+  ? `${formatTrafficDayAxisLabel(hoveredBucket.bucket)} • DAY VIEW`
+  : `${getDistributionWindowLabel(selectedWindow)} • ${getTrafficSourceFormatLabel(selectedFormat)}`
+
+ /**
+  * The indicator is written straight to the DOM rather than re-rendered: a React
+  * pass over 17 stacked areas plus the stat strip cannot keep up with the pointer,
+  * which is what made the old tooltip cursor lag behind the cursor.
+  */
+ const moveHoverIndicator = (event: React.MouseEvent<HTMLDivElement>) => {
+  const host = hoverHostRef.current
+  const line = hoverLineRef.current
+  const label = hoverLabelRef.current
+  if (!host || !line || !label || areaData.length === 0) return
+  const plot = host.querySelector(".recharts-cartesian-grid")
+  if (!plot) return
+  const hostRect = host.getBoundingClientRect()
+  const plotRect = plot.getBoundingClientRect()
+  if (plotRect.width <= 0) return
+
+  const pointerX = Math.min(Math.max(event.clientX, plotRect.left), plotRect.right)
+  const lineX = pointerX - hostRect.left
+  const ratio = (pointerX - plotRect.left) / plotRect.width
+  const index = Math.min(areaData.length - 1, Math.max(0, Math.round(ratio * (areaData.length - 1))))
+  const bucket = String(areaData[index]?.bucket ?? "")
+
+  line.style.opacity = "1"
+  line.style.height = `${plotRect.height}px`
+  line.style.top = `${plotRect.top - hostRect.top}px`
+  line.style.transform = `translateX(${lineX}px)`
+
+  label.textContent = hoveredDateLabel(bucket)
+  label.style.opacity = "1"
+  label.style.top = `${plotRect.top - hostRect.top - 14}px`
+  const halfLabel = label.offsetWidth / 2
+  const labelX = Math.min(Math.max(lineX, halfLabel), Math.max(halfLabel, hostRect.width - halfLabel))
+  label.style.transform = `translateX(${labelX}px) translateX(-50%)`
+
+  if (pendingBucketRef.current === bucket) return
+  pendingBucketRef.current = bucket
+  if (hoverFrameRef.current !== null) return
+  hoverFrameRef.current = window.requestAnimationFrame(() => {
+   hoverFrameRef.current = null
+   setHoveredBucketKey(pendingBucketRef.current)
+  })
+ }
+
+ const clearHoverIndicator = () => {
+  if (hoverLineRef.current) hoverLineRef.current.style.opacity = "0"
+  if (hoverLabelRef.current) hoverLabelRef.current.style.opacity = "0"
+  if (hoverFrameRef.current !== null) {
+   cancelAnimationFrame(hoverFrameRef.current)
+   hoverFrameRef.current = null
+  }
+  pendingBucketRef.current = null
+  setHoveredBucketKey(null)
+ }
+
  return (
-  <SubToolboxChartModule header={{ title: "TRAFFIC SOURCE EVOLUTION", subtitle, icon: <CustomIcon name="analytics" size={18} /> }} theme={{ headerBandBg: "#B8FF2C", iconBlockBg: "#24D3FF", shadowColor: "rgba(184,255,44,0.45)" }}>
-   <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">{keys.length === 0 ? <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} /> : (
-    <div className="flex flex-col gap-3">
-     <div className="grid grid-cols-2 xl:grid-cols-5 gap-2">
-      {keys.map((k, i) => {
-       const now = Number(latest?.[k] || 0)
-       const prev = Number(previous?.[k] || 0)
-       const delta = now - prev
-       return (
-        <div key={k} className="border-[3px] border-black rounded-xl bg-white px-3 py-2 shadow-[3px_3px_0px_0px_black]">
-         <p className="text-[10px] font-black uppercase tracking-[0.12em]">{k}</p>
-         <p className="text-[30px] leading-[0.9] font-[1000]">{now.toFixed(0)}%</p>
-         <p className={`text-[12px] font-black ${delta >= 0 ? "text-green-600" : "text-red-600"}`}>{delta >= 0 ? "+" : ""}{delta.toFixed(0)}pp</p>
+  <SubToolboxChartModule
+   header={{ title: "TRAFFIC SOURCE EVOLUTION", subtitle: "SOURCE MIX OVER TIME", icon: <CustomIcon name="analytics" size={18} />, headerStyle: "subtoolbox" }}
+   theme={{ headerBandBg: "#B8FF2C", iconBlockBg: "#24D3FF", shadowColor: "rgba(184,255,44,0.45)" }}
+   layout={{ moduleMinHeight: "470px", moduleWidth: "100%" }}
+  controllerRows={controllerRows}
+   activeContext={{
+    title: activeContextTitle,
+    stats: activeContextStats,
+    bgTone: "#E5E7EB",
+   }}
+  >
+   <div className="h-full min-h-[470px] w-full overflow-hidden bg-[#090b16] px-1 pb-1 pt-1">
+    {visibleKeys.length === 0 ? <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} /> : (
+     <div className="flex h-full flex-col justify-center gap-2">
+      <div className="h-[462px] overflow-hidden rounded-xl border-[3px] border-black bg-[#050814] px-1 pb-1 pt-1 flex flex-col gap-1">
+       <div
+        ref={hoverHostRef}
+        className="relative min-h-0 w-full flex-1"
+        onMouseMove={moveHoverIndicator}
+        onMouseLeave={clearHoverIndicator}
+       >
+       <StableChartFrame minHeightClassName="min-h-0">
+        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+          <AreaChart
+          className="tse-plot"
+          data={areaData}
+          margin={{ top: 30, right: 44, left: 0, bottom: 0 }}
+         >
+          <Customized component={TrafficPlotClipDefs} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#2a2f41" />
+          {useSectionedAxis ? (
+           <XAxis
+            dataKey="bucket"
+            interval={0}
+            height={30}
+            tick={<TrafficSectionedAxisTick />}
+            tickLine={false}
+            axisLine={{ stroke: "#8087a2", strokeWidth: 1 }}
+           />
+          ) : (
+           <XAxis dataKey="bucket" height={30} tickFormatter={formatTrafficDayAxisLabel} tick={{ fontSize: 10, fontWeight: 900, fill: "#dfe4ff" }} axisLine={{ stroke: "#8087a2", strokeWidth: 1 }} tickLine={{ stroke: "#8087a2" }} />
+          )}
+          <YAxis width={44} tickMargin={3} tick={{ fontSize: 10, fontWeight: 900, fill: "#dfe4ff" }} tickFormatter={(v) => `${v}%`} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} allowDataOverflow axisLine={{ stroke: "#8087a2", strokeWidth: 1 }} tickLine={{ stroke: "#8087a2" }} />
+          {visibleKeys.map((k, i) => {
+           const tone = trafficRankTone(i)
+           return (
+           <Area
+            key={k}
+            type="monotone"
+            dataKey={k}
+            stackId="1"
+            stroke={tone}
+            strokeWidth={1.25}
+            fill={tone}
+            fillOpacity={0.94}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+           isAnimationActive={false}
+           dot={false}
+           activeDot={false}
+           />
+           )
+          })}
+         </AreaChart>
+        </ResponsiveContainer>
+       </StableChartFrame>
+        <div
+         ref={hoverLineRef}
+         aria-hidden="true"
+         className="pointer-events-none absolute left-0 top-0 w-px bg-black/50 opacity-0"
+        />
+        <div
+         ref={hoverLabelRef}
+         aria-hidden="true"
+         className="pointer-events-none absolute left-0 top-0 whitespace-nowrap text-[10px] font-black uppercase tracking-[0.08em] text-white opacity-0"
+        />
+       </div>
+       <div className="shrink-0 select-none overflow-hidden rounded-[8px] bg-black px-2 py-1.5">
+        <div
+         className="grid items-center gap-x-2 gap-y-1.5"
+         style={{ gridTemplateColumns: `repeat(${legendColumnCount}, minmax(0, 1fr))` }}
+        >
+         {legendSourceMeta.map((entry) => (
+          <div key={entry.key} className="flex min-w-0 items-center gap-1.5">
+           <span
+            className="h-4 w-4 shrink-0 border-[2px] border-black"
+            style={{ background: entry.tone, opacity: entry.charted ? 1 : 0.35 }}
+           />
+           <span
+            className="min-w-0 truncate text-[8.5px] font-black uppercase leading-none tracking-[0.06em]"
+            style={{ color: entry.tone, opacity: entry.charted ? 1 : 0.45 }}
+           >
+            {entry.legendLabel}
+           </span>
+          </div>
+         ))}
         </div>
-       )
-      })}
+       </div>
+      </div>
      </div>
-     <div className="h-[310px] border-[3px] border-black rounded-xl bg-[#f5f5f0] p-2 overflow-hidden">
-      <StableChartFrame minHeightClassName="min-h-[280px]">
-       <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-        <AreaChart data={areaData}>
-         <CartesianGrid strokeDasharray="3 3" />
-         <XAxis dataKey="bucket" tick={{ fontSize: 10, fontWeight: 900 }} />
-         <YAxis tick={{ fontSize: 10, fontWeight: 900 }} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
-         <Tooltip formatter={(v: any) => `${Number(v).toFixed(1)}%`} />
-         {keys.map((k, i) => <Area key={k} type="monotone" dataKey={k} stackId="1" stroke={COLORS[i % COLORS.length]} fill={COLORS[i % COLORS.length]} fillOpacity={0.9} />)}
-        </AreaChart>
-       </ResponsiveContainer>
-      </StableChartFrame>
-     </div>
-    </div>
-   )}</div>
+    )}
+   </div>
   </SubToolboxChartModule>
  )
 }
@@ -2774,7 +3937,7 @@ const keywordColorIndexForSelection = (selected: string[], keyword: string, fall
 const keywordVennBadge = (label: string, index: number) => (
  <span
   key={`${label}-${index}`}
-  className="inline-flex items-center h-6 px-2.5 border-[2px] border-black rounded-md text-[10px] font-black uppercase tracking-[0.08em]"
+  className="inline-flex items-center h-5 px-2 border-[2px] border-black rounded-md text-[9px] font-black uppercase tracking-[0.08em]"
   style={{ backgroundColor: KEYWORD_VENN_COLORS[index % KEYWORD_VENN_COLORS.length] }}
  >
   {label}
@@ -2832,9 +3995,12 @@ const VennValueLabel: React.FC<{
    x={0}
    y={intersection ? -4 : small ? 4 : 0}
    textAnchor="middle"
-   style={{ fontSize: small ? 22 : 34, fontWeight: 1000, fill: "#000" }}
+   style={{ fontWeight: 1000, fill: "#000" }}
   >
-   {intersection ? count : `${count} videos`}
+   <tspan style={{ fontSize: small ? 22 : 34 }}>{count}</tspan>
+   {intersection ? null : (
+    <tspan dx={5} style={{ fontSize: small ? 11 : 15, fontWeight: 800 }}>VIDEOS</tspan>
+   )}
   </text>
   <text
    x={0}
@@ -2849,12 +4015,28 @@ const VennValueLabel: React.FC<{
  </g>
 )
 
+
 export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
  const vennId = useId()
  const [slots, setSlots] = useState<(string | null)[]>([null, null, null])
  const [replaceIndex, setReplaceIndex] = useState(0)
  const selected = useMemo(() => slots.filter((s): s is string => s !== null), [slots])
-
+ const [pulses, setPulses] = useState<[number, number, number]>([0, 0, 0])
+ const prevSlotsRef = useRef<(string | null)[]>([null, null, null])
+ useEffect(() => {
+  const prev = prevSlotsRef.current
+  let changed = false
+  const next: [number, number, number] = [...pulses]
+  for (let i = 0; i < 3; i++) {
+   if (prev[i] !== null && slots[i] !== null && prev[i] !== slots[i]) {
+    next[i] += 1
+    changed = true
+   }
+  }
+  if (changed) setPulses(next)
+  prevSlotsRef.current = slots
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [slots])
  const [metricMode, setMetricMode] = useState<KeywordMetricKey>("views")
  const [metricMenuOpen, setMetricMenuOpen] = useState(false)
  const [rankedByMode, setRankedByMode] = useState<"average" | "total">("average")
@@ -2887,6 +4069,22 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
   [data, selected, metricMode],
  )
  const topKeywords = ranked.slice(0, 15)
+ const didAutoSelectRef = useRef(false)
+ useEffect(() => {
+  if (didAutoSelectRef.current || topKeywords.length === 0) return
+  didAutoSelectRef.current = true
+  setSlots([topKeywords[0]?.word ?? null, topKeywords[1]?.word ?? null, topKeywords[2]?.word ?? null])
+ }, [topKeywords])
+ const RANKED_BY_COLS = 5
+ const rankedByRows = Math.ceil(topKeywords.length / RANKED_BY_COLS)
+ const rankedByCellBorder = (i: number): string => {
+  const col = i % RANKED_BY_COLS
+  const row = Math.floor(i / RANKED_BY_COLS)
+  return [
+   col !== RANKED_BY_COLS - 1 && i !== topKeywords.length - 1 ? "border-r-[2px] border-black" : "",
+   row !== rankedByRows - 1 ? "border-b-[2px] border-black" : "",
+  ].filter(Boolean).join(" ")
+ }
  const selectedMetric = getKeywordMetricDefinition(metricMode)
  const a = slots[0] || ""
  const b = slots[1] || ""
@@ -2894,17 +4092,77 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
  const singles = combinationRows.filter((item) => item.keywords.length === 1)
  const pairs = combinationRows.filter((item) => item.keywords.length === 2)
  const triple = combinationRows.find((item) => item.keywords.length === 3) || null
-
  const getPair = (k1: string, k2: string) => k1 && k2 ? pairs.find(item => item.keywords.includes(k1) && item.keywords.includes(k2)) || null : null
  const pairAB = getPair(a, b)
  const pairAC = getPair(a, c)
  const pairBC = getPair(b, c)
-
  const singleA = a ? singles.find((item) => item.keywords[0] === a) || null : null
  const singleB = b ? singles.find((item) => item.keywords[0] === b) || null : null
  const singleC = c ? singles.find((item) => item.keywords[0] === c) || null : null
  const rankedMax = Math.max(1, ranked[0]?.metricValue || 1)
-
+ const activeSlots = slots.map((k, i) => k !== null ? i : null).filter(i => i !== null) as number[]
+ const activeCount = activeSlots.length
+ const vennBox = { w: 620, h: 560 }
+ const vennCanvas = { w: Math.round(vennBox.w * 1.075), h: Math.round(vennBox.h * 1.075) }
+ const vennIdleCenter = { x: 310, y: 280 }
+ const slotGeom = [
+  { cx: vennIdleCenter.x, cy: vennIdleCenter.y, r: 0, opacity: 0, lx: vennIdleCenter.x, ly: vennIdleCenter.y, small: false },
+  { cx: vennIdleCenter.x, cy: vennIdleCenter.y, r: 0, opacity: 0, lx: vennIdleCenter.x, ly: vennIdleCenter.y, small: false },
+  { cx: vennIdleCenter.x, cy: vennIdleCenter.y, r: 0, opacity: 0, lx: vennIdleCenter.x, ly: vennIdleCenter.y, small: false },
+ ]
+ if (activeCount === 1) {
+  slotGeom[activeSlots[0]] = { cx: 310, cy: 280, r: 230, opacity: 1, lx: 310, ly: 280, small: false }
+ } else if (activeCount === 2) {
+  slotGeom[activeSlots[0]] = { cx: 210, cy: 280, r: 200, opacity: 1, lx: 90, ly: 280, small: true }
+  slotGeom[activeSlots[1]] = { cx: 410, cy: 280, r: 200, opacity: 1, lx: 530, ly: 280, small: true }
+ } else if (activeCount === 3) {
+  slotGeom[0] = { cx: 310, cy: 189, r: 165, opacity: slots[0] ? 1 : 0, lx: 310, ly: 125, small: true }
+  slotGeom[1] = { cx: 205, cy: 371, r: 165, opacity: slots[1] ? 1 : 0, lx: 125, ly: 440, small: true }
+  slotGeom[2] = { cx: 415, cy: 371, r: 165, opacity: slots[2] ? 1 : 0, lx: 495, ly: 440, small: true }
+ }
+ const g0 = slotGeom[0]
+ const g1 = slotGeom[1]
+ const g2 = slotGeom[2]
+ const vennTransition = "all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)"
+ const totalBreakdownRow = useMemo(() => {
+  if (selected.length === 0) return null
+  const selectedSingles = selected
+   .map((keyword) => singles.find((item) => item.keywords[0] === keyword) || null)
+   .filter(Boolean) as typeof singles
+  if (selectedSingles.length === 0) return null
+  const aggregation = selectedMetric.aggregation
+  const totalMetricValue =
+   aggregation === "sum"
+    ? selectedSingles.reduce((sum, item) => sum + item.metricValue, 0)
+    : selectedSingles.reduce((sum, item) => sum + item.metricValue, 0) / selectedSingles.length
+  return {
+   keywords: [...selected],
+   videoCount: selectedSingles.reduce((sum, item) => sum + item.videoCount, 0),
+   metricValue: totalMetricValue,
+  }
+ }, [selected, singles, selectedMetric.aggregation])
+ const breakdownRows = useMemo(() => {
+  const sortedPairs = [...pairs].sort((left, right) => {
+   const leftLength = left.keywords.join("").length
+   const rightLength = right.keywords.join("").length
+   if (rightLength !== leftLength) return rightLength - leftLength
+   return left.keywords.join("|").localeCompare(right.keywords.join("|"))
+  })
+  const sortedSingles = [...singles].sort((left, right) => {
+   const leftWord = left.keywords[0] || ""
+   const rightWord = right.keywords[0] || ""
+   if (rightWord.length !== leftWord.length) return rightWord.length - leftWord.length
+   return leftWord.localeCompare(rightWord)
+  })
+  return [
+   ...(totalBreakdownRow ? [{ kind: "total" as const, key: `total:${selected.join("|")}`, ...totalBreakdownRow }] : []),
+   ...(triple ? [{ kind: "triple" as const, key: `triple:${triple.keywords.join("|")}`, ...triple }] : []),
+   ...sortedPairs.map((row) => ({ kind: "pair" as const, key: `pair:${row.keywords.join("|")}`, ...row })),
+   ...sortedSingles.map((row) => ({ kind: "single" as const, key: `single:${row.keywords.join("|")}`, ...row })),
+  ]
+ }, [pairs, singles, totalBreakdownRow, triple])
+ const visibleBreakdownRows = selected.length > 0 ? breakdownRows : []
+ const breakdownSelectionKey = selected.length > 0 ? selected.join("|") : "empty"
  const toggle = (keyword: string) => {
   const index = slots.indexOf(keyword)
   if (index !== -1) {
@@ -2927,234 +4185,519 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
   }
  }
 
- const activeSlots = slots.map((k, i) => k !== null ? i : null).filter(i => i !== null) as number[]
- const activeCount = activeSlots.length
+ const top10Videos = useMemo(() => {
+  if (selected.length === 0) return []
+  const allVideos = buildKeywordVideoRows(data as unknown as Record<string, unknown>[])
+  const matched = allVideos.filter(v => selected.every(k => v.keywords.includes(k)))
+  return matched.sort((a, b) => b.metrics[metricMode] - a.metrics[metricMode]).slice(0, 10)
+ }, [data, selected, metricMode])
 
- const slotGeom = [
-  { cx: 310, cy: 260, r: 0, opacity: 0, lx: 310, ly: 260, small: false },
-  { cx: 310, cy: 260, r: 0, opacity: 0, lx: 310, ly: 260, small: false },
-  { cx: 310, cy: 260, r: 0, opacity: 0, lx: 310, ly: 260, small: false },
+ const RANKED_STAT_DEFS: [KeywordMetricKey, string][] = [
+  ["impressions", "IMPR"],
+  ["views", "VIEWS"],
+  ["engagedViews", "ENG"],
+  ["subscribersGained", "SUBS"],
+  ["likes", "LIKES"],
+  ["comments", "CMNTS"],
+  ["shares", "SHARE"],
+  ["revenue", "REV"],
+  ["averageViewDuration", "AVD"],
+  ["averageViewPercentage", "AVP"],
+  ["rpm", "RPM"],
  ]
 
- if (activeCount === 1) {
-  slotGeom[activeSlots[0]] = { cx: 310, cy: 260, r: 182, opacity: 1, lx: 310, ly: 260, small: false }
- } else if (activeCount === 2) {
-  slotGeom[activeSlots[0]] = { cx: 210, cy: 260, r: 210, opacity: 1, lx: 110, ly: 260, small: true }
-  slotGeom[activeSlots[1]] = { cx: 410, cy: 260, r: 210, opacity: 1, lx: 510, ly: 260, small: true }
- } else if (activeCount === 3) {
-  slotGeom[0] = { cx: 310, cy: 165, r: 160, opacity: slots[0] ? 1 : 0, lx: 310, ly: 116, small: true }
-  slotGeom[1] = { cx: 190, cy: 350, r: 160, opacity: slots[1] ? 1 : 0, lx: 110, ly: 400, small: true }
-  slotGeom[2] = { cx: 430, cy: 350, r: 160, opacity: slots[2] ? 1 : 0, lx: 510, ly: 400, small: true }
- }
+ const renderRankedItem = (item: (typeof ranked)[number], index: number, extraClassName = "") => {
+  const activeIndex = selected.indexOf(item.word)
+  const active = activeIndex >= 0
+  const badgeColorIndex = keywordColorIndexForSelection(selected, item.word, item.rank - 1)
+  const activeColor = KEYWORD_VENN_COLORS[badgeColorIndex % KEYWORD_VENN_COLORS.length]
 
- const g0 = slotGeom[0]
- const g1 = slotGeom[1]
- const g2 = slotGeom[2]
+  const getValue = (key: KeywordMetricKey) => {
+   const def = getKeywordMetricDefinition(key)
+   if (def.aggregation === "average" || def.aggregation === "derived_average") {
+    return item.metrics[key]
+   }
+   if (rankedByMode === "average") {
+    return item.metrics[key] / item.videoCount
+   }
+   return item.metrics[key]
+  }
 
- const transition = "all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)"
+  const gridCols = 4
+  const cellBorder = (i: number) =>
+   [
+    i % gridCols !== gridCols - 1 ? "border-r-[2px] border-black" : "",
+    Math.floor(i / gridCols) < 2 ? "border-b-[2px] border-black" : "",
+   ].filter(Boolean).join(" ")
 
- return (
-  <div className="flex flex-col h-full bg-white text-black p-4 rounded-xl border-4 border-black shadow-[4px_4px_0_rgba(0,0,0,1)]">
-   <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
-    <div className="flex items-center gap-4">
-     <div className="flex items-center gap-2 px-3 py-1 bg-black text-white font-bold rounded-md">
-      <VennDiagramIcon width={16} height={16} fill="white" />
-      KEYWORD VENN
-     </div>
-     <div className="text-sm font-bold opacity-60">
-      SELECT 3 TO SEE INTERSECTIONS
-     </div>
-    </div>
-    {/* metric menu */}
-    <div className="relative">
-     <button
-      onClick={() => setMetricMenuOpen(!metricMenuOpen)}
-      className="flex items-center gap-2 px-3 py-1.5 border-2 border-black rounded-lg hover:bg-gray-100 font-bold uppercase"
+  const formatRankedStatValue = (key: KeywordMetricKey, value: number): string => {
+   if (key === "averageViewPercentage") {
+    return `${Math.round(Number.isFinite(value) ? value : 0)}%`
+   }
+   const base = formatKeywordMetricValue(key, value)
+   if (key === "revenue" || key === "rpm") {
+    return base.replace(/^\$0\./, "$.")
+   }
+   return base
+  }
+
+  return (
+   <div
+    key={item.word}
+    className={`p-1.5 flex flex-col gap-1.5 ${extraClassName}`}
+    style={{ background: active ? `${activeColor}30` : "#fff" }}
+   >
+    <div className="grid grid-cols-4 border-[2px] border-black rounded-md overflow-hidden bg-white">
+     <div
+      title={`${item.videoCount} vids · ${item.coveragePct.toFixed(1)}% coverage`}
+      className={`flex flex-col items-center justify-center gap-0 px-0.5 py-1 min-w-0 ${cellBorder(0)}`}
+      style={{ background: active ? activeColor : "#F6F6F6" }}
      >
-      <MenuIcon width={16} height={16} />
-      {selectedMetric.label}
-     </button>
-     {metricMenuOpen ? (
-      <div className="absolute right-0 top-full mt-2 w-48 bg-white border-2 border-black rounded-lg shadow-[2px_2px_0_rgba(0,0,0,1)] z-50 py-1">
-       {Object.entries(KEYWORD_METRIC_DEFINITIONS).map(([key, def]) => (
-        <button
-         key={key}
-         onClick={() => {
-          setMetricMode(key as KeywordMetricKey)
-          setMetricMenuOpen(false)
-         }}
-         className={`w-full text-left px-4 py-2 hover:bg-gray-100 font-bold ${
-          metricMode === key ? "bg-blue-100" : ""
-         }`}
-        >
-         {def.label}
-        </button>
-       ))}
+      <span className="text-[8px] font-black uppercase opacity-50 leading-none">#{index + 1}</span>
+      <span className="text-[9px] font-black uppercase truncate leading-tight max-w-full">{item.word}</span>
+     </div>
+     {RANKED_STAT_DEFS.map(([key, label], i) => (
+      <div key={key} className={`flex items-center justify-between gap-1 px-1 py-1 ${cellBorder(i + 1)}`}>
+       <span className="text-[8px] font-black uppercase opacity-50 shrink-0">{label}</span>
+       <span className="text-[9px] font-black truncate">{formatRankedStatValue(key, getValue(key))}</span>
       </div>
-     ) : null}
+     ))}
+    </div>
+
+    <div className="h-1.5 rounded-full bg-black/10 overflow-hidden">
+     <div
+      className="h-full"
+      style={{
+       width: `${(item.metricValue / rankedMax) * 100}%`,
+       background: active ? activeColor : "#000",
+      }}
+     />
     </div>
    </div>
+  )
+ }
 
-   <div className="flex gap-4 min-h-0 flex-1 flex-col xl:flex-row">
-    <div className="w-full xl:w-[320px] shrink-0 flex flex-col gap-3 min-h-0">
-     <div className="bg-gray-100 p-2 rounded-lg border-2 border-black shrink-0 flex items-center justify-between">
-      <div className="font-bold">TOP KEYWORDS</div>
-      <div className="flex gap-1 text-xs">
-       <button
-        className={`px-2 py-1 rounded border-2 border-black font-bold ${rankedByMode === "average" ? "bg-black text-white" : "bg-white text-black hover:bg-gray-200"}`}
-        onClick={() => setRankedByMode("average")}
-       >
-        AVG
-       </button>
-       <button
-        className={`px-2 py-1 rounded border-2 border-black font-bold ${rankedByMode === "total" ? "bg-black text-white" : "bg-white text-black hover:bg-gray-200"}`}
-        onClick={() => setRankedByMode("total")}
-       >
-        TOTAL
-       </button>
-      </div>
-     </div>
-     <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-2">
-      {topKeywords.map((item) => {
-       const isSelected = selected.includes(item.word)
-       const p = Math.max(5, (item.metricValue / rankedMax) * 100)
-       return (
-        <button
-         key={item.word}
-         onClick={() => toggle(item.word)}
-         className={`w-full relative overflow-hidden rounded border-2 border-black text-left px-3 py-2 flex items-center justify-between font-bold text-sm ${
-          isSelected ? "bg-[#e5f1ff]" : "bg-white hover:bg-gray-50"
-         }`}
-        >
-         <div
-          className="absolute left-0 top-0 bottom-0 bg-gray-200 opacity-50 z-0"
-          style={{ width: `${p}%` }}
-         />
-         <div className="z-10 flex items-center gap-2">
-          {isSelected ? (
-           <div className="w-3 h-3 rounded-full bg-blue-500 border border-black shrink-0" />
-          ) : (
-           <div className="w-3 h-3 rounded-full border border-black opacity-30 shrink-0" />
-          )}
-          <span>{item.word.toUpperCase()}</span>
-         </div>
-         <div className="z-10 opacity-60">
-          {formatKeywordMetricValue(metricMode, item.metricValue)}
-         </div>
-        </button>
-       )
-      })}
-     </div>
-    </div>
+ return (
+  <SubToolboxChartModule
+   header={{
+    title: "KEYWORD VENN",
+    subtitle: "MASTER TABLE TITLE OVERLAP × LIVE PERFORMANCE STATS",
+    icon: <CustomIcon name="analytics" size={18} />,
+    headerStyle: "subtoolbox",
+   }}
+   theme={{
+    headerBandBg: "#CCFF00",
+    iconBlockBg: "#FF7497",
+    shadowColor: "rgba(204,255,0,0.45)",
+   }}
+   layout={{ moduleMinHeight: "820px", moduleWidth: "100%" }}
+   controlBox={{
+    count: selected.length,
+    countUnit: "KEYWORDS",
+    dropdown: {
+     value: metricMode,
+     isOpen: metricMenuOpen,
+     onToggle: () => setMetricMenuOpen((prev) => !prev),
+     onSelect: (value) => {
+      setMetricMode(value as KeywordMetricKey)
+      setMetricMenuOpen(false)
+     },
+     options: KEYWORD_VENN_METRIC_OPTIONS.map((option) => ({
+      value: option,
+      label: getKeywordMetricDefinition(option).label,
+     })),
+    },
+   }}
+   activeContext={{
+    title:
+     selected.length > 0
+      ? `${selected.join(" + ").toUpperCase()}`
+      : "SELECT UP TO 3 KEYWORDS FROM THE MASTER VIDEO TABLE",
+    stats: summary
+     ? [
+        { label: "Videos", value: String(summary.videoCount), tone: "white" },
+        {
+         label: keywordMetricBadgeLabel(metricMode),
+         value: formatKeywordMetricValue(metricMode, summary.metricValue),
+         tone: keywordVennStatTone(metricMode),
+        },
+       ]
+     : [
+        { label: "Videos", value: String(data.filter((row) => String(row.title || "").trim()).length), tone: "white" },
+       ],
+   }}
+   footer={
+    <InsightMarquee
+     mode="insight-lock"
+     segments={[
+      {
+       badge: "Chart",
+       text: "Keyword venn pulls only from titles in the loaded master video table and updates live with the selected statistic.",
+       badgeTone: "cyan",
+      },
+      {
+       badge: "Action",
+       text:
+        selected.length > 0 && summary
+         ? `${selected.join(" + ")} maps to ${summary.videoCount} videos and ${selectedMetric.label.toLowerCase()} ${formatKeywordMetricValue(metricMode, summary.metricValue)}.`
+         : "Select up to 3 recurring title keywords to compare individual and overlap performance.",
+       badgeTone: "lime",
+      },
+     ]}
+    />
+   }
+  >
+   <div className="w-full bg-white p-2 flex flex-col">
+    {topKeywords.length === 0 ? (
+     <EmptyState missing={["keywords", "title_rows"]} rows={data.length} />
+    ) : (
+     <div className="flex flex-col gap-2">
+     <div className="grid grid-cols-1 xl:grid-cols-[930px_1fr] gap-2 items-stretch">
+      <div className="flex flex-col gap-2 pr-1 min-w-0">
 
-    <div className="flex-1 flex flex-col min-w-0">
-      {/* 1. VENN CIRCLE */}
-      <div className="border-[3px] border-black rounded-xl bg-[#FAFAFA] overflow-hidden shrink-0 h-[460px] flex items-center justify-center relative">
-       <svg viewBox="0 0 620 520" className="max-w-[700px] h-full object-contain">
+      {/* 1. VENN CIRCLE + TOP KEYWORDS FOOTER */}
+      <div className="border-[3px] border-black rounded-xl bg-[#FAFAFA] overflow-hidden flex flex-col flex-1">
+       <div className="flex items-center justify-center flex-1">
+       <svg viewBox={`0 0 ${vennBox.w} ${vennBox.h}`} width={vennCanvas.w} height={vennCanvas.h} className="shrink-0">
+        <style>{`
+         @keyframes kvPulseRing {
+          0% { opacity: 0.85; transform: scale(0.88); }
+          100% { opacity: 0; transform: scale(1.2); }
+         }
+        `}</style>
         <defs>
          <clipPath id={`${vennId}-clip-0`}>
-          <circle cx={g0.cx} cy={g0.cy} r={g0.r} style={{ transition }} />
+          <circle cx={g0.cx} cy={g0.cy} r={g0.r} style={{ transition: vennTransition }} />
          </clipPath>
          <clipPath id={`${vennId}-clip-1`}>
-          <circle cx={g1.cx} cy={g1.cy} r={g1.r} style={{ transition }} />
+          <circle cx={g1.cx} cy={g1.cy} r={g1.r} style={{ transition: vennTransition }} />
          </clipPath>
          <clipPath id={`${vennId}-clip-2`}>
-          <circle cx={g2.cx} cy={g2.cy} r={g2.r} style={{ transition }} />
+          <circle cx={g2.cx} cy={g2.cy} r={g2.r} style={{ transition: vennTransition }} />
          </clipPath>
         </defs>
-
         {selected.length === 0 ? (
          <>
-          <text x="310" y="236" textAnchor="middle" style={{ fontWeight: 1000, fontSize: 34, fill: "rgba(0,0,0,0.28)" }}>
+          <text x="310" y="270" textAnchor="middle" style={{ fontWeight: 1000, fontSize: 30, fill: "rgba(0,0,0,0.28)" }}>
            SELECT UP TO 3 KEYWORDS
           </text>
-          <text x="310" y="274" textAnchor="middle" style={{ fontWeight: 800, fontSize: 16, fill: "rgba(0,0,0,0.34)" }}>
+          <text x="310" y="306" textAnchor="middle" style={{ fontWeight: 800, fontSize: 14, fill: "rgba(0,0,0,0.34)" }}>
            Data is derived from titles in the loaded master video table.
           </text>
-         </>
+        </>
         ) : null}
 
         {/* Base Circles */}
-        <circle cx={g0.cx} cy={g0.cy} r={g0.r} fill={KEYWORD_VENN_FILLS[0]} stroke={KEYWORD_VENN_STROKES[0]} strokeWidth={g0.r > 0 ? 5 : 0} opacity={g0.opacity} style={{ transition }} />
-        <circle cx={g1.cx} cy={g1.cy} r={g1.r} fill={KEYWORD_VENN_FILLS[1]} stroke={KEYWORD_VENN_STROKES[1]} strokeWidth={g1.r > 0 ? 5 : 0} opacity={g1.opacity} style={{ transition }} />
-        <circle cx={g2.cx} cy={g2.cy} r={g2.r} fill={KEYWORD_VENN_FILLS[2]} stroke={KEYWORD_VENN_STROKES[2]} strokeWidth={g2.r > 0 ? 5 : 0} opacity={g2.opacity} style={{ transition }} />
+        <circle cx={g0.cx} cy={g0.cy} r={g0.r} fill={KEYWORD_VENN_FILLS[0]} stroke={KEYWORD_VENN_STROKES[0]} strokeWidth={g0.r > 0 ? 5 : 0} opacity={g0.opacity} style={{ transition: vennTransition }} />
+        <circle cx={g1.cx} cy={g1.cy} r={g1.r} fill={KEYWORD_VENN_FILLS[1]} stroke={KEYWORD_VENN_STROKES[1]} strokeWidth={g1.r > 0 ? 5 : 0} opacity={g1.opacity} style={{ transition: vennTransition }} />
+        <circle cx={g2.cx} cy={g2.cy} r={g2.r} fill={KEYWORD_VENN_FILLS[2]} stroke={KEYWORD_VENN_STROKES[2]} strokeWidth={g2.r > 0 ? 5 : 0} opacity={g2.opacity} style={{ transition: vennTransition }} />
 
         {/* Overlaps */}
-        <g clipPath={`url(#${vennId}-clip-0)`} opacity={Math.min(g0.opacity, g1.opacity)} style={{ transition }}>
-          <circle cx={g1.cx} cy={g1.cy} r={g1.r} fill={KEYWORD_VENN_OVERLAPS.purple} style={{ transition }} />
+        <g clipPath={`url(#${vennId}-clip-0)`} opacity={Math.min(g0.opacity, g1.opacity)} style={{ transition: vennTransition }}>
+          <circle cx={g1.cx} cy={g1.cy} r={g1.r} fill={KEYWORD_VENN_OVERLAPS.purple} style={{ transition: vennTransition }} />
         </g>
-        <g clipPath={`url(#${vennId}-clip-0)`} opacity={Math.min(g0.opacity, g2.opacity)} style={{ transition }}>
-          <circle cx={g2.cx} cy={g2.cy} r={g2.r} fill={KEYWORD_VENN_OVERLAPS.orange} style={{ transition }} />
+        <g clipPath={`url(#${vennId}-clip-0)`} opacity={Math.min(g0.opacity, g2.opacity)} style={{ transition: vennTransition }}>
+          <circle cx={g2.cx} cy={g2.cy} r={g2.r} fill={KEYWORD_VENN_OVERLAPS.orange} style={{ transition: vennTransition }} />
         </g>
-        <g clipPath={`url(#${vennId}-clip-1)`} opacity={Math.min(g1.opacity, g2.opacity)} style={{ transition }}>
-          <circle cx={g2.cx} cy={g2.cy} r={g2.r} fill={KEYWORD_VENN_OVERLAPS.green} style={{ transition }} />
+        <g clipPath={`url(#${vennId}-clip-1)`} opacity={Math.min(g1.opacity, g2.opacity)} style={{ transition: vennTransition }}>
+          <circle cx={g2.cx} cy={g2.cy} r={g2.r} fill={KEYWORD_VENN_OVERLAPS.green} style={{ transition: vennTransition }} />
         </g>
-        <g clipPath={`url(#${vennId}-clip-0)`} opacity={Math.min(g0.opacity, g1.opacity, g2.opacity)} style={{ transition }}>
+        <g clipPath={`url(#${vennId}-clip-0)`} opacity={Math.min(g0.opacity, g1.opacity, g2.opacity)} style={{ transition: vennTransition }}>
           <g clipPath={`url(#${vennId}-clip-1)`}>
-            <circle cx={g2.cx} cy={g2.cy} r={g2.r} fill={KEYWORD_VENN_OVERLAPS.white} style={{ transition }} />
+            <circle cx={g2.cx} cy={g2.cy} r={g2.r} fill={KEYWORD_VENN_OVERLAPS.white} style={{ transition: vennTransition }} />
           </g>
         </g>
 
         {/* Borders overlay so intersections don't hide the strokes */}
-        <circle cx={g0.cx} cy={g0.cy} r={g0.r} fill="none" stroke={KEYWORD_VENN_STROKES[0]} strokeWidth={g0.r > 0 ? 5 : 0} opacity={g0.opacity} style={{ transition }} />
-        <circle cx={g1.cx} cy={g1.cy} r={g1.r} fill="none" stroke={KEYWORD_VENN_STROKES[1]} strokeWidth={g1.r > 0 ? 5 : 0} opacity={g1.opacity} style={{ transition }} />
-        <circle cx={g2.cx} cy={g2.cy} r={g2.r} fill="none" stroke={KEYWORD_VENN_STROKES[2]} strokeWidth={g2.r > 0 ? 5 : 0} opacity={g2.opacity} style={{ transition }} />
+        <circle cx={g0.cx} cy={g0.cy} r={g0.r} fill="none" stroke={KEYWORD_VENN_STROKES[0]} strokeWidth={g0.r > 0 ? 5 : 0} opacity={g0.opacity} style={{ transition: vennTransition }} />
+        <circle cx={g1.cx} cy={g1.cy} r={g1.r} fill="none" stroke={KEYWORD_VENN_STROKES[1]} strokeWidth={g1.r > 0 ? 5 : 0} opacity={g1.opacity} style={{ transition: vennTransition }} />
+        <circle cx={g2.cx} cy={g2.cy} r={g2.r} fill="none" stroke={KEYWORD_VENN_STROKES[2]} strokeWidth={g2.r > 0 ? 5 : 0} opacity={g2.opacity} style={{ transition: vennTransition }} />
 
-        {/* Labels */}
-        {singleA ? <VennValueLabel x={g0.lx} y={g0.ly} title={a.toUpperCase()} count={singleA.videoCount} metricValue={singleA.metricValue} metricKey={metricMode} small={g0.small} opacity={g0.opacity} transition={transition} /> : null}
-        {singleB ? <VennValueLabel x={g1.lx} y={g1.ly} title={b.toUpperCase()} count={singleB.videoCount} metricValue={singleB.metricValue} metricKey={metricMode} small={g1.small} opacity={g1.opacity} transition={transition} /> : null}
-        {singleC ? <VennValueLabel x={g2.lx} y={g2.ly} title={c.toUpperCase()} count={singleC.videoCount} metricValue={singleC.metricValue} metricKey={metricMode} small={g2.small} opacity={g2.opacity} transition={transition} /> : null}
+        {/* Swap pulse rings — flash when a slot's keyword changes while the circle stays in place */}
+        <circle
+         key={`pulse-0-${pulses[0]}`}
+         cx={g0.cx}
+         cy={g0.cy}
+         r={g0.r}
+         fill="none"
+         stroke="#ffffff"
+         strokeWidth={10}
+         style={{
+          transformBox: "fill-box",
+          transformOrigin: "center",
+          opacity: pulses[0] > 0 ? undefined : 0,
+          animation: pulses[0] > 0 ? "kvPulseRing 0.5s ease-out forwards" : undefined,
+         }}
+        />
+        <circle
+         key={`pulse-1-${pulses[1]}`}
+         cx={g1.cx}
+         cy={g1.cy}
+         r={g1.r}
+         fill="none"
+         stroke="#ffffff"
+         strokeWidth={10}
+         style={{
+          transformBox: "fill-box",
+          transformOrigin: "center",
+          opacity: pulses[1] > 0 ? undefined : 0,
+          animation: pulses[1] > 0 ? "kvPulseRing 0.5s ease-out forwards" : undefined,
+         }}
+        />
+        <circle
+         key={`pulse-2-${pulses[2]}`}
+         cx={g2.cx}
+         cy={g2.cy}
+         r={g2.r}
+         fill="none"
+         stroke="#ffffff"
+         strokeWidth={10}
+         style={{
+          transformBox: "fill-box",
+          transformOrigin: "center",
+          opacity: pulses[2] > 0 ? undefined : 0,
+          animation: pulses[2] > 0 ? "kvPulseRing 0.5s ease-out forwards" : undefined,
+         }}
+        />
 
-        {/* Pair Labels (calculated center of two circles) */}
-        {pairAB ? <VennValueLabel x={(g0.cx + g1.cx) / 2} y={(g0.cy + g1.cy) / 2 - 8} count={pairAB.videoCount} metricValue={pairAB.metricValue} metricKey={metricMode} small intersection opacity={Math.min(g0.opacity, g1.opacity)} transition={transition} /> : null}
-        {pairAC ? <VennValueLabel x={(g0.cx + g2.cx) / 2} y={(g0.cy + g2.cy) / 2 - 8} count={pairAC.videoCount} metricValue={pairAC.metricValue} metricKey={metricMode} small intersection opacity={Math.min(g0.opacity, g2.opacity)} transition={transition} /> : null}
-        {pairBC ? <VennValueLabel x={(g1.cx + g2.cx) / 2} y={(g1.cy + g2.cy) / 2 + 2} count={pairBC.videoCount} metricValue={pairBC.metricValue} metricKey={metricMode} small intersection opacity={Math.min(g1.opacity, g2.opacity)} transition={transition} /> : null}
+        {/* Single labels */}
+        {singleA ? <VennValueLabel x={g0.lx} y={g0.ly} title={a.toUpperCase()} count={singleA.videoCount} metricValue={singleA.metricValue} metricKey={metricMode} small={g0.small} opacity={g0.opacity} transition={vennTransition} /> : null}
+        {singleB ? <VennValueLabel x={g1.lx} y={g1.ly} title={b.toUpperCase()} count={singleB.videoCount} metricValue={singleB.metricValue} metricKey={metricMode} small={g1.small} opacity={g1.opacity} transition={vennTransition} /> : null}
+        {singleC ? <VennValueLabel x={g2.lx} y={g2.ly} title={c.toUpperCase()} count={singleC.videoCount} metricValue={singleC.metricValue} metricKey={metricMode} small={g2.small} opacity={g2.opacity} transition={vennTransition} /> : null}
 
-        {triple ? <VennValueLabel x={310} y={286} count={triple.videoCount} metricValue={triple.metricValue} metricKey={metricMode} small intersection opacity={Math.min(g0.opacity, g1.opacity, g2.opacity)} transition={transition} /> : null}
+        {/* Pair labels */}
+        {pairAB ? (
+         <VennValueLabel
+          x={(g0.cx + g1.cx) / 2}
+          y={(g0.cy + g1.cy) / 2}
+          count={pairAB.videoCount}
+          metricValue={pairAB.metricValue}
+          metricKey={metricMode}
+          small
+          intersection
+          opacity={Math.min(g0.opacity, g1.opacity)}
+          transition={vennTransition}
+         />
+        ) : null}
+        {pairAC ? (
+         <VennValueLabel
+          x={(g0.cx + g2.cx) / 2}
+          y={(g0.cy + g2.cy) / 2}
+          count={pairAC.videoCount}
+          metricValue={pairAC.metricValue}
+          metricKey={metricMode}
+          small
+          intersection
+          opacity={Math.min(g0.opacity, g2.opacity)}
+          transition={vennTransition}
+         />
+        ) : null}
+        {pairBC ? (
+         <VennValueLabel
+          x={(g1.cx + g2.cx) / 2}
+          y={(g1.cy + g2.cy) / 2}
+          count={pairBC.videoCount}
+          metricValue={pairBC.metricValue}
+          metricKey={metricMode}
+          small
+          intersection
+          opacity={Math.min(g1.opacity, g2.opacity)}
+          transition={vennTransition}
+         />
+        ) : null}
+        {triple ? (
+         <VennValueLabel
+          x={(g0.cx + g1.cx + g2.cx) / 3}
+          y={(g0.cy + g1.cy + g2.cy) / 3}
+          count={triple.videoCount}
+          metricValue={triple.metricValue}
+          metricKey={metricMode}
+          small
+          intersection
+          opacity={Math.min(g0.opacity, g1.opacity, g2.opacity)}
+          transition={vennTransition}
+         />
+        ) : null}
        </svg>
-      </div>
+       </div>
 
-      {/* 2. SUMMARY STRIP */}
-      {selected.length > 0 ? (
-       <div className="mt-4 border-4 border-black rounded-xl p-4 bg-yellow-100 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-         <div className="text-sm font-bold opacity-60 uppercase">
-          SELECTION
-         </div>
-         <div className="font-black text-xl lg:text-2xl flex flex-wrap gap-2">
-          {selected.map((kw, i) => (
-           <React.Fragment key={kw}>
-            {i > 0 ? <span>+</span> : null}
-            <span className="px-2 py-0.5 rounded border-2 border-black bg-white">
-             {kw.toUpperCase()}
-            </span>
-           </React.Fragment>
-          ))}
-         </div>
-        </div>
-        <div className="flex gap-6 items-center shrink-0">
-         <div>
-          <div className="text-xs font-bold opacity-60 uppercase">
-           VIDEOS
-          </div>
-          <div className="font-black text-2xl text-blue-600">
-           {summary.videoCount}
-          </div>
-         </div>
-         <div>
-          <div className="text-xs font-bold opacity-60 uppercase">
-           {selectedMetric.label} (TOTAL)
-          </div>
-          <div className="font-black text-2xl text-green-600">
-           {formatKeywordMetricValue(metricMode, summary.metricValue)}
-          </div>
-         </div>
+       {/* Top Keywords footer row, attached to the canvas */}
+       <div className="border-t-[3px] border-black bg-white px-3 py-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-1.5">
+         <span className="text-[10px] font-black uppercase tracking-[0.12em] mr-1 shrink-0">
+          Top Keywords - Click To Select
+         </span>
+         {topKeywords.map((item) => {
+          const activeIndex = selected.indexOf(item.word)
+          const active = activeIndex >= 0
+         return (
+           <button
+            key={item.word}
+            onClick={() => toggle(item.word)}
+            className="inline-flex items-center h-6 px-2.5 border-[2px] border-black rounded-md text-[10px] font-black uppercase tracking-[0.08em]"
+            style={keywordBadgeStyle(keywordColorIndexForSelection(selected, item.word, item.rank - 1), active)}
+           >
+            {item.word}
+           </button>
+          )
+         })}
+         <button
+          onClick={() => setSlots([null, null, null])}
+          className="h-6 px-2.5 border-[2px] border-black rounded-md bg-white text-[10px] font-black uppercase tracking-[0.12em] ml-auto shrink-0"
+         >
+          Clear
+         </button>
         </div>
        </div>
-      ) : null}
+      </div>
+
+      </div>
+
+      {/* 2. RIGHT COLUMN: Combination Breakdown + Top 10 Videos */}
+      <div className="flex flex-col gap-2 h-full min-w-0">
+
+      {/* Combination Breakdown */}
+      <div className="shrink-0">
+       <div className="border-[3px] border-black rounded-xl overflow-hidden bg-white flex flex-col">
+        <div className="bg-[#E9FF93] text-black px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] border-b-[3px] border-black shrink-0">
+         Combination Breakdown
+        </div>
+        <div key={breakdownSelectionKey} className="divide-y-[1.5px] divide-black bg-white">
+         {visibleBreakdownRows.length === 0 ? (
+          <div className="px-3 py-2 text-[10px] font-black uppercase opacity-60">
+           Select up to 3 keywords to see single and overlap performance.
+          </div>
+         ) : (
+          visibleBreakdownRows.map((row) => {
+           const badgeItems: Array<{ key: string; node: React.ReactNode }> =
+            row.kind === "total"
+             ? [
+                { key: "total-pill", node: (
+                   <span className="inline-flex items-center h-5 px-2 border-[2px] border-black rounded-md text-[9px] font-black uppercase tracking-[0.08em] bg-white">
+                    Total
+                   </span>
+                  ) },
+                ...row.keywords.map((keyword, index) => ({
+                 key: `kw-${keyword}`,
+                 node: keywordVennBadge(keyword.toUpperCase(), keywordColorIndexForSelection(selected, keyword, index)),
+                })),
+               ]
+             : row.keywords.map((keyword, index) => ({
+                key: `kw-${keyword}`,
+                node: keywordVennBadge(keyword.toUpperCase(), keywordColorIndexForSelection(selected, keyword, index)),
+               }))
+           const splitAt = Math.ceil(badgeItems.length / 2)
+           const badgeRow1 = badgeItems.slice(0, splitAt)
+           const badgeRow2 = badgeItems.slice(splitAt)
+
+           return (
+           <div
+            key={row.key}
+            className="px-3 py-2 flex items-start justify-between gap-2"
+            style={{
+             background:
+              row.kind === "total"
+               ? "rgba(255,216,230,0.5)"
+               :
+              row.keywords.length === 1
+               ? "rgba(255,255,255,1)"
+               : row.keywords.length === 2
+               ? "rgba(0,0,0,0.04)"
+               : "rgba(177,74,237,0.12)",
+            }}
+           >
+            <div className="flex flex-col gap-1 min-w-0 flex-1">
+             <div className="flex items-center gap-1 min-h-[20px]">{badgeRow1.map((b) => <React.Fragment key={b.key}>{b.node}</React.Fragment>)}</div>
+             <div className="flex items-center gap-1 min-h-[20px]">{badgeRow2.map((b) => <React.Fragment key={b.key}>{b.node}</React.Fragment>)}</div>
+            </div>
+            <div className="shrink-0 flex flex-col gap-0.5 justify-center text-right whitespace-nowrap">
+             <div className="text-[10px] font-black uppercase">{row.videoCount} videos</div>
+             <div className="text-[10px] font-black uppercase">
+              {row.kind === "total" ? "Total" : selectedMetric.label}: {formatKeywordMetricValue(metricMode, row.metricValue)}
+             </div>
+            </div>
+           </div>
+           )
+          })
+         )}
+        </div>
+       </div>
+
+      </div>
+
+      {/* Top 10 Videos */}
+      <div className="border-[3px] border-black rounded-xl overflow-hidden bg-white flex flex-col flex-1">
+       <div className="bg-[#FFD8E6] text-black px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] border-b-[3px] border-black shrink-0 truncate">
+        Top 10 Videos {selected.length > 0 ? `Matching: ${selected.join(" + ").toUpperCase()}` : ""} — Ranked By {selectedMetric.label}
+       </div>
+       <div className="flex flex-col divide-y-[1.5px] divide-black flex-1">
+        {top10Videos.length === 0 ? (
+         <div className="px-3 py-4 text-[10px] font-black uppercase opacity-60 text-center">
+          {selected.length === 0 ? "Select keywords to view top videos" : "No videos found for this combination"}
+         </div>
+        ) : (
+         top10Videos.map((video, idx) => (
+          <div key={video.rowId} title={video.title} className="px-3 py-1.5 flex items-center gap-2 bg-white">
+           <div className="w-5 h-5 shrink-0 rounded-full border-[2px] border-black bg-[#CCFF00] flex items-center justify-center text-[9px] font-black">
+            {idx + 1}
+           </div>
+           <div className="flex-1 min-w-0 overflow-hidden whitespace-nowrap text-ellipsis text-[10px] font-black uppercase tracking-[0.03em] text-black leading-normal">
+            {(() => {
+             if (selected.length === 0) return video.title;
+             const sorted = [...selected].sort((a, b) => b.length - a.length);
+             const regex = new RegExp(`\\b(${sorted.map(k => k.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')).join("|")})\\b`, 'gi');
+             const parts = video.title.split(regex);
+             return parts.map((part, i) => {
+              const lower = part.toLowerCase();
+              const matchIndex = selected.indexOf(lower);
+              if (matchIndex >= 0) {
+               const badgeColorIndex = keywordColorIndexForSelection(selected, lower, matchIndex);
+               return (
+                <span
+                 key={i}
+                 className="inline-flex items-center mx-0.5 align-middle h-[15px] px-1.5 rounded text-[9.5px] font-black uppercase tracking-[0.03em]"
+                 style={{ background: KEYWORD_VENN_COLORS[badgeColorIndex % KEYWORD_VENN_COLORS.length] }}
+                >
+                 {part.toUpperCase()}
+                </span>
+               );
+              }
+              return <span key={i}>{part}</span>;
+             });
+            })()}
+           </div>
+           <div className="shrink-0 text-right whitespace-nowrap leading-tight">
+            <p className="text-[12px] font-[1000]">{formatKeywordMetricValue(metricMode, video.metrics[metricMode])}</p>
+            <p className="text-[8px] font-black uppercase opacity-60">{selectedMetric.label}</p>
+           </div>
+          </div>
+         ))
+        )}
+       </div>
+      </div>
+
+      </div>
+
      </div>
+
+     {/* RANKED BY — full width across the bottom */}
+     <div className="border-[3px] border-black rounded-xl overflow-hidden bg-white flex flex-col">
+      <div className="bg-[#FFD8E6] text-black px-4 py-2 text-[10px] font-black uppercase tracking-[0.12em] border-b-[3px] border-black flex justify-between items-center">
+       <span>Ranked By {selectedMetric.label}</span>
+       <div className="flex border-[2px] border-black rounded-md overflow-hidden bg-white shrink-0">
+        <button onClick={() => setRankedByMode("average")} className={`px-2 py-0.5 ${rankedByMode === "average" ? "bg-[#CCFF00]" : ""}`}>AVG</button>
+        <button onClick={() => setRankedByMode("total")} className={`px-2 py-0.5 border-l-[2px] border-black ${rankedByMode === "total" ? "bg-[#CCFF00]" : ""}`}>TOTAL</button>
+       </div>
+      </div>
+      <div className="grid grid-cols-5">
+       {topKeywords.map((item, i) => renderRankedItem(item, i, rankedByCellBorder(i)))}
+      </div>
+     </div>
+
+     </div>
+    )}
    </div>
-  </div>
+  </SubToolboxChartModule>
  )
 }
 

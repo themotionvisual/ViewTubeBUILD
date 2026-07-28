@@ -572,8 +572,8 @@ export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, o
 
  return (
   <WidgetShell {...common} icon={<Pencil size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%" }}>
-    
+   <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%", minHeight: 0 }}>
+
     {/* Mode Toggle & Progress Bar */}
     <div style={{ display: "flex", gap: "4px" }}>
      <button onClick={() => { setWorkflowMode("upload"); setPage("main") }} className="vt-button" style={{

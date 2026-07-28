@@ -59,7 +59,7 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({data, com
     <WidgetShell {...commonProps} icon={<Activity size={22} />}>
       <div style={{ display: "flex", height: "100%", gap: "0", position: "relative" }}>
         {/* Left sidebar rail — info boxes */}
-        <div style={{ width: "82px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "4px", paddingRight: "4px", borderRight: "2px solid #000", marginRight: "6px", zIndex: 10 }}>
+        <div style={{ width: "82px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "4px", paddingRight: "4px", paddingTop: "10px", paddingBottom: "10px", marginTop: "-10px", marginBottom: "-10px", height: "calc(100% + 20px)", borderRight: "3px solid var(--widget-border, #000)", marginRight: "6px", zIndex: 10 }}>
           {categories.map((cat) => {
             const goal = goalTargets[cat.key]
             const label = cat.key === "Subscribers" ? "SUBS" : cat.key === "Views" ? "VIEWS" : cat.key === "Revenue" ? "$REV" : "OTHER"

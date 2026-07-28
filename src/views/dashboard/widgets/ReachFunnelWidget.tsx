@@ -22,7 +22,7 @@ export const ReachFunnelWidget = ({ widget, instance, editMode, onToggleCollapse
  return (
   <WidgetShell {...common} icon={<TrendingUp size={22} />}>
    <div className="flex flex-col h-full gap-2 p-2">
-    <div className="flex justify-between items-end border-b-[3px] border-black pb-2">
+    <div className="flex justify-between items-end border-b-[3px] border-[var(--widget-border,#000)] pb-2">
      <div className="flex flex-col">
       <span className="text-[10px] font-black uppercase opacity-40">
        Thumbnail Impressions

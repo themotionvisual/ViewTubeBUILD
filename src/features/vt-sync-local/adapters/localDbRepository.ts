@@ -169,3 +169,10 @@ export const putVtSyncDatasetRawReport = async (record: VtSyncDatasetRawReportRe
 
 export const putVtSyncDatasetTableRows = async (record: VtSyncDatasetTableRowsRecord): Promise<void> =>
  putRecord(VT_SYNC_LOCAL_STORE_NAMES.datasetTableRows, record)
+
+export const listVtSyncDatasetTableRows = async (): Promise<VtSyncDatasetTableRowsRecord[]> =>
+ getAll<VtSyncDatasetTableRowsRecord>(VT_SYNC_LOCAL_STORE_NAMES.datasetTableRows)
+
+export const deleteVtSyncDatasetTableRows = async (id: string): Promise<void> => {
+ await withStore(VT_SYNC_LOCAL_STORE_NAMES.datasetTableRows, "readwrite", (store) => store.delete(id))
+}

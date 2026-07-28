@@ -46,6 +46,7 @@ export type VtSyncCategoryDefinition = {
  disabledReason?: string
  group: VtSyncCategoryGroup
  phase: string
+ runtimePhaseId: string
  sourceApi: VtSyncSourceApi
  quotaClass: VtSyncQuotaClass
  defaultEnabled: boolean
@@ -85,6 +86,9 @@ export type VtSyncTableDefinition = {
  exportName: string
  layoutMode?: "auto" | "sparse-full"
  compactMode?: "supported" | "normal-only"
+ presentationMode?: "standard" | "traffic-source-day" | "retention-video"
+ summaryMode?: "selected-video" | "registry"
+ summaryColumns?: string[]
 }
 
 export type VtSyncVideoMetric = Record<string, number | null | undefined> & {
@@ -163,6 +167,8 @@ export type VtSyncChannelIdentity = {
  subscriberCount?: number | null
  channelVideoCount?: number | null
  channelViewCount?: number | null
+ /** The channel's YouTube sign-up date (RFC 3339). Used as the lifetime start date for analytics queries. */
+ channelPublishedAt?: string | null
 }
 
 export type VtSyncSyncManifest = {
@@ -256,6 +262,7 @@ export type VtSyncDatasetTableRowsRecord = {
  capturedAt: string
  rows: Array<Record<string, unknown>>
  provenance: "api" | "csv" | "computed" | "previous_snapshot" | "placeholder"
+ filenames?: string[]
 }
 
 export type VtSyncInventorySyncResult = {
@@ -294,6 +301,8 @@ export type VtSyncSnapshot = VtSyncChannelIdentity & {
  geography: Array<Record<string, unknown>>
  devices: Array<Record<string, unknown>>
  operatingSystems: Array<Record<string, unknown>>
+ deviceOs: Array<Record<string, unknown>>
+ trafficByDay: Array<Record<string, unknown>>
  playbackLocations: Array<Record<string, unknown>>
  subscriptionStatuses: Array<Record<string, unknown>>
  playlistsData: Array<Record<string, unknown>>

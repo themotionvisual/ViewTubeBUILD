@@ -26,7 +26,11 @@ export const VT_NAV_PALETTE_06 = [
   VT_SPECTRUM_PALETTE_06[11], // Pink
 ] as const;
 
-export const TOOLBOX_PALETTE = VT_SPECTRUM_PALETTE_06;
+export const VT_NAV_PALETTE_12 = VT_SPECTRUM_PALETTE_06;
+
+export const APPLICATIONS_TOOLBOX_PALETTE = VT_SPECTRUM_PALETTE_06;
+
+export const TOOLBOX_PALETTE = APPLICATIONS_TOOLBOX_PALETTE;
 
 const normalizePaletteIndex = (index: number, length: number) => {
   const safe = Number.isFinite(index) ? Math.round(index) : 0;

@@ -174,7 +174,7 @@ export const KeywordOverlapWidget = ({
 
   return (
     <WidgetShell {...common} icon={<GitMerge size={22} />}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%", overflow: "auto" }}>
+      <div className="vt-widget-fill-body" style={{ gap: "8px" }}>
         {!hasEnoughData ? (
           <div style={{ border: "2px solid #000", borderRadius: "10px", padding: "10px", background: "#F5F5F5" }}>
             <div style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase" }}>Need More Keyword Data</div>

@@ -85,6 +85,7 @@ import { CommentReplyWidget } from "./widgets/CommentReplyWidget"
 import { AIJournalWidget } from "./widgets/AIJournalWidget"
 import { WidgetShell } from "./WidgetShell"
 import { useBrain } from "../../context/useBrain"
+import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
 
  interface WidgetRendererProps extends WidgetRenderCallbacks {
   widget: WidgetDefinition
@@ -124,7 +125,7 @@ const AlertsFeedWidget: React.FC<{
 
  return (
   <WidgetShell {...common} icon={<Bell size={20} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "0", height: "100%", overflowY: "auto" }}>
+   <div className="vt-widget-fill-scroll" style={{ gap: "0" }}>
     {/* COMMENTS SECTION */}
     {recentComments.length > 0 ?
      recentComments.map((comment: VideoComment, idx: number) => (
@@ -307,7 +308,7 @@ const SuperfanCardWidget: React.FC<{
 
   return (
     <WidgetShell {...common} icon={<Star size={22} />}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+      <div className="vt-widget-fill" style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
         {loading ? (
           <div style={{ opacity: 0.3, fontSize: "10px", fontWeight: 900, textTransform: "uppercase" }}>Scanning for superfans...</div>
         ) : (
@@ -434,7 +435,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   dashboardControls
 }) => {
   const { brain } = useBrain();
-  const timeWindows = ["7 DAYS", "14 DAYS", "28 DAYS", "60 DAYS", "90 DAYS", "180 DAYS", "365 DAYS"];
+  const account = useUnifiedAccount();
+  const timeWindows = ["7 DAYS", "14 DAYS", "28 DAYS", "60 DAYS", "90 DAYS", "180 DAYS", "365 DAYS", "LIFETIME"];
   const [kpiTimeWindowIdx, setKpiTimeWindowIdx] = useState(2);
 
   // FORCE ROW 1 WIDGETS TO BE TALL
@@ -736,38 +738,73 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
 
    return (
     <WidgetShell {...common} widget={shellWidget} icon={<TrendingUp size={22} />} headerContent={timeWindowToggle}>
-     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", margin: 0 }}>
+     <div style={{ display: "flex", flexDirection: "column", height: "100%", margin: 0 }}>
       <div style={{ display: "flex", gap: "6px", flex: 1, overflow: "hidden", padding: "5px" }}>
-       {/* Circular Avatar Sidebar */}
-       <div style={{ 
-         display: "flex", 
-         flexDirection: "column", 
-         alignItems: "center", 
-         justifyContent: "center", 
-         gap: "6px", 
-         flexShrink: 0, 
-         width: "160px",
-         marginRight: "4px",
-         paddingRight: "2px"
-       }}>
-        <div style={{ 
-          width: "140px", 
-          height: "140px", 
-          borderRadius: "50%", 
-          border: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)", 
-          overflow: "hidden", 
-          background: "#eee",
-          boxShadow: "4px 4px 0px 0px rgba(0,0,0,0.1)"
+       {/* Circular Avatar Sidebar — replaced with a sign-up nudge when no account is connected */}
+       {!data.authState.isAuthenticated ? (
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          gap: "8px",
+          flexShrink: 0,
+          width: "222px",
+          height: "222px",
         }}>
-         {avatar ? (
-           <img src={avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-         ) : (
-           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-             <TrendingUp size={isSmall ? 40 : 60} opacity={0.2} />
-           </div>
-         )}
+         <p style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.04em", lineHeight: 1.3, margin: "0 0 2px" }}>
+          Connect your channel to see real analytics here.
+         </p>
+         <button
+          onClick={() => void account.start(account.intent, window.location.pathname + window.location.search + window.location.hash)}
+          style={{ border: "2px solid #000", borderRadius: "8px", background: "#000", color: "#C0F240", padding: "9px 10px", fontSize: "11px", fontWeight: 900, textTransform: "uppercase", textAlign: "left", boxShadow: "3px 3px 0 0 rgba(0,0,0,.35)" }}
+         >
+          Join ViewTube — Free
+         </button>
+         <button
+          onClick={() => onNavigate("/about")}
+          style={{ border: "2px solid #000", borderRadius: "8px", background: "#40C6E9", padding: "8px 10px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", textAlign: "left" }}
+         >
+          About ViewTube
+         </button>
+         <button
+          onClick={() => onNavigate("/user-guide")}
+          style={{ border: "2px solid #000", borderRadius: "8px", background: "#FFDA47", padding: "8px 10px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", textAlign: "left" }}
+         >
+          User Guide
+         </button>
         </div>
-       </div>
+       ) : (
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "6px",
+          flexShrink: 0,
+          width: "222px",
+          marginRight: "0px",
+          paddingRight: "0px",
+          height: "222px"
+        }}>
+         <div style={{
+           width: "204px",
+           height: "204px",
+           borderRadius: "50%",
+           border: "4px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)",
+           overflow: "hidden",
+           background: "rgb(238, 238, 238)",
+           boxShadow: "rgba(0, 0, 0, 0.1) 4px 4px 0px 0px"
+         }}>
+          {avatar ? (
+            <img src={avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <TrendingUp size={isSmall ? 40 : 60} opacity={0.2} />
+            </div>
+          )}
+         </div>
+        </div>
+       )}
 
        {/* Stats Grid - 3x2 on small, 6x1 on large */}
        <div style={{
@@ -777,7 +814,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
          gridTemplateRows: "repeat(3, minmax(0, 1fr))",
          gap: "4px"
        }}>
-        {data.getKpiStatBlocks(parseInt(timeWindows[kpiTimeWindowIdx])).map((stat: any, idx: number) => {
+        {data.getKpiStatBlocks(timeWindows[kpiTimeWindowIdx] === "LIFETIME" ? 99999 : parseInt(timeWindows[kpiTimeWindowIdx])).map((stat: any, idx: number) => {
           let bars = stat.bars || [40, 60, 45, 80, 55, 90, 75]
 
           let cleanTrend = stat.trend || ""
@@ -793,13 +830,13 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
          const cardColor = stat.color || rainbowKpiColors[idx % rainbowKpiColors.length]
 
            return (
-            <div
+             <div
              key={idx}
              style={{
               background: "#fff",
-              border: `1px solid rgba(0,0,0,0.1)`,
+              border: `2px solid black`,
               borderRadius: "8px",
-              boxShadow: `0px 2px 4px rgba(0,0,0,0.05)`,
+              boxShadow: `2px 2px 0px 0px rgba(0,0,0,0.1)`,
               display: "flex",
               flexDirection: "column",
               minHeight: 0,
@@ -808,14 +845,14 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
              <div
               style={{
                background: cardColor,
-               borderBottom: "1px solid rgba(0,0,0,0.1)",
-               height: "20px",
+               borderBottom: "2px solid black",
+               height: "22px",
                display: "flex",
                justifyContent: "center",
                alignItems: "center",
                padding: "0 4px",
               }}>
-              <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.02em", color: "#000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              <span style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.02em", color: "#000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                {stat.label}
               </span>
              </div>
@@ -850,21 +887,25 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
       </div>
 
       {/* Full Width Footer */}
-      <div style={{ 
-        borderTop: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)", 
-        background: "#eee", 
-        padding: "8px 12px", 
-        display: "flex", 
-        alignItems: "center", 
+      <div style={{
+        borderTop: "3px solid var(--widget-border, #000)",
+        background: "#eee",
+        padding: "10px 12px",
+        display: "flex",
+        alignItems: "center",
         justifyContent: "space-between",
-        marginTop: "auto"
+        marginTop: "auto",
+        marginLeft: "-10px",
+        marginRight: "-10px",
+        marginBottom: "-10px",
+        width: "calc(100% + 20px)"
       }}>
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ fontSize: "14px", fontWeight: 950, textTransform: "uppercase", tracking: "-0.02em" }}>
-            {data.brain?.channelProfile?.name || data.authState?.channelName || "Your Channel"}
+          <div style={{ fontSize: "18px", fontWeight: 950, textTransform: "uppercase", letterSpacing: "-0.02em" }}>
+            {data.channelTitle}
           </div>
-          <div style={{ fontSize: "10px", fontWeight: 800, opacity: 0.5 }}>
-            @{data.brain?.channelProfile?.channelHandle || data.authState?.channelHandle || "handle"}
+          <div style={{ fontSize: "12px", fontWeight: 800, opacity: 0.5 }}>
+            {data.channelCustomUrl.startsWith("@") ? data.channelCustomUrl : `@${data.channelCustomUrl}`}
           </div>
         </div>
         <a
@@ -895,7 +936,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  if (widget.id === "channel-overview") {
   return (
    <WidgetShell {...common} icon={<UserCircle2 size={22} />}>
-    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+    <div className="vt-widget-fill" style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
      <div
       style={{
        display: "flex",
@@ -955,7 +996,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  if (widget.id === "mini-calendar") {
   return (
    <WidgetShell {...common} icon={<CalendarDays size={22} />}>
-    <div style={{ display: "flex", flexDirection: "column", gap: "4px", height: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "4px", height: "100%", minHeight: 0 }}>
      {/* Mini Calendar Grid */}
      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "3px" }}>
       {data.upcomingDays.map((day) => (
@@ -1066,17 +1107,19 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
       }
 
       return (
-        <div
-         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(2, 1fr)",
-          gap: "4px",
-         }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            {pages.map((action: any, idx: number) => renderAction(action, idx, true))}
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            {tools.map((action: any, idx: number) => renderAction(action, idx, true))}
+        <div className="vt-widget-fill">
+          <div
+           style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gap: "4px",
+           }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              {pages.map((action: any, idx: number) => renderAction(action, idx, true))}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              {tools.map((action: any, idx: number) => renderAction(action, idx, true))}
+            </div>
           </div>
         </div>
       )
@@ -1089,7 +1132,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  if (widget.id === "recent-uploads") {
   return (
    <WidgetShell {...common} icon={<Upload size={22} />}>
-    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+    <div className="vt-widget-fill" style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
      {data.recentUploads.slice(0, 3).map((video) => (
       <div
        key={video.videoId}
@@ -1149,6 +1192,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
    <WidgetShell {...common} icon={<Video size={22} />}>
     {data.topPerformer ?
      <div
+      className="vt-widget-fill"
       style={{
        display: "flex",
        flexDirection: "column",
@@ -1232,7 +1276,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  if (widget.id === "ai-prompt-box") {
   return (
    <WidgetShell {...common} icon={<WandSparkles size={22} />}>
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+    <div className="vt-widget-fill" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
      <div
       style={{
        display: "flex",

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { VT_SYNC_ACTIVE_TABLE_IDS, VT_SYNC_TABLE_DEFINITIONS, VT_SYNC_VISIBLE_TABLE_CATEGORIES, VT_SYNC_VISIBLE_TABLE_DEFINITIONS } from "../upstream/tableRegistry"
+import { tableRows } from "./tableData"
 import { getVtSyncTableExportHeaders, getVtSyncTableExportRows } from "./tableExport"
 import {
  formatVtSyncLocalDateValue,
@@ -10,6 +11,8 @@ import {
  parseVtSyncDateValue,
  parseVtSyncDurationSeconds,
 } from "./tableFormatting"
+import { normalizeVtSyncSnapshot } from "./snapshot"
+import { getVisibleVtSyncColumns } from "../shell/toolbox-table/vtSyncToolboxTableModel"
 
 describe("VT Sync table contracts", () => {
  it("uses registry column labels as export headers", () => {
@@ -77,5 +80,239 @@ describe("VT Sync table contracts", () => {
   expect(getVtSyncTableExportRows(table, [{ tags: [{ topic: "sync" }], ctr: 8.912 }])).toEqual([
    ['{"topic":"sync"}', "8.91%"],
   ])
+ })
+
+ it("expands meaningful video revenue, advertising, premium, and card metric groups by default", () => {
+  const videosTable = VT_SYNC_TABLE_DEFINITIONS.find((table) => table.id === "videos")!
+  expect(videosTable.collapsedGroups).toEqual(["Details", "Format"])
+  expect(videosTable.collapsedGroups).not.toEqual(expect.arrayContaining(["Revenue", "Advertising", "Premium", "Card Links"]))
+  expect(videosTable.columns.filter((column) => ["Revenue", "Advertising", "Premium"].includes(column.group)).every((column) => column.visibility === "whenMeaningful")).toBe(true)
+  expect(videosTable.columns.filter((column) => column.group === "Card Links").every((column) => column.visibility === "always")).toBe(true)
+ })
+
+ it("adds traffic share columns to overview and detail table rows", () => {
+  const trafficTable = VT_SYNC_TABLE_DEFINITIONS.find((table) => table.id === "traffic")!
+  const searchTable = VT_SYNC_TABLE_DEFINITIONS.find((table) => table.id === "search")!
+  const snapshot = normalizeVtSyncSnapshot({
+   trafficSources: [
+    { source: "YT_SEARCH", views: 75, watchTime: 30 },
+    { source: "EXT_URL", views: 25, watchTime: 10 },
+   ],
+   searchTerms: [
+    { term: "kentucky derby", views: 60, watchTime: 24 },
+    { term: "napoleonic cavalry", views: 40, watchTime: 6 },
+   ],
+  })
+
+  expect(trafficTable.columns.map((column) => column.key)).toEqual(expect.arrayContaining(["trafficViewShare", "trafficWatchTimeShare"]))
+  expect(searchTable.columns.map((column) => column.key)).toEqual(expect.arrayContaining(["trafficViewShare", "trafficWatchTimeShare"]))
+
+  const overviewRows = tableRows(snapshot, trafficTable)
+  const searchRows = tableRows(snapshot, searchTable)
+
+  expect(overviewRows[0]).toMatchObject({ trafficViewShare: 75, trafficWatchTimeShare: 75 })
+  expect(overviewRows[1]).toMatchObject({ trafficViewShare: 25, trafficWatchTimeShare: 25 })
+  expect(searchRows[0]).toMatchObject({ trafficViewShare: 60, trafficWatchTimeShare: 80 })
+  expect(searchRows[1]).toMatchObject({ trafficViewShare: 40, trafficWatchTimeShare: 20 })
+
+  const visibleSearchColumns = getVisibleVtSyncColumns(searchTable, searchRows, false, true)
+  expect(visibleSearchColumns.map((column) => column.key)).toEqual(expect.arrayContaining(["trafficViewShare", "trafficWatchTimeShare"]))
+ })
+
+ it("adds shared-link percentage to sharing service rows", () => {
+  const sharesTable = VT_SYNC_TABLE_DEFINITIONS.find((table) => table.id === "shares")!
+  const snapshot = normalizeVtSyncSnapshot({
+   sharingService: [
+    { term: "Messages", sharingService: "Messages", shares: 30 },
+    { term: "Discord", sharingService: "Discord", shares: 20 },
+   ],
+  })
+
+  expect(sharesTable.columns.map((column) => column.key)).toEqual(expect.arrayContaining(["shareLinkShare"]))
+  expect(sharesTable.columns.find((column) => column.key === "shareLinkShare")).toMatchObject({
+   label: "% of Shared Links",
+   format: "percent",
+   totalMode: "sum",
+  })
+
+  const shareRows = tableRows(snapshot, sharesTable)
+  expect(shareRows[0]).toMatchObject({ shareLinkShare: 60 })
+  expect(shareRows[1]).toMatchObject({ shareLinkShare: 40 })
+ })
+
+ it("keeps Formats shares while adding video-table totals grouped by normalized format", () => {
+  const formatsTable = VT_SYNC_TABLE_DEFINITIONS.find((table) => table.id === "creator")!
+  const snapshot = normalizeVtSyncSnapshot({
+   creatorContentTypes: [
+    { creatorContentType: "shorts", views: 400, engagedViews: 300, watchTime: 100 },
+    { creatorContentType: "videoOnDemand", views: 600, engagedViews: 500, watchTime: 300 },
+   ],
+   videos: [
+    {
+     id: "short-a",
+     title: "Short A",
+     format: "short",
+     metrics: {
+      views: 100,
+      engagedViews: 80,
+      watchTime: 1,
+      averagePercentageViewed: 50,
+      revenue: 2,
+      likes: 10,
+      subscribersGained: 4,
+      subscribersLost: 1,
+      comments: 3,
+      videosAddedToPlaylists: 2,
+      shares: 5,
+     },
+    },
+    {
+     id: "short-b",
+     title: "Short B",
+     format: "shorts",
+     metrics: {
+      views: 200,
+      engagedViews: 120,
+      watchTime: 2,
+      averagePercentageViewed: 25,
+      revenue: 3,
+      likes: 20,
+      subscribersGained: 2,
+      subscribersLost: 1,
+      comments: 4,
+      videosAddedToPlaylists: 3,
+      shares: 6,
+     },
+    },
+    {
+     id: "long-a",
+     title: "Long A",
+     format: "long",
+     metrics: {
+      views: 500,
+      engagedViews: 350,
+      watchTime: 10,
+      averagePercentageViewed: 40,
+      revenue: 20,
+      likes: 40,
+      subscribersGained: 8,
+      subscribersLost: 2,
+      comments: 9,
+      videosAddedToPlaylists: 7,
+      shares: 12,
+     },
+    },
+    {
+     id: "live-a",
+     title: "Live A",
+     format: "live",
+     metrics: {
+      views: 100,
+      engagedViews: 75,
+      watchTime: 5,
+      averagePercentageViewed: 30,
+      revenue: 4,
+      likes: 8,
+      subscribersGained: 3,
+      subscribersLost: 1,
+      comments: 5,
+      videosAddedToPlaylists: 4,
+      shares: 2,
+     },
+    },
+   ],
+  })
+
+  expect(formatsTable.columns.filter((column) => column.group === "Format Share").map((column) => column.key))
+   .toEqual(expect.arrayContaining(["formatViewShare", "formatWatchTimeShare"]))
+  expect(formatsTable.columns.filter((column) => column.group === "Video Table Totals").map((column) => column.key))
+   .toEqual([
+    "videoFormatViews",
+    "videoFormatWatchTime",
+    "videoFormatAvgViewDuration",
+    "videoFormatAvgPercentageViewed",
+    "videoFormatRevenue",
+    "videoFormatLikes",
+    "videoFormatSubscribers",
+    "videoFormatComments",
+    "videoFormatSaves",
+    "videoFormatShares",
+   ])
+
+  const rows = tableRows(snapshot, formatsTable)
+  const shorts = rows.find((row) => row.term === "Shorts")!
+  const longFormat = rows.find((row) => row.term === "Long-Format")!
+  const live = rows.find((row) => row.term === "Live Stream")!
+
+  expect(shorts).toMatchObject({
+   views: 400,
+   watchTime: 100,
+   formatViewShare: 40,
+   formatWatchTimeShare: 25,
+   videoFormatViews: 300,
+   videoFormatWatchTime: 3,
+   videoFormatRevenue: 5,
+   videoFormatLikes: 30,
+   videoFormatSubscribers: 4,
+   videoFormatComments: 7,
+   videoFormatSaves: 5,
+   videoFormatShares: 11,
+  })
+  expect(shorts.videoFormatAvgViewDuration).toBeCloseTo(36)
+  expect(shorts.videoFormatAvgPercentageViewed).toBeCloseTo(100 / 3)
+  expect(longFormat).toMatchObject({
+   views: 600,
+   watchTime: 300,
+   formatViewShare: 60,
+   formatWatchTimeShare: 75,
+   videoFormatViews: 500,
+   videoFormatWatchTime: 10,
+   videoFormatAvgViewDuration: 72,
+   videoFormatAvgPercentageViewed: 40,
+   videoFormatRevenue: 20,
+   videoFormatLikes: 40,
+   videoFormatSubscribers: 6,
+   videoFormatComments: 9,
+   videoFormatSaves: 7,
+   videoFormatShares: 12,
+  })
+  expect(live).toMatchObject({
+   videoFormatViews: 100,
+   videoFormatWatchTime: 5,
+   videoFormatRevenue: 4,
+   videoFormatLikes: 8,
+   videoFormatSubscribers: 2,
+   videoFormatComments: 5,
+   videoFormatSaves: 4,
+   videoFormatShares: 2,
+  })
+  expect(live.views).toBeUndefined()
+  expect(live.watchTime).toBeUndefined()
+  expect(live.formatViewShare).toBeUndefined()
+  expect(live.formatWatchTimeShare).toBeUndefined()
+ })
+
+ it("backfills Formats base metrics and shares from videos only when the API report is absent", () => {
+  const formatsTable = VT_SYNC_TABLE_DEFINITIONS.find((table) => table.id === "creator")!
+  const snapshot = normalizeVtSyncSnapshot({
+   videos: [
+    { id: "short-a", format: "short", metrics: { views: 300, watchTime: 3 } },
+    { id: "long-a", format: "long", metrics: { views: 700, watchTime: 7 } },
+   ],
+  })
+
+  const rows = tableRows(snapshot, formatsTable)
+  expect(rows.find((row) => row.term === "Shorts")).toMatchObject({
+   views: 300,
+   watchTime: 3,
+   formatViewShare: 30,
+   formatWatchTimeShare: 30,
+  })
+  expect(rows.find((row) => row.term === "Long-Format")).toMatchObject({
+   views: 700,
+   watchTime: 7,
+   formatViewShare: 70,
+   formatWatchTimeShare: 70,
+  })
  })
 })

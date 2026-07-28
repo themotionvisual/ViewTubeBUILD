@@ -301,6 +301,16 @@ const computeMetricRecord = (
   )
 }
 
+const stemToken = (token: string): string => {
+  if (token.length <= 4) return token
+  if (token.endsWith("ers") && token.length > 6) return token.slice(0, -3)
+  if (token.endsWith("ing") && token.length > 6) return token.slice(0, -3)
+  if (token.endsWith("ies") && token.length > 6) return `${token.slice(0, -3)}y`
+  if (token.endsWith("es") && token.length > 5) return token.slice(0, -2)
+  if (token.endsWith("s") && !token.endsWith("ss") && token.length > 4) return token.slice(0, -1)
+  return token
+}
+
 export const tokenizeTitleKeywords = (title: string): string[] => {
   const normalized = String(title || "")
     .toLowerCase()
@@ -308,12 +318,14 @@ export const tokenizeTitleKeywords = (title: string): string[] => {
   const tokens = normalized.split(/\s+/).filter(Boolean)
   return Array.from(
     new Set(
-      tokens.filter((token) => {
-        if (token.length < 3) return false
-        if (STOP_WORDS.has(token)) return false
-        if (/^\d+$/.test(token)) return token.length >= 4
-        return true
-      }),
+      tokens
+        .filter((token) => {
+          if (token.length < 3) return false
+          if (STOP_WORDS.has(token)) return false
+          if (/^\d+$/.test(token)) return token.length >= 4
+          return true
+        })
+        .map(stemToken),
     ),
   )
 }

@@ -211,7 +211,7 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
 
  return (
   <WidgetShell {...common} icon={<MessageSquare size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "10px", gap: "8px" }}>
+   <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px", minHeight: 0 }}>
     {/* Quick Topics */}
     {messages.length === 0 && (
      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -255,7 +255,7 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
     )}
 
     {/* Chat History */}
-    <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px", minHeight: "80px", padding: "2px 2px" }}>
+    <div ref={scrollRef} className="vt-widget-fill-body" style={{ gap: "8px", minHeight: "80px", padding: "2px 2px" }}>
      {messages.map((msg, i) => (
       <div key={i} style={{
        alignSelf: msg.role === "user" ? "flex-end" : "flex-start",

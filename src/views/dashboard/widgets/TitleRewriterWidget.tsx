@@ -77,7 +77,7 @@ export const TitleRewriterWidget = ({ widget, instance, editMode, onToggleCollap
 
  return (
   <WidgetShell {...common} icon={<Type size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%" }}>
+   <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%", minHeight: 0 }}>
     <div style={{ display: "flex", gap: "4px", zIndex: 10 }}>
      <div style={{ flex: 2, minWidth: 0 }}>
       <CustomDropdown 

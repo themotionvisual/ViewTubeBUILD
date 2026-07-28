@@ -19,7 +19,7 @@ export const GuestRatioWidget = ({ widget, instance, editMode, onToggleCollapse,
  return (
   <WidgetShell {...common} icon={<UserCircle2 size={22} />}>
    <div className="flex flex-col h-full justify-between gap-2 p-2">
-    <div className="flex justify-between items-baseline border-b-[3px] border-black pb-2">
+    <div className="flex justify-between items-baseline border-b-[3px] border-[var(--widget-border,#000)] pb-2">
      <span className="text-[10px] font-black uppercase opacity-40">S2G Ratio</span>
      <span className="text-xl font-black text-[#FF7497]">1:12</span>
     </div>

@@ -420,6 +420,7 @@ interface ToolboxScaffoldProps {
   onToggle?: () => void;
   unmountWhenClosed?: boolean;
   embedded?: boolean;
+  fillAvailable?: boolean;
   outerClassName?: string;
   shellClassName?: string;
   contentClassName?: string;
@@ -444,6 +445,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
   onToggle,
   unmountWhenClosed = false,
   embedded = false,
+  fillAvailable = false,
   outerClassName = "",
   shellClassName = "",
   contentClassName = "",
@@ -468,6 +470,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
     onToggle={onToggle}
     unmountWhenClosed={unmountWhenClosed}
     embedded={embedded}
+    fillAvailable={fillAvailable}
     outerClassName={outerClassName}
     shellClassName={shellClassName}
     contentClassName={contentClassName || (embedded ? "p-0" : "p-8")}

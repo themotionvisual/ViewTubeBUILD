@@ -34,6 +34,12 @@ const STABLE_CATEGORY_IDS = new Set([
  "playback_location",
  "subscription_status",
  "playlists_analytics",
+ "sharing_service",
+ "traffic_subscribers",
+ "subscription_source",
+ "retention",
+ "device_os",
+ "traffic_day",
 ])
 
 export const VT_SYNC_DISABLED_UNVALIDATED_CATEGORY_IDS = new Set([
@@ -49,15 +55,11 @@ export const VT_SYNC_DISABLED_UNVALIDATED_CATEGORY_IDS = new Set([
  "traffic_no_link_other",
  "traffic_playlist",
  "traffic_yt_playlist_page",
- "traffic_subscribers",
  "audience_watch_behavior",
  "new_returning_viewers",
- "subscription_source",
  "demographics_age",
  "demographics_gender",
- "sharing_service",
  "revenue_source",
- "retention",
 ])
 
 const normalizeCategory = (category: VtSyncCategoryDefinition): VtSyncCategoryDefinition => {
@@ -66,6 +68,21 @@ const normalizeCategory = (category: VtSyncCategoryDefinition): VtSyncCategoryDe
   ...category,
   ...disabledUnvalidated("Hidden from the active VT Sync controller until this YouTube Analytics query shape is validated."),
  }
+}
+
+const runtimePhaseIdForCategory = (category: Omit<VtSyncCategoryDefinition, "runtimePhaseId">): string => {
+ if (category.id === "channel_metadata") return "channel_metadata"
+ if (category.id === "uploads_playlist") return "uploads_playlist"
+ if (category.id === "video_metadata") return "video_metadata"
+ if (category.id === "videos_analytics") return "videos_analytics"
+ if (category.id === "channel_totals") return "channel_totals"
+ if (category.id === "daily_metrics") return "daily_metrics"
+ if (category.id === "device_os") return "device_os"
+ if (category.id === "traffic_day") return "traffic_day"
+ if (category.id === "playlists_analytics") return "playlists_analytics"
+ if (category.id === "retention") return "retention"
+ if (category.phase === "traffic_sync") return "traffic"
+ return "segments"
 }
 
 const ALL_VT_SYNC_CATEGORY_OPTION_DEFINITIONS = [
@@ -110,16 +127,20 @@ const ALL_VT_SYNC_CATEGORY_OPTION_DEFINITIONS = [
  { id: "geography_dma", label: "Geography: US DMA", description: "Traffic breakdown by US designated market area.", isCore: false, group: "geography", phase: "geography_sync", sourceApi: "youtube_analytics_v2", quotaClass: "medium", defaultEnabled: false, canonicalTargets: ["geography"] },
  { id: "device_type", label: "Device Type", description: "Traffic by device type.", isCore: false, group: "device", phase: "audience_segments", sourceApi: "youtube_analytics_v2", quotaClass: "medium", defaultEnabled: false, canonicalTargets: ["device", "device_type"] },
  { id: "operating_system", label: "Operating System", description: "Traffic by operating system.", isCore: false, group: "device", phase: "audience_segments", sourceApi: "youtube_analytics_v2", quotaClass: "medium", defaultEnabled: false, canonicalTargets: ["operating_system"] },
+ { id: "device_os", label: "Device x OS", description: "Combined device type and operating system breakdown.", isCore: false, group: "device", phase: "audience_segments", sourceApi: "youtube_analytics_v2", quotaClass: "medium", defaultEnabled: false, canonicalTargets: ["device_os"] },
  { id: "ad_type", label: "Ad Type", description: "Performance by ad type.", isCore: false, group: "revenue", phase: "owner_mode", sourceApi: "youtube_analytics_v2", quotaClass: "medium", defaultEnabled: false, canonicalTargets: ["ad_type", "daily_ad_type_performance"] },
  { id: "playback_location", label: "Playback Location", description: "Where videos are being played.", isCore: false, group: "traffic", phase: "traffic_sync", sourceApi: "youtube_analytics_v2", quotaClass: "medium", defaultEnabled: false, canonicalTargets: ["playback_location", "playback_location"] },
+ { id: "traffic_day", label: "Traffic Source x Day", description: "Daily breakdown of views and watch time by traffic source type.", isCore: false, group: "traffic", phase: "traffic_sync", sourceApi: "youtube_analytics_v2", quotaClass: "high", defaultEnabled: false, canonicalTargets: ["traffic_day"] },
  { id: "subscription_status", label: "Subscription Status", description: "Performance split by subscribed vs non-subscribed viewers.", isCore: false, group: "audience", phase: "audience_segments", sourceApi: "youtube_analytics_v2", quotaClass: "medium", defaultEnabled: false, canonicalTargets: ["subscription_status"] },
  { id: "playlists_analytics", label: "Playlists Analytics", description: "Full playlist performance rows, watch time, starts, and saves.", isCore: false, group: "playlists", phase: "playlist_sync", sourceApi: "youtube_analytics_v2", quotaClass: "medium", defaultEnabled: false, canonicalTargets: ["playlists_ranked"] },
  { id: "sharing_service", label: "Sharing Service", description: "Where viewers are sharing videos.", isCore: false, group: "traffic", phase: "traffic_sync", sourceApi: "youtube_analytics_v2", quotaClass: "medium", defaultEnabled: false, canonicalTargets: ["traffic_other_features"] },
  { id: "revenue_source", label: "Revenue Source", description: "Breakdown of estimated revenue sources.", isCore: false, group: "revenue", phase: "owner_mode", sourceApi: "youtube_analytics_v2", quotaClass: "medium", defaultEnabled: false, canonicalTargets: ["revenue_source"] },
- { id: "retention", label: "Audience Retention", description: "Watch ratios and relative retention performance.", isCore: false, group: "retention", phase: "retention_sync", sourceApi: "youtube_analytics_v2", quotaClass: "high", defaultEnabled: false, canonicalTargets: ["retention_curves"] },
-] satisfies VtSyncCategoryDefinition[]
+ { id: "retention", label: "Audience Retention", description: "Watch ratios and relative retention performance.", isCore: false, group: "retention", phase: "retention_sync", sourceApi: "youtube_analytics_v2", quotaClass: "high", defaultEnabled: false, dependsOn: ["video_metadata"], canonicalTargets: ["retention_curves"] },
+] satisfies Array<Omit<VtSyncCategoryDefinition, "runtimePhaseId">>
 
-const ALL_VT_SYNC_CATEGORY_OPTIONS: VtSyncCategoryDefinition[] = ALL_VT_SYNC_CATEGORY_OPTION_DEFINITIONS.map(normalizeCategory)
+const ALL_VT_SYNC_CATEGORY_OPTIONS: VtSyncCategoryDefinition[] = ALL_VT_SYNC_CATEGORY_OPTION_DEFINITIONS
+ .map((category) => ({ ...category, runtimePhaseId: runtimePhaseIdForCategory(category) }))
+ .map(normalizeCategory)
 
 export const VT_SYNC_CATEGORY_OPTIONS: VtSyncCategoryDefinition[] =
  ALL_VT_SYNC_CATEGORY_OPTIONS.filter((category) => category.syncStatus !== "disabled_unvalidated")
@@ -141,4 +162,23 @@ export const getVtSyncDefaultCategoryIds = (): string[] =>
 export const filterVtSyncVisibleCategoryIds = (categoryIds: string[]): string[] => {
  const visibleIds = new Set(getVtSyncVisibleCategoryIds())
  return categoryIds.filter((id) => visibleIds.has(id))
+}
+
+export const expandVtSyncCategoryDependencies = (categoryIds: string[]): string[] => {
+ const byId = new Map(VT_SYNC_CATEGORY_OPTIONS.map((category) => [category.id, category]))
+ const ordered: string[] = []
+ const visited = new Set<string>()
+ const visiting = new Set<string>()
+ const visit = (id: string) => {
+  if (visited.has(id) || visiting.has(id)) return
+  const category = byId.get(id)
+  if (!category) return
+  visiting.add(id)
+  category.dependsOn?.forEach(visit)
+  visiting.delete(id)
+  visited.add(id)
+  ordered.push(id)
+ }
+ categoryIds.forEach(visit)
+ return ordered
 }

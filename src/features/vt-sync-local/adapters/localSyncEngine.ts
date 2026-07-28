@@ -26,6 +26,10 @@ import type {
 } from "./contracts"
 
 export const VT_SYNC_SERVER_ACCOUNT_TOKEN = "__viewtube_server_account_session__"
+export const VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE = 25
+export const VT_SYNC_TRAFFIC_DETAIL_MAX_PAGES = 4
+export const VT_SYNC_TRAFFIC_DETAIL_MAX_ROWS = VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE * VT_SYNC_TRAFFIC_DETAIL_MAX_PAGES
+export const VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE = 200
 
 export type VtSyncLocalSyncPhaseStatus = "pending" | "running" | "complete" | "partial" | "failed" | "skipped"
 
@@ -45,6 +49,7 @@ export type VtSyncLocalSyncProgress = {
  startedAt: string
  completedAt?: string
  status: "idle" | "running" | "complete" | "partial" | "failed"
+ requestedCategoryIds: string[]
  phases: VtSyncLocalSyncPhase[]
 }
 
@@ -52,6 +57,8 @@ export type VtSyncLocalSyncOptions = {
  token: string
  selectedCategories: string[]
  previousSnapshot: VtSyncSnapshot
+ /** Specific video IDs to sync retention for. Falls back to the top 25 videos by views when omitted/empty. */
+ retentionVideoIds?: string[]
  onProgress?: (progress: VtSyncLocalSyncProgress) => void
  onSnapshotCommit?: (snapshot: VtSyncSnapshot) => void
 }
@@ -61,6 +68,23 @@ type BundleResult = {
  columns: string[]
  error?: string
  status?: number
+ fallback?: {
+  strategy: "traffic_detail_date_windows"
+  reason: string
+  rowsBefore: number
+  rowsAfter: number
+ }
+ pageDiagnostics?: Array<{
+  page: number
+  startIndex: number
+  maxResults: number
+  rows: number
+  status: "complete" | "short" | "failed"
+  httpStatus?: number
+  error?: string
+  startDate?: string
+  endDate?: string
+ }>
 }
 
 type PlaylistMetadata = {
@@ -104,12 +128,29 @@ const YOUTUBE_CATEGORY_NAMES: Record<string, string> = {
  "29": "Nonprofits & Activism",
 }
 
-const today = () => new Date().toISOString().slice(0, 10)
+const toLocalDateKey = (date: Date) =>
+ `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
 const daysAgo = (days: number) => {
  const date = new Date()
  date.setDate(date.getDate() - days)
- return date.toISOString().slice(0, 10)
+ return toLocalDateKey(date)
 }
+const parseDateKey = (dateKey: string) => {
+ const [year, month, day] = dateKey.split("-").map(Number)
+ return new Date(year || 2000, (month || 1) - 1, day || 1)
+}
+const addDaysToDateKey = (dateKey: string, days: number) => {
+ const date = parseDateKey(dateKey)
+ date.setDate(date.getDate() + days)
+ return toLocalDateKey(date)
+}
+const daysBetweenInclusive = (startDate: string, endDate: string) =>
+ Math.max(1, Math.floor((parseDateKey(endDate).getTime() - parseDateKey(startDate).getTime()) / 86_400_000) + 1)
+// YouTube Analytics data for "today" is usually incomplete; report through yesterday instead.
+const reportEndDate = () => daysAgo(1)
+// Fallback lifetime start date for calls made before the channel's actual sign-up date
+// (snapshot.channelPublishedAt) is known, e.g. if channel_metadata wasn't synced this run.
+const VT_SYNC_LIFETIME_START_DATE = "2000-01-01"
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -222,16 +263,18 @@ const fetchWithBackoff = async (url: string, token: string, maxRetries = 3): Pro
     credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ url }),
-   })
+  })
   : fetch(url, { headers: { Authorization: `Bearer ${token}` } })
  let delayMs = 800
+ let lastResponse: Response | null = null
  for (let attempt = 0; attempt < maxRetries; attempt += 1) {
   const res = await request()
+  lastResponse = res
   if (res.ok || (res.status !== 429 && res.status < 500)) return res
   if (attempt < maxRetries - 1) await sleep(delayMs)
   delayMs *= 2
  }
- return request()
+ return lastResponse || request()
 }
 
 const runAnalyticsBundle = async ({
@@ -242,8 +285,9 @@ const runAnalyticsBundle = async ({
  sort = "-views",
  maxResults = 50,
  filters = "",
- startDate = daysAgo(365),
- endDate = today(),
+ startDate = VT_SYNC_LIFETIME_START_DATE,
+ endDate = reportEndDate(),
+ startIndex = 1,
  allowFallback = true,
 }: {
  token: string
@@ -255,6 +299,7 @@ const runAnalyticsBundle = async ({
  filters?: string
  startDate?: string
  endDate?: string
+ startIndex?: number
  allowFallback?: boolean
 }): Promise<BundleResult> => {
  const request = async (activeMetrics: string[]) => {
@@ -268,6 +313,7 @@ const runAnalyticsBundle = async ({
   if (sort) params.set("sort", sort)
   if (maxResults > 0) params.set("maxResults", String(maxResults))
   if (filters) params.set("filters", filters)
+  if (startIndex > 1) params.set("startIndex", String(startIndex))
   return fetchWithBackoff(`https://youtubeanalytics.googleapis.com/v2/reports?${params.toString()}`, token)
  }
 
@@ -296,6 +342,194 @@ const runAnalyticsBundle = async ({
   return out
  })
  return { rows, columns }
+}
+
+// Pages through runAnalyticsBundle in fixed-size chunks via start-index, stopping once a page
+// comes back short (no more rows) or the page cap is hit. Used for reports like
+// insightTrafficSourceDetail whose maxResults is capped well below what a single call can return.
+const runPaginatedAnalyticsBundle = async (
+ options: Parameters<typeof runAnalyticsBundle>[0] & { pageSize: number; maxPages: number },
+): Promise<BundleResult> => {
+ const { pageSize, maxPages, ...base } = options
+ const rows: Record<string, any>[] = []
+ let columns: string[] = []
+ let firstFailure: BundleResult | undefined
+ const pageDiagnostics: NonNullable<BundleResult["pageDiagnostics"]> = []
+ for (let page = 0; page < maxPages; page += 1) {
+  const startIndex = page * pageSize + 1
+  const result = await runAnalyticsBundle({ ...base, maxResults: pageSize, startIndex })
+  if (!result.rows) {
+   pageDiagnostics.push({
+    page: page + 1,
+    startIndex,
+    maxResults: pageSize,
+    rows: 0,
+    status: "failed",
+    httpStatus: result.status,
+    error: result.error,
+   })
+   if (page === 0) firstFailure = result
+   else {
+    return {
+     rows,
+     columns,
+     status: result.status,
+     error: `${base.id}: partial pagination stopped at startIndex ${startIndex}; ${result.error || "YouTube Analytics returned no page."}`,
+     pageDiagnostics,
+    }
+   }
+   break
+  }
+  columns = result.columns
+  rows.push(...result.rows)
+  pageDiagnostics.push({
+   page: page + 1,
+   startIndex,
+   maxResults: pageSize,
+   rows: result.rows.length,
+   status: result.rows.length < pageSize ? "short" : "complete",
+  })
+  if (result.rows.length < pageSize) break
+  if (page < maxPages - 1) await sleep(150)
+ }
+ if (!rows.length && firstFailure) return { ...firstFailure, pageDiagnostics }
+ return { rows, columns, pageDiagnostics }
+}
+
+const buildEvenDateWindows = (startDate: string, endDate: string, maxWindows: number) => {
+ const totalDays = daysBetweenInclusive(startDate, endDate)
+ const windowCount = Math.min(Math.max(1, maxWindows), totalDays)
+ const windowSize = Math.ceil(totalDays / windowCount)
+ const windows: Array<{ startDate: string; endDate: string }> = []
+ for (let index = 0; index < windowCount; index += 1) {
+  const windowStart = addDaysToDateKey(startDate, index * windowSize)
+  if (parseDateKey(windowStart).getTime() > parseDateKey(endDate).getTime()) break
+  const windowEnd = parseDateKey(addDaysToDateKey(windowStart, windowSize - 1)).getTime() > parseDateKey(endDate).getTime()
+   ? endDate
+   : addDaysToDateKey(windowStart, windowSize - 1)
+  windows.push({ startDate: windowStart, endDate: windowEnd })
+ }
+ return windows
+}
+
+const mergeTrafficDetailRows = (rows: Record<string, any>[], detailKey = "insightTrafficSourceDetail") => {
+ const merged = new Map<string, {
+  row: Record<string, any>
+  averageViewDurationWeighted: number
+  averageViewPercentageWeighted: number
+  weight: number
+ }>()
+ rows.forEach((row) => {
+  const key = String(row[detailKey] || row.insightTrafficSourceDetail || row.source || row.term || "").trim()
+  if (!key) return
+  const views = numberOrZero(row.views)
+  const minutesWatched = numberOrZero(row.estimatedMinutesWatched)
+  const engagedViews = numberOrZero(row.engagedViews)
+  const existing = merged.get(key)
+  if (existing) {
+   existing.row.views = numberOrZero(existing.row.views) + views
+   existing.row.estimatedMinutesWatched = numberOrZero(existing.row.estimatedMinutesWatched) + minutesWatched
+   existing.row.engagedViews = numberOrZero(existing.row.engagedViews) + engagedViews
+   existing.averageViewDurationWeighted += numberOrZero(row.averageViewDuration) * views
+   existing.averageViewPercentageWeighted += numberOrZero(row.averageViewPercentage) * views
+   existing.weight += views
+  } else {
+   merged.set(key, {
+    row: { ...row, [detailKey]: key, insightTrafficSourceDetail: key },
+    averageViewDurationWeighted: numberOrZero(row.averageViewDuration) * views,
+    averageViewPercentageWeighted: numberOrZero(row.averageViewPercentage) * views,
+    weight: views,
+   })
+  }
+ })
+ return [...merged.values()]
+  .map((entry): Record<string, any> => ({
+   ...entry.row,
+   averageViewDuration: entry.weight > 0 ? entry.averageViewDurationWeighted / entry.weight : numberOrZero(entry.row.averageViewDuration),
+   averageViewPercentage: entry.weight > 0 ? entry.averageViewPercentageWeighted / entry.weight : numberOrZero(entry.row.averageViewPercentage),
+  }))
+  .sort((a, b) => numberOrZero(b.views) - numberOrZero(a.views))
+}
+
+const runWindowedTrafficDetailFallback = async (
+ options: Parameters<typeof runAnalyticsBundle>[0] & { pageSize: number; maxWindows: number; maxRows: number; reason: string },
+): Promise<BundleResult> => {
+ const { pageSize, maxWindows, maxRows, reason, ...base } = options
+ const windows = buildEvenDateWindows(base.startDate || VT_SYNC_LIFETIME_START_DATE, base.endDate || reportEndDate(), maxWindows)
+ const rows: Record<string, any>[] = []
+ let columns: string[] = []
+ const pageDiagnostics: NonNullable<BundleResult["pageDiagnostics"]> = []
+ for (let index = 0; index < windows.length; index += 1) {
+  const window = windows[index]
+  const result = await runAnalyticsBundle({
+   ...base,
+   startDate: window.startDate,
+   endDate: window.endDate,
+   maxResults: pageSize,
+   startIndex: 1,
+  })
+  if (result.rows) {
+   columns = result.columns
+   rows.push(...result.rows)
+   pageDiagnostics.push({
+    page: index + 1,
+    startIndex: 1,
+    maxResults: pageSize,
+    rows: result.rows.length,
+    status: result.rows.length < pageSize ? "short" : "complete",
+    startDate: window.startDate,
+    endDate: window.endDate,
+   })
+  } else {
+   pageDiagnostics.push({
+    page: index + 1,
+    startIndex: 1,
+    maxResults: pageSize,
+    rows: 0,
+    status: "failed",
+    httpStatus: result.status,
+    error: result.error,
+    startDate: window.startDate,
+    endDate: window.endDate,
+   })
+  }
+  if (index < windows.length - 1) await sleep(150)
+ }
+ const mergedRows = mergeTrafficDetailRows(rows).slice(0, maxRows)
+ return {
+  rows: mergedRows,
+  columns,
+  fallback: {
+   strategy: "traffic_detail_date_windows",
+   reason,
+   rowsBefore: rows.length,
+   rowsAfter: mergedRows.length,
+  },
+  pageDiagnostics,
+ }
+}
+
+const runTrafficDetailAnalyticsBundle = async (
+ options: Parameters<typeof runAnalyticsBundle>[0] & { pageSize: number; maxPages: number; maxRows: number },
+): Promise<BundleResult> => {
+ const paginated = await runPaginatedAnalyticsBundle(options)
+ if (!paginated.error || !paginated.rows?.length) return paginated
+
+ const fallback = await runWindowedTrafficDetailFallback({
+  ...options,
+  maxWindows: options.maxPages,
+  reason: paginated.error,
+ })
+ if ((fallback.rows?.length || 0) > paginated.rows.length) {
+  return {
+   ...fallback,
+   pageDiagnostics: [
+    ...(paginated.pageDiagnostics || []),
+    ...(fallback.pageDiagnostics || []),
+   ],
+  }
+ }
+ return paginated
 }
 
 const updatePhase = (
@@ -897,14 +1131,14 @@ const mapSegmentRows = (rows: Record<string, any>[] | null, identityKey: string)
  adImpressions: numberOrUndefined(row.adImpressions),
 }))
 
-const channelTotalsForWindow = async (token: string, window: VtSyncAnalyticsWindow) => {
- const startDate = window === "lifetime" ? "2000-01-01" : daysAgo(Number(window.replace("d", "")))
+const channelTotalsForWindow = async (token: string, window: VtSyncAnalyticsWindow, lifetimeStartDate: string) => {
+ const startDate = window === "lifetime" ? lifetimeStartDate : daysAgo(Number(window.replace("d", "")))
  const result = await runAnalyticsBundle({
   token,
   id: `channel_totals_${window}`,
   metrics: ["views", "estimatedMinutesWatched", "subscribersGained", "subscribersLost", "estimatedRevenue", "adImpressions", "engagedViews"],
   startDate,
-  endDate: today(),
+  endDate: reportEndDate(),
   sort: "",
   maxResults: 0,
  })
@@ -919,7 +1153,7 @@ const channelTotalsForWindow = async (token: string, window: VtSyncAnalyticsWind
  }
 }
 
-export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSnapshot, onProgress, onSnapshotCommit }: VtSyncLocalSyncOptions): Promise<VtSyncSnapshot> => {
+export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSnapshot, retentionVideoIds, onProgress, onSnapshotCommit }: VtSyncLocalSyncOptions): Promise<VtSyncSnapshot> => {
  const visibleSelectedCategories = filterVtSyncVisibleCategoryIds(selectedCategories)
  const hiddenRequestedCategories = selectedCategories.filter((categoryId) => !visibleSelectedCategories.includes(categoryId))
  const selected = new Set(visibleSelectedCategories)
@@ -934,6 +1168,8 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   ["daily_metrics", "Daily Metrics"],
   ["traffic", "Traffic Details"],
   ["segments", "Audience Segments"],
+  ["device_os", "Device x OS"],
+  ["traffic_day", "Traffic Source x Day"],
   ["playlists_analytics", "Playlist Analytics"],
   ["retention", "Retention"],
  ] as const
@@ -941,6 +1177,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   runId,
   startedAt,
   status: "running",
+  requestedCategoryIds: visibleSelectedCategories,
   phases: phaseIds.map(([id, label]) => ({ id, label, status: "pending", rows: 0 })),
  }
  onProgress?.(progress)
@@ -1017,12 +1254,15 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    subscriberCount: numberOrZero(channel.statistics?.subscriberCount),
    channelVideoCount: numberOrZero(channel.statistics?.videoCount),
    channelViewCount: numberOrZero(channel.statistics?.viewCount),
+   channelPublishedAt: channel.snippet?.publishedAt || null,
    }
    addManifestResult(manifest, "channel_metadata", true, 1, ["snippet", "statistics", "contentDetails"])
    markFreshness(["channel_metadata"], "channel_metadata", 1)
    updatePhase(progress, "channel_metadata", { status: "complete", rows: 1, completedAt: new Date().toISOString() }, onProgress)
    commitSnapshot()
   }
+
+  const channelStartDate = snapshot.channelPublishedAt?.slice(0, 10) || VT_SYNC_LIFETIME_START_DATE
 
   let videoIds = snapshot.videos.map((video) => video.id).filter(Boolean)
   if (channel && shouldSync(selected, "uploads_playlist")) {
@@ -1107,11 +1347,12 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    }
 
    const missingVideoIds = snapshot.videos.filter((video) => !analyticsMap[video.id]).map((video) => video.id)
-   for (let index = 0; index < missingVideoIds.length; index += 50) {
-    const chunk = missingVideoIds.slice(index, index + 50)
+   for (let index = 0; index < missingVideoIds.length; index += VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE) {
+    const chunk = missingVideoIds.slice(index, index + VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE)
+    const batchIndex = index / VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE
     const chunkResult = await runAnalyticsBundle({
      token,
-     id: `video_stats_recent_${index / 50}`,
+     id: `video_stats_recent_${batchIndex}`,
      metrics: FULL_ANALYTICS_METRICS,
      dimensions: "video",
      sort: "",
@@ -1125,23 +1366,24 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      })
      rowsWritten += chunkResult.rows.length
      snapshot = { ...snapshot, videos: mergeVideoAnalytics(snapshot.videos, Object.values(analyticsMap)) }
-     addManifestResult(manifest, `video_stats_recent_${index / 50}`, true, chunkResult.rows.length, ["video", ...FULL_ANALYTICS_METRICS], undefined, chunkResult.columns)
-     updatePhase(progress, "videos_analytics", { status: "running", rows: rowsWritten, message: `Backfilled ${Math.min(index + 50, missingVideoIds.length)} of ${missingVideoIds.length} missing video analytics rows.` }, onProgress)
+     addManifestResult(manifest, `video_stats_recent_${batchIndex}`, true, chunkResult.rows.length, ["video", ...FULL_ANALYTICS_METRICS], undefined, chunkResult.columns)
+     updatePhase(progress, "videos_analytics", { status: "running", rows: rowsWritten, message: `Backfilled ${Math.min(index + VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE, missingVideoIds.length)} of ${missingVideoIds.length} missing video analytics rows.` }, onProgress)
      commitSnapshot()
     } else {
      failures += 1
-     addManifestResult(manifest, `video_stats_recent_${index / 50}`, false, 0, ["video", ...FULL_ANALYTICS_METRICS], chunkResult.error)
+     addManifestResult(manifest, `video_stats_recent_${batchIndex}`, false, 0, ["video", ...FULL_ANALYTICS_METRICS], chunkResult.error)
     }
-    if (index + 50 < missingVideoIds.length) await sleep(300)
+    if (index + VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE < missingVideoIds.length) await sleep(300)
    }
 
    const longIds = snapshot.videos.filter((video) => video.format === "long").map((video) => video.id)
    const longRows: Record<string, any>[] = []
-   for (let index = 0; index < longIds.length; index += 50) {
-    const chunk = longIds.slice(index, index + 50)
+   for (let index = 0; index < longIds.length; index += VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE) {
+    const chunk = longIds.slice(index, index + VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE)
+    const batchIndex = index / VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE
     const longResult = await runAnalyticsBundle({
      token,
-     id: `video_long_only_metrics_${index / 50}`,
+     id: `video_long_only_metrics_${batchIndex}`,
      metrics: LONG_FORMAT_METRICS,
      dimensions: "video",
      sort: "",
@@ -1151,12 +1393,12 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     })
     if (longResult.rows) {
      longRows.push(...longResult.rows)
-     addManifestResult(manifest, `video_long_only_metrics_${index / 50}`, true, longResult.rows.length, ["video", ...LONG_FORMAT_METRICS], undefined, longResult.columns)
+     addManifestResult(manifest, `video_long_only_metrics_${batchIndex}`, true, longResult.rows.length, ["video", ...LONG_FORMAT_METRICS], undefined, longResult.columns)
     } else {
      failures += 1
-     addManifestResult(manifest, `video_long_only_metrics_${index / 50}`, false, 0, ["video", ...LONG_FORMAT_METRICS], longResult.error)
+     addManifestResult(manifest, `video_long_only_metrics_${batchIndex}`, false, 0, ["video", ...LONG_FORMAT_METRICS], longResult.error)
     }
-    if (index + 50 < longIds.length) await sleep(300)
+    if (index + VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE < longIds.length) await sleep(300)
    }
    if (longRows.length) snapshot = { ...snapshot, videos: mergeLongFormatCardMetrics(snapshot.videos, longRows) }
    markFreshness(["videos"], "videos_analytics", snapshot.videos.length, failures ? "partial" : "synced", failures ? ["someVideoAnalyticsBundles"] : [])
@@ -1172,7 +1414,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   if (shouldSync(selected, "channel_totals")) {
    updatePhase(progress, "channel_totals", { status: "running", startedAt: new Date().toISOString() }, onProgress)
    const windows: VtSyncAnalyticsWindow[] = ["7d", "28d", "90d", "365d", "lifetime"]
-   const totalsEntries = await Promise.all(windows.map(async (window) => [window, await channelTotalsForWindow(token, window)] as const))
+   const totalsEntries = await Promise.all(windows.map(async (window) => [window, await channelTotalsForWindow(token, window, channelStartDate)] as const))
    const totalsObject = Object.fromEntries(totalsEntries) as any
    snapshot = {
     ...snapshot,
@@ -1192,7 +1434,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
 
   if (shouldSync(selected, "daily_metrics")) {
    updatePhase(progress, "daily_metrics", { status: "running", startedAt: new Date().toISOString() }, onProgress)
-   const result = await runAnalyticsBundle({ token, id: "daily_history", metrics: FULL_ANALYTICS_METRICS, dimensions: "day", sort: "-day", maxResults: 500, startDate: daysAgo(365) })
+   const result = await runAnalyticsBundle({ token, id: "daily_history", metrics: FULL_ANALYTICS_METRICS, dimensions: "day", sort: "-day", maxResults: 500, startDate: channelStartDate })
    const dailyAttemptedColumns = ["day", ...FULL_ANALYTICS_METRICS]
    const dailyMissingMetrics = dailyAttemptedColumns.filter((metric) => !result.columns.includes(metric))
    snapshot = {
@@ -1273,33 +1515,71 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   if (selectedTraffic.length > 0) {
    updatePhase(progress, "traffic", { status: "running", startedAt: new Date().toISOString() }, onProgress)
    let rowsWritten = 0
+   let trafficPartial = false
    for (const [categoryId, field, sourceType, enrichType] of selectedTraffic) {
-    const result = await runAnalyticsBundle({
-     token,
-     id: categoryId,
-     metrics: ["views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"],
-     dimensions: sourceType ? "insightTrafficSourceDetail" : "insightTrafficSourceType",
-     filters: sourceType ? `insightTrafficSourceType==${sourceType}` : "",
-     sort: "-views",
-     maxResults: sourceType ? 50 : 200,
-     startDate: daysAgo(365),
-    })
+    // insightTrafficSourceDetail rejects maxResults values above ~25 with a garbled 500
+    // (FIELD_UNKNOWN_VALUE on max-results) instead of a clean error, so page through it in
+    // chunks of 25 (up to 4 pages / 100 rows) instead of requesting a larger page directly.
+    const result = sourceType
+     ? await runTrafficDetailAnalyticsBundle({
+       token,
+       id: categoryId,
+       metrics: ["views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"],
+       dimensions: "insightTrafficSourceDetail",
+       filters: `insightTrafficSourceType==${sourceType}`,
+       sort: "-views",
+       startDate: channelStartDate,
+       pageSize: VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE,
+       maxPages: VT_SYNC_TRAFFIC_DETAIL_MAX_PAGES,
+       maxRows: VT_SYNC_TRAFFIC_DETAIL_MAX_ROWS,
+      })
+     : await runAnalyticsBundle({
+       token,
+       id: categoryId,
+       metrics: ["views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"],
+       dimensions: "insightTrafficSourceType",
+       sort: "-views",
+       maxResults: 200,
+       startDate: channelStartDate,
+      })
     const mappedRows = await enrichTrafficDetailRows(token, mapTraffic(result.rows, sourceType ? "insightTrafficSourceDetail" : "insightTrafficSourceType"), enrichType)
     ;(snapshot as any)[field] = mappedRows
     rowsWritten += mappedRows.length
-    addManifestResult(manifest, categoryId, !!result.rows, result.rows?.length || 0, result.columns, result.error)
+    const categoryComplete = !!result.rows && !result.error
+    if (!categoryComplete) trafficPartial = true
+    if (result.pageDiagnostics?.length) {
+     manifest.diagnostics = [
+      ...(manifest.diagnostics || []),
+      {
+       phase: "traffic_sync",
+       categoryId,
+       sourceType: sourceType || "overview",
+       requestedRows: sourceType ? VT_SYNC_TRAFFIC_DETAIL_MAX_ROWS : result.rows?.length || 0,
+       returnedRows: result.rows?.length || 0,
+       pagination: result.pageDiagnostics,
+       fallback: result.fallback,
+       status: result.error ? "partial" : result.fallback ? "fallback_windowed" : "inspected",
+       error: result.error,
+      },
+     ]
+    }
+    addManifestResult(manifest, categoryId, categoryComplete, result.rows?.length || 0, result.columns, result.error)
     if (result.rows) await persistDatasetRows({ runId, datasetId: categoryId, phase: "traffic_sync", rawRows: result.rows, tableRows: mappedRows, columns: result.columns })
     markFreshness(
      [categoryId],
      categoryId,
      mappedRows.length,
-     result.rows ? (mappedRows.length ? "synced" : "partial") : "failed",
-     result.rows && mappedRows.length === 0 ? [`No ${sourceType || "traffic overview"} rows returned by YouTube Analytics.`] : [],
+     result.rows ? (result.error || mappedRows.length === 0 ? "partial" : "synced") : "failed",
+     result.error
+      ? [result.error]
+      : result.rows && mappedRows.length === 0
+       ? [`No ${sourceType || "traffic overview"} rows returned by YouTube Analytics.`]
+       : [],
     )
     commitSnapshot()
     await sleep(150)
    }
-   updatePhase(progress, "traffic", { status: "complete", rows: rowsWritten, completedAt: new Date().toISOString() }, onProgress)
+   updatePhase(progress, "traffic", { status: trafficPartial ? "partial" : "complete", rows: rowsWritten, completedAt: new Date().toISOString() }, onProgress)
    commitSnapshot()
   }
 
@@ -1312,7 +1592,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     ["demographics_gender", "demographicsByGender", "gender", ["viewerPercentage"], ""],
     ["audience_watch_behavior", "audienceWatchBehavior", "audienceType", ["views", "estimatedMinutesWatched", "averageViewDuration"], "-views"],
     ["new_returning_viewers", "newReturningViewers", "audienceType", ["views", "estimatedMinutesWatched"], "-views"],
-    ["subscription_source", "subscriptionSource", "insightTrafficSourceType", ["subscribersGained", "subscribersLost"], "-subscribersGained"],
+    ["subscription_source", "subscriptionSource", "insightTrafficSourceType", ["subscribersGained", "subscribersLost"], "-subscribersGained", "", 50],
     ["creator_content_type", "creatorContentTypes", "creatorContentType", ["views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"], "-views"],
     ["geography_country", "geography", "country", ["engagedViews", "views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage", "shares", "subscribersGained", "subscribersLost", "likes", "dislikes", "comments", "estimatedRevenue", "estimatedAdRevenue", "estimatedRedPartnerRevenue"], "-views"],
     ["geography_city", "cities", "country,city", ["views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"], "-views"],
@@ -1325,7 +1605,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    ]
    for (const [categoryId, field, dimensions, metrics, sort, filters = "", maxResults = 200] of segmentRuns) {
     if (!shouldSync(selected, categoryId)) continue
-    const result = await runAnalyticsBundle({ token, id: categoryId, metrics: [...metrics], dimensions, sort, maxResults, filters, startDate: daysAgo(365) })
+    const result = await runAnalyticsBundle({ token, id: categoryId, metrics: [...metrics], dimensions, sort, maxResults, filters, startDate: channelStartDate })
     const mappedRows = mapSegmentRows(result.rows, dimensions.split(",").pop() || dimensions)
     ;(snapshot as any)[field] = mappedRows
     rowsWritten += result.rows?.length || 0
@@ -1342,8 +1622,10 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   if (["ad_type", "revenue_source", "sharing_service"].some((id) => shouldSync(selected, id))) {
    updatePhase(progress, "segments", { status: "running", startedAt: new Date().toISOString(), message: "Running revenue and sharing segments." }, onProgress)
    let rowsWritten = 0
+   let segmentPartial = false
    if (shouldSync(selected, "ad_type")) {
-   const result = await runAnalyticsBundle({ token, id: "ad_type", metrics: ["grossRevenue", "cpm", "adImpressions"], dimensions: "adType", sort: "-grossRevenue", maxResults: 50, startDate: daysAgo(365) })
+    const result = await runAnalyticsBundle({ token, id: "ad_type", metrics: ["grossRevenue", "cpm", "adImpressions"], dimensions: "adType", sort: "-grossRevenue", maxResults: 50, startDate: channelStartDate })
+    if (!result.rows || result.error) segmentPartial = true
     snapshot = { ...snapshot, adTypes: result.rows || [] }
     rowsWritten += result.rows?.length || 0
     addManifestResult(manifest, "ad_type", !!result.rows, result.rows?.length || 0, result.columns, result.error)
@@ -1352,7 +1634,8 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     commitSnapshot()
    }
    if (shouldSync(selected, "revenue_source")) {
-    const result = await runAnalyticsBundle({ token, id: "revenue_source", metrics: ["estimatedRevenue", "estimatedAdRevenue", "estimatedRedPartnerRevenue"], dimensions: "day", sort: "-day", maxResults: 365, startDate: daysAgo(365) })
+    const result = await runAnalyticsBundle({ token, id: "revenue_source", metrics: ["estimatedRevenue", "estimatedAdRevenue", "estimatedRedPartnerRevenue"], dimensions: "day", sort: "-day", maxResults: 365, startDate: channelStartDate })
+    if (!result.rows || result.error) segmentPartial = true
     snapshot = {
      ...snapshot,
      revenueSource: (result.rows || []).map((row) => ({
@@ -1372,7 +1655,17 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     commitSnapshot()
    }
    if (shouldSync(selected, "sharing_service")) {
-    const result = await runAnalyticsBundle({ token, id: "sharing_service", metrics: ["shares"], dimensions: "sharingService", sort: "-shares", maxResults: 50, startDate: daysAgo(365) })
+    const result = await runPaginatedAnalyticsBundle({
+     token,
+     id: "sharing_service",
+     metrics: ["shares"],
+     dimensions: "sharingService",
+     sort: "-shares",
+     startDate: channelStartDate,
+     pageSize: VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE,
+     maxPages: VT_SYNC_TRAFFIC_DETAIL_MAX_PAGES,
+    })
+    if (!result.rows || result.error) segmentPartial = true
     snapshot = {
      ...snapshot,
      sharingService: (result.rows || []).map((row) => ({
@@ -1382,12 +1675,69 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     })),
     }
     rowsWritten += result.rows?.length || 0
+    if (result.pageDiagnostics?.length) {
+     manifest.diagnostics = [
+      ...(manifest.diagnostics || []),
+      {
+       phase: "sharing_service",
+       categoryId: "sharing_service",
+       requestedRows: VT_SYNC_TRAFFIC_DETAIL_MAX_ROWS,
+       returnedRows: result.rows?.length || 0,
+       pagination: result.pageDiagnostics,
+       status: result.error ? "partial" : "inspected",
+       error: result.error,
+      },
+     ]
+    }
     addManifestResult(manifest, "sharing_service", !!result.rows, result.rows?.length || 0, result.columns, result.error)
     if (result.rows) await persistDatasetRows({ runId, datasetId: "shares", phase: "sharing_service", rawRows: result.rows, tableRows: snapshot.sharingService as Array<Record<string, unknown>>, columns: result.columns })
-    markFreshness(["shares"], "sharing_service", result.rows?.length || 0, result.rows ? "synced" : "failed")
+    markFreshness(["shares"], "sharing_service", result.rows?.length || 0, result.rows ? (result.error ? "partial" : "synced") : "failed", result.error ? [result.error] : [])
     commitSnapshot()
    }
-   updatePhase(progress, "segments", { status: "complete", rows: rowsWritten, completedAt: new Date().toISOString() }, onProgress)
+   updatePhase(progress, "segments", { status: segmentPartial ? "partial" : "complete", rows: rowsWritten, completedAt: new Date().toISOString() }, onProgress)
+   commitSnapshot()
+  }
+
+  if (shouldSync(selected, "device_os")) {
+   updatePhase(progress, "device_os", { status: "running", startedAt: new Date().toISOString() }, onProgress)
+   const result = await runAnalyticsBundle({ token, id: "device_os", metrics: ["views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage"], dimensions: "deviceType,operatingSystem", sort: "-views", maxResults: 200, startDate: channelStartDate })
+   snapshot = {
+    ...snapshot,
+    deviceOs: (result.rows || []).map((row) => ({
+     device: row.deviceType,
+     operatingSystem: row.operatingSystem,
+     views: numberOrZero(row.views),
+     watchTime: numberOrZero(row.estimatedMinutesWatched) / 60,
+     avgDuration: numberOrZero(row.averageViewDuration),
+     avgPercentageViewed: numberOrZero(row.averageViewPercentage),
+    })),
+   }
+   addManifestResult(manifest, "device_os", !!result.rows, result.rows?.length || 0, result.columns, result.error)
+   if (result.rows) await persistDatasetRows({ runId, datasetId: "device_os", phase: "device_os", rawRows: result.rows, tableRows: snapshot.deviceOs as Array<Record<string, unknown>>, columns: result.columns })
+   markFreshness(["device_os"], "device_os", result.rows?.length || 0, result.rows ? "synced" : "failed")
+   updatePhase(progress, "device_os", { status: result.rows ? "complete" : "failed", rows: result.rows?.length || 0, error: result.error, completedAt: new Date().toISOString() }, onProgress)
+   commitSnapshot()
+  }
+
+  if (shouldSync(selected, "traffic_day")) {
+   updatePhase(progress, "traffic_day", { status: "running", startedAt: new Date().toISOString() }, onProgress)
+   const result = await runAnalyticsBundle({ token, id: "traffic_day", metrics: ["views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"], dimensions: "insightTrafficSourceType,day", sort: "-day", maxResults: 0, startDate: channelStartDate })
+   snapshot = {
+    ...snapshot,
+    trafficByDay: (result.rows || []).map((row) => ({
+     term: row.insightTrafficSourceType,
+     day: row.day,
+     views: numberOrZero(row.views),
+     watchTime: numberOrZero(row.estimatedMinutesWatched) / 60,
+     avgDuration: numberOrZero(row.averageViewDuration),
+     avgPercentageViewed: numberOrZero(row.averageViewPercentage),
+     engagedViews: numberOrZero(row.engagedViews),
+    })),
+   }
+   addManifestResult(manifest, "traffic_day", !!result.rows, result.rows?.length || 0, result.columns, result.error)
+   if (result.rows) await persistDatasetRows({ runId, datasetId: "traffic_day", phase: "traffic_day", rawRows: result.rows, tableRows: snapshot.trafficByDay as Array<Record<string, unknown>>, columns: result.columns })
+   markFreshness(["traffic_day"], "traffic_day", result.rows?.length || 0, result.rows ? "synced" : "failed")
+   updatePhase(progress, "traffic_day", { status: result.rows ? "complete" : "failed", rows: result.rows?.length || 0, error: result.error, completedAt: new Date().toISOString() }, onProgress)
    commitSnapshot()
   }
 
@@ -1396,7 +1746,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    const playlistMetadata = await getPlaylistMetadata(token)
    const playlistMetadataById = new Map(playlistMetadata.map((playlist) => [playlist.id, playlist]))
    addManifestResult(manifest, "playlists_metadata", true, playlistMetadata.length, ["snippet", "contentDetails", "status"])
-   const result = await runAnalyticsBundle({ token, id: "playlists_analytics", metrics: ["playlistViews", "playlistEstimatedMinutesWatched", "playlistStarts", "averageTimeInPlaylist", "playlistSaves"], dimensions: "playlist", sort: "-playlistViews", maxResults: 50, startDate: daysAgo(365) })
+   const result = await runAnalyticsBundle({ token, id: "playlists_analytics", metrics: ["playlistViews", "playlistEstimatedMinutesWatched", "playlistStarts", "averageTimeInPlaylist", "playlistSaves"], dimensions: "playlist", sort: "-playlistViews", maxResults: 50, startDate: channelStartDate })
    snapshot = {
     ...snapshot,
     playlistsData: (result.rows || []).map((row) => ({
@@ -1423,8 +1773,46 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   }
 
   if (shouldSync(selected, "retention")) {
-   updatePhase(progress, "retention", { status: "skipped", rows: 0, message: "Retention sync is intentionally capped for a follow-up pass after core tables are verified." }, onProgress)
-   addManifestResult(manifest, "retention", false, 0, ["audienceWatchRatio", "relativeRetentionPerformance"], "Skipped until core sync tables are verified.")
+   updatePhase(progress, "retention", { status: "running", startedAt: new Date().toISOString() }, onProgress)
+   const knownVideoIds = new Set(snapshot.videos.map((video) => video.id))
+   const selectedVideoIds = (retentionVideoIds || []).filter((id) => knownVideoIds.has(id))
+   const topVideoIds = selectedVideoIds.length > 0
+    ? selectedVideoIds
+    : [...snapshot.videos]
+     .sort((a, b) => numberOrZero(b.metrics?.views) - numberOrZero(a.metrics?.views))
+     .slice(0, 25)
+     .map((video) => video.id)
+     .filter(Boolean)
+   const retentionRows: Array<Record<string, unknown>> = []
+   let retentionFailures = 0
+   for (const videoId of topVideoIds) {
+    const result = await runAnalyticsBundle({
+     token,
+     id: `retention_${videoId}`,
+     metrics: ["audienceWatchRatio", "relativeRetentionPerformance"],
+     dimensions: "elapsedVideoTimeRatio",
+     sort: "elapsedVideoTimeRatio",
+     maxResults: 500,
+     filters: `video==${videoId}`,
+     startDate: channelStartDate,
+    })
+    if (result.rows) {
+     retentionRows.push(...result.rows.map((row) => ({
+      videoId,
+      elapsedVideoTimeRatio: numberOrZero(row.elapsedVideoTimeRatio),
+      audienceWatchRatio: numberOrZero(row.audienceWatchRatio),
+      relativeRetentionPerformance: numberOrZero(row.relativeRetentionPerformance),
+     })))
+    } else {
+     retentionFailures += 1
+    }
+   }
+   snapshot = { ...snapshot, retentions: retentionRows }
+   addManifestResult(manifest, "retention", retentionRows.length > 0, retentionRows.length, ["audienceWatchRatio", "relativeRetentionPerformance"], retentionFailures > 0 ? `${retentionFailures} of ${topVideoIds.length} video retention requests failed` : undefined)
+   if (retentionRows.length) await persistDatasetRows({ runId, datasetId: "retentions", phase: "retention", rawRows: retentionRows, tableRows: retentionRows, columns: ["videoId", "elapsedVideoTimeRatio", "audienceWatchRatio", "relativeRetentionPerformance"] })
+   markFreshness(["retentions"], "retention", retentionRows.length, retentionRows.length > 0 ? (retentionFailures > 0 ? "partial" : "synced") : "failed")
+   updatePhase(progress, "retention", { status: retentionRows.length > 0 ? (retentionFailures > 0 ? "partial" : "complete") : "failed", rows: retentionRows.length, error: retentionFailures > 0 ? `${retentionFailures} of ${topVideoIds.length} video retention requests failed` : undefined, completedAt: new Date().toISOString() }, onProgress)
+   commitSnapshot()
   }
 
   const completedAt = new Date().toISOString()

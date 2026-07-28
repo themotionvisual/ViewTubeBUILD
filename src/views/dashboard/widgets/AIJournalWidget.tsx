@@ -76,7 +76,7 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
 
   return (
     <WidgetShell {...common} icon={<BookOpen size={20} />}>
-      <div className="flex flex-col gap-4" style={{ height: "100%", overflowY: "auto" }}>
+      <div className="flex flex-col gap-4 vt-widget-fill-body">
         {/* ENTRY SECTION */}
         <div className="flex flex-col gap-2">
           <div className="vt-tab-group" style={{ flexWrap: "wrap", padding: 0 }}>

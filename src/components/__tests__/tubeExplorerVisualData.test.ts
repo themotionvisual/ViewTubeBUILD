@@ -98,9 +98,14 @@ describe("buildTubeExplorerVisualData", () => {
 
 describe("TUBE_EXPLORER_VISUAL_MODULES", () => {
  it("registers the VT-SYNC visualizations with stable prefixed ids", () => {
-  expect(TUBE_EXPLORER_VISUAL_MODULES).toHaveLength(34)
+  expect(TUBE_EXPLORER_VISUAL_MODULES).toHaveLength(46)
   expect(TUBE_EXPLORER_VISUAL_MODULES.every((entry) => entry.id.startsWith("tube-explorer-"))).toBe(true)
-  expect(new Set(TUBE_EXPLORER_VISUAL_MODULES.map((entry) => entry.id)).size).toBe(34)
-  expect(TUBE_EXPLORER_VISUAL_MODULES.map((entry) => entry.title)).toContain("Title Word Network")
+  expect(new Set(TUBE_EXPLORER_VISUAL_MODULES.map((entry) => entry.id)).size).toBe(TUBE_EXPLORER_VISUAL_MODULES.length)
+  const titles = TUBE_EXPLORER_VISUAL_MODULES.map((entry) => entry.title)
+  expect(titles).toContain("Title Word Network")
+  expect(titles).toContain("Channel Vital Signs")
+  expect(titles).toContain("Traffic x Day River Delta")
+  expect(titles).toContain("Publish Optimal Clock")
+  expect(titles).toContain("Content Treemap")
  })
 })

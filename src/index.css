@@ -53,6 +53,16 @@ body,
   height: 0;
 }
 
+/* Thermal Imaging heatmap: dark blue scroll track instead of the app-wide white default */
+.vt-thermal-scrollbar {
+  scrollbar-color: #000 #0a1f4d;
+}
+
+.vt-thermal-scrollbar::-webkit-scrollbar-track {
+  background: #0a1f4d;
+  border-left: 4px solid #000;
+}
+
 /* Canonical text input + textarea surface (matches Video Manager title/description style) */
 .vt-input-standard {
   width: 100%;

@@ -58,8 +58,8 @@ export const KeywordEngineWidget = ({
    const title = row.title || row["Video title"] || originalData["Video title"] || ""
    const v = row.metrics || {}
    const vByWindow = row.metricsByWindow?.lifetime || {}
-   const views = metricCellValue(vByWindow.views) 
-     || metricCellValue(v.views) 
+   const views = (typeof vByWindow.views === 'object' ? metricCellValue(vByWindow.views) : Number(vByWindow.views || 0))
+     || (typeof v.views === 'object' ? metricCellValue(v.views) : Number(v.views || 0))
      || Number(row.views) 
      || Number(row.Views) 
      || Number(row.viewCount) 
@@ -95,7 +95,7 @@ export const KeywordEngineWidget = ({
    .slice(0, 10)
 
   return list
- }, [data.canonicalRows, data.brain?.canonicalRows, initialBootstrap])
+ }, [data.canonicalRows, data.brain?.canonicalRows, initialBootstrap, data.lastSyncComplete])
 
  const maxViews = Math.max(...keywords.map((k) => k.avgViews), 1)
 
@@ -107,17 +107,20 @@ export const KeywordEngineWidget = ({
      flexDirection: "column",
      height: "100%",
      gap: "4px",
-     overflowY: "auto",
-     paddingRight: "4px",
+     minHeight: 0,
     }}>
     <div
      style={{
       display: "flex",
       justifyContent: "space-between",
       alignItems: "flex-end",
-      borderBottom: "3px solid #000",
+      borderBottom: "3px solid var(--widget-border, #000)",
       paddingBottom: "4px",
-      marginBottom: "4px",
+      marginLeft: "-10px",
+      marginRight: "-10px",
+      paddingLeft: "10px",
+      paddingRight: "10px",
+      width: "calc(100% + 20px)",
      }}>
      <span
       style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase" }}>
@@ -134,6 +137,7 @@ export const KeywordEngineWidget = ({
      </span>
     </div>
 
+    <div className="vt-widget-fill-body" style={{ gap: "4px" }}>
     {keywords.length === 0 && (
      <div
       style={{
@@ -193,6 +197,7 @@ export const KeywordEngineWidget = ({
       </div>
      )
     })}
+    </div>
    </div>
   </WidgetShell>
  )
