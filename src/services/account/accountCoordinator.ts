@@ -122,6 +122,15 @@ const readJson = async <T>(response: Response): Promise<T> => {
   return payload as T
 }
 
+const isValidAccountSnapshot = (value: unknown): value is UnifiedAccountSnapshot =>
+  Boolean(value) && typeof value === "object" && typeof (value as UnifiedAccountSnapshot).authentication === "object"
+
+const readAccountSnapshotJson = async (response: Response): Promise<UnifiedAccountSnapshot> => {
+  const snapshot = await readJson<UnifiedAccountSnapshot>(response)
+  if (!isValidAccountSnapshot(snapshot)) throw new Error("Account snapshot response was malformed.")
+  return snapshot
+}
+
 export const readCachedAccountSnapshot = (): UnifiedAccountSnapshot => {
   if (typeof window === "undefined") return ANONYMOUS_ACCOUNT_SNAPSHOT
   try {
@@ -184,7 +193,7 @@ export const fetchUnifiedAccountSnapshot = async (): Promise<UnifiedAccountSnaps
       markUnifiedAccountServerUnavailable()
       return readCachedAccountSnapshot()
     }
-    const snapshot = await readJson<UnifiedAccountSnapshot>(response)
+    const snapshot = await readAccountSnapshotJson(response)
     cacheAccountSnapshot(snapshot)
     return snapshot
   } catch {
@@ -264,7 +273,7 @@ export const revokeUnifiedGoogleConnection = async (): Promise<UnifiedAccountSna
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: "{}",
   })
-  const snapshot = await readJson<UnifiedAccountSnapshot>(response)
+  const snapshot = await readAccountSnapshotJson(response)
   cacheAccountSnapshot(snapshot)
   return snapshot
 }
@@ -290,7 +299,7 @@ export const updateUnifiedOnboarding = async (input: {
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify(input),
   })
-  const snapshot = await readJson<UnifiedAccountSnapshot>(response)
+  const snapshot = await readAccountSnapshotJson(response)
   cacheAccountSnapshot(snapshot)
   return snapshot
 }
@@ -302,7 +311,7 @@ export const activateUnifiedFreePlan = async (planId: "basic" | "beta"): Promise
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ planId }),
   })
-  const snapshot = await readJson<UnifiedAccountSnapshot>(response)
+  const snapshot = await readAccountSnapshotJson(response)
   cacheAccountSnapshot(snapshot)
   return snapshot
 }
@@ -319,6 +328,7 @@ export const consumeUnifiedAiCredits = async (input: {
     body: JSON.stringify(input),
   })
   const payload = await readJson<{ snapshot: UnifiedAccountSnapshot }>(response)
+  if (!isValidAccountSnapshot(payload?.snapshot)) throw new Error("Account snapshot response was malformed.")
   cacheAccountSnapshot(payload.snapshot)
   window.dispatchEvent(new CustomEvent("vt_account_snapshot_changed", { detail: payload.snapshot }))
   return payload.snapshot

@@ -96,6 +96,9 @@ export const ANONYMOUS_ACCOUNT_SNAPSHOT: UnifiedAccountSnapshot = {
 export const resolveAccountIntent = (
   snapshot: UnifiedAccountSnapshot,
 ): AccountIntent => {
+  if (!snapshot || !snapshot.authentication || !snapshot.google) {
+    return ANONYMOUS_ACCOUNT_SNAPSHOT.nextIntent ?? "sign_up"
+  }
   if (snapshot.authentication.status === "pending") {
     return snapshot.google.youtubeScopesGranted ? "log_in" : "connect_channel"
   }

@@ -82,4 +82,38 @@ describe("accountCoordinator runtime resolution", () => {
   expect(addEventListener).toHaveBeenCalledWith("message", expect.any(Function))
   expect(removeEventListener).toHaveBeenCalledWith("message", expect.any(Function))
  })
+
+ it("falls back to a valid snapshot instead of crashing when the server returns a malformed body", async () => {
+  const store = new Map<string, string>()
+  const localStorageStub = {
+   getItem: (key: string) => store.get(key) ?? null,
+   setItem: (key: string, value: string) => { store.set(key, value) },
+   removeItem: (key: string) => { store.delete(key) },
+  }
+  vi.stubGlobal("localStorage", localStorageStub as unknown as Storage)
+  vi.stubGlobal("window", {
+   location: {
+    origin: "https://viewtube.live",
+    hostname: "viewtube.live",
+    pathname: "/",
+    search: "",
+    hash: "",
+   },
+  } as unknown as Window)
+
+  const fetchMock = vi.fn(async () => ({
+   ok: true,
+   status: 200,
+   json: async () => null,
+  }))
+  vi.stubGlobal("fetch", fetchMock as unknown as typeof fetch)
+
+  const { fetchUnifiedAccountSnapshot } = await import("./accountCoordinator")
+  const snapshot = await fetchUnifiedAccountSnapshot()
+
+  expect(snapshot).toBeTruthy()
+  expect(snapshot.authentication).toBeTruthy()
+  expect(snapshot.authentication.status).toBe("anonymous")
+  expect(store.get("vt_unified_account_snapshot_v1")).not.toBe("null")
+ })
 })
