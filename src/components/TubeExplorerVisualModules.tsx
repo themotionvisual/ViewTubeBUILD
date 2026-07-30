@@ -39,6 +39,7 @@ export interface TubeExplorerVisualProps {
   trafficRows?: any[]
   trafficByDay?: any[]
   geographyRows?: any[]
+  contentTypeRows?: Array<Record<string, unknown>>
   collapsible?: boolean
   isOpenInitial?: boolean
 }

@@ -58,6 +58,22 @@ describe("BrainKpiModule", () => {
   expect(html).toContain(">2<")
  })
 
+ it("renders a sparkline for a trend module's points", () => {
+  const html = render({
+   id: "views-trend",
+   title: "Views Trend",
+   body: "Momentum is building.",
+   tone: "green",
+   source: "analytics",
+   kind: "trend_chart",
+   data: { points: [{ label: "w1", value: 10 }, { label: "w2", value: 14 }, { label: "w3", value: 22 }] },
+  })
+
+  expect(html).toContain("Views Trend")
+  expect(html).toContain("<svg")
+  expect(html).toContain("<path")
+ })
+
  it("shows a missing-evidence note instead of inventing data", () => {
   const html = render({
    id: "revenue-forecast",

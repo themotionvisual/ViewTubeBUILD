@@ -40,7 +40,7 @@ const CORE_VISUAL_MODULES: VtSyncVisualModuleDefinition[] = [
  { id: "combo-channel-progress", group: "core", delayMs: 0, render: ({ data }) => <ComboChannelProgress data={data} /> },
  { id: "engagement-lines", group: "core", delayMs: 25, render: ({ data }) => <EngagementLinesModule data={data} /> },
  { id: "top-performers-trio", group: "core", delayMs: 30, render: ({ data }) => <TopPerformersTrio data={data} /> },
- { id: "format-comparison-donuts", group: "core", delayMs: 35, render: ({ data }) => <FormatComparisonDonuts data={data} /> },
+ { id: "format-comparison-donuts", group: "core", delayMs: 35, render: ({ data, contentTypeRows }) => <FormatComparisonDonuts data={data} contentTypeRows={contentTypeRows} /> },
  { id: "shorts-retention-widget", group: "core", delayMs: 50, render: ({ data }) => <ShortsRetentionWidgetModule data={data} /> },
  { id: "algorithm-trigger", group: "core", delayMs: 100, render: ({ data }) => <AlgorithmTriggerModule data={data} /> },
  { id: "revenue-efficiency", group: "core", delayMs: 175, render: ({ data }) => <RevenueEfficiency data={data} /> },
@@ -172,8 +172,6 @@ const VtSyncDataVisualsContent: React.FC<{
   visualData.canonicalContext.trafficRows.length > 0 ||
   visualData.canonicalContext.geographyRows.length > 0
 
- const firstTubeExplorerIndex = modules.findIndex((module) => module.group === "tube-explorer")
-
  const renderedVisualBlocks = useMemo(() => {
   const blocks: Array<
    | { type: "module"; module: VtSyncVisualModuleDefinition; index: number }
@@ -205,6 +203,7 @@ const VtSyncDataVisualsContent: React.FC<{
   trafficRows: visualData.canonicalContext.trafficRows,
   trafficByDay: visualData.trafficByDay,
   geographyRows: visualData.canonicalContext.geographyRows,
+  contentTypeRows: (snapshot.creatorContentTypes as Array<Record<string, unknown>>) || [],
  }
 
  return (
@@ -233,16 +232,6 @@ const VtSyncDataVisualsContent: React.FC<{
      {renderedVisualBlocks.map((block) => (
       <React.Fragment
        key={block.type === "module" ? block.module.id : block.modules.map(({ module }) => module.id).join("-")}>
-       {block.type === "module" && block.index === firstTubeExplorerIndex ? (
-        <div className="border-[4px] border-black bg-[#0B0B0B] px-5 py-4 text-white shadow-[8px_8px_0px_0px_#FF7497]">
-         <div className="text-[34px] font-[1000] uppercase leading-none tracking-tight text-[#CCFF00]">
-          Annalytics Tube Explorer Visual Lab
-         </div>
-         <div className="mt-1 text-[12px] font-black uppercase tracking-[0.14em] text-white/70">
-          Explorer modules use Annalytics video, traffic, search, and geography table data. No canonical cache or Performance Hub data reads.
-         </div>
-        </div>
-       ) : null}
        {block.type === "module" ? (
         <RevealOnView
          delayMs={block.module.delayMs}

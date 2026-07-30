@@ -162,7 +162,7 @@
 
 /* Vertical scrollbar — matches horizontal style */
 
-.vt-sync-split-table { display: flex; width: 100%; max-height: 813px; overflow: hidden; background: #fff; }
+.vt-sync-split-table { display: flex; width: 100%; max-height: 813px; overflow: hidden; background: #fff; border-top-width: 6px; }
 .vt-sync-vertical-scrollbar { position: relative; z-index: 70; flex: 0 0 32px; width: 32px; min-width: 32px; display: grid; grid-template-rows: calc(var(--vt-group-header-height, 30px) + var(--vt-total-height, 48px) + var(--vt-column-header-height, 82px)) 58px minmax(44px, 1fr) 58px; overflow: hidden; border-right: 4px solid var(--vt-ink); background: var(--vt-active-label); }
 .vt-sync-vertical-scrollbar-header { background: var(--vt-ink); }
 .vt-sync-vertical-scrollbar button { display: grid; place-items: center; padding: 0; border: 0; background: var(--vt-active-icon); color: var(--vt-ink); cursor: pointer; touch-action: none; }
@@ -196,9 +196,17 @@
 .vt-sync-group-row th > strong { display: block; max-height: 28px; padding: 1px 22px 0 4px; overflow: hidden; font-size: 18px; line-height: .84; font-weight: 999; letter-spacing: -.03em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
 .vt-sync-group-row th > button { position: absolute; top: 50%; right: 4px; width: 18px; height: 18px; display: grid; place-items: center; padding: 0; transform: translateY(-50%); border: 0; background: transparent; color: var(--vt-ink); cursor: pointer; }
 .vt-sync-group-row th > button svg { width: 14px; height: 14px; stroke-width: 3px; }
-.vt-sync-group-row th.is-collapsed { width: 40px; min-width: 40px; max-width: 40px; cursor: pointer; }
+.vt-sync-group-row th.is-collapsed { 
+  width: 40px; 
+  min-width: 40px; 
+  max-width: 40px; 
+  cursor: pointer; 
+  background: var(--vt-ink); 
+}
 .vt-sync-group-row th.is-collapsed > button { position: static; width: 100%; height: 100%; transform: none; }
-.vt-sync-total-row th.is-collapsed,
+.vt-sync-total-row th.is-collapsed { 
+  background: #d5f2fa !important; 
+}
 .vt-sync-column-row th.is-collapsed,
 .vt-sync-filter-row th.is-collapsed,
 .vt-sync-data-table td.is-collapsed { width: 40px; min-width: 40px; max-width: 40px; padding: 0; }
@@ -300,7 +308,7 @@
 .vt-sync-data-table td.is-url-cell { padding: 0; }
 .vt-sync-url-buttons { display: flex; flex-direction: column; width: 100%; height: 100%; }
 .vt-sync-url-buttons button, .vt-sync-url-buttons a { display: grid; place-items: center; flex: 1 1 50%; border: 0; border-radius: 0; margin: 0; padding: 0; background: var(--vt-canvas); color: var(--vt-ink); cursor: pointer; text-decoration: none; }
-.vt-sync-url-buttons button { border-bottom: 2px solid var(--vt-ink); }
+.vt-sync-url-buttons button { border-bottom: 2px solid #000000; }
 .vt-sync-url-buttons button:hover, .vt-sync-url-buttons a:hover { background: var(--vt-active-label); color: var(--vt-ink); }
 .vt-sync-url-buttons svg { width: 14px; height: 14px; stroke-width: 2px; }
 .vt-sync-published-moment { position: absolute; inset: 0; display: grid; min-width: 0; grid-template-rows: minmax(0, 1fr) 18px; align-items: center; overflow: hidden; padding: 2px 4px; }
@@ -422,7 +430,23 @@
 .vt-sync-url-buttons svg { width: 16px; height: 16px; stroke-width: 3px; }
 
 /* Collapsed group label — vertical text in totals row */
-.vt-sync-collapsed-group-label { display: block; width: 100%; height: 100%; overflow: hidden; writing-mode: vertical-rl; transform: rotate(180deg); font-size: 13px; line-height: 40px; font-weight: 999; letter-spacing: -.03em; text-transform: uppercase; text-overflow: ellipsis; white-space: nowrap; padding: 4px 0; color: var(--vt-ink); }
+.vt-sync-collapsed-group-label { 
+  display: block; 
+  width: 100%; 
+  height: 100%; 
+  overflow: hidden; 
+  writing-mode: vertical-rl; 
+  transform: rotate(180deg); 
+  font-size: 15px; 
+  line-height: 40px; 
+  font-weight: 999; 
+  letter-spacing: -.03em; 
+  text-transform: uppercase; 
+  text-overflow: ellipsis; 
+  white-space: nowrap; 
+  padding: 1px 0; 
+  color: var(--vt-header-color, #36E0F6); 
+}
 
 .vt-sync-collapsed-format-totals { display: flex; flex-direction: column; gap: 2px; align-items: center; justify-content: center; width: 100%; height: 100%; font-family: "Century Gothic", "Helvetica Neue", sans-serif; font-size: 10px; font-weight: 999; letter-spacing: -.03em; color: var(--vt-ink); }
 .vt-sync-collapsed-format-totals span { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 16px; border: 2px solid currentColor; border-radius: 4px; font-size: 10px; line-height: 1; font-weight: 999; letter-spacing: -.03em; text-transform: uppercase; white-space: nowrap; box-sizing: border-box; }
@@ -775,3 +799,272 @@
  .vt-sync-toolbox-table *::before,
  .vt-sync-toolbox-table *::after { scroll-behavior: auto !important; transition-duration: .001ms !important; animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
 }
+
+/* =========================================================
+   VIEWTUBE TABLE CORRECTIONS — 2026-07-30
+   ========================================================= */
+
+/* Remove the divider between the two stacked URL actions. */
+.vt-sync-url-buttons button,
+.vt-sync-url-buttons a {
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+}
+
+/* ---------------------------------------------------------
+   LIGHT MODE
+   --------------------------------------------------------- */
+
+/* Every totals-row header remains the same light blue,
+   including totals cells belonging to collapsed groups. */
+.vt-sync-toolbox-table:not(.is-dark) .vt-sync-total-row th,
+.vt-sync-toolbox-table:not(.is-dark) .vt-sync-total-row th.is-collapsed {
+  background: #d5f2fa !important;
+  background-color: #d5f2fa !important;
+  color: var(--vt-ink) !important;
+}
+
+/* Normal column headers and vertical collapsed labels are one
+   visual system: black fill with that column's header color. */
+.vt-sync-toolbox-table:not(.is-dark) .vt-sync-column-row th,
+.vt-sync-toolbox-table:not(.is-dark) .vt-sync-column-row th.is-collapsed,
+.vt-sync-toolbox-table:not(.is-dark) .vt-sync-collapsed-group-label {
+  background: var(--vt-ink) !important;
+  background-color: var(--vt-ink) !important;
+  color: var(--vt-header-color, #36E0F6) !important;
+}
+
+/* Make a collapsed vertical label fully cover its own label area
+   without changing the light-blue totals-cell background behind it. */
+.vt-sync-collapsed-group-label {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  place-items: center;
+  padding: 4px 0;
+  overflow: hidden;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 1000;
+  letter-spacing: -.03em;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------
+   DARK MODE
+   --------------------------------------------------------- */
+
+/* Normal and collapsed column headers invert to the individual
+   --vt-header-color fill with black text. */
+.vt-sync-toolbox-table.is-dark .vt-sync-column-row th,
+.vt-sync-toolbox-table.is-dark .vt-sync-column-row th.is-collapsed,
+.vt-sync-toolbox-table.is-dark .vt-sync-collapsed-group-label {
+  background: var(--vt-header-color, #36E0F6) !important;
+  background-color: var(--vt-header-color, #36E0F6) !important;
+  color: var(--vt-ink) !important;
+}
+
+/* Keep all text and controls inside the inverted headers black. */
+.vt-sync-toolbox-table.is-dark .vt-sync-column-row th > b,
+.vt-sync-toolbox-table.is-dark .vt-sync-column-row th .vt-sync-sort-label,
+.vt-sync-toolbox-table.is-dark .vt-sync-column-row th svg,
+.vt-sync-toolbox-table.is-dark .vt-sync-collapsed-group-label {
+  color: var(--vt-ink) !important;
+  stroke: currentColor;
+}
+
+/* Metric-group names use black text in dark mode. */
+.vt-sync-toolbox-table.is-dark .vt-sync-group-row th,
+.vt-sync-toolbox-table.is-dark .vt-sync-group-row th > strong,
+.vt-sync-toolbox-table.is-dark .vt-sync-group-row th > button {
+  color: var(--vt-ink) !important;
+}
+
+/* Dark-mode titles use the same gray as the other table copy. */
+.vt-sync-toolbox-table.is-dark .vt-sync-video-identity > strong,
+.vt-sync-toolbox-table.is-dark .vt-sync-composite-identity-copy strong,
+.vt-sync-toolbox-table.is-dark
+  .vt-sync-data-table td[data-column-key="title"]
+  .vt-sync-cell-text {
+  color: #aaa !important;
+}
+
+/* Restore the same heavy upper table boundary in dark mode. */
+.vt-sync-toolbox-table.is-dark .vt-sync-split-table,
+.vt-sync-toolbox-table.is-dark .vt-sync-traffic-day-scroll-shell,
+.vt-sync-toolbox-table.is-dark .vt-sync-demographic-board-viewport {
+  border-top: 5px solid var(--vt-ink) !important;
+}
+
+/* Monthly identity cells: show a full month label supplied through
+   data-month-name, e.g. data-month-name="January 2026". */
+.vt-sync-toolbox-table.is-monthly
+  .vt-sync-data-table td.is-identity[data-month-name] > * {
+  visibility: hidden;
+}
+
+.vt-sync-toolbox-table.is-monthly
+  .vt-sync-data-table td.is-identity[data-month-name]::after {
+  content: attr(data-month-name);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 8px;
+  color: inherit;
+  font: inherit;
+  font-weight: 1000;
+  letter-spacing: -.035em;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: normal;
+}
+
+/* Spectrum ordering hook for monthly badges. */
+.vt-sync-toolbox-table.is-monthly .vt-sync-spectrum-badge,
+.vt-sync-toolbox-table.is-monthly .vt-sync-category-badge,
+.vt-sync-toolbox-table.is-monthly .vt-sync-traffic-source-badge {
+  order: var(--vt-spectrum-order, 0);
+}
+
+/* =========================================================
+   FINAL HEADER / COLLAPSE / ROW-RAIL ALIGNMENT FIX — 2026-07-30
+   ========================================================= */
+
+/* One shared source for the section color. The rendering code may set
+   any of these existing custom properties on the collapsed TH. */
+.vt-sync-column-row th,
+.vt-sync-column-row th.is-collapsed,
+.vt-sync-collapsed-group-label {
+  --vt-section-header-color: var(
+    --vt-header-color,
+    var(--vt-group-header-color,
+    var(--vt-group-color,
+    var(--vt-column-color, #36E0F6)))
+  );
+}
+
+/* LIGHT MODE: all column labels, including collapsed vertical labels,
+   use black fill and the individual section's own header color. */
+.vt-sync-toolbox-table:not(.is-dark) .vt-sync-column-row th,
+.vt-sync-toolbox-table:not(.is-dark) .vt-sync-column-row th.is-collapsed {
+  background: var(--vt-ink) !important;
+  color: var(--vt-section-header-color) !important;
+}
+
+.vt-sync-toolbox-table:not(.is-dark) .vt-sync-collapsed-group-label {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+/* DARK MODE: use the individual section color as the fill and black text.
+   The label inherits from its collapsed TH so the two cannot drift apart. */
+.vt-sync-toolbox-table.is-dark .vt-sync-column-row th,
+.vt-sync-toolbox-table.is-dark .vt-sync-column-row th.is-collapsed {
+  background: var(--vt-section-header-color) !important;
+  background-color: var(--vt-section-header-color) !important;
+  color: var(--vt-ink) !important;
+}
+
+.vt-sync-toolbox-table.is-dark .vt-sync-collapsed-group-label {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+/* The collapsed totals cell must always match the expanded totals cells. */
+.vt-sync-total-row th.is-collapsed {
+  background: inherit !important;
+  background-color: inherit !important;
+  color: inherit !important;
+}
+
+/* Light totals are the requested pale blue. */
+.vt-sync-toolbox-table:not(.is-dark) .vt-sync-total-row th,
+.vt-sync-toolbox-table:not(.is-dark) .vt-sync-total-row th.is-collapsed {
+  background: #d5f2fa !important;
+  background-color: #d5f2fa !important;
+  color: var(--vt-ink) !important;
+}
+
+/* Dark totals stay dark; collapsed totals do not revert to pale blue. */
+.vt-sync-toolbox-table.is-dark .vt-sync-total-row th,
+.vt-sync-toolbox-table.is-dark .vt-sync-total-row th.is-collapsed {
+  background: #111 !important;
+  background-color: #111 !important;
+  color: #aaa !important;
+}
+
+.vt-sync-toolbox-table.is-dark .vt-sync-total-row th small {
+  color: #777 !important;
+}
+
+/* Keep the vertical label itself purely typographic. Its parent TH owns
+   the section background and text color in both themes. */
+.vt-sync-collapsed-group-label {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  place-items: center;
+  padding: 4px 0;
+  overflow: hidden;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 1000;
+  letter-spacing: -.03em;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Make the row-number rail use exactly the same stacked header heights as
+   the data table. This prevents row 1 from sliding underneath the headers. */
+.vt-sync-row-rail-head.is-blank {
+  height: var(--vt-group-header-height, 30px) !important;
+  min-height: var(--vt-group-header-height, 30px) !important;
+  max-height: var(--vt-group-header-height, 30px) !important;
+}
+
+.vt-sync-row-rail-head.is-totals {
+  height: var(--vt-total-height, 48px) !important;
+  min-height: var(--vt-total-height, 48px) !important;
+  max-height: var(--vt-total-height, 48px) !important;
+}
+
+.vt-sync-row-rail-head.is-stats {
+  height: var(--vt-column-header-height, 82px) !important;
+  min-height: var(--vt-column-header-height, 82px) !important;
+  max-height: var(--vt-column-header-height, 82px) !important;
+  padding: 0 4px !important;
+  vertical-align: middle;
+}
+
+.vt-sync-row-rail-head.is-filter {
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+}
+
+/* Do not use a separate oversized monthly header value. Daily, weekly and
+   monthly tables all align to the same column-row height variable. */
+.vt-sync-toolbox-table.is-daily,
+.vt-sync-toolbox-table.is-weekly,
+.vt-sync-toolbox-table.is-monthly {
+  --vt-column-header-height: 82px;
+}
+
+/* Stacked URL controls have no colored divider. */
+.vt-sync-url-buttons button,
+.vt-sync-url-buttons a {
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+}
+

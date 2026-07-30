@@ -35,6 +35,7 @@ export interface GChartProps {
  data: CanonicalVideoRow[]
  trafficRows?: Array<Record<string, unknown>>
  trafficByDay?: Array<Record<string, unknown>>
+ contentTypeRows?: Array<Record<string, unknown>>
  useVideoTrafficFallback?: boolean
 }
 
@@ -2361,7 +2362,7 @@ export const GrowthPulse: React.FC<GChartProps> = ({ data }) => {
 export const StackedEngagementPulse = EngagementLinesModule
 
 /* 16. Format Comparison Donuts */
-export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data }) => {
+export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTypeRows }) => {
  const [localWindow, setLocalWindow] = useState<"28d" | "90d" | "lifetime">("lifetime")
  const [windowOpen, setWindowOpen] = useState(false)
 
@@ -2373,6 +2374,38 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data }) => {
   return data.filter((r) => new Date(r.uploadDate || 0).getTime() > threshold)
  }, [data, localWindow])
 
+ // Content Type dataset (creatorContentTypes) authoritatively splits Views and Watch Time by format.
+ // We only honor it in "lifetime" mode because the Analytics API rows aren't windowed by upload date.
+ const contentTypeTotals = useMemo(() => {
+  if (localWindow !== "lifetime" || !contentTypeRows || contentTypeRows.length === 0) return null
+  const isShorts = (value: unknown) => {
+   const label = String(value ?? "").toLowerCase()
+   return label === "shorts" || label === "short" || label.includes("short")
+  }
+  const readNumber = (value: unknown): number => {
+   if (typeof value === "number" && Number.isFinite(value)) return value
+   const parsed = Number(String(value ?? "").replace(/[$,%\s,]/g, ""))
+   return Number.isFinite(parsed) ? parsed : 0
+  }
+  const totals = { longViews: 0, shortsViews: 0, longWatchMinutes: 0, shortsWatchMinutes: 0 }
+  contentTypeRows.forEach((row) => {
+   const label = row.creatorContentType ?? row.contentType ?? row.term
+   const views = readNumber(row.views)
+   const watchMinutes = readNumber(row.estimatedMinutesWatched ?? row.watchTime)
+   if (isShorts(label)) {
+    totals.shortsViews += views
+    totals.shortsWatchMinutes += watchMinutes
+   } else {
+    totals.longViews += views
+    totals.longWatchMinutes += watchMinutes
+   }
+  })
+  return {
+   views: { long: totals.longViews, shorts: totals.shortsViews },
+   watchHours: { long: totals.longWatchMinutes / 60, shorts: totals.shortsWatchMinutes / 60 },
+  }
+ }, [contentTypeRows, localWindow])
+
  const cd = useMemo(() => {
   const metrics = [
    { key: "watchHours", label: "Watch Hrs" },
@@ -2382,12 +2415,20 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data }) => {
   ]
 
   return metrics.map((m) => {
-   const longTotal = filteredData
-    .filter((r) => r.format === "long" || r.format === "unknown")
-    .reduce((acc, r) => acc + mv(r, m.key), 0)
-   const shortsTotal = filteredData
-    .filter((r) => r.format === "shorts")
-    .reduce((acc, r) => acc + mv(r, m.key), 0)
+   let longTotal: number
+   let shortsTotal: number
+   if (contentTypeTotals && (m.key === "views" || m.key === "watchHours")) {
+    const bucket = contentTypeTotals[m.key]
+    longTotal = bucket.long
+    shortsTotal = bucket.shorts
+   } else {
+    longTotal = filteredData
+     .filter((r) => r.format === "long" || r.format === "unknown")
+     .reduce((acc, r) => acc + mv(r, m.key), 0)
+    shortsTotal = filteredData
+     .filter((r) => r.format === "shorts")
+     .reduce((acc, r) => acc + mv(r, m.key), 0)
+   }
 
    const total = longTotal + shortsTotal
    const longRatio = total > 0 ? longTotal / total : 0.5
@@ -2404,7 +2445,7 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data }) => {
     total,
    }
   })
- }, [filteredData])
+ }, [filteredData, contentTypeTotals])
 
  const longStats = cd.map(m => ({ label: m.label.toUpperCase(), value: Math.round(m.data[0].value).toLocaleString(), tone: "cyan" as const, lockTone: true }))
  const shortsStats = cd.map(m => ({ label: m.label.toUpperCase(), value: Math.round(m.data[1].value).toLocaleString(), tone: "pink" as const, lockTone: true }))

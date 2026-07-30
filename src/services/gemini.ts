@@ -1638,6 +1638,13 @@ export interface StructuredBrainModelOutput {
   body: string
   tone: "green" | "yellow" | "pink" | "blue" | "orange" | "white"
   kind: string
+  /** Optional structured payload the model fills from the evidence pack. */
+  data?: {
+   metrics?: Array<{ label: string; value?: number | null; displayValue?: string; change?: number | null }>
+   points?: Array<{ label: string; value: number | null }>
+   rows?: Array<Record<string, string | number | null>>
+   items?: Array<{ title: string; detail?: string; score?: number | null; status?: string }>
+  }
  }>
  actions: string[]
  question?: string
@@ -1676,7 +1683,53 @@ export const generateStructuredBrainResponse = async (input: {
         title: { type: Type.STRING },
         body: { type: Type.STRING },
         tone: { type: Type.STRING },
-        kind: { type: Type.STRING },
+        kind: {
+         type: Type.STRING,
+         description:
+          "One of: executive_snapshot, metric_comparison, trend_chart, retention_curve, audience_mix, recommendation_stack, action_table, idea_scorecard, packaging_board, keyword_cluster, search_table, funnel, timeline, revenue_lens. Choose the kind that matches the data you provide.",
+        },
+        data: {
+         type: Type.OBJECT,
+         description:
+          "Structured payload for this module. Every number MUST come from the provided channel evidence; never invent metrics. Leave arrays empty when the evidence is missing.",
+         properties: {
+          metrics: {
+           type: Type.ARRAY,
+           description: "Named figures, e.g. views/CTR/retention, only from real evidence.",
+           items: {
+            type: Type.OBJECT,
+            properties: {
+             label: { type: Type.STRING },
+             displayValue: { type: Type.STRING },
+             change: { type: Type.NUMBER },
+            },
+            required: ["label"],
+           },
+          },
+          points: {
+           type: Type.ARRAY,
+           description: "Time-series points for a trend sparkline (label + value).",
+           items: {
+            type: Type.OBJECT,
+            properties: { label: { type: Type.STRING }, value: { type: Type.NUMBER } },
+            required: ["label", "value"],
+           },
+          },
+          items: {
+           type: Type.ARRAY,
+           description: "Ranked list rows, e.g. the creator's real top videos (title + detail).",
+           items: {
+            type: Type.OBJECT,
+            properties: {
+             title: { type: Type.STRING },
+             detail: { type: Type.STRING },
+             status: { type: Type.STRING },
+            },
+            required: ["title"],
+           },
+          },
+         },
+        },
        },
        required: ["title", "body", "tone", "kind"],
       },

@@ -55,6 +55,38 @@ const formatMetricValue = (
  return value.toLocaleString()
 }
 
+/** A minimal area sparkline for a module's trend points (trend_chart / retention_curve). */
+const BrainSparkline: React.FC<{ points: Array<{ label: string; value: number | null }>; accent: string }> = ({
+ points,
+ accent,
+}) => {
+ const values = points.map((point) => (typeof point.value === "number" && Number.isFinite(point.value) ? point.value : 0))
+ if (values.length < 2) return null
+ const max = Math.max(...values)
+ const min = Math.min(...values)
+ const range = max - min || 1
+ const width = 240
+ const height = 44
+ const pad = 3
+ const step = (width - pad * 2) / (values.length - 1)
+ const coords = values.map((value, index): [number, number] => [
+  pad + index * step,
+  height - pad - ((value - min) / range) * (height - pad * 2),
+ ])
+ const line = coords.map(([x, y], index) => `${index === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ")
+ const last = coords[coords.length - 1]
+ const area = `${line} L${last[0].toFixed(1)},${height - pad} L${coords[0][0].toFixed(1)},${height - pad} Z`
+ return (
+  <figure className="rounded-[7px] border-[2px] border-black bg-white p-1.5">
+   <svg viewBox={`0 0 ${width} ${height}`} className="h-11 w-full" preserveAspectRatio="none" role="img" aria-label="Trend">
+    <path d={area} fill={accent} opacity="0.35" />
+    <path d={line} fill="none" stroke="#000" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+    <circle cx={last[0]} cy={last[1]} r="3" fill={accent} stroke="#000" strokeWidth="1.5" />
+   </svg>
+  </figure>
+ )
+}
+
 /**
  * A Brain answer module.
  *
@@ -71,10 +103,11 @@ export const BrainKpiModule: React.FC<{
 }> = ({ module, compact = false, className = "" }) => {
  const metrics = module.data?.metrics || []
  const items = module.data?.items || []
+ const points = module.data?.points || []
  const missingReason = module.data?.missingReason
  const icon = SOURCE_ICON[module.source || "growth"] || SOURCE_ICON.growth
  const accent = MODULE_TONE[module.tone] || MODULE_TONE.white
- const hasStructured = metrics.length > 0 || items.length > 0
+ const hasStructured = metrics.length > 0 || items.length > 0 || points.length >= 2
 
  // Prose-only module: a light labeled section, not a card inside the answer card.
  // Nesting bordered cards for plain text was needless visual weight on every answer.
@@ -148,6 +181,8 @@ export const BrainKpiModule: React.FC<{
        ))}
       </dl>
      ) : null}
+
+     {points.length >= 2 ? <BrainSparkline points={points} accent={accent} /> : null}
 
      {items.length ? (
       <ol className="grid gap-1.5">

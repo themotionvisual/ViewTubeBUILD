@@ -61,7 +61,15 @@ const responseText = (response: CreatorBrainResponse): string => [
  response.headline,
  response.keyInsight,
  response.body,
- ...(response.modules || []).flatMap((module) => [module.title, module.body]),
+ ...(response.modules || []).flatMap((module) => [
+  module.title,
+  module.body,
+  // Scan the model's claimed figures (metrics/trend points) so invented numbers are
+  // caught. Ranked-item details are derived from the evidence pack and already
+  // reformatted (e.g. "480K"), so scanning them would false-positive on grounded data.
+  ...(module.data?.metrics || []).flatMap((metric) => [metric.displayValue || "", metric.value != null ? String(metric.value) : ""]),
+  ...(module.data?.points || []).map((point) => (point.value != null ? String(point.value) : "")),
+ ]),
  ...response.actions,
 ].join(" ")
 
@@ -137,7 +145,50 @@ const validTone = (value: string): AIBrainAnswerModule["tone"] =>
   ? value as AIBrainAnswerModule["tone"]
   : "white"
 
-const fromStructuredOutput = (
+const numOrNull = (value: unknown): number | null =>
+ typeof value === "number" && Number.isFinite(value) ? value : null
+
+/**
+ * Keep only well-formed, string-sanitized structured data from the model. Numbers
+ * pass through as numbers; the unsupported-number guard (see responseText) then
+ * rejects any figure not present in the evidence pack, so invented metrics fail
+ * validation and trigger repair rather than reaching the creator.
+ */
+const sanitizeModuleData = (
+ data: StructuredBrainModelOutput["modules"][number]["data"],
+): AIBrainAnswerModule["data"] | undefined => {
+ if (!data || typeof data !== "object") return undefined
+ const metrics = (data.metrics || [])
+  .slice(0, 3)
+  .map((metric) => ({
+   label: sanitizeCreatorFacingBrainCopy(metric.label || ""),
+   value: numOrNull(metric.value),
+   displayValue: metric.displayValue ? sanitizeCreatorFacingBrainCopy(metric.displayValue) : undefined,
+   change: numOrNull(metric.change),
+  }))
+  .filter((metric) => metric.label)
+ const points = (data.points || [])
+  .slice(0, 24)
+  .map((point) => ({ label: sanitizeCreatorFacingBrainCopy(point.label || ""), value: numOrNull(point.value) }))
+  .filter((point) => point.label)
+ const items = (data.items || [])
+  .slice(0, 5)
+  .map((item) => ({
+   title: sanitizeCreatorFacingBrainCopy(item.title || ""),
+   detail: item.detail ? sanitizeCreatorFacingBrainCopy(item.detail) : undefined,
+   score: numOrNull(item.score),
+   status: item.status ? sanitizeCreatorFacingBrainCopy(item.status) : undefined,
+  }))
+  .filter((item) => item.title)
+ if (!metrics.length && !points.length && !items.length) return undefined
+ return {
+  ...(metrics.length ? { metrics } : {}),
+  ...(points.length ? { points } : {}),
+  ...(items.length ? { items } : {}),
+ }
+}
+
+export const fromStructuredOutput = (
  output: StructuredBrainModelOutput,
  snapshot: AIBrainContextSnapshot,
 ): CreatorBrainResponse => {
@@ -160,6 +211,7 @@ const fromStructuredOutput = (
   tone: validTone(module.tone),
   kind: module.kind as AIBrainAnswerModule["kind"],
   source: inferBrainIntent(output.body) === "analytics" ? "analytics" : "growth",
+  data: sanitizeModuleData(module.data),
  }))
  return {
   id: makeId("creator_brain_response"),
