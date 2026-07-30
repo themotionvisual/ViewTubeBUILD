@@ -88,7 +88,6 @@ const VISUAL_MODULES: VtSyncVisualModuleDefinition[] = [
 const PRIMARY_MODULE_IDS = new Set([
  "combo-channel-progress",
  "engagement-lines",
- "growth-pulse",
  "shorts-retention-widget",
  "format-comparison-donuts",
  "revenue-efficiency",
@@ -106,7 +105,7 @@ const PRIMARY_MODULE_IDS = new Set([
  "tube-explorer-publish-optimal-clock",
  "tube-explorer-title-word-network",
  "tube-explorer-channel-vital-signs",
- "upload-time-heatmap",
+ "tube-explorer-thermal-imaging",
 ])
 
 const PRIMARY_VISUAL_MODULES: VtSyncVisualModuleDefinition[] = VISUAL_MODULES.filter((module) => PRIMARY_MODULE_IDS.has(module.id))

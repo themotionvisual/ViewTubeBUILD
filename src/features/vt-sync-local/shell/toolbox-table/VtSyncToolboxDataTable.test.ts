@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 
 import { VT_SYNC_ACTIVE_TABLE_IDS, VT_SYNC_TABLE_DEFINITIONS, VT_SYNC_VISIBLE_TABLE_CATEGORIES, VT_SYNC_VISIBLE_TABLE_DEFINITIONS } from "../../upstream/tableRegistry"
 import { normalizeVtSyncSnapshot, toVtSyncRawAppExport } from "../../adapters/snapshot"
-import { buildVtSyncDemographicOverviewRows, getVtSyncContentTypeLabel } from "../../adapters/tableData"
+import { buildVtSyncDemographicOverviewRows, getVtSyncContentTypeLabel, normalizeVtSyncTableRows } from "../../adapters/tableData"
 import { formatVtSyncLocalMonthValue } from "../../adapters/tableFormatting"
 import { isManualImportNewerThanApi } from "./VtSyncToolboxDataTable"
 import {
@@ -20,6 +20,7 @@ import {
  exportVtSyncTableCsv,
  formatVtSyncColumnValue,
  getVtSyncApiValuePresentation,
+ getVtSyncCompositeIdentityPresentation,
  getVtSyncAbsolutePercentRatio,
  getVtSyncAlphabeticSpectrumColors,
  getVtSyncBadgeValues,
@@ -425,7 +426,7 @@ describe("VT Sync toolbox data table", () => {
   expect(rendererSource).toContain("Expand visible videos")
   expect(rendererSource).toContain("data-retention-video-parent")
   expect(rendererSource).toContain("data-retention-point")
-  expect(rendererSource).toContain("Grouped on screen")
+  expect(rendererSource).toContain("video groups; export remains")
   expect(rendererCss).toContain(".vt-sync-retention-video-table")
  expect(rendererCss).toContain(".vt-sync-retention-point-badge")
  })
@@ -766,18 +767,21 @@ describe("VT Sync toolbox data table", () => {
   const trafficDayTable = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((table) => table.id === "traffic_day")!
   expect(trafficTable.columns.find((column) => column.key === "source")?.preferredWidth).toBe(300)
   expect(trafficTable.verticalScrollMode).toBe("none")
+  expect(trafficTable.horizontalScrollMode).toBe("none")
   expect(trafficDayTable.verticalScrollMode).toBe("custom")
-  expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.filter((table) => table.mainCategoryId === "traffic" && table.id !== "traffic_day").every((table) => table.verticalScrollMode === "none")).toBe(true)
+  expect(trafficDayTable.horizontalScrollMode).toBe("none")
+  expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.filter((table) => table.mainCategoryId === "traffic" && table.id !== "traffic").every((table) => table.verticalScrollMode === "custom")).toBe(true)
+  expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.filter((table) => table.mainCategoryId === "traffic").every((table) => table.horizontalScrollMode === "none")).toBe(true)
   expect(getVtSyncTrafficOverviewRowHeight(18)).toBe(44)
   expect(getVtSyncTrafficOverviewRowHeight(17)).toBe(46)
   expect(getVtSyncTrafficOverviewRowHeight(12)).toBe(66)
   expect(getVtSyncTrafficOverviewRowHeight(0)).toBe(44)
-  expect(rendererSource).toContain('table.id !== "traffic" && renderScrollbar("top")')
+  expect(rendererSource).toContain('table.horizontalScrollMode === "custom" && renderScrollbar("top")')
   expect(rendererSource).toContain('table.verticalScrollMode === "custom" && renderVerticalScrollbar()')
-  expect(rendererSource).toContain('table.id !== "traffic" && renderScrollbar("bottom")')
+  expect(rendererSource).toContain('table.horizontalScrollMode === "custom" && renderScrollbar("bottom")')
   expect(rendererSource).toContain('(table.id === "traffic" && column.key === "source")')
-  expect(rendererCss).toContain(".vt-sync-toolbox-table.is-traffic-table .vt-sync-split-table { max-height: none; }")
-  expect(rendererCss).toContain(".vt-sync-toolbox-table.is-traffic-table .vt-sync-row-rail-viewport,")
+  expect(rendererCss).toContain(".vt-sync-toolbox-table.is-traffic-overview .vt-sync-split-table { max-height: none; }")
+  expect(rendererCss).toContain(".vt-sync-toolbox-table.is-traffic-overview .vt-sync-row-rail-viewport,")
   expect(rendererCss).toContain(".vt-sync-traffic-day-scroll-shell { display: flex;")
   expect(rendererCss).toContain("border-top: 4px solid var(--vt-ink)")
  })
@@ -868,8 +872,8 @@ describe("VT Sync toolbox data table", () => {
  })
 
  it("uses only the two custom horizontal scrollbars and active left split menus", () => {
-  expect(rendererSource).toContain('{table.id !== "traffic" && renderScrollbar("top")}')
-  expect(rendererSource).toContain('{table.id !== "traffic" && renderScrollbar("bottom")}')
+  expect(rendererSource).toContain('{table.horizontalScrollMode === "custom" && renderScrollbar("top")}')
+  expect(rendererSource).toContain('{table.horizontalScrollMode === "custom" && renderScrollbar("bottom")}')
   expect(rendererSource).not.toContain("item.tableIds.length > 1 && !isActive")
   expect(rendererCss).toContain(".vt-sync-main-viewport::-webkit-scrollbar { width: 0; height: 0; display: none; }")
   expect(rendererCss).toContain(".vt-sync-main-viewport { flex: 1 1 auto; min-width: 0; overflow: auto; scrollbar-width: none; }")
@@ -1170,18 +1174,70 @@ describe("VT Sync toolbox data table", () => {
   expect(rendererCss).toContain("border-radius: 0")
  })
 
+ it("normalizes external referrer identities without changing their raw API values", () => {
+  expect(getVtSyncApiValuePresentation("ext_web", "term", "https://www.reddit.com/r/videos")).toEqual({ title: "Reddit", apiValue: "https://www.reddit.com/r/videos" })
+  expect(getVtSyncApiValuePresentation("ext_web", "term", "facebook.com/watch")).toEqual({ title: "Facebook", apiValue: "facebook.com/watch" })
+  expect(getVtSyncApiValuePresentation("ext_web", "term", "chatgpt.com")).toEqual({ title: "Chat GPT", apiValue: "chatgpt.com" })
+  expect(getVtSyncApiValuePresentation("ext_web", "term", "com.reddit.frontpage")).toEqual({ title: "Reddit Frontpage", apiValue: "com.reddit.frontpage" })
+  expect(getVtSyncApiValuePresentation("ext_web", "term", "com.google.android.apps.messaging")).toEqual({ title: "Google Msgs", apiValue: "com.google.android.apps.messaging" })
+ })
+
+ it("builds reusable channel, suggested-video, and playlist identities", () => {
+  expect(getVtSyncCompositeIdentityPresentation("suggested", { term: "abc123", title: "A suggested video", thumbnail: "https://img.test/abc.jpg" })).toEqual({
+   title: "A suggested video",
+   secondaryLabel: "Suggested video",
+   rawId: "abc123",
+   thumbnail: "https://img.test/abc.jpg",
+   url: "https://www.youtube.com/watch?v=abc123",
+  })
+  expect(getVtSyncCompositeIdentityPresentation("suggested", { term: "Unknown", title: "Video metadata unavailable" })).toEqual({
+   title: "Video metadata unavailable",
+   secondaryLabel: "Suggested video",
+   rawId: undefined,
+   thumbnail: undefined,
+   url: undefined,
+  })
+  expect(getVtSyncCompositeIdentityPresentation("chan_page", { term: "UC123", title: "Creator", handle: "creator" })).toMatchObject({
+   title: "Creator",
+   secondaryLabel: "@creator",
+   rawId: "UC123",
+  })
+  expect(getVtSyncCompositeIdentityPresentation("playlists", { playlistId: "PL123", title: "History", videoCount: 8 })).toEqual({
+   title: "History",
+   secondaryLabel: "8 videos",
+   rawId: "PL123",
+  })
+  expect(getVtSyncCompositeIdentityPresentation("playlists", { playlistId: "PL456", title: "Incomplete", videoCount: null })).toEqual({
+   title: "Incomplete",
+   secondaryLabel: undefined,
+   rawId: "PL456",
+  })
+ })
+
  it("applies exact Playlist identity sizing without allowing long values to grow rows", () => {
   const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "playlists")!
   const playlistId = table.columns.find((column) => column.key === "playlistId")!
   const title = table.columns.find((column) => column.key === "title")!
 
   expect(resolveVtSyncColumnWidth({ tableId: table.id, column: playlistId, columnIndex: 0, compact: false, sparklines: true })).toBe(190)
-  expect(resolveVtSyncColumnWidth({ tableId: table.id, column: title, columnIndex: 1, compact: false, sparklines: true })).toBe(240)
+  expect(resolveVtSyncColumnWidth({ tableId: table.id, column: title, columnIndex: 1, compact: false, sparklines: true })).toBe(325)
   expect(resolveVtSyncColumnWidth({ tableId: table.id, column: title, columnIndex: 1, compact: false, sparklines: true, override: 275 })).toBe(275)
   expect(playlistId.textSize).toBe(10)
   expect(title.textSize).toBe(13)
   expect(rendererCss).toContain('td[data-column-key="playlistId"] .vt-sync-cell-text.is-table-sized-text')
   expect(rendererCss).toContain('td[data-column-key="title"] .vt-sync-cell-text.is-table-sized-text')
+ })
+
+ it("calculates playlist shares from the complete normalized dataset", () => {
+  const rows = normalizeVtSyncTableRows("playlists", [
+   { playlistId: "one", views: 25, playlistEstimatedMinutesWatched: 10 },
+   { playlistId: "two", views: 75, playlistEstimatedMinutesWatched: 30 },
+  ])
+  expect(rows.map((row) => row.playlistViewShare)).toEqual([25, 75])
+  expect(rows.map((row) => row.playlistWatchTimeShare)).toEqual([25, 75])
+  expect(rows.reduce((sum, row) => sum + Number(row.playlistViewShare), 0)).toBe(100)
+  expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "playlists")?.columns.find((column) => column.key === "playlistSaves")?.label).toBe("Playlist Saves (Net)")
+  expect(rendererSource).toContain("vt-sync-privacy-badge")
  })
 
  it("normalizes Formats aliases while preserving unknown raw labels and CSV output", () => {

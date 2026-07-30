@@ -31,6 +31,25 @@ const num = (value: unknown): number | undefined => {
 
 const numberOrZero = (value: unknown): number => num(value) ?? 0
 
+const withPlaylistShareColumns = (rows: Row[]): Row[] => {
+ const normalized: Row[] = rows.map((row): Row => ({
+  ...row,
+  title: firstValue(row.title, row.playlist),
+  watchTime: firstValue(row.watchTime, row.playlistEstimatedMinutesWatched),
+ }))
+ const viewsTotal = normalized.reduce((sum, row) => sum + Math.max(0, num(row.views) ?? 0), 0)
+ const watchTimeTotal = normalized.reduce((sum, row) => sum + Math.max(0, num(row.watchTime) ?? 0), 0)
+ return normalized.map((row) => {
+  const views = num(row.views)
+  const watchTime = num(row.watchTime)
+  return {
+   ...row,
+   playlistViewShare: viewsTotal > 0 && views !== undefined ? (views / viewsTotal) * 100 : undefined,
+   playlistWatchTimeShare: watchTimeTotal > 0 && watchTime !== undefined ? (watchTime / watchTimeTotal) * 100 : undefined,
+  }
+ })
+}
+
 const asRecord = (value: unknown): Row => (value && typeof value === "object" ? value as Row : {})
 
 const geographyCountryRow = (row: Row): Row => {
@@ -611,7 +630,7 @@ export const normalizeVtSyncTableRows = (tableId: string, rows: Row[]): Row[] =>
    return { ...row, contentTypeCode, term: getVtSyncContentTypeLabel(contentTypeCode) }
   }))
   case "shares": return withSharedLinkShareColumn(normalizeRows(rows, { term: "sharingService" }))
-  case "playlists": return rows.map((row) => ({ ...row, title: firstValue(row.title, row.playlist), watchTime: firstValue(row.watchTime, row.playlistEstimatedMinutesWatched) }))
+  case "playlists": return withPlaylistShareColumns(rows)
   case "revenue": return rows.map((row) => ({ ...row, day: firstValue(row.day, row.date), revenue: firstValue(row.revenue, row.estimatedRevenue), adRevenue: firstValue(row.adRevenue, row.estimatedAdRevenue), redRevenue: firstValue(row.redRevenue, row.estimatedRedPartnerRevenue) }))
   default: return rows
  }

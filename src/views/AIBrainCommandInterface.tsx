@@ -218,7 +218,7 @@ const CreatorResponseCard: React.FC<{
    </article>
   )
  }
- const modules = response.modules?.length
+ const rawModules = response.modules?.length
   ? response.modules
   : (response.sections || []).map((section) => ({
      id: section.id,
@@ -227,6 +227,17 @@ const CreatorResponseCard: React.FC<{
      tone: section.tone,
      source: "growth" as const,
     }))
+ // Drop prose modules that just restate the key insight (the common duplication),
+ // and cap the count so every answer isn't the same tall stack.
+ const keyNorm = sanitizeCreatorFacingBrainCopy(response.keyInsight).trim().toLowerCase()
+ const modules = rawModules
+  .filter((module) => {
+   if (module.data?.metrics?.length || module.data?.items?.length) return true
+   const body = sanitizeCreatorFacingBrainCopy(module.body || "").trim().toLowerCase()
+   if (!body || !keyNorm) return Boolean(body)
+   return !(body === keyNorm || body.startsWith(keyNorm.slice(0, 60)) || keyNorm.startsWith(body.slice(0, 60)))
+  })
+  .slice(0, 3)
  const openQuestions = response.questions.filter((question) => !answeredQuestionIds.has(question.id))
 
  return (
@@ -243,34 +254,38 @@ const CreatorResponseCard: React.FC<{
     {openQuestions[0] ? (
      <BrainQuestionPrompt question={openQuestions[0]} onAnswer={onAnswerQuestion} compact />
     ) : null}
-    <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-t-[2px] border-black pt-2">
+    <div className="flex shrink-0 flex-wrap items-center gap-1 border-t-[2px] border-black pt-2">
      {(
       [
-       ["helpful", <ThumbsUp size={14} key="up" />, "Helpful"],
-       ["not_useful", <ThumbsDown size={14} key="down" />, "Not useful"],
-       ["inaccurate", <HelpCircle size={14} key="q" />, "Inaccurate"],
-       ["save_insight", <BookOpen size={14} key="save" />, "Save insight"],
-       ["ask_follow_up", <MessageSquare size={14} key="follow" />, "Ask follow-up"],
+       ["helpful", <ThumbsUp size={13} key="up" />, "Helpful", "#3FEE56"],
+       ["not_useful", <ThumbsDown size={13} key="down" />, "Not useful", "#FA618A"],
+       ["inaccurate", <HelpCircle size={13} key="q" />, "Inaccurate", "#FFDA47"],
+       ["save_insight", <BookOpen size={13} key="save" />, "Save insight", "#36E0F6"],
+       ["ask_follow_up", <MessageSquare size={13} key="follow" />, "Ask follow-up", "#FF7AC8"],
      ] as const
-     ).map(([rating, iconNode, label]) => (
+     ).map(([rating, iconNode, label, hover]) => (
       <button
        key={rating}
        type="button"
+       title={label}
+       aria-label={label}
        onClick={() => onFeedback(message, rating as AIBrainFeedbackSignal["rating"])}
-       className={kpiButton}
+       className="grid h-7 w-7 place-items-center rounded-[6px] border-[2px] border-black bg-white transition hover:-translate-y-0.5"
+       onMouseEnter={(event) => (event.currentTarget.style.backgroundColor = hover)}
+       onMouseLeave={(event) => (event.currentTarget.style.backgroundColor = "#ffffff")}
       >
        {iconNode}
-       {label}
       </button>
      ))}
-     <BrainEvidenceDrawer evidencePack={evidencePack} />
+     <BrainEvidenceDrawer evidencePack={evidencePack} compact />
      {message.handoff ? (
       <Link
        to={message.handoff.route}
-       className="inline-flex items-center gap-2 rounded-[8px] border-[2px] border-black bg-[#FFDA47] px-3 py-2 text-[10px] font-black uppercase tracking-[0.08em]"
+       title={`Open ${message.handoff.targetTitle}`}
+       className="ml-auto inline-flex items-center gap-1.5 rounded-[6px] border-[2px] border-black bg-[#FFDA47] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em]"
       >
-       Open {message.handoff.targetTitle}
-       <ArrowRight size={14} />
+       Open
+       <ArrowRight size={13} />
       </Link>
      ) : null}
     </div>

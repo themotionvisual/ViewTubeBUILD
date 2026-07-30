@@ -89,6 +89,7 @@ export type VtSyncTableDefinition = {
  compactMode?: "supported" | "normal-only"
  presentationMode?: "standard" | "traffic-source-day" | "retention-video"
  verticalScrollMode?: "custom" | "none"
+ horizontalScrollMode?: "custom" | "none"
  summaryMode?: "selected-video" | "registry" | "primary-row"
  summaryColumns?: string[]
  summaryPrimaryRow?: { key: string; value: string }
@@ -154,6 +155,10 @@ export type VtSyncTrafficRow = Record<string, unknown> & {
  engagedViews?: number
  title?: string
  handle?: string
+ thumbnail?: string
+ videoId?: string
+ videoUrl?: string
+ channelUrl?: string
 }
 
 export type VtSyncChannelTotals = Partial<Record<

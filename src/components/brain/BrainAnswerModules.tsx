@@ -73,13 +73,41 @@ export const BrainKpiModule: React.FC<{
  const items = module.data?.items || []
  const missingReason = module.data?.missingReason
  const icon = SOURCE_ICON[module.source || "growth"] || SOURCE_ICON.growth
+ const accent = MODULE_TONE[module.tone] || MODULE_TONE.white
+ const hasStructured = metrics.length > 0 || items.length > 0
 
+ // Prose-only module: a light labeled section, not a card inside the answer card.
+ // Nesting bordered cards for plain text was needless visual weight on every answer.
+ if (!hasStructured) {
+  if (!module.body && !missingReason) return null
+  return (
+   <section className={className}>
+    <div className="mb-1 flex flex-wrap items-center gap-1.5">
+     <span className="h-2.5 w-2.5 shrink-0 rounded-[3px] border-[1.5px] border-black" style={{ backgroundColor: accent }} aria-hidden="true" />
+     <h4 className="text-[10px] font-[1000] uppercase leading-4 tracking-[0.1em] text-black/55">
+      {sanitizeCreatorFacingBrainCopy(module.title)}
+     </h4>
+     {module.code ? (
+      <span className="rounded-[4px] border-[1.5px] border-black px-1 text-[8px] font-[1000] uppercase tracking-[0.06em]">{module.code}</span>
+     ) : null}
+    </div>
+    {module.body ? (
+     <p className="text-[13px] font-bold leading-6 text-black/80">{sanitizeCreatorFacingBrainCopy(module.body)}</p>
+    ) : null}
+    {missingReason ? (
+     <p className="mt-1 text-xs font-bold leading-5 text-black/55">{sanitizeCreatorFacingBrainCopy(missingReason)}</p>
+    ) : null}
+   </section>
+  )
+ }
+
+ // Structured module (metrics / ranked evidence): a real data widget earns its card.
  return (
   <article className={`${cardShell} ${className}`}>
    <details open>
     <summary
      className="grid min-h-[36px] cursor-pointer list-none grid-cols-[34px_minmax(0,1fr)_auto_28px] items-stretch border-b-[2px] border-black"
-     style={{ backgroundColor: MODULE_TONE[module.tone] || MODULE_TONE.white }}
+     style={{ backgroundColor: accent }}
     >
      <span className="grid place-items-center border-r-[2px] border-black bg-white">{icon}</span>
      <h4 className="min-w-0 self-center truncate px-2.5 py-1.5 text-[11px] font-[1000] uppercase leading-4 tracking-[0.04em]">

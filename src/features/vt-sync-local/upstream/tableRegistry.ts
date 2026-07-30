@@ -21,7 +21,7 @@ const col = (
  format,
  defaultVisible,
  pinned,
- isFormula: ["engagementRate", "likeRatio", "subRatio", "subRate"].includes(key) || undefined,
+ isFormula: ["engagementRate", "likeRatio", "subRatio", "subRate", "playlistViewShare", "playlistWatchTimeShare"].includes(key) || undefined,
  visibility: "always",
  semanticRole: options.semanticRole ?? (["number", "percent", "currency", "duration", "durationHours", "durationMinutes"].includes(format || "") ? "metric" : "identity"),
  visualization: options.visualization ?? (["number", "percent", "currency", "duration", "durationHours", "durationMinutes"].includes(format || "") ? "metric" : "none"),
@@ -51,6 +51,7 @@ const table = ({
  summaryColumns = [],
  summaryPrimaryRow,
  verticalScrollMode,
+ horizontalScrollMode,
 }: {
  id: string
  label: string
@@ -71,6 +72,7 @@ const table = ({
  summaryColumns?: string[]
  summaryPrimaryRow?: VtSyncTableDefinition["summaryPrimaryRow"]
  verticalScrollMode?: VtSyncTableDefinition["verticalScrollMode"]
+ horizontalScrollMode?: VtSyncTableDefinition["horizontalScrollMode"]
 }): VtSyncTableDefinition => ({
  id,
  label,
@@ -91,7 +93,8 @@ const table = ({
  summaryMode,
  summaryColumns,
  summaryPrimaryRow,
- verticalScrollMode: verticalScrollMode ?? (mainCategoryId === "traffic" ? "none" : "custom"),
+ verticalScrollMode: verticalScrollMode ?? (id === "traffic" || id === "devices" ? "none" : "custom"),
+ horizontalScrollMode: horizontalScrollMode ?? (mainCategoryId === "traffic" || id === "devices" || id === "os" ? "none" : "custom"),
 })
 
 export const VT_SYNC_TABLE_CATEGORIES: VtSyncTableCategoryDefinition[] = [
@@ -281,19 +284,15 @@ const dailyMetricColumns = [
  col("cardTeaserClicks", "Card Teaser Clicks", "Cards / End Screens", "number"),
  col("cardTeaserImpressions", "Card Teaser Impressions", "Cards / End Screens", "number"),
  col("cardTeaserClickRate", "Teaser Clicks per Card Teaser Shown (%)", "Cards / End Screens", "percent"),
- col("annotationClicks", "Annotation Clicks", "Cards / End Screens", "number"),
- col("annotationImpressions", "Annotation Impressions", "Cards / End Screens", "number"),
- col("annotationClickThroughRate", "Clicks per Annotation Shown (%)", "Cards / End Screens", "percent"),
- col("videosAddedToPlaylists", "Videos Added to Playlists", "Playlists", "number"),
- col("videosRemovedFromPlaylists", "Videos Removed from Playlists", "Playlists", "number"),
-]
+  col("annotationClicks", "Annotation Clicks", "Cards / End Screens", "number"),
+];
 
 const trafficMetricColumns = [
  col("views", "Views", "Metrics", "number"),
  col("engagedViews", "Engaged Views", "Metrics", "number"),
- col("trafficViewShare", "% of Traffic Views", "Traffic Share", "percent"),
+ col("trafficViewShare", "% of Daily Views", "Traffic Share", "percent"),
  col("watchTime", "Watch Time", "Metrics", "durationHours"),
- col("trafficWatchTimeShare", "% of Traffic Watch Time", "Traffic Share", "percent"),
+ col("trafficWatchTimeShare", "% of Daily Watch Time", "Traffic Share", "percent"),
  col("avgDuration", "Average View Duration", "Metrics", "duration"),
  col("avgPercentageViewed", "Average Percentage Viewed (%)", "Metrics", "percent"),
 ]
@@ -306,8 +305,8 @@ const trafficDayMetricColumns = [
 ]
 
 const trafficShareColumns = [
- col("trafficViewShare", "% of Traffic Views", "Traffic Share", "percent"),
- col("trafficWatchTimeShare", "% of Traffic Watch Time", "Traffic Share", "percent"),
+ col("trafficViewShare", "% of Daily Views", "Traffic Share", "percent"),
+ col("trafficWatchTimeShare", "% of Daily Watch Time", "Traffic Share", "percent"),
 ]
 
 const geographyFullColumns = [
@@ -315,21 +314,10 @@ const geographyFullColumns = [
  col("engagedViews", "Engaged Views", "Metrics", "number"),
  col("watchTime", "Watch Time", "Metrics", "durationHours"),
  col("revenue", "Revenue", "Revenue", "currency"),
- col("estimatedAdRevenue", "Estimated Ad Revenue", "Revenue", "currency"),
- col("youtubePremiumRevenue", "YouTube Premium Revenue", "Revenue", "currency"),
- col("avgDuration", "Avg View Duration", "Metrics", "duration"),
- col("avgPercentageViewed", "Avg % Viewed", "Metrics", "percent"),
- col("shares", "Shares", "Engagement", "number"),
- col("subscribersGained", "Subs Gained", "Subscribers", "number"),
- col("subscribersLost", "Subs Lost", "Subscribers", "number"),
- col("likes", "Likes", "Engagement", "number"),
- col("dislikes", "Dislikes", "Engagement", "number"),
- col("comments", "Comments", "Engagement", "number"),
- col("cpm", "CPM", "Advertising", "currency"),
- col("grossRevenue", "Gross Revenue", "Advertising", "currency"),
- col("monetizedPlaybacks", "Monetized Playbacks", "Advertising", "number"),
- col("playbackBasedCpm", "Playback CPM", "Advertising", "currency"),
- col("adImpressions", "Ad Impressions", "Advertising", "number"),
+ col("averagePercentageViewed", "Avg. % Viewed", "Metrics", "percent"),
+ col("subscribersGained", "Subs Gained", "Engagement", "number"),
+ col("subscribersLost", "Subs Lost", "Engagement", "number"),
+ col("netSubscribers", "Net Subs", "Engagement", "number"),
 ]
 
 const shortMetricColumns = [
@@ -350,11 +338,11 @@ const demographicOverviewColumns = [
 
 export const VT_SYNC_TABLE_DEFINITIONS: VtSyncTableDefinition[] = [
  table({ id: "videos", mainCategoryId: "videos", label: "Video Metadata & Metrics", description: "AI Studio video metadata and analytics table.", categoryIds: ["uploads_playlist", "video_metadata", "videos_analytics"], columns: videoColumns, datasetId: "videos", defaultSort: { key: "publishedAt", direction: "desc" }, collapsedGroups: ["Details", "Format"] }),
- table({ id: "daily", mainCategoryId: "daily", label: "Daily Overview", description: "Day-by-day channel analytics.", snapshotKeys: ["dailyMetrics"], categoryIds: ["daily_metrics"], columns: [col("date", "Date", "Time", "date", true, "left"), ...dailyMetricColumns], defaultSort: { key: "date", direction: "desc" }, datasetId: "daily" }),
- table({ id: "weekly", mainCategoryId: "daily", label: "Weekly", description: "Weekly rollup derived from daily metrics.", snapshotKeys: ["dailyMetrics"], categoryIds: ["daily_metrics"], columns: [col("date", "Week", "Time", "date", true, "left"), col("dateRange", "Date Range", "Time", "dateRange"), ...dailyMetricColumns], defaultSort: { key: "date", direction: "desc" }, datasetId: "weekly" }),
- table({ id: "monthly", mainCategoryId: "daily", label: "Monthly", description: "Monthly rollup derived from daily metrics.", snapshotKeys: ["dailyMetrics"], categoryIds: ["daily_metrics"], columns: [col("date", "Month", "Time", "date", true, "left"), ...dailyMetricColumns], defaultSort: { key: "date", direction: "desc" }, datasetId: "monthly" }),
+ table({ id: "daily", mainCategoryId: "daily", label: "Daily Overview", description: "Day-by-day channel analytics.", snapshotKeys: ["dailyMetrics"], categoryIds: ["daily_metrics"], columns: [col("date", "Date", "Time", "date", true, "left", { preferredWidth: 220 }), ...dailyMetricColumns], defaultSort: { key: "date", direction: "desc" }, datasetId: "daily" }),
+ table({ id: "weekly", mainCategoryId: "daily", label: "Weekly", description: "Weekly rollup derived from daily metrics.", snapshotKeys: ["dailyMetrics"], categoryIds: ["daily_metrics"], columns: [col("dateRange", "Week / Date Range", "Time", "dateRange", true, "left", { preferredWidth: 240 }), ...dailyMetricColumns], defaultSort: { key: "dateRange", direction: "desc" }, datasetId: "weekly" }),
+ table({ id: "monthly", mainCategoryId: "daily", label: "Monthly", description: "Monthly rollup derived from daily metrics.", snapshotKeys: ["dailyMetrics"], categoryIds: ["daily_metrics"], columns: [col("date", "Month", "Time", "date", true, "left", { preferredWidth: 240 }), ...dailyMetricColumns], defaultSort: { key: "date", direction: "desc" }, datasetId: "monthly" }),
  table({ id: "channel_totals", mainCategoryId: "channel_totals", label: "Channel Totals", description: "Channel total windows.", categoryIds: ["channel_totals"], columns: [col("window", "Time Window", "Time", "text", true, "left"), col("views", "Views", "Core Metrics", "number"), col("engagedViews", "Engaged Views", "Core Metrics", "number"), col("watchTime", "Watch Time", "Core Metrics", "durationHours"), col("avgViewDuration", "Avg. View Dur.", "Core Metrics", "duration"), col("averagePercentageViewed", "Avg. % Viewed", "Core Metrics", "percent"), col("impressions", "Impressions", "Reach", "number"), col("adImpressions", "Ad Impressions", "Reach", "number"), col("likes", "Likes", "Viewer Engagement", "number"), col("dislikes", "Dislikes", "Viewer Engagement", "number"), col("comments", "Comments", "Viewer Engagement", "number"), col("shares", "Shares", "Viewer Engagement", "number"), col("subscribersGained", "Subs Gained", "Subscriptions", "number"), col("subscribersLost", "Subs Lost", "Subscriptions", "number"), col("netSubscribers", "Net Subs", "Subscriptions", "number"), col("revenue", "Est. Revenue", "Revenue Insight", "currency"), col("estimatedAdRevenue", "Est. Ad Revenue", "Revenue Insight", "currency"), col("grossRevenue", "Gross Revenue", "Revenue Insight", "currency"), col("cpm", "CPM", "Revenue Insight", "currency"), col("playbackBasedCpm", "Playback CPM", "Revenue Insight", "currency"), col("monetizedPlaybacks", "Monetized Plays", "Advertising Info", "number"), col("youtubePremiumViews", "Premium Views", "Premium Metrics", "number"), col("youtubePremiumWatchTime", "Premium Watch", "Premium Metrics", "durationHours"), col("youtubePremiumRevenue", "Premium Revenue", "Premium Metrics", "currency")], datasetId: "channel_totals", summaryMode: "primary-row", summaryPrimaryRow: { key: "window", value: "Lifetime (All Time)" } }),
- table({ id: "traffic", mainCategoryId: "traffic", label: "Overview", description: "Traffic source overview.", snapshotKeys: ["trafficSources"], categoryIds: ["traffic_overview"], columns: [col("source", "Source", "Identity", "text", true, "left", { preferredWidth: 300 }), ...shortMetricColumns, ...trafficShareColumns], datasetId: "traffic" }),
+ table({ id: "traffic", mainCategoryId: "traffic", label: "Overview", description: "Traffic source overview.", snapshotKeys: ["trafficSources"], categoryIds: ["traffic_overview"], columns: [col("source", "Source", "Identity", "text", true, "left", { preferredWidth: 300 }), ...shortMetricColumns, ...trafficShareColumns], datasetId: "traffic", layoutMode: "sparse-full" }),
  table({ id: "search", mainCategoryId: "traffic", label: "Search Terms", description: "YouTube search terms.", snapshotKeys: ["searchTerms"], categoryIds: ["search_terms"], columns: [col("term", "Search Term", "Identity", "text", true, "left"), ...trafficMetricColumns], datasetId: "search" }),
  table({ id: "ext_web", mainCategoryId: "traffic", label: "External Websites", description: "External website traffic.", snapshotKeys: ["extWebsites"], categoryIds: ["ext_websites"], columns: [col("term", "External Website", "Identity", "text", true, "left"), ...trafficMetricColumns], datasetId: "ext_web" }),
  table({ id: "suggested", mainCategoryId: "traffic", label: "Suggested Videos", description: "Suggested video traffic.", snapshotKeys: ["suggestedVideos"], categoryIds: ["suggested_videos"], columns: [col("term", "Suggested Video (ID)", "Identity", "text", true, "left"), col("title", "Video Title", "Identity"), ...trafficMetricColumns], datasetId: "suggested" }),
@@ -387,7 +375,7 @@ export const VT_SYNC_TABLE_DEFINITIONS: VtSyncTableDefinition[] = [
  table({ id: "cities", mainCategoryId: "geography", label: "Cities", description: "City geography rows.", snapshotKeys: ["cities"], categoryIds: ["geography_city"], columns: [
   col("countryFlag", "Flag", "Identity", "flag", true, "left", { preferredWidth: 66 }),
   col("city", "City", "Identity", "text", true, "left", { preferredWidth: 150 }),
-  col("countryName", "Country", "Identity", "text", true, "left", { preferredWidth: 96 }),
+  col("countryName", "Country", "Identity", "text", true, "left", { preferredWidth: 180 }),
   ...shortMetricColumns,
  ], datasetId: "cities", layoutMode: "sparse-full" }),
  table({ id: "provinces", mainCategoryId: "geography", label: "US States", description: "US state rows.", snapshotKeys: ["provinces"], categoryIds: ["geography_province"], columns: [
@@ -436,7 +424,7 @@ export const VT_SYNC_TABLE_DEFINITIONS: VtSyncTableDefinition[] = [
  ], datasetId: "creator", summaryColumns: ["views", "watchTime", "formatViewShare", "formatWatchTimeShare"] }),
  table({ id: "retentions", mainCategoryId: "content", label: "Retentions", description: "100-point audience-retention curves grouped by video.", snapshotKeys: ["retentions"], categoryIds: ["retention"], columns: [col("videoId", "Video ID", "Identity", "text", true, "left"), col("elapsedVideoTimeRatio", "Elapsed Video Time Ratio", "Retention", "percent"), col("audienceWatchRatio", "Audience Watch Ratio", "Retention", "percent"), col("relativeRetentionPerformance", "Relative Retention Performance", "Retention", "percent")], defaultSort: { key: "videoId", direction: "asc" }, datasetId: "retentions", presentationMode: "retention-video" }),
  table({ id: "shares", mainCategoryId: "content", label: "Sharing Services", description: "Sharing service rows.", snapshotKeys: ["sharingService"], categoryIds: ["sharing_service"], columns: [col("term", "Sharing Service", "Identity", "text", true, "left"), col("shares", "Shares", "Engagement", "number"), col("shareLinkShare", "% of Shared Links", "Engagement", "percent", true, undefined, { totalMode: "sum" })], defaultSort: { key: "shares", direction: "desc" }, datasetId: "shares" }),
- table({ id: "playlists", mainCategoryId: "playlists", label: "Playlist Statistics", description: "Playlist statistics rows.", snapshotKeys: ["playlistsData"], categoryIds: ["playlists_analytics"], columns: [col("playlistId", "Playlist ID", "Identity", "text", true, "left", { preferredWidth: 190, textSize: 10 }), col("title", "Title", "Identity", "text", true, undefined, { preferredWidth: 240, textSize: 13 }), col("description", "Description", "Metadata"), col("publishedAt", "Published", "Metadata", "date"), col("videoCount", "Video Count", "Metadata", "number"), col("views", "Views", "Metrics", "number"), col("engagedViews", "Engaged Views", "Metrics", "number"), col("watchTime", "Watch Time", "Metrics", "durationMinutes"), col("playlistStarts", "Playlist Starts", "Metrics", "number"), col("playlistSaves", "Saves", "Metrics", "number"), col("averageTimeInPlaylist", "Avg Time in Playlist", "Metrics", "duration"), col("viewsPerPlaylistStart", "Views per Playlist Start", "Metrics", "number"), col("privacyStatus", "Privacy Status", "Metadata")], datasetId: "playlists" }),
+ table({ id: "playlists", mainCategoryId: "playlists", label: "Playlist Statistics", description: "Playlist statistics rows.", snapshotKeys: ["playlistsData"], categoryIds: ["playlists_analytics"], columns: [col("playlistId", "Playlist ID", "Identity", "text", true, "left", { preferredWidth: 190, textSize: 10 }), col("title", "Playlist Title", "Identity", "text", true, undefined, { preferredWidth: 325, textSize: 13 }), col("description", "Description", "Metadata"), col("publishedAt", "Published", "Metadata", "date"), col("videoCount", "Video Count", "Metadata", "number"), col("views", "Views", "Metrics", "number"), col("playlistViewShare", "% of Playlist Views", "Playlist Share", "percent", true, undefined, { totalMode: "sum" }), col("engagedViews", "Engaged Views", "Metrics", "number"), col("watchTime", "Watch Time", "Metrics", "durationMinutes"), col("playlistWatchTimeShare", "% of Playlist Watch Time", "Playlist Share", "percent", true, undefined, { totalMode: "sum" }), col("playlistStarts", "Playlist Starts", "Metrics", "number"), col("playlistSaves", "Playlist Saves (Net)", "Metrics", "number"), col("averageTimeInPlaylist", "Avg Time in Playlist", "Metrics", "duration"), col("viewsPerPlaylistStart", "Views per Playlist Start", "Metrics", "number"), col("privacyStatus", "Privacy Status", "Metadata")], datasetId: "playlists" }),
  table({ id: "revenue", mainCategoryId: "revenue", label: "Overview", description: "Revenue source rows.", snapshotKeys: ["revenueSource"], categoryIds: ["revenue_source"], columns: [col("day", "Date", "Time", "date", true, "left"), col("revenue", "Total Revenue", "Revenue", "currency"), col("adRevenue", "Ad Revenue", "Revenue", "currency"), col("redRevenue", "Premium Revenue", "Revenue", "currency")], defaultSort: { key: "day", direction: "desc" }, datasetId: "revenue" }),
  table({ id: "ads", mainCategoryId: "revenue", label: "Ad Types", description: "Ad type rows.", snapshotKeys: ["adTypes"], categoryIds: ["ad_type"], columns: [col("adType", "Ad Type", "Identity", "text", true, "left"), col("grossRevenue", "Gross Revenue (USD)", "Revenue", "currency"), col("cpm", "CPM (USD)", "Revenue", "currency"), col("adImpressions", "Ad Impressions", "Revenue", "number")], defaultSort: { key: "grossRevenue", direction: "desc" }, datasetId: "ads" }),
 ]

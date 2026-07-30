@@ -79,6 +79,8 @@ export const indexVtSyncVideoRowsById = (rows: VtSyncTableRow[]): Map<string, Vt
 const VT_SYNC_HALF_SIZE_SECONDS_COLUMNS = new Set(["watchTime", "youtubePremiumWatchTime", "estimatedRedMinutesWatched"])
 const VT_SYNC_VIDEO_COMPOSITE_HIDDEN_COLUMNS = new Set(["videoId", "publishedDay", "publishedTime"])
 const VT_SYNC_CHANNEL_PAGE_COMPOSITE_HIDDEN_COLUMNS = new Set(["title", "handle"])
+const VT_SYNC_SUGGESTED_COMPOSITE_HIDDEN_COLUMNS = new Set(["title"])
+const VT_SYNC_PLAYLIST_COMPOSITE_HIDDEN_COLUMNS = new Set(["playlistId"])
 export const VT_SYNC_VIDEO_NON_COMPACT_WIDTHS = [91, 325, 97, 68, 132, 82, 92, 238, 79, 69, 80, 68, 68, 78, 79, 65, 79, 82, 73, 68, 72, 68, 75, 74, 69, 81, 68, 72, 68, 78, 68, 76, 68, 68, 68, 69, 68, 64, 78, 68, 68, 72, 82, 89, 82, 74, 81, 74, 73, 68, 68, 73, 68, 68, 91, 85, 85, 78] as const
 export const VT_SYNC_SMALL_TABLE_COLORS = [
  "#FA618A", "#FF7F6B", "#FFA85C", "#FFDA47", "#C0F240", "#3FEE56",
@@ -175,6 +177,14 @@ export const getVtSyncTableProvenance = (
 export type VtSyncApiValuePresentation = {
  title: string
  apiValue: string
+}
+
+export type VtSyncCompositeIdentityPresentation = {
+ title: string
+ secondaryLabel?: string
+ rawId?: string
+ thumbnail?: string
+ url?: string
 }
 
 const VT_SYNC_TRAFFIC_SOURCE_LABELS: Record<string, string> = {
@@ -295,8 +305,22 @@ export const getVtSyncApiValuePresentation = (
  if (isMissingVtSyncValue(value)) return null
  const apiValue = String(value).trim()
  let title: string | undefined
+ const normalizedPackage = apiValue.toLowerCase()
+ const externalIdentity = (() => {
+  if (normalizedPackage === "com.google.android.apps.messaging") return "Google Msgs"
+  if (normalizedPackage === "reddit.frontpage" || normalizedPackage === "com.reddit.frontpage") return "Reddit Frontpage"
+  const withoutScheme = normalizedPackage.replace(/^[a-z]+:\/\//, "").replace(/^www\./, "")
+  const host = withoutScheme.split(/[/?#]/)[0]
+  return ({
+   "reddit.com": "Reddit",
+   "facebook.com": "Facebook",
+   "chatgpt.com": "Chat GPT",
+  } as Record<string, string>)[host]
+ })()
 
- if ((tableId === "traffic" && columnKey === "source") || (tableId === "traffic_day" && columnKey === "term")) {
+ if (externalIdentity && (tableId === "ext_web" || normalizedPackage === "com.google.android.apps.messaging")) {
+  title = externalIdentity
+ } else if ((tableId === "traffic" && columnKey === "source") || (tableId === "traffic_day" && columnKey === "term")) {
   title = VT_SYNC_TRAFFIC_SOURCE_LABELS[apiValue.toUpperCase()]
  } else if (tableId === "traffic_subscribers" && columnKey === "term") {
   const detailValue = apiValue.replace(/^SUBSCRIBER\./i, "").toLowerCase()
@@ -312,6 +336,45 @@ export const getVtSyncApiValuePresentation = (
  }
 
  return title ? { title, apiValue } : null
+}
+
+export const getVtSyncCompositeIdentityPresentation = (
+ tableId: string,
+ row: VtSyncTableRow,
+): VtSyncCompositeIdentityPresentation | null => {
+ if (tableId === "suggested") {
+  const candidateId = String(row.videoId || row.term || "").trim()
+  const rawId = candidateId && candidateId !== "Unknown" && candidateId !== "-" ? candidateId : ""
+  return {
+   title: String(row.title || "Video metadata unavailable"),
+   secondaryLabel: "Suggested video",
+   rawId: rawId || undefined,
+   thumbnail: String(row.thumbnail || "").trim() || undefined,
+   url: String(row.videoUrl || (rawId ? `https://www.youtube.com/watch?v=${rawId}` : "")).trim() || undefined,
+  }
+ }
+ if (tableId === "chan_page") {
+  const candidateId = String(row.channelId || row.term || "").trim()
+  const rawId = candidateId && candidateId !== "Unknown" && candidateId !== "-" ? candidateId : ""
+  const rawHandle = String(row.handle || "").trim()
+  const handle = rawHandle ? (rawHandle.startsWith("@") ? rawHandle : `@${rawHandle.replace(/^@/, "")}`) : undefined
+  return {
+   title: String(row.title || "Channel title unavailable"),
+   secondaryLabel: handle,
+   rawId: rawId || undefined,
+   url: String(row.channelUrl || row.url || (handle ? `https://www.youtube.com/${handle}` : rawId ? `https://www.youtube.com/channel/${rawId}` : "")).trim() || undefined,
+  }
+ }
+ if (tableId === "playlists") {
+  const rawId = String(row.playlistId || row.id || "").trim()
+  const videoCount = Number(row.videoCount)
+  return {
+   title: String(row.title || row.playlist || "Untitled playlist"),
+   secondaryLabel: !isMissingVtSyncValue(row.videoCount) && Number.isFinite(videoCount) ? `${videoCount} videos` : undefined,
+   rawId: rawId || undefined,
+  }
+ }
+ return null
 }
 
 export const getVtSyncPresentationLabel = (tableId: string, fallback: string): string =>
@@ -1091,6 +1154,8 @@ export const getVtSyncPresentationColumns = (
 ): VtSyncTableColumnDefinition[] => {
  if (tableId === "videos") return columns.filter((column) => !VT_SYNC_VIDEO_COMPOSITE_HIDDEN_COLUMNS.has(column.key))
  if (tableId === "chan_page") return columns.filter((column) => !VT_SYNC_CHANNEL_PAGE_COMPOSITE_HIDDEN_COLUMNS.has(column.key))
+ if (tableId === "suggested") return columns.filter((column) => !VT_SYNC_SUGGESTED_COMPOSITE_HIDDEN_COLUMNS.has(column.key))
+ if (tableId === "playlists") return columns.filter((column) => !VT_SYNC_PLAYLIST_COMPOSITE_HIDDEN_COLUMNS.has(column.key))
  return columns
 }
 

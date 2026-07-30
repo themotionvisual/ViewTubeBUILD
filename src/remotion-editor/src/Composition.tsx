@@ -64,6 +64,12 @@ type Props = {
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 const isVideo = (value: unknown) => /\.(mp4|webm|mov|m4v|ogg)(\?|#|$)/i.test(String(value || ''));
+const isVideoPayload = (payload: Record<string, unknown>) => (
+  payload.mediaKind === 'video'
+  || String(payload.mediaMime || '').toLowerCase().startsWith('video/')
+  || isVideo(payload.mediaUrl)
+  || isVideo(payload.mediaName)
+);
 const toFrame = (seconds: number, fps: number) => Math.max(0, Math.round(seconds * fps));
 const sortTracks = (tracks: VTTrack[]) => [...tracks].sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
 const durationOf = (clip: VTClip) => Math.max(0.05, Number(clip.end || 0) - Number(clip.start || 0));
@@ -230,6 +236,141 @@ const layerFilter = (payload: Record<string, unknown>) => {
     `brightness(${brightness})`,
     hue ? `hue-rotate(${hue}deg)` : '',
   ].filter(Boolean).join(' ');
+};
+
+const shortsEase = (type: string, t: number) => {
+  if (type === 'cut') return t < 1 ? 0 : 1;
+  if (type === 'ease-in') return t * t;
+  if (type === 'ease-out') return 1 - (1 - t) * (1 - t);
+  if (type === 'ease-in-out') return t < 0.5 ? 2 * t * t : 1 - 2 * (1 - t) * (1 - t);
+  if (type === 'bell') return 0.5 * (1 - Math.cos(Math.PI * t));
+  return t;
+};
+
+const interpolateShortsConfig = (payload: Record<string, unknown>, sourceSeconds: number) => {
+  const extractor = (payload.shortsExtractor || {}) as Record<string, unknown>;
+  const base = {
+    mode: 'single',
+    aspectPreset: '9:16',
+    xPosition: 0.5,
+    yPosition: 0.5,
+    zoom: 1.65,
+    splitRatio: 0.55,
+    closeupPosition: 'top',
+    closeupZoom: 2.2,
+    closeupX: 0.5,
+    transition: 'ease-in-out',
+    ...((extractor.config || {}) as Record<string, unknown>),
+  };
+  const keyframes = Array.isArray(extractor.keyframes)
+    ? [...extractor.keyframes].map((entry) => entry as Record<string, unknown>).sort((a, b) => Number(a.time || 0) - Number(b.time || 0))
+    : [];
+  if (!keyframes.length) return base;
+  if (sourceSeconds <= Number(keyframes[0].time || 0)) return { ...base, ...keyframes[0] };
+  const last = keyframes[keyframes.length - 1];
+  if (sourceSeconds >= Number(last.time || 0)) return { ...base, ...last };
+
+  let left = keyframes[0];
+  let right = last;
+  for (let index = 0; index < keyframes.length - 1; index += 1) {
+    if (sourceSeconds >= Number(keyframes[index].time || 0) && sourceSeconds <= Number(keyframes[index + 1].time || 0)) {
+      left = keyframes[index];
+      right = keyframes[index + 1];
+      break;
+    }
+  }
+  const span = Number(right.time || 0) - Number(left.time || 0) || 1;
+  const t = shortsEase(String(right.transition || base.transition || 'pan'), clamp((sourceSeconds - Number(left.time || 0)) / span, 0, 1));
+  const lerp = (key: string, fallback: number) => Number(left[key] ?? fallback) + (Number(right[key] ?? fallback) - Number(left[key] ?? fallback)) * t;
+  return {
+    ...base,
+    mode: t < 0.5 ? (left.mode || base.mode) : (right.mode || base.mode),
+    xPosition: lerp('xPosition', Number(base.xPosition || 0.5)),
+    yPosition: lerp('yPosition', Number(base.yPosition || 0.5)),
+    zoom: lerp('zoom', Number(base.zoom || 1.65)),
+    splitRatio: lerp('splitRatio', Number(base.splitRatio || 0.55)),
+    closeupX: lerp('closeupX', Number(base.closeupX || 0.5)),
+    closeupZoom: lerp('closeupZoom', Number(base.closeupZoom || 2.2)),
+    closeupPosition: t < 0.5 ? (left.closeupPosition || base.closeupPosition) : (right.closeupPosition || base.closeupPosition),
+  };
+};
+
+const getShortsCropStyle = (
+  config: Record<string, unknown>,
+  sourceAspect: number,
+  outputAspect: number,
+  regionHeightRatio = 1,
+  closeup = false,
+): React.CSSProperties => {
+  const zoom = clamp(Number(closeup ? config.closeupZoom ?? 2.2 : config.zoom ?? 1.65), 1, 6);
+  const targetAspect = outputAspect / Math.max(0.05, regionHeightRatio);
+  let cropHeightPct = 100 / zoom;
+  let cropWidthPct = (targetAspect / Math.max(0.05, sourceAspect) / zoom) * 100;
+  if (cropWidthPct > 100) {
+    cropWidthPct = 100;
+    cropHeightPct = Math.min(100, (sourceAspect / targetAspect) * 100);
+  }
+  const xPos = clamp(Number(closeup ? config.closeupX ?? 0.5 : config.xPosition ?? 0.5), 0, 1);
+  const yPos = clamp(Number(config.yPosition ?? 0.5), 0, 1);
+  const sourceWidthPct = 10000 / Math.max(1, cropWidthPct);
+  const sourceHeightPct = 10000 / Math.max(1, cropHeightPct);
+  return {
+    position: 'absolute',
+    width: `${sourceWidthPct}%`,
+    height: `${sourceHeightPct}%`,
+    left: `${-xPos * (sourceWidthPct - 100)}%`,
+    top: `${-yPos * (sourceHeightPct - 100)}%`,
+    objectFit: 'fill',
+    maxWidth: 'none',
+    maxHeight: 'none',
+  };
+};
+
+const renderShortsExtractorMedia = (
+  src: string,
+  startFrom: number,
+  payload: Record<string, unknown>,
+  sourceSeconds: number,
+) => {
+  const extractor = (payload.shortsExtractor || {}) as Record<string, unknown>;
+  const source = (extractor.source || {}) as Record<string, unknown>;
+  const sourceAspect = Number(source.aspectRatio || (Number(source.width || 1920) / Math.max(1, Number(source.height || 1080))) || 16 / 9);
+  const config = interpolateShortsConfig(payload, sourceSeconds);
+  const aspectPreset = String(config.aspectPreset || '9:16');
+  const outputAspect = aspectPreset === '1:1' ? 1 : aspectPreset === '4:5' ? 4 / 5 : 9 / 16;
+  const Media = isVideo(src) ? OffthreadVideo : Img;
+  const mediaProps = isVideo(src) ? { startFrom } : {};
+
+  if (String(config.mode || 'single') !== 'split') {
+    return (
+      <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#000' }}>
+        <Media src={src} {...mediaProps} style={getShortsCropStyle(config, sourceAspect, outputAspect)} />
+      </div>
+    );
+  }
+
+  const splitRatio = clamp(Number(config.splitRatio ?? 0.55), 0.15, 0.85);
+  const closeupOnTop = String(config.closeupPosition || 'top') === 'top';
+  const closeupHeight = closeupOnTop ? splitRatio : 1 - splitRatio;
+  const wideHeight = 1 - closeupHeight;
+  const closeupStyle = getShortsCropStyle(config, sourceAspect, outputAspect, closeupHeight, true);
+  const wideStyle: React.CSSProperties = { width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#000' };
+  const closeup = (
+    <div style={{ position: 'relative', height: `${closeupHeight * 100}%`, overflow: 'hidden', backgroundColor: '#000' }}>
+      <Media src={src} {...mediaProps} style={closeupStyle} />
+    </div>
+  );
+  const wide = (
+    <div style={{ position: 'relative', height: `${wideHeight * 100}%`, overflow: 'hidden', backgroundColor: '#000' }}>
+      <Media src={src} {...mediaProps} style={wideStyle} />
+    </div>
+  );
+  return (
+    <div style={{ width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#000' }}>
+      {closeupOnTop ? closeup : wide}
+      {closeupOnTop ? wide : closeup}
+    </div>
+  );
 };
 const svgShortsDefaultPaths = [
   'M 100 50 A 50 50 0 0 1 150 100',
@@ -545,10 +686,13 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
           const src = String(payload.mediaUrl || '');
           if (!src) return null;
           const startFrom = toFrame(Math.max(0, sourceTimeForClipAt(project, clip, bounds.startSec)), fps);
+          const sourceSeconds = sourceTimeForClipAt(project, clip, currentSec);
           return (
             <Sequence key={clip.id} from={from} durationInFrames={durationInFrames}>
               <div style={commonStyle}>
-                {isVideo(src) ? (
+                {payload.shortsExtractor ? (
+                  renderShortsExtractorMedia(src, startFrom, payload, sourceSeconds)
+                ) : isVideoPayload(payload) ? (
                   <OffthreadVideo src={src} startFrom={startFrom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   <Img src={src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

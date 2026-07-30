@@ -167,6 +167,7 @@ import JSZip from 'jszip';
     const PAGE_REGISTRY = Object.freeze([
       { id: 'projects', label: 'Projects', shortLabel: 'PROJECTS', icon: Settings, color: COLORS.yellow, toolId: 'projects', fallbackTab: 'project', description: 'Project setup, sessions, export settings, and global controls.' },
       { id: 'clips', label: 'Clips', shortLabel: 'CLIPS', icon: Layers, color: COLORS.pink, toolId: 'clips-media', fallbackTab: 'media', description: 'Timeline editing, media positioning, drag, trim, split, seams, and keyframes.' },
+      { id: 'shorts-extractor', label: 'Shorts Extractor', shortLabel: 'SHORTS', icon: Scissors, color: COLORS.orange, toolId: 'shorts-extractor', fallbackTab: 'shorts', description: 'Reframe landscape videos into vertical shorts, segment them, and insert the results into the timeline.' },
       { id: 'text-captions', label: 'Text & Captions', shortLabel: 'TEXT/CAPS', icon: MessageSquare, color: COLORS.green, toolId: 'text-captions', fallbackTab: 'layerSettings', description: 'Script writing, text layers, captions, and cue formatting.' },
       { id: 'vault-media-images', label: 'Vault / Media / Images', shortLabel: 'VAULT', icon: FolderOpen, color: COLORS.blue, toolId: 'vault', fallbackTab: 'media', description: 'Reusable media, vault sources, video, image, and audio library flows.' },
       { id: 'ai', label: 'AI', shortLabel: 'AI', icon: Wand2, color: COLORS.orange, toolId: 'ai', fallbackTab: 'interactive', description: 'Manual AI tools, SVG Shorts, code drafts, and proposal-only flows.' },
@@ -239,6 +240,10 @@ import JSZip from 'jszip';
       'clips:addMedia': 'half',
       'clips:canvas': 'half',
       'clips:pageGuide': 'half',
+      'shorts-extractor:source': 'half',
+      'shorts-extractor:framing': 'half',
+      'shorts-extractor:segments': 'half',
+      'shorts-extractor:apply': 'half',
       'text-captions:search': 'half',
       'text-captions:captions': 'half',
       'text-captions:tts': 'half',
@@ -260,6 +265,12 @@ import JSZip from 'jszip';
         { id: 'clipControls', label: 'Clip Controls', color: COLORS.yellow },
         { id: 'settings', label: 'Selected Layer', color: COLORS.orange },
         { id: 'search', label: 'Search', color: COLORS.cyan }
+      ],
+      'shorts-extractor': [
+        { id: 'source', label: 'Source Video', color: COLORS.orange },
+        { id: 'framing', label: 'Framing', color: COLORS.cyan },
+        { id: 'segments', label: 'Segments', color: COLORS.yellow },
+        { id: 'apply', label: 'Apply To Timeline', color: COLORS.green }
       ],
       transitions: [
         { id: 'transitions', label: 'Seams + Presets', color: COLORS.purple },
@@ -334,6 +345,7 @@ import JSZip from 'jszip';
     const PAGE_MODULE_REGISTRY = Object.freeze({
       projects: ['project', 'importExport', 'render', 'camera'],
       clips: ['addMedia', 'clipControls', 'settings', 'search'],
+      'shorts-extractor': ['source', 'framing', 'segments', 'apply'],
       'text-captions': ['tts', 'captions', 'textTools', 'settings', 'search'],
       transitions: ['transitions', 'transitionDiagnostics'],
       'clip-effects': ['fx', 'settings'],
@@ -352,6 +364,7 @@ import JSZip from 'jszip';
     const NAV_PAGE_GUIDE = Object.freeze({
       projects: 'Project settings, save/load, import/export, render status, and final output controls.',
       clips: 'Media import, selected clip controls, timeline edits, split, trim, group, and delete.',
+      'shorts-extractor': 'Convert landscape source videos into editable 9:16 timeline clips with crop, split-screen, smoothing, and segment metadata.',
       'text-captions': 'Script writing, captions, and text formatting tools.',
       transitions: 'Seam selection, transition presets, timing, and transition diagnostics.',
       'clip-effects': 'Selected-layer filter and effect stack controls.',
@@ -494,6 +507,7 @@ import JSZip from 'jszip';
     const TOPBAR_BUTTONS_BY_PAGE = Object.freeze({
       projects: ['undo', 'redo', 'time', 'snap', 'help', 'chroma', 'track'],
       clips: ['undo', 'redo', 'time', 'snap', 'cursor', 'split', 'copyKf', 'pasteKf', 'help', 'track'],
+      'shorts-extractor': ['undo', 'redo', 'time', 'snap', 'split', 'help', 'track'],
       'clips-media': ['undo', 'redo', 'time', 'snap', 'cursor', 'split', 'copyKf', 'pasteKf', 'help', 'track'],
       'text-captions': ['undo', 'redo', 'time', 'snap', 'split', 'help'],
       transitions: ['undo', 'redo', 'time', 'snap', 'cursor', 'help'],
@@ -615,6 +629,32 @@ import JSZip from 'jszip';
       { id: 'zoom_glitch', label: 'Zoom + Glitch', steps: [{ type: 'zoom', params: { intensity: 1.3, amount: 1.2 } }, { type: 'glitch', params: { intensity: 1.1, frequency: 130, blurPx: 8 } }], durationSec: 0.36 },
       { id: 'rotate_fade', label: 'Rotate + Fade', steps: [{ type: 'rotate', params: { intensity: 1.2, rotateDeg: 65 } }, { type: 'fade', params: { intensity: 1 } }], durationSec: 0.4 },
       { id: 'vortex_pulse', label: 'Vortex + Pulse', steps: [{ type: 'vortex', params: { intensity: 1.1, amount: 1.1 } }, { type: 'pulse', params: { intensity: 1.2, amount: 1 } }], durationSec: 0.5 }
+    ]);
+    const SHORTS_EXTRACTOR_DEFAULT_CONFIG = Object.freeze({
+      mode: 'single',
+      aspectPreset: '9:16',
+      xPosition: 0.5,
+      yPosition: 0.5,
+      zoom: 1.65,
+      splitRatio: 0.55,
+      closeupPosition: 'top',
+      closeupZoom: 2.2,
+      closeupX: 0.5,
+      transition: 'ease-in-out',
+      smoothing: 0.45
+    });
+    const SHORTS_EXTRACTOR_ASPECTS = Object.freeze({
+      '9:16': { width: 1080, height: 1920, ratio: 9 / 16 },
+      '1:1': { width: 1080, height: 1080, ratio: 1 },
+      '4:5': { width: 1080, height: 1350, ratio: 4 / 5 }
+    });
+    const SHORTS_EXTRACTOR_TRANSITIONS = Object.freeze([
+      { id: 'pan', label: 'Linear' },
+      { id: 'ease-in', label: 'Ease In' },
+      { id: 'ease-out', label: 'Ease Out' },
+      { id: 'ease-in-out', label: 'Ease I/O' },
+      { id: 'bell', label: 'Bell' },
+      { id: 'cut', label: 'Cut' }
     ]);
     const ICON_LIBRARY = [
       'sparkles','bell','thumbs-up','message-square','share-2','dollar-sign',
@@ -2308,6 +2348,7 @@ import JSZip from 'jszip';
         motionAsset: src.motionAsset ? normalizeMotionAsset(src.motionAsset) : null,
         templateBundleId: typeof src.templateBundleId === 'string' ? src.templateBundleId : '',
         templateNodes: Array.isArray(src.templateNodes) ? src.templateNodes : [],
+        shortsExtractor: src.shortsExtractor && typeof src.shortsExtractor === 'object' ? clone(src.shortsExtractor) : null,
         effects: Array.isArray(src.effects) ? src.effects : []
       };
     };
@@ -2407,6 +2448,21 @@ import JSZip from 'jszip';
 
     const durationOf = (clip) => Math.max(0.05, clip.end - clip.start);
     const isVideoLikeUrl = (url) => /\.(mp4|webm|mov|m4v|ogg)(\?|#|$)/i.test(String(url || ''));
+    const isImageLikeUrl = (url) => /\.(png|jpe?g|gif|webp|svg|avif)(\?|#|$)/i.test(String(url || ''));
+    const isVideoMimeLike = (mime) => String(mime || '').toLowerCase().startsWith('video/');
+    const isImageMimeLike = (mime) => String(mime || '').toLowerCase().startsWith('image/');
+    const isVideoPayload = (payload = {}) => (
+      payload.mediaKind === 'video'
+      || isVideoMimeLike(payload.mediaMime)
+      || isVideoLikeUrl(payload.mediaUrl)
+      || isVideoLikeUrl(payload.mediaName)
+    );
+    const isImagePayload = (payload = {}) => (
+      payload.mediaKind === 'image'
+      || isImageMimeLike(payload.mediaMime)
+      || isImageLikeUrl(payload.mediaUrl)
+      || isImageLikeUrl(payload.mediaName)
+    );
     const isGifLikeUrl = (url) => /\.(gif|webp)(\?|#|$)/i.test(String(url || ''));
     const getTransitionWindow = (transition, leftClip, rightClip) => {
       const durationSec = clamp(Number(transition?.durationSec || 0.35), 0.05, 8);
@@ -2426,7 +2482,7 @@ import JSZip from 'jszip';
     const getLayerForClip = (sourceProject, clip) => (sourceProject?.layers || []).find((layer) => layer.id === clip?.layerId) || null;
     const isVideoClip = (sourceProject, clip) => {
       const layer = getLayerForClip(sourceProject, clip);
-      return layer?.type === 'media' && isVideoLikeUrl(layer?.payload?.mediaUrl || '');
+      return layer?.type === 'media' && isVideoPayload(layer?.payload || {});
     };
     const getVideoSourceInfo = (sourceProject, clip) => {
       const layer = getLayerForClip(sourceProject, clip);
@@ -2804,6 +2860,23 @@ import JSZip from 'jszip';
       const [svgFrameExportDurationSec, setSvgFrameExportDurationSec] = useState(2);
       const [svgFrameExportStatus, setSvgFrameExportStatus] = useState({ status: 'idle', message: '' });
       const [svgFrameZipConvertStatus, setSvgFrameZipConvertStatus] = useState({ status: 'idle', message: '' });
+      const [shortsExtractorSource, setShortsExtractorSource] = useState(null);
+      const [shortsExtractorConfig, setShortsExtractorConfig] = useState(() => ({ ...SHORTS_EXTRACTOR_DEFAULT_CONFIG }));
+      const [shortsExtractorKeyframes, setShortsExtractorKeyframes] = useState(() => ([
+        { id: uid('shortkf'), time: 0, ...SHORTS_EXTRACTOR_DEFAULT_CONFIG }
+      ]));
+      const [selectedShortsKeyframeId, setSelectedShortsKeyframeId] = useState(null);
+      const [shortsExtractorSegments, setShortsExtractorSegments] = useState(() => ([
+        { id: uid('shortseg'), label: 'Short 1', start: 0, end: 30 }
+      ]));
+      const [shortsExtractorStatus, setShortsExtractorStatus] = useState({ mode: 'idle', message: 'Upload a landscape source video to start reframing.' });
+      const [shortsPreviewTimeSec, setShortsPreviewTimeSec] = useState(0);
+      const [shortsPreviewPlaying, setShortsPreviewPlaying] = useState(false);
+      const [shortsLiveMode, setShortsLiveMode] = useState(false);
+      const [shortsSafeZone, setShortsSafeZone] = useState('none');
+      const shortsSourceVideoRef = useRef(null);
+      const shortsSourceStageRef = useRef(null);
+      const shortsDragRef = useRef(false);
       const [renderJobState, setRenderJobState] = useState({ status: 'idle', jobId: null, progress: 0, error: '', downloadUrl: '', warnings: [] });
       const [renderServerInfo, setRenderServerInfo] = useState({ status: 'idle', service: '', origin: '', executor: '', primaryFormat: '', blocked: [], rendererInstalled: null, error: '' });
       const [effectSession, setEffectSession] = useState({
@@ -2967,6 +3040,7 @@ import JSZip from 'jszip';
       const audioUploadRef = useRef(null);
       const audioNodeMapRef = useRef(new Map());
       const videoNodeMapRef = useRef(new Map());
+      const shortsOutputVideoRefs = useRef(new Set());
       const historyRef = useRef([]);
       const historyIndexRef = useRef(-1);
       const historyApplyingRef = useRef(false);
@@ -6891,6 +6965,8 @@ ${failure}`);
         updateLayerPayload(selectedLayer.id, {
           mediaUrl: url,
           mediaName: url ? (url.split('/').pop() || 'URL_MEDIA') : '',
+          mediaKind: measured.isVideo ? 'video' : 'image',
+          mediaMime: knownMeta.mimeType || knownMeta.mediaMime || '',
           sourceDurationSec: measured.durationSec || undefined,
           mediaDurationSec: measured.durationSec || undefined,
           sourceDurationUnknown: measured.isVideo && !measured.durationSec,
@@ -6938,6 +7014,8 @@ ${failure}`);
           updateLayerPayload(selectedLayer.id, {
             mediaUrl: url,
             mediaName: file.name || '',
+            mediaKind: isVideo ? 'video' : 'image',
+            mediaMime: file.type || '',
             sourceDurationSec: durationSec || undefined,
             mediaDurationSec: durationSec || undefined,
             sourceDurationUnknown: isVideo && !durationSec,
@@ -6965,7 +7043,14 @@ ${failure}`);
           video.src = url;
           return;
         }
-        updateLayerPayload(selectedLayer.id, { mediaUrl: url, mediaName: file.name || '', playWhilePaused: true, mediaFps: 0 });
+        updateLayerPayload(selectedLayer.id, {
+          mediaUrl: url,
+          mediaName: file.name || '',
+          mediaKind: 'unknown',
+          mediaMime: file.type || '',
+          playWhilePaused: true,
+          mediaFps: 0
+        });
       };
 
       const onUploadAudio = (file) => {
@@ -7006,6 +7091,452 @@ ${failure}`);
             meta: { ...prev.meta, durationSec: Math.max(prev.meta.durationSec, end + 1) }
           };
         });
+      };
+      const updateShortsExtractorConfig = (patch, options = {}) => {
+        const sourceDuration = Number(shortsExtractorSource?.durationSec || project.meta.durationSec || 30);
+        const time = clamp(Number(shortsSourceVideoRef.current?.currentTime ?? shortsPreviewTimeSec ?? 0), 0, sourceDuration);
+        const shouldWriteKeyframe = Boolean(options.writeKeyframe ?? shortsLiveMode);
+        const selectedKeyframeId = options.selectedKeyframeId ?? selectedShortsKeyframeId;
+        setShortsExtractorConfig((prev) => ({ ...prev, ...patch }));
+        setShortsExtractorKeyframes((prev) => {
+          const keyframes = Array.isArray(prev) ? prev : [];
+          if (shouldWriteKeyframe) {
+            const base = keyframes.find((item) => item.id === selectedKeyframeId) || getShortsPreviewConfig(time);
+            const keyframe = { ...base, id: selectedKeyframeId || uid('shortkf'), time, ...patch };
+            setSelectedShortsKeyframeId(keyframe.id);
+            return [...keyframes.filter((item) => item.id !== keyframe.id && Math.abs(Number(item.time || 0) - time) > 0.12), keyframe]
+              .sort((a, b) => Number(a.time || 0) - Number(b.time || 0));
+          }
+          if (selectedKeyframeId) {
+            return keyframes.map((item) => (item.id === selectedKeyframeId ? { ...item, ...patch } : item));
+          }
+          if (options.applyToAll === false) return keyframes;
+          return keyframes.map((item) => ({ ...item, ...patch }));
+        });
+      };
+      const getShortsPreviewConfig = (timeSec = shortsPreviewTimeSec) => {
+        const keyframes = [...(shortsExtractorKeyframes || [])].sort((a, b) => Number(a.time || 0) - Number(b.time || 0));
+        if (!keyframes.length) return { ...shortsExtractorConfig };
+        const time = Number(timeSec || 0);
+        const first = keyframes[0];
+        const last = keyframes[keyframes.length - 1];
+        if (time <= Number(first.time || 0)) return { ...shortsExtractorConfig, ...first };
+        if (time >= Number(last.time || 0)) return { ...shortsExtractorConfig, ...last };
+        const right = keyframes.find((entry) => Number(entry.time || 0) >= time) || last;
+        const rightIndex = keyframes.indexOf(right);
+        const left = keyframes[Math.max(0, rightIndex - 1)] || first;
+        const span = Math.max(0.0001, Number(right.time || 0) - Number(left.time || 0));
+        const rawT = clamp((time - Number(left.time || 0)) / span, 0, 1);
+        const easedT = right.transition === 'cut' ? 0 : right.transition === 'ease-in' ? rawT * rawT : right.transition === 'ease-out' ? 1 - Math.pow(1 - rawT, 2) : right.transition === 'bell' ? (1 - Math.cos(rawT * Math.PI)) / 2 : rawT;
+        const lerp = (a, b) => Number(a || 0) + (Number(b || 0) - Number(a || 0)) * easedT;
+        return {
+          ...shortsExtractorConfig,
+          ...right,
+          xPosition: lerp(left.xPosition ?? shortsExtractorConfig.xPosition, right.xPosition ?? shortsExtractorConfig.xPosition),
+          yPosition: lerp(left.yPosition ?? shortsExtractorConfig.yPosition, right.yPosition ?? shortsExtractorConfig.yPosition),
+          zoom: lerp(left.zoom ?? shortsExtractorConfig.zoom, right.zoom ?? shortsExtractorConfig.zoom),
+          splitRatio: lerp(left.splitRatio ?? shortsExtractorConfig.splitRatio, right.splitRatio ?? shortsExtractorConfig.splitRatio),
+          closeupZoom: lerp(left.closeupZoom ?? shortsExtractorConfig.closeupZoom, right.closeupZoom ?? shortsExtractorConfig.closeupZoom),
+          closeupX: lerp(left.closeupX ?? shortsExtractorConfig.closeupX ?? 0.5, right.closeupX ?? shortsExtractorConfig.closeupX ?? 0.5)
+        };
+      };
+      const getShortsCropMetrics = (config = shortsExtractorConfig) => {
+        const sourceAspect = Number(shortsExtractorSource?.aspectRatio || 16 / 9);
+        const outputAspect = Number((SHORTS_EXTRACTOR_ASPECTS[config.aspectPreset] || SHORTS_EXTRACTOR_ASPECTS['9:16']).ratio || 9 / 16);
+        const zoom = Math.max(1, Number(config.zoom || 1));
+        const cropWidthPct = clamp((outputAspect / sourceAspect / zoom) * 100, 5, 100);
+        const cropHeightPct = clamp(100 / zoom, 5, 100);
+        const leftPct = clamp(Number(config.xPosition ?? 0.5), 0, 1) * (100 - cropWidthPct);
+        const topPct = clamp(Number(config.yPosition ?? 0.5), 0, 1) * (100 - cropHeightPct);
+        return { sourceAspect, outputAspect, zoom, cropWidthPct, cropHeightPct, leftPct, topPct };
+      };
+      const getShortsVerticalMediaStyleForSource = (config = shortsExtractorConfig, sourceAspect = 16 / 9, outputAspect = 9 / 16, closeup = false) => {
+        const cropScale = Math.max(1, Number(closeup ? config.closeupZoom || config.zoom || 1 : config.zoom || 1));
+        const coverScale = sourceAspect > outputAspect ? outputAspect / sourceAspect : 1;
+        const widthPct = sourceAspect > outputAspect ? (sourceAspect / outputAspect) * 100 : 100;
+        const heightPct = sourceAspect > outputAspect ? 100 : (outputAspect / sourceAspect) * 100;
+        return {
+          width: `${widthPct}%`,
+          height: `${heightPct}%`,
+          left: '50%',
+          top: '50%',
+          transform: `translate(calc(-50% + ${(0.5 - Number(closeup ? config.closeupX ?? config.xPosition ?? 0.5 : config.xPosition ?? 0.5)) * 100 * cropScale * coverScale}%), calc(-50% + ${(0.5 - Number(config.yPosition ?? 0.5)) * 100 * cropScale}%) ) scale(${cropScale})`,
+          transformOrigin: 'center center'
+        };
+      };
+      const getShortsVerticalMediaStyle = (config = shortsExtractorConfig, closeup = false) => {
+        const { sourceAspect, outputAspect } = getShortsCropMetrics(config);
+        return getShortsVerticalMediaStyleForSource(config, sourceAspect, outputAspect, closeup);
+      };
+      const registerShortsOutputVideo = (node) => {
+        if (node instanceof HTMLVideoElement) {
+          shortsOutputVideoRefs.current.add(node);
+        }
+        return () => {
+          if (node instanceof HTMLVideoElement) {
+            shortsOutputVideoRefs.current.delete(node);
+          }
+        };
+      };
+      const seekShortsPreview = (timeSec) => {
+        const duration = Number(shortsExtractorSource?.durationSec || project.meta.durationSec || 30);
+        const next = clamp(Number(timeSec || 0), 0, duration);
+        setShortsPreviewTimeSec(next);
+        if (shortsSourceVideoRef.current instanceof HTMLVideoElement) {
+          shortsSourceVideoRef.current.currentTime = next;
+        }
+      };
+      const toggleShortsPreviewPlayback = async () => {
+        const video = shortsSourceVideoRef.current;
+        if (!(video instanceof HTMLVideoElement)) return;
+        if (shortsPreviewPlaying) {
+          video.pause();
+          setShortsPreviewPlaying(false);
+          return;
+        }
+        try {
+          await video.play();
+          setShortsPreviewPlaying(true);
+        } catch (error) {
+          setShortsExtractorStatus({ mode: 'error', message: error?.message || 'Browser blocked source preview playback.' });
+        }
+      };
+      const commitShortsLiveConfig = (patch) => updateShortsExtractorConfig(patch);
+      const updateShortsCropFromPointer = (clientX, clientY) => {
+        const el = shortsSourceStageRef.current;
+        if (!el || shortsExtractorConfig.mode !== 'single') return;
+        const rect = el.getBoundingClientRect();
+        const cfg = getShortsPreviewConfig();
+        const { cropWidthPct, cropHeightPct } = getShortsCropMetrics(cfg);
+        const relX = clamp((clientX - rect.left) / Math.max(1, rect.width), 0, 1);
+        const relY = clamp((clientY - rect.top) / Math.max(1, rect.height), 0, 1);
+        const xPosition = clamp((relX * 100 - cropWidthPct / 2) / Math.max(1, 100 - cropWidthPct), 0, 1);
+        const yPosition = clamp((relY * 100 - cropHeightPct / 2) / Math.max(1, 100 - cropHeightPct), 0, 1);
+        commitShortsLiveConfig({ xPosition, yPosition });
+      };
+      const onShortsSourcePointerDown = (event) => {
+        if (shortsExtractorConfig.mode !== 'single') return;
+        shortsDragRef.current = true;
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+        updateShortsCropFromPointer(event.clientX, event.clientY);
+      };
+      const onShortsSourcePointerMove = (event) => {
+        if (!shortsDragRef.current) return;
+        updateShortsCropFromPointer(event.clientX, event.clientY);
+      };
+      const onShortsSourcePointerUp = () => {
+        shortsDragRef.current = false;
+      };
+      const onShortsSourceWheel = (event) => {
+        if (shortsExtractorConfig.mode !== 'single') return;
+        event.preventDefault();
+        const delta = event.deltaY > 0 ? -0.08 : 0.08;
+        commitShortsLiveConfig({ zoom: clamp(Number(shortsExtractorConfig.zoom || 1.65) + delta, 1, 5) });
+      };
+      const applyShortsKeyframeToConfig = (keyframe) => {
+        if (!keyframe) return;
+        const { id, time, ...configPatch } = keyframe;
+        setSelectedShortsKeyframeId(id);
+        setShortsExtractorConfig((prev) => ({ ...prev, ...configPatch }));
+        seekShortsPreview(time);
+      };
+      const addShortsExtractorKeyframe = () => {
+        const time = clamp(shortsPreviewTimeSec, 0, shortsExtractorSource?.durationSec || project.meta.durationSec || 30);
+        const keyframe = { id: uid('shortkf'), time, ...getShortsPreviewConfig(time), ...shortsExtractorConfig };
+        setShortsExtractorKeyframes((prev) => [...prev.filter((item) => Math.abs(Number(item.time || 0) - time) > 0.15), keyframe].sort((a, b) => Number(a.time || 0) - Number(b.time || 0)));
+        setSelectedShortsKeyframeId(keyframe.id);
+      };
+      const removeShortsExtractorKeyframe = (keyframeId) => {
+        setShortsExtractorKeyframes((prev) => prev.filter((item) => item.id !== keyframeId));
+        setSelectedShortsKeyframeId((prev) => (prev === keyframeId ? null : prev));
+      };
+      const smoothShortsKeyframes = (keyframes, effectiveness = 0.45) => {
+        const sorted = [...(keyframes || [])].sort((a, b) => Number(a.time || 0) - Number(b.time || 0));
+        if (sorted.length < 3) return sorted;
+        const radius = Math.max(1, Math.round(clamp(Number(effectiveness || 0.45), 0, 1) * 3));
+        return sorted.map((keyframe, index) => {
+          let sumX = 0;
+          let sumY = 0;
+          let count = 0;
+          for (let cursor = Math.max(0, index - radius); cursor <= Math.min(sorted.length - 1, index + radius); cursor += 1) {
+            sumX += Number(sorted[cursor].xPosition ?? 0.5);
+            sumY += Number(sorted[cursor].yPosition ?? 0.5);
+            count += 1;
+          }
+          return {
+            ...keyframe,
+            xPosition: count ? sumX / count : Number(keyframe.xPosition ?? 0.5),
+            yPosition: count ? sumY / count : Number(keyframe.yPosition ?? 0.5)
+          };
+        });
+      };
+      const runShortsMotionTracking = async () => {
+        if (!shortsExtractorSource?.url) {
+          setShortsExtractorStatus({ mode: 'error', message: 'Upload a source video before running motion tracking.' });
+          return;
+        }
+        setShortsExtractorStatus({ mode: 'loading', message: 'Analyzing motion and generating draft crop keyframes...' });
+        try {
+          const video = document.createElement('video');
+          video.muted = true;
+          video.playsInline = true;
+          video.preload = 'auto';
+          video.src = shortsExtractorSource.url;
+          await new Promise((resolve, reject) => {
+            video.onloadedmetadata = resolve;
+            video.onerror = () => reject(new Error('Could not read video metadata for motion tracking.'));
+          });
+          const seekVideo = (time) => new Promise((resolve) => {
+            const done = () => {
+              video.removeEventListener('seeked', done);
+              resolve();
+            };
+            video.addEventListener('seeked', done);
+            video.currentTime = clamp(time, 0, Number(video.duration || shortsExtractorSource.durationSec || 0));
+          });
+          const canvas = document.createElement('canvas');
+          canvas.width = 320;
+          canvas.height = 180;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          let previous = null;
+          const duration = Math.max(0.1, Number(video.duration || shortsExtractorSource.durationSec || 30));
+          const segments = shortsExtractorSegments.length ? shortsExtractorSegments : [{ start: 0, end: Math.min(30, duration) }];
+          const generated = [];
+          for (const segment of segments) {
+            const start = clamp(Number(segment.start || 0), 0, duration);
+            const end = clamp(Number(segment.end || duration), start + 0.1, duration);
+            const steps = Math.max(2, Math.floor((end - start) / 0.35));
+            for (let index = 0; index <= steps; index += 1) {
+              const time = start + (end - start) * (index / steps);
+              await seekVideo(time);
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              if (previous) {
+                let sumX = 0;
+                let sumY = 0;
+                let sumWeight = 0;
+                const stride = 4;
+                for (let y = 0; y < canvas.height; y += stride) {
+                  for (let x = 0; x < canvas.width; x += stride) {
+                    const offset = (y * canvas.width + x) * 4;
+                    const diff = Math.abs(frame.data[offset] - previous[offset])
+                      + Math.abs(frame.data[offset + 1] - previous[offset + 1])
+                      + Math.abs(frame.data[offset + 2] - previous[offset + 2]);
+                    if (diff > 28) {
+                      sumX += x * diff;
+                      sumY += y * diff;
+                      sumWeight += diff;
+                    }
+                  }
+                }
+                if (sumWeight > 0) {
+                  generated.push({
+                    id: uid('shortkf'),
+                    time,
+                    ...shortsExtractorConfig,
+                    mode: 'single',
+                    xPosition: clamp(sumX / sumWeight / canvas.width, 0, 1),
+                    yPosition: clamp(sumY / sumWeight / canvas.height, 0, 1),
+                    transition: 'ease-in-out'
+                  });
+                }
+              }
+              previous = frame.data;
+            }
+          }
+          const anchors = [
+            { id: uid('shortkf'), time: 0, ...shortsExtractorConfig },
+            { id: uid('shortkf'), time: duration, ...shortsExtractorConfig }
+          ];
+          const merged = smoothShortsKeyframes([...anchors, ...generated], shortsExtractorConfig.smoothing);
+          setShortsExtractorKeyframes(merged);
+          setSelectedShortsKeyframeId(merged[0]?.id || null);
+          setShortsExtractorStatus({ mode: 'ready', message: `Generated ${generated.length} draft motion keyframe${generated.length === 1 ? '' : 's'}. Review and insert when ready.` });
+        } catch (error) {
+          setShortsExtractorStatus({ mode: 'error', message: error?.message || 'Motion tracking failed.' });
+        }
+      };
+      const addShortsExtractorSegment = () => {
+        const duration = Math.max(1, Number(shortsExtractorSource?.durationSec || project.meta.durationSec || 30));
+        const start = clamp(playhead, 0, duration - 0.1);
+        const end = clamp(start + 15, start + 0.1, duration);
+        setShortsExtractorSegments((prev) => [...prev, { id: uid('shortseg'), label: `Short ${prev.length + 1}`, start, end }]);
+      };
+      const updateShortsExtractorSegment = (segmentId, patch) => {
+        setShortsExtractorSegments((prev) => prev.map((segment) => {
+          if (segment.id !== segmentId) return segment;
+          const duration = Math.max(1, Number(shortsExtractorSource?.durationSec || project.meta.durationSec || 30));
+          const start = clamp(Number(patch.start ?? segment.start ?? 0), 0, duration);
+          const end = clamp(Number(patch.end ?? segment.end ?? start + 1), start + 0.1, duration);
+          return { ...segment, ...patch, start, end };
+        }));
+      };
+      const removeShortsExtractorSegment = (segmentId) => {
+        setShortsExtractorSegments((prev) => prev.filter((segment) => segment.id !== segmentId));
+      };
+      const onUploadShortsSource = async (file) => {
+        if (!file) return;
+        if (!String(file.type || '').startsWith('video/')) {
+          setShortsExtractorStatus({ mode: 'error', message: 'Choose a video file. Images can be added on the normal Clips page.' });
+          return;
+        }
+        const url = URL.createObjectURL(file);
+        const measured = await resolveMediaDimensionsFromUrl(url);
+        const durationSec = Math.max(0, Number(measured.durationSec || 0));
+        const source = {
+          id: uid('shortsrc'),
+          url,
+          name: file.name || 'landscape-source-video',
+          mimeType: file.type || '',
+          mediaKind: 'video',
+          width: measured.width || 1920,
+          height: measured.height || 1080,
+          durationSec,
+          aspectRatio: measured.width && measured.height ? measured.width / measured.height : 16 / 9
+        };
+        const segmentEnd = durationSec > 0 ? Math.min(30, durationSec) : 30;
+        const firstKeyframeId = uid('shortkf');
+        const lastKeyframeId = uid('shortkf');
+        setShortsExtractorSource(source);
+        setShortsExtractorSegments([{ id: uid('shortseg'), label: 'Short 1', start: 0, end: segmentEnd }]);
+        setShortsExtractorKeyframes([
+          { id: firstKeyframeId, time: 0, ...SHORTS_EXTRACTOR_DEFAULT_CONFIG },
+          { id: lastKeyframeId, time: Math.max(0.1, segmentEnd), ...SHORTS_EXTRACTOR_DEFAULT_CONFIG }
+        ]);
+        setSelectedShortsKeyframeId(firstKeyframeId);
+        setShortsExtractorConfig({ ...SHORTS_EXTRACTOR_DEFAULT_CONFIG });
+        setShortsPreviewTimeSec(0);
+        setShortsExtractorStatus({ mode: 'ready', message: `${file.name || 'Video'} loaded. Configure framing, then insert segments into the timeline.` });
+      };
+      useEffect(() => {
+        if (!shortsPreviewPlaying) return undefined;
+        let rafId = 0;
+        const tick = () => {
+          const video = shortsSourceVideoRef.current;
+          if (video instanceof HTMLVideoElement) {
+            setShortsPreviewTimeSec(Number(video.currentTime || 0));
+            if (video.ended) {
+              setShortsPreviewPlaying(false);
+              return;
+            }
+          }
+          rafId = requestAnimationFrame(tick);
+        };
+        rafId = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(rafId);
+      }, [shortsPreviewPlaying]);
+      useEffect(() => {
+        const outputVideos = Array.from(shortsOutputVideoRefs.current);
+        outputVideos.forEach((video) => {
+          if (!(video instanceof HTMLVideoElement) || !video.isConnected || video.readyState < 1) {
+            shortsOutputVideoRefs.current.delete(video);
+            return;
+          }
+          const duration = Number(video.duration || shortsExtractorSource?.durationSec || 0);
+          if (!Number.isFinite(duration) || duration <= 0) return;
+          const target = clamp(Number(shortsPreviewTimeSec || 0), 0, duration);
+          if (Math.abs(Number(video.currentTime || 0) - target) > 0.08) {
+            video.currentTime = target;
+          }
+          if (shortsPreviewPlaying && video.paused) {
+            video.play?.().catch(() => {});
+          } else if (!shortsPreviewPlaying && !video.paused) {
+            video.pause?.();
+          }
+        });
+      }, [shortsPreviewTimeSec, shortsPreviewPlaying, shortsExtractorSource?.url, shortsExtractorConfig.mode]);
+      const insertShortsSegmentsToTimeline = () => {
+        if (!shortsExtractorSource?.url) {
+          setShortsExtractorStatus({ mode: 'error', message: 'Upload a source video before inserting shorts.' });
+          return;
+        }
+        const validSegments = shortsExtractorSegments
+          .map((segment, index) => ({
+            ...segment,
+            label: segment.label || `Short ${index + 1}`,
+            start: Math.max(0, Number(segment.start || 0)),
+            end: Math.max(Number(segment.start || 0) + 0.1, Number(segment.end || 0))
+          }))
+          .filter((segment) => segment.end > segment.start);
+        if (!validSegments.length) {
+          setShortsExtractorStatus({ mode: 'error', message: 'Create at least one valid segment before inserting.' });
+          return;
+        }
+        const aspect = SHORTS_EXTRACTOR_ASPECTS[shortsExtractorConfig.aspectPreset] || SHORTS_EXTRACTOR_ASPECTS['9:16'];
+        markHistoryAction('Insert Shorts Extractor Segments');
+        setProject((prev) => {
+          const tracks = normalizeTracksWithAudio(prev.tracks || []);
+          const visualTracks = tracks.filter((track) => track.kind !== AUDIO_TRACK_KIND).sort((a, b) => a.order - b.order);
+          const targetTrack = visualTracks[0] || tracks[0];
+          if (!targetTrack) return prev;
+          let cursor = nearestFreeStart(prev.clips, targetTrack.id, playhead, durationOf({ start: validSegments[0].start, end: validSegments[0].end }), null);
+          const nextLayers = [];
+          const nextClips = [];
+          validSegments.forEach((segment, index) => {
+            const len = Math.max(0.1, Number(segment.end) - Number(segment.start));
+            const layer = createLayer('media', targetTrack.id, prev.layers.length + nextLayers.length);
+            layer.payload.layerName = `${segment.label || `SHORT ${index + 1}`} · REFRAME`;
+            layer.payload.mediaUrl = shortsExtractorSource.url;
+            layer.payload.mediaName = shortsExtractorSource.name;
+            layer.payload.mediaKind = shortsExtractorSource.mediaKind || 'video';
+            layer.payload.mediaMime = shortsExtractorSource.mimeType || '';
+            layer.payload.width = aspect.width;
+            layer.payload.height = aspect.height;
+            layer.payload.x = 0;
+            layer.payload.y = 0;
+            layer.payload.scale = 1;
+            layer.payload.fit = 'shorts-extractor';
+            layer.payload.strokeWidth = 0;
+            layer.payload.fillColor = '#111111';
+            layer.payload.sourceDurationSec = shortsExtractorSource.durationSec || undefined;
+            layer.payload.mediaDurationSec = shortsExtractorSource.durationSec || undefined;
+            layer.payload.sourceDurationUnknown = !shortsExtractorSource.durationSec;
+            layer.payload.playWhilePaused = true;
+            layer.payload.shortsExtractor = {
+              version: 'VT_E1ShortsExtractorV1',
+              source: {
+                name: shortsExtractorSource.name,
+                width: shortsExtractorSource.width,
+                height: shortsExtractorSource.height,
+                durationSec: shortsExtractorSource.durationSec,
+                aspectRatio: shortsExtractorSource.aspectRatio
+              },
+              config: { ...shortsExtractorConfig },
+              keyframes: shortsExtractorKeyframes.map((keyframe) => ({ ...keyframe })),
+              segment: { id: segment.id, label: segment.label, start: segment.start, end: segment.end },
+              output: { aspectPreset: shortsExtractorConfig.aspectPreset, width: aspect.width, height: aspect.height }
+            };
+            const start = cursor;
+            const end = start + len;
+            const clip = createClip(targetTrack.id, layer.id, start, end, COLORS.orange);
+            clip.layerName = layer.payload.layerName;
+            clip.sourceInSec = segment.start;
+            clip.sourceOutSec = segment.end;
+            clip.sourceDurationSec = shortsExtractorSource.durationSec || undefined;
+            clip.sourceDurationUnknown = !shortsExtractorSource.durationSec;
+            nextLayers.push(layer);
+            nextClips.push(clip);
+            cursor = end;
+          });
+          const lastClip = nextClips[nextClips.length - 1];
+          if (lastClip) {
+            setSelectedLayerId(lastClip.layerId);
+            setSelectedClipId(lastClip.id);
+            setSelectedClipIds([lastClip.id]);
+          }
+          return {
+            ...prev,
+            tracks,
+            meta: {
+              ...prev.meta,
+              aspectRatio: shortsExtractorConfig.aspectPreset,
+              durationSec: Math.max(prev.meta.durationSec, cursor + 1)
+            },
+            layers: [...prev.layers, ...nextLayers],
+            clips: [...prev.clips, ...nextClips]
+          };
+        });
+        setShortsExtractorStatus({ mode: 'ready', message: `${validSegments.length} reframed short${validSegments.length === 1 ? '' : 's'} inserted as editable media clip${validSegments.length === 1 ? '' : 's'}.` });
       };
       const addLibraryItem = (item) => {
         const normalized = {
@@ -9530,7 +10061,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
       ), [project.layers, project.clips, project.transitions, previewSec, activeTrackIds]);
       const activeVideoClips = useMemo(() => (
         project.layers
-          .filter((layer) => layer.type === 'media' && layer.visible !== false && layer.payload?.mediaUrl && isVideoLikeUrl(layer.payload.mediaUrl) && activeTrackIds.has(layer.trackId))
+          .filter((layer) => layer.type === 'media' && layer.visible !== false && layer.payload?.mediaUrl && isVideoPayload(layer.payload || {}) && activeTrackIds.has(layer.trackId))
           .flatMap((layer) => {
             const clips = getClipsForLayerAtPreview(layer.id, previewSec);
             return clips.map((clip) => {
@@ -10420,7 +10951,8 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
       };
       useEffect(() => {
         if (!selectedClipId && !selectedClipIds.length) return;
-        if (resolvePageIdFromState(editorShellState.activeTool, activeTab) !== 'clips') {
+        const currentPageId = resolvePageIdFromState(editorShellState.activeTool, activeTab);
+        if (currentPageId !== 'clips' && currentPageId !== 'shorts-extractor') {
           setActiveToolTab('clips');
         }
       }, [selectedClipId, selectedClipIds.length]);
@@ -11015,6 +11547,306 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
           ) : null}
         </div>
       );
+      const getShortsPayloadPreviewConfig = (payload = {}, sourceSeconds = 0) => {
+        const extractor = payload.shortsExtractor || {};
+        const base = {
+          ...SHORTS_EXTRACTOR_DEFAULT_CONFIG,
+          ...(extractor.config || {})
+        };
+        const keyframes = Array.isArray(extractor.keyframes)
+          ? [...extractor.keyframes].sort((a, b) => Number(a.time || 0) - Number(b.time || 0))
+          : [];
+        if (!keyframes.length) return base;
+        const time = Number(sourceSeconds || 0);
+        const first = keyframes[0];
+        const last = keyframes[keyframes.length - 1];
+        if (time <= Number(first.time || 0)) return { ...base, ...first };
+        if (time >= Number(last.time || 0)) return { ...base, ...last };
+        const right = keyframes.find((entry) => Number(entry.time || 0) >= time) || last;
+        const rightIndex = keyframes.indexOf(right);
+        const left = keyframes[Math.max(0, rightIndex - 1)] || first;
+        const span = Math.max(0.0001, Number(right.time || 0) - Number(left.time || 0));
+        const rawT = clamp((time - Number(left.time || 0)) / span, 0, 1);
+        const easedT = right.transition === 'cut' ? 0 : right.transition === 'ease-in' ? rawT * rawT : right.transition === 'ease-out' ? 1 - Math.pow(1 - rawT, 2) : right.transition === 'bell' ? (1 - Math.cos(rawT * Math.PI)) / 2 : rawT;
+        const lerp = (a, b) => Number(a || 0) + (Number(b || 0) - Number(a || 0)) * easedT;
+        return {
+          ...base,
+          ...right,
+          xPosition: lerp(left.xPosition ?? base.xPosition, right.xPosition ?? base.xPosition),
+          yPosition: lerp(left.yPosition ?? base.yPosition, right.yPosition ?? base.yPosition),
+          zoom: lerp(left.zoom ?? base.zoom, right.zoom ?? base.zoom),
+          splitRatio: lerp(left.splitRatio ?? base.splitRatio, right.splitRatio ?? base.splitRatio),
+          closeupZoom: lerp(left.closeupZoom ?? base.closeupZoom, right.closeupZoom ?? base.closeupZoom),
+          closeupX: lerp(left.closeupX ?? base.closeupX ?? 0.5, right.closeupX ?? base.closeupX ?? 0.5)
+        };
+      };
+      const renderStageMediaNode = (src, payload, clip, style, className = '') => (
+        isVideoPayload(payload)
+          ? (
+            <video
+              ref={(node) => {
+                if (clip?.id && node) videoNodeMapRef.current.set(clip.id, node);
+                else if (clip?.id) videoNodeMapRef.current.delete(clip.id);
+              }}
+              src={src}
+              className={className}
+              style={style}
+              muted
+              loop
+              autoPlay={isPlaying || Boolean(payload.playWhilePaused ?? true)}
+              playsInline
+              preload="metadata"
+            />
+          )
+          : <img src={src} alt={payload.layerName || 'media'} className={className} style={style} />
+      );
+      const renderShortsBrowserMedia = (payload, clip) => {
+        const src = String(payload.mediaUrl || '');
+        if (!src) return payload.layerName || 'MEDIA';
+        const extractor = payload.shortsExtractor || {};
+        const source = extractor.source || {};
+        const sourceAspect = Number(source.aspectRatio || (Number(source.width || 1920) / Math.max(1, Number(source.height || 1080))) || 16 / 9);
+        const sourceSeconds = sourceTimeForClipAt(project, clip, previewSec);
+        const cfg = getShortsPayloadPreviewConfig(payload, sourceSeconds);
+        const aspectPreset = String(cfg.aspectPreset || extractor.output?.aspectPreset || '9:16');
+        const outputAspect = Number((SHORTS_EXTRACTOR_ASPECTS[aspectPreset] || SHORTS_EXTRACTOR_ASPECTS['9:16']).ratio || 9 / 16);
+        if (String(cfg.mode || 'single') === 'split') {
+          const splitRatio = clamp(Number(cfg.splitRatio ?? 0.55), 0.15, 0.85);
+          return (
+            <div className="vt-shorts-stage-render">
+              <div className="vt-shorts-output-split vt-shorts-output-closeup" style={{ height: `${splitRatio * 100}%` }}>
+                {renderStageMediaNode(src, payload, clip, getShortsVerticalMediaStyleForSource({ ...cfg, zoom: cfg.closeupZoom || cfg.zoom }, sourceAspect, outputAspect, true), 'vt-shorts-output-video')}
+              </div>
+              <div className="vt-shorts-output-split vt-shorts-output-wide" style={{ top: `${splitRatio * 100}%`, height: `${(1 - splitRatio) * 100}%` }}>
+                {renderStageMediaNode(src, payload, clip, { width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }, 'vt-shorts-output-video vt-shorts-output-video-wide')}
+              </div>
+            </div>
+          );
+        }
+        return (
+          <div className="vt-shorts-stage-render">
+            {renderStageMediaNode(src, payload, clip, getShortsVerticalMediaStyleForSource(cfg, sourceAspect, outputAspect), 'vt-shorts-output-video')}
+          </div>
+        );
+      };
+      const renderShortsReframeTimeline = (duration) => {
+        const keyframes = [...(shortsExtractorKeyframes || [])].sort((a, b) => Number(a.time || 0) - Number(b.time || 0));
+        return (
+          <div className="vt-shorts-reframe-timeline">
+            <div className="vt-shorts-reframe-head">
+              <span>Extraction Timeline</span>
+              <span>{keyframes.length} keyframes · {shortsExtractorSegments.length} segments</span>
+            </div>
+            <div
+              className="vt-shorts-reframe-ruler"
+              onPointerDown={(event) => {
+                const rect = event.currentTarget.getBoundingClientRect();
+                seekShortsPreview(((event.clientX - rect.left) / Math.max(1, rect.width)) * duration);
+              }}
+            >
+              {shortsExtractorSegments.map((segment) => {
+                const startPct = clamp(Number(segment.start || 0) / duration, 0, 1) * 100;
+                const widthPct = clamp((Number(segment.end || 0) - Number(segment.start || 0)) / duration, 0, 1) * 100;
+                return (
+                  <button
+                    key={segment.id}
+                    type="button"
+                    className="vt-shorts-reframe-segment"
+                    style={{ left: `${startPct}%`, width: `${Math.max(1, widthPct)}%` }}
+                    title={`${segment.label || 'Short'} · ${formatHMS(segment.start)} to ${formatHMS(segment.end)}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      seekShortsPreview(Number(segment.start || 0));
+                    }}
+                  >
+                    {segment.label || 'Short'}
+                  </button>
+                );
+              })}
+              {keyframes.map((keyframe) => {
+                const leftPct = clamp(Number(keyframe.time || 0) / duration, 0, 1) * 100;
+                return (
+                  <button
+                    key={keyframe.id}
+                    type="button"
+                    className="vt-shorts-reframe-keyframe"
+                    style={{ left: `${leftPct}%`, background: selectedShortsKeyframeId === keyframe.id ? COLORS.yellow : COLORS.cyan }}
+                    title={`${formatHMS(keyframe.time)} · ${keyframe.mode || 'single'} · zoom ${Number(keyframe.zoom || 1).toFixed(2)}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      applyShortsKeyframeToConfig(keyframe);
+                    }}
+                  />
+                );
+              })}
+              <div className="vt-shorts-reframe-playhead" style={{ left: `${clamp(shortsPreviewTimeSec / duration, 0, 1) * 100}%` }} />
+            </div>
+          </div>
+        );
+      };
+      const renderShortsExtractorPreviewWorkspace = () => {
+        const previewCfg = getShortsPreviewConfig(shortsPreviewTimeSec);
+        const crop = getShortsCropMetrics(previewCfg);
+        const aspect = SHORTS_EXTRACTOR_ASPECTS[previewCfg.aspectPreset] || SHORTS_EXTRACTOR_ASPECTS['9:16'];
+        const duration = Math.max(0.1, Number(shortsExtractorSource?.durationSec || project.meta.durationSec || 30));
+        const sourceLabel = shortsExtractorSource ? `${shortsExtractorSource.width || 1920} x ${shortsExtractorSource.height || 1080}` : '1920 x 1080';
+        const safeZones = {
+          none: null,
+          instagram: { top: 8, bottom: 12, right: 0 },
+          tiktok: { top: 10, bottom: 18, right: 14 },
+          shorts: { top: 8, bottom: 20, right: 0 }
+        };
+        const zone = safeZones[shortsSafeZone];
+        const updateSourceMetadata = (event) => {
+          const video = event.currentTarget;
+          if (!(video instanceof HTMLVideoElement)) return;
+          const nextDuration = Number(video.duration || 0);
+          if (!shortsExtractorSource?.durationSec && Number.isFinite(nextDuration) && nextDuration > 0) {
+            setShortsExtractorSource((prev) => prev ? ({ ...prev, durationSec: nextDuration }) : prev);
+          }
+        };
+        const outputVideoProps = {
+          ref: registerShortsOutputVideo,
+          src: shortsExtractorSource?.url,
+          muted: true,
+          playsInline: true,
+          preload: 'metadata',
+          className: 'vt-shorts-output-video'
+        };
+        return (
+          <div className="vt-shorts-canvas-workspace">
+            <div className="vt-shorts-canvas-header">
+              <div>
+                <div className="text-xs font-black uppercase tracking-[0.12em]">Shorts Extractor Preview</div>
+                <div className="text-[10px] font-bold uppercase opacity-70">Drag the vertical frame over the landscape source. Inserted clips use the main VT_E1 timeline below.</div>
+              </div>
+              <div className="flex flex-wrap justify-end gap-1">
+                <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: shortsLiveMode ? COLORS.green : COLORS.white }} onClick={() => setShortsLiveMode((value) => !value)}>
+                  {shortsLiveMode ? 'Live On' : 'Live Off'}
+                </button>
+                <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: shortsExtractorConfig.mode === 'single' ? COLORS.cyan : COLORS.white }} onClick={() => updateShortsExtractorConfig({ mode: 'single' })}>Single</button>
+                <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: shortsExtractorConfig.mode === 'split' ? COLORS.cyan : COLORS.white }} onClick={() => updateShortsExtractorConfig({ mode: 'split' })}>Split</button>
+              </div>
+            </div>
+            <div className="vt-shorts-preview-grid vt-shorts-preview-grid-stage">
+              <section className="vt-shorts-monitor vt-shorts-monitor-source">
+                <div className="vt-shorts-monitor-header">
+                  <span>Source · {sourceLabel}</span>
+                  <span>{previewCfg.mode === 'single' ? 'Single frame' : 'Split closeup + wide'}</span>
+                </div>
+                <div
+                  ref={shortsSourceStageRef}
+                  className="vt-shorts-source-stage"
+                  onPointerDown={onShortsSourcePointerDown}
+                  onPointerMove={onShortsSourcePointerMove}
+                  onPointerUp={onShortsSourcePointerUp}
+                  onPointerCancel={onShortsSourcePointerUp}
+                  onWheel={onShortsSourceWheel}
+                  title="Drag to move the crop frame. Scroll to zoom."
+                >
+                  {shortsExtractorSource?.url ? (
+                    <video
+                      ref={shortsSourceVideoRef}
+                      src={shortsExtractorSource.url}
+                      className="vt-shorts-source-video"
+                      muted
+                      playsInline
+                      preload="metadata"
+                      onLoadedMetadata={updateSourceMetadata}
+                      onPause={() => setShortsPreviewPlaying(false)}
+                    />
+                  ) : (
+                    <div className="vt-shorts-source-empty">Upload a landscape clip</div>
+                  )}
+                  {previewCfg.mode === 'single' ? (
+                    <div
+                      className="vt-shorts-crop-frame"
+                      style={{
+                        left: `${crop.leftPct}%`,
+                        top: `${crop.topPct}%`,
+                        width: `${crop.cropWidthPct}%`,
+                        height: `${crop.cropHeightPct}%`
+                      }}
+                    >
+                      <span>{previewCfg.aspectPreset} render frame</span>
+                    </div>
+                  ) : (
+                    <div className="vt-shorts-split-frame" style={{ '--shorts-split': `${Number(previewCfg.splitRatio || 0.55) * 100}%` }}>
+                      <span>Closeup</span>
+                      <span>Wide</span>
+                    </div>
+                  )}
+                </div>
+                <div className="vt-shorts-preview-hint">
+                  {shortsLiveMode ? 'LIVE MODE: drag/zoom writes crop keyframes at the current source time.' : 'Manual mode: drag/zoom edits the current framing controls.'}
+                </div>
+              </section>
+              <section className="vt-shorts-monitor vt-shorts-monitor-output">
+                <div className="vt-shorts-monitor-header">
+                  <span>Vertical Preview · {previewCfg.aspectPreset}</span>
+                  <span>{aspect.width} x {aspect.height}</span>
+                </div>
+                <div className="vt-shorts-safe-tabs">
+                  {['none', 'instagram', 'tiktok', 'shorts'].map((zoneId) => (
+                    <button
+                      key={zoneId}
+                      className="neo-btn !min-h-0 px-2 py-1 text-[9px]"
+                      style={{ background: shortsSafeZone === zoneId ? COLORS.purple : COLORS.white, color: shortsSafeZone === zoneId ? '#fff' : '#111' }}
+                      onClick={() => setShortsSafeZone(zoneId)}
+                    >
+                      {zoneId === 'none' ? 'None' : zoneId === 'instagram' ? 'IG' : zoneId === 'tiktok' ? 'TikTok' : 'Shorts'}
+                    </button>
+                  ))}
+                </div>
+                <div className="vt-shorts-output-stage" style={{ aspectRatio: `${aspect.width} / ${aspect.height}` }}>
+                  {shortsExtractorSource?.url ? (
+                    previewCfg.mode === 'split' ? (
+                      <>
+                        <div className="vt-shorts-output-split vt-shorts-output-closeup" style={{ height: `${Number(previewCfg.splitRatio || 0.55) * 100}%` }}>
+                          <video {...outputVideoProps} style={getShortsVerticalMediaStyle({ ...previewCfg, zoom: previewCfg.closeupZoom || previewCfg.zoom }, true)} />
+                        </div>
+                        <div className="vt-shorts-output-split vt-shorts-output-wide" style={{ top: `${Number(previewCfg.splitRatio || 0.55) * 100}%`, height: `${(1 - Number(previewCfg.splitRatio || 0.55)) * 100}%` }}>
+                          <video {...outputVideoProps} className="vt-shorts-output-video vt-shorts-output-video-wide" />
+                        </div>
+                      </>
+                    ) : (
+                      <video {...outputVideoProps} style={getShortsVerticalMediaStyle(previewCfg)} />
+                    )
+                  ) : (
+                    <div className="vt-shorts-output-empty">Vertical preview</div>
+                  )}
+                  {zone ? (
+                    <>
+                      <div className="vt-shorts-safe-zone vt-shorts-safe-zone-top" style={{ height: `${zone.top}%` }} />
+                      <div className="vt-shorts-safe-zone vt-shorts-safe-zone-bottom" style={{ height: `${zone.bottom}%` }} />
+                      {zone.right ? <div className="vt-shorts-safe-zone vt-shorts-safe-zone-right" style={{ width: `${zone.right}%` }} /> : null}
+                    </>
+                  ) : null}
+                </div>
+              </section>
+            </div>
+            {renderShortsReframeTimeline(duration)}
+            <div className="vt-shorts-scrub-row">
+              <button className="neo-btn vt-timeline-icon-button" style={{ background: shortsPreviewPlaying ? COLORS.orange : COLORS.white }} onClick={toggleShortsPreviewPlayback} title="Play or pause source preview">
+                {shortsPreviewPlaying ? <Pause size={16} /> : <Play size={16} />}
+              </button>
+              <div className="vt-shorts-time-pill">{formatHMS(shortsPreviewTimeSec)} / {formatHMS(duration)}</div>
+              <input
+                className="vt-shorts-scrubber"
+                type="range"
+                min="0"
+                max={duration}
+                step="0.01"
+                value={clamp(shortsPreviewTimeSec, 0, duration)}
+                onChange={(event) => seekShortsPreview(Number(event.target.value || 0))}
+              />
+              <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.cyan }} onClick={addShortsExtractorKeyframe}>
+                <Crosshair size={12} /> Add Keyframe
+              </button>
+            </div>
+          </div>
+        );
+      };
       const ProjectCameraPanel = () => (
         <div className="neo-card p-3 space-y-2">
           <div className="text-xs font-black uppercase">Camera</div>
@@ -11175,8 +12007,130 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
           <div className="h-full overflow-hidden flex flex-col">
             <div className="flex-1 overflow-y-auto no-scrollbar p-3">
               <div className={isStudio596Layout ? 'vt-shell-modules vt-shell-modules--studio596' : 'vt-shell-modules'}>
-              {(activeTab === 'layers' || activeTab === 'media' || activeTab === 'layerSettings') && (
+              {(activeTab === 'layers' || activeTab === 'media' || activeTab === 'layerSettings' || activePageId === 'shorts-extractor') && (
                 <>
+                  {activePageId === 'shorts-extractor' && (
+                    <>
+                      <div className={getModuleCardClass(activePageId, 'source', 'neo-card p-3 space-y-3 relative')}>
+                        {renderModuleBadge('source')}
+                        <div>
+                          <div className="text-xs font-black uppercase">Shorts Source Video</div>
+                          <div className="text-[10px] font-bold uppercase opacity-70">Upload a landscape clip, then create vertical reframed timeline segments.</div>
+                        </div>
+                        <label className="neo-btn w-full cursor-pointer" style={{ background: COLORS.orange }}>
+                          <Upload size={14} /> Upload Landscape Video
+                          <input type="file" accept="video/*,.mp4,.mov,.webm,.m4v" className="hidden" onChange={(event) => onUploadShortsSource(event.target.files?.[0])} />
+                        </label>
+                        <div className="rounded-md border-2 border-black bg-white p-2 text-[10px] font-black uppercase leading-5">
+                          <div>Source: {shortsExtractorSource?.name || 'None selected'}</div>
+                          <div>Size: {shortsExtractorSource ? `${shortsExtractorSource.width} x ${shortsExtractorSource.height}` : 'Waiting'}</div>
+                          <div>Duration: {shortsExtractorSource?.durationSec ? formatHMS(shortsExtractorSource.durationSec) : 'Unknown'}</div>
+                          <div className={shortsExtractorStatus.mode === 'error' ? 'text-red-700' : 'opacity-70'}>{shortsExtractorStatus.message}</div>
+                        </div>
+                      </div>
+                      <div className={getModuleCardClass(activePageId, 'framing', 'neo-card p-3 space-y-3 relative')}>
+                        {renderModuleBadge('framing')}
+                        <div>
+                          <div className="text-xs font-black uppercase">Vertical Framing</div>
+                          <div className="text-[10px] font-bold uppercase opacity-70">Saved as render metadata on inserted media clips.</div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {Object.keys(SHORTS_EXTRACTOR_ASPECTS).map((aspectId) => (
+                            <button
+                              key={aspectId}
+                              type="button"
+                              className="neo-btn !min-h-0 px-2 py-1 text-[10px]"
+                              style={{ background: shortsExtractorConfig.aspectPreset === aspectId ? COLORS.green : COLORS.white }}
+                              onClick={() => updateShortsExtractorConfig({ aspectPreset: aspectId })}
+                            >
+                              {aspectId}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: shortsExtractorConfig.mode === 'single' ? COLORS.cyan : COLORS.white }} onClick={() => updateShortsExtractorConfig({ mode: 'single' })}>Single Crop</button>
+                          <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: shortsExtractorConfig.mode === 'split' ? COLORS.cyan : COLORS.white }} onClick={() => updateShortsExtractorConfig({ mode: 'split' })}>Split View</button>
+                        </div>
+                        <SpringToggle label="Focus X" min={0} max={1} step={0.01} value={shortsExtractorConfig.xPosition} onChange={(v) => updateShortsExtractorConfig({ xPosition: Number(v) })} onReset={() => updateShortsExtractorConfig({ xPosition: 0.5 })} speed={1} />
+                        <SpringToggle label="Focus Y" min={0} max={1} step={0.01} value={shortsExtractorConfig.yPosition} onChange={(v) => updateShortsExtractorConfig({ yPosition: Number(v) })} onReset={() => updateShortsExtractorConfig({ yPosition: 0.5 })} speed={1} />
+                        <SpringToggle label="Crop Zoom" min={1} max={5} step={0.05} value={shortsExtractorConfig.zoom} onChange={(v) => updateShortsExtractorConfig({ zoom: Number(v) })} onReset={() => updateShortsExtractorConfig({ zoom: 1.65 })} speed={1} />
+                        {shortsExtractorConfig.mode === 'split' && (
+                          <>
+                            <SpringToggle label="Split Point" min={0.15} max={0.85} step={0.01} value={shortsExtractorConfig.splitRatio} onChange={(v) => updateShortsExtractorConfig({ splitRatio: Number(v) })} onReset={() => updateShortsExtractorConfig({ splitRatio: 0.55 })} speed={1} />
+                            <SpringToggle label="Closeup Zoom" min={1} max={6} step={0.05} value={shortsExtractorConfig.closeupZoom} onChange={(v) => updateShortsExtractorConfig({ closeupZoom: Number(v) })} onReset={() => updateShortsExtractorConfig({ closeupZoom: 2.2 })} speed={1} />
+                          </>
+                        )}
+                        <div className="grid grid-cols-3 gap-1">
+                          {SHORTS_EXTRACTOR_TRANSITIONS.map((transition) => (
+                            <button key={transition.id} className="neo-btn !min-h-0 px-1 py-1 text-[9px]" style={{ background: shortsExtractorConfig.transition === transition.id ? COLORS.yellow : COLORS.white }} onClick={() => updateShortsExtractorConfig({ transition: transition.id })}>
+                              {transition.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className={getModuleCardClass(activePageId, 'segments', 'neo-card p-3 space-y-3 relative')}>
+                        {renderModuleBadge('segments')}
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="text-xs font-black uppercase">Short Segments</div>
+                            <div className="text-[10px] font-bold uppercase opacity-70">Each row becomes one editable media clip.</div>
+                          </div>
+                          <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.yellow }} onClick={addShortsExtractorSegment}><Plus size={12} />Add</button>
+                        </div>
+                        <div className="space-y-2">
+                          {shortsExtractorSegments.map((segment, index) => (
+                            <div key={segment.id} className="rounded-md border-2 border-black bg-white p-2 space-y-2">
+                              <div className="grid grid-cols-[1fr_auto] gap-2">
+                                <input className="border-2 border-black rounded-md p-1 text-[10px] font-black uppercase" value={segment.label || ''} onChange={(event) => updateShortsExtractorSegment(segment.id, { label: event.target.value })} />
+                                <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.pink }} onClick={() => removeShortsExtractorSegment(segment.id)}><Trash2 size={12} /></button>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <label className="text-[9px] font-black uppercase">Start
+                                  <input className="mt-1 w-full border-2 border-black rounded-md p-1 text-[10px] font-black" type="number" min="0" step="0.1" value={Number(segment.start || 0)} onChange={(event) => updateShortsExtractorSegment(segment.id, { start: Number(event.target.value || 0) })} />
+                                </label>
+                                <label className="text-[9px] font-black uppercase">End
+                                  <input className="mt-1 w-full border-2 border-black rounded-md p-1 text-[10px] font-black" type="number" min="0" step="0.1" value={Number(segment.end || 0)} onChange={(event) => updateShortsExtractorSegment(segment.id, { end: Number(event.target.value || 0) })} />
+                                </label>
+                              </div>
+                              <div className="text-[9px] font-black uppercase opacity-70">#{index + 1} · {Math.max(0, Number(segment.end || 0) - Number(segment.start || 0)).toFixed(1)} sec</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className={getModuleCardClass(activePageId, 'apply', 'neo-card p-3 space-y-3 relative')}>
+                        {renderModuleBadge('apply')}
+                        <div>
+                          <div className="text-xs font-black uppercase">Keyframes + Timeline Insert</div>
+                          <div className="text-[10px] font-bold uppercase opacity-70">Keyframes define crop motion. Insert creates normal VT_E1 clips.</div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.cyan }} onClick={addShortsExtractorKeyframe}><Crosshair size={12} />Add KF</button>
+                          <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.yellow }} onClick={runShortsMotionTracking}><ScanLine size={12} />Track Motion</button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <SpringToggle label="Smooth" min={0} max={1} step={0.05} value={shortsExtractorConfig.smoothing} onChange={(v) => updateShortsExtractorConfig({ smoothing: Number(v) })} onReset={() => updateShortsExtractorConfig({ smoothing: 0.45 })} speed={1} compact />
+                          <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.green }} onClick={insertShortsSegmentsToTimeline}><Scissors size={12} />Insert Shorts</button>
+                        </div>
+                        <div className="max-h-[180px] overflow-y-auto neo-scroll space-y-1">
+                          {[...shortsExtractorKeyframes].sort((a, b) => Number(a.time || 0) - Number(b.time || 0)).map((keyframe) => (
+                            <button
+                              key={keyframe.id}
+                              type="button"
+                              className="w-full rounded-md border-2 border-black bg-white p-2 text-left text-[10px] font-black uppercase"
+                              style={{ boxShadow: selectedShortsKeyframeId === keyframe.id ? `3px 3px 0 ${COLORS.cyan}` : 'none' }}
+                              onClick={() => applyShortsKeyframeToConfig(keyframe)}
+                            >
+                              <span>{formatHMS(Number(keyframe.time || 0))} · {keyframe.mode || 'single'} · zoom {Number(keyframe.zoom || 1).toFixed(2)}</span>
+                              <span className="float-right" onClick={(event) => { event.stopPropagation(); removeShortsExtractorKeyframe(keyframe.id); }}>×</span>
+                            </button>
+                          ))}
+                        </div>
+                        <div className="rounded-md border-2 border-black bg-[#fffbe8] p-2 text-[10px] font-black uppercase leading-5">
+                          Final MP4 uses hosted Remotion when media URLs are stable. Blob uploads preview locally and require asset staging before hosted render.
+                        </div>
+                      </div>
+                    </>
+                  )}
                   {isModuleVisible('search') && (
                   <div className={getModuleCardClass(activePageId, 'search', 'neo-card p-2 space-y-2 relative')}>
                     {renderModuleBadge('search')}
@@ -13542,6 +14496,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
 
             <section className="neo-card outer-frame p-0 overflow-hidden flex flex-col min-h-0 bg-white" style={previewSectionStyle}>
               <div ref={previewViewportRef} className="w-full h-full flex overflow-hidden justify-center items-center" style={{ background: '#ffffff', borderRadius: '8px', padding: '18px' }}>
+                {activePageId === 'shorts-extractor' ? renderShortsExtractorPreviewWorkspace() : (
                 <div className="w-full h-full flex items-center justify-center" style={{ background: '#ffffff', borderRadius: '8px' }}>
                 <div
                   className={`relative ${project.meta.chromaEnabled ? '' : 'checker'}`}
@@ -14192,9 +15147,9 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                           onPointerDown={(e) => beginStageMediaMove(e, layer, clip, payload, cam.scale)}
                         >
                           {payload.mediaUrl ? (
-                            isVideoLikeUrl(payload.mediaUrl)
-                              ? <video ref={(node) => { if (clip?.id && node) videoNodeMapRef.current.set(clip.id, node); else if (clip?.id) videoNodeMapRef.current.delete(clip.id); }} src={payload.mediaUrl} style={{ width: '100%', height: '100%', objectFit: payload.fit || 'cover', pointerEvents: 'none' }} muted loop autoPlay={isPlaying || Boolean(payload.playWhilePaused ?? true)} playsInline />
-                              : <img src={payload.mediaUrl} alt={payload.layerName || 'media'} style={{ width: '100%', height: '100%', objectFit: payload.fit || 'cover', pointerEvents: 'none' }} />
+                            payload.shortsExtractor
+                              ? renderShortsBrowserMedia(payload, clip)
+                              : renderStageMediaNode(payload.mediaUrl, payload, clip, { width: '100%', height: '100%', objectFit: payload.fit || 'cover', pointerEvents: 'none' })
                           ) : payload.layerName}
                           {isStageSelected && (
                             <>
@@ -14385,6 +15340,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                   )}
                 </div>
               </div>
+                )}
               </div>
             </section>
 

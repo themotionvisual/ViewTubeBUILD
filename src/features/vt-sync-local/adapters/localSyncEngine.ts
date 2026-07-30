@@ -1046,6 +1046,7 @@ const enrichTrafficDetailRows = async (
  const endpoint = type === "video" ? "videos" : type === "channel" ? "channels" : "playlists"
  const titleById: Record<string, string> = {}
  const handleById: Record<string, string> = {}
+ const thumbnailById: Record<string, string> = {}
  for (let index = 0; index < ids.length; index += 50) {
   const chunk = ids.slice(index, index + 50)
   const params = new URLSearchParams({ part: "snippet", id: chunk.join(",") })
@@ -1055,16 +1056,27 @@ const enrichTrafficDetailRows = async (
    ;(data.items || []).forEach((item: any) => {
     titleById[item.id] = item.snippet?.title || item.snippet?.localized?.title || ""
     if (type === "channel") handleById[item.id] = item.snippet?.customUrl || ""
+    if (type === "video") {
+     const thumbnails = item.snippet?.thumbnails || {}
+     thumbnailById[item.id] = thumbnails.maxres?.url || thumbnails.standard?.url || thumbnails.high?.url || thumbnails.medium?.url || thumbnails.default?.url || ""
+    }
    })
   }
   if (index + 50 < ids.length) await sleep(150)
  }
  return rows.map((row) => {
   const id = String(row[idField] || "")
+  const hasMeaningfulId = Boolean(id && id !== "Unknown" && id !== "-")
   return {
    ...row,
    title: titleById[id] || row.title,
    handle: handleById[id] || row.handle,
+   thumbnail: thumbnailById[id] || row.thumbnail,
+   videoId: type === "video" && hasMeaningfulId ? id : row.videoId,
+   videoUrl: type === "video" && hasMeaningfulId ? `https://www.youtube.com/watch?v=${id}` : row.videoUrl,
+   channelUrl: type === "channel" && hasMeaningfulId
+    ? (handleById[id] ? `https://www.youtube.com/${handleById[id].startsWith("@") ? handleById[id] : `@${handleById[id]}`}` : `https://www.youtube.com/channel/${id}`)
+    : row.channelUrl,
   }
  })
 }
@@ -2304,7 +2316,16 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    const playlistMetadata = await getPlaylistMetadata(token)
    const playlistMetadataById = new Map(playlistMetadata.map((playlist) => [playlist.id, playlist]))
    addManifestResult(manifest, "playlists_metadata", true, playlistMetadata.length, ["snippet", "contentDetails", "status"])
-   const result = await runAnalyticsBundle({ token, id: "playlists_analytics", metrics: ["playlistViews", "playlistEstimatedMinutesWatched", "playlistStarts", "averageTimeInPlaylist", "playlistSaves"], dimensions: "playlist", sort: "-playlistViews", maxResults: 50, startDate: channelStartDate })
+   const result = await runPaginatedAnalyticsBundle({
+    token,
+    id: "playlists_analytics",
+    metrics: ["playlistViews", "playlistEstimatedMinutesWatched", "playlistStarts", "averageTimeInPlaylist", "playlistSaves"],
+    dimensions: "playlist",
+    sort: "-playlistViews",
+    startDate: channelStartDate,
+    pageSize: 200,
+    maxPages: 50,
+   })
    snapshot = {
     ...snapshot,
     playlistsData: (result.rows || []).map((row) => ({
@@ -2326,7 +2347,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    addManifestResult(manifest, "playlists_analytics", !!result.rows, result.rows?.length || 0, result.columns, result.error)
    if (result.rows) await persistDatasetRows({ runId, datasetId: "playlists", phase: "playlists_analytics", rawRows: result.rows, tableRows: snapshot.playlistsData as Array<Record<string, unknown>>, columns: result.columns })
    markFreshness(["playlists"], "playlists_analytics", result.rows?.length || 0, result.rows ? "synced" : "failed")
-   updatePhase(progress, "playlists_analytics", { status: result.rows ? "complete" : "failed", rows: result.rows?.length || 0, error: result.error, completedAt: new Date().toISOString() }, onProgress)
+   updatePhase(progress, "playlists_analytics", { status: result.rows ? (result.error ? "partial" : "complete") : "failed", rows: result.rows?.length || 0, error: result.error, completedAt: new Date().toISOString() }, onProgress)
    commitSnapshot()
   }
 
