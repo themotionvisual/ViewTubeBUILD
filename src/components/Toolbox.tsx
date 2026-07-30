@@ -103,6 +103,8 @@ interface ToolboxProps {
   helpGuide?: string[];
   disableCollapseAnimation?: boolean;
   fillAvailable?: boolean;
+  /** Solid black shell shadow instead of the default header-tinted 45%-opacity shadow. */
+  hardShadow?: boolean;
 }
 
 export const Toolbox: React.FC<ToolboxProps> = ({
@@ -131,6 +133,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   children,
   disableCollapseAnimation = false,
   fillAvailable = false,
+  hardShadow = false,
 }) => {
   const [internalOpen, setInternalOpen] = useState(isOpenInitial);
   const [showHelpRail, setShowHelpRail] = useState(false);
@@ -152,8 +155,8 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   const iconStyle = palette ? { backgroundColor: palette.icon } : undefined;
   const headerHex = palette?.header ?? extractHexFromBgClass(headerColor);
   
-  // Canonical colored shadow logic
-  const shadowColor = headerHex ? hexToRgba(headerHex, 0.45) : 'rgba(0,0,0,0.45)';
+  // Canonical colored shadow logic (opt out with hardShadow for a solid black shell shadow).
+  const shadowColor = hardShadow ? 'rgba(0,0,0,1)' : (headerHex ? hexToRgba(headerHex, 0.45) : 'rgba(0,0,0,0.45)');
   const shadowOffset = MAIN_TOOLBOX_SHADOW;
   
   // Stroke hierarchy: Scaffold = 4, Accordion = 3, Sub = 2
@@ -430,6 +433,7 @@ interface ToolboxScaffoldProps {
   helpTitle?: string;
   helpText?: React.ReactNode;
   helpGuide?: string[];
+  hardShadow?: boolean;
 }
 
 export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
@@ -455,6 +459,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
   helpTitle,
   helpText,
   helpGuide,
+  hardShadow = false,
 }) => (
   <Toolbox
     variant="scaffold"
@@ -480,6 +485,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
     helpTitle={helpTitle}
     helpText={helpText}
     helpGuide={helpGuide}
+    hardShadow={hardShadow}
   >
     {children}
   </Toolbox>

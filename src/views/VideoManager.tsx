@@ -208,6 +208,17 @@ const normalizeVideoSnippets = (input: unknown[]): VideoSnippet[] =>
   })
   .filter((video) => video.videoId.length > 0)
 
+const resolveVideoListLoadState = (
+ status: string,
+ videoCount: number,
+): VideoListLoadState => {
+ if (status === "confirmed_empty") return "empty"
+ if (status === "error" && videoCount === 0) return "error"
+ if (videoCount > 0) return "success"
+ if (status === "restoring" || status === "refreshing") return "loading"
+ return "idle"
+}
+
 const VideoManager: React.FC<VideoManagerProps> = ({
  embedded = false,
  collapsible = false,
@@ -223,7 +234,9 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  } = useVideoAssetCatalog()
  const navigate = useNavigate()
  const basePalette = paletteIndex ?? 0
- const [videos, setVideos] = useState<VideoSnippet[]>([])
+ const [videos, setVideos] = useState<VideoSnippet[]>(() =>
+  normalizeVideoSnippets(catalogSnapshot.items),
+ )
  const [videoSearchQuery, setVideoSearchQuery] = useState("")
  const [isSearchingVideos, setIsSearchingVideos] = useState(false)
  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null)
@@ -270,9 +283,13 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
  const [isDraggingThumbnail, setIsDraggingThumbnail] = useState(false)
  const [isOpen, setIsOpen] = useState(isOpenInitial)
- const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false)
+ const [hasLoadedInitialData, setHasLoadedInitialData] = useState(
+  catalogSnapshot.status !== "idle",
+ )
  const [videoListLoadState, setVideoListLoadState] =
-  useState<VideoListLoadState>("idle")
+  useState<VideoListLoadState>(() =>
+   resolveVideoListLoadState(catalogSnapshot.status, catalogSnapshot.items.length),
+  )
  const hasTriggeredInitialLoadRef = useRef(false)
  const chooseVideoPalette = getToolboxPaletteColors(basePalette + 1)
  const updateDetailsPalette = getToolboxPaletteColors(basePalette + 5)
@@ -310,7 +327,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
 
 
  const loadInitialData = useCallback(async (force = false) => {
-  setVideoListLoadState("loading")
+  setVideoListLoadState((prev) => videos.length > 0 || prev === "success" ? prev : "loading")
   setLoading(true)
   setError(null)
   try {
@@ -330,15 +347,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    setVideos(videoList)
    setUserPlaylists(playlists)
    setHasLoadedInitialData(true)
-   setVideoListLoadState(
-    catalogSnapshot.status === "confirmed_empty"
-     ? "empty"
-     : catalogSnapshot.status === "error" && videoList.length === 0
-      ? "error"
-      : videoList.length > 0
-       ? "success"
-       : "loading",
-   )
+   setVideoListLoadState(resolveVideoListLoadState(catalogSnapshot.status, videoList.length))
    setError(catalogSnapshot.error?.message || null)
    if (videoList.length > 0) {
     console.info("[VideoManager] Hydrated videos from shared asset catalog", {
@@ -360,7 +369,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   } finally {
    setLoading(false)
   }
- }, [connected, ensureCatalog])
+ }, [connected, ensureCatalog, videos.length])
 
  useEffect(() => {
   const delayDebounceFn = setTimeout(() => {
@@ -379,10 +388,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   const nextVideos = normalizeVideoSnippets(searchCatalog(videoSearchQuery, 50))
   setVideos(nextVideos)
   setHasLoadedInitialData(catalogSnapshot.status !== "idle")
-  if (catalogSnapshot.status === "confirmed_empty") setVideoListLoadState("empty")
-  else if (catalogSnapshot.status === "error" && nextVideos.length === 0) setVideoListLoadState("error")
-  else if (nextVideos.length > 0) setVideoListLoadState("success")
-  else if (catalogSnapshot.status === "restoring" || catalogSnapshot.status === "refreshing") setVideoListLoadState("loading")
+  setVideoListLoadState(resolveVideoListLoadState(catalogSnapshot.status, nextVideos.length))
   setError(catalogSnapshot.error?.message || null)
  }, [catalogSnapshot.error, catalogSnapshot.revision, catalogSnapshot.status, searchCatalog, videoSearchQuery])
 
@@ -1002,7 +1008,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
         ? "opacity-60 cursor-not-allowed"
         : "hover:bg-[#111] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_black]"
       }`}>
-      {loading ? "SYNCING..." : "LOAD SPACE ASSETS"}
+      {loading ? "REFRESHING..." : "LOAD SPACE ASSETS"}
      </button>
     ) : null
    }
@@ -1105,18 +1111,18 @@ const VideoManager: React.FC<VideoManagerProps> = ({
     {videoListLoadState === "idle" && !hasLoadedInitialData ? (
      <div className="h-[500px] flex flex-col items-center justify-center gap-5 font-black uppercase text-3xl tracking-tighter text-black/30">
       <Edit size={100} strokeWidth={1} className="mb-2 opacity-50" />
-      Ready To Sync Channel Assets
+      Ready To Load Channel Catalog
       <button
        onClick={() => void loadInitialData(true)}
        disabled={loading}
        className="bg-[#CCFF00] text-black px-8 py-4 rounded-xl border-[4px] border-black shadow-[6px_6px_0px_0px_black] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-sm">
-       {loading ? "Loading..." : "Load Channel Assets"}
+       {loading ? "Loading..." : "Load Channel Catalog"}
       </button>
      </div>
     ) : videoListLoadState === "loading" && videos.length === 0 && !selectedVideo ? (
      <div className="h-[500px] flex flex-col items-center justify-center font-black uppercase text-2xl text-black/20 animate-pulse">
       <Loader2 size={48} className="mb-4 animate-spin" />
-      Syncing Database...
+      Connecting Video Catalog...
      </div>
     ) : videoListLoadState === "error" && videos.length === 0 ? (
      <div className="flex flex-col items-center justify-center p-20 text-center space-y-6 min-h-[500px]">
@@ -1134,7 +1140,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
         onClick={() => void loadInitialData(true)}
         disabled={loading}
         className="inline-block w-full bg-[#CCFF00] border-[4px] border-black rounded-xl p-5 font-black uppercase text-xl text-black shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all mt-4 disabled:opacity-50">
-        {loading ? "Retrying..." : "Retry Sync"}
+        {loading ? "Retrying..." : "Retry Catalog Load"}
        </button>
       </div>
      </div>
@@ -1161,7 +1167,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
          onClick={() => void loadInitialData(true)}
          disabled={loading}
          className="inline-block w-full bg-white border-[4px] border-black rounded-xl p-4 font-black uppercase text-sm text-black shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50">
-         {loading ? "Syncing..." : "Reload Assets"}
+         {loading ? "Reloading..." : "Reload Assets"}
         </button>
        </div>
       </div>

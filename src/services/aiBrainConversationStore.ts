@@ -36,6 +36,30 @@ const makeId = (prefix: string): string => {
 
 const clean = (value: unknown): string => String(value || "").replace(/\s+/g, " ").trim()
 
+const THREAD_HINT_KEY = (channelId?: string | null): string =>
+ `vt_ai_brain_thread_seen_${channelId || "default"}`
+
+/**
+ * A synchronous hint that a channel has saved conversation turns. IndexedDB reads are
+ * async, so this lets the UI decide, on the very first render, whether to hold for a
+ * restored conversation (avoiding a launchpad flash) or show the launchpad immediately.
+ */
+export const markAIBrainThreadSeen = (channelId?: string | null): void => {
+ try {
+  localStorage.setItem(THREAD_HINT_KEY(channelId), "1")
+ } catch {
+  /* storage unavailable: fall back to the async path */
+ }
+}
+
+export const aiBrainThreadHasTurnsHint = (channelId?: string | null): boolean => {
+ try {
+  return localStorage.getItem(THREAD_HINT_KEY(channelId)) === "1"
+ } catch {
+  return false
+ }
+}
+
 const defaultThreadId = (channelId?: string | null): string =>
  `ai_brain_thread_${channelId || "default"}`
 
@@ -320,6 +344,7 @@ export const beginAIBrainTurn = async (input: {
  thread.turnIds = Array.from(new Set([...thread.turnIds, turn.id]))
  await saveAIBrainConversationTurnDB(turn)
  await saveAIBrainConversationThreadDB(thread)
+ markAIBrainThreadSeen(channelId)
  return turn
 }
 

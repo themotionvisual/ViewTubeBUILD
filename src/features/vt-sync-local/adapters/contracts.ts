@@ -68,6 +68,7 @@ export type VtSyncTableColumnDefinition = {
  totalMode?: "sum" | "average" | "none"
  preferredWidth?: number
  textSize?: number
+ availabilityNote?: string
 }
 
 export type VtSyncTableDefinition = {
@@ -87,8 +88,10 @@ export type VtSyncTableDefinition = {
  layoutMode?: "auto" | "sparse-full"
  compactMode?: "supported" | "normal-only"
  presentationMode?: "standard" | "traffic-source-day" | "retention-video"
- summaryMode?: "selected-video" | "registry"
+ verticalScrollMode?: "custom" | "none"
+ summaryMode?: "selected-video" | "registry" | "primary-row"
  summaryColumns?: string[]
+ summaryPrimaryRow?: { key: string; value: string }
 }
 
 export type VtSyncVideoMetric = Record<string, number | null | undefined> & {

@@ -125,10 +125,66 @@ const readJson = async <T>(response: Response): Promise<T> => {
 const isValidAccountSnapshot = (value: unknown): value is UnifiedAccountSnapshot =>
   Boolean(value) && typeof value === "object" && typeof (value as UnifiedAccountSnapshot).authentication === "object"
 
+const cleanNullableString = (value: unknown): string | null => {
+  const text = String(value || "").trim()
+  return text || null
+}
+
+export const normalizeAccountSnapshot = (snapshot: UnifiedAccountSnapshot): UnifiedAccountSnapshot => {
+  const candidateProfile = snapshot.profile as UnifiedAccountSnapshot["profile"] & {
+    avatar?: unknown
+    image?: unknown
+    picture?: unknown
+    photo?: unknown
+    photoUrl?: unknown
+    pictureUrl?: unknown
+  }
+  return {
+    ...ANONYMOUS_ACCOUNT_SNAPSHOT,
+    ...snapshot,
+    profile: {
+      ...ANONYMOUS_ACCOUNT_SNAPSHOT.profile,
+      ...snapshot.profile,
+      email: cleanNullableString(snapshot.profile?.email),
+      displayName: cleanNullableString(snapshot.profile?.displayName),
+      avatarUrl: cleanNullableString(
+        snapshot.profile?.avatarUrl ||
+          candidateProfile?.picture ||
+          candidateProfile?.photoUrl ||
+          candidateProfile?.pictureUrl ||
+          candidateProfile?.avatar ||
+          candidateProfile?.image ||
+          candidateProfile?.photo,
+      ),
+    },
+    authentication: {
+      ...ANONYMOUS_ACCOUNT_SNAPSHOT.authentication,
+      ...snapshot.authentication,
+    },
+    google: {
+      ...ANONYMOUS_ACCOUNT_SNAPSHOT.google,
+      ...snapshot.google,
+    },
+    onboarding: {
+      ...ANONYMOUS_ACCOUNT_SNAPSHOT.onboarding,
+      ...snapshot.onboarding,
+    },
+    billing: {
+      ...ANONYMOUS_ACCOUNT_SNAPSHOT.billing,
+      ...snapshot.billing,
+    },
+    ai: {
+      ...ANONYMOUS_ACCOUNT_SNAPSHOT.ai,
+      ...snapshot.ai,
+    },
+    grantedCapabilities: Array.isArray(snapshot.grantedCapabilities) ? snapshot.grantedCapabilities : [],
+  }
+}
+
 const readAccountSnapshotJson = async (response: Response): Promise<UnifiedAccountSnapshot> => {
   const snapshot = await readJson<UnifiedAccountSnapshot>(response)
   if (!isValidAccountSnapshot(snapshot)) throw new Error("Account snapshot response was malformed.")
-  return snapshot
+  return normalizeAccountSnapshot(snapshot)
 }
 
 export const readCachedAccountSnapshot = (): UnifiedAccountSnapshot => {
@@ -136,10 +192,17 @@ export const readCachedAccountSnapshot = (): UnifiedAccountSnapshot => {
   try {
     const raw = localStorage.getItem(SNAPSHOT_CACHE_KEY)
     if (!raw) return ANONYMOUS_ACCOUNT_SNAPSHOT
-    const parsed = JSON.parse(raw) as UnifiedAccountSnapshot
-    return {
+    const parsed = JSON.parse(raw) as UnifiedAccountSnapshot | null
+    // A cached JSON `null` or non-object must not become a snapshot: reading
+    // `.authentication` off it is the "Cannot read properties of null" crash.
+    if (!parsed || typeof parsed !== "object") return ANONYMOUS_ACCOUNT_SNAPSHOT
+    return normalizeAccountSnapshot({
       ...ANONYMOUS_ACCOUNT_SNAPSHOT,
       ...parsed,
+      profile: {
+        ...ANONYMOUS_ACCOUNT_SNAPSHOT.profile,
+        ...parsed.profile,
+      },
       authentication: {
         ...ANONYMOUS_ACCOUNT_SNAPSHOT.authentication,
         ...parsed.authentication,
@@ -153,7 +216,7 @@ export const readCachedAccountSnapshot = (): UnifiedAccountSnapshot => {
         youtubeScopesGranted: false,
       },
       nextIntent: parsed.viewtubeUserId ? "log_in" : "sign_up",
-    }
+    })
   } catch {
     return ANONYMOUS_ACCOUNT_SNAPSHOT
   }
@@ -162,7 +225,7 @@ export const readCachedAccountSnapshot = (): UnifiedAccountSnapshot => {
 export const cacheAccountSnapshot = (snapshot: UnifiedAccountSnapshot): void => {
   if (typeof window === "undefined") return
   const safeSnapshot: UnifiedAccountSnapshot = {
-    ...snapshot,
+    ...normalizeAccountSnapshot(snapshot),
     error: null,
   }
   localStorage.setItem(SNAPSHOT_CACHE_KEY, JSON.stringify(safeSnapshot))

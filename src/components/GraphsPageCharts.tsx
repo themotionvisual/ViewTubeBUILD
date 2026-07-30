@@ -497,7 +497,6 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
    <div className="p-4 h-[420px] relative">
     <div className="h-[320px] relative">
      <StableChartFrame minHeightClassName="min-h-[320px]">
-      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
        <ScatterChart margin={{ top: 10, right: 8, bottom: 8, left: 8 }}>
         <ReferenceArea x1={0} x2={matrix.thresholds.ctr} y1={matrix.thresholds.retention} y2={matrix.retentionDomainMax} fill="#dbeafe" fillOpacity={0.16} />
         <ReferenceArea x1={matrix.thresholds.ctr} x2={matrix.ctrDomainMax} y1={matrix.thresholds.retention} y2={matrix.retentionDomainMax} fill="#dcfce7" fillOpacity={0.16} />
@@ -543,7 +542,6 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
          animationDuration={900}
         />
        </ScatterChart>
-      </ResponsiveContainer>
      </StableChartFrame>
     </div>
     {matrix.points.length === 0 && (
@@ -1235,7 +1233,6 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
    <div className="min-h-[400px] w-full border-[0px] border-black rounded-none bg-white p-0 overflow-hidden flex flex-col">
     <div className="h-[400px] relative">
      <StableChartFrame minHeightClassName="min-h-[400px]">
-      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
       <ScatterChart
        className="[&_svg]:outline-none [&_*:focus]:outline-none [&_*:focus-visible]:outline-none"
        margin={{ top: 20, right: 30, bottom: 28, left: 10 }}
@@ -1335,7 +1332,6 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
        )
       }} />
       </ScatterChart>
-      </ResponsiveContainer>
      </StableChartFrame>
      <div className="absolute bottom-[0px] left-[14px] right-[14px] grid grid-cols-3 items-center pointer-events-none">
       <div className="flex items-center gap-2 justify-self-end">
@@ -1515,7 +1511,6 @@ export const AlgorithmTriggerModule: React.FC<GChartProps> = ({ data }) => {
    <div className="min-h-[400px] w-full border-[0px] border-black rounded-none bg-white p-0 overflow-hidden flex flex-col">
     <div className="h-[400px] relative">
      <StableChartFrame minHeightClassName="min-h-[400px]">
-      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
        <ScatterChart
         className="[&_svg]:outline-none [&_*:focus]:outline-none [&_*:focus-visible]:outline-none"
         margin={{ top: 20, right: 30, bottom: 28, left: 10 }}
@@ -1564,7 +1559,6 @@ export const AlgorithmTriggerModule: React.FC<GChartProps> = ({ data }) => {
          )
         }} />
        </ScatterChart>
-      </ResponsiveContainer>
      </StableChartFrame>
      <div className="absolute bottom-[0px] left-[14px] right-[14px] grid grid-cols-3 items-center pointer-events-none">
       <div className="flex items-center gap-2 justify-self-end">
@@ -1786,7 +1780,6 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data }) => {
    <div className="min-h-[400px] w-full bg-white p-0 overflow-hidden flex flex-col">
     <div className="h-[400px] relative">
      <StableChartFrame minHeightClassName="min-h-[400px]">
-      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
        <LineChart
         data={cd}
         margin={{ top: 20, right: 60, bottom: 20, left: 20 }}
@@ -1861,7 +1854,6 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data }) => {
          )
         }} />
        </LineChart>
-      </ResponsiveContainer>
      </StableChartFrame>
     </div>
    </div>
@@ -2482,7 +2474,6 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data }) => {
      <div key={metric.key} className="flex-1 h-full min-w-0 relative bg-white flex flex-col">
       <div className="flex-1 min-h-0 relative">
        <StableChartFrame minHeightClassName="min-h-[300px]">
-        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
          <PieChart>
           <Pie
            data={metric.data}
@@ -2522,7 +2513,6 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data }) => {
           </Pie>
           <Tooltip content={<ChartTip />} />
          </PieChart>
-        </ResponsiveContainer>
        </StableChartFrame>
       </div>
       <div className="h-8 flex items-center justify-center">
@@ -2670,7 +2660,6 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
       <div className="min-h-[400px] w-full border-[0px] border-black rounded-none bg-white p-0 overflow-hidden flex flex-col">
         <div className="h-[400px] relative">
           <StableChartFrame minHeightClassName="min-h-[400px]">
-            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
               <ScatterChart 
                 margin={{ top: 20, right: 30, bottom: 28, left: 10 }}
                 onMouseLeave={() => setHoveredKey(null)}
@@ -2715,7 +2704,6 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
                   )
                 }} />
               </ScatterChart>
-            </ResponsiveContainer>
           </StableChartFrame>
           
           <div className="absolute bottom-[0px] left-[14px] right-[14px] grid grid-cols-3 items-center pointer-events-none">
@@ -3795,7 +3783,6 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
         onMouseLeave={clearHoverIndicator}
        >
        <StableChartFrame minHeightClassName="min-h-0">
-        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
           <AreaChart
           className="tse-plot"
           data={areaData}
@@ -3837,7 +3824,6 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
            )
           })}
          </AreaChart>
-        </ResponsiveContainer>
        </StableChartFrame>
         <div
          ref={hoverLineRef}
@@ -4750,7 +4736,6 @@ export const ConversionFunnelModule: React.FC<GChartProps> = ({ data }) => {
     ) : (
      <div className="h-[340px] border-[3px] border-black rounded-xl bg-[#f5f5f0] p-2 overflow-hidden">
       <StableChartFrame minHeightClassName="min-h-[300px]">
-       <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
         <BarChart data={ds.funnelStages} layout="vertical" margin={{ left: 20, right: 20 }}>
          <CartesianGrid strokeDasharray="3 3" />
          <XAxis type="number" tick={{ fontWeight: 900, fontSize: 10 }} />
@@ -4760,7 +4745,6 @@ export const ConversionFunnelModule: React.FC<GChartProps> = ({ data }) => {
           {ds.funnelStages.map((stage, index) => <Cell key={stage.name} fill={COLORS[index % COLORS.length]} />)}
          </Bar>
         </BarChart>
-       </ResponsiveContainer>
       </StableChartFrame>
      </div>
     )}
@@ -4814,7 +4798,6 @@ export const LissajousWebModule: React.FC<GChartProps> = ({ data }) => {
     ) : (
      <div className="h-[340px] border-[3px] border-black rounded-xl bg-[#060A24] p-2 overflow-hidden">
       <StableChartFrame minHeightClassName="min-h-[300px]">
-       <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
         <ScatterChart margin={{ top: 24, right: 24, left: 8, bottom: 8 }}>
          <CartesianGrid stroke="rgba(255,255,255,0.12)" />
          <XAxis type="number" dataKey="x" tick={{ fontWeight: 900, fontSize: 10, fill: "#9ca3af" }} />
@@ -4822,7 +4805,6 @@ export const LissajousWebModule: React.FC<GChartProps> = ({ data }) => {
          <Tooltip content={<ChartTip />} />
          <Scatter data={ds.lissajous} fill="#00E5FF" fillOpacity={0.85} />
         </ScatterChart>
-       </ResponsiveContainer>
       </StableChartFrame>
      </div>
     )}

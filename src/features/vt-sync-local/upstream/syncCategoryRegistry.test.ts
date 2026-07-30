@@ -19,7 +19,8 @@ describe("VT Sync category registry", () => {
   expect(visibleIds).not.toContain("traffic_shorts")
   expect(visibleIds).not.toContain("traffic_browse_features")
   expect(visibleIds).not.toContain("audience_watch_behavior")
-  expect(visibleIds).toContain("subscription_source")
+  expect(visibleIds).not.toContain("subscription_source")
+  expect(VT_SYNC_CATEGORY_OPTIONS.map((category) => category.id)).not.toContain("subscription_source")
   expect(VT_SYNC_CATEGORY_OPTIONS.every((category) => category.syncStatus === "stable")).toBe(true)
  })
 

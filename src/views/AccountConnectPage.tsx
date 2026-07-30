@@ -48,7 +48,7 @@ const AccountConnectPage: React.FC = () => {
               {connected ? "Your account is ready" : "Connect without losing your work"}
             </h2>
             <p className="max-w-[58ch] text-base font-bold leading-6 text-black/70">
-              Google is used for identity and read-only YouTube access. ViewTube stores refresh credentials on the server and keeps analytics, projects, CSV imports, and VT-SYNC snapshots when you log out or reconnect.
+              Google is used for identity and read-only YouTube access. ViewTube stores refresh credentials on the server and keeps analytics, projects, CSV imports, and Analytics snapshots when you log out or reconnect.
             </p>
             <ul className="space-y-2 text-sm font-black uppercase">
               {["Read-only YouTube scopes", "Secure HttpOnly session", "Return to the tool you requested"].map((item) => (

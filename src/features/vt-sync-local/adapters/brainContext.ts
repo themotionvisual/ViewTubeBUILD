@@ -42,13 +42,13 @@ export const buildVtSyncBrainContext = (
   ? videoWatchHours
   : Number((snapshot.channelTotals as any)?.lifetime?.watchTime || 0) || videoWatchHours
  const warnings: string[] = []
- if (snapshot.source === "empty") warnings.push("No VT-SYNC or ViewTube analytics snapshot is currently loaded.")
+ if (snapshot.source === "empty") warnings.push("No Analytics snapshot is currently loaded.")
  if (failedBundles > 0) warnings.push(`${failedBundles} sync bundles failed in the latest manifest; answer with partial-data caveats.`)
  if (snapshot.videos.length === 0) warnings.push("Video-level data is missing; do not make per-video ranking claims.")
- if (rawVideoCount > snapshot.videos.length) warnings.push(`${rawVideoCount - snapshot.videos.length} private or unlisted video rows are excluded from Brain evidence by the current VT-SYNC privacy settings.`)
+ if (rawVideoCount > snapshot.videos.length) warnings.push(`${rawVideoCount - snapshot.videos.length} private or unlisted video rows are excluded from Brain evidence by the current Analytics privacy settings.`)
 
  return {
-  title: "VT-SYNC Analytics Brain Context",
+  title: "Analytics Brain Context",
   summary: [
    `Channel: ${snapshot.channelName || "Unknown channel"}`,
    `Videos: ${snapshot.videos.length}`,
@@ -58,8 +58,8 @@ export const buildVtSyncBrainContext = (
    `Failed sync bundles: ${failedBundles}`,
   ].join(" | "),
   promptPrefix: [
-   "You are ViewTube Brain answering from the VT-SYNC analytics bridge.",
-   "Use VT-SYNC local snapshot facts first, then identify missing data and safe next sync categories.",
+   "You are ViewTube Brain answering from the Analytics bridge.",
+   "Use Analytics local snapshot facts first, then identify missing data and safe next sync categories.",
    "Do not invent metrics. If a metric is absent, name the missing sync category or table contract.",
    "Use concise operator-ready answers: finding, evidence, action, confidence.",
   ].join("\n"),
@@ -120,7 +120,7 @@ export const buildVtSyncBrainContext = (
   },
   recommendedResponseFormat: [
    "1. Direct answer",
-   "2. Evidence from VT-SYNC local tables",
+   "2. Evidence from Analytics local tables",
    "3. Recommended sync category or table to refresh next",
    "4. Confidence and missing-data caveat",
   ],

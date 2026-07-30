@@ -30,6 +30,7 @@ export interface UnifiedAccountSnapshot {
   profile: {
     email: string | null
     displayName: string | null
+    avatarUrl?: string | null
   }
   authentication: {
     status: "anonymous" | "pending" | "authenticated" | "expired"
@@ -66,6 +67,7 @@ export const ANONYMOUS_ACCOUNT_SNAPSHOT: UnifiedAccountSnapshot = {
   profile: {
     email: null,
     displayName: null,
+    avatarUrl: null,
   },
   authentication: {
     status: "anonymous",
@@ -109,6 +111,9 @@ export const resolveAccountIntent = (
   if (snapshot.google.status === "expired" || snapshot.google.status === "revoked") {
     return "reconnect_channel"
   }
+  if (snapshot.google.status === "connected" && snapshot.nextIntent === "reconnect_channel") {
+    return "reconnect_channel"
+  }
   if (!snapshot.google.youtubeScopesGranted || snapshot.google.status === "disconnected") {
     return "connect_channel"
   }
@@ -118,6 +123,7 @@ export const resolveAccountIntent = (
 export const resolveAccountActionLabel = (
   snapshot: UnifiedAccountSnapshot,
 ): AccountActionLabel => {
+  if (!snapshot || !snapshot.authentication) return "Account"
   if (snapshot.authentication.status === "pending") {
     return "Connecting…"
   }
@@ -131,6 +137,7 @@ export const resolveAccountActionLabel = (
 }
 
 export const resolveAccountChipLabel = (snapshot: UnifiedAccountSnapshot): string => {
+  if (!snapshot || !snapshot.authentication) return "Sign up"
   if (snapshot.authentication.status === "pending") return "Connecting…"
   const intent = resolveAccountIntent(snapshot)
   if (intent === "sign_up") return "Sign up"
@@ -159,7 +166,7 @@ export const resolveAccountSurfaceLabel = (
 }
 
 export const isAccountActionPending = (snapshot: UnifiedAccountSnapshot): boolean =>
-  snapshot.authentication.status === "pending"
+  snapshot?.authentication?.status === "pending"
 
 export const sanitizeInternalReturnTo = (value: string | null | undefined): string => {
   const candidate = String(value || "").trim()

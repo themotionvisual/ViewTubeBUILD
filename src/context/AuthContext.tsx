@@ -61,6 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(token);
     setSessionMeta(meta);
     setIsAuthenticated(true);
+    window.dispatchEvent(new Event('vt_auth_changed'));
   };
 
   const logout = () => {

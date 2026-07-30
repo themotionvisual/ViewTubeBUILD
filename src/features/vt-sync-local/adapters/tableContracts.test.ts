@@ -25,8 +25,18 @@ describe("VT Sync table contracts", () => {
   expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id).sort()).toEqual([...VT_SYNC_ACTIVE_TABLE_IDS].sort())
   expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id)).not.toContain("traffic_shorts")
   expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id)).not.toContain("audience")
+  expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id)).not.toContain("sub_source")
   expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id)).toContain("provinces")
   expect(VT_SYNC_VISIBLE_TABLE_CATEGORIES.flatMap((category) => category.tabs.map((tab) => tab.id)).sort()).toEqual([...VT_SYNC_ACTIVE_TABLE_IDS].sort())
+ })
+
+ it("keeps legacy subscription-source snapshot data readable without exposing its retired table", () => {
+  const snapshot = normalizeVtSyncSnapshot({
+   subscriptionSource: [{ term: "what-to-watch", subscribersGained: 12, subscribersLost: 1 }],
+  })
+
+  expect(snapshot.subscriptionSource).toEqual([{ term: "what-to-watch", subscribersGained: 12, subscribersLost: 1 }])
+  expect(VT_SYNC_TABLE_DEFINITIONS.map((table) => table.id)).not.toContain("sub_source")
  })
 
  it("formats structured cells without object coercion", () => {

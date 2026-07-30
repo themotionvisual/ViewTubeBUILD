@@ -48,6 +48,9 @@ export type VtSyncCreatorHeroModel = {
  videos: number | undefined
  subscribers: number | undefined
  lifetimeViews: number | undefined
+ watchTimeMinutes: number | undefined
+ datasetsSyncedCount: number
+ datasetsTotalCount: number
  coverage: VtSyncCreatorCoverageItem[]
  coverageSummary: string
  latestUpdatedAt?: string
@@ -55,6 +58,14 @@ export type VtSyncCreatorHeroModel = {
  windowLabel: string
  recentVideos: VtSyncVideoItem[]
  errorDetail?: string
+}
+
+const toHighResYouTubeAvatar = (url?: string | null) => {
+ if (!url) return undefined
+ if (url.includes("googleusercontent.com") || url.includes("yt3.ggpht.com") || url.includes("ggpht.com")) {
+  return url.replace(/=s\d+/, "=s800")
+ }
+ return url
 }
 
 const categoryFreshness = (
@@ -90,7 +101,7 @@ const recentVideos = (videos: VtSyncVideoItem[]): VtSyncVideoItem[] => videos
  .map(({ video }) => video)
 
 const sourceLabel = (source: VtSyncSnapshot["source"]): string => {
- if (source === "manual") return "Imported VT-SYNC snapshot"
+ if (source === "manual") return "Imported Analytics snapshot"
  if (source === "vt-sync") return "YouTube Data + Analytics APIs"
  if (source === "viewtubex-cache") return "Migrated ViewTube snapshot"
  return "No synced source yet"
@@ -215,7 +226,7 @@ export const buildVtSyncCreatorHeroModel = ({
   actionLabel: contract.actionLabel,
   channelName: snapshot.channelName || (authReady ? "Your YouTube Channel" : "Connect Your Channel"),
   channelHandle: snapshot.channelCustomUrl || (authReady ? "Connected YouTube account" : "YouTube connection required"),
-  avatarUrl: snapshot.avatarUrl || undefined,
+  avatarUrl: toHighResYouTubeAvatar(snapshot.avatarUrl),
   videos: typeof snapshot.channelVideoCount === "number"
    ? snapshot.channelVideoCount
    : hasStoredData
@@ -227,6 +238,11 @@ export const buildVtSyncCreatorHeroModel = ({
    : typeof snapshot.channelTotals?.lifetime?.views === "number"
     ? snapshot.channelTotals.lifetime.views
     : undefined,
+  watchTimeMinutes: typeof snapshot.channelTotals?.lifetime?.watchTime === "number"
+   ? snapshot.channelTotals.lifetime.watchTime
+   : undefined,
+  datasetsSyncedCount: tallies.synced,
+  datasetsTotalCount: coverage.length,
   coverage,
   coverageSummary: availableSegments.join(" · "),
   latestUpdatedAt,
@@ -280,6 +296,10 @@ export const VtSyncCreatorHero: React.FC<{
   else onRecommendedSync()
  }
 
+ const isChannelConnected = model.status !== "disconnected"
+  && model.channelName !== "Your YouTube Channel"
+  && model.channelName !== "Connect Your Channel"
+
  return (
   <section className={`vt-sync-creator-hero is-${model.status}`} aria-labelledby="vt-sync-creator-title">
    <header className="vt-sync-creator-masthead">
@@ -287,6 +307,7 @@ export const VtSyncCreatorHero: React.FC<{
     <div>
      <p>ViewTube Channel Intelligence</p>
      <h1 id="vt-sync-creator-title">Your channel. Fully visible.</h1>
+     {isChannelConnected ? <p className="vt-sync-creator-masthead-channel">{model.channelName}</p> : null}
     </div>
     <strong className="vt-sync-creator-status-stamp">
      {model.status === "syncing" ? <LoaderCircle className="is-spinning" /> : model.status === "failed" ? <AlertTriangle /> : <CheckCircle2 />}
@@ -297,7 +318,9 @@ export const VtSyncCreatorHero: React.FC<{
    <div className="vt-sync-creator-stage">
     <section className="vt-sync-creator-identity" aria-label="Connected channel">
      <div className="vt-sync-creator-avatar">
-      {model.avatarUrl ? <img src={model.avatarUrl} alt="" /> : <span>{initials(model.channelName)}</span>}
+      <div className="vt-sync-creator-avatar-inner">
+       {model.avatarUrl ? <img src={model.avatarUrl} alt="" /> : <span>{initials(model.channelName)}</span>}
+      </div>
      </div>
      <div className="vt-sync-creator-identity-copy">
       <span className="vt-sync-creator-kicker">Your creator universe</span>
@@ -318,6 +341,21 @@ export const VtSyncCreatorHero: React.FC<{
        <small>{value === undefined ? "Not yet synced" : "Connected channel total"}</small>
       </div>
      ))}
+     <div>
+      <dt>Watch time</dt>
+      <dd>{model.watchTimeMinutes !== undefined ? `${compactNumber(Math.round(model.watchTimeMinutes / 60))}h` : "—"}</dd>
+      <small>{model.watchTimeMinutes === undefined ? "Not yet synced" : "Lifetime hours watched"}</small>
+     </div>
+     <div>
+      <dt>Datasets synced</dt>
+      <dd>{model.datasetsSyncedCount}/{model.datasetsTotalCount}</dd>
+      <small>Your data picture</small>
+     </div>
+     <div>
+      <dt>Last updated</dt>
+      <dd>{relativeTime(model.latestUpdatedAt)}</dd>
+      <small>{model.sourceLabel}</small>
+     </div>
     </dl>
 
     <aside className="vt-sync-creator-command" aria-live="polite">

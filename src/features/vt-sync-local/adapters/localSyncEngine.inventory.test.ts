@@ -228,8 +228,11 @@ describe("syncUploadsInventory", () => {
    avgPercentageViewed: 63.5,
   })
   expect(snapshot.provinces[0].subscribersGained).toBeUndefined()
+  expect(snapshot.provinces[0].subscribersLost).toBeUndefined()
   expect(snapshot.provinces[0].likes).toBeUndefined()
+  expect(snapshot.provinces[0].dislikes).toBeUndefined()
   expect(snapshot.provinces[0].comments).toBeUndefined()
+  expect(snapshot.provinces[0].shares).toBeUndefined()
   expect(snapshot.syncManifest?.diagnostics?.some((entry) => entry.categoryId === "traffic_shorts" && entry.status === "disabled_unvalidated")).toBe(true)
  })
 

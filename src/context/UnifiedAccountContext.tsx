@@ -14,6 +14,7 @@ import {
   fetchUnifiedAccountSnapshot,
   isAccountServerUnavailableError,
   isUnifiedAccountServerEnabled,
+  normalizeAccountSnapshot,
   readCachedAccountSnapshot,
   revokeUnifiedGoogleConnection,
   signOutUnifiedAccount,
@@ -38,11 +39,20 @@ const UnifiedAccountContext = createContext<UnifiedAccountContextValue | null>(n
 export const UnifiedAccountProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [snapshot, setSnapshot] = useState<UnifiedAccountSnapshot>(() => readCachedAccountSnapshot())
 
+  const commitSnapshot = useCallback((nextSnapshot: UnifiedAccountSnapshot) => {
+    const next = normalizeAccountSnapshot(nextSnapshot)
+    setSnapshot(next)
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("vt_account_snapshot_changed", { detail: next }))
+      window.dispatchEvent(new Event("vt_auth_changed"))
+    }
+    return next
+  }, [])
+
   const refresh = useCallback(async () => {
     try {
       const next = await fetchUnifiedAccountSnapshot()
-      setSnapshot(next)
-      return next
+      return commitSnapshot(next)
     } catch (error) {
       const cached = readCachedAccountSnapshot()
       const next: UnifiedAccountSnapshot = {
@@ -54,10 +64,9 @@ export const UnifiedAccountProvider: React.FC<{ children: React.ReactNode }> = (
           recoverable: true,
         },
       }
-      setSnapshot(next)
-      return next
+      return commitSnapshot(next)
     }
-  }, [])
+  }, [commitSnapshot])
 
   useEffect(() => {
     if (isUnifiedAccountServerEnabled()) {
@@ -106,13 +115,13 @@ export const UnifiedAccountProvider: React.FC<{ children: React.ReactNode }> = (
     } catch (error) {
       if (isAccountServerUnavailableError(error)) {
         await legacyLogin()
-        setSnapshot((current) => ({
-          ...current,
+        commitSnapshot({
+          ...snapshot,
           authentication: { status: "authenticated", accountExists: true },
-          google: { ...current.google, status: "connected", youtubeScopesGranted: true },
+          google: { ...snapshot.google, status: "connected", youtubeScopesGranted: true },
           nextIntent: "manage_account",
           error: null,
-        }))
+        })
         return
       }
       setSnapshot((current) => ({
@@ -129,11 +138,11 @@ export const UnifiedAccountProvider: React.FC<{ children: React.ReactNode }> = (
       }))
       throw error
     }
-  }, [refresh, snapshot])
+  }, [commitSnapshot, refresh, snapshot])
 
   const signOut = useCallback(async () => {
     await signOutUnifiedAccount()
-    setSnapshot({
+    commitSnapshot({
       ...ANONYMOUS_ACCOUNT_SNAPSHOT,
       viewtubeUserId: snapshot.viewtubeUserId,
       authentication: {
@@ -142,17 +151,17 @@ export const UnifiedAccountProvider: React.FC<{ children: React.ReactNode }> = (
       },
       nextIntent: snapshot.viewtubeUserId ? "log_in" : "sign_up",
     })
-  }, [snapshot.viewtubeUserId])
+  }, [commitSnapshot, snapshot.viewtubeUserId])
 
   const disconnectGoogle = useCallback(async () => {
     if (!isUnifiedAccountServerEnabled()) return
-    setSnapshot(await revokeUnifiedGoogleConnection())
-  }, [])
+    commitSnapshot(await revokeUnifiedGoogleConnection())
+  }, [commitSnapshot])
 
   const deleteAccount = useCallback(async () => {
     await deleteUnifiedAccount()
-    setSnapshot(ANONYMOUS_ACCOUNT_SNAPSHOT)
-  }, [])
+    commitSnapshot(ANONYMOUS_ACCOUNT_SNAPSHOT)
+  }, [commitSnapshot])
 
   const value = useMemo<UnifiedAccountContextValue>(() => ({
     snapshot,

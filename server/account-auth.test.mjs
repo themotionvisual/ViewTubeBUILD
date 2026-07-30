@@ -7,6 +7,7 @@ import {
   encryptToken,
   isAllowedGoogleApiUrl,
   isTrustedAccountOrigin,
+  resolveGoogleNextIntent,
   sanitizeReturnTo,
 } from "./account-auth.mjs";
 
@@ -24,7 +25,23 @@ test("first approval scope lane stays read-only and complete", () => {
     "email",
     "https://www.googleapis.com/auth/youtube.readonly",
     "https://www.googleapis.com/auth/yt-analytics.readonly",
+    "https://www.googleapis.com/auth/yt-analytics-monetary.readonly",
   ]);
+});
+
+test("existing core-connected users receive an incremental monetary reconnect action", () => {
+  assert.equal(resolveGoogleNextIntent({
+    googleStatus: "connected",
+    monetaryScopeGranted: false,
+  }), "reconnect_channel");
+  assert.equal(resolveGoogleNextIntent({
+    googleStatus: "connected",
+    monetaryScopeGranted: true,
+  }), "manage_account");
+  assert.equal(resolveGoogleNextIntent({
+    googleStatus: "disconnected",
+    monetaryScopeGranted: false,
+  }), "connect_channel");
 });
 
 test("server plan catalog owns every public plan id", () => {

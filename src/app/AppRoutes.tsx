@@ -55,6 +55,7 @@ export const AppRoutes: React.FC = () => {
    <Route path="/data-transparency" element={<DataTransparencyCenter />} />
    <Route path="/ai-brain" element={<AIBrainCommandInterface />} />
    <Route path="/local-analytics" element={<VtSyncLocalAnalyticsPage />} />
+   <Route path="/analytics" element={<VtSyncLocalAnalyticsPage />} />
    <Route path="/vt-sync-local" element={<VtSyncLocalAnalyticsPage />} />
 
    <Route path="/shorts" element={<Navigate to="/editor" replace />} />

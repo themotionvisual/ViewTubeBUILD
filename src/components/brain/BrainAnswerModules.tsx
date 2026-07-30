@@ -78,26 +78,26 @@ export const BrainKpiModule: React.FC<{
   <article className={`${cardShell} ${className}`}>
    <details open>
     <summary
-     className="grid cursor-pointer list-none grid-cols-[32px_minmax(0,1fr)_auto_26px] items-stretch border-b-[2px] border-black"
+     className="grid min-h-[36px] cursor-pointer list-none grid-cols-[34px_minmax(0,1fr)_auto_28px] items-stretch border-b-[2px] border-black"
      style={{ backgroundColor: MODULE_TONE[module.tone] || MODULE_TONE.white }}
     >
      <span className="grid place-items-center border-r-[2px] border-black bg-white">{icon}</span>
-     <h4 className="self-center truncate px-2 text-[11px] font-[1000] uppercase leading-4 tracking-[0.04em]">
+     <h4 className="min-w-0 self-center truncate px-2.5 py-1.5 text-[11px] font-[1000] uppercase leading-4 tracking-[0.04em]">
       {sanitizeCreatorFacingBrainCopy(module.title)}
      </h4>
      {module.code ? (
-      <span className="my-1 self-center rounded-[5px] border-[2px] border-black bg-white/75 px-1.5 py-0.5 text-[8px] font-[1000] uppercase tracking-[0.06em]">
+      <span className="my-auto mr-1 self-center rounded-[5px] border-[2px] border-black bg-white/80 px-1.5 py-0.5 text-[8px] font-[1000] uppercase tracking-[0.06em]">
        {module.code}
       </span>
      ) : (
       <span />
      )}
      <span className="grid place-items-center border-l-[2px] border-black bg-white/30">
-      <ChevronDown size={13} />
+      <ChevronDown size={14} />
      </span>
     </summary>
 
-    <div className={`grid gap-2 ${compact ? "p-2" : "p-2.5"}`}>
+    <div className={`grid ${compact ? "gap-2 p-3" : "gap-2.5 p-3.5"}`}>
      {metrics.length ? (
       <dl className="grid grid-cols-3 gap-1.5">
        {metrics.slice(0, 3).map((metric) => (
@@ -145,7 +145,7 @@ export const BrainKpiModule: React.FC<{
      ) : null}
 
      {module.body ? (
-      <p className={`font-bold text-black/75 ${compact ? "text-[11px] leading-4" : "text-xs leading-5"}`}>
+      <p className={`font-bold text-black/75 ${compact ? "text-xs leading-5" : "text-[13px] leading-6"}`}>
        {sanitizeCreatorFacingBrainCopy(module.body)}
       </p>
      ) : null}

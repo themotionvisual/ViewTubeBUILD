@@ -24,6 +24,7 @@ import {
  isUnifiedAccountServerEnabled,
 } from "../services/account/accountCoordinator"
 import { resolveAccountIntent } from "../services/account/accountContracts"
+import type { UnifiedAccountSnapshot } from "../services/account/accountContracts"
 import { requestGoogleOAuthTermsConsent } from "../services/googleOAuthConsent"
 import { readYouTubeAnalyticsCache } from "../services/analytics/DataStore"
 import {
@@ -548,6 +549,32 @@ const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
   }
  }, [applyChannelIdentity, authState])
 
+ const applyUnifiedAccountSnapshot = useCallback((snapshot: UnifiedAccountSnapshot) => {
+  const authenticated = snapshot.authentication.status === "authenticated"
+  const googleConnected =
+   snapshot.google.status === "connected" ||
+   snapshot.google.youtubeScopesGranted ||
+   Boolean(snapshot.google.channelId)
+
+  if (!authenticated) {
+   setAuthStateRaw((prev) => ({
+    ...prev,
+    isAuthenticated: false,
+   }))
+   return
+  }
+
+  setAuthStateRaw((prev) => ({
+   ...prev,
+   isAuthenticated: true,
+   channelId: snapshot.google.channelId || prev.channelId || null,
+  }))
+  if (googleConnected) {
+   setChannelBootPhase((prev) => (prev === "idle" || prev === "oauth" ? "ready" : prev))
+  }
+  hydrateAuthStateFromAnalyticsCache()
+ }, [hydrateAuthStateFromAnalyticsCache])
+
  useEffect(() => {
   const handleAnalyticsSynced = (event: Event) => {
    if (!unifiedAuth.isAuthenticated()) return
@@ -559,6 +586,30 @@ const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
    window.removeEventListener("yt_analytics_synced", handleAnalyticsSynced as EventListener)
   }
  }, [bootstrapFirstRunBrain])
+
+ useEffect(() => {
+  const onUnifiedAccountSnapshotChanged = (event: Event) => {
+   const snapshot = (event as CustomEvent<UnifiedAccountSnapshot>).detail
+   if (!snapshot) return
+   applyUnifiedAccountSnapshot(snapshot)
+  }
+  const onAuthChanged = () => {
+   if (unifiedAuth.isAuthenticated()) {
+    setAuthStateRaw((prev) => ({ ...prev, isAuthenticated: true }))
+    hydrateAuthStateFromAnalyticsCache()
+    return
+   }
+   void fetchUnifiedAccountSnapshot().then(applyUnifiedAccountSnapshot).catch(() => {
+    setAuthStateRaw((prev) => ({ ...prev, isAuthenticated: false }))
+   })
+  }
+  window.addEventListener("vt_account_snapshot_changed", onUnifiedAccountSnapshotChanged as EventListener)
+  window.addEventListener("vt_auth_changed", onAuthChanged)
+  return () => {
+   window.removeEventListener("vt_account_snapshot_changed", onUnifiedAccountSnapshotChanged as EventListener)
+   window.removeEventListener("vt_auth_changed", onAuthChanged)
+  }
+ }, [applyUnifiedAccountSnapshot, hydrateAuthStateFromAnalyticsCache])
 
   const globalSyncData = useCallback(
   async (options?: {
@@ -1127,6 +1178,10 @@ const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
    try {
     const accountSnapshot = await fetchUnifiedAccountSnapshot()
     await beginAccountIntent(resolveAccountIntent(accountSnapshot))
+    const nextAccountSnapshot = await fetchUnifiedAccountSnapshot()
+    applyUnifiedAccountSnapshot(nextAccountSnapshot)
+    window.dispatchEvent(new CustomEvent("vt_account_snapshot_changed", { detail: nextAccountSnapshot }))
+    window.dispatchEvent(new Event("vt_auth_changed"))
     return
    } catch (error) {
     if (!isAccountServerUnavailableError(error)) throw error
@@ -1213,7 +1268,7 @@ const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
 
   loginBootPromiseRef.current = bootPromise
   return bootPromise
- }, [applyChannelIdentity, authState.subscriberCount, hydrateAuthStateFromAnalyticsCache])
+ }, [applyChannelIdentity, applyUnifiedAccountSnapshot, authState.subscriberCount, hydrateAuthStateFromAnalyticsCache])
 
  const disconnectChannel = useCallback(() => {
   setAuthStateRaw(defaultAuthState)

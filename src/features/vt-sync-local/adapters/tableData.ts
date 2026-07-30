@@ -591,6 +591,7 @@ export const normalizeVtSyncTableRows = (tableId: string, rows: Row[]): Row[] =>
   case "subs": return normalizeRows(rows, { status: "subscribedStatus" })
   case "devices": return normalizeRows(rows, { device: "deviceType" })
   case "os": return normalizeRows(rows, { operatingSystem: "operatingSystem" })
+  case "device_os": return normalizeRows(rows, { device: "deviceType", operatingSystem: "operatingSystem" })
   case "geography": return normalizeRows(rows, { country: "country" }).map(geographyCountryRow)
   case "cities": return normalizeRows(rows, { city: "city" }).map(geographyCountryRow)
   case "provinces": return normalizeRows(rows, { province: "province" }).map(geographyStateRow)

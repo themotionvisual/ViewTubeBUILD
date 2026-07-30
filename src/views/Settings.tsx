@@ -89,7 +89,7 @@ const Settings: React.FC = () => {
 
   useEffect(() => {
     const syncBilling = async () => {
-      const authReady = account.snapshot.authentication.status === "authenticated" || isAuth
+      const authReady = account.snapshot?.authentication?.status === "authenticated" || isAuth
       if (!authReady) {
         setBillingStatus("Connect to sync billing entitlements.")
         return
@@ -112,7 +112,7 @@ const Settings: React.FC = () => {
       }
     }
     syncBilling()
-  }, [account.serverEnabled, account.snapshot.authentication.status, isAuth])
+  }, [account.serverEnabled, account.snapshot?.authentication?.status, isAuth])
 
   const handleAccountAction = async () => {
     if (account.serverEnabled) {

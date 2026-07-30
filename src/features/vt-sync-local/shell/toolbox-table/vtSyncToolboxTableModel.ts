@@ -80,29 +80,31 @@ const VT_SYNC_HALF_SIZE_SECONDS_COLUMNS = new Set(["watchTime", "youtubePremiumW
 const VT_SYNC_VIDEO_COMPOSITE_HIDDEN_COLUMNS = new Set(["videoId", "publishedDay", "publishedTime"])
 const VT_SYNC_CHANNEL_PAGE_COMPOSITE_HIDDEN_COLUMNS = new Set(["title", "handle"])
 export const VT_SYNC_VIDEO_NON_COMPACT_WIDTHS = [91, 325, 97, 68, 132, 82, 92, 238, 79, 69, 80, 68, 68, 78, 79, 65, 79, 82, 73, 68, 72, 68, 75, 74, 69, 81, 68, 72, 68, 78, 68, 76, 68, 68, 68, 69, 68, 64, 78, 68, 68, 72, 82, 89, 82, 74, 81, 74, 73, 68, 68, 73, 68, 68, 91, 85, 85, 78] as const
-export const VT_SYNC_SMALL_TABLE_COLORS = ["#40C6E9", "#4FFF5B", "#FFFF61", "#FFB570", "#FF3B30", "#FF83EA", "#579AFF", "#CC00FF"] as const
+export const VT_SYNC_SMALL_TABLE_COLORS = [
+ "#FA618A", "#FF7F6B", "#FFA85C", "#FFDA47", "#C0F240", "#3FEE56",
+ "#4EE4BE", "#36E0F6", "#528FFA", "#A467F4", "#F55EFC", "#FF7AC8",
+] as const
 export const VT_SYNC_DEMOGRAPHIC_COLUMN_COLORS: Record<string, string> = {
- ageGroupLabel: "#40C6E9",
- maleViewerPercentage: "#40C6E9",
- femaleViewerPercentage: "#FF83EA",
- otherViewerPercentage: "#FFFF61",
- viewerPercentage: "#4FFF5B",
+ ageGroupLabel: "#36E0F6",
+ maleViewerPercentage: "#36E0F6",
+ femaleViewerPercentage: "#F55EFC",
+ otherViewerPercentage: "#FFDA47",
+ viewerPercentage: "#3FEE56",
 }
-export const VT_SYNC_SPARK_RANK_PALETTE = ["#40C6E9", "#4FFF5B", "#FFFF61", "#FFB570", "#FF3B30"] as const
+export const VT_SYNC_SPARK_RANK_PALETTE = ["#36E0F6", "#3FEE56", "#FFDA47", "#FFA85C", "#FA618A"] as const
 export const VT_SYNC_ALPHABETIC_SPECTRUM_PALETTE = [
  "#FA618A", "#FF7F6B", "#FFA85C", "#FFDA47", "#C0F240", "#3FEE56",
  "#4EE4BE", "#36E0F6", "#528FFA", "#A467F4", "#F55EFC", "#FF7AC8",
 ] as const
 export const VT_SYNC_OPPOSITE_COLORS: Record<string, string> = {
- "#FF83EA": "#4FFF5B",
- "#FF8AAF": "#40C6E9",
- "#FFB570": "#579AFF",
- "#FFFF61": "#CC00FF",
- "#4FFF5B": "#FF83EA",
- "#40C6E9": "#FF8AAF",
- "#579AFF": "#FFB570",
- "#CC00FF": "#FFFF61",
- "#FF3B30": "#40C6E9",
+ "#F55EFC": "#3FEE56",
+ "#FA618A": "#36E0F6",
+ "#FFA85C": "#528FFA",
+ "#FFDA47": "#A467F4",
+ "#3FEE56": "#F55EFC",
+ "#36E0F6": "#FA618A",
+ "#528FFA": "#FFA85C",
+ "#A467F4": "#FFDA47",
 }
 
 const VT_SYNC_PRESENTATION_LABELS: Record<string, string> = {
@@ -148,10 +150,10 @@ export const getVtSyncTableProvenance = (
  const sourceLabel = importedAt
   ? "Local CSV import"
   : snapshot.source === "manual"
-   ? "Manual VT-SYNC snapshot"
+    ? "Manual Analytics snapshot"
    : derivedFromDaily
     ? `Derived from daily data · ${apiLabel || VT_SYNC_SOURCE_API_LABELS.derived}`
-    : apiLabel || (snapshot.source === "empty" ? "No dataset loaded" : "VT-SYNC local snapshot")
+    : apiLabel || (snapshot.source === "empty" ? "No dataset loaded" : "Analytics local snapshot")
  const statusLabel = importedAt
   ? "Imported"
   : freshness?.status === "synced" ? "Current"
@@ -192,6 +194,7 @@ const VT_SYNC_TRAFFIC_SOURCE_LABELS: Record<string, string> = {
  HASHTAGS: "Hashtag Pages",
  ANNOTATION: "Annotations",
  IMMERSIVE_LIVE: "Live Streams",
+ ADVERTISING: "Advertising",
 }
 
 const VT_SYNC_SUBSCRIBER_DETAIL_LABELS: Record<string, string> = {
@@ -316,6 +319,44 @@ export const getVtSyncPresentationLabel = (tableId: string, fallback: string): s
 
 export const getVtSyncRowHeight = (compact: boolean, sparklines: boolean): number =>
  compact ? (sparklines ? 31 : 19) : 48
+
+export const getVtSyncTrafficOverviewRowHeight = (rowCount: number): number =>
+ rowCount > 0 ? Math.max(44, Math.floor((18 * 44) / rowCount)) : 44
+
+export type VtSyncVerticalScrollMetrics = {
+ thumbHeight: number
+ thumbTop: number
+ trackTravel: number
+ maxScroll: number
+}
+
+export const getVtSyncVerticalScrollMetrics = ({
+ scrollTop,
+ scrollHeight,
+ clientHeight,
+ trackHeight,
+ minimumThumbHeight = 44,
+}: {
+ scrollTop: number
+ scrollHeight: number
+ clientHeight: number
+ trackHeight: number
+ minimumThumbHeight?: number
+}): VtSyncVerticalScrollMetrics => {
+ const maxScroll = Math.max(0, scrollHeight - clientHeight)
+ const thumbHeight = Math.min(
+  Math.max(0, trackHeight),
+  Math.max(minimumThumbHeight, scrollHeight > 0 ? trackHeight * (clientHeight / scrollHeight) : trackHeight),
+ )
+ const trackTravel = Math.max(0, trackHeight - thumbHeight)
+ const progress = maxScroll > 0 ? Math.min(1, Math.max(0, scrollTop / maxScroll)) : 0
+ return {
+  thumbHeight,
+  thumbTop: trackTravel * progress,
+  trackTravel,
+  maxScroll,
+ }
+}
 
 export const getNextVtSyncRowLimit = (
  currentLimit: number,
@@ -618,13 +659,13 @@ export type VtSyncToolboxCategory = {
 }
 
 export const VT_SYNC_TOOLBOX_CATEGORIES: VtSyncToolboxCategory[] = [
- { id: "content", label: "Content", tableIds: ["videos", "playlists", "creator", "locations", "retentions", "shares"], colors: { icon: "#ff83ea", label: "#40c6e9", shadow: "rgba(64,198,233,.52)" } },
- { id: "daily", label: "Daily", tableIds: ["daily", "weekly", "monthly"], colors: { icon: "#40c6e9", label: "#4fff5b", shadow: "rgba(79,255,91,.52)" } },
- { id: "channel", label: "Channel", tableIds: ["channel_totals"], colors: { icon: "#ffb570", label: "#579aff", shadow: "rgba(87,154,255,.52)" } },
- { id: "traffic", label: "Traffic", tableIds: ["traffic", "search", "ext_web", "suggested", "chan_page", "hashtags", "sound", "adv", "other_feat", "traffic_subscribers", "traffic_day"], colors: { icon: "#ffff61", label: "#4fff5b", shadow: "rgba(79,255,91,.52)" } },
- { id: "audience", label: "Audience", tableIds: ["demographics", "subs", "sub_source", "devices", "os", "device_os"], colors: { icon: "#cc00ff", label: "#ffff61", shadow: "rgba(255,255,97,.52)" } },
- { id: "global", label: "Global", tableIds: ["geography", "cities", "provinces", "dma"], colors: { icon: "#4fff5b", label: "#ff83ea", shadow: "rgba(255,131,234,.52)" } },
- { id: "revenue", label: "Revenue", tableIds: ["ads"], colors: { icon: "#579aff", label: "#ff83ea", shadow: "rgba(255,131,234,.52)" } },
+ { id: "content", label: "Videos", tableIds: ["videos", "playlists", "creator", "locations", "retentions", "shares"], colors: { icon: "#F55EFC", label: "#36E0F6", shadow: "rgba(54,224,246,.52)" } },
+ { id: "daily", label: "Daily", tableIds: ["daily", "weekly", "monthly"], colors: { icon: "#36E0F6", label: "#3FEE56", shadow: "rgba(63,238,86,.52)" } },
+ { id: "channel", label: "Channel", tableIds: ["channel_totals"], colors: { icon: "#FFA85C", label: "#528FFA", shadow: "rgba(82,143,250,.52)" } },
+ { id: "traffic", label: "Traffic", tableIds: ["traffic", "search", "ext_web", "suggested", "chan_page", "hashtags", "sound", "adv", "other_feat", "traffic_subscribers", "traffic_day"], colors: { icon: "#FFDA47", label: "#3FEE56", shadow: "rgba(63,238,86,.52)" } },
+ { id: "audience", label: "Audience", tableIds: ["demographics", "subs", "devices", "os", "device_os"], colors: { icon: "#A467F4", label: "#FFDA47", shadow: "rgba(255,218,71,.52)" } },
+ { id: "global", label: "Global", tableIds: ["geography", "cities", "provinces", "dma"], colors: { icon: "#3FEE56", label: "#F55EFC", shadow: "rgba(245,94,252,.52)" } },
+ { id: "revenue", label: "Revenue", tableIds: ["ads"], colors: { icon: "#528FFA", label: "#F55EFC", shadow: "rgba(245,94,252,.52)" } },
 ]
 
 export const VT_SYNC_COMPACT_PIN_TABLE_IDS = new Set(["videos", "playlists", "daily", "weekly", "monthly", "channel_totals", "geography"])
@@ -784,7 +825,7 @@ export const buildVtSyncDeviceOsGroups = (
   const osLabel = osPresentation?.title || os
   const totals: VtSyncTableRow = { operatingSystem: os }
   columns.forEach((column) => {
-   if (["views", "watchTime"].includes(column.key)) {
+   if (["views", "engagedViews", "watchTime"].includes(column.key)) {
     totals[column.key] = sumVtSyncTrafficDayMetric(osRows, column.key)
    } else if (["avgDuration", "avgPercentageViewed"].includes(column.key)) {
     totals[column.key] = weightedVtSyncTrafficDayMetric(osRows, column.key)

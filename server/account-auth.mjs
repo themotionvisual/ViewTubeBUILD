@@ -32,6 +32,7 @@ export const READ_ONLY_SCOPES = [
   "email",
   "https://www.googleapis.com/auth/youtube.readonly",
   "https://www.googleapis.com/auth/yt-analytics.readonly",
+  "https://www.googleapis.com/auth/yt-analytics-monetary.readonly",
 ];
 export const PUBLIC_PLANS = [
   { id: "basic", label: "Basic", priceUsd: 0, trialHours: 0, monthlyCredits: 0 },
@@ -143,6 +144,12 @@ const hasTrustedOrigin = (req) => {
   return isTrustedAccountOrigin(req.headers.origin);
 };
 
+export const resolveGoogleNextIntent = ({ googleStatus, monetaryScopeGranted }) => {
+  if (googleStatus === "revoked" || googleStatus === "expired") return "reconnect_channel";
+  if (googleStatus === "connected" && !monetaryScopeGranted) return "reconnect_channel";
+  return googleStatus === "connected" ? "manage_account" : "connect_channel";
+};
+
 const buildSnapshot = async (userId) => {
   if (!userId) {
     return {
@@ -168,12 +175,12 @@ const buildSnapshot = async (userId) => {
   const googleStatus = record.connectionStatus === "revoked" ? "revoked"
     : expired ? "expired"
       : youtubeScopesGranted && record.channelId ? "connected" : "disconnected";
-  const nextIntent = googleStatus === "revoked" || googleStatus === "expired" ? "reconnect_channel"
-    : googleStatus === "connected" ? "manage_account" : "connect_channel";
+  const monetaryScopeGranted = scopes.has("https://www.googleapis.com/auth/yt-analytics-monetary.readonly");
+  const nextIntent = resolveGoogleNextIntent({ googleStatus, monetaryScopeGranted });
   const grantedCapabilities = [];
   if (scopes.has("https://www.googleapis.com/auth/youtube.readonly")) grantedCapabilities.push("youtube_read");
   if (scopes.has("https://www.googleapis.com/auth/yt-analytics.readonly")) grantedCapabilities.push("youtube_analytics_read");
-  if (scopes.has("https://www.googleapis.com/auth/yt-analytics-monetary.readonly")) grantedCapabilities.push("youtube_monetary_read");
+  if (monetaryScopeGranted) grantedCapabilities.push("youtube_monetary_read");
   if (scopes.has("https://www.googleapis.com/auth/youtube.upload")) grantedCapabilities.push("youtube_upload");
   if (scopes.has("https://www.googleapis.com/auth/youtube.force-ssl")) grantedCapabilities.push("youtube_comments");
   if (scopes.has("https://www.googleapis.com/auth/webmasters.readonly")) grantedCapabilities.push("search_console_read");

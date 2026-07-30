@@ -1,6 +1,6 @@
 :root {
   --vt-nav-top-height: 85px;
-  --vt-nav-wide-width: 204px;
+  --vt-nav-wide-width: 190px;
   --vt-nav-thin-width: 154px;
   --vt-nav-stroke: 3px;
   --vt-nav-control-stroke: 2px;
@@ -99,13 +99,15 @@
 
 .vt-adaptive-nav__brand {
   display: flex;
+  box-sizing: border-box;
   min-width: 0;
   align-items: center;
-  padding: 4px 12px;
+  padding: 4px 10px;
 }
 
 .vt-adaptive-nav__logo {
   display: inline-flex;
+  box-sizing: border-box;
   min-width: 0;
   height: 100%;
   align-items: center;
@@ -119,11 +121,12 @@
 }
 
 .vt-adaptive-nav__logo span {
-  font-size: 38px;
+  font-size: 42px;
   font-weight: 1000;
+  letter-spacing: 0;
 }
 
-.vt-adaptive-nav__logo span:first-child { letter-spacing: -2px; }
+.vt-adaptive-nav__logo span:first-child { margin-right: -7px; }
 .vt-adaptive-nav__logo span:last-child { color: #36e0f6; }
 
 .vt-adaptive-nav__links {
@@ -138,6 +141,7 @@
 .vt-adaptive-nav__link {
   position: relative;
   display: flex;
+  box-sizing: border-box;
   min-width: 0;
   height: 74px;
   align-items: center;
@@ -162,7 +166,21 @@
 
 .vt-adaptive-nav__link:hover { transform: translateY(-1px); box-shadow: 0 2px 0 #000; }
 .vt-adaptive-nav__link:active { transform: translateY(1px); box-shadow: none; }
-.vt-adaptive-nav__link.active { box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .82); }
+
+/* Selected state: the hover shine frozen near its right-side flash point. */
+.vt-adaptive-nav__link.active::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  right: 12px;
+  bottom: -2px;
+  width: 30px;
+  background: rgba(255, 255, 255, .76);
+  opacity: .82;
+  pointer-events: none;
+  transform: skewX(-20deg);
+  z-index: 0;
+}
 
 /* White shine sweeps across a nav button on hover/focus, and across a flight clone mid-animation. */
 .vt-adaptive-nav__link::before,
@@ -182,6 +200,7 @@
 .vt-nav-flight-clone.is-shining::before {
   transform: translateX(115%) skewX(-20deg);
 }
+.vt-adaptive-nav__link > * { position: relative; z-index: 1; }
 
 /* Flight-clone based morph animation between the topbar and sidebar layouts (see useNavLayoutMorph). */
 .vt-adaptive-shell.vt-nav-transitioning { pointer-events: none; }
@@ -268,12 +287,14 @@
 
 .vt-adaptive-nav__layout-controls {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  box-sizing: border-box;
+  grid-template-columns: minmax(0, 1fr);
   gap: 4px;
   width: 100%;
 }
 
 .vt-adaptive-nav__layout-controls button {
+  box-sizing: border-box;
   width: 100%;
   min-width: 0;
   height: 42px;
@@ -284,57 +305,84 @@
 
 .vt-adaptive-nav__account-trigger {
   display: grid;
-  grid-template-columns: 40px minmax(92px, 1fr) minmax(96px, 150px) 20px;
-  width: clamp(250px, 25vw, 390px);
+  box-sizing: border-box;
+  grid-template-columns: 48px minmax(0, 1fr) 22px;
+  width: clamp(246px, 20vw, 340px);
   min-width: 0;
   height: 74px;
   align-items: center;
-  gap: 7px;
-  padding: 4px 8px;
+  gap: 8px;
+  padding: 6px 8px;
   overflow: hidden;
   border: var(--vt-nav-control-stroke) solid #000;
   border-radius: var(--vt-nav-radius);
-  background: #c0f240;
+  background:
+    linear-gradient(90deg, #c0f240 0 58%, #fff 58% 61%, #c0f240 61% 100%);
   color: #000;
   text-align: left;
   touch-action: manipulation;
+  cursor: pointer;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .1);
+  transition: transform 110ms ease, box-shadow 110ms ease;
 }
+.vt-adaptive-nav__account-trigger:hover { transform: translateY(-1px); box-shadow: 0 2px 0 #000, inset 0 -3px 0 rgba(0, 0, 0, .1); }
+.vt-adaptive-nav__account-trigger:active { transform: translateY(1px); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .12); }
 
 .vt-adaptive-nav__avatar {
   display: grid;
-  width: 38px;
-  height: 38px;
+  width: 46px;
+  height: 46px;
   place-items: center;
   overflow: hidden;
   border: var(--vt-nav-control-stroke) solid #000;
   border-radius: 50%;
   background: #fff;
+  box-shadow: 2px 2px 0 #000;
 }
 
 .vt-adaptive-nav__avatar img { width: 100%; height: 100%; object-fit: cover; }
 .vt-adaptive-nav__avatar svg { width: 23px; height: 23px; stroke-width: 2.2; }
 
-.vt-adaptive-nav__account-copy { min-width: 0; line-height: 1.1; }
+.vt-adaptive-nav__account-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  line-height: 1;
+}
 .vt-adaptive-nav__account-copy strong,
-.vt-adaptive-nav__account-copy span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.vt-adaptive-nav__account-copy strong { font-size: 11px; font-weight: 900; text-transform: uppercase; }
-.vt-adaptive-nav__account-copy span { margin-top: 4px; font-size: 8px; font-weight: 800; text-transform: uppercase; opacity: .7; }
+.vt-adaptive-nav__account-copy span { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vt-adaptive-nav__account-copy strong {
+  font-size: 12px;
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+.vt-adaptive-nav__account-meta {
+  font-size: 8px;
+  font-weight: 900;
+  text-transform: uppercase;
+  opacity: .72;
+}
+.vt-adaptive-nav__auth-status {
+  justify-self: start;
+  max-width: 100%;
+  padding: 3px 6px;
+  border: 2px solid #000;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 8px;
+  font-weight: 1000;
+  text-transform: uppercase;
+  box-shadow: 1px 1px 0 #000;
+}
 
-.vt-adaptive-nav__meter { display: flex; min-width: 0; flex-direction: column; gap: 5px; }
-.vt-adaptive-nav__meter > span { display: flex; justify-content: space-between; gap: 5px; font-size: 8px; text-transform: uppercase; }
-.vt-adaptive-nav__meter > i { display: block; height: 9px; overflow: hidden; border: 2px solid #000; border-radius: 5px; background: #fff; }
-.vt-adaptive-nav__meter > i > i { display: block; height: 100%; background: #3fee56; }
+/* Plan/credit meter now lives only inside the opened menu's status card, not the always-visible trigger. */
+.vt-adaptive-nav__menu-meter { display: flex; min-width: 0; flex-direction: column; gap: 4px; width: 92px; }
+.vt-adaptive-nav__menu-meter > b { padding: 5px; border: 2px solid #000; border-radius: 5px; background: #ffda47; font-size: 8px; text-transform: uppercase; white-space: nowrap; text-align: center; overflow: hidden; text-overflow: ellipsis; }
+.vt-adaptive-nav__menu-meter > i { display: block; height: 7px; overflow: hidden; border: 2px solid #000; border-radius: 4px; background: #fff; }
+.vt-adaptive-nav__menu-meter > i > i { display: block; height: 100%; background: #3fee56; }
 
 /* Signed-out account trigger: a direct, one-tap sign-up CTA instead of an empty avatar + credits meter. */
-.vt-adaptive-nav__account-trigger--signup {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  transition: transform 110ms ease, box-shadow 110ms ease;
-}
-.vt-adaptive-nav__account-trigger--signup:hover { transform: translateY(-1px); box-shadow: 0 2px 0 #000; }
-.vt-adaptive-nav__account-trigger--signup:active { transform: translateY(1px); box-shadow: none; }
+.vt-adaptive-nav__account-trigger--signup { background: #c0f240; }
 .vt-adaptive-nav__account-trigger--signup .vt-adaptive-nav__avatar { background: #000; color: #c0f240; flex-shrink: 0; }
 .vt-adaptive-nav__account-trigger--signup .vt-adaptive-nav__account-copy { flex: 1 1 auto; }
 .vt-adaptive-nav__signup-cta {
@@ -385,7 +433,6 @@
 .vt-adaptive-nav__menu-status small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase; }
 .vt-adaptive-nav__menu-status strong { font-size: 10px; }
 .vt-adaptive-nav__menu-status small { margin-top: 3px; font-size: 8px; font-weight: 800; opacity: .65; }
-.vt-adaptive-nav__menu-status > b { padding: 5px; border: 2px solid #000; border-radius: 5px; background: #ffda47; font-size: 8px; text-transform: uppercase; white-space: nowrap; }
 
 .vt-adaptive-nav__connect-action,
 .vt-adaptive-nav__sign-out {
@@ -401,33 +448,57 @@
   text-transform: uppercase;
 }
 
-.vt-adaptive-nav__menu-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 7px; }
-.vt-adaptive-nav__menu-groups section { min-width: 0; padding: 5px; border: 2px solid #000; border-radius: 7px; }
-.vt-adaptive-nav__menu-groups h2 { margin: 1px 4px 5px; font-size: 9px; font-weight: 900; text-transform: uppercase; }
+/* Single scannable column instead of a dense 2-up grid — this is a short, user-facing menu now, not a
+   power-user control panel. */
+.vt-adaptive-nav__menu-groups { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.vt-adaptive-nav__menu-groups section { min-width: 0; padding: 6px; border: 2px solid #000; border-radius: 8px; }
+.vt-adaptive-nav__menu-groups h2 { margin: 2px 5px 5px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
 .vt-adaptive-nav__menu-groups section > button,
 .vt-adaptive-nav__submenu button {
   display: flex;
   width: 100%;
-  min-height: 30px;
+  min-height: 34px;
   align-items: center;
   justify-content: space-between;
-  gap: 5px;
-  padding: 4px 6px;
+  gap: 6px;
+  padding: 6px 8px;
   border: 2px solid transparent;
-  border-radius: 5px;
+  border-radius: 6px;
   background: transparent;
   color: #000;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 900;
   text-align: left;
   text-transform: uppercase;
 }
 .vt-adaptive-nav__menu-groups section > button:hover,
 .vt-adaptive-nav__submenu button:hover { border-color: #000; background: #f3f4f6; }
-.vt-adaptive-nav__menu-groups button svg { width: 13px; height: 13px; flex: 0 0 auto; stroke-width: 3; }
-.vt-adaptive-nav__submenu { margin: 2px 0 4px; padding-left: 5px; border-left: 4px solid #36e0f6; }
-.vt-adaptive-nav__submenu button { min-height: 26px; font-size: 8px; }
+.vt-adaptive-nav__menu-groups button svg { width: 14px; height: 14px; flex: 0 0 auto; stroke-width: 3; }
+.vt-adaptive-nav__submenu { margin: 4px 0 2px; padding-left: 6px; border-left: 4px solid #36e0f6; }
+.vt-adaptive-nav__submenu button { min-height: 30px; font-size: 9px; }
 .vt-adaptive-nav__sign-out { background: #fa618a; }
+
+/* Advanced: collapsed by default so BYO-key / API-key options don't clutter the everyday menu. */
+.vt-adaptive-nav__menu-advanced-toggle {
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  color: rgba(0, 0, 0, .55);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+.vt-adaptive-nav__menu-advanced-toggle svg { width: 13px; height: 13px; stroke-width: 3; transition: transform 150ms ease; }
+.vt-adaptive-nav__menu-advanced-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+.vt-adaptive-nav__menu-advanced .vt-adaptive-nav__submenu { border-left-color: #c0c4cc; }
 
 .vt-adaptive-main {
   min-width: 0;
@@ -457,15 +528,15 @@
    nav buttons/utilities/page content need to animate between top and sidebar — the logo never moves. */
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__brand,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__brand {
-  width: 210px;
+  width: 100%;
   height: var(--vt-nav-top-height);
-  padding: 4px 12px;
+  padding: 4px 8px;
   align-self: start;
 }
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__logo,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__logo { height: 100%; }
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__logo span,
-.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__logo span { font-size: 38px; }
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__logo span { font-size: 37px; }
 
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__links,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__links {
@@ -473,7 +544,7 @@
   flex-direction: column;
   gap: 4px;
   align-items: stretch;
-  padding: 5px 9px 8px;
+  padding: 5px 7px 8px;
 }
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__link,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link {
@@ -482,6 +553,13 @@
   min-height: 44px;
   font-size: 13px;
 }
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__link.active::after,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link.active::after {
+  top: -2px;
+  right: 11px;
+  bottom: -2px;
+  width: 28px;
+}
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link { font-size: 11px; }
 
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__utilities,
@@ -489,19 +567,29 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  padding: 2px 9px 8px;
+  padding: 2px 7px 8px;
 }
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__account-trigger,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-trigger {
-  grid-template-columns: 38px minmax(0, 1fr) 18px;
+  grid-template-columns: 42px minmax(0, 1fr) 18px;
   width: 100%;
-  height: 54px;
+  height: 68px;
+  padding: 6px;
 }
-.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__meter,
-.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__meter { display: none; }
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__avatar,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__avatar {
+  width: 42px;
+  height: 42px;
+}
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__account-copy strong {
+  font-size: 11px;
+}
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__auth-status {
+  max-width: 104px;
+}
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-copy { display: none; }
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__signup-cta { display: none; }
-.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-trigger { grid-template-columns: 38px 18px; justify-content: space-between; }
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-trigger { grid-template-columns: 42px 18px; justify-content: space-between; }
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__account-menu,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-menu {
   position: fixed;
@@ -526,8 +614,8 @@
 .vt-adaptive-nav--mobile .vt-adaptive-nav__logo { justify-self: center; }
 .vt-adaptive-nav--mobile .vt-adaptive-nav__logo span { font-size: clamp(26px, 9vw, 35px); }
 .vt-adaptive-nav--mobile .vt-adaptive-nav__account-trigger { grid-template-columns: 38px; width: 50px; height: 50px; padding: 4px; }
+.vt-adaptive-nav--mobile .vt-adaptive-nav__avatar { width: 38px; height: 38px; box-shadow: none; }
 .vt-adaptive-nav--mobile .vt-adaptive-nav__account-copy,
-.vt-adaptive-nav--mobile .vt-adaptive-nav__meter,
 .vt-adaptive-nav--mobile .vt-adaptive-nav__account-chevron { display: none; }
 .vt-adaptive-nav--mobile .vt-adaptive-nav__account-menu { position: fixed; top: 77px; right: 36px; }
 .vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-main { grid-area: 2 / 1; padding: 20px 16px 300px; }
@@ -581,10 +669,20 @@
   }
   .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__link { height: 35px; font-size: 11px; }
   .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__account-trigger {
-    grid-template-columns: 38px minmax(78px, 1fr) 18px;
-    width: clamp(150px, 19vw, 250px);
+    grid-template-columns: 44px minmax(0, 1fr) 18px;
+    width: clamp(224px, 20vw, 270px);
+    padding: 5px 7px;
   }
-  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__meter { display: none; }
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__avatar {
+    width: 42px;
+    height: 42px;
+  }
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__account-copy strong {
+    font-size: 10px;
+  }
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__auth-status {
+    max-width: 118px;
+  }
 }
 
 @media (max-width: 1080px) and (min-width: 761px) {

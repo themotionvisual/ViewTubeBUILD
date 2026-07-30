@@ -36,7 +36,9 @@ import {
  getVtSyncSparkFillStyle,
  getVtSyncSparkGradient,
  getVtSyncTableGeometry,
+ getVtSyncTrafficOverviewRowHeight,
  getVtSyncTableProvenance,
+ getVtSyncVerticalScrollMetrics,
  getVtSyncVideoTitleLayout,
  getVisibleVtSyncColumns,
  getVtSyncHoverScrollIntent,
@@ -265,6 +267,7 @@ describe("VT Sync toolbox data table", () => {
    PLAYLIST: "YouTube Playlists", NO_LINK_OTHER: "Direct / Unknown", NOTIFICATION: "Notifications",
    SOUND_PAGE: "Audio Pages", SHORTS_CONTENT_LINKS: "Shorts Links", END_SCREEN: "End Screens",
    HASHTAGS: "Hashtag Pages", ANNOTATION: "Annotations", IMMERSIVE_LIVE: "Live Streams",
+   ADVERTISING: "Advertising",
   }
   const playbackLabels: Record<string, string> = {
    BROWSE: "Browsing Features", CHANNEL: "Channel Pages", EMBEDDED: "Embedded Players", EXTERNAL_APP: "External Apps",
@@ -309,6 +312,7 @@ describe("VT Sync toolbox data table", () => {
   expect(formatVtSyncColumnValue({ source: "SHORTS" }, sourceColumn)).toBe("SHORTS")
   expect(exportVtSyncTableCsv(trafficTable, [{ source: "SHORTS" }])).toContain("SHORTS")
   expect(exportVtSyncTableCsv(trafficTable, [{ source: "SHORTS" }])).not.toContain("Shorts Feed")
+  expect(rendererSource).toContain('table.id === "traffic" && column.key === "source" && !isMissingVtSyncValue(raw) ? renderTrafficSourceBadge')
   const subscriberTable = VT_SYNC_TABLE_DEFINITIONS.find((table) => table.id === "traffic_subscribers")!
   expect(exportVtSyncTableCsv(subscriberTable, [{ term: "what-to-watch" }])).toContain("what-to-watch")
   expect(exportVtSyncTableCsv(subscriberTable, [{ term: "what-to-watch" }])).not.toContain("YouTube Home")
@@ -358,7 +362,8 @@ describe("VT Sync toolbox data table", () => {
   expect(rendererSource).toContain("data-traffic-day-detail")
   expect(rendererSource).toContain("source.sourceApiValue.toLocaleUpperCase()")
   expect(rendererSource).not.toContain("<small>{source.sourceApiValue}</small>")
-  expect(rendererSource).toContain("buildVtSyncTrafficDayGroups(sourceRows, orderedColumns)")
+  expect(rendererSource).toContain("buildVtSyncTrafficDayGroups(trafficDayReference.rows, trafficDayReference.columns)")
+  expect(rendererSource).toContain('table.id !== "traffic" && table.presentationMode !== "traffic-source-day"')
   expect(rendererSource).toContain("newestGroup?.sources")
   expect(rendererSource).toContain("trafficSourceBadgeColors.get(apiValue.toLocaleUpperCase())")
   expect(rendererSource).toContain("return sortedTrafficDayGroups[0] ? new Set([sortedTrafficDayGroups[0].id]) : new Set()")
@@ -369,10 +374,13 @@ describe("VT Sync toolbox data table", () => {
   expect(rendererCss).toContain(".vt-sync-traffic-day-child td { height: 38px; max-height: 38px; }")
   expect(rendererCss).toContain(".vt-sync-traffic-day-child .vt-sync-traffic-day-value { padding: 4px 6px 11px; font-size: 15px; }")
   expect(rendererCss).toContain(".vt-sync-traffic-day-table .vt-sync-spark.shape-bar { right: 8px; bottom: 5px; left: 8px; height: 8px;")
-  expect(rendererCss).toContain(".vt-sync-traffic-day-viewport { width: 100%; max-height: 760px; overflow: auto; border-top: 4px solid var(--vt-ink); background: #fff; scrollbar-width: none; }")
+  expect(rendererCss).toContain(".vt-sync-traffic-day-scroll-shell { display: flex; width: 100%; max-height: 760px; overflow: hidden; border-top: 4px solid var(--vt-ink);")
+  expect(rendererCss).toContain(".vt-sync-traffic-day-viewport { flex: 1 1 auto; width: 100%; min-width: 0; max-height: 760px; overflow: auto;")
   expect(rendererCss).toContain(".vt-sync-traffic-day-viewport::-webkit-scrollbar { width: 0; height: 0; display: none; }")
   expect(rendererCss).toContain(".vt-sync-traffic-source-badge")
- expect(rendererCss).toContain("font-size: 11px; line-height: 1; font-weight: 1000;")
+ expect(rendererCss).toContain(".vt-sync-traffic-source-badge { width: 280px; min-width: 280px; max-width: 280px;")
+ expect(rendererCss).toContain("font-size: 15px; line-height: 1; font-weight: 1000;")
+ expect(rendererCss).toContain('.vt-sync-data-table td[data-column-key="source"] .vt-sync-traffic-source-badge { position: absolute;')
  })
 
  it("groups 100-point retention curves by video without changing the flat export contract", () => {
@@ -592,7 +600,7 @@ describe("VT Sync toolbox data table", () => {
   expect(getVtSyncTableGeometry(10, false, true)).toMatchObject({ mode: "large", useGroups: true, canPin: true, rowHeight: 48 })
   expect(getVtSyncTableGeometry(8, true, true)).toMatchObject({ rowHeight: 31, totalsHeight: 16, columnHeaderHeight: 84 })
   expect(getVtSyncTableGeometry(8, true, false)).toMatchObject({ rowHeight: 19, totalsHeight: 16, columnHeaderHeight: 84 })
-  expect(VT_SYNC_SMALL_TABLE_COLORS).toHaveLength(8)
+  expect(VT_SYNC_SMALL_TABLE_COLORS).toHaveLength(12)
  })
 
  it("sorts dates chronologically and each duration unit by elapsed time", () => {
@@ -695,16 +703,16 @@ describe("VT Sync toolbox data table", () => {
  })
 
  it("changes compact palettes without reversing magnitude or bar direction", () => {
-  expect(getVtSyncOppositeColor("#FF83EA")).toBe("#4FFF5B")
-  expect(getVtSyncOppositeColor("#ff83ea")).toBe("#4FFF5B")
-  expect(getVtSyncRankColor(0, false)).toBe("#40C6E9")
-  expect(getVtSyncRankColor(1, false)).toBe("#FF3B30")
-  expect(getVtSyncRankColor(0, true)).toBe("#FF3B30")
-  expect(getVtSyncRankColor(1, true)).toBe("#40C6E9")
-  expect(getVtSyncSparkGradient(false)).toContain("#40C6E9 0%")
-  expect(getVtSyncSparkGradient(false)).toContain("#FFFF61 50%")
-  expect(getVtSyncSparkGradient(false)).toContain("#FF3B30 100%")
- expect(getVtSyncSparkGradient(true)).toContain("#FF3B30 0%")
+  expect(getVtSyncOppositeColor("#F55EFC")).toBe("#3FEE56")
+  expect(getVtSyncOppositeColor("#F55EFC")).toBe("#3FEE56")
+  expect(getVtSyncRankColor(0, false)).toBe("#36E0F6")
+  expect(getVtSyncRankColor(1, false)).toBe("#FA618A")
+  expect(getVtSyncRankColor(0, true)).toBe("#FA618A")
+  expect(getVtSyncRankColor(1, true)).toBe("#36E0F6")
+  expect(getVtSyncSparkGradient(false)).toContain("#36E0F6 0%")
+  expect(getVtSyncSparkGradient(false)).toContain("#FFDA47 50%")
+  expect(getVtSyncSparkGradient(false)).toContain("#FA618A 100%")
+ expect(getVtSyncSparkGradient(true)).toContain("#FA618A 0%")
   expect(getVtSyncSparkFillStyle(.2, getVtSyncSparkGradient(false), "spectrum")).toMatchObject({
    width: "20%",
    backgroundPosition: "left center",
@@ -713,7 +721,7 @@ describe("VT Sync toolbox data table", () => {
   })
   expect(getVtSyncSparkFillStyle(.5, getVtSyncSparkGradient(false), "spectrum").backgroundSize).toBe("200% 100%")
   expect(getVtSyncSparkFillStyle(1, getVtSyncSparkGradient(false), "spectrum").backgroundSize).toBe("100% 100%")
-  expect(getVtSyncSparkFillStyle(.5, "#4FFF5B", "solid")).toEqual({ width: "50%", background: "#4FFF5B" })
+  expect(getVtSyncSparkFillStyle(.5, "#3FEE56", "solid")).toEqual({ width: "50%", background: "#3FEE56" })
   expect(rendererCss).not.toContain("transform: scaleX(-1)")
  })
 
@@ -751,6 +759,58 @@ describe("VT Sync toolbox data table", () => {
    { key: "source", width: 200 },
    { key: "views", width: 100 },
   ], 300)).toEqual({ source: 200, views: 100 })
+ })
+
+ it("fills Traffic Overview without scrollbar controls while preserving its fixed source width", () => {
+  const trafficTable = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((table) => table.id === "traffic")!
+  const trafficDayTable = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((table) => table.id === "traffic_day")!
+  expect(trafficTable.columns.find((column) => column.key === "source")?.preferredWidth).toBe(300)
+  expect(trafficTable.verticalScrollMode).toBe("none")
+  expect(trafficDayTable.verticalScrollMode).toBe("custom")
+  expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.filter((table) => table.mainCategoryId === "traffic" && table.id !== "traffic_day").every((table) => table.verticalScrollMode === "none")).toBe(true)
+  expect(getVtSyncTrafficOverviewRowHeight(18)).toBe(44)
+  expect(getVtSyncTrafficOverviewRowHeight(17)).toBe(46)
+  expect(getVtSyncTrafficOverviewRowHeight(12)).toBe(66)
+  expect(getVtSyncTrafficOverviewRowHeight(0)).toBe(44)
+  expect(rendererSource).toContain('table.id !== "traffic" && renderScrollbar("top")')
+  expect(rendererSource).toContain('table.verticalScrollMode === "custom" && renderVerticalScrollbar()')
+  expect(rendererSource).toContain('table.id !== "traffic" && renderScrollbar("bottom")')
+  expect(rendererSource).toContain('(table.id === "traffic" && column.key === "source")')
+  expect(rendererCss).toContain(".vt-sync-toolbox-table.is-traffic-table .vt-sync-split-table { max-height: none; }")
+  expect(rendererCss).toContain(".vt-sync-toolbox-table.is-traffic-table .vt-sync-row-rail-viewport,")
+  expect(rendererCss).toContain(".vt-sync-traffic-day-scroll-shell { display: flex;")
+  expect(rendererCss).toContain("border-top: 4px solid var(--vt-ink)")
+ })
+
+ it("maps vertical scrollbar pixels one-to-one with scroll progress", () => {
+  expect(getVtSyncVerticalScrollMetrics({
+   scrollTop: 450,
+   scrollHeight: 1_000,
+   clientHeight: 100,
+   trackHeight: 200,
+  })).toEqual({
+   thumbHeight: 44,
+   thumbTop: 78,
+   trackTravel: 156,
+   maxScroll: 900,
+  })
+  expect(getVtSyncVerticalScrollMetrics({
+   scrollTop: 500,
+   scrollHeight: 100,
+   clientHeight: 100,
+   trackHeight: 200,
+  })).toEqual({
+   thumbHeight: 200,
+   thumbTop: 0,
+   trackTravel: 0,
+   maxScroll: 0,
+  })
+  expect(getVtSyncVerticalScrollMetrics({
+   scrollTop: 9_999,
+   scrollHeight: 1_000,
+   clientHeight: 100,
+   trackHeight: 200,
+  }).thumbTop).toBe(156)
  })
 
  it("keeps every normal video row fixed while adapting title typography", () => {
@@ -808,8 +868,8 @@ describe("VT Sync toolbox data table", () => {
  })
 
  it("uses only the two custom horizontal scrollbars and active left split menus", () => {
-  expect(rendererSource).toContain('{renderScrollbar("top")}')
-  expect(rendererSource).toContain('{renderScrollbar("bottom")}')
+  expect(rendererSource).toContain('{table.id !== "traffic" && renderScrollbar("top")}')
+  expect(rendererSource).toContain('{table.id !== "traffic" && renderScrollbar("bottom")}')
   expect(rendererSource).not.toContain("item.tableIds.length > 1 && !isActive")
   expect(rendererCss).toContain(".vt-sync-main-viewport::-webkit-scrollbar { width: 0; height: 0; display: none; }")
   expect(rendererCss).toContain(".vt-sync-main-viewport { flex: 1 1 auto; min-width: 0; overflow: auto; scrollbar-width: none; }")
@@ -821,6 +881,14 @@ describe("VT Sync toolbox data table", () => {
   expect(rendererSource).not.toContain("<i /></span>")
   expect(rendererCss).not.toContain(".vt-sync-scroll-thumb i")
   expect(rendererCss).toContain(".vt-sync-scrollbar.top button svg { width: 22px; height: 22px; display: block;")
+  expect(rendererSource).toContain("const useSplitControl = isActive && hasTables")
+  expect(rendererSource).toContain('className="vt-sync-category-split-label">Set</span>')
+  expect(rendererSource).toContain('className="vt-sync-category-split-icon"><ChevronDown')
+  expect(rendererSource).toContain("isSelected ? <ChevronDown")
+  expect(rendererSource).not.toContain("{item.label} Data Set")
+  expect(rendererSource).not.toContain("{candidate.columns.length} columns")
+  expect(rendererCss).toContain(".vt-sync-category-icon.is-split { grid-template-rows: 1fr 1fr; }")
+  expect(rendererCss).toContain(".vt-sync-subset-menu button { width: 100%; min-height: 40px;")
  })
 
  it("renders one fixed row rail outside every horizontally scrolling table", () => {
@@ -835,12 +903,12 @@ describe("VT Sync toolbox data table", () => {
  })
 
  it("uses category-style toolbar strokes, shadows, and binary effect toggles", () => {
- expect(rendererCss).toContain(".vt-sync-toolbar-action { --vt-action-rail: #ff83ea; --vt-action-label: #ffff61;")
+ expect(rendererCss).toContain(".vt-sync-toolbar-action { --vt-action-rail: #F55EFC; --vt-action-label: #FFDA47;")
   expect(rendererCss).toContain("border: 3px solid var(--vt-ink); border-radius: 10px;")
   expect(rendererCss).toContain("filter: drop-shadow(5px 5px 0 var(--vt-action-shadow))")
   expect(rendererCss).toContain("background: var(--vt-action-label)")
   expect(rendererCss).toContain("font-size: 19px; line-height: 1.5; font-weight: bolder;")
-  expect(rendererCss).toContain(".vt-sync-toolbar-action svg { width: 30px; height: 30px;")
+  expect(rendererCss).toContain(".vt-sync-toolbar-action svg { width: 22px; height: 22px;")
   expect(rendererCss).toContain(".vt-sync-binary-toggle { display: grid;")
   expect(rendererCss).toContain(".vt-sync-binary-toggle button.active { background: var(--vt-binary-color)")
  })
@@ -850,17 +918,17 @@ describe("VT Sync toolbox data table", () => {
   expect(rendererCss).toContain("tr.format-short:nth-child(odd)")
   expect(rendererCss).toContain("tr.format-long:nth-child(even)")
   expect(rendererCss).toContain("tr.format-live:nth-child(odd)")
-  expect(rendererCss).toContain("tr.is-selected td { background: rgba(64,198,233,.30) !important;")
+  expect(rendererCss).toContain("tr.is-selected td { background: rgba(54,224,246,.30) !important;")
   expect(rendererCss).not.toContain("tr.is-selected td { outline: 3px")
   expect(rendererSource).toContain('className="vt-sync-row-rail-head is-totals">Totals</th>')
   expect(rendererSource).toContain('className="vt-sync-row-rail-head is-stats">Stats</th>')
  })
 
  it("keeps the standard data visuals toolbox collapsed and unmounted by default", () => {
-  expect(visualsSource).toContain("const [isOpen, setIsOpen] = useState(false)")
+  expect(visualsSource).toContain("const [isOpen1, setIsOpen1] = useState(false)")
   expect(visualsSource).toContain("<ToolboxScaffold")
   expect(visualsSource).toContain("unmountWhenClosed")
-  expect(visualsSource.indexOf("buildVtSyncVisualPropsData")).toBeLessThan(visualsSource.indexOf("const [isOpen, setIsOpen]"))
+  expect(visualsSource.indexOf("buildVtSyncVisualPropsData")).toBeLessThan(visualsSource.indexOf("const [isOpen1, setIsOpen1]"))
  })
 
  it("scopes width state by table and keeps reordering inside a metric group", () => {
@@ -1079,9 +1147,19 @@ describe("VT Sync toolbox data table", () => {
 
   expect(keys("geography").slice(0, 3)).toEqual(["countryFlag", "countryCode", "countryName"])
   expect(keys("geography")).toEqual(expect.arrayContaining(["revenue", "estimatedAdRevenue", "youtubePremiumRevenue"]))
-  expect(keys("geography")).not.toEqual(expect.arrayContaining(["cpm", "grossRevenue", "monetizedPlaybacks", "playbackBasedCpm", "adImpressions"]))
+  expect(keys("geography")).toEqual(expect.arrayContaining(["cpm", "grossRevenue", "monetizedPlaybacks", "playbackBasedCpm", "adImpressions"]))
   expect(keys("cities")).toEqual(["countryFlag", "city", "countryName", "views", "engagedViews", "watchTime", "avgDuration", "avgPercentageViewed"])
-  expect(keys("provinces")).toEqual(["provinceCode", "stateName", "views", "engagedViews", "watchTime", "avgDuration", "avgPercentageViewed"])
+  expect(table("cities").columns.slice(0, 3).map((column) => column.preferredWidth)).toEqual([66, 150, 96])
+  expect(keys("provinces")).toEqual([
+   "provinceCode", "stateName", "views", "engagedViews", "watchTime", "avgDuration", "avgPercentageViewed",
+   "subscribersGained", "subscribersLost", "likes", "dislikes", "comments", "shares",
+  ])
+  expect(table("provinces").columns.filter((column) => column.group === "Unavailable by State")).toHaveLength(6)
+  expect(table("provinces").columns.filter((column) => column.group === "Unavailable by State").every((column) =>
+   column.availabilityNote === "Not available by state from the YouTube Analytics API."
+   && column.visualization === "none"
+   && column.totalMode === "none"
+  )).toBe(true)
   expect(keys("dma")).toEqual(["dmaCode", "dmaName", "views", "engagedViews", "watchTime", "avgDuration", "avgPercentageViewed"])
   expect(table("provinces")).toMatchObject({ layoutMode: "sparse-full", compactMode: "normal-only" })
   expect(table("dma")).toMatchObject({ layoutMode: "sparse-full", compactMode: "normal-only" })

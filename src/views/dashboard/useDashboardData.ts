@@ -467,7 +467,7 @@ export const useDashboardData = () => {
     { label: "Studio", to: "/studio", paletteIndex: 1, icon: "Layers", isTool: false },
     { label: "Projects", to: "/project-calendar", paletteIndex: 2, icon: "CalendarDays", isTool: false },
     { label: "Ai Brain", to: "/performance", paletteIndex: 3, icon: "Bot", isTool: false },
-    { label: "VT SYNC", to: "/sync", paletteIndex: 4, icon: "RefreshCw", isTool: false },
+    { label: "ANALYTICS", to: "/analytics", paletteIndex: 4, icon: "RefreshCw", isTool: false },
     { label: "Editor", to: "/editor", paletteIndex: 5, icon: "Edit3", isTool: false },
     { label: "Settings", to: "/settings", paletteIndex: 6, icon: "Settings", isTool: false },
     { label: "User Guide", to: "/guide", paletteIndex: 7, icon: "BookOpen", isTool: false },

@@ -42,7 +42,7 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
 
  const renderPieSlices = () => {
   let accumulatedPct = 0
-  return sources.map((src) => {
+  return sources.map((src, index) => {
    const startPct = accumulatedPct
    accumulatedPct += src.pct
    const x1 = Math.cos(2 * Math.PI * (startPct / 100))
@@ -53,7 +53,7 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
 
    return (
     <path
-     key={src.label}
+     key={`${src.label}-${index}`}
      d={`M 0 0 L ${x1} ${y1} A 1 1 0 ${largeArcFlag} 1 ${x2} ${y2} Z`}
      fill={src.color}
      stroke="none"
@@ -99,8 +99,8 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
       {renderPieSlices()}
      </svg>
      <div className="bub" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px", zIndex: 110 }}>
-       {sources.map(src => (
-         <div key={src.label} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+       {sources.map((src, index) => (
+         <div key={`${src.label}-${index}`} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
            <div style={{ width: "8px", height: "8px", background: src.color, border: "1px solid #000" }} />
            <span>{src.label}: {src.pct}%</span>
          </div>
@@ -118,9 +118,9 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
       borderTop: "2px solid #000",
       paddingTop: "6px",
      }}>
-     {sources.map((src) => (
+     {sources.map((src, index) => (
       <div
-       key={src.label}
+       key={`${src.label}-${index}`}
        style={{
         display: "flex",
         alignItems: "center",

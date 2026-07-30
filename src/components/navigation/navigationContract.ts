@@ -10,7 +10,7 @@ export const PRIMARY_NAV_ITEMS = [
   { id: "STUDIO", path: "/studio", label: "Studio", paletteIndex: 1 },
   { id: "PROJECTS", path: "/projects", label: "Projects", paletteIndex: 2 },
   { id: "AI_BRAIN", path: "/ai-brain", label: "AI Brain", paletteIndex: 3 },
-  { id: "VT_SYNC", path: "/local-analytics", label: "VT Sync", paletteIndex: 4 },
+  { id: "VT_SYNC", path: "/local-analytics", label: "Analytics", paletteIndex: 4 },
   { id: "EDITOR", path: "/editor", label: "Editor", paletteIndex: 5 },
   { id: "SETTINGS", path: "/settings", label: "Settings", paletteIndex: 6 },
   { id: "USER_GUIDE", path: "/user-guide", label: "User Guide", paletteIndex: 7 },

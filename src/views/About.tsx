@@ -8,7 +8,7 @@ const navPreview = [
   { label: "Studio", color: "#FF7F6B" },
   { label: "Projects", color: "#FFA85C" },
   { label: "AI Brain", color: "#FFDA47" },
-  { label: "VT Sync", color: "#C0F240" },
+  { label: "Analytics", color: "#C0F240" },
   { label: "Editor", color: "#3FEE56" },
   { label: "Settings", color: "#36E0F6" },
   { label: "User Guide", color: "#528FFA" },

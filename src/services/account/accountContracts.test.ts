@@ -57,6 +57,14 @@ describe("unified account copy", () => {
     expect(resolveAccountSurfaceLabel(connected, "topbar")).toBe("Connected")
     expect(resolveAccountSurfaceLabel(connected, "sidebar")).toBe("Sync Data")
     expect(resolveAccountSurfaceLabel(connected, "settings")).toBe("Connected")
+
+    const incrementalGrant = snapshot({
+      authentication: { status: "authenticated", accountExists: true },
+      google: { status: "connected", youtubeScopesGranted: true, channelId: "UC123" },
+      nextIntent: "reconnect_channel",
+    })
+    expect(resolveAccountIntent(incrementalGrant)).toBe("reconnect_channel")
+    expect(resolveAccountActionLabel(incrementalGrant)).toBe("Reconnect Channel")
   })
 
   it("shows connecting copy while auth is pending", () => {

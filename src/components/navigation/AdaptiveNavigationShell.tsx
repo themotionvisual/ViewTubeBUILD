@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react"
 import {
   ChevronDown,
   ChevronRight,
-  Columns2,
   Menu,
   PanelLeft,
   PanelTop,
@@ -10,9 +9,9 @@ import {
   X,
 } from "lucide-react"
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
-import { useDashboard } from "../../context/DashboardContext"
 import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
 import { useBrain } from "../../context/useBrain"
+import { getVtSyncSnapshot } from "../../features/vt-sync-local"
 import { isOwnerEmail, type EntitlementState } from "../../services/billingEntitlement"
 import { resolveAccountChipLabel } from "../../services/account/accountContracts"
 import { formatSyncLabel, getSyncTimestamp } from "../../services/onboardingState"
@@ -149,6 +148,36 @@ const knownEmail = (): string => {
 const isMobileViewport = (): boolean =>
   typeof window !== "undefined" && window.matchMedia(MOBILE_QUERY).matches
 
+const cleanAccountText = (value: string | null | undefined): string =>
+  String(value || "").trim()
+
+const cleanConnectedChannelName = (value: string | null | undefined): string => {
+  const cleanValue = cleanAccountText(value)
+  if (!cleanValue) return ""
+  if (/^(syncing channel|not connected|needs verification)$/i.test(cleanValue)) return ""
+  return cleanValue
+}
+
+const accountInitials = (value: string): string => {
+  const cleanValue = cleanAccountText(value)
+  if (!cleanValue) return "VT"
+  const source = cleanValue.includes("@") ? cleanValue.split("@")[0] : cleanValue
+  const parts = source.split(/[\s._-]+/).filter(Boolean)
+  const initials = parts.length > 1
+    ? `${parts[0][0] || ""}${parts[1][0] || ""}`
+    : source.slice(0, 2)
+  return initials.toUpperCase()
+}
+
+const toHighResYouTubeAvatar = (url?: string | null): string => {
+  const cleanUrl = cleanAccountText(url)
+  if (!cleanUrl) return ""
+  if (cleanUrl.includes("googleusercontent.com") || cleanUrl.includes("yt3.ggpht.com") || cleanUrl.includes("ggpht.com")) {
+    return cleanUrl.replace(/=s\d+/, "=s800")
+  }
+  return cleanUrl
+}
+
 export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = ({
   children,
   entitlement,
@@ -158,6 +187,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   const navigate = useNavigate()
   const account = useUnifiedAccount()
   const {
+    brain,
     authState,
     channelConnection,
     channelIdentity,
@@ -165,16 +195,6 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     disconnectChannel,
     syncChannelData,
   } = useBrain()
-  const {
-    editMode,
-    setEditMode,
-    isLocked,
-    setIsLocked,
-    setPickerOpen,
-    exportLayout,
-    importLayout,
-    resetLayout,
-  } = useDashboard()
 
   const [layout, setLayoutState] = useState<NavigationLayout>(() => {
     if (typeof window === "undefined") return "top"
@@ -183,28 +203,50 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   const [mobile, setMobile] = useState(isMobileViewport)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
-  const [expandedSection, setExpandedSection] = useState<"brain" | "widgets" | null>(null)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
   const [announcement, setAnnouncement] = useState("")
   const accountButtonRef = useRef<HTMLButtonElement | null>(null)
   const accountMenuRef = useRef<HTMLDivElement | null>(null)
   const drawerRef = useRef<HTMLDivElement | null>(null)
   const mainViewportRef = useRef<HTMLElement | null>(null)
 
-  const isConnected = account.snapshot.authentication.status === "authenticated" && (account.snapshot.google.status === "connected" || channelConnection.isConnected)
+  const accountAuthenticated =
+    account.snapshot.authentication.status === "authenticated" ||
+    authState.isAuthenticated ||
+    channelConnection.hasSession
+  const googleConnected = account.snapshot.google.status === "connected" || account.snapshot.google.youtubeScopesGranted || channelConnection.isConnected
+  const channelVerified = channelConnection.state === "connected_verified" || channelIdentity.isVerified
+  const isConnected = accountAuthenticated && googleConnected
   const accountChipLabel = resolveAccountChipLabel(account.snapshot)
+  const accountDisplayName =
+    cleanAccountText(account.snapshot.profile.displayName) ||
+    cleanAccountText(account.snapshot.profile.email) ||
+    "ViewTube Account"
+  const accountEmail = cleanAccountText(account.snapshot.profile.email)
+  const vtSyncSnapshot = getVtSyncSnapshot()
+  const fallbackChannelName = cleanConnectedChannelName(channelConnection.channelName)
   const channelName = isConnected
-    ? channelIdentity.name || channelConnection.channelName || "Connected"
+    ? cleanConnectedChannelName(channelIdentity.name) || cleanConnectedChannelName(authState.channelName) || cleanConnectedChannelName(vtSyncSnapshot.channelName) || fallbackChannelName || accountDisplayName
     : accountChipLabel
   const handleText = isConnected && (channelIdentity.handle || channelConnection.handleText)
     ? `@${String(channelIdentity.handle || channelConnection.handleText || "").replace(/^@/, "")}`
     : ""
-  const channelAvatar = isConnected ? channelIdentity.avatarUrl || authState.channelThumbnail : null
+  const accountMeta = handleText || cleanAccountText(vtSyncSnapshot.channelCustomUrl) || accountEmail || (googleConnected ? "YouTube channel connected" : "Account active")
+  const brainAvatar =
+    brain.channelProfile?.thumbnail ||
+    brain.channelProfile?.thumbnails?.high?.url ||
+    brain.channelProfile?.thumbnails?.medium?.url ||
+    brain.channelProfile?.thumbnails?.default?.url ||
+    ""
+  const channelAvatar = isConnected
+    ? toHighResYouTubeAvatar(channelIdentity.avatarUrl || authState.channelThumbnail || brainAvatar || vtSyncSnapshot.avatarUrl || account.snapshot.profile.avatarUrl)
+    : null
   const syncLabel = channelConnection.state === "connected_verified"
     ? formatSyncLabel(getSyncTimestamp(authState))
     : channelConnection.state === "syncing"
-      ? "Syncing now"
+      ? channelVerified ? "Refreshing catalog" : "Signed in"
       : isConnected
-        ? channelConnection.statusLabel || "Ready to connect"
+        ? channelVerified ? channelConnection.statusLabel || "Connected" : "Signed in"
         : accountChipLabel
   const label = planLabel(entitlement.subscriptionPlanId)
   const unlimited = entitlement.tier === "large"
@@ -221,7 +263,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
 
   const closeAccountMenu = (restoreFocus = false) => {
     setAccountOpen(false)
-    setExpandedSection(null)
+    setAdvancedOpen(false)
     if (restoreFocus) requestAnimationFrame(() => accountButtonRef.current?.focus())
   }
 
@@ -360,19 +402,13 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
 
   const renderLayoutControls = () => (
     <div ref={registerControl} className="vt-adaptive-nav__layout-controls" role="group" aria-label="Navigation layout">
-      <button type="button" onClick={animateToTop} aria-label="Use top bar" aria-pressed={layout === "top"} title="Top bar">
+      <button type="button" onClick={animateToTop} aria-label="Use top bar" title="Top bar">
         <PanelTop aria-hidden="true" />
-      </button>
-      <button type="button" onClick={() => setLayout("wide")} aria-label="Use wide sidebar" aria-pressed={layout === "wide"} title="Wide sidebar">
-        <PanelLeft aria-hidden="true" />
-      </button>
-      <button type="button" onClick={() => setLayout("thin")} aria-label="Use thin sidebar" aria-pressed={layout === "thin"} title="Thin sidebar">
-        <Columns2 aria-hidden="true" />
       </button>
     </div>
   )
 
-  const accountTrigger = isConnected ? (
+  const accountTrigger = accountAuthenticated ? (
     <button
       ref={accountButtonRef}
       type="button"
@@ -390,18 +426,15 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
         {channelAvatar ? (
           <img src={channelAvatar} alt="" width="38" height="38" />
         ) : (
-          <span className="rounded-full border-[2px] border-black bg-white px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0_0_#000]">
-            {accountChipLabel}
+          <span className="grid size-[38px] place-items-center rounded-full border-[2px] border-black bg-white text-[10px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0_0_#000]">
+            {accountInitials(channelName)}
           </span>
         )}
       </span>
       <span className="vt-adaptive-nav__account-copy">
         <strong>{channelName}</strong>
-        <span>{handleText ? `${handleText} | ${syncLabel}` : syncLabel}</span>
-      </span>
-      <span className="vt-adaptive-nav__meter">
-        <span><b>{label}</b><b>{credits}</b></span>
-        <i><i style={{ width: `${creditPercent}%` }} /></i>
+        <span className="vt-adaptive-nav__account-meta">{accountMeta}</span>
+        <span className="vt-adaptive-nav__auth-status">{syncLabel}</span>
       </span>
       <ChevronDown className="vt-adaptive-nav__account-chevron" aria-hidden="true" />
     </button>
@@ -417,7 +450,8 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
       </span>
       <span className="vt-adaptive-nav__account-copy">
         <strong>Join ViewTube</strong>
-        <span>Free — connect your channel</span>
+        <span className="vt-adaptive-nav__account-meta">Free Account Setup</span>
+        <span className="vt-adaptive-nav__auth-status">Connect Channel</span>
       </span>
       <span className="vt-adaptive-nav__signup-cta" aria-hidden="true">Sign Up</span>
     </button>
@@ -435,13 +469,16 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
       <div className="vt-adaptive-nav__menu-status">
         <span className="vt-adaptive-nav__avatar">
           {channelAvatar ? <img src={channelAvatar} alt="" width="38" height="38" /> : (
-            <span className="rounded-full border-[2px] border-black bg-white px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0_0_#000]">
-              {accountChipLabel}
+            <span className="grid size-[38px] place-items-center rounded-full border-[2px] border-black bg-white text-[10px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0_0_#000]">
+              {accountInitials(channelName)}
             </span>
           )}
         </span>
-        <span><strong>{channelName}</strong><small>{isConnected && handleText ? `${handleText} | ${syncLabel}` : "Popup login opens from any connect action"}</small></span>
-        <b>{label} | {unlimited ? "Unlimited" : Math.max(0, Math.floor(entitlement.creditBalance)).toLocaleString()}</b>
+        <span><strong>{channelName}</strong><small>{accountAuthenticated ? `${accountMeta} | ${syncLabel}` : "Popup login opens from any connect action"}</small></span>
+        <span className="vt-adaptive-nav__menu-meter">
+          <b>{label} · {credits}</b>
+          <i><i style={{ width: `${creditPercent}%` }} /></i>
+        </span>
       </div>
 
       <AccountActionButton
@@ -455,51 +492,42 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
       />
 
       <div className="vt-adaptive-nav__menu-groups">
-        <section aria-label="Workspace">
-          <h2>Workspace</h2>
+        <section aria-label="Account">
+          <h2>Account</h2>
           <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/account")}><span>Account Settings</span><ChevronRight aria-hidden="true" /></button>
-          {isConnected ? (
-            <button data-nav-menu-item role="menuitem" type="button" onClick={() => { closeAccountMenu(); void syncChannelData({ batchMode: "initial" }) }}><span>Run Sync</span><ChevronRight aria-hidden="true" /></button>
-          ) : null}
           <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/account?panel=billing")}><span>Billing & Credits</span><ChevronRight aria-hidden="true" /></button>
-          <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/reference-studio/toolbox-system")}><span>Reference Studio</span><ChevronRight aria-hidden="true" /></button>
+        </section>
+
+        <section aria-label="Help">
+          <h2>Help</h2>
           <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/user-guide")}><span>User Guide</span><ChevronRight aria-hidden="true" /></button>
           <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/about")}><span>About ViewTube</span><ChevronRight aria-hidden="true" /></button>
         </section>
 
-        <section aria-label="Tools and layout">
-          <h2>Tools & Layout</h2>
-          <button data-nav-menu-item role="menuitem" type="button" aria-expanded={expandedSection === "brain"} onClick={() => setExpandedSection((value) => value === "brain" ? null : "brain")}><span>AI Brain Options</span><ChevronDown aria-hidden="true" /></button>
-          {expandedSection === "brain" ? (
+        <section aria-label="Advanced" className="vt-adaptive-nav__menu-advanced">
+          <button
+            type="button"
+            className="vt-adaptive-nav__menu-advanced-toggle"
+            aria-expanded={advancedOpen}
+            onClick={() => setAdvancedOpen((value) => !value)}
+          >
+            <span>Advanced</span>
+            <ChevronDown aria-hidden="true" />
+          </button>
+          {advancedOpen ? (
             <div className="vt-adaptive-nav__submenu">
-              <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/ai-brain")}>Open AI Brain Command</button>
-              <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/ai-brain?intake=1")}>Gemini Flash Lite</button>
-              <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/ai-brain?intake=1")}>Gemini Pro Preview</button>
-              <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/ai-brain?intake=1")}>Gemini Video Analysis</button>
-              <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/ai-brain?intake=1")}>Gemini Image Analysis</button>
+              <GeminiKeySettings trigger={
+                <button data-nav-menu-item role="menuitem" type="button"><span>Use Your Own AI Key</span><ChevronRight aria-hidden="true" /></button>
+              } />
+              {canSeeApiKeys ? (
+                <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/account")}><span>API Keys</span><ChevronRight aria-hidden="true" /></button>
+              ) : null}
             </div>
           ) : null}
-          <button data-nav-menu-item role="menuitem" type="button" aria-expanded={expandedSection === "widgets"} onClick={() => setExpandedSection((value) => value === "widgets" ? null : "widgets")}><span>Widget Options</span><ChevronDown aria-hidden="true" /></button>
-          {expandedSection === "widgets" ? (
-            <div className="vt-adaptive-nav__submenu">
-              <button data-nav-menu-item role="menuitem" type="button" onClick={() => { setEditMode((value) => !value); closeAccountMenu() }}>{editMode ? "Exit Rearrange Widgets" : "Rearrange Widgets"}</button>
-              <button data-nav-menu-item role="menuitem" type="button" onClick={() => { setPickerOpen(true); closeAccountMenu() }}>Widget Availability</button>
-              <button data-nav-menu-item role="menuitem" type="button" onClick={() => { setIsLocked((value) => !value); closeAccountMenu() }}>{isLocked ? "Unlock Layout" : "Lock Layout"}</button>
-              <button data-nav-menu-item role="menuitem" type="button" onClick={() => { exportLayout(); closeAccountMenu() }}>Export Layout</button>
-              <button data-nav-menu-item role="menuitem" type="button" onClick={() => { importLayout(); closeAccountMenu() }}>Import Layout</button>
-              <button data-nav-menu-item role="menuitem" type="button" onClick={() => { resetLayout(); closeAccountMenu() }}>Reset Layout</button>
-            </div>
-          ) : null}
-          {canSeeApiKeys ? (
-            <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/account#api-keys")}><span>API Keys</span><ChevronRight aria-hidden="true" /></button>
-          ) : null}
-          <GeminiKeySettings trigger={
-            <button data-nav-menu-item role="menuitem" type="button"><span>Bring Your AI Key</span><ChevronRight aria-hidden="true" /></button>
-          } />
         </section>
       </div>
 
-      {account.snapshot.authentication.status === "authenticated" || isConnected ? (
+      {accountAuthenticated || isConnected ? (
         <button data-nav-menu-item role="menuitem" type="button" className="vt-adaptive-nav__sign-out" onClick={() => void onSignOut()}>Sign Out</button>
       ) : null}
     </div>

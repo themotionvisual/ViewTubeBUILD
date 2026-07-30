@@ -85,6 +85,33 @@ const VISUAL_MODULES: VtSyncVisualModuleDefinition[] = [
  ...TUBE_EXPLORER_MODULES,
 ]
 
+const PRIMARY_MODULE_IDS = new Set([
+ "combo-channel-progress",
+ "engagement-lines",
+ "growth-pulse",
+ "shorts-retention-widget",
+ "format-comparison-donuts",
+ "revenue-efficiency",
+ "revenue-distribution",
+ "subscribers-gained",
+ "watch-time-distribution",
+ "traffic-source-evolution",
+ "keyword-venn",
+ "tube-explorer-clock-radial-burst",
+ "tube-explorer-barcode-fingerprint",
+ "tube-explorer-subscriber-waterfall",
+ "tube-explorer-shorts-vs-longs",
+ "tube-explorer-content-treemap",
+ "tube-explorer-traffic-day-river-delta",
+ "tube-explorer-publish-optimal-clock",
+ "tube-explorer-title-word-network",
+ "tube-explorer-channel-vital-signs",
+ "upload-time-heatmap",
+])
+
+const PRIMARY_VISUAL_MODULES: VtSyncVisualModuleDefinition[] = VISUAL_MODULES.filter((module) => PRIMARY_MODULE_IDS.has(module.id))
+const SECONDARY_VISUAL_MODULES: VtSyncVisualModuleDefinition[] = VISUAL_MODULES.filter((module) => !PRIMARY_MODULE_IDS.has(module.id))
+
 const THREE_UP_VISUAL_ROW_IDS = new Set([
  "revenue-distribution",
  "subscribers-gained",
@@ -135,7 +162,10 @@ const RevealOnView: React.FC<{
  )
 }
 
-const VtSyncDataVisualsContent: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snapshot }) => {
+const VtSyncDataVisualsContent: React.FC<{
+ snapshot: VtSyncSnapshot
+ modules: VtSyncVisualModuleDefinition[]
+}> = ({ snapshot, modules }) => {
  const visualData = useMemo(() => buildVtSyncVisualPropsData(snapshot), [snapshot])
 
  const hasRenderableData =
@@ -143,7 +173,7 @@ const VtSyncDataVisualsContent: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snap
   visualData.canonicalContext.trafficRows.length > 0 ||
   visualData.canonicalContext.geographyRows.length > 0
 
- const firstTubeExplorerIndex = VISUAL_MODULES.findIndex((module) => module.group === "tube-explorer")
+ const firstTubeExplorerIndex = modules.findIndex((module) => module.group === "tube-explorer")
 
  const renderedVisualBlocks = useMemo(() => {
   const blocks: Array<
@@ -151,14 +181,14 @@ const VtSyncDataVisualsContent: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snap
    | { type: "row"; modules: Array<{ module: VtSyncVisualModuleDefinition; index: number }> }
   > = []
 
-  for (let index = 0; index < VISUAL_MODULES.length; index += 1) {
-   const module = VISUAL_MODULES[index]
+  for (let index = 0; index < modules.length; index += 1) {
+   const module = modules[index]
    if (!THREE_UP_VISUAL_ROW_IDS.has(module.id)) {
     blocks.push({ type: "module", module, index })
     continue
    }
 
-   const rowModules = VISUAL_MODULES
+   const rowModules = modules
     .map((entry, entryIndex) => ({ module: entry, index: entryIndex }))
     .filter((entry) => THREE_UP_VISUAL_ROW_IDS.has(entry.module.id))
 
@@ -168,7 +198,7 @@ const VtSyncDataVisualsContent: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snap
   }
 
   return blocks
- }, [])
+ }, [modules])
 
  const moduleProps: TubeExplorerVisualProps = {
   data: visualData.rows,
@@ -184,10 +214,10 @@ const VtSyncDataVisualsContent: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snap
     <span className="rounded-full border-[3px] border-black bg-[#59BFFF] px-3 py-2">
      Videos: {visualData.diagnostics.videos.toLocaleString()}
     </span>
-    <span className="rounded-full border-[3px] border-black bg-[#FFFF61] px-3 py-2">
+    <span className="rounded-full border-[3px] border-black bg-[#FFDA47] px-3 py-2">
      Traffic: {visualData.diagnostics.trafficRows.toLocaleString()}
     </span>
-    <span className="rounded-full border-[3px] border-black bg-[#FF83EA] px-3 py-2">
+    <span className="rounded-full border-[3px] border-black bg-[#F55EFC] px-3 py-2">
      Geo: {visualData.diagnostics.geographyRows.toLocaleString()}
     </span>
     <span className="rounded-full border-[3px] border-black bg-white px-3 py-2">
@@ -197,7 +227,7 @@ const VtSyncDataVisualsContent: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snap
 
    {!hasRenderableData ? (
     <div className="flex items-center justify-center rounded-[20px] border-[4px] border-dashed border-black bg-white p-16 text-center text-xl font-black uppercase tracking-[0.14em] text-black/35">
-     Sync or import VT-SYNC tables to populate data visuals.
+     Sync or import Annalytics tables to populate data visuals.
     </div>
    ) : (
     <div className="flex flex-col gap-8">
@@ -207,10 +237,10 @@ const VtSyncDataVisualsContent: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snap
        {block.type === "module" && block.index === firstTubeExplorerIndex ? (
         <div className="border-[4px] border-black bg-[#0B0B0B] px-5 py-4 text-white shadow-[8px_8px_0px_0px_#FF7497]">
          <div className="text-[34px] font-[1000] uppercase leading-none tracking-tight text-[#CCFF00]">
-          VT-SYNC Tube Explorer Visual Lab
+          Annalytics Tube Explorer Visual Lab
          </div>
          <div className="mt-1 text-[12px] font-black uppercase tracking-[0.14em] text-white/70">
-          Explorer modules use VT-SYNC video, traffic, search, and geography table data. No canonical cache or Performance Hub data reads.
+          Explorer modules use Annalytics video, traffic, search, and geography table data. No canonical cache or Performance Hub data reads.
          </div>
         </div>
        ) : null}
@@ -241,22 +271,40 @@ const VtSyncDataVisualsContent: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snap
 }
 
 export const VtSyncDataVisualsToolbox: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snapshot }) => {
- const [isOpen, setIsOpen] = useState(false)
+ const [isOpen1, setIsOpen1] = useState(false)
+ const [isOpen2, setIsOpen2] = useState(false)
 
  return (
-  <ToolboxScaffold
-   title="VT-SYNC DATA VISUALS"
-   subtitle="Full Data Transparency visual modules powered only by the local VT-SYNC snapshot."
-   icon={<ChartNoAxesCombined />}
-   paletteIndex={0}
-   headerColor="bg-[#40C6E9]"
-   iconBoxColor="bg-[#FF83EA]"
-   collapsible
-   isOpen={isOpen}
-   onToggle={() => setIsOpen((open) => !open)}
-   unmountWhenClosed
-   contentClassName="bg-[#f4f1eb] p-6">
-   <VtSyncDataVisualsContent key={`${snapshot.snapshotId}:${snapshot.capturedAt}`} snapshot={snapshot} />
-  </ToolboxScaffold>
+  <div className="flex flex-col gap-6">
+   <ToolboxScaffold
+    title="DATA VISUALS"
+    subtitle="Primary intelligence visual modules powered by the local Annalytics snapshot."
+    icon={<ChartNoAxesCombined />}
+    paletteIndex={0}
+    headerColor="bg-[#36E0F6]"
+    iconBoxColor="bg-[#F55EFC]"
+    collapsible
+    isOpen={isOpen1}
+    onToggle={() => setIsOpen1((open) => !open)}
+    unmountWhenClosed
+    contentClassName="bg-[#f4f1eb] p-6">
+    <VtSyncDataVisualsContent key={`t1:${snapshot.snapshotId}:${snapshot.capturedAt}`} snapshot={snapshot} modules={PRIMARY_VISUAL_MODULES} />
+   </ToolboxScaffold>
+
+   <ToolboxScaffold
+    title="DATA VISUALS 2"
+    subtitle="Extended Tube Explorer & Visual Lab modules powered by the local Annalytics snapshot."
+    icon={<ChartNoAxesCombined />}
+    paletteIndex={3}
+    headerColor="bg-[#FFDA47]"
+    iconBoxColor="bg-[#3FEE56]"
+    collapsible
+    isOpen={isOpen2}
+    onToggle={() => setIsOpen2((open) => !open)}
+    unmountWhenClosed
+    contentClassName="bg-[#f4f1eb] p-6">
+    <VtSyncDataVisualsContent key={`t2:${snapshot.snapshotId}:${snapshot.capturedAt}`} snapshot={snapshot} modules={SECONDARY_VISUAL_MODULES} />
+   </ToolboxScaffold>
+  </div>
  )
 }

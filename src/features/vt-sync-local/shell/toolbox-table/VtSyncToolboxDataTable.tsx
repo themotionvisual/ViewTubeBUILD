@@ -23,6 +23,7 @@ import {
  X,
 } from "lucide-react"
 import { AnimatedToggleIcon } from "../../../../components/ToolboxUISystem"
+import { VT_SYNC_CATEGORY_OPTIONS } from "../../upstream/syncCategoryRegistry"
 import type { VtSyncDatasetTableRowsRecord, VtSyncSnapshot, VtSyncTableColumnDefinition } from "../../adapters/contracts"
 import {
  deleteVtSyncDatasetTableRows,
@@ -71,6 +72,8 @@ import {
  getVtSyncPresentationColumns,
  getVtSyncTableGeometry,
  getVtSyncTableProvenance,
+ getVtSyncTrafficOverviewRowHeight,
+ getVtSyncVerticalScrollMetrics,
  getVtSyncVideoTitleLayout,
  getVisibleVtSyncColumns,
  getVtSyncHoverScrollIntent,
@@ -104,7 +107,7 @@ import "./VtSyncToolboxDataTable.css"
 type Group = { id: string; label: string; color: string; columns: VtSyncTableColumnDefinition[] }
 type CssVars = React.CSSProperties & Record<`--${string}`, string | number>
 
-const GROUP_COLORS = ["#40c6e9", "#4fff5b", "#ffff61", "#ffb570", "#ff8aaf", "#ff83ea", "#cc00ff", "#579aff"]
+const GROUP_COLORS = ["#FA618A", "#FF7F6B", "#FFA85C", "#FFDA47", "#C0F240", "#3FEE56", "#4EE4BE", "#36E0F6", "#528FFA", "#A467F4", "#F55EFC", "#FF7AC8"]
 
 const getOpaqueVtSyncTint = (color: string, amount = .22): string => {
  const channels = color.replace("#", "").match(/.{1,2}/g)?.map((part) => Number.parseInt(part, 16)) || [213, 242, 250]
@@ -168,10 +171,10 @@ const formatRetentionRatio = (value: unknown): string => {
 const retentionPointColor = (relativePerformance: number | undefined): string => {
  if (relativePerformance === undefined) return "#fff"
  if (relativePerformance >= .58) return "#C9F830"
- if (relativePerformance >= .52) return "#4FFF5B"
+ if (relativePerformance >= .52) return "#3FEE56"
  if (relativePerformance >= .48) return "#FFE357"
- if (relativePerformance >= .42) return "#FFB570"
- return "#FF8AAF"
+ if (relativePerformance >= .42) return "#FFA85C"
+ return "#FF7AC8"
 }
 
 const retentionPolyline = (
@@ -255,7 +258,7 @@ const downloadCsv = (name: string, csv: string) => {
  window.setTimeout(() => URL.revokeObjectURL(url), 1_000)
 }
 
-const Switch = ({ checked, label, onChange, activeColor = "#4FFF5B" }: { checked: boolean; label: string; onChange: () => void; activeColor?: string }) => (
+const Switch = ({ checked, label, onChange, activeColor = "#3FEE56" }: { checked: boolean; label: string; onChange: () => void; activeColor?: string }) => (
  <button type="button" className={`vt-sync-switch ${checked ? "is-on" : ""}`} style={{ "--vt-toggle-color": activeColor } as CssVars} role="switch" aria-checked={checked} aria-label={label} onClick={onChange}><span /></button>
 )
 
@@ -397,6 +400,18 @@ export const VtSyncToolboxDataTable: React.FC<{
  const [tableId, setTableId] = useState("videos")
  const table = findVtSyncTable(tableId)
  const category = VT_SYNC_TOOLBOX_CATEGORIES.find((item) => item.id === categoryId) || VT_SYNC_TOOLBOX_CATEGORIES[0]
+ const syncModuleDescription = useMemo(() => {
+  const seen = new Set<string>()
+  const parts: string[] = []
+  table.categoryIds.forEach((id) => {
+   const option = VT_SYNC_CATEGORY_OPTIONS.find((entry) => entry.id === id)
+   if (option && !seen.has(option.description)) {
+    seen.add(option.description)
+    parts.push(option.description)
+   }
+  })
+  return parts.join(" ") || table.description
+ }, [table.categoryIds, table.description])
  const [sort, setSort] = useState<VtSyncSortState>(table.defaultSort)
  const [dropdown, setDropdown] = useState<{ id: string; left: number; top: number; width: number } | null>(null)
  const dropdownId = dropdown?.id
@@ -461,9 +476,16 @@ export const VtSyncToolboxDataTable: React.FC<{
  const hoverCurrentSpeedRef = useRef(0)
  const rowLoadPendingRef = useRef(false)
  const verticalThumbRef = useRef<HTMLSpanElement | null>(null)
- const verticalScrollMetricsRef = useRef({ top: 0, height: 100 })
+ const verticalTrackWindowRef = useRef<HTMLSpanElement | null>(null)
+ const verticalScrollMetricsRef = useRef(getVtSyncVerticalScrollMetrics({
+  scrollTop: 0,
+  scrollHeight: 0,
+  clientHeight: 0,
+  trackHeight: 0,
+ }))
  const verticalScrollFrameRef = useRef<number | undefined>(undefined)
  const pendingRetentionAnchorRef = useRef<{ groupId: string; viewportTop: number } | null>(null)
+ const pendingTrafficDayAnchorRef = useRef<{ groupId: string; viewportTop: number } | null>(null)
 
  const activePrivacyFilters = privacyFilters || localPrivacyFilters
 
@@ -499,8 +521,15 @@ export const VtSyncToolboxDataTable: React.FC<{
     ? filterVtSyncVideos(importedRows, activePrivacyFilters)
     : importedRows
   }
-  return buildVtSyncTableViewModel(snapshot, table, activePrivacyFilters).rows
+ return buildVtSyncTableViewModel(snapshot, table, activePrivacyFilters).rows
  }, [activePrivacyFilters, imported, snapshot, table])
+ const trafficDayReference = useMemo(() => {
+  const trafficDayTable = findVtSyncTable("traffic_day")
+  return {
+   columns: trafficDayTable.columns,
+   rows: imported.traffic_day || buildVtSyncTableViewModel(snapshot, trafficDayTable, activePrivacyFilters).rows,
+  }
+ }, [activePrivacyFilters, imported.traffic_day, snapshot])
  const spectrumBadgeLibrary = useMemo(() => buildVtSyncAlphabeticSpectrumLibrary(
   sourceRows.flatMap((row) => [row.tags, row.topics]),
  ), [sourceRows])
@@ -573,8 +602,8 @@ export const VtSyncToolboxDataTable: React.FC<{
   .sort(compareGroups)
  }, [orderedColumns, sort.direction, sort.key, table.presentationMode, trafficDayGroups])
  const trafficSourceBadgeColors = useMemo(() => {
-  if (table.presentationMode !== "traffic-source-day") return new Map<string, { stroke: string; fill: string }>()
-  const sourceGroups = buildVtSyncTrafficDayGroups(sourceRows, orderedColumns)
+  if (table.id !== "traffic" && table.presentationMode !== "traffic-source-day") return new Map<string, { stroke: string; fill: string }>()
+  const sourceGroups = buildVtSyncTrafficDayGroups(trafficDayReference.rows, trafficDayReference.columns)
   const newestGroup = sourceGroups[0]
   const rankedSources = new Set<string>()
   const colors = new Map<string, { stroke: string; fill: string }>()
@@ -599,7 +628,7 @@ export const VtSyncToolboxDataTable: React.FC<{
    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
    .forEach(([source], index) => assignColor(source, rankedSources.size + index))
   return colors
- }, [orderedColumns, sourceRows, table.presentationMode])
+ }, [table.id, table.presentationMode, trafficDayReference])
  const visibleTrafficDayGroups = sortedTrafficDayGroups.slice(0, rowLimit)
  const retentionVideoGroups = useMemo(
   () => table.presentationMode === "retention-video" ? buildVtSyncRetentionVideoGroups(sortedRows) : [],
@@ -675,7 +704,7 @@ export const VtSyncToolboxDataTable: React.FC<{
   [orderedColumns, sortedRows, table.id],
  )
  const deviceOsDisplayColumns = useMemo(() => {
-  const keys = ["views", "watchTime", "avgDuration", "avgPercentageViewed"]
+  const keys = ["views", "engagedViews", "watchTime", "avgDuration", "avgPercentageViewed"]
   const byKey = new Map(orderedColumns.map((column) => [column.key, column]))
   return keys.map((key) => byKey.get(key)).filter(Boolean) as VtSyncTableColumnDefinition[]
  }, [orderedColumns])
@@ -770,12 +799,19 @@ export const VtSyncToolboxDataTable: React.FC<{
   ? distributeVtSyncSparseColumnWidths(presentationColumns.map((column) => ({
    key: column.key,
    width: baseColumnWidths[column.key],
-   overridden: widths[getVtSyncColumnStateKey(table.id, column.key)] !== undefined,
+   overridden: widths[getVtSyncColumnStateKey(table.id, column.key)] !== undefined ||
+    (table.id === "traffic" && column.key === "source") ||
+    (table.id === "cities" && ["countryFlag", "city", "countryName"].includes(column.key)),
   })), viewportWidth, 0)
   : {}, [baseColumnWidths, presentationColumns, table.id, tableGeometry.mode, viewportWidth, widths])
  const columnWidth = (column: VtSyncTableColumnDefinition) => sparseColumnWidths[column.key] ?? baseColumnWidths[column.key]
 
  const selected = useMemo(() => sortedRows.find((row, index) => String(row.videoId ?? row.id ?? index) === selectedKey) || sortedRows[0], [selectedKey, sortedRows])
+ const tableTotalRows = useMemo(() => {
+  if (table.summaryMode !== "primary-row" || !table.summaryPrimaryRow) return sortedRows
+  const primary = sortedRows.filter((row) => String(row[table.summaryPrimaryRow!.key] ?? "") === table.summaryPrimaryRow!.value)
+  return primary.length ? primary : sortedRows.slice(0, 1)
+ }, [sortedRows, table.summaryMode, table.summaryPrimaryRow])
  const selectedNetSubscribers = useMemo(() => {
   const gained = toVtSyncNumber(selected?.subscribersGained)
   const lost = toVtSyncNumber(selected?.subscribersLost)
@@ -798,10 +834,10 @@ export const VtSyncToolboxDataTable: React.FC<{
    ? table.summaryColumns.map((key) => byKey.get(key)).filter(Boolean)
    : presentationColumns.filter((column) =>
     column.semanticRole === "metric" &&
-    sortedRows.some((row) => !isMissingVtSyncValue(row[column.key])),
+    tableTotalRows.some((row) => !isMissingVtSyncValue(row[column.key])),
    )) as VtSyncTableColumnDefinition[]
   const metrics = registered.slice(0, 4).map((column) => {
-   const total = totalVtSyncColumn(sortedRows, column)
+   const total = totalVtSyncColumn(tableTotalRows, column)
    return {
     label: DISPLAY_HEADER_LABELS[column.key] || column.label,
     value: total.primary || "-",
@@ -810,14 +846,15 @@ export const VtSyncToolboxDataTable: React.FC<{
   })
   while (metrics.length < 4) metrics.push({ label: "Metric", value: "-", note: "Not available" })
   return [{ label: "Rows", value: sortedRows.length.toLocaleString(), note: "Visible records" }, ...metrics]
- })(), [presentationColumns, selected, selectedNetSubscribers, sortedRows, table.summaryColumns, table.summaryMode])
+ })(), [presentationColumns, selected, selectedNetSubscribers, sortedRows, table.summaryColumns, table.summaryMode, tableTotalRows])
 
  const updateVerticalScrollThumb = useCallback((node: HTMLDivElement) => {
-  const verticalMax = Math.max(1, node.scrollHeight - node.clientHeight)
-  const next = {
-   top: Math.min(100, (node.scrollTop / verticalMax) * 100),
-   height: Math.min(100, (node.clientHeight / node.scrollHeight) * 100),
-  }
+  const next = getVtSyncVerticalScrollMetrics({
+   scrollTop: node.scrollTop,
+   scrollHeight: node.scrollHeight,
+   clientHeight: node.clientHeight,
+   trackHeight: verticalTrackWindowRef.current?.clientHeight ?? 0,
+  })
   verticalScrollMetricsRef.current = next
   if (verticalScrollFrameRef.current !== undefined) return
   verticalScrollFrameRef.current = window.requestAnimationFrame(() => {
@@ -825,8 +862,10 @@ export const VtSyncToolboxDataTable: React.FC<{
    const thumb = verticalThumbRef.current
    if (!thumb) return
    const metrics = verticalScrollMetricsRef.current
-   thumb.style.top = `${metrics.top * (1 - metrics.height / 100)}%`
-   thumb.style.height = `${metrics.height}%`
+   thumb.style.top = `${metrics.thumbTop}px`
+   thumb.style.height = `${metrics.thumbHeight}px`
+   thumb.setAttribute("aria-valuemax", String(metrics.maxScroll))
+   thumb.setAttribute("aria-valuenow", String(Math.round(node.scrollTop)))
   })
  }, [])
 
@@ -908,6 +947,7 @@ export const VtSyncToolboxDataTable: React.FC<{
   }
   const observer = new ResizeObserver(updateViewport)
   observer.observe(node)
+  if (verticalTrackWindowRef.current) observer.observe(verticalTrackWindowRef.current)
   const frame = window.requestAnimationFrame(updateViewport)
   return () => { observer.disconnect(); window.cancelAnimationFrame(frame) }
  }, [pinCount, presentationColumns, table.id, updateScrollState])
@@ -924,6 +964,19 @@ export const VtSyncToolboxDataTable: React.FC<{
   pendingRetentionAnchorRef.current = null
   updateVerticalScrollThumb(node)
  }, [expandedRetentionVideos, table.presentationMode, updateVerticalScrollThumb])
+
+ useLayoutEffect(() => {
+  const pending = pendingTrafficDayAnchorRef.current
+  const node = mainScrollRef.current
+  if (!node || table.presentationMode !== "traffic-source-day") return
+  if (pending) {
+   const anchor = [...node.querySelectorAll<HTMLElement>("[data-traffic-day-group-id]")]
+    .find((candidate) => candidate.dataset.trafficDayGroupId === pending.groupId)
+   if (anchor) node.scrollTop += anchor.getBoundingClientRect().top - pending.viewportTop
+  }
+  pendingTrafficDayAnchorRef.current = null
+  updateVerticalScrollThumb(node)
+ }, [expandedTrafficDays, table.presentationMode, updateVerticalScrollThumb])
 
  useEffect(() => () => {
   if (verticalScrollFrameRef.current !== undefined) window.cancelAnimationFrame(verticalScrollFrameRef.current)
@@ -1039,11 +1092,12 @@ export const VtSyncToolboxDataTable: React.FC<{
   setTableId(next.tableId)
   if (!next.dropdownId) { setDropdown(null); return }
   const bounds = button.getBoundingClientRect()
+  const menuWidth = Math.min(bounds.width, window.innerWidth - 16)
   setDropdown({
    id: next.dropdownId,
-   left: Math.max(8, Math.min(bounds.left, window.innerWidth - bounds.width - 8)),
+   left: Math.max(8, Math.min(bounds.left, window.innerWidth - menuWidth - 8)),
    top: bounds.bottom + 8,
-   width: bounds.width,
+   width: menuWidth,
   })
  }
 
@@ -1171,7 +1225,7 @@ export const VtSyncToolboxDataTable: React.FC<{
  }
 
  const dragVerticalThumb = (event: React.PointerEvent<HTMLSpanElement>) => {
-  const track = event.currentTarget.parentElement
+  const track = verticalTrackWindowRef.current
   const node = mainScrollRef.current
   if (!track || !node) return
   const target = event.currentTarget
@@ -1179,20 +1233,75 @@ export const VtSyncToolboxDataTable: React.FC<{
   target.setPointerCapture(pointerId)
   const start = event.clientY
   const initial = node.scrollTop
+  const initialMetrics = getVtSyncVerticalScrollMetrics({
+   scrollTop: node.scrollTop,
+   scrollHeight: node.scrollHeight,
+   clientHeight: node.clientHeight,
+   trackHeight: track.clientHeight,
+  })
+  let latestClientY = event.clientY
+  let frame: number | undefined
+  let finished = false
+  const apply = () => {
+   frame = undefined
+   const nextScrollTop = initialMetrics.trackTravel > 0
+    ? initial + ((latestClientY - start) / initialMetrics.trackTravel) * initialMetrics.maxScroll
+    : 0
+   node.scrollTop = Math.min(initialMetrics.maxScroll, Math.max(0, nextScrollTop))
+  }
   const move = (next: PointerEvent) => {
-   const available = Math.max(1, track.clientHeight * (1 - verticalScrollMetricsRef.current.height / 100))
-   const max = Math.max(0, node.scrollHeight - node.clientHeight)
-   node.scrollTop = initial + ((next.clientY - start) / available) * max
+   latestClientY = next.clientY
+   if (frame === undefined) frame = window.requestAnimationFrame(apply)
   }
   const done = () => {
+   if (finished) return
+   finished = true
+   if (frame !== undefined) {
+    window.cancelAnimationFrame(frame)
+    apply()
+   }
+   target.removeEventListener("lostpointercapture", done)
    if (target.hasPointerCapture(pointerId)) target.releasePointerCapture(pointerId)
    window.removeEventListener("pointermove", move)
    window.removeEventListener("pointerup", done)
    window.removeEventListener("pointercancel", done)
   }
+  target.addEventListener("lostpointercapture", done)
   window.addEventListener("pointermove", move)
   window.addEventListener("pointerup", done)
   window.addEventListener("pointercancel", done)
+ }
+
+ const pageVerticalTrack = (clientY: number) => {
+  const node = mainScrollRef.current
+  const track = verticalTrackWindowRef.current
+  if (!node || !track) return
+  const metrics = verticalScrollMetricsRef.current
+  const click = clientY - track.getBoundingClientRect().top
+  const direction = click < metrics.thumbTop ? -1 : click > metrics.thumbTop + metrics.thumbHeight ? 1 : 0
+  if (!direction) return
+  const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+  node.scrollBy({ top: direction * node.clientHeight * .85, behavior: reducedMotion ? "auto" : "smooth" })
+ }
+
+ const handleVerticalScrollbarKey = (event: React.KeyboardEvent<HTMLSpanElement>) => {
+  const node = mainScrollRef.current
+  if (!node) return
+  if (event.key === "Home" || event.key === "End") {
+   event.preventDefault()
+   node.scrollTop = event.key === "Home" ? 0 : node.scrollHeight
+   return
+  }
+  const offsets: Partial<Record<string, number>> = {
+   ArrowUp: -tableGeometry.rowHeight,
+   ArrowDown: tableGeometry.rowHeight,
+   PageUp: -node.clientHeight * .85,
+   PageDown: node.clientHeight * .85,
+  }
+  const offset = offsets[event.key]
+  if (offset === undefined) return
+  event.preventDefault()
+  node.scrollBy({ top: offset })
  }
 
  const onHoverScroll = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -1226,11 +1335,9 @@ export const VtSyncToolboxDataTable: React.FC<{
    <button type="button" aria-label="Scroll up five rows" onPointerDown={() => startVerticalHold(-1)} onPointerUp={stopVerticalHold} onPointerLeave={stopVerticalHold}><ChevronUp /></button>
    <div className="vt-sync-vertical-scroll-track" onPointerDown={(event) => {
     if ((event.target as HTMLElement).classList.contains("vt-sync-vertical-scroll-thumb")) return
-    const bounds = event.currentTarget.getBoundingClientRect()
-    const node = mainScrollRef.current
-    if (node) node.scrollTop = ((event.clientY - bounds.top) / bounds.height) * (node.scrollHeight - node.clientHeight)
+    pageVerticalTrack(event.clientY)
    }}>
-    <span className="vt-sync-vertical-scroll-window"><span ref={verticalThumbRef} className="vt-sync-vertical-scroll-thumb" style={{ top: "0%", height: "100%" }} onPointerDown={dragVerticalThumb} /></span>
+    <span ref={verticalTrackWindowRef} className="vt-sync-vertical-scroll-track-window"><span ref={verticalThumbRef} className="vt-sync-vertical-scroll-thumb" role="scrollbar" aria-label="Table vertical position" aria-orientation="vertical" aria-valuemin={0} aria-valuemax={0} aria-valuenow={0} tabIndex={0} style={{ top: 0, height: 44 }} onKeyDown={handleVerticalScrollbarKey} onPointerDown={dragVerticalThumb} /></span>
    </div>
    <button type="button" aria-label="Scroll down five rows" onPointerDown={() => startVerticalHold(1)} onPointerUp={stopVerticalHold} onPointerLeave={stopVerticalHold}><ChevronDown /></button>
   </div>
@@ -1307,7 +1414,7 @@ export const VtSyncToolboxDataTable: React.FC<{
      const width = isCollapsed ? 40 : columnWidth(column)
      if (isCollapsed) {
       if (group.label === "Format") {
-       const total = totalVtSyncColumn(sortedRows, column, totalContext)
+       const total = totalVtSyncColumn(tableTotalRows, column, totalContext)
        if (total.badges?.length) {
         return <th className="is-collapsed" key={`${group.id}-${column.key}`} style={{ width, minWidth: width, maxWidth: width, background: group.color }}>
          <div className="vt-sync-collapsed-format-totals">
@@ -1323,7 +1430,7 @@ export const VtSyncToolboxDataTable: React.FC<{
       }
       return <th className="is-collapsed" key={`${group.id}-${column.key}`} style={{ width, minWidth: width, maxWidth: width, background: group.color }} />
      }
-     const total = totalVtSyncColumn(sortedRows, column, totalContext)
+     const total = totalVtSyncColumn(tableTotalRows, column, totalContext)
      const totalClock = splitVtSyncSpecialCharacters(total.primary, column.key)
      return <th className={`is-${total.kind || "numeric"}`} data-column-key={column.key} key={`${group.id}-${column.key}`} style={{ width, minWidth: width, maxWidth: width, backgroundColor: tableGeometry.mode === "sparse" ? getOpaqueVtSyncTint(color, .22) : undefined }}>
       {total.badges?.length ? (
@@ -1353,14 +1460,14 @@ export const VtSyncToolboxDataTable: React.FC<{
     <tr className="vt-sync-column-row">{renderColumns.map(({ column, group, isCollapsed, color }) => {
      const width = isCollapsed ? 40 : columnWidth(column)
      if (isCollapsed) return <th className="is-collapsed" key={`${group.id}-${column.key}`} style={{ background: group.color, width, minWidth: width, maxWidth: width }}>
-      <span className="vt-sync-collapsed-group-label" style={{ color: group.color === "#ffff61" || group.color === "#4fff5b" ? "#0a0a0a" : "#0a0a0a" }}>{COLLAPSED_GROUP_DISPLAY_LABELS[group.label] || group.label}</span>
+      <span className="vt-sync-collapsed-group-label" style={{ color: group.color === "#FFDA47" || group.color === "#3FEE56" ? "#0a0a0a" : "#0a0a0a" }}>{COLLAPSED_GROUP_DISPLAY_LABELS[group.label] || group.label}</span>
      </th>
      const demographicHeader = table.id === "demographics" && column.key === "viewerPercentage" ? "Age Total" : undefined
      const [first, second] = splitHeader(demographicHeader || DISPLAY_HEADER_LABELS[column.key] || column.label)
      const source = dragKey ? orderedColumns.find((candidate) => candidate.key === dragKey) : undefined
      const acceptsDrop = !source || source.group === column.group
      const sortActive = sort.key === column.key || isVtSyncCompositeSortActive(table.id, column.key, sort)
-     return <th key={`${group.id}-${column.key}`} data-column-key={column.key} data-group-start={tableGeometry.useGroups ? undefined : "true"} style={{ "--vt-header-color": color, width, minWidth: width, maxWidth: width } as CssVars} draggable aria-grabbed={dragKey === column.key} aria-sort={sortActive ? (sort.direction === "desc" ? "descending" : "ascending") : "none"} className={`${dragKey === column.key ? "is-dragging" : ""} ${dragOverKey === column.key ? "is-drag-over" : ""}`} onDragStart={(event) => startColumnDrag(event, column, color)} onDragEnd={() => { setDragKey(null); setDragOverKey(null); hideDragRect() }} onDragOver={(event) => { if (!acceptsDrop) return; event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDragOverKey(column.key); updateDragRect(event.currentTarget) }} onDragLeave={() => { if (dragOverKey === column.key) setDragOverKey(null) }} onDrop={(event) => { event.preventDefault(); if (dragKey && acceptsDrop) reorderColumn(dragKey, column.key); setDragKey(null); setDragOverKey(null); hideDragRect() }} onKeyDown={(event) => { if (event.altKey && event.key === "ArrowLeft") { event.preventDefault(); moveColumn(column.key, -1) } else if (event.altKey && event.key === "ArrowRight") { event.preventDefault(); moveColumn(column.key, 1) } }} onClick={() => sortColumn(column)} tabIndex={0}>
+     return <th key={`${group.id}-${column.key}`} title={column.availabilityNote} data-column-key={column.key} data-group-start={tableGeometry.useGroups ? undefined : "true"} style={{ "--vt-header-color": color, width, minWidth: width, maxWidth: width } as CssVars} draggable aria-grabbed={dragKey === column.key} aria-sort={sortActive ? (sort.direction === "desc" ? "descending" : "ascending") : "none"} className={`${dragKey === column.key ? "is-dragging" : ""} ${dragOverKey === column.key ? "is-drag-over" : ""}`} onDragStart={(event) => startColumnDrag(event, column, color)} onDragEnd={() => { setDragKey(null); setDragOverKey(null); hideDragRect() }} onDragOver={(event) => { if (!acceptsDrop) return; event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDragOverKey(column.key); updateDragRect(event.currentTarget) }} onDragLeave={() => { if (dragOverKey === column.key) setDragOverKey(null) }} onDrop={(event) => { event.preventDefault(); if (dragKey && acceptsDrop) reorderColumn(dragKey, column.key); setDragKey(null); setDragOverKey(null); hideDragRect() }} onKeyDown={(event) => { if (event.altKey && event.key === "ArrowLeft") { event.preventDefault(); moveColumn(column.key, -1) } else if (event.altKey && event.key === "ArrowRight") { event.preventDefault(); moveColumn(column.key, 1) } }} onClick={() => sortColumn(column)} tabIndex={0}>
       <span>{first}{second && <><br />{second}</>}</span><b className="vt-sync-sort-arrow">{sortActive ? (sort.direction === "desc" ? "↓" : "↑") : ""}{sortActive && (() => { const label = getVtSyncCompositeSortLabel(table.id, column.key, sort); return label ? <small className="vt-sync-sort-label">{label}</small> : null })()}</b>
       <i className="vt-sync-resize" onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); event.currentTarget.setPointerCapture(event.pointerId); document.body.style.userSelect = "none"; resizeRef.current = { key: widthKey(column), start: event.clientX, width: columnWidth(column), pointerId: event.pointerId, target: event.currentTarget } }} />
      </th>
@@ -1404,13 +1511,15 @@ export const VtSyncToolboxDataTable: React.FC<{
        : undefined
       const tableTextStyle: React.CSSProperties | undefined = column.textSize ? { fontSize: `${column.textSize}px`, WebkitLineClamp: table.id === "playlists" && column.key === "title" ? 2 : 1 } : undefined
       const cellFill = cellFillEnabled ? style.backgroundImage : undefined
-      const cellFillTextColor = (color === "#ffff61" || color === "#4fff5b") ? "#0a0a0a" : "#ffffff"
+      const cellFillTextColor = (color === "#FFDA47" || color === "#3FEE56") ? "#0a0a0a" : "#ffffff"
       const demographicTint = table.id === "demographics" ? `${color}${index % 2 ? "24" : "3D"}` : undefined
       return (
        <td
         key={`${rowKey}-${column.key}`}
-        data-column-key={column.key}
-        data-format={column.format}
+       data-column-key={column.key}
+       data-format={column.format}
+       title={column.availabilityNote}
+       aria-label={column.availabilityNote && isMissingVtSyncValue(raw) ? `${column.label}: unavailable. ${column.availabilityNote}` : undefined}
         className={`is-${column.semanticRole || "numeric"} ${tableGeometry.mode === "sparse" ? "is-sparse-cell" : ""} ${cellFill ? "is-filled-cell" : ""} ${heatmapClassName || ""}`}
         style={{
          ...style,
@@ -1423,7 +1532,7 @@ export const VtSyncToolboxDataTable: React.FC<{
          color: cellFill && !effectiveCompact && cellFillTextColor ? cellFillTextColor : undefined,
         }}
        >
-       {table.id === "videos" && column.key === "title" ? <VideoIdentityCell row={row} title={text} titleLayout={titleLayout} /> : table.id === "chan_page" && column.key === "term" ? <ChannelIdentityCell row={row} /> : table.id === "videos" && column.key === "publishedAt" ? <PublishedMomentCell row={row} /> : table.id === "demographics" && column.key === "ageGroupLabel" ? <DemographicAgeCell row={row} text={text} /> : table.mainCategoryId === "demographics" && column.key === "cohort" ? <DemographicCohortCell row={row} text={text} /> : column.format === "thumbnail" && !isMissingVtSyncValue(raw) ? <img className="vt-sync-thumbnail" src={String(raw)} alt="" /> : column.format === "flag" && !isMissingVtSyncValue(raw) ? <span className="vt-sync-flag-thumbnail" role="img" aria-label={`${String(row.countryName || row.countryCode || "Region")} flag`}><span className={`fi fi-${text}`} aria-hidden="true" /></span> : column.key === "videoUrl" && !isMissingVtSyncValue(raw) ? <span className="vt-sync-url-buttons"><button type="button" title="Copy URL" aria-label="Copy video URL" onClick={(event) => { event.stopPropagation(); void navigator.clipboard?.writeText(String(raw)) }}><Copy /></button><a href={String(raw)} target="_blank" rel="noreferrer" title="Open video" aria-label="Open video" onClick={(event) => event.stopPropagation()}><ExternalLink /></a></span> : column.key === "format" && !isMissingVtSyncValue(raw) ? <span className={`vt-sync-format-badge is-${String(raw).toLowerCase()}`}>{text}</span> : table.id === "videos" && column.key === "category" && !isMissingVtSyncValue(raw) ? <CategoryBadge value={raw} /> : badgeValues.length ? <SpectrumBadgeList values={badgeValues} library={spectrumBadgeLibrary} kind={column.key as "tags" | "topics"} /> : apiValuePresentation ? <span className="vt-sync-api-value"><strong>{apiValuePresentation.title}</strong><small>{apiValuePresentation.apiValue}</small></span> : <span className={`vt-sync-cell-text ${titleLayout ? "is-video-title" : ""} ${tableTextStyle ? "is-table-sized-text" : ""}`} style={titleLayout ? { fontSize: `${titleLayout.fontSize}px`, WebkitLineClamp: titleLayout.lineCount } : tableTextStyle}>{clockText.isNegative && "-"}{clockText.prefix && <span className="vt-sync-zero-seconds">{clockText.prefix}</span>}{clockText.value}{clockText.suffix && <span className="vt-sync-zero-seconds">{clockText.suffix}</span>}</span>}
+       {table.id === "videos" && column.key === "title" ? <VideoIdentityCell row={row} title={text} titleLayout={titleLayout} /> : table.id === "chan_page" && column.key === "term" ? <ChannelIdentityCell row={row} /> : table.id === "videos" && column.key === "publishedAt" ? <PublishedMomentCell row={row} /> : table.id === "demographics" && column.key === "ageGroupLabel" ? <DemographicAgeCell row={row} text={text} /> : table.mainCategoryId === "demographics" && column.key === "cohort" ? <DemographicCohortCell row={row} text={text} /> : column.format === "thumbnail" && !isMissingVtSyncValue(raw) ? <img className="vt-sync-thumbnail" src={String(raw)} alt="" /> : column.format === "flag" && !isMissingVtSyncValue(raw) ? <span className="vt-sync-flag-thumbnail" role="img" aria-label={`${String(row.countryName || row.countryCode || "Region")} flag`}><span className={`fi fi-${text}`} aria-hidden="true" /></span> : column.key === "videoUrl" && !isMissingVtSyncValue(raw) ? <span className="vt-sync-url-buttons"><button type="button" title="Copy URL" aria-label="Copy video URL" onClick={(event) => { event.stopPropagation(); void navigator.clipboard?.writeText(String(raw)) }}><Copy /></button><a href={String(raw)} target="_blank" rel="noreferrer" title="Open video" aria-label="Open video" onClick={(event) => event.stopPropagation()}><ExternalLink /></a></span> : column.key === "format" && !isMissingVtSyncValue(raw) ? <span className={`vt-sync-format-badge is-${String(raw).toLowerCase()}`}>{text}</span> : table.id === "videos" && column.key === "category" && !isMissingVtSyncValue(raw) ? <CategoryBadge value={raw} /> : badgeValues.length ? <SpectrumBadgeList values={badgeValues} library={spectrumBadgeLibrary} kind={column.key as "tags" | "topics"} /> : table.id === "traffic" && column.key === "source" && !isMissingVtSyncValue(raw) ? renderTrafficSourceBadge(apiValuePresentation?.title || String(raw), apiValuePresentation?.apiValue || String(raw)) : apiValuePresentation ? <span className="vt-sync-api-value"><strong>{apiValuePresentation.title}</strong><small>{apiValuePresentation.apiValue}</small></span> : <span className={`vt-sync-cell-text ${titleLayout ? "is-video-title" : ""} ${tableTextStyle ? "is-table-sized-text" : ""}`} style={titleLayout ? { fontSize: `${titleLayout.fontSize}px`, WebkitLineClamp: titleLayout.lineCount } : tableTextStyle}>{clockText.isNegative && "-"}{clockText.prefix && <span className="vt-sync-zero-seconds">{clockText.prefix}</span>}{clockText.value}{clockText.suffix && <span className="vt-sync-zero-seconds">{clockText.suffix}</span>}</span>}
        {sparklinesEnabled && visualizesMetrics && rank > 0 && column.format !== "thumbnail" && column.format !== "flag" && <span className={`vt-sync-spark color-${sparkColorMode} shape-${sparkShape} ${sparkOpposite ? "is-opposite" : ""} ${sparkStroke ? "" : "no-stroke"}`}><i style={getVtSyncSparkFillStyle(rank / 100, sparkColorMode === "spectrum" ? getVtSyncSparkGradient(sparkOpposite) : getVtSyncSparkColor(color, rank / 100, sparkColorMode, sparkOpposite), sparkColorMode)} /></span>}
        </td>
       )
@@ -1476,7 +1585,7 @@ export const VtSyncToolboxDataTable: React.FC<{
        const [ageWord, ...rangeParts] = ageLabel.split(" ")
        const ageRange = rangeParts.join(" ")
        return <article key={String(row.ageGroup || row.ageGroupLabel)}>
-        {renderDemographicMetric(toVtSyncNumber(row.viewerPercentage), "#4fff5b")}
+        {renderDemographicMetric(toVtSyncNumber(row.viewerPercentage), "#3FEE56")}
         <div className="vt-sync-demographic-age-label"><strong>{ageWord}</strong><span>{ageRange || ageWord}</span></div>
        </article>
       })}
@@ -1529,7 +1638,7 @@ export const VtSyncToolboxDataTable: React.FC<{
   return <div className="vt-sync-demographic-board-viewport">
    <section className="vt-sync-demographic-board" style={boardStyle} aria-label="Device and operating system overview">
     <section className="vt-sync-demographic-section" aria-labelledby="vt-sync-device-totals">
-     <header id="vt-sync-device-totals" style={{ backgroundColor: "#4fff5b" }}>Devices</header>
+     <header id="vt-sync-device-totals" style={{ backgroundColor: "#3FEE56" }}>Devices</header>
      <div className="vt-sync-demographic-subhead">All operating systems</div>
      <div className="vt-sync-demographic-gender-stack vt-sync-device-total-stack" style={{ gridTemplateRows: `repeat(${deviceOsSummary.deviceList.length || 1}, minmax(0, 1fr))` } as CssVars}>
       {deviceOsSummary.deviceList.map((device) => <article key={device.key} title={device.label} style={{ "--vt-demographic-color": device.color } as CssVars}>
@@ -1539,7 +1648,7 @@ export const VtSyncToolboxDataTable: React.FC<{
      </div>
     </section>
     <section className="vt-sync-demographic-section is-matrix" aria-labelledby="vt-sync-os-totals">
-     <header id="vt-sync-os-totals" style={{ backgroundColor: "#40c6e9" }}>Operating Systems</header>
+     <header id="vt-sync-os-totals" style={{ backgroundColor: "#36E0F6" }}>Operating Systems</header>
      <div className="vt-sync-traffic-day-viewport" style={{ maxHeight: 480 }}>
       <table className="vt-sync-traffic-day-table vt-sync-device-os-table" aria-label="Operating system by device grouped table">
        <thead>
@@ -1559,7 +1668,7 @@ export const VtSyncToolboxDataTable: React.FC<{
           <tr className="vt-sync-traffic-day-parent" aria-expanded={expanded} tabIndex={0} onClick={() => toggleDeviceOsGroup(group.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); toggleDeviceOsGroup(group.id) } }}>
            <td className="is-day-source">
             <span className="vt-sync-traffic-day-toggle" aria-hidden="true">{expanded ? <ChevronDown /> : <ChevronRight />}</span>
-            {renderDeviceOsRowPercent(osStat?.pct, osStat?.color ?? "#40c6e9")}
+            {renderDeviceOsRowPercent(osStat?.pct, osStat?.color ?? "#36E0F6")}
             <strong>{group.osLabel}</strong>
             <small>{group.devices.length} devices</small>
            </td>
@@ -1598,7 +1707,8 @@ export const VtSyncToolboxDataTable: React.FC<{
   return Object.fromEntries(retentionDisplayColumns.map((column) => [column.key, getVtSyncColumnSortedValues(metricRows, column)]))
  }, [retentionDisplayColumns, sortedRetentionVideoGroups])
 
- const toggleTrafficDay = (groupId: string) => {
+ const toggleTrafficDay = (groupId: string, anchor?: HTMLElement) => {
+  if (anchor) pendingTrafficDayAnchorRef.current = { groupId, viewportTop: anchor.getBoundingClientRect().top }
   setExpandedTrafficDays((current) => {
    const next = new Set(current)
    if (next.has(groupId)) next.delete(groupId)
@@ -1656,6 +1766,8 @@ export const VtSyncToolboxDataTable: React.FC<{
   }
   const trafficDaySortArrow = (key: string) => sort.key === key ? <b className="vt-sync-traffic-sort-arrow">{sort.direction === "desc" ? "↓" : "↑"}</b> : null
  return <>
+  <div className="vt-sync-traffic-day-scroll-shell">
+   {table.verticalScrollMode === "custom" && renderVerticalScrollbar()}
    <div className="vt-sync-traffic-day-viewport" ref={mainScrollRef} onScroll={updateScrollState}>
     <table className="vt-sync-traffic-day-table" aria-label="Traffic source by day grouped table">
      <thead>
@@ -1672,7 +1784,7 @@ export const VtSyncToolboxDataTable: React.FC<{
        const expanded = expandedTrafficDays.has(group.id)
        const dayText = dayColumn ? formatVtSyncColumnValue(group.totals, dayColumn) : group.day
        return <React.Fragment key={group.id}>
-        <tr className="vt-sync-traffic-day-parent" data-traffic-day-parent="true" aria-expanded={expanded} tabIndex={0} onClick={() => toggleTrafficDay(group.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); toggleTrafficDay(group.id) } }}>
+        <tr className="vt-sync-traffic-day-parent" data-traffic-day-parent="true" data-traffic-day-group-id={group.id} aria-expanded={expanded} tabIndex={0} onClick={(event) => toggleTrafficDay(group.id, event.currentTarget)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); toggleTrafficDay(group.id, event.currentTarget) } }}>
          <td className="is-day-source">
           <span className="vt-sync-traffic-day-toggle" aria-hidden="true">{expanded ? <ChevronDown /> : <ChevronRight />}</span>
           <strong>{dayText}</strong>
@@ -1691,6 +1803,7 @@ export const VtSyncToolboxDataTable: React.FC<{
      </tbody>
     </table>
    </div>
+  </div>
    <div className="vt-sync-traffic-day-counts" role="status">
     <span>{visibleTrafficDayGroups.length.toLocaleString()} visible days</span>
     <span>{totalVisibleSourceRows.toLocaleString()} expanded source rows</span>
@@ -1742,10 +1855,10 @@ export const VtSyncToolboxDataTable: React.FC<{
   const renderRetentionProgressAxis = () => <div className="vt-sync-retention-progress-axis" aria-label="Video progress percentiles">
    {[
     { point: "P001", label: "Start", color: "#00D2FF" },
-    { point: "P025", label: "25%", color: "#4FFF5B" },
+    { point: "P025", label: "25%", color: "#3FEE56" },
     { point: "P050", label: "Midpoint", color: "#FFE357" },
-    { point: "P075", label: "75%", color: "#FFB570" },
-    { point: "P100", label: "Finish", color: "#FF83EA" },
+    { point: "P075", label: "75%", color: "#FFA85C" },
+    { point: "P100", label: "Finish", color: "#F55EFC" },
    ].map((item) => <span key={item.point} style={{ "--vt-progress-color": item.color } as CssVars}><b>{item.point}</b><small>{item.label}</small></span>)}
   </div>
 
@@ -1760,10 +1873,10 @@ export const VtSyncToolboxDataTable: React.FC<{
        <svg viewBox="0 0 900 180" preserveAspectRatio="none" role="img" aria-label="Audience ratio and relative retention performance line chart">
          <rect x="24" y={medianBandTop} width="852" height={medianBandHeight} fill="#dfe7ff" />
          {[0, .25, .5, .75, 1].map((value) => <line key={value} x1="24" x2="876" y1={16 + (1 - value) * 148} y2={16 + (1 - value) * 148} stroke="rgba(0,0,0,.14)" strokeWidth="1" vectorEffect="non-scaling-stroke" />)}
-         <polyline points={relativePolyline} fill="none" stroke="#579AFF" strokeWidth="3" strokeDasharray="7 5" vectorEffect="non-scaling-stroke" />
+         <polyline points={relativePolyline} fill="none" stroke="#528FFA" strokeWidth="3" strokeDasharray="7 5" vectorEffect="non-scaling-stroke" />
          <polyline points={actualPolyline} fill="none" stroke="#FF3399" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
         </svg>
-        <div className="vt-sync-retention-legend"><span><i style={{ background: "#FF3399" }} />Audience remaining</span><span><i style={{ background: "#579AFF" }} />Length-relative index</span><span><i style={{ background: "#dfe7ff" }} />Median relative band</span></div>
+        <div className="vt-sync-retention-legend"><span><i style={{ background: "#FF3399" }} />Audience remaining</span><span><i style={{ background: "#528FFA" }} />Length-relative index</span><span><i style={{ background: "#dfe7ff" }} />Median relative band</span></div>
        </div>
       </section>
 
@@ -1786,7 +1899,7 @@ export const VtSyncToolboxDataTable: React.FC<{
         </div>
         {renderRetentionProgressAxis()}
        </div>
-       <div className="vt-sync-retention-fingerprint-key"><span><i style={{ background: "#C9F830" }} />Excellent</span><span><i style={{ background: "#4FFF5B" }} />Above</span><span><i style={{ background: "#FFE357" }} />Median</span><span><i style={{ background: "#FF8AAF" }} />Below</span></div>
+       <div className="vt-sync-retention-fingerprint-key"><span><i style={{ background: "#C9F830" }} />Excellent</span><span><i style={{ background: "#3FEE56" }} />Above</span><span><i style={{ background: "#FFE357" }} />Median</span><span><i style={{ background: "#FF7AC8" }} />Below</span></div>
       </section>
 
       <section className="vt-sync-retention-insight-rail" aria-labelledby={`retention-inspector-heading-${group.id}`}>
@@ -1794,12 +1907,12 @@ export const VtSyncToolboxDataTable: React.FC<{
         <label id={`retention-inspector-heading-${group.id}`} htmlFor={`retention-inspector-${group.id}`}>Percentile inspector <b>P{String(selectedPoint?.pointNumber || 1).padStart(3, "0")}</b></label>
         <input id={`retention-inspector-${group.id}`} type="range" min={1} max={Math.max(1, visual.points.length)} value={selectedIndex + 1} onChange={(event) => setRetentionInspectorPoints((current) => ({ ...current, [group.id]: Number(event.target.value) - 1 }))} />
         <div className="vt-sync-retention-readout">
-         <span style={{ "--vt-read-color": "#FF83EA" } as CssVars}><b>{formatRetentionRatio(selectedPoint?.audienceRatio)}</b><small>Audience remaining</small></span>
-         <span style={{ "--vt-read-color": "#579AFF" } as CssVars}><b>{formatRetentionRatio(selectedPoint?.relativePerformance)}</b><small>Length-relative score</small></span>
+         <span style={{ "--vt-read-color": "#F55EFC" } as CssVars}><b>{formatRetentionRatio(selectedPoint?.audienceRatio)}</b><small>Audience remaining</small></span>
+         <span style={{ "--vt-read-color": "#528FFA" } as CssVars}><b>{formatRetentionRatio(selectedPoint?.relativePerformance)}</b><small>Length-relative score</small></span>
          <span style={{ "--vt-read-color": "#FFE357" } as CssVars}><b>{selectedRelativeDelta === undefined ? "-" : `${selectedRelativeDelta >= 0 ? "+" : ""}${(selectedRelativeDelta * 100).toFixed(1)} pts`}</b><small>Difference from median</small></span>
          <span style={{ "--vt-read-color": "#00D2FF" } as CssVars}><b>{selectedTimestamp || formatRetentionRatio(selectedPoint?.elapsedRatio)}</b><small>{selectedTimestamp ? "Timestamp" : "Elapsed position"}</small></span>
          <span style={{ "--vt-read-color": "#C9F830" } as CssVars}><b>P{String(selectedPoint?.pointNumber || 1).padStart(3, "0")}</b><small>Percentile</small></span>
-         <span style={{ "--vt-read-color": "#FFB570" } as CssVars}><b>{selectedChange === undefined ? "-" : `${selectedChange >= 0 ? "+" : ""}${(selectedChange * 100).toFixed(1)} pts`}</b><small>1-point change</small></span>
+         <span style={{ "--vt-read-color": "#FFA85C" } as CssVars}><b>{selectedChange === undefined ? "-" : `${selectedChange >= 0 ? "+" : ""}${(selectedChange * 100).toFixed(1)} pts`}</b><small>1-point change</small></span>
         </div>
        </div>
        <div className="vt-sync-retention-story-grid">
@@ -1886,19 +1999,20 @@ export const VtSyncToolboxDataTable: React.FC<{
  }
 
  const pinnedTableWidth = useMemo(() => pinnedColumns.reduce((sum, column) => sum + (sparseColumnWidths[column.key] ?? baseColumnWidths[column.key] ?? 0), 0), [pinnedColumns, sparseColumnWidths, baseColumnWidths])
+ const trafficOverviewRowHeight = table.id === "traffic" ? getVtSyncTrafficOverviewRowHeight(sortedRows.length) : tableGeometry.rowHeight
 
  const rootStyle: CssVars = {
   "--vt-active-icon": category.colors.icon,
   "--vt-active-label": category.colors.label,
   "--vt-active-shadow": category.colors.shadow,
-  "--vt-row-height": `${tableGeometry.rowHeight}px`,
+  "--vt-row-height": `${trafficOverviewRowHeight}px`,
   "--vt-group-header-height": `${tableGeometry.useGroups ? 30 : 0}px`,
   "--vt-total-height": `${table.id === "demographics" ? 0 : tableGeometry.totalsHeight}px`,
   "--vt-column-header-height": `${tableGeometry.columnHeaderHeight}px`,
   "--vt-pinned-offset": `${32 + 58 + (pinCount > 0 ? pinnedTableWidth : 0)}px`,
  }
 
- return <section className={`vt-sync-toolbox-table is-${tableGeometry.mode}-table ${focus ? "is-focus" : ""} ${dark ? "is-dark" : ""} ${effectiveCompact ? "is-compact" : ""} ${cellFillEnabled ? "has-cell-fill" : ""} ${sparklinesEnabled ? "" : "no-spark"} ${table.mainCategoryId === "demographics" ? "is-demographics" : ""}`} style={rootStyle}>
+ return <section className={`vt-sync-toolbox-table is-${tableGeometry.mode}-table ${focus ? "is-focus" : ""} ${dark ? "is-dark" : ""} ${effectiveCompact ? "is-compact" : ""} ${cellFillEnabled ? "has-cell-fill" : ""} ${sparklinesEnabled ? "" : "no-spark"} ${table.mainCategoryId === "demographics" ? "is-demographics" : ""} ${table.mainCategoryId === "traffic" ? "is-traffic-table" : ""} ${table.id === "traffic" ? "is-traffic-overview" : ""}`} style={rootStyle}>
   {toast && <div className={`vt-sync-toast ${toast.ok ? "is-ok" : "is-error"}`} role="status">{toast.message}</div>}
   <div ref={dragRectRef} className="vt-sync-column-drag-rect" aria-hidden="true" />
   <header className="vt-sync-title-rail"><div>{categoryIcon(category.id)}</div><h2>MASTER DATA TABLES</h2><button type="button" className="vt-sync-collapse-button" aria-label={tableOpen ? "Collapse master data tables" : "Expand master data tables"} aria-expanded={tableOpen} aria-controls="vt-sync-table-content" onClick={() => { setTableOpen((open) => !open); setSettingsOpen(false) }}><AnimatedToggleIcon open={tableOpen} size={44} /></button></header>
@@ -1906,12 +2020,44 @@ export const VtSyncToolboxDataTable: React.FC<{
   <div id="vt-sync-table-content" className={`vt-sync-toolbox-content ${tableOpen ? "is-open" : "is-closed"}`} aria-hidden={!tableOpen} inert={!tableOpen}><div className="vt-sync-toolbox-content-inner">
 
   <nav ref={categoryRailRef} className="vt-sync-category-rail" aria-label="Data table categories">
-   {VT_SYNC_TOOLBOX_CATEGORIES.map((item) => { const isActive = categoryId === item.id; const selectedLabel = isActive && item.tableIds.length > 1 ? getVtSyncPresentationLabel(table.id, table.subLabel || table.label) : item.label; return <div className="vt-sync-category-wrap" key={item.id} style={{ "--vt-cat-icon": item.colors.icon, "--vt-cat-label": item.colors.label, "--vt-cat-shadow": item.colors.shadow } as CssVars}>
-     <button ref={(node) => { categoryButtonRefs.current[item.id] = node }} type="button" className={`vt-sync-category-button ${isActive ? "active" : ""} ${isActive && item.tableIds.length > 1 ? "is-subset" : ""}`} aria-haspopup={item.tableIds.length > 1 ? "listbox" : undefined} aria-expanded={dropdown?.id === item.id} aria-pressed={isActive} onClick={(event) => clickCategory(item, event.currentTarget)}>
-     <span className="vt-sync-category-icon">{isActive && item.tableIds.length > 1 ? <><small>Set</small><ChevronDown size={16} /></> : categoryIcon(item.id)}</span><span>{selectedLabel}</span>
-    </button>
-    {dropdown?.id === item.id && <div ref={dropdownRef} className="vt-sync-subset-menu" role="listbox" style={{ left: dropdown.left, top: dropdown.top, width: dropdown.width }}>{item.tableIds.map((id) => { const candidate = findVtSyncTable(id); return <button type="button" role="option" aria-selected={id === table.id} className={id === table.id ? "active" : ""} key={id} onClick={() => selectCategory(item.id, id)}><i>{categoryIcon(item.id)}</i><span>{getVtSyncPresentationLabel(candidate.id, candidate.label)}</span></button> })}</div>}
-   </div> })}
+   {VT_SYNC_TOOLBOX_CATEGORIES.map((item) => {
+    const isActive = categoryId === item.id
+    const hasTables = item.tableIds.length > 1
+    const useSplitControl = isActive && hasTables
+    const activeTable = isActive ? table : findVtSyncTable(item.tableIds[0])
+    const buttonLabel = useSplitControl
+     ? getVtSyncPresentationLabel(activeTable.id, activeTable.subLabel || activeTable.label)
+     : item.label
+    return <div className="vt-sync-category-wrap" key={item.id} style={{ "--vt-cat-icon": item.colors.icon, "--vt-cat-label": item.colors.label, "--vt-cat-shadow": item.colors.shadow } as CssVars}>
+     <button
+      ref={(node) => { categoryButtonRefs.current[item.id] = node }}
+      type="button"
+      className={`vt-sync-category-button ${isActive ? "active" : ""} ${useSplitControl ? "is-subset" : ""}`}
+      aria-haspopup={hasTables ? "listbox" : undefined}
+      aria-expanded={dropdown?.id === item.id}
+      aria-pressed={isActive}
+      onClick={(event) => clickCategory(item, event.currentTarget)}
+     >
+      <span className={`vt-sync-category-icon ${useSplitControl ? "is-split" : ""}`}>
+       {useSplitControl ? <>
+        <span className="vt-sync-category-split-label">Set</span>
+        <span className="vt-sync-category-split-icon"><ChevronDown aria-hidden="true" /></span>
+       </> : <i>{categoryIcon(item.id)}</i>}
+      </span>
+      <span className="vt-sync-category-label"><strong>{buttonLabel}</strong></span>
+     </button>
+     {dropdown?.id === item.id && <div ref={dropdownRef} className="vt-sync-subset-menu" role="listbox" aria-label={`${item.label} data tables`} style={{ left: dropdown.left, top: dropdown.top, width: dropdown.width }}>
+      {item.tableIds.map((id) => {
+       const candidate = findVtSyncTable(id)
+       const isSelected = id === table.id
+       return <button type="button" role="option" aria-selected={isSelected} className={isSelected ? "active" : ""} key={id} onClick={() => selectCategory(item.id, id)}>
+        <i>{isSelected ? <ChevronDown aria-hidden="true" /> : categoryIcon(item.id)}</i>
+        <span><strong>{getVtSyncPresentationLabel(candidate.id, candidate.label)}</strong></span>
+       </button>
+      })}
+     </div>}
+    </div>
+   })}
   </nav>
 
   <section className={`vt-sync-summary-rail ${table.id === "videos" ? "is-video-summary" : ""}`}>
@@ -1928,14 +2074,14 @@ export const VtSyncToolboxDataTable: React.FC<{
  <div className="vt-sync-toolbar">
    <div className="vt-sync-search" role="search"><span><Search /></span><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") setSearch("") }} placeholder="Search table rows…" aria-label="Search table rows" /><button type="button" aria-label="Clear search" onClick={() => setSearch("")}><X /></button></div>
    {table.presentationMode === "traffic-source-day" && <>
-    <button type="button" className="vt-sync-toolbar-action is-traffic-day-control" style={{ "--vt-action-rail": "#FFFF61", "--vt-action-label": "#FFFFFF", "--vt-action-shadow": "rgba(255,255,97,.52)" } as CssVars} onClick={() => setExpandedTrafficDays(new Set(visibleTrafficDayGroups.map((group) => group.id)))}><span><ChevronDown /></span><strong>Expand visible days</strong></button>
-   <button type="button" className="vt-sync-toolbar-action is-traffic-day-control" style={{ "--vt-action-rail": "#FF83EA", "--vt-action-label": "#FFFFFF", "--vt-action-shadow": "rgba(255,131,234,.52)" } as CssVars} onClick={() => setExpandedTrafficDays(new Set())}><span><ChevronRight /></span><strong>Collapse all</strong></button>
+    <button type="button" className="vt-sync-toolbar-action is-traffic-day-control" style={{ "--vt-action-rail": "#FFDA47", "--vt-action-label": "#FFFFFF", "--vt-action-shadow": "rgba(255,218,71,.52)" } as CssVars} onClick={() => setExpandedTrafficDays(new Set(visibleTrafficDayGroups.map((group) => group.id)))}><span><ChevronDown /></span><strong>Expand visible days</strong></button>
+   <button type="button" className="vt-sync-toolbar-action is-traffic-day-control" style={{ "--vt-action-rail": "#F55EFC", "--vt-action-label": "#FFFFFF", "--vt-action-shadow": "rgba(245,94,252,.52)" } as CssVars} onClick={() => setExpandedTrafficDays(new Set())}><span><ChevronRight /></span><strong>Collapse all</strong></button>
    </>}
    {table.presentationMode === "retention-video" && <>
-    <button type="button" className="vt-sync-toolbar-action is-traffic-day-control" style={{ "--vt-action-rail": "#FFFF61", "--vt-action-label": "#FFFFFF", "--vt-action-shadow": "rgba(255,255,97,.52)" } as CssVars} onClick={() => setExpandedRetentionVideos(new Set(visibleRetentionVideoGroups.map((group) => group.id)))}><span><ChevronDown /></span><strong>Expand visible videos</strong></button>
-    <button type="button" className="vt-sync-toolbar-action is-traffic-day-control" style={{ "--vt-action-rail": "#FF83EA", "--vt-action-label": "#FFFFFF", "--vt-action-shadow": "rgba(255,131,234,.52)" } as CssVars} onClick={() => setExpandedRetentionVideos(new Set())}><span><ChevronRight /></span><strong>Collapse all</strong></button>
+    <button type="button" className="vt-sync-toolbar-action is-traffic-day-control" style={{ "--vt-action-rail": "#FFDA47", "--vt-action-label": "#FFFFFF", "--vt-action-shadow": "rgba(255,218,71,.52)" } as CssVars} onClick={() => setExpandedRetentionVideos(new Set(visibleRetentionVideoGroups.map((group) => group.id)))}><span><ChevronDown /></span><strong>Expand visible videos</strong></button>
+    <button type="button" className="vt-sync-toolbar-action is-traffic-day-control" style={{ "--vt-action-rail": "#F55EFC", "--vt-action-label": "#FFFFFF", "--vt-action-shadow": "rgba(245,94,252,.52)" } as CssVars} onClick={() => setExpandedRetentionVideos(new Set())}><span><ChevronRight /></span><strong>Collapse all</strong></button>
    </>}
-   <button type="button" className="vt-sync-toolbar-action" style={{ "--vt-action-rail": "#4FFF5B", "--vt-action-label": "#FFFF61", "--vt-action-shadow": "rgba(79,255,91,.52)" } as CssVars} onClick={() => fileRef.current?.click()}><span><Upload /></span><strong>Import CSV</strong></button><input ref={fileRef} hidden type="file" multiple accept=".csv,text/csv" onChange={async (event) => {
+   <button type="button" className="vt-sync-toolbar-action" style={{ "--vt-action-rail": "#3FEE56", "--vt-action-label": "#FFDA47", "--vt-action-shadow": "rgba(63,238,86,.52)" } as CssVars} onClick={() => fileRef.current?.click()}><span><Upload /></span><strong>Import CSV</strong></button><input ref={fileRef} hidden type="file" multiple accept=".csv,text/csv" onChange={async (event) => {
     if (!event.target.files) return
     try {
      const files = Array.from(event.target.files)
@@ -1967,27 +2113,27 @@ export const VtSyncToolboxDataTable: React.FC<{
       showToast(`Imported ${entries.reduce((sum, [, rows]) => sum + rows.length, 0)} rows`)
      }
     } catch (error) {
-     console.error("VT-SYNC CSV import failed", error)
+     console.error("Analytics CSV import failed", error)
      showToast("Import failed — check the CSV format", false)
     } finally { event.currentTarget.value = "" }
    }} />
-   <button type="button" className="vt-sync-toolbar-action" style={{ "--vt-action-rail": "#579AFF", "--vt-action-label": "#40C6E9", "--vt-action-shadow": "rgba(87,154,255,.52)" } as CssVars} onClick={() => { downloadCsv(table.exportName, exportVtSyncTableCsv(table, sortedRows, orderedColumns)); showToast(`Exported ${sortedRows.length} ${table.id} rows`) }}><span><Download /></span><strong>Export CSV</strong></button>
+   <button type="button" className="vt-sync-toolbar-action" style={{ "--vt-action-rail": "#528FFA", "--vt-action-label": "#36E0F6", "--vt-action-shadow": "rgba(82,143,250,.52)" } as CssVars} onClick={() => { downloadCsv(table.exportName, exportVtSyncTableCsv(table, sortedRows, orderedColumns)); showToast(`Exported ${sortedRows.length} ${table.id} rows`) }}><span><Download /></span><strong>Export CSV</strong></button>
    <div ref={settingsRef} className="vt-sync-toolbar-settings">
-    <button type="button" className="vt-sync-toolbar-action" style={{ "--vt-action-rail": "#FF83EA", "--vt-action-label": "#FFFF61", "--vt-action-shadow": "rgba(255,131,234,.52)" } as CssVars} aria-label="Table settings" aria-haspopup="dialog" aria-expanded={settingsOpen} onClick={() => setSettingsOpen((open) => !open)}><span><Settings /></span><strong>Settings</strong></button>
+    <button type="button" className="vt-sync-toolbar-action" style={{ "--vt-action-rail": "#F55EFC", "--vt-action-label": "#FFDA47", "--vt-action-shadow": "rgba(245,94,252,.52)" } as CssVars} aria-label="Table settings" aria-haspopup="dialog" aria-expanded={settingsOpen} onClick={() => setSettingsOpen((open) => !open)}><span><Settings /></span><strong>Settings</strong></button>
     {settingsOpen && <div className="vt-sync-settings-panel" role="dialog" aria-label="Table settings">
      <div className="vt-sync-settings-heading"><strong>Display Options</strong><button type="button" aria-label="Close settings" onClick={() => setSettingsOpen(false)}><X /></button></div>
      <div className="vt-sync-settings-grid">
-      <SettingControl label="Dark Mode"><Switch label="Dark mode" checked={dark} activeColor="#40C6E9" onChange={() => setDark(!dark)} /></SettingControl>
-      <SettingControl label="Compact" disabled={!compactEligible}><Switch label="Compact rows" checked={effectiveCompact} activeColor="#4FFF5B" onChange={() => setCompact(!compact)} /></SettingControl>
-      <SettingControl label="Pin Columns" disabled={!compactEligible || !tableGeometry.canPin}><Switch label="Pin columns" checked={Boolean(pinCount)} activeColor="#FF3B30" onChange={() => setPin(!pin)} /></SettingControl>
-      <SettingControl label="Fullscreen"><Switch label="Fullscreen" checked={focus} activeColor="#FFB570" onChange={() => setFocus(!focus)} /></SettingControl>
-      <SettingControl label="Zebra Rows"><Switch label="Zebra rows" checked={zebra} activeColor="#FF3B30" onChange={() => setZebra(!zebra)} /></SettingControl>
-      <SettingControl label="Format Rows"><Switch label="Format rows" checked={formatRows} activeColor="#CC00FF" onChange={() => setFormatRows(!formatRows)} /></SettingControl>
-      <SettingControl label="Formula"><Switch label="Formula metrics" checked={formulas} activeColor="#FF83EA" onChange={() => setFormulas(!formulas)} /></SettingControl>
-      <SettingControl label="Hover Scroll"><Switch label="Hover scroll" checked={hoverScroll} activeColor="#FF83EA" onChange={() => setHoverScroll(!hoverScroll)} /></SettingControl>
-      <SettingControl label="Filters"><Switch label="Column filters" checked={filterRows} activeColor="#4FFF5B" onChange={() => setFilterRows(!filterRows)} /></SettingControl>
-      <SettingControl label="Exclude Private"><Switch label="Exclude private videos" checked={activePrivacyFilters.excludePrivate} activeColor="#4FFF5B" onChange={() => updatePrivacyFilter("excludePrivate", !activePrivacyFilters.excludePrivate)} /></SettingControl>
-     <SettingControl label="Exclude Unlisted"><Switch label="Exclude unlisted videos" checked={activePrivacyFilters.excludeUnlisted} activeColor="#4FFF5B" onChange={() => updatePrivacyFilter("excludeUnlisted", !activePrivacyFilters.excludeUnlisted)} /></SettingControl>
+      <SettingControl label="Dark Mode"><Switch label="Dark mode" checked={dark} activeColor="#36E0F6" onChange={() => setDark(!dark)} /></SettingControl>
+      <SettingControl label="Compact" disabled={!compactEligible}><Switch label="Compact rows" checked={effectiveCompact} activeColor="#3FEE56" onChange={() => setCompact(!compact)} /></SettingControl>
+      <SettingControl label="Pin Columns" disabled={!compactEligible || !tableGeometry.canPin}><Switch label="Pin columns" checked={Boolean(pinCount)} activeColor="#FA618A" onChange={() => setPin(!pin)} /></SettingControl>
+      <SettingControl label="Fullscreen"><Switch label="Fullscreen" checked={focus} activeColor="#FFA85C" onChange={() => setFocus(!focus)} /></SettingControl>
+      <SettingControl label="Zebra Rows"><Switch label="Zebra rows" checked={zebra} activeColor="#FA618A" onChange={() => setZebra(!zebra)} /></SettingControl>
+      <SettingControl label="Format Rows"><Switch label="Format rows" checked={formatRows} activeColor="#A467F4" onChange={() => setFormatRows(!formatRows)} /></SettingControl>
+      <SettingControl label="Formula"><Switch label="Formula metrics" checked={formulas} activeColor="#F55EFC" onChange={() => setFormulas(!formulas)} /></SettingControl>
+      <SettingControl label="Hover Scroll"><Switch label="Hover scroll" checked={hoverScroll} activeColor="#F55EFC" onChange={() => setHoverScroll(!hoverScroll)} /></SettingControl>
+      <SettingControl label="Filters"><Switch label="Column filters" checked={filterRows} activeColor="#3FEE56" onChange={() => setFilterRows(!filterRows)} /></SettingControl>
+      <SettingControl label="Exclude Private"><Switch label="Exclude private videos" checked={activePrivacyFilters.excludePrivate} activeColor="#3FEE56" onChange={() => updatePrivacyFilter("excludePrivate", !activePrivacyFilters.excludePrivate)} /></SettingControl>
+     <SettingControl label="Exclude Unlisted"><Switch label="Exclude unlisted videos" checked={activePrivacyFilters.excludeUnlisted} activeColor="#3FEE56" onChange={() => updatePrivacyFilter("excludeUnlisted", !activePrivacyFilters.excludeUnlisted)} /></SettingControl>
      </div>
      <div className="vt-sync-saved-csv-settings">
       <button
@@ -2010,23 +2156,23 @@ export const VtSyncToolboxDataTable: React.FC<{
       <span>{savedCsvTableIds.has(table.id) ? "Latest import retained for this table." : "No saved import for this table."}</span>
      </div>
      <div className="vt-sync-effect-settings">
-      <section style={{ "--vt-effect-color": "#40C6E9" } as CssVars}>
+      <section style={{ "--vt-effect-color": "#36E0F6" } as CssVars}>
        <strong>Sparklines</strong>
-       <BinaryToggle label="Sparkline visibility" left="On" right="Off" leftActive={sparklinesEnabled} onChange={setSparklinesEnabled} color="#40C6E9" />
-       <BinaryToggle label="Sparkline shape" left="Pill" right="Bar" leftActive={sparkShape === "pill"} onChange={(pill) => setSparkShape(pill ? "pill" : "bar")} color="#FFFF61" />
-       <TernaryToggle label="Sparkline color" options={["solid", "rank", "spectrum"] as const} value={sparkColorMode} onChange={setSparkColorMode} color="#4FFF5B" />
-       <BinaryToggle label="Sparkline palette" left="Color" right="Invert" leftActive={!sparkInverted} onChange={(color) => setSparkInverted(!color)} color="#FF83EA" />
-       <BinaryToggle label="Sparkline outline" left="Stroke" right="Off" leftActive={sparkStroke} onChange={setSparkStroke} color="#FFB570" />
+       <BinaryToggle label="Sparkline visibility" left="On" right="Off" leftActive={sparklinesEnabled} onChange={setSparklinesEnabled} color="#36E0F6" />
+       <BinaryToggle label="Sparkline shape" left="Pill" right="Bar" leftActive={sparkShape === "pill"} onChange={(pill) => setSparkShape(pill ? "pill" : "bar")} color="#FFDA47" />
+       <TernaryToggle label="Sparkline color" options={["solid", "rank", "spectrum"] as const} value={sparkColorMode} onChange={setSparkColorMode} color="#3FEE56" />
+       <BinaryToggle label="Sparkline palette" left="Color" right="Invert" leftActive={!sparkInverted} onChange={(color) => setSparkInverted(!color)} color="#F55EFC" />
+       <BinaryToggle label="Sparkline outline" left="Stroke" right="Off" leftActive={sparkStroke} onChange={setSparkStroke} color="#FFA85C" />
       </section>
-      <section style={{ "--vt-effect-color": "#579AFF" } as CssVars}>
+      <section style={{ "--vt-effect-color": "#528FFA" } as CssVars}>
        <strong>Heat Map</strong>
-       <BinaryToggle label="Heat map visibility" left="On" right="Off" leftActive={heatmapEnabled} onChange={setHeatmapEnabled} color="#579AFF" />
-       <BinaryToggle label="Heat map palette" left="Color" right="Invert" leftActive={!heatmapInverted} onChange={(color) => setHeatmapInverted(!color)} color="#FF83EA" />
+       <BinaryToggle label="Heat map visibility" left="On" right="Off" leftActive={heatmapEnabled} onChange={setHeatmapEnabled} color="#528FFA" />
+       <BinaryToggle label="Heat map palette" left="Color" right="Invert" leftActive={!heatmapInverted} onChange={(color) => setHeatmapInverted(!color)} color="#F55EFC" />
       </section>
-      <section style={{ "--vt-effect-color": "#CC00FF" } as CssVars}>
+      <section style={{ "--vt-effect-color": "#A467F4" } as CssVars}>
        <strong>Cell Fill</strong>
-       <BinaryToggle label="Cell fill visibility" left="On" right="Off" leftActive={cellFillEnabled} onChange={setCellFillEnabled} color="#CC00FF" />
-       <BinaryToggle label="Cell fill palette" left="Color" right="Invert" leftActive={!cellFillInverted} onChange={(color) => setCellFillInverted(!color)} color="#FF83EA" />
+       <BinaryToggle label="Cell fill visibility" left="On" right="Off" leftActive={cellFillEnabled} onChange={setCellFillEnabled} color="#A467F4" />
+       <BinaryToggle label="Cell fill palette" left="Color" right="Invert" leftActive={!cellFillInverted} onChange={(color) => setCellFillInverted(!color)} color="#F55EFC" />
       </section>
      </div>
     </div>}
@@ -2035,16 +2181,17 @@ export const VtSyncToolboxDataTable: React.FC<{
   {csvPersistenceWarning ? <p className="vt-sync-csv-persistence-warning" role="status">{csvPersistenceWarning}</p> : null}
 
   {table.id === "demographics" ? renderDemographicTable() : table.id === "device_os" ? renderDeviceOsTable() : table.presentationMode === "traffic-source-day" ? renderTrafficSourceDayTable() : table.presentationMode === "retention-video" ? renderRetentionVideoTable() : <>
-   {renderScrollbar("top")}
-   <div className="vt-sync-split-table">
-    {renderVerticalScrollbar()}
+   {table.id !== "traffic" && renderScrollbar("top")}
+   <div className={`vt-sync-split-table ${table.id === "traffic" ? "has-toolbar-boundary" : ""}`}>
+    {table.verticalScrollMode === "custom" && renderVerticalScrollbar()}
     <div className="vt-sync-row-rail-viewport" ref={rowRailScrollRef} onScroll={(event) => { if (mainScrollRef.current && mainScrollRef.current.scrollTop !== event.currentTarget.scrollTop) mainScrollRef.current.scrollTop = event.currentTarget.scrollTop }}>{renderRowRail()}</div>
     {pinCount > 0 && <div className="vt-sync-pinned-viewport" ref={pinnedScrollRef}>{renderTable(pinnedGroups, true)}</div>}
     <div className="vt-sync-main-viewport" ref={mainScrollRef} onScroll={updateScrollState} onPointerMove={onHoverScroll} onPointerLeave={() => { hoverRef.current = { direction: 0, speed: 1 } }}>{renderTable(mainGroups, false)}</div>
    </div>
-   {renderScrollbar("bottom")}
+   {table.id !== "traffic" && renderScrollbar("bottom")}
   </>}
-  <footer className="vt-sync-table-footer">
+  <footer className="vt-sync-table-footer" style={{ "--vt-footer-color": category.colors.label } as CssVars}>
+   <div className="vt-sync-table-footer-copy">{syncModuleDescription}</div>
    <div className="vt-sync-table-footer-status"><span>{getVtSyncPresentationLabel(table.id, table.label)}</span><span>{table.presentationMode === "traffic-source-day" ? `Showing ${visibleTrafficDayGroups.length.toLocaleString()} of ${trafficDayGroups.length.toLocaleString()} day groups` : table.presentationMode === "retention-video" ? `Showing ${visibleRetentionVideoGroups.length.toLocaleString()} of ${retentionVideoGroups.length.toLocaleString()} video groups` : table.id === "device_os" ? `Showing ${sortedDeviceOsGroups.length.toLocaleString()} of ${sortedDeviceOsGroups.length.toLocaleString()} OS groups` : `Showing ${renderedRows.length.toLocaleString()} of ${sortedRows.length.toLocaleString()} rows`}</span><span>{table.id === "demographics" ? "3 sections · 3 gender metrics" : table.id === "device_os" ? `2 sections · ${deviceOsSummary?.deviceList.length ?? 0} devices per OS row` : table.presentationMode === "traffic-source-day" ? `${sortedRows.length.toLocaleString()} flat source/day rows · CSV stays flat` : table.presentationMode === "retention-video" ? `${sortedRows.length.toLocaleString()} flat retention points · CSV stays flat` : `${presentationColumns.length} visible columns · ${pinCount ? `${pinCount} pinned` : "not pinned"}`}</span><span>{table.presentationMode === "traffic-source-day" || table.id === "device_os" ? "Grouped on screen" : table.presentationMode === "retention-video" ? "Grouped on screen" : renderedRows.length < sortedRows.length ? "Loading on scroll · next 50" : "All visible rows loaded"}</span></div>
    <div className="vt-sync-table-footer-provenance"><span><b>Source</b> {tableProvenance.sourceLabel}</span><span><b>Updated</b> <time dateTime={tableProvenance.updatedAt}>{provenanceTime}</time></span>{tableProvenance.windowLabel && <span><b>Coverage</b> {tableProvenance.windowLabel}</span>}<span><b>Status</b> {tableProvenance.statusLabel}</span></div>
   </footer>

@@ -38,7 +38,7 @@ export const userGuideSections: GuideSection[] = [
           "Enable Rearrange Widgets to drag widgets into a new order or resize them, then lock the layout when you're happy with it.",
         ],
         troubleshooting: [
-          "If a widget shows zeros or an empty state, you haven't synced yet, or that widget's data category isn't selected in VT Sync.",
+          "If a widget shows zeros or an empty state, you haven't synced yet, or that widget's data category isn't selected in Analytics.",
           "If the layout looks wrong after an update, use Reset Layout from Widget Options to restore the default arrangement.",
         ],
         qaChecks: [
@@ -122,13 +122,13 @@ export const userGuideSections: GuideSection[] = [
   },
   {
     id: "vt-sync",
-    title: "VT Sync",
+    title: "Analytics",
     audience: "Creators who want direct access to every synced YouTube dataset and table.",
     routeRefs: ["/local-analytics"],
     tools: [
       {
         toolId: "VT_SYNC_TOOLS_PAGE",
-        toolName: "VT Sync Tools Page",
+        toolName: "Analytics Tools Page",
         routeRef: "/local-analytics",
         whatItDoes:
           "Runs the sync that pulls your channel's data from the YouTube Data and Analytics APIs into local tables — videos, traffic sources, demographics, geography, devices and operating systems, revenue, and more — plus a full data-table browser for inspecting every dataset directly.",

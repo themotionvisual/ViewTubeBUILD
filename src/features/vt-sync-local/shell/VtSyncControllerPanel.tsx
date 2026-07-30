@@ -2,7 +2,8 @@ import React, { useMemo, useState } from "react"
 import { CheckSquare, ChevronDown, ChevronRight, RefreshCw, ShieldCheck, Square } from "lucide-react"
 import { ToolboxScaffold } from "../../../components/Toolbox"
 import { getPaletteColor } from "../../../styles/toolboxPalette"
-import type { VtSyncCategoryDefinition, VtSyncCategoryGroup } from "../adapters/contracts"
+import { RetroRivets } from "./VtSyncRetroChrome"
+import type { VtSyncCategoryDefinition, VtSyncCategoryGroup, VtSyncDatasetFreshness } from "../adapters/contracts"
 import {
  VT_SYNC_CATEGORY_OPTIONS,
  expandVtSyncCategoryDependencies,
@@ -30,8 +31,6 @@ const SOURCE_API_LABELS: Record<string, string> = {
 
 const formatPlainLabel = (value: string) => value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
 
-const pillButton = "rounded-full border-[2px] border-black px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.04em] transition-transform disabled:cursor-not-allowed disabled:opacity-50"
-
 const categoryGroups = GROUP_ORDER
  .map((group) => ({
   group,
@@ -40,14 +39,23 @@ const categoryGroups = GROUP_ORDER
  }))
  .filter((entry) => entry.categories.length > 0)
 
+// The three "videos" categories form a strict dependency chain (uploads_playlist -> video_metadata ->
+// videos_analytics) that all back a single Videos data table, so they sync as one unit in the UI.
+const VIDEOS_MERGED_QUOTA_LABEL = "YouTube Data API v3 + YouTube Analytics API · Low–High quota"
+const VIDEOS_MERGED_DESCRIPTION = "Full uploaded video list with titles, thumbnails, tags, and per-video views, watch time, and engagement."
+
+const categoryFreshness = (freshness: VtSyncDatasetFreshness | undefined, categoryId: string) =>
+ freshness?.[categoryId] || Object.values(freshness || {}).find((entry) => entry.phase === categoryId)
+
 export const VtSyncControllerPanel: React.FC<{
  isAuthenticated: boolean
  isSyncing: boolean
  videos: VtSyncRetentionVideoOption[]
  activeCategoryIds?: string[]
+ datasetFreshness?: VtSyncDatasetFreshness
  onLogin: () => Promise<void>
  onStartSync: (categoryIds: string[], retentionVideoIds?: string[]) => Promise<void>
-}> = ({ isAuthenticated, isSyncing, videos, activeCategoryIds = [], onLogin, onStartSync }) => {
+}> = ({ isAuthenticated, isSyncing, videos, activeCategoryIds = [], datasetFreshness, onLogin, onStartSync }) => {
  const [selected, setSelected] = useState<string[]>(() => getVtSyncDefaultCategoryIds())
  const [retentionVideoIds, setRetentionVideoIds] = useState<string[]>([])
  const [videoSearch, setVideoSearch] = useState("")
@@ -70,6 +78,16 @@ export const VtSyncControllerPanel: React.FC<{
   setSelected((current) => current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id])
  }
 
+ const toggleMany = (ids: string[]) => {
+  if (isSyncing) return
+  setSelected((current) => {
+   const allSelected = ids.every((id) => current.includes(id))
+   return allSelected
+    ? current.filter((entry) => !ids.includes(entry))
+    : [...new Set([...current, ...ids])]
+  })
+ }
+
  const toggleRetentionVideo = (id: string) => {
   if (isSyncing) return
   setRetentionVideoIds((current) => current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id])
@@ -89,11 +107,13 @@ export const VtSyncControllerPanel: React.FC<{
   await onStartSync(expandVtSyncCategoryDependencies(filterVtSyncVisibleCategoryIds(selected)), retentionEnabled ? retentionVideoIds : undefined)
  }
 
- const startSingle = async (category: VtSyncCategoryDefinition) => {
+ const startCategories = async (categoryIds: string[], includeRetentionVideoIds = false) => {
   if (!isAuthenticated) await onLogin()
-  const categoryIds = expandVtSyncCategoryDependencies([category.id])
-  await onStartSync(categoryIds, category.id === "retention" ? retentionVideoIds : undefined)
+  const expanded = expandVtSyncCategoryDependencies(categoryIds)
+  await onStartSync(expanded, includeRetentionVideoIds ? retentionVideoIds : undefined)
  }
+
+ const startSingle = (category: VtSyncCategoryDefinition) => startCategories([category.id], category.id === "retention")
 
  return (
   <ToolboxScaffold
@@ -104,52 +124,83 @@ export const VtSyncControllerPanel: React.FC<{
    iconBoxColor="bg-[#C0F240]"
    paletteIndex={2}
    embedded
-   contentClassName="bg-white p-4"
-   headerActions={
-    <div className="flex flex-wrap items-center gap-2">
-     <span className="rounded-full border-[2px] border-black bg-[#FFDA47] px-3 py-1 text-[10px] font-black uppercase leading-none tabular-nums">{selected.length} selected</span>
-     <span className={`rounded-full border-[2px] border-black px-3 py-1 text-[10px] font-black uppercase leading-none ${isAuthenticated ? "bg-[#3FEE56]" : "bg-[#FA618A]"}`}>{isAuthenticated ? "Authorized" : "Connect"}</span>
-     <span className={`rounded-full border-[2px] border-black px-3 py-1 text-[10px] font-black uppercase leading-none ${isSyncing ? "bg-[#FFFF61]" : "bg-white"}`}>{isSyncing ? "Running" : "Ready"}</span>
-    </div>
-   }
+   contentClassName="vt-retro-dark-content p-4"
+   outerClassName="vt-retro-shell"
+   hardShadow
   >
-   <div className="w-full bg-white">
+   <RetroRivets />
+   <div className="w-full">
 
    <div className="mb-4 flex flex-wrap items-center gap-2">
-    <button type="button" disabled={isSyncing} onClick={() => setSelected(VT_SYNC_CATEGORY_OPTIONS.map((category) => category.id))} className={`${pillButton} bg-white shadow-[2px_2px_0_0_#000]`}>Select All</button>
-    <button type="button" disabled={isSyncing} onClick={() => setSelected(getVtSyncCoreCategoryIds())} className={`${pillButton} bg-[#FFDA47] shadow-[2px_2px_0_0_#000]`}>Core Only</button>
-    <button type="button" disabled={isSyncing} onClick={() => setSelected(getVtSyncDefaultCategoryIds())} className={`${pillButton} bg-[#36E0F6] shadow-[2px_2px_0_0_#000]`}>Recommended</button>
-    <button type="button" disabled={isSyncing} onClick={() => setSelected([])} className={`${pillButton} bg-white shadow-[2px_2px_0_0_#000]`}>Clear</button>
+    <button type="button" disabled={isSyncing} onClick={() => setSelected(VT_SYNC_CATEGORY_OPTIONS.map((category) => category.id))} className="vt-retro-switch"><span className="vt-retro-switch-led" />Select All</button>
+    <button type="button" disabled={isSyncing} onClick={() => setSelected(getVtSyncCoreCategoryIds())} className="vt-retro-switch" style={{ "--tone": "#FFDA47", "--tone-light": "#fff3b0" } as React.CSSProperties}><span className="vt-retro-switch-led" />Core Only</button>
+    <button type="button" disabled={isSyncing} onClick={() => setSelected(getVtSyncDefaultCategoryIds())} className="vt-retro-switch" style={{ "--tone": "#36E0F6", "--tone-light": "#b9f2ff" } as React.CSSProperties}><span className="vt-retro-switch-led" />Recommended</button>
+    <button type="button" disabled={isSyncing} onClick={() => setSelected([])} className="vt-retro-switch"><span className="vt-retro-switch-led" />Clear</button>
    </div>
 
-   <div className="overflow-hidden rounded-[14px] border-[3px] border-black bg-white">
+   <div className="overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0d0d0d]">
     {categoryGroups.map(({ group, label, categories }) => {
-     const selectedCount = categories.filter((category) => selectedSet.has(category.id)).length
      const expanded = openGroups.has(group)
      const contentId = `vt-sync-controller-group-${group}`
      return (
-      <section key={group} className="border-b-[3px] border-black bg-white last:border-b-0">
+      <section key={group} className="border-b-[3px] border-black bg-[#0d0d0d] last:border-b-0">
        <h3>
         <button
          type="button"
          aria-expanded={expanded}
          aria-controls={contentId}
          onClick={() => toggleGroup(group)}
-         className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-[-4px] focus-visible:outline-black ${expanded ? "border-b-[2px] border-black" : ""}`}
+         className={`vt-retro-acc-header flex w-full items-center justify-between gap-3 py-1.5 px-3 text-left focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-[-4px] focus-visible:outline-black ${expanded ? "border-b-[2px] border-black" : ""}`}
          style={{ backgroundColor: GROUP_COLORS[group] }}
         >
          <span className="flex min-w-0 items-center gap-2">
           <span className="grid h-6 w-6 shrink-0 place-items-center rounded-[5px] border-[2px] border-black bg-white" aria-hidden="true">
            {expanded ? <ChevronDown className="h-4 w-4" strokeWidth={3.5} /> : <ChevronRight className="h-4 w-4" strokeWidth={3.5} />}
           </span>
-          <span className="truncate text-[13px] font-black uppercase tracking-[0.02em]">{label}</span>
+          <span className="vt-retro-acc-label truncate text-[15px] tracking-[0.02em]">{label}</span>
          </span>
-         <span className="shrink-0 rounded-full border-[2px] border-black bg-white px-2.5 py-1 text-[9.5px] font-black uppercase leading-none">{selectedCount}/{categories.length} selected</span>
         </button>
        </h3>
        <div id={contentId} hidden={!expanded}>
          <div className="divide-y-[2px] divide-black">
-          {categories.map((category: VtSyncCategoryDefinition) => {
+          {group === "videos" ? (() => {
+           const videoCategoryIds = categories.map((category) => category.id)
+           const checked = videoCategoryIds.every((id) => selectedSet.has(id))
+           const active = videoCategoryIds.some((id) => activeCategorySet.has(id))
+           const hasPriorData = videoCategoryIds.some((id) => {
+            const entry = categoryFreshness(datasetFreshness, id)
+            return Boolean(entry?.status && entry.status !== "failed")
+           })
+           return (
+            <div className={`grid w-full grid-cols-[32px_minmax(130px,1.05fr)_minmax(180px,1.35fr)_72px] items-center gap-3 px-3 py-2.5 text-left hover:bg-[#f8f7f1] max-lg:grid-cols-[32px_1fr_72px] ${checked ? "bg-white" : "bg-white/55 text-black/50"}`}>
+             <button type="button" aria-pressed={checked} disabled={isSyncing} onClick={() => toggleMany(videoCategoryIds)} title={`${checked ? "Remove" : "Add"} Videos ${checked ? "from" : "to"} batch sync`} aria-label={`${checked ? "Remove" : "Add"} Videos ${checked ? "from" : "to"} batch sync`} className="grid min-h-8 min-w-8 place-items-center rounded-[6px] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-black">
+              {checked ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5 text-black/35" />}
+             </button>
+             <span className="min-w-0">
+              <span className="flex flex-wrap items-center gap-1.5">
+               <span className="truncate text-[13px] font-black uppercase tracking-[-0.01em]">Video Catalog &amp; Analytics</span>
+               <span className="rounded-full border border-black bg-[#3FEE56] px-1.5 py-[1px] text-[8px] font-black uppercase leading-tight">Core</span>
+              </span>
+              <span className="mt-1 block text-[9.5px] font-bold uppercase leading-snug tracking-[0.03em] text-black/45">
+               {VIDEOS_MERGED_QUOTA_LABEL}
+              </span>
+             </span>
+             <span className="min-w-0 text-[10px] font-black uppercase leading-snug tracking-[0.02em] text-black/70 max-lg:col-span-2 max-lg:col-start-2">
+              {VIDEOS_MERGED_DESCRIPTION}
+             </span>
+             <button
+              type="button"
+              disabled={isSyncing}
+              onClick={() => void startCategories(videoCategoryIds)}
+              aria-label={`${hasPriorData ? "Update" : "Fully sync"} the video catalog and analytics`}
+              className="flex min-h-8 min-w-[68px] items-center justify-center gap-1 rounded-[7px] border-[2px] border-black bg-[#C0F240] px-2 py-1 text-[9px] font-black uppercase shadow-[2px_2px_0_0_#000] active:translate-x-px active:translate-y-px active:shadow-none focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-black disabled:opacity-45"
+             >
+              <RefreshCw className={`h-3.5 w-3.5 ${active ? "animate-spin" : ""}`} aria-hidden="true" />
+              {active ? "Running" : hasPriorData ? "Update" : "Full Sync"}
+             </button>
+            </div>
+           )
+          })() : categories.map((category: VtSyncCategoryDefinition) => {
            const checked = selectedSet.has(category.id)
            const active = activeCategorySet.has(category.id)
            return (

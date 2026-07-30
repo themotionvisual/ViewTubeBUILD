@@ -958,17 +958,29 @@ export const buildAIBrainContextSnapshot = ({
  }
 }
 
+/**
+ * Route a creator question to a response mode.
+ *
+ * Ordering matters: a question's *primary* intent is its verb and object, not the
+ * metrics it happens to name. "Which formats are best for views and revenue?" is a
+ * formats question, so content-creation and packaging intents are checked before
+ * revenue/analytics — otherwise an incidental "revenue" or "views" hijacks the mode
+ * and every question collapses to the same answer. Word boundaries also allow plural
+ * forms ("formats", "titles") so they don't silently fall through.
+ */
 const responseModeForText = (text: string): CreatorBrainResponse["mode"] => {
  const lower = text.toLowerCase()
- if (/\b(daily oracle|quick win|today's priority|today)\b/.test(lower)) return "goal_coach"
+ if (/\b(daily oracle|quick win|today'?s priority|today)\b/.test(lower)) return "goal_coach"
  if (/\b(best|most successful|top)\b.*\b(video|upload)\b/.test(lower)) return "analytics_diagnosis"
- if (/\b(revenue|income|rpm|money)\b/.test(lower)) return "revenue_levers"
- if (/\b(seo|keyword|search|title|description)\b/.test(lower)) return "seo_keyword_plan"
- if (/\b(analytics|views|ctr|retention|traffic|impression)\b/.test(lower)) return "analytics_diagnosis"
+ if (/\b(thumbnail|packaging|hook|click-?through)\b/.test(lower)) return "seo_keyword_plan"
+ if (/\b(ideas?|topics?|angles?|formats?|series|episodes?|double down)\b/.test(lower)) return "video_idea_sprint"
+ if (/\b(niche|positioning|channel identity)\b/.test(lower)) return "strategy_brief"
+ if (/\b(seo|keywords?|search|titles?|descriptions?|tags?)\b/.test(lower)) return "seo_keyword_plan"
+ if (/\b(revenue|income|rpm|cpm|money|monetiz\w*|sponsor)\b/.test(lower)) return "revenue_levers"
+ if (/\b(retention|watch ?time|analytics|views|ctr|traffic|impressions?)\b/.test(lower)) return "analytics_diagnosis"
  if (/\b(journal|reflect|voice|style)\b/.test(lower)) return "journal_reflection"
- if (/\b(goal|target|milestone)\b/.test(lower)) return "goal_coach"
- if (/\b(publish|schedule|upload)\b/.test(lower)) return "publishing_checklist"
- if (/\b(idea|topic|format|series)\b/.test(lower)) return "video_idea_sprint"
+ if (/\b(goals?|target|milestone|on pace|pace)\b/.test(lower)) return "goal_coach"
+ if (/\b(publish|schedule|upload|calendar|consistency)\b/.test(lower)) return "publishing_checklist"
  return "strategy_brief"
 }
 
@@ -1342,7 +1354,12 @@ export const formatCreatorBrainResponse = (
 ): CreatorBrainResponse => {
  const evidencePack = options.evidencePack || snapshot.evidencePack
  const clean = sanitizeCreatorBrainMarkdown(rawText)
- const mode = responseModeForText(`${options.requestText || ""} ${rawText} ${snapshot.brain.targetNiche} ${snapshot.brain.coreConcept}`)
+ // Route by the creator's question. Falling back to the generated body only when no
+ // request text is available; otherwise the answer's own wording (e.g. a niche reply
+ // mentioning "views") would hijack the mode and make every answer look the same.
+ const mode = responseModeForText(
+  options.requestText?.trim() || `${rawText} ${snapshot.brain.targetNiche} ${snapshot.brain.coreConcept}`,
+ )
  const shouldUseProfileLead = Boolean(snapshot.inferredProfile.niche && isVagueNicheAnswer(clean))
  const confidence =
   snapshot.inferredProfile.status === "ready" ? "high"
@@ -1452,23 +1469,19 @@ export const buildCreatorBrainLocalFallback = (
   ].join(" ")
  }
 
- if (/\b(niche|lane|focus|fuzzy|position)\b/.test(lower)) {
+ // Everything else routes through the same classifier the headline uses, so the
+ // body and headline can never disagree and different questions get different bodies.
+ const mode = responseModeForText(requestText)
+
+ if (mode === "video_idea_sprint") {
   return [
-   `Your clearest current lane appears to be ${laneList}.`,
-   "The fuzzy part is deciding which lane should lead the next 30 days instead of letting every strong topic compete for the channel identity.",
-   `Prioritize ${lane} for the next test cycle, then judge it by views, subscriber conversion, comments, and watch time.`,
+   `For your next tests, pull ideas straight from ${laneList}${topVideo?.title ? `, using "${topVideo.title}" as the proven template` : ""}.`,
+   "Pick three angles on that lane: a beginner entry point, a surprising counter-take, and a direct answer to a question your audience keeps asking.",
+   "Test one idea at a time so you can see which angle your viewers and the algorithm actually reward.",
   ].join(" ")
  }
 
- if (/\b(format|series|episode|upload plan|ideas?)\b/.test(lower)) {
-  return [
-   `Build the next series or format around ${lane}.`,
-   "Use one repeatable structure: clear promise, fast proof, one memorable example, and a direct viewer payoff before the midpoint.",
-   "A useful first series map is: origin story, surprising example, comparison, viewer question, and next-step breakdown.",
-  ].join(" ")
- }
-
- if (/\b(title|thumbnail|ctr|packaging|hook|seo|keyword)\b/.test(lower)) {
+ if (mode === "seo_keyword_plan") {
   return [
    `Package the next video around ${lane} with one clear viewer promise.`,
    "Create three title angles: direct benefit, curiosity gap, and specific outcome. Pair each with a thumbnail that shows the result before the viewer reads the full title.",
@@ -1476,7 +1489,7 @@ export const buildCreatorBrainLocalFallback = (
   ].join(" ")
  }
 
- if (/\b(revenue|rpm|monetiz|income|money)\b/.test(lower)) {
+ if (mode === "revenue_levers") {
   return [
    "Separate revenue growth into audience growth, retention, and revenue efficiency.",
    `Use ${lane} to create videos that attract the right viewer for longer sessions, then add a clearer path to the next watch, product, membership, sponsor, or offer.`,
@@ -1484,11 +1497,45 @@ export const buildCreatorBrainLocalFallback = (
   ].join(" ")
  }
 
- if (/\b(goal|target|month|30 day|30-day|progress)\b/.test(lower)) {
+ if (mode === "analytics_diagnosis") {
+  return [
+   topVideo?.title
+    ? `To read your view trend, compare recent uploads against ${topVideoText}.`
+    : "To read your view trend, compare your recent uploads against your strongest past uploads.",
+   `Walk the funnel in order: impressions and click-through decide who arrives, the first 30 seconds and pacing decide who stays, and how well the topic fits ${lane} decides who subscribes.`,
+   "Change one variable at a time so you can tell which link in that chain actually moved.",
+  ].join(" ")
+ }
+
+ if (mode === "goal_coach") {
   return [
    "Pick one primary 30-day result before changing the content plan.",
    "Use views for discovery, subscribers for audience fit, watch time for video quality, revenue for business strength, and output for workflow consistency.",
    `The best first goal is the one that helps ${lane} become repeatable, not just bigger.`,
+  ].join(" ")
+ }
+
+ if (mode === "publishing_checklist") {
+  return [
+   `Build a publishing rhythm around ${lane} that you can actually sustain.`,
+   "Decide the one format you can ship on schedule, then protect that slot before adding Shorts, community posts, or extras.",
+   "A cadence the audience can predict beats occasional bursts the algorithm cannot learn from.",
+  ].join(" ")
+ }
+
+ if (mode === "journal_reflection") {
+  return [
+   `Reflect on what makes ${lane} yours: the angle, tone, or promise only your channel delivers.`,
+   "Write down the one thing your best videos have in common so future recommendations protect it instead of diluting it.",
+  ].join(" ")
+ }
+
+ // strategy_brief: niche-specific when the creator asks about positioning, else general.
+ if (/\b(niche|positioning|identity|fuzzy|clearest|position)\b/.test(lower)) {
+  return [
+   `Your clearest current lane appears to be ${laneList}.`,
+   "The fuzzy part is deciding which lane should lead the next 30 days instead of letting every strong topic compete for the channel identity.",
+   `Prioritize ${lane} for the next test cycle, then judge it by views, subscriber conversion, comments, and watch time.`,
   ].join(" ")
  }
 

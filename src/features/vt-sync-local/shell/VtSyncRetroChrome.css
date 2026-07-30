@@ -1,0 +1,165 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Bebas+Neue&display=swap');
+
+:root {
+ --vt-retro-mono: "Space Mono", "SF Mono", ui-monospace, monospace;
+ --vt-retro-display: "Bebas Neue", "Arial Narrow", sans-serif;
+}
+
+/* Dark chassis background for the sync controller/progress panel content areas. */
+.vt-retro-dark-content { background: #141414 !important; }
+
+/* Panel title in the retro display font. */
+.vt-retro-shell header h1 { font-family: var(--vt-retro-display); letter-spacing: .03em; }
+
+/* Half-height colored accordion header with the retro display font, no badge. */
+.vt-retro-acc-header { min-height: 0; }
+.vt-retro-acc-label { font-family: var(--vt-retro-display); font-weight: 400; text-transform: uppercase; }
+
+/* Chassis shell: hosts corner rivets on the outer bordered/shadowed frame. */
+.vt-retro-shell { position: relative; }
+
+.vt-retro-rivet {
+ position: absolute;
+ z-index: 5;
+ width: 10px;
+ height: 10px;
+ border-radius: 50%;
+ background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.9), rgba(255,255,255,.15) 40%, rgba(0,0,0,.55) 72%, rgba(0,0,0,.78));
+ box-shadow: 0 1px 1px rgba(255,255,255,.35) inset, 0 1px 2px rgba(0,0,0,.5);
+ pointer-events: none;
+}
+.vt-retro-rivet--tl { top: 10px; left: 10px; }
+.vt-retro-rivet--tr { top: 10px; right: 10px; }
+.vt-retro-rivet--bl { bottom: 10px; left: 10px; }
+.vt-retro-rivet--br { bottom: 10px; right: 10px; }
+
+/* Brushed-metal panel texture: a faint diagonal grain over a warm-gray base. */
+.vt-retro-brushed {
+ background-image: repeating-linear-gradient(115deg, rgba(255,255,255,.5) 0 1px, transparent 1px 3px);
+ background-color: #e4e4e0;
+}
+
+/* LED status row: dark housing with round lights, 2x the reference component's 12px dots. */
+.vt-retro-led-row {
+ display: flex;
+ align-items: center;
+ gap: 10px;
+ padding: 7px 12px;
+ border: 2px solid #000;
+ border-radius: 8px;
+ background: #0b0b0c;
+ box-shadow: 2px 2px 0 rgba(0,0,0,.4);
+}
+.vt-retro-led {
+ position: relative;
+ width: 24px;
+ height: 24px;
+ flex: 0 0 auto;
+ border-radius: 50%;
+ border: 2px solid rgba(255,255,255,.28);
+ background: rgba(255,255,255,.08);
+ transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.vt-retro-led.is-lit {
+ background: currentColor;
+ border-color: currentColor;
+ box-shadow: 0 0 8px currentColor, 0 0 18px currentColor;
+}
+.vt-retro-led.is-pulse.is-lit { animation: vt-retro-led-pulse 1.3s ease-in-out infinite; }
+@keyframes vt-retro-led-pulse {
+ 0%, 100% { box-shadow: 0 0 6px currentColor, 0 0 12px currentColor; }
+ 50% { box-shadow: 0 0 10px currentColor, 0 0 24px currentColor; }
+}
+.vt-retro-led-caption {
+ font-family: var(--vt-retro-mono);
+ font-size: 8px;
+ font-weight: 700;
+ letter-spacing: .08em;
+ text-transform: uppercase;
+ color: rgba(255,255,255,.55);
+}
+
+/* LCD digital readout: replaces flat oval badges with a glowing mono display. */
+.vt-retro-lcd {
+ display: inline-flex;
+ align-items: center;
+ gap: 4px;
+ padding: 4px 9px;
+ border: 2px solid #000;
+ border-radius: 4px;
+ background: #0b0b0c;
+ color: var(--tone, #3FEE56);
+ font-family: var(--vt-retro-mono);
+ font-size: 10px;
+ font-weight: 700;
+ letter-spacing: .05em;
+ line-height: 1;
+ text-shadow: 0 0 6px currentColor;
+ box-shadow: 2px 2px 0 rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.04);
+ white-space: nowrap;
+}
+
+/* Chunky bezeled switch: replaces flat rounded-full pill buttons. */
+.vt-retro-switch {
+ position: relative;
+ display: inline-flex;
+ align-items: center;
+ gap: 6px;
+ padding: 9px 16px;
+ border: 2px solid #000;
+ border-radius: 7px;
+ background: linear-gradient(180deg, #ffffff 0%, #d6d6d2 100%);
+ box-shadow: inset 0 1px 0 rgba(255,255,255,.85), inset 0 -2px 0 rgba(0,0,0,.12), 2px 2px 0 #000;
+ font-family: var(--vt-retro-mono);
+ font-size: 11px;
+ font-weight: 700;
+ letter-spacing: .04em;
+ text-transform: uppercase;
+ color: #000;
+ cursor: pointer;
+ transition: transform .08s ease, box-shadow .08s ease;
+}
+.vt-retro-switch:hover { transform: translate(-1px, -1px); box-shadow: inset 0 1px 0 rgba(255,255,255,.85), inset 0 -2px 0 rgba(0,0,0,.12), 3px 3px 0 #000; }
+.vt-retro-switch:active,
+.vt-retro-switch[data-active="true"]:active { transform: translate(1px, 1px); box-shadow: inset 0 1px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(0,0,0,.15), 1px 1px 0 #000; }
+.vt-retro-switch:disabled { cursor: not-allowed; opacity: .5; }
+.vt-retro-switch[data-active="true"] {
+ background: linear-gradient(180deg, var(--tone-light, #fff59a) 0%, var(--tone, #FFDA47) 100%);
+}
+.vt-retro-switch .vt-retro-switch-led {
+ width: 8px;
+ height: 8px;
+ border-radius: 50%;
+ background: rgba(0,0,0,.2);
+ border: 1px solid rgba(0,0,0,.4);
+}
+.vt-retro-switch[data-active="true"] .vt-retro-switch-led {
+ background: #3FEE56;
+ border-color: #000;
+ box-shadow: 0 0 6px #3FEE56;
+}
+
+/* Segmented VU-meter bar: replaces the thin gradient-fill progress bar. */
+.vt-retro-vu {
+ position: relative;
+ height: 15px;
+ overflow: hidden;
+ border: 2px solid #000;
+ border-radius: 3px;
+ background: repeating-linear-gradient(90deg, #1c1c1c 0 6px, #0b0b0c 6px 8px);
+}
+.vt-retro-vu > i {
+ position: absolute;
+ inset: 0;
+ display: block;
+ width: var(--fill, 0%);
+ background-image: repeating-linear-gradient(90deg, var(--tone, #3FEE56) 0 6px, rgba(0,0,0,.4) 6px 8px);
+ box-shadow: 0 0 8px var(--tone, #3FEE56) inset;
+ transition: width .3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+ .vt-retro-led.is-pulse.is-lit { animation: none; }
+ .vt-retro-switch,
+ .vt-retro-vu > i { transition: none; }
+}

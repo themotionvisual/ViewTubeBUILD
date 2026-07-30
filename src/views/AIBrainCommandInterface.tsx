@@ -5,7 +5,6 @@ import {
  BookOpen,
  Brain,
  ChevronLeft,
- ChevronRight,
  HelpCircle,
  MessageSquare,
  PanelRight,
@@ -45,6 +44,7 @@ import {
  resumeAIBrainThread,
  saveAIBrainConversationTurn,
  sanitizeCreatorFacingBrainCopy,
+ aiBrainThreadHasTurnsHint,
 } from "../services/aiBrainConversationStore"
 import {
  buildBrainQuickActions,
@@ -89,6 +89,32 @@ const kpiButton =
 const metricText = (value: number | null | undefined) =>
  typeof value === "number" && Number.isFinite(value) ? value.toLocaleString() : "Not synced yet"
 
+/**
+ * An honest one-line channel status.
+ *
+ * Local synced data and account sign-in are two different things: a creator can be
+ * signed out while their imported data still sits in the tables. Leading with "Not
+ * connected" while 900+ videos are loaded reads as broken, so when data exists we
+ * name the channel and the data instead, and only surface sign-in state as a soft note.
+ */
+const channelStatusLine = (snapshot: AIBrainContextSnapshot): string => {
+ const videos = snapshot.vtSync.videos
+ const totalViews = snapshot.channel.totalViews
+ const name =
+  snapshot.channel.label && snapshot.channel.label !== "Not connected"
+   ? snapshot.channel.label
+   : snapshot.vtSync.channelName || (videos ? "Imported channel data" : "No channel yet")
+
+ const parts = [name]
+ if (videos) {
+  parts.push(`${videos.toLocaleString()} videos loaded`)
+  parts.push(typeof totalViews === "number" ? `${totalViews.toLocaleString()} views` : "views pending sign-in")
+ } else {
+  parts.push(snapshot.channel.connected ? "no videos synced yet" : "sign in or import to begin")
+ }
+ return parts.join(" · ")
+}
+
 const makeMessageId = () =>
  typeof crypto !== "undefined" && "randomUUID" in crypto
   ? crypto.randomUUID()
@@ -107,7 +133,9 @@ const ASK_SEED_PROMPTS: Record<string, string> = {
  */
 const OpeningBriefing: React.FC<{
  snapshot: AIBrainContextSnapshot
-}> = ({ snapshot }) => {
+ starters: CreatorBrainPromptCard[]
+ onPrompt: (prompt: string) => void
+}> = ({ snapshot, starters, onPrompt }) => {
  const confidence = confidenceForEvidence({
   hasProfile: snapshot.inferredProfile.status !== "missing",
   videoCount: snapshot.inferredProfile.videoCount || snapshot.vtSync.videos,
@@ -129,16 +157,48 @@ const OpeningBriefing: React.FC<{
   : "I don't have your channel evidence yet. Connect or sync your channel, or just tell me what you make and who it's for, and I'll start building a real read instead of generic advice."
 
  return (
-  <section className="max-w-[68ch]">
-   <div className="flex flex-wrap items-center gap-2">
-    <h2 className="text-xl font-[1000] uppercase leading-tight">
-     {hasEvidence ? "Here's what I'm seeing" : "Let's get me enough to be useful"}
-    </h2>
-    <BrainConfidenceChip confidence={confidence} />
-   </div>
-   <p className="mt-2 text-sm font-bold leading-6 text-black/75">{sanitizeCreatorFacingBrainCopy(read)}</p>
-   <BrainEvidenceDrawer evidencePack={snapshot.evidencePack} className="mt-3" />
-  </section>
+  // Top-aligned and scrollable: the briefing is a launchpad, not a block floating in
+  // the middle of an empty canvas.
+  <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto">
+   <section className="mx-auto grid max-w-[70ch] gap-4">
+    <div>
+     <div className="flex flex-wrap items-center gap-2">
+      <h2 className="text-xl font-[1000] uppercase leading-tight sm:text-2xl">
+       {hasEvidence ? "Here's what I'm seeing" : "Let's get me enough to be useful"}
+      </h2>
+      <BrainConfidenceChip confidence={confidence} />
+     </div>
+     <p className="mt-2 text-sm font-bold leading-6 text-black/75">{sanitizeCreatorFacingBrainCopy(read)}</p>
+     <BrainEvidenceDrawer evidencePack={snapshot.evidencePack} className="mt-3" />
+    </div>
+
+    {starters.length ? (
+     <div>
+      <div className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-black/45">
+       {hasEvidence ? "Start with one of these" : "Or ask me anything"}
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+       {starters.map((card) => (
+        <button
+         key={card.id}
+         type="button"
+         onClick={() => onPrompt(card.prompt)}
+         className="group overflow-hidden rounded-[10px] border-[2px] border-black bg-white text-left transition hover:bg-[#FFDA47]"
+        >
+         <span className="flex items-center justify-between gap-2 border-b-[2px] border-black px-3 py-1.5" style={{ backgroundColor: card.color }}>
+          <span className="text-[11px] font-[1000] uppercase leading-4">{card.label}</span>
+          <ArrowRight size={13} className="shrink-0 transition group-hover:translate-x-0.5" />
+         </span>
+         <span className="block px-3 py-2 text-[11px] font-bold leading-4 text-black/60">
+          {card.prompt}
+         </span>
+        </button>
+       ))}
+      </div>
+     </div>
+    ) : null}
+   </section>
+  </div>
  )
 }
 
@@ -149,7 +209,6 @@ const CreatorResponseCard: React.FC<{
  onFeedback: (message: ChatMessage, rating: AIBrainFeedbackSignal["rating"]) => void
  onAnswerQuestion: (question: CreatorBrainLearningQuestion, answer: string) => void
 }> = ({ message, evidencePack, answeredQuestionIds, onFeedback, onAnswerQuestion }) => {
- const [modulePage, setModulePage] = useState(0)
  const response = message.response
  if (!response) {
   return (
@@ -169,38 +228,19 @@ const CreatorResponseCard: React.FC<{
      source: "growth" as const,
     }))
  const openQuestions = response.questions.filter((question) => !answeredQuestionIds.has(question.id))
- const modulePageCount = Math.max(1, Math.ceil(modules.length / 2))
- const visibleModules = modules.slice(modulePage * 2, modulePage * 2 + 2)
 
  return (
-  <article className="flex h-full min-h-0 max-w-[96%] flex-col overflow-hidden rounded-[12px] border-[2px] border-black bg-white shadow-[4px_4px_0_0_#000]">
+  <article className="flex w-full max-w-[680px] shrink-0 flex-col overflow-hidden rounded-[12px] border-[2px] border-black bg-white shadow-[4px_4px_0_0_#000]">
    <div className="shrink-0 border-b-[2px] border-black px-3 py-2" style={{ backgroundColor: TOOLBOX_PALETTE[5] }}>
-    <div className="flex flex-wrap items-center justify-between gap-2">
-     <div>
-      <div className="text-[9px] font-black uppercase tracking-[0.16em] text-black/55">ViewTube Copilot</div>
-      <h3 className="text-lg font-[1000] uppercase leading-none sm:text-xl">
-       {sanitizeCreatorFacingBrainCopy(response.headline)}
-      </h3>
-     </div>
-    </div>
+    <div className="text-[9px] font-black uppercase tracking-[0.16em] text-black/55">ViewTube Copilot</div>
+    <h3 className="text-lg font-[1000] uppercase leading-none sm:text-xl">
+     {sanitizeCreatorFacingBrainCopy(response.headline)}
+    </h3>
    </div>
-   <div className="flex min-h-0 flex-1 flex-col gap-2.5 p-3">
-    <p className="shrink-0 text-sm font-black leading-5">{sanitizeCreatorFacingBrainCopy(response.keyInsight)}</p>
-    <div className="min-h-0 flex-1">
-     <BrainAnswerModuleGrid modules={visibleModules} compact />
-    </div>
-    {modulePageCount > 1 ? (
-     <div className="flex shrink-0 items-center justify-between gap-2">
-      <button type="button" className={kpiButton} disabled={modulePage === 0} onClick={() => setModulePage((page) => Math.max(0, page - 1))}>
-       <ChevronLeft size={13} /> Previous
-      </button>
-      <span className="text-[10px] font-black uppercase">Modules {modulePage + 1} / {modulePageCount}</span>
-      <button type="button" className={kpiButton} disabled={modulePage >= modulePageCount - 1} onClick={() => setModulePage((page) => Math.min(modulePageCount - 1, page + 1))}>
-       Next <ChevronRight size={13} />
-      </button>
-     </div>
-    ) : null}
-    {openQuestions[0] && modulePage === modulePageCount - 1 ? (
+   <div className="flex flex-col gap-2.5 p-3">
+    <p className="text-sm font-black leading-5">{sanitizeCreatorFacingBrainCopy(response.keyInsight)}</p>
+    <BrainAnswerModuleGrid modules={modules} compact />
+    {openQuestions[0] ? (
      <BrainQuestionPrompt question={openQuestions[0]} onAnswer={onAnswerQuestion} compact />
     ) : null}
     <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-t-[2px] border-black pt-2">
@@ -240,7 +280,7 @@ const CreatorResponseCard: React.FC<{
 }
 
 const UserMessage: React.FC<{ text: string }> = ({ text }) => (
- <article className={`${innerCard} ml-auto max-w-[82%] bg-[#f8f8f4] p-4 shadow-[3px_3px_0_0_#000]`}>
+ <article className={`${innerCard} ml-auto max-w-[82%] shrink-0 bg-[#f8f8f4] p-4 shadow-[3px_3px_0_0_#000]`}>
   <div className="mb-2 text-[10px] font-black uppercase tracking-[0.12em] text-black/45">You</div>
   <p className="whitespace-pre-wrap text-sm font-bold leading-6">{sanitizeCreatorFacingBrainCopy(text)}</p>
  </article>
@@ -330,16 +370,22 @@ const AIBrainCommandInterface: React.FC = () => {
  const [journalInput, setJournalInput] = useState("")
  const [busy, setBusy] = useState(false)
  const [messages, setMessages] = useState<ChatMessage[]>([])
+ // Gate the opening launchpad so it doesn't flash before a restored conversation
+ // loads on refresh. When a channel has no saved turns (first-time users, and the
+ // static-render tests), start hydrated so the launchpad shows immediately.
+ const [hydrated, setHydrated] = useState(
+  () => !aiBrainThreadHasTurnsHint(authState.channelHandle || authState.channelId || null),
+ )
  const [learningEntries, setLearningEntries] = useState<AIBrainLearningEntry[]>([])
  const [recentTurns, setRecentTurns] = useState<AIBrainConversationTurn[]>([])
  const [questionAnswers, setQuestionAnswers] = useState<AIBrainQuestionAnswer[]>([])
  const [onboardingSnapshot, setOnboardingSnapshot] = useState<BrainOnboardingSnapshot | null>(null)
  const [intakeOpen, setIntakeOpen] = useState(false)
  const [intakeContext, setIntakeContext] = useState<AiBrainContext>(() => loadAiBrainContext())
- const [selectedTurnIndex, setSelectedTurnIndex] = useState(0)
  const [contextRailOpen, setContextRailOpen] = useState(false)
  const [journalOpen, setJournalOpen] = useState(false)
  const composerRef = useRef<HTMLInputElement | null>(null)
+ const bottomRef = useRef<HTMLDivElement | null>(null)
  const askSeededRef = useRef(false)
  const canUseGemini = hasGeminiKey()
  const promptCards = useMemo(() => buildCreatorBrainPromptCards(), [])
@@ -409,9 +455,10 @@ const AIBrainCommandInterface: React.FC = () => {
    const turns = resumed.turns.slice().reverse()
    setRecentTurns(turns)
    setQuestionAnswers(turns.flatMap((turn) => turn.questionAnswers || []))
-   setSelectedTurnIndex(0)
   } catch (error) {
    console.warn("[AIBrain] Conversation thread unavailable:", error)
+  } finally {
+   setHydrated(true)
   }
  }
 
@@ -425,18 +472,24 @@ const AIBrainCommandInterface: React.FC = () => {
   [recentTurns],
  )
 
+ // The conversation is one continuous, scrollable thread: rebuild every exchange
+ // oldest-first so new answers append to the bottom like a normal chat. Skip while a
+ // send is in flight so the optimistic user bubble isn't clobbered mid-request.
  useEffect(() => {
   if (busy) return
-  const turn = visibleTurns[selectedTurnIndex]
-  if (!turn) {
-   setMessages([])
-   return
-  }
-  setMessages([
-   { id: `${turn.id}-user`, role: "user", text: turn.userText },
-   { id: turn.id, role: "model", text: turn.assistantText, response: turn.response, handoff: null },
-  ])
- }, [busy, selectedTurnIndex, visibleTurns])
+  const chronological = [...visibleTurns].reverse()
+  setMessages(
+   chronological.flatMap((turn) => [
+    { id: `${turn.id}-user`, role: "user" as const, text: turn.userText },
+    { id: turn.id, role: "model" as const, text: turn.assistantText, response: turn.response, handoff: null },
+   ]),
+  )
+ }, [busy, visibleTurns])
+
+ // Keep the newest exchange in view as the thread grows.
+ useEffect(() => {
+  bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
+ }, [messages.length, busy])
 
  useEffect(() => {
   let active = true
@@ -483,7 +536,8 @@ const AIBrainCommandInterface: React.FC = () => {
   setInput("")
   setBusy(true)
   const userMessage: ChatMessage = { id: makeMessageId(), role: "user", text: userText }
-  setMessages([userMessage])
+  // Append to the ongoing thread; the post-send refresh rebuilds it authoritatively.
+  setMessages((current) => [...current, userMessage])
   try {
    const systemPrompt = buildAIBrainSystemPrompt({
     brain,
@@ -512,8 +566,8 @@ const AIBrainCommandInterface: React.FC = () => {
     history: historyPayload,
     allowModel: canUseGemini,
    })
-   setMessages([
-    userMessage,
+   setMessages((current) => [
+    ...current,
     { id: result.turn.id, role: "model", text: result.turn.assistantText, response: result.response, handoff: null },
    ])
    await refreshConversationTurns()
@@ -523,8 +577,8 @@ const AIBrainCommandInterface: React.FC = () => {
    const fallbackText = buildCreatorBrainLocalFallback(userText, snapshot)
    const fallbackResponse = formatCreatorBrainResponse(fallbackText, snapshot, { requestText: userText })
    const response = { ...fallbackResponse, modules: formatCreatorGrowthModules(fallbackResponse, creatorGrowthContext) }
-   setMessages([
-    userMessage,
+   setMessages((current) => [
+    ...current,
     { id: makeMessageId(), role: "model", text: fallbackText, response },
    ])
   } finally {
@@ -713,7 +767,7 @@ const AIBrainCommandInterface: React.FC = () => {
     collapsible={false}
     indicator="none"
     fillAvailable
-    contentClassName="h-full min-h-0 overflow-hidden bg-[#f3f4f6] p-2"
+    contentClassName="h-full min-h-0 overflow-hidden bg-[#f3f4f6]"
    >
     {intakeOpen ? (
      <CreatorIntakeWizard
@@ -723,26 +777,13 @@ const AIBrainCommandInterface: React.FC = () => {
       onDefer={handleDeferIntake}
      />
     ) : (
-     <section className={`${shellCard} relative flex h-full min-h-0 flex-col overflow-hidden`}>
-      <header className="flex min-h-[50px] shrink-0 items-center justify-between gap-3 border-b-[4px] border-black bg-white px-3 py-2">
+     <section className="relative flex h-full min-h-0 flex-col overflow-hidden">
+      <header className="flex min-h-[48px] shrink-0 items-center justify-between gap-3 border-b-[3px] border-black bg-white px-3 py-2">
        <div className="min-w-0">
         <h1 className="truncate text-lg font-[1000] uppercase leading-none sm:text-2xl">Ask ViewTube Copilot Anything</h1>
-        <p className="mt-1 truncate text-[10px] font-black uppercase text-black/50">
-         {snapshot.channel.label} · {snapshot.vtSync.videos ? `${snapshot.vtSync.videos.toLocaleString()} videos` : "channel data not connected"} · {metricText(snapshot.channel.totalViews)} views
-        </p>
+        <p className="mt-1 truncate text-[10px] font-black uppercase text-black/50">{channelStatusLine(snapshot)}</p>
        </div>
        <div className="flex shrink-0 items-center gap-1.5">
-        {visibleTurns.length ? (
-         <>
-          <button type="button" className={kpiButton} disabled={selectedTurnIndex >= visibleTurns.length - 1} onClick={() => setSelectedTurnIndex((index) => Math.min(visibleTurns.length - 1, index + 1))} title="Older exchange">
-           <ChevronLeft size={14} /><span className="hidden sm:inline">Older</span>
-          </button>
-          <span className="text-[10px] font-black">{selectedTurnIndex + 1}/{visibleTurns.length}</span>
-          <button type="button" className={kpiButton} disabled={selectedTurnIndex === 0} onClick={() => setSelectedTurnIndex((index) => Math.max(0, index - 1))} title="Newer exchange">
-           <span className="hidden sm:inline">Newer</span><ChevronRight size={14} />
-          </button>
-         </>
-        ) : null}
         <button type="button" className={`${kpiButton} xl:hidden`} onClick={() => setContextRailOpen(true)} aria-label="Open channel context">
          <PanelRight size={15} />
         </button>
@@ -752,10 +793,12 @@ const AIBrainCommandInterface: React.FC = () => {
       <div className="grid min-h-0 flex-1 gap-2 p-2 xl:grid-cols-[minmax(0,1fr)_310px]">
        <div className={`${innerCard} flex min-h-0 flex-col overflow-hidden`}>
         <div className="grid min-h-0 flex-1 gap-2 bg-white p-2">
-         {messages.length === 0 ? (
-          <div className="grid h-full place-items-center"><OpeningBriefing snapshot={snapshot} /></div>
+         {!hydrated && messages.length === 0 ? (
+          <div className="min-h-0 flex-1" aria-hidden="true" />
+         ) : messages.length === 0 ? (
+          <OpeningBriefing snapshot={snapshot} starters={promptCards.slice(0, 6)} onPrompt={(prompt) => void handleSend(prompt)} />
          ) : (
-          <div className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-2">
+          <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
            {messages.map((message) => message.role === "user" ? (
             <UserMessage key={message.id} text={message.text} />
            ) : (
@@ -768,6 +811,7 @@ const AIBrainCommandInterface: React.FC = () => {
              onAnswerQuestion={handleAnswerQuestion}
             />
            ))}
+           <div ref={bottomRef} aria-hidden="true" />
           </div>
          )}
         </div>

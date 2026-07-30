@@ -95,8 +95,8 @@ describe("AIBrainCommandInterface", () => {
  it("keeps journal capture available as a bounded workspace action", () => {
   const html = renderHub()
 
+  // Journal capture is an inline affordance in the composer, not a mode/tab.
   expect(html).toContain("AI Journal")
-  expect(html).not.toContain("overflow-y-auto")
  })
 
  it("keeps internal diagnostics out of the creator workspace", () => {

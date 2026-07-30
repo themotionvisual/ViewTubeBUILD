@@ -3,6 +3,7 @@ import { fallbackContext } from "../../context/GlobalDataContextTypes"
 import { getVtSyncSnapshot } from "../../features/vt-sync-local"
 import {
  buildAIBrainContextSnapshot,
+ buildCreatorBrainLocalFallback,
  formatCreatorBrainResponse,
 } from "../aiBrainCommandInterface"
 import { buildBrainQuickActions } from "../aiBrainInitialInsights"
@@ -145,6 +146,48 @@ describe("Brain personalization and autonomous intent routing", () => {
   const evidence = analytics.modules?.find((module) => module.id === "video-evidence-ranking")
   expect(evidence?.data?.items?.[0]?.title).toBe("Restoring a Rusted Victorian Anvil")
   expect(evidence?.data?.items?.[0]?.detail).toMatch(/views/)
+ })
+
+ it("gives different questions different answers, not one repeated response", () => {
+  const forge = contextFor(syncedSnapshot(FORGE))
+  const nicheQuestion = "Based on my channel metrics, titles, tags, and videos, what is my clearest niche and where is it still fuzzy?"
+  const ideasQuestion = "What topics or niche angles should I test next to grow views without drifting away from my channel identity?"
+
+  const nicheBody = buildCreatorBrainLocalFallback(nicheQuestion, forge)
+  const ideasBody = buildCreatorBrainLocalFallback(ideasQuestion, forge)
+
+  // Two genuinely different questions must not return byte-identical bodies.
+  expect(nicheBody).not.toBe(ideasBody)
+
+  const niche = formatCreatorBrainResponse(nicheBody, forge, { requestText: nicheQuestion })
+  const ideas = formatCreatorBrainResponse(ideasBody, forge, { requestText: ideasQuestion })
+  expect(niche.mode).toBe("strategy_brief")
+  expect(ideas.mode).toBe("video_idea_sprint")
+ })
+
+ it("routes a formats question by its intent, not an incidental 'revenue' mention", () => {
+  const forge = contextFor(syncedSnapshot(FORGE))
+  const formatsQuestion = "Which content formats appear strongest for views, subscribers, retention, and revenue, and what should I double down on?"
+
+  const response = formatCreatorBrainResponse(
+   buildCreatorBrainLocalFallback(formatsQuestion, forge),
+   forge,
+   { requestText: formatsQuestion },
+  )
+  expect(response.mode).toBe("video_idea_sprint")
+  expect(response.mode).not.toBe("revenue_levers")
+ })
+
+ it("derives the mode from the question, not from the answer's own wording", () => {
+  const forge = contextFor(syncedSnapshot(FORGE))
+  // The generated body mentions "views" and "watch time", which previously hijacked
+  // the mode; the creator actually asked about revenue.
+  const response = formatCreatorBrainResponse(
+   "Your views are climbing and your watch time is up this month.",
+   forge,
+   { requestText: "How do I increase revenue?" },
+  )
+  expect(response.mode).toBe("revenue_levers")
  })
 
  it("binds what it says to the creator's own channel, not a reusable template", () => {
