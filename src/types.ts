@@ -1154,6 +1154,7 @@ export interface AIBrainConversationDigest {
   | "goal_coach"
   | "publishing_checklist"
   | "revenue_levers"
+  | "creator_asset_draft"
  keyFacts: string[]
  unresolvedQuestions: string[]
  learningEntryIds: string[]
@@ -1198,6 +1199,7 @@ export type AIBrainEvidenceIntent =
  | "revenue"
  | "publishing"
  | "content_analysis"
+ | "content_generation"
 
 export interface AIBrainEvidenceVideo {
  id: string

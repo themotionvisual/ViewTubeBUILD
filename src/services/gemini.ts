@@ -490,6 +490,14 @@ export const getAiClient = () => {
    },
    entitlement,
   )
+  // Localhost dev bypass: .env.local key + Vite dev mode skips account/credit gates.
+  // Never active in production builds.
+  const isLocalhostDev = Boolean(import.meta.env?.DEV) &&
+   (typeof window === "undefined" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+  if (isLocalhostDev && keySource === "env") {
+   return withCanonicalModel("generateContent", args, (a) => generateContent(...a as [any]))
+  }
+
   const unifiedMetering = isUnifiedAccountServerEnabled() && keySource !== "custom"
   const unifiedSnapshot = isUnifiedAccountServerEnabled()
    ? await fetchUnifiedAccountSnapshot()

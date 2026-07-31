@@ -8,7 +8,7 @@ import JSZip from 'jszip';
     import {
       Play, Pause, SkipBack, SkipForward, Plus, Trash2, Save, Upload,
       Download, Layers, Sparkles, Settings, Camera, Code2, Type, RectangleHorizontal,
-      Circle, Video, Eye, EyeOff, FileCode, Wand2, Palette, Filter, Workflow, Magnet, Pipette, Music2, VolumeX, Volume2, Copy, Crosshair, Undo2, Redo2, ScanLine, Link, HelpCircle, ArrowUpDown, Settings2, ShieldAlert, ShieldCheck, ChevronLeft, ChevronRight, ChevronsLeft, Minus, ChevronsRight, FolderOpen, Search, MessageSquare, ArrowRightLeft, Scissors, SlidersHorizontal
+      Circle, Video, Eye, EyeOff, FileCode, Wand2, Palette, Filter, Workflow, Magnet, Pipette, Music2, VolumeX, Volume2, Copy, Crosshair, Undo2, Redo2, ScanLine, Link, HelpCircle, ArrowUpDown, Settings2, ShieldAlert, ShieldCheck, ChevronLeft, ChevronRight, ChevronsLeft, Minus, ChevronsRight, FolderOpen, Search, MessageSquare, ArrowRightLeft, Scissors, SlidersHorizontal, Terminal
     } from 'lucide-react';
 
     const SCHEMA_VERSION = 'EditorProjectV2';
@@ -154,7 +154,7 @@ import JSZip from 'jszip';
       { id: 'text-captions', label: 'TEXT/CAPS', icon: MessageSquare, color: COLORS.green, fallbackTab: 'layerSettings' },
       { id: 'transitions-effects', label: 'TRANS+FX', icon: Filter, color: COLORS.cyan, fallbackTab: 'effects' },
       { id: 'templates', label: 'TEMPLATES', icon: Sparkles, color: COLORS.purple, fallbackTab: 'templates' },
-      { id: 'code', label: 'CODE', icon: Code2, color: COLORS.white, fallbackTab: 'code' },
+      { id: 'dev', label: 'DEV', icon: Terminal, color: COLORS.yellow, fallbackTab: 'code' },
       { id: 'ai', label: 'AI', icon: Wand2, color: COLORS.orange, fallbackTab: 'interactive' },
       { id: 'vault', label: 'VAULT', icon: FolderOpen, color: COLORS.blue, fallbackTab: 'media' },
       { id: 'video', label: 'VIDEO (LEGACY)', icon: Video, color: COLORS.pink, fallbackTab: 'media' },
@@ -174,14 +174,15 @@ import JSZip from 'jszip';
       { id: 'transitions', label: 'Transitions', shortLabel: 'TRANSITIONS', icon: ArrowRightLeft, color: COLORS.purple, toolId: 'transitions-effects', fallbackTab: 'transitions', description: 'Transition seams, presets, timing, and transition diagnostics.' },
       { id: 'effects', label: 'FX Studio', shortLabel: 'FX STUDIO', icon: Wand2, color: COLORS.cyan, toolId: 'transitions-effects', fallbackTab: 'interactive', description: 'Advanced FX Studio, generated overlays, deterministic effect sessions, and preview tuning.' },
       { id: 'clip-effects', label: 'Clip Effects', shortLabel: 'CLIP FX', icon: Filter, color: COLORS.green, toolId: 'transitions-effects', fallbackTab: 'effects', description: 'Legacy clip-effect wall, filter stack, and per-layer effect controls.' },
-      { id: 'build', label: 'Build', shortLabel: 'BUILD', icon: Workflow, color: COLORS.magenta, toolId: 'build', fallbackTab: 'export', description: 'Editor build toggles, audits, render support reports, and integration tooling.' },
-      { id: 'code', label: 'Code', shortLabel: 'CODE', icon: Code2, color: COLORS.white, toolId: 'code', fallbackTab: 'code', description: 'Project JSON, generated SVG/HTML, and code-facing editor outputs.' }
+      { id: 'dev', label: 'Dev Console', shortLabel: 'DEV', icon: Terminal, color: COLORS.yellow, toolId: 'dev', fallbackTab: 'code', description: 'Developer console, build toggles, audits, render diagnostics, code workspace, and raw project JSON.' }
     ]);
     const PAGE_REGISTRY_BY_ID = Object.freeze(PAGE_REGISTRY.reduce((acc, page) => {
       acc[page.id] = page;
       return acc;
     }, {}));
     const LEGACY_TOOL_ALIAS_MAP = Object.freeze({
+      code: 'dev',
+      build: 'dev',
       video: 'clips-media',
       text: 'text-captions',
       audio: 'clips-media',
@@ -239,11 +240,8 @@ import JSZip from 'jszip';
       'clips:search': 'half',
       'clips:addMedia': 'half',
       'clips:canvas': 'half',
-      'clips:pageGuide': 'half',
-      'shorts-extractor:source': 'half',
-      'shorts-extractor:framing': 'half',
-      'shorts-extractor:segments': 'half',
-      'shorts-extractor:apply': 'half',
+      'clips:pageGuide': 'full',
+      'shorts-extractor:shortsConfig': 'full',
       'text-captions:search': 'half',
       'text-captions:captions': 'half',
       'text-captions:tts': 'half',
@@ -267,10 +265,7 @@ import JSZip from 'jszip';
         { id: 'search', label: 'Search', color: COLORS.cyan }
       ],
       'shorts-extractor': [
-        { id: 'source', label: 'Source Video', color: COLORS.orange },
-        { id: 'framing', label: 'Framing', color: COLORS.cyan },
-        { id: 'segments', label: 'Segments', color: COLORS.yellow },
-        { id: 'apply', label: 'Apply To Timeline', color: COLORS.green }
+        { id: 'shortsConfig', label: 'Shorts Studio', color: COLORS.orange }
       ],
       transitions: [
         { id: 'transitions', label: 'Seams + Presets', color: COLORS.purple },
@@ -283,6 +278,12 @@ import JSZip from 'jszip';
       effects: [
         { id: 'settings', label: 'FX Studio', color: COLORS.cyan },
         { id: 'status', label: 'Determinism', color: COLORS.yellow }
+      ],
+      dev: [
+        { id: 'codeWorkspace', label: 'Code Workspace', color: COLORS.cyan },
+        { id: 'liveMirrors', label: 'Live Mirrors', color: COLORS.white },
+        { id: 'buildWorkspace', label: 'Build Toggles & Diagnostics', color: COLORS.yellow },
+        { id: 'fxSubsystems', label: 'Subsystem Status', color: COLORS.magenta }
       ],
       'vault-media-images': [
         { id: 'library', label: 'Library', color: COLORS.blue },
@@ -345,10 +346,11 @@ import JSZip from 'jszip';
     const PAGE_MODULE_REGISTRY = Object.freeze({
       projects: ['project', 'importExport', 'render', 'camera'],
       clips: ['addMedia', 'clipControls', 'settings', 'search'],
-      'shorts-extractor': ['source', 'framing', 'segments', 'apply'],
+      'shorts-extractor': ['shortsConfig'],
       'text-captions': ['tts', 'captions', 'textTools', 'settings', 'search'],
       transitions: ['transitions', 'transitionDiagnostics'],
       'clip-effects': ['fx', 'settings'],
+      dev: ['codeWorkspace', 'liveMirrors', 'buildWorkspace', 'fxSubsystems'],
       effects: ['settings', 'status'],
       templates: ['templates', 'search', 'settings'],
       'vault-media-images': ['library', 'search'],
@@ -1925,7 +1927,7 @@ import JSZip from 'jszip';
       );
     };
 
-    const SpringToggle = ({ label, value, min, max, step = 1, onChange, onAddCircle = () => {}, onReset = () => {}, showCircle = true, speed = 1, absolute = false, kfState = 'none', compact = false, hideLabel = false }) => {
+    const SpringToggle = ({ label, value, min, max, step = 1, onChange, onAddCircle = () => {}, onReset = () => {}, showCircle = true, speed = 1, absolute = false, kfState = 'none', compact = false, hideLabel = false, fullWidth = false, trackColor }) => {
       const trackRef = useRef(null);
       const [dragging, setDragging] = useState(false);
       const tapRef = useRef({ count: 0, ts: 0 });
@@ -2037,13 +2039,20 @@ import JSZip from 'jszip';
         };
       }, [absolute, dragging]);
 
+      const displayLabel = String(label || '')
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/[_-]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
       return (
-        <div className={`setting-row ${compact ? 'compact' : ''} ${hideLabel ? 'no-label' : ''}`}>
-          {!hideLabel && <span className="setting-label">{label}</span>}
-          <div className="track-wrap">
+        <div className={`setting-row ${compact ? 'compact' : ''} ${hideLabel ? 'no-label' : ''}`} style={fullWidth ? { display: 'flex', width: '100%', gap: '12px' } : undefined}>
+          {!hideLabel && compact && <span className="setting-label" style={fullWidth ? { minWidth: '70px' } : undefined}>{displayLabel}</span>}
+          <div className="track-wrap" style={fullWidth ? { flex: '1 1 auto' } : undefined}>
             <div
               ref={trackRef}
               className="track-bar"
+              style={trackColor ? { '--spring-track-bg': trackColor } : undefined}
               onPointerDown={(e) => {
                 const rect = trackRef.current?.getBoundingClientRect();
                 dragMetaRef.current = {
@@ -2056,7 +2065,7 @@ import JSZip from 'jszip';
             >
               <button
                 className="track-end-dot left"
-                title={`${label}: double-click to min`}
+                title={`${displayLabel}: double-click to min`}
                 onPointerDown={(e) => e.stopPropagation()}
                 onDoubleClick={(e) => { e.stopPropagation(); onChange(clamp(min, min, max)); }}
               />
@@ -2091,7 +2100,7 @@ import JSZip from 'jszip';
               </div>
               <button
                 className="track-end-dot right"
-                title={`${label}: double-click to max`}
+                title={`${displayLabel}: double-click to max`}
                 onPointerDown={(e) => e.stopPropagation()}
                 onDoubleClick={(e) => { e.stopPropagation(); onChange(clamp(max, min, max)); }}
               />
@@ -2099,7 +2108,7 @@ import JSZip from 'jszip';
             {showCircle && (
               <button
                 className="kf-inline-btn"
-                title={`Add circle keyframe for ${label}`}
+                title={`Add circle keyframe for ${displayLabel}`}
                 onClick={onAddCircle}
                 style={{
                   color: kfState === 'active' ? '#2D8CFF' : '#111',
@@ -2111,19 +2120,23 @@ import JSZip from 'jszip';
             )}
           </div>
           {!compact && (
-            <input
-              className="value-display"
-              type="number"
-              step={step}
-              min={min}
-              max={max}
-              value={Number(value).toFixed(step < 1 ? 2 : 0)}
-              style={{ appearance: 'auto' }}
-              onChange={(e) => {
-                const n = Number(e.target.value);
-                if (Number.isFinite(n)) onChange(clamp(n, min, max));
-              }}
-            />
+            <label className="setting-value-stack">
+              {!hideLabel && <span>{displayLabel}</span>}
+              <input
+                className="value-display"
+                type="number"
+                aria-label={`${displayLabel} value`}
+                step={step}
+                min={min}
+                max={max}
+                value={Number(value).toFixed(step < 1 ? 2 : 0)}
+                style={{ appearance: 'auto' }}
+                onChange={(e) => {
+                  const n = Number(e.target.value);
+                  if (Number.isFinite(n)) onChange(clamp(n, min, max));
+                }}
+              />
+            </label>
           )}
         </div>
       );
@@ -2938,7 +2951,7 @@ import JSZip from 'jszip';
         return {
           providers: { enabled: online, reason: online ? '' : 'Disabled in file:// portable mode. Use localhost for provider APIs.' },
           mcpBits: { enabled: online, reason: online ? '' : 'Disabled in file:// portable mode. Local bit catalog remains available.' },
-          remoteAssets: { enabled: true, reason: online ? '' : 'Remote media URLs are allowed for preview/editing in portable mode. Final render still requires localhost render bridge support.' },
+          remoteAssets: { enabled: true, reason: online ? '' : 'Remote media URLs are allowed for preview/editing in portable mode. Final render still requires a hosted render bridge or explicit local-dev override.' },
           localCatalog: { enabled: true, reason: '' },
           localTimelineEdit: { enabled: true, reason: '' }
         };
@@ -3870,12 +3883,16 @@ import JSZip from 'jszip';
           if (viewportRafRef.current) cancelAnimationFrame(viewportRafRef.current);
           viewportRafRef.current = requestAnimationFrame(computeViewport);
         };
+        const onResize = () => {
+          if (viewportRafRef.current) cancelAnimationFrame(viewportRafRef.current);
+          viewportRafRef.current = requestAnimationFrame(computeViewport);
+        };
         el.addEventListener('scroll', onScroll, { passive: true });
-        window.addEventListener('resize', computeViewport);
+        window.addEventListener('resize', onResize, { passive: true });
         return () => {
           if (viewportRafRef.current) cancelAnimationFrame(viewportRafRef.current);
           el.removeEventListener('scroll', onScroll);
-          window.removeEventListener('resize', computeViewport);
+          window.removeEventListener('resize', onResize);
         };
       }, [pxPerSec, project.meta.durationSec]);
 
@@ -5803,12 +5820,16 @@ import JSZip from 'jszip';
       const getRenderServiceStatusLabel = () => {
         if (renderServiceConfig.mode === 'browser-fallback') return 'Browser fallback only';
         if (renderServerInfo.status === 'ready' && renderServerInfo.rendererInstalled) return 'Hosted renderer online';
+        if (renderServerInfo.status === 'degraded') return 'Hosted renderer degraded';
         if (renderServerInfo.status === 'idle') return 'Checking hosted renderer';
         return 'Hosted renderer unavailable';
       };
 
       const getFinalRenderUnavailableReason = (info = renderServerInfo) => {
         if (!runtimeCapabilities.renderBridgeEnabled) return runtimeCapabilities.reasonByCapability.renderBridge;
+        if (info?.status === 'degraded') {
+          return info.error || 'Hosted Remotion renderer responded, but readiness checks are degraded. Final MP4 is disabled until capabilities report ready.';
+        }
         if (!info || info.status !== 'ready') {
           return 'Hosted Remotion MP4 renderer is unavailable. Final MP4 is disabled until /api/vt-e1/render/capabilities responds successfully.';
         }
@@ -5908,32 +5929,35 @@ ${verdict.reason}`);
           const data = await response.json().catch(() => ({}));
           if (!response.ok) {
             setRenderServerInfo({
-              status: 'failed',
+              status: data?.status || 'failed',
               service: 'vt-e1-render-server',
               origin: apiBase,
-              executor: '',
-              primaryFormat: '',
-              blocked: [],
+              executor: data?.capabilities?.executor || '',
+              primaryFormat: data?.capabilities?.primaryFormat || '',
+              blocked: Array.isArray(data?.capabilities?.blocked?.readiness) ? data.capabilities.blocked.readiness : [],
               rendererInstalled: false,
               error: data?.renderer?.error || data?.error || 'Render capabilities check failed.'
             });
             return null;
           }
           const capabilities = data?.capabilities || {};
+          const ready = Boolean(data?.ready ?? capabilities?.ready);
+          const readinessBlocks = Array.isArray(capabilities?.blocked?.readiness) ? capabilities.blocked.readiness : [];
           const blocked = [
             capabilities?.blocked?.transitions ? 'transitions' : null,
             capabilities?.blocked?.overlayFx ? 'overlay-fx' : null,
-            ...(Array.isArray(capabilities?.blocked?.outputFormats) ? capabilities.blocked.outputFormats.map((item) => `no-${item}`) : [])
+            ...(Array.isArray(capabilities?.blocked?.outputFormats) ? capabilities.blocked.outputFormats.map((item) => `no-${item}`) : []),
+            ...readinessBlocks
           ].filter(Boolean);
           const next = {
-            status: 'ready',
+            status: ready ? 'ready' : (data?.status || capabilities?.status || 'degraded'),
             service: capabilities.service || data?.service || 'vt-e1-render-server',
             origin: data?.origin || apiBase,
             executor: capabilities.executor || '',
             primaryFormat: capabilities.primaryFormat || 'mp4',
             blocked,
             rendererInstalled: Boolean(data?.renderer?.installed),
-            error: data?.renderer?.error || ''
+            error: data?.renderer?.error || (!ready && readinessBlocks.length ? `Readiness blocked by: ${readinessBlocks.join(', ')}` : '')
           };
           setRenderServerInfo(next);
           return next;
@@ -5954,7 +5978,16 @@ ${verdict.reason}`);
 
       useEffect(() => {
         void fetchRenderServerCapabilities();
-      }, []);
+        const intervalId = window.setInterval(() => void fetchRenderServerCapabilities(), 30000);
+        const recheck = () => void fetchRenderServerCapabilities();
+        window.addEventListener('focus', recheck);
+        window.addEventListener('online', recheck);
+        return () => {
+          window.clearInterval(intervalId);
+          window.removeEventListener('focus', recheck);
+          window.removeEventListener('online', recheck);
+        };
+      }, [renderServiceConfig.mode, renderServiceConfig.baseUrl, runtimeCapabilities.renderBridgeEnabled]);
 
       const stageRenderAssetFromUrl = async (url, options = {}) => {
         const apiBase = getRenderApiBase();
@@ -6868,6 +6901,7 @@ ${failure}`);
           const duration = project.meta.durationSec;
           let frame = 0;
           const totalFrames = Math.ceil(duration * fps);
+          const stoppedPromise = new Promise((resolve) => { recorder.onstop = resolve; });
           recorder.start();
           await new Promise((resolve) => {
             const tick = async () => {
@@ -6882,7 +6916,7 @@ ${failure}`);
             };
             tick();
           });
-          await new Promise((resolve) => { recorder.onstop = resolve; });
+          await stoppedPromise;
           const blob = new Blob(chunks, { type: mimeType || `video/${format}` });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
@@ -7092,26 +7126,58 @@ ${failure}`);
           };
         });
       };
+      const normalizeShortsExtractorConfig = (config = {}) => ({
+        ...SHORTS_EXTRACTOR_DEFAULT_CONFIG,
+        ...config,
+        mode: ['single', 'split'].includes(config.mode) ? config.mode : SHORTS_EXTRACTOR_DEFAULT_CONFIG.mode,
+        aspectPreset: SHORTS_EXTRACTOR_ASPECTS[config.aspectPreset] ? config.aspectPreset : SHORTS_EXTRACTOR_DEFAULT_CONFIG.aspectPreset,
+        xPosition: clamp(Number(config.xPosition ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.xPosition), 0, 1),
+        yPosition: clamp(Number(config.yPosition ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.yPosition), 0, 1),
+        zoom: clamp(Number(config.zoom ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.zoom), 1, 5),
+        splitRatio: clamp(Number(config.splitRatio ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.splitRatio), 0.15, 0.85),
+        closeupZoom: clamp(Number(config.closeupZoom ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.closeupZoom), 1, 6),
+        closeupX: clamp(Number(config.closeupX ?? config.xPosition ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.closeupX), 0, 1),
+        smoothing: clamp(Number(config.smoothing ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.smoothing), 0, 1),
+        transition: SHORTS_EXTRACTOR_TRANSITIONS.some((entry) => entry.id === config.transition) ? config.transition : SHORTS_EXTRACTOR_DEFAULT_CONFIG.transition
+      });
+      const createShortsKeyframe = (config, time, id = uid('shortkf')) => {
+        const normalized = normalizeShortsExtractorConfig(config);
+        return {
+          id,
+          time: clamp(Number(time || 0), 0, Number(shortsExtractorSource?.durationSec || project.meta.durationSec || 30)),
+          mode: normalized.mode,
+          aspectPreset: normalized.aspectPreset,
+          xPosition: normalized.xPosition,
+          yPosition: normalized.yPosition,
+          zoom: normalized.zoom,
+          splitRatio: normalized.splitRatio,
+          closeupPosition: normalized.closeupPosition,
+          closeupZoom: normalized.closeupZoom,
+          closeupX: normalized.closeupX,
+          transition: normalized.transition,
+          smoothing: normalized.smoothing
+        };
+      };
       const updateShortsExtractorConfig = (patch, options = {}) => {
         const sourceDuration = Number(shortsExtractorSource?.durationSec || project.meta.durationSec || 30);
         const time = clamp(Number(shortsSourceVideoRef.current?.currentTime ?? shortsPreviewTimeSec ?? 0), 0, sourceDuration);
         const shouldWriteKeyframe = Boolean(options.writeKeyframe ?? shortsLiveMode);
         const selectedKeyframeId = options.selectedKeyframeId ?? selectedShortsKeyframeId;
-        setShortsExtractorConfig((prev) => ({ ...prev, ...patch }));
+        setShortsExtractorConfig((prev) => normalizeShortsExtractorConfig({ ...prev, ...patch }));
         setShortsExtractorKeyframes((prev) => {
           const keyframes = Array.isArray(prev) ? prev : [];
           if (shouldWriteKeyframe) {
             const base = keyframes.find((item) => item.id === selectedKeyframeId) || getShortsPreviewConfig(time);
-            const keyframe = { ...base, id: selectedKeyframeId || uid('shortkf'), time, ...patch };
+            const keyframe = createShortsKeyframe({ ...base, ...patch }, time, selectedKeyframeId || uid('shortkf'));
             setSelectedShortsKeyframeId(keyframe.id);
             return [...keyframes.filter((item) => item.id !== keyframe.id && Math.abs(Number(item.time || 0) - time) > 0.12), keyframe]
               .sort((a, b) => Number(a.time || 0) - Number(b.time || 0));
           }
-          if (selectedKeyframeId) {
-            return keyframes.map((item) => (item.id === selectedKeyframeId ? { ...item, ...patch } : item));
+          if (options.updateSelectedKeyframe && selectedKeyframeId) {
+            return keyframes.map((item) => (item.id === selectedKeyframeId ? createShortsKeyframe({ ...item, ...patch }, item.time, item.id) : item));
           }
-          if (options.applyToAll === false) return keyframes;
-          return keyframes.map((item) => ({ ...item, ...patch }));
+          if (options.applyToAll === true) return keyframes.map((item) => createShortsKeyframe({ ...item, ...patch }, item.time, item.id));
+          return keyframes;
         });
       };
       const getShortsPreviewConfig = (timeSec = shortsPreviewTimeSec) => {
@@ -7140,33 +7206,48 @@ ${failure}`);
           closeupX: lerp(left.closeupX ?? shortsExtractorConfig.closeupX ?? 0.5, right.closeupX ?? shortsExtractorConfig.closeupX ?? 0.5)
         };
       };
+      const getShortsCropMetricsForAspects = (config = shortsExtractorConfig, sourceAspect = 16 / 9, outputAspect = 9 / 16, regionHeightRatio = 1, closeup = false) => {
+        const normalized = normalizeShortsExtractorConfig(config);
+        const zoom = Math.max(1, Number(closeup ? normalized.closeupZoom || normalized.zoom : normalized.zoom));
+        const targetAspect = outputAspect / Math.max(0.05, Number(regionHeightRatio || 1));
+        let cropHeightPct = 100 / zoom;
+        let cropWidthPct = (targetAspect / Math.max(0.05, sourceAspect) / zoom) * 100;
+        if (cropWidthPct > 100) {
+          cropWidthPct = 100;
+          cropHeightPct = Math.min(100, (sourceAspect / targetAspect) * 100);
+        }
+        const xPosition = clamp(Number(closeup ? normalized.closeupX ?? normalized.xPosition : normalized.xPosition), 0, 1);
+        const yPosition = clamp(Number(normalized.yPosition), 0, 1);
+        const leftPct = xPosition * (100 - cropWidthPct);
+        const topPct = yPosition * (100 - cropHeightPct);
+        return { sourceAspect, outputAspect, zoom, cropWidthPct, cropHeightPct, leftPct, topPct };
+      };
       const getShortsCropMetrics = (config = shortsExtractorConfig) => {
         const sourceAspect = Number(shortsExtractorSource?.aspectRatio || 16 / 9);
         const outputAspect = Number((SHORTS_EXTRACTOR_ASPECTS[config.aspectPreset] || SHORTS_EXTRACTOR_ASPECTS['9:16']).ratio || 9 / 16);
-        const zoom = Math.max(1, Number(config.zoom || 1));
-        const cropWidthPct = clamp((outputAspect / sourceAspect / zoom) * 100, 5, 100);
-        const cropHeightPct = clamp(100 / zoom, 5, 100);
-        const leftPct = clamp(Number(config.xPosition ?? 0.5), 0, 1) * (100 - cropWidthPct);
-        const topPct = clamp(Number(config.yPosition ?? 0.5), 0, 1) * (100 - cropHeightPct);
-        return { sourceAspect, outputAspect, zoom, cropWidthPct, cropHeightPct, leftPct, topPct };
+        return getShortsCropMetricsForAspects(config, sourceAspect, outputAspect);
       };
-      const getShortsVerticalMediaStyleForSource = (config = shortsExtractorConfig, sourceAspect = 16 / 9, outputAspect = 9 / 16, closeup = false) => {
-        const cropScale = Math.max(1, Number(closeup ? config.closeupZoom || config.zoom || 1 : config.zoom || 1));
-        const coverScale = sourceAspect > outputAspect ? outputAspect / sourceAspect : 1;
-        const widthPct = sourceAspect > outputAspect ? (sourceAspect / outputAspect) * 100 : 100;
-        const heightPct = sourceAspect > outputAspect ? 100 : (outputAspect / sourceAspect) * 100;
+      const getShortsVerticalMediaStyleForSource = (config = shortsExtractorConfig, sourceAspect = 16 / 9, outputAspect = 9 / 16, closeup = false, regionHeightRatio = 1) => {
+        const { cropWidthPct, cropHeightPct, leftPct, topPct } = getShortsCropMetricsForAspects(config, sourceAspect, outputAspect, regionHeightRatio, closeup);
+        const sourceWidthPct = 10000 / Math.max(1, cropWidthPct);
+        const sourceHeightPct = 10000 / Math.max(1, cropHeightPct);
         return {
-          width: `${widthPct}%`,
-          height: `${heightPct}%`,
-          left: '50%',
-          top: '50%',
-          transform: `translate(calc(-50% + ${(0.5 - Number(closeup ? config.closeupX ?? config.xPosition ?? 0.5 : config.xPosition ?? 0.5)) * 100 * cropScale * coverScale}%), calc(-50% + ${(0.5 - Number(config.yPosition ?? 0.5)) * 100 * cropScale}%) ) scale(${cropScale})`,
-          transformOrigin: 'center center'
+          width: `${sourceWidthPct}%`,
+          height: `${sourceHeightPct}%`,
+          left: `${-(leftPct / Math.max(1, cropWidthPct)) * 100}%`,
+          top: `${-(topPct / Math.max(1, cropHeightPct)) * 100}%`,
+          right: 'auto',
+          bottom: 'auto',
+          transform: 'none',
+          transformOrigin: 'top left',
+          objectFit: 'fill',
+          maxWidth: 'none',
+          maxHeight: 'none'
         };
       };
-      const getShortsVerticalMediaStyle = (config = shortsExtractorConfig, closeup = false) => {
+      const getShortsVerticalMediaStyle = (config = shortsExtractorConfig, closeup = false, regionHeightRatio = 1) => {
         const { sourceAspect, outputAspect } = getShortsCropMetrics(config);
-        return getShortsVerticalMediaStyleForSource(config, sourceAspect, outputAspect, closeup);
+        return getShortsVerticalMediaStyleForSource(config, sourceAspect, outputAspect, closeup, regionHeightRatio);
       };
       const registerShortsOutputVideo = (node) => {
         if (node instanceof HTMLVideoElement) {
@@ -7201,12 +7282,12 @@ ${failure}`);
           setShortsExtractorStatus({ mode: 'error', message: error?.message || 'Browser blocked source preview playback.' });
         }
       };
-      const commitShortsLiveConfig = (patch) => updateShortsExtractorConfig(patch);
+      const commitShortsLiveConfig = (patch) => updateShortsExtractorConfig(patch, { writeKeyframe: shortsLiveMode });
       const updateShortsCropFromPointer = (clientX, clientY) => {
         const el = shortsSourceStageRef.current;
         if (!el || shortsExtractorConfig.mode !== 'single') return;
         const rect = el.getBoundingClientRect();
-        const cfg = getShortsPreviewConfig();
+        const cfg = shortsLiveMode ? getShortsPreviewConfig() : shortsExtractorConfig;
         const { cropWidthPct, cropHeightPct } = getShortsCropMetrics(cfg);
         const relX = clamp((clientX - rect.left) / Math.max(1, rect.width), 0, 1);
         const relY = clamp((clientY - rect.top) / Math.max(1, rect.height), 0, 1);
@@ -7231,20 +7312,23 @@ ${failure}`);
         if (shortsExtractorConfig.mode !== 'single') return;
         event.preventDefault();
         const delta = event.deltaY > 0 ? -0.08 : 0.08;
-        commitShortsLiveConfig({ zoom: clamp(Number(shortsExtractorConfig.zoom || 1.65) + delta, 1, 5) });
+        const cfg = shortsLiveMode ? getShortsPreviewConfig() : shortsExtractorConfig;
+        commitShortsLiveConfig({ zoom: clamp(Number(cfg.zoom || 1.65) + delta, 1, 5) });
       };
       const applyShortsKeyframeToConfig = (keyframe) => {
         if (!keyframe) return;
         const { id, time, ...configPatch } = keyframe;
         setSelectedShortsKeyframeId(id);
-        setShortsExtractorConfig((prev) => ({ ...prev, ...configPatch }));
+        setShortsExtractorConfig((prev) => normalizeShortsExtractorConfig({ ...prev, ...configPatch }));
         seekShortsPreview(time);
       };
       const addShortsExtractorKeyframe = () => {
         const time = clamp(shortsPreviewTimeSec, 0, shortsExtractorSource?.durationSec || project.meta.durationSec || 30);
-        const keyframe = { id: uid('shortkf'), time, ...getShortsPreviewConfig(time), ...shortsExtractorConfig };
+        const visibleConfig = shortsLiveMode ? getShortsPreviewConfig(time) : shortsExtractorConfig;
+        const keyframe = createShortsKeyframe(visibleConfig, time);
         setShortsExtractorKeyframes((prev) => [...prev.filter((item) => Math.abs(Number(item.time || 0) - time) > 0.15), keyframe].sort((a, b) => Number(a.time || 0) - Number(b.time || 0)));
         setSelectedShortsKeyframeId(keyframe.id);
+        setShortsExtractorStatus({ mode: 'ready', message: `Keyframe saved at ${formatHMS(time)} · x ${keyframe.xPosition.toFixed(2)} · y ${keyframe.yPosition.toFixed(2)} · zoom ${keyframe.zoom.toFixed(2)}.` });
       };
       const removeShortsExtractorKeyframe = (keyframeId) => {
         setShortsExtractorKeyframes((prev) => prev.filter((item) => item.id !== keyframeId));
@@ -7428,10 +7512,11 @@ ${failure}`);
       useEffect(() => {
         const outputVideos = Array.from(shortsOutputVideoRefs.current);
         outputVideos.forEach((video) => {
-          if (!(video instanceof HTMLVideoElement) || !video.isConnected || video.readyState < 1) {
+          if (!(video instanceof HTMLVideoElement) || !video.isConnected) {
             shortsOutputVideoRefs.current.delete(video);
             return;
           }
+          if (video.readyState < 1) return;
           const duration = Number(video.duration || shortsExtractorSource?.durationSec || 0);
           if (!Number.isFinite(duration) || duration <= 0) return;
           const target = clamp(Number(shortsPreviewTimeSec || 0), 0, duration);
@@ -10147,6 +10232,34 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
         colorSwatches[4],
         colorSwatches[6]
       ];
+      const renderInlineColorSwatches = (currentColor, onPick, label = 'Layer color') => (
+        <div className="vt-inline-color-swatches" role="group" aria-label={label}>
+          {contextColorSwatches.map((color) => (
+            <button
+              key={`${label}_${color}`}
+              type="button"
+              className="vt-inline-color-swatch"
+              style={{
+                background: color,
+                boxShadow: String(currentColor || '').toLowerCase() === String(color).toLowerCase() ? '0 0 0 3px #111 inset' : 'none'
+              }}
+              onClick={() => onPick(color)}
+              title={`${label}: ${color}`}
+              aria-label={`${label} ${color}`}
+            />
+          ))}
+        </div>
+      );
+      const renderAddMediaButtonGrid = (className = 'grid grid-cols-3 gap-2') => (
+        <div className={className}>
+          <button className="neo-btn" style={{ background: COLORS.pink }} onClick={() => addLayerWithClip('text')}><Type size={14} />Text</button>
+          <button className="neo-btn" style={{ background: COLORS.orange }} onClick={() => addLayerWithClip('shape')}><RectangleHorizontal size={14} />Shape</button>
+          <button className="neo-btn" style={{ background: COLORS.yellow }} onClick={() => addLayerWithClip('image')}><Circle size={14} />Image</button>
+          <button className="neo-btn" style={{ background: COLORS.green }} onClick={() => addLayerWithClip('video')}><Video size={14} />Video</button>
+          <button className="neo-btn" style={{ background: COLORS.blue }} onClick={() => audioUploadRef.current?.click()}><Upload size={14} />Audio</button>
+          <button className="neo-btn" style={{ background: COLORS.purple, color: '#fff' }} onClick={openTemplateCreator}><Sparkles size={14} />Template</button>
+        </div>
+      );
       const hexToRgba = (hex, alpha = 1) => {
         const raw = String(hex || '').trim().replace('#', '');
         const full = raw.length === 3 ? raw.split('').map((c) => c + c).join('') : raw;
@@ -10860,6 +10973,28 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
         { id: 'fit-selection', group: 'zoom-view', label: 'Fit Timeline to Selection', icon: Crosshair, pages: ['clips'], enabled: selectedCommandClipIds.length > 0, disabledReason: 'Select at least one clip.', run: () => fitTimelineToSelection() },
         { id: 'toggle-snap', group: 'zoom-view', label: `Snap ${snapEnabled ? 'Off' : 'On'}`, icon: Magnet, pages: ['clips'], enabled: true, disabledReason: '', run: () => setSnapEnabled((v) => !v) }
       ];
+      const selectedClipActionCommandIds = ['split-selected', 'duplicate-selected', 'delete-selected', 'group-selected', 'toggle-visibility', 'route-layer', 'copy-keyframe', 'paste-keyframe'];
+      const selectedClipActionCommands = selectedClipActionCommandIds.map((id) => timelineCommandRegistry.find((command) => command.id === id)).filter(Boolean);
+      const selectedClipActionLabels = {
+        'split-selected': 'Split at playhead',
+        'duplicate-selected': 'Duplicate clip',
+        'delete-selected': 'Delete clip',
+        'group-selected': selectedCommandClipIds.length > 1 ? 'Group selection' : 'Group clip',
+        'toggle-visibility': 'Show or hide selected clip',
+        'route-layer': 'Select the clip layer for track routing',
+        'copy-keyframe': 'Copy keyframe at playhead',
+        'paste-keyframe': 'Paste copied keyframe at playhead'
+      };
+      const selectedClipActionBackgrounds = {
+        'split-selected': COLORS.yellow,
+        'duplicate-selected': COLORS.cyan,
+        'delete-selected': COLORS.magenta,
+        'group-selected': COLORS.green,
+        'toggle-visibility': COLORS.white,
+        'route-layer': COLORS.white,
+        'copy-keyframe': COLORS.white,
+        'paste-keyframe': COLORS.yellow
+      };
       const runTimelineCommand = (command) => {
         if (!command?.enabled) {
           setProviderStatus({ mode: 'disabled', message: command?.disabledReason || 'Command unavailable.' });
@@ -10912,8 +11047,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
         if (normalizedToolId === 'projects') return 'projects';
         if (normalizedToolId === 'templates') return 'templates';
         if (normalizedToolId === 'ai') return 'ai';
-        if (normalizedToolId === 'code') return 'code';
-        if (normalizedToolId === 'build') return 'build';
+        if (normalizedToolId === 'code' || normalizedToolId === 'build' || normalizedToolId === 'dev') return 'dev';
         if (normalizedToolId === 'text-captions') return 'text-captions';
         if (normalizedToolId === 'clips-media') return 'clips';
         if (normalizedToolId === 'transitions-effects') {
@@ -10964,6 +11098,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
       const isProjectsPage = activePageId === 'projects';
       const isTextCaptionsPage = activePageId === 'text-captions';
       const isModuleVisible = (moduleId) => {
+        if (activePageId === 'clips' && moduleId === 'addMedia' && selectedClip) return false;
         const toolId = editorShellState.activeTool;
         const pageModules = PAGE_MODULE_SET_REGISTRY[activePageId];
         if (pageModules && !pageModules.has(moduleId)) return false;
@@ -10975,7 +11110,15 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
         return value !== false;
       };
       const getModuleSpan = (toolId, moduleId, layoutMode) => {
-        return MODULE_SPAN_REGISTRY[`${toolId}:${moduleId}`] || 'full';
+        const baseSpan = MODULE_SPAN_REGISTRY[`${toolId}:${moduleId}`] || 'full';
+        if (baseSpan !== 'half') return baseSpan;
+        const moduleOrder = PAGE_MODULE_REGISTRY[toolId] || [];
+        const visibleHalfModules = moduleOrder.filter((id) => {
+          if (!isModuleVisible(id)) return false;
+          return (MODULE_SPAN_REGISTRY[`${toolId}:${id}`] || 'full') === 'half';
+        });
+        const orphanHalfModule = visibleHalfModules.length % 2 === 1 ? visibleHalfModules[visibleHalfModules.length - 1] : null;
+        return orphanHalfModule === moduleId ? 'full' : 'half';
       };
       const getModuleCardClass = (toolId, moduleId, baseClass = '') => {
         const span = getModuleSpan(toolId, moduleId, editorShellState.layoutMode);
@@ -11040,10 +11183,13 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
         update();
         const observer = new ResizeObserver(update);
         observer.observe(node);
-        window.addEventListener('resize', update);
+        let resizeRaf = null;
+        const onWindowResize = () => { if (resizeRaf) cancelAnimationFrame(resizeRaf); resizeRaf = requestAnimationFrame(update); };
+        window.addEventListener('resize', onWindowResize, { passive: true });
         return () => {
           observer.disconnect();
-          window.removeEventListener('resize', update);
+          if (resizeRaf) cancelAnimationFrame(resizeRaf);
+          window.removeEventListener('resize', onWindowResize);
         };
       }, [editorShellState.layoutMode, editorShellState.railCollapsed, editorShellState.panelWidth, project.meta.aspectRatio]);
 
@@ -11057,10 +11203,13 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
         const host = shellRootRef.current?.parentElement;
         const observer = host && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateViewport) : null;
         if (host && observer) observer.observe(host);
-        window.addEventListener('resize', updateViewport);
+        let shellResizeRaf = null;
+        const onWindowResize = () => { if (shellResizeRaf) cancelAnimationFrame(shellResizeRaf); shellResizeRaf = requestAnimationFrame(updateViewport); };
+        window.addEventListener('resize', onWindowResize, { passive: true });
         return () => {
           if (observer) observer.disconnect();
-          window.removeEventListener('resize', updateViewport);
+          if (shellResizeRaf) cancelAnimationFrame(shellResizeRaf);
+          window.removeEventListener('resize', onWindowResize);
         };
       }, []);
 
@@ -11615,7 +11764,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
           return (
             <div className="vt-shorts-stage-render">
               <div className="vt-shorts-output-split vt-shorts-output-closeup" style={{ height: `${splitRatio * 100}%` }}>
-                {renderStageMediaNode(src, payload, clip, getShortsVerticalMediaStyleForSource({ ...cfg, zoom: cfg.closeupZoom || cfg.zoom }, sourceAspect, outputAspect, true), 'vt-shorts-output-video')}
+                {renderStageMediaNode(src, payload, clip, getShortsVerticalMediaStyleForSource({ ...cfg, zoom: cfg.closeupZoom || cfg.zoom }, sourceAspect, outputAspect, true, splitRatio), 'vt-shorts-output-video')}
               </div>
               <div className="vt-shorts-output-split vt-shorts-output-wide" style={{ top: `${splitRatio * 100}%`, height: `${(1 - splitRatio) * 100}%` }}>
                 {renderStageMediaNode(src, payload, clip, { width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }, 'vt-shorts-output-video vt-shorts-output-video-wide')}
@@ -11634,8 +11783,16 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
         return (
           <div className="vt-shorts-reframe-timeline">
             <div className="vt-shorts-reframe-head">
-              <span>Extraction Timeline</span>
-              <span>{keyframes.length} keyframes · {shortsExtractorSegments.length} segments</span>
+              <span>Extraction Timeline · {keyframes.length} keyframes · {shortsExtractorSegments.length} segments</span>
+              <div className="vt-shorts-reframe-head-controls">
+                <button className="neo-btn vt-timeline-icon-button !min-h-0 h-5" style={{ background: shortsPreviewPlaying ? COLORS.orange : COLORS.white }} onClick={toggleShortsPreviewPlayback} title="Play or pause source preview">
+                  {shortsPreviewPlaying ? <Pause size={12} /> : <Play size={12} />}
+                </button>
+                <div className="vt-shorts-time-pill !min-h-0 h-5 !py-0 flex items-center text-[10px]">{formatHMS(shortsPreviewTimeSec)} / {formatHMS(duration)}</div>
+                <button className="neo-btn !min-h-0 h-5 px-2 text-[10px]" style={{ background: COLORS.cyan }} onClick={addShortsExtractorKeyframe}>
+                  <Crosshair size={12} /> Add Keyframe
+                </button>
+              </div>
             </div>
             <div
               className="vt-shorts-reframe-ruler"
@@ -11671,7 +11828,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                     type="button"
                     className="vt-shorts-reframe-keyframe"
                     style={{ left: `${leftPct}%`, background: selectedShortsKeyframeId === keyframe.id ? COLORS.yellow : COLORS.cyan }}
-                    title={`${formatHMS(keyframe.time)} · ${keyframe.mode || 'single'} · zoom ${Number(keyframe.zoom || 1).toFixed(2)}`}
+                    title={`${formatHMS(keyframe.time)} · ${keyframe.mode || 'single'} · x ${Number(keyframe.xPosition ?? 0.5).toFixed(2)} · y ${Number(keyframe.yPosition ?? 0.5).toFixed(2)} · zoom ${Number(keyframe.zoom || 1).toFixed(2)}`}
                     onClick={(event) => {
                       event.stopPropagation();
                       applyShortsKeyframeToConfig(keyframe);
@@ -11685,7 +11842,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
         );
       };
       const renderShortsExtractorPreviewWorkspace = () => {
-        const previewCfg = getShortsPreviewConfig(shortsPreviewTimeSec);
+        const previewCfg = shortsLiveMode ? getShortsPreviewConfig(shortsPreviewTimeSec) : shortsExtractorConfig;
         const crop = getShortsCropMetrics(previewCfg);
         const aspect = SHORTS_EXTRACTOR_ASPECTS[previewCfg.aspectPreset] || SHORTS_EXTRACTOR_ASPECTS['9:16'];
         const duration = Math.max(0.1, Number(shortsExtractorSource?.durationSec || project.meta.durationSec || 30));
@@ -11782,15 +11939,11 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                 </div>
               </section>
               <section className="vt-shorts-monitor vt-shorts-monitor-output">
-                <div className="vt-shorts-monitor-header">
-                  <span>Vertical Preview · {previewCfg.aspectPreset}</span>
-                  <span>{aspect.width} x {aspect.height}</span>
-                </div>
                 <div className="vt-shorts-safe-tabs">
                   {['none', 'instagram', 'tiktok', 'shorts'].map((zoneId) => (
                     <button
                       key={zoneId}
-                      className="neo-btn !min-h-0 px-2 py-1 text-[9px]"
+                      className="neo-btn !min-h-0 px-2 py-0 h-[18px] text-[8px]"
                       style={{ background: shortsSafeZone === zoneId ? COLORS.purple : COLORS.white, color: shortsSafeZone === zoneId ? '#fff' : '#111' }}
                       onClick={() => setShortsSafeZone(zoneId)}
                     >
@@ -11803,7 +11956,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                     previewCfg.mode === 'split' ? (
                       <>
                         <div className="vt-shorts-output-split vt-shorts-output-closeup" style={{ height: `${Number(previewCfg.splitRatio || 0.55) * 100}%` }}>
-                          <video {...outputVideoProps} style={getShortsVerticalMediaStyle({ ...previewCfg, zoom: previewCfg.closeupZoom || previewCfg.zoom }, true)} />
+                          <video {...outputVideoProps} style={getShortsVerticalMediaStyle({ ...previewCfg, zoom: previewCfg.closeupZoom || previewCfg.zoom }, true, Number(previewCfg.splitRatio || 0.55))} />
                         </div>
                         <div className="vt-shorts-output-split vt-shorts-output-wide" style={{ top: `${Number(previewCfg.splitRatio || 0.55) * 100}%`, height: `${(1 - Number(previewCfg.splitRatio || 0.55)) * 100}%` }}>
                           <video {...outputVideoProps} className="vt-shorts-output-video vt-shorts-output-video-wide" />
@@ -11826,24 +11979,6 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
               </section>
             </div>
             {renderShortsReframeTimeline(duration)}
-            <div className="vt-shorts-scrub-row">
-              <button className="neo-btn vt-timeline-icon-button" style={{ background: shortsPreviewPlaying ? COLORS.orange : COLORS.white }} onClick={toggleShortsPreviewPlayback} title="Play or pause source preview">
-                {shortsPreviewPlaying ? <Pause size={16} /> : <Play size={16} />}
-              </button>
-              <div className="vt-shorts-time-pill">{formatHMS(shortsPreviewTimeSec)} / {formatHMS(duration)}</div>
-              <input
-                className="vt-shorts-scrubber"
-                type="range"
-                min="0"
-                max={duration}
-                step="0.01"
-                value={clamp(shortsPreviewTimeSec, 0, duration)}
-                onChange={(event) => seekShortsPreview(Number(event.target.value || 0))}
-              />
-              <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.cyan }} onClick={addShortsExtractorKeyframe}>
-                <Crosshair size={12} /> Add Keyframe
-              </button>
-            </div>
           </div>
         );
       };
@@ -11861,18 +11996,6 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
         const controlledClipIds = activeSelectedClipIds.length ? activeSelectedClipIds : (selectedClip ? [selectedClip.id] : []);
         const selectedTrack = selectedClip ? sortedTracks.find((track) => track.id === selectedClip.trackId) : null;
         const selectedClipLayer = selectedClip ? project.layers.find((layer) => layer.id === selectedClip.layerId) : null;
-        const clipControlCommandIds = ['split-selected', 'duplicate-selected', 'delete-selected', 'group-selected', 'toggle-visibility', 'route-layer', 'copy-keyframe', 'paste-keyframe'];
-        const clipControlCommands = clipControlCommandIds.map((id) => timelineCommandRegistry.find((command) => command.id === id)).filter(Boolean);
-        const clipControlLabels = {
-          'split-selected': 'Split at playhead',
-          'duplicate-selected': 'Duplicate clip',
-          'delete-selected': 'Delete clip',
-          'group-selected': controlledClipIds.length > 1 ? 'Group selection' : 'Group clip',
-          'toggle-visibility': 'Show / hide',
-          'route-layer': 'Move to track',
-          'copy-keyframe': 'Copy keyframe',
-          'paste-keyframe': 'Paste keyframe'
-        };
         return (
           <div className="border-2 border-black rounded-lg p-2 bg-[#f7f7f9] space-y-2">
             <div>
@@ -11892,19 +12015,18 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
               )}
             </div>
             <div className="grid grid-cols-2 gap-2">
-              {clipControlCommands.map((command, index) => {
+              {selectedClipActionCommands.map((command) => {
                 const Icon = command.icon || Workflow;
-                const backgrounds = [COLORS.yellow, COLORS.cyan, COLORS.magenta, COLORS.green, COLORS.white, COLORS.white, COLORS.white, COLORS.white];
                 return (
                   <button
                     key={command.id}
                     className="neo-btn"
-                    style={{ background: command.enabled ? backgrounds[index] : '#e7e7e7', opacity: command.enabled ? 1 : 0.55 }}
+                    style={{ background: command.enabled ? selectedClipActionBackgrounds[command.id] || COLORS.white : '#e7e7e7', opacity: command.enabled ? 1 : 0.55 }}
                     disabled={!command.enabled}
-                    title={command.enabled ? (clipControlLabels[command.id] || command.label) : command.disabledReason}
+                    title={command.enabled ? (selectedClipActionLabels[command.id] || command.label) : command.disabledReason}
                     onClick={() => runTimelineCommand(command)}
                   >
-                    <Icon size={14} /> {clipControlLabels[command.id] || command.label}
+                    <Icon size={14} /> {selectedClipActionLabels[command.id] || command.label}
                   </button>
                 );
               })}
@@ -12005,18 +12127,17 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
           </nav>
           {!editorShellState.railCollapsed && (
           <div className="h-full overflow-hidden flex flex-col">
-            <div className="flex-1 overflow-y-auto no-scrollbar p-3">
-              <div className={isStudio596Layout ? 'vt-shell-modules vt-shell-modules--studio596' : 'vt-shell-modules'}>
+            <div className="flex-1 overflow-y-auto neo-scroll p-3">
+              <div className={isStudio596Layout ? 'vt-shell-modules vt-shell-modules--studio596' : 'vt-shell-modules'} style={activePageId === 'shorts-extractor' ? { gridTemplateColumns: '1fr' } : undefined}>
               {(activeTab === 'layers' || activeTab === 'media' || activeTab === 'layerSettings' || activePageId === 'shorts-extractor') && (
                 <>
                   {activePageId === 'shorts-extractor' && (
-                    <>
-                      <div className={getModuleCardClass(activePageId, 'source', 'neo-card p-3 space-y-3 relative')}>
-                        {renderModuleBadge('source')}
-                        <div>
-                          <div className="text-xs font-black uppercase">Shorts Source Video</div>
-                          <div className="text-[10px] font-bold uppercase opacity-70">Upload a landscape clip, then create vertical reframed timeline segments.</div>
-                        </div>
+                    <div className={getModuleCardClass(activePageId, 'shortsConfig', 'neo-card p-3 space-y-4 relative neo-scroll overflow-y-auto max-h-full')}>
+                      {renderModuleBadge('shortsConfig')}
+
+                      {/* Section 1: Source Video */}
+                      <div className="space-y-2">
+                        <div className="text-xs font-black uppercase">Shorts Source Video</div>
                         <label className="neo-btn w-full cursor-pointer" style={{ background: COLORS.orange }}>
                           <Upload size={14} /> Upload Landscape Video
                           <input type="file" accept="video/*,.mp4,.mov,.webm,.m4v" className="hidden" onChange={(event) => onUploadShortsSource(event.target.files?.[0])} />
@@ -12028,12 +12149,12 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                           <div className={shortsExtractorStatus.mode === 'error' ? 'text-red-700' : 'opacity-70'}>{shortsExtractorStatus.message}</div>
                         </div>
                       </div>
-                      <div className={getModuleCardClass(activePageId, 'framing', 'neo-card p-3 space-y-3 relative')}>
-                        {renderModuleBadge('framing')}
-                        <div>
-                          <div className="text-xs font-black uppercase">Vertical Framing</div>
-                          <div className="text-[10px] font-bold uppercase opacity-70">Saved as render metadata on inserted media clips.</div>
-                        </div>
+
+                      <hr className="border-t-2 border-black" />
+
+                      {/* Section 2: Vertical Framing */}
+                      <div className="space-y-2">
+                        <div className="text-xs font-black uppercase">Vertical Framing</div>
                         <div className="grid grid-cols-3 gap-2">
                           {Object.keys(SHORTS_EXTRACTOR_ASPECTS).map((aspectId) => (
                             <button
@@ -12051,13 +12172,13 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                           <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: shortsExtractorConfig.mode === 'single' ? COLORS.cyan : COLORS.white }} onClick={() => updateShortsExtractorConfig({ mode: 'single' })}>Single Crop</button>
                           <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: shortsExtractorConfig.mode === 'split' ? COLORS.cyan : COLORS.white }} onClick={() => updateShortsExtractorConfig({ mode: 'split' })}>Split View</button>
                         </div>
-                        <SpringToggle label="Focus X" min={0} max={1} step={0.01} value={shortsExtractorConfig.xPosition} onChange={(v) => updateShortsExtractorConfig({ xPosition: Number(v) })} onReset={() => updateShortsExtractorConfig({ xPosition: 0.5 })} speed={1} />
-                        <SpringToggle label="Focus Y" min={0} max={1} step={0.01} value={shortsExtractorConfig.yPosition} onChange={(v) => updateShortsExtractorConfig({ yPosition: Number(v) })} onReset={() => updateShortsExtractorConfig({ yPosition: 0.5 })} speed={1} />
-                        <SpringToggle label="Crop Zoom" min={1} max={5} step={0.05} value={shortsExtractorConfig.zoom} onChange={(v) => updateShortsExtractorConfig({ zoom: Number(v) })} onReset={() => updateShortsExtractorConfig({ zoom: 1.65 })} speed={1} />
+                        <SpringToggle label="Focus X" min={0} max={1} step={0.01} value={shortsExtractorConfig.xPosition} onChange={(v) => updateShortsExtractorConfig({ xPosition: Number(v) })} onReset={() => updateShortsExtractorConfig({ xPosition: 0.5 })} speed={1} fullWidth trackColor={COLORS.purple} />
+                        <SpringToggle label="Focus Y" min={0} max={1} step={0.01} value={shortsExtractorConfig.yPosition} onChange={(v) => updateShortsExtractorConfig({ yPosition: Number(v) })} onReset={() => updateShortsExtractorConfig({ yPosition: 0.5 })} speed={1} fullWidth trackColor={COLORS.purple} />
+                        <SpringToggle label="Crop Zoom" min={1} max={5} step={0.05} value={shortsExtractorConfig.zoom} onChange={(v) => updateShortsExtractorConfig({ zoom: Number(v) })} onReset={() => updateShortsExtractorConfig({ zoom: 1.65 })} speed={1} fullWidth trackColor={COLORS.purple} />
                         {shortsExtractorConfig.mode === 'split' && (
                           <>
-                            <SpringToggle label="Split Point" min={0.15} max={0.85} step={0.01} value={shortsExtractorConfig.splitRatio} onChange={(v) => updateShortsExtractorConfig({ splitRatio: Number(v) })} onReset={() => updateShortsExtractorConfig({ splitRatio: 0.55 })} speed={1} />
-                            <SpringToggle label="Closeup Zoom" min={1} max={6} step={0.05} value={shortsExtractorConfig.closeupZoom} onChange={(v) => updateShortsExtractorConfig({ closeupZoom: Number(v) })} onReset={() => updateShortsExtractorConfig({ closeupZoom: 2.2 })} speed={1} />
+                            <SpringToggle label="Split Point" min={0.15} max={0.85} step={0.01} value={shortsExtractorConfig.splitRatio} onChange={(v) => updateShortsExtractorConfig({ splitRatio: Number(v) })} onReset={() => updateShortsExtractorConfig({ splitRatio: 0.55 })} speed={1} fullWidth trackColor={COLORS.purple} />
+                            <SpringToggle label="Closeup Zoom" min={1} max={6} step={0.05} value={shortsExtractorConfig.closeupZoom} onChange={(v) => updateShortsExtractorConfig({ closeupZoom: Number(v) })} onReset={() => updateShortsExtractorConfig({ closeupZoom: 2.2 })} speed={1} fullWidth trackColor={COLORS.purple} />
                           </>
                         )}
                         <div className="grid grid-cols-3 gap-1">
@@ -12068,12 +12189,14 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                           ))}
                         </div>
                       </div>
-                      <div className={getModuleCardClass(activePageId, 'segments', 'neo-card p-3 space-y-3 relative')}>
-                        {renderModuleBadge('segments')}
+
+                      <hr className="border-t-2 border-black" />
+
+                      {/* Section 3: Segments */}
+                      <div className="space-y-2">
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <div className="text-xs font-black uppercase">Short Segments</div>
-                            <div className="text-[10px] font-bold uppercase opacity-70">Each row becomes one editable media clip.</div>
                           </div>
                           <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.yellow }} onClick={addShortsExtractorSegment}><Plus size={12} />Add</button>
                         </div>
@@ -12097,12 +12220,12 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                           ))}
                         </div>
                       </div>
-                      <div className={getModuleCardClass(activePageId, 'apply', 'neo-card p-3 space-y-3 relative')}>
-                        {renderModuleBadge('apply')}
-                        <div>
-                          <div className="text-xs font-black uppercase">Keyframes + Timeline Insert</div>
-                          <div className="text-[10px] font-bold uppercase opacity-70">Keyframes define crop motion. Insert creates normal VT_E1 clips.</div>
-                        </div>
+
+                      <hr className="border-t-2 border-black" />
+
+                      {/* Section 4: Keyframes + Insert */}
+                      <div className="space-y-2">
+                        <div className="text-xs font-black uppercase">Keyframes + Timeline Insert</div>
                         <div className="grid grid-cols-2 gap-2">
                           <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.cyan }} onClick={addShortsExtractorKeyframe}><Crosshair size={12} />Add KF</button>
                           <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.yellow }} onClick={runShortsMotionTracking}><ScanLine size={12} />Track Motion</button>
@@ -12120,19 +12243,16 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                               style={{ boxShadow: selectedShortsKeyframeId === keyframe.id ? `3px 3px 0 ${COLORS.cyan}` : 'none' }}
                               onClick={() => applyShortsKeyframeToConfig(keyframe)}
                             >
-                              <span>{formatHMS(Number(keyframe.time || 0))} · {keyframe.mode || 'single'} · zoom {Number(keyframe.zoom || 1).toFixed(2)}</span>
+                              <span>{formatHMS(Number(keyframe.time || 0))} · x {Number(keyframe.xPosition ?? 0.5).toFixed(2)} · y {Number(keyframe.yPosition ?? 0.5).toFixed(2)} · z {Number(keyframe.zoom || 1).toFixed(2)}</span>
                               <span className="float-right" onClick={(event) => { event.stopPropagation(); removeShortsExtractorKeyframe(keyframe.id); }}>×</span>
                             </button>
                           ))}
                         </div>
-                        <div className="rounded-md border-2 border-black bg-[#fffbe8] p-2 text-[10px] font-black uppercase leading-5">
-                          Final MP4 uses hosted Remotion when media URLs are stable. Blob uploads preview locally and require asset staging before hosted render.
-                        </div>
                       </div>
-                    </>
+                    </div>
                   )}
                   {isModuleVisible('search') && (
-                  <div className={getModuleCardClass(activePageId, 'search', 'neo-card p-2 space-y-2 relative')}>
+                  <div className={getModuleCardClass(activePageId, 'search', `neo-card p-2 space-y-2 relative ${activePageId === 'clips' ? 'order-last' : ''}`)}>
                     {renderModuleBadge('search')}
                     <div className="text-[10px] font-black uppercase">Search</div>
                     <input
@@ -12228,7 +12348,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                     </div>
                   )}
                   {isModuleVisible('settings') && (selectedLayer && ['text', 'media', 'template', 'shape'].includes(selectedLayer.type)) && (
-                    <div className={getModuleCardClass(activePageId, 'canvas', 'neo-card p-3 space-y-2 relative')}>
+                    <div className={getModuleCardClass(activePageId, 'canvas', `neo-card p-3 space-y-2 relative ${activePageId === 'clips' ? 'order-last' : ''}`)}>
                       {renderModuleBadge('canvas')}
                       <div>
                         <div className="text-xs font-black uppercase">Canvas Placement</div>
@@ -12265,18 +12385,11 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                   )}
 
                   {isModuleVisible('addMedia') && (
-                  <div className={getModuleCardClass(activePageId, 'addMedia', 'neo-card p-3 space-y-2 relative')}>
+                  <div className={getModuleCardClass(activePageId, 'addMedia', `neo-card p-3 space-y-2 relative ${activePageId === 'clips' ? 'order-first' : ''}`)}>
                     {renderModuleBadge('addMedia')}
                     <div className="text-xs font-black uppercase">Add Media:</div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button className="neo-btn col-span-2" style={{ background: COLORS.pink }} onClick={() => addLayerWithClip('text')}><Type size={14} />Text</button>
-                      <button className="neo-btn" style={{ background: COLORS.orange }} onClick={() => addLayerWithClip('shape')}><RectangleHorizontal size={14} />Shape</button>
-                      <button className="neo-btn" style={{ background: COLORS.yellow }} onClick={() => addLayerWithClip('image')}><Circle size={14} />Image</button>
-                      <button className="neo-btn" style={{ background: COLORS.green }} onClick={() => addLayerWithClip('video')}><Video size={14} />Video</button>
-                      <button className="neo-btn" style={{ background: COLORS.blue }} onClick={() => audioUploadRef.current?.click()}><Upload size={14} />Add Audio/MP3</button>
-                      <input ref={audioUploadRef} type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg" className="hidden" onChange={(e) => onUploadAudio(e.target.files?.[0])} />
-                      <button className="neo-btn col-span-2" style={{ background: COLORS.purple, color: '#fff' }} onClick={openTemplateCreator}><Sparkles size={14} />Template</button>
-                    </div>
+                    {renderAddMediaButtonGrid()}
+                    <input ref={audioUploadRef} type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg" className="hidden" onChange={(e) => onUploadAudio(e.target.files?.[0])} />
                   </div>
                   )}
                   {false && activePageId === 'clips' && isModuleVisible('clipControls') && (
@@ -12297,62 +12410,56 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                   )}
 
                   {isModuleVisible('settings') && selectedLayer && (
-                    <div className={getModuleCardClass(activePageId, 'settings', `neo-card p-3 space-y-3 relative ${selectedClip ? 'order-first' : ''}`)}>
+                    <div className={getModuleCardClass(activePageId, 'settings', 'neo-card p-3 space-y-3 relative')}>
                       {renderModuleBadge(selectedClip ? 'clip inspector' : 'layer inspector')}
-                      <div>
-                        <div className="text-xs font-black uppercase">{selectedClip ? 'Selected Clip Inspector' : 'Layer Formatting Inspector'}</div>
-                        <div className="text-[10px] font-bold uppercase opacity-70">
-                          {selectedClip ? 'Edit clip actions, animation, timing, transform, and appearance in one place.' : 'Select a timeline clip to unlock clip actions above these layer controls.'}
-                        </div>
-                      </div>
-                      {selectedClip && <ClipControlPanel />}
-                      <div className="text-[10px] font-black opacity-70 uppercase">Editing {selectedLayer.type} · {selectedLayer.payload.layerName || selectedLayer.id}</div>
-                      {selectedLayer.type === 'text' && (
-                        <>
-                          <div className="text-[10px] font-black uppercase opacity-70">Text Content</div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <input
-                              className="w-full border-2 border-black rounded-md p-2 text-xs font-black"
-                              value={selectedLayer.payload.layerName || ''}
-                              onChange={(e) => updateLayerPayload(selectedLayer.id, { layerName: e.target.value })}
-                              placeholder="Title"
-                            />
-                            <select
-                              className="w-full border-2 border-black rounded-md p-2 text-xs font-black bg-white"
-                              value={selectedLayer.payload.fontFamily || 'Outfit'}
-                              onChange={(e) => updateLayerPayload(selectedLayer.id, { fontFamily: e.target.value })}
-                            >
-                              {FONT_OPTIONS.map((font) => (
-                                <option key={font} value={font}>{font}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <input className="w-full border-2 border-black rounded-md p-2 text-xs font-black" value={selectedLayer.payload.text || ''} onChange={(e) => updateLayerPayload(selectedLayer.id, { text: e.target.value })} />
-                        </>
-                      )}
-
-                      {selectedLayer.type !== 'text' && selectedLayer.type !== 'media' && selectedLayer.type !== 'audio' && (
+                      {renderAddMediaButtonGrid('vt-settings-add-media-grid')}
+                      <input ref={audioUploadRef} type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg" className="hidden" onChange={(e) => onUploadAudio(e.target.files?.[0])} />
+                      {!selectedClip && (
+                      <div className="vt-clip-name-color-row">
                         <input
-                          className="w-full border-2 border-black p-2 text-xs font-black rounded-md"
+                          className="flex-1 border-2 border-black p-2 text-xs font-black rounded-md"
                           value={selectedLayer.payload.layerName || ''}
                           onChange={(e) => updateLayerPayload(selectedLayer.id, { layerName: e.target.value })}
-                          placeholder="Layer label"
+                          placeholder={selectedLayer.type === 'text' ? 'Title' : 'Layer Name'}
                         />
+                        {selectedLayer.type === 'text' && (
+                          renderInlineColorSwatches(selectedLayer.payload.color || '#111111', (color) => updateLayerPayload(selectedLayer.id, { color }), 'Text color')
+                        )}
+                        {selectedLayer.type === 'shape' && (
+                          renderInlineColorSwatches(selectedLayer.payload.fillColor || '#111111', (color) => updateLayerPayload(selectedLayer.id, { fillColor: color }), 'Shape fill')
+                        )}
+                        {selectedLayer.payload?.motionAsset && (
+                          renderInlineColorSwatches(selectedLayer.payload.motionAsset.color || '#40C6E9', (color) => updateTemplateBundle(selectedLayer.payload.templateBundleId, { color }), 'Template color')
+                        )}
+                      </div>
+                      )}
+
+                      {/* D3: Context-sensitive sub-buttons */}
+                      {selectedLayer.type === 'text' && (
+                        <div className="space-y-2">
+                          <input className="w-full border-2 border-black rounded-md p-2 text-xs font-black" value={selectedLayer.payload.text || ''} onChange={(e) => updateLayerPayload(selectedLayer.id, { text: e.target.value })} />
+                          <select
+                            className="w-full border-2 border-black rounded-md p-2 text-xs font-black bg-white"
+                            value={selectedLayer.payload.fontFamily || 'Outfit'}
+                            onChange={(e) => updateLayerPayload(selectedLayer.id, { fontFamily: e.target.value })}
+                          >
+                            {FONT_OPTIONS.map((font) => (
+                              <option key={font} value={font}>{font}</option>
+                            ))}
+                          </select>
+                        </div>
                       )}
 
                       {selectedLayer.type === 'shape' && selectedLayer.payload.shapeNeedsChoice && (
-                        <div className="neo-card p-2 space-y-2">
-                          <div className="text-[10px] font-black uppercase">Choose Shape Type</div>
-                          <div className="grid grid-cols-3 gap-2">
-                            <button className="neo-btn" style={{ background: COLORS.yellow }} onClick={() => chooseShapeType(selectedLayer.id, 'rect')}>Rect</button>
-                            <button className="neo-btn" style={{ background: COLORS.cyan }} onClick={() => chooseShapeType(selectedLayer.id, 'circle')}>Circle</button>
-                            <button className="neo-btn" style={{ background: COLORS.purple }} onClick={() => chooseShapeType(selectedLayer.id, 'polygon')}>Polygon</button>
-                          </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <button className="neo-btn" style={{ background: COLORS.yellow }} onClick={() => chooseShapeType(selectedLayer.id, 'rect')}>Rect</button>
+                          <button className="neo-btn" style={{ background: COLORS.cyan }} onClick={() => chooseShapeType(selectedLayer.id, 'circle')}>Circle</button>
+                          <button className="neo-btn" style={{ background: COLORS.purple }} onClick={() => chooseShapeType(selectedLayer.id, 'polygon')}>Polygon</button>
                         </div>
                       )}
+
                       {selectedLayer.payload?.motionAsset && (
                         <div className="neo-card p-2 space-y-2">
-                          <div className="text-[10px] font-black uppercase">Template Runtime</div>
                           {(() => {
                             const asset = selectedLayer.payload.motionAsset;
                             const bundleId = selectedLayer.payload.templateBundleId;
@@ -12393,24 +12500,15 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                                   onChange={(e) => updateTemplateBundle(bundleId, { secondary: e.target.value })}
                                   placeholder="SECONDARY TEXT"
                                 />
-                                  <SpringToggle
-                                    label="Duration"
-                                    min={0.25}
-                                    max={60}
-                                    step={0.05}
-                                    value={asset.duration ?? 5.5}
-                                    onChange={(v) => updateTemplateBundle(bundleId, { duration: Number(v) })}
-                                    showCircle={false}
-                                  />
-                                <div className="flex items-center gap-2">
-                                  <input
-                                    type="color"
-                                    className="flex-1 h-8 border-2 border-black rounded-md cursor-pointer"
-                                    value={asset.color || '#40C6E9'}
-                                    onChange={(e) => updateTemplateBundle(bundleId, { color: e.target.value })}
-                                  />
-                                  <span className="text-[10px] font-black uppercase w-10 text-right">Color</span>
-                                </div>
+                                <SpringToggle
+                                  label="Duration"
+                                  min={0.25}
+                                  max={60}
+                                  step={0.05}
+                                  value={asset.duration ?? 5.5}
+                                  onChange={(v) => updateTemplateBundle(bundleId, { duration: Number(v) })}
+                                  showCircle={false}
+                                />
                                 <button
                                   className="neo-btn w-full py-2"
                                   style={{ background: asset.showText ? COLORS.green : COLORS.white }}
@@ -12425,25 +12523,47 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                       )}
 
                       {(selectedLayer.type === 'media' || selectedLayer.type === 'audio') && (
-                        <>
-                          <div className="text-[10px] font-black uppercase opacity-70">Media Source</div>
-                          <div className="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
-                            <input
-                              className="w-full border-2 border-black p-2 text-xs font-black rounded-md"
-                              value={selectedLayer.payload.layerName || ''}
-                              onChange={(e) => updateLayerPayload(selectedLayer.id, { layerName: e.target.value })}
-                              placeholder="Layer Name"
-                            />
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-2 gap-2">
                             {isUrlModeForLayer(selectedLayer.id) ? (
-                              <input
-                                className="border-2 border-black rounded-md p-2 text-xs font-black min-w-[190px]"
-                                value={mediaUrlDraft}
-                                onChange={(e) => setMediaUrlDraft(e.target.value)}
-                                placeholder={selectedLayer.type === 'audio' ? 'Audio URL' : 'Media URL'}
-                              />
+                              <>
+                                <input
+                                  className="border-2 border-black rounded-md p-2 text-xs font-black w-full"
+                                  value={mediaUrlDraft}
+                                  onChange={(e) => setMediaUrlDraft(e.target.value)}
+                                  placeholder={selectedLayer.type === 'audio' ? 'Audio URL' : 'Media URL'}
+                                />
+                                <div className="grid grid-cols-2 gap-1">
+                                  <button
+                                    className="neo-btn text-[10px] !p-1 bg-green-400"
+                                    onClick={() => {
+                                      const nextUrl = (mediaUrlDraft || '').trim();
+                                      if (!nextUrl) return;
+                                      if (assertStandaloneSafeMediaUrl(nextUrl, 'Media URL').blocked) return;
+                                      if (selectedLayer.type === 'audio') addAudioToSelected(nextUrl, 'url');
+                                      else addMediaToSelected(nextUrl);
+                                      if (/^https?:\/\//i.test(nextUrl) && runtimeMode === 'portable-offline') {
+                                        setProviderStatus({
+                                          mode: 'ready',
+                                          message: 'Remote URL added for preview/editing in portable mode. Final render still requires localhost render bridge support.'
+                                        });
+                                      }
+                                      setSelectedLayerUrlMode((prev) => ({ ...prev, [selectedLayer.id]: false }));
+                                    }}
+                                  >
+                                    Apply
+                                  </button>
+                                  <button
+                                    className="neo-btn text-[10px] !p-1 bg-white"
+                                    onClick={() => setSelectedLayerUrlMode((prev) => ({ ...prev, [selectedLayer.id]: false }))}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </>
                             ) : (
                               <>
-                                <label className="neo-btn cursor-pointer text-center min-w-[90px]" style={{ background: COLORS.blue }}>
+                                <label className="neo-btn cursor-pointer text-center w-full !px-1" style={{ background: COLORS.blue }}>
                                   Upload
                                   <input
                                     type="file"
@@ -12456,7 +12576,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                                   />
                                 </label>
                                 <button
-                                  className="neo-btn min-w-[90px]"
+                                  className="neo-btn w-full !px-1"
                                   style={{ background: COLORS.cyan }}
                                   onClick={() => setSelectedLayerUrlMode((prev) => ({ ...prev, [selectedLayer.id]: true }))}
                                 >
@@ -12468,37 +12588,6 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                           {(selectedLayer.payload.mediaName || selectedLayer.payload.mediaUrl) && (
                             <div className="text-[11px] font-black opacity-80 truncate">
                               {selectedLayer.payload.mediaName || (selectedLayer.payload.mediaUrl || '').split('/').pop() || ''}
-                            </div>
-                          )}
-                          {isUrlModeForLayer(selectedLayer.id) && (
-                            <div className="grid grid-cols-2 gap-2">
-                              <button
-                                className="neo-btn"
-                                style={{ background: COLORS.green }}
-                                onClick={() => {
-                                  const nextUrl = (mediaUrlDraft || '').trim();
-                                  if (!nextUrl) return;
-                                  if (assertStandaloneSafeMediaUrl(nextUrl, 'Media URL').blocked) return;
-                                  if (selectedLayer.type === 'audio') addAudioToSelected(nextUrl, 'url');
-                                  else addMediaToSelected(nextUrl);
-                                  if (/^https?:\/\//i.test(nextUrl) && runtimeMode === 'portable-offline') {
-                                    setProviderStatus({
-                                      mode: 'ready',
-                                      message: 'Remote URL added for preview/editing in portable mode. Final render still requires localhost render bridge support.'
-                                    });
-                                  }
-                                  setSelectedLayerUrlMode((prev) => ({ ...prev, [selectedLayer.id]: false }));
-                                }}
-                              >
-                                Apply URL
-                              </button>
-                              <button
-                                className="neo-btn"
-                                style={{ background: COLORS.white }}
-                                onClick={() => setSelectedLayerUrlMode((prev) => ({ ...prev, [selectedLayer.id]: false }))}
-                              >
-                                Cancel URL
-                              </button>
                             </div>
                           )}
                           <div className="grid grid-cols-2 gap-2">
@@ -12526,11 +12615,11 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                             onChange={(v) => updateLayerPayload(selectedLayer.id, { mediaFps: Number(v) })}
                             onReset={() => updateLayerPayload(selectedLayer.id, { mediaFps: 0 })}
                           />
-                        </>
+                        </div>
                       )}
 
                       {selectedLayer.type === 'audio' && (
-                        <>
+                        <div className="space-y-2 mt-2">
                           <div className="text-[10px] font-black uppercase opacity-70">Timing + Playback</div>
                           <div className="w-full h-[60px] bg-[#1A1A1A] border-[4px] border-white/20 rounded-2xl p-4 flex items-center gap-4">
                             <VolumeX className="text-white" size={20} />
@@ -12552,12 +12641,28 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                             onReset={() => updateLayerPayload(selectedLayer.id, { volume: 0.6 })}
                             kfState={keyframeStateForProp(selectedClip, 'volume')}
                           />
-                        </>
+                        </div>
                       )}
 
                       {selectedClip && selectedClip.layerId === selectedLayer.id && (
-                        <div className="neo-card p-2 space-y-2">
-                          <div className="text-[10px] font-black uppercase opacity-70">Clip Animation</div>
+                        <div className="neo-card p-2 space-y-2 mt-2">
+                          <div className="vt-clip-name-color-row">
+                            <input
+                              className="flex-1 border-2 border-black p-2 text-xs font-black rounded-md"
+                              value={selectedLayer.payload.layerName || ''}
+                              onChange={(e) => updateLayerPayload(selectedLayer.id, { layerName: e.target.value })}
+                              placeholder={selectedLayer.type === 'text' ? 'Title' : 'Layer Name'}
+                            />
+                            {selectedLayer.type === 'text' && (
+                              renderInlineColorSwatches(selectedLayer.payload.color || '#111111', (color) => updateLayerPayload(selectedLayer.id, { color }), 'Text color')
+                            )}
+                            {selectedLayer.type === 'shape' && (
+                              renderInlineColorSwatches(selectedLayer.payload.fillColor || '#111111', (color) => updateLayerPayload(selectedLayer.id, { fillColor: color }), 'Shape fill')
+                            )}
+                            {selectedLayer.payload?.motionAsset && (
+                              renderInlineColorSwatches(selectedLayer.payload.motionAsset.color || '#40C6E9', (color) => updateTemplateBundle(selectedLayer.payload.templateBundleId, { color }), 'Template color')
+                            )}
+                          </div>
                           <div className="grid grid-cols-3 gap-2">
                             <button
                               className="neo-btn h-8 py-0 px-2"
@@ -12790,7 +12895,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                               type="color"
                               value={selectedLayer.payload.fillColor || '#ffffff'}
                               onChange={(e) => updateLayerPayload(selectedLayer.id, { fillColor: e.target.value })}
-                              className="flex-1 h-9 border-2 border-black"
+                              className="vt-color-input flex-1 h-9 w-full cursor-pointer"
                             />
                             <button
                               className="kf-inline-btn"
@@ -12808,7 +12913,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                               type="color"
                               value={selectedLayer.payload.strokeColor || '#111111'}
                               onChange={(e) => updateLayerPayload(selectedLayer.id, { strokeColor: e.target.value })}
-                              className="flex-1 h-9 border-2 border-black"
+                              className="vt-color-input flex-1 h-9 w-full cursor-pointer"
                             />
                             <button
                               className="kf-inline-btn"
@@ -13630,109 +13735,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                 </>
               )}
 
-              {(activePageId === 'code' || activeTab === 'oracle') && (
-                <>
-                  <div className="neo-card p-3 space-y-2">
-                    <div className="text-xs font-black uppercase">Code Workspace</div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button className="neo-btn !min-h-0 px-2 py-1" style={{ background: aiMode === 'draft-only' ? COLORS.green : COLORS.white }} onClick={() => setAiMode('draft-only')}>AI: Draft Only</button>
-                      <button className="neo-btn !min-h-0 px-2 py-1" style={{ background: aiMode === 'manual-apply' ? COLORS.green : COLORS.white }} onClick={() => setAiMode('manual-apply')}>AI: Manual Apply</button>
-                    </div>
-                    <div className="text-xs font-black uppercase">HF Token (optional)</div>
-                    <input className="w-full border-4 border-black p-2 text-xs font-black" value={hfToken} onChange={(e) => setHfToken(e.target.value)} />
-                    <textarea className="code" value={aiTextPrompt} onChange={(e) => setAiTextPrompt(e.target.value)} />
-                    <button className="neo-btn w-full" style={{ background: COLORS.green }} onClick={() => runAiJob('text')}>Run Text Job</button>
-                    <textarea className="code" value={aiImagePrompt} onChange={(e) => setAiImagePrompt(e.target.value)} />
-                    <button className="neo-btn w-full" style={{ background: COLORS.yellow }} onClick={() => runAiJob('image')}>Run Image Job</button>
-                    <textarea className="code" value={aiVoicePrompt} onChange={(e) => setAiVoicePrompt(e.target.value)} />
-                    <button className="neo-btn w-full" style={{ background: COLORS.cyan }} onClick={() => runAiJob('voice')}>Run Voice Job</button>
-                    <div className="max-h-[220px] overflow-y-auto neo-scroll space-y-2">
-                      {(project.aiJobs || []).map((job) => (
-                        <div key={job.id} className="border-4 border-black p-2 text-[11px]">
-                          <div className="font-black uppercase">{job.type} • {job.provider}</div>
-                          <div>{job.createdAt}</div>
-                          <pre className="whitespace-pre-wrap">{JSON.stringify(job.outputs, null, 2)}</pre>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="text-xs font-black uppercase">AI Token / Cost Meter</div>
-                    <div className="max-h-[120px] overflow-y-auto neo-scroll border-2 border-black p-1 bg-white space-y-1">
-                      {aiCostLedger.length === 0 && <div className="text-[10px] font-black opacity-70">No AI usage yet.</div>}
-                      {aiCostLedger.map((item) => (
-                        <div key={item.id} className="text-[10px] font-black border-b border-black/20 pb-1">
-                          <div>{item.type.toUpperCase()} · {item.totalTokens} tok · ${item.estimatedUsd.toFixed(4)}</div>
-                          <div className="opacity-70">{new Date(item.at).toLocaleTimeString()}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="text-xs font-black uppercase">Project JSON Draft Patch</div>
-                    <div className="text-[10px] font-black opacity-70">Use this editor for manual patch drafts only. The live code panels on the right always show the exact current timeline export at the active playhead.</div>
-                    <textarea className="code" value={codeJsonDraft} onChange={(e) => setCodeJsonDraft(e.target.value)} />
-                    {codeError ? <div className="text-xs font-black text-red-700">{codeError}</div> : null}
-                    <div className="grid grid-cols-2 gap-2">
-                      <button className="neo-btn" style={{ background: COLORS.green }} onClick={applyJsonDraft}>Preview JSON Patch</button>
-                      <button className="neo-btn" onClick={resetJsonDraft}>Reset Draft</button>
-                    </div>
-                    {aiMode === 'draft-only' && (
-                      <div className="text-[10px] font-black border-2 border-black p-2 bg-[#fffde7]">
-                        Draft-only mode active: timeline mutations require patch preview + manual confirmation.
-                      </div>
-                    )}
-                  </div>
-                  <div className="neo-card p-3 space-y-2">
-                    <div className="text-xs font-black uppercase">Live Code Mirrors</div>
-                    <div className="text-[10px] font-black opacity-70">These four panels update live from the same resolved timeline state. Downloads always match the code shown here.</div>
-                    <div className="space-y-2">
-                      <div className="border-2 border-black rounded-md p-2 bg-white space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="text-xs font-black uppercase">Project JSON</div>
-                          <div className="flex gap-2">
-                            <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.yellow }} onClick={() => copyArtifactText(projectJsonCode, 'Project JSON')}>Copy</button>
-                            <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.cyan }} onClick={() => downloadTextArtifact('VT_E1.project.v3.json', projectJsonCode, 'application/json')}>Download</button>
-                          </div>
-                        </div>
-                        <div className="text-[10px] font-black opacity-70">Authoritative project envelope for the full timeline and export contract.</div>
-                        <textarea className="code" readOnly value={projectJsonCode} />
-                      </div>
-                      <div className="border-2 border-black rounded-md p-2 bg-white space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="text-xs font-black uppercase">Resolved Frame JSON</div>
-                          <div className="flex gap-2">
-                            <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.yellow }} onClick={() => copyArtifactText(resolvedFrameJsonCode, 'Resolved Frame JSON')}>Copy</button>
-                            <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.cyan }} onClick={() => downloadTextArtifact('VT_E1.frame.resolved.json', resolvedFrameJsonCode, 'application/json')}>Download</button>
-                          </div>
-                        </div>
-                        <div className="text-[10px] font-black opacity-70">Exact current-playhead scene after timing, stacking, transforms, color, and opacity are resolved.</div>
-                        <textarea className="code" readOnly value={resolvedFrameJsonCode} />
-                      </div>
-                      <div className="border-2 border-black rounded-md p-2 bg-white space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="text-xs font-black uppercase">Generated SVG</div>
-                          <div className="flex gap-2">
-                            <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.yellow }} onClick={() => copyArtifactText(toSvgCode(), 'Generated SVG')}>Copy</button>
-                            <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.pink }} onClick={exportSvg}>Download</button>
-                          </div>
-                        </div>
-                        <div className="text-[10px] font-black opacity-70">Current frame as SVG markup generated from the resolved frame scene.</div>
-                        <textarea className="code" readOnly value={toSvgCode()} />
-                      </div>
-                      <div className="border-2 border-black rounded-md p-2 bg-white space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="text-xs font-black uppercase">Generated HTML</div>
-                          <div className="flex gap-2">
-                            <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.yellow }} onClick={() => copyArtifactText(toHtmlCode(), 'Generated HTML')}>Copy</button>
-                            <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.purple, color: '#fff' }} onClick={exportHtml}>Download</button>
-                          </div>
-                        </div>
-                        <div className="text-[10px] font-black opacity-70">Standalone HTML frame export built from the same SVG/scene graph shown above.</div>
-                        <textarea className="code" readOnly value={toHtmlCode()} />
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {activePageId === 'build' && (
+              {(activePageId === 'dev' || activePageId === 'code' || activePageId === 'build' || activeTab === 'oracle') && (
                 <>
                   {isModuleVisible('render') && (
                     <>
@@ -15357,18 +15360,11 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                   {hasTopbarButton('undo') && <button className="neo-btn" style={{ background: canUndo ? COLORS.white : '#e7e7e7', opacity: canUndo ? 1 : 0.45 }} onClick={undoProject} disabled={!canUndo} title="Undo (Cmd/Ctrl+Z)"><Undo2 size={14} /></button>}
                   {hasTopbarButton('redo') && <button className="neo-btn" style={{ background: canRedo ? COLORS.white : '#e7e7e7', opacity: canRedo ? 1 : 0.45 }} onClick={redoProject} disabled={!canRedo} title="Redo (Shift+Cmd/Ctrl+Z or Ctrl+Y)"><Redo2 size={14} /></button>}
 
-                  {hasTopbarButton('time') && <div className="vt-time-readout flex items-center border-2 border-black rounded-md overflow-hidden bg-white ml-2">
-                    <div className="px-2 py-1 bg-[#ececec] text-[11px] font-black uppercase flex items-center justify-center border-r-2 border-black" style={{ minWidth: '60px' }}>
-                      {formatHMS(playhead)}
-                    </div>
-                    <input
-                      className="px-2 py-1 w-20 text-[11px] font-black outline-none border-none"
-                      value={durationInput}
-                      onChange={(e) => setDurationInput(e.target.value)}
-                      onBlur={commitDurationInput}
-                      onKeyDown={(e) => { if (e.key === 'Enter') commitDurationInput(); }}
-                      title="Total Duration"
-                    />
+                  {hasTopbarButton('time') && <div
+                    className="vt-time-readout flex items-center justify-center border-2 border-black rounded-md bg-white ml-2 px-2 text-[11px] font-black uppercase"
+                    title={`Playhead ${formatHMS(playhead)} of ${formatHMS(project.meta.durationSec)}. Edit duration from Project Settings.`}
+                  >
+                    {formatHMS(playhead)} / {formatHMS(project.meta.durationSec)}
                   </div>}
 
                   {hasTopbarButton('snap') && <button
@@ -15388,15 +15384,24 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                   {hasTopbarButton('cursor') && <button className="neo-btn" style={{ background: cursorPreviewMode === 'on' ? COLORS.cyan : cursorPreviewMode === 'lite' ? 'rgba(64,198,233,0.30)' : COLORS.white }} onClick={cycleCursorPreviewMode} title={`Cursor Preview: ${cursorPreviewMode}`}>
                     <Crosshair size={14} />
                   </button>}
-                  {hasTopbarButton('split') && <button className="neo-btn w-[30px] h-[30px] min-h-0 p-0 inline-flex items-center justify-center text-[10px]" style={{ background: COLORS.white }} onClick={splitSelectedAtPlayhead} title="Split selected clips at playhead (Shift+S)">
-                    <Workflow size={13} />
-                  </button>}
-                  {hasTopbarButton('copyKf') && <button className="neo-btn w-[30px] h-[30px] min-h-0 p-0 inline-flex items-center justify-center text-[10px]" style={{ background: keyframeClipboard ? COLORS.green : COLORS.white }} onClick={copyKeyframeAtPlayhead} title="Copy keyframe at playhead">
-                    <Copy size={13} />
-                  </button>}
-                  {hasTopbarButton('pasteKf') && <button className="neo-btn w-[30px] h-[30px] min-h-0 p-0 inline-flex items-center justify-center text-[10px]" style={{ background: keyframeClipboard ? COLORS.yellow : '#e7e7e7', opacity: keyframeClipboard ? 1 : 0.45 }} onClick={pasteKeyframeAtPlayhead} disabled={!keyframeClipboard} title="Paste keyframe at playhead">
-                    <Upload size={13} />
-                  </button>}
+
+                  {selectedClipActionCommands.map((command) => {
+                    const Icon = command.icon || Workflow;
+                    const label = selectedClipActionLabels[command.id] || command.label;
+                    return (
+                      <button
+                        key={`timeline_clip_action_${command.id}`}
+                        className="neo-btn vt-selected-clip-action-btn"
+                        style={{ background: command.enabled ? selectedClipActionBackgrounds[command.id] || COLORS.white : '#e7e7e7', opacity: command.enabled ? 1 : 0.45 }}
+                        disabled={!command.enabled}
+                        title={command.enabled ? label : command.disabledReason}
+                        aria-label={command.enabled ? label : command.disabledReason}
+                        onClick={() => runTimelineCommand(command)}
+                      >
+                        <Icon size={18} />
+                      </button>
+                    );
+                  })}
 
                   {hasTopbarButton('help') && <button className="neo-btn w-[30px] h-[30px] min-h-0 p-0 inline-flex items-center justify-center text-[10px]" style={{ background: showTopbarHelp ? COLORS.yellow : COLORS.white }} onClick={() => setShowTopbarHelp((v) => !v)} title="Top controls help">
                     <HelpCircle size={13} />

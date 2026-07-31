@@ -12,10 +12,18 @@ export const BRAIN_CAPABILITY_REGISTRY: BrainCapabilityDefinition[] = [
  { id: "journal-memory", label: "Journal and memory", description: "Uses confirmed notes, constraints, style, and decisions.", intents: ["strategy", "audience", "content_analysis"], maximumInvocationsPerTurn: 1 },
  { id: "niche-knowledge", label: "Niche knowledge", description: "Adds bounded public subject knowledge after the niche is stable.", intents: ["strategy", "seo", "audience", "content_analysis"], maximumInvocationsPerTurn: 1 },
  { id: "current-grounding", label: "Current grounding", description: "Uses Google grounding only for timely public questions.", intents: ["strategy", "seo", "audience"], maximumInvocationsPerTurn: 1, requiresCurrentResearch: true },
+ { id: "content-generation", label: "Content generation", description: "Drafts creator assets: scripts, hooks, pinned comments, descriptions, tags, titles, community posts, and replies.", intents: ["content_generation"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
 ]
 
 export const inferBrainIntent = (userText: string): BrainCapabilityDefinition["intents"][number] => {
  const value = userText.toLowerCase()
+ // Content-generation: asset-production verbs, "new video about X", or pinned comment
+ if (/\b(write|draft|create|generate|rewrite|make me|give me|compose|produce)\b.{0,60}\b(script|hook|pinned comment|comment|description|tag|title|post|reply|caption|outline|intro|outro|cta)\b/i.test(value)) return "content_generation"
+ if (/\b(write|draft|create|generate|rewrite|make)\b.{0,40}\b(video concept|concept|idea)\b/i.test(value)) return "content_generation"
+ if (/\b(want to make|make a new video|new video about|video about|video on|create a video|plan a video|plan.*video)\b/i.test(value)) return "content_generation"
+ if (/\bpinned comment\b/i.test(value)) return "content_generation"
+ // Named reads and oracle
+ if (/\b(daily oracle|oracle|first week plan|week plan|7.day plan|best video autopsy|autopsy|title.*thumbnail test|format strategy|revenue levers?)\b/i.test(value)) return "strategy"
  if (/revenue|rpm|cpm|moneti[sz]|income|sponsor/.test(value)) return "revenue"
  if (/seo|keyword|search|title|description|tag/.test(value)) return "seo"
  if (/audience|viewer|subscriber|comment|community/.test(value)) return "audience"

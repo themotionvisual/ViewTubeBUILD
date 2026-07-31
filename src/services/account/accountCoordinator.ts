@@ -123,7 +123,9 @@ const readJson = async <T>(response: Response): Promise<T> => {
 }
 
 const isValidAccountSnapshot = (value: unknown): value is UnifiedAccountSnapshot =>
-  Boolean(value) && typeof value === "object" && typeof (value as UnifiedAccountSnapshot).authentication === "object"
+  Boolean(value) && typeof value === "object" && value !== null &&
+  typeof (value as UnifiedAccountSnapshot).authentication === "object" &&
+  (value as UnifiedAccountSnapshot).authentication !== null
 
 const cleanNullableString = (value: unknown): string | null => {
   const text = String(value || "").trim()
@@ -131,6 +133,7 @@ const cleanNullableString = (value: unknown): string | null => {
 }
 
 export const normalizeAccountSnapshot = (snapshot: UnifiedAccountSnapshot): UnifiedAccountSnapshot => {
+  if (!snapshot || typeof snapshot !== "object") return { ...ANONYMOUS_ACCOUNT_SNAPSHOT }
   const candidateProfile = snapshot.profile as UnifiedAccountSnapshot["profile"] & {
     avatar?: unknown
     image?: unknown
@@ -159,11 +162,11 @@ export const normalizeAccountSnapshot = (snapshot: UnifiedAccountSnapshot): Unif
     },
     authentication: {
       ...ANONYMOUS_ACCOUNT_SNAPSHOT.authentication,
-      ...snapshot.authentication,
+      ...(snapshot.authentication && typeof snapshot.authentication === "object" ? snapshot.authentication : {}),
     },
     google: {
       ...ANONYMOUS_ACCOUNT_SNAPSHOT.google,
-      ...snapshot.google,
+      ...(snapshot.google && typeof snapshot.google === "object" ? snapshot.google : {}),
     },
     onboarding: {
       ...ANONYMOUS_ACCOUNT_SNAPSHOT.onboarding,

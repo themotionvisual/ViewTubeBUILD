@@ -194,7 +194,7 @@ export const fromStructuredOutput = (
 ): CreatorBrainResponse => {
  const allowedModes: CreatorBrainResponse["mode"][] = [
   "strategy_brief", "analytics_diagnosis", "seo_keyword_plan", "video_idea_sprint",
-  "journal_reflection", "goal_coach", "publishing_checklist", "revenue_levers",
+  "journal_reflection", "goal_coach", "publishing_checklist", "revenue_levers", "creator_asset_draft",
  ]
  const mode = allowedModes.includes(output.mode) ? output.mode : "strategy_brief"
  const question: CreatorBrainLearningQuestion[] = output.question?.trim() ? [{
