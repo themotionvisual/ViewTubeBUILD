@@ -91,10 +91,10 @@ const innerCard = "rounded-[10px] border-[2px] border-black bg-white"
 const kpiButton =
  "inline-flex items-center gap-2 rounded-[8px] border-[2px] border-black bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[0.08em] transition hover:bg-[#3FEE56]"
 
-const GENERATION_BADGES: Record<BrainGenerationPath, { label: string; color: string }> = {
- model: { label: "Full Brain", color: "#00FF00" },
- repaired_model: { label: "Refined Answer", color: "#36E0F6" },
- basic_guidance: { label: "Basic Guidance", color: "#FFDA47" },
+const GENERATION_BADGES: Record<BrainGenerationPath, { label: string; color: string; description: string }> = {
+ model: { label: "Full Brain", color: "#00FF00", description: "This response was prepared with the full Brain." },
+ repaired_model: { label: "Refined Answer", color: "#36E0F6", description: "This response was prepared with an additional quality pass." },
+ basic_guidance: { label: "Basic Guidance", color: "#FFDA47", description: "This response was prepared from available channel evidence while full generation was unavailable." },
 }
 
 export const BrainGenerationBadge: React.FC<{ path: BrainGenerationPath }> = ({ path }) => {
@@ -104,7 +104,7 @@ export const BrainGenerationBadge: React.FC<{ path: BrainGenerationPath }> = ({ 
    role="status"
    tabIndex={0}
    aria-label={`${badge.label} response status`}
-   title="How this answer was prepared"
+   title={badge.description}
    className="max-w-full whitespace-normal break-words rounded-[6px] border-[2px] border-black px-2 py-0.5 text-center text-[8px] font-black uppercase leading-3 tracking-[0.1em] outline-none focus-visible:ring-[3px] focus-visible:ring-black"
    style={{ backgroundColor: badge.color }}
   >
@@ -153,7 +153,7 @@ const OpeningBriefing: React.FC<{ snapshot: AIBrainContextSnapshot }> = ({ snaps
  return (
   // Top-aligned and scrollable: the briefing is a launchpad, not a block floating in
   // the middle of an empty canvas.
-  <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto">
+  <div className="vt-scrollless min-h-0 flex-1 overflow-y-auto overscroll-contain" aria-label="Brain conversation" tabIndex={0}>
    <section className="mx-auto grid max-w-[70ch] gap-4">
     <div>
      <div className="flex flex-wrap items-center gap-2">
@@ -182,9 +182,9 @@ export const BrainPromptLibrary: React.FC<{
  <section
   aria-labelledby={headingId}
   aria-busy={busy || undefined}
-  className="overflow-hidden rounded-[10px] border-[2px] border-black bg-white"
+  className="rounded-[10px] border-[2px] border-black bg-white"
  >
-  <div className="border-b-[2px] border-black bg-[#FF7AC8] px-3 py-2">
+  <div className="sticky top-0 z-10 rounded-t-[7px] border-b-[2px] border-black bg-[#FF7AC8] px-3 py-2">
    <h2 id={headingId} className="text-[12px] font-[1000] uppercase leading-4 tracking-[0.08em]">
     Prompt Library
    </h2>
@@ -192,19 +192,19 @@ export const BrainPromptLibrary: React.FC<{
     Start a focused Brain task at any point in the conversation.
    </p>
   </div>
-  <ul className="grid gap-2 p-2.5">
+  <ul className="grid gap-1.5 p-2">
    {cards.map((card) => (
     <li key={card.id}>
      <button
       type="button"
       disabled={busy}
       onClick={() => onPrompt(card.prompt)}
-      className="group grid min-h-11 w-full grid-cols-[8px_minmax(0,1fr)_16px] items-center gap-2 overflow-hidden rounded-[8px] border-[2px] border-black bg-white px-2 py-2 text-left outline-none transition hover:-translate-y-0.5 hover:bg-[#FFDA47] focus-visible:ring-[3px] focus-visible:ring-black disabled:cursor-wait disabled:opacity-50"
+      className="group grid min-h-10 w-full grid-cols-[7px_minmax(0,1fr)_16px] items-center gap-2 overflow-hidden rounded-[8px] border-[2px] border-black bg-white px-2 py-1.5 text-left outline-none transition hover:-translate-y-0.5 hover:bg-[#FFDA47] focus-visible:ring-[3px] focus-visible:ring-black disabled:cursor-wait disabled:opacity-50"
      >
-      <span className="h-full min-h-8 rounded-[3px] border border-black" style={{ backgroundColor: card.color }} aria-hidden="true" />
+      <span className="h-full min-h-7 rounded-[3px] border border-black" style={{ backgroundColor: card.color }} aria-hidden="true" />
       <span className="min-w-0">
        <span className="block text-[10px] font-[1000] uppercase leading-4">{card.label}</span>
-       <span className="mt-0.5 line-clamp-2 block text-[10px] font-bold leading-4 text-black/60">
+       <span className="line-clamp-2 block text-[9px] font-bold leading-[13px] text-black/60">
         {card.prompt}
        </span>
       </span>
@@ -255,7 +255,7 @@ const CreatorResponseCard: React.FC<{
  const openQuestions = response.questions.filter((question) => !answeredQuestionIds.has(question.id))
 
  return (
-  <article className="flex w-full max-w-[680px] shrink-0 flex-col overflow-hidden rounded-[12px] border-[2px] border-black bg-white shadow-[4px_4px_0_0_#000]">
+  <article className="flex w-full max-w-[760px] shrink-0 flex-col overflow-hidden rounded-[12px] border-[2px] border-black bg-white shadow-[4px_4px_0_0_#000]">
    <div className="shrink-0 border-b-[2px] border-black px-3 py-2" style={{ backgroundColor: TOOLBOX_PALETTE[5] }}>
     <div className="flex flex-wrap items-start justify-between gap-1.5">
      <div className="text-[9px] font-black uppercase tracking-[0.16em] text-black/55">ViewTube Copilot</div>
@@ -863,7 +863,7 @@ const AIBrainCommandInterface: React.FC = () => {
          ) : messages.length === 0 ? (
           <OpeningBriefing snapshot={snapshot} />
          ) : (
-          <div className="custom-scrollbar mx-auto flex min-h-0 w-full max-w-[880px] flex-1 flex-col gap-3 overflow-y-auto pr-1">
+          <div className="vt-scrollless mx-auto flex min-h-0 w-full max-w-[880px] flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-1 pb-1" aria-label="Brain conversation" aria-live="polite" role="log" tabIndex={0}>
            {messages.map((message) => message.role === "user" ? (
             <UserMessage key={message.id} text={message.text} />
            ) : (
@@ -913,11 +913,11 @@ const AIBrainCommandInterface: React.FC = () => {
         </footer>
        </div>
 
-       <div className="custom-scrollbar hidden min-h-0 overflow-y-auto xl:block">
+       <div className="vt-scrollless hidden min-h-0 overflow-y-auto overscroll-contain xl:block" aria-label="Prompt library" tabIndex={0}>
         <BrainPromptLibrary cards={promptCards} busy={busy} onPrompt={(prompt) => void handleSend(prompt)} />
        </div>
 
-       <div className="custom-scrollbar hidden min-h-0 overflow-y-auto xl:block">
+       <div className="vt-scrollless hidden min-h-0 overflow-y-auto overscroll-contain xl:block" aria-label="Channel context" tabIndex={0}>
         <BrainContextRail
          snapshot={snapshot}
          growthContext={creatorGrowthContext}
@@ -944,7 +944,7 @@ const AIBrainCommandInterface: React.FC = () => {
           <X size={14} aria-hidden="true" /> Close
          </button>
         </div>
-        <div className="custom-scrollbar min-h-0 overflow-y-auto">
+        <div className="vt-scrollless min-h-0 overflow-y-auto overscroll-contain" aria-label="Prompt library" tabIndex={0}>
          <BrainPromptLibrary
           cards={promptCards}
           busy={busy}
@@ -964,7 +964,7 @@ const AIBrainCommandInterface: React.FC = () => {
          <h2 id="brain-context-dialog-title" className="text-lg font-[1000] uppercase">Your Channel Context</h2>
          <button ref={contextCloseRef} type="button" className={kpiButton} onClick={() => setContextRailOpen(false)}><X size={14} aria-hidden="true" /> Close</button>
         </div>
-        <div className="custom-scrollbar min-h-0 overflow-y-auto">
+        <div className="vt-scrollless min-h-0 overflow-y-auto overscroll-contain" aria-label="Channel context" tabIndex={0}>
          <BrainContextRail snapshot={snapshot} growthContext={creatorGrowthContext} insights={railInsights} questions={learningQuestions} quickActions={quickActions} onAskInsight={handleAskInsight} onAcceptQuickAction={handleAcceptQuickAction} onAnswerQuestion={handleAnswerQuestion} />
         </div>
        </div>

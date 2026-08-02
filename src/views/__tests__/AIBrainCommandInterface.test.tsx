@@ -117,6 +117,7 @@ describe("AIBrainCommandInterface", () => {
   expect(html).toContain("Revenue Levers")
   expect(html).toContain("Best Video Autopsy")
   expect(html).toContain("Run Daily Oracle")
+  expect(html).toContain("sticky top-0")
   expect((html.match(/type="button"/g) || [])).toHaveLength(cards.length)
  })
 
@@ -126,6 +127,16 @@ describe("AIBrainCommandInterface", () => {
   expect(html).toContain('aria-label="Open prompt library"')
   expect(html).toContain('aria-label="Open channel context"')
   expect(html).not.toContain(">Growth prompts<")
+ })
+
+ it("keeps every Brain scroll region usable without drawing nested scrollbar tracks", () => {
+  const html = renderHub()
+
+  expect(html).toContain("vt-scrollless")
+  expect(html).toContain('aria-label="Brain conversation"')
+  expect(html).toContain('aria-label="Prompt library"')
+  expect(html).toContain('aria-label="Channel context"')
+  expect(html).not.toContain("custom-scrollbar")
  })
 
  it("keeps internal diagnostics out of the creator workspace", () => {
@@ -149,7 +160,7 @@ describe("AIBrainCommandInterface", () => {
   expect(html).toContain('role="status"')
   expect(html).toContain('tabindex="0"')
   expect(html).toContain(`aria-label="${label} response status"`)
-  expect(html).toContain('title="How this answer was prepared"')
+  expect(html).toContain("response was prepared")
   expect(html).toContain("whitespace-normal")
   expect(html).not.toMatch(/provider|account|credit|consent|internal error/i)
  })
