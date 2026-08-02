@@ -2,7 +2,10 @@ import type {
  AIBrainAnswerModule,
  AIBrainConversationTurn,
  BrainAnswerEvaluation,
+ BrainFallbackReason,
+ BrainGenerationPath,
  BrainOrchestratorResult,
+ BrainRepairOutcome,
  BrainResponseCitation,
  CreatorBrainLearningQuestion,
  CreatorBrainResponse,
@@ -32,6 +35,7 @@ import {
  selectBrainCapabilities,
  shouldUseCurrentGrounding,
 } from "./BrainCapabilityRegistry"
+import { resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"
 import {
  cacheCurrentNicheResearch,
  readCachedCurrentNicheResearch,
@@ -245,6 +249,10 @@ const withTimeout = async <T>(promise: Promise<T>, milliseconds: number): Promis
   new Promise<T>((_, reject) => setTimeout(() => reject(new Error("Brain response timed out")), milliseconds)),
  ])
 
+export const BRAIN_MODEL_TIMEOUT_MS = 30_000
+export const BRAIN_REPAIR_TIMEOUT_MS = 20_000
+export const BRAIN_PROMPT_VERSION = "brain-orchestrator-v2"
+
 export interface RunBrainTurnInput {
  channelId?: string | null
  userText: string
@@ -260,15 +268,23 @@ export interface RunBrainTurnInput {
 }
 
 export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrchestratorResult> => {
+ const taskProfile = resolveBrainTaskProfile(input.userText)
  const pending = await beginAIBrainTurn({
   channelId: input.channelId,
   userText: input.userText,
-  metadata: { source: "brain_orchestrator", promptVersion: "brain-orchestrator-v1" },
+  metadata: { source: "brain_orchestrator", promptVersion: BRAIN_PROMPT_VERSION, taskProfileId: taskProfile.id },
  })
  const capabilities = selectBrainCapabilities({ userText: input.userText, snapshot: input.snapshot })
+ const capabilityIds = capabilities.map((capability) => capability.id)
  let nicheKnowledge: NicheKnowledgeProfile | null = null
  let currentResearch = ""
  let citations: BrainResponseCitation[] = []
+ let context = buildBrainContextPack({
+  systemPrompt: input.systemPrompt,
+  snapshot: input.snapshot,
+  recentTurns: input.recentTurns || [],
+  userText: input.userText,
+ })
  try {
   if (capabilities.some((capability) => capability.id === "niche-knowledge")) {
    nicheKnowledge = await (input.nicheResolver || resolveNicheKnowledge)({
@@ -297,7 +313,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
     nicheKnowledge = await cacheCurrentNicheResearch({ profile: nicheKnowledge, text: grounded.text, citations: grounded.citations })
    }
   }
-  const context = buildBrainContextPack({
+  context = buildBrainContextPack({
    systemPrompt: input.systemPrompt,
    snapshot: input.snapshot,
    recentTurns: input.recentTurns || [],
@@ -307,17 +323,20 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
   })
 
   let response = buildFallback(input.userText, input.snapshot, input.growthContext)
-  let repaired = false
   let status: "complete" | "fallback" = "fallback"
+  let generationPath: BrainGenerationPath = "basic_guidance"
+  let fallbackReason: BrainFallbackReason | undefined = input.allowModel ? undefined : "model_disabled"
+  let repairOutcome: BrainRepairOutcome = { attempted: false, succeeded: false, reasons: [] }
   if (input.allowModel) {
    const output = await withTimeout((input.modelGenerator || generateStructuredBrainResponse)({
     history: (input.history || []).slice(-8),
     userText: input.userText,
     systemInstruction: context.systemInstruction,
-   }), 30_000)
+   }), BRAIN_MODEL_TIMEOUT_MS)
    response = fromStructuredOutput(output, input.snapshot)
    response = { ...response, modules: formatCreatorGrowthModules(response, input.growthContext) }
    status = "complete"
+   generationPath = "model"
   }
 
   let evaluation = validateBrainResponse({
@@ -327,11 +346,60 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
    growthContext: input.growthContext,
   })
   if (!evaluation.passed && status === "complete") {
-   response = buildFallback(input.userText, input.snapshot, input.growthContext)
-   evaluation = validateBrainResponse({ response, snapshot: input.snapshot, recentTurns: input.recentTurns, growthContext: input.growthContext })
-   repaired = true
-   status = "fallback"
+   const initialRepairReasons = [...evaluation.repairReasons]
+   repairOutcome = { attempted: true, succeeded: false, reasons: initialRepairReasons, evaluationId: evaluation.id }
+   try {
+    const repairedOutput = await withTimeout((input.modelGenerator || generateStructuredBrainResponse)({
+     history: (input.history || []).slice(-8),
+     userText: input.userText,
+     systemInstruction: [
+      context.systemInstruction,
+      "",
+      "REPAIR THE PREVIOUS DRAFT:",
+      ...initialRepairReasons.map((reason) => `- ${reason}`),
+      "- Answer the creator's actual task directly.",
+      "- Use only supplied evidence for every numeric or channel-specific claim.",
+      "- Differ materially from recent responses in both wording and recommended action.",
+     ].join("\n"),
+    }), BRAIN_REPAIR_TIMEOUT_MS)
+    const repairedResponse = fromStructuredOutput(repairedOutput, input.snapshot)
+    const repairedCandidate = {
+     ...repairedResponse,
+     modules: formatCreatorGrowthModules(repairedResponse, input.growthContext),
+    }
+    const repairedEvaluation = validateBrainResponse({
+     response: repairedCandidate,
+     snapshot: input.snapshot,
+     recentTurns: input.recentTurns,
+     growthContext: input.growthContext,
+    })
+    if (repairedEvaluation.passed) {
+     response = repairedCandidate
+     evaluation = repairedEvaluation
+     generationPath = "repaired_model"
+     repairOutcome = { attempted: true, succeeded: true, reasons: initialRepairReasons, evaluationId: repairedEvaluation.id }
+    } else {
+     response = buildFallback(input.userText, input.snapshot, input.growthContext)
+     evaluation = validateBrainResponse({ response, snapshot: input.snapshot, recentTurns: input.recentTurns, growthContext: input.growthContext })
+     status = "fallback"
+     generationPath = "basic_guidance"
+     fallbackReason = "validation_failed"
+     repairOutcome = {
+      attempted: true,
+      succeeded: false,
+      reasons: [...initialRepairReasons, ...repairedEvaluation.repairReasons],
+      evaluationId: repairedEvaluation.id,
+     }
+    }
+   } catch {
+    response = buildFallback(input.userText, input.snapshot, input.growthContext)
+    evaluation = validateBrainResponse({ response, snapshot: input.snapshot, recentTurns: input.recentTurns, growthContext: input.growthContext })
+    status = "fallback"
+    generationPath = "basic_guidance"
+    fallbackReason = "repair_failed"
+   }
   }
+  response = { ...response, generationPath, ...(fallbackReason ? { fallbackReason } : {}) }
   const learning = await captureAIBrainLearningEvent({
    channelId: input.channelId || null,
    source: "copilot",
@@ -340,7 +408,15 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
    category: "answer_quality",
    confidence: evaluation.passed ? "high" : "medium",
    evidence: response.modules?.map((module) => module.title) || [],
-   metadata: { evaluationId: evaluation.id, capabilities: capabilities.map((capability) => capability.id) },
+   metadata: {
+    evaluationId: evaluation.id,
+    capabilities: capabilityIds,
+    taskProfileId: taskProfile.id,
+    generationPath,
+    fallbackReason,
+    promptVersion: BRAIN_PROMPT_VERSION,
+    repairReasons: repairOutcome.reasons,
+   },
   })
   const turn = await completeAIBrainTurn({
    turnId: pending.id,
@@ -351,19 +427,51 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
    citations,
    evaluation,
    learningEntryIds: [learning.id],
-   metadata: { capabilities: capabilities.map((capability) => capability.id), repaired },
+   metadata: {
+    capabilities: capabilityIds,
+    taskProfileId: taskProfile.id,
+    generationPath,
+    fallbackReason,
+    promptVersion: BRAIN_PROMPT_VERSION,
+    evaluationId: evaluation.id,
+    repairReasons: repairOutcome.reasons,
+    repaired: repairOutcome.attempted,
+   },
   })
   return {
    turn,
    response,
    modules: response.modules || [],
-   capabilities: capabilities.map((capability) => capability.id),
+   capabilities: capabilityIds,
    contextBudget: context.budget,
-   repaired,
+   repaired: repairOutcome.attempted,
+   generationPath,
+   fallbackReason,
+   repairOutcome,
   }
  } catch (error) {
-  const response = buildFallback(input.userText, input.snapshot, input.growthContext)
+  const generationPath: BrainGenerationPath = "basic_guidance"
+  const fallbackReason: BrainFallbackReason = input.allowModel ? "provider_error" : "model_disabled"
+  const repairOutcome: BrainRepairOutcome = { attempted: false, succeeded: false, reasons: [] }
+  const response = { ...buildFallback(input.userText, input.snapshot, input.growthContext), generationPath, fallbackReason }
   const evaluation = validateBrainResponse({ response, snapshot: input.snapshot, recentTurns: input.recentTurns, growthContext: input.growthContext })
+  const learning = await captureAIBrainLearningEvent({
+   channelId: input.channelId || null,
+   source: "copilot",
+   summary: `Copilot conversation: ${input.userText}`,
+   detail: response.keyInsight,
+   category: "answer_quality",
+   confidence: evaluation.passed ? "high" : "medium",
+   evidence: response.modules?.map((module) => module.title) || [],
+   metadata: {
+    evaluationId: evaluation.id,
+    capabilities: capabilityIds,
+    taskProfileId: taskProfile.id,
+    generationPath,
+    fallbackReason,
+    promptVersion: BRAIN_PROMPT_VERSION,
+   },
+  })
   const turn = await completeAIBrainTurn({
    turnId: pending.id,
    status: "fallback",
@@ -371,21 +479,28 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
    response,
    answerModules: response.modules,
    evaluation,
-   metadata: { orchestrationError: error instanceof Error ? error.message : String(error) },
-  })
-  const context = buildBrainContextPack({
-   systemPrompt: input.systemPrompt,
-   snapshot: input.snapshot,
-   recentTurns: input.recentTurns || [],
-   userText: input.userText,
+   learningEntryIds: [learning.id],
+   metadata: {
+    orchestrationError: error instanceof Error ? error.message : String(error),
+    capabilities: capabilityIds,
+    taskProfileId: taskProfile.id,
+    generationPath,
+    fallbackReason,
+    promptVersion: BRAIN_PROMPT_VERSION,
+    evaluationId: evaluation.id,
+    repaired: false,
+   },
   })
   return {
    turn,
    response,
    modules: response.modules || [],
-   capabilities: capabilities.map((capability) => capability.id),
+   capabilities: capabilityIds,
    contextBudget: context.budget,
-   repaired: true,
+   repaired: false,
+   generationPath,
+   fallbackReason,
+   repairOutcome,
   }
  }
 }

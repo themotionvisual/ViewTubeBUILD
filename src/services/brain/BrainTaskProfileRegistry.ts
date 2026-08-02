@@ -87,6 +87,7 @@ export const resolveBrainTaskProfile = (userText: string): BrainTaskProfile => {
   }
  }
  if (/\b(daily oracle|oracle)\b/i.test(value)) return profile("daily_oracle", "strategy", "goal_coach")
+ if (/\b(quick win|today'?s priority|today)\b/i.test(value)) return profile("goal_coach", "strategy", "goal_coach")
  if (/\b(first week plan|week plan|7.day plan|seven.day plan)\b/i.test(value)) return profile("first_week_plan", "strategy", "publishing_checklist")
  if (/\b(best video autopsy|video autopsy|autopsy)\b/i.test(value)) return profile("best_video_autopsy", "analytics", "analytics_diagnosis")
  if (/\b(revive|revival|comeback|return|not posted|haven't posted|after.*break|greet.*audience|greet.*subscriber|welcome back)\b/i.test(value)) {

@@ -4,7 +4,12 @@ import { fallbackContext } from "../../context/GlobalDataContextTypes"
 import { getVtSyncSnapshot } from "../../features/vt-sync-local"
 import { buildAIBrainContextSnapshot } from "../aiBrainCommandInterface"
 import { buildCreatorGrowthContext, resumeAIBrainThread } from "../aiBrainConversationStore"
-import { runBrainTurn, validateBrainResponse } from "../brain/BrainOrchestrator"
+import {
+ BRAIN_MODEL_TIMEOUT_MS,
+ BRAIN_REPAIR_TIMEOUT_MS,
+ runBrainTurn,
+ validateBrainResponse,
+} from "../brain/BrainOrchestrator"
 
 const makeSnapshot = () => buildAIBrainContextSnapshot({
  brain: fallbackContext.brain,
@@ -67,9 +72,16 @@ describe("BrainOrchestrator", () => {
   const restored = await resumeAIBrainThread("orchestrator-channel")
 
   expect(result.turn.status).toBe("complete")
+  expect(result.generationPath).toBe("model")
+  expect(result.repairOutcome).toEqual({ attempted: false, succeeded: false, reasons: [] })
   expect(result.modules).toHaveLength(2)
   expect(result.capabilities.length).toBeLessThanOrEqual(8)
   expect(result.contextBudget.maximumCharacters).toBe(24000)
+  expect(result.turn.metadata).toMatchObject({
+   generationPath: "model",
+   promptVersion: "brain-orchestrator-v2",
+   taskProfileId: "content_analysis",
+  })
   expect(restored.turns.at(-1)?.id).toBe(result.turn.id)
  })
 
@@ -88,6 +100,17 @@ describe("BrainOrchestrator", () => {
    questionAnswers: [],
    learningEntryIds: [],
   }
+  const modelGenerator = vi.fn(async () => ({
+   headline: "General advice",
+   keyInsight: "Try making a better video.",
+   body: "Try making a better video. Focus on quality and consistency.",
+   mode: "strategy_brief" as const,
+   modules: [
+    { title: "Next step", body: "Try making a better video.", tone: "white" as const, kind: "recommendation_stack" as const },
+    { title: "Plan", body: "Focus on quality and consistency.", tone: "white" as const, kind: "recommendation_stack" as const },
+   ],
+   actions: [],
+  }))
   const result = await runBrainTurn({
    channelId: "repeat-channel",
    userText: "What is my best video?",
@@ -97,22 +120,111 @@ describe("BrainOrchestrator", () => {
    recentTurns: [repeatedTurn],
    allowModel: true,
    nicheResolver: vi.fn(async () => nicheProfile),
-   modelGenerator: vi.fn(async () => ({
-    headline: "General advice",
-    keyInsight: "Try making a better video.",
-    body: "Try making a better video. Focus on quality and consistency.",
-    mode: "strategy_brief",
-    modules: [
-     { title: "Next step", body: "Try making a better video.", tone: "white", kind: "recommendation_stack" },
-     { title: "Plan", body: "Focus on quality and consistency.", tone: "white", kind: "recommendation_stack" },
-    ],
-    actions: [],
-   })),
+   modelGenerator,
   })
 
   expect(result.repaired).toBe(true)
+  expect(result.repairOutcome.attempted).toBe(true)
+  expect(modelGenerator).toHaveBeenCalledTimes(2)
   expect(result.response.keyInsight).toMatch(/Napoleon|Cavalry/i)
   expect(result.turn.status).toBe("fallback")
+  expect(result.generationPath).toBe("basic_guidance")
+  expect(result.fallbackReason).toBe("validation_failed")
+ })
+
+ it("accepts one materially improved repair response", async () => {
+  const snapshot = makeSnapshot()
+  const growthContext = buildCreatorGrowthContext(snapshot, [], [])
+  const modelGenerator = vi.fn()
+   .mockResolvedValueOnce({ headline: "Generic", keyInsight: "Be consistent.", body: "Your result will be 999999 views. Be consistent.", mode: "strategy_brief", modules: [], actions: [] })
+   .mockResolvedValueOnce({
+    headline: "Cavalry follow-up",
+    keyInsight: "Napoleon's Cavalry Explained is the clearest evidence for another military-systems breakdown.",
+    body: "Create an artillery follow-up using the same explanatory promise, then test a cavalry-versus-artillery title.",
+    mode: "video_idea_sprint",
+    modules: [
+     { title: "Draft the follow-up", body: "Outline the artillery story using Napoleon's Cavalry Explained as the control.", tone: "green", kind: "recommendation_stack" },
+     { title: "Test the package", body: "Compare a direct artillery title with a cavalry-versus-artillery contrast.", tone: "yellow", kind: "packaging_board" },
+    ],
+    actions: ["Create the artillery outline."],
+   })
+
+  const result = await runBrainTurn({
+   channelId: "repair-success-channel",
+   userText: "What should my next video be?",
+   snapshot,
+   growthContext,
+   systemPrompt: "Use channel evidence.",
+   allowModel: true,
+   nicheResolver: vi.fn(async () => nicheProfile),
+   modelGenerator,
+  })
+
+  expect(modelGenerator).toHaveBeenCalledTimes(2)
+  expect(modelGenerator.mock.calls[1]?.[0].systemInstruction).toContain("REPAIR THE PREVIOUS DRAFT")
+  expect(result.generationPath).toBe("repaired_model")
+  expect(result.repairOutcome.succeeded).toBe(true)
+  expect(result.turn.status).toBe("complete")
+ })
+
+ it("records provider and model-disabled fallback reasons without extra model calls", async () => {
+  const snapshot = makeSnapshot()
+  const growthContext = buildCreatorGrowthContext(snapshot, [], [])
+  const provider = vi.fn(async () => { throw new Error("provider unavailable") })
+  const failed = await runBrainTurn({
+   channelId: "provider-error-channel",
+   userText: "Give me a strategy",
+   snapshot,
+   growthContext,
+   systemPrompt: "Use evidence.",
+   allowModel: true,
+   nicheResolver: vi.fn(async () => nicheProfile),
+   modelGenerator: provider,
+  })
+  const disabled = await runBrainTurn({
+   channelId: "model-disabled-channel",
+   userText: "Give me a strategy",
+   snapshot,
+   growthContext,
+   systemPrompt: "Use evidence.",
+   allowModel: false,
+   nicheResolver: vi.fn(async () => nicheProfile),
+   modelGenerator: provider,
+  })
+
+  expect(provider).toHaveBeenCalledTimes(1)
+  expect(failed.fallbackReason).toBe("provider_error")
+  expect(failed.repaired).toBe(false)
+  expect(disabled.fallbackReason).toBe("model_disabled")
+ })
+
+ it("uses local guidance when the single repair call errors", async () => {
+  const snapshot = makeSnapshot()
+  const growthContext = buildCreatorGrowthContext(snapshot, [], [])
+  const modelGenerator = vi.fn()
+   .mockResolvedValueOnce({ headline: "Generic", keyInsight: "Be consistent.", body: "Expect 999999 views.", mode: "strategy_brief", modules: [], actions: [] })
+   .mockRejectedValueOnce(new Error("repair unavailable"))
+
+  const result = await runBrainTurn({
+   channelId: "repair-error-channel",
+   userText: "What should my next video be?",
+   snapshot,
+   growthContext,
+   systemPrompt: "Use evidence.",
+   allowModel: true,
+   nicheResolver: vi.fn(async () => nicheProfile),
+   modelGenerator,
+  })
+
+  expect(modelGenerator).toHaveBeenCalledTimes(2)
+  expect(result.generationPath).toBe("basic_guidance")
+  expect(result.fallbackReason).toBe("repair_failed")
+  expect(result.repairOutcome).toMatchObject({ attempted: true, succeeded: false })
+ })
+
+ it("keeps the first and repair timeouts bounded", () => {
+  expect(BRAIN_MODEL_TIMEOUT_MS).toBe(30_000)
+  expect(BRAIN_REPAIR_TIMEOUT_MS).toBe(20_000)
  })
 
  it("rejects unsupported numbers and high similarity", () => {
