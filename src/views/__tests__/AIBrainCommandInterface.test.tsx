@@ -3,7 +3,11 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { MemoryRouter } from "react-router-dom"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { GlobalDataContext, fallbackContext } from "../../context/GlobalDataContextTypes"
-import AIBrainCommandInterface from "../AIBrainCommandInterface"
+import { buildCreatorBrainPromptCards } from "../../services/aiBrainCommandInterface"
+import AIBrainCommandInterface, {
+ BrainGenerationBadge,
+ BrainPromptLibrary,
+} from "../AIBrainCommandInterface"
 
 const createStorage = () => {
  const store = new Map<string, string>()
@@ -47,7 +51,9 @@ describe("AIBrainCommandInterface", () => {
   const html = renderHub()
 
   expect(html).toContain("ViewTube Brain Hub")
-  expect(html).toContain("Ask ViewTube Copilot Anything")
+  expect(html).toContain("Prompt Library")
+  expect(html).not.toContain("Ask ViewTube Copilot Anything")
+  expect(html).not.toContain("views pending sign-in")
 
   // The creator never picks a mode: no tab controls of any kind.
   expect(html).not.toContain('role="tab"')
@@ -99,6 +105,29 @@ describe("AIBrainCommandInterface", () => {
   expect(html).toContain("AI Journal")
  })
 
+ it("keeps every guided prompt available independently of chat history", () => {
+  const cards = buildCreatorBrainPromptCards()
+  const html = renderToStaticMarkup(
+   <BrainPromptLibrary cards={cards} onPrompt={() => undefined} />,
+  )
+
+  expect(cards).toHaveLength(12)
+  expect(html).toContain('aria-labelledby="brain-prompt-library-title"')
+  expect(html).toContain("Analyze Channel Niche")
+  expect(html).toContain("Revenue Levers")
+  expect(html).toContain("Best Video Autopsy")
+  expect(html).toContain("Run Daily Oracle")
+  expect((html.match(/type="button"/g) || [])).toHaveLength(cards.length)
+ })
+
+ it("keeps prompt and channel-context launchers reachable on smaller screens", () => {
+  const html = renderHub()
+
+  expect(html).toContain('aria-label="Open prompt library"')
+  expect(html).toContain('aria-label="Open channel context"')
+  expect(html).not.toContain(">Growth prompts<")
+ })
+
  it("keeps internal diagnostics out of the creator workspace", () => {
   const html = renderHub()
 
@@ -107,5 +136,21 @@ describe("AIBrainCommandInterface", () => {
   expect(html).not.toContain("localStorage")
   expect(html).not.toContain("VT-SYNC")
   expect(html).not.toContain("manifest")
+ })
+
+ it.each([
+  ["model", "Full Brain"],
+  ["repaired_model", "Refined Answer"],
+  ["basic_guidance", "Basic Guidance"],
+ ] as const)("renders an accessible, wrapping %s generation badge", (path, label) => {
+  const html = renderToStaticMarkup(<BrainGenerationBadge path={path} />)
+
+  expect(html).toContain(label)
+  expect(html).toContain('role="status"')
+  expect(html).toContain('tabindex="0"')
+  expect(html).toContain(`aria-label="${label} response status"`)
+  expect(html).toContain('title="How this answer was prepared"')
+  expect(html).toContain("whitespace-normal")
+  expect(html).not.toMatch(/provider|account|credit|consent|internal error/i)
  })
 })

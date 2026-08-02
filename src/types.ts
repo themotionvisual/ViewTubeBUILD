@@ -1246,6 +1246,7 @@ export interface AIBrainEvidencePack {
 
 export interface AIBrainAnswerModule {
  id: string
+ code?: string
  title: string
  body: string
  tone: CreatorBrainResponseSection["tone"]
@@ -1355,6 +1356,8 @@ export interface CreatorBrainResponse {
  learningSummary: string
  questions: CreatorBrainLearningQuestion[]
  confidence: BrainConfidenceLevel
+ generationPath?: BrainGenerationPath
+ fallbackReason?: BrainFallbackReason
 }
 
 export interface AIBrainQuestionAnswer {
@@ -1512,6 +1515,21 @@ export interface BrainOrchestratorRequest {
  metadata?: Record<string, unknown>
 }
 
+export type BrainGenerationPath = "model" | "repaired_model" | "basic_guidance"
+
+export type BrainFallbackReason =
+ | "model_disabled"
+ | "provider_error"
+ | "validation_failed"
+ | "repair_failed"
+
+export interface BrainRepairOutcome {
+ attempted: boolean
+ succeeded: boolean
+ reasons: string[]
+ evaluationId?: string
+}
+
 export interface BrainOrchestratorResult {
  turn: AIBrainConversationTurn
  response: CreatorBrainResponse
@@ -1519,6 +1537,9 @@ export interface BrainOrchestratorResult {
  capabilities: string[]
  contextBudget: BrainContextBudget
  repaired: boolean
+ generationPath: BrainGenerationPath
+ fallbackReason?: BrainFallbackReason
+ repairOutcome: BrainRepairOutcome
 }
 
 export type CreatorGrowthCapabilityStatus = "ready" | "partial" | "missing"
