@@ -107,7 +107,7 @@ export const resolveBrainTaskProfile = (userText: string): BrainTaskProfile => {
  if (/\b(niche|positioning|channel identity)\b/i.test(value)) return profile("strategy", "strategy", "strategy_brief")
  if (/\b(revenue|rpm|cpm|moneti[sz]\w*|income|sponsor|money)\b/i.test(value)) return profile("revenue", "revenue", "revenue_levers")
  if (/\b(seo|keywords?|search|titles?|descriptions?|tags?)\b/i.test(value)) return profile("seo", "seo", "seo_keyword_plan")
- if (/\b(audience|viewer|subscriber|comment|community)\b/i.test(value)) return profile("audience", "audience", "strategy_brief")
+ if (/\b(audience|viewers?|subscribers?|comments?|community)\b/i.test(value)) return profile("audience", "audience", "audience_insight")
  if (/\b(publish|upload|schedule|checklist|launch|calendar|consistency)\b/i.test(value)) return profile("publishing", "publishing", "publishing_checklist")
  if (/\b(metric|analytics|views|watch time|retention|ctr|best video|perform|traffic|impressions?)\b/i.test(value)) return profile("analytics", "analytics", "analytics_diagnosis")
  if (/\b(journal|reflect|voice|style)\b/i.test(value)) return profile("journal", "strategy", "journal_reflection")
@@ -129,5 +129,12 @@ export const buildBrainTaskInstruction = (task: BrainTaskProfile): string => {
  if (task.id === "first_week_plan") return "FIRST WEEK PLAN TASK\nReturn seven distinct daily actions grounded in this channel's niche, top videos, and gaps."
  if (task.id === "best_video_autopsy") return "BEST VIDEO AUTOPSY TASK\nName the strongest video, explain its title, hook, retention, and shareability signals, then give a same-payoff/different-angle replication plan."
  if (task.id === "channel_revival") return "CHANNEL REVIVAL TASK\nGive a channel-specific comeback plan, first publish choice, subscriber re-engagement, and a paste-ready two-to-three sentence opening hook."
+ if (task.id === "audience") return [
+  "AUDIENCE LANGUAGE TASK",
+  "Identify what this audience appears to value and give concrete words or phrases the creator can use.",
+  "Separate direct audience language from inference based on topics, search behavior, and top videos.",
+  "If comments, search terms, or transcripts are missing, name that limitation and ask at most one focused question.",
+  "Set mode to audience_insight.",
+ ].join("\n")
  return ""
 }

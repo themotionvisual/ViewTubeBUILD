@@ -165,6 +165,21 @@ describe("Brain personalization and autonomous intent routing", () => {
   expect(ideas.mode).toBe("video_idea_sprint")
  })
 
+ it("answers an audience-language request with audience evidence and an honest evidence boundary", () => {
+  const forge = contextFor(syncedSnapshot(FORGE))
+  const question = "What does my audience seem to care about, and what language should I use to make future videos feel more relevant?"
+  const body = buildCreatorBrainLocalFallback(question, forge)
+  const response = formatCreatorBrainResponse(body, forge, { requestText: question })
+
+  expect(response.mode).toBe("audience_insight")
+  expect(response.headline).toBe("Audience Language Read")
+  expect(body).toMatch(/audience|viewer/i)
+  expect(body).toMatch(/direct|inferred|search|comment|transcript/i)
+  expect(body).not.toContain("turn it into one concrete creator action")
+  expect(response.modules?.map((module) => module.title)).toContain("Audience Signal")
+  expect(response.modules?.map((module) => module.title)).toContain("Language To Use")
+ })
+
  it("routes a formats question by its intent, not an incidental 'revenue' mention", () => {
   const forge = contextFor(syncedSnapshot(FORGE))
   const formatsQuestion = "Which content formats appear strongest for views, subscribers, retention, and revenue, and what should I double down on?"

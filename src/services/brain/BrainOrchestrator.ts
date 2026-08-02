@@ -128,6 +128,18 @@ export const validateBrainResponse = (input: {
  const novelty = Math.max(0, Math.round(100 - (similar[0]?.score || 0) * 100))
  const invented = unsupportedNumbers(input.response, input.snapshot)
  const modeMatches = !input.expectedMode || input.response.mode === input.expectedMode
+ const answerContent = [
+  input.response.keyInsight,
+  input.response.body,
+  ...(input.response.modules || []).flatMap((module) => [module.title, module.body]),
+  ...input.response.actions,
+ ].join(" ").toLowerCase()
+ const audienceTaskAnswered = input.expectedMode !== "audience_insight" || (
+  /\b(audience|viewers?|subscribers?)\b/.test(answerContent)
+  && /\b(care|value|interest|want|choose|watch|return|request|payoff)\w*\b/.test(answerContent)
+  && /\b(language|words?|phrases?|wording|search terms?|titles?|hooks?)\b/.test(answerContent)
+  && /\b(direct|infer\w*|evidence|comments?|transcripts?|search behavior|missing|available)\b/.test(answerContent)
+ )
  const average = (creatorSpecificity + evidenceCoverage + goalAlignment + actionability + novelty) / 5
  const repairReasons = [
   creatorSpecificity < 55 ? "Answer does not use available channel-specific evidence." : "",
@@ -135,6 +147,7 @@ export const validateBrainResponse = (input: {
   novelty < 35 ? "Answer is too similar to a recent response." : "",
   invented.length ? "Answer contains numbers that are not present in the evidence pack." : "",
   !modeMatches ? `Answer mode ${input.response.mode} does not match the requested ${input.expectedMode} task.` : "",
+  !audienceTaskAnswered ? "Answer the audience-language task with an audience finding, concrete language guidance, and an evidence boundary." : "",
  ].filter(Boolean)
  return {
   id: makeId("brain_answer_evaluation"),
@@ -201,7 +214,7 @@ export const fromStructuredOutput = (
 ): CreatorBrainResponse => {
  const allowedModes: CreatorBrainResponse["mode"][] = [
   "strategy_brief", "analytics_diagnosis", "seo_keyword_plan", "video_idea_sprint",
-  "journal_reflection", "goal_coach", "publishing_checklist", "revenue_levers", "creator_asset_draft",
+  "journal_reflection", "goal_coach", "publishing_checklist", "revenue_levers", "creator_asset_draft", "audience_insight",
  ]
  const mode = allowedModes.includes(output.mode) ? output.mode : "strategy_brief"
  const question: CreatorBrainLearningQuestion[] = output.question?.trim() ? [{

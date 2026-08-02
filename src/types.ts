@@ -1155,6 +1155,7 @@ export interface AIBrainConversationDigest {
   | "publishing_checklist"
   | "revenue_levers"
   | "creator_asset_draft"
+  | "audience_insight"
  keyFacts: string[]
  unresolvedQuestions: string[]
  learningEntryIds: string[]

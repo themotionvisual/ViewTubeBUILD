@@ -987,6 +987,7 @@ const titleForMode = (mode: CreatorBrainResponse["mode"]): string => ({
  publishing_checklist: "Publishing Checklist",
  revenue_levers: "Revenue Levers",
  creator_asset_draft: "Creator Asset Drafts",
+ audience_insight: "Audience Language Read",
 }[mode])
 
 const cleanModuleBody = (value: string): string =>
@@ -1200,6 +1201,36 @@ const formatIntentModules = (input: {
     "Before tomorrow, finish one asset you can judge: one rewritten title, one thumbnail variant, one Short cutdown, one hook draft, or one publish-ready outline.",
     "pink",
     "oracle",
+   ),
+  ]
+ }
+
+ if (mode === "audience_insight") {
+  const directTerms = evidencePack.searchTerms.slice(0, 3).map((term) => term.value).filter(Boolean)
+  return [
+   moduleFor(
+    "audience-signal",
+    "Audience Signal",
+    topVideo?.title
+     ? `${titleExample} and the recurring ${strongestLane} lane show the clearest available viewer-interest signal. This identifies the payoff they choose, not yet the exact words they use in comments.`
+     : `The recurring ${strongestLane} lane is the best available viewer-interest signal, but direct audience behavior is still limited.`,
+    "green",
+    "analytics",
+   ),
+   moduleFor(
+    "audience-language",
+    "Language To Use",
+    directTerms.length
+     ? `Use the audience's demonstrated search language directly: ${readableList(directTerms)}. Keep titles, hooks, and community posts concrete about the subject, transformation, or answer they came to get.`
+     : `Use specific topic and payoff language from ${titleExample} and ${strongestLane}; avoid broad phrases like “great content” or “learn more.”`,
+    "yellow",
+   ),
+   moduleFor(
+    "audience-evidence-boundary",
+    "What Would Confirm This",
+    "This read is inferred from channel topics, searches, and performance evidence. Synced comments and transcripts would confirm the audience's recurring questions, emotional language, and objections.",
+    "blue",
+    "analytics",
    ),
   ]
  }
@@ -1577,6 +1608,20 @@ export const buildCreatorBrainLocalFallback = (
   }
   const subject = task.explicitSubject || topVideo?.title || lane
   return `Here are paste-ready ${creatorAssetLabel[task.assetKind || "outline"].toLowerCase()} drafts for ${subject}, grounded in the strongest relevant channel evidence available.`
+ }
+
+ if (mode === "audience_insight") {
+  const directTerms = evidencePack.searchTerms.slice(0, 3).map((term) => term.value).filter(Boolean)
+  const interestSignal = topVideo?.title
+   ? `${topVideoText}, while ${laneList} are the recurring topics around it`
+   : `${laneList} are the strongest recurring topic signals available`
+  return [
+   `Your audience appears to care about the specific payoff behind ${interestSignal}.`,
+   directTerms.length
+    ? `The clearest direct language available comes from search behavior: ${readableList(directTerms)}. Reuse those concrete words in titles, opening hooks, descriptions, and community questions.`
+    : `Use concrete subject-and-payoff language from ${laneList}; avoid generic promises that could fit any channel.`,
+   "This is an inferred audience read from topics, searches, and video performance—not a claim about exact viewer wording. Comments and transcripts would confirm their recurring questions, emotional language, and objections.",
+  ].join(" ")
  }
 
  if (mode === "video_idea_sprint") {

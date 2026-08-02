@@ -256,4 +256,31 @@ describe("BrainOrchestrator", () => {
   expect(evaluation.passed).toBe(false)
   expect(evaluation.unsupportedNumbers).toEqual(expect.arrayContaining(["83%", "999999"]))
  })
+
+ it("rejects channel-specific advice that does not answer an audience-language task", () => {
+  const snapshot = makeSnapshot()
+  const response = {
+   id: "audience-response",
+   mode: "audience_insight" as const,
+   body: "Use Napoleon's Cavalry Explained as the control sample and make another video.",
+   evidenceIds: snapshot.evidencePack.evidenceIds,
+   headline: "Audience Language Read",
+   keyInsight: "Napoleon's Cavalry Explained is your strongest topic.",
+   evidenceChips: [],
+   modules: [],
+   actions: ["Make another Napoleon video."],
+   learningSummary: "",
+   questions: [],
+   confidence: "high" as const,
+  }
+
+  const evaluation = validateBrainResponse({
+   response,
+   snapshot,
+   expectedMode: "audience_insight",
+  })
+
+  expect(evaluation.passed).toBe(false)
+  expect(evaluation.repairReasons).toContain("Answer the audience-language task with an audience finding, concrete language guidance, and an evidence boundary.")
+ })
 })

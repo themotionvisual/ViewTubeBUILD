@@ -538,15 +538,16 @@ export const getAiClient = () => {
     if (!isAuthenticated) {
       throw new Error("AI generation with a custom key requires a connected ViewTube account. Please connect and retry.")
     }
-   } else
-   if (entitlement.tier === "free") {
+   } else {
+    if (entitlement.tier === "free") {
+     throw new Error(
+      "AI generation requires a paid plan. Upgrade to a paid plan in /settings?panel=billing.",
+     )
+    }
     throw new Error(
-     "AI generation requires a paid plan. Upgrade to a paid plan in /settings?panel=billing.",
+     `Not enough credits. Need ~${quote.creditDebitEstimate}, have ${Math.max(0, Math.floor(entitlement.creditBalance))}.`,
     )
    }
-   throw new Error(
-    `Not enough credits. Need ~${quote.creditDebitEstimate}, have ${Math.max(0, Math.floor(entitlement.creditBalance))}.`,
-   )
   }
 
  const response: any = await withCanonicalModel("generateContent", args, (nextArgs) =>
@@ -1641,6 +1642,7 @@ export interface StructuredBrainModelOutput {
   | "goal_coach"
   | "publishing_checklist"
   | "revenue_levers"
+  | "audience_insight"
  modules: Array<{
   title: string
   body: string
