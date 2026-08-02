@@ -46,6 +46,7 @@ import { listGenerationRecords } from "./generationStore"
 import { listWorkflowChains } from "./workflowEngine"
 import { isReviewOnlyBrainCommandAction } from "./brainOwnershipPolicy"
 import { scoreVideoPerformance } from "./brain/videoPerformanceScore"
+import { resolveBrainTaskProfile } from "./brain/BrainTaskProfileRegistry"
 import { getSuperTool, listPublicSuperTools } from "./superToolRegistry"
 
 export type AIBrainSourceStatus =
@@ -969,19 +970,7 @@ export const buildAIBrainContextSnapshot = ({
  * forms ("formats", "titles") so they don't silently fall through.
  */
 const responseModeForText = (text: string): CreatorBrainResponse["mode"] => {
- const lower = text.toLowerCase()
- if (/\b(daily oracle|quick win|today'?s priority|today)\b/.test(lower)) return "goal_coach"
- if (/\b(best|most successful|top)\b.*\b(video|upload)\b/.test(lower)) return "analytics_diagnosis"
- if (/\b(thumbnail|packaging|hook|click-?through)\b/.test(lower)) return "seo_keyword_plan"
- if (/\b(ideas?|topics?|angles?|formats?|series|episodes?|double down)\b/.test(lower)) return "video_idea_sprint"
- if (/\b(niche|positioning|channel identity)\b/.test(lower)) return "strategy_brief"
- if (/\b(seo|keywords?|search|titles?|descriptions?|tags?)\b/.test(lower)) return "seo_keyword_plan"
- if (/\b(revenue|income|rpm|cpm|money|monetiz\w*|sponsor)\b/.test(lower)) return "revenue_levers"
- if (/\b(retention|watch ?time|analytics|views|ctr|traffic|impressions?)\b/.test(lower)) return "analytics_diagnosis"
- if (/\b(journal|reflect|voice|style)\b/.test(lower)) return "journal_reflection"
- if (/\b(goals?|target|milestone|on pace|pace)\b/.test(lower)) return "goal_coach"
- if (/\b(publish|schedule|upload|calendar|consistency)\b/.test(lower)) return "publishing_checklist"
- return "strategy_brief"
+ return resolveBrainTaskProfile(text).answerMode
 }
 
 const titleForMode = (mode: CreatorBrainResponse["mode"]): string => ({

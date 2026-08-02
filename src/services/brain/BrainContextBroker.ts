@@ -4,7 +4,7 @@ import type {
  NicheKnowledgeProfile,
 } from "../../types"
 import type { AIBrainContextSnapshot } from "../aiBrainCommandInterface"
-import { inferBrainIntent } from "./BrainCapabilityRegistry"
+import { buildBrainTaskInstruction, resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"
 import { buildRelevantNicheKnowledgeContext } from "./NicheKnowledge"
 
 const clip = (value: string, maximum: number): string => value.slice(0, Math.max(0, maximum))
@@ -50,38 +50,7 @@ export const buildBrainContextPack = (input: {
  const knowledge = clip(buildRelevantNicheKnowledgeContext(input.nicheKnowledge || null, input.userText, 2200), 2200)
  const research = clip(input.currentResearch || "", 1800)
 
- const intent = inferBrainIntent(input.userText)
- const userTextLower = input.userText.toLowerCase()
-
- const generationInstruction = intent === "content_generation" ? [
-  "\nCONTENT GENERATION TASK",
-  "The creator asked you to draft a real creator asset (script, hook, title angles, pinned comment, description, tags, etc.).",
-  "Your response MUST contain the actual drafted asset — not strategy advice about the asset.",
-  "Use the channel evidence above to match the creator's established style, niche, and top-performing video patterns.",
-  "For 'new video about X': draft 3 title angle options, an opening hook (first 30 seconds), a description, and 10 tags.",
-  "For pinned comments: select the specific top videos by title and write one distinct comment per video.",
-  "For title angles: provide 3 concrete title options with different emotional hooks.",
-  "For descriptions/tags: write the full text ready to paste — no placeholders.",
-  "Set mode to creator_asset_draft. Keep body to the draft itself, not explanation.",
- ].join("\n") : ""
-
- const namedReadInstruction = !generationInstruction && /\b(daily oracle|oracle)\b/i.test(input.userText) ? [
-  "\nDAILY ORACLE TASK",
-  "Return exactly: one priority (the single most important thing to do today), one quick win (achievable in under 2 hours), and one measurable action (a specific outcome to judge by tomorrow).",
-  "Ground each item in the creator's actual channel data and top videos. No generic advice.",
- ].join("\n") : !generationInstruction && /\b(first week plan|week plan|7.day plan)\b/i.test(userTextLower) ? [
-  "\nFIRST WEEK PLAN TASK",
-  "Return a concrete 7-day action board for this specific channel. Each day: one specific task grounded in the channel's niche, top videos, and gaps.",
-  "Day 1-7 must be distinct actions. Reference actual video titles and niche topics. No generic creator advice.",
- ].join("\n") : !generationInstruction && /\b(best video autopsy|autopsy)\b/i.test(userTextLower) ? [
-  "\nBEST VIDEO AUTOPSY TASK",
-  "Break down the top-performing video by name: why the title worked, what the hook likely promised, why viewers stayed, and what made it shareable.",
-  "Then give a step-by-step replication plan for the next upload — same payoff, different angle.",
- ].join("\n") : !generationInstruction && /\b(revive|comeback|return|not posted|haven't posted|after.*break|greet.*audience|greet.*subscriber|welcome back)\b/i.test(userTextLower) ? [
-  "\nCHANNEL REVIVAL TASK",
-  "The creator is returning after a gap. Give them a specific comeback plan: what to say in the first video back, how to re-engage existing subscribers, and what to publish first based on their top-performing content.",
-  "Reference their actual top videos and niche. Draft the opening 2-3 sentences of a comeback hook they can use.",
- ].join("\n") : ""
+ const taskInstruction = buildBrainTaskInstruction(resolveBrainTaskProfile(input.userText))
 
  const sections = [
   system,
@@ -90,8 +59,7 @@ export const buildBrainContextPack = (input: {
   clippedConversation ? "\nRECENT CONVERSATION\n" + clippedConversation : "",
   knowledge ? "\nPUBLIC NICHE KNOWLEDGE\n" + knowledge : "",
   research ? "\nCURRENT PUBLIC RESEARCH\n" + research : "",
-  generationInstruction,
-  namedReadInstruction,
+  taskInstruction ? `\n${taskInstruction}` : "",
  ].filter(Boolean)
  let systemInstruction = sections.join("\n")
  if (systemInstruction.length > maximumCharacters) {

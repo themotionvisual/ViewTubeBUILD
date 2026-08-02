@@ -18,6 +18,7 @@ import {
  promoteBrainClaim,
  rebuildAffectedToolContextPacks,
 } from "./brain/BrainMemoryClaims"
+import { resolveBrainTaskProfile } from "./brain/BrainTaskProfileRegistry"
 
 const nowIso = () => new Date().toISOString()
 
@@ -328,16 +329,9 @@ export const buildConversationAnalyticDigest = (input: {
  const responseText = typeof input.response === "string"
   ? input.response
   : input.response?.keyInsight || input.response?.headline || ""
- const combined = `${input.userText} ${responseText}`.toLowerCase()
- const mode: AIBrainConversationDigest["answerMode"] =
-  /\b(revenue|income|rpm|money)\b/.test(combined) ? "revenue_levers"
-  : /\b(seo|keyword|search|title|description)\b/.test(combined) ? "seo_keyword_plan"
-  : /\b(analytics|views|ctr|retention|traffic)\b/.test(combined) ? "analytics_diagnosis"
-  : /\b(journal|reflect|feeling|direction)\b/.test(combined) ? "journal_reflection"
-  : /\b(goal|target|milestone)\b/.test(combined) ? "goal_coach"
-  : /\b(publish|schedule|upload)\b/.test(combined) ? "publishing_checklist"
-  : /\b(idea|topic|format|series)\b/.test(combined) ? "video_idea_sprint"
-  : "strategy_brief"
+ const mode: AIBrainConversationDigest["answerMode"] = typeof input.response === "object" && input.response?.mode
+  ? input.response.mode
+  : resolveBrainTaskProfile(`${input.userText} ${responseText}`).answerMode
 
  return {
   id: makeId("conversation_digest"),
