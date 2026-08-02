@@ -27,6 +27,15 @@ describe("creator asset drafts", () => {
   expect(items?.[0]?.detail).toMatch(/stood out|follow-up/i)
  })
 
+ it("preserves the complete title, hook, description, and tag package for a new video", () => {
+  const response = answer("I want to make a new video about restoring a seized hand plane")
+  const items = response.modules?.find((module) => module.id === "creator-asset-drafts")?.data?.items || []
+
+  expect(items.map((item) => item.title)).toEqual(["Title Angles", "Opening Hook", "Description", "Tags"])
+  expect(items.find((item) => item.title === "Title Angles")?.detail).toMatch(/\|/)
+  expect(items.find((item) => item.title === "Tags")?.detail?.split(",")).toHaveLength(10)
+ })
+
  it.each([
   ["community posts", "Community Post"],
   ["replies", "Reply"],

@@ -63,6 +63,7 @@ import { BrainContextRail } from "../components/brain/BrainContextRail"
 import { BrainEvidenceDrawer } from "../components/brain/BrainEvidenceDrawer"
 import { BrainQuestionPrompt } from "../components/brain/BrainQuestionPrompt"
 import type {
+ AIBrainAnswerModule,
  AIBrainConversationTurn,
  AIBrainFeedbackSignal,
  AIBrainLearningEntry,
@@ -70,6 +71,7 @@ import type {
  BrainGenerationPath,
  BrainQuickAction,
  CreatorBrainLearningQuestion,
+ CreatorBrainPromptCard,
  CreatorBrainResponse,
  CreatorInitialInsight,
 } from "../types"
@@ -98,9 +100,10 @@ export const BrainGenerationBadge: React.FC<{ path: BrainGenerationPath }> = ({ 
  return (
   <span
    role="status"
+   tabIndex={0}
    aria-label={`${badge.label} response status`}
    title="How this answer was prepared"
-   className="max-w-full whitespace-normal break-words rounded-[6px] border-[2px] border-black px-2 py-0.5 text-center text-[8px] font-black uppercase leading-3 tracking-[0.1em]"
+   className="max-w-full whitespace-normal break-words rounded-[6px] border-[2px] border-black px-2 py-0.5 text-center text-[8px] font-black uppercase leading-3 tracking-[0.1em] outline-none focus-visible:ring-[3px] focus-visible:ring-black"
    style={{ backgroundColor: badge.color }}
   >
    {badge.label}
@@ -240,7 +243,7 @@ const CreatorResponseCard: React.FC<{
    </article>
   )
  }
- const rawModules = response.modules?.length
+ const rawModules: AIBrainAnswerModule[] = response.modules?.length
   ? response.modules
   : (response.sections || []).map((section) => ({
      id: section.id,

@@ -1246,6 +1246,7 @@ export interface AIBrainEvidencePack {
 
 export interface AIBrainAnswerModule {
  id: string
+ code?: string
  title: string
  body: string
  tone: CreatorBrainResponseSection["tone"]

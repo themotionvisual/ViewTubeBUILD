@@ -5,6 +5,7 @@ import type {
  AIBrainLearningEntry,
  AIBrainPromotionCandidate,
  AIBrainReflectionTrace,
+ AIBrainReflectionStep,
  AIBrainSkillResource,
  BrainConfidenceLevel,
  CreatorBrainResponse,
@@ -128,7 +129,7 @@ export const buildAIBrainReflectionTrace = (
  const evidenceConfidence: BrainConfidenceLevel = hasEvidence ? entry.confidence : "low"
  const contradictionDecision = isCorrection ? "hold" : weakConfidence ? "ask_user" : "proceed"
  const finalDecision = isHighEnoughForPromotion(entry) && !isCorrection ? "promote" : "hold"
- const steps = [
+ const steps: AIBrainReflectionStep[] = [
   {
    id: "observation",
    label: "Observation",

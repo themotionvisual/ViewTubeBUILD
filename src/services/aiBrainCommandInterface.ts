@@ -5,7 +5,6 @@ import type {
  AIBrainEvidenceSignal,
  AIBrainEvidenceVideo,
  AIBrainAnswerModule,
- BrainCommandAction,
  BrainMemorySchema,
  BrainOnboardingBootstrapRun,
  BrainQuestionSet,
@@ -57,6 +56,8 @@ export type AIBrainSourceStatus =
  | "partial"
  | "missing"
  | "disabled"
+
+type BrainCommandAction = ReturnType<typeof listBrainCommandActions>[number]
 
 export type AIBrainToolRoute = {
  toolId: SuperToolId
@@ -1025,9 +1026,11 @@ const creatorAssetLabel: Record<BrainCreatorAssetKind, string> = {
  script_direction: "Script Direction",
  title: "Title",
  description: "Description",
+ tag: "Tag",
  caption: "Caption",
  outline: "Outline",
  cta: "CTA",
+ video_package: "Video Package",
 }
 
 const creatorAssetDraft = (
@@ -1045,6 +1048,7 @@ const creatorAssetDraft = (
  if (kind === "script_direction") return `OPEN: State the unanswered question behind “${subject}.” BEAT 1: show what viewers assume. BEAT 2: reveal ${angle}. BEAT 3: connect it to the larger ${lane} story. CLOSE: invite the viewer to choose the next angle.`
  if (kind === "title") return `${subject}: ${angle.replace(/^the /, "The ")} That Changes the Story`
  if (kind === "description") return `In this video, we break down ${subject}, reveal ${angle}, and show why it matters to anyone interested in ${lane}. Watch to the end, then share the detail you want explored next.`
+ if (kind === "tag") return [subject, lane, angle].join(", ")
  if (kind === "caption") return `${subject}, seen through ${angle}. Watch the full breakdown and tell me what I should cover next.`
  if (kind === "cta") return `If ${subject} gave you a new angle on ${lane}, subscribe for the next breakdown and leave the one question you want answered next.`
  return `1. Open with the central mystery behind ${subject}. 2. Establish the familiar explanation. 3. Reveal ${angle}. 4. Show why it matters to ${lane}. 5. End with the next unanswered question.`
@@ -1119,10 +1123,33 @@ const formatIntentModules = (input: {
  if (task.id === "creator_asset_draft") {
   const kind = task.assetKind || "outline"
   const evidenceTargets = evidencePack.topVideos.slice(0, task.requestedCount).map((video) => video.title)
-  const targets = task.explicitSubject
+ const targets = task.explicitSubject
    ? Array.from({ length: task.requestedCount }, () => task.explicitSubject as string)
    : evidenceTargets
-  const items = targets.map((target, index) => ({
+  const packageSubject = targets[0]
+  const packageTags = packageSubject ? Array.from(new Set([
+   packageSubject,
+   strongestLane,
+   ...packageSubject.toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length > 3),
+   "explained",
+   "breakdown",
+   "deep dive",
+   "analysis",
+   "guide",
+   "story",
+   "details",
+  ])).slice(0, 10) : []
+  while (packageTags.length < 10 && packageSubject) packageTags.push(`More ${packageSubject} ${packageTags.length + 1}`)
+  const items = kind === "video_package" && packageSubject ? [
+   {
+    title: "Title Angles",
+    detail: [0, 1, 2].map((index) => creatorAssetDraft("title", packageSubject, strongestLane, index)).join(" | "),
+    status: "Draft",
+   },
+   { title: "Opening Hook", detail: creatorAssetDraft("hook", packageSubject, strongestLane, 0), status: "Draft" },
+   { title: "Description", detail: creatorAssetDraft("description", packageSubject, strongestLane, 0), status: "Draft" },
+   { title: "Tags", detail: packageTags.join(","), status: "Draft" },
+  ] : targets.map((target, index) => ({
    title: task.explicitSubject && targets.length > 1 ? `${target} · Option ${index + 1}` : target,
    detail: creatorAssetDraft(kind, target, strongestLane, index),
    status: "Draft",

@@ -232,7 +232,7 @@ export const formatCreatorGrowthModules = (
  response: CreatorBrainResponse,
  growthContext: CreatorGrowthContext,
 ): AIBrainAnswerModule[] => {
- const modules = response.modules?.length ? response.modules : (response.sections || []).map((section) => ({
+ const modules: AIBrainAnswerModule[] = response.modules?.length ? response.modules : (response.sections || []).map((section) => ({
   id: section.id,
   title: section.title,
   body: section.body,
@@ -247,11 +247,13 @@ export const formatCreatorGrowthModules = (
   }))
   .filter((item) => !/profile confidence|growth read|content opportunity|what the brain learned|best next action|seo queue/i.test(item.title))
 
+ if (response.mode === "creator_asset_draft" && cleaned.length) return cleaned.slice(0, 4)
+
  if (cleaned.length >= 2) return cleaned.slice(0, 4)
 
  const topPattern = firstOr(growthContext.topPerformerPatterns, firstOr(growthContext.contentPillars, growthContext.inferredNiche))
  const goal = sanitizeCreatorFacingBrainCopy(growthContext.currentGoal)
- return [
+ const fallbackModules: AIBrainAnswerModule[] = [
   {
    id: "what-to-do-next",
    title: "What To Do Next",
@@ -275,7 +277,8 @@ export const formatCreatorGrowthModules = (
    tone: "yellow",
    source: "oracle",
   },
- ].slice(0, 3)
+ ]
+ return fallbackModules.slice(0, 3)
 }
 
 export const saveAIBrainConversationTurn = async (input: {
@@ -414,7 +417,7 @@ export const resumeAIBrainThread = async (
 ): Promise<{ thread: AIBrainConversationThread; turns: AIBrainConversationTurn[] }> => {
  const normalizedChannelId = channelId || null
  const threadId = defaultThreadId(normalizedChannelId)
- let turns = (await listAIBrainConversationTurnsDB(normalizedChannelId))
+ let turns: AIBrainConversationTurn[] = (await listAIBrainConversationTurnsDB(normalizedChannelId))
   .filter((turn) => !turn.threadId || turn.threadId === threadId)
   .map((turn) => ({
    ...turn,

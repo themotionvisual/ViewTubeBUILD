@@ -118,6 +118,7 @@ describe("AIBrainCommandInterface", () => {
 
   expect(html).toContain(label)
   expect(html).toContain('role="status"')
+  expect(html).toContain('tabindex="0"')
   expect(html).toContain(`aria-label="${label} response status"`)
   expect(html).toContain('title="How this answer was prepared"')
   expect(html).toContain("whitespace-normal")

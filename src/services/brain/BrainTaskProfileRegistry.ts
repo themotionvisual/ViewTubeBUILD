@@ -24,9 +24,11 @@ export type BrainCreatorAssetKind =
  | "script_direction"
  | "title"
  | "description"
+ | "tag"
  | "caption"
  | "outline"
  | "cta"
+ | "video_package"
 
 export interface BrainTaskProfile {
  id: BrainTaskProfileId
@@ -48,14 +50,20 @@ const resolveAssetKind = (text: string): BrainCreatorAssetKind => {
  if (/\bhooks?\b/i.test(text)) return "hook"
  if (/\bscripts?|intros?|outros?\b/i.test(text)) return "script_direction"
  if (/\btitles?\b/i.test(text)) return "title"
- if (/\bdescriptions?|tags?\b/i.test(text)) return "description"
+ if (/\bdescriptions?\b/i.test(text)) return "description"
+ if (/\btags?\b/i.test(text)) return "tag"
  if (/\bcaptions?\b/i.test(text)) return "caption"
  if (/\bcalls? to action|\bctas?\b/i.test(text)) return "cta"
+ if (videoCreation.test(text)) return "video_package"
  return "outline"
 }
 
 const requestedCount = (text: string): number => {
- const parsed = Number(text.match(/\b(\d{1,3})\b/)?.[1] || 3)
+ const parsed = Number(
+  text.match(/\b(?:write|draft|create|generate|give me|make me)\s+(\d{1,3})\b/i)?.[1]
+  || text.match(/\b(?:top|for)\s+(\d{1,3})\s+(?:videos?|scripts?|hooks?|comments?|posts?|replies?|titles?|descriptions?|captions?|outlines?|ctas?)\b/i)?.[1]
+  || 3,
+ )
  return Math.max(1, Math.min(10, parsed))
 }
 
@@ -114,6 +122,7 @@ export const buildBrainTaskInstruction = (task: BrainTaskProfile): string => {
   "Draft the requested creator asset directly; do not substitute advice about drafting it.",
   "Prefer the creator's explicit topic or title, then the supplied top-video evidence.",
   "If neither is available, ask exactly one focused topic-or-title question instead of producing a generic draft.",
+  "For a new video about a topic, include three title angles, an opening hook, a paste-ready description, and ten tags.",
   `Return 1-10 paste-ready drafts as requested (resolved count: ${task.requestedCount}) and set mode to creator_asset_draft.`,
  ].join("\n")
  if (task.id === "daily_oracle") return "DAILY ORACLE TASK\nReturn one evidence-grounded priority, one quick win under two hours, and one measurable action for tomorrow."

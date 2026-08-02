@@ -99,6 +99,7 @@ export const validateBrainResponse = (input: {
  snapshot: AIBrainContextSnapshot
  recentTurns?: AIBrainConversationTurn[]
  growthContext?: CreatorGrowthContext | null
+ expectedMode?: CreatorBrainResponse["mode"]
 }): BrainAnswerEvaluation => {
  const text = responseText(input.response).toLowerCase()
  const evidenceTerms = [
@@ -126,12 +127,14 @@ export const validateBrainResponse = (input: {
   .filter((item) => item.score >= 0.68)
  const novelty = Math.max(0, Math.round(100 - (similar[0]?.score || 0) * 100))
  const invented = unsupportedNumbers(input.response, input.snapshot)
+ const modeMatches = !input.expectedMode || input.response.mode === input.expectedMode
  const average = (creatorSpecificity + evidenceCoverage + goalAlignment + actionability + novelty) / 5
  const repairReasons = [
   creatorSpecificity < 55 ? "Answer does not use available channel-specific evidence." : "",
   actionability < 55 ? "Answer lacks a concrete creator action." : "",
   novelty < 35 ? "Answer is too similar to a recent response." : "",
   invented.length ? "Answer contains numbers that are not present in the evidence pack." : "",
+  !modeMatches ? `Answer mode ${input.response.mode} does not match the requested ${input.expectedMode} task.` : "",
  ].filter(Boolean)
  return {
   id: makeId("brain_answer_evaluation"),
@@ -344,6 +347,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
    snapshot: input.snapshot,
    recentTurns: input.recentTurns,
    growthContext: input.growthContext,
+   expectedMode: taskProfile.answerMode,
   })
   if (!evaluation.passed && status === "complete") {
    const initialRepairReasons = [...evaluation.repairReasons]
@@ -372,6 +376,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
      snapshot: input.snapshot,
      recentTurns: input.recentTurns,
      growthContext: input.growthContext,
+     expectedMode: taskProfile.answerMode,
     })
     if (repairedEvaluation.passed) {
      response = repairedCandidate
@@ -380,7 +385,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
      repairOutcome = { attempted: true, succeeded: true, reasons: initialRepairReasons, evaluationId: repairedEvaluation.id }
     } else {
      response = buildFallback(input.userText, input.snapshot, input.growthContext)
-     evaluation = validateBrainResponse({ response, snapshot: input.snapshot, recentTurns: input.recentTurns, growthContext: input.growthContext })
+     evaluation = validateBrainResponse({ response, snapshot: input.snapshot, recentTurns: input.recentTurns, growthContext: input.growthContext, expectedMode: taskProfile.answerMode })
      status = "fallback"
      generationPath = "basic_guidance"
      fallbackReason = "validation_failed"
@@ -393,7 +398,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
     }
    } catch {
     response = buildFallback(input.userText, input.snapshot, input.growthContext)
-    evaluation = validateBrainResponse({ response, snapshot: input.snapshot, recentTurns: input.recentTurns, growthContext: input.growthContext })
+    evaluation = validateBrainResponse({ response, snapshot: input.snapshot, recentTurns: input.recentTurns, growthContext: input.growthContext, expectedMode: taskProfile.answerMode })
     status = "fallback"
     generationPath = "basic_guidance"
     fallbackReason = "repair_failed"
@@ -454,7 +459,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
   const fallbackReason: BrainFallbackReason = input.allowModel ? "provider_error" : "model_disabled"
   const repairOutcome: BrainRepairOutcome = { attempted: false, succeeded: false, reasons: [] }
   const response = { ...buildFallback(input.userText, input.snapshot, input.growthContext), generationPath, fallbackReason }
-  const evaluation = validateBrainResponse({ response, snapshot: input.snapshot, recentTurns: input.recentTurns, growthContext: input.growthContext })
+  const evaluation = validateBrainResponse({ response, snapshot: input.snapshot, recentTurns: input.recentTurns, growthContext: input.growthContext, expectedMode: taskProfile.answerMode })
   const learning = await captureAIBrainLearningEvent({
    channelId: input.channelId || null,
    source: "copilot",

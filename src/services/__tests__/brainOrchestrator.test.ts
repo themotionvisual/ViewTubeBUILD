@@ -4,6 +4,7 @@ import { fallbackContext } from "../../context/GlobalDataContextTypes"
 import { getVtSyncSnapshot } from "../../features/vt-sync-local"
 import { buildAIBrainContextSnapshot } from "../aiBrainCommandInterface"
 import { buildCreatorGrowthContext, resumeAIBrainThread } from "../aiBrainConversationStore"
+import type { StructuredBrainModelOutput } from "../gemini"
 import {
  BRAIN_MODEL_TIMEOUT_MS,
  BRAIN_REPAIR_TIMEOUT_MS,
@@ -67,7 +68,7 @@ describe("BrainOrchestrator", () => {
      { title: "Packaging test", body: "Test a cavalry versus artillery contrast against a single-system explainer.", tone: "yellow", kind: "packaging_board" },
     ],
     actions: ["Outline the artillery follow-up.", "Draft two title promises."],
-   })),
+   } as StructuredBrainModelOutput)),
   })
   const restored = await resumeAIBrainThread("orchestrator-channel")
 
@@ -136,7 +137,14 @@ describe("BrainOrchestrator", () => {
   const snapshot = makeSnapshot()
   const growthContext = buildCreatorGrowthContext(snapshot, [], [])
   const modelGenerator = vi.fn()
-   .mockResolvedValueOnce({ headline: "Generic", keyInsight: "Be consistent.", body: "Your result will be 999999 views. Be consistent.", mode: "strategy_brief", modules: [], actions: [] })
+   .mockResolvedValueOnce({
+    headline: "Cavalry strategy",
+    keyInsight: "Napoleon's Cavalry Explained is your strongest signal.",
+    body: "Use Napoleon's Cavalry Explained to create an artillery follow-up.",
+    mode: "strategy_brief",
+    modules: [{ title: "Next move", body: "Create the artillery follow-up.", tone: "green", kind: "recommendation_stack" }],
+    actions: ["Create the artillery outline."],
+   })
    .mockResolvedValueOnce({
     headline: "Cavalry follow-up",
     keyInsight: "Napoleon's Cavalry Explained is the clearest evidence for another military-systems breakdown.",
