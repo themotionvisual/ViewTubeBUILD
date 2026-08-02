@@ -46,7 +46,10 @@ import { listGenerationRecords } from "./generationStore"
 import { listWorkflowChains } from "./workflowEngine"
 import { isReviewOnlyBrainCommandAction } from "./brainOwnershipPolicy"
 import { scoreVideoPerformance } from "./brain/videoPerformanceScore"
-import { resolveBrainTaskProfile } from "./brain/BrainTaskProfileRegistry"
+import {
+ resolveBrainTaskProfile,
+ type BrainCreatorAssetKind,
+} from "./brain/BrainTaskProfileRegistry"
 import { getSuperTool, listPublicSuperTools } from "./superToolRegistry"
 
 export type AIBrainSourceStatus =
@@ -982,6 +985,7 @@ const titleForMode = (mode: CreatorBrainResponse["mode"]): string => ({
  goal_coach: "Goal Coach",
  publishing_checklist: "Publishing Checklist",
  revenue_levers: "Revenue Levers",
+ creator_asset_draft: "Creator Asset Drafts",
 }[mode])
 
 const cleanModuleBody = (value: string): string =>
@@ -1011,6 +1015,39 @@ const compactCount = (value: number): string => {
  if (Math.abs(value) >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
  if (Math.abs(value) >= 1_000) return `${Math.round(value / 1_000)}K`
  return value.toLocaleString()
+}
+
+const creatorAssetLabel: Record<BrainCreatorAssetKind, string> = {
+ pinned_comment: "Pinned Comment",
+ community_post: "Community Post",
+ reply: "Reply",
+ hook: "Opening Hook",
+ script_direction: "Script Direction",
+ title: "Title",
+ description: "Description",
+ caption: "Caption",
+ outline: "Outline",
+ cta: "CTA",
+}
+
+const creatorAssetDraft = (
+ kind: BrainCreatorAssetKind,
+ subject: string,
+ lane: string,
+ option: number,
+): string => {
+ const variants = ["the overlooked detail", "the surprising turn", "the practical payoff"]
+ const angle = variants[option % variants.length]
+ if (kind === "pinned_comment") return `What detail in “${subject}” stood out most to you, and what should I explore next? I’m reading every answer for the follow-up.`
+ if (kind === "community_post") return `New on the channel: “${subject}.” Before you watch, which part do you think will change the way you see ${lane}?`
+ if (kind === "reply") return `Thanks for watching “${subject}.” That’s a useful point. Which part would you like me to expand in a follow-up?`
+ if (kind === "hook") return `Most people know the familiar version of ${subject}. But ${angle} changes how the whole story works—and that’s what we’re unpacking today.`
+ if (kind === "script_direction") return `OPEN: State the unanswered question behind “${subject}.” BEAT 1: show what viewers assume. BEAT 2: reveal ${angle}. BEAT 3: connect it to the larger ${lane} story. CLOSE: invite the viewer to choose the next angle.`
+ if (kind === "title") return `${subject}: ${angle.replace(/^the /, "The ")} That Changes the Story`
+ if (kind === "description") return `In this video, we break down ${subject}, reveal ${angle}, and show why it matters to anyone interested in ${lane}. Watch to the end, then share the detail you want explored next.`
+ if (kind === "caption") return `${subject}, seen through ${angle}. Watch the full breakdown and tell me what I should cover next.`
+ if (kind === "cta") return `If ${subject} gave you a new angle on ${lane}, subscribe for the next breakdown and leave the one question you want answered next.`
+ return `1. Open with the central mystery behind ${subject}. 2. Establish the familiar explanation. 3. Reveal ${angle}. 4. Show why it matters to ${lane}. 5. End with the next unanswered question.`
 }
 
 /**
@@ -1078,6 +1115,40 @@ const formatIntentModules = (input: {
  const asksPackaging = /\b(title|thumbnail|ctr|packaging|hook)\b/i.test(requestText)
  const asksSeries = /\b(series|episodes|schedule|recurring)\b/i.test(requestText)
  const asksRevenue = mode === "revenue_levers" || /\b(revenue|rpm|monetiz|income|money)\b/i.test(requestText)
+ const task = resolveBrainTaskProfile(requestText)
+ if (task.id === "creator_asset_draft") {
+  const kind = task.assetKind || "outline"
+  const evidenceTargets = evidencePack.topVideos.slice(0, task.requestedCount).map((video) => video.title)
+  const targets = task.explicitSubject
+   ? Array.from({ length: task.requestedCount }, () => task.explicitSubject as string)
+   : evidenceTargets
+  const items = targets.map((target, index) => ({
+   title: task.explicitSubject && targets.length > 1 ? `${target} · Option ${index + 1}` : target,
+   detail: creatorAssetDraft(kind, target, strongestLane, index),
+   status: "Draft",
+  }))
+  return [
+   {
+    id: "creator-asset-drafts",
+    title: `${creatorAssetLabel[kind]} Drafts`,
+    body: items.length
+     ? "Paste-ready drafts grounded in the topic or channel evidence available for this request."
+     : "Tell me the topic or working title and I’ll draft this directly.",
+    tone: "green",
+    source: "growth",
+    kind: "action_table",
+    data: items.length ? { items } : { missingReason: "A topic or video title is required for a specific draft." },
+   },
+   moduleFor(
+    "creator-asset-review",
+    items.length ? "Ready To Personalize" : "One Detail Needed",
+    items.length
+     ? "Choose the strongest draft, tune any phrase that does not sound like your voice, and paste it into the intended creator surface."
+     : "What topic or working video title should these drafts be about?",
+    "yellow",
+   ),
+  ]
+ }
  if (asksOracle) {
   return [
    moduleFor(
@@ -1387,7 +1458,17 @@ export const formatCreatorBrainResponse = (
  const requestText = options.requestText || ""
  const explicitlyRequestsQuestions = /\b(ask me|question me|what do you need|clarify with me)\b/i.test(requestText)
  const needsMissingContextQuestion = evidencePack.dataStatus === "missing" && !snapshot.brain.targetNiche && !snapshot.brain.coreConcept
- const questions = !questionSeen && (explicitlyRequestsQuestions || needsMissingContextQuestion)
+ const task = resolveBrainTaskProfile(requestText)
+ const needsCreatorAssetSubject = task.id === "creator_asset_draft"
+  && !task.explicitSubject
+  && evidencePack.topVideos.length === 0
+ const questions = needsCreatorAssetSubject ? [{
+  id: "creator-asset-subject",
+  question: "What topic or working video title should these drafts be about?",
+  reason: "A specific subject lets the Brain produce a paste-ready asset instead of generic copy.",
+  category: "content_style" as const,
+  confidence: "high" as const,
+ }] : !questionSeen && (explicitlyRequestsQuestions || needsMissingContextQuestion)
   ? buildBrainLearningQuestions(snapshot).slice(0, 1)
   : []
  const modules = formatIntentModules({
@@ -1461,6 +1542,15 @@ export const buildCreatorBrainLocalFallback = (
  // Everything else routes through the same classifier the headline uses, so the
  // body and headline can never disagree and different questions get different bodies.
  const mode = responseModeForText(requestText)
+
+ if (mode === "creator_asset_draft") {
+  const task = resolveBrainTaskProfile(requestText)
+  if (!task.explicitSubject && !evidencePack.topVideos.length) {
+   return "I need one topic or working video title before I can make this draft specific and paste-ready."
+  }
+  const subject = task.explicitSubject || topVideo?.title || lane
+  return `Here are paste-ready ${creatorAssetLabel[task.assetKind || "outline"].toLowerCase()} drafts for ${subject}, grounded in the strongest relevant channel evidence available.`
+ }
 
  if (mode === "video_idea_sprint") {
   return [
@@ -1564,7 +1654,8 @@ export const buildAIBrainSystemPrompt = (input: AIBrainContextInput): string => 
   "4. If evidence is missing, say what you need in normal creator language. Do not pretend missing analytics are zero.",
   "5. You may prepare reviewed command handoffs, but you cannot sync, upload, delete, publish, render, or mutate YouTube directly.",
   "6. Do not use raw markdown markers, code fences, backticks, JSON blocks, internal tool ids, or developer-facing labels in the final answer.",
-  "7. Vary the answer shape based on intent: strategy brief, analytics diagnosis, SEO plan, idea sprint, journal reflection, goal coach, publishing checklist, or revenue levers.",
+  "7. Vary the answer shape based on intent: strategy brief, analytics diagnosis, SEO plan, idea sprint, creator asset draft, journal reflection, goal coach, publishing checklist, or revenue levers.",
+  "7a. When asked to draft an asset, return the requested paste-ready copy directly. Prefer an explicit topic or title, then channel top-video evidence; otherwise ask one focused topic-or-title question.",
   "8. End with 1-2 intentional questions only when the answer would improve if the Brain knew more about the creator or channel.",
   "9. Do not mention sync failures, bundles, manifests, APIs, functions, databases, internal diagnostics, or implementation details to the creator.",
   "10. Keep every answer focused on YouTube success: stronger content, better titles and thumbnails, views, subscribers, comments, likes, watch time, revenue, consistency, output, publishing, SEO, and audience fit.",

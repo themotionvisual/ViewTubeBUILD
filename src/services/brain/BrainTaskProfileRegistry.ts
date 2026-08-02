@@ -38,7 +38,7 @@ export interface BrainTaskProfile {
 }
 
 const creationVerb = /\b(write|draft|create|generate|rewrite|make me|give me|compose|produce)\b/i
-const creatorAsset = /\b(scripts?|hooks?|pinned comments?|comments?|community posts?|posts?|replies?|titles?|descriptions?|tags?|captions?|outlines?|intros?|outros?|calls? to action|cta)\b/i
+const creatorAsset = /\b(scripts?|hooks?|pinned comments?|comments?|community posts?|posts?|replies?|titles?|descriptions?|tags?|captions?|outlines?|intros?|outros?|calls? to action|ctas?)\b/i
 const videoCreation = /\b(want to make|make a new video|new video about|video about|video on|create a video|plan a video|plan.*video)\b/i
 
 const resolveAssetKind = (text: string): BrainCreatorAssetKind => {
@@ -50,7 +50,7 @@ const resolveAssetKind = (text: string): BrainCreatorAssetKind => {
  if (/\btitles?\b/i.test(text)) return "title"
  if (/\bdescriptions?|tags?\b/i.test(text)) return "description"
  if (/\bcaptions?\b/i.test(text)) return "caption"
- if (/\bcalls? to action|\bcta\b/i.test(text)) return "cta"
+ if (/\bcalls? to action|\bctas?\b/i.test(text)) return "cta"
  return "outline"
 }
 
