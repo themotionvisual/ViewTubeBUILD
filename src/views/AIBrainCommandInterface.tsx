@@ -67,6 +67,7 @@ import type {
  AIBrainFeedbackSignal,
  AIBrainLearningEntry,
  AIBrainQuestionAnswer,
+ BrainGenerationPath,
  BrainQuickAction,
  CreatorBrainLearningQuestion,
  CreatorBrainResponse,
@@ -85,6 +86,27 @@ const shellCard = "rounded-[16px] border-[4px] border-black bg-white shadow-[6px
 const innerCard = "rounded-[10px] border-[2px] border-black bg-white"
 const kpiButton =
  "inline-flex items-center gap-2 rounded-[8px] border-[2px] border-black bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[0.08em] transition hover:bg-[#3FEE56]"
+
+const GENERATION_BADGES: Record<BrainGenerationPath, { label: string; color: string }> = {
+ model: { label: "Full Brain", color: "#00FF00" },
+ repaired_model: { label: "Refined Answer", color: "#36E0F6" },
+ basic_guidance: { label: "Basic Guidance", color: "#FFDA47" },
+}
+
+export const BrainGenerationBadge: React.FC<{ path: BrainGenerationPath }> = ({ path }) => {
+ const badge = GENERATION_BADGES[path]
+ return (
+  <span
+   role="status"
+   aria-label={`${badge.label} response status`}
+   title="How this answer was prepared"
+   className="max-w-full whitespace-normal break-words rounded-[6px] border-[2px] border-black px-2 py-0.5 text-center text-[8px] font-black uppercase leading-3 tracking-[0.1em]"
+   style={{ backgroundColor: badge.color }}
+  >
+   {badge.label}
+  </span>
+ )
+}
 
 const metricText = (value: number | null | undefined) =>
  typeof value === "number" && Number.isFinite(value) ? value.toLocaleString() : "Not synced yet"
@@ -243,7 +265,10 @@ const CreatorResponseCard: React.FC<{
  return (
   <article className="flex w-full max-w-[680px] shrink-0 flex-col overflow-hidden rounded-[12px] border-[2px] border-black bg-white shadow-[4px_4px_0_0_#000]">
    <div className="shrink-0 border-b-[2px] border-black px-3 py-2" style={{ backgroundColor: TOOLBOX_PALETTE[5] }}>
-    <div className="text-[9px] font-black uppercase tracking-[0.16em] text-black/55">ViewTube Copilot</div>
+    <div className="flex flex-wrap items-start justify-between gap-1.5">
+     <div className="text-[9px] font-black uppercase tracking-[0.16em] text-black/55">ViewTube Copilot</div>
+     {response.generationPath ? <BrainGenerationBadge path={response.generationPath} /> : null}
+    </div>
     <h3 className="text-lg font-[1000] uppercase leading-none sm:text-xl">
      {sanitizeCreatorFacingBrainCopy(response.headline)}
     </h3>
@@ -591,7 +616,12 @@ const AIBrainCommandInterface: React.FC = () => {
    console.warn("[AIBrain] Copilot answer failed:", message)
    const fallbackText = buildCreatorBrainLocalFallback(userText, snapshot)
    const fallbackResponse = formatCreatorBrainResponse(fallbackText, snapshot, { requestText: userText })
-   const response = { ...fallbackResponse, modules: formatCreatorGrowthModules(fallbackResponse, creatorGrowthContext) }
+   const response = {
+    ...fallbackResponse,
+    modules: formatCreatorGrowthModules(fallbackResponse, creatorGrowthContext),
+    generationPath: "basic_guidance" as const,
+    fallbackReason: "provider_error" as const,
+   }
    setMessages((current) => [
     ...current,
     { id: makeMessageId(), role: "model", text: fallbackText, response },

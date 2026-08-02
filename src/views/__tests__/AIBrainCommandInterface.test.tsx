@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { MemoryRouter } from "react-router-dom"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { GlobalDataContext, fallbackContext } from "../../context/GlobalDataContextTypes"
-import AIBrainCommandInterface from "../AIBrainCommandInterface"
+import AIBrainCommandInterface, { BrainGenerationBadge } from "../AIBrainCommandInterface"
 
 const createStorage = () => {
  const store = new Map<string, string>()
@@ -107,5 +107,20 @@ describe("AIBrainCommandInterface", () => {
   expect(html).not.toContain("localStorage")
   expect(html).not.toContain("VT-SYNC")
   expect(html).not.toContain("manifest")
+ })
+
+ it.each([
+  ["model", "Full Brain"],
+  ["repaired_model", "Refined Answer"],
+  ["basic_guidance", "Basic Guidance"],
+ ] as const)("renders an accessible, wrapping %s generation badge", (path, label) => {
+  const html = renderToStaticMarkup(<BrainGenerationBadge path={path} />)
+
+  expect(html).toContain(label)
+  expect(html).toContain('role="status"')
+  expect(html).toContain(`aria-label="${label} response status"`)
+  expect(html).toContain('title="How this answer was prepared"')
+  expect(html).toContain("whitespace-normal")
+  expect(html).not.toMatch(/provider|account|credit|consent|internal error/i)
  })
 })
