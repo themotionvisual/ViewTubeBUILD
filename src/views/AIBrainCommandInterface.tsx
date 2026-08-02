@@ -6,11 +6,13 @@ import {
  Brain,
  ChevronLeft,
  HelpCircle,
+ LayoutGrid,
  MessageSquare,
  PanelRight,
  Send,
  ThumbsDown,
  ThumbsUp,
+ X,
  Zap,
 } from "lucide-react"
 import { Toolbox } from "../components/Toolbox"
@@ -111,35 +113,6 @@ export const BrainGenerationBadge: React.FC<{ path: BrainGenerationPath }> = ({ 
  )
 }
 
-const metricText = (value: number | null | undefined) =>
- typeof value === "number" && Number.isFinite(value) ? value.toLocaleString() : "Not synced yet"
-
-/**
- * An honest one-line channel status.
- *
- * Local synced data and account sign-in are two different things: a creator can be
- * signed out while their imported data still sits in the tables. Leading with "Not
- * connected" while 900+ videos are loaded reads as broken, so when data exists we
- * name the channel and the data instead, and only surface sign-in state as a soft note.
- */
-const channelStatusLine = (snapshot: AIBrainContextSnapshot): string => {
- const videos = snapshot.vtSync.videos
- const totalViews = snapshot.channel.totalViews
- const name =
-  snapshot.channel.label && snapshot.channel.label !== "Not connected"
-   ? snapshot.channel.label
-   : snapshot.vtSync.channelName || (videos ? "Imported channel data" : "No channel yet")
-
- const parts = [name]
- if (videos) {
-  parts.push(`${videos.toLocaleString()} videos loaded`)
-  parts.push(typeof totalViews === "number" ? `${totalViews.toLocaleString()} views` : "views pending sign-in")
- } else {
-  parts.push(snapshot.channel.connected ? "no videos synced yet" : "sign in or import to begin")
- }
- return parts.join(" · ")
-}
-
 const makeMessageId = () =>
  typeof crypto !== "undefined" && "randomUUID" in crypto
   ? crypto.randomUUID()
@@ -156,11 +129,7 @@ const ASK_SEED_PROMPTS: Record<string, string> = {
  * is composed from whatever real evidence exists, and names what is missing when
  * there is nothing to stand on.
  */
-const OpeningBriefing: React.FC<{
- snapshot: AIBrainContextSnapshot
- starters: CreatorBrainPromptCard[]
- onPrompt: (prompt: string) => void
-}> = ({ snapshot, starters, onPrompt }) => {
+const OpeningBriefing: React.FC<{ snapshot: AIBrainContextSnapshot }> = ({ snapshot }) => {
  const confidence = confidenceForEvidence({
   hasProfile: snapshot.inferredProfile.status !== "missing",
   videoCount: snapshot.inferredProfile.videoCount || snapshot.vtSync.videos,
@@ -197,35 +166,55 @@ const OpeningBriefing: React.FC<{
      <BrainEvidenceDrawer evidencePack={snapshot.evidencePack} className="mt-3" />
     </div>
 
-    {starters.length ? (
-     <div>
-      <div className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-black/45">
-       {hasEvidence ? "Start with one of these" : "Or ask me anything"}
-      </div>
-      <div className="grid gap-2 sm:grid-cols-2">
-       {starters.map((card) => (
-        <button
-         key={card.id}
-         type="button"
-         onClick={() => onPrompt(card.prompt)}
-         className="group overflow-hidden rounded-[10px] border-[2px] border-black bg-white text-left transition hover:bg-[#FFDA47]"
-        >
-         <span className="flex items-center justify-between gap-2 border-b-[2px] border-black px-3 py-1.5" style={{ backgroundColor: card.color }}>
-          <span className="text-[11px] font-[1000] uppercase leading-4">{card.label}</span>
-          <ArrowRight size={13} className="shrink-0 transition group-hover:translate-x-0.5" />
-         </span>
-         <span className="block px-3 py-2 text-[11px] font-bold leading-4 text-black/60">
-          {card.prompt}
-         </span>
-        </button>
-       ))}
-      </div>
-     </div>
-    ) : null}
    </section>
   </div>
  )
 }
+
+/** Persistent task discovery. Kept outside the empty-chat branch so prior turns
+ * never hide a Brain capability from returning creators. */
+export const BrainPromptLibrary: React.FC<{
+ cards: CreatorBrainPromptCard[]
+ busy?: boolean
+ headingId?: string
+ onPrompt: (prompt: string) => void
+}> = ({ cards, busy = false, headingId = "brain-prompt-library-title", onPrompt }) => (
+ <section
+  aria-labelledby={headingId}
+  aria-busy={busy || undefined}
+  className="overflow-hidden rounded-[10px] border-[2px] border-black bg-white"
+ >
+  <div className="border-b-[2px] border-black bg-[#FF7AC8] px-3 py-2">
+   <h2 id={headingId} className="text-[12px] font-[1000] uppercase leading-4 tracking-[0.08em]">
+    Prompt Library
+   </h2>
+   <p className="mt-0.5 text-[10px] font-bold leading-4 text-black/65">
+    Start a focused Brain task at any point in the conversation.
+   </p>
+  </div>
+  <ul className="grid gap-2 p-2.5">
+   {cards.map((card) => (
+    <li key={card.id}>
+     <button
+      type="button"
+      disabled={busy}
+      onClick={() => onPrompt(card.prompt)}
+      className="group grid min-h-11 w-full grid-cols-[8px_minmax(0,1fr)_16px] items-center gap-2 overflow-hidden rounded-[8px] border-[2px] border-black bg-white px-2 py-2 text-left outline-none transition hover:-translate-y-0.5 hover:bg-[#FFDA47] focus-visible:ring-[3px] focus-visible:ring-black disabled:cursor-wait disabled:opacity-50"
+     >
+      <span className="h-full min-h-8 rounded-[3px] border border-black" style={{ backgroundColor: card.color }} aria-hidden="true" />
+      <span className="min-w-0">
+       <span className="block text-[10px] font-[1000] uppercase leading-4">{card.label}</span>
+       <span className="mt-0.5 line-clamp-2 block text-[10px] font-bold leading-4 text-black/60">
+        {card.prompt}
+       </span>
+      </span>
+      <ArrowRight size={14} className="shrink-0 transition group-hover:translate-x-0.5" aria-hidden="true" />
+     </button>
+    </li>
+   ))}
+  </ul>
+ </section>
+)
 
 const CreatorResponseCard: React.FC<{
  message: ChatMessage
@@ -425,9 +414,14 @@ const AIBrainCommandInterface: React.FC = () => {
  const [onboardingSnapshot, setOnboardingSnapshot] = useState<BrainOnboardingSnapshot | null>(null)
  const [intakeOpen, setIntakeOpen] = useState(false)
  const [intakeContext, setIntakeContext] = useState<AiBrainContext>(() => loadAiBrainContext())
+ const [promptRailOpen, setPromptRailOpen] = useState(false)
  const [contextRailOpen, setContextRailOpen] = useState(false)
  const [journalOpen, setJournalOpen] = useState(false)
  const composerRef = useRef<HTMLInputElement | null>(null)
+ const promptLauncherRef = useRef<HTMLButtonElement | null>(null)
+ const contextLauncherRef = useRef<HTMLButtonElement | null>(null)
+ const promptCloseRef = useRef<HTMLButtonElement | null>(null)
+ const contextCloseRef = useRef<HTMLButtonElement | null>(null)
  const bottomRef = useRef<HTMLDivElement | null>(null)
  const askSeededRef = useRef(false)
  const canUseGemini = hasGeminiKey()
@@ -533,6 +527,41 @@ const AIBrainCommandInterface: React.FC = () => {
  useEffect(() => {
   bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
  }, [messages.length, busy])
+
+ useEffect(() => {
+  if (!promptRailOpen && !contextRailOpen) return
+  const closeButton = promptRailOpen ? promptCloseRef.current : contextCloseRef.current
+  const launcher = promptRailOpen ? promptLauncherRef.current : contextLauncherRef.current
+  closeButton?.focus()
+  const handleDrawerKeyboard = (event: KeyboardEvent) => {
+   if (event.key === "Escape") {
+    event.preventDefault()
+    setPromptRailOpen(false)
+    setContextRailOpen(false)
+    return
+   }
+   if (event.key !== "Tab") return
+   const dialog = closeButton?.closest<HTMLElement>('[role="dialog"]')
+   const focusable = Array.from(
+    dialog?.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])') || [],
+   )
+   if (!focusable.length) return
+   const first = focusable[0]
+   const last = focusable[focusable.length - 1]
+   if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault()
+    last.focus()
+   } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
+   }
+  }
+  document.addEventListener("keydown", handleDrawerKeyboard)
+  return () => {
+   document.removeEventListener("keydown", handleDrawerKeyboard)
+   launcher?.focus()
+  }
+ }, [promptRailOpen, contextRailOpen])
 
  useEffect(() => {
   let active = true
@@ -826,27 +855,15 @@ const AIBrainCommandInterface: React.FC = () => {
      />
     ) : (
      <section className="relative flex h-full min-h-0 flex-col overflow-hidden">
-      <header className="flex min-h-[48px] shrink-0 items-center justify-between gap-3 border-b-[3px] border-black bg-white px-3 py-2">
-       <div className="min-w-0">
-        <h1 className="truncate text-lg font-[1000] uppercase leading-none sm:text-2xl">Ask ViewTube Copilot Anything</h1>
-        <p className="mt-1 truncate text-[10px] font-black uppercase text-black/50">{channelStatusLine(snapshot)}</p>
-       </div>
-       <div className="flex shrink-0 items-center gap-1.5">
-        <button type="button" className={`${kpiButton} xl:hidden`} onClick={() => setContextRailOpen(true)} aria-label="Open channel context">
-         <PanelRight size={15} />
-        </button>
-       </div>
-      </header>
-
-      <div className="grid min-h-0 flex-1 gap-2 p-2 xl:grid-cols-[minmax(0,1fr)_310px]">
+      <div className="grid min-h-0 flex-1 gap-2 p-2 xl:grid-cols-[minmax(560px,960px)_310px_310px] xl:justify-center">
        <div className={`${innerCard} flex min-h-0 flex-col overflow-hidden`}>
         <div className="grid min-h-0 flex-1 gap-2 bg-white p-2">
          {!hydrated && messages.length === 0 ? (
           <div className="min-h-0 flex-1" aria-hidden="true" />
          ) : messages.length === 0 ? (
-          <OpeningBriefing snapshot={snapshot} starters={promptCards.slice(0, 6)} onPrompt={(prompt) => void handleSend(prompt)} />
+          <OpeningBriefing snapshot={snapshot} />
          ) : (
-          <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
+          <div className="custom-scrollbar mx-auto flex min-h-0 w-full max-w-[880px] flex-1 flex-col gap-3 overflow-y-auto pr-1">
            {messages.map((message) => message.role === "user" ? (
             <UserMessage key={message.id} text={message.text} />
            ) : (
@@ -865,36 +882,42 @@ const AIBrainCommandInterface: React.FC = () => {
         </div>
 
         <footer className="shrink-0 border-t-[4px] border-black bg-[#f8f8f4] p-2">
-         <div className="mb-1.5 flex flex-wrap gap-1">
-          {promptCards.slice(0, 4).map((card) => (
-           <button key={card.id} type="button" onClick={() => void handleSend(card.prompt)} className="rounded-[7px] border-[2px] border-black bg-white px-2 py-1 text-[9px] font-black uppercase hover:bg-[#FFDA47]">
-            {card.label}
+         <div className="mx-auto w-full max-w-[880px]">
+          <div className="mb-1.5 flex flex-wrap gap-1">
+           <button ref={promptLauncherRef} type="button" onClick={() => setPromptRailOpen(true)} aria-label="Open prompt library" className="inline-flex min-h-9 items-center gap-1 rounded-[7px] border-[2px] border-black bg-[#FF7AC8] px-2 py-1 text-[9px] font-black uppercase outline-none focus-visible:ring-[3px] focus-visible:ring-black xl:hidden">
+            <LayoutGrid size={13} aria-hidden="true" /> Prompt Library
            </button>
-          ))}
-          <button type="button" onClick={() => composerRef.current?.focus()} className="rounded-[7px] border-[2px] border-black bg-[#FF7AC8] px-2 py-1 text-[9px] font-black uppercase">Growth prompts</button>
-          <button type="button" onClick={() => void handleSend("Run my Daily Oracle and give me one priority, one quick win, and one measurable action for today.")} className="rounded-[7px] border-[2px] border-black bg-[#FFDA47] px-2 py-1 text-[9px] font-black uppercase">Run Daily Oracle</button>
-          <button type="button" onClick={() => setJournalOpen(true)} className="rounded-[7px] border-[2px] border-black bg-[#36E0F6] px-2 py-1 text-[9px] font-black uppercase"><BookOpen size={12} className="mr-1 inline" />AI Journal</button>
-         </div>
-         <div className="flex gap-2">
-          <label className="sr-only" htmlFor="brain-composer">Ask ViewTube Copilot</label>
-          <input
-           ref={composerRef}
-           type="text"
-           id="brain-composer"
-           value={input}
-           onChange={(event) => setInput(event.target.value)}
-           onKeyDown={(event) => { if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) void handleSend() }}
-           placeholder="Ask about your next video, audience, analytics, goals, thumbnails, SEO, publishing, or revenue..."
-           className="h-[52px] min-w-0 flex-1 rounded-[9px] border-[2px] border-black bg-white p-2 text-sm font-bold leading-5 outline-none focus:bg-[#FFDA47]/20"
-          />
-          <button type="button" onClick={() => void handleSend()} disabled={busy || !input.trim()} className="inline-flex w-[74px] shrink-0 items-center justify-center gap-1 rounded-[9px] border-[2px] border-black bg-[#3FEE56] text-xs font-black uppercase disabled:opacity-50">
-           {busy ? <Zap className="animate-pulse" size={16} /> : <Send size={16} />} Send
-          </button>
+           <button ref={contextLauncherRef} type="button" onClick={() => setContextRailOpen(true)} aria-label="Open channel context" className="inline-flex min-h-9 items-center gap-1 rounded-[7px] border-[2px] border-black bg-[#3FEE56] px-2 py-1 text-[9px] font-black uppercase outline-none focus-visible:ring-[3px] focus-visible:ring-black xl:hidden">
+            <PanelRight size={13} aria-hidden="true" /> Channel Context
+           </button>
+           <button type="button" onClick={() => void handleSend("Run my Daily Oracle and give me one priority, one quick win, and one measurable action for today.")} className="min-h-9 rounded-[7px] border-[2px] border-black bg-[#FFDA47] px-2 py-1 text-[9px] font-black uppercase outline-none focus-visible:ring-[3px] focus-visible:ring-black">Run Daily Oracle</button>
+           <button type="button" onClick={() => setJournalOpen(true)} className="min-h-9 rounded-[7px] border-[2px] border-black bg-[#36E0F6] px-2 py-1 text-[9px] font-black uppercase outline-none focus-visible:ring-[3px] focus-visible:ring-black"><BookOpen size={12} className="mr-1 inline" aria-hidden="true" />AI Journal</button>
+          </div>
+          <div className="flex gap-2">
+           <label className="sr-only" htmlFor="brain-composer">Ask ViewTube Copilot</label>
+           <input
+            ref={composerRef}
+            type="text"
+            id="brain-composer"
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            onKeyDown={(event) => { if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) void handleSend() }}
+            placeholder="Ask about your next video, audience, analytics, goals, thumbnails, SEO, publishing, or revenue..."
+            className="h-[52px] min-w-0 flex-1 rounded-[9px] border-[2px] border-black bg-white p-2 text-sm font-bold leading-5 outline-none focus:bg-[#FFDA47]/20 focus-visible:ring-[3px] focus-visible:ring-black"
+           />
+           <button type="button" onClick={() => void handleSend()} disabled={busy || !input.trim()} className="inline-flex w-[74px] shrink-0 items-center justify-center gap-1 rounded-[9px] border-[2px] border-black bg-[#3FEE56] text-xs font-black uppercase outline-none focus-visible:ring-[3px] focus-visible:ring-black disabled:opacity-50">
+            {busy ? <Zap className="animate-pulse" size={16} /> : <Send size={16} />} Send
+           </button>
+          </div>
          </div>
         </footer>
        </div>
 
-       <div className="hidden min-h-0 overflow-hidden xl:block">
+       <div className="custom-scrollbar hidden min-h-0 overflow-y-auto xl:block">
+        <BrainPromptLibrary cards={promptCards} busy={busy} onPrompt={(prompt) => void handleSend(prompt)} />
+       </div>
+
+       <div className="custom-scrollbar hidden min-h-0 overflow-y-auto xl:block">
         <BrainContextRail
          snapshot={snapshot}
          growthContext={creatorGrowthContext}
@@ -908,13 +931,42 @@ const AIBrainCommandInterface: React.FC = () => {
        </div>
       </div>
 
-      {contextRailOpen ? (
-       <div className="absolute inset-0 z-40 grid bg-white p-3 xl:hidden">
+      {promptRailOpen ? (
+       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="brain-prompt-library-dialog-title"
+        className="absolute inset-0 z-40 grid min-h-0 grid-rows-[auto_1fr] bg-white p-3 xl:hidden"
+       >
         <div className="mb-2 flex items-center justify-between border-b-[2px] border-black pb-2">
-         <h2 className="text-lg font-[1000] uppercase">Your Channel Context</h2>
-         <button type="button" className={kpiButton} onClick={() => setContextRailOpen(false)}>Close</button>
+         <h2 id="brain-prompt-library-dialog-title" className="text-lg font-[1000] uppercase">Prompt Library</h2>
+         <button ref={promptCloseRef} type="button" className={kpiButton} onClick={() => setPromptRailOpen(false)}>
+          <X size={14} aria-hidden="true" /> Close
+         </button>
         </div>
-        <BrainContextRail snapshot={snapshot} growthContext={creatorGrowthContext} insights={railInsights} questions={learningQuestions} quickActions={quickActions} onAskInsight={handleAskInsight} onAcceptQuickAction={handleAcceptQuickAction} onAnswerQuestion={handleAnswerQuestion} />
+        <div className="custom-scrollbar min-h-0 overflow-y-auto">
+         <BrainPromptLibrary
+          cards={promptCards}
+          busy={busy}
+          headingId="brain-prompt-library-drawer-title"
+          onPrompt={(prompt) => {
+           setPromptRailOpen(false)
+           void handleSend(prompt)
+          }}
+         />
+        </div>
+       </div>
+      ) : null}
+
+      {contextRailOpen ? (
+       <div role="dialog" aria-modal="true" aria-labelledby="brain-context-dialog-title" className="absolute inset-0 z-40 grid min-h-0 grid-rows-[auto_1fr] bg-white p-3 xl:hidden">
+        <div className="mb-2 flex items-center justify-between border-b-[2px] border-black pb-2">
+         <h2 id="brain-context-dialog-title" className="text-lg font-[1000] uppercase">Your Channel Context</h2>
+         <button ref={contextCloseRef} type="button" className={kpiButton} onClick={() => setContextRailOpen(false)}><X size={14} aria-hidden="true" /> Close</button>
+        </div>
+        <div className="custom-scrollbar min-h-0 overflow-y-auto">
+         <BrainContextRail snapshot={snapshot} growthContext={creatorGrowthContext} insights={railInsights} questions={learningQuestions} quickActions={quickActions} onAskInsight={handleAskInsight} onAcceptQuickAction={handleAcceptQuickAction} onAnswerQuestion={handleAnswerQuestion} />
+        </div>
        </div>
       ) : null}
 

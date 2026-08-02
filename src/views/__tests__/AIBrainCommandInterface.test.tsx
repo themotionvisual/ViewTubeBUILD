@@ -3,7 +3,11 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { MemoryRouter } from "react-router-dom"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { GlobalDataContext, fallbackContext } from "../../context/GlobalDataContextTypes"
-import AIBrainCommandInterface, { BrainGenerationBadge } from "../AIBrainCommandInterface"
+import { buildCreatorBrainPromptCards } from "../../services/aiBrainCommandInterface"
+import AIBrainCommandInterface, {
+ BrainGenerationBadge,
+ BrainPromptLibrary,
+} from "../AIBrainCommandInterface"
 
 const createStorage = () => {
  const store = new Map<string, string>()
@@ -47,7 +51,9 @@ describe("AIBrainCommandInterface", () => {
   const html = renderHub()
 
   expect(html).toContain("ViewTube Brain Hub")
-  expect(html).toContain("Ask ViewTube Copilot Anything")
+  expect(html).toContain("Prompt Library")
+  expect(html).not.toContain("Ask ViewTube Copilot Anything")
+  expect(html).not.toContain("views pending sign-in")
 
   // The creator never picks a mode: no tab controls of any kind.
   expect(html).not.toContain('role="tab"')
@@ -97,6 +103,29 @@ describe("AIBrainCommandInterface", () => {
 
   // Journal capture is an inline affordance in the composer, not a mode/tab.
   expect(html).toContain("AI Journal")
+ })
+
+ it("keeps every guided prompt available independently of chat history", () => {
+  const cards = buildCreatorBrainPromptCards()
+  const html = renderToStaticMarkup(
+   <BrainPromptLibrary cards={cards} onPrompt={() => undefined} />,
+  )
+
+  expect(cards).toHaveLength(12)
+  expect(html).toContain('aria-labelledby="brain-prompt-library-title"')
+  expect(html).toContain("Analyze Channel Niche")
+  expect(html).toContain("Revenue Levers")
+  expect(html).toContain("Best Video Autopsy")
+  expect(html).toContain("Run Daily Oracle")
+  expect((html.match(/type="button"/g) || [])).toHaveLength(cards.length)
+ })
+
+ it("keeps prompt and channel-context launchers reachable on smaller screens", () => {
+  const html = renderHub()
+
+  expect(html).toContain('aria-label="Open prompt library"')
+  expect(html).toContain('aria-label="Open channel context"')
+  expect(html).not.toContain(">Growth prompts<")
  })
 
  it("keeps internal diagnostics out of the creator workspace", () => {
