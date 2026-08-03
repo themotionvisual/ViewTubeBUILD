@@ -14,8 +14,13 @@ import { UnifiedChartModule } from "./UnifiedChartModule"
 import { CustomIcon } from "./CustomIcon"
 import { StableChartFrame } from "./StableChartFrame"
 import { SubToolboxChartModule, subToolboxChartPresets } from "./SubToolboxChartModule"
+import type { ControllerRow } from "./VisualModuleController"
 import { InsightMarquee } from "./InsightMarquee"
-import { VT_SPECTRUM_PALETTE_06, VT_NAV_PALETTE_12 } from "../styles/toolboxPalette"
+import {
+ VT_SPECTRUM_PALETTE_06,
+ VT_NAV_PALETTE_12,
+ VT_VISUAL_METRIC_COLORS,
+} from "../styles/toolboxPalette"
 import { UPLOAD_CACHE_FILES_KEY } from "../services/analytics/SyncPipeline"
 import {
   buildKeywordClustersFromMasterRows,
@@ -25,8 +30,17 @@ import {
   formatKeywordMetricValue,
   KEYWORD_VENN_METRIC_OPTIONS,
   buildKeywordVideoRows,
+  getKeywordRankValue,
+  keywordMetricSupportsTotal,
   type KeywordMetricKey,
+  type KeywordRankingMode,
 } from "../services/keywordVennAnalysis"
+import {
+ buildAdaptiveZeroScale,
+ buildLogBubbleRadii,
+ buildTieAwarePercentiles,
+ interpolateThreeStopColor,
+} from "./chartScaleModel"
 
 const mv = (row: CanonicalVideoRow, key: string): number =>
  resolveMetricNumber(row, key as any).value || 0
@@ -40,6 +54,9 @@ export interface GChartProps {
 }
 
 const COLORS = ["#FF3399","#00E5FF","#CCFF00","#FF9900","#9933FF","#33FF99","#FF7497","#24D3FF","#FFB158"]
+const SHORTS_REVENUE_PALETTE = ["#24BCFF", "#45DDB0", "#66FF8A"] as const
+const REVENUE_EFFICIENCY_PALETTE = ["#FF7497", "#B14AED", "#26C7EC"] as const
+const MISSING_BUBBLE_COLOR = "#D6D6D6"
 const ctrPct = (row: CanonicalVideoRow): number => {
  const raw = mv(row, "ctr")
  if (!Number.isFinite(raw)) return 0
@@ -118,26 +135,60 @@ const buildDistributionControllerRows = (config: {
  formatTone: string
  window: DistributionWindowKey
  onWindowSelect: (value: DistributionWindowKey) => void
-}) => [
- { type: "number" as const, value: config.count, bgTone: "#33FF99", onPrev: config.onCountPrev, onNext: config.onCountNext },
+}): ControllerRow[] => [
  {
-  type: "split" as const,
-  bgTone: "#000000",
-  leftBgTone: "#000000",
-  leftFgTone: config.leadTone,
-  rightBgTone: config.formatTone,
-  rightFgTone: "#000000",
-  leftValue: config.leadLabel,
-  rightValue: getDistributionFormatLabel(config.format),
-  onPrev: config.onFormatPrev,
-  onNext: config.onFormatNext,
+  type: "custom" as const,
+  render: () => (
+   <div className="grid h-[52px] w-full grid-cols-[minmax(82px,.86fr)_minmax(104px,1.14fr)] overflow-hidden bg-white">
+    <div className="grid grid-cols-[22px_minmax(0,1fr)_22px] items-stretch bg-[#33FF99]">
+     <button
+      type="button"
+      onClick={config.onCountPrev}
+      className="grid place-items-center border-0 bg-transparent p-0 text-[18px] font-black leading-none"
+      aria-label="Show fewer videos">
+      ◀
+     </button>
+     <strong className="grid min-w-0 place-items-center text-[31px] font-[1000] leading-none tabular-nums">
+      {config.count}
+     </strong>
+     <button
+      type="button"
+      onClick={config.onCountNext}
+      className="grid place-items-center border-0 bg-transparent p-0 text-[18px] font-black leading-none"
+      aria-label="Show more videos">
+      ▶
+     </button>
+    </div>
+    <div className="grid min-w-0 grid-rows-2 border-l-[4px] border-black">
+     <div
+      className="grid min-w-0 grid-cols-[16px_minmax(0,1fr)] items-center overflow-hidden border-b-[4px] border-black bg-black px-1"
+      style={{ color: config.leadTone }}>
+      <span className="text-[11px] font-black">◀</span>
+      <strong className="truncate text-center text-[9px] font-[1000] uppercase leading-none tracking-0">
+       {config.leadLabel}
+      </strong>
+     </div>
+     <button
+      type="button"
+      onClick={config.onFormatNext}
+      className="grid min-w-0 grid-cols-[minmax(0,1fr)_16px] items-center overflow-hidden border-0 px-1 text-black"
+      style={{ background: config.formatTone }}
+      aria-label={`Change format from ${getDistributionFormatLabel(config.format)}`}>
+      <strong className="truncate text-center text-[10px] font-[1000] uppercase leading-none tracking-0">
+       {getDistributionFormatLabel(config.format).replace("ALL CHANNEL ", "")}
+      </strong>
+      <span className="text-[11px] font-black">▶</span>
+     </button>
+    </div>
+   </div>
+  ),
  },
  {
   type: "dropdown" as const,
   value: config.window,
   labelPrefix: "WINDOW",
   options: DISTRIBUTION_WINDOW_VALUES,
-  onSelect: config.onWindowSelect,
+  onSelect: (value) => config.onWindowSelect(value as DistributionWindowKey),
   bgTone: "#FFFFFF",
   fgTone: "#000000",
  },
@@ -159,6 +210,27 @@ const EngagementKeyItem: React.FC<{ label: string; tone: string }> = ({ label, t
  </div>
 )
 
+const EngagementSelectedDot: React.FC<any> = ({ cx, cy, stroke }) => {
+ if (!Number.isFinite(cx) || !Number.isFinite(cy)) return null
+ return <circle cx={cx} cy={cy} r={6} fill="#FFFFFF" stroke={stroke} strokeWidth={3} />
+}
+
+const EngagementHoverDot: React.FC<any> = ({ cx, cy, stroke, metricIndex = 0 }) => {
+ if (!Number.isFinite(cx) || !Number.isFinite(cy)) return null
+ return (
+  <circle
+   cx={cx}
+   cy={cy}
+   r={6}
+   fill="#FFFFFF"
+   stroke={stroke}
+   strokeWidth={3}
+   className="engagement-hover-dot"
+   style={{ animationDelay: `${metricIndex * 200}ms` }}
+  />
+ )
+}
+
 const EngagementLeftAxisLabel: React.FC<{ viewBox?: { x: number; y: number; width: number; height: number } }> = ({ viewBox }) => {
  if (!viewBox) return null
  const x = viewBox.x + 2
@@ -174,7 +246,7 @@ const EngagementLeftAxisLabel: React.FC<{ viewBox?: { x: number; y: number; widt
     <tspan fill="#000000"> • </tspan>
     <tspan fill="#FFE357">SHARES</tspan>
     <tspan fill="#000000"> • </tspan>
-    <tspan fill="#CCFF00">SUBS</tspan>
+    <tspan fill="#CCFF00">SUBSCRIBERS</tspan>
    </text>
   </g>
  )
@@ -601,17 +673,19 @@ export const RevenueDistribution: React.FC<GChartProps> = ({ data }) => {
  return (
   <SubToolboxChartModule
    header={{
-    title: "REVENUE DISTRIBUTION",
+   title: "REVENUE DISTRIBUTION",
     subtitle: `TOP ${cd.length} • ${getDistributionFormatLabel(selectedFormat)} • ${getDistributionWindowLabel(selectedWindow)}`,
     icon: <CustomIcon name="analytics" size={18} />,
     headerStyle: "subtoolbox",
+    titleClassName: "text-[clamp(18px,2vw,30px)] leading-[.9]",
    }}
    theme={{
     headerBandBg: "#CCFF00",
     iconBlockBg: "#00E5FF",
     shadowColor: "rgba(204,255,0,0.45)",
    }}
-   layout={{ moduleMinHeight: "340px", moduleWidth: "100%" }}
+   layout={{ moduleMinHeight: "250px", moduleWidth: "100%" }}
+   controllerWidth={210}
    controllerRows={controllerRows}
    activeContext={{
     title: cd[0]?.name?.toUpperCase() || "NO DATA",
@@ -629,10 +703,11 @@ export const RevenueDistribution: React.FC<GChartProps> = ({ data }) => {
     />
    }
   >
-   <div className="h-[340px] px-3 pb-3 pt-1">
-    <StableChartFrame minHeightClassName="min-h-[300px]">
+   <div className="h-[250px] px-3 pb-3 pt-1">
+    <StableChartFrame minHeightClassName="min-h-[220px]">
      <PieChart>
       <Pie data={cd} innerRadius="30%" outerRadius="90%" dataKey="value" stroke="#fff" strokeWidth={2} label={({value})=>`$${value}`}>
+       <Label value="REVENUE" position="center" style={{ fontSize: "11px", fontWeight: 1000, fill: "#000000" }} />
        {cd.map((_,i)=><Cell key={i} fill={COLORS[i%COLORS.length]}/>)}
       </Pie>
       <Tooltip content={<ChartTip/>}/>
@@ -674,17 +749,19 @@ export const WatchTimeDistribution: React.FC<GChartProps> = ({ data }) => {
  return (
   <SubToolboxChartModule
    header={{
-    title: "WATCH TIME DISTRIBUTION",
+   title: "WATCH TIME DISTRIBUTION",
     subtitle: `TOP ${cd.length} • ${getDistributionFormatLabel(selectedFormat)} • ${getDistributionWindowLabel(selectedWindow)}`,
     icon: <CustomIcon name="calendar" size={18} />,
     headerStyle: "subtoolbox",
+    titleClassName: "text-[clamp(18px,2vw,30px)] leading-[.9]",
    }}
    theme={{
     headerBandBg: "#FFEA00",
     iconBlockBg: "#FF7497",
     shadowColor: "rgba(255,234,0,0.45)",
    }}
-   layout={{ moduleMinHeight: "340px", moduleWidth: "100%" }}
+   layout={{ moduleMinHeight: "250px", moduleWidth: "100%" }}
+   controllerWidth={210}
    controllerRows={controllerRows}
    activeContext={{
     title: cd[0]?.name?.toUpperCase() || "NO DATA",
@@ -697,15 +774,16 @@ export const WatchTimeDistribution: React.FC<GChartProps> = ({ data }) => {
     <InsightMarquee
      mode="insight-lock"
      segments={[
-      { badge: "Watch Time", text: "Watch time distribution reveals which videos keep viewers engaged longest — a key factor in algorithmic promotion.", badgeTone: "yellow" },
+      { badge: "Watch Time", text: "Watch time distribution reveals which videos keep viewers engaged longest — a key factor in algorithmic promotion.", badgeTone: "lime" },
      ]}
     />
    }
   >
-   <div className="h-[340px] px-3 pb-3 pt-1">
-    <StableChartFrame minHeightClassName="min-h-[300px]">
+   <div className="h-[250px] px-3 pb-3 pt-1">
+    <StableChartFrame minHeightClassName="min-h-[220px]">
      <PieChart>
       <Pie data={cd} innerRadius="20%" outerRadius="90%" dataKey="value" stroke="#fff" strokeWidth={2}>
+       <Label value="WATCH TIME" position="center" style={{ fontSize: "11px", fontWeight: 1000, fill: "#000000" }} />
        {cd.map((_,i)=><Cell key={i} fill={COLORS[i%COLORS.length]}/>)}
       </Pie>
       <Tooltip content={<ChartTip/>}/>
@@ -737,7 +815,7 @@ export const SubscribersGained: React.FC<GChartProps> = ({ data }) => {
   count: cd.length,
   onCountPrev: () => cycleCount(-1),
   onCountNext: () => cycleCount(1),
-  leadLabel: "HIGHEST SUBS",
+   leadLabel: "HIGHEST SUBSCRIBERS",
   leadTone: "#00E5FF",
   format: selectedFormat,
   onFormatPrev: () => cycleFormat(-1),
@@ -749,17 +827,19 @@ export const SubscribersGained: React.FC<GChartProps> = ({ data }) => {
  return (
   <SubToolboxChartModule
    header={{
-    title: "SUBSCRIBERS GAINED",
+   title: "SUBSCRIBERS GAINED",
     subtitle: `TOP ${cd.length} • ${getDistributionFormatLabel(selectedFormat)} • ${getDistributionWindowLabel(selectedWindow)}`,
     icon: <CustomIcon name="analytics" size={18} />,
     headerStyle: "subtoolbox",
+    titleClassName: "text-[clamp(18px,2vw,30px)] leading-[.9]",
    }}
    theme={{
     headerBandBg: "#FFEA00",
     iconBlockBg: "#00E5FF",
     shadowColor: "rgba(255,234,0,0.45)",
    }}
-   layout={{ moduleMinHeight: "340px", moduleWidth: "100%" }}
+   layout={{ moduleMinHeight: "250px", moduleWidth: "100%" }}
+   controllerWidth={210}
    controllerRows={controllerRows}
    activeContext={{
     title: cd[0]?.name?.toUpperCase() || "NO DATA",
@@ -777,8 +857,8 @@ export const SubscribersGained: React.FC<GChartProps> = ({ data }) => {
     />
    }
   >
-   <div className="h-[340px] px-3 pb-3 pt-1">
-    <StableChartFrame minHeightClassName="min-h-[300px]">
+   <div className="h-[250px] px-3 pb-3 pt-1">
+    <StableChartFrame minHeightClassName="min-h-[220px]">
      <BarChart data={cd} margin={{top:10,right:10,left:-20,bottom:40}}>
       <CartesianGrid strokeDasharray="3 3" vertical={false}/>
       <XAxis dataKey="name" tick={{fontSize:8,fontWeight:900}} interval={0} angle={-45} textAnchor="end" axisLine={{ stroke: '#000', strokeWidth: 3 }}/>
@@ -807,7 +887,7 @@ export const TopPerformersTrio: React.FC<GChartProps> = ({ data }) => {
   () => [
    buildTop("revenue", "Revenue"),
    buildTop("watchHours", "Watch Hrs"),
-   buildTop("subscribersGained", "Subs"),
+   buildTop("subscribersGained", "Subscribers"),
   ],
   [data],
  )
@@ -822,20 +902,21 @@ export const TopPerformersTrio: React.FC<GChartProps> = ({ data }) => {
   >
    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
     {trio.map((card, idx) => (
-     <div key={card.label} className="border-[3px] border-black rounded-xl bg-white p-2">
-      <div className="text-[10px] font-black uppercase tracking-[0.12em] mb-1">{card.label}</div>
+     <div key={card.label} className="border-[3px] border-black rounded-xl bg-white p-2 flex flex-col min-w-0">
+      <div className="text-[11px] font-[1000] uppercase tracking-[0.12em] mb-1 whitespace-nowrap overflow-hidden text-ellipsis text-black">{card.label}</div>
       <div className="h-[200px] border-[2px] border-black rounded-lg bg-[#F4F4F5] p-1">
        <StableChartFrame minHeightClassName="min-h-[160px]">
         <PieChart>
          <Pie data={card.rows} dataKey="value" nameKey="name" innerRadius={40} outerRadius={72} stroke="#111827" strokeWidth={1} isAnimationActive animationDuration={700} animationBegin={idx * 120}>
+          <Label value={card.label.toUpperCase()} position="center" style={{ fontSize: "10px", fontWeight: 1000, fill: "#000000" }} />
           {card.rows.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
          </Pie>
         </PieChart>
        </StableChartFrame>
       </div>
-      <div className="mt-2 h-10 border-[2px] border-black rounded-md bg-[#00CCFF] text-black px-2 flex items-center justify-between">
-       <span className="text-[8px] font-black uppercase tracking-[0.1em]">#1</span>
-       <span className="text-[10px] font-[1000] truncate max-w-[70%]">{card.top?.name || "N/A"}</span>
+      <div className="mt-2 h-10 border-[2px] border-black rounded-md bg-[#00CCFF] text-black px-2 flex items-center justify-between min-w-0">
+       <span className="text-[9px] font-[1000] uppercase tracking-[0.1em] shrink-0">#1</span>
+       <span className="text-[10px] font-[1000] truncate ml-1">{card.top?.name || "N/A"}</span>
       </div>
      </div>
     ))}
@@ -861,14 +942,21 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
     if (selectedFormat === "Long") return !isShortRow(r)
     return true
    })
-   .map((r) => ({
-    title: r.title,
-    dur: r.durationSeconds,
-    avd: +retentionPct(r).toFixed(1),
-    views: mv(r, "views"),
-    estIncome: Math.max(mv(r, "revenue"), (mv(r, "rpm") * Math.max(0, mv(r, "views"))) / 1000),
-    uploadTs: new Date(String(r.uploadDate || "")).getTime() || 0,
-   }))
+   .map((r) => {
+    const views = mv(r, "views")
+    const revenue = resolveMetricNumber(r, "revenue")
+    const rpm = resolveMetricNumber(r, "rpm")
+    const revenueFromRpm = rpm.value === null ? 0 : (rpm.value * Math.max(0, views)) / 1000
+    return {
+     title: r.title,
+     dur: r.durationSeconds,
+     avd: (retentionPct(r) / 100) * r.durationSeconds,
+     views,
+     estIncome: Math.max(revenue.value ?? 0, revenueFromRpm),
+     revenueAvailable: revenue.value !== null || rpm.value !== null,
+     uploadTs: new Date(String(r.uploadDate || "")).getTime() || 0,
+    }
+   })
    .filter((d) => d.dur > 0 && d.avd > 0)
 
   const ranked = mode === "most-recent"
@@ -876,48 +964,33 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
    : [...shorts].sort((a, b) => b.views - a.views)
 
   const top100 = ranked.slice(0, selectedCount)
-  const yTop = 300
-  if (top100.length === 0) {
-   return { points: [], yTop }
-  }
-  const minViews = Math.min(...top100.map((d) => d.views))
-  const maxViews = Math.max(...top100.map((d) => d.views))
-  const minIncome = Math.min(...top100.map((d) => d.estIncome))
-  const maxIncome = Math.max(...top100.map((d) => d.estIncome))
-  const lerp = (a: number, b: number, t: number) => a + (b - a) * t
-  const clamp01 = (n: number) => Math.max(0, Math.min(1, n))
-
-  const rankDenom = Math.max(1, top100.length - 1)
-  const rankByKey = new Map<string, number>()
-  ;[...top100]
-   .sort((a, b) => a.estIncome - b.estIncome)
-   .forEach((d, idx) => rankByKey.set(`${d.title}-${d.uploadTs}-${d.views}`, idx))
-
-  const points = top100.map((d) => {
+  const durationScale = buildAdaptiveZeroScale(top100.map((d) => d.dur), { fallbackMax: 180, hardMax: 180 })
+  const avdScale = buildAdaptiveZeroScale(top100.map((d) => d.avd), { fallbackMax: 300 })
+  const revenuePercentiles = buildTieAwarePercentiles(
+   top100.map((d) => d.revenueAvailable ? d.estIncome : null),
+  )
+  const viewRadii = buildLogBubbleRadii(top100.map((d) => d.views), {
+   minRadius: 3,
+   maxRadius: 30,
+  })
+  const points = top100.map((d, index) => {
    const key = `${d.title}-${d.uploadTs}-${d.views}`
-   const rankT = (rankByKey.get(key) ?? 0) / rankDenom
-   const incomeT = maxIncome > minIncome ? (d.estIncome - minIncome) / (maxIncome - minIncome) : 0.5
-   const hybridT = clamp01(rankT * 0.65 + incomeT * 0.35)
-   const rareLargeBiasT = Math.pow(hybridT, 2.1)
-   const r = lerp(3, 30, rareLargeBiasT)
-   const c = {
-    r: Math.round(lerp(36, 102, clamp01(incomeT))),
-    g: Math.round(lerp(188, 255, clamp01(incomeT))),
-    b: Math.round(255 - 116 * clamp01(incomeT)),
-   }
+   const revenuePosition = revenuePercentiles[index]
    return {
     ...d,
     key,
-    avdClamped: +Math.max(0, Math.min(yTop, d.avd)).toFixed(2),
-    radius: r,
-    color: `rgb(${c.r}, ${c.g}, ${c.b})`,
+    radius: viewRadii[index],
+    color: revenuePosition === null
+     ? MISSING_BUBBLE_COLOR
+     : interpolateThreeStopColor(revenuePosition, SHORTS_REVENUE_PALETTE),
    }
   })
 
   // Draw larger bubbles first so smaller ones stay above on z-order.
   return {
    points: [...points].sort((a, b) => b.radius - a.radius),
-   yTop,
+   durationScale,
+   avdScale,
   }
  }, [data, mode, selectedCount, selectedFormat])
 
@@ -953,7 +1026,7 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
    <div className="border-b-[4px] border-black px-4 py-2 flex justify-between items-center gap-2 bg-[#CCFF00]">
     <div>
      <span className="font-[900] text-base uppercase tracking-tight">SHORTS RETENTION</span>
-     <span className="block text-[9px] font-bold opacity-60 uppercase">AVD% × Duration</span>
+     <span className="block text-[9px] font-bold opacity-60 uppercase">AVD (s) × Duration</span>
     </div>
     <div className="flex items-center gap-2">
      <select
@@ -979,7 +1052,7 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
        <option key={f} value={f}>{f.toUpperCase()}</option>
       ))}
      </select>
-     <span className="text-[10px] font-black uppercase">TOP AVG % {cd.yTop}</span>
+     <span className="text-[10px] font-black uppercase">TOP AVD (s) {cd.avdScale.domain[1]}</span>
      <span className="text-[10px] font-black">{cd.points.length} SHOWN</span>
     </div>
    </div>
@@ -994,8 +1067,24 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
       }}
       onMouseLeave={() => setMousePos(null)}>
       <CartesianGrid stroke="rgba(107,114,128,0.28)" strokeDasharray="4 4"/>
-      <XAxis type="number" dataKey="dur" name="Duration (s)" tick={{fontWeight:900,fontSize:10}}/>
-      <YAxis type="number" dataKey="avdClamped" name="AVG % Viewed (relative)" domain={[0, cd.yTop]} tick={{fontWeight:900,fontSize:10}}/>
+      <XAxis
+       type="number"
+       dataKey="dur"
+       name="Duration (s)"
+       domain={cd.durationScale.domain}
+       ticks={cd.durationScale.ticks}
+       tickFormatter={(value) => `${value}s`}
+       tick={{fontWeight:900,fontSize:10}}
+      />
+      <YAxis
+       type="number"
+       dataKey="avd"
+       name="AVD (s)"
+       domain={cd.avdScale.domain}
+       ticks={cd.avdScale.ticks}
+       tickFormatter={(value) => value === 0 ? "" : `${value}s`}
+       tick={{fontWeight:900,fontSize:10}}
+      />
       <Tooltip
        content={<ChartTip/>}
        isAnimationActive={false}
@@ -1068,14 +1157,21 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
    (r.durationSeconds > 0 && r.durationSeconds <= 180)
   const shorts = data
    .filter((r) => isShortRow(r))
-   .map((r) => ({
-    title: r.title,
-    dur: r.durationSeconds,
-    avd: +mv(r, "avp").toFixed(1),
-    views: mv(r, "views"),
-    estIncome: Math.max(mv(r, "revenue"), (mv(r, "rpm") * Math.max(0, mv(r, "views"))) / 1000),
-    uploadTs: new Date(String(r.uploadDate || "")).getTime() || 0,
-   }))
+   .map((r) => {
+    const views = mv(r, "views")
+    const revenue = resolveMetricNumber(r, "revenue")
+    const rpm = resolveMetricNumber(r, "rpm")
+    const revenueFromRpm = rpm.value === null ? 0 : (rpm.value * Math.max(0, views)) / 1000
+    return {
+     title: r.title,
+     dur: r.durationSeconds,
+     avd: (retentionPct(r) / 100) * r.durationSeconds,
+     views,
+     estIncome: Math.max(revenue.value ?? 0, revenueFromRpm),
+     revenueAvailable: revenue.value !== null || rpm.value !== null,
+     uploadTs: new Date(String(r.uploadDate || "")).getTime() || 0,
+    }
+   })
    .filter((d) => d.dur > 0 && d.avd > 0)
 
   const ranked = mode === "most-recent"
@@ -1083,44 +1179,33 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
    : [...shorts].sort((a, b) => b[sortMetric] - a[sortMetric])
 
   const top100 = ranked.slice(0, selectedCount)
-  const yTop = 300
-  const minViews = Math.min(...top100.map((d) => d.views))
-  const maxViews = Math.max(...top100.map((d) => d.views))
-  const minIncome = Math.min(...top100.map((d) => d.estIncome))
-  const maxIncome = Math.max(...top100.map((d) => d.estIncome))
-  const lerp = (a: number, b: number, t: number) => a + (b - a) * t
-  const clamp01 = (n: number) => Math.max(0, Math.min(1, n))
+  const durationScale = buildAdaptiveZeroScale(top100.map((d) => d.dur), { fallbackMax: 180, hardMax: 180 })
+  const avdScale = buildAdaptiveZeroScale(top100.map((d) => d.avd), { fallbackMax: 300 })
+  const revenuePercentiles = buildTieAwarePercentiles(
+   top100.map((d) => d.revenueAvailable ? d.estIncome : null),
+  )
+  const viewRadii = buildLogBubbleRadii(top100.map((d) => d.views), {
+   minRadius: 3,
+   maxRadius: 30,
+  })
 
-  const rankDenom = Math.max(1, top100.length - 1)
-  const rankByKey = new Map<string, number>()
-  ;[...top100]
-   .sort((a, b) => a.estIncome - b.estIncome)
-   .forEach((d, idx) => rankByKey.set(`${d.title}-${d.uploadTs}-${d.views}`, idx))
-
-  const points = top100.map((d) => {
+  const points = top100.map((d, index) => {
    const key = `${d.title}-${d.uploadTs}-${d.views}`
-   const rankT = (rankByKey.get(key) ?? 0) / rankDenom
-   const incomeT = maxIncome > minIncome ? (d.estIncome - minIncome) / (maxIncome - minIncome) : 0.5
-   const hybridT = clamp01(rankT * 0.65 + incomeT * 0.35)
-   const rareLargeBiasT = Math.pow(hybridT, 2.1)
-   const r = lerp(3, 30, rareLargeBiasT)
-   const c = {
-    r: Math.round(lerp(36, 102, clamp01(incomeT))),
-    g: Math.round(lerp(188, 255, clamp01(incomeT))),
-    b: Math.round(255 - 116 * clamp01(incomeT)),
-   }
+   const revenuePosition = revenuePercentiles[index]
    return {
     ...d,
     key,
-    avdClamped: +Math.max(0, Math.min(yTop, d.avd)).toFixed(2),
-    radius: r,
-    color: `rgb(${c.r}, ${c.g}, ${c.b})`,
+    radius: viewRadii[index],
+    color: revenuePosition === null
+     ? MISSING_BUBBLE_COLOR
+     : interpolateThreeStopColor(revenuePosition, SHORTS_REVENUE_PALETTE),
    }
   })
 
   return {
    points: [...points].sort((a, b) => b.radius - a.radius),
-   yTop,
+   durationScale,
+   avdScale,
   }
  }, [data, mode, sortMetric, selectedCount])
 
@@ -1142,10 +1227,10 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
  const shortsInsight = useMemo(() => {
   if (cd.points.length === 0) return "No shorts retention data yet. Sync to unlock retention insights."
   const best = [...cd.points].sort((a, b) => b.avd - a.avd)[0]
-  const longHold = cd.points.filter((p) => p.dur >= 90 && p.avd >= 55).length
+  const longHold = cd.points.filter((p) => p.dur >= 90 && p.avd >= (55/100*p.dur)).length
   return `Your strongest short holds ${best.avd.toFixed(
    1,
-  )}% at ${Math.round(best.dur)}s, and ${longHold} videos keep 55%+ attention beyond 90s - that's a repeatable retention signature.`
+  )}s at ${Math.round(best.dur)}s, and ${longHold} videos keep 55%+ attention beyond 90s - that's a repeatable retention signature.`
  }, [cd.points])
 
  const generalInsight =
@@ -1202,22 +1287,22 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
         setModeMenuOpen(false)
       },
       options: [
-        { value: "top-performing", label: "BEST" },
-        { value: "most-recent", label: "LAST" },
+        { value: "top-performing", label: sortMetric === "avd" ? "BEST BY AVD" : sortMetric === "estIncome" ? "BEST BY REVENUE" : sortMetric === "dur" ? "BEST BY LENGTH" : "BEST BY VIEWS" },
+        { value: "most-recent", label: "LATEST PUBLISHED" },
       ],
     },
    }}
    activeContext={{
      title: activePoint?.title?.toUpperCase() || "NO VIDEO SELECTED",
      stats: [
-      { label: "AVP%", value: activePoint ? activePoint.avd.toFixed(2) : "0.00", tone: "lime", onClick: () => setSortMetric("avd"), isActive: sortMetric === "avd" },
+      { label: "AVD", value: activePoint ? `${activePoint.avd.toFixed(1)}s` : "0s", tone: "lime", onClick: () => setSortMetric("avd"), isActive: sortMetric === "avd" },
       { label: "REV", value: `$${activePoint ? activePoint.estIncome.toFixed(2) : "0.00"}`, tone: "cyan", onClick: () => setSortMetric("estIncome"), isActive: sortMetric === "estIncome" },
       { label: "LENGTH", value: `${activePoint ? Math.round(activePoint.dur) : 0}s`, tone: "yellow", onClick: () => setSortMetric("dur"), isActive: sortMetric === "dur" },
       { label: "VIEWS", value: activePoint ? Math.round(activePoint.views).toLocaleString() : "0", tone: "white", onClick: () => setSortMetric("views"), isActive: sortMetric === "views" },
      ],
    }}
    metricBadges={[
-    { label: "AVP%", tone: "lime" },
+    { label: "AVD", tone: "lime" },
     { label: "REV", tone: "cyan" },
     { label: "VIEWS", tone: "white" },
    ]}
@@ -1258,22 +1343,24 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
        <XAxis
         type="number"
         dataKey="dur"
-        domain={[0, 180]}
+        domain={cd.durationScale.domain}
+        ticks={cd.durationScale.ticks}
+        tickFormatter={(value) => `${value}s`}
         axisLine={{ stroke: '#000', strokeWidth: 3 }}
         tickLine={false}
         tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
        />
        <YAxis
         type="number"
-        dataKey="avdClamped"
-        domain={[0, cd.yTop]}
-        ticks={[0, 75, 150, 225, 300]}
+        dataKey="avd"
+        domain={cd.avdScale.domain}
+        ticks={cd.avdScale.ticks}
         axisLine={{ stroke: '#000', strokeWidth: 3 }}
         tickLine={false}
         tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
-        tickFormatter={(v) => v === 0 ? '' : v}
+        tickFormatter={(value) => value === 0 ? '' : `${value}s`}
         label={{
-         value: "AVG % VIEWED",
+         value: "AVD (SECONDS)",
          angle: -90,
          position: "insideLeft",
          offset: 15,
@@ -1585,10 +1672,10 @@ export const AlgorithmTriggerModule: React.FC<GChartProps> = ({ data }) => {
 
 /* 5d. Engagement Lines Module (Comments/Likes/Shares/Subs - SubToolbox) */
 const ENGAGEMENT_METRICS = [
- { key: "comments", label: "COMMENTS", color: "#00E5FF", tone: "cyan" as const },
- { key: "subscribersGained", label: "SUBS", color: "#CCFF00", tone: "lime" as const },
- { key: "shares", label: "SHARES", color: "#FFE357", tone: "yellow" as const },
- { key: "likes", label: "LIKES", color: "#FF7497", tone: "pink" as const },
+ { key: "comments", label: "COMMENTS", color: VT_VISUAL_METRIC_COLORS.comments, tone: "cyan" as const },
+ { key: "subscribersGained", label: "SUBSCRIBERS", color: VT_VISUAL_METRIC_COLORS.subscribers, tone: "lime" as const },
+ { key: "shares", label: "SHARES", color: VT_VISUAL_METRIC_COLORS.shares, tone: "yellow" as const },
+ { key: "likes", label: "LIKES", color: VT_VISUAL_METRIC_COLORS.likes, tone: "pink" as const },
 ] as const
 
 const ENGAGEMENT_PULSE_COUNT_OPTIONS = [10, 15, 20, 25, 50]
@@ -1598,7 +1685,6 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data }) => {
  const [mode, setMode] = useState<"top-performing" | "most-recent">("most-recent")
  const [format, setFormat] = useState<"shorts" | "longform" | "combined">("combined")
  const [selectedCount, setSelectedCount] = useState(25)
- const [hoveredBucketKey, setHoveredBucketKey] = useState<string | null>(null)
  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
  const [animKey, setAnimKey] = useState(0)
  const [rankMenuOpen, setRankMenuOpen] = useState(false)
@@ -1675,7 +1761,7 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data }) => {
  }
 
  const sortLabel = ENGAGEMENT_METRICS.find((m) => m.key === sortMetric)?.label || "LIKES"
- const modeLabel = mode === "most-recent" ? "NEWEST" : "BEST"
+ const modeLabel = mode === "most-recent" ? "NEWEST" : "TOP PERFORMING"
  const formatLabel = format === "shorts" ? "SHORTS" : format === "longform" ? "LONGFORMAT" : "VIDEOS"
  const activeRow = hoveredIdx !== null ? cd[hoveredIdx] : cd[0]
  const renderOrder = useMemo(() => {
@@ -1720,41 +1806,56 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data }) => {
      { label: "LIKES", value: String(activeRow?.likes ?? 0), tone: "pink", onClick: () => handleSortChange("likes"), isActive: sortMetric === "likes" },
      { label: "COMMENTS", value: String(activeRow?.comments ?? 0), tone: "cyan", onClick: () => handleSortChange("comments"), isActive: sortMetric === "comments" },
      { label: "SHARES", value: String(activeRow?.shares ?? 0), tone: "yellow", onClick: () => handleSortChange("shares"), isActive: sortMetric === "shares" },
-     { label: "SUBS", value: String(activeRow?.subscribersGained ?? 0), tone: "lime", onClick: () => handleSortChange("subscribersGained"), isActive: sortMetric === "subscribersGained" },
+     { label: "SUBSCRIBERS", value: String(activeRow?.subscribersGained ?? 0), tone: "lime", onClick: () => handleSortChange("subscribersGained"), isActive: sortMetric === "subscribersGained" },
     ],
    }}
-   controllerRows={[
-    { type: "number", value: cd.length, bgTone: "#33FF99", onPrev: () => cycleCount(-1), onNext: () => cycleCount(1) },
-    {
-      type: "split",
-      bgTone: "#FFEA00",
-      leftBgTone: "#FF7497",
-      leftFgTone: "#000000",
-      rightBgTone: "#B14AED",
-      rightFgTone: "#000000",
-      leftValue: modeLabel,
-      rightValue: formatLabel,
-      onPrev: toggleMode,
-      onNext: cycleFormat,
-    },
-    {
-      type: "rankedBy",
-      bgTone: "#FFFFFF",
-      label: "BY",
-      value: sortLabel,
-      open: rankMenuOpen,
-      onToggle: () => setRankMenuOpen((prev) => !prev),
-      options: ENGAGEMENT_METRICS.map((m) => ({
-       key: m.key,
-       label: m.label,
-       active: sortMetric === m.key,
-       onSelect: () => {
-        handleSortChange(m.key)
-        setRankMenuOpen(false)
-       },
-      })),
-    },
-   ]}
+   controllerRows={[{
+    type: "custom",
+    render: () => (
+     <div className="grid h-full w-full grid-cols-2 grid-rows-[1fr_1fr_28px] bg-white">
+      <button
+       type="button"
+       aria-label="Show fewer videos"
+       onClick={() => cycleCount(-1)}
+       className="row-span-2 flex min-w-0 items-center border-0 border-r-[4px] border-black bg-[#33FF99] px-1"
+      >
+       <span className="text-[20px] font-black leading-none">◀</span>
+       <span className="min-w-0 flex-1 text-center text-[38px] font-[1000] leading-none">{selectedCount}</span>
+      </button>
+      <button
+       type="button"
+       aria-label="Change ranking scope"
+       onClick={toggleMode}
+       className="flex min-w-0 items-center border-0 border-b-[4px] border-black bg-[#FF7497] px-1"
+      >
+       <span className="min-w-0 flex-1 truncate text-[11px] font-black uppercase">{modeLabel}</span>
+       <span className="text-[16px] font-black leading-none">▶</span>
+      </button>
+      <button
+       type="button"
+       aria-label="Change video format"
+       onClick={cycleFormat}
+       className="flex min-w-0 items-center border-0 bg-[#B14AED] px-1"
+      >
+       <span className="min-w-0 flex-1 truncate text-[11px] font-black uppercase">{formatLabel}</span>
+       <span className="text-[16px] font-black leading-none">▶</span>
+      </button>
+      <label className="col-span-2 flex min-w-0 items-stretch border-t-[4px] border-black bg-black">
+       <span className="flex w-[42px] items-center justify-center text-[12px] font-black uppercase text-[#B14AED]">BY</span>
+       <select
+        aria-label="Rank engagement pulse by metric"
+        value={sortMetric}
+        onChange={(event) => handleSortChange(event.target.value)}
+        className="min-w-0 flex-1 appearance-none border-0 border-l-[4px] border-black bg-[#B14AED] px-2 text-center text-[12px] font-black uppercase text-black"
+       >
+        {ENGAGEMENT_METRICS.map((metric) => (
+         <option key={metric.key} value={metric.key}>{metric.label}</option>
+        ))}
+       </select>
+      </label>
+     </div>
+    ),
+   }]}
    footerBorderless
    footer={
     <div className="bg-black text-white">
@@ -1765,7 +1866,7 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data }) => {
       </div>
       <div className="flex flex-1 items-center justify-between gap-4">
        <EngagementKeyItem label="SHARES" tone="#FFE357" />
-       <EngagementKeyItem label="SUBS" tone="#CCFF00" />
+       <EngagementKeyItem label="SUBSCRIBERS" tone="#CCFF00" />
       </div>
      </div>
      <InsightMarquee
@@ -1792,9 +1893,10 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data }) => {
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
         <XAxis
          dataKey="name"
-         tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
+         tick={false}
          axisLine={{ stroke: '#000', strokeWidth: 3 }}
          tickLine={false}
+         height={8}
         />
         <YAxis
          yAxisId="left"
@@ -1827,8 +1929,12 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data }) => {
            name={m.label}
            stroke={m.color}
            strokeWidth={m.key === sortMetric ? 5 : 3}
-           dot={m.key === sortMetric ? { r: 4, fill: m.color, stroke: '#000', strokeWidth: 2 } : false}
-           activeDot={{ r: 6, fill: m.color, stroke: '#000', strokeWidth: 2 }}
+           dot={m.key === sortMetric
+            ? (props: any) => <EngagementSelectedDot {...props} stroke={m.color} />
+            : false}
+           activeDot={(props: any) => (
+            <EngagementHoverDot {...props} stroke={m.color} metricIndex={i} />
+           )}
            isAnimationActive
            animationBegin={animationMetaByMetric[m.key]?.beginMs ?? 0}
            animationDuration={animationMetaByMetric[m.key]?.durationMs ?? 1000}
@@ -2031,13 +2137,13 @@ export const PerformanceTrend: React.FC<GChartProps> = ({ data }) => {
   .map(r => ({ title: r.title.substring(0,20), date: new Date(r.uploadDate).toLocaleDateString(undefined,{month:"short",day:"numeric"}),
    views: mv(r,"views"), subs: mv(r,"subscribersGained") })), [data])
  return (
-  <Card title="PERFORMANCE TREND" subtitle="Views vs. Subs Trends" headerColor="#FFEA00">
+  <Card title="PERFORMANCE TREND" subtitle="Views vs. Subscriber Trends" headerColor="#FFEA00">
    <ComposedChart data={cd} margin={{top:10,right:10,left:-10,bottom:0}}>
     <CartesianGrid strokeDasharray="3 3"/><XAxis dataKey="date" tick={{fontSize:9,fontWeight:900}}/>
     <YAxis yAxisId="l" tick={{fontSize:10,fontWeight:900}}/><YAxis yAxisId="r" orientation="right" tick={{fontSize:10,fontWeight:900}}/>
     <Tooltip content={<ChartTip/>}/>
     <Area yAxisId="l" type="monotone" dataKey="views" fill="#FF749730" stroke="#FF7497" strokeWidth={2} name="Views"/>
-    <Line yAxisId="r" type="monotone" dataKey="subs" stroke="#00E5FF" strokeWidth={3} dot={false} name="Subs"/>
+    <Line yAxisId="r" type="monotone" dataKey="subs" stroke="#00E5FF" strokeWidth={3} dot={false} name="Subscribers"/>
    </ComposedChart>
   </Card>
  )
@@ -2069,7 +2175,7 @@ export const AudienceGrowth: React.FC<GChartProps> = ({ data }) => {
   <Card title="AUDIENCE GROWTH" subtitle="Discovery vs. Community" headerColor="#FF9900">
    <AreaChart data={cd} margin={{top:10,right:10,left:-10,bottom:0}}>
     <CartesianGrid strokeDasharray="3 3"/><XAxis dataKey="date" tick={{fontSize:9,fontWeight:900}}/><YAxis tick={{fontSize:10,fontWeight:900}}/>
-    <Tooltip content={<ChartTip/>}/><Area type="monotone" dataKey="subs" fill="#CCFF00" stroke="#000" strokeWidth={2} name="Subs Gained"/></AreaChart>
+    <Tooltip content={<ChartTip/>}/><Area type="monotone" dataKey="subs" fill="#CCFF00" stroke="#000" strokeWidth={2} name="Subscribers Gained"/></AreaChart>
   </Card>
  )
 }
@@ -2084,7 +2190,7 @@ export const GoldenRatioRadar: React.FC<GChartProps> = ({ data }) => {
    { subject:"Likes/View", A: +(avg("likes")/(avg("views")||1)*100).toFixed(2), max: 10 },
    { subject:"Comments", A: +avg("comments").toFixed(0), max: 200 },
    { subject:"Shares", A: +avg("shares").toFixed(0), max: 100 },
-   { subject:"Subs", A: +avg("subscribersGained").toFixed(0), max: 50 },
+   { subject:"Subscribers", A: +avg("subscribersGained").toFixed(0), max: 50 },
   ]
  }, [data])
  return (
@@ -2348,7 +2454,7 @@ export const GrowthPulse: React.FC<GChartProps> = ({ data }) => {
       <YAxis tick={{ fill: "#666", fontSize: 10 }} />
       <Tooltip content={<ChartTip />} />
       <Line type="monotone" dataKey="views" stroke="#FF7497" strokeWidth={3} dot={false} name="Views" />
-      <Line type="monotone" dataKey="subs" stroke="#00E5FF" strokeWidth={3} dot={false} name="Subs" />
+      <Line type="monotone" dataKey="subs" stroke="#00E5FF" strokeWidth={3} dot={false} name="Subscribers" />
       <Line type="monotone" dataKey="rev" stroke="#FFEA00" strokeWidth={3} dot={false} name="Revenue" />
       <Line type="monotone" dataKey="shares" stroke="#CCFF00" strokeWidth={3} dot={false} name="Shares" />
       <Legend wrapperStyle={{ fontSize: "10px", fontWeight: 900 }} />
@@ -2364,7 +2470,7 @@ export const StackedEngagementPulse = EngagementLinesModule
 /* 16. Format Comparison Donuts */
 export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTypeRows }) => {
  const [localWindow, setLocalWindow] = useState<"28d" | "90d" | "lifetime">("lifetime")
- const [windowOpen, setWindowOpen] = useState(false)
+ const [aggregationMode, setAggregationMode] = useState<"total" | "average">("total")
 
  const filteredData = useMemo(() => {
   if (localWindow === "lifetime") return data
@@ -2408,7 +2514,7 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
 
  const cd = useMemo(() => {
   const metrics = [
-   { key: "watchHours", label: "Watch Hrs" },
+   { key: "watchHours", label: "Watch Hours" },
    { key: "revenue", label: "Revenue" },
    { key: "subscribersGained", label: "Subscribers" },
    { key: "views", label: "Views" },
@@ -2417,7 +2523,7 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
   return metrics.map((m) => {
    let longTotal: number
    let shortsTotal: number
-   if (contentTypeTotals && (m.key === "views" || m.key === "watchHours")) {
+   if (aggregationMode === "total" && contentTypeTotals && (m.key === "views" || m.key === "watchHours")) {
     const bucket = contentTypeTotals[m.key]
     longTotal = bucket.long
     shortsTotal = bucket.shorts
@@ -2428,6 +2534,12 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
     shortsTotal = filteredData
      .filter((r) => r.format === "shorts")
      .reduce((acc, r) => acc + mv(r, m.key), 0)
+   }
+   if (aggregationMode === "average") {
+    const longCount = filteredData.filter((r) => r.format === "long" || r.format === "unknown").length
+    const shortsCount = filteredData.filter((r) => r.format === "shorts").length
+    longTotal = longCount > 0 ? longTotal / longCount : 0
+    shortsTotal = shortsCount > 0 ? shortsTotal / shortsCount : 0
    }
 
    const total = longTotal + shortsTotal
@@ -2445,7 +2557,7 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
     total,
    }
   })
- }, [filteredData, contentTypeTotals])
+ }, [filteredData, contentTypeTotals, aggregationMode])
 
  const longStats = cd.map(m => ({ label: m.label.toUpperCase(), value: Math.round(m.data[0].value).toLocaleString(), tone: "cyan" as const, lockTone: true }))
  const shortsStats = cd.map(m => ({ label: m.label.toUpperCase(), value: Math.round(m.data[1].value).toLocaleString(), tone: "pink" as const, lockTone: true }))
@@ -2484,24 +2596,35 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
     rightTitle: "SHORTS",
     rightStats: shortsStats
    }}
-   controlBox={{
-    count: filteredData.length,
-    countUnit: "VIDEOS",
-    dropdown: {
-     value: localWindow,
-     isOpen: windowOpen,
-     onToggle: () => setWindowOpen(!windowOpen),
-     onSelect: (v) => {
-      setLocalWindow(v as any)
-      setWindowOpen(false)
-     },
-     options: [
-      { value: "28d", label: "28 DAYS" },
-      { value: "90d", label: "90 DAYS" },
-      { value: "lifetime", label: "LIFETIME" },
-     ],
+   controllerRows={[
+    { type: "number", value: filteredData.length, bgTone: "#00E5FF" },
+    { type: "label", value: "LONG + SHORTS", bgTone: "#FF7497", fgTone: "#000000" },
+    {
+     type: "custom",
+     bgTone: "#FFFFFF",
+     render: () => (
+      <div className="grid h-[26px] min-h-[26px] w-full grid-cols-[1fr_1.25fr] items-stretch text-[11px] font-[1000] uppercase">
+       <label className="relative min-w-0 border-r-[4px] border-black bg-[#FFEA00]">
+        <span className="pointer-events-none absolute inset-y-0 left-1 flex items-center">Window</span>
+        <select
+         aria-label="Format dominance time window"
+         value={localWindow}
+         onChange={(event) => setLocalWindow(event.target.value as "28d" | "90d" | "lifetime")}
+         className="h-full w-full cursor-pointer appearance-none border-0 bg-transparent pl-[48px] pr-4 text-right text-[11px] font-[1000] uppercase outline-none"
+        >
+         <option value="28d">28 Days</option>
+         <option value="90d">90 Days</option>
+         <option value="lifetime">Lifetime</option>
+        </select>
+       </label>
+       <div className="grid grid-cols-2">
+        <button type="button" onClick={() => setAggregationMode("total")} className="border-0 border-r-[2px] border-black text-[11px] font-[1000] uppercase" style={{ background: aggregationMode === "total" ? "#CCFF00" : "#FFFFFF" }}>Total</button>
+        <button type="button" onClick={() => setAggregationMode("average")} className="border-0 border-l-[2px] border-black text-[11px] font-[1000] uppercase" style={{ background: aggregationMode === "average" ? "#CCFF00" : "#FFFFFF" }}>Average</button>
+       </div>
+      </div>
+     ),
     },
-   }}
+   ]}
    footer={
     <InsightMarquee 
       chartInsight="Compares longform and shorts contribution across watch hours, revenue, subscribers, and views."
@@ -2532,8 +2655,9 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
            label={({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
             const RADIAN = Math.PI / 180
             const radius = Number(innerRadius) + (Number(outerRadius) - Number(innerRadius)) * 0.5
-            const x = cx + radius * Math.cos(-midAngle * RADIAN)
-            const y = cy + radius * Math.sin(-midAngle * RADIAN)
+            const angle = Number(midAngle ?? 0)
+            const x = Number(cx) + radius * Math.cos(-angle * RADIAN)
+            const y = Number(cy) + radius * Math.sin(-angle * RADIAN)
             return (
              <text
               x={x}
@@ -2541,7 +2665,7 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
               fill="white"
               textAnchor="middle"
               dominantBaseline="central"
-              className="text-[16px] font-[1000] tabular-nums"
+              className="text-[32px] font-[1000] tabular-nums"
              >
               {Math.round(value).toLocaleString()}
              </text>
@@ -2553,13 +2677,14 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
            ))}
           </Pie>
           <Tooltip content={<ChartTip />} />
+          <text x="50%" y={metric.key === "watchHours" ? "47%" : "50%"} textAnchor="middle" dominantBaseline="middle" fill="#000" className="text-[14px] font-[1000] uppercase">
+           {metric.key === "watchHours" ? "WATCH" : metric.label.toUpperCase()}
+          </text>
+          {metric.key === "watchHours" ? (
+           <text x="50%" y="54%" textAnchor="middle" dominantBaseline="middle" fill="#000" className="text-[14px] font-[1000] uppercase">HOURS</text>
+          ) : null}
          </PieChart>
        </StableChartFrame>
-      </div>
-      <div className="h-8 flex items-center justify-center">
-       <span className="text-[12px] font-[1000] uppercase tracking-[0.11em] text-black">
-        {metric.label}
-       </span>
       </div>
      </div>
     ))}
@@ -2586,41 +2711,56 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
 
   const cd = useMemo(() => {
     const raw = data
-      .map(r => ({
-        title: r.title,
-        wh: +mv(r, "watchHours").toFixed(1),
-        rpm: +(mv(r, "revenue") / (mv(r, "views") / 1000 || 1)).toFixed(2),
-        views: mv(r, "views"),
-        rev: mv(r, "revenue"),
-        uploadTs: new Date(String(r.uploadDate || "")).getTime() || 0,
-      }))
+      .map(r => {
+        const revenue = resolveMetricNumber(r, "revenue")
+        const views = mv(r, "views")
+        return {
+          title: r.title,
+          wh: +mv(r, "watchHours").toFixed(1),
+          rpm: +((revenue.value ?? 0) / (views / 1000 || 1)).toFixed(2),
+          views,
+          rev: revenue.value ?? 0,
+          revenueAvailable: revenue.value !== null,
+          uploadTs: new Date(String(r.uploadDate || "")).getTime() || 0,
+        }
+      })
       .filter(d => d.wh > 0 && d.rpm > 0)
 
     const points = mode === "most-recent"
       ? [...raw].sort((a, b) => b.uploadTs - a.uploadTs).slice(0, selectedCount)
       : [...raw].sort((a, b) => b.rev - a.rev).slice(0, selectedCount)
 
-    const maxRev = Math.max(1, ...points.map(d => d.rev))
-    const minRev = Math.min(...points.map(d => d.rev))
-    const lerp = (a: number, b: number, t: number) => a + (b - a) * t
-
-    return points.map(d => {
+    const revenuePercentiles = buildTieAwarePercentiles(
+      points.map((point) => point.revenueAvailable ? point.rev : null),
+    )
+    const viewRadii = buildLogBubbleRadii(points.map((point) => point.views), {
+      minRadius: 4,
+      maxRadius: 25,
+    })
+    const watchHoursScale = buildAdaptiveZeroScale(points.map((point) => point.wh), {
+      fallbackMax: 100,
+    })
+    const revScale = buildAdaptiveZeroScale(points.map((point) => point.rev), {
+      fallbackMax: 100,
+    })
+    const chartPoints = points.map((d, index) => {
       const key = `${d.title}-${d.uploadTs}-${d.rev}`
-      const revT = maxRev > minRev ? (d.rev - minRev) / (maxRev - minRev) : 0.5
-      const radius = lerp(4, 25, Math.pow(revT, 0.5))
-      const c = {
-        r: Math.round(lerp(0, 204, revT)),
-        g: Math.round(lerp(229, 255, revT)),
-        b: Math.round(lerp(255, 0, revT)),
-      }
-
+      const revenuePosition = revenuePercentiles[index]
       return {
         ...d,
         key,
-        radius,
-        color: `rgb(${c.r}, ${c.g}, ${c.b})`
+        radius: viewRadii[index],
+        color: revenuePosition === null
+          ? MISSING_BUBBLE_COLOR
+          : interpolateThreeStopColor(revenuePosition, REVENUE_EFFICIENCY_PALETTE),
       }
     })
+
+    return {
+      points: [...chartPoints].sort((a, b) => b.radius - a.radius),
+      watchHoursScale,
+      revScale,
+    }
   }, [data, mode, selectedCount])
 
   const bubbleShape = (props: any) => {
@@ -2648,13 +2788,13 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
     )
   }
 
-  const activePoint = cd.find(p => p.key === hoveredKey) || cd[0]
+  const activePoint = cd.points.find(p => p.key === hoveredKey) || cd.points[0]
 
   return (
     <SubToolboxChartModule
       header={{
         title: "REVENUE EFFICIENCY",
-        subtitle: "WATCH HOURS × RPM DYNAMICS",
+        subtitle: "WATCH HOURS × EST. REVENUE",
         headerStyle: "subtoolbox",
         icon: <CustomIcon name="analytics" size={18} />,
       }}
@@ -2665,7 +2805,7 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
       }}
       layout={{ moduleMinHeight: "420px", moduleWidth: "100%" }}
       controlBox={{
-        count: cd.length,
+        count: cd.points.length,
         countUnit: "VIDEOS",
         onCountPrev: () => cycleCount(-1),
         onCountNext: () => cycleCount(1),
@@ -2678,17 +2818,17 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
             setModeMenuOpen(false)
           },
           options: [
-            { value: "top-performing", label: "BEST" },
-            { value: "most-recent", label: "LAST" }
+            { value: "top-performing", label: "BEST BY EST. REVENUE" },
+            { value: "most-recent", label: "LATEST PUBLISHED" }
           ]
         }
       }}
       activeContext={{
         title: activePoint?.title?.toUpperCase() || "SELECT DATA POINT",
         stats: [
-          { label: "RPM", value: `$${activePoint?.rpm.toFixed(2)}`, tone: "lime" },
+          { label: "EST REV", value: `$${activePoint?.rev.toFixed(2)}`, tone: "lime" },
           { label: "WATCH HRS", value: activePoint?.wh.toLocaleString(), tone: "cyan" },
-          { label: "TOTAL REVENUE", value: `$${activePoint?.rev.toFixed(2)}`, tone: "yellow" }
+          { label: "RPM", value: `$${activePoint?.rpm.toFixed(2)}`, tone: "yellow" }
         ]
       }}
       footer={
@@ -2710,19 +2850,25 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
                   type="number" 
                   dataKey="wh" 
                   name="Watch Hours" 
+                  domain={cd.watchHoursScale.domain}
+                  ticks={cd.watchHoursScale.ticks}
+                  tickFormatter={(value) => `${formatCompact(value)}h`}
                   tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
                   axisLine={{ stroke: '#000', strokeWidth: 3 }}
                   tickLine={false}
                 />
                 <YAxis 
                   type="number" 
-                  dataKey="rpm" 
-                  name="RPM" 
+                  dataKey="rev"
+                  name="Est. Revenue"
+                  domain={cd.revScale.domain}
+                  ticks={cd.revScale.ticks}
+                  tickFormatter={(value) => `$${formatCompact(value)}`}
                   tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
                   axisLine={{ stroke: '#000', strokeWidth: 3 }}
                   tickLine={false}
                   label={{ 
-                    value: 'RPM ($)', 
+                    value: 'EST. REVENUE ($)',
                     angle: -90, 
                     position: 'insideLeft', 
                     offset: 15, 
@@ -2730,7 +2876,7 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
                   }}
                 />
                 <Tooltip content={<ChartTip />} />
-                <Scatter data={cd} shape={bubbleShape} />
+                <Scatter data={cd.points} shape={bubbleShape} />
                 <Customized component={({ offset, width, height }: any) => {
                   if (!offset) return null
                   const left = offset.left
@@ -2750,7 +2896,10 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
           <div className="absolute bottom-[0px] left-[14px] right-[14px] grid grid-cols-3 items-center pointer-events-none">
             <div className="flex items-center gap-2 justify-self-end">
               <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Revenue</span>
-              <div className="w-36 h-6 border-[2px] border-black rounded-[2px] bg-[#CCFF00]" />
+              <div
+                className="w-36 h-6 border-[2px] border-black rounded-[2px]"
+                style={{ background: "linear-gradient(90deg, #FF7497 0%, #B14AED 50%, #26C7EC 100%)" }}
+              />
             </div>
             <div className="justify-self-center flex items-center gap-3">
               <span className="text-black font-[1000] text-[16px] leading-none">◀</span>
@@ -2761,11 +2910,19 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
             </div>
             <div className="flex items-center gap-2 justify-self-start">
               <div className="flex items-center gap-2">
-                <span className="w-2 aspect-square shrink-0 box-border rounded-full bg-white border border-[#00E5FF]" />
-                <span className="w-3 aspect-square shrink-0 box-border rounded-full bg-white border border-[#66FF8A]" />
-                <span className="w-4 aspect-square shrink-0 box-border rounded-full bg-white border border-[#CCFF00]" />
-                <span className="w-5 aspect-square shrink-0 box-border rounded-full bg-white border border-[#EBE357]" />
-                <span className="w-6 aspect-square shrink-0 box-border rounded-full bg-white border border-[#FFD700]" />
+                {[2, 3, 4, 5, 6].map((size, index) => (
+                  <span
+                    key={size}
+                    className="aspect-square shrink-0 box-border rounded-full border border-black/30"
+                    style={{
+                      width: `${size * 4}px`,
+                      backgroundColor: interpolateThreeStopColor(
+                        index / 4,
+                        REVENUE_EFFICIENCY_PALETTE,
+                      ),
+                    }}
+                  />
+                ))}
                 <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Views</span>
               </div>
             </div>
@@ -3074,7 +3231,7 @@ const csvSourceGroup = (sourceRaw: string): string => {
   EXT_URL: "External Websites",
   YT_CHANNEL: "Channel Pages",
   RELATED_VIDEO: "Suggested Videos",
-  YT_OTHER_PAGE: "Other YouTube Features",
+  YT_OTHER_PAGE: "YouTube Features",
   PLAYLIST: "YouTube Playlists",
   NO_LINK_OTHER: "Direct / Unknown",
   NOTIFICATION: "Notifications",
@@ -3110,7 +3267,7 @@ const trafficSourceDisplayName = (value: string): string => {
   EXT_URL: "External Websites",
   YT_CHANNEL: "Channel Pages",
   RELATED_VIDEO: "Suggested Videos",
-  YT_OTHER_PAGE: "Other YouTube Features",
+  YT_OTHER_PAGE: "YouTube Features",
   PLAYLIST: "YouTube Playlists",
   NO_LINK_OTHER: "Direct / Unknown",
   NOTIFICATION: "Notifications",
@@ -3207,7 +3364,18 @@ const trafficSourceSubtitleLabel = (source: string): string => {
  return TRAFFIC_SOURCE_SHORT_LABELS[normalized] || trafficSourceDisplayName(source).toUpperCase()
 }
 
-const trafficSourceLegendLabel = (source: string): string => trafficSourceDisplayName(source)
+const trafficSourceLegendLabel = (source: string): string => {
+ const normalized = normalizeTrafficSourceKey(source)
+ if (normalized === "YT_OTHER_PAGE") return "YouTube Features"
+ return trafficSourceDisplayName(source)
+}
+
+const trafficSourceLegendLines = (label: string): string[] => {
+ const words = label.trim().split(/\s+/).filter(Boolean)
+ if (words.length <= 1) return words
+ const splitAt = Math.ceil(words.length / 2)
+ return [words.slice(0, splitAt).join(" "), words.slice(splitAt).join(" ")]
+}
 
 /**
  * Every traffic source the evolution legend lists, whether or not the current
@@ -3361,7 +3529,7 @@ const buildExpansionDatasets = (rows: CanonicalVideoRow[]): ExpansionDatasets =>
   { name: "Views", value: totals.views, tone: "lime" },
   { name: "Engaged", value: totals.engaged, tone: "yellow" },
   { name: "Watch Hrs", value: totals.watch, tone: "pink" },
-  { name: "Subs", value: totals.subs, tone: "white" },
+  { name: "Subscribers", value: totals.subs, tone: "white" },
  ]
 
  const ctrValues = rows.map((r) => ctrPct(r)).filter((n) => n > 0)
@@ -3449,8 +3617,8 @@ const canonicalTrafficTimeline = (rows: Array<Record<string, unknown>>) => {
   comparableRows.forEach((row) => {
   const rawDate = String(row.syncedAt || "")
   const bucket = /^\d{4}-\d{2}/.test(rawDate) ? rawDate.slice(0, 7) : "Current"
-  const source = String(
-   trafficSourceDisplayName(
+  const source = trafficSourceDisplayName(
+   String(
     row.sourceTitle ||
     row.sourceLabel ||
     row.trafficSourceDetail ||
@@ -3530,20 +3698,38 @@ const TrafficSectionedAxisTick: React.FC<{
  x?: number
  y?: number
  payload?: { value?: string }
-}> = ({ x = 0, y = 0, payload }) => {
+ index?: number
+}> = ({ x = 0, y = 0, payload, index = 0 }) => {
  const bucket = String(payload?.value ?? "")
  const kind = trafficAxisTickKind(bucket)
- if (!kind) return <g />
+ // The first visible month sits against the Y axis even when it is not the
+ // first data bucket, so use both the tick index and plot position.
+ if (!kind || index === 0 || x <= 76) return <g />
  const parsed = new Date(bucket)
  const isMonth = kind === "month"
  return (
   <g transform={`translate(${x},${y})`}>
-   <line x1={0} x2={0} y1={0} y2={isMonth ? 12 : 5} stroke="#8087a2" strokeWidth={isMonth ? 1.5 : 1} />
    {isMonth ? (
-    <text x={0} y={24} textAnchor="middle" fill="#dfe4ff" fontSize={10} fontWeight={900}>
+    <text x={0} y={-13} textAnchor="middle" fill="#000000" fontSize={13} fontWeight={1000}>
      {TRAFFIC_MONTH_LABELS[parsed.getMonth()]}
     </text>
    ) : null}
+  </g>
+ )
+}
+
+const TrafficPercentAxisTick: React.FC<{
+ x?: number
+ y?: number
+ payload?: { value?: number }
+}> = ({ x = 0, y = 0, payload }) => {
+ const value = Number(payload?.value)
+ if (![25, 50, 75].includes(value)) return <g />
+ return (
+  <g transform={`translate(${x},${y})`}>
+   <text x={8} y={4} textAnchor="start" fill="#000000" fontSize={10} fontWeight={1000}>
+    {value}
+   </text>
   </g>
  )
 }
@@ -3553,8 +3739,8 @@ const normalizeTrafficDayRows = (rows: Array<Record<string, unknown>>): TrafficD
   .map((row) => {
    const timestamp = parseTrafficDayTimestamp(row.day || row.Day || row.date || row.bucket || row.syncedAt)
    if (!timestamp) return null
-  const source = String(
-    trafficSourceDisplayName(
+  const source = trafficSourceDisplayName(
+    String(
       row["Traffic Source"] ||
       row.term ||
       row.sourceTitle ||
@@ -3657,7 +3843,7 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
    type: "dropdown" as const,
    value: selectedFormat,
    options: DISTRIBUTION_FORMAT_VALUES.map((value) => ({ value, label: getTrafficSourceFormatLabel(value) })),
-   onSelect: (value) => setSelectedFormat(value as DistributionFormatKey),
+   onSelect: (value: string) => setSelectedFormat(value as DistributionFormatKey),
    bgTone: "#FF7497",
    fgTone: "#000000",
   },
@@ -3665,7 +3851,9 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
    type: "dropdown" as const,
    value: selectedWindow,
    options: DISTRIBUTION_WINDOW_VALUES,
-   onSelect: (value) => setSelectedWindow(value),
+   onSelect: (value: string) =>
+    DISTRIBUTION_WINDOW_VALUES.some((option) => option.value === value)
+     && setSelectedWindow(value as DistributionWindowKey),
    bgTone: "#FFEA00",
    fgTone: "#000000",
   },
@@ -3712,7 +3900,6 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
     charted: false,
    })),
  ]
- const legendColumnCount = Math.ceil(legendSourceMeta.length / 2)
  const hoveredDateLabel = (bucket: string): string => {
   const parsed = new Date(bucket)
   if (!Number.isFinite(parsed.getTime())) return bucket
@@ -3736,9 +3923,11 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
    label: entry.subtitleLabel,
    value: `${(((activeSourceTotals[entry.key] || 0) / activeSourceTotal) * 100).toFixed(0)}%`,
    tone: entry.tone as any,
-   valueTone: entry.tone,
+   valueTone: "#000000",
    backgroundTone: "#E5E7EB",
-   labelText: entry.subtitleLabel,
+   labelText: trafficSourceLegendLines(entry.legendLabel).join("\n"),
+   labelClassName: "whitespace-pre-line text-center text-[8px] leading-[8px] tracking-[0.03em]",
+   minWidth: 84,
    lockTone: true,
    compact: true,
   })),
@@ -3811,12 +4000,13 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
     title: activeContextTitle,
     stats: activeContextStats,
     bgTone: "#E5E7EB",
+    minHeight: 48,
    }}
   >
-   <div className="h-full min-h-[470px] w-full overflow-hidden bg-[#090b16] px-1 pb-1 pt-1">
+   <div className="h-full min-h-[470px] w-full overflow-hidden bg-[#090b16]">
     {visibleKeys.length === 0 ? <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} /> : (
      <div className="flex h-full flex-col justify-center gap-2">
-      <div className="h-[462px] overflow-hidden rounded-xl border-[3px] border-black bg-[#050814] px-1 pb-1 pt-1 flex flex-col gap-1">
+      <div className="flex h-[462px] flex-col overflow-hidden bg-[#050814]">
        <div
         ref={hoverHostRef}
         className="relative min-h-0 w-full flex-1"
@@ -3827,10 +4017,15 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
           <AreaChart
           className="tse-plot"
           data={areaData}
-          margin={{ top: 30, right: 44, left: 0, bottom: 0 }}
+          margin={{ top: 18, right: 0, left: 0, bottom: 0 }}
          >
           <Customized component={TrafficPlotClipDefs} />
-          <CartesianGrid strokeDasharray="3 3" stroke="#2a2f41" />
+          <CartesianGrid
+           horizontal
+           vertical={false}
+           stroke="#000000"
+           strokeDasharray=""
+          />
           {useSectionedAxis ? (
            <XAxis
             dataKey="bucket"
@@ -3838,12 +4033,28 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
             height={30}
             tick={<TrafficSectionedAxisTick />}
             tickLine={false}
-            axisLine={{ stroke: "#8087a2", strokeWidth: 1 }}
+            axisLine={false}
            />
           ) : (
-           <XAxis dataKey="bucket" height={30} tickFormatter={formatTrafficDayAxisLabel} tick={{ fontSize: 10, fontWeight: 900, fill: "#dfe4ff" }} axisLine={{ stroke: "#8087a2", strokeWidth: 1 }} tickLine={{ stroke: "#8087a2" }} />
+           <XAxis
+            dataKey="bucket"
+            height={30}
+            tickFormatter={formatTrafficDayAxisLabel}
+            tick={{ fontSize: 10, fontWeight: 1000, fill: "#000000", dy: -8 }}
+            axisLine={false}
+            tickLine={false}
+           />
           )}
-          <YAxis width={44} tickMargin={3} tick={{ fontSize: 10, fontWeight: 900, fill: "#dfe4ff" }} tickFormatter={(v) => `${v}%`} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} allowDataOverflow axisLine={{ stroke: "#8087a2", strokeWidth: 1 }} tickLine={{ stroke: "#8087a2" }} />
+          <YAxis
+           width={44}
+           tickMargin={0}
+           tick={<TrafficPercentAxisTick />}
+           domain={[0, 100]}
+           ticks={[25, 50, 75]}
+           allowDataOverflow
+           axisLine={false}
+           tickLine={false}
+          />
           {visibleKeys.map((k, i) => {
            const tone = trafficRankTone(i)
            return (
@@ -3877,22 +4088,21 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
          className="pointer-events-none absolute left-0 top-0 whitespace-nowrap text-[10px] font-black uppercase tracking-[0.08em] text-white opacity-0"
         />
        </div>
-       <div className="shrink-0 select-none overflow-hidden rounded-[8px] bg-black px-2 py-1.5">
-        <div
-         className="grid items-center gap-x-2 gap-y-1.5"
-         style={{ gridTemplateColumns: `repeat(${legendColumnCount}, minmax(0, 1fr))` }}
-        >
+       <div className="shrink-0 select-none bg-black px-2 py-1.5 overflow-x-auto">
+        <div className="flex flex-row flex-nowrap items-center justify-between gap-2 min-w-full">
          {legendSourceMeta.map((entry) => (
-          <div key={entry.key} className="flex min-w-0 items-center gap-1.5">
+          <div key={entry.key} className="flex shrink-0 items-center gap-1">
            <span
-            className="h-4 w-4 shrink-0 border-[2px] border-black"
+            className="h-[14px] w-[14px] shrink-0 rounded-[1px] border border-black"
             style={{ background: entry.tone, opacity: entry.charted ? 1 : 0.35 }}
            />
            <span
-            className="min-w-0 truncate text-[8.5px] font-black uppercase leading-none tracking-[0.06em]"
+            className="flex flex-col text-left text-[8px] font-black uppercase leading-[9px] tracking-[0.03em] whitespace-nowrap"
             style={{ color: entry.tone, opacity: entry.charted ? 1 : 0.45 }}
            >
-            {entry.legendLabel}
+            {trafficSourceLegendLines(entry.legendLabel).map((line, lineIndex) => (
+             <span key={`${line}-${lineIndex}`} className="block">{line}</span>
+            ))}
            </span>
           </div>
          ))}
@@ -3944,7 +4154,7 @@ const keywordVennStatTone = (metricKey: KeywordMetricKey): "pink" | "cyan" | "li
 const keywordMetricBadgeLabel = (metricKey: KeywordMetricKey): string => {
  if (metricKey === "averageViewDuration") return "AVG DUR"
  if (metricKey === "averageViewPercentage") return "AVP %"
- if (metricKey === "subscribersGained") return "SUBS"
+ if (metricKey === "subscribersGained") return "SUBSCRIBERS"
  if (metricKey === "engagedViews") return "ENGAGED"
  if (metricKey === "impressions") return "IMPRSNS"
  if (metricKey === "revenue") return "REV"
@@ -4006,21 +4216,27 @@ const VennValueLabel: React.FC<{
   intersection?: boolean
   opacity?: number
   transition?: string
-}> = ({ x, y, title, count, metricValue, metricKey, small = false, intersection = false, opacity = 1, transition }) => (
+  colorIndex?: number
+}> = ({ x, y, title, count, metricValue, metricKey, small = false, intersection = false, opacity = 1, transition, colorIndex = 0 }) => (
  <g className="venn-label" style={{ transform: `translate(${x}px, ${y}px)`, opacity, transition }}>
   {title ? (
-   <text
-    x={0}
-    y={-(small ? 16 : 24)}
-    textAnchor="middle"
-    style={{ fontSize: small ? 16 : 22, fontWeight: 900, fill: "#000" }}
-   >
-    {title}
-   </text>
+   <foreignObject x={-160} y={small ? -72 : -80} width={320} height={70}>
+    <div className="flex h-full w-full items-end justify-center overflow-visible">
+     <button
+      type="button"
+      tabIndex={-1}
+      aria-hidden="true"
+      className="pointer-events-none inline-flex items-center h-7 px-3 border-[2px] border-black rounded-md text-[11px] font-black uppercase tracking-[0.06em] whitespace-nowrap"
+      style={{ ...keywordBadgeStyle(colorIndex, true), scale: "2", transformOrigin: "center bottom" }}
+     >
+      {title.length > 18 ? `${title.slice(0, 17)}…` : title}
+     </button>
+    </div>
+   </foreignObject>
   ) : null}
   <text
    x={0}
-   y={intersection ? -4 : small ? 4 : 0}
+   y={intersection ? -4 : small ? 10 : 8}
    textAnchor="middle"
    style={{ fontWeight: 1000, fill: "#000" }}
   >
@@ -4031,7 +4247,7 @@ const VennValueLabel: React.FC<{
   </text>
   <text
    x={0}
-   y={intersection ? 18 : small ? 24 : 26}
+   y={intersection ? 18 : small ? 30 : 34}
    textAnchor="middle"
    style={{ fontSize: small ? 12 : 15, fontWeight: 800, fill: "rgba(0,0,0,0.68)" }}
   >
@@ -4065,17 +4281,20 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
  }, [slots])
  const [metricMode, setMetricMode] = useState<KeywordMetricKey>("views")
- const [metricMenuOpen, setMetricMenuOpen] = useState(false)
- const [rankedByMode, setRankedByMode] = useState<"average" | "total">("average")
+ const [rankedByMode, setRankedByMode] = useState<KeywordRankingMode>("average")
+ const supportsTotal = keywordMetricSupportsTotal(metricMode)
+ useEffect(() => {
+  if (!supportsTotal && rankedByMode !== "average") setRankedByMode("average")
+ }, [rankedByMode, supportsTotal])
 
  const ranked = useMemo(
   () =>
    buildKeywordClustersFromMasterRows(
     data as unknown as Record<string, unknown>[],
     metricMode,
-    { minSupport: 2, maxKeywords: 15 },
+    { minSupport: 2, maxKeywords: 50, rankingMode: rankedByMode },
    ),
-  [data, metricMode],
+  [data, metricMode, rankedByMode],
  )
  const summary = useMemo(
   () =>
@@ -4096,19 +4315,22 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
   [data, selected, metricMode],
  )
  const topKeywords = ranked.slice(0, 15)
- const didAutoSelectRef = useRef(false)
+ const rankedKeywords = ranked.slice(0, 10)
+ const leaderSignature = `${rankedByMode}:${metricMode}:${ranked.slice(0, 3).map((item) => item.word).join("|")}`
+ const leaderSignatureRef = useRef("")
  useEffect(() => {
-  if (didAutoSelectRef.current || topKeywords.length === 0) return
-  didAutoSelectRef.current = true
-  setSlots([topKeywords[0]?.word ?? null, topKeywords[1]?.word ?? null, topKeywords[2]?.word ?? null])
- }, [topKeywords])
- const RANKED_BY_COLS = 5
- const rankedByRows = Math.ceil(topKeywords.length / RANKED_BY_COLS)
+  if (ranked.length === 0 || leaderSignatureRef.current === leaderSignature) return
+  leaderSignatureRef.current = leaderSignature
+  setSlots([ranked[0]?.word ?? null, ranked[1]?.word ?? null, ranked[2]?.word ?? null])
+  setReplaceIndex(0)
+ }, [leaderSignature, ranked])
+ const RANKED_BY_COLS = 1
+ const rankedByRows = Math.ceil(rankedKeywords.length / RANKED_BY_COLS)
  const rankedByCellBorder = (i: number): string => {
   const col = i % RANKED_BY_COLS
   const row = Math.floor(i / RANKED_BY_COLS)
   return [
-   col !== RANKED_BY_COLS - 1 && i !== topKeywords.length - 1 ? "border-r-[2px] border-black" : "",
+   col !== RANKED_BY_COLS - 1 && i !== rankedKeywords.length - 1 ? "border-r-[2px] border-black" : "",
    row !== rankedByRows - 1 ? "border-b-[2px] border-black" : "",
   ].filter(Boolean).join(" ")
  }
@@ -4126,26 +4348,28 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
  const singleA = a ? singles.find((item) => item.keywords[0] === a) || null : null
  const singleB = b ? singles.find((item) => item.keywords[0] === b) || null : null
  const singleC = c ? singles.find((item) => item.keywords[0] === c) || null : null
- const rankedMax = Math.max(1, ranked[0]?.metricValue || 1)
+ const rankedMax = Math.max(
+  1,
+  ...rankedKeywords.map((item) => getKeywordRankValue(item, metricMode, rankedByMode)),
+ )
  const activeSlots = slots.map((k, i) => k !== null ? i : null).filter(i => i !== null) as number[]
  const activeCount = activeSlots.length
- const vennBox = { w: 620, h: 560 }
- const vennCanvas = { w: Math.round(vennBox.w * 1.075), h: Math.round(vennBox.h * 1.075) }
- const vennIdleCenter = { x: 310, y: 280 }
+ const vennBox = { w: 760, h: 600 }
+ const vennIdleCenter = { x: 380, y: 300 }
  const slotGeom = [
   { cx: vennIdleCenter.x, cy: vennIdleCenter.y, r: 0, opacity: 0, lx: vennIdleCenter.x, ly: vennIdleCenter.y, small: false },
   { cx: vennIdleCenter.x, cy: vennIdleCenter.y, r: 0, opacity: 0, lx: vennIdleCenter.x, ly: vennIdleCenter.y, small: false },
   { cx: vennIdleCenter.x, cy: vennIdleCenter.y, r: 0, opacity: 0, lx: vennIdleCenter.x, ly: vennIdleCenter.y, small: false },
  ]
  if (activeCount === 1) {
-  slotGeom[activeSlots[0]] = { cx: 310, cy: 280, r: 230, opacity: 1, lx: 310, ly: 280, small: false }
+  slotGeom[activeSlots[0]] = { cx: 380, cy: 315, r: 245, opacity: 1, lx: 380, ly: 145, small: false }
  } else if (activeCount === 2) {
-  slotGeom[activeSlots[0]] = { cx: 210, cy: 280, r: 200, opacity: 1, lx: 90, ly: 280, small: true }
-  slotGeom[activeSlots[1]] = { cx: 410, cy: 280, r: 200, opacity: 1, lx: 530, ly: 280, small: true }
+  slotGeom[activeSlots[0]] = { cx: 222, cy: 300, r: 210, opacity: 1, lx: 120, ly: 480, small: true }
+  slotGeom[activeSlots[1]] = { cx: 538, cy: 300, r: 210, opacity: 1, lx: 640, ly: 480, small: true }
  } else if (activeCount === 3) {
-  slotGeom[0] = { cx: 310, cy: 189, r: 165, opacity: slots[0] ? 1 : 0, lx: 310, ly: 125, small: true }
-  slotGeom[1] = { cx: 205, cy: 371, r: 165, opacity: slots[1] ? 1 : 0, lx: 125, ly: 440, small: true }
-  slotGeom[2] = { cx: 415, cy: 371, r: 165, opacity: slots[2] ? 1 : 0, lx: 495, ly: 440, small: true }
+  slotGeom[0] = { cx: 380, cy: 205, r: 178, opacity: slots[0] ? 1 : 0, lx: 380, ly: 65, small: true }
+  slotGeom[1] = { cx: 255, cy: 405, r: 178, opacity: slots[1] ? 1 : 0, lx: 145, ly: 525, small: true }
+  slotGeom[2] = { cx: 505, cy: 405, r: 178, opacity: slots[2] ? 1 : 0, lx: 615, ly: 525, small: true }
  }
  const g0 = slotGeom[0]
  const g1 = slotGeom[1]
@@ -4220,10 +4444,9 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
  }, [data, selected, metricMode])
 
  const RANKED_STAT_DEFS: [KeywordMetricKey, string][] = [
-  ["impressions", "IMPR"],
   ["views", "VIEWS"],
   ["engagedViews", "ENG"],
-  ["subscribersGained", "SUBS"],
+  ["subscribersGained", "SUBSCRIBERS"],
   ["likes", "LIKES"],
   ["comments", "CMNTS"],
   ["shares", "SHARE"],
@@ -4233,28 +4456,16 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
   ["rpm", "RPM"],
  ]
 
- const renderRankedItem = (item: (typeof ranked)[number], index: number, extraClassName = "") => {
+ const renderRankedItem = (item: (typeof ranked)[number], extraClassName = "") => {
   const activeIndex = selected.indexOf(item.word)
   const active = activeIndex >= 0
   const badgeColorIndex = keywordColorIndexForSelection(selected, item.word, item.rank - 1)
   const activeColor = KEYWORD_VENN_COLORS[badgeColorIndex % KEYWORD_VENN_COLORS.length]
 
-  const getValue = (key: KeywordMetricKey) => {
-   const def = getKeywordMetricDefinition(key)
-   if (def.aggregation === "average" || def.aggregation === "derived_average") {
-    return item.metrics[key]
-   }
-   if (rankedByMode === "average") {
-    return item.metrics[key] / item.videoCount
-   }
-   return item.metrics[key]
-  }
-
-  const gridCols = 4
   const cellBorder = (i: number) =>
    [
-    i % gridCols !== gridCols - 1 ? "border-r-[2px] border-black" : "",
-    Math.floor(i / gridCols) < 2 ? "border-b-[2px] border-black" : "",
+    i % 5 !== 4 ? "border-r-[2px] border-black" : "",
+    Math.floor(i / 5) < 1 ? "border-b-[2px] border-black" : "",
    ].filter(Boolean).join(" ")
 
   const formatRankedStatValue = (key: KeywordMetricKey, value: number): string => {
@@ -4271,31 +4482,35 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
   return (
    <div
     key={item.word}
-    className={`p-1.5 flex flex-col gap-1.5 ${extraClassName}`}
+    className={`self-start p-1 flex flex-col gap-1 ${extraClassName}`}
     style={{ background: active ? `${activeColor}30` : "#fff" }}
    >
-    <div className="grid grid-cols-4 border-[2px] border-black rounded-md overflow-hidden bg-white">
-     <div
-      title={`${item.videoCount} vids · ${item.coveragePct.toFixed(1)}% coverage`}
-      className={`flex flex-col items-center justify-center gap-0 px-0.5 py-1 min-w-0 ${cellBorder(0)}`}
-      style={{ background: active ? activeColor : "#F6F6F6" }}
-     >
-      <span className="text-[8px] font-black uppercase opacity-50 leading-none">#{index + 1}</span>
-      <span className="text-[9px] font-black uppercase truncate leading-tight max-w-full">{item.word}</span>
-     </div>
+    <button
+     type="button"
+     onClick={() => toggle(item.word)}
+     title={`${item.videoCount} videos · ${item.coveragePct.toFixed(1)}% coverage`}
+     className="flex min-h-7 items-center justify-between gap-2 border-[2px] border-black rounded-md px-2 text-left"
+     style={{ background: active ? activeColor : "#F6F6F6" }}
+    >
+     <span className="min-w-0 truncate text-[14px] font-[1000] uppercase text-black">{item.word}</span>
+     <span className="shrink-0 text-[11px] font-[1000] uppercase text-black/70">{item.videoCount} {item.videoCount === 1 ? "VIDEO" : "VIDEOS"}</span>
+    </button>
+    <div className="grid grid-cols-5 border-[2px] border-black rounded-md overflow-hidden bg-white">
      {RANKED_STAT_DEFS.map(([key, label], i) => (
-      <div key={key} className={`flex items-center justify-between gap-1 px-1 py-1 ${cellBorder(i + 1)}`}>
-       <span className="text-[8px] font-black uppercase opacity-50 shrink-0">{label}</span>
-       <span className="text-[9px] font-black truncate">{formatRankedStatValue(key, getValue(key))}</span>
+      <div key={key} className={`flex min-w-0 flex-col items-center justify-center px-1 py-0.5 ${cellBorder(i)}`}>
+       <span className="text-[7px] font-black uppercase opacity-50">{label}</span>
+       <span className="max-w-full truncate text-[10px] font-[1000]">
+        {formatRankedStatValue(key, getKeywordRankValue(item, key, rankedByMode))}
+       </span>
       </div>
      ))}
     </div>
 
-    <div className="h-1.5 rounded-full bg-black/10 overflow-hidden">
+    <div className="h-3 rounded-full border border-black bg-black/10 overflow-hidden">
      <div
       className="h-full"
       style={{
-       width: `${(item.metricValue / rankedMax) * 100}%`,
+       width: `${(getKeywordRankValue(item, metricMode, rankedByMode) / rankedMax) * 100}%`,
        background: active ? activeColor : "#000",
       }}
      />
@@ -4318,23 +4533,48 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
     shadowColor: "rgba(204,255,0,0.45)",
    }}
    layout={{ moduleMinHeight: "820px", moduleWidth: "100%" }}
-   controlBox={{
-    count: selected.length,
-    countUnit: "KEYWORDS",
-    dropdown: {
-     value: metricMode,
-     isOpen: metricMenuOpen,
-     onToggle: () => setMetricMenuOpen((prev) => !prev),
-     onSelect: (value) => {
-      setMetricMode(value as KeywordMetricKey)
-      setMetricMenuOpen(false)
-     },
-     options: KEYWORD_VENN_METRIC_OPTIONS.map((option) => ({
-      value: option,
-      label: getKeywordMetricDefinition(option).label,
-     })),
+   controllerRows={[
+    { type: "label", value: "TOP PERFORMING", bgTone: "#FF7497" },
+    { type: "label", value: "TITLE KEYWORDS", bgTone: "#FFFFFF" },
+    {
+     type: "custom",
+     render: () => (
+      <div className="grid h-full grid-cols-[44px_1fr_1fr_minmax(112px,1.35fr)] bg-white">
+       <span className="flex items-center justify-center border-r-[3px] border-black bg-black text-[10px] font-black uppercase text-white">
+        By
+       </span>
+       <button
+        type="button"
+        aria-pressed={rankedByMode === "average"}
+        onClick={() => setRankedByMode("average")}
+        className={`border-0 border-r-[3px] border-black text-[10px] font-black uppercase ${rankedByMode === "average" ? "bg-[#CCFF00]" : "bg-white"}`}
+       >
+        Average
+       </button>
+       <button
+        type="button"
+        aria-pressed={rankedByMode === "total"}
+        aria-disabled={!supportsTotal}
+        disabled={!supportsTotal}
+        onClick={() => setRankedByMode("total")}
+        className={`border-0 border-r-[3px] border-black text-[10px] font-black uppercase disabled:cursor-not-allowed disabled:bg-[#E5E5E5] disabled:text-black/40 ${rankedByMode === "total" ? "bg-[#CCFF00]" : "bg-white"}`}
+       >
+        Total
+       </button>
+       <select
+        aria-label="Rank title keywords by metric"
+        value={metricMode}
+        onChange={(event) => setMetricMode(event.target.value as KeywordMetricKey)}
+        className="min-w-0 appearance-none border-0 bg-[#FFE357] px-2 text-center text-[10px] font-black uppercase"
+       >
+        {KEYWORD_VENN_METRIC_OPTIONS.map((option) => (
+         <option key={option} value={option}>{getKeywordMetricDefinition(option).label}</option>
+        ))}
+       </select>
+      </div>
+     ),
     },
-   }}
+   ]}
    activeContext={{
     title:
      selected.length > 0
@@ -4379,13 +4619,19 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
      <EmptyState missing={["keywords", "title_rows"]} rows={data.length} />
     ) : (
      <div className="flex flex-col gap-2">
-     <div className="grid grid-cols-1 xl:grid-cols-[930px_1fr] gap-2 items-stretch">
-      <div className="flex flex-col gap-2 pr-1 min-w-0">
+     <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_430px] gap-2 items-stretch">
+      <div className="flex min-w-0 flex-col gap-2">
 
       {/* 1. VENN CIRCLE + TOP KEYWORDS FOOTER */}
       <div className="border-[3px] border-black rounded-xl bg-[#FAFAFA] overflow-hidden flex flex-col flex-1">
        <div className="flex items-center justify-center flex-1">
-       <svg viewBox={`0 0 ${vennBox.w} ${vennBox.h}`} width={vennCanvas.w} height={vennCanvas.h} className="shrink-0">
+       <svg
+        viewBox={`0 0 ${vennBox.w} ${vennBox.h}`}
+        width="100%"
+        preserveAspectRatio="xMidYMid meet"
+        className="block h-auto max-w-[760px]"
+        style={{ aspectRatio: `${vennBox.w} / ${vennBox.h}` }}
+       >
         <style>{`
          @keyframes kvPulseRing {
           0% { opacity: 0.85; transform: scale(0.88); }
@@ -4405,10 +4651,10 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
         </defs>
         {selected.length === 0 ? (
          <>
-          <text x="310" y="270" textAnchor="middle" style={{ fontWeight: 1000, fontSize: 30, fill: "rgba(0,0,0,0.28)" }}>
+          <text x="380" y="290" textAnchor="middle" style={{ fontWeight: 1000, fontSize: 30, fill: "rgba(0,0,0,0.28)" }}>
            SELECT UP TO 3 KEYWORDS
           </text>
-          <text x="310" y="306" textAnchor="middle" style={{ fontWeight: 800, fontSize: 14, fill: "rgba(0,0,0,0.34)" }}>
+          <text x="380" y="326" textAnchor="middle" style={{ fontWeight: 800, fontSize: 14, fill: "rgba(0,0,0,0.34)" }}>
            Data is derived from titles in the loaded master video table.
           </text>
         </>
@@ -4488,9 +4734,9 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
         />
 
         {/* Single labels */}
-        {singleA ? <VennValueLabel x={g0.lx} y={g0.ly} title={a.toUpperCase()} count={singleA.videoCount} metricValue={singleA.metricValue} metricKey={metricMode} small={g0.small} opacity={g0.opacity} transition={vennTransition} /> : null}
-        {singleB ? <VennValueLabel x={g1.lx} y={g1.ly} title={b.toUpperCase()} count={singleB.videoCount} metricValue={singleB.metricValue} metricKey={metricMode} small={g1.small} opacity={g1.opacity} transition={vennTransition} /> : null}
-        {singleC ? <VennValueLabel x={g2.lx} y={g2.ly} title={c.toUpperCase()} count={singleC.videoCount} metricValue={singleC.metricValue} metricKey={metricMode} small={g2.small} opacity={g2.opacity} transition={vennTransition} /> : null}
+        {singleA ? <VennValueLabel x={g0.lx} y={g0.ly} title={a.toUpperCase()} count={singleA.videoCount} metricValue={singleA.metricValue} metricKey={metricMode} small={g0.small} opacity={g0.opacity} transition={vennTransition} colorIndex={0} /> : null}
+        {singleB ? <VennValueLabel x={g1.lx} y={g1.ly} title={b.toUpperCase()} count={singleB.videoCount} metricValue={singleB.metricValue} metricKey={metricMode} small={g1.small} opacity={g1.opacity} transition={vennTransition} colorIndex={1} /> : null}
+        {singleC ? <VennValueLabel x={g2.lx} y={g2.ly} title={c.toUpperCase()} count={singleC.videoCount} metricValue={singleC.metricValue} metricKey={metricMode} small={g2.small} opacity={g2.opacity} transition={vennTransition} colorIndex={2} /> : null}
 
         {/* Pair labels */}
         {pairAB ? (
@@ -4561,7 +4807,7 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
            <button
             key={item.word}
             onClick={() => toggle(item.word)}
-            className="inline-flex items-center h-6 px-2.5 border-[2px] border-black rounded-md text-[10px] font-black uppercase tracking-[0.08em]"
+            className="inline-flex items-center h-7 px-3 border-[2px] border-black rounded-md text-[11px] font-black uppercase tracking-[0.06em]"
             style={keywordBadgeStyle(keywordColorIndexForSelection(selected, item.word, item.rank - 1), active)}
            >
             {item.word}
@@ -4578,10 +4824,8 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
        </div>
       </div>
 
-      </div>
-
-      {/* 2. RIGHT COLUMN: Combination Breakdown + Top 10 Videos */}
-      <div className="flex flex-col gap-2 h-full min-w-0">
+      {/* Combination Breakdown + Top 10 Videos */}
+      <div className="grid min-w-0 grid-cols-1 gap-2 md:grid-cols-2">
 
       {/* Combination Breakdown */}
       <div className="shrink-0">
@@ -4704,21 +4948,19 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
       </div>
 
       </div>
+      </div>
 
+     {/* RANKED BY — full-height right rail */}
+     <div className="flex h-full min-w-0 flex-col overflow-hidden rounded-xl border-[3px] border-black bg-white">
+      <div className="flex items-center justify-between border-b-[3px] border-black bg-[#FFD8E6] px-4 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-black">
+       <span>Ranked By {rankedByMode} {selectedMetric.label}</span>
+       <span>{rankedKeywords.length} leaders</span>
+      </div>
+      <div className="grid grid-cols-1 auto-rows-max content-start items-start">
+       {rankedKeywords.map((item, i) => renderRankedItem(item, rankedByCellBorder(i)))}
+      </div>
      </div>
 
-     {/* RANKED BY — full width across the bottom */}
-     <div className="border-[3px] border-black rounded-xl overflow-hidden bg-white flex flex-col">
-      <div className="bg-[#FFD8E6] text-black px-4 py-2 text-[10px] font-black uppercase tracking-[0.12em] border-b-[3px] border-black flex justify-between items-center">
-       <span>Ranked By {selectedMetric.label}</span>
-       <div className="flex border-[2px] border-black rounded-md overflow-hidden bg-white shrink-0">
-        <button onClick={() => setRankedByMode("average")} className={`px-2 py-0.5 ${rankedByMode === "average" ? "bg-[#CCFF00]" : ""}`}>AVG</button>
-        <button onClick={() => setRankedByMode("total")} className={`px-2 py-0.5 border-l-[2px] border-black ${rankedByMode === "total" ? "bg-[#CCFF00]" : ""}`}>TOTAL</button>
-       </div>
-      </div>
-      <div className="grid grid-cols-5">
-       {topKeywords.map((item, i) => renderRankedItem(item, i, rankedByCellBorder(i)))}
-      </div>
      </div>
 
      </div>
@@ -4769,7 +5011,7 @@ export const ConversionFunnelModule: React.FC<GChartProps> = ({ data }) => {
 
  return (
   <SubToolboxChartModule
-   header={{ title: "CONVERSION FUNNEL", subtitle: "IMPRESSIONS TO SUBS", icon: <CustomIcon name="target" size={18} /> }}
+   header={{ title: "CONVERSION FUNNEL", subtitle: "IMPRESSIONS TO SUBSCRIBERS", icon: <CustomIcon name="target" size={18} /> }}
    theme={{ headerBandBg: "#CCFF00", iconBlockBg: "#FF82B0", shadowColor: "rgba(204,255,0,0.45)" }}>
    <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">
     {ds.funnelStages.every((stage) => stage.value <= 0) ? (

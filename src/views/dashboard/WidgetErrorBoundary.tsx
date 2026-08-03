@@ -1,4 +1,5 @@
 import React from "react"
+import { WidgetStatePanel } from "./WidgetPrimitives"
 
 type Props = {
   widgetId: string
@@ -20,18 +21,24 @@ export class WidgetErrorBoundary extends React.Component<Props, State> {
     console.error(`[WidgetErrorBoundary] ${this.props.widgetId} crashed`, error)
   }
 
+  handleRetry = () => {
+    this.setState({ hasError: false })
+  }
+
   render() {
     if (this.state.hasError) {
       return (
-        <div className="h-full w-full border-[3px] border-black rounded-[12px] bg-white p-3 shadow-[3px_3px_0_0_#000]">
-          <div className="text-[11px] font-black uppercase tracking-wider">Widget Error</div>
-          <div className="mt-2 text-[10px] font-bold opacity-70">
-            This widget failed to render and was isolated so the dashboard can continue running.
-          </div>
-        </div>
+        <WidgetStatePanel
+          state={{
+            status: "error",
+            data: null,
+            message: "This widget failed to render. The rest of the dashboard is still available.",
+            recoveryAction: "Try widget again",
+          }}
+          onRecover={this.handleRetry}
+        />
       )
     }
     return this.props.children
   }
 }
-

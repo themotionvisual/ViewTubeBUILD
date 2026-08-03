@@ -16,10 +16,23 @@ describe("accountCoordinator runtime resolution", () => {
   expect(isUnifiedAccountServerEnabled("viewtube.live")).toBe(true)
  })
 
-  it("prefers the deployed origin over localhost account bases", async () => {
+ it("prefers the deployed origin over localhost account bases", async () => {
   const { accountUrl, resolveAccountApiBase } = await import("./accountCoordinator")
   expect(resolveAccountApiBase("viewtube.live", "https://viewtube.live")).toBe("https://viewtube.live")
   expect(accountUrl("/api/account/snapshot")).toBe("https://viewtube.live/api/account/snapshot")
+ })
+
+ it("keeps local account requests on the same origin so session cookies survive the proxy", async () => {
+  vi.stubGlobal("window", {
+   location: {
+    origin: "http://localhost:5173",
+    hostname: "localhost",
+   },
+  } as unknown as Window)
+
+  const { resolveAccountApiBase, accountUrl } = await import("./accountCoordinator")
+  expect(resolveAccountApiBase("localhost", "http://localhost:5173")).toBe("http://localhost:5173")
+  expect(accountUrl("/api/account/snapshot")).toBe("http://localhost:5173/api/account/snapshot")
  })
 
  it("opens popup auth and resolves on opener message", async () => {

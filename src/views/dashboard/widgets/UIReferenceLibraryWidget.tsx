@@ -12,15 +12,13 @@ const STYLE_NAMES: Record<number, string> = {
   8: 'Full Tinted Rectangular Plate + Black Frame (32px)'
 };
 
-export default function UIReferenceLibraryWidget({ widget, onUpdate, onRemove }: any) {
+export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
   const [scrollStyle, setScrollStyle] = useState(1);
 
   return (
     <WidgetShell
-      title="UI Reference Library"
       widget={widget}
-      onUpdate={onUpdate}
-      onRemove={onRemove}
+      {...common}
     >
       <div className={`flex-1 flex flex-col h-full min-h-0 bg-[#f5f5f5] p-2 overflow-y-auto scrollbar-style-${scrollStyle}`}>
         {/* Style Selector Module */}

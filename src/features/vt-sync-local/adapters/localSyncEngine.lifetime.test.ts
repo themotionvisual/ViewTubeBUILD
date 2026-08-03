@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest"
 import {
  VT_SYNC_ANALYTICS_DATE_WINDOW_DAYS,
  buildVtSyncAnalyticsDateWindows,
+ buildVtSyncAnalyticsMonthRange,
+ buildVtSyncAnalyticsMonthWindows,
  mergeVtSyncDefinedFields,
  mergeVtSyncRowsPreservingDefined,
  preserveVtSyncRowsForFailedDateWindows,
@@ -32,6 +34,18 @@ describe("VT-SYNC lifetime analytics windows", () => {
    { startDate: "2026-07-01", endDate: "2026-07-28" },
   ])
  })
+
+ it("aligns API month reports to Google's required first-of-month boundaries", () => {
+ expect(buildVtSyncAnalyticsMonthRange("2023-07-19", "2026-08-02")).toEqual({
+   startDate: "2023-07-01",
+   endDate: "2026-08-01",
+  })
+ })
+ expect(buildVtSyncAnalyticsMonthWindows("2005-04-23", "2026-08-02")).toEqual([
+  { startDate: "2005-04-01", endDate: "2015-03-31" },
+  { startDate: "2015-04-01", endDate: "2025-03-31" },
+  { startDate: "2025-04-01", endDate: "2026-08-01" },
+ ])
 
  it("retains stored rows only for failed windows and prefers newly fetched rows", () => {
   const merged = preserveVtSyncRowsForFailedDateWindows(
@@ -139,6 +153,16 @@ describe("requested lifetime metric table contracts", () => {
    "avgDuration",
    "avgPercentageViewed",
   ]))
+ })
+
+ it("keeps the API month table metric-identical to Daily while retaining the derived rollup", () => {
+  const dailyMetricKeys = keys("daily").filter((key) => key !== "date")
+  const monthlyApiMetricKeys = keys("monthly_api").filter((key) => key !== "date")
+
+  expect(monthlyApiMetricKeys).toEqual(dailyMetricKeys)
+  expect(table("monthly").performanceHubDatasetId).toBe("monthly")
+  expect(table("monthly_api").performanceHubDatasetId).toBe("monthly_api")
+  expect(table("monthly_api").categoryIds).toEqual(["monthly_metrics"])
  })
 
  it("adds country advertising metrics and Traffic x Day engagement metrics", () => {

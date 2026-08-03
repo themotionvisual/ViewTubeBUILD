@@ -1217,6 +1217,8 @@ export interface AIBrainEvidenceVideo {
   revenue: number | null
   ctr: number | null
   averagePercentageViewed: number | null
+  likes: number | null
+  comments: number | null
  }
 }
 

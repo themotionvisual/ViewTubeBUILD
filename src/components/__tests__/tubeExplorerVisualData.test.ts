@@ -26,7 +26,7 @@ const row = (
  durationSeconds: format === "shorts" ? 45 : 420,
  sourceMode: "api",
  metrics: Object.fromEntries(
-  Object.entries(metrics).map(([key, value]) => [key, cell(value)]),
+  Object.entries(metrics).map(([key, value]) => [key, cell(value ?? 0)]),
  ) as CanonicalVideoRow["metrics"],
 })
 
@@ -61,7 +61,22 @@ describe("buildTubeExplorerVisualData", () => {
   expect(dataset.totals.revenue).toBe(7)
   expect(dataset.monthly[0]).toMatchObject({ month: "2026-01", videos: 2 })
   expect(dataset.keywords.some((keyword) => keyword.keyword === "napoleon")).toBe(true)
-  expect(dataset.videos[0].retentionScore).toBe(75)
+ expect(dataset.videos[0].retentionScore).toBe(75)
+ })
+
+ it("maps canonical and legacy Playlist Saves values into the shared saves metric", () => {
+  const canonical = row("save-1", "Canonical saves", "long", {
+   views: 10,
+   videosAddedToPlaylists: 7,
+  })
+  const legacy = {
+   ...row("save-2", "Legacy saves", "long", { views: 8 }),
+   originalData: { playlistSaves: 3 },
+  }
+
+  const dataset = buildTubeExplorerVisualData([canonical, legacy])
+
+  expect(dataset.videos.map((video) => video.saves)).toEqual([7, 3])
  })
 
  it("uses classified CSV traffic and geography rows without synthetic fallback rows", () => {

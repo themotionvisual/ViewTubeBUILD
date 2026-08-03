@@ -50,7 +50,12 @@ export interface GlobalDataContextProps {
  logout: () => void
  connectChannel: () => Promise<void>
  disconnectChannel: () => void
- addJournalEntry: (content: string, category: any) => void
+ addJournalEntry: (content: string, category: any) => {
+  id: string
+  content: string
+  category: any
+  timestamp: number
+ }
  addFollowUp: (id: string, q: string) => void
  answerFollowUp: (id: string, a: string) => void
  answerMicroPoll: (id: string, opt: string) => void
@@ -261,7 +266,12 @@ export const fallbackContext: GlobalDataContextProps = {
  globalSyncData: async () => {},
  syncChannelData: async () => {},
  syncMetrics: async () => {},
- addJournalEntry: () => {},
+ addJournalEntry: (content: string, category: any) => ({
+  id: "fallback-journal-entry",
+  content,
+  category,
+  timestamp: Date.now(),
+ }),
  addFollowUp: () => {},
  answerFollowUp: () => {},
  answerMicroPoll: () => {},

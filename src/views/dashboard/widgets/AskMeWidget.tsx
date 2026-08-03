@@ -171,7 +171,7 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
  const scrollRef = useRef<HTMLDivElement>(null)
 
  useEffect(() => {
-  scrollRef.current?.scrollTo({top: scrollRef.current.scrollHeight, behavior: "smooth", onDecSize, onCycleHeight, onDecHeight})
+  scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
  }, [messages])
 
  useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useId, useMemo, useRef, useState } from "react"
 import {
  Area,
  AreaChart,
@@ -26,7 +26,11 @@ import type { CsvFileWithTag } from "../types"
 import { CustomIcon } from "./CustomIcon"
 import { StableChartFrame } from "./StableChartFrame"
 import { SubToolboxChartModule } from "./SubToolboxChartModule"
-import { VT_NAV_PALETTE_12, VT_SPECTRUM_PALETTE_06 } from "../styles/toolboxPalette"
+import {
+ VT_NAV_PALETTE_12,
+ VT_SPECTRUM_PALETTE_06,
+ VT_VISUAL_METRIC_COLORS,
+} from "../styles/toolboxPalette"
 import {
  buildTubeExplorerVisualData,
  type TubeExplorerVisualDataset,
@@ -70,17 +74,16 @@ const numericValue = (value: unknown): number => {
  return Number.isFinite(parsed) ? parsed : 0
 }
 
-const paddedDomain = (values: number[], floorAtZero = true): [number, number] => {
- const finite = values.filter((value) => Number.isFinite(value))
+const paddedDomain = (values: number[], floorAtZero = true, maxCap?: number): [number, number] => {
+ const finite = values.filter((value) => Number.isFinite(value) && value > 0)
  if (finite.length === 0) return [0, 1]
  const min = Math.min(...finite)
  const max = Math.max(...finite)
- if (min === max) {
-  const pad = Math.max(Math.abs(max) * 0.12, 1)
-  return [floorAtZero ? Math.max(0, min - pad) : min - pad, max + pad]
- }
- const pad = (max - min) * 0.12
- return [floorAtZero ? Math.max(0, min - pad) : min - pad, max + pad]
+ const range = max - min || Math.abs(max) * 0.1 || 1
+ const pad = range * 0.05
+ const lo = floorAtZero ? Math.max(0, min - pad) : min - pad
+ const hi = maxCap !== undefined ? Math.min(max + pad, maxCap) : max + pad
+ return [lo, hi]
 }
 
 const scaleBetween = (value: number, min: number, max: number, outMin: number, outMax: number): number => {
@@ -117,7 +120,7 @@ const ModuleFrame: React.FC<{
   header={{
    title,
    subtitle,
-   icon: <CustomIcon name={icon as any} size={34} />,
+   icon: typeof icon === "string" ? <CustomIcon name={icon as any} size={96} /> : icon,
   }}
   activeContext={activeContext}
   controllerRows={controllerRows ?? [
@@ -341,9 +344,9 @@ const GeoBars: React.FC<{ dataset: TubeExplorerVisualDataset }> = ({ dataset }) 
 const FunnelStages: React.FC<{ dataset: TubeExplorerVisualDataset }> = ({ dataset }) => {
  const stages = [
   { label: "Impressions", value: dataset.totals.impressions, color: "#579AFF" },
-  { label: "Views", value: dataset.totals.views, color: "#40C6E9" },
-  { label: "Engaged", value: dataset.totals.engagedViews, color: "#4FFF5B" },
-  { label: "Subscribers", value: dataset.totals.subscribersGained, color: "#FF83EA" },
+  { label: "Views", value: dataset.totals.views, color: VT_VISUAL_METRIC_COLORS.views },
+  { label: "Engaged", value: dataset.totals.engagedViews, color: VT_VISUAL_METRIC_COLORS.engagedViews },
+  { label: "Subscribers", value: dataset.totals.subscribersGained, color: VT_VISUAL_METRIC_COLORS.subscribers },
  ].filter((stage) => stage.value > 0)
  if (stages.length === 0) return <Empty label="No conversion-stage metrics are available" />
  const max = Math.max(...stages.map((stage) => stage.value), 1)
@@ -664,7 +667,45 @@ type WordEdge = {
  sharedVideos: number
 }
 
-const buildWordNetwork = (videos: TubeExplorerVideoPoint[], limit = 38) => {
+type TitleNetworkMetric =
+ | "views"
+ | "watchHours"
+ | "subscribersGained"
+ | "engagedViews"
+ | "revenue"
+ | "comments"
+ | "shares"
+ | "likes"
+ | "saves"
+ | "avp"
+ | "avdSeconds"
+ | "rpm"
+
+const TITLE_NETWORK_METRIC_LABELS: Record<TitleNetworkMetric, string> = {
+ views: "Views",
+ watchHours: "Watch Time",
+ subscribersGained: "Subscribers",
+ engagedViews: "Engaged Views",
+ revenue: "Revenue",
+ comments: "Comments",
+ shares: "Shares",
+ likes: "Likes",
+ saves: "Playlist Saves",
+ avp: "AVP",
+ avdSeconds: "AVD",
+ rpm: "RPM",
+}
+
+const titleNetworkMetricValue = (video: TubeExplorerVideoPoint, metric: TitleNetworkMetric): number => {
+ const value = Number(video[metric])
+ return Number.isFinite(value) ? value : 0
+}
+
+const buildWordNetwork = (
+ videos: TubeExplorerVideoPoint[],
+ limit = 38,
+ metric: TitleNetworkMetric = "views",
+) => {
  const wordViews: Record<string, number> = {}
  const wordVideos: Record<string, number> = {}
  const coOccurrence = new Map<string, number>()
@@ -672,7 +713,7 @@ const buildWordNetwork = (videos: TubeExplorerVideoPoint[], limit = 38) => {
  for (const video of videos) {
   const words = [...new Set(titleTokens(video.title))]
   for (const word of words) {
-   wordViews[word] = (wordViews[word] || 0) + video.views
+   wordViews[word] = (wordViews[word] || 0) + titleNetworkMetricValue(video, metric)
    wordVideos[word] = (wordVideos[word] || 0) + 1
   }
   for (let i = 0; i < words.length; i += 1) {
@@ -700,27 +741,73 @@ const buildWordNetwork = (videos: TubeExplorerVideoPoint[], limit = 38) => {
   edges.push({ source, target, weight: Math.sqrt(count), sharedVideos: count })
  }
 
- const width = 860
- const height = 340
+ const width = 1060
+ const height = 465
  const lastIndex = Math.max(topWords.length - 1, 1)
- // Placement is rank-driven, not decorative: the most-viewed word starts nearest the
- // center, later ranks spiral outward. The per-node center-pull below (stronger for
- // top ranks) keeps that meaning intact once the repulsion/attraction forces settle.
- const maxRadius = Math.min(width, height) / 2 - 40
+
+ // Assign community labels via greedy graph coloring: nodes with the most shared edges
+ // get the same community index when they co-occur heavily. Used for color assignment.
+ const community: number[] = new Array(topWords.length).fill(-1)
+ // Build adjacency strength per node pair for community detection
+ const pairStrength = new Map<string, number>()
+ for (const edge of edges) {
+  const k = `${Math.min(edge.source, edge.target)}_${Math.max(edge.source, edge.target)}`
+  pairStrength.set(k, (pairStrength.get(k) || 0) + edge.sharedVideos)
+ }
+ // Sort nodes by degree (most connected first) and greedily assign communities
+ const degree = new Array(topWords.length).fill(0)
+ for (const edge of edges) {
+  degree[edge.source] += edge.sharedVideos
+  degree[edge.target] += edge.sharedVideos
+ }
+ const byDegree = [...topWords.keys()].sort((a, b) => degree[b] - degree[a])
+ const NUM_COMMUNITIES = Math.min(8, Math.ceil(topWords.length / 3))
+ let nextCommunity = 0
+ for (const nodeIdx of byDegree) {
+  if (community[nodeIdx] !== -1) continue
+  community[nodeIdx] = nextCommunity % NUM_COMMUNITIES
+  // Pull strongly-connected neighbors into the same community
+  const neighbors = edges
+   .filter((e) => e.source === nodeIdx || e.target === nodeIdx)
+   .sort((a, b) => b.sharedVideos - a.sharedVideos)
+   .slice(0, 3)
+   .map((e) => (e.source === nodeIdx ? e.target : e.source))
+  for (const nb of neighbors) {
+   if (community[nb] === -1) community[nb] = nextCommunity % NUM_COMMUNITIES
+  }
+  nextCommunity += 1
+ }
+ // Any unassigned nodes get their own community
+ for (let i = 0; i < topWords.length; i += 1) {
+  if (community[i] === -1) community[i] = nextCommunity++ % NUM_COMMUNITIES
+ }
+
+ // Seed positions using a jittered grid that covers the full canvas
+ const cols = Math.ceil(Math.sqrt(topWords.length * (width / height)))
+ const rows = Math.ceil(topWords.length / cols)
+ const cellW = width / cols
+ const cellH = height / rows
+ // Deterministic jitter using index-based pseudo-random offsets
  const nodes: WordNode[] = topWords.map((word, index) => {
-  const rankFraction = index / lastIndex
-  const angle = rankFraction * Math.PI * 2 * 2.4
-  const radius = 16 + rankFraction * maxRadius
+  const col = index % cols
+  const row = Math.floor(index / cols)
+  const jx = ((index * 7919) % 100) / 100 - 0.5
+  const jy = ((index * 6271) % 100) / 100 - 0.5
   return {
    ...word,
    rank: index,
-   x: width / 2 + Math.cos(angle) * radius,
-   y: height / 2 + Math.sin(angle) * radius,
+   x: cellW * (col + 0.5 + jx * 0.6),
+   y: cellH * (row + 0.5 + jy * 0.6),
   }
  })
 
- const boundsMargin = 32
- for (let iteration = 0; iteration < 140; iteration += 1) {
+ const margin = 50
+ // Repulsion scales with node count so sparse graphs still spread
+ const repK = Math.max(3500, 1800 * Math.log2(Math.max(nodes.length, 2)))
+ // Rest length grows when there are fewer nodes so they spread further apart
+ const restLength = Math.max(55, 220 / Math.sqrt(Math.max(nodes.length, 1)))
+ for (let iteration = 0; iteration < 260; iteration += 1) {
+  const alpha = 1 - iteration / 260
   for (let a = 0; a < nodes.length; a += 1) {
    let fx = 0
    let fy = 0
@@ -728,29 +815,57 @@ const buildWordNetwork = (videos: TubeExplorerVideoPoint[], limit = 38) => {
     if (a === b) continue
     const dx = nodes[a].x - nodes[b].x
     const dy = nodes[a].y - nodes[b].y
-    const distSq = Math.max(dx * dx + dy * dy, 36)
-    fx += (dx / distSq) * 150
-    fy += (dy / distSq) * 150
+    const distSq = Math.max(dx * dx + dy * dy, 25)
+    const dist = Math.sqrt(distSq)
+    fx += (dx / dist) * (repK / distSq)
+    fy += (dy / dist) * (repK / distSq)
    }
    for (const edge of edges) {
     if (edge.source !== a && edge.target !== a) continue
     const other = edge.source === a ? nodes[edge.target] : nodes[edge.source]
     const dx = other.x - nodes[a].x
     const dy = other.y - nodes[a].y
-    fx += dx * 0.002 * edge.weight
-    fy += dy * 0.002 * edge.weight
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1
+    const stretch = dist - restLength
+    const pull = stretch * 0.009 * edge.weight
+    fx += (dx / dist) * pull
+    fy += (dy / dist) * pull
    }
-   // Higher-ranked (more-viewed) words get pulled toward center much harder, so rank
-   // reads as "distance from center" instead of every node fighting to the same spot.
-   const centerPull = 0.0012 + 0.007 * (1 - nodes[a].rank / lastIndex)
-   fx += (width / 2 - nodes[a].x) * centerPull
-   fy += (height / 2 - nodes[a].y) * centerPull
-   nodes[a].x = Math.min(width - boundsMargin, Math.max(boundsMargin, nodes[a].x + fx))
-   nodes[a].y = Math.min(height - boundsMargin, Math.max(boundsMargin, nodes[a].y + fy))
+   fx += (width / 2 - nodes[a].x) * 0.0004
+   fy += (height / 2 - nodes[a].y) * 0.0004
+   nodes[a].x += fx * alpha
+   nodes[a].y += fy * alpha
+   const softPush = (v: number, lo: number, hi: number) => {
+    const zone = 50
+    if (v < lo + zone) return lo + zone + (v - lo - zone) * 0.25
+    if (v > hi - zone) return hi - zone + (v - hi + zone) * 0.25
+    return v
+   }
+   nodes[a].x = Math.min(width - margin, Math.max(margin, softPush(nodes[a].x, 0, width)))
+   nodes[a].y = Math.min(height - margin, Math.max(margin, softPush(nodes[a].y, 0, height)))
   }
  }
 
- return { nodes, edges }
+ // After simulation: rescale all positions to fill the canvas with a comfortable margin
+ let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
+ for (const n of nodes) {
+  if (n.x < minX) minX = n.x
+  if (n.x > maxX) maxX = n.x
+  if (n.y < minY) minY = n.y
+  if (n.y > maxY) maxY = n.y
+ }
+ const pad = 52
+ const scaleX = nodes.length < 3 ? 1 : (width - pad * 2) / Math.max(maxX - minX, 1)
+ const scaleY = nodes.length < 3 ? 1 : (height - pad * 2) / Math.max(maxY - minY, 1)
+ const scale = Math.min(scaleX, scaleY, 2.4)
+ const cx = (minX + maxX) / 2
+ const cy = (minY + maxY) / 2
+ for (const n of nodes) {
+  n.x = width / 2 + (n.x - cx) * scale
+  n.y = height / 2 + (n.y - cy) * scale
+ }
+
+ return { nodes, edges, community }
 }
 
 type ExplorerMetricKey = "views" | "shares" | "comments" | "subscribersGained" | "revenue" | "avp" | "avdSeconds" | "likes"
@@ -759,7 +874,7 @@ const EXPLORER_METRIC_OPTIONS: Array<{ key: ExplorerMetricKey; label: string; fo
  { key: "views", label: "Views", format: compact },
  { key: "shares", label: "Shares", format: compact },
  { key: "comments", label: "Comments", format: compact },
- { key: "subscribersGained", label: "Subs", format: compact },
+ { key: "subscribersGained", label: "Subscribers", format: compact },
  { key: "revenue", label: "Revenue", format: (value) => `$${value.toFixed(value >= 100 ? 0 : 2)}` },
  { key: "avp", label: "AVP", format: (value) => `${value.toFixed(1)}%` },
  { key: "avdSeconds", label: "AVD", format: (value) => `${Math.round(value)}s` },
@@ -801,7 +916,7 @@ const VIDEO_PLOT_METRIC_OPTIONS: Array<{ key: VideoPlotMetricKey; label: string;
  { key: "likes", label: "Likes", format: compact },
  { key: "comments", label: "Comments", format: compact },
  { key: "shares", label: "Shares", format: compact },
- { key: "subscribersGained", label: "Subs", format: compact },
+ { key: "subscribersGained", label: "Subscribers", format: compact },
  { key: "engagedViews", label: "Engaged", format: compact },
  { key: "likeRate", label: "Like Rate", format: (value) => `${value.toFixed(2)}%`, average: true },
  { key: "engagementRate", label: "Engagement", format: (value) => `${value.toFixed(2)}%`, average: true },
@@ -977,7 +1092,7 @@ const ViewsSubsGrowthQuadrantRenderer: React.FC<{ dataset: TubeExplorerVisualDat
    <rect x="0" y="0" width="900" height="360" fill={EXPLORER_BG} />
    <line x1={scaleBetween(xMid, xMin, xMax, 70, 850)} y1="30" x2={scaleBetween(xMid, xMin, xMax, 70, 850)} y2="304" stroke="#ffffff" strokeWidth="2" opacity="0.3" />
    <line x1="70" y1={scaleBetween(yMid, yMin, yMax, 304, 34)} x2="850" y2={scaleBetween(yMid, yMin, yMax, 304, 34)} stroke="#ffffff" strokeWidth="2" opacity="0.3" />
-   {["HIGH SUBS / LOW VIEWS", "HIGH SUBS / HIGH VIEWS", "LOW SUBS / LOW VIEWS", "LOW SUBS / HIGH VIEWS"].map((label, index) => (
+   {["HIGH SUBSCRIBERS / LOW VIEWS", "HIGH SUBSCRIBERS / HIGH VIEWS", "LOW SUBSCRIBERS / LOW VIEWS", "LOW SUBSCRIBERS / HIGH VIEWS"].map((label, index) => (
     <text key={label} x={index % 2 ? 614 : 86} y={index > 1 ? 286 : 54} fill="#ffffff" opacity="0.38" fontSize="11" fontWeight="1000" letterSpacing="1.4">{label}</text>
    ))}
    {rows.map((row, index) => {
@@ -986,12 +1101,12 @@ const ViewsSubsGrowthQuadrantRenderer: React.FC<{ dataset: TubeExplorerVisualDat
     const radius = 5 + Math.sqrt(Math.max(row.watchHours, 0)) * 0.18
     return (
      <circle key={row.videoId} cx={x} cy={y} r={Math.min(22, radius)} fill={TRAFFIC_COLORS[index % TRAFFIC_COLORS.length]} stroke="#000" strokeWidth="3">
-      <title>{`${row.title} · ${compact(row.views)} views · ${compact(row.subscribersGained)} subs`}</title>
+      <title>{`${row.title} · ${compact(row.views)} views · ${compact(row.subscribersGained)} subscribers`}</title>
      </circle>
     )
    })}
    <text x="70" y="334" fill="#00e5ff" fontSize="11" fontWeight="1000">VIEWS {compact(xMin)} → {compact(xMax)}</text>
-   <text x="24" y="36" fill="#ccff00" fontSize="11" fontWeight="1000" transform="rotate(-90 24 36)">SUBS {compact(yMin)} → {compact(yMax)}</text>
+   <text x="24" y="36" fill="#ccff00" fontSize="11" fontWeight="1000" transform="rotate(-90 24 36)">SUBSCRIBERS {compact(yMin)} → {compact(yMax)}</text>
   </svg>
  )
 }
@@ -1024,8 +1139,8 @@ const SubscriberWaterfallRenderer: React.FC<{
  }, [])
  const running = points.length ? points[points.length - 1].cumulative : 0
 
- const barMax = Math.max(...rows.map((r) => Math.abs(r.subscribersGained)), 1)
- const cumMax = Math.max(...points.map((p) => p.cumulative), 1)
+ const barMax = Math.max(...rows.map((r) => Math.abs(r.subscribersGained)), 1) * 1.05
+ const cumMax = Math.max(...points.map((p) => p.cumulative), 1) * 1.05
  const slot = plotW / Math.max(points.length, 1)
  const barW = Math.max(1.5, Math.min(14, slot - 1.5))
  const baseY = padT + plotH
@@ -1068,7 +1183,7 @@ const SubscriberWaterfallRenderer: React.FC<{
       onMouseEnter={() => onHover?.(p)}
       onMouseLeave={() => onHover?.(null)}
      >
-      <title>{`${p.video.title} · +${p.video.subscribersGained} subs`}</title>
+      <title>{`${p.video.title} · +${p.video.subscribersGained} subscribers`}</title>
      </rect>
     )
    })}
@@ -1097,7 +1212,7 @@ const DUEL_METRICS = [
  { key: "likes", label: "LIKES", format: compact },
  { key: "comments", label: "COMMENTS", format: compact },
  { key: "shares", label: "SHARES", format: compact },
- { key: "subscribersGained", label: "SUBS", format: compact },
+  { key: "subscribersGained", label: "SUBSCRIBERS", format: compact },
  { key: "revenue", label: "REVENUE", format: (v: number) => `$${v.toFixed(2)}` },
 ] as const
 
@@ -1175,7 +1290,7 @@ const RADAR_AXES = [
  { key: "watch", label: "WATCH", read: (v: TubeExplorerVideoPoint) => v.watchHours, format: (n: number) => `${compact(n)}h` },
  { key: "revenue", label: "REVENUE", read: (v: TubeExplorerVideoPoint) => v.revenue, format: (n: number) => `$${n.toFixed(2)}` },
  { key: "likeRate", label: "LIKE RATE", read: (v: TubeExplorerVideoPoint) => v.likeRate, format: (n: number) => `${n.toFixed(2)}%` },
- { key: "subs1k", label: "SUBS/1K", read: (v: TubeExplorerVideoPoint) => (v.views > 0 ? (v.subscribersGained / v.views) * 1000 : 0), format: (n: number) => n.toFixed(2) },
+ { key: "subs1k", label: "SUBSCRIBERS/1K", read: (v: TubeExplorerVideoPoint) => (v.views > 0 ? (v.subscribersGained / v.views) * 1000 : 0), format: (n: number) => n.toFixed(2) },
  { key: "comments", label: "COMMENTS", read: (v: TubeExplorerVideoPoint) => v.comments, format: compact },
 ] as const
 
@@ -1302,12 +1417,14 @@ const trafficDayPoint = (row: Record<string, unknown>): TrafficDayPoint => ({
  */
 type RiverHighlight = { kind: "source" | "day" | "flow"; source?: string; day?: string } | null
 
-type RiverGrain = "day" | "week" | "month"
+type RiverGrain = "day" | "week" | "month3" | "month6" | "month12"
 
 const RIVER_GRAINS: Array<{ value: RiverGrain; label: string; count: number; axis: string }> = [
  { value: "day", label: "14 DAYS", count: 14, axis: "LAST 14 DAYS" },
  { value: "week", label: "12 WEEKS", count: 12, axis: "LAST 12 WEEKS" },
- { value: "month", label: "12 MONTHS", count: 12, axis: "LAST 12 MONTHS" },
+ { value: "month3", label: "3 MONTHS", count: 3, axis: "LAST 3 MONTHS" },
+ { value: "month6", label: "6 MONTHS", count: 6, axis: "LAST 6 MONTHS" },
+ { value: "month12", label: "12 MONTHS", count: 12, axis: "LAST 12 MONTHS" },
 ]
 
 /**
@@ -1326,7 +1443,7 @@ const parseLocalDay = (day: string): Date | null => {
 const riverBucket = (day: string, grain: RiverGrain): { key: string; label: string; ts: number } => {
  const parsed = parseLocalDay(day)
  if (!parsed) return { key: day, label: day, ts: 0 }
- if (grain === "month") {
+ if (grain.startsWith("month")) {
   const start = new Date(parsed.getFullYear(), parsed.getMonth(), 1)
   return {
    key: `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}`,
@@ -1561,12 +1678,11 @@ const TrafficDayRiverDeltaRenderer: React.FC<{
      />
      <text
       x={node.x + node.w / 2}
-      y={botY + barH + 15}
+      y={botY + barH / 2 + 4}
       textAnchor="middle"
-      fill="#ffffff"
-      fontSize="8.5"
+      fill="#000000"
+      fontSize={Math.max(6, Math.min(10, (node.w - 6) / Math.max(bucketLabel(node.day).length * 0.58, 1)))}
       fontWeight="1000"
-      opacity="0.62"
      >
       {bucketLabel(node.day)}
      </text>
@@ -1780,7 +1896,7 @@ const PUBLISH_CLOCK_METRICS: Array<{
 }> = [
  { key: "views", label: "AVG VIEWS", format: compact, average: true },
  { key: "watchHours", label: "AVG WATCH", format: (value) => `${compact(value)}h`, average: true },
- { key: "subscribersGained", label: "AVG SUBS", format: (value) => value.toFixed(1), average: true },
+   { key: "subscribersGained", label: "AVG SUBSCRIBERS", format: (value) => value.toFixed(1), average: true },
  { key: "likes", label: "AVG LIKES", format: (value) => value.toFixed(1), average: true },
  { key: "revenue", label: "AVG REV", format: (value) => `$${value.toFixed(2)}`, average: true },
  { key: "avp", label: "AVP %", format: (value) => `${value.toFixed(1)}%`, average: true },
@@ -1814,56 +1930,96 @@ const PublishOptimalClockRenderer: React.FC<{
  onHover?: (cell: PublishClockCell | null) => void
 }> = ({ cells, metricLabel, formatValue, hoveredKey, onHover }) => {
  if (cells.every((cell) => cell.uploads === 0)) return <Empty label="No upload dates available for publish clock" />
+ const topWindows = [...cells]
+  .filter((cell) => cell.uploads > 0)
+  .sort((a, b) => b.value - a.value)
+  .slice(0, 3)
+
  return (
-  <div className="flex h-full flex-col overflow-hidden bg-[#080810] p-2 text-white">
-   <div className="grid min-h-0 flex-1 grid-cols-[46px_minmax(0,1fr)] grid-rows-[20px_minmax(0,1fr)] gap-x-1">
-    <div />
-    <div className="grid text-center text-[8px] font-black uppercase leading-none text-white/55" style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))" }}>
-     {PUBLISH_CLOCK_HOURS.map((hour) => <span key={hour} className="self-center">{hour}</span>)}
+  <div className="flex h-full flex-col overflow-hidden bg-[#000000] p-2 text-white">
+   <div className="flex flex-1 min-h-0 flex-col">
+    <div className="flex pl-[48px] pr-1 pb-1">
+     <div className="grid flex-1 gap-[2px]" style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))" }}>
+      {PUBLISH_CLOCK_HOURS.map((hour) => (
+       <span key={hour} className="text-center text-[9px] font-[1000] text-white/60">
+        {formatClockHour(hour)}
+       </span>
+      ))}
+     </div>
     </div>
-    <div className="grid pr-2 text-right text-[10px] font-black uppercase text-white/70" style={{ gridTemplateRows: "repeat(7, minmax(0, 1fr))" }}>
-     {PUBLISH_CLOCK_DAYS.map((day) => <span key={day} className="flex items-center justify-end">{day}</span>)}
-    </div>
-    <div className="grid gap-[2px]" style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))", gridTemplateRows: "repeat(7, minmax(0, 1fr))" }}>
-     {cells.map((cell) => {
-      const isHovered = hoveredKey === publishClockCellKey(cell)
-      return (
-       <div
-        key={publishClockCellKey(cell)}
-        className="flex min-h-[14px] flex-col items-center justify-center overflow-hidden leading-none"
-        style={{
-         background: cell.uploads > 0 ? publishClockColor(cell.rank) : "rgba(255,255,255,0.04)",
-         border: isHovered ? "2px solid #fff" : "1px solid rgba(255,255,255,0.08)",
-         borderRadius: 2,
-         boxSizing: "border-box",
-         transition: "border-color 80ms",
-        }}
-        title={`${PUBLISH_CLOCK_DAYS[cell.dayIndex]} ${cell.hour}:00 · ${formatValue(cell.value)} ${metricLabel.toLowerCase()} · ${cell.uploads} uploads`}
-        onMouseEnter={() => onHover?.(cell)}
-        onMouseLeave={() => onHover?.(null)}
-       >
-        {isHovered ? (
-         <span className="flex flex-col items-center gap-[1px] text-[16px] font-black uppercase tracking-[0.04em]" style={{ color: "#0B1020" }}>
-          <span>{PUBLISH_CLOCK_DAYS[cell.dayIndex]}</span>
-          <span>{formatClockHour(cell.hour)}</span>
-         </span>
-        ) : null}
-       </div>
-      )
-     })}
+
+    <div className="flex flex-1 min-h-0 items-stretch">
+     <div className="w-[48px] shrink-0 flex flex-col justify-between py-[2px] pr-1">
+      {PUBLISH_CLOCK_DAYS.map((day) => (
+       <span key={day} className="flex-1 flex items-center justify-end text-[10px] font-[1000] text-white/75 pr-1 uppercase">
+        {day.substring(0, 3)}
+       </span>
+      ))}
+     </div>
+
+     <div className="grid flex-1 gap-[2px]" style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))", gridTemplateRows: "repeat(7, minmax(0, 1fr))" }}>
+      {cells.map((cell) => {
+       if (cell.uploads === 0) {
+        return <div key={publishClockCellKey(cell)} className="min-h-[14px]" />
+       }
+       const isHovered = hoveredKey === publishClockCellKey(cell)
+       const dayStr = PUBLISH_CLOCK_DAYS[cell.dayIndex].substring(0, 3).toUpperCase()
+       const hourStr = formatClockHour(cell.hour).toUpperCase()
+       return (
+        <div
+         key={publishClockCellKey(cell)}
+         className="relative flex min-h-[14px] flex-col items-center justify-center overflow-hidden leading-none select-none"
+         tabIndex={0}
+         role="img"
+         aria-label={`${PUBLISH_CLOCK_DAYS[cell.dayIndex]} ${cell.hour}:00 · ${formatValue(cell.value)} ${metricLabel.toLowerCase()} · ${cell.uploads} uploads`}
+         style={{
+          background: publishClockColor(cell.rank),
+          border: isHovered ? "2px solid #fff" : "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 2,
+          boxSizing: "border-box",
+          transform: isHovered ? "scale(1.15)" : "scale(1)",
+          transition: "border-color 80ms, transform 80ms",
+          cursor: "pointer",
+          zIndex: isHovered ? 10 : 1,
+         }}
+         onMouseEnter={() => onHover?.(cell)}
+         onMouseLeave={() => onHover?.(null)}
+         onFocus={() => onHover?.(cell)}
+         onBlur={() => onHover?.(null)}
+        >
+         {isHovered ? (
+          <div className="flex flex-col items-center justify-center font-[1000] text-[18px] leading-tight text-black uppercase">
+           <span>{dayStr}</span>
+           <span>{hourStr}</span>
+          </div>
+         ) : null}
+        </div>
+       )
+      })}
+     </div>
     </div>
    </div>
-   <div className="mt-2 flex shrink-0 items-center justify-center gap-3 px-4 py-2">
-    <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-white/35">COLD</span>
-    <div
-     className="h-6 w-[155px] shrink-0 rounded-[2px] border-[1px] border-white/90"
-     style={{
-      background: PUBLISH_CLOCK_GRADIENT,
-      boxShadow: "0 0 6px rgba(255,79,163,0.25), inset 0 1px 0 rgba(255,255,255,0.08)",
-     }}
-    />
-    <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-white/35">HOT</span>
-    <span className="ml-3 shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-white/18">RANK RELATIVE</span>
+
+   <div className="mt-2 flex shrink-0 items-center justify-between gap-4 px-2 py-1 border-t border-white/10">
+    <div className="flex min-w-0 items-center gap-2 text-[9px] font-black uppercase">
+     <span className="text-white/40">Top windows:</span>
+     {topWindows.map((cell, index) => (
+      <div key={publishClockCellKey(cell)} className="border border-white/30 px-2 py-1 rounded bg-black flex flex-col items-center justify-center text-center leading-none">
+       <span className="text-[10px] font-[1000] text-white">#{index + 1} {PUBLISH_CLOCK_DAYS[cell.dayIndex].substring(0, 3).toUpperCase()}</span>
+       <span className="text-[9px] font-[900] text-white/80">{formatClockHour(cell.hour).toUpperCase()}</span>
+      </div>
+     ))}
+    </div>
+    <div className="flex shrink-0 items-center gap-3">
+     <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-white/50">COLD</span>
+     <div
+      className="h-5 w-[140px] shrink-0 rounded-[2px] border-[1px] border-white/90"
+      style={{
+       background: PUBLISH_CLOCK_GRADIENT,
+      }}
+     />
+     <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-white/50">HOT</span>
+    </div>
    </div>
   </div>
  )
@@ -1988,8 +2144,8 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset }>
  if (overviewSlices.length === 0) return <Empty label="Sync or import traffic source rows to render the clock distribution." />
 
  return (
-  <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#090b16] text-white">
-   <div className="grid min-h-0 flex-1 grid-cols-[0.67fr_1.47fr_1.47fr_0.67fr] gap-0 bg-[#090b16] p-0">
+  <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#000000] text-white">
+   <div className="grid min-h-0 flex-1 grid-cols-[0.67fr_1.47fr_1.47fr_0.67fr] gap-0 bg-[#000000] p-0">
     <div className="min-h-0 overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-1.5">
      <div className="mb-1 flex items-center">
       <div className="min-w-0 flex-1">
@@ -2169,7 +2325,7 @@ const SankeyRiverDeltaRenderer: React.FC<{
    viewBox={`0 0 ${width} ${height}`}
    preserveAspectRatio="none"
    className="block h-full w-full"
-   style={{ background: "#0a0a0f" }}
+   style={{ background: "#000000" }}
   >
     <defs>
      {model.flows.map((flow, index) => (
@@ -2206,9 +2362,9 @@ const SankeyRiverDeltaRenderer: React.FC<{
       onMouseLeave={() => setHovered(null)}
       style={{ cursor: "pointer" }}>
       <rect x={node.x} y={sourceY} width={node.w} height={barHeight} fill={node.color} stroke="#000" strokeWidth={hovered === node.label ? 2 : 1.5} opacity={hovered === node.label ? 1 : 0.92} />
-      {node.w > 60 ? (
-       <text x={node.x + node.w / 2} y={sourceY + 34} textAnchor="middle" style={{ fill: "#000", fontSize: 24, fontFamily: "inherit", fontWeight: 1000, letterSpacing: "0.03em" }}>
-        {node.label.toUpperCase().slice(0, 13)}
+      {node.w > 28 ? (
+       <text x={node.x + node.w / 2} y={sourceY + barHeight / 2 + 4} textAnchor="middle" style={{ fill: "#000", fontSize: Math.max(6, Math.min(12, (node.w - 6) / Math.max(node.label.length * 0.58, 1))), fontFamily: "inherit", fontWeight: 1000 }}>
+        {node.label.toUpperCase()}
         </text>
       ) : null}
      </g>
@@ -2216,9 +2372,9 @@ const SankeyRiverDeltaRenderer: React.FC<{
     {model.destNodes.map((node) => (
      <g key={node.label}>
       <rect x={node.x} y={destY - barHeight} width={node.w} height={barHeight} fill={node.color} stroke="#000" strokeWidth="1.5" opacity="0.9" />
-      {node.w > 36 ? (
-       <text x={node.x + node.w / 2} y={destY - 10} textAnchor="middle" style={{ fill: "#000", fontSize: 24, fontFamily: "inherit", fontWeight: 1000, letterSpacing: "0.03em" }}>
-        {node.label.toUpperCase().slice(0, 12)}
+      {node.w > 28 ? (
+       <text x={node.x + node.w / 2} y={destY - barHeight / 2 + 4} textAnchor="middle" style={{ fill: "#000", fontSize: Math.max(6, Math.min(12, (node.w - 6) / Math.max(node.label.length * 0.58, 1))), fontFamily: "inherit", fontWeight: 1000 }}>
+        {node.label.toUpperCase()}
         </text>
       ) : null}
      </g>
@@ -2234,88 +2390,196 @@ const SankeyRiverDeltaRenderer: React.FC<{
 }
 
 const TITLE_NETWORK_MIN_WORDS = 5
-const TITLE_NETWORK_MAX_WORDS = 25
+const TITLE_NETWORK_MAX_WORDS = 50
 
 const TitleWordNetworkCanvas: React.FC<{
  graph: { nodes: WordNode[]; edges: WordEdge[] }
+ community: number[]
  hovered: string | null
  onHover: (id: string | null) => void
-}> = ({ graph, hovered, onHover }) => {
+ selected: readonly string[]
+ onSelect: (id: string | null, exclusive?: boolean) => void
+ metricLabel: string
+}> = ({ graph, community, hovered, onHover, selected, onSelect, metricLabel }) => {
  const maxViews = Math.max(...graph.nodes.map((node) => node.totalViews), 1)
- const width = 860
- const height = 340
+ const maxShared = Math.max(...graph.edges.map((e) => e.sharedVideos), 1)
+ const width = 1060
+ const height = 465
+ const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "")
+ const [visible, setVisible] = React.useState(false)
+ React.useEffect(() => {
+  setVisible(false)
+  const t = setTimeout(() => setVisible(true), 30)
+  return () => clearTimeout(t)
+ }, [graph])
+ const numCommunities = Math.max(...community, 0) + 1
+ // Spread communities evenly across the full 12-color spectrum regardless of count
  const getNodeColor = (nodeIdx: number): string => {
-  const node = graph.nodes[nodeIdx]
-  if (!node) return "#FF1493"
-  const cx = width / 2
-  const cy = height / 2
-  const angle = Math.atan2(node.y - cy, node.x - cx)
-  const hue = ((angle + Math.PI) / (Math.PI * 2)) * 360
-  return `hsl(${hue.toFixed(0)}, 100%, 60%)`
+  const comm = community[nodeIdx] ?? nodeIdx
+  const paletteIdx = Math.round((comm / Math.max(numCommunities - 1, 1)) * (VT_SPECTRUM_PALETTE_06.length - 1))
+  return VT_SPECTRUM_PALETTE_06[paletteIdx % VT_SPECTRUM_PALETTE_06.length]
  }
+ // Degree per node (sum of sharedVideos for all its edges) — used for ring visualisation
+ const degree = graph.nodes.map((_, i) =>
+  graph.edges.filter((e) => e.source === i || e.target === i).reduce((s, e) => s + e.sharedVideos, 0),
+ )
+ const maxDegree = Math.max(...degree, 1)
  return (
-  <div className="relative h-full w-full p-8" style={{ background: "#050810" }}>
-   <svg viewBox={`0 0 ${width} ${height}`} className="block h-full w-full">
+  <div
+   className="relative h-full w-full p-2"
+   style={{ background: "#050810", opacity: visible ? 1 : 0, transition: "opacity 0.4s ease" }}>
+   <svg
+    viewBox={`0 0 ${width} ${height}`}
+    className="block h-full w-full"
+    onClick={() => onSelect(null)}>
     <defs>
-     <filter id="node-glow">
-      <feGaussianBlur stdDeviation="2" result="blur" />
+     <filter id={`${instanceId}-node-glow`}>
+      <feGaussianBlur stdDeviation="3" result="blur" />
       <feMerge>
        <feMergeNode in="blur" />
        <feMergeNode in="SourceGraphic" />
       </feMerge>
      </filter>
+     {graph.edges.map((edge, index) => {
+      const source = graph.nodes[edge.source]
+      const target = graph.nodes[edge.target]
+      if (!source || !target) return null
+      return (
+       <linearGradient
+        key={`grad-${index}`}
+        id={`${instanceId}-word-edge-grad-${index}`}
+        x1={source.x}
+        y1={source.y}
+        x2={target.x}
+        y2={target.y}
+        gradientUnits="userSpaceOnUse"
+       >
+        <stop offset="0%" stopColor={getNodeColor(edge.source)} />
+        <stop offset="100%" stopColor={getNodeColor(edge.target)} />
+       </linearGradient>
+      )
+     })}
     </defs>
+    {/* Edges */}
     {graph.edges.map((edge, index) => {
       const source = graph.nodes[edge.source]
       const target = graph.nodes[edge.target]
       if (!source || !target) return null
       const isHovered = hovered === source.id || hovered === target.id
+      const isSelected = selected.length === 0 || selected.includes(source.id) || selected.includes(target.id)
+      const srcRadius = 5 + (source.totalViews / maxViews) * 20
+      const tgtRadius = 5 + (target.totalViews / maxViews) * 20
+      const maxEdgeWidth = Math.min(srcRadius, tgtRadius) * 0.55
+      const edgeWidth = Math.max(1.8, Math.sqrt(edge.sharedVideos / maxShared) * maxEdgeWidth)
+      const mx = (source.x + target.x) / 2
+      const my = (source.y + target.y) / 2
       return (
-       <line
-        key={index}
-        x1={source.x}
-        y1={source.y}
-        x2={target.x}
-        y2={target.y}
-        stroke={isHovered ? "#ffffff" : "#ffffff"}
-        strokeWidth={Math.max(0.5, edge.sharedVideos * 0.5)}
-        opacity={isHovered ? 0.62 : 0.1}
-       />
+       <g key={index}>
+        <line
+         x1={source.x}
+         y1={source.y}
+         x2={target.x}
+         y2={target.y}
+         stroke={`url(#${instanceId}-word-edge-grad-${index})`}
+         strokeWidth={edgeWidth}
+         opacity={isSelected ? (isHovered ? 0.95 : 0.55) : 0.07}
+        />
+        {/* On hover: show "N videos" label so context is clear */}
+        {isHovered && isSelected && (
+         <text
+          x={mx}
+          y={my - 4}
+          textAnchor="middle"
+          stroke="#000"
+          strokeWidth="3"
+          strokeLinejoin="round"
+          style={{ paintOrder: "stroke", fill: "#ffffff", fontSize: 8, fontWeight: 900, fontFamily: "inherit" }}>
+          {edge.sharedVideos === 1 ? "1 video" : `${edge.sharedVideos} videos`}
+         </text>
+        )}
+       </g>
       )
      })}
+    {/* Nodes */}
     {graph.nodes.map((node, index) => {
      const radius = 5 + (node.totalViews / maxViews) * 20
      const color = getNodeColor(index)
      const isHovered = hovered === node.id
+     const isSelected = selected.includes(node.id)
+     const degreeRingR = radius + 3 + (degree[index] / maxDegree) * 5
+     const dashLen = (2 * Math.PI * degreeRingR * degree[index]) / maxDegree
+     const dashGap = 2 * Math.PI * degreeRingR
      return (
       <g
        key={node.id}
+       tabIndex={0}
+       role="button"
+       aria-label={`${node.id}, ${metricLabel} ${node.totalViews}, ${node.videoCount} videos`}
+       aria-pressed={isSelected}
        onMouseEnter={() => onHover(node.id)}
        onMouseLeave={() => onHover(null)}
+       onFocus={() => onHover(node.id)}
+       onBlur={() => onHover(null)}
+       onClick={(event) => {
+        event.stopPropagation()
+        onSelect(node.id)
+       }}
+       onDoubleClick={(event) => {
+        event.stopPropagation()
+        onSelect(node.id, true)
+       }}
+       onKeyDown={(event) => {
+        if (event.key !== "Enter" && event.key !== " ") return
+        event.preventDefault()
+        event.stopPropagation()
+        onSelect(node.id, event.shiftKey)
+       }}
        style={{ cursor: "pointer" }}>
-       <circle cx={node.x} cy={node.y} r={radius * 2} fill={color} opacity="0.08" filter="url(#node-glow)" />
-       <circle cx={node.x} cy={node.y} r={isHovered ? radius * 1.35 : radius} fill={color} stroke={isHovered ? "#ffffff" : "rgba(0,0,0,0.35)"} strokeWidth={isHovered ? 2 : 1} opacity="0.92" />
+       {/* Soft glow halo */}
+       <circle cx={node.x} cy={node.y} r={radius * 2.2} fill={color} opacity={isHovered || isSelected ? 0.14 : 0.06} filter={`url(#${instanceId}-node-glow)`} />
+       {/* Degree ring — arc length shows how connected this node is */}
+       <circle
+        cx={node.x}
+        cy={node.y}
+        r={degreeRingR}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeDasharray={`${dashLen} ${dashGap}`}
+        opacity={isHovered || isSelected ? 0.7 : 0.3}
+        style={{ transformOrigin: `${node.x}px ${node.y}px`, transform: "rotate(-90deg)" }}
+       />
+       {/* Main node circle */}
+       <circle
+        cx={node.x}
+        cy={node.y}
+        r={isHovered ? radius * 1.3 : radius}
+        fill={color}
+        stroke={isSelected ? "#ffffff" : isHovered ? "#ffffff" : "rgba(0,0,0,0.4)"}
+        strokeWidth={isSelected || isHovered ? 2.5 : 1}
+        opacity="0.94"
+       />
+       {/* Label — stays its node color, thick black stroke for legibility on hover/select */}
        <text
         x={node.x}
-        y={node.y - radius - 5}
+        y={node.y - (isHovered ? radius * 1.3 : radius) - 4}
         textAnchor="middle"
-        style={{
-         fill: isHovered ? "#ffffff" : color,
-         fontSize: Math.max(8, Math.min(12, radius * 0.72)),
-         fontWeight: 1000,
-         fontFamily: "inherit",
-         letterSpacing: "0.04em",
-         opacity: isHovered ? 1 : 0.92,
-        }}>
+        stroke="#000000"
+        strokeWidth={isHovered || isSelected ? 3.5 : 0}
+        strokeLinejoin="round"
+        style={{ paintOrder: "stroke" }}
+        fill={color}
+        fontSize={Math.max(8, Math.min(12, radius * 0.72))}
+        fontWeight={1000}
+        fontFamily="inherit"
+        letterSpacing="0.04em"
+        opacity={isHovered || isSelected ? 1 : 0.92}>
         {node.id.toUpperCase()}
        </text>
       </g>
      )
     })}
    </svg>
-   <div className="pointer-events-none absolute bottom-2 left-2 text-[9px] font-black uppercase tracking-[0.08em] text-white/40">
-    Size = views · Color = layout position · Position = rank pull, center = top word · Lines = shared title words · Hover for stats
-   </div>
   </div>
  )
 }
@@ -2353,7 +2617,7 @@ export const TubeExplorerChannelHealthRadar = createModule("SIGNAL DIAL", "A bal
   { metric: "Views", value: d.totals.views },
   { metric: "Engaged", value: d.totals.engagedViews },
   { metric: "Revenue", value: d.totals.revenue * 1000 },
-  { metric: "Subs", value: d.totals.subscribersGained * 100 },
+  { metric: "Subscribers", value: d.totals.subscribersGained * 100 },
   { metric: "Likes", value: d.totals.likes },
   { metric: "Shares", value: d.totals.shares * 12 },
  ]
@@ -2362,11 +2626,11 @@ export const TubeExplorerChannelHealthRadar = createModule("SIGNAL DIAL", "A bal
 export const TubeExplorerRevenueForecast = createModule("COHORT CURVE", "Revenue and views stacked by publish month.", (d) => <MonthlyArea dataset={d} a="revenue" b="views" />, { color: "#FF7497" })
 export const TubeExplorerTrafficEvolution = createModule("TRAFFIC MIX", "Current traffic sources in the active Analytics window.", (d) => <TrafficBars dataset={d} />, { color: "#00CCFF" })
 export const TubeExplorerVideoValueMatrix = createModule("VALUE MAP", "Views versus revenue across the strongest videos.", (d) => <VideoScatter rows={topVideos(d, "valueScore", 80)} x="views" y="revenue" />, { color: "#CCFF00" })
-export const TubeExplorerSubNetFlow = createModule("NET SUBS", "Subscribers gained minus lost for each video.", (d) => <VideoBars rows={topVideos(d, "subscribersNet", 18, true)} metric="subscribersNet" color="#CCFF00" />, { color: "#FFEA00" })
+export const TubeExplorerSubNetFlow = createModule("NET SUBSCRIBERS", "Subscribers gained minus lost for each video.", (d) => <VideoBars rows={topVideos(d, "subscribersNet", 18, true)} metric="subscribersNet" color="#CCFF00" />, { color: "#FFEA00" })
 export const TubeExplorerContentDonut = createModule("FORMAT SPLIT", "How the channel breaks across Shorts, long-form, and everything else.", (d) => <Donut rows={[{ name: "Shorts", value: d.shorts.length }, { name: "Long", value: d.longform.length }, { name: "Other", value: d.videos.length - d.shorts.length - d.longform.length }]} />, { color: "#FFB158" })
 export const TubeExplorerPerformanceGauges = createModule("TOP VIEWS", "Ranked bars for the channel's highest-viewed videos.", (d) => <VideoBars rows={topVideos(d, "views", 12)} metric="views" color="#00CCFF" />, { color: "#B14AED" })
 export const TubeExplorerRevenueWaterfall = createModule("REVENUE TIDE", "Revenue and watch hours rising with publish month.", (d) => <MonthlyArea dataset={d} a="revenue" b="watchHours" />, { color: "#42FF68" })
-export const TubeExplorerConversionFunnel = createModule("FUNNEL FLOW", "Impressions, views, engagement, watch hours, and subs in order.", (d) => <FunnelStages dataset={d} />, { color: "#00CCFF" })
+export const TubeExplorerConversionFunnel = createModule("FUNNEL FLOW", "Impressions, views, engagement, watch hours, and subscribers in order.", (d) => <FunnelStages dataset={d} />, { color: "#00CCFF" })
 export const TubeExplorerUploadHeatmap = createModule("UPLOAD GRID", "Views by day of week across the upload schedule.", (d) => <HeatGrid cells={["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((label) => ({ label, value: d.videos.filter((v) => v.dayKey === label).reduce((sum, v) => sum + v.views, 0) }))} empty="No dated rows available" />, { color: "#FF7497" })
 
 export const TubeExplorerECGVitalsMonitor = createModule("WATCH PULSE", "Watch hours tracked by publish month.", (d) => <MonthlyArea dataset={d} a="watchHours" b="engagement" />, { color: "#FF7497" })
@@ -2380,20 +2644,26 @@ export const TubeExplorerKeywordVennChart = createModule("OVERLAP BLOCKS", "Shar
 /* ─── THERMAL IMAGING ──────────────────────────────────────────────────────── */
 
 const THERMAL_METRICS = [
- { key: "views",              label: "VIEWS",       fmt: (v: number) => compact(v) },
- { key: "watchHours",         label: "WATCH TIME",  fmt: (v: number) => `${compact(v)}h` },
- { key: "avp",                label: "AVD %",       fmt: (v: number) => `${v.toFixed(1)}%` },
- { key: "averageViewDuration",label: "AVP %",       fmt: (v: number) => `${v.toFixed(1)}%` },
- { key: "subscribersGained",  label: "SUBS",        fmt: (v: number) => compact(v) },
- { key: "likes",              label: "LIKES",       fmt: (v: number) => compact(v) },
- { key: "comments",           label: "COMMENTS",    fmt: (v: number) => compact(v) },
- { key: "shares",             label: "SHARES",      fmt: (v: number) => compact(v) },
- { key: "saves",              label: "SAVES",       fmt: (v: number) => compact(v) },
- { key: "revenue",            label: "REVENUE",     fmt: (v: number) => `$${v.toFixed(2)}` },
- { key: "rpm",                label: "RPM",         fmt: (v: number) => `$${v.toFixed(2)}` },
+ { key: "views",              label: "VIEWS",          fmt: (v: number) => compact(v) },
+ { key: "watchHours",         label: "WATCH TIME",     fmt: (v: number) => `${compact(v)}h` },
+ { key: "subscribersGained",  label: "SUBSCRIBERS",    fmt: (v: number) => compact(v) },
+ { key: "engagedViews",       label: "ENGAGED VIEWS",  fmt: (v: number) => compact(v) },
+ { key: "revenue",            label: "REVENUE",        fmt: (v: number) => `$${v.toFixed(2)}` },
+ { key: "comments",           label: "COMMENTS",       fmt: (v: number) => compact(v) },
+ { key: "shares",             label: "SHARES",         fmt: (v: number) => compact(v) },
+ { key: "likes",              label: "LIKES",          fmt: (v: number) => compact(v) },
+ { key: "saves",              label: "PLAYLIST SAVES", fmt: (v: number) => compact(v) },
+ { key: "avp",                label: "AVP",            fmt: (v: number) => `${v.toFixed(1)}%` },
+ { key: "avdSeconds",         label: "AVD",            fmt: (v: number) => formatDuration(v) },
+ { key: "rpm",                label: "RPM",            fmt: (v: number) => `$${v.toFixed(2)}` },
 ] as const
 
 type ThermalMetricKey = (typeof THERMAL_METRICS)[number]["key"]
+
+const readThermalMetric = (video: TubeExplorerVideoPoint, metric: ThermalMetricKey): number => {
+ const value = Number(video[metric])
+ return Number.isFinite(value) ? value : 0
+}
 
 /** Heat ramp: 75% cold (near-black → blue), 25% warm (green → yellow → orange → coral → rose)
  * Warm-zone colors are exact nav-button palette values. Lower 50% stays very dark. */
@@ -2633,7 +2903,7 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
 
  // Normalise values based on rank percentile
  const scored = useMemo(() => {
-  const vals = filteredVideos.map((v) => Math.max(0, Number((v as any)[metric]) || 0))
+  const vals = filteredVideos.map((v) => Math.max(0, readThermalMetric(v, metric)))
   const order = [...vals.keys()].sort((a, b) => vals[a] - vals[b])
   const ranks = new Array<number>(vals.length)
   order.forEach((originalIdx, rank) => {
@@ -2662,7 +2932,8 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
 
  // Calculate channel totals for non-hovered state
  const totals = useMemo(() => {
-  const totalViews = filteredVideos.reduce((sum, v) => sum + v.views, 0)
+ const totalViews = filteredVideos.reduce((sum, v) => sum + v.views, 0)
+  const totalEngagedViews = filteredVideos.reduce((sum, v) => sum + v.engagedViews, 0)
   const totalWatchHours = filteredVideos.reduce((sum, v) => sum + v.watchHours, 0)
   const totalRevenue = filteredVideos.reduce((sum, v) => sum + v.revenue, 0)
   const totalSubs = filteredVideos.reduce((sum, v) => sum + v.subscribersGained, 0)
@@ -2681,6 +2952,7 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
 
   return {
    views: totalViews,
+   engagedViews: totalEngagedViews,
    watchHours: totalWatchHours,
    avd: avgDuration * (avgAvp / 100),
    avp: avgAvp,
@@ -2698,22 +2970,21 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
 
  // Active context statistics
  const activeStats = useMemo(() => {
-  const target = hovered || totals
-  const pubDate = hovered ? formatShortDate(hovered.uploadDate) : (filteredVideos.length > 0 ? formatShortDate(filteredVideos.sort((a: any, b: any) => new Date(b.uploadDate || "").getTime() - new Date(a.uploadDate || "").getTime())[0]?.uploadDate) : "—")
-  return [
-   { label: "PUBLISHED", value: pubDate, tone: "white" as const, lockTone: true, compact: true },
-   { label: metric === "views" ? "► VIEWS" : "VIEWS", value: compact(target.views), tone: "yellow" as const, lockTone: true, compact: true },
-   { label: metric === "watchHours" ? "► WATCH" : "WATCH", value: `${compact(target.watchHours)}h`, tone: "purple" as const, lockTone: true, compact: true },
-   { label: metric === "avdSeconds" || metric === "avd" ? "► AVD" : "AVD", value: formatDuration(hovered ? (hovered.durationSec * (hovered.avp / 100)) : totals.avd), tone: "cyan" as const, lockTone: true, compact: true },
-   { label: metric === "avp" ? "► AVP" : "AVP", value: `${(target.avp || 0).toFixed(1)}%`, tone: "pink" as const, lockTone: true, compact: true },
-   { label: metric === "subscribersGained" ? "► SUBS" : "SUBS", value: compact(target.subscribersGained), tone: "lime" as const, lockTone: true, compact: true },
-   { label: metric === "likes" ? "► LIKES" : "LIKES", value: compact(target.likes), tone: "pink" as const, lockTone: true, compact: true },
-   { label: metric === "shares" ? "► SHARES" : "SHARES", value: compact(target.shares), tone: "cyan" as const, lockTone: true, compact: true },
-   { label: metric === "comments" ? "► CMTS" : "CMTS", value: compact(target.comments), tone: "yellow" as const, lockTone: true, compact: true },
-   { label: metric === "saves" ? "► SAVES" : "SAVES", value: compact(target.saves || 0), tone: "purple" as const, lockTone: true, compact: true },
-   { label: metric === "revenue" ? "► REV" : "REV", value: `$${target.revenue.toFixed(2)}`, tone: "lime" as const, lockTone: true, compact: true },
-   { label: metric === "rpm" ? "► RPM" : "RPM", value: `$${target.rpm.toFixed(2)}`, tone: "orange" as const, lockTone: true, compact: true },
-  ]
+ const target = hovered || totals
+  const valueFor = (key: VitalMetricKey): number => {
+   if (key === "avdSeconds") return hovered ? hovered.durationSec * (hovered.avp / 100) : totals.avd
+   return Number(target[key]) || 0
+  }
+  return CHANNEL_VITAL_METRICS.map((definition) => ({
+   label: metric === definition.key
+    ? `► ${definition.label}`
+    : definition.label,
+   value: definition.format(valueFor(definition.key)),
+   tone: definition.color,
+   valueTone: "#000000",
+   lockTone: true,
+   compact: true,
+  }))
  }, [hovered, totals, metric, filteredVideos])
 
  const METRIC_OPTIONS = THERMAL_METRICS.map(m => ({ label: m.label, value: m.key }))
@@ -2733,52 +3004,41 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
      ? `${hovered.title.toUpperCase()}${lockedIdx !== null ? " 🔒" : ""}`
      : `CHANNEL TOTALS (${formatFilter.toUpperCase()})`,
     stats: activeStats,
+    minHeight: 44,
    }}
    controllerRows={[
     {
      type: "dropdown",
-     value: metric,
-     options: METRIC_OPTIONS,
-     onSelect: (val) => setMetric(val as ThermalMetricKey),
-     bgTone: "#FFEA00"
-    },
-    {
-     type: "dropdown",
      value: formatFilter,
      options: [
-      { label: "ALL FORMATS", value: "all" },
-      { label: "SHORTS ONLY", value: "shorts" },
-      { label: "LONG ONLY", value: "long" },
+      { label: "ALL CHANNEL VIDEOS", value: "all" },
+      { label: "ALL CHANNEL SHORTS", value: "shorts" },
+      { label: "ALL LONGFORM VIDEOS", value: "long" },
      ],
      onSelect: (val) => setFormatFilter(val as any),
-     bgTone: "#FF7497"
+     bgTone: "#FF7497",
+     fgTone: "#000000",
     },
     {
      type: "dropdown",
      value: orderMode,
      options: [
-      { label: "CHRONO ORDER", value: "chrono" },
-      { label: "BY RANK", value: "rank" },
+      { label: "IN CHRONOLOGICAL ORDER", value: "chrono" },
+      { label: "ORDERED BY RANK", value: "rank" },
      ],
      onSelect: (val) => setOrderMode(val as any),
-     bgTone: "#00CCFF"
+     bgTone: "#00CCFF",
+     fgTone: "#000000",
     },
     {
-     type: "dropdown",
-     value: String(rowCount),
-     options: [
-      { label: "8 ROWS", value: "8" },
-      { label: "5 ROWS", value: "5" },
-     ],
-     onSelect: (val) => setRowCount(Number(val) as 5 | 8),
-     bgTone: "#B14AED"
-    },
-    {
-     type: "label",
-     value: `${displayVideos.length} VIDEOS`,
-     bgTone: "#FFFFFF"
-    }
-   ]}
+      type: "dropdown",
+      value: metric,
+      options: METRIC_OPTIONS,
+      onSelect: (val) => setMetric(val as any),
+      bgTone: "#CCFF00",
+      fgTone: "#000000",
+     },
+    ]}
    layout={{ moduleMinHeight: "480px" }}
    >
     <ThermalImagingModuleInner
@@ -2795,21 +3055,38 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
   )
 }
 
-type VitalMetricKey = "views" | "watchHours" | "subscribersGained" | "likes" | "comments" | "shares" | "saves" | "revenue"
+type VitalMetricKey =
+ | "views"
+ | "watchHours"
+ | "subscribersGained"
+ | "engagedViews"
+ | "revenue"
+ | "comments"
+ | "shares"
+ | "likes"
+ | "saves"
+ | "avp"
+ | "avdSeconds"
+ | "rpm"
 
-/** Track colours come straight off the shared spectrum so the monitor matches the other modules. */
-// Ordered top-to-bottom. The headline metrics sit at the bottom of the stack:
-// views on the last row, watch time above it, then likes.
+/**
+ * Canonical Channel Vital Signs order. Each color is resolved from the shared
+ * metric palette so the same statistic keeps its identity in every visual.
+ */
 const CHANNEL_VITAL_METRICS: Array<{ key: VitalMetricKey; label: string; color: string; format: (value: number) => string }> = [
- { key: "subscribersGained", label: "SUBS", format: compact },
- { key: "comments", label: "COMMENTS", format: compact },
- { key: "shares", label: "SHARES", format: compact },
- { key: "saves", label: "SAVES", format: compact },
- { key: "revenue", label: "REVENUE", format: (value) => `$${value.toFixed(2)}` },
- { key: "likes", label: "LIKES", format: compact },
- { key: "watchHours", label: "WATCH", format: (value) => `${compact(value)}H` },
- { key: "views", label: "VIEWS", format: compact },
-].map((entry, index) => ({ ...entry, color: VT_SPECTRUM_PALETTE_06[index % VT_SPECTRUM_PALETTE_06.length] }))
+ { key: "views", label: "VIEWS", color: VT_VISUAL_METRIC_COLORS.views, format: compact },
+ { key: "watchHours", label: "WATCH TIME", color: VT_VISUAL_METRIC_COLORS.watchTime, format: (value) => `${compact(value)}H` },
+ { key: "subscribersGained", label: "SUBSCRIBERS", color: VT_VISUAL_METRIC_COLORS.subscribers, format: compact },
+ { key: "engagedViews", label: "ENGAGED VIEWS", color: VT_VISUAL_METRIC_COLORS.engagedViews, format: compact },
+ { key: "revenue", label: "REVENUE", color: VT_VISUAL_METRIC_COLORS.revenue, format: (value) => `$${value.toFixed(2)}` },
+ { key: "comments", label: "COMMENTS", color: VT_VISUAL_METRIC_COLORS.comments, format: compact },
+ { key: "shares", label: "SHARES", color: VT_VISUAL_METRIC_COLORS.shares, format: compact },
+ { key: "likes", label: "LIKES", color: VT_VISUAL_METRIC_COLORS.likes, format: compact },
+ { key: "saves", label: "PLAYLIST SAVES", color: VT_VISUAL_METRIC_COLORS.saves, format: compact },
+ { key: "avp", label: "AVP", color: VT_VISUAL_METRIC_COLORS.avp, format: (value) => `${value.toFixed(1)}%` },
+ { key: "avdSeconds", label: "AVD", color: VT_VISUAL_METRIC_COLORS.avd, format: formatDuration },
+ { key: "rpm", label: "RPM", color: VT_VISUAL_METRIC_COLORS.rpm, format: (value) => `$${value.toFixed(2)}` },
+]
 
 /** 0 means "all rows". */
 const VITAL_ROW_COUNTS = [5, 10, 15, 25, 50, 100, 150, 200, 250, 0] as const
@@ -2828,16 +3105,10 @@ const sortVitalRows = (rows: TubeExplorerVideoPoint[]) =>
   return aTime - bTime
  })
 
-const formatVitalPublishedDate = (value: string): string => {
- const date = new Date(value)
- if (!Number.isFinite(date.getTime())) return "—"
- return `${date.getUTCMonth() + 1}/${date.getUTCDate()}/${String(date.getUTCFullYear()).slice(-2)}`
-}
-
 export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = (props) => {
  const dataset = useExplorerData(props)
  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
- const [countIndex, setCountIndex] = useState<number>(0)
+ const [countIndex, setCountIndex] = useState<number>(5)
  const [formatIndex, setFormatIndex] = useState<number>(0)
  const rowCount = VITAL_ROW_COUNTS[countIndex]
  const formatFilter = VITAL_FORMAT_MODES[formatIndex]
@@ -2895,25 +3166,22 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
 
  const activeContext = useMemo(() => {
   const target = hovered || rows[rows.length - 1]
+  const metricValue = (metric: VitalMetricKey): number => {
+   if (!target) return 0
+   const value = Number(target[metric])
+   return Number.isFinite(value) ? value : 0
+  }
   return {
    title: target ? target.title.toUpperCase() : "CHANNEL VITALS",
-   stats: [
-    {
-     label: "PUBLISHED",
-     value: target ? formatVitalPublishedDate(target.uploadDate) : "—",
-     tone: "white" as const,
+   stats: CHANNEL_VITAL_METRICS.map((metric) => ({
+     label: metric.label,
+     value: metric.format(metricValue(metric.key)),
+     tone: metric.color,
      valueTone: "#000000",
      lockTone: true,
      compact: true,
-    },
-    ...CHANNEL_VITAL_METRICS.map((metric) => ({
-     label: metric.label,
-     value: metric.format(target ? Number(target[metric.key]) || 0 : 0),
-     tone: metric.color,
-     lockTone: true,
-     compact: true,
     })),
-   ],
+   minHeight: 44,
   }
  }, [hovered, rows])
 
@@ -2962,7 +3230,7 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
  return (
   <ModuleFrame
    title="CHANNEL VITAL SIGNS"
-   subtitle="Oscilloscope monitor for subs, comments, shares, saves, revenue, likes, watch time, and views."
+   subtitle="Twelve channel metrics traced together across upload order. Saves use YouTube Playlist Saves."
    count={rows.length}
    color="#FF7497"
    activeContext={activeContext}
@@ -3005,7 +3273,7 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
      preserveAspectRatio="none"
      className="block min-h-0 w-full flex-1"
      role="img"
-     aria-label="Channel vital signs oscilloscope showing eight metrics across upload order"
+     aria-label="Channel vital signs oscilloscope showing twelve metrics across upload order"
      onMouseMove={(event) => {
       // preserveAspectRatio="none" makes viewBox x map linearly onto element width,
       // so this stays accurate edge to edge rather than only at the centre.
@@ -3125,7 +3393,7 @@ export const TubeExplorerBarcodeFingerprint: React.FC<TubeExplorerVisualProps> =
   { label: marked("LIKES", "likes"), value: compact(hovered ? hovered.likes : totals.likes), tone: "pink" as const, lockTone: true, compact: true },
   { label: marked("CMTS", "comments"), value: compact(hovered ? hovered.comments : totals.comments), tone: "cyan" as const, lockTone: true, compact: true },
   { label: marked("SHARES", "shares"), value: compact(hovered ? hovered.shares : totals.shares), tone: "lime" as const, lockTone: true, compact: true },
-  { label: marked("SUBS", "subscribersGained"), value: compact(hovered ? hovered.subscribersGained : totals.subs), tone: "lime" as const, lockTone: true, compact: true },
+   { label: marked("SUBSCRIBERS", "subscribersGained"), value: compact(hovered ? hovered.subscribersGained : totals.subs), tone: "lime" as const, lockTone: true, compact: true },
   { label: marked("REV", "revenue"), value: `$${(hovered ? hovered.revenue : totals.revenue).toFixed(2)}`, tone: "orange" as const, lockTone: true, compact: true },
   { label: marked("AVP", "avp"), value: `${(hovered ? hovered.avp : weightedAverage(rows, (row) => row.avp, (row) => Math.max(row.views, 1))).toFixed(1)}%`, tone: "purple" as const, lockTone: true, compact: true },
   { label: marked("AVD", "avdSeconds"), value: formatDuration(hovered ? hovered.avdSeconds : weightedAverage(rows, (row) => row.avdSeconds, (row) => Math.max(row.views, 1))), tone: "cyan" as const, lockTone: true, compact: true },
@@ -3149,48 +3417,47 @@ export const TubeExplorerBarcodeFingerprint: React.FC<TubeExplorerVisualProps> =
    }}
    controllerRows={[
     {
+     type: "number",
+     value: barCount,
+     onPrev: () => setBarCount((prev) => Math.max(20, prev - 20)),
+     onNext: () => setBarCount((prev) => Math.min(200, prev + 20)),
+     bgTone: "#CCFF00",
+     fgTone: "#000000",
+    },
+    {
+     type: "dropdown",
+     value: `${orderMode}:${formatFilter}`,
+     options: [
+      { label: "GREATEST | ALL", value: "top:all" },
+      { label: "GREATEST | SHORTS", value: "top:shorts" },
+      { label: "GREATEST | LONGFORM", value: "top:long" },
+      { label: "LATEST | ALL", value: "recent:all" },
+      { label: "LATEST | SHORTS", value: "recent:shorts" },
+      { label: "LATEST | LONGFORM", value: "recent:long" },
+     ],
+     onSelect: (val) => {
+      const [o, f] = val.split(":")
+      setOrderMode(o as any)
+      setFormatFilter(f as any)
+     },
+     bgTone: "#FF7497",
+     fgTone: "#000000",
+    },
+    {
      type: "dropdown",
      value: metric,
-     options: EXPLORER_METRIC_OPTIONS.map((entry) => ({ label: entry.label.toUpperCase(), value: entry.key })),
+     options: EXPLORER_METRIC_OPTIONS.map((entry) => ({ label: `RANKED BY: ${entry.label.toUpperCase()}`, value: entry.key })),
      onSelect: (value) => setMetric(value as ExplorerMetricKey),
-     bgTone: "#FFEA00",
-    },
-    {
-     type: "dropdown",
-     value: formatFilter,
-     options: [
-      { label: "ALL VIDEOS", value: "all" },
-      { label: "SHORTS ONLY", value: "shorts" },
-      { label: "LONGFORM ONLY", value: "long" },
-     ],
-     onSelect: (value) => setFormatFilter(value as "all" | "shorts" | "long"),
-     bgTone: "#FF7497",
-    },
-    {
-     type: "dropdown",
-     value: orderMode,
-     options: [
-      { label: "TOP PERFORMING", value: "top" },
-      { label: "MOST RECENT", value: "recent" },
-     ],
-     onSelect: (value) => setOrderMode(value as "top" | "recent"),
      bgTone: "#00CCFF",
+     fgTone: "#000000",
     },
-    {
-     type: "dropdown",
-     value: String(barCount),
-     options: BARCODE_BAR_COUNTS.map((entry) => ({ label: `${entry} VIDEOS`, value: String(entry) })),
-     onSelect: (value) => setBarCount(Number(value)),
-     bgTone: "#B14AED",
-    },
-    { type: "label", value: `${rows.length} VIDEOS`, bgTone: "#FFFFFF" },
    ]}
   >
    <BarcodeFingerprintAdvancedRenderer rows={rows} metric={metric} orderLabel={orderLabel} onHover={setHovered} />
   </ModuleFrame>
  )
 }
-export const TubeExplorerViewsSubsGrowthQuadrant = createModule("VIEWS × SUBS GROWTH QUADRANT", "Videos plotted by reach and subscriber conversion.", (d) => <ViewsSubsGrowthQuadrantRenderer dataset={d} />, {
+export const TubeExplorerViewsSubsGrowthQuadrant = createModule("VIEWS × SUBSCRIBER GROWTH QUADRANT", "Videos plotted by reach and subscriber conversion.", (d) => <ViewsSubsGrowthQuadrantRenderer dataset={d} />, {
  color: "#00E5FF",
  height: 420,
  flushShell: true,
@@ -3199,7 +3466,7 @@ export const TubeExplorerViewsSubsGrowthQuadrant = createModule("VIEWS × SUBS G
   stats: [
    { label: "VIDEOS", value: compact(dataset.videos.length), tone: "#00E5FF", lockTone: true, compact: true },
    { label: "VIEWS", value: compact(dataset.totals.views), tone: "#42FF68", lockTone: true, compact: true },
-   { label: "SUBS GAINED", value: compact(dataset.totals.subscribersGained), tone: "#FF83EA", lockTone: true, compact: true },
+   { label: "SUBSCRIBERS GAINED", value: compact(dataset.totals.subscribersGained), tone: "#FF83EA", lockTone: true, compact: true },
   ],
  }),
 })
@@ -3250,13 +3517,13 @@ export const TubeExplorerSubscriberWaterfall: React.FC<TubeExplorerVisualProps> 
     stats: hovered
      ? [
       { label: "PUBLISHED", value: formatShortDate(hovered.video.uploadDate), tone: "white" as const, valueTone: "#000000", lockTone: true, compact: true },
-      { label: "SUBS", value: `+${compact(hovered.video.subscribersGained)}`, tone: "lime" as const, lockTone: true, compact: true },
+      { label: "SUBSCRIBERS", value: `+${compact(hovered.video.subscribersGained)}`, tone: "lime" as const, lockTone: true, compact: true },
       { label: "RUNNING", value: `+${compact(hovered.cumulative)}`, tone: "yellow" as const, lockTone: true, compact: true },
       { label: "VIEWS", value: compact(hovered.video.views), tone: "cyan" as const, lockTone: true, compact: true },
       { label: "FORMAT", value: hovered.video.format.toUpperCase(), tone: "pink" as const, lockTone: true, compact: true },
      ]
      : [
-      { label: "NET SUBS", value: `+${compact(netSubs)}`, tone: "lime" as const, lockTone: true, compact: true },
+      { label: "NET SUBSCRIBERS", value: `+${compact(netSubs)}`, tone: "lime" as const, lockTone: true, compact: true },
       { label: "VIDEOS", value: compact(rows.length), tone: "cyan" as const, lockTone: true, compact: true },
       { label: "BEST", value: best ? `+${compact(best.subscribersGained)}` : "—", tone: "yellow" as const, lockTone: true, compact: true },
       { label: "AVG", value: rows.length ? (netSubs / rows.length).toFixed(1) : "0", tone: "pink" as const, lockTone: true, compact: true },
@@ -3336,7 +3603,7 @@ export const TubeExplorerShortsVsLongs: React.FC<TubeExplorerVisualProps> = (pro
     { type: "number", value: String(shorts.length + longs.length), bgTone: "#FFEA00", fgTone: "#000000" },
     {
      type: "text",
-     value: mode,
+     value: average ? "AVERAGE" : "TOTAL",
      onPrev: () => setAverage((current) => !current),
      onNext: () => setAverage((current) => !current),
      bgTone: "#FF7497",
@@ -3407,6 +3674,12 @@ const buildTreemapPillars = (
 const TREEMAP_PILLAR_COUNTS = [8, 12, 16, 24, 0] as const
 /** Explicit stage height: h-full cannot resolve reliably inside StableChartFrame's ResponsiveContainer. */
 const TREEMAP_STAGE_HEIGHT = 452
+
+const treemapFontSize = (text: string, width: number, height: number, min: number, max: number): number => {
+ const widthFit = (Math.max(0, width) - 12) / Math.max(1, text.length * 0.58)
+ const heightFit = Math.max(0, height) * 0.3
+ return Math.max(min, Math.min(max, Math.floor(widthFit), Math.floor(heightFit)))
+}
 
 export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (props) => {
  const dataset = useExplorerData(props)
@@ -3479,7 +3752,7 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
    ).map((rect) => ({
     key: rect.video.videoId,
     label: videoShortTitle(rect.video.title, 60),
-    sub: `${compact(rect.video.views)} views · ${rect.video.format}`,
+    sub: `${metric.format(rect.value)} · ${compact(rect.video.views)} ${rect.video.views === 1 ? "view" : "views"}`,
     color: drilled.color,
     value: rect.value,
     x: rect.x, y: rect.y, w: rect.w, h: rect.h,
@@ -3488,7 +3761,7 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
   return squarifyTreemap(pillars, width, height).map((rect) => ({
    key: rect.word,
    label: rect.word,
-   sub: `${metric.format(rect.value)} · ${rect.videos.length} vids`,
+   sub: `${metric.format(rect.value)} · ${rect.videos.length} ${rect.videos.length === 1 ? "video" : "videos"}`,
    color: rect.color,
    value: rect.value,
    x: rect.x, y: rect.y, w: rect.w, h: rect.h,
@@ -3498,13 +3771,12 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
  // Pillars overlap, so summing them would over-count. Share is measured against the
  // channel total, which keeps each pillar's percentage honest.
  const total = scoped.reduce((sum, video) => sum + (Number(video[metric.key]) || 0), 0) || 1
- const peak = rects[0]?.value || 1
  const scopeTotal = drilled ? drilled.value : total
 
  const stats = hovered
   ? [
    { label: metric.label, value: metric.format(hovered.value), tone: "lime" as const, lockTone: true, compact: true },
-   { label: drilled ? "FORMAT" : "VIDEOS", value: hovered.sub, tone: "cyan" as const, lockTone: true, compact: true },
+   { label: drilled ? "VIDEO STATS" : "VIDEOS", value: hovered.sub, tone: "cyan" as const, lockTone: true, compact: true },
    { label: "SHARE", value: `${((hovered.value / scopeTotal) * 100).toFixed(1)}%`, tone: "pink" as const, lockTone: true, compact: true },
   ]
   : [
@@ -3559,6 +3831,8 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
      {rects.length === 0 ? <Empty label="No keyword pillars available for the current filters." /> : rects.map((rect) => {
       const tiny = rect.w < 52 || rect.h < 30
       const small = rect.w < 118 || rect.h < 58
+      const titleSize = treemapFontSize(rect.label, rect.w, rect.h, tiny ? 5 : 7, drilled ? 20 : 26)
+      const statSize = treemapFontSize(rect.sub, rect.w, rect.h * 0.45, 7, 15)
       return (
        <button
         key={rect.key}
@@ -3570,7 +3844,6 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
          width: Math.max(0, rect.w - 3),
          height: Math.max(0, rect.h - 3),
          background: rect.color,
-         opacity: 0.62 + 0.38 * (rect.value / peak),
          padding: tiny ? "2px 3px" : small ? "4px 5px" : "7px 8px",
         }}
         onClick={() => { if (!drilled) { setDrillWord(rect.key); setHovered(null) } }}
@@ -3579,13 +3852,13 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
         title={`${rect.label} · ${rect.sub}`}
        >
         <span
-         className="overflow-hidden font-[1000] uppercase leading-none tracking-[-0.02em]"
-         style={{ fontSize: tiny ? 8 : small ? 10 : 15 }}
+         className="block max-w-full overflow-hidden whitespace-nowrap font-[1000] uppercase leading-none tracking-[-0.02em]"
+         style={{ fontSize: titleSize }}
         >
          {rect.label}
         </span>
         {!tiny && (
-         <span className="font-[1000] uppercase leading-tight tracking-[0.04em] opacity-85" style={{ fontSize: small ? 8 : 10 }}>
+         <span className="font-[1000] uppercase leading-tight tracking-[0.02em]" style={{ fontSize: statSize }}>
           {rect.sub}
          </span>
         )}
@@ -4059,15 +4332,16 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
    isOpenInitial={props.isOpenInitial}
    activeContext={{
     title: hovered ? `${slotLabel(hovered)} • SLOT` : `PUBLISH GRID (${formatFilter.toUpperCase()})`,
+    minHeight: 44,
     stats: [
-     { label: "SLOT", value: slotLabel(activeCell), tone: "white" as const, lockTone: true, compact: true },
-     { label: marked("AVG VIEWS", "views"), value: compact(per(summary.views)), tone: "yellow" as const, lockTone: true, compact: true },
-     { label: marked("AVG SUBS", "subscribersGained"), value: per(summary.subs).toFixed(1), tone: "lime" as const, lockTone: true, compact: true },
-     { label: "AVG CMTS", value: per(summary.comments).toFixed(1), tone: "cyan" as const, lockTone: true, compact: true },
-     { label: marked("AVG LIKES", "likes"), value: per(summary.likes).toFixed(1), tone: "pink" as const, lockTone: true, compact: true },
-     { label: marked("AVG REV", "revenue"), value: `$${per(summary.revenue).toFixed(2)}`, tone: "orange" as const, lockTone: true, compact: true },
-     { label: marked("UPLOADS", "uploads"), value: `${summaryUploads}`, tone: "purple" as const, lockTone: true, compact: true },
-     { label: "TOP SLOT", value: slotLabel(best), tone: "white" as const, lockTone: true, compact: true },
+     { label: "SLOT", value: slotLabel(activeCell), tone: "white" as const, minWidth: 126, lockTone: true, compact: true },
+     { label: marked("AVG VIEWS", "views"), value: compact(per(summary.views)), tone: VT_VISUAL_METRIC_COLORS.views, minWidth: 94, lockTone: true, compact: true },
+     { label: marked("AVG SUBSCRIBERS", "subscribersGained"), value: per(summary.subs).toFixed(1), tone: VT_VISUAL_METRIC_COLORS.subscribers, minWidth: 116, lockTone: true, compact: true },
+     { label: marked("AVG REVENUE", "revenue"), value: `$${per(summary.revenue).toFixed(2)}`, tone: VT_VISUAL_METRIC_COLORS.revenue, minWidth: 104, lockTone: true, compact: true },
+     { label: "AVG COMMENTS", value: per(summary.comments).toFixed(1), tone: VT_VISUAL_METRIC_COLORS.comments, minWidth: 106, lockTone: true, compact: true },
+     { label: marked("AVG LIKES", "likes"), value: per(summary.likes).toFixed(1), tone: VT_VISUAL_METRIC_COLORS.likes, minWidth: 94, lockTone: true, compact: true },
+     { label: marked("UPLOADS", "uploads"), value: `${summaryUploads}`, tone: VT_VISUAL_METRIC_COLORS.rpm, minWidth: 88, lockTone: true, compact: true },
+     { label: "TOP SLOT", value: slotLabel(best), tone: "white" as const, minWidth: 126, lockTone: true, compact: true },
     ],
    }}
    controllerRows={[
@@ -4107,8 +4381,8 @@ const RIVER_SOURCE_LIMITS = [6, 8, 10, 14] as const
 export const TubeExplorerTrafficDayRiverDelta: React.FC<TubeExplorerVisualProps> = (props) => {
  const rows = Array.isArray(props.trafficByDay) ? props.trafficByDay : []
  const dataset = useExplorerData(props)
- const [limitIndex, setLimitIndex] = useState(1)
- const [grainIndex, setGrainIndex] = useState(0)
+ const [limitIndex, setLimitIndex] = useState(0)
+ const [grainIndex, setGrainIndex] = useState(3)
  const [hovered, setHovered] = useState<{ label: string; views: number; sub: string } | null>(null)
  const [highlight, setHighlight] = useState<RiverHighlight>(null)
  const grainSpec = RIVER_GRAINS[grainIndex]
@@ -4286,16 +4560,19 @@ export const TubeExplorerCalendarHeatSignature = createModule("CALENDAR HEAT", "
 export const TubeExplorerUSStateDotMap = createModule("GEO RANK", "Country, region, and city views sorted by reach.", (d) => <GeoBars dataset={d} />, { color: "#FF7497" })
 export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (props) => {
  const dataset = useExplorerData(props)
- const [wordLimit, setWordLimit] = useState(15)
+ const [wordLimit, setWordLimit] = useState(20)
  const [hovered, setHovered] = useState<string | null>(null)
+ const [metric, setMetric] = useState<TitleNetworkMetric>("views")
+ const [selectedRoots, setSelectedRoots] = useState<string[]>([])
 
  const graph = useMemo(
-  () => buildWordNetwork(dataset.videos.filter((video) => video.views > 0), wordLimit),
-  [dataset.videos, wordLimit],
+  () => buildWordNetwork(dataset.videos.filter((video) => titleNetworkMetricValue(video, metric) > 0), wordLimit, metric),
+  [dataset.videos, metric, wordLimit],
  )
 
  const topNode = graph.nodes.reduce<WordNode | null>((best, node) => (!best || node.totalViews > best.totalViews ? node : best), null)
  const totalKeywordViews = graph.nodes.reduce((sum, node) => sum + node.totalViews, 0)
+ const metricLabel = TITLE_NETWORK_METRIC_LABELS[metric]
 
  const hoveredNode = hovered ? graph.nodes.find((node) => node.id === hovered) || null : null
  const hoveredConnections = hoveredNode
@@ -4305,15 +4582,15 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
  const activeStats = hoveredNode ? [
   { label: "WORD", value: hoveredNode.id.toUpperCase(), tone: "lime" as const, lockTone: true },
   { label: "VIDEOS", value: String(hoveredNode.videoCount), tone: "cyan" as const, lockTone: true },
-  { label: "VIEWS", value: compact(hoveredNode.totalViews), tone: "pink" as const, lockTone: true },
+  { label: metricLabel.toUpperCase(), value: compact(hoveredNode.totalViews), tone: "pink" as const, lockTone: true },
   { label: "CO-WORDS", value: String(hoveredConnections), tone: "yellow" as const, lockTone: true },
   { label: "SHARE OF TRACKED", value: `${((hoveredNode.totalViews / Math.max(totalKeywordViews, 1)) * 100).toFixed(1)}%`, tone: "purple" as const, lockTone: true },
  ] : [
   { label: "KEYWORDS", value: String(graph.nodes.length), tone: "lime" as const, lockTone: true },
   { label: "LINKS", value: String(graph.edges.length), tone: "cyan" as const, lockTone: true },
   { label: "TOP WORD", value: topNode ? topNode.id.toUpperCase() : "—", tone: "yellow" as const, lockTone: true },
-  { label: "TOP VIEWS", value: topNode ? compact(topNode.totalViews) : "0", tone: "pink" as const, lockTone: true },
-  { label: "TRACKED VIEWS", value: compact(totalKeywordViews), tone: "purple" as const, lockTone: true },
+  { label: `TOP ${metricLabel.toUpperCase()}`, value: topNode ? compact(topNode.totalViews) : "0", tone: "pink" as const, lockTone: true },
+  { label: `TRACKED ${metricLabel.toUpperCase()}`, value: compact(totalKeywordViews), tone: "purple" as const, lockTone: true },
  ]
 
  return (
@@ -4322,7 +4599,7 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
    isOpenInitial={props.isOpenInitial}
    header={{
     title: "TITLE WORD NETWORK",
-    subtitle: "CO-OCCURRENCE GRAPH · NODE SIZE = VIEWS · COLOR = POSITION · VIEWS · RANK VS OTHERS · CONNECTED TO · AVG RET% · AVG DURATION · VIDEOS",
+    subtitle: `WORDS SIZED BY ${metric.toUpperCase()} · LINE THICKNESS = TIMES CO-APPEARING · SAME COLOR = RELATED CLUSTER`,
     icon: <CustomIcon name="analytics" size={34} />,
    }}
    theme={{ headerBandBg: "#CCFF00", iconBlockBg: "#20D4F7" }}
@@ -4339,13 +4616,26 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
      bgTone: "#FFFFFF",
     },
     { type: "label", value: "WORDS SHOWN", bgTone: "#FFFFFF" },
+    {
+     type: "dropdown",
+     value: metric,
+     options: (Object.entries(TITLE_NETWORK_METRIC_LABELS) as Array<[TitleNetworkMetric, string]>).map(([value, label]) => ({
+      value,
+      label: label.toUpperCase(),
+     })),
+     onSelect: (value) => {
+      setMetric(value as TitleNetworkMetric)
+      setSelectedRoots([])
+     },
+     bgTone: "#FFEA00",
+    },
    ]}
    layout={{ moduleMinHeight: "420px" }}
    footer={
     <div className="flex items-center gap-3 px-4 py-2.5">
      <InsightBadge label="Personal Insight" />
      <span className="text-[11px] font-medium leading-5 text-white/85">
-      Each bubble is a word from your video titles. Size is total views of titles containing it, color follows layout position across the spectrum, and position is view rank — the most-viewed words sit nearest the center, less-viewed words further out. A line connects two words whenever they appear in the same title. Hover any word to see its own stats above.
+      Each bubble is a title word from your videos — bigger means more {metricLabel.toLowerCase()}. Thicker lines mean those two words appear together in more videos. Words that share the same color cluster together. Hover any word to see its connections. Click to lock a word and reveal its full network; double-click to isolate it.
      </span>
     </div>
    }
@@ -4353,8 +4643,26 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
    {graph.nodes.length === 0 ? (
     <Empty label="Need multiple video titles with real views to build the title word network." />
    ) : (
-    <div className="h-[420px] w-full">
-     <TitleWordNetworkCanvas graph={graph} hovered={hovered} onHover={setHovered} />
+    <div className="h-[545px] w-full">
+     <TitleWordNetworkCanvas
+      graph={graph}
+      community={graph.community}
+      hovered={hovered}
+      onHover={setHovered}
+      selected={selectedRoots}
+      metricLabel={metricLabel}
+      onSelect={(id, exclusive) => {
+       if (!id) {
+        setSelectedRoots([])
+        return
+       }
+       setSelectedRoots((current) => {
+        if (exclusive) return [id]
+        if (current.includes(id)) return current.filter((candidate) => candidate !== id)
+        return [...current, id].slice(-5)
+       })
+      }}
+     />
     </div>
    )}
   </SubToolboxChartModule>
@@ -4364,7 +4672,7 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
 export const TUBE_EXPLORER_VISUAL_MODULES: TubeExplorerVisualModuleEntry[] = [
  { id: "tube-explorer-clock-radial-burst", title: "Clock Radial Burst", render: (props) => <TubeExplorerClockRadialBurst {...props} /> },
  { id: "tube-explorer-barcode-fingerprint", title: "Barcode Fingerprint", render: (props) => <TubeExplorerBarcodeFingerprint {...props} /> },
- { id: "tube-explorer-views-subs-growth-quadrant", title: "Views x Subs Growth Quadrant", render: (props) => <TubeExplorerViewsSubsGrowthQuadrant {...props} /> },
+ { id: "tube-explorer-views-subs-growth-quadrant", title: "Views x Subscriber Growth Quadrant", render: (props) => <TubeExplorerViewsSubsGrowthQuadrant {...props} /> },
  { id: "tube-explorer-subscriber-waterfall", title: "Subscriber Waterfall", render: (props) => <TubeExplorerSubscriberWaterfall {...props} /> },
  { id: "tube-explorer-shorts-vs-longs", title: "Shorts vs Longs", render: (props) => <TubeExplorerShortsVsLongs {...props} /> },
  { id: "tube-explorer-content-treemap", title: "Content Treemap", render: (props) => <TubeExplorerContentTreemap {...props} /> },

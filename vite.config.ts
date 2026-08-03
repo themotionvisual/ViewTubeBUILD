@@ -34,10 +34,12 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
+        cookieDomainRewrite: 'localhost',
       },
       '/billing': {
         target: 'http://localhost:3000',
         changeOrigin: true,
+        cookieDomainRewrite: 'localhost',
       },
     },
     hmr: {

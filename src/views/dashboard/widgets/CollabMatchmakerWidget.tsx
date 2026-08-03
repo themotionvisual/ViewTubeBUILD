@@ -15,7 +15,6 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
   onCycleHeight,
   onRemove,
   onDecSize,
-  onCycleHeight,
   onDecHeight,
  }
   const [peers, setPeers] = useState<CollabPeer[]>([])
@@ -50,7 +49,7 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
   }
 
   return (
-    <WidgetShell {...common} title="COLLAB MATCHMAKER" icon={<Users size={20} />}>
+    <WidgetShell {...common} icon={<Users size={20} />}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px", overflow: "hidden" }}>
         
         {/* Header Action */}

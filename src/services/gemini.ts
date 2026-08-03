@@ -72,8 +72,23 @@ export interface AIPatchPlan {
 }
 
 export interface OracleState {
-  analysis: any;
-  suggestions: any[];
+  dateKey: string
+  priorities: Array<{
+    text: string
+    timeframe: string
+    color: string
+    shadowColor: string
+    action: string
+    completed: boolean
+  }>
+  quickWins: Array<{
+    text: string
+    timeframe: string
+    color: string
+    shadowColor: string
+    action: string
+    completed: boolean
+  }>
 }
 
 export const fetchViralTrends = async (query?: string): Promise<Trend[]> => {

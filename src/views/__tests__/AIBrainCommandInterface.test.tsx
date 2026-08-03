@@ -6,7 +6,11 @@ import { GlobalDataContext, fallbackContext } from "../../context/GlobalDataCont
 import { buildCreatorBrainPromptCards } from "../../services/aiBrainCommandInterface"
 import AIBrainCommandInterface, {
  BrainGenerationBadge,
+ BrainFeedbackControls,
  BrainPromptLibrary,
+ promptCardSummary,
+ shouldSendBrainComposerKey,
+ UserMessage,
 } from "../AIBrainCommandInterface"
 
 const createStorage = () => {
@@ -72,8 +76,10 @@ describe("AIBrainCommandInterface", () => {
 
   expect(html).toContain("What the Brain currently knows")
   expect(html).toContain("Your channel")
-  // Goal lives inside the channel panel rather than owning a panel of its own.
+  // Current goal context stays in the channel panel while an unanswered goal
+  // check is a dedicated actionable module in the rail.
   expect(html).toContain("Goal ·")
+  expect(html).toContain("Goal check")
  })
 
  it("opens with the Brain's own read instead of an empty chat box", () => {
@@ -111,14 +117,57 @@ describe("AIBrainCommandInterface", () => {
    <BrainPromptLibrary cards={cards} onPrompt={() => undefined} />,
   )
 
-  expect(cards).toHaveLength(12)
+  expect(cards.length).toBeGreaterThanOrEqual(12)
+  // Every card renders, whatever the count, and ids are unique.
+  expect(new Set(cards.map((card) => card.id)).size).toBe(cards.length)
+  cards.forEach((card) => expect(html).toContain(card.label))
   expect(html).toContain('aria-labelledby="brain-prompt-library-title"')
   expect(html).toContain("Analyze Channel Niche")
   expect(html).toContain("Revenue Levers")
   expect(html).toContain("Best Video Autopsy")
   expect(html).toContain("Run Daily Oracle")
+  // The newly added creator-requested prompts are present.
+  expect(html).toContain("Pinned Comments")
+  expect(html).toContain("10 Video Ideas")
+  expect(html).toContain("Shorts Funnel Plan")
   expect(html).toContain("sticky top-0")
+  expect(html).toContain("sm:grid-cols-2")
+  expect(html).toContain("sm:auto-rows-[50px]")
+  expect(html).toContain("xl:grid-cols-3")
+  expect(html).toContain("line-clamp-2")
+  expect(html).toContain("text-[10px]")
+  expect(html).toContain("rounded-t-[5px]")
+  expect(html).toContain("border-b-[2px]")
   expect((html.match(/type="button"/g) || [])).toHaveLength(cards.length)
+  expect(promptCardSummary(cards[0])).toBe("Find your niche and fuzzy edges.")
+  expect(html).toContain("Find your niche and fuzzy edges.")
+ })
+
+ it("exposes persistent response rating states instead of inert icon buttons", () => {
+  const message = { id: "response-1", role: "model", text: "Answer", response: null } as const
+  const html = renderToStaticMarkup(
+   <BrainFeedbackControls message={message} onFeedback={async () => undefined} />,
+  )
+
+  expect(html).toContain('aria-label="Rate this response"')
+  expect(html).toContain('aria-pressed="false"')
+  expect(html).toContain('role="status"')
+  expect(html).toContain("Rate answer")
+ })
+
+ it("renders creator prompts as cyan split-row messages", () => {
+  const html = renderToStaticMarkup(<UserMessage text="Plan my next upload." />)
+
+  expect(html).toContain("bg-[#36E0F6]")
+  expect(html).toContain("grid-cols-[84px_minmax(0,1fr)]")
+  expect(html).toContain("text-[14px]")
+  expect(html).toContain("You:")
+ })
+
+ it("sends the composer with Enter while ignoring IME composition", () => {
+  expect(shouldSendBrainComposerKey({ key: "Enter", isComposing: false })).toBe(true)
+  expect(shouldSendBrainComposerKey({ key: "Enter", isComposing: true })).toBe(false)
+  expect(shouldSendBrainComposerKey({ key: "Escape", isComposing: false })).toBe(false)
  })
 
  it("keeps prompt and channel-context launchers reachable on smaller screens", () => {
@@ -129,14 +178,26 @@ describe("AIBrainCommandInterface", () => {
   expect(html).not.toContain(">Growth prompts<")
  })
 
- it("keeps every Brain scroll region usable without drawing nested scrollbar tracks", () => {
+ it("uses one themed scrollbar for the Brain conversation", () => {
   const html = renderHub()
 
-  expect(html).toContain("vt-scrollless")
+  expect(html).toContain("brain-chat-scrollbar")
   expect(html).toContain('aria-label="Brain conversation"')
   expect(html).toContain('aria-label="Prompt library"')
   expect(html).toContain('aria-label="Channel context"')
   expect(html).not.toContain("custom-scrollbar")
+ })
+
+ it("mounts the conversation directly against its panel instead of adding a second content mat", () => {
+  const html = renderHub()
+
+  expect(html).not.toContain("grid min-h-0 flex-1 gap-2 bg-white p-2")
+  expect(html).toContain("grid min-h-0 flex-1 bg-white")
+  expect(html).toContain("xl:grid-cols-[minmax(0,1.45fr)_minmax(520px,1fr)]")
+  expect(html).toContain("pt-5")
+  expect(html).toContain("brain-chat-scrollbar")
+  expect(html).toContain('aria-label="Open AI Journal"')
+  expect(html).not.toContain("shrink-0 border-t-[4px] border-black bg-[#f8f8f4]")
  })
 
  it("keeps internal diagnostics out of the creator workspace", () => {

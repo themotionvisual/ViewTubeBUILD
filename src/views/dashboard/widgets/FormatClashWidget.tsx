@@ -16,7 +16,6 @@ export const FormatClashWidget = ({ widget, instance, editMode, onToggleCollapse
   onCycleHeight,
   onRemove,
   onDecSize,
-  onCycleHeight,
   onDecHeight,
  }
 

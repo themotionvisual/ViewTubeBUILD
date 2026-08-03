@@ -16,6 +16,7 @@ describe("VT Sync category registry", () => {
 
   expect(visibleIds).toContain("geography_province")
   expect(visibleIds).toContain("traffic_overview")
+  expect(visibleIds).toContain("monthly_metrics")
   expect(visibleIds).not.toContain("traffic_shorts")
   expect(visibleIds).not.toContain("traffic_browse_features")
   expect(visibleIds).not.toContain("audience_watch_behavior")
@@ -28,6 +29,7 @@ describe("VT Sync category registry", () => {
   expect(VT_SYNC_CATEGORY_OPTIONS.every((category) => Boolean(category.runtimePhaseId))).toBe(true)
   expect(VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === "retention")?.runtimePhaseId).toBe("retention")
   expect(VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === "traffic_overview")?.runtimePhaseId).toBe("traffic")
+  expect(VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === "monthly_metrics")?.runtimePhaseId).toBe("monthly_metrics")
  })
 
  it("recursively expands dependencies once and keeps prerequisites first", () => {

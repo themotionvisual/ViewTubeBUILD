@@ -1,5 +1,9 @@
 import React from "react"
 import { VisualModuleController, type ControllerRow } from "./VisualModuleController"
+import {
+  getVtVisualMetricColor,
+  VT_VISUAL_METRIC_COLORS,
+} from "../styles/toolboxPalette"
 
 type Tone = "pink" | "cyan" | "lime" | "yellow" | "purple" | "orange" | "white"
 
@@ -28,19 +32,23 @@ export interface LegendSlotConfig {
 export interface SubToolboxStat {
   label: string
   value: string
-  tone?: Tone
+  /** Named UI tone or an explicit metric color from the shared visual palette. */
+  tone?: Tone | string
   valueTone?: string
   backgroundTone?: string
   labelText?: string
+  labelClassName?: string
   onClick?: () => void
   isActive?: boolean
   lockTone?: boolean
   compact?: boolean
+  /** Minimum card width. Longer labels may expand beyond this value. */
+  minWidth?: number
 }
 
 export interface SubToolboxMetricBadge {
   label: string
-  tone?: Tone
+  tone?: Tone | string
 }
 
 export interface SubToolboxChartModuleProps {
@@ -49,6 +57,7 @@ export interface SubToolboxChartModuleProps {
     subtitle: string
     icon?: React.ReactNode
     headerStyle?: "subtoolbox" | "classic"
+    titleClassName?: string
   }
   controlBox?: {
     count?: number | string
@@ -85,6 +94,8 @@ export interface SubToolboxChartModuleProps {
     rightTitle?: string
     rightStats?: SubToolboxStat[]
     bgTone?: string
+    /** Allows dense two-line labels without clipping the subtitle rail. */
+    minHeight?: number
   } | null
   layout?: {
     moduleWidth?: string
@@ -115,7 +126,7 @@ export interface SubToolboxChartModuleProps {
   }
 }
 
-const toneClass = (tone?: Tone): string => {
+const toneClass = (tone?: Tone | string): string => {
   if (tone === "pink") return "bg-[#FF7497]"
   if (tone === "cyan") return "bg-[#00CCFF]"
   if (tone === "lime") return "bg-[#CCFF00]"
@@ -125,35 +136,74 @@ const toneClass = (tone?: Tone): string => {
   return "bg-[#E5E7EB]"
 }
 
-const toneForMetricLabel = (label: string, fallback?: Tone): Tone => {
+/** Backward-compatible aliases backed by the canonical VT-SYNC metric palette. */
+export const METRIC_COLORS: Record<string, string> = {
+  SUBSCRIBERS: VT_VISUAL_METRIC_COLORS.subscribers,
+  SUBS: VT_VISUAL_METRIC_COLORS.subscribers,
+  COMMENTS: VT_VISUAL_METRIC_COLORS.comments,
+  CMNTS: VT_VISUAL_METRIC_COLORS.comments,
+  SHARES: VT_VISUAL_METRIC_COLORS.shares,
+  SAVES: VT_VISUAL_METRIC_COLORS.saves,
+  "PLAYLIST SAVES": VT_VISUAL_METRIC_COLORS.saves,
+  REVENUE: VT_VISUAL_METRIC_COLORS.revenue,
+  REV: VT_VISUAL_METRIC_COLORS.revenue,
+  RPM: VT_VISUAL_METRIC_COLORS.rpm,
+  VIEWS: VT_VISUAL_METRIC_COLORS.views,
+  "WATCH TIME": VT_VISUAL_METRIC_COLORS.watchTime,
+  WATCH: VT_VISUAL_METRIC_COLORS.watchTime,
+  AVP: VT_VISUAL_METRIC_COLORS.avp,
+  AVD: VT_VISUAL_METRIC_COLORS.avd,
+  LIKES: VT_VISUAL_METRIC_COLORS.likes,
+  IMPRESSIONS: "#B14AED",
+  IMPRSNS: "#B14AED",
+  CTR: "#00CCFF",
+  RETENTION: "#FF7497",
+  RET: "#FF7497",
+  ENGAGED: VT_VISUAL_METRIC_COLORS.engagedViews,
+  "ENGAGED VIEWS": VT_VISUAL_METRIC_COLORS.engagedViews,
+  LENGTH: "#40C6E9",
+}
+
+const metricColorHex = (label: string): string | undefined => {
+  return getVtVisualMetricColor(label) ?? METRIC_COLORS[label.trim().toUpperCase()]
+}
+
+const toneForMetricLabel = (label: string, fallback?: Tone | string): Tone | string => {
   const normalized = label.trim().toUpperCase()
   if (normalized.includes("CTR")) return "cyan"
   if (normalized === "RET" || normalized.includes("RETENTION")) return "pink"
   if (normalized.includes("LIKE")) return "pink"
-  if (normalized.includes("COMMENT")) return "cyan"
-  if (normalized.includes("SHARE")) return "lime"
-  if (normalized.includes("SUB")) return "lime"
-  if (normalized.includes("REVENUE") || normalized === "REV" || normalized.includes("RPM")) return "cyan"
-  if (normalized.includes("VIEWS")) return "yellow"
-  if (normalized.includes("LENGTH") || normalized.includes("WATCH")) return "yellow"
+  if (normalized.includes("COMMENT")) return "orange"
+  if (normalized.includes("SHARE")) return "orange"
+  if (normalized.includes("SUB")) return "pink"
+  if (normalized.includes("REVENUE") || normalized === "REV" || normalized.includes("RPM")) return "lime"
+  if (normalized.includes("SAVE")) return "yellow"
+  if (normalized.includes("VIEWS")) return "cyan"
+  if (normalized.includes("LENGTH") || normalized.includes("WATCH")) return "cyan"
   if (normalized.includes("AVD")) return "lime"
+  if (normalized.includes("AVP")) return "purple"
   if (normalized.includes("IMP")) return "purple"
+  if (normalized.includes("ENGAGED")) return "cyan"
   return fallback ?? "white"
 }
 
-const statButtonClass = (clickable: boolean, compact?: boolean): string =>
-  `h-full ${compact ? "w-[76px]" : "w-[88px]"} flex-none px-0 inline-flex flex-col items-stretch justify-start tabular-nums leading-none overflow-hidden transition-colors ${
+const statButtonClass = (clickable: boolean): string =>
+  `h-full w-auto flex-none px-0 inline-flex flex-col items-stretch justify-start tabular-nums leading-none overflow-hidden transition-colors ${
     clickable ? "cursor-pointer hover:bg-gray-50" : "cursor-default"
   }`
 
 const normalizeStatLabel = (label: string): string => {
   const normalized = label.trim().toUpperCase()
   if (normalized.includes("IMPRESSION")) return "IMPRSNS"
-  if (normalized === "SUBSCRIBERS" || normalized === "SUBSCRIPTIONS") return "SUBS"
+  if (normalized === "SUBS" || normalized === "SUBSCRIPTIONS") return "SUBSCRIBERS"
   return label
 }
 
-const statValueTone = (item: SubToolboxStat): string => item.valueTone ?? item.tone ?? "#000000"
+const statButtonStyle = (item: SubToolboxStat): React.CSSProperties => ({
+  background: item.backgroundTone ?? "#EDEDED",
+  minWidth: item.minWidth ?? (item.compact ? 76 : 88),
+})
+
 const toneBackgroundStyle = (tone?: string): React.CSSProperties | undefined =>
   typeof tone === "string" && tone.startsWith("#") ? { background: tone } : undefined
 
@@ -234,7 +284,7 @@ export const SubToolboxChartModule: React.FC<
           style={{ background: tokens.headerBandBg }}
         >
           <div className="min-w-0 py-2 flex flex-col justify-center">
-            <div className="max-w-full font-[1000] text-[clamp(24px,3.5vw,42px)] leading-[0.88] uppercase tracking-[0em] break-words">
+            <div className={`max-w-full font-[1000] uppercase tracking-[0em] break-words ${header.titleClassName ?? "text-[clamp(24px,3.5vw,42px)] leading-[0.88]"}`}>
               {header.title}
             </div>
             <div className="max-w-full text-[clamp(10px,1.1vw,14px)] font-black uppercase tracking-[0.069em] opacity-80 truncate">
@@ -286,15 +336,21 @@ export const SubToolboxChartModule: React.FC<
         <div className="overflow-hidden flex flex-col relative">
           {activeContext ? (
             <div
-              className={`${disableActiveContextBottomBorder ? "" : "border-b-[4px] border-black"} px-0 py-0 h-[34px] overflow-hidden`}
-              style={{ background: activeContext.bgTone ?? "#FFFFFF" }}
+              className={`${disableActiveContextBottomBorder ? "" : "border-b-[4px] border-black"} px-0 py-0 min-h-[36px] overflow-x-auto overflow-y-hidden`}
+              style={{
+                background: activeContext.bgTone ?? "#FFFFFF",
+                height: activeContext.minHeight ?? 36,
+                minHeight: activeContext.minHeight ?? 36,
+              }}
             >
-              <div className="flex items-stretch h-full w-full justify-between">
+              <div
+                className="flex h-full items-stretch w-full justify-between"
+              >
                 {/* Left Section */}
                 <div className="flex items-stretch h-full overflow-hidden shrink-0">
                   {activeContext.leftTitle && (
                     <div
-                      className="px-2 flex items-center justify-center font-[1000] text-[13px] border-r-[4px] border-black shrink-0"
+                      className="px-2 flex items-center justify-center font-[1000] text-[13px] border-r-[4px] border-black shrink-0 text-black"
                       style={{ background: activeContext.bgTone ?? "#FFFFFF" }}
                     >
                       {activeContext.leftTitle}
@@ -307,18 +363,21 @@ export const SubToolboxChartModule: React.FC<
                           key={`${item.label}-${index}`}
                           onClick={item.onClick}
                           disabled={!item.onClick}
-                          className={statButtonClass(Boolean(item.onClick), item.compact)}
-                          style={{ background: item.backgroundTone ?? "#EDEDED" }}
+                          className={statButtonClass(Boolean(item.onClick))}
+                          style={statButtonStyle(item)}
                         >
                           <span
-                            className="h-[18px] text-[11px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0 leading-none px-1"
-                            style={{ color: statValueTone(item) }}
+                            className="h-[55%] whitespace-nowrap text-[15px] font-[900] tracking-[0] inline-flex items-center justify-center leading-none px-1 text-black"
                           >
                             {item.value}
                           </span>
                           <span
-                            className={`h-[12px] text-[8px] font-black tracking-[0.11em] uppercase inline-flex items-center justify-center w-full whitespace-nowrap ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
-                            style={toneBackgroundStyle(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}
+                            className={`h-[45%] text-[12px] font-[1000] tracking-[0] uppercase inline-flex items-center justify-center w-full text-black ${item.labelClassName ?? "whitespace-nowrap"} ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
+                            style={item.lockTone
+                              ? toneBackgroundStyle(item.tone)
+                              : metricColorHex(item.label)
+                                ? { background: metricColorHex(item.label) }
+                                : toneBackgroundStyle(toneForMetricLabel(item.label, item.tone))}
                           >
                             {item.labelText ?? normalizeStatLabel(item.label)}
                           </span>
@@ -333,11 +392,11 @@ export const SubToolboxChartModule: React.FC<
                   {activeContext.title && (
                     <div className={`flex items-stretch flex-1 min-w-0 ${activeContext.leftStats || activeContext.leftTitle ? 'border-l-[4px]' : ''} ${activeContext.rightStats || activeContext.rightTitle || activeContext.stats ? 'border-r-[4px]' : ''} border-black`}>
                       {typeof activeContext.title === 'string' ? (
-                        <div className="flex items-center px-2 font-[1000] text-[clamp(13px,1.4vw,18px)] leading-tight flex-1 truncate">
+                        <div className="flex items-center px-2 font-[1000] text-[clamp(13px,1.4vw,18px)] leading-tight flex-1 truncate text-black">
                           {activeContext.title}
                         </div>
                       ) : (
-                        <div className="flex-1 flex items-stretch min-w-0">
+                        <div className="flex-1 flex items-stretch min-w-0 text-black">
                           {activeContext.title}
                         </div>
                       )}
@@ -349,7 +408,7 @@ export const SubToolboxChartModule: React.FC<
                 <div className="flex items-stretch h-full overflow-hidden shrink-0">
                   {activeContext.rightTitle && (
                     <div
-                      className="px-2 flex items-center justify-center font-[1000] text-[13px] border-l-[4px] border-black shrink-0"
+                      className="px-2 flex items-center justify-center font-[1000] text-[13px] border-l-[4px] border-black shrink-0 text-black"
                       style={{ background: activeContext.bgTone ?? "#FFFFFF" }}
                     >
                       {activeContext.rightTitle}
@@ -362,18 +421,21 @@ export const SubToolboxChartModule: React.FC<
                           key={`${item.label}-${index}`}
                           onClick={item.onClick}
                           disabled={!item.onClick}
-                          className={statButtonClass(Boolean(item.onClick), item.compact)}
-                          style={{ background: item.backgroundTone ?? "#EDEDED" }}
+                          className={statButtonClass(Boolean(item.onClick))}
+                          style={statButtonStyle(item)}
                         >
                           <span
-                            className="h-[18px] text-[11px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0 leading-none px-1"
-                            style={{ color: statValueTone(item) }}
+                            className="h-[55%] whitespace-nowrap text-[15px] font-[900] tracking-[0] inline-flex items-center justify-center leading-none px-1 text-black"
                           >
                             {item.value}
                           </span>
                           <span
-                            className={`h-[12px] text-[8px] font-[1000] tracking-[0.11em] uppercase inline-flex items-center justify-center w-full whitespace-nowrap ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
-                            style={toneBackgroundStyle(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}
+                            className={`h-[45%] text-[12px] font-[1000] tracking-[0] uppercase inline-flex items-center justify-center w-full text-black ${item.labelClassName ?? "whitespace-nowrap"} ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
+                            style={item.lockTone
+                              ? toneBackgroundStyle(item.tone)
+                              : metricColorHex(item.label)
+                                ? { background: metricColorHex(item.label) }
+                                : toneBackgroundStyle(toneForMetricLabel(item.label, item.tone))}
                           >
                             {item.labelText ?? normalizeStatLabel(item.label)}
                           </span>
@@ -388,18 +450,21 @@ export const SubToolboxChartModule: React.FC<
                           key={`${item.label}-${index}`}
                           onClick={item.onClick}
                           disabled={!item.onClick}
-                          className={statButtonClass(Boolean(item.onClick), item.compact)}
-                          style={{ background: item.backgroundTone ?? "#EDEDED" }}
+                          className={statButtonClass(Boolean(item.onClick))}
+                          style={statButtonStyle(item)}
                         >
                           <span
-                            className="h-[18px] text-[11px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0 leading-none px-1"
-                            style={{ color: statValueTone(item) }}
+                            className="h-[55%] whitespace-nowrap text-[15px] font-[900] tracking-[0] inline-flex items-center justify-center leading-none px-1 text-black"
                           >
                             {item.value}
                           </span>
                           <span
-                            className={`h-[12px] text-[8px] font-[1000] tracking-[0.11em] uppercase inline-flex items-center justify-center w-full whitespace-nowrap ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
-                            style={toneBackgroundStyle(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}
+                            className={`h-[45%] text-[12px] font-[1000] tracking-[0] uppercase inline-flex items-center justify-center w-full text-black ${item.labelClassName ?? "whitespace-nowrap"} ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
+                            style={item.lockTone
+                              ? toneBackgroundStyle(item.tone)
+                              : metricColorHex(item.label)
+                                ? { background: metricColorHex(item.label) }
+                                : toneBackgroundStyle(toneForMetricLabel(item.label, item.tone))}
                           >
                             {item.labelText ?? normalizeStatLabel(item.label)}
                           </span>

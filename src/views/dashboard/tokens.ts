@@ -1,5 +1,10 @@
-export const DASHBOARD_SCHEMA_VERSION = 7
-export const DASHBOARD_LAYOUT_STORAGE_KEY = "vt_dashboard_layout_v7"
+export const DASHBOARD_SCHEMA_VERSION = 9
+export const DASHBOARD_LAYOUT_STORAGE_KEY = "vt_dashboard_layout_v9"
+export const DASHBOARD_LAYOUT_BACKUP_KEY = "vt_dashboard_layout_backup_v9"
+export const LEGACY_DASHBOARD_LAYOUT_STORAGE_KEYS = [
+  "vt_dashboard_layout_v8",
+  "vt_dashboard_layout_v7",
+] as const
 
 export const DASHBOARD_TOKENS = {
   strokeLevel1: 4,
@@ -12,7 +17,7 @@ export const DASHBOARD_TOKENS = {
   innerGap: 12,
   denseGap: 8,
   shadowOffset: 6,
-  transition: "duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
+  transitionMs: 180,
 } as const
 
 export const SIZE_BUCKET_ORDER = ["quarter", "companion", "third", "between", "half", "two-thirds", "three-quarters", "full"] as const

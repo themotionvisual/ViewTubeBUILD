@@ -30,6 +30,7 @@ export const resolveAccountApiBase = (
   const isLocalRuntime = LOCAL_HOSTS.has(runtimeHostname) || runtimeHostname.endsWith(".local")
   const configuredIsLocal = /localhost|127\.0\.0\.1|::1/.test(configuredBase)
 
+  if (runtimeOrigin && isLocalRuntime && configuredIsLocal) return runtimeOrigin.replace(/\/$/, "")
   if (runtimeOrigin && !isLocalRuntime && configuredIsLocal) return runtimeOrigin.replace(/\/$/, "")
   if (configuredBase) return configuredBase
   return runtimeOrigin.replace(/\/$/, "")

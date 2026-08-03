@@ -4,6 +4,8 @@ import { Filter } from "lucide-react"
 import { formatTrafficSourceNickname } from "../../../services/dataUtils"
 import { getVtSyncSnapshot } from "../../../features/vt-sync-local"
 
+type TrafficSourceSlice = { label: string; pct: number; color: string }
+
 export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggleCollapse, onCycleSize, onCycleHeight, onDecSize, onDecHeight, onRemove }: any) => {
  const common = {
   widget,
@@ -21,7 +23,7 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
  
   const COLORS = ["#C9F830", "#40C6E9", "#FF83EA", "#9D4EDD", "#FF1744"]
 
- const sources = useMemo(() => {
+ const sources = useMemo<TrafficSourceSlice[]>(() => {
   const snapshot = getVtSyncSnapshot()
   const rawSources = snapshot.trafficSources?.length ? snapshot.trafficSources : data?.trafficSources || []
   if (rawSources.length === 0) {

@@ -15,7 +15,6 @@ export const DescriptionEditorWidget = ({ widget, instance, editMode, onToggleCo
   onCycleHeight,
   onRemove,
   onDecSize,
-  onCycleHeight,
   onDecHeight,
  }
  const [description, setDescription] = useState("")

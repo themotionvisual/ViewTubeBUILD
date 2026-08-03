@@ -116,6 +116,8 @@ export interface KeywordClusterStat {
   sampleTitles: string[]
 }
 
+export type KeywordRankingMode = "average" | "total"
+
 export interface KeywordCombinationStat {
   keywords: string[]
   videoCount: number
@@ -365,10 +367,15 @@ export const buildKeywordVideoRows = (
 export const buildKeywordClustersFromMasterRows = (
   rows: Array<Record<string, unknown>>,
   metricKey: KeywordMetricKey,
-  options?: { minSupport?: number; maxKeywords?: number },
+  options?: {
+    minSupport?: number
+    maxKeywords?: number
+    rankingMode?: KeywordRankingMode
+  },
 ): KeywordClusterStat[] => {
   const minSupport = options?.minSupport ?? 2
   const maxKeywords = options?.maxKeywords ?? 15
+  const rankingMode = options?.rankingMode ?? "total"
   const videos = buildKeywordVideoRows(rows)
   const totalVideos = videos.length
   const groups = new Map<string, KeywordVennVideoRow[]>()
@@ -401,7 +408,9 @@ export const buildKeywordClustersFromMasterRows = (
       }
     })
     .sort((a, b) => {
-      if (b.metricValue !== a.metricValue) return b.metricValue - a.metricValue
+      const leftValue = getKeywordRankValue(a, metricKey, rankingMode)
+      const rightValue = getKeywordRankValue(b, metricKey, rankingMode)
+      if (rightValue !== leftValue) return rightValue - leftValue
       if (b.videoCount !== a.videoCount) return b.videoCount - a.videoCount
       return a.word.localeCompare(b.word)
     })
@@ -496,6 +505,26 @@ export const toggleKeywordSelection = (
 export const getKeywordMetricDefinition = (
   metricKey: KeywordMetricKey,
 ): KeywordMetricDefinition => DEFINITIONS[metricKey]
+
+export const keywordMetricSupportsTotal = (metricKey: KeywordMetricKey): boolean =>
+  getKeywordMetricDefinition(metricKey).aggregation === "sum"
+
+/**
+ * Single source of truth for Keyword Venn ranked-card values and ordering.
+ * Rate/duration metrics are already aggregated as averages in the cluster
+ * record, so Average and Total intentionally preserve that authoritative value.
+ * Additive metrics expose either their cluster total or per-video average.
+ */
+export const getKeywordRankValue = (
+  cluster: Pick<KeywordClusterStat, "metrics" | "videoCount">,
+  metricKey: KeywordMetricKey,
+  mode: KeywordRankingMode,
+): number => {
+  const value = Number(cluster.metrics[metricKey])
+  if (!Number.isFinite(value)) return 0
+  if (!keywordMetricSupportsTotal(metricKey) || mode === "total") return value
+  return cluster.videoCount > 0 ? value / cluster.videoCount : 0
+}
 
 export const formatKeywordMetricValue = (
   metricKey: KeywordMetricKey,

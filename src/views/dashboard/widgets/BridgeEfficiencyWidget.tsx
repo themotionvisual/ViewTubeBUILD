@@ -31,7 +31,6 @@ export const BridgeEfficiencyWidget: React.FC<any> = ({widget, instance, editMod
   onCycleHeight,
   onRemove,
   onDecSize,
-  onCycleHeight,
   onDecHeight,
  }
   
@@ -103,7 +102,7 @@ export const BridgeEfficiencyWidget: React.FC<any> = ({widget, instance, editMod
               />
               <Tooltip
                 cursor={{ fill: "transparent" }}
-                content={({active, payload, onDecSize, onCycleHeight, onDecHeight}) => {
+                content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     return (
                       <div style={{

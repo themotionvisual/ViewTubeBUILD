@@ -637,7 +637,7 @@ import JSZip from 'jszip';
       aspectPreset: '9:16',
       xPosition: 0.5,
       yPosition: 0.5,
-      zoom: 1.65,
+      zoom: 1,
       splitRatio: 0.55,
       closeupPosition: 'top',
       closeupZoom: 2.2,
@@ -645,6 +645,12 @@ import JSZip from 'jszip';
       transition: 'ease-in-out',
       smoothing: 0.45
     });
+    const SHORTS_CROP_ZOOM_CONTROL_MIN = 0;
+    const SHORTS_CROP_ZOOM_CONTROL_MAX = 4;
+    const SHORTS_CROP_ZOOM_NEUTRAL_MULTIPLIER = 1;
+    const SHORTS_CROP_ZOOM_MULTIPLIER_MAX = SHORTS_CROP_ZOOM_NEUTRAL_MULTIPLIER + SHORTS_CROP_ZOOM_CONTROL_MAX;
+    const cropZoomControlToMultiplier = (value) => clamp(Number(value || 0) + SHORTS_CROP_ZOOM_NEUTRAL_MULTIPLIER, SHORTS_CROP_ZOOM_NEUTRAL_MULTIPLIER, SHORTS_CROP_ZOOM_MULTIPLIER_MAX);
+    const cropZoomMultiplierToControl = (value) => clamp(Number(value ?? SHORTS_CROP_ZOOM_NEUTRAL_MULTIPLIER) - SHORTS_CROP_ZOOM_NEUTRAL_MULTIPLIER, SHORTS_CROP_ZOOM_CONTROL_MIN, SHORTS_CROP_ZOOM_CONTROL_MAX);
     const SHORTS_EXTRACTOR_ASPECTS = Object.freeze({
       '9:16': { width: 1080, height: 1920, ratio: 9 / 16 },
       '1:1': { width: 1080, height: 1080, ratio: 1 },
@@ -658,6 +664,14 @@ import JSZip from 'jszip';
       { id: 'bell', label: 'Bell' },
       { id: 'cut', label: 'Cut' }
     ]);
+    const VT_E1_RENDER_ENDPOINTS = Object.freeze({
+      finalMp4: '/api/vt-e1/render',
+      capabilities: '/api/vt-e1/render/capabilities',
+      assets: '/api/vt-e1/render/assets',
+      svgFrames: '/api/vt-e1/render-svg-frames',
+      svgFramesFromZip: '/api/vt-e1/render-svg-frames/from-zip'
+    });
+    const SHORTS_EXTRACTOR_KEYFRAME_TOLERANCE_SEC = 0.12;
     const ICON_LIBRARY = [
       'sparkles','bell','thumbs-up','message-square','share-2','dollar-sign',
       'heart','star','crown','award','zap','play-circle','bookmark','terminal',
@@ -2957,9 +2971,10 @@ import JSZip from 'jszip';
         };
       }, [runtimeMode]);
       const renderServiceConfig = useMemo(() => {
-        const explicitRenderBase = typeof window !== 'undefined' && window.VT_E1_RENDER_API_BASE
+        const envRenderBase = typeof import.meta !== 'undefined' && import.meta.env?.VITE_VT_E1_RENDER_API_BASE ? String(import.meta.env.VITE_VT_E1_RENDER_API_BASE).trim() : '';
+        const explicitRenderBase = (typeof window !== 'undefined' && window.VT_E1_RENDER_API_BASE)
           ? String(window.VT_E1_RENDER_API_BASE).trim()
-          : '';
+          : envRenderBase;
         const normalizedBase = explicitRenderBase.replace(/\/$/, '');
         const isFileRuntime = runtimeMode === 'portable-offline';
         const mode = isFileRuntime && !normalizedBase
@@ -2970,7 +2985,8 @@ import JSZip from 'jszip';
         return {
           mode,
           baseUrl: normalizedBase,
-          capabilitiesUrl: `${normalizedBase}/api/vt-e1/render/capabilities`,
+          endpoints: VT_E1_RENDER_ENDPOINTS,
+          capabilitiesUrl: `${normalizedBase}${VT_E1_RENDER_ENDPOINTS.capabilities}`,
           supportsFinalMp4: mode !== 'browser-fallback',
           supportsBrowserCapture: true
         };
@@ -2984,7 +3000,7 @@ import JSZip from 'jszip';
           remoteAssetsEnabled: runtimeCapabilityMap.remoteAssets.enabled,
           reasonByCapability: {
             providers: runtimeCapabilityMap.providers.reason,
-            renderBridge: renderBridgeEnabled ? '' : 'Final MP4 requires a hosted VT_E1 render API. Standalone file mode can still use Preview Capture, or set window.VT_E1_RENDER_API_BASE for local-dev testing.',
+            renderBridge: renderBridgeEnabled ? '' : 'Final MP4 requires the same-origin VT_E1 render API. Standalone file mode can still use Preview Capture, or a dev-only render API base override for local testing.',
             remoteAssets: runtimeCapabilityMap.remoteAssets.reason
           }
         };
@@ -5824,6 +5840,15 @@ import JSZip from 'jszip';
         if (renderServerInfo.status === 'idle') return 'Checking hosted renderer';
         return 'Hosted renderer unavailable';
       };
+      const getRenderRouteModeLabel = () => {
+        if (renderServiceConfig.mode === 'browser-fallback') return 'browser preview fallback only';
+        if (renderServiceConfig.mode === 'local-dev') return 'dev-only render API override';
+        return 'same-origin hosted API proxy';
+      };
+      const getRenderBrowserRouteLabel = () => {
+        const base = getRenderApiBase();
+        return base ? `${base}${VT_E1_RENDER_ENDPOINTS.finalMp4}` : `same-origin ${VT_E1_RENDER_ENDPOINTS.finalMp4}`;
+      };
 
       const getFinalRenderUnavailableReason = (info = renderServerInfo) => {
         if (!runtimeCapabilities.renderBridgeEnabled) return runtimeCapabilities.reasonByCapability.renderBridge;
@@ -5831,7 +5856,7 @@ import JSZip from 'jszip';
           return info.error || 'Hosted Remotion renderer responded, but readiness checks are degraded. Final MP4 is disabled until capabilities report ready.';
         }
         if (!info || info.status !== 'ready') {
-          return 'Hosted Remotion MP4 renderer is unavailable. Final MP4 is disabled until /api/vt-e1/render/capabilities responds successfully.';
+          return `Hosted Remotion MP4 renderer is unavailable. Final MP4 is disabled until ${VT_E1_RENDER_ENDPOINTS.capabilities} responds successfully.`;
         }
         if (info.rendererInstalled === false) {
           return info.error || 'Hosted render API responded, but the Remotion renderer is not installed.';
@@ -5925,7 +5950,7 @@ ${verdict.reason}`);
         }
         try {
           const apiBase = getRenderApiBase();
-          const response = await fetch(apiBase + '/api/vt-e1/render/capabilities');
+          const response = await fetch(apiBase + VT_E1_RENDER_ENDPOINTS.capabilities);
           const data = await response.json().catch(() => ({}));
           if (!response.ok) {
             setRenderServerInfo({
@@ -5997,7 +6022,7 @@ ${verdict.reason}`);
         }
         const blob = await response.blob();
         const fileName = inferAssetFileName(url, blob.type || options.mimeType || '', options.fileName || options.layerName || 'render-asset');
-        const upload = await fetch(apiBase + '/api/vt-e1/render/assets', {
+        const upload = await fetch(apiBase + VT_E1_RENDER_ENDPOINTS.assets, {
           method: 'POST',
           headers: {
             'Content-Type': blob.type || options.mimeType || 'application/octet-stream',
@@ -6199,7 +6224,7 @@ ${validation.errors.join('\n')}`);
         URL.revokeObjectURL(u);
       };
 
-      const pollRenderJob = async (jobId, routeBase = '/api/vt-e1/render') => {
+      const pollRenderJob = async (jobId, routeBase = VT_E1_RENDER_ENDPOINTS.finalMp4) => {
         const apiBase = getRenderApiBase();
         for (let attempt = 0; attempt < 120; attempt += 1) {
           await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -6245,7 +6270,7 @@ ${validation.errors.join('\n')}`);
           setSvgFrameZipConvertStatus({ status: 'uploading', message: `Uploading ${file.name || 'SVG frame ZIP'}...` });
           setRenderJobState({ status: 'submitting', jobId: null, progress: 0.15, error: '', downloadUrl: '', warnings: [] });
           const apiBase = getRenderApiBase();
-          const response = await fetch(apiBase + '/api/vt-e1/render-svg-frames/from-zip', {
+          const response = await fetch(apiBase + VT_E1_RENDER_ENDPOINTS.svgFramesFromZip, {
             method: 'POST',
             headers: { 'Content-Type': file.type || 'application/zip' },
             body: file
@@ -6273,7 +6298,7 @@ ${validation.errors.join('\n')}`);
               ...(Array.isArray(job.warnings) ? job.warnings : [])
             ]
           });
-          if (job.jobId) void pollRenderJob(job.jobId, '/api/vt-e1/render-svg-frames');
+          if (job.jobId) void pollRenderJob(job.jobId, VT_E1_RENDER_ENDPOINTS.svgFrames);
         } catch (error) {
           const message = `SVG ZIP -> MP4 conversion failed: ${error instanceof Error ? error.message : String(error)}`;
           setSvgFrameZipConvertStatus({ status: 'failed', message });
@@ -6334,7 +6359,7 @@ ${validation.errors.join('\n')}`);
         });
         try {
           const apiBase = getRenderApiBase();
-          const response = await fetch(apiBase + '/api/vt-e1/render-svg-frames', {
+          const response = await fetch(apiBase + VT_E1_RENDER_ENDPOINTS.svgFrames, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -6359,7 +6384,7 @@ ${validation.errors.join('\n')}`);
               ...(Array.isArray(job.warnings) ? job.warnings : [])
             ]
           });
-          if (job.jobId) void pollRenderJob(job.jobId, '/api/vt-e1/render-svg-frames');
+          if (job.jobId) void pollRenderJob(job.jobId, VT_E1_RENDER_ENDPOINTS.svgFrames);
         } catch (error) {
           const message = `Hosted SVG-frame renderer unavailable. Final MP4 is disabled; Preview Capture still works. ${error instanceof Error ? error.message : String(error)}`;
           setRenderJobState({ status: 'failed', jobId: null, progress: 1, error: message, downloadUrl: '', warnings: [] });
@@ -6433,7 +6458,7 @@ ${validation.errors.join('\n')}`);
         });
         try {
           const apiBase = getRenderApiBase();
-          const response = await fetch(apiBase + '/api/vt-e1/render', {
+          const response = await fetch(apiBase + VT_E1_RENDER_ENDPOINTS.finalMp4, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -7133,7 +7158,7 @@ ${failure}`);
         aspectPreset: SHORTS_EXTRACTOR_ASPECTS[config.aspectPreset] ? config.aspectPreset : SHORTS_EXTRACTOR_DEFAULT_CONFIG.aspectPreset,
         xPosition: clamp(Number(config.xPosition ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.xPosition), 0, 1),
         yPosition: clamp(Number(config.yPosition ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.yPosition), 0, 1),
-        zoom: clamp(Number(config.zoom ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.zoom), 1, 5),
+        zoom: clamp(Number(config.zoom ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.zoom), SHORTS_CROP_ZOOM_NEUTRAL_MULTIPLIER, SHORTS_CROP_ZOOM_MULTIPLIER_MAX),
         splitRatio: clamp(Number(config.splitRatio ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.splitRatio), 0.15, 0.85),
         closeupZoom: clamp(Number(config.closeupZoom ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.closeupZoom), 1, 6),
         closeupX: clamp(Number(config.closeupX ?? config.xPosition ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.closeupX), 0, 1),
@@ -7160,17 +7185,21 @@ ${failure}`);
       };
       const updateShortsExtractorConfig = (patch, options = {}) => {
         const sourceDuration = Number(shortsExtractorSource?.durationSec || project.meta.durationSec || 30);
-        const time = clamp(Number(shortsSourceVideoRef.current?.currentTime ?? shortsPreviewTimeSec ?? 0), 0, sourceDuration);
-        const shouldWriteKeyframe = Boolean(options.writeKeyframe ?? shortsLiveMode);
+        const time = clamp(Number(options.timeSec ?? shortsPreviewTimeSec ?? shortsSourceVideoRef.current?.currentTime ?? 0), 0, sourceDuration);
         const selectedKeyframeId = options.selectedKeyframeId ?? selectedShortsKeyframeId;
         setShortsExtractorConfig((prev) => normalizeShortsExtractorConfig({ ...prev, ...patch }));
         setShortsExtractorKeyframes((prev) => {
           const keyframes = Array.isArray(prev) ? prev : [];
+          const hasKeyframeSystem = keyframes.length > 0;
+          const shouldWriteKeyframe = Boolean(options.writeKeyframe ?? (shortsLiveMode || hasKeyframeSystem));
           if (shouldWriteKeyframe) {
-            const base = keyframes.find((item) => item.id === selectedKeyframeId) || getShortsPreviewConfig(time);
-            const keyframe = createShortsKeyframe({ ...base, ...patch }, time, selectedKeyframeId || uid('shortkf'));
+            const existingAtTime = keyframes.find((item) => Math.abs(Number(item.time || 0) - time) <= SHORTS_EXTRACTOR_KEYFRAME_TOLERANCE_SEC);
+            const selectedKeyframe = keyframes.find((item) => item.id === selectedKeyframeId);
+            const selectedIsAtTime = selectedKeyframe && Math.abs(Number(selectedKeyframe.time || 0) - time) <= SHORTS_EXTRACTOR_KEYFRAME_TOLERANCE_SEC;
+            const base = existingAtTime || (selectedIsAtTime ? selectedKeyframe : null) || getShortsPreviewConfig(time);
+            const keyframe = createShortsKeyframe({ ...base, ...patch }, time, existingAtTime?.id || (selectedIsAtTime ? selectedKeyframe.id : uid('shortkf')));
             setSelectedShortsKeyframeId(keyframe.id);
-            return [...keyframes.filter((item) => item.id !== keyframe.id && Math.abs(Number(item.time || 0) - time) > 0.12), keyframe]
+            return [...keyframes.filter((item) => item.id !== keyframe.id && Math.abs(Number(item.time || 0) - time) > SHORTS_EXTRACTOR_KEYFRAME_TOLERANCE_SEC), keyframe]
               .sort((a, b) => Number(a.time || 0) - Number(b.time || 0));
           }
           if (options.updateSelectedKeyframe && selectedKeyframeId) {
@@ -7259,13 +7288,20 @@ ${failure}`);
           }
         };
       };
-      const seekShortsPreview = (timeSec) => {
+      const seekShortsPreview = (timeSec, options = {}) => {
         const duration = Number(shortsExtractorSource?.durationSec || project.meta.durationSec || 30);
         const next = clamp(Number(timeSec || 0), 0, duration);
         setShortsPreviewTimeSec(next);
         if (shortsSourceVideoRef.current instanceof HTMLVideoElement) {
+          if (options.pause !== false) {
+            shortsSourceVideoRef.current.pause();
+            setShortsPreviewPlaying(false);
+          }
           shortsSourceVideoRef.current.currentTime = next;
         }
+        const existingAtTime = [...(shortsExtractorKeyframes || [])].sort((a, b) => Number(a.time || 0) - Number(b.time || 0))
+          .find((item) => Math.abs(Number(item.time || 0) - next) <= SHORTS_EXTRACTOR_KEYFRAME_TOLERANCE_SEC);
+        setSelectedShortsKeyframeId(existingAtTime?.id || null);
       };
       const toggleShortsPreviewPlayback = async () => {
         const video = shortsSourceVideoRef.current;
@@ -7282,7 +7318,7 @@ ${failure}`);
           setShortsExtractorStatus({ mode: 'error', message: error?.message || 'Browser blocked source preview playback.' });
         }
       };
-      const commitShortsLiveConfig = (patch) => updateShortsExtractorConfig(patch, { writeKeyframe: shortsLiveMode });
+      const commitShortsLiveConfig = (patch) => updateShortsExtractorConfig(patch);
       const updateShortsCropFromPointer = (clientX, clientY) => {
         const el = shortsSourceStageRef.current;
         if (!el || shortsExtractorConfig.mode !== 'single') return;
@@ -7313,7 +7349,7 @@ ${failure}`);
         event.preventDefault();
         const delta = event.deltaY > 0 ? -0.08 : 0.08;
         const cfg = shortsLiveMode ? getShortsPreviewConfig() : shortsExtractorConfig;
-        commitShortsLiveConfig({ zoom: clamp(Number(cfg.zoom || 1.65) + delta, 1, 5) });
+        commitShortsLiveConfig({ zoom: clamp(Number(cfg.zoom ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.zoom) + delta, SHORTS_CROP_ZOOM_NEUTRAL_MULTIPLIER, SHORTS_CROP_ZOOM_MULTIPLIER_MAX) });
       };
       const applyShortsKeyframeToConfig = (keyframe) => {
         if (!keyframe) return;
@@ -7326,7 +7362,7 @@ ${failure}`);
         const time = clamp(shortsPreviewTimeSec, 0, shortsExtractorSource?.durationSec || project.meta.durationSec || 30);
         const visibleConfig = shortsLiveMode ? getShortsPreviewConfig(time) : shortsExtractorConfig;
         const keyframe = createShortsKeyframe(visibleConfig, time);
-        setShortsExtractorKeyframes((prev) => [...prev.filter((item) => Math.abs(Number(item.time || 0) - time) > 0.15), keyframe].sort((a, b) => Number(a.time || 0) - Number(b.time || 0)));
+        setShortsExtractorKeyframes((prev) => [...prev.filter((item) => Math.abs(Number(item.time || 0) - time) > SHORTS_EXTRACTOR_KEYFRAME_TOLERANCE_SEC), keyframe].sort((a, b) => Number(a.time || 0) - Number(b.time || 0)));
         setSelectedShortsKeyframeId(keyframe.id);
         setShortsExtractorStatus({ mode: 'ready', message: `Keyframe saved at ${formatHMS(time)} · x ${keyframe.xPosition.toFixed(2)} · y ${keyframe.yPosition.toFixed(2)} · zoom ${keyframe.zoom.toFixed(2)}.` });
       };
@@ -11595,11 +11631,13 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
           <button className="neo-btn w-full !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.cyan }} onClick={() => void fetchRenderServerCapabilities()}>Recheck Renderer</button>
           <div className="border-2 border-black rounded-md p-2 bg-white text-[10px] font-black leading-5">
             <div>Service: {getRenderServiceStatusLabel()}</div>
-            <div>Mode: {renderServiceConfig.mode === 'local-dev' ? 'local dev override' : renderServiceConfig.mode === 'hosted' ? 'same-origin hosted API' : 'browser fallback only'}</div>
+            <div>Mode: {getRenderRouteModeLabel()}</div>
             <div>Status: {String(renderServerInfo.status || 'idle').toUpperCase()}</div>
             <div>Executor: {renderServerInfo.executor || 'checking'}</div>
             <div>Primary Format: {(renderServerInfo.primaryFormat || 'mp4').toUpperCase()}</div>
-            <div>Origin: {renderServerInfo.origin || getRenderApiBase() || 'same-origin /api/vt-e1/render'}</div>
+            <div>Browser Route: {getRenderBrowserRouteLabel()}</div>
+            <div>Worker Route: server proxy via VT_E1_RENDER_SERVICE_URL</div>
+            {renderServerInfo.origin ? <div>Worker Origin: {renderServerInfo.origin}</div> : null}
             {Array.isArray(renderServerInfo.blocked) && renderServerInfo.blocked.length > 0 ? <div>Blocks: {renderServerInfo.blocked.join(', ')}</div> : null}
             {renderServerInfo.error ? <div className="text-red-700">{renderServerInfo.error}</div> : null}
           </div>
@@ -11614,8 +11652,9 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
           </div>
           <div className="border-2 border-black rounded-md p-2 bg-white text-[10px] font-black leading-5">
             <div>Render service: {getRenderServiceStatusLabel()}</div>
-            <div>Final MP4 - Remotion: /api/vt-e1/render</div>
-            <div>Final MP4 - SVG Frames: /api/vt-e1/render-svg-frames</div>
+            <div>Final MP4 - Remotion: {VT_E1_RENDER_ENDPOINTS.finalMp4}</div>
+            <div>Final MP4 - SVG Frames: {VT_E1_RENDER_ENDPOINTS.svgFrames}</div>
+            <div>SVG ZIP -&gt; MP4: {VT_E1_RENDER_ENDPOINTS.svgFramesFromZip}</div>
             <div>Preview Capture: browser WebM/MOV only, not final parity MP4.</div>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -11813,7 +11852,6 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                     title={`${segment.label || 'Short'} · ${formatHMS(segment.start)} to ${formatHMS(segment.end)}`}
                     onClick={(event) => {
                       event.stopPropagation();
-                      seekShortsPreview(Number(segment.start || 0));
                     }}
                   >
                     {segment.label || 'Short'}
@@ -11828,7 +11866,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                     type="button"
                     className="vt-shorts-reframe-keyframe"
                     style={{ left: `${leftPct}%`, background: selectedShortsKeyframeId === keyframe.id ? COLORS.yellow : COLORS.cyan }}
-                    title={`${formatHMS(keyframe.time)} · ${keyframe.mode || 'single'} · x ${Number(keyframe.xPosition ?? 0.5).toFixed(2)} · y ${Number(keyframe.yPosition ?? 0.5).toFixed(2)} · zoom ${Number(keyframe.zoom || 1).toFixed(2)}`}
+                    title={`${formatHMS(keyframe.time)} · ${keyframe.mode || 'single'} · x ${Number(keyframe.xPosition ?? 0.5).toFixed(2)} · y ${Number(keyframe.yPosition ?? 0.5).toFixed(2)} · zoom ${cropZoomMultiplierToControl(keyframe.zoom).toFixed(2)}`}
                     onClick={(event) => {
                       event.stopPropagation();
                       applyShortsKeyframeToConfig(keyframe);
@@ -11925,7 +11963,6 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                         height: `${crop.cropHeightPct}%`
                       }}
                     >
-                      <span>{previewCfg.aspectPreset} render frame</span>
                     </div>
                   ) : (
                     <div className="vt-shorts-split-frame" style={{ '--shorts-split': `${Number(previewCfg.splitRatio || 0.55) * 100}%` }}>
@@ -12174,7 +12211,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                         </div>
                         <SpringToggle label="Focus X" min={0} max={1} step={0.01} value={shortsExtractorConfig.xPosition} onChange={(v) => updateShortsExtractorConfig({ xPosition: Number(v) })} onReset={() => updateShortsExtractorConfig({ xPosition: 0.5 })} speed={1} fullWidth trackColor={COLORS.purple} />
                         <SpringToggle label="Focus Y" min={0} max={1} step={0.01} value={shortsExtractorConfig.yPosition} onChange={(v) => updateShortsExtractorConfig({ yPosition: Number(v) })} onReset={() => updateShortsExtractorConfig({ yPosition: 0.5 })} speed={1} fullWidth trackColor={COLORS.purple} />
-                        <SpringToggle label="Crop Zoom" min={1} max={5} step={0.05} value={shortsExtractorConfig.zoom} onChange={(v) => updateShortsExtractorConfig({ zoom: Number(v) })} onReset={() => updateShortsExtractorConfig({ zoom: 1.65 })} speed={1} fullWidth trackColor={COLORS.purple} />
+                        <SpringToggle label="Crop Zoom" min={SHORTS_CROP_ZOOM_CONTROL_MIN} max={SHORTS_CROP_ZOOM_CONTROL_MAX} step={0.05} value={cropZoomMultiplierToControl(shortsExtractorConfig.zoom)} onChange={(v) => updateShortsExtractorConfig({ zoom: cropZoomControlToMultiplier(v) })} onReset={() => updateShortsExtractorConfig({ zoom: SHORTS_CROP_ZOOM_NEUTRAL_MULTIPLIER })} speed={1} fullWidth trackColor={COLORS.purple} />
                         {shortsExtractorConfig.mode === 'split' && (
                           <>
                             <SpringToggle label="Split Point" min={0.15} max={0.85} step={0.01} value={shortsExtractorConfig.splitRatio} onChange={(v) => updateShortsExtractorConfig({ splitRatio: Number(v) })} onReset={() => updateShortsExtractorConfig({ splitRatio: 0.55 })} speed={1} fullWidth trackColor={COLORS.purple} />
@@ -12243,7 +12280,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                               style={{ boxShadow: selectedShortsKeyframeId === keyframe.id ? `3px 3px 0 ${COLORS.cyan}` : 'none' }}
                               onClick={() => applyShortsKeyframeToConfig(keyframe)}
                             >
-                              <span>{formatHMS(Number(keyframe.time || 0))} · x {Number(keyframe.xPosition ?? 0.5).toFixed(2)} · y {Number(keyframe.yPosition ?? 0.5).toFixed(2)} · z {Number(keyframe.zoom || 1).toFixed(2)}</span>
+                              <span>{formatHMS(Number(keyframe.time || 0))} · x {Number(keyframe.xPosition ?? 0.5).toFixed(2)} · y {Number(keyframe.yPosition ?? 0.5).toFixed(2)} · z {cropZoomMultiplierToControl(keyframe.zoom).toFixed(2)}</span>
                               <span className="float-right" onClick={(event) => { event.stopPropagation(); removeShortsExtractorKeyframe(keyframe.id); }}>×</span>
                             </button>
                           ))}
@@ -14440,11 +14477,13 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                       Recheck Renderer
                     </button>
                     <div>Service: {getRenderServiceStatusLabel()}</div>
-                    <div>Mode: {renderServiceConfig.mode}</div>
+                    <div>Mode: {getRenderRouteModeLabel()}</div>
                     <div>Status: {String(renderServerInfo.status || 'idle').toUpperCase()}</div>
                     <div>Executor: {renderServerInfo.executor || 'checking'}</div>
                     <div>Primary Format: {(renderServerInfo.primaryFormat || 'mp4').toUpperCase()}</div>
-                    <div>Origin: {renderServerInfo.origin || getRenderApiBase() || 'same-origin /api/vt-e1/render'}</div>
+                    <div>Browser Route: {getRenderBrowserRouteLabel()}</div>
+                    <div>Worker Route: server proxy via VT_E1_RENDER_SERVICE_URL</div>
+                    {renderServerInfo.origin ? <div>Worker Origin: {renderServerInfo.origin}</div> : null}
                     {getFinalRenderUnavailableReason() ? (
                       <div className="border-2 border-black rounded-md p-2 bg-[#fffbe8]">{getFinalRenderUnavailableReason()}</div>
                     ) : null}

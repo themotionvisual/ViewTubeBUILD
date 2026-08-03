@@ -8,6 +8,8 @@ import { generateTagSuggestions } from "../../../services/gemini"
 import type { TagSuggestion } from "../../../services/gemini"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
+import { CustomDropdown } from "./DataEditWidget"
+import { buildVideoAssetOptions } from "./videoAssetOptions"
 
 export const TagGeneratorWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
  const { brain } = useBrain()
@@ -39,8 +41,7 @@ export const TagGeneratorWidget = ({ widget, instance, editMode, onToggleCollaps
 
  const videos = data.videoAssets || []
 
- const handleSelect = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-  const vidId = e.target.value
+ const handleSelect = async (vidId: string) => {
   setSelectedVideo(vidId)
   setSuggestedTags([])
   setSaveSuccess(false)
@@ -137,7 +138,7 @@ export const TagGeneratorWidget = ({ widget, instance, editMode, onToggleCollaps
       <select
        className="vt-select"
        value={selectedVideo}
-       onChange={handleSelect}
+       onChange={(event) => void handleSelect(event.target.value)}
        style={{ flex: 2 }}>
        <option value="" disabled>
         Select a video...

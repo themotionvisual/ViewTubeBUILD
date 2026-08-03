@@ -263,6 +263,11 @@ const dailyBase = (row: Row): Row => ({
  averagePercentageViewed: firstValue(row.averagePercentageViewed, row.averageViewPercentage, row.avgPercentageViewed),
  estimatedAdRevenue: firstValue(row.estimatedAdRevenue),
  youtubePremiumRevenue: firstValue(row.youtubePremiumRevenue, row.estimatedRedPartnerRevenue),
+ youtubePremiumViews: firstValue(row.youtubePremiumViews, row.redViews),
+ youtubePremiumWatchTime: firstValue(
+  row.youtubePremiumWatchTime,
+  num(row.estimatedRedMinutesWatched) !== undefined ? numberOrZero(row.estimatedRedMinutesWatched) / 60 : undefined,
+ ),
  redViews: firstValue(row.redViews),
  estimatedRedMinutesWatched: firstValue(row.estimatedRedMinutesWatched),
  cardClicks: firstValue(row.cardClicks),
@@ -297,8 +302,11 @@ const videoRows = (
  const dislikes = num(metrics.dislikes)
  const gained = num(metrics.subscribersGained)
  const lost = num(metrics.subscribersLost)
- const revenue = num(firstValue(metrics.revenue, metrics.estimatedRevenue))
- return {
+const revenue = num(firstValue(metrics.revenue, metrics.estimatedRevenue))
+  const comments = num(metrics.comments)
+  const shares = num(metrics.shares)
+  const saves = num(metrics.saves)
+  return {
   ...video,
   ...metrics,
   videoId,
@@ -313,13 +321,18 @@ const videoRows = (
   cardsShown: firstValue((metrics as Row).cardsShown, (metrics as Row).cardImpressions),
   clicksPerCardShown: firstValue((metrics as Row).clicksPerCardShown, (metrics as Row).cardClickRate),
   cardTeasersShown: firstValue((metrics as Row).cardTeasersShown, (metrics as Row).cardTeaserImpressions),
-  teaserClicksPerCardTeaserShown: firstValue((metrics as Row).teaserClicksPerCardTeaserShown, (metrics as Row).cardTeaserClickRate),
-  engagementRate: firstValue((metrics as Row).engagementRate, views !== undefined && views > 0 && engagedViews !== undefined ? (engagedViews / views) * 100 : undefined),
-  likeRatio: firstValue((metrics as Row).likeRatio, likes !== undefined && dislikes !== undefined && likes + dislikes > 0 ? (likes / (likes + dislikes)) * 100 : undefined),
-  netSubscribers: firstValue((metrics as Row).netSubscribers, gained !== undefined && lost !== undefined ? gained - lost : undefined),
-  subRatio: firstValue((metrics as Row).subRatio, views !== undefined && views > 0 && gained !== undefined ? (gained / views) * 1000 : undefined),
-  subRate: firstValue((metrics as Row).subRate, views !== undefined && views > 0 && gained !== undefined ? (gained / views) * 100 : undefined),
-  rpm: firstValue((metrics as Row).rpm, views !== undefined && views > 0 && revenue !== undefined ? (revenue / views) * 1000 : undefined),
+teaserClicksPerCardTeaserShown: firstValue((metrics as Row).teaserClicksPerCardTeaserShown, (metrics as Row).cardTeaserClickRate),
+engagementRate: firstValue((metrics as Row).engagementRate, views !== undefined && views > 0 && engagedViews !== undefined ? (engagedViews / views) * 100 : undefined),
+    likeRatio: firstValue((metrics as Row).likeRatio, likes !== undefined && dislikes !== undefined && likes + dislikes > 0 ? (likes / (likes + dislikes)) * 100 : undefined),
+    likeRate: firstValue((metrics as Row).likeRate, views !== undefined && views > 0 && likes !== undefined ? (likes / views) * 100 : undefined),
+    netSubscribers: firstValue((metrics as Row).netSubscribers, gained !== undefined && lost !== undefined ? gained - lost : undefined),
+   subRatio: firstValue((metrics as Row).subRatio, views !== undefined && views > 0 && gained !== undefined ? (gained / views) * 1000 : undefined),
+   subRate: firstValue((metrics as Row).subRate, views !== undefined && views > 0 && gained !== undefined ? (gained / views) * 100 : undefined),
+   rpm: firstValue((metrics as Row).rpm, views !== undefined && views > 0 && revenue !== undefined ? (revenue / views) * 1000 : undefined),
+   commentRate: firstValue((metrics as Row).commentRate, views !== undefined && views > 0 && comments !== undefined ? (comments / views) * 100 : undefined),
+   shareRate: firstValue((metrics as Row).shareRate, views !== undefined && views > 0 && shares !== undefined ? (shares / views) * 100 : undefined),
+   saveRate: firstValue((metrics as Row).saveRate, views !== undefined && views > 0 && saves !== undefined ? (saves / views) * 100 : undefined),
+   revenuePer100Views: firstValue((metrics as Row).revenuePer100Views, views !== undefined && views > 0 && revenue !== undefined ? (revenue / views) * 100 : undefined),
  }
  })
 }
@@ -532,7 +545,7 @@ const weekKey = (dateString: string) => {
  return `${date.getFullYear()}-W${String(week).padStart(2, "0")}`
 }
 
-const aggregateRows = (rows: Row[], mode: "weekly" | "monthly"): Row[] => {
+export const aggregateVtSyncTimeRows = (rows: Row[], mode: "weekly" | "monthly"): Row[] => {
  const buckets = new Map<string, Row[]>()
  rows.forEach((row) => {
   const date = String(firstValue(row.date, row.day, "") || "")
@@ -557,6 +570,41 @@ const aggregateRows = (rows: Row[], mode: "weekly" | "monthly"): Row[] => {
     out[field] = values.reduce((sum, value) => sum + value, 0)
    }
   })
+  const views = num(out.views)
+  const watchTimeHours = num(out.watchTime)
+  const cardClicks = num(out.cardClicks)
+  const cardImpressions = num(out.cardImpressions)
+  const teaserClicks = num(out.cardTeaserClicks)
+  const teaserImpressions = num(out.cardTeaserImpressions)
+  const grossRevenue = num(out.grossRevenue)
+  const adImpressions = num(out.adImpressions)
+  const monetizedPlaybacks = num(out.monetizedPlaybacks)
+  const weightedAverage = (field: string) => {
+   const weighted = bucket.reduce((state, row) => {
+    const value = num(row[field])
+    const weight = num(row.views)
+    return value === undefined || weight === undefined
+     ? state
+     : { sum: state.sum + value * weight, weight: state.weight + weight }
+   }, { sum: 0, weight: 0 })
+   return weighted.weight > 0 ? weighted.sum / weighted.weight : undefined
+  }
+  out.avgViewDuration = views !== undefined && views > 0 && watchTimeHours !== undefined
+   ? (watchTimeHours * 3600) / views
+   : weightedAverage("avgViewDuration")
+  out.averagePercentageViewed = weightedAverage("averagePercentageViewed")
+  out.cardClickRate = cardImpressions !== undefined && cardImpressions > 0 && cardClicks !== undefined
+   ? (cardClicks / cardImpressions) * 100
+   : weightedAverage("cardClickRate")
+  out.cardTeaserClickRate = teaserImpressions !== undefined && teaserImpressions > 0 && teaserClicks !== undefined
+   ? (teaserClicks / teaserImpressions) * 100
+   : weightedAverage("cardTeaserClickRate")
+  out.cpm = adImpressions !== undefined && adImpressions > 0 && grossRevenue !== undefined
+   ? (grossRevenue / adImpressions) * 1000
+   : weightedAverage("cpm")
+  out.playbackBasedCpm = monetizedPlaybacks !== undefined && monetizedPlaybacks > 0 && grossRevenue !== undefined
+   ? (grossRevenue / monetizedPlaybacks) * 1000
+   : weightedAverage("playbackBasedCpm")
   return out
  })
 }
@@ -569,7 +617,7 @@ const sourceRows = (
  if (table.id === "videos") return videoRows(snapshot, privacyFilters)
  if (table.id === "channel_totals") return channelTotalRows(snapshot)
  if (table.id === "daily") return snapshot.dailyMetrics.map((row) => dailyBase(row as Row))
- if (table.id === "weekly" || table.id === "monthly") return aggregateRows(snapshot.dailyMetrics as Row[], table.id)
+ if (table.id === "weekly" || table.id === "monthly") return aggregateVtSyncTimeRows(snapshot.dailyMetrics as Row[], table.id)
  if (table.id === "demog_age" && snapshot.demographics.length) return snapshot.demographics as Row[]
  if (table.id === "demog_gender" && snapshot.demographics.length) return snapshot.demographics as Row[]
  const exportedRows = snapshot.tableExports?.[table.id] || snapshot.tableExports?.[table.exportName]
@@ -606,7 +654,7 @@ export const normalizeVtSyncTableRows = (tableId: string, rows: Row[]): Row[] =>
   case "traffic_playlist":
   case "traffic_yt_playlist_page":
   case "chan_page": return withTrafficShareColumns(normalizeTrafficRows(rows, "term"))
-  case "locations": return normalizeRows(rows, { location: "insightPlaybackLocationType" })
+  case "locations": return withTrafficShareColumns(normalizeRows(rows, { location: "insightPlaybackLocationType" }))
   case "subs": return normalizeRows(rows, { status: "subscribedStatus" })
   case "devices": return normalizeRows(rows, { device: "deviceType" })
   case "os": return normalizeRows(rows, { operatingSystem: "operatingSystem" })

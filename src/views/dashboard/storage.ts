@@ -1,159 +1,175 @@
-import { DASHBOARD_TOKENS, DASHBOARD_LAYOUT_STORAGE_KEY, DASHBOARD_SCHEMA_VERSION, SIZE_BUCKET_ORDER, HEIGHT_BUCKET_ORDER } from "./tokens"
-import { DASHBOARD_WIDGET_BY_ID, DEFAULT_DASHBOARD_WIDGET_ORDER } from "./WidgetRegistry"
-import type { DashboardLayoutState, DashboardSizeBucket, DashboardHeightBucket, WidgetInstanceState } from "./types"
+import { z } from "zod"
+import {
+  DASHBOARD_LAYOUT_BACKUP_KEY,
+  DASHBOARD_LAYOUT_STORAGE_KEY,
+  DASHBOARD_SCHEMA_VERSION,
+  DASHBOARD_TOKENS,
+  HEIGHT_BUCKET_ORDER,
+  LEGACY_DASHBOARD_LAYOUT_STORAGE_KEYS,
+  SIZE_BUCKET_ORDER,
+} from "./tokens"
+import { DASHBOARD_WIDGET_BY_ID, DASHBOARD_WIDGET_REGISTRY } from "./WidgetRegistry"
+import type {
+  DashboardHeightBucket,
+  DashboardLayoutState,
+  DashboardSizeBucket,
+  WidgetDefinition,
+  WidgetInstanceState,
+} from "./types"
 
-const SIZE_TO_INDEX = Object.fromEntries(SIZE_BUCKET_ORDER.map((size, idx) => [size, idx])) as Record<DashboardSizeBucket, number>
-const HEIGHT_TO_INDEX = Object.fromEntries(HEIGHT_BUCKET_ORDER.map((size, idx) => [size, idx])) as Record<DashboardHeightBucket, number>
+const LegacyWidgetInstanceSchema = z.object({
+  collapsed: z.boolean().optional(),
+  size: z.string().optional(),
+  height: z.string().optional(),
+}).passthrough()
 
-const defaultInstanceFor = (widgetId: string): WidgetInstanceState => ({
+const ImportedDashboardLayoutSchema = z.object({
+  schemaVersion: z.number().optional(),
+  locked: z.boolean().optional(),
+  order: z.array(z.string()).optional(),
+  hidden: z.array(z.string()).optional(),
+  instances: z.record(z.string(), LegacyWidgetInstanceSchema).optional(),
+}).passthrough()
+
+const SIZE_TO_INDEX = Object.fromEntries(
+  SIZE_BUCKET_ORDER.map((size, index) => [size, index]),
+) as Record<DashboardSizeBucket, number>
+
+const HEIGHT_TO_INDEX = Object.fromEntries(
+  HEIGHT_BUCKET_ORDER.map((height, index) => [height, index]),
+) as Record<DashboardHeightBucket, number>
+
+const orderedDefinitions = (): WidgetDefinition[] =>
+  [...DASHBOARD_WIDGET_REGISTRY].sort((left, right) => left.defaultOrder - right.defaultOrder)
+
+const defaultInstanceFor = (widget: WidgetDefinition): WidgetInstanceState => ({
   collapsed: false,
-  size: DASHBOARD_WIDGET_BY_ID[widgetId]?.defaultSize || "quarter",
-  height: DASHBOARD_WIDGET_BY_ID[widgetId]?.defaultHeight || "medium",
-  pinned: false,
-  focus: false,
+  size: widget.defaultSize,
+  height: widget.defaultHeight,
 })
 
-export const buildDefaultDashboardLayout = (): DashboardLayoutState => {
-  return {
-    "schemaVersion": 7,
-    "locked": false,
-    "order": [
-      "kpi-cluster",
-      "community-post",
-      "comment-replier",
-      "consistency-heatmap",
-      "realtime-performance",
-      "goals-tracker",
-      "keyword-engine",
-      "daily-oracle",
-      "ask-me",
-      "ai-journal",
-      "image-generator",
-      "data-edit",
-      "traffic-sources",
-      "shorts-vs-long",
-      "publish-momentum",
-      "audience-matrix",
-      "system-micro-stack",
-      "keyword-overlap-intelligence",
-      "retention-sim",
-      "upload-scheduler",
-      "brain-hub",
-      "thumb-ai",
-      "quick-actions",
-      "ai-prompt-box",
-      "revenue-momentum",
-      "title-rewriter",
-      "description-editor",
-      "hashtag-analyzer",
-      "tag-generator",
-      "superfan-card",
-      "flight-check",
-      "bridge-efficiency",
-      "reach-funnel",
-      "alerts-feed",
-      "mini-calendar",
-      "task-stack",
-      "collab-matchmaker",
-      "channel-overview",
-      "audience-retention",
-      "relative-retention-benchmark",
-      "ad-stack-intelligence",
-      "revenue-chart",
-      "recent-uploads",
-      "top-performer",
-      "alerts-ticker",
-      "burnout-monitor",
-      "ui-reference-library"
-    ],
-    "hidden": [
-      "bridge-efficiency",
-      "reach-funnel",
-      "alerts-feed",
-      "mini-calendar",
-      "task-stack",
-      "collab-matchmaker"
-    ],
-    "instances": {
-      "kpi-cluster": { "collapsed": false, "pinned": false, "focus": false, "size": "third", "height": "tall" },
-      "community-post": { "collapsed": false, "pinned": false, "focus": false, "size": "third", "height": "tall" },
-      "comment-replier": { "collapsed": false, "pinned": false, "focus": false, "size": "third", "height": "tall" },
-      
-      "consistency-heatmap": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "medium" },
-      "realtime-performance": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "medium" },
-      "goals-tracker": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "medium" },
-      "keyword-engine": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "medium" },
-      
-      "daily-oracle": { "collapsed": false, "pinned": false, "focus": false, "size": "third", "height": "xtall" },
-      "ask-me": { "collapsed": false, "pinned": false, "focus": false, "size": "third", "height": "xtall" },
-      "ai-journal": { "collapsed": false, "pinned": false, "focus": false, "size": "third", "height": "xtall" },
-      
-      "image-generator": { "collapsed": false, "pinned": false, "focus": false, "size": "half", "height": "xtall" },
-      "data-edit": { "collapsed": false, "pinned": false, "focus": false, "size": "half", "height": "xtall" },
-      
-      "traffic-sources": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "tall" },
-      "shorts-vs-long": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "tall" },
-      "publish-momentum": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "tall" },
-      "audience-matrix": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "tall" },
-      
-      "system-micro-stack": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "medium" },
-      "keyword-overlap-intelligence": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "medium" },
-      "retention-sim": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "medium" },
-      "upload-scheduler": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "medium" },
-      
-      "brain-hub": { "collapsed": false, "pinned": false, "focus": false, "size": "half", "height": "xtall" },
-      "thumb-ai": { "collapsed": false, "pinned": false, "focus": false, "size": "half", "height": "xtall" },
-      
-      "quick-actions": { "collapsed": false, "pinned": false, "focus": false, "size": "third", "height": "xtall" },
-      "ai-prompt-box": { "collapsed": false, "pinned": false, "focus": false, "size": "third", "height": "xtall" },
-      "revenue-momentum": { "collapsed": false, "pinned": false, "focus": false, "size": "third", "height": "xtall" },
-      
-      "title-rewriter": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "medium" },
-      "description-editor": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "medium" },
-      "hashtag-analyzer": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "medium" },
-      "tag-generator": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "medium" },
-      
-      "superfan-card": { "collapsed": false, "pinned": false, "focus": false, "size": "half", "height": "medium" },
-      "flight-check": { "collapsed": false, "pinned": false, "focus": false, "size": "half", "height": "medium" },
-      
-      "bridge-efficiency": { "collapsed": false, "pinned": false, "focus": false, "size": "half", "height": "medium" },
-      "reach-funnel": { "collapsed": false, "pinned": false, "focus": false, "size": "half", "height": "medium" },
-      "alerts-feed": { "collapsed": false, "pinned": false, "focus": false, "size": "half", "height": "medium" },
-      "mini-calendar": { "collapsed": false, "pinned": false, "focus": false, "size": "half", "height": "medium" },
-      "task-stack": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "medium" },
-      "collab-matchmaker": { "collapsed": false, "pinned": false, "focus": false, "size": "half", "height": "medium" },
-      "channel-overview": { "collapsed": false, "pinned": false, "focus": false, "size": "quarter", "height": "medium" },
-      "audience-retention": { "collapsed": false, "pinned": false, "focus": false, "size": "half", "height": "medium" },
-      "relative-retention-benchmark": { "collapsed": false, "pinned": false, "focus": false, "size": "half", "height": "medium" },
-      "ad-stack-intelligence": { "collapsed": false, "pinned": false, "focus": false, "size": "half", "height": "medium" },
-      "revenue-chart": { "collapsed": false, "pinned": false, "focus": false, "size": "half", "height": "medium" },
-      "recent-uploads": { "collapsed": false, "pinned": false, "focus": false, "size": "third", "height": "medium" },
-      "top-performer": { "collapsed": false, "pinned": false, "focus": false, "size": "third", "height": "medium" },
-      "alerts-ticker": { "collapsed": false, "pinned": false, "focus": false, "size": "full", "height": "medium" },
-      "burnout-monitor": { "collapsed": false, "pinned": false, "focus": false, "size": "half", "height": "medium" },
-      "ui-reference-library": { "collapsed": false, "pinned": false, "focus": false, "size": "half", "height": "xtall" }
-    }
-  }
-  
+const uniqueKnownIds = (ids: readonly string[]): string[] => {
+  const seen = new Set<string>()
+  return ids.filter((id) => {
+    if (!DASHBOARD_WIDGET_BY_ID[id] || seen.has(id)) return false
+    seen.add(id)
+    return true
+  })
 }
 
-export const loadDashboardLayout = (): DashboardLayoutState => {
-  try {
-    const raw = localStorage.getItem(DASHBOARD_LAYOUT_STORAGE_KEY)
-    if (!raw) return buildDefaultDashboardLayout()
-    const parsed = JSON.parse(raw) as DashboardLayoutState
-    if (!parsed || typeof parsed !== "object") return buildDefaultDashboardLayout()
-    if (parsed.schemaVersion !== DASHBOARD_SCHEMA_VERSION) {
-      return normalizeDashboardLayout(parsed)
-    }
-    return normalizeDashboardLayout(parsed)
-  } catch {
-    return buildDefaultDashboardLayout()
+const clampDimensions = (
+  widget: WidgetDefinition,
+  size: string | undefined,
+  height: string | undefined,
+): Pick<WidgetInstanceState, "size" | "height"> => {
+  const requestedSize = SIZE_BUCKET_ORDER.includes(size as DashboardSizeBucket)
+    ? size as DashboardSizeBucket
+    : widget.defaultSize
+  const requestedHeight = HEIGHT_BUCKET_ORDER.includes(height as DashboardHeightBucket)
+    ? height as DashboardHeightBucket
+    : widget.defaultHeight
+  const targetSizeIndex = SIZE_TO_INDEX[requestedSize]
+  const targetHeightIndex = HEIGHT_TO_INDEX[requestedHeight]
+  const fallback = { size: widget.defaultSize, height: widget.defaultHeight }
+
+  return widget.supportedDimensions.reduce((nearest, candidate) => {
+    const nearestDistance = Math.abs(SIZE_TO_INDEX[nearest.size] - targetSizeIndex)
+      + Math.abs(HEIGHT_TO_INDEX[nearest.height] - targetHeightIndex)
+    const candidateDistance = Math.abs(SIZE_TO_INDEX[candidate.size] - targetSizeIndex)
+      + Math.abs(HEIGHT_TO_INDEX[candidate.height] - targetHeightIndex)
+    return candidateDistance < nearestDistance ? candidate : nearest
+  }, fallback)
+}
+
+export const buildDefaultDashboardLayout = (): DashboardLayoutState => {
+  const definitions = orderedDefinitions()
+  return {
+    schemaVersion: DASHBOARD_SCHEMA_VERSION,
+    locked: false,
+    order: definitions.map((widget) => widget.id),
+    hidden: definitions.filter((widget) => !widget.defaultVisible).map((widget) => widget.id),
+    instances: Object.fromEntries(
+      definitions.map((widget) => [widget.id, defaultInstanceFor(widget)]),
+    ),
   }
+}
+
+export const normalizeDashboardLayout = (input: unknown): DashboardLayoutState => {
+  const parsed = ImportedDashboardLayoutSchema.safeParse(input)
+  if (!parsed.success) return buildDefaultDashboardLayout()
+
+  const definitions = orderedDefinitions()
+  const defaultLayout = buildDefaultDashboardLayout()
+  const requestedOrder = uniqueKnownIds(parsed.data.order ?? [])
+  const requestedOrderSet = new Set(requestedOrder)
+  const missingIds = definitions
+    .map((widget) => widget.id)
+    .filter((id) => !requestedOrderSet.has(id))
+  const order = requestedOrder.length > 0
+    ? [...requestedOrder, ...missingIds]
+    : defaultLayout.order
+
+  const hidden = new Set(
+    requestedOrder.length > 0
+      ? uniqueKnownIds(parsed.data.hidden ?? [])
+      : defaultLayout.hidden,
+  )
+  if (requestedOrder.length > 0) {
+    for (const id of missingIds) {
+      if (!DASHBOARD_WIDGET_BY_ID[id]?.defaultVisible) hidden.add(id)
+    }
+  }
+
+  const instances = Object.fromEntries(definitions.map((widget) => {
+    const candidate = parsed.data.instances?.[widget.id]
+    const dimensions = clampDimensions(widget, candidate?.size, candidate?.height)
+    return [widget.id, {
+      collapsed: candidate?.collapsed ?? false,
+      ...dimensions,
+    } satisfies WidgetInstanceState]
+  }))
+
+  return {
+    schemaVersion: DASHBOARD_SCHEMA_VERSION,
+    locked: parsed.data.locked ?? false,
+    order,
+    hidden: order.filter((id) => hidden.has(id)),
+    instances,
+  }
+}
+
+const getStorage = (): Storage | null =>
+  typeof window === "undefined" ? null : window.localStorage
+
+export const loadDashboardLayout = (): DashboardLayoutState => {
+  const storage = getStorage()
+  if (!storage) return buildDefaultDashboardLayout()
+
+  const keys = [DASHBOARD_LAYOUT_STORAGE_KEY, ...LEGACY_DASHBOARD_LAYOUT_STORAGE_KEYS]
+  for (const key of keys) {
+    const raw = storage.getItem(key)
+    if (!raw) continue
+    try {
+      const parsed = JSON.parse(raw) as unknown
+      const layout = normalizeDashboardLayout(parsed)
+      if (key !== DASHBOARD_LAYOUT_STORAGE_KEY) {
+        storage.setItem(DASHBOARD_LAYOUT_BACKUP_KEY, JSON.stringify({ sourceKey: key, raw }))
+        storage.setItem(DASHBOARD_LAYOUT_STORAGE_KEY, JSON.stringify(layout))
+      }
+      return layout
+    } catch {
+      continue
+    }
+  }
+
+  return buildDefaultDashboardLayout()
 }
 
 export const saveDashboardLayout = (layout: DashboardLayoutState): void => {
-  localStorage.setItem(DASHBOARD_LAYOUT_STORAGE_KEY, JSON.stringify(layout))
+  getStorage()?.setItem(
+    DASHBOARD_LAYOUT_STORAGE_KEY,
+    JSON.stringify(normalizeDashboardLayout(layout)),
+  )
 }
 
 export const resetDashboardLayout = (): DashboardLayoutState => {
@@ -162,59 +178,46 @@ export const resetDashboardLayout = (): DashboardLayoutState => {
   return fresh
 }
 
-export const exportDashboardLayout = (layout: DashboardLayoutState): string => {
-  return JSON.stringify(layout, null, 2)
-}
+export const exportDashboardLayout = (layout: DashboardLayoutState): string =>
+  JSON.stringify(normalizeDashboardLayout(layout), null, 2)
 
 export const importDashboardLayout = (raw: string): DashboardLayoutState => {
-  const parsed = JSON.parse(raw) as Partial<DashboardLayoutState>
-  const normalized = normalizeDashboardLayout(parsed)
+  const parsedJson = JSON.parse(raw) as unknown
+  const parsed = ImportedDashboardLayoutSchema.safeParse(parsedJson)
+  if (!parsed.success) throw new Error("Invalid dashboard layout")
+  const normalized = normalizeDashboardLayout(parsed.data)
   saveDashboardLayout(normalized)
   return normalized
 }
 
+const nextSupportedBucket = <T extends DashboardSizeBucket | DashboardHeightBucket>(
+  supported: readonly T[],
+  current: T,
+  direction: 1 | -1,
+): T => {
+  const currentIndex = Math.max(0, supported.indexOf(current))
+  const nextIndex = (currentIndex + direction + supported.length) % supported.length
+  return supported[nextIndex] ?? current
+}
+
 export const nextSizeBucket = (widgetId: string, current: DashboardSizeBucket): DashboardSizeBucket => {
   const widget = DASHBOARD_WIDGET_BY_ID[widgetId]
-  if (!widget) return current
-  const minIdx = SIZE_TO_INDEX[widget.minSize]
-  const maxIdx = SIZE_TO_INDEX[widget.maxSize]
-  const idx = SIZE_TO_INDEX[current]
-  const candidate = idx >= maxIdx ? minIdx : idx + 1
-  const next = Math.min(maxIdx, Math.max(minIdx, candidate))
-  return SIZE_BUCKET_ORDER[next]
+  return widget ? nextSupportedBucket(widget.supportedSizes, current, 1) : current
 }
 
 export const prevSizeBucket = (widgetId: string, current: DashboardSizeBucket): DashboardSizeBucket => {
   const widget = DASHBOARD_WIDGET_BY_ID[widgetId]
-  if (!widget) return current
-  const minIdx = SIZE_TO_INDEX[widget.minSize]
-  const maxIdx = SIZE_TO_INDEX[widget.maxSize]
-  const idx = SIZE_TO_INDEX[current]
-  const candidate = idx <= minIdx ? maxIdx : idx - 1
-  const next = Math.min(maxIdx, Math.max(minIdx, candidate))
-  return SIZE_BUCKET_ORDER[next]
+  return widget ? nextSupportedBucket(widget.supportedSizes, current, -1) : current
 }
 
 export const nextHeightBucket = (widgetId: string, current: DashboardHeightBucket): DashboardHeightBucket => {
   const widget = DASHBOARD_WIDGET_BY_ID[widgetId]
-  if (!widget) return current
-  const minIdx = HEIGHT_TO_INDEX[widget.minHeight]
-  const maxIdx = HEIGHT_TO_INDEX[widget.maxHeight]
-  const idx = HEIGHT_TO_INDEX[current]
-  const candidate = idx >= maxIdx ? minIdx : idx + 1
-  const next = Math.min(maxIdx, Math.max(minIdx, candidate))
-  return HEIGHT_BUCKET_ORDER[next]
+  return widget ? nextSupportedBucket(widget.supportedHeights, current, 1) : current
 }
 
 export const prevHeightBucket = (widgetId: string, current: DashboardHeightBucket): DashboardHeightBucket => {
   const widget = DASHBOARD_WIDGET_BY_ID[widgetId]
-  if (!widget) return current
-  const minIdx = HEIGHT_TO_INDEX[widget.minHeight]
-  const maxIdx = HEIGHT_TO_INDEX[widget.maxHeight]
-  const idx = HEIGHT_TO_INDEX[current]
-  const candidate = idx <= minIdx ? maxIdx : idx - 1
-  const next = Math.min(maxIdx, Math.max(minIdx, candidate))
-  return HEIGHT_BUCKET_ORDER[next]
+  return widget ? nextSupportedBucket(widget.supportedHeights, current, -1) : current
 }
 
 export const sizeBucketClassName = (size: DashboardSizeBucket): string => {

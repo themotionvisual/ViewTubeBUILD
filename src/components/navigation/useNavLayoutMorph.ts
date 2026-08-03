@@ -27,10 +27,12 @@ const styleSnapshot = (el: Element): VtNavStyleSnapshot => {
   }
 }
 
-const cloneFor = (el: HTMLElement, rect: DOMRect, labelOverride?: string): HTMLDivElement => {
-  const clone = document.createElement("div")
-  clone.className = "vt-nav-flight-clone"
-  clone.textContent = labelOverride ?? el.textContent?.trim() ?? ""
+const cloneFor = (el: HTMLElement, rect: DOMRect): HTMLElement => {
+  const clone = el.cloneNode(true) as HTMLElement
+  clone.classList.add("vt-nav-flight-clone")
+  clone.removeAttribute("id")
+  clone.setAttribute("aria-hidden", "true")
+  clone.querySelectorAll("[id]").forEach((node) => node.removeAttribute("id"))
   const cs = getComputedStyle(el)
   Object.assign(clone.style, {
     left: `${rect.left}px`,
@@ -40,6 +42,7 @@ const cloneFor = (el: HTMLElement, rect: DOMRect, labelOverride?: string): HTMLD
     background: cs.backgroundColor,
     borderRadius: cs.borderRadius,
     borderWidth: cs.borderTopWidth,
+    display: cs.display,
     fontFamily: cs.fontFamily,
     fontSize: cs.fontSize,
     letterSpacing: cs.letterSpacing,
@@ -92,7 +95,7 @@ const animatePageContext = async (
 const prefersReducedMotion = (): boolean =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
-type VtFlightItem = { el: HTMLElement; label?: string }
+type VtFlightItem = { el: HTMLElement }
 
 // Durations/stagger below are the prototype's originals scaled 1.5x.
 const STAGGER_STEP = 225 // 150 * 1.5
@@ -138,7 +141,7 @@ export const useNavLayoutMorph = ({
       const items: VtFlightItem[] = [
         ...[...linksRef.current.values()].map((el) => ({ el })),
         ...(controlElRef.current ? [{ el: controlElRef.current }] : []),
-        ...(accountButtonRef.current ? [{ el: accountButtonRef.current, label: "Account" }] : []),
+        ...(accountButtonRef.current ? [{ el: accountButtonRef.current }] : []),
       ]
 
       if (!shell || !items.length || prefersReducedMotion()) {
@@ -158,7 +161,7 @@ export const useNavLayoutMorph = ({
       document.body.appendChild(flightLayer)
 
       const clones = items.map((item, index) => {
-        const clone = cloneFor(item.el, start[index], item.label)
+        const clone = cloneFor(item.el, start[index])
         flightLayer.appendChild(clone)
         item.el.classList.add("vt-nav-source-hidden")
         return clone

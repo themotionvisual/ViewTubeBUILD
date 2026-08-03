@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react"
 import { WidgetShell } from "../WidgetShell"
+import { WidgetHeaderToggle } from "../WidgetPrimitives"
 import {
   Users,
   FileText,
@@ -231,22 +232,12 @@ export const CommunityPostWidget = ({
   )
 
   const headerContent = (
-    <div className="vt-tab-group" style={{ width: "110px", padding: "2px" }}>
-      <button
-        onClick={() => setViewMode("write")}
-        className={`vt-tab-btn ${viewMode === "write" ? 'active' : ''}`}
-        style={{ padding: "4px", fontSize: "9px" }}
-      >
-        WRITE
-      </button>
-      <button
-        onClick={() => setViewMode("create")}
-        className={`vt-tab-btn ${viewMode === "create" ? 'active' : ''}`}
-        style={{ padding: "4px", fontSize: "9px" }}
-      >
-        CREATE
-      </button>
-    </div>
+    <WidgetHeaderToggle
+      label="Community post mode"
+      value={viewMode}
+      onChange={setViewMode}
+      items={[{ id: "write", label: "Write" }, { id: "create", label: "Create" }]}
+    />
   )
 
   return (

@@ -38,17 +38,9 @@ export const KeywordEngineWidget = ({
 
  const keywords = useMemo(() => {
   const snapshot = getVtSyncSnapshot()
-   
-  if (snapshot?.searchTerms && snapshot.searchTerms.length > 0) {
-    return snapshot.searchTerms.slice(0, 10).map((term: any) => ({
-      word: term.term || term.label || term.title || term.keyword || "Unknown",
-      avgViews: term.views || 0,
-      count: 1,
-    }))
-  }
 
   const syncRows = snapshot?.videos || []
-  const hasViewsInSync = syncRows.length > 0 && (typeof syncRows[0]?.metrics?.views === "number" || typeof syncRows[0]?.views === "number")
+  const hasViewsInSync = syncRows.length > 0 && typeof syncRows[0]?.metrics?.views === "number"
   const rows = hasViewsInSync ? syncRows : (initialBootstrap?.videos || data.canonicalRows || data.brain?.canonicalRows || [])
 
   const map = new Map<string, { views: number; count: number }>()
@@ -60,19 +52,19 @@ export const KeywordEngineWidget = ({
    const vByWindow = row.metricsByWindow?.lifetime || {}
    const views = (typeof vByWindow.views === 'object' ? metricCellValue(vByWindow.views) : Number(vByWindow.views || 0))
      || (typeof v.views === 'object' ? metricCellValue(v.views) : Number(v.views || 0))
-     || Number(row.views) 
-     || Number(row.Views) 
-     || Number(row.viewCount) 
-     || Number(row.statistics?.viewCount) 
-     || Number(originalData.Views) 
-     || Number(originalData.views) 
+     || Number(row.views)
+     || Number(row.Views)
+     || Number(row.viewCount)
+     || Number(row.statistics?.viewCount)
+     || Number(originalData.Views)
+     || Number(originalData.views)
      || 0
 
    const words = title
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, "")
     .split(/\s+/)
-   const uniqueWords = Array.from(new Set(words)) // count each word max once per video
+   const uniqueWords = Array.from(new Set(words))
 
    uniqueWords.forEach((word) => {
     if (typeof word !== "string" || word.length < 3 || STOP_WORDS.has(word)) return
@@ -89,12 +81,10 @@ export const KeywordEngineWidget = ({
     filtered = entries.filter(([_, stat]) => stat.count >= 1)
   }
 
-  const list = filtered
+  return filtered
    .map(([word, stat]) => ({word, avgViews: Math.round(stat.views / Math.max(1, stat.count)), count: stat.count}))
    .sort((a, b) => b.avgViews - a.avgViews)
    .slice(0, 10)
-
-  return list
  }, [data.canonicalRows, data.brain?.canonicalRows, initialBootstrap, data.lastSyncComplete])
 
  const maxViews = Math.max(...keywords.map((k) => k.avgViews), 1)
@@ -151,7 +141,7 @@ export const KeywordEngineWidget = ({
      </div>
     )}
 
-    {keywords.map((kw, i) => {
+    {keywords.map((kw) => {
      const widthPct = Math.max((kw.avgViews / maxViews) * 100, 5)
      return (
       <div
@@ -160,7 +150,7 @@ export const KeywordEngineWidget = ({
         display: "flex",
         height: "26px",
         width: "100%",
-        background: "#E5F7D3",
+        background: "color-mix(in srgb, var(--widget-color, #d9d9d9) 18%, white)",
         borderRadius: "24px",
         border: "1px solid rgba(0,0,0,0.1)",
         overflow: "hidden",
@@ -185,12 +175,12 @@ export const KeywordEngineWidget = ({
           fontSize: "11px",
           fontWeight: 900,
           textTransform: "uppercase",
-          color: "#000",
+          color: "var(--widget-border, #000)",
           whiteSpace: "nowrap",
          }}>
          <span>{kw.word}</span>
         </div>
-        <div style={{ fontSize: "11px", fontWeight: 1000, color: "#000" }}>
+        <div style={{ fontSize: "11px", fontWeight: 1000, color: "var(--widget-border, #000)" }}>
          {kw.avgViews.toLocaleString()}
         </div>
        </div>

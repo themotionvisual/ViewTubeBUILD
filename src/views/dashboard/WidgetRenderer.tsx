@@ -1,13 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Legacy inline renderers are being migrated behind typed registry contracts incrementally. */
 import React, { useState, useMemo } from "react"
 import {
   Activity,
   Bell,
   Bot,
   CalendarDays,
-  CheckSquare,
   Database,
   DollarSign,
-  Grip,
   Layers,
   Star,
   TrendingUp,
@@ -15,15 +14,9 @@ import {
   UserCircle2,
   Video,
   WandSparkles,
-  X,
   Edit3,
   Lock,
-  LockOpen,
-  RotateCcw,
-  Download,
   Settings,
-  MoreVertical,
-  Maximize2,
   Image as ImageIcon,
   MessageSquare,
   MessageCircle,
@@ -32,42 +25,16 @@ import {
   Magnet,
   RefreshCw,
   BookOpen,
-  ChevronLeft,
-  ChevronRight,
  } from "lucide-react"
 import { useVideoComments, type VideoComment } from "./useVideoComments"
 import type { DashboardData } from "./useDashboardData"
 import type {
+ CommonWidgetProps,
  WidgetDefinition,
  WidgetRenderCallbacks,
  WidgetInstanceState,
 } from "./types"
-import { TagGeneratorWidget } from "./widgets/TagGeneratorWidget"
-import { RevenueChartWidget } from "./widgets/RevenueChartWidget"
-import UIReferenceLibraryWidget from "./widgets/UIReferenceLibraryWidget"
-import { CommunityPostWidget } from "./widgets/CommunityPostWidget"
-import { ThumbnailLabWidget } from "./widgets/ThumbnailLabWidget"
-import { RealtimePerformanceWidget } from "./widgets/RealtimePerformanceWidget"
-import { KeywordEngineWidget } from "./widgets/KeywordEngineWidget"
-import { KeywordOverlapWidget } from "./widgets/KeywordOverlapWidget"
-import { PublishMomentumWidget } from "./widgets/PublishMomentumWidget"
-import { TrafficSourcesWidget } from "./widgets/TrafficSourcesWidget"
-import { AskMeWidget } from "./widgets/AskMeWidget"
-import { DailyOracleWidget } from "./widgets/DailyOracleWidget"
-import { FlightCheckWidget } from "./widgets/FlightCheckWidget"
-import { DescriptionEditorWidget } from "./widgets/DescriptionEditorWidget"
-import { DataEditWidget } from "./widgets/DataEditWidget"
-import { TitleRewriterWidget } from "./widgets/TitleRewriterWidget"
-import { RetentionSimWidget } from "./widgets/RetentionSimWidget"
-import { UploadSchedulerWidget } from "./widgets/UploadSchedulerWidget"
-import { HashtagAnalyzerWidget } from "./widgets/HashtagAnalyzerWidget"
-import { BurnoutMonitorWidget } from "./widgets/BurnoutMonitorWidget"
-import { CollabMatchmakerWidget } from "./widgets/CollabMatchmakerWidget"
-import { BridgeEfficiencyWidget } from "./widgets/BridgeEfficiencyWidget"
-import { AudienceMatrixWidget } from "./widgets/AudienceMatrixWidget"
 import { GoalsTrackerWidget } from "./widgets/GoalsTrackerWidget"
-import { BrainHubWidget } from "./widgets/BrainHubWidget"
-import { ImageGeneratorWidget } from "./widgets/ImageGeneratorWidget"
 const formatHumanNumber = (value: unknown): string => {
  const v = Number(value)
  if (isNaN(v)) return "0"
@@ -76,16 +43,71 @@ const formatHumanNumber = (value: unknown): string => {
  return v.toString()
 }
 
-// import { PublishingFormatClashChart } from "./PublishingFormatClashChart"
-const PublishingFormatClashChart = () => <div className="p-4 border-2 border-dashed border-black/20 rounded-xl text-[10px] font-black uppercase text-black/40 text-center">Format Clash Visualization Pending</div>
-
-import { AudienceRetentionWidget } from "./widgets/AudienceRetentionWidget"
-import { FormatClashWidget } from "./widgets/FormatClashWidget"
-import { CommentReplyWidget } from "./widgets/CommentReplyWidget"
-import { AIJournalWidget } from "./widgets/AIJournalWidget"
 import { WidgetShell } from "./WidgetShell"
-import { useBrain } from "../../context/useBrain"
+import { WidgetHeaderStepper } from "./WidgetPrimitives"
 import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
+
+const LAZY_WIDGET_RENDERERS: Record<string, React.LazyExoticComponent<React.ComponentType<any>>> = {
+ "tag-generator": React.lazy(() => import("./widgets/TagGeneratorWidget").then((module) => ({ default: module.TagGeneratorWidget }))),
+ "revenue-chart": React.lazy(() => import("./widgets/RevenueChartWidget").then((module) => ({ default: module.RevenueChartWidget }))),
+ "ui-reference-library": React.lazy(() => import("./widgets/UIReferenceLibraryWidget")),
+ "community-post": React.lazy(() => import("./widgets/CommunityPostWidget").then((module) => ({ default: module.CommunityPostWidget }))),
+ "thumb-ai": React.lazy(() => import("./widgets/ThumbnailLabWidget").then((module) => ({ default: module.ThumbnailLabWidget }))),
+ "realtime-performance": React.lazy(() => import("./widgets/RealtimePerformanceWidget").then((module) => ({ default: module.RealtimePerformanceWidget }))),
+ "keyword-engine": React.lazy(() => import("./widgets/KeywordEngineWidget").then((module) => ({ default: module.KeywordEngineWidget }))),
+ "keyword-overlap-intelligence": React.lazy(() => import("./widgets/KeywordOverlapWidget").then((module) => ({ default: module.KeywordOverlapWidget }))),
+ "publish-momentum": React.lazy(() => import("./widgets/PublishMomentumWidget").then((module) => ({ default: module.PublishMomentumWidget }))),
+ "traffic-sources": React.lazy(() => import("./widgets/TrafficSourcesWidget").then((module) => ({ default: module.TrafficSourcesWidget }))),
+ "ask-me": React.lazy(() => import("./widgets/AskMeWidget").then((module) => ({ default: module.AskMeWidget }))),
+ "daily-oracle": React.lazy(() => import("./widgets/DailyOracleWidget").then((module) => ({ default: module.DailyOracleWidget }))),
+ "flight-check": React.lazy(() => import("./widgets/FlightCheckWidget").then((module) => ({ default: module.FlightCheckWidget }))),
+ "description-editor": React.lazy(() => import("./widgets/DescriptionEditorWidget").then((module) => ({ default: module.DescriptionEditorWidget }))),
+ "data-edit": React.lazy(() => import("./widgets/DataEditWidget").then((module) => ({ default: module.DataEditWidget }))),
+ "title-rewriter": React.lazy(() => import("./widgets/TitleRewriterWidget").then((module) => ({ default: module.TitleRewriterWidget }))),
+ "retention-sim": React.lazy(() => import("./widgets/RetentionSimWidget").then((module) => ({ default: module.RetentionSimWidget }))),
+ "upload-scheduler": React.lazy(() => import("./widgets/UploadSchedulerWidget").then((module) => ({ default: module.UploadSchedulerWidget }))),
+ "hashtag-analyzer": React.lazy(() => import("./widgets/HashtagAnalyzerWidget").then((module) => ({ default: module.HashtagAnalyzerWidget }))),
+ "burnout-monitor": React.lazy(() => import("./widgets/BurnoutMonitorWidget").then((module) => ({ default: module.BurnoutMonitorWidget }))),
+ "collab-matchmaker": React.lazy(() => import("./widgets/CollabMatchmakerWidget").then((module) => ({ default: module.CollabMatchmakerWidget }))),
+ "bridge-efficiency": React.lazy(() => import("./widgets/BridgeEfficiencyWidget").then((module) => ({ default: module.BridgeEfficiencyWidget }))),
+ "audience-matrix": React.lazy(() => import("./widgets/AudienceMatrixWidget").then((module) => ({ default: module.AudienceMatrixWidget }))),
+ "brain-hub": React.lazy(() => import("./widgets/BrainHubWidget").then((module) => ({ default: module.BrainHubWidget }))),
+ "image-generator": React.lazy(() => import("./widgets/ImageGeneratorWidget").then((module) => ({ default: module.ImageGeneratorWidget }))),
+ "video-uploader": React.lazy(() => import("./widgets/DataEditWidget").then((module) => ({ default: module.VideoUploaderWidget }))),
+ "audience-retention": React.lazy(() => import("./widgets/AudienceRetentionWidget").then((module) => ({ default: module.AudienceRetentionWidget }))),
+ "shorts-vs-long": React.lazy(() => import("./widgets/FormatClashWidget").then((module) => ({ default: module.FormatClashWidget }))),
+ "comment-replier": React.lazy(() => import("./widgets/CommentReplyWidget").then((module) => ({ default: module.CommentReplyWidget }))),
+ "ai-journal": React.lazy(() => import("./widgets/AIJournalWidget").then((module) => ({ default: module.AIJournalWidget }))),
+}
+
+const INLINE_WIDGET_RENDERER_KEYS = [
+ "app-verification-explainer",
+ "reach-funnel",
+ "relative-retention-benchmark",
+ "consistency-heatmap",
+ "ad-stack-intelligence",
+ "kpi-cluster",
+ "channel-overview",
+ "mini-calendar",
+ "quick-actions",
+ "recent-uploads",
+ "top-performer",
+ "goals-tracker",
+ "alerts-feed",
+ "ai-prompt-box",
+ "revenue-momentum",
+ "superfan-card",
+ "system-micro-stack",
+ "task-stack",
+ "alerts-ticker",
+] as const
+
+// Renderer coverage is exported for registry certification without eagerly loading widget modules.
+// eslint-disable-next-line react-refresh/only-export-components
+export const DASHBOARD_WIDGET_RENDERER_KEYS = new Set<string>([
+ ...Object.keys(LAZY_WIDGET_RENDERERS),
+ ...INLINE_WIDGET_RENDERER_KEYS,
+])
 
  interface WidgetRendererProps extends WidgetRenderCallbacks {
   widget: WidgetDefinition
@@ -102,16 +124,144 @@ const formatUploadDate = (value: unknown): string => {
  return Number.isNaN(dt.getTime()) ? "Unknown date" : dt.toLocaleDateString()
 }
 
-const widgetControlClass =
- "h-8 bg-[#f3f4f6] border-[3px] border-black rounded-[12px] inline-flex items-center justify-center text-[9px] font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,0.45)] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,0.45)] transition-all"
+const VerificationExplainerWidget: React.FC<{
+ common: CommonWidgetProps
+ onNavigate: (to: string) => void
+}> = ({ common, onNavigate }) => {
+ const handleNavigate = (event: React.MouseEvent<HTMLAnchorElement>, to: string) => {
+  event.preventDefault()
+  onNavigate(to)
+ }
 
-const statusBadge = (status: string, tone: string) => (
- <span
-  className="h-7 px-2 border-[3px] border-black rounded-md inline-flex items-center text-[9px] font-black uppercase tracking-[0.1em] shadow-[2px_2px_0px_0px_rgba(0,0,0,0.35)]"
-  style={{ backgroundColor: tone }}>
-  {status}
- </span>
-)
+ const linkStyle: React.CSSProperties = {
+  minHeight: "30px",
+  width: "100%",
+  padding: "5px 8px",
+  border: "3px solid #000",
+  borderRadius: "8px",
+  background: "#fff",
+  boxShadow: "3px 3px 0 #000",
+  color: "#000",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: "10px",
+  fontWeight: 950,
+  lineHeight: 1,
+  textDecoration: "none",
+  textTransform: "uppercase",
+  whiteSpace: "nowrap",
+ }
+
+ const panelStyle: React.CSSProperties = {
+  border: "3px solid #000",
+  borderRadius: "10px",
+  background: "#fff",
+  padding: "10px",
+  minWidth: 0,
+  boxShadow: "4px 4px 0 rgba(0,0,0,0.18)",
+ }
+
+ return (
+  <WidgetShell {...common} icon={<BookOpen size={22} aria-hidden="true" />}>
+   <section
+    className="vt-widget-fill-scroll"
+    aria-label="VIEWTUBE app purpose and data use"
+    style={{
+     gap: "8px",
+     padding: "8px",
+     background: "#F6F7FB",
+     justifyContent: "flex-start",
+     overflowX: "hidden",
+    }}>
+    <div
+     style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
+      gap: "8px",
+      alignItems: "stretch",
+     }}>
+     <div
+      style={{
+       ...panelStyle,
+       background: "#33D6EA",
+       display: "flex",
+       flexDirection: "column",
+       justifyContent: "space-between",
+       gap: "6px",
+      }}>
+      <div>
+       <div
+        translate="no"
+        style={{
+         fontSize: "26px",
+         fontWeight: 1000,
+         lineHeight: 0.95,
+         letterSpacing: 0,
+         textTransform: "uppercase",
+         overflowWrap: "anywhere",
+        }}>
+        VIEWTUBE
+       </div>
+       <p style={{ margin: "8px 0 0", fontSize: "15px", fontWeight: 950, lineHeight: 1.18 }}>
+        Your YouTube channel command center.
+       </p>
+      </div>
+     </div>
+
+     <div style={panelStyle}>
+      <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "6px" }}>
+       <Database size={18} aria-hidden="true" />
+       <h3 style={{ margin: 0, fontSize: "14px", fontWeight: 1000, textTransform: "uppercase" }}>
+        What You Can Do
+       </h3>
+      </div>
+      <p style={{ margin: 0, fontSize: "13px", fontWeight: 850, lineHeight: 1.3 }}>
+       VIEWTUBE helps you review performance, sync video metadata, plan uploads,
+       and manage creator work from one dashboard.
+      </p>
+     </div>
+
+     <div style={panelStyle}>
+      <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "6px" }}>
+       <Lock size={18} aria-hidden="true" />
+       <h3 style={{ margin: 0, fontSize: "14px", fontWeight: 1000, textTransform: "uppercase" }}>
+        Why Sign-In Helps
+       </h3>
+      </div>
+      <p style={{ margin: 0, fontSize: "13px", fontWeight: 850, lineHeight: 1.3 }}>
+       Google and YouTube access lets VIEWTUBE show your signed-in channel,
+       videos, comments, and analytics. You control connection and sign-out.
+      </p>
+     </div>
+
+     <nav
+      aria-label="VIEWTUBE account and help links"
+      style={{
+       ...panelStyle,
+       display: "flex",
+       flexDirection: "column",
+       gap: "6px",
+       background: "#FFEE57",
+      }}>
+       <a href="/about" onClick={event => handleNavigate(event, "/about")} style={linkStyle}>
+        About VIEWTUBE
+       </a>
+       <a href="/account/connect" onClick={event => handleNavigate(event, "/account/connect")} style={{ ...linkStyle, background: "#C9F830" }}>
+        Connect Channel
+       </a>
+       <a href="/user-guide" onClick={event => handleNavigate(event, "/user-guide")} style={linkStyle}>
+        User Guide
+       </a>
+       <a href="/privacy.html" style={{ ...linkStyle, background: "#FF83EA" }}>
+        Privacy Policy
+       </a>
+      </nav>
+    </div>
+   </section>
+  </WidgetShell>
+ )
+}
 
 const AlertsFeedWidget: React.FC<{
  commentsVideoId: string | null
@@ -360,13 +510,14 @@ const RevenueMomentumWidget: React.FC<{
   common: CommonWidgetProps
 }> = ({ data, common }) => {
   const [metric, setMetric] = useState<"revenue" | "views" | "subscribers">("revenue")
+  const [renderedAt] = useState(() => Date.now())
   
   const weeklyData = useMemo(() => {
     // Basic 4-week simulation based on canonicalRows if direct week-buckets aren't available
     const weeks = [0, 0, 0, 0]
     data.canonicalRows.forEach(row => {
       const d = new Date(row.uploadDate)
-      const diff = (Date.now() - d.getTime()) / (1000 * 3600 * 24 * 7)
+      const diff = (renderedAt - d.getTime()) / (1000 * 3600 * 24 * 7)
       const weekIdx = Math.floor(diff)
       if (weekIdx < 4) {
         let val = 0
@@ -377,7 +528,7 @@ const RevenueMomentumWidget: React.FC<{
       }
     })
     return weeks
-  }, [data.canonicalRows, metric])
+  }, [data.canonicalRows, metric, renderedAt])
 
   const maxVal = Math.max(...weeklyData, 1)
 
@@ -432,22 +583,14 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   onCycleHeight,
   onDecHeight,
   onRemoveWidget,
-  dashboardControls
 }) => {
-  const { brain } = useBrain();
   const account = useUnifiedAccount();
   const timeWindows = ["7 DAYS", "14 DAYS", "28 DAYS", "60 DAYS", "90 DAYS", "180 DAYS", "365 DAYS", "LIFETIME"];
   const [kpiTimeWindowIdx, setKpiTimeWindowIdx] = useState(2);
 
-  // FORCE ROW 1 WIDGETS TO BE TALL
-  const overrideInstance = {
-    ...instance,
-    height: ["kpi-cluster", "community-post", "comment-replier"].includes(widget.id) ? "tall" : instance.height
-  } as any;
-
   const common = {
   widget,
-  instance: overrideInstance,
+  instance,
   editMode,
   canEdit,
   onToggleCollapse: () => onToggleCollapse(widget.id),
@@ -458,71 +601,14 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   onRemove: () => onRemoveWidget(widget.id),
  }
 
- // 17. TAG GENERATOR
- if (widget.id === "tag-generator") {
-  return <TagGeneratorWidget {...common} data={data} editMode={editMode} />
+ if (widget.id === "app-verification-explainer") {
+  return <VerificationExplainerWidget common={common} onNavigate={onNavigate} />
  }
 
- // 18. REVENUE CHART
- if (widget.id === "revenue-chart") {
-  return <RevenueChartWidget {...common} data={data} editMode={editMode} />
+ const LazyWidgetRenderer = LAZY_WIDGET_RENDERERS[widget.rendererKey]
+ if (LazyWidgetRenderer) {
+  return <LazyWidgetRenderer {...common} data={data} editMode={editMode} />
  }
-
- // 19. COMMUNITY POST
- if (widget.id === "community-post") {
-  return <CommunityPostWidget {...common} data={data} editMode={editMode} />
- }
-
- // 20. THUMB AI
- if (widget.id === "thumb-ai") {
-  return <ThumbnailLabWidget {...common} data={data} editMode={editMode} />
- }
-
- // 21. REALTIME PERFORMANCE
- if (widget.id === "realtime-performance") {
-  return (
-   <RealtimePerformanceWidget {...common} data={data} editMode={editMode} />
-  )
- }
-
- // 22. KEYWORD ENGINE
- if (widget.id === "keyword-engine") {
-  return <KeywordEngineWidget {...common} data={data} editMode={editMode} />
- }
-
- // 22.5 KEYWORD OVERLAP
- if (widget.id === "keyword-overlap-intelligence") {
-  return <KeywordOverlapWidget {...common} data={data} editMode={editMode} />
- }
-
- // 23. PUBLISH MOMENTUM
- if (widget.id === "publish-momentum") {
-  return <PublishMomentumWidget {...common} data={data} editMode={editMode} />
- }
-
- // 24. TRAFFIC SOURCES
- if (widget.id === "traffic-sources") {
-  return <TrafficSourcesWidget {...common} data={data} editMode={editMode} />
- }
-
- // 25. AUDIENCE RETENTION
- if (widget.id === "audience-retention") {
-  return <AudienceRetentionWidget {...common} data={data} editMode={editMode} />
- }
-
- // 26. FORMAT CLASH
- if (widget.id === "shorts-vs-long") {
-  return <FormatClashWidget {...common} data={data} editMode={editMode} />
- }
-
- // 27. COMMENT REPLY
- if (widget.id === "comment-replier") {
-  return <CommentReplyWidget {...common} data={data} editMode={editMode} />
- }
-
-  if (widget.id === "ai-journal") {
-    return <AIJournalWidget {...common} editMode={editMode} />
-  }
 
  // 28. REACH FUNNEL
  if (widget.id === "reach-funnel") {
@@ -691,17 +777,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   )
  }
 
- // ADVANCED TELEMETRY (CONSOLIDATED)
- if (widget.id === "audience-matrix") return <AudienceMatrixWidget {...common} data={data} />
- if (widget.id === "bridge-efficiency") return <BridgeEfficiencyWidget {...common} data={data} />
-
- // 1. CHANNEL OVERVIEW
+  // 1. CHANNEL OVERVIEW
   if (widget.id === "kpi-cluster") {
-   const shellWidget = {
-    ...widget,
-    headerColor: "#d8d8d8",
-    iconRailColor: "#efefef",
-   }
    const avatar = data.avatarUrl || ""
    const isSmall = instance.size === "quarter" || instance.size === "third" || instance.size === "half"
    const rainbowKpiColors = [
@@ -717,27 +794,16 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
    ]
 
    const timeWindowToggle = (
-     <div className="vt-tab-group" style={{ padding: "2px", display: "inline-flex", alignItems: "center" }}>
-       <button 
-         className="vt-tab-btn active" 
-         onClick={(e) => { e.stopPropagation(); setKpiTimeWindowIdx(prev => (prev > 0 ? prev - 1 : timeWindows.length - 1)); }}
-         style={{ padding: "2px", width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-         <ChevronLeft size={14} strokeWidth={3} />
-       </button>
-       <div style={{ fontSize: "10px", fontWeight: 900, padding: "0 10px", letterSpacing: "0.05em", color: "#000" }}>
-         {timeWindows[kpiTimeWindowIdx]}
-       </div>
-       <button 
-         className="vt-tab-btn active" 
-         onClick={(e) => { e.stopPropagation(); setKpiTimeWindowIdx(prev => (prev + 1) % timeWindows.length); }}
-         style={{ padding: "2px", width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-         <ChevronRight size={14} strokeWidth={3} />
-       </button>
-     </div>
-   );
+    <WidgetHeaderStepper
+     label="Channel overview time window"
+     value={timeWindows[kpiTimeWindowIdx]}
+     onPrevious={() => setKpiTimeWindowIdx(prev => (prev > 0 ? prev - 1 : timeWindows.length - 1))}
+     onNext={() => setKpiTimeWindowIdx(prev => (prev + 1) % timeWindows.length)}
+    />
+   )
 
    return (
-    <WidgetShell {...common} widget={shellWidget} icon={<TrendingUp size={22} />} headerContent={timeWindowToggle}>
+    <WidgetShell {...common} icon={<TrendingUp size={22} />} headerContent={timeWindowToggle}>
      <div style={{ display: "flex", flexDirection: "column", height: "100%", margin: 0 }}>
       <div style={{ display: "flex", gap: "6px", flex: 1, overflow: "hidden", padding: "5px" }}>
        {/* Circular Avatar Sidebar — replaced with a sign-up nudge when no account is connected */}
@@ -762,7 +828,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
          </button>
          <button
           onClick={() => onNavigate("/about")}
-          style={{ border: "2px solid #000", borderRadius: "8px", background: "#40C6E9", padding: "8px 10px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", textAlign: "left" }}
+         style={{ border: "2px solid #000", borderRadius: "8px", background: "#40C6E9", padding: "8px 10px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", textAlign: "left" }}
          >
           About ViewTube
          </button>
@@ -815,7 +881,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
          gap: "4px"
        }}>
         {data.getKpiStatBlocks(timeWindows[kpiTimeWindowIdx] === "LIFETIME" ? 99999 : parseInt(timeWindows[kpiTimeWindowIdx])).map((stat: any, idx: number) => {
-          let bars = stat.bars || [40, 60, 45, 80, 55, 90, 75]
+          const bars = stat.bars || [40, 60, 45, 80, 55, 90, 75]
 
           let cleanTrend = stat.trend || ""
           if (cleanTrend) {
@@ -876,7 +942,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
                ) : null}
               </div>
              <div style={{ display: "flex", alignItems: "flex-end", gap: "1px", padding: "0 2px 0", height: "14px", marginTop: "auto" }}>
-              {bars.map((h, i) => (
+              {bars.map((h: number, i: number) => (
                <div key={i} style={{ flex: 1, height: `${h}%`, background: cardColor, opacity: 0.4 + (h / 100) * 0.6, borderRadius: "1px 1px 0 0" }} />
               ))}
              </div>
@@ -1063,7 +1129,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
       const pages = data.quickActions.filter((a: any) => !a.isTool);
       const tools = data.quickActions.filter((a: any) => a.isTool);
 
-      const renderAction = (action: any, idx: number, forcePrimary: boolean) => {
+      const renderAction = (action: any, idx: number) => {
         let IconComponent = Layers;
         if (action.icon === "Video") IconComponent = Video;
         else if (action.icon === "Upload") IconComponent = Upload;
@@ -1115,10 +1181,10 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
             gap: "4px",
            }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              {pages.map((action: any, idx: number) => renderAction(action, idx, true))}
+              {pages.map((action: any, idx: number) => renderAction(action, idx))}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              {tools.map((action: any, idx: number) => renderAction(action, idx, true))}
+              {tools.map((action: any, idx: number) => renderAction(action, idx))}
             </div>
           </div>
         </div>
@@ -1331,7 +1397,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  if (widget.id === "system-micro-stack") {
   const model = localStorage.getItem("GEMINI_MODEL") || "gemini-3.0-flash"
   const isConnected = data.authState.isAuthenticated
-  const lastSync = data.formatRelativeTime(data.lastSyncComplete)
+  const lastSyncTimestamp = data.lastSyncComplete ? Date.parse(data.lastSyncComplete) : null
+  const lastSync = data.formatRelativeTime(Number.isFinite(lastSyncTimestamp) ? lastSyncTimestamp : null)
   const planId = String(localStorage.getItem("vt_last_plan") || "basic").toUpperCase()
   const currentModelLabel =
    model === "gemini-3.1-pro-preview"
@@ -1404,21 +1471,18 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  // 15. NEWS TICKER (placeholder)
  // Alerts ticker removed (now implemented in DashboardHeader)
 
- if (widget.id === "ask-me") return <AskMeWidget {...common} data={data} />
- if (widget.id === "daily-oracle") return <DailyOracleWidget {...common} data={data} />
- if (widget.id === "flight-check") return <FlightCheckWidget {...common} data={data} />
- if (widget.id === "description-editor") return <DescriptionEditorWidget {...common} data={data} />
- if (widget.id === "data-edit") return <DataEditWidget {...common} data={data} />
- if (widget.id === "title-rewriter") return <TitleRewriterWidget {...common} data={data} />
- if (widget.id === "retention-sim") return <RetentionSimWidget {...common} data={data} />
- if (widget.id === "upload-scheduler") return <UploadSchedulerWidget {...common} data={data} />
- if (widget.id === "hashtag-analyzer") return <HashtagAnalyzerWidget {...common} data={data} />
- if (widget.id === "burnout-monitor") return <BurnoutMonitorWidget {...common} data={data} />
- if (widget.id === "image-generator") return <ImageGeneratorWidget {...common} data={data} />
-
- if (widget.id === "collab-matchmaker") return <CollabMatchmakerWidget {...common} data={data} />
- if (widget.id === "brain-hub") return <BrainHubWidget {...common} data={data} />
- if (widget.id === "ui-reference-library") return <UIReferenceLibraryWidget {...common} data={data} />
+ if (widget.id === "task-stack" || widget.id === "alerts-ticker") {
+  return (
+   <WidgetShell {...common} icon={widget.id === "alerts-ticker" ? <Bell size={20} /> : <Layers size={20} />}>
+    <div className="widget-state-panel is-empty" role="status">
+     <strong>Preview module</strong>
+     <p>{widget.id === "alerts-ticker"
+      ? "Live alerts now appear in the dashboard header. This legacy module remains available for layout compatibility."
+      : "Task Stack is preserved as a preview until its data and interaction certification is complete."}</p>
+    </div>
+   </WidgetShell>
+  )
+ }
 
  return (
   <WidgetShell {...common}>

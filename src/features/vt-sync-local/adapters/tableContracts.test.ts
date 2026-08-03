@@ -39,6 +39,19 @@ describe("VT Sync table contracts", () => {
   expect(VT_SYNC_TABLE_DEFINITIONS.map((table) => table.id)).not.toContain("sub_source")
  })
 
+ it("reads API-backed Month rows from the generic persisted table dataset", () => {
+  const snapshot = normalizeVtSyncSnapshot({
+   tableExports: {
+    monthly_api: [{ date: "2026-07", views: 1200, engagedViews: 800 }],
+   },
+  })
+  const table = VT_SYNC_TABLE_DEFINITIONS.find((definition) => definition.id === "monthly_api")!
+
+  expect(tableRows(snapshot, table)).toEqual([
+   expect.objectContaining({ date: "2026-07", views: 1200, engagedViews: 800 }),
+  ])
+ })
+
  it("formats structured cells without object coercion", () => {
   expect(formatVtSyncTableCellValue([{ label: "one" }, "two"], "json")).toBe('{"label":"one"}, two')
   expect(formatVtSyncTableCellValue({ nested: true }, "json")).toBe('{"nested":true}')

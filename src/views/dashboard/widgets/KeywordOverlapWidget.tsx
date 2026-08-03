@@ -54,7 +54,7 @@ const nodeColor = (node: KeywordNode): string => {
 const MetricModeDropdown: React.FC<{
   mode: KeywordMetricMode
   onChange: (mode: KeywordMetricMode) => void
-}> = ({mode, onChange, onDecSize, onCycleHeight, onDecHeight}) => {
+}> = ({ mode, onChange }) => {
   const [open, setOpen] = useState(false)
   return (
     <div style={{ position: "relative" }}>

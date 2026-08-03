@@ -8,7 +8,6 @@ import { reflectAndCompress } from "../../../services/brain"
 
 interface BrainHubWidgetProps extends CommonWidgetProps {
   data: DashboardData
-  editMode?: boolean
 }
 
 const MEMORY_SECTIONS = [
@@ -18,7 +17,7 @@ const MEMORY_SECTIONS = [
   { key: "futureStateMap", label: "Future Map", icon: Map, color: "#FFB570" },
 ] as const
 
-export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data, editMode, ...common }) => {
+export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data, ...common }) => {
   const { getBrainMemory } = useBrain()
   const memory = getBrainMemory()
   const [isReflecting, setIsReflecting] = useState(false)

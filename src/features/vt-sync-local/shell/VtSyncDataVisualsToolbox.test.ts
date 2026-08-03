@@ -7,6 +7,7 @@ const here = path.dirname(fileURLToPath(import.meta.url))
 const source = fs.readFileSync(path.join(here, "VtSyncDataVisualsToolbox.tsx"), "utf8")
 const graphSource = fs.readFileSync(path.join(here, "../../../components/GraphsPageCharts.tsx"), "utf8")
 const explorerSource = fs.readFileSync(path.join(here, "../../../components/TubeExplorerVisualModules.tsx"), "utf8")
+const frameSource = fs.readFileSync(path.join(here, "VtSyncVisualFrame.tsx"), "utf8")
 
 describe("VT-SYNC data visual module registry", () => {
  it("keeps the complete custom core visual set", () => {
@@ -73,5 +74,31 @@ describe("VT-SYNC data visual module registry", () => {
   expect(source).toContain("visible ? children")
   expect(source).not.toContain("setInterval")
   expect(source).not.toContain("mountedCharts")
+ })
+
+ it("registers source tables, controls, footer contracts, and one shared visual frame", () => {
+  expect(source).toContain("export const VT_SYNC_VISUAL_MODULE_REGISTRY")
+  expect(source).toContain("sourceTableIds: sourceTablesForVisual(module.id)")
+  expect(source).toContain("controls: controlsForVisual(module.id)")
+  expect(source).toContain('insight: "Calculated from the active VT-SYNC table registry."')
+  expect(frameSource).toContain("export type VtSyncVisualModuleSpec")
+  expect(frameSource).toContain("export const VtSyncVisualFrame")
+  expect(frameSource).toContain("React.createElement(spec.renderer, visualProps)")
+  expect(source).toContain("<VtSyncVisualFrame")
+ })
+
+ it("keeps the requested subject-specific visual interactions in their custom renderers", () => {
+  expect(graphSource).toContain("TrafficPercentAxisTick")
+  expect(graphSource).toContain('if (normalized === "YT_OTHER_PAGE") return "YouTube Features"')
+  expect(graphSource).toContain("EngagementHoverDot")
+  expect(graphSource).toContain("leaderSignature")
+  expect(graphSource).toContain("getKeywordRankValue(item, metricMode, rankedByMode)")
+  expect(graphSource).toContain("trafficSourceLegendLines(entry.legendLabel)")
+  expect(graphSource).toContain('width="100%"')
+  expect(graphSource).toContain("disabled={!supportsTotal}")
+  expect(graphSource).not.toContain('["impressions", "IMPR"]')
+  expect(explorerSource).toContain("TITLE_NETWORK_MAX_WORDS = 50")
+  expect(explorerSource).toContain("return [...current, id].slice(-5)")
+  expect(explorerSource).toContain('transform: isHovered ? "scale(1.15)"')
  })
 })

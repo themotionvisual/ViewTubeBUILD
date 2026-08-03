@@ -18,7 +18,6 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   onCycleHeight,
   onRemove,
   onDecSize,
-  onCycleHeight,
   onDecHeight,
  }
 
@@ -58,7 +57,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   const handleGenerate = () => {
     setIsProcessing(true)
     setTimeout(() => {
-      setResult({type: "generation", imageUrl: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=600&auto=format&fit=crop", onDecSize, onCycleHeight, onDecHeight})
+      setResult({type: "generation", imageUrl: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=600&auto=format&fit=crop"})
       setIsProcessing(false)
     }, 2000)
   }
@@ -92,7 +91,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   const analyzeThumbnails = async () => {
     setAbAnalyzing(true)
     await new Promise(r => setTimeout(r, 1500))
-    setVariants(prev => prev.map(v => ({...v, score: v.image ? Math.round(30 + Math.random() * 65) : 0, onDecSize, onCycleHeight, onDecHeight})))
+    setVariants(prev => prev.map(v => ({...v, score: v.image ? Math.round(30 + Math.random() * 65) : 0})))
     setAbAnalyzing(false)
   }
 

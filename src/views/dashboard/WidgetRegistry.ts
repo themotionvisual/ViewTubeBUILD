@@ -1,7 +1,91 @@
 import { getDashboardWidgetPaletteColors } from "../../styles/toolboxPalette"
-import type { WidgetDefinition } from "./types"
+import { HEIGHT_BUCKET_ORDER, SIZE_BUCKET_ORDER } from "./tokens"
+import type {
+ DashboardHeightBucket,
+ DashboardSizeBucket,
+ WidgetDefinition,
+ WidgetDefinitionBase,
+} from "./types"
 
-export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
+type DefaultDashboardSlot = Readonly<{
+ id: string
+ size: DashboardSizeBucket
+ height: DashboardHeightBucket
+}>
+
+export const DEFAULT_DASHBOARD_ROWS = [
+ [{ id: "app-verification-explainer", size: "full", height: "medium" }],
+ [
+  { id: "kpi-cluster", size: "third", height: "tall" },
+  { id: "community-post", size: "third", height: "tall" },
+  { id: "comment-replier", size: "third", height: "tall" },
+ ],
+ [
+  { id: "consistency-heatmap", size: "quarter", height: "medium" },
+  { id: "realtime-performance", size: "quarter", height: "medium" },
+  { id: "goals-tracker", size: "quarter", height: "medium" },
+  { id: "keyword-engine", size: "quarter", height: "medium" },
+ ],
+ [
+  { id: "daily-oracle", size: "third", height: "xtall" },
+  { id: "ask-me", size: "third", height: "xtall" },
+  { id: "ai-journal", size: "third", height: "xtall" },
+ ],
+ [
+  { id: "image-generator", size: "half", height: "xtall" },
+  { id: "video-uploader", size: "half", height: "xtall" },
+ ],
+ [
+  { id: "data-edit", size: "half", height: "xtall" },
+  { id: "traffic-sources", size: "half", height: "xtall" },
+ ],
+ [
+  { id: "shorts-vs-long", size: "third", height: "medium" },
+  { id: "publish-momentum", size: "third", height: "medium" },
+  { id: "audience-matrix", size: "third", height: "medium" },
+ ],
+ [
+  { id: "system-micro-stack", size: "quarter", height: "tall" },
+  { id: "keyword-overlap-intelligence", size: "half", height: "tall" },
+  { id: "retention-sim", size: "quarter", height: "tall" },
+ ],
+ [
+  { id: "upload-scheduler", size: "half", height: "xtall" },
+  { id: "brain-hub", size: "half", height: "xtall" },
+ ],
+ [
+  { id: "thumb-ai", size: "half", height: "medium" },
+  { id: "quick-actions", size: "quarter", height: "medium" },
+  { id: "ai-prompt-box", size: "quarter", height: "medium" },
+ ],
+ [
+  { id: "revenue-momentum", size: "third", height: "medium" },
+  { id: "title-rewriter", size: "third", height: "medium" },
+  { id: "description-editor", size: "third", height: "medium" },
+ ],
+ [{ id: "hashtag-analyzer", size: "full", height: "medium" }],
+] as const satisfies readonly (readonly DefaultDashboardSlot[])[]
+
+const defaultDashboardSlotById = new Map<string, DefaultDashboardSlot>(
+ DEFAULT_DASHBOARD_ROWS.flat().map((slot) => [slot.id, slot]),
+)
+
+const DASHBOARD_WIDGET_BASE_REGISTRY: WidgetDefinitionBase[] = [
+ {
+  id: "app-verification-explainer",
+  title: "About VIEWTUBE",
+  subtitle: "VIEWTUBE app purpose, Google sign-in, and YouTube data use",
+  category: "system",
+  defaultSize: "full",
+  minSize: "half",
+  maxSize: "full",
+  defaultHeight: "medium",
+  minHeight: "short",
+  maxHeight: "medium",
+  ...getDashboardWidgetPaletteColors(7),
+  dependency: ["none"],
+  status: "ready",
+ },
   {
   id: "kpi-cluster",
   title: "Channel Overview",
@@ -558,9 +642,24 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   status: "ready",
  },
  {
+  id: "video-uploader",
+  title: "Video Uploader",
+  subtitle: "Upload and publish a new video",
+  category: "creation",
+  defaultSize: "half",
+  minSize: "third",
+  maxSize: "full",
+  defaultHeight: "xtall",
+  minHeight: "medium",
+  maxHeight: "massive",
+  ...getDashboardWidgetPaletteColors(37),
+  dependency: ["youtube_data_v3"],
+  status: "ready",
+ },
+ {
   id: "data-edit",
   title: "Video Manager",
-  subtitle: "Quick Metadata Editor",
+  subtitle: "Edit published video metadata",
   category: "creation",
   defaultSize: "half",
   minSize: "third",
@@ -696,7 +795,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   id: "ui-reference-library",
   title: "UI Reference Library",
   subtitle: "Component library and scrollbar styles",
-  category: "utility",
+  category: "system",
   defaultSize: "half",
   minSize: "quarter",
   maxSize: "full",
@@ -709,50 +808,68 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
  }
 ]
 
-const prioritizedOrder = [
-  // Row 1 — Top shelf (all 1/3)
-  "kpi-cluster",
-  "community-post",
-  "comment-replier",
-  // Row 2 — Instrument panel (all 1/4)
-  "consistency-heatmap",
-  "realtime-performance",
-  "goals-tracker",
-  "keyword-engine",
-  // Row 3 — AI zone (all 1/3)
-  "daily-oracle",
-  "ask-me",
-  "ai-journal",
-  // Row 4 — Creation tools (all 1/2)
-  "data-edit",
-  "brain-hub",
-  // Remaining — analytics & tools
-  "revenue-chart",
-  "traffic-sources",
-  "recent-uploads",
-  "top-performer",
-  "reach-funnel",
-  "alerts-feed",
-  "channel-overview",
-  "thumb-ai",
-  "mini-calendar",
-  "task-stack",
-  "system-micro-stack",
-  "shorts-vs-long",
-  "collab-matchmaker",
-  "ui-reference-library",
- ];
+export const SUPPORTED_DASHBOARD_WIDGET_IDS = DEFAULT_DASHBOARD_ROWS
+ .flat()
+ .map((slot) => slot.id)
 
-export const DEFAULT_DASHBOARD_WIDGET_ORDER = [
-  ...prioritizedOrder,
-  ...DASHBOARD_WIDGET_REGISTRY.map((widget) => widget.id).filter(id => !prioritizedOrder.includes(id))
-]
+const supportedOrder = new Map<string, number>(
+ SUPPORTED_DASHBOARD_WIDGET_IDS.map((widgetId, index) => [widgetId, index]),
+)
+
+const inclusiveBucketRange = <T extends string>(
+ order: readonly T[],
+ minimum: T,
+ maximum: T,
+): readonly T[] => {
+ const minIndex = Math.max(0, order.indexOf(minimum))
+ const maxIndex = Math.max(minIndex, order.indexOf(maximum))
+ return order.slice(minIndex, maxIndex + 1)
+}
+
+export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = DASHBOARD_WIDGET_BASE_REGISTRY.map(
+ (widget, index) => {
+  const defaultSlot = defaultDashboardSlotById.get(widget.id)
+  const supportedSizes = inclusiveBucketRange<DashboardSizeBucket>(
+   SIZE_BUCKET_ORDER,
+   widget.minSize,
+   widget.maxSize,
+  )
+  const supportedHeights = inclusiveBucketRange<DashboardHeightBucket>(
+   HEIGHT_BUCKET_ORDER,
+   widget.minHeight,
+   widget.maxHeight,
+  )
+  return {
+   ...widget,
+   defaultSize: defaultSlot?.size ?? widget.defaultSize,
+   defaultHeight: defaultSlot?.height ?? widget.defaultHeight,
+   rendererKey: widget.id,
+   releaseTier: supportedOrder.has(widget.id) ? "supported" : "preview",
+   defaultVisible: supportedOrder.has(widget.id),
+   defaultOrder: supportedOrder.get(widget.id) ?? SUPPORTED_DASHBOARD_WIDGET_IDS.length + index,
+   supportedSizes,
+   supportedHeights,
+   supportedDimensions: supportedSizes.flatMap((size) =>
+    supportedHeights.map((height) => ({ size, height })),
+   ),
+   responsiveMode: supportedOrder.has(widget.id) ? "container" : "legacy",
+  }
+ },
+)
+
+export const DEFAULT_DASHBOARD_WIDGET_ORDER = [...DASHBOARD_WIDGET_REGISTRY]
+ .sort((left, right) => left.defaultOrder - right.defaultOrder)
+ .map((widget) => widget.id)
 
 export const DASHBOARD_WIDGET_BY_ID = Object.fromEntries(
  DASHBOARD_WIDGET_REGISTRY.map((widget) => [widget.id, widget]),
 )
 
 export const WIDGET_DESCRIPTIONS: Record<string, { short: string, detailed: string }> = {
+  "app-verification-explainer": {
+   short: "VIEWTUBE EXPLAINS ITS PURPOSE AND DATA USE BEFORE CHANNEL TOOLS.",
+   detailed: "This module is intentionally visible at the top of the dashboard so reviewers and creators can understand why the app requests Google and YouTube access."
+  },
   "kpi-cluster": {
    short: "REAL-TIME CHANNEL VITALS AND CORE GROWTH METRICS.",
    detailed: "Monitor subscribers, views, and revenue in a dense, at-a-glance cluster. Best used for high-level health checks."
@@ -898,8 +1015,12 @@ export const WIDGET_DESCRIPTIONS: Record<string, { short: string, detailed: stri
    detailed: "Ensure every video has optimal SEO, links, and settings before going live. Use this as a final safety net for every release."
   },
   "data-edit": {
-   short: "VIDEO MANAGER FOR UPLOAD + PUBLISHED VIDEO WORKFLOWS.",
-   detailed: "Manage upload and edit flows in one place. Update titles, descriptions, tags, metadata, and publishing options quickly."
+   short: "EDIT PUBLISHED VIDEO METADATA AND MONETIZATION SETTINGS.",
+   detailed: "Select a published video, review its thumbnail, then update its title, description, tags, metadata, and ad suitability settings."
+  },
+  "video-uploader": {
+   short: "UPLOAD AND PUBLISH A NEW VIDEO.",
+   detailed: "Choose a source video and thumbnail, prepare metadata and publishing options, complete ad suitability, then publish."
   },
   "image-generator": {
    short: "GENERATE THUMBNAIL + END SCREEN IMAGES WITH AI.",

@@ -24,6 +24,7 @@ const FFMPEG_BIN = process.env.FFMPEG_BIN || '/opt/homebrew/bin/ffmpeg';
 
 const PORT = Number(process.env.VT_E1_RENDER_PORT || 3001);
 const ORIGIN = process.env.VT_E1_RENDER_ORIGIN || '*';
+const SHARED_SECRET = String(process.env.VT_E1_RENDER_SHARED_SECRET || '').trim();
 const RENDER_JOB_SCHEMA_VERSION = 'RemotionRenderJobV1';
 const SVG_RENDER_JOB_SCHEMA_VERSION = 'SvgFrameRenderJobV1';
 const SVG_ZIP_RENDER_JOB_SCHEMA_VERSION = 'SvgFrameZipRenderJobV1';
@@ -35,8 +36,9 @@ const sendJson = (res, status, payload) => {
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
     'Access-Control-Allow-Origin': ORIGIN,
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type, X-VT-File-Name, X-VT-Mime-Type',
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Cache-Control': 'no-store',
   });
   res.end(JSON.stringify(payload));
 };
@@ -64,6 +66,19 @@ const readBody = async (req) => new Promise((resolve, reject) => {
   req.on('error', reject);
   req.on('end', () => resolve(Buffer.concat(chunks)));
 });
+
+const timingSafeEqualString = (a, b) => {
+  const left = Buffer.from(String(a || ''));
+  const right = Buffer.from(String(b || ''));
+  return left.length === right.length && crypto.timingSafeEqual(left, right);
+};
+
+const isAuthorizedRenderRequest = (req) => {
+  if (!SHARED_SECRET) return true;
+  const header = String(req.headers.authorization || '').trim();
+  const token = header.toLowerCase().startsWith('bearer ') ? header.slice(7).trim() : header;
+  return timingSafeEqualString(token, SHARED_SECRET);
+};
 
 const inferRequestOrigin = (req) => {
   const forwardedProto = String(req.headers['x-forwarded-proto'] || '').trim();
@@ -428,12 +443,117 @@ const validateSvgFramePayload = (payload) => {
   };
 };
 
-const renderCapabilities = () => ({
+const buildQueueStatus = async () => {
+  const db = await readJobsDb();
+  const jobs = Object.values(db.records || {});
+  return {
+    activeJobId,
+    totalJobs: jobs.length,
+    queuedJobs: jobs.filter((job) => job?.status === 'queued').length,
+    renderingJobs: jobs.filter((job) => job?.status === 'rendering').length,
+    completedJobs: jobs.filter((job) => job?.status === 'succeeded').length,
+    failedJobs: jobs.filter((job) => job?.status === 'failed').length,
+  };
+};
+
+const checkWritableDir = async (dirPath, label) => {
+  const testPath = path.join(dirPath, `.readiness-${crypto.randomUUID()}.tmp`);
+  try {
+    await fs.mkdir(dirPath, { recursive: true });
+    await fs.writeFile(testPath, 'ok', 'utf8');
+    await fs.rm(testPath, { force: true });
+    return { label, path: dirPath, writable: true };
+  } catch (error) {
+    return {
+      label,
+      path: dirPath,
+      writable: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+};
+
+const buildRendererReadiness = async () => {
+  const checks = [];
+  const blocked = [];
+  let rendererInstalled = false;
+  let svgFramesInstalled = false;
+
+  try {
+    await ensureStore();
+    checks.push({ id: 'store', ok: true });
+  } catch (error) {
+    checks.push({ id: 'store', ok: false, error: error instanceof Error ? error.message : String(error) });
+    blocked.push('store');
+  }
+
+  try {
+    await ensureRendererInstalled();
+    rendererInstalled = true;
+    checks.push({ id: 'remotion', ok: true, path: REMOTION_BIN });
+  } catch (error) {
+    checks.push({ id: 'remotion', ok: false, path: REMOTION_BIN, error: error instanceof Error ? error.message : String(error) });
+    blocked.push('remotion');
+  }
+
+  try {
+    await ensureFfmpegInstalled();
+    svgFramesInstalled = true;
+    checks.push({ id: 'ffmpeg', ok: true, path: FFMPEG_BIN });
+  } catch (error) {
+    checks.push({ id: 'ffmpeg', ok: false, path: FFMPEG_BIN, error: error instanceof Error ? error.message : String(error) });
+    blocked.push('ffmpeg');
+  }
+
+  const storageChecks = await Promise.all([
+    checkWritableDir(JOB_PAYLOAD_DIR, 'payloads'),
+    checkWritableDir(OUTPUT_DIR, 'output'),
+    checkWritableDir(RENDER_ASSET_DIR, 'render-assets'),
+    checkWritableDir(SVG_FRAME_UPLOAD_DIR, 'svg-frame-uploads'),
+  ]);
+  storageChecks.forEach((check) => {
+    checks.push({ id: `storage:${check.label}`, ok: check.writable, path: check.path, error: check.error || '' });
+    if (!check.writable) blocked.push(`storage:${check.label}`);
+  });
+
+  const queue = await buildQueueStatus();
+  const storageReady = storageChecks.every((check) => check.writable);
+  const ready = rendererInstalled && svgFramesInstalled && storageReady;
+  const degraded = rendererInstalled && storageReady && !ready;
+  return {
+    online: true,
+    ready,
+    status: ready ? 'ready' : degraded ? 'degraded' : 'unavailable',
+    checks,
+    blocked,
+    queue,
+    storage: {
+      strategy: 'local-worker-disk',
+      persistent: false,
+      writable: storageReady,
+      dataDir: DATA_DIR,
+      outputDir: OUTPUT_DIR,
+      renderAssetDir: RENDER_ASSET_DIR,
+    },
+    renderer: {
+      installed: rendererInstalled,
+      compositionId: 'VTE1Renderer',
+      svgFramesInstalled,
+      remotionBin: REMOTION_BIN,
+      ffmpegBin: FFMPEG_BIN,
+    },
+  };
+};
+
+const renderCapabilities = (readiness = {}) => ({
   service: 'vt-e1-render-server',
+  online: readiness.online !== false,
+  ready: Boolean(readiness.ready),
+  status: readiness.status || 'unavailable',
   primaryFormat: 'mp4',
   supportedFormats: ['mp4'],
   previewFormats: ['webm', 'mov'],
-  executor: 'remotion-local-server',
+  executor: 'remotion-hosted-worker',
   renderModes: ['remotion-mp4', 'svg-frames-mp4'],
   svgRenderPolicies: ['exact-svg', 'hybrid-raster', 'best-effort'],
   assetStrategy: 'stage-local-assets-before-render',
@@ -448,14 +568,19 @@ const renderCapabilities = () => ({
     overlayFx: true,
     blobDataUrls: true,
     outputFormats: ['mov', 'gif', 'png-sequence', 'wav'],
+    readiness: Array.isArray(readiness.blocked) ? readiness.blocked : [],
   },
+  queue: readiness.queue || { activeJobId: null, totalJobs: 0, queuedJobs: 0, renderingJobs: 0, completedJobs: 0, failedJobs: 0 },
+  storage: readiness.storage || { strategy: 'local-worker-disk', persistent: false, writable: false },
+  maxDurationSec: 600,
+  maxResolution: { width: 3840, height: 3840 },
 });
 
 const ensureRendererInstalled = async () => {
   try {
     await fs.access(REMOTION_BIN);
   } catch {
-    throw new Error("Remotion dependencies are missing. Run 'cd apps/remotion-editor && npm install'.");
+    throw new Error("Remotion dependencies are missing. Run 'cd src/remotion-editor && npm install'.");
   }
 };
 const ensureFfmpegInstalled = async () => {
@@ -1028,36 +1153,54 @@ const handleCreateSvgFrameZipJob = async (req, res) => {
 
 const handleGetCapabilities = async (req, res) => {
   try {
-    await ensureRendererInstalled();
-    let svgFramesInstalled = true;
-    try {
-      await ensureFfmpegInstalled();
-    } catch {
-      svgFramesInstalled = false;
-    }
+    const readiness = await buildRendererReadiness();
+    const capabilities = renderCapabilities(readiness);
     return sendJson(res, 200, {
       ok: true,
+      online: true,
+      ready: readiness.ready,
+      status: readiness.status,
       origin: inferRequestOrigin(req),
-      capabilities: renderCapabilities(),
-      renderer: {
-        installed: true,
-        compositionId: 'VTE1Renderer',
-        svgFramesInstalled,
-      },
+      capabilities,
+      renderer: readiness.renderer,
+      queue: readiness.queue,
+      storage: readiness.storage,
+      checks: readiness.checks,
     });
   } catch (error) {
-    return sendJson(res, 503, {
-      ok: false,
-      origin: inferRequestOrigin(req),
-      capabilities: renderCapabilities(),
+    const readiness = {
+      online: true,
+      ready: false,
+      status: 'unavailable',
+      blocked: ['readiness-check'],
       renderer: {
         installed: false,
         compositionId: 'VTE1Renderer',
         svgFramesInstalled: false,
         error: error instanceof Error ? error.message : String(error),
       },
+    };
+    return sendJson(res, 503, {
+      ok: false,
+      online: true,
+      ready: false,
+      status: 'unavailable',
+      origin: inferRequestOrigin(req),
+      capabilities: renderCapabilities(readiness),
+      renderer: readiness.renderer,
     });
   }
+};
+
+const handleGetHealth = async (req, res) => {
+  return sendJson(res, 200, {
+    ok: true,
+    status: 'live',
+    service: 'vt-e1-render-server',
+    origin: inferRequestOrigin(req),
+    timestamp: nowIso(),
+    activeJobId,
+  });
 };
 
 const handleCreateRenderAsset = async (req, res) => {
@@ -1240,10 +1383,20 @@ const server = http.createServer(async (req, res) => {
     if (method === 'OPTIONS') {
       res.writeHead(204, {
         'Access-Control-Allow-Origin': ORIGIN,
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Authorization, Content-Type, X-VT-File-Name, X-VT-Mime-Type',
         'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
       });
       return res.end();
+    }
+
+    const isRenderApi = pathname.startsWith('/api/vt-e1/render') || pathname.startsWith('/api/vt-e1/render-svg-frames');
+    const isPublicHealth = method === 'GET' && pathname === '/api/vt-e1/render/health';
+    if (isRenderApi && !isPublicHealth && !isAuthorizedRenderRequest(req)) {
+      return sendJson(res, 401, {
+        ok: false,
+        error: 'VT_E1_RENDER_UNAUTHORIZED',
+        message: 'Hosted VT_E1 render worker requires a valid server-to-server shared secret.',
+      });
     }
 
     if (method === 'POST' && pathname === '/api/vt-e1/render') {
@@ -1254,6 +1407,10 @@ const server = http.createServer(async (req, res) => {
     }
     if (method === 'POST' && pathname === '/api/vt-e1/render-svg-frames') {
       return await handleCreateSvgFrameJob(req, res);
+    }
+
+    if (method === 'GET' && pathname === '/api/vt-e1/render/health') {
+      return await handleGetHealth(req, res);
     }
 
     if (method === 'GET' && pathname === '/api/vt-e1/render/capabilities') {

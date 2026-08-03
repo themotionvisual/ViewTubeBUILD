@@ -44,7 +44,7 @@ const formatRelativeTime = (timestamp?: number | null) => {
 }
 
 export const useDashboardData = () => {
-  const { brain, authState, lastSyncComplete, isSyncing, globalSyncData } = useBrain()
+  const { brain, authState, channelIdentity, lastSyncComplete, isSyncing, globalSyncData } = useBrain()
   const { snapshot: videoAssetCatalog } = useVideoAssetCatalog()
   const { snapshot: initialBootstrap } = useInitialChannelBootstrap()
   const channelHandle = authState.channelHandle
@@ -354,7 +354,7 @@ export const useDashboardData = () => {
         secondaryValue: formatHumanNumber(Math.abs(curSubs)),
         secondaryIsIncrease: curSubs >= prevSubs,
         trend: null, 
-        color: "#FF4B4B", 
+        color: "#FA618A",
         bars: getTrendBars(["subscribersGained", "Subscribers gained", "subscribers", "Subscribers"], days, currentData) 
       },
       { 
@@ -364,7 +364,7 @@ export const useDashboardData = () => {
         secondaryValue: formatMetric(Math.abs(curViews)), 
         secondaryIsIncrease: curViews >= prevViews,
         trend: null, 
-        color: "#FF9029", 
+        color: "#FFA85C",
         bars: getTrendBars(["views", "Views"], days, currentData) 
       },
       { 
@@ -374,7 +374,7 @@ export const useDashboardData = () => {
         secondaryValue: formatMetric(Math.abs(curWatchHours)), 
         secondaryIsIncrease: curWatchHours >= prevWatchHours,
         trend: null, 
-        color: "#FFE357", 
+        color: "#FFDA47",
         bars: getTrendBars(["estimatedMinutesWatched", "watchTime", "watchHours", "Watch time (hours)"], days, currentData) 
       },
       { 
@@ -384,7 +384,7 @@ export const useDashboardData = () => {
         secondaryValue: formatAvd(Math.abs(curAVD)),
         secondaryIsIncrease: curAVD >= prevAVD,
         trend: null, 
-        color: "#C9F830", 
+        color: "#3FEE56",
         bars: getAvdBars(days, currentData) 
       },
       { 
@@ -394,7 +394,7 @@ export const useDashboardData = () => {
         secondaryValue: formatMoney(Math.abs(curRev)),
         secondaryIsIncrease: curRev >= prevRev,
         trend: null, 
-        color: "#24D3FF", 
+        color: "#528FFA",
         bars: getTrendBars(["estimatedRevenue", "revenue", "Estimated revenue (USD)", "Your estimated revenue (USD)"], days, currentData) 
       },
       { 
@@ -404,7 +404,7 @@ export const useDashboardData = () => {
         secondaryValue: String(Math.abs(curVids)),
         secondaryIsIncrease: curVids >= prevVids,
         trend: null, 
-        color: "#8B5CF6", 
+        color: "#A467F4",
         bars: getVideoCountBars(days, currentData) 
       }
     ]
@@ -572,6 +572,7 @@ export const useDashboardData = () => {
   return {
     brain,
     authState,
+    channelIdentity,
     isSyncing,
     lastSyncComplete,
     channelHandle,
@@ -607,8 +608,8 @@ export const useDashboardData = () => {
       return acc
     }, new Map<string, {month: string, week: string, revenue: number}>()).values()).slice(0, 12).reverse(),
     avatarUrl: toHighResYouTubeAvatar(authState.channelThumbnail || vtSyncSnapshot.avatarUrl),
-    channelTitle: authState.channelTitle || vtSyncSnapshot.channelName || "Your Channel",
-    channelCustomUrl: authState.channelCustomUrl || vtSyncSnapshot.channelCustomUrl || "@handle",
+    channelTitle: authState.channelName || vtSyncSnapshot.channelName || "Your Channel",
+    channelCustomUrl: authState.channelHandle || vtSyncSnapshot.channelCustomUrl || "@handle",
     formatRelativeTime,
     canonicalRows,
     videoAssets: videoAssetCatalog.items,

@@ -102,12 +102,14 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
  const renderKpiCards = () => (
   <div className="flex items-center gap-1.5 flex-1 px-4 justify-center">
    {data.statBlocks28d.map((stat, idx) => {
+    const displayValue = String(stat.value ?? "")
+    const trendText = String(stat.trend ?? "")
     const bars = Array.from({ length: 7 }, (_, i) => {
      const seed = ((idx * 7 + i + 1) * 17) % 100
      return 40 + (seed % 50)
     })
     
-    let cleanTrend = stat.trend || ""
+    let cleanTrend = trendText
     if (cleanTrend) {
      const match = cleanTrend.match(/([+-]?)(\d+(\.\d+)?)%/)
      if (match) {
@@ -123,9 +125,9 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ dashboardContr
       </div>
       <div className="flex items-baseline justify-center gap-1.5 px-1 pt-0.5">
        <div className="text-[14px] font-black tracking-tighter text-black leading-none">
-        {stat.value.endsWith("K") ? <>{stat.value.slice(0, -1)}<span className="text-[0.65em]">K</span></> : stat.value.endsWith("M") ? <>{stat.value.slice(0, -1)}<span className="text-[0.65em]">M</span></> : stat.value}
+        {displayValue.endsWith("K") ? <>{displayValue.slice(0, -1)}<span className="text-[0.65em]">K</span></> : displayValue.endsWith("M") ? <>{displayValue.slice(0, -1)}<span className="text-[0.65em]">M</span></> : displayValue}
        </div>
-       {stat.trend && <span style={{ color: stat.trend.includes("▲") ? "#008B00" : "#D32F2F" }} className="text-[8.5px] font-black leading-none">{cleanTrend}</span>}
+       {trendText && <span style={{ color: trendText.includes("▲") ? "#008B00" : "#D32F2F" }} className="text-[8.5px] font-black leading-none">{cleanTrend}</span>}
       </div>
       <div className="flex items-end gap-[1.5px] px-1 h-[14px] mt-auto">
        {bars.map((h, i) => (

@@ -2,13 +2,21 @@ import React, { useCallback, useEffect, useRef, useState } from "react"
 import {
   ChevronDown,
   ChevronRight,
+  Download,
+  Edit3,
+  Layers,
+  Lock,
+  LockOpen,
   Menu,
   PanelLeft,
   PanelTop,
+  RotateCcw,
   Sparkles,
+  Upload,
   X,
 } from "lucide-react"
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
+import { useDashboard } from "../../context/DashboardContext"
 import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
 import { useBrain } from "../../context/useBrain"
 import { getVtSyncSnapshot } from "../../features/vt-sync-local"
@@ -185,6 +193,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
 }) => {
   const location = useLocation()
   const navigate = useNavigate()
+  const dashboard = useDashboard()
   const account = useUnifiedAccount()
   const {
     brain,
@@ -380,6 +389,13 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     navigate(path)
   }
 
+  const isDashboardRoute = location.pathname === "/"
+
+  const runDashboardMenuAction = (action: () => void) => {
+    closeAccountMenu()
+    action()
+  }
+
   const renderPrimaryNavigation = (mobileDrawer = false) => (
     <nav className={mobileDrawer ? "vt-adaptive-nav__drawer-links" : "vt-adaptive-nav__links"} aria-label="Primary navigation">
       {PRIMARY_NAV_ITEMS.map((item) => (
@@ -443,7 +459,14 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
       ref={accountButtonRef}
       type="button"
       className="vt-adaptive-nav__account-trigger vt-adaptive-nav__account-trigger--signup"
-      onClick={() => void account.start(account.intent, window.location.pathname + window.location.search + window.location.hash)}
+      onClick={() => {
+        const willOpen = !accountOpen
+        setAccountOpen(willOpen)
+        if (willOpen) requestAnimationFrame(() => accountMenuRef.current?.querySelector<HTMLElement>("[data-nav-menu-item]")?.focus())
+      }}
+      aria-haspopup="menu"
+      aria-expanded={accountOpen}
+      aria-controls="vt-adaptive-account-menu"
     >
       <span className="vt-adaptive-nav__avatar">
         <Sparkles aria-hidden="true" />
@@ -453,7 +476,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
         <span className="vt-adaptive-nav__account-meta">Free Account Setup</span>
         <span className="vt-adaptive-nav__auth-status">Connect Channel</span>
       </span>
-      <span className="vt-adaptive-nav__signup-cta" aria-hidden="true">Sign Up</span>
+      <ChevronDown className="vt-adaptive-nav__account-chevron" aria-hidden="true" />
     </button>
   )
 
@@ -497,6 +520,46 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
           <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/account")}><span>Account Settings</span><ChevronRight aria-hidden="true" /></button>
           <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/account?panel=billing")}><span>Billing & Credits</span><ChevronRight aria-hidden="true" /></button>
         </section>
+
+        {isDashboardRoute ? (
+          <section aria-label="Dashboard layout">
+            <h2>Dashboard Layout</h2>
+            <button
+              data-nav-menu-item
+              role="menuitem"
+              type="button"
+              onClick={() => runDashboardMenuAction(() => dashboard.setEditMode((prev) => !prev))}
+            >
+              <span>{dashboard.editMode ? "Exit Rearrange Mode" : "Rearrange Widgets"}</span>
+              <Edit3 aria-hidden="true" />
+            </button>
+            <button
+              data-nav-menu-item
+              role="menuitem"
+              type="button"
+              onClick={() => runDashboardMenuAction(dashboard.toggleLock)}
+            >
+              <span>{dashboard.isLocked ? "Unlock Layout" : "Lock Layout"}</span>
+              {dashboard.isLocked ? <LockOpen aria-hidden="true" /> : <Lock aria-hidden="true" />}
+            </button>
+            <button data-nav-menu-item role="menuitem" type="button" onClick={() => runDashboardMenuAction(() => dashboard.setPickerOpen(true))}>
+              <span>Add Or Hide Widgets</span>
+              <Layers aria-hidden="true" />
+            </button>
+            <button data-nav-menu-item role="menuitem" type="button" onClick={() => runDashboardMenuAction(dashboard.exportLayout)}>
+              <span>Export Layout</span>
+              <Download aria-hidden="true" />
+            </button>
+            <button data-nav-menu-item role="menuitem" type="button" onClick={() => runDashboardMenuAction(dashboard.importLayout)}>
+              <span>Import Layout</span>
+              <Upload aria-hidden="true" />
+            </button>
+            <button data-nav-menu-item role="menuitem" type="button" onClick={() => runDashboardMenuAction(dashboard.resetLayout)}>
+              <span>Reset Layout</span>
+              <RotateCcw aria-hidden="true" />
+            </button>
+          </section>
+        ) : null}
 
         <section aria-label="Help">
           <h2>Help</h2>

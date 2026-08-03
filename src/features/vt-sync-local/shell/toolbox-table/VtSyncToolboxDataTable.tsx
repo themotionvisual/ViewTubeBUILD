@@ -13,7 +13,6 @@ import {
  ChevronRight,
  ChevronUp,
  Clapperboard,
- Clock3,
  Copy,
  DollarSign,
  Download,
@@ -43,6 +42,7 @@ import {
 } from "../../adapters/localDbRepository"
 import {
  formatVtSyncDurationSeconds,
+ formatVtSyncFullMonthValue,
  formatVtSyncLocalMonthValue,
  formatVtSyncTableCellValue,
  parseVtSyncDurationSeconds,
@@ -74,18 +74,23 @@ import {
  formatVtSyncColumnValue,
  distributeVtSyncSparseColumnWidths,
  getVtSyncCategoryClickState,
+ createVtSyncWorkspaceUrlSearch,
  getVtSyncApiValuePresentation,
  getVtSyncAlphabeticSpectrumColors,
  getVtSyncBadgeValues,
  getVtSyncCategoryBadgePresentation,
  getVtSyncColumnSortedValues,
  getVtSyncColumnStateKey,
+ getVtSyncCompositeIdentityPresentation,
+ getVtSyncCompactMenuLabel,
  getVtSyncAbsolutePercentRatio,
  getVtSyncNumericRank,
+ getVtSyncOrderedSpectrumColors,
  getNextVtSyncCompositeSortState,
  getVtSyncCompositeSortLabel,
  getVtSyncPresentationLabel,
  getVtSyncPresentationColumns,
+ getVtSyncWorkspaceForTable,
  getVtSyncTableGeometry,
  getVtSyncTableProvenance,
  getVtSyncTrafficOverviewRowHeight,
@@ -101,6 +106,7 @@ import {
  isVtSyncCompositeSortActive,
  measureVtSyncCompactColumnWidths,
  resolveVtSyncColumnWidth,
+ resolveVtSyncWorkspaceUrlState,
  reorderVtSyncColumnsWithinGroup,
  stableSortVtSyncRows,
  splitVtSyncSpecialCharacters,
@@ -244,7 +250,7 @@ const retentionPolyline = (
 
 const categoryIcon = (category: string) => {
  const props = { size: 25, strokeWidth: 3 }
- if (category === "daily") return <Clock3 {...props} />
+ if (category === "daily") return <Activity {...props} />
  if (category === "channel") return <Waypoints {...props} />
  if (category === "traffic") return <Route {...props} />
  if (category === "audience") return <UsersRound {...props} />
@@ -515,6 +521,20 @@ const MONTH_BADGE_LIBRARY = [
  "Nov",
  "Dec",
 ]
+const FULL_MONTH_BADGE_LIBRARY = [
+ "January",
+ "February",
+ "March",
+ "April",
+ "May",
+ "June",
+ "July",
+ "August",
+ "September",
+ "October",
+ "November",
+ "December",
+]
 
 const DemographicCohortCell = ({
  row,
@@ -625,48 +645,47 @@ const VideoIdentityCell = ({
  )
 }
 
-const ChannelIdentityCell = ({ row }: { row: VtSyncTableRow }) => {
- const channelId = String(row.term || row.channelId || "-")
- const title = String(row.title || "Channel title unavailable")
- const rawHandle = String(row.handle || "")
- const handle =
-  rawHandle && rawHandle !== "-" ?
-   rawHandle.startsWith("@") ?
-    rawHandle
-   : `@${rawHandle.replace(/^@/, "")}`
-  : "—"
- const channelUrl = String(
-  row.channelUrl ||
-   row.url ||
-   (handle !== "—" ? `https://www.youtube.com/${handle}`
-   : channelId !== "-" ? `https://www.youtube.com/channel/${channelId}`
-   : ""),
- )
+const CompositeIdentityCell = ({
+ tableId,
+ row,
+}: {
+ tableId: string
+ row: VtSyncTableRow
+}) => {
+ const identity = getVtSyncCompositeIdentityPresentation(tableId, row)
+ if (!identity) return null
  return (
   <span
-   className="vt-sync-channel-identity"
-   title={`${title}\n${handle}\n${channelId}`}>
-   <strong>{title}</strong>
-   <small>{handle}</small>
-   <em>{channelId}</em>
-   {channelUrl ?
+   className={`vt-sync-composite-identity is-${tableId}`}
+   title={[identity.title, identity.secondaryLabel, identity.rawId]
+    .filter(Boolean)
+    .join("\n")}>
+   {identity.thumbnail ?
+    <img src={identity.thumbnail} alt="" width="72" height="41" />
+   : null}
+   <span className="vt-sync-composite-identity-copy">
+    <strong>{identity.title}</strong>
+    {identity.secondaryLabel ? <small>{identity.secondaryLabel}</small> : null}
+    {identity.rawId ? <em>{identity.rawId}</em> : null}
+   </span>
+   {identity.url ?
     <span className="vt-sync-video-identity-links">
      <button
       type="button"
-      title="Copy channel URL"
-      aria-label="Copy channel URL"
+      title={`Copy ${tableId === "chan_page" ? "channel" : "video"} URL`}
+      aria-label={`Copy ${identity.title} URL`}
       onClick={(event) => {
        event.stopPropagation()
-       void navigator.clipboard?.writeText(channelUrl)
+       void navigator.clipboard?.writeText(identity.url || "")
       }}>
       <Copy />
      </button>
      <a
-      href={channelUrl}
+      href={identity.url}
       target="_blank"
       rel="noreferrer"
-      title="Open channel"
-      aria-label="Open channel"
+      title={`Open ${identity.title}`}
+      aria-label={`Open ${identity.title}`}
       onClick={(event) => event.stopPropagation()}>
       <ExternalLink />
      </a>
@@ -740,8 +759,17 @@ export const VtSyncToolboxDataTable: React.FC<{
  privacyFilters?: VtSyncPrivacyFilters
  onPrivacyFiltersChange?: (filters: VtSyncPrivacyFilters) => void
 }> = ({ snapshot, privacyFilters, onPrivacyFiltersChange }) => {
- const [categoryId, setCategoryId] = useState("content")
- const [tableId, setTableId] = useState("videos")
+ const initialWorkspaceState = useMemo(
+  () => resolveVtSyncWorkspaceUrlState(typeof window === "undefined" ? "" : window.location.search),
+  [],
+ )
+ const initialExpandedIdsRef = useRef(new Set(initialWorkspaceState.expandedIds))
+ const [categoryId, setCategoryId] = useState(
+  VT_SYNC_TOOLBOX_CATEGORIES.find((item) => item.tableIds.includes(initialWorkspaceState.tableId))?.id
+  || VT_SYNC_TOOLBOX_CATEGORIES[0].id,
+ )
+ const [viewId, setViewId] = useState(initialWorkspaceState.viewId)
+ const [tableId, setTableId] = useState(initialWorkspaceState.tableId)
  const table = findVtSyncTable(tableId)
  const category =
   VT_SYNC_TOOLBOX_CATEGORIES.find((item) => item.id === categoryId) ||
@@ -768,16 +796,19 @@ export const VtSyncToolboxDataTable: React.FC<{
  const dropdownId = dropdown?.id
  const [settingsOpen, setSettingsOpen] = useState(false)
  const [tableOpen, setTableOpen] = useState(true)
- const [search, setSearch] = useState("")
- const [columnFilters, setColumnFilters] = useState<Record<string, string>>({})
+ const [search, setSearch] = useState(initialWorkspaceState.filter)
+ const [columnFilters, setColumnFilters] = useState<Record<string, string>>(
+  initialWorkspaceState.columnFilters,
+ )
  const [filterRows, setFilterRows] = useState(false)
  const [pin, setPin] = useState(false)
  const [compact, setCompact] = useState(false)
  const [dark, setDark] = useState(false)
  const [zebra, setZebra] = useState(false)
  const [formatRows, setFormatRows] = useState(false)
- const [formulas, setFormulas] = useState(false)
- const [heatmapEnabled, setHeatmapEnabled] = useState(true)
+const [formulas, setFormulas] = useState(false)
+  const [formatFilter, setFormatFilter] = useState('')
+  const [heatmapEnabled, setHeatmapEnabled] = useState(true)
  const [heatmapInverted, setHeatmapInverted] = useState(false)
  const [cellFillEnabled, setCellFillEnabled] = useState(false)
  const [cellFillInverted, setCellFillInverted] = useState(false)
@@ -790,9 +821,10 @@ export const VtSyncToolboxDataTable: React.FC<{
  >("rank")
  const [hoverScroll, setHoverScroll] = useState(true)
  const [focus, setFocus] = useState(false)
- const [localPrivacyFilters, setLocalPrivacyFilters] =
-  useState<VtSyncPrivacyFilters>(() => readVtSyncPrivacyFilters())
- const [collapsed, setCollapsed] = useState<Record<string, boolean>>({
+const [localPrivacyFilters, setLocalPrivacyFilters] =
+   useState<VtSyncPrivacyFilters>(() => readVtSyncPrivacyFilters())
+
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({
   Details: true,
   Format: true,
  })
@@ -813,17 +845,17 @@ export const VtSyncToolboxDataTable: React.FC<{
  const [scrollState, setScrollState] = useState({ left: 0, width: 100 })
  const [rowLimit, setRowLimit] = useState(VT_SYNC_ROW_BATCH_SIZE)
  const [expandedTrafficDays, setExpandedTrafficDays] = useState<Set<string>>(
-  new Set(),
+  new Set(initialWorkspaceState.expandedIds.filter((id) => id.startsWith("traffic:")).map((id) => id.slice(8))),
  )
  const [expandedRetentionVideos, setExpandedRetentionVideos] = useState<
   Set<string>
- >(new Set())
+ >(new Set(initialWorkspaceState.expandedIds.filter((id) => id.startsWith("retention:")).map((id) => id.slice(10))))
  const [retentionInspectorPoints, setRetentionInspectorPoints] = useState<
   Record<string, number>
  >({})
  const [expandedDeviceOsGroups, setExpandedDeviceOsGroups] = useState<
   Set<string>
- >(new Set())
+ >(new Set(initialWorkspaceState.expandedIds.filter((id) => id.startsWith("device:")).map((id) => id.slice(7))))
  const [viewportWidth, setViewportWidth] = useState(0)
  const mainScrollRef = useRef<HTMLDivElement | null>(null)
  const pinnedScrollRef = useRef<HTMLDivElement | null>(null)
@@ -834,6 +866,7 @@ export const VtSyncToolboxDataTable: React.FC<{
  const categoryButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({})
  const dragRectRef = useRef<HTMLDivElement | null>(null)
  const fileRef = useRef<HTMLInputElement | null>(null)
+ const previousTableIdRef = useRef(table.id)
  const resizeRef = useRef<{
   key: string
   start: number
@@ -994,50 +1027,59 @@ export const VtSyncToolboxDataTable: React.FC<{
  const pinnedGroups = groupedColumns(pinnedColumns)
  const mainGroups = groupedColumns(mainColumns)
 
- const filteredRows = useMemo(() => {
-  const query = search.trim().toLowerCase()
-  return sourceRows.filter((row) => {
-   if (
-    query &&
-    !orderedColumns.some((column) => {
-     const formatted = formatVtSyncColumnValue(row, column).toLowerCase()
-     const apiValue = getVtSyncApiValuePresentation(
-      table.id,
-      column.key,
-      row[column.key],
-     )
-     return (
-      formatted.includes(query) ||
-      Boolean(
-       apiValue &&
-       `${apiValue.title} ${apiValue.apiValue}`.toLowerCase().includes(query),
-      )
-     )
+const filteredRows = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    return sourceRows.filter((row) => {
+      // If there's a search query, check if the row matches it
+      const matchesSearch = !query || orderedColumns.some((column) => {
+        const formatted = formatVtSyncColumnValue(row, column).toLowerCase()
+        const apiValue = getVtSyncApiValuePresentation(
+          table.id,
+          column.key,
+          row[column.key],
+        )
+        return (
+          formatted.includes(query) ||
+          Boolean(
+            apiValue &&
+            `${apiValue.title} ${apiValue.apiValue}`.toLowerCase().includes(query),
+          )
+        )
+      })
+
+      // If there's a format filter, check if the row's format matches
+      const matchesFormat = !formatFilter || String(row.format).toLowerCase() === formatFilter.toLowerCase()
+
+      // If either search or format fails, skip the row
+      if (!matchesSearch || !matchesFormat) {
+        return false
+      }
+
+      // If filterRows is disabled, we only need to match search and format
+      if (!filterRows) return true
+
+      // Otherwise, also check the column filters
+      return orderedColumns.every((column) => {
+        const filter = columnFilters[getVtSyncColumnStateKey(table.id, column.key)]
+          ?.trim()
+          .toLowerCase()
+        if (!filter) return true
+        const formatted = formatVtSyncColumnValue(row, column).toLowerCase()
+        const apiValue = getVtSyncApiValuePresentation(
+          table.id,
+          column.key,
+          row[column.key],
+        )
+        return (
+          formatted.includes(filter) ||
+          Boolean(
+            apiValue &&
+            `${apiValue.title} ${apiValue.apiValue}`.toLowerCase().includes(filter),
+          )
+        )
+      })
     })
-   )
-    return false
-   if (!filterRows) return true
-   return orderedColumns.every((column) => {
-    const filter = columnFilters[getVtSyncColumnStateKey(table.id, column.key)]
-     ?.trim()
-     .toLowerCase()
-    const apiValue = getVtSyncApiValuePresentation(
-     table.id,
-     column.key,
-     row[column.key],
-    )
-    const formatted = formatVtSyncColumnValue(row, column).toLowerCase()
-    return (
-     !filter ||
-     formatted.includes(filter) ||
-     Boolean(
-      apiValue &&
-      `${apiValue.title} ${apiValue.apiValue}`.toLowerCase().includes(filter),
-     )
-    )
-   })
-  })
- }, [columnFilters, filterRows, orderedColumns, search, sourceRows, table.id])
+  }, [columnFilters, filterRows, formatFilter, orderedColumns, search, sourceRows, table.id])
  const sortedRows = useMemo(
   () =>
    stableSortVtSyncRows(
@@ -1728,20 +1770,62 @@ export const VtSyncToolboxDataTable: React.FC<{
  ])
 
  useEffect(() => {
+  const tableChanged = previousTableIdRef.current !== table.id
+  previousTableIdRef.current = table.id
   setSort(table.defaultSort)
-  setSearch("")
   setSelectedKey(null)
-  setExpandedTrafficDays(new Set())
-  setExpandedRetentionVideos(new Set())
+  if (tableChanged) {
+   setExpandedTrafficDays(new Set())
+   setExpandedRetentionVideos(new Set())
+   setExpandedDeviceOsGroups(new Set())
+  }
   setRetentionInspectorPoints({})
-  setExpandedDeviceOsGroups(new Set())
   setRowLimit(VT_SYNC_ROW_BATCH_SIZE)
   compositeSortRef.current = {}
   setCollapsed(
-   Object.fromEntries(table.collapsedGroups.map((group) => [group, true])),
+   Object.fromEntries(
+    table.collapsedGroups.map((group) => [
+     group,
+     !initialExpandedIdsRef.current.has(`group:${group}`),
+    ]),
+   ),
   )
   if (mainScrollRef.current) mainScrollRef.current.scrollLeft = 0
  }, [table])
+
+ useEffect(() => {
+  if (typeof window === "undefined") return
+  const expandedIds = [
+   ...expandedTrafficDays,
+  ].map((id) => `traffic:${id}`)
+   .concat([...expandedRetentionVideos].map((id) => `retention:${id}`))
+   .concat([...expandedDeviceOsGroups].map((id) => `device:${id}`))
+   .concat(
+    Object.entries(collapsed)
+     .filter(([, isCollapsed]) => !isCollapsed)
+     .map(([group]) => `group:${group}`),
+   )
+  const resolvedLocation = getVtSyncWorkspaceForTable(tableId)
+  const nextSearch = createVtSyncWorkspaceUrlSearch(window.location.search, {
+   workspaceId: resolvedLocation.workspace.id,
+   viewId: resolvedLocation.view.id,
+   tableId,
+   filter: search,
+   columnFilters,
+   expandedIds,
+  })
+  const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ""}${window.location.hash}`
+  window.history.replaceState(window.history.state, "", nextUrl)
+ }, [
+  collapsed,
+  columnFilters,
+  expandedDeviceOsGroups,
+  expandedRetentionVideos,
+  expandedTrafficDays,
+  search,
+  tableId,
+  viewId,
+ ])
 
  useEffect(() => {
   if (table.presentationMode !== "traffic-source-day") return
@@ -1879,16 +1963,18 @@ export const VtSyncToolboxDataTable: React.FC<{
    const button = categoryButtonRefs.current[dropdownId]
    if (!button) return
    const bounds = button.getBoundingClientRect()
+   const requestedWidth = dropdownId === "all_data" ? Math.max(bounds.width, 360) : bounds.width
+   const menuWidth = Math.min(requestedWidth, window.innerWidth - 16)
    setDropdown((current) =>
     current?.id === dropdownId ?
      {
       ...current,
       left: Math.max(
        8,
-       Math.min(bounds.left, window.innerWidth - bounds.width - 8),
+       Math.min(bounds.left, window.innerWidth - menuWidth - 8),
       ),
       top: bounds.bottom + 8,
-      width: bounds.width,
+      width: menuWidth,
      }
     : current,
    )
@@ -1973,12 +2059,14 @@ export const VtSyncToolboxDataTable: React.FC<{
  }, [])
 
  const selectCategory = (
-  nextId: string,
+  nextId: (typeof VT_SYNC_TOOLBOX_CATEGORIES)[number]["id"],
   nextTable = VT_SYNC_TOOLBOX_CATEGORIES.find((item) => item.id === nextId)
    ?.tableIds[0],
  ) => {
   if (!nextTable) return
+  const resolved = getVtSyncWorkspaceForTable(nextTable)
   setCategoryId(nextId)
+  setViewId(resolved.view.id)
   setTableId(nextTable)
   setDropdown(null)
  }
@@ -1991,14 +2079,17 @@ export const VtSyncToolboxDataTable: React.FC<{
    { categoryId, tableId, dropdownId: dropdown?.id || null },
    item,
   )
-  setCategoryId(next.categoryId)
+  setCategoryId(next.categoryId as typeof categoryId)
+  const resolved = getVtSyncWorkspaceForTable(next.tableId)
+  setViewId(resolved.view.id)
   setTableId(next.tableId)
   if (!next.dropdownId) {
    setDropdown(null)
    return
   }
   const bounds = button.getBoundingClientRect()
-  const menuWidth = Math.min(bounds.width, window.innerWidth - 16)
+  const requestedWidth = bounds.width
+  const menuWidth = Math.min(requestedWidth, window.innerWidth - 16)
   setDropdown({
    id: next.dropdownId,
    left: Math.max(8, Math.min(bounds.left, window.innerWidth - menuWidth - 8)),
@@ -2430,7 +2521,7 @@ export const VtSyncToolboxDataTable: React.FC<{
      </tr>
     )}
     {table.id !== "demographics" &&
-     !["daily", "weekly", "monthly"].includes(table.id) && (
+     !["daily", "weekly", "monthly", "monthly_api"].includes(table.id) && (
       <tr className="vt-sync-total-row">
        <th className="vt-sync-row-rail-head is-totals">Totals</th>
       </tr>
@@ -2575,7 +2666,7 @@ export const VtSyncToolboxDataTable: React.FC<{
       </tr>
      )}
      {table.id !== "demographics" &&
-      !["daily", "weekly", "monthly"].includes(table.id) && (
+      !["daily", "weekly", "monthly", "monthly_api"].includes(table.id) && (
        <tr className="vt-sync-total-row">
         {renderColumns.map(({ column, group, isCollapsed, color }) => {
          const width = isCollapsed ? 40 : columnWidth(column)
@@ -3062,8 +3153,13 @@ export const VtSyncToolboxDataTable: React.FC<{
              title={text}
              titleLayout={titleLayout}
             />
-           : table.id === "chan_page" && column.key === "term" ?
-            <ChannelIdentityCell row={row} />
+           : (
+            (table.id === "chan_page" || table.id === "suggested")
+            && column.key === "term"
+           ) ?
+            <CompositeIdentityCell tableId={table.id} row={row} />
+           : table.id === "playlists" && column.key === "title" ?
+            <CompositeIdentityCell tableId={table.id} row={row} />
            : table.id === "videos" && column.key === "publishedAt" ?
             <PublishedMomentCell row={row} />
            : table.id === "demographics" && column.key === "ageGroupLabel" ?
@@ -3130,11 +3226,11 @@ export const VtSyncToolboxDataTable: React.FC<{
              apiValuePresentation?.apiValue || String(raw),
             )
            : (
-            table.id === "monthly" &&
+            ["monthly", "monthly_api"].includes(table.id) &&
             column.key === "date" &&
-            !isMissingVtSyncValue(raw)
+           !isMissingVtSyncValue(raw)
            ) ?
-            renderTrafficSourceBadge(text, String(raw))
+            renderMonthBadge(raw)
            : apiValuePresentation ?
             <span className="vt-sync-api-value">
              <strong>{apiValuePresentation.title}</strong>
@@ -3775,6 +3871,24 @@ export const VtSyncToolboxDataTable: React.FC<{
    <span
     className="vt-sync-traffic-source-badge"
     title={`${label} · ${apiValue}`}
+    style={
+     {
+      "--vt-badge-stroke": colors.stroke,
+      "--vt-badge-fill": colors.fill,
+     } as CssVars
+    }>
+    {label}
+   </span>
+  )
+ }
+
+ const renderMonthBadge = (value: unknown) => {
+  const label = formatVtSyncFullMonthValue(value)
+  const colors = getVtSyncOrderedSpectrumColors(label, FULL_MONTH_BADGE_LIBRARY)
+  return (
+   <span
+    className="vt-sync-traffic-source-badge is-month"
+    title={`${label} · ${String(value)}`}
     style={
      {
       "--vt-badge-stroke": colors.stroke,
@@ -4607,7 +4721,7 @@ export const VtSyncToolboxDataTable: React.FC<{
   "--vt-active-shadow": category.colors.shadow,
   "--vt-row-height": `${trafficOverviewRowHeight}px`,
   "--vt-group-header-height": `${tableGeometry.useGroups ? 30 : 0}px`,
-  "--vt-total-height": `${table.id === "demographics" || ["daily", "weekly", "monthly"].includes(table.id) ? 0 : tableGeometry.totalsHeight}px`,
+  "--vt-total-height": `${table.id === "demographics" || ["daily", "weekly", "monthly", "monthly_api"].includes(table.id) ? 0 : tableGeometry.totalsHeight}px`,
   "--vt-column-header-height": `${tableGeometry.columnHeaderHeight}px`,
   "--vt-pinned-offset": `${32 + 58 + (pinCount > 0 ? pinnedTableWidth : 0)}px`,
  }
@@ -4664,7 +4778,7 @@ export const VtSyncToolboxDataTable: React.FC<{
        const activeTable = isActive ? table : findVtSyncTable(item.tableIds[0])
        const buttonLabel =
         useSplitControl ?
-         getVtSyncPresentationLabel(
+         getVtSyncCompactMenuLabel(
           activeTable.id,
           activeTable.subLabel || activeTable.label,
          )
@@ -4719,6 +4833,10 @@ export const VtSyncToolboxDataTable: React.FC<{
            {item.tableIds.map((id) => {
             const candidate = findVtSyncTable(id)
             const isSelected = id === table.id
+            const label = getVtSyncCompactMenuLabel(
+             candidate.id,
+             candidate.subLabel || candidate.label,
+            )
             return (
              <button
               type="button"
@@ -4733,9 +4851,7 @@ export const VtSyncToolboxDataTable: React.FC<{
                : categoryIcon(item.id)}
               </i>
               <span>
-               <strong>
-                {getVtSyncPresentationLabel(candidate.id, candidate.label)}
-               </strong>
+               <strong>{label}</strong>
               </span>
              </button>
             )
@@ -4757,6 +4873,8 @@ export const VtSyncToolboxDataTable: React.FC<{
         <strong>
          {table.id === "videos" ?
           "Selected Video"
+         : table.id === "channel_totals" ?
+          "Channel Intelligence"
          : getVtSyncPresentationLabel(table.id, table.label)}
         </strong>
        </header>
@@ -4772,7 +4890,11 @@ export const VtSyncToolboxDataTable: React.FC<{
          <h3>
           {String(selected?.title || snapshot.channelName || table.label)}
          </h3>
-         <p>{String(selected?.descriptionSnippet || table.description)}</p>
+         <p>
+          {table.id === "channel_totals" ?
+           "Channel identity · YouTube Data API · Performance totals · YouTube Analytics API"
+          : String(selected?.descriptionSnippet || table.description)}
+         </p>
         </div>
        </div>
       </article>
@@ -4819,87 +4941,111 @@ export const VtSyncToolboxDataTable: React.FC<{
         onClick={() => setSearch("")}>
         <X />
        </button>
-      </div>
-      {table.presentationMode === "traffic-source-day" && (
-       <>
-        <button
-         type="button"
-         className="vt-sync-toolbar-action is-traffic-day-control"
-         style={
-          {
-           "--vt-action-rail": "#FFDA47",
-           "--vt-action-label": "#FFFFFF",
-           "--vt-action-shadow": "rgba(255,218,71,.52)",
-          } as CssVars
-         }
-         onClick={() =>
-          setExpandedTrafficDays(
-           new Set(visibleTrafficDayGroups.map((group) => group.id)),
-          )
-         }>
-         <span>
-          <ChevronDown />
-         </span>
-         <strong>Expand visible days</strong>
-        </button>
-        <button
-         type="button"
-         className="vt-sync-toolbar-action is-traffic-day-control"
-         style={
-          {
-           "--vt-action-rail": "#F55EFC",
-           "--vt-action-label": "#FFFFFF",
-           "--vt-action-shadow": "rgba(245,94,252,.52)",
-          } as CssVars
-         }
-         onClick={() => setExpandedTrafficDays(new Set())}>
-         <span>
-          <ChevronRight />
-         </span>
-         <strong>Collapse all</strong>
-        </button>
-       </>
-      )}
-      {table.presentationMode === "retention-video" && (
-       <>
-        <button
-         type="button"
-         className="vt-sync-toolbar-action is-traffic-day-control"
-         style={
-          {
-           "--vt-action-rail": "#FFDA47",
-           "--vt-action-label": "#FFFFFF",
-           "--vt-action-shadow": "rgba(255,218,71,.52)",
-          } as CssVars
-         }
-         onClick={() =>
-          setExpandedRetentionVideos(
-           new Set(visibleRetentionVideoGroups.map((group) => group.id)),
-          )
-         }>
-         <span>
-          <ChevronDown />
-         </span>
-         <strong>Expand visible videos</strong>
-        </button>
-        <button
-         type="button"
-         className="vt-sync-toolbar-action is-traffic-day-control"
-         style={
-          {
-           "--vt-action-rail": "#F55EFC",
-           "--vt-action-label": "#FFFFFF",
-           "--vt-action-shadow": "rgba(245,94,252,.52)",
-          } as CssVars
-         }
-         onClick={() => setExpandedRetentionVideos(new Set())}>
-         <span>
-          <ChevronRight />
-         </span>
-         <strong>Collapse all</strong>
-        </button>
-       </>
-      )}
+</div>
+        {tableId === "videos" && (
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <button
+              type="button"
+              className={`vt-sync-toolbar-action ${formatFilter === 'long' ? 'active' : ''} is-format-filter-long`}
+              style={{
+                "--vt-action-rail": "#FFDA47",
+                "--vt-action-label": "#FFFFFF",
+                "--vt-action-shadow": "rgba(255,218,71,.52)",
+                marginLeft: 0,
+              } as CssVars}
+            >
+              <span>
+                <div
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 6,
+                    borderWidth: 3,
+                    borderStyle: 'solid',
+                    borderColor: '#000',
+                    backgroundColor: '#E6F7FF',
+                    margin: 0,
+                    boxShadow: formatFilter === 'long' ? '0 0 0 3px #fff, 0 0 0 5px #000' : 'none'
+                  }}
+                  title="Longform Only"
+                />
+              </span>
+              <span>
+                <strong>Longform Only</strong>
+              </span>
+            </button>
+            <button
+              type="button"
+              className={`vt-sync-toolbar-action ${formatFilter === 'short' ? 'active' : ''} is-format-filter-short`}
+              style={{
+                "--vt-action-rail": "#FFDA47",
+                "--vt-action-label": "#FFFFFF",
+                "--vt-action-shadow": "rgba(255,218,71,.52)",
+                marginLeft: 8,
+              } as CssVars}
+            >
+              <span>
+                <div
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 6,
+                    borderWidth: 3,
+                    borderStyle: 'solid',
+                    borderColor: '#000',
+                    backgroundColor: '#FFE6F0',
+                    margin: 0,
+                    boxShadow: formatFilter === 'short' ? '0 0 0 3px #fff, 0 0 0 5px #000' : 'none'
+                  }}
+                  title="Shorts Only"
+                />
+              </span>
+              <span>
+                <strong>Shorts Only</strong>
+              </span>
+            </button>
+          </div>
+        )}
+{table.presentationMode === "retention-video" && (
+        <>
+         <button
+          type="button"
+          className="vt-sync-toolbar-action is-traffic-day-control"
+          style={
+           {
+            "--vt-action-rail": "#FFDA47",
+            "--vt-action-label": "#FFFFFF",
+            "--vt-action-shadow": "rgba(255,218,71,.52)",
+           } as CssVars
+          }
+          onClick={() =>
+           setExpandedRetentionVideos(
+            new Set(visibleRetentionVideoGroups.map((group) => group.id)),
+           )
+          }>
+          <span>
+           <ChevronDown />
+          </span>
+          <strong>Expand visible videos</strong>
+         </button>
+         <button
+          type="button"
+          className="vt-sync-toolbar-action is-traffic-day-control"
+          style={
+           {
+            "--vt-action-rail": "#F55EFC",
+            "--vt-action-label": "#FFFFFF",
+            "--vt-action-shadow": "rgba(245,94,252,.52)",
+           } as CssVars
+          }
+          onClick={() => setExpandedRetentionVideos(new Set())}>
+          <span>
+           <ChevronRight />
+          </span>
+          <strong>Collapse all</strong>
+         </button>
+        </>
+       )}
       <button
        type="button"
        className="vt-sync-toolbar-action"

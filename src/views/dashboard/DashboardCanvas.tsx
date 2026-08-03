@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   closestCenter,
   DndContext,
@@ -7,7 +7,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core"
-import type { DragEndEvent } from "@dnd-kit/core"
+import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core"
 import {
   SortableContext,
   sortableKeyboardCoordinates,
@@ -16,8 +16,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { Download, Edit3, Lock, LockOpen, RotateCcw, Upload, Layers, Settings, ChevronDown } from "lucide-react"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 import { DashboardBarrier } from "./DashboardBarrier"
 import { useDashboard } from "../../context/DashboardContext"
 import { DASHBOARD_WIDGET_REGISTRY, DASHBOARD_WIDGET_BY_ID } from "./WidgetRegistry"
@@ -39,21 +38,13 @@ import type { DashboardLayoutState } from "./types"
 import type { DashboardData } from "./useDashboardData"
 import { WidgetRenderer } from "./WidgetRenderer"
 import { WidgetErrorBoundary } from "./WidgetErrorBoundary"
-import type { WidgetDefinition } from "./types"
-import { getDashboardWidgetPaletteColors } from "../../styles/toolboxPalette"
+import { resolveVisibleWidgetSpectrum } from "./spectrum"
+import { WidgetDragHandleProvider } from "./WidgetShell"
+import { WidgetStatePanel } from "./WidgetPrimitives"
 
 interface DashboardCanvasProps {
   data: DashboardData
   onNavigate: (to: string) => void
-}
-
-const withCanonicalWidgetTheme = (widget: WidgetDefinition, position: number): WidgetDefinition => {
-  const theme = getDashboardWidgetPaletteColors(position)
-  return {
-    ...widget,
-    headerColor: theme.headerColor,
-    iconRailColor: theme.iconRailColor,
-  }
 }
 
 const SortableWidgetItem: React.FC<{
@@ -62,10 +53,12 @@ const SortableWidgetItem: React.FC<{
   className: string
   children: React.ReactNode
 }> = ({ id, disabled, className, children }) => {
+  const reduceMotion = useReducedMotion()
   const {
     attributes,
     listeners,
     setNodeRef,
+    setActivatorNodeRef,
     transform,
     isDragging,
   } = useSortable({ id, disabled })
@@ -80,17 +73,23 @@ const SortableWidgetItem: React.FC<{
     <motion.div 
       ref={setNodeRef} 
       layout
-      transition={{
+      transition={reduceMotion ? { duration: 0 } : {
         layout: { type: "spring", stiffness: 300, damping: 30 },
         opacity: { duration: 0.2 }
       }}
       style={style} 
-      className={`${className} ${isDragging ? 'opacity-60' : 'opacity-100'}`} 
-      data-widget-id={id} 
-      {...attributes} 
-      {...listeners}
+      className={`dashboard-widget-slot ${className} ${isDragging ? 'opacity-60' : 'opacity-100'}`}
+      data-widget-id={id}
+      inert={isDragging}
     >
-      {children}
+      <WidgetDragHandleProvider
+        attributes={attributes as unknown as React.ButtonHTMLAttributes<HTMLButtonElement>}
+        listeners={listeners as unknown as React.DOMAttributes<HTMLButtonElement>}
+        setActivatorNodeRef={setActivatorNodeRef as (node: HTMLButtonElement | null) => void}
+        disabled={disabled}
+      >
+        {children}
+      </WidgetDragHandleProvider>
     </motion.div>
   )
 }
@@ -98,35 +97,18 @@ const SortableWidgetItem: React.FC<{
 export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNavigate }) => {
   const { 
     editMode, setEditMode, 
-    isLocked, setIsLocked, 
+    setIsLocked,
     pickerOpen, setPickerOpen, 
     registerActions 
   } = useDashboard()
   const [layout, setLayout] = useState<DashboardLayoutState>(() => loadDashboardLayout())
-  const [isControlsOpen, setIsControlsOpen] = useState(false)
+  const [dragPreviewOrder, setDragPreviewOrder] = useState<string[] | null>(null)
+  const [recentlyRemovedId, setRecentlyRemovedId] = useState<string | null>(null)
   const [showWelcomeBanner, setShowWelcomeBanner] = useState<boolean>(() => {
     const params = new URLSearchParams(window.location.search)
     return params.get("onboarding") === "welcome"
   })
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-
-  useEffect(() => {
-    registerActions({
-      exportLayout: handleExport,
-      importLayout: handleImportClick,
-      resetLayout: () => setLayout(resetDashboardLayout())
-    });
-  }, [layout]);
-
-  useEffect(() => {
-    setIsLocked(layout.locked);
-  }, [layout.locked]);
-
-  useEffect(() => {
-    if (isLocked !== layout.locked) {
-      setLayout(prev => ({ ...prev, locked: isLocked }));
-    }
-  }, [isLocked]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -140,27 +122,49 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
     [layout.order, hiddenSet],
   )
 
+  const displayedWidgetIds = dragPreviewOrder || visibleWidgetIds
+  const spectrumByWidgetId = useMemo(
+    () => resolveVisibleWidgetSpectrum(displayedWidgetIds, hiddenSet),
+    [displayedWidgetIds, hiddenSet],
+  )
+
   useEffect(() => {
     saveDashboardLayout(layout)
   }, [layout])
 
   const canDrag = editMode && !layout.locked
 
+  const handleDragStart = (event: DragStartEvent) => {
+    if (!canDrag) return
+    const activeId = String(event.active.id)
+    if (visibleWidgetIds.includes(activeId)) setDragPreviewOrder(visibleWidgetIds)
+  }
+
+  const handleDragOver = (event: DragOverEvent) => {
+    if (!canDrag || !event.over) return
+    setDragPreviewOrder((current) => {
+      const order = current || visibleWidgetIds
+      const oldIndex = order.indexOf(String(event.active.id))
+      const newIndex = order.indexOf(String(event.over?.id))
+      if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return order
+      return arrayMove(order, oldIndex, newIndex)
+    })
+  }
+
+  const handleDragCancel = () => {
+    setDragPreviewOrder(null)
+  }
+
   const handleDragEnd = (event: DragEndEvent) => {
     if (!canDrag) return
     const { active, over } = event
-    if (!over || active.id === over.id) return
-
-    const oldIndex = visibleWidgetIds.indexOf(String(active.id))
-    const newIndex = visibleWidgetIds.indexOf(String(over.id))
-    if (oldIndex < 0 || newIndex < 0) return
-
-    const movedVisible = arrayMove(visibleWidgetIds, oldIndex, newIndex)
-    const hidden = layout.order.filter((id) => hiddenSet.has(id))
+    const proposedOrder = dragPreviewOrder
+    setDragPreviewOrder(null)
+    if (!over || active.id === over.id || !proposedOrder) return
 
     setLayout((prev) => ({
       ...prev,
-      order: [...movedVisible, ...hidden],
+      order: [...proposedOrder, ...prev.order.filter((id) => prev.hidden.includes(id))],
     }))
   }
 
@@ -169,6 +173,11 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
       const hidden = new Set(prev.hidden)
       if (hidden.has(widgetId)) {
         hidden.delete(widgetId)
+        return {
+          ...prev,
+          order: [...prev.order.filter((id) => id !== widgetId), widgetId],
+          hidden: [...hidden],
+        }
       } else {
         hidden.add(widgetId)
       }
@@ -182,7 +191,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
       instances: {
         ...prev.instances,
         [widgetId]: {
-          ...(prev.instances[widgetId] || { collapsed: false, size: "quarter", pinned: false, focus: false }),
+          ...(prev.instances[widgetId] || { collapsed: false, size: "quarter", height: "medium" }),
           collapsed: !prev.instances[widgetId]?.collapsed,
         },
       },
@@ -263,10 +272,14 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
 
   const onRemoveWidget = (widgetId: string) => {
     if (!canDrag) return
-    toggleWidgetVisibility(widgetId)
+    setLayout((prev) => ({
+      ...prev,
+      hidden: prev.hidden.includes(widgetId) ? prev.hidden : [...prev.hidden, widgetId],
+    }))
+    setRecentlyRemovedId(widgetId)
   }
 
-  const handleExport = () => {
+  const handleExport = useCallback(() => {
     const json = exportDashboardLayout(layout)
     const blob = new Blob([json], { type: "application/json" })
     const url = URL.createObjectURL(blob)
@@ -277,11 +290,11 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
     a.click()
     a.remove()
     URL.revokeObjectURL(url)
-  }
+  }, [layout])
 
-  const handleImportClick = () => {
+  const handleImportClick = useCallback(() => {
     fileInputRef.current?.click()
-  }
+  }, [])
 
   const handleImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -293,6 +306,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
       try {
         const imported = importDashboardLayout(raw)
         setLayout(imported)
+        setIsLocked(imported.locked)
       } catch {
         window.alert("Invalid dashboard layout JSON. Keeping current layout.")
       }
@@ -301,6 +315,27 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
 
     event.target.value = ""
   }
+
+  const handleToggleLock = useCallback(() => {
+    const nextLocked = !layout.locked
+    setLayout((current) => ({ ...current, locked: nextLocked }))
+    setIsLocked(nextLocked)
+  }, [layout.locked, setIsLocked])
+
+  const handleReset = useCallback(() => {
+    const reset = resetDashboardLayout()
+    setLayout(reset)
+    setIsLocked(reset.locked)
+  }, [setIsLocked])
+
+  useEffect(() => {
+    registerActions({
+      exportLayout: handleExport,
+      importLayout: handleImportClick,
+      resetLayout: handleReset,
+      toggleLock: handleToggleLock,
+    })
+  }, [handleExport, handleImportClick, handleReset, handleToggleLock, registerActions])
 
   return (
     <DashboardBarrier>
@@ -325,46 +360,75 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
           </button>
         </div>
       )}
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragCancel={handleDragCancel}
+        onDragEnd={handleDragEnd}
+        accessibility={{
+          screenReaderInstructions: {
+            draggable: "Press space to pick up a widget. Use arrow keys to move it, then press space to drop or Escape to cancel.",
+          },
+          announcements: {
+            onDragStart: ({ active }) => `${DASHBOARD_WIDGET_BY_ID[String(active.id)]?.title || "Widget"} picked up.`,
+            onDragOver: ({ active, over }) => over
+              ? `${DASHBOARD_WIDGET_BY_ID[String(active.id)]?.title || "Widget"} will be position ${displayedWidgetIds.indexOf(String(over.id)) + 1} of ${displayedWidgetIds.length}.`
+              : undefined,
+            onDragEnd: ({ active, over }) => over
+              ? `${DASHBOARD_WIDGET_BY_ID[String(active.id)]?.title || "Widget"} moved to position ${displayedWidgetIds.indexOf(String(over.id)) + 1} of ${displayedWidgetIds.length}.`
+              : "Widget was not moved.",
+            onDragCancel: () => "Widget move cancelled.",
+          },
+        }}
+      >
         <SortableContext items={visibleWidgetIds} strategy={rectSortingStrategy}>
            <div className="grid grid-cols-[repeat(24,minmax(0,1fr))] gap-4 md:gap-5">
-             {visibleWidgetIds.map((widgetId, visibleIndex) => {
+             {visibleWidgetIds.map((widgetId) => {
                const widget = DASHBOARD_WIDGET_BY_ID[widgetId]
                const instance = layout.instances[widgetId]
                if (!widget || !instance) return null
-               const themedWidget = withCanonicalWidgetTheme(widget, visibleIndex)
+               const spectrum = spectrumByWidgetId[widgetId]
+               const themedWidget = spectrum ? {
+                 ...widget,
+                 headerColor: spectrum.headerColor,
+                 iconRailColor: spectrum.iconRailColor,
+               } : widget
 
                return (
                  <SortableWidgetItem
                    key={widgetId}
                    id={widgetId}
                    disabled={!canDrag}
-                   className={`${sizeBucketClassName(instance.size)} ${heightBucketClassName(instance.height)} transition-all duration-300`}>
+                   className={`${sizeBucketClassName(instance.size)} ${instance.collapsed ? "h-[48px]" : heightBucketClassName(instance.height)}`}>
                     <WidgetErrorBoundary widgetId={widgetId}>
-                      <WidgetRenderer
-                        widget={themedWidget}
-                        instance={instance}
-                        editMode={editMode}
-                        canEdit={canDrag}
-                        data={data}
-                        onNavigate={onNavigate}
-                        onToggleCollapse={onToggleCollapse}
-                        onCycleSize={onCycleSize}
-                        onDecSize={onDecSize}
-                        onCycleHeight={onCycleHeight}
-                        onDecHeight={onDecHeight}
-                        onRemoveWidget={onRemoveWidget}
-                        dashboardControls={{
-                          editMode,
-                          setEditMode,
-                          locked: layout.locked,
-                          toggleLock: () => setLayout(prev => ({ ...prev, locked: !prev.locked })),
-                          openPicker: () => setPickerOpen(true),
-                          resetLayout: () => setLayout(resetDashboardLayout()),
-                          handleExport,
-                          handleImportClick
-                        }}
-                      />
+                      <Suspense fallback={<WidgetStatePanel state={{ status: "loading", data: null, message: `Loading ${widget.title}…` }} />}>
+                        <WidgetRenderer
+                          widget={themedWidget}
+                          instance={instance}
+                          editMode={editMode}
+                          canEdit={canDrag}
+                          data={data}
+                          onNavigate={onNavigate}
+                          onToggleCollapse={onToggleCollapse}
+                          onCycleSize={onCycleSize}
+                          onDecSize={onDecSize}
+                          onCycleHeight={onCycleHeight}
+                          onDecHeight={onDecHeight}
+                          onRemoveWidget={onRemoveWidget}
+                          dashboardControls={{
+                            editMode,
+                            setEditMode,
+                            locked: layout.locked,
+                            toggleLock: handleToggleLock,
+                            openPicker: () => setPickerOpen(true),
+                            resetLayout: handleReset,
+                            handleExport,
+                            handleImportClick
+                          }}
+                        />
+                      </Suspense>
                     </WidgetErrorBoundary>
                  </SortableWidgetItem>
                )
@@ -380,6 +444,24 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
         onClose={() => setPickerOpen(false)}
         onToggleWidget={toggleWidgetVisibility}
       />
+      {recentlyRemovedId && (
+        <div className="widget-removal-toast" role="status" aria-live="polite">
+          <span>{DASHBOARD_WIDGET_BY_ID[recentlyRemovedId]?.title || "Widget"} removed.</span>
+          <button
+            type="button"
+            onClick={() => {
+              setLayout((prev) => ({
+                ...prev,
+                hidden: prev.hidden.filter((id) => id !== recentlyRemovedId),
+              }))
+              setRecentlyRemovedId(null)
+            }}
+          >
+            Undo
+          </button>
+          <button type="button" aria-label="Dismiss removal message" onClick={() => setRecentlyRemovedId(null)}>×</button>
+        </div>
+      )}
     </div>
     </DashboardBarrier>
   )

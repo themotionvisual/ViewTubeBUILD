@@ -9,6 +9,10 @@ export type DashboardWidgetCategory =
   | "community"
   | "creation"
 
+export type DashboardWidgetReleaseTier = "supported" | "preview" | "hidden"
+export type DashboardWidgetResponsiveMode = "container" | "legacy"
+export type DashboardWidgetDataStatus = "loading" | "ready" | "empty" | "blocked" | "stale" | "error"
+
 export type WidgetDependency =
   | "youtube_data_v3"
   | "youtube_analytics_v2"
@@ -18,7 +22,7 @@ export type WidgetDependency =
   | "gemini_api"
   | "none"
 
-export interface WidgetDefinition {
+export interface WidgetDefinitionBase {
   id: string
   title: string
   subtitle: string
@@ -35,12 +39,33 @@ export interface WidgetDefinition {
   status: "ready" | "prototype" | "needs-backend"
 }
 
+export interface WidgetDefinition extends WidgetDefinitionBase {
+  rendererKey: string
+  releaseTier: DashboardWidgetReleaseTier
+  defaultVisible: boolean
+  defaultOrder: number
+  supportedSizes: readonly DashboardSizeBucket[]
+  supportedHeights: readonly DashboardHeightBucket[]
+  supportedDimensions: readonly Readonly<{
+    size: DashboardSizeBucket
+    height: DashboardHeightBucket
+  }>[]
+  responsiveMode: DashboardWidgetResponsiveMode
+}
+
 export interface WidgetInstanceState {
   collapsed: boolean
   size: DashboardSizeBucket
   height: DashboardHeightBucket
-  pinned: boolean
-  focus: boolean
+}
+
+export interface WidgetDataState<T> {
+  status: DashboardWidgetDataStatus
+  data: T | null
+  provenance?: string
+  updatedAt?: string | null
+  message?: string
+  recoveryAction?: string
 }
 
 export interface DashboardLayoutState {

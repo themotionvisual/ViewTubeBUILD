@@ -28,15 +28,25 @@ import {
 } from "../../../components/GraphsPageCharts"
 import type { VtSyncSnapshot } from "../adapters/contracts"
 import { buildVtSyncVisualPropsData } from "../adapters/visualData"
+import {
+ VtSyncVisualFrame,
+ type VtSyncVisualModuleSpec,
+ type VtSyncVisualProps,
+} from "./VtSyncVisualFrame"
 
-type VtSyncVisualModuleDefinition = {
+type VtSyncVisualModuleDefinition = VtSyncVisualModuleSpec & {
+ group: "core" | "tube-explorer"
+ delayMs: number
+}
+
+type LegacyVisualModuleDefinition = {
  id: string
  group: "core" | "tube-explorer"
  delayMs: number
  render: (props: TubeExplorerVisualProps) => React.ReactNode
 }
 
-const CORE_VISUAL_MODULES: VtSyncVisualModuleDefinition[] = [
+const CORE_VISUAL_MODULES: LegacyVisualModuleDefinition[] = [
  { id: "combo-channel-progress", group: "core", delayMs: 0, render: ({ data }) => <ComboChannelProgress data={data} /> },
  { id: "engagement-lines", group: "core", delayMs: 25, render: ({ data }) => <EngagementLinesModule data={data} /> },
  { id: "top-performers-trio", group: "core", delayMs: 30, render: ({ data }) => <TopPerformersTrio data={data} /> },
@@ -72,7 +82,7 @@ const CORE_VISUAL_MODULES: VtSyncVisualModuleDefinition[] = [
  { id: "orbital", group: "core", delayMs: 840, render: ({ data }) => <OrbitalModule data={data} /> },
 ]
 
-const TUBE_EXPLORER_MODULES: VtSyncVisualModuleDefinition[] =
+const TUBE_EXPLORER_MODULES: LegacyVisualModuleDefinition[] =
  TUBE_EXPLORER_VISUAL_MODULES.map((entry, index) => ({
   id: entry.id,
   group: "tube-explorer",
@@ -80,10 +90,62 @@ const TUBE_EXPLORER_MODULES: VtSyncVisualModuleDefinition[] =
   render: entry.render,
  }))
 
+const sourceTablesForVisual = (id: string): readonly string[] => {
+ if (id.includes("traffic") || id.includes("clock-radial")) return ["traffic", "traffic_day"]
+ if (id.includes("format") || id.includes("shorts-vs-longs")) return ["creator", "videos"]
+ if (id.includes("keyword") || id.includes("word-network")) return ["videos", "search"]
+ if (id.includes("publish") || id.includes("upload-time")) return ["videos", "daily"]
+ if (id.includes("revenue")) return ["videos", "ads"]
+ if (id.includes("subscriber")) return ["videos", "subs"]
+ return ["videos"]
+}
+
+const controlsForVisual = (id: string): VtSyncVisualModuleSpec["controls"] => {
+ if (id.includes("word-network"))
+  return [
+   { id: "metric", label: "Metric", kind: "select" },
+   { id: "word-limit", label: "Words", kind: "count" },
+  ]
+ if (id.includes("format"))
+  return [
+   { id: "window", label: "Window", kind: "select" },
+   { id: "aggregation", label: "Average / Total", kind: "toggle" },
+  ]
+ if (id.includes("engagement"))
+  return [
+   { id: "count", label: "Videos", kind: "count" },
+   { id: "format", label: "Format", kind: "select" },
+   { id: "ranking", label: "Ranked By", kind: "select" },
+  ]
+ return []
+}
+
+const visualRenderer = (
+ render: LegacyVisualModuleDefinition["render"],
+): React.FC<VtSyncVisualProps> => {
+ const RegisteredVtSyncVisual: React.FC<VtSyncVisualProps> = (props) => <>{render(props)}</>
+ return RegisteredVtSyncVisual
+}
+
 const VISUAL_MODULES: VtSyncVisualModuleDefinition[] = [
  ...CORE_VISUAL_MODULES,
  ...TUBE_EXPLORER_MODULES,
-]
+].map((module) => ({
+ id: module.id,
+ group: module.group,
+ delayMs: module.delayMs,
+ sourceTableIds: sourceTablesForVisual(module.id),
+ controls: controlsForVisual(module.id),
+ footer: {
+  insight: "Calculated from the active VT-SYNC table registry.",
+  legend: [],
+  axisLabel: module.id.includes("publish") ? "Local publish time" : undefined,
+ },
+ renderer: visualRenderer(module.render),
+}))
+
+export const VT_SYNC_VISUAL_MODULE_REGISTRY: readonly VtSyncVisualModuleSpec[] =
+ VISUAL_MODULES
 
 const PRIMARY_MODULE_IDS = new Set([
  "combo-channel-progress",
@@ -236,16 +298,32 @@ const VtSyncDataVisualsContent: React.FC<{
         <RevealOnView
          delayMs={block.module.delayMs}
          estimatedHeight={block.module.group === "core" ? 360 : 80}>
-         {block.module.render({ ...moduleProps, collapsible: true, isOpenInitial: block.index < 3 })}
+         <VtSyncVisualFrame
+          spec={block.module}
+          visualProps={{
+           ...moduleProps,
+           collapsible: true,
+           isOpenInitial: block.index < 3,
+          }}
+         />
         </RevealOnView>
        ) : (
-        <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-3">
+        <div className="grid grid-cols-1 items-stretch gap-6 xl:grid-cols-3">
          {block.modules.map(({ module, index }) => (
           <RevealOnView
            key={module.id}
            delayMs={module.delayMs}
            estimatedHeight={module.group === "core" ? 360 : 80}>
-           {module.render({ ...moduleProps, collapsible: true, isOpenInitial: index < 3 })}
+           <div className="h-full [&>div]:h-full">
+            <VtSyncVisualFrame
+             spec={module}
+             visualProps={{
+              ...moduleProps,
+              collapsible: true,
+              isOpenInitial: index < 3,
+             }}
+            />
+           </div>
           </RevealOnView>
          ))}
         </div>

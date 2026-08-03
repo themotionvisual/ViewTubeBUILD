@@ -110,11 +110,46 @@ export const VT_SYNC_OPPOSITE_COLORS: Record<string, string> = {
 }
 
 const VT_SYNC_PRESENTATION_LABELS: Record<string, string> = {
+ videos: "Video Catalog Analytics",
+ playlists: "Playlists",
+ creator: "Formats",
+ daily: "Daily Metrics",
+ geography: "Countries",
+}
+
+const VT_SYNC_COMPACT_MENU_LABELS: Record<string, string> = {
  videos: "Videos",
  playlists: "Playlists",
  creator: "Formats",
+ locations: "Playback Locations",
+ retentions: "Retentions",
+ shares: "Sharing Services",
  daily: "Daily",
+ weekly: "Weekly",
+ monthly: "Monthly",
+ monthly_api: "Month (API)",
+ channel_totals: "Channel Totals",
+ traffic: "Overview",
+ search: "Search Terms",
+ ext_web: "External Websites",
+ suggested: "Suggested Videos",
+ chan_page: "Channel Pages",
+ hashtags: "Hashtags",
+ sound: "Sound Pages",
+ adv: "Advertising",
+ other_feat: "Other Features",
+ traffic_subscribers: "Subscriber Detail",
+ traffic_day: "Traffic × Day",
+ demographics: "Age × Gender",
+ subs: "Subscriptions",
+ devices: "Devices",
+ os: "Operating Systems",
+ device_os: "Device × OS",
  geography: "Countries",
+ cities: "Cities",
+ provinces: "US States",
+ dma: "Metro Areas",
+ ads: "Ad Types",
 }
 
 const VT_SYNC_SOURCE_API_LABELS = {
@@ -345,9 +380,15 @@ export const getVtSyncCompositeIdentityPresentation = (
  if (tableId === "suggested") {
   const candidateId = String(row.videoId || row.term || "").trim()
   const rawId = candidateId && candidateId !== "Unknown" && candidateId !== "-" ? candidateId : ""
-  return {
+ return {
    title: String(row.title || "Video metadata unavailable"),
-   secondaryLabel: "Suggested video",
+   secondaryLabel: String(
+    row.sourceChannelTitle
+    || row.channelTitle
+    || row.sourceChannelHandle
+    || row.channelHandle
+    || "Suggested video",
+   ),
    rawId: rawId || undefined,
    thumbnail: String(row.thumbnail || "").trim() || undefined,
    url: String(row.videoUrl || (rawId ? `https://www.youtube.com/watch?v=${rawId}` : "")).trim() || undefined,
@@ -362,6 +403,7 @@ export const getVtSyncCompositeIdentityPresentation = (
    title: String(row.title || "Channel title unavailable"),
    secondaryLabel: handle,
    rawId: rawId || undefined,
+   thumbnail: String(row.thumbnail || row.avatarUrl || "").trim() || undefined,
    url: String(row.channelUrl || row.url || (handle ? `https://www.youtube.com/${handle}` : rawId ? `https://www.youtube.com/channel/${rawId}` : "")).trim() || undefined,
   }
  }
@@ -379,6 +421,9 @@ export const getVtSyncCompositeIdentityPresentation = (
 
 export const getVtSyncPresentationLabel = (tableId: string, fallback: string): string =>
  VT_SYNC_PRESENTATION_LABELS[tableId] || fallback
+
+export const getVtSyncCompactMenuLabel = (tableId: string, fallback: string): string =>
+ VT_SYNC_COMPACT_MENU_LABELS[tableId] || fallback
 
 export const getVtSyncRowHeight = (compact: boolean, sparklines: boolean): number =>
  compact ? (sparklines ? 31 : 19) : 48
@@ -472,6 +517,30 @@ export const getVtSyncAlphabeticSpectrumColors = (
  const lower = Math.floor(scaled)
  const upper = Math.min(VT_SYNC_ALPHABETIC_SPECTRUM_PALETTE.length - 1, Math.ceil(scaled))
  const stroke = mixVtSyncHex(VT_SYNC_ALPHABETIC_SPECTRUM_PALETTE[lower], VT_SYNC_ALPHABETIC_SPECTRUM_PALETTE[upper], scaled - lower)
+ return { stroke, fill: rgbaFromVtSyncHex(stroke, .35) }
+}
+
+export const getVtSyncOrderedSpectrumColors = (
+ value: unknown,
+ orderedLibrary: readonly string[],
+): { stroke: string; fill: string } => {
+ const key = String(value ?? "").trim().toUpperCase()
+ const library = [...new Set(
+  orderedLibrary
+   .map((entry) => String(entry).trim().toUpperCase())
+   .filter(Boolean),
+ )]
+ const index = library.indexOf(key)
+ if (index < 0 || library.length < 2) return getVtSyncAlphabeticSpectrumColors(value)
+ const position = index / (library.length - 1)
+ const scaled = position * (VT_SYNC_ALPHABETIC_SPECTRUM_PALETTE.length - 1)
+ const lower = Math.floor(scaled)
+ const upper = Math.min(VT_SYNC_ALPHABETIC_SPECTRUM_PALETTE.length - 1, Math.ceil(scaled))
+ const stroke = mixVtSyncHex(
+  VT_SYNC_ALPHABETIC_SPECTRUM_PALETTE[lower],
+  VT_SYNC_ALPHABETIC_SPECTRUM_PALETTE[upper],
+  scaled - lower,
+ )
  return { stroke, fill: rgbaFromVtSyncHex(stroke, .35) }
 }
 
@@ -721,9 +790,100 @@ export type VtSyncToolboxCategory = {
  colors: { icon: string; label: string; shadow: string }
 }
 
+export type VtSyncWorkspaceId =
+ | "overview"
+ | "content"
+ | "discovery"
+ | "audience"
+ | "revenue"
+
+export type VtSyncWorkspaceViewDefinition = {
+ id: string
+ label: string
+ tableIds: readonly string[]
+ defaultTableId: string
+ kind: "table" | "summary-detail" | "drilldown"
+}
+
+export type VtSyncWorkspaceDefinition = {
+ id: VtSyncWorkspaceId
+ label: string
+ defaultViewId: string
+ views: readonly VtSyncWorkspaceViewDefinition[]
+}
+
+export const VT_SYNC_WORKSPACE_DEFINITIONS: readonly VtSyncWorkspaceDefinition[] = [
+ {
+  id: "overview",
+  label: "Overview",
+  defaultViewId: "channel-intelligence",
+  views: [
+   { id: "channel-intelligence", label: "Channel Intelligence", tableIds: ["channel_totals"], defaultTableId: "channel_totals", kind: "summary-detail" },
+   { id: "daily-metrics", label: "Daily Metrics", tableIds: ["daily", "weekly", "monthly", "monthly_api"], defaultTableId: "daily", kind: "table" },
+  ],
+ },
+ {
+  id: "content",
+  label: "Content",
+  defaultViewId: "video-catalog",
+  views: [
+   { id: "video-catalog", label: "Video Catalog Analytics", tableIds: ["videos"], defaultTableId: "videos", kind: "summary-detail" },
+   { id: "formats", label: "Formats", tableIds: ["creator"], defaultTableId: "creator", kind: "table" },
+   { id: "playlists", label: "Playlists", tableIds: ["playlists"], defaultTableId: "playlists", kind: "table" },
+   { id: "retention", label: "Retention", tableIds: ["retentions"], defaultTableId: "retentions", kind: "drilldown" },
+   { id: "sharing", label: "Sharing", tableIds: ["shares"], defaultTableId: "shares", kind: "table" },
+  ],
+ },
+ {
+  id: "discovery",
+  label: "Discovery",
+  defaultViewId: "traffic-overview",
+  views: [
+   { id: "traffic-overview", label: "Traffic Overview", tableIds: ["traffic"], defaultTableId: "traffic", kind: "summary-detail" },
+   { id: "traffic-time", label: "Traffic × Day", tableIds: ["traffic_day"], defaultTableId: "traffic_day", kind: "drilldown" },
+   { id: "playback", label: "Playback Locations", tableIds: ["locations"], defaultTableId: "locations", kind: "table" },
+   { id: "search", label: "Search", tableIds: ["search"], defaultTableId: "search", kind: "table" },
+   { id: "external", label: "External", tableIds: ["ext_web"], defaultTableId: "ext_web", kind: "table" },
+   { id: "suggested", label: "Suggested Videos", tableIds: ["suggested"], defaultTableId: "suggested", kind: "summary-detail" },
+   { id: "channel-pages", label: "Channel Pages", tableIds: ["chan_page"], defaultTableId: "chan_page", kind: "summary-detail" },
+   { id: "specialist", label: "Specialist Reports", tableIds: ["hashtags", "sound", "adv", "other_feat", "traffic_subscribers"], defaultTableId: "hashtags", kind: "drilldown" },
+  ],
+ },
+ {
+  id: "audience",
+  label: "Audience",
+  defaultViewId: "demographics",
+  views: [
+   { id: "demographics", label: "Demographics", tableIds: ["demographics"], defaultTableId: "demographics", kind: "summary-detail" },
+   { id: "subscriptions", label: "Subscription Status", tableIds: ["subs"], defaultTableId: "subs", kind: "table" },
+   { id: "devices", label: "Devices & OS", tableIds: ["devices", "os", "device_os"], defaultTableId: "device_os", kind: "drilldown" },
+   { id: "geography", label: "Geography", tableIds: ["geography", "cities", "provinces", "dma"], defaultTableId: "geography", kind: "drilldown" },
+  ],
+ },
+ {
+  id: "revenue",
+  label: "Revenue",
+  defaultViewId: "ad-types",
+  views: [
+   { id: "ad-types", label: "Ad Types", tableIds: ["ads"], defaultTableId: "ads", kind: "table" },
+  ],
+ },
+] as const
+
+export const getVtSyncWorkspaceForTable = (
+ tableId: string,
+): { workspace: VtSyncWorkspaceDefinition; view: VtSyncWorkspaceViewDefinition } => {
+ for (const workspace of VT_SYNC_WORKSPACE_DEFINITIONS) {
+  const view = workspace.views.find((candidate) => candidate.tableIds.includes(tableId))
+  if (view) return { workspace, view }
+ }
+ const workspace = VT_SYNC_WORKSPACE_DEFINITIONS[0]
+ return { workspace, view: workspace.views[0] }
+}
+
 export const VT_SYNC_TOOLBOX_CATEGORIES: VtSyncToolboxCategory[] = [
  { id: "content", label: "Videos", tableIds: ["videos", "playlists", "creator", "locations", "retentions", "shares"], colors: { icon: "#F55EFC", label: "#36E0F6", shadow: "rgba(54,224,246,.52)" } },
- { id: "daily", label: "Daily", tableIds: ["daily", "weekly", "monthly"], colors: { icon: "#36E0F6", label: "#3FEE56", shadow: "rgba(63,238,86,.52)" } },
+ { id: "daily", label: "Daily", tableIds: ["daily", "weekly", "monthly", "monthly_api"], colors: { icon: "#36E0F6", label: "#3FEE56", shadow: "rgba(63,238,86,.52)" } },
  { id: "channel", label: "Channel", tableIds: ["channel_totals"], colors: { icon: "#FFA85C", label: "#528FFA", shadow: "rgba(82,143,250,.52)" } },
  { id: "traffic", label: "Traffic", tableIds: ["traffic", "search", "ext_web", "suggested", "chan_page", "hashtags", "sound", "adv", "other_feat", "traffic_subscribers", "traffic_day"], colors: { icon: "#FFDA47", label: "#3FEE56", shadow: "rgba(63,238,86,.52)" } },
  { id: "audience", label: "Audience", tableIds: ["demographics", "subs", "devices", "os", "device_os"], colors: { icon: "#A467F4", label: "#FFDA47", shadow: "rgba(255,218,71,.52)" } },
@@ -731,7 +891,80 @@ export const VT_SYNC_TOOLBOX_CATEGORIES: VtSyncToolboxCategory[] = [
  { id: "revenue", label: "Revenue", tableIds: ["ads"], colors: { icon: "#528FFA", label: "#F55EFC", shadow: "rgba(245,94,252,.52)" } },
 ]
 
-export const VT_SYNC_COMPACT_PIN_TABLE_IDS = new Set(["videos", "playlists", "daily", "weekly", "monthly", "channel_totals", "geography"])
+export type VtSyncWorkspaceUrlState = {
+ workspaceId: VtSyncWorkspaceId | "all_data"
+ viewId: string
+ tableId: string
+ filter: string
+ columnFilters: Record<string, string>
+ expandedIds: string[]
+}
+
+export const resolveVtSyncWorkspaceUrlState = (
+ search: string,
+): VtSyncWorkspaceUrlState => {
+ const params = new URLSearchParams(search)
+ const requestedTableId =
+  params.get("vtTable") || params.get("table") || params.get("tableId") || "channel_totals"
+ const validTableId = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.some((table) => table.id === requestedTableId)
+  ? requestedTableId
+  : "channel_totals"
+ const resolved = getVtSyncWorkspaceForTable(validTableId)
+ const requestedWorkspace = params.get("vtWorkspace")
+ const requestedView = params.get("vtView")
+ const isAllData = requestedWorkspace === "all_data"
+ const requestedWorkspaceDefinition = VT_SYNC_WORKSPACE_DEFINITIONS.find(
+  (candidate) => candidate.id === requestedWorkspace,
+ )
+ const workspace =
+  requestedWorkspaceDefinition?.views.some((candidate) =>
+   candidate.tableIds.includes(validTableId),
+  ) ? requestedWorkspaceDefinition
+  : resolved.workspace
+ const view =
+  workspace.views.find((candidate) => candidate.id === requestedView && candidate.tableIds.includes(validTableId))
+  || workspace.views.find((candidate) => candidate.tableIds.includes(validTableId))
+  || resolved.view
+ let columnFilters: Record<string, string> = {}
+ try {
+  const parsed = JSON.parse(params.get("vtColumnFilters") || "{}")
+  if (parsed && typeof parsed === "object" && !Array.isArray(parsed))
+   columnFilters = Object.fromEntries(
+    Object.entries(parsed).filter((entry): entry is [string, string] => typeof entry[1] === "string" && Boolean(entry[1])),
+   )
+ } catch {
+  columnFilters = {}
+ }
+ return {
+  workspaceId: isAllData ? "all_data" : workspace.id,
+  viewId: isAllData ? "all_data" : view.id,
+  tableId: view.tableIds.includes(validTableId) ? validTableId : view.defaultTableId,
+  filter: params.get("vtFilter") || "",
+  columnFilters,
+  expandedIds: (params.get("vtExpanded") || "").split(",").filter(Boolean),
+ }
+}
+
+export const createVtSyncWorkspaceUrlSearch = (
+ currentSearch: string,
+ state: VtSyncWorkspaceUrlState,
+): string => {
+ const params = new URLSearchParams(currentSearch)
+ params.set("vtWorkspace", state.workspaceId)
+ params.set("vtView", state.viewId)
+ params.set("vtTable", state.tableId)
+ state.filter ? params.set("vtFilter", state.filter) : params.delete("vtFilter")
+ const filters = Object.fromEntries(Object.entries(state.columnFilters).filter(([, value]) => Boolean(value)))
+ Object.keys(filters).length
+  ? params.set("vtColumnFilters", JSON.stringify(filters))
+  : params.delete("vtColumnFilters")
+ state.expandedIds.length
+  ? params.set("vtExpanded", state.expandedIds.join(","))
+  : params.delete("vtExpanded")
+ return params.toString()
+}
+
+export const VT_SYNC_COMPACT_PIN_TABLE_IDS = new Set(["videos", "playlists", "daily", "weekly", "monthly", "monthly_api", "channel_totals", "geography"])
 
 export const findVtSyncTable = (id: string): VtSyncTableDefinition =>
  VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((table) => table.id === id) || VT_SYNC_VISIBLE_TABLE_DEFINITIONS[0]
@@ -1517,6 +1750,43 @@ export const totalVtSyncColumn = (
     .filter((value): value is number => value !== undefined && value > 0)
    return { primary: durations.length ? formatVtSyncDurationSeconds(durations.reduce((sum, value) => sum + value, 0) / durations.length) : "", secondary: "Avg duration", kind: "context" }
   }
+ }
+ const numeric = (key: string) => rows
+  .map((row) => toVtSyncNumber(row[key]))
+  .filter(isMeaningfulVtSyncNumericValue)
+ const sumFor = (key: string): number | undefined => {
+  const values = numeric(key)
+  return values.length ? values.reduce((total, value) => total + value, 0) : undefined
+ }
+ const ratioTotal = (numeratorKey: string, denominatorKey: string, multiplier = 100): number | undefined => {
+  const numerator = sumFor(numeratorKey)
+  const denominator = sumFor(denominatorKey)
+  return numerator !== undefined && denominator !== undefined && denominator > 0
+   ? numerator / denominator * multiplier
+   : undefined
+ }
+ const calculatedTotal = (() => {
+  if (column.key === "cardClickRate") return ratioTotal("cardClicks", "cardImpressions")
+  if (column.key === "cardTeaserClickRate") return ratioTotal("cardTeaserClicks", "cardTeaserImpressions")
+  if (column.key === "cpm") return ratioTotal("grossRevenue", "adImpressions", 1000)
+  if (column.key === "playbackBasedCpm") return ratioTotal("grossRevenue", "monetizedPlaybacks", 1000)
+  if (column.key === "avgViewDuration") return ratioTotal("watchTime", "views", 3600)
+  if (column.key === "averagePercentageViewed") {
+   let weightedValue = 0
+   let totalWeight = 0
+   rows.forEach((row) => {
+    const value = toVtSyncNumber(row.averagePercentageViewed)
+    const weight = toVtSyncNumber(row.views)
+    if (!isMeaningfulVtSyncNumericValue(value) || !isMeaningfulVtSyncNumericValue(weight)) return
+    weightedValue += value * weight
+    totalWeight += weight
+   })
+   return totalWeight > 0 ? weightedValue / totalWeight : undefined
+  }
+  return undefined
+ })()
+ if (calculatedTotal !== undefined) {
+  return { primary: formatVtSyncTableCellValue(calculatedTotal, column.format), secondary: "Calculated", kind: "numeric" }
  }
  if (column.totalMode === "none") return { primary: "-", kind: "muted" }
  if (column.visualization === "none" || column.semanticRole === "identity") return { primary: "-", kind: "muted" }

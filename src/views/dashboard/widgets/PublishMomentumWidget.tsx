@@ -28,7 +28,6 @@ export const PublishMomentumWidget = ({ widget, instance, editMode, onToggleColl
   onCycleHeight,
   onRemove,
   onDecSize,
-  onCycleHeight,
   onDecHeight,
  }
 

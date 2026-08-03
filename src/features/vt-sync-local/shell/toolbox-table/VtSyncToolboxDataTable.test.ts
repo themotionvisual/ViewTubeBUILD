@@ -4,10 +4,11 @@ import { describe, expect, it } from "vitest"
 import { VT_SYNC_ACTIVE_TABLE_IDS, VT_SYNC_TABLE_DEFINITIONS, VT_SYNC_VISIBLE_TABLE_CATEGORIES, VT_SYNC_VISIBLE_TABLE_DEFINITIONS } from "../../upstream/tableRegistry"
 import { normalizeVtSyncSnapshot, toVtSyncRawAppExport } from "../../adapters/snapshot"
 import { buildVtSyncDemographicOverviewRows, getVtSyncContentTypeLabel, normalizeVtSyncTableRows } from "../../adapters/tableData"
-import { formatVtSyncLocalMonthValue } from "../../adapters/tableFormatting"
+import { formatVtSyncFullMonthValue, formatVtSyncLocalMonthValue } from "../../adapters/tableFormatting"
 import { isManualImportNewerThanApi } from "./VtSyncToolboxDataTable"
 import {
  VT_SYNC_TOOLBOX_CATEGORIES,
+ VT_SYNC_WORKSPACE_DEFINITIONS,
  VT_SYNC_SMALL_TABLE_COLORS,
  VT_SYNC_ROW_BATCH_SIZE,
  VT_SYNC_VIDEO_NON_COMPACT_WIDTHS,
@@ -26,18 +27,22 @@ import {
  getVtSyncBadgeValues,
  getVtSyncCategoryBadgePresentation,
  getVtSyncCategoryClickState,
+ getVtSyncCompactMenuLabel,
  getVtSyncColumnSortedValues,
  getVtSyncColumnStateKey,
  getVtSyncCompactThumbnailWidth,
  getVtSyncOppositeColor,
  getVtSyncPresentationLabel,
  getVtSyncNumericRank,
+ getVtSyncOrderedSpectrumColors,
  getVtSyncRankColor,
  getVtSyncRowHeight,
  getVtSyncSparkFillStyle,
  getVtSyncSparkGradient,
  getVtSyncTableGeometry,
  getVtSyncTrafficOverviewRowHeight,
+ createVtSyncWorkspaceUrlSearch,
+ resolveVtSyncWorkspaceUrlState,
  getVtSyncTableProvenance,
  getVtSyncVerticalScrollMetrics,
  getVtSyncVideoTitleLayout,
@@ -535,10 +540,15 @@ describe("VT Sync toolbox data table", () => {
   expect(visibleIds).not.toContain("traffic_yt_playlist_page")
  })
 
- it("covers every active registry table exactly once in the parity categories", () => {
-  const mapped = VT_SYNC_TOOLBOX_CATEGORIES.flatMap((category) => category.tableIds)
+ it("covers every active registry table exactly once in creator workspaces", () => {
+  const mapped = VT_SYNC_WORKSPACE_DEFINITIONS.flatMap((workspace) =>
+   workspace.views.flatMap((view) => view.tableIds),
+  )
   expect(mapped.sort()).toEqual([...VT_SYNC_ACTIVE_TABLE_IDS].sort())
- expect(new Set(mapped).size).toBe(mapped.length)
+  expect(new Set(mapped).size).toBe(mapped.length)
+  const visibleCategoryIds = VT_SYNC_TOOLBOX_CATEGORIES.flatMap((category) => category.tableIds)
+  expect(visibleCategoryIds.sort()).toEqual([...VT_SYNC_ACTIVE_TABLE_IDS].sort())
+  expect(new Set(visibleCategoryIds).size).toBe(visibleCategoryIds.length)
  })
 
  it("maps every video column to the approved non-compact geometry", () => {
@@ -822,6 +832,12 @@ describe("VT Sync toolbox data table", () => {
   expect(getVtSyncVideoTitleLayout("A long measured title", false, 288, 287)).toEqual({ fontSize: 10, lineCount: 2 })
   expect(getVtSyncVideoTitleLayout("Any title", true)).toEqual({ fontSize: 10, lineCount: 1 })
   expect(formatVtSyncLocalMonthValue("2026-07-15T12:00:00Z")).toBe("Jul")
+  expect(formatVtSyncFullMonthValue("2026-01")).toBe("January")
+  expect(formatVtSyncFullMonthValue("2026-07-01")).toBe("July")
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+  expect(getVtSyncOrderedSpectrumColors("January", months).stroke).toBe("#FA618A")
+  expect(getVtSyncOrderedSpectrumColors("December", months).stroke).toBe("#FF7AC8")
+  expect(new Set(months.map((month) => getVtSyncOrderedSpectrumColors(month, months).stroke)).size).toBe(12)
   expect(rendererCss).toContain(".vt-sync-data-table tbody tr { height: var(--vt-row-height)")
   expect(rendererCss).toContain(".vt-sync-cell-text { position: absolute; inset: 0;")
   expect(rendererCss).toContain(".vt-sync-zero-seconds { display: inline-block; flex: 0 0 auto; font-size: 10px;")
@@ -949,14 +965,14 @@ describe("VT Sync toolbox data table", () => {
  it("loads main datasets and opens split menus only for multi-table categories", () => {
   const initial = { categoryId: "content", tableId: "playlists", dropdownId: null }
   const inactive = { categoryId: "not-selected", tableId: "none", dropdownId: null }
-  const daily = VT_SYNC_TOOLBOX_CATEGORIES.find((category) => category.id === "daily")!
-  const selectedDaily = getVtSyncCategoryClickState(initial, daily)
-  const toggledDaily = getVtSyncCategoryClickState(selectedDaily, daily)
-  const channel = VT_SYNC_TOOLBOX_CATEGORIES.find((category) => category.id === "channel")!
+  const traffic = VT_SYNC_TOOLBOX_CATEGORIES.find((category) => category.id === "traffic")!
+  const selectedTraffic = getVtSyncCategoryClickState(initial, traffic)
+  const toggledTraffic = getVtSyncCategoryClickState(selectedTraffic, traffic)
+  const revenue = VT_SYNC_TOOLBOX_CATEGORIES.find((category) => category.id === "revenue")!
 
-  expect(selectedDaily).toEqual({ categoryId: "daily", tableId: "daily", dropdownId: "daily" })
-  expect(toggledDaily).toEqual({ categoryId: "daily", tableId: "daily", dropdownId: null })
-  expect(getVtSyncCategoryClickState(initial, channel)).toEqual({ categoryId: "channel", tableId: "channel_totals", dropdownId: null })
+  expect(selectedTraffic).toEqual({ categoryId: "traffic", tableId: "traffic", dropdownId: "traffic" })
+  expect(toggledTraffic).toEqual({ categoryId: "traffic", tableId: "traffic", dropdownId: null })
+  expect(getVtSyncCategoryClickState(initial, revenue)).toEqual({ categoryId: "revenue", tableId: "ads", dropdownId: null })
   expect(Object.fromEntries(VT_SYNC_TOOLBOX_CATEGORIES.map((category) => [category.id, getVtSyncCategoryClickState(inactive, category).tableId]))).toEqual({
    content: "videos",
    daily: "daily",
@@ -968,13 +984,55 @@ describe("VT Sync toolbox data table", () => {
   })
  })
 
+ it("uses compact owner-consent labels in category menus", () => {
+  expect(getVtSyncCompactMenuLabel("videos", "Video Catalog Analytics")).toBe("Videos")
+  expect(getVtSyncCompactMenuLabel("daily", "Daily Metrics")).toBe("Daily")
+  expect(getVtSyncCompactMenuLabel("traffic_day", "Traffic Source × Day")).toBe("Traffic × Day")
+ })
+
  it("keeps presentation aliases separate from registry and export labels", () => {
   const videos = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "videos")!
-  expect(getVtSyncPresentationLabel(videos.id, videos.label)).toBe("Videos")
+  expect(getVtSyncPresentationLabel(videos.id, videos.label)).toBe("Video Catalog Analytics")
   expect(getVtSyncPresentationLabel("creator", "Content Type")).toBe("Formats")
   expect(getVtSyncPresentationLabel("geography", "Overview")).toBe("Countries")
-  expect(videos.label).toBe("Video Metadata & Metrics")
+  expect(videos.label).toBe("Video Catalog Analytics")
   expect(exportVtSyncTableCsv(videos, []).split("\n")[0]).toBe(videos.columns.map((column) => column.label).join(","))
+ })
+
+ it("round-trips workspace, table, filters, and expanded state through URL parameters", () => {
+  const search = createVtSyncWorkspaceUrlSearch("?unrelated=keep", {
+   workspaceId: "discovery",
+   viewId: "traffic-time",
+   tableId: "traffic_day",
+   filter: "search",
+   columnFilters: { source: "YT_SEARCH" },
+   expandedIds: ["2026-07-29", "2026-07-28"],
+  })
+  const resolved = resolveVtSyncWorkspaceUrlState(`?${search}`)
+
+  expect(search).toContain("unrelated=keep")
+  expect(resolved).toEqual({
+   workspaceId: "discovery",
+   viewId: "traffic-time",
+   tableId: "traffic_day",
+   filter: "search",
+   columnFilters: { source: "YT_SEARCH" },
+   expandedIds: ["2026-07-29", "2026-07-28"],
+  })
+  expect(resolveVtSyncWorkspaceUrlState(
+   "?vtWorkspace=all_data&vtView=all_data&vtTable=traffic_day",
+  )).toMatchObject({
+   workspaceId: "all_data",
+   viewId: "all_data",
+   tableId: "traffic_day",
+  })
+  expect(resolveVtSyncWorkspaceUrlState(
+   "?vtWorkspace=content&vtView=video-catalog&vtTable=search",
+  )).toMatchObject({
+   workspaceId: "discovery",
+   viewId: "search",
+   tableId: "search",
+  })
  })
 
  it("derives formulas without manufacturing values from missing inputs", () => {

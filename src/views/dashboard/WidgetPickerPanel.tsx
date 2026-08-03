@@ -1,6 +1,8 @@
-import React from "react"
-import { Grid3X3, X } from "lucide-react"
-import type { DashboardLayoutState, WidgetDefinition } from "./types"
+import React, { useId, useMemo, useRef, useState } from "react"
+import * as Dialog from "@radix-ui/react-dialog"
+import { Check, Grid3X3, Search, X } from "lucide-react"
+import type { DashboardLayoutState, DashboardWidgetCategory, WidgetDefinition } from "./types"
+import { resolveDashboardSpectrum, resolveVisibleWidgetSpectrum } from "./spectrum"
 
 interface WidgetPickerPanelProps {
   open: boolean
@@ -10,6 +12,16 @@ interface WidgetPickerPanelProps {
   onToggleWidget: (widgetId: string) => void
 }
 
+const CATEGORIES: Array<"all" | DashboardWidgetCategory> = [
+  "all",
+  "core",
+  "analytics",
+  "ai",
+  "creation",
+  "community",
+  "system",
+]
+
 export const WidgetPickerPanel: React.FC<WidgetPickerPanelProps> = ({
   open,
   widgets,
@@ -17,46 +29,130 @@ export const WidgetPickerPanel: React.FC<WidgetPickerPanelProps> = ({
   onClose,
   onToggleWidget,
 }) => {
-  const hiddenSet = new Set(layout.hidden)
+  const searchId = useId()
+  const categoryId = useId()
+  const searchRef = useRef<HTMLInputElement | null>(null)
+  const [query, setQuery] = useState("")
+  const [category, setCategory] = useState<"all" | DashboardWidgetCategory>("all")
+  const hiddenSet = useMemo(() => new Set(layout.hidden), [layout.hidden])
+  const visibleIds = useMemo(
+    () => layout.order.filter((id) => !hiddenSet.has(id)),
+    [hiddenSet, layout.order],
+  )
+  const spectrumById = useMemo(
+    () => resolveVisibleWidgetSpectrum(layout.order, hiddenSet),
+    [hiddenSet, layout.order],
+  )
+  const appendedSpectrum = resolveDashboardSpectrum(visibleIds.length)
+
+  const filteredWidgets = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase()
+    return [...widgets]
+      .filter((widget) => widget.releaseTier !== "hidden")
+      .filter((widget) => category === "all" || widget.category === category)
+      .filter((widget) => !normalizedQuery
+        || `${widget.title} ${widget.subtitle} ${widget.category}`.toLowerCase().includes(normalizedQuery))
+      .sort((left, right) => left.defaultOrder - right.defaultOrder)
+  }, [category, query, widgets])
 
   return (
-    <aside
-      className={`fixed top-0 right-0 h-screen w-[320px] max-w-[92vw] z-50 border-l-[5px] border-black bg-white shadow-[-8px_0_24px_rgba(0,0,0,0.2)] transition-transform duration-500 ${
-        open ? "translate-x-0" : "translate-x-full"
-      }`}>
-      <header className="h-[60px] border-b-[4px] border-black bg-[#C9F830] px-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Grid3X3 size={18} className="text-black" />
-          <h3 className="text-lg font-black uppercase tracking-tight">Widgets</h3>
-        </div>
-        <button
-          onClick={onClose}
-          className="h-8 w-8 border-[2px] border-black rounded-lg bg-white inline-flex items-center justify-center">
-          <X size={14} />
-        </button>
-      </header>
+    <Dialog.Root open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+      <Dialog.Overlay className="widget-picker-overlay" />
+      <Dialog.Content
+        className="widget-picker-drawer"
+        onOpenAutoFocus={(event) => {
+          if (window.matchMedia("(min-width: 768px)").matches) {
+            event.preventDefault()
+            searchRef.current?.focus()
+          }
+        }}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault()
+          document.querySelector<HTMLElement>("[aria-controls='vt-adaptive-account-menu']")?.focus()
+        }}
+      >
+          <header className="widget-picker-header">
+            <div className="widget-picker-heading">
+              <Grid3X3 size={22} strokeWidth={2} aria-hidden="true" />
+              <div>
+                <Dialog.Title>Dashboard widgets</Dialog.Title>
+                <Dialog.Description>
+                  {visibleIds.length} active · colors follow dashboard position
+                </Dialog.Description>
+              </div>
+            </div>
+            <Dialog.Close className="widget-picker-close" aria-label="Close widget picker">
+              <X size={20} strokeWidth={2} />
+            </Dialog.Close>
+          </header>
 
-      <div className="p-4 overflow-y-auto h-[calc(100%-60px)]">
-        <div className="grid grid-cols-4 gap-3">
-          {widgets.map((widget) => {
-            const active = !hiddenSet.has(widget.id)
-            return (
-              <button
-                key={widget.id}
-                onClick={() => onToggleWidget(widget.id)}
-                className={`aspect-square rounded-xl border-[3px] flex flex-col items-center justify-center gap-1 transition-transform hover:scale-105 ${
-                  active ? "border-black" : "border-[#bdbdbd] opacity-55"
-                }`}
-                style={{
-                  backgroundColor: active ? widget.headerColor : "#E3E3E3",
-                  color: "#000",
-                }}>
-                <span className="text-[8px] font-black uppercase leading-tight px-1 text-center">{widget.title}</span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-    </aside>
+          <div className="widget-picker-filters">
+            <label htmlFor={searchId}>Search widgets</label>
+            <div className="widget-picker-search">
+              <Search size={18} strokeWidth={2} aria-hidden="true" />
+              <input
+                id={searchId}
+                ref={searchRef}
+                type="search"
+                name="dashboard-widget-search"
+                autoComplete="off"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search by name or function…"
+              />
+            </div>
+
+            <label htmlFor={categoryId}>Category</label>
+            <select
+              id={categoryId}
+              name="dashboard-widget-category"
+              value={category}
+              onChange={(event) => setCategory(event.target.value as typeof category)}
+            >
+              {CATEGORIES.map((option) => (
+                <option key={option} value={option}>{option === "all" ? "All categories" : option}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="widget-picker-results" aria-live="polite">
+            <p className="widget-picker-count">{filteredWidgets.length} widgets</p>
+            <div className="widget-picker-grid">
+              {filteredWidgets.map((widget) => {
+                const active = !hiddenSet.has(widget.id)
+                const spectrum = spectrumById[widget.id] || appendedSpectrum
+                return (
+                  <button
+                    type="button"
+                    key={widget.id}
+                    onClick={() => onToggleWidget(widget.id)}
+                    className={`widget-picker-card ${active ? "is-active" : "is-hidden"}`}
+                    style={{ "--picker-spectrum": spectrum.headerColor } as React.CSSProperties}
+                    aria-pressed={active}
+                    aria-label={`${active ? "Hide" : "Add"} ${widget.title}`}
+                  >
+                    <span className="widget-picker-card-topline">
+                      <span className="widget-picker-swatch" aria-hidden="true" />
+                      <span className={`widget-picker-tier is-${widget.releaseTier}`}>{widget.releaseTier}</span>
+                      {active && <Check size={16} strokeWidth={3} aria-hidden="true" />}
+                    </span>
+                    <strong>{widget.title}</strong>
+                    <span className="widget-picker-card-description">{widget.subtitle}</span>
+                    <span className="widget-picker-dependency">
+                      {widget.dependency.includes("none") ? "Local" : widget.dependency.join(" · ").replaceAll("_", " ")}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+            {filteredWidgets.length === 0 && (
+              <div className="widget-picker-empty">
+                <strong>No matching widgets</strong>
+                <span>Try another search term or category.</span>
+              </div>
+            )}
+          </div>
+      </Dialog.Content>
+    </Dialog.Root>
   )
 }

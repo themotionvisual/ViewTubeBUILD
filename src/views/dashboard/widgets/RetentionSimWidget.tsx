@@ -19,8 +19,6 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
   onDecHeight,
   onRemove,
   onDecSize,
-  onCycleHeight,
-  onDecHeight,
  }
  const videos = data.videoAssets || []
  const [syntheticVideos, setSyntheticVideos] = useState<any[]>([])
@@ -55,7 +53,7 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
    // Natural decay with some random variation
    const base = 100 * Math.exp(-1.2 * t)
    const noise = (Math.sin(i * 3.7) * 8)
-   points.push({pct: t, value: Math.max(5, Math.min(100, base + noise)), time: Math.round(t * duration), onDecSize, onCycleHeight, onDecHeight})
+   points.push({pct: t, value: Math.max(5, Math.min(100, base + noise)), time: Math.round(t * duration)})
   }
   return points
  }, [selectedData])

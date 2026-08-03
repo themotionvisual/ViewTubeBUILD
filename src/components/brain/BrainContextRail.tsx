@@ -40,27 +40,38 @@ export const BrainContextRail: React.FC<{
  growthContext: CreatorGrowthContext
  insights: CreatorInitialInsight[]
  questions: CreatorBrainLearningQuestion[]
+ responseQuestions?: CreatorBrainLearningQuestion[]
  quickActions: BrainQuickAction[]
  onAskInsight: (insight: CreatorInitialInsight) => void
  onAcceptQuickAction: (action: BrainQuickAction) => void
  onAnswerQuestion: (question: CreatorBrainLearningQuestion, answer: string) => void
+ compactGrid?: boolean
 }> = ({
  snapshot,
  growthContext,
  insights,
  questions,
+ responseQuestions = [],
  quickActions,
  onAskInsight,
  onAcceptQuickAction,
  onAnswerQuestion,
+ compactGrid = false,
 }) => {
  const goal = sanitizeCreatorFacingBrainCopy(growthContext.currentGoal)
  const clusters = snapshot.inferredProfile.topicClusters.slice(0, 5)
- const topQuestion = questions[0]
+ const availableQuestions = [...responseQuestions, ...questions].filter(
+  (question, index, all) => all.findIndex((candidate) => candidate.id === question.id) === index,
+ )
+ const goalQuestion = availableQuestions.find((question) => question.category === "creator_goal")
+ const topQuestion = availableQuestions.find((question) => question.category !== "creator_goal")
  const laneOptions = snapshot.inferredProfile.topicClusters.slice(0, 4)
 
  return (
-  <aside className="grid content-start gap-2.5" aria-label="What the Brain currently knows">
+  <aside
+   className={`grid content-start gap-2 ${compactGrid ? "grid-cols-2" : "grid-cols-1"}`}
+   aria-label="What the Brain currently knows"
+  >
    <Panel title="Your channel" tone="#3FEE56">
     {clusters.length ? (
      <ul className="flex flex-wrap gap-1">
@@ -119,12 +130,24 @@ export const BrainContextRail: React.FC<{
    ) : null}
 
    {topQuestion ? (
-    <BrainQuestionPrompt
-     question={topQuestion}
-     dynamicOptions={topQuestion.category === "channel_fact" ? laneOptions : []}
-     onAnswer={onAnswerQuestion}
-     compact
-    />
+    <div>
+     <BrainQuestionPrompt
+      question={topQuestion}
+      dynamicOptions={topQuestion.category === "channel_fact" ? laneOptions : []}
+      onAnswer={onAnswerQuestion}
+      compact
+     />
+    </div>
+   ) : null}
+
+   {goalQuestion ? (
+    <div>
+     <BrainQuestionPrompt
+      question={goalQuestion}
+      onAnswer={onAnswerQuestion}
+      compact
+     />
+    </div>
    ) : null}
   </aside>
  )

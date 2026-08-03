@@ -13,6 +13,7 @@ const STABLE_CATEGORY_IDS = new Set([
  "videos_analytics",
  "channel_totals",
  "daily_metrics",
+ "monthly_metrics",
  "traffic_overview",
  "search_terms",
  "ext_websites",
@@ -76,6 +77,7 @@ const runtimePhaseIdForCategory = (category: Omit<VtSyncCategoryDefinition, "run
  if (category.id === "videos_analytics") return "videos_analytics"
  if (category.id === "channel_totals") return "channel_totals"
  if (category.id === "daily_metrics") return "daily_metrics"
+ if (category.id === "monthly_metrics") return "monthly_metrics"
  if (category.id === "device_os") return "device_os"
  if (category.id === "traffic_day") return "traffic_day"
  if (category.id === "playlists_analytics") return "playlists_analytics"
@@ -91,6 +93,7 @@ const ALL_VT_SYNC_CATEGORY_OPTION_DEFINITIONS = [
  { id: "videos_analytics", label: "Video Analytics", description: "Per-video views, watch time, subscribers, revenue, cards, end screens, and engagement metrics.", isCore: true, group: "videos", phase: "video_metrics", sourceApi: "youtube_analytics_v2", quotaClass: "high", defaultEnabled: true, dependsOn: ["video_metadata"], canonicalTargets: ["video_statistics", "extended_video_metrics"] },
  { id: "channel_totals", label: "Channel Totals", description: "Lifetime, 365, 90, 28, 7 day and comparison rollups for KPI widgets.", isCore: true, group: "channel", phase: "channel_window", sourceApi: "youtube_analytics_v2", quotaClass: "medium", defaultEnabled: true, canonicalTargets: ["window_statistics"] },
  { id: "daily_metrics", label: "Daily Traffic Overview", description: "Day-by-day views, watch hours, revenue, subscribers, and engagement logs.", isCore: true, group: "channel", phase: "channel_daily", sourceApi: "youtube_analytics_v2", quotaClass: "high", defaultEnabled: true, canonicalTargets: ["daily", "daily_statistics"] },
+ { id: "monthly_metrics", label: "Monthly Metrics", description: "API-native calendar-month views, watch hours, revenue, subscribers, and engagement metrics.", isCore: false, group: "channel", phase: "channel_monthly", sourceApi: "youtube_analytics_v2", quotaClass: "medium", defaultEnabled: false, dependsOn: ["channel_metadata"], canonicalTargets: ["monthly_api"] },
  { id: "traffic_overview", label: "Traffic Sources Overview", description: "High-level traffic source distribution for charts and source modules.", isCore: true, group: "traffic", phase: "traffic_sync", sourceApi: "youtube_analytics_v2", quotaClass: "medium", defaultEnabled: true, canonicalTargets: ["traffic", "traffic_sources"] },
  { id: "search_terms", label: "Search Terms", description: "YouTube search queries driving traffic.", isCore: false, group: "traffic", phase: "traffic_sync", sourceApi: "youtube_analytics_v2", quotaClass: "medium", defaultEnabled: true, canonicalTargets: ["traffic_youtube_search_terms", "search_intelligence"] },
  { id: "ext_websites", label: "External Websites", description: "External sites and apps driving traffic.", isCore: false, group: "traffic", phase: "traffic_sync", sourceApi: "youtube_analytics_v2", quotaClass: "medium", defaultEnabled: true, canonicalTargets: ["traffic_external_websites"] },

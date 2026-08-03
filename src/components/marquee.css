@@ -176,6 +176,25 @@
   animation-timing-function: ease-out;
 }
 
+@keyframes engagementHoverPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.333); }
+}
+
+.engagement-hover-dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: engagementHoverPulse 1.2s ease-in-out infinite;
+  transition: cx 180ms ease, cy 180ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .engagement-hover-dot {
+    animation: none;
+    transition: none;
+  }
+}
+
 /*
  * Rounds the stacked block in TRAFFIC SOURCE EVOLUTION. Every area layer shares one
  * clip rect (published by TrafficPlotClipDefs and sized to the plot area), so the

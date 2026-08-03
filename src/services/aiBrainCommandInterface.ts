@@ -330,6 +330,55 @@ export const buildCreatorBrainPromptCards = (): CreatorBrainPromptCard[] => [
   category: "goals",
   color: "#FFFF61",
  },
+ {
+  id: "pinned-comments",
+  label: "Pinned Comments",
+  prompt: "Write an engagement-producing pinned comment for each of my top 10 long-form videos. For each one, either ask viewers a specific question that invites replies, or recommend another one of my videos that viewers of that video would also enjoy. Use the actual video titles.",
+  category: "audience",
+  color: "#FFE357",
+ },
+ {
+  id: "ten-video-ideas",
+  label: "10 Video Ideas",
+  prompt: "Based on my best-performing long-form videos from the past year, give me 10 new video titles and topics, each with a one-line description of what the video would cover and why my audience would watch it.",
+  category: "ideas",
+  color: "#FFFF61",
+ },
+ {
+  id: "shorts-funnel-plan",
+  label: "Shorts Funnel Plan",
+  prompt: "Show me how to use Shorts to pull in new viewers and convert them into subscribers, then turn that new traffic into long-form views, watch time, and revenue. Give me a concrete Shorts-to-long-form funnel plan tailored to my channel.",
+  category: "strategy",
+  color: "#4FFF5B",
+ },
+ {
+  id: "shorts-from-longform",
+  label: "Shorts From Long-Form",
+  prompt: "Which of my long-form videos have the strongest moments to cut into Shorts, and what hook should each Short use to send viewers to the full video? Name the specific videos.",
+  category: "ideas",
+  color: "#FFB570",
+ },
+ {
+  id: "metric-correlations",
+  label: "Metric Correlations",
+  prompt: "Look at the relationship between my views, subscribers, likes, comments, watch time, and revenue across my videos. Where are the strongest correlations, what do they tell me about what drives success, and how do I leverage them?",
+  category: "analytics",
+  color: "#40C6E9",
+ },
+ {
+  id: "uploader-assets",
+  label: "Optimize Upload Assets",
+  prompt: "For my next long-form video, generate an optimized title, description, and tag set based on the language, structure, and keywords that already work on my channel.",
+  category: "seo",
+  color: "#FF83EA",
+ },
+ {
+  id: "thumbnail-brief",
+  label: "Thumbnail Concept",
+  prompt: "Give me a thumbnail concept for my next video that matches my channel's recognizable visual style but still feels fresh and clickable. Describe the composition, focal subject, text, and color direction.",
+  category: "publishing",
+  color: "#FFB570",
+ },
 ]
 
 export const sanitizeCreatorBrainMarkdown = (value: string): string =>
@@ -551,6 +600,8 @@ const evidenceVideo = (video: VtSyncVideoItem): AIBrainEvidenceVideo => ({
   revenue: optionalVideoMetric(video, "revenue"),
   ctr: optionalVideoMetric(video, "ctr"),
   averagePercentageViewed: optionalVideoMetric(video, "averagePercentageViewed"),
+  likes: optionalVideoMetric(video, "likes"),
+  comments: optionalVideoMetric(video, "comments"),
  },
 })
 
@@ -1731,6 +1782,8 @@ export const buildAIBrainSystemPrompt = (input: AIBrainContextInput): string => 
   "8. End with 1-2 intentional questions only when the answer would improve if the Brain knew more about the creator or channel.",
   "9. Do not mention sync failures, bundles, manifests, APIs, functions, databases, internal diagnostics, or implementation details to the creator.",
   "10. Keep every answer focused on YouTube success: stronger content, better titles and thumbnails, views, subscribers, comments, likes, watch time, revenue, consistency, output, publishing, SEO, and audience fit.",
+  "11. Reason about the RELATIONSHIPS between metrics, not single numbers. Views, subscribers gained, likes, comments, watch time, average view duration, CTR, and revenue move together in patterns: high views but few subscribers gained is a discovery win that failed to convert; strong watch time with weak CTR is a packaging problem, not a content problem; high comments and likes per view signal an engaged audience worth building a series around; high RPM on a topic means lean into it. Use these correlations across the creator's OWN videos to explain what actually drives their success and what to do next.",
+  "12. Treat Shorts as the top-of-funnel discovery and subscriber engine, and long-form as where watch time and revenue are earned. When relevant, show the funnel explicitly: Shorts pull in new viewers, convert them to subscribers, subscribers return for long-form, long-form builds watch time and revenue. Recommend cutting Shorts from proven long-form moments, using each Short's hook to route viewers to the fuller video, and making long-form that pays off what a breakout Short promised. Name the creator's actual videos when you do.",
   snapshot.inferredProfile.contextBlock ? `\nINFERRED CHANNEL PROFILE:\n${snapshot.inferredProfile.contextBlock}` : "",
   "",
   "CREATOR-SAFE BRAIN CONTEXT:",

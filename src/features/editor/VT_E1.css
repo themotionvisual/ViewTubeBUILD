@@ -247,6 +247,12 @@
       background: #111 !important;
     }
 
+    .vt-timeline-toolbar {
+      position: relative;
+      z-index: 60;
+      overflow: visible;
+    }
+
     .vt-timeline-toolbar .neo-btn:not(.vt-timeline-status-pill) {
       width: 30px;
       height: 30px;
@@ -267,7 +273,8 @@
 
     .vt-timeline-toolbar .vt-time-readout {
       width: auto;
-      min-width: 148px;
+      min-width: 126px;
+      height: 30px;
       padding: 0;
     }
 
@@ -280,8 +287,8 @@
     .vt-shell-tools-menu {
       position: absolute;
       left: 0;
-      top: auto;
-  bottom: 36px;
+      top: 36px;
+      bottom: auto;
       width: 248px;
       max-height: 360px;
       overflow-y: auto;
@@ -293,6 +300,53 @@
       border-radius: 10px;
       background: #fff;
       box-shadow: 6px 6px 0 #111;
+    }
+
+    .vt-inline-color-swatches {
+      display: grid;
+      grid-template-columns: repeat(6, 22px);
+      gap: 5px;
+      align-items: center;
+      justify-content: end;
+      flex: 0 0 auto;
+      padding: 4px;
+      border: 2px solid #111;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .vt-inline-color-swatch {
+      width: 22px;
+      height: 22px;
+      border: 2px solid #111;
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .vt-settings-add-media-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+    }
+
+    .vt-settings-add-media-grid .neo-btn {
+      width: 100%;
+      min-height: 38px;
+      padding-inline: 8px;
+    }
+
+    .vt-clip-name-color-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .vt-inline-color-swatch:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 2px 2px 0 #111;
     }
 
     .vt-shell-tools-menu-row {
@@ -367,6 +421,20 @@
       border: 2px solid #fff;
     }
 
+    .vt-sidebar-scroll::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .vt-sidebar-scroll::-webkit-scrollbar-track {
+      background: #111;
+      border-radius: 4px;
+    }
+
+    .vt-sidebar-scroll::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 4px;
+    }
+
     .checker {
       background-color: #6b6b6b;
       background-image:
@@ -437,7 +505,8 @@
 
     .vt-shorts-preview-grid-stage {
       min-height: 0;
-      grid-template-columns: minmax(280px, 1.6fr) minmax(180px, 0.65fr);
+      grid-template-columns: minmax(420px, 1fr) minmax(190px, 260px);
+      align-items: start;
     }
 
     .vt-shorts-preview-grid-stage .vt-shorts-monitor {
@@ -447,15 +516,18 @@
     }
 
     .vt-shorts-preview-grid-stage .vt-shorts-source-stage {
-      flex: 0 1 auto;
+      flex: none;
       width: 100%;
-      max-height: 100%;
+      height: auto !important;
+      max-height: none;
+      aspect-ratio: 16 / 9;
     }
 
     .vt-shorts-preview-grid-stage .vt-shorts-output-stage {
-      width: min(100%, 34vh, 320px);
-      flex: 0 1 auto;
-      max-height: 100%;
+      width: min(100%, 240px);
+      height: auto !important;
+      flex: none;
+      max-height: none;
     }
 
     .vt-shorts-monitor {
@@ -483,7 +555,10 @@
 
     .vt-shorts-source-stage {
       position: relative;
+      width: 100%;
+      height: auto;
       aspect-ratio: 16 / 9;
+      flex: none;
       overflow: hidden;
       border: 3px solid #111;
       border-radius: 10px;
@@ -532,21 +607,6 @@
       background-size: 33.333% 33.333%, 33.333% 33.333%, auto;
       box-shadow: 0 0 0 999px rgba(0,0,0,0.34), 0 0 0 1px #fff inset, 0 0 18px rgba(204,0,255,0.5);
       pointer-events: none;
-    }
-
-    .vt-shorts-crop-frame span {
-      position: absolute;
-      top: 6px;
-      left: 6px;
-      padding: 3px 6px;
-      border: 2px solid #111;
-      border-radius: 999px;
-      background: #ffff61;
-      color: #111;
-      font-size: 9px;
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
     }
 
     .vt-shorts-split-frame {
@@ -614,7 +674,8 @@
       position: relative;
       width: min(100%, 230px);
       height: auto;
-      flex-shrink: 0;
+      aspect-ratio: 9 / 16;
+      flex: none;
       overflow: hidden;
       border: 3px solid #111;
       border-radius: 12px;
@@ -721,6 +782,7 @@
     .vt-shorts-reframe-head {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       gap: 8px;
       margin-bottom: 6px;
       font-size: 9px;
@@ -728,6 +790,12 @@
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: rgba(17, 17, 17, 0.62);
+    }
+
+    .vt-shorts-reframe-head-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .vt-shorts-reframe-ruler {
@@ -758,20 +826,21 @@
       text-transform: uppercase;
       white-space: nowrap;
       cursor: pointer;
+      z-index: 2;
       box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
     }
 
     .vt-shorts-reframe-keyframe {
       position: absolute;
-      top: 7px;
-      width: 14px;
-      height: 14px;
-      border: 2px solid #111;
+      top: 9px;
+      width: 16px;
+      height: 16px;
+      border: 3px solid #111;
       border-radius: 3px;
-      transform: translateX(-50%) rotate(45deg);
+      transform: translate(-50%, -50%) rotate(45deg);
       cursor: pointer;
-      z-index: 3;
-      box-shadow: 0 0 0 2px rgba(255,255,255,0.72);
+      z-index: 6;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.78), 0 0 0 5px rgba(209,54,255,0.22);
     }
 
     .vt-shorts-reframe-playhead {
@@ -781,7 +850,7 @@
       width: 3px;
       background: #ff00ff;
       transform: translateX(-50%);
-      z-index: 4;
+      z-index: 7;
       box-shadow: 0 0 0 1px #111;
       pointer-events: none;
     }
@@ -860,78 +929,86 @@
       gap: 6px;
     }
 
+    .setting-row:not(.compact) .track-wrap {
+      width: 85%;
+      justify-self: start;
+    }
+
     .track-bar {
       flex: 1 1 auto;
-      height: 12px;
+      height: 18px;
       border: none;
       border-radius: 999px;
       position: relative;
-      background: #cc00ff;
+      background: var(--spring-track-bg, #cc00ff);
     }
     .track-end-dot {
       position: absolute;
       top: 50%;
-      width: 10px;
-      height: 10px;
+      width: 12px;
+      height: 12px;
       border-radius: 999px;
       border: none;
       background: #d88dff;
       transform: translateY(-50%);
       cursor: pointer;
-      padding: 0;
+      padding: 2px;
+      box-sizing: content-box;
       z-index: 2;
     }
     .track-end-dot.left {
       left: 0;
-      margin-left: 2px;
-      padding-right: 0px;
-      width: 10px;
+      margin-left: 4px;
     }
     .track-end-dot.right {
       right: 0;
-      margin-right: 2px;
-      padding-right: 0px;
-      width: 10px;
+      margin-right: 4px;
     }
 
     .thumb {
-      width: 12px;
-      height: 24px;
-      border: 2px solid #fff;
-      border-radius: 4px;
+      width: 14px;
+      height: 28px;
+      border: 2px solid #d88dff;
+      border-radius: 2px;
       position: absolute;
       top: 50%;
       transform: translate(-50%, -50%);
-      background: #111;
+      background: #7a267a;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      box-shadow: 0 0 0 2px #111;
+      box-shadow: 0 0 0 4px #a12988;
     }
 
     .thumb-accent {
       width: 2px;
       height: 10px;
       border-radius: 2px;
-      background: #40C6E9;
+      background: #d88dff;
     }
 
     .kf-inline-btn {
-      border: none;
-      background: transparent;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #111;
+      border-radius: 999px;
+      background: #fff;
       font-size: 14px;
       font-weight: 900;
       line-height: 1;
-      padding: 0 2px;
+      padding: 0;
       color: #111;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .setting-row {
       display: grid;
-      grid-template-columns: 108px 1fr 58px;
-      align-items: center;
+      grid-template-columns: minmax(0, 1fr) 62px;
+      align-items: end;
       gap: 6px;
       width: 100%;
     }
@@ -953,6 +1030,30 @@
       font-weight: 900;
       text-transform: uppercase;
       white-space: normal;
+    }
+
+    .setting-value-stack {
+      display: grid;
+      gap: 2px;
+      align-items: end;
+      min-width: 58px;
+    }
+
+    .setting-value-stack span {
+      font-size: 8px;
+      font-weight: 900;
+      line-height: 1;
+      text-transform: uppercase;
+      text-align: center;
+      opacity: 0.72;
+    }
+
+    .vt-color-input {
+      border: 2px solid #111;
+      border-radius: 8px;
+      background: #fff;
+      padding: 3px;
+      box-shadow: none;
     }
 
     .no-scrollbar {

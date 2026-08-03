@@ -81,7 +81,29 @@ describe("VT-SYNC visual data bridge", () => {
   expect(dataset.coverage).toMatchObject({ hasVideos: true, hasTraffic: true, hasGeography: true })
   expect(dataset.traffic[0]).toMatchObject({ sourceTitle: "YouTube Search", views: 120, watchHours: 6 })
   expect(dataset.geography[0]).toMatchObject({ label: "US", views: 90, watchHours: 5 })
-  expect(dataset.videos[0]).toMatchObject({ subscribersGained: 12, subscribersLost: 3, subscribersNet: 9 })
-  expect(dataset.videos[0].valueScore).toBeGreaterThan(0)
+ expect(dataset.videos[0]).toMatchObject({ subscribersGained: 12, subscribersLost: 3, subscribersNet: 9 })
+ expect(dataset.videos[0].valueScore).toBeGreaterThan(0)
+ })
+
+ it("carries YouTube Playlist Saves through the VT-SYNC visual bridge", () => {
+  const snapshot = normalizeVtSyncSnapshot({
+   source: "vt-sync",
+   channelId: "channel-1",
+   videos: [{
+    id: "video-1",
+    title: "Saved video",
+    privacyStatus: "public",
+    format: "long",
+    metrics: {
+     views: 100,
+     videosAddedToPlaylists: 7,
+    },
+   }],
+  })
+
+  const props = buildVtSyncVisualPropsData(snapshot)
+  const dataset = buildTubeExplorerVisualData(props.rows)
+
+  expect(dataset.videos[0].saves).toBe(7)
  })
 })

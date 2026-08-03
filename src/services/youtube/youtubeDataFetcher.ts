@@ -1050,6 +1050,26 @@ export const postCommentReply = async (parentId: string, text: string) => {
  return response.json()
 }
 
+export const postVideoTopLevelComment = async (videoId: string, text: string) => {
+ const token = await refreshTokenIfExpired()
+ if (!token) throw new Error("Unauthorized")
+ const response = await proxyFetch(`${BASE_URL}/commentThreads?part=snippet`, {
+  method: "POST",
+  headers: {
+   Authorization: `Bearer ${token}`,
+   "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+   snippet: {
+    videoId,
+    topLevelComment: { snippet: { textOriginal: text } },
+   },
+  }),
+ })
+ if (!response.ok) await handleYouTubeApiError(response, "Failed to post top-level comment")
+ return response.json()
+}
+
 export const updateCommentText = async (commentId: string, text: string) => {
  const token = await refreshTokenIfExpired()
  if (!token) throw new Error("Unauthorized")

@@ -6,7 +6,7 @@ import { generateEndScreenImage, generateThumbnail, hasGeminiKey } from "../../.
 
 const IMAGE_BRIDGE_EVENT = "vt_dashboard_generated_image"
 
-type TargetWidget = "community-post" | "comment-replier" | "thumb-ai" | "data-edit"
+type TargetWidget = "community-post" | "comment-replier" | "thumb-ai" | "video-uploader"
 type TemplateMode = "thumbnail" | "endscreen"
 
 const STYLE_OPTIONS = [
@@ -73,7 +73,13 @@ export const ImageGeneratorWidget = ({
       const image =
         mode === "endscreen"
           ? await generateEndScreenImage(finalPrompt, AspectRatio.LANDSCAPE_16_9, ImageSize.SIZE_1K, headline, subline)
-          : await generateThumbnail(finalPrompt, AspectRatio.LANDSCAPE_16_9, ImageSize.SIZE_1K, headline, subline)
+          : await generateThumbnail(
+            finalPrompt,
+            AspectRatio.LANDSCAPE_16_9,
+            ImageSize.SIZE_1K,
+            [headline, subline].filter(Boolean).join(" — "),
+            "mobile",
+          )
       setGeneratedImage(image)
     } catch (error) {
       console.error("[ImageGeneratorWidget] generation failed", error)
@@ -163,8 +169,8 @@ export const ImageGeneratorWidget = ({
           <button className="vt-button" style={{ height: "30px", fontSize: "9px" }} onClick={() => sendToWidget("thumb-ai")} disabled={!generatedImage}>
             <Send size={12} /> Send → Thumb AI
           </button>
-          <button className="vt-button" style={{ height: "30px", fontSize: "9px" }} onClick={() => sendToWidget("data-edit")} disabled={!generatedImage}>
-            <Send size={12} /> Send → Video Manager
+          <button className="vt-button" style={{ height: "30px", fontSize: "9px" }} onClick={() => sendToWidget("video-uploader")} disabled={!generatedImage}>
+            <Send size={12} /> Send → Video Uploader
           </button>
         </div>
 
@@ -177,4 +183,3 @@ export const ImageGeneratorWidget = ({
     </WidgetShell>
   )
 }
-

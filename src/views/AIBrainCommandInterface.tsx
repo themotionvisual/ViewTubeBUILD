@@ -78,7 +78,7 @@ import type {
  CreatorInitialInsight,
 } from "../types"
 
-type ChatMessage = {
+export type ChatMessage = {
  id: string
  role: "user" | "model"
  text: string
@@ -88,8 +88,30 @@ type ChatMessage = {
 
 const shellCard = "rounded-[16px] border-[4px] border-black bg-white shadow-[6px_6px_0_0_#000]"
 const innerCard = "rounded-[10px] border-[2px] border-black bg-white"
+const assistantCardFrame = "w-full max-w-none shrink-0 border-y-[2px] border-black bg-white"
 const kpiButton =
  "inline-flex items-center gap-2 rounded-[8px] border-[2px] border-black bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[0.08em] transition hover:bg-[#3FEE56]"
+
+export const shouldSendBrainComposerKey = ({ key, isComposing }: { key: string; isComposing: boolean }) =>
+ key === "Enter" && !isComposing
+
+const PROMPT_CARD_SUMMARIES: Record<string, string> = {
+ "analyze-channel-niche": "Find your niche and fuzzy edges.",
+ "niche-growth-ideas": "Choose adjacent topics that still fit.",
+ "analyze-formats": "Compare views, retention, and revenue.",
+ "seo-script-drafter": "Draft a concept, hook, description, and tags.",
+ "format-strategy": "Plan five repeatable uploads.",
+ "clarify-channel-goals": "Confirm goals, audience, and direction.",
+ "revenue-levers": "Find practical 30-day revenue moves.",
+ "audience-language": "Identify audience interests and wording.",
+ "why-views-changed": "Diagnose momentum and choose three moves.",
+ "best-video-autopsy": "Explain and replicate your best video.",
+ "title-thumbnail-test": "Create the next title and thumbnail test.",
+ "daily-oracle": "Get today’s priority, quick win, and action.",
+}
+
+export const promptCardSummary = (card: CreatorBrainPromptCard): string =>
+ PROMPT_CARD_SUMMARIES[card.id] || card.prompt
 
 const GENERATION_BADGES: Record<BrainGenerationPath, { label: string; color: string; description: string }> = {
  model: { label: "Full Brain", color: "#00FF00", description: "This response was prepared with the full Brain." },
@@ -153,7 +175,7 @@ const OpeningBriefing: React.FC<{ snapshot: AIBrainContextSnapshot }> = ({ snaps
  return (
   // Top-aligned and scrollable: the briefing is a launchpad, not a block floating in
   // the middle of an empty canvas.
-  <div className="vt-scrollless min-h-0 flex-1 overflow-y-auto overscroll-contain" aria-label="Brain conversation" tabIndex={0}>
+  <div className="brain-chat-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain p-4" aria-label="Brain conversation" tabIndex={0}>
    <section className="mx-auto grid max-w-[70ch] gap-4">
     <div>
      <div className="flex flex-wrap items-center gap-2">
@@ -192,23 +214,29 @@ export const BrainPromptLibrary: React.FC<{
     Start a focused Brain task at any point in the conversation.
    </p>
   </div>
-  <ul className="grid gap-1.5 p-2">
+  <ul className="grid grid-cols-1 gap-1.5 p-2 sm:grid-cols-2 sm:auto-rows-[50px] xl:grid-cols-3">
    {cards.map((card) => (
-    <li key={card.id}>
+    <li key={card.id} className="h-full">
      <button
       type="button"
       disabled={busy}
+      title={card.prompt}
+      aria-label={`${card.label}: ${card.prompt}`}
       onClick={() => onPrompt(card.prompt)}
-      className="group grid min-h-10 w-full grid-cols-[7px_minmax(0,1fr)_16px] items-center gap-2 overflow-hidden rounded-[8px] border-[2px] border-black bg-white px-2 py-1.5 text-left outline-none transition hover:-translate-y-0.5 hover:bg-[#FFDA47] focus-visible:ring-[3px] focus-visible:ring-black disabled:cursor-wait disabled:opacity-50"
-     >
-      <span className="h-full min-h-7 rounded-[3px] border border-black" style={{ backgroundColor: card.color }} aria-hidden="true" />
-      <span className="min-w-0">
-       <span className="block text-[10px] font-[1000] uppercase leading-4">{card.label}</span>
-       <span className="line-clamp-2 block text-[9px] font-bold leading-[13px] text-black/60">
-        {card.prompt}
-       </span>
+      className="group flex h-full min-h-[50px] w-full flex-col items-stretch overflow-hidden rounded-[8px] border-[2px] border-black bg-white text-left outline-none transition hover:-translate-y-0.5 focus-visible:ring-[3px] focus-visible:ring-black disabled:cursor-wait disabled:opacity-50"
+      >
+      <span
+       className="flex h-[20px] shrink-0 items-center rounded-t-[5px] border-b-[2px] border-black px-2 text-[10px] font-[1000] uppercase leading-none"
+       style={{ backgroundColor: card.color }}
+      >
+       {card.label}
       </span>
-      <ArrowRight size={14} className="shrink-0 transition group-hover:translate-x-0.5" aria-hidden="true" />
+      <span className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_14px] items-center gap-1.5 px-2">
+       <span className="line-clamp-2 block overflow-hidden text-[10px] font-bold leading-[12px] text-black/75">
+        {promptCardSummary(card)}
+       </span>
+       <ArrowRight size={12} className="shrink-0 transition group-hover:translate-x-0.5" aria-hidden="true" />
+      </span>
      </button>
     </li>
    ))}
@@ -216,17 +244,74 @@ export const BrainPromptLibrary: React.FC<{
  </section>
 )
 
+const FEEDBACK_OPTIONS = [
+ ["helpful", ThumbsUp, "Helpful", "#3FEE56"],
+ ["not_useful", ThumbsDown, "Not useful", "#FA618A"],
+ ["inaccurate", HelpCircle, "Inaccurate", "#FFDA47"],
+ ["save_insight", BookOpen, "Save insight", "#36E0F6"],
+ ["ask_follow_up", MessageSquare, "Ask follow-up", "#FF7AC8"],
+] as const satisfies ReadonlyArray<readonly [AIBrainFeedbackSignal["rating"], React.ComponentType<{ size?: number }>, string, string]>
+
+export const BrainFeedbackControls: React.FC<{
+ message: ChatMessage
+ onFeedback: (message: ChatMessage, rating: AIBrainFeedbackSignal["rating"]) => Promise<void>
+}> = ({ message, onFeedback }) => {
+ const [selected, setSelected] = useState<AIBrainFeedbackSignal["rating"] | null>(null)
+ const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+
+ const submitFeedback = async (rating: AIBrainFeedbackSignal["rating"]) => {
+  if (status === "saving") return
+  setSelected(rating)
+  setStatus("saving")
+  try {
+   await onFeedback(message, rating)
+   setStatus("saved")
+  } catch (error) {
+   console.warn("[AIBrain] Feedback was not saved:", error)
+   setStatus("error")
+  }
+ }
+
+ return (
+  <div className="flex min-w-0 flex-wrap items-center gap-1.5" aria-label="Rate this response">
+   {FEEDBACK_OPTIONS.map(([rating, Icon, label, color]) => {
+    const isSelected = selected === rating
+    return (
+     <button
+      key={rating}
+      type="button"
+      title={label}
+      aria-label={label}
+      aria-pressed={isSelected}
+      disabled={status === "saving"}
+      onClick={() => void submitFeedback(rating)}
+      className="grid h-8 w-8 cursor-pointer place-items-center rounded-[6px] border-[2px] border-black bg-white transition hover:-translate-y-0.5 focus-visible:ring-[3px] focus-visible:ring-black disabled:cursor-wait disabled:opacity-60"
+      style={{ backgroundColor: isSelected ? color : "#ffffff" }}
+      onMouseEnter={(event) => (event.currentTarget.style.backgroundColor = color)}
+      onMouseLeave={(event) => (event.currentTarget.style.backgroundColor = isSelected ? color : "#ffffff")}
+     >
+      <Icon size={14} aria-hidden="true" />
+     </button>
+    )
+   })}
+   <span className="ml-1 text-[10px] font-black uppercase tracking-[0.06em]" aria-live="polite" role="status">
+    {status === "saving" ? "Saving…" : status === "saved" ? "Saved" : status === "error" ? "Try again" : "Rate answer"}
+   </span>
+  </div>
+ )
+}
+
 const CreatorResponseCard: React.FC<{
  message: ChatMessage
  evidencePack: AIBrainContextSnapshot["evidencePack"]
  answeredQuestionIds: Set<string>
- onFeedback: (message: ChatMessage, rating: AIBrainFeedbackSignal["rating"]) => void
+ onFeedback: (message: ChatMessage, rating: AIBrainFeedbackSignal["rating"]) => Promise<void>
  onAnswerQuestion: (question: CreatorBrainLearningQuestion, answer: string) => void
 }> = ({ message, evidencePack, answeredQuestionIds, onFeedback, onAnswerQuestion }) => {
  const response = message.response
  if (!response) {
   return (
-   <article className={`${innerCard} max-w-[92%] p-4 shadow-[3px_3px_0_0_#000]`}>
+   <article className={`${assistantCardFrame} p-4`}>
     <div className="mb-2 text-[10px] font-black uppercase tracking-[0.12em] text-black/45">ViewTube Copilot</div>
     <p className="whitespace-pre-wrap text-sm font-bold leading-6">{sanitizeCreatorFacingBrainCopy(message.text)}</p>
    </article>
@@ -252,10 +337,12 @@ const CreatorResponseCard: React.FC<{
    return !(body === keyNorm || body.startsWith(keyNorm.slice(0, 60)) || keyNorm.startsWith(body.slice(0, 60)))
   })
   .slice(0, 3)
- const openQuestions = response.questions.filter((question) => !answeredQuestionIds.has(question.id))
+ const openQuestions = response.questions.filter(
+  (question) => question.category !== "creator_goal" && !answeredQuestionIds.has(question.id),
+ )
 
  return (
-  <article className="flex w-full max-w-[760px] shrink-0 flex-col overflow-hidden rounded-[12px] border-[2px] border-black bg-white shadow-[4px_4px_0_0_#000]">
+  <article className={`${assistantCardFrame} flex flex-col overflow-hidden`}>
    <div className="shrink-0 border-b-[2px] border-black px-3 py-2" style={{ backgroundColor: TOOLBOX_PALETTE[5] }}>
     <div className="flex flex-wrap items-start justify-between gap-1.5">
      <div className="text-[9px] font-black uppercase tracking-[0.16em] text-black/55">ViewTube Copilot</div>
@@ -271,29 +358,9 @@ const CreatorResponseCard: React.FC<{
     {openQuestions[0] ? (
      <BrainQuestionPrompt question={openQuestions[0]} onAnswer={onAnswerQuestion} compact />
     ) : null}
-    <div className="flex shrink-0 flex-wrap items-center gap-1 border-t-[2px] border-black pt-2">
-     {(
-      [
-       ["helpful", <ThumbsUp size={13} key="up" />, "Helpful", "#3FEE56"],
-       ["not_useful", <ThumbsDown size={13} key="down" />, "Not useful", "#FA618A"],
-       ["inaccurate", <HelpCircle size={13} key="q" />, "Inaccurate", "#FFDA47"],
-       ["save_insight", <BookOpen size={13} key="save" />, "Save insight", "#36E0F6"],
-       ["ask_follow_up", <MessageSquare size={13} key="follow" />, "Ask follow-up", "#FF7AC8"],
-     ] as const
-     ).map(([rating, iconNode, label, hover]) => (
-      <button
-       key={rating}
-       type="button"
-       title={label}
-       aria-label={label}
-       onClick={() => onFeedback(message, rating as AIBrainFeedbackSignal["rating"])}
-       className="grid h-7 w-7 place-items-center rounded-[6px] border-[2px] border-black bg-white transition hover:-translate-y-0.5"
-       onMouseEnter={(event) => (event.currentTarget.style.backgroundColor = hover)}
-       onMouseLeave={(event) => (event.currentTarget.style.backgroundColor = "#ffffff")}
-      >
-       {iconNode}
-      </button>
-     ))}
+   </div>
+   <div className="flex min-h-9 shrink-0 flex-wrap items-center gap-1 border-t-[2px] border-black bg-[#f8f8f4] px-3 py-1">
+     <BrainFeedbackControls message={message} onFeedback={onFeedback} />
      <BrainEvidenceDrawer evidencePack={evidencePack} compact />
      {message.handoff ? (
       <Link
@@ -305,16 +372,19 @@ const CreatorResponseCard: React.FC<{
        <ArrowRight size={13} />
       </Link>
      ) : null}
-    </div>
    </div>
   </article>
  )
 }
 
-const UserMessage: React.FC<{ text: string }> = ({ text }) => (
- <article className={`${innerCard} ml-auto max-w-[82%] shrink-0 bg-[#f8f8f4] p-4 shadow-[3px_3px_0_0_#000]`}>
-  <div className="mb-2 text-[10px] font-black uppercase tracking-[0.12em] text-black/45">You</div>
-  <p className="whitespace-pre-wrap text-sm font-bold leading-6">{sanitizeCreatorFacingBrainCopy(text)}</p>
+export const UserMessage: React.FC<{ text: string }> = ({ text }) => (
+ <article className="grid min-h-[68px] w-full shrink-0 grid-cols-[84px_minmax(0,1fr)] overflow-hidden border-y-[2px] border-black bg-[#36E0F6]">
+  <div className="flex items-center border-r-[2px] border-black bg-[#24C8E2] px-3 text-[14px] font-[1000] uppercase tracking-[0.06em]">
+   You:
+  </div>
+  <p className="flex min-w-0 items-center whitespace-pre-wrap px-4 py-3 text-sm font-bold leading-6">
+   {sanitizeCreatorFacingBrainCopy(text)}
+  </p>
  </article>
 )
 
@@ -452,6 +522,15 @@ const AIBrainCommandInterface: React.FC = () => {
  const learningQuestions = useMemo(
   () => buildBrainLearningQuestions(snapshot).filter((question) => !answeredQuestionIds.has(question.id)),
   [snapshot, answeredQuestionIds],
+ )
+ const latestResponseQuestions = useMemo(
+  () => [...messages]
+   .reverse()
+   .find((message) => message.role === "model" && message.response)
+   ?.response?.questions.filter(
+    (question) => question.category === "creator_goal" && !answeredQuestionIds.has(question.id),
+   ) || [],
+  [messages, answeredQuestionIds],
  )
  const quickActions = useMemo(
   () => buildBrainQuickActions(snapshot, creatorGrowthContext, 2),
@@ -677,33 +756,35 @@ const AIBrainCommandInterface: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
  }, [location.search])
 
- const handleFeedback = (message: ChatMessage, rating: AIBrainFeedbackSignal["rating"]) => {
-  void (async () => {
-   const learningEntry = await captureLearning({
-    channelId,
-    source: "feedback",
-    summary: `Creator marked Copilot answer as ${rating.replace(/_/g, " ")}`,
-    detail: message.response?.keyInsight || message.text,
-    confidence: rating === "helpful" || rating === "save_insight" ? "high" : "medium",
-    evidence: [message.response?.headline || "Copilot response"].filter(Boolean),
-    metadata: {
-     messageId: message.id,
-     rating,
-     usefulnessScore: scoreAIBrainAnswerUsefulness({ response: message.response || message.text, feedback: rating }),
-    },
-   })
-   await saveAIBrainConversationTurn({
-    channelId,
-    userText: `Feedback: ${rating.replace(/_/g, " ")}`,
-    assistantText: message.response?.keyInsight || message.text,
-    response: message.response,
-    answerModules: message.response?.modules || [],
-    feedback: { messageId: message.id, rating, createdAt: new Date().toISOString() },
-    learningEntryIds: learningEntry ? [learningEntry.id] : [],
-    metadata: { source: "feedback" },
-   })
-   await refreshConversationTurns()
-  })()
+ const handleFeedback = async (message: ChatMessage, rating: AIBrainFeedbackSignal["rating"]) => {
+  const learningEntry = await captureLearning({
+   channelId,
+   source: "feedback",
+   summary: `Creator marked Copilot answer as ${rating.replace(/_/g, " ")}`,
+   detail: message.response?.keyInsight || message.text,
+   confidence: rating === "helpful" || rating === "save_insight" ? "high" : "medium",
+   evidence: [message.response?.headline || "Copilot response"].filter(Boolean),
+   metadata: {
+    messageId: message.id,
+    rating,
+    usefulnessScore: scoreAIBrainAnswerUsefulness({ response: message.response || message.text, feedback: rating }),
+   },
+  })
+  await saveAIBrainConversationTurn({
+   channelId,
+   userText: `Feedback: ${rating.replace(/_/g, " ")}`,
+   assistantText: message.response?.keyInsight || message.text,
+   response: message.response,
+   answerModules: message.response?.modules || [],
+   feedback: { messageId: message.id, rating, createdAt: new Date().toISOString() },
+   learningEntryIds: learningEntry ? [learningEntry.id] : [],
+   metadata: { source: "feedback" },
+  })
+  await refreshConversationTurns()
+  if (rating === "ask_follow_up") {
+   setInput(`Follow up on ${message.response?.headline || "this answer"}: `)
+   composerRef.current?.focus()
+  }
  }
 
  const handleAnswerQuestion = (question: CreatorBrainLearningQuestion, answer: string) => {
@@ -855,15 +936,15 @@ const AIBrainCommandInterface: React.FC = () => {
      />
     ) : (
      <section className="relative flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="grid min-h-0 flex-1 gap-2 p-2 xl:grid-cols-[minmax(560px,960px)_310px_310px] xl:justify-center">
+      <div className="grid min-h-0 flex-1 gap-3 bg-[#f3f4f6] px-3 pb-3 pt-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(520px,1fr)]">
        <div className={`${innerCard} flex min-h-0 flex-col overflow-hidden`}>
-        <div className="grid min-h-0 flex-1 gap-2 bg-white p-2">
+        <div className="grid min-h-0 flex-1 bg-white">
          {!hydrated && messages.length === 0 ? (
           <div className="min-h-0 flex-1" aria-hidden="true" />
          ) : messages.length === 0 ? (
           <OpeningBriefing snapshot={snapshot} />
          ) : (
-          <div className="vt-scrollless mx-auto flex min-h-0 w-full max-w-[880px] flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-1 pb-1" aria-label="Brain conversation" aria-live="polite" role="log" tabIndex={0}>
+          <div className="brain-chat-scrollbar flex min-h-0 w-full flex-1 flex-col gap-2 overflow-y-auto overscroll-contain" aria-label="Brain conversation" aria-live="polite" role="log" tabIndex={0}>
            {messages.map((message) => message.role === "user" ? (
             <UserMessage key={message.id} text={message.text} />
            ) : (
@@ -881,19 +962,20 @@ const AIBrainCommandInterface: React.FC = () => {
          )}
         </div>
 
-        <footer className="shrink-0 border-t-[4px] border-black bg-[#f8f8f4] p-2">
+        <footer className="shrink-0 border-t-[2px] border-black bg-[#f8f8f4] p-2">
          <div className="mx-auto w-full max-w-[880px]">
-          <div className="mb-1.5 flex flex-wrap gap-1">
+          <div className="mb-1.5 flex flex-wrap gap-1 xl:hidden">
            <button ref={promptLauncherRef} type="button" onClick={() => setPromptRailOpen(true)} aria-label="Open prompt library" className="inline-flex min-h-9 items-center gap-1 rounded-[7px] border-[2px] border-black bg-[#FF7AC8] px-2 py-1 text-[9px] font-black uppercase outline-none focus-visible:ring-[3px] focus-visible:ring-black xl:hidden">
             <LayoutGrid size={13} aria-hidden="true" /> Prompt Library
            </button>
            <button ref={contextLauncherRef} type="button" onClick={() => setContextRailOpen(true)} aria-label="Open channel context" className="inline-flex min-h-9 items-center gap-1 rounded-[7px] border-[2px] border-black bg-[#3FEE56] px-2 py-1 text-[9px] font-black uppercase outline-none focus-visible:ring-[3px] focus-visible:ring-black xl:hidden">
             <PanelRight size={13} aria-hidden="true" /> Channel Context
            </button>
-           <button type="button" onClick={() => void handleSend("Run my Daily Oracle and give me one priority, one quick win, and one measurable action for today.")} className="min-h-9 rounded-[7px] border-[2px] border-black bg-[#FFDA47] px-2 py-1 text-[9px] font-black uppercase outline-none focus-visible:ring-[3px] focus-visible:ring-black">Run Daily Oracle</button>
-           <button type="button" onClick={() => setJournalOpen(true)} className="min-h-9 rounded-[7px] border-[2px] border-black bg-[#36E0F6] px-2 py-1 text-[9px] font-black uppercase outline-none focus-visible:ring-[3px] focus-visible:ring-black"><BookOpen size={12} className="mr-1 inline" aria-hidden="true" />AI Journal</button>
           </div>
           <div className="flex gap-2">
+           <button type="button" onClick={() => setJournalOpen(true)} aria-label="Open AI Journal" title="Open AI Journal" className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[9px] border-[2px] border-black bg-[#36E0F6] outline-none transition hover:bg-[#FFDA47] focus-visible:ring-[3px] focus-visible:ring-black">
+            <BookOpen size={18} aria-hidden="true" />
+           </button>
            <label className="sr-only" htmlFor="brain-composer">Ask ViewTube Copilot</label>
            <input
             ref={composerRef}
@@ -901,7 +983,11 @@ const AIBrainCommandInterface: React.FC = () => {
             id="brain-composer"
             value={input}
             onChange={(event) => setInput(event.target.value)}
-            onKeyDown={(event) => { if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) void handleSend() }}
+            onKeyDown={(event) => {
+             if (!shouldSendBrainComposerKey({ key: event.key, isComposing: event.nativeEvent.isComposing })) return
+             event.preventDefault()
+             void handleSend()
+            }}
             placeholder="Ask about your next video, audience, analytics, goals, thumbnails, SEO, publishing, or revenue..."
             className="h-[52px] min-w-0 flex-1 rounded-[9px] border-[2px] border-black bg-white p-2 text-sm font-bold leading-5 outline-none focus:bg-[#FFDA47]/20 focus-visible:ring-[3px] focus-visible:ring-black"
            />
@@ -913,21 +999,24 @@ const AIBrainCommandInterface: React.FC = () => {
         </footer>
        </div>
 
-       <div className="vt-scrollless hidden min-h-0 overflow-y-auto overscroll-contain xl:block" aria-label="Prompt library" tabIndex={0}>
-        <BrainPromptLibrary cards={promptCards} busy={busy} onPrompt={(prompt) => void handleSend(prompt)} />
-       </div>
-
-       <div className="vt-scrollless hidden min-h-0 overflow-y-auto overscroll-contain xl:block" aria-label="Channel context" tabIndex={0}>
-        <BrainContextRail
-         snapshot={snapshot}
-         growthContext={creatorGrowthContext}
-         insights={railInsights}
-         questions={learningQuestions}
-         quickActions={quickActions}
-         onAskInsight={handleAskInsight}
-         onAcceptQuickAction={handleAcceptQuickAction}
-         onAnswerQuestion={handleAnswerQuestion}
-        />
+       <div className="hidden min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-3 overflow-hidden xl:grid">
+        <div className="min-h-0" aria-label="Prompt library">
+         <BrainPromptLibrary cards={promptCards} busy={busy} onPrompt={(prompt) => void handleSend(prompt)} />
+        </div>
+        <div className="min-h-0 overflow-hidden" aria-label="Channel context">
+         <BrainContextRail
+          snapshot={snapshot}
+          growthContext={creatorGrowthContext}
+          insights={railInsights}
+          questions={learningQuestions}
+          responseQuestions={latestResponseQuestions}
+          quickActions={quickActions}
+          onAskInsight={handleAskInsight}
+          onAcceptQuickAction={handleAcceptQuickAction}
+          onAnswerQuestion={handleAnswerQuestion}
+          compactGrid
+         />
+        </div>
        </div>
       </div>
 
@@ -965,7 +1054,7 @@ const AIBrainCommandInterface: React.FC = () => {
          <button ref={contextCloseRef} type="button" className={kpiButton} onClick={() => setContextRailOpen(false)}><X size={14} aria-hidden="true" /> Close</button>
         </div>
         <div className="vt-scrollless min-h-0 overflow-y-auto overscroll-contain" aria-label="Channel context" tabIndex={0}>
-         <BrainContextRail snapshot={snapshot} growthContext={creatorGrowthContext} insights={railInsights} questions={learningQuestions} quickActions={quickActions} onAskInsight={handleAskInsight} onAcceptQuickAction={handleAcceptQuickAction} onAnswerQuestion={handleAnswerQuestion} />
+         <BrainContextRail snapshot={snapshot} growthContext={creatorGrowthContext} insights={railInsights} questions={learningQuestions} responseQuestions={latestResponseQuestions} quickActions={quickActions} onAskInsight={handleAskInsight} onAcceptQuickAction={handleAcceptQuickAction} onAnswerQuestion={handleAnswerQuestion} />
         </div>
        </div>
       ) : null}

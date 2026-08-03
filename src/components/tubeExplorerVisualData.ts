@@ -17,7 +17,7 @@ export interface TubeExplorerVideoPoint {
  dislikes: number
  comments: number
  shares: number
- /** Playlist adds, surfaced by the API as videosAddedToPlaylists. */
+ /** YouTube Playlist Saves, surfaced by Analytics as videosAddedToPlaylists. */
  saves: number
  subscribersGained: number
  subscribersLost: number
@@ -180,6 +180,31 @@ const normalizeKey = (value: string): string =>
 const metric = (row: CanonicalVideoRow, key: string): number =>
  resolveMetricNumber(row, key as any).value || 0
 
+const playlistSaves = (row: CanonicalVideoRow): number => {
+ const metricCell = (row.metrics as unknown as Record<string, { value?: unknown } | number | undefined>)
+  .videosAddedToPlaylists
+ if (typeof metricCell === "number") return metricCell
+ if (metricCell && typeof metricCell === "object" && metricCell.value !== null && metricCell.value !== undefined) {
+  return numeric(metricCell.value)
+ }
+
+ // Older imports and visual fixtures used the display-facing Playlist Saves
+ // names before normalization. Keep them readable without changing exports or
+ // the canonical YouTube Analytics metric key.
+ const originalMetrics = row.originalData && typeof row.originalData.metrics === "object"
+  ? row.originalData.metrics as Record<string, unknown>
+  : {}
+ return numeric(pick(
+  {
+   ...(row as unknown as Record<string, unknown>),
+   ...(row.originalData || {}),
+   ...originalMetrics,
+   ...(row.supplementalData || {}),
+  },
+  ["videosAddedToPlaylists", "playlistSaves", "playlistSavesAdded", "Playlist Saves", "saves"],
+ ))
+}
+
 const canonicalMetric = (row: Record<string, any>, key: string): number => {
  const raw = row.metrics?.[key]
  if (raw && typeof raw === "object" && "value" in raw) return numeric(raw.value)
@@ -239,7 +264,7 @@ const toVideoPoint = (row: CanonicalVideoRow): TubeExplorerVideoPoint => {
   dislikes: metric(row, "dislikes"),
   comments,
   shares,
-  saves: metric(row, "videosAddedToPlaylists"),
+  saves: playlistSaves(row),
   subscribersGained: metric(row, "subscribersGained"),
   subscribersLost: metric(row, "subscribersLost"),
   subscribersNet: metric(row, "subscribersGained") - metric(row, "subscribersLost"),

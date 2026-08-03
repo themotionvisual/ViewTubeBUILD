@@ -16,6 +16,12 @@ import {
  VT_SYNC_DISABLED_UNVALIDATED_CATEGORY_OPTIONS,
  filterVtSyncVisibleCategoryIds,
 } from "../upstream/syncCategoryRegistry"
+import {
+ VT_SYNC_ANALYTICS_METRIC_DESCRIPTORS,
+ VT_SYNC_ANALYTICS_METRIC_BUNDLES,
+ VT_SYNC_REQUIRED_ANALYTICS_METRICS,
+ mapVtSyncAnalyticsMetricFields,
+} from "../upstream/analyticsMetricContract"
 import type {
  VtSyncAnalyticsWindow,
  VtSyncInventorySyncResult,
@@ -152,106 +158,51 @@ const reportEndDate = () => daysAgo(1)
 // Fallback lifetime start date for calls made before the channel's actual sign-up date
 // (snapshot.channelPublishedAt) is known, e.g. if channel_metadata wasn't synced this run.
 const VT_SYNC_LIFETIME_START_DATE = "2000-01-01"
+export const buildVtSyncAnalyticsMonthRange = (startDate: string, endDate: string) => ({
+ startDate: `${String(startDate || VT_SYNC_LIFETIME_START_DATE).slice(0, 7)}-01`,
+ endDate: `${String(endDate || reportEndDate()).slice(0, 7)}-01`,
+})
+
+export const buildVtSyncAnalyticsMonthWindows = (
+ startDate: string,
+ endDate: string,
+ monthsPerWindow = 120,
+) => {
+ const range = buildVtSyncAnalyticsMonthRange(startDate, endDate)
+ const first = parseDateKey(range.startDate)
+ const final = parseDateKey(range.endDate)
+ const windows: Array<{ startDate: string; endDate: string }> = []
+ const safeWindowMonths = Math.max(1, monthsPerWindow)
+ for (let cursor = new Date(first); cursor.getTime() <= final.getTime();) {
+  const windowStart = toLocalDateKey(cursor)
+  const candidateEnd = new Date(cursor.getFullYear(), cursor.getMonth() + safeWindowMonths, 0)
+  const windowEnd = candidateEnd.getTime() > final.getTime() ? range.endDate : toLocalDateKey(candidateEnd)
+  windows.push({ startDate: windowStart, endDate: windowEnd })
+  cursor = new Date(candidateEnd.getFullYear(), candidateEnd.getMonth() + 1, 1)
+ }
+ return windows
+}
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const shouldSync = (selected: Set<string>, id: string) => selected.has(id)
 
-const FULL_ANALYTICS_METRICS = [
- "views",
- "estimatedMinutesWatched",
- "averageViewDuration",
- "averageViewPercentage",
- "shares",
- "subscribersGained",
- "subscribersLost",
- "likes",
- "dislikes",
- "comments",
- "estimatedRevenue",
- "cpm",
- "grossRevenue",
- "monetizedPlaybacks",
- "playbackBasedCpm",
- "adImpressions",
- "estimatedAdRevenue",
- "estimatedRedPartnerRevenue",
- "redViews",
- "estimatedRedMinutesWatched",
- "cardClicks",
- "cardImpressions",
- "cardClickRate",
- "cardTeaserClicks",
- "cardTeaserImpressions",
- "cardTeaserClickRate",
+const ANNOTATION_ANALYTICS_METRICS = [
  "annotationClicks",
  "annotationImpressions",
  "annotationClickThroughRate",
- "engagedViews",
- "videosAddedToPlaylists",
- "videosRemovedFromPlaylists",
+ ] as const
+
+const FULL_ANALYTICS_METRICS = [
+ ...VT_SYNC_REQUIRED_ANALYTICS_METRICS,
+ ...ANNOTATION_ANALYTICS_METRICS,
 ]
 
-const FALLBACK_BLOCKED_METRICS = new Set([
- "estimatedRevenue",
- "cpm",
- "grossRevenue",
- "monetizedPlaybacks",
- "playbackBasedCpm",
- "adImpressions",
- "estimatedAdRevenue",
- "estimatedRedPartnerRevenue",
- "redViews",
- "estimatedRedMinutesWatched",
- "cardClicks",
- "cardImpressions",
- "cardClickRate",
- "cardTeaserClicks",
- "cardTeaserImpressions",
- "cardTeaserClickRate",
- "annotationClicks",
- "annotationImpressions",
- "annotationClickThroughRate",
-])
-
 const DAILY_ANALYTICS_METRIC_BUNDLES = [
- {
-  id: "core",
-  metrics: FULL_ANALYTICS_METRICS.filter((metric) => !FALLBACK_BLOCKED_METRICS.has(metric)),
- },
- {
-  id: "monetary",
-  metrics: [
-   "estimatedRevenue",
-   "cpm",
-   "grossRevenue",
-   "monetizedPlaybacks",
-   "playbackBasedCpm",
-   "adImpressions",
-   "estimatedAdRevenue",
-   "estimatedRedPartnerRevenue",
-   "redViews",
-   "estimatedRedMinutesWatched",
-  ],
- },
- {
-  id: "cards",
-  metrics: [
-   "cardClicks",
-   "cardImpressions",
-   "cardClickRate",
-   "cardTeaserClicks",
-   "cardTeaserImpressions",
-   "cardTeaserClickRate",
-  ],
- },
+ ...VT_SYNC_ANALYTICS_METRIC_BUNDLES,
  {
   id: "annotations",
-  metrics: [
-   "annotationClicks",
-   "annotationImpressions",
-   "annotationClickThroughRate",
-  ],
+  metrics: [...ANNOTATION_ANALYTICS_METRICS],
  },
 ] as const
 
@@ -263,6 +214,18 @@ const LONG_FORMAT_METRICS = [
  "cardTeaserClicks",
  "cardTeaserClickRate",
 ]
+
+const mapAnalyticsTimeMetricRow = (
+ row: Record<string, any>,
+ dimension: "day" | "month",
+): Record<string, unknown> => ({
+ ...row,
+ date: row[dimension],
+ ...mapVtSyncAnalyticsMetricFields(row),
+ annotationClicks: numberOrUndefined(row.annotationClicks),
+ annotationImpressions: numberOrUndefined(row.annotationImpressions),
+ annotationClickThroughRate: numberOrUndefined(row.annotationClickThroughRate),
+})
 
 export const GEOGRAPHY_PROVINCE_SAFE_METRICS = [
  "views",
@@ -479,7 +442,7 @@ const mergeRowsByKey = (
  supplementalRows.forEach((row) => {
   const key = keyOf(row)
   if (!key) return
-  merged.set(key, { ...(merged.get(key) || {}), ...row })
+  merged.set(key, mergeVtSyncDefinedFields(merged.get(key), row))
  })
  return [...merged.values()]
 }
@@ -596,6 +559,64 @@ const runLifetimeDateWindowBundle = async (
   columns: [...columns],
   error: errors.length ? `${bundleOptions.id}: ${errors.length} of ${windows.length} lifetime window(s) were partial or failed. ${errors.join(" | ")}` : undefined,
   pageDiagnostics,
+ }
+}
+
+const runLifetimeMonthWindowBundle = async (
+ options: Parameters<typeof runAnalyticsBundle>[0] & { splitOnFailure?: boolean },
+): Promise<BundleResult> => {
+ const { splitOnFailure = false, ...bundleOptions } = options
+ const dimensions = String(bundleOptions.dimensions || "month")
+ const windows = buildVtSyncAnalyticsMonthWindows(
+  bundleOptions.startDate || VT_SYNC_LIFETIME_START_DATE,
+  bundleOptions.endDate || reportEndDate(),
+ )
+ const results: BundleResult[] = []
+ for (let index = 0; index < windows.length; index += 1) {
+  const window = windows[index]
+  const request = {
+   ...bundleOptions,
+   id: `${bundleOptions.id}_${window.startDate}_${window.endDate}`,
+   startDate: window.startDate,
+   endDate: window.endDate,
+   maxResults: 500,
+   startIndex: 1,
+  }
+  results.push(splitOnFailure
+   ? await runAnalyticsBundleWithMetricSplit(request)
+   : await runAnalyticsBundle(request))
+  if (index < windows.length - 1) await sleep(150)
+ }
+ const rows = results.reduce(
+  (merged, result) => mergeRowsByKey(
+   merged,
+   result.rows || [],
+   (row) => metricRowKey(row, dimensions),
+  ),
+  [] as Record<string, any>[],
+ )
+ const errors = results.map((result) => result.error).filter(Boolean)
+ return {
+  rows: rows.length || !errors.length ? rows : null,
+  columns: [...new Set(results.flatMap((result) => result.columns))],
+  error: errors.length
+   ? `${bundleOptions.id}: ${errors.length} of ${windows.length} lifetime month window(s) were partial or failed. ${errors.join(" | ")}`
+   : undefined,
+  status: results.find((result) => !result.rows)?.status,
+  pageDiagnostics: results.flatMap((result, index) => {
+   const window = windows[index]
+   return [{
+    page: index + 1,
+    startIndex: 1,
+    maxResults: 500,
+    rows: result.rows?.length || 0,
+    status: !result.rows ? "failed" as const : result.error ? "short" as const : "complete" as const,
+    httpStatus: result.status,
+    error: result.error,
+    startDate: window.startDate,
+    endDate: window.endDate,
+   }]
+  }),
  }
 }
 
@@ -1319,6 +1340,7 @@ const mapTraffic = (rows: Record<string, any>[] | null, detailKey = "source") =>
 
 const mapSegmentRows = (rows: Record<string, any>[] | null, identityKey: string) => (rows || []).map((row) => ({
  ...row,
+ ...mapVtSyncAnalyticsMetricFields(row),
  [identityKey]: row[identityKey],
  term: row.term || row[identityKey] || row.audienceType || row.creatorContentType || row.insightTrafficSourceType,
  cohort: row.cohort || `${row.gender || ""} ${row.ageGroup || ""}`.trim() || row.ageGroup || row.gender,
@@ -1331,6 +1353,7 @@ const mapSegmentRows = (rows: Record<string, any>[] | null, identityKey: string)
  watchTime: numberOrUndefined(row.estimatedMinutesWatched) !== undefined ? numberOrZero(row.estimatedMinutesWatched) / 60 : undefined,
  avgDuration: numberOrUndefined(row.averageViewDuration),
  avgPercentageViewed: numberOrUndefined(row.averageViewPercentage),
+ averagePercentageViewed: numberOrUndefined(row.averageViewPercentage),
  engagedViews: numberOrUndefined(row.engagedViews),
  revenue: numberOrUndefined(row.estimatedRevenue),
  estimatedAdRevenue: numberOrUndefined(row.estimatedAdRevenue),
@@ -1348,42 +1371,41 @@ const mapSegmentRows = (rows: Record<string, any>[] | null, identityKey: string)
  adImpressions: numberOrUndefined(row.adImpressions),
 }))
 
-const CHANNEL_TOTAL_CORE_METRICS = [
- "views",
- "engagedViews",
- "estimatedMinutesWatched",
- "averageViewDuration",
- "averageViewPercentage",
- "likes",
- "dislikes",
- "comments",
- "shares",
- "subscribersGained",
- "subscribersLost",
-] as const
+const CHANNEL_TOTAL_METRICS = [...VT_SYNC_REQUIRED_ANALYTICS_METRICS] as const
 
-const CHANNEL_TOTAL_MONETARY_METRICS = [
- "estimatedRevenue",
- "estimatedAdRevenue",
- "estimatedRedPartnerRevenue",
- "grossRevenue",
- "cpm",
- "playbackBasedCpm",
- "monetizedPlaybacks",
- "adImpressions",
- "redViews",
- "estimatedRedMinutesWatched",
-] as const
+const analyticsBundleDiagnostic = ({
+ phase,
+ categoryId,
+ bundleId,
+ requestedMetrics,
+ result,
+ context = {},
+}: {
+ phase: string
+ categoryId: string
+ bundleId: string
+ requestedMetrics: readonly string[]
+ result: BundleResult
+ context?: Record<string, unknown>
+}) => ({
+ phase,
+ categoryId,
+ bundle: bundleId,
+ requestedMetrics: [...requestedMetrics],
+ returnedHeaders: result.columns,
+ missingHeaders: requestedMetrics.filter((metric) => !result.columns.includes(metric)),
+ rowCount: result.rows?.length || 0,
+ permissionState: bundleId === "revenue" && !result.rows
+  ? "permission_or_report_unavailable"
+  : "available",
+ mergeStatus: result.rows ? (result.error ? "partial" : "merged") : "unavailable",
+ error: result.error,
+ ...context,
+})
 
 const channelTotalsForWindow = async (token: string, window: VtSyncAnalyticsWindow, lifetimeStartDate: string) => {
  const startDate = window === "lifetime" ? lifetimeStartDate : daysAgo(Number(window.replace("d", "")))
- const bundles = [
-  { id: "performance", metrics: ["views", "engagedViews", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage"] },
-  { id: "engagement", metrics: ["likes", "dislikes", "comments", "shares", "subscribersGained", "subscribersLost"] },
-  { id: "revenue", metrics: ["estimatedRevenue", "estimatedAdRevenue", "grossRevenue"] },
-  { id: "advertising", metrics: ["cpm", "playbackBasedCpm", "monetizedPlaybacks", "adImpressions"] },
-  { id: "premium", metrics: ["estimatedRedPartnerRevenue", "redViews", "estimatedRedMinutesWatched"] },
- ] as const
+ const bundles = VT_SYNC_ANALYTICS_METRIC_BUNDLES
  const results: BundleResult[] = []
  for (const bundle of bundles) {
   results.push(await runAnalyticsBundleWithMetricSplit({
@@ -1405,41 +1427,94 @@ const channelTotalsForWindow = async (token: string, window: VtSyncAnalyticsWind
  const adImpressions = numberOrUndefined(row.adImpressions)
  return {
   row: {
-   views: numberOrUndefined(row.views),
-   engagedViews: numberOrUndefined(row.engagedViews),
-   watchTime: numberOrUndefined(row.estimatedMinutesWatched) !== undefined ? numberOrZero(row.estimatedMinutesWatched) / 60 : undefined,
-   avgViewDuration: numberOrUndefined(row.averageViewDuration),
-   averagePercentageViewed: numberOrUndefined(row.averageViewPercentage),
-   likes: numberOrUndefined(row.likes),
-   dislikes: numberOrUndefined(row.dislikes),
-   comments: numberOrUndefined(row.comments),
-   shares: numberOrUndefined(row.shares),
+   ...mapVtSyncAnalyticsMetricFields(row),
    subscribersGained,
    subscribersLost,
    netSubscribers: subscribersGained !== undefined && subscribersLost !== undefined ? subscribersGained - subscribersLost : undefined,
    subscribers: subscribersGained !== undefined && subscribersLost !== undefined ? subscribersGained - subscribersLost : undefined,
    revenue: estimatedRevenue,
    estimatedRevenue,
-   estimatedAdRevenue: numberOrUndefined(row.estimatedAdRevenue),
-   youtubePremiumRevenue: numberOrUndefined(row.estimatedRedPartnerRevenue),
-   grossRevenue: numberOrUndefined(row.grossRevenue),
-   cpm: numberOrUndefined(row.cpm),
-   playbackBasedCpm: numberOrUndefined(row.playbackBasedCpm),
-   monetizedPlaybacks: numberOrUndefined(row.monetizedPlaybacks),
    adImpressions,
    impressions: adImpressions,
-   youtubePremiumViews: numberOrUndefined(row.redViews),
-   youtubePremiumWatchTime: numberOrUndefined(row.estimatedRedMinutesWatched) !== undefined ? numberOrZero(row.estimatedRedMinutesWatched) / 60 : undefined,
   },
   columns: [...new Set(results.flatMap((result) => result.columns))],
   error: results.map((result) => result.error).filter(Boolean).join(" | ") || undefined,
   coreAvailable: !!results[0].rows,
+  diagnostics: results.map((result, index) => analyticsBundleDiagnostic({
+   phase: "channel_totals",
+   categoryId: "channel_totals",
+   bundleId: bundles[index].id,
+   requestedMetrics: bundles[index].metrics,
+   result,
+   context: { window },
+  })),
  }
 }
 
 const sumAvailableMetric = (rows: Array<Record<string, any>>, key: string): number | undefined => {
  const values = rows.map((row) => numberOrUndefined(row[key])).filter((value): value is number => value !== undefined)
  return values.length ? values.reduce((sum, value) => sum + value, 0) : undefined
+}
+
+const weightedAvailableMetric = (
+ rows: Array<Record<string, any>>,
+ valueKey: string,
+ weightKey = "views",
+): number | undefined => {
+ let weighted = 0
+ let totalWeight = 0
+ rows.forEach((row) => {
+  const value = numberOrUndefined(row[valueKey])
+  const weight = numberOrUndefined(row[weightKey])
+  if (value === undefined || weight === undefined || weight <= 0) return
+  weighted += value * weight
+  totalWeight += weight
+ })
+ return totalWeight > 0 ? weighted / totalWeight : undefined
+}
+
+/** Lifetime creator-content-type rows aggregated from native month reports. */
+export const aggregateVtSyncCreatorContentTypeRows = (rows: Array<Record<string, any>>) => {
+ const grouped = new Map<string, Array<Record<string, any>>>()
+ rows.forEach((row) => {
+  const key = String(row.creatorContentType || row.term || "").trim()
+  if (!key) return
+  grouped.set(key, [...(grouped.get(key) || []), row])
+ })
+ return [...grouped.entries()].map(([creatorContentType, monthlyRows]) => {
+  const normalizedRows = monthlyRows.map((row) => ({ ...row, ...mapVtSyncAnalyticsMetricFields(row) }))
+  const aggregated: Record<string, unknown> = { creatorContentType, term: creatorContentType }
+  VT_SYNC_ANALYTICS_METRIC_DESCRIPTORS.forEach((descriptor) => {
+   if (descriptor.aggregation === "sum") {
+    aggregated[descriptor.normalizedField] = sumAvailableMetric(normalizedRows, descriptor.normalizedField)
+   } else if (descriptor.aggregation === "weighted-rate") {
+    aggregated[descriptor.normalizedField] = weightedAvailableMetric(normalizedRows, descriptor.normalizedField)
+   }
+  })
+  const views = numberOrUndefined(aggregated.views)
+  const watchHours = numberOrUndefined(aggregated.watchTime)
+  if (views !== undefined && views > 0 && watchHours !== undefined) aggregated.avgViewDuration = watchHours * 3600 / views
+  const cardClicks = numberOrUndefined(aggregated.cardClicks)
+  const cardImpressions = numberOrUndefined(aggregated.cardImpressions)
+  aggregated.cardClickRate = cardClicks !== undefined && cardImpressions !== undefined && cardImpressions > 0
+   ? cardClicks / cardImpressions * 100
+   : weightedAvailableMetric(normalizedRows, "cardClickRate", "cardImpressions")
+  const teaserClicks = numberOrUndefined(aggregated.cardTeaserClicks)
+  const teaserImpressions = numberOrUndefined(aggregated.cardTeaserImpressions)
+  aggregated.cardTeaserClickRate = teaserClicks !== undefined && teaserImpressions !== undefined && teaserImpressions > 0
+   ? teaserClicks / teaserImpressions * 100
+   : weightedAvailableMetric(normalizedRows, "cardTeaserClickRate", "cardTeaserImpressions")
+  const grossRevenue = numberOrUndefined(aggregated.grossRevenue)
+  const adImpressions = numberOrUndefined(aggregated.adImpressions)
+  aggregated.cpm = grossRevenue !== undefined && adImpressions !== undefined && adImpressions > 0
+   ? grossRevenue / adImpressions * 1000
+   : weightedAvailableMetric(normalizedRows, "cpm", "adImpressions")
+  const monetizedPlaybacks = numberOrUndefined(aggregated.monetizedPlaybacks)
+  aggregated.playbackBasedCpm = grossRevenue !== undefined && monetizedPlaybacks !== undefined && monetizedPlaybacks > 0
+   ? grossRevenue / monetizedPlaybacks * 1000
+   : weightedAvailableMetric(normalizedRows, "playbackBasedCpm", "monetizedPlaybacks")
+  return aggregated
+ })
 }
 
 const fillMissingChannelTotalsFromDaily = (
@@ -1471,6 +1546,12 @@ const fillMissingChannelTotalsFromDaily = (
    dislikes: sumAvailableMetric(rows, "dislikes"),
    comments: sumAvailableMetric(rows, "comments"),
    shares: sumAvailableMetric(rows, "shares"),
+   videosAddedToPlaylists: sumAvailableMetric(rows, "videosAddedToPlaylists"),
+   videosRemovedFromPlaylists: sumAvailableMetric(rows, "videosRemovedFromPlaylists"),
+   cardImpressions: sumAvailableMetric(rows, "cardImpressions"),
+   cardTeaserImpressions: sumAvailableMetric(rows, "cardTeaserImpressions"),
+   cardClicks: sumAvailableMetric(rows, "cardClicks"),
+   cardTeaserClicks: sumAvailableMetric(rows, "cardTeaserClicks"),
    subscribersGained,
    subscribersLost,
    netSubscribers: subscribersGained !== undefined && subscribersLost !== undefined ? subscribersGained - subscribersLost : undefined,
@@ -1483,8 +1564,10 @@ const fillMissingChannelTotalsFromDaily = (
    monetizedPlaybacks: sumAvailableMetric(rows, "monetizedPlaybacks"),
    adImpressions,
    impressions: adImpressions,
-   youtubePremiumViews: sumAvailableMetric(rows, "redViews"),
+   youtubePremiumViews: sumAvailableMetric(rows, "youtubePremiumViews") ?? sumAvailableMetric(rows, "redViews"),
    youtubePremiumWatchTime: (() => {
+    const hours = sumAvailableMetric(rows, "youtubePremiumWatchTime")
+    if (hours !== undefined) return hours
     const minutes = sumAvailableMetric(rows, "estimatedRedMinutesWatched")
     return minutes === undefined ? undefined : minutes / 60
    })(),
@@ -1500,6 +1583,16 @@ const fillMissingChannelTotalsFromDaily = (
   }
   if (direct.playbackBasedCpm === undefined && direct.grossRevenue !== undefined && direct.monetizedPlaybacks > 0) {
    direct.playbackBasedCpm = direct.grossRevenue / direct.monetizedPlaybacks * 1000
+  }
+  if (direct.cardClickRate === undefined && direct.cardClicks !== undefined && direct.cardImpressions > 0) {
+   direct.cardClickRate = direct.cardClicks / direct.cardImpressions * 100
+  }
+  if (direct.cardTeaserClickRate === undefined && direct.cardTeaserClicks !== undefined && direct.cardTeaserImpressions > 0) {
+   direct.cardTeaserClickRate = direct.cardTeaserClicks / direct.cardTeaserImpressions * 100
+  }
+  if (direct.averagePercentageViewed === undefined) {
+   direct.averagePercentageViewed = weightedAvailableMetric(rows, "averagePercentageViewed")
+    ?? weightedAvailableMetric(rows, "averageViewPercentage")
   }
   next[window] = direct
  })
@@ -1523,6 +1616,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   ["videos_analytics", "Video Analytics"],
   ["channel_totals", "Channel Totals"],
   ["daily_metrics", "Daily Metrics"],
+  ["monthly_metrics", "Monthly Metrics"],
   ["traffic", "Traffic Details"],
   ["segments", "Audience Segments"],
   ["device_os", "Device x OS"],
@@ -1680,57 +1774,74 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    const analyticsMap: Record<string, Record<string, any>> = {}
    let rowsWritten = 0
    let failures = 0
-   const result = await runAnalyticsBundle({
-    token,
-    id: "video_stats",
-    metrics: FULL_ANALYTICS_METRICS,
-    dimensions: "video",
-    sort: "-views",
-    maxResults: 200,
-    startDate: "2000-01-01",
-   })
-   if (result.rows) {
-    result.rows.forEach((row) => {
-     analyticsMap[String(row.video)] = row
-    })
-    rowsWritten += result.rows.length
-   snapshot = { ...snapshot, videos: mergeVideoAnalytics(snapshot.videos, Object.values(analyticsMap)) }
-   addManifestResult(manifest, "video_stats", true, result.rows.length, ["video", ...FULL_ANALYTICS_METRICS], undefined, result.columns)
-    await persistDatasetRows({ runId, datasetId: "videos", phase: "videos_analytics", rawRows: result.rows, tableRows: snapshot.videos as unknown as Array<Record<string, unknown>>, columns: result.columns })
-    commitSnapshot()
-   } else {
-    failures += 1
-    addManifestResult(manifest, "video_stats", false, 0, ["video", ...FULL_ANALYTICS_METRICS], result.error)
-   }
-
-   const missingVideoIds = snapshot.videos.filter((video) => !analyticsMap[video.id]).map((video) => video.id)
-   for (let index = 0; index < missingVideoIds.length; index += VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE) {
-    const chunk = missingVideoIds.slice(index, index + VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE)
+   const videoAnalyticsIds = snapshot.videos.map((video) => video.id).filter(Boolean)
+   const videoColumns = new Set<string>()
+   const videoBundleDiagnostics: Array<Record<string, unknown>> = []
+   for (let index = 0; index < videoAnalyticsIds.length; index += VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE) {
+    const chunk = videoAnalyticsIds.slice(index, index + VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE)
     const batchIndex = index / VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE
-    const chunkResult = await runAnalyticsBundle({
-     token,
-     id: `video_stats_recent_${batchIndex}`,
-     metrics: FULL_ANALYTICS_METRICS,
-     dimensions: "video",
-     sort: "",
-     maxResults: 0,
-     filters: `video==${chunk.join(",")}`,
-     startDate: "2000-01-01",
-    })
-    if (chunkResult.rows) {
-     chunkResult.rows.forEach((row) => {
-      analyticsMap[String(row.video)] = row
+    const batchRows: Record<string, any>[] = []
+    for (const bundle of DAILY_ANALYTICS_METRIC_BUNDLES) {
+     const bundleResult = await runAnalyticsBundleWithMetricSplit({
+      token,
+      id: `video_stats_${batchIndex}_${bundle.id}`,
+      metrics: [...bundle.metrics],
+      dimensions: "video",
+      sort: "",
+      maxResults: 0,
+      filters: `video==${chunk.join(",")}`,
+      startDate: "2000-01-01",
+      allowFallback: false,
      })
-     rowsWritten += chunkResult.rows.length
-     snapshot = { ...snapshot, videos: mergeVideoAnalytics(snapshot.videos, Object.values(analyticsMap)) }
-     addManifestResult(manifest, `video_stats_recent_${batchIndex}`, true, chunkResult.rows.length, ["video", ...FULL_ANALYTICS_METRICS], undefined, chunkResult.columns)
-     updatePhase(progress, "videos_analytics", { status: "running", rows: rowsWritten, message: `Backfilled ${Math.min(index + VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE, missingVideoIds.length)} of ${missingVideoIds.length} missing video analytics rows.` }, onProgress)
-     commitSnapshot()
-    } else {
-     failures += 1
-     addManifestResult(manifest, `video_stats_recent_${batchIndex}`, false, 0, ["video", ...FULL_ANALYTICS_METRICS], chunkResult.error)
+     bundleResult.columns.forEach((column) => videoColumns.add(column))
+     if (bundleResult.rows) batchRows.push(...bundleResult.rows)
+     if (!bundleResult.rows || bundleResult.error) failures += 1
+     addManifestResult(
+      manifest,
+      `video_stats_${batchIndex}_${bundle.id}`,
+      !!bundleResult.rows,
+      bundleResult.rows?.length || 0,
+      ["video", ...bundle.metrics],
+      bundleResult.error,
+      bundleResult.columns,
+     )
+     videoBundleDiagnostics.push(analyticsBundleDiagnostic({
+      phase: "videos_analytics",
+      categoryId: "videos_analytics",
+      bundleId: bundle.id,
+      requestedMetrics: bundle.metrics,
+      result: bundleResult,
+      context: { batch: batchIndex },
+     }))
+     if (bundle !== DAILY_ANALYTICS_METRIC_BUNDLES[DAILY_ANALYTICS_METRIC_BUNDLES.length - 1]) await sleep(75)
     }
-    if (index + VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE < missingVideoIds.length) await sleep(300)
+    const mergedBatchRows = batchRows.reduce(
+     (rows, row) => mergeRowsByKey(rows, [row], (candidate) => String(candidate.video || "")),
+     [] as Record<string, any>[],
+    )
+    if (mergedBatchRows.length) {
+     mergedBatchRows.forEach((row) => {
+      const videoId = String(row.video || "")
+      if (!videoId) return
+      analyticsMap[videoId] = mergeVtSyncDefinedFields(analyticsMap[videoId], row)
+     })
+     rowsWritten = Object.keys(analyticsMap).length
+     snapshot = { ...snapshot, videos: mergeVideoAnalytics(snapshot.videos, Object.values(analyticsMap)) }
+     updatePhase(progress, "videos_analytics", { status: "running", rows: rowsWritten, message: `Merged ${Math.min(index + VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE, videoAnalyticsIds.length)} of ${videoAnalyticsIds.length} video analytics rows.` }, onProgress)
+     commitSnapshot()
+    }
+    if (index + VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE < videoAnalyticsIds.length) await sleep(300)
+   }
+   manifest.diagnostics = [...(manifest.diagnostics || []), ...videoBundleDiagnostics]
+   if (Object.keys(analyticsMap).length) {
+    await persistDatasetRows({
+     runId,
+     datasetId: "videos",
+     phase: "videos_analytics",
+     rawRows: Object.values(analyticsMap),
+     tableRows: snapshot.videos as unknown as Array<Record<string, unknown>>,
+     columns: [...videoColumns],
+    })
    }
 
    const longIds = snapshot.videos.filter((video) => video.format === "long").map((video) => video.id)
@@ -1805,8 +1916,12 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     channelStartDate,
    )
    snapshot = { ...snapshot, channelTotals: mergedChannelTotals }
-   addManifestResult(manifest, "channel_totals", coreWindows > 0, totalsEntries.length, [...CHANNEL_TOTAL_CORE_METRICS, ...CHANNEL_TOTAL_MONETARY_METRICS], totalsErrors.join(" | ") || undefined, totalsColumns)
-   const missingChannelTotalMetrics = [...CHANNEL_TOTAL_CORE_METRICS, ...CHANNEL_TOTAL_MONETARY_METRICS].filter((metric) => !totalsColumns.includes(metric))
+   manifest.diagnostics = [
+    ...(manifest.diagnostics || []),
+    ...totalsEntries.flatMap(([, result]) => result.diagnostics),
+   ]
+   addManifestResult(manifest, "channel_totals", coreWindows > 0, totalsEntries.length, [...CHANNEL_TOTAL_METRICS], totalsErrors.join(" | ") || undefined, totalsColumns)
+   const missingChannelTotalMetrics = CHANNEL_TOTAL_METRICS.filter((metric) => !totalsColumns.includes(metric))
    const totalsStatus = coreWindows === 0 ? "failed" : totalsErrors.length || missingChannelTotalMetrics.length ? "partial" : "synced"
    markFreshness(["channel_totals"], "channel_totals", totalsEntries.length, totalsStatus, missingChannelTotalMetrics)
    updatePhase(progress, "channel_totals", {
@@ -1840,6 +1955,16 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     [] as Record<string, any>[],
    ).sort((a, b) => String(b.day || "").localeCompare(String(a.day || "")))
    const dailyErrors = dailyBundleResults.map((bundle) => bundle.error).filter(Boolean)
+   manifest.diagnostics = [
+    ...(manifest.diagnostics || []),
+    ...dailyBundleResults.map((bundleResult, index) => analyticsBundleDiagnostic({
+     phase: "daily_metrics",
+     categoryId: "daily_metrics",
+     bundleId: DAILY_ANALYTICS_METRIC_BUNDLES[index].id,
+     requestedMetrics: DAILY_ANALYTICS_METRIC_BUNDLES[index].metrics,
+     result: bundleResult,
+    })),
+   ]
    const result: BundleResult = {
     rows: dailyRows.length || dailyBundleResults.some((bundle) => bundle.rows) ? dailyRows : null,
     columns: [...new Set(dailyBundleResults.flatMap((bundle) => bundle.columns))],
@@ -1848,41 +1973,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    }
    const dailyAttemptedColumns = ["day", ...FULL_ANALYTICS_METRICS]
    const dailyMissingMetrics = dailyAttemptedColumns.filter((metric) => !result.columns.includes(metric))
-   const mappedDailyMetrics = (result.rows || []).map((row) => ({
-    date: row.day,
-    views: numberOrUndefined(row.views),
-    watchTime: numberOrUndefined(row.estimatedMinutesWatched) !== undefined ? numberOrZero(row.estimatedMinutesWatched) / 60 : undefined,
-    revenue: numberOrUndefined(row.estimatedRevenue),
-    avgViewDuration: numberOrUndefined(row.averageViewDuration),
-    averagePercentageViewed: numberOrUndefined(row.averageViewPercentage),
-    estimatedAdRevenue: numberOrUndefined(row.estimatedAdRevenue),
-    youtubePremiumRevenue: numberOrUndefined(row.estimatedRedPartnerRevenue),
-    subscribersGained: numberOrUndefined(row.subscribersGained),
-    subscribersLost: numberOrUndefined(row.subscribersLost),
-    adImpressions: numberOrUndefined(row.adImpressions),
-    engagedViews: numberOrUndefined(row.engagedViews),
-    likes: numberOrUndefined(row.likes),
-    dislikes: numberOrUndefined(row.dislikes),
-    comments: numberOrUndefined(row.comments),
-    shares: numberOrUndefined(row.shares),
-    cpm: numberOrUndefined(row.cpm),
-    grossRevenue: numberOrUndefined(row.grossRevenue),
-    monetizedPlaybacks: numberOrUndefined(row.monetizedPlaybacks),
-    playbackBasedCpm: numberOrUndefined(row.playbackBasedCpm),
-    redViews: numberOrUndefined(row.redViews),
-    estimatedRedMinutesWatched: numberOrUndefined(row.estimatedRedMinutesWatched),
-    cardClicks: numberOrUndefined(row.cardClicks),
-    cardImpressions: numberOrUndefined(row.cardImpressions),
-    cardClickRate: numberOrUndefined(row.cardClickRate),
-    cardTeaserClicks: numberOrUndefined(row.cardTeaserClicks),
-    cardTeaserImpressions: numberOrUndefined(row.cardTeaserImpressions),
-    cardTeaserClickRate: numberOrUndefined(row.cardTeaserClickRate),
-    annotationClicks: numberOrUndefined(row.annotationClicks),
-    annotationImpressions: numberOrUndefined(row.annotationImpressions),
-    annotationClickThroughRate: numberOrUndefined(row.annotationClickThroughRate),
-    videosAddedToPlaylists: numberOrUndefined(row.videosAddedToPlaylists),
-    videosRemovedFromPlaylists: numberOrUndefined(row.videosRemovedFromPlaylists),
-   }))
+   const mappedDailyMetrics = (result.rows || []).map((row) => mapAnalyticsTimeMetricRow(row, "day"))
    const retainedDailyMetrics = preserveVtSyncRowsForFailedDateWindows(
     mappedDailyMetrics,
     previousDailyMetrics,
@@ -1930,6 +2021,79 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     status: result.rows ? (dailyPartial ? "partial" : "complete") : "failed",
     rows: completeDailyMetrics.length,
     error: result.error || (dailyMissingMetrics.length ? `Missing returned metrics: ${dailyMissingMetrics.join(", ")}` : undefined),
+    completedAt: new Date().toISOString(),
+   }, onProgress)
+   commitSnapshot()
+  }
+
+  if (shouldSync(selected, "monthly_metrics")) {
+   updatePhase(progress, "monthly_metrics", { status: "running", startedAt: new Date().toISOString() }, onProgress)
+   const previousMonthlyMetrics = (snapshot.tableExports?.monthly_api || []) as Array<Record<string, any>>
+   const monthRange = buildVtSyncAnalyticsMonthRange(channelStartDate, reportEndDate())
+   const monthlyBundleResults: BundleResult[] = []
+   for (const bundle of DAILY_ANALYTICS_METRIC_BUNDLES) {
+    monthlyBundleResults.push(await runAnalyticsBundleWithMetricSplit({
+     token,
+     id: `monthly_history_${bundle.id}`,
+     metrics: [...bundle.metrics],
+     dimensions: "month",
+     sort: "-month",
+     startDate: monthRange.startDate,
+     endDate: monthRange.endDate,
+     maxResults: 500,
+     allowFallback: false,
+    }))
+    if (bundle !== DAILY_ANALYTICS_METRIC_BUNDLES[DAILY_ANALYTICS_METRIC_BUNDLES.length - 1]) await sleep(100)
+   }
+   const monthlyRows = monthlyBundleResults.reduce(
+    (rows, bundle) => mergeRowsByKey(rows, bundle.rows || [], (row) => String(row.month || "")),
+    [] as Record<string, any>[],
+   ).sort((a, b) => String(b.month || "").localeCompare(String(a.month || "")))
+   const monthlyColumns = [...new Set(monthlyBundleResults.flatMap((bundle) => bundle.columns))]
+   const monthlyErrors = monthlyBundleResults.map((bundle) => bundle.error).filter(Boolean)
+   manifest.diagnostics = [
+    ...(manifest.diagnostics || []),
+    ...monthlyBundleResults.map((bundleResult, index) => analyticsBundleDiagnostic({
+     phase: "monthly_metrics",
+     categoryId: "monthly_metrics",
+     bundleId: DAILY_ANALYTICS_METRIC_BUNDLES[index].id,
+     requestedMetrics: DAILY_ANALYTICS_METRIC_BUNDLES[index].metrics,
+     result: bundleResult,
+    })),
+   ]
+   const monthlyAttemptedColumns = ["month", ...FULL_ANALYTICS_METRICS]
+   const monthlyMissingMetrics = monthlyAttemptedColumns.filter((metric) => !monthlyColumns.includes(metric))
+   const mappedMonthlyMetrics = monthlyRows.map((row) => mapAnalyticsTimeMetricRow(row, "month"))
+   const completeMonthlyMetrics = monthlyRows.length
+    ? mergeVtSyncRowsPreservingDefined(
+       previousMonthlyMetrics,
+       mappedMonthlyMetrics,
+       (row) => String(row.date || ""),
+      )
+    : previousMonthlyMetrics
+   snapshot = {
+    ...snapshot,
+    tableExports: {
+     ...(snapshot.tableExports || {}),
+     monthly_api: completeMonthlyMetrics,
+    },
+   }
+   const monthlyError = monthlyErrors.length ? monthlyErrors.join(" | ") : undefined
+   if (monthlyRows.length) await persistDatasetRows({
+    runId,
+    datasetId: "monthly_api",
+    phase: "monthly_metrics",
+    rawRows: monthlyRows,
+    tableRows: completeMonthlyMetrics,
+    columns: monthlyColumns,
+   })
+   addManifestResult(manifest, "monthly_history", monthlyRows.length > 0, monthlyRows.length, monthlyAttemptedColumns, monthlyError, monthlyColumns)
+   const monthlyPartial = !!monthlyError || monthlyMissingMetrics.length > 0
+   markFreshness(["monthly_api"], "monthly_metrics", completeMonthlyMetrics.length, monthlyRows.length ? (monthlyPartial ? "partial" : "synced") : "failed", monthlyMissingMetrics)
+   updatePhase(progress, "monthly_metrics", {
+    status: monthlyRows.length ? (monthlyPartial ? "partial" : "complete") : "failed",
+    rows: completeMonthlyMetrics.length,
+    error: monthlyError || (monthlyMissingMetrics.length ? `Missing returned metrics: ${monthlyMissingMetrics.join(", ")}` : undefined),
     completedAt: new Date().toISOString(),
    }, onProgress)
    commitSnapshot()
@@ -2041,8 +2205,8 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     ["demographics_gender", "demographicsByGender", "gender", ["viewerPercentage"], ""],
     ["audience_watch_behavior", "audienceWatchBehavior", "audienceType", ["views", "estimatedMinutesWatched", "averageViewDuration"], "-views"],
     ["new_returning_viewers", "newReturningViewers", "audienceType", ["views", "estimatedMinutesWatched"], "-views"],
-    ["creator_content_type", "creatorContentTypes", "creatorContentType", ["views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"], "-views"],
-    ["geography_country", "geography", "country", ["engagedViews", "views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage", "shares", "subscribersGained", "subscribersLost", "likes", "dislikes", "comments"], "-views"],
+    ["creator_content_type", "creatorContentTypes", "month,creatorContentType", VT_SYNC_REQUIRED_ANALYTICS_METRICS, "-month"],
+    ["geography_country", "geography", "country", VT_SYNC_REQUIRED_ANALYTICS_METRICS, "-views"],
     ["geography_city", "cities", "country,city", ["views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"], "-views"],
     ["geography_province", "provinces", "province", GEOGRAPHY_PROVINCE_SAFE_METRICS, "-views", "country==US", 50],
     ["geography_dma", "dmaRegions", "dma", ["views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"], "-views"],
@@ -2053,57 +2217,89 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    ]
    for (const [categoryId, field, dimensions, metrics, sort, filters = "", maxResults = 200] of segmentRuns) {
     if (!shouldSync(selected, categoryId)) continue
-    const coreResult = await runAnalyticsBundle({ token, id: `${categoryId}_core`, metrics: [...metrics], dimensions, sort, maxResults, filters, startDate: channelStartDate, allowFallback: false })
-    let result = coreResult
-    if (categoryId === "geography_country" && coreResult.rows) {
-     const supplementalBundles = [
-      ["revenue", ["estimatedRevenue", "estimatedAdRevenue", "estimatedRedPartnerRevenue", "cpm", "grossRevenue"]],
-      ["advertising", ["monetizedPlaybacks", "playbackBasedCpm", "adImpressions"]],
-     ] as const
-     const supplementalResults: BundleResult[] = []
-     for (const [bundleId, bundleMetrics] of supplementalBundles) {
-      supplementalResults.push(await runAnalyticsBundleWithMetricSplit({
+    const usesCompleteContract = categoryId === "creator_content_type" || categoryId === "geography_country"
+    let result: BundleResult
+    if (usesCompleteContract) {
+    const bundleResults: BundleResult[] = []
+    for (const bundle of VT_SYNC_ANALYTICS_METRIC_BUNDLES) {
+      const bundleResult = categoryId === "creator_content_type"
+       ? await runLifetimeMonthWindowBundle({
+        token,
+        id: `${categoryId}_${bundle.id}`,
+        metrics: [...bundle.metrics],
+        dimensions,
+        sort,
+        maxResults: 500,
+        filters,
+        startDate: channelStartDate,
+        allowFallback: false,
+        splitOnFailure: true,
+       })
+       : await runAnalyticsBundleWithMetricSplit({
        token,
-       id: `geography_country_${bundleId}`,
-       metrics: [...bundleMetrics],
+       id: `${categoryId}_${bundle.id}`,
+       metrics: [...bundle.metrics],
        dimensions,
-       sort: bundleId === "revenue" ? "-estimatedRevenue" : "-monetizedPlaybacks",
+       sort,
        maxResults,
        filters,
        startDate: channelStartDate,
        allowFallback: false,
-      }))
-      if (bundleId !== supplementalBundles[supplementalBundles.length - 1][0]) await sleep(100)
+      })
+      bundleResults.push(bundleResult)
+      manifest.diagnostics = [
+       ...(manifest.diagnostics || []),
+       analyticsBundleDiagnostic({
+        phase: "segments",
+        categoryId,
+        bundleId: bundle.id,
+        requestedMetrics: bundle.metrics,
+        result: bundleResult,
+       }),
+      ]
+      if (bundle !== VT_SYNC_ANALYTICS_METRIC_BUNDLES[VT_SYNC_ANALYTICS_METRIC_BUNDLES.length - 1]) await sleep(100)
      }
-     const supplementalRows = supplementalResults.reduce(
-      (rows, supplemental) => mergeRowsByKey(rows, supplemental.rows || [], (row) => String(row.country || "")),
-      [] as Record<string, any>[],
-     )
      result = {
-      rows: mergeRowsByKey(coreResult.rows, supplementalRows, (row) => String(row.country || "")),
-      columns: [...new Set([...coreResult.columns, ...supplementalResults.flatMap((supplemental) => supplemental.columns)])],
-      error: supplementalResults.map((supplemental) => supplemental.error).filter(Boolean).join(" | ") || undefined,
-      status: supplementalResults.find((supplemental) => supplemental.status)?.status,
+      rows: bundleResults.reduce(
+       (rows, bundle) => mergeRowsByKey(rows, bundle.rows || [], (row) => metricRowKey(row, dimensions)),
+       [] as Record<string, any>[],
+      ),
+      columns: [...new Set(bundleResults.flatMap((bundle) => bundle.columns))],
+      error: bundleResults.map((bundle) => bundle.error).filter(Boolean).join(" | ") || undefined,
+      status: bundleResults.find((bundle) => bundle.status)?.status,
      }
+     if (!result.rows.length && bundleResults.every((bundle) => !bundle.rows)) result.rows = null
+    } else {
+     result = await runAnalyticsBundle({ token, id: `${categoryId}_core`, metrics: [...metrics], dimensions, sort, maxResults, filters, startDate: channelStartDate, allowFallback: false })
     }
     if (!result.rows || result.error) segmentsPartial = true
-    const attemptedMetrics = categoryId === "geography_country"
-     ? [...metrics, "estimatedRevenue", "estimatedAdRevenue", "estimatedRedPartnerRevenue", "cpm", "grossRevenue", "monetizedPlaybacks", "playbackBasedCpm", "adImpressions"]
-     : [...metrics]
+    const attemptedMetrics = usesCompleteContract ? [...VT_SYNC_REQUIRED_ANALYTICS_METRICS] : [...metrics]
     const missingMetrics = attemptedMetrics.filter((metric) => !result.columns.includes(metric))
-    const mappedRows = mapSegmentRows(result.rows, dimensions.split(",").pop() || dimensions)
+    if (missingMetrics.length) segmentsPartial = true
+    const rawRows = result.rows || []
+    const mappedRows = categoryId === "creator_content_type"
+     ? aggregateVtSyncCreatorContentTypeRows(rawRows)
+     : mapSegmentRows(result.rows, dimensions.split(",").pop() || dimensions)
     const previousRows = Array.isArray((snapshot as any)[field]) ? (snapshot as any)[field] as Record<string, any>[] : []
-    const completedRows = categoryId === "geography_country" && (result.error || missingMetrics.length)
+    const completedRows = usesCompleteContract && (result.error || missingMetrics.length)
      ? mergeVtSyncRowsPreservingDefined(
       previousRows,
       mappedRows,
-      (row) => String(row.country || row.countryCode || row.term || ""),
+      (row) => String(row.country || row.countryCode || row.creatorContentType || row.term || ""),
      )
      : mappedRows
     ;(snapshot as any)[field] = completedRows
     rowsWritten += result.rows?.length || 0
-    addManifestResult(manifest, categoryId, !!result.rows, result.rows?.length || 0, result.columns, result.error)
-    if (result.rows) await persistDatasetRows({ runId, datasetId: categoryId, phase: "segments", rawRows: result.rows, tableRows: completedRows, columns: result.columns })
+    addManifestResult(
+     manifest,
+     categoryId,
+     !!result.rows && !result.error && !missingMetrics.length,
+     result.rows?.length || 0,
+     [dimensions, ...attemptedMetrics],
+     result.error,
+     result.columns,
+    )
+    if (result.rows) await persistDatasetRows({ runId, datasetId: categoryId, phase: "segments", rawRows, tableRows: completedRows, columns: result.columns })
     markFreshness([categoryId], categoryId, completedRows.length, result.rows ? (result.error || missingMetrics.length ? "partial" : "synced") : "failed", missingMetrics)
     commitSnapshot()
     await sleep(150)

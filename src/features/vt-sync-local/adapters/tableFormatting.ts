@@ -113,6 +113,34 @@ export const formatVtSyncLocalMonthValue = (value: unknown): string => {
  return new Date(timestamp).toLocaleDateString("en-US", { month: "short" })
 }
 
+const VT_SYNC_FULL_MONTH_NAMES = [
+ "January",
+ "February",
+ "March",
+ "April",
+ "May",
+ "June",
+ "July",
+ "August",
+ "September",
+ "October",
+ "November",
+ "December",
+] as const
+
+export const formatVtSyncFullMonthValue = (value: unknown): string => {
+ if (typeof value === "string") {
+  const yearMonth = value.trim().match(/^(\d{4})-(\d{2})(?:-\d{2})?$/)
+  if (yearMonth) {
+   const monthIndex = Number(yearMonth[2]) - 1
+   return VT_SYNC_FULL_MONTH_NAMES[monthIndex] || value
+  }
+ }
+ const timestamp = parseVtSyncDateValue(value)
+ if (timestamp === undefined) return isMissing(value) ? "-" : String(value)
+ return VT_SYNC_FULL_MONTH_NAMES[new Date(timestamp).getUTCMonth()]
+}
+
 export const getVtSyncLocalWeekdayIndex = (value: unknown): number | undefined => {
  const timestamp = parseVtSyncDateValue(value)
  if (timestamp !== undefined) return (new Date(timestamp).getDay() + 6) % 7
