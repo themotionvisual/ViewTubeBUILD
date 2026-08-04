@@ -11,6 +11,7 @@ import {
  FormatComparisonDonuts,
  GrowthPulse,
  HookEffectiveness,
+ AgeGenderAudienceModule,
  KeywordTreemapModule,
  KeywordVennModule,
  LissajousWebModule,
@@ -25,6 +26,8 @@ import {
  UploadTimeHeatmapModule,
  VideoValueMatrix,
  WatchTimeDistribution,
+ CustomScatterModule,
+ SignalMatrixModule,
 } from "../../../components/GraphsPageCharts"
 import type { VtSyncSnapshot } from "../adapters/contracts"
 import { buildVtSyncVisualPropsData } from "../adapters/visualData"
@@ -53,13 +56,16 @@ const CORE_VISUAL_MODULES: LegacyVisualModuleDefinition[] = [
  { id: "format-comparison-donuts", group: "core", delayMs: 35, render: ({ data, contentTypeRows }) => <FormatComparisonDonuts data={data} contentTypeRows={contentTypeRows} /> },
  { id: "shorts-retention-widget", group: "core", delayMs: 50, render: ({ data }) => <ShortsRetentionWidgetModule data={data} /> },
  { id: "algorithm-trigger", group: "core", delayMs: 100, render: ({ data }) => <AlgorithmTriggerModule data={data} /> },
+ { id: "revenue-distribution", group: "core", delayMs: 150, render: ({ data }) => <RevenueDistribution data={data} /> },
  { id: "revenue-efficiency", group: "core", delayMs: 175, render: ({ data }) => <RevenueEfficiency data={data} /> },
  { id: "hook-effectiveness", group: "core", delayMs: 200, render: ({ data }) => <HookEffectiveness data={data} /> },
- { id: "revenue-distribution", group: "core", delayMs: 250, render: ({ data }) => <RevenueDistribution data={data} /> },
+ { id: "age-gender-audience", group: "core", delayMs: 250, render: ({ data, demographicRows }) => <AgeGenderAudienceModule data={data} demographicRows={demographicRows} /> },
  { id: "subscribers-gained", group: "core", delayMs: 300, render: ({ data }) => <SubscribersGained data={data} /> },
  { id: "watch-time-distribution", group: "core", delayMs: 350, render: ({ data }) => <WatchTimeDistribution data={data} /> },
  { id: "video-value-matrix", group: "core", delayMs: 400, render: ({ data }) => <VideoValueMatrix data={data} /> },
  { id: "growth-pulse", group: "core", delayMs: 450, render: ({ data }) => <GrowthPulse data={data} /> },
+ { id: "signal-matrix", group: "core", delayMs: 520, render: ({ data }) => <SignalMatrixModule data={data} /> },
+ { id: "custom-scatter", group: "core", delayMs: 545, render: ({ data }) => <CustomScatterModule data={data} /> },
  {
   id: "traffic-source-evolution",
   group: "core",
@@ -95,6 +101,7 @@ const sourceTablesForVisual = (id: string): readonly string[] => {
  if (id.includes("format") || id.includes("shorts-vs-longs")) return ["creator", "videos"]
  if (id.includes("keyword") || id.includes("word-network")) return ["videos", "search"]
  if (id.includes("publish") || id.includes("upload-time")) return ["videos", "daily"]
+ if (id.includes("age-gender") || id.includes("audience")) return ["demographics"]
  if (id.includes("revenue")) return ["videos", "ads"]
  if (id.includes("subscriber")) return ["videos", "subs"]
  return ["videos"]
@@ -152,12 +159,15 @@ const PRIMARY_MODULE_IDS = new Set([
  "engagement-lines",
  "shorts-retention-widget",
  "format-comparison-donuts",
- "revenue-efficiency",
  "revenue-distribution",
+ "revenue-efficiency",
+ "age-gender-audience",
  "subscribers-gained",
  "watch-time-distribution",
  "traffic-source-evolution",
  "keyword-venn",
+ "signal-matrix",
+ "custom-scatter",
  "tube-explorer-clock-radial-burst",
  "tube-explorer-barcode-fingerprint",
  "tube-explorer-subscriber-waterfall",
@@ -174,7 +184,7 @@ const PRIMARY_VISUAL_MODULES: VtSyncVisualModuleDefinition[] = VISUAL_MODULES.fi
 const SECONDARY_VISUAL_MODULES: VtSyncVisualModuleDefinition[] = VISUAL_MODULES.filter((module) => !PRIMARY_MODULE_IDS.has(module.id))
 
 const THREE_UP_VISUAL_ROW_IDS = new Set([
- "revenue-distribution",
+ "age-gender-audience",
  "subscribers-gained",
  "watch-time-distribution",
 ])
@@ -265,6 +275,7 @@ const VtSyncDataVisualsContent: React.FC<{
   trafficRows: visualData.canonicalContext.trafficRows,
   trafficByDay: visualData.trafficByDay,
   geographyRows: visualData.canonicalContext.geographyRows,
+  demographicRows: visualData.canonicalContext.demographicRows,
   contentTypeRows: (snapshot.creatorContentTypes as Array<Record<string, unknown>>) || [],
  }
 

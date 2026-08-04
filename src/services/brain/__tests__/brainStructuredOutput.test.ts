@@ -100,6 +100,26 @@ describe("structured model output -> CreatorBrainResponse", () => {
   expect(evaluation.passed).toBe(false)
  })
 
+ it("does not downgrade a creative asset draft that contains legitimate numbers", () => {
+  const snapshot = buildGoldenChannelFixture(restorationRichSpec).snapshot
+  // A drafted description with a year and a count — perfectly valid creative copy that
+  // isn't in the analytics evidence. Analytics rules would reject it; asset drafts must not.
+  const output = baseOutput({
+   mode: "creator_asset_draft",
+   keyInsight: "Here is a paste-ready description for your next restoration video.",
+   body: "In this 1940s hand plane restoration, I walk through all 12 steps from rust to razor-sharp.",
+   modules: [{ title: "Description", body: "Restored from a rusty 1943 relic in 12 stages.", tone: "green", kind: "recommendation_stack" }],
+  })
+  const response = fromStructuredOutput(output, snapshot)
+
+  const asDraft = validateBrainResponse({ response, snapshot, expectedMode: "creator_asset_draft" })
+  expect(asDraft.passed).toBe(true)
+
+  // The same copy judged as an analytics answer would be rejected for invented numbers.
+  const asAnalytics = validateBrainResponse({ response, snapshot, expectedMode: "analytics_diagnosis" })
+  expect(asAnalytics.passed).toBe(false)
+ })
+
  it("drops empty structured payloads so a module falls back to prose", () => {
   const snapshot = buildGoldenChannelFixture(restorationRichSpec).snapshot
   const output = baseOutput({

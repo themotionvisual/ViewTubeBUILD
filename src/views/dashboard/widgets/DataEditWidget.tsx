@@ -10,6 +10,7 @@ import {
  ShieldCheck,
  Upload,
  UploadCloud,
+ CircleX,
  X,
 } from "lucide-react"
 import {
@@ -306,9 +307,38 @@ const VideoMetadataWorkspace = ({ mode, data }: { mode: WorkflowMode; data: Dash
         </div>
         <Field label="Description"><textarea className="vt-textarea widget-description-textarea" aria-label="Description" value={description} onChange={(event) => setDescription(event.target.value)} rows={4} /><small className="widget-character-count">{description.length}/5000</small></Field>
         <Module title={`Tags (${tags.length})`}>
-         <div className="widget-tag-list">{tags.map((tag) => <button className="vt-button" type="button" key={tag} onClick={() => setTags((current) => current.filter((item) => item !== tag))}>{tag}<X /></button>)}</div>
-         <div className="widget-inline-entry"><input className="vt-input-standard" value={newTag} onChange={(event) => setNewTag(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addTag() } }} placeholder="Add tag…" /><button className="vt-button primary" type="button" onClick={addTag} aria-label="Add tag"><Plus /></button></div>
-        </Module>
+  <div className="widget-tag-list">
+    {tags.map((tag) => (
+      <button 
+        className="chip" 
+        type="button" 
+        key={tag} 
+        onClick={() => setTags((current) => current.filter((item) => item !== tag))}
+      >
+        {tag}
+        {/* Adjusted icon to match the black close circle in your mockups */}
+        <CircleX size={16} fill="black" stroke="white" />
+      </button>
+    ))}
+  </div>
+  <div className="widget-inline-entry">
+    <input 
+      className="vt-input-standard" 
+      value={newTag} 
+      onChange={(event) => setNewTag(event.target.value)} 
+      onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addTag() } }} 
+      placeholder="Add tag…" 
+    />
+    <button 
+      className="vt-button primary" 
+      type="button" 
+      onClick={addTag} 
+      aria-label="Add tag"
+    >
+      <Plus />
+    </button>
+  </div>
+</Module>
        </>
       ) : null}
 

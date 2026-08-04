@@ -50,6 +50,7 @@ export interface GChartProps {
  trafficRows?: Array<Record<string, unknown>>
  trafficByDay?: Array<Record<string, unknown>>
  contentTypeRows?: Array<Record<string, unknown>>
+ demographicRows?: Array<Record<string, unknown>>
  useVideoTrafficFallback?: boolean
 }
 
@@ -642,6 +643,53 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
   </SubToolboxChartModule>
  )
 }
+type AgeGenderAudienceDatum = {
+ cohort: string
+ male: number
+ female: number
+ other: number
+ total: number
+}
+
+const demographicNumber = (value: unknown): number => {
+ if (typeof value === "number" && Number.isFinite(value)) return Math.max(0, value)
+ if (typeof value === "string") {
+  const parsed = Number(value.replace(/[$,% ,]/g, ""))
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : 0
+ }
+ return 0
+}
+
+const demographicLabel = (row: Record<string, unknown>): string =>
+ String(row.ageGroupLabel || row.cohort || row.ageGroup || "Unknown")
+
+const buildAgeGenderAudienceData = (rows: Array<Record<string, unknown>> = []): AgeGenderAudienceDatum[] => {
+ const byCohort = new Map<string, AgeGenderAudienceDatum>()
+ rows.forEach((row) => {
+  const cohort = demographicLabel(row)
+  if (!cohort || cohort === "Unknown") return
+  const existing = byCohort.get(cohort) || { cohort, male: 0, female: 0, other: 0, total: 0 }
+  const gender = String(row.gender || "").toLowerCase()
+  const directMale = demographicNumber(row.maleViewerPercentage)
+  const directFemale = demographicNumber(row.femaleViewerPercentage)
+  const directOther = demographicNumber(row.otherViewerPercentage)
+  if (directMale || directFemale || directOther) {
+   existing.male += directMale
+   existing.female += directFemale
+   existing.other += directOther
+  } else if (gender.includes("female")) {
+   existing.female += demographicNumber(row.viewerPercentage ?? row.viewsPct)
+  } else if (gender.includes("male")) {
+   existing.male += demographicNumber(row.viewerPercentage ?? row.viewsPct)
+  } else {
+   existing.other += demographicNumber(row.viewerPercentage ?? row.viewsPct)
+  }
+  existing.total = existing.male + existing.female + existing.other
+  byCohort.set(cohort, existing)
+ })
+ return [...byCohort.values()].filter((row) => row.total > 0).slice(0, 7)
+}
+
 /* 2. Revenue Distribution */
 export const RevenueDistribution: React.FC<GChartProps> = ({ data }) => {
  const [selectedCount, setSelectedCount] = useState(10)
@@ -698,7 +746,7 @@ export const RevenueDistribution: React.FC<GChartProps> = ({ data }) => {
     <InsightMarquee
      mode="insight-lock"
      segments={[
-      { badge: "Revenue", text: "Revenue distribution shows which videos generate the most income — focus on creating more of your top earners.", badgeTone: "lime" },
+      { badge: "Revenue", text: "Revenue distribution shows which videos generate the most income - focus on creating more of your top earners.", badgeTone: "lime" },
      ]}
     />
    }
@@ -715,6 +763,221 @@ export const RevenueDistribution: React.FC<GChartProps> = ({ data }) => {
     </StableChartFrame>
    </div>
   </SubToolboxChartModule>
+ )
+}
+
+/* 2b. Age x Gender Audience — Interactive Sunburst */
+const SUNBURST_GRADIENT = [
+ "#FF3399", "#FF6633", "#FFAA00", "#CCFF00", "#00E5FF", "#3366FF", "#9933FF",
+] as const
+
+const sunburstColor = (t: number): string => {
+ const palette = SUNBURST_GRADIENT
+ const scaled = t * (palette.length - 1)
+ const lo = Math.floor(Math.min(scaled, palette.length - 2))
+ const hi = lo + 1
+ const frac = scaled - lo
+ const parse = (hex: string) => [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)]
+ const [r1,g1,b1] = parse(palette[lo])
+ const [r2,g2,b2] = parse(palette[hi])
+ return `rgb(${Math.round(r1+(r2-r1)*frac)},${Math.round(g1+(g2-g1)*frac)},${Math.round(b1+(b2-b1)*frac)})`
+}
+
+const polarToCart = (cx: number, cy: number, r: number, angle: number) => ({
+ x: cx + r * Math.cos(angle),
+ y: cy + r * Math.sin(angle),
+})
+
+const arcPath = (cx: number, cy: number, r1: number, r2: number, startAngle: number, endAngle: number): string => {
+ const s1 = polarToCart(cx, cy, r1, startAngle)
+ const s2 = polarToCart(cx, cy, r2, startAngle)
+ const e1 = polarToCart(cx, cy, r1, endAngle)
+ const e2 = polarToCart(cx, cy, r2, endAngle)
+ const large = endAngle - startAngle > Math.PI ? 1 : 0
+ return `M${s1.x},${s1.y} A${r1},${r1} 0 ${large} 1 ${e1.x},${e1.y} L${e2.x},${e2.y} A${r2},${r2} 0 ${large} 0 ${s2.x},${s2.y} Z`
+}
+
+export const AgeGenderAudienceModule: React.FC<GChartProps> = ({ demographicRows }) => {
+ const cd = useMemo(() => buildAgeGenderAudienceData(demographicRows), [demographicRows])
+ const leader = useMemo(() => [...cd].sort((a, b) => b.total - a.total)[0], [cd])
+ const total = useMemo(() => cd.reduce((sum, row) => sum + row.total, 0), [cd])
+ const [hovered, setHovered] = useState<string | null>(null)
+
+ // Build sunburst data — inner ring = age cohorts, outer ring = gender splits
+ const sunData = useMemo(() => {
+ const AGE_GROUPS = cd.map((row, i) => {
+ const start = i / cd.length
+ const end = (i + 1) / cd.length
+ return {
+ label: row.cohort,
+ pct: row.total,
+ colorT: cd.length <= 1 ? 0.5 : i / (cd.length - 1),
+ arcStart: start,
+ arcEnd: end,
+ male: row.male,
+ female: row.female,
+ other: row.other,
+ }
+ })
+ // Outer ring: gender per age group
+ const OUTER: Array<{ label: string; pct: number; colorT: number; arcStart: number; arcEnd: number; parentLabel: string }> = []
+ AGE_GROUPS.forEach((ag) => {
+ const segments = [
+ { label: "Male", val: ag.male },
+ { label: "Female", val: ag.female },
+ { label: "Other", val: ag.other },
+ ].filter(s => s.val > 0)
+ const segTotal = segments.reduce((s, x) => s + x.val, 0) || 1
+ const span = ag.arcEnd - ag.arcStart
+ let offset = 0
+ segments.forEach((seg, si) => {
+ const frac = seg.val / segTotal
+ OUTER.push({
+ label: seg.label,
+ pct: seg.val,
+ colorT: ag.colorT + (si - 1) * 0.05,
+ arcStart: ag.arcStart + offset * span,
+ arcEnd: ag.arcStart + (offset + frac) * span,
+ parentLabel: ag.label,
+ })
+ offset += frac
+ })
+ })
+ return { inner: AGE_GROUPS, outer: OUTER }
+ }, [cd])
+
+ const CX = 160
+ const CY = 155
+ const R_IN1 = 50, R_IN2 = 110, R_OUT1 = 115, R_OUT2 = 155
+ const toAngle = (t: number) => t * 2 * Math.PI - Math.PI / 2
+
+ const hoveredInner = sunData.inner.find(d => d.label === hovered)
+ const hoveredOuter = sunData.outer.find(d => `${d.parentLabel}-${d.label}` === hovered)
+ const hoveredLabel = hoveredInner ? hoveredInner.label : hoveredOuter ? `${hoveredOuter.parentLabel} / ${hoveredOuter.label}` : null
+ const hoveredPct = hoveredInner ? hoveredInner.pct : hoveredOuter ? hoveredOuter.pct : null
+
+ return (
+ <SubToolboxChartModule
+ header={{
+ title: "AGE × GENDER",
+ subtitle: "VIEWER % SUNBURST · INNER=AGE · OUTER=GENDER",
+ icon: <CustomIcon name="analytics" size={18} />,
+ headerStyle: "subtoolbox",
+ titleClassName: "text-[clamp(18px,2vw,30px)] leading-[.9]",
+ }}
+ theme={{
+ headerBandBg: "#CCFF00",
+ iconBlockBg: "#F55EFC",
+ shadowColor: "rgba(204,255,0,0.45)",
+ }}
+ layout={{ moduleMinHeight: "320px", moduleWidth: "100%" }}
+ activeContext={{
+ title: hoveredLabel ? hoveredLabel.toUpperCase() : (leader?.cohort?.toUpperCase() || "NO DATA"),
+ stats: [
+ { label: "PCT", value: hoveredPct != null ? `${hoveredPct.toFixed(1)}%` : `${leader?.total.toFixed(1) ?? "0.0"}%`, tone: "lime" },
+ { label: "TOTAL", value: `${total.toFixed(1)}%`, tone: "pink" },
+ ],
+ }}
+ footer={
+ <InsightMarquee
+ mode="insight-lock"
+ segments={[{ badge: "Audience", text: "Inner ring = age groups · outer ring = gender split per age · hover to inspect.", badgeTone: "lime" }]}
+ />
+ }
+ >
+ <div className="flex items-center gap-4 px-3 pb-3 pt-1" style={{ background: "#0a0b18" }}>
+ <svg viewBox="0 0 320 310" width={320} height={310} style={{ flexShrink: 0, background: "#0a0b18" }}>
+ {/* Inner ring — age groups */}
+ {sunData.inner.map((seg) => {
+ const key = seg.label
+ const isHov = hovered === key
+ const col = sunburstColor(seg.colorT)
+ const sa = toAngle(seg.arcStart)
+ const ea = toAngle(seg.arcEnd)
+ const gap = 0.01
+ return (
+ <g key={key}
+ onMouseEnter={() => setHovered(key)}
+ onMouseLeave={() => setHovered(null)}
+ style={{ cursor: "pointer" }}
+ >
+ <path
+ d={arcPath(CX, CY, R_IN1, isHov ? R_IN2 + 6 : R_IN2, sa + gap, ea - gap)}
+ fill={col}
+ fillOpacity={isHov ? 1 : 0.82}
+ stroke="#0a0b18"
+ strokeWidth={2}
+ style={{ transition: "all 200ms cubic-bezier(0.34,1.56,0.64,1)", filter: isHov ? `drop-shadow(0 0 6px ${col})` : undefined }}
+ />
+ {(ea - sa) > 0.18 && (
+ <text
+ x={polarToCart(CX, CY, (R_IN1 + R_IN2) / 2, (sa + ea) / 2).x}
+ y={polarToCart(CX, CY, (R_IN1 + R_IN2) / 2, (sa + ea) / 2).y + 3}
+ textAnchor="middle"
+ fontSize={isHov ? 9 : 8}
+ fontWeight={1000}
+ fill="#000"
+ style={{ pointerEvents: "none", textTransform: "uppercase" }}
+ >
+ {seg.label.replace(/age_/i, "")}
+ </text>
+ )}
+ </g>
+ )
+ })}
+ {/* Outer ring — gender per age */}
+ {sunData.outer.map((seg) => {
+ const key = `${seg.parentLabel}-${seg.label}`
+ const isHov = hovered === key
+ const col = seg.label === "Male" ? "#36E0F6" : seg.label === "Female" ? "#FF7AC8" : "#CCFF00"
+ const sa = toAngle(seg.arcStart)
+ const ea = toAngle(seg.arcEnd)
+ const gap = 0.006
+ return (
+ <g key={key}
+ onMouseEnter={() => setHovered(key)}
+ onMouseLeave={() => setHovered(null)}
+ style={{ cursor: "pointer" }}
+ >
+ <path
+ d={arcPath(CX, CY, R_OUT1, isHov ? R_OUT2 + 8 : R_OUT2, sa + gap, ea - gap)}
+ fill={col}
+ fillOpacity={isHov ? 1 : 0.85}
+ stroke="#0a0b18"
+ strokeWidth={1.5}
+ style={{ transition: "all 180ms cubic-bezier(0.34,1.56,0.64,1)", filter: isHov ? `drop-shadow(0 0 5px ${col})` : undefined }}
+ />
+ </g>
+ )
+ })}
+ {/* Centre label */}
+ <text x={CX} y={CY - 8} textAnchor="middle" fontSize={11} fontWeight={1000} fill="#fff">AGE</text>
+ <text x={CX} y={CY + 6} textAnchor="middle" fontSize={9} fontWeight={800} fill="rgba(255,255,255,0.6)" style={{ textTransform: "uppercase" }}>× GENDER</text>
+ </svg>
+ {/* Legend */}
+ <div className="flex flex-col gap-2 min-w-0">
+ <div className="text-[9px] font-black uppercase tracking-[0.1em] text-white/60 mb-1">AGE GROUPS</div>
+ {cd.map((row, i) => (
+ <div key={row.cohort} className="flex items-center gap-2">
+ <span className="w-3 h-3 rounded-sm shrink-0 border border-black/20" style={{ background: sunburstColor(cd.length <= 1 ? 0.5 : i / (cd.length - 1)) }} />
+ <span className="text-[10px] font-black uppercase text-white">{row.cohort}</span>
+ <span className="text-[10px] font-[900] text-white/70 ml-auto">{row.total.toFixed(1)}%</span>
+ </div>
+ ))}
+ <div className="text-[9px] font-black uppercase tracking-[0.1em] text-white/60 mt-2 mb-1">GENDER (outer)</div>
+ {[
+ { label: "Male", color: "#36E0F6" },
+ { label: "Female", color: "#FF7AC8" },
+ { label: "Other", color: "#CCFF00" },
+ ].map(g => (
+ <div key={g.label} className="flex items-center gap-2">
+ <span className="w-3 h-3 rounded-sm shrink-0 border border-black/20" style={{ background: g.color }} />
+ <span className="text-[10px] font-black uppercase text-white">{g.label}</span>
+ </div>
+ ))}
+ </div>
+ </div>
+ </SubToolboxChartModule>
  )
 }
 
@@ -924,24 +1187,24 @@ export const TopPerformersTrio: React.FC<GChartProps> = ({ data }) => {
   </UnifiedChartModule>
  )
 }
-
 /* 5. Shorts Retention */
 export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
  const [mode, setMode] = useState<"top-performing" | "most-recent">("top-performing")
  const [hoveredKey, setHoveredKey] = useState<string | null>(null)
  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
  const [selectedCount, setSelectedCount] = useState(100)
- const [selectedFormat, setSelectedFormat] = useState<"All" | "Shorts" | "Long">("All")
+ const [formatFilter, setFormatFilter] = useState<"All" | "Shorts" | "Long">("All")
  const cd = useMemo(() => {
   const isShortRow = (r: CanonicalVideoRow) =>
    String(r.format || "").toLowerCase().includes("short") ||
    (r.durationSeconds > 0 && r.durationSeconds <= 180)
-  const shorts = data
-   .filter((r) => {
-    if (selectedFormat === "Shorts") return isShortRow(r)
-    if (selectedFormat === "Long") return !isShortRow(r)
-    return true
-   })
+  const isLongRow = (r: CanonicalVideoRow) => !isShortRow(r)
+  const filteredByFormat = formatFilter === "Shorts"
+   ? data.filter(isShortRow)
+   : formatFilter === "Long"
+   ? data.filter(isLongRow)
+   : data
+  const shorts = filteredByFormat
    .map((r) => {
     const views = mv(r, "views")
     const revenue = resolveMetricNumber(r, "revenue")
@@ -971,28 +1234,40 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
   )
   const viewRadii = buildLogBubbleRadii(top100.map((d) => d.views), {
    minRadius: 3,
-   maxRadius: 30,
+   maxRadius: 32,
   })
+
+  // Exponential outlier formula: compress middle, push 7% extremes to palette edges
+  const expPosition = (t: number | null): number | null => {
+   if (t === null) return null
+   const OUTLIER_THRESHOLD = 0.07
+   if (t <= OUTLIER_THRESHOLD) return t / OUTLIER_THRESHOLD * 0.07
+   if (t >= 1 - OUTLIER_THRESHOLD) return 0.93 + ((t - (1 - OUTLIER_THRESHOLD)) / OUTLIER_THRESHOLD) * 0.07
+   // Exponential compression of middle 86%
+   const mid = (t - OUTLIER_THRESHOLD) / (1 - 2 * OUTLIER_THRESHOLD)
+   return 0.07 + Math.pow(mid, 1.6) * 0.86
+  }
+
   const points = top100.map((d, index) => {
    const key = `${d.title}-${d.uploadTs}-${d.views}`
    const revenuePosition = revenuePercentiles[index]
+   const scaledPos = expPosition(revenuePosition)
    return {
     ...d,
     key,
     radius: viewRadii[index],
-    color: revenuePosition === null
+    color: scaledPos === null
      ? MISSING_BUBBLE_COLOR
-     : interpolateThreeStopColor(revenuePosition, SHORTS_REVENUE_PALETTE),
+     : interpolateThreeStopColor(scaledPos, SHORTS_REVENUE_PALETTE),
    }
   })
 
-  // Draw larger bubbles first so smaller ones stay above on z-order.
   return {
    points: [...points].sort((a, b) => b.radius - a.radius),
    durationScale,
    avdScale,
   }
- }, [data, mode, selectedCount, selectedFormat])
+ }, [data, mode, selectedCount, formatFilter])
 
  const bubbleShape = (props: any) => {
   const { cx, cy, payload } = props
@@ -1002,17 +1277,19 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
    <circle
     cx={cx}
     cy={cy}
-    r={payload.radius}
+    r={payload.radius * scale}
     fill={payload.color}
-    fillOpacity={0.75}
+    fillOpacity={isHover ? 0.92 : 0.78}
     stroke={payload.color}
     strokeWidth={isHover ? 2 : 0}
     style={{
       transformBox: "fill-box",
       transformOrigin: "center",
-      transform: `scale(${scale})`,
       shapeRendering: "geometricPrecision",
-      transition: "transform 220ms cubic-bezier(0.34,1.56,0.64,1)",
+      mixBlendMode: "multiply",
+      transitionProperty: "r, stroke-width, fill-opacity",
+      transitionDuration: isHover ? "750ms" : "350ms",
+      transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
       cursor: "pointer",
     }}
     onMouseEnter={() => setHoveredKey(payload.key)}
@@ -1040,13 +1317,13 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
       value={selectedCount}
       onChange={(e) => setSelectedCount(Number(e.target.value))}
       className="h-7 px-2 bg-white border-[2px] border-black rounded-[4px] text-[9px] font-black uppercase">
-      {[25, 50, 75, 100, 200].map((n) => (
+      {[25, 50, 75, 100, 200, 400].map((n) => (
        <option key={n} value={n}>TOP {n}</option>
       ))}
      </select>
      <select
-      value={selectedFormat}
-      onChange={(e) => setSelectedFormat(e.target.value as "All" | "Shorts" | "Long")}
+      value={formatFilter}
+      onChange={(e) => setFormatFilter(e.target.value as "All" | "Shorts" | "Long")}
       className="h-7 px-2 bg-white border-[2px] border-black rounded-[4px] text-[9px] font-black uppercase">
       {["All", "Shorts", "Long"].map((f) => (
        <option key={f} value={f}>{f.toUpperCase()}</option>
@@ -1131,130 +1408,6 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
    <div className="px-5 pb-3 text-[10px] font-black uppercase opacity-70">Bubble size = Views · Color = Estimated Income (Blue → Green)</div>
   </div>
  )
-}
-
-/* 5b. Shorts Retention - Widget Module (no tooltip, subtitle rail) */
-const SHORTS_RETENTION_COUNT_VALUES = [25, 50, 75, 100, 200]
-
-export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => {
- const [mode, setMode] = useState<"top-performing" | "most-recent">("top-performing")
- const [sortMetric, setSortMetric] = useState<"avd" | "estIncome" | "dur" | "views">("avd")
- const [modeMenuOpen, setModeMenuOpen] = useState(false)
- const [activeKey, setActiveKey] = useState<string | null>(null)
- const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
- const [selectedCount, setSelectedCount] = useState(100)
- const rafMouseRef = useRef<number | null>(null)
- const pendingMouseRef = useRef<{ x: number; y: number } | null>(null)
- const cycleCount = (dir: 1 | -1) => {
-  const idx = SHORTS_RETENTION_COUNT_VALUES.indexOf(selectedCount)
-  const nextIdx = (idx + dir + SHORTS_RETENTION_COUNT_VALUES.length) % SHORTS_RETENTION_COUNT_VALUES.length
-  setSelectedCount(SHORTS_RETENTION_COUNT_VALUES[nextIdx])
- }
-
- const cd = useMemo(() => {
-  const isShortRow = (r: CanonicalVideoRow) =>
-   String(r.format || "").toLowerCase().includes("short") ||
-   (r.durationSeconds > 0 && r.durationSeconds <= 180)
-  const shorts = data
-   .filter((r) => isShortRow(r))
-   .map((r) => {
-    const views = mv(r, "views")
-    const revenue = resolveMetricNumber(r, "revenue")
-    const rpm = resolveMetricNumber(r, "rpm")
-    const revenueFromRpm = rpm.value === null ? 0 : (rpm.value * Math.max(0, views)) / 1000
-    return {
-     title: r.title,
-     dur: r.durationSeconds,
-     avd: (retentionPct(r) / 100) * r.durationSeconds,
-     views,
-     estIncome: Math.max(revenue.value ?? 0, revenueFromRpm),
-     revenueAvailable: revenue.value !== null || rpm.value !== null,
-     uploadTs: new Date(String(r.uploadDate || "")).getTime() || 0,
-    }
-   })
-   .filter((d) => d.dur > 0 && d.avd > 0)
-
-  const ranked = mode === "most-recent"
-   ? [...shorts].sort((a, b) => b.uploadTs - a.uploadTs)
-   : [...shorts].sort((a, b) => b[sortMetric] - a[sortMetric])
-
-  const top100 = ranked.slice(0, selectedCount)
-  const durationScale = buildAdaptiveZeroScale(top100.map((d) => d.dur), { fallbackMax: 180, hardMax: 180 })
-  const avdScale = buildAdaptiveZeroScale(top100.map((d) => d.avd), { fallbackMax: 300 })
-  const revenuePercentiles = buildTieAwarePercentiles(
-   top100.map((d) => d.revenueAvailable ? d.estIncome : null),
-  )
-  const viewRadii = buildLogBubbleRadii(top100.map((d) => d.views), {
-   minRadius: 3,
-   maxRadius: 30,
-  })
-
-  const points = top100.map((d, index) => {
-   const key = `${d.title}-${d.uploadTs}-${d.views}`
-   const revenuePosition = revenuePercentiles[index]
-   return {
-    ...d,
-    key,
-    radius: viewRadii[index],
-    color: revenuePosition === null
-     ? MISSING_BUBBLE_COLOR
-     : interpolateThreeStopColor(revenuePosition, SHORTS_REVENUE_PALETTE),
-   }
-  })
-
-  return {
-   points: [...points].sort((a, b) => b.radius - a.radius),
-   durationScale,
-   avdScale,
-  }
- }, [data, mode, sortMetric, selectedCount])
-
- useEffect(() => {
-  if (cd.points.length === 0) {
-   setActiveKey(null)
-   return
-  }
-  if (!activeKey || !cd.points.some((p) => p.key === activeKey)) {
-   setActiveKey(cd.points[0].key)
-  }
- }, [cd.points, activeKey])
-
- const activePoint = useMemo(
-  () => cd.points.find((p) => p.key === activeKey) || cd.points[0] || null,
-  [cd.points, activeKey],
- )
-
- const shortsInsight = useMemo(() => {
-  if (cd.points.length === 0) return "No shorts retention data yet. Sync to unlock retention insights."
-  const best = [...cd.points].sort((a, b) => b.avd - a.avd)[0]
-  const longHold = cd.points.filter((p) => p.dur >= 90 && p.avd >= (55/100*p.dur)).length
-  return `Your strongest short holds ${best.avd.toFixed(
-   1,
-  )}s at ${Math.round(best.dur)}s, and ${longHold} videos keep 55%+ attention beyond 90s - that's a repeatable retention signature.`
- }, [cd.points])
-
- const generalInsight =
-  "Shorts retention maps the relationship between video length, attention hold, and reach to expose your strongest duration ranges."
-
-  const bubbleShape = (props: any) => {
-  const { cx, cy, payload } = props
-  const isActive = activeKey === payload.key
-  const scale = isActive ? 1.25 : 1
-  return (
-   <circle
-    cx={cx}
-    cy={cy}
-    r={payload.radius * scale}
-    fill={payload.color}
-    fillOpacity={0.75}
-    stroke={payload.color}
-    strokeWidth={isActive ? 2 : 0}
-    onMouseEnter={() => setActiveKey(payload.key)}
-    style={{
-      shapeRendering: "geometricPrecision",
-      transitionProperty: "r, stroke-width, fill-opacity",
-      transitionDuration: isActive ? "750ms" : "350ms",
-      transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
       cursor: "pointer",
     }}
    />

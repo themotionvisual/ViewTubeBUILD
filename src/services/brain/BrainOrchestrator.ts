@@ -109,16 +109,24 @@ export const validateBrainResponse = (input: {
   ...input.snapshot.inferredProfile.topEvidenceVideos.slice(0, 4).map((video) => video.title),
  ].flatMap((value) => Array.from(words(value)))
  const specificityHits = evidenceTerms.filter((term) => text.includes(term)).length
- const creatorSpecificity = input.snapshot.inferredProfile.status === "missing"
-  ? 60
-  : Math.min(100, 35 + specificityHits * 15)
+ // Content drafts (pinned comments, titles, descriptions, video concepts) are fresh
+ // creative copy: they should not be held to analytics-grade evidence-echoing, are
+ // allowed to contain numbers (years, "top 5") that aren't in the analytics pack, and
+ // deliver the asset itself rather than an action verb. Holding them to those rules is
+ // what wrongly downgraded good model drafts to "basic guidance".
+ const isContentDraft = input.expectedMode === "creator_asset_draft"
+ const creatorSpecificity = isContentDraft
+  ? 80
+  : input.snapshot.inferredProfile.status === "missing"
+   ? 60
+   : Math.min(100, 35 + specificityHits * 15)
  const evidenceCoverage = input.snapshot.evidencePack.evidenceIds.length === 0
   ? 65
   : Math.min(100, 40 + specificityHits * 12)
  const goal = input.growthContext?.currentGoal || input.snapshot.brain.futureStateMap
  const goalTerms = Array.from(words(goal || ""))
  const goalAlignment = !goalTerms.length ? 65 : goalTerms.some((term) => text.includes(term)) ? 95 : 50
- const actionability = /\b(create|publish|rewrite|test|compare|open|draft|review|choose|make|schedule|measure|use|build)\b/.test(text)
+ const actionability = isContentDraft || /\b(create|publish|rewrite|test|compare|open|draft|review|choose|make|schedule|measure|use|build)\b/.test(text)
   ? 90
   : 35
  const recent = (input.recentTurns || []).slice(0, 4)
@@ -145,7 +153,7 @@ export const validateBrainResponse = (input: {
   creatorSpecificity < 55 ? "Answer does not use available channel-specific evidence." : "",
   actionability < 55 ? "Answer lacks a concrete creator action." : "",
   novelty < 35 ? "Answer is too similar to a recent response." : "",
-  invented.length ? "Answer contains numbers that are not present in the evidence pack." : "",
+  !isContentDraft && invented.length ? "Answer contains numbers that are not present in the evidence pack." : "",
   !modeMatches ? `Answer mode ${input.response.mode} does not match the requested ${input.expectedMode} task.` : "",
   !audienceTaskAnswered ? "Answer the audience-language task with an audience finding, concrete language guidance, and an evidence boundary." : "",
  ].filter(Boolean)

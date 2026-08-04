@@ -1,5 +1,6 @@
 import type { TubeExplorerVisualProps } from "../../../components/TubeExplorerVisualModules"
 import type { VtSyncSnapshot, VtSyncTrafficRow, VtSyncVideoItem } from "./contracts"
+import { buildVtSyncDemographicOverviewRows } from "./tableData"
 import {
  applyVtSyncPrivacyFilters,
  readVtSyncPrivacyFilters,
@@ -87,6 +88,7 @@ type CanonicalTrafficDatasetKind = "traffic_summary" | "traffic_detail" | "traff
 type TubeExplorerCanonicalContext = {
  trafficRows: Array<Record<string, unknown>>
  geographyRows: Array<Record<string, unknown>>
+ demographicRows: Array<Record<string, unknown>>
 }
 type CanonicalTrafficRow = TubeExplorerCanonicalContext["trafficRows"][number]
 type CanonicalGeographyRow = TubeExplorerCanonicalContext["geographyRows"][number]
@@ -579,10 +581,10 @@ export const buildVtSyncVisualPropsData = (
  addTrafficRows(snapshot, trafficRows, snapshot.trafficYtPlaylistPage, "traffic_detail", "YT_PLAYLIST_PAGE")
  addTrafficRows(snapshot, trafficRows, snapshot.playbackLocations as VtSyncTrafficRow[], "traffic_playback_location", "PLAYBACK_LOCATION")
 
- const trafficByDay = Array.isArray(snapshot.trafficByDay) && snapshot.trafficByDay.length > 0
+ const trafficByDay: Array<Record<string, unknown>> = Array.isArray(snapshot.trafficByDay) && snapshot.trafficByDay.length > 0
   ? snapshot.trafficByDay
   : Array.isArray(snapshot.tableExports?.traffic_day)
-   ? snapshot.tableExports.traffic_day
+   ? snapshot.tableExports.traffic_day as Array<Record<string, unknown>>
    : []
 
  const geographyRows = [
@@ -600,6 +602,7 @@ export const buildVtSyncVisualPropsData = (
   canonicalContext: {
    trafficRows,
    geographyRows,
+   demographicRows: buildVtSyncDemographicOverviewRows(snapshot.demographics),
   },
   diagnostics: {
    videos: rows.length,

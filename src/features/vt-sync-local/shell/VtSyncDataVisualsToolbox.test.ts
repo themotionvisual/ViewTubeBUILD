@@ -20,7 +20,7 @@ describe("VT-SYNC data visual module registry", () => {
    "algorithm-trigger",
    "revenue-efficiency",
    "hook-effectiveness",
-   "revenue-distribution",
+   "age-gender-audience",
    "subscribers-gained",
    "watch-time-distribution",
    "video-value-matrix",
@@ -59,12 +59,23 @@ describe("VT-SYNC data visual module registry", () => {
  })
 
  it("feeds the custom traffic evolution visual from VT-SYNC rows without video fallback", () => {
- expect(source).toContain("<TrafficSourceEvolutionModule")
- expect(source).toContain("trafficRows={trafficRows}")
+  expect(source).toContain("<TrafficSourceEvolutionModule")
+  expect(source).toContain("trafficRows={trafficRows}")
   expect(source).toContain("trafficByDay={trafficByDay}")
   expect(source).toContain("useVideoTrafficFallback={false}")
   expect(graphSource).toContain('row.datasetKind === "traffic_summary"')
   expect(graphSource).toContain('row.datasetKind === "traffic_detail"')
+ })
+
+ it("routes the one-third audience module through VT-SYNC demographic rows", () => {
+  expect(source).toContain('id: "age-gender-audience"')
+  expect(source).toContain("<AgeGenderAudienceModule")
+  expect(source).toContain("demographicRows={demographicRows}")
+  expect(source).toContain('return ["demographics"]')
+  expect(source).toContain('"age-gender-audience"')
+  expect(graphSource).toContain("export const AgeGenderAudienceModule")
+  expect(graphSource).toContain("buildAgeGenderAudienceData")
+  expect(graphSource).toContain('title: "AGE X GENDER"')
  })
 
  it("mounts offscreen visuals only as they approach the viewport", () => {

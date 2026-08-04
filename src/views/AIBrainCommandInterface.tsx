@@ -4,6 +4,7 @@ import {
  ArrowRight,
  BookOpen,
  Brain,
+ Check,
  ChevronLeft,
  HelpCircle,
  LayoutGrid,
@@ -108,6 +109,13 @@ const PROMPT_CARD_SUMMARIES: Record<string, string> = {
  "best-video-autopsy": "Explain and replicate your best video.",
  "title-thumbnail-test": "Create the next title and thumbnail test.",
  "daily-oracle": "Get today’s priority, quick win, and action.",
+ "pinned-comments": "Engagement pinned comments for your top 10 videos.",
+ "ten-video-ideas": "10 new titles and topics from your best long-form.",
+ "shorts-funnel-plan": "Turn Shorts viewers into subscribers and long-form watch time.",
+ "shorts-from-longform": "Find the best Short moments in your long-form videos.",
+ "metric-correlations": "See what drives success across your metrics.",
+ "uploader-assets": "Optimized title, description, and tags for your next video.",
+ "thumbnail-brief": "A fresh, on-brand thumbnail concept for your next video.",
 }
 
 export const promptCardSummary = (card: CreatorBrainPromptCard): string =>
@@ -200,49 +208,116 @@ export const BrainPromptLibrary: React.FC<{
  busy?: boolean
  headingId?: string
  onPrompt: (prompt: string) => void
-}> = ({ cards, busy = false, headingId = "brain-prompt-library-title", onPrompt }) => (
- <section
-  aria-labelledby={headingId}
-  aria-busy={busy || undefined}
-  className="rounded-[10px] border-[2px] border-black bg-white"
- >
-  <div className="sticky top-0 z-10 rounded-t-[7px] border-b-[2px] border-black bg-[#FF7AC8] px-3 py-2">
-   <h2 id={headingId} className="text-[12px] font-[1000] uppercase leading-4 tracking-[0.08em]">
-    Prompt Library
-   </h2>
-   <p className="mt-0.5 text-[10px] font-bold leading-4 text-black/65">
-    Start a focused Brain task at any point in the conversation.
-   </p>
-  </div>
-  <ul className="grid grid-cols-1 gap-1.5 p-2 sm:grid-cols-2 sm:auto-rows-[50px] xl:grid-cols-3">
-   {cards.map((card) => (
-    <li key={card.id} className="h-full">
-     <button
-      type="button"
-      disabled={busy}
-      title={card.prompt}
-      aria-label={`${card.label}: ${card.prompt}`}
-      onClick={() => onPrompt(card.prompt)}
-      className="group flex h-full min-h-[50px] w-full flex-col items-stretch overflow-hidden rounded-[8px] border-[2px] border-black bg-white text-left outline-none transition hover:-translate-y-0.5 focus-visible:ring-[3px] focus-visible:ring-black disabled:cursor-wait disabled:opacity-50"
+ onEdit?: (prompt: string) => void
+}> = ({ cards, busy = false, headingId = "brain-prompt-library-title", onPrompt, onEdit }) => {
+ const [selectedId, setSelectedId] = useState<string | null>(null)
+ const selected = cards.find((card) => card.id === selectedId) || null
+
+ return (
+  <section
+   aria-labelledby={headingId}
+   aria-busy={busy || undefined}
+   className="overflow-hidden rounded-[10px] border-[2px] border-black bg-white"
+  >
+   <div className="border-b-[2px] border-black bg-[#FF7AC8] px-3 py-2">
+    <h2 id={headingId} className="text-[12px] font-[1000] uppercase leading-4 tracking-[0.08em]">
+     Prompt Library
+    </h2>
+    <p className="mt-0.5 text-[10px] font-bold leading-4 text-black/65">
+     Tap a prompt to preview it, then send it into the chat.
+    </p>
+   </div>
+
+   <ul className="grid grid-cols-1 gap-1.5 p-2 sm:grid-cols-2 xl:grid-cols-3">
+    {cards.map((card) => {
+     const isSelected = card.id === selectedId
+     return (
+      <li key={card.id}>
+       <button
+        type="button"
+        disabled={busy}
+        aria-pressed={isSelected}
+        title={card.prompt}
+        onClick={() => setSelectedId(isSelected ? null : card.id)}
+        className={`group flex h-full min-h-[54px] w-full flex-col items-stretch overflow-hidden rounded-[8px] border-[2px] border-black bg-white text-left outline-none transition focus-visible:ring-[3px] focus-visible:ring-black disabled:cursor-wait disabled:opacity-50 ${
+         isSelected ? "-translate-x-[1px] -translate-y-[1px] shadow-[3px_3px_0_0_#000]" : "hover:-translate-y-0.5"
+        }`}
+       >
+        <span
+         className="flex shrink-0 items-center justify-between gap-1 border-b-[2px] border-black px-2 py-1 text-[10px] font-[1000] uppercase leading-none"
+         style={{ backgroundColor: card.color }}
+        >
+         <span className="truncate">{card.label}</span>
+         {isSelected ? <Check size={12} className="shrink-0" aria-hidden="true" /> : null}
+        </span>
+        <span className="flex min-h-0 flex-1 items-center px-2 py-1.5">
+         <span className="line-clamp-2 block overflow-hidden text-[10px] font-bold leading-[13px] text-black/70">
+          {promptCardSummary(card)}
+         </span>
+        </span>
+       </button>
+      </li>
+     )
+    })}
+   </ul>
+
+   <div className="border-t-[2px] border-black bg-[#f8f8f4] p-2">
+    {selected ? (
+     <div className="overflow-hidden rounded-[8px] border-[2px] border-black bg-white shadow-[3px_3px_0_0_#000]">
+      <div
+       className="flex items-center justify-between gap-2 border-b-[2px] border-black px-2.5 py-1"
+       style={{ backgroundColor: selected.color }}
       >
-      <span
-       className="flex h-[20px] shrink-0 items-center rounded-t-[5px] border-b-[2px] border-black px-2 text-[10px] font-[1000] uppercase leading-none"
-       style={{ backgroundColor: card.color }}
-      >
-       {card.label}
-      </span>
-      <span className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_14px] items-center gap-1.5 px-2">
-       <span className="line-clamp-2 block overflow-hidden text-[10px] font-bold leading-[12px] text-black/75">
-        {promptCardSummary(card)}
+       <span className="truncate text-[9px] font-[1000] uppercase tracking-[0.12em]">
+        Preview · {selected.label}
        </span>
-       <ArrowRight size={12} className="shrink-0 transition group-hover:translate-x-0.5" aria-hidden="true" />
-      </span>
-     </button>
-    </li>
-   ))}
-  </ul>
- </section>
-)
+       <button
+        type="button"
+        aria-label="Close preview"
+        onClick={() => setSelectedId(null)}
+        className="grid h-5 w-5 shrink-0 place-items-center rounded-[5px] border-[2px] border-black bg-white/80 hover:bg-white"
+       >
+        <X size={11} />
+       </button>
+      </div>
+      <div className="grid gap-2 p-2.5">
+       <p className="text-xs font-bold leading-5 text-black/80">{selected.prompt}</p>
+       <div className="flex flex-wrap gap-1.5">
+        <button
+         type="button"
+         disabled={busy}
+         onClick={() => {
+          onPrompt(selected.prompt)
+          setSelectedId(null)
+         }}
+         className="inline-flex items-center gap-1.5 rounded-[7px] border-[2px] border-black bg-[#3FEE56] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.06em] transition hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-50"
+        >
+         <Send size={12} /> Send to chat
+        </button>
+        {onEdit ? (
+         <button
+          type="button"
+          onClick={() => {
+           onEdit(selected.prompt)
+           setSelectedId(null)
+          }}
+          className="inline-flex items-center gap-1.5 rounded-[7px] border-[2px] border-black bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.06em] transition hover:bg-[#FFDA47]"
+         >
+          Edit first <ArrowRight size={11} />
+         </button>
+        ) : null}
+       </div>
+      </div>
+     </div>
+    ) : (
+     <p className="px-1 py-0.5 text-[10px] font-bold uppercase leading-4 tracking-[0.08em] text-black/45">
+      Tap a prompt above to preview it before sending.
+     </p>
+    )}
+   </div>
+  </section>
+ )
+}
 
 const FEEDBACK_OPTIONS = [
  ["helpful", ThumbsUp, "Helpful", "#3FEE56"],
@@ -1001,7 +1076,15 @@ const AIBrainCommandInterface: React.FC = () => {
 
        <div className="hidden min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-3 overflow-hidden xl:grid">
         <div className="min-h-0" aria-label="Prompt library">
-         <BrainPromptLibrary cards={promptCards} busy={busy} onPrompt={(prompt) => void handleSend(prompt)} />
+         <BrainPromptLibrary
+          cards={promptCards}
+          busy={busy}
+          onPrompt={(prompt) => void handleSend(prompt)}
+          onEdit={(prompt) => {
+           setInput(prompt)
+           composerRef.current?.focus()
+          }}
+         />
         </div>
         <div className="min-h-0 overflow-hidden" aria-label="Channel context">
          <BrainContextRail
@@ -1041,6 +1124,11 @@ const AIBrainCommandInterface: React.FC = () => {
           onPrompt={(prompt) => {
            setPromptRailOpen(false)
            void handleSend(prompt)
+          }}
+          onEdit={(prompt) => {
+           setPromptRailOpen(false)
+           setInput(prompt)
+           composerRef.current?.focus()
           }}
          />
         </div>

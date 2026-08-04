@@ -222,7 +222,7 @@ export const CommentReplyWidget = ({
           </div>
         )}
 
-        <div className="vt-widget-fill-body" style={{ gap: 0, padding: 0 }}>
+        <div className="vt-widget-fill-body" style={{ gap: 0, padding: 0, justifyContent: "flex-start" }}>
           {loading && allThreads.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px", opacity: 0.4, fontWeight: 900, fontSize: "12px" }}>
               <Loader2 size={24} className="animate-spin mx-auto mb-2" />
@@ -251,70 +251,113 @@ export const CommentReplyWidget = ({
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
 
                   {/* Left Column: Thumbnail + Video Title */}
-                  <div style={{ width: "120px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "6px" }}>
-                    <div style={{ width: "100%", aspectRatio: "16/9", background: "#000", border: "2px solid var(--widget-border, #000)", borderRadius: "6px", overflow: "hidden" }}>
-                      {videoId ? (
-                        <img
-                          width={320}
-                          height={180}
-                          src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
-                          onError={(e) => {
-                            const t = e.target as HTMLImageElement
-                            if (t.src.includes("hqdefault.jpg")) t.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
-                            else t.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 180'%3E%3Crect width='320' height='180' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23111' font-family='Arial' font-size='16'%3EThumbnail unavailable%3C/text%3E%3C/svg%3E"
-                          }}
-                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                          alt={`Video thumbnail for ${video?.title || videoId}`}
-                        />
-                      ) : (
-                        <div style={{ width: "100%", height: "100%", background: "#E0B0FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <Loader2 size={16} className="animate-spin text-black/20" />
-                        </div>
-                      )}
+                  <div className="kpi-video-card" style={{ width: "190px", flexShrink: 0 }}>
+                    
+                    {/* TOP SECTION: Blue title header */}
+                    <div className="kpi-header">
+                      {video?.title && video.title !== "Unknown Video" 
+                        ? htmlDecode(video.title) 
+                        : `[${videoId}]`}
                     </div>
-                    {/* Blue text moved directly underneath thumbnail */}
-                    <div style={{ fontSize: "9px", fontWeight: 900, color: "#00D2FF", textTransform: "uppercase", lineHeight: 1.25, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                      {video?.title && video.title !== "Unknown Video" ? htmlDecode(video.title) : `[${videoId}]`}
+
+                    {/* BOTTOM SECTION: The white area with the thumbnail */}
+                    <div className="kpi-body">
+                      <div style={{ width: "100%", aspectRatio: "16/9", background: "#000", overflow: "hidden" }}>
+                        {videoId ? (
+                          <img
+                            width={320}
+                            height={180}
+                            src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+                            onError={(e) => {
+                              const t = e.target as HTMLImageElement
+                              if (t.src.includes("hqdefault.jpg")) t.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
+                              else t.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 180'%3E%3Crect width='320' height='180' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23111' font-family='Arial' font-size='16'%3EThumbnail unavailable%3C/text%3E%3C/svg%3E"
+                            }}
+                            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                            alt={`Video thumbnail for ${video?.title || videoId}`}
+                          />
+                        ) : (
+                          <div style={{ width: "100%", height: "100%", background: "#E0B0FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Loader2 size={16} className="animate-spin text-black/20" />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Right Column: Author Info & Comment text */}
-                  <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#FFB570", border: "2px solid var(--widget-border, #000)", flexShrink: 0, overflow: "hidden" }}>
-                        <img src={c.authorProfileImageUrl} width={36} height={36} alt={`${authorHandle} profile`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  {/* Right Column Wrapper: Takes the remaining space */}
+                  <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "10px" }}>
+                    
+                    {/* Author Info & Comment text */}
+                    <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                      
+                      {/* Profile Circle */}
+                      <div style={{ 
+                        width: "56px", 
+                        height: "56px", 
+                        borderRadius: "50%", 
+                        background: "#FFB570", 
+                        border: "2px solid var(--widget-border, #000)", 
+                        flexShrink: 0, 
+                        overflow: "hidden" 
+                      }}>
+                        <img 
+                          src={c.authorProfileImageUrl} 
+                          width={36} 
+                          height={36} 
+                          alt={`${authorHandle} profile`} 
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                        />
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
+
+                      {/* Info Column */}
+                      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "2px" }}>
+                        
+                        {/* Author Name and Date */}
                         <div style={{ display: "flex", alignItems: "baseline", gap: "6px", flexWrap: "wrap" }}>
-                          <span style={{ fontSize: "10px", fontWeight: 1000, color: "#FF3399", textTransform: "uppercase" }}>{authorHandle}</span>
-                          <span style={{ fontSize: "8px", fontWeight: 900, color: "#FF1744", textTransform: "uppercase" }}>{new Date(c.publishedAt).toLocaleDateString()}</span>
+                          <span style={{ fontSize: "12px", fontWeight: 1000, color: "#FF3399", textTransform: "uppercase" }}>
+                            {authorHandle}
+                          </span>
                         </div>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#000", lineHeight: 1.25, marginTop: "2px", wordWrap: "break-word" }}>
+
+                        {/* THE COMMENT TEXT: All-Caps, Bold, Stacks below Name */}
+                        <span style={{ 
+                          fontSize: "10px", 
+                          fontWeight: 900, 
+                          color: "#000", 
+                          lineHeight: "1.2", 
+                          wordWrap: "break-word",
+                          textTransform: "uppercase",
+                          display: "block"
+                        }}>
                           {htmlDecode(c.textDisplay)}
-                        </div>
+                        </span>
                       </div>
                     </div>
+
+                    {/* Previous Replies (Now enclosed in the Right Column) */}
+                    {tab === "history" && existingChannelReplies.length > 0 && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.65 }}>Previous Replies</div>
+                        {existingChannelReplies.map((reply: any, idx: number) => (
+                          <div key={idx} style={{ border: "1.5px solid var(--widget-border, #000)", borderRadius: "8px", background: "#F4F4F4", padding: "6px 8px", fontSize: "10px", fontWeight: 700, lineHeight: 1.3 }}>
+                            {htmlDecode(reply.snippet.textDisplay || "")}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Text Area (Now enclosed in the Right Column) */}
+                    <textarea
+                      className="vt-textarea"
+                      style={{ minHeight: "52px" }}
+                      value={currentReply}
+                      onChange={(e) => setReplyText(prev => ({ ...prev, [threadId]: e.target.value }))}
+                      placeholder={tab === "history" ? "ADD FOLLOW-UP REPLY..." : "REPLY..."}
+                    />
+
                   </div>
                 </div>
-
-                {tab === "history" && existingChannelReplies.length > 0 && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.65 }}>Previous Replies</div>
-                    {existingChannelReplies.map((reply: any, idx: number) => (
-                      <div key={idx} style={{ border: "1.5px solid var(--widget-border, #000)", borderRadius: "8px", background: "#F4F4F4", padding: "6px 8px", fontSize: "10px", fontWeight: 700, lineHeight: 1.3 }}>
-                        {htmlDecode(reply.snippet.textDisplay || "")}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <textarea
-                  className="vt-textarea"
-                  style={{ minHeight: "52px" }}
-                  value={currentReply}
-                  onChange={(e) => setReplyText(prev => ({ ...prev, [threadId]: e.target.value }))}
-                  placeholder={tab === "history" ? "ADD FOLLOW-UP REPLY..." : "REPLY..."}
-                />
               </div>
             )
           })()}
