@@ -698,3 +698,19 @@
   .vt-adaptive-nav__drawer * { scroll-behavior: auto !important; transition-duration: .01ms !important; }
   .vt-nav-flight-layer { display: none; }
 }
+
+/* =========================================================
+   TOP-BAR FULL-WIDTH CONTENT
+   In top-bar mode there is no sidebar, so the content column already spans the
+   full viewport. Page shells that cap their width for the wide/thin sidebar
+   layouts (max-w-[1400px]..[1600px], max-w-7xl) would otherwise leave large
+   empty side margins here — let them fill the available width instead. Sidebar,
+   thin, and mobile layouts keep their caps, which keep those narrower columns
+   readable.
+   ========================================================= */
+.vt-adaptive-shell[data-layout="top"] .vt-adaptive-main [class*="max-w-[14"],
+.vt-adaptive-shell[data-layout="top"] .vt-adaptive-main [class*="max-w-[15"],
+.vt-adaptive-shell[data-layout="top"] .vt-adaptive-main [class*="max-w-[16"],
+.vt-adaptive-shell[data-layout="top"] .vt-adaptive-main .max-w-7xl {
+  max-width: 100% !important;
+}

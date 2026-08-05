@@ -133,298 +133,156 @@ const VerificationExplainerWidget: React.FC<{
   onNavigate(to)
  }
 
- const linkStyle: React.CSSProperties = {
-  minHeight: "30px",
-  width: "100%",
-  padding: "5px 8px",
-  border: "3px solid #000",
-  borderRadius: "8px",
-  background: "#fff",
-  boxShadow: "3px 3px 0 #000",
-  color: "#000",
+ const ctaPrimaryStyle: React.CSSProperties = {
+  flex: "1 1 auto",
+  minHeight: "44px",
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  fontSize: "10px",
-  fontWeight: 950,
-  lineHeight: 1,
-  textDecoration: "none",
+  gap: "8px",
+  padding: "8px 14px",
+  border: "3px solid #000",
+  borderRadius: "12px",
+  background: "#C9F830",
+  color: "#000",
+  boxShadow: "4px 4px 0 #000",
+  fontSize: "15px",
+  fontWeight: 1000,
   textTransform: "uppercase",
+  textDecoration: "none",
   whiteSpace: "nowrap",
  }
 
- const panelStyle: React.CSSProperties = {
+ const ctaSecondaryStyle = (bg: string): React.CSSProperties => ({
+  flex: "1 1 0",
+  minHeight: "38px",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "6px 12px",
   border: "3px solid #000",
   borderRadius: "10px",
-  background: "#fff",
-  padding: "10px",
-  minWidth: 0,
-  boxShadow: "4px 4px 0 rgba(0,0,0,0.18)",
- }
+  background: bg,
+  color: "#000",
+  boxShadow: "3px 3px 0 #000",
+  fontSize: "12px",
+  fontWeight: 1000,
+  textTransform: "uppercase",
+  textDecoration: "none",
+  whiteSpace: "nowrap",
+ })
+
+ const features: Array<{ Icon: typeof TrendingUp; title: string; desc: string; bg: string }> = [
+  { Icon: TrendingUp, title: "Track Performance", desc: "Views, watch time & revenue — unified.", bg: "#33D6EA" },
+  { Icon: RefreshCw, title: "Sync Everything", desc: "Videos, metadata & analytics in one click.", bg: "#C9F830" },
+  { Icon: CalendarDays, title: "Plan & Publish", desc: "Schedule uploads, titles & thumbnails.", bg: "#FFB570" },
+  { Icon: Bot, title: "AI Brain", desc: "Ask your channel anything, grounded in your data.", bg: "#FF83EA" },
+ ]
 
  return (
   <WidgetShell {...common} icon={<BookOpen size={22} aria-hidden="true" />}>
    <section
-    className="vt-widget-fill-scroll"
+    className="vt-widget-fill"
     aria-label="VIEWTUBE app purpose and data use"
     style={{
-     gap: "8px",
-     padding: "8px",
+     gap: "10px",
+     padding: "10px",
      background: "#F6F7FB",
-     justifyContent: "flex-start",
-     overflowX: "hidden",
+     justifyContent: "center",
+     overflow: "hidden",
     }}>
-    <div
-     style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
-      gap: "8px",
-      alignItems: "stretch",
-     }}>
+    {/* SINGLE ROW STRUCTURE */}
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "stretch" }}>
+     
+     {/* 1. Brand (Blue background removed) */}
+     <div
+      translate="no"
+      style={{
+       flex: "1 1 160px",
+       display: "flex",
+       alignItems: "center",
+       justifyContent: "center",
+       padding: "10px 14px",
+       border: "3px solid #000",
+       borderRadius: "12px",
+       background: "#fff",
+       boxShadow: "4px 4px 0 #000",
+       fontSize: "26px",
+       fontWeight: 1000,
+       letterSpacing: "-0.03em",
+       lineHeight: 1,
+       textTransform: "uppercase",
+      }}>
+      <span style={{ color: "#0A0A0A" }}>View</span>
+      <span style={{ color: "#17B9CE" }}>Tube</span>
+     </div>
+
+     {/* 2. Features Grid Map */}
+     {features.map(({ Icon, title, desc, bg }) => (
+      <div
+       key={title}
+       style={{
+        flex: "1 1 130px",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        border: "3px solid #000",
+        borderRadius: "11px",
+        background: "#fff",
+        boxShadow: "3px 3px 0 #000",
+       }}>
+       <div style={{ display: "flex", alignItems: "center", gap: "7px", padding: "6px 9px", background: bg, borderBottom: "3px solid #000" }}>
+        <Icon size={16} aria-hidden="true" />
+        <span style={{ fontSize: "11.5px", fontWeight: 1000, textTransform: "uppercase", letterSpacing: "-0.01em" }}>{title}</span>
+       </div>
+       <p style={{ margin: 0, padding: "7px 9px", fontSize: "11px", fontWeight: 800, lineHeight: 1.25 }}>{desc}</p>
+      </div>
+     ))}
+
+     {/* 3. Green data-use disclosure (Wider flex basis, condensed text, centered items) */}
      <div
       style={{
-       ...panelStyle,
-       background: "#33D6EA",
+       flex: "3 1 340px",
+       minWidth: 0,
        display: "flex",
-       flexDirection: "column",
-       justifyContent: "space-between",
-       gap: "6px",
+       alignItems: "center",
+       gap: "10px",
+       padding: "10px 12px",
+       border: "3px solid #000",
+       borderRadius: "12px",
+       background: "#E7F9E4",
+       boxShadow: "4px 4px 0 #000",
       }}>
-      <div>
-       <div
-        translate="no"
-        style={{
-         fontSize: "26px",
-         fontWeight: 1000,
-         lineHeight: 0.95,
-         letterSpacing: 0,
-         textTransform: "uppercase",
-         overflowWrap: "anywhere",
-        }}>
-        VIEWTUBE
-       </div>
-       <p style={{ margin: "8px 0 0", fontSize: "15px", fontWeight: 950, lineHeight: 1.18 }}>
-        Your YouTube channel command center.
+      <div style={{ display: "grid", placeItems: "center", flex: "0 0 auto", width: "36px", height: "36px", border: "3px solid #000", borderRadius: "9px", background: "#4FFF5B", boxShadow: "3px 3px 0 #000" }}>
+       <Lock size={18} aria-hidden="true" />
+      </div>
+      <div style={{ minWidth: 0 }}>
+       <h3 style={{ margin: "0 0 2px", fontSize: "12px", fontWeight: 1000, textTransform: "uppercase" }}>
+        Why sign-in helps
+       </h3>
+       <p style={{ margin: 0, fontSize: "11px", fontWeight: 800, lineHeight: 1.3 }}>
+        Signing in connects your YouTube account to show your channel, videos, comments &amp; analytics. Your data only powers your dashboard—it's never sold—and you can disconnect anytime.
        </p>
       </div>
      </div>
 
-     <div style={panelStyle}>
-      <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "6px" }}>
-       <Database size={18} aria-hidden="true" />
-       <h3 style={{ margin: 0, fontSize: "14px", fontWeight: 1000, textTransform: "uppercase" }}>
-        What You Can Do
-       </h3>
+     {/* 4. Navigation Buttons */}
+     <nav aria-label="VIEWTUBE account and help links" style={{ flex: "2 1 280px", display: "flex", flexDirection: "column", gap: "7px" }}>
+      <div style={{ display: "flex", flex: 1 }}>
+       <a href="/account/connect" onClick={event => handleNavigate(event, "/account/connect")} style={{...ctaPrimaryStyle, flex: 1}}>
+        <Rocket size={16} aria-hidden="true" /> Connect your channel
+       </a>
       </div>
-      <p style={{ margin: 0, fontSize: "13px", fontWeight: 850, lineHeight: 1.3 }}>
-       VIEWTUBE helps you review performance, sync video metadata, plan uploads,
-       and manage creator work from one dashboard.
-      </p>
-     </div>
-
-     <div style={panelStyle}>
-      <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "6px" }}>
-       <Lock size={18} aria-hidden="true" />
-       <h3 style={{ margin: 0, fontSize: "14px", fontWeight: 1000, textTransform: "uppercase" }}>
-        Why Sign-In Helps
-       </h3>
+      <div style={{ display: "flex", flex: 1, gap: "7px" }}>
+       <a href="/about" onClick={event => handleNavigate(event, "/about")} style={ctaSecondaryStyle("#33D6EA")}>About</a>
+       <a href="/user-guide" onClick={event => handleNavigate(event, "/user-guide")} style={ctaSecondaryStyle("#FFEE57")}>User Guide</a>
+       <a href="/privacy.html" style={ctaSecondaryStyle("#FF83EA")}>Privacy</a>
+       <a href="/terms.html" style={ctaSecondaryStyle("#FFB570")}>Terms</a>
       </div>
-      <p style={{ margin: 0, fontSize: "13px", fontWeight: 850, lineHeight: 1.3 }}>
-       Google and YouTube access lets VIEWTUBE show your signed-in channel,
-       videos, comments, and analytics. You control connection and sign-out.
-      </p>
-     </div>
+     </nav>
 
-     <nav
-      aria-label="VIEWTUBE account and help links"
-      style={{
-       ...panelStyle,
-       display: "flex",
-       flexDirection: "column",
-       gap: "6px",
-       background: "#FFEE57",
-      }}>
-       <a href="/about" onClick={event => handleNavigate(event, "/about")} style={linkStyle}>
-        About VIEWTUBE
-       </a>
-       <a href="/account/connect" onClick={event => handleNavigate(event, "/account/connect")} style={{ ...linkStyle, background: "#C9F830" }}>
-        Connect Channel
-       </a>
-       <a href="/user-guide" onClick={event => handleNavigate(event, "/user-guide")} style={linkStyle}>
-        User Guide
-       </a>
-       <a href="/privacy.html" style={{ ...linkStyle, background: "#FF83EA" }}>
-        Privacy Policy
-       </a>
-      </nav>
     </div>
    </section>
-  </WidgetShell>
- )
-}
-
-const AlertsFeedWidget: React.FC<{
- commentsVideoId: string | null
- alerts: string[]
- subscriberCount: number
- common: CommonWidgetProps
-}> = ({ commentsVideoId, alerts, subscriberCount, common }) => {
- const { comments } = useVideoComments(commentsVideoId)
- const recentComments = comments.slice(0, 3)
- const alertColors = ["#4FFF5B", "#FFE357", "#24D3FF", "#FF83EA", "#FFB570"]
-
- return (
-  <WidgetShell {...common} icon={<Bell size={20} />}>
-   <div className="vt-widget-fill-scroll" style={{ gap: "0" }}>
-    {/* COMMENTS SECTION */}
-    {recentComments.length > 0 ?
-     recentComments.map((comment: VideoComment, idx: number) => (
-      <div
-       key={comment.id}
-       style={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: "6px",
-        padding: "10px 12px",
-        borderBottom: "2px solid #f0f0f0",
-       }}>
-       <div
-        style={{
-         width: "24px",
-         height: "24px",
-         borderRadius: "50%",
-         background: alertColors[idx % alertColors.length],
-         border: "2px solid #000",
-         display: "flex",
-         alignItems: "center",
-         justifyContent: "center",
-         flexShrink: 0,
-         fontSize: "10px",
-         fontWeight: 900,
-        }}>
-        @
-       </div>
-       <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-         style={{
-          fontSize: "11px",
-          fontWeight: 800,
-          textTransform: "uppercase",
-         }}>
-         {comment.author}
-        </div>
-        <div
-         style={{
-          fontSize: "10px",
-          fontWeight: 600,
-          opacity: 0.7,
-          lineHeight: 1.3,
-          marginTop: "2px",
-          overflow: "hidden",
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical" as any,
-         }}>
-         {comment.text}
-        </div>
-       </div>
-      </div>
-     ))
-    : <div
-      style={{
-       padding: "10px 12px",
-       fontSize: "10px",
-       fontWeight: 900,
-       textTransform: "uppercase",
-       opacity: 0.4,
-      }}>
-      No recent comments
-     </div>
-    }
-
-    {/* SUBSCRIBER COUNT */}
-    <div
-     style={{
-      display: "flex",
-      alignItems: "center",
-      gap: "6px",
-      padding: "10px 12px",
-      borderBottom: "2px solid #f0f0f0",
-     }}>
-     <div
-      style={{
-       width: "24px",
-       height: "24px",
-       borderRadius: "50%",
-       background: "#FF3399",
-       border: "2px solid #000",
-       display: "flex",
-       alignItems: "center",
-       justifyContent: "center",
-       flexShrink: 0,
-      }}>
-      <UserCircle2 size={12} color="#fff" />
-     </div>
-     <div style={{ flex: 1 }}>
-      <div
-       style={{
-        fontSize: "11px",
-        fontWeight: 800,
-        textTransform: "uppercase",
-       }}>
-       New Subscribers
-      </div>
-      <div style={{ fontSize: "10px", fontWeight: 700, opacity: 0.5 }}>
-       {subscriberCount.toLocaleString()} total
-      </div>
-     </div>
-    </div>
-
-    {/* SYSTEM ALERTS */}
-    {alerts.map((alert, idx) => (
-     <div
-      key={idx}
-      style={{
-       display: "flex",
-       alignItems: "center",
-       gap: "6px",
-       padding: "10px 12px",
-       borderBottom: idx < alerts.length - 1 ? "2px solid #f0f0f0" : "none",
-      }}>
-      <div
-       style={{
-        width: "24px",
-        height: "24px",
-        borderRadius: "50%",
-        background: alertColors[(idx + 3) % alertColors.length],
-        border: "2px solid #000",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-       }}>
-       <Activity size={10} />
-      </div>
-      <div style={{ flex: 1 }}>
-       <div
-        style={{
-         fontSize: "11px",
-         fontWeight: 900,
-         textTransform: "uppercase",
-        }}>
-        {alert}
-       </div>
-      </div>
-      <div
-       style={{
-        width: "6px",
-        height: "6px",
-        background: "#FF1744",
-        borderRadius: "50%",
-       }}></div>
-     </div>
-    ))}
-   </div>
   </WidgetShell>
  )
 }
