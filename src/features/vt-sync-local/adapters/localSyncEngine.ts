@@ -1547,6 +1547,18 @@ const fillMissingChannelTotalsFromDaily = (
  const endDate = reportEndDate()
  const windows: VtSyncAnalyticsWindow[] = ["7d", "28d", "90d", "365d", "lifetime"]
  const next = { ...(totals as Record<string, any>) }
+ // The undimensioned channel-totals query does not reliably aggregate card and
+ // playlist-save metrics (YouTube returns them missing or as 0), so the
+ // day-dimensioned daily rows are authoritative for these — prefer the daily
+ // sum unless the channel query actually produced a positive value.
+ const dailyAuthoritativeKeys = new Set([
+  "videosAddedToPlaylists",
+  "videosRemovedFromPlaylists",
+  "cardImpressions",
+  "cardTeaserImpressions",
+  "cardClicks",
+  "cardTeaserClicks",
+ ])
  windows.forEach((window) => {
   const startDate = window === "lifetime" ? lifetimeStartDate : daysAgo(Number(window.replace("d", "")))
   const rows = dailyRows.filter((row) => {
@@ -1594,7 +1606,13 @@ const fillMissingChannelTotalsFromDaily = (
    })(),
   }
   Object.entries(fallback).forEach(([key, value]) => {
-   if (direct[key] === undefined && value !== undefined) direct[key] = value
+   if (value === undefined) return
+   const channelNumber = numberOrUndefined(direct[key])
+   const channelHasPositive = channelNumber !== undefined && channelNumber > 0
+   const preferDaily = dailyAuthoritativeKeys.has(key)
+    ? !channelHasPositive
+    : direct[key] === undefined
+   if (preferDaily) direct[key] = value
   })
   if (direct.avgViewDuration === undefined && direct.views > 0 && direct.watchTime !== undefined) {
    direct.avgViewDuration = direct.watchTime * 3600 / direct.views
@@ -1605,10 +1623,10 @@ const fillMissingChannelTotalsFromDaily = (
   if (direct.playbackBasedCpm === undefined && direct.grossRevenue !== undefined && direct.monetizedPlaybacks > 0) {
    direct.playbackBasedCpm = direct.grossRevenue / direct.monetizedPlaybacks * 1000
   }
-  if (direct.cardClickRate === undefined && direct.cardClicks !== undefined && direct.cardImpressions > 0) {
+  if (direct.cardClicks !== undefined && direct.cardImpressions > 0) {
    direct.cardClickRate = direct.cardClicks / direct.cardImpressions * 100
   }
-  if (direct.cardTeaserClickRate === undefined && direct.cardTeaserClicks !== undefined && direct.cardTeaserImpressions > 0) {
+  if (direct.cardTeaserClicks !== undefined && direct.cardTeaserImpressions > 0) {
    direct.cardTeaserClickRate = direct.cardTeaserClicks / direct.cardTeaserImpressions * 100
   }
   if (direct.averagePercentageViewed === undefined) {
