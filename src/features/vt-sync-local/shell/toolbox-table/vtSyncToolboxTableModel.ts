@@ -905,10 +905,10 @@ export const resolveVtSyncWorkspaceUrlState = (
 ): VtSyncWorkspaceUrlState => {
  const params = new URLSearchParams(search)
  const requestedTableId =
-  params.get("vtTable") || params.get("table") || params.get("tableId") || "channel_totals"
+  params.get("vtTable") || params.get("table") || params.get("tableId") || "videos"
  const validTableId = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.some((table) => table.id === requestedTableId)
   ? requestedTableId
-  : "channel_totals"
+  : "videos"
  const resolved = getVtSyncWorkspaceForTable(validTableId)
  const requestedWorkspace = params.get("vtWorkspace")
  const requestedView = params.get("vtView")
