@@ -56,7 +56,9 @@
 .vt-app-scroll-thumb:active { cursor: grabbing; }
 
 .vt-adaptive-shell[data-layout="top"] .vt-app-scroll-track { top: var(--vt-nav-top-height); }
-.vt-adaptive-shell[data-layout="mobile"] .vt-app-scroll-track { top: 70px; }
+/* Mobile uses native touch scrolling, so the custom draggable scroll rail (a
+   fixed 28px black bar) is hidden — it otherwise overlaps content on the right. */
+.vt-adaptive-shell[data-layout="mobile"] .vt-app-scroll-track { display: none; }
 
 .vt-adaptive-shell[data-layout="top"] {
   grid-template: var(--vt-nav-top-height) minmax(0, 1fr) / minmax(0, 1fr);
@@ -640,8 +642,12 @@
 .vt-adaptive-nav__drawer::-webkit-scrollbar { display: none; }
 .vt-adaptive-nav__drawer-head { display: flex; height: 48px; align-items: center; justify-content: space-between; margin-bottom: 8px; padding-left: 8px; border-bottom: 3px solid #000; font-size: 14px; text-transform: uppercase; }
 .vt-adaptive-nav__drawer-head button { width: 38px; height: 38px; }
-.vt-adaptive-nav__drawer-links { display: flex; flex-direction: column; gap: 6px; }
-.vt-adaptive-nav__drawer-links .vt-adaptive-nav__link { width: calc(100% + 10px); height: 44px; border-radius: 0 18px 18px 0; font-size: 14px; }
+.vt-adaptive-nav__drawer-links { display: flex; flex-direction: column; gap: 9px; padding: 2px; }
+/* Match the desktop top-bar buttons: full-width rounded palette pills with the
+   same border/radius and a hard neubrutalist shadow, instead of side tabs. */
+.vt-adaptive-nav__drawer-links .vt-adaptive-nav__link { width: 100%; height: 50px; border-radius: var(--vt-nav-radius); font-size: 14px; box-shadow: 3px 3px 0 #000; }
+.vt-adaptive-nav__drawer-links .vt-adaptive-nav__link:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 #000; }
+.vt-adaptive-nav__drawer-links .vt-adaptive-nav__link:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #000; }
 
 .vt-adaptive-legal { position: fixed; z-index: 20; bottom: 10px; left: 12px; display: flex; gap: 7px; padding: 4px 7px; background: rgba(255, 255, 255, .88); font-size: 9px; font-weight: 700; }
 .vt-adaptive-legal a { color: inherit; text-decoration: underline; }
