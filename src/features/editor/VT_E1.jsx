@@ -2864,6 +2864,40 @@ import JSZip from 'jszip';
       const [cursorPreviewMode, setCursorPreviewMode] = useState('off'); // off | lite | on
       const [timelineViewportWidth, setTimelineViewportWidth] = useState(1400);
       const [shellViewportHeight, setShellViewportHeight] = useState(720);
+      // Track viewport so the shell can compact on landscape phones. Kept as
+      // a single flag so the panel-width cap + auto-collapse can key off it
+      // in one place.
+      const [shellViewport, setShellViewport] = useState(() => {
+        if (typeof window === 'undefined') return { w: 1440, h: 900, mobileLandscape: false };
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        return { w, h, mobileLandscape: (h <= 560 || w <= 932) && w > h };
+      });
+      useEffect(() => {
+        if (typeof window === 'undefined') return undefined;
+        const onResize = () => {
+          const w = window.innerWidth;
+          const h = window.innerHeight;
+          const mobileLandscape = (h <= 560 || w <= 932) && w > h;
+          setShellViewport((prev) => (prev.w === w && prev.h === h && prev.mobileLandscape === mobileLandscape ? prev : { w, h, mobileLandscape }));
+        };
+        window.addEventListener('resize', onResize);
+        window.addEventListener('orientationchange', onResize);
+        return () => {
+          window.removeEventListener('resize', onResize);
+          window.removeEventListener('orientationchange', onResize);
+        };
+      }, []);
+      // Auto-collapse the rail the first time the viewport enters landscape
+      // mobile — the timeline needs the room. Only nudges on the transition,
+      // so the user can still open it manually and it stays open.
+      const lastMobileLandscapeRef = useRef(shellViewport.mobileLandscape);
+      useEffect(() => {
+        if (shellViewport.mobileLandscape && !lastMobileLandscapeRef.current) {
+          setEditorShellState((prev) => (prev.railCollapsed ? prev : { ...prev, railCollapsed: true }));
+        }
+        lastMobileLandscapeRef.current = shellViewport.mobileLandscape;
+      }, [shellViewport.mobileLandscape]);
       const [boxSelect, setBoxSelect] = useState(null);
       const [showStartupRestore, setShowStartupRestore] = useState(false);
       const [showTemplateCreator, setShowTemplateCreator] = useState(false);
@@ -11442,9 +11476,17 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
       const layoutModeId = activeLayout.id;
       const isStudio596Layout = layoutModeId === 'studio-596';
       const isSplitColumnLayout = layoutModeId === 'split-column';
-      const shellSidebarWidth = editorShellState.railCollapsed
+      // On mobile landscape, cap the expanded sidebar so the timeline gets
+      // at least ~55% of the viewport. Collapsed state (74px) is already
+      // tight enough. When the user hasn't collapsed, we clamp aggressively
+      // rather than pushing the canvas off-screen.
+      const mobileSidebarCap = shellViewport.mobileLandscape
+        ? Math.max(160, Math.min(240, Math.floor(shellViewport.w * 0.45)))
+        : Infinity;
+      const rawSidebarWidth = editorShellState.railCollapsed
         ? 74
         : (isStudio596Layout ? 596 : clamp(Math.max(320, Number(editorShellState.panelWidth || 560)), 320, 760));
+      const shellSidebarWidth = Math.min(rawSidebarWidth, mobileSidebarCap);
       const shellGutterSize = 12;
       const shellOuterPadding = 16;
       const shellGridColumns = `${shellSidebarWidth}px ${shellGutterSize}px minmax(0, 1fr)`;
