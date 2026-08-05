@@ -110,7 +110,12 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
           ) : null}
           <main
             className={`flex-1 h-full overflow-y-auto overflow-x-hidden relative ${
-              isEditorSurface ? "p-2 pb-2" : "p-3 pb-24 sm:p-6 md:p-8 md:pb-96"
+              isEditorSurface
+                // Editor iframe wants every pixel. On mobile we drop the
+                // outer padding to zero so the timeline + preview + rail
+                // actually fit inside a phone held sideways.
+                ? "p-0 md:p-2"
+                : "p-3 pb-24 sm:p-6 md:p-8 md:pb-96"
             }`}
           >
             <EntitlementContext.Provider value={entitlement}>{children}</EntitlementContext.Provider>
