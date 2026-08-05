@@ -1238,6 +1238,18 @@ const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
     })
     hydrateAuthStateFromAnalyticsCache()
     setChannelBootPhase("ready")
+
+    // Begin the core channel data sync immediately after first login so the
+    // dashboard overview (avatar + KPIs), the nav bar, and the analytics
+    // creator module hydrate without the user having to click "Sync". This runs
+    // inside the app-level context boot promise, so it keeps going even as the
+    // user navigates between pages. A sync failure must not tear down a
+    // successful connection, so it is isolated from the connect catch below.
+    try {
+     await globalSyncData({ batchMode: "initial" })
+    } catch (syncErr) {
+     console.warn("Post-login core sync failed; manual sync remains available.", syncErr)
+    }
    } catch (err) {
     if (isUnauthorizedError(err)) {
      unifiedAuth.logout()
@@ -1268,7 +1280,7 @@ const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
 
   loginBootPromiseRef.current = bootPromise
   return bootPromise
- }, [applyChannelIdentity, applyUnifiedAccountSnapshot, authState.subscriberCount, hydrateAuthStateFromAnalyticsCache])
+ }, [applyChannelIdentity, applyUnifiedAccountSnapshot, authState.subscriberCount, globalSyncData, hydrateAuthStateFromAnalyticsCache])
 
  const disconnectChannel = useCallback(() => {
   setAuthStateRaw(defaultAuthState)

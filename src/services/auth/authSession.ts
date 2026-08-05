@@ -188,21 +188,51 @@ export const login = async (mode: 'popup' | 'redirect' = 'popup'): Promise<void>
     }
 
     let settled = false;
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+    let timeoutTimer: ReturnType<typeof setTimeout> | null = null;
 
     const cleanup = () => {
       settled = true;
       window.removeEventListener('message', handleMessage);
-      try { popup.close(); } catch { /* ignore */ }
+      window.removeEventListener('storage', handleStorage);
+      if (pollTimer !== null) clearInterval(pollTimer);
+      if (timeoutTimer !== null) clearTimeout(timeoutTimer);
+      try { popup.close(); } catch { /* ignore — COOP may block closing a severed popup */ }
     };
 
-    // Listen for postMessage from the popup
+    // The popup writes the token straight to localStorage before it tries to
+    // postMessage/close. Reading it back is COOP-proof: localStorage is shared
+    // across same-origin windows regardless of whether the opener link survives
+    // Google's Cross-Origin-Opener-Policy. Force a fresh read past the cache.
+    const readFreshToken = (): string | null => {
+      cachedAuthObj = null;
+      const token = getAuthObj().accessToken;
+      if (typeof token !== 'string' || !token) return null;
+      return isTokenFresh(token) ? token : null;
+    };
+
+    const finishIfTokenPresent = (): boolean => {
+      if (settled) return true;
+      const token = readFreshToken();
+      if (!token) return false;
+      cleanup();
+      resolve();
+      return true;
+    };
+
+    // Primary, COOP-resilient signal: the token appearing in localStorage.
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === KEY_VT_AUTH) finishIfTokenPresent();
+    };
+
+    // Best-effort fast path when the opener relationship survives.
     const handleMessage = (event: MessageEvent) => {
       if (settled) return;
       if (event.origin !== window.location.origin) return;
 
       if (event.data?.type === 'OAUTH_IMPLICIT_SUCCESS') {
-        cleanup();
         setImplicitSession(event.data.access_token, Number(event.data.expires_in || 3600));
+        cleanup();
         resolve();
       } else if (event.data?.type === 'OAUTH_IMPLICIT_ERROR') {
         cleanup();
@@ -211,6 +241,28 @@ export const login = async (mode: 'popup' | 'redirect' = 'popup'): Promise<void>
     };
 
     window.addEventListener('message', handleMessage);
+    window.addEventListener('storage', handleStorage);
+
+    // Poll as a backstop: storage events don't always fire (same-process popups,
+    // Safari quirks), and this is also how we notice the user closing the popup.
+    pollTimer = setInterval(() => {
+      if (finishIfTokenPresent()) return;
+      let popupClosed = false;
+      try { popupClosed = popup.closed; } catch { /* COOP can throw on access */ }
+      if (popupClosed) {
+        // Give any in-flight token write one last chance before giving up.
+        if (finishIfTokenPresent()) return;
+        cleanup();
+        reject(new Error('LOGIN_ABORTED'));
+      }
+    }, 400);
+
+    // Absolute ceiling so a stuck popup can never hang the boot promise forever.
+    timeoutTimer = setTimeout(() => {
+      if (finishIfTokenPresent()) return;
+      cleanup();
+      reject(new Error('LOGIN_ABORTED'));
+    }, 3 * 60 * 1000);
   });
 };
 

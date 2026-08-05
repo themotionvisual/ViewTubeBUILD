@@ -299,8 +299,15 @@ export const beginAccountIntent = async (
       markUnifiedAccountServerUnavailable()
       throw new Error(ACCOUNT_SERVER_UNAVAILABLE_ERROR)
     }
-    const payload = await readJson<{ authorizationUrl: string }>(response)
-    if (!payload.authorizationUrl) throw new Error("Google authorization URL was not returned.")
+    const payload = await readJson<{ authorizationUrl?: string } | null>(response)
+    // A static host (e.g. an SPA served by Vercel without the account server) rewrites
+    // unknown /api routes to index.html — a 200 that is not JSON, so readJson yields null.
+    // Treat any response without a usable authorization URL as "server not deployed here"
+    // so the caller falls back to the legacy Google popup instead of a dead blank popup.
+    if (!payload || !payload.authorizationUrl) {
+      markUnifiedAccountServerUnavailable()
+      throw new Error(ACCOUNT_SERVER_UNAVAILABLE_ERROR)
+    }
     popup.location.href = payload.authorizationUrl
     await waitForAccountPopupMessage(popup, sanitizeInternalReturnTo(returnTo))
   } catch (error) {
