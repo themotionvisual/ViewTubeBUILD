@@ -1667,8 +1667,8 @@ const filteredRows = useMemo(() => {
        note: total.secondary || "Available values",
       }
      })
-     while (metrics.length < 4)
-      metrics.push({ label: "Metric", value: "-", note: "Not available" })
+     // Only surface metrics that actually resolved — never pad the row with
+     // empty "Metric / Not available" placeholder cards.
      return [
       {
        label: "Rows",
@@ -2846,19 +2846,13 @@ const filteredRows = useMemo(() => {
           className="is-collapsed"
           key={`${group.id}-${column.key}`}
           style={{
+           "--vt-header-color": group.color,
            background: group.color,
            width,
            minWidth: width,
            maxWidth: width,
-          }}>
-          <span
-           className="vt-sync-collapsed-group-label"
-           style={{
-            color:
-             group.color === "#FFDA47" || group.color === "#3FEE56" ?
-              "#0a0a0a"
-             : "#0a0a0a",
-           }}>
+          } as CssVars}>
+          <span className="vt-sync-collapsed-group-label">
            {COLLAPSED_GROUP_DISPLAY_LABELS[group.label] || group.label}
           </span>
          </th>
@@ -4948,9 +4942,9 @@ const filteredRows = useMemo(() => {
               type="button"
               className={`vt-sync-toolbar-action ${formatFilter === 'long' ? 'active' : ''} is-format-filter-long`}
               style={{
-                "--vt-action-rail": "#FFDA47",
-                "--vt-action-label": "#FFFFFF",
-                "--vt-action-shadow": "rgba(255,218,71,.52)",
+                "--vt-action-rail": "#C0F240",
+                "--vt-action-label": "#FA618A",
+                "--vt-action-shadow": "rgba(192,242,64,.52)",
                 marginLeft: 0,
               } as CssVars}
             >
@@ -4970,17 +4964,15 @@ const filteredRows = useMemo(() => {
                   title="Longform Only"
                 />
               </span>
-              <span>
-                <strong>Longform Only</strong>
-              </span>
+              <strong>Longform Only</strong>
             </button>
             <button
               type="button"
               className={`vt-sync-toolbar-action ${formatFilter === 'short' ? 'active' : ''} is-format-filter-short`}
               style={{
-                "--vt-action-rail": "#FFDA47",
-                "--vt-action-label": "#FFFFFF",
-                "--vt-action-shadow": "rgba(255,218,71,.52)",
+                "--vt-action-rail": "#3FEE56",
+                "--vt-action-label": "#FF7F6B",
+                "--vt-action-shadow": "rgba(63,238,86,.52)",
                 marginLeft: 8,
               } as CssVars}
             >
@@ -5000,9 +4992,7 @@ const filteredRows = useMemo(() => {
                   title="Shorts Only"
                 />
               </span>
-              <span>
-                <strong>Shorts Only</strong>
-              </span>
+              <strong>Shorts Only</strong>
             </button>
           </div>
         )}
@@ -5051,9 +5041,9 @@ const filteredRows = useMemo(() => {
        className="vt-sync-toolbar-action"
        style={
         {
-         "--vt-action-rail": "#3FEE56",
-         "--vt-action-label": "#FFDA47",
-         "--vt-action-shadow": "rgba(63,238,86,.52)",
+         "--vt-action-rail": "#4EE4BE",
+         "--vt-action-label": "#FFA85C",
+         "--vt-action-shadow": "rgba(78,228,190,.52)",
         } as CssVars
        }
        onClick={() => fileRef.current?.click()}>
@@ -5128,9 +5118,9 @@ const filteredRows = useMemo(() => {
        className="vt-sync-toolbar-action"
        style={
         {
-         "--vt-action-rail": "#528FFA",
-         "--vt-action-label": "#36E0F6",
-         "--vt-action-shadow": "rgba(82,143,250,.52)",
+         "--vt-action-rail": "#36E0F6",
+         "--vt-action-label": "#FFDA47",
+         "--vt-action-shadow": "rgba(54,224,246,.52)",
         } as CssVars
        }
        onClick={() => {
@@ -5151,9 +5141,9 @@ const filteredRows = useMemo(() => {
         className="vt-sync-toolbar-action"
         style={
          {
-          "--vt-action-rail": "#F55EFC",
-          "--vt-action-label": "#FFDA47",
-          "--vt-action-shadow": "rgba(245,94,252,.52)",
+          "--vt-action-rail": "#528FFA",
+          "--vt-action-label": "#C0F240",
+          "--vt-action-shadow": "rgba(82,143,250,.52)",
          } as CssVars
         }
         aria-label="Table settings"

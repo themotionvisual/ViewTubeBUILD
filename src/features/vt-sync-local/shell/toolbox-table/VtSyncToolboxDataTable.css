@@ -139,7 +139,7 @@
 .vt-sync-search:focus-within { filter: drop-shadow(7px 7px 0 rgba(245,94,252,.46)); }
 .vt-sync-search > span { display: grid; place-items: center; background: #36E0F6; }
 .vt-sync-search > span svg { width: 22px; height: 22px; stroke-width: 3px; }
-.vt-sync-search input { width: 100%; min-width: 0; padding: 0 12px; border: 0; outline: 0; background: transparent; font-size: 12px; font-weight: 950; letter-spacing: .05em; text-transform: uppercase; }
+.vt-sync-search input { width: 100%; min-width: 0; padding: 0 12px; -webkit-appearance: none; appearance: none; border: 0; outline: 0; box-shadow: none; background: transparent; font-size: 12px; font-weight: 950; letter-spacing: .05em; text-transform: uppercase; }
 .vt-sync-search input::-webkit-search-cancel-button { display: none; }
 .vt-sync-search button { display: grid; place-items: center; background: #FA618A; cursor: pointer; }
 .vt-sync-search button svg { width: 22px; height: 22px; stroke-width: 4px; }
@@ -967,6 +967,15 @@
 .vt-sync-toolbox-table:not(.is-dark) .vt-sync-collapsed-group-label {
   background: transparent !important;
   color: inherit !important;
+}
+
+/* Collapsed group columns (e.g. DETAILS / FORMAT) mirror the expanded group
+   header bar: the section's own palette color as the fill with black text,
+   rather than reading like the black column-label row. */
+.vt-sync-toolbox-table:not(.is-dark) .vt-sync-column-row th.is-collapsed {
+  background: var(--vt-section-header-color) !important;
+  background-color: var(--vt-section-header-color) !important;
+  color: var(--vt-ink) !important;
 }
 
 /* DARK MODE: use the individual section color as the fill and black text.
