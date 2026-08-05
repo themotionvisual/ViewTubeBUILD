@@ -282,6 +282,27 @@ const fetchWithBackoff = async (url: string, token: string, maxRetries = 3): Pro
  return lastResponse || request()
 }
 
+/**
+ * The Analytics API rejects any sort key that isn't also selected as a metric or
+ * dimension. Reports are fetched as per-family metric bundles (watch, engagement,
+ * cards, revenue) that all sort by -views, but only the "watch" bundle actually
+ * lists `views` — so engagement/cards/revenue used to return 400 "-views is not
+ * selected in 'metrics' or 'dimensions'". A sort key is always a metric or a
+ * dimension; when it isn't the report's dimension, add it back to the metrics so
+ * every bundle sorts consistently and the request is accepted.
+ */
+export const ensureSortMetricSelected = (
+ metrics: string[],
+ sort: string | undefined,
+ dimensions: string | undefined,
+): string[] => {
+ const sortKey = sort ? sort.replace(/^-/, "").trim() : ""
+ if (!sortKey) return metrics
+ const dimensionKeys = dimensions ? dimensions.split(",").map((entry) => entry.trim()) : []
+ if (dimensionKeys.includes(sortKey) || metrics.includes(sortKey)) return metrics
+ return [sortKey, ...metrics]
+}
+
 const runAnalyticsBundle = async ({
  token,
  id,
@@ -312,7 +333,7 @@ const runAnalyticsBundle = async ({
    ids: "channel==MINE",
    startDate,
    endDate,
-   metrics: activeMetrics.join(","),
+   metrics: ensureSortMetricSelected(activeMetrics, sort, dimensions).join(","),
   })
   if (dimensions) params.set("dimensions", dimensions)
   if (sort) params.set("sort", sort)
