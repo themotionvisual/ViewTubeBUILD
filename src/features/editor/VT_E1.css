@@ -1287,3 +1287,94 @@
       border-radius: 9999px;
       background: #ccff00;
     }
+
+    /* =====================================================================
+       MOBILE HORIZONTAL LAYOUT
+       Landscape phones (roughly 640-932px wide, <=560px tall). Keep the
+       two-column shell — rail | canvas — never reflow to a stack, because a
+       video editor without a wide timeline is useless. Everything else
+       shrinks proportionally. Portrait phones get a rotate-device prompt.
+       ===================================================================== */
+
+    /* Portrait phone — the editor is fundamentally horizontal; portrait
+       squeezes the timeline into uselessness, so prompt to rotate. */
+    @media (max-width: 640px) and (orientation: portrait) {
+      .vt-editor-shell::before {
+        content: "Rotate your device — the editor works horizontally.";
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        text-align: center;
+        background: #f0f0f4;
+        color: #111;
+        font-weight: 900;
+        font-size: 15px;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        border: 4px solid #111;
+      }
+    }
+
+    /* Landscape phones. */
+    @media (max-height: 560px) and (orientation: landscape),
+           (max-width: 932px) and (orientation: landscape) {
+      /* Shell frame: pull in the outer padding so the timeline reclaims
+         ~10-14px of vertical room. */
+      .vt-editor-shell { padding: 4px !important; }
+      .outer-frame { border-width: 2px !important; }
+      .neo-card { border-radius: 8px; }
+
+      /* Slimmer studio logo in the panel header. */
+      .viewtube-logo { font-size: 20px !important; margin: 2px 0 4px; }
+
+      /* Dock rail — 52px buttons are too tall for a 375px viewport. */
+      .dock-btn { width: 40px; height: 40px; border-radius: 10px; }
+      .dock-nav { width: 12px; }
+
+      /* Panel header + gutters shrink. */
+      .neo-btn { min-height: 28px; padding: .25rem .4rem; font-size: 9px; }
+
+      /* Timeline sticky label column shrinks so track content wins. */
+      .timeline-label { width: 68px; min-width: 68px; max-width: 68px; }
+
+      /* Setting rows: less label room so sliders remain draggable. */
+      .setting-row { grid-template-columns: 82px 1fr 48px; gap: 4px; }
+      .setting-label { font-size: 9px; }
+      .value-display { min-width: 36px; height: 24px; font-size: 9px; }
+
+      /* Transport dock: pack tighter so play cluster still fits. */
+      .transport-glass-pill { min-width: 44px; height: 24px; font-size: 9px; }
+      .transport-neon-slab .neo-btn,
+      .transport-scanner .neo-btn { width: 26px; height: 26px; min-height: 26px; }
+      .transport-data-strip { height: 26px; }
+      .transport-data-strip button { font-size: 9px; padding: 0 6px; }
+      .transport-dot-matrix { padding: 3px 6px; }
+
+      /* Timeline toolbar buttons — save vertical real estate. */
+      .vt-timeline-toolbar .neo-btn:not(.vt-timeline-status-pill) {
+        width: 26px; height: 26px; min-width: 26px; min-height: 26px;
+      }
+      .vt-timeline-toolbar .neo-btn svg,
+      .vt-timeline-icon-btn svg { width: 15px; height: 15px; }
+      .vt-timeline-toolbar .vt-time-readout { min-width: 96px; height: 26px; }
+
+      /* Anything horizontally overflow-y becomes swipe-scrollable. */
+      .neo-scroll, .no-scrollbar { -webkit-overflow-scrolling: touch; }
+    }
+
+    /* Very short landscape (iPhone SE-mini in landscape ≈ 320px tall). */
+    @media (max-height: 400px) and (orientation: landscape) {
+      .dock-btn { width: 34px; height: 34px; border-radius: 8px; }
+      .viewtube-logo { display: none; }
+      .vt-editor-shell { padding: 2px !important; }
+    }
+
+    /* Touch tweaks — larger tap targets, no hover-only cues. */
+    @media (pointer: coarse) {
+      .kf-diamond, .kf-circle { width: 28px; height: 28px; }
+      .thumb { width: 16px; height: 28px; }
+      button, .neo-btn { touch-action: manipulation; }
+    }

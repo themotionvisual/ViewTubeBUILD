@@ -698,3 +698,31 @@
   .vt-adaptive-nav__drawer * { scroll-behavior: auto !important; transition-duration: .01ms !important; }
   .vt-nav-flight-layer { display: none; }
 }
+
+/* =====================================================================
+   MOBILE HORIZONTAL — EDITOR SURFACE
+   On landscape phones, the editor claims the entire viewport: nav bar
+   hides, main padding collapses to zero. Every other route keeps its
+   normal mobile chrome. The Adaptive shell's own mobile layout stays
+   intact for non-editor pages.
+   ===================================================================== */
+@media (max-height: 560px) and (orientation: landscape),
+       (max-width: 932px) and (orientation: landscape) {
+  /* Zero-out padding on the editor surface so VT_E1's own outer frame
+     wins the pixel budget. */
+  .vt-adaptive-main.vt-adaptive-main--editor { padding: 0 !important; }
+
+  /* Collapse the top nav row when the shell is in mobile layout AND the
+     editor is the surface — the nav row eats a full 70px of a ~390px
+     landscape viewport, which is 18% of the height for a navigation the
+     user isn't currently using. */
+  .vt-adaptive-shell[data-layout="mobile"]:has(.vt-adaptive-main--editor) {
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  }
+  .vt-adaptive-shell[data-layout="mobile"]:has(.vt-adaptive-main--editor) > .vt-adaptive-nav {
+    display: none;
+  }
+  .vt-adaptive-shell[data-layout="mobile"]:has(.vt-adaptive-main--editor) > .vt-adaptive-main {
+    grid-area: 1 / 1;
+  }
+}
