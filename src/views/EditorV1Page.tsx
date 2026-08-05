@@ -49,7 +49,7 @@ class EditorRouteBoundary extends React.Component<React.PropsWithChildren, Edito
 
 const EditorV1Page: React.FC = () => {
   return (
-    <section className="h-full min-h-0 w-full overflow-hidden rounded-[10px] border-[2px] border-black bg-[#111]">
+    <section className="w-full h-full min-h-0 bg-[#111] md:border-[2px] md:border-black md:rounded-[10px] overflow-hidden flex flex-col">
       <EditorRouteBoundary>
         <VTE1Editor />
       </EditorRouteBoundary>

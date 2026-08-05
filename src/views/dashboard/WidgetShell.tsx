@@ -89,12 +89,56 @@ export const WidgetShell: React.FC<{
     </div>
 
     {headerContent && (
-     <div className="header-extra" onClick={(e) => e.stopPropagation()} style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+     <div
+      className="header-extra"
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+      style={{ flex: 1, display: "flex", justifyContent: "center" }}
+     >
       {headerContent}
      </div>
     )}
 
-    <div className="toggle flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+    <div
+     className="toggle flex items-center gap-2"
+     onClick={(e) => e.stopPropagation()}
+     onPointerDown={(e) => e.stopPropagation()}
+     onTouchStart={(e) => e.stopPropagation()}
+    >
+     {canEdit && editMode ?
+      <div className="flex flex-col gap-1 mr-1">
+       <div className="flex items-center gap-1">
+        <button
+         onClick={onCycleSize}
+         className="widget-header-btn"
+         title="Go Wider">
+         <span className="text-[8px] font-black">+W</span>
+        </button>
+        <button
+         onClick={onDecSize}
+         className="widget-header-btn"
+         title="Go Smaller">
+         <span className="text-[8px] font-black">-W</span>
+        </button>
+       </div>
+       <div className="flex items-center gap-1">
+        <button
+         onClick={onCycleHeight}
+         className="widget-header-btn"
+         title="Go Taller">
+         <span className="text-[8px] font-black">+H</span>
+        </button>
+        <button
+         onClick={onDecHeight}
+         className="widget-header-btn"
+         title="Go Shorter">
+         <span className="text-[8px] font-black">-H</span>
+        </button>
+       </div>
+      </div>
+     : null}
+
      {hasAI && (
       <div className="flex items-center gap-1.5 mr-1">
        {typeof aiCost === "number" && (
@@ -197,7 +241,20 @@ export const WidgetShell: React.FC<{
    </div>}
 
    {!instance.collapsed && <div className="vt-widget-content">
-    <div className={cn("vt-widget-body", contentLayout === "flush" && "vt-widget-body--flush")}>{children}</div>
+    <div
+     className={cn("vt-widget-body", contentLayout === "flush" && "vt-widget-body--flush")}
+     onPointerDown={(e) => {
+      // Prevent DnD-kit's PointerSensor on the sortable card from swallowing
+      // taps on interactive widget content (buttons, inputs, links). Without
+      // this, quick taps on mobile could initiate a drag instead of firing
+      // the button's click handler, which read as "the widget buttons freeze
+      // the site".
+      e.stopPropagation()
+     }}
+     onTouchStart={(e) => e.stopPropagation()}
+    >
+     {children}
+    </div>
    </div>}
   </div>
  )

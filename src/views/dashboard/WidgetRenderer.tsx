@@ -804,18 +804,18 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
 
    return (
     <WidgetShell {...common} icon={<TrendingUp size={22} />} headerContent={timeWindowToggle}>
-     <div style={{ display: "flex", flexDirection: "column", height: "100%", margin: 0 }}>
-      <div style={{ display: "flex", gap: "6px", flex: 1, overflow: "hidden", padding: "5px" }}>
+     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+      <div className="kpi-cluster-row" style={{ display: "flex", gap: "6px", flex: 1, overflow: "hidden", padding: "2px" }}>
        {/* Circular Avatar Sidebar — replaced with a sign-up nudge when no account is connected */}
        {!data.authState.isAuthenticated ? (
-        <div style={{
+        <div className="kpi-cluster-avatar" style={{
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
           gap: "8px",
           flexShrink: 0,
-          width: "222px",
-          height: "222px",
+          width: "clamp(72px, 30vw, 222px)",
+          height: "clamp(72px, 30vw, 222px)",
         }}>
          <p style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.04em", lineHeight: 1.3, margin: "0 0 2px" }}>
           Connect your channel to see real analytics here.

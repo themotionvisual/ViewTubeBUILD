@@ -497,10 +497,153 @@
       border-radius: 9999px;
       background: #ccff00;
     }
+
+    /* =========================================================
+       Mobile — landscape layout.
+       The editor's native layout assumes a 1200 px+ canvas, so
+       here we squeeze the left rail, dock, buttons and chrome
+       until the preview + timeline + one panel column still fit
+       on a phone held sideways (iPhone-class 812x375 up to
+       Android-class 900x420 landscape). Portrait phones instead
+       see a full-screen "rotate device" overlay because a video
+       editor is unusable stacked vertically.
+       ========================================================= */
+    #vt-e1-rotate-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      display: none;
+      background: #111;
+      color: #fff;
+      padding: 24px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-family: 'Anton', 'Bebas Neue', ui-sans-serif, system-ui, sans-serif;
+      letter-spacing: 0.02em;
+    }
+    #vt-e1-rotate-overlay .vt-rotate-title {
+      font-size: 32px;
+      line-height: 1.05;
+      color: var(--lime, #C9F830);
+      text-transform: uppercase;
+    }
+    #vt-e1-rotate-overlay .vt-rotate-sub {
+      font-size: 14px;
+      margin-top: 12px;
+      opacity: 0.85;
+      max-width: 320px;
+    }
+    #vt-e1-rotate-overlay .vt-rotate-icon {
+      width: 84px;
+      height: 84px;
+      border: 3px solid var(--lime, #C9F830);
+      border-radius: 14px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      animation: vtRotateSpin 2.4s ease-in-out infinite;
+    }
+    @keyframes vtRotateSpin {
+      0%, 100% { transform: rotate(-8deg); }
+      50% { transform: rotate(82deg); }
+    }
+    /* Show the overlay only on portrait phones. */
+    @media (max-width: 767px) and (orientation: portrait) {
+      #vt-e1-rotate-overlay { display: flex; }
+      /* Hide the editor behind the overlay to avoid users interacting
+         with the unusable stacked layout underneath. */
+      #root > * { visibility: hidden; }
+    }
+
+    /* Landscape phones + very short viewports: tighten every fixed
+       dimension the editor hard-codes so the shell actually fits. */
+    @media (max-width: 900px) and (orientation: landscape),
+           (max-height: 500px) and (orientation: landscape) {
+      /* Give the editor room by killing the outer 8 px page padding
+         and dropping to a single-pixel gap between rail and preview. */
+      body { font-size: 12px; }
+      #root > div.h-screen.w-screen { padding: 2px !important; gap: 2px !important; }
+
+      /* Left rail: was 320-620 px, cap much smaller. */
+      .neo-card.outer-frame { border-width: 2px !important; }
+      .viewtube-logo { font-size: 18px !important; }
+      .viewtube-logo .studio { display: none; }
+
+      /* Dock nav — icons only, tighter buttons. */
+      .dock-btn {
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 10px !important;
+        transform: translateX(0) scale(1) !important;
+      }
+
+      /* Neo-buttons everywhere: knock the min-height down from 34
+         so toolbars stop pushing the timeline off-screen. */
+      .neo-btn {
+        min-height: 26px;
+        padding: .2rem .38rem;
+        font-size: 9px;
+        gap: 4px;
+      }
+      .neo-btn svg { width: 12px; height: 12px; }
+      .module-toggle-btn { width: 18px; height: 18px; min-height: 18px; }
+
+      /* Timeline label column and value chips. */
+      .timeline-label {
+        width: 64px !important;
+        min-width: 64px !important;
+        max-width: 64px !important;
+      }
+      .value-display { min-width: 34px; height: 22px; font-size: 9px; }
+
+      /* Transport scanner + dot-matrix in the toolbar row. */
+      .transport-scanner .neo-btn {
+        width: 24px !important;
+        height: 24px !important;
+        min-height: 24px !important;
+      }
+      .transport-dot-pill { height: 12px; width: 3px; }
+      .transport-dot-matrix { padding: 3px 5px; gap: 3px; }
+
+      /* Larger tap targets on the tiny keyframe handles. */
+      .kf-diamond, .kf-circle { width: 18px; height: 18px; }
+
+      /* Panel headings + labels shrink one step. */
+      .neo-card .text-\[10px\] { font-size: 9px !important; }
+      .neo-card .text-\[11px\] { font-size: 10px !important; }
+    }
+
+    /* Ultra-narrow landscape (Android edge-to-edge phones): collapse the
+       left rail to icons only. The dock still works, just no side panel. */
+    @media (max-width: 720px) and (orientation: landscape) {
+      #root .h-screen.w-screen {
+        /* Force the two-column grid to become "rail + everything else"
+           at a fixed 74 px rail width regardless of railCollapsed state.
+           This overrides the inline gridTemplateColumns from the App. */
+        grid-template-columns: 74px 1fr !important;
+      }
+      .viewtube-logo { display: none; }
+    }
   </style>
 </head>
 <body>
   <div id="root"></div>
+  <!-- Portrait-mobile "rotate device" overlay. CSS controls when it shows;
+       the icon is a rotating-phone glyph rendered via a plain unicode char
+       so we don't need another asset. Users on desktop / tablets / landscape
+       phones never see this. -->
+  <div id="vt-e1-rotate-overlay" aria-hidden="true">
+    <div class="vt-rotate-icon">📱</div>
+    <div class="vt-rotate-title">Rotate to landscape</div>
+    <div class="vt-rotate-sub">
+      The ViewTube video editor needs a wide canvas.<br>
+      Turn your phone sideways to open the timeline, preview and inspector.
+    </div>
+  </div>
 
   <script type="text/babel" data-type="module">
     import React, { useEffect, useMemo, useRef, useState } from 'react';

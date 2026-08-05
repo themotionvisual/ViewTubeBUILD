@@ -11,36 +11,58 @@ body,
   padding: 0;
 }
 
+html,
+body {
+  /* Belt-and-suspenders: the neo-brutalist layout was overflowing horizontally
+     on narrow viewports and producing a phantom horizontal scroll gutter on
+     mobile. AppShell already caps things with overflow-hidden but hardening
+     the root prevents any stray absolutely-positioned element from bringing
+     the sideways scroll bar back. */
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 * {
   box-sizing: border-box;
 }
 
-/* Custom Scrollbar for Neo-Brutalist UI */
-::-webkit-scrollbar {
-  width: 16px;
+/* Custom Scrollbar for Neo-Brutalist UI (desktop only).
+   Mobile browsers already draw overlay scrollbars — the 16 px chunky
+   version bled through as a black strip next to the widgets on phones. */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 16px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #fff;
+    border-left: 4px solid #000;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #000;
+    border: 4px solid #000;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #333;
+  }
+
+  /* Firefox support */
+  * {
+    scrollbar-width: auto;
+    scrollbar-color: #000 #fff;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: #fff;
-  border-left: 4px solid #000;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #000;
-  border: 4px solid #000;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #333;
-}
-
-/* Firefox / Standard support */
-* {
-  scrollbar-width: auto;
-}
-
-[class*="scrollbar-style-"] {
-  scrollbar-color: initial !important;
+@media (max-width: 767px) {
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+  * {
+    scrollbar-width: none;
+  }
 }
 /* Video manager description: hide scrollbar chrome while keeping scroll + resize handle */
 .vm-scrollless {
