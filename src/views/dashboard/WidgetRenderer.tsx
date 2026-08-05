@@ -704,25 +704,25 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
    return (
     <WidgetShell {...common} widget={shellWidget} icon={<TrendingUp size={22} />}>
      <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-      <div style={{ display: "flex", gap: "6px", flex: 1, overflow: "hidden", padding: "2px" }}>
+      <div className="kpi-cluster-row" style={{ display: "flex", gap: "6px", flex: 1, overflow: "hidden", padding: "2px" }}>
        {/* Circular Avatar Sidebar */}
-       <div style={{ 
-         display: "flex", 
-         flexDirection: "column", 
-         alignItems: "center", 
-         justifyContent: "center", 
-         gap: "6px", 
-         flexShrink: 0, 
-         width: "160px",
+       <div className="kpi-cluster-avatar" style={{
+         display: "flex",
+         flexDirection: "column",
+         alignItems: "center",
+         justifyContent: "center",
+         gap: "6px",
+         flexShrink: 0,
+         width: "clamp(72px, 30vw, 160px)",
          marginRight: "4px",
          paddingRight: "2px"
        }}>
-        <div style={{ 
-          width: "120px", 
-          height: "120px", 
-          borderRadius: "50%", 
-          border: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)", 
-          overflow: "hidden", 
+        <div style={{
+          width: "clamp(60px, 22vw, 120px)",
+          height: "clamp(60px, 22vw, 120px)",
+          borderRadius: "50%",
+          border: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)",
+          overflow: "hidden",
           background: "#eee",
           boxShadow: "4px 4px 0px 0px rgba(0,0,0,0.1)"
         }}>

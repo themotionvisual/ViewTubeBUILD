@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { ChevronDown, ChevronLeft, ChevronRight, RefreshCw, UserCircle2 } from "lucide-react"
+import { ChevronDown, ChevronLeft, ChevronRight, Menu, RefreshCw, UserCircle2, X as CloseIcon } from "lucide-react"
 import { useEntitlement } from "../app/AppShell"
 import { useBrain } from "../context/useBrain"
 import { useDashboard } from "../context/DashboardContext"
@@ -152,9 +152,53 @@ export const TopBar: React.FC<TopBarProps> = ({ sidebarHidden = false, onToggleS
 
   const guestSubtitle = "Connect once, sync once, then let ViewTubeX guide your first growth win."
 
+  const initials = React.useMemo(() => {
+    const source = (authState.channelName || authState.channelHandle || "").trim()
+    if (!source) return "VT"
+    const parts = source.replace(/^@/, "").split(/\s+|_+|-+/).filter(Boolean)
+    if (parts.length === 0) return "VT"
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+    return (parts[0][0] + parts[1][0]).toUpperCase()
+  }, [authState.channelName, authState.channelHandle])
+
   return (
     <header className="sticky top-0 z-[120] w-full border-b-[3px] border-black bg-white">
-      <div className="min-h-[96px] px-4 md:px-6 py-2 flex items-center justify-between gap-4">
+      {/* Mobile compact header: hamburger + logo + avatar chip */}
+      <div className="md:hidden flex items-center justify-between gap-2 px-3 py-2 min-h-[60px]">
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          aria-label={sidebarHidden ? "Open navigation" : "Close navigation"}
+          className="w-11 h-11 shrink-0 border-[3px] border-black rounded-[12px] bg-[#C9F830] shadow-[2px_2px_0_0_#000] flex items-center justify-center active:translate-y-[1px] active:shadow-none"
+        >
+          {sidebarHidden ? <Menu size={22} strokeWidth={3} /> : <CloseIcon size={22} strokeWidth={3} />}
+        </button>
+        <button
+          onClick={() => navigate("/")}
+          className="shrink-0 text-left leading-none"
+          aria-label="Go to Dashboard"
+        >
+          <span className="text-[28px] font-[1000] tracking-[-0.06em] uppercase text-black">VIEW</span>
+          <span className="text-[28px] font-[1000] tracking-[-0.01em] uppercase text-[#00CCFF]">TUBE</span>
+        </button>
+        <button
+          ref={menuButtonRef}
+          onClick={() => setOpen((value) => !value)}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-label="Open account menu"
+          className="w-11 h-11 shrink-0 border-[3px] border-black rounded-[12px] bg-[#C9F830] shadow-[2px_2px_0_0_#000] flex items-center justify-center active:translate-y-[1px] active:shadow-none overflow-hidden"
+        >
+          {authState.channelThumbnail ? (
+            <img src={authState.channelThumbnail} alt="Channel avatar" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-[13px] font-[1000] uppercase tracking-tight">{initials}</span>
+          )}
+        </button>
+      </div>
+
+      {/* Desktop / tablet header (unchanged layout) */}
+      <div className="hidden md:flex min-h-[96px] px-4 md:px-6 py-2 items-center justify-between gap-4">
         <button
           onClick={() => navigate("/")}
           className="shrink-0 text-left leading-none"
@@ -257,7 +301,7 @@ export const TopBar: React.FC<TopBarProps> = ({ sidebarHidden = false, onToggleS
             <div
               ref={menuRef}
               role="menu"
-              className="absolute right-4 md:right-6 top-[106px] w-[300px] bg-white border-[3px] border-black rounded-[12px] shadow-[5px_5px_0_0_#000] p-2 flex flex-col gap-1 z-[130]"
+              className="fixed md:absolute right-3 md:right-6 top-[68px] md:top-[106px] w-[calc(100vw-24px)] max-w-[300px] md:w-[300px] bg-white border-[3px] border-black rounded-[12px] shadow-[5px_5px_0_0_#000] p-2 flex flex-col gap-1 z-[130]"
               onMouseLeave={() => {
                 setAiBrainOptionsOpen(false)
                 setWidgetOptionsOpen(false)
@@ -281,6 +325,10 @@ export const TopBar: React.FC<TopBarProps> = ({ sidebarHidden = false, onToggleS
               <button onClick={() => { setOpen(false); navigate("/account") }} className="text-left px-3 py-2 text-[10px] font-black uppercase border-[2px] border-transparent rounded hover:border-black hover:bg-[#f3f4f6]">Account Settings</button>
               <button
                 data-keep-open="true"
+                onClick={() => {
+                  setAiBrainOptionsOpen((v) => !v)
+                  setWidgetOptionsOpen(false)
+                }}
                 onMouseEnter={() => {
                   setAiBrainOptionsOpen(true)
                   setWidgetOptionsOpen(false)
@@ -296,6 +344,10 @@ export const TopBar: React.FC<TopBarProps> = ({ sidebarHidden = false, onToggleS
               <div className="h-[1px] bg-black/15 my-1" />
               <button
                 data-keep-open="true"
+                onClick={() => {
+                  setWidgetOptionsOpen((v) => !v)
+                  setAiBrainOptionsOpen(false)
+                }}
                 onMouseEnter={() => {
                   setWidgetOptionsOpen(true)
                   setAiBrainOptionsOpen(false)
@@ -306,7 +358,7 @@ export const TopBar: React.FC<TopBarProps> = ({ sidebarHidden = false, onToggleS
                 <ChevronLeft size={12} className={`transition-transform ${widgetOptionsOpen ? "rotate-[-90deg]" : ""}`} />
               </button>
               {aiBrainOptionsOpen && (
-                <div className="absolute right-full mr-2 top-[112px] w-[260px] border-[3px] border-black rounded-[12px] bg-white shadow-[5px_5px_0_0_#000] p-2 z-[140]">
+                <div className="absolute left-2 right-2 top-full mt-1 md:left-auto md:right-full md:mr-2 md:top-[112px] md:mt-0 md:w-[260px] border-[3px] border-black rounded-[12px] bg-white shadow-[5px_5px_0_0_#000] p-2 z-[140]">
                   <div className="text-[9px] font-black uppercase tracking-widest opacity-70 mb-1 px-1">AI Model Orchestration</div>
                   <button onClick={() => { setOpen(false); setAiBrainOptionsOpen(false); navigate("/account#ai-brain-context") }} className="w-full text-left px-2 py-1.5 rounded hover:bg-[#f3f4f6]">
                     <div className="text-[10px] font-black uppercase">Gemini 3.1 Flash Lite ⚡</div>
@@ -343,7 +395,7 @@ export const TopBar: React.FC<TopBarProps> = ({ sidebarHidden = false, onToggleS
                 </div>
               )}
               {widgetOptionsOpen && (
-                <div className="absolute right-full mr-2 top-[152px] w-[280px] border-[3px] border-black rounded-[12px] bg-white shadow-[5px_5px_0_0_#000] p-2 flex flex-col gap-1 z-[140]">
+                <div className="absolute left-2 right-2 top-full mt-1 md:left-auto md:right-full md:mr-2 md:top-[152px] md:mt-0 md:w-[280px] border-[3px] border-black rounded-[12px] bg-white shadow-[5px_5px_0_0_#000] p-2 flex flex-col gap-1 z-[140]">
                   <div className="px-2 py-1 text-[9px] font-black uppercase tracking-widest opacity-60">Widget Options</div>
                   <div className="h-[1px] bg-black/15 mb-1" />
                     <button

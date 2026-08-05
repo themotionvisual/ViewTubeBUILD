@@ -254,12 +254,23 @@ export const WidgetShell: React.FC<{
     </div>
 
     {headerContent && (
-     <div className="header-extra" onClick={(e) => e.stopPropagation()} style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+     <div
+      className="header-extra"
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+      style={{ flex: 1, display: "flex", justifyContent: "center" }}
+     >
       {headerContent}
      </div>
     )}
 
-    <div className="toggle flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+    <div
+     className="toggle flex items-center gap-2"
+     onClick={(e) => e.stopPropagation()}
+     onPointerDown={(e) => e.stopPropagation()}
+     onTouchStart={(e) => e.stopPropagation()}
+    >
      {canEdit && editMode ?
       <div className="flex flex-col gap-1 mr-1">
        <div className="flex items-center gap-1">
@@ -374,7 +385,20 @@ export const WidgetShell: React.FC<{
    </div>
 
    <div className="vt-widget-content">
-    <div className="vt-widget-body">{children}</div>
+    <div
+     className="vt-widget-body"
+     onPointerDown={(e) => {
+      // Prevent DnD-kit's PointerSensor on the sortable card from swallowing
+      // taps on interactive widget content (buttons, inputs, links). Without
+      // this, quick taps on mobile could initiate a drag instead of firing
+      // the button's click handler, which read as "the widget buttons freeze
+      // the site".
+      e.stopPropagation()
+     }}
+     onTouchStart={(e) => e.stopPropagation()}
+    >
+     {children}
+    </div>
    </div>
   </div>
  )

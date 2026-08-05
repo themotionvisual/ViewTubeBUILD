@@ -68,7 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onHide }) => {
  }
 
  return (
-  <aside className="w-[220px] bg-[#f3f4f6] h-screen flex flex-col py-4 pl-3 pr-4 z-50 overflow-y-auto overflow-x-visible custom-scrollbar">
+  <aside className="w-[220px] bg-[#f3f4f6] h-full flex flex-col py-4 pl-3 pr-4 z-50 overflow-y-auto overflow-x-visible custom-scrollbar">
 
    {/* Stacked Navigation */}
    <nav className="mb-6 z-10 shrink-0 overflow-visible">

@@ -352,7 +352,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
 
   return (
     <DashboardBarrier>
-    <div className="w-full max-w-[1720px] mx-auto pb-24 px-4 md:px-6 xl:px-8">
+    <div className="w-full max-w-[1720px] mx-auto pb-24 px-2 sm:px-4 md:px-6 xl:px-8">
        <input
          ref={fileInputRef}
          type="file"
@@ -447,7 +447,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={visibleWidgetIds} strategy={rectSortingStrategy}>
-           <div className="grid grid-cols-[repeat(24,minmax(0,1fr))] gap-4 md:gap-5">
+           <div className="grid grid-cols-[repeat(24,minmax(0,1fr))] gap-3 sm:gap-4 md:gap-5">
              {visibleWidgetIds.map((widgetId, visibleIndex) => {
                const widget = DASHBOARD_WIDGET_BY_ID[widgetId]
                const instance = layout.instances[widgetId]
