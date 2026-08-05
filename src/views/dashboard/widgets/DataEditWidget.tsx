@@ -262,19 +262,9 @@ const VideoMetadataWorkspace = ({ mode, data }: { mode: WorkflowMode; data: Dash
      <div className="widget-search-control"><Search aria-hidden="true" /><input className="vt-input-standard" value={videoSearch} onChange={(event) => setVideoSearch(event.target.value)} aria-label="Search published videos" placeholder="Search videos…" /></div>
      <PortalSelect value={selectedVideoId} onChange={(value) => { setSelectedVideoId(value); setPage("details"); setError("") }} options={filteredVideoOptions} label="Published video" placeholder="Select a published video…" />
     </section>
-   ) : (
-    <button
-     type="button"
-     className="vt-button primary video-upload-button"
-     onClick={() => videoInputRef.current?.click()}
-     aria-label={videoFile ? `Upload video. Selected file: ${videoFile.name}` : "Upload video"}
-     title={videoFile?.name}
-    >
-     <Upload aria-hidden="true" />
-     Upload video
-    </button>
-   )}
+   ) : null}
    <input ref={videoInputRef} hidden type="file" accept="video/*" onChange={(event) => setVideoFile(event.target.files?.[0] || null)} />
+   <input ref={thumbnailInputRef} hidden type="file" accept="image/*" onChange={(event) => readThumbnail(event.target.files?.[0])} />
 
    {mode === "manage" && !selectedAsset ? (
     <div className="widget-empty-state"><FileVideo2 /><strong>Select a published video</strong><span>Its thumbnail and editable metadata will appear here.</span></div>
@@ -287,70 +277,103 @@ const VideoMetadataWorkspace = ({ mode, data }: { mode: WorkflowMode; data: Dash
       </article>
      ) : null}
 
-     <div className="widget-scroll-region" ref={pageRef}>
+     <div className="widget-workspace-content">
       {page === "details" ? (
-       <>
-        <div className="widget-feature-grid">
-         <div className="widget-details-primary">
-          <Field label="Video title"><input className="vt-input" aria-label="Video title" value={title} maxLength={100} onChange={(event) => setTitle(event.target.value)} /><small className="widget-character-count">{title.length}/100</small></Field>
-          <div className="widget-control-grid is-three widget-details-selects">
-           <PortalSelect value={privacyStatus} onChange={setPrivacyStatus} label="Visibility" options={[{ value: "public", label: "Public" }, { value: "unlisted", label: "Unlisted" }, { value: "private", label: "Private" }]} placeholder="Visibility" />
-           <PortalSelect value={categoryId} onChange={setCategoryId} label="Category" options={categories} placeholder="Category" />
-           <PortalSelect value={playlistId} onChange={setPlaylistId} label="Playlist" options={playlists} placeholder="Playlist" />
+        <div className="widget-details-wrapper">
+          <div className="widget-details-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: '16px' }}>
+            <div className="widget-details-left">
+              {/* Top Action Row */}
+              <div className="widget-top-actions" style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                {mode === "upload" && (
+                  <button
+                    type="button"
+                    className="vt-button primary video-upload-button"
+                    style={{ flex: 1 }}
+                    onClick={() => videoInputRef.current?.click()}
+                  >
+                    <Upload aria-hidden="true" />
+                    Upload video
+                  </button>
+                )}
+                <button 
+                  className="vt-button secondary" 
+                  type="button" 
+                  style={{ flex: 1 }}
+                  onClick={() => thumbnailInputRef.current?.click()}
+                >
+                  <Upload />{thumbnailPreview ? "Replace thumbnail" : "Add thumbnail"}
+                </button>
+              </div>
+              
+              <Field label="Video title"><input className="vt-input" aria-label="Video title" value={title} maxLength={100} onChange={(event) => setTitle(event.target.value)} /><small className="widget-character-count">{title.length}/100</small></Field>
+            </div>
+            
+            <div className="widget-details-right">
+               <div className="widget-media-picker" style={{ border: '2px dashed #ccc', padding: '4px', height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {thumbnailPreview ? <img src={thumbnailPreview} alt={mode === "manage" && selectedAsset ? `Current thumbnail for ${selectedAsset.title}` : "Thumbnail preview"} style={{ height: '100%', objectFit: 'cover' }}/> : <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}><ImagePlus size={24} /><p style={{margin:0, fontSize:'10px'}}>Thumbnail</p></div>}
+               </div>
+               <input ref={videoInputRef} hidden type="file" accept="video/*" onChange={(event) => setVideoFile(event.target.files?.[0] || null)} />
+               <input ref={thumbnailInputRef} hidden type="file" accept="image/*" onChange={(event) => readThumbnail(event.target.files?.[0])} />
+            </div>
           </div>
-         </div>
-         <div className="widget-media-picker">
-          {thumbnailPreview ? <img src={thumbnailPreview} alt={mode === "manage" && selectedAsset ? `Current thumbnail for ${selectedAsset.title}` : "Thumbnail preview"} /> : <div><ImagePlus /><span>Thumbnail</span></div>}
-          <button className="vt-button secondary" type="button" onClick={() => thumbnailInputRef.current?.click()}><Upload />{thumbnailPreview ? "Replace" : "Add"}</button>
-          <input ref={thumbnailInputRef} hidden type="file" accept="image/*" onChange={(event) => readThumbnail(event.target.files?.[0])} />
-         </div>
+          
+          {/* Description, Tags, Dropdowns */}
+          <div className="widget-details-bottom" style={{ marginTop: '16px' }}>
+            <Field label="Description"><textarea className="vt-textarea widget-description-textarea" aria-label="Description" value={description} onChange={(event) => setDescription(event.target.value)} rows={2} /><small className="widget-character-count">{description.length}/5000</small></Field>
+            
+            <Module title={`Tags (${tags.length})`}>
+              <div className="widget-tag-list">
+                {tags.map((tag) => (
+                  <button 
+                    className="chip" 
+                    type="button" 
+                    key={tag} 
+                    onClick={() => setTags((current) => current.filter((item) => item !== tag))}
+                  >
+                    {tag}
+                    <CircleX size={16} fill="black" stroke="white" />
+                  </button>
+                ))}
+              </div>
+              <div className="widget-inline-entry">
+                <input 
+                  className="vt-input-standard" 
+                  value={newTag} 
+                  onChange={(event) => setNewTag(event.target.value)} 
+                  onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addTag() } }} 
+                  placeholder="Add tag…" 
+                />
+                <button 
+                  className="vt-button primary" 
+                  type="button" 
+                  onClick={addTag} 
+                  aria-label="Add tag"
+                >
+                  <Plus />
+                </button>
+              </div>
+            </Module>
+
+            <div className="widget-control-grid is-three widget-details-selects" style={{ marginTop: '16px' }}>
+                <PortalSelect value={privacyStatus} onChange={setPrivacyStatus} label="Visibility" options={[{ value: "public", label: "Public" }, { value: "unlisted", label: "Unlisted" }, { value: "private", label: "Private" }]} placeholder="Visibility" />
+                <PortalSelect value={categoryId} onChange={setCategoryId} label="Category" options={categories} placeholder="Category" />
+                <PortalSelect value={playlistId} onChange={setPlaylistId} label="Playlist" options={playlists} placeholder="Playlist" />
+            </div>
+          </div>
         </div>
-        <Field label="Description"><textarea className="vt-textarea widget-description-textarea" aria-label="Description" value={description} onChange={(event) => setDescription(event.target.value)} rows={4} /><small className="widget-character-count">{description.length}/5000</small></Field>
-        <Module title={`Tags (${tags.length})`}>
-  <div className="widget-tag-list">
-    {tags.map((tag) => (
-      <button 
-        className="chip" 
-        type="button" 
-        key={tag} 
-        onClick={() => setTags((current) => current.filter((item) => item !== tag))}
-      >
-        {tag}
-        {/* Adjusted icon to match the black close circle in your mockups */}
-        <CircleX size={16} fill="black" stroke="white" />
-      </button>
-    ))}
-  </div>
-  <div className="widget-inline-entry">
-    <input 
-      className="vt-input-standard" 
-      value={newTag} 
-      onChange={(event) => setNewTag(event.target.value)} 
-      onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addTag() } }} 
-      placeholder="Add tag…" 
-    />
-    <button 
-      className="vt-button primary" 
-      type="button" 
-      onClick={addTag} 
-      aria-label="Add tag"
-    >
-      <Plus />
-    </button>
-  </div>
-</Module>
-       </>
       ) : null}
 
+      {/* Options page and Ads page (re-wrapped to maintain scroll structure if needed by styles) */}
+      <div className={page !== "details" ? "widget-disclosure-list" : ""}>
       {page === "options" ? (
-       <div className="widget-disclosure-list">
+        <>
         <Module title="Audience and restrictions"><Choice type="radio" name={`${mode}-kids`} value="yes" label="Yes, this video is made for kids" checked={madeForKids === "yes"} onChange={() => setMadeForKids("yes")} /><Choice type="radio" name={`${mode}-kids`} value="no" label="No, this video is not made for kids" checked={madeForKids === "no"} onChange={() => setMadeForKids("no")} /></Module>
         <Module title="Disclosures and altered content"><Choice label="Contains paid promotion" checked={paidPromotion} onChange={() => setPaidPromotion((value) => !value)} /><Choice type="radio" name={`${mode}-altered`} value="yes" label="Contains realistic altered or synthetic content" checked={alteredContent === "yes"} onChange={() => setAlteredContent("yes")} /><Choice type="radio" name={`${mode}-altered`} value="no" label="Does not contain realistic altered content" checked={alteredContent === "no"} onChange={() => setAlteredContent("no")} /></Module>
         <Module title="Automatic concepts and chapters"><Choice label="Allow automatic chapters and key moments" checked={autoChapters} onChange={() => setAutoChapters((value) => !value)} /></Module>
         <Module title="Language and captions certification"><div className="widget-control-grid"><Field label="Video language"><PortalSelect value={language} onChange={setLanguage} label="Video language" options={[{ value: "en", label: "English" }, { value: "es", label: "Spanish" }, { value: "fr", label: "French" }, { value: "de", label: "German" }, { value: "none", label: "Not applicable" }]} /></Field><Field label="Caption certification"><PortalSelect value={captionCert} onChange={setCaptionCert} label="Caption certification" options={[{ value: "none", label: "None" }, { value: "neverAired", label: "Never aired on U.S. television" }, { value: "grantedExemption", label: "FCC exemption granted" }]} /></Field></div></Module>
         <Module title="Recording date and location"><div className="widget-control-grid"><Field label="Recording date"><input className="vt-input-standard" type="date" value={recordingDate} onChange={(event) => setRecordingDate(event.target.value)} /></Field><Field label="Video location"><input className="vt-input-standard" value={location} onChange={(event) => setLocation(event.target.value)} placeholder="None" /></Field></div></Module>
         <Module title="License and distribution"><div className="widget-control-grid"><Field label="License"><PortalSelect value={license} onChange={setLicense} label="License" options={[{ value: "youtube", label: "Standard YouTube license" }, { value: "creativeCommon", label: "Creative Commons - Attribution" }]} /></Field></div><Choice label="Allow embedding" checked={allowEmbedding} onChange={() => setAllowEmbedding((value) => !value)} /><Choice label="Notify subscribers" checked={notifySubscribers} onChange={() => setNotifySubscribers((value) => !value)} /></Module>
-       </div>
+        </>
       ) : null}
 
       {page === "ads" ? (
@@ -368,6 +391,7 @@ const VideoMetadataWorkspace = ({ mode, data }: { mode: WorkflowMode; data: Dash
         <Choice label="None of the above applies" checked={noneOfTheAbove} onChange={() => setNoneOfTheAbove((value) => !value)} />
        </div>
       ) : null}
+      </div>
      </div>
 
      {error ? <div className="widget-inline-error" role="alert">{error}</div> : null}

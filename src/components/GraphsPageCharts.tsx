@@ -1286,8 +1286,8 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
       transformBox: "fill-box",
       transformOrigin: "center",
       shapeRendering: "geometricPrecision",
-      mixBlendMode: "multiply",
-      transitionProperty: "r, stroke-width, fill-opacity",
+      mixBlendMode: "normal",
+      transitionProperty: "r, fill-opacity, stroke-width",
       transitionDuration: isHover ? "750ms" : "350ms",
       transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
       cursor: "pointer",
@@ -1408,6 +1408,141 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
    <div className="px-5 pb-3 text-[10px] font-black uppercase opacity-70">Bubble size = Views · Color = Estimated Income (Blue → Green)</div>
   </div>
  )
+}
+
+/* 5b. Shorts Retention Widget Module */
+const SHORTS_RETENTION_COUNT_VALUES = [10, 25, 50, 75, 100, 150, 200]
+type ShortsFormatFilter = "all" | "shorts" | "longform"
+
+export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => {
+ const [mode, setMode] = useState<"top-performing" | "most-recent">("top-performing")
+ const [sortMetric, setSortMetric] = useState<"avd" | "estIncome" | "dur" | "views">("avd")
+ const [modeMenuOpen, setModeMenuOpen] = useState(false)
+ const [activeKey, setActiveKey] = useState<string | null>(null)
+ const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
+ const [selectedCount, setSelectedCount] = useState(100)
+ const [formatFilter, setFormatFilter] = useState<ShortsFormatFilter>("shorts")
+ const rafMouseRef = useRef<number | null>(null)
+ const pendingMouseRef = useRef<{ x: number; y: number } | null>(null)
+ const cycleCount = (dir: 1 | -1) => {
+  const idx = SHORTS_RETENTION_COUNT_VALUES.indexOf(selectedCount)
+  const nextIdx = (idx + dir + SHORTS_RETENTION_COUNT_VALUES.length) % SHORTS_RETENTION_COUNT_VALUES.length
+  setSelectedCount(SHORTS_RETENTION_COUNT_VALUES[nextIdx])
+ }
+ const cycleFormat = (dir: 1 | -1) => {
+  const opts: ShortsFormatFilter[] = ["all", "shorts", "longform"]
+  const idx = opts.indexOf(formatFilter)
+  setFormatFilter(opts[(idx + dir + opts.length) % opts.length])
+ }
+
+ const cd = useMemo(() => {
+  const isShortRow = (r: CanonicalVideoRow) =>
+   String(r.format || "").toLowerCase().includes("short") ||
+   (r.durationSeconds > 0 && r.durationSeconds <= 180)
+  const baseRows = formatFilter === "shorts"
+   ? data.filter(isShortRow)
+   : formatFilter === "longform"
+   ? data.filter((r) => !isShortRow(r))
+   : data
+  const mapped = baseRows
+   .map((r) => {
+    const views = mv(r, "views")
+    const revenue = resolveMetricNumber(r, "revenue")
+    const rpm = resolveMetricNumber(r, "rpm")
+    const revenueFromRpm = rpm.value === null ? 0 : (rpm.value * Math.max(0, views)) / 1000
+    return {
+     title: r.title,
+     dur: r.durationSeconds,
+     avd: (retentionPct(r) / 100) * r.durationSeconds,
+     views,
+     estIncome: Math.max(revenue.value ?? 0, revenueFromRpm),
+     revenueAvailable: revenue.value !== null || rpm.value !== null,
+     uploadTs: new Date(String(r.uploadDate || "")).getTime() || 0,
+    }
+   })
+   .filter((d) => d.dur > 0 && d.avd > 0)
+
+  const ranked = mode === "most-recent"
+   ? [...mapped].sort((a, b) => b.uploadTs - a.uploadTs)
+   : [...mapped].sort((a, b) => b[sortMetric] - a[sortMetric])
+
+  const top = ranked.slice(0, selectedCount)
+  const durationScale = buildAdaptiveZeroScale(top.map((d) => d.dur), { fallbackMax: 180, hardMax: 180 })
+  const avdScale = buildAdaptiveZeroScale(top.map((d) => d.avd), { fallbackMax: 300 })
+  const revenuePercentiles = buildTieAwarePercentiles(
+   top.map((d) => d.revenueAvailable ? d.estIncome : null),
+  )
+  const viewRadii = buildLogBubbleRadii(top.map((d) => d.views), { minRadius: 3, maxRadius: 32 })
+
+  // Exponential outlier: top/bottom 7% occupy the palette edges alone
+  const expPos = (t: number | null): number | null => {
+   if (t === null) return null
+   const THRESH = 0.07
+   if (t <= THRESH) return (t / THRESH) * THRESH
+   if (t >= 1 - THRESH) return 1 - THRESH + ((t - (1 - THRESH)) / THRESH) * THRESH
+   const mid = (t - THRESH) / (1 - 2 * THRESH)
+   return THRESH + Math.pow(mid, 1.6) * (1 - 2 * THRESH)
+  }
+
+  const points = top.map((d, index) => {
+   const key = `${d.title}-${d.uploadTs}-${d.views}`
+   const scaledPos = expPos(revenuePercentiles[index])
+   return {
+    ...d,
+    key,
+    radius: viewRadii[index],
+    color: scaledPos === null
+     ? MISSING_BUBBLE_COLOR
+     : interpolateThreeStopColor(scaledPos, SHORTS_REVENUE_PALETTE),
+   }
+  })
+
+  return {
+   points: [...points].sort((a, b) => b.radius - a.radius),
+   durationScale,
+   avdScale,
+  }
+ }, [data, mode, sortMetric, selectedCount, formatFilter])
+
+ useEffect(() => {
+  if (cd.points.length === 0) { setActiveKey(null); return }
+  if (!activeKey || !cd.points.some((p) => p.key === activeKey)) setActiveKey(cd.points[0].key)
+ }, [cd.points, activeKey])
+
+ const activePoint = useMemo(
+  () => cd.points.find((p) => p.key === activeKey) || cd.points[0] || null,
+  [cd.points, activeKey],
+ )
+
+ const shortsInsight = useMemo(() => {
+  if (cd.points.length === 0) return "No retention data yet. Sync to unlock insights."
+  const best = [...cd.points].sort((a, b) => b.avd - a.avd)[0]
+  const longHold = cd.points.filter((p) => p.dur >= 90 && p.avd >= (55/100*p.dur)).length
+  return `Strongest hold: ${best.avd.toFixed(1)}s at ${Math.round(best.dur)}s length. ${longHold} videos sustain 55%+ attention past 90s.`
+ }, [cd.points])
+
+ const generalInsight = "Bubble = views · color = revenue (blue→green) · position = length vs avg view duration. Outliers (7%) lock to palette edges."
+
+ const bubbleShape = (props: any) => {
+  const { cx, cy, payload } = props
+  const isActive = activeKey === payload.key
+  const scale = isActive ? 1.25 : 1
+  return (
+   <circle
+    cx={cx}
+    cy={cy}
+    r={payload.radius * scale}
+    fill={payload.color}
+    fillOpacity={isActive ? 0.92 : 0.78}
+    stroke={payload.color}
+    strokeWidth={isActive ? 2.5 : 0}
+    onMouseEnter={() => setActiveKey(payload.key)}
+    style={{
+      shapeRendering: "geometricPrecision",
+      mixBlendMode: "multiply" as any,
+      transitionProperty: "r, stroke-width, fill-opacity",
+      transitionDuration: isActive ? "750ms" : "350ms",
+      transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
       cursor: "pointer",
     }}
    />
@@ -1445,6 +1580,16 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
       ],
     },
    }}
+   controllerRows={[{
+    type: "custom",
+    render: () => (
+     <div className="flex h-full items-center gap-0 bg-white border-t-[3px] border-black">
+      <button type="button" onClick={() => cycleFormat(-1)} className="h-full px-3 border-r-[2px] border-black text-[12px] font-black">◀</button>
+      <span className="flex-1 text-center text-[10px] font-black uppercase tracking-[0.1em]">{formatFilter.toUpperCase()}</span>
+      <button type="button" onClick={() => cycleFormat(1)} className="h-full px-3 border-l-[2px] border-black text-[12px] font-black">▶</button>
+     </div>
+    ),
+   }]}
    activeContext={{
      title: activePoint?.title?.toUpperCase() || "NO VIDEO SELECTED",
      stats: [
@@ -1487,10 +1632,7 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
        onMouseLeave={() => {
         setMousePos(null)
         pendingMouseRef.current = null
-        if (rafMouseRef.current !== null) {
-         cancelAnimationFrame(rafMouseRef.current)
-         rafMouseRef.current = null
-        }
+        if (rafMouseRef.current !== null) { cancelAnimationFrame(rafMouseRef.current); rafMouseRef.current = null }
        }}>
        <CartesianGrid stroke="rgba(0,0,0,0.06)" vertical={true} />
        <XAxis
@@ -1512,66 +1654,24 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
         tickLine={false}
         tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
         tickFormatter={(value) => value === 0 ? '' : `${value}s`}
-        label={{
-         value: "AVD (SECONDS)",
-         angle: -90,
-         position: "insideLeft",
-         offset: 15,
-         style: { fontWeight: 1000, fontSize: 14, fill: '#000', letterSpacing: '0.1em', textAnchor: 'middle' },
-        }}
+        label={{ value: "AVD (SECONDS)", angle: -90, position: "insideLeft", offset: 15, style: { fontWeight: 1000, fontSize: 14, fill: '#000', letterSpacing: '0.1em', textAnchor: 'middle' } }}
        />
        <Scatter data={cd.points} shape={bubbleShape} name="Income Gradient" />
-      <Customized component={({ offset, width }: any) => {
-        if (!mousePos || !offset) return null
-        const left = offset.left
-        const top = offset.top
-        const right = offset.left + offset.width
-        const bottom = offset.top + offset.height
-        if (mousePos.x < left || mousePos.x > right || mousePos.y < top || mousePos.y > bottom) return null
-        const snappedX = Math.round(mousePos.x) + 0.5
-        const snappedY = Math.round(mousePos.y) + 0.5
-       return (
-         <g pointerEvents="none">
-          {/* Extend axis lines to container edges without changing tick/label positions */}
-          <line
-           x1={left}
-           y1={top}
-           x2={left}
-           y2={0}
-           stroke="#000"
-           strokeWidth={3}
-           shapeRendering="crispEdges"
-          />
-          <line
-           x1={right}
-           y1={bottom}
-           x2={width}
-           y2={bottom}
-           stroke="#000"
-           strokeWidth={3}
-           shapeRendering="crispEdges"
-          />
-          <line
-           x1={left}
-           y1={snappedY}
-           x2={right}
-           y2={snappedY}
-           stroke="rgba(0, 0, 0, 0.15)"
-           strokeWidth={1}
-           shapeRendering="crispEdges"
-          />
-          <line
-           x1={snappedX}
-           y1={top}
-           x2={snappedX}
-           y2={bottom}
-           stroke="rgba(0, 0, 0, 0.15)"
-           strokeWidth={1}
-           shapeRendering="crispEdges"
-          />
-         </g>
-       )
-      }} />
+       <Customized component={({ offset, width }: any) => {
+         if (!mousePos || !offset) return null
+         const left = offset.left; const top = offset.top
+         const right = offset.left + offset.width; const bottom = offset.top + offset.height
+         if (mousePos.x < left || mousePos.x > right || mousePos.y < top || mousePos.y > bottom) return null
+         const snappedX = Math.round(mousePos.x) + 0.5; const snappedY = Math.round(mousePos.y) + 0.5
+         return (
+           <g pointerEvents="none">
+            <line x1={left} y1={top} x2={left} y2={0} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
+            <line x1={right} y1={bottom} x2={width} y2={bottom} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
+            <line x1={left} y1={snappedY} x2={right} y2={snappedY} stroke="rgba(0,0,0,0.15)" strokeWidth={1} shapeRendering="crispEdges" />
+            <line x1={snappedX} y1={top} x2={snappedX} y2={bottom} stroke="rgba(0,0,0,0.15)" strokeWidth={1} shapeRendering="crispEdges" />
+           </g>
+         )
+        }} />
       </ScatterChart>
      </StableChartFrame>
      <div className="absolute bottom-[0px] left-[14px] right-[14px] grid grid-cols-3 items-center pointer-events-none">
@@ -1581,25 +1681,18 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
       </div>
       <div className="justify-self-center flex items-center gap-3">
         <span className="text-black font-[1000] text-[16px] leading-none">◀</span>
-        <span
-          className="uppercase tracking-[0.1em] text-black"
-          style={{ fontWeight: 1000, fontSize: 14, letterSpacing: "0.1em" }}
-        >
-          Shorts Length
-        </span>
+        <span className="uppercase tracking-[0.1em] text-black" style={{ fontWeight: 1000, fontSize: 14 }}>Duration</span>
         <span className="text-black font-[1000] text-[16px] leading-none">▶</span>
       </div>
       <div className="flex items-center gap-2 justify-self-start">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-between w-[115px]">
-            <span className="w-2 aspect-square shrink-0 box-border rounded-full bg-[#24BCFF] opacity-[0.75]" />
-            <span className="w-3 aspect-square shrink-0 box-border rounded-full bg-[#2FC8EF] opacity-[0.75]" />
-            <span className="w-4 aspect-square shrink-0 box-border rounded-full bg-[#3AD4DF] opacity-[0.75]" />
-            <span className="w-5 aspect-square shrink-0 box-border rounded-full bg-[#45DDB0] opacity-[0.75]" />
-            <span className="w-6 aspect-square shrink-0 box-border rounded-full bg-[#66FF8A] opacity-[0.75]" />
-          </div>
-          <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Views</span>
+        <div className="flex items-center justify-between w-[115px]">
+          <span className="w-2 aspect-square shrink-0 rounded-full bg-[#24BCFF] opacity-[0.75]" />
+          <span className="w-3 aspect-square shrink-0 rounded-full bg-[#2FC8EF] opacity-[0.75]" />
+          <span className="w-4 aspect-square shrink-0 rounded-full bg-[#3AD4DF] opacity-[0.75]" />
+          <span className="w-5 aspect-square shrink-0 rounded-full bg-[#45DDB0] opacity-[0.75]" />
+          <span className="w-6 aspect-square shrink-0 rounded-full bg-[#66FF8A] opacity-[0.75]" />
         </div>
+        <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Views</span>
       </div>
      </div>
     </div>
@@ -3946,6 +4039,7 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
  const hoverLabelRef = useRef<HTMLDivElement | null>(null)
  const hoverFrameRef = useRef<number | null>(null)
  const pendingBucketRef = useRef<string | null>(null)
+ const [hoveredSourceKey, setHoveredSourceKey] = useState<string | null>(null)
  useEffect(() => () => {
   if (hoverFrameRef.current !== null) cancelAnimationFrame(hoverFrameRef.current)
  }, [])
@@ -4210,6 +4304,8 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
           />
           {visibleKeys.map((k, i) => {
            const tone = trafficRankTone(i)
+           const isHov = hoveredSourceKey === k
+           const anyHov = hoveredSourceKey !== null
            return (
            <Area
             key={k}
@@ -4217,14 +4313,20 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
             dataKey={k}
             stackId="1"
             stroke={tone}
-            strokeWidth={1.25}
+            strokeWidth={isHov ? 2.5 : 1.25}
             fill={tone}
-            fillOpacity={0.94}
+            fillOpacity={anyHov ? (isHov ? 0.99 : 0.52) : 0.94}
             strokeLinejoin="round"
             strokeLinecap="round"
            isAnimationActive={false}
            dot={false}
            activeDot={false}
+           style={{
+            filter: isHov ? `drop-shadow(0 0 6px ${tone}) drop-shadow(0 0 14px ${tone}99)` : undefined,
+            transition: "fill-opacity 180ms ease, stroke-width 180ms ease",
+           }}
+           onMouseEnter={() => setHoveredSourceKey(k)}
+           onMouseLeave={() => setHoveredSourceKey(null)}
            />
            )
           })}
@@ -4776,14 +4878,14 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
       <div className="flex min-w-0 flex-col gap-2">
 
       {/* 1. VENN CIRCLE + TOP KEYWORDS FOOTER */}
-      <div className="border-[3px] border-black rounded-xl bg-[#FAFAFA] overflow-hidden flex flex-col flex-1">
-       <div className="flex items-center justify-center flex-1">
+      <div className="border-[3px] border-black rounded-xl bg-[#FAFAFA] overflow-hidden flex flex-col flex-1 min-h-[320px]">
+       <div className="flex items-center justify-center flex-1 min-h-[300px]">
        <svg
         viewBox={`0 0 ${vennBox.w} ${vennBox.h}`}
         width="100%"
         preserveAspectRatio="xMidYMid meet"
-        className="block h-auto max-w-[760px]"
-        style={{ aspectRatio: `${vennBox.w} / ${vennBox.h}` }}
+        className="block h-auto w-full max-w-[760px]"
+        style={{ aspectRatio: `${vennBox.w} / ${vennBox.h}`, minHeight: "280px" }}
        >
         <style>{`
          @keyframes kvPulseRing {
@@ -5284,6 +5386,378 @@ export const OrbitalModule: React.FC<GChartProps> = ({ data }) => {
        </div>
       ))}
      </div>
+    )}
+   </div>
+  </SubToolboxChartModule>
+ )
+}
+
+/* ═══════════════════════════════════════════════
+   CUSTOM SCATTER MODULE — 4-dropdown generic bubble plot
+   ═══════════════════════════════════════════════ */
+const CUSTOM_SCATTER_METRICS = [
+ { key: "views", label: "VIEWS" },
+ { key: "revenue", label: "REVENUE" },
+ { key: "rpm", label: "RPM" },
+ { key: "ctr", label: "CTR" },
+ { key: "durationSeconds", label: "DURATION" },
+ { key: "impressions", label: "IMPRESSIONS" },
+ { key: "likes", label: "LIKES" },
+ { key: "comments", label: "COMMENTS" },
+] as const
+type CustomScatterMetricKey = typeof CUSTOM_SCATTER_METRICS[number]["key"]
+const CUSTOM_SCATTER_PALETTE = ["#CCFF00", "#FFCC00", "#FF8C00"] as const
+const CUSTOM_SCATTER_COUNTS = [10, 25, 50, 75, 100, 200] as const
+type CustomScatterFormat = "all" | "shorts" | "longform"
+
+export const CustomScatterModule: React.FC<GChartProps> = ({ data }) => {
+ const [xMetric, setXMetric] = useState<CustomScatterMetricKey>("views")
+ const [yMetric, setYMetric] = useState<CustomScatterMetricKey>("revenue")
+ const [sizeMetric, setSizeMetric] = useState<CustomScatterMetricKey>("durationSeconds")
+ const [colorMetric, setColorMetric] = useState<CustomScatterMetricKey>("rpm")
+ const [count, setCount] = useState<number>(50)
+ const [format, setFormat] = useState<CustomScatterFormat>("all")
+ const [hovered, setHovered] = useState<string | null>(null)
+ const [countMenuOpen, setCountMenuOpen] = useState(false)
+
+ const cycleCount = (dir: 1 | -1) => {
+  const idx = CUSTOM_SCATTER_COUNTS.indexOf(count as any)
+  const next = (idx + dir + CUSTOM_SCATTER_COUNTS.length) % CUSTOM_SCATTER_COUNTS.length
+  setCount(CUSTOM_SCATTER_COUNTS[next])
+ }
+ const cycleFormat = (dir: 1 | -1) => {
+  const opts: CustomScatterFormat[] = ["all", "shorts", "longform"]
+  const idx = opts.indexOf(format)
+  setFormat(opts[(idx + dir + opts.length) % opts.length])
+ }
+
+ const isShort = (r: CanonicalVideoRow) =>
+  String(r.format || "").toLowerCase().includes("short") || (r.durationSeconds > 0 && r.durationSeconds <= 180)
+
+ const cd = useMemo(() => {
+  const filtered = format === "shorts" ? data.filter(isShort)
+   : format === "longform" ? data.filter((r) => !isShort(r))
+   : data
+  const mapped = filtered.map((r) => ({
+   title: String(r.title || ""),
+   x: mv(r, xMetric),
+   y: mv(r, yMetric),
+   size: mv(r, sizeMetric),
+   colorVal: mv(r, colorMetric),
+   key: `${r.title}-${r.uploadDate}`,
+  })).filter((d) => d.x >= 0 && d.y >= 0)
+  const sorted = [...mapped].sort((a, b) => b.colorVal - a.colorVal).slice(0, count)
+  const colorPercentiles = buildTieAwarePercentiles(sorted.map((d) => d.colorVal))
+  const radii = buildLogBubbleRadii(sorted.map((d) => d.size), { minRadius: 4, maxRadius: 28 })
+  const expPos = (t: number | null) => {
+   if (t === null) return null
+   const TH = 0.07
+   if (t <= TH) return (t / TH) * TH
+   if (t >= 1 - TH) return 1 - TH + ((t - (1 - TH)) / TH) * TH
+   return TH + Math.pow((t - TH) / (1 - 2 * TH), 1.6) * (1 - 2 * TH)
+  }
+  const points = sorted.map((d, i) => ({
+   ...d,
+   radius: radii[i],
+   color: colorPercentiles[i] === null
+    ? "#888"
+    : interpolateThreeStopColor(expPos(colorPercentiles[i])!, CUSTOM_SCATTER_PALETTE),
+  }))
+  const xScale = buildAdaptiveZeroScale(points.map((p) => p.x), { fallbackMax: 100 })
+  const yScale = buildAdaptiveZeroScale(points.map((p) => p.y), { fallbackMax: 100 })
+  return { points: [...points].sort((a, b) => b.radius - a.radius), xScale, yScale }
+ }, [data, xMetric, yMetric, sizeMetric, colorMetric, count, format])
+
+ const metricLabel = (k: CustomScatterMetricKey) => CUSTOM_SCATTER_METRICS.find((m) => m.key === k)?.label ?? k
+
+ const bubbleShape = (props: any) => {
+  const { cx, cy, payload } = props
+  const isHov = hovered === payload.key
+  const scale = isHov ? 1.25 : 1
+  return (
+   <circle
+    cx={cx}
+    cy={cy}
+    r={payload.radius * scale}
+    fill={payload.color}
+    fillOpacity={isHov ? 0.94 : 0.80}
+    stroke={payload.color}
+    strokeWidth={isHov ? 2.5 : 0}
+    onMouseEnter={() => setHovered(payload.key)}
+    onMouseLeave={() => setHovered(null)}
+    style={{
+     shapeRendering: "geometricPrecision",
+     mixBlendMode: "normal" as any,
+     transitionProperty: "r, fill-opacity, stroke-width",
+     transitionDuration: "250ms",
+     transitionTimingFunction: "cubic-bezier(0.34,1.56,0.64,1)",
+     cursor: "pointer",
+    }}
+   />
+  )
+ }
+
+ const hoveredPoint = cd.points.find((p) => p.key === hovered) || cd.points[0] || null
+
+ return (
+  <SubToolboxChartModule
+   header={{ title: "CUSTOM SCATTER", subtitle: "FULLY CONFIGURABLE BUBBLE PLOT · 4 AXES", icon: <CustomIcon name="analytics" size={18} /> }}
+   theme={{ headerBandBg: "#CCFF00", iconBlockBg: "#FF9900", shadowColor: "rgba(204,255,0,0.45)" }}
+   layout={{ moduleMinHeight: "480px", moduleWidth: "100%" }}
+   controlBox={{
+    count: cd.points.length,
+    countUnit: "VIDEOS",
+    onCountPrev: () => cycleCount(-1),
+    onCountNext: () => cycleCount(1),
+    dropdown: {
+     value: format,
+     isOpen: countMenuOpen,
+     onToggle: () => setCountMenuOpen((p) => !p),
+     onSelect: (v) => { setFormat(v as CustomScatterFormat); setCountMenuOpen(false) },
+     options: [
+      { value: "all", label: "ALL FORMATS" },
+      { value: "shorts", label: "SHORTS ONLY" },
+      { value: "longform", label: "LONG-FORM ONLY" },
+     ],
+    },
+   }}
+   controllerRows={[{
+    type: "custom",
+    render: () => (
+     <div className="grid grid-cols-4 h-full divide-x-[3px] divide-black">
+      {([
+       { label: "X", val: xMetric, set: setXMetric },
+       { label: "Y", val: yMetric, set: setYMetric },
+       { label: "SIZE", val: sizeMetric, set: setSizeMetric },
+       { label: "COLOR", val: colorMetric, set: setColorMetric },
+      ] as const).map((axis) => (
+       <div key={axis.label} className="flex items-center justify-between px-1.5 min-w-0">
+        <span className="text-[9px] font-black uppercase tracking-[0.1em] shrink-0 mr-1">{axis.label}</span>
+        <select
+         value={axis.val}
+         onChange={(e) => (axis.set as any)(e.target.value)}
+         className="min-w-0 flex-1 appearance-none border-0 bg-transparent text-[9px] font-black uppercase truncate"
+        >
+         {CUSTOM_SCATTER_METRICS.map((m) => (
+          <option key={m.key} value={m.key}>{m.label}</option>
+         ))}
+        </select>
+       </div>
+      ))}
+     </div>
+    ),
+   }]}
+   activeContext={{
+    title: hoveredPoint?.title?.toUpperCase() || "HOVER A BUBBLE",
+    stats: [
+     { label: metricLabel(xMetric), value: hoveredPoint ? formatCompact(hoveredPoint.x) : "—", tone: "lime" },
+     { label: metricLabel(yMetric), value: hoveredPoint ? formatCompact(hoveredPoint.y) : "—", tone: "cyan" },
+     { label: metricLabel(sizeMetric), value: hoveredPoint ? formatCompact(hoveredPoint.size) : "—", tone: "yellow" },
+     { label: metricLabel(colorMetric), value: hoveredPoint ? formatCompact(hoveredPoint.colorVal) : "—", tone: "pink" },
+    ],
+   }}
+   footer={
+    <InsightMarquee
+     mode="insight-lock"
+     segments={[{
+      badge: "Scatter",
+      text: `X=${metricLabel(xMetric)} · Y=${metricLabel(yMetric)} · Bubble=${metricLabel(sizeMetric)} · Color=${metricLabel(colorMetric)} · Gradient: Lime → Yellow → Orange`,
+      badgeTone: "lime",
+     }]}
+    />
+   }
+  >
+   <div className="h-[420px] w-full bg-white relative overflow-hidden">
+    <StableChartFrame minHeightClassName="min-h-[420px]">
+     <ScatterChart margin={{ top: 20, right: 24, left: 10, bottom: 28 }}>
+      <CartesianGrid stroke="rgba(0,0,0,0.06)" />
+      <XAxis
+       type="number"
+       dataKey="x"
+       domain={cd.xScale.domain}
+       ticks={cd.xScale.ticks}
+       tickFormatter={formatCompact}
+       axisLine={{ stroke: "#000", strokeWidth: 3 }}
+       tickLine={false}
+       tick={{ fontWeight: 1000, fontSize: 10, fill: "#000" }}
+       label={{ value: metricLabel(xMetric), position: "insideBottom", offset: -10, style: { fontWeight: 1000, fontSize: 12, fill: "#000" } }}
+      />
+      <YAxis
+       type="number"
+       dataKey="y"
+       domain={cd.yScale.domain}
+       ticks={cd.yScale.ticks}
+       tickFormatter={formatCompact}
+       axisLine={{ stroke: "#000", strokeWidth: 3 }}
+       tickLine={false}
+       tick={{ fontWeight: 1000, fontSize: 10, fill: "#000" }}
+       label={{ value: metricLabel(yMetric), angle: -90, position: "insideLeft", offset: 12, style: { fontWeight: 1000, fontSize: 12, fill: "#000", textAnchor: "middle" } }}
+      />
+      <Scatter data={cd.points} shape={bubbleShape} />
+     </ScatterChart>
+    </StableChartFrame>
+    <div className="absolute bottom-2 right-4 flex items-center gap-2 pointer-events-none">
+     <span className="text-[11px] font-black uppercase text-black">{metricLabel(colorMetric)}</span>
+     <div className="w-[120px] h-5 border-[2px] border-black rounded-[2px] bg-gradient-to-r from-[#CCFF00] via-[#FFCC00] to-[#FF8C00]" />
+    </div>
+   </div>
+  </SubToolboxChartModule>
+ )
+}
+
+/* ═══════════════════════════════════════════════
+   SIGNAL MATRIX MODULE — keyword × metric heatmap
+   ═══════════════════════════════════════════════ */
+const SIGNAL_MATRIX_METRICS = [
+ { key: "views", label: "VIEWS", fmt: formatCompact },
+ { key: "revenue", label: "REV", fmt: (v: number) => `$${formatCompact(v)}` },
+ { key: "rpm", label: "RPM", fmt: (v: number) => `$${v.toFixed(2)}` },
+ { key: "ctr", label: "CTR", fmt: (v: number) => `${v.toFixed(1)}%` },
+ { key: "likes", label: "LIKES", fmt: formatCompact },
+ { key: "comments", label: "CMNT", fmt: formatCompact },
+ { key: "impressions", label: "IMPR", fmt: formatCompact },
+] as const
+type SignalMatrixMetricKey = typeof SIGNAL_MATRIX_METRICS[number]["key"]
+
+const signalMatrixHeatColor = (t: number): string =>
+ interpolateThreeStopColor(t, ["#0a1628", "#2563eb", "#CCFF00"] as const)
+
+export const SignalMatrixModule: React.FC<GChartProps> = ({ data }) => {
+ const [sortBy, setSortBy] = useState<SignalMatrixMetricKey>("views")
+ const [topN, setTopN] = useState(15)
+ const [hovered, setHovered] = useState<{ keyword: string; metric: SignalMatrixMetricKey } | null>(null)
+
+ const matrix = useMemo(() => {
+  const wordMap = new Map<string, CanonicalVideoRow[]>()
+  data.forEach((row) => {
+   const words = String(row.title || "")
+    .toLowerCase()
+    .split(/\W+/)
+    .filter((w) => w.length >= 4)
+   const seen = new Set<string>()
+   words.forEach((word) => {
+    if (seen.has(word)) return
+    seen.add(word)
+    if (!wordMap.has(word)) wordMap.set(word, [])
+    wordMap.get(word)!.push(row)
+   })
+  })
+  const rows = Array.from(wordMap.entries())
+   .filter(([, videos]) => videos.length >= 2)
+   .map(([keyword, videos]) => {
+    const avg = (key: string) => {
+     const vals = videos.map((v) => mv(v, key)).filter((n) => n > 0)
+     return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0
+    }
+    return {
+     keyword, count: videos.length,
+     views: avg("views"), revenue: avg("revenue"), rpm: avg("rpm"),
+     ctr: avg("ctr"), likes: avg("likes"), comments: avg("comments"), impressions: avg("impressions"),
+    }
+   })
+   .sort((a, b) => b[sortBy] - a[sortBy])
+   .slice(0, topN)
+  const colMax: Record<string, number> = {}
+  SIGNAL_MATRIX_METRICS.forEach(({ key }) => {
+   colMax[key] = Math.max(...rows.map((r) => (r as any)[key]), 1)
+  })
+  return { rows, colMax }
+ }, [data, sortBy, topN])
+
+ return (
+  <SubToolboxChartModule
+   header={{ title: "SIGNAL MATRIX", subtitle: "KEYWORD × METRIC HEATMAP · CLICK COLUMN TO SORT", icon: <CustomIcon name="analytics" size={18} /> }}
+   theme={{ headerBandBg: "#0A1628", iconBlockBg: "#2563eb", shadowColor: "rgba(37,99,235,0.5)" }}
+   layout={{ moduleMinHeight: "500px", moduleWidth: "100%" }}
+   controllerRows={[{
+    type: "custom",
+    render: () => (
+     <div className="flex h-full items-center gap-2 px-3 bg-[#0a1628]">
+      <span className="text-[9px] font-black uppercase tracking-[0.12em] text-white/60">Top</span>
+      {[10, 15, 20, 25, 30].map((n) => (
+       <button key={n} type="button" onClick={() => setTopN(n)}
+        className="h-6 px-2.5 rounded-md text-[10px] font-black uppercase border-[2px] transition-colors"
+        style={{
+         borderColor: topN === n ? "#CCFF00" : "rgba(255,255,255,0.25)",
+         color: topN === n ? "#CCFF00" : "rgba(255,255,255,0.6)",
+         background: topN === n ? "rgba(204,255,0,0.08)" : "transparent",
+        }}>{n}</button>
+      ))}
+      <span className="ml-auto text-[9px] font-black uppercase text-white/40">KEYWORDS</span>
+     </div>
+    ),
+   }]}
+   activeContext={{
+    title: hovered ? `${hovered.keyword.toUpperCase()} · ${hovered.metric.toUpperCase()}` : `SIGNAL MATRIX · ${topN} KEYWORDS`,
+    stats: hovered
+     ? (() => {
+        const row = matrix.rows.find((r) => r.keyword === hovered.keyword)
+        if (!row) return []
+        return SIGNAL_MATRIX_METRICS.map((m) => ({
+         label: m.label,
+         value: m.fmt((row as any)[m.key]),
+         tone: m.key === sortBy ? "lime" as const : "white" as const,
+        }))
+       })()
+     : [{ label: "SORT BY", value: sortBy.toUpperCase(), tone: "lime" as const }],
+   }}
+   footer={
+    <InsightMarquee
+     mode="insight-lock"
+     segments={[{ badge: "Signal", text: "Each cell = avg metric for all videos containing that title keyword. Brightest = highest. Click column to sort.", badgeTone: "cyan" }]}
+    />
+   }
+  >
+   <div className="overflow-auto w-full" style={{ background: "#060e1e" }}>
+    {matrix.rows.length === 0 ? (
+     <div className="flex items-center justify-center h-40 text-white/40 text-sm font-black uppercase">No keyword data — load master table</div>
+    ) : (
+     <table className="w-full border-collapse text-[11px] font-black uppercase">
+      <thead>
+       <tr className="border-b-[3px] border-white/20">
+        <th className="sticky left-0 bg-[#060e1e] px-3 py-2 text-left text-[9px] text-white/50 tracking-[0.12em] w-[140px]">KEYWORD</th>
+        <th className="px-2 py-2 text-center text-[9px] text-white/50">VIDS</th>
+        {SIGNAL_MATRIX_METRICS.map((m) => (
+         <th key={m.key} className="px-2 py-2 text-center tracking-[0.1em] cursor-pointer select-none hover:text-[#CCFF00] transition-colors"
+          style={{ color: sortBy === m.key ? "#CCFF00" : "rgba(255,255,255,0.6)" }}
+          onClick={() => setSortBy(m.key)}>
+          {m.label}{sortBy === m.key && <span className="ml-1">▼</span>}
+         </th>
+        ))}
+       </tr>
+      </thead>
+      <tbody>
+       {matrix.rows.map((row, ri) => (
+        <tr key={row.keyword} className="border-b border-white/10" style={{ background: ri % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
+         <td className="sticky left-0 px-3 py-1.5 font-black text-white text-[10px] tracking-[0.06em]" style={{ background: ri % 2 === 0 ? "#070f1f" : "#060e1e" }}>
+          {row.keyword}
+         </td>
+         <td className="px-2 py-1.5 text-center text-white/50">{row.count}</td>
+         {SIGNAL_MATRIX_METRICS.map((m) => {
+          const val = (row as any)[m.key] as number
+          const t = val / (matrix.colMax[m.key] || 1)
+          const isHov = hovered?.keyword === row.keyword && hovered?.metric === m.key
+          return (
+           <td key={m.key}
+            className="px-2 py-1.5 text-center cursor-pointer transition-all"
+            style={{
+             background: signalMatrixHeatColor(Math.pow(t, 0.55)),
+             color: t > 0.45 ? "#000" : "#fff",
+             fontWeight: 1000, fontSize: 10,
+             outline: isHov ? "2px solid #CCFF00" : undefined,
+             outlineOffset: "-2px",
+            }}
+            onMouseEnter={() => setHovered({ keyword: row.keyword, metric: m.key })}
+            onMouseLeave={() => setHovered(null)}
+           >
+            {val > 0 ? m.fmt(val) : "—"}
+           </td>
+          )
+         })}
+        </tr>
+       ))}
+      </tbody>
+     </table>
     )}
    </div>
   </SubToolboxChartModule>

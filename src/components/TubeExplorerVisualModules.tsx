@@ -1117,11 +1117,22 @@ const ViewsSubsGrowthQuadrantRenderer: React.FC<{ dataset: TubeExplorerVisualDat
  * subscriber journey traced over the top. Bars are coloured by format so a spike
  * immediately reads as Shorts or long-form.
  */
+type WaterfallMetricKey = "subscribersGained" | "views" | "watchHours" | "revenue"
+const WATERFALL_METRICS = [
+ { key: "subscribersGained", label: "SUBSCRIBERS", prefix: "+", format: compact, tone: "#42FF68" as const },
+ { key: "views", label: "VIEWS", prefix: "", format: compact, tone: "#2ED2E6" as const },
+ { key: "watchHours", label: "WATCH TIME", prefix: "", format: (v: number) => compact(v) + "h", tone: "#FF7497" as const },
+ { key: "revenue", label: "REVENUE", prefix: "$", format: (v: number) => compact(v, true), tone: "#FFEA00" as const },
+] as const
+
 const SubscriberWaterfallRenderer: React.FC<{
  rows: TubeExplorerVideoPoint[]
+ metricKey: WaterfallMetricKey
  onHover?: (row: { video: TubeExplorerVideoPoint; cumulative: number } | null) => void
-}> = ({ rows, onHover }) => {
- if (rows.length === 0) return <Empty label="No subscriber gain rows available for waterfall" />
+}> = ({ rows, metricKey, onHover }) => {
+ if (rows.length === 0) return <Empty label="No data rows available for waterfall" />
+
+ const activeDef = WATERFALL_METRICS.find((m) => m.key === metricKey) || WATERFALL_METRICS[0]
 
  const W = 1080
  const H = 380
@@ -1132,15 +1143,15 @@ const SubscriberWaterfallRenderer: React.FC<{
  const plotW = W - padL - padR
  const plotH = H - padT - padB
 
- // Running total built by scan instead of a mutable accumulator captured in map.
  const points = rows.reduce<Array<{ video: TubeExplorerVideoPoint; cumulative: number }>>((acc, video) => {
   const previous = acc.length ? acc[acc.length - 1].cumulative : 0
-  acc.push({ video, cumulative: previous + video.subscribersGained })
+  const val = Number(video[metricKey]) || 0
+  acc.push({ video, cumulative: previous + val })
   return acc
  }, [])
  const running = points.length ? points[points.length - 1].cumulative : 0
 
- const barMax = Math.max(...rows.map((r) => Math.abs(r.subscribersGained)), 1) * 1.05
+ const barMax = Math.max(...rows.map((r) => Math.abs(Number(r[metricKey]) || 0)), 1) * 1.05
  const cumMax = Math.max(...points.map((p) => p.cumulative), 1) * 1.05
  const slot = plotW / Math.max(points.length, 1)
  const barW = Math.max(1.5, Math.min(14, slot - 1.5))
@@ -1163,7 +1174,7 @@ const SubscriberWaterfallRenderer: React.FC<{
      <g key={t}>
       <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#ffffff" strokeWidth="1" opacity="0.08" />
       <text x={padL - 7} y={y + 3} textAnchor="end" fill="#ffffff" fontSize="9" fontWeight="1000" opacity="0.45">
-       {compact(cumMax * t)}
+       {activeDef.prefix}{activeDef.format(cumMax * t)}
       </text>
      </g>
     )
@@ -1171,7 +1182,8 @@ const SubscriberWaterfallRenderer: React.FC<{
 
    {points.map((p, i) => {
     const x = padL + i * slot + (slot - barW) / 2
-    const top = yBar(p.video.subscribersGained)
+    const val = Number(p.video[metricKey]) || 0
+    const top = yBar(val)
     return (
      <rect
       key={p.video.videoId}
@@ -1184,16 +1196,16 @@ const SubscriberWaterfallRenderer: React.FC<{
       onMouseEnter={() => onHover?.(p)}
       onMouseLeave={() => onHover?.(null)}
      >
-      <title>{`${p.video.title} · +${p.video.subscribersGained} subscribers`}</title>
+      <title>{`${p.video.title} · ${activeDef.prefix}${activeDef.format(val)}`}</title>
      </rect>
     )
    })}
 
-   <path d={linePath} fill="none" stroke="#C0F240" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+   <path d={linePath} fill="none" stroke={activeDef.tone} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
    <line x1={padL} y1={baseY} x2={W - padR} y2={baseY} stroke="#ffffff" strokeWidth="1" opacity="0.3" />
 
-   <text x={W - padR} y={padT - 8} textAnchor="end" fill="#C0F240" fontSize="11" fontWeight="1000" letterSpacing="1">
-    CUMULATIVE: +{compact(running)} SUBS
+   <text x={W - padR} y={padT - 8} textAnchor="end" fill={activeDef.tone} fontSize="11" fontWeight="1000" letterSpacing="1">
+    CUMULATIVE: {activeDef.prefix}{activeDef.format(running)}
    </text>
    <text x={padL} y={H - 12} fill="#ffffff" fontSize="9" fontWeight="1000" opacity="0.42" letterSpacing="1">OLDEST</text>
    <text x={W / 2} y={H - 12} textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="1000" opacity="0.42" letterSpacing="1">
@@ -3478,11 +3490,13 @@ export const TubeExplorerSubscriberWaterfall: React.FC<TubeExplorerVisualProps> 
  const [countIndex, setCountIndex] = useState(2)
  const [orderIndex, setOrderIndex] = useState(0)
  const [formatIndex, setFormatIndex] = useState(0)
+ const [metricIndex, setMetricIndex] = useState(0)
  const [hovered, setHovered] = useState<{ video: TubeExplorerVideoPoint; cumulative: number } | null>(null)
 
  const limit = WATERFALL_COUNTS[countIndex]
  const chrono = orderIndex === 0
  const formatMode = VITAL_FORMAT_MODES[formatIndex]
+ const activeDef = WATERFALL_METRICS[metricIndex]
 
  const rows = useMemo(() => {
   const scoped = dataset.videos.filter((video) => {
@@ -3494,43 +3508,51 @@ export const TubeExplorerSubscriberWaterfall: React.FC<TubeExplorerVisualProps> 
   // Always take the most recent slice, then order it for display.
   const byDate = [...scoped].sort((a, b) => new Date(a.uploadDate).getTime() - new Date(b.uploadDate).getTime())
   const windowed = limit === 0 ? byDate : byDate.slice(-limit)
-  return chrono ? windowed : [...windowed].sort((a, b) => b.subscribersGained - a.subscribersGained)
- }, [chrono, dataset.videos, formatMode, limit])
+  return chrono ? windowed : [...windowed].sort((a, b) => (Number(b[activeDef.key]) || 0) - (Number(a[activeDef.key]) || 0))
+ }, [chrono, dataset.videos, formatMode, limit, activeDef.key])
 
- const netSubs = rows.reduce((sum, row) => sum + row.subscribersGained, 0)
+ const netVal = rows.reduce((sum, row) => sum + (Number(row[activeDef.key]) || 0), 0)
  const best = rows.reduce<TubeExplorerVideoPoint | null>(
-  (top, row) => (!top || row.subscribersGained > top.subscribersGained ? row : top),
+  (top, row) => (!top || (Number(row[activeDef.key]) || 0) > (Number(top[activeDef.key]) || 0) ? row : top),
   null,
  )
 
  return (
   <ModuleFrame
-   title="SUBSCRIBER WATERFALL"
-   subtitle="Per-video subscriber gains with the cumulative growth line."
+   title="METRIC WATERFALL"
+   subtitle="Per-video gains with the cumulative growth line."
    count={rows.length}
-   color="#42FF68"
+   color={activeDef.tone}
    height={420}
    flushShell
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
-    title: hovered ? videoShortTitle(hovered.video.title, 54).toUpperCase() : `SUBSCRIBER JOURNEY (${formatMode.label})`,
+    title: hovered ? videoShortTitle(hovered.video.title, 54).toUpperCase() : `${activeDef.label} JOURNEY (${formatMode.label})`,
     stats: hovered
      ? [
       { label: "PUBLISHED", value: formatShortDate(hovered.video.uploadDate), tone: "white" as const, valueTone: "#000000", lockTone: true, compact: true },
-      { label: "SUBSCRIBERS", value: `+${compact(hovered.video.subscribersGained)}`, tone: "lime" as const, lockTone: true, compact: true },
-      { label: "RUNNING", value: `+${compact(hovered.cumulative)}`, tone: "yellow" as const, lockTone: true, compact: true },
+      { label: activeDef.label, value: `${activeDef.prefix}${activeDef.format(Number(hovered.video[activeDef.key]) || 0)}`, tone: "lime" as const, lockTone: true, compact: true },
+      { label: "RUNNING", value: `${activeDef.prefix}${activeDef.format(hovered.cumulative)}`, tone: "yellow" as const, lockTone: true, compact: true },
       { label: "VIEWS", value: compact(hovered.video.views), tone: "cyan" as const, lockTone: true, compact: true },
       { label: "FORMAT", value: hovered.video.format.toUpperCase(), tone: "pink" as const, lockTone: true, compact: true },
      ]
      : [
-      { label: "NET SUBSCRIBERS", value: `+${compact(netSubs)}`, tone: "lime" as const, lockTone: true, compact: true },
+      { label: `NET ${activeDef.label}`, value: `${activeDef.prefix}${activeDef.format(netVal)}`, tone: "lime" as const, lockTone: true, compact: true },
       { label: "VIDEOS", value: compact(rows.length), tone: "cyan" as const, lockTone: true, compact: true },
-      { label: "BEST", value: best ? `+${compact(best.subscribersGained)}` : "—", tone: "yellow" as const, lockTone: true, compact: true },
-      { label: "AVG", value: rows.length ? (netSubs / rows.length).toFixed(1) : "0", tone: "pink" as const, lockTone: true, compact: true },
+      { label: "BEST", value: best ? `${activeDef.prefix}${activeDef.format(Number(best[activeDef.key]) || 0)}` : "—", tone: "yellow" as const, lockTone: true, compact: true },
+      { label: "AVG", value: rows.length ? `${activeDef.prefix}${activeDef.format(netVal / rows.length)}` : "0", tone: "pink" as const, lockTone: true, compact: true },
      ],
    }}
    controllerRows={[
+    {
+     type: "text",
+     value: activeDef.label,
+     onPrev: () => { setMetricIndex((i) => (i + WATERFALL_METRICS.length - 1) % WATERFALL_METRICS.length); setHovered(null) },
+     onNext: () => { setMetricIndex((i) => (i + 1) % WATERFALL_METRICS.length); setHovered(null) },
+     bgTone: activeDef.tone,
+     fgTone: "#000000",
+    },
     {
      type: "number",
      value: limit === 0 || rows.length < limit ? String(rows.length) : String(limit),
@@ -3558,7 +3580,7 @@ export const TubeExplorerSubscriberWaterfall: React.FC<TubeExplorerVisualProps> 
    ]}
   >
    <div className="h-full w-full bg-[#0a0a1a]">
-    <SubscriberWaterfallRenderer rows={rows} onHover={setHovered} />
+    <SubscriberWaterfallRenderer rows={rows} metricKey={activeDef.key} onHover={setHovered} />
    </div>
   </ModuleFrame>
  )
