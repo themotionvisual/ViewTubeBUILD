@@ -352,10 +352,16 @@ export const VT_SYNC_TABLE_DEFINITIONS: VtSyncTableDefinition[] = [
  table({ id: "monthly", mainCategoryId: "daily", label: "Monthly", description: "Monthly rollup derived from daily metrics.", snapshotKeys: ["dailyMetrics"], categoryIds: ["daily_metrics"], columns: [col("date", "Month", "Time", "date", true, "left", { preferredWidth: 240 }), ...dailyMetricColumns], defaultSort: { key: "date", direction: "desc" }, datasetId: "monthly" }),
  table({ id: "monthly_api", mainCategoryId: "daily", label: "Month (API)", description: "Calendar-month analytics queried directly with the YouTube Analytics month dimension.", categoryIds: ["monthly_metrics"], columns: [col("date", "Month", "Time", "date", true, "left", { preferredWidth: 240 }), ...dailyMetricColumns], defaultSort: { key: "date", direction: "desc" }, datasetId: "monthly_api" }),
  table({ id: "channel_totals", mainCategoryId: "channel_totals", label: "Channel Totals", description: "Channel total windows.", categoryIds: ["channel_totals"], columns: [
+  // Keep each metric group contiguous so netSubscribers/impressions merge into
+  // their own groups instead of forming duplicate Engagement/Revenue blocks on
+  // the right, and place Revenue to the left of Cards.
   col("window", "Time Window", "Time", "text", true, "left"),
-  ...completeAnalyticsMetricColumns,
+  ...completeAnalyticsMetricColumns.filter((column) => column.group === "Watch"),
+  ...completeAnalyticsMetricColumns.filter((column) => column.group === "Engagement"),
   col("netSubscribers", "Net Subscribers", "Engagement", "number"),
+  ...completeAnalyticsMetricColumns.filter((column) => column.group === "Revenue"),
   col("impressions", "Impressions", "Revenue", "number"),
+  ...completeAnalyticsMetricColumns.filter((column) => column.group === "Cards"),
  ], datasetId: "channel_totals", summaryMode: "primary-row", summaryPrimaryRow: { key: "window", value: "Lifetime (All Time)" } }),
  table({ id: "traffic", mainCategoryId: "traffic", label: "Overview", description: "Traffic source overview.", snapshotKeys: ["trafficSources"], categoryIds: ["traffic_overview"], columns: [col("source", "Source", "Identity", "text", true, "left", { preferredWidth: 300 }), ...shortMetricColumns, ...trafficShareColumns], datasetId: "traffic", layoutMode: "sparse-full" }),
  table({ id: "search", mainCategoryId: "traffic", label: "Search Terms", description: "YouTube search terms.", snapshotKeys: ["searchTerms"], categoryIds: ["search_terms"], columns: [col("term", "Search Term", "Identity", "text", true, "left"), ...searchMetricColumns], datasetId: "search" }),
