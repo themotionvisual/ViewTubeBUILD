@@ -882,13 +882,15 @@ export const getVtSyncWorkspaceForTable = (
 }
 
 export const VT_SYNC_TOOLBOX_CATEGORIES: VtSyncToolboxCategory[] = [
- { id: "content", label: "Videos", tableIds: ["videos", "playlists", "creator", "locations", "retentions", "shares"], colors: { icon: "#F55EFC", label: "#36E0F6", shadow: "rgba(54,224,246,.52)" } },
- { id: "daily", label: "Daily", tableIds: ["daily", "weekly", "monthly", "monthly_api"], colors: { icon: "#36E0F6", label: "#3FEE56", shadow: "rgba(63,238,86,.52)" } },
- { id: "channel", label: "Channel", tableIds: ["channel_totals"], colors: { icon: "#FFA85C", label: "#528FFA", shadow: "rgba(82,143,250,.52)" } },
- { id: "traffic", label: "Traffic", tableIds: ["traffic", "search", "ext_web", "suggested", "chan_page", "hashtags", "sound", "adv", "other_feat", "traffic_subscribers", "traffic_day"], colors: { icon: "#FFDA47", label: "#3FEE56", shadow: "rgba(63,238,86,.52)" } },
- { id: "audience", label: "Audience", tableIds: ["demographics", "subs", "devices", "os", "device_os"], colors: { icon: "#A467F4", label: "#FFDA47", shadow: "rgba(255,218,71,.52)" } },
- { id: "global", label: "Global", tableIds: ["geography", "cities", "provinces", "dma"], colors: { icon: "#3FEE56", label: "#F55EFC", shadow: "rgba(245,94,252,.52)" } },
- { id: "revenue", label: "Revenue", tableIds: ["ads"], colors: { icon: "#528FFA", label: "#F55EFC", shadow: "rgba(245,94,252,.52)" } },
+ // Category buttons cycle the shared GROUP_COLORS palette in order, matching the
+ // KPI cards and toolbar buttons: label = palette[i], icon rail = palette[i+4].
+ { id: "content", label: "Videos", tableIds: ["videos", "playlists", "creator", "locations", "retentions", "shares"], colors: { icon: "#C0F240", label: "#FA618A", shadow: "rgba(192,242,64,.52)" } },
+ { id: "daily", label: "Daily", tableIds: ["daily", "weekly", "monthly", "monthly_api"], colors: { icon: "#3FEE56", label: "#FF7F6B", shadow: "rgba(63,238,86,.52)" } },
+ { id: "channel", label: "Channel", tableIds: ["channel_totals"], colors: { icon: "#4EE4BE", label: "#FFA85C", shadow: "rgba(78,228,190,.52)" } },
+ { id: "traffic", label: "Traffic", tableIds: ["traffic", "search", "ext_web", "suggested", "chan_page", "hashtags", "sound", "adv", "other_feat", "traffic_subscribers", "traffic_day"], colors: { icon: "#36E0F6", label: "#FFDA47", shadow: "rgba(54,224,246,.52)" } },
+ { id: "audience", label: "Audience", tableIds: ["demographics", "subs", "devices", "os", "device_os"], colors: { icon: "#528FFA", label: "#C0F240", shadow: "rgba(82,143,250,.52)" } },
+ { id: "global", label: "Global", tableIds: ["geography", "cities", "provinces", "dma"], colors: { icon: "#A467F4", label: "#3FEE56", shadow: "rgba(164,103,244,.52)" } },
+ { id: "revenue", label: "Revenue", tableIds: ["ads"], colors: { icon: "#F55EFC", label: "#4EE4BE", shadow: "rgba(245,94,252,.52)" } },
 ]
 
 export type VtSyncWorkspaceUrlState = {
