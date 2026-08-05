@@ -4,9 +4,21 @@ import { getMasterRows } from "../services/analytics/Selectors"
 import { applyGlobalRowFilters, UPLOAD_CACHE_FILES_KEY } from "../services/analytics/SyncPipeline"
 import type { AnalyticsWindow, CanonicalVideoRow } from "../services/analytics/DataStore"
 import {
- VideoValueMatrix, RevenueDistribution, WatchTimeDistribution, SubscribersGained,
- ShortsRetention, Packaging, EngagementMap, PerformanceTrend, DurationSweetSpot,
- RevenueEfficiency, AudienceGrowth, GoldenRatioRadar, HookEffectiveness, GrowthPulse, TopPerformersTrio,
+ VideoValueMatrix,
+ RevenueDistribution,
+ WatchTimeDistribution,
+ SubscribersGained,
+ HookEffectiveness,
+ ShortsRetentionWidgetModule,
+ RevenueEfficiency,
+ GrowthPulse,
+ TopPerformersTrio,
+ Packaging,
+ EngagementMap,
+ PerformanceTrend,
+ DurationSweetSpot,
+ AudienceGrowth,
+ GoldenRatioRadar,
 } from "../components/GraphsPageCharts"
 import { SubToolbox, ToolboxScaffold } from "../components/Toolbox"
 import { Activity, ChartColumnBig } from "lucide-react"
@@ -191,7 +203,7 @@ const GraphsPage: React.FC = () => {
          <WatchTimeDistribution data={data} />
          <SubscribersGained data={data} />
          <HookEffectiveness data={data} />
-         <ShortsRetention data={data} />
+         <ShortsRetentionWidgetModule data={data} />
         </div>
 
         {/* Full-width: Revenue Efficiency */}

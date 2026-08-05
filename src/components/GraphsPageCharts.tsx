@@ -37,6 +37,7 @@ import {
 } from "../services/keywordVennAnalysis"
 import {
  buildAdaptiveZeroScale,
+ buildLinearAreaBubbleRadii,
  buildLogBubbleRadii,
  buildTieAwarePercentiles,
  interpolateThreeStopColor,
@@ -1279,14 +1280,15 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
     cy={cy}
     r={payload.radius * scale}
     fill={payload.color}
-    fillOpacity={isHover ? 0.92 : 0.78}
+    fillOpacity={isHover ? 0.72 : 0.55}
     stroke={payload.color}
-    strokeWidth={isHover ? 2 : 0}
+    strokeWidth={isHover ? 2.5 : 1.5}
+    strokeOpacity={1}
     style={{
       transformBox: "fill-box",
       transformOrigin: "center",
       shapeRendering: "geometricPrecision",
-      mixBlendMode: "normal",
+      mixBlendMode: "screen",
       transitionProperty: "r, fill-opacity, stroke-width",
       transitionDuration: isHover ? "750ms" : "350ms",
       transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
@@ -1421,7 +1423,6 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
  const [activeKey, setActiveKey] = useState<string | null>(null)
  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
  const [selectedCount, setSelectedCount] = useState(100)
- const [formatFilter, setFormatFilter] = useState<ShortsFormatFilter>("shorts")
  const rafMouseRef = useRef<number | null>(null)
  const pendingMouseRef = useRef<{ x: number; y: number } | null>(null)
  const cycleCount = (dir: 1 | -1) => {
@@ -1429,21 +1430,12 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
   const nextIdx = (idx + dir + SHORTS_RETENTION_COUNT_VALUES.length) % SHORTS_RETENTION_COUNT_VALUES.length
   setSelectedCount(SHORTS_RETENTION_COUNT_VALUES[nextIdx])
  }
- const cycleFormat = (dir: 1 | -1) => {
-  const opts: ShortsFormatFilter[] = ["all", "shorts", "longform"]
-  const idx = opts.indexOf(formatFilter)
-  setFormatFilter(opts[(idx + dir + opts.length) % opts.length])
- }
 
  const cd = useMemo(() => {
   const isShortRow = (r: CanonicalVideoRow) =>
    String(r.format || "").toLowerCase().includes("short") ||
    (r.durationSeconds > 0 && r.durationSeconds <= 180)
-  const baseRows = formatFilter === "shorts"
-   ? data.filter(isShortRow)
-   : formatFilter === "longform"
-   ? data.filter((r) => !isShortRow(r))
-   : data
+  const baseRows = data.filter(isShortRow)
   const mapped = baseRows
    .map((r) => {
     const views = mv(r, "views")
@@ -1472,7 +1464,7 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
   const revenuePercentiles = buildTieAwarePercentiles(
    top.map((d) => d.revenueAvailable ? d.estIncome : null),
   )
-  const viewRadii = buildLogBubbleRadii(top.map((d) => d.views), { minRadius: 3, maxRadius: 32 })
+  const viewRadii = buildLinearAreaBubbleRadii(top.map((d) => d.views), { minRadius: 4, maxRadius: 36 })
 
   // Exponential outlier: top/bottom 7% occupy the palette edges alone
   const expPos = (t: number | null): number | null => {
@@ -1502,7 +1494,7 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
    durationScale,
    avdScale,
   }
- }, [data, mode, sortMetric, selectedCount, formatFilter])
+ }, [data, mode, sortMetric, selectedCount])
 
  useEffect(() => {
   if (cd.points.length === 0) { setActiveKey(null); return }
@@ -1533,13 +1525,14 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
     cy={cy}
     r={payload.radius * scale}
     fill={payload.color}
-    fillOpacity={isActive ? 0.92 : 0.78}
+    fillOpacity={isActive ? 0.72 : 0.55}
     stroke={payload.color}
-    strokeWidth={isActive ? 2.5 : 0}
+    strokeWidth={isActive ? 2.5 : 1.5}
+    strokeOpacity={1}
     onMouseEnter={() => setActiveKey(payload.key)}
     style={{
       shapeRendering: "geometricPrecision",
-      mixBlendMode: "multiply" as any,
+      mixBlendMode: "normal" as any,
       transitionProperty: "r, stroke-width, fill-opacity",
       transitionDuration: isActive ? "750ms" : "350ms",
       transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
@@ -1580,16 +1573,6 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data }) => 
       ],
     },
    }}
-   controllerRows={[{
-    type: "custom",
-    render: () => (
-     <div className="flex h-full items-center gap-0 bg-white border-t-[3px] border-black">
-      <button type="button" onClick={() => cycleFormat(-1)} className="h-full px-3 border-r-[2px] border-black text-[12px] font-black">◀</button>
-      <span className="flex-1 text-center text-[10px] font-black uppercase tracking-[0.1em]">{formatFilter.toUpperCase()}</span>
-      <button type="button" onClick={() => cycleFormat(1)} className="h-full px-3 border-l-[2px] border-black text-[12px] font-black">▶</button>
-     </div>
-    ),
-   }]}
    activeContext={{
      title: activePoint?.title?.toUpperCase() || "NO VIDEO SELECTED",
      stats: [
@@ -5397,28 +5380,37 @@ export const OrbitalModule: React.FC<GChartProps> = ({ data }) => {
    ═══════════════════════════════════════════════ */
 const CUSTOM_SCATTER_METRICS = [
  { key: "views", label: "VIEWS" },
+ { key: "watchHours", label: "WATCH HRS" },
  { key: "revenue", label: "REVENUE" },
  { key: "rpm", label: "RPM" },
- { key: "ctr", label: "CTR" },
- { key: "durationSeconds", label: "DURATION" },
- { key: "impressions", label: "IMPRESSIONS" },
  { key: "likes", label: "LIKES" },
  { key: "comments", label: "COMMENTS" },
+ { key: "subscribersGained", label: "SUBS GAINED" },
+ { key: "shares", label: "SHARES" },
 ] as const
 type CustomScatterMetricKey = typeof CUSTOM_SCATTER_METRICS[number]["key"]
 const CUSTOM_SCATTER_PALETTE = ["#CCFF00", "#FFCC00", "#FF8C00"] as const
 const CUSTOM_SCATTER_COUNTS = [10, 25, 50, 75, 100, 200] as const
 type CustomScatterFormat = "all" | "shorts" | "longform"
 
+const scatterMv = (r: CanonicalVideoRow, key: string): number => {
+ if (key === "revenue") {
+  const rev = resolveMetricNumber(r, "revenue")
+  return rev.value ?? 0
+ }
+ return mv(r, key)
+}
+
 export const CustomScatterModule: React.FC<GChartProps> = ({ data }) => {
  const [xMetric, setXMetric] = useState<CustomScatterMetricKey>("views")
- const [yMetric, setYMetric] = useState<CustomScatterMetricKey>("revenue")
- const [sizeMetric, setSizeMetric] = useState<CustomScatterMetricKey>("durationSeconds")
- const [colorMetric, setColorMetric] = useState<CustomScatterMetricKey>("rpm")
+ const [yMetric, setYMetric] = useState<CustomScatterMetricKey>("watchHours")
+ const [sizeMetric, setSizeMetric] = useState<CustomScatterMetricKey>("likes")
+ const [colorMetric, setColorMetric] = useState<CustomScatterMetricKey>("revenue")
  const [count, setCount] = useState<number>(50)
  const [format, setFormat] = useState<CustomScatterFormat>("all")
  const [hovered, setHovered] = useState<string | null>(null)
  const [countMenuOpen, setCountMenuOpen] = useState(false)
+ const [formatMenuOpen, setFormatMenuOpen] = useState(false)
 
  const cycleCount = (dir: 1 | -1) => {
   const idx = CUSTOM_SCATTER_COUNTS.indexOf(count as any)
@@ -5440,15 +5432,15 @@ export const CustomScatterModule: React.FC<GChartProps> = ({ data }) => {
    : data
   const mapped = filtered.map((r) => ({
    title: String(r.title || ""),
-   x: mv(r, xMetric),
-   y: mv(r, yMetric),
-   size: mv(r, sizeMetric),
-   colorVal: mv(r, colorMetric),
+   x: scatterMv(r, xMetric),
+   y: scatterMv(r, yMetric),
+   size: scatterMv(r, sizeMetric),
+   colorVal: scatterMv(r, colorMetric),
    key: `${r.title}-${r.uploadDate}`,
   })).filter((d) => d.x >= 0 && d.y >= 0)
   const sorted = [...mapped].sort((a, b) => b.colorVal - a.colorVal).slice(0, count)
   const colorPercentiles = buildTieAwarePercentiles(sorted.map((d) => d.colorVal))
-  const radii = buildLogBubbleRadii(sorted.map((d) => d.size), { minRadius: 4, maxRadius: 28 })
+  const radii = buildLinearAreaBubbleRadii(sorted.map((d) => d.size), { minRadius: 4, maxRadius: 36 })
   const expPos = (t: number | null) => {
    if (t === null) return null
    const TH = 0.07
@@ -5480,14 +5472,15 @@ export const CustomScatterModule: React.FC<GChartProps> = ({ data }) => {
     cy={cy}
     r={payload.radius * scale}
     fill={payload.color}
-    fillOpacity={isHov ? 0.94 : 0.80}
+    fillOpacity={isHov ? 0.72 : 0.55}
     stroke={payload.color}
-    strokeWidth={isHov ? 2.5 : 0}
+    strokeWidth={isHov ? 2.5 : 1.5}
+    strokeOpacity={1}
     onMouseEnter={() => setHovered(payload.key)}
     onMouseLeave={() => setHovered(null)}
     style={{
      shapeRendering: "geometricPrecision",
-     mixBlendMode: "normal" as any,
+     mixBlendMode: "screen" as any,
      transitionProperty: "r, fill-opacity, stroke-width",
      transitionDuration: "250ms",
      transitionTimingFunction: "cubic-bezier(0.34,1.56,0.64,1)",
@@ -5521,32 +5514,44 @@ export const CustomScatterModule: React.FC<GChartProps> = ({ data }) => {
      ],
     },
    }}
-   controllerRows={[{
-    type: "custom",
-    render: () => (
-     <div className="grid grid-cols-4 h-full divide-x-[3px] divide-black">
-      {([
-       { label: "X", val: xMetric, set: setXMetric },
-       { label: "Y", val: yMetric, set: setYMetric },
-       { label: "SIZE", val: sizeMetric, set: setSizeMetric },
-       { label: "COLOR", val: colorMetric, set: setColorMetric },
-      ] as const).map((axis) => (
-       <div key={axis.label} className="flex items-center justify-between px-1.5 min-w-0">
-        <span className="text-[9px] font-black uppercase tracking-[0.1em] shrink-0 mr-1">{axis.label}</span>
-        <select
-         value={axis.val}
-         onChange={(e) => (axis.set as any)(e.target.value)}
-         className="min-w-0 flex-1 appearance-none border-0 bg-transparent text-[9px] font-black uppercase truncate"
-        >
-         {CUSTOM_SCATTER_METRICS.map((m) => (
-          <option key={m.key} value={m.key}>{m.label}</option>
-         ))}
-        </select>
-       </div>
-      ))}
-     </div>
-    ),
-   }]}
+   controllerRows={[
+    {
+     type: "dropdown" as const,
+     value: xMetric,
+     labelPrefix: "X",
+     options: CUSTOM_SCATTER_METRICS.map((m) => ({ label: m.label, value: m.key })),
+     onSelect: (v: string) => setXMetric(v as CustomScatterMetricKey),
+     bgTone: "#CCFF00",
+     fgTone: "#000000",
+    },
+    {
+     type: "dropdown" as const,
+     value: yMetric,
+     labelPrefix: "Y",
+     options: CUSTOM_SCATTER_METRICS.map((m) => ({ label: m.label, value: m.key })),
+     onSelect: (v: string) => setYMetric(v as CustomScatterMetricKey),
+     bgTone: "#00E5FF",
+     fgTone: "#000000",
+    },
+    {
+     type: "dropdown" as const,
+     value: sizeMetric,
+     labelPrefix: "SIZE",
+     options: CUSTOM_SCATTER_METRICS.map((m) => ({ label: m.label, value: m.key })),
+     onSelect: (v: string) => setSizeMetric(v as CustomScatterMetricKey),
+     bgTone: "#FF9900",
+     fgTone: "#000000",
+    },
+    {
+     type: "dropdown" as const,
+     value: colorMetric,
+     labelPrefix: "COLOR",
+     options: CUSTOM_SCATTER_METRICS.map((m) => ({ label: m.label, value: m.key })),
+     onSelect: (v: string) => setColorMetric(v as CustomScatterMetricKey),
+     bgTone: "#FF82B0",
+     fgTone: "#000000",
+    },
+   ]}
    activeContext={{
     title: hoveredPoint?.title?.toUpperCase() || "HOVER A BUBBLE",
     stats: [

@@ -174,3 +174,23 @@ export const buildLogBubbleRadii = (
     return roundScaleValue(minRadius + (maxRadius - minRadius) * Math.sqrt(normalized))
   })
 }
+
+export const buildLinearAreaBubbleRadii = (
+  values: readonly number[],
+  {
+    minRadius = 4,
+    maxRadius = 30,
+  }: BubbleRadiusOptions = {},
+): number[] => {
+  const finite = values.filter((value) => Number.isFinite(value) && value >= 0)
+  if (finite.length === 0) return values.map(() => minRadius)
+
+  const minVal = 0 // always scale from 0 to preserve true relative size
+  const maxVal = Math.max(...finite)
+  return values.map((value) => {
+    if (!Number.isFinite(value) || value <= 0) return minRadius
+    if (maxVal === minVal) return roundScaleValue((minRadius + maxRadius) / 2)
+    const normalized = value / maxVal
+    return roundScaleValue(minRadius + (maxRadius - minRadius) * Math.sqrt(normalized))
+  })
+}
