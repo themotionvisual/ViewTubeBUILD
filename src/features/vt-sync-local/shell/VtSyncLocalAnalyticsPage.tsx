@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import React, { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Copy } from "lucide-react"
 import { useBrain } from "../../../context/useBrain"
@@ -27,7 +27,13 @@ import { VtSyncControllerPanel } from "./VtSyncControllerPanel"
 import { buildVtSyncCreatorHeroModel, VtSyncCreatorHero } from "./VtSyncCreatorHero"
 import { VtSyncToolboxDataTable } from "./toolbox-table/VtSyncToolboxDataTable"
 import "./VtSyncLocalAnalyticsPage.css"
-import { VtSyncDataVisualsToolbox } from "./VtSyncDataVisualsToolbox"
+// Lazy-load the DATA VISUALS toolbox: it pulls in ~24 Recharts modules and the
+// GraphsPageCharts library, none of which the user needs before the analytics
+// page finishes its first paint. Suspending it here trims the initial payload
+// on the mobile-critical /analytics landing route.
+const VtSyncDataVisualsToolbox = lazy(() =>
+ import("./VtSyncDataVisualsToolbox").then((module) => ({ default: module.VtSyncDataVisualsToolbox })),
+)
 import { RetroLcd, RetroLedRow, RetroRivets, RetroVuMeter, type RetroLedSpec } from "./VtSyncRetroChrome"
 
 const syncStatusLabel = (status?: string) => {
@@ -518,7 +524,9 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
      onPrivacyFiltersChange={updatePrivacyFilters}
      onManualImportsChange={refreshManualImports}
     />
-    <VtSyncDataVisualsToolbox snapshot={consumerSnapshot} />
+    <Suspense fallback={<div className="min-h-[120px]" aria-hidden />}>
+     <VtSyncDataVisualsToolbox snapshot={consumerSnapshot} />
+    </Suspense>
    </div>
   </div>
  )

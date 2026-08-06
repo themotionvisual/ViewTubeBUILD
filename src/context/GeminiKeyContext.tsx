@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { GoogleGenAI } from '@google/genai';
+
+// Do NOT static-import @google/genai — it's a ~50 kB gzip module and this
+// provider mounts at App boot, which used to force every route (Dashboard,
+// Editor, Analytics) to preload the Gemini SDK before first paint. The SDK
+// is only reachable via `validateAndSaveKey`, which fires on user action, so
+// a dynamic import there defers the cost until the moment it's needed.
 
 interface GeminiKeyContextType {
   apiKey: string | null;
@@ -40,6 +45,7 @@ export const GeminiKeyProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setValidationError(null);
     try {
       // Validate by making a tiny request
+      const { GoogleGenAI } = await import('@google/genai');
       const ai = new GoogleGenAI({ apiKey: key });
       const response = await ai.models.generateContent({
         model: 'gemini-1.5-flash',

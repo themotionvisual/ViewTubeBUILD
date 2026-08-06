@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ChevronDown,
   ChevronRight,
@@ -19,7 +19,10 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { useDashboard } from "../../context/DashboardContext"
 import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
 import { useBrain } from "../../context/useBrain"
-import { getVtSyncSnapshot } from "../../features/vt-sync-local"
+// Direct import — the feature barrel would drag in the entire VT-SYNC engine
+// (tableRegistry, localSyncEngine, adapters) on every first paint even though
+// the shell only needs the lightweight snapshot reader.
+import { getVtSyncSnapshot } from "../../features/vt-sync-local/adapters/snapshot"
 import { isOwnerEmail, type EntitlementState } from "../../services/billingEntitlement"
 import { resolveAccountChipLabel } from "../../services/account/accountContracts"
 import { formatSyncLabel, getSyncTimestamp } from "../../services/onboardingState"
@@ -249,7 +252,14 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     cleanAccountText(account.snapshot.profile.email) ||
     "ViewTube Account"
   const accountEmail = cleanAccountText(account.snapshot.profile.email)
-  const vtSyncSnapshot = getVtSyncSnapshot()
+  // Reading the VT-SYNC snapshot on every render meant parsing a localStorage
+  // JSON blob every time the shell re-rendered (auth ticks, resize, drawer
+  // toggles, …). Memoize on the fields we actually source from it so the
+  // parse only re-runs when a sync/logout changes the identity.
+  const vtSyncSnapshot = useMemo(
+    () => getVtSyncSnapshot(),
+    [authState.channelName, authState.channelThumbnail, channelConnection.isConnected, channelIdentity.name, channelIdentity.avatarUrl],
+  )
   const fallbackChannelName = cleanConnectedChannelName(channelConnection.channelName)
   const channelName = isConnected
     ? cleanConnectedChannelName(channelIdentity.name) || cleanConnectedChannelName(authState.channelName) || cleanConnectedChannelName(vtSyncSnapshot.channelName) || fallbackChannelName || accountDisplayName

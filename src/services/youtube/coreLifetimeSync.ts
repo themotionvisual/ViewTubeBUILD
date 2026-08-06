@@ -24,7 +24,12 @@ import {
 } from "../analytics/DataStore"
 import { loadVideoMetaCache, saveVideoMetaCache } from "./videoMetaCache"
 import { reportSyncError } from "../analytics/AnalyticsErrorReporter"
-import { getVideoImpressionsAnalytics } from "./youtubeAnalyticsFetcher"
+import {
+  getVideoImpressionsAnalytics,
+  fetchDemographicAnalytics,
+  fetchTrafficSourceAnalytics,
+  fetchGeographyAnalytics,
+} from "./youtubeAnalyticsFetcher"
 
 // ============================================================================
 // 1. METRIC DEFINITIONS
@@ -1804,11 +1809,10 @@ export const syncDeepVideoData = async (
  * Fetches Demographics (Audience), Traffic Sources (Discovery), and Geography.
  */
 export const syncDeepSegments = async (channelId: string, startDate: string, endDate: string): Promise<any> => {
-  const { 
-    fetchDemographicAnalytics, 
-    fetchTrafficSourceAnalytics, 
-    fetchGeographyAnalytics 
-  } = await import("./youtubeAnalyticsFetcher")
+  // Note: previously a dynamic import here, but the same module is imported
+  // statically at the top of this file, so Rollup was warning that the
+  // dynamic import couldn't split the module out. Reusing the static bindings
+  // silences the warning and avoids a redundant chunk resolution.
 
   console.log("👥 PHASE 4: FETCHING AUDIENCE, TRAFFIC & GEOGRAPHY...")
 
