@@ -758,7 +758,8 @@ export const VtSyncToolboxDataTable: React.FC<{
  snapshot: VtSyncSnapshot
  privacyFilters?: VtSyncPrivacyFilters
  onPrivacyFiltersChange?: (filters: VtSyncPrivacyFilters) => void
-}> = ({ snapshot, privacyFilters, onPrivacyFiltersChange }) => {
+ onManualImportsChange?: () => void
+}> = ({ snapshot, privacyFilters, onPrivacyFiltersChange, onManualImportsChange }) => {
  const initialWorkspaceState = useMemo(
   () => resolveVtSyncWorkspaceUrlState(typeof window === "undefined" ? "" : window.location.search),
   [],
@@ -5099,6 +5100,9 @@ const filteredRows = useMemo(() => {
             "CSV import is active for this session but could not be retained after reload.",
            )
           }
+          // Let the analytics page merge the fresh CSV into the snapshot so the
+          // DATA VISUALS toolbox can render off it right after import completes.
+          onManualImportsChange?.()
           setSelectedKey(null)
           setSort(table.defaultSort)
           showToast(
@@ -5293,6 +5297,7 @@ const filteredRows = useMemo(() => {
               next.delete(table.id)
               return next
              })
+             onManualImportsChange?.()
              showToast(
               `Cleared saved CSV for ${getVtSyncPresentationLabel(table.id, table.label)}`,
              )

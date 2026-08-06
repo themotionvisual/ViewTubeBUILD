@@ -52,7 +52,12 @@ import {
  runFirstRunBrainOnboardingBootstrap,
  refreshToolContextPack,
 } from "../services/brain"
-import { applyVtSyncPrivacyFilters, getVtSyncSnapshot } from "../features/vt-sync-local"
+// Import directly from the leaf modules rather than the feature barrel — the
+// barrel re-exports the entire vt-sync-local surface (localSyncEngine,
+// tableRegistry, adapters), which is ~120 kB of code that we do not want to
+// pay for on the first-paint entry chunk.
+import { applyVtSyncPrivacyFilters } from "../features/vt-sync-local/adapters/privacyPolicy"
+import { getVtSyncSnapshot } from "../features/vt-sync-local/adapters/snapshot"
 import { resolveChannelConnectionSnapshot } from "../services/connectionState"
 import type {
  ChannelBootPhase,

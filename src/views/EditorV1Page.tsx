@@ -47,9 +47,22 @@ class EditorRouteBoundary extends React.Component<React.PropsWithChildren, Edito
   }
 }
 
+/**
+ * VT_E1 editor host. On desktop we keep the framed "card" look; on landscape
+ * phones (and short viewports) we drop the border/rounded corners so the
+ * embedded editor gets every pixel — the editor's own outer-frame becomes
+ * the visible edge.
+ */
 const EditorV1Page: React.FC = () => {
   return (
-    <section className="h-full min-h-0 w-full overflow-hidden rounded-[10px] border-[2px] border-black bg-[#111]">
+    <section
+      className="
+        h-full min-h-0 w-full overflow-hidden bg-[#111] flex flex-col
+        rounded-[10px] border-[2px] border-black
+        landscape:max-[932px]:border-0 landscape:max-[932px]:rounded-none
+        max-[560px]:border-0 max-[560px]:rounded-none
+      "
+    >
       <EditorRouteBoundary>
         <VTE1Editor />
       </EditorRouteBoundary>

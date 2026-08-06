@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useMemo, useRef, useState } from "react"
+import React, { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Copy } from "lucide-react"
 import { useBrain } from "../../../context/useBrain"
@@ -18,13 +18,22 @@ import {
  applyVtSyncPrivacyFilters,
  readVtSyncPrivacyFilters,
  type VtSyncPrivacyFilters,
+ loadVtSyncManualImports,
+ mergeVtSyncManualImportsIntoSnapshot,
+ type VtSyncManualImportState,
 } from ".."
 import { ToolboxScaffold } from "../../../components/Toolbox"
 import { VtSyncControllerPanel } from "./VtSyncControllerPanel"
 import { buildVtSyncCreatorHeroModel, VtSyncCreatorHero } from "./VtSyncCreatorHero"
 import { VtSyncToolboxDataTable } from "./toolbox-table/VtSyncToolboxDataTable"
 import "./VtSyncLocalAnalyticsPage.css"
-import { VtSyncDataVisualsToolbox } from "./VtSyncDataVisualsToolbox"
+// Lazy-load the DATA VISUALS toolbox: it pulls in ~24 Recharts modules and the
+// GraphsPageCharts library, none of which the user needs before the analytics
+// page finishes its first paint. Suspending it here trims the initial payload
+// on the mobile-critical /analytics landing route.
+const VtSyncDataVisualsToolbox = lazy(() =>
+ import("./VtSyncDataVisualsToolbox").then((module) => ({ default: module.VtSyncDataVisualsToolbox })),
+)
 import { RetroLcd, RetroLedRow, RetroRivets, RetroVuMeter, type RetroLedSpec } from "./VtSyncRetroChrome"
 
 const syncStatusLabel = (status?: string) => {
@@ -348,9 +357,28 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
  const account = useUnifiedAccount()
  const [snapshot, setSnapshot] = useState<VtSyncSnapshot>(() => getVtSyncSnapshot())
  const [privacyFilters, setPrivacyFilters] = useState<VtSyncPrivacyFilters>(() => readVtSyncPrivacyFilters())
+ const [manualImports, setManualImports] = useState<VtSyncManualImportState>({ rowsByTableId: {}, capturedAtByTableId: {} })
+
+ const refreshManualImports = useCallback(async () => {
+  try {
+   const next = await loadVtSyncManualImports()
+   setManualImports(next)
+  } catch {
+   // IndexedDB may be unavailable (private browsing, quota exhaustion). Leave state as-is.
+  }
+ }, [])
+
+ useEffect(() => {
+  void refreshManualImports()
+ }, [refreshManualImports])
+
+ const mergedSnapshot = useMemo(
+  () => mergeVtSyncManualImportsIntoSnapshot(snapshot, manualImports),
+  [manualImports, snapshot],
+ )
  const consumerSnapshot = useMemo(
-  () => applyVtSyncPrivacyFilters(snapshot, privacyFilters),
-  [privacyFilters, snapshot],
+  () => applyVtSyncPrivacyFilters(mergedSnapshot, privacyFilters),
+  [mergedSnapshot, privacyFilters],
  )
  const [syncProgress, setSyncProgress] = useState<VtSyncLocalSyncProgress | null>(null)
  const [syncError, setSyncError] = useState<string>("")
@@ -490,8 +518,15 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
       <ProgressRail progress={syncProgress} datasetFreshness={snapshot.datasetFreshness} />
      </div>
     </section>
-    <VtSyncToolboxDataTable snapshot={snapshot} privacyFilters={privacyFilters} onPrivacyFiltersChange={updatePrivacyFilters} />
-    <VtSyncDataVisualsToolbox snapshot={consumerSnapshot} />
+    <VtSyncToolboxDataTable
+     snapshot={snapshot}
+     privacyFilters={privacyFilters}
+     onPrivacyFiltersChange={updatePrivacyFilters}
+     onManualImportsChange={refreshManualImports}
+    />
+    <Suspense fallback={<div className="min-h-[120px]" aria-hidden />}>
+     <VtSyncDataVisualsToolbox snapshot={consumerSnapshot} />
+    </Suspense>
    </div>
   </div>
  )

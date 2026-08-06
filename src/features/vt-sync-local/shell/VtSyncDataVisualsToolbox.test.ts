@@ -79,10 +79,17 @@ describe("VT-SYNC data visual module registry", () => {
  })
 
  it("mounts offscreen visuals only as they approach the viewport", () => {
-  expect(source).toContain('rootMargin: "160px 0px"')
+  // The reveal margin narrows on coarse-pointer (touch) devices to keep a
+  // burst of Recharts mounts from freezing mobile.
+  expect(source).toContain('"160px 0px"')
+  expect(source).toContain('"40px 0px"')
+  expect(source).toContain("detectCoarsePointer()")
   expect(source).toContain("minHeight: visible ? undefined : estimatedHeight")
   expect(source).toContain('estimatedHeight={block.module.group === "core" ? 360 : 80}')
   expect(source).toContain("visible ? children")
+  // Skip painting entire panels below the fold — the mobile freeze mitigation
+  // relies on the browser's content-visibility optimization.
+  expect(source).toContain('contentVisibility: "auto"')
   expect(source).not.toContain("setInterval")
   expect(source).not.toContain("mountedCharts")
  })

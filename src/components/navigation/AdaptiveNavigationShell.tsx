@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ChevronDown,
   ChevronRight,
@@ -19,7 +19,10 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { useDashboard } from "../../context/DashboardContext"
 import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
 import { useBrain } from "../../context/useBrain"
-import { getVtSyncSnapshot } from "../../features/vt-sync-local"
+// Direct import — the feature barrel would drag in the entire VT-SYNC engine
+// (tableRegistry, localSyncEngine, adapters) on every first paint even though
+// the shell only needs the lightweight snapshot reader.
+import { getVtSyncSnapshot } from "../../features/vt-sync-local/adapters/snapshot"
 import { isOwnerEmail, type EntitlementState } from "../../services/billingEntitlement"
 import { resolveAccountChipLabel } from "../../services/account/accountContracts"
 import { formatSyncLabel, getSyncTimestamp } from "../../services/onboardingState"
@@ -85,23 +88,40 @@ const ApplicationScrollbar: React.FC<ApplicationScrollbarProps> = ({ viewportRef
     const viewport = viewportRef.current
     if (!viewport) return
 
-    const resizeObserver = new ResizeObserver(syncThumb)
+    // Coalesce every re-sync into a single rAF so a burst of DOM mutations
+    // (chart re-renders, table row updates) can't cause a layout-thrash freeze
+    // on mobile.
+    let scheduledFrame: number | undefined
+    const scheduleSync = () => {
+      if (scheduledFrame !== undefined) return
+      scheduledFrame = window.requestAnimationFrame(() => {
+        scheduledFrame = undefined
+        syncThumb()
+      })
+    }
+    const cancelScheduled = () => {
+      if (scheduledFrame !== undefined) {
+        window.cancelAnimationFrame(scheduledFrame)
+        scheduledFrame = undefined
+      }
+    }
+
+    const resizeObserver = new ResizeObserver(scheduleSync)
     resizeObserver.observe(viewport)
-    Array.from(viewport.children).forEach((child) => resizeObserver.observe(child))
-    const mutationObserver = new MutationObserver(() => {
-      Array.from(viewport.children).forEach((child) => resizeObserver.observe(child))
-      syncThumb()
-    })
-    mutationObserver.observe(viewport, { childList: true, subtree: true })
-    viewport.addEventListener("scroll", syncThumb, { passive: true })
-    window.addEventListener("resize", syncThumb, { passive: true })
-    syncThumb()
+    // ResizeObserver on the viewport already fires when any descendant
+    // resizes/adds content because viewport scrollHeight grows. Observing
+    // direct children is redundant; observing the whole subtree with a
+    // MutationObserver caused re-layouts on every render, which was the
+    // dominant mobile-freeze cause on data-heavy pages.
+    viewport.addEventListener("scroll", scheduleSync, { passive: true })
+    window.addEventListener("resize", scheduleSync, { passive: true })
+    scheduleSync()
 
     return () => {
+      cancelScheduled()
       resizeObserver.disconnect()
-      mutationObserver.disconnect()
-      viewport.removeEventListener("scroll", syncThumb)
-      window.removeEventListener("resize", syncThumb)
+      viewport.removeEventListener("scroll", scheduleSync)
+      window.removeEventListener("resize", scheduleSync)
     }
   }, [syncThumb, viewportRef])
 
@@ -232,7 +252,14 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     cleanAccountText(account.snapshot.profile.email) ||
     "ViewTube Account"
   const accountEmail = cleanAccountText(account.snapshot.profile.email)
-  const vtSyncSnapshot = getVtSyncSnapshot()
+  // Reading the VT-SYNC snapshot on every render meant parsing a localStorage
+  // JSON blob every time the shell re-rendered (auth ticks, resize, drawer
+  // toggles, …). Memoize on the fields we actually source from it so the
+  // parse only re-runs when a sync/logout changes the identity.
+  const vtSyncSnapshot = useMemo(
+    () => getVtSyncSnapshot(),
+    [authState.channelName, authState.channelThumbnail, channelConnection.isConnected, channelIdentity.name, channelIdentity.avatarUrl],
+  )
   const fallbackChannelName = cleanConnectedChannelName(channelConnection.channelName)
   const channelName = isConnected
     ? cleanConnectedChannelName(channelIdentity.name) || cleanConnectedChannelName(authState.channelName) || cleanConnectedChannelName(vtSyncSnapshot.channelName) || fallbackChannelName || accountDisplayName
@@ -662,7 +689,11 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
       >
         {children}
       </main>
-      {!isBrainWorkspace ? <ApplicationScrollbar viewportRef={mainViewportRef} /> : null}
+      {/* The custom scrollbar's ResizeObserver on the viewport is unnecessary
+          on touch devices where the native scroller draws the thumb. Skipping
+          it on mobile removes a permanent layout listener from data-heavy
+          pages that was contributing to touch-scroll freezes. */}
+      {!isBrainWorkspace && !mobile ? <ApplicationScrollbar viewportRef={mainViewportRef} /> : null}
 
       {location.pathname === "/" && !mobile && layout === "top" ? (
         <div className="vt-adaptive-legal"><a href="/privacy.html">Privacy Policy</a><span>|</span><a href="/terms.html">Terms of Service</a></div>
