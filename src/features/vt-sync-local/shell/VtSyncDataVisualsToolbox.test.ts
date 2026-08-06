@@ -75,7 +75,7 @@ describe("VT-SYNC data visual module registry", () => {
   expect(source).toContain('"age-gender-audience"')
   expect(graphSource).toContain("export const AgeGenderAudienceModule")
   expect(graphSource).toContain("buildAgeGenderAudienceData")
-  expect(graphSource).toContain('title: "AGE X GENDER"')
+  expect(graphSource).toContain('title: "AGE × GENDER"')
  })
 
  it("mounts offscreen visuals only as they approach the viewport", () => {

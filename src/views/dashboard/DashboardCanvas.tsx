@@ -401,7 +401,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
                    key={widgetId}
                    id={widgetId}
                    disabled={!canDrag}
-                   className={`${sizeBucketClassName(instance.size)} ${instance.collapsed ? "h-[48px]" : heightBucketClassName(instance.height)}`}>
+                   className={`vt-dash-cell ${instance.collapsed ? "is-collapsed" : ""} ${sizeBucketClassName(instance.size)} ${instance.collapsed ? "h-[48px]" : heightBucketClassName(instance.height)}`}>
                     <WidgetErrorBoundary widgetId={widgetId}>
                       <Suspense fallback={<WidgetStatePanel state={{ status: "loading", data: null, message: `Loading ${widget.title}…` }} />}>
                         <WidgetRenderer

@@ -89,6 +89,36 @@ describe("VT-SYNC lifetime analytics windows", () => {
   ])
  })
 
+ it("retains prior rows for successful windows when they are not present in newly fetched rows", () => {
+  const merged = preserveVtSyncRowsForFailedDateWindows(
+   [
+    { date: "2026-05-01", views: 60 },
+   ],
+   [
+    { date: "2025-05-01", views: 5 },
+    { date: "2026-05-01", views: 6 },
+   ],
+   [
+    {
+     page: 1,
+     startIndex: 1,
+     maxResults: 500,
+     rows: 1,
+     status: "short",
+     startDate: "2025-01-01",
+     endDate: "2026-07-28",
+    },
+   ],
+   "date",
+   "date",
+  )
+
+  expect(merged).toEqual([
+   { date: "2026-05-01", views: 60 },
+   { date: "2025-05-01", views: 5 },
+  ])
+ })
+
  it("preserves prior dates when a window returns partial metric rows with an error", () => {
   const merged = preserveVtSyncRowsForFailedDateWindows(
    [{ day: "2026-05-01", revenue: 6 }],

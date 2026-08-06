@@ -207,6 +207,22 @@ export type VtSyncVisualPropsData = {
  csvFiles: []
  canonicalContext: TubeExplorerCanonicalContext
  trafficByDay: Array<Record<string, unknown>>
+ /** Per-day channel totals from the Analytics API's `dailyMetrics` table.
+  *  Prefer this over `trafficByDay` when computing channel-wide weekly
+  *  rollups — it is the direct daily-metric feed rather than a traffic slice. */
+ dailyMetrics: Array<Record<string, unknown>>
+ /** Channel-wide identity + lifetime totals. Modules should surface these
+  *  when a viewer wants "channel totals" rather than a window sum. */
+ channelSummary: {
+  subscriberCount: number | null
+  videoCount: number | null
+  lifetimeViews: number | null
+  lifetimeWatchHours: number | null
+  lifetimeRevenue: number | null
+  lifetimeSubsGained: number | null
+  lifetimeLikes: number | null
+  lifetimeImpressions: number | null
+ }
  diagnostics: {
   videos: number
   trafficRows: number
@@ -595,10 +611,62 @@ export const buildVtSyncVisualPropsData = (
   ...snapshot.continentsData.map((row, index) => toGeographyRow(snapshot, row, "continent", index)),
  ]
 
+ const dailyMetrics: Array<Record<string, unknown>> =
+  Array.isArray(snapshot.dailyMetrics) && snapshot.dailyMetrics.length > 0
+   ? (snapshot.dailyMetrics as Array<Record<string, unknown>>)
+   : Array.isArray(snapshot.tableExports?.daily)
+    ? snapshot.tableExports.daily as Array<Record<string, unknown>>
+    : []
+
+ // Channel-wide totals: prefer the Analytics `channelTotals.lifetime` bucket
+ // when it exists; fall back to summing every canonical video row for each
+ // metric so the module always shows *some* channel-total figure even when
+ // Analytics hasn't been synced.
+ const numeric = (value: unknown): number | null => {
+  if (typeof value === "number" && Number.isFinite(value)) return value
+  if (typeof value === "string" && value.trim()) {
+   const parsed = Number(value.replace(/[$,%,]/g, "").trim())
+   if (Number.isFinite(parsed)) return parsed
+  }
+  return null
+ }
+ const lifetime = (snapshot.channelTotals && typeof snapshot.channelTotals === "object"
+  ? (snapshot.channelTotals as Record<string, unknown>)["lifetime"]
+  : undefined) as Record<string, unknown> | undefined
+ const readLifetime = (...keys: string[]): number | null => {
+  if (!lifetime) return null
+  for (const key of keys) {
+   const value = numeric(lifetime[key])
+   if (value !== null) return value
+  }
+  return null
+ }
+ const sumRowsMetric = (metricKey: string): number => {
+  let total = 0
+  for (const row of rows) {
+   const cell = (row.metrics as Record<string, unknown> | undefined)?.[metricKey] as Record<string, unknown> | undefined
+   const cellVal = cell && typeof cell.value === "number" ? cell.value as number : null
+   if (cellVal !== null && Number.isFinite(cellVal)) total += cellVal
+  }
+  return total
+ }
+ const channelSummary: VtSyncVisualPropsData["channelSummary"] = {
+  subscriberCount: numeric(snapshot.subscriberCount) ?? readLifetime("subscribers", "subscriberCount"),
+  videoCount: numeric(snapshot.channelVideoCount) ?? readLifetime("videos", "videoCount") ?? rows.length,
+  lifetimeViews: numeric(snapshot.channelViewCount) ?? readLifetime("views") ?? sumRowsMetric("views"),
+  lifetimeWatchHours: readLifetime("watchHours", "watchTime") ?? sumRowsMetric("watchHours"),
+  lifetimeRevenue: readLifetime("revenue", "estimatedRevenue") ?? sumRowsMetric("revenue"),
+  lifetimeSubsGained: readLifetime("subscribersGained") ?? sumRowsMetric("subscribersGained"),
+  lifetimeLikes: readLifetime("likes") ?? sumRowsMetric("likes"),
+  lifetimeImpressions: readLifetime("impressions", "adImpressions") ?? sumRowsMetric("impressions"),
+ }
+
  return {
   rows,
   csvFiles: [],
   trafficByDay,
+  dailyMetrics,
+  channelSummary,
   canonicalContext: {
    trafficRows,
    geographyRows,

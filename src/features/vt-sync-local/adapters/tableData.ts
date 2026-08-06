@@ -78,6 +78,7 @@ export const getVtSyncContentTypeLabel = (value: unknown): string => {
  if (normalized === "short" || normalized === "shorts") return "Shorts"
  if (["videoondemand", "vod", "long", "longformat"].includes(normalized)) return "Long-Format"
  if (["livestream", "live"].includes(normalized)) return "Live Stream"
+ if (["creatorcontenttypeunspecified", "unspecified", "unknown"].includes(normalized)) return "Unspecified"
  return raw
 }
 

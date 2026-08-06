@@ -159,21 +159,31 @@ describe("syncUploadsInventory", () => {
   })
  })
 
- it("keeps the geography province query on the reduced safe metric bundle", () => {
-  expect([...GEOGRAPHY_PROVINCE_SAFE_METRICS]).toEqual([
-   "views",
-   "engagedViews",
-   "estimatedMinutesWatched",
-   "averageViewDuration",
-   "averageViewPercentage",
-  ])
-  expect([...GEOGRAPHY_PROVINCE_SAFE_METRICS]).not.toEqual(expect.arrayContaining([
-   "subscribersGained",
-   "subscribersLost",
-   "likes",
-   "comments",
-  ]))
- })
+  it("keeps the geography province query on the reduced safe metric bundle", () => {
+   expect([...GEOGRAPHY_PROVINCE_SAFE_METRICS]).toEqual([
+    "engagedViews",
+    "views",
+    "redViews",
+    "estimatedMinutesWatched",
+    "estimatedRedMinutesWatched",
+    "averageViewDuration",
+    "averageViewPercentage",
+    "cardClickRate",
+    "cardTeaserClickRate",
+    "cardImpressions",
+    "cardTeaserImpressions",
+    "cardClicks",
+    "cardTeaserClicks",
+   ])
+   expect([...GEOGRAPHY_PROVINCE_SAFE_METRICS]).not.toEqual(expect.arrayContaining([
+    "subscribersGained",
+    "subscribersLost",
+    "likes",
+    "comments",
+    "annotationClicks",
+    "annotationImpressions",
+   ]))
+  })
 
  it("runs geography province with the reduced query shape and leaves unrequested metrics blank", async () => {
   const requestedUrls: string[] = []

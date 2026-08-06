@@ -3194,9 +3194,14 @@ const filteredRows = useMemo(() => {
               <ExternalLink />
              </a>
             </span>
-           : column.key === "format" && !isMissingVtSyncValue(raw) ?
+           : (column.key === "format" || (table.id === "creator" && column.key === "term")) && !isMissingVtSyncValue(raw) ?
             <span
-             className={`vt-sync-format-badge is-${String(raw).toLowerCase()}`}>
+             className={`vt-sync-format-badge is-${String(raw).toLowerCase().replace(/[^a-z0-9]/g, "")}`}>
+             {text || getVtSyncContentTypeLabel(raw)}
+            </span>
+           : column.key === "privacyStatus" && !isMissingVtSyncValue(raw) ?
+            <span
+             className={`vt-sync-privacy-badge is-${String(raw).toLowerCase()}`}>
              {text}
             </span>
            : (
@@ -3217,7 +3222,7 @@ const filteredRows = useMemo(() => {
             !isMissingVtSyncValue(raw)
            ) ?
             renderTrafficSourceBadge(
-             apiValuePresentation?.title || String(raw),
+             apiValuePresentation?.title || String(text || raw),
              apiValuePresentation?.apiValue || String(raw),
             )
            : (

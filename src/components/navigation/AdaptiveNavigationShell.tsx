@@ -467,7 +467,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     >
       <span className="vt-adaptive-nav__avatar">
         {channelAvatar ? (
-          <img src={channelAvatar} alt="" width="38" height="38" />
+          <img src={channelAvatar} alt="" width="38" height="38" referrerPolicy="no-referrer" />
         ) : (
           <span className="grid size-[38px] place-items-center rounded-full border-[2px] border-black bg-white text-[10px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0_0_#000]">
             {accountInitials(channelName)}
@@ -518,7 +518,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     >
       <div className="vt-adaptive-nav__menu-status">
         <span className="vt-adaptive-nav__avatar">
-          {channelAvatar ? <img src={channelAvatar} alt="" width="38" height="38" /> : (
+          {channelAvatar ? <img src={channelAvatar} alt="" width="38" height="38" referrerPolicy="no-referrer" /> : (
             <span className="grid size-[38px] place-items-center rounded-full border-[2px] border-black bg-white text-[10px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0_0_#000]">
               {accountInitials(channelName)}
             </span>

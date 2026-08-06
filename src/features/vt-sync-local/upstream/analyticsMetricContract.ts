@@ -57,13 +57,6 @@ export const VT_SYNC_ANALYTICS_METRIC_DESCRIPTORS = [
  metric("subscribersGained", "subscribersGained", "Subscribers Gained", "Engagement", "engagement", "number", "sum"),
  metric("subscribersLost", "subscribersLost", "Subscribers Lost", "Engagement", "engagement", "number", "sum"),
 
- metric("cardClickRate", "cardClickRate", "Card Click Rate", "Cards", "cards", "percent", "calculated-rate"),
- metric("cardTeaserClickRate", "cardTeaserClickRate", "Teaser Click Rate", "Cards", "cards", "percent", "calculated-rate"),
- metric("cardImpressions", "cardImpressions", "Card Impressions", "Cards", "cards", "number", "sum"),
- metric("cardTeaserImpressions", "cardTeaserImpressions", "Teaser Impressions", "Cards", "cards", "number", "sum"),
- metric("cardClicks", "cardClicks", "Card Clicks", "Cards", "cards", "number", "sum"),
- metric("cardTeaserClicks", "cardTeaserClicks", "Teaser Clicks", "Cards", "cards", "number", "sum"),
-
  metric("estimatedRevenue", "revenue", "Estimated Revenue", "Revenue", "revenue", "currency", "sum", { requiresMonetaryScope: true }),
  metric("estimatedAdRevenue", "estimatedAdRevenue", "Estimated Ad Revenue", "Revenue", "revenue", "currency", "sum", { requiresMonetaryScope: true }),
  metric("grossRevenue", "grossRevenue", "Gross Revenue", "Revenue", "revenue", "currency", "sum", { requiresMonetaryScope: true }),
@@ -72,6 +65,13 @@ export const VT_SYNC_ANALYTICS_METRIC_DESCRIPTORS = [
  metric("playbackBasedCpm", "playbackBasedCpm", "Playback CPM", "Revenue", "revenue", "currency", "calculated-rate", { requiresMonetaryScope: true }),
  metric("adImpressions", "adImpressions", "Ad Impressions", "Revenue", "revenue", "number", "sum", { requiresMonetaryScope: true }),
  metric("cpm", "cpm", "CPM", "Revenue", "revenue", "currency", "calculated-rate", { requiresMonetaryScope: true }),
+
+ metric("cardClickRate", "cardClickRate", "Card Click Rate", "Cards", "cards", "percent", "calculated-rate"),
+ metric("cardTeaserClickRate", "cardTeaserClickRate", "Teaser Click Rate", "Cards", "cards", "percent", "calculated-rate"),
+ metric("cardImpressions", "cardImpressions", "Card Impressions", "Cards", "cards", "number", "sum"),
+ metric("cardTeaserImpressions", "cardTeaserImpressions", "Teaser Impressions", "Cards", "cards", "number", "sum"),
+ metric("cardClicks", "cardClicks", "Card Clicks", "Cards", "cards", "number", "sum"),
+ metric("cardTeaserClicks", "cardTeaserClicks", "Teaser Clicks", "Cards", "cards", "number", "sum"),
 ] as const satisfies readonly VtSyncAnalyticsMetricDescriptor[]
 
 export const VT_SYNC_REQUIRED_ANALYTICS_METRICS = VT_SYNC_ANALYTICS_METRIC_DESCRIPTORS.map(

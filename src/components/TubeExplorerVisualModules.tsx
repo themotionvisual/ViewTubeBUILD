@@ -42,6 +42,24 @@ export interface TubeExplorerVisualProps {
   csvFiles?: CsvFileWithTag[]
   trafficRows?: any[]
   trafficByDay?: any[]
+  /** Per-day channel totals sourced from the VtSync analytics table
+   *  (`snapshot.dailyMetrics`). Optional — modules should fall back to
+   *  `trafficByDay` or to summing canonical rows if this is missing. */
+  dailyMetrics?: any[]
+  /** Channel-wide lifetime/current totals derived from
+   *  `snapshot.channelTotals` and the top-level identity counts. Modules
+   *  should prefer these over ad-hoc window sums when reporting "channel
+   *  totals" (subscribers, lifetime views, lifetime revenue, etc.). */
+  channelSummary?: {
+    subscriberCount: number | null
+    videoCount: number | null
+    lifetimeViews: number | null
+    lifetimeWatchHours: number | null
+    lifetimeRevenue: number | null
+    lifetimeSubsGained: number | null
+    lifetimeLikes: number | null
+    lifetimeImpressions: number | null
+  }
   geographyRows?: any[]
   demographicRows?: Array<Record<string, unknown>>
   contentTypeRows?: Array<Record<string, unknown>>

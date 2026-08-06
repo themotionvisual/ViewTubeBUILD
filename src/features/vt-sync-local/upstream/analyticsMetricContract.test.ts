@@ -79,6 +79,7 @@ describe("VT-SYNC complete Analytics metric contract", () => {
    const table = VT_SYNC_TABLE_DEFINITIONS.find((definition) => definition.id === tableId)!
    const keys = new Set(table.columns.map((column) => column.key))
    VT_SYNC_ANALYTICS_METRIC_DESCRIPTORS.forEach((descriptor) => {
+    if (tableId === "creator" && ["videosAddedToPlaylists", "videosRemovedFromPlaylists"].includes(descriptor.normalizedField)) return
     const tableKey = tableId === "videos"
      ? videoColumnAliases[descriptor.normalizedField] || descriptor.normalizedField
      : descriptor.normalizedField

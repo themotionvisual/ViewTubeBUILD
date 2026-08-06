@@ -2302,3 +2302,30 @@ textarea.vt-textarea {
   gap: 8px; /* Adds space between comment and the input box */
   width: 100%;
 }
+/* ═══ MOBILE: single-column widgets that grow to fit their content ═══
+   On phones the grid already stacks every widget full-width (col-span-24). The
+   fixed height buckets (h-[250px] etc.) would clip taller content inside
+   overflow:hidden, so on mobile each widget grows to its content instead —
+   nothing is hidden and there is no inner scrollbar. Collapsed widgets keep
+   their fixed 48px height. */
+@media (max-width: 760px) {
+  /* Grid items default to min-width:auto, so wide inner content would push the
+     cell past the single-column track and off-screen. Clamp them to the track. */
+  /* Cap the cell to the viewport (minus the main's 16px side padding) with an
+     absolute value — a percentage would resolve against the grid track, which
+     a wide grid item can itself inflate, so it must not be relied on here. */
+  .dashboard-barrier .vt-dash-cell { min-width: 0; max-width: calc(100vw - 32px); }
+  .dashboard-barrier .vt-dash-cell .vt-widget { min-width: 0; max-width: 100%; }
+  .dashboard-barrier .vt-dash-cell:not(.is-collapsed) { height: auto !important; }
+  .dashboard-barrier .vt-dash-cell:not(.is-collapsed) .vt-widget { height: auto; }
+  .dashboard-barrier .vt-dash-cell:not(.is-collapsed) .vt-widget-content,
+  .dashboard-barrier .vt-dash-cell:not(.is-collapsed) .vt-widget-body { height: auto; overflow-y: visible; }
+  .dashboard-barrier .vt-dash-cell:not(.is-collapsed) .vt-widget-fill,
+  .dashboard-barrier .vt-dash-cell:not(.is-collapsed) .vt-widget-fill-scroll,
+  .dashboard-barrier .vt-dash-cell:not(.is-collapsed) .vt-widget-fill-body {
+    height: auto;
+    min-height: 0;
+    justify-content: flex-start;
+    overflow-y: visible;
+  }
+}

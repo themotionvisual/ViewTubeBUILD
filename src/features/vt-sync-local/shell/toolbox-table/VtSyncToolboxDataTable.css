@@ -168,12 +168,36 @@
 /* Vertical scrollbar — matches horizontal style */
 
 .vt-sync-split-table { display: flex; width: 100%; max-height: 813px; overflow: hidden; background: #fff; border-top-width: 6px; }
-.vt-sync-vertical-scrollbar { position: relative; z-index: 70; flex: 0 0 32px; width: 32px; min-width: 32px; display: grid; grid-template-rows: calc(var(--vt-group-header-height, 30px) + var(--vt-total-height, 48px) + var(--vt-column-header-height, 82px)) 58px minmax(44px, 1fr) 58px; overflow: hidden; border-right: 4px solid var(--vt-ink); background: var(--vt-active-label); }
-.vt-sync-vertical-scrollbar-header { background: var(--vt-ink); }
-.vt-sync-vertical-scrollbar button { display: grid; place-items: center; padding: 0; border: 0; background: var(--vt-active-icon); color: var(--vt-ink); cursor: pointer; touch-action: none; }
+/*
+ * The scrollbar renders when `table.verticalScrollMode === "custom"` (the
+ * default for daily / weekly / monthly and all non-traffic tables). Children
+ * stack vertically: header spacer · up-button · track (flex-grow) · down-
+ * button. `order: -1` places the scrollbar to the LEFT of the row-rail /
+ * pinned / main viewports even though it renders first in DOM order.
+ * `.is-demographics` and `.is-traffic-overview` still hide it explicitly.
+ *
+ * `!important` on `display` and `width` defends against any stale cached
+ * cascade from the earlier `display: none !important` rule that lived here.
+ */
+.vt-sync-vertical-scrollbar {
+  order: -1 !important;              /* leftmost flex item */
+  flex: 0 0 40px !important;
+  width: 40px !important;
+  min-width: 40px !important;
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+  border-right: 4px solid var(--vt-ink);
+  background: var(--vt-ink);
+  overflow: hidden;
+  visibility: visible !important;
+  z-index: 65;
+}
+.vt-sync-vertical-scrollbar-header { flex: 0 0 30px; background: var(--vt-ink); }
+.vt-sync-vertical-scrollbar button { flex: 0 0 44px; display: grid; place-items: center; padding: 0; border: 0; background: var(--vt-active-icon); color: var(--vt-ink); cursor: pointer; touch-action: none; }
 .vt-sync-vertical-scrollbar button:active { opacity: 0.7; }
 .vt-sync-vertical-scrollbar button svg { width: 24px; height: 24px; stroke-width: 4px; }
-.vt-sync-vertical-scroll-track { position: relative; margin: 8px 4px; border: 0; border-radius: 999px; background: var(--vt-ink); cursor: pointer; touch-action: none; }
+.vt-sync-vertical-scroll-track { flex: 1 1 auto; position: relative; margin: 8px 4px; border: 0; border-radius: 999px; background: var(--vt-ink); cursor: pointer; touch-action: none; min-height: 44px; }
 .vt-sync-vertical-scroll-track-window { position: absolute; inset: 2px; overflow: hidden; border-radius: 999px; pointer-events: none; }
 .vt-sync-vertical-scroll-thumb { position: absolute; right: 0; left: 0; min-height: 44px; border: 0; border-radius: 999px; background: var(--vt-active-label); cursor: grab; pointer-events: auto; touch-action: none; }
 .vt-sync-vertical-scroll-thumb:active { cursor: grabbing; }
@@ -189,7 +213,8 @@
 .vt-sync-toolbox-table.is-traffic-overview .vt-sync-main-viewport { overflow-y: hidden; }
 
 .vt-sync-toolbox-table.is-demographics .vt-sync-scrollbar,
-.vt-sync-toolbox-table.is-demographics .vt-sync-vertical-scrollbar { display: none !important; }
+.vt-sync-toolbox-table.is-demographics .vt-sync-vertical-scrollbar,
+.vt-sync-toolbox-table.is-traffic-overview .vt-sync-vertical-scrollbar { display: none !important; }
 
 .vt-sync-data-table { min-width: 100%; border-spacing: 0; border-collapse: separate; table-layout: fixed; background: #fff; font-size: 10px; }
 .vt-sync-data-table th,
@@ -335,10 +360,18 @@
 .vt-sync-link-actions button,
 .vt-sync-link-actions a { width: 28px; height: 28px; display: grid; place-items: center; padding: 0; border: 2px solid var(--vt-ink); border-radius: 5px; background: var(--vt-ink); color: #fff; }
 .vt-sync-link-actions svg { width: 14px; height: 14px; stroke-width: 2.5px; }
-.vt-sync-format-badge { position: absolute; top: 50%; left: 50%; display: inline-flex; align-items: center; justify-content: center; max-width: 50px; overflow: hidden; padding: 1px 6px; transform: translate(-50%, -50%); border: 2px solid var(--vt-ink); border-radius: 4px; font-family: "Century Gothic", "Helvetica Neue", sans-serif; font-size: 12px; line-height: 1; font-weight: 999; letter-spacing: -.03em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
-.vt-sync-format-badge.is-short { border-color: #ff99b7; background: #ffe0ea; color: #ff6e9c; }
-.vt-sync-format-badge.is-long { border-color: #22dff3; background: #ddfbff; color: #22cce2; }
-.vt-sync-format-badge.is-live { border-color: #00d66b; background: #ccffdf; color: #00b85a; }
+.vt-sync-format-badge { position: absolute; top: 50%; left: 50%; display: inline-flex; align-items: center; justify-content: center; width: auto; max-width: calc(100% - 12px); padding: 3px 10px; transform: translate(-50%, -50%); border: 2px solid currentColor; border-radius: 6px; font-family: "Century Gothic", "Helvetica Neue", sans-serif; font-size: 13px; line-height: 1; font-weight: 999; letter-spacing: -.02em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.vt-sync-format-badge.is-short,
+.vt-sync-format-badge.is-shorts { border-color: #ff99b7; background: #ffe0ea; color: #ff6e9c; }
+.vt-sync-format-badge.is-long,
+.vt-sync-format-badge.is-long-format,
+.vt-sync-format-badge.is-longformat { border-color: #22dff3; background: #ddfbff; color: #22cce2; }
+.vt-sync-format-badge.is-live,
+.vt-sync-format-badge.is-live-stream,
+.vt-sync-format-badge.is-livestream { border-color: #00d66b; background: #ccffdf; color: #00b85a; }
+.vt-sync-format-badge.is-unspecified,
+.vt-sync-format-badge.is-creatorcontenttypeunspecified,
+.vt-sync-format-badge.is-unknown { border-color: #f59e0b; background: #fef3c7; color: #d97706; }
 
 .vt-sync-demographic-badge {
   display: inline-flex;

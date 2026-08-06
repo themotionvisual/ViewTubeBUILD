@@ -150,7 +150,8 @@ const VerificationExplainerWidget: React.FC<{
   fontWeight: 1000,
   textTransform: "uppercase",
   textDecoration: "none",
-  whiteSpace: "nowrap",
+  textAlign: "center",
+  minWidth: 0,
  }
 
  const ctaSecondaryStyle = (bg: string): React.CSSProperties => ({
@@ -169,7 +170,7 @@ const VerificationExplainerWidget: React.FC<{
   fontWeight: 1000,
   textTransform: "uppercase",
   textDecoration: "none",
-  whiteSpace: "nowrap",
+  minWidth: 0,
  })
 
  const features: Array<{ Icon: typeof TrendingUp; title: string; desc: string; bg: string }> = [
@@ -267,13 +268,13 @@ const VerificationExplainerWidget: React.FC<{
      </div>
 
      {/* 4. Navigation Buttons */}
-     <nav aria-label="VIEWTUBE account and help links" style={{ flex: "2 1 280px", display: "flex", flexDirection: "column", gap: "7px" }}>
+     <nav aria-label="VIEWTUBE account and help links" style={{ flex: "2 1 280px", minWidth: 0, display: "flex", flexDirection: "column", gap: "7px" }}>
       <div style={{ display: "flex", flex: 1 }}>
        <a href="/account/connect" onClick={event => handleNavigate(event, "/account/connect")} style={{...ctaPrimaryStyle, flex: 1}}>
         <Rocket size={16} aria-hidden="true" /> Connect your channel
        </a>
       </div>
-      <div style={{ display: "flex", flex: 1, gap: "7px" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", flex: 1, gap: "7px" }}>
        <a href="/about" onClick={event => handleNavigate(event, "/about")} style={ctaSecondaryStyle("#33D6EA")}>About</a>
        <a href="/user-guide" onClick={event => handleNavigate(event, "/user-guide")} style={ctaSecondaryStyle("#FFEE57")}>User Guide</a>
        <a href="/privacy.html" style={ctaSecondaryStyle("#FF83EA")}>Privacy</a>

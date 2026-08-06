@@ -249,18 +249,17 @@ describe("VT Sync table contracts", () => {
   expect(formatsTable.columns.filter((column) => column.group === "Format Share").map((column) => column.key))
    .toEqual(expect.arrayContaining(["formatViewShare", "formatWatchTimeShare"]))
   expect(formatsTable.columns.filter((column) => column.group === "Video Table Totals").map((column) => column.key))
-   .toEqual([
-    "videoFormatViews",
-    "videoFormatWatchTime",
-    "videoFormatAvgViewDuration",
-    "videoFormatAvgPercentageViewed",
-    "videoFormatRevenue",
-    "videoFormatLikes",
-    "videoFormatSubscribers",
-    "videoFormatComments",
-    "videoFormatSaves",
-    "videoFormatShares",
-   ])
+    .toEqual([
+     "videoFormatViews",
+     "videoFormatWatchTime",
+     "videoFormatAvgViewDuration",
+     "videoFormatAvgPercentageViewed",
+     "videoFormatRevenue",
+     "videoFormatLikes",
+     "videoFormatSubscribers",
+     "videoFormatComments",
+     "videoFormatShares",
+    ])
 
   const rows = tableRows(snapshot, formatsTable)
   const shorts = rows.find((row) => row.term === "Shorts")!

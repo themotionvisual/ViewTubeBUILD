@@ -3659,15 +3659,18 @@ type TrafficPlotOffset = { top?: number; left?: number; width?: number; height?:
  * consumes so the stacked block gets soft corners. Always emits a shape - an unresolved
  * clip-path reference would blank the areas out.
  */
-const TrafficPlotClipDefs: React.FC<{ offset?: TrafficPlotOffset }> = ({ offset }) => {
- const width = offset?.width ?? 0
- const height = offset?.height ?? 0
+const TrafficPlotClipDefs: React.FC<{ offset?: TrafficPlotOffset; width?: number; height?: number }> = (props) => {
+ const offset = props.offset
+ const width = offset?.width ?? props.width ?? 0
+ const height = offset?.height ?? props.height ?? 0
+ const left = offset?.left ?? 0
+ const top = offset?.top ?? 0
  const measured = width > 0 && height > 0
  return (
   <defs>
    <clipPath id="tse-plot-clip">
     {measured
-     ? <rect x={offset?.left ?? 0} y={offset?.top ?? 0} width={width} height={height} rx={7} ry={7} />
+     ? <rect x={left} y={top} width={width} height={height} rx={7} ry={7} />
      : <rect x={0} y={0} width={100000} height={100000} />}
    </clipPath>
   </defs>
@@ -4033,7 +4036,7 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
   () => canonicalTrafficTimeline(trafficRows || []),
   [trafficRows],
  )
- const trafficTimeline = useMemo(() => {
+ const rawTimeline = useMemo(() => {
   if (trafficDayPoints.length > 0) {
    const threshold = trafficWindowThreshold(selectedWindow)
    const windowed = trafficDayPoints.filter((row) => !threshold || row.timestamp >= threshold)
@@ -4053,6 +4056,22 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
   if (canonicalTimeline.length > 0) return canonicalTimeline
   return useVideoTrafficFallback ? ds.trafficTimeline : []
  }, [canonicalTimeline, ds.trafficTimeline, selectedFormat, selectedWindow, trafficDayPoints, useVideoTrafficFallback])
+
+ const trafficTimeline = useMemo(() => {
+  if (rawTimeline.length === 0) return []
+  if (rawTimeline.length === 1) {
+   const single = rawTimeline[0]
+   const parsed = new Date(single.bucket)
+   const prevBucket = Number.isFinite(parsed.getTime())
+    ? formatTrafficDayBucketKey(new Date(parsed.getFullYear(), parsed.getMonth() - 5, 1).getTime())
+    : "365d"
+   return [
+    { bucket: prevBucket, shares: single.shares },
+    single,
+   ]
+  }
+  return rawTimeline
+ }, [rawTimeline])
 
  const keys = Array.from(new Set(trafficTimeline.flatMap((t) => Object.keys(t.shares))))
   .map((key) => ({
@@ -5768,3 +5787,15 @@ export const SignalMatrixModule: React.FC<GChartProps> = ({ data }) => {
   </SubToolboxChartModule>
  )
 }
+
+/* ═══════════════════════════════════════════════
+   DATA VISUALS 2 — PORTED ADVANCED VISUAL MODULES
+   ═══════════════════════════════════════════════ */
+export { TrajectoryForecasterModule as TrajectoryForecaster } from "./DataVisuals/modules2/TrajectoryForecaster"
+export { MultiMetricTimelineModule as MultiMetricTimeline } from "./DataVisuals/modules2/MultiMetricTimeline"
+export { WeeklySparklinesModule as WeeklySparklines } from "./DataVisuals/modules2/WeeklySparklines"
+export { RevenueMosaicModule as RevenueMosaic } from "./DataVisuals/modules2/RevenueMosaic"
+export { SearchTermGravityModule as SearchTermGravity } from "./DataVisuals/modules2/SearchTermGravity"
+export { ChannelBigBangTimelineModule as ChannelBigBangTimeline } from "./DataVisuals/modules2/ChannelBigBangTimeline"
+export { VideoPerformanceFingerprintModule as VideoPerformanceFingerprint } from "./DataVisuals/modules2/VideoPerformanceFingerprint"
+

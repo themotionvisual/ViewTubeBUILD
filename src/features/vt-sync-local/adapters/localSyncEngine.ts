@@ -228,11 +228,19 @@ const mapAnalyticsTimeMetricRow = (
 })
 
 export const GEOGRAPHY_PROVINCE_SAFE_METRICS = [
- "views",
  "engagedViews",
+ "views",
+ "redViews",
  "estimatedMinutesWatched",
+ "estimatedRedMinutesWatched",
  "averageViewDuration",
  "averageViewPercentage",
+ "cardClickRate",
+ "cardTeaserClickRate",
+ "cardImpressions",
+ "cardTeaserImpressions",
+ "cardClicks",
+ "cardTeaserClicks",
 ] as const
 
 const numberOrZero = (value: unknown): number => {
@@ -651,9 +659,12 @@ export const preserveVtSyncRowsForFailedDateWindows = (
  const failedWindows = (diagnostics || []).filter((entry) =>
   (entry.status === "failed" || !!entry.error) && entry.startDate && entry.endDate,
  )
+ const fetchedDates = new Set(fetchedRows.map((row) => String(row[fetchedDateKey] || row[previousDateKey] || "")))
  const preserved = previousRows.filter((row) => {
   const date = String(row[previousDateKey] || "")
-  return failedWindows.some((window) => date >= String(window.startDate) && date <= String(window.endDate))
+  const inFailedWindow = failedWindows.some((window) => date >= String(window.startDate) && date <= String(window.endDate))
+  const notFetched = !fetchedDates.has(date)
+  return inFailedWindow || notFetched
  })
  return mergeRowsByKey(preserved, fetchedRows, (row) => String(row[fetchedDateKey] || row[previousDateKey] || ""))
   .sort((a, b) => String(b[fetchedDateKey] || b[previousDateKey] || "").localeCompare(String(a[fetchedDateKey] || a[previousDateKey] || "")))
@@ -2239,7 +2250,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    let rowsWritten = 0
    let segmentsPartial = false
    const segmentRuns: Array<[string, keyof VtSyncSnapshot, string, readonly string[], string, string?, number?]> = [
-    ["audience_demographics", "demographics", "ageGroup,gender", ["viewerPercentage"], "gender,ageGroup"],
+    ["audience_demographics", "demographics", "ageGroup,gender", ["viewerPercentage"], ""],
     ["demographics_age", "demographicsByAge", "ageGroup", ["viewerPercentage"], ""],
     ["demographics_gender", "demographicsByGender", "gender", ["viewerPercentage"], ""],
     ["audience_watch_behavior", "audienceWatchBehavior", "audienceType", ["views", "estimatedMinutesWatched", "averageViewDuration"], "-views"],
@@ -2261,11 +2272,15 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     if (usesCompleteContract) {
     const bundleResults: BundleResult[] = []
     for (const bundle of VT_SYNC_ANALYTICS_METRIC_BUNDLES) {
+      const bundleMetrics = categoryId === "creator_content_type"
+       ? bundle.metrics.filter((m) => m !== "videosAddedToPlaylists" && m !== "videosRemovedFromPlaylists")
+       : [...bundle.metrics]
+      if (bundleMetrics.length === 0) continue
       const bundleResult = categoryId === "creator_content_type"
        ? await runLifetimeMonthWindowBundle({
         token,
         id: `${categoryId}_${bundle.id}`,
-        metrics: [...bundle.metrics],
+        metrics: bundleMetrics,
         dimensions,
         sort,
         maxResults: 500,
@@ -2292,7 +2307,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
         phase: "segments",
         categoryId,
         bundleId: bundle.id,
-        requestedMetrics: bundle.metrics,
+        requestedMetrics: bundleMetrics,
         result: bundleResult,
        }),
       ]
@@ -2312,7 +2327,9 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      result = await runAnalyticsBundle({ token, id: `${categoryId}_core`, metrics: [...metrics], dimensions, sort, maxResults, filters, startDate: channelStartDate, allowFallback: false })
     }
     if (!result.rows || result.error) segmentsPartial = true
-    const attemptedMetrics = usesCompleteContract ? [...VT_SYNC_REQUIRED_ANALYTICS_METRICS] : [...metrics]
+    const attemptedMetrics = categoryId === "creator_content_type"
+     ? VT_SYNC_REQUIRED_ANALYTICS_METRICS.filter((m) => m !== "videosAddedToPlaylists" && m !== "videosRemovedFromPlaylists")
+     : usesCompleteContract ? [...VT_SYNC_REQUIRED_ANALYTICS_METRICS] : [...metrics]
     const missingMetrics = attemptedMetrics.filter((metric) => !result.columns.includes(metric))
     if (missingMetrics.length) segmentsPartial = true
     const rawRows = result.rows || []
@@ -2489,7 +2506,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   if (shouldSync(selected, "traffic_day")) {
    updatePhase(progress, "traffic_day", { status: "running", startedAt: new Date().toISOString() }, onProgress)
    const trafficDayCoreMetrics = ["views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"]
-   const trafficDaySupplementalMetrics = ["subscribersGained", "shares", "likes"]
+   const trafficDaySupplementalMetrics: string[] = []
    const combined = await runAnalyticsBundle({
     token,
     id: "traffic_day_combined",

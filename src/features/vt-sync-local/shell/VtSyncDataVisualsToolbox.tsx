@@ -36,15 +36,23 @@ import {
  type VtSyncVisualModuleSpec,
  type VtSyncVisualProps,
 } from "./VtSyncVisualFrame"
+import { WeeklySparklinesModule } from "../../../components/DataVisuals/modules2/WeeklySparklines"
+import { RevenueMosaicModule } from "../../../components/DataVisuals/modules2/RevenueMosaic"
+import { SearchTermGravityModule } from "../../../components/DataVisuals/modules2/SearchTermGravity"
+import { VideoPerformanceFingerprintModule } from "../../../components/DataVisuals/modules2/VideoPerformanceFingerprint"
+import { ChannelBigBangTimelineModule } from "../../../components/DataVisuals/modules2/ChannelBigBangTimeline"
+import { TrajectoryForecasterModule } from "../../../components/DataVisuals/modules2/TrajectoryForecaster"
+import { MultiMetricTimelineModule } from "../../../components/DataVisuals/modules2/MultiMetricTimeline"
+import { Vt2ThemeContext, type Vt2ThemeMode } from "../../../components/DataVisuals/modules2/theme"
 
 type VtSyncVisualModuleDefinition = VtSyncVisualModuleSpec & {
- group: "core" | "tube-explorer"
+ group: "core" | "tube-explorer" | "vt2"
  delayMs: number
 }
 
 type LegacyVisualModuleDefinition = {
  id: string
- group: "core" | "tube-explorer"
+ group: "core" | "tube-explorer" | "vt2"
  delayMs: number
  render: (props: TubeExplorerVisualProps) => React.ReactNode
 }
@@ -96,7 +104,29 @@ const TUBE_EXPLORER_MODULES: LegacyVisualModuleDefinition[] =
   render: entry.render,
  }))
 
+// ── Data Visuals 2 modules (ported from source viz app, wired to VT-Sync) ──
+// Each entry keeps the source's neo-brutalist ChartModule shell; the palette
+// picks up whichever Vt2 theme mode is active (Preserved vs Adapted). New
+// modules land in this array and automatically show up in the second toolbox
+// (Data Visuals 2) because they aren't in PRIMARY_MODULE_IDS.
+const VT2_MODULES: LegacyVisualModuleDefinition[] = [
+ { id: "vt2-weekly-sparklines", group: "vt2", delayMs: 40, render: ({ data, trafficByDay, dailyMetrics, channelSummary }) => <WeeklySparklinesModule data={data} trafficByDay={trafficByDay} dailyMetrics={dailyMetrics} channelSummary={channelSummary} /> },
+ { id: "vt2-revenue-mosaic", group: "vt2", delayMs: 80, render: ({ data }) => <RevenueMosaicModule data={data} /> },
+ { id: "vt2-search-term-gravity", group: "vt2", delayMs: 120, render: ({ data, trafficRows }) => <SearchTermGravityModule data={data} trafficRows={trafficRows} /> },
+ { id: "vt2-video-fingerprint", group: "vt2", delayMs: 160, render: ({ data }) => <VideoPerformanceFingerprintModule data={data} /> },
+ { id: "vt2-channel-big-bang", group: "vt2", delayMs: 200, render: ({ data }) => <ChannelBigBangTimelineModule data={data} /> },
+ { id: "vt2-trajectory-forecaster", group: "vt2", delayMs: 240, render: ({ data }) => <TrajectoryForecasterModule data={data} /> },
+ { id: "vt2-multi-metric-timeline", group: "vt2", delayMs: 280, render: ({ data, trafficByDay, dailyMetrics }) => <MultiMetricTimelineModule data={data} trafficByDay={trafficByDay} dailyMetrics={dailyMetrics} /> },
+]
+
 const sourceTablesForVisual = (id: string): readonly string[] => {
+ if (id.startsWith("vt2-weekly-sparklines")) return ["videos", "traffic_day"]
+ if (id.startsWith("vt2-revenue-mosaic")) return ["videos"]
+ if (id.startsWith("vt2-search-term-gravity")) return ["traffic", "search"]
+ if (id.startsWith("vt2-video-fingerprint")) return ["videos"]
+ if (id.startsWith("vt2-channel-big-bang")) return ["videos"]
+ if (id.startsWith("vt2-trajectory-forecaster")) return ["videos"]
+ if (id.startsWith("vt2-multi-metric-timeline")) return ["videos", "traffic_day"]
  if (id.includes("traffic") || id.includes("clock-radial")) return ["traffic", "traffic_day"]
  if (id.includes("format") || id.includes("shorts-vs-longs")) return ["creator", "videos"]
  if (id.includes("keyword") || id.includes("word-network")) return ["videos", "search"]
@@ -137,6 +167,7 @@ const visualRenderer = (
 const VISUAL_MODULES: VtSyncVisualModuleDefinition[] = [
  ...CORE_VISUAL_MODULES,
  ...TUBE_EXPLORER_MODULES,
+ ...VT2_MODULES,
 ].map((module) => ({
  id: module.id,
  group: module.group,
@@ -293,6 +324,8 @@ const VtSyncDataVisualsContent: React.FC<{
   csvFiles: visualData.csvFiles,
   trafficRows: visualData.canonicalContext.trafficRows,
   trafficByDay: visualData.trafficByDay,
+  dailyMetrics: visualData.dailyMetrics,
+  channelSummary: visualData.channelSummary,
   geographyRows: visualData.canonicalContext.geographyRows,
   demographicRows: visualData.canonicalContext.demographicRows,
   contentTypeRows: (snapshot.creatorContentTypes as Array<Record<string, unknown>>) || [],
@@ -366,9 +399,37 @@ const VtSyncDataVisualsContent: React.FC<{
  )
 }
 
+// Small pill toggle for the Preserved ↔ Adapted theme applied to VT2 modules.
+const Vt2ThemeToggle: React.FC<{
+ mode: Vt2ThemeMode
+ onChange: (next: Vt2ThemeMode) => void
+}> = ({ mode, onChange }) => {
+ const pill = (label: string, value: Vt2ThemeMode, bg: string) => (
+  <button
+   type="button"
+   onClick={() => onChange(value)}
+   className="rounded-full border-[3px] border-black px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] transition"
+   style={{
+    background: mode === value ? bg : "transparent",
+    color: mode === value ? "#000" : "rgba(0,0,0,0.55)",
+   }}>
+   {label}
+  </button>
+ )
+ return (
+  <div className="mb-4 flex items-center gap-3 rounded-full border-[3px] border-black bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em]">
+   <span className="opacity-60">VT2 Theme</span>
+   {pill("Preserved", "preserved", "#FFDA47")}
+   {pill("Adapted", "adapted", "#36E0F6")}
+   <span className="opacity-45">Applies only to Data Visuals 2 modules</span>
+  </div>
+ )
+}
+
 export const VtSyncDataVisualsToolbox: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snapshot }) => {
  const [isOpen1, setIsOpen1] = useState(false)
  const [isOpen2, setIsOpen2] = useState(false)
+ const [vt2Theme, setVt2Theme] = useState<Vt2ThemeMode>("preserved")
 
  return (
   <div className="flex flex-col gap-6">
@@ -399,7 +460,10 @@ export const VtSyncDataVisualsToolbox: React.FC<{ snapshot: VtSyncSnapshot }> = 
     onToggle={() => setIsOpen2((open) => !open)}
     unmountWhenClosed
     contentClassName="bg-[#f4f1eb] p-6">
-    <VtSyncDataVisualsContent key={`t2:${snapshot.snapshotId}:${snapshot.capturedAt}`} snapshot={snapshot} modules={SECONDARY_VISUAL_MODULES} />
+    <Vt2ThemeToggle mode={vt2Theme} onChange={setVt2Theme} />
+    <Vt2ThemeContext.Provider value={vt2Theme}>
+     <VtSyncDataVisualsContent key={`t2:${snapshot.snapshotId}:${snapshot.capturedAt}:${vt2Theme}`} snapshot={snapshot} modules={SECONDARY_VISUAL_MODULES} />
+    </Vt2ThemeContext.Provider>
    </ToolboxScaffold>
   </div>
  )
