@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Copy } from "lucide-react"
 import { useBrain } from "../../../context/useBrain"
@@ -18,6 +18,9 @@ import {
  applyVtSyncPrivacyFilters,
  readVtSyncPrivacyFilters,
  type VtSyncPrivacyFilters,
+ loadVtSyncManualImports,
+ mergeVtSyncManualImportsIntoSnapshot,
+ type VtSyncManualImportState,
 } from ".."
 import { ToolboxScaffold } from "../../../components/Toolbox"
 import { VtSyncControllerPanel } from "./VtSyncControllerPanel"
@@ -348,9 +351,28 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
  const account = useUnifiedAccount()
  const [snapshot, setSnapshot] = useState<VtSyncSnapshot>(() => getVtSyncSnapshot())
  const [privacyFilters, setPrivacyFilters] = useState<VtSyncPrivacyFilters>(() => readVtSyncPrivacyFilters())
+ const [manualImports, setManualImports] = useState<VtSyncManualImportState>({ rowsByTableId: {}, capturedAtByTableId: {} })
+
+ const refreshManualImports = useCallback(async () => {
+  try {
+   const next = await loadVtSyncManualImports()
+   setManualImports(next)
+  } catch {
+   // IndexedDB may be unavailable (private browsing, quota exhaustion). Leave state as-is.
+  }
+ }, [])
+
+ useEffect(() => {
+  void refreshManualImports()
+ }, [refreshManualImports])
+
+ const mergedSnapshot = useMemo(
+  () => mergeVtSyncManualImportsIntoSnapshot(snapshot, manualImports),
+  [manualImports, snapshot],
+ )
  const consumerSnapshot = useMemo(
-  () => applyVtSyncPrivacyFilters(snapshot, privacyFilters),
-  [privacyFilters, snapshot],
+  () => applyVtSyncPrivacyFilters(mergedSnapshot, privacyFilters),
+  [mergedSnapshot, privacyFilters],
  )
  const [syncProgress, setSyncProgress] = useState<VtSyncLocalSyncProgress | null>(null)
  const [syncError, setSyncError] = useState<string>("")
@@ -490,7 +512,12 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
       <ProgressRail progress={syncProgress} datasetFreshness={snapshot.datasetFreshness} />
      </div>
     </section>
-    <VtSyncToolboxDataTable snapshot={snapshot} privacyFilters={privacyFilters} onPrivacyFiltersChange={updatePrivacyFilters} />
+    <VtSyncToolboxDataTable
+     snapshot={snapshot}
+     privacyFilters={privacyFilters}
+     onPrivacyFiltersChange={updatePrivacyFilters}
+     onManualImportsChange={refreshManualImports}
+    />
     <VtSyncDataVisualsToolbox snapshot={consumerSnapshot} />
    </div>
   </div>

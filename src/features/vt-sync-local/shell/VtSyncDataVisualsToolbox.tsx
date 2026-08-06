@@ -189,6 +189,18 @@ const THREE_UP_VISUAL_ROW_IDS = new Set([
  "watch-time-distribution",
 ])
 
+// Coarse-pointer devices (touch phones/tablets) tighten the reveal window so
+// mounting a chart doesn't cascade through every neighbour off-screen. Desktop
+// keeps the generous margin so no scroll flash appears.
+const detectCoarsePointer = (): boolean => {
+ if (typeof window === "undefined" || !window.matchMedia) return false
+ try {
+  return window.matchMedia("(pointer: coarse)").matches
+ } catch {
+  return false
+ }
+}
+
 const RevealOnView: React.FC<{
  delayMs?: number
  estimatedHeight?: number
@@ -199,6 +211,7 @@ const RevealOnView: React.FC<{
 
  useEffect(() => {
   if (!node) return
+  const isCoarsePointer = detectCoarsePointer()
   const observer = new IntersectionObserver(
    (entries) => {
     if (entries.some((entry) => entry.isIntersecting)) {
@@ -206,12 +219,16 @@ const RevealOnView: React.FC<{
      observer.disconnect()
     }
    },
-   { threshold: 0.01, rootMargin: "160px 0px" },
+   { threshold: 0.01, rootMargin: isCoarsePointer ? "40px 0px" : "160px 0px" },
   )
   observer.observe(node)
   return () => observer.disconnect()
  }, [node])
 
+ // `content-visibility: auto` lets the browser skip layout+paint for panels
+ // that are still below the fold — the single biggest mobile freeze win for a
+ // grid of ~24 Recharts modules. We pair it with `contain-intrinsic-size` so
+ // the scrollbar stays honest before a panel has been measured.
  return (
   <div
    ref={setNode}
@@ -221,7 +238,9 @@ const RevealOnView: React.FC<{
     transform: visible ? "translateY(0px)" : "translateY(14px)",
     transition: "opacity 420ms ease, transform 420ms ease",
     transitionDelay: `${delayMs}ms`,
-   }}>
+    contentVisibility: "auto",
+    containIntrinsicSize: `${estimatedHeight}px`,
+   } as React.CSSProperties}>
    {visible ? children : (
     <div
      className="flex items-center justify-center border-[3px] border-dashed border-black bg-white text-[11px] font-black uppercase tracking-[0.14em] text-black/35"

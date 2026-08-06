@@ -269,6 +269,22 @@ export const fetchUnifiedAccountSnapshot = async (): Promise<UnifiedAccountSnaps
   }
 }
 
+// Touch devices (phones/tablets) can't reliably keep a popup+opener
+// relationship alive across a Google OAuth round-trip: mobile browsers block
+// popups, open them as detached tabs, or lose window.opener before postMessage
+// can arrive. Full-page redirects avoid the whole handshake — the server's
+// returnTo lands the user back on the page that started the intent.
+const shouldPreferAccountRedirect = (): boolean => {
+  if (typeof window === "undefined" || !window.matchMedia) return false
+  try {
+    const coarsePointer = window.matchMedia("(pointer: coarse)").matches
+    const narrowViewport = window.matchMedia("(max-width: 760px)").matches
+    return coarsePointer || narrowViewport
+  } catch {
+    return false
+  }
+}
+
 export const beginAccountIntent = async (
   intent: AccountIntent,
   returnTo = typeof window !== "undefined"
@@ -284,7 +300,9 @@ export const beginAccountIntent = async (
     throw new Error(ACCOUNT_SERVER_UNAVAILABLE_ERROR)
   }
 
-  const popup = openAccountPopup()
+  const sanitizedReturnTo = sanitizeInternalReturnTo(returnTo)
+  const useRedirect = shouldPreferAccountRedirect()
+  const popup = useRedirect ? null : openAccountPopup()
   try {
     const response = await fetch(accountUrl("/api/account/auth/start"), {
       method: "POST",
@@ -292,7 +310,7 @@ export const beginAccountIntent = async (
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({
         intent,
-        returnTo: sanitizeInternalReturnTo(returnTo),
+        returnTo: sanitizedReturnTo,
       }),
     })
     if (response.status === 404) {
@@ -308,13 +326,22 @@ export const beginAccountIntent = async (
       markUnifiedAccountServerUnavailable()
       throw new Error(ACCOUNT_SERVER_UNAVAILABLE_ERROR)
     }
+    if (!popup) {
+      // Full-page redirect path (mobile). Returns a never-resolving promise
+      // because the tab is being torn down for the navigation.
+      window.location.href = payload.authorizationUrl
+      await new Promise(() => {})
+      return
+    }
     popup.location.href = payload.authorizationUrl
-    await waitForAccountPopupMessage(popup, sanitizeInternalReturnTo(returnTo))
+    await waitForAccountPopupMessage(popup, sanitizedReturnTo)
   } catch (error) {
-    try {
-      popup.close()
-    } catch {
-      // ignore popup close failures
+    if (popup) {
+      try {
+        popup.close()
+      } catch {
+        // ignore popup close failures
+      }
     }
     if (
       error instanceof Error &&

@@ -126,11 +126,28 @@ const setImplicitSession = (accessToken: string, expiresInSeconds: number) => {
   });
 };
 
+// Mobile browsers routinely block popups or open them as tabs that lose the
+// opener relationship, so the popup+postMessage handshake times out and Sync
+// looks broken to the user. Redirect mode threads through the same OAuth flow
+// without needing a live opener window.
+const shouldPreferRedirectFlow = (): boolean => {
+  if (typeof window === "undefined" || !window.matchMedia) return false
+  try {
+    const coarsePointer = window.matchMedia("(pointer: coarse)").matches
+    const narrowViewport = window.matchMedia("(max-width: 760px)").matches
+    return coarsePointer || narrowViewport
+  } catch {
+    return false
+  }
+}
+
 /**
  * Implicit Grant Flow — works entirely client-side, no backend needed.
  * Opens a popup or redirects to Google, user authenticates, Google redirects back with token in the URL hash.
  */
-export const login = async (mode: 'popup' | 'redirect' = 'popup'): Promise<void> => {
+export const login = async (mode?: 'popup' | 'redirect'): Promise<void> => {
+  const effectiveMode: 'popup' | 'redirect' =
+    mode || (shouldPreferRedirectFlow() ? 'redirect' : 'popup')
   if (isUnifiedAccountServerEnabled()) {
     try {
       await beginAccountIntent('connect_channel')
@@ -175,7 +192,7 @@ export const login = async (mode: 'popup' | 'redirect' = 'popup'): Promise<void>
   authUrl.searchParams.append('include_granted_scopes', 'true');
   authUrl.searchParams.append('prompt', 'consent');
 
-  if (mode === 'redirect') {
+  if (effectiveMode === 'redirect') {
     window.location.href = authUrl.toString();
     return new Promise(() => {}); // Will be reloaded by redirect
   }
