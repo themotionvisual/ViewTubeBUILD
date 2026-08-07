@@ -267,69 +267,85 @@ export const SubToolboxChartModule: React.FC<
         maxWidth: layout?.moduleWidth ?? "100%",
       }}
     >
-      <div 
-        className={`${headerBorderClass} flex items-stretch min-h-[76px] ${collapsible ? 'cursor-pointer' : ''}`}
+      {/*
+        Header layout is width-adaptive:
+        - On landscape / tablet / desktop (≥ 640 px) it stays a single flex row:
+          [icon square] [title/subtitle] [controllers pinned right].
+        - On portrait phones the controllers used to eat a fixed ~195 px on the
+          right, which left ~90 px for the title and forced "CHANNEL PROGRESS"
+          to `break-words` character-by-character (one letter per row). Below
+          640 px we now stack vertically: [icon + title/subtitle] on top,
+          controllers on their own row underneath, spanning the full width.
+      */}
+      <div
+        className={`${headerBorderClass} flex flex-col sm:flex-row sm:items-stretch min-h-[76px] ${collapsible ? 'cursor-pointer' : ''}`}
         onClick={collapsible ? setOpen : undefined}
       >
-        {/* self-stretch fills the header's full height (no white frame showing beneath),
-            and aspect-square drives the width off that height so the block stays square. */}
         <div
-          className="self-stretch aspect-square min-w-[76px] shrink-0 flex-none border-r-[4px] border-black flex items-center justify-center"
-          style={{ background: tokens.iconBlockBg, borderColor: tokens.iconBlockBorder }}
-        >
-          <span className="[&_svg]:h-8 [&_svg]:w-8">{header.icon}</span>
-        </div>
-        <div
-          className="flex-1 min-w-0 pl-3 pr-0 py-0 flex items-stretch justify-between gap-0"
+          className="flex items-stretch flex-1 min-w-0"
           style={{ background: tokens.headerBandBg }}
         >
-          <div className="min-w-0 py-2 flex flex-col justify-center">
-            <div className={`max-w-full font-[1000] uppercase tracking-[0em] break-words ${header.titleClassName ?? "text-[clamp(24px,3.5vw,42px)] leading-[0.88]"}`}>
+          {/* self-stretch fills the header's full height (no white frame showing beneath),
+              and aspect-square drives the width off that height so the block stays square. */}
+          <div
+            className="self-stretch aspect-square min-w-[76px] shrink-0 flex-none border-r-[4px] border-black flex items-center justify-center"
+            style={{ background: tokens.iconBlockBg, borderColor: tokens.iconBlockBorder }}
+          >
+            <span className="[&_svg]:h-8 [&_svg]:w-8">{header.icon}</span>
+          </div>
+          <div className="min-w-0 flex-1 pl-3 pr-2 py-2 flex flex-col justify-center">
+            <div className={`max-w-full font-[1000] uppercase tracking-[0em] ${header.titleClassName ?? "text-[clamp(20px,5vw,42px)] leading-[0.88]"}`}>
               {header.title}
             </div>
-            <div className="max-w-full text-[clamp(10px,1.1vw,14px)] font-black uppercase tracking-[0.069em] opacity-80 truncate">
+            <div className="max-w-full text-[clamp(10px,2.2vw,14px)] font-black uppercase tracking-[0.069em] opacity-80 truncate">
               {header.subtitle}
             </div>
           </div>
-
-          <div className="flex shrink-0 items-stretch" onClick={(event) => event.stopPropagation()}>
-            {controlBox?.rightInlineControls ? (
-              <div className="flex items-center justify-end gap-2 pr-2 py-2">
-                {controlBox.rightInlineControls}
-              </div>
-            ) : null}
-
-            {controllerRows ? (
-              <VisualModuleController rows={controllerRows} width={controllerWidth ?? 195} density={controllerDensity ?? "normal"} />
-            ) : controlBox ? (
-              <div className="flex shrink-0 relative h-full">
-                <VisualModuleController width={controllerWidth ?? 195} density={controllerDensity ?? "normal"} rows={[
-                  ...(controlBox.count !== undefined ? [
-                    { type: "number" as const, value: controlBox.count, bgTone: tokens.iconBlockBg, fgTone: "#000000", onPrev: controlBox.onCountPrev, onNext: controlBox.onCountNext }
-                  ] : []),
-                  ...(controlBox.dropdown ? [{
-                     type: "dropdown" as const,
-                     value: controlBox.dropdown.value,
-                     options: controlBox.dropdown.options,
-                     onSelect: controlBox.dropdown.onSelect,
-                     bgTone: "#FFFFFF",
-                     fgTone: "#000000"
-                  }] : (controlBox.count !== undefined ? [{ type: "label" as const, value: controlBox.countLabel ?? "BEST", bgTone: "#FFFFFF", fgTone: tokens.iconBlockBg }] : [])),
-                  ...(controlBox.dropdown2 ? [{
-                     type: "dropdown" as const,
-                     value: controlBox.dropdown2.value,
-                     options: controlBox.dropdown2.options,
-                     onSelect: controlBox.dropdown2.onSelect,
-                     bgTone: "#FFFFFF",
-                     fgTone: "#000000"
-                  }] : []),
-                  { type: "label" as const, value: controlBox.countUnit ?? "VIDEOS", bgTone: "#FFFFFF", fgTone: "#000000" }
-                ]} />
-                {controlBox.extraActions}
-              </div>
-            ) : null}
-          </div>
         </div>
+
+        {(controlBox?.rightInlineControls || controllerRows || controlBox) ? (
+        <div
+          className="flex shrink-0 items-stretch border-t-[4px] sm:border-t-0 border-black w-full sm:w-auto overflow-x-auto"
+          style={{ background: tokens.headerBandBg }}
+          onClick={(event) => event.stopPropagation()}
+        >
+          {controlBox?.rightInlineControls ? (
+            <div className="flex items-center justify-end gap-2 pr-2 py-2">
+              {controlBox.rightInlineControls}
+            </div>
+          ) : null}
+
+          {controllerRows ? (
+            <VisualModuleController rows={controllerRows} width={controllerWidth ?? 195} density={controllerDensity ?? "normal"} />
+          ) : controlBox ? (
+            <div className="flex shrink-0 relative h-full">
+              <VisualModuleController width={controllerWidth ?? 195} density={controllerDensity ?? "normal"} rows={[
+                ...(controlBox.count !== undefined ? [
+                  { type: "number" as const, value: controlBox.count, bgTone: tokens.iconBlockBg, fgTone: "#000000", onPrev: controlBox.onCountPrev, onNext: controlBox.onCountNext }
+                ] : []),
+                ...(controlBox.dropdown ? [{
+                   type: "dropdown" as const,
+                   value: controlBox.dropdown.value,
+                   options: controlBox.dropdown.options,
+                   onSelect: controlBox.dropdown.onSelect,
+                   bgTone: "#FFFFFF",
+                   fgTone: "#000000"
+                }] : (controlBox.count !== undefined ? [{ type: "label" as const, value: controlBox.countLabel ?? "BEST", bgTone: "#FFFFFF", fgTone: tokens.iconBlockBg }] : [])),
+                ...(controlBox.dropdown2 ? [{
+                   type: "dropdown" as const,
+                   value: controlBox.dropdown2.value,
+                   options: controlBox.dropdown2.options,
+                   onSelect: controlBox.dropdown2.onSelect,
+                   bgTone: "#FFFFFF",
+                   fgTone: "#000000"
+                }] : []),
+                { type: "label" as const, value: controlBox.countUnit ?? "VIDEOS", bgTone: "#FFFFFF", fgTone: "#000000" }
+              ]} />
+              {controlBox.extraActions}
+            </div>
+          ) : null}
+        </div>
+        ) : null}
       </div>
 
       <div className={`grid transition-[grid-template-rows,opacity] duration-300 ${internalOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
