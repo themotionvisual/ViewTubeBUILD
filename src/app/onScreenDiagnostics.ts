@@ -140,6 +140,47 @@ export const installOnScreenDiagnostics = (): void => {
  }
 
  recordDiagnostic("info", "boot", `${navigator.userAgent.slice(0, 100)}`)
+
+ // Snapshot the set of *in-flight* fetches every 3 seconds after a hang
+ // becomes possible. The plain per-request log only records failed and
+ // completed calls — a request that just never resolves is invisible.
+ // This heartbeat surfaces those "still open" URLs so we can see what's
+ // hanging even without an error event.
+ const inFlight = new Map<string, number>()
+ const trackedFetch = window.fetch
+ if (typeof trackedFetch === "function") {
+  window.fetch = async (...args) => {
+   const url = typeof args[0] === "string" ? args[0] : (args[0] as Request).url || "<request>"
+   const key = `${url}#${Date.now()}`
+   inFlight.set(key, now())
+   try {
+    const response = await trackedFetch(...args)
+    return response
+   } finally {
+    inFlight.delete(key)
+   }
+  }
+ }
+ // Poll: any fetch that has been in flight for > 3 s gets flagged once.
+ const flagged = new Set<string>()
+ window.setInterval(() => {
+  const nowMs = now()
+  inFlight.forEach((startedAt, key) => {
+   const age = nowMs - startedAt
+   if (age > 3000 && !flagged.has(key)) {
+    flagged.add(key)
+    const url = key.split("#")[0]
+    recordDiagnostic("warn", "fetch-slow", `${age}ms still pending: ${url}`)
+   }
+  })
+ }, 3000)
+}
+
+// Public helper for app-shell modules to plant boot-phase breadcrumbs
+// (e.g. "GlobalDataProvider mounted", "AppRoutes suspended") so the
+// on-screen log tells a coherent story instead of just being errors.
+export const recordBootPhase = (phase: string, detail?: string): void => {
+ recordDiagnostic("info", "boot-phase", detail ? `${phase} — ${detail}` : phase)
 }
 
 export const formatDiagnostics = (entries: readonly DiagnosticEntry[]): string => {

@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { BrowserRouter, useLocation } from "react-router-dom"
 import { SpeedInsights } from "@vercel/speed-insights/react"
 import { GlobalDataProvider } from "./context/GlobalDataContext"
@@ -8,6 +8,7 @@ import { InitialChannelBootstrapProvider } from "./context/InitialChannelBootstr
 import { GeminiKeyProvider } from "./context/GeminiKeyContext"
 import { AppShell } from "./app/AppShell"
 import { AppRoutes } from "./app/AppRoutes"
+import { recordBootPhase } from "./app/onScreenDiagnostics"
 
 const DARK_THEME_CSS = `
   .dark-theme-override {
@@ -64,6 +65,10 @@ function AppInner() {
 }
 
 function App() {
+ // Boot-phase breadcrumb so the on-screen diagnostic log shows whether the
+ // App root actually mounted (as opposed to the whole thing crashing before
+ // React commits). Cheap: one log entry per session mount.
+ useEffect(() => { recordBootPhase("App mounted") }, [])
  const isDarkTheme = useMemo(
   () => localStorage.getItem("vt_dark_mode") === "true",
   [],

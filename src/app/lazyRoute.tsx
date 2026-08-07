@@ -1,7 +1,7 @@
 import React, { Suspense } from "react"
 
 import { Spinner } from "../components/ui/spinner"
-import { formatDiagnostics, readDiagnostics } from "./onScreenDiagnostics"
+import { formatDiagnostics, readDiagnostics, recordBootPhase } from "./onScreenDiagnostics"
 
 // After a Vercel redeploy, cached index.html can point at chunk hashes that
 // no longer exist. Vite/Rolldown's dynamic imports then reject with a
@@ -378,10 +378,12 @@ export class RouteErrorBoundary extends React.Component<
 
 // If the children commit (not the fallback), clear the hang counter — proof
 // that the app did successfully render a route so any earlier stuck cycles
-// are no longer relevant.
+// are no longer relevant. Also plant a boot-phase breadcrumb so the on-
+// screen log tells us the route actually mounted (vs. still Suspending).
 const RouteHangCountResetter: React.FC<{ children: React.ReactNode }> = ({ children }) => {
  React.useEffect(() => {
   clearHangCount()
+  recordBootPhase("route committed", window.location.pathname)
  }, [])
  return <>{children}</>
 }
