@@ -1,5 +1,6 @@
 import { useMemo } from "react"
 import { BrowserRouter, useLocation } from "react-router-dom"
+import { SpeedInsights } from "@vercel/speed-insights/react"
 import { GlobalDataProvider } from "./context/GlobalDataContext"
 import { UnifiedAccountProvider } from "./context/UnifiedAccountContext"
 import { VideoAssetCatalogProvider } from "./context/VideoAssetCatalogContext"
@@ -79,6 +80,16 @@ function App() {
         <BrowserRouter>
          <AppInner />
         </BrowserRouter>
+        {/*
+          Vercel Speed Insights — invisible reporter of Core Web Vitals
+          (LCP, INP, CLS, TTFB, FCP) from every real visitor's browser back
+          to the Vercel dashboard. No user-facing effect. Data appears under
+          Project → Speed Insights within ~1 hour of deploy, broken out by
+          route, device type, country, and connection. Also enable the
+          feature toggle in the Vercel dashboard's Speed Insights tab if it
+          isn't already on.
+        */}
+        <SpeedInsights />
        </GlobalDataProvider>
       </VideoAssetCatalogProvider>
      </InitialChannelBootstrapProvider>
