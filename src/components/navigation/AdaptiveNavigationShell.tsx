@@ -36,6 +36,7 @@ import {
   type NavigationLayout,
 } from "./navigationContract"
 import { useNavLayoutMorph } from "./useNavLayoutMorph"
+import { prefetchRoute, scheduleIdlePrefetch } from "./routePrefetch"
 import "./adaptive-navigation.css"
 
 interface AdaptiveNavigationShellProps {
@@ -332,6 +333,14 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     return () => mediaQuery.removeEventListener("change", updateViewport)
   }, [])
 
+  // Idle-time prefetch of the top-hit routes so the *first* nav click from a
+  // freshly loaded Dashboard doesn't pay chunk-download latency. Runs once
+  // per shell mount, gated by requestIdleCallback so it never competes with
+  // above-the-fold work.
+  useEffect(() => {
+    scheduleIdlePrefetch()
+  }, [])
+
   useEffect(() => {
     if (!accountOpen) return
     const onPointerDown = (event: MouseEvent) => {
@@ -434,6 +443,14 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
             if (mobileDrawer) setDrawerOpen(false)
             closeAccountMenu()
           }}
+          // Warm the target route's JS chunk on any signal of intent. Desktop
+          // hover, mobile touchstart (fires ~100 ms before click on iOS), and
+          // keyboard focus all count. By the time the user actually clicks,
+          // the chunk is usually already parsed and the route mounts without
+          // a Suspense fallback flash.
+          onPointerEnter={() => prefetchRoute(item.path)}
+          onTouchStart={() => prefetchRoute(item.path)}
+          onFocus={() => prefetchRoute(item.path)}
           className="vt-adaptive-nav__link"
           style={{ "--vt-nav-color": getNavPaletteColor(item.paletteIndex) } as React.CSSProperties}
         >

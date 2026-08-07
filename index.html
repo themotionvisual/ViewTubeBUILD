@@ -6,7 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" />
+    <!--
+      Consolidated font stylesheet. Previously each of these families was pulled
+      in via `@import url(...)` inside a route-scoped CSS file (analytics,
+      editor), which forced the browser to block first paint of that route on a
+      *serial* fetch chain: the route CSS parsed → discovered the @import →
+      fetched Google Fonts CSS → fetched the woff2 files. Consolidating here
+      means the DNS/TLS is already warm via preconnect and the fonts start
+      loading in parallel with the app JS on every route. `display=swap` renders
+      with the fallback stack immediately, so no invisible-text flash.
+    -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bebas+Neue&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" />
     <title>viewtube</title>
   </head>
   <body>

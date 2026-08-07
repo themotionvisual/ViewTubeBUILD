@@ -34,7 +34,12 @@ import type {
  WidgetRenderCallbacks,
  WidgetInstanceState,
 } from "./types"
-import { GoalsTrackerWidget } from "./widgets/GoalsTrackerWidget"
+// Lazy-load like every other widget so the Dashboard chunk doesn't have to
+// carry this widget's ~328 lines up-front — Dashboard visitors who never
+// enable the Goals tracker widget skip downloading it entirely.
+const GoalsTrackerWidget = React.lazy(() =>
+ import("./widgets/GoalsTrackerWidget").then((module) => ({ default: module.GoalsTrackerWidget })),
+)
 const formatHumanNumber = (value: unknown): string => {
  const v = Number(value)
  if (isNaN(v)) return "0"
@@ -1178,7 +1183,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  }
 
 
- // 16. GOALS TRACKER
+ // 16. GOALS TRACKER — lazy-loaded like every other Dashboard widget; the
+ // per-widget <Suspense> boundary in DashboardCanvas handles the fallback.
   if (widget.id === "goals-tracker") {
     return <GoalsTrackerWidget data={data} commonProps={common} />
   }

@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Bebas+Neue&display=swap');
+/* Space Mono and Bebas Neue are loaded via the consolidated <link> in
+   index.html so this route stops render-blocking on a serial CSS-inside-CSS
+   fetch chain (Vite would previously hoist this @import to the top of the
+   route bundle and hold first paint on it). */
 
 :root {
  --vt-retro-mono: "Space Mono", "SF Mono", ui-monospace, monospace;
