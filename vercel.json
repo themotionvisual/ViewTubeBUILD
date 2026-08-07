@@ -38,8 +38,14 @@
     }
   ],
   "routes": [
+    { "handle": "filesystem" },
     {
-      "handle": "filesystem"
+      "src": "^/assets/.+",
+      "status": 404
+    },
+    {
+      "src": "^/.+\\.(js|mjs|css|map|json|txt|xml|woff2?|ttf|otf|eot|png|jpg|jpeg|gif|svg|ico|webp|avif|mp4|webm|mp3|wav|ogg|pdf)$",
+      "status": 404
     },
     {
       "src": "/(.*)",

@@ -18,8 +18,16 @@ import { formatDiagnostics, readDiagnostics } from "./onScreenDiagnostics"
 //   3. Catches render-time errors and shows the actual error message plus a
 //      reload button so we stop losing diagnostics into the void.
 
+// Recognize every shape a stale-chunk failure takes across browsers.
+// The MIME-type variant ("'text/html' is not a valid JavaScript MIME type",
+// "Expected a JavaScript module script but the server responded with a MIME
+// type of \"text/html\"") is the *most common* one in practice — it's what
+// happens when Vercel's SPA fallback catches a request for a missing
+// chunk .js and returns index.html instead. We were previously only
+// catching the Vite/Chrome "Loading chunk failed" phrase and missing this
+// entirely, so the retry logic never fired and users hit the raw error UI.
 const CHUNK_ERROR_REGEX =
- /(Loading chunk [\d]+ failed|Failed to fetch dynamically imported module|Importing a module script failed|ChunkLoadError|import\(\) with the argument|Unable to preload CSS)/i
+ /(Loading chunk [\d]+ failed|Failed to fetch dynamically imported module|Importing a module script failed|ChunkLoadError|import\(\) with the argument|Unable to preload CSS|is not a valid JavaScript MIME type|Expected a JavaScript(?:.| )*module script|MIME type\s*\(?["']?text\/html|MIME type checking is enabled)/i
 
 const RELOAD_FLAG = "vt_chunk_reload_attempted"
 // Track how many times the fallback timeout has fired without the page
@@ -268,6 +276,18 @@ export class RouteErrorBoundary extends React.Component<
   // Insights if it's listening.
   // eslint-disable-next-line no-console
   console.error("[route-error]", error, info.componentStack)
+
+  // Chunk-shaped errors are almost always a stale-cached index.html
+  // pointing at chunk hashes that no longer exist on the CDN. Auto-reload
+  // once (gated by RELOAD_FLAG so we can't loop) to fetch the fresh HTML.
+  if (isChunkLoadError(error)) {
+   if (typeof window !== "undefined" && sessionStorage.getItem(RELOAD_FLAG) !== "1") {
+    try { sessionStorage.setItem(RELOAD_FLAG, "1") } catch { /* ignore */ }
+    // Give React one microtask so the error state doesn't win over the
+    // navigation — otherwise the reload can be canceled by the render.
+    setTimeout(() => window.location.reload(), 50)
+   }
+  }
  }
 
  handleReload = (): void => {
