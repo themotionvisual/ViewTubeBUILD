@@ -79,6 +79,16 @@ const isChunkLoadError = (error: unknown): boolean => {
  return CHUNK_ERROR_REGEX.test(message)
 }
 
+// Force a fresh fetch of index.html even if iOS Safari is being stubborn
+// about the Cache-Control: no-cache header we set. A `?_v=<timestamp>` query
+// param makes the URL unique so no browser cache can match it, and
+// `location.replace` scrubs the entry from history so the back button
+// doesn't return the user to the broken cached state.
+const hardReload = (): void => {
+ const url = `${window.location.pathname}${window.location.search ? window.location.search + "&" : "?"}_v=${Date.now()}${window.location.hash}`
+ window.location.replace(url)
+}
+
 // One retry, then hard-reload — but only once per session, or we'd get stuck
 // in a refresh loop if the deploy is actually broken.
 const retryImport = <T,>(factory: () => Promise<T>): Promise<T> =>
@@ -89,7 +99,7 @@ const retryImport = <T,>(factory: () => Promise<T>): Promise<T> =>
     factory().then(resolve, (secondError) => {
      if (typeof window !== "undefined" && sessionStorage.getItem(RELOAD_FLAG) !== "1") {
       sessionStorage.setItem(RELOAD_FLAG, "1")
-      window.location.reload()
+      hardReload()
       // Reload doesn't cancel the current microtask synchronously, so still
       // reject after a beat to unblock React's Suspense machinery in case
       // the reload is denied.
@@ -181,7 +191,7 @@ const RouteLoadingIndicator: React.FC = () => {
      className={`rounded-full border-[3px] border-black px-5 py-2 text-sm font-black uppercase tracking-[0.08em] shadow-[3px_3px_0_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${persistedFailure ? "bg-white" : "bg-[#C0F240]"}`}
      onClick={() => {
       try { sessionStorage.removeItem(RELOAD_FLAG) } catch { /* ignore */ }
-      window.location.reload()
+      hardReload()
      }}
     >
      Reload page
@@ -313,7 +323,7 @@ export class RouteErrorBoundary extends React.Component<
     try { sessionStorage.setItem(RELOAD_FLAG, "1") } catch { /* ignore */ }
     // Give React one microtask so the error state doesn't win over the
     // navigation — otherwise the reload can be canceled by the render.
-    setTimeout(() => window.location.reload(), 50)
+    setTimeout(() => hardReload(), 50)
    }
   }
  }
