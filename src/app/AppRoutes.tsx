@@ -1,7 +1,14 @@
-import React, { Suspense, lazy } from "react"
+import React from "react"
 import { Routes, Route, Navigate } from "react-router-dom"
 
-import { Spinner } from "../components/ui/spinner"
+import { lazyRoute, RouteSuspense } from "./lazyRoute"
+
+// `lazyRoute` = `React.lazy` + one retry on chunk-load failure + a single
+// hard-reload backstop when the retry also fails (usually a stale
+// cached index.html after a Vercel deploy). This keeps the app from
+// hanging on the Suspense spinner when the JS chunks the browser expects
+// are no longer on the CDN.
+const lazy = lazyRoute
 
 // Route-level code splitting: every top-level view is loaded on demand so the
 // initial bundle only contains the shell + the first route the user lands on.
@@ -45,19 +52,9 @@ const VtSyncLocalAnalyticsPage = lazy(
 const AIBrainCommandInterface = lazy(() => import("../views/AIBrainCommandInterface"))
 const AccountConnectPage = lazy(() => import("../views/AccountConnectPage"))
 
-const RouteFallback: React.FC = () => (
- <div
-  role="status"
-  aria-label="Loading page"
-  className="flex min-h-[60vh] w-full items-center justify-center"
- >
-  <Spinner className="size-8" />
- </div>
-)
-
 export const AppRoutes: React.FC = () => {
  return (
-  <Suspense fallback={<RouteFallback />}>
+  <RouteSuspense>
    <Routes>
     <Route path="/" element={<Dashboard />} />
     <Route path="/dashboard-legacy" element={<DashboardLegacy />} />
@@ -156,6 +153,6 @@ export const AppRoutes: React.FC = () => {
 
     <Route path="*" element={<Navigate to="/" replace />} />
    </Routes>
-  </Suspense>
+  </RouteSuspense>
  )
 }
