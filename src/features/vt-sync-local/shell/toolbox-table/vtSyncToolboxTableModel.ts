@@ -752,6 +752,15 @@ export const resolveVtSyncColumnWidth = ({
  override,
 }: VtSyncColumnWidthOptions): number => {
  if (override !== undefined) return clampVtSyncColumnWidth(override)
+
+ if (!compact) {
+  if (column.key === "thumbnail") return 91
+  if (column.key === "cover") return 72
+  if (column.key === "title") return 325
+  if (column.key === "videoId" || column.key === "channelId" || (["suggested", "chan_page"].includes(tableId) && column.key === "term")) return 97
+  if (column.key === "videoUrl" || column.key === "playlistUrl" || column.key === "channelUrl") return 72
+ }
+
  if (column.preferredWidth !== undefined) return clampVtSyncColumnWidth(column.preferredWidth)
  if (tableId === "videos" && column.key === "publishedAt") return compact ? 112 : 132
  if (tableId === "videos" && !compact) return VT_SYNC_VIDEO_NON_COMPACT_WIDTHS[columnIndex] || 90

@@ -193,10 +193,10 @@ export const VT_SYNC_VISIBLE_TABLE_CATEGORIES: VtSyncTableCategoryDefinition[] =
   .filter((category) => category.tabs.length > 0)
 
 const videoColumns = [
- col("thumbnail", "Thumbnail", "Video", "thumbnail", true, "left"),
- col("title", "Video Title", "Video", "text", true, "left"),
+ col("thumbnail", "Thumbnail", "Video", "thumbnail", true, "left", { preferredWidth: 112 }),
+ col("title", "Video Title", "Video", "text", true, "left", { preferredWidth: 360 }),
  col("videoId", "Video ID", "Video", "text", true, "left"),
- col("videoUrl", "Video URL", "Video", "text", true, undefined, { preferredWidth: 36 }),
+ col("videoUrl", "Video URL", "Video", "text", true, undefined, { preferredWidth: 44 }),
  col("publishedAt", "Upload Date", "Video", "dateLocal"),
  col("publishedDay", "Upload Day", "Video", "weekdayLocal"),
  col("publishedTime", "Upload Time", "Video", "timeLocal"),
@@ -365,14 +365,25 @@ export const VT_SYNC_TABLE_DEFINITIONS: VtSyncTableDefinition[] = [
  ], datasetId: "channel_totals", summaryMode: "primary-row", summaryPrimaryRow: { key: "window", value: "Lifetime (All Time)" } }),
  table({ id: "traffic", mainCategoryId: "traffic", label: "Overview", description: "Traffic source overview.", snapshotKeys: ["trafficSources"], categoryIds: ["traffic_overview"], columns: [col("source", "Source", "Identity", "text", true, "left", { preferredWidth: 300 }), ...shortMetricColumns, ...trafficShareColumns], datasetId: "traffic", layoutMode: "sparse-full" }),
  table({ id: "search", mainCategoryId: "traffic", label: "Search Terms", description: "YouTube search terms.", snapshotKeys: ["searchTerms"], categoryIds: ["search_terms"], columns: [col("term", "Search Term", "Identity", "text", true, "left"), ...searchMetricColumns], datasetId: "search" }),
- table({ id: "ext_web", mainCategoryId: "traffic", label: "External Websites", description: "External website traffic.", snapshotKeys: ["extWebsites"], categoryIds: ["ext_websites"], columns: [col("term", "External Website", "Identity", "text", true, "left"), ...trafficMetricColumns], datasetId: "ext_web" }),
- table({ id: "suggested", mainCategoryId: "traffic", label: "Suggested Videos", description: "Suggested video traffic enriched with YouTube Data API metadata when available.", snapshotKeys: ["suggestedVideos"], categoryIds: ["suggested_videos"], columns: [col("term", "Suggested Video", "Identity", "text", true, "left", { preferredWidth: 360 }), col("title", "Video Title", "Identity"), ...trafficMetricColumnsWithoutShares], datasetId: "suggested" }),
+ table({ id: "ext_web", mainCategoryId: "traffic", label: "External Websites", description: "External website traffic.", snapshotKeys: ["extWebsites"], categoryIds: ["ext_websites"], columns: [col("term", "External Website", "Identity", "text", true, "left"), ...trafficMetricColumns], datasetId: "ext_web" }), table({ id: "suggested", mainCategoryId: "traffic", label: "Suggested Videos", description: "Suggested video traffic enriched with YouTube Data API metadata when available.", snapshotKeys: ["suggestedVideos"], categoryIds: ["suggested_videos"], columns: [
+  col("cover", "Cover", "Identity", "thumbnail", true, "left", { preferredWidth: 112 }),
+  col("title", "Video Title", "Identity", "text", true, "left", { preferredWidth: 360 }),
+  col("term", "Suggested Video", "Identity", "text", true, "left", { preferredWidth: 360 }),
+  col("videoUrl", "Video URL", "Identity", "text", true, undefined, { preferredWidth: 44 }),
+  ...trafficMetricColumnsWithoutShares
+ ], datasetId: "suggested" }),
  table({ id: "hashtags", mainCategoryId: "traffic", label: "Hashtags", description: "Hashtag traffic.", snapshotKeys: ["hashtags"], categoryIds: ["hashtags"], columns: [col("term", "Hashtag", "Identity", "text", true, "left"), ...trafficMetricColumns], datasetId: "hashtags" }),
  table({ id: "sound", mainCategoryId: "traffic", label: "Sound Pages", description: "Sound page traffic.", snapshotKeys: ["soundPages"], categoryIds: ["sound_pages"], columns: [col("term", "Sound Page", "Identity", "text", true, "left"), ...trafficMetricColumns], datasetId: "sound" }),
  table({ id: "adv", mainCategoryId: "traffic", label: "Advertising", description: "Advertising traffic.", snapshotKeys: ["trafficAdvertising"], categoryIds: ["advertising"], columns: [col("term", "Advertising", "Identity", "text", true, "left"), ...trafficMetricColumns], datasetId: "adv" }),
  table({ id: "traffic_subscribers", mainCategoryId: "traffic", label: "Subscriber Detail", description: "Subscriber traffic detail.", snapshotKeys: ["trafficSubscriberData"], categoryIds: ["traffic_subscribers"], columns: [col("term", "Subscriber Source", "Identity", "text", true, "left"), ...trafficMetricColumns], datasetId: "traffic_subscribers" }),
  table({ id: "traffic_day", mainCategoryId: "traffic", label: "Traffic Source x Day", description: "Daily breakdown of traffic source performance.", snapshotKeys: ["trafficByDay"], categoryIds: ["traffic_day"], columns: [col("term", "Traffic Source", "Identity", "text", true, "left"), col("day", "Day", "Identity", "date", true, "left"), ...trafficDayMetricColumns], defaultSort: { key: "day", direction: "desc" }, datasetId: "traffic_day", presentationMode: "traffic-source-day", verticalScrollMode: "custom" }),
- table({ id: "chan_page", mainCategoryId: "traffic", label: "Channel Pages", description: "Channel page traffic enriched with YouTube Data API metadata when available.", snapshotKeys: ["trafficChannelPages"], categoryIds: ["channel_pages"], columns: [col("term", "Channel", "Identity", "text", true, "left", { preferredWidth: 360 }), col("title", "Channel Title", "Identity"), col("handle", "Handle", "Identity"), ...trafficMetricColumnsWithoutShares], datasetId: "chan_page" }),
+ table({ id: "chan_page", mainCategoryId: "traffic", label: "Channel Pages", description: "Channel page traffic enriched with YouTube Data API metadata when available.", snapshotKeys: ["trafficChannelPages"], categoryIds: ["channel_pages"], columns: [
+  col("cover", "Cover", "Identity", "thumbnail", true, "left", { preferredWidth: 112 }),
+  col("title", "Channel Title", "Identity", "text", true, "left", { preferredWidth: 360 }),
+  col("term", "Channel Page", "Identity", "text", true, "left", { preferredWidth: 360 }),
+  col("channelUrl", "Channel URL", "Identity", "text", true, undefined, { preferredWidth: 44 }),
+  ...trafficMetricColumnsWithoutShares
+ ], datasetId: "chan_page" }),
  ...(["traffic_shorts", "traffic_browse_features", "traffic_shorts_content_link", "traffic_campaign_card", "traffic_notification", "traffic_no_link_embedded", "traffic_no_link_other"] as const).map((id) => table({ id, mainCategoryId: "traffic", label: VT_SYNC_TABLE_CATEGORIES[3].tabs.find((tab) => tab.id === id)?.label || id, description: `${id} traffic detail.`, snapshotKeys: ({ traffic_shorts: ["trafficShorts"], traffic_browse_features: ["trafficBrowseFeatures"], traffic_shorts_content_link: ["trafficShortsContentLink"], traffic_campaign_card: ["trafficCampaignCard"], traffic_notification: ["trafficNotification"], traffic_no_link_embedded: ["trafficNoLinkEmbedded"], traffic_no_link_other: ["trafficNoLinkOther"] } as Record<typeof id, string[]>)[id], categoryIds: [id], columns: [col("term", "Source Detail", "Identity", "text", true, "left"), ...trafficMetricColumns], datasetId: id })),
  table({ id: "traffic_card", mainCategoryId: "traffic", label: "Info Cards", description: "Info card traffic.", snapshotKeys: ["trafficCard"], categoryIds: ["traffic_card"], columns: [col("term", "Info Card (ID)", "Identity", "text", true, "left"), col("title", "Title", "Identity"), ...trafficMetricColumns], datasetId: "traffic_card" }),
  table({ id: "traffic_end_screen", mainCategoryId: "traffic", label: "End Screens", description: "End screen traffic.", snapshotKeys: ["trafficEndScreen"], categoryIds: ["traffic_end_screen"], columns: [col("term", "Video (ID)", "Identity", "text", true, "left"), col("title", "Video Title", "Identity"), ...trafficMetricColumns], datasetId: "traffic_end_screen" }),
@@ -441,7 +452,24 @@ export const VT_SYNC_TABLE_DEFINITIONS: VtSyncTableDefinition[] = [
  ], datasetId: "creator", summaryColumns: ["views", "watchTime", "formatViewShare", "formatWatchTimeShare"] }),
  table({ id: "retentions", mainCategoryId: "content", label: "Retentions", description: "100-point audience-retention curves grouped by video.", snapshotKeys: ["retentions"], categoryIds: ["retention"], columns: [col("videoId", "Video ID", "Identity", "text", true, "left"), col("elapsedVideoTimeRatio", "Elapsed Video Time Ratio", "Retention", "percent"), col("audienceWatchRatio", "Audience Watch Ratio", "Retention", "percent"), col("relativeRetentionPerformance", "Relative Retention Performance", "Retention", "percent")], defaultSort: { key: "videoId", direction: "asc" }, datasetId: "retentions", presentationMode: "retention-video" }),
  table({ id: "shares", mainCategoryId: "content", label: "Sharing Services", description: "Sharing service rows.", snapshotKeys: ["sharingService"], categoryIds: ["sharing_service"], columns: [col("term", "Sharing Service", "Identity", "text", true, "left"), col("shares", "Shares", "Engagement", "number"), col("shareLinkShare", "% of Shared Links", "Engagement", "percent", true, undefined, { totalMode: "sum" })], defaultSort: { key: "shares", direction: "desc" }, datasetId: "shares" }),
- table({ id: "playlists", mainCategoryId: "playlists", label: "Playlist Statistics", description: "Playlist statistics rows.", snapshotKeys: ["playlistsData"], categoryIds: ["playlists_analytics"], columns: [col("playlistId", "Playlist ID", "Identity", "text", true, "left", { preferredWidth: 190, textSize: 10 }), col("title", "Playlist Title", "Identity", "text", true, undefined, { preferredWidth: 325, textSize: 13 }), col("description", "Description", "Metadata"), col("publishedAt", "Published", "Metadata", "date"), col("videoCount", "Video Count", "Metadata", "number"), col("views", "Views", "Metrics", "number"), col("playlistViewShare", "% of Playlist Views", "Playlist Share", "percent", true, undefined, { totalMode: "sum" }), col("engagedViews", "Engaged Views", "Metrics", "number"), col("watchTime", "Watch Time", "Metrics", "durationMinutes"), col("playlistWatchTimeShare", "% of Playlist Watch Time", "Playlist Share", "percent", true, undefined, { totalMode: "sum" }), col("playlistStarts", "Playlist Starts", "Metrics", "number"), col("playlistSaves", "Playlist Saves (Net)", "Metrics", "number"), col("averageTimeInPlaylist", "Avg Time in Playlist", "Metrics", "duration"), col("viewsPerPlaylistStart", "Views per Playlist Start", "Metrics", "number"), col("privacyStatus", "Privacy Status", "Metadata")], datasetId: "playlists" }),
+ table({ id: "playlists", mainCategoryId: "playlists", label: "Playlist Statistics", description: "Playlist statistics rows.", snapshotKeys: ["playlistsData"], categoryIds: ["playlists_analytics"], columns: [
+  col("cover", "Cover", "Playlist", "thumbnail", true, "left", { preferredWidth: 112 }),
+  col("title", "Playlist", "Playlist", "text", true, "left", { preferredWidth: 360, textSize: 13 }),
+  col("playlistId", "Playlist ID", "Playlist", "text", true, "left", { preferredWidth: 190, textSize: 10 }),
+  col("playlistUrl", "Playlist URL", "Playlist", "text", true, undefined, { preferredWidth: 44 }),
+  col("description", "Description", "Metadata", "text", true, "left", { preferredWidth: 280 }),
+  col("publishedAt", "Published", "Metadata", "date"),
+  col("videoCount", "Video Count", "Metadata", "number"),
+  col("views", "Views", "Metrics", "number"),
+  col("playlistViewShare", "% of Playlist Views", "Playlist Share", "percent", true, undefined, { totalMode: "sum" }),
+  col("watchTime", "Watch Time", "Metrics", "durationMinutes"),
+  col("playlistWatchTimeShare", "% of Playlist Watch Time", "Playlist Share", "percent", true, undefined, { totalMode: "sum" }),
+  col("playlistStarts", "Playlist Starts", "Metrics", "number"),
+  col("playlistSaves", "Playlist Saves (Net)", "Metrics", "number"),
+  col("averageTimeInPlaylist", "Avg Time in Playlist", "Metrics", "duration"),
+  col("viewsPerPlaylistStart", "Views per Playlist Start", "Metrics", "number"),
+  col("privacyStatus", "Privacy Status", "Metadata")
+ ], datasetId: "playlists", layoutMode: "sparse-full", horizontalScrollMode: "none" }),
  table({ id: "revenue", mainCategoryId: "revenue", label: "Overview", description: "Revenue source rows.", snapshotKeys: ["revenueSource"], categoryIds: ["revenue_source"], columns: [col("day", "Date", "Time", "date", true, "left"), col("revenue", "Total Revenue", "Revenue", "currency"), col("adRevenue", "Ad Revenue", "Revenue", "currency"), col("redRevenue", "Premium Revenue", "Revenue", "currency")], defaultSort: { key: "day", direction: "desc" }, datasetId: "revenue" }),
  table({ id: "ads", mainCategoryId: "revenue", label: "Ad Types", description: "Ad type rows.", snapshotKeys: ["adTypes"], categoryIds: ["ad_type"], columns: [col("adType", "Ad Type", "Identity", "text", true, "left"), col("grossRevenue", "Gross Revenue (USD)", "Revenue", "currency"), col("cpm", "CPM (USD)", "Revenue", "currency"), col("adImpressions", "Ad Impressions", "Revenue", "number")], defaultSort: { key: "grossRevenue", direction: "desc" }, datasetId: "ads" }),
 ]

@@ -12,7 +12,7 @@ import { Flame, Sparkles } from "lucide-react"
 import type { TubeExplorerVisualProps } from "../../TubeExplorerVisualModules"
 import { ChartModule, RaisedControl, type Stat } from "../ChartModule"
 import { useVt2Theme } from "./theme"
-import { rollupWeeklyBigBang, type Vt2BigBangWeek } from "./dataBridge"
+import { rollupWeeklyBigBangWithSource, type Vt2BigBangWeek } from "./dataBridge"
 
 import { VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
 
@@ -31,12 +31,19 @@ const buildMetrics = (): BigBangMetric[] => [
   { key: "avd",       label: "AVD SEC",   color: VT_SPECTRUM_PALETTE_06[10], get: (w) => w.avd },
 ]
 
-export const ChannelBigBangTimelineModule: React.FC<TubeExplorerVisualProps> = ({ data }) => {
+export const ChannelBigBangTimelineModule: React.FC<TubeExplorerVisualProps> = ({
+  data,
+  dailyMetrics = [],
+  trafficByDay = [],
+}) => {
   const { palette } = useVt2Theme()
   const metrics = useMemo(() => buildMetrics(), [])
 
   const [weekCount, setWeekCount] = useState<number>(24)
-  const weekly = useMemo<Vt2BigBangWeek[]>(() => rollupWeeklyBigBang(data, weekCount), [data, weekCount])
+  const weekly = useMemo<Vt2BigBangWeek[]>(
+    () => rollupWeeklyBigBangWithSource(data, dailyMetrics, trafficByDay, weekCount),
+    [data, dailyMetrics, trafficByDay, weekCount],
+  )
   const n = weekly.length
 
   const [scrubWeek, setScrubWeek] = useState<number>(0)

@@ -94,3 +94,6 @@ pnpm-debug.log*
 .env.production
 *.pem
 *.key
+
+.gemini/
+gha-creds-*.json

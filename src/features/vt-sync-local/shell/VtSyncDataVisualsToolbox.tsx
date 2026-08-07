@@ -114,8 +114,8 @@ const VT2_MODULES: LegacyVisualModuleDefinition[] = [
  { id: "vt2-revenue-mosaic", group: "vt2", delayMs: 80, render: ({ data }) => <RevenueMosaicModule data={data} /> },
  { id: "vt2-search-term-gravity", group: "vt2", delayMs: 120, render: ({ data, trafficRows }) => <SearchTermGravityModule data={data} trafficRows={trafficRows} /> },
  { id: "vt2-video-fingerprint", group: "vt2", delayMs: 160, render: ({ data }) => <VideoPerformanceFingerprintModule data={data} /> },
- { id: "vt2-channel-big-bang", group: "vt2", delayMs: 200, render: ({ data }) => <ChannelBigBangTimelineModule data={data} /> },
- { id: "vt2-trajectory-forecaster", group: "vt2", delayMs: 240, render: ({ data }) => <TrajectoryForecasterModule data={data} /> },
+ { id: "vt2-channel-big-bang", group: "vt2", delayMs: 200, render: ({ data, dailyMetrics, trafficByDay }) => <ChannelBigBangTimelineModule data={data} dailyMetrics={dailyMetrics} trafficByDay={trafficByDay} /> },
+ { id: "vt2-trajectory-forecaster", group: "vt2", delayMs: 240, render: ({ data, dailyMetrics, trafficByDay }) => <TrajectoryForecasterModule data={data} dailyMetrics={dailyMetrics} trafficByDay={trafficByDay} /> },
  { id: "vt2-multi-metric-timeline", group: "vt2", delayMs: 280, render: ({ data, trafficByDay, dailyMetrics }) => <MultiMetricTimelineModule data={data} trafficByDay={trafficByDay} dailyMetrics={dailyMetrics} /> },
 ]
 
@@ -124,8 +124,8 @@ const sourceTablesForVisual = (id: string): readonly string[] => {
  if (id.startsWith("vt2-revenue-mosaic")) return ["videos"]
  if (id.startsWith("vt2-search-term-gravity")) return ["traffic", "search"]
  if (id.startsWith("vt2-video-fingerprint")) return ["videos"]
- if (id.startsWith("vt2-channel-big-bang")) return ["videos"]
- if (id.startsWith("vt2-trajectory-forecaster")) return ["videos"]
+ if (id.startsWith("vt2-channel-big-bang")) return ["videos", "traffic_day"]
+ if (id.startsWith("vt2-trajectory-forecaster")) return ["videos", "traffic_day"]
  if (id.startsWith("vt2-multi-metric-timeline")) return ["videos", "traffic_day"]
  if (id.includes("traffic") || id.includes("clock-radial")) return ["traffic", "traffic_day"]
  if (id.includes("format") || id.includes("shorts-vs-longs")) return ["creator", "videos"]

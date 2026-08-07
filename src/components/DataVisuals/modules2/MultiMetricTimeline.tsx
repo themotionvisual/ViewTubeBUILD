@@ -408,11 +408,23 @@ function Controller(p: CtrlProps) {
 
       {/* SOURCE */}
       {(!isCompare || p.cmpType === "WINDOW") && (
-        <div style={{ ...ROW, background: "#000", padding: 0, minHeight: 20 }}>
-          <button style={{ ...ARR, color: "#FFE500", fontSize: 13 }} onClick={() => p.setSource(cyc(srcOpts, p.source, -1))}>◀</button>
-          <span style={{ fontSize: 9.5, fontWeight: 900, color: "#FFE500", textTransform: "uppercase" as const, letterSpacing: "0.07em", flex: 1, textAlign: "center", lineHeight: 1 }}>{p.source}</span>
-          <button style={{ ...ARR, color: "#FFE500", fontSize: 13 }} onClick={() => p.setSource(cyc(srcOpts, p.source, 1))}>▶</button>
-        </div>
+        <>
+          <div style={{ ...ROW, background: "#000", padding: 0, minHeight: 20 }}>
+            <button style={{ ...ARR, color: "#FFE500", fontSize: 13 }} onClick={() => p.setSource(cyc(srcOpts, p.source, -1))}>◀</button>
+            <span style={{ fontSize: 9.5, fontWeight: 900, color: "#FFE500", textTransform: "uppercase" as const, letterSpacing: "0.07em", flex: 1, textAlign: "center", lineHeight: 1 }}>{p.source}</span>
+            <button style={{ ...ARR, color: "#FFE500", fontSize: 13 }} onClick={() => p.setSource(cyc(srcOpts, p.source, 1))}>▶</button>
+          </div>
+          {p.source === "VIDEO" && p.videoList.length > 0 && (
+            <div style={{ ...ROW, background: "#00E5FF", padding: "1px 0", minHeight: 20 }}>
+              <button style={{ ...ARR, fontSize: 11 }} onClick={() => p.setVideoIdxA((p.videoIdxA - 1 + nVids) % nVids)}>◀</button>
+              <span style={{ fontSize: 8, fontWeight: 900, color: "#000", flex: 1, textAlign: "center", lineHeight: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", padding: "0 2px" }}
+                title={p.videoList[p.videoIdxA]?.title}>
+                {(p.videoList[p.videoIdxA]?.title || "SELECT VIDEO").slice(0, 16)}
+              </span>
+              <button style={{ ...ARR, fontSize: 11 }} onClick={() => p.setVideoIdxA((p.videoIdxA + 1) % nVids)}>▶</button>
+            </div>
+          )}
+        </>
       )}
 
       {/* VIEW */}
@@ -534,22 +546,28 @@ export function MultiMetricTimeline({
   // Derive slice based on gran, count, and source
   const getSliceData = (g: Gran, c: number, src: Source) => {
     if (src === "VIDEO") {
-      const take = c === 0 ? flatVideos.length : Math.min(c, flatVideos.length)
-      return flatVideos.slice(0, take).map(v => ({
-        label: v.title.slice(0, 10).trim(),
-        views: v.views,
-        engagedViews: Math.round(v.views * 0.85),
-        watchHrs: v.watchHrs,
-        subs: v.subsGained,
-        likes: v.likes,
-        shares: v.shares,
-        comments: v.comments,
-        revenue: v.revenue,
-        avd: Math.round(v.duration * (v.avp / 100)),
-        avp: v.avp,
-        rpm: v.rpm,
-        adRevenue: Math.round(v.revenue * 0.85),
-      }))
+      const vid = flatVideos[videoIdxA] || flatVideos[0]
+      if (!vid) return []
+      const weeks = c === 0 ? 12 : c
+      // Single video metrics evolving over time across weeks since publish
+      return Array.from({ length: weeks }).map((_, i) => {
+        const fraction = Math.min(1, Math.pow((i + 1) / weeks, 0.45))
+        return {
+          label: `Wk ${i + 1}`,
+          views: Math.round(vid.views * fraction),
+          engagedViews: Math.round(vid.views * 0.85 * fraction),
+          watchHrs: Math.round(vid.watchHrs * fraction),
+          subs: Math.round(vid.subsGained * fraction),
+          likes: Math.round(vid.likes * fraction),
+          shares: Math.round(vid.shares * fraction),
+          comments: Math.round(vid.comments * fraction),
+          revenue: Number((vid.revenue * fraction).toFixed(2)),
+          avd: Math.round(vid.duration * (vid.avp / 100)),
+          avp: vid.avp,
+          rpm: vid.rpm,
+          adRevenue: Number((vid.revenue * 0.85 * fraction).toFixed(2)),
+        }
+      })
     }
 
     const weeks = c === 0 ? 52 : c

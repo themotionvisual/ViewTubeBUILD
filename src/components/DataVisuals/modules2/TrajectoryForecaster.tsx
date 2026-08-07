@@ -18,8 +18,8 @@ import { ChartModule, SlabControl } from "../ChartModule"
 import { useVt2Theme } from "./theme"
 import {
   labelWeek,
-  rollupMonthlyFromVideos,
-  rollupWeeklyFromVideos,
+  rollupMonthlyChannelWithSource,
+  rollupWeeklyChannelWithSource,
   type Vt2MonthlyRow,
   type Vt2WeeklyRow,
 } from "./dataBridge"
@@ -65,16 +65,18 @@ function linReg(vals: number[]): number {
 }
 
 function makeForecast(vals: number[], periods: number): { opt: number[]; real: number[]; cau: number[] } {
-  const n = vals.length
+  const activeVals = vals.filter((v) => v > 0)
+  const fitVals = activeVals.length >= 2 ? activeVals : vals
+  const n = fitVals.length
   if (n < 2) {
-    const v = vals[0] ?? 0
+    const v = fitVals[0] ?? 0
     return { opt: Array(periods).fill(v), real: Array(periods).fill(v), cau: Array(periods).fill(v) }
   }
-  const s4 = linReg(vals.slice(-Math.min(4, n)))
-  const s8 = linReg(vals.slice(-Math.min(8, n)))
-  const sAll = linReg(vals)
-  const lastVal = vals[n - 1] ?? 0
-  const sorted = [...vals.slice(-6).filter((v) => v > 0)].sort((a, b) => a - b)
+  const s4 = linReg(fitVals.slice(-Math.min(4, n)))
+  const s8 = linReg(fitVals.slice(-Math.min(8, n)))
+  const sAll = linReg(fitVals)
+  const lastVal = vals[vals.length - 1] || (fitVals[n - 1] ?? 0)
+  const sorted = [...fitVals.slice(-6)].sort((a, b) => a - b)
   const baseline = sorted[Math.floor(sorted.length / 2)] ?? lastVal
 
   const slopeReal = s4 * 0.25 + s8 * 0.35 + sAll * 0.40
@@ -95,20 +97,20 @@ function makeForecast(vals: number[], periods: number): { opt: number[]; real: n
   return { opt, real, cau }
 }
 
-// ─── Forecast Chart (canvas) ───────────────────────────────────────────────
 interface ForecastChartProps {
   historical: number[]
   opt: number[]; real: number[]; cau: number[]
   accentColor: string
   fmt: (v: number) => string
   labels: string[]
+  forecastLabels?: string[]
   goalValue?: number
   showHist: boolean; showOpt: boolean; showReal: boolean; showCau: boolean
   compact?: boolean
 }
 
 function ForecastChart({
-  historical, opt, real, cau, accentColor, fmt, labels, goalValue,
+  historical, opt, real, cau, accentColor, fmt, labels, forecastLabels = [], goalValue,
   showHist, showOpt, showReal, showCau, compact,
 }: ForecastChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -157,10 +159,17 @@ function ForecastChart({
 
     const divX = xOf(historical.length - 1)
     ctx.setLineDash([4, 4])
-    ctx.strokeStyle = "rgba(255,255,255,0.15)"
-    ctx.lineWidth = 1
+    ctx.strokeStyle = "#FFE500"
+    ctx.lineWidth = 2
     ctx.beginPath(); ctx.moveTo(divX, pT); ctx.lineTo(divX, pT + cH); ctx.stroke()
     ctx.setLineDash([])
+
+    if (!compact) {
+      ctx.fillStyle = "#FFE500"
+      ctx.font = "900 9px monospace"
+      ctx.textAlign = "center"
+      ctx.fillText("▲ PRESENT", divX, pT - 7)
+    }
 
     if (goalValue && goalValue > 0 && !compact) {
       const gy = yOf(goalValue)
@@ -175,13 +184,15 @@ function ForecastChart({
       ctx.fillText(`GOAL ${fmt(goalValue)}`, pL + 4, gy - 5)
     }
 
+    const lastHist = historical[historical.length - 1] ?? 0
+
     if (showOpt && showCau) {
       ctx.beginPath()
-      ctx.moveTo(xOf(historical.length), yOf(opt[0] ?? 0))
+      ctx.moveTo(xOf(historical.length - 1), yOf(lastHist))
       for (let i = 0; i < periods; i++) ctx.lineTo(xOf(historical.length + i), yOf(opt[i] ?? 0))
       for (let i = periods - 1; i >= 0; i--) ctx.lineTo(xOf(historical.length + i), yOf(cau[i] ?? 0))
       ctx.closePath()
-      ctx.fillStyle = `${accentColor}10`
+      ctx.fillStyle = `${accentColor}15`
       ctx.fill()
     }
 
@@ -202,16 +213,17 @@ function ForecastChart({
       ctx.setLineDash([])
     }
 
-    if (showCau) drawLine(cau, historical.length, COLOR_CAU, compact ? 2 : 3.5, [6, 4])
-    if (showReal) drawLine(real, historical.length, realColor, compact ? 2 : 3.5)
-    if (showOpt) drawLine(opt, historical.length, COLOR_OPT, compact ? 2 : 3.5)
+    if (showCau) drawLine([lastHist, ...cau], historical.length - 1, COLOR_CAU, compact ? 2 : 3.5, [6, 4])
+    if (showReal) drawLine([lastHist, ...real], historical.length - 1, realColor, compact ? 2 : 3.5)
+    if (showOpt) drawLine([lastHist, ...opt], historical.length - 1, COLOR_OPT, compact ? 2 : 3.5)
 
     if (showHist) {
       drawLine(historical, 0, accentColor, compact ? 1.5 : 3)
       const lx = xOf(historical.length - 1)
-      const ly = yOf(historical[historical.length - 1] ?? 0)
-      ctx.beginPath(); ctx.arc(lx, ly, compact ? 3 : 5, 0, Math.PI * 2)
-      ctx.fillStyle = accentColor; ctx.fill()
+      const ly = yOf(lastHist)
+      ctx.beginPath(); ctx.arc(lx, ly, compact ? 4 : 6, 0, Math.PI * 2)
+      ctx.fillStyle = "#FFE500"; ctx.fill()
+      ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.stroke()
     }
 
     if (!compact) {
@@ -223,8 +235,9 @@ function ForecastChart({
         if (labels[i]) ctx.fillText(labels[i], xOf(i), pT + cH + 14)
       }
       for (let i = 0; i < periods; i += step) {
-        ctx.fillStyle = `${accentColor}88`
-        ctx.fillText(`+${i + 1}`, xOf(historical.length + i), pT + cH + 14)
+        const fTxt = forecastLabels[i] || `+${i + 1}`
+        ctx.fillStyle = `${accentColor}aa`
+        ctx.fillText(fTxt, xOf(historical.length + i), pT + cH + 14)
         ctx.fillStyle = "rgba(255,255,255,0.30)"
       }
     }
@@ -240,30 +253,33 @@ function ForecastChart({
       ctx.setLineDash([])
 
       if (future) {
-        const ttW = 160, ttH = 84
+        const ttW = 165, ttH = 84
         const ttX = Math.min(x + 10, W - ttW - 4)
         const ttY = Math.max(pT, yv - ttH / 2)
+        const fTxt = forecastLabels[period] || `+${period + 1}`
         ctx.fillStyle = "#111118"; ctx.strokeStyle = accentColor; ctx.lineWidth = 1.5
         ctx.beginPath(); ctx.roundRect(ttX, ttY, ttW, ttH, 5); ctx.fill(); ctx.stroke()
         ctx.font = "800 9px monospace"; ctx.textAlign = "left"
-        ctx.fillStyle = "rgba(255,255,255,0.5)"; ctx.fillText(`FORECAST +${period + 1}`, ttX + 8, ttY + 14)
+        ctx.fillStyle = "rgba(255,255,255,0.5)"; ctx.fillText(`FORECAST (${fTxt})`, ttX + 8, ttY + 14)
         if (showOpt) { ctx.fillStyle = COLOR_OPT; ctx.fillText(`OPTIMISTIC: ${fmt(opt[period] ?? 0)}`, ttX + 8, ttY + 30) }
         if (showReal) { ctx.fillStyle = realColor; ctx.fillText(`REALISTIC:  ${fmt(real[period] ?? 0)}`, ttX + 8, ttY + 46) }
         if (showCau) { ctx.fillStyle = COLOR_CAU; ctx.fillText(`CAUTIOUS:   ${fmt(cau[period] ?? 0)}`, ttX + 8, ttY + 62) }
       } else if (historical[period] !== undefined) {
-        const ttW = 130, ttH = 42
+        const ttW = 145, ttH = 42
         const ttX = Math.min(x + 10, W - ttW - 4)
         const ttY = Math.max(pT, yv - ttH / 2)
+        const isPres = period === historical.length - 1
         ctx.fillStyle = "#111118"; ctx.strokeStyle = accentColor; ctx.lineWidth = 1.5
         ctx.beginPath(); ctx.roundRect(ttX, ttY, ttW, ttH, 5); ctx.fill(); ctx.stroke()
         ctx.font = "800 9px monospace"; ctx.textAlign = "left"
         ctx.fillStyle = accentColor
         ctx.fillText(`${labels[period] ?? ""}: ${fmt(historical[period] ?? 0)}`, ttX + 8, ttY + 14)
-        ctx.fillStyle = "rgba(255,255,255,0.35)"; ctx.font = "600 8px monospace"
-        ctx.fillText("HISTORICAL", ttX + 8, ttY + 30)
+        ctx.fillStyle = isPres ? "#FFE500" : "rgba(255,255,255,0.35)"
+        ctx.font = "600 8px monospace"
+        ctx.fillText(isPres ? "HISTORICAL (PRESENT)" : "HISTORICAL", ttX + 8, ttY + 30)
       }
     }
-  }, [historical, opt, real, cau, accentColor, fmt, labels, goalValue,
+  }, [historical, opt, real, cau, accentColor, fmt, labels, forecastLabels, goalValue,
       showHist, showOpt, showReal, showCau, compact, hover, realColor, periods])
 
   function handleMouseMove(e: React.MouseEvent<HTMLCanvasElement>) {
@@ -296,7 +312,11 @@ function ForecastChart({
 }
 
 // ─── Main module ──────────────────────────────────────────────────────────
-export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({ data }) => {
+export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({
+  data,
+  dailyMetrics = [],
+  trafficByDay = [],
+}) => {
   const { palette } = useVt2Theme()
   const [metric, setMetric] = useState<MetricKey>("views")
   const [gran, setGran] = useState<Gran>("MONTHLY")
@@ -318,11 +338,16 @@ export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({ 
   const m = metricMap[metric]
   const accent = m.color
 
-  // Roll canonical rows into the granularity we're on. Weekly rollup uses a
-  // generous 52-week window so we always have enough history to fit slopes.
+  const rollupRes = useMemo(
+    () => gran === "WEEKLY"
+      ? rollupWeeklyChannelWithSource(data, dailyMetrics, trafficByDay, 16)
+      : rollupMonthlyChannelWithSource(data, dailyMetrics, trafficByDay),
+    [gran, data, dailyMetrics, trafficByDay],
+  )
+
   const rows: MetricRow[] = useMemo(
-    () => gran === "WEEKLY" ? rollupWeeklyFromVideos(data, 52) : rollupMonthlyFromVideos(data),
-    [gran, data],
+    () => "weeks" in rollupRes ? rollupRes.weeks : rollupRes.months,
+    [rollupRes],
   )
 
   const historical = useMemo(
@@ -345,9 +370,12 @@ export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({ 
   )
 
   const periodLabel = gran === "WEEKLY" ? "week" : "month"
-  const recentAvg = historical.length > 0
-    ? historical.slice(-6).reduce((a, b) => a + b, 0) / Math.min(6, historical.length)
-    : 0
+  const activeHist = historical.filter((v) => v > 0)
+  const recentAvg = activeHist.length > 0
+    ? activeHist.slice(-6).reduce((a, b) => a + b, 0) / Math.min(6, activeHist.length)
+    : historical.length > 0
+      ? historical.slice(-6).reduce((a, b) => a + b, 0) / Math.min(6, historical.length)
+      : 0
   const realFutureAvg = real.length > 0 ? real.reduce((a, b) => a + b, 0) / real.length : 0
   const optFutureAvg = opt.length > 0 ? opt.reduce((a, b) => a + b, 0) / opt.length : 0
   const cauFutureAvg = cau.length > 0 ? cau.reduce((a, b) => a + b, 0) / cau.length : 0

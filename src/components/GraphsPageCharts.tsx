@@ -2906,11 +2906,11 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
            ))}
           </Pie>
           <Tooltip content={<ChartTip />} />
-          <text x="50%" y={metric.key === "watchHours" ? "47%" : "50%"} textAnchor="middle" dominantBaseline="middle" fill="#000" className="text-[14px] font-[1000] uppercase">
+          <text x="50%" y={metric.key === "watchHours" ? "47%" : "50%"} textAnchor="middle" dominantBaseline="middle" fill="#000" className="text-[24px] font-[1000] uppercase">
            {metric.key === "watchHours" ? "WATCH" : metric.label.toUpperCase()}
           </text>
           {metric.key === "watchHours" ? (
-           <text x="50%" y="54%" textAnchor="middle" dominantBaseline="middle" fill="#000" className="text-[14px] font-[1000] uppercase">HOURS</text>
+           <text x="50%" y="54%" textAnchor="middle" dominantBaseline="middle" fill="#000" className="text-[24px] font-[1000] uppercase">HOURS</text>
           ) : null}
          </PieChart>
        </StableChartFrame>

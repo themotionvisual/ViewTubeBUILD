@@ -161,8 +161,259 @@
  transition: width .3s ease;
 }
 
+/* ── ELECTRONIC SLIDE SWITCH FROM ANALOG COMPONENT ARCHIVE ──────────────── */
+.vt-retro-pcb-group {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #0f0f11;
+    border-radius: 8px;
+    border: 3px solid #000;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.8), 3px 3px 0 #000;
+    transition: background 0.3s;
+    user-select: none;
+    min-width: 105px;
+}
+
+.vt-retro-pcb-group .led-rim {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #555 0%, #2a2a2a 40%, #151515 100%);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.3);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.vt-retro-pcb-group .led-bulb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    box-shadow: inset 1px 1px 3px rgba(0,0,0,0.8);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 2;
+}
+
+.vt-retro-pcb-group .led-bulb::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 4px;
+    height: 3px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    transform: rotate(-30deg);
+}
+
+.vt-retro-pcb-group.is-active .led-rim {
+    background: linear-gradient(135deg, #666 0%, #2a2a2a 30%, rgba(var(--active-col-rgb), 0.45) 100%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.4), 0 0 10px rgba(var(--active-col-rgb), 0.2);
+}
+
+.vt-retro-pcb-group.is-active .led-bulb {
+    background: var(--active-col);
+    box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.6), 0 0 12px var(--active-col), 0 0 20px rgba(var(--active-col-rgb), 0.4);
+}
+
+.vt-retro-pcb-group .switch-hitbox {
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+}
+
+.vt-retro-pcb-group .switch-hitbox:focus-visible {
+    outline: 2px solid var(--active-col, #3FEE56);
+    border-radius: 4px;
+}
+
+.vt-retro-pcb-group .sw-slide-housing {
+    width: 52px;
+    height: 26px;
+    background: linear-gradient(to bottom, #d1d5db, #9ca3af);
+    border-radius: 4px;
+    box-shadow: inset 0 1px 1px #fff, 0 0 0 2px #000;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+}
+
+.vt-retro-pcb-group .sw-slide-track {
+    width: 100%;
+    height: 12px;
+    background: #111;
+    border-radius: 2px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+    position: relative;
+}
+
+.vt-retro-pcb-group .sw-slide-nub {
+    width: 14px;
+    height: 18px;
+    background: #374151;
+    border: 1px solid #111;
+    border-radius: 2px;
+    position: absolute;
+    top: -3px;
+    left: 2px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1.5px 1px rgba(255,255,255,0.2);
+    transition: left 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.vt-retro-pcb-group .sw-slide-nub::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 3px;
+    bottom: 3px;
+    width: 2px;
+    background: #111;
+    transform: translateX(-50%);
+}
+
+.vt-retro-pcb-group.is-active .sw-slide-nub {
+    left: calc(100% - 16px);
+    background: #111827;
+}
+
+.vt-retro-pcb-group .comp-label {
+    font-family: var(--vt-retro-mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: #4b5563;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: center;
+}
+
+.vt-retro-pcb-group.is-active .comp-label {
+    color: var(--active-col);
+    text-shadow: 0 0 4px rgba(255,255,255,0.1);
+}
+
+.vt-retro-pcb-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Sync status states and animations for PCB slide switch LEDs */
+@keyframes pcb-led-pulse-green {
+    0% {
+        background: #4FFF5B;
+        box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.6), 0 0 6px #4FFF5B, 0 0 10px rgba(79,255,91, 0.4);
+    }
+    50% {
+        background: #115c16;
+        box-shadow: inset -2px -2px 4px rgba(0,0,0,0.6), inset 2px 2px 4px rgba(255,255,255,0.1), 0 0 2px rgba(79,255,91, 0.1);
+    }
+    100% {
+        background: #4FFF5B;
+        box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.6), 0 0 6px #4FFF5B, 0 0 10px rgba(79,255,91, 0.4);
+    }
+}
+
+/* Syncing state: LED pulses green */
+.vt-retro-pcb-group.is-syncing .led-rim {
+    background: linear-gradient(135deg, #666 0%, #2a2a2a 30%, rgba(79,255,91, 0.45) 100%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.4), 0 0 10px rgba(79,255,91, 0.2);
+}
+.vt-retro-pcb-group.is-syncing .led-bulb {
+    animation: pcb-led-pulse-green 1s infinite ease-in-out;
+}
+.vt-retro-pcb-group.is-syncing .comp-label {
+    color: #4FFF5B;
+    text-shadow: 0 0 4px rgba(79,255,91, 0.3);
+}
+
+/* Waiting state: LED turns yellow */
+.vt-retro-pcb-group.is-waiting .led-rim {
+    background: linear-gradient(135deg, #666 0%, #2a2a2a 30%, rgba(255,255,97, 0.45) 100%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.4), 0 0 10px rgba(255,255,97, 0.2);
+}
+.vt-retro-pcb-group.is-waiting .led-bulb {
+    background: #FFFF61;
+    box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.6), 0 0 12px #FFFF61, 0 0 20px rgba(255,255,97, 0.4);
+}
+.vt-retro-pcb-group.is-waiting .comp-label {
+    color: #FFFF61;
+    text-shadow: 0 0 4px rgba(255,255,97, 0.3);
+}
+
+/* Completed state: LED turns blue */
+.vt-retro-pcb-group.is-completed .led-rim {
+    background: linear-gradient(135deg, #666 0%, #2a2a2a 30%, rgba(59,107,255, 0.45) 100%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.4), 0 0 10px rgba(59,107,255, 0.2);
+}
+.vt-retro-pcb-group.is-completed .led-bulb {
+    background: #3B6BFF;
+    box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.6), 0 0 12px #3B6BFF, 0 0 20px rgba(59,107,255, 0.4);
+}
+.vt-retro-pcb-group.is-completed .comp-label {
+    color: #3B6BFF;
+    text-shadow: 0 0 4px rgba(59,107,255, 0.3);
+}
+
 @media (prefers-reduced-motion: reduce) {
  .vt-retro-led.is-pulse.is-lit { animation: none; }
  .vt-retro-switch,
  .vt-retro-vu > i { transition: none; }
+ .vt-retro-pcb-group.is-syncing .led-bulb { animation: none; background: #4FFF5B; }
+}
+
+/* Compact layout for row action slide switches */
+.vt-retro-pcb-group.is-category-action {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    min-width: 0 !important;
+    gap: 4px !important;
+    display: inline-flex !important;
+}
+.vt-retro-pcb-group.is-category-action .vt-retro-pcb-controls {
+    gap: 6px !important;
+}
+.vt-retro-pcb-group.is-category-action .sw-slide-housing {
+    width: 44px !important;
+    height: 22px !important;
+    padding: 0 3px !important;
+}
+.vt-retro-pcb-group.is-category-action .sw-slide-track {
+    height: 10px !important;
+}
+.vt-retro-pcb-group.is-category-action .sw-slide-nub {
+    width: 12px !important;
+    height: 14px !important;
+    top: -2px !important;
+}
+.vt-retro-pcb-group.is-category-action.is-active .sw-slide-nub {
+    left: calc(100% - 14px) !important;
+}
+.vt-retro-pcb-group.is-category-action .led-rim {
+    width: 18px !important;
+    height: 18px !important;
+}
+.vt-retro-pcb-group.is-category-action .led-bulb {
+    width: 10px !important;
+    height: 10px !important;
+}
+.vt-retro-pcb-group.is-category-action .comp-label {
+    font-size: 8px !important;
+    letter-spacing: 0.02em !important;
 }

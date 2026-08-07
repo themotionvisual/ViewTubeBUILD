@@ -101,6 +101,7 @@ type PlaylistMetadata = {
  publishedAt: string
  videoCount: number
  privacyStatus: string
+ thumbnail?: string
 }
 
 type UploadPlaylistItem = {
@@ -1080,6 +1081,7 @@ const getPlaylistMetadata = async (token: string): Promise<PlaylistMetadata[]> =
     publishedAt: item.snippet?.publishedAt ? new Date(item.snippet.publishedAt).toLocaleDateString() : "-",
     videoCount: numberOrZero(item.contentDetails?.itemCount),
     privacyStatus: item.status?.privacyStatus || "public",
+    thumbnail: item.snippet?.thumbnails?.medium?.url || item.snippet?.thumbnails?.default?.url || "",
    })
   })
   pageToken = data.nextPageToken || ""
@@ -2580,21 +2582,28 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    })
    snapshot = {
     ...snapshot,
-    playlistsData: (result.rows || []).map((row) => ({
-     playlistId: row.playlist,
-     playlist: playlistMetadataById.get(String(row.playlist))?.title || `Playlist ${row.playlist}`,
-     title: playlistMetadataById.get(String(row.playlist))?.title || `Playlist ${row.playlist}`,
-     description: playlistMetadataById.get(String(row.playlist))?.description || "Playlist metadata not returned by Data API.",
-     publishedAt: playlistMetadataById.get(String(row.playlist))?.publishedAt || "-",
-     videoCount: playlistMetadataById.get(String(row.playlist))?.videoCount ?? 0,
-     privacyStatus: playlistMetadataById.get(String(row.playlist))?.privacyStatus || "unknown",
-     views: numberOrZero(row.playlistViews),
-     watchTime: numberOrZero(row.playlistEstimatedMinutesWatched),
-     playlistStarts: numberOrZero(row.playlistStarts),
-     playlistSaves: numberOrZero(row.playlistSaves),
-     averageTimeInPlaylist: numberOrZero(row.averageTimeInPlaylist),
-     viewsPerPlaylistStart: numberOrZero(row.playlistStarts) > 0 ? numberOrZero(row.playlistViews) / numberOrZero(row.playlistStarts) : 0,
-    })),
+    playlistsData: (result.rows || []).map((row) => {
+     const pId = String(row.playlist || "").trim()
+     const meta = playlistMetadataById.get(pId)
+     return {
+      playlistId: pId,
+      playlist: meta?.title || `Playlist ${pId}`,
+      title: meta?.title || `Playlist ${pId}`,
+      description: meta?.description || "Playlist metadata not returned by Data API.",
+      publishedAt: meta?.publishedAt || "-",
+      videoCount: meta?.videoCount ?? 0,
+      privacyStatus: meta?.privacyStatus || "unknown",
+      cover: meta?.thumbnail || "",
+      thumbnail: meta?.thumbnail || "",
+      playlistUrl: pId && pId !== "Unknown" && pId !== "-" ? `https://www.youtube.com/playlist?list=${pId}` : "",
+      views: numberOrZero(row.playlistViews),
+      watchTime: numberOrZero(row.playlistEstimatedMinutesWatched),
+      playlistStarts: numberOrZero(row.playlistStarts),
+      playlistSaves: numberOrZero(row.playlistSaves),
+      averageTimeInPlaylist: numberOrZero(row.averageTimeInPlaylist),
+      viewsPerPlaylistStart: numberOrZero(row.playlistStarts) > 0 ? numberOrZero(row.playlistViews) / numberOrZero(row.playlistStarts) : 0,
+     }
+    }),
    }
    addManifestResult(manifest, "playlists_analytics", !!result.rows, result.rows?.length || 0, result.columns, result.error)
    if (result.rows) await persistDatasetRows({ runId, datasetId: "playlists", phase: "playlists_analytics", rawRows: result.rows, tableRows: snapshot.playlistsData as Array<Record<string, unknown>>, columns: result.columns })

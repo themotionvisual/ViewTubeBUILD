@@ -163,6 +163,7 @@ const DISPLAY_HEADER_LABELS: Record<string, string> = {
  title: "Video",
  videoId: "ID",
  videoUrl: "URL",
+ playlistUrl: "URL",
  publishedAt: "Published",
  publishedDay: "Day",
  publishedTime: "Time",
@@ -187,6 +188,11 @@ const DISPLAY_HEADER_LABELS: Record<string, string> = {
  subscribersLost: "Subs Lost",
  playbackBasedCpm: "Playback CPM",
  monetizedPlaybacks: "Monetized Plays",
+}
+
+const getColumnDisplayLabel = (tableId: string, column: { key: string; label: string }): string => {
+ if (tableId === "playlists" && column.key === "title") return "Playlist"
+ return DISPLAY_HEADER_LABELS[column.key] || column.label
 }
 
 const COLLAPSED_GROUP_DISPLAY_LABELS: Record<string, string> = {
@@ -621,25 +627,77 @@ const VideoIdentityCell = ({
  row,
  title,
  titleLayout,
+ hideMeta,
+}: {
+ row: VtSyncTableRow
+ title: string
+ titleLayout?: { fontSize: number; lineCount: number }
+ hideMeta?: boolean
+}) => {
+ const videoId = String(row.videoId || row.term || "-")
+ const displayTitle = String(row.title || row.sourceTitle || (title && title !== videoId ? title : "") || videoId)
+ return (
+  <span className="vt-sync-video-identity" title={`${displayTitle}\n${videoId}`}>
+   <strong
+    className={`is-two-line ${titleLayout?.lineCount === 2 ? "is-condensed" : ""}`}
+    style={titleLayout ? { fontSize: `${titleLayout.fontSize}px` } : undefined}>
+    {displayTitle}
+   </strong>
+   {!hideMeta && (
+    <span className="vt-sync-video-identity-meta">
+     <small>{videoId}</small>
+    </span>
+   )}
+  </span>
+ )
+}
+
+const PlaylistIdentityCell = ({
+ row,
+ title,
+ titleLayout,
 }: {
  row: VtSyncTableRow
  title: string
  titleLayout?: { fontSize: number; lineCount: number }
 }) => {
- const videoId = String(row.videoId || "-")
- const videoUrl = String(
-  row.videoUrl ||
-   (videoId !== "-" ? `https://www.youtube.com/watch?v=${videoId}` : ""),
- )
+ const playlistId = String(row.playlistId || row.id || "-")
  return (
-  <span className="vt-sync-video-identity" title={`${title}\n${videoId}`}>
+  <span className="vt-sync-video-identity" title={`${title}\n${playlistId}`}>
    <strong
     className={`is-two-line ${titleLayout?.lineCount === 2 ? "is-condensed" : ""}`}
     style={titleLayout ? { fontSize: `${titleLayout.fontSize}px` } : undefined}>
     {title}
    </strong>
    <span className="vt-sync-video-identity-meta">
-    <small>{videoId}</small>
+    <small>{playlistId}</small>
+   </span>
+  </span>
+ )
+}
+
+const ChannelIdentityCell = ({
+ row,
+ title,
+ titleLayout,
+}: {
+ row: VtSyncTableRow
+ title: string
+ titleLayout?: { fontSize: number; lineCount: number }
+}) => {
+ const channelId = String(row.channelId || row.term || "-")
+ const displayTitle = String(row.title || row.channelTitle || row.sourceTitle || (title && title !== channelId ? title : "") || channelId)
+ const handle = String(row.handle || "").trim()
+ const meta = handle ? `${handle} (${channelId})` : channelId
+ return (
+  <span className="vt-sync-video-identity" title={`${displayTitle}\n${channelId}`}>
+   <strong
+    className={`is-two-line ${titleLayout?.lineCount === 2 ? "is-condensed" : ""}`}
+    style={titleLayout ? { fontSize: `${titleLayout.fontSize}px` } : undefined}>
+    {displayTitle}
+   </strong>
+   <span className="vt-sync-video-identity-meta">
+    <small>{meta}</small>
    </span>
   </span>
  )
@@ -1663,7 +1721,7 @@ const filteredRows = useMemo(() => {
      const metrics = registered.slice(0, 4).map((column) => {
       const total = totalVtSyncColumn(tableTotalRows, column)
       return {
-       label: DISPLAY_HEADER_LABELS[column.key] || column.label,
+       label: getColumnDisplayLabel(table.id, column),
        value: total.primary || "-",
        note: total.secondary || "Available values",
       }
@@ -2036,9 +2094,7 @@ const filteredRows = useMemo(() => {
    if (!resize) return
    setWidths((current) => ({
     ...current,
-    [resize.key]: clampVtSyncColumnWidth(
-     resize.width + event.clientX - resize.start,
-    ),
+    [resize.key]: clampVtSyncColumnWidth(resize.width + event.clientX - resize.start),
    }))
   }
   const up = () => {
@@ -2135,7 +2191,7 @@ const filteredRows = useMemo(() => {
   ghost.className = "vt-sync-column-drag-ghost"
   ghost.style.width = `${width}px`
   const header = document.createElement("strong")
-  header.textContent = DISPLAY_HEADER_LABELS[column.key] || column.label
+  header.textContent = getColumnDisplayLabel(table.id, column)
   header.style.background = color
   ghost.appendChild(header)
   renderedRows.slice(0, 8).forEach((row) => {
@@ -2863,7 +2919,7 @@ const filteredRows = useMemo(() => {
          "Age Total"
         : undefined
        const [first, second] = splitHeader(
-        demographicHeader || DISPLAY_HEADER_LABELS[column.key] || column.label,
+        demographicHeader || getColumnDisplayLabel(table.id, column),
        )
        const source =
         dragKey ?
@@ -3148,13 +3204,24 @@ const filteredRows = useMemo(() => {
              title={text}
              titleLayout={titleLayout}
             />
-           : (
-            (table.id === "chan_page" || table.id === "suggested")
-            && column.key === "term"
-           ) ?
-            <CompositeIdentityCell tableId={table.id} row={row} />
+           : table.id === "suggested" && (column.key === "title" || column.key === "term") ?
+            <VideoIdentityCell
+             row={row}
+             title={text}
+             titleLayout={titleLayout}
+            />
+           : table.id === "chan_page" && (column.key === "title" || column.key === "term") ?
+            <ChannelIdentityCell
+             row={row}
+             title={text}
+             titleLayout={titleLayout}
+            />
            : table.id === "playlists" && column.key === "title" ?
-            <CompositeIdentityCell tableId={table.id} row={row} />
+            <PlaylistIdentityCell
+             row={row}
+             title={text}
+             titleLayout={titleLayout}
+            />
            : table.id === "videos" && column.key === "publishedAt" ?
             <PublishedMomentCell row={row} />
            : table.id === "demographics" && column.key === "ageGroupLabel" ?
@@ -3172,12 +3239,20 @@ const filteredRows = useMemo(() => {
              aria-label={`${String(row.countryName || row.countryCode || "Region")} flag`}>
              <span className={`fi fi-${text}`} aria-hidden="true" />
             </span>
-           : column.key === "videoUrl" && !isMissingVtSyncValue(raw) ?
+           : (column.key === "videoUrl" || column.key === "playlistUrl" || column.key === "channelUrl") && !isMissingVtSyncValue(raw) ?
             <span className="vt-sync-url-buttons">
              <button
               type="button"
-              title="Copy URL"
-              aria-label="Copy video URL"
+              title={
+               column.key === "videoUrl" ? "Copy video URL"
+               : column.key === "playlistUrl" ? "Copy playlist URL"
+               : "Copy channel URL"
+              }
+              aria-label={
+               column.key === "videoUrl" ? "Copy video URL"
+               : column.key === "playlistUrl" ? "Copy playlist URL"
+               : "Copy channel URL"
+              }
               onClick={(event) => {
                event.stopPropagation()
                void navigator.clipboard?.writeText(String(raw))
@@ -3188,8 +3263,16 @@ const filteredRows = useMemo(() => {
               href={String(raw)}
               target="_blank"
               rel="noreferrer"
-              title="Open video"
-              aria-label="Open video"
+              title={
+               column.key === "videoUrl" ? "Open video"
+               : column.key === "playlistUrl" ? "Open playlist"
+               : "Open channel"
+              }
+              aria-label={
+               column.key === "videoUrl" ? "Open video"
+               : column.key === "playlistUrl" ? "Open playlist"
+               : "Open channel"
+              }
               onClick={(event) => event.stopPropagation()}>
               <ExternalLink />
              </a>
@@ -3216,11 +3299,7 @@ const filteredRows = useMemo(() => {
              library={spectrumBadgeLibrary}
              kind={column.key as "tags" | "topics"}
             />
-           : (
-            table.id === "traffic" &&
-            column.key === "source" &&
-            !isMissingVtSyncValue(raw)
-           ) ?
+           : table.id === "traffic" && column.key === "source" && !isMissingVtSyncValue(raw) ?
             renderTrafficSourceBadge(
              apiValuePresentation?.title || String(text || raw),
              apiValuePresentation?.apiValue || String(raw),
@@ -3578,7 +3657,7 @@ const filteredRows = useMemo(() => {
           </th>
           {deviceOsDisplayColumns.map((column, index) => {
            const [first, second] = splitHeader(
-            DISPLAY_HEADER_LABELS[column.key] || column.label,
+            getColumnDisplayLabel(table.id, column),
            )
            return (
             <th
@@ -3954,7 +4033,7 @@ const filteredRows = useMemo(() => {
          </th>
          {trafficDayDisplayColumns.map((column, index) => {
           const [first, second] = splitHeader(
-           DISPLAY_HEADER_LABELS[column.key] || column.label,
+           getColumnDisplayLabel(table.id, column),
           )
           return (
            <th
@@ -4534,7 +4613,7 @@ const filteredRows = useMemo(() => {
          </th>
          {retentionDisplayColumns.map((column, index) => {
           const [first, second] = splitHeader(
-           DISPLAY_HEADER_LABELS[column.key] || column.label,
+           getColumnDisplayLabel(table.id, column),
           )
           return (
            <th
@@ -5410,14 +5489,10 @@ const filteredRows = useMemo(() => {
       </p>
      : null}
 
-     {table.id === "demographics" ?
-      renderDemographicTable()
-     : table.id === "device_os" ?
-      renderDeviceOsTable()
-     : table.presentationMode === "traffic-source-day" ?
-      renderTrafficSourceDayTable()
-     : table.presentationMode === "retention-video" ?
-      renderRetentionVideoTable()
+     {table.id === "demographics" ? renderDemographicTable()
+     : table.id === "device_os" ? renderDeviceOsTable()
+     : table.presentationMode === "traffic-source-day" ? renderTrafficSourceDayTable()
+     : table.presentationMode === "retention-video" ? renderRetentionVideoTable()
      : <>
        <div
         className={`vt-sync-split-table ${table.id === "traffic" ? "has-toolbar-boundary" : ""}`}>

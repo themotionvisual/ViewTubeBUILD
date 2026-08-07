@@ -305,8 +305,10 @@
 .vt-sync-data-table td[data-column-key="playlistId"] .vt-sync-cell-text.is-table-sized-text { display: block; padding-right: 8px; padding-left: 8px; line-height: var(--vt-row-height); text-align: left; white-space: nowrap; }
 .vt-sync-data-table td[data-column-key="title"] .vt-sync-cell-text.is-table-sized-text { justify-content: initial; align-content: center; padding-right: 8px; padding-left: 8px; text-align: left; text-transform: none; }
 .vt-sync-data-table td[data-column-key="descriptionSnippet"] .vt-sync-cell-text,
+.vt-sync-data-table td[data-column-key="description"] .vt-sync-cell-text,
 .vt-sync-data-table td[data-column-key="tags"] .vt-sync-cell-text { justify-content: flex-start; font-size: 16px; font-weight: 1000; text-align: left; }
-.vt-sync-data-table td[data-column-key="descriptionSnippet"] .vt-sync-cell-text { display: -webkit-box; align-content: center; overflow: hidden; line-height: 1.1; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 3; text-overflow: ellipsis; }
+.vt-sync-data-table td[data-column-key="descriptionSnippet"] .vt-sync-cell-text,
+.vt-sync-data-table td[data-column-key="description"] .vt-sync-cell-text { display: -webkit-box; align-content: center; overflow: hidden; line-height: 1.1; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 3; text-overflow: ellipsis; }
 .vt-sync-data-table td[data-column-key="topics"] .vt-sync-cell-text { display: -webkit-box; align-content: center; font-size: 10px; line-height: 1.05; text-transform: uppercase; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .vt-sync-data-table td[data-column-key="publishedAt"] .vt-sync-cell-text { font-size: 15px; }
 .vt-sync-video-identity { position: absolute; inset: 0; display: block; min-width: 0; overflow: hidden; padding: 4px 6px 2px 6px; text-align: left; }
@@ -711,7 +713,8 @@
 .vt-sync-toolbox-table.is-compact.no-spark .vt-sync-row-rail-number { font-size: 14px !important; }
 .vt-sync-toolbox-table.is-compact.no-spark .vt-sync-thumbnail { width: 100%; }
 .vt-sync-toolbox-table.is-compact .vt-sync-data-table td[data-column-key="title"] .vt-sync-cell-text,
-.vt-sync-toolbox-table.is-compact .vt-sync-data-table td[data-column-key="descriptionSnippet"] .vt-sync-cell-text { font-size: 10px; line-height: 1; white-space: nowrap; }
+.vt-sync-toolbox-table.is-compact .vt-sync-data-table td[data-column-key="descriptionSnippet"] .vt-sync-cell-text,
+.vt-sync-toolbox-table.is-compact .vt-sync-data-table td[data-column-key="description"] .vt-sync-cell-text { font-size: 10px; line-height: 1; white-space: nowrap; }
 .vt-sync-toolbox-table.is-compact .vt-sync-data-table td[data-column-key="topics"] .vt-sync-cell-text { display: -webkit-box; padding: 2px 2px 10px; overflow: hidden; font-size: 9px; line-height: 1; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .vt-sync-toolbox-table.is-compact.no-spark .vt-sync-data-table td[data-column-key="topics"] .vt-sync-cell-text { display: block; padding: 2px 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; -webkit-line-clamp: 1; }
 .vt-sync-toolbox-table.is-compact .vt-sync-link-actions { gap: 1px; }

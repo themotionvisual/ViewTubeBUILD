@@ -32,11 +32,18 @@ const num = (value: unknown): number | undefined => {
 const numberOrZero = (value: unknown): number => num(value) ?? 0
 
 const withPlaylistShareColumns = (rows: Row[]): Row[] => {
- const normalized: Row[] = rows.map((row): Row => ({
-  ...row,
-  title: firstValue(row.title, row.playlist),
-  watchTime: firstValue(row.watchTime, row.playlistEstimatedMinutesWatched),
- }))
+ const normalized: Row[] = rows.map((row): Row => {
+  const pId = String(row.playlistId || row.id || row.playlist || "").trim()
+  const thumbnail = String(row.cover || row.thumbnail || "").trim()
+  return {
+   ...row,
+   title: firstValue(row.title, row.playlist),
+   watchTime: firstValue(row.watchTime, row.playlistEstimatedMinutesWatched),
+   playlistUrl: pId && pId !== "Unknown" && pId !== "-" ? `https://www.youtube.com/playlist?list=${pId}` : "",
+   cover: thumbnail,
+   thumbnail,
+  }
+ })
  const viewsTotal = normalized.reduce((sum, row) => sum + Math.max(0, num(row.views) ?? 0), 0)
  const watchTimeTotal = normalized.reduce((sum, row) => sum + Math.max(0, num(row.watchTime) ?? 0), 0)
  return normalized.map((row) => {
@@ -372,15 +379,23 @@ const channelTotalRows = (snapshot: VtSyncSnapshot): Row[] => {
  return rows.filter((row) => Object.values(row).some((value, index) => index > 0 && !isMissing(value)))
 }
 
-const normalizeTrafficRows = (rows: Row[], identityKey: string): Row[] => rows.map((row) => ({
- ...row,
- ...metricBase(row),
- source: firstValue(row.source, row.insightTrafficSourceType, row.term),
- term: firstValue(row.term, row.insightTrafficSourceDetail, row.insightTrafficSourceType, row.source),
- title: firstValue(row.title, row.videoTitle, row.channelTitle, row.playlistTitle),
- handle: firstValue(row.handle, row.channelHandle),
- [identityKey]: firstValue(row[identityKey], row.term, row.source, row.insightTrafficSourceDetail, row.insightTrafficSourceType),
-}))
+const normalizeTrafficRows = (rows: Row[], identityKey: string, tableId?: string): Row[] => rows.map((row) => {
+ const id = String(firstValue(row.term, row.insightTrafficSourceDetail, row.insightTrafficSourceType, row.source, "Unknown"))
+ let defaultTitle = undefined
+ if (id && id !== "Unknown" && id !== "-") {
+  if (tableId === "suggested") defaultTitle = `Suggested Video ${id}`
+  else if (tableId === "chan_page") defaultTitle = `Channel ${id}`
+ }
+ return {
+  ...row,
+  ...metricBase(row),
+  source: firstValue(row.source, row.insightTrafficSourceType, row.term),
+  term: id,
+  title: firstValue(row.title, row.videoTitle, row.channelTitle, row.playlistTitle, defaultTitle),
+  handle: firstValue(row.handle, row.channelHandle),
+  [identityKey]: firstValue(row[identityKey], id),
+ }
+})
 
 const withTrafficShareColumns = (rows: Row[]): Row[] => {
  const totalViews = rows.reduce((sum, row) => sum + numberOrZero(firstValue(row.views, row.metrics && asRecord(row.metrics).views)), 0)
@@ -648,13 +663,13 @@ export const normalizeVtSyncTableRows = (tableId: string, rows: Row[]): Row[] =>
   case "traffic_no_link_other":
   case "traffic_day":
   case "other_feat": return withTrafficShareColumns(normalizeTrafficRows(rows, "term"))
-  case "suggested":
+  case "suggested": return withTrafficShareColumns(normalizeTrafficRows(rows, "term", "suggested").map((row) => ({ ...row, cover: row.thumbnail })))
+  case "chan_page": return withTrafficShareColumns(normalizeTrafficRows(rows, "term", "chan_page").map((row) => ({ ...row, cover: row.thumbnail || row.avatarUrl })))
   case "traffic_card":
   case "traffic_end_screen":
   case "traffic_live_redirect":
   case "traffic_playlist":
-  case "traffic_yt_playlist_page":
-  case "chan_page": return withTrafficShareColumns(normalizeTrafficRows(rows, "term"))
+  case "traffic_yt_playlist_page": return withTrafficShareColumns(normalizeTrafficRows(rows, "term"))
   case "locations": return withTrafficShareColumns(normalizeRows(rows, { location: "insightPlaybackLocationType" }))
   case "subs": return normalizeRows(rows, { status: "subscribedStatus" })
   case "devices": return normalizeRows(rows, { device: "deviceType" })

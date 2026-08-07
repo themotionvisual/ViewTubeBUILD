@@ -115,6 +115,96 @@ export const VtSyncControllerPanel: React.FC<{
 
  const startSingle = (category: VtSyncCategoryDefinition) => startCategories([category.id], category.id === "retention")
 
+ // Track category-specific completion
+ const [prevActiveCategories, setPrevActiveCategoryIds] = useState<string[]>([])
+ const [categoryCompleted, setCategoryCompleted] = useState<Record<string, boolean>>({})
+
+ React.useEffect(() => {
+  const activeSet = new Set(activeCategoryIds)
+  const justCompleted: string[] = []
+  prevActiveCategories.forEach((id) => {
+   if (!activeSet.has(id)) {
+    justCompleted.push(id)
+   }
+  })
+
+  if (justCompleted.length > 0) {
+   setCategoryCompleted((current) => {
+    const next = { ...current }
+    justCompleted.forEach((id) => {
+     next[id] = true
+    })
+    return next
+   })
+
+   const timer = setTimeout(() => {
+    setCategoryCompleted((current) => {
+     const next = { ...current }
+     justCompleted.forEach((id) => {
+      delete next[id]
+     })
+     return next
+    })
+   }, 5000)
+   return () => clearTimeout(timer)
+  }
+
+  setPrevActiveCategoryIds(activeCategoryIds)
+ }, [activeCategoryIds, prevActiveCategories])
+
+ const renderCategorySlideSwitch = ({
+  label,
+  active,
+  completed,
+  onClick,
+  disabled,
+ }: {
+  label: string
+  active: boolean
+  completed: boolean
+  onClick: () => void
+  disabled?: boolean
+ }) => {
+  const statusClass =
+   active ? "is-syncing"
+   : completed ? "is-completed"
+   : ""
+
+  return (
+   <div
+    className={`vt-retro-pcb-group is-category-action ${active || completed ? "is-active" : ""} ${statusClass}`}
+    style={
+     {
+      "--active-col": "var(--led-green)",
+      "--active-col-rgb": "var(--led-green-rgb)",
+     } as React.CSSProperties
+    }
+   >
+    <div className="vt-retro-pcb-controls">
+     <button
+      type="button"
+      disabled={disabled || isSyncing}
+      onClick={onClick}
+      className="switch-hitbox"
+      aria-pressed={active}
+      title={`${active ? "Running" : "Start"} Sync`}
+      aria-label={`${active ? "Running" : "Start"} Sync`}
+     >
+      <div className="sw-slide-housing">
+       <div className="sw-slide-track">
+        <div className="sw-slide-nub" />
+       </div>
+      </div>
+     </button>
+     <div className="led-rim">
+      <div className="led-bulb" />
+     </div>
+    </div>
+    <div className="comp-label">{active ? "RUNNING" : completed ? "DONE" : label}</div>
+   </div>
+  )
+ }
+
  return (
   <ToolboxScaffold
    title="YOUTUBE DATA SYNC"
@@ -188,16 +278,12 @@ export const VtSyncControllerPanel: React.FC<{
              <span className="min-w-0 text-[10px] font-black uppercase leading-snug tracking-[0.02em] text-black/70 max-lg:col-span-2 max-lg:col-start-2">
               {VIDEOS_MERGED_DESCRIPTION}
              </span>
-             <button
-              type="button"
-              disabled={isSyncing}
-              onClick={() => void startCategories(videoCategoryIds)}
-              aria-label={`${hasPriorData ? "Update" : "Fully sync"} the video catalog and analytics`}
-              className="flex min-h-8 min-w-[68px] items-center justify-center gap-1 rounded-[7px] border-[2px] border-black bg-[#C0F240] px-2 py-1 text-[9px] font-black uppercase shadow-[2px_2px_0_0_#000] active:translate-x-px active:translate-y-px active:shadow-none focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-black disabled:opacity-45"
-             >
-              <RefreshCw className={`h-3.5 w-3.5 ${active ? "animate-spin" : ""}`} aria-hidden="true" />
-              {active ? "Running" : hasPriorData ? "Update" : "Full Sync"}
-             </button>
+             {renderCategorySlideSwitch({
+              label: hasPriorData ? "UPDATE" : "FULL SYNC",
+              active,
+              completed: videoCategoryIds.some((id) => categoryCompleted[id]),
+              onClick: () => void startCategories(videoCategoryIds),
+             })}
             </div>
            )
           })() : categories.map((category: VtSyncCategoryDefinition) => {
@@ -223,16 +309,12 @@ export const VtSyncControllerPanel: React.FC<{
              <span className="min-w-0 text-[10px] font-black uppercase leading-snug tracking-[0.02em] text-black/70 max-lg:col-span-2 max-lg:col-start-2">
               {category.description}
              </span>
-             <button
-              type="button"
-              disabled={isSyncing}
-              onClick={() => void startSingle(category)}
-              aria-label={`Sync ${category.label}${category.dependsOn?.length ? " with required prerequisites" : ""}`}
-              className="flex min-h-8 min-w-[68px] items-center justify-center gap-1 rounded-[7px] border-[2px] border-black bg-[#C0F240] px-2 py-1 text-[9px] font-black uppercase shadow-[2px_2px_0_0_#000] active:translate-x-px active:translate-y-px active:shadow-none focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-black disabled:opacity-45"
-             >
-              <RefreshCw className={`h-3.5 w-3.5 ${active ? "animate-spin" : ""}`} aria-hidden="true" />
-              {active ? "Running" : "Sync"}
-             </button>
+             {renderCategorySlideSwitch({
+              label: "SYNC",
+              active,
+              completed: categoryCompleted[category.id],
+              onClick: () => void startSingle(category),
+             })}
             </div>
            )
           })}
