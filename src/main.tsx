@@ -1,6 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+// Install error/rejection/fetch capture BEFORE anything else runs so we
+// don't miss the very first failure — the whole point of the on-screen
+// diagnostics is to be there when nothing else works.
+import { installOnScreenDiagnostics } from './app/onScreenDiagnostics'
+installOnScreenDiagnostics()
 // Eagerly evaluate authSession so its OAuth redirect hash listener fires
 // before the app mounts. This ensures the popup window handles the token
 // and calls window.close() before React can boot any auth side-effects.

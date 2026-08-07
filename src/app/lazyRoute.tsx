@@ -1,6 +1,7 @@
 import React, { Suspense } from "react"
 
 import { Spinner } from "../components/ui/spinner"
+import { formatDiagnostics, readDiagnostics } from "./onScreenDiagnostics"
 
 // After a Vercel redeploy, cached index.html can point at chunk hashes that
 // no longer exist. Vite/Rolldown's dynamic imports then reject with a
@@ -185,6 +186,62 @@ const RouteLoadingIndicator: React.FC = () => {
      Sign out &amp; clear cache
     </button>
    </div>
+   {/* On-screen diagnostics: mobile users can't open chrome://inspect from
+       their phone, so surface captured errors + failed requests directly in
+       the stuck UI. Screenshot-friendly. */}
+   <DiagnosticPanel />
+  </div>
+ )
+}
+
+const DiagnosticPanel: React.FC = () => {
+ const [expanded, setExpanded] = React.useState(false)
+ const [text, setText] = React.useState("")
+ React.useEffect(() => {
+  setText(formatDiagnostics(readDiagnostics()))
+ }, [expanded])
+
+ const copyToClipboard = () => {
+  const info = [
+   `location: ${window.location.href}`,
+   `ua: ${navigator.userAgent}`,
+   `hangCount: ${readHangCount()}`,
+   "",
+   text || formatDiagnostics(readDiagnostics()),
+  ].join("\n")
+  const doCopy = navigator.clipboard?.writeText
+  if (doCopy) {
+   doCopy.call(navigator.clipboard, info).catch(() => { /* ignore */ })
+  }
+ }
+
+ return (
+  <div className="mt-6 w-full max-w-lg">
+   <button
+    type="button"
+    className="rounded-full border-[2px] border-black bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
+    onClick={() => setExpanded((prev) => !prev)}
+    aria-expanded={expanded}
+   >
+    {expanded ? "Hide diagnostics" : "Show diagnostics"}
+   </button>
+   {expanded ? (
+    <div className="mt-3 rounded-[12px] border-[2px] border-black bg-[#0f172a] p-3 text-left shadow-[3px_3px_0_0_#000]">
+     <div className="mb-2 flex items-center justify-between">
+      <span className="text-[9px] font-black uppercase tracking-[0.14em] text-[#C0F240]">Runtime log</span>
+      <button
+       type="button"
+       className="rounded-full border border-[#C0F240] bg-transparent px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[#C0F240]"
+       onClick={copyToClipboard}
+      >
+       Copy
+      </button>
+     </div>
+     <pre className="max-h-[45vh] overflow-auto whitespace-pre-wrap break-words font-mono text-[10px] leading-[1.4] text-white/85">
+{text || "(no diagnostics captured — the app hasn't logged anything yet)"}
+     </pre>
+    </div>
+   ) : null}
   </div>
  )
 }
