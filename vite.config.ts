@@ -27,11 +27,40 @@ function stripDebugConsole(): Plugin {
   }
 }
 
+/**
+ * `flag-icons` ships CSS with two rules per country — `.fi-xx` (4x3
+ * background image) AND `.fi-xx.fis` (1x1 square background image) — plus
+ * both SVG variants for all ~250 countries. The app only ever uses
+ * `<span class="fi fi-XX">` (4x3), never `.fis`, so shipping the square
+ * variant is pure waste: 270+ unused `.fis` CSS rules bloat the analytics
+ * bundle, and Vite's CSS asset-URL scan drags every 1x1 SVG into
+ * `dist/assets/` even though nothing renders it. Strip the square rules
+ * before Vite processes the CSS so the `url(../flags/1x1/…)` references
+ * disappear and the square SVGs never get emitted.
+ */
+function trimFlagIconsCss(): Plugin {
+  const SQUARE_RULE = /,\.fi-[a-z-]+\.fis\{background-image:url\([^)]+1x1\/[^)]+\)\}/g
+  const SQUARE_RULE_STANDALONE = /\.fi-[a-z-]+\.fis\{background-image:url\([^)]+1x1\/[^)]+\)\}/g
+  return {
+    name: 'vt-trim-flag-icons-css',
+    apply: 'build',
+    enforce: 'pre',
+    transform(code, id) {
+      if (!id.includes('flag-icons') || !id.endsWith('.css')) return null
+      const trimmed = code
+        .replace(SQUARE_RULE, '')
+        .replace(SQUARE_RULE_STANDALONE, '')
+      if (trimmed === code) return null
+      return { code: trimmed, map: null }
+    },
+  }
+}
+
 // https://vite.dev/config/
 // NOTE: Vite 8 uses Rolldown (not Rollup/esbuild) as the bundler, so chunking
 // tuning uses Rolldown-native options (`advancedChunks`).
 export default defineConfig(() => ({
-  plugins: [react(), tailwindcss(), stripDebugConsole()],
+  plugins: [react(), tailwindcss(), stripDebugConsole(), trimFlagIconsCss()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
