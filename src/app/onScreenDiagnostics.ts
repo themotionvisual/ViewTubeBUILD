@@ -24,6 +24,31 @@ const BUFFER_LIMIT = 40
 const buffer: DiagnosticEntry[] = []
 const bootTime = typeof performance !== "undefined" ? performance.now() : Date.now()
 
+// Same shape check as `lazyRoute.tsx#CHUNK_ERROR_REGEX`. Duplicated here so
+// this file has no dependency on lazyRoute (they both need it at boot).
+const STALE_CHUNK_REGEX =
+ /(Loading chunk [\d]+ failed|Failed to fetch dynamically imported module|Importing a module script failed|ChunkLoadError|import\(\) with the argument|Unable to preload CSS|is not a valid JavaScript MIME type|Expected a JavaScript(?:.| )*module script|MIME type\s*\(?["']?text\/html|MIME type checking is enabled)/i
+
+const isStaleChunkMessage = (message: string): boolean =>
+ typeof message === "string" && STALE_CHUNK_REGEX.test(message)
+
+const RELOAD_FLAG = "vt_chunk_reload_attempted"
+
+// Global auto-reload for any dynamic import failure that looks stale-chunk-
+// shaped. Cache-busts via ?_v= so iOS Safari can't serve the stale HTML,
+// gated by sessionStorage so we can't loop.
+const attemptAutoReload = (): void => {
+ if (typeof window === "undefined") return
+ try {
+  if (sessionStorage.getItem(RELOAD_FLAG) === "1") return
+  sessionStorage.setItem(RELOAD_FLAG, "1")
+ } catch { /* ignore */ }
+ const search = window.location.search ? `${window.location.search}&` : "?"
+ const bustedUrl = `${window.location.pathname}${search}_v=${Date.now()}${window.location.hash}`
+ // location.replace() so the busted URL doesn't linger in history.
+ window.setTimeout(() => window.location.replace(bustedUrl), 50)
+}
+
 const now = (): number =>
  typeof performance !== "undefined"
   ? Math.round(performance.now() - bootTime)
@@ -72,6 +97,25 @@ export const installOnScreenDiagnostics = (): void => {
    : typeof reason === "string" ? reason
    : (() => { try { return JSON.stringify(reason).slice(0, 200) } catch { return String(reason) } })()
   recordDiagnostic("error", "unhandled-rejection", message)
+  // Global safety net for any dynamic import that failed with a stale-chunk
+  // shape — routes are already wrapped in `lazyRoute`, but Dashboard widgets
+  // (30+ `React.lazy(() => import(...))` sites in WidgetRenderer) use raw
+  // React.lazy and their failures bubble as unhandled rejections. Auto-reload
+  // once with a busted URL so users self-heal without the whole dashboard
+  // becoming a graveyard of "Importing a module script failed" cards.
+  if (isStaleChunkMessage(message)) attemptAutoReload()
+ })
+
+ window.addEventListener("error", (event) => {
+  // Catch chunk-load errors thrown from anywhere in the module graph — the
+  // same global fallback for widget-level `React.lazy` failures. This runs
+  // in addition to the target-tagged asset-load listener above; the
+  // condition below matches when event.target is window (i.e. a real JS
+  // runtime error, not an asset load failure).
+  if (event.target === window) {
+   const message = event.error?.message || event.message || ""
+   if (isStaleChunkMessage(message)) attemptAutoReload()
+  }
  })
 
  // Wrap fetch to log non-2xx responses and network errors — the two mobile
