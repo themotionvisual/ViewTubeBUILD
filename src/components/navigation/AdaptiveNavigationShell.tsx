@@ -13,6 +13,7 @@ import {
   RotateCcw,
   Sparkles,
   Upload,
+  UserRound,
   X,
 } from "lucide-react"
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
@@ -187,10 +188,34 @@ const cleanConnectedChannelName = (value: string | null | undefined): string => 
   return cleanValue
 }
 
-const accountInitials = (value: string): string => {
+// Any user-facing display name that reduces to one of these values is one of
+// our placeholders (channelName falls back to `accountDisplayName` which
+// falls back to "ViewTube Account" while we're still waiting for the Google
+// profile response). Deriving initials from a placeholder produces junk like
+// "VA" (V+A from "ViewTube Account") which users read as "why doesn't the
+// app know my name?" instead of "the app is still loading my profile".
+const PLACEHOLDER_NAMES = new Set([
+  "viewtube account",
+  "viewtube user",
+  "unknown user",
+])
+
+const isPlaceholderName = (value: string): boolean =>
+  PLACEHOLDER_NAMES.has(value.trim().toLowerCase())
+
+// Optional `email` fallback is used when the display name is missing OR is
+// one of our placeholders — the email prefix ("cbrewsterart" from
+// "cbrewsterart@gmail.com") almost always yields more meaningful initials
+// than the placeholder does. Returns an empty string when we have nothing
+// usable, so the caller can render a person icon instead of a fake "VA".
+const accountInitials = (value: string, email?: string): string => {
   const cleanValue = cleanAccountText(value)
-  if (!cleanValue) return "VT"
-  const source = cleanValue.includes("@") ? cleanValue.split("@")[0] : cleanValue
+  const cleanEmail = cleanAccountText(email)
+  const nameCandidate = cleanValue && !isPlaceholderName(cleanValue) ? cleanValue : ""
+  const source =
+    nameCandidate ||
+    (cleanEmail ? cleanEmail.split("@")[0] : "")
+  if (!source) return ""
   const parts = source.split(/[\s._-]+/).filter(Boolean)
   const initials = parts.length > 1
     ? `${parts[0][0] || ""}${parts[1][0] || ""}`
@@ -248,11 +273,23 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   const channelVerified = channelConnection.state === "connected_verified" || channelIdentity.isVerified
   const isConnected = accountAuthenticated && googleConnected
   const accountChipLabel = resolveAccountChipLabel(account.snapshot)
+  const accountEmail = cleanAccountText(account.snapshot.profile.email)
+  // Prefer a proper display name; if the profile hasn't populated one yet,
+  // synthesize a friendlier fallback from the email prefix (e.g.
+  // "cbrewsterart@gmail.com" → "Cbrewsterart") instead of the generic
+  // "ViewTube Account" — which not only looks impersonal but was also the
+  // source of the "VA" avatar initials people were seeing.
+  const emailDerivedName = accountEmail
+    ? (() => {
+       const prefix = accountEmail.split("@")[0]
+       if (!prefix) return ""
+       return prefix.charAt(0).toUpperCase() + prefix.slice(1)
+      })()
+    : ""
   const accountDisplayName =
     cleanAccountText(account.snapshot.profile.displayName) ||
-    cleanAccountText(account.snapshot.profile.email) ||
+    emailDerivedName ||
     "ViewTube Account"
-  const accountEmail = cleanAccountText(account.snapshot.profile.email)
   // Reading the VT-SYNC snapshot on every render meant parsing a localStorage
   // JSON blob every time the shell re-rendered (auth ticks, resize, drawer
   // toggles, …). Memoize on the fields we actually source from it so the
@@ -486,9 +523,18 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
         {channelAvatar ? (
           <img src={channelAvatar} alt="" width="38" height="38" referrerPolicy="no-referrer" />
         ) : (
-          <span className="grid size-[38px] place-items-center rounded-full border-[2px] border-black bg-white text-[10px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0_0_#000]">
-            {accountInitials(channelName)}
-          </span>
+          (() => {
+            // If we have a real name or an email, show initials from it. If
+            // neither is available yet (still hydrating profile after login),
+            // render a neutral person icon rather than fabricating "VA"
+            // initials out of the "ViewTube Account" placeholder.
+            const initials = accountInitials(channelName, accountEmail)
+            return (
+              <span className="grid size-[38px] place-items-center rounded-full border-[2px] border-black bg-white text-[10px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0_0_#000]">
+                {initials || <UserRound className="size-5 opacity-70" aria-hidden="true" />}
+              </span>
+            )
+          })()
         )}
       </span>
       <span className="vt-adaptive-nav__account-copy">
@@ -536,9 +582,14 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
       <div className="vt-adaptive-nav__menu-status">
         <span className="vt-adaptive-nav__avatar">
           {channelAvatar ? <img src={channelAvatar} alt="" width="38" height="38" referrerPolicy="no-referrer" /> : (
-            <span className="grid size-[38px] place-items-center rounded-full border-[2px] border-black bg-white text-[10px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0_0_#000]">
-              {accountInitials(channelName)}
-            </span>
+            (() => {
+              const initials = accountInitials(channelName, accountEmail)
+              return (
+                <span className="grid size-[38px] place-items-center rounded-full border-[2px] border-black bg-white text-[10px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0_0_#000]">
+                  {initials || <UserRound className="size-5 opacity-70" aria-hidden="true" />}
+                </span>
+              )
+            })()
           )}
         </span>
         <span><strong>{channelName}</strong><small>{accountAuthenticated ? `${accountMeta} | ${syncLabel}` : "Popup login opens from any connect action"}</small></span>
