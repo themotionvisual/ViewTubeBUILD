@@ -21,6 +21,49 @@ const CHUNK_ERROR_REGEX =
  /(Loading chunk [\d]+ failed|Failed to fetch dynamically imported module|Importing a module script failed|ChunkLoadError|import\(\) with the argument|Unable to preload CSS)/i
 
 const RELOAD_FLAG = "vt_chunk_reload_attempted"
+// Track how many times the fallback timeout has fired without the page
+// mounting. Persisted in sessionStorage so it survives reloads (which is the
+// whole point — after ≥2 reloads that led back here, we know something
+// deeper than a stale chunk is stuck).
+const HANG_COUNTER = "vt_route_hang_count"
+
+const readHangCount = (): number => {
+ if (typeof window === "undefined") return 0
+ try {
+  const raw = sessionStorage.getItem(HANG_COUNTER)
+  const n = raw ? Number(raw) : 0
+  return Number.isFinite(n) ? n : 0
+ } catch { return 0 }
+}
+
+const incrementHangCount = (): number => {
+ const next = readHangCount() + 1
+ try { sessionStorage.setItem(HANG_COUNTER, String(next)) } catch { /* ignore */ }
+ return next
+}
+
+const clearHangCount = (): void => {
+ try { sessionStorage.removeItem(HANG_COUNTER) } catch { /* ignore */ }
+}
+
+// Nuclear option: wipe every trace of app state so a broken auth token,
+// corrupted cache, or half-migrated localStorage schema can't keep the user
+// trapped. Used both by the manual button and by the auto-recovery path
+// after repeated hangs.
+const nukeAppStateAndReload = (): void => {
+ try {
+  localStorage.clear()
+  sessionStorage.clear()
+  // Clear any known cookies too (auth session, entitlement). Same-origin only.
+  document.cookie.split(";").forEach((c) => {
+   const eq = c.indexOf("=")
+   const name = (eq > -1 ? c.substring(0, eq) : c).trim()
+   if (!name) return
+   document.cookie = `${name}=; Max-Age=0; path=/; SameSite=Lax`
+  })
+ } catch { /* ignore */ }
+ window.location.assign("/")
+}
 
 const isChunkLoadError = (error: unknown): boolean => {
  const message = error instanceof Error ? error.message : String(error || "")
@@ -51,7 +94,9 @@ const retryImport = <T,>(factory: () => Promise<T>): Promise<T> =>
  })
 
 // Clear the reload flag when the app boots successfully so a *later*
-// deploy can trigger its own single-reload cycle.
+// deploy can trigger its own single-reload cycle. Also clear the hang
+// counter once we've actually painted something interactive — surviving to
+// that point is proof the app came unstuck.
 if (typeof window !== "undefined") {
  window.addEventListener("load", () => {
   try {
@@ -69,11 +114,28 @@ export const lazyRoute = <T extends React.ComponentType<any>>(
 // ─── Route fallback that never hangs silently ────────────────────────────────
 
 const RETRY_TIMEOUT_MS = 12_000
+// After this many hang cycles we auto-recover — because if we've already
+// hit the recovery UI twice and the user clicked Reload each time to no
+// effect, we know a plain reload won't help. Sign them out and land clean.
+const AUTO_RECOVER_AFTER_HANGS = 3
 
 const RouteLoadingIndicator: React.FC = () => {
  const [showRetry, setShowRetry] = React.useState(false)
+ // Snapshot the pre-existing hang count so the button labeling stabilizes
+ // even after we bump the counter for this render.
+ const previousHangCount = React.useRef(readHangCount())
  React.useEffect(() => {
-  const timer = window.setTimeout(() => setShowRetry(true), RETRY_TIMEOUT_MS)
+  const timer = window.setTimeout(() => {
+   const nextCount = incrementHangCount()
+   // If the user has been trapped in a reload loop, don't wait for another
+   // button tap — auto-nuke storage and land on / with a clean slate.
+   if (nextCount >= AUTO_RECOVER_AFTER_HANGS) {
+    clearHangCount()
+    nukeAppStateAndReload()
+    return
+   }
+   setShowRetry(true)
+  }, RETRY_TIMEOUT_MS)
   return () => window.clearTimeout(timer)
  }, [])
 
@@ -89,25 +151,40 @@ const RouteLoadingIndicator: React.FC = () => {
   )
  }
 
+ // On the very first hang show only the soft Reload; on second or later
+ // hangs — meaning a plain reload didn't fix it last time — prominently
+ // offer the destructive Sign-out & clear cache option.
+ const persistedFailure = previousHangCount.current >= 1
  return (
   <div
    role="status"
    className="flex min-h-[60vh] w-full flex-col items-center justify-center gap-4 px-6 text-center"
   >
    <Spinner className="size-8 opacity-40" />
-   <p className="text-sm font-black uppercase tracking-wide text-black/60">
-    Still loading — this usually means a stale cached page.
+   <p className="max-w-sm text-sm font-black uppercase tracking-wide text-black/60">
+    {persistedFailure
+     ? "Reload didn't help — try signing out and starting fresh."
+     : "Still loading — this usually means a stale cached page."}
    </p>
-   <button
-    type="button"
-    className="rounded-full border-[3px] border-black bg-[#C0F240] px-5 py-2 text-sm font-black uppercase tracking-[0.08em] shadow-[3px_3px_0_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-    onClick={() => {
-     try { sessionStorage.removeItem(RELOAD_FLAG) } catch { /* ignore */ }
-     window.location.reload()
-    }}
-   >
-    Reload page
-   </button>
+   <div className="flex flex-wrap justify-center gap-3">
+    <button
+     type="button"
+     className={`rounded-full border-[3px] border-black px-5 py-2 text-sm font-black uppercase tracking-[0.08em] shadow-[3px_3px_0_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${persistedFailure ? "bg-white" : "bg-[#C0F240]"}`}
+     onClick={() => {
+      try { sessionStorage.removeItem(RELOAD_FLAG) } catch { /* ignore */ }
+      window.location.reload()
+     }}
+    >
+     Reload page
+    </button>
+    <button
+     type="button"
+     className={`rounded-full border-[3px] border-black px-5 py-2 text-sm font-black uppercase tracking-[0.08em] shadow-[3px_3px_0_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${persistedFailure ? "bg-[#C0F240]" : "bg-white"}`}
+     onClick={nukeAppStateAndReload}
+    >
+     Sign out &amp; clear cache
+    </button>
+   </div>
   </div>
  )
 }
@@ -142,11 +219,7 @@ export class RouteErrorBoundary extends React.Component<
  }
 
  handleClearAndReload = (): void => {
-  try {
-   localStorage.clear()
-   sessionStorage.clear()
-  } catch { /* ignore */ }
-  window.location.assign("/")
+  nukeAppStateAndReload()
  }
 
  render(): React.ReactNode {
@@ -184,8 +257,20 @@ export class RouteErrorBoundary extends React.Component<
  }
 }
 
+// If the children commit (not the fallback), clear the hang counter — proof
+// that the app did successfully render a route so any earlier stuck cycles
+// are no longer relevant.
+const RouteHangCountResetter: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+ React.useEffect(() => {
+  clearHangCount()
+ }, [])
+ return <>{children}</>
+}
+
 export const RouteSuspense: React.FC<{ children: React.ReactNode }> = ({ children }) => (
  <RouteErrorBoundary>
-  <Suspense fallback={<RouteLoadingIndicator />}>{children}</Suspense>
+  <Suspense fallback={<RouteLoadingIndicator />}>
+   <RouteHangCountResetter>{children}</RouteHangCountResetter>
+  </Suspense>
  </RouteErrorBoundary>
 )
