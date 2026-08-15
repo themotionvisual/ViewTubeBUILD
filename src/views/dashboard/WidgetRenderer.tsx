@@ -40,6 +40,7 @@ import type {
 const GoalsTrackerWidget = React.lazy(() =>
  import("./widgets/GoalsTrackerWidget").then((module) => ({ default: module.GoalsTrackerWidget })),
 )
+
 const formatHumanNumber = (value: unknown): string => {
  const v = Number(value)
  if (isNaN(v)) return "0"
@@ -83,6 +84,7 @@ const LAZY_WIDGET_RENDERERS: Record<string, React.LazyExoticComponent<React.Comp
  "shorts-vs-long": React.lazy(() => import("./widgets/FormatClashWidget").then((module) => ({ default: module.FormatClashWidget }))),
  "comment-replier": React.lazy(() => import("./widgets/CommentReplyWidget").then((module) => ({ default: module.CommentReplyWidget }))),
  "ai-journal": React.lazy(() => import("./widgets/AIJournalWidget").then((module) => ({ default: module.AIJournalWidget }))),
+ "video-autopsy": React.lazy(() => import("./widgets/VideoAutopsyWidget").then((module) => ({ default: module.VideoAutopsyWidget }))),
 }
 
 const INLINE_WIDGET_RENDERER_KEYS = [
@@ -376,7 +378,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   return <LazyWidgetRenderer {...common} data={data} editMode={editMode} />
  }
 
- // 28. REACH FUNNEL
+  // 28. REACH FUNNEL
  if (widget.id === "reach-funnel") {
   return (
    <WidgetShell {...common} icon={<TrendingUp size={22} />}>

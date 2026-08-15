@@ -4257,3 +4257,342 @@ export async function generateKeywordResearch(concept: string, niche: string, br
     return JSON.parse(cleanJsonString(result.text || "{}"))
   })
 }
+
+// ============================================================================
+// ENHANCED COMMENT RESPONDER - AI Features
+// ============================================================================
+
+import {
+  ENHANCED_COMMENT_REPLY_PROMPT,
+  REPLY_REFINEMENT_PROMPT,
+  VIDEO_RECOMMENDATION_PROMPT,
+  VIDEO_AUTOPSY_PROMPT,
+  COMMUNITY_POST_SCHEDULER_PROMPT,
+} from "./prompts"
+
+export interface EnhancedReplyResult {
+  reply: string
+  suggestedVideoId?: string
+  videoRecommendationReason?: string
+  toneConfidence?: number
+  engagementHook?: string
+}
+
+export interface RefinedReplyResult {
+  refinedReply: string
+  changes: string[]
+  engagementScore: number
+}
+
+export interface VideoRecommendation {
+  recommendedVideoId: string | null
+  matchStrength: number
+  reason: string
+  bridgePhrase: string
+}
+
+/**
+ * Generate an enhanced comment reply with tone matching and video recommendations
+ */
+export const generateEnhancedReply = async (
+  commentText: string,
+  authorName: string,
+  channelContext: {
+    channelName: string
+    channelDescription?: string
+    previousReplies?: string[]
+    communityPosts?: string[]
+  },
+  availableVideos: { title: string; id: string; description?: string }[],
+  brain?: any,
+): Promise<EnhancedReplyResult> => {
+  const ai = getAiClient()
+  
+  const toneExamples = [
+    ...(channelContext.previousReplies || []).slice(0, 5),
+    ...(channelContext.communityPosts || []).slice(0, 3),
+  ].join("\n---\n")
+  
+  const brainPacket = consultBrainSync("COMMENT_REPLY")
+  const basePrompt = `
+  ${ENHANCED_COMMENT_REPLY_PROMPT}
+  
+  ### CREATOR VOICE SAMPLES
+  ${toneExamples || "No samples available - use professional, friendly tone"}
+  
+  ### CHANNEL CONTEXT
+  Channel Name: ${channelContext.channelName}
+  Channel Description: ${channelContext.channelDescription || "YouTube content creator"}
+  
+  ### THE COMMENT TO REPLY TO
+  From @${authorName}: "${commentText}"
+  
+  ### AVAILABLE VIDEOS FOR RECOMMENDATION
+  ${JSON.stringify(availableVideos.slice(0, 15).map(v => ({ id: v.id, title: v.title })))}
+  `
+  const prompt = annotateSystemPrompt(basePrompt, brainPacket)
+  
+  return await executeWithRetry(async () => {
+    const result = await ai.models.generateContent({
+      model: getActiveModel("text"),
+      contents: prompt,
+      config: { responseMimeType: "application/json" },
+    })
+    
+    const json = JSON.parse(cleanJsonString(result.text || "{}"))
+    return {
+      reply: json.reply || "",
+      suggestedVideoId: json.suggestedVideoId || undefined,
+      videoRecommendationReason: json.videoRecommendationReason || undefined,
+      toneConfidence: json.toneConfidence || 0.5,
+      engagementHook: json.engagementHook || undefined,
+    }
+  })
+}
+
+/**
+ * Refine a user-typed reply to improve engagement while preserving voice
+ */
+export const refineUserReply = async (
+  draftReply: string,
+  originalComment: string,
+  channelContext: {
+    channelName: string
+    previousReplies?: string[]
+  },
+  brain?: any,
+): Promise<RefinedReplyResult> => {
+  const ai = getAiClient()
+  
+  const brainPacket = consultBrainSync("COMMENT_REPLY")
+  const basePrompt = `
+  ${REPLY_REFINEMENT_PROMPT}
+  
+  ### CREATOR'S DRAFT REPLY
+  "${draftReply}"
+  
+  ### ORIGINAL COMMENT IT'S REPLYING TO
+  "${originalComment}"
+  
+  ### CHANNEL VOICE CONTEXT
+  Channel: ${channelContext.channelName}
+  Previous Reply Samples: ${(channelContext.previousReplies || []).slice(0, 3).join(" | ")}
+  `
+  const prompt = annotateSystemPrompt(basePrompt, brainPacket)
+  
+  return await executeWithRetry(async () => {
+    const result = await ai.models.generateContent({
+      model: getActiveModel("text"),
+      contents: prompt,
+      config: { responseMimeType: "application/json" },
+    })
+    
+    const json = JSON.parse(cleanJsonString(result.text || "{}"))
+    return {
+      refinedReply: json.refinedReply || draftReply,
+      changes: json.changes || [],
+      engagementScore: json.engagementScore || 50,
+    }
+  })
+}
+
+/**
+ * Recommend the best video based on comment content
+ */
+export const recommendVideoForComment = async (
+  commentText: string,
+  availableVideos: { title: string; id: string; description?: string; tags?: string[] }[],
+  brain?: any,
+): Promise<VideoRecommendation> => {
+  const ai = getAiClient()
+  
+  const brainPacket = consultBrainSync("VIDEO_RECOMMENDATION")
+  const basePrompt = `
+  ${VIDEO_RECOMMENDATION_PROMPT}
+  
+  ### THE COMMENT TO ANALYZE
+  "${commentText}"
+  
+  ### AVAILABLE VIDEOS
+  ${JSON.stringify(availableVideos.slice(0, 20).map(v => ({
+    id: v.id,
+    title: v.title,
+    description: (v.description || "").slice(0, 200),
+    tags: (v.tags || []).slice(0, 5),
+  })))}
+  `
+  const prompt = annotateSystemPrompt(basePrompt, brainPacket)
+  
+  return await executeWithRetry(async () => {
+    const result = await ai.models.generateContent({
+      model: getActiveModel("text"),
+      contents: prompt,
+      config: { responseMimeType: "application/json" },
+    })
+    
+    const json = JSON.parse(cleanJsonString(result.text || "{}"))
+    return {
+      recommendedVideoId: json.recommendedVideoId || null,
+      matchStrength: json.matchStrength || 0,
+      reason: json.reason || "",
+      bridgePhrase: json.bridgePhrase || "",
+    }
+  })
+}
+
+// ============================================================================
+// VIDEO PERFORMANCE AUTOPSY - Deep Analytics
+// ============================================================================
+
+export interface VideoAutopsyResult {
+  overallHealth: "excellent" | "good" | "warning" | "critical"
+  healthScore: number
+  retentionAnalysis: {
+    milestone: string
+    percentage: number
+    status: "strong" | "average" | "weak"
+    recommendation: string
+  }[]
+  trafficSourceAnalysis: {
+    source: string
+    percentage: number
+    quality: "high" | "medium" | "low"
+    insight: string
+  }[]
+  engagementHealth: {
+    metric: string
+    value: number
+    benchmark: number
+    status: "above" | "at" | "below"
+  }[]
+  ctrAvdQuadrant: "gold" | "clickbait" | "hidden_gem" | "needs_overhaul"
+  keyInsights: string[]
+  actionPlan: {
+    priority: number
+    action: string
+    expectedImpact: string
+  }[]
+}
+
+export const generateVideoAutopsy = async (
+  videoData: {
+    videoId: string
+    title: string
+    views: number
+    likes: number
+    comments: number
+    shares?: number
+    ctr?: number
+    avgViewDuration?: number
+    avgViewPercentage?: number
+    impressions?: number
+    subscribersGained?: number
+    subscribersLost?: number
+    trafficSources?: Record<string, number>
+    retentionData?: { position: number; percentage: number }[]
+  },
+  channelAverages?: {
+    avgCtr?: number
+    avgViewPercentage?: number
+    avgLikesPerView?: number
+  },
+  brain?: any,
+): Promise<VideoAutopsyResult> => {
+  const ai = getAiClient()
+  
+  const brainPacket = consultBrainSync("VIDEO_ANALYSIS")
+  const basePrompt = `
+  ${VIDEO_AUTOPSY_PROMPT}
+  
+  ### VIDEO DATA
+  ${JSON.stringify(videoData, null, 2)}
+  
+  ### CHANNEL BENCHMARKS
+  ${channelAverages ? JSON.stringify(channelAverages) : "No benchmarks available"}
+  
+  Provide a comprehensive autopsy with specific, actionable insights.
+  `
+  const prompt = annotateSystemPrompt(basePrompt, brainPacket)
+  
+  return await executeWithRetry(async () => {
+    const result = await ai.models.generateContent({
+      model: getActiveModel("analysis"),
+      contents: prompt,
+      config: { responseMimeType: "application/json" },
+    })
+    
+    const json = JSON.parse(cleanJsonString(result.text || "{}"))
+    return {
+      overallHealth: json.overallHealth || "warning",
+      healthScore: json.healthScore || 50,
+      retentionAnalysis: json.retentionAnalysis || [],
+      trafficSourceAnalysis: json.trafficSourceAnalysis || [],
+      engagementHealth: json.engagementHealth || [],
+      ctrAvdQuadrant: json.ctrAvdQuadrant || "needs_overhaul",
+      keyInsights: json.keyInsights || [],
+      actionPlan: json.actionPlan || [],
+    }
+  })
+}
+
+// ============================================================================
+// COMMUNITY POST SCHEDULER
+// ============================================================================
+
+export interface CommunityPostSchedule {
+  recommendedTimes: {
+    dayOfWeek: string
+    hour: number
+    reason: string
+    expectedEngagement: "high" | "medium" | "low"
+  }[]
+  contentRecommendations: {
+    type: "poll" | "image" | "text" | "video"
+    frequency: string
+    bestFor: string
+  }[]
+  upcomingSchedule: {
+    date: string
+    type: string
+    content: string
+    status: "scheduled" | "draft" | "posted"
+  }[]
+}
+
+export const generateCommunityPostSchedule = async (
+  channelContext: {
+    channelName: string
+    audienceTimezones?: string[]
+    recentPostPerformance?: { type: string; engagement: number }[]
+    upcomingVideos?: { title: string; publishDate: string }[]
+  },
+  brain?: any,
+): Promise<CommunityPostSchedule> => {
+  const ai = getAiClient()
+  
+  const brainPacket = consultBrainSync("COMMUNITY_POST")
+  const basePrompt = `
+  ${COMMUNITY_POST_SCHEDULER_PROMPT}
+  
+  ### CHANNEL CONTEXT
+  ${JSON.stringify(channelContext, null, 2)}
+  
+  Generate an optimized posting schedule with specific recommendations.
+  `
+  const prompt = annotateSystemPrompt(basePrompt, brainPacket)
+  
+  return await executeWithRetry(async () => {
+    const result = await ai.models.generateContent({
+      model: getActiveModel("analysis"),
+      contents: prompt,
+      config: { responseMimeType: "application/json" },
+    })
+    
+    const json = JSON.parse(cleanJsonString(result.text || "{}"))
+    return {
+      recommendedTimes: json.recommendedTimes || [],
+      contentRecommendations: json.contentRecommendations || [],
+      upcomingSchedule: json.upcomingSchedule || [],
+    }
+  })
+}
