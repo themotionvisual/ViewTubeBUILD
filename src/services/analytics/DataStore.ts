@@ -66,6 +66,15 @@ export interface LedgerEntry {
   | "search_console"
   | "geography"
   | "demographics"
+  | "device_os"
+  | "ad_type"
+  | "sharing_service"
+  | "subscription_status"
+  | "subscription_source"
+  | "subscriber_detail"
+  | "creator_content_type"
+  | "playlist"
+  | "retention"
  dimensions: string[]
  metrics: string[]
  payload: any // Exactly as it comes from API

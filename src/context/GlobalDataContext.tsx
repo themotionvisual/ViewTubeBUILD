@@ -657,6 +657,7 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
    | "deep_data"
    syncButtonId?: string
    enrichmentMode?: "core" | "video_metrics" | "traffic" | "segments" | "all"
+   segmentDatasets?: import("../services/SyncCoordinator").SegmentDatasetId[]
   }) => {
    setIsSyncing(true)
    setChannelBootPhase((prev) => (prev === "idle" ? "syncing" : prev === "ready" ? "syncing" : prev))
@@ -684,6 +685,7 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
       batchMode: options?.batchMode || "initial",
       syncAction: options?.syncAction,
       enrichmentMode: options?.enrichmentMode,
+      segmentDatasets: options?.segmentDatasets,
      })
     } else {
      const { runCanonicalDefaultSync } = await import("../services/canonicalSync")

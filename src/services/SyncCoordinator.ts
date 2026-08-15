@@ -10,11 +10,22 @@ import {
  fetchDailyAnalytics,
  fetchGeographyAnalytics,
  fetchGlobalLifetimeAnalytics,
+ fetchDeviceOsAnalytics,
+ fetchTrafficByDayAnalytics,
+ fetchAdTypeAnalytics,
+ fetchSharingServiceAnalytics,
+ fetchSubscriptionStatusAnalytics,
+ fetchSubscriptionSourceAnalytics,
+ fetchSubscriberDetailAnalytics,
+ fetchCreatorContentTypeAnalytics,
+ fetchPlaylistAnalytics,
+ fetchRetentionAnalyticsReport,
  resetYouTubeApiCallCounts,
  getYouTubeApiCallCounts,
  isChannelConnected,
  disconnectChannel,
 } from "./youtubeService"
+import type { SegmentAnalyticsReport } from "./youtube/youtubeAnalyticsFetcher"
 import {
   syncCoreLifetimeData,
   CHANNEL_LIFETIME_METRICS,
@@ -24,7 +35,7 @@ import { syncTrafficAnalytics } from "./youtube/trafficAnalyticsSync"
 import { SyncMachine } from "./SyncMachine";
 import { googleSearchConsoleService } from "./googleSearchConsoleService"
 import { ga4Service, type GA4Property } from "./ga4Service"
-import { upsertLedgerEntry } from "./analytics/DataStore"
+import { upsertLedgerEntry, commitToLedger, type LedgerEntry } from "./analytics/DataStore"
 import { parseDurationSeconds } from "./dataUtils"
 import { ytApiQueue } from "../utils/RequestQueue"
 import {
@@ -77,10 +88,46 @@ export type YouTubeSyncAction =
  | "comments"
  | "deep_data"
 
+/**
+ * Channel-level segment datasets ported from the VT-SYNC controller. Each id maps
+ * to an exact YouTube Analytics query fetched during the deep-segments pass and can
+ * also be requested individually from the sync controller.
+ */
+export type SegmentDatasetId =
+ | "device_os"
+ | "traffic_day"
+ | "ad_type"
+ | "sharing_service"
+ | "subscription_status"
+ | "subscription_source"
+ | "subscriber_detail"
+ | "content_type"
+ | "playlists"
+ | "retention"
+
+export const SEGMENT_DATASET_IDS: SegmentDatasetId[] = [
+ "device_os",
+ "traffic_day",
+ "ad_type",
+ "sharing_service",
+ "subscription_status",
+ "subscription_source",
+ "subscriber_detail",
+ "content_type",
+ "playlists",
+ "retention",
+]
+
 export type YouTubeSyncOptions = {
  batchMode?: "initial" | "next"
  enrichmentMode?: YouTubeSyncEnrichmentMode
  syncAction?: YouTubeSyncAction
+ /**
+  * When present, only these segment datasets are refreshed (used by the
+  * per-dataset controls in the sync controller). Empty/undefined falls back to
+  * the enrichment-mode default (all segment datasets during a segments pass).
+  */
+ segmentDatasets?: SegmentDatasetId[]
 }
 
 const DEFAULT_VIDEO_SYNC_BATCH_STATE: VideoSyncBatchState = {
@@ -401,6 +448,123 @@ export class SyncCoordinator {
   }
  }
 
+ /**
+  * Fetches the requested channel-level segment datasets (device x OS, traffic
+  * source x day, ad type, sharing service, subscription status, subscription
+  * source, subscriber detail, content type/format, playlist analytics, and
+  * video retention) using the exact VT-SYNC queries, commits each raw report to
+  * the canonical ledger, and stores it on cacheData for the master tables.
+  */
+ private async syncSegmentDatasets(
+  cacheData: Record<string, any>,
+  profileId: string | undefined,
+  startDate: string,
+  endDate: string,
+  targetVideoIds: string[],
+  selected: SegmentDatasetId[],
+ ): Promise<void> {
+  const wanted = new Set(selected)
+
+  const commitReport = (
+   cacheKey: string,
+   context: LedgerEntry["context"],
+   dimensions: string[],
+   report: SegmentAnalyticsReport | null | undefined,
+  ) => {
+   if (!report || !Array.isArray(report.rows)) return
+   commitToLedger({
+    source: "youtube_analytics_v2",
+    context,
+    dimensions,
+    metrics: (report.columnHeaders || []).map((header: any) => header.name),
+    payload: report,
+    window: "lifetime",
+   })
+   cacheData[cacheKey] = report
+  }
+
+  const run = async (
+   id: SegmentDatasetId,
+   cacheKey: string,
+   context: LedgerEntry["context"],
+   dimensions: string[],
+   fetcher: () => Promise<SegmentAnalyticsReport>,
+  ) => {
+   if (!wanted.has(id)) return
+   try {
+    const report = await ytApiQueue.add(() => fetcher())
+    commitReport(cacheKey, context, dimensions, report)
+   } catch (e: any) {
+    console.error(`Segment dataset "${id}" sync failed:`, e?.message || e)
+   }
+  }
+
+  await run("device_os", "deviceOs", "device_os", ["deviceType", "operatingSystem"], () =>
+   fetchDeviceOsAnalytics(startDate, endDate, profileId),
+  )
+  await run("traffic_day", "trafficDay", "traffic_daily", ["insightTrafficSourceType", "day"], () =>
+   fetchTrafficByDayAnalytics(startDate, endDate, profileId),
+  )
+  await run("ad_type", "adTypes", "ad_type", ["adType"], () =>
+   fetchAdTypeAnalytics(startDate, endDate, profileId),
+  )
+  await run("sharing_service", "sharingService", "sharing_service", ["sharingService"], () =>
+   fetchSharingServiceAnalytics(startDate, endDate, profileId),
+  )
+  await run(
+   "subscription_status",
+   "subscriptionStatus",
+   "subscription_status",
+   ["subscribedStatus"],
+   () => fetchSubscriptionStatusAnalytics(startDate, endDate, profileId),
+  )
+  await run(
+   "subscription_source",
+   "subscriptionSource",
+   "subscription_source",
+   ["insightTrafficSourceType"],
+   () => fetchSubscriptionSourceAnalytics(startDate, endDate, profileId),
+  )
+  await run(
+   "subscriber_detail",
+   "subscriberDetail",
+   "subscriber_detail",
+   ["insightTrafficSourceDetail"],
+   () => fetchSubscriberDetailAnalytics(startDate, endDate, profileId),
+  )
+  await run(
+   "content_type",
+   "creatorContentTypes",
+   "creator_content_type",
+   ["creatorContentType"],
+   () => fetchCreatorContentTypeAnalytics(startDate, endDate, profileId),
+  )
+  await run("playlists", "playlistAnalytics", "playlist", ["playlist"], () =>
+   fetchPlaylistAnalytics(startDate, endDate, profileId),
+  )
+  if (wanted.has("retention") && targetVideoIds.length > 0) {
+   try {
+    const report = await ytApiQueue.add(() =>
+     fetchRetentionAnalyticsReport(targetVideoIds, startDate, endDate, 25),
+    )
+    commitReport(
+     "retentions",
+     "retention",
+     ["video", "elapsedVideoTimeRatio"],
+     report,
+    )
+   } catch (e: any) {
+    console.error("Segment dataset \"retention\" sync failed:", e?.message || e)
+   }
+  }
+
+  cacheData.segmentDatasetsStatus = {
+   status: "complete",
+   datasets: selected,
+   fetchedAt: Date.now(),
+  }
+ }
+
  private getStoredSyncMergePolicy(): SyncMergePolicy {
   try {
    const raw = localStorage.getItem(SYNC_MERGE_POLICY_KEY)
@@ -531,6 +695,16 @@ export class SyncCoordinator {
     enrichmentMode === "all"
    const shouldSyncSegments =
     enrichmentMode === "segments" || enrichmentMode === "all"
+   const requestedSegments = Array.isArray(options.segmentDatasets)
+    ? options.segmentDatasets.filter((id): id is SegmentDatasetId =>
+       SEGMENT_DATASET_IDS.includes(id),
+      )
+    : []
+   const hasRequestedSegments = requestedSegments.length > 0
+   const shouldSyncSegmentDatasets = hasRequestedSegments || shouldSyncSegments
+   const segmentSelection: SegmentDatasetId[] = hasRequestedSegments
+    ? requestedSegments
+    : [...SEGMENT_DATASET_IDS]
    const maxVideos = isNextBatch
     ? batchState.cursor + batchState.incrementSize
     : batchState.initialLimit
@@ -1456,6 +1630,31 @@ export class SyncCoordinator {
      mode: enrichmentMode,
      reason: "Traffic, audience, and geography are manual enrichment passes.",
      fetchedAt: Date.now(),
+    }
+   }
+
+   if (shouldSyncSegmentDatasets) {
+    try {
+     this.emitSyncStatus({
+      ...syncStatusBase,
+      phase: "syncing",
+      completedAt: null,
+      lastError: null,
+      stages: [
+       "Fetching segment datasets",
+       segmentSelection.join(", "),
+      ],
+     })
+     await this.syncSegmentDatasets(
+      cacheData,
+      profile.id,
+      startDate,
+      endDate,
+      targetVideoIds,
+      segmentSelection,
+     )
+    } catch (e: any) {
+     console.error("Segment datasets sync ERROR:", e?.message || e)
     }
    }
 

@@ -2035,6 +2035,260 @@ export const fetchVideoRetention = async (videoId: string) => {
  return null
 }
 
+/**
+ * ── Segment Analytics Fetchers ───────────────────────────────────────────────
+ * One fetcher per channel-level segment dataset, each using the EXACT YouTube
+ * Analytics API query (metrics / dimensions / sort / filters) ported from the
+ * VT-SYNC reference implementation (src/App.tsx runBundle calls). Every fetcher
+ * returns a raw { columnHeaders, rows } report so the SyncCoordinator can commit
+ * it straight to the canonical ledger and master tables.
+ */
+
+export type SegmentAnalyticsReport = {
+ columnHeaders: YouTubeReportHeader[]
+ rows: (string | number)[][]
+}
+
+const EMPTY_SEGMENT_REPORT: SegmentAnalyticsReport = { columnHeaders: [], rows: [] }
+
+/**
+ * Runs a single YouTube Analytics API v2 report and returns the raw payload.
+ * Mirrors the VT-SYNC `runBundle` request shape (ids/startDate/endDate/metrics/
+ * dimensions/sort/maxResults/filters). A `maxResults` of 0 is omitted, matching
+ * VT-SYNC's `if (maxResults)` guard.
+ */
+export const fetchSegmentAnalyticsReport = async (
+ config: {
+  metrics: string
+  dimensions?: string
+  sort?: string
+  maxResults?: number
+  filters?: string
+  startDate: string
+  endDate: string
+  channelId?: string
+ },
+): Promise<SegmentAnalyticsReport> => {
+ const token = await refreshTokenIfExpired()
+ if (!token)
+  throw new YouTubeApiError(
+   "Your YouTube session has expired or is invalid. Please reconnect your channel in Settings.",
+   401,
+   "authError",
+  )
+ const idParam = config.channelId ? `channel==${config.channelId}` : "channel==MINE"
+ const search = new URLSearchParams({
+  ids: idParam,
+  startDate: config.startDate,
+  endDate: config.endDate,
+  metrics: config.metrics,
+ })
+ if (config.dimensions) search.set("dimensions", config.dimensions)
+ if (config.sort) search.set("sort", config.sort)
+ if (config.maxResults) search.set("maxResults", String(config.maxResults))
+ if (config.filters) search.set("filters", config.filters)
+
+ const response = await proxyFetch(`${ANALYTICS_URL}/reports?${search.toString()}`, {
+  headers: { Authorization: `Bearer ${token}` },
+ })
+ if (!response.ok)
+  await handleYouTubeApiError(response, "Failed to fetch segment analytics report")
+ const payload = await response.json()
+ return {
+  columnHeaders: Array.isArray(payload?.columnHeaders) ? payload.columnHeaders : [],
+  rows: Array.isArray(payload?.rows) ? payload.rows : [],
+ }
+}
+
+// Device x Operating System — deviceType,operatingSystem
+export const fetchDeviceOsAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics: "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage",
+  dimensions: "deviceType,operatingSystem",
+  sort: "-views",
+  maxResults: 200,
+  startDate,
+  endDate,
+  channelId,
+ })
+
+// Traffic Source x Day — insightTrafficSourceType,day
+export const fetchTrafficByDayAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics:
+   "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,engagedViews",
+  dimensions: "insightTrafficSourceType,day",
+  sort: "-day",
+  startDate,
+  endDate,
+  channelId,
+ })
+
+// Ad Type — adType
+export const fetchAdTypeAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics: "grossRevenue,cpm,adImpressions",
+  dimensions: "adType",
+  sort: "-grossRevenue",
+  maxResults: 50,
+  startDate,
+  endDate,
+  channelId,
+ })
+
+// Sharing Service — sharingService
+export const fetchSharingServiceAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics: "shares",
+  dimensions: "sharingService",
+  sort: "-shares",
+  maxResults: 50,
+  startDate,
+  endDate,
+  channelId,
+ })
+
+// Subscription Status — subscribedStatus
+export const fetchSubscriptionStatusAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics:
+   "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,engagedViews",
+  dimensions: "subscribedStatus",
+  sort: "-views",
+  maxResults: 50,
+  startDate,
+  endDate,
+  channelId,
+ })
+
+// Subscription Source — insightTrafficSourceType (subscribers gained/lost)
+export const fetchSubscriptionSourceAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics: "subscribersGained,subscribersLost",
+  dimensions: "insightTrafficSourceType",
+  sort: "-subscribersGained",
+  maxResults: 50,
+  startDate,
+  endDate,
+  channelId,
+ })
+
+// Subscriber Traffic Detail — insightTrafficSourceDetail filtered to SUBSCRIBER
+export const fetchSubscriberDetailAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics:
+   "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,engagedViews",
+  dimensions: "insightTrafficSourceDetail",
+  filters: "insightTrafficSourceType==SUBSCRIBER",
+  sort: "-views",
+  maxResults: 25,
+  startDate,
+  endDate,
+  channelId,
+ })
+
+// Content Type / Format — creatorContentType
+export const fetchCreatorContentTypeAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics:
+   "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,engagedViews",
+  dimensions: "creatorContentType",
+  sort: "-views",
+  maxResults: 50,
+  startDate,
+  endDate,
+  channelId,
+ })
+
+// Channel Playlist Analytics Metrics — playlist
+export const fetchPlaylistAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics:
+   "playlistViews,playlistEstimatedMinutesWatched,playlistStarts,averageTimeInPlaylist,playlistSaves",
+  dimensions: "playlist",
+  sort: "-playlistViews",
+  maxResults: 50,
+  startDate,
+  endDate,
+  channelId,
+ })
+
+/**
+ * Video Retention — audienceWatchRatio + relativeRetentionPerformance across
+ * elapsedVideoTimeRatio, fetched per-video for the supplied target videos and
+ * flattened into a single report keyed by video. Ports the VT-SYNC retentions
+ * loop (top videos → per-video elapsedVideoTimeRatio report).
+ */
+export const fetchRetentionAnalyticsReport = async (
+ videoIds: string[],
+ startDate: string,
+ endDate: string,
+ topN = 25,
+): Promise<SegmentAnalyticsReport> => {
+ const targets = Array.from(
+  new Set(videoIds.map((id) => String(id || "").trim()).filter(Boolean)),
+ ).slice(0, Math.max(0, topN))
+ const rows: (string | number)[][] = []
+ for (const videoId of targets) {
+  const retention = await fetchVideoRetention(videoId)
+  if (!Array.isArray(retention)) continue
+  retention.forEach((point: any) => {
+   rows.push([
+    videoId,
+    point.elapsedVideoTimeRatio ?? 0,
+    point.audienceWatchRatio ?? 0,
+    point.relativeRetentionPerformance ?? 0,
+   ])
+  })
+ }
+ if (rows.length === 0) return EMPTY_SEGMENT_REPORT
+ return {
+  columnHeaders: [
+   { name: "video" },
+   { name: "elapsedVideoTimeRatio" },
+   { name: "audienceWatchRatio" },
+   { name: "relativeRetentionPerformance" },
+  ],
+  rows,
+ }
+}
+
 export const createReportingJob = async (
  reportTypeId: string,
  name: string,
