@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { CanonicalVideoRow, MetricCell } from "../../services/analytics/DataStore"
 import { buildTubeExplorerVisualData } from "../tubeExplorerVisualData"
-import { TUBE_EXPLORER_VISUAL_MODULES } from "../TubeExplorerVisualModules"
+import { buildTrafficDetailRows, classifyTrafficFocus, CLOCK_BURST_MAX_DETAILS, TUBE_EXPLORER_VISUAL_MODULES } from "../TubeExplorerVisualModules"
 import type { CsvFileWithTag } from "../../types"
 
 const cell = (value: number): MetricCell => ({
@@ -31,6 +31,54 @@ const row = (
 })
 
 describe("buildTubeExplorerVisualData", () => {
+ it("classifies normalized API traffic source ids for the Clock Burst drilldown", () => {
+ expect(classifyTrafficFocus({ sourceType: "EXT_URL", sourceTitle: "EXT_URL", sourceDetail: "", views: 1 } as any)).toBe("external")
+ expect(classifyTrafficFocus({ sourceType: "SHORTS_FEED", sourceTitle: "SHORTS_FEED", sourceDetail: "", views: 1 } as any)).toBe("shorts_feed")
+  expect(classifyTrafficFocus({ sourceType: "YT_CHANNEL", sourceTitle: "YT_CHANNEL", sourceDetail: "", views: 1 } as any)).toBe("channel")
+  expect(classifyTrafficFocus({ sourceType: "RELATED_VIDEO", sourceTitle: "RELATED_VIDEO", sourceDetail: "", views: 1 } as any)).toBe("related")
+ expect(classifyTrafficFocus({ sourceType: "PLAYLIST", sourceTitle: "PLAYLIST", sourceDetail: "", views: 1 } as any)).toBe("playlist")
+ })
+
+ it("shows enriched channel titles and handles instead of raw traffic ids", () => {
+  const detail = buildTrafficDetailRows([{
+   sourceType: "YT_CHANNEL",
+   sourceTitle: "The Motion Visual History",
+   sourceHandle: "@themotionvisualhistory",
+   sourceDetail: "UC123raw-id",
+   views: 1200,
+   watchHours: 10,
+   engagedViews: 800,
+   avp: 0,
+   impressions: 0,
+   ctr: 0,
+   rowCount: 1,
+   sourceOrigin: "cache",
+  }], "channel")
+ expect(detail[0]?.label).toBe("The Motion Visual History · @themotionvisualhistory")
+ })
+
+ it("keeps up to fifteen Clock Burst detail rows available for lists and pies", () => {
+  const rows = Array.from({ length: 18 }, (_, index) => ({
+   sourceType: "YT_SEARCH",
+   sourceTitle: `Query ${String(index + 1).padStart(2, "0")}`,
+   sourceDetail: `query-${index + 1}`,
+   views: 1800 - index,
+   watchHours: 10,
+   engagedViews: 800,
+   avp: 0,
+   impressions: 0,
+   ctr: 0,
+   rowCount: 1,
+   sourceOrigin: "api",
+  }))
+
+  const detail = buildTrafficDetailRows(rows as any, "search")
+
+  expect(CLOCK_BURST_MAX_DETAILS).toBe(15)
+  expect(detail).toHaveLength(15)
+  expect(detail.at(-1)?.label).toBe("Query 15")
+ })
+
  it("builds real video splits, totals, monthly rows, and title keyword points", () => {
   const dataset = buildTubeExplorerVisualData([
    row("s1", "Napoleon Cavalry Charge", "shorts", {
@@ -107,7 +155,35 @@ describe("buildTubeExplorerVisualData", () => {
   expect(dataset.coverage.hasTraffic).toBe(true)
   expect(dataset.coverage.hasGeography).toBe(true)
   expect(dataset.traffic[0]).toMatchObject({ sourceDetail: "napoleon cavalry", views: 1200, watchHours: 45 })
-  expect(dataset.geography[0]).toMatchObject({ label: "United States", views: 800, watchHours: 30 })
+ expect(dataset.geography[0]).toMatchObject({ label: "United States", views: 800, watchHours: 30 })
+ })
+
+ it("keeps traffic overview and traffic details distinct for source/detail visuals", () => {
+  const dataset = buildTubeExplorerVisualData([], [], [
+   { datasetKind: "traffic_summary", trafficSourceType: "SUMMARY", trafficSourceDetail: "YT_SEARCH", sourceTitle: "YT_SEARCH", metrics: { views: cell(100) } },
+   { datasetKind: "traffic_detail", trafficSourceType: "YT_SEARCH", trafficSourceDetail: "napoleonic cavalry", sourceTitle: "napoleonic cavalry", metrics: { views: cell(80) } },
+  ])
+
+  expect(dataset.traffic).toEqual(expect.arrayContaining([
+   expect.objectContaining({ datasetKind: "traffic_summary", sourceTitle: "YT_SEARCH" }),
+   expect.objectContaining({ datasetKind: "traffic_detail", sourceDetail: "napoleonic cavalry" }),
+  ]))
+ })
+
+ it("does not double-count canonical traffic beneath a matching manual CSV dataset", () => {
+  const dataset = buildTubeExplorerVisualData([], [{
+   id: "overview-csv",
+   name: "traffic-overview.csv",
+   tag: "traffic",
+   detectedCategory: "traffic_overview",
+   data: [{ Source: "YT_SEARCH", Views: "100" }],
+  }], [
+   { datasetKind: "traffic_summary", trafficSourceType: "SUMMARY", trafficSourceDetail: "YT_SEARCH", sourceTitle: "YT_SEARCH", metrics: { views: cell(75) } },
+  ])
+
+  expect(dataset.traffic).toEqual([
+   expect.objectContaining({ datasetKind: "traffic_summary", sourceTitle: "YT_SEARCH", views: 100, sourceOrigin: "csv" }),
+  ])
  })
 })
 

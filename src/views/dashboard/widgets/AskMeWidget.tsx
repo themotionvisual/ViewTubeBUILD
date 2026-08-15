@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react"
 import { WidgetShell } from "../WidgetShell"
+import { WidgetScrollArea } from "../WidgetPrimitives"
 import { useEntitlement } from "../../../context/entitlementContext"
 import {
  MessageSquare,
@@ -255,7 +256,7 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
     )}
 
     {/* Chat History */}
-    <div ref={scrollRef} className="vt-widget-fill-body" style={{ gap: "8px", minHeight: "80px", padding: "2px 2px" }}>
+    <WidgetScrollArea viewportRef={scrollRef} ariaLabel="Ask Me conversation" className="min-h-[80px]" contentClassName="flex min-h-full flex-col gap-2 px-0.5 py-0.5">
      {messages.map((msg, i) => (
       <div key={i} style={{
        alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
@@ -280,7 +281,7 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
        <span style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>Analyzing...</span>
       </div>
      )}
-    </div>
+    </WidgetScrollArea>
 
     {/* Input */}
     <div style={{ display: "flex", gap: "6px", paddingTop: "8px" }}>

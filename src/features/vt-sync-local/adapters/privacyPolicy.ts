@@ -1,15 +1,18 @@
 import type { VtSyncSnapshot, VtSyncVideoItem } from "./contracts"
 
 export const VT_SYNC_PRIVACY_FILTERS_KEY = "vt_sync_privacy_filters" as const
+export const VT_SYNC_PRIVACY_FILTERS_VERSION = 2 as const
 
 export type VtSyncPrivacyFilters = {
  excludePrivate: boolean
  excludeUnlisted: boolean
 }
 
+type StoredVtSyncPrivacyFilters = VtSyncPrivacyFilters & { version: number }
+
 export const DEFAULT_VT_SYNC_PRIVACY_FILTERS: Readonly<VtSyncPrivacyFilters> = Object.freeze({
- excludePrivate: true,
- excludeUnlisted: true,
+ excludePrivate: false,
+ excludeUnlisted: false,
 })
 
 export const normalizeVtSyncPrivacyStatus = (value: unknown): string =>
@@ -37,7 +40,19 @@ export const readVtSyncPrivacyFilters = (): VtSyncPrivacyFilters => {
  if (typeof localStorage === "undefined") return normalizeVtSyncPrivacyFilters()
  try {
   const raw = localStorage.getItem(VT_SYNC_PRIVACY_FILTERS_KEY)
-  return raw ? normalizeVtSyncPrivacyFilters(JSON.parse(raw)) : normalizeVtSyncPrivacyFilters()
+  if (!raw) return normalizeVtSyncPrivacyFilters()
+  const stored = JSON.parse(raw) as Partial<StoredVtSyncPrivacyFilters>
+  // Version-one values were implicit hide-by-default settings. Reset them once
+  // so existing creators see the complete authenticated catalog.
+  if (stored.version !== VT_SYNC_PRIVACY_FILTERS_VERSION) {
+   const migrated = normalizeVtSyncPrivacyFilters()
+   localStorage.setItem(VT_SYNC_PRIVACY_FILTERS_KEY, JSON.stringify({
+    ...migrated,
+    version: VT_SYNC_PRIVACY_FILTERS_VERSION,
+   }))
+   return migrated
+  }
+  return normalizeVtSyncPrivacyFilters(stored)
  } catch {
   return normalizeVtSyncPrivacyFilters()
  }
@@ -49,7 +64,10 @@ export const saveVtSyncPrivacyFilters = (
  const normalized = normalizeVtSyncPrivacyFilters(filters)
  if (typeof localStorage !== "undefined") {
   try {
-   localStorage.setItem(VT_SYNC_PRIVACY_FILTERS_KEY, JSON.stringify(normalized))
+   localStorage.setItem(VT_SYNC_PRIVACY_FILTERS_KEY, JSON.stringify({
+    ...normalized,
+    version: VT_SYNC_PRIVACY_FILTERS_VERSION,
+   }))
   } catch {
    // The in-memory state remains authoritative for this session when storage is unavailable.
   }
@@ -68,11 +86,7 @@ export const isVtSyncVideoExcluded = (
 
 export const normalizeVtSyncVideoPrivacyFormat = <T extends Record<string, unknown>>(
  video: T,
-): T => {
- const status = readVideoPrivacyStatus(video)
- if (status !== "private" && status !== "unlisted") return video
- return { ...video, format: "unknown" }
-}
+): T => video
 
 export const filterVtSyncVideos = <T extends Record<string, unknown>>(
  videos: readonly T[],
@@ -96,14 +110,18 @@ export const resolveVtSyncVideoFormat = ({
  privacyStatus,
  isLive,
  isShort,
+ durationSeconds,
+ title,
 }: {
- privacyStatus: unknown
- isLive: boolean
- isShort: boolean
-}): "short" | "long" | "live" | "unknown" => {
- const status = normalizeVtSyncPrivacyStatus(privacyStatus)
- if (status === "private" || status === "unlisted") return "unknown"
- if (isLive) return "live"
+ privacyStatus?: unknown
+ isLive?: boolean
+ isShort?: boolean
+ durationSeconds?: number
+ title?: string
+}): "short" | "long" | "live" => {
+ const titleStr = String(title || "").toLowerCase()
+ if (isLive || titleStr.includes("live stream") || titleStr.includes("is live") || titleStr.includes("live highlight")) return "live"
+ if (durationSeconds !== undefined && durationSeconds > 180) return "long"
  if (isShort) return "short"
  return "long"
 }

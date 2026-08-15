@@ -1,0 +1,113 @@
+:root {
+  --vt-ink: #111111;
+  --vt-paper: #ffffff;
+  --vt-cyan: #40d7e9;
+  --vt-lime: #b7ef39;
+  --vt-yellow: #ffdc4a;
+  --vt-pink: #ff83c8;
+  --vt-muted: #5d6470;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #f3f4f6;
+  color: var(--vt-ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.65;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 74px;
+  padding: 12px clamp(16px, 4vw, 48px);
+  border-bottom: 4px solid var(--vt-ink);
+  background: var(--vt-yellow);
+  box-shadow: 0 5px 0 var(--vt-ink);
+}
+
+.header-logo {
+  color: var(--vt-ink);
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 1000;
+  letter-spacing: -0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.header-logo::first-letter { color: var(--vt-ink); }
+.header-divider { font-size: 24px; font-weight: 1000; }
+.header-page { font-size: 11px; font-weight: 1000; letter-spacing: 0.1em; text-transform: uppercase; }
+
+.container {
+  max-width: 980px;
+  margin: 30px auto 56px;
+  padding: clamp(22px, 5vw, 54px);
+  border: 4px solid var(--vt-ink);
+  border-radius: 18px;
+  background: var(--vt-paper);
+  box-shadow: 9px 9px 0 var(--vt-ink);
+}
+
+h1, h2, h3 { color: var(--vt-ink); font-weight: 1000; line-height: 1.08; text-transform: uppercase; }
+h1 { margin: 0 0 10px; font-size: clamp(30px, 5vw, 52px); letter-spacing: -0.055em; }
+h2 { margin: 42px 0 14px; padding-left: 12px; border-left: 7px solid var(--vt-cyan); font-size: clamp(19px, 3vw, 26px); letter-spacing: -0.025em; }
+h3 { margin: 28px 0 8px; font-size: 14px; letter-spacing: 0.04em; }
+p { margin: 0 0 16px; }
+
+.updated {
+  display: inline-block;
+  margin-bottom: 26px;
+  padding: 5px 10px;
+  border: 2px solid var(--vt-ink);
+  border-radius: 7px;
+  background: var(--vt-lime);
+  font-size: 11px;
+  font-weight: 1000;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.intro { max-width: 78ch; font-size: 17px; font-weight: 650; }
+a { color: inherit; font-weight: 850; text-decoration-color: var(--vt-cyan); text-decoration-thickness: 3px; text-underline-offset: 3px; }
+a:hover { color: #006f86; }
+a:focus-visible { outline: 4px solid var(--vt-pink); outline-offset: 3px; }
+
+ul, ol { margin: 0 0 18px; padding-left: 24px; }
+li { margin: 7px 0; }
+li::marker { color: #007d93; font-weight: 1000; }
+strong { font-weight: 1000; }
+hr { margin: 34px 0; border: 0; border-top: 3px solid var(--vt-ink); }
+
+.callout, .contact {
+  margin: 22px 0;
+  padding: 18px;
+  border: 3px solid var(--vt-ink);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--vt-cyan) 20%, white);
+  box-shadow: 5px 5px 0 var(--vt-ink);
+}
+.callout p:last-child, .contact p:last-child { margin-bottom: 0; }
+.legal-caps { font-size: 13px; font-weight: 750; letter-spacing: 0.02em; }
+
+.scope-table { width: 100%; margin: 16px 0 22px; border: 3px solid var(--vt-ink); border-collapse: separate; border-spacing: 0; font-size: 14px; }
+.scope-table th, .scope-table td { padding: 12px; border-right: 2px solid var(--vt-ink); border-bottom: 2px solid var(--vt-ink); text-align: left; vertical-align: top; }
+.scope-table th:last-child, .scope-table td:last-child { border-right: 0; }
+.scope-table tbody tr:last-child td { border-bottom: 0; }
+.scope-table th { background: var(--vt-yellow); font-size: 10px; font-weight: 1000; letter-spacing: 0.08em; text-transform: uppercase; }
+code { display: inline-block; margin: 2px 2px 2px 0; padding: 1px 5px; border: 2px solid var(--vt-ink); border-radius: 4px; background: var(--vt-paper); color: var(--vt-ink); font-size: 12px; font-weight: 800; }
+
+.footer { padding: 26px 16px 38px; color: var(--vt-muted); font-size: 12px; font-weight: 750; text-align: center; }
+
+@media (max-width: 680px) {
+  .header { min-height: 62px; gap: 8px; }
+  .header-divider { font-size: 18px; }
+  .header-page { font-size: 9px; }
+  .container { margin: 18px 12px 38px; padding: 22px 18px; border-width: 3px; border-radius: 13px; box-shadow: 5px 5px 0 var(--vt-ink); }
+  .scope-table { display: block; overflow-x: auto; white-space: nowrap; }
+  .scope-table th, .scope-table td { min-width: 145px; white-space: normal; }
+}

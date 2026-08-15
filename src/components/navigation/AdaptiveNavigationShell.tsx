@@ -37,7 +37,7 @@ import {
   type NavigationLayout,
 } from "./navigationContract"
 import { useNavLayoutMorph } from "./useNavLayoutMorph"
-import { prefetchRoute, scheduleIdlePrefetch } from "./routePrefetch"
+import { prefetchRoute } from "./routePrefetch"
 import "./adaptive-navigation.css"
 
 interface AdaptiveNavigationShellProps {
@@ -108,13 +108,29 @@ const ApplicationScrollbar: React.FC<ApplicationScrollbarProps> = ({ viewportRef
       }
     }
 
+    // ResizeObserver on the viewport itself only fires when the *container*
+    // box changes (window resize / nav layout morph). It does NOT fire when
+    // page content grows or shrinks — only scrollHeight changes in that case,
+    // not clientHeight. So we also observe the direct content child and use a
+    // MutationObserver to re-observe whenever React swaps the page component
+    // on route navigation.
     const resizeObserver = new ResizeObserver(scheduleSync)
     resizeObserver.observe(viewport)
-    // ResizeObserver on the viewport already fires when any descendant
-    // resizes/adds content because viewport scrollHeight grows. Observing
-    // direct children is redundant; observing the whole subtree with a
-    // MutationObserver caused re-layouts on every render, which was the
-    // dominant mobile-freeze cause on data-heavy pages.
+
+    const observeContentChild = () => {
+      const child = viewport.firstElementChild
+      if (child) resizeObserver.observe(child)
+    }
+    observeContentChild()
+
+    // Fires when React replaces the page component (route change), giving us a
+    // new firstElementChild to observe and an immediate thumb recalc.
+    const mutationObserver = new MutationObserver(() => {
+      observeContentChild()
+      scheduleSync()
+    })
+    mutationObserver.observe(viewport, { childList: true })
+
     viewport.addEventListener("scroll", scheduleSync, { passive: true })
     window.addEventListener("resize", scheduleSync, { passive: true })
     scheduleSync()
@@ -122,6 +138,7 @@ const ApplicationScrollbar: React.FC<ApplicationScrollbarProps> = ({ viewportRef
     return () => {
       cancelScheduled()
       resizeObserver.disconnect()
+      mutationObserver.disconnect()
       viewport.removeEventListener("scroll", scheduleSync)
       window.removeEventListener("resize", scheduleSync)
     }
@@ -273,22 +290,8 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   const channelVerified = channelConnection.state === "connected_verified" || channelIdentity.isVerified
   const isConnected = accountAuthenticated && googleConnected
   const accountChipLabel = resolveAccountChipLabel(account.snapshot)
-  const accountEmail = cleanAccountText(account.snapshot.profile.email)
-  // Prefer a proper display name; if the profile hasn't populated one yet,
-  // synthesize a friendlier fallback from the email prefix (e.g.
-  // "cbrewsterart@gmail.com" → "Cbrewsterart") instead of the generic
-  // "ViewTube Account" — which not only looks impersonal but was also the
-  // source of the "VA" avatar initials people were seeing.
-  const emailDerivedName = accountEmail
-    ? (() => {
-       const prefix = accountEmail.split("@")[0]
-       if (!prefix) return ""
-       return prefix.charAt(0).toUpperCase() + prefix.slice(1)
-      })()
-    : ""
   const accountDisplayName =
     cleanAccountText(account.snapshot.profile.displayName) ||
-    emailDerivedName ||
     "ViewTube Account"
   // Reading the VT-SYNC snapshot on every render meant parsing a localStorage
   // JSON blob every time the shell re-rendered (auth ticks, resize, drawer
@@ -300,12 +303,17 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   )
   const fallbackChannelName = cleanConnectedChannelName(channelConnection.channelName)
   const channelName = isConnected
-    ? cleanConnectedChannelName(channelIdentity.name) || cleanConnectedChannelName(authState.channelName) || cleanConnectedChannelName(vtSyncSnapshot.channelName) || fallbackChannelName || accountDisplayName
+    ? cleanConnectedChannelName(account.snapshot.google.channelTitle) || cleanConnectedChannelName(channelIdentity.name) || cleanConnectedChannelName(authState.channelName) || cleanConnectedChannelName(vtSyncSnapshot.channelName) || fallbackChannelName || accountDisplayName
     : accountChipLabel
-  const handleText = isConnected && (channelIdentity.handle || channelConnection.handleText)
-    ? `@${String(channelIdentity.handle || channelConnection.handleText || "").replace(/^@/, "")}`
+  const handleValue = isConnected
+    ? String(account.snapshot.google.channelHandle || channelIdentity.handle || channelConnection.handleText || vtSyncSnapshot.channelCustomUrl || "").replace(/^@/, "").trim()
     : ""
-  const accountMeta = handleText || cleanAccountText(vtSyncSnapshot.channelCustomUrl) || accountEmail || (googleConnected ? "YouTube channel connected" : "Account active")
+  const handleText = handleValue ? `@${handleValue}` : ""
+  const accountMeta = handleText
+    ? `${handleText} – ${accountDisplayName}`
+    : isConnected && accountDisplayName !== "ViewTube Account"
+      ? accountDisplayName
+      : googleConnected ? "YouTube channel connected" : "Account active"
   const brainAvatar =
     brain.channelProfile?.thumbnail ||
     brain.channelProfile?.thumbnails?.high?.url ||
@@ -313,7 +321,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     brain.channelProfile?.thumbnails?.default?.url ||
     ""
   const channelAvatar = isConnected
-    ? toHighResYouTubeAvatar(channelIdentity.avatarUrl || authState.channelThumbnail || brainAvatar || vtSyncSnapshot.avatarUrl || account.snapshot.profile.avatarUrl)
+    ? toHighResYouTubeAvatar(account.snapshot.google.channelThumbnail || channelIdentity.avatarUrl || authState.channelThumbnail || brainAvatar || vtSyncSnapshot.avatarUrl || account.snapshot.profile.avatarUrl)
     : null
   const syncLabel = channelConnection.state === "connected_verified"
     ? formatSyncLabel(getSyncTimestamp(authState))
@@ -368,14 +376,6 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     updateViewport()
     mediaQuery.addEventListener("change", updateViewport)
     return () => mediaQuery.removeEventListener("change", updateViewport)
-  }, [])
-
-  // Idle-time prefetch of the top-hit routes so the *first* nav click from a
-  // freshly loaded Dashboard doesn't pay chunk-download latency. Runs once
-  // per shell mount, gated by requestIdleCallback so it never competes with
-  // above-the-fold work.
-  useEffect(() => {
-    scheduleIdlePrefetch()
   }, [])
 
   useEffect(() => {
@@ -528,7 +528,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
             // neither is available yet (still hydrating profile after login),
             // render a neutral person icon rather than fabricating "VA"
             // initials out of the "ViewTube Account" placeholder.
-            const initials = accountInitials(channelName, accountEmail)
+            const initials = accountInitials(channelName)
             return (
               <span className="grid size-[38px] place-items-center rounded-full border-[2px] border-black bg-white text-[10px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0_0_#000]">
                 {initials || <UserRound className="size-5 opacity-70" aria-hidden="true" />}
@@ -583,7 +583,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
         <span className="vt-adaptive-nav__avatar">
           {channelAvatar ? <img src={channelAvatar} alt="" width="38" height="38" referrerPolicy="no-referrer" /> : (
             (() => {
-              const initials = accountInitials(channelName, accountEmail)
+            const initials = accountInitials(channelName)
               return (
                 <span className="grid size-[38px] place-items-center rounded-full border-[2px] border-black bg-white text-[10px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0_0_#000]">
                   {initials || <UserRound className="size-5 opacity-70" aria-hidden="true" />}

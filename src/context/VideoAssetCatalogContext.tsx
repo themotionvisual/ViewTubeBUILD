@@ -17,7 +17,6 @@ import {
  refreshVideoAssetCatalog,
  restoreVideoAssetCatalog,
  VideoAssetCatalogError,
- VIDEO_ASSET_CATALOG_FRESHNESS_KEY,
  type VideoAsset,
  type VideoAssetCatalogSnapshot,
 } from "../services/videoAssets"
@@ -46,11 +45,12 @@ const resolveLegacyChannelId = (): string | null => {
 export const VideoAssetCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
  const account = useUnifiedAccount()
  const initialBootstrap = useInitialChannelBootstrap()
- const [eventTick, setEventTick] = useState(0)
  const [snapshot, setSnapshot] = useState<VideoAssetCatalogSnapshot>(EMPTY_VIDEO_ASSET_CATALOG)
  const snapshotRef = useRef<VideoAssetCatalogSnapshot>(EMPTY_VIDEO_ASSET_CATALOG)
  const inFlightRef = useRef<Map<string, Promise<VideoAssetCatalogSnapshot>>>(new Map())
  const abortRef = useRef<AbortController | null>(null)
+ const restoreGenerationRef = useRef(0)
+ const currentChannelIdRef = useRef("")
 
  const legacyConnected = !account.serverEnabled && isLegacyAuthenticated()
  const serverConnected = account.serverEnabled &&
@@ -61,6 +61,7 @@ export const VideoAssetCatalogProvider: React.FC<{ children: React.ReactNode }> 
  const channelId = account.serverEnabled
   ? account.snapshot.google.channelId
   : resolveLegacyChannelId()
+ currentChannelIdRef.current = String(channelId || "").trim()
 
  useEffect(() => {
   snapshotRef.current = snapshot
@@ -70,6 +71,7 @@ export const VideoAssetCatalogProvider: React.FC<{ children: React.ReactNode }> 
   options: EnsureVideoAssetCatalogOptions = {},
  ): Promise<VideoAssetCatalogSnapshot> => {
   const activeChannelId = String(channelId || "").trim()
+  restoreGenerationRef.current += 1
   if (!activeChannelId) {
    const next = { ...EMPTY_VIDEO_ASSET_CATALOG, revision: snapshotRef.current.revision + 1 }
    setSnapshot(next)
@@ -198,32 +200,52 @@ export const VideoAssetCatalogProvider: React.FC<{ children: React.ReactNode }> 
    inFlightRef.current.delete(activeChannelId)
   })
 
-  inFlightRef.current.set(activeChannelId, task)
-  return task
+ inFlightRef.current.set(activeChannelId, task)
+ return task
  }, [channelId, connected, initialBootstrap])
 
- useEffect(() => {
-  void ensure({ reason: "boot" })
- }, [ensure, eventTick])
+ const restoreLocalCatalog = useCallback(async () => {
+  const activeChannelId = String(channelId || "").trim()
+  if (!activeChannelId) return
+  const restoreGeneration = ++restoreGenerationRef.current
+  const restored = await restoreVideoAssetCatalog(activeChannelId)
+  if (restoreGeneration !== restoreGenerationRef.current || activeChannelId !== currentChannelIdRef.current) return
+  setSnapshot((current) => {
+   if (
+    restoreGeneration !== restoreGenerationRef.current ||
+    activeChannelId !== currentChannelIdRef.current ||
+    (current.channelId === activeChannelId && (current.status === "refreshing" || (current.source === "data_api" && !current.stale)))
+   ) return current
+   return {
+    channelId: activeChannelId,
+    status: restored.items.length > 0 ? "ready" : "idle",
+    items: restored.items,
+    revision: current.revision + 1,
+    source: restored.source,
+    lastSyncedAt: current.channelId === activeChannelId ? current.lastSyncedAt : null,
+    stale: isVideoAssetCatalogStale(activeChannelId),
+    error: null,
+   }
+  })
+ }, [channelId])
 
  useEffect(() => {
-  const refreshFromEvent = () => setEventTick((value) => value + 1)
-  const refreshFromStorage = (event: StorageEvent) => {
-   if (event.key === VIDEO_ASSET_CATALOG_FRESHNESS_KEY) refreshFromEvent()
-  }
-  window.addEventListener("vt_auth_changed", refreshFromEvent)
-  window.addEventListener("yt_analytics_synced", refreshFromEvent)
-  window.addEventListener("canonical_store_updated", refreshFromEvent)
-  window.addEventListener("vt_video_asset_catalog_updated", refreshFromEvent)
-  window.addEventListener("storage", refreshFromStorage)
+  void restoreLocalCatalog()
+ }, [restoreLocalCatalog])
+
+ useEffect(() => {
+  const restoreFromLocalEvent = () => void restoreLocalCatalog()
+  window.addEventListener("vt_auth_changed", restoreFromLocalEvent)
+  window.addEventListener("yt_analytics_synced", restoreFromLocalEvent)
+  window.addEventListener("canonical_store_updated", restoreFromLocalEvent)
+  window.addEventListener("vt_video_asset_catalog_updated", restoreFromLocalEvent)
   return () => {
-   window.removeEventListener("vt_auth_changed", refreshFromEvent)
-   window.removeEventListener("yt_analytics_synced", refreshFromEvent)
-   window.removeEventListener("canonical_store_updated", refreshFromEvent)
-   window.removeEventListener("vt_video_asset_catalog_updated", refreshFromEvent)
-   window.removeEventListener("storage", refreshFromStorage)
+   window.removeEventListener("vt_auth_changed", restoreFromLocalEvent)
+   window.removeEventListener("yt_analytics_synced", restoreFromLocalEvent)
+   window.removeEventListener("canonical_store_updated", restoreFromLocalEvent)
+   window.removeEventListener("vt_video_asset_catalog_updated", restoreFromLocalEvent)
   }
- }, [])
+ }, [restoreLocalCatalog])
 
  const search = useCallback((query: string, limit = 50): VideoAsset[] => {
   const normalized = query.trim().toLowerCase()

@@ -269,6 +269,17 @@ export const fetchUnifiedAccountSnapshot = async (): Promise<UnifiedAccountSnaps
   }
 }
 
+export const selectUnifiedContentOwner = async (ownerId: string): Promise<UnifiedAccountSnapshot> => {
+  const response = await fetch(accountUrl("/api/account/content-owner"), {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ ownerId }),
+  })
+  if (!response.ok) throw new Error((await response.json().catch(() => null))?.error || "Content Owner selection failed.")
+  return fetchUnifiedAccountSnapshot()
+}
+
 // Touch devices (phones/tablets) can't reliably keep a popup+opener
 // relationship alive across a Google OAuth round-trip: mobile browsers block
 // popups, open them as detached tabs, or lose window.opener before postMessage

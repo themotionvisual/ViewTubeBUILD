@@ -4,6 +4,7 @@ import { useEntitlement } from "../../../context/entitlementContext"
 import { Image as ImageIcon, Sparkles, Download, Search, CheckCircle2, AlertTriangle, Upload, ArrowRight } from "lucide-react"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { VideoAssetSelect } from "./VideoAssetSelect"
+import { WidgetScrollArea } from "../WidgetPrimitives"
 
 type TabMode = "generate" | "analyze" | "abtest"
 
@@ -159,7 +160,6 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
         onChange={setSelectedVideo}
         query={videoSearch}
         limit={50}
-        className="vt-select"
         style={{ flex: 2 }}
       />
       <input
@@ -177,7 +177,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
       {...common}
       icon={<ImageIcon size={22} />}
       headerContent={modeTabBar}>
-      <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px", overflowY: "auto" }}>
+      <WidgetScrollArea ariaLabel="Thumbnail laboratory" contentClassName="flex min-h-full flex-col gap-2">
 
         {/* GENERATE MODE */}
         {mode === "generate" && !result && (
@@ -259,9 +259,8 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
                       <span style={{ fontSize: "7px", fontWeight: 900, background: "#C9F830", border: "1px solid #000", borderRadius: "4px", padding: "1px 4px", textTransform: "uppercase" }}>AI Favored</span>
                     )}
                   </div>
-                  <label style={{
-                    width: "100%", aspectRatio: "16/9", border: v.image ? "2px solid #000" : "2px dashed #999",
-                    borderRadius: "8px", background: v.image ? "transparent" : "#f5f5f5",
+                  <label className="widget-upload-frame" style={{
+                    width: "100%", aspectRatio: "16/9",
                     display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
                     overflow: "hidden", position: "relative",
                   }}>
@@ -346,7 +345,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
           </div>
         )}
 
-      </div>
+      </WidgetScrollArea>
     </WidgetShell>
   )
 }

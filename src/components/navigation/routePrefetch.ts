@@ -17,7 +17,6 @@ type PrefetchFactory = () => Promise<unknown>
 const prefetched = new Set<string>()
 
 const factories: Record<string, PrefetchFactory> = {
- "/": () => import("../../views/Dashboard"),
  "/studio": () => import("../../views/StudioHub"),
  "/projects": () => import("../../views/ProjectCalendarPage"),
  "/ai-brain": () => import("../../views/AIBrainCommandInterface"),

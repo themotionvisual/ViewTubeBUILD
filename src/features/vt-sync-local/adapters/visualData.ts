@@ -211,6 +211,7 @@ export type VtSyncVisualPropsData = {
   *  Prefer this over `trafficByDay` when computing channel-wide weekly
   *  rollups — it is the direct daily-metric feed rather than a traffic slice. */
  dailyMetrics: Array<Record<string, unknown>>
+ monthlyMetrics: Array<Record<string, unknown>>
  /** Channel-wide identity + lifetime totals. Modules should surface these
   *  when a viewer wants "channel totals" rather than a window sum. */
  channelSummary: {
@@ -618,6 +619,13 @@ export const buildVtSyncVisualPropsData = (
     ? snapshot.tableExports.daily as Array<Record<string, unknown>>
     : []
 
+ const monthlyMetrics: Array<Record<string, unknown>> =
+  Array.isArray(snapshot.monthlyMetrics) && snapshot.monthlyMetrics.length > 0
+   ? (snapshot.monthlyMetrics as Array<Record<string, unknown>>)
+   : Array.isArray(snapshot.tableExports?.monthly_api)
+    ? snapshot.tableExports.monthly_api as Array<Record<string, unknown>>
+    : []
+
  // Channel-wide totals: prefer the Analytics `channelTotals.lifetime` bucket
  // when it exists; fall back to summing every canonical video row for each
  // metric so the module always shows *some* channel-total figure even when
@@ -652,7 +660,9 @@ export const buildVtSyncVisualPropsData = (
  }
  const channelSummary: VtSyncVisualPropsData["channelSummary"] = {
   subscriberCount: numeric(snapshot.subscriberCount) ?? readLifetime("subscribers", "subscriberCount"),
-  videoCount: numeric(snapshot.channelVideoCount) ?? readLifetime("videos", "videoCount") ?? rows.length,
+  // Visual counts describe the active, privacy-filtered catalog. Public channel
+  // counts remain available on the channel identity/totals surfaces.
+  videoCount: rows.length,
   lifetimeViews: numeric(snapshot.channelViewCount) ?? readLifetime("views") ?? sumRowsMetric("views"),
   lifetimeWatchHours: readLifetime("watchHours", "watchTime") ?? sumRowsMetric("watchHours"),
   lifetimeRevenue: readLifetime("revenue", "estimatedRevenue") ?? sumRowsMetric("revenue"),
@@ -666,6 +676,7 @@ export const buildVtSyncVisualPropsData = (
   csvFiles: [],
   trafficByDay,
   dailyMetrics,
+  monthlyMetrics,
   channelSummary,
   canonicalContext: {
    trafficRows,

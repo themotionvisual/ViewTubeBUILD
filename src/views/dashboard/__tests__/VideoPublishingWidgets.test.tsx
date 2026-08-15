@@ -15,6 +15,14 @@ vi.mock("../../../services/youtubeService", () => ({
  uploadVideo: vi.fn().mockResolvedValue(undefined),
 }))
 
+vi.mock("../../../context/UnifiedAccountContext", () => ({
+ useUnifiedAccount: () => ({
+  serverEnabled: false,
+  snapshot: { grantedCapabilities: [] },
+  start: vi.fn(),
+ }),
+}))
+
 describe("split video publishing widgets", () => {
  let container: HTMLDivElement
  let root: Root
@@ -60,16 +68,19 @@ describe("split video publishing widgets", () => {
    )
   })
 
-  expect(container.querySelector(".widget-dropzone")).toBeNull()
-  expect(container.querySelector(".video-upload-button")).not.toBeNull()
-  expect(container.querySelectorAll(".widget-toolbar.vt-full-bleed-bottom .widget-workflow-buttons > .vt-button")).toHaveLength(3)
+  expect(container.querySelectorAll(".widget-media-upload")).toHaveLength(1)
+  expect(container.querySelector(".video-uploader-title-row .video-upload-file-action")?.textContent).toContain("Upload video")
+  expect(container.querySelector(".video-thumbnail-column .widget-media-upload-action")?.textContent).toContain("Upload thumbnail")
+  expect(container.querySelectorAll(".video-uploader-description-row .widget-media-upload-frame")).toHaveLength(1)
+  expect(container.querySelectorAll(".video-uploader-meta-row .video-uploader-selects .widget-select-trigger")).toHaveLength(3)
+  expect(container.querySelectorAll(".widget-footer.widget-toolbar .widget-workflow-buttons > .vt-button")).toHaveLength(3)
   expect(container.querySelector('[aria-label="Video title"].vt-input')).not.toBeNull()
   expect(container.querySelector(".widget-counted-input")).toBeNull()
-  expect(container.querySelectorAll(".widget-details-primary .widget-details-selects.is-three .widget-select-trigger")).toHaveLength(3)
+  expect(container.querySelectorAll(".video-uploader-meta-row .video-uploader-selects .widget-select-trigger")).toHaveLength(3)
   expect(container.querySelector('[aria-label="Category"]')?.textContent).toContain("Category")
   expect(container.querySelector('[aria-label="Playlist"]')?.textContent).toContain("Playlist")
   expect(container.querySelector('[aria-label="Description"].widget-description-textarea')).not.toBeNull()
-  expect(container.querySelectorAll(".widget-control-disclosure")).toHaveLength(1)
+  expect(container.querySelectorAll(".widget-control-disclosure")).toHaveLength(0)
   expect(container.querySelector(".is-green, .is-blue, .is-pink")).toBeNull()
   expect(container.querySelector(".video-meta-workspace, .video-meta-footer")).toBeNull()
  })
@@ -116,5 +127,34 @@ describe("split video publishing widgets", () => {
   const thumbnail = container.querySelector<HTMLImageElement>('img[alt="Thumbnail for Published test video"]')
   expect(thumbnail?.src).toBe("https://example.com/video123.jpg")
   expect([...container.querySelectorAll("details")].every((module) => !module.open)).toBe(true)
+ })
+
+ it("adds the educational timestamps page when Education is selected", async () => {
+  const widget = DASHBOARD_WIDGET_BY_ID["video-uploader"]
+  await act(async () => {
+   root.render(
+    <VideoUploaderWidget
+     widget={widget}
+     instance={{ collapsed: false, size: "half", height: "xtall" }}
+     editMode={false}
+     canEdit
+     onToggleCollapse={vi.fn()}
+     onCycleSize={vi.fn()}
+     onDecSize={vi.fn()}
+     onCycleHeight={vi.fn()}
+     onDecHeight={vi.fn()}
+     onRemove={vi.fn()}
+     data={{ authState: { isAuthenticated: false }, videoAssets: [] } as never}
+    />,
+   )
+  })
+
+  const category = container.querySelector<HTMLButtonElement>('[aria-label="Category"]')
+  await act(async () => category?.click())
+  const education = [...document.querySelectorAll<HTMLElement>('[role="option"]')]
+   .find((option) => option.textContent === "Education")
+  await act(async () => education?.click())
+
+  expect(container.querySelector('.widget-workflow-buttons button')?.parentElement?.textContent).toContain("Timestamps")
  })
 })

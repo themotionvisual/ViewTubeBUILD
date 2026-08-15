@@ -1,10 +1,11 @@
 import React, { useState } from "react"
-import { MessageCircle, Sparkles, Loader2, Copy, Check } from "lucide-react"
+import { MessageCircle, Sparkles, Loader2, ExternalLink, ThumbsUp } from "lucide-react"
 import { PostActionReflection } from "./PostActionReflection"
 import { generateCommentResponses } from "../services/gemini"
-import { youtubeApiClient } from "../services/youtubeService"
+import { fetchAllCommentThreads } from "../services/youtubeService"
 import Markdown from "react-markdown"
 import { SubToolbox } from "./Toolbox"
+import { buildYouTubeCommentUrl } from "../services/youtube/commentHandoff"
 
 export const CommentResponder: React.FC = () => {
  const [comments, setComments] = useState("")
@@ -34,8 +35,7 @@ export const CommentResponder: React.FC = () => {
  const handleFetchComments = async () => {
   setFetching(true)
   try {
-   const response = await youtubeApiClient.fetchCommentThreads({ allThreads: true })
-   setFetchedThreads(response.items || [])
+   setFetchedThreads(await fetchAllCommentThreads(100))
   } catch (e) {
    console.error("Failed to fetch comments:", e)
   } finally {
@@ -79,17 +79,50 @@ export const CommentResponder: React.FC = () => {
        {fetchedThreads.length > 0 && (
         <div className="max-h-48 overflow-y-auto border-[2px] border-black rounded-xl p-2 space-y-2 bg-gray-50 custom-scrollbar">
          {fetchedThreads.map((thread) => {
-          const text = thread.snippet.topLevelComment.snippet.textDisplay
-          const author = thread.snippet.topLevelComment.snippet.authorDisplayName
+          const topLevelComment = thread.snippet?.topLevelComment
+          const text = topLevelComment?.snippet?.textDisplay || ""
+          const author = topLevelComment?.snippet?.authorDisplayName || "Unknown viewer"
+          const videoId = thread.snippet?.videoId
+          const commentUrl = buildYouTubeCommentUrl(videoId, topLevelComment?.id || thread.id)
+          const replies = thread.replies?.comments || []
           return (
-           <button
-            key={thread.id}
-            onClick={() => selectComment(text)}
-            className="w-full text-left p-2 hover:bg-[#FF3399]/10 rounded-lg transition-colors border-2 border-transparent hover:border-black/10"
-           >
-            <div className="text-[9px] font-black uppercase opacity-50">{author}</div>
-            <div className="text-xs font-bold line-clamp-2">{text}</div>
-           </button>
+           <div key={thread.id} className="p-2 rounded-lg border-2 border-transparent hover:border-black/10">
+            <div className="flex items-start gap-2">
+             <button
+              onClick={() => selectComment(text)}
+              className="flex-1 min-w-0 text-left hover:bg-[#FF3399]/10 rounded-lg transition-colors"
+             >
+              <div className="text-[9px] font-black uppercase opacity-50">{author}</div>
+              <div className="text-xs font-bold line-clamp-2">{text}</div>
+             </button>
+             {commentUrl && (
+              <a
+               href={commentUrl}
+               target="_blank"
+               rel="noreferrer"
+               title="Open this comment in YouTube to like it"
+               className="shrink-0 border-2 border-black bg-[#FFB158] p-1 text-black hover:bg-[#FF3399]"
+              >
+               <ThumbsUp size={13} aria-hidden="true" />
+               <span className="ml-1 text-[8px] font-black uppercase">Like on YouTube</span>
+              </a>
+             )}
+            </div>
+            {replies.length > 0 && (
+             <div className="mt-2 ml-2 space-y-1 border-l-2 border-black/20 pl-2">
+              <div className="text-[8px] font-black uppercase opacity-50">Previous replies</div>
+              {replies.map((reply: any) => {
+               const replyUrl = buildYouTubeCommentUrl(videoId, reply.id)
+               return (
+                <div key={reply.id || reply.snippet?.publishedAt} className="flex items-start gap-2 text-[10px] font-bold">
+                 <span className="flex-1 min-w-0 line-clamp-2">{reply.snippet?.textDisplay || ""}</span>
+                 {replyUrl && <a href={replyUrl} target="_blank" rel="noreferrer" title="Open this reply in YouTube to like it" className="shrink-0 text-[8px] font-black uppercase text-black/60 hover:text-[#FF3399]"><ExternalLink size={12} aria-hidden="true" className="inline mr-1" />Like on YouTube</a>}
+                </div>
+               )
+              })}
+             </div>
+            )}
+           </div>
           )
          })}
         </div>

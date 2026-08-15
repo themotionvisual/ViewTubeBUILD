@@ -59,9 +59,8 @@ export const ABThumbnailWidget = ({
         )}
        </div>
        {/* Image Drop Zone */}
-       <label style={{
-        width: "100%", aspectRatio: "16/9", border: v.image ? "2px solid #000" : "2px dashed #999",
-        borderRadius: "8px", background: v.image ? "transparent" : "#f5f5f5",
+       <label className="widget-upload-frame" style={{
+        width: "100%", aspectRatio: "16/9",
         display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
         overflow: "hidden", position: "relative",
        }}>

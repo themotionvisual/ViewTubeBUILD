@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react"
 import { WidgetShell } from "../WidgetShell"
+import { WidgetScrollArea } from "../WidgetPrimitives"
 import { BarChart3, AlertTriangle, Sparkles, Upload } from "lucide-react"
 import { CustomDropdown } from "./DataEditWidget"
 import { compressMediaForAnalysis } from "../../../services/analysisCompression"
@@ -113,7 +114,7 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
 
   return (
   <WidgetShell {...common} icon={<BarChart3 size={22} />}>
-   <div className="vt-widget-fill-body" style={{ gap: "8px" }}>
+   <WidgetScrollArea ariaLabel="Retention simulation" contentClassName="flex min-h-full flex-col gap-2">
      <div style={{ padding: "8px", border: "2px solid #000", borderRadius: "8px", background: "rgba(204,255,0,0.16)", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", lineHeight: 1.35 }}>
       Analysis-only upload policy active: local videos are compressed before analysis to reduce AI processing cost.
      </div>
@@ -220,7 +221,7 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
       )}
      </>
     )}
-   </div>
+   </WidgetScrollArea>
   </WidgetShell>
  )
 }

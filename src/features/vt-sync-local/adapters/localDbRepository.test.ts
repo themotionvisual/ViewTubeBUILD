@@ -11,12 +11,18 @@ import {
  deleteVtSyncDatasetTableRows,
  getVtSyncChannelIndex,
  getVtSyncKnownVideoIds,
+ listVtSyncDatasetRawReports,
  listVtSyncDatasetTableRows,
+ listVtSyncSyncRuns,
  listVtSyncVideoInventory,
  openVtSyncLocalDb,
  putVtSyncChannelIndex,
+ putVtSyncDatasetRawReport,
  putVtSyncDatasetTableRows,
  putVtSyncVideoInventoryRecords,
+ replaceLatestVtSyncDatasetRawReport,
+ replaceLatestVtSyncDatasetTableRows,
+ replaceLatestVtSyncSyncRun,
 } from "./localDbRepository"
 
 afterEach(async () => {
@@ -58,6 +64,67 @@ describe("VT Sync local IndexedDB repository", () => {
 
   await deleteVtSyncDatasetTableRows("manual_import::creator")
   expect(await listVtSyncDatasetTableRows()).toEqual([])
+ })
+
+ it("keeps only the latest API dataset for each channel while preserving CSV and other channels", async () => {
+  await putVtSyncDatasetTableRows({
+   id: "legacy-a", runId: "run-a-1", channelId: "channel-a", datasetId: "videos", phase: "video_metadata",
+   capturedAt: "2026-08-12T00:00:00.000Z", rows: [{ id: "old" }], provenance: "api",
+  })
+  await putVtSyncDatasetTableRows({
+   id: "manual_import::videos", runId: "manual_import::videos", channelId: "channel-a", datasetId: "videos", phase: "manual_import",
+   capturedAt: "2026-08-12T00:00:00.000Z", rows: [{ id: "csv" }], provenance: "csv",
+  })
+  await putVtSyncDatasetTableRows({
+   id: "channel-b", runId: "run-b", channelId: "channel-b", datasetId: "videos", phase: "video_metadata",
+   capturedAt: "2026-08-12T00:00:00.000Z", rows: [{ id: "other-channel" }], provenance: "api",
+  })
+
+  await replaceLatestVtSyncDatasetTableRows({
+   runId: "run-a-2", channelId: "channel-a", datasetId: "videos", phase: "video_metadata",
+   capturedAt: "2026-08-13T00:00:00.000Z", rows: [{ id: "new" }],
+  })
+  await replaceLatestVtSyncDatasetTableRows({
+   runId: "run-a-3", channelId: "channel-a", datasetId: "videos", phase: "videos_analytics",
+   capturedAt: "2026-08-13T01:00:00.000Z", rows: [{ id: "newest" }],
+  })
+
+  const records = await listVtSyncDatasetTableRows()
+  expect(records.filter((record) => record.channelId === "channel-a" && record.provenance === "api")).toEqual([
+   expect.objectContaining({ runId: "run-a-3", rows: [{ id: "newest" }] }),
+  ])
+  expect(records).toEqual(expect.arrayContaining([
+   expect.objectContaining({ id: "manual_import::videos", provenance: "csv" }),
+   expect.objectContaining({ id: "channel-b", channelId: "channel-b" }),
+  ]))
+ })
+
+ it("replaces raw diagnostics and sync-run history only after a new record exists", async () => {
+  await putVtSyncDatasetRawReport({
+   id: "local-import-daily", runId: "local-import-daily", datasetId: "daily", phase: "manual_import",
+   capturedAt: "2026-08-11T00:00:00.000Z", columns: ["day"], rows: [{ day: "csv" }], source: "local_import",
+  })
+  await replaceLatestVtSyncDatasetRawReport({
+   runId: "raw-1", channelId: "channel-a", datasetId: "daily", phase: "daily_metrics",
+   capturedAt: "2026-08-12T00:00:00.000Z", columns: ["day"], rows: [{ day: "2026-08-12" }], source: "youtube_analytics_v2",
+  })
+  await replaceLatestVtSyncDatasetRawReport({
+   runId: "raw-2", channelId: "channel-a", datasetId: "daily", phase: "daily_metrics",
+   capturedAt: "2026-08-13T00:00:00.000Z", columns: ["day"], rows: [{ day: "2026-08-13" }], source: "youtube_analytics_v2",
+  })
+  expect(await listVtSyncDatasetRawReports()).toEqual(expect.arrayContaining([
+   expect.objectContaining({ runId: "raw-2", channelId: "channel-a" }),
+   expect.objectContaining({ id: "local-import-daily", source: "local_import" }),
+  ]))
+
+  const run = (id: string, channelId: string) => ({
+   id, channelId, startedAt: "2026-08-13T00:00:00.000Z", phase: "uploads_inventory", status: "complete" as const,
+   rowsRead: 1, rowsWritten: 1,
+  })
+  await replaceLatestVtSyncSyncRun(run("run-a-1", "channel-a"))
+  await replaceLatestVtSyncSyncRun(run("run-b-1", "channel-b"))
+  await replaceLatestVtSyncSyncRun(run("run-a-2", "channel-a"))
+  expect((await listVtSyncSyncRuns()).map((entry) => entry.id).sort()).toEqual(["run-a-2", "run-b-1"])
  })
 
  it("stores channel inventory by channel-scoped video IDs", async () => {

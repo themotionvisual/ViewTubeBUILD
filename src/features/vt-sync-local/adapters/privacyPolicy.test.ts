@@ -1,11 +1,14 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { normalizeVtSyncSnapshot } from "./snapshot"
 import {
  DEFAULT_VT_SYNC_PRIVACY_FILTERS,
+ VT_SYNC_PRIVACY_FILTERS_KEY,
+ VT_SYNC_PRIVACY_FILTERS_VERSION,
  applyVtSyncPrivacyFilters,
  filterVtSyncVideos,
  normalizeVtSyncPrivacyFilters,
+ readVtSyncPrivacyFilters,
  resolveVtSyncVideoFormat,
 } from "./privacyPolicy"
 import { buildVtSyncBrainContext } from "./brainContext"
@@ -24,32 +27,62 @@ const snapshot = normalizeVtSyncSnapshot({
 })
 
 describe("VT-SYNC privacy policy", () => {
- it("defaults both privacy exclusions on", () => {
+ afterEach(() => {
+  vi.unstubAllGlobals()
+ })
+
+ it("defaults to showing the creator's complete catalog", () => {
   expect(normalizeVtSyncPrivacyFilters()).toEqual(DEFAULT_VT_SYNC_PRIVACY_FILTERS)
+  expect(DEFAULT_VT_SYNC_PRIVACY_FILTERS).toEqual({
+   excludePrivate: false,
+   excludeUnlisted: false,
+  })
  })
 
- it("classifies private and unlisted metadata as unknown format", () => {
-  expect(resolveVtSyncVideoFormat({ privacyStatus: "private", isLive: false, isShort: false })).toBe("unknown")
-  expect(resolveVtSyncVideoFormat({ privacyStatus: "unlisted", isLive: false, isShort: true })).toBe("unknown")
+ it("durably migrates legacy hidden privacy defaults to show the complete catalog", () => {
+  const values = new Map<string, string>([
+   [VT_SYNC_PRIVACY_FILTERS_KEY, JSON.stringify({ excludePrivate: true, excludeUnlisted: true })],
+  ])
+  vi.stubGlobal("localStorage", {
+   getItem: (key: string) => values.get(key) ?? null,
+   setItem: (key: string, value: string) => values.set(key, value),
+  })
+
+  expect(readVtSyncPrivacyFilters()).toEqual({ excludePrivate: false, excludeUnlisted: false })
+  expect(JSON.parse(values.get(VT_SYNC_PRIVACY_FILTERS_KEY) || "{}"))
+   .toEqual({
+    excludePrivate: false,
+    excludeUnlisted: false,
+    version: VT_SYNC_PRIVACY_FILTERS_VERSION,
+   })
+ })
+
+ it("classifies video format based on duration or isShort indicator", () => {
+  expect(resolveVtSyncVideoFormat({ privacyStatus: "private", isLive: false, isShort: false, durationSeconds: 400 })).toBe("long")
+  expect(resolveVtSyncVideoFormat({ privacyStatus: "unlisted", isLive: false, isShort: true })).toBe("short")
   expect(resolveVtSyncVideoFormat({ privacyStatus: "public", isLive: false, isShort: true })).toBe("short")
-  expect(resolveVtSyncVideoFormat({ privacyStatus: "public", isLive: false, isShort: false })).toBe("long")
+  expect(resolveVtSyncVideoFormat({ privacyStatus: "public", isLive: false, isShort: false, durationSeconds: 30 })).toBe("long")
+  expect(resolveVtSyncVideoFormat({ privacyStatus: "public", isLive: false, isShort: false, durationSeconds: 400 })).toBe("long")
  })
 
- it("keeps raw snapshot rows while excluding private and unlisted consumer rows", () => {
-  const projected = applyVtSyncPrivacyFilters(snapshot)
+ it("keeps raw snapshot rows while applying explicit privacy filters to consumers", () => {
+  const projected = applyVtSyncPrivacyFilters(snapshot, {
+   excludePrivate: true,
+   excludeUnlisted: true,
+  })
   expect(projected.videos.map((video) => video.id)).toEqual(["public"])
   expect(snapshot.videos.map((video) => video.id)).toEqual(["public", "private", "unlisted"])
  })
 
- it("restores excluded rows as unknown when their toggles are disabled", () => {
+ it("restores private and unlisted rows when their toggles are disabled", () => {
   const videos = filterVtSyncVideos(
    snapshot.videos as Array<(typeof snapshot.videos)[number] & Record<string, unknown>>,
    { excludePrivate: false, excludeUnlisted: false },
   )
   expect(videos.map((video) => [video.id, video.format])).toEqual([
    ["public", "long"],
-   ["private", "unknown"],
-   ["unlisted", "unknown"],
+   ["private", "long"],
+   ["unlisted", "short"],
   ])
  })
 
@@ -59,10 +92,10 @@ describe("VT-SYNC privacy policy", () => {
   const brain = buildVtSyncBrainContext(snapshot)
   const visuals = buildVtSyncVisualPropsData(snapshot)
 
-  expect(tableRows.map((row) => row.videoId)).toEqual(["public"])
-  expect(brain.facts.rowCounts).toMatchObject({ videos: 1 })
-  expect(brain.facts.privacyPolicy).toMatchObject({ excludedVideoRows: 2 })
-  expect(brain.facts.totals).toEqual({ privacyFilteredVideos: { views: 10, watchTime: 0 } })
-  expect(visuals.rows.map((row) => row.videoId)).toEqual(["public"])
+  expect(tableRows.map((row) => row.videoId)).toEqual(["public", "private", "unlisted"])
+  expect(brain.facts.rowCounts).toMatchObject({ videos: 3 })
+  expect(brain.facts.privacyPolicy).toMatchObject({ excludedVideoRows: 0 })
+  expect(brain.facts.totals).toEqual({ lifetime: { views: 999, watchTime: 999 } })
+  expect(visuals.rows.map((row) => row.videoId)).toEqual(["public", "private", "unlisted"])
  })
 })

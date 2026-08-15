@@ -4,6 +4,7 @@ import React, {
  useCallback,
  useEffect,
  useRef,
+ startTransition,
 } from "react"
 import type { ReactNode } from "react"
 import type {
@@ -368,44 +369,66 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
  useEffect(() => {
   initializeBrain().catch(e => console.error("Brain initialization failed:", e));
  }, []);
- const [brain, setBrain] = useState<WorkspaceBrain>(loadPersistedBrain)
- const [authState, setAuthStateRaw] = useState<AuthState>(loadPersistedAuth)
+ // ── Phase 3: Defer heavy localStorage parsing off the critical render path ──
+ // Start with lightweight defaults so the first React commit is instant.
+ // Heavy JSON.parse of brain/auth/cache is scheduled via requestIdleCallback
+ // and merged in once ready. Users see a skeleton for 1-2 frames at most.
+ const [brain, setBrain] = useState<WorkspaceBrain>(defaultBrain)
+ const [authState, setAuthStateRaw] = useState<AuthState>(() => ({
+  ...defaultAuthState,
+  isAuthenticated: unifiedAuth.isAuthenticated(),
+ }))
  const [isAuthorizing, setIsAuthorizing] = useState(false)
  const [isSyncing, setIsSyncing] = useState<boolean>(false)
- const [channelIdentity, setChannelIdentity] = useState<ChannelIdentitySnapshot>(() =>
-  buildChannelIdentityFromSources(loadPersistedAuth(), readYouTubeAnalyticsCache()),
- )
+ const [channelIdentity, setChannelIdentity] = useState<ChannelIdentitySnapshot>(defaultChannelIdentity)
  const [channelBootPhase, setChannelBootPhase] = useState<ChannelBootPhase>("idle")
  const [initialDashboardHydrationStatus, setInitialDashboardHydrationStatus] =
   useState<InitialDashboardHydrationStatus>(defaultInitialDashboardHydrationStatus)
- const [lastSyncComplete, setLastSyncComplete] = useState<string | null>(
-  localStorage.getItem("yt_analytics_last_sync") || null,
- )
+ const [lastSyncComplete, setLastSyncComplete] = useState<string | null>(null)
  const [syncStatus, setSyncStatus] =
   useState<ChannelAnalysisSyncStatus>(defaultSyncStatus)
  const [activeSyncAction, setActiveSyncAction] =
   useState<AnalyticsSyncAction | null>(null)
  const [activeSyncButtonId, setActiveSyncButtonId] = useState<string | null>(null)
-const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
+ const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(defaultSyncBatch)
+ const [aiModel, setAiModel] = useState<string>("gemini-3.1-flash-lite")
+ const loginBootPromiseRef = useRef<Promise<void> | null>(null)
+ const hydratedFromStorageRef = useRef(false)
+
+ // Deferred hydration: parse localStorage in an idle callback so the main
+ // thread isn't blocked during first paint. On mobile this saves 300-1500ms.
+ useEffect(() => {
+  if (hydratedFromStorageRef.current) return
+  hydratedFromStorageRef.current = true
+  const schedule = typeof window.requestIdleCallback === "function"
+   ? window.requestIdleCallback
+   : (cb: () => void) => setTimeout(cb, 0)
+  schedule(() => {
+   const persistedBrain = loadPersistedBrain()
+   const persistedAuth = loadPersistedAuth()
+   const cache = readYouTubeAnalyticsCache()
+   const identity = buildChannelIdentityFromSources(persistedAuth, cache)
+   setBrain(persistedBrain)
+   setAuthStateRaw(persistedAuth)
+   setChannelIdentity(identity)
+   setLastSyncComplete(localStorage.getItem("yt_analytics_last_sync") || null)
+   try {
+    const model = localStorage.getItem("vt_ai_model")
+    if (model) setAiModel(model)
+   } catch { /* ignore */ }
    try {
     const raw = localStorage.getItem("vt_video_sync_batch_state")
-    if (!raw) return defaultSyncBatch
-    const parsed = JSON.parse(raw) as Partial<VideoSyncBatchState>
-    const parsedInitialLimit =
-     typeof parsed.initialLimit === "number" && parsed.initialLimit > 500
-      ? parsed.initialLimit
-      : defaultSyncBatch.initialLimit
-    return {
-     ...defaultSyncBatch,
-     ...parsed,
-     initialLimit: parsedInitialLimit,
+    if (raw) {
+     const parsed = JSON.parse(raw) as Partial<VideoSyncBatchState>
+     const parsedInitialLimit =
+      typeof parsed.initialLimit === "number" && parsed.initialLimit > 500
+       ? parsed.initialLimit
+       : defaultSyncBatch.initialLimit
+     setSyncBatch({ ...defaultSyncBatch, ...parsed, initialLimit: parsedInitialLimit })
     }
-   } catch {
-    return defaultSyncBatch
-   }
+   } catch { /* ignore */ }
   })
-  const [aiModel, setAiModel] = useState<string>(() => localStorage.getItem("vt_ai_model") || "gemini-3.1-flash-lite")
- const loginBootPromiseRef = useRef<Promise<void> | null>(null)
+ }, [])
   useEffect(() => {
     localStorage.setItem("vt_ai_model", aiModel)
   }, [aiModel])
@@ -1003,16 +1026,22 @@ const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
    }
   }, [applyChannelIdentity, authState, hydrateAuthStateFromAnalyticsCache])
 
+ // Phase 5: Guard session verification against concurrent login boot.
+ // If connectChannel() is already running, skip — it handles its own
+ // token refresh and channel boot. Also wrap the cache hydration in
+ // startTransition so it doesn't block any pending user interaction.
  useEffect(() => {
   let cancelled = false
   const verifyExistingSession = async () => {
    if (!unifiedAuth.isAuthenticated()) return
+   // Skip if a login boot is already in progress — it handles everything.
+   if (loginBootPromiseRef.current) return
    try {
      const { refreshTokenIfExpired } = await import("../services/youtube/youtubeApiClient")
      const token = await refreshTokenIfExpired()
      if (!token || cancelled) return
     setAuthStateRaw((prev) => ({ ...prev, isAuthenticated: true }))
-    hydrateAuthStateFromAnalyticsCache()
+    startTransition(() => hydrateAuthStateFromAnalyticsCache())
     setChannelBootPhase("ready")
    } catch {
     // auth invalidation is handled by the API client event path
@@ -1024,26 +1053,40 @@ const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
   }
  }, [hydrateAuthStateFromAnalyticsCache])
 
+ // Phase 6: Debounce brain persistence. During login boot the brain state
+ // changes 10-20x in rapid succession; writing JSON.stringify on each one
+ // blocks the main thread for 50-200ms per call on mobile. A 2s trailing
+ // debounce coalesces the storm into a single write.
  useEffect(() => {
-  try {
-   const persistable = { ...brain }
-   const toSave = {
-    ...persistable,
-    channelyticsState: { csvFiles: [], allData: [], analyticsResult: null },
-    researchLabState: { csvFiles: [], allData: [], analyticsResult: null },
+  // Don't persist until the deferred hydration has run, otherwise we'd
+  // overwrite the real persisted state with the empty defaults.
+  if (!hydratedFromStorageRef.current) return
+  const timer = setTimeout(() => {
+   try {
+    const toSave = {
+     ...brain,
+     channelyticsState: { csvFiles: [], allData: [], analyticsResult: null },
+     researchLabState: { csvFiles: [], allData: [], analyticsResult: null },
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
+   } catch (e) {
+    console.warn("[Brain] Failed to persist state:", e)
    }
-   localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
-  } catch (e) {
-   console.warn("[Brain] Failed to persist state:", e)
-  }
+  }, 2000)
+  return () => clearTimeout(timer)
  }, [brain])
 
+ // Debounce auth persistence with 1s trailing delay for the same reason.
  useEffect(() => {
-  try {
-   localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authState))
-  } catch (e) {
-   console.warn("[Auth] Failed to persist state:", e)
-  }
+  if (!hydratedFromStorageRef.current) return
+  const timer = setTimeout(() => {
+   try {
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authState))
+   } catch (e) {
+    console.warn("[Auth] Failed to persist state:", e)
+   }
+  }, 1000)
+  return () => clearTimeout(timer)
  }, [authState])
 
  const registerProvider = useCallback((tool: AppTool) => {

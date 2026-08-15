@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { BookOpen, Send, Sparkles, Zap, Check, X, MessageSquare, Plus } from "lucide-react"
+import { WidgetScrollArea, WidgetSection } from "../WidgetPrimitives"
+import { BookOpen, Send, Sparkles, Zap, Check, Plus } from "lucide-react"
 import { useBrain } from "../../../context/useBrain"
 import {
   generateJournalFollowUps,
@@ -9,20 +10,20 @@ import {
 } from "../../../services/gemini"
 
 const CATEGORIES = [
-  { id: "site", label: "Site", color: "#4FFF5B" },
-  { id: "self", label: "Self", color: "#FF83EA" },
-  { id: "content", label: "Content", color: "#00D2FF" },
-  { id: "style", label: "Style", color: "#FFE357" },
-  { id: "goals", label: "Goals", color: "#FF3399" },
-  { id: "community", label: "Community", color: "#FFB570" },
-  { id: "plans", label: "Plans", color: "#B191FF" },
-  { id: "projects", label: "Projects", color: "#70FFCB" },
+  { id: "site", label: "Site" },
+  { id: "self", label: "Self" },
+  { id: "content", label: "Content" },
+  { id: "style", label: "Style" },
+  { id: "goals", label: "Goals" },
+  { id: "community", label: "Community" },
+  { id: "plans", label: "Plans" },
+  { id: "projects", label: "Projects" },
 ]
 
 export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onToggleCollapse, onCycleSize, onRemove, onDecSize, onCycleHeight, onDecHeight}) => {
   const { brain, addJournalEntry, addFollowUp, answerFollowUp, answerMicroPoll, setMicroPolls } = useBrain()
   const [content, setContent] = useState("")
-  const [category, setCategory] = useState<any>("content")
+  const [category, setCategory] = useState("content")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGeneratingPulse, setIsGeneratingPulse] = useState(false)
   const geminiReady = isGeminiConfigured()
@@ -76,46 +77,44 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
 
   return (
     <WidgetShell {...common} icon={<BookOpen size={20} />}>
-      <div className="flex flex-col gap-4 vt-widget-fill-body">
+      <WidgetScrollArea ariaLabel="AI journal" contentClassName="flex min-h-full flex-col gap-4">
         {/* ENTRY SECTION */}
-        <div className="flex flex-col gap-2">
-          <div className="vt-tab-group" style={{ flexWrap: "wrap", padding: 0 }}>
-            {CATEGORIES.map(cat => (
+        <WidgetSection className="ai-journal-entry-section">
+          <div className="ai-journal-category-grid" role="group" aria-label="Journal category">
+            {CATEGORIES.map(({ id, label }) => (
               <button
-                key={cat.id}
-                onClick={() => setCategory(cat.id)}
-                className={`vt-tab-btn ${category === cat.id ? 'active' : ''}`}
-                style={{ 
-                  backgroundColor: category === cat.id ? cat.color : undefined,
-                }}
+                key={id}
+                type="button"
+                className={`vt-button ${category === id ? "primary" : ""}`.trim()}
+                aria-pressed={category === id}
+                onClick={() => setCategory(id)}
               >
-                {cat.label}
+                {label}
               </button>
             ))}
           </div>
           
-          <div className="relative">
+          <div className="ai-journal-composer">
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="What's on your mind? Visions, goals, style updates..."
-              className="vt-input"
-              style={{ width: "100%", height: "96px", resize: "none", padding: "12px", paddingBottom: "40px" }}
+              className="vt-textarea ai-journal-textarea"
             />
             <button
               onClick={handleSubmit}
               disabled={isSubmitting || !content.trim()}
-              className="vt-button primary absolute bottom-2 right-2"
-              style={{ width: "32px", height: "32px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+              className="vt-button primary ai-journal-submit"
             >
               <Send size={14} />
+              Save entry
             </button>
           </div>
-        </div>
+        </WidgetSection>
 
         {/* REFLECTIONS (FOLLOW-UPS) */}
         {!geminiReady && (
-          <div className="rounded-xl border-2 border-black bg-[#fff7db] p-3 text-[10px] font-black uppercase tracking-wide">
+          <div className="widget-state-panel is-blocked ai-journal-state">
             Gemini key missing. Add it in Settings - Key Vault to enable AI journal generation.
           </div>
         )}
@@ -127,13 +126,12 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
             </div>
             <div className="flex flex-col gap-2">
               {pendingFollowUps.map(f => (
-                <div key={f.id} className="bg-[#B191FF15] border-2 border-[#B191FF] border-dashed rounded-xl p-3 flex flex-col gap-2">
+                <div key={f.id} className="ai-journal-card">
                   <div className="text-[11px] font-extrabold leading-tight">{f.question}</div>
                   <div className="flex gap-2">
                     <input 
                       type="text"
                       className="vt-input flex-1"
-                      style={{ padding: "4px 8px", fontSize: "10px", minHeight: "28px" }}
                       placeholder="Optional reply..."
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -146,8 +144,7 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
                         const input = (e.currentTarget.previousSibling as HTMLInputElement)
                         answerFollowUp(f.id, input.value || "Acknowledged")
                       }}
-                      className="vt-button primary flex-shrink-0"
-                      style={{ width: "28px", height: "28px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+                      className="vt-button primary is-icon-only flex-shrink-0"
                     >
                       <Plus size={14} />
                     </button>
@@ -170,20 +167,20 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
           
           <div className="flex flex-col gap-1.5">
             {pendingPolls.map(p => (
-              <div key={p.id} className="group bg-white border-2 border-black rounded-xl p-2 flex items-center justify-between hover:shadow-[2px_2px_0px_0px_#000] transition-all">
+              <div key={p.id} className="ai-journal-card is-poll">
                 <div className="text-[10px] font-black leading-tight flex-1 pr-2">{p.question}</div>
                 <div className="flex gap-1">
                   {p.type === 'binary' ? (
                     <>
                       <button 
                         onClick={() => answerMicroPoll(p.id, "Yes")}
-                        className="h-6 px-2 bg-[#4FFF5B] border-2 border-black rounded-md text-[9px] font-black shadow-[1px_1px_0px_0px_#000] hover:translate-y-[0.5px] hover:shadow-none"
+                        className="vt-button"
                       >
                         YES
                       </button>
                       <button 
                         onClick={() => answerMicroPoll(p.id, "No")}
-                        className="h-6 px-2 bg-[#FF3399] border-2 border-black rounded-md text-[9px] font-black shadow-[1px_1px_0px_0px_#000] hover:translate-y-[0.5px] hover:shadow-none"
+                        className="vt-button"
                       >
                         NO
                       </button>
@@ -193,14 +190,14 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
                       <input 
                         type="text" 
                         placeholder="..."
-                        className="w-16 h-6 border-2 border-black rounded-md px-1 text-[9px] font-bold outline-none"
+                        className="vt-input ai-journal-poll-input"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') answerMicroPoll(p.id, (e.target as HTMLInputElement).value)
                         }}
                       />
                       <button 
                          onClick={() => answerMicroPoll(p.id, "Answered")}
-                         className="h-6 w-6 bg-black text-white rounded-md flex items-center justify-center"
+                         className="vt-button primary is-icon-only"
                       >
                         <Check size={10} />
                       </button>
@@ -213,14 +210,14 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
             {pendingPolls.length === 0 && !isGeneratingPulse && (
               <button 
                 onClick={refreshPulse}
-                className="w-full py-2 border-2 border-black border-dashed rounded-xl text-[9px] font-black uppercase opacity-40 hover:opacity-100 transition-all"
+                className="vt-button ai-journal-refill"
               >
                 Refill the Pulse
               </button>
             )}
           </div>
         </div>
-      </div>
+      </WidgetScrollArea>
     </WidgetShell>
   )
 }

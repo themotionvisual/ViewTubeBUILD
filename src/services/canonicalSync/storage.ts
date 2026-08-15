@@ -265,6 +265,7 @@ export const putCanonicalVideoRecords = async (
 export const replaceCanonicalVideoInventory = async (
  channelId: string,
  records: CanonicalVideoRecord[],
+ options: { removeMissing?: boolean } = {},
 ): Promise<void> => {
  const db = await openCanonicalSyncDb()
  await new Promise<void>((resolve, reject) => {
@@ -284,9 +285,14 @@ export const replaceCanonicalVideoInventory = async (
     records.map((record) => record.identityKey || buildVideoIdentityKey(channelId, record.videoId)),
    )
 
-   stored.forEach((record) => {
-    if (record.channelId === channelId && !incomingIds.has(record.id)) store.delete(record.id)
-   })
+   // A refresh can be paged, interrupted, or filtered by YouTube. Missing from
+   // one response therefore never means deleted. Only an explicit local-delete
+   // workflow may request removal of records absent from a confirmed inventory.
+   if (options.removeMissing) {
+    stored.forEach((record) => {
+     if (record.channelId === channelId && !incomingIds.has(record.id)) store.delete(record.id)
+    })
+   }
 
    records.forEach((record) => {
     const identityKey = record.identityKey || buildVideoIdentityKey(channelId, record.videoId)

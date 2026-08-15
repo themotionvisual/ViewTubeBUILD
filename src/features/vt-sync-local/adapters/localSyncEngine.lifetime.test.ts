@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 import {
  VT_SYNC_ANALYTICS_DATE_WINDOW_DAYS,
@@ -10,6 +11,7 @@ import {
 } from "./localSyncEngine"
 import { VT_SYNC_TABLE_DEFINITIONS } from "../upstream/tableRegistry"
 
+const engineSource = readFileSync(new URL("./localSyncEngine.ts", import.meta.url), "utf8")
 const utcDay = (value: string) => Date.parse(`${value}T00:00:00Z`)
 const inclusiveDays = (start: string, end: string) =>
  Math.floor((utcDay(end) - utcDay(start)) / 86_400_000) + 1
@@ -185,14 +187,14 @@ describe("requested lifetime metric table contracts", () => {
   ]))
  })
 
- it("keeps the API month table metric-identical to Daily while retaining the derived rollup", () => {
+ it("uses the API month table as the sole canonical Monthly Stats table", () => {
   const dailyMetricKeys = keys("daily").filter((key) => key !== "date")
-  const monthlyApiMetricKeys = keys("monthly_api").filter((key) => key !== "date")
+  const monthlyMetricKeys = keys("monthly").filter((key) => key !== "date")
 
-  expect(monthlyApiMetricKeys).toEqual(dailyMetricKeys)
-  expect(table("monthly").performanceHubDatasetId).toBe("monthly")
-  expect(table("monthly_api").performanceHubDatasetId).toBe("monthly_api")
-  expect(table("monthly_api").categoryIds).toEqual(["monthly_metrics"])
+  expect(monthlyMetricKeys).toEqual(dailyMetricKeys)
+  expect(table("monthly").performanceHubDatasetId).toBe("monthly_api")
+  expect(table("monthly").categoryIds).toEqual(["monthly_metrics"])
+  expect(VT_SYNC_TABLE_DEFINITIONS.map((definition) => definition.id)).not.toContain("monthly_api")
  })
 
  it("adds country advertising metrics and Traffic x Day engagement metrics", () => {
@@ -210,11 +212,44 @@ describe("requested lifetime metric table contracts", () => {
   ]))
  })
 
+ it("keeps Daily Stats and Traffic x Day query dimensions separate", () => {
+  const dailyStart = engineSource.indexOf('if (shouldSync(selected, "daily_metrics"))')
+  const monthlyStart = engineSource.indexOf('if (shouldSync(selected, "monthly_metrics"))', dailyStart)
+  const trafficDayStart = engineSource.indexOf('if (shouldSync(selected, "traffic_day"))')
+  const playlistsStart = engineSource.indexOf('if (shouldSync(selected, "playlists_analytics"))', trafficDayStart)
+  const dailyBlock = engineSource.slice(dailyStart, monthlyStart)
+  const trafficDayBlock = engineSource.slice(trafficDayStart, playlistsStart)
+
+  expect(dailyBlock).toContain('dimensions: "day"')
+  expect(dailyBlock).not.toContain("insightTrafficSourceType")
+  expect(trafficDayBlock).toContain('dimensions: "insightTrafficSourceType,day"')
+  expect(trafficDayBlock).toContain('datasetId: "traffic_day"')
+  expect(trafficDayBlock).not.toContain('datasetId: "daily"')
+ })
+
  it("uses the lifetime Channel Totals row for summaries", () => {
-  expect(table("channel_totals")).toMatchObject({
+ expect(table("channel_totals")).toMatchObject({
    summaryMode: "primary-row",
    summaryPrimaryRow: { key: "window", value: "Lifetime (All Time)" },
   })
+ })
+
+ it("publishes lifetime channel totals before the next selected query begins", () => {
+  const totalsStart = engineSource.indexOf('if (shouldSync(selected, "channel_totals"))')
+  const dailyStart = engineSource.indexOf('if (shouldSync(selected, "daily_metrics"))', totalsStart)
+  const totalsBlock = engineSource.slice(totalsStart, dailyStart)
+
+  expect(totalsStart).toBeGreaterThan(-1)
+  expect(dailyStart).toBeGreaterThan(totalsStart)
+  expect(totalsBlock).toContain("snapshot = { ...snapshot, channelTotals: mergedChannelTotals }")
+  expect(totalsBlock).toContain("commitSnapshot()")
+  expect(totalsBlock).toContain("await sleep(0)")
+ })
+
+ it("adds the aggregate creator content type x subscriber status sync query", () => {
+  expect(engineSource).toContain('"formats_subscriber_status", "formatSubscriberStatuses", "creatorContentType,subscribedStatus"')
+  expect(engineSource).toContain('"redViews", "estimatedMinutesWatched", "estimatedRedMinutesWatched"')
+  expect(engineSource).toContain('"averageViewDuration", "averageViewPercentage", "engagedViews"')
  })
 
  it("keeps all requested Channel Totals fields registry-driven", () => {

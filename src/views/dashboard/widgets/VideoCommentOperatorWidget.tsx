@@ -16,6 +16,7 @@ import type {
 } from "../types"
 import { postVideoTopLevelComment } from "../../../services/youtubeService"
 import { getActiveModel, getAiClient, hasGeminiKey } from "../../../services/gemini"
+import { WidgetSelect } from "../WidgetPrimitives"
 
 type OwnedVideoOption = {
  videoId: string
@@ -407,18 +408,13 @@ export const VideoCommentOperatorWidget = ({
        placeholder="Search your videos by title..."
        className="vt-input-standard"
       />
-      <select
+      <WidgetSelect
        value={selectedVideoId}
-       onChange={(event) => setSelectedVideoId(event.target.value)}
-       className="vt-input-standard"
-      >
-       <option value="">Choose a video...</option>
-       {videoResults.map((video) => (
-        <option key={video.videoId} value={video.videoId}>
-         {video.title}
-        </option>
-       ))}
-      </select>
+       onChange={setSelectedVideoId}
+       label="Choose a video"
+       placeholder="Choose a video…"
+       options={videoResults.map((video) => ({ value: video.videoId, label: video.title }))}
+      />
       <div className="rounded-lg border-[2px] border-black bg-[#F8F8F8] px-3 py-3 text-[10px] font-black uppercase tracking-wider text-black/60">
        {videoStatus || "Search recent or matching owned videos to populate the dropdown."}
       </div>

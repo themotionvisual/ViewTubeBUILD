@@ -880,6 +880,35 @@ export const generateIdeaSpark = async (topic: string, brain?: any): Promise<str
  })
 }
 
+export const generateEducationalTimestampQuestions = async (
+ input: { title: string; description: string; tags: string[] },
+ brain?: any,
+): Promise<string[]> => {
+ const responseSchema: any = { type: Type.ARRAY, items: { type: Type.STRING } }
+ const journalContext = getJournalKnowledge(brain)
+ const prompt = `
+IDENTITY: You are a YouTube educational-content editor.
+CREATOR CONTEXT: ${journalContext}
+VIDEO TITLE: ${input.title || "Untitled educational video"}
+DESCRIPTION: ${input.description || "No description supplied."}
+TAGS: ${input.tags.join(", ") || "No tags supplied."}
+
+Generate exactly five timestamp-ready viewer questions. Each item must begin with a plausible timestamp in MM:SS, followed by one concise educational question that helps a creator plan or validate that section. Do not invent source facts, links, or completed timestamps. Return only a JSON array of strings.
+`.trim()
+
+ return executeWithRetry(async () => {
+  const result = await getAiClient().models.generateContent({
+   model: getActiveModel("fast-text"),
+   contents: [{ role: "user", parts: [{ text: prompt }] }],
+   config: { responseMimeType: "application/json", responseSchema },
+  })
+  if (!result.text) throw new Error("No timestamp questions returned")
+  const parsed = JSON.parse(cleanJsonString(result.text))
+  if (!Array.isArray(parsed)) throw new Error("Timestamp questions were not an array")
+  return parsed.map((item) => String(item).trim()).filter(Boolean).slice(0, 5)
+ })
+}
+
 // --- YT-OS v5.0 Launch Protocol (SEO) ---
 export const generateSeoData = async (
  concept: string,
@@ -3769,6 +3798,7 @@ export const generatePerfectReply = async (
   channelContext: string,
   availableVideos: { title: string; id: string }[],
   brain?: any,
+  existingReply = "",
 ): Promise<{ reply: string; suggestedVideoId?: string }> => {
   const ai = getAiClient()
   
@@ -3780,6 +3810,7 @@ export const generatePerfectReply = async (
   Viewer (@${authorName}): "${commentText}"
   Channel Focus: ${channelContext}
   My Videos: ${JSON.stringify(availableVideos.slice(0, 10))}
+  ${existingReply ? `EXISTING REPLY TO REFINE: "${existingReply}"\nKeep its general message and improve clarity, warmth, and usefulness.` : ""}
   `
   const prompt = annotateSystemPrompt(basePrompt, brainPacket)
 
@@ -3800,6 +3831,7 @@ export const refineCommunityPost = async (
   channelName: string,
   recentVideoTitles: string[],
   brain?: any,
+  mediaAttachments: string[] = [],
 ): Promise<string> => {
   const ai = getAiClient()
   
@@ -3815,10 +3847,15 @@ export const refineCommunityPost = async (
   `
   const prompt = annotateSystemPrompt(basePrompt, brainPacket)
 
+  const mediaParts = mediaAttachments.flatMap((attachment) => {
+    const match = attachment.match(/^data:(image\/[\w.+-]+);base64,(.+)$/)
+    return match ? [{ inlineData: { mimeType: match[1], data: match[2] } }] : []
+  })
+
   return await executeWithRetry(async () => {
     const result = await ai.models.generateContent({
       model: getActiveModel("text"),
-      contents: prompt,
+      contents: mediaParts.length ? [{ role: "user", parts: [{ text: `${prompt}\n\nUse the attached media as visual context. Improve the written post without inventing visual details you cannot verify.` }, ...mediaParts] }] : prompt,
     })
 
     return result.text?.trim() || draftText

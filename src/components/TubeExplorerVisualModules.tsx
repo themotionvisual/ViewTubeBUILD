@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import {
  Area,
  AreaChart,
@@ -23,14 +23,18 @@ import {
 } from "recharts"
 import type { CanonicalVideoRow } from "../services/analytics/DataStore"
 import type { CsvFileWithTag } from "../types"
+import { AnalyticsVisualShell } from "./AnalyticsVisualShell"
 import { CustomIcon } from "./CustomIcon"
 import { StableChartFrame } from "./StableChartFrame"
-import { SubToolboxChartModule } from "./SubToolboxChartModule"
+import type { SubToolboxChartModuleProps } from "./SubToolboxChartModule"
 import {
+ getVtVisualHeaderColorPair,
  VT_NAV_PALETTE_12,
  VT_SPECTRUM_PALETTE_06,
  VT_VISUAL_METRIC_COLORS,
 } from "../styles/toolboxPalette"
+import type { VtSyncVisualHeaderColorPair } from "../features/vt-sync-local/shell/VtSyncVisualFrame"
+import { resolveVtSyncVisualStyle } from "../styles/vtSyncVisualStyles"
 import {
  buildTubeExplorerVisualData,
  type TubeExplorerVisualDataset,
@@ -46,6 +50,8 @@ export interface TubeExplorerVisualProps {
    *  (`snapshot.dailyMetrics`). Optional — modules should fall back to
    *  `trafficByDay` or to summing canonical rows if this is missing. */
   dailyMetrics?: any[]
+  /** Direct month-dimension Analytics rows used for one-year and longer trends. */
+  monthlyMetrics?: any[]
   /** Channel-wide lifetime/current totals derived from
    *  `snapshot.channelTotals` and the top-level identity counts. Modules
    *  should prefer these over ad-hoc window sums when reporting "channel
@@ -65,6 +71,15 @@ export interface TubeExplorerVisualProps {
   contentTypeRows?: Array<Record<string, unknown>>
   collapsible?: boolean
   isOpenInitial?: boolean
+  visualStyle?: {
+    iconKey?: string
+    headerColorPair?: VtSyncVisualHeaderColorPair
+    controllerColors?: {
+      previous: string
+      middle: string
+      next: string
+    }
+  }
 }
 
 export interface TubeExplorerVisualModuleEntry {
@@ -78,6 +93,10 @@ const EXPLORER_BG = "#0a0a1a"
 const EXPLORER_SURFACE = "#0b0b12"
 const EXPLORER_GRID = "rgba(255,255,255,0.08)"
 const TRAFFIC_COLORS = VT_NAV_PALETTE_12
+const headerPairForColor = (color: string): { icon: string; title: string } => {
+ const index = VT_SPECTRUM_PALETTE_06.findIndex((entry) => entry.toLowerCase() === color.toLowerCase())
+ return index >= 0 ? getVtVisualHeaderColorPair(index) : { icon: VT_VISUAL_METRIC_COLORS.likes, title: color }
+}
 const compact = (value: number): string => {
  if (!Number.isFinite(value)) return "0"
  const abs = Math.abs(value)
@@ -124,40 +143,56 @@ const ModuleFrame: React.FC<{
  icon?: string
  color?: string
  badges?: { label: string; tone?: "pink" | "cyan" | "lime" | "yellow" | "purple" | "orange" | "white" }[]
- activeContext?: React.ComponentProps<typeof SubToolboxChartModule>["activeContext"]
- controllerRows?: React.ComponentProps<typeof SubToolboxChartModule>["controllerRows"]
+ activeContext?: SubToolboxChartModuleProps["activeContext"]
+ controllerRows?: SubToolboxChartModuleProps["controllerRows"]
+ visualStyle?: TubeExplorerVisualProps["visualStyle"]
  insight?: string
  height?: number
  flushShell?: boolean
+ stableChartFrame?: boolean
  collapsible?: boolean
  isOpenInitial?: boolean
  children: React.ReactNode
-}> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], activeContext, controllerRows, insight, height = 320, flushShell = false, collapsible = false, isOpenInitial = true, children }) => (
- <SubToolboxChartModule
-  collapsible={collapsible}
-  isOpenInitial={isOpenInitial}
-  header={{
-   title,
-   subtitle,
-   icon: typeof icon === "string" ? <CustomIcon name={icon as any} size={96} /> : icon,
-  }}
+}> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], activeContext, controllerRows, visualStyle, insight, height = 320, flushShell = false, stableChartFrame = true, collapsible = false, isOpenInitial = true, children }) => {
+ const resolvedStyle = visualStyle ?? resolveVtSyncVisualStyle(title)
+ const headerPair = visualStyle?.headerColorPair ?? headerPairForColor(color)
+ const resolvedIcon = visualStyle?.iconKey ?? resolvedStyle.iconKey ?? icon
+ const boundedHeight = `${height}px`
+ return (
+ <AnalyticsVisualShell
+  shellMode="standard"
+  title={title}
+  subtitle={subtitle}
+  icon={typeof resolvedIcon === "string" ? <CustomIcon name={resolvedIcon as any} size={96} /> : resolvedIcon}
+  headerColorPair={headerPair}
   activeContext={activeContext}
-  controllerRows={controllerRows ?? [
+  controllerSpec={{
+   rows: controllerRows ?? [
     { type: "number", value: count, bgTone: color, fgTone: "#000000", isBig: false },
-    { type: "label", value: "VIDEOS", bgTone: color, fgTone: "#000000" }
-  ]}
-  layout={{ chartHeight: height }}
-  theme={{ headerBandBg: color, iconBlockBg: "#20D4F7" }}
-  metricBadges={badges}
-  footer={insight ? <span className="font-black uppercase tracking-[0.08em]">{insight}</span> : undefined}
+    { type: "label", value: "VIDEOS", bgTone: color, fgTone: "#000000" },
+   ],
+  }}
+  canvasFitMode={flushShell ? "fillWidth" : "balanced"}
+  standard={{
+   collapsible,
+   isOpenInitial,
+   layout: { chartHeight: height, bodyMinHeight: `${height}px`, bodyPreferredHeight: `${height}px`, heightPolicy: flushShell ? "fillWidth" : "fixedBody" },
+   metricBadges: badges,
+   footer: insight ? <span className="font-black uppercase tracking-[0.08em]">{insight}</span> : undefined,
+  }}
  >
   <div
    className={flushShell ? "mx-auto h-full w-full max-w-none" : "mx-auto w-full max-w-[1080px] border-[3px] border-black bg-white p-2"}
-   style={{ height }}>
-   <StableChartFrame minHeightClassName="min-h-[300px]">{children}</StableChartFrame>
+   style={{ height: boundedHeight }}>
+   {stableChartFrame ? (
+    <StableChartFrame minHeightClassName="min-h-[300px]">{children}</StableChartFrame>
+   ) : (
+    <div className="h-full min-h-[300px] w-full">{children}</div>
+   )}
   </div>
- </SubToolboxChartModule>
-)
+ </AnalyticsVisualShell>
+ )
+}
 
 const ExplorerCanvas: React.FC<{
  legend?: React.ReactNode
@@ -524,8 +559,24 @@ const trafficDetailExclusions = (kind: TrafficFocusKind): string[] => {
    return ["watch"]
   case "subscriber":
    return ["subscriber", "subscribers"]
-  case "suggested":
+ case "suggested":
    return ["suggested", "suggested videos"]
+  case "related":
+   return ["related", "related video"]
+  case "channel":
+   return ["yt channel", "channel page"]
+  case "playlist":
+   return ["playlist", "yt playlist"]
+  case "youtube_other":
+   return ["yt other", "other page"]
+  case "embedded":
+   return ["embedded", "no link embedded"]
+  case "direct":
+   return ["no link other", "direct"]
+  case "notification":
+   return ["notification"]
+  case "browse":
+   return ["browse"]
   default:
    return []
  }
@@ -536,7 +587,7 @@ const isAggregateTrafficLabel = (label: string): boolean => {
  return normalized === "total" || normalized === "totals" || normalized === "overall total"
 }
 
-type TrafficFocusKind =
+export type TrafficFocusKind =
  "search"
  | "external"
  | "shorts_feed"
@@ -544,14 +595,59 @@ type TrafficFocusKind =
  | "watch"
  | "subscriber"
  | "suggested"
+ | "related"
+ | "channel"
+ | "playlist"
+ | "youtube_other"
+ | "embedded"
+ | "direct"
+ | "notification"
+ | "browse"
  | "other"
 
 type TrafficFocusSlice = {
  kind: TrafficFocusKind
  label: string
  views: number
+ watchHours: number
+ engagedViews: number
+ avp: number
+ avdSeconds: number
+ value: number
  color: string
  }
+
+export const CLOCK_BURST_MAX_AREAS = 15
+export const CLOCK_BURST_MAX_DETAILS = 15
+
+type ClockBurstMetricKey = "views" | "engagedViews" | "watchHours" | "avp" | "avdSeconds"
+
+const CLOCK_BURST_METRIC_OPTIONS: Array<{ key: ClockBurstMetricKey; label: string; shortLabel: string; tone: string }> = [
+ { key: "views", label: "Views", shortLabel: "VIEWS", tone: VT_VISUAL_METRIC_COLORS.views },
+ { key: "engagedViews", label: "Engaged Views", shortLabel: "ENGAGED", tone: VT_VISUAL_METRIC_COLORS.engagedViews },
+ { key: "watchHours", label: "Watch Time", shortLabel: "WATCH", tone: VT_VISUAL_METRIC_COLORS.watchTime },
+ { key: "avp", label: "AVP", shortLabel: "AVP", tone: VT_VISUAL_METRIC_COLORS.avp },
+ { key: "avdSeconds", label: "AVD", shortLabel: "AVD", tone: VT_VISUAL_METRIC_COLORS.avd },
+]
+
+const clockBurstMetricOption = (metric: ClockBurstMetricKey) => CLOCK_BURST_METRIC_OPTIONS.find((option) => option.key === metric) || CLOCK_BURST_METRIC_OPTIONS[0]
+
+const clockBurstAvdSeconds = (views: number, watchHours: number): number => views > 0 ? (watchHours * 3600) / views : 0
+
+const formatClockBurstMetricValue = (value: number, metric: ClockBurstMetricKey): string => {
+ if (!Number.isFinite(value)) return "0"
+ if (metric === "watchHours") return `${compact(value)}h`
+ if (metric === "avp") return `${value.toFixed(value >= 10 ? 0 : 1)}%`
+ if (metric === "avdSeconds") return formatDuration(value)
+ return compact(value)
+}
+
+const formatClockBurstShare = (share: number): string => {
+ if (!Number.isFinite(share) || share <= 0) return ".00%"
+ if (share >= 10) return `${Math.round(share)}%`
+ if (share >= 1) return `${share.toFixed(1)}%`
+ return `.${Math.max(1, Math.round(share * 100)).toString().padStart(2, "0")}%`
+}
 
 const TRAFFIC_FOCUS_META: Record<TrafficFocusKind, { label: string; tone: string }> = {
  search: { label: "SEARCH TERMS", tone: "#FF83EA" },
@@ -561,17 +657,35 @@ const TRAFFIC_FOCUS_META: Record<TrafficFocusKind, { label: string; tone: string
  watch: { label: "WATCH", tone: "#4FFF5B" },
  subscriber: { label: "SUBSCRIBER", tone: "#FFFF61" },
  suggested: { label: "SUGGESTED", tone: "#579AFF" },
+ related: { label: "RELATED VIDEOS", tone: "#579AFF" },
+ channel: { label: "CHANNEL PAGES", tone: "#A5F12B" },
+ playlist: { label: "PLAYLISTS", tone: "#33D6E6" },
+ youtube_other: { label: "YOUTUBE OTHER", tone: "#50D5B5" },
+ embedded: { label: "EMBEDDED", tone: "#F9D94C" },
+ direct: { label: "DIRECT / UNKNOWN", tone: "#679EFF" },
+ notification: { label: "NOTIFICATIONS", tone: "#9D64E8" },
+ browse: { label: "BROWSE", tone: "#F2A15A" },
  other: { label: "OTHER", tone: "#B14AED" },
 }
 
 const trafficFocusLabel = (kind: TrafficFocusKind): string => TRAFFIC_FOCUS_META[kind].label
 
-const classifyTrafficFocus = (row: TubeExplorerTrafficPoint): TrafficFocusKind => {
- const haystack = `${row.sourceType} ${row.sourceTitle} ${row.sourceDetail}`.toLowerCase()
+export const classifyTrafficFocus = (row: TubeExplorerTrafficPoint): TrafficFocusKind => {
+ const haystack = `${row.sourceType} ${row.sourceTitle} ${row.sourceDetail}`
+  .toLowerCase()
+  .replace(/[_-]+/g, " ")
  if (haystack.includes("search")) return "search"
- if (haystack.includes("external") || haystack.includes("website") || haystack.includes("ext_url")) return "external"
+ if (haystack.includes("external") || haystack.includes("website") || haystack.includes("ext url")) return "external"
  if (haystack.includes("shorts feed")) return "shorts_feed"
  if (haystack.includes("shorts")) return "shorts"
+ if (haystack.includes("yt channel") || haystack.includes("channel page")) return "channel"
+ if (haystack.includes("related video")) return "related"
+ if (haystack.includes("playlist")) return "playlist"
+ if (haystack.includes("yt other") || haystack.includes("other page")) return "youtube_other"
+ if (haystack.includes("no link embedded") || haystack.includes("embedded")) return "embedded"
+ if (haystack.includes("no link other") || haystack.includes("direct")) return "direct"
+ if (haystack.includes("notification")) return "notification"
+ if (haystack.includes("browse")) return "browse"
  if (haystack.includes("subscriber")) return "subscriber"
  if (haystack.includes("suggest")) return "suggested"
  if (haystack.includes("watch")) return "watch"
@@ -595,48 +709,97 @@ const summarizeTrafficSlices = (rows: TubeExplorerTrafficPoint[]): TrafficFocusS
   .sort((a, b) => b.views - a.views)
 }
 
-const buildTrafficSourceSlices = (rows: TubeExplorerTrafficPoint[]): TrafficFocusSlice[] => {
- const grouped = new Map<string, { label: string; kind: TrafficFocusKind; views: number }>()
+const clockBurstValueFor = (
+ row: { views: number; watchHours: number; engagedViews: number; avp: number; avdSeconds: number },
+ metric: ClockBurstMetricKey,
+): number => {
+ if (metric === "avdSeconds") return row.avdSeconds
+ const value = row[metric]
+ return Number.isFinite(value) ? value : 0
+}
+
+const buildTrafficSourceSlices = (rows: TubeExplorerTrafficPoint[], metric: ClockBurstMetricKey = "views"): TrafficFocusSlice[] => {
+ const grouped = new Map<string, { label: string; kind: TrafficFocusKind; views: number; watchHours: number; engagedViews: number; avpWeighted: number; avpWeight: number }>()
  rows
   .filter((row) => row.views > 0 && !isAggregateTrafficLabel(row.sourceTitle) && !isAggregateTrafficLabel(row.sourceType) && !isAggregateTrafficLabel(row.sourceDetail))
   .forEach((row) => {
    const label = formatTrafficLabel(String(row.sourceTitle || row.sourceType || "Other"))
    const key = normalizeTrafficText(label)
-   const existing = grouped.get(key) || { label, kind: classifyTrafficFocus(row), views: 0 }
+   const existing = grouped.get(key) || { label, kind: classifyTrafficFocus(row), views: 0, watchHours: 0, engagedViews: 0, avpWeighted: 0, avpWeight: 0 }
    existing.views += row.views
+   existing.watchHours += row.watchHours
+   existing.engagedViews += row.engagedViews
+   if (row.avp > 0) {
+    existing.avpWeighted += row.avp * Math.max(row.views, 1)
+    existing.avpWeight += Math.max(row.views, 1)
+   }
    grouped.set(key, existing)
   })
  return [...grouped.values()]
-  .sort((a, b) => b.views - a.views)
-  .slice(0, 10)
+  .map((entry) => {
+   const avp = entry.avpWeight > 0 ? entry.avpWeighted / entry.avpWeight : 0
+   const model = {
+    label: entry.label,
+    kind: entry.kind,
+    views: entry.views,
+    watchHours: entry.watchHours,
+    engagedViews: entry.engagedViews,
+    avp,
+    avdSeconds: clockBurstAvdSeconds(entry.views, entry.watchHours),
+   }
+   return { ...model, value: clockBurstValueFor(model, metric) }
+  })
+  .sort((a, b) => b.value - a.value)
+  .slice(0, CLOCK_BURST_MAX_AREAS)
   .map((entry, index) => ({ ...entry, color: TRAFFIC_COLORS[index % TRAFFIC_COLORS.length] }))
 }
 
-const buildTrafficDetailRows = (rows: TubeExplorerTrafficPoint[], kind: TrafficFocusKind): Array<{ label: string; views: number; watchHours: number; engagedViews: number; color: string }> => {
+export const buildTrafficDetailRows = (rows: TubeExplorerTrafficPoint[], kind: TrafficFocusKind, metric: ClockBurstMetricKey = "views"): Array<{ label: string; views: number; watchHours: number; engagedViews: number; avp: number; avdSeconds: number; value: number; color: string }> => {
  const parentLabel = trafficKindSourceLabel(kind)
  const exclusions = [parentLabel, ...trafficDetailExclusions(kind), "summary"].map(normalizeTrafficText)
  const isExcludedDetailCandidate = (candidate: string): boolean => {
   const normalized = normalizeTrafficText(candidate)
   return TRAFFIC_DETAIL_SOURCE_TOKEN_EXCLUSIONS.has(normalized) || exclusions.some((term) => normalized.includes(term))
  }
- const grouped = new Map<string, { label: string; views: number; watchHours: number; engagedViews: number }>()
+ const grouped = new Map<string, { label: string; views: number; watchHours: number; engagedViews: number; avpWeighted: number; avpWeight: number }>()
  rows
   .filter((row) => row.views > 0 && classifyTrafficFocus(row) === kind)
   .forEach((row) => {
-   const candidates = [row.sourceDetail, row.sourceTitle, row.sourceType]
+   const title = String(row.sourceTitle || "").trim()
+   const handle = String(row.sourceHandle || "").trim()
+   const preferredLabel = title && !isExcludedDetailCandidate(title)
+    ? `${title}${handle ? ` · ${handle.startsWith("@") ? handle : `@${handle}`}` : ""}`
+    : ""
+   const candidates = [preferredLabel, row.sourceTitle, row.sourceDetail, row.sourceType]
     .map((value) => String(value || "").trim())
     .filter(Boolean)
    const label = candidates.find((candidate) => !isExcludedDetailCandidate(candidate)) || candidates[0] || "Unknown"
    if (isExcludedDetailCandidate(label)) return
-   const existing = grouped.get(label) || { label, views: 0, watchHours: 0, engagedViews: 0 }
+   const existing = grouped.get(label) || { label, views: 0, watchHours: 0, engagedViews: 0, avpWeighted: 0, avpWeight: 0 }
    existing.views += row.views
    existing.watchHours += row.watchHours
    existing.engagedViews += row.engagedViews
+   if (row.avp > 0) {
+    existing.avpWeighted += row.avp * Math.max(row.views, 1)
+    existing.avpWeight += Math.max(row.views, 1)
+   }
    grouped.set(label, existing)
   })
  return [...grouped.values()]
-  .sort((a, b) => b.views - a.views)
-  .slice(0, 10)
+  .map((entry) => {
+   const avp = entry.avpWeight > 0 ? entry.avpWeighted / entry.avpWeight : 0
+   const model = {
+    label: entry.label,
+    views: entry.views,
+    watchHours: entry.watchHours,
+    engagedViews: entry.engagedViews,
+    avp,
+    avdSeconds: clockBurstAvdSeconds(entry.views, entry.watchHours),
+   }
+   return { ...model, value: clockBurstValueFor(model, metric) }
+  })
+  .sort((a, b) => b.value - a.value)
+  .slice(0, CLOCK_BURST_MAX_DETAILS)
   .map((entry, index) => ({
    ...entry,
    color: TRAFFIC_COLORS[index % TRAFFIC_COLORS.length],
@@ -674,6 +837,8 @@ type WordNode = {
  id: string
  totalViews: number
  videoCount: number
+ avgAvp: number
+ avgDurSec: number
  rank: number
  x: number
  y: number
@@ -727,6 +892,8 @@ const buildWordNetwork = (
 ) => {
  const wordViews: Record<string, number> = {}
  const wordVideos: Record<string, number> = {}
+ const wordAvpSum: Record<string, number> = {}
+ const wordDurSum: Record<string, number> = {}
  const coOccurrence = new Map<string, number>()
 
  for (const video of videos) {
@@ -734,6 +901,8 @@ const buildWordNetwork = (
   for (const word of words) {
    wordViews[word] = (wordViews[word] || 0) + titleNetworkMetricValue(video, metric)
    wordVideos[word] = (wordVideos[word] || 0) + 1
+   wordAvpSum[word] = (wordAvpSum[word] || 0) + (Number(video.avp) || 0)
+   wordDurSum[word] = (wordDurSum[word] || 0) + (Number(video.avdSeconds) || 0)
   }
   for (let i = 0; i < words.length; i += 1) {
    for (let j = i + 1; j < words.length; j += 1) {
@@ -748,7 +917,13 @@ const buildWordNetwork = (
   .filter(([word]) => (wordVideos[word] || 0) >= 2)
   .sort((a, b) => b[1] - a[1])
   .slice(0, limit)
-  .map(([id, totalViews]) => ({ id, totalViews, videoCount: wordVideos[id] || 0 }))
+  .map(([id, totalViews]) => ({
+   id,
+   totalViews,
+   videoCount: wordVideos[id] || 0,
+   avgAvp: (wordAvpSum[id] || 0) / Math.max(wordVideos[id] || 1, 1),
+   avgDurSec: (wordDurSum[id] || 0) / Math.max(wordVideos[id] || 1, 1),
+  }))
 
  const indexByWord = new Map(topWords.map((word, index) => [word.id, index]))
  const edges: WordEdge[] = []
@@ -801,6 +976,43 @@ const buildWordNetwork = (
   if (community[i] === -1) community[i] = nextCommunity++ % NUM_COMMUNITIES
  }
 
+ // Reorder community indices by inter-cluster co-occurrence weight so that
+ // communities sharing more edges get adjacent index values — and thus adjacent
+ // HSL hues — making topic clusters that overlap more appear as similar colors.
+ const numComm = Math.max(...community, 0) + 1
+ const commEdgeWeight: Record<string, number> = {}
+ for (const edge of edges) {
+  const ca = community[edge.source]
+  const cb = community[edge.target]
+  if (ca === cb) continue
+  const ck = `${Math.min(ca, cb)}_${Math.max(ca, cb)}`
+  commEdgeWeight[ck] = (commEdgeWeight[ck] || 0) + edge.sharedVideos
+ }
+ const visitedComm = new Set<number>()
+ const commOrder: number[] = []
+ let curComm = 0
+ visitedComm.add(0)
+ commOrder.push(0)
+ while (commOrder.length < numComm) {
+  let bestNext = -1
+  let bestW = -1
+  for (let c = 0; c < numComm; c++) {
+   if (visitedComm.has(c)) continue
+   const ck = `${Math.min(curComm, c)}_${Math.max(curComm, c)}`
+   const w = commEdgeWeight[ck] || 0
+   if (w > bestW) { bestW = w; bestNext = c }
+  }
+  if (bestNext === -1) {
+   for (let c = 0; c < numComm; c++) { if (!visitedComm.has(c)) { bestNext = c; break } }
+  }
+  visitedComm.add(bestNext)
+  commOrder.push(bestNext)
+  curComm = bestNext
+ }
+ const commToHueIdx = new Map<number, number>()
+ commOrder.forEach((oldComm, newIdx) => commToHueIdx.set(oldComm, newIdx))
+ const remappedCommunity = community.map((c) => commToHueIdx.get(c) ?? c)
+
  // Seed positions using a jittered grid that covers the full canvas
  const cols = Math.ceil(Math.sqrt(topWords.length * (width / height)))
  const rows = Math.ceil(topWords.length / cols)
@@ -820,13 +1032,13 @@ const buildWordNetwork = (
   }
  })
 
- const margin = 50
- // Repulsion scales with node count so sparse graphs still spread
- const repK = Math.max(3500, 1800 * Math.log2(Math.max(nodes.length, 2)))
- // Rest length grows when there are fewer nodes so they spread further apart
- const restLength = Math.max(55, 220 / Math.sqrt(Math.max(nodes.length, 1)))
- for (let iteration = 0; iteration < 260; iteration += 1) {
-  const alpha = 1 - iteration / 260
+ const margin = 60
+ // Higher repulsion + longer rest-length reduce node congestion and overlap
+ const repK = Math.max(9000, 3200 * Math.log2(Math.max(nodes.length, 2)))
+ // Wider rest length so co-occurring clusters breathe and separate clearly
+ const restLength = Math.max(90, 320 / Math.sqrt(Math.max(nodes.length, 1)))
+ for (let iteration = 0; iteration < 300; iteration += 1) {
+  const alpha = 1 - iteration / 300
   for (let a = 0; a < nodes.length; a += 1) {
    let fx = 0
    let fy = 0
@@ -846,18 +1058,22 @@ const buildWordNetwork = (
     const dy = other.y - nodes[a].y
     const dist = Math.sqrt(dx * dx + dy * dy) || 1
     const stretch = dist - restLength
-    const pull = stretch * 0.009 * edge.weight
+    // Same-community edges attract 2× stronger — pulls co-topic words closer.
+    // Cross-community edges are weaker (0.7×) so clusters stay distinct.
+    const sameCommunity = remappedCommunity[edge.source] === remappedCommunity[edge.target]
+    const communityFactor = sameCommunity ? 2.0 : 0.7
+    const pull = stretch * 0.007 * edge.weight * communityFactor
     fx += (dx / dist) * pull
     fy += (dy / dist) * pull
    }
-   fx += (width / 2 - nodes[a].x) * 0.0004
-   fy += (height / 2 - nodes[a].y) * 0.0004
+   fx += (width / 2 - nodes[a].x) * 0.00015
+   fy += (height / 2 - nodes[a].y) * 0.00015
    nodes[a].x += fx * alpha
    nodes[a].y += fy * alpha
    const softPush = (v: number, lo: number, hi: number) => {
-    const zone = 50
-    if (v < lo + zone) return lo + zone + (v - lo - zone) * 0.25
-    if (v > hi - zone) return hi - zone + (v - hi + zone) * 0.25
+    const zone = 80
+    if (v < lo + zone) return lo + zone + (v - lo - zone) * 0.15
+    if (v > hi - zone) return hi - zone + (v - hi + zone) * 0.15
     return v
    }
    nodes[a].x = Math.min(width - margin, Math.max(margin, softPush(nodes[a].x, 0, width)))
@@ -884,7 +1100,19 @@ const buildWordNetwork = (
   n.y = height / 2 + (n.y - cy) * scale
  }
 
- return { nodes, edges, community }
+ // Pivot: shift the entire layout so the highest-metric node lands exactly at
+ // the canvas center — its connections radiate outward from there.
+ if (nodes.length > 0) {
+  const pivot = nodes.reduce((best, n) => (n.totalViews > best.totalViews ? n : best), nodes[0])
+  const shiftX = width / 2 - pivot.x
+  const shiftY = height / 2 - pivot.y
+  for (const n of nodes) {
+   n.x = Math.min(width - pad, Math.max(pad, n.x + shiftX))
+   n.y = Math.min(height - pad, Math.max(pad, n.y + shiftY))
+  }
+ }
+
+ return { nodes, edges, community: remappedCommunity }
 }
 
 type ExplorerMetricKey = "views" | "shares" | "comments" | "subscribersGained" | "revenue" | "avp" | "avdSeconds" | "likes"
@@ -1052,7 +1280,13 @@ const BarcodeFingerprintAdvancedRenderer: React.FC<{
   ordered.length > 1 ? ordered.findIndex((entry) => entry >= value) / (ordered.length - 1) : 1
  return (
   <div className="flex h-full flex-col overflow-hidden bg-[#0a0a1a] text-white">
-   <svg viewBox="0 0 980 300" className="min-h-0 flex-1" role="img" aria-label={`Barcode fingerprint aligned around center by ${option.label}`}>
+   <svg
+    viewBox="0 0 980 300"
+    preserveAspectRatio="none"
+    className="block min-h-0 w-full flex-1"
+    role="img"
+    aria-label={`Barcode fingerprint aligned around center by ${option.label}`}
+   >
     <rect x="0" y="0" width="980" height="300" fill={EXPLORER_BG} />
     <line x1="24" y1="150" x2="956" y2="150" stroke="#ffffff" strokeWidth="2" opacity="0.24" />
     {rows.map((row, index) => {
@@ -1315,15 +1549,73 @@ const ShortsLongsRenderer: React.FC<{
  )
 }
 
-/** Axes for the per-video radar. CTR and retention are deliberately excluded. */
+/**
+ * The radar uses the same eight semantic metrics and colours everywhere else
+ * in VT-SYNC. Additive metrics summarize with totals; rates summarize with an
+ * average so the subtitle rail never implies that AVP or RPM can be summed.
+ */
 const RADAR_AXES = [
- { key: "views", label: "VIEWS", read: (v: TubeExplorerVideoPoint) => v.views, format: compact },
- { key: "watch", label: "WATCH", read: (v: TubeExplorerVideoPoint) => v.watchHours, format: (n: number) => `${compact(n)}h` },
- { key: "revenue", label: "REVENUE", read: (v: TubeExplorerVideoPoint) => v.revenue, format: (n: number) => `$${n.toFixed(2)}` },
- { key: "likeRate", label: "LIKE RATE", read: (v: TubeExplorerVideoPoint) => v.likeRate, format: (n: number) => `${n.toFixed(2)}%` },
- { key: "subs1k", label: "SUBSCRIBERS/1K", read: (v: TubeExplorerVideoPoint) => (v.views > 0 ? (v.subscribersGained / v.views) * 1000 : 0), format: (n: number) => n.toFixed(2) },
- { key: "comments", label: "COMMENTS", read: (v: TubeExplorerVideoPoint) => v.comments, format: compact },
+ { key: "views", label: "VIEWS", color: VT_VISUAL_METRIC_COLORS.views, read: (v: TubeExplorerVideoPoint) => v.views, format: compact, summary: "sum" },
+ { key: "watch", label: "WATCH TIME", color: VT_VISUAL_METRIC_COLORS.watchTime, read: (v: TubeExplorerVideoPoint) => v.watchHours, format: (n: number) => `${compact(n)}h`, summary: "sum" },
+ { key: "revenue", label: "REVENUE", color: VT_VISUAL_METRIC_COLORS.revenue, read: (v: TubeExplorerVideoPoint) => v.revenue, format: (n: number) => `$${n.toFixed(2)}`, summary: "sum" },
+ { key: "subscribers", label: "SUBSCRIBERS", color: VT_VISUAL_METRIC_COLORS.subscribers, read: (v: TubeExplorerVideoPoint) => v.subscribersGained, format: compact, summary: "sum" },
+ { key: "avp", label: "AVP", color: VT_VISUAL_METRIC_COLORS.avp, read: (v: TubeExplorerVideoPoint) => v.avp, format: (n: number) => `${n.toFixed(1)}%`, summary: "average" },
+ { key: "rpm", label: "RPM", color: VT_VISUAL_METRIC_COLORS.rpm, read: (v: TubeExplorerVideoPoint) => v.rpm, format: (n: number) => `$${n.toFixed(2)}`, summary: "average" },
+ { key: "saves", label: "PLAYLIST SAVES", color: VT_VISUAL_METRIC_COLORS.playlistSaves, read: (v: TubeExplorerVideoPoint) => v.saves, format: compact, summary: "sum" },
+ { key: "comments", label: "COMMENTS", color: VT_VISUAL_METRIC_COLORS.comments, read: (v: TubeExplorerVideoPoint) => v.comments, format: compact, summary: "sum" },
 ] as const
+
+type RadarRankMode = "latest" | (typeof RADAR_AXES)[number]["key"]
+
+const RADAR_RANK_OPTIONS: ReadonlyArray<{ value: RadarRankMode; label: string }> = [
+ { value: "latest", label: "LAST PUBLISHED" },
+ { value: "views", label: "VIEWS" },
+ { value: "watch", label: "WATCH TIME" },
+ { value: "revenue", label: "REVENUE" },
+ { value: "subscribers", label: "SUBSCRIBERS" },
+ { value: "avp", label: "AVP" },
+ { value: "rpm", label: "RPM" },
+ { value: "saves", label: "SAVES" },
+ { value: "comments", label: "COMMENTS" },
+]
+
+const rankEngagementRadarVideos = (
+ videos: readonly TubeExplorerVideoPoint[],
+ mode: RadarRankMode,
+): TubeExplorerVideoPoint[] => {
+ const axis = RADAR_AXES.find((candidate) => candidate.key === mode)
+ return [...videos].sort((a, b) => {
+  if (mode === "latest") {
+   const aTime = Date.parse(a.uploadDate)
+   const bTime = Date.parse(b.uploadDate)
+   const safeATime = Number.isFinite(aTime) ? aTime : 0
+   const safeBTime = Number.isFinite(bTime) ? bTime : 0
+   return safeBTime - safeATime || b.uploadDate.localeCompare(a.uploadDate) || a.videoId.localeCompare(b.videoId)
+  }
+  const difference = (axis?.read(b) ?? 0) - (axis?.read(a) ?? 0)
+  return difference || b.views - a.views || a.videoId.localeCompare(b.videoId)
+ })
+}
+
+const summarizeRadarAxis = (
+ videos: readonly TubeExplorerVideoPoint[],
+ axis: (typeof RADAR_AXES)[number],
+): number => {
+ if (videos.length === 0) return 0
+ if (axis.key === "rpm") {
+  const views = videos.reduce((sum, video) => sum + video.views, 0)
+  const revenue = videos.reduce((sum, video) => sum + video.revenue, 0)
+  return views > 0 ? (revenue / views) * 1_000 : 0
+ }
+ if (axis.key === "avp") {
+  const views = videos.reduce((sum, video) => sum + video.views, 0)
+  return views > 0
+   ? videos.reduce((sum, video) => sum + video.avp * video.views, 0) / views
+   : 0
+ }
+ const total = videos.reduce((sum, video) => sum + axis.read(video), 0)
+ return axis.summary === "average" ? total / videos.length : total
+}
 
 /**
  * One polygon per video across shared axes. Every axis is normalised against the
@@ -1332,17 +1624,22 @@ const RADAR_AXES = [
  */
 const EngagementRadarRenderer: React.FC<{
  videos: TubeExplorerVideoPoint[]
- colors: string[]
+ colors: readonly string[]
+ selectedVideoIds: ReadonlySet<string>
+ listLabel: string
  hoveredId: string | null
  onHover?: (video: TubeExplorerVideoPoint | null) => void
-}> = ({ videos, colors, hoveredId, onHover }) => {
+ onToggleVideo?: (videoId: string) => void
+}> = ({ videos, colors, selectedVideoIds, listLabel, hoveredId, onHover, onToggleVideo }) => {
  if (videos.length === 0) return <Empty label="No videos available for the engagement radar" />
+
+ const visibleVideos = videos.filter((video) => selectedVideoIds.has(video.videoId))
 
  const size = 380
  const cx = size / 2
  const cy = size / 2
  const radius = size / 2 - 46
- const axisMax = RADAR_AXES.map((axis) => Math.max(...videos.map((v) => axis.read(v)), 1e-9))
+ const axisMax = RADAR_AXES.map((axis) => Math.max(...visibleVideos.map((v) => axis.read(v)), 1e-9))
 
  const pointAt = (axisIndex: number, ratio: number) => {
   const angle = (Math.PI * 2 * axisIndex) / RADAR_AXES.length - Math.PI / 2
@@ -1350,9 +1647,9 @@ const EngagementRadarRenderer: React.FC<{
  }
 
  return (
-  <div className="flex h-full w-full items-stretch gap-2 bg-[#0a0a1a] p-2">
+  <div className="flex h-full w-full flex-col items-stretch gap-2 bg-[#0a0a1a] p-2 md:flex-row">
    <div className="relative min-w-0 flex-1">
-    <svg viewBox={`0 0 ${size} ${size}`} className="block h-full w-full" role="img" aria-label="Engagement radar comparing top videos">
+    <svg viewBox={`0 0 ${size} ${size}`} className="block h-full w-full" role="img" aria-label="Eight-axis engagement radar comparing selected videos">
      {[0.25, 0.5, 0.75, 1].map((ring) => (
       <polygon
        key={ring}
@@ -1368,14 +1665,15 @@ const EngagementRadarRenderer: React.FC<{
       const [lx, ly] = pointAt(i, 1.17)
       return (
        <g key={axis.key}>
-        <line x1={cx} y1={cy} x2={x} y2={y} stroke="#ffffff" strokeWidth="1" opacity="0.14" />
-        <text x={lx} y={ly + 3} textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="1000" opacity="0.62" letterSpacing="0.5">
+        <line x1={cx} y1={cy} x2={x} y2={y} stroke={axis.color} strokeWidth="1" opacity="0.3" />
+        <text x={lx} y={ly + 3} textAnchor="middle" fill={axis.color} fontSize="8.5" fontWeight="1000">
          {axis.label}
         </text>
        </g>
       )
      })}
-     {videos.map((video, index) => {
+     {visibleVideos.map((video) => {
+      const index = videos.findIndex((candidate) => candidate.videoId === video.videoId)
       const dim = hoveredId !== null && hoveredId !== video.videoId
       const pts = RADAR_AXES.map((axis, i) => pointAt(i, Math.max(0, Math.min(1, axis.read(video) / axisMax[i]))).join(",")).join(" ")
       return (
@@ -1395,18 +1693,26 @@ const EngagementRadarRenderer: React.FC<{
      })}
     </svg>
    </div>
-   <div className="w-[230px] shrink-0 overflow-auto rounded-[8px] bg-black/40 p-2">
+   <div className="max-h-[150px] w-full shrink-0 overflow-auto rounded-[8px] bg-black/40 p-2 md:max-h-none md:w-[190px]">
     <div className="mb-1 text-[8px] font-black uppercase tracking-[0.14em] text-white/40">
-     TOP {videos.length} BY VIEWS
+     {listLabel} · {selectedVideoIds.size} SHOWN
     </div>
     {videos.map((video, index) => (
      <button
       key={video.videoId}
       type="button"
-      className="mb-1 flex w-full items-start gap-2 rounded-[6px] border-0 bg-transparent p-1 text-left"
-      style={{ opacity: hoveredId !== null && hoveredId !== video.videoId ? 0.4 : 1 }}
+      aria-pressed={selectedVideoIds.has(video.videoId)}
+      className="mb-1 flex w-full items-start gap-2 rounded-[6px] border-2 p-1 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white"
+      style={{
+       borderColor: selectedVideoIds.has(video.videoId) ? colors[index % colors.length] : "transparent",
+       background: selectedVideoIds.has(video.videoId) ? "rgba(255,255,255,0.08)" : "transparent",
+       opacity: hoveredId !== null && hoveredId !== video.videoId ? 0.4 : selectedVideoIds.has(video.videoId) ? 1 : 0.5,
+      }}
+      onClick={() => onToggleVideo?.(video.videoId)}
       onMouseEnter={() => onHover?.(video)}
       onMouseLeave={() => onHover?.(null)}
+      onFocus={() => onHover?.(video)}
+      onBlur={() => onHover?.(null)}
      >
       <span className="mt-[2px] h-3 w-3 shrink-0 rounded-[2px]" style={{ background: colors[index % colors.length] }} />
       <span className="min-w-0 flex-1">
@@ -1630,7 +1936,7 @@ const TrafficDayRiverDeltaRenderer: React.FC<{
   })
 
  return (
-  <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="block h-full w-full" role="img" aria-label="Traffic source to day river delta">
+  <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="block h-full w-full" role="img" aria-label="Traffic source to day river delta">
    <rect width={W} height={H} fill={EXPLORER_BG} />
 
    {ribbons.map((ribbon, i) => {
@@ -1937,6 +2243,12 @@ const PUBLISH_CLOCK_METRICS: Array<{
 const formatClockHour = (hour: number): string =>
  `${hour % 12 === 0 ? 12 : hour % 12}${hour < 12 ? "AM" : "PM"}`
 
+// A date-only value is parsed by browsers as midnight, which would fabricate a
+// misleading "best" publishing hour. The clock only ranks videos with the
+// precise YouTube Data API publication timestamp.
+const hasPrecisePublishTimestamp = (value: string): boolean =>
+ /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)
+
 type PublishClockCell = {
  dayIndex: number
  hour: number
@@ -1960,7 +2272,7 @@ const PublishOptimalClockRenderer: React.FC<{
  hoveredKey: string | null
  onHover?: (cell: PublishClockCell | null) => void
 }> = ({ cells, metricLabel, formatValue, hoveredKey, onHover }) => {
- if (cells.every((cell) => cell.uploads === 0)) return <Empty label="No upload dates available for publish clock" />
+ if (cells.every((cell) => cell.uploads === 0)) return <Empty label="Video publication times are missing — run Video Metadata sync to populate the publish clock" />
  const topWindows = [...cells]
   .filter((cell) => cell.uploads > 0)
   .sort((a, b) => b.value - a.value)
@@ -2056,12 +2368,25 @@ const PublishOptimalClockRenderer: React.FC<{
  )
 }
 
-const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset }> = ({ dataset }) => {
+const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; metric: ClockBurstMetricKey }> = ({ dataset, metric }) => {
  const [selectedKind, setSelectedKind] = useState<TrafficFocusKind>("search")
  const [hoveredDonutSliceKey, setHoveredDonutSliceKey] = useState<string | null>(null)
  const [hoveredDonutSlice, setHoveredDonutSlice] = useState<{ label: string; views: number; color: string; share: number; scope: string } | null>(null)
 
- const overviewSlices = useMemo(() => buildTrafficSourceSlices(dataset.traffic), [dataset.traffic])
+ const overviewRows = useMemo(
+  () => dataset.traffic.filter((row) => row.datasetKind === "traffic_summary"),
+  [dataset.traffic],
+ )
+ const trafficDetailRows = useMemo(
+  () => dataset.traffic.filter((row) => row.datasetKind === "traffic_detail"),
+  [dataset.traffic],
+ )
+ // Legacy/imported data can lack provenance. Only use it as an overview
+ // fallback; never blend Traffic × Day rows into this source/detail visual.
+ const overviewSlices = useMemo(
+  () => buildTrafficSourceSlices(overviewRows.length ? overviewRows : dataset.traffic.filter((row) => row.datasetKind !== "traffic_day"), metric),
+  [dataset.traffic, metric, overviewRows],
+ )
 
  const activeKind = useMemo(() => {
   if (overviewSlices.some((slice) => slice.kind === selectedKind)) return selectedKind
@@ -2076,18 +2401,21 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset }>
  }, [overviewSlices, selectedKind])
 
  const activeSlice = overviewSlices.find((slice) => slice.kind === activeKind) || overviewSlices[0] || null
- const detailRows = useMemo(() => buildTrafficDetailRows(dataset.traffic, activeKind), [dataset.traffic, activeKind])
- const detailRowsVisible = detailRows.slice(0, 10)
+ const detailRows = useMemo(
+  () => buildTrafficDetailRows(trafficDetailRows, activeKind, metric),
+  [trafficDetailRows, activeKind, metric],
+ )
+ const overviewSlicesVisible = overviewSlices.slice(0, CLOCK_BURST_MAX_AREAS)
+ const detailRowsVisible = detailRows.slice(0, CLOCK_BURST_MAX_DETAILS)
  const detailSlices = detailRowsVisible.map((row) => ({
   label: formatDonutSourceLabel(row.label),
-  views: row.views,
+  value: row.value,
   color: row.color,
  }))
- const detailTotal = detailRowsVisible.reduce((sum, row) => sum + row.views, 0) || 1
- const totalViews = overviewSlices.reduce((sum, slice) => sum + slice.views, 0) || 1
- const activeDetail = detailRowsVisible[0] || null
+ const detailTotal = detailRowsVisible.reduce((sum, row) => sum + row.value, 0) || 1
+ const totalValue = overviewSlices.reduce((sum, slice) => sum + slice.value, 0) || 1
  const detailLabel = trafficFocusLabel(activeKind)
- const selectedShare = activeSlice ? (activeSlice.views / totalViews) * 100 : 0
+ const metricOption = clockBurstMetricOption(metric)
 	 const renderDonut = (params: {
 	  width: number
 	  height: number
@@ -2095,7 +2423,7 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset }>
 	  cy: number
 	  innerRadius: number
 	  outerRadius: number
-	  slices: Array<{ label: string; views: number; color: string; kind?: TrafficFocusKind }>
+	  slices: Array<{ label: string; value: number; color: string; kind?: TrafficFocusKind }>
 	  onPick?: (kind: TrafficFocusKind) => void
 	  hoverScope: string
 	  centerLabelTop: string
@@ -2103,8 +2431,8 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset }>
 	  centerLabelBottom: string
 	 }) => {
   const { width, height, cx, cy, innerRadius, outerRadius, slices, onPick, hoverScope, centerLabelTop, centerLabelMain, centerLabelBottom } = params
-  const total = slices.reduce((sum, slice) => sum + slice.views, 0) || 1
-  const visualTotal = slices.reduce((sum, slice) => sum + Math.max(slice.views / total, 0.02), 0) || 1
+  const total = slices.reduce((sum, slice) => sum + slice.value, 0) || 1
+  const visualTotal = slices.reduce((sum, slice) => sum + Math.max(slice.value / total, 0.02), 0) || 1
   const scopedHoveredSlice = hoveredDonutSlice?.scope === hoverScope ? hoveredDonutSlice : null
   const hoveredCenter = scopedHoveredSlice
    ? {
@@ -2118,7 +2446,7 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset }>
   return (
    <svg viewBox={`0 0 ${width} ${height}`} className="block h-full w-full" style={{ background: EXPLORER_BG }}>
     {slices.map((slice, index) => {
-     const fraction = slice.views / total
+     const fraction = slice.value / total
      // Preserve the reported percentage while giving sub-2% wedges enough area to inspect.
      const visualFraction = Math.max(fraction, 0.02) / visualTotal
      const startAngle = angle
@@ -2137,7 +2465,7 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset }>
        key={sliceKey}
        onMouseEnter={() => {
         setHoveredDonutSliceKey(sliceKey)
-        setHoveredDonutSlice({ label: displayLabel, views: slice.views, color: slice.color, share: fraction * 100, scope: hoverScope })
+        setHoveredDonutSlice({ label: displayLabel, views: slice.value, color: slice.color, share: fraction * 100, scope: hoverScope })
        }}
        onMouseLeave={() => {
         setHoveredDonutSliceKey(null)
@@ -2177,23 +2505,26 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset }>
  return (
   <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#000000] text-white">
    <div className="grid min-h-0 flex-1 grid-cols-[0.67fr_1.47fr_1.47fr_0.67fr] gap-0 bg-[#000000] p-0">
-    <div className="min-h-0 overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-1.5">
+    <div className="flex min-h-0 flex-col overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-1.5">
      <div className="mb-1 flex items-center">
       <div className="min-w-0 flex-1">
        <div className="truncate text-[14px] font-black uppercase tracking-[0.04em] text-white">Traffic sources</div>
       </div>
      </div>
-     <div className="space-y-1 overflow-hidden">
-      {overviewSlices.slice(0, 10).map((slice) => {
-       const share = (slice.views / totalViews) * 100
+     <div className="grid min-h-0 flex-1 grid-rows-[repeat(15,minmax(0,1fr))] gap-0.5 overflow-hidden">
+      {overviewSlicesVisible.map((slice, index) => {
+       const share = (slice.value / totalValue) * 100
        return (
-        <div key={slice.kind} className="flex w-full items-stretch overflow-hidden rounded-[9px] border-[2px] border-black text-left shadow-[2px_2px_0px_0px_rgba(0,0,0,0.22)]">
-         <span className="w-[14px] shrink-0" style={{ background: slice.color }} />
-         <span className="flex-1 bg-[#111321] px-2 py-1 text-black">
-          <span className="block truncate text-[10px] font-black uppercase leading-tight" style={{ color: slice.color }}>{slice.label}</span>
-          <span className="block text-[8px] font-black uppercase tracking-[0.1em] text-white">
-           {compact(slice.views)} views • {share.toFixed(1)}%
+        <div key={`${slice.kind}-${slice.label}-${index}`} className="flex w-full items-stretch overflow-hidden rounded-[6px] border border-black text-left shadow-[1px_1px_0px_0px_rgba(0,0,0,0.22)]">
+         <span className="flex w-[36px] shrink-0 items-center justify-center px-1 text-center text-[8px] font-[1000] uppercase leading-none text-black" style={{ background: slice.color }}>
+          {formatClockBurstShare(share)}
+         </span>
+         <span className="flex min-w-0 flex-1 flex-col justify-center bg-[#111321] px-2 py-0.5 text-black">
+          <span className="block truncate text-[10px] font-black uppercase leading-tight">
+           <span className="mr-1 text-white">{formatClockBurstMetricValue(slice.value, metric)}</span>
+           <span style={{ color: slice.color }}>{slice.label}</span>
           </span>
+          <span className="block truncate text-[7px] font-black uppercase tracking-[0.08em] text-white/65">{metricOption.shortLabel}</span>
          </span>
         </div>
        )
@@ -2213,7 +2544,7 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset }>
        slices: overviewSlices,
        onPick: setSelectedKind,
        hoverScope: "TRAFFIC",
-       centerLabelTop: "VIEWS",
+       centerLabelTop: metricOption.shortLabel,
        centerLabelMain: detailLabel,
        centerLabelBottom: "BURST",
       })}
@@ -2233,8 +2564,8 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset }>
         slices: detailSlices,
         hoverScope: detailLabel,
         centerLabelTop: activeKind === "search" ? "SEARCH" : activeKind === "external" ? "EXTERNAL" : "DETAIL",
-        centerLabelMain: compact(detailTotal),
-        centerLabelBottom: "TOP 10",
+        centerLabelMain: formatClockBurstMetricValue(detailTotal, metric),
+        centerLabelBottom: `TOP ${CLOCK_BURST_MAX_DETAILS}`,
        })
       ) : (
        <div className="flex h-full items-center justify-center text-[11px] font-black uppercase tracking-[0.12em] text-white/45">
@@ -2244,26 +2575,29 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset }>
      </div>
     </div>
 
-    <div className="min-h-0 overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-1.5">
+    <div className="flex min-h-0 flex-col overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-1.5">
      <div className="mb-1 flex items-center">
       <div className="min-w-0 flex-1">
        <div className="truncate text-[14px] font-black uppercase tracking-[0.04em] text-white">{detailLabel}</div>
       </div>
      </div>
-     <div className="space-y-1 overflow-hidden">
+     <div className="grid min-h-0 flex-1 grid-rows-[repeat(15,minmax(0,1fr))] gap-0.5 overflow-hidden">
       {detailRowsVisible.map((row, index) => {
-       const share = (row.views / detailTotal) * 100
+       const share = (row.value / detailTotal) * 100
        const label = formatDonutSourceLabel(row.label)
        return (
         <div
          key={`${row.label}-${index}`}
-         className="flex w-full items-stretch overflow-hidden rounded-[9px] border-[2px] border-black text-left shadow-[2px_2px_0px_0px_rgba(0,0,0,0.22)]">
-         <span className="w-[14px] shrink-0" style={{ background: row.color }} />
-         <span className="flex-1 bg-[#111321] px-2 py-1 text-black">
-          <span className="block truncate text-[10px] font-black uppercase leading-tight" style={{ color: row.color }}>{label}</span>
-          <span className="block text-[8px] font-black uppercase tracking-[0.1em] text-white">
-           {compact(row.views)} views • {share.toFixed(1)}%
+         className="flex w-full items-stretch overflow-hidden rounded-[6px] border border-black text-left shadow-[1px_1px_0px_0px_rgba(0,0,0,0.22)]">
+         <span className="flex w-[36px] shrink-0 items-center justify-center px-1 text-center text-[8px] font-[1000] uppercase leading-none text-black" style={{ background: row.color }}>
+          {formatClockBurstShare(share)}
+         </span>
+         <span className="flex min-w-0 flex-1 flex-col justify-center bg-[#111321] px-2 py-0.5 text-black">
+          <span className="block truncate text-[10px] font-black uppercase leading-tight">
+           <span className="mr-1 text-white">{formatClockBurstMetricValue(row.value, metric)}</span>
+           <span style={{ color: row.color }}>{label}</span>
           </span>
+          <span className="block truncate text-[7px] font-black uppercase tracking-[0.08em] text-white/65">{metricOption.shortLabel}</span>
          </span>
         </div>
        )
@@ -2354,7 +2688,7 @@ const SankeyRiverDeltaRenderer: React.FC<{
  return (
   <svg
    viewBox={`0 0 ${width} ${height}`}
-   preserveAspectRatio="none"
+   preserveAspectRatio="xMidYMid meet"
    className="block h-full w-full"
    style={{ background: "#000000" }}
   >
@@ -2429,9 +2763,11 @@ const TitleWordNetworkCanvas: React.FC<{
  hovered: string | null
  onHover: (id: string | null) => void
  selected: readonly string[]
- onSelect: (id: string | null, exclusive?: boolean) => void
+ onSelect: (id: string | null) => void
+ onRecenter: (id: string) => void
+ centerNodeId: string | null
  metricLabel: string
-}> = ({ graph, community, hovered, onHover, selected, onSelect, metricLabel }) => {
+}> = ({ graph, community, hovered, onHover, selected, onSelect, onRecenter, centerNodeId, metricLabel }) => {
  const maxViews = Math.max(...graph.nodes.map((node) => node.totalViews), 1)
  const maxShared = Math.max(...graph.edges.map((e) => e.sharedVideos), 1)
  const width = 1060
@@ -2444,17 +2780,40 @@ const TitleWordNetworkCanvas: React.FC<{
   return () => clearTimeout(t)
  }, [graph])
  const numCommunities = Math.max(...community, 0) + 1
- // Spread communities evenly across the full 12-color spectrum regardless of count
+ // VT palette with offset so community 0 (the highest-metric/center word) maps to
+ // the green/teal zone (indices 5-6) — the visual center of the spectrum.
+ // Same-community nodes share the same palette color; adjacent communities get
+ // adjacent palette entries, so related clusters appear as similar hues.
+ const PALETTE_OFFSET = 5
  const getNodeColor = (nodeIdx: number): string => {
   const comm = community[nodeIdx] ?? nodeIdx
-  const paletteIdx = Math.round((comm / Math.max(numCommunities - 1, 1)) * (VT_SPECTRUM_PALETTE_06.length - 1))
-  return VT_SPECTRUM_PALETTE_06[paletteIdx % VT_SPECTRUM_PALETTE_06.length]
+  const paletteIdx = (Math.round((comm / Math.max(numCommunities, 1)) * VT_SPECTRUM_PALETTE_06.length) + PALETTE_OFFSET) % VT_SPECTRUM_PALETTE_06.length
+  return VT_SPECTRUM_PALETTE_06[paletteIdx]
  }
  // Degree per node (sum of sharedVideos for all its edges) — used for ring visualisation
  const degree = graph.nodes.map((_, i) =>
   graph.edges.filter((e) => e.source === i || e.target === i).reduce((s, e) => s + e.sharedVideos, 0),
  )
  const maxDegree = Math.max(...degree, 1)
+
+ // Re-center: compute translate so the chosen node sits at canvas midpoint.
+ // Animates smoothly via CSS transition on the <g> transform.
+ const centerNode = centerNodeId ? graph.nodes.find((n) => n.id === centerNodeId) : null
+ const translateX = centerNode ? width / 2 - centerNode.x : 0
+ const translateY = centerNode ? height / 2 - centerNode.y : 0
+
+ // Build a map: neighborNodeId → sharedVideos, for the currently hovered node.
+ // This lets us display the shared count inside the neighbor circle instead of
+ // floating text on the line.
+ const hoveredIdx = hovered ? graph.nodes.findIndex((n) => n.id === hovered) : -1
+ const hoveredNeighborCount = new Map<number, number>()
+ if (hoveredIdx >= 0) {
+  for (const edge of graph.edges) {
+   if (edge.source === hoveredIdx) hoveredNeighborCount.set(edge.target, edge.sharedVideos)
+   else if (edge.target === hoveredIdx) hoveredNeighborCount.set(edge.source, edge.sharedVideos)
+  }
+ }
+
  return (
   <div
    className="relative h-full w-full p-2"
@@ -2491,8 +2850,12 @@ const TitleWordNetworkCanvas: React.FC<{
       )
      })}
     </defs>
-    {/* Edges */}
-    {graph.edges.map((edge, index) => {
+    {/* All graph content in a translate group — shifts when user double-clicks to re-center */}
+    <g
+     transform={`translate(${translateX}, ${translateY})`}
+     style={{ transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)" }}>
+     {/* Edges */}
+     {graph.edges.map((edge, index) => {
       const source = graph.nodes[edge.source]
       const target = graph.nodes[edge.target]
       if (!source || !target) return null
@@ -2502,11 +2865,9 @@ const TitleWordNetworkCanvas: React.FC<{
       const tgtRadius = 5 + (target.totalViews / maxViews) * 20
       const maxEdgeWidth = Math.min(srcRadius, tgtRadius) * 0.55
       const edgeWidth = Math.max(1.8, Math.sqrt(edge.sharedVideos / maxShared) * maxEdgeWidth)
-      const mx = (source.x + target.x) / 2
-      const my = (source.y + target.y) / 2
       return (
-       <g key={index}>
         <line
+         key={index}
          x1={source.x}
          y1={source.y}
          x2={target.x}
@@ -2515,101 +2876,111 @@ const TitleWordNetworkCanvas: React.FC<{
          strokeWidth={edgeWidth}
          opacity={isSelected ? (isHovered ? 0.95 : 0.55) : 0.07}
         />
-        {/* On hover: show "N videos" label so context is clear */}
-        {isHovered && isSelected && (
-         <text
-          x={mx}
-          y={my - 4}
-          textAnchor="middle"
-          stroke="#000"
-          strokeWidth="3"
-          strokeLinejoin="round"
-          style={{ paintOrder: "stroke", fill: "#ffffff", fontSize: 8, fontWeight: 900, fontFamily: "inherit" }}>
-          {edge.sharedVideos === 1 ? "1 video" : `${edge.sharedVideos} videos`}
-         </text>
-        )}
+      )
+     })}
+     {/* Nodes */}
+     {graph.nodes.map((node, index) => {
+      const radius = 5 + (node.totalViews / maxViews) * 20
+      const color = getNodeColor(index)
+      const isHovered = hovered === node.id
+      const isSelected = selected.includes(node.id)
+      const isCentered = centerNodeId === node.id
+      const degreeRingR = radius + 3 + (degree[index] / maxDegree) * 5
+      const dashLen = (2 * Math.PI * degreeRingR * degree[index]) / maxDegree
+      const dashGap = 2 * Math.PI * degreeRingR
+      return (
+       <g
+        key={node.id}
+        tabIndex={0}
+        role="button"
+        aria-label={`${node.id}, ${metricLabel} ${node.totalViews}, ${node.videoCount} videos`}
+        aria-pressed={isSelected}
+        onMouseEnter={() => onHover(node.id)}
+        onMouseLeave={() => onHover(null)}
+        onFocus={() => onHover(node.id)}
+        onBlur={() => onHover(null)}
+        onClick={(event) => {
+         event.stopPropagation()
+         onSelect(node.id)
+        }}
+        onDoubleClick={(event) => {
+         event.stopPropagation()
+         onRecenter(node.id)
+        }}
+        onKeyDown={(event) => {
+         if (event.key !== "Enter" && event.key !== " ") return
+         event.preventDefault()
+         event.stopPropagation()
+         onSelect(node.id)
+        }}
+        style={{ cursor: "pointer" }}>
+        {/* Soft glow halo */}
+        <circle cx={node.x} cy={node.y} r={radius * 2.2} fill={color} opacity={isHovered || isSelected ? 0.14 : 0.06} filter={`url(#${instanceId}-node-glow)`} />
+        {/* Degree ring — arc length shows how connected this node is */}
+        <circle
+         cx={node.x}
+         cy={node.y}
+         r={degreeRingR}
+         fill="none"
+         stroke={color}
+         strokeWidth="1.5"
+         strokeDasharray={`${dashLen} ${dashGap}`}
+         opacity={isHovered || isSelected ? 0.7 : 0.3}
+         style={{ transformOrigin: `${node.x}px ${node.y}px`, transform: "rotate(-90deg)" }}
+        />
+        {/* Main node circle — double ring when it's the re-center pivot */}
+        <circle
+         cx={node.x}
+         cy={node.y}
+         r={isHovered ? radius * 1.3 : radius}
+         fill={color}
+         stroke={isCentered ? "#ffffff" : isSelected ? "#ffffff" : isHovered ? "#ffffff" : "rgba(0,0,0,0.4)"}
+         strokeWidth={isCentered ? 3 : isSelected || isHovered ? 2.5 : 1}
+         strokeDasharray={isCentered ? "4 2" : undefined}
+         opacity="0.94"
+        />
+        {/* Shared-video count inside the circle when this node neighbors the hovered word.
+            Shows how many videos connect the two words without cluttering the edges. */}
+        {(() => {
+         const count = hoveredNeighborCount.get(index)
+         if (!count || isHovered) return null
+         const displayR = isHovered ? radius * 1.3 : radius
+         const fontSize = Math.max(7, Math.min(11, displayR * 0.72))
+         return (
+          <text
+           x={node.x}
+           y={node.y + fontSize * 0.36}
+           textAnchor="middle"
+           fill="#000000"
+           fontSize={fontSize}
+           fontWeight={900}
+           fontFamily="inherit"
+           style={{ pointerEvents: "none", userSelect: "none" }}>
+           {count}
+          </text>
+         )
+        })()}
+        {/* Label — stays its node color, thick black stroke for legibility on hover/select */}
+        <text
+         x={node.x}
+         y={node.y - (isHovered ? radius * 1.3 : radius) - 4}
+         textAnchor="middle"
+         stroke="#000000"
+         strokeWidth={isHovered || isSelected ? 3.5 : 0}
+         strokeLinejoin="round"
+         style={{ paintOrder: "stroke" }}
+         fill={color}
+         fontSize={Math.max(8, Math.min(12, radius * 0.72))}
+         fontWeight={1000}
+         fontFamily="inherit"
+         letterSpacing="0.04em"
+         opacity={isHovered || isSelected ? 1 : 0.92}>
+         {node.id.toUpperCase()}
+        </text>
        </g>
       )
      })}
-    {/* Nodes */}
-    {graph.nodes.map((node, index) => {
-     const radius = 5 + (node.totalViews / maxViews) * 20
-     const color = getNodeColor(index)
-     const isHovered = hovered === node.id
-     const isSelected = selected.includes(node.id)
-     const degreeRingR = radius + 3 + (degree[index] / maxDegree) * 5
-     const dashLen = (2 * Math.PI * degreeRingR * degree[index]) / maxDegree
-     const dashGap = 2 * Math.PI * degreeRingR
-     return (
-      <g
-       key={node.id}
-       tabIndex={0}
-       role="button"
-       aria-label={`${node.id}, ${metricLabel} ${node.totalViews}, ${node.videoCount} videos`}
-       aria-pressed={isSelected}
-       onMouseEnter={() => onHover(node.id)}
-       onMouseLeave={() => onHover(null)}
-       onFocus={() => onHover(node.id)}
-       onBlur={() => onHover(null)}
-       onClick={(event) => {
-        event.stopPropagation()
-        onSelect(node.id)
-       }}
-       onDoubleClick={(event) => {
-        event.stopPropagation()
-        onSelect(node.id, true)
-       }}
-       onKeyDown={(event) => {
-        if (event.key !== "Enter" && event.key !== " ") return
-        event.preventDefault()
-        event.stopPropagation()
-        onSelect(node.id, event.shiftKey)
-       }}
-       style={{ cursor: "pointer" }}>
-       {/* Soft glow halo */}
-       <circle cx={node.x} cy={node.y} r={radius * 2.2} fill={color} opacity={isHovered || isSelected ? 0.14 : 0.06} filter={`url(#${instanceId}-node-glow)`} />
-       {/* Degree ring — arc length shows how connected this node is */}
-       <circle
-        cx={node.x}
-        cy={node.y}
-        r={degreeRingR}
-        fill="none"
-        stroke={color}
-        strokeWidth="1.5"
-        strokeDasharray={`${dashLen} ${dashGap}`}
-        opacity={isHovered || isSelected ? 0.7 : 0.3}
-        style={{ transformOrigin: `${node.x}px ${node.y}px`, transform: "rotate(-90deg)" }}
-       />
-       {/* Main node circle */}
-       <circle
-        cx={node.x}
-        cy={node.y}
-        r={isHovered ? radius * 1.3 : radius}
-        fill={color}
-        stroke={isSelected ? "#ffffff" : isHovered ? "#ffffff" : "rgba(0,0,0,0.4)"}
-        strokeWidth={isSelected || isHovered ? 2.5 : 1}
-        opacity="0.94"
-       />
-       {/* Label — stays its node color, thick black stroke for legibility on hover/select */}
-       <text
-        x={node.x}
-        y={node.y - (isHovered ? radius * 1.3 : radius) - 4}
-        textAnchor="middle"
-        stroke="#000000"
-        strokeWidth={isHovered || isSelected ? 3.5 : 0}
-        strokeLinejoin="round"
-        style={{ paintOrder: "stroke" }}
-        fill={color}
-        fontSize={Math.max(8, Math.min(12, radius * 0.72))}
-        fontWeight={1000}
-        fontFamily="inherit"
-        letterSpacing="0.04em"
-        opacity={isHovered || isSelected ? 1 : 0.92}>
-        {node.id.toUpperCase()}
-       </text>
-      </g>
-     )
-    })}
+    </g>
    </svg>
   </div>
  )
@@ -2619,11 +2990,12 @@ const createModule = (
  title: string,
  subtitle: string,
  render: (dataset: TubeExplorerVisualDataset) => React.ReactNode,
- options: { color?: string; icon?: string; badges?: { label: string; tone?: any }[]; insight?: string; height?: number; flushShell?: boolean; activeContext?: (dataset: TubeExplorerVisualDataset) => React.ComponentProps<typeof SubToolboxChartModule>["activeContext"] } = {},
+ options: { color?: string; icon?: string; badges?: { label: string; tone?: any }[]; insight?: string; height?: number; flushShell?: boolean; activeContext?: (dataset: TubeExplorerVisualDataset) => SubToolboxChartModuleProps["activeContext"] } = {},
 ): React.FC<TubeExplorerVisualProps> => (props) => {
  const dataset = useExplorerData(props)
  return (
   <ModuleFrame
+   visualStyle={props.visualStyle}
    title={title}
    subtitle={subtitle}
    count={dataset.totals.videos || dataset.traffic.length || dataset.geography.length || dataset.keywords.length}
@@ -2676,17 +3048,17 @@ export const TubeExplorerKeywordVennChart = createModule("OVERLAP BLOCKS", "Shar
 
 const THERMAL_METRICS = [
  { key: "views",              label: "VIEWS",          fmt: (v: number) => compact(v) },
+ { key: "engagedViews",       label: "ENGAGED VIEWS",  fmt: (v: number) => compact(v) },
  { key: "watchHours",         label: "WATCH TIME",     fmt: (v: number) => `${compact(v)}h` },
  { key: "subscribersGained",  label: "SUBSCRIBERS",    fmt: (v: number) => compact(v) },
- { key: "engagedViews",       label: "ENGAGED VIEWS",  fmt: (v: number) => compact(v) },
  { key: "revenue",            label: "REVENUE",        fmt: (v: number) => `$${v.toFixed(2)}` },
  { key: "comments",           label: "COMMENTS",       fmt: (v: number) => compact(v) },
- { key: "shares",             label: "SHARES",         fmt: (v: number) => compact(v) },
- { key: "likes",              label: "LIKES",          fmt: (v: number) => compact(v) },
- { key: "saves",              label: "PLAYLIST SAVES", fmt: (v: number) => compact(v) },
  { key: "avp",                label: "AVP",            fmt: (v: number) => `${v.toFixed(1)}%` },
  { key: "avdSeconds",         label: "AVD",            fmt: (v: number) => formatDuration(v) },
+ { key: "likes",              label: "LIKES",          fmt: (v: number) => compact(v) },
  { key: "rpm",                label: "RPM",            fmt: (v: number) => `$${v.toFixed(2)}` },
+ { key: "shares",             label: "SHARES",         fmt: (v: number) => compact(v) },
+ { key: "saves",              label: "PLAYLIST SAVES", fmt: (v: number) => compact(v) },
 ] as const
 
 type ThermalMetricKey = (typeof THERMAL_METRICS)[number]["key"]
@@ -2785,22 +3157,72 @@ const ThermalImagingModuleInner: React.FC<{
  onMouseLeaveTile: () => void
  onClickTile: (idx: number) => void
  heatColor: (t: number) => string
-}> = ({ displayVideos, rows, hoveredIdx, lockedIdx, onMouseEnterTile, onMouseLeaveTile, onClickTile, heatColor }) => {
+ headerColorPair?: { icon: string; title: string }
+}> = ({ displayVideos, rows, hoveredIdx, lockedIdx, onMouseEnterTile, onMouseLeaveTile, onClickTile, heatColor, headerColorPair = { icon: "#FFB158", title: "#FF7497" } }) => {
  const containerRef = useRef<HTMLDivElement>(null)
+ const trackRef = useRef<HTMLDivElement>(null)
+ const [thumbWidth, setThumbWidth] = useState(60)
+ const [thumbLeft, setThumbLeft] = useState(0)
+
  const ROWS = rows
  const cols = Math.ceil(displayVideos.length / ROWS)
- // 5-row mode scales tiles up so total grid height matches the 8-row layout (8×36+7×2=302px)
  const TILE = rows === 5 ? 58 : 36
  const GAP = 2
+
+ const updateThumb = useCallback(() => {
+  const el = containerRef.current
+  const tr = trackRef.current
+  if (!el || !tr) return
+  const scrollWidth = el.scrollWidth
+  const clientWidth = el.clientWidth
+  const trackWidth = tr.clientWidth
+  if (scrollWidth <= clientWidth) {
+   setThumbWidth(trackWidth)
+   setThumbLeft(0)
+   return
+  }
+  const ratio = clientWidth / scrollWidth
+  const calculatedThumbWidth = Math.max(20, trackWidth * ratio)
+  setThumbWidth(calculatedThumbWidth)
+  const maxScroll = scrollWidth - clientWidth
+  const maxThumbLeft = trackWidth - calculatedThumbWidth
+  const currentScroll = el.scrollLeft
+  setThumbLeft(maxScroll > 0 ? (currentScroll / maxScroll) * maxThumbLeft : 0)
+ }, [])
+
+ useEffect(() => {
+  const el = containerRef.current
+  if (!el) return
+  updateThumb()
+  el.addEventListener("scroll", updateThumb, { passive: true })
+  window.addEventListener("resize", updateThumb)
+  return () => {
+   el.removeEventListener("scroll", updateThumb)
+   window.removeEventListener("resize", updateThumb)
+  }
+ }, [updateThumb])
+
+ const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const el = containerRef.current
+  const tr = trackRef.current
+  if (!el || !tr) return
+  const rect = tr.getBoundingClientRect()
+  const clickX = e.clientX - rect.left
+  const ratio = clickX / rect.width
+  el.scrollLeft = ratio * (el.scrollWidth - el.clientWidth)
+ }
 
  if (displayVideos.length === 0) return <Empty label="No videos match the selected filters" />
 
  return (
-  // Fixed 440px locks height identically for both 5-row and 8-row modes
-  <div className="flex flex-col overflow-hidden" style={{ background: "#080810", height: 440, minHeight: 440 }}>
-   {/* Grid container — flex-1 absorbs any leftover space when tile count changes */}
+  <div className="flex flex-col overflow-hidden" style={{ background: "#080816" }}>
+   {/* Grid container */}
    <div className="flex flex-1 min-h-0 overflow-hidden">
-    <div className="vt-thermal-scrollbar flex-1 overflow-x-auto overflow-y-hidden p-4" ref={containerRef}>
+    <div
+     className="flex-1 overflow-x-auto overflow-y-hidden p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+     ref={containerRef}
+     style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+    >
      <div
       style={{
        display: "grid",
@@ -2845,29 +3267,114 @@ const ThermalImagingModuleInner: React.FC<{
     </div>
    </div>
 
-   {/* Legend — gradient bar */}
-   <div className="flex items-center justify-center gap-3 border-t-[2px] border-white/10 px-4 py-2 bg-[#0d0d1f] shrink-0">
-   <span className="text-[9px] font-black uppercase tracking-[0.12em] text-white/35 shrink-0">COLD</span>
-   <div
-     className="w-[155px] h-6 rounded-[2px] border-[1px] border-white/90"
-     style={{
-      background: HEAT_GRADIENT,
-      boxShadow: "0 0 6px rgba(250,97,138,0.25), inset 0 1px 0 rgba(255,255,255,0.08)",
-     }}
-    />
-    <span className="text-[9px] font-black uppercase tracking-[0.12em] text-white/35 shrink-0">HOT</span>
-    <span className="ml-3 text-[9px] font-black uppercase tracking-[0.12em] text-white/18 shrink-0">RANK RELATIVE</span>
+   {/* Combined Scrollbar + Legend Spectrum Row (Same Row!) */}
+   <div className="flex items-center justify-between gap-3 border-t-[3px] border-black bg-[#080816] px-3 py-1.5 shrink-0">
+    {/* 1/2 Size vt-sync-scroll-controls */}
+    <div className="flex-1 flex items-center min-w-0 pr-2">
+     <div
+      className="w-full flex items-stretch overflow-hidden border-[3px] border-black"
+      style={{
+       height: 24,
+       background: headerColorPair.title,
+      }}
+     >
+      {/* Previous / Left Arrow Button (Icon section bg color, NO corner radius!) */}
+      <button
+       type="button"
+       aria-label="Previous metric group"
+       onClick={() => {
+        if (containerRef.current) containerRef.current.scrollLeft -= 180
+       }}
+       className="flex items-center justify-center border-r-[3px] border-black cursor-pointer shrink-0 transition-opacity hover:opacity-90 active:opacity-75"
+       style={{
+        width: 26,
+        height: "100%",
+        background: headerColorPair.icon,
+        borderRadius: 0,
+       }}
+      >
+       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left" aria-hidden="true">
+        <path d="m15 18-6-6 6-6"></path>
+       </svg>
+      </button>
+
+      {/* Track & 2px Window Inset with 999px Area and Thumb Radius */}
+      <div
+       ref={trackRef}
+       onClick={handleTrackClick}
+       className="relative flex-1 cursor-pointer touch-none"
+       style={{
+        margin: "3px 6px",
+        borderRadius: 999,
+        background: "#000000",
+       }}
+      >
+       <span
+        className="absolute overflow-hidden pointer-events-none"
+        style={{
+         inset: 2,
+         borderRadius: 999,
+        }}
+       >
+        <span
+         className="absolute top-0 bottom-0 pointer-events-auto cursor-grab active:cursor-grabbing"
+         style={{
+          left: `${thumbLeft}px`,
+          width: `${thumbWidth}px`,
+          borderRadius: 999,
+          background: headerColorPair.title, // Title section bg color!
+          border: 0,                           // No stroke!
+          minWidth: 20,
+         }}
+        />
+       </span>
+      </div>
+
+      {/* Next / Right Arrow Button (Icon section bg color, NO corner radius!) */}
+      <button
+       type="button"
+       aria-label="Next metric group"
+       onClick={() => {
+        if (containerRef.current) containerRef.current.scrollLeft += 180
+       }}
+       className="flex items-center justify-center border-l-[3px] border-black cursor-pointer shrink-0 transition-opacity hover:opacity-90 active:opacity-75"
+       style={{
+        width: 26,
+        height: "100%",
+        background: headerColorPair.icon,
+        borderRadius: 0,
+       }}
+      >
+       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right" aria-hidden="true">
+        <path d="m9 18 6-6-6-6"></path>
+       </svg>
+      </button>
+     </div>
+    </div>
+
+    {/* Legend Spectrum Bar */}
+    <div className="flex items-center gap-1.5 shrink-0">
+     <span className="text-[9px] font-[1000] uppercase tracking-[0.1em] text-[#F3F4F6]/50 shrink-0">COLD</span>
+     <div
+      className="w-[120px] h-3.5 rounded-[2px] border-[1.5px] border-black"
+      style={{
+       background: HEAT_GRADIENT,
+       boxShadow: "0 0 6px rgba(250,97,138,0.35)",
+      }}
+     />
+     <span className="text-[9px] font-[1000] uppercase tracking-[0.1em] text-[#F3F4F6]/50 shrink-0">HOT</span>
+     <span className="ml-1.5 text-[9px] font-[1000] uppercase tracking-[0.1em] text-[#F3F4F6]/30 shrink-0">RANK RELATIVE</span>
+    </div>
    </div>
 
-   {/* Insight section */}
-   <div className="border-t-[2px] border-white/10 px-4 py-3 bg-[#090910] shrink-0">
-    <p className="text-[9px] font-bold uppercase tracking-[0.08em] text-white/30 leading-relaxed">
-     <span className="text-white/50 font-black">HOW TO READ:</span>{" "}
+   {/* Footer Marquee / Insight */}
+   <div className="border-t-[3px] border-black px-3 py-1.5 bg-[#080816] shrink-0">
+    <p className="text-[9px] font-[900] uppercase tracking-[0.06em] text-[#F3F4F6]/40 leading-tight">
+     <span className="text-[#F3F4F6]/70 font-[1000]">HOW TO READ:</span>{" "}
      Each pixel = one video. Color = performance rank vs. channel average—not raw numbers.
-     Bottom <span className="text-[#528FFA]">75%</span> are cold blue; only the top{" "}
+     Bottom <span className="text-[#528FFA]">75%</span> are cold blue; only top{" "}
      <span className="text-[#FA618A]">25%</span> earn warm colors.
-     Switch the metric dropdown to re-rank all pixels instantly.
-     Click any pixel to lock its stats for 5 seconds.
+     Switch metric dropdown to re-rank instantly. Click pixel to lock stats.
     </p>
    </div>
   </div>
@@ -3012,32 +3519,33 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
     : definition.label,
    value: definition.format(valueFor(definition.key)),
    tone: definition.color,
-   valueTone: "#000000",
+   backgroundTone: "#080816",
+   valueTone: definition.color,
    lockTone: true,
    compact: true,
   }))
  }, [hovered, totals, metric, filteredVideos])
 
  const METRIC_OPTIONS = THERMAL_METRICS.map(m => ({ label: m.label, value: m.key }))
+ const heatStyle = props.visualStyle ?? resolveVtSyncVisualStyle("HEAT MATRIX")
+ const heatHeaderPair = props.visualStyle?.headerColorPair ?? headerPairForColor("#FFB158")
 
  return (
-  <SubToolboxChartModule
-   collapsible={props.collapsible}
-   isOpenInitial={props.isOpenInitial}
-   header={{
-    title: "HEAT MATRIX",
-    subtitle: "Ranks each video as a pixel by the selected metric and format.",
-    icon: <CustomIcon name="analytics" size={34} />,
-   }}
-   theme={{ headerBandBg: "#FFB158", iconBlockBg: "#20D4F7", shadowColor: "rgba(255,177,88,0.45)" }}
+  <AnalyticsVisualShell
+   shellMode="standard"
+   title="HEAT MATRIX"
+   subtitle="Ranks each video as a pixel by the selected metric and format."
+   iconKey={heatStyle.iconKey}
+   headerColorPair={heatHeaderPair}
    activeContext={{
     title: hovered
-     ? `${hovered.title.toUpperCase()}${lockedIdx !== null ? " 🔒" : ""}`
+     ? `${hovered.title.toUpperCase()}${lockedIdx !== null ? " LOCKED" : ""}`
      : `CHANNEL TOTALS (${formatFilter.toUpperCase()})`,
     stats: activeStats,
+    bgTone: "#080816",
     minHeight: 44,
    }}
-   controllerRows={[
+   controllerSpec={{ rows: [
     {
      type: "dropdown",
      value: formatFilter,
@@ -3069,8 +3577,14 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
       bgTone: "#CCFF00",
       fgTone: "#000000",
      },
-    ]}
-   layout={{ moduleMinHeight: "480px" }}
+    ] }}
+   canvasFitMode="balanced"
+   standard={{
+    collapsible: props.collapsible,
+    isOpenInitial: props.isOpenInitial,
+    layout: { moduleMinHeight: "auto" },
+    theme: { shadowColor: "rgba(255,177,88,0.45)" },
+   }}
    >
     <ThermalImagingModuleInner
      displayVideos={displayVideos}
@@ -3082,7 +3596,7 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
      onClickTile={handleTileClick}
      heatColor={heatColor}
     />
-   </SubToolboxChartModule>
+   </AnalyticsVisualShell>
   )
 }
 
@@ -3106,17 +3620,17 @@ type VitalMetricKey =
  */
 const CHANNEL_VITAL_METRICS: Array<{ key: VitalMetricKey; label: string; color: string; format: (value: number) => string }> = [
  { key: "views", label: "VIEWS", color: VT_VISUAL_METRIC_COLORS.views, format: compact },
+ { key: "engagedViews", label: "ENGAGED VIEWS", color: VT_VISUAL_METRIC_COLORS.engagedViews, format: compact },
  { key: "watchHours", label: "WATCH TIME", color: VT_VISUAL_METRIC_COLORS.watchTime, format: (value) => `${compact(value)}H` },
  { key: "subscribersGained", label: "SUBSCRIBERS", color: VT_VISUAL_METRIC_COLORS.subscribers, format: compact },
- { key: "engagedViews", label: "ENGAGED VIEWS", color: VT_VISUAL_METRIC_COLORS.engagedViews, format: compact },
  { key: "revenue", label: "REVENUE", color: VT_VISUAL_METRIC_COLORS.revenue, format: (value) => `$${value.toFixed(2)}` },
  { key: "comments", label: "COMMENTS", color: VT_VISUAL_METRIC_COLORS.comments, format: compact },
- { key: "shares", label: "SHARES", color: VT_VISUAL_METRIC_COLORS.shares, format: compact },
- { key: "likes", label: "LIKES", color: VT_VISUAL_METRIC_COLORS.likes, format: compact },
- { key: "saves", label: "PLAYLIST SAVES", color: VT_VISUAL_METRIC_COLORS.saves, format: compact },
  { key: "avp", label: "AVP", color: VT_VISUAL_METRIC_COLORS.avp, format: (value) => `${value.toFixed(1)}%` },
  { key: "avdSeconds", label: "AVD", color: VT_VISUAL_METRIC_COLORS.avd, format: formatDuration },
+ { key: "likes", label: "LIKES", color: VT_VISUAL_METRIC_COLORS.likes, format: compact },
  { key: "rpm", label: "RPM", color: VT_VISUAL_METRIC_COLORS.rpm, format: (value) => `$${value.toFixed(2)}` },
+ { key: "shares", label: "SHARES", color: VT_VISUAL_METRIC_COLORS.shares, format: compact },
+ { key: "saves", label: "PLAYLIST SAVES", color: VT_VISUAL_METRIC_COLORS.playlistSaves, format: compact },
 ]
 
 /** 0 means "all rows". */
@@ -3174,7 +3688,7 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
   setHoveredIndex(null)
  }
 
- const controllerRows: React.ComponentProps<typeof SubToolboxChartModule>["controllerRows"] = [
+ const controllerRows: SubToolboxChartModuleProps["controllerRows"] = [
   {
    type: "number",
    // Falls back to the real total whenever the channel has fewer videos than the step.
@@ -3219,6 +3733,7 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
  if (rows.length === 0) {
   return (
    <ModuleFrame
+   visualStyle={props.visualStyle}
     title="CHANNEL VITAL SIGNS"
     subtitle="Independent channel metrics traced across upload order."
     count={0}
@@ -3260,6 +3775,7 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
 
  return (
   <ModuleFrame
+   visualStyle={props.visualStyle}
    title="CHANNEL VITAL SIGNS"
    subtitle="Twelve channel metrics traced together across upload order. Saves use YouTube Playlist Saves."
    count={rows.length}
@@ -3420,23 +3936,25 @@ export const TubeExplorerBarcodeFingerprint: React.FC<TubeExplorerVisualProps> =
    value: hovered ? formatShortDate(hovered.uploadDate) : `${rows.length} SHOWN`,
    tone: "white" as const, lockTone: true, compact: true,
   },
-  { label: marked("VIEWS", "views"), value: compact(hovered ? hovered.views : totals.views), tone: "yellow" as const, lockTone: true, compact: true },
-  { label: marked("LIKES", "likes"), value: compact(hovered ? hovered.likes : totals.likes), tone: "pink" as const, lockTone: true, compact: true },
-  { label: marked("CMTS", "comments"), value: compact(hovered ? hovered.comments : totals.comments), tone: "cyan" as const, lockTone: true, compact: true },
-  { label: marked("SHARES", "shares"), value: compact(hovered ? hovered.shares : totals.shares), tone: "lime" as const, lockTone: true, compact: true },
-   { label: marked("SUBSCRIBERS", "subscribersGained"), value: compact(hovered ? hovered.subscribersGained : totals.subs), tone: "lime" as const, lockTone: true, compact: true },
-  { label: marked("REV", "revenue"), value: `$${(hovered ? hovered.revenue : totals.revenue).toFixed(2)}`, tone: "orange" as const, lockTone: true, compact: true },
-  { label: marked("AVP", "avp"), value: `${(hovered ? hovered.avp : weightedAverage(rows, (row) => row.avp, (row) => Math.max(row.views, 1))).toFixed(1)}%`, tone: "purple" as const, lockTone: true, compact: true },
-  { label: marked("AVD", "avdSeconds"), value: formatDuration(hovered ? hovered.avdSeconds : weightedAverage(rows, (row) => row.avdSeconds, (row) => Math.max(row.views, 1))), tone: "cyan" as const, lockTone: true, compact: true },
+  { label: marked("VIEWS", "views"), value: compact(hovered ? hovered.views : totals.views), tone: VT_VISUAL_METRIC_COLORS.views, lockTone: true, compact: true },
+  { label: marked("LIKES", "likes"), value: compact(hovered ? hovered.likes : totals.likes), tone: VT_VISUAL_METRIC_COLORS.likes, lockTone: true, compact: true },
+  { label: marked("CMTS", "comments"), value: compact(hovered ? hovered.comments : totals.comments), tone: VT_VISUAL_METRIC_COLORS.comments, lockTone: true, compact: true },
+  { label: marked("SHARES", "shares"), value: compact(hovered ? hovered.shares : totals.shares), tone: VT_VISUAL_METRIC_COLORS.shares, lockTone: true, compact: true },
+   { label: marked("SUBSCRIBERS", "subscribersGained"), value: compact(hovered ? hovered.subscribersGained : totals.subs), tone: VT_VISUAL_METRIC_COLORS.subscribers, lockTone: true, compact: true },
+  { label: marked("REV", "revenue"), value: `$${(hovered ? hovered.revenue : totals.revenue).toFixed(2)}`, tone: VT_VISUAL_METRIC_COLORS.revenue, lockTone: true, compact: true },
+  { label: marked("AVP", "avp"), value: `${(hovered ? hovered.avp : weightedAverage(rows, (row) => row.avp, (row) => Math.max(row.views, 1))).toFixed(1)}%`, tone: VT_VISUAL_METRIC_COLORS.avp, lockTone: true, compact: true },
+  { label: marked("AVD", "avdSeconds"), value: formatDuration(hovered ? hovered.avdSeconds : weightedAverage(rows, (row) => row.avdSeconds, (row) => Math.max(row.views, 1))), tone: VT_VISUAL_METRIC_COLORS.avd, lockTone: true, compact: true },
   { label: "PEAK", value: peak ? option.format(metricValue(peak, metric)) : "—", tone: "pink" as const, lockTone: true, compact: true },
   { label: "FORMAT", value: hovered ? hovered.format.toUpperCase() : formatFilter.toUpperCase(), tone: "white" as const, lockTone: true, compact: true },
  ]
 
  return (
   <ModuleFrame
+   visualStyle={props.visualStyle}
    title="BARCODE FINGERPRINT"
    subtitle="Ranked video bars centered on one horizontal spine."
    count={rows.length}
+   icon="database"
    color="#CCFF00"
    height={420}
    flushShell
@@ -3537,6 +4055,7 @@ export const TubeExplorerSubscriberWaterfall: React.FC<TubeExplorerVisualProps> 
 
  return (
   <ModuleFrame
+   visualStyle={props.visualStyle}
    title="METRIC WATERFALL"
    subtitle="Per-video gains with the cumulative growth line."
    count={rows.length}
@@ -3618,6 +4137,7 @@ export const TubeExplorerShortsVsLongs: React.FC<TubeExplorerVisualProps> = (pro
 
  return (
   <ModuleFrame
+   visualStyle={props.visualStyle}
    title="SHORTS vs LONGS"
    subtitle="Head-to-head duel · bars extend from centre · no CTR or retention."
    count={shorts.length + longs.length}
@@ -3828,6 +4348,7 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
 
  return (
   <ModuleFrame
+   visualStyle={props.visualStyle}
    title="CONTENT TREEMAP"
    subtitle="Pillar area map · area = selected metric · click a pillar to zoom in."
    count={scoped.length}
@@ -3920,56 +4441,103 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
   </ModuleFrame>
  )
 }
-const RADAR_COUNTS = [4, 6, 8, 12] as const
+const RADAR_COUNTS = [5, 8, 10, 12] as const
+
+const RADAR_FORMAT_MODES = [
+ { value: "all" as const, label: "ALL VIDEOS" },
+ { value: "long" as const, label: "LONGFORM ONLY" },
+ { value: "shorts" as const, label: "SHORTS ONLY" },
+] as const
+
+// Stable categorical order: the first five series span the spectrum, while
+// larger rosters add intermediate colors without recoloring existing videos.
+const ENGAGEMENT_RADAR_PALETTE_ORDER = [0, 3, 6, 8, 11, 1, 2, 4, 5, 7, 9, 10] as const
+
+export const buildEngagementRadarSeriesPalette = (count: number): string[] => {
+ const safeCount = Math.min(ENGAGEMENT_RADAR_PALETTE_ORDER.length, Math.max(0, Math.floor(count)))
+ return ENGAGEMENT_RADAR_PALETTE_ORDER
+  .slice(0, safeCount)
+  .map((paletteIndex) => VT_SPECTRUM_PALETTE_06[paletteIndex])
+}
 
 export const TubeExplorerEngagementRadar: React.FC<TubeExplorerVisualProps> = (props) => {
  const dataset = useExplorerData(props)
- const [countIndex, setCountIndex] = useState(2)
- const [formatIndex, setFormatIndex] = useState(0)
+ const [countIndex, setCountIndex] = useState(0)
+ const [formatIndex, setFormatIndex] = useState(1)
+ const [rankMode, setRankMode] = useState<RadarRankMode>("views")
+ const [selection, setSelection] = useState<{ rosterKey: string; videoIds: string[] }>({ rosterKey: "", videoIds: [] })
  const [hovered, setHovered] = useState<TubeExplorerVideoPoint | null>(null)
 
  const count = RADAR_COUNTS[countIndex]
- const formatMode = VITAL_FORMAT_MODES[formatIndex]
+ const formatMode = RADAR_FORMAT_MODES[formatIndex]
 
  const videos = useMemo(() => {
   const scoped = dataset.videos.filter((video) => (
    formatMode.value === "all" ? true : formatMode.value === "shorts" ? video.format === "shorts" : video.format === "long"
   ))
-  return [...scoped].sort((a, b) => b.views - a.views).slice(0, count)
- }, [count, dataset.videos, formatMode])
+  return rankEngagementRadarVideos(scoped, rankMode).slice(0, count)
+ }, [count, dataset.videos, formatMode.value, rankMode])
 
- const colors = VT_SPECTRUM_PALETTE_06
+ const rosterKey = videos.map((video) => video.videoId).join("|")
+ const selectedVideoIds = selection.rosterKey === rosterKey
+  ? selection.videoIds
+  : videos.map((video) => video.videoId)
+ const selectedVideoIdSet = useMemo(() => new Set(selectedVideoIds), [selectedVideoIds])
+ const selectedVideos = useMemo(
+  () => videos.filter((video) => selectedVideoIdSet.has(video.videoId)),
+  [selectedVideoIdSet, videos],
+ )
+ const rankOptionLabel = RADAR_RANK_OPTIONS.find((option) => option.value === rankMode)?.label ?? "VIEWS"
+ const rankLabel = rankMode === "latest" ? rankOptionLabel : `RANKED BY ${rankOptionLabel}`
+
+ const toggleVideo = (videoId: string) => {
+  setSelection(() => {
+   const current = selectedVideoIds
+   const videoIds = !current.includes(videoId)
+    ? [...current, videoId]
+    : current.length > 1
+     ? current.filter((id) => id !== videoId)
+     : current
+   return { rosterKey, videoIds }
+  })
+ }
+
+ const colors = useMemo(() => buildEngagementRadarSeriesPalette(videos.length), [videos.length])
 
  return (
   <ModuleFrame
+   visualStyle={props.visualStyle}
    title="ENGAGEMENT RADAR"
-   subtitle="One polygon per video · axes normalised against the current selection."
-   count={videos.length}
+   subtitle="Compares selected videos across eight engagement and value metrics."
+   count={selectedVideos.length}
    color="#B14AED"
    height={420}
    flushShell
+   stableChartFrame={false}
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
-    title: hovered ? videoShortTitle(hovered.title, 54).toUpperCase() : `TOP ${videos.length} BY VIEWS (${formatMode.label})`,
+    title: hovered ? videoShortTitle(hovered.title, 54).toUpperCase() : `${rankLabel} · ${selectedVideos.length} OF ${videos.length} SHOWN`,
     stats: hovered
-     ? RADAR_AXES.map((axis, index) => ({
+     ? RADAR_AXES.map((axis) => ({
       label: axis.label,
       value: axis.format(axis.read(hovered)),
-      tone: colors[index % colors.length],
+      tone: axis.color,
       lockTone: true,
       compact: true,
      }))
-     : [
-      { label: "VIDEOS", value: String(videos.length), tone: "#C0F240", lockTone: true, compact: true },
-      { label: "AXES", value: String(RADAR_AXES.length), tone: "#36E0F6", lockTone: true, compact: true },
-      { label: "TOP VIEWS", value: compact(videos[0]?.views || 0), tone: "#FFDA47", lockTone: true, compact: true },
-     ],
+     : RADAR_AXES.map((axis) => ({
+      label: axis.label,
+      value: axis.format(summarizeRadarAxis(selectedVideos, axis)),
+      tone: axis.color,
+      lockTone: true,
+      compact: true,
+     })),
    }}
    controllerRows={[
     {
      type: "number",
-     value: String(videos.length),
+     value: String(count),
      onPrev: () => { setCountIndex((i) => (i + RADAR_COUNTS.length - 1) % RADAR_COUNTS.length); setHovered(null) },
      onNext: () => { setCountIndex((i) => (i + 1) % RADAR_COUNTS.length); setHovered(null) },
      bgTone: "#FFEA00",
@@ -3978,19 +4546,30 @@ export const TubeExplorerEngagementRadar: React.FC<TubeExplorerVisualProps> = (p
     {
      type: "text",
      value: formatMode.label,
-     onPrev: () => { setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length); setHovered(null) },
-     onNext: () => { setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length); setHovered(null) },
+     onPrev: () => { setFormatIndex((i) => (i + RADAR_FORMAT_MODES.length - 1) % RADAR_FORMAT_MODES.length); setHovered(null) },
+     onNext: () => { setFormatIndex((i) => (i + 1) % RADAR_FORMAT_MODES.length); setHovered(null) },
      bgTone: "#FF7497",
      fgTone: "#000000",
     },
-    { type: "label", value: "RANK RELATIVE", bgTone: "#000000", fgTone: "#FFFFFF" },
+    {
+     type: "dropdown",
+     labelPrefix: "RANKED BY",
+     value: rankMode,
+     options: RADAR_RANK_OPTIONS.map((option) => ({ label: option.label, value: option.value })),
+     onSelect: (value) => { setRankMode(value as RadarRankMode); setHovered(null) },
+     bgTone: "#36E0F6",
+     fgTone: "#000000",
+    },
    ]}
   >
    <EngagementRadarRenderer
     videos={videos}
     colors={colors}
+    selectedVideoIds={selectedVideoIdSet}
+    listLabel={rankLabel}
     hoveredId={hovered?.videoId ?? null}
     onHover={setHovered}
+    onToggleVideo={toggleVideo}
    />
   </ModuleFrame>
  )
@@ -4015,6 +4594,7 @@ export const TubeExplorerRevenueEfficiencyMap: React.FC<TubeExplorerVisualProps>
 
  return (
   <ModuleFrame
+   visualStyle={props.visualStyle}
    title="REVENUE EFFICIENCY MAP"
    subtitle="Video points plotted by selected business metrics with responsive axis ranges."
    count={rows.length}
@@ -4071,6 +4651,7 @@ export const TubeExplorerLikeRateWaveform: React.FC<TubeExplorerVisualProps> = (
 
  return (
   <ModuleFrame
+   visualStyle={props.visualStyle}
    title="LIKE RATE WAVEFORM"
    subtitle="Upload-order signal line for like rate, engagement, comments, shares, or other creator response metrics."
    count={rows.length}
@@ -4128,6 +4709,7 @@ export const TubeExplorerSeasonalityRadar: React.FC<TubeExplorerVisualProps> = (
 
  return (
   <ModuleFrame
+   visualStyle={props.visualStyle}
    title="SEASONALITY RADAR"
    subtitle="Upload weekday shape for the selected metric and format."
    count={scoped.length}
@@ -4177,6 +4759,7 @@ export const TubeExplorerSearchBubbleUniverse: React.FC<TubeExplorerVisualProps>
 
  return (
   <ModuleFrame
+   visualStyle={props.visualStyle}
    title="BUBBLE UNIVERSE"
    subtitle="Video universe with custom X, Y, and bubble-size metrics."
    count={rows.length}
@@ -4237,6 +4820,7 @@ export const TubeExplorerRetentionCurveAtlas: React.FC<TubeExplorerVisualProps> 
 
  return (
   <ModuleFrame
+   visualStyle={props.visualStyle}
    title="RETENTION CURVE ATLAS"
    subtitle="Mock curve atlas from available average-view percentage until full point-by-point retention is synced."
    count={rows.length}
@@ -4286,7 +4870,7 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
 
  const { cells, scopedCount } = useMemo(() => {
   const scoped = dataset.videos.filter((video) => {
-   if (!video.uploadDate) return false
+   if (!hasPrecisePublishTimestamp(video.uploadDate)) return false
    if (formatFilter === "shorts") return video.format === "shorts"
    if (formatFilter === "long") return video.format === "long"
    return true
@@ -4363,6 +4947,7 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
 
  return (
   <ModuleFrame
+   visualStyle={props.visualStyle}
    title="PUBLISH OPTIMAL CLOCK"
    subtitle="Day and time cells for upload performance."
    count={scopedCount}
@@ -4373,16 +4958,17 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
    isOpenInitial={props.isOpenInitial}
    activeContext={{
     title: hovered ? `${slotLabel(hovered)} • SLOT` : `PUBLISH GRID (${formatFilter.toUpperCase()})`,
+    bgTone: "#080816",
     minHeight: 44,
     stats: [
-     { label: "SLOT", value: slotLabel(activeCell), tone: "white" as const, minWidth: 126, lockTone: true, compact: true },
-     { label: marked("AVG VIEWS", "views"), value: compact(per(summary.views)), tone: VT_VISUAL_METRIC_COLORS.views, minWidth: 94, lockTone: true, compact: true },
-     { label: marked("AVG SUBSCRIBERS", "subscribersGained"), value: per(summary.subs).toFixed(1), tone: VT_VISUAL_METRIC_COLORS.subscribers, minWidth: 116, lockTone: true, compact: true },
-     { label: marked("AVG REVENUE", "revenue"), value: `$${per(summary.revenue).toFixed(2)}`, tone: VT_VISUAL_METRIC_COLORS.revenue, minWidth: 104, lockTone: true, compact: true },
-     { label: "AVG COMMENTS", value: per(summary.comments).toFixed(1), tone: VT_VISUAL_METRIC_COLORS.comments, minWidth: 106, lockTone: true, compact: true },
-     { label: marked("AVG LIKES", "likes"), value: per(summary.likes).toFixed(1), tone: VT_VISUAL_METRIC_COLORS.likes, minWidth: 94, lockTone: true, compact: true },
-     { label: marked("UPLOADS", "uploads"), value: `${summaryUploads}`, tone: VT_VISUAL_METRIC_COLORS.rpm, minWidth: 88, lockTone: true, compact: true },
-     { label: "TOP SLOT", value: slotLabel(best), tone: "white" as const, minWidth: 126, lockTone: true, compact: true },
+     { label: "SLOT", value: slotLabel(activeCell), tone: "white" as const, minWidth: 126, lockTone: true, compact: true, backgroundTone: "#080816", valueTone: "#F3F4F6" },
+     { label: marked("AVG VIEWS", "views"), value: compact(per(summary.views)), tone: VT_VISUAL_METRIC_COLORS.views, minWidth: 94, lockTone: true, compact: true, backgroundTone: "#080816", valueTone: "#F3F4F6" },
+     { label: marked("AVG SUBSCRIBERS", "subscribersGained"), value: per(summary.subs).toFixed(1), tone: VT_VISUAL_METRIC_COLORS.subscribers, minWidth: 116, lockTone: true, compact: true, backgroundTone: "#080816", valueTone: "#F3F4F6" },
+     { label: marked("AVG REVENUE", "revenue"), value: `$${per(summary.revenue).toFixed(2)}`, tone: VT_VISUAL_METRIC_COLORS.revenue, minWidth: 104, lockTone: true, compact: true, backgroundTone: "#080816", valueTone: "#F3F4F6" },
+     { label: "AVG COMMENTS", value: per(summary.comments).toFixed(1), tone: VT_VISUAL_METRIC_COLORS.comments, minWidth: 106, lockTone: true, compact: true, backgroundTone: "#080816", valueTone: "#F3F4F6" },
+     { label: marked("AVG LIKES", "likes"), value: per(summary.likes).toFixed(1), tone: VT_VISUAL_METRIC_COLORS.likes, minWidth: 94, lockTone: true, compact: true, backgroundTone: "#080816", valueTone: "#F3F4F6" },
+     { label: marked("UPLOADS", "uploads"), value: `${summaryUploads}`, tone: VT_VISUAL_METRIC_COLORS.rpm, minWidth: 88, lockTone: true, compact: true, backgroundTone: "#080816", valueTone: "#F3F4F6" },
+     { label: "TOP SLOT", value: slotLabel(best), tone: "white" as const, minWidth: 126, lockTone: true, compact: true, backgroundTone: "#080816", valueTone: "#F3F4F6" },
     ],
    }}
    controllerRows={[
@@ -4435,6 +5021,7 @@ export const TubeExplorerTrafficDayRiverDelta: React.FC<TubeExplorerVisualProps>
 
  return (
   <ModuleFrame
+   visualStyle={props.visualStyle}
    title="RIVER DELTA"
    subtitle="Traffic source flow · sources on top, the selected time buckets below."
    count={rows.length || dataset.traffic.length}
@@ -4518,6 +5105,7 @@ export const TubeExplorerSankeyRiverDelta: React.FC<TubeExplorerVisualProps> = (
 
  return (
   <ModuleFrame
+   visualStyle={props.visualStyle}
    title="RIVER DELTA"
    subtitle="Traffic sources flowing into top geography ranks."
    count={sourceRows.length + geoRows.length}
@@ -4568,30 +5156,56 @@ export const TubeExplorerSankeyRiverDelta: React.FC<TubeExplorerVisualProps> = (
  )
 }
 export const TubeExplorerContourDensityMap = createModule("RETENTION SCATTER", "Views against average percentage viewed.", (d) => <VideoScatter rows={topVideos(d, "views", 120)} x="views" y="retentionScore" />, { color: "#FFB158" })
-export const TubeExplorerClockRadialBurst = createModule(
- "CLOCK BURST",
- "Traffic sources arranged as a radial ring with drilldown detail.",
- (d) => <ClockRadialBurstRenderer dataset={d} />,
- {
-  color: "#FFE35A",
-  height: 460,
-  flushShell: true,
-  activeContext: (dataset) => {
-   const slices = summarizeTrafficSlices(dataset.traffic.filter((row) => row.views > 0 && !isAggregateTrafficLabel(row.sourceTitle) && !isAggregateTrafficLabel(row.sourceType) && !isAggregateTrafficLabel(row.sourceDetail)))
-   const leadSlice = slices[0] || null
-   const totalViews = slices.reduce((sum, slice) => sum + slice.views, 0) || 1
-   const detailRows = leadSlice ? buildTrafficDetailRows(dataset.traffic, leadSlice.kind) : []
-   return {
+export const TubeExplorerClockRadialBurst: React.FC<TubeExplorerVisualProps> = (props) => {
+ const dataset = useExplorerData(props)
+ const [metric, setMetric] = useState<ClockBurstMetricKey>("views")
+ const metricOption = clockBurstMetricOption(metric)
+ const overviewRows = dataset.traffic.filter((row) => row.datasetKind === "traffic_summary")
+ const detailRows = dataset.traffic.filter((row) => row.datasetKind === "traffic_detail")
+ const sourceRows = overviewRows.length ? overviewRows : dataset.traffic.filter((row) => row.datasetKind !== "traffic_day")
+ const slices = buildTrafficSourceSlices(sourceRows, metric)
+ const leadSlice = slices[0] || null
+ const totalValue = slices.reduce((sum, slice) => sum + slice.value, 0) || 1
+ const selectedDetailRows = leadSlice ? buildTrafficDetailRows(detailRows, leadSlice.kind, metric) : []
+
+ return (
+  <ModuleFrame
+   visualStyle={props.visualStyle}
+   title="CLOCK BURST"
+   subtitle="Traffic overview with traffic-detail drilldown; excludes Traffic Source × Day."
+   count={dataset.totals.videos || dataset.traffic.length}
+   color="#FFE35A"
+   activeContext={{
     title: leadSlice ? `${trafficFocusLabel(leadSlice.kind)} • SOURCE DETAIL` : "CLOCK RADIAL BURST",
     stats: [
-     { label: "TOTAL VIEWS", value: compact(totalViews), tone: leadSlice?.color || "#00E5FF", lockTone: true, compact: true },
+     { label: `TOTAL ${metricOption.shortLabel}`, value: formatClockBurstMetricValue(totalValue, metric), tone: metricOption.tone, lockTone: true, compact: true },
      { label: "TOP SOURCE", value: leadSlice ? leadSlice.label : "—", tone: leadSlice?.color || "#FF7497", lockTone: true, compact: true },
-     { label: "DETAIL ROWS", value: compact(detailRows.length), tone: "#00E5FF", lockTone: true, compact: true },
+     { label: "DETAIL ROWS", value: compact(selectedDetailRows.length), tone: "#00E5FF", lockTone: true, compact: true },
     ],
-   }
-  },
- }
-)
+   }}
+   controllerRows={[
+    { type: "number", value: CLOCK_BURST_MAX_AREAS, bgTone: "#4FFF5B", fgTone: "#000000", isBig: false },
+    { type: "label", value: "SOURCES", bgTone: "#50D5B5", fgTone: "#000000" },
+    { type: "label", value: `TOP ${CLOCK_BURST_MAX_DETAILS} DETAILS`, bgTone: "#FF83EA", fgTone: "#000000" },
+    {
+     type: "dropdown",
+     labelPrefix: "METRIC",
+     value: metric,
+     options: CLOCK_BURST_METRIC_OPTIONS.map((option) => ({ label: option.label, value: option.key })),
+     onSelect: (value) => setMetric(value as ClockBurstMetricKey),
+     bgTone: metricOption.tone,
+     fgTone: "#000000",
+    },
+   ]}
+   height={460}
+   flushShell
+   collapsible={props.collapsible}
+   isOpenInitial={props.isOpenInitial}
+  >
+   <ClockRadialBurstRenderer dataset={dataset} metric={metric} />
+  </ModuleFrame>
+ )
+}
 export const TubeExplorerRetentionMosaic = createModule("RETENTION TILES", "AVP and STW spread across a compact tile field.", (d) => <HeatGrid cells={topVideos(d, "retentionScore", 28).map((v) => ({ label: v.videoId.slice(0, 5), value: v.retentionScore }))} empty="No retention metrics available" />, { color: "#FF7497" })
 
 export const TubeExplorerPerfectionQuadrant = createModule("PERFECT MIX", "Retention and revenue plotted together.", (d) => <VideoScatter rows={topVideos(d, "valueScore", 90)} x="retentionScore" y="revenue" />, { color: "#CCFF00" })
@@ -4601,18 +5215,23 @@ export const TubeExplorerCalendarHeatSignature = createModule("CALENDAR HEAT", "
 export const TubeExplorerUSStateDotMap = createModule("GEO RANK", "Country, region, and city views sorted by reach.", (d) => <GeoBars dataset={d} />, { color: "#FF7497" })
 export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (props) => {
  const dataset = useExplorerData(props)
- const [wordLimit, setWordLimit] = useState(20)
+ const [wordLimit, setWordLimit] = useState(30)
  const [hovered, setHovered] = useState<string | null>(null)
  const [metric, setMetric] = useState<TitleNetworkMetric>("views")
  const [selectedRoots, setSelectedRoots] = useState<string[]>([])
+ const [centerNodeId, setCenterNodeId] = useState<string | null>(null)
 
  const graph = useMemo(
   () => buildWordNetwork(dataset.videos.filter((video) => titleNetworkMetricValue(video, metric) > 0), wordLimit, metric),
   [dataset.videos, metric, wordLimit],
  )
 
+ // When the graph rebuilds (metric or limit changes), reset re-center
+ React.useEffect(() => { setCenterNodeId(null) }, [graph])
+
  const topNode = graph.nodes.reduce<WordNode | null>((best, node) => (!best || node.totalViews > best.totalViews ? node : best), null)
  const totalKeywordViews = graph.nodes.reduce((sum, node) => sum + node.totalViews, 0)
+ const totalVideos = dataset.videos.length
  const metricLabel = TITLE_NETWORK_METRIC_LABELS[metric]
 
  const hoveredNode = hovered ? graph.nodes.find((node) => node.id === hovered) || null : null
@@ -4620,12 +5239,38 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
   ? graph.edges.filter((edge) => graph.nodes[edge.source]?.id === hoveredNode.id || graph.nodes[edge.target]?.id === hoveredNode.id).length
   : 0
 
- const activeStats = hoveredNode ? [
+ // Selected group stats — shown when 2+ nodes are selected
+ const selectedNodes = graph.nodes.filter((n) => selectedRoots.includes(n.id))
+ const selectionEdges = graph.edges.filter(
+  (e) => selectedRoots.includes(graph.nodes[e.source]?.id) && selectedRoots.includes(graph.nodes[e.target]?.id),
+ )
+ const selSharedVideos = selectionEdges.reduce((s, e) => s + e.sharedVideos, 0)
+ const selTotalMetric = selectedNodes.reduce((s, n) => s + n.totalViews, 0)
+ const selAvgAvp = selectedNodes.length > 0
+  ? selectedNodes.reduce((s, n) => s + n.avgAvp, 0) / selectedNodes.length : 0
+ const selAvgDur = selectedNodes.length > 0
+  ? selectedNodes.reduce((s, n) => s + n.avgDurSec, 0) / selectedNodes.length : 0
+
+ // Percentile rank of a node among all displayed nodes (by totalViews)
+ const sortedByMetric = [...graph.nodes].sort((a, b) => b.totalViews - a.totalViews)
+ const rankOf = new Map(sortedByMetric.map((n, i) => [n.id, i + 1]))
+
+ const activeStats = selectedRoots.length >= 2 ? [
+  { label: "SELECTED", value: `${selectedRoots.length} WORDS`, tone: "lime" as const, lockTone: true },
+  { label: `${metricLabel.toUpperCase()} TOTAL`, value: compact(selTotalMetric), tone: "pink" as const, lockTone: true },
+  { label: "SHARED VIDEOS", value: String(selSharedVideos), tone: "cyan" as const, lockTone: true },
+  { label: "CONNECTIONS", value: String(selectionEdges.length), tone: "yellow" as const, lockTone: true },
+  { label: "AVG RET%", value: `${selAvgAvp.toFixed(1)}%`, tone: "purple" as const, lockTone: true },
+  { label: "AVG DURATION", value: `${(selAvgDur / 60).toFixed(1)}m`, tone: "cyan" as const, lockTone: true },
+ ] : hoveredNode ? [
   { label: "WORD", value: hoveredNode.id.toUpperCase(), tone: "lime" as const, lockTone: true },
-  { label: "VIDEOS", value: String(hoveredNode.videoCount), tone: "cyan" as const, lockTone: true },
+  { label: "VIDEOS", value: `${hoveredNode.videoCount} (${((hoveredNode.videoCount / Math.max(totalVideos, 1)) * 100).toFixed(0)}%)`, tone: "cyan" as const, lockTone: true },
   { label: metricLabel.toUpperCase(), value: compact(hoveredNode.totalViews), tone: "pink" as const, lockTone: true },
-  { label: "CO-WORDS", value: String(hoveredConnections), tone: "yellow" as const, lockTone: true },
-  { label: "SHARE OF TRACKED", value: `${((hoveredNode.totalViews / Math.max(totalKeywordViews, 1)) * 100).toFixed(1)}%`, tone: "purple" as const, lockTone: true },
+  { label: "RANK", value: `#${rankOf.get(hoveredNode.id) ?? "—"} of ${graph.nodes.length}`, tone: "yellow" as const, lockTone: true },
+  { label: "CO-WORDS", value: String(hoveredConnections), tone: "purple" as const, lockTone: true },
+  { label: "AVG RET%", value: `${hoveredNode.avgAvp.toFixed(1)}%`, tone: "cyan" as const, lockTone: true },
+  { label: "AVG DURATION", value: `${(hoveredNode.avgDurSec / 60).toFixed(1)}m`, tone: "yellow" as const, lockTone: true },
+  { label: "SHARE", value: `${((hoveredNode.totalViews / Math.max(totalKeywordViews, 1)) * 100).toFixed(1)}%`, tone: "purple" as const, lockTone: true },
  ] : [
   { label: "KEYWORDS", value: String(graph.nodes.length), tone: "lime" as const, lockTone: true },
   { label: "LINKS", value: String(graph.edges.length), tone: "cyan" as const, lockTone: true },
@@ -4633,22 +5278,27 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
   { label: `TOP ${metricLabel.toUpperCase()}`, value: topNode ? compact(topNode.totalViews) : "0", tone: "pink" as const, lockTone: true },
   { label: `TRACKED ${metricLabel.toUpperCase()}`, value: compact(totalKeywordViews), tone: "purple" as const, lockTone: true },
  ]
+ const networkStyle = props.visualStyle ?? resolveVtSyncVisualStyle("TITLE WORD NETWORK")
+ const networkHeaderPair = props.visualStyle?.headerColorPair ?? headerPairForColor("#CCFF00")
 
  return (
-  <SubToolboxChartModule
-   collapsible={props.collapsible}
-   isOpenInitial={props.isOpenInitial}
-   header={{
-    title: "TITLE WORD NETWORK",
-    subtitle: `WORDS SIZED BY ${metric.toUpperCase()} · LINE THICKNESS = TIMES CO-APPEARING · SAME COLOR = RELATED CLUSTER`,
-    icon: <CustomIcon name="analytics" size={34} />,
-   }}
-   theme={{ headerBandBg: "#CCFF00", iconBlockBg: "#20D4F7" }}
+  <AnalyticsVisualShell
+   shellMode="standard"
+   title="TITLE WORD NETWORK"
+   subtitle={selectedRoots.length >= 2
+    ? `${selectedRoots.length} WORDS SELECTED · ${selSharedVideos} SHARED VIDEOS · ${selectionEdges.length} CONNECTIONS BETWEEN THEM`
+    : hoveredNode
+    ? `"${hoveredNode.id.toUpperCase()}" · ${hoveredConnections} CO-WORDS · ${hoveredNode.videoCount} VIDEOS · AVG RET ${hoveredNode.avgAvp.toFixed(0)}% · AVG DUR ${(hoveredNode.avgDurSec / 60).toFixed(1)}m`
+    : `WORDS SIZED BY ${metric.toUpperCase()} · LINE THICKNESS = SHARED VIDEOS · SIMILAR COLOR = RELATED CLUSTER`}
+   iconKey={networkStyle.iconKey}
+   headerColorPair={networkHeaderPair}
    activeContext={{
-    title: hovered ? `"${hovered.toUpperCase()}" CLUSTER` : "NETWORK OVERVIEW",
+    title: selectedRoots.length >= 2
+     ? `GROUP: ${selectedRoots.map((w) => w.toUpperCase()).slice(0, 3).join(" + ")}${selectedRoots.length > 3 ? " +MORE" : ""}`
+     : hovered ? `"${hovered.toUpperCase()}" WORD STATS` : "NETWORK OVERVIEW",
     stats: activeStats,
    }}
-   controllerRows={[
+   controllerSpec={{ rows: [
     {
      type: "number",
      value: wordLimit,
@@ -4670,16 +5320,21 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
      },
      bgTone: "#FFEA00",
     },
-   ]}
-   layout={{ moduleMinHeight: "420px" }}
-   footer={
-    <div className="flex items-center gap-3 px-4 py-2.5">
-     <InsightBadge label="Personal Insight" />
-     <span className="text-[11px] font-medium leading-5 text-white/85">
-      Each bubble is a title word from your videos — bigger means more {metricLabel.toLowerCase()}. Thicker lines mean those two words appear together in more videos. Words that share the same color cluster together. Hover any word to see its connections. Click to lock a word and reveal its full network; double-click to isolate it.
-     </span>
-    </div>
-   }
+   ] }}
+   canvasFitMode="balanced"
+   standard={{
+    collapsible: props.collapsible,
+    isOpenInitial: props.isOpenInitial,
+    layout: { moduleMinHeight: "420px" },
+    footer: (
+     <div className="flex items-center gap-3 px-4 py-2.5">
+      <InsightBadge label="Personal Insight" />
+      <span className="text-[11px] font-medium leading-5 text-white/85">
+       Each bubble is a word from your video titles — size = {metricLabel.toLowerCase()}, thickness of connecting lines = how many videos those two words share. Words pulled close together co-appear in more videos. Same color = same topic cluster. <strong>Hover</strong> any word for stats. <strong>Click</strong> to select; click more to compare a group (up to 6) — the subtitle shows shared-video counts between the group. <strong>Click background</strong> to clear selection. <strong>Double-click</strong> any word to shift the visual so that word becomes the center.
+      </span>
+     </div>
+    ),
+   }}
   >
    {graph.nodes.length === 0 ? (
     <Empty label="Need multiple video titles with real views to build the title word network." />
@@ -4691,22 +5346,23 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
       hovered={hovered}
       onHover={setHovered}
       selected={selectedRoots}
+      centerNodeId={centerNodeId}
       metricLabel={metricLabel}
-      onSelect={(id, exclusive) => {
+      onSelect={(id) => {
        if (!id) {
         setSelectedRoots([])
         return
        }
        setSelectedRoots((current) => {
-        if (exclusive) return [id]
-        if (current.includes(id)) return current.filter((candidate) => candidate !== id)
-        return [...current, id].slice(-5)
+        if (current.includes(id)) return current.filter((c) => c !== id)
+        return [...current, id].slice(-6)
        })
       }}
+      onRecenter={(id) => setCenterNodeId((cur) => (cur === id ? null : id))}
      />
     </div>
    )}
-  </SubToolboxChartModule>
+  </AnalyticsVisualShell>
  )
 }
 

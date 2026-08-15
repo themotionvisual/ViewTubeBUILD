@@ -8,7 +8,7 @@
  overflow: hidden;
  background: var(--vt-paper);
  color: var(--vt-ink);
- font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+ font-family: var(--vt-studio-toolbox-font, var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif));
  isolation: isolate;
 }
 
@@ -71,7 +71,7 @@
 .vt-sync-ternary-toggle button.active { background: var(--vt-binary-color); color: var(--vt-ink); }
 .vt-sync-ternary-toggle button:focus-visible { position: relative; z-index: 1; outline-offset: -3px; }
 
-.vt-sync-category-rail { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; width: 100%; padding: 12px 24px 15px; overflow-x: auto; overflow-y: visible; border-bottom: 0; background: #fff; scrollbar-width: thin; }
+.vt-sync-category-rail { display: grid; grid-template-columns: repeat(var(--vt-category-count, 6), minmax(0, 1fr)); gap: 12px; width: 100%; padding: 12px 24px 15px; overflow: visible; border-bottom: 0; background: #fff; }
 .vt-sync-category-wrap { position: relative; min-width: 0; }
 .vt-sync-category-button { width: 100%; height: 48px; display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: stretch; padding: 0; overflow: hidden; border: 3px solid var(--vt-ink); border-radius: 10px; background: var(--vt-cat-label); color: var(--vt-ink); cursor: pointer; filter: drop-shadow(5px 5px 0 var(--vt-cat-shadow)); text-transform: uppercase; transition: transform .14s ease, filter .14s ease; }
 .vt-sync-category-button:hover,
@@ -87,8 +87,8 @@
 .vt-sync-category-split-icon svg { width: 17px; height: 17px; stroke-width: 3.5; transition: transform .14s ease; }
 .vt-sync-category-button[aria-expanded="true"] .vt-sync-category-split-icon svg { transform: rotate(180deg); }
 .vt-sync-category-label { min-width: 0; display: grid; place-items: center; padding: 3px 8px; overflow: hidden; text-align: center; }
-.vt-sync-category-label strong { max-width: 100%; overflow: hidden; font-size: clamp(14px, 1.15vw, 20px); line-height: 1; font-weight: 1000; letter-spacing: 0; text-overflow: ellipsis; white-space: nowrap; }
-.vt-sync-subset-menu { position: fixed; z-index: 110; max-height: min(560px, calc(100vh - 16px)); overflow: auto; border: 3px solid var(--vt-ink); border-radius: 12px; background: var(--vt-offwhite); filter: drop-shadow(5px 5px 0 var(--vt-cat-shadow)); }
+.vt-sync-category-label strong { max-width: 100%; overflow: hidden; font-size: clamp(14px, 1.15vw, 20px); line-height: 1; font-weight: 1000; letter-spacing: -.055em; text-overflow: ellipsis; white-space: nowrap; }
+.vt-sync-subset-menu { position: fixed; z-index: 110; max-height: min(560px, calc(100vh - 16px)); overflow: auto; overscroll-behavior: contain; border: 3px solid var(--vt-ink); border-radius: 0 0 12px 12px; background: var(--vt-offwhite); filter: drop-shadow(5px 5px 0 var(--vt-cat-shadow)); }
 .vt-sync-subset-menu button { width: 100%; min-height: 40px; display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: stretch; padding: 0; border: 0; border-bottom: 3px solid var(--vt-ink); background: var(--vt-offwhite); color: var(--vt-ink); cursor: pointer; text-align: left; }
 .vt-sync-subset-menu button:last-child { border-bottom: 0; }
 .vt-sync-subset-menu button:hover,
@@ -172,7 +172,8 @@
  * The scrollbar renders when `table.verticalScrollMode === "custom"` (the
  * default for daily / weekly / monthly and all non-traffic tables). Children
  * stack vertically: header spacer · up-button · track (flex-grow) · down-
- * button. `order: -1` places the scrollbar to the LEFT of the row-rail /
+ * button. The rail is deliberately ordered after the data viewport, so it sits
+ * on the right edge of every table rather than displacing its identity column.
  * pinned / main viewports even though it renders first in DOM order.
  * `.is-demographics` and `.is-traffic-overview` still hide it explicitly.
  *
@@ -180,7 +181,7 @@
  * cascade from the earlier `display: none !important` rule that lived here.
  */
 .vt-sync-vertical-scrollbar {
-  order: -1 !important;              /* leftmost flex item */
+  order: 3 !important;               /* rightmost flex item */
   flex: 0 0 40px !important;
   width: 40px !important;
   min-width: 40px !important;
@@ -362,7 +363,8 @@
 .vt-sync-link-actions button,
 .vt-sync-link-actions a { width: 28px; height: 28px; display: grid; place-items: center; padding: 0; border: 2px solid var(--vt-ink); border-radius: 5px; background: var(--vt-ink); color: #fff; }
 .vt-sync-link-actions svg { width: 14px; height: 14px; stroke-width: 2.5px; }
-.vt-sync-format-badge { position: absolute; top: 50%; left: 50%; display: inline-flex; align-items: center; justify-content: center; width: auto; max-width: calc(100% - 12px); padding: 3px 10px; transform: translate(-50%, -50%); border: 2px solid currentColor; border-radius: 6px; font-family: "Century Gothic", "Helvetica Neue", sans-serif; font-size: 13px; line-height: 1; font-weight: 999; letter-spacing: -.02em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.vt-sync-format-badge { position: absolute; top: 50%; left: 50%; display: inline-flex; align-items: center; justify-content: center; width: max-content; max-width: calc(100% - 8px); padding: 3px 7px; transform: translate(-50%, -50%); border: 2px solid currentColor; border-radius: 6px; font-family: "Century Gothic", "Helvetica Neue", sans-serif; font-size: 12px; line-height: 1; font-weight: 999; letter-spacing: -.035em; text-transform: uppercase; white-space: nowrap; box-sizing: border-box; }
+.vt-sync-format-badge.is-inline { position: relative; top: auto; left: auto; max-width: 100%; min-height: 30px; transform: none; padding: 5px 12px; font-size: 16px; }
 .vt-sync-format-badge.is-short,
 .vt-sync-format-badge.is-shorts { border-color: #ff99b7; background: #ffe0ea; color: #ff6e9c; }
 .vt-sync-format-badge.is-long,
@@ -545,6 +547,13 @@
 .vt-sync-traffic-day-value { position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center; padding: 6px 8px 14px; overflow: hidden; background: transparent; font-size: 16px; line-height: 1; font-weight: 1000; letter-spacing: -.035em; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; box-sizing: border-box; }
 .vt-sync-traffic-day-parent .vt-sync-traffic-day-value { font-size: 18px; }
 .vt-sync-traffic-day-child .vt-sync-traffic-day-value { padding: 4px 6px 11px; font-size: 15px; }
+.vt-sync-format-subscriber-table tbody tr.vt-sync-traffic-day-parent,
+.vt-sync-format-subscriber-table .vt-sync-traffic-day-parent td { height: 76px; max-height: 76px; }
+.vt-sync-format-subscriber-table tbody tr.vt-sync-traffic-day-child,
+.vt-sync-format-subscriber-table .vt-sync-traffic-day-child td { height: 52px; max-height: 52px; }
+.vt-sync-format-subscriber-table .vt-sync-traffic-day-parent .vt-sync-traffic-day-value { font-size: 20px; }
+.vt-sync-format-subscriber-table .vt-sync-traffic-day-child .vt-sync-traffic-day-value { padding: 6px 8px 14px; font-size: 16px; }
+.vt-sync-format-subscriber-table .vt-sync-traffic-source-badge { width: 160px; min-width: 160px; max-width: 160px; min-height: 30px; }
 .vt-sync-traffic-day-table .vt-sync-spark,
 .vt-sync-traffic-day-table .vt-sync-spark.shape-bar { right: 8px; bottom: 5px; left: 8px; height: 8px; border: 1.5px solid var(--vt-ink); border-radius: 999px; background: rgba(255,255,255,.82); box-sizing: border-box; }
 .vt-sync-traffic-day-table .vt-sync-spark i,
@@ -671,7 +680,9 @@
 .vt-sync-category-badge { height: 16px; min-width: 0; max-width: 100%; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; padding: 1px 4px; border: 2px solid var(--vt-badge-stroke); border-radius: 4px; background: var(--vt-badge-fill); color: var(--vt-badge-stroke); font-family: "Century Gothic", "Helvetica Neue", sans-serif; font-size: 7px; line-height: 1; font-weight: 1000; letter-spacing: -.01em; text-align: center; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; box-sizing: border-box; }
 
 .vt-sync-total-badges { display: flex; flex-direction: column; gap: 2px; align-items: center; justify-content: center; padding: 2px; width: 100%; height: 100%; overflow: hidden; }
-.vt-sync-total-badges .vt-sync-format-badge { position: relative; top: auto; left: auto; transform: none; width: 100%; max-width: 100%; justify-content: space-between; padding: 1px 4px; margin: 0; }
+.vt-sync-total-badges .vt-sync-format-badge { position: relative; top: auto; left: auto; transform: none; width: 100%; max-width: 100%; justify-content: space-between; gap: 4px; padding: 1px 4px; margin: 0; font-size: 10px; }
+.vt-sync-total-badges .vt-sync-format-badge > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.vt-sync-total-badges .vt-sync-format-badge > b { flex: 0 0 auto; font-variant-numeric: tabular-nums; }
 .vt-sync-total-badges .vt-sync-category-badges { position: relative; inset: auto; max-width: 100%; min-width: 0; display: flex; }
 .vt-sync-column-drag-ghost { position: fixed; top: -3000px; left: 0; z-index: 99999; overflow: hidden; border: 3px solid #F55EFC; border-radius: 6px; background: #fff; box-shadow: 6px 6px 0 rgba(245,94,252,.45); opacity: .68; pointer-events: none; }
 .vt-sync-column-drag-ghost strong,
@@ -788,7 +799,7 @@
 }
 
 @media (max-width: 980px) {
- .vt-sync-category-rail { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(146px, 1fr); }
+ .vt-sync-category-rail { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 620px) {
@@ -797,7 +808,7 @@
  .vt-sync-title-rail > div:first-child,
  .vt-sync-collapse-button { border-width: 4px; }
  .vt-sync-title-rail h2 { padding: 10px 8px; font-size: clamp(26px, 9vw, 38px); letter-spacing: -.065em; }
- .vt-sync-category-rail { gap: 9px; padding: 13px 12px 16px; border-bottom-width: 4px; }
+ .vt-sync-category-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; padding: 13px 12px 16px; border-bottom-width: 4px; }
  .vt-sync-category-button { width: 100%; height: 48px; grid-template-columns: 44px minmax(0, 1fr); }
  .vt-sync-summary-rail { gap: 10px; padding: 12px; border-bottom-width: 4px; }
  .vt-sync-summary-card { min-height: 136px; }
@@ -851,6 +862,121 @@
 .vt-sync-url-buttons a {
   border-top: 0 !important;
   border-bottom: 0 !important;
+}
+
+/* Final shared scroll lattice: controls stay square, the vertical rail owns
+   only its left divider, and the lower-right corner is a deliberate void. */
+.vt-sync-scroll-lattice {
+  --vt-scroll-control-size: 40px;
+  width: 100%;
+}
+.vt-sync-scrollbar-row {
+  display: flex;
+  width: 100%;
+  height: var(--vt-scroll-control-size);
+  background: var(--vt-ink);
+}
+.vt-sync-scrollbar-row .vt-sync-scrollbar.bottom {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: var(--vt-scroll-control-size);
+  border: 0;
+}
+.vt-sync-scrollbar-corner {
+  flex: 0 0 var(--vt-scroll-control-size);
+  width: var(--vt-scroll-control-size);
+  height: var(--vt-scroll-control-size);
+  background: var(--vt-ink);
+}
+.vt-sync-scroll-gutter { display: none; }
+.vt-sync-scroll-controls {
+  grid-template-columns: var(--vt-scroll-control-size) minmax(0, 1fr) var(--vt-scroll-control-size);
+  border-left: 0;
+}
+.vt-sync-scrollbar button {
+  width: var(--vt-scroll-control-size);
+  height: var(--vt-scroll-control-size);
+}
+.vt-sync-scrollbar button svg {
+  width: 28px;
+  height: 28px;
+}
+.vt-sync-vertical-scrollbar {
+  --vt-scroll-control-size: 40px;
+  order: 3 !important;
+  flex: 0 0 var(--vt-scroll-control-size) !important;
+  width: var(--vt-scroll-control-size) !important;
+  min-width: var(--vt-scroll-control-size) !important;
+  border-right: 0;
+  border-left: 0;
+  box-shadow: inset 4px 0 0 var(--vt-ink);
+}
+.vt-sync-vertical-scrollbar button {
+  flex: 0 0 var(--vt-scroll-control-size);
+  width: var(--vt-scroll-control-size);
+  height: var(--vt-scroll-control-size);
+}
+.vt-sync-vertical-scrollbar-header { flex-basis: var(--vt-scroll-control-size); }
+.vt-sync-vertical-scrollbar button svg { width: 22px; height: 22px; }
+
+/* Row and column capacity live in the useful bottom status band, not in an
+   extra top metadata strip. */
+.vt-sync-table-meta { display: none; }
+.vt-sync-table-footer {
+  grid-template-rows: auto auto auto;
+}
+.vt-sync-table-footer-copy,
+.vt-sync-table-footer-status,
+.vt-sync-table-footer-provenance {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  padding: 9px 16px;
+}
+.vt-sync-table-footer-copy {
+  font-size: 12px;
+  line-height: 1.25;
+  letter-spacing: .01em;
+}
+.vt-sync-table-footer-status {
+  border-top: 2px solid rgba(10,10,10,.45);
+  font-size: 13px;
+  line-height: 1.1;
+  letter-spacing: .025em;
+}
+.vt-sync-table-footer-status span:nth-child(n + 2) { font-size: 14px; }
+.vt-sync-table-footer-provenance { border-top: 2px solid rgba(10,10,10,.45); }
+
+/* Totals follow their own column tint; collapsed labels use the normal column
+   label treatment rather than an inverted group-color override. */
+.vt-sync-toolbox-table:not(.is-dark) .vt-sync-total-row th,
+.vt-sync-toolbox-table:not(.is-dark) .vt-sync-total-row th.is-collapsed {
+  background: var(--vt-total-cell-background, #d5f2fa) !important;
+  background-color: var(--vt-total-cell-background, #d5f2fa) !important;
+  color: var(--vt-ink) !important;
+}
+.vt-sync-toolbox-table:not(.is-dark) .vt-sync-column-row th.is-collapsed {
+  background: var(--vt-ink) !important;
+  background-color: var(--vt-ink) !important;
+  color: var(--vt-section-header-color) !important;
+}
+.vt-sync-toolbox-table.is-dark .vt-sync-column-row th.is-collapsed {
+  background: var(--vt-section-header-color) !important;
+  background-color: var(--vt-section-header-color) !important;
+  color: var(--vt-ink) !important;
+}
+
+@media (max-width: 720px) {
+  .vt-sync-scroll-lattice,
+  .vt-sync-vertical-scrollbar { --vt-scroll-control-size: 32px; }
+  .vt-sync-scrollbar button,
+  .vt-sync-vertical-scrollbar button { width: 32px; height: 32px; }
+  .vt-sync-scrollbar button svg { width: 22px; height: 22px; }
+  .vt-sync-vertical-scrollbar button svg { width: 18px; height: 18px; }
+  .vt-sync-table-footer-copy,
+  .vt-sync-table-footer-status,
+  .vt-sync-table-footer-provenance { padding: 8px 12px; }
 }
 
 /* ---------------------------------------------------------
@@ -941,6 +1067,76 @@
 .vt-sync-toolbox-table.is-dark .vt-sync-traffic-day-scroll-shell,
 .vt-sync-toolbox-table.is-dark .vt-sync-demographic-board-viewport {
   border-top: 5px solid var(--vt-ink) !important;
+}
+
+/* Compact footer contract: one information band on desktop, with labelled
+   blocks that wrap only when the viewport needs it.  This deliberately
+   supersedes the older copy/status/provenance stack above. */
+.vt-sync-table-footer {
+  display: flex !important;
+  min-height: 58px;
+  align-items: stretch;
+  gap: 0;
+  padding: 0 !important;
+  border-top: 4px solid var(--vt-ink) !important;
+  background: var(--vt-footer-color, #FFDA47);
+  font-size: 10px;
+  font-weight: 1000;
+  line-height: 1.16;
+  letter-spacing: .025em;
+  text-transform: uppercase;
+}
+.vt-sync-table-footer > span {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  padding: 8px 11px;
+  border-right: 2px solid rgba(10,10,10,.5);
+  border-top: 0 !important;
+}
+.vt-sync-table-footer > span:last-child { border-right: 0; }
+.vt-sync-table-footer-purpose { flex: 2 1 380px; font-size: 10px; text-transform: none; }
+.vt-sync-table-footer-table { flex: 0 1 180px; font-size: 11px; }
+.vt-sync-table-footer-coverage { flex: 0 1 185px; }
+.vt-sync-table-footer-columns,
+.vt-sync-table-footer-loading { flex: 0 1 155px; }
+.vt-sync-table-footer-provenance { flex: 0 1 150px; }
+.vt-sync-table-footer-provenance b { margin-right: 4px; }
+
+/* Final total-cell ownership: the renderer supplies the same column tint used
+   by the data column, so no generic footer-blue may flatten the visual map. */
+.vt-sync-toolbox-table:not(.is-dark) .vt-sync-total-row th,
+.vt-sync-toolbox-table:not(.is-dark) .vt-sync-total-row th.is-collapsed {
+  background: var(--vt-total-cell-background, #d5f2fa) !important;
+  background-color: var(--vt-total-cell-background, #d5f2fa) !important;
+}
+
+/* The rail owns exactly one divider: its left edge. The bottom control rail
+   owns the matching top divider, while the corner remains an intentional
+   black square. */
+.vt-sync-vertical-scrollbar {
+  border-left: 4px solid var(--vt-ink) !important;
+  border-right: 0 !important;
+  box-shadow: none !important;
+}
+.vt-sync-scrollbar-row {
+  border-top: 4px solid var(--vt-ink);
+}
+.vt-sync-scrollbar-row .vt-sync-scrollbar.bottom {
+  border-top: 0 !important;
+}
+.vt-sync-scrollbar-corner { border-top: 0; }
+
+@media (max-width: 900px) {
+  .vt-sync-table-footer { align-items: stretch; }
+  .vt-sync-table-footer > span { flex: 1 1 180px; min-height: 42px; }
+  .vt-sync-table-footer-purpose { flex-basis: 100%; }
+}
+
+@media (max-width: 620px) {
+  .vt-sync-table-footer { font-size: 9px; }
+  .vt-sync-table-footer > span { flex-basis: 100%; padding: 7px 10px; border-right: 0; border-bottom: 2px solid rgba(10,10,10,.45); }
+  .vt-sync-table-footer > span:last-child { border-bottom: 0; }
 }
 
 /* Monthly identity cells: show a full month label supplied through

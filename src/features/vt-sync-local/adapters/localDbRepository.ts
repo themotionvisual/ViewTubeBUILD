@@ -105,6 +105,31 @@ const getAll = async <T>(storeName: VtSyncLocalDbStoreName): Promise<T[]> => {
  return result || []
 }
 
+const deleteMany = async (storeName: VtSyncLocalDbStoreName, ids: string[]): Promise<void> => {
+ if (!ids.length) return
+ const db = await openVtSyncLocalDb()
+ await new Promise<void>((resolve, reject) => {
+  const tx = db.transaction(storeName, "readwrite")
+  const store = tx.objectStore(storeName)
+  ids.forEach((id) => store.delete(id))
+  tx.oncomplete = () => {
+   db.close()
+   resolve()
+  }
+  tx.onerror = () => {
+   db.close()
+   reject(tx.error)
+  }
+  tx.onabort = () => {
+   db.close()
+   reject(tx.error)
+  }
+ })
+}
+
+const latestDatasetRecordId = (channelId: string | undefined, datasetId: string, kind: "raw" | "table") =>
+ `latest_api::${encodeURIComponent(channelId || "unscoped")}::${encodeURIComponent(datasetId)}::${kind}`
+
 const getById = async <T>(storeName: VtSyncLocalDbStoreName, id: string): Promise<T | null> => {
  const result = await withStore<T>(storeName, "readonly", (store) => store.get(id))
  return result || null
@@ -137,6 +162,18 @@ export const getVtSyncInventoryCursor = async (channelId: string): Promise<VtSyn
 export const putVtSyncSyncRun = async (record: VtSyncSyncRunRecord): Promise<void> =>
  putRecord(VT_SYNC_LOCAL_STORE_NAMES.syncRuns, record)
 
+export const listVtSyncSyncRuns = async (): Promise<VtSyncSyncRunRecord[]> =>
+ getAll<VtSyncSyncRunRecord>(VT_SYNC_LOCAL_STORE_NAMES.syncRuns)
+
+export const replaceLatestVtSyncSyncRun = async (record: VtSyncSyncRunRecord): Promise<void> => {
+ await putVtSyncSyncRun(record)
+ const runs = await listVtSyncSyncRuns()
+ await deleteMany(
+  VT_SYNC_LOCAL_STORE_NAMES.syncRuns,
+  runs.filter((candidate) => candidate.channelId === record.channelId && candidate.id !== record.id).map((candidate) => candidate.id),
+ )
+}
+
 export const getVtSyncSyncRun = async (runId: string): Promise<VtSyncSyncRunRecord | null> =>
  getById<VtSyncSyncRunRecord>(VT_SYNC_LOCAL_STORE_NAMES.syncRuns, runId)
 
@@ -167,6 +204,32 @@ export const getVtSyncKnownVideoIds = async (channelId: string): Promise<Set<str
 export const putVtSyncDatasetRawReport = async (record: VtSyncDatasetRawReportRecord): Promise<void> =>
  putRecord(VT_SYNC_LOCAL_STORE_NAMES.datasetRawReports, record)
 
+export const listVtSyncDatasetRawReports = async (): Promise<VtSyncDatasetRawReportRecord[]> =>
+ getAll<VtSyncDatasetRawReportRecord>(VT_SYNC_LOCAL_STORE_NAMES.datasetRawReports)
+
+/**
+ * Store the newest authoritative API report under a stable key, then remove
+ * superseded diagnostics. The successful put happens before cleanup so a
+ * failed write never destroys the last usable report.
+ */
+export const replaceLatestVtSyncDatasetRawReport = async (
+ record: Omit<VtSyncDatasetRawReportRecord, "id">,
+): Promise<void> => {
+ const id = latestDatasetRecordId(record.channelId, record.datasetId, "raw")
+ await putVtSyncDatasetRawReport({ ...record, id })
+ const records = await listVtSyncDatasetRawReports()
+ await deleteMany(
+  VT_SYNC_LOCAL_STORE_NAMES.datasetRawReports,
+  records
+   .filter((candidate) => candidate.id !== id
+    && candidate.source !== "local_import"
+    && candidate.datasetId === record.datasetId && (
+    candidate.channelId === record.channelId || candidate.channelId === undefined
+   ))
+   .map((candidate) => candidate.id),
+ )
+}
+
 export const putVtSyncDatasetTableRows = async (record: VtSyncDatasetTableRowsRecord): Promise<void> =>
  putRecord(VT_SYNC_LOCAL_STORE_NAMES.datasetTableRows, record)
 
@@ -175,4 +238,22 @@ export const listVtSyncDatasetTableRows = async (): Promise<VtSyncDatasetTableRo
 
 export const deleteVtSyncDatasetTableRows = async (id: string): Promise<void> => {
  await withStore(VT_SYNC_LOCAL_STORE_NAMES.datasetTableRows, "readwrite", (store) => store.delete(id))
+}
+
+/** Replace only API-owned rows for this channel/dataset; manual CSV records survive. */
+export const replaceLatestVtSyncDatasetTableRows = async (
+ record: Omit<VtSyncDatasetTableRowsRecord, "id" | "provenance">,
+): Promise<void> => {
+ const id = latestDatasetRecordId(record.channelId, record.datasetId, "table")
+ await putVtSyncDatasetTableRows({ ...record, id, provenance: "api" })
+ const records = await listVtSyncDatasetTableRows()
+ await deleteMany(
+  VT_SYNC_LOCAL_STORE_NAMES.datasetTableRows,
+  records
+   .filter((candidate) => candidate.id !== id
+    && candidate.provenance === "api"
+    && candidate.datasetId === record.datasetId
+    && (candidate.channelId === record.channelId || candidate.channelId === undefined))
+   .map((candidate) => candidate.id),
+ )
 }

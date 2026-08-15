@@ -14,35 +14,33 @@ import { ChartModule, RaisedControl, type Stat } from "../ChartModule"
 import { useVt2Theme } from "./theme"
 import { rollupWeeklyBigBangWithSource, type Vt2BigBangWeek } from "./dataBridge"
 
-import { VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
+import { VT_VISUAL_METRIC_COLORS } from "../../../styles/toolboxPalette"
 
 type BigBangMetricKey = "views" | "watchMins" | "subs" | "revenue" | "comments" | "shares" | "saves" | "avp" | "avd"
 type BigBangMetric = { key: BigBangMetricKey; label: string; color: string; get: (w: Vt2BigBangWeek) => number }
 
 const buildMetrics = (): BigBangMetric[] => [
-  { key: "views",     label: "VIEWS",     color: VT_SPECTRUM_PALETTE_06[0],  get: (w) => w.views },
-  { key: "watchMins", label: "WATCH MIN", color: VT_SPECTRUM_PALETTE_06[1],  get: (w) => w.watchMins },
-  { key: "subs",      label: "SUBS",      color: VT_SPECTRUM_PALETTE_06[2],  get: (w) => w.subs },
-  { key: "revenue",   label: "REVENUE",   color: VT_SPECTRUM_PALETTE_06[4],  get: (w) => w.revenue },
-  { key: "comments",  label: "COMMENTS",  color: VT_SPECTRUM_PALETTE_06[5],  get: (w) => w.comments },
-  { key: "shares",    label: "SHARES",    color: VT_SPECTRUM_PALETTE_06[6],  get: (w) => w.shares },
-  { key: "saves",     label: "SAVES",     color: VT_SPECTRUM_PALETTE_06[8],  get: (w) => w.saves },
-  { key: "avp",       label: "AVP%",      color: VT_SPECTRUM_PALETTE_06[9],  get: (w) => w.avp },
-  { key: "avd",       label: "AVD SEC",   color: VT_SPECTRUM_PALETTE_06[10], get: (w) => w.avd },
+  { key: "views",     label: "VIEWS",          color: VT_VISUAL_METRIC_COLORS.views, get: (w) => w.views },
+  { key: "watchMins", label: "WATCH TIME",     color: VT_VISUAL_METRIC_COLORS.watchTime, get: (w) => w.watchMins },
+  { key: "subs",      label: "SUBSCRIBERS",    color: VT_VISUAL_METRIC_COLORS.subscribers, get: (w) => w.subs },
+  { key: "revenue",   label: "REVENUE",        color: VT_VISUAL_METRIC_COLORS.revenue, get: (w) => w.revenue },
+  { key: "comments",  label: "COMMENTS",       color: VT_VISUAL_METRIC_COLORS.comments, get: (w) => w.comments },
+  { key: "avp",       label: "AVP%",           color: VT_VISUAL_METRIC_COLORS.avp, get: (w) => w.avp },
+  { key: "avd",       label: "AVD SEC",        color: VT_VISUAL_METRIC_COLORS.avd, get: (w) => w.avd },
+  { key: "shares",    label: "SHARES",         color: VT_VISUAL_METRIC_COLORS.shares, get: (w) => w.shares },
+  { key: "saves",     label: "PLAYLIST SAVES", color: VT_VISUAL_METRIC_COLORS.playlistSaves, get: (w) => w.saves },
 ]
 
 export const ChannelBigBangTimelineModule: React.FC<TubeExplorerVisualProps> = ({
-  data,
   dailyMetrics = [],
-  trafficByDay = [],
 }) => {
   const { palette } = useVt2Theme()
   const metrics = useMemo(() => buildMetrics(), [])
 
   const [weekCount, setWeekCount] = useState<number>(24)
   const weekly = useMemo<Vt2BigBangWeek[]>(
-    () => rollupWeeklyBigBangWithSource(data, dailyMetrics, trafficByDay, weekCount),
-    [data, dailyMetrics, trafficByDay, weekCount],
+    () => rollupWeeklyBigBangWithSource(dailyMetrics, weekCount),
+    [dailyMetrics, weekCount],
   )
   const n = weekly.length
 

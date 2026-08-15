@@ -1,6 +1,7 @@
 import React from "react"
 import type { VideoAsset } from "../../../services/videoAssets"
 import { buildVideoAssetOptions } from "./videoAssetOptions"
+import { WidgetSelect } from "../WidgetPrimitives"
 
 interface VideoAssetSelectProps {
  assets: VideoAsset[]
@@ -21,22 +22,21 @@ export const VideoAssetSelect: React.FC<VideoAssetSelectProps> = ({
  query = "",
  limit = 50,
  placeholder,
- className = "vt-input",
+ className = "",
  style,
  disabled = false,
 }) => {
  const options = buildVideoAssetOptions(assets, query, limit, placeholder)
  return (
-  <select
+  <WidgetSelect
    className={className}
    value={value}
    disabled={disabled}
    style={style}
-   onChange={(event) => onChange(event.target.value)}
-  >
-   {options.map((option) => (
-    <option key={option.key} value={option.val}>{option.lbl}</option>
-   ))}
-  </select>
+   onChange={onChange}
+   label={placeholder || "Select a video"}
+   placeholder={placeholder || "Select a video…"}
+   options={options.map((option) => ({ value: option.val, label: option.lbl }))}
+  />
  )
 }

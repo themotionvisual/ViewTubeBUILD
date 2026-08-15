@@ -1,11 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react"
+import React, { useState, useEffect } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { useEntitlement } from "../../../context/entitlementContext"
-import { Sparkles, Zap, ArrowRight, Check, RefreshCw } from "lucide-react"
+import { Sparkles, Zap, ArrowRight, Check, RefreshCw, Eye, Users, DollarSign, Heart, Clock3 } from "lucide-react"
 import { useBrain } from "../../../context/useBrain"
-import { generateOracleAdvice } from "../../../services/gemini"
-import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
-import { getAiTokenCost } from "../../../services/aiTokenCosts"
+import type { DayTask } from "../../../types"
 
 const ORACLE_STORAGE_KEY = "vt_daily_oracle"
 
@@ -24,12 +21,20 @@ interface OracleState {
  quickWins: OracleAdvice[]
 }
 
+type DailyOracleGoalMetric = "views" | "subscribers" | "revenue" | "engagement" | "watch-time"
+
+const METRIC_TASKS: Record<DailyOracleGoalMetric, readonly string[]> = {
+ views: ["Refresh the title and thumbnail promise on a recent video with low click-through rate.", "Create one searchable follow-up around a proven channel topic.", "Add an end screen from a top video to the strongest related upload.", "Publish one Community post that sends viewers to a relevant catalog video.", "Compare your top 3 videos and repeat the topic-hook combination with the highest reach."],
+ subscribers: ["Add a clear subscriber payoff to the first 30 seconds of your next video.", "Pin a comment that asks viewers to subscribe for the next related upload.", "Turn a proven topic into a repeatable series with a named viewer promise.", "Improve the channel trailer or featured-video call to action.", "Reply to five high-intent comments with a useful next video recommendation."],
+ revenue: ["Add end screens to the five videos with the strongest current watch time.", "Audit monetization eligibility and mid-roll opportunities on your longest videos.", "Create a follow-up that extends a proven revenue-driving topic.", "Improve the first minute of a high-value video to retain monetizable viewing.", "Link a relevant long-form video from a recent short or Community post."],
+ engagement: ["Pin a question on the latest video that invites a specific viewer response.", "Publish a two-option Community poll based on current channel topics.", "Reply to five thoughtful comments with a follow-up question.", "Add one direct question near the end of a new upload.", "Turn a recurring audience question into a video or post."],
+ "watch-time": ["Add an end screen that continues viewers to the most relevant next video.", "Review the first 30 seconds of a recent upload and sharpen its promise.", "Add timestamps to a long video so viewers can find value without leaving.", "Create a sequel around the topic with the strongest average view duration.", "Link a related playlist in the description and pinned comment."],
+}
+
 function generateAdvice(data: any): OracleState {
  const rows = data.canonicalRows || []
  const stats = data.statBlocks28d || []
- const viewsBlock = stats.find((s: any) => s.label.toLowerCase().includes("views"))
  const revenueBlock = stats.find((s: any) => s.label.toLowerCase().includes("revenue"))
- const subsBlock = stats.find((s: any) => s.label.toLowerCase().includes("subscribers"))
 
  // Analyze channel state to generate relevant advice
  const recentUploads = rows.filter((r: any) => {
@@ -78,11 +83,7 @@ function generateAdvice(data: any): OracleState {
 }
 
 export const DailyOracleWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
- const { brain } = useBrain()
- const ORACLE_COST = getAiTokenCost("dailyOracleRefresh")
- const entitlement = useEntitlement()
- const canAffordOracle = canAffordAiTokensFromState(entitlement, ORACLE_COST)
- const [isGenerating, setIsGenerating] = useState(false)
+ const { setCalendarState } = useBrain()
  const common = {
   widget,
   instance,
@@ -101,7 +102,9 @@ export const DailyOracleWidget = ({ widget, instance, editMode, onToggleCollapse
   try {
    const saved = JSON.parse(localStorage.getItem(ORACLE_STORAGE_KEY) || "{}")
    if (saved.dateKey === todayKey) return saved
-  } catch {}
+  } catch {
+   // Ignore malformed legacy state and regenerate today's local advice.
+  }
   return generateAdvice(data)
  })
 
@@ -117,45 +120,57 @@ export const DailyOracleWidget = ({ widget, instance, editMode, onToggleCollapse
   })
  }
 
-  const regenerate = async () => {
-   if (!canAffordOracle) return
-   setIsGenerating(true)
-   try {
-    const fresh = await generateOracleAdvice(data, brain)
-    setOracle(fresh)
-   } catch (e) {
-    console.error("Oracle failed:", e)
-    const fallback = generateAdvice(data)
-    setOracle(fallback)
-   } finally {
-    setIsGenerating(false)
-   }
-  }
+ const refresh = () => setOracle(generateAdvice(data))
+
+ const focusMetric = (metric: DailyOracleGoalMetric) => {
+  const dateKey = new Date().toISOString().slice(0, 10)
+  const tasks: DayTask[] = METRIC_TASKS[metric].map((text, index) => ({
+   id: `daily_oracle_${metric}_${Date.now()}_${index}`,
+   text,
+   completed: false,
+   dueDate: dateKey,
+  }))
+  const existing = data.brain?.calendarState?.dayTasks?.[dateKey] || []
+  setCalendarState({ dayTasks: { ...(data.brain?.calendarState?.dayTasks || {}), [dateKey]: [...existing, ...tasks] } })
+  setOracle((current) => ({
+   ...current,
+   priorities: [{
+    text: `${metric.replace("-", " ")} task pack added: ${tasks[0].text}`,
+    timeframe: "Today",
+    color: "#579AFF",
+    shadowColor: "rgba(87,154,255,0.5)",
+    action: "Review",
+    completed: false,
+   }, ...current.priorities].slice(0, 2),
+  }))
+ }
 
  const renderAdviceCard = (advice: OracleAdvice, idx: number, type: "priorities" | "quickWins") => {
   const isPriority = type === "priorities"
   return (
    <div
     key={idx}
+    className="oracle-advice-card"
     style={{
      flexShrink: 0,
-     display: "flex", background: advice.completed ? "#f0f0f0" : "#fff",
-     border: `2px solid #000`, borderRadius: "12px",
-     overflow: "hidden", boxShadow: `3px 3px 0 0 ${advice.shadowColor}`,
-     opacity: advice.completed ? 0.5 : 1, transition: "all 0.2s",
+     display: "flex", background: advice.completed ? "color-mix(in srgb, var(--widget-color) 10%, white)" : "#fff",
+     border: `2px solid #000`, borderRadius: "4px",
+     overflow: "hidden", boxShadow: `2px 2px 0 0 ${advice.shadowColor}`,
+     opacity: advice.completed ? 0.78 : 1,
     }}>
     {isPriority && <div style={{ width: "6px", background: advice.color, flexShrink: 0 }} />}
     {!isPriority && <div style={{ width: "8px", borderRadius: "999px", background: advice.color, flexShrink: 0, margin: "8px 0 8px 10px" }} />}
-    <div style={{ flex: 1, padding: isPriority ? "12px" : "10px 12px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
+    <div style={{ flex: 1, padding: isPriority ? "7px 8px" : "6px 8px", display: "flex", alignItems: "center", gap: "6px" }}>
      <div style={{ flex: 1 }}>
       <div style={{
        fontWeight: 700, fontSize: isPriority ? "11px" : "10px", lineHeight: 1.4,
-       textDecoration: advice.completed ? "line-through" : "none",
+       textDecoration: "none",
       }}>
        {advice.text}
        <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.4, marginLeft: "6px", display: "inline-block" }}>
         ⏱ {advice.timeframe}
        </span>
+       {advice.completed ? <span className="oracle-outcome-copy">Verify the outcome in channel metrics, then repeat the approach that improved the result.</span> : null}
       </div>
      </div>
      <button
@@ -164,8 +179,8 @@ export const DailyOracleWidget = ({ widget, instance, editMode, onToggleCollapse
       style={{
        background: advice.completed ? "#4FFF5B" : advice.color,
        flexShrink: 0,
-       width: isPriority ? "42px" : "36px",
-       height: isPriority ? "42px" : "36px",
+       width: "32px",
+       height: "32px",
        padding: "0",
        flexDirection: "column",
        gap: "2px",
@@ -178,44 +193,18 @@ export const DailyOracleWidget = ({ widget, instance, editMode, onToggleCollapse
   )
  }
 
- const completedCount = [...oracle.priorities, ...oracle.quickWins].filter(a => a.completed).length
- const totalCount = oracle.priorities.length + oracle.quickWins.length
-
  return (
   <WidgetShell
    {...common}
    icon={<Sparkles size={22} />}>
    <div style={{ display: "flex", flexDirection: "column", gap: "10px", height: "100%", minHeight: 0 }}>
-    {/* Header Row */}
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
-     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-      <Sparkles size={14} color="#FF8AAF" />
-      <span style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", color: "#FF8AAF" }}>Strategic Priorities</span>
-     </div>
-     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-      <span style={{ fontSize: "8px", fontWeight: 900, opacity: 0.4 }}>{completedCount}/{totalCount}</span>
-       <button
-        onClick={regenerate}
-        disabled={isGenerating || !canAffordOracle}
-        title="Regenerate advice"
-        style={{
-          width: "24px", height: "24px", border: "2px solid #000", borderRadius: "6px",
-          background: "#fff", cursor: isGenerating ? "wait" : "pointer",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          opacity: isGenerating ? 0.5 : 1
-        }}>
-        <RefreshCw size={12} className={isGenerating ? "animate-spin" : ""} />
-       </button>
-     </div>
+    <div className="daily-oracle-actions" aria-label="Generate goal-focused tasks">
+     <button type="button" className="vt-button is-icon-only" onClick={refresh} aria-label="Refresh daily guidance"><RefreshCw size={15} /></button>
+     {([
+      ["views", "Views", Eye], ["subscribers", "Subscribers", Users], ["revenue", "Revenue", DollarSign], ["engagement", "Engagement", Heart], ["watch-time", "Watch time", Clock3],
+     ] as const).map(([id, label, Icon]) => <button key={id} type="button" className="vt-button" onClick={() => focusMetric(id)}><Icon size={13} />{label}</button>)}
     </div>
-    {!canAffordOracle && (
-     <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6, flexShrink: 0 }}>
-      {entitlement.tier === "free" ? "Upgrade for Oracle AI." : `Need ${ORACLE_COST} credits.`}
-     </div>
-    )}
-
-    {/* Scrollable card list — grows to fill remaining space, centers when content is short */}
-    <div className="vt-widget-fill-body" style={{ gap: "10px" }}>
+    <div className="daily-oracle-list">
      {/* Priorities */}
      {oracle.priorities.map((p, i) => renderAdviceCard(p, i, "priorities"))}
 

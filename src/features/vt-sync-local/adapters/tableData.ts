@@ -13,6 +13,7 @@ import {
  normalizeVtSyncDmaCode,
  normalizeVtSyncStateCode,
 } from "../upstream/geographyLookup"
+import { getVtSyncTrafficDetailTable } from "../upstream/tableRegistry"
 
 type Row = Record<string, unknown>
 
@@ -79,12 +80,18 @@ const geographyDmaRow = (row: Row): Row => {
  return { ...row, dmaCode, dmaName: getVtSyncDmaName(dmaCode) }
 }
 
-export const getVtSyncContentTypeLabel = (value: unknown): string => {
+export const getVtSyncContentTypeLabel = (value: unknown, row?: Record<string, any>): string => {
  const raw = String(value ?? "").trim()
  const normalized = raw.toLowerCase().replace(/[^a-z0-9]/g, "")
  if (normalized === "short" || normalized === "shorts") return "Shorts"
  if (["videoondemand", "vod", "long", "longformat"].includes(normalized)) return "Long-Format"
  if (["livestream", "live"].includes(normalized)) return "Live Stream"
+ if (row) {
+  const title = String(row.title ?? row.videoTitle ?? row.name ?? "").toLowerCase()
+  if (Boolean(row.isLive) || title.includes("live") || title.includes("stream")) return "Live Stream"
+  if (Boolean(row.isShort) || title.includes("#short")) return "Shorts"
+  return "Long-Format"
+ }
  if (["creatorcontenttypeunspecified", "unspecified", "unknown"].includes(normalized)) return "Unspecified"
  return raw
 }
@@ -249,6 +256,13 @@ const metricBase = (row: Row): Row => ({
  revenue: firstValue(row.revenue, row.estimatedRevenue),
  estimatedAdRevenue: firstValue(row.estimatedAdRevenue),
  youtubePremiumRevenue: firstValue(row.youtubePremiumRevenue, row.estimatedRedPartnerRevenue, row.redRevenue),
+ youtubePremiumViews: firstValue(row.youtubePremiumViews, row.redViews),
+ youtubePremiumWatchTime: firstValue(
+  row.youtubePremiumWatchTime,
+  num(row.estimatedRedMinutesWatched) !== undefined ? numberOrZero(row.estimatedRedMinutesWatched) / 60 : undefined,
+ ),
+ redViews: firstValue(row.redViews),
+ estimatedRedMinutesWatched: firstValue(row.estimatedRedMinutesWatched),
  shares: firstValue(row.shares),
  subscribersGained: firstValue(row.subscribersGained),
  subscribersLost: firstValue(row.subscribersLost),
@@ -294,16 +308,16 @@ const dailyBase = (row: Row): Row => ({
  videosRemovedFromPlaylists: firstValue(row.videosRemovedFromPlaylists),
 })
 
-const videoRows = (
- snapshot: VtSyncSnapshot,
- privacyFilters: VtSyncPrivacyFilters,
+/** Canonical Videos-table row adapter. Live snapshots, IndexedDB recovery,
+ * imports, and exports must all pass through this function. */
+export const normalizeVtSyncVideoTableRows = (
+ rows: Row[],
+ privacyFilters?: VtSyncPrivacyFilters,
 ): Row[] => {
- const sourceVideos = snapshot.videos.length
-  ? filterVtSyncVideos(snapshot.videos as Array<Row>, privacyFilters)
-  : uploadPlaceholderVideos(snapshot)
+ const sourceVideos = privacyFilters ? filterVtSyncVideos(rows, privacyFilters) : rows
  return sourceVideos.map((video) => {
  const metrics = asRecord(video.metrics)
- const videoId = firstValue(video.videoId, video.id)
+ const videoId = firstValue(video.id, video.videoId)
  const views = num(metrics.views)
  const engagedViews = num(metrics.engagedViews)
  const likes = num(metrics.likes)
@@ -318,7 +332,7 @@ const revenue = num(firstValue(metrics.revenue, metrics.estimatedRevenue))
   ...video,
   ...metrics,
   videoId,
-  videoUrl: firstValue(video.videoUrl, video.url, videoId ? `https://www.youtube.com/watch?v=${String(videoId)}` : undefined),
+  videoUrl: videoId ? `https://www.youtube.com/watch?v=${String(videoId)}` : firstValue(video.videoUrl, video.url),
   publishedDay: video.publishedAt,
   publishedTime: video.publishedAt,
   title: firstValue(video.title, "Metadata pending"),
@@ -344,6 +358,14 @@ engagementRate: firstValue((metrics as Row).engagementRate, views !== undefined 
  }
  })
 }
+
+const videoRows = (
+ snapshot: VtSyncSnapshot,
+ privacyFilters: VtSyncPrivacyFilters,
+): Row[] => normalizeVtSyncVideoTableRows(
+ snapshot.videos.length ? snapshot.videos as Array<Row> : uploadPlaceholderVideos(snapshot),
+ privacyFilters,
+)
 
 const windowEntry = (label: string, value: Row | undefined): Row => {
  const gained = num(value?.subscribersGained)
@@ -393,6 +415,8 @@ const normalizeTrafficRows = (rows: Row[], identityKey: string, tableId?: string
   term: id,
   title: firstValue(row.title, row.videoTitle, row.channelTitle, row.playlistTitle, defaultTitle),
   handle: firstValue(row.handle, row.channelHandle),
+  sourceChannel: firstValue(row.sourceChannelTitle, row.channelTitle),
+  sourceChannelHandle: firstValue(row.sourceChannelHandle, row.channelHandle, row.handle),
   [identityKey]: firstValue(row[identityKey], id),
  }
 })
@@ -407,6 +431,34 @@ const withTrafficShareColumns = (rows: Row[]): Row[] => {
    ...row,
    trafficViewShare: totalViews > 0 ? views / totalViews * 100 : undefined,
    trafficWatchTimeShare: totalWatchTime > 0 ? watchTime / totalWatchTime * 100 : undefined,
+  }
+ })
+}
+
+const withFormatSubscriberChannelShareColumns = (rows: Row[]): Row[] => {
+ const normalized = rows.map((row) => {
+  const youtubePremiumViews = firstValue(row.youtubePremiumViews, row.redViews)
+  const youtubePremiumWatchTime = firstValue(
+   row.youtubePremiumWatchTime,
+   typeof row.estimatedRedMinutesWatched === "number" ? row.estimatedRedMinutesWatched / 60 : undefined,
+  )
+  return { ...row, youtubePremiumViews, youtubePremiumWatchTime }
+ })
+ const totalViews = normalized.reduce((sum, row) => sum + numberOrZero(row.views), 0)
+ const totalWatchTime = normalized.reduce((sum, row) => sum + numberOrZero(row.watchTime), 0)
+ const totalPremiumViews = normalized.reduce((sum, row) => sum + numberOrZero(row.youtubePremiumViews), 0)
+ const totalPremiumWatchTime = normalized.reduce((sum, row) => sum + numberOrZero(row.youtubePremiumWatchTime), 0)
+ return normalized.map((row) => {
+  const views = numberOrZero(row.views)
+  const watchTime = numberOrZero(row.watchTime)
+  const premiumViews = numberOrZero(row.youtubePremiumViews)
+  const premiumWatchTime = numberOrZero(row.youtubePremiumWatchTime)
+  return {
+   ...row,
+   channelViewShare: totalViews > 0 ? views / totalViews * 100 : undefined,
+   channelWatchTimeShare: totalWatchTime > 0 ? watchTime / totalWatchTime * 100 : undefined,
+   channelPremiumViewShare: totalPremiumViews > 0 ? premiumViews / totalPremiumViews * 100 : undefined,
+   channelPremiumWatchTimeShare: totalPremiumWatchTime > 0 ? premiumWatchTime / totalPremiumWatchTime * 100 : undefined,
   }
  })
 }
@@ -435,6 +487,30 @@ const formatMetricValue = (row: Row, ...keys: string[]): number | undefined =>
 
 const sumFormatMetric = (rows: Row[], ...keys: string[]): number | undefined =>
  sumAvailable(rows.map((row) => formatMetricValue(row, ...keys)))
+
+const averageFormatMetric = (rows: Row[], ...keys: string[]): number | undefined => {
+ const values = rows
+  .map((row) => formatMetricValue(row, ...keys))
+  .filter((value): value is number => value !== undefined)
+ return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : undefined
+}
+
+const formatDurationSeconds = (row: Row): number | undefined => {
+ const numeric = formatMetricValue(row, "durationSeconds")
+ if (numeric !== undefined) return numeric
+ const raw = String(firstValue(row.duration, "") || "").trim()
+ if (!raw) return undefined
+ if (/^PT/i.test(raw)) {
+  const match = raw.match(/^PT(?:(\d+(?:\.\d+)?)H)?(?:(\d+(?:\.\d+)?)M)?(?:(\d+(?:\.\d+)?)S)?$/i)
+  if (!match) return undefined
+  return Number(match[1] || 0) * 3600 + Number(match[2] || 0) * 60 + Number(match[3] || 0)
+ }
+ const parts = raw.split(":").map(Number)
+ if (parts.some((part) => !Number.isFinite(part))) return undefined
+ if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
+ if (parts.length === 2) return parts[0] * 60 + parts[1]
+ return parts.length === 1 && parts[0] >= 0 ? parts[0] : undefined
+}
 
 const weightedFormatAverage = (
  rows: Row[],
@@ -482,10 +558,33 @@ export const buildVtSyncVideoFormatTotals = (rows: Row[]): Row[] => {
   const videoFormatAvgViewDuration = pairedViews !== undefined && pairedViews > 0 && pairedWatchTime !== undefined
    ? pairedWatchTime * 3600 / pairedViews
    : weightedFormatAverage(bucket, ["avgViewDuration", "averageViewDuration", "avgDuration"])
+  const videoFormatGrossRevenue = sumFormatMetric(bucket, "grossRevenue")
+  const videoFormatAdImpressions = sumFormatMetric(bucket, "adImpressions")
+  const videoFormatAverageCpm = videoFormatGrossRevenue !== undefined
+   && videoFormatAdImpressions !== undefined
+   && videoFormatAdImpressions > 0
+   ? (videoFormatGrossRevenue / videoFormatAdImpressions) * 1000
+   : weightedFormatAverage(bucket, ["cpm"], ["adImpressions"])
+  const durationValues = bucket
+   .map(formatDurationSeconds)
+   .filter((value): value is number => value !== undefined)
 
   return {
    term,
    contentTypeCode: term,
+   videoFormatVideoCount: bucket.length,
+   videoFormatAverageDuration: durationValues.length
+    ? durationValues.reduce((sum, value) => sum + value, 0) / durationValues.length
+    : undefined,
+   videoFormatAverageViews: averageFormatMetric(bucket, "views"),
+   videoFormatAverageWatchTime: averageFormatMetric(bucket, "watchTime"),
+   videoFormatAverageLikes: averageFormatMetric(bucket, "likes"),
+   videoFormatAverageSubscribers: averageFormatMetric(bucket, "netSubscribers", "subscribers"),
+   videoFormatAverageComments: averageFormatMetric(bucket, "comments"),
+   videoFormatAverageShares: averageFormatMetric(bucket, "shares"),
+   videoFormatAverageCpm,
+   videoFormatAverageEstimatedRevenue: averageFormatMetric(bucket, "revenue", "estimatedRevenue"),
+   videoFormatAverageGrossRevenue: averageFormatMetric(bucket, "grossRevenue"),
    videoFormatViews,
    videoFormatEngagedViews: sumFormatMetric(bucket, "engagedViews"),
    videoFormatWatchTime: sumFormatMetric(bucket, "watchTime"),
@@ -633,10 +732,14 @@ const sourceRows = (
  if (table.id === "videos") return videoRows(snapshot, privacyFilters)
  if (table.id === "channel_totals") return channelTotalRows(snapshot)
  if (table.id === "daily") return snapshot.dailyMetrics.map((row) => dailyBase(row as Row))
- if (table.id === "weekly" || table.id === "monthly") return aggregateVtSyncTimeRows(snapshot.dailyMetrics as Row[], table.id)
+ if (table.id === "weekly") return aggregateVtSyncTimeRows(snapshot.dailyMetrics as Row[], "weekly")
  if (table.id === "demog_age" && snapshot.demographics.length) return snapshot.demographics as Row[]
  if (table.id === "demog_gender" && snapshot.demographics.length) return snapshot.demographics as Row[]
- const exportedRows = snapshot.tableExports?.[table.id] || snapshot.tableExports?.[table.exportName]
+ const exportedRows = table.id === "traffic"
+  ? snapshot.tableExports?.traffic || (
+   snapshot.trafficSources.length === 0 ? snapshot.tableExports?.traffic_overview : undefined
+  )
+  : snapshot.tableExports?.[table.id] || snapshot.tableExports?.[table.exportName]
  if (Array.isArray(exportedRows) && exportedRows.length) return exportedRows as Row[]
  if (!table.snapshotKeys?.length) return []
  return table.snapshotKeys.flatMap((key) => {
@@ -646,8 +749,24 @@ const sourceRows = (
 }
 
 export const normalizeVtSyncTableRows = (tableId: string, rows: Row[]): Row[] => {
+ if (tableId.startsWith("traffic_detail_")) {
+  const definition = getVtSyncTrafficDetailTable(tableId)
+  if (!definition) return []
+  return withTrafficShareColumns(normalizeTrafficRows(rows.filter((row) => String(row.sourceType || row.insightTrafficSourceType || "") === definition.sourceType), "detail").map((row) => ({
+   ...row,
+   sourceType: definition.sourceType,
+   detail: firstValue(row.detail, row.insightTrafficSourceDetail, row.term),
+   cover: definition.family === "channel" ? firstValue(row.thumbnail, row.avatarUrl) : row.thumbnail,
+  })))
+ }
  switch (tableId) {
+  case "videos": return normalizeVtSyncVideoTableRows(rows)
   case "traffic": return withTrafficShareColumns(normalizeRows(rows, { source: "insightTrafficSourceType" }))
+  case "traffic_details": return withTrafficShareColumns(normalizeTrafficRows(rows, "detail").map((row) => ({
+   ...row,
+   sourceType: firstValue(row.sourceType, row.insightTrafficSourceType, "Unknown"),
+   detail: firstValue(row.detail, row.insightTrafficSourceDetail, row.term),
+  })))
   case "search":
   case "ext_web":
   case "hashtags":
@@ -689,6 +808,21 @@ export const normalizeVtSyncTableRows = (tableId: string, rows: Row[]): Row[] =>
    : normalizeRows(rows, { cohort: "cohort" })
   case "audience":
   case "new_returning": return normalizeRows(rows, { term: "audienceType" })
+  case "formats_subscribers": return withFormatSubscriberChannelShareColumns(normalizeRows(rows, { status: "subscribedStatus" }).map((row) => {
+   const contentTypeCode = firstValue(row.formatCode, row.contentTypeCode, row.term, row.creatorContentType)
+   return {
+    ...row,
+    formatCode: contentTypeCode,
+    term: getVtSyncContentTypeLabel(contentTypeCode),
+    status: firstValue(row.status, row.subscribedStatus, "Unknown"),
+    youtubePremiumViews: firstValue(row.youtubePremiumViews, row.redViews),
+    youtubePremiumWatchTime: typeof row.youtubePremiumWatchTime === "number" ?
+     row.youtubePremiumWatchTime
+    : typeof row.estimatedRedMinutesWatched === "number" ?
+     row.estimatedRedMinutesWatched / 60
+    : row.youtubePremiumWatchTime,
+   }
+  }))
   case "creator": return withVtSyncFormatShareColumns(normalizeRows(rows, { term: "audienceType" }).map((row) => {
    const contentTypeCode = firstValue(row.contentTypeCode, row.term, row.creatorContentType)
    return { ...row, contentTypeCode, term: getVtSyncContentTypeLabel(contentTypeCode) }

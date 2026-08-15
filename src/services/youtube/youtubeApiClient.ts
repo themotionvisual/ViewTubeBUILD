@@ -13,6 +13,7 @@ import {
  authorizedGoogleRead,
  SERVER_ACCOUNT_SESSION_TOKEN,
 } from "./googleReadTransport"
+import { postUnifiedCommentReply } from "./youtubeWriteTransport"
 
 export const BASE_URL = "https://www.googleapis.com/youtube/v3"
 export const ANALYTICS_URL = "https://youtubeanalytics.googleapis.com/v2"
@@ -281,6 +282,7 @@ export class YouTubeApiClient extends GoogleService {
  }
 
  public async insertComment(parentId: string, text: string) {
+  if (isUnifiedAccountServerEnabled()) return postUnifiedCommentReply(parentId, text)
   return this.requestYouTube("/comments?part=snippet", {
    method: "POST",
    body: JSON.stringify({

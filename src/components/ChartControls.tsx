@@ -1,4 +1,5 @@
-import React, { useState } from "react"
+import React, { useRef, useState } from "react"
+import { createPortal } from "react-dom"
 
 export function SlabController({
  r1,
@@ -36,6 +37,17 @@ export function SlabController({
  onMetricChange: (m: string) => void
 }) {
  const [dropdownOpen, setDropdownOpen] = useState(false)
+ const dropdownAnchorRef = useRef<HTMLDivElement | null>(null)
+ const [dropdownPosition, setDropdownPosition] = useState({ left: 0, top: 0 })
+
+ const toggleDropdown = () => {
+  const rect = dropdownAnchorRef.current?.getBoundingClientRect()
+  if (rect) setDropdownPosition({
+   left: Math.max(8, Math.min(rect.left - 4, window.innerWidth - 163)),
+   top: Math.min(rect.bottom, window.innerHeight - 8),
+  })
+  setDropdownOpen((open) => !open)
+ }
 
  const cycleCount = (dir: number) => {
   const idx = counts.indexOf(count)
@@ -136,15 +148,16 @@ export function SlabController({
    <div
     className="relative flex items-center justify-center py-[1px] px-2 cursor-pointer flex-1 min-h-[20px]"
     style={{ background: metricBg }}
-    onClick={() => setDropdownOpen(!dropdownOpen)}>
+    ref={dropdownAnchorRef}
+    onClick={toggleDropdown}>
     <div className="flex items-center gap-[4px]">
      <span className="text-[13px] font-black text-black uppercase tracking-[0.04em]">
       {metric}
      </span>
      <span className="text-[9px] font-black text-black">▼</span>
     </div>
-    {dropdownOpen && (
-     <div className="absolute top-[100%] left-[-4px] right-0 bg-white border-[3px] border-black rounded-b-[10px] z-50 overflow-hidden w-[155px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)]">
+    {dropdownOpen && typeof document !== "undefined" && createPortal(
+     <div className="fixed bg-white border-[3px] border-black rounded-b-[10px] z-[1000] overflow-hidden w-[155px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)]" style={dropdownPosition}>
       {metrics.map((m) => (
        <button
         key={m}
@@ -168,7 +181,8 @@ export function SlabController({
         {m}
        </button>
       ))}
-     </div>
+     </div>,
+     document.body,
     )}
    </div>
   </div>
@@ -203,6 +217,17 @@ export function DeepController({
  onTimeWindowChange: (t: string) => void
 }) {
  const [dropdownOpen, setDropdownOpen] = useState(false)
+ const dropdownAnchorRef = useRef<HTMLDivElement | null>(null)
+ const [dropdownPosition, setDropdownPosition] = useState({ left: 0, top: 0 })
+
+ const toggleDropdown = () => {
+  const rect = dropdownAnchorRef.current?.getBoundingClientRect()
+  if (rect) setDropdownPosition({
+   left: Math.max(8, Math.min(rect.left - 4, window.innerWidth - 136)),
+   top: Math.min(rect.bottom, window.innerHeight - 8),
+  })
+  setDropdownOpen((open) => !open)
+ }
 
  return (
   <div
@@ -236,15 +261,16 @@ export function DeepController({
    <div
     className="relative flex items-center justify-center py-[6px] px-2 cursor-pointer flex-1"
     style={{ background: r4 }}
-    onClick={() => setDropdownOpen(!dropdownOpen)}>
+    ref={dropdownAnchorRef}
+    onClick={toggleDropdown}>
     <div className="flex items-center gap-[6px]">
      <span className="text-[13px] font-black text-black uppercase tracking-[0.04em]">
       {timeWindow}
      </span>
      <span className="text-[10px] font-black text-black">▼</span>
     </div>
-    {dropdownOpen && (
-     <div className="absolute top-[100%] left-[-4px] right-0 bg-white border-[3px] border-black rounded-b-[10px] z-50 overflow-hidden w-[128px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)]">
+    {dropdownOpen && typeof document !== "undefined" && createPortal(
+     <div className="fixed bg-white border-[3px] border-black rounded-b-[10px] z-[1000] overflow-hidden w-[128px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)]" style={dropdownPosition}>
       {timeWindows.map((m) => (
        <button
         key={m}
@@ -266,7 +292,8 @@ export function DeepController({
         {m}
        </button>
       ))}
-     </div>
+     </div>,
+     document.body,
     )}
    </div>
   </div>

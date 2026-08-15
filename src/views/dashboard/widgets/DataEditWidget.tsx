@@ -2,25 +2,25 @@ import React, { useEffect, useMemo, useRef, useState } from "react"
 import {
  FileVideo2,
  ImagePlus,
+ BookOpen,
+ Loader2,
  Pencil,
  Plus,
  RotateCcw,
  Save,
- Search,
  ShieldCheck,
- Upload,
  UploadCloud,
- CircleX,
- X,
 } from "lucide-react"
 import {
  fetchUserPlaylists,
  fetchVideoCategories,
  fetchVideoSnippetDetails,
+ fetchChannelPublishingDefaults,
  updateVideoThumbnail,
  updateVideo,
  uploadVideo,
 } from "../../../services/youtubeService"
+import { generateEducationalTimestampQuestions } from "../../../services/gemini"
 import type { DashboardData } from "../useDashboardData"
 import type { CommonWidgetProps } from "../types"
 import {
@@ -28,12 +28,20 @@ import {
  WidgetDisclosure as Module,
  WidgetField as Field,
  WidgetSelect as PortalSelect,
+  WidgetFooter,
+  WidgetMediaUploadAction,
+  WidgetMediaUploadFrame,
+  WidgetSplitButton,
+  WidgetTag,
+  WidgetWorkflowMain,
  type WidgetSelectOption as SelectOption,
 } from "../WidgetPrimitives"
 import { WidgetShell } from "../WidgetShell"
 import { buildVideoAssetOptions } from "./videoAssetOptions"
+import { useUnifiedAccount } from "../../../context/UnifiedAccountContext"
 
 const STORAGE_KEY = "vt_data_edit_state"
+const TAG_CHARACTER_LIMIT = 500
 const YT_STANDARD_CATEGORY_IDS = new Set([
  "1", "2", "10", "15", "17", "19", "20", "22", "23", "24", "25", "26", "27", "28", "29",
 ])
@@ -59,6 +67,12 @@ const AD_CATEGORIES = [
  "Controversial issues",
 ] as const
 
+const limitTagsToCharacterBudget = (values: string[]) => values.reduce<string[]>((accepted, value) => {
+ const tag = value.trim()
+ if (!tag || accepted.includes(tag)) return accepted
+ return [...accepted, tag].join(", ").length <= TAG_CHARACTER_LIMIT ? [...accepted, tag] : accepted
+}, [])
+
 // Compatibility surface for the title and retention widgets while dropdown behavior is centralized.
 export const CustomDropdown = ({ value, onChange, options }: {
  value: string
@@ -74,10 +88,11 @@ export const CustomDropdown = ({ value, onChange, options }: {
 )
 
 type WorkflowMode = "upload" | "manage"
-type WorkspacePage = "details" | "options" | "ads"
+type WorkspacePage = "details" | "options" | "ads" | "timestamps"
 type WidgetProps = CommonWidgetProps & { data: DashboardData }
 
 const VideoMetadataWorkspace = ({ mode, data }: { mode: WorkflowMode; data: DashboardData }) => {
+ const account = useUnifiedAccount()
  const videos = data.videoAssets
  const [page, setPage] = useState<WorkspacePage>("details")
  const [selectedVideoId, setSelectedVideoId] = useState("")
@@ -110,9 +125,13 @@ const VideoMetadataWorkspace = ({ mode, data }: { mode: WorkflowMode; data: Dash
  const [saving, setSaving] = useState(false)
  const [saved, setSaved] = useState(false)
  const [error, setError] = useState("")
+ const [defaultsLoading, setDefaultsLoading] = useState<"description" | "tags" | null>(null)
+ const [timestampQuestions, setTimestampQuestions] = useState<string[]>([])
+ const [timestampsLoading, setTimestampsLoading] = useState(false)
  const [originalData, setOriginalData] = useState({ title: "", description: "", tags: [] as string[], categoryId: "" })
  const videoInputRef = useRef<HTMLInputElement>(null)
  const thumbnailInputRef = useRef<HTMLInputElement>(null)
+ const tagInputRef = useRef<HTMLInputElement>(null)
  const pageRef = useRef<HTMLDivElement>(null)
 
  const selectedAsset = useMemo(
@@ -198,6 +217,10 @@ const VideoMetadataWorkspace = ({ mode, data }: { mode: WorkflowMode; data: Dash
   pageRef.current?.scrollTo?.({ top: 0 })
  }, [page])
 
+ useEffect(() => {
+  if (categoryId !== "27" && page === "timestamps") setPage("details")
+ }, [categoryId, page])
+
  const readThumbnail = (file?: File) => {
   if (!file || !file.type.startsWith("image/")) return
   setThumbnailFile(file)
@@ -209,8 +232,47 @@ const VideoMetadataWorkspace = ({ mode, data }: { mode: WorkflowMode; data: Dash
  const addTag = () => {
   const next = newTag.trim()
   if (!next || tags.includes(next)) return
+  if ([...tags, next].join(", ").length > TAG_CHARACTER_LIMIT) {
+   setError(`Tags are limited to ${TAG_CHARACTER_LIMIT} characters.`)
+   return
+  }
   setTags((current) => [...current, next])
   setNewTag("")
+ }
+
+ const tagCharacterCount = tags.join(", ").length
+ const tagDraftCharacterCount = tagCharacterCount + (newTag ? (tags.length ? 2 : 0) + newTag.length : 0)
+ const remainingTagInputLength = Math.max(0, TAG_CHARACTER_LIMIT - tagCharacterCount - (tags.length ? 2 : 0))
+
+ const applyChannelDefaults = async (target: "description" | "tags") => {
+  setDefaultsLoading(target)
+  setError("")
+  try {
+   const defaults = await fetchChannelPublishingDefaults()
+   if (target === "description") {
+    setDescription(defaults.description)
+    if (!defaults.description) setError("Your channel has no default description in YouTube branding settings.")
+   } else {
+    setTags(limitTagsToCharacterBudget(defaults.tags))
+    if (!defaults.tags.length) setError("Your channel has no default keywords in YouTube branding settings.")
+   }
+  } catch (cause) {
+   setError(cause instanceof Error ? cause.message : "Unable to load channel defaults.")
+  } finally {
+   setDefaultsLoading(null)
+  }
+ }
+
+ const generateTimestampQuestions = async () => {
+  setTimestampsLoading(true)
+  setError("")
+  try {
+   setTimestampQuestions(await generateEducationalTimestampQuestions({ title, description, tags }, data.brain))
+  } catch (cause) {
+   setError(cause instanceof Error ? cause.message : "Unable to generate timestamp questions.")
+  } finally {
+   setTimestampsLoading(false)
+  }
  }
 
  const reset = () => {
@@ -225,6 +287,12 @@ const VideoMetadataWorkspace = ({ mode, data }: { mode: WorkflowMode; data: Dash
   if (mode === "manage" && !selectedVideoId) return setError("Select a published video first.")
   if (mode === "upload" && !videoFile) return setError("Choose a video file before publishing.")
   if (!title.trim()) return setError("Add a video title before continuing.")
+  const requiredCapability = mode === "upload" ? "youtube_upload" : "youtube_comments"
+  if (account.serverEnabled && !account.snapshot.grantedCapabilities.includes(requiredCapability)) {
+   setError("Reconnect Channel to grant YouTube management permission.")
+   void account.start("reconnect_channel", window.location.pathname)
+   return
+  }
   setSaving(true)
   setError("")
   const payload = {
@@ -253,13 +321,14 @@ const VideoMetadataWorkspace = ({ mode, data }: { mode: WorkflowMode; data: Dash
   { id: "details", label: "Details" },
   { id: "options", label: "Options" },
   { id: "ads", label: "Ad suitability" },
+  ...(categoryId === "27" ? [{ id: "timestamps" as const, label: "Timestamps" }] : []),
  ]
 
  return (
   <div className="widget-workspace">
    {mode === "manage" ? (
     <section className="video-manager-selection" aria-label="Published video selection">
-     <div className="widget-search-control"><Search aria-hidden="true" /><input className="vt-input-standard" value={videoSearch} onChange={(event) => setVideoSearch(event.target.value)} aria-label="Search published videos" placeholder="Search videos…" /></div>
+     <input className="vt-input" value={videoSearch} onChange={(event) => setVideoSearch(event.target.value)} aria-label="Search published videos" placeholder="Search videos…" />
      <PortalSelect value={selectedVideoId} onChange={(value) => { setSelectedVideoId(value); setPage("details"); setError("") }} options={filteredVideoOptions} label="Published video" placeholder="Select a published video…" />
     </section>
    ) : null}
@@ -277,62 +346,84 @@ const VideoMetadataWorkspace = ({ mode, data }: { mode: WorkflowMode; data: Dash
       </article>
      ) : null}
 
-     <div className="widget-workspace-content">
+     <WidgetWorkflowMain className="widget-workspace-content">
       {page === "details" ? (
         <div className="widget-details-wrapper">
-          <div className="widget-details-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: '16px' }}>
-            <div className="widget-details-left">
-              {/* Top Action Row */}
-              <div className="widget-top-actions" style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-                {mode === "upload" && (
-                  <button
-                    type="button"
-                    className="vt-button primary video-upload-button"
-                    style={{ flex: 1 }}
-                    onClick={() => videoInputRef.current?.click()}
-                  >
-                    <Upload aria-hidden="true" />
-                    Upload video
-                  </button>
-                )}
-                <button 
-                  className="vt-button secondary" 
-                  type="button" 
-                  style={{ flex: 1 }}
-                  onClick={() => thumbnailInputRef.current?.click()}
-                >
-                  <Upload />{thumbnailPreview ? "Replace thumbnail" : "Add thumbnail"}
-                </button>
+          {mode === "upload" ? (
+            <>
+              <div className="video-uploader-title-row">
+                <div className="widget-uploader-input is-title">
+                  <input className="vt-input" aria-label="Video title" placeholder="Video title" value={title} maxLength={100} onChange={(event) => setTitle(event.target.value)} />
+                  <span className="widget-uploader-input-meta" aria-hidden="true"><span>Video title</span><small>{title.length}/100</small></span>
+                </div>
+                <WidgetMediaUploadAction className="video-upload-file-action" onClick={() => videoInputRef.current?.click()} title={videoFile?.name || "Choose a source video"}>
+                  {videoFile?.name || "Upload video"}
+                </WidgetMediaUploadAction>
               </div>
-              
+              <div className="video-uploader-description-row">
+                <div className="widget-uploader-input is-description">
+                  <textarea className="vt-textarea widget-description-textarea" aria-label="Description" placeholder="Description" value={description} maxLength={5000} onChange={(event) => setDescription(event.target.value)} rows={2} />
+                  <span className="widget-uploader-input-meta" aria-hidden="true"><span>Description</span><small>{description.length}/5000</small></span>
+                </div>
+                <div className="video-thumbnail-column">
+                  <WidgetMediaUploadFrame
+                    className="video-thumbnail-upload"
+                    icon={<ImagePlus />}
+                    title="Thumbnail"
+                    detail="Drop an image file here"
+                    hasValue={Boolean(thumbnailPreview)}
+                    preview={thumbnailPreview ? <img src={thumbnailPreview} alt="Thumbnail preview" /> : undefined}
+                    onBrowse={() => thumbnailInputRef.current?.click()}
+                    onDropFile={readThumbnail}
+                  />
+                  <WidgetMediaUploadAction onClick={() => thumbnailInputRef.current?.click()}>
+                    {thumbnailPreview ? "Replace thumbnail" : "Upload thumbnail"}
+                  </WidgetMediaUploadAction>
+                </div>
+              </div>
+              <div className="video-uploader-meta-row">
+                <div className="widget-tags-entry" aria-label={`Tags (${tags.length})`}>
+                  <div className="widget-tags-composer" role="group" aria-label={`Tags (${tags.length})`} onClick={() => tagInputRef.current?.focus()}>
+                    <div className="widget-tags-scroll">
+                      <div className="widget-tag-list">
+                        {tags.map((tag) => (
+                          <WidgetTag key={tag} onRemove={() => setTags((current) => current.filter((item) => item !== tag))}>{tag}</WidgetTag>
+                        ))}
+                      </div>
+                      <input ref={tagInputRef} className="widget-tags-composer-input" aria-label="Add tag" value={newTag} maxLength={remainingTagInputLength} onChange={(event) => setNewTag(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addTag() } }} placeholder={tags.length ? "Add tag…" : "Tags — add tag…"} />
+                      <span className="widget-tags-character-count" aria-live="polite">{Math.min(TAG_CHARACTER_LIMIT, tagDraftCharacterCount)}/{TAG_CHARACTER_LIMIT}</span>
+                    </div>
+                  </div>
+                  <div className="widget-tags-composer-actions">
+                    <button type="button" className="vt-button" disabled={defaultsLoading !== null} onClick={() => void applyChannelDefaults("description")}>{defaultsLoading === "description" ? "Loading…" : "Use default description"}</button>
+                    <button type="button" className="vt-button" disabled={defaultsLoading !== null} onClick={() => void applyChannelDefaults("tags")}>{defaultsLoading === "tags" ? "Loading…" : "Use default tags"}</button>
+                    <button className="vt-button primary" type="button" onClick={addTag} aria-label="Add tag"><Plus /></button>
+                  </div>
+                </div>
+                <div className="widget-details-selects video-uploader-selects">
+                  <PortalSelect value={privacyStatus} onChange={setPrivacyStatus} label="Visibility" options={[{ value: "public", label: "Public" }, { value: "unlisted", label: "Unlisted" }, { value: "private", label: "Private" }]} placeholder="Visibility" />
+                  <PortalSelect value={categoryId} onChange={setCategoryId} label="Category" options={categories} placeholder="Category" />
+                  <PortalSelect value={playlistId} onChange={setPlaylistId} label="Playlist" options={playlists} placeholder="Playlist" />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="widget-details-layout is-manage">
+                <WidgetMediaUploadFrame className="video-thumbnail-upload" icon={<ImagePlus />} title="Thumbnail" detail="Choose an image file" actionLabel={thumbnailPreview ? "Replace thumbnail" : "Upload thumbnail"} hasValue={Boolean(thumbnailPreview)} preview={thumbnailPreview ? <img src={thumbnailPreview} alt={selectedAsset ? `Current thumbnail for ${selectedAsset.title}` : "Thumbnail preview"} /> : undefined} onBrowse={() => thumbnailInputRef.current?.click()} onDropFile={readThumbnail} />
+              </div>
               <Field label="Video title"><input className="vt-input" aria-label="Video title" value={title} maxLength={100} onChange={(event) => setTitle(event.target.value)} /><small className="widget-character-count">{title.length}/100</small></Field>
-            </div>
-            
-            <div className="widget-details-right">
-               <div className="widget-media-picker" style={{ border: '2px dashed #ccc', padding: '4px', height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {thumbnailPreview ? <img src={thumbnailPreview} alt={mode === "manage" && selectedAsset ? `Current thumbnail for ${selectedAsset.title}` : "Thumbnail preview"} style={{ height: '100%', objectFit: 'cover' }}/> : <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}><ImagePlus size={24} /><p style={{margin:0, fontSize:'10px'}}>Thumbnail</p></div>}
-               </div>
-               <input ref={videoInputRef} hidden type="file" accept="video/*" onChange={(event) => setVideoFile(event.target.files?.[0] || null)} />
-               <input ref={thumbnailInputRef} hidden type="file" accept="image/*" onChange={(event) => readThumbnail(event.target.files?.[0])} />
-            </div>
-          </div>
-          
-          {/* Description, Tags, Dropdowns */}
-          <div className="widget-details-bottom" style={{ marginTop: '16px' }}>
-            <Field label="Description"><textarea className="vt-textarea widget-description-textarea" aria-label="Description" value={description} onChange={(event) => setDescription(event.target.value)} rows={2} /><small className="widget-character-count">{description.length}/5000</small></Field>
-            
-            <Module title={`Tags (${tags.length})`}>
+              <div className="widget-details-bottom">
+                <Field label="Description"><textarea className="vt-textarea widget-description-textarea" aria-label="Description" value={description} maxLength={5000} onChange={(event) => setDescription(event.target.value)} rows={2} /><small className="widget-character-count">{description.length}/5000</small></Field>
+                <Module title={`Tags (${tags.length})`}>
               <div className="widget-tag-list">
                 {tags.map((tag) => (
-                  <button 
-                    className="chip" 
-                    type="button" 
-                    key={tag} 
-                    onClick={() => setTags((current) => current.filter((item) => item !== tag))}
+                  <WidgetTag
+                    key={tag}
+                    onRemove={() => setTags((current) => current.filter((item) => item !== tag))}
                   >
                     {tag}
-                    <CircleX size={16} fill="black" stroke="white" />
-                  </button>
+                  </WidgetTag>
                 ))}
               </div>
               <div className="widget-inline-entry">
@@ -352,14 +443,15 @@ const VideoMetadataWorkspace = ({ mode, data }: { mode: WorkflowMode; data: Dash
                   <Plus />
                 </button>
               </div>
-            </Module>
-
-            <div className="widget-control-grid is-three widget-details-selects" style={{ marginTop: '16px' }}>
+                </Module>
+                <div className="widget-control-grid is-three widget-details-selects">
                 <PortalSelect value={privacyStatus} onChange={setPrivacyStatus} label="Visibility" options={[{ value: "public", label: "Public" }, { value: "unlisted", label: "Unlisted" }, { value: "private", label: "Private" }]} placeholder="Visibility" />
                 <PortalSelect value={categoryId} onChange={setCategoryId} label="Category" options={categories} placeholder="Category" />
                 <PortalSelect value={playlistId} onChange={setPlaylistId} label="Playlist" options={playlists} placeholder="Playlist" />
-            </div>
-          </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       ) : null}
 
@@ -388,22 +480,37 @@ const VideoMetadataWorkspace = ({ mode, data }: { mode: WorkflowMode; data: Dash
           </Module>
          ))}
         </div>
-        <Choice label="None of the above applies" checked={noneOfTheAbove} onChange={() => setNoneOfTheAbove((value) => !value)} />
+       <Choice label="None of the above applies" checked={noneOfTheAbove} onChange={() => setNoneOfTheAbove((value) => !value)} />
        </div>
       ) : null}
+      {page === "timestamps" ? (
+       <section className="widget-section-workspace video-timestamp-workspace">
+        <header><BookOpen /><div><strong>Educational timestamps</strong><span>Generate five teaching questions from the upload metadata.</span></div></header>
+        {timestampQuestions.length ? (
+         <ol className="video-timestamp-questions">
+          {timestampQuestions.map((question, index) => <li key={`${question}-${index}`}>{question}</li>)}
+         </ol>
+        ) : <p className="widget-empty-copy">No timestamp questions generated yet.</p>}
+        <button type="button" className="vt-button primary" disabled={timestampsLoading} onClick={() => void generateTimestampQuestions()}>
+         {timestampsLoading ? <><Loader2 className="is-spinning" /> Generating…</> : "Generate timestamp questions"}
+        </button>
+       </section>
+      ) : null}
       </div>
-     </div>
+     </WidgetWorkflowMain>
 
      {error ? <div className="widget-inline-error" role="alert">{error}</div> : null}
-     <footer className="widget-toolbar widget-workflow-toolbar vt-full-bleed-bottom">
-      <nav className="widget-workflow-buttons" aria-label={`${mode === "upload" ? "Upload" : "Video manager"} sections`}>
+     <WidgetFooter className="widget-toolbar widget-workflow-toolbar">
+      <nav className={`widget-workflow-buttons is-${tabs.length}-up`} aria-label={`${mode === "upload" ? "Upload" : "Video manager"} sections`}>
        {tabs.map((tab) => (
         <button key={tab.id} type="button" className={`vt-button ${page === tab.id ? "primary" : ""}`.trim()} aria-pressed={page === tab.id} onClick={() => setPage(tab.id)}>{tab.label}</button>
        ))}
       </nav>
-      <button type="button" className="vt-button primary is-primary" disabled={saving} onClick={save}><Save />{saving ? "Saving…" : saved ? (mode === "upload" ? "Published" : "Saved") : (mode === "upload" ? "Publish video" : "Save changes")}</button>
+      <WidgetSplitButton type="button" tone="primary" width="full" icon={<Save />} disabled={saving} onClick={save}>
+       {saving ? "Saving…" : saved ? (mode === "upload" ? "Published" : "Saved") : (mode === "upload" ? "Publish video" : "Save changes")}
+      </WidgetSplitButton>
       <button type="button" className="vt-button is-icon-only" onClick={reset} aria-label="Revert changes"><RotateCcw /></button>
-     </footer>
+     </WidgetFooter>
     </>
    )}
   </div>

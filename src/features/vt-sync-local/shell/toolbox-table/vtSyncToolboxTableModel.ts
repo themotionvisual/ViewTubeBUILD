@@ -1,5 +1,5 @@
 import type { VtSyncSnapshot, VtSyncTableColumnDefinition, VtSyncTableDefinition } from "../../adapters/contracts"
-import { normalizeVtSyncTableRows, tableRows } from "../../adapters/tableData"
+import { getVtSyncContentTypeLabel, normalizeVtSyncTableRows, tableRows } from "../../adapters/tableData"
 import type { VtSyncPrivacyFilters } from "../../adapters/privacyPolicy"
 import { getVtSyncTableExportHeaders, getVtSyncTableExportRows } from "../../adapters/tableExport"
 import {
@@ -12,7 +12,7 @@ import {
  parseVtSyncDurationSeconds,
  type VtSyncDurationFormat,
 } from "../../adapters/tableFormatting"
-import { VT_SYNC_VISIBLE_TABLE_DEFINITIONS } from "../../upstream/tableRegistry"
+import { getVtSyncTrafficDetailTable, resolveVtSyncCanonicalTableId, VT_SYNC_VISIBLE_TABLE_DEFINITIONS } from "../../upstream/tableRegistry"
 import { VT_SYNC_ALL_CATEGORY_OPTIONS } from "../../upstream/syncCategoryRegistry"
 
 export type VtSyncTableRow = Record<string, unknown>
@@ -24,6 +24,10 @@ export type VtSyncTableTotalContext = {
  channelName?: string | null
  channelDescription?: string | null
  channelCustomUrl?: string | null
+ channelId?: string | null
+ channelPublishedAt?: string | null
+ channelVideoCount?: number | null
+ channelLifetime?: VtSyncTableRow | null
 }
 export type VtSyncTableTotal = { primary: string; secondary?: string; imageUrl?: string; kind?: "context" | "numeric" | "muted" | "image"; badges?: { value: string; count: number }[] }
 export type VtSyncTableProvenance = {
@@ -127,7 +131,6 @@ const VT_SYNC_COMPACT_MENU_LABELS: Record<string, string> = {
  daily: "Daily",
  weekly: "Weekly",
  monthly: "Monthly",
- monthly_api: "Month (API)",
  channel_totals: "Channel Totals",
  traffic: "Overview",
  search: "Search Terms",
@@ -140,8 +143,9 @@ const VT_SYNC_COMPACT_MENU_LABELS: Record<string, string> = {
  other_feat: "Other Features",
  traffic_subscribers: "Subscriber Detail",
  traffic_day: "Traffic × Day",
+ formats_subscribers: "Formats × Subs",
  demographics: "Age × Gender",
- subs: "Subscriptions",
+ subs: "Subscriber Status",
  devices: "Devices",
  os: "Operating Systems",
  device_os: "Device × OS",
@@ -183,7 +187,7 @@ export const getVtSyncTableProvenance = (
   return sourceApi ? [sourceApi] : []
  }))]
  const apiLabel = categoryApis.map((sourceApi) => VT_SYNC_SOURCE_API_LABELS[sourceApi]).join(" + ")
- const derivedFromDaily = table.id === "weekly" || table.id === "monthly"
+ const derivedFromDaily = table.id === "weekly"
  const sourceLabel = importedAt
   ? "Local CSV import"
   : snapshot.source === "manual"
@@ -377,7 +381,8 @@ export const getVtSyncCompositeIdentityPresentation = (
  tableId: string,
  row: VtSyncTableRow,
 ): VtSyncCompositeIdentityPresentation | null => {
- if (tableId === "suggested") {
+ const trafficDetail = getVtSyncTrafficDetailTable(tableId)
+ if (tableId === "suggested" || trafficDetail?.family === "video") {
   const candidateId = String(row.videoId || row.term || "").trim()
   const rawId = candidateId && candidateId !== "Unknown" && candidateId !== "-" ? candidateId : ""
  return {
@@ -394,7 +399,7 @@ export const getVtSyncCompositeIdentityPresentation = (
    url: String(row.videoUrl || (rawId ? `https://www.youtube.com/watch?v=${rawId}` : "")).trim() || undefined,
   }
  }
- if (tableId === "chan_page") {
+ if (tableId === "chan_page" || trafficDetail?.family === "channel") {
   const candidateId = String(row.channelId || row.term || "").trim()
   const rawId = candidateId && candidateId !== "Unknown" && candidateId !== "-" ? candidateId : ""
   const rawHandle = String(row.handle || "").trim()
@@ -407,11 +412,11 @@ export const getVtSyncCompositeIdentityPresentation = (
    url: String(row.channelUrl || row.url || (handle ? `https://www.youtube.com/${handle}` : rawId ? `https://www.youtube.com/channel/${rawId}` : "")).trim() || undefined,
   }
  }
- if (tableId === "playlists") {
-  const rawId = String(row.playlistId || row.id || "").trim()
+ if (tableId === "playlists" || trafficDetail?.family === "playlist") {
+  const rawId = String(row.playlistId || row.detail || row.id || "").trim()
   const videoCount = Number(row.videoCount)
   return {
-   title: String(row.title || row.playlist || "Untitled playlist"),
+   title: String(row.title || row.playlistTitle || row.playlist || "Untitled playlist"),
    secondaryLabel: !isMissingVtSyncValue(row.videoCount) && Number.isFinite(videoCount) ? `${videoCount} videos` : undefined,
    rawId: rawId || undefined,
   }
@@ -793,17 +798,18 @@ export const getVtSyncCategoryClickState = (
 }
 
 export type VtSyncToolboxCategory = {
- id: "content" | "daily" | "channel" | "traffic" | "audience" | "global" | "revenue"
+ id: "channel" | "time" | "traffic" | "audience" | "geographic" | "revenue"
  label: string
  tableIds: string[]
  colors: { icon: string; label: string; shadow: string }
 }
 
 export type VtSyncWorkspaceId =
- | "overview"
- | "content"
- | "discovery"
+ | "channel"
+ | "time"
+ | "traffic"
  | "audience"
+ | "geographic"
  | "revenue"
 
 export type VtSyncWorkspaceViewDefinition = {
@@ -821,41 +827,41 @@ export type VtSyncWorkspaceDefinition = {
  views: readonly VtSyncWorkspaceViewDefinition[]
 }
 
+const visibleTableIdsFor = (...mainCategoryIds: string[]) =>
+ VT_SYNC_VISIBLE_TABLE_DEFINITIONS
+  .filter((table) => mainCategoryIds.includes(table.mainCategoryId))
+  .map((table) => table.id)
+
+const tableIdsFor = (...ids: string[]) => ids.filter((id) => VT_SYNC_VISIBLE_TABLE_DEFINITIONS.some((table) => table.id === id))
+const trafficDetailTableIds = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.filter((table) => table.id.startsWith("traffic_detail_")).map((table) => table.id)
+const audienceTrafficDetailTableIds = tableIdsFor("traffic_detail_traffic_subscribers")
+const trafficOnlyDetailTableIds = trafficDetailTableIds.filter((id) => !audienceTrafficDetailTableIds.includes(id))
+
 export const VT_SYNC_WORKSPACE_DEFINITIONS: readonly VtSyncWorkspaceDefinition[] = [
  {
-  id: "overview",
-  label: "Overview",
-  defaultViewId: "channel-intelligence",
+  id: "channel",
+  label: "Channel",
+  defaultViewId: "catalog",
   views: [
-   { id: "channel-intelligence", label: "Channel Intelligence", tableIds: ["channel_totals"], defaultTableId: "channel_totals", kind: "summary-detail" },
-   { id: "daily-metrics", label: "Daily Metrics", tableIds: ["daily", "weekly", "monthly", "monthly_api"], defaultTableId: "daily", kind: "table" },
+   { id: "catalog", label: "Videos", tableIds: tableIdsFor("videos"), defaultTableId: "videos", kind: "summary-detail" },
+   { id: "channel-content", label: "Channel Content", tableIds: tableIdsFor("playlists", "creator", "formats_subscribers", "shares", "locations", "retentions", "subs"), defaultTableId: "playlists", kind: "drilldown" },
   ],
  },
  {
-  id: "content",
-  label: "Content",
-  defaultViewId: "video-catalog",
+  id: "time",
+  label: "Time",
+  defaultViewId: "time-stats",
   views: [
-   { id: "video-catalog", label: "Video Catalog Analytics", tableIds: ["videos"], defaultTableId: "videos", kind: "summary-detail" },
-   { id: "formats", label: "Formats", tableIds: ["creator"], defaultTableId: "creator", kind: "table" },
-   { id: "playlists", label: "Playlists", tableIds: ["playlists"], defaultTableId: "playlists", kind: "table" },
-   { id: "retention", label: "Retention", tableIds: ["retentions"], defaultTableId: "retentions", kind: "drilldown" },
-   { id: "sharing", label: "Sharing", tableIds: ["shares"], defaultTableId: "shares", kind: "table" },
+   { id: "time-stats", label: "Stats", tableIds: tableIdsFor("daily", "weekly", "monthly", "channel_totals", "traffic_day"), defaultTableId: "daily", kind: "drilldown" },
   ],
  },
  {
-  id: "discovery",
-  label: "Discovery",
+  id: "traffic",
+  label: "Traffic",
   defaultViewId: "traffic-overview",
   views: [
-   { id: "traffic-overview", label: "Traffic Overview", tableIds: ["traffic"], defaultTableId: "traffic", kind: "summary-detail" },
-   { id: "traffic-time", label: "Traffic × Day", tableIds: ["traffic_day"], defaultTableId: "traffic_day", kind: "drilldown" },
-   { id: "playback", label: "Playback Locations", tableIds: ["locations"], defaultTableId: "locations", kind: "table" },
-   { id: "search", label: "Search", tableIds: ["search"], defaultTableId: "search", kind: "table" },
-   { id: "external", label: "External", tableIds: ["ext_web"], defaultTableId: "ext_web", kind: "table" },
-   { id: "suggested", label: "Suggested Videos", tableIds: ["suggested"], defaultTableId: "suggested", kind: "summary-detail" },
-   { id: "channel-pages", label: "Channel Pages", tableIds: ["chan_page"], defaultTableId: "chan_page", kind: "summary-detail" },
-   { id: "specialist", label: "Specialist Reports", tableIds: ["hashtags", "sound", "adv", "other_feat", "traffic_subscribers"], defaultTableId: "hashtags", kind: "drilldown" },
+   { id: "traffic-overview", label: "Traffic Overview", tableIds: tableIdsFor("traffic"), defaultTableId: "traffic", kind: "summary-detail" },
+   { id: "traffic-details", label: "Traffic Details", tableIds: trafficOnlyDetailTableIds, defaultTableId: trafficOnlyDetailTableIds[0] || "traffic", kind: "drilldown" },
   ],
  },
  {
@@ -863,18 +869,21 @@ export const VT_SYNC_WORKSPACE_DEFINITIONS: readonly VtSyncWorkspaceDefinition[]
   label: "Audience",
   defaultViewId: "demographics",
   views: [
-   { id: "demographics", label: "Demographics", tableIds: ["demographics"], defaultTableId: "demographics", kind: "summary-detail" },
-   { id: "subscriptions", label: "Subscription Status", tableIds: ["subs"], defaultTableId: "subs", kind: "table" },
-   { id: "devices", label: "Devices & OS", tableIds: ["devices", "os", "device_os"], defaultTableId: "device_os", kind: "drilldown" },
-   { id: "geography", label: "Geography", tableIds: ["geography", "cities", "provinces", "dma"], defaultTableId: "geography", kind: "drilldown" },
+   { id: "audience-data", label: "Audience Data", tableIds: [...visibleTableIdsFor("demographics", "devices"), ...audienceTrafficDetailTableIds], defaultTableId: "demographics", kind: "drilldown" },
   ],
+ },
+ {
+  id: "geographic",
+  label: "Geographic",
+  defaultViewId: "geography",
+  views: [{ id: "geography", label: "Geographic", tableIds: visibleTableIdsFor("geography"), defaultTableId: "geography", kind: "drilldown" }],
  },
  {
   id: "revenue",
   label: "Revenue",
   defaultViewId: "ad-types",
   views: [
-   { id: "ad-types", label: "Ad Types", tableIds: ["ads"], defaultTableId: "ads", kind: "table" },
+   { id: "revenue-data", label: "Revenue Data", tableIds: visibleTableIdsFor("revenue"), defaultTableId: "revenue", kind: "table" },
   ],
  },
 ] as const
@@ -893,13 +902,12 @@ export const getVtSyncWorkspaceForTable = (
 export const VT_SYNC_TOOLBOX_CATEGORIES: VtSyncToolboxCategory[] = [
  // Category buttons cycle the shared GROUP_COLORS palette in order, matching the
  // KPI cards and toolbar buttons: label = palette[i], icon rail = palette[i+4].
- { id: "content", label: "Videos", tableIds: ["videos", "playlists", "creator", "locations", "retentions", "shares"], colors: { icon: "#C0F240", label: "#FA618A", shadow: "rgba(192,242,64,.52)" } },
- { id: "daily", label: "Daily", tableIds: ["daily", "weekly", "monthly", "monthly_api"], colors: { icon: "#3FEE56", label: "#FF7F6B", shadow: "rgba(63,238,86,.52)" } },
- { id: "channel", label: "Channel", tableIds: ["channel_totals"], colors: { icon: "#4EE4BE", label: "#FFA85C", shadow: "rgba(78,228,190,.52)" } },
- { id: "traffic", label: "Traffic", tableIds: ["traffic", "search", "ext_web", "suggested", "chan_page", "hashtags", "sound", "adv", "other_feat", "traffic_subscribers", "traffic_day"], colors: { icon: "#36E0F6", label: "#FFDA47", shadow: "rgba(54,224,246,.52)" } },
- { id: "audience", label: "Audience", tableIds: ["demographics", "subs", "devices", "os", "device_os"], colors: { icon: "#528FFA", label: "#C0F240", shadow: "rgba(82,143,250,.52)" } },
- { id: "global", label: "Global", tableIds: ["geography", "cities", "provinces", "dma"], colors: { icon: "#A467F4", label: "#3FEE56", shadow: "rgba(164,103,244,.52)" } },
- { id: "revenue", label: "Revenue", tableIds: ["ads"], colors: { icon: "#F55EFC", label: "#4EE4BE", shadow: "rgba(245,94,252,.52)" } },
+ { id: "channel", label: "Channel", tableIds: tableIdsFor("videos", "playlists", "creator", "formats_subscribers", "shares", "locations", "retentions", "subs"), colors: { icon: "#C0F240", label: "#FA618A", shadow: "rgba(250,97,138,.52)" } },
+ { id: "time", label: "Time", tableIds: tableIdsFor("daily", "weekly", "monthly", "channel_totals", "traffic_day"), colors: { icon: "#3FEE56", label: "#FF7F6B", shadow: "rgba(255,127,107,.52)" } },
+ { id: "traffic", label: "Traffic", tableIds: tableIdsFor("traffic", ...trafficOnlyDetailTableIds), colors: { icon: "#36E0F6", label: "#FFDA47", shadow: "rgba(255,218,71,.52)" } },
+ { id: "audience", label: "Audience", tableIds: [...visibleTableIdsFor("demographics", "devices"), ...audienceTrafficDetailTableIds], colors: { icon: "#528FFA", label: "#C0F240", shadow: "rgba(192,242,64,.52)" } },
+ { id: "geographic", label: "Geographic", tableIds: visibleTableIdsFor("geography"), colors: { icon: "#A467F4", label: "#3FEE56", shadow: "rgba(63,238,86,.52)" } },
+ { id: "revenue", label: "Revenue", tableIds: visibleTableIdsFor("revenue"), colors: { icon: "#F55EFC", label: "#4EE4BE", shadow: "rgba(78,228,190,.52)" } },
 ]
 
 export type VtSyncWorkspaceUrlState = {
@@ -915,8 +923,9 @@ export const resolveVtSyncWorkspaceUrlState = (
  search: string,
 ): VtSyncWorkspaceUrlState => {
  const params = new URLSearchParams(search)
- const requestedTableId =
-  params.get("vtTable") || params.get("table") || params.get("tableId") || "videos"
+ const requestedTableId = resolveVtSyncCanonicalTableId(
+  params.get("vtTable") || params.get("table") || params.get("tableId") || "videos",
+ )
  const validTableId = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.some((table) => table.id === requestedTableId)
   ? requestedTableId
   : "videos"
@@ -975,7 +984,7 @@ export const createVtSyncWorkspaceUrlSearch = (
  return params.toString()
 }
 
-export const VT_SYNC_COMPACT_PIN_TABLE_IDS = new Set(["videos", "playlists", "daily", "weekly", "monthly", "monthly_api", "channel_totals", "geography"])
+export const VT_SYNC_COMPACT_PIN_TABLE_IDS = new Set(["videos", "playlists", "daily", "weekly", "monthly", "channel_totals", "geography"])
 
 export const findVtSyncTable = (id: string): VtSyncTableDefinition =>
  VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((table) => table.id === id) || VT_SYNC_VISIBLE_TABLE_DEFINITIONS[0]
@@ -1099,6 +1108,84 @@ export const buildVtSyncTrafficDayGroups = (
   if (left.sortTime !== right.sortTime) return right.sortTime - left.sortTime
   return right.day.localeCompare(left.day)
  })
+}
+
+export type VtSyncFormatSubscriberStatusRow = {
+ id: string
+ format: string
+ formatLabel: string
+ formatCode: string
+ status: string
+ statusLabel: string
+ row: VtSyncTableRow
+}
+
+export type VtSyncFormatSubscriberGroup = {
+ id: string
+ format: string
+ formatLabel: string
+ formatCode: string
+ totals: VtSyncTableRow
+ statuses: VtSyncFormatSubscriberStatusRow[]
+}
+
+const getVtSyncFormatSubscriberStatusLabel = (status: unknown): string => {
+ const value = String(status ?? "").trim()
+ const normalized = value.toLocaleUpperCase()
+ if (normalized === "SUBSCRIBED" || normalized === "SUBSCRIBER") return "Subscribed"
+ if (normalized === "UNSUBSCRIBED" || normalized === "NOT_SUBSCRIBED") return "Unsubscribed"
+ return value || "Unknown Status"
+}
+
+const getVtSyncFormatSubscriberCode = (row: VtSyncTableRow): string =>
+ String(row.formatCode ?? row.contentTypeCode ?? row.creatorContentType ?? row.term ?? "unknown").trim() || "unknown"
+
+export const buildVtSyncFormatSubscriberGroups = (
+ rows: VtSyncTableRow[],
+ columns: VtSyncTableColumnDefinition[] = [],
+): VtSyncFormatSubscriberGroup[] => {
+ const groups = new Map<string, VtSyncTableRow[]>()
+ rows.forEach((row) => {
+  const formatCode = getVtSyncFormatSubscriberCode(row)
+  groups.set(formatCode, [...(groups.get(formatCode) || []), row])
+ })
+
+ return [...groups.entries()].map(([formatCode, formatRows]) => {
+  const firstRow = formatRows[0] || {}
+  const formatLabel = String(firstRow.term ?? firstRow.format ?? getVtSyncContentTypeLabel(formatCode)).trim() || "Unknown Format"
+  const totals: VtSyncTableRow = { term: formatLabel, format: formatLabel, formatCode, status: "" }
+  columns.forEach((column) => {
+   if (column.key === "term") totals.term = formatLabel
+   else if (column.key === "status") totals.status = ""
+   else if (["views", "engagedViews", "watchTime", "youtubePremiumViews", "youtubePremiumWatchTime", "redViews", "estimatedRedMinutesWatched", "channelViewShare", "channelWatchTimeShare", "channelPremiumViewShare", "channelPremiumWatchTimeShare"].includes(column.key)) {
+    totals[column.key] = sumVtSyncTrafficDayMetric(formatRows, column.key)
+   } else if (["avgDuration", "averageViewDuration", "avgPercentageViewed", "averagePercentageViewed"].includes(column.key)) {
+    totals[column.key] = weightedVtSyncTrafficDayMetric(formatRows, column.key)
+   }
+  })
+
+  return {
+   id: formatCode,
+   format: formatCode,
+   formatLabel,
+   formatCode,
+   totals,
+   statuses: [...formatRows]
+    .sort((left, right) => (toVtSyncNumber(right.views) || 0) - (toVtSyncNumber(left.views) || 0))
+    .map((row, index) => {
+     const status = String(row.status ?? row.subscribedStatus ?? "Unknown").trim() || "Unknown"
+     return {
+      id: `${formatCode}::${status}::${index}`,
+      format: formatCode,
+      formatLabel,
+      formatCode,
+      status,
+      statusLabel: getVtSyncFormatSubscriberStatusLabel(status),
+      row,
+     }
+    }),
+  }
+ }).sort((left, right) => (toVtSyncNumber(right.totals.views) || 0) - (toVtSyncNumber(left.totals.views) || 0) || left.formatLabel.localeCompare(right.formatLabel))
 }
 
 export type VtSyncDeviceOsDeviceRow = {
@@ -1731,11 +1818,12 @@ export const totalVtSyncColumn = (
  if (context) {
   if (column.key === "thumbnail") return { primary: context.avatarUrl ? "" : "-", imageUrl: context.avatarUrl || undefined, kind: "image" }
   if (column.key === "title") return { primary: context.channelName || "Channel", secondary: "Channel title", kind: "context" }
-  if (column.key === "videoId") return { primary: `${rows.length.toLocaleString()} videos`, secondary: "Library size", kind: "context" }
+  if (column.key === "videoId") return { primary: context.channelId || "-", secondary: `${(context.channelVideoCount ?? rows.length).toLocaleString()} videos`, kind: "context" }
   if (column.key === "videoUrl") return { primary: context.channelCustomUrl || "-", secondary: "Channel link", kind: "context" }
-  if (column.key === "publishedAt") {
-   const years = rows.map((row) => new Date(String(row.publishedAt || "")).getFullYear()).filter(Number.isFinite)
-   return { primary: years.length ? `Since ${Math.min(...years)}` : "-", secondary: "First upload", kind: "context" }
+  if (column.key === "publishedAt") return {
+   primary: context.channelPublishedAt ? formatVtSyncTableCellValue(context.channelPublishedAt, column.format) : "-",
+   secondary: "Channel start date",
+   kind: "context",
   }
   if (column.key === "descriptionSnippet") return { primary: context.channelDescription || "-", secondary: "Channel description", kind: "context" }
   if (column.key === "tags") return { primary: "", badges: topBadges(rows.map((row) => row.tags)), secondary: "Top tags", kind: "context" }
@@ -1743,9 +1831,9 @@ export const totalVtSyncColumn = (
   if (column.key === "category") return { primary: "", badges: topBadges(rows.map((row) => row.category)), secondary: "Top categories", kind: "context" }
   if (column.key === "format") {
    const formats = rows.map((row) => String(row.format || "").toLowerCase())
-   const shorts = formats.filter((value) => value === "short").length
-   const live = formats.filter((value) => value === "live").length
-   const long = formats.filter((value) => value === "long").length
+   const shorts = formats.filter((value) => value === "short" || value === "shorts" || value.includes("short")).length
+   const live = formats.filter((value) => value === "live" || value.includes("live")).length
+   const long = formats.length - shorts - live
    const badges = []
    if (long > 0) badges.push({ value: "long", count: long })
    if (shorts > 0) badges.push({ value: "short", count: shorts })
@@ -1755,11 +1843,22 @@ export const totalVtSyncColumn = (
   }
   if (["privacyStatus", "definition", "caption"].includes(column.key)) return { primary: mode(rows.map((row) => formatVtSyncColumnValue(row, column))), secondary: "Most common", kind: "context" }
   if (isVtSyncDurationFormat(column.format)) {
+   const lifetimeValue = context.channelLifetime?.[column.key]
+   if (!isMissingVtSyncValue(lifetimeValue)) {
+    return { primary: formatVtSyncTableCellValue(lifetimeValue, column.format), secondary: "Lifetime analytics", kind: "context" }
+   }
+   if (column.semanticRole === "metric") return { primary: "-", secondary: "Lifetime analytics unavailable", kind: "muted" }
    const durationFormat = column.format
    const durations = rows
     .map((row) => parseVtSyncDurationSeconds(row[column.key], durationFormat))
     .filter((value): value is number => value !== undefined && value > 0)
    return { primary: durations.length ? formatVtSyncDurationSeconds(durations.reduce((sum, value) => sum + value, 0) / durations.length) : "", secondary: "Avg duration", kind: "context" }
+  }
+  if (column.semanticRole === "metric") {
+   const lifetimeValue = context.channelLifetime?.[column.key]
+   return !isMissingVtSyncValue(lifetimeValue)
+    ? { primary: formatVtSyncTableCellValue(lifetimeValue, column.format), secondary: "Lifetime analytics", kind: "context" }
+    : { primary: "-", secondary: "Lifetime analytics unavailable", kind: "muted" }
   }
  }
  const numeric = (key: string) => rows

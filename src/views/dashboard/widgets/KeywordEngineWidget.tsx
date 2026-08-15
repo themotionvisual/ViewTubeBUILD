@@ -1,5 +1,6 @@
 import React, { useMemo } from "react"
 import { WidgetShell } from "../WidgetShell"
+import { WidgetSection } from "../WidgetPrimitives"
 import { Search } from "lucide-react"
 import { metricCellValue } from "../../../services/analytics/Selectors"
 import { useInitialChannelBootstrap } from "../../../context/InitialChannelBootstrapContext"
@@ -99,19 +100,7 @@ export const KeywordEngineWidget = ({
      gap: "4px",
      minHeight: 0,
     }}>
-    <div
-     style={{
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "flex-end",
-      borderBottom: "3px solid var(--widget-border, #000)",
-      paddingBottom: "4px",
-      marginLeft: "-10px",
-      marginRight: "-10px",
-      paddingLeft: "10px",
-      paddingRight: "10px",
-      width: "calc(100% + 20px)",
-     }}>
+    <WidgetSection edge="full" className="keyword-engine-heading">
      <span
       style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase" }}>
       Top Keywords
@@ -125,9 +114,9 @@ export const KeywordEngineWidget = ({
       }}>
       Avg Views
      </span>
-    </div>
+    </WidgetSection>
 
-    <div className="vt-widget-fill-body" style={{ gap: "4px" }}>
+    <div className="keyword-engine-list" aria-label="Keyword engine results">
     {keywords.length === 0 && (
      <div
       style={{
@@ -146,43 +135,15 @@ export const KeywordEngineWidget = ({
      return (
       <div
        key={kw.word}
-       style={{
-        display: "flex",
-        height: "26px",
-        width: "100%",
-        background: "color-mix(in srgb, var(--widget-color, #d9d9d9) 18%, white)",
-        borderRadius: "24px",
-        border: "1px solid rgba(0,0,0,0.1)",
-        overflow: "hidden",
-       }}>
+       className="keyword-engine-bar">
        <div
+       className="keyword-engine-bar-fill"
        style={{
         width: `${widthPct}%`,
-        minWidth: "fit-content",
-        height: "100%",
-         background: "var(--widget-color, #4FFF5B)",
-         borderRadius: "24px",
-         display: "flex",
-         justifyContent: "space-between",
-         alignItems: "center",
-         padding: "0 10px",
-         gap: "12px",
-        }}>
-        <div
-         style={{
-          display: "flex",
-          alignItems: "center",
-          fontSize: "11px",
-          fontWeight: 900,
-          textTransform: "uppercase",
-          color: "var(--widget-border, #000)",
-          whiteSpace: "nowrap",
-         }}>
-         <span>{kw.word}</span>
-        </div>
-        <div style={{ fontSize: "11px", fontWeight: 1000, color: "var(--widget-border, #000)" }}>
-         {kw.avgViews.toLocaleString()}
-        </div>
+       }} />
+       <div className="keyword-engine-bar-copy">
+        <span>{kw.word}</span>
+        <strong>{kw.avgViews.toLocaleString()}</strong>
        </div>
       </div>
      )

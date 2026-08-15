@@ -1,5 +1,6 @@
 import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
+import { WidgetScrollArea } from "../WidgetPrimitives"
 import { useEntitlement } from "../../../context/entitlementContext"
 import { Hash, Sparkles, Copy, Check, TrendingUp, TrendingDown, Minus } from "lucide-react"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
@@ -103,7 +104,7 @@ export const HashtagAnalyzerWidget = ({ widget, instance, editMode, onToggleColl
        <div style={{ flexShrink: 0, display: "grid", gridTemplateColumns: "1fr 60px 60px 30px", padding: "4px 8px", background: "#000", color: "#fff", fontSize: "7px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em" }}>
         <span>Tag</span><span>Reach</span><span>Comp.</span><span>📈</span>
        </div>
-       <div className="vt-widget-fill-body">
+       <WidgetScrollArea ariaLabel="Hashtag analysis results">
         {results.map((r, i) => (
          <div key={i} style={{
           display: "grid", gridTemplateColumns: "1fr 60px 60px 30px", padding: "4px 8px",
@@ -118,7 +119,7 @@ export const HashtagAnalyzerWidget = ({ widget, instance, editMode, onToggleColl
           <TrendIcon trend={r.trending} />
          </div>
         ))}
-       </div>
+       </WidgetScrollArea>
       </div>
 
       {/* Optimal Combo */}

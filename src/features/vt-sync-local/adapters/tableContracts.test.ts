@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { VT_SYNC_ACTIVE_TABLE_IDS, VT_SYNC_TABLE_DEFINITIONS, VT_SYNC_VISIBLE_TABLE_CATEGORIES, VT_SYNC_VISIBLE_TABLE_DEFINITIONS } from "../upstream/tableRegistry"
+import { resolveVtSyncCanonicalTableId, VT_SYNC_ACTIVE_TABLE_IDS, VT_SYNC_TABLE_DEFINITIONS, VT_SYNC_VISIBLE_TABLE_CATEGORIES, VT_SYNC_VISIBLE_TABLE_DEFINITIONS } from "../upstream/tableRegistry"
+import { VT_SYNC_SYNC_UNITS } from "../upstream/syncUnitRegistry"
 import { tableRows } from "./tableData"
 import { getVtSyncTableExportHeaders, getVtSyncTableExportRows } from "./tableExport"
 import {
@@ -12,7 +13,7 @@ import {
  parseVtSyncDurationSeconds,
 } from "./tableFormatting"
 import { normalizeVtSyncSnapshot } from "./snapshot"
-import { getVisibleVtSyncColumns } from "../shell/toolbox-table/vtSyncToolboxTableModel"
+import { getVisibleVtSyncColumns, VT_SYNC_TOOLBOX_CATEGORIES, VT_SYNC_WORKSPACE_DEFINITIONS } from "../shell/toolbox-table/vtSyncToolboxTableModel"
 
 describe("VT Sync table contracts", () => {
  it("uses registry column labels as export headers", () => {
@@ -21,13 +22,92 @@ describe("VT Sync table contracts", () => {
   })
  })
 
+ it("uses source-specific detail contracts without generic identity columns or metric bands", () => {
+  const table = (id: string) => VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((entry) => entry.id === id)!
+  const keys = (id: string) => table(id).columns.map((column) => column.key)
+  expect(table("traffic_detail_search_terms")).toMatchObject({ layoutMode: "sparse-full", horizontalScrollMode: "none", verticalScrollMode: "none" })
+  expect(table("traffic_detail_search_terms").columns.map((column) => column.label)).toContain("YouTube Search Terms")
+  expect(table("traffic_detail_search_terms").columns.map((column) => column.label)).toContain("% of Search Views")
+  expect(keys("traffic_detail_search_terms")).not.toEqual(expect.arrayContaining(["title", "handle", "videoUrl", "channelUrl"]))
+  expect(keys("traffic_detail_suggested_videos").slice(0, 4)).toEqual(["cover", "title", "sourceChannel", "videoUrl"])
+  expect(keys("traffic_detail_channel_pages").slice(0, 3)).toEqual(["cover", "title", "channelUrl"])
+  expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((entry) => entry.id)).not.toEqual(expect.arrayContaining([
+   "traffic_detail_traffic_notification",
+   "traffic_detail_end_screens",
+   "traffic_detail_video_remixes",
+   "traffic_detail_watch_with",
+  ]))
+  expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((entry) => entry.id)).not.toContain("traffic_detail_traffic_playlist")
+ })
+
  it("only exposes the successful July 13 table set", () => {
   expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id).sort()).toEqual([...VT_SYNC_ACTIVE_TABLE_IDS].sort())
   expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id)).not.toContain("traffic_shorts")
   expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id)).not.toContain("audience")
   expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id)).not.toContain("sub_source")
-  expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id)).toContain("provinces")
+ expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id)).toContain("provinces")
+  expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id)).toContain("traffic_detail_search_terms")
+  expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id)).not.toContain("search")
+  expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id)).not.toContain("channel_overview")
   expect(VT_SYNC_VISIBLE_TABLE_CATEGORIES.flatMap((category) => category.tabs.map((tab) => tab.id)).sort()).toEqual([...VT_SYNC_ACTIVE_TABLE_IDS].sort())
+ expect(resolveVtSyncCanonicalTableId("channel_overview")).toBe("videos")
+})
+
+ it("places Subscriber Status with channel tables and exposes premium columns", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((definition) => definition.id === "subs")!
+  const channelCategory = VT_SYNC_TOOLBOX_CATEGORIES.find((category) => category.id === "channel")!
+  const audienceCategory = VT_SYNC_TOOLBOX_CATEGORIES.find((category) => category.id === "audience")!
+  const channelWorkspace = VT_SYNC_WORKSPACE_DEFINITIONS.find((workspace) => workspace.id === "channel")!
+  const audienceWorkspace = VT_SYNC_WORKSPACE_DEFINITIONS.find((workspace) => workspace.id === "audience")!
+
+  expect(table).toMatchObject({ label: "Subscriber Status", mainCategoryId: "channel_totals" })
+  expect(table.columns.map((column) => column.key)).toEqual(expect.arrayContaining(["youtubePremiumViews", "youtubePremiumWatchTime"]))
+  expect(channelCategory.tableIds).toContain("subs")
+  expect(audienceCategory.tableIds).not.toContain("subs")
+  expect(channelWorkspace.views.some((view) => view.tableIds.includes("subs"))).toBe(true)
+  expect(audienceWorkspace.views.some((view) => view.tableIds.includes("subs"))).toBe(false)
+ expect(tableRows(normalizeVtSyncSnapshot({
+  subscriptionStatuses: [{ subscribedStatus: "SUBSCRIBED", redViews: 12, estimatedRedMinutesWatched: 90 }],
+ }), table)[0]).toMatchObject({
+   status: "SUBSCRIBED",
+   youtubePremiumViews: 12,
+   youtubePremiumWatchTime: 1.5,
+  })
+ })
+
+ it("places Formats x Subscriber Status with content tables and exposes channel share columns", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((definition) => definition.id === "formats_subscribers")!
+  const contentCategory = VT_SYNC_VISIBLE_TABLE_CATEGORIES.find((category) => category.id === "content")!
+  const channelCategory = VT_SYNC_TOOLBOX_CATEGORIES.find((category) => category.id === "channel")!
+  const channelWorkspace = VT_SYNC_WORKSPACE_DEFINITIONS.find((workspace) => workspace.id === "channel")!
+
+  expect(table).toMatchObject({ label: "Formats x Subscriber Status", mainCategoryId: "content", presentationMode: "format-subscriber-status" })
+  expect(contentCategory.tabs.map((tab) => tab.id)).toContain("formats_subscribers")
+  expect(channelCategory.tableIds).toContain("formats_subscribers")
+  expect(channelWorkspace.views.some((view) => view.tableIds.includes("formats_subscribers"))).toBe(true)
+  expect(table.columns.map((column) => column.key)).toEqual(expect.arrayContaining([
+   "youtubePremiumViews",
+   "youtubePremiumWatchTime",
+   "channelViewShare",
+   "channelWatchTimeShare",
+   "channelPremiumViewShare",
+   "channelPremiumWatchTimeShare",
+  ]))
+  expect(tableRows(normalizeVtSyncSnapshot({
+   formatSubscriberStatuses: [
+    { creatorContentType: "shorts", subscribedStatus: "SUBSCRIBED", views: 80, estimatedMinutesWatched: 20, redViews: 8, estimatedRedMinutesWatched: 6 },
+    { creatorContentType: "videoOnDemand", subscribedStatus: "UNSUBSCRIBED", views: 20, estimatedMinutesWatched: 10, redViews: 2, estimatedRedMinutesWatched: 4 },
+   ],
+  }), table)[0]).toMatchObject({
+   term: "Shorts",
+   status: "SUBSCRIBED",
+   youtubePremiumViews: 8,
+   youtubePremiumWatchTime: 0.1,
+   channelViewShare: 80,
+   channelWatchTimeShare: 20 / 30 * 100,
+   channelPremiumViewShare: 80,
+   channelPremiumWatchTimeShare: 60,
+  })
  })
 
  it("keeps legacy subscription-source snapshot data readable without exposing its retired table", () => {
@@ -45,8 +125,9 @@ describe("VT Sync table contracts", () => {
     monthly_api: [{ date: "2026-07", views: 1200, engagedViews: 800 }],
    },
   })
-  const table = VT_SYNC_TABLE_DEFINITIONS.find((definition) => definition.id === "monthly_api")!
+  const table = VT_SYNC_TABLE_DEFINITIONS.find((definition) => definition.id === "monthly")!
 
+  expect(snapshot.monthlyMetrics).toEqual([expect.objectContaining({ date: "2026-07", views: 1200 })])
   expect(tableRows(snapshot, table)).toEqual([
    expect.objectContaining({ date: "2026-07", views: 1200, engagedViews: 800 }),
   ])
@@ -142,6 +223,35 @@ describe("VT Sync table contracts", () => {
   expect(visibleSearchColumns.map((column) => column.key)).toEqual(expect.arrayContaining(["trafficViewShare", "trafficWatchTimeShare"]))
  })
 
+ it("keeps legacy traffic-overview datasets visible in the traffic overview table", () => {
+  const trafficTable = VT_SYNC_TABLE_DEFINITIONS.find((table) => table.id === "traffic")!
+  const legacySnapshot = normalizeVtSyncSnapshot({
+   trafficOverview: [{ insightTrafficSourceType: "YT_SEARCH", views: 80, estimatedMinutesWatched: 120 }],
+  })
+  const exportedSnapshot = normalizeVtSyncSnapshot({
+   tableExports: {
+    traffic_overview: [{ insightTrafficSourceType: "EXT_URL", views: 20, estimatedMinutesWatched: 30 }],
+   },
+  })
+
+  expect(tableRows(legacySnapshot, trafficTable)).toEqual([
+   expect.objectContaining({ source: "YT_SEARCH", views: 80, trafficViewShare: 100 }),
+  ])
+  expect(tableRows(exportedSnapshot, trafficTable)).toEqual([
+   expect.objectContaining({ source: "EXT_URL", views: 20, trafficViewShare: 100 }),
+  ])
+
+  const currentSnapshot = normalizeVtSyncSnapshot({
+   trafficSources: [{ source: "YT_BROWSE", views: 90 }],
+   tableExports: {
+    traffic_overview: [{ insightTrafficSourceType: "EXT_URL", views: 10 }],
+   },
+  })
+  expect(tableRows(currentSnapshot, trafficTable)).toEqual([
+   expect.objectContaining({ source: "YT_BROWSE", views: 90 }),
+  ])
+ })
+
  it("adds shared-link percentage to sharing service rows", () => {
   const sharesTable = VT_SYNC_TABLE_DEFINITIONS.find((table) => table.id === "shares")!
   const snapshot = normalizeVtSyncSnapshot({
@@ -175,6 +285,7 @@ describe("VT Sync table contracts", () => {
      id: "short-a",
      title: "Short A",
      format: "short",
+     duration: "PT30S",
      metrics: {
       views: 100,
       engagedViews: 80,
@@ -187,12 +298,16 @@ describe("VT Sync table contracts", () => {
       comments: 3,
       videosAddedToPlaylists: 2,
       shares: 5,
+       grossRevenue: 4,
+       adImpressions: 1000,
+       cpm: 4,
      },
     },
     {
      id: "short-b",
      title: "Short B",
      format: "shorts",
+     duration: "0:45",
      metrics: {
       views: 200,
       engagedViews: 120,
@@ -205,6 +320,9 @@ describe("VT Sync table contracts", () => {
       comments: 4,
       videosAddedToPlaylists: 3,
       shares: 6,
+       grossRevenue: 8,
+       adImpressions: 1000,
+       cpm: 8,
      },
     },
     {
@@ -260,6 +378,35 @@ describe("VT Sync table contracts", () => {
      "videoFormatComments",
      "videoFormatShares",
     ])
+  expect(formatsTable.columns.filter((column) => column.group === "Format Averages").map((column) => column.key))
+   .toEqual([
+    "videoFormatVideoCount",
+    "videoFormatAverageDuration",
+    "videoFormatAverageViews",
+    "videoFormatAverageWatchTime",
+    "videoFormatAverageLikes",
+    "videoFormatAverageSubscribers",
+    "videoFormatAverageComments",
+    "videoFormatAverageShares",
+    "videoFormatAverageCpm",
+    "videoFormatAverageEstimatedRevenue",
+    "videoFormatAverageGrossRevenue",
+   ])
+  expect(formatsTable.columns.filter((column) => column.group === "Format Averages"))
+   .toSatisfy((columns: Array<{ isFormula?: boolean }>) => columns.every((column) => column.isFormula))
+  expect(getVtSyncTableExportHeaders(formatsTable)).toEqual(expect.arrayContaining([
+   "Video Count",
+   "Average Duration",
+   "Average Views",
+   "Average Watch Time",
+   "Average Likes",
+   "Average Subscribers",
+   "Average Comments",
+   "Average Shares",
+   "Average CPM",
+   "Average Est. Revenue",
+   "Average Gross Revenue",
+  ]))
 
   const rows = tableRows(snapshot, formatsTable)
   const shorts = rows.find((row) => row.term === "Shorts")!
@@ -279,7 +426,18 @@ describe("VT Sync table contracts", () => {
    videoFormatComments: 7,
    videoFormatSaves: 5,
    videoFormatShares: 11,
+   videoFormatVideoCount: 2,
+   videoFormatAverageViews: 150,
+   videoFormatAverageWatchTime: 1.5,
+   videoFormatAverageLikes: 15,
+   videoFormatAverageSubscribers: 2,
+   videoFormatAverageComments: 3.5,
+   videoFormatAverageShares: 5.5,
+   videoFormatAverageCpm: 6,
+   videoFormatAverageEstimatedRevenue: 2.5,
+   videoFormatAverageGrossRevenue: 6,
   })
+  expect(shorts.videoFormatAverageDuration).toBeCloseTo(37.5)
   expect(shorts.videoFormatAvgViewDuration).toBeCloseTo(36)
   expect(shorts.videoFormatAvgPercentageViewed).toBeCloseTo(100 / 3)
   expect(longFormat).toMatchObject({
@@ -338,3 +496,50 @@ describe("VT Sync table contracts", () => {
   })
  })
 })
+
+ it("keeps every stable sync unit selectable through its canonical table and redirects legacy traffic URLs", () => {
+  const visibleTableIds = new Set(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id))
+  expect(VT_SYNC_SYNC_UNITS.every((unit) => visibleTableIds.has(unit.tableId))).toBe(true)
+  expect(resolveVtSyncCanonicalTableId("search")).toBe("traffic_detail_search_terms")
+  expect(resolveVtSyncCanonicalTableId("ext_web")).toBe("traffic_detail_ext_websites")
+ expect(resolveVtSyncCanonicalTableId("traffic")).toBe("traffic")
+ })
+
+ it("places every visible canonical table in both a toolbox category and workspace view", () => {
+  const categoryTableIds = new Set(VT_SYNC_TOOLBOX_CATEGORIES.flatMap((category) => category.tableIds))
+  const workspaceTableIds = new Set(VT_SYNC_WORKSPACE_DEFINITIONS.flatMap((workspace) => workspace.views.flatMap((view) => view.tableIds)))
+  expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id).filter((id) => !categoryTableIds.has(id))).toEqual([])
+  expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id).filter((id) => !workspaceTableIds.has(id))).toEqual([])
+  expect([...categoryTableIds].some((id) => id === "search" || id === "ext_web")).toBe(false)
+ })
+
+ it("uses Stats labels for channel time series and reserves Traffic x Day for source-by-day rows", () => {
+  const byId = (id: string) => VT_SYNC_TABLE_DEFINITIONS.find((table) => table.id === id)!
+  expect(byId("daily").label).toBe("Daily Stats")
+  expect(byId("weekly").label).toBe("Weekly Stats")
+ expect(byId("monthly")).toMatchObject({ label: "Monthly Stats", snapshotKeys: ["monthlyMetrics"], performanceHubDatasetId: "monthly_api" })
+ expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => table.id)).not.toContain("monthly_api")
+ expect(resolveVtSyncCanonicalTableId("monthly_api")).toBe("monthly")
+ expect(byId("traffic_day").label).toBe("Traffic × Day")
+ expect(byId("daily")).toMatchObject({ mainCategoryId: "daily", snapshotKeys: ["dailyMetrics"], performanceHubDatasetId: "daily" })
+ expect(byId("traffic_day")).toMatchObject({ mainCategoryId: "daily", snapshotKeys: ["trafficByDay"], performanceHubDatasetId: "traffic_day" })
+ expect(VT_SYNC_TOOLBOX_CATEGORIES.find((category) => category.id === "time")?.tableIds).toEqual(
+  expect.arrayContaining(["daily", "traffic_day"]),
+ )
+ })
+
+ it("rejects cross-wired Daily Stats and Traffic x Day rows during normalization", () => {
+  const snapshot = normalizeVtSyncSnapshot({
+   dailyMetrics: [
+    { date: "2026-08-01", views: 10 },
+    { day: "2026-08-02", term: "YT_SEARCH", views: 999 },
+   ],
+   trafficByDay: [
+    { day: "2026-08-01", term: "YT_SEARCH", views: 4 },
+    { date: "2026-08-02", views: 888 },
+   ],
+  })
+
+  expect(snapshot.dailyMetrics).toEqual([expect.objectContaining({ date: "2026-08-01", views: 10 })])
+  expect(snapshot.trafficByDay).toEqual([expect.objectContaining({ day: "2026-08-01", term: "YT_SEARCH", views: 4 })])
+ })

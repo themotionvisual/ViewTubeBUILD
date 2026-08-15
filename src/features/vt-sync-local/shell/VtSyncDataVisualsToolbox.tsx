@@ -44,6 +44,13 @@ import { ChannelBigBangTimelineModule } from "../../../components/DataVisuals/mo
 import { TrajectoryForecasterModule } from "../../../components/DataVisuals/modules2/TrajectoryForecaster"
 import { MultiMetricTimelineModule } from "../../../components/DataVisuals/modules2/MultiMetricTimeline"
 import { Vt2ThemeContext, type Vt2ThemeMode } from "../../../components/DataVisuals/modules2/theme"
+import {
+ getVtVisualControllerColors,
+ getVtVisualHeaderColorPair,
+ VT_VISUAL_METRIC_COLORS,
+} from "../../../styles/toolboxPalette"
+import { getVtSyncVisualStyle } from "../../../styles/vtSyncVisualStyles"
+import { buildVtSyncVisualGridBlocks, shouldVtSyncVisualStartOpen } from "./vtSyncVisualGridModel"
 
 type VtSyncVisualModuleDefinition = VtSyncVisualModuleSpec & {
  group: "core" | "tube-explorer" | "vt2"
@@ -58,11 +65,11 @@ type LegacyVisualModuleDefinition = {
 }
 
 const CORE_VISUAL_MODULES: LegacyVisualModuleDefinition[] = [
- { id: "combo-channel-progress", group: "core", delayMs: 0, render: ({ data }) => <ComboChannelProgress data={data} /> },
- { id: "engagement-lines", group: "core", delayMs: 25, render: ({ data }) => <EngagementLinesModule data={data} /> },
+ { id: "combo-channel-progress", group: "core", delayMs: 0, render: ({ data, dailyMetrics, monthlyMetrics, visualStyle }) => <ComboChannelProgress data={data} dailyMetrics={dailyMetrics} monthlyMetrics={monthlyMetrics} visualStyle={visualStyle} /> },
+ { id: "engagement-lines", group: "core", delayMs: 25, render: (props) => <EngagementLinesModule {...props} /> },
  { id: "top-performers-trio", group: "core", delayMs: 30, render: ({ data }) => <TopPerformersTrio data={data} /> },
  { id: "format-comparison-donuts", group: "core", delayMs: 35, render: ({ data, contentTypeRows }) => <FormatComparisonDonuts data={data} contentTypeRows={contentTypeRows} /> },
- { id: "shorts-retention-widget", group: "core", delayMs: 50, render: ({ data }) => <ShortsRetentionWidgetModule data={data} /> },
+ { id: "shorts-retention-widget", group: "core", delayMs: 50, render: (props) => <ShortsRetentionWidgetModule {...props} /> },
  { id: "algorithm-trigger", group: "core", delayMs: 100, render: ({ data }) => <AlgorithmTriggerModule data={data} /> },
  { id: "revenue-distribution", group: "core", delayMs: 150, render: ({ data }) => <RevenueDistribution data={data} /> },
  { id: "revenue-efficiency", group: "core", delayMs: 175, render: ({ data }) => <RevenueEfficiency data={data} /> },
@@ -110,24 +117,27 @@ const TUBE_EXPLORER_MODULES: LegacyVisualModuleDefinition[] =
 // modules land in this array and automatically show up in the second toolbox
 // (Data Visuals 2) because they aren't in PRIMARY_MODULE_IDS.
 const VT2_MODULES: LegacyVisualModuleDefinition[] = [
- { id: "vt2-weekly-sparklines", group: "vt2", delayMs: 40, render: ({ data, trafficByDay, dailyMetrics, channelSummary }) => <WeeklySparklinesModule data={data} trafficByDay={trafficByDay} dailyMetrics={dailyMetrics} channelSummary={channelSummary} /> },
+ { id: "vt2-weekly-sparklines", group: "vt2", delayMs: 40, render: ({ data, dailyMetrics, channelSummary }) => <WeeklySparklinesModule data={data} dailyMetrics={dailyMetrics} channelSummary={channelSummary} /> },
  { id: "vt2-revenue-mosaic", group: "vt2", delayMs: 80, render: ({ data }) => <RevenueMosaicModule data={data} /> },
  { id: "vt2-search-term-gravity", group: "vt2", delayMs: 120, render: ({ data, trafficRows }) => <SearchTermGravityModule data={data} trafficRows={trafficRows} /> },
  { id: "vt2-video-fingerprint", group: "vt2", delayMs: 160, render: ({ data }) => <VideoPerformanceFingerprintModule data={data} /> },
- { id: "vt2-channel-big-bang", group: "vt2", delayMs: 200, render: ({ data, dailyMetrics, trafficByDay }) => <ChannelBigBangTimelineModule data={data} dailyMetrics={dailyMetrics} trafficByDay={trafficByDay} /> },
- { id: "vt2-trajectory-forecaster", group: "vt2", delayMs: 240, render: ({ data, dailyMetrics, trafficByDay }) => <TrajectoryForecasterModule data={data} dailyMetrics={dailyMetrics} trafficByDay={trafficByDay} /> },
- { id: "vt2-multi-metric-timeline", group: "vt2", delayMs: 280, render: ({ data, trafficByDay, dailyMetrics }) => <MultiMetricTimelineModule data={data} trafficByDay={trafficByDay} dailyMetrics={dailyMetrics} /> },
+ { id: "vt2-channel-big-bang", group: "vt2", delayMs: 200, render: ({ data, dailyMetrics }) => <ChannelBigBangTimelineModule data={data} dailyMetrics={dailyMetrics} /> },
+ { id: "vt2-trajectory-forecaster", group: "vt2", delayMs: 240, render: ({ data, dailyMetrics }) => <TrajectoryForecasterModule data={data} dailyMetrics={dailyMetrics} /> },
+ { id: "vt2-multi-metric-timeline", group: "vt2", delayMs: 280, render: ({ data, dailyMetrics }) => <MultiMetricTimelineModule data={data} dailyMetrics={dailyMetrics} /> },
 ]
 
 const sourceTablesForVisual = (id: string): readonly string[] => {
- if (id.startsWith("vt2-weekly-sparklines")) return ["videos", "traffic_day"]
+ if (id === "combo-channel-progress") return ["daily", "monthly", "videos"]
+ if (id === "format-comparison-donuts") return ["creator", "videos"]
+ if (id === "tube-explorer-clock-radial-burst") return ["traffic_overview", "traffic_details"]
+ if (id.startsWith("vt2-weekly-sparklines")) return ["daily"]
  if (id.startsWith("vt2-revenue-mosaic")) return ["videos"]
  if (id.startsWith("vt2-search-term-gravity")) return ["traffic", "search"]
  if (id.startsWith("vt2-video-fingerprint")) return ["videos"]
- if (id.startsWith("vt2-channel-big-bang")) return ["videos", "traffic_day"]
- if (id.startsWith("vt2-trajectory-forecaster")) return ["videos", "traffic_day"]
- if (id.startsWith("vt2-multi-metric-timeline")) return ["videos", "traffic_day"]
- if (id.includes("traffic") || id.includes("clock-radial")) return ["traffic", "traffic_day"]
+ if (id.startsWith("vt2-channel-big-bang")) return ["daily"]
+ if (id.startsWith("vt2-trajectory-forecaster")) return ["daily"]
+ if (id.startsWith("vt2-multi-metric-timeline")) return ["daily"]
+ if (id.includes("traffic")) return ["traffic", "traffic_day"]
  if (id.includes("format") || id.includes("shorts-vs-longs")) return ["creator", "videos"]
  if (id.includes("keyword") || id.includes("word-network")) return ["videos", "search"]
  if (id.includes("publish") || id.includes("upload-time")) return ["videos", "daily"]
@@ -157,6 +167,119 @@ const controlsForVisual = (id: string): VtSyncVisualModuleSpec["controls"] => {
  return []
 }
 
+const iconKeyForVisual = (id: string): string => getVtSyncVisualStyle(id).iconKey
+
+const activeMetricKeysForVisual = (id: string): readonly string[] => {
+ if (id.includes("multi-metric")) return ["views", "subscribers"]
+ if (id.includes("barcode")) return ["views"]
+ if (id.includes("progress") || id.includes("trajectory")) return ["views"]
+ if (id.includes("revenue")) return ["revenue", "rpm"]
+ if (id.includes("subscriber")) return ["subscribers"]
+ if (id.includes("engagement")) return ["likes", "comments", "shares"]
+ return []
+}
+
+const dimensionKeysForVisual = (id: string): readonly string[] => {
+ if (id.includes("traffic")) return ["trafficSource", "day"]
+ if (id.includes("multi-metric")) return ["timeWindow", "source"]
+ if (id.includes("barcode")) return ["video", "rank"]
+ if (id.includes("geo")) return ["country", "region"]
+ return ["video"]
+}
+
+const controllerExplanationForVisual = (id: string): string => {
+ if (id.includes("barcode")) return "Ranked video bars by the selected metric and format."
+ if (id.includes("multi-metric")) return "Selected metrics over the chosen channel or video time window."
+ if (id.includes("combo-channel-progress")) return "Daily Stats drive channel metrics; the Videos catalog supplies only upload counts."
+ if (id.includes("engagement")) return "Newest or top videos grouped by engagement metric."
+ return "Visualization generated from the active VT-SYNC table snapshot."
+}
+
+const canvasFitModeForVisual = (id: string): VtSyncVisualModuleSpec["canvasFitMode"] => {
+ if (id.includes("barcode") || id.includes("multi-metric")) return "fillWidth"
+ if (id.includes("sparklines") || id.includes("river-delta") || id.includes("trajectory")) return "preserveRatio"
+ return "balanced"
+}
+
+const shellModeForVisual = (group: VtSyncVisualModuleDefinition["group"]): VtSyncVisualModuleSpec["shellMode"] => {
+ if (group === "vt2") return "vt2-preserved"
+ return "standard"
+}
+
+const noop = () => undefined
+
+const controllerSpecForVisual = (id: string): VtSyncVisualModuleSpec["controllerSpec"] => {
+ if (id.includes("barcode")) {
+  return {
+   rows: [
+    { type: "number", value: 80, bgTone: VT_VISUAL_METRIC_COLORS.revenue, fgTone: "#000000", onPrev: noop, onNext: noop },
+    {
+     type: "dropdown",
+     value: "top:all",
+     options: [
+      { label: "GREATEST | ALL", value: "top:all" },
+      { label: "LATEST | SHORTS", value: "recent:shorts" },
+     ],
+     onSelect: noop,
+     bgTone: VT_VISUAL_METRIC_COLORS.views,
+     fgTone: "#000000",
+    },
+    {
+     type: "dropdown",
+     value: "views",
+     options: [
+      { label: "RANKED BY: VIEWS", value: "views" },
+      { label: "RANKED BY: LIKES", value: "likes" },
+     ],
+     onSelect: noop,
+     bgTone: VT_VISUAL_METRIC_COLORS.likes,
+     fgTone: "#000000",
+    },
+   ],
+  }
+ }
+
+ if (id.includes("multi-metric")) {
+  return {
+   denseLegacy: true,
+   rows: [
+    { type: "number", value: 12, bgTone: VT_VISUAL_METRIC_COLORS.engagedViews, fgTone: "#000000", onPrev: noop, onNext: noop },
+    { type: "toggle", value: "WEEKS", options: ["WEEKS", "MONTHS"], onSelect: noop, bgTone: VT_VISUAL_METRIC_COLORS.views, fgTone: "#000000" },
+    { type: "statement", value: "CHANNEL OVERLAY", bgTone: "#000000", fgTone: VT_VISUAL_METRIC_COLORS.engagedViews },
+    {
+     type: "metricMultiSelect",
+     selectedValues: ["views", "subscribers"],
+     options: [
+      { label: "VIEWS", value: "views", color: VT_VISUAL_METRIC_COLORS.views },
+      { label: "SUBS", value: "subscribers", color: VT_VISUAL_METRIC_COLORS.subscribers },
+      { label: "LIKES", value: "likes", color: VT_VISUAL_METRIC_COLORS.likes },
+      { label: "RPM", value: "rpm", color: VT_VISUAL_METRIC_COLORS.rpm },
+     ],
+     onToggleValue: noop,
+     bgTone: "#FFFFFF",
+     fgTone: "#000000",
+    },
+   ],
+  }
+ }
+
+ if (id.includes("combo-channel-progress")) {
+  return {
+   rows: [
+    { type: "statement", value: "CHANNEL TOTALS", bgTone: "#000000", fgTone: VT_VISUAL_METRIC_COLORS.views },
+    { type: "dropdown", value: "views", options: [{ label: "VIEWS", value: "views" }, { label: "LIKES", value: "likes" }], onSelect: noop, bgTone: VT_VISUAL_METRIC_COLORS.views, fgTone: "#000000" },
+    { type: "toggle", value: "1 YEAR", options: ["90 DAYS", "6 MONTHS", "1 YEAR"], onSelect: noop, bgTone: VT_VISUAL_METRIC_COLORS.watchTime, fgTone: "#000000" },
+   ],
+  }
+ }
+
+ return {
+  rows: [
+   { type: "statement", value: controllerExplanationForVisual(id), bgTone: "#000000", fgTone: VT_VISUAL_METRIC_COLORS.likes },
+  ],
+ }
+}
+
 const visualRenderer = (
  render: LegacyVisualModuleDefinition["render"],
 ): React.FC<VtSyncVisualProps> => {
@@ -164,15 +287,28 @@ const visualRenderer = (
  return RegisteredVtSyncVisual
 }
 
-const VISUAL_MODULES: VtSyncVisualModuleDefinition[] = [
+const ALL_LEGACY_VISUAL_MODULES: LegacyVisualModuleDefinition[] = [
  ...CORE_VISUAL_MODULES,
  ...TUBE_EXPLORER_MODULES,
  ...VT2_MODULES,
-].map((module) => ({
+]
+
+export const VT_SYNC_VISUAL_ICON_REGISTRY: Readonly<Record<string, string>> =
+ Object.freeze(Object.fromEntries(ALL_LEGACY_VISUAL_MODULES.map((module) => [module.id, iconKeyForVisual(module.id)])))
+
+const VISUAL_MODULES: VtSyncVisualModuleDefinition[] = ALL_LEGACY_VISUAL_MODULES.map((module, index) => ({
  id: module.id,
  group: module.group,
  delayMs: module.delayMs,
  sourceTableIds: sourceTablesForVisual(module.id),
+ iconKey: VT_SYNC_VISUAL_ICON_REGISTRY[module.id] || "analytics",
+ headerColorPair: getVtVisualHeaderColorPair(index),
+ activeMetricKeys: activeMetricKeysForVisual(module.id),
+ dimensionKeys: dimensionKeysForVisual(module.id),
+ controllerExplanation: controllerExplanationForVisual(module.id),
+ controllerSpec: controllerSpecForVisual(module.id),
+ canvasFitMode: canvasFitModeForVisual(module.id),
+ shellMode: shellModeForVisual(module.group),
  controls: controlsForVisual(module.id),
  footer: {
   insight: "Calculated from the active VT-SYNC table registry.",
@@ -193,12 +329,12 @@ const PRIMARY_MODULE_IDS = new Set([
  "revenue-distribution",
  "revenue-efficiency",
  "age-gender-audience",
+ "tube-explorer-engagement-radar",
  "subscribers-gained",
  "watch-time-distribution",
  "traffic-source-evolution",
  "keyword-venn",
  "signal-matrix",
- "custom-scatter",
  "tube-explorer-clock-radial-burst",
  "tube-explorer-barcode-fingerprint",
  "tube-explorer-subscriber-waterfall",
@@ -213,12 +349,6 @@ const PRIMARY_MODULE_IDS = new Set([
 
 const PRIMARY_VISUAL_MODULES: VtSyncVisualModuleDefinition[] = VISUAL_MODULES.filter((module) => PRIMARY_MODULE_IDS.has(module.id))
 const SECONDARY_VISUAL_MODULES: VtSyncVisualModuleDefinition[] = VISUAL_MODULES.filter((module) => !PRIMARY_MODULE_IDS.has(module.id))
-
-const THREE_UP_VISUAL_ROW_IDS = new Set([
- "age-gender-audience",
- "subscribers-gained",
- "watch-time-distribution",
-])
 
 // Coarse-pointer devices (touch phones/tablets) tighten the reveal window so
 // mounting a chart doesn't cascade through every neighbour off-screen. Desktop
@@ -295,28 +425,7 @@ const VtSyncDataVisualsContent: React.FC<{
   visualData.canonicalContext.geographyRows.length > 0
 
  const renderedVisualBlocks = useMemo(() => {
-  const blocks: Array<
-   | { type: "module"; module: VtSyncVisualModuleDefinition; index: number }
-   | { type: "row"; modules: Array<{ module: VtSyncVisualModuleDefinition; index: number }> }
-  > = []
-
-  for (let index = 0; index < modules.length; index += 1) {
-   const module = modules[index]
-   if (!THREE_UP_VISUAL_ROW_IDS.has(module.id)) {
-    blocks.push({ type: "module", module, index })
-    continue
-   }
-
-   const rowModules = modules
-    .map((entry, entryIndex) => ({ module: entry, index: entryIndex }))
-    .filter((entry) => THREE_UP_VISUAL_ROW_IDS.has(entry.module.id))
-
-   if (rowModules[0]?.module.id === module.id) {
-    blocks.push({ type: "row", modules: rowModules })
-   }
-  }
-
-  return blocks
+  return buildVtSyncVisualGridBlocks(modules)
  }, [modules])
 
  const moduleProps: TubeExplorerVisualProps = {
@@ -325,6 +434,7 @@ const VtSyncDataVisualsContent: React.FC<{
   trafficRows: visualData.canonicalContext.trafficRows,
   trafficByDay: visualData.trafficByDay,
   dailyMetrics: visualData.dailyMetrics,
+  monthlyMetrics: visualData.monthlyMetrics,
   channelSummary: visualData.channelSummary,
   geographyRows: visualData.canonicalContext.geographyRows,
   demographicRows: visualData.canonicalContext.demographicRows,
@@ -362,16 +472,20 @@ const VtSyncDataVisualsContent: React.FC<{
          delayMs={block.module.delayMs}
          estimatedHeight={block.module.group === "core" ? 360 : 80}>
          <VtSyncVisualFrame
-          spec={block.module}
+          spec={{
+           ...block.module,
+           headerColorPair: getVtVisualHeaderColorPair(block.index),
+           controllerColors: getVtVisualControllerColors(block.index),
+          }}
           visualProps={{
            ...moduleProps,
            collapsible: true,
-           isOpenInitial: block.index < 3,
+           isOpenInitial: shouldVtSyncVisualStartOpen(block.module.id, block.index),
           }}
          />
         </RevealOnView>
        ) : (
-        <div className="grid grid-cols-1 items-stretch gap-6 xl:grid-cols-3">
+        <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
          {block.modules.map(({ module, index }) => (
           <RevealOnView
            key={module.id}
@@ -379,11 +493,15 @@ const VtSyncDataVisualsContent: React.FC<{
            estimatedHeight={module.group === "core" ? 360 : 80}>
            <div className="h-full [&>div]:h-full">
             <VtSyncVisualFrame
-             spec={module}
+             spec={{
+              ...module,
+              headerColorPair: getVtVisualHeaderColorPair(index),
+              controllerColors: getVtVisualControllerColors(index),
+             }}
              visualProps={{
               ...moduleProps,
               collapsible: true,
-              isOpenInitial: index < 3,
+              isOpenInitial: shouldVtSyncVisualStartOpen(module.id, index),
              }}
             />
            </div>
@@ -432,7 +550,7 @@ export const VtSyncDataVisualsToolbox: React.FC<{ snapshot: VtSyncSnapshot }> = 
  const [vt2Theme, setVt2Theme] = useState<Vt2ThemeMode>("preserved")
 
  return (
-  <div className="flex flex-col gap-6">
+  <div className="vt-sync-data-visuals flex flex-col gap-6">
    <ToolboxScaffold
     title="DATA VISUALS"
     subtitle="Primary intelligence visual modules powered by the local Annalytics snapshot."

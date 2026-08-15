@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { Activity } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
+import { WidgetTooltip } from "../WidgetPrimitives"
 import type { DashboardData } from "../useDashboardData"
 
 interface GoalsTrackerWidgetProps {
@@ -22,6 +23,7 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, co
   const [activeGoalPrompt, setActiveGoalPrompt] = useState<string | null>(null)
   const [goalInputValue, setGoalInputValue] = useState("")
   const [goalType, setGoalType] = useState<"total" | "avg">("total")
+  const [hoveredMetric, setHoveredMetric] = useState<string | null>(null)
 
   useEffect(() => {
     const load = () => setGoalTargets(JSON.parse(localStorage.getItem(GOAL_STORAGE_KEY) || "{}"))
@@ -69,6 +71,23 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, co
     },
   ]
 
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem(GOAL_STORAGE_KEY) || "{}")
+    if (Object.keys(stored).length > 0) return
+
+    const now = Date.now()
+    const automaticGoals = categories.reduce<Record<string, any>>((next, category) => {
+      const baseline = category.period28d > 0 ? category.period28d : category.daily * 30
+      const target = Math.round(baseline * 1.1)
+      if (target > 0) next[category.key] = { target, duration: "1mo", type: "total", setAt: now, auto: true }
+      return next
+    }, {})
+
+    if (Object.keys(automaticGoals).length === 0) return
+    localStorage.setItem(GOAL_STORAGE_KEY, JSON.stringify(automaticGoals))
+    setGoalTargets(automaticGoals)
+  }, [rawMetrics.subscribers28d, rawMetrics.views28d, rawMetrics.revenue28d, (rawMetrics as any).watchHours28d, daysCount])
+
   const handleSaveGoal = () => {
     if (!activeGoalPrompt || !goalInputValue) { setActiveGoalPrompt(null); return }
     const current = JSON.parse(localStorage.getItem(GOAL_STORAGE_KEY) || "{}")
@@ -103,6 +122,12 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, co
   }
 
   const hasAnyGoal = Object.keys(goalTargets).length > 0
+  const hoveredCategory = categories.find((category) => category.key === hoveredMetric)
+  const hoveredGoal = hoveredCategory ? goalTargets[hoveredCategory.key] : null
+  const hoveredValue = hoveredCategory ? (hoveredGoal?.type === "avg" ? hoveredCategory.daily : hoveredCategory.period28d) : 0
+  const hoveredPercent = hoveredCategory && hoveredGoal?.target
+    ? Math.min(100, Math.round((hoveredValue / hoveredGoal.target) * 100))
+    : 0
 
   return (
     <WidgetShell {...commonProps} icon={<Activity size={22} />}>
@@ -115,8 +140,14 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, co
             const progressValue = goal?.type === "avg" ? cat.daily : cat.period28d
             const pct = goal?.target ? Math.min(100, Math.round((progressValue / goal.target) * 100)) : 0
             return (
-              <button
+              <WidgetTooltip
                 key={cat.key}
+                variant="top-center-outline"
+                className="goals-tracker-metric-tooltip"
+                content={<><span className="widget-tooltip-title">{cat.key} goal</span><span className="widget-tooltip-subtitle">{fmt(cat.key, progressValue)} of {fmt(cat.key, goal?.target || 0)} this month · {pct}% complete.</span></>}
+                style={{ "--tooltip-surface": cat.color, "--tooltip-border": cat.color } as React.CSSProperties}
+              >
+              <button
                 onClick={() => {
                   setActiveGoalPrompt(cat.key)
                   setGoalInputValue(goal?.target ? String(goal.target) : "")
@@ -148,6 +179,7 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, co
                   <span style={{ fontSize: "8px", opacity: 0.35 }}>TAP</span>
                 )}
               </button>
+              </WidgetTooltip>
             )
           })}
         </div>
@@ -160,6 +192,7 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, co
             </div>
           )}
 
+          <div className="goals-tracker-visual" aria-label="Goal progress visual details">
           <svg width="100%" height="100%" viewBox="0 0 160 140" style={{ maxWidth: "180px", maxHeight: "160px" }}>
             {categories.map((cat, ci) => {
               const radii = [62, 48, 34, 20]
@@ -198,6 +231,21 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, co
                       style={{ transition: "stroke-dashoffset 1s ease-out", transform: "rotate(-90deg)", transformOrigin: "80px 70px" }}
                     />
                   )}
+                  <circle
+                    cx="80"
+                    cy="70"
+                    r={r}
+                    fill="none"
+                    stroke="transparent"
+                    strokeWidth="16"
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`${cat.key} goal details`}
+                    onPointerEnter={() => setHoveredMetric(cat.key)}
+                    onPointerLeave={() => setHoveredMetric(null)}
+                    onFocus={() => setHoveredMetric(cat.key)}
+                    onBlur={() => setHoveredMetric(null)}
+                  />
                 </g>
               )
             })}
@@ -219,14 +267,21 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, co
               <text x="80" y="78" textAnchor="middle" style={{ fontFamily: "inherit", fontWeight: 800, fontSize: 7, fill: "rgba(0,0,0,0.4)", textTransform: "uppercase", letterSpacing: "0.06em" }}>AVG</text>
             )}
           </svg>
+          {hoveredCategory && (
+            <div className="goals-tracker-visual-tooltip" style={{ "--goal-tooltip-color": hoveredCategory.color } as React.CSSProperties} role="tooltip">
+              <strong>{hoveredCategory.key}</strong>
+              <span>{fmt(hoveredCategory.key, hoveredValue)} / {fmt(hoveredCategory.key, hoveredGoal?.target || 0)} · {hoveredPercent}%</span>
+            </div>
+          )}
+          </div>
 
           {/* Legend */}
           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", justifyContent: "center" }}>
             {categories.map((cat) => (
-              <div key={cat.key} style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+              <span key={cat.key} className="goals-tracker-legend">
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: cat.color, border: "1px solid #000" }} />
                 <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", opacity: 0.65 }}>{cat.label}</span>
-              </div>
+              </span>
             ))}
           </div>
 

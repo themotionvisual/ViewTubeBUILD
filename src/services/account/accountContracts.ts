@@ -23,6 +23,7 @@ export type AccountCapability =
   | "youtube_monetary_read"
   | "youtube_upload"
   | "youtube_comments"
+  | "youtube_content_owner"
   | "search_console_read"
 
 export interface UnifiedAccountSnapshot {
@@ -40,6 +41,12 @@ export interface UnifiedAccountSnapshot {
     status: "disconnected" | "connected" | "expired" | "revoked"
     youtubeScopesGranted: boolean
     channelId: string | null
+    channelTitle: string | null
+    channelHandle: string | null
+    channelThumbnail: string | null
+    contentOwners: Array<{ id: string; displayName: string }>
+    activeContentOwnerId: string | null
+    contentOwnerSelectionRequired: boolean
   }
   onboarding: {
     status: "not_started" | "in_progress" | "complete"
@@ -77,6 +84,12 @@ export const ANONYMOUS_ACCOUNT_SNAPSHOT: UnifiedAccountSnapshot = {
     status: "disconnected",
     youtubeScopesGranted: false,
     channelId: null,
+    channelTitle: null,
+    channelHandle: null,
+    channelThumbnail: null,
+    contentOwners: [],
+    activeContentOwnerId: null,
+    contentOwnerSelectionRequired: false,
   },
   onboarding: {
     status: "not_started",

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react"
 import { Image as ImageIcon, Send, Sparkles } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
+import { WidgetFooter, WidgetHeaderToggle, WidgetWorkflowMain } from "../WidgetPrimitives"
 import { AspectRatio, ImageSize } from "../../../types"
 import { generateEndScreenImage, generateThumbnail, hasGeminiKey } from "../../../services/gemini"
 
@@ -52,6 +53,17 @@ export const ImageGeneratorWidget = ({
   const [generatedImage, setGeneratedImage] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [lastTarget, setLastTarget] = useState<TargetWidget | null>(null)
+  const templateToggle = (
+    <WidgetHeaderToggle
+      label="Image template type"
+      value={mode}
+      onChange={(value) => setMode(value as TemplateMode)}
+      items={[
+        { id: "thumbnail", label: "Thumbnail" },
+        { id: "endscreen", label: "End\nScreen" },
+      ]}
+    />
+  )
 
   const finalPrompt = useMemo(() => {
     const styleContext = selectedStyles.length ? ` Styles: ${selectedStyles.join(", ")}.` : ""
@@ -104,37 +116,29 @@ export const ImageGeneratorWidget = ({
   }
 
   return (
-    <WidgetShell {...common} icon={<ImageIcon size={22} />}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%" }}>
-        <div className="vt-tab-group" style={{ width: "170px", padding: "2px", alignSelf: "center" }}>
-          <button onClick={() => setMode("thumbnail")} className={`vt-tab-btn ${mode === "thumbnail" ? "active" : ""}`} style={{ padding: "4px", fontSize: "9px" }}>
-            THUMBNAIL
-          </button>
-          <button onClick={() => setMode("endscreen")} className={`vt-tab-btn ${mode === "endscreen" ? "active" : ""}`} style={{ padding: "4px", fontSize: "9px" }}>
-            END SCREEN
-          </button>
+    <WidgetShell {...common} icon={<ImageIcon size={22} />} headerContent={templateToggle}>
+      <div className="widget-workspace image-generator-workspace">
+      <WidgetWorkflowMain className="image-generator-main">
+        <div className="image-generator-copy-grid">
+          <textarea
+            className="vt-textarea"
+            value={prompt}
+            onChange={(event) => setPrompt(event.target.value)}
+            placeholder={mode === "thumbnail" ? "Describe thumbnail concept..." : "Describe end screen template background..."}
+          />
+          <div className="image-generator-text-fields">
+            <input className="vt-input" value={headline} onChange={(event) => setHeadline(event.target.value)} placeholder="Large text" />
+            <input className="vt-input" value={subline} onChange={(event) => setSubline(event.target.value)} placeholder="Small text" />
+          </div>
         </div>
 
-        <textarea
-          className="vt-textarea"
-          value={prompt}
-          onChange={(event) => setPrompt(event.target.value)}
-          placeholder={mode === "thumbnail" ? "Describe thumbnail concept..." : "Describe end screen template background..."}
-          style={{ minHeight: "74px" }}
-        />
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
-          <input className="vt-input" value={headline} onChange={(event) => setHeadline(event.target.value)} placeholder="Large text" />
-          <input className="vt-input" value={subline} onChange={(event) => setSubline(event.target.value)} placeholder="Small text" />
-        </div>
-
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+        <div className="image-generator-style-grid" aria-label="Image styles">
           {STYLE_OPTIONS.map((style) => (
             <button
               key={style}
               onClick={() => toggleStyle(style)}
-              className="vt-button"
-              style={{ height: "24px", fontSize: "8px", padding: "0 8px", background: selectedStyles.includes(style) ? "var(--widget-color)" : "#fff" }}
+              className={`vt-button${selectedStyles.includes(style) ? " is-selected" : ""}`}
+              aria-pressed={selectedStyles.includes(style)}
             >
               {style}
             </button>
@@ -151,7 +155,7 @@ export const ImageGeneratorWidget = ({
           </button>
         )}
 
-        <div style={{ flex: 1, minHeight: "110px", border: "2px solid #000", borderRadius: "10px", overflow: "hidden", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="image-generator-preview">
           {generatedImage ? (
             <img src={generatedImage} alt="Generated output" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
@@ -159,26 +163,24 @@ export const ImageGeneratorWidget = ({
           )}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
-          <button className="vt-button" style={{ height: "30px", fontSize: "9px" }} onClick={() => sendToWidget("community-post")} disabled={!generatedImage}>
-            <Send size={12} /> Send → Community
+      </WidgetWorkflowMain>
+        <WidgetFooter divider={false} className="image-generator-footer">
+        <div className="image-generator-send-grid">
+          <button className="vt-button" aria-label="Send image to Community Post" onClick={() => sendToWidget("community-post")} disabled={!generatedImage}>
+            <Send size={12} /> Community
           </button>
-          <button className="vt-button" style={{ height: "30px", fontSize: "9px" }} onClick={() => sendToWidget("comment-replier")} disabled={!generatedImage}>
-            <Send size={12} /> Send → Comments
+          <button className="vt-button" aria-label="Send image to Comment Responder" onClick={() => sendToWidget("comment-replier")} disabled={!generatedImage}>
+            <Send size={12} /> Comments
           </button>
-          <button className="vt-button" style={{ height: "30px", fontSize: "9px" }} onClick={() => sendToWidget("thumb-ai")} disabled={!generatedImage}>
-            <Send size={12} /> Send → Thumb AI
+          <button className="vt-button" aria-label="Send image to Thumbnail AI" onClick={() => sendToWidget("thumb-ai")} disabled={!generatedImage}>
+            <Send size={12} /> Thumb AI
           </button>
-          <button className="vt-button" style={{ height: "30px", fontSize: "9px" }} onClick={() => sendToWidget("video-uploader")} disabled={!generatedImage}>
-            <Send size={12} /> Send → Video Uploader
+          <button className="vt-button" aria-label="Send image to Video Uploader" onClick={() => sendToWidget("video-uploader")} disabled={!generatedImage}>
+            <Send size={12} /> Uploader
           </button>
         </div>
-
-        {lastTarget ? (
-          <div style={{ fontSize: "9px", fontWeight: 900, opacity: 0.65, textTransform: "uppercase" }}>
-            Sent to: {lastTarget}
-          </div>
-        ) : null}
+        {lastTarget ? <span className="widget-action-status">Sent to: {lastTarget}</span> : null}
+        </WidgetFooter>
       </div>
     </WidgetShell>
   )

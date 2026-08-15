@@ -118,13 +118,22 @@ export const installOnScreenDiagnostics = (): void => {
   }
  })
 
- // Wrap fetch to log non-2xx responses and network errors — the two mobile
- // symptoms most likely to hang a data-hydration Suspense boundary.
+ recordDiagnostic("info", "boot", `${navigator.userAgent.slice(0, 100)}`)
+
+ // Wrap fetch ONCE to log non-2xx responses, catch network errors, and
+ // track in-flight requests. The previous code wrapped window.fetch twice
+ // (logging, then in-flight tracking), creating double closure overhead
+ // per call and GC pressure on mobile. This single wrapper does both.
  const originalFetch = window.fetch
  if (typeof originalFetch === "function") {
+  const inFlight = new Map<string, number>()
+  const flagged = new Set<string>()
+
   window.fetch = async (...args) => {
    const url = typeof args[0] === "string" ? args[0] : (args[0] as Request).url || "<request>"
+   const key = `${url}#${Date.now()}`
    const started = now()
+   inFlight.set(key, started)
    try {
     const response = await originalFetch(...args)
     if (!response.ok) {
@@ -135,45 +144,23 @@ export const installOnScreenDiagnostics = (): void => {
     const message = error instanceof Error ? error.message : String(error)
     recordDiagnostic("error", "fetch-fail", `${message} ${url} (${now() - started}ms)`)
     throw error
-   }
-  }
- }
-
- recordDiagnostic("info", "boot", `${navigator.userAgent.slice(0, 100)}`)
-
- // Snapshot the set of *in-flight* fetches every 3 seconds after a hang
- // becomes possible. The plain per-request log only records failed and
- // completed calls — a request that just never resolves is invisible.
- // This heartbeat surfaces those "still open" URLs so we can see what's
- // hanging even without an error event.
- const inFlight = new Map<string, number>()
- const trackedFetch = window.fetch
- if (typeof trackedFetch === "function") {
-  window.fetch = async (...args) => {
-   const url = typeof args[0] === "string" ? args[0] : (args[0] as Request).url || "<request>"
-   const key = `${url}#${Date.now()}`
-   inFlight.set(key, now())
-   try {
-    const response = await trackedFetch(...args)
-    return response
    } finally {
     inFlight.delete(key)
    }
   }
+
+  // Poll: any fetch that has been in flight for > 3 s gets flagged once.
+  window.setInterval(() => {
+   const nowMs = now()
+   inFlight.forEach((startedAt, key) => {
+    const age = nowMs - startedAt
+    if (age > 3000 && !flagged.has(key)) {
+     flagged.add(key)
+     recordDiagnostic("warn", "fetch-slow", `${age}ms still pending: ${key.split("#")[0]}`)
+    }
+   })
+  }, 3000)
  }
- // Poll: any fetch that has been in flight for > 3 s gets flagged once.
- const flagged = new Set<string>()
- window.setInterval(() => {
-  const nowMs = now()
-  inFlight.forEach((startedAt, key) => {
-   const age = nowMs - startedAt
-   if (age > 3000 && !flagged.has(key)) {
-    flagged.add(key)
-    const url = key.split("#")[0]
-    recordDiagnostic("warn", "fetch-slow", `${age}ms still pending: ${url}`)
-   }
-  })
- }, 3000)
 }
 
 // Public helper for app-shell modules to plant boot-phase breadcrumbs

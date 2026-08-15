@@ -9,8 +9,17 @@ import {
  getVtSyncDefaultCategoryIds,
  getVtSyncVisibleCategoryIds,
 } from "./syncCategoryRegistry"
+import { VT_SYNC_SYNC_UNITS } from "./syncUnitRegistry"
+import { VT_SYNC_TABLE_CATEGORIES, VT_SYNC_TABLE_DEFINITIONS } from "./tableRegistry"
+import { getVtSyncAvailableTrafficDetailSources, VT_SYNC_TRAFFIC_DETAIL_SOURCES } from "./trafficDetailRegistry"
 
 describe("VT Sync category registry", () => {
+ it("owns the exact supported traffic detail source set", () => {
+ expect(VT_SYNC_TRAFFIC_DETAIL_SOURCES.map((source) => source.sourceType)).toEqual([
+   "ADVERTISING", "EXT_URL", "HASHTAGS", "NOTIFICATION", "SUBSCRIBER", "YT_OTHER_PAGE", "YT_SEARCH",
+   "END_SCREEN", "RELATED_VIDEO", "SOUND_PAGE", "VIDEO_REMIXES", "WATCH_WITH", "YT_CHANNEL", "CAMPAIGN_CARD",
+  ])
+ })
  it("exposes only successful/stable categories to the controller", () => {
   const visibleIds = getVtSyncVisibleCategoryIds()
 
@@ -53,10 +62,94 @@ describe("VT Sync category registry", () => {
  })
 
  it("does not include hidden categories in default or sanitized selections", () => {
+  expect(getVtSyncDefaultCategoryIds()).not.toEqual(expect.arrayContaining(["channel_pages", "traffic_subscribers"]))
   expect(getVtSyncDefaultCategoryIds()).not.toContain("traffic_shorts")
   expect(filterVtSyncVisibleCategoryIds(["traffic_overview", "traffic_shorts", "geography_province"])).toEqual([
    "traffic_overview",
    "geography_province",
   ])
+ })
+
+ it("maps every controller sync unit to a table category and supported child categories", () => {
+  const tableCategoryIds = new Set(VT_SYNC_TABLE_CATEGORIES.map((category) => category.id))
+  const visibleCategoryIds = new Set(VT_SYNC_CATEGORY_OPTIONS.map((category) => category.id))
+ expect(VT_SYNC_SYNC_UNITS.every((unit) => tableCategoryIds.has(unit.tableCategoryId))).toBe(true)
+ expect(VT_SYNC_SYNC_UNITS.every((unit) => unit.categoryIds.every((id) => visibleCategoryIds.has(id)))).toBe(true)
+ expect(VT_SYNC_SYNC_UNITS.some((unit) => unit.categoryIds.includes("traffic_notification"))).toBe(false)
+ expect(VT_SYNC_SYNC_UNITS.find((unit) => unit.id === "channel_overview_windows")).toMatchObject({
+  label: "Channel Overview + Windows",
+  group: "channel",
+  tableId: "channel_totals",
+  categoryIds: ["channel_metadata", "channel_totals"],
+ })
+ expect(VT_SYNC_SYNC_UNITS.find((unit) => unit.id === "video_catalog")?.categoryIds).toEqual([
+  "uploads_playlist", "video_metadata", "videos_analytics",
+ ])
+ expect(getVtSyncAvailableTrafficDetailSources().map((source) => source.sourceType)).not.toEqual(expect.arrayContaining([
+  "NOTIFICATION", "END_SCREEN", "VIDEO_REMIXES", "WATCH_WITH",
+ ]))
+ expect(VT_SYNC_SYNC_UNITS.some((unit) => unit.id === "channel_totals")).toBe(false)
+ expect(VT_SYNC_SYNC_UNITS.find((unit) => unit.id === "daily_stats")).toMatchObject({
+  label: "Daily Stats",
+  group: "time",
+  tableCategoryId: "daily",
+  tableId: "daily",
+  categoryIds: ["daily_metrics"],
+ })
+ expect(VT_SYNC_SYNC_UNITS.find((unit) => unit.id === "traffic_by_day")).toMatchObject({
+  label: "Traffic × Day",
+  group: "time",
+  tableCategoryId: "daily",
+  tableId: "traffic_day",
+  categoryIds: ["traffic_day"],
+ })
+ expect(VT_SYNC_SYNC_UNITS.some((unit) => unit.id === "daily_traffic")).toBe(false)
+ expect(VT_SYNC_SYNC_UNITS.filter((unit) => unit.group === "geography").map((unit) => unit.tableId)).toEqual([
+  "geography", "cities", "provinces", "dma",
+  ])
+  expect(VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === "subscription_status")).toMatchObject({
+   label: "Subscriber Status",
+   group: "channel",
+  })
+  expect(VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === "formats_subscriber_status")).toMatchObject({
+   label: "Formats x Subscriber Status",
+   group: "channel",
+   phase: "audience_segments",
+  })
+  expect(VT_SYNC_SYNC_UNITS.find((unit) => unit.id === "subscription_status")).toMatchObject({
+   label: "Subscriber Status",
+   group: "channel",
+   tableCategoryId: "channel_totals",
+   tableId: "subs",
+  })
+  expect(VT_SYNC_SYNC_UNITS.find((unit) => unit.id === "formats_subscriber_status")).toMatchObject({
+   label: "Formats x Subscriber Status",
+   group: "channel",
+   tableCategoryId: "content",
+   tableId: "formats_subscribers",
+  })
+  expect(VT_SYNC_TABLE_CATEGORIES.find((category) => category.id === "channel_totals")).toMatchObject({
+   label: "Channel",
+   tabs: expect.arrayContaining([expect.objectContaining({ id: "subs", label: "Subscriber Status" })]),
+  })
+  const subscriberStatusTable = VT_SYNC_TABLE_DEFINITIONS.find((table) => table.id === "subs")
+  expect(subscriberStatusTable).toMatchObject({
+   mainCategoryId: "channel_totals",
+   label: "Subscriber Status",
+  })
+  expect(subscriberStatusTable?.columns.map((column) => column.key)).toEqual(expect.arrayContaining([
+   "youtubePremiumViews",
+   "youtubePremiumWatchTime",
+  ]))
+  const formatSubscriberTable = VT_SYNC_TABLE_DEFINITIONS.find((table) => table.id === "formats_subscribers")
+  expect(formatSubscriberTable).toMatchObject({
+   mainCategoryId: "content",
+   label: "Formats x Subscriber Status",
+   presentationMode: "format-subscriber-status",
+  })
+  expect(VT_SYNC_SYNC_UNITS.filter((unit) => unit.id.startsWith("traffic_detail_")).every((unit) =>
+   VT_SYNC_TABLE_DEFINITIONS.some((table) => table.id === unit.tableId && table.syncUnitId === unit.id),
+  )).toBe(true)
+  expect(VT_SYNC_TABLE_DEFINITIONS.find((table) => table.id === "traffic_details")?.syncUnitId).toBe("traffic_details")
  })
 })

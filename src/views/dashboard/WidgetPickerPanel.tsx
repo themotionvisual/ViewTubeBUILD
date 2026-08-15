@@ -3,6 +3,7 @@ import * as Dialog from "@radix-ui/react-dialog"
 import { Check, Grid3X3, Search, X } from "lucide-react"
 import type { DashboardLayoutState, DashboardWidgetCategory, WidgetDefinition } from "./types"
 import { resolveDashboardSpectrum, resolveVisibleWidgetSpectrum } from "./spectrum"
+import { WidgetSelect } from "./WidgetPrimitives"
 
 interface WidgetPickerPanelProps {
   open: boolean
@@ -102,17 +103,16 @@ export const WidgetPickerPanel: React.FC<WidgetPickerPanelProps> = ({
               />
             </div>
 
-            <label htmlFor={categoryId}>Category</label>
-            <select
-              id={categoryId}
-              name="dashboard-widget-category"
+            <label id={categoryId}>Category</label>
+            <WidgetSelect
               value={category}
-              onChange={(event) => setCategory(event.target.value as typeof category)}
-            >
-              {CATEGORIES.map((option) => (
-                <option key={option} value={option}>{option === "all" ? "All categories" : option}</option>
-              ))}
-            </select>
+              onChange={(value) => setCategory(value as typeof category)}
+              label="Widget category"
+              options={CATEGORIES.map((option) => ({
+                value: option,
+                label: option === "all" ? "All categories" : option,
+              }))}
+            />
           </div>
 
           <div className="widget-picker-results" aria-live="polite">

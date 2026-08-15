@@ -37,17 +37,17 @@ export const VT_NAV_PALETTE_12 = VT_SPECTRUM_PALETTE_06;
  */
 export const VT_VISUAL_METRIC_ORDER = [
   "views",
+  "engagedViews",
   "watchTime",
   "subscribers",
-  "engagedViews",
   "revenue",
   "comments",
-  "shares",
-  "likes",
-  "saves",
   "avp",
   "avd",
+  "likes",
   "rpm",
+  "shares",
+  "playlistSaves",
 ] as const;
 
 export type VtVisualMetricKey = (typeof VT_VISUAL_METRIC_ORDER)[number];
@@ -79,18 +79,20 @@ const VT_VISUAL_METRIC_ALIASES: Readonly<Record<string, VtVisualMetricKey>> = Ob
   "$ rev": "revenue",
   "est revenue": "revenue",
   "estimated revenue": "revenue",
+  "revenue per mille": "rpm",
   comments: "comments",
   comment: "comments",
   cmnts: "comments",
   shares: "shares",
   likes: "likes",
   like: "likes",
-  saves: "saves",
-  save: "saves",
-  "playlist saves": "saves",
-  "playlist saves net": "saves",
-  "added to playlists": "saves",
-  "videos added to playlists": "saves",
+  saves: "playlistSaves",
+  save: "playlistSaves",
+  playlistsaves: "playlistSaves",
+  "playlist saves": "playlistSaves",
+  "playlist saves net": "playlistSaves",
+  "added to playlists": "playlistSaves",
+  "videos added to playlists": "playlistSaves",
   avp: "avp",
   "avg viewed": "avp",
   "avg % viewed": "avp",
@@ -134,6 +136,26 @@ export const resolveVtVisualMetricKey = (label: string): VtVisualMetricKey | und
 export const getVtVisualMetricColor = (label: string): string | undefined => {
   const metric = resolveVtVisualMetricKey(label);
   return metric ? VT_VISUAL_METRIC_COLORS[metric] : undefined;
+};
+
+export const getVtVisualHeaderColorPair = (index: number) => {
+  const len = VT_SPECTRUM_PALETTE_06.length;
+  const normalized = normalizePaletteIndex(index, len);
+  const palette = getToolboxPaletteColors(normalized);
+  return {
+    icon: palette.icon,
+    title: palette.header,
+  };
+};
+
+export const getVtVisualControllerColors = (index: number) => {
+  const len = VT_SPECTRUM_PALETTE_06.length;
+  const iconIndex = normalizePaletteIndex(index + 4, len);
+  return {
+    previous: getPaletteColor(iconIndex - 1),
+    middle: getPaletteColor(iconIndex),
+    next: getPaletteColor(iconIndex + 1),
+  };
 };
 
 export const APPLICATIONS_TOOLBOX_PALETTE = VT_SPECTRUM_PALETTE_06;

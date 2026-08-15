@@ -13,7 +13,7 @@ import type { TubeExplorerVisualProps } from "../../TubeExplorerVisualModules"
 import { ChartModule, SlabControl, type Stat } from "../ChartModule"
 import { useVt2Theme } from "./theme"
 import { flattenVideosForVt2, type Vt2VideoRow } from "./dataBridge"
-import { VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
+import { VT_SPECTRUM_PALETTE_06, VT_VISUAL_METRIC_COLORS } from "../../../styles/toolboxPalette"
 
 type MetricKey = "ctr" | "avp" | "views" | "rpm" | "watchHrs" | "likes" | "revenue" | "subs"
 
@@ -102,14 +102,14 @@ export const VideoPerformanceFingerprintModule: React.FC<TubeExplorerVisualProps
   }, [])
 
   const defs: MetricDef[] = useMemo(() => [
-    { key: "views",    label: "VIEWS", color: VT_SPECTRUM_PALETTE_06[0],  get: (v) => v.views },
-    { key: "watchHrs", label: "W.HRS", color: VT_SPECTRUM_PALETTE_06[1],  get: (v) => v.watchHrs },
-    { key: "subs",     label: "SUBS",  color: VT_SPECTRUM_PALETTE_06[2],  get: (v) => v.subsGained },
-    { key: "revenue",  label: "REV",   color: VT_SPECTRUM_PALETTE_06[4],  get: (v) => v.revenue },
-    { key: "likes",    label: "LIKES", color: VT_SPECTRUM_PALETTE_06[7],  get: (v) => v.likes },
-    { key: "avp",      label: "AVP%",  color: VT_SPECTRUM_PALETTE_06[9],  get: (v) => v.avp },
+    { key: "views",    label: "VIEWS", color: VT_VISUAL_METRIC_COLORS.views, get: (v) => v.views },
+    { key: "watchHrs", label: "W.HRS", color: VT_VISUAL_METRIC_COLORS.watchTime, get: (v) => v.watchHrs },
+    { key: "subs",     label: "SUBSCRIBERS", color: VT_VISUAL_METRIC_COLORS.subscribers, get: (v) => v.subsGained },
+    { key: "revenue",  label: "REV", color: VT_VISUAL_METRIC_COLORS.revenue, get: (v) => v.revenue },
+    { key: "avp",      label: "AVP%", color: VT_VISUAL_METRIC_COLORS.avp, get: (v) => v.avp },
+    { key: "likes",    label: "LIKES", color: VT_VISUAL_METRIC_COLORS.likes, get: (v) => v.likes },
     { key: "ctr",      label: "CTR",   color: VT_SPECTRUM_PALETTE_06[10], get: (v) => v.ctr },
-    { key: "rpm",      label: "RPM",   color: VT_SPECTRUM_PALETTE_06[11], get: (v) => v.rpm },
+    { key: "rpm",      label: "RPM", color: VT_VISUAL_METRIC_COLORS.rpm, get: (v) => v.rpm },
   ], [])
 
   const videos = useMemo(() => flattenVideosForVt2(data), [data])

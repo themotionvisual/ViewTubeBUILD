@@ -1,11 +1,30 @@
 import { handleAccountRoute } from "../../server/account-auth.mjs";
 
-const readBody = async (req) =>
+const readBody = async (req, maxBytes = Number.POSITIVE_INFINITY) =>
   new Promise((resolve, reject) => {
+    const contentLength = Number(req.headers["content-length"] || 0);
+    if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+      const error = new Error("Request body is too large.");
+      error.statusCode = 413;
+      reject(error);
+      return;
+    }
     const chunks = [];
-    req.on("data", (chunk) => chunks.push(chunk));
+    let size = 0;
+    let rejected = false;
+    req.on("data", (chunk) => {
+      size += chunk.length;
+      if (size > maxBytes && !rejected) {
+        rejected = true;
+        const error = new Error("Request body is too large.");
+        error.statusCode = 413;
+        reject(error);
+        return;
+      }
+      if (!rejected) chunks.push(chunk);
+    });
     req.on("error", reject);
-    req.on("end", () => resolve(Buffer.concat(chunks)));
+    req.on("end", () => { if (!rejected) resolve(Buffer.concat(chunks)); });
   });
 
 const json = (res, status, payload) => {
@@ -31,15 +50,12 @@ export const routeAccountRequest = async (req, res) => {
     return;
   }
 
-  const handled = await handleAccountRoute({
-    req,
-    res,
-    method,
-    pathname,
-    parsedUrl,
-    json,
-    readBody,
-  });
+  let handled;
+  try {
+    handled = await handleAccountRoute({ req, res, method, pathname, parsedUrl, json, readBody });
+  } catch (error) {
+    return json(res, Number(error?.statusCode) || 500, { error: error instanceof Error ? error.message : "Account request failed." });
+  }
 
   if (!handled && !res.writableEnded) {
     json(res, 404, { error: `Not found: ${method} ${pathname}` });

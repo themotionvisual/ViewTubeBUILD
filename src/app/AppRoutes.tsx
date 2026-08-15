@@ -10,12 +10,16 @@ import { lazyRoute, RouteSuspense } from "./lazyRoute"
 // are no longer on the CDN.
 const lazy = lazyRoute
 
+// Dashboard was the only eagerly-imported route — pulling DashboardRebuild,
+// WidgetRenderer (1292 lines), and all widget deps into the entry chunk.
+// Lazy-loading it keeps ~200KB+ out of the critical path on mobile.
+const Dashboard = lazy(() => import("../views/Dashboard"))
+
 // Route-level code splitting: every top-level view is loaded on demand so the
 // initial bundle only contains the shell + the first route the user lands on.
 // This keeps the multi-thousand-line views (ResearchLab, PerformanceHub,
 // GraphsPageCharts, ToolboxUISystem, ...) and their heavy chart/AI deps out of
 // the critical path until they are actually navigated to.
-const Dashboard = lazy(() => import("../views/Dashboard"))
 const DashboardLegacy = lazy(() => import("../views/DashboardLegacy"))
 const StudioHub = lazy(() => import("../views/StudioHub"))
 const PerformanceHub = lazy(() => import("../views/PerformanceHub"))

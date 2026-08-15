@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react"
 import type { CanonicalVideoRow } from "../../../services/analytics/DataStore"
 import type { TubeExplorerVisualProps } from "../../TubeExplorerVisualModules"
-import { ChartModule } from "../ChartModule"
+import { AnalyticsVisualShell } from "../../AnalyticsVisualShell"
 import { TrendingUp } from "lucide-react"
 import {
   flattenVideosForVt2,
@@ -11,31 +11,28 @@ import {
 } from "./dataBridge"
 import { useVt2Theme } from "./theme"
 
-import { VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
+import { VT_VISUAL_METRIC_COLORS } from "../../../styles/toolboxPalette"
 
 // ── Metric Definitions ───────────────────────────────────────────────────────
 const METRIC_DEFS: Record<string, { label: string; color: string; fmt: (v: number) => string }> = {
-  views:        { label: "VIEWS",     color: VT_SPECTRUM_PALETTE_06[0],  fmt: v => v >= 1000 ? (v / 1000).toFixed(0) + "K" : v.toFixed(0) },
-  engagedViews: { label: "ENGAGED",   color: VT_SPECTRUM_PALETTE_06[3],  fmt: v => v >= 1000 ? (v / 1000).toFixed(0) + "K" : v.toFixed(0) },
-  watchHrs:     { label: "WATCH HRS", color: VT_SPECTRUM_PALETTE_06[1],  fmt: v => v.toFixed(0) + "h" },
-  subs:         { label: "SUBS",      color: VT_SPECTRUM_PALETTE_06[2],  fmt: v => v >= 1000 ? (v / 1000).toFixed(1) + "K" : v.toFixed(0) },
-  likes:        { label: "LIKES",     color: VT_SPECTRUM_PALETTE_06[7],  fmt: v => v >= 1000 ? (v / 1000).toFixed(0) + "K" : v.toFixed(0) },
-  shares:       { label: "SHARES",    color: VT_SPECTRUM_PALETTE_06[6],  fmt: v => v.toFixed(0) },
-  comments:     { label: "COMMENTS",  color: VT_SPECTRUM_PALETTE_06[5],  fmt: v => v.toFixed(0) },
-  revenue:      { label: "REVENUE",   color: VT_SPECTRUM_PALETTE_06[4],  fmt: v => "$" + v.toFixed(0) },
-  avd:          { label: "AVD",       color: VT_SPECTRUM_PALETTE_06[10], fmt: v => v.toFixed(0) + "s" },
-  avp:          { label: "AVP%",      color: VT_SPECTRUM_PALETTE_06[9],  fmt: v => v.toFixed(1) + "%" },
-  rpm:          { label: "RPM",       color: VT_SPECTRUM_PALETTE_06[11], fmt: v => "$" + v.toFixed(2) },
-  adRevenue:    { label: "AD REV",    color: VT_SPECTRUM_PALETTE_06[11], fmt: v => "$" + v.toFixed(0) },
+  views:        { label: "VIEWS",     color: VT_VISUAL_METRIC_COLORS.views,  fmt: v => v >= 1000 ? (v / 1000).toFixed(0) + "K" : v.toFixed(0) },
+  engagedViews: { label: "ENGAGED",   color: VT_VISUAL_METRIC_COLORS.engagedViews,  fmt: v => v >= 1000 ? (v / 1000).toFixed(0) + "K" : v.toFixed(0) },
+  watchHrs:     { label: "WATCH TIME", color: VT_VISUAL_METRIC_COLORS.watchTime,  fmt: v => v.toFixed(0) + "h" },
+  subs:         { label: "SUBSCRIBERS", color: VT_VISUAL_METRIC_COLORS.subscribers, fmt: v => v >= 1000 ? (v / 1000).toFixed(1) + "K" : v.toFixed(0) },
+  revenue:      { label: "REVENUE",   color: VT_VISUAL_METRIC_COLORS.revenue,  fmt: v => "$" + v.toFixed(0) },
+  comments:     { label: "COMMENTS",  color: VT_VISUAL_METRIC_COLORS.comments,  fmt: v => v.toFixed(0) },
+  avp:          { label: "AVP%",      color: VT_VISUAL_METRIC_COLORS.avp,  fmt: v => v.toFixed(1) + "%" },
+  avd:          { label: "AVD",       color: VT_VISUAL_METRIC_COLORS.avd, fmt: v => v.toFixed(0) + "s" },
+  likes:        { label: "LIKES",     color: VT_VISUAL_METRIC_COLORS.likes,  fmt: v => v >= 1000 ? (v / 1000).toFixed(0) + "K" : v.toFixed(0) },
+  rpm:          { label: "RPM",       color: VT_VISUAL_METRIC_COLORS.rpm, fmt: v => "$" + v.toFixed(2) },
+  shares:       { label: "SHARES",    color: VT_VISUAL_METRIC_COLORS.shares,  fmt: v => v.toFixed(0) },
+  adRevenue:    { label: "AD REV",    color: VT_VISUAL_METRIC_COLORS.revenue, fmt: v => "$" + v.toFixed(0) },
 }
 const ALL_KEYS = Object.keys(METRIC_DEFS)
 
 // ── Time Windows ─────────────────────────────────────────────────────────────
-const TIME_WINDOWS = {
-  WEEKS:  [1, 2, 3, 4, 8, 12, 16, 26, 52, 0],
-  MONTHS: [1, 2, 3, 4, 5, 6, 9, 12, 24, 36, 0],
-}
-type Gran = "WEEKS" | "MONTHS"
+const TIME_WINDOW_COUNTS = [4, 5, 6, 7, 8, 10, 12, 16, 20, 24, 36] as const
+type Gran = "DAYS" | "WEEKS" | "MONTHS" | "YEARS"
 type Source = "CHANNEL" | "VIDEO"
 type ViewMode = "OVERLAY" | "GRID" | "COMPARE"
 type CmpType = "WINDOW" | "SOURCE" | "VIDEO"
@@ -63,14 +60,50 @@ function cyc<T>(arr: T[], val: T, dir: 1 | -1): T {
   return arr[(base + dir + arr.length) % arr.length]
 }
 
+const unitShortLabel = (gran: Gran): string =>
+  gran === "DAYS" ? "D" : gran === "WEEKS" ? "W" : gran === "MONTHS" ? "M" : "Y"
+
+const periodLabel = (gran: Gran, index: number): string =>
+  `${unitShortLabel(gran)}${index + 1}`
+
+const periodCountLabel = (count: number, gran: Gran): string =>
+  `${count} ${gran.toLowerCase()}`
+
+const metricListLabel = (selected: readonly string[]): string =>
+  selected.map((key) => METRIC_DEFS[key]?.label || key.toUpperCase()).join(" + ")
+
+const metricDatum = (row: Record<string, unknown>, key: string): number =>
+  Number(row[key] ?? 0) || 0
+
+const sumTimelineRows = (rows: Array<Record<string, unknown>>, gran: Gran, index: number) => {
+  const out: Record<string, unknown> = { label: periodLabel(gran, index), week: index + 1 }
+  ALL_KEYS.forEach((key) => {
+    if (key === "avd" || key === "avp" || key === "rpm") {
+      const weighted = rows.reduce((sum, row) => sum + metricDatum(row, key) * Math.max(metricDatum(row, "views"), 1), 0)
+      const weight = rows.reduce((sum, row) => sum + Math.max(metricDatum(row, "views"), 1), 0)
+      out[key] = weight > 0 ? weighted / weight : 0
+      return
+    }
+    out[key] = rows.reduce((sum, row) => sum + metricDatum(row, key), 0)
+  })
+  return out
+}
+
+const groupTimelineRows = (rows: Array<Record<string, unknown>>, gran: Gran, count: number, groupSize: number) => {
+  const recent = rows.slice(Math.max(0, rows.length - count * groupSize))
+  return Array.from({ length: count }).map((_, index) =>
+    sumTimelineRows(recent.slice(index * groupSize, (index + 1) * groupSize), gran, index),
+  )
+}
+
 // ── Overlay line chart ────────────────────────────────────────────────────────
 function OverlayChart({ data, selected, dark, compact }: {
   data: any[]; selected: Set<string>; dark: boolean; compact?: boolean;
 }) {
   const [hov, setHov] = useState<number | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
-  const W = 800, H = compact ? 200 : 260
-  const padL = 4, padR = 4, padT = 16, padB = 24
+  const W = 1200, H = compact ? 200 : 260
+  const padL = 0, padR = 0, padT = 16, padB = 24
   const plotW = W - padL - padR, plotH = H - padT - padB
   const selArr = Array.from(selected)
 
@@ -102,7 +135,7 @@ function OverlayChart({ data, selected, dark, compact }: {
         setHov(Math.max(0, Math.min(idx, data.length - 1)))
       }}
       onMouseLeave={() => setHov(null)}>
-      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "100%", background: bgColor }}>
+      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height: "100%", background: bgColor, display: "block" }}>
         <defs>
           {selArr.map(k => (
             <linearGradient key={k} id={`tl41_${k}`} x1="0" x2="0" y1="0" y2="1">
@@ -211,7 +244,7 @@ function GridPanel({ data, selected, dark, gran, count }: {
   if (nSel === 1) {
     const k = selArr[0]
     const def = METRIC_DEFS[k] ?? METRIC_DEFS.views
-    const opts = TIME_WINDOWS[gran].filter(n => n !== 0).slice(0, 6)
+    const opts = TIME_WINDOW_COUNTS.slice(0, 6)
     return (
       <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, height: "100%", background: bg }}>
         {opts.map(w => {
@@ -292,18 +325,17 @@ interface CtrlProps {
   videoIdxB: number; setVideoIdxB: (i: number) => void;
   videoCount: number;
   videoList: any[];
-  dark: boolean; toggleDark: () => void;
 }
 
 function Controller(p: CtrlProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const granOpts: Gran[] = ["WEEKS", "MONTHS"]
+  const granOpts: Gran[] = ["DAYS", "WEEKS", "MONTHS", "YEARS"]
   const srcOpts: Source[] = ["CHANNEL", "VIDEO"]
   const viewOpts: ViewMode[] = ["OVERLAY", "GRID", "COMPARE"]
   const cmpOpts: CmpType[] = ["WINDOW", "SOURCE", "VIDEO"]
   const dispOpts: CmpDisplay[] = ["OVERLAY", "GRID"]
-  const wins = TIME_WINDOWS[p.gran]
+  const wins = [...TIME_WINDOW_COUNTS]
   const selArr = Array.from(p.selected)
   const nSel = selArr.length
   const isCompare = p.view === "COMPARE"
@@ -317,10 +349,10 @@ function Controller(p: CtrlProps) {
     return () => document.removeEventListener("mousedown", h)
   }, [])
 
-  const countDisplay = (n: number) => n === 0 ? "LIFE" : String(n)
+  const countDisplay = (n: number) => String(n)
   const cntFontSize = (n: number) => {
     const s = countDisplay(n)
-    return s === "LIFE" ? 14 : s.length > 2 ? 20 : 28
+    return s.length > 2 ? 20 : 28
   }
 
   const metricBar = () => {
@@ -401,9 +433,9 @@ function Controller(p: CtrlProps) {
 
       {/* GRAN */}
       <div style={{ ...ROW, background: "#FF2D78", padding: 0, minHeight: 20 }}>
-        <button style={{ ...ARR, color: "#000", fontSize: 13 }} onClick={() => { const g = cyc(granOpts, p.gran, -1); p.setGran(g); p.setCount(TIME_WINDOWS[g][3]); p.setCountB(TIME_WINDOWS[g][0]); }}>◀</button>
+        <button style={{ ...ARR, color: "#000", fontSize: 13 }} onClick={() => p.setGran(cyc(granOpts, p.gran, -1))}>◀</button>
         <span style={{ fontSize: 11, fontWeight: 900, color: "#000", textTransform: "uppercase" as const, letterSpacing: "0.06em", flex: 1, textAlign: "center", lineHeight: 1 }}>{p.gran}</span>
-        <button style={{ ...ARR, color: "#000", fontSize: 13 }} onClick={() => { const g = cyc(granOpts, p.gran, 1); p.setGran(g); p.setCount(TIME_WINDOWS[g][3]); p.setCountB(TIME_WINDOWS[g][0]); }}>▶</button>
+        <button style={{ ...ARR, color: "#000", fontSize: 13 }} onClick={() => p.setGran(cyc(granOpts, p.gran, 1))}>▶</button>
       </div>
 
       {/* SOURCE */}
@@ -451,13 +483,6 @@ function Controller(p: CtrlProps) {
           )}
         </>
       )}
-
-      {/* DARK MODE */}
-      <div style={{ ...ROW, background: p.dark ? "#1a1a1a" : "#f0f0f0", padding: 0, minHeight: 18, borderBottom: "4px solid #000" }}>
-        <button style={{ ...ARR, color: p.dark ? "#FFE500" : "#000", fontSize: 8.5, flex: 1, textAlign: "center" }} onClick={p.toggleDark}>
-          {p.dark ? "☀ LIGHT MODE" : "◐ DARK MODE"}
-        </button>
-      </div>
 
       {/* METRIC BAR (dropdown trigger) */}
       <div style={{ display: "flex", alignItems: "stretch", minHeight: 22, cursor: "pointer", position: "relative", flexShrink: 0 }}
@@ -510,13 +535,11 @@ function CompareSide({ label, labelColor, data, selected, dark, cmpDisplay, gran
 // ── Main component ─────────────────────────────────────────────────────────────
 export interface MultiMetricTimelineProps {
   data?: CanonicalVideoRow[]
-  trafficByDay?: ReadonlyArray<Record<string, unknown>>
   dailyMetrics?: ReadonlyArray<Record<string, unknown>>
 }
 
 export function MultiMetricTimeline({
   data = [],
-  trafficByDay = [],
   dailyMetrics = [],
 }: MultiMetricTimelineProps) {
   const vt2ThemeMode = useVt2Theme()
@@ -548,12 +571,11 @@ export function MultiMetricTimeline({
     if (src === "VIDEO") {
       const vid = flatVideos[videoIdxA] || flatVideos[0]
       if (!vid) return []
-      const weeks = c === 0 ? 12 : c
-      // Single video metrics evolving over time across weeks since publish
-      return Array.from({ length: weeks }).map((_, i) => {
-        const fraction = Math.min(1, Math.pow((i + 1) / weeks, 0.45))
+      // Single video metrics evolving over the selected period since publish.
+      return Array.from({ length: c }).map((_, i) => {
+        const fraction = Math.min(1, Math.pow((i + 1) / c, 0.45))
         return {
-          label: `Wk ${i + 1}`,
+          label: periodLabel(g, i),
           views: Math.round(vid.views * fraction),
           engagedViews: Math.round(vid.views * 0.85 * fraction),
           watchHrs: Math.round(vid.watchHrs * fraction),
@@ -570,10 +592,14 @@ export function MultiMetricTimeline({
       })
     }
 
-    const weeks = c === 0 ? 52 : c
-    const rollup = rollupWeeklyChannelWithSource(data, dailyMetrics, trafficByDay, weeks)
-    return rollup.weeks.map(w => ({
-      label: `Wk ${w.week}`,
+    const weeksNeeded =
+      g === "DAYS" ? Math.max(1, Math.ceil(c / 7))
+      : g === "WEEKS" ? c
+      : g === "MONTHS" ? c * 4
+      : c * 52
+    const rollup = rollupWeeklyChannelWithSource(dailyMetrics, weeksNeeded)
+    const weeklyRows = rollup.weeks.map((w, index) => ({
+      label: periodLabel("WEEKS", index),
       views: w.views,
       engagedViews: Math.round(w.views * 0.85),
       watchHrs: Math.round(w.watchMins_hrs),
@@ -587,6 +613,34 @@ export function MultiMetricTimeline({
       rpm: w.views > 0 ? (w.revenue / w.views) * 1000 : 0,
       adRevenue: Math.round(w.revenue * 0.85),
     }))
+    if (g === "WEEKS") return weeklyRows.slice(Math.max(0, weeklyRows.length - c)).map((row, index) => ({ ...row, label: periodLabel(g, index) }))
+    if (g === "DAYS") {
+      const rawDaily = dailyMetrics.slice(Math.max(0, dailyMetrics.length - c))
+      if (rawDaily.length) {
+        return rawDaily.map((row, index) => {
+          const views = Number(row.views ?? 0) || 0
+          const watchHrs = Number(row.watchTime ?? row.estimatedMinutesWatched ?? 0) || 0
+          const revenue = Number(row.revenue ?? row.estimatedRevenue ?? 0) || 0
+          return {
+            label: String(row.date ?? row.day ?? periodLabel(g, index)),
+            views,
+            engagedViews: Number(row.engagedViews ?? Math.round(views * 0.85)) || 0,
+            watchHrs,
+            subs: Number(row.subscribersGained ?? 0) - Number(row.subscribersLost ?? 0),
+            likes: Math.round(views * 0.045),
+            shares: Math.round(views * 0.015),
+            comments: Math.round(views * 0.005),
+            revenue,
+            avd: Number(row.avgViewDuration ?? row.averageViewDuration ?? 45) || 45,
+            avp: Number(row.averagePercentageViewed ?? row.averageViewPercentage ?? 55) || 55,
+            rpm: views > 0 ? (revenue / views) * 1000 : 0,
+            adRevenue: Math.round(revenue * 0.85),
+          }
+        })
+      }
+      return groupTimelineRows(weeklyRows, g, c, 1)
+    }
+    return groupTimelineRows(weeklyRows, g, c, g === "MONTHS" ? 4 : 52)
   }
 
   const dataMain = getSliceData(gran, count, source)
@@ -603,54 +657,84 @@ export function MultiMetricTimeline({
   const vidA = flatVideos[videoIdxA]
   const vidB = flatVideos[videoIdxB]
 
+  const activeMetricLabel = metricListLabel(selArr)
   const modeLabel = view === "COMPARE"
-    ? `COMPARE · ${cmpType === "WINDOW" ? `W${count} vs W${countB}` : cmpType === "SOURCE" ? "CHANNEL vs VIDEO" : "VIDEO vs VIDEO"}`
-    : `${nSel} METRIC${nSel !== 1 ? "S" : ""} · ${gran === "WEEKS" ? `${count === 0 ? "ALL" : count} WKS` : `${count === 0 ? "ALL" : count} MO`} · ${source} · ${view}`
+    ? `COMPARE · ${cmpType === "WINDOW" ? `${count} vs ${countB} ${gran}` : cmpType === "SOURCE" ? "CHANNEL vs VIDEO" : "VIDEO vs VIDEO"} · ${activeMetricLabel}`
+    : `${activeMetricLabel || "NO METRICS"} · ${periodCountLabel(count, gran)} · ${source} · ${view}`
+  const controllerExplanation = view === "COMPARE"
+    ? `Compare ${cmpType.toLowerCase()} ${periodCountLabel(count, gran)} data for ${activeMetricLabel || "selected metrics"}`
+    : `${activeMetricLabel || "selected metrics"} over ${periodCountLabel(count, gran)} for ${source.toLowerCase()} data`
 
   return (
-    <ChartModule
-      icon={<TrendingUp size={44} strokeWidth={2.5} />} iconBg="#FFE500" titleBg="#FFE500"
+    <AnalyticsVisualShell
+      shellMode="vt2-preserved"
+      icon={<TrendingUp size={44} strokeWidth={2.5} />}
+      headerColorPair={{ icon: "#FFE500", title: "#FFE500" }}
       title="MULTI-METRIC TIMELINE — CHANNEL & VIDEO DATA"
-      controlBlock={
-        <Controller
-          gran={gran} setGran={setGran}
-          count={count} setCount={setCount}
-          countB={countB} setCountB={setCountB}
-          source={source} setSource={setSource}
-          selected={selected} toggleMetric={toggleMetric}
-          view={view} setView={setView}
-          cmpType={cmpType} setCmpType={setCmpType}
-          cmpDisplay={cmpDisplay} setCmpDisplay={setCmpDisplay}
-          videoIdxA={videoIdxA} setVideoIdxA={setVideoIdxA}
-          videoIdxB={videoIdxB} setVideoIdxB={setVideoIdxB}
-          videoCount={flatVideos.length}
-          videoList={flatVideos}
-          dark={dark} toggleDark={toggleDark}
-        />
-      }
-      hovTitle={modeLabel}
-      stats={nSel > 0 && dataMain.length > 0 ? selArr.slice(0, 4).map(k => ({
-        value: METRIC_DEFS[k]?.fmt(dataMain[dataMain.length - 1]?.[k] ?? 0) ?? "0",
-        label: METRIC_DEFS[k]?.label ?? k,
-        bg: METRIC_DEFS[k]?.color ?? "#FFE500",
-        color: "#000",
-      })) : []}
-      legendLeft={<>
-        {selArr.slice(0, 3).map(k => (
-          METRIC_DEFS[k] ? (
-            <span key={k} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-              <span style={{ width: 10, height: 10, borderRadius: "50%", background: METRIC_DEFS[k].color, display: "inline-block", border: "1.5px solid #000" }} />
-              <span style={{ fontFamily: "monospace", fontSize: 9, fontWeight: 900, textTransform: "uppercase" }}>{METRIC_DEFS[k].label}</span>
-            </span>
-          ) : null
-        ))}
-        {nSel > 3 && <span style={{ fontFamily: "monospace", fontSize: 9, fontWeight: 900 }}>+{nSel - 3} MORE</span>}
-      </>}
-      legendRight={<span style={{ fontFamily: "monospace", fontSize: 9, fontWeight: 700 }}>{view === "COMPARE" ? `COMPARE: ${cmpType}` : `${dataMain.length} ${gran === "WEEKS" ? "WEEK" : "MONTH"} PERIODS`} · {source}</span>}
-      bodyBg={bodyBg}
-      minHeight={340}
-      chartInsight={nSel === 0 ? "SELECT ONE OR MORE METRICS FROM THE DROPDOWN TO BEGIN." : view === "OVERLAY" ? `NORMALIZED OVERLAY — ALL ${nSel} METRIC${nSel > 1 ? "S" : ""} SCALED 0–100% ACROSS ${dataMain.length} ${gran}.` : view === "GRID" ? nSel === 1 ? "SINGLE METRIC — 6 TIME WINDOWS SHOWN AS SPARKLINES." : `GRID OF ${nSel} METRIC SPARKLINES — ${dataMain.length} ${gran}.` : `COMPARE MODE: ${cmpType === "WINDOW" ? `WINDOW ${count} vs ${countB} ${gran}` : cmpType === "SOURCE" ? "CHANNEL STATS vs VIDEO STATS" : `"${(vidA?.title || "").slice(0, 20)}" vs "${(vidB?.title || "").slice(0, 20)}"`}.`}
-      personalInsight="COMPARE MULTIPLE METRICS SIMULTANEOUSLY ACROSS CUSTOM TIME WINDOWS TO UNCOVER LEADING INDICATORS."
+      subtitle={controllerExplanation}
+      bodyFitMode="fillWidth"
+      vt2={{
+        controlBlock: (
+          <Controller
+            gran={gran} setGran={setGran}
+            count={count} setCount={setCount}
+            countB={countB} setCountB={setCountB}
+            source={source} setSource={setSource}
+            selected={selected} toggleMetric={toggleMetric}
+            view={view} setView={setView}
+            cmpType={cmpType} setCmpType={setCmpType}
+            cmpDisplay={cmpDisplay} setCmpDisplay={setCmpDisplay}
+            videoIdxA={videoIdxA} setVideoIdxA={setVideoIdxA}
+            videoIdxB={videoIdxB} setVideoIdxB={setVideoIdxB}
+            videoCount={flatVideos.length}
+            videoList={flatVideos}
+          />
+        ),
+        hovTitle: modeLabel,
+        stats: nSel > 0 && dataMain.length > 0 ? selArr.map(k => ({
+          value: METRIC_DEFS[k]?.fmt(dataMain[dataMain.length - 1]?.[k] ?? 0) ?? "0",
+          label: METRIC_DEFS[k]?.label ?? k,
+          bg: METRIC_DEFS[k]?.color ?? "#FFE500",
+          color: "#000",
+        })) : [],
+        legendLeft: <>
+          {selArr.map(k => (
+            METRIC_DEFS[k] ? (
+              <span key={k} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: METRIC_DEFS[k].color, display: "inline-block", border: "1.5px solid #000" }} />
+                <span style={{ fontFamily: "monospace", fontSize: 9, fontWeight: 900, textTransform: "uppercase" }}>{METRIC_DEFS[k].label}</span>
+              </span>
+            ) : null
+          ))}
+        </>,
+        legendRight: (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontFamily: "monospace", fontSize: 9, fontWeight: 700 }}>{view === "COMPARE" ? `COMPARE: ${cmpType}` : `${dataMain.length} ${gran.slice(0, -1)} PERIODS`} · {source}</span>
+            <button
+              type="button"
+              onClick={toggleDark}
+              style={{
+                border: "2px solid #000",
+                borderRadius: 4,
+                background: dark ? "#000" : "#fff",
+                color: dark ? "#FFE500" : "#000",
+                fontFamily: "monospace",
+                fontSize: 9,
+                fontWeight: 1000,
+                lineHeight: 1,
+                padding: "5px 8px",
+                textTransform: "uppercase",
+                cursor: "pointer",
+              }}>
+              {dark ? "Light Mode" : "Dark Mode"}
+            </button>
+          </span>
+        ),
+        bodyBg,
+        minHeight: 380,
+        chartInsight: nSel === 0 ? "SELECT ONE OR MORE METRICS FROM THE DROPDOWN TO BEGIN." : view === "OVERLAY" ? `NORMALIZED OVERLAY — ${activeMetricLabel} SCALED 0–100% ACROSS ${dataMain.length} ${gran}.` : view === "GRID" ? nSel === 1 ? `SINGLE METRIC — ${activeMetricLabel} ACROSS ${periodCountLabel(count, gran)}.` : `GRID OF ${nSel} METRIC SPARKLINES — ${periodCountLabel(count, gran)}.` : `COMPARE MODE: ${cmpType === "WINDOW" ? `WINDOW ${count} vs ${countB} ${gran}` : cmpType === "SOURCE" ? "CHANNEL STATS vs VIDEO STATS" : `"${(vidA?.title || "").slice(0, 20)}" vs "${(vidB?.title || "").slice(0, 20)}"`}.`,
+        personalInsight: "COMPARE MULTIPLE METRICS SIMULTANEOUSLY ACROSS CUSTOM TIME WINDOWS TO UNCOVER LEADING INDICATORS.",
+      }}
     >
       {nSel === 0 ? (
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: bodyBg }}>
@@ -700,19 +784,17 @@ export function MultiMetricTimeline({
           </div>
         )
       )}
-    </ChartModule>
+    </AnalyticsVisualShell>
   )
 }
 
 export const MultiMetricTimelineModule: React.FC<TubeExplorerVisualProps> = ({
   data = [],
-  trafficByDay = [],
   dailyMetrics = [],
 }) => {
   return (
     <MultiMetricTimeline
       data={data}
-      trafficByDay={trafficByDay}
       dailyMetrics={dailyMetrics}
     />
   )

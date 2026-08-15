@@ -242,6 +242,7 @@ export const UploadSchedulerWidget = ({ widget, instance, editMode, onToggleColl
       {/* Drop Zone */}
       {uploadedFiles.length === 0 && (
        <div
+        className={`widget-dropzone ${isDragOver ? "is-dragging" : ""}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -249,16 +250,12 @@ export const UploadSchedulerWidget = ({ widget, instance, editMode, onToggleColl
         style={{
          flex: 1,
          minHeight: "80px",
-         border: `2px dashed ${isDragOver ? "color-mix(in srgb, var(--widget-color, #FFD700) 60%, black)" : "rgba(0,0,0,0.15)"}`,
-         borderRadius: "10px",
          display: "flex",
          flexDirection: "column",
          alignItems: "center",
          justifyContent: "center",
          gap: "6px",
          cursor: "pointer",
-         background: isDragOver ? "color-mix(in srgb, var(--widget-color, #FFD700) 15%, white)" : "#fafafa",
-         transition: "all 0.2s ease",
          padding: "12px",
         }}
        >

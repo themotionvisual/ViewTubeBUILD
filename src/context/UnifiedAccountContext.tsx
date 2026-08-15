@@ -17,6 +17,7 @@ import {
   normalizeAccountSnapshot,
   readCachedAccountSnapshot,
   revokeUnifiedGoogleConnection,
+  selectUnifiedContentOwner,
   signOutUnifiedAccount,
 } from "../services/account/accountCoordinator"
 import { isAuthenticated as isLegacyAuthenticated, login as legacyLogin } from "../services/auth/authSession"
@@ -32,6 +33,7 @@ interface UnifiedAccountContextValue {
   signOut: () => Promise<void>
   disconnectGoogle: () => Promise<void>
   deleteAccount: () => Promise<void>
+  selectContentOwner: (ownerId: string) => Promise<void>
 }
 
 const UnifiedAccountContext = createContext<UnifiedAccountContextValue | null>(null)
@@ -163,6 +165,10 @@ export const UnifiedAccountProvider: React.FC<{ children: React.ReactNode }> = (
     commitSnapshot(ANONYMOUS_ACCOUNT_SNAPSHOT)
   }, [commitSnapshot])
 
+  const selectContentOwner = useCallback(async (ownerId: string) => {
+    commitSnapshot(await selectUnifiedContentOwner(ownerId))
+  }, [commitSnapshot])
+
   const value = useMemo<UnifiedAccountContextValue>(() => ({
     snapshot,
     label: resolveAccountActionLabel(snapshot),
@@ -174,7 +180,8 @@ export const UnifiedAccountProvider: React.FC<{ children: React.ReactNode }> = (
     signOut,
     disconnectGoogle,
     deleteAccount,
-  }), [deleteAccount, disconnectGoogle, intent, refresh, signOut, snapshot, start])
+    selectContentOwner,
+  }), [deleteAccount, disconnectGoogle, intent, refresh, selectContentOwner, signOut, snapshot, start])
 
   return <UnifiedAccountContext.Provider value={value}>{children}</UnifiedAccountContext.Provider>
 }

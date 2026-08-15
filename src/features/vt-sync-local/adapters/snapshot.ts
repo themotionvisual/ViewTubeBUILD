@@ -2,11 +2,32 @@ import { VT_SYNC_LOCAL_SNAPSHOT_KEY, type VtSyncSnapshot, type VtSyncVideoItem }
 import { VT_SYNC_TABLE_DEFINITIONS } from "../upstream/tableRegistry"
 
 let memorySnapshot: VtSyncSnapshot | null = null
+let snapshotVersion = 0
+const snapshotListeners = new Set<() => void>()
+
+export const VT_SYNC_SNAPSHOT_UPDATED_EVENT = "vt_sync_snapshot_updated"
+
+export const getVtSyncSnapshotVersion = (): number => snapshotVersion
+
+export const subscribeToVtSyncSnapshot = (listener: () => void): (() => void) => {
+ snapshotListeners.add(listener)
+ return () => snapshotListeners.delete(listener)
+}
+
+const publishVtSyncSnapshotUpdate = () => {
+ snapshotVersion += 1
+ snapshotListeners.forEach((listener) => listener())
+ window.dispatchEvent(new CustomEvent(VT_SYNC_SNAPSHOT_UPDATED_EVENT, {
+  detail: { version: snapshotVersion },
+ }))
+}
 
 const arrayFields = [
  "videos",
  "dailyMetrics",
+ "monthlyMetrics",
  "trafficSources",
+ "trafficDetails",
  "searchTerms",
  "demographics",
  "geography",
@@ -14,6 +35,7 @@ const arrayFields = [
  "operatingSystems",
  "playbackLocations",
  "subscriptionStatuses",
+ "formatSubscriberStatuses",
  "playlistsData",
  "adTypes",
  "cities",
@@ -136,12 +158,34 @@ const placeholderVideosFromUploadRows = (rows: unknown[], runId?: string): VtSyn
 
 const normalizeArrayFieldRows = (field: string, value: unknown): unknown[] => {
  if (!Array.isArray(value)) return []
- return value.map((entry) => {
-  if (!entry || typeof entry !== "object") return entry
+ return value.flatMap((entry) => {
+  if (!entry || typeof entry !== "object") {
+   return field === "dailyMetrics" || field === "trafficByDay" ? [] : [entry]
+  }
   const row = normalizeMetricAliases(entry as Record<string, unknown>)
+  const date = row.date ?? row.day
+  const trafficSource = row.term ?? row.source ?? row.sourceType ?? row.insightTrafficSourceType
+  if (field === "dailyMetrics") {
+   // Daily Stats is a channel-wide day series. Never admit a traffic-source
+   // dimension into this store, even when a legacy/import record is mislabeled.
+   if (!date || trafficSource) return []
+   return [{ ...row, date, avgViewDuration: row.avgViewDuration ?? row.averageViewDuration, averagePercentageViewed: row.averagePercentageViewed ?? row.averageViewPercentage }]
+  }
+  if (field === "monthlyMetrics") {
+   const month = row.date ?? row.month
+   if (!month || trafficSource) return []
+   return [{ ...row, date: String(month), month: String(row.month ?? month), avgViewDuration: row.avgViewDuration ?? row.averageViewDuration, averagePercentageViewed: row.averagePercentageViewed ?? row.averageViewPercentage }]
+  }
+  if (field === "trafficByDay") {
+   // Traffic × Day always has both dimensions. A channel-wide daily row must
+   // not be recoverable through this field.
+   if (!date || !trafficSource) return []
+   return [{ ...row, day: String(row.day ?? row.date), term: String(trafficSource) }]
+  }
   if (field === "devices") return { ...row, device: row.device ?? row.deviceType }
   if (field === "playbackLocations") return { ...row, location: row.location ?? row.insightPlaybackLocationType }
   if (field === "subscriptionStatuses") return { ...row, status: row.status ?? row.subscribedStatus }
+  if (field === "formatSubscriberStatuses") return { ...row, formatCode: row.formatCode ?? row.creatorContentType, status: row.status ?? row.subscribedStatus }
   if (field === "demographics") {
     let formattedCohort = row.cohort;
     if (!formattedCohort) {
@@ -161,88 +205,150 @@ const normalizeArrayFieldRows = (field: string, value: unknown): unknown[] => {
     }
     return { ...row, cohort: formattedCohort, viewsPct: row.viewsPct ?? row.viewerPercentage }
   }
-  if (field === "dailyMetrics") return { ...row, date: row.date ?? row.day, avgViewDuration: row.avgViewDuration ?? row.averageViewDuration, averagePercentageViewed: row.averagePercentageViewed ?? row.averageViewPercentage }
   return row
  })
 }
 
-const storageSafeSnapshot = (snapshot: VtSyncSnapshot): VtSyncSnapshot => ({
- ...snapshot,
- videos: snapshot.videos.slice(0, 25),
- dailyMetrics: snapshot.dailyMetrics.slice(0, 30),
- trafficSources: snapshot.trafficSources.slice(0, 25),
- searchTerms: [],
- demographics: snapshot.demographics.slice(0, 25),
- geography: snapshot.geography.slice(0, 25),
- devices: snapshot.devices.slice(0, 25),
- operatingSystems: snapshot.operatingSystems.slice(0, 25),
- playbackLocations: snapshot.playbackLocations.slice(0, 25),
- subscriptionStatuses: snapshot.subscriptionStatuses.slice(0, 25),
- playlistsData: snapshot.playlistsData.slice(0, 25),
- adTypes: snapshot.adTypes.slice(0, 25),
- cities: [],
- provinces: [],
- dmaRegions: [],
- continentsData: [],
- extWebsites: [],
- suggestedVideos: [],
- hashtags: [],
- soundPages: [],
- creatorContentTypes: [],
- demographicsByAge: [],
- demographicsByGender: [],
- trafficAdvertising: [],
- audienceWatchBehavior: [],
- sharingService: [],
- newReturningViewers: [],
- revenueSource: [],
- subscriptionSource: [],
- trafficChannelPages: [],
- trafficOtherFeatures: [],
- trafficSubscriberData: [],
- trafficShorts: [],
- trafficShortsContentLink: [],
- trafficBrowseFeatures: [],
- trafficCampaignCard: [],
- trafficCard: [],
- trafficEndScreen: [],
- trafficLiveRedirect: [],
- trafficNotification: [],
- trafficNoLinkEmbedded: [],
- trafficNoLinkOther: [],
- trafficPlaylist: [],
- trafficYtPlaylistPage: [],
- trafficByDay: snapshot.trafficByDay.slice(0, 5000),
- retentions: [],
- tableExports: {},
- datasetFreshness: {
-  ...(snapshot.datasetFreshness || {}),
-  storage: {
-   runId: snapshot.syncManifest?.run_id || snapshot.snapshotId,
-   phase: "browser_storage",
-   source: "current_run",
-   status: "partial",
-   rows: snapshot.videos.length,
-   updatedAt: new Date().toISOString(),
-   missingMetrics: ["Full snapshot kept in page memory because localStorage quota was exceeded."],
+const snapshotArrayValue = (raw: Record<string, unknown>, field: string): unknown => {
+ const current = raw[field]
+ if (Array.isArray(current) && current.length > 0) return current
+ if (field === "monthlyMetrics") {
+  const legacyMonthly = (raw.tableExports as Record<string, unknown> | undefined)?.monthly_api
+  if (Array.isArray(legacyMonthly)) return legacyMonthly
+ }
+ if (field === "trafficSources") {
+  const legacyOverview = raw.trafficOverview ?? raw.traffic_overview
+  if (Array.isArray(legacyOverview)) return legacyOverview
+ }
+ return current ?? (
+  field === "extWebsites" ? raw.externalWebsites :
+  field === "playlistsData" ? raw.playlists :
+  field === "retentions" ? raw.retention :
+  undefined
+ )
+}
+
+const fullRowCountByField = (snapshot: VtSyncSnapshot): Record<string, number> =>
+ Object.fromEntries(
+  arrayFields.map((field) => [field, Array.isArray(snapshot[field]) ? snapshot[field].length : 0]),
+ )
+
+const withCompactPreviewMetadata = (snapshot: VtSyncSnapshot): VtSyncSnapshot => {
+ const fullCounts = fullRowCountByField(snapshot)
+ const compactSnapshot: VtSyncSnapshot = {
+  ...snapshot,
+  videos: snapshot.videos.slice(0, 25),
+  dailyMetrics: snapshot.dailyMetrics.slice(0, 30),
+  monthlyMetrics: snapshot.monthlyMetrics.slice(0, 24),
+  trafficSources: snapshot.trafficSources.slice(0, 25),
+  trafficDetails: [],
+  searchTerms: [],
+  demographics: snapshot.demographics.slice(0, 25),
+  geography: snapshot.geography.slice(0, 25),
+  devices: snapshot.devices.slice(0, 25),
+  operatingSystems: snapshot.operatingSystems.slice(0, 25),
+  playbackLocations: snapshot.playbackLocations.slice(0, 25),
+  subscriptionStatuses: snapshot.subscriptionStatuses.slice(0, 25),
+  formatSubscriberStatuses: snapshot.formatSubscriberStatuses.slice(0, 25),
+  playlistsData: snapshot.playlistsData.slice(0, 25),
+  adTypes: snapshot.adTypes.slice(0, 25),
+  cities: [],
+  provinces: [],
+  dmaRegions: [],
+  continentsData: [],
+  extWebsites: [],
+  suggestedVideos: [],
+  hashtags: [],
+  soundPages: [],
+  creatorContentTypes: [],
+  demographicsByAge: [],
+  demographicsByGender: [],
+  trafficAdvertising: [],
+  audienceWatchBehavior: [],
+  sharingService: [],
+  newReturningViewers: [],
+  revenueSource: [],
+  subscriptionSource: [],
+  trafficChannelPages: [],
+  trafficOtherFeatures: [],
+  trafficSubscriberData: [],
+  trafficShorts: [],
+  trafficShortsContentLink: [],
+  trafficBrowseFeatures: [],
+  trafficCampaignCard: [],
+  trafficCard: [],
+  trafficEndScreen: [],
+  trafficLiveRedirect: [],
+  trafficNotification: [],
+  trafficNoLinkEmbedded: [],
+  trafficNoLinkOther: [],
+  trafficPlaylist: [],
+  trafficYtPlaylistPage: [],
+  trafficByDay: snapshot.trafficByDay.slice(0, 25),
+  retentions: [],
+  tableExports: {},
+ }
+ const visibleCounts = fullRowCountByField(compactSnapshot)
+ return {
+  ...compactSnapshot,
+  storageMetadata: {
+   storageMode: "compact_preview",
+   isCompacted: true,
+   fullRowCountByField: fullCounts,
+   visiblePreviewRowCountByField: visibleCounts,
+   warning: "localStorage contains a compact boot preview; IndexedDB owns complete Analytics table rows.",
   },
- },
-})
+  datasetFreshness: {
+   ...(snapshot.datasetFreshness || {}),
+   storage: {
+    runId: snapshot.syncManifest?.run_id || snapshot.snapshotId,
+    phase: "browser_storage",
+    source: "current_run",
+    status: "synced",
+    rows: snapshot.videos.length,
+    updatedAt: new Date().toISOString(),
+    missingMetrics: [],
+   },
+  },
+ }
+}
+
+const storageSafeSnapshot = (snapshot: VtSyncSnapshot): VtSyncSnapshot =>
+ withCompactPreviewMetadata(snapshot)
 
 export const saveVtSyncSnapshot = (snapshot: VtSyncSnapshot): void => {
  if (typeof window === "undefined") return
- memorySnapshot = normalizeVtSyncSnapshot(snapshot)
+ memorySnapshot = normalizeVtSyncSnapshot({
+  ...snapshot,
+  storageMetadata: {
+   storageMode: "full",
+   isCompacted: false,
+   fullRowCountByField: fullRowCountByField(snapshot),
+   visiblePreviewRowCountByField: fullRowCountByField(snapshot),
+  },
+ })
+ // localStorage is a compact boot manifest only. Complete table rows live in
+ // IndexedDB; retaining the full in-memory snapshot keeps the active UI lossless
+ // without repeatedly attempting writes that are known to exceed browser quota.
  try {
-  window.localStorage.setItem(VT_SYNC_LOCAL_SNAPSHOT_KEY, JSON.stringify(memorySnapshot))
+  window.localStorage.setItem(VT_SYNC_LOCAL_SNAPSHOT_KEY, JSON.stringify(storageSafeSnapshot(memorySnapshot)))
  } catch (error) {
   try {
    window.localStorage.removeItem(VT_SYNC_LOCAL_SNAPSHOT_KEY)
    window.localStorage.setItem(VT_SYNC_LOCAL_SNAPSHOT_KEY, JSON.stringify(storageSafeSnapshot(memorySnapshot)))
-   console.warn("VT-SYNC full snapshot exceeded browser localStorage quota; stored a compact recovery snapshot and kept the full snapshot in page memory.", error)
   } catch (fallbackError) {
-   console.warn("VT-SYNC could not persist even the compact recovery snapshot; keeping the full snapshot in page memory only.", fallbackError)
+   memorySnapshot = normalizeVtSyncSnapshot({
+    ...memorySnapshot,
+    storageMetadata: {
+     ...(memorySnapshot.storageMetadata || {}),
+     storageMode: "memory_only",
+     isCompacted: false,
+    },
+   })
+   console.warn("Analytics could not persist the compact recovery snapshot; keeping the full snapshot in page memory only.", fallbackError)
   }
  }
+ publishVtSyncSnapshotUpdate()
 }
 
 const emptySnapshot = (): VtSyncSnapshot => ({
@@ -261,7 +367,9 @@ const emptySnapshot = (): VtSyncSnapshot => ({
  channelTotals: null,
  videos: [],
  dailyMetrics: [],
+ monthlyMetrics: [],
  trafficSources: [],
+ trafficDetails: [],
  searchTerms: [],
  demographics: [],
  geography: [],
@@ -271,6 +379,7 @@ const emptySnapshot = (): VtSyncSnapshot => ({
  trafficByDay: [],
  playbackLocations: [],
  subscriptionStatuses: [],
+ formatSubscriberStatuses: [],
  playlistsData: [],
  adTypes: [],
  cities: [],
@@ -309,6 +418,10 @@ const emptySnapshot = (): VtSyncSnapshot => ({
  syncManifest: null,
  tableExports: {},
  datasetFreshness: {},
+ storageMetadata: {
+  storageMode: "unknown",
+  isCompacted: false,
+ },
 })
 
 export const normalizeVtSyncSnapshot = (input?: Partial<VtSyncSnapshot> | Record<string, unknown> | null): VtSyncSnapshot => {
@@ -328,15 +441,18 @@ export const normalizeVtSyncSnapshot = (input?: Partial<VtSyncSnapshot> | Record
   syncManifest: (raw.syncManifest || null) as VtSyncSnapshot["syncManifest"],
   tableExports,
   datasetFreshness: (raw.datasetFreshness || {}) as VtSyncSnapshot["datasetFreshness"],
+  storageMetadata: (
+   raw.storageMetadata && typeof raw.storageMetadata === "object" ?
+    raw.storageMetadata
+   : {
+    storageMode: "unknown",
+    isCompacted: false,
+   }
+  ) as VtSyncSnapshot["storageMetadata"],
  }
 
  arrayFields.forEach((field) => {
-  const value = raw[field] || (
-   field === "extWebsites" ? raw.externalWebsites :
-   field === "playlistsData" ? raw.playlists :
-   field === "retentions" ? raw.retention :
-   undefined
-  )
+  const value = snapshotArrayValue(raw, field)
   ;(normalized as unknown as Record<string, unknown>)[field] = normalizeArrayFieldRows(field, value)
  })
 
@@ -382,7 +498,9 @@ export const getVtSyncSnapshot = (input?: Partial<VtSyncSnapshot>): VtSyncSnapsh
 export const toVtSyncRawAppExport = (snapshot: VtSyncSnapshot): Record<string, unknown> => ({
  videos: snapshot.videos,
  dailyMetrics: snapshot.dailyMetrics,
+ monthlyMetrics: snapshot.monthlyMetrics,
  trafficSources: snapshot.trafficSources,
+ trafficDetails: snapshot.trafficDetails,
  searchTerms: snapshot.searchTerms,
  demographics: snapshot.demographics,
  geography: snapshot.geography,
@@ -390,6 +508,7 @@ export const toVtSyncRawAppExport = (snapshot: VtSyncSnapshot): Record<string, u
  operatingSystems: snapshot.operatingSystems,
  playbackLocations: snapshot.playbackLocations,
  subscriptionStatuses: snapshot.subscriptionStatuses,
+ formatSubscriberStatuses: snapshot.formatSubscriberStatuses,
  playlistsData: snapshot.playlistsData,
  adTypes: snapshot.adTypes,
  cities: snapshot.cities,

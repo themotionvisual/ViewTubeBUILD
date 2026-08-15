@@ -8,6 +8,14 @@
  */
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react"
+import { AnalyticsVisualIcon } from "../AnalyticsVisualIcon"
+import { useAnalyticsVisualStyle } from "../AnalyticsVisualStyleContext"
+import { useVtSyncVisualDataSourcePrefix } from "../../features/vt-sync-local/shell/VtSyncVisualDataSourceContext"
+import {
+  ANALYTICS_VISUAL_CONTEXT_BAR_HEIGHTS,
+  AnalyticsActiveStats,
+  type AnalyticsVisualStat,
+} from "../analyticsVisualContextBar"
 import "./chartModule.css"
 
 // ── Row colors ──────────────────────────────────────────────────────────────
@@ -38,11 +46,12 @@ export interface SlabCfg {
 }
 
 export function SlabControl({ cfg }: { cfg: SlabCfg }) {
+  const visualStyle = useAnalyticsVisualStyle()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const r1 = cfg.r1 ?? cfg.accent
-  const r2 = cfg.r2 ?? cfg.accent
-  const r3 = cfg.r3 ?? "#00CCFF"
+  const r1 = visualStyle?.controllerColors?.previous ?? cfg.r1 ?? cfg.accent
+  const r2 = visualStyle?.controllerColors?.middle ?? cfg.r2 ?? cfg.accent
+  const r3 = visualStyle?.controllerColors?.next ?? cfg.r3 ?? "#00CCFF"
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -109,13 +118,14 @@ export interface RaisedCfg {
 }
 
 export function RaisedControl({ cfg }: { cfg: RaisedCfg }) {
+  const visualStyle = useAnalyticsVisualStyle()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const r1 = cfg.r1 ?? cfg.accent
-  const r2 = cfg.r2 ?? "#000"
-  const r3 = cfg.r3 ?? cfg.accent
-  const r4 = cfg.r4 ?? "#00CCFF"
-  const textOnDark = cfg.accent
+  const r1 = visualStyle?.controllerColors?.previous ?? cfg.r1 ?? cfg.accent
+  const r2 = visualStyle?.controllerColors?.middle ?? cfg.r2 ?? "#000"
+  const r3 = visualStyle?.controllerColors?.next ?? cfg.r3 ?? cfg.accent
+  const r4 = visualStyle?.controllerColors?.next ?? cfg.r4 ?? "#00CCFF"
+  const textOnDark = r2 === "#000" ? cfg.accent : "#000000"
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -177,10 +187,12 @@ export function RaisedControl({ cfg }: { cfg: RaisedCfg }) {
 }
 
 // ── Stat type ────────────────────────────────────────────────────────────────
-export interface Stat { value: string; label: string; bg: string; color?: string }
+export interface Stat extends AnalyticsVisualStat {
+  bg: string
+}
 
 // ── ChartModule ──────────────────────────────────────────────────────────────
-interface ChartModuleProps {
+export interface ChartModuleProps {
   icon: ReactNode
   iconBg?: string
   titleBg?: string
@@ -203,7 +215,8 @@ interface ChartModuleProps {
   footerBadgeBg?: string
   // Chart body
   bodyBg?: string
-  minHeight?: number
+  minHeight?: number | string
+  bodyFitMode?: "balanced" | "fillWidth" | "preserveRatio"
   children: ReactNode
 }
 
@@ -214,9 +227,17 @@ export function ChartModule({
   legendLeft, legendCenter, legendRight,
   chartInsight, personalInsight,
   footerBadge, footerBadgeBg,
-  bodyBg, minHeight = 320,
+  bodyBg, minHeight = 320, bodyFitMode = "balanced",
   children,
 }: ChartModuleProps) {
+  const sourcePrefix = useVtSyncVisualDataSourcePrefix()
+  const visualStyle = useAnalyticsVisualStyle()
+  const resolvedSubtitle = sourcePrefix ? `${sourcePrefix}${subtitle ? ` · ${subtitle}` : ""}` : subtitle
+  const resolvedIconBg = visualStyle?.headerColorPair?.icon ?? iconBg
+  const resolvedTitleBg = visualStyle?.headerColorPair?.title ?? titleBg
+  const resolvedIcon = visualStyle?.iconKey
+    ? <AnalyticsVisualIcon iconKey={visualStyle.iconKey} size={60} />
+    : icon
 
   // Auto-generate subtitle from hov state or default
   const contextTitle = hovTitle || "HOVER OVER A DATA POINT"
@@ -232,19 +253,19 @@ export function ChartModule({
       boxShadow: "8px 8px 0px 0px #000",
     }}>
       {/* ── HEADER ── */}
-      <div style={{ borderBottom: "4px solid #000", display: "flex", alignItems: "stretch", minHeight: 74, flexShrink: 0 }}>
+      <div style={{ borderBottom: "4px solid #000", display: "flex", alignItems: "stretch", minHeight: 80, flexShrink: 0 }}>
         {/* Icon block */}
-        <div style={{ width: 76, background: iconBg, display: "flex", alignItems: "center", justifyContent: "center", borderRight: "4px solid #000", flexShrink: 0, fontSize: 26, color: "#000" }}>
-          {icon}
+        <div style={{ width: 80, background: resolvedIconBg, display: "flex", alignItems: "center", justifyContent: "center", borderRight: "4px solid #000", flexShrink: 0, fontSize: 26, color: "#000" }}>
+          {resolvedIcon}
         </div>
         {/* Title block */}
-        <div style={{ flex: 1, minWidth: 0, background: titleBg, padding: "6px 10px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+        <div style={{ flex: 1, minWidth: 0, background: resolvedTitleBg, padding: "6px 10px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
           <div style={{ fontSize: "clamp(22px, 3vw, 38px)", fontWeight: 1000, lineHeight: 0.88, textTransform: "uppercase", letterSpacing: "-0.02em", color: "#000" }}>
             {title}
           </div>
-          {subtitle && (
+          {resolvedSubtitle && (
             <div style={{ marginTop: 4, fontSize: 10, fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase", color: "#000", opacity: 0.85 }}>
-              {subtitle}
+              {resolvedSubtitle}
             </div>
           )}
         </div>
@@ -253,24 +274,23 @@ export function ChartModule({
       </div>
 
       {/* ── CONTEXT BAR ── */}
-      <div style={{ borderBottom: "4px solid #000", height: 40, display: "flex", alignItems: "stretch", background: "#fff", flexShrink: 0, overflow: "hidden" }}>
+      <div style={{ borderBottom: "4px solid #000", height: ANALYTICS_VISUAL_CONTEXT_BAR_HEIGHTS.standard, minHeight: ANALYTICS_VISUAL_CONTEXT_BAR_HEIGHTS.standard, display: "flex", alignItems: "stretch", background: "#fff", flexShrink: 0, overflow: "hidden" }}>
         <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 10px", fontSize: "clamp(11px, 1.5vw, 18px)", fontWeight: 1000, borderRight: "4px solid #000", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", minWidth: 0, color: "#000" }}>
           {contextTitle}
         </div>
-        {stats.map((s, i) => (
-          <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "stretch", minWidth: 72, borderLeft: "4px solid #000" }}>
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 1000, letterSpacing: "-0.02em", padding: "0 6px", color: "#000" }}>
-              {s.value}
-            </div>
-            <div style={{ height: 18, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", background: s.bg, color: s.color ?? "#000", width: "100%" }}>
-              {s.label}
-            </div>
-          </div>
-        ))}
+        <AnalyticsActiveStats stats={stats} />
       </div>
 
       {/* ── CHART BODY ── */}
-      <div style={{ position: "relative", minHeight, overflow: "hidden", background: bodyBg }}>
+      <div
+        data-canvas-fit-mode={bodyFitMode}
+        style={{
+          position: "relative",
+          minHeight,
+          overflow: "hidden",
+          background: bodyBg,
+        }}
+      >
         {children}
       </div>
 

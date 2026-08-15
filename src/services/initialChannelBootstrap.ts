@@ -26,7 +26,11 @@ import {
  putChannelWindowSummaries,
 } from "./canonicalSync/storage"
 import { syncLegacyAnalyticsCacheFromCanonical } from "./canonicalSync/legacyCacheBridge"
-import { publishInitialBootstrapToVtSync } from "../features/vt-sync-local/adapters/initialBootstrapBridge"
+import {
+ publishInitialBootstrapToVtSync,
+ publishInitialChannelOverviewToVtSync,
+ publishInitialChannelTotalsToVtSync,
+} from "../features/vt-sync-local/adapters/initialBootstrapBridge"
 
 export const INITIAL_CHANNEL_BOOTSTRAP_FLAG = "VITE_UNIFIED_INITIAL_CHANNEL_BOOTSTRAP"
 const IDENTITY_INVENTORY_FRESH_MS = 6 * 60 * 60 * 1000
@@ -192,25 +196,11 @@ const runBootstrap = async (input: {
    await putCanonicalRawAuditEntries([bootstrap.audit])
   }
   await putCanonicalSyncRun(run)
+  // Overview widgets get identity/counts now; no wait for video inventory.
+  await publishInitialChannelOverviewToVtSync({ channel: bootstrap.channel, runId: run.id })
 
-  const inventory = inventoryFresh && restored
-   ? { records: restored.videos, audit: [] }
-   : await syncVideoInventory(
-      bootstrap.channel.channelId,
-      run.id,
-      bootstrap.channel.uploadsPlaylistId,
-     )
-  if (inventory.audit.length > 0) {
-   await putCanonicalVideoRecords(inventory.records, "video_inventory", "data_api")
-   await putCanonicalRawAuditEntries(inventory.audit)
-  }
-  run = {
-   ...run,
-   videoCount: inventory.records.length,
-   stageStatus: { ...run.stageStatus, video_inventory: "complete" },
-  }
-  await putCanonicalSyncRun(run)
-
+  // Channel totals are independent of inventory. Run and commit them next so
+  // dashboard KPIs become current while longer video work continues.
   const refreshedPeriods = currentWindows.length || previousWindows.length
    ? await syncChannelPeriodSummaries(
       bootstrap.channel.channelId,
@@ -229,6 +219,27 @@ const runBootstrap = async (input: {
    ...refreshedPeriods.summaries,
   ]
   run = { ...run, stageStatus: { ...run.stageStatus, channel_window: "complete" } }
+  await putCanonicalSyncRun(run)
+  if (refreshedPeriods.summaries.length > 0) {
+   publishInitialChannelTotalsToVtSync({ periods: refreshedPeriods.summaries, runId: run.id })
+  }
+
+  const inventory = inventoryFresh && restored
+   ? { records: restored.videos, audit: [] }
+   : await syncVideoInventory(
+      bootstrap.channel.channelId,
+      run.id,
+      bootstrap.channel.uploadsPlaylistId,
+     )
+  if (inventory.audit.length > 0) {
+   await putCanonicalVideoRecords(inventory.records, "video_inventory", "data_api")
+   await putCanonicalRawAuditEntries(inventory.audit)
+  }
+  run = {
+   ...run,
+   videoCount: inventory.records.length,
+   stageStatus: { ...run.stageStatus, video_inventory: "complete" },
+  }
   await putCanonicalSyncRun(run)
 
   const daily = dailyFresh
@@ -302,7 +313,13 @@ export const ensureInitialChannelBootstrap = (input: {
 } = {}): Promise<InitialChannelBootstrapSnapshot> => {
  const key = input.channelId || "mine"
  const existing = inFlight.get(key)
- if (existing) return existing
+ if (existing) {
+  // A first action may request today's forced refresh while the immediate
+  // login bootstrap is still running. Finish current work, then honor force.
+  return input.force
+   ? existing.then(() => ensureInitialChannelBootstrap(input))
+   : existing
+ }
  const promise = runBootstrap(input).finally(() => inFlight.delete(key))
  inFlight.set(key, promise)
  return promise

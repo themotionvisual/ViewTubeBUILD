@@ -5,8 +5,8 @@ import { clearVtSyncLocalDb, listVtSyncVideoInventory, putVtSyncVideoInventoryRe
 import { normalizeVtSyncSnapshot } from "./snapshot"
 import {
  GEOGRAPHY_PROVINCE_SAFE_METRICS,
- VT_SYNC_TRAFFIC_DETAIL_MAX_PAGES,
- VT_SYNC_TRAFFIC_DETAIL_MAX_ROWS,
+ VT_SYNC_TRAFFIC_DETAIL_FALLBACK_MAX_WINDOWS,
+ VT_SYNC_PAGINATED_REPORT_MAX_PAGES,
  VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE,
  VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE,
  runVtSyncLocalSync,
@@ -45,6 +45,29 @@ afterEach(async () => {
 })
 
 describe("syncUploadsInventory", () => {
+ it("does not carry a previous channel's catalog into the active channel", async () => {
+  vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+   if (url.includes("youtube/v3/channels")) {
+    return new Response(JSON.stringify({
+     items: [{ id: "channel-b", snippet: { title: "Channel B", thumbnails: {} }, statistics: {}, contentDetails: { relatedPlaylists: {} } }],
+    }), { status: 200 })
+   }
+   return new Response(JSON.stringify({ items: [] }), { status: 200 })
+  }))
+
+  const snapshot = await runVtSyncLocalSync({
+   token: "token",
+   selectedCategories: ["channel_metadata"],
+   previousSnapshot: normalizeVtSyncSnapshot({
+    channelId: "channel-a",
+    videos: [{ id: "video-from-a", title: "Channel A video" }],
+   }),
+  })
+
+  expect(snapshot.channelId).toBe("channel-b")
+  expect(snapshot.videos).toEqual([])
+ })
+
  it("backfills video analytics in 200-video chunks after the first ranked page", async () => {
   const requestedVideoFilters: string[] = []
   vi.stubGlobal("fetch", vi.fn(async (url: string) => {
@@ -94,10 +117,50 @@ describe("syncUploadsInventory", () => {
 
   const chunkSizes = requestedVideoFilters.map((filter) => filter.replace("video==", "").split(",").length)
   expect(VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE).toBe(200)
-  expect(chunkSizes).toEqual([200, 50])
+  // Each Analytics metric bundle receives the same complete 200/50-video
+  // partition; the requests must never exceed the engine batch size.
+  expect(new Set(chunkSizes)).toEqual(new Set([200, 50]))
+  expect(chunkSizes.filter((size) => size === 200)).toHaveLength(chunkSizes.filter((size) => size === 50).length)
   expect(snapshot.videos[0]?.metrics?.views).toBe(100)
-  expect(snapshot.datasetFreshness?.videos?.status).toBe("synced")
- })
+ expect(snapshot.datasetFreshness?.videos?.status).toBe("synced")
+})
+
+ it("keeps a rendered title and thumbnail when metadata omits those fields", async () => {
+ let latestCommittedTitle = ""
+  let latestCommittedViews: number | undefined
+  let metadataWasVisibleBeforeAnalytics = false
+  vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+   if (url.includes("youtube/v3/channels")) return new Response(JSON.stringify({
+    items: [{ id: "channel-a", snippet: { title: "Channel A", thumbnails: {} }, statistics: {}, contentDetails: { relatedPlaylists: {} } }],
+   }), { status: 200 })
+   if (url.includes("youtube/v3/videos")) return new Response(JSON.stringify({
+    items: [{ id: "video-a", snippet: { thumbnails: {} }, contentDetails: {}, statistics: { viewCount: "123", likeCount: "9", commentCount: "4" } }],
+   }), { status: 200 })
+   if (url.includes("youtubeanalytics.googleapis.com/v2/reports")) {
+    metadataWasVisibleBeforeAnalytics = latestCommittedTitle === "Established title" && latestCommittedViews === 123
+    return new Response(JSON.stringify({ columnHeaders: [], rows: [] }), { status: 200 })
+   }
+   return new Response(JSON.stringify({ items: [] }), { status: 200 })
+  }))
+
+  const snapshot = await runVtSyncLocalSync({
+   token: "token",
+   selectedCategories: ["channel_metadata", "video_metadata", "videos_analytics"],
+   previousSnapshot: normalizeVtSyncSnapshot({ videos: [{ id: "video-a", title: "Established title", thumbnail: "https://example.test/cover.jpg", publishedAt: "2026-01-01T00:00:00Z", duration: "", metrics: {} }] }),
+   onSnapshotCommit: (committed) => {
+    latestCommittedTitle = committed.videos[0]?.title || ""
+    latestCommittedViews = committed.videos[0]?.metrics?.views
+   },
+  })
+
+  expect(snapshot.videos[0]).toMatchObject({ title: "Established title", thumbnail: "https://example.test/cover.jpg" })
+  expect(snapshot.videos[0].metrics).toMatchObject({ views: 123, likes: 9, comments: 4 })
+  expect(snapshot.videos[0].metricProvenance).toMatchObject({ views: "youtube_data_v3", likes: "youtube_data_v3", comments: "youtube_data_v3" })
+  expect(snapshot.datasetFreshness?.videos).toMatchObject({
+   status: expect.stringMatching(/synced|partial/),
+  })
+  expect(metadataWasVisibleBeforeAnalytics).toBe(true)
+})
 
  it("keeps prior analytics when the long-format Cards pass returns a partial row", async () => {
   vi.stubGlobal("fetch", vi.fn(async (url: string) => {
@@ -246,7 +309,7 @@ describe("syncUploadsInventory", () => {
   expect(snapshot.syncManifest?.diagnostics?.some((entry) => entry.categoryId === "traffic_shorts" && entry.status === "disabled_unvalidated")).toBe(true)
  })
 
- it("pages VT-SYNC traffic detail bundles to the top 100 rows by default", async () => {
+ it("pages VT-SYNC traffic detail bundles until YouTube returns no more rows", async () => {
   const requestedDetailPages: Array<{ sourceType: string; startIndex: number; maxResults: number }> = []
   vi.stubGlobal("fetch", vi.fn(async (url: string) => {
    if (url.includes("youtube/v3/channels")) {
@@ -263,15 +326,15 @@ describe("syncUploadsInventory", () => {
    if (url.includes("youtubeanalytics.googleapis.com/v2/reports")) {
     const parsed = new URL(url)
     const filters = parsed.searchParams.get("filters") || ""
-    const sourceType = filters.includes("YT_SEARCH") ? "YT_SEARCH" : filters.includes("EXT_URL") ? "EXT_URL" : "UNKNOWN"
+    const sourceType = filters.includes("YT_SEARCH") ? "YT_SEARCH" : filters.includes("EXT_URL") ? "EXT_URL" : filters.includes("NOTIFICATION") ? "NOTIFICATION" : "UNKNOWN"
     const startIndex = Number(parsed.searchParams.get("startIndex") || "1")
     const maxResults = Number(parsed.searchParams.get("maxResults") || "0")
     requestedDetailPages.push({ sourceType, startIndex, maxResults })
 
-    const rows = Array.from({ length: VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE }, (_, index) => {
+    const rows = startIndex > 125 ? [] : Array.from({ length: VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE }, (_, index) => {
      const rank = startIndex + index
      return [
-      sourceType === "YT_SEARCH" ? `search term ${rank}` : `referrer-${rank}.example.com`,
+      sourceType === "YT_SEARCH" ? `search term ${rank}` : sourceType === "NOTIFICATION" ? `notification ${rank}` : `referrer-${rank}.example.com`,
       1_000 - rank,
       rank * 2,
       45 + rank,
@@ -301,13 +364,13 @@ describe("syncUploadsInventory", () => {
    selectedCategories: ["search_terms", "ext_websites"],
    previousSnapshot: normalizeVtSyncSnapshot(),
   })
-
-  expect(snapshot.searchTerms).toHaveLength(VT_SYNC_TRAFFIC_DETAIL_MAX_ROWS)
-  expect(snapshot.extWebsites).toHaveLength(VT_SYNC_TRAFFIC_DETAIL_MAX_ROWS)
-  expect(requestedDetailPages.filter((page) => page.sourceType === "YT_SEARCH").map((page) => page.startIndex)).toEqual([1, 26, 51, 76])
-  expect(requestedDetailPages.filter((page) => page.sourceType === "EXT_URL").map((page) => page.startIndex)).toEqual([1, 26, 51, 76])
+  expect(snapshot.searchTerms).toHaveLength(125)
+  expect(snapshot.extWebsites).toHaveLength(125)
+  expect(snapshot.trafficDetails.filter((row) => row.sourceType === "YT_SEARCH")).toHaveLength(125)
+  expect(requestedDetailPages.filter((page) => page.sourceType === "YT_SEARCH").map((page) => page.startIndex)).toEqual([1, 26, 51, 76, 101, 126])
+  expect(requestedDetailPages.filter((page) => page.sourceType === "EXT_URL").map((page) => page.startIndex)).toEqual([1, 26, 51, 76, 101, 126])
   expect(requestedDetailPages.every((page) => page.maxResults === VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE)).toBe(true)
-  expect(requestedDetailPages).toHaveLength(VT_SYNC_TRAFFIC_DETAIL_MAX_PAGES * 2)
+  expect(requestedDetailPages).toHaveLength(12)
  })
 
  it("pages sharing services to the top 100 rows by default", async () => {
@@ -353,7 +416,7 @@ describe("syncUploadsInventory", () => {
    previousSnapshot: normalizeVtSyncSnapshot(),
   })
 
-  expect(snapshot.sharingService).toHaveLength(VT_SYNC_TRAFFIC_DETAIL_MAX_ROWS)
+  expect(snapshot.sharingService).toHaveLength(VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE * VT_SYNC_PAGINATED_REPORT_MAX_PAGES)
   expect(snapshot.sharingService[0]).toMatchObject({
    sharingService: "share-service-1",
    term: "share-service-1",
@@ -364,10 +427,57 @@ describe("syncUploadsInventory", () => {
   expect(snapshot.datasetFreshness?.shares?.status).toBe("synced")
   const paginationDiagnostic = snapshot.syncManifest?.diagnostics?.find((entry) => entry.categoryId === "sharing_service" && entry.phase === "sharing_service")
   expect(paginationDiagnostic).toMatchObject({
-   requestedRows: VT_SYNC_TRAFFIC_DETAIL_MAX_ROWS,
-   returnedRows: VT_SYNC_TRAFFIC_DETAIL_MAX_ROWS,
+   requestedRows: VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE * VT_SYNC_PAGINATED_REPORT_MAX_PAGES,
+   returnedRows: VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE * VT_SYNC_PAGINATED_REPORT_MAX_PAGES,
    status: "inspected",
   })
+ })
+
+ it("pages Traffic x Day until the complete lifetime series is returned", async () => {
+  const requestedStartIndexes: number[] = []
+  vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+   if (url.includes("youtube/v3/channels")) {
+    return new Response(JSON.stringify({
+     items: [{ id: "channel-a", snippet: { title: "Channel A", publishedAt: "2025-01-01T00:00:00Z", thumbnails: {} }, statistics: {}, contentDetails: { relatedPlaylists: {} } }],
+    }), { status: 200 })
+   }
+   if (!url.includes("youtubeanalytics.googleapis.com/v2/reports")) {
+    return new Response(JSON.stringify({ items: [] }), { status: 200 })
+   }
+   const parsed = new URL(url)
+   const startIndex = Number(parsed.searchParams.get("startIndex") || "1")
+   const maxResults = Number(parsed.searchParams.get("maxResults") || "0")
+   requestedStartIndexes.push(startIndex)
+   const remaining = Math.max(0, 450 - startIndex + 1)
+   const count = Math.min(maxResults, remaining)
+   const rows = Array.from({ length: count }, (_, index) => {
+    const rank = startIndex + index
+    const day = new Date(Date.UTC(2025, 0, rank)).toISOString().slice(0, 10)
+    return [rank % 2 ? "YT_SEARCH" : "EXT_URL", day, rank, rank * 2, 30, 50, rank]
+   })
+   return new Response(JSON.stringify({
+    columnHeaders: [
+     "insightTrafficSourceType", "day", "views", "estimatedMinutesWatched",
+     "averageViewDuration", "averageViewPercentage", "engagedViews",
+    ].map((name) => ({ name })),
+    rows,
+   }), { status: 200 })
+  }))
+
+  const snapshot = await runVtSyncLocalSync({
+   token: "token",
+   selectedCategories: ["traffic_day"],
+   previousSnapshot: normalizeVtSyncSnapshot({
+    channelId: "channel-a",
+    channelStartedAt: "2025-01-01T00:00:00Z",
+    trafficByDay: [{ term: "STALE_SOURCE", day: "2024-01-01", views: 999 }],
+   }),
+  })
+
+  expect(requestedStartIndexes).toEqual([1, 201, 401])
+  expect(snapshot.trafficByDay).toHaveLength(450)
+  expect(snapshot.trafficByDay.some((row) => row.term === "STALE_SOURCE")).toBe(false)
+  expect(snapshot.datasetFreshness?.traffic_day?.status).toBe("synced")
  })
 
  it("marks VT-SYNC traffic details partial when Google rejects a later detail page", async () => {
@@ -447,10 +557,10 @@ describe("syncUploadsInventory", () => {
   })
   expect((paginationDiagnostic?.pagination as Array<Record<string, unknown>>).map((page) => page.startIndex)).toEqual([1, 26])
   expect(requestedDetailPages[0]).toEqual({ startIndex: 1, maxResults: VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE })
-  expect(requestedDetailPages.slice(1, 4).every((page) => page.startIndex === 26 && page.maxResults === VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE)).toBe(true)
-  expect(requestedDetailPages.slice(4).every((page) => page.startIndex === 1 && page.maxResults === VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE)).toBe(true)
-  expect(requestedDetailPages).toHaveLength(8)
- })
+  expect(requestedDetailPages.every((page) => [1, 26].includes(page.startIndex) && page.maxResults === VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE)).toBe(true)
+  expect(requestedDetailPages.filter((page) => page.startIndex === 1)).toHaveLength(1 + VT_SYNC_TRAFFIC_DETAIL_FALLBACK_MAX_WINDOWS)
+  expect(requestedDetailPages.filter((page) => page.startIndex === 26).length).toBeGreaterThanOrEqual(1 + VT_SYNC_TRAFFIC_DETAIL_FALLBACK_MAX_WINDOWS)
+ }, 20_000)
 
  it("falls back to date-windowed traffic details when offset pagination fails", async () => {
   const requestedDetailPages: Array<{ startIndex: number; maxResults: number; startDate: string; endDate: string }> = []
@@ -520,20 +630,21 @@ describe("syncUploadsInventory", () => {
    previousSnapshot: normalizeVtSyncSnapshot(),
   })
 
-  expect(snapshot.searchTerms).toHaveLength(VT_SYNC_TRAFFIC_DETAIL_MAX_ROWS)
-  expect(snapshot.datasetFreshness?.search_terms?.status).toBe("synced")
+  expect(snapshot.searchTerms).toHaveLength(VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE * VT_SYNC_TRAFFIC_DETAIL_FALLBACK_MAX_WINDOWS)
+  expect(snapshot.datasetFreshness?.search_terms?.status).toBe("partial")
   const paginationDiagnostic = snapshot.syncManifest?.diagnostics?.find((entry) => entry.categoryId === "search_terms" && entry.phase === "traffic_sync")
   expect(paginationDiagnostic).toMatchObject({
-   returnedRows: VT_SYNC_TRAFFIC_DETAIL_MAX_ROWS,
-   status: "fallback_windowed",
+   returnedRows: VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE * VT_SYNC_TRAFFIC_DETAIL_FALLBACK_MAX_WINDOWS,
+   status: "partial",
    fallback: {
     strategy: "traffic_detail_date_windows",
-    rowsAfter: VT_SYNC_TRAFFIC_DETAIL_MAX_ROWS,
+    rowsAfter: VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE * VT_SYNC_TRAFFIC_DETAIL_FALLBACK_MAX_WINDOWS,
    },
   })
-  expect(requestedDetailPages.map((page) => page.startIndex)).toEqual([1, 26, 26, 26, 1, 1, 1, 1])
+  expect(requestedDetailPages.filter((page) => page.startIndex === 1)).toHaveLength(1 + VT_SYNC_TRAFFIC_DETAIL_FALLBACK_MAX_WINDOWS)
+  expect(requestedDetailPages.some((page) => page.startIndex === 26)).toBe(true)
   expect(requestedDetailPages.every((page) => page.maxResults === VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE)).toBe(true)
- })
+ }, 20_000)
 
  it("stores the full uploads playlist on first inventory sync", async () => {
   mockPlaylistPages({

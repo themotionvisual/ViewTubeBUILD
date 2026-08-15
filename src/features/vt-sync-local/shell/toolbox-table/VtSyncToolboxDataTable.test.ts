@@ -5,7 +5,7 @@ import { VT_SYNC_ACTIVE_TABLE_IDS, VT_SYNC_TABLE_DEFINITIONS, VT_SYNC_VISIBLE_TA
 import { normalizeVtSyncSnapshot, toVtSyncRawAppExport } from "../../adapters/snapshot"
 import { buildVtSyncDemographicOverviewRows, getVtSyncContentTypeLabel, normalizeVtSyncTableRows } from "../../adapters/tableData"
 import { formatVtSyncFullMonthValue, formatVtSyncLocalMonthValue } from "../../adapters/tableFormatting"
-import { isManualImportNewerThanApi } from "./VtSyncToolboxDataTable"
+import { getVtSyncFormatBadgePresentation, isManualImportNewerThanApi, resolveAnalyticsTableRows } from "./VtSyncToolboxDataTable"
 import {
  VT_SYNC_TOOLBOX_CATEGORIES,
  VT_SYNC_WORKSPACE_DEFINITIONS,
@@ -14,6 +14,7 @@ import {
  VT_SYNC_VIDEO_NON_COMPACT_WIDTHS,
  buildVtSyncRetentionVisualModel,
  buildVtSyncRetentionVideoGroups,
+ buildVtSyncFormatSubscriberGroups,
  buildVtSyncTrafficDayGroups,
  buildVtSyncTableViewModel,
  clampVtSyncColumnWidth,
@@ -70,6 +71,44 @@ const rendererCss = readFileSync(new URL("./VtSyncToolboxDataTable.css", import.
 const visualsSource = readFileSync(new URL("../VtSyncDataVisualsToolbox.tsx", import.meta.url), "utf8")
 
 describe("VT Sync toolbox data table", () => {
+ it("keeps full format labels and gives live badges their green presentation", () => {
+  expect(getVtSyncFormatBadgePresentation("shorts")).toEqual({
+   badgeClass: "is-short",
+   collapsedLabel: "S",
+   label: "SHORTS",
+  })
+  expect(getVtSyncFormatBadgePresentation("long-form")).toEqual({
+   badgeClass: "is-long",
+   collapsedLabel: "L",
+   label: "LONG-FORMAT",
+  })
+  expect(getVtSyncFormatBadgePresentation("live stream")).toEqual({
+   badgeClass: "is-live",
+   collapsedLabel: "L",
+   label: "LIVE STREAM",
+  })
+
+  const formatColumn = VT_SYNC_TABLE_DEFINITIONS
+   .find((table) => table.id === "videos")
+   ?.columns.find((column) => column.key === "format")
+  expect(formatColumn?.preferredWidth).toBeGreaterThanOrEqual(140)
+ })
+
+ it("normalizes recovered video identity, URL, and nested Data API statistics", () => {
+  const [row] = normalizeVtSyncTableRows("videos", [{
+   id: "abc123",
+   title: "Recovered video",
+   metrics: { views: 42, likes: 7, comments: 3 },
+  }])
+  expect(row).toMatchObject({
+   videoId: "abc123",
+   videoUrl: "https://www.youtube.com/watch?v=abc123",
+   views: 42,
+   likes: 7,
+   comments: 3,
+  })
+  expect(row.videoId).not.toBe(row.videoUrl)
+ })
  it("uses literal percentage-of-audience widths for demographic sparklines", () => {
   expect(getVtSyncAbsolutePercentRatio(3.1)).toBeCloseTo(0.031)
   expect(getVtSyncAbsolutePercentRatio(25.8)).toBeCloseTo(0.258)
@@ -146,6 +185,77 @@ describe("VT Sync toolbox data table", () => {
 
   expect(isManualImportNewerThanApi(record, snapshotAt("2026-07-28T06:00:00.000Z"))).toBe(true)
   expect(isManualImportNewerThanApi(record, snapshotAt("2026-07-28T08:00:00.000Z"))).toBe(false)
+ })
+
+ it("uses recovered IndexedDB API rows instead of compact preview snapshot rows", () => {
+  const compactSnapshot = normalizeVtSyncSnapshot({
+   source: "vt-sync",
+   snapshotId: "compact-run",
+   capturedAt: "2026-08-12T12:00:00.000Z",
+   videos: [{ id: "preview-1", title: "Preview row" }],
+   storageMetadata: {
+    storageMode: "compact_preview",
+    isCompacted: true,
+    fullRowCountByField: { videos: 3 },
+    visiblePreviewRowCountByField: { videos: 1 },
+   },
+  })
+  const resolved = resolveAnalyticsTableRows({
+   tableId: "videos",
+   snapshot: compactSnapshot,
+   snapshotRows: [{ id: "preview-1", videoTitle: "Preview row" }],
+   recoveredRows: [
+    { id: "full-1", videoTitle: "Full row 1" },
+    { id: "full-2", videoTitle: "Full row 2" },
+    { id: "full-3", videoTitle: "Full row 3" },
+   ],
+   privacyFilters: {
+    excludePrivate: false,
+    excludeUnlisted: false,
+   },
+  })
+
+  expect(resolved).toHaveLength(3)
+  expect(resolved.map((row) => row.id)).toEqual(["full-1", "full-2", "full-3"])
+ })
+
+ it("supplements snapshot rows with imported CSV rows instead of replacing them", () => {
+  const resolved = resolveAnalyticsTableRows({
+   tableId: "creator",
+   snapshot: normalizeVtSyncSnapshot(),
+   snapshotRows: [{ term: "Snapshot", views: 1 }],
+   importedRows: [{ term: "Imported", views: 2 }],
+   recoveredRows: [{ term: "Recovered", views: 3 }],
+   privacyFilters: {
+    excludePrivate: false,
+    excludeUnlisted: false,
+   },
+  })
+
+  expect(resolved).toEqual([
+   { term: "Snapshot", views: 1 },
+   { term: "Imported", views: 2 },
+  ])
+ })
+
+ it("never lets a smaller Videos import replace the projected API catalog", () => {
+  const snapshotRows = Array.from({ length: 100 }, (_, index) => ({
+   videoId: `video-${index + 1}`,
+   title: `Video ${index + 1}`,
+  }))
+  const resolved = resolveAnalyticsTableRows({
+   tableId: "videos",
+   snapshot: normalizeVtSyncSnapshot(),
+   snapshotRows,
+   importedRows: Array.from({ length: 77 }, (_, index) => ({
+    videoId: `video-${index + 1}`,
+    title: `CSV ${index + 1}`,
+   })),
+   privacyFilters: { excludePrivate: false, excludeUnlisted: false },
+  })
+
+  expect(resolved).toHaveLength(100)
+  expect(resolved[0]).toEqual(expect.objectContaining({ title: "Video 1" }))
  })
 
  it("builds one demographic matrix from the combined age and gender report", () => {
@@ -359,6 +469,39 @@ describe("VT Sync toolbox data table", () => {
   expect(exportVtSyncTableCsv(table, rows)).not.toContain("YouTube Search")
  })
 
+ it("groups formats x subscriber status rows without changing the flat table export contract", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((definition) => definition.id === "formats_subscribers")!
+  const rows = buildVtSyncTableViewModel(normalizeVtSyncSnapshot({
+   formatSubscriberStatuses: [
+    { creatorContentType: "shorts", subscribedStatus: "SUBSCRIBED", views: 100, engagedViews: 60, estimatedMinutesWatched: 50, averageViewDuration: 20, averageViewPercentage: 40, redViews: 12, estimatedRedMinutesWatched: 9 },
+    { creatorContentType: "shorts", subscribedStatus: "UNSUBSCRIBED", views: 300, engagedViews: 210, estimatedMinutesWatched: 90, averageViewDuration: 30, averageViewPercentage: 60, redViews: 18, estimatedRedMinutesWatched: 21 },
+    { creatorContentType: "videoOnDemand", subscribedStatus: "SUBSCRIBED", views: 50, engagedViews: 25, estimatedMinutesWatched: 25, averageViewDuration: 40, averageViewPercentage: 70, redViews: 5, estimatedRedMinutesWatched: 6 },
+   ],
+  }), table).rows
+
+  const groups = buildVtSyncFormatSubscriberGroups(rows, table.columns)
+
+  expect(table.presentationMode).toBe("format-subscriber-status")
+  expect(groups.map((group) => group.formatLabel)).toEqual(["Shorts", "Long-Format"])
+  expect(groups[0].statuses.map((status) => status.statusLabel)).toEqual(["Unsubscribed", "Subscribed"])
+  expect(groups[0].totals).toMatchObject({
+   term: "Shorts",
+   views: 400,
+   engagedViews: 270,
+   watchTime: 140 / 60,
+   youtubePremiumViews: 30,
+   youtubePremiumWatchTime: 0.5,
+   channelViewShare: 400 / 450 * 100,
+   channelWatchTimeShare: (140 / 60) / (165 / 60) * 100,
+   channelPremiumViewShare: 30 / 35 * 100,
+   channelPremiumWatchTimeShare: 0.5 / 0.6 * 100,
+  })
+  expect(groups[0].totals.avgDuration).toBeCloseTo(((20 * 100) + (30 * 300)) / 400)
+  expect(groups[0].totals.avgPercentageViewed).toBeCloseTo(((40 * 100) + (60 * 300)) / 400)
+  expect(exportVtSyncTableCsv(table, rows)).toContain("Format,Subscriber Status,Views,Engaged Views,Watch Time,Avg Duration,Avg % Viewed,Premium Views,Premium Watch Time,% of Channel Views,% of Channel Watch Time,% of Channel Premium Views,% of Channel Premium Watch Time")
+  expect(exportVtSyncTableCsv(table, rows)).toContain("UNSUBSCRIBED")
+ })
+
  it("renders traffic source x day with a grouped presentation shell", () => {
   expect(rendererSource).toContain('table.presentationMode === "traffic-source-day" ? renderTrafficSourceDayTable()')
   expect(rendererSource).toContain('className="vt-sync-traffic-day-table"')
@@ -386,7 +529,17 @@ describe("VT Sync toolbox data table", () => {
   expect(rendererCss).toContain(".vt-sync-traffic-source-badge")
  expect(rendererCss).toContain(".vt-sync-traffic-source-badge { width: 280px; min-width: 280px; max-width: 280px;")
  expect(rendererCss).toContain("font-size: 15px; line-height: 1; font-weight: 1000;")
- expect(rendererCss).toContain('.vt-sync-data-table td[data-column-key="source"] .vt-sync-traffic-source-badge { position: absolute;')
+  expect(rendererCss).toContain('.vt-sync-data-table td[data-column-key="source"] .vt-sync-traffic-source-badge { position: absolute;')
+ })
+
+ it("renders formats x subscriber status with the grouped traffic table shell", () => {
+  expect(rendererSource).toContain('table.presentationMode === "format-subscriber-status" ? renderFormatSubscriberTable()')
+  expect(rendererSource).toContain("Format / Subscriber Status")
+  expect(rendererSource).toContain("<FormatBadge value={group.formatCode} label={group.formatLabel} />")
+  expect(rendererSource).toContain("buildVtSyncFormatSubscriberGroups(sortedRows, orderedColumns)")
+  expect(rendererCss).toContain(".vt-sync-format-badge.is-inline")
+  expect(rendererSource).toContain("data-traffic-day-parent")
+  expect(rendererSource).toContain("flat format/status rows · CSV stays flat")
  })
 
  it("groups 100-point retention curves by video without changing the flat export contract", () => {
@@ -911,6 +1064,23 @@ describe("VT Sync toolbox data table", () => {
   expect(rendererCss).toContain(".vt-sync-subset-menu button { width: 100%; min-height: 40px;")
  })
 
+ it("fills the category rail and keeps an open category menu attached while scrolling", () => {
+  expect(rendererCss).toContain("grid-template-columns: repeat(var(--vt-category-count, 6), minmax(0, 1fr))")
+  expect(rendererCss).toContain("border-radius: 0 0 12px 12px")
+  expect(rendererSource).toContain('window.addEventListener("scroll", update, true)')
+  expect(rendererSource).toContain('window.removeEventListener("scroll", update, true)')
+  expect(rendererSource).toContain("top: bounds.bottom - 3")
+  expect(rendererSource).toContain('"--vt-category-count": VT_SYNC_TOOLBOX_CATEGORIES.length')
+ })
+
+ it("uses each category label color for its shadow", () => {
+  VT_SYNC_TOOLBOX_CATEGORIES.forEach((category) => {
+   const hex = category.colors.label.slice(1)
+   const rgb = [0, 2, 4].map((offset) => Number.parseInt(hex.slice(offset, offset + 2), 16)).join(",")
+   expect(category.colors.shadow).toBe(`rgba(${rgb},.52)`)
+  })
+ })
+
  it("renders one fixed row rail outside every horizontally scrolling table", () => {
   expect(rendererSource).toContain('className="vt-sync-row-rail-viewport" ref={rowRailScrollRef}')
   expect(rendererSource).toContain('className="vt-sync-data-table vt-sync-row-rail-table"')
@@ -963,7 +1133,7 @@ describe("VT Sync toolbox data table", () => {
  })
 
  it("loads main datasets and opens split menus only for multi-table categories", () => {
-  const initial = { categoryId: "content", tableId: "playlists", dropdownId: null }
+  const initial = { categoryId: "channel", tableId: "playlists", dropdownId: null }
   const inactive = { categoryId: "not-selected", tableId: "none", dropdownId: null }
   const traffic = VT_SYNC_TOOLBOX_CATEGORIES.find((category) => category.id === "traffic")!
   const selectedTraffic = getVtSyncCategoryClickState(initial, traffic)
@@ -972,15 +1142,14 @@ describe("VT Sync toolbox data table", () => {
 
   expect(selectedTraffic).toEqual({ categoryId: "traffic", tableId: "traffic", dropdownId: "traffic" })
   expect(toggledTraffic).toEqual({ categoryId: "traffic", tableId: "traffic", dropdownId: null })
-  expect(getVtSyncCategoryClickState(initial, revenue)).toEqual({ categoryId: "revenue", tableId: "ads", dropdownId: null })
+  expect(getVtSyncCategoryClickState(initial, revenue)).toEqual({ categoryId: "revenue", tableId: "revenue", dropdownId: "revenue" })
   expect(Object.fromEntries(VT_SYNC_TOOLBOX_CATEGORIES.map((category) => [category.id, getVtSyncCategoryClickState(inactive, category).tableId]))).toEqual({
-   content: "videos",
-   daily: "daily",
-   channel: "channel_totals",
+   channel: "videos",
+   time: "daily",
    traffic: "traffic",
    audience: "demographics",
-   global: "geography",
-   revenue: "ads",
+   geographic: "geography",
+   revenue: "revenue",
   })
  })
 
@@ -1001,8 +1170,8 @@ describe("VT Sync toolbox data table", () => {
 
  it("round-trips workspace, table, filters, and expanded state through URL parameters", () => {
   const search = createVtSyncWorkspaceUrlSearch("?unrelated=keep", {
-   workspaceId: "discovery",
-   viewId: "traffic-time",
+   workspaceId: "time",
+   viewId: "time-stats",
    tableId: "traffic_day",
    filter: "search",
    columnFilters: { source: "YT_SEARCH" },
@@ -1012,8 +1181,8 @@ describe("VT Sync toolbox data table", () => {
 
   expect(search).toContain("unrelated=keep")
   expect(resolved).toEqual({
-   workspaceId: "discovery",
-   viewId: "traffic-time",
+   workspaceId: "time",
+   viewId: "time-stats",
    tableId: "traffic_day",
    filter: "search",
    columnFilters: { source: "YT_SEARCH" },
@@ -1029,9 +1198,9 @@ describe("VT Sync toolbox data table", () => {
   expect(resolveVtSyncWorkspaceUrlState(
    "?vtWorkspace=content&vtView=video-catalog&vtTable=search",
   )).toMatchObject({
-   workspaceId: "discovery",
-   viewId: "search",
-   tableId: "search",
+   workspaceId: "traffic",
+   viewId: "traffic-details",
+   tableId: "traffic_detail_search_terms",
   })
  })
 

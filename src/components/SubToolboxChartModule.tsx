@@ -1,9 +1,16 @@
 import React from "react"
+import { AnalyticsVisualIcon } from "./AnalyticsVisualIcon"
+import { useAnalyticsVisualStyle } from "./AnalyticsVisualStyleContext"
 import { VisualModuleController, type ControllerRow } from "./VisualModuleController"
+import { useVtSyncVisualDataSourcePrefix } from "../features/vt-sync-local/shell/VtSyncVisualDataSourceContext"
 import {
-  getVtVisualMetricColor,
   VT_VISUAL_METRIC_COLORS,
 } from "../styles/toolboxPalette"
+import {
+  AnalyticsActiveStats,
+  resolveAnalyticsVisualContextBarHeight,
+  type AnalyticsVisualContextBarHeight,
+} from "./analyticsVisualContextBar"
 
 type Tone = "pink" | "cyan" | "lime" | "yellow" | "purple" | "orange" | "white"
 
@@ -94,6 +101,7 @@ export interface SubToolboxChartModuleProps {
     rightTitle?: string
     rightStats?: SubToolboxStat[]
     bgTone?: string
+    height?: AnalyticsVisualContextBarHeight
     /** Allows dense two-line labels without clipping the subtitle rail. */
     minHeight?: number
   } | null
@@ -101,6 +109,9 @@ export interface SubToolboxChartModuleProps {
     moduleWidth?: string
     moduleMinHeight?: string
     chartHeight?: number
+    bodyMinHeight?: string
+    bodyPreferredHeight?: string
+    heightPolicy?: "fixedBody" | "fillWidth" | "preserveRatio" | "compact"
   }
   theme?: ModuleThemeTokens
   renderer?: {
@@ -126,16 +137,6 @@ export interface SubToolboxChartModuleProps {
   }
 }
 
-const toneClass = (tone?: Tone | string): string => {
-  if (tone === "pink") return "bg-[#FF7497]"
-  if (tone === "cyan") return "bg-[#00CCFF]"
-  if (tone === "lime") return "bg-[#CCFF00]"
-  if (tone === "yellow") return "bg-[#FFEA00]"
-  if (tone === "purple") return "bg-[#B14AED]"
-  if (tone === "orange") return "bg-[#FFB158]"
-  return "bg-[#E5E7EB]"
-}
-
 /** Backward-compatible aliases backed by the canonical VT-SYNC metric palette. */
 export const METRIC_COLORS: Record<string, string> = {
   SUBSCRIBERS: VT_VISUAL_METRIC_COLORS.subscribers,
@@ -143,8 +144,8 @@ export const METRIC_COLORS: Record<string, string> = {
   COMMENTS: VT_VISUAL_METRIC_COLORS.comments,
   CMNTS: VT_VISUAL_METRIC_COLORS.comments,
   SHARES: VT_VISUAL_METRIC_COLORS.shares,
-  SAVES: VT_VISUAL_METRIC_COLORS.saves,
-  "PLAYLIST SAVES": VT_VISUAL_METRIC_COLORS.saves,
+  SAVES: VT_VISUAL_METRIC_COLORS.playlistSaves,
+  "PLAYLIST SAVES": VT_VISUAL_METRIC_COLORS.playlistSaves,
   REVENUE: VT_VISUAL_METRIC_COLORS.revenue,
   REV: VT_VISUAL_METRIC_COLORS.revenue,
   RPM: VT_VISUAL_METRIC_COLORS.rpm,
@@ -163,49 +164,6 @@ export const METRIC_COLORS: Record<string, string> = {
   "ENGAGED VIEWS": VT_VISUAL_METRIC_COLORS.engagedViews,
   LENGTH: "#40C6E9",
 }
-
-const metricColorHex = (label: string): string | undefined => {
-  return getVtVisualMetricColor(label) ?? METRIC_COLORS[label.trim().toUpperCase()]
-}
-
-const toneForMetricLabel = (label: string, fallback?: Tone | string): Tone | string => {
-  const normalized = label.trim().toUpperCase()
-  if (normalized.includes("CTR")) return "cyan"
-  if (normalized === "RET" || normalized.includes("RETENTION")) return "pink"
-  if (normalized.includes("LIKE")) return "pink"
-  if (normalized.includes("COMMENT")) return "orange"
-  if (normalized.includes("SHARE")) return "orange"
-  if (normalized.includes("SUB")) return "pink"
-  if (normalized.includes("REVENUE") || normalized === "REV" || normalized.includes("RPM")) return "lime"
-  if (normalized.includes("SAVE")) return "yellow"
-  if (normalized.includes("VIEWS")) return "cyan"
-  if (normalized.includes("LENGTH") || normalized.includes("WATCH")) return "cyan"
-  if (normalized.includes("AVD")) return "lime"
-  if (normalized.includes("AVP")) return "purple"
-  if (normalized.includes("IMP")) return "purple"
-  if (normalized.includes("ENGAGED")) return "cyan"
-  return fallback ?? "white"
-}
-
-const statButtonClass = (clickable: boolean): string =>
-  `h-full w-auto flex-none px-0 inline-flex flex-col items-stretch justify-start tabular-nums leading-none overflow-hidden transition-colors ${
-    clickable ? "cursor-pointer hover:bg-gray-50" : "cursor-default"
-  }`
-
-const normalizeStatLabel = (label: string): string => {
-  const normalized = label.trim().toUpperCase()
-  if (normalized.includes("IMPRESSION")) return "IMPRSNS"
-  if (normalized === "SUBS" || normalized === "SUBSCRIPTIONS") return "SUBSCRIBERS"
-  return label
-}
-
-const statButtonStyle = (item: SubToolboxStat): React.CSSProperties => ({
-  background: item.backgroundTone ?? "#EDEDED",
-  minWidth: item.minWidth ?? (item.compact ? 76 : 88),
-})
-
-const toneBackgroundStyle = (tone?: string): React.CSSProperties | undefined =>
-  typeof tone === "string" && tone.startsWith("#") ? { background: tone } : undefined
 
 export const SubToolboxChartModule: React.FC<
   React.PropsWithChildren<SubToolboxChartModuleProps>
@@ -229,6 +187,9 @@ export const SubToolboxChartModule: React.FC<
   isOpenInitial = true,
   insight,
 }) => {
+  const sourcePrefix = useVtSyncVisualDataSourcePrefix()
+  const visualStyle = useAnalyticsVisualStyle()
+  const resolvedSubtitle = sourcePrefix ? `${sourcePrefix} · ${header.subtitle}` : header.subtitle
   const [internalOpen, setInternalOpen] = React.useState(isOpenInitial)
   const [hasOpened, setHasOpened] = React.useState(isOpenInitial)
   const setOpen = () => {
@@ -239,13 +200,16 @@ export const SubToolboxChartModule: React.FC<
   const tokens = {
     frameBg: theme?.frameBg ?? "#FFFFFF",
     frameBorder: theme?.frameBorder ?? "#000000",
-    shadowColor: theme?.shadowColor ?? "#000000",
-    headerBandBg: theme?.headerBandBg ?? "#FF82B0",
-    iconBlockBg: theme?.iconBlockBg ?? "#26C7EC",
+    shadowColor: visualStyle?.headerColorPair?.title ? `${visualStyle.headerColorPair.title}73` : theme?.shadowColor ?? "#000000",
+    headerBandBg: visualStyle?.headerColorPair?.title ?? theme?.headerBandBg ?? "#FF82B0",
+    iconBlockBg: visualStyle?.headerColorPair?.icon ?? theme?.iconBlockBg ?? "#26C7EC",
     iconBlockBorder: theme?.iconBlockBorder ?? "#000000",
     controlBoxBg: theme?.controlBoxBg ?? "#000000",
     controlBoxText: theme?.controlBoxText ?? "#CCFF00",
   }
+  const resolvedHeaderIcon = visualStyle?.iconKey
+    ? <AnalyticsVisualIcon iconKey={visualStyle.iconKey} size={60} />
+    : header.icon
 
   const content = renderer ? renderer.render() : children
   const badges =
@@ -256,6 +220,7 @@ export const SubToolboxChartModule: React.FC<
         : []
   const headerBorderClass = collapsible && !internalOpen ? "" : "border-b-[4px] border-black"
   const interiorMinHeight = collapsible && !internalOpen ? 0 : (layout?.moduleMinHeight ?? "420px")
+  const activeContextHeight = resolveAnalyticsVisualContextBarHeight(activeContext)
 
   return (
     <div
@@ -278,7 +243,7 @@ export const SubToolboxChartModule: React.FC<
           controllers on their own row underneath, spanning the full width.
       */}
       <div
-        className={`${headerBorderClass} flex flex-col sm:flex-row sm:items-stretch min-h-[76px] ${collapsible ? 'cursor-pointer' : ''}`}
+        className={`${headerBorderClass} flex flex-col sm:flex-row sm:items-stretch min-h-[80px] ${collapsible ? 'cursor-pointer' : ''}`}
         onClick={collapsible ? setOpen : undefined}
       >
         <div
@@ -288,17 +253,17 @@ export const SubToolboxChartModule: React.FC<
           {/* self-stretch fills the header's full height (no white frame showing beneath),
               and aspect-square drives the width off that height so the block stays square. */}
           <div
-            className="self-stretch aspect-square min-w-[76px] shrink-0 flex-none border-r-[4px] border-black flex items-center justify-center"
+            className="self-stretch aspect-square min-w-[80px] shrink-0 flex-none border-r-[4px] border-black flex items-center justify-center"
             style={{ background: tokens.iconBlockBg, borderColor: tokens.iconBlockBorder }}
           >
-            <span className="[&_svg]:h-8 [&_svg]:w-8">{header.icon}</span>
+            <span className="[&_svg]:h-8 [&_svg]:w-8">{resolvedHeaderIcon}</span>
           </div>
           <div className="min-w-0 flex-1 pl-3 pr-2 py-2 flex flex-col justify-center">
             <div className={`max-w-full font-[1000] uppercase tracking-[0em] ${header.titleClassName ?? "text-[clamp(20px,5vw,42px)] leading-[0.88]"}`}>
               {header.title}
             </div>
             <div className="max-w-full text-[clamp(10px,2.2vw,14px)] font-black uppercase tracking-[0.069em] opacity-80 truncate">
-              {header.subtitle}
+              {resolvedSubtitle}
             </div>
           </div>
         </div>
@@ -352,11 +317,11 @@ export const SubToolboxChartModule: React.FC<
         <div className="overflow-hidden flex flex-col relative">
           {activeContext ? (
             <div
-              className={`${disableActiveContextBottomBorder ? "" : "border-b-[4px] border-black"} px-0 py-0 min-h-[36px] overflow-x-auto overflow-y-hidden`}
+              className={`${disableActiveContextBottomBorder ? "" : "border-b-[4px] border-black"} px-0 py-0 overflow-x-auto overflow-y-hidden`}
               style={{
                 background: activeContext.bgTone ?? "#FFFFFF",
-                height: activeContext.minHeight ?? 36,
-                minHeight: activeContext.minHeight ?? 36,
+                height: activeContextHeight,
+                minHeight: activeContextHeight,
               }}
             >
               <div
@@ -366,39 +331,15 @@ export const SubToolboxChartModule: React.FC<
                 <div className="flex items-stretch h-full overflow-hidden shrink-0">
                   {activeContext.leftTitle && (
                     <div
-                      className="px-2 flex items-center justify-center font-[1000] text-[13px] border-r-[4px] border-black shrink-0 text-black"
-                      style={{ background: activeContext.bgTone ?? "#FFFFFF" }}
+                      className="px-2 flex items-center justify-center font-[1000] text-[13px] border-r-[4px] border-black shrink-0"
+                      style={{ background: activeContext.bgTone ?? "#FFFFFF", color: activeContext.bgTone === "#080816" ? "#F3F4F6" : "#000000" }}
                     >
                       {activeContext.leftTitle}
                     </div>
                   )}
                   {activeContext.leftStats && (
-                    <div className="flex items-stretch h-full divide-x-[4px] divide-black border-r-[4px] border-black">
-                      {activeContext.leftStats.map((item, index) => (
-                        <button
-                          key={`${item.label}-${index}`}
-                          onClick={item.onClick}
-                          disabled={!item.onClick}
-                          className={statButtonClass(Boolean(item.onClick))}
-                          style={statButtonStyle(item)}
-                        >
-                          <span
-                            className="h-[55%] whitespace-nowrap text-[15px] font-[900] tracking-[0] inline-flex items-center justify-center leading-none px-1 text-black"
-                          >
-                            {item.value}
-                          </span>
-                          <span
-                            className={`h-[45%] text-[12px] font-[1000] tracking-[0] uppercase inline-flex items-center justify-center w-full text-black ${item.labelClassName ?? "whitespace-nowrap"} ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
-                            style={item.lockTone
-                              ? toneBackgroundStyle(item.tone)
-                              : metricColorHex(item.label)
-                                ? { background: metricColorHex(item.label) }
-                                : toneBackgroundStyle(toneForMetricLabel(item.label, item.tone))}
-                          >
-                            {item.labelText ?? normalizeStatLabel(item.label)}
-                          </span>
-                        </button>
-                      ))}
+                    <div className="flex items-stretch h-full border-r-[4px] border-black">
+                      <AnalyticsActiveStats stats={activeContext.leftStats} />
                     </div>
                   )}
                 </div>
@@ -408,11 +349,11 @@ export const SubToolboxChartModule: React.FC<
                   {activeContext.title && (
                     <div className={`flex items-stretch flex-1 min-w-0 ${activeContext.leftStats || activeContext.leftTitle ? 'border-l-[4px]' : ''} ${activeContext.rightStats || activeContext.rightTitle || activeContext.stats ? 'border-r-[4px]' : ''} border-black`}>
                       {typeof activeContext.title === 'string' ? (
-                        <div className="flex items-center px-2 font-[1000] text-[clamp(13px,1.4vw,18px)] leading-tight flex-1 truncate text-black">
+                        <div className="flex items-center px-2 font-[1000] text-[clamp(13px,1.4vw,18px)] leading-tight flex-1 truncate" style={{ color: activeContext.bgTone === "#080816" ? "#F3F4F6" : "#000000" }}>
                           {activeContext.title}
                         </div>
                       ) : (
-                        <div className="flex-1 flex items-stretch min-w-0 text-black">
+                        <div className="flex-1 flex items-stretch min-w-0" style={{ color: activeContext.bgTone === "#080816" ? "#F3F4F6" : "#000000" }}>
                           {activeContext.title}
                         </div>
                       )}
@@ -424,69 +365,15 @@ export const SubToolboxChartModule: React.FC<
                 <div className="flex items-stretch h-full overflow-hidden shrink-0">
                   {activeContext.rightTitle && (
                     <div
-                      className="px-2 flex items-center justify-center font-[1000] text-[13px] border-l-[4px] border-black shrink-0 text-black"
-                      style={{ background: activeContext.bgTone ?? "#FFFFFF" }}
+                      className="px-2 flex items-center justify-center font-[1000] text-[13px] border-l-[4px] border-black shrink-0"
+                      style={{ background: activeContext.bgTone ?? "#FFFFFF", color: activeContext.bgTone === "#080816" ? "#F3F4F6" : "#000000" }}
                     >
                       {activeContext.rightTitle}
                     </div>
                   )}
-                  {activeContext.rightStats && (
-                    <div className="flex items-stretch h-full divide-x-[4px] divide-black">
-                      {activeContext.rightStats.map((item, index) => (
-                        <button
-                          key={`${item.label}-${index}`}
-                          onClick={item.onClick}
-                          disabled={!item.onClick}
-                          className={statButtonClass(Boolean(item.onClick))}
-                          style={statButtonStyle(item)}
-                        >
-                          <span
-                            className="h-[55%] whitespace-nowrap text-[15px] font-[900] tracking-[0] inline-flex items-center justify-center leading-none px-1 text-black"
-                          >
-                            {item.value}
-                          </span>
-                          <span
-                            className={`h-[45%] text-[12px] font-[1000] tracking-[0] uppercase inline-flex items-center justify-center w-full text-black ${item.labelClassName ?? "whitespace-nowrap"} ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
-                            style={item.lockTone
-                              ? toneBackgroundStyle(item.tone)
-                              : metricColorHex(item.label)
-                                ? { background: metricColorHex(item.label) }
-                                : toneBackgroundStyle(toneForMetricLabel(item.label, item.tone))}
-                          >
-                            {item.labelText ?? normalizeStatLabel(item.label)}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  {activeContext.rightStats ? <AnalyticsActiveStats stats={activeContext.rightStats} /> : null}
                   {!activeContext.rightStats && activeContext.stats && (
-                    <div className="flex items-stretch h-full divide-x-[4px] divide-black">
-                      {activeContext.stats.map((item, index) => (
-                        <button
-                          key={`${item.label}-${index}`}
-                          onClick={item.onClick}
-                          disabled={!item.onClick}
-                          className={statButtonClass(Boolean(item.onClick))}
-                          style={statButtonStyle(item)}
-                        >
-                          <span
-                            className="h-[55%] whitespace-nowrap text-[15px] font-[900] tracking-[0] inline-flex items-center justify-center leading-none px-1 text-black"
-                          >
-                            {item.value}
-                          </span>
-                          <span
-                            className={`h-[45%] text-[12px] font-[1000] tracking-[0] uppercase inline-flex items-center justify-center w-full text-black ${item.labelClassName ?? "whitespace-nowrap"} ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
-                            style={item.lockTone
-                              ? toneBackgroundStyle(item.tone)
-                              : metricColorHex(item.label)
-                                ? { background: metricColorHex(item.label) }
-                                : toneBackgroundStyle(toneForMetricLabel(item.label, item.tone))}
-                          >
-                            {item.labelText ?? normalizeStatLabel(item.label)}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+                    <AnalyticsActiveStats stats={activeContext.stats} />
                   )}
                 </div>
               </div>

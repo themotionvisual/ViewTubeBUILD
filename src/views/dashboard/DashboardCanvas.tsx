@@ -40,11 +40,33 @@ import { WidgetRenderer } from "./WidgetRenderer"
 import { WidgetErrorBoundary } from "./WidgetErrorBoundary"
 import { resolveVisibleWidgetSpectrum } from "./spectrum"
 import { WidgetDragHandleProvider } from "./WidgetShell"
-import { WidgetStatePanel } from "./WidgetPrimitives"
 
 interface DashboardCanvasProps {
   data: DashboardData
   onNavigate: (to: string) => void
+}
+
+const DeferredDashboardWidget: React.FC<{ eager: boolean; children: React.ReactNode }> = ({ eager, children }) => {
+  const hostRef = useRef<HTMLDivElement | null>(null)
+  const [isVisible, setIsVisible] = useState(eager)
+
+  useEffect(() => {
+    if (eager || isVisible) return
+    const host = hostRef.current
+    if (!host || typeof IntersectionObserver === "undefined") {
+      setIsVisible(true)
+      return
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return
+      setIsVisible(true)
+      observer.disconnect()
+    }, { rootMargin: "700px 0px" })
+    observer.observe(host)
+    return () => observer.disconnect()
+  }, [eager, isVisible])
+
+  return <div ref={hostRef} className="h-full">{isVisible ? children : null}</div>
 }
 
 const SortableWidgetItem: React.FC<{
@@ -339,7 +361,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
 
   return (
     <DashboardBarrier>
-    <div className="w-full max-w-[1720px] mx-auto pb-24 px-2 sm:px-4 md:px-6 xl:px-8">
+    <div className="w-full pb-24 px-3 sm:px-4 md:px-5 xl:px-6">
        <input
          ref={fileInputRef}
          type="file"
@@ -402,9 +424,10 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
                    id={widgetId}
                    disabled={!canDrag}
                    className={`vt-dash-cell ${instance.collapsed ? "is-collapsed" : ""} ${sizeBucketClassName(instance.size)} ${instance.collapsed ? "h-[48px]" : heightBucketClassName(instance.height)}`}>
-                    <WidgetErrorBoundary widgetId={widgetId}>
-                      <Suspense fallback={<WidgetStatePanel state={{ status: "loading", data: null, message: `Loading ${widget.title}…` }} />}>
-                        <WidgetRenderer
+                    <DeferredDashboardWidget eager={editMode}>
+                      <WidgetErrorBoundary widgetId={widgetId}>
+                        <Suspense fallback={null}>
+                          <WidgetRenderer
                           widget={themedWidget}
                           instance={instance}
                           editMode={editMode}
@@ -427,9 +450,10 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
                             handleExport,
                             handleImportClick
                           }}
-                        />
-                      </Suspense>
-                    </WidgetErrorBoundary>
+                          />
+                        </Suspense>
+                      </WidgetErrorBoundary>
+                    </DeferredDashboardWidget>
                  </SortableWidgetItem>
                )
              })}

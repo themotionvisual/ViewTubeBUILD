@@ -89,7 +89,7 @@ export default defineConfig(() => ({
         // Skip heavy libraries that only specific routes actually mount.
         // Route-splitting still applies — Vite still emits the chunk, we just
         // don't tell the browser to fetch it up-front.
-        return !/recharts|motion|genai|jszip|bg-removal|google-charts|VtSyncDataVisualsToolbox|GraphsPageCharts|Editor|PerformanceHub|AIBrainCommandInterface|NativeUIKit/i.test(dep)
+        return !/recharts|motion|genai|jszip|bg-removal|google-charts|VtSyncDataVisualsToolbox|GraphsPageCharts|Editor|PerformanceHub|AIBrainCommandInterface|NativeUIKit|Dashboard|lucide/i.test(dep)
       }),
     },
     rollupOptions: {

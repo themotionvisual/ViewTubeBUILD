@@ -24,7 +24,7 @@ import {
 } from "../../../styles/toolboxPalette"
 
 const COUNTS = [4, 8, 12]
-const METRICS = ["VIEWS", "SUBS", "REVENUE", "LIKES", "WATCH HRS", "IMPRESSIONS"] as const
+const METRICS = ["VIEWS", "WATCH HRS", "SUBSCRIBERS", "REVENUE", "LIKES", "IMPRESSIONS"] as const
 const TYPES = ["WEEKLY", "CUMULATIVE", "DELTA"] as const
 
 type MetricLabel = (typeof METRICS)[number]
@@ -47,7 +47,7 @@ const compact = (v: number): string => {
 
 const FMT: Record<MetricLabel, (v: number) => string> = {
   VIEWS: (v) => compact(v),
-  SUBS: (v) => v.toLocaleString(),
+  SUBSCRIBERS: (v) => v.toLocaleString(),
   REVENUE: (v) => `$${v.toFixed(0)}`,
   LIKES: (v) => v.toLocaleString(),
   "WATCH HRS": (v) => `${v.toFixed(0)}h`,
@@ -67,11 +67,11 @@ const colorForMetric = (label: string, spectrumIndex: number): string => {
 }
 
 const buildSparkDefs = (): SparkDef[] => [
-  { key: "views",         label: "VIEWS",       color: VT_SPECTRUM_PALETTE_06[0], fmt: FMT.VIEWS },
-  { key: "subs",          label: "SUBS",        color: VT_SPECTRUM_PALETTE_06[2], fmt: FMT.SUBS },
-  { key: "revenue",       label: "REVENUE",     color: VT_SPECTRUM_PALETTE_06[4], fmt: FMT.REVENUE },
-  { key: "likes",         label: "LIKES",       color: VT_SPECTRUM_PALETTE_06[7], fmt: FMT.LIKES },
-  { key: "watchMins_hrs", label: "WATCH HRS",   color: VT_SPECTRUM_PALETTE_06[1], fmt: FMT["WATCH HRS"] },
+  { key: "views",         label: "VIEWS",       color: colorForMetric("views", 0), fmt: FMT.VIEWS },
+  { key: "watchMins_hrs", label: "WATCH HRS",   color: colorForMetric("watch time", 2), fmt: FMT["WATCH HRS"] },
+  { key: "subs",          label: "SUBSCRIBERS", color: colorForMetric("subscribers", 3), fmt: FMT.SUBSCRIBERS },
+  { key: "revenue",       label: "REVENUE",     color: colorForMetric("revenue", 4), fmt: FMT.REVENUE },
+  { key: "likes",         label: "LIKES",       color: colorForMetric("likes", 8), fmt: FMT.LIKES },
   { key: "impressions",   label: "IMPRESSIONS", color: VT_SPECTRUM_PALETTE_06[11], fmt: FMT.IMPRESSIONS },
 ]
 
@@ -113,8 +113,7 @@ function Sparkline({
 }: { data: number[]; color: string; highlighted: boolean }) {
   const min = Math.min(...data, 0)
   const max = Math.max(...data)
-  // Larger viewBox + stretch-to-fill so the line uses the whole cell instead
-  // of letterboxing into the top strip.
+  // Larger viewBox keeps the line readable while preserving the drawing ratio.
   const W = 200, H = 120
   const padL = 2, padR = 2, padT = 4, padB = 4
   const plotW = W - padL - padR, plotH = H - padT - padB
@@ -131,7 +130,7 @@ function Sparkline({
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
-      preserveAspectRatio="none"
+      preserveAspectRatio="xMidYMid meet"
       style={{ width: "100%", height: "100%", display: "block" }}
     >
       <defs>
@@ -187,7 +186,7 @@ function fmtWeekDate(iso: string): string {
 }
 
 export const WeeklySparklinesModule: React.FC<TubeExplorerVisualProps> = ({
-  data, trafficByDay, dailyMetrics, channelSummary,
+  dailyMetrics, channelSummary,
 }) => {
   const { palette } = useVt2Theme()
   const [count, setCount] = useState<number>(12)
@@ -199,8 +198,8 @@ export const WeeklySparklinesModule: React.FC<TubeExplorerVisualProps> = ({
   const sparkDefs = useMemo(() => buildSparkDefs(), [])
 
   const rollup = useMemo(
-    () => rollupWeeklyChannelWithSource(data, dailyMetrics ?? [], trafficByDay ?? [], count),
-    [data, dailyMetrics, trafficByDay, count],
+    () => rollupWeeklyChannelWithSource(dailyMetrics ?? [], count),
+    [dailyMetrics, count],
   )
   const weeklyBase = rollup.weeks
   const weekly = useMemo(
@@ -241,10 +240,10 @@ export const WeeklySparklinesModule: React.FC<TubeExplorerVisualProps> = ({
 
   // Bind stat backgrounds to the same 12-color metric palette used by the
   // sparklines so a metric wears the same hue across the whole module.
-  const viewsBg = VT_SPECTRUM_PALETTE_06[0]
-  const subsBg = VT_SPECTRUM_PALETTE_06[2]
-  const revenueBg = VT_SPECTRUM_PALETTE_06[4]
-  const windowBg = VT_SPECTRUM_PALETTE_06[1]
+  const viewsBg = colorForMetric("views", 0)
+  const subsBg = colorForMetric("subscribers", 3)
+  const revenueBg = colorForMetric("revenue", 4)
+  const windowBg = colorForMetric("watch time", 2)
 
   const stats: Stat[] = hovWeekData
     ? [

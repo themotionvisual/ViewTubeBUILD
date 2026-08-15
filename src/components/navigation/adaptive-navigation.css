@@ -361,12 +361,12 @@
 .vt-adaptive-nav__account-copy strong,
 .vt-adaptive-nav__account-copy span { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vt-adaptive-nav__account-copy strong {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 1000;
   text-transform: uppercase;
 }
 .vt-adaptive-nav__account-meta {
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 900;
   text-transform: uppercase;
   opacity: .72;
@@ -748,4 +748,3 @@
     grid-area: 1 / 1;
   }
 }
-

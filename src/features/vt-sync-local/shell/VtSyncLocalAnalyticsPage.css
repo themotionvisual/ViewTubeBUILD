@@ -1,3 +1,26 @@
+/* Studio Hub toolboxes inherit Tailwind's default sans stack. VT-SYNC used
+   separate retro/table/chart families, so its three related surfaces no
+   longer read as one product. Keep this token here at their common route. */
+.vt-sync-local-page {
+ --vt-studio-toolbox-font: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif);
+ --vt-retro-display: var(--vt-studio-toolbox-font);
+ --vt-retro-mono: var(--vt-studio-toolbox-font);
+ font-family: var(--vt-studio-toolbox-font);
+}
+
+.vt-sync-local-page .vt-retro-shell,
+.vt-sync-local-page .vt-sync-toolbox-table,
+.vt-sync-local-page .vt-sync-data-visuals {
+ font-family: var(--vt-studio-toolbox-font);
+}
+
+/* Data Visuals includes legacy SVG and inline module labels. Their typography
+   is intentionally normalized too, while metrics, colors, and geometry stay
+   owned by the existing visual contracts. */
+.vt-sync-local-page .vt-sync-data-visuals :is(h1, h2, h3, h4, p, span, strong, small, button, label, th, td) {
+ font-family: var(--vt-studio-toolbox-font) !important;
+}
+
 @media (min-width: 768px) {
  .vt-sync-progress-height-match {
   height: var(--vt-sync-controller-height, auto);

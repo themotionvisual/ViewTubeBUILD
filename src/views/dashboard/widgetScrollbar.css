@@ -1,0 +1,146 @@
+/* Canonical dashboard scroll viewport and positional viewport indicator. */
+.dashboard-barrier .vt-widget {
+  --widget-content-inset: 10px;
+  --widget-component-gap: 8px;
+  --widget-shadow-clearance: 4px;
+  --widget-scroll-lane: 21px;
+  --widget-scroll-visual-width: 18px;
+  --widget-scroll-edge: 3px;
+  --widget-divider-stroke: 3px;
+  --widget-scroll-fill: color-mix(in srgb, var(--widget-color) 75%, transparent);
+  --widget-scroll-fill-hover: var(--widget-color);
+  --widget-scroll-ink: var(--widget-border);
+}
+
+.dashboard-barrier .widget-scroll-area {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  margin-inline-end: calc(-1 * var(--widget-content-inset));
+}
+
+.dashboard-barrier .widget-scroll-area.is-full {
+  margin-inline-start: calc(-1 * var(--widget-content-inset));
+}
+
+.dashboard-barrier .widget-scroll-viewport {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding-inline-end: calc(var(--widget-scroll-lane) + var(--widget-shadow-clearance));
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.dashboard-barrier .widget-scroll-area[data-overflowing="false"] .widget-scroll-viewport {
+  padding-inline-end: 0;
+}
+
+.dashboard-barrier .widget-scroll-static {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.dashboard-barrier .widget-scroll-area.is-both .widget-scroll-viewport {
+  overflow-x: auto;
+}
+
+.dashboard-barrier .widget-scroll-viewport::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.dashboard-barrier .widget-scroll-content {
+  min-width: 0;
+  min-height: 100%;
+}
+
+.dashboard-barrier .widget-scroll-area.is-both .widget-scroll-content {
+  width: max-content;
+  min-width: 100%;
+}
+
+.dashboard-barrier .widget-scroll-controller {
+  position: absolute;
+  z-index: 5;
+  inset-block: 0;
+  inset-inline-end: 0;
+  box-sizing: border-box;
+  width: 44px;
+  min-height: 34px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.dashboard-barrier .widget-scroll-controller[hidden] {
+  display: none;
+}
+
+.dashboard-barrier .widget-scroll-visual {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: var(--widget-scroll-edge);
+  box-sizing: border-box;
+  width: var(--widget-scroll-visual-width);
+  min-height: 34px;
+  overflow: hidden;
+  border: 2px solid var(--widget-scroll-ink);
+  border-radius: 4px;
+  background: #fff;
+}
+
+.dashboard-barrier .widget-scroll-segment {
+  position: absolute;
+  inset-inline: 0;
+  top: 2px;
+  display: block;
+  background: var(--widget-scroll-fill);
+  border-radius: 2px;
+  transform-origin: top center;
+}
+
+.dashboard-barrier .widget-scroll-controller:hover .widget-scroll-segment {
+  background: var(--widget-scroll-fill-hover);
+}
+
+.dashboard-barrier .widget-scroll-controller[data-dragging="true"] {
+  cursor: grabbing;
+}
+
+.dashboard-barrier .widget-scroll-controller[data-dragging="true"] .widget-scroll-segment {
+  background: var(--widget-scroll-fill-hover);
+  box-shadow: inset 0 0 0 3px var(--widget-scroll-ink);
+}
+
+@media (pointer: coarse), (max-width: 767px) {
+  .dashboard-barrier .widget-scroll-controller {
+    display: none;
+  }
+
+  .dashboard-barrier .widget-scroll-viewport {
+    padding-inline-end: var(--widget-content-inset);
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (forced-colors: active) {
+  .dashboard-barrier .widget-scroll-viewport {
+    scrollbar-width: auto;
+  }
+
+  .dashboard-barrier .widget-scroll-viewport::-webkit-scrollbar {
+    width: auto;
+    display: initial;
+  }
+
+  .dashboard-barrier .widget-scroll-controller {
+    display: none;
+  }
+}

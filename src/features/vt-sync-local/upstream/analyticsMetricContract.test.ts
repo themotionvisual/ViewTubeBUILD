@@ -74,7 +74,7 @@ describe("VT-SYNC complete Analytics metric contract", () => {
  })
 
  it("keeps all 29 metrics registry-driven in every complete-contract table", () => {
-  const tableIds = ["videos", "channel_totals", "daily", "monthly_api", "creator", "geography"]
+  const tableIds = ["videos", "channel_totals", "daily", "monthly", "creator", "geography"]
   tableIds.forEach((tableId) => {
    const table = VT_SYNC_TABLE_DEFINITIONS.find((definition) => definition.id === tableId)!
    const keys = new Set(table.columns.map((column) => column.key))

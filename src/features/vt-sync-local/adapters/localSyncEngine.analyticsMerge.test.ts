@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import type { VtSyncVideoItem } from "./contracts"
-import { mergeVideoAnalyticsRows } from "./localSyncEngine"
+import { mergeVideoAnalyticsRows, mergeVtSyncRowsPreservingDefined, vtSyncSegmentRowKey } from "./localSyncEngine"
 
 const longVideo = (metrics: VtSyncVideoItem["metrics"] = {}): VtSyncVideoItem => ({
  id: "long-1",
@@ -11,6 +11,38 @@ const longVideo = (metrics: VtSyncVideoItem["metrics"] = {}): VtSyncVideoItem =>
 })
 
 describe("mergeVideoAnalyticsRows", () => {
+ it("keeps every age × gender row when a later sync refreshes one cohort", () => {
+  const merged = mergeVtSyncRowsPreservingDefined(
+   [
+    { ageGroup: "age18-24", gender: "male", viewerPercentage: 10 },
+    { ageGroup: "age25-34", gender: "male", viewerPercentage: 12 },
+   ],
+   [{ ageGroup: "age25-34", gender: "male", viewerPercentage: 14 }],
+   vtSyncSegmentRowKey,
+  )
+
+  expect(merged).toEqual([
+   { ageGroup: "age18-24", gender: "male", viewerPercentage: 10 },
+   { ageGroup: "age25-34", gender: "male", viewerPercentage: 14 },
+  ])
+ })
+
+ it("keeps rows absent from a later partial response while refreshing matching rows", () => {
+  const merged = mergeVtSyncRowsPreservingDefined(
+   [
+    { videoId: "older-video", views: 10, title: "Keep" },
+    { videoId: "current-video", views: 20, likes: 2 },
+   ],
+   [{ videoId: "current-video", views: 25 }],
+   (row) => String(row.videoId || ""),
+  )
+
+  expect(merged).toEqual([
+   { videoId: "older-video", views: 10, title: "Keep" },
+   { videoId: "current-video", views: 25, likes: 2 },
+  ])
+ })
+
  it("updates long-format card metrics without erasing previously fetched analytics", () => {
   const [merged] = mergeVideoAnalyticsRows(
    [longVideo({
@@ -61,7 +93,9 @@ describe("mergeVideoAnalyticsRows", () => {
    comments: 12,
    revenue: 8,
   })
-  expect(merged.metrics?.rpm).toBeUndefined()
+ expect(merged.metrics?.rpm).toBeUndefined()
+  expect(merged.metricProvenance).toMatchObject({ views: "youtube_analytics_v2", likes: "youtube_analytics_v2" })
+  expect(merged.metricProvenance?.comments).toBeUndefined()
  })
 
  it("does not manufacture zero analytics for a new Cards-only row", () => {

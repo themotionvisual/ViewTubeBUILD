@@ -94,7 +94,7 @@ function App() {
           feature toggle in the Vercel dashboard's Speed Insights tab if it
           isn't already on.
         */}
-        <SpeedInsights />
+        {import.meta.env.PROD && <SpeedInsights />}
        </GlobalDataProvider>
       </VideoAssetCatalogProvider>
      </InitialChannelBootstrapProvider>

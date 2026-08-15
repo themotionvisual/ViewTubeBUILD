@@ -1,11 +1,15 @@
-import { useMemo } from "react"
+import { useMemo, useSyncExternalStore } from "react"
 import { useBrain } from "../../context/useBrain"
 import { getMasterRows, getMetricSummary, metricCellValue } from "../../services/analytics/Selectors"
 import { readYouTubeAnalyticsCache } from "../../services/analytics/DataStore"
 import { reportToRows } from "../performanceHubUtils"
 import { useVideoAssetCatalog } from "../../context/VideoAssetCatalogContext"
 import { useInitialChannelBootstrap } from "../../context/InitialChannelBootstrapContext"
-import { getVtSyncSnapshot } from "../../features/vt-sync-local/adapters/snapshot"
+import {
+  getVtSyncSnapshot,
+  getVtSyncSnapshotVersion,
+  subscribeToVtSyncSnapshot,
+} from "../../features/vt-sync-local/adapters/snapshot"
 import { getToolboxPaletteColors, getNavPaletteColor } from "../../styles/toolboxPalette"
 
 const formatHumanNumber = (value: unknown): string => {
@@ -52,7 +56,15 @@ export const useDashboardData = () => {
   const summary28d = useMemo(() => getMetricSummary("28d", "hybrid", brain.csvFiles || []), [lastSyncComplete, channelHandle, brain.csvFiles])
   const summaryLifetime = useMemo(() => getMetricSummary("lifetime", "hybrid", brain.csvFiles || []), [lastSyncComplete, channelHandle, brain.csvFiles])
   
-  const vtSyncSnapshot = useMemo(() => getVtSyncSnapshot(), [lastSyncComplete, isSyncing])
+  const vtSyncSnapshotVersion = useSyncExternalStore(
+    subscribeToVtSyncSnapshot,
+    getVtSyncSnapshotVersion,
+    getVtSyncSnapshotVersion,
+  )
+  const vtSyncSnapshot = useMemo(
+    () => getVtSyncSnapshot(),
+    [lastSyncComplete, isSyncing, vtSyncSnapshotVersion],
+  )
   const canonicalRows = useMemo(() => {
     const rows = getMasterRows("lifetime", "hybrid", brain.csvFiles || [])
     if (rows.length === 0 && vtSyncSnapshot.videos.length > 0) {
@@ -170,17 +182,25 @@ export const useDashboardData = () => {
   const displaySubs28d = fast?.subscribers28d || subscribers28d || 0
   
   // Try to sum lifetime watch hours and revenue from vtSyncSnapshot if summaryLifetime is empty
-  const vtSyncLifetimeWatchHours = vtSyncSnapshot.videos?.reduce((acc, v) => acc + (v.metrics?.watchTime || 0), 0) || 0
-  const vtSyncLifetimeRevenue = vtSyncSnapshot.videos?.reduce((acc, v) => acc + (v.metrics?.revenue || 0), 0) || 0
+  const vtSyncLifetimeTotals = (vtSyncSnapshot.channelTotals?.lifetime || {}) as Record<string, unknown>
+  const vtSyncLifetimeMetric = (...keys: string[]) => {
+    for (const key of keys) {
+      const value = Number(vtSyncLifetimeTotals[key])
+      if (Number.isFinite(value)) return value
+    }
+    return 0
+  }
+  const vtSyncLifetimeWatchHours = vtSyncLifetimeMetric("watchTime", "watchHours") || vtSyncSnapshot.videos?.reduce((acc, v) => acc + (v.metrics?.watchTime || 0), 0) || 0
+  const vtSyncLifetimeRevenue = vtSyncLifetimeMetric("revenue", "estimatedRevenue") || vtSyncSnapshot.videos?.reduce((acc, v) => acc + (v.metrics?.revenue || 0), 0) || 0
 
-  const displayRevenueLifetime = fast?.lifetimeRevenue || revenueLifetime || vtSyncLifetimeRevenue || 0
-  const displayWatchHoursLifetime = (fast?.lifetimeWatchMinutes ? fast.lifetimeWatchMinutes / 60 : hoursLifetime) || vtSyncLifetimeWatchHours || 0
-  const displayViewsLifetime = fast?.lifetimeViews || viewsTotal || 0
+  const displayRevenueLifetime = fast?.lifetimeRevenue || vtSyncLifetimeRevenue || revenueLifetime || 0
+  const displayWatchHoursLifetime = (fast?.lifetimeWatchMinutes ? fast.lifetimeWatchMinutes / 60 : 0) || vtSyncLifetimeWatchHours || hoursLifetime || 0
+  const displayViewsLifetime = fast?.lifetimeViews || vtSyncLifetimeMetric("views") || viewsTotal || 0
   const displayVideoCount = Number(authState.videoCount || vtSyncSnapshot.channelVideoCount || canonicalRows.length || 0)
 
   // 1.5/1.7 Calculations
   const calculatedRPM = displayViewsLifetime > 0 ? (displayRevenueLifetime / displayViewsLifetime) * 1000 : 0
-  const calculatedAVD = displayViewsLifetime > 0 ? (displayWatchHoursLifetime * 3600) / displayViewsLifetime : summaryLifetime.averages.avdSeconds
+  const calculatedAVD = vtSyncLifetimeMetric("avgViewDuration", "averageViewDuration") || (displayViewsLifetime > 0 ? (displayWatchHoursLifetime * 3600) / displayViewsLifetime : summaryLifetime.averages.avdSeconds)
   
   // Velocity & Engagement
   const subVelocity = fast?.subscribers28d || subscribers28d || 0

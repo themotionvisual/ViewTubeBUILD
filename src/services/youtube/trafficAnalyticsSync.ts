@@ -453,7 +453,7 @@ export const syncTrafficAnalytics = async (
     dimensions: "day,insightTrafficSourceType",
     sort: "day",
    },
-   "Failed to fetch daily traffic by source",
+   "Failed to fetch Traffic × Day",
   )
   trafficDailyByType = normalizeAnalyticsTrafficPayload(
    rawReports.dailyByType,

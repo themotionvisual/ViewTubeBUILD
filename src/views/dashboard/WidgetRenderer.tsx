@@ -26,7 +26,7 @@ import {
   RefreshCw,
   BookOpen,
  } from "lucide-react"
-import { useVideoComments, type VideoComment } from "./useVideoComments"
+import { useVideoComments } from "./useVideoComments"
 import type { DashboardData } from "./useDashboardData"
 import type {
  CommonWidgetProps,
@@ -49,7 +49,7 @@ const formatHumanNumber = (value: unknown): string => {
 }
 
 import { WidgetShell } from "./WidgetShell"
-import { WidgetHeaderStepper } from "./WidgetPrimitives"
+import { WidgetFooter, WidgetHeaderStepper, WidgetScrollArea, WidgetSelect } from "./WidgetPrimitives"
 import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
 
 const LAZY_WIDGET_RENDERERS: Record<string, React.LazyExoticComponent<React.ComponentType<any>>> = {
@@ -138,152 +138,53 @@ const VerificationExplainerWidget: React.FC<{
   onNavigate(to)
  }
 
- const ctaPrimaryStyle: React.CSSProperties = {
-  flex: "1 1 auto",
-  minHeight: "44px",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "8px",
-  padding: "8px 14px",
-  border: "3px solid #000",
-  borderRadius: "12px",
-  background: "#C9F830",
-  color: "#000",
-  boxShadow: "4px 4px 0 #000",
-  fontSize: "15px",
-  fontWeight: 1000,
-  textTransform: "uppercase",
-  textDecoration: "none",
-  textAlign: "center",
-  minWidth: 0,
- }
-
- const ctaSecondaryStyle = (bg: string): React.CSSProperties => ({
-  flex: "1 1 0",
-  minHeight: "38px",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "6px 12px",
-  border: "3px solid #000",
-  borderRadius: "10px",
-  background: bg,
-  color: "#000",
-  boxShadow: "3px 3px 0 #000",
-  fontSize: "12px",
-  fontWeight: 1000,
-  textTransform: "uppercase",
-  textDecoration: "none",
-  minWidth: 0,
- })
-
- const features: Array<{ Icon: typeof TrendingUp; title: string; desc: string; bg: string }> = [
-  { Icon: TrendingUp, title: "Track Performance", desc: "Views, watch time & revenue — unified.", bg: "#33D6EA" },
-  { Icon: RefreshCw, title: "Sync Everything", desc: "Videos, metadata & analytics in one click.", bg: "#C9F830" },
-  { Icon: CalendarDays, title: "Plan & Publish", desc: "Schedule uploads, titles & thumbnails.", bg: "#FFB570" },
-  { Icon: Bot, title: "AI Brain", desc: "Ask your channel anything, grounded in your data.", bg: "#FF83EA" },
+ const features: Array<{ Icon: typeof TrendingUp; title: string; desc: string; tone: string }> = [
+  { Icon: TrendingUp, title: "Track Performance", desc: "Views, watch time & revenue — unified.", tone: "cyan" },
+  { Icon: RefreshCw, title: "Sync Everything", desc: "Videos, metadata & analytics in one click.", tone: "lime" },
+  { Icon: CalendarDays, title: "Plan & Publish", desc: "Schedule uploads, titles & thumbnails.", tone: "orange" },
+  { Icon: Bot, title: "AI Brain", desc: "Ask your channel anything, grounded in your data.", tone: "magenta" },
  ]
 
  return (
   <WidgetShell {...common} icon={<BookOpen size={22} aria-hidden="true" />}>
-   <section
-    className="vt-widget-fill"
-    aria-label="VIEWTUBE app purpose and data use"
-    style={{
-     gap: "10px",
-     padding: "10px",
-     background: "#F6F7FB",
-     justifyContent: "center",
-     overflow: "hidden",
-    }}>
-    {/* SINGLE ROW STRUCTURE */}
-    <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "stretch" }}>
-     
-     {/* 1. Brand (Blue background removed) */}
-     <div
-      translate="no"
-      style={{
-       flex: "1 1 160px",
-       display: "flex",
-       alignItems: "center",
-       justifyContent: "center",
-       padding: "10px 14px",
-       border: "3px solid #000",
-       borderRadius: "12px",
-       background: "#fff",
-       boxShadow: "4px 4px 0 #000",
-       fontSize: "26px",
-       fontWeight: 1000,
-       letterSpacing: "-0.03em",
-       lineHeight: 1,
-       textTransform: "uppercase",
-      }}>
-      <span style={{ color: "#0A0A0A" }}>View</span>
-      <span style={{ color: "#17B9CE" }}>Tube</span>
+   <section className="widget-verification-body" aria-label="VIEWTUBE app purpose and data use">
+    <div className="widget-verification-grid">
+     <div className="widget-verification-brand" translate="no">
+      <span>View</span>
+      <span>Tube</span>
      </div>
 
-     {/* 2. Features Grid Map */}
-     {features.map(({ Icon, title, desc, bg }) => (
-      <div
-       key={title}
-       style={{
-        flex: "1 1 130px",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-        border: "3px solid #000",
-        borderRadius: "11px",
-        background: "#fff",
-        boxShadow: "3px 3px 0 #000",
-       }}>
-       <div style={{ display: "flex", alignItems: "center", gap: "7px", padding: "6px 9px", background: bg, borderBottom: "3px solid #000" }}>
+     {features.map(({ Icon, title, desc, tone }) => (
+      <article key={title} className={`widget-verification-feature is-${tone}`}>
+       <header>
         <Icon size={16} aria-hidden="true" />
-        <span style={{ fontSize: "11.5px", fontWeight: 1000, textTransform: "uppercase", letterSpacing: "-0.01em" }}>{title}</span>
-       </div>
-       <p style={{ margin: 0, padding: "7px 9px", fontSize: "11px", fontWeight: 800, lineHeight: 1.25 }}>{desc}</p>
-      </div>
+        <span>{title}</span>
+       </header>
+       <p>{desc}</p>
+      </article>
      ))}
 
-     {/* 3. Green data-use disclosure (Wider flex basis, condensed text, centered items) */}
-     <div
-      style={{
-       flex: "3 1 340px",
-       minWidth: 0,
-       display: "flex",
-       alignItems: "center",
-       gap: "10px",
-       padding: "10px 12px",
-       border: "3px solid #000",
-       borderRadius: "12px",
-       background: "#E7F9E4",
-       boxShadow: "4px 4px 0 #000",
-      }}>
-      <div style={{ display: "grid", placeItems: "center", flex: "0 0 auto", width: "36px", height: "36px", border: "3px solid #000", borderRadius: "9px", background: "#4FFF5B", boxShadow: "3px 3px 0 #000" }}>
+     <section className="widget-verification-disclosure">
+      <div className="widget-verification-lock">
        <Lock size={18} aria-hidden="true" />
       </div>
-      <div style={{ minWidth: 0 }}>
-       <h3 style={{ margin: "0 0 2px", fontSize: "12px", fontWeight: 1000, textTransform: "uppercase" }}>
-        Why sign-in helps
-       </h3>
-       <p style={{ margin: 0, fontSize: "11px", fontWeight: 800, lineHeight: 1.3 }}>
+      <div>
+       <h3>Why sign-in helps</h3>
+       <p>
         Signing in connects your YouTube account to show your channel, videos, comments &amp; analytics. Your data only powers your dashboard—it's never sold—and you can disconnect anytime.
        </p>
       </div>
-     </div>
+     </section>
 
-     {/* 4. Navigation Buttons */}
-     <nav aria-label="VIEWTUBE account and help links" style={{ flex: "2 1 280px", minWidth: 0, display: "flex", flexDirection: "column", gap: "7px" }}>
-      <div style={{ display: "flex", flex: 1 }}>
-       <a href="/account/connect" onClick={event => handleNavigate(event, "/account/connect")} style={{...ctaPrimaryStyle, flex: 1}}>
+     <nav className="widget-verification-actions" aria-label="VIEWTUBE account and help links">
+      <a href="/account/connect" onClick={event => handleNavigate(event, "/account/connect")} className="widget-verification-connect">
         <Rocket size={16} aria-hidden="true" /> Connect your channel
-       </a>
-      </div>
-      <div style={{ display: "flex", flexWrap: "wrap", flex: 1, gap: "7px" }}>
-       <a href="/about" onClick={event => handleNavigate(event, "/about")} style={ctaSecondaryStyle("#33D6EA")}>About</a>
-       <a href="/user-guide" onClick={event => handleNavigate(event, "/user-guide")} style={ctaSecondaryStyle("#FFEE57")}>User Guide</a>
-       <a href="/privacy.html" style={ctaSecondaryStyle("#FF83EA")}>Privacy</a>
-       <a href="/terms.html" style={ctaSecondaryStyle("#FFB570")}>Terms</a>
+      </a>
+      <div className="widget-verification-links">
+       <a href="/about" onClick={event => handleNavigate(event, "/about")} className="is-cyan">About</a>
+       <a href="/user-guide" onClick={event => handleNavigate(event, "/user-guide")} className="is-yellow">User Guide</a>
+       <a href="/privacy.html" className="is-magenta">Privacy</a>
+       <a href="/terms.html" className="is-orange">Terms</a>
       </div>
      </nav>
 
@@ -401,16 +302,17 @@ const RevenueMomentumWidget: React.FC<{
       <div style={{ display: "flex", flexDirection: "column", gap: "4px", height: "100%" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontSize: "9px", fontWeight: 800, opacity: 0.4, textTransform: "uppercase" }}>Momentum Pulse</span>
-          <select 
+          <WidgetSelect
             value={metric} 
-            onChange={(e) => setMetric(e.target.value as any)}
-            className="brutal-input"
+            onChange={(value) => setMetric(value as typeof metric)}
+            label="Momentum metric"
             style={{ height: "24px", fontSize: "9px", padding: "0 4px", width: "auto" }}
-          >
-            <option value="revenue">REVENUE</option>
-            <option value="views">VIEWS</option>
-            <option value="subscribers">SUBS</option>
-          </select>
+            options={[
+              { value: "revenue", label: "Revenue" },
+              { value: "views", label: "Views" },
+              { value: "subscribers", label: "Subs" },
+            ]}
+          />
         </div>
         
         <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1, justifyContent: "center" }}>
@@ -668,8 +570,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
 
    return (
     <WidgetShell {...common} icon={<TrendingUp size={22} />} headerContent={timeWindowToggle}>
-     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-      <div className="kpi-cluster-row" style={{ display: "flex", gap: "6px", flex: 1, overflow: "hidden", padding: "2px" }}>
+     <div className="channel-overview-layout">
+      <div className="kpi-cluster-row channel-overview-main">
        {/* Circular Avatar Sidebar — replaced with a sign-up nudge when no account is connected */}
        {!data.authState.isAuthenticated ? (
         <div className="kpi-cluster-avatar" style={{
@@ -686,45 +588,26 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
          </p>
          <button
           onClick={() => void account.start(account.intent, window.location.pathname + window.location.search + window.location.hash)}
-          style={{ border: "2px solid #000", borderRadius: "8px", background: "#000", color: "#C0F240", padding: "9px 10px", fontSize: "11px", fontWeight: 900, textTransform: "uppercase", textAlign: "left", boxShadow: "3px 3px 0 0 rgba(0,0,0,.35)" }}
+          className="vt-button primary"
          >
           Join ViewTube — Free
          </button>
          <button
           onClick={() => onNavigate("/about")}
-         style={{ border: "2px solid #000", borderRadius: "8px", background: "#40C6E9", padding: "8px 10px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", textAlign: "left" }}
+          className="vt-button"
          >
           About ViewTube
          </button>
          <button
           onClick={() => onNavigate("/user-guide")}
-          style={{ border: "2px solid #000", borderRadius: "8px", background: "#FFDA47", padding: "8px 10px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", textAlign: "left" }}
+          className="vt-button"
          >
           User Guide
          </button>
         </div>
        ) : (
-        <div style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "6px",
-          flexShrink: 0,
-          width: "222px",
-          marginRight: "0px",
-          paddingRight: "0px",
-          height: "222px"
-        }}>
-         <div style={{
-           width: "204px",
-           height: "204px",
-           borderRadius: "50%",
-           border: "4px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)",
-           overflow: "hidden",
-           background: "rgb(238, 238, 238)",
-           boxShadow: "rgba(0, 0, 0, 0.1) 4px 4px 0px 0px"
-         }}>
+        <div className="channel-overview-avatar">
+         <div className="channel-overview-avatar-frame">
           {avatar ? (
             <img src={avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
@@ -737,9 +620,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
        )}
 
        {/* Stats Grid - 3x2 on small, 6x1 on large */}
-       <div style={{
-         flex: 1,
-         display: "grid",
+       <div className="channel-overview-kpis" style={{
          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
          gridTemplateRows: "repeat(3, minmax(0, 1fr))",
          gap: "4px"
@@ -814,22 +695,69 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
            )
         })}
        </div>
+
+       {/* Donuts + Stacked Bars Panel */}
+       <div className="channel-overview-breakdown">
+        {/* 4 Donut Charts */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "4px" }}>
+         {[
+          { color: "#FA618A", bg: `conic-gradient(#FA618A 0 82%, #528FFA 82% 95%, #3FEE56 95% 100%)`, icon: <><path d="M2.5 12s3.5-5 9.5-5 9.5 5 9.5 5-3.5 5-9.5 5-9.5-5-9.5-5Z"/><circle cx="12" cy="12" r="2.7"/></>, label: "Views" },
+          { color: "#FFA85C", bg: `conic-gradient(#FA618A 0 60%, #528FFA 60% 92%, #3FEE56 92% 100%)`, icon: <><circle cx="12" cy="7.2" r="3.2"/><path d="M5.3 20c0-4.1 2.8-6.3 6.7-6.3s6.7 2.2 6.7 6.3"/></>, label: "Subs" },
+          { color: "#FFDA47", bg: `conic-gradient(#FA618A 0 30%, #528FFA 30% 90%, #3FEE56 90% 100%)`, icon: <><circle cx="12" cy="12" r="8"/><path d="M12 7.2v5l3.2 2"/></>, label: "Hours" },
+          { color: "#528FFA", bg: `conic-gradient(#FA618A 0 20%, #528FFA 20% 95%, #3FEE56 95% 100%)`, icon: <><path d="M15 6.5c-.8-.8-1.8-1.2-3.1-1.2-1.9 0-3.1.8-3.1 2.2 0 3.2 6.5 1.4 6.5 5.2 0 1.7-1.4 2.8-3.5 2.8-1.6 0-2.9-.5-3.8-1.5"/><path d="M12 3v18"/></>, label: "Rev" },
+         ].map((d, i) => (
+          <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+           <div style={{ position: "relative", width: "100%", aspectRatio: "1/1", borderRadius: "50%", background: d.bg }}>
+            <div style={{ position: "absolute", inset: "29%", borderRadius: "50%", background: "#fff" }} />
+            <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: "29%", aspectRatio: "1/1", display: "grid", placeItems: "center", zIndex: 2 }}>
+             <svg viewBox="0 0 24 24" style={{ width: "100%", height: "100%", fill: "none", stroke: "#050505", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}>{d.icon}</svg>
+            </div>
+           </div>
+           <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.04em", color: "#050505", lineHeight: 1 }}>{d.label}</span>
+          </div>
+         ))}
+        </div>
+
+        {/* 3 Stacked Bar Charts */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+         {[
+          {
+           icon: <><circle cx="9" cy="8" r="3"/><path d="M3.8 20c0-4 2.3-6 5.2-6s5.2 2 5.2 6"/><path d="M17 5h4M19 3v4"/></>,
+           segs: [{ label: "Male", pct: "78%", bg: "#36E0F6" }, { label: "Female", pct: "22%", bg: "#FF7AC8" }],
+          },
+          {
+           icon: <><rect x="7" y="4" width="10" height="17" rx="2"/><circle cx="12" cy="8" r=".5"/><circle cx="12" cy="12" r=".5"/><circle cx="12" cy="16" r=".5"/></>,
+           segs: [{ label: "Shorts", pct: "35%", bg: "#FA618A" }, { label: "Browse", pct: "20%", bg: "#FFA85C" }, { label: "Search", pct: "20%", bg: "#FFDA47" }, { label: "Subs", pct: "15%", bg: "#4EE4BE" }, { label: "Ext", pct: "10%", bg: "#C0F240" }],
+          },
+          {
+           icon: <><circle cx="12" cy="12" r="8"/><path d="M14.8 8.1c-.7-.7-1.6-1.1-2.8-1.1-1.6 0-2.8.7-2.8 1.9 0 2.8 6 1.3 6 4.7 0 1.5-1.3 2.5-3.2 2.5-1.4 0-2.6-.5-3.4-1.3"/><path d="M12 5v14"/></>,
+           segs: [{ label: "Ads", pct: "52%", bg: "#528FFA" }, { label: "Premium", pct: "22%", bg: "#FA618A" }, { label: "Members", pct: "26%", bg: "#C0F240" }],
+          },
+         ].map((bar, i) => (
+          <div key={i} style={{ position: "relative" }}>
+           <div style={{ position: "absolute", left: "8px", top: 0, height: "100%", display: "flex", alignItems: "center", zIndex: 2, pointerEvents: "none" }}>
+            <svg viewBox="0 0 24 24" style={{ width: "18px", height: "18px", fill: "none", stroke: "#050505", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}>{bar.icon}</svg>
+           </div>
+           <div style={{ display: "flex", height: "28px", borderRadius: "3px", overflow: "hidden" }}>
+            {bar.segs.map((seg, j) => (
+             <div key={j} style={{ width: seg.pct, background: seg.bg, display: "flex", alignItems: "center", justifyContent: "center", paddingLeft: j === 0 ? "28px" : "0", overflow: "hidden" }}>
+              <span style={{ fontSize: "7px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.01em", whiteSpace: "nowrap", color: "#050505" }}>{seg.label}</span>
+             </div>
+            ))}
+           </div>
+          </div>
+         ))}
+        </div>
+       </div>
       </div>
 
       {/* Full Width Footer */}
-      <div style={{
-        borderTop: "3px solid var(--widget-border, #000)",
-        background: "#eee",
-        padding: "10px 12px",
+      <WidgetFooter surface="subtle" className="channel-overview-footer" style={{
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        marginTop: "auto",
-        marginLeft: "-10px",
-        marginRight: "-10px",
-        marginBottom: "-10px",
-        width: "calc(100% + 20px)"
-      }}>
+        marginTop: "6px",
+      } as React.CSSProperties}>
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ fontSize: "18px", fontWeight: 950, textTransform: "uppercase", letterSpacing: "-0.02em" }}>
             {data.channelTitle}
@@ -856,7 +784,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
          >
           VISIT CHANNEL
         </a>
-      </div>
+      </WidgetFooter>
      </div>
     </WidgetShell>
    )
@@ -953,7 +881,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
      </div>
      
      {/* Task checklist integrated below */}
-     <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "4px", padding: "4px 0" }}>
+     <WidgetScrollArea ariaLabel="Daily checklist" contentClassName="flex min-h-full flex-col gap-1 py-1">
       <span style={{ fontSize: "8px", fontWeight: 800, opacity: 0.4, textTransform: "uppercase" }}>Daily Checklist</span>
       {(data.todayTasks.length > 0 ? data.todayTasks : [{text: "No tasks for today", completed: false}]).slice(0, 3).map((task: any, idx: number) => (
         <div
@@ -979,7 +907,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
          <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" }}>{task.text}</span>
         </div>
      ))}
-    </div>
+    </WidgetScrollArea>
     </div>
    </WidgetShell>
   )
@@ -1192,12 +1120,16 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  // 9. ALERTS FEED — comments + subscriber alerts + insights
  if (widget.id === "alerts-feed") {
   return (
-   <AlertsFeedWidget
-    commentsVideoId={data.topPerformer?.videoId || null}
-    alerts={data.alerts}
-    subscriberCount={data.brain?.recentMetrics?.currentSubscribers ?? 0}
-    common={common}
-   />
+   <WidgetShell {...common} icon={<Bell size={22} />}>
+    <div className="vt-widget-fill" style={{ gap: "var(--widget-component-gap)" }}>
+     {data.alerts.map((alert, index) => (
+      <div key={`${alert}-${index}`} className="widget-card-row">
+       <Bell size={16} aria-hidden="true" />
+       <span>{alert}</span>
+      </div>
+     ))}
+    </div>
+   </WidgetShell>
   )
  }
 

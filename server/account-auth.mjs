@@ -11,6 +11,7 @@ import {
   resolveGoogleAccount,
   revokeAccountSession,
   saveGoogleConnection,
+  selectGoogleContentOwner,
   saveOAuthState,
   setServerSubscription,
   updateOnboarding,
@@ -26,14 +27,20 @@ const VALID_INTENTS = new Set(["sign_up", "log_in", "connect_channel", "reconnec
 const VALID_ONBOARDING_STATUS = new Set(["not_started", "in_progress", "complete"]);
 const FREE_PLAN_IDS = new Set(["basic", "beta"]);
 const tokenRefreshes = new Map();
-export const READ_ONLY_SCOPES = [
+const contentOwnerDiscoveryEnabled = () => process.env.YOUTUBE_CONTENT_OWNER_DISCOVERY_ENABLED === "true";
+export const GOOGLE_SCOPES = [
   "openid",
   "profile",
   "email",
   "https://www.googleapis.com/auth/youtube.readonly",
+  "https://www.googleapis.com/auth/youtube.force-ssl",
+  "https://www.googleapis.com/auth/youtube.upload",
   "https://www.googleapis.com/auth/yt-analytics.readonly",
   "https://www.googleapis.com/auth/yt-analytics-monetary.readonly",
+  ...(contentOwnerDiscoveryEnabled() ? ["https://www.googleapis.com/auth/youtubepartner"] : []),
 ];
+// Compatibility export for external tooling that has not yet moved to GOOGLE_SCOPES.
+export const READ_ONLY_SCOPES = GOOGLE_SCOPES;
 export const PUBLIC_PLANS = [
   { id: "basic", label: "Basic", priceUsd: 0, trialHours: 0, monthlyCredits: 0 },
   { id: "beta", label: "Beta (BYOK)", priceUsd: 0, trialHours: 0, monthlyCredits: 0 },
@@ -133,10 +140,60 @@ export const decryptToken = (value) => {
 const oauthConfigured = () => Boolean(clientId() && clientSecret());
 
 const readJsonBody = async (req, readBody) => {
-  const raw = await readBody(req);
+  const raw = await readBody(req, 64 * 1024);
   if (raw.length > 64 * 1024) throw new Error("Request body is too large.");
   try { return JSON.parse(raw.toString("utf8") || "{}"); }
   catch { throw new Error("Invalid JSON body."); }
+};
+
+// Vercel serverless requests cap below 4.5MB. Keep room for proxy overhead.
+const MAX_UPLOAD_CHUNK_BYTES = 3 * 1024 * 1024;
+const MAX_THUMBNAIL_BYTES = 2 * 1024 * 1024;
+const UPLOAD_SESSION_TTL_MS = 60 * 60 * 1000;
+const youtubeId = (value) => /^[A-Za-z0-9_-]{6,128}$/.test(String(value || ""));
+const plainText = (value, max) => String(value || "").trim().slice(0, max);
+
+const googleError = async (response, fallback) => {
+  const body = await response.text();
+  try { return JSON.parse(body || "{}"); }
+  catch { return { error: fallback, detail: body.slice(0, 500) }; }
+};
+
+export const sendGoogleJson = async (json, res, response, fallback) => {
+  const payload = await googleError(response, fallback);
+  return json(res, response.status, payload);
+};
+
+const requireGoogleScope = async (req, res, scope) => {
+  const userId = await sessionUserId(req);
+  if (!userId) {
+    json(res, 401, { error: "Authentication required." });
+    return null;
+  }
+  const credential = await getGoogleCredentialRecord(userId);
+  if (!credential || credential.connectionStatus === "revoked" || !credential.scopes?.includes(scope)) {
+    json(res, 403, { error: "Reconnect your YouTube channel to grant this capability." });
+    return null;
+  }
+  return userId;
+};
+
+export const isAllowedYouTubeUploadUrl = (value) => {
+  try {
+    const url = new URL(String(value || ""));
+    return url.protocol === "https:" && url.hostname === "www.googleapis.com" &&
+      url.pathname.startsWith("/upload/youtube/v3/videos");
+  } catch { return false; }
+};
+
+const decodeUploadSession = (sessionId, userId) => {
+  const raw = decryptToken(sessionId);
+  const session = JSON.parse(raw || "{}");
+  if (session.userId !== userId || !Number.isFinite(session.expiresAt) || session.expiresAt <= Date.now() ||
+      !Number.isFinite(session.contentLength) || session.contentLength <= 0 || !isAllowedYouTubeUploadUrl(session.uploadUrl)) {
+    throw new Error("Upload session is invalid or expired.");
+  }
+  return session;
 };
 
 const sessionUserId = async (req) => getSessionUserId(parseCookies(req)[SESSION_COOKIE] || "");
@@ -156,7 +213,7 @@ const buildSnapshot = async (userId) => {
       viewtubeUserId: null,
       profile: { email: null, displayName: null },
       authentication: { status: "anonymous", accountExists: null },
-      google: { status: "disconnected", youtubeScopesGranted: false, channelId: null },
+      google: { status: "disconnected", youtubeScopesGranted: false, channelId: null, channelTitle: null, channelHandle: null, channelThumbnail: null, contentOwners: [], activeContentOwnerId: null, contentOwnerSelectionRequired: false },
       onboarding: { status: "not_started", nextStep: null },
       billing: { status: "inactive", planId: null },
       ai: { planId: null, availableCredits: 0 },
@@ -183,12 +240,23 @@ const buildSnapshot = async (userId) => {
   if (monetaryScopeGranted) grantedCapabilities.push("youtube_monetary_read");
   if (scopes.has("https://www.googleapis.com/auth/youtube.upload")) grantedCapabilities.push("youtube_upload");
   if (scopes.has("https://www.googleapis.com/auth/youtube.force-ssl")) grantedCapabilities.push("youtube_comments");
+  if (contentOwnerDiscoveryEnabled() && googleStatus === "connected" && record.activeContentOwnerId && (record.contentOwners || []).some((owner) => owner.id === record.activeContentOwnerId)) grantedCapabilities.push("youtube_content_owner");
   if (scopes.has("https://www.googleapis.com/auth/webmasters.readonly")) grantedCapabilities.push("search_console_read");
   return {
     viewtubeUserId: userId,
     profile: { email: record.email || null, displayName: record.displayName || null },
     authentication: { status: "authenticated", accountExists: true },
-    google: { status: googleStatus, youtubeScopesGranted, channelId: record.channelId || null },
+    google: {
+      status: googleStatus,
+      youtubeScopesGranted,
+      channelId: record.channelId || null,
+      channelTitle: record.channelTitle || null,
+      channelHandle: record.channelHandle || null,
+      channelThumbnail: record.channelThumbnail || null,
+      contentOwners: contentOwnerDiscoveryEnabled() ? record.contentOwners || [] : [],
+      activeContentOwnerId: contentOwnerDiscoveryEnabled() ? record.activeContentOwnerId || null : null,
+      contentOwnerSelectionRequired: contentOwnerDiscoveryEnabled() && (record.contentOwners || []).length > 1 && !record.activeContentOwnerId,
+    },
     onboarding: { status: record.onboarding?.status || "not_started", nextStep: record.onboarding?.nextStep || null },
     billing: { status: record.subscription?.status || "inactive", planId: record.subscription?.planId || null },
     ai: { planId: record.subscription?.planId || null, availableCredits: Math.max(0, Number(record.availableCredits || 0)) },
@@ -209,6 +277,19 @@ const fetchTokenInfo = async (idToken) => {
     throw new Error("Google identity email is not verified.");
   }
   return payload;
+};
+
+const discoverContentOwners = async (accessToken, scopes) => {
+  if (!contentOwnerDiscoveryEnabled() || !scopes.includes("https://www.googleapis.com/auth/youtubepartner")) return [];
+  const response = await fetch("https://www.googleapis.com/youtube/partner/v1/contentOwners?fetchMine=true", {
+    headers: { Authorization: `Bearer ${accessToken}` }, signal: AbortSignal.timeout(10_000),
+  });
+  if (!response.ok) return [];
+  const payload = await response.json();
+  return (payload.items || []).map((owner) => ({
+    id: String(owner.id || ""),
+    displayName: String(owner.displayName || owner.id || "Content Owner"),
+  })).filter((owner) => owner.id);
 };
 
 const exchangeCode = async (code, verifier) => {
@@ -265,7 +346,9 @@ export const isAllowedGoogleApiUrl = (input) => {
     const url = new URL(String(input || ""));
     if (url.protocol !== "https:") return false;
     if (url.hostname === "www.googleapis.com") return url.pathname.startsWith("/youtube/v3/");
-    if (url.hostname === "youtubeanalytics.googleapis.com") return url.pathname === "/v2/reports";
+    // Analytics reports may include a trailing slash depending on the client
+    // URL builder. Keep this narrow to the reports endpoint, not a host-wide proxy.
+    if (url.hostname === "youtubeanalytics.googleapis.com") return /^\/v2\/reports\/?$/.test(url.pathname);
     return false;
   } catch { return false; }
 };
@@ -375,7 +458,7 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
     const returnTo = sanitizeReturnTo(payload.returnTo);
     await saveOAuthState({ state, codeVerifier: verifier, nonce, intent, returnTo,
       expiresAt: new Date(Date.now() + OAUTH_TTL_MS).toISOString() });
-    const scopes = [...READ_ONLY_SCOPES];
+    const scopes = [...GOOGLE_SCOPES];
     const url = new URL(GOOGLE_AUTH_URL);
     url.search = new URLSearchParams({ client_id: clientId(), redirect_uri: callbackUrl(), response_type: "code",
       scope: scopes.join(" "), state, nonce, code_challenge: codeChallenge(verifier), code_challenge_method: "S256",
@@ -409,11 +492,14 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
       if (!userId) { redirectWithError(res, saved.returnTo, "account_not_found"); return true; }
       const scopes = String(token.scope || "").split(/\s+/).filter(Boolean);
       const channel = await fetchChannel(token.access_token, scopes);
+      const contentOwners = await discoverContentOwners(token.access_token, scopes);
       await saveGoogleConnection(userId, identity.sub, {
         accessTokenCiphertext: encryptToken(token.access_token),
         refreshTokenCiphertext: encryptToken(token.refresh_token),
         tokenExpiresAt: new Date(Date.now() + Number(token.expires_in || 3600) * 1000).toISOString(),
-        scopes, ...(channel || {}), connectionStatus: channel ? "connected" : "disconnected",
+        scopes, ...(channel || {}), contentOwners,
+        activeContentOwnerId: contentOwners.length === 1 ? contentOwners[0].id : null,
+        connectionStatus: channel ? "connected" : "disconnected",
       });
       const session = await createAccountSession(userId);
       const destination = new URL(saved.returnTo, publicOrigin());
@@ -444,8 +530,178 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
     return json(res, 200, { grantedCapabilities: snapshot.grantedCapabilities || [] }), true;
   }
 
+  if (method === "PUT" && pathname === "/api/account/content-owner") {
+    if (!contentOwnerDiscoveryEnabled()) return json(res, 404, { error: "Content Owner discovery is not enabled." }), true;
+    if (!isTrustedAccountOrigin(req.headers.origin || req.headers.referer || "")) {
+      return json(res, 403, { error: "Untrusted request origin." }), true;
+    }
+    const userId = await sessionUserId(req);
+    if (!userId) return json(res, 401, { error: "ViewTube sign-in required." }), true;
+    const payload = await readJsonBody(req, readBody);
+    const ownerId = plainText(payload.ownerId, 128);
+    const selected = await selectGoogleContentOwner(userId, ownerId);
+    if (!selected) return json(res, 400, { error: "Choose a Content Owner available to this Google account." }), true;
+    return json(res, 200, { activeContentOwnerId: selected }), true;
+  }
+
   if (method === "GET" && pathname === "/api/plans") {
     return json(res, 200, { plans: PUBLIC_PLANS }), true;
+  }
+
+  if (method === "POST" && pathname === "/api/account/youtube/comment-replies") {
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
+    if (!userId) return true;
+    const payload = await readJsonBody(req, readBody);
+    const parentId = plainText(payload.parentId, 128);
+    const text = plainText(payload.text, 10_000);
+    if (!youtubeId(parentId) || !text) return json(res, 400, { error: "A valid comment and reply text are required." }), true;
+    const accessToken = await getServerGoogleAccessToken(userId);
+    const response = await fetch("https://www.googleapis.com/youtube/v3/comments?part=snippet", {
+      method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ snippet: { parentId, textOriginal: text } }), signal: AbortSignal.timeout(30_000),
+    });
+    await sendGoogleJson(json, res, response, "Failed to post comment reply.");
+    return true;
+  }
+
+  if (method === "POST" && pathname === "/api/account/youtube/comment-threads") {
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
+    if (!userId) return true;
+    const payload = await readJsonBody(req, readBody);
+    const videoId = plainText(payload.videoId, 128);
+    const text = plainText(payload.text, 10_000);
+    if (!youtubeId(videoId) || !text) return json(res, 400, { error: "A valid video and comment text are required." }), true;
+    const accessToken = await getServerGoogleAccessToken(userId);
+    const response = await fetch("https://www.googleapis.com/youtube/v3/commentThreads?part=snippet", {
+      method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ snippet: { videoId, topLevelComment: { snippet: { textOriginal: text } } } }), signal: AbortSignal.timeout(30_000),
+    });
+    await sendGoogleJson(json, res, response, "Failed to post comment.");
+    return true;
+  }
+
+  const commentMatch = pathname.match(/^\/api\/account\/youtube\/comments\/([A-Za-z0-9_-]{6,128})$/);
+  if (method === "PUT" && commentMatch) {
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
+    if (!userId) return true;
+    const payload = await readJsonBody(req, readBody);
+    const text = plainText(payload.text, 10_000);
+    if (!text) return json(res, 400, { error: "Comment text is required." }), true;
+    const accessToken = await getServerGoogleAccessToken(userId);
+    const response = await fetch("https://www.googleapis.com/youtube/v3/comments?part=snippet", {
+      method: "PUT", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ id: commentMatch[1], snippet: { textOriginal: text } }), signal: AbortSignal.timeout(30_000),
+    });
+    await sendGoogleJson(json, res, response, "Failed to update comment.");
+    return true;
+  }
+
+  if (method === "POST" && pathname === "/api/account/youtube/playlist-items") {
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
+    if (!userId) return true;
+    const payload = await readJsonBody(req, readBody);
+    const playlistId = plainText(payload.playlistId, 128);
+    const videoId = plainText(payload.videoId, 128);
+    if (!youtubeId(playlistId) || !youtubeId(videoId)) return json(res, 400, { error: "Valid playlist and video IDs are required." }), true;
+    const accessToken = await getServerGoogleAccessToken(userId);
+    const response = await fetch("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet", {
+      method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ snippet: { playlistId, resourceId: { kind: "youtube#video", videoId } } }), signal: AbortSignal.timeout(30_000),
+    });
+    await sendGoogleJson(json, res, response, "Failed to add video to playlist.");
+    return true;
+  }
+
+  const playlistItemMatch = pathname.match(/^\/api\/account\/youtube\/playlist-items\/([A-Za-z0-9_-]{6,128})$/);
+  if (method === "DELETE" && playlistItemMatch) {
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
+    if (!userId) return true;
+    const accessToken = await getServerGoogleAccessToken(userId);
+    const response = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?id=${encodeURIComponent(playlistItemMatch[1])}`, {
+      method: "DELETE", headers: { Authorization: `Bearer ${accessToken}` }, signal: AbortSignal.timeout(30_000),
+    });
+    if (response.status === 204) return json(res, 200, { success: true }), true;
+    await sendGoogleJson(json, res, response, "Failed to remove video from playlist.");
+    return true;
+  }
+
+  const videoMatch = pathname.match(/^\/api\/account\/youtube\/videos\/([A-Za-z0-9_-]{6,128})$/);
+  if (method === "PUT" && videoMatch) {
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
+    if (!userId) return true;
+    const payload = await readJsonBody(req, readBody);
+    const title = plainText(payload.title, 100);
+    if (!title) return json(res, 400, { error: "Video title is required." }), true;
+    const privacyStatus = ["public", "private", "unlisted"].includes(payload.privacyStatus) ? payload.privacyStatus : "private";
+    const tags = Array.isArray(payload.tags) ? payload.tags.map((tag) => plainText(tag, 100)).filter(Boolean).slice(0, 500) : [];
+    const accessToken = await getServerGoogleAccessToken(userId);
+    const response = await fetch("https://www.googleapis.com/youtube/v3/videos?part=snippet,status", {
+      method: "PUT", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ id: videoMatch[1], snippet: { title, description: plainText(payload.description, 5_000), tags, categoryId: plainText(payload.categoryId, 8) || "22" }, status: { privacyStatus } }),
+      signal: AbortSignal.timeout(30_000),
+    });
+    await sendGoogleJson(json, res, response, "Failed to update video.");
+    return true;
+  }
+
+  const thumbnailMatch = pathname.match(/^\/api\/account\/youtube\/thumbnails\/([A-Za-z0-9_-]{6,128})$/);
+  if (method === "POST" && thumbnailMatch) {
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
+    if (!userId) return true;
+    const contentType = String(req.headers["content-type"] || "").toLowerCase();
+    if (!/^image\/(jpeg|png|webp)$/.test(contentType)) return json(res, 400, { error: "Thumbnail must be JPEG, PNG, or WebP." }), true;
+    const body = await readBody(req, MAX_THUMBNAIL_BYTES);
+    if (!body.length || body.length > MAX_THUMBNAIL_BYTES) return json(res, 413, { error: "Thumbnail exceeds 2MB limit." }), true;
+    const accessToken = await getServerGoogleAccessToken(userId);
+    const response = await fetch(`https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${encodeURIComponent(thumbnailMatch[1])}`, {
+      method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": contentType }, body, signal: AbortSignal.timeout(60_000),
+    });
+    await sendGoogleJson(json, res, response, "Failed to update thumbnail.");
+    return true;
+  }
+
+  if (method === "POST" && pathname === "/api/account/youtube/uploads") {
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.upload");
+    if (!userId) return true;
+    const payload = await readJsonBody(req, readBody);
+    const contentLength = Number(payload.contentLength);
+    const contentType = plainText(payload.contentType, 120) || "video/*";
+    if (!Number.isSafeInteger(contentLength) || contentLength <= 0 || contentLength > 20 * 1024 * 1024 * 1024 || !/^video\//.test(contentType)) {
+      return json(res, 400, { error: "A valid video file is required." }), true;
+    }
+    const metadata = payload.metadata || {};
+    const title = plainText(metadata.title, 100);
+    if (!title) return json(res, 400, { error: "Video title is required." }), true;
+    const accessToken = await getServerGoogleAccessToken(userId);
+    const response = await fetch("https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status", {
+      method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json", "X-Upload-Content-Length": String(contentLength), "X-Upload-Content-Type": contentType },
+      body: JSON.stringify({ snippet: { title, description: plainText(metadata.description, 5_000), tags: Array.isArray(metadata.tags) ? metadata.tags.map((tag) => plainText(tag, 100)).filter(Boolean).slice(0, 500) : [], categoryId: plainText(metadata.categoryId, 8) || "22" }, status: { privacyStatus: ["public", "private", "unlisted"].includes(metadata.privacyStatus) ? metadata.privacyStatus : "private" } }),
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!response.ok) { await sendGoogleJson(json, res, response, "Failed to create upload session."); return true; }
+    const uploadUrl = response.headers.get("location");
+    if (!isAllowedYouTubeUploadUrl(uploadUrl)) return json(res, 502, { error: "YouTube returned an invalid upload session." }), true;
+    const sessionId = encryptToken(JSON.stringify({ userId, uploadUrl, contentLength, contentType, expiresAt: Date.now() + UPLOAD_SESSION_TTL_MS }));
+    return json(res, 201, { sessionId, chunkSize: MAX_UPLOAD_CHUNK_BYTES }), true;
+  }
+
+  const uploadMatch = pathname.match(/^\/api\/account\/youtube\/uploads\/([^/]+)$/);
+  if (method === "PUT" && uploadMatch) {
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.upload");
+    if (!userId) return true;
+    let session;
+    try { session = decodeUploadSession(decodeURIComponent(uploadMatch[1]), userId); }
+    catch { return json(res, 400, { error: "Upload session is invalid or expired." }), true; }
+    const contentRange = String(req.headers["content-range"] || "");
+    const range = contentRange.match(/^bytes (\d+)-(\d+)\/(\d+)$/);
+    if (!range || Number(range[3]) !== session.contentLength || Number(range[2]) < Number(range[1])) return json(res, 400, { error: "Upload range is invalid." }), true;
+    const body = await readBody(req, MAX_UPLOAD_CHUNK_BYTES);
+    if (!body.length || body.length > MAX_UPLOAD_CHUNK_BYTES || body.length !== Number(range[2]) - Number(range[1]) + 1) return json(res, 413, { error: "Upload chunk is invalid." }), true;
+    const accessToken = await getServerGoogleAccessToken(userId);
+    const response = await fetch(session.uploadUrl, { method: "PUT", redirect: "manual", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": session.contentType, "Content-Range": contentRange, "Content-Length": String(body.length) }, body, signal: AbortSignal.timeout(120_000) });
+    if (response.status === 308) return json(res, 200, { complete: false, range: response.headers.get("range") || null }), true;
+    if (!response.ok) { await sendGoogleJson(json, res, response, "Video upload failed."); return true; }
+    return json(res, 200, { complete: true, video: await googleError(response, "Video upload failed.") }), true;
   }
 
   if (method === "POST" && pathname === "/api/account/google-proxy") {

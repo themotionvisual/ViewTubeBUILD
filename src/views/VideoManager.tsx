@@ -611,6 +611,11 @@ const VideoManager: React.FC<VideoManagerProps> = ({
 
  const handleSave = async () => {
   if (!selectedVideoId) return
+  if (account.serverEnabled && !account.snapshot.grantedCapabilities.includes("youtube_comments")) {
+   setError("Reconnect Channel to grant YouTube video-management permission.")
+   void account.start("reconnect_channel", "/video-manager")
+   return
+  }
   setSaving(true)
   setError(null)
   setSaveSuccess(false)

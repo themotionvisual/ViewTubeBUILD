@@ -114,9 +114,28 @@ function ForecastChart({
   showHist, showOpt, showReal, showCau, compact,
 }: ForecastChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [canvasWidth, setCanvasWidth] = useState(900)
   const [hover, setHover] = useState<{ period: number; future: boolean } | null>(null)
   const realColor = `${accentColor}cc`
   const periods = opt.length
+  const h = compact ? 80 : 280
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const updateWidth = () => {
+      const next = Math.max(360, Math.round(canvas.getBoundingClientRect().width || 900))
+      setCanvasWidth((prev) => (Math.abs(prev - next) > 1 ? next : prev))
+    }
+    updateWidth()
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateWidth) : null
+    observer?.observe(canvas)
+    window.addEventListener("resize", updateWidth)
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener("resize", updateWidth)
+    }
+  }, [])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -280,7 +299,7 @@ function ForecastChart({
       }
     }
   }, [historical, opt, real, cau, accentColor, fmt, labels, forecastLabels, goalValue,
-      showHist, showOpt, showReal, showCau, compact, hover, realColor, periods])
+      showHist, showOpt, showReal, showCau, compact, hover, realColor, periods, canvasWidth])
 
   function handleMouseMove(e: React.MouseEvent<HTMLCanvasElement>) {
     if (compact) return
@@ -298,11 +317,10 @@ function ForecastChart({
       : { period: idx - historical.length, future: true })
   }
 
-  const h = compact ? 80 : 280
   return (
     <canvas
       ref={canvasRef}
-      width={900}
+      width={canvasWidth}
       height={h}
       style={{ width: "100%", height: h, display: "block", cursor: compact ? "default" : "crosshair" }}
       onMouseMove={handleMouseMove}
@@ -313,9 +331,7 @@ function ForecastChart({
 
 // ─── Main module ──────────────────────────────────────────────────────────
 export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({
-  data,
   dailyMetrics = [],
-  trafficByDay = [],
 }) => {
   const { palette } = useVt2Theme()
   const [metric, setMetric] = useState<MetricKey>("views")
@@ -340,9 +356,9 @@ export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({
 
   const rollupRes = useMemo(
     () => gran === "WEEKLY"
-      ? rollupWeeklyChannelWithSource(data, dailyMetrics, trafficByDay, 16)
-      : rollupMonthlyChannelWithSource(data, dailyMetrics, trafficByDay),
-    [gran, data, dailyMetrics, trafficByDay],
+      ? rollupWeeklyChannelWithSource(dailyMetrics, 16)
+      : rollupMonthlyChannelWithSource(dailyMetrics),
+    [gran, dailyMetrics],
   )
 
   const rows: MetricRow[] = useMemo(
@@ -470,6 +486,7 @@ export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({
       personalInsight="Toggle scenarios to compare — the shaded band shows the optimistic-to-cautious envelope."
       bodyBg="#0a0a0f"
       minHeight={380}
+      bodyFitMode="preserveRatio"
     >
       {/* Tab bar */}
       <div style={{ display: "flex", borderBottom: "3px solid #000", background: "#0a0a0f" }}>
@@ -484,7 +501,7 @@ export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({
               color: tab === t ? "#000" : "#444",
             }}
           >
-            {t === "TRAJECTORY" ? "📈 TRAJECTORY" : "🎯 GOAL PLANNER"}
+            {t === "TRAJECTORY" ? "TRAJECTORY" : "GOAL PLANNER"}
           </button>
         ))}
       </div>

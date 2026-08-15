@@ -500,7 +500,7 @@ const buildVideoBaseline = (
   const duration = parseDurationSeconds(video?.contentDetails?.duration || "")
   const durationRaw = video?.contentDetails?.duration || ""
   const aspect = aspectEvidenceFromEmbedHtml(video?.player?.embedHtml || "")
-  const isShort = duration > 180 ? false : aspect.isPortrait
+  const isShort = (duration > 0 && duration <= 180) || aspect.isPortrait
   const categoryId = String(video?.snippet?.categoryId || "").trim()
 
   return {
@@ -1341,12 +1341,12 @@ export const syncCoreLifetimeData = async (
     videoBaseMap.forEach((video, videoId) => {
       const isInShortsPlaylist = shortsPlaylistIds.has(videoId)
       // Videos > 180s are always Long.
-      // Videos <= 180s are Short if in UUSH playlist OR if aspect ratio says vertical.
+      // Videos <= 180s are Short if duration <= 180s, in UUSH playlist, OR if aspect ratio says vertical.
       video.isShort =
         video.duration > 180
           ? false
-          : isInShortsPlaylist || video.isShort
-      video.format = video.isShort ? "shorts" : "long"
+          : (video.duration > 0 && video.duration <= 180) || isInShortsPlaylist || video.isShort
+      video.format = video.isShort ? "short" : "long"
     })
   } catch (e) {
     console.warn("[CoreSync] Shorts playlist cross-ref failed, using duration+aspect only:", e)

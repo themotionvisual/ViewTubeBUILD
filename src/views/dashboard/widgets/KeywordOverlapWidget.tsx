@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react"
 import { ChevronDown, GitMerge } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
+import { WidgetScrollArea } from "../WidgetPrimitives"
 import {
   buildKeywordConstellationDataset,
   buildKeywordSelectionSummary,
@@ -174,7 +175,7 @@ export const KeywordOverlapWidget = ({
 
   return (
     <WidgetShell {...common} icon={<GitMerge size={22} />}>
-      <div className="vt-widget-fill-body" style={{ gap: "8px" }}>
+      <WidgetScrollArea ariaLabel="Keyword overlap analysis" contentClassName="flex min-h-full flex-col gap-2">
         {!hasEnoughData ? (
           <div style={{ border: "2px solid #000", borderRadius: "10px", padding: "10px", background: "#F5F5F5" }}>
             <div style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase" }}>Need More Keyword Data</div>
@@ -319,7 +320,7 @@ export const KeywordOverlapWidget = ({
             ))}
           </div>
         </div>
-      </div>
+      </WidgetScrollArea>
     </WidgetShell>
   )
 }

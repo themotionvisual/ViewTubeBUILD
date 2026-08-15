@@ -90,12 +90,31 @@ const writeJson = async (file, payload) => {
   await fs.writeFile(file, JSON.stringify(payload, null, 2), "utf8");
 };
 
-const readBody = async (req) => {
+const readBody = async (req, maxBytes = Number.POSITIVE_INFINITY) => {
   return new Promise((resolve, reject) => {
+    const contentLength = Number(req.headers["content-length"] || 0);
+    if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+      const error = new Error("Request body is too large.");
+      error.statusCode = 413;
+      reject(error);
+      return;
+    }
     const chunks = [];
-    req.on("data", (chunk) => chunks.push(chunk));
+    let size = 0;
+    let rejected = false;
+    req.on("data", (chunk) => {
+      size += chunk.length;
+      if (size > maxBytes && !rejected) {
+        rejected = true;
+        const error = new Error("Request body is too large.");
+        error.statusCode = 413;
+        reject(error);
+        return;
+      }
+      if (!rejected) chunks.push(chunk);
+    });
     req.on("error", reject);
-    req.on("end", () => resolve(Buffer.concat(chunks)));
+    req.on("end", () => { if (!rejected) resolve(Buffer.concat(chunks)); });
   });
 };
 

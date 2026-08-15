@@ -14,10 +14,15 @@ export const VT_SYNC_LOCAL_STORE_NAMES = {
  datasetRawReports: "dataset_raw_reports",
  datasetTableRows: "dataset_table_rows",
 } as const
+export const ANALYTICS_LOCAL_SNAPSHOT_KEY = VT_SYNC_LOCAL_SNAPSHOT_KEY
+export const ANALYTICS_LOCAL_DB_NAME = VT_SYNC_LOCAL_DB_NAME
+export const ANALYTICS_LOCAL_DB_VERSION = VT_SYNC_LOCAL_DB_VERSION
+export const ANALYTICS_LOCAL_STORE_NAMES = VT_SYNC_LOCAL_STORE_NAMES
 export const VT_SYNC_UPSTREAM_REPO_PATH = "/Users/cwb/Downloads/viewtube/VT-SYNC" as const
 
 export type VtSyncCategoryGroup =
  | "channel"
+ | "time"
  | "videos"
  | "traffic"
  | "audience"
@@ -79,6 +84,8 @@ export type VtSyncTableDefinition = {
  description: string
  performanceHubDatasetId: string
  categoryIds: string[]
+ /** Controller ownership. Tables in one top-level category share a sync unit. */
+ syncUnitId?: string
  snapshotKeys?: string[]
  columns: VtSyncTableColumnDefinition[]
  defaultSort: { key: string; direction: "asc" | "desc" }
@@ -87,7 +94,7 @@ export type VtSyncTableDefinition = {
  exportName: string
  layoutMode?: "auto" | "sparse-full"
  compactMode?: "supported" | "normal-only"
- presentationMode?: "standard" | "traffic-source-day" | "retention-video"
+ presentationMode?: "standard" | "traffic-source-day" | "format-subscriber-status" | "retention-video"
  verticalScrollMode?: "custom" | "none"
  horizontalScrollMode?: "custom" | "none"
  summaryMode?: "selected-video" | "registry" | "primary-row"
@@ -131,6 +138,8 @@ export type VtSyncVideoItem = {
  caption?: string
  descriptionSnippet?: string
  metrics?: VtSyncVideoMetric
+ /** Per-field source of the currently displayed metric value. */
+ metricProvenance?: Record<string, "youtube_data_v3" | "youtube_analytics_v2">
 }
 
 export type VtSyncDailyMetricRow = Record<string, unknown> & {
@@ -142,6 +151,18 @@ export type VtSyncDailyMetricRow = Record<string, unknown> & {
  subscribersLost?: number
  impressions?: number
  adImpressions?: number
+ engagedViews?: number
+}
+
+/** A traffic-source-by-day fact. This is intentionally not assignable to the
+ * channel-wide Daily Stats row contract. */
+export type VtSyncTrafficByDayRow = Record<string, unknown> & {
+ day: string
+ term: string
+ views?: number
+ watchTime?: number
+ avgDuration?: number
+ avgPercentageViewed?: number
  engagedViews?: number
 }
 
@@ -159,6 +180,29 @@ export type VtSyncTrafficRow = Record<string, unknown> & {
  videoId?: string
  videoUrl?: string
  channelUrl?: string
+}
+
+/** A source-scoped YouTube Analytics traffic detail row. */
+export type VtSyncTrafficDetailRow = VtSyncTrafficRow & {
+ sourceType: string
+ detail: string
+ /** The raw Analytics value is retained even when a title/handle is resolved. */
+ insightTrafficSourceDetail?: string
+ coverageStatus?: "complete" | "partial" | "unavailable" | "unsupported"
+}
+
+export type VtSyncSyncUnitDefinition = {
+ id: string
+ label: string
+ description: string
+ group: VtSyncCategoryGroup
+ /** Exact visible table this controller unit owns. */
+ tableId: string
+ /** The top-level data-table category this user-facing switch owns. */
+ tableCategoryId: string
+ categoryIds: string[]
+ defaultEnabled: boolean
+ refreshPolicy: "each_run" | "daily_incremental" | "on_demand"
 }
 
 export type VtSyncChannelTotals = Partial<Record<
@@ -254,6 +298,8 @@ export type VtSyncInventoryCursorRecord = {
 export type VtSyncDatasetRawReportRecord = {
  id: string
  runId: string
+ /** The connected channel that owns this diagnostic report. */
+ channelId?: string
  datasetId: string
  phase: string
  capturedAt: string
@@ -265,6 +311,8 @@ export type VtSyncDatasetRawReportRecord = {
 export type VtSyncDatasetTableRowsRecord = {
  id: string
  runId: string
+ /** The connected channel that owns these rows. Required for safe recovery. */
+ channelId?: string
  datasetId: string
  phase: string
  capturedAt: string
@@ -295,6 +343,15 @@ export type VtSyncDatasetFreshness = Record<string, {
  missingMetrics?: string[]
 }>
 
+export type VtSyncSnapshotStorageMetadata = {
+ storageMode: "full" | "compact_preview" | "memory_only" | "unknown"
+ isCompacted: boolean
+ manifestOnly?: boolean
+ fullRowCountByField?: Record<string, number>
+ visiblePreviewRowCountByField?: Record<string, number>
+ warning?: string
+}
+
 export type VtSyncSnapshot = VtSyncChannelIdentity & {
  source: "vt-sync" | "viewtubex-cache" | "manual" | "empty"
  snapshotId: string
@@ -303,16 +360,19 @@ export type VtSyncSnapshot = VtSyncChannelIdentity & {
  channelTotals?: VtSyncChannelTotals | null
  videos: VtSyncVideoItem[]
  dailyMetrics: VtSyncDailyMetricRow[]
+ monthlyMetrics: VtSyncDailyMetricRow[]
  trafficSources: VtSyncTrafficRow[]
+ trafficDetails: VtSyncTrafficDetailRow[]
  searchTerms: VtSyncTrafficRow[]
  demographics: Array<Record<string, unknown>>
  geography: Array<Record<string, unknown>>
  devices: Array<Record<string, unknown>>
  operatingSystems: Array<Record<string, unknown>>
  deviceOs: Array<Record<string, unknown>>
- trafficByDay: Array<Record<string, unknown>>
+ trafficByDay: VtSyncTrafficByDayRow[]
  playbackLocations: Array<Record<string, unknown>>
  subscriptionStatuses: Array<Record<string, unknown>>
+ formatSubscriberStatuses: Array<Record<string, unknown>>
  playlistsData: Array<Record<string, unknown>>
  adTypes: Array<Record<string, unknown>>
  cities: Array<Record<string, unknown>>
@@ -351,6 +411,7 @@ export type VtSyncSnapshot = VtSyncChannelIdentity & {
  syncManifest?: VtSyncSyncManifest | null
  tableExports?: Record<string, unknown[]>
  datasetFreshness?: VtSyncDatasetFreshness
+ storageMetadata?: VtSyncSnapshotStorageMetadata
 }
 
 

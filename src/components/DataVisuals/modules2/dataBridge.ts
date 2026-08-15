@@ -9,12 +9,10 @@
  *   • `rollupWeeklyFromVideos(rows, weeks)` — buckets canonical video rows into
  *     N most-recent ISO weeks (by upload date) and returns per-week aggregates
  *     shaped like the source `CHANNEL_WEEKLY` rows.
- *   • `rollupWeeklyFromDaily(daily, weeks)` — same shape but built from the
- *     Analytics `trafficByDay` daily rows when available (higher fidelity;
- *     falls back to the video rollup when the array is empty).
+ *   • `rollupWeeklyFromDaily(daily, weeks)` — same shape, built only from the
+ *     channel-wide Daily Stats dataset.
  *
- * These helpers never throw; they return zero-filled weeks so the sparklines
- * always render a smooth timeline instead of gaps.
+ * These helpers never substitute Traffic × Day for channel-wide statistics.
  */
 
 import type { CanonicalVideoRow } from "../../../services/analytics/DataStore"
@@ -224,11 +222,8 @@ export const rollupWeeklyFromVideos = (
 }
 
 /**
- * Roll `snapshot.trafficByDay` into weekly buckets. Daily rows come from the
- * Analytics API and give truer weekly totals than the video-cohort proxy when
- * they are present. `likes` isn't in the daily payload, so we leave it at zero
- * and let the caller decide whether to hide the sparkline or overlay a video
- * rollup on top for that one metric.
+ * Roll channel-wide `snapshot.dailyMetrics` into weekly buckets. Traffic × Day
+ * rows are deliberately incompatible with this helper.
  */
 export const rollupWeeklyFromDaily = (
   daily: ReadonlyArray<Record<string, unknown>>,
@@ -245,7 +240,7 @@ export const rollupWeeklyFromDaily = (
     bucket.views += numOr(row.views)
     bucket.subs += numOr(row.subscribersGained) - numOr(row.subscribersLost)
     bucket.revenue += numOr(row.revenue ?? row.estimatedRevenue)
-    // trafficByDay does not carry `likes` — leave zero.
+    bucket.likes += numOr(row.likes)
     bucket.watchMins_hrs += numOr(row.watchTime) // already hours per adapter
     bucket.impressions += numOr(row.impressions ?? row.adImpressions)
     buckets.set(iso.key, bucket)
@@ -257,7 +252,7 @@ export const rollupWeeklyFromDaily = (
 /** Which source powered the current weekly rollup. Modules surface this
  *  string so a chart's totals are traceable to the underlying analytics
  *  table (or fallback) they came from. */
-export type Vt2WeeklySource = "daily_metrics" | "traffic_by_day" | "video_cohort" | "none"
+export type Vt2WeeklySource = "daily_metrics" | "none"
 
 export type Vt2WeeklyRollup = {
   weeks: Vt2WeeklyRow[]
@@ -265,48 +260,19 @@ export type Vt2WeeklyRollup = {
 }
 
 /**
- * Prefer the direct daily-metrics table, then the traffic-by-day table, then
- * fall back to the per-video cohort rollup. `likes` is always overlaid from
- * the video rollup because none of the daily tables carry per-day likes.
+ * Build a channel-wide weekly series exclusively from Daily Stats. Returning
+ * no rows is intentional when Daily Stats is unavailable; Traffic × Day and
+ * upload cohorts describe different facts and are never substitutes.
  */
 export const rollupWeeklyChannelWithSource = (
-  rows: readonly CanonicalVideoRow[],
   dailyMetrics: ReadonlyArray<Record<string, unknown>>,
-  trafficByDay: ReadonlyArray<Record<string, unknown>>,
   weeks: number,
 ): Vt2WeeklyRollup => {
-  const videoWeeks = rollupWeeklyFromVideos(rows, weeks)
-  const likesByDate = new Map(videoWeeks.map((w) => [w.date, w.likes]))
-  const totalVideoLikes = rows.reduce((s, r) => s + readMetric(r, "likes"), 0)
-  const totalVideoViews = rows.reduce((s, r) => s + readMetric(r, "views"), 0)
-  const globalLikeRatio = totalVideoViews > 0 ? totalVideoLikes / totalVideoViews : 0.045
-
-  const resolveLikes = (w: Vt2WeeklyRow): number => {
-    const direct = likesByDate.get(w.date)
-    if (direct && direct > 0) return direct
-    return Math.round(w.views * globalLikeRatio)
-  }
-
   const dmWeeks = rollupWeeklyFromDaily(dailyMetrics, weeks)
   if (dmWeeks.length > 0) {
-    return {
-      source: "daily_metrics",
-      weeks: dmWeeks.map((w) => ({ ...w, likes: resolveLikes(w) })),
-    }
+    return { source: "daily_metrics", weeks: dmWeeks }
   }
-
-  const tbdWeeks = rollupWeeklyFromDaily(trafficByDay, weeks)
-  if (tbdWeeks.length > 0) {
-    return {
-      source: "traffic_by_day",
-      weeks: tbdWeeks.map((w) => ({ ...w, likes: resolveLikes(w) })),
-    }
-  }
-
-  return {
-    source: videoWeeks.length > 0 ? "video_cohort" : "none",
-    weeks: videoWeeks.map((w) => ({ ...w, likes: resolveLikes(w) })),
-  }
+  return { source: "none", weeks: [] }
 }
 
 /**
@@ -315,18 +281,16 @@ export const rollupWeeklyChannelWithSource = (
  * callers should use `rollupWeeklyChannelWithSource` for a traceable rollup.
  */
 export const rollupWeeklyChannel = (
-  rows: readonly CanonicalVideoRow[],
+  _rows: readonly CanonicalVideoRow[],
   daily: ReadonlyArray<Record<string, unknown>>,
   weeks: number,
-): Vt2WeeklyRow[] => rollupWeeklyChannelWithSource(rows, [], daily, weeks).weeks
+): Vt2WeeklyRow[] => rollupWeeklyChannelWithSource(daily, weeks).weeks
 
 /** Human-readable label for a rollup source, used in module subtitles. */
 export const describeWeeklySource = (source: Vt2WeeklySource): string => {
   switch (source) {
-    case "daily_metrics": return "DAILY METRICS TABLE"
-    case "traffic_by_day": return "TRAFFIC-BY-DAY TABLE"
-    case "video_cohort": return "PER-VIDEO COHORT (weekly by upload date)"
-    case "none": return "NO WEEKLY DATA"
+    case "daily_metrics": return "DAILY STATS TABLE"
+    case "none": return "DAILY STATS UNAVAILABLE"
   }
 }
 
@@ -347,27 +311,25 @@ export type Vt2BigBangWeek = Vt2WeeklyRow & {
 /** Bucket canonical rows into weeks with the extended metric set the
  *  BigBangTimeline needs. Sourced primarily from channel daily metrics table when available. */
 export const rollupWeeklyBigBangWithSource = (
-  rows: readonly CanonicalVideoRow[],
   dailyMetrics: ReadonlyArray<Record<string, unknown>> = [],
-  trafficByDay: ReadonlyArray<Record<string, unknown>> = [],
   weeks: number = 24,
 ): Vt2BigBangWeek[] => {
-  const rollup = rollupWeeklyChannelWithSource(rows, dailyMetrics, trafficByDay, weeks)
+  const rollup = rollupWeeklyChannelWithSource(dailyMetrics, weeks)
   const base = rollup.weeks
   if (base.length === 0) return []
 
   type Ext = { comments: number; shares: number; saves: number; avpSum: number; avpN: number; avdSum: number; avdN: number }
   const extras = new Map<string, Ext>()
-  for (const row of rows) {
-    const iso = isoWeekStart(row.uploadDate)
+  for (const row of dailyMetrics) {
+    const iso = isoWeekStart(row.date ?? row.day)
     if (!iso) continue
     const bucket = extras.get(iso.key) ?? { comments: 0, shares: 0, saves: 0, avpSum: 0, avpN: 0, avdSum: 0, avdN: 0 }
-    bucket.comments += readMetric(row, "comments")
-    bucket.shares += readMetric(row, "shares")
-    bucket.saves += readMetric(row, "remixCount")
-    const avp = readMetric(row, "avp")
+    bucket.comments += numOr(row.comments)
+    bucket.shares += numOr(row.shares)
+    bucket.saves += numOr(row.playlistSaves ?? row.videosAddedToPlaylists)
+    const avp = numOr(row.averagePercentageViewed ?? row.avgPercentageViewed)
     if (avp > 0) { bucket.avpSum += avp; bucket.avpN += 1 }
-    const avd = readMetric(row, "avdSeconds")
+    const avd = numOr(row.averageViewDuration ?? row.avgDuration)
     if (avd > 0) { bucket.avdSum += avd; bucket.avdN += 1 }
     extras.set(iso.key, bucket)
   }
@@ -377,19 +339,19 @@ export const rollupWeeklyBigBangWithSource = (
     return {
       ...w,
       watchMins: w.watchMins_hrs * 60,
-      comments: ext.comments || Math.round(w.views * 0.005),
-      shares: ext.shares || Math.round(w.views * 0.015),
-      saves: ext.saves || Math.round(w.views * 0.008),
-      avp: ext.avpN > 0 ? ext.avpSum / ext.avpN : 55,
-      avd: ext.avdN > 0 ? ext.avdSum / ext.avdN : 120,
+      comments: ext.comments,
+      shares: ext.shares,
+      saves: ext.saves,
+      avp: ext.avpN > 0 ? ext.avpSum / ext.avpN : 0,
+      avd: ext.avdN > 0 ? ext.avdSum / ext.avdN : 0,
     }
   })
 }
 
 export const rollupWeeklyBigBang = (
-  rows: readonly CanonicalVideoRow[],
+  _rows: readonly CanonicalVideoRow[],
   weeks: number,
-): Vt2BigBangWeek[] => rollupWeeklyBigBangWithSource(rows, [], [], weeks)
+): Vt2BigBangWeek[] => rollupWeeklyBigBangWithSource([], weeks)
 
 /** Per-day rollup row shape used by TrajectoryForecaster's DAILY granularity.
  *  `label` is a compact human-readable day key (e.g. "Aug 3"). */
@@ -522,23 +484,16 @@ export const rollupMonthlyFromVideos = (
   return takeMostRecentMonthly(map, monthsCount)
 }
 
-/** Channel-wide monthly rollup that prefers daily metrics, then traffic-by-day, then video cohort fallback. */
+/** Channel-wide monthly rollup sourced exclusively from Daily Stats. */
 export const rollupMonthlyChannelWithSource = (
-  rows: readonly CanonicalVideoRow[],
   dailyMetrics?: ReadonlyArray<Record<string, unknown>>,
-  trafficByDay?: ReadonlyArray<Record<string, unknown>>,
   monthsCount: number = 12,
 ): { source: Vt2WeeklySource; months: Vt2MonthlyRow[] } => {
   if (dailyMetrics && dailyMetrics.length > 0) {
     const months = rollupMonthlyFromDaily(dailyMetrics, monthsCount)
     if (months.length > 0) return { source: "daily_metrics", months }
   }
-  if (trafficByDay && trafficByDay.length > 0) {
-    const months = rollupMonthlyFromDaily(trafficByDay, monthsCount)
-    if (months.length > 0) return { source: "traffic_by_day", months }
-  }
-  const months = rollupMonthlyFromVideos(rows, monthsCount)
-  return { source: months.length > 0 ? "video_cohort" : "none", months }
+  return { source: "none", months: [] }
 }
 
 /** Small helper: turn a Vt2WeeklyRow into a Trajectory-friendly label ("W12"). */

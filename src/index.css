@@ -129,7 +129,7 @@ body {
 }
 
 /* Canonical text input + textarea surface (matches Video Manager title/description style) */
-.vt-input-standard {
+.vt-input-standard:not(.dashboard-barrier .vt-input-standard) {
   width: 100%;
   background: color-mix(in srgb, var(--vt-subtoolbox-fill, #f6f6f6) 16%, #ffffff);
   border: 3px solid #000;
@@ -148,23 +148,23 @@ body {
     transform 0.12s ease;
 }
 
-.vt-input-standard[data-border-width="4"] {
+.vt-input-standard:not(.dashboard-barrier .vt-input-standard)[data-border-width="4"] {
   border-width: 4px;
 }
 
-.vt-input-standard:focus {
+.vt-input-standard:not(.dashboard-barrier .vt-input-standard):focus {
   border-color: #000;
   box-shadow: 2px 2px 0 0 rgba(0,0,0,1);
   background: color-mix(in srgb, var(--vt-subtoolbox-fill, #ffffff) 10%, #ffffff);
 }
 
-.vt-textarea-standard {
+.vt-textarea-standard:not(.dashboard-barrier .vt-textarea-standard) {
   min-height: 116px;
   padding: 1rem;
   resize: vertical;
 }
 
-.vt-textarea-standard:focus {
+.vt-textarea-standard:not(.dashboard-barrier .vt-textarea-standard):focus {
   border-color: #000;
   box-shadow: 2px 2px 0 0 rgba(0,0,0,1);
   background: #fff;
@@ -209,9 +209,9 @@ body {
 }
 
 /* Global field normalization: unified placeholder + black-to-blue focus outline */
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
-textarea,
-select {
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(.dashboard-barrier input),
+textarea:not(.dashboard-barrier textarea),
+select:not(.dashboard-barrier select) {
   outline: none;
   border: 2px solid var(--widget-color, #000);
   background-color: #fff;
@@ -222,9 +222,9 @@ select {
   caret-color: var(--widget-color, #000);
 }
 
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus,
-textarea:focus,
-select:focus {
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(.dashboard-barrier input):focus,
+textarea:not(.dashboard-barrier textarea):focus,
+select:not(.dashboard-barrier select):focus {
   border-color: var(--widget-color, #000);
   background-color: color-mix(in srgb, var(--widget-color, #fff) 6%, white);
   box-shadow:
@@ -232,8 +232,8 @@ select:focus {
     0 0 16px 2px color-mix(in srgb, var(--widget-color, #000) 55%, transparent);
 }
 
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"])::placeholder,
-textarea::placeholder {
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(.dashboard-barrier input)::placeholder,
+textarea:not(.dashboard-barrier textarea)::placeholder {
   color: rgb(0 0 0 / 0.35);
   font-weight: 700;
 }
@@ -313,9 +313,9 @@ textarea::placeholder {
 }
 .dashboard-barrier .vt-button.primary { background: var(--widget-color, #4FFF5B); }
 .dashboard-barrier .vt-button.secondary { background: color-mix(in srgb, var(--widget-color, #000) 30%, white); }
-.dashboard-barrier .vt-button:hover { transform: translate(1.5px, 1.5px); box-shadow: 1.5px 1.5px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent); }
-.dashboard-barrier .vt-button:active { transform: translate(3px, 3px); box-shadow: 0px 0px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent); }
-.dashboard-barrier .vt-button:disabled { opacity: 0.45; cursor: not-allowed; }
+.dashboard-barrier .vt-button:hover { transform: translate(1px, 1px); box-shadow: 2px 2px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent); }
+.dashboard-barrier .vt-button:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent); }
+.dashboard-barrier .vt-button:disabled { opacity: 1; cursor: not-allowed; }
 
 /* v2 · square icon buttons — vt-button geometry, any of the 3 fills */
 .dashboard-barrier .vt-button.icon { width: 36px; height: 36px; padding: 0; flex-shrink: 0; font-size: 15px; }

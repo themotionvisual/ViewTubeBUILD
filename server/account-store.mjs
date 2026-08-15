@@ -36,8 +36,11 @@ CREATE TABLE IF NOT EXISTS viewtube_google_identities (
   email TEXT NOT NULL, access_token_ciphertext TEXT, refresh_token_ciphertext TEXT,
   token_expires_at TIMESTAMPTZ, scopes TEXT[] NOT NULL DEFAULT '{}',
   channel_id TEXT, channel_title TEXT, channel_handle TEXT, channel_thumbnail TEXT,
+  content_owners JSONB NOT NULL DEFAULT '[]', active_content_owner_id TEXT,
   connection_status TEXT NOT NULL DEFAULT 'disconnected', updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+ALTER TABLE viewtube_google_identities ADD COLUMN IF NOT EXISTS content_owners JSONB NOT NULL DEFAULT '[]';
+ALTER TABLE viewtube_google_identities ADD COLUMN IF NOT EXISTS active_content_owner_id TEXT;
 CREATE TABLE IF NOT EXISTS viewtube_sessions (
   token_hash TEXT PRIMARY KEY,
   viewtube_user_id TEXT NOT NULL REFERENCES viewtube_users(id) ON DELETE CASCADE,
@@ -220,10 +223,14 @@ export const saveGoogleConnection = async (userId, googleSubject, input) => {
        refresh_token_ciphertext=COALESCE($2,refresh_token_ciphertext),token_expires_at=$3,scopes=$4,
        channel_id=COALESCE($5,channel_id),channel_title=COALESCE($6,channel_title),
        channel_handle=COALESCE($7,channel_handle),channel_thumbnail=COALESCE($8,channel_thumbnail),
-       connection_status=$9,updated_at=NOW() WHERE google_subject=$10 AND viewtube_user_id=$11`,
+       content_owners=COALESCE($9,content_owners),
+       active_content_owner_id=CASE WHEN $14 THEN $10 ELSE active_content_owner_id END,
+       connection_status=$11,updated_at=NOW() WHERE google_subject=$12 AND viewtube_user_id=$13`,
       [input.accessTokenCiphertext || null, input.refreshTokenCiphertext || null, input.tokenExpiresAt || null,
        input.scopes || [], input.channelId || null, input.channelTitle || null, input.channelHandle || null,
-       input.channelThumbnail || null, input.connectionStatus || "connected", googleSubject, userId],
+       input.channelThumbnail || null, input.contentOwners ? JSON.stringify(input.contentOwners) : null,
+       input.activeContentOwnerId ?? null, input.connectionStatus || "connected", googleSubject, userId,
+       Object.prototype.hasOwnProperty.call(input, "activeContentOwnerId")],
     );
     return;
   }
@@ -235,6 +242,28 @@ export const saveGoogleConnection = async (userId, googleSubject, input) => {
       refreshTokenCiphertext: input.refreshTokenCiphertext || identity.refreshTokenCiphertext || null,
       updatedAt: nowIso(),
     };
+  });
+};
+
+export const selectGoogleContentOwner = async (userId, ownerId) => {
+  await initAccountStore();
+  const normalized = String(ownerId || "").trim();
+  if (usePostgres()) {
+    const result = await pool.query(
+      `UPDATE viewtube_google_identities SET active_content_owner_id=$1,updated_at=NOW()
+       WHERE viewtube_user_id=$2 AND EXISTS (
+        SELECT 1 FROM jsonb_array_elements(content_owners) owner WHERE owner->>'id'=$1
+       ) RETURNING active_content_owner_id`,
+      [normalized, userId],
+    );
+    return result.rowCount ? result.rows[0].active_content_owner_id : null;
+  }
+  return updateFileDb((db) => {
+    const identity = Object.values(db.googleIdentities).find((item) => item.viewtubeUserId === userId);
+    if (!identity || !(identity.contentOwners || []).some((owner) => owner.id === normalized)) return null;
+    identity.activeContentOwnerId = normalized;
+    identity.updatedAt = nowIso();
+    return normalized;
   });
 };
 
@@ -564,6 +593,7 @@ export const getAccountSnapshotData = async (userId) => {
   if (usePostgres()) {
     const result = await pool.query(
       `SELECT u.id,u.email,u.display_name,g.scopes,g.channel_id,g.channel_title,g.channel_handle,g.channel_thumbnail,
+       g.content_owners,g.active_content_owner_id,
        g.connection_status,g.token_expires_at,(g.refresh_token_ciphertext IS NOT NULL) AS has_refresh_token,
        o.status AS onboarding_status,o.next_step,o.context,
        s.status AS billing_status,s.plan_id,
@@ -577,6 +607,7 @@ export const getAccountSnapshotData = async (userId) => {
     return { id: row.id, email: row.email, displayName: row.display_name, scopes: row.scopes || [],
       channelId: row.channel_id, channelTitle: row.channel_title, channelHandle: row.channel_handle,
       channelThumbnail: row.channel_thumbnail, connectionStatus: row.connection_status || "disconnected",
+      contentOwners: Array.isArray(row.content_owners) ? row.content_owners : [], activeContentOwnerId: row.active_content_owner_id || null,
       tokenExpiresAt: row.token_expires_at ? new Date(row.token_expires_at).toISOString() : null,
       hasRefreshToken: Boolean(row.has_refresh_token),
       onboarding: { status: row.onboarding_status || "not_started", nextStep: row.next_step, context: row.context || {} },

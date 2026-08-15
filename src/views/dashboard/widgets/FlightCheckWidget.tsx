@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { WidgetShell } from "../WidgetShell"
+import { WidgetScrollArea } from "../WidgetPrimitives"
 import { Check, Rocket, RotateCcw } from "lucide-react"
 
 const STORAGE_KEY = "vt_flight_check"
@@ -53,7 +54,7 @@ export const FlightCheckWidget = ({ widget, instance, editMode, onToggleCollapse
     </div>
 
     {/* Checklist */}
-    <div className="vt-widget-fill-body" style={{ gap: "4px" }}>
+    <WidgetScrollArea ariaLabel="Flight check items" contentClassName="flex min-h-full flex-col gap-1">
      {items.map((item: any, idx: number) => (
       <div
        key={idx}
@@ -77,7 +78,7 @@ export const FlightCheckWidget = ({ widget, instance, editMode, onToggleCollapse
        }}>{item.text}</span>
       </div>
      ))}
-    </div>
+    </WidgetScrollArea>
 
     {/* Actions */}
     <div style={{ display: "flex", gap: "6px" }}>

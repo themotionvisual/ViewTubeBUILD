@@ -7,13 +7,13 @@ import type {
 import {
  buildVtSyncInventoryId,
  putVtSyncChannelIndex,
- putVtSyncDatasetRawReport,
- putVtSyncDatasetTableRows,
- putVtSyncSyncRun,
  putVtSyncVideoInventoryRecords,
+ replaceLatestVtSyncDatasetRawReport,
+ replaceLatestVtSyncDatasetTableRows,
+ replaceLatestVtSyncSyncRun,
 } from "./localDbRepository"
 import { getVtSyncSnapshot, saveVtSyncSnapshot } from "./snapshot"
-import type { VtSyncChannelTotals, VtSyncVideoItem } from "./contracts"
+import type { VtSyncChannelTotals, VtSyncDailyMetricRow, VtSyncVideoItem } from "./contracts"
 
 const windowKey = (summary: ChannelWindowSummary): string => {
  if ((summary.period || "current") === "current") return summary.window
@@ -55,6 +55,94 @@ const toDailyRow = (row: CanonicalChannelDailyRow) => ({
  avgPercentageViewed: row.metrics.averageViewPercentage ?? undefined,
 })
 
+const mergeRows = (
+ existing: Array<Record<string, unknown>>,
+ incoming: Array<Record<string, unknown>>,
+ keyOf: (row: Record<string, unknown>) => string,
+) => {
+ const merged = new Map(existing.map((row) => [keyOf(row), { ...row }]))
+ incoming.forEach((row) => {
+  const key = keyOf(row)
+  if (!key) return
+  const next = { ...(merged.get(key) || {}) }
+  Object.entries(row).forEach(([field, value]) => {
+   if (value !== undefined && value !== null) next[field] = value
+  })
+  merged.set(key, next)
+ })
+ return [...merged.values()]
+}
+
+/** Commit channel identity before longer inventory/analytics work completes. */
+export const publishInitialChannelOverviewToVtSync = async (input: {
+ channel: CanonicalChannelRecord
+ runId: string
+}): Promise<void> => {
+ const capturedAt = new Date().toISOString()
+ const current = getVtSyncSnapshot()
+ await putVtSyncChannelIndex({
+  id: input.channel.channelId,
+  channelId: input.channel.channelId,
+  uploadsPlaylistId: input.channel.uploadsPlaylistId || "",
+  title: input.channel.title,
+  handle: input.channel.handle,
+  publicVideoCount: input.channel.publicVideoCount,
+  firstSyncedAt: input.channel.syncedAt,
+  lastInventorySyncedAt: current.capturedAt || capturedAt,
+  knownVideoCount: current.videos.length,
+  lastInventoryRunId: input.runId,
+ })
+ saveVtSyncSnapshot({
+  ...current,
+  source: "vt-sync",
+  snapshotId: input.runId,
+  capturedAt,
+  channelId: input.channel.channelId,
+  channelName: input.channel.title,
+  channelDescription: input.channel.description,
+  channelCustomUrl: input.channel.url || input.channel.handle || null,
+  avatarUrl: input.channel.thumbnails.high?.url || input.channel.thumbnails.medium?.url || input.channel.thumbnails.default?.url || null,
+  subscriberCount: input.channel.currentSubscribers,
+  channelVideoCount: input.channel.publicVideoCount,
+  channelViewCount: input.channel.publicViewCount,
+  datasetFreshness: {
+   ...(current.datasetFreshness || {}),
+   channel_metadata: { runId: input.runId, phase: "channel_metadata", source: "current_run", status: "synced", rows: 1, updatedAt: capturedAt },
+  },
+ })
+}
+
+/** Replace only matching channel-total windows; preserve all other stored data. */
+export const publishInitialChannelTotalsToVtSync = (input: {
+ periods: ChannelWindowSummary[]
+ runId: string
+}): void => {
+ const capturedAt = new Date().toISOString()
+ const current = getVtSyncSnapshot()
+ const incomingRows = input.periods.map((summary) => ({ window: windowKey(summary), ...toTotalMetrics(summary) }))
+ const totalsRows = mergeRows(
+  ((current.tableExports?.channel_totals || []) as Array<Record<string, unknown>>),
+  incomingRows,
+  (row) => String(row.window || ""),
+ )
+ const totals = {
+  ...(current.channelTotals || {}),
+  ...Object.fromEntries(incomingRows.map((row) => [String(row.window), row])),
+ } as VtSyncChannelTotals
+ saveVtSyncSnapshot({
+  ...current,
+  source: "vt-sync",
+  snapshotId: input.runId,
+  capturedAt,
+  channelTotals: totals,
+  tableExports: { ...(current.tableExports || {}), channel_totals: totalsRows },
+  datasetFreshness: {
+   ...(current.datasetFreshness || {}),
+   channel_totals: { runId: input.runId, phase: "channel_totals", source: "current_run", status: input.periods.some((period) => period.coverage === "partial") ? "partial" : "synced", rows: incomingRows.length, updatedAt: capturedAt },
+  },
+ })
+}
+
 export const publishInitialBootstrapToVtSync = async (input: {
  channel: CanonicalChannelRecord
  videos: CanonicalVideoRecord[]
@@ -64,11 +152,23 @@ export const publishInitialBootstrapToVtSync = async (input: {
 }): Promise<void> => {
  const capturedAt = new Date().toISOString()
  const uploadsPlaylistId = input.channel.uploadsPlaylistId || ""
- const vtVideos = input.videos.map(toVtVideo)
- const dailyRows = input.dailyRows.map(toDailyRow)
- const channelTotals = Object.fromEntries(
+ const current = getVtSyncSnapshot()
+ const vtVideos = mergeRows(
+  current.videos as unknown as Array<Record<string, unknown>>,
+  input.videos.map(toVtVideo) as unknown as Array<Record<string, unknown>>,
+  (row) => String(row.id || row.videoId || ""),
+ ) as unknown as VtSyncVideoItem[]
+ const dailyRows = mergeRows(
+  current.dailyMetrics as unknown as Array<Record<string, unknown>>,
+  input.dailyRows.map(toDailyRow),
+  (row) => String(row.date || ""),
+ ) as VtSyncDailyMetricRow[]
+ const channelTotals = {
+  ...(current.channelTotals || {}),
+  ...Object.fromEntries(
   input.periods.map((summary) => [windowKey(summary), toTotalMetrics(summary)]),
- ) as VtSyncChannelTotals
+  ),
+ } as VtSyncChannelTotals
 
  await putVtSyncChannelIndex({
   id: input.channel.channelId,
@@ -102,9 +202,9 @@ export const publishInitialBootstrapToVtSync = async (input: {
   { id: "daily", rows: dailyRows, source: "youtube_analytics_v2" as const },
  ]
  for (const dataset of datasets) {
-  await putVtSyncDatasetRawReport({
-   id: `${input.runId}::${dataset.id}`,
+  await replaceLatestVtSyncDatasetRawReport({
    runId: input.runId,
+   channelId: input.channel.channelId,
    datasetId: dataset.id,
    phase: "initial_channel_bootstrap",
    capturedAt,
@@ -112,17 +212,16 @@ export const publishInitialBootstrapToVtSync = async (input: {
    rows: dataset.rows,
    source: dataset.source,
   })
-  await putVtSyncDatasetTableRows({
-   id: `${input.runId}::${dataset.id}`,
+  await replaceLatestVtSyncDatasetTableRows({
    runId: input.runId,
+   channelId: input.channel.channelId,
    datasetId: dataset.id,
    phase: "initial_channel_bootstrap",
    capturedAt,
    rows: dataset.rows,
-   provenance: "api",
   })
  }
- await putVtSyncSyncRun({
+ await replaceLatestVtSyncSyncRun({
   id: input.runId,
   channelId: input.channel.channelId,
   startedAt: input.channel.syncedAt,
@@ -134,7 +233,6 @@ export const publishInitialBootstrapToVtSync = async (input: {
   knownVideoCount: input.videos.length,
  })
 
- const current = getVtSyncSnapshot()
  saveVtSyncSnapshot({
   ...current,
   source: "vt-sync",

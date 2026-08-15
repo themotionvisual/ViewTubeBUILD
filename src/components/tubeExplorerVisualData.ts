@@ -49,9 +49,11 @@ export interface TubeExplorerKeywordPoint {
 }
 
 export interface TubeExplorerTrafficPoint {
+ datasetKind?: string
  sourceType: string
  sourceDetail: string
  sourceTitle: string
+ sourceHandle?: string
  views: number
  watchHours: number
  engagedViews: number
@@ -315,8 +317,12 @@ const buildTrafficRows = (csvFiles: CsvFileWithTag[]): TubeExplorerTrafficPoint[
    const sourceTitle = String(pick(row, ["Source title", "Title", "Video title", "Traffic source", "Source"]) || sourceDetail || sourceType)
    const views = numeric(pick(row, ["Views", "views"]))
    const watchHours = numeric(pick(row, ["Watch time (hours)", "Watch Hrs", "watchHours", "Watch time"]));
-   const key = `${sourceType}::${sourceDetail || sourceTitle}`
+   const datasetKind = file.detectedCategory === "traffic_overview"
+    ? "traffic_summary"
+    : "traffic_detail"
+   const key = `${datasetKind}::${datasetKind === "traffic_summary" ? sourceTitle : sourceType + "::" + (sourceDetail || sourceTitle)}`
    mergeTraffic(map, key, {
+    datasetKind,
     sourceType,
     sourceDetail,
     sourceTitle,
@@ -458,15 +464,23 @@ export const buildTubeExplorerVisualData = (
  const trafficMap = new Map<string, TubeExplorerTrafficPoint>()
  const traffic = buildTrafficRows(csvFiles)
  for (const r of traffic) {
-   trafficMap.set(r.sourceType + "::" + (r.sourceDetail || r.sourceTitle), r)
+   const datasetKind = r.datasetKind || "legacy"
+   const key = `${datasetKind}::${datasetKind === "traffic_summary" ? r.sourceTitle : r.sourceType + "::" + (r.sourceDetail || r.sourceTitle)}`
+   trafficMap.set(key, r)
  }
  for (const r of trafficRows) {
    const st = String(r.trafficSourceType || "Unknown")
    const sd = String(r.trafficSourceDetail || "")
-   const key = st + "::" + sd
+   const datasetKind = String(r.datasetKind || "legacy")
+   const sourceTitle = String(r.sourceTitle || r.sourceLabel || sd || st)
+   const sourceHandle = String(r.resolvedEntityHandle || "")
+   const key = `${datasetKind}::${datasetKind === "traffic_summary" ? sourceTitle : st + "::" + (sd || sourceTitle)}`
    const existing = trafficMap.get(key)
    if (existing) {
-     existing.views += canonicalMetric(r, "views")
+    // A manual CSV is the user-selected replacement for the corresponding
+    // dataset. Do not add an older/API copy on top of it.
+    if (existing.sourceOrigin === "csv") continue
+    existing.views += canonicalMetric(r, "views")
      existing.watchHours += canonicalMetric(r, "watchHours")
      existing.engagedViews += canonicalMetric(r, "engagedViews")
      existing.impressions += canonicalMetric(r, "impressions")
@@ -474,9 +488,11 @@ export const buildTubeExplorerVisualData = (
      existing.ctr = Math.max(existing.ctr, normalizePercent(canonicalMetric(r, "ctr")))
    } else {
      trafficMap.set(key, {
+       datasetKind,
        sourceType: st,
        sourceDetail: sd,
-       sourceTitle: String(r.sourceTitle || r.sourceLabel || sd || st),
+       sourceTitle,
+       sourceHandle,
        views: canonicalMetric(r, "views"),
        watchHours: canonicalMetric(r, "watchHours"),
        engagedViews: canonicalMetric(r, "engagedViews"),
