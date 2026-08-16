@@ -14,7 +14,8 @@ import { CustomIcon } from "./CustomIcon"
 import { AnalyticsVisualIcon } from "./AnalyticsVisualIcon"
 import { StableChartFrame } from "./StableChartFrame"
 import { SubToolboxChartModule, subToolboxChartPresets } from "./SubToolboxChartModule"
-import type { ControllerRow } from "./VisualModuleController"
+import type { ControllerRow, ControllerRankedByRow } from "./VisualModuleController"
+import { RankedByRow } from "./VisualModuleController"
 import { InsightMarquee } from "./InsightMarquee"
 import type { VtSyncVisualHeaderColorPair } from "../features/vt-sync-local/shell/VtSyncVisualFrame"
 import {
@@ -2040,7 +2041,7 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
 
  const sortLabel = ENGAGEMENT_METRICS.find((m) => m.key === sortMetric)?.label || "LIKES"
  const modeLabel = mode === "most-recent" ? "NEWEST" : "TOP PERFORMING"
- const formatLabel = format === "shorts" ? "SHORTS" : format === "longform" ? "LONGFORMAT" : "VIDEOS"
+ const formatLabel = format === "shorts" ? "SHORTS" : format === "longform" ? "LONGFORM" : "VIDEOS"
  const activeRow = hoveredIdx !== null ? cd[hoveredIdx] : cd[0]
  const renderOrder = useMemo(() => {
   const preferredOrder = ENGAGEMENT_METRICS.map((metric) => metric.key)
@@ -2089,47 +2090,56 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
    controllerRows={[{
     type: "custom",
     render: () => (
-     <div className="grid h-full w-full grid-cols-2 grid-rows-[1fr_1fr_28px] bg-white">
+     <div className="grid h-full w-full grid-cols-[80px_1fr] grid-rows-[1fr_1fr_30px] bg-white">
       <button
        type="button"
        aria-label="Show fewer videos"
        onClick={() => cycleCount(-1)}
-       className="row-span-2 flex min-w-0 items-center border-0 border-r-[4px] border-black bg-[#33FF99] px-1"
+       className="row-span-2 flex h-full w-full min-w-0 items-center border-0 border-r-[4px] border-black bg-[#33FF99] px-1 group"
       >
-       <span className="text-[20px] font-black leading-none">◀</span>
+       <span className="text-[15px] font-[999] leading-none transition-transform group-hover:scale-125 inline-block rotate-180">►</span>
        <span className="min-w-0 flex-1 text-center text-[38px] font-[1000] leading-none">{selectedCount}</span>
       </button>
       <button
        type="button"
        aria-label="Change ranking scope"
        onClick={toggleMode}
-       className="flex min-w-0 items-center border-0 border-b-[4px] border-black bg-[#FF7497] px-1"
+       className="flex h-full w-full min-w-0 items-center border-0 border-b-[4px] border-black bg-[#FF7497] px-1 group"
       >
-       <span className="min-w-0 flex-1 truncate text-[11px] font-black uppercase">{modeLabel}</span>
-       <span className="text-[16px] font-black leading-none">▶</span>
+       <span className="min-w-0 flex-1 truncate text-[15px] font-[999] uppercase tracking-[-0.05em] text-black">{modeLabel}</span>
+       <span className="text-[15px] font-[999] leading-none transition-transform group-hover:scale-125">►</span>
       </button>
       <button
        type="button"
        aria-label="Change video format"
        onClick={cycleFormat}
-       className="flex min-w-0 items-center border-0 bg-[#B14AED] px-1"
+       className="flex h-full w-full min-w-0 items-center border-0 bg-[#B14AED] px-1 group"
       >
-       <span className="min-w-0 flex-1 truncate text-[11px] font-black uppercase">{formatLabel}</span>
-       <span className="text-[16px] font-black leading-none">▶</span>
+       <span className="min-w-0 flex-1 truncate text-[15px] font-[999] uppercase tracking-[-0.05em] text-black">{formatLabel}</span>
+       <span className="text-[15px] font-[999] leading-none transition-transform group-hover:scale-125">►</span>
       </button>
-      <label className="col-span-2 flex min-w-0 items-stretch border-t-[4px] border-black bg-black">
-       <span className="flex w-[42px] items-center justify-center text-[12px] font-black uppercase text-[#B14AED]">BY</span>
-       <select
-        aria-label="Rank engagement pulse by metric"
-        value={sortMetric}
-        onChange={(event) => handleSortChange(event.target.value)}
-        className="min-w-0 flex-1 appearance-none border-0 border-l-[4px] border-black bg-[#B14AED] px-2 text-center text-[12px] font-black uppercase text-black"
-       >
-        {ENGAGEMENT_METRICS.map((metric) => (
-         <option key={metric.key} value={metric.key}>{metric.label}</option>
-        ))}
-       </select>
-      </label>
+      <div className="col-span-2 flex min-w-0 items-stretch border-t-[4px] border-black bg-black">
+       <RankedByRow
+        isLast
+        row={{
+         type: "rankedBy",
+         label: "BY",
+         value: sortMetric,
+         bgTone: "#000000",
+         open: rankMenuOpen,
+         onToggle: () => setRankMenuOpen((prev) => !prev),
+         options: ENGAGEMENT_METRICS.map((m) => ({
+          key: m.key,
+          label: m.label,
+          active: sortMetric === m.key,
+          onSelect: () => {
+           handleSortChange(m.key)
+           setRankMenuOpen(false)
+          },
+         })),
+        }}
+       />
+      </div>
      </div>
     ),
    }]}
@@ -3161,14 +3171,47 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
   )
 }
 
-/* ═══════════════════════════════════════════════
-   15. COMBO CHANNEL PROGRESS
-   ═══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════ */
 const parseChannelProgressPeriodDate = (value: unknown): Date => {
  const raw = String(value ?? "").trim()
  const parts = raw.match(/^(\d{4})-(\d{2})(?:-(\d{2}))?$/)
  if (parts) return new Date(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3] || 1))
  return new Date(raw)
+}
+
+const bucketLabelForChannelProgress = (
+  startMs: number,
+  endMs: number,
+  usesMonthlyGrain: boolean,
+  index: number,
+  timeRange: string
+): string => {
+  if (!startMs) return ""
+  const d = new Date(startMs)
+
+if (timeRange === "1y") {
+    return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" })
+  }
+
+  if (timeRange === "6m" || timeRange === "3m") {
+    const isThreeMonth = timeRange === "3m"
+    if (isThreeMonth && index % 2 !== 0) return ""
+
+    const bucketsPerMonth = isThreeMonth ? 8 : 4
+    const weekNum = Math.floor(index % bucketsPerMonth / (isThreeMonth ? 2 : 1)) + 1
+    const weekLabel = `W${weekNum}`
+
+    if (Math.floor(index % bucketsPerMonth) === 0) {
+      return `${d.toLocaleDateString("en-US", { month: "short" })} ${weekLabel}`
+    }
+    return weekLabel
+  }
+
+  if (usesMonthlyGrain) {
+    return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" })
+  }
+  const end = new Date(endMs)
+  return `${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${end.getDate()}`
 }
 
 const mixChannelProgressTone = (hex: string, target: "#FFFFFF" | "#000000", amount: number): string => {
@@ -3186,6 +3229,8 @@ const mixChannelProgressTone = (hex: string, target: "#FFFFFF" | "#000000", amou
 export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics, monthlyMetrics, visualStyle }) => {
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["views"])
   const [timeRange, setTimeRange] = useState<"lifetime" | "3y" | "2y" | "1y" | "6m" | "3m">("1y")
+  const [viewMode, setViewMode] = useState<"progress" | "delta">("progress")
+  const [layoutMode, setLayoutMode] = useState<"overlay" | "individual">("overlay")
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
 
   const METRIC_OPTIONS = [
@@ -3199,7 +3244,7 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
     { value: "lifetime", label: "LIFETIME", months: null, grain: "month" },
     { value: "3y", label: "THREE YEARS", months: 36, grain: "month" },
     { value: "2y", label: "TWO YEARS", months: 24, grain: "month" },
-    { value: "1y", label: "ONE YEAR", months: 12, grain: "month" },
+    { value: "1y", label: "ONE YEAR", months: 12, grain: "day" },
     { value: "6m", label: "SIX MONTHS", months: 6, grain: "day" },
     { value: "3m", label: "THREE MONTHS", months: 3, grain: "day" },
   ] as const
@@ -3248,55 +3293,53 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
       start.setHours(0, 0, 0, 0)
       start.setMonth(start.getMonth() - activeTimeRange.months + 1)
     } else {
-      start.setMonth(start.getMonth() - activeTimeRange.months)
+      start.setHours(0, 0, 0, 0)
+      start.setDate(start.getDate() - activeTimeRange.months * 30 + 1)
     }
     return start
-  }, [activeTimeRange.months, data, dailyMetrics, monthlyMetrics, usesMonthlyGrain])
+  }, [activeTimeRange, dailyMetrics, data, monthlyMetrics, usesMonthlyGrain])
 
-  const scopedVideoRows = useMemo(() => {
-    const now = new Date()
-    return data.filter((r) => {
-      const d = parseChannelProgressPeriodDate(r.uploadDate)
-      return Number.isFinite(d.getTime()) && d >= rangeStart && d <= now
-    })
-  }, [data, rangeStart])
+  const activeMetricRows = useMemo(() => {
+    const dates = usesMonthlyGrain ? monthlyMetrics : dailyMetrics
+    if (!dates || dates.length === 0) return []
+    return dates
+      .map((row) => {
+        const date = parseChannelProgressPeriodDate(String(row.date ?? row.month ?? row.day ?? ""))
+        return { row, date }
+      })
+      .filter(({ date }) => Number.isFinite(date.getTime()) && date.getTime() >= rangeStart.getTime())
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+  }, [dailyMetrics, monthlyMetrics, rangeStart, usesMonthlyGrain])
 
-  const scopedDailyRows = useMemo(() => {
-    const now = new Date()
-    return (dailyMetrics ?? []).flatMap((row) => {
-      const date = parseChannelProgressPeriodDate(row.date ?? row.day ?? row.bucket)
-      return Number.isFinite(date.getTime()) && date >= rangeStart && date <= now ? [{ row, date }] : []
-    })
-  }, [dailyMetrics, rangeStart])
-
-  const scopedMonthlyRows = useMemo(() => {
-    const now = new Date()
-    return (monthlyMetrics ?? []).flatMap((row) => {
-      const date = parseChannelProgressPeriodDate(row.date ?? row.month ?? row.bucket)
-      return Number.isFinite(date.getTime()) && date >= rangeStart && date <= now ? [{ row, date }] : []
-    })
-  }, [monthlyMetrics, rangeStart])
-
-  const activeMetricRows = usesMonthlyGrain ? scopedMonthlyRows : scopedDailyRows
+  const scopedVideoRows = useMemo(
+    () =>
+      data
+        .map((row) => ({ row, date: parseChannelProgressPeriodDate(String(row.uploadDate || "")) }))
+        .filter(({ date }) => Number.isFinite(date.getTime()) && date.getTime() >= rangeStart.getTime())
+        .map(({ row }) => row),
+    [data, rangeStart],
+  )
 
   const chartData = useMemo(() => {
     const now = new Date()
-    const emptyBuckets = buildChannelProgressBuckets([], rangeStart.getTime(), now.getTime(), 24)
-    const points = emptyBuckets.map((bucket) => {
-      const start = new Date(bucket.startMs)
-      const end = new Date(bucket.endMs)
-      return {
-        ...bucket,
-        start,
-        end,
-        name: start.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-      } as { start: Date; end: Date; name: string; [key: string]: any }
-    })
+    const rawBuckets = buildChannelProgressBuckets(
+      [],
+      rangeStart.getTime(),
+      now.getTime(),
+      24,
+    )
+    if (rawBuckets.length === 0) return []
+
+    const points = rawBuckets.map((bucket, index) => ({
+      name: bucketLabelForChannelProgress(bucket.startMs, bucket.endMs, usesMonthlyGrain, index, timeRange),
+      start: bucket.startMs,
+      end: bucket.endMs,
+    })) as Array<Record<string, any>>
 
     selectedMetrics.forEach((metricKey) => {
       const sourceRows = metricKey === "videoCount"
-        ? scopedVideoRows.map((row) => ({
-            date: parseChannelProgressPeriodDate(row.uploadDate),
+        ? scopedVideoRows.map((video) => ({
+            date: parseChannelProgressPeriodDate(String(video.uploadDate || "")),
             value: 1,
           }))
         : activeMetricRows.flatMap(({ row, date }) => {
@@ -3309,17 +3352,34 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
         now.getTime(),
         24,
       )
-      const series = buildRelativeChannelProgressSeries(buckets.map((bucket) => bucket.periodAmount))
-      series.forEach((point, index) => {
-        points[index][`bar_${metricKey}`] = point.barPercent
-        points[index][`line_${metricKey}`] = point.linePercent
-        points[index][`period_${metricKey}`] = point.rawPeriod
-        points[index][`total_${metricKey}`] = point.rawCumulative
+
+      let runningCumulative = 0
+      buckets.forEach((bucket, index) => {
+        const periodVal = bucket.periodAmount
+        runningCumulative += periodVal
+        const prevVal = index > 0 ? buckets[index - 1].periodAmount : periodVal
+        const delta = periodVal - prevVal
+        const isUp = delta >= 0
+
+        points[index][`period_${metricKey}`] = periodVal
+        points[index][`total_${metricKey}`] = runningCumulative
+        points[index][`delta_${metricKey}`] = delta
+        points[index][`prev_${metricKey}`] = prevVal
+
+        points[index][`candle_color_${metricKey}`] = isUp ? "#3FEE56" : "#FA618A"
+        points[index][`candle_wick_${metricKey}`] = [
+          Math.max(0, Math.min(periodVal, prevVal) * 0.95),
+          Math.max(periodVal, prevVal) * 1.05
+        ]
+        points[index][`candle_body_${metricKey}`] = [
+          Math.min(periodVal, prevVal),
+          Math.max(periodVal, prevVal)
+        ]
       })
     })
 
     return points
-  }, [activeMetricRows, rangeStart, scopedVideoRows, selectedMetrics])
+  }, [activeMetricRows, rangeStart, scopedVideoRows, selectedMetrics, usesMonthlyGrain])
 
   const selectedWindowStats = useMemo(
     () =>
@@ -3353,13 +3413,18 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
 
   const hoveredPeriod = hoveredIdx !== null ? chartData[hoveredIdx] ?? null : null
   const hoveredStats = hoveredPeriod
-    ? METRIC_OPTIONS.filter((option) => selectedMetrics.includes(option.value)).map((option) => ({
-        label: option.label,
-        value: formatMetricValue(option.value, Number(hoveredPeriod[`period_${option.value}`] ?? 0)),
-        tone: option.tone,
-        lockTone: true,
-        compact: true,
-      }))
+    ? METRIC_OPTIONS.filter((option) => selectedMetrics.includes(option.value)).map((option) => {
+        const periodVal = Number(hoveredPeriod[`period_${option.value}`] ?? 0)
+        const deltaVal = Number(hoveredPeriod[`delta_${option.value}`] ?? 0)
+        const deltaLabel = viewMode === "delta" ? ` (${deltaVal >= 0 ? "+" : ""}${formatMetricValue(option.value, deltaVal)})` : ""
+        return {
+          label: option.label,
+          value: `${formatMetricValue(option.value, periodVal)}${deltaLabel}`,
+          tone: option.tone,
+          lockTone: true,
+          compact: true,
+        }
+      })
     : null
   const activePeriodLabel = hoveredPeriod
    ? usesMonthlyGrain
@@ -3372,36 +3437,255 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
     const point = payload[0]?.payload
     if (!point) return null
     return (
-      <div className="z-50 min-w-[190px] rounded-xl border-[3px] border-black bg-white p-3 shadow-[4px_4px_0px_0px_black]">
+      <div className="z-50 min-w-[210px] rounded-xl border-[3px] border-black bg-white p-3 shadow-[4px_4px_0px_0px_black]">
         <p className="mb-1 border-b-2 border-black/10 pb-1 text-[11px] font-black uppercase">
-          {formatRange(point.start, point.end)}
+          {formatRange(new Date(point.start), new Date(point.end))}
         </p>
-        {METRIC_OPTIONS.filter((option) => selectedMetrics.includes(option.value)).map((option) => (
-          <div key={option.value} className="grid grid-cols-[10px_1fr_auto] items-center gap-2 text-[10px] font-bold">
-            <span className="h-[8px] w-[8px] rounded-full border border-black" style={{ background: option.tone }} />
-            <span className="uppercase opacity-60">{option.label}</span>
-            <span className="font-black">
-              {formatMetricValue(option.value, Number(point[`period_${option.value}`] ?? 0))}
-              <span className="ml-1 opacity-50">/ {formatMetricValue(option.value, Number(point[`total_${option.value}`] ?? 0))}</span>
-            </span>
-          </div>
-        ))}
+        {METRIC_OPTIONS.filter((option) => selectedMetrics.includes(option.value)).map((option) => {
+          const pVal = Number(point[`period_${option.value}`] ?? 0)
+          const tVal = Number(point[`total_${option.value}`] ?? 0)
+          const dVal = Number(point[`delta_${option.value}`] ?? 0)
+          return (
+            <div key={option.value} className="grid grid-cols-[10px_1fr_auto] items-center gap-2 text-[10px] font-bold">
+              <span className="h-[8px] w-[8px] rounded-full border border-black" style={{ background: option.tone }} />
+              <span className="uppercase opacity-60">{option.label}</span>
+              <span className="font-black">
+                {viewMode === "delta" ? (
+                  <span className={dVal >= 0 ? "text-green-600" : "text-red-600"}>
+                    {dVal >= 0 ? "+" : ""}{formatMetricValue(option.value, dVal)}
+                  </span>
+                ) : (
+                  <>
+                    {formatMetricValue(option.value, pVal)}
+                    <span className="ml-1 opacity-50">/ {formatMetricValue(option.value, tVal)}</span>
+                  </>
+                )}
+              </span>
+            </div>
+          )
+        })}
       </div>
     )
   }
 
+  const activeMetrics = METRIC_OPTIONS.filter((option) => selectedMetrics.includes(option.value))
+
+  const CustomCandle = (props: any) => {
+    const { x, y, width, height, payload, optionKey } = props
+    const wick = payload[`candle_wick_${optionKey}`]
+    const body = payload[`candle_body_${optionKey}`]
+    const color = payload[`candle_color_${optionKey}`]
+    
+    if (!wick || !body) return null
+
+    const wickMin = wick[0]
+    const wickMax = wick[1]
+    const wickRange = wickMax - wickMin || 1
+
+    const bodyMin = body[0]
+    const bodyMax = body[1]
+
+    const getPixelY = (val: number) => {
+      const ratio = (wickMax - val) / wickRange
+      return y + height * ratio
+    }
+
+    const bodyTopY = getPixelY(bodyMax)
+    const bodyBottomY = getPixelY(bodyMin)
+    const bodyHeight = Math.max(1, bodyBottomY - bodyTopY)
+    
+    const center = x + width / 2
+
+    return (
+      <g>
+        <rect x={center - 1} y={y} width={2} height={height} fill={color} />
+        <rect x={x} y={bodyTopY} width={width} height={bodyHeight} fill={color} />
+      </g>
+    )
+  }
+
+  const renderChartForMetrics = (metricsToRender: typeof METRIC_OPTIONS, isIndividualGrid = false) => {
+    return (
+      <ComposedChart
+        data={chartData}
+        margin={{ top: 20, right: 30, bottom: 35, left: 10 }}
+        barGap={metricsToRender.length === 2 ? 5 : metricsToRender.length === 3 ? 3.5 : 4}
+        onMouseMove={(state: any) => {
+          if (typeof state?.activeTooltipIndex === "number") {
+            setHoveredIdx(state.activeTooltipIndex)
+          }
+        }}
+        onMouseLeave={() => setHoveredIdx(null)}
+      >
+        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+      <XAxis 
+  dataKey="name" 
+  axisLine={{ stroke: "#000", strokeWidth: 3 }}
+  tick={(props: any) => {
+    const { x, y, payload, index } = props
+    const labelColor = mixChannelProgressTone(activeMetrics[0].tone, "#000000", 0.4)
+
+    // Custom label spanning for the 1-year view
+    if (timeRange === "1y") {
+      if (index % 2 !== 0) return <g /> 
+      
+      const d = new Date(chartData[index].start)
+      return (
+        <text 
+          x={x} 
+          y={y + 12} 
+          dx={isIndividualGrid ? 2 : 6} 
+          textAnchor="start" 
+          fill={labelColor} 
+          fontSize={isIndividualGrid ? 8 : 10} 
+          fontWeight={900}
+        >
+          {d.toLocaleDateString("en-US", { month: "short", year: "2-digit" })}
+        </text>
+      )
+    }
+
+    // Two-tier label spanning for the 6-month view
+    if (timeRange === "6m") {
+      const d = new Date(chartData[index].start)
+      const weekNum = (index % 4) + 1
+      const isSecondWeek = index % 4 === 1
+      
+      return (
+        <g transform={`translate(${x},${y})`}>
+          {/* Top Tier: Week Number */}
+          <text 
+            x={0} 
+            y={12} 
+            textAnchor="middle" 
+            fill={labelColor} 
+            fontSize={isIndividualGrid ? 7 : 9} 
+            fontWeight={900}
+          >
+            W{weekNum}
+          </text>
+          
+          {/* Bottom Tier: Month Label (Anchored to W2 to span across the 4 weeks) */}
+          {isSecondWeek && (
+            <text 
+              x={0} 
+              y={26} 
+              dx={isIndividualGrid ? 4 : 8}
+              textAnchor="start" 
+              fill={labelColor} 
+              fontSize={isIndividualGrid ? 9 : 11} 
+              fontWeight={900}
+            >
+              {d.toLocaleDateString("en-US", { month: "short" })}
+            </text>
+          )}
+        </g>
+      )
+    }
+
+    // Default centered label for all other time ranges
+    return (
+      <text 
+        x={x} 
+        y={y + 12} 
+        textAnchor="middle" 
+        fill={labelColor} 
+        fontSize={isIndividualGrid ? 8 : 10} 
+        fontWeight={900}
+      >
+        {payload.value}
+      </text>
+    )
+  }} 
+/>
+        {metricsToRender.map((option, idx) => (
+          <YAxis
+            key={`yaxis-${option.value}`}
+            yAxisId={option.value}
+            orientation={idx === 0 ? "right" : "left"}
+            hide={idx > 1}
+            tick={{ 
+              fontWeight: 900, 
+              fontSize: isIndividualGrid ? 8 : 10,
+              fill: mixChannelProgressTone(option.tone, "#000000", 0.4)
+            }}
+            tickFormatter={(v) => formatCompact(v)}
+            axisLine={{ stroke: mixChannelProgressTone(option.tone, "#000000", 0.2), strokeWidth: 3 }}
+            width={45}
+          />
+        ))}
+        <Tooltip content={channelProgressTooltip} />
+        {metricsToRender.map((option) => {
+          const lightTone = mixChannelProgressTone(option.tone, "#FFFFFF", 0.38)
+          const darkTone = mixChannelProgressTone(option.tone, "#000000", 0.2)
+          const barSize = isIndividualGrid
+            ? 28
+            : metricsToRender.length === 1
+              ? 46
+              : metricsToRender.length === 2
+                ? 20.5
+                : Math.max(3, Math.floor((46 - (metricsToRender.length - 1) * 3) / metricsToRender.length))
+
+          if (viewMode === "delta") {
+            return (
+              <React.Fragment key={option.value}>
+                <Bar
+                  yAxisId={option.value}
+                  dataKey={`candle_wick_${option.value}`}
+                  name={`${option.label} DELTA`}
+                  barSize={barSize}
+                  isAnimationActive={false}
+                  shape={<CustomCandle optionKey={option.value} />}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`candle-${index}`} fill={entry[`candle_color_${option.value}`]} />
+                  ))}
+                </Bar>
+              </React.Fragment>
+            )
+          }
+
+          return (
+            <React.Fragment key={option.value}>
+              <Bar
+                yAxisId={option.value}
+                dataKey={`period_${option.value}`}
+                name={`${option.label} PERIOD`}
+                fill={lightTone}
+                stroke={darkTone}
+                strokeWidth={2}
+                barSize={barSize}
+                radius={[3, 3, 0, 0]}
+              />
+              <Line
+                yAxisId={option.value}
+                type="monotone"
+                dataKey={`total_${option.value}`}
+                name={`${option.label} TOTAL`}
+                stroke={darkTone}
+                strokeWidth={metricsToRender.length === 1 ? 3.5 : 2}
+                dot={{ r: metricsToRender.length === 1 ? 3.5 : 2, fill: lightTone, stroke: darkTone, strokeWidth: 2 }}
+                activeDot={{ r: 5, fill: "#FFFFFF", stroke: darkTone, strokeWidth: 3 }}
+              />
+            </React.Fragment>
+          )
+        })}
+      </ComposedChart>
+    )
+  }
+
   return (
-      <SubToolboxChartModule
+    <SubToolboxChartModule
       header={{
         title: "CHANNEL PROGRESS",
-        subtitle: `DATA: ${usesMonthlyGrain ? "MONTHLY STATS" : "DAILY STATS"} • PERIOD AMOUNT • RUNNING TOTAL`,
+        subtitle: `DATA: ${usesMonthlyGrain ? "MONTHLY STATS" : "DAILY STATS"} • ${viewMode.toUpperCase()} VIEW • RAW METRICS`,
         icon: visualShellIcon(visualStyle, "calendar"),
       }}
       theme={visualShellTheme(visualStyle, "#FF82B0", "#26C7EC")}
       controllerRows={[
         {
           type: "label",
-          value: "CHANNEL TOTALS FOR",
+          value: "METRICS",
           bgTone: "#000000",
           fgTone: "#CCFF00",
         },
@@ -3421,88 +3705,82 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
         },
         {
           type: "text",
-          value: TIME_RANGE_OPTIONS.find(o => o.value === timeRange)?.label || timeRange,
+          value: TIME_RANGE_OPTIONS.find((o) => o.value === timeRange)?.label || timeRange,
           onPrev: () => {
-             const idx = TIME_RANGE_OPTIONS.findIndex(o => o.value === timeRange)
-             setTimeRange(TIME_RANGE_OPTIONS[(idx - 1 + TIME_RANGE_OPTIONS.length) % TIME_RANGE_OPTIONS.length].value)
+            const idx = TIME_RANGE_OPTIONS.findIndex((o) => o.value === timeRange)
+            setTimeRange(TIME_RANGE_OPTIONS[(idx - 1 + TIME_RANGE_OPTIONS.length) % TIME_RANGE_OPTIONS.length].value)
           },
           onNext: () => {
-             const idx = TIME_RANGE_OPTIONS.findIndex(o => o.value === timeRange)
-             setTimeRange(TIME_RANGE_OPTIONS[(idx + 1) % TIME_RANGE_OPTIONS.length].value)
+            const idx = TIME_RANGE_OPTIONS.findIndex((o) => o.value === timeRange)
+            setTimeRange(TIME_RANGE_OPTIONS[(idx + 1) % TIME_RANGE_OPTIONS.length].value)
           },
-          bgTone: "#FFEA00"
-        }
+          bgTone: "#FFEA00",
+        },
+        {
+          type: "custom",
+          render: () => (
+            <div className="flex h-full items-center gap-1 px-2 bg-[#FF7497]">
+              <button
+                type="button"
+                onClick={() => setViewMode((m) => (m === "progress" ? "delta" : "progress"))}
+                className="h-6 px-2 rounded-[4px] text-[9px] font-black uppercase border-[2px] border-black transition-colors"
+                style={{
+                  background: viewMode === "delta" ? "#000000" : "#FFFFFF",
+                  color: viewMode === "delta" ? "#3FEE56" : "#000000",
+                }}
+              >
+                {viewMode === "delta" ? "CANDLE DELTA" : "BAR PROGRESS"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setLayoutMode((m) => (m === "overlay" ? "individual" : "overlay"))}
+                className="h-6 px-2 rounded-[4px] text-[9px] font-black uppercase border-[2px] border-black transition-colors"
+                style={{
+                  background: layoutMode === "individual" ? "#000000" : "#FFFFFF",
+                  color: layoutMode === "individual" ? "#4EE4BE" : "#000000",
+                }}
+              >
+                {layoutMode === "individual" ? "GRID" : "OVERLAY"}
+              </button>
+            </div>
+          ),
+        },
       ]}
       activeContext={{
         title: activePeriodLabel,
         stats: hoveredStats || selectedWindowStats,
       }}
       footer={
-        <InsightMarquee 
+        <InsightMarquee
           chartInsight="Cumulative growth tracking identifies the long-term compound value of your content periods."
-          personalInsight="Compare each metric's lighter period bars with its darker cumulative line to find sustained growth."
+          personalInsight="Toggle CANDLE DELTA to analyze period-over-period performance gains or losses."
         />
       }
     >
-      <div className="p-4 h-[400px] relative">
-        <StableChartFrame minHeightClassName="min-h-[360px]">
-          <ComposedChart
-            data={chartData}
-            margin={{ top: 20, right: 10, bottom: 40, left: 10 }}
-            barGap={selectedMetrics.length === 2 ? 5 : selectedMetrics.length === 3 ? 3.5 : 4}
-            onMouseMove={(state: any) => {
-              if (typeof state?.activeTooltipIndex === "number") {
-                setHoveredIdx(state.activeTooltipIndex)
-              }
-            }}
-            onMouseLeave={() => setHoveredIdx(null)}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-            <XAxis dataKey="name" tick={{ fontWeight: 900, fontSize: 10 }} axisLine={{ stroke: '#000', strokeWidth: 3 }} />
-            <YAxis yAxisId="relative" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fontWeight: 900, fontSize: 10 }} tickFormatter={(v) => `${v}%`} axisLine={{ stroke: '#000', strokeWidth: 3 }} label={{ value: "RELATIVE PROGRESS", angle: -90, position: "insideLeft", style: { fontWeight: 1000, fontSize: 11, fill: "#000" } }} />
-            <Tooltip content={channelProgressTooltip} />
-            {METRIC_OPTIONS.filter((option) => selectedMetrics.includes(option.value)).map((option) => {
-              const lightTone = mixChannelProgressTone(option.tone, "#FFFFFF", 0.38)
-              const darkTone = mixChannelProgressTone(option.tone, "#000000", 0.2)
-              const barSize =
-                selectedMetrics.length === 1
-                  ? 46
-                  : selectedMetrics.length === 2
-                    ? 20.5
-                    : selectedMetrics.length === 3
-                      ? 13
-                      : Math.max(3, Math.floor((46 - (selectedMetrics.length - 1) * 3) / selectedMetrics.length))
-              const barRadius = selectedMetrics.length === 1 ? 4 : selectedMetrics.length === 2 ? 2 : 1
-              return (
-                <React.Fragment key={option.value}>
-                  <Bar
-                    yAxisId="relative"
-                    dataKey={`bar_${option.value}`}
-                    name={`${option.label} PERIOD`}
-                    fill={lightTone}
-                    stroke={darkTone}
-                    strokeWidth={2}
-                    barSize={barSize}
-                    radius={[barRadius, barRadius, 0, 0]}
-                  />
-                  <Line
-                    yAxisId="relative"
-                    type="monotone"
-                    dataKey={`line_${option.value}`}
-                    name={`${option.label} CUMULATIVE`}
-                    stroke={darkTone}
-                    strokeWidth={selectedMetrics.length === 1 ? 4 : 2.5}
-                    dot={{ r: selectedMetrics.length === 1 ? 4 : 2.5, fill: lightTone, stroke: darkTone, strokeWidth: 2 }}
-                    activeDot={{ r: 6, fill: "#FFFFFF", stroke: darkTone, strokeWidth: 3 }}
-                  />
-                </React.Fragment>
-              )
-            })}
-          </ComposedChart>
-        </StableChartFrame>
+      <div className="p-4 min-h-[400px] relative">
+        {layoutMode === "individual" && activeMetrics.length > 1 ? (
+          <div className={`grid gap-3 h-[420px] ${activeMetrics.length === 2 ? 'grid-cols-1 grid-rows-2' : 'grid-cols-2 grid-rows-2'}`}>
+            {activeMetrics.map((metricOpt) => (
+              <div key={metricOpt.value} className="relative h-full rounded-lg border-2 border-black/20 bg-white/50 p-1">
+                <div className="absolute top-1 left-2 z-10 text-[9px] font-black uppercase tracking-wider" style={{ color: metricOpt.tone }}>
+                  {metricOpt.label}
+                </div>
+                <StableChartFrame minHeightClassName="h-full">
+                  {renderChartForMetrics([metricOpt], true)}
+                </StableChartFrame>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="h-[400px]">
+            <StableChartFrame minHeightClassName="min-h-[360px]">
+              {renderChartForMetrics(activeMetrics, false)}
+            </StableChartFrame>
+          </div>
+        )}
 
-        <div className="pointer-events-none absolute bottom-0 left-[14px] right-[14px] flex h-9 items-center justify-center gap-3 overflow-hidden bg-white/90 px-2">
-          {METRIC_OPTIONS.filter((option) => selectedMetrics.includes(option.value)).map((option) => {
+        <div className="pointer-events-none absolute bottom-0 left-[14px] right-[14px] flex h-8 items-center justify-center gap-3 overflow-hidden bg-white/90 px-2">
+          {activeMetrics.map((option) => {
             const lightTone = mixChannelProgressTone(option.tone, "#FFFFFF", 0.38)
             const darkTone = mixChannelProgressTone(option.tone, "#000000", 0.2)
             return (
@@ -4661,7 +4939,7 @@ const VennValueLabel: React.FC<{
 }> = ({ x, y, title, count, metricValue, metricKey, small = false, intersection = false, opacity = 1, transition, colorIndex = 0 }) => (
  <g className="venn-label" style={{ transform: `translate(${x}px, ${y}px)`, opacity, transition }}>
   {title ? (
-   <foreignObject x={-160} y={small ? -72 : -80} width={320} height={70}>
+   <foreignObject x={-160} y={small ? -72 : -80} width={320} height={70} style={{ overflow: "visible" }}>
     <div className="flex h-full w-full items-end justify-center overflow-visible">
      <button
       type="button"
@@ -4679,7 +4957,7 @@ const VennValueLabel: React.FC<{
    x={0}
    y={intersection ? -4 : small ? 10 : 8}
    textAnchor="middle"
-   style={{ fontWeight: 1000, fill: "#000" }}
+   style={{ fontWeight: 1000, fill: "#000", vectorEffect: "non-scaling-stroke" }}
   >
    <tspan style={{ fontSize: small ? 22 : 34 }}>{count}</tspan>
    {intersection ? null : (
@@ -4690,7 +4968,7 @@ const VennValueLabel: React.FC<{
    x={0}
    y={intersection ? 18 : small ? 30 : 34}
    textAnchor="middle"
-   style={{ fontSize: small ? 12 : 15, fontWeight: 800, fill: "rgba(0,0,0,0.68)" }}
+   style={{ fontSize: small ? 12 : 15, fontWeight: 800, fill: "rgba(0,0,0,0.68)", vectorEffect: "non-scaling-stroke" }}
   >
    {intersection
     ? formatKeywordMetricValue(metricKey, metricValue)
@@ -4722,7 +5000,7 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
  }, [slots])
  const [metricMode, setMetricMode] = useState<KeywordMetricKey>("views")
- const [rankedByMode, setRankedByMode] = useState<KeywordRankingMode>("average")
+ const [rankedByMode, setRankedByMode] = useState<KeywordRankingMode>("total")
  const supportsTotal = keywordMetricSupportsTotal(metricMode)
  useEffect(() => {
   if (!supportsTotal && rankedByMode !== "average") setRankedByMode("average")
@@ -5038,9 +5316,9 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
     {topKeywords.length === 0 ? (
      <EmptyState missing={["keywords", "title_rows"]} rows={data.length} />
     ) : (
-     <div className="flex flex-col gap-2">
-     <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_430px] gap-2 items-stretch">
-      <div className="flex min-w-0 flex-col gap-2">
+     <div className="flex flex-col gap-1 flex-1">
+     <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-1 items-stretch flex-1 min-h-0">
+      <div className="flex min-w-0 flex-col gap-1 min-h-0">
 
       {/* 1. VENN CIRCLE + TOP KEYWORDS FOOTER */}
       <div className="border-[3px] border-black rounded-xl bg-[#FAFAFA] overflow-hidden flex flex-col flex-1 min-h-[260px]">
@@ -5049,8 +5327,8 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
         viewBox={`0 0 ${vennBox.w} ${vennBox.h}`}
         width="100%"
         preserveAspectRatio="xMidYMid meet"
-        className="block h-auto w-full max-w-[620px]"
-        style={{ aspectRatio: `${vennBox.w} / ${vennBox.h}`, minHeight: "220px", maxHeight: "min(52vh, 490px)" }}
+        className="block h-auto w-full max-w-none"
+        style={{ aspectRatio: "12 / 10", minHeight: "220px", maxHeight: "min(52vh, 490px)" }}
        >
         <style>{`
          @keyframes kvPulseRing {
@@ -5245,7 +5523,7 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
       </div>
 
       {/* Combination Breakdown + Top 10 Videos */}
-      <div className="grid min-w-0 grid-cols-1 gap-2 md:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 gap-1 md:grid-cols-2">
 
       {/* Combination Breakdown */}
       <div className="shrink-0">
@@ -5277,9 +5555,6 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
                 key: `kw-${keyword}`,
                 node: keywordVennBadge(keyword.toUpperCase(), keywordColorIndexForSelection(selected, keyword, index)),
                }))
-           const splitAt = Math.ceil(badgeItems.length / 2)
-           const badgeRow1 = badgeItems.slice(0, splitAt)
-           const badgeRow2 = badgeItems.slice(splitAt)
 
            return (
            <div
@@ -5297,9 +5572,8 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
                : "rgba(177,74,237,0.12)",
             }}
            >
-            <div className="flex flex-col gap-1 min-w-0 flex-1">
-             <div className="flex items-center gap-1 min-h-[20px]">{badgeRow1.map((b) => <React.Fragment key={b.key}>{b.node}</React.Fragment>)}</div>
-             <div className="flex items-center gap-1 min-h-[20px]">{badgeRow2.map((b) => <React.Fragment key={b.key}>{b.node}</React.Fragment>)}</div>
+            <div className="flex flex-wrap items-center gap-1 min-w-0 flex-1">
+             {badgeItems.map((b) => <React.Fragment key={b.key}>{b.node}</React.Fragment>)}
             </div>
             <div className="shrink-0 flex flex-col gap-0.5 justify-center text-right whitespace-nowrap">
              <div className="text-[10px] font-black uppercase">{row.videoCount} videos</div>
@@ -5376,7 +5650,7 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
        <span>Ranked By {rankedByMode} {selectedMetric.label}</span>
        <span>{rankedKeywords.length} leaders</span>
       </div>
-      <div className="grid grid-cols-1 auto-rows-max content-start items-start">
+      <div className="grid grid-cols-2 gap-1 overflow-y-auto">
        {rankedKeywords.map((item, i) => renderRankedItem(item, rankedByCellBorder(i)))}
       </div>
      </div>
@@ -5799,15 +6073,14 @@ const SIGNAL_MATRIX_METRICS = [
  { key: "views", label: "VIEWS", fmt: formatCompact },
  { key: "revenue", label: "REV", fmt: (v: number) => `$${formatCompact(v)}` },
  { key: "rpm", label: "RPM", fmt: (v: number) => `$${v.toFixed(2)}` },
- { key: "ctr", label: "CTR", fmt: (v: number) => `${v.toFixed(1)}%` },
  { key: "likes", label: "LIKES", fmt: formatCompact },
  { key: "comments", label: "CMNT", fmt: formatCompact },
- { key: "impressions", label: "IMPR", fmt: formatCompact },
+ { key: "avp", label: "AVP%", fmt: (v: number) => `${v.toFixed(1)}%` },
 ] as const
 type SignalMatrixMetricKey = typeof SIGNAL_MATRIX_METRICS[number]["key"]
 
 const signalMatrixHeatColor = (t: number): string =>
- interpolateThreeStopColor(t, ["#0a1628", "#2563eb", "#CCFF00"] as const)
+ interpolateThreeStopColor(t, ["#050814", "#3FEE56", "#C0F240"] as const)
 
 export const SignalMatrixModule: React.FC<GChartProps> = ({ data }) => {
  const [sortBy, setSortBy] = useState<SignalMatrixMetricKey>("views")
@@ -5839,7 +6112,7 @@ export const SignalMatrixModule: React.FC<GChartProps> = ({ data }) => {
     return {
      keyword, count: videos.length,
      views: avg("views"), revenue: avg("revenue"), rpm: avg("rpm"),
-     ctr: avg("ctr"), likes: avg("likes"), comments: avg("comments"), impressions: avg("impressions"),
+     likes: avg("likes"), comments: avg("comments"), avp: avg("avp"),
     }
    })
    .sort((a, b) => b[sortBy] - a[sortBy])
@@ -5851,30 +6124,24 @@ export const SignalMatrixModule: React.FC<GChartProps> = ({ data }) => {
   return { rows, colMax }
  }, [data, sortBy, topN])
 
- return (
-  <SubToolboxChartModule
-   header={{ title: "SIGNAL MATRIX", subtitle: "KEYWORD × METRIC HEATMAP · CLICK COLUMN TO SORT", icon: <CustomIcon name="analytics" size={18} /> }}
-   theme={{ headerBandBg: "#0A1628", iconBlockBg: "#2563eb", shadowColor: "rgba(37,99,235,0.5)" }}
-   layout={{ moduleMinHeight: "500px", moduleWidth: "100%" }}
-   controllerRows={[{
-    type: "custom",
-    render: () => (
-     <div className="flex h-full items-center gap-2 px-3 bg-[#0a1628]">
-      <span className="text-[9px] font-black uppercase tracking-[0.12em] text-white/60">Top</span>
-      {[10, 15, 20, 25, 30].map((n) => (
-       <button key={n} type="button" onClick={() => setTopN(n)}
-        className="h-6 px-2.5 rounded-md text-[10px] font-black uppercase border-[2px] transition-colors"
-        style={{
-         borderColor: topN === n ? "#CCFF00" : "rgba(255,255,255,0.25)",
-         color: topN === n ? "#CCFF00" : "rgba(255,255,255,0.6)",
-         background: topN === n ? "rgba(204,255,0,0.08)" : "transparent",
-        }}>{n}</button>
-      ))}
-      <span className="ml-auto text-[9px] font-black uppercase text-white/40">KEYWORDS</span>
-     </div>
-    ),
-   }]}
+  return (
+   <SubToolboxChartModule
+    header={{ title: "SIGNAL MATRIX", subtitle: "KEYWORD × METRIC HEATMAP · CLICK COLUMN TO SORT", icon: <CustomIcon name="analytics" size={18} /> }}
+    theme={{ headerBandBg: "#C0F240", iconBlockBg: "#3FEE56", shadowColor: "rgba(192,242,64,0.5)" }}
+    layout={{ moduleWidth: "100%" }}
+    controllerRows={[
+     {
+      type: "dropdown",
+      labelPrefix: "TOP",
+      value: topN.toString(),
+      options: [10, 15, 20, 25, 30].map((n) => ({ label: `${n} KEYWORDS`, value: n.toString() })),
+      onSelect: (val) => setTopN(parseInt(val, 10)),
+      bgTone: "#C0F240",
+      fgTone: "#000000",
+     },
+    ]}
    activeContext={{
+    bgTone: "#080816",
     title: hovered ? `${hovered.keyword.toUpperCase()} · ${hovered.metric.toUpperCase()}` : `SIGNAL MATRIX · ${topN} KEYWORDS`,
     stats: hovered
      ? (() => {
@@ -5895,7 +6162,7 @@ export const SignalMatrixModule: React.FC<GChartProps> = ({ data }) => {
     />
    }
   >
-   <div className="overflow-auto w-full" style={{ background: "#060e1e" }}>
+   <div className="flex h-full min-h-0 w-full overflow-auto bg-[#0a0a1a]">
     {matrix.rows.length === 0 ? (
      <div className="flex items-center justify-center h-40 text-white/40 text-sm font-black uppercase">No keyword data — load master table</div>
     ) : (

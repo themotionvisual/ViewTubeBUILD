@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { useEntitlement } from "../../../app/AppShell"
+import { useEntitlement } from "../../../context/entitlementContext"
 import {
   Activity,
   TrendingUp,

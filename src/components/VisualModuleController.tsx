@@ -96,16 +96,33 @@ export interface VisualModuleControllerProps {
   density?: "normal" | "compact"
 }
 
-const controllerTextSizeClass = "text-[13px]"
-const controllerArrowSizeClass = "text-[20px]"
+const controllerTextSizeClass = "text-[15px]"
+const controllerArrowSizeClass = "text-[15px]"
 const controllerRowHeightClass = "h-[26px] min-h-[26px]"
-const controllerArrowButtonClass = "inline-flex h-[26px] w-[30px] shrink-0 items-center justify-center overflow-hidden border-none bg-transparent px-0 leading-none origin-center transform-gpu transition-transform duration-100 will-change-transform"
+const controllerArrowButtonClass = "inline-flex h-[20px] w-[24px] shrink-0 items-center justify-center overflow-hidden border-none bg-transparent px-0 leading-none origin-center transform-gpu transition-transform duration-100 will-change-transform"
 const controllerBaseWidth = 195
 const controllerMinWidth = 195
 const controllerDropdownMenuMaxHeight = 240
 const controllerDropdownMenuItemHeight = 28
 
-const measureTextWidth = (value: string, fontSize = 13): number => {
+const getComplementaryHex = (hex: string): string => {
+  if (!hex || hex.length < 7) return "#B14AED"
+  const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255)
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2
+  let h = 0, s = 0
+  if (mx !== mn) {
+    const d = mx - mn
+    s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn)
+    h = r === mx ? ((g - b) / d + (g < b ? 6 : 0)) / 6 : g === mx ? ((b - r) / d + 2) / 6 : ((r - g) / d + 4) / 6
+  }
+  h = (h + 0.5) % 1
+  if (s === 0) return "#B14AED"
+  const q2 = l < 0.5 ? l * (1 + s) : l + s - l * s, p2 = 2 * l - q2
+  const f = (t: number) => { t = ((t % 1) + 1) % 1; return t < 1 / 6 ? p2 + (q2 - p2) * 6 * t : t < 0.5 ? q2 : t < 2 / 3 ? p2 + (q2 - p2) * (2 / 3 - t) * 6 : p2 }
+  return "#" + [h + 1 / 3, h, h - 1 / 3].map(t => Math.round(f(t) * 255).toString(16).padStart(2, "0")).join("")
+}
+
+const measureTextWidth = (value: string, fontSize = 16): number => {
   const length = Math.max(0, value.trim().length)
   return Math.ceil(length * fontSize * 0.72)
 }
@@ -174,7 +191,7 @@ const applyControllerPalette = (
   if (row.type === "statement") {
     return {
       ...row,
-      bgTone: "#000000",
+      bgTone: "#ffffff",
       fgTone: row.fgTone ?? colors.middle,
     }
   }
@@ -207,21 +224,17 @@ const applyControllerPalette = (
 
 const getDropdownPortalStyle = (
   anchor: HTMLElement | null,
-  itemCount: number,
+  _itemCount: number,
 ): React.CSSProperties | null => {
   if (!anchor || typeof window === "undefined") return null
   const rect = anchor.getBoundingClientRect()
-  const estimatedHeight = Math.min(itemCount * controllerDropdownMenuItemHeight + 8, controllerDropdownMenuMaxHeight)
-  const roomBelow = window.innerHeight - rect.bottom
-  const roomAbove = rect.top
-  const openUpward = roomBelow < estimatedHeight && roomAbove > estimatedHeight
-  const top = openUpward ? Math.max(4, rect.top - estimatedHeight) : rect.bottom
-  const left = Math.max(4, Math.min(rect.left, window.innerWidth - rect.width - 4))
+  const root = anchor.closest("[data-controller-root]") as HTMLElement | null
+  const wRect = root?.getBoundingClientRect() ?? rect
   return {
     position: "fixed",
-    top,
-    left,
-    width: rect.width,
+    top: rect.bottom,
+    left: Math.max(4, Math.min(wRect.left, window.innerWidth - wRect.width - 4)),
+    width: wRect.width,
     boxSizing: "border-box",
     zIndex: 900,
   }
@@ -261,7 +274,7 @@ const DropdownRow: React.FC<{ row: ControllerDropdownRow; isLast?: boolean; comp
   }, [isOpen, row.options.length])
 
   const bg = row.bgTone || "#FFFFFF"
-  const hoverBg = bg.toUpperCase() !== "#FFFFFF" ? bg : "#B14AED"
+  const hoverBg = getComplementaryHex(bg)
   const fg = row.fgTone || "#000000"
 
   const displayLabel = row.options.find(o => o.value === row.value)?.label || row.value
@@ -277,22 +290,22 @@ const DropdownRow: React.FC<{ row: ControllerDropdownRow; isLast?: boolean; comp
       <button
         type="button"
         ref={triggerRef}
-        className="inline-flex h-full w-full cursor-pointer items-center justify-center gap-[3px] border-0 bg-transparent px-2 py-0"
+        className="group inline-flex h-full w-full cursor-pointer items-center gap-[3px] border-0 bg-transparent px-2 py-0"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-label={`Choose ${row.labelPrefix ? row.labelPrefix.toLowerCase() : "module option"}`}
         onClick={() => setIsOpen(!isOpen)}
       >
         {row.labelPrefix && (
-          <span style={{ color: fg }} className={`font-[900] uppercase tracking-[0.05em] mr-1 ${controllerTextSizeClass}`}>
+          <span style={{ color: fg }} className={`font-[999] uppercase tracking-[-0.05em] mr-1 ${controllerTextSizeClass}`}>
             {row.labelPrefix}
           </span>
         )}
-        <span style={{ color: fg }} className={`font-[900] uppercase tracking-[0.05em] pointer-events-none leading-none overflow-hidden text-clip whitespace-nowrap ${labelSizeClass}`}>
+        <span style={{ color: fg }} className={`font-[999] uppercase tracking-[-0.05em] pointer-events-none leading-none overflow-hidden text-clip whitespace-nowrap ${labelSizeClass}`}>
           {displayLabel}
         </span>
-        <span style={{ color: fg }} className={`font-[900] pointer-events-none mt-[1px] shrink-0 ${caretSizeClass}`}>
-          ▼
+        <span style={{ color: fg }} className={`ml-auto w-[24px] shrink-0 inline-flex items-center justify-center font-[999] pointer-events-none leading-none rotate-90 transition-transform duration-100 group-hover:scale-125 ${caretSizeClass}`}>
+          ►
         </span>
       </button>
       
@@ -300,7 +313,7 @@ const DropdownRow: React.FC<{ row: ControllerDropdownRow; isLast?: boolean; comp
         <div
           role="listbox"
           ref={menuRef}
-          className="bg-white border-x-[4px] border-b-[4px] border-black flex flex-col max-h-[240px] overflow-y-auto overflow-x-hidden pointer-events-auto"
+          className="bg-white border-x-[4px] border-b-[4px] border-black flex flex-col overflow-hidden pointer-events-auto"
           style={portalStyle}
         >
           {row.options.map((opt, i) => (
@@ -309,7 +322,7 @@ const DropdownRow: React.FC<{ row: ControllerDropdownRow; isLast?: boolean; comp
               type="button"
               role="option"
               aria-selected={opt.value === row.value}
-              className={`w-full px-2 py-[3px] font-inherit ${controllerTextSizeClass} font-[900] uppercase border-none bg-white text-black cursor-pointer text-center tracking-[0.04em] transition-colors`}
+              className={`w-full px-2 py-[3px] font-inherit ${controllerTextSizeClass} font-[999] uppercase border-none bg-white text-black cursor-pointer text-center tracking-[-0.05em] transition-colors`}
               style={{ backgroundColor: opt.value === row.value ? bg : hoveredIndex === i ? hoverBg : "#ffffff" }}
               onMouseEnter={() => setHoveredIndex(i)}
               onMouseLeave={() => setHoveredIndex(null)}
@@ -329,12 +342,13 @@ const DropdownRow: React.FC<{ row: ControllerDropdownRow; isLast?: boolean; comp
   )
 }
 
-const RankedByRow: React.FC<{ row: ControllerRankedByRow; isLast?: boolean }> = ({ row, isLast }) => {
+export const RankedByRow: React.FC<{ row: ControllerRankedByRow; isLast?: boolean }> = ({ row, isLast }) => {
   const triggerRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const [portalStyle, setPortalStyle] = useState<React.CSSProperties | null>(null)
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
-  const hoverTone = row.bgTone && row.bgTone.toUpperCase() !== "#FFFFFF" ? row.bgTone : "#B14AED"
+  const activeTone = row.bgTone && row.bgTone.toUpperCase() !== "#FFFFFF" ? row.bgTone : "#B14AED"
+  const hoverTone = getComplementaryHex(activeTone)
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -372,7 +386,7 @@ const RankedByRow: React.FC<{ row: ControllerRankedByRow; isLast?: boolean }> = 
       style={{ background: row.bgTone || "#FFFFFF" }}
     >
       <div className="flex items-center justify-center bg-black px-1 min-w-[34px]">
-        <span className="font-black uppercase tracking-[0.11em] text-[#B14AED] leading-none text-[13px]">
+        <span className="font-[999] uppercase tracking-[-0.05em] text-[#B14AED] leading-none text-[15px]">
           {row.label}
         </span>
       </div>
@@ -381,17 +395,17 @@ const RankedByRow: React.FC<{ row: ControllerRankedByRow; isLast?: boolean }> = 
           ref={triggerRef}
           type="button"
           onClick={row.onToggle}
-          className={`h-full w-full bg-[#B14AED] border-l-[4px] border-black px-0 inline-flex items-center justify-between gap-0 ${controllerRowHeightClass}`}
+          className={`group h-full w-full bg-[#B14AED] border-l-[4px] border-black px-0 inline-flex items-center justify-between gap-0 ${controllerRowHeightClass}`}
         >
-          <span className={`flex-1 min-w-0 overflow-visible whitespace-nowrap font-black uppercase tracking-[0.06em] text-black ${controllerTextSizeClass}`}>
+          <span className={`flex-1 min-w-0 overflow-visible whitespace-nowrap font-[999] uppercase tracking-[-0.05em] text-black ${controllerTextSizeClass}`}>
             {current}
           </span>
-          <span className={`shrink-0 font-black text-black leading-none ${controllerTextSizeClass}`}>▼</span>
+          <span className={`ml-auto w-[24px] shrink-0 inline-flex items-center justify-center font-[999] text-black leading-none rotate-90 transition-transform duration-100 group-hover:scale-125 ${controllerTextSizeClass}`}>►</span>
         </button>
         {row.open && portalStyle && typeof document !== "undefined" ? createPortal(
           <div
             ref={menuRef}
-            className="bg-white border-x-[4px] border-b-[4px] border-black flex flex-col max-h-[240px] overflow-y-auto overflow-x-hidden pointer-events-auto"
+            className="bg-white border-x-[4px] border-b-[4px] border-black flex flex-col overflow-hidden pointer-events-auto"
             style={portalStyle}
           >
             {row.options.map((option, idx) => (
@@ -399,8 +413,8 @@ const RankedByRow: React.FC<{ row: ControllerRankedByRow; isLast?: boolean }> = 
                 key={option.key}
                 type="button"
                 onClick={option.onSelect}
-                className={`w-full px-2 py-[3px] text-center ${controllerTextSizeClass} font-black uppercase tracking-[0.06em] bg-white text-black border-none transition-colors`}
-                style={{ backgroundColor: option.active ? hoverTone : hoveredIndex === idx ? hoverTone : "#ffffff" }}
+                className={`w-full px-2 py-[3px] text-center ${controllerTextSizeClass} font-[999] uppercase tracking-[-0.05em] bg-white text-black border-none transition-colors`}
+                style={{ backgroundColor: option.active ? activeTone : hoveredIndex === idx ? hoverTone : "#ffffff" }}
                 onMouseEnter={() => setHoveredIndex(idx)}
                 onMouseLeave={() => setHoveredIndex(null)}
               >
@@ -454,7 +468,7 @@ const MetricMultiSelectRow: React.FC<{ row: ControllerMetricMultiSelectRow; isLa
   const maxLabels = row.maxLabels ?? 3
   const showLabels = selectedOptions.length > 0 && selectedOptions.length <= maxLabels
   const bg = row.bgTone || "#FFFFFF"
-  const hoverBg = bg.toUpperCase() !== "#FFFFFF" ? bg : "#B14AED"
+  const hoverBg = getComplementaryHex(bg)
   const fg = row.fgTone || "#000000"
 
   return (
@@ -466,7 +480,7 @@ const MetricMultiSelectRow: React.FC<{ row: ControllerMetricMultiSelectRow; isLa
         ref={triggerRef}
         id={triggerId}
         type="button"
-        className="flex h-full w-full cursor-pointer items-center justify-center gap-1 border-0 bg-transparent px-2 py-0"
+        className="group flex h-full w-full cursor-pointer items-center gap-1 border-0 bg-transparent px-2 py-0"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={isOpen ? menuId : undefined}
@@ -474,12 +488,12 @@ const MetricMultiSelectRow: React.FC<{ row: ControllerMetricMultiSelectRow; isLa
         onClick={() => setIsOpen((open) => !open)}
       >
         {selectedOptions.length === 0 ? (
-          <span className={`font-[900] uppercase tracking-[0.06em] ${controllerTextSizeClass}`}>SELECT</span>
+          <span className={`font-[999] uppercase tracking-[-0.05em] ${controllerTextSizeClass}`}>SELECT</span>
         ) : showLabels ? (
           selectedOptions.map((option) => (
             <span
               key={option.value}
-              className="inline-flex h-[18px] min-w-0 items-center justify-center border-[2px] border-black px-1 text-[9px] font-[900] uppercase leading-none tracking-[0.04em] text-black"
+              className="inline-flex h-[18px] min-w-0 items-center justify-center border-[2px] border-black px-1 text-[9px] font-[999] uppercase leading-none tracking-[0.04em] text-black"
               style={{ background: option.color }}
             >
               {option.label}
@@ -497,7 +511,7 @@ const MetricMultiSelectRow: React.FC<{ row: ControllerMetricMultiSelectRow; isLa
             ))}
           </span>
         )}
-        <span className={`shrink-0 font-[900] leading-none ${controllerTextSizeClass}`}>▼</span>
+        <span className={`ml-auto w-[24px] shrink-0 inline-flex items-center justify-center font-[999] leading-none rotate-90 transition-transform duration-100 group-hover:scale-125 ${controllerTextSizeClass}`}>►</span>
       </button>
       {isOpen && portalStyle && typeof document !== "undefined" ? createPortal(
         <div
@@ -506,7 +520,7 @@ const MetricMultiSelectRow: React.FC<{ row: ControllerMetricMultiSelectRow; isLa
           role="listbox"
           aria-labelledby={triggerId}
           aria-multiselectable="true"
-          className="bg-white border-x-[4px] border-b-[4px] border-black flex flex-col max-h-[240px] overflow-y-auto overflow-x-hidden pointer-events-auto"
+          className="bg-white border-x-[4px] border-b-[4px] border-black flex flex-col overflow-hidden pointer-events-auto"
           style={portalStyle}
         >
           {row.options.map((option, index) => {
@@ -522,7 +536,7 @@ const MetricMultiSelectRow: React.FC<{ row: ControllerMetricMultiSelectRow; isLa
                 aria-selected={isSelected}
                 aria-disabled={isDisabled}
                 disabled={isDisabled}
-                className={`flex w-full items-center gap-2 border-none px-2 py-[5px] text-left text-[11px] font-[900] uppercase tracking-[0.06em] text-black transition-colors ${isDisabled ? "cursor-not-allowed opacity-45" : "cursor-pointer"}`}
+                className={`flex w-full items-center gap-2 border-none px-2 py-[5px] text-left text-[11px] font-[999] uppercase tracking-[-0.05em] text-black transition-colors ${isDisabled ? "cursor-not-allowed opacity-45" : "cursor-pointer"}`}
                 style={{ backgroundColor: isSelected ? option.color : hoveredIndex === index ? hoverBg : "#ffffff" }}
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
@@ -555,6 +569,7 @@ export const VisualModuleController: React.FC<VisualModuleControllerProps> = ({ 
   const computedWidth = Math.max(width, ...displayRows.map(estimateRowMinWidth))
   return (
     <div 
+      data-controller-root
       className="flex flex-col h-full overflow-hidden shrink-0 border-l-[4px] border-l-black relative"
       style={{ width: computedWidth }}
     >
@@ -572,13 +587,13 @@ export const VisualModuleController: React.FC<VisualModuleControllerProps> = ({ 
                 onClick={row.onPrev}
                 disabled={!row.onPrev}
                 aria-label="Previous value"
-                className={`${controllerArrowButtonClass} font-[900] ${row.onPrev ? 'cursor-pointer hover:scale-125 active:scale-[.85]' : 'cursor-default opacity-30'} ${controllerArrowSizeClass}`}
+                className={`${controllerArrowButtonClass} font-[999] ${row.onPrev ? 'cursor-pointer hover:scale-125 active:scale-[.85]' : 'cursor-default opacity-30'} ${controllerArrowSizeClass} rotate-180`}
                 style={{ color: fg }}
               >
-                ◀
+                ►
               </button>
               <span 
-                className="font-[900] tracking-[-0.02em] leading-none pointer-events-none flex-1 text-center"
+                className="font-[999] tracking-[-0.02em] leading-none pointer-events-none flex-1 text-center"
                 style={{ color: fg, fontSize: isBig ? numberValueFontSize : (compact ? '16px' : '18px') }}
               >
                 {row.value}
@@ -588,10 +603,10 @@ export const VisualModuleController: React.FC<VisualModuleControllerProps> = ({ 
                 onClick={row.onNext}
                 disabled={!row.onNext}
                 aria-label="Next value"
-                className={`${controllerArrowButtonClass} font-[900] ${row.onNext ? 'cursor-pointer hover:scale-125 active:scale-[.85]' : 'cursor-default opacity-30'} ${controllerArrowSizeClass}`}
+                className={`${controllerArrowButtonClass} font-[999] ${row.onNext ? 'cursor-pointer hover:scale-125 active:scale-[.85]' : 'cursor-default opacity-30'} ${controllerArrowSizeClass}`}
                 style={{ color: fg }}
               >
-                ▶
+                ►
               </button>
             </div>
           )
@@ -605,13 +620,13 @@ export const VisualModuleController: React.FC<VisualModuleControllerProps> = ({ 
                 onClick={row.onPrev}
                 disabled={!row.onPrev}
                 aria-label="Previous option"
-                className={`${controllerArrowButtonClass} font-[900] ${row.onPrev ? 'cursor-pointer hover:scale-125 active:scale-[.85]' : 'cursor-default opacity-30'} ${textSizeClass}`}
+                className={`${controllerArrowButtonClass} font-[999] ${row.onPrev ? 'cursor-pointer hover:scale-125 active:scale-[.85]' : 'cursor-default opacity-30'} ${textSizeClass} rotate-180`}
                 style={{ color: fg }}
               >
-                ◀
+                ►
               </button>
               <span 
-                className={`font-[900] uppercase tracking-[0.05em] flex-1 text-center pointer-events-none overflow-hidden text-clip whitespace-nowrap ${textSizeClass}`}
+                className={`font-[999] uppercase tracking-[-0.05em] flex-1 text-center pointer-events-none overflow-hidden text-clip whitespace-nowrap ${textSizeClass}`}
                 style={{ color: fg }}
               >
                 {row.value}
@@ -621,10 +636,10 @@ export const VisualModuleController: React.FC<VisualModuleControllerProps> = ({ 
                 onClick={row.onNext}
                 disabled={!row.onNext}
                 aria-label="Next option"
-                className={`${controllerArrowButtonClass} font-[900] ${row.onNext ? 'cursor-pointer hover:scale-125 active:scale-[.85]' : 'cursor-default opacity-30'} ${textSizeClass}`}
+                className={`${controllerArrowButtonClass} font-[999] ${row.onNext ? 'cursor-pointer hover:scale-125 active:scale-[.85]' : 'cursor-default opacity-30'} ${textSizeClass}`}
                 style={{ color: fg }}
               >
-                ▶
+                ►
               </button>
             </div>
           )
@@ -634,7 +649,7 @@ export const VisualModuleController: React.FC<VisualModuleControllerProps> = ({ 
           return (
             <div key={i} className={`flex items-center justify-center ${controllerRowHeightClass} px-2 whitespace-nowrap select-none ${isLast ? 'flex-1' : 'border-b-[4px] border-black'}`} style={{ background: bg }}>
               <span 
-                className={`font-[900] uppercase tracking-[0.06em] text-center w-full pointer-events-none overflow-hidden text-clip whitespace-nowrap ${labelSizeClass}`}
+                className={`font-[999] uppercase tracking-[-0.05em] text-center w-full pointer-events-none overflow-hidden text-clip whitespace-nowrap ${labelSizeClass}`}
                 style={{ color: fg }}
               >
                 {row.value}
@@ -659,19 +674,19 @@ export const VisualModuleController: React.FC<VisualModuleControllerProps> = ({ 
                 onClick={row.onPrev}
                 disabled={!row.onPrev}
                 aria-label="Previous split value"
-                className={`w-[20px] h-full shrink-0 border-none flex items-center justify-center overflow-hidden leading-none font-black px-0 origin-center transform-gpu transition-transform duration-100 will-change-transform ${controllerTextSizeClass} ${row.onPrev ? 'cursor-pointer hover:scale-125 active:scale-[.85]' : 'cursor-default opacity-30'}`}
+                className={`w-[20px] h-full shrink-0 border-none flex items-center justify-center overflow-hidden leading-none font-[999] px-0 origin-center transform-gpu transition-transform duration-100 will-change-transform ${controllerTextSizeClass} ${row.onPrev ? 'cursor-pointer hover:scale-125 active:scale-[.85]' : 'cursor-default opacity-30'} rotate-180`}
                 style={{ background: leftBg, color: leftFg }}
               >
-                ◀
+                ►
               </button>
               <div className="flex flex-1 min-w-0">
                 <div className="flex-1 min-w-0 flex items-center justify-center px-0" style={{ background: leftBg, color: leftFg }}>
-                  <span className={`overflow-hidden text-clip whitespace-nowrap font-black uppercase tracking-[0.08em] ${controllerTextSizeClass}`} style={{ color: leftFg }}>
+                  <span className={`overflow-hidden text-clip whitespace-nowrap font-[999] uppercase tracking-[-0.05em] ${controllerTextSizeClass}`} style={{ color: leftFg }}>
                     {row.leftValue}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0 flex items-center justify-center px-0 border-l-[4px] border-black" style={{ background: rightBg, color: rightFg }}>
-                  <span className={`overflow-hidden text-clip whitespace-nowrap font-black uppercase tracking-[0.08em] ${controllerTextSizeClass}`} style={{ color: rightFg }}>
+                  <span className={`overflow-hidden text-clip whitespace-nowrap font-[999] uppercase tracking-[-0.05em] ${controllerTextSizeClass}`} style={{ color: rightFg }}>
                     {row.rightValue}
                   </span>
                 </div>
@@ -681,10 +696,10 @@ export const VisualModuleController: React.FC<VisualModuleControllerProps> = ({ 
                 onClick={row.onNext}
                 disabled={!row.onNext}
                 aria-label="Next split value"
-                className={`w-[20px] h-full shrink-0 border-none flex items-center justify-center overflow-hidden leading-none font-black px-0 origin-center transform-gpu transition-transform duration-100 will-change-transform ${controllerTextSizeClass} ${row.onNext ? 'cursor-pointer hover:scale-125 active:scale-[.85]' : 'cursor-default opacity-30'}`}
+                className={`w-[20px] h-full shrink-0 border-none flex items-center justify-center overflow-hidden leading-none font-[999] px-0 origin-center transform-gpu transition-transform duration-100 will-change-transform ${controllerTextSizeClass} ${row.onNext ? 'cursor-pointer hover:scale-125 active:scale-[.85]' : 'cursor-default opacity-30'}`}
                 style={{ background: rightBg, color: rightFg }}
               >
-                ▶
+                ►
               </button>
             </div>
           )
@@ -708,22 +723,22 @@ export const VisualModuleController: React.FC<VisualModuleControllerProps> = ({ 
                 type="button"
                 onClick={() => row.onSelect(prevValue)}
                 aria-label="Previous toggle option"
-                className={`${controllerArrowButtonClass} font-[900] hover:scale-125 active:scale-[.85] ${textSizeClass}`}
+                className={`${controllerArrowButtonClass} font-[999] hover:scale-125 active:scale-[.85] ${textSizeClass} rotate-180`}
                 style={{ color: fg }}
               >
-                ◀
+                ►
               </button>
-              <span className={`flex-1 overflow-hidden text-clip whitespace-nowrap text-center font-[900] uppercase tracking-[0.05em] ${textSizeClass}`} style={{ color: fg }}>
+              <span className={`flex-1 overflow-hidden text-clip whitespace-nowrap text-center font-[999] uppercase tracking-[-0.05em] ${textSizeClass}`} style={{ color: fg }}>
                 {row.value}
               </span>
               <button
                 type="button"
                 onClick={() => row.onSelect(nextValue)}
                 aria-label="Next toggle option"
-                className={`${controllerArrowButtonClass} font-[900] hover:scale-125 active:scale-[.85] ${textSizeClass}`}
+                className={`${controllerArrowButtonClass} font-[999] hover:scale-125 active:scale-[.85] ${textSizeClass}`}
                 style={{ color: fg }}
               >
-                ▶
+                ►
               </button>
             </div>
           )
@@ -732,7 +747,7 @@ export const VisualModuleController: React.FC<VisualModuleControllerProps> = ({ 
         if (row.type === "statement") {
           return (
             <div key={i} className={`flex items-center justify-center overflow-hidden ${controllerRowHeightClass} px-2 whitespace-nowrap select-none ${isLast ? "flex-1" : "border-b-[4px] border-black"}`} style={{ background: row.bgTone ?? "#000000" }}>
-              <span className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-center text-[10px] font-[900] uppercase tracking-[0.08em]" style={{ color: row.fgTone ?? "#CCFF00" }}>
+              <span className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-center text-[10px] font-[999] uppercase tracking-[-0.05em]" style={{ color: row.fgTone ?? "#CCFF00" }}>
                 {row.value}
               </span>
             </div>

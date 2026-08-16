@@ -362,18 +362,6 @@ const detectCoarsePointer = (): boolean => {
  }
 }
 
-// Coarse-pointer devices (touch phones/tablets) tighten the reveal window so
-// mounting a chart doesn't cascade through every neighbour off-screen. Desktop
-// keeps the generous margin so no scroll flash appears.
-const detectCoarsePointer = (): boolean => {
- if (typeof window === "undefined" || !window.matchMedia) return false
- try {
-  return window.matchMedia("(pointer: coarse)").matches
- } catch {
-  return false
- }
-}
-
 const RevealOnView: React.FC<{
  delayMs?: number
  estimatedHeight?: number

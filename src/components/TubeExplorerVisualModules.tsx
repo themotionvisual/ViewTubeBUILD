@@ -1066,18 +1066,10 @@ const buildWordNetwork = (
     fx += (dx / dist) * pull
     fy += (dy / dist) * pull
    }
-   fx += (width / 2 - nodes[a].x) * 0.00015
-   fy += (height / 2 - nodes[a].y) * 0.00015
+   fx += (width / 2 - nodes[a].x) * 0.0003
+   fy += (height / 2 - nodes[a].y) * 0.0003
    nodes[a].x += fx * alpha
    nodes[a].y += fy * alpha
-   const softPush = (v: number, lo: number, hi: number) => {
-    const zone = 80
-    if (v < lo + zone) return lo + zone + (v - lo - zone) * 0.15
-    if (v > hi - zone) return hi - zone + (v - hi + zone) * 0.15
-    return v
-   }
-   nodes[a].x = Math.min(width - margin, Math.max(margin, softPush(nodes[a].x, 0, width)))
-   nodes[a].y = Math.min(height - margin, Math.max(margin, softPush(nodes[a].y, 0, height)))
   }
  }
 
@@ -1271,27 +1263,30 @@ const BarcodeFingerprintAdvancedRenderer: React.FC<{
  onHover?: (row: TubeExplorerVideoPoint | null) => void
 }> = ({ rows, metric, orderLabel, onHover }) => {
  const option = metricOptionFor(metric)
- const max = Math.max(...rows.map((row) => metricValue(row, metric)), 1)
  if (rows.length === 0) return <Empty label={`No ${option.label} values available for barcode`} />
- const slot = 920 / rows.length
- // Percentile rank spreads the ramp across the set, so a long tail still reads as a gradient.
- const ordered = [...rows].map((row) => metricValue(row, metric)).sort((a, b) => a - b)
+ // Sort ascending so the LARGEST bar appears on the RIGHT side
+ const sorted = [...rows].sort((a, b) => metricValue(a, metric) - metricValue(b, metric))
+ const max = Math.max(...sorted.map((row) => metricValue(row, metric)), 1)
+ const slot = 920 / sorted.length
+ const ordered = [...sorted].map((row) => metricValue(row, metric)).sort((a, b) => a - b)
  const rankOf = (value: number) =>
   ordered.length > 1 ? ordered.findIndex((entry) => entry >= value) / (ordered.length - 1) : 1
+ const [hoveredId, setHoveredId] = React.useState<string | null>(null)
  return (
   <div className="flex h-full flex-col overflow-hidden bg-[#0a0a1a] text-white">
    <svg
     viewBox="0 0 980 300"
     preserveAspectRatio="none"
-    className="block min-h-0 w-full flex-1"
+    className="block min-h-0 w-full flex-1 max-w-[980px] mx-auto"
     role="img"
     aria-label={`Barcode fingerprint aligned around center by ${option.label}`}
    >
     <rect x="0" y="0" width="980" height="300" fill={EXPLORER_BG} />
-    <line x1="24" y1="150" x2="956" y2="150" stroke="#ffffff" strokeWidth="2" opacity="0.24" />
-    {rows.map((row, index) => {
+    {sorted.map((row, index) => {
      const value = metricValue(row, metric)
-     const h = Math.max(12, (value / max) * 248)
+     const isHov = hoveredId === row.videoId
+     const baseH = Math.max(12, (value / max) * 248)
+     const h = isHov ? baseH * 1.15 : baseH
      const w = Math.max(4, slot - 2)
      const x = 30 + index * slot
      const y = 150 - h / 2
@@ -1303,25 +1298,27 @@ const BarcodeFingerprintAdvancedRenderer: React.FC<{
        width={w}
        height={h}
        rx="2"
-       fill={heatColor(rankOf(value))}
-       stroke="#000"
-       strokeWidth="1.5"
-       onMouseEnter={() => onHover?.(row)}
-       onMouseLeave={() => onHover?.(null)}
+       fill={barcodeHeatColor(rankOf(value))}
+       stroke={isHov ? "#ffffff" : "#000"}
+       strokeWidth={isHov ? 2 : 1.5}
+       style={{ transition: "height 0.12s ease, y 0.12s ease" }}
+       onMouseEnter={() => { setHoveredId(row.videoId); onHover?.(row) }}
+       onMouseLeave={() => { setHoveredId(null); onHover?.(null) }}
       >
        <title>{`${row.title} · ${option.format(value)}`}</title>
       </rect>
      )
     })}
-    <text x="30" y="34" fill="#ffffff" fontSize="12" fontWeight="1000" letterSpacing="2">{orderLabel} BY {option.label.toUpperCase()}</text>
-    <text x="950" y="280" fill="#ffffff" textAnchor="end" fontSize="10" fontWeight="1000" opacity="0.46">BAR MIDPOINTS SHARE ONE HORIZONTAL CENTERLINE</text>
    </svg>
-   <div className="flex shrink-0 items-center justify-center gap-3 px-4 py-2">
-    <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-white/35">COLD</span>
+   <div className="flex shrink-0 items-center gap-3 px-4 py-2">
+    <span className="shrink-0 text-[10px] font-black uppercase tracking-[0.12em] text-white/60 mr-2">
+     {orderLabel} BY {option.label.toUpperCase()}
+    </span>
+    <span className="ml-auto shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-white/35">COLD</span>
     <div
      className="h-6 w-[155px] shrink-0 rounded-[2px] border-[1px] border-white/90"
      style={{
-      background: HEAT_GRADIENT,
+      background: BARCODE_HEAT_GRADIENT,
       boxShadow: "0 0 6px rgba(250,97,138,0.25), inset 0 1px 0 rgba(255,255,255,0.08)",
      }}
     />
@@ -1380,8 +1377,9 @@ const WATERFALL_METRICS = [
 const SubscriberWaterfallRenderer: React.FC<{
  rows: TubeExplorerVideoPoint[]
  metricKey: WaterfallMetricKey
+ chrono?: boolean
  onHover?: (row: { video: TubeExplorerVideoPoint; cumulative: number } | null) => void
-}> = ({ rows, metricKey, onHover }) => {
+}> = ({ rows, metricKey, chrono = true, onHover }) => {
  if (rows.length === 0) return <Empty label="No data rows available for waterfall" />
 
  const activeDef = WATERFALL_METRICS.find((m) => m.key === metricKey) || WATERFALL_METRICS[0]
@@ -1459,11 +1457,15 @@ const SubscriberWaterfallRenderer: React.FC<{
    <text x={W - padR} y={padT - 8} textAnchor="end" fill={activeDef.tone} fontSize="11" fontWeight="1000" letterSpacing="1">
     CUMULATIVE: {activeDef.prefix}{activeDef.format(running)}
    </text>
-   <text x={padL} y={H - 12} fill="#ffffff" fontSize="9" fontWeight="1000" opacity="0.42" letterSpacing="1">OLDEST</text>
+   <text x={padL} y={H - 12} fill="#ffffff" fontSize="9" fontWeight="1000" opacity="0.42" letterSpacing="1">
+    {chrono ? "OLDEST" : "SMALLEST GAIN"}
+   </text>
    <text x={W / 2} y={H - 12} textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="1000" opacity="0.42" letterSpacing="1">
     PINK = SHORTS · CYAN = LONG-FORM · {points.length} VIDEOS
    </text>
-   <text x={W - padR} y={H - 12} textAnchor="end" fill="#ffffff" fontSize="9" fontWeight="1000" opacity="0.42" letterSpacing="1">LATEST</text>
+   <text x={W - padR} y={H - 12} textAnchor="end" fill="#ffffff" fontSize="9" fontWeight="1000" opacity="0.42" letterSpacing="1">
+    {chrono ? "LATEST" : "LARGEST GAIN"}
+   </text>
   </svg>
  )
 }
@@ -1499,11 +1501,11 @@ const ShortsLongsRenderer: React.FC<{
   return average ? (rows.length ? sum / rows.length : 0) : sum
  }
 
- const W = 1000
+ const W = 700
  const rowH = 46
  const H = 44 + DUEL_METRICS.length * rowH + 16
  const mid = W / 2
- const halfMax = mid - 96
+ const halfMax = mid - 120
 
  return (
   <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="block h-full w-full" role="img" aria-label="Shorts versus long-form head to head">
@@ -1936,7 +1938,7 @@ const TrafficDayRiverDeltaRenderer: React.FC<{
   })
 
  return (
-  <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="block h-full w-full" role="img" aria-label="Traffic source to day river delta">
+  <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="block h-full w-full" role="img" aria-label="Traffic source to day river delta">
    <rect width={W} height={H} fill={EXPLORER_BG} />
 
    {ribbons.map((ribbon, i) => {
@@ -1985,7 +1987,7 @@ const TrafficDayRiverDeltaRenderer: React.FC<{
       opacity={highlight && !isLit(node.source, undefined) ? 0.35 : 1}
      />
      {node.w > 46 && (
-      <text x={node.x + node.w / 2} y={topY + barH / 2 + 4} textAnchor="middle" fill="#000" fontSize="9" fontWeight="1000">
+      <text x={node.x + node.w / 2} y={topY + barH / 2 + 4} textAnchor="middle" fill="#000" fontSize="11" fontWeight="1000">
        {formatTrafficLabel(node.source).toUpperCase().slice(0, Math.floor(node.w / 6))}
       </text>
      )}
@@ -2018,7 +2020,7 @@ const TrafficDayRiverDeltaRenderer: React.FC<{
       y={botY + barH / 2 + 4}
       textAnchor="middle"
       fill="#000000"
-      fontSize={Math.max(6, Math.min(10, (node.w - 6) / Math.max(bucketLabel(node.day).length * 0.58, 1)))}
+      fontSize={Math.max(6, Math.min(12, (node.w - 6) / Math.max(bucketLabel(node.day).length * 0.58, 1)))}
       fontWeight="1000"
      >
       {bucketLabel(node.day)}
@@ -2504,7 +2506,7 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
 
  return (
   <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#000000] text-white">
-   <div className="grid min-h-0 flex-1 grid-cols-[0.67fr_1.47fr_1.47fr_0.67fr] gap-0 bg-[#000000] p-0">
+   <div className="grid min-h-0 flex-1 grid-cols-[0.8fr_1fr_1fr_0.8fr] gap-1 bg-[#000000] p-1 w-full">
     <div className="flex min-h-0 flex-col overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-1.5">
      <div className="mb-1 flex items-center">
       <div className="min-w-0 flex-1">
@@ -2516,15 +2518,15 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
        const share = (slice.value / totalValue) * 100
        return (
         <div key={`${slice.kind}-${slice.label}-${index}`} className="flex w-full items-stretch overflow-hidden rounded-[6px] border border-black text-left shadow-[1px_1px_0px_0px_rgba(0,0,0,0.22)]">
-         <span className="flex w-[36px] shrink-0 items-center justify-center px-1 text-center text-[8px] font-[1000] uppercase leading-none text-black" style={{ background: slice.color }}>
+         <span className="flex w-[36px] shrink-0 items-center justify-center px-1 text-center text-[10px] font-[1000] uppercase leading-none text-black" style={{ background: slice.color }}>
           {formatClockBurstShare(share)}
          </span>
-         <span className="flex min-w-0 flex-1 flex-col justify-center bg-[#111321] px-2 py-0.5 text-black">
-          <span className="block truncate text-[10px] font-black uppercase leading-tight">
-           <span className="mr-1 text-white">{formatClockBurstMetricValue(slice.value, metric)}</span>
-           <span style={{ color: slice.color }}>{slice.label}</span>
-          </span>
-          <span className="block truncate text-[7px] font-black uppercase tracking-[0.08em] text-white/65">{metricOption.shortLabel}</span>
+         <span className="flex min-w-0 flex-1 justify-between items-center bg-[#111321] px-2 py-0.5 text-black">
+          <span className="block truncate text-[14px] font-black uppercase leading-tight" style={{ color: slice.color }}>{slice.label}</span>
+          <div className="text-right shrink-0">
+           <span className="block text-[12px] font-black text-white">{formatClockBurstMetricValue(slice.value, metric)}</span>
+           <span className="block text-[9px] font-black uppercase tracking-[0.08em] text-white/65">{metricOption.shortLabel}</span>
+          </div>
          </span>
         </div>
        )
@@ -2589,15 +2591,15 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
         <div
          key={`${row.label}-${index}`}
          className="flex w-full items-stretch overflow-hidden rounded-[6px] border border-black text-left shadow-[1px_1px_0px_0px_rgba(0,0,0,0.22)]">
-         <span className="flex w-[36px] shrink-0 items-center justify-center px-1 text-center text-[8px] font-[1000] uppercase leading-none text-black" style={{ background: row.color }}>
+         <span className="flex w-[36px] shrink-0 items-center justify-center px-1 text-center text-[10px] font-[1000] uppercase leading-none text-black" style={{ background: row.color }}>
           {formatClockBurstShare(share)}
          </span>
-         <span className="flex min-w-0 flex-1 flex-col justify-center bg-[#111321] px-2 py-0.5 text-black">
-          <span className="block truncate text-[10px] font-black uppercase leading-tight">
-           <span className="mr-1 text-white">{formatClockBurstMetricValue(row.value, metric)}</span>
-           <span style={{ color: row.color }}>{label}</span>
-          </span>
-          <span className="block truncate text-[7px] font-black uppercase tracking-[0.08em] text-white/65">{metricOption.shortLabel}</span>
+         <span className="flex min-w-0 flex-1 justify-between items-center bg-[#111321] px-2 py-0.5 text-black">
+          <span className="block truncate text-[13px] font-black uppercase leading-tight" style={{ color: row.color }}>{label}</span>
+          <div className="text-right shrink-0">
+           <span className="block text-[11px] font-black text-white">{formatClockBurstMetricValue(row.value, metric)}</span>
+           <span className="block text-[9px] font-black uppercase tracking-[0.08em] text-white/65">{metricOption.shortLabel}</span>
+          </div>
          </span>
         </div>
        )
@@ -2634,7 +2636,8 @@ const SankeyRiverDeltaRenderer: React.FC<{
   let sourceX = pad
   const sourceNodes = sourceRows.map((row, index) => {
    const nodeWidth = (row.views / totalSourceViews) * usableWidth
-   const node = { label: formatTrafficLabel(row.sourceTitle || row.sourceType), views: row.views, x: sourceX, w: nodeWidth, color: TRAFFIC_COLORS[index % TRAFFIC_COLORS.length] }
+   const percent = Math.round((row.views / totalSourceViews) * 100)
+   const node = { label: `${formatTrafficLabel(row.sourceTitle || row.sourceType)} ${percent}%`, views: row.views, x: sourceX, w: nodeWidth, color: TRAFFIC_COLORS[index % TRAFFIC_COLORS.length] }
    sourceX += nodeWidth
    return node
   })
@@ -2642,7 +2645,8 @@ const SankeyRiverDeltaRenderer: React.FC<{
   let geoX = pad
   const destNodes = geoRows.map((row, index) => {
    const nodeWidth = (row.views / totalGeoViews) * usableWidth
-   const node = { label: row.label, views: row.views, x: geoX, w: nodeWidth, color: TRAFFIC_COLORS[(index + 1) % TRAFFIC_COLORS.length] }
+   const percent = Math.round((row.views / totalGeoViews) * 100)
+   const node = { label: `${row.label} ${percent}%`, views: row.views, x: geoX, w: nodeWidth, color: TRAFFIC_COLORS[(index + 1) % TRAFFIC_COLORS.length] }
    geoX += nodeWidth
    return node
   })
@@ -2688,7 +2692,7 @@ const SankeyRiverDeltaRenderer: React.FC<{
  return (
   <svg
    viewBox={`0 0 ${width} ${height}`}
-   preserveAspectRatio="xMidYMid meet"
+   preserveAspectRatio="none"
    className="block h-full w-full"
    style={{ background: "#000000" }}
   >
@@ -2728,7 +2732,7 @@ const SankeyRiverDeltaRenderer: React.FC<{
       style={{ cursor: "pointer" }}>
       <rect x={node.x} y={sourceY} width={node.w} height={barHeight} fill={node.color} stroke="#000" strokeWidth={hovered === node.label ? 2 : 1.5} opacity={hovered === node.label ? 1 : 0.92} />
       {node.w > 28 ? (
-       <text x={node.x + node.w / 2} y={sourceY + barHeight / 2 + 4} textAnchor="middle" style={{ fill: "#000", fontSize: Math.max(6, Math.min(12, (node.w - 6) / Math.max(node.label.length * 0.58, 1))), fontFamily: "inherit", fontWeight: 1000 }}>
+       <text x={node.x + node.w / 2} y={sourceY + barHeight / 2 + 4} textAnchor="middle" style={{ fill: "#000", fontSize: Math.max(6, Math.min(14, (node.w - 6) / Math.max(node.label.length * 0.58, 1))), fontFamily: "inherit", fontWeight: 1000 }}>
         {node.label.toUpperCase()}
         </text>
       ) : null}
@@ -2738,7 +2742,7 @@ const SankeyRiverDeltaRenderer: React.FC<{
      <g key={node.label}>
       <rect x={node.x} y={destY - barHeight} width={node.w} height={barHeight} fill={node.color} stroke="#000" strokeWidth="1.5" opacity="0.9" />
       {node.w > 28 ? (
-       <text x={node.x + node.w / 2} y={destY - barHeight / 2 + 4} textAnchor="middle" style={{ fill: "#000", fontSize: Math.max(6, Math.min(12, (node.w - 6) / Math.max(node.label.length * 0.58, 1))), fontFamily: "inherit", fontWeight: 1000 }}>
+       <text x={node.x + node.w / 2} y={destY - barHeight / 2 + 4} textAnchor="middle" style={{ fill: "#000", fontSize: Math.max(6, Math.min(14, (node.w - 6) / Math.max(node.label.length * 0.58, 1))), fontFamily: "inherit", fontWeight: 1000 }}>
         {node.label.toUpperCase()}
         </text>
       ) : null}
@@ -2816,11 +2820,11 @@ const TitleWordNetworkCanvas: React.FC<{
 
  return (
   <div
-   className="relative h-full w-full p-2"
+   className="relative flex h-full w-full flex-col"
    style={{ background: "#050810", opacity: visible ? 1 : 0, transition: "opacity 0.4s ease" }}>
    <svg
     viewBox={`0 0 ${width} ${height}`}
-    className="block h-full w-full"
+    className="block min-h-0 w-full flex-1"
     onClick={() => onSelect(null)}>
     <defs>
      <filter id={`${instanceId}-node-glow`}>
@@ -2851,137 +2855,157 @@ const TitleWordNetworkCanvas: React.FC<{
      })}
     </defs>
     {/* All graph content in a translate group — shifts when user double-clicks to re-center */}
-    <g
-     transform={`translate(${translateX}, ${translateY})`}
-     style={{ transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)" }}>
-     {/* Edges */}
-     {graph.edges.map((edge, index) => {
-      const source = graph.nodes[edge.source]
-      const target = graph.nodes[edge.target]
-      if (!source || !target) return null
-      const isHovered = hovered === source.id || hovered === target.id
-      const isSelected = selected.length === 0 || selected.includes(source.id) || selected.includes(target.id)
-      const srcRadius = 5 + (source.totalViews / maxViews) * 20
-      const tgtRadius = 5 + (target.totalViews / maxViews) * 20
-      const maxEdgeWidth = Math.min(srcRadius, tgtRadius) * 0.55
-      const edgeWidth = Math.max(1.8, Math.sqrt(edge.sharedVideos / maxShared) * maxEdgeWidth)
-      return (
-        <line
-         key={index}
-         x1={source.x}
-         y1={source.y}
-         x2={target.x}
-         y2={target.y}
-         stroke={`url(#${instanceId}-word-edge-grad-${index})`}
-         strokeWidth={edgeWidth}
-         opacity={isSelected ? (isHovered ? 0.95 : 0.55) : 0.07}
-        />
-      )
-     })}
-     {/* Nodes */}
-     {graph.nodes.map((node, index) => {
-      const radius = 5 + (node.totalViews / maxViews) * 20
-      const color = getNodeColor(index)
-      const isHovered = hovered === node.id
-      const isSelected = selected.includes(node.id)
-      const isCentered = centerNodeId === node.id
-      const degreeRingR = radius + 3 + (degree[index] / maxDegree) * 5
-      const dashLen = (2 * Math.PI * degreeRingR * degree[index]) / maxDegree
-      const dashGap = 2 * Math.PI * degreeRingR
-      return (
-       <g
-        key={node.id}
-        tabIndex={0}
-        role="button"
-        aria-label={`${node.id}, ${metricLabel} ${node.totalViews}, ${node.videoCount} videos`}
-        aria-pressed={isSelected}
-        onMouseEnter={() => onHover(node.id)}
-        onMouseLeave={() => onHover(null)}
-        onFocus={() => onHover(node.id)}
-        onBlur={() => onHover(null)}
-        onClick={(event) => {
-         event.stopPropagation()
-         onSelect(node.id)
-        }}
-        onDoubleClick={(event) => {
-         event.stopPropagation()
-         onRecenter(node.id)
-        }}
-        onKeyDown={(event) => {
-         if (event.key !== "Enter" && event.key !== " ") return
-         event.preventDefault()
-         event.stopPropagation()
-         onSelect(node.id)
-        }}
-        style={{ cursor: "pointer" }}>
-        {/* Soft glow halo */}
-        <circle cx={node.x} cy={node.y} r={radius * 2.2} fill={color} opacity={isHovered || isSelected ? 0.14 : 0.06} filter={`url(#${instanceId}-node-glow)`} />
-        {/* Degree ring — arc length shows how connected this node is */}
-        <circle
-         cx={node.x}
-         cy={node.y}
-         r={degreeRingR}
-         fill="none"
-         stroke={color}
-         strokeWidth="1.5"
-         strokeDasharray={`${dashLen} ${dashGap}`}
-         opacity={isHovered || isSelected ? 0.7 : 0.3}
-         style={{ transformOrigin: `${node.x}px ${node.y}px`, transform: "rotate(-90deg)" }}
-        />
-        {/* Main node circle — double ring when it's the re-center pivot */}
-        <circle
-         cx={node.x}
-         cy={node.y}
-         r={isHovered ? radius * 1.3 : radius}
-         fill={color}
-         stroke={isCentered ? "#ffffff" : isSelected ? "#ffffff" : isHovered ? "#ffffff" : "rgba(0,0,0,0.4)"}
-         strokeWidth={isCentered ? 3 : isSelected || isHovered ? 2.5 : 1}
-         strokeDasharray={isCentered ? "4 2" : undefined}
-         opacity="0.94"
-        />
-        {/* Shared-video count inside the circle when this node neighbors the hovered word.
-            Shows how many videos connect the two words without cluttering the edges. */}
-        {(() => {
-         const count = hoveredNeighborCount.get(index)
-         if (!count || isHovered) return null
-         const displayR = isHovered ? radius * 1.3 : radius
-         const fontSize = Math.max(7, Math.min(11, displayR * 0.72))
-         return (
-          <text
-           x={node.x}
-           y={node.y + fontSize * 0.36}
-           textAnchor="middle"
-           fill="#000000"
-           fontSize={fontSize}
-           fontWeight={900}
-           fontFamily="inherit"
-           style={{ pointerEvents: "none", userSelect: "none" }}>
-           {count}
-          </text>
-         )
-        })()}
-        {/* Label — stays its node color, thick black stroke for legibility on hover/select */}
-        <text
-         x={node.x}
-         y={node.y - (isHovered ? radius * 1.3 : radius) - 4}
-         textAnchor="middle"
-         stroke="#000000"
-         strokeWidth={isHovered || isSelected ? 3.5 : 0}
-         strokeLinejoin="round"
-         style={{ paintOrder: "stroke" }}
-         fill={color}
-         fontSize={Math.max(8, Math.min(12, radius * 0.72))}
-         fontWeight={1000}
-         fontFamily="inherit"
-         letterSpacing="0.04em"
-         opacity={isHovered || isSelected ? 1 : 0.92}>
-         {node.id.toUpperCase()}
-        </text>
-       </g>
-      )
-     })}
+     <g
+      transform={`translate(${translateX}, ${translateY})`}
+      style={{ transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)" }}>
+      {/* Edges */}
+      {graph.edges.map((edge, index) => {
+       const source = graph.nodes[edge.source]
+       const target = graph.nodes[edge.target]
+       if (!source || !target) return null
+       
+       // Calculate clamped coordinates for edges to match clamped nodes
+       const srcRadius = 5 + (source.totalViews / maxViews) * 20
+       const tgtRadius = 5 + (target.totalViews / maxViews) * 20
+       const srcX = Math.max(srcRadius + 20, Math.min(width - srcRadius - 20, source.x))
+       const srcY = Math.max(srcRadius + 25, Math.min(height - srcRadius - 10, source.y))
+       const tgtX = Math.max(tgtRadius + 20, Math.min(width - tgtRadius - 20, target.x))
+       const tgtY = Math.max(tgtRadius + 25, Math.min(height - tgtRadius - 10, target.y))
+
+       const isHovered = hovered === source.id || hovered === target.id
+       const isSelected = selected.length === 0 || selected.includes(source.id) || selected.includes(target.id)
+       const maxEdgeWidth = Math.min(srcRadius, tgtRadius) * 0.55
+       const edgeWidth = Math.max(1.8, Math.sqrt(edge.sharedVideos / maxShared) * maxEdgeWidth)
+       return (
+         <line
+          key={`edge-${index}`}
+          x1={srcX}
+          y1={srcY}
+          x2={tgtX}
+          y2={tgtY}
+          stroke={`url(#${instanceId}-word-edge-grad-${index})`}
+          strokeWidth={edgeWidth}
+          opacity={isSelected ? (isHovered ? 0.95 : 0.6) : 0.15}
+         />
+       )
+      })}
+      {/* Nodes */}
+      {graph.nodes.map((node, index) => {
+       const radius = 5 + (node.totalViews / maxViews) * 20
+       const color = getNodeColor(index)
+       
+       // Clamp coordinates to prevent overflow
+       const cx = Math.max(radius + 20, Math.min(width - radius - 20, node.x))
+       const cy = Math.max(radius + 25, Math.min(height - radius - 10, node.y))
+
+       const isHovered = hovered === node.id
+       const isSelected = selected.includes(node.id)
+       const isCentered = centerNodeId === node.id
+       const degreeRingR = radius + 3 + (degree[index] / maxDegree) * 5
+       const dashLen = (2 * Math.PI * degreeRingR * degree[index]) / maxDegree
+       const dashGap = 2 * Math.PI * degreeRingR
+       return (
+        <g
+         key={node.id}
+         tabIndex={0}
+         role="button"
+         aria-label={`${node.id}, ${metricLabel} ${node.totalViews}, ${node.videoCount} videos`}
+         aria-pressed={isSelected}
+         onMouseEnter={() => onHover(node.id)}
+         onMouseLeave={() => onHover(null)}
+         onFocus={() => onHover(node.id)}
+         onBlur={() => onHover(null)}
+         onClick={(event) => {
+          event.stopPropagation()
+          onSelect(node.id)
+         }}
+         onDoubleClick={(event) => {
+          event.stopPropagation()
+          onRecenter(node.id)
+         }}
+         onKeyDown={(event) => {
+          if (event.key !== "Enter" && event.key !== " ") return
+          event.preventDefault()
+          event.stopPropagation()
+          onSelect(node.id)
+         }}
+         style={{ cursor: "pointer" }}>
+         {/* Soft glow halo */}
+         <circle cx={cx} cy={cy} r={radius * 2.2} fill={color} opacity={isHovered || isSelected ? 0.14 : 0.06} filter={`url(#${instanceId}-node-glow)`} />
+         {/* Degree ring — arc length shows how connected this node is */}
+         <circle
+          cx={cx}
+          cy={cy}
+          r={degreeRingR}
+          fill="none"
+          stroke={color}
+          strokeWidth="1.5"
+          strokeDasharray={`${dashLen} ${dashGap}`}
+          opacity={isHovered || isSelected ? 0.7 : 0.3}
+          style={{ transformOrigin: `${cx}px ${cy}px`, transform: "rotate(-90deg)" }}
+         />
+         {/* Main node circle — double ring when it's the re-center pivot */}
+         <circle
+          cx={cx}
+          cy={cy}
+          r={isHovered ? radius * 1.3 : radius}
+          fill={color}
+          stroke={isCentered ? "#CCFF00" : isSelected ? color : isHovered ? color : "rgba(0,0,0,0.4)"}
+          strokeWidth={isCentered ? 3 : isSelected || isHovered ? 2.5 : 1}
+          strokeDasharray={isCentered ? "4 2" : undefined}
+          opacity="0.94"
+         />
+         {/* Shared-video count inside the circle when this node neighbors the hovered word.
+             Shows how many videos connect the two words without cluttering the edges. */}
+         {(() => {
+          const count = hoveredNeighborCount.get(index)
+          if (!count || isHovered) return null
+          const displayR = isHovered ? radius * 1.3 : radius
+          const fontSize = Math.max(7, Math.min(11, displayR * 0.72))
+          return (
+           <text
+            x={cx}
+            y={cy + fontSize * 0.36}
+            textAnchor="middle"
+            fill="#000000"
+            fontSize={fontSize}
+            fontWeight={900}
+            fontFamily="inherit"
+            style={{ pointerEvents: "none", userSelect: "none" }}>
+            {count}
+           </text>
+          )
+         })()}
+         {/* Label — stays its node color, thick black stroke for legibility on hover/select */}
+         <text
+          x={cx}
+          y={cy - (isHovered ? radius * 1.3 : radius) - 4}
+          textAnchor="middle"
+          stroke="#000000"
+          strokeWidth={isHovered || isSelected ? 3.5 : 0}
+          strokeLinejoin="round"
+          style={{ paintOrder: "stroke" }}
+          fill={color}
+          fontSize={Math.max(8, Math.min(12, radius * 0.72))}
+          fontWeight={1000}
+          fontFamily="inherit"
+          letterSpacing="0.04em"
+          opacity={isHovered || isSelected ? 1 : 0.92}>
+          {node.id.toUpperCase()}
+         </text>
+        </g>
+       )
+      })}
     </g>
    </svg>
+   <div className="absolute bottom-4 right-4 flex items-center gap-2 rounded-md bg-black/60 px-3 py-1.5 backdrop-blur shadow-md pointer-events-none">
+    <span className="text-[9px] font-black text-white/70 tracking-[0.1em] uppercase">Topic Clusters</span>
+    <div className="flex -space-x-1">
+     {Array.from({ length: numCommunities }).map((_, i) => (
+      <div key={i} className="h-2.5 w-2.5 rounded-full border border-black" style={{ backgroundColor: getNodeColor(i) }} />
+     ))}
+    </div>
+   </div>
   </div>
  )
 }
@@ -3084,6 +3108,18 @@ const HEAT_STOPS: [number, string][] = [
  [1.00, "#FA618A"],  // Rose/Red   ← nav   — hottest
 ]
 
+const BARCODE_HEAT_STOPS: [number, string][] = [
+ [0.00, "#020710"],  // near-black         — coldest
+ [0.15, "#050F26"],  // dark navy
+ [0.30, "#08173F"],  // dark navy
+ [0.42, "#528FFA"],  // Royal blue ← nav   — smoothly bridges into green
+ [0.50, "#3FEE56"],  // Green      ← nav   — 50th percentile (midpoint)
+ [0.62, "#FFDA47"],  // Yellow     ← nav
+ [0.75, "#FFA85C"],  // Orange     ← nav
+ [0.88, "#FF7F6B"],  // Coral      ← nav
+ [1.00, "#FA618A"],  // Rose/Red   ← nav   — hottest
+]
+
 const hexToRgb = (hex: string): [number, number, number] => {
  const h = hex.replace("#", "")
  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]
@@ -3108,6 +3144,8 @@ const rampColor = (stops: [number, string][], t: number): string => {
 }
 
 const heatColor = (t: number): string => rampColor(HEAT_STOPS, t)
+const barcodeHeatColor = (t: number): string => rampColor(BARCODE_HEAT_STOPS, t)
+const BARCODE_HEAT_GRADIENT = `linear-gradient(to right, ${BARCODE_HEAT_STOPS.map(([t, c]) => `${c} ${(t * 100).toFixed(0)}%`).join(", ")})`
 
 /** Publish clock ramp: dark blue → blue over the first 60%, on to pink by 85%, then pink → white across the top 15%. */
 const PUBLISH_CLOCK_STOPS: [number, string][] = [
@@ -3209,7 +3247,37 @@ const ThermalImagingModuleInner: React.FC<{
   const rect = tr.getBoundingClientRect()
   const clickX = e.clientX - rect.left
   const ratio = clickX / rect.width
-  el.scrollLeft = ratio * (el.scrollWidth - el.clientWidth)
+  el.scrollTo({ left: ratio * (el.scrollWidth - el.clientWidth), behavior: 'smooth' })
+ }
+
+ const handleThumbPointerDown = (e: React.PointerEvent<HTMLSpanElement>) => {
+  e.preventDefault()
+  e.stopPropagation()
+  
+  const startX = e.clientX
+  const el = containerRef.current
+  const tr = trackRef.current
+  if (!el || !tr) return
+
+  const scrollStart = el.scrollLeft
+  const maxThumbTravel = tr.clientWidth - thumbWidth
+  if (maxThumbTravel <= 0) return
+
+  const maxScroll = el.scrollWidth - el.clientWidth
+
+  const onPointerMove = (moveEvent: PointerEvent) => {
+   const deltaX = moveEvent.clientX - startX
+   const deltaScroll = (deltaX / maxThumbTravel) * maxScroll
+   el.scrollLeft = scrollStart + deltaScroll
+  }
+
+  const onPointerUp = () => {
+   window.removeEventListener("pointermove", onPointerMove)
+   window.removeEventListener("pointerup", onPointerUp)
+  }
+
+  window.addEventListener("pointermove", onPointerMove)
+  window.addEventListener("pointerup", onPointerUp)
  }
 
  if (displayVideos.length === 0) return <Empty label="No videos match the selected filters" />
@@ -3267,38 +3335,35 @@ const ThermalImagingModuleInner: React.FC<{
     </div>
    </div>
 
-   {/* Combined Scrollbar + Legend Spectrum Row (Same Row!) */}
+  {/* Combined Scrollbar + Legend Spectrum Row */}
    <div className="flex items-center justify-between gap-3 border-t-[3px] border-black bg-[#080816] px-3 py-1.5 shrink-0">
-    {/* 1/2 Size vt-sync-scroll-controls */}
     <div className="flex-1 flex items-center min-w-0 pr-2">
      <div
       className="w-full flex items-stretch overflow-hidden border-[3px] border-black"
       style={{
-       height: 24,
+       height: 30,
        background: headerColorPair.title,
       }}
      >
-      {/* Previous / Left Arrow Button (Icon section bg color, NO corner radius!) */}
       <button
        type="button"
        aria-label="Previous metric group"
        onClick={() => {
-        if (containerRef.current) containerRef.current.scrollLeft -= 180
+        if (containerRef.current) containerRef.current.scrollBy({ left: -180, behavior: 'smooth' })
        }}
        className="flex items-center justify-center border-r-[3px] border-black cursor-pointer shrink-0 transition-opacity hover:opacity-90 active:opacity-75"
        style={{
-        width: 26,
+        width: 30,
         height: "100%",
         background: headerColorPair.icon,
         borderRadius: 0,
        }}
       >
-       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left" aria-hidden="true">
+       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left" aria-hidden="true">
         <path d="m15 18-6-6 6-6"></path>
        </svg>
       </button>
 
-      {/* Track & 2px Window Inset with 999px Area and Thumb Radius */}
       <div
        ref={trackRef}
        onClick={handleTrackClick}
@@ -3317,53 +3382,54 @@ const ThermalImagingModuleInner: React.FC<{
         }}
        >
         <span
-         className="absolute top-0 bottom-0 pointer-events-auto cursor-grab active:cursor-grabbing"
+         className="absolute top-0 bottom-0 pointer-events-auto cursor-grab active:cursor-grabbing hover:brightness-110"
+         onPointerDown={handleThumbPointerDown}
          style={{
           left: `${thumbLeft}px`,
           width: `${thumbWidth}px`,
           borderRadius: 999,
-          background: headerColorPair.title, // Title section bg color!
-          border: 0,                           // No stroke!
+          background: headerColorPair.title,
+          border: 0,
           minWidth: 20,
          }}
         />
        </span>
       </div>
 
-      {/* Next / Right Arrow Button (Icon section bg color, NO corner radius!) */}
       <button
        type="button"
        aria-label="Next metric group"
        onClick={() => {
-        if (containerRef.current) containerRef.current.scrollLeft += 180
+        if (containerRef.current) containerRef.current.scrollBy({ left: 180, behavior: 'smooth' })
        }}
        className="flex items-center justify-center border-l-[3px] border-black cursor-pointer shrink-0 transition-opacity hover:opacity-90 active:opacity-75"
        style={{
-        width: 26,
+        width: 30,
         height: "100%",
         background: headerColorPair.icon,
         borderRadius: 0,
        }}
       >
-       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right" aria-hidden="true">
+       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right" aria-hidden="true">
         <path d="m9 18 6-6-6-6"></path>
        </svg>
       </button>
      </div>
     </div>
 
+
     {/* Legend Spectrum Bar */}
-    <div className="flex items-center gap-1.5 shrink-0">
-     <span className="text-[9px] font-[1000] uppercase tracking-[0.1em] text-[#F3F4F6]/50 shrink-0">COLD</span>
+    <div className="flex items-center gap-2 shrink-0 h-[30px]">
+     <span className="text-[10px] font-[1000] uppercase tracking-[0.15em] text-[#F3F4F6]/60 shrink-0">COLD</span>
      <div
-      className="w-[120px] h-3.5 rounded-[2px] border-[1.5px] border-black"
+      className="h-6 w-[180px] shrink-0 rounded-[4px] border-[1.5px] border-white/80"
       style={{
        background: HEAT_GRADIENT,
-       boxShadow: "0 0 6px rgba(250,97,138,0.35)",
+       boxShadow: "0 0 8px rgba(250,97,138,0.4)",
       }}
      />
-     <span className="text-[9px] font-[1000] uppercase tracking-[0.1em] text-[#F3F4F6]/50 shrink-0">HOT</span>
-     <span className="ml-1.5 text-[9px] font-[1000] uppercase tracking-[0.1em] text-[#F3F4F6]/30 shrink-0">RANK RELATIVE</span>
+     <span className="text-[10px] font-[1000] uppercase tracking-[0.15em] text-[#F3F4F6]/60 shrink-0">HOT</span>
+     <span className="ml-2 text-[9px] font-[1000] uppercase tracking-[0.1em] text-[#F3F4F6]/40 shrink-0">RANK RELATIVE</span>
     </div>
    </div>
 
@@ -3527,25 +3593,26 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
  }, [hovered, totals, metric, filteredVideos])
 
  const METRIC_OPTIONS = THERMAL_METRICS.map(m => ({ label: m.label, value: m.key }))
- const heatStyle = props.visualStyle ?? resolveVtSyncVisualStyle("HEAT MATRIX")
- const heatHeaderPair = props.visualStyle?.headerColorPair ?? headerPairForColor("#FFB158")
 
  return (
-  <AnalyticsVisualShell
-   shellMode="standard"
+  <ModuleFrame
+   visualStyle={props.visualStyle}
    title="HEAT MATRIX"
    subtitle="Ranks each video as a pixel by the selected metric and format."
-   iconKey={heatStyle.iconKey}
-   headerColorPair={heatHeaderPair}
+   count={displayVideos.length}
+   color="#FFB158"
+   height={420}
+   flushShell
+   collapsible={props.collapsible}
+   isOpenInitial={props.isOpenInitial}
    activeContext={{
     title: hovered
      ? `${hovered.title.toUpperCase()}${lockedIdx !== null ? " LOCKED" : ""}`
      : `CHANNEL TOTALS (${formatFilter.toUpperCase()})`,
     stats: activeStats,
     bgTone: "#080816",
-    minHeight: 44,
    }}
-   controllerSpec={{ rows: [
+   controllerRows={[
     {
      type: "dropdown",
      value: formatFilter,
@@ -3577,26 +3644,21 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
       bgTone: "#CCFF00",
       fgTone: "#000000",
      },
-    ] }}
-   canvasFitMode="balanced"
-   standard={{
-    collapsible: props.collapsible,
-    isOpenInitial: props.isOpenInitial,
-    layout: { moduleMinHeight: "auto" },
-    theme: { shadowColor: "rgba(255,177,88,0.45)" },
-   }}
+    ]}
    >
-    <ThermalImagingModuleInner
-     displayVideos={displayVideos}
-     rows={rowCount}
-     hoveredIdx={hoveredIdx}
-     lockedIdx={lockedIdx}
-     onMouseEnterTile={handleTileMouseEnter}
-     onMouseLeaveTile={handleTileMouseLeave}
-     onClickTile={handleTileClick}
-     heatColor={heatColor}
-    />
-   </AnalyticsVisualShell>
+    <div className="h-full w-full bg-[#0a0a1a]">
+     <ThermalImagingModuleInner
+      displayVideos={displayVideos}
+      rows={rowCount}
+      hoveredIdx={hoveredIdx}
+      lockedIdx={lockedIdx}
+      onMouseEnterTile={handleTileMouseEnter}
+      onMouseLeaveTile={handleTileMouseLeave}
+      onClickTile={handleTileClick}
+      heatColor={heatColor}
+     />
+    </div>
+   </ModuleFrame>
   )
 }
 
@@ -3634,7 +3696,7 @@ const CHANNEL_VITAL_METRICS: Array<{ key: VitalMetricKey; label: string; color: 
 ]
 
 /** 0 means "all rows". */
-const VITAL_ROW_COUNTS = [5, 10, 15, 25, 50, 100, 150, 200, 250, 0] as const
+const VITAL_ROW_COUNTS = [0, 5, 10, 15, 25, 50, 100, 150, 200, 250] as const
 
 const VITAL_FORMAT_MODES = [
  { value: "all" as const, label: "CHANNEL VIDEOS" },
@@ -3653,7 +3715,7 @@ const sortVitalRows = (rows: TubeExplorerVideoPoint[]) =>
 export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = (props) => {
  const dataset = useExplorerData(props)
  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
- const [countIndex, setCountIndex] = useState<number>(5)
+ const [countIndex, setCountIndex] = useState<number>(0)
  const [formatIndex, setFormatIndex] = useState<number>(0)
  const rowCount = VITAL_ROW_COUNTS[countIndex]
  const formatFilter = VITAL_FORMAT_MODES[formatIndex]
@@ -3691,8 +3753,7 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
  const controllerRows: SubToolboxChartModuleProps["controllerRows"] = [
   {
    type: "number",
-   // Falls back to the real total whenever the channel has fewer videos than the step.
-   value: rowCount === 0 || rows.length < rowCount ? String(rows.length) : String(rowCount),
+   value: rowCount === 0 ? "ALL VIDEOS" : rows.length < rowCount ? String(rows.length) : String(rowCount),
    onPrev: () => stepCount(-1),
    onNext: () => stepCount(1),
    bgTone: "#FFEA00",
@@ -3711,22 +3772,9 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
 
  const activeContext = useMemo(() => {
   const target = hovered || rows[rows.length - 1]
-  const metricValue = (metric: VitalMetricKey): number => {
-   if (!target) return 0
-   const value = Number(target[metric])
-   return Number.isFinite(value) ? value : 0
-  }
   return {
-   title: target ? target.title.toUpperCase() : "CHANNEL VITALS",
-   stats: CHANNEL_VITAL_METRICS.map((metric) => ({
-     label: metric.label,
-     value: metric.format(metricValue(metric.key)),
-     tone: metric.color,
-     valueTone: "#000000",
-     lockTone: true,
-     compact: true,
-    })),
-   minHeight: 44,
+   bgTone: "#080816",
+   title: target ? videoShortTitle(target.title.toUpperCase(), 65) : "CHANNEL VITALS",
   }
  }, [hovered, rows])
 
@@ -3736,6 +3784,7 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
    visualStyle={props.visualStyle}
     title="CHANNEL VITAL SIGNS"
     subtitle="Independent channel metrics traced across upload order."
+    bgTone="#080816"
     count={0}
     color="#FF7497"
     activeContext={activeContext}
@@ -3778,6 +3827,7 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
    visualStyle={props.visualStyle}
    title="CHANNEL VITAL SIGNS"
    subtitle="Twelve channel metrics traced together across upload order. Saves use YouTube Playlist Saves."
+   bgTone="#080816"
    count={rows.length}
    color="#FF7497"
    activeContext={activeContext}
@@ -3788,10 +3838,120 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
   >
-   <div className="flex h-full flex-col bg-[#090914]">
-    <div className="flex shrink-0 flex-wrap items-center justify-center gap-x-3 gap-y-1 px-2 py-1.5">
+    <div className="flex h-full flex-col bg-[#090914]">
+     <div className="relative flex-1 min-h-0">
+      <svg
+       viewBox={`0 0 ${W} ${H}`}
+       preserveAspectRatio="none"
+       className="block h-full w-full"
+       role="img"
+       aria-label="Channel vital signs oscilloscope showing twelve metrics across upload order"
+       onMouseMove={(event) => {
+        // preserveAspectRatio="none" makes viewBox x map linearly onto element width,
+        // so this stays accurate edge to edge rather than only at the centre.
+        const bounds = event.currentTarget.getBoundingClientRect()
+        const ratio = (event.clientX - bounds.left) / Math.max(bounds.width, 1)
+        const index = Math.max(0, Math.min(rows.length - 1, Math.round((ratio * W - PAD_L) / plotWidth * Math.max(rows.length - 1, 1))))
+        setHoveredIndex(index)
+       }}
+       onMouseLeave={() => setHoveredIndex(null)}
+      >
+       <defs>
+        {visibleMetrics.map((metric) => (
+         <filter key={metric.key} id={`vital-glow-${metric.key}`} x="-20%" y="-40%" width="140%" height="180%">
+          <feGaussianBlur stdDeviation="2.5" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+         </filter>
+        ))}
+       </defs>
+       {/* Lanes first, traces second: peaks reach into neighbouring lanes, and a later
+           lane's background would otherwise paint over the trace above it. */}
+       {visibleMetrics.map((metric, trackIndex) => {
+        const top = PAD_T + trackIndex * (trackHeight + trackGap)
+        const baseline = top + trackHeight
+        return (
+         <g key={`lane-${metric.key}`}>
+          <rect x={PAD_L} y={top} width={plotWidth} height={trackHeight} fill="#05050c" stroke="#ffffff" strokeOpacity="0.09" strokeWidth="1" />
+          <line x1={PAD_L} y1={baseline} x2={W - PAD_R} y2={baseline} stroke={metric.color} strokeOpacity="0.32" strokeWidth="1" />
+         </g>
+        )
+       })}
+       {visibleMetrics.map((metric, trackIndex) => (
+        <polyline
+         key={`trace-${metric.key}`}
+         points={rows.map((row, index) => `${xFor(index)},${yFor(metric, Number(row[metric.key]) || 0, trackIndex)}`).join(" ")}
+         fill="none"
+         stroke={metric.color}
+         strokeWidth="1.5"
+         strokeLinejoin="round"
+         strokeLinecap="round"
+         filter={`url(#vital-glow-${metric.key})`}
+        />
+       ))}
+       {hoverX !== null ? (
+        <line
+         pointerEvents="none"
+         x1={hoverX}
+         y1={PAD_T}
+         x2={hoverX}
+         y2={H - PAD_B}
+         stroke="#FFFFFF"
+         strokeWidth="1"
+         opacity="0.5"
+        />
+       ) : null}
+      </svg>
+      <div className="absolute inset-0 pointer-events-none">
+       {visibleMetrics.map((metric, trackIndex) => {
+        const top = PAD_T + trackIndex * (trackHeight + trackGap)
+        const yPct = ((top + trackHeight / 2) / H) * 100
+        const rightPct = 100 - ((PAD_L - 8) / W) * 100
+        return (
+         <div
+          key={metric.key}
+          className="absolute -translate-y-1/2 text-right font-[1000] uppercase tracking-[0.04em]"
+          style={{
+           top: `${yPct}%`,
+           right: `${rightPct}%`,
+           color: metric.color,
+           fontSize: '9px',
+          }}
+         >
+          {metric.label}
+         </div>
+        )
+       })}
+       <div
+        className="absolute font-[900] tracking-[0.1em]"
+        style={{
+         left: `${(PAD_L / W) * 100}%`,
+         bottom: `${(8 / H) * 100}%`,
+         color: "#FFFFFF",
+         opacity: 0.38,
+         fontSize: '9px',
+        }}
+       >
+        OLDER UPLOADS
+       </div>
+       <div
+        className="absolute font-[900] tracking-[0.1em] text-right"
+        style={{
+         right: `${(PAD_R / W) * 100}%`,
+         bottom: `${(8 / H) * 100}%`,
+         color: "#FFFFFF",
+         opacity: 0.38,
+         fontSize: '9px',
+        }}
+       >
+        LATEST UPLOADS
+       </div>
+      </div>
+     </div>
+     <div className="flex shrink-0 flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-white/10 px-2 py-3 bg-[#080816]">
      {CHANNEL_VITAL_METRICS.map((metric) => {
       const isOn = !hiddenMetrics.has(metric.key)
+      const target = hovered || rows[rows.length - 1]
+      const metricVal = target ? Number(target[metric.key]) || 0 : 0
       return (
        <button
         key={metric.key}
@@ -3800,87 +3960,22 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
         aria-checked={isOn}
         aria-label={`Toggle ${metric.label} trace`}
         onClick={() => toggleMetric(metric.key)}
-        className="flex items-center gap-1.5 border-none bg-transparent p-0 text-[9px] font-black uppercase tracking-[0.1em] leading-none"
+        className="flex items-center gap-1.5 border-none bg-transparent p-0 text-[10px] font-black uppercase tracking-[0.05em] leading-none"
         style={{ color: metric.color, opacity: isOn ? 1 : 0.4, cursor: "pointer" }}
        >
         <span
-         className="h-3.5 w-3.5 shrink-0 rounded-[2px] border-[2px]"
+         className="h-3 w-3 shrink-0 rounded-[2px] border-[2px]"
          style={{
           background: isOn ? metric.color : "transparent",
           borderColor: metric.color,
          }}
         />
         {metric.label}
+        <span className="ml-1 font-[1000] text-white opacity-80">{metric.format(metricVal)}</span>
        </button>
       )
      })}
     </div>
-    <svg
-     viewBox={`0 0 ${W} ${H}`}
-     preserveAspectRatio="none"
-     className="block min-h-0 w-full flex-1"
-     role="img"
-     aria-label="Channel vital signs oscilloscope showing twelve metrics across upload order"
-     onMouseMove={(event) => {
-      // preserveAspectRatio="none" makes viewBox x map linearly onto element width,
-      // so this stays accurate edge to edge rather than only at the centre.
-      const bounds = event.currentTarget.getBoundingClientRect()
-      const ratio = (event.clientX - bounds.left) / Math.max(bounds.width, 1)
-      const index = Math.max(0, Math.min(rows.length - 1, Math.round((ratio * W - PAD_L) / plotWidth * Math.max(rows.length - 1, 1))))
-      setHoveredIndex(index)
-     }}
-     onMouseLeave={() => setHoveredIndex(null)}
-    >
-     <defs>
-      {visibleMetrics.map((metric) => (
-       <filter key={metric.key} id={`vital-glow-${metric.key}`} x="-20%" y="-40%" width="140%" height="180%">
-        <feGaussianBlur stdDeviation="2.5" result="blur" />
-        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-       </filter>
-      ))}
-     </defs>
-     {/* Lanes first, traces second: peaks reach into neighbouring lanes, and a later
-         lane's background would otherwise paint over the trace above it. */}
-     {visibleMetrics.map((metric, trackIndex) => {
-      const top = PAD_T + trackIndex * (trackHeight + trackGap)
-      const baseline = top + trackHeight
-      return (
-       <g key={`lane-${metric.key}`}>
-        <rect x={PAD_L} y={top} width={plotWidth} height={trackHeight} fill="#05050c" stroke="#ffffff" strokeOpacity="0.09" strokeWidth="1" />
-        <line x1={PAD_L} y1={baseline} x2={W - PAD_R} y2={baseline} stroke={metric.color} strokeOpacity="0.32" strokeWidth="1" />
-        <text x={PAD_L - 8} y={top + trackHeight / 2 + 3} textAnchor="end" style={{ fill: metric.color, fontSize: 9, fontWeight: 1000, letterSpacing: "0.04em" }}>
-         {metric.label}
-        </text>
-       </g>
-      )
-     })}
-     {visibleMetrics.map((metric, trackIndex) => (
-      <polyline
-       key={`trace-${metric.key}`}
-       points={rows.map((row, index) => `${xFor(index)},${yFor(metric, Number(row[metric.key]) || 0, trackIndex)}`).join(" ")}
-       fill="none"
-       stroke={metric.color}
-       strokeWidth="1.5"
-       strokeLinejoin="round"
-       strokeLinecap="round"
-       filter={`url(#vital-glow-${metric.key})`}
-      />
-     ))}
-     {hoverX !== null ? (
-      <line
-       pointerEvents="none"
-       x1={hoverX}
-       y1={PAD_T}
-       x2={hoverX}
-       y2={H - PAD_B}
-       stroke="#FFFFFF"
-       strokeWidth="1"
-       opacity="0.5"
-      />
-     ) : null}
-     <text x={PAD_L} y={H - 8} style={{ fill: "#FFFFFF", opacity: 0.38, fontSize: 9, fontWeight: 900, letterSpacing: "0.1em" }}>OLDER UPLOADS</text>
-     <text x={W - PAD_R} y={H - 8} textAnchor="end" style={{ fill: "#FFFFFF", opacity: 0.38, fontSize: 9, fontWeight: 900, letterSpacing: "0.1em" }}>LATEST UPLOADS</text>
-    </svg>
    </div>
   </ModuleFrame>
  )
@@ -3961,6 +4056,7 @@ export const TubeExplorerBarcodeFingerprint: React.FC<TubeExplorerVisualProps> =
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
+    bgTone: "#080816",
     title: hovered ? videoShortTitle(hovered.title, 52).toUpperCase() : `VIDEO BARCODE (${formatFilter.toUpperCase()})`,
     stats,
    }}
@@ -4035,16 +4131,20 @@ export const TubeExplorerSubscriberWaterfall: React.FC<TubeExplorerVisualProps> 
  const activeDef = WATERFALL_METRICS[metricIndex]
 
  const rows = useMemo(() => {
+  const getVideoTime = (v: TubeExplorerVideoPoint) => {
+   const d = v.uploadDate || (v as any).publishedAt || (v as any).date || ""
+   const t = Date.parse(d)
+   return Number.isFinite(t) ? t : 0
+  }
   const scoped = dataset.videos.filter((video) => {
-   if (!video.uploadDate) return false
    if (formatMode.value === "shorts") return video.format === "shorts"
    if (formatMode.value === "long") return video.format === "long"
    return true
   })
-  // Always take the most recent slice, then order it for display.
-  const byDate = [...scoped].sort((a, b) => new Date(a.uploadDate).getTime() - new Date(b.uploadDate).getTime())
+  // Sort ascending by upload timestamp (oldest → newest chronological order)
+  const byDate = [...scoped].sort((a, b) => getVideoTime(a) - getVideoTime(b) || a.videoId.localeCompare(b.videoId))
   const windowed = limit === 0 ? byDate : byDate.slice(-limit)
-  return chrono ? windowed : [...windowed].sort((a, b) => (Number(b[activeDef.key]) || 0) - (Number(a[activeDef.key]) || 0))
+  return chrono ? windowed : [...windowed].sort((a, b) => (Number(a[activeDef.key]) || 0) - (Number(b[activeDef.key]) || 0))
  }, [chrono, dataset.videos, formatMode, limit, activeDef.key])
 
  const netVal = rows.reduce((sum, row) => sum + (Number(row[activeDef.key]) || 0), 0)
@@ -4065,6 +4165,7 @@ export const TubeExplorerSubscriberWaterfall: React.FC<TubeExplorerVisualProps> 
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
+    bgTone: "#080816",
     title: hovered ? videoShortTitle(hovered.video.title, 54).toUpperCase() : `${activeDef.label} JOURNEY (${formatMode.label})`,
     stats: hovered
      ? [
@@ -4117,7 +4218,7 @@ export const TubeExplorerSubscriberWaterfall: React.FC<TubeExplorerVisualProps> 
    ]}
   >
    <div className="h-full w-full bg-[#0a0a1a]">
-    <SubscriberWaterfallRenderer rows={rows} metricKey={activeDef.key} onHover={setHovered} />
+    <SubscriberWaterfallRenderer rows={rows} metricKey={activeDef.key} chrono={chrono} onHover={setHovered} />
    </div>
   </ModuleFrame>
  )
@@ -4148,6 +4249,7 @@ export const TubeExplorerShortsVsLongs: React.FC<TubeExplorerVisualProps> = (pro
    isOpenInitial={props.isOpenInitial}
    activeContext={{
     title: hovered ? `${hovered.label} — ${winner} WIN` : `FORMAT DUEL (${mode})`,
+    bgTone: "#080816",
     stats: hovered
      ? [
       { label: "SHORTS", value: hovered.format(hovered.shorts), tone: SHORTS_TONE, lockTone: true, compact: true },
@@ -4173,8 +4275,10 @@ export const TubeExplorerShortsVsLongs: React.FC<TubeExplorerVisualProps> = (pro
     { type: "label", value: "HEAD TO HEAD", bgTone: "#000000", fgTone: "#FFFFFF" },
    ]}
   >
-   <div className="h-full w-full bg-[#0a0a1a]">
-    <ShortsLongsRenderer shorts={shorts} longs={longs} average={average} onHover={setHovered} />
+   <div className="h-full w-full bg-[#0a0a1a] flex items-center justify-center">
+    <div className="h-full w-1/2 max-w-[600px] flex items-center justify-center">
+     <ShortsLongsRenderer shorts={shorts} longs={longs} average={average} onHover={setHovered} />
+    </div>
    </div>
   </ModuleFrame>
  )
@@ -4306,17 +4410,18 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
   if (drilled) {
    return squarifyTreemap(
     drilled.videos
+     .slice(0, 20)
      .map((video) => ({ video, value: Number(video[metric.key]) || 0 }))
      .filter((entry) => entry.value > 0),
     width,
-    height,
+    Math.max(10, height - 44),
    ).map((rect) => ({
     key: rect.video.videoId,
     label: videoShortTitle(rect.video.title, 60),
     sub: `${metric.format(rect.value)} · ${compact(rect.video.views)} ${rect.video.views === 1 ? "view" : "views"}`,
     color: drilled.color,
     value: rect.value,
-    x: rect.x, y: rect.y, w: rect.w, h: rect.h,
+    x: rect.x, y: rect.y + 44, w: rect.w, h: rect.h,
    }))
   }
   return squarifyTreemap(pillars, width, height).map((rect) => ({
@@ -4351,6 +4456,7 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
    visualStyle={props.visualStyle}
    title="CONTENT TREEMAP"
    subtitle="Pillar area map · area = selected metric · click a pillar to zoom in."
+   bgTone="#080816"
    count={scoped.length}
    color="#FFB570"
    height={480}
@@ -4957,6 +5063,7 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
+    bgTone: "#080816",
     title: hovered ? `${slotLabel(hovered)} • SLOT` : `PUBLISH GRID (${formatFilter.toUpperCase()})`,
     bgTone: "#080816",
     minHeight: 44,
@@ -5024,6 +5131,7 @@ export const TubeExplorerTrafficDayRiverDelta: React.FC<TubeExplorerVisualProps>
    visualStyle={props.visualStyle}
    title="RIVER DELTA"
    subtitle="Traffic source flow · sources on top, the selected time buckets below."
+   bgTone="#080816"
    count={rows.length || dataset.traffic.length}
    color="#42FF68"
    icon="analytics"
@@ -5108,6 +5216,7 @@ export const TubeExplorerSankeyRiverDelta: React.FC<TubeExplorerVisualProps> = (
    visualStyle={props.visualStyle}
    title="RIVER DELTA"
    subtitle="Traffic sources flowing into top geography ranks."
+   bgTone="#080816"
    count={sourceRows.length + geoRows.length}
    color="#42FF68"
    height={460}
@@ -5176,6 +5285,7 @@ export const TubeExplorerClockRadialBurst: React.FC<TubeExplorerVisualProps> = (
    count={dataset.totals.videos || dataset.traffic.length}
    color="#FFE35A"
    activeContext={{
+    bgTone: "#080816",
     title: leadSlice ? `${trafficFocusLabel(leadSlice.kind)} • SOURCE DETAIL` : "CLOCK RADIAL BURST",
     stats: [
      { label: `TOTAL ${metricOption.shortLabel}`, value: formatClockBurstMetricValue(totalValue, metric), tone: metricOption.tone, lockTone: true, compact: true },
@@ -5184,9 +5294,6 @@ export const TubeExplorerClockRadialBurst: React.FC<TubeExplorerVisualProps> = (
     ],
    }}
    controllerRows={[
-    { type: "number", value: CLOCK_BURST_MAX_AREAS, bgTone: "#4FFF5B", fgTone: "#000000", isBig: false },
-    { type: "label", value: "SOURCES", bgTone: "#50D5B5", fgTone: "#000000" },
-    { type: "label", value: `TOP ${CLOCK_BURST_MAX_DETAILS} DETAILS`, bgTone: "#FF83EA", fgTone: "#000000" },
     {
      type: "dropdown",
      labelPrefix: "METRIC",
@@ -5285,6 +5392,7 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
   <AnalyticsVisualShell
    shellMode="standard"
    title="TITLE WORD NETWORK"
+   bgTone="#080816"
    subtitle={selectedRoots.length >= 2
     ? `${selectedRoots.length} WORDS SELECTED · ${selSharedVideos} SHARED VIDEOS · ${selectionEdges.length} CONNECTIONS BETWEEN THEM`
     : hoveredNode
