@@ -1,4 +1,16 @@
 import React from "react"
+import { AnalyticsVisualIcon } from "./AnalyticsVisualIcon"
+import { useAnalyticsVisualStyle } from "./AnalyticsVisualStyleContext"
+import { VisualModuleController, type ControllerRow } from "./VisualModuleController"
+import { useVtSyncVisualDataSourcePrefix } from "../features/vt-sync-local/shell/VtSyncVisualDataSourceContext"
+import {
+  VT_VISUAL_METRIC_COLORS,
+} from "../styles/toolboxPalette"
+import {
+  AnalyticsActiveStats,
+  resolveAnalyticsVisualContextBarHeight,
+  type AnalyticsVisualContextBarHeight,
+} from "./analyticsVisualContextBar"
 
 type Tone = "pink" | "cyan" | "lime" | "yellow" | "purple" | "orange" | "white"
 
@@ -27,15 +39,23 @@ export interface LegendSlotConfig {
 export interface SubToolboxStat {
   label: string
   value: string
-  tone?: Tone
+  /** Named UI tone or an explicit metric color from the shared visual palette. */
+  tone?: Tone | string
+  valueTone?: string
+  backgroundTone?: string
+  labelText?: string
+  labelClassName?: string
   onClick?: () => void
   isActive?: boolean
   lockTone?: boolean
+  compact?: boolean
+  /** Minimum card width. Longer labels may expand beyond this value. */
+  minWidth?: number
 }
 
 export interface SubToolboxMetricBadge {
   label: string
-  tone?: Tone
+  tone?: Tone | string
 }
 
 export interface SubToolboxChartModuleProps {
@@ -44,12 +64,23 @@ export interface SubToolboxChartModuleProps {
     subtitle: string
     icon?: React.ReactNode
     headerStyle?: "subtoolbox" | "classic"
+    titleClassName?: string
   }
   controlBox?: {
-    count: number | string
+    count?: number | string
     countLabel?: string
     countUnit?: string
+    onCountPrev?: () => void
+    onCountNext?: () => void
     dropdown?: {
+      value: string
+      options: ControlBoxDropdownOption[]
+      isOpen: boolean
+      onToggle: () => void
+      onSelect: (value: string) => void
+    }
+    /** A second dropdown rendered immediately after the first */
+    dropdown2?: {
       value: string
       options: ControlBoxDropdownOption[]
       isOpen: boolean
@@ -59,6 +90,9 @@ export interface SubToolboxChartModuleProps {
     extraActions?: React.ReactNode
     rightInlineControls?: React.ReactNode
   }
+  controllerRows?: ControllerRow[]
+  controllerWidth?: number
+  controllerDensity?: "normal" | "compact"
   activeContext?: {
     title?: React.ReactNode
     stats?: SubToolboxStat[]
@@ -66,11 +100,18 @@ export interface SubToolboxChartModuleProps {
     leftStats?: SubToolboxStat[]
     rightTitle?: string
     rightStats?: SubToolboxStat[]
+    bgTone?: string
+    height?: AnalyticsVisualContextBarHeight
+    /** Allows dense two-line labels without clipping the subtitle rail. */
+    minHeight?: number
   } | null
   layout?: {
     moduleWidth?: string
     moduleMinHeight?: string
     chartHeight?: number
+    bodyMinHeight?: string
+    bodyPreferredHeight?: string
+    heightPolicy?: "fixedBody" | "fillWidth" | "preserveRatio" | "compact"
   }
   theme?: ModuleThemeTokens
   renderer?: {
@@ -87,44 +128,41 @@ export interface SubToolboxChartModuleProps {
   }
   disableActiveContextBottomBorder?: boolean
   footerBorderless?: boolean
+  collapsible?: boolean
+  isOpenInitial?: boolean
+  /** Standard two-column insight / action row rendered below chart content */
+  insight?: {
+    personalInsight: string
+    actionInsight?: string
+  }
 }
 
-const toneClass = (tone?: Tone): string => {
-  if (tone === "pink") return "bg-[#FF7497]"
-  if (tone === "cyan") return "bg-[#00CCFF]"
-  if (tone === "lime") return "bg-[#CCFF00]"
-  if (tone === "yellow") return "bg-[#FFEA00]"
-  if (tone === "purple") return "bg-[#B14AED]"
-  if (tone === "orange") return "bg-[#FFB158]"
-  return "bg-[#E5E7EB]"
-}
-
-const toneForMetricLabel = (label: string, fallback?: Tone): Tone => {
-  const normalized = label.trim().toUpperCase()
-  if (normalized.includes("CTR")) return "cyan"
-  if (normalized === "RET" || normalized.includes("RETENTION")) return "pink"
-  if (normalized.includes("LIKE")) return "pink"
-  if (normalized.includes("COMMENT")) return "cyan"
-  if (normalized.includes("SHARE")) return "lime"
-  if (normalized.includes("SUB")) return "lime"
-  if (normalized.includes("REVENUE") || normalized === "REV" || normalized.includes("RPM")) return "cyan"
-  if (normalized.includes("VIEWS")) return "yellow"
-  if (normalized.includes("LENGTH") || normalized.includes("WATCH")) return "yellow"
-  if (normalized.includes("AVD")) return "lime"
-  if (normalized.includes("IMP")) return "purple"
-  return fallback ?? "white"
-}
-
-const statButtonClass = (clickable: boolean): string =>
-  `h-full w-auto min-w-[84px] px-0 inline-flex flex-col items-stretch justify-start tabular-nums leading-none overflow-hidden transition-colors ${
-    clickable ? "cursor-pointer hover:bg-gray-50" : "cursor-default"
-  } bg-white`
-
-const normalizeStatLabel = (label: string): string => {
-  const normalized = label.trim().toUpperCase()
-  if (normalized.includes("IMPRESSION")) return "IMPRSNS"
-  if (normalized === "SUBSCRIBERS" || normalized === "SUBSCRIPTIONS") return "SUBS"
-  return label
+/** Backward-compatible aliases backed by the canonical VT-SYNC metric palette. */
+export const METRIC_COLORS: Record<string, string> = {
+  SUBSCRIBERS: VT_VISUAL_METRIC_COLORS.subscribers,
+  SUBS: VT_VISUAL_METRIC_COLORS.subscribers,
+  COMMENTS: VT_VISUAL_METRIC_COLORS.comments,
+  CMNTS: VT_VISUAL_METRIC_COLORS.comments,
+  SHARES: VT_VISUAL_METRIC_COLORS.shares,
+  SAVES: VT_VISUAL_METRIC_COLORS.playlistSaves,
+  "PLAYLIST SAVES": VT_VISUAL_METRIC_COLORS.playlistSaves,
+  REVENUE: VT_VISUAL_METRIC_COLORS.revenue,
+  REV: VT_VISUAL_METRIC_COLORS.revenue,
+  RPM: VT_VISUAL_METRIC_COLORS.rpm,
+  VIEWS: VT_VISUAL_METRIC_COLORS.views,
+  "WATCH TIME": VT_VISUAL_METRIC_COLORS.watchTime,
+  WATCH: VT_VISUAL_METRIC_COLORS.watchTime,
+  AVP: VT_VISUAL_METRIC_COLORS.avp,
+  AVD: VT_VISUAL_METRIC_COLORS.avd,
+  LIKES: VT_VISUAL_METRIC_COLORS.likes,
+  IMPRESSIONS: "#B14AED",
+  IMPRSNS: "#B14AED",
+  CTR: "#00CCFF",
+  RETENTION: "#FF7497",
+  RET: "#FF7497",
+  ENGAGED: VT_VISUAL_METRIC_COLORS.engagedViews,
+  "ENGAGED VIEWS": VT_VISUAL_METRIC_COLORS.engagedViews,
+  LENGTH: "#40C6E9",
 }
 
 export const SubToolboxChartModule: React.FC<
@@ -132,6 +170,9 @@ export const SubToolboxChartModule: React.FC<
 > = ({
   header,
   controlBox,
+  controllerRows,
+  controllerWidth,
+  controllerDensity,
   activeContext,
   layout,
   theme,
@@ -142,17 +183,33 @@ export const SubToolboxChartModule: React.FC<
   metricBadges = [],
   disableActiveContextBottomBorder = false,
   footerBorderless = false,
+  collapsible = false,
+  isOpenInitial = true,
+  insight,
 }) => {
+  const sourcePrefix = useVtSyncVisualDataSourcePrefix()
+  const visualStyle = useAnalyticsVisualStyle()
+  const resolvedSubtitle = sourcePrefix ? `${sourcePrefix} · ${header.subtitle}` : header.subtitle
+  const [internalOpen, setInternalOpen] = React.useState(isOpenInitial)
+  const [hasOpened, setHasOpened] = React.useState(isOpenInitial)
+  const setOpen = () => {
+    setInternalOpen((prev) => !prev)
+    setHasOpened(true)
+  }
+
   const tokens = {
     frameBg: theme?.frameBg ?? "#FFFFFF",
     frameBorder: theme?.frameBorder ?? "#000000",
-    shadowColor: theme?.shadowColor ?? "#000000",
-    headerBandBg: theme?.headerBandBg ?? "#FF82B0",
-    iconBlockBg: theme?.iconBlockBg ?? "#26C7EC",
+    shadowColor: visualStyle?.headerColorPair?.title ? `${visualStyle.headerColorPair.title}73` : theme?.shadowColor ?? "#000000",
+    headerBandBg: visualStyle?.headerColorPair?.title ?? theme?.headerBandBg ?? "#FF82B0",
+    iconBlockBg: visualStyle?.headerColorPair?.icon ?? theme?.iconBlockBg ?? "#26C7EC",
     iconBlockBorder: theme?.iconBlockBorder ?? "#000000",
     controlBoxBg: theme?.controlBoxBg ?? "#000000",
     controlBoxText: theme?.controlBoxText ?? "#CCFF00",
   }
+  const resolvedHeaderIcon = visualStyle?.iconKey
+    ? <AnalyticsVisualIcon iconKey={visualStyle.iconKey} size={60} />
+    : header.icon
 
   const content = renderer ? renderer.render() : children
   const badges =
@@ -161,6 +218,9 @@ export const SubToolboxChartModule: React.FC<
       : activeContext?.stats?.length
         ? activeContext.stats.slice(0, 4).map((s) => ({ label: s.label, tone: s.tone }))
         : []
+  const headerBorderClass = collapsible && !internalOpen ? "" : "border-b-[4px] border-black"
+  const interiorMinHeight = collapsible && !internalOpen ? 0 : (layout?.moduleMinHeight ?? "420px")
+  const activeContextHeight = resolveAnalyticsVisualContextBarHeight(activeContext)
 
   return (
     <div
@@ -172,239 +232,197 @@ export const SubToolboxChartModule: React.FC<
         maxWidth: layout?.moduleWidth ?? "100%",
       }}
     >
-      <div className="border-b-[4px] border-black flex items-stretch h-[74px]">
+      {/*
+        Header layout is width-adaptive:
+        - On landscape / tablet / desktop (≥ 640 px) it stays a single flex row:
+          [icon square] [title/subtitle] [controllers pinned right].
+        - On portrait phones the controllers used to eat a fixed ~195 px on the
+          right, which left ~90 px for the title and forced "CHANNEL PROGRESS"
+          to `break-words` character-by-character (one letter per row). Below
+          640 px we now stack vertically: [icon + title/subtitle] on top,
+          controllers on their own row underneath, spanning the full width.
+      */}
+      <div
+        className={`${headerBorderClass} flex flex-col sm:flex-row sm:items-stretch min-h-[80px] ${collapsible ? 'cursor-pointer' : ''}`}
+        onClick={collapsible ? setOpen : undefined}
+      >
         <div
-          className="w-[76px] h-full border-r-[4px] border-black flex items-center justify-center shrink-0"
-          style={{ background: tokens.iconBlockBg, borderColor: tokens.iconBlockBorder }}
-        >
-          <span className="[&_svg]:h-9 [&_svg]:w-9">{header.icon}</span>
-        </div>
-        <div
-          className="flex-1 min-w-0 pl-3 pr-0 py-0 flex items-stretch justify-between gap-0"
+          className="flex items-stretch flex-1 min-w-0"
           style={{ background: tokens.headerBandBg }}
         >
-          <div className="min-w-0 py-2 flex flex-col justify-center">
-            <div className="font-[1000] text-[42px] leading-[0.85] uppercase tracking-[0em]">
+          {/* self-stretch fills the header's full height (no white frame showing beneath),
+              and aspect-square drives the width off that height so the block stays square. */}
+          <div
+            className="self-stretch aspect-square min-w-[80px] shrink-0 flex-none border-r-[4px] border-black flex items-center justify-center"
+            style={{ background: tokens.iconBlockBg, borderColor: tokens.iconBlockBorder }}
+          >
+            <span className="[&_svg]:h-8 [&_svg]:w-8">{resolvedHeaderIcon}</span>
+          </div>
+          <div className="min-w-0 flex-1 pl-3 pr-2 py-2 flex flex-col justify-center text-black">
+            <div className={`max-w-full font-[1000] uppercase tracking-[0em] ${header.titleClassName ?? "text-[clamp(20px,5vw,42px)] leading-[0.88]"}`}>
               {header.title}
             </div>
-            <div className="text-[14px] font-black uppercase tracking-[0.069em] opacity-80 truncate">
-              {header.subtitle}
+            <div className="max-w-full text-[clamp(10px,2.2vw,14px)] font-black uppercase tracking-[0.069em] text-black/80 truncate">
+              {resolvedSubtitle}
             </div>
           </div>
+        </div>
 
+        {(controlBox?.rightInlineControls || controllerRows || controlBox) ? (
+        <div
+          className="flex shrink-0 items-stretch border-t-[4px] sm:border-t-0 border-black w-full sm:w-auto overflow-x-auto"
+          style={{ background: tokens.headerBandBg }}
+          onClick={(event) => event.stopPropagation()}
+        >
           {controlBox?.rightInlineControls ? (
             <div className="flex items-center justify-end gap-2 pr-2 py-2">
               {controlBox.rightInlineControls}
             </div>
           ) : null}
 
-          {controlBox ? (
-            <div
-              className="relative w-fit h-full min-h-[70px] border-l-[4px] border-l-black rounded-none px-0 py-0 flex flex-col items-center justify-start gap-0 shrink-0 overflow-visible"
-              style={{ background: tokens.iconBlockBg, color: "#000000" }}
-            >
-                <span className={`font-[1000] leading-[0.9] text-center w-full pt-1 px-1 break-all ${String(controlBox.count).length > 5 ? 'text-[24px]' : 'text-[32px]'}`}>
-                  {controlBox.count}
-                </span>
-                <div className="mt-auto mb-0 w-full flex items-center justify-center h-[22px] shrink-0 overflow-hidden px-1">
-                  {controlBox.dropdown ? (
-                    <button
-                      type="button"
-                      onClick={controlBox.dropdown.onToggle}
-                      className="h-full px-2 w-full bg-white border-[2px] border-black rounded-md text-black text-[11px] font-black uppercase tracking-[0.08em] inline-flex items-center justify-center gap-1 shrink-0"
-                    >
-                      <span className="truncate text-center">
-                        {controlBox.dropdown.options.find(
-                          (o) => o.value === controlBox.dropdown?.value,
-                        )?.label ?? controlBox.dropdown.value}
-                      </span>
-                      <span
-                        className={`text-[10px] leading-none transition-transform duration-150 ${
-                          controlBox.dropdown.isOpen ? "rotate-180" : ""
-                        }`}
-                      >
-                        ▾
-                      </span>
-                    </button>
-                  ) : (
-                    <span className="text-[14px] font-black uppercase tracking-[0.01em] text-center leading-none w-full px-2" style={{ color: tokens.iconBlockBg }}>
-                      {controlBox.countLabel ?? "BEST"}
-                    </span>
-                  )}
-                </div>
-                <div className="flex-1 w-full flex items-center justify-center">
-                  <span className="text-[16px] text-center font-black uppercase tracking-[0.01em] leading-none">
-                    {controlBox.countUnit ?? "VIDEOS"}
-                  </span>
-                </div>
-              {controlBox.dropdown ? (
-                <div
-                  className={`absolute left-0 right-0 top-[calc(100%+6px)] bg-white border-[4px] border-black rounded-[10px] overflow-hidden z-30 origin-top transition-all duration-200 ${
-                    controlBox.dropdown.isOpen
-                      ? "opacity-100 scale-y-100 pointer-events-auto"
-                      : "opacity-0 scale-y-95 pointer-events-none"
-                  }`}
-                >
-                  {controlBox.dropdown.options.map((option, idx) => {
-                    const isActive = controlBox.dropdown?.value === option.value;
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => controlBox.dropdown?.onSelect(option.value)}
-                        style={{ 
-                          backgroundColor: isActive ? tokens.iconBlockBg : 'white' 
-                        }}
-                        className={`w-full h-8 px-3 text-center text-[11px] font-[1000] uppercase tracking-[0.08em] whitespace-nowrap border-black flex items-center justify-center transition-colors duration-150 ${
-                          idx === 0 ? "" : "border-t-[4px]"
-                        }`}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = tokens.iconBlockBg;
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isActive) {
-                            e.currentTarget.style.backgroundColor = 'white';
-                          }
-                        }}
-                      >
-                        {option.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : null}
+          {controllerRows ? (
+            <VisualModuleController rows={controllerRows} width={controllerWidth ?? 195} density={controllerDensity ?? "normal"} />
+          ) : controlBox ? (
+            <div className="flex shrink-0 relative h-full">
+              <VisualModuleController width={controllerWidth ?? 195} density={controllerDensity ?? "normal"} rows={[
+                ...(controlBox.count !== undefined ? [
+                  { type: "number" as const, value: controlBox.count, bgTone: tokens.iconBlockBg, fgTone: "#000000", onPrev: controlBox.onCountPrev, onNext: controlBox.onCountNext }
+                ] : []),
+                ...(controlBox.dropdown ? [{
+                   type: "dropdown" as const,
+                   value: controlBox.dropdown.value,
+                   options: controlBox.dropdown.options,
+                   onSelect: controlBox.dropdown.onSelect,
+                   bgTone: "#FFFFFF",
+                   fgTone: "#000000"
+                }] : (controlBox.count !== undefined ? [{ type: "label" as const, value: controlBox.countLabel ?? "BEST", bgTone: "#FFFFFF", fgTone: tokens.iconBlockBg }] : [])),
+                ...(controlBox.dropdown2 ? [{
+                   type: "dropdown" as const,
+                   value: controlBox.dropdown2.value,
+                   options: controlBox.dropdown2.options,
+                   onSelect: controlBox.dropdown2.onSelect,
+                   bgTone: "#FFFFFF",
+                   fgTone: "#000000"
+                }] : []),
+                { type: "label" as const, value: controlBox.countUnit ?? "VIDEOS", bgTone: "#FFFFFF", fgTone: "#000000" }
+              ]} />
               {controlBox.extraActions}
             </div>
           ) : null}
         </div>
+        ) : null}
       </div>
 
-      {activeContext ? (
-        <div className={`${disableActiveContextBottomBorder ? "" : "border-b-[4px] border-black"} px-0 py-0 bg-white h-10 overflow-hidden`}>
-          <div className="flex items-stretch h-full w-full justify-between">
-            {/* Left Section */}
-            <div className="flex items-stretch h-full overflow-hidden shrink-0">
-              {activeContext.leftTitle && (
-                <div className="px-2 flex items-center justify-center font-[1000] text-[18px] border-r-[4px] border-black bg-white shrink-0">
-                  {activeContext.leftTitle}
-                </div>
-              )}
-              {activeContext.leftStats && (
-                <div className="flex items-stretch h-full divide-x-[4px] divide-black border-r-[4px] border-black">
-                  {activeContext.leftStats.map((item) => (
-                    <button
-                      key={item.label}
-                      onClick={item.onClick}
-                      disabled={!item.onClick}
-                      className={statButtonClass(Boolean(item.onClick))}
+      <div className={`grid transition-[grid-template-rows,opacity] duration-300 ${internalOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+        <div className="overflow-hidden flex flex-col relative">
+          {activeContext ? (
+            <div
+              className={`${disableActiveContextBottomBorder ? "" : "border-b-[4px] border-black"} px-0 py-0 overflow-x-auto overflow-y-hidden`}
+              style={{
+                background: activeContext.bgTone ?? "#FFFFFF",
+                height: activeContextHeight,
+                minHeight: activeContextHeight,
+              }}
+            >
+              <div
+                className="flex h-full items-stretch w-full justify-between"
+              >
+                {/* Left Section */}
+                <div className="flex items-stretch h-full overflow-hidden shrink-0">
+                  {activeContext.leftTitle && (
+                    <div
+                      className="px-2 flex items-center justify-center font-[1000] text-[13px] border-r-[4px] border-black shrink-0"
+                      style={{ background: activeContext.bgTone ?? "#FFFFFF", color: activeContext.bgTone === "#080816" ? "#F3F4F6" : "#000000" }}
                     >
-                      <span className="h-8 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 text-black leading-none px-1">
-                        {item.value}
-                      </span>
-                      <span
-                        className={`h-5 text-[11px] font-black tracking-[0.11em] uppercase inline-flex items-center justify-center w-full ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
-                      >
-                        {normalizeStatLabel(item.label)}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Middle Section (Filler / Title) */}
-            <div className="flex-1 bg-white flex items-stretch h-full overflow-hidden min-w-0">
-              {activeContext.title && (
-                <div className={`flex items-stretch flex-1 min-w-0 ${activeContext.leftStats || activeContext.leftTitle ? 'border-l-[4px]' : ''} ${activeContext.rightStats || activeContext.rightTitle || activeContext.stats ? 'border-r-[4px]' : ''} border-black`}>
-                  {typeof activeContext.title === 'string' ? (
-                    <div className="flex items-center px-2 font-[1000] text-[22px] leading-tight flex-1 truncate">
-                      {activeContext.title}
+                      {activeContext.leftTitle}
                     </div>
-                  ) : (
-                    <div className="flex-1 flex items-stretch min-w-0">
-                      {activeContext.title}
+                  )}
+                  {activeContext.leftStats && (
+                    <div className="flex items-stretch h-full border-r-[4px] border-black">
+                      <AnalyticsActiveStats stats={activeContext.leftStats} />
                     </div>
                   )}
                 </div>
-              )}
-            </div>
 
-            {/* Right Section */}
-            <div className="flex items-stretch h-full overflow-hidden shrink-0">
-              {activeContext.rightTitle && (
-                <div className="px-2 flex items-center justify-center font-[1000] text-[18px] border-l-[4px] border-black bg-white shrink-0">
-                  {activeContext.rightTitle}
+                {/* Middle Section (Filler / Title) */}
+                <div className="flex-1 flex items-stretch h-full overflow-hidden min-w-0" style={{ background: activeContext.bgTone ?? "#FFFFFF" }}>
+                  {activeContext.title && (
+                    <div className={`flex items-stretch flex-1 min-w-0 ${activeContext.leftStats || activeContext.leftTitle ? 'border-l-[4px]' : ''} ${activeContext.rightStats || activeContext.rightTitle || activeContext.stats ? 'border-r-[4px]' : ''} border-black`}>
+                      {typeof activeContext.title === 'string' ? (
+                        <div className="flex items-center px-2 font-[1000] text-[clamp(13px,1.4vw,18px)] leading-tight flex-1 truncate" style={{ color: activeContext.bgTone === "#080816" ? "#F3F4F6" : "#000000" }}>
+                          {activeContext.title}
+                        </div>
+                      ) : (
+                        <div className="flex-1 flex items-stretch min-w-0" style={{ color: activeContext.bgTone === "#080816" ? "#F3F4F6" : "#000000" }}>
+                          {activeContext.title}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
-              {activeContext.rightStats && (
-                <div className="flex items-stretch h-full divide-x-[4px] divide-black">
-                  {activeContext.rightStats.map((item) => (
-                    <button
-                      key={item.label}
-                      onClick={item.onClick}
-                      disabled={!item.onClick}
-                      className={statButtonClass(Boolean(item.onClick))}
+
+                {/* Right Section */}
+                <div className="flex items-stretch h-full overflow-hidden shrink-0">
+                  {activeContext.rightTitle && (
+                    <div
+                      className="px-2 flex items-center justify-center font-[1000] text-[13px] border-l-[4px] border-black shrink-0"
+                      style={{ background: activeContext.bgTone ?? "#FFFFFF", color: activeContext.bgTone === "#080816" ? "#F3F4F6" : "#000000" }}
                     >
-                      <span className="h-8 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 text-black leading-none px-1">
-                        {item.value}
-                      </span>
-                      <span
-                        className={`h-5 text-[11px] font-[1000] tracking-[0.11em] uppercase inline-flex items-center justify-center w-full ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
-                      >
-                        {normalizeStatLabel(item.label)}
-                      </span>
-                    </button>
-                  ))}
+                      {activeContext.rightTitle}
+                    </div>
+                  )}
+                  {activeContext.rightStats ? <AnalyticsActiveStats stats={activeContext.rightStats} /> : null}
+                  {!activeContext.rightStats && activeContext.stats && (
+                    <AnalyticsActiveStats stats={activeContext.stats} />
+                  )}
                 </div>
-              )}
-              {!activeContext.rightStats && activeContext.stats && (
-                <div className="flex items-stretch h-full divide-x-[4px] divide-black">
-                  {activeContext.stats.map((item) => (
-                    <button
-                      key={item.label}
-                      onClick={item.onClick}
-                      disabled={!item.onClick}
-                      className={statButtonClass(Boolean(item.onClick))}
-                    >
-                      <span className="h-8 text-[14px] font-[1000] tracking-tight inline-flex items-center justify-center pt-0.5 text-black leading-none px-1">
-                        {item.value}
-                      </span>
-                      <span
-                        className={`h-5 text-[11px] font-[1000] tracking-[0.11em] uppercase inline-flex items-center justify-center w-full ${toneClass(item.lockTone ? item.tone : toneForMetricLabel(item.label, item.tone))}`}
-                      >
-                        {normalizeStatLabel(item.label)}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
+              </div>
             </div>
+          ) : null}
+
+          <div
+            className="flex-1 p-0 vt-chart-interior"
+            style={{ minHeight: interiorMinHeight }}
+          >
+            {hasOpened ? content : null}
           </div>
-        </div>
-      ) : null}
 
-      <div
-        className="flex-1 p-0 vt-chart-interior"
-        style={{ minHeight: layout?.moduleMinHeight ?? "420px" }}
-      >
-        {content}
+          {(legendLayout?.left || legendLayout?.center || legendLayout?.right) && (
+            <div className="px-4 py-2 border-t-[4px] border-black bg-[#F8F8F8]">
+              <div className="grid grid-cols-3 items-center gap-2 text-[10px] font-black uppercase tracking-[0.08em]">
+                <div className="justify-self-start">{legendLayout.left}</div>
+                <div className="justify-self-center">{legendLayout.center}</div>
+                <div className="justify-self-end">{legendLayout.right}</div>
+              </div>
+            </div>
+          )}
+
+          {footer ? (
+            <div className={`${footerBorderless ? "" : "border-t-[4px] border-black"} bg-black`}>
+              {footer}
+            </div>
+          ) : null}
+
+          {insight ? (
+            <div className="border-t-[4px] border-black bg-[#0c0c14] text-white flex items-stretch">
+              <div className="flex flex-1 min-h-[56px] items-center gap-3 border-r border-white/10 px-4 py-3">
+                <span className="shrink-0 border border-black px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-black bg-[#CCFF00] whitespace-nowrap">
+                  INSIGHT
+                </span>
+                <span className="text-[11px] font-medium leading-5 text-white/75">{insight.personalInsight}</span>
+              </div>
+              {insight.actionInsight ? (
+                <div className="flex flex-1 min-h-[56px] items-center gap-3 px-4 py-3">
+                  <span className="shrink-0 border border-black px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-black bg-[#00CCFF] whitespace-nowrap">
+                    ACTION
+                  </span>
+                  <span className="text-[11px] font-medium leading-5 text-white/75">{insight.actionInsight}</span>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
       </div>
-
-      {(legendLayout?.left || legendLayout?.center || legendLayout?.right) && (
-        <div className="px-4 py-2 border-t-[4px] border-black bg-[#F8F8F8]">
-          <div className="grid grid-cols-3 items-center gap-2 text-[10px] font-black uppercase tracking-[0.08em]">
-            <div className="justify-self-start">{legendLayout.left}</div>
-            <div className="justify-self-center">{legendLayout.center}</div>
-            <div className="justify-self-end">{legendLayout.right}</div>
-          </div>
-        </div>
-      )}
-
-      {footer ? (
-        <div className={`${footerBorderless ? "" : "border-t-[4px] border-black"} bg-black`}>
-          {footer}
-        </div>
-      ) : null}
     </div>
   )
 }
@@ -417,6 +435,8 @@ export const subToolboxChartPresets = {
       headerStyle: "subtoolbox" as const,
     },
     layout: { moduleMinHeight: "420px" },
+    videoCountOptions: [25, 50, 75, 100, 200],
+    formatOptions: ["All", "Shorts", "Long"] as string[],
   },
   videoValueMatrixStarter: {
     header: {
@@ -424,6 +444,8 @@ export const subToolboxChartPresets = {
       subtitle: "CTR × RETENTION × VIEWS",
       headerStyle: "subtoolbox" as const,
     },
+    videoCountOptions: [10, 15, 20, 25, 50, 100],
+    formatOptions: ["All", "Long"] as string[],
   },
   packagingStarter: {
     header: {
@@ -431,6 +453,8 @@ export const subToolboxChartPresets = {
       subtitle: "CTR × IMPRESSIONS",
       headerStyle: "subtoolbox" as const,
     },
+    videoCountOptions: [10, 15, 20, 25, 50],
+    formatOptions: ["All", "Shorts", "Long"] as string[],
   },
   engagementMapStarter: {
     header: {
@@ -438,5 +462,7 @@ export const subToolboxChartPresets = {
       subtitle: "TOP RECENT BY COMMENTS",
       headerStyle: "subtoolbox" as const,
     },
+    videoCountOptions: [10, 15, 20, 25, 50],
+    formatOptions: ["All", "Shorts", "Long"] as string[],
   },
 }

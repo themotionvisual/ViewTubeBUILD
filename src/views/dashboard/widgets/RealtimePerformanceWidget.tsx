@@ -1,6 +1,31 @@
-import React, { useMemo, useState } from "react"
+import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { Activity, Plus } from "lucide-react"
+import { Activity } from "lucide-react"
+import { WidgetHeaderToggle } from "../WidgetPrimitives"
+
+type RealtimeBar = { val: number; label: string }
+type RealtimePerformanceWidgetProps = Pick<
+  React.ComponentProps<typeof WidgetShell>,
+  | "widget"
+  | "instance"
+  | "editMode"
+  | "onToggleCollapse"
+  | "onCycleSize"
+  | "onDecSize"
+  | "onCycleHeight"
+  | "onDecHeight"
+  | "onRemove"
+> & { data?: unknown }
+
+const HOURS_DATA: RealtimeBar[] = [44, 58, 35, 72, 118, 64, 81, 53, 76, 132, 91, 67].map((val, index) => ({
+  val,
+  label: `${48 - index * 4}–${44 - index * 4} hours ago`,
+}))
+
+const MINUTES_DATA: RealtimeBar[] = [1, 3, 2, 4, 1, 0, 2, 3, 1, 4, 2, 3].map((val, index) => ({
+  val,
+  label: `${60 - index * 5}–${55 - index * 5} minutes ago`,
+}))
 
 export const RealtimePerformanceWidget = ({
   widget,
@@ -12,8 +37,7 @@ export const RealtimePerformanceWidget = ({
   onCycleHeight,
   onDecHeight,
   onRemove,
-  data,
-}: any) => {
+}: RealtimePerformanceWidgetProps) => {
   const common = {
   widget,
   instance,
@@ -27,39 +51,10 @@ export const RealtimePerformanceWidget = ({
   onDecHeight,
  }
   const [viewMode, setViewMode] = useState<"48h" | "60m">("48h")
-  const [hoveredBar, setHoveredBar] = useState<any>(null)
+  const [hoveredBar, setHoveredBar] = useState<RealtimeBar | null>(null)
 
-  // Create segmented data: 12 bars total
-  const hoursData = useMemo(() => {
-    return Array.from({ length: 12 }, (_, i) => {
-      const base = Math.floor(Math.random() * 80) + 20
-      const peak = i === 4 || i === 9 ? Math.floor(Math.random() * 120) : 0
-        const now = new Date()
-        const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours())
-        const segmentEnd = new Date(currentHour.getTime() - ((11 - i) * 4) * 3600000)
-        const segmentStart = new Date(segmentEnd.getTime() - 4 * 3600000)
-        const dayStr = segmentStart.toLocaleDateString([], { weekday: 'short' }).toUpperCase()
-        const fmtH = (d: Date) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
-        return {
-          val: base + peak,
-          label: `${fmtH(segmentStart)} - ${fmtH(segmentEnd)} ${dayStr}`,
-        }
-    })
-  }, [])
-
-  const minsData = useMemo(() => {
-    return Array.from({ length: 12 }, (_, i) => {
-      const base = Math.floor(Math.random() * 5)
-        const now = new Date()
-        const segmentEnd = new Date(now.getTime() - ((11 - i) * 5) * 60000)
-        const segmentStart = new Date(segmentEnd.getTime() - 5 * 60000)
-        const fmtM = (d: Date) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
-        return {
-          val: base,
-          label: `${fmtM(segmentStart)}-${fmtM(segmentEnd)}`,
-        }
-    })
-  }, [])
+  const hoursData = HOURS_DATA
+  const minsData = MINUTES_DATA
 
   const total48 = hoursData.reduce((a, b) => a + b.val, 0)
   const total60 = minsData.reduce((a, b) => a + b.val, 0)
@@ -68,32 +63,12 @@ export const RealtimePerformanceWidget = ({
   const maxMin = Math.max(...minsData.map((d) => d.val), 1)
 
   const headerContent = (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "center" }}>
-      <button 
-        onClick={() => {}} // Placeholder for Create action
-        className="vt-header-action-btn"
-        title="Create New Content"
-      >
-        <Plus size={14} strokeWidth={3} />
-      </button>
-
-      <div className="vt-tab-group" style={{ width: "100px", padding: "2px" }}>
-        <button
-          onClick={() => setViewMode("48h")}
-          className={`vt-tab-btn ${viewMode === "48h" ? 'active' : ''}`}
-          style={{ padding: "4px", fontSize: "8px" }}
-        >
-          48H
-        </button>
-        <button
-          onClick={() => setViewMode("60m")}
-          className={`vt-tab-btn ${viewMode === "60m" ? 'active' : ''}`}
-          style={{ padding: "4px", fontSize: "8px" }}
-        >
-          60M
-        </button>
-      </div>
-    </div>
+    <WidgetHeaderToggle
+      label="Realtime view range"
+      value={viewMode}
+      onChange={setViewMode}
+      items={[{ id: "48h", label: "48 hr" }, { id: "60m", label: "60 mn" }]}
+    />
   )
 
   return (
@@ -161,7 +136,7 @@ export const RealtimePerformanceWidget = ({
                       style={{
                         fontSize: "11px",
                         fontWeight: 900,
-                        color: hoveredBar ? "#000" : "rgba(0,0,0,0.6)",
+                        color: "var(--widget-border, #000)",
                         textTransform: "uppercase",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
@@ -172,7 +147,7 @@ export const RealtimePerformanceWidget = ({
                     </span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", lineHeight: 1 }}>
-                    <span style={{ fontSize: "12px", fontWeight: 1000, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.75 }}>
+                    <span style={{ color: "var(--widget-border, #000)", fontSize: "12px", fontWeight: 1000, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.75 }}>
                       Views
                     </span>
                     <span style={{ fontSize: "19px", fontWeight: 1000 }}>
@@ -191,24 +166,35 @@ export const RealtimePerformanceWidget = ({
                     minHeight: "110px",
                   }}
                 >
-                  {activeData.map((d: any, i: number) => (
+                  {activeData.map((d, i) => (
                     <div
                       key={i}
+                      className="realtime-bar"
                       onMouseEnter={() => setHoveredBar(d)}
                       onMouseLeave={() => setHoveredBar(null)}
                       style={{
                         flex: 1,
                         height: `${(d.val / activeMax) * 100}%`,
-                        background: i % 3 === 0 ? "var(--widget-color, #40C6E9)" : "color-mix(in srgb, var(--widget-color, #40C6E9) 55%, white)",
-                        opacity: 0.5 + (d.val / activeMax) * 0.5,
                         minWidth: "0",
                         transition: "height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
                         cursor: "crosshair",
                         borderRadius: "4px 4px 0 0",
-                        border: "2px solid #000",
+                        border: "2px solid var(--widget-border, #000)",
                         borderBottom: "none",
+                        overflow: "hidden",
                       }}
-                    />
+                    >
+                      <div
+                        className="realtime-bar-fill"
+                        aria-hidden="true"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          background: i % 3 === 0 ? "var(--widget-color, #40C6E9)" : "color-mix(in srgb, var(--widget-color, #40C6E9) 55%, white)",
+                          opacity: 0.5 + (d.val / activeMax) * 0.5,
+                        }}
+                      />
+                    </div>
                   ))}
                 </div>
               </div>

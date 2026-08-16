@@ -1,13 +1,14 @@
 import React, { useState } from "react"
 import { useBrain } from "../../../context/useBrain"
 import { WidgetShell } from "../WidgetShell"
-import { useEntitlement } from "../../../app/AppShell"
+import { useEntitlement } from "../../../context/entitlementContext"
 import { Sparkles, Save, Check, Tag } from "lucide-react"
 import { fetchVideoSnippetDetails } from "../../../services/youtubeService"
 import { generateTagSuggestions } from "../../../services/gemini"
 import type { TagSuggestion } from "../../../services/gemini"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
+import { WidgetScrollArea, WidgetSelect } from "../WidgetPrimitives"
 
 export const TagGeneratorWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
  const { brain } = useBrain()
@@ -37,10 +38,9 @@ export const TagGeneratorWidget = ({ widget, instance, editMode, onToggleCollaps
  const entitlement = useEntitlement()
  const canAffordTagSuggestions = canAffordAiTokensFromState(entitlement, TAG_SUGGEST_COST)
 
- const videos = data.canonicalRows || data.brain?.canonicalRows || []
+ const videos = data.videoAssets || []
 
- const handleSelect = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-  const vidId = e.target.value
+ const handleSelect = async (vidId: string) => {
   setSelectedVideo(vidId)
   setSuggestedTags([])
   setSaveSuccess(false)
@@ -130,23 +130,21 @@ export const TagGeneratorWidget = ({ widget, instance, editMode, onToggleCollaps
      flexDirection: "column",
      gap: "12px",
      height: "100%",
+     minHeight: 0,
     }}>
     {/* Video Selector */}
      <div style={{ display: "flex", gap: "4px" }}>
-      <select
-       className="vt-select"
+      <WidgetSelect
        value={selectedVideo}
-       onChange={handleSelect}
-       style={{ flex: 2 }}>
-       <option value="" disabled>
-        Select a video...
-       </option>
-       {videos.slice(0, 15).filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase())).map((v: any) => (
-        <option key={v.videoId} value={v.videoId}>
-         {v.title || v.id}
-        </option>
-       ))}
-      </select>
+       onChange={(value) => void handleSelect(value)}
+       label="Select a video"
+       placeholder="Select a video…"
+       style={{ flex: 2 }}
+       options={videos.filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase()) || v.videoId?.toLowerCase().includes(videoSearch.toLowerCase())).slice(0, 50).map((v: any) => ({
+        value: v.videoId,
+        label: v.title || v.id,
+       }))}
+      />
       <input
        className="vt-input"
        value={videoSearch}
@@ -192,16 +190,7 @@ export const TagGeneratorWidget = ({ widget, instance, editMode, onToggleCollaps
          {tagsLoading ? "..." : currentTags.length}
         </span>
        </div>
-       <div
-        style={{
-         padding: "8px",
-         overflowY: "auto",
-         flex: 1,
-         display: "flex",
-         flexWrap: "wrap",
-         gap: "6px",
-         alignContent: "flex-start",
-        }}>
+       <WidgetScrollArea ariaLabel="Current video tags" contentClassName="flex min-h-full flex-wrap content-center gap-1.5 p-2">
         {tagsLoading ?
          <div style={{ fontSize: "10px", opacity: 0.5, width: "100%", textAlign: "center", marginTop: "20px" }}>
           Fetching tags...
@@ -225,7 +214,7 @@ export const TagGeneratorWidget = ({ widget, instance, editMode, onToggleCollaps
            No tags found.
           </div>
         }
-       </div>
+       </WidgetScrollArea>
       </div>
 
       {/* Generated Tags */}
@@ -267,16 +256,7 @@ export const TagGeneratorWidget = ({ widget, instance, editMode, onToggleCollaps
          </span>
         )}
        </div>
-       <div
-        style={{
-         padding: "8px",
-         overflowY: "auto",
-         flex: 1,
-         display: "flex",
-         flexWrap: "wrap",
-         gap: "6px",
-         alignContent: "flex-start",
-        }}>
+       <WidgetScrollArea ariaLabel="Suggested video tags" contentClassName="flex min-h-full flex-wrap content-center gap-1.5 p-2">
         {suggestedTags.length > 0 ?
          suggestedTags.map((t, i) => (
           <div
@@ -346,7 +326,7 @@ export const TagGeneratorWidget = ({ widget, instance, editMode, onToggleCollaps
            )}
           </div>
         }
-       </div>
+       </WidgetScrollArea>
        {suggestedTags.length > 0 && (
         <div style={{ padding: "6px", borderTop: "2px solid #000" }}>
          <button

@@ -354,7 +354,6 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
       <SubToolbox
        title="VIDEO"
        icon={<Upload size={20} strokeWidth={3} className="text-black" />}
-       paletteIndex={subPalette(0)}
        shellClassName="h-full"
        contentClassName="p-5 h-full flex flex-col">
        <div className="flex flex-col gap-3">
@@ -376,7 +375,6 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
       <SubToolbox
        title="SCRIPT"
        icon={<AlignLeft size={20} strokeWidth={3} className="text-black" />}
-       paletteIndex={subPalette(1)}
        shellClassName="h-full"
        contentClassName="p-5 h-full flex flex-col">
        <div className="flex flex-col gap-3 h-full min-h-0">
@@ -429,7 +427,6 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
       <SubToolbox
        title="VIDEO INFO"
        icon={<Target size={20} strokeWidth={3} className="text-black" />}
-       paletteIndex={subPalette(2)}
        shellClassName="h-full"
        contentClassName="p-5 h-full grid grid-cols-1 gap-4">
        <div className="space-y-1">
@@ -470,7 +467,6 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
       <SubToolbox
        title="ANALYSIS DIRECTIVE"
        icon={<FileText size={20} strokeWidth={3} className="text-black" />}
-       paletteIndex={subPalette(3)}
        shellClassName="h-full"
        contentClassName="p-5 h-full flex flex-col">
        <div className="flex flex-col h-full min-h-0">
@@ -511,7 +507,6 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
       <SubToolbox
        title="CONTENT OVERVIEW"
        icon={<Search size={20} strokeWidth={3} className="text-black" />}
-       paletteIndex={subPalette(4)}
        contentClassName="p-6"
       >
        <div className="flex items-center justify-between mb-4">
@@ -534,7 +529,6 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
        <SubToolbox
         title="STRATEGIC ANALYSIS"
         icon={<FileText size={20} strokeWidth={3} className="text-black" />}
-        paletteIndex={subPalette(5)}
         contentClassName="p-6"
        >
         {strategicIntro && (

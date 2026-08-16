@@ -361,7 +361,6 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({
      <SubToolbox
       title="Video Upload"
       icon={<Upload size={20} strokeWidth={3} />}
-      paletteIndex={basePalette + 1}
       collapsible
       isOpenInitial={true}
      >
@@ -375,7 +374,6 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({
      <SubToolbox
       title="Video Script"
       icon={<FileText size={20} strokeWidth={3} />}
-      paletteIndex={basePalette + 1}
       collapsible
       isOpenInitial={true}
       shellClassName="h-full"
@@ -396,7 +394,6 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({
      <SubToolbox
       title="Video Info"
       icon={<Sparkles size={20} strokeWidth={3} />}
-      paletteIndex={basePalette + 2}
       collapsible
       isOpenInitial={true}
      >

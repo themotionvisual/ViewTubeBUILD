@@ -2,6 +2,9 @@ import React, { useState, useMemo } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { Filter } from "lucide-react"
 import { formatTrafficSourceNickname } from "../../../services/dataUtils"
+import { getVtSyncSnapshot } from "../../../features/vt-sync-local"
+
+type TrafficSourceSlice = { label: string; pct: number; color: string }
 
 export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggleCollapse, onCycleSize, onCycleHeight, onDecSize, onDecHeight, onRemove }: any) => {
  const common = {
@@ -17,17 +20,12 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
   onDecHeight,
  }
 
- const [tooltip, setTooltip] = useState<{
-  x: number
-  y: number
-  label: string
-  pct: number
- } | null>(null)
+ 
+  const COLORS = ["#C9F830", "#40C6E9", "#FF83EA", "#9D4EDD", "#FF1744"]
 
- const COLORS = ["#C9F830", "#40C6E9", "#FF83EA", "#9D4EDD", "#FF1744"]
-
- const sources = useMemo(() => {
-  const rawSources = data?.trafficSources || []
+ const sources = useMemo<TrafficSourceSlice[]>(() => {
+  const snapshot = getVtSyncSnapshot()
+  const rawSources = snapshot.trafficSources?.length ? snapshot.trafficSources : data?.trafficSources || []
   if (rawSources.length === 0) {
    return [
     { label: "Browse features", pct: 45, color: "#C9F830" },
@@ -38,15 +36,15 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
    ]
   }
   return rawSources.map((s: any, idx: number) => ({
-   label: formatTrafficSourceNickname(s.label),
-   pct: s.pct,
+   label: formatTrafficSourceNickname(s.label || s.trafficSource),
+   pct: s.viewsPct ?? s.pct ?? Number(s.views) ?? 0,
    color: COLORS[idx % COLORS.length]
   }))
  }, [data?.trafficSources])
 
  const renderPieSlices = () => {
   let accumulatedPct = 0
-  return sources.map((src) => {
+  return sources.map((src, index) => {
    const startPct = accumulatedPct
    accumulatedPct += src.pct
    const x1 = Math.cos(2 * Math.PI * (startPct / 100))
@@ -57,24 +55,10 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
 
    return (
     <path
-     key={src.label}
+     key={`${src.label}-${index}`}
      d={`M 0 0 L ${x1} ${y1} A 1 1 0 ${largeArcFlag} 1 ${x2} ${y2} Z`}
      fill={src.color}
      stroke="none"
-     style={{ cursor: "pointer", transition: "opacity 0.2s" }}
-     onMouseEnter={(e) => {
-      const rect = (e.target as SVGElement).closest("svg")?.getBoundingClientRect()
-      if (rect) {
-       setTooltip({x: e.clientX - rect.left, y: e.clientY - rect.top, label: src.label, pct: src.pct})
-      }
-     }}
-     onMouseMove={(e) => {
-      const rect = (e.target as SVGElement).closest("svg")?.getBoundingClientRect()
-      if (rect) {
-       setTooltip({x: e.clientX - rect.left, y: e.clientY - rect.top, label: src.label, pct: src.pct})
-      }
-     }}
-     onMouseLeave={() => setTooltip(null)}
     />
    )
   })
@@ -103,6 +87,7 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
 
     {/* Chart */}
     <div
+     className="tip"
      style={{
       flex: 1,
       display: "flex",
@@ -115,27 +100,14 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
       style={{ width: "95%", height: "95%", transform: "rotate(-90deg)" }}>
       {renderPieSlices()}
      </svg>
-     {/* Custom Tooltip */}
-     {tooltip && (
-      <div
-       style={{
-        position: "absolute",
-        left: tooltip.x,
-        top: tooltip.y - 36,
-        background: "#000",
-        color: "#fff",
-        padding: "4px 10px",
-        borderRadius: "6px",
-        fontSize: "10px",
-        fontWeight: 900,
-        whiteSpace: "nowrap",
-        zIndex: 50,
-        pointerEvents: "none",
-        transform: "translateX(-50%)",
-       }}>
-       {tooltip.label}: {tooltip.pct}%
-      </div>
-     )}
+     <div className="bub" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px", zIndex: 110 }}>
+       {sources.map((src, index) => (
+         <div key={`${src.label}-${index}`} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+           <div style={{ width: "8px", height: "8px", background: src.color, border: "1px solid #000" }} />
+           <span>{src.label}: {src.pct}%</span>
+         </div>
+       ))}
+     </div>
     </div>
 
     {/* Legend */}
@@ -148,9 +120,9 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
       borderTop: "2px solid #000",
       paddingTop: "6px",
      }}>
-     {sources.map((src) => (
+     {sources.map((src, index) => (
       <div
-       key={src.label}
+       key={`${src.label}-${index}`}
        style={{
         display: "flex",
         alignItems: "center",

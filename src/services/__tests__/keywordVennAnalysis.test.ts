@@ -3,6 +3,8 @@ import {
   buildKeywordClustersFromMasterRows,
   buildKeywordCombinationStats,
   buildKeywordSelectionSummary,
+  getKeywordRankValue,
+  keywordMetricSupportsTotal,
   tokenizeTitleKeywords,
   toggleKeywordSelection,
 } from "../keywordVennAnalysis"
@@ -109,6 +111,41 @@ describe("buildKeywordClustersFromMasterRows", () => {
     expect(cavalry?.metrics.averageViewDuration).toBe(105)
     expect(cavalry?.metrics.averageViewPercentage).toBe(58.5)
     expect(cavalry?.metrics.rpm).toBe(3)
+  })
+
+  it("uses one resolver for distinct Average and Total leaders", () => {
+    const leaderRows = [
+      makeRow("broad alpha", { views: 100 }),
+      makeRow("broad beta", { views: 100 }),
+      makeRow("broad gamma", { views: 100 }),
+      makeRow("focused alpha", { views: 130 }),
+      makeRow("focused beta", { views: 130 }),
+    ]
+    const total = buildKeywordClustersFromMasterRows(leaderRows, "views", {
+      minSupport: 2,
+      rankingMode: "total",
+    })
+    const average = buildKeywordClustersFromMasterRows(leaderRows, "views", {
+      minSupport: 2,
+      rankingMode: "average",
+    })
+
+    expect(total[0]?.word).toBe("broad")
+    expect(average[0]?.word).toBe("focused")
+    expect(getKeywordRankValue(total[0], "views", "total")).toBe(300)
+    expect(getKeywordRankValue(average[0], "views", "average")).toBe(130)
+  })
+
+  it("keeps rate metrics Average-only in both control modes", () => {
+    const clusters = buildKeywordClustersFromMasterRows(rows, "averageViewPercentage", {
+      minSupport: 2,
+    })
+    const cavalry = clusters.find((item) => item.word === "cavalry")
+    expect(cavalry).toBeDefined()
+    expect(getKeywordRankValue(cavalry!, "averageViewPercentage", "average")).toBe(58.5)
+    expect(getKeywordRankValue(cavalry!, "averageViewPercentage", "total")).toBe(58.5)
+    expect(keywordMetricSupportsTotal("averageViewPercentage")).toBe(false)
+    expect(keywordMetricSupportsTotal("views")).toBe(true)
   })
 })
 

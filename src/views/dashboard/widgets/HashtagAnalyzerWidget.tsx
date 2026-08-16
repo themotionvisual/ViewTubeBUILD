@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { useEntitlement } from "../../../app/AppShell"
+import { WidgetScrollArea } from "../WidgetPrimitives"
+import { useEntitlement } from "../../../context/entitlementContext"
 import { Hash, Sparkles, Copy, Check, TrendingUp, TrendingDown, Minus } from "lucide-react"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
@@ -75,7 +76,7 @@ export const HashtagAnalyzerWidget = ({ widget, instance, editMode, onToggleColl
 
  return (
   <WidgetShell {...common} icon={<Hash size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%" }}>
+   <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%", minHeight: 0 }}>
     <div style={{ display: "flex", gap: "6px" }}>
      <input className="vt-input" value={input} onChange={(e) => setInput(e.target.value)}
       onKeyDown={(e) => { if (e.key === "Enter") analyze() }}
@@ -99,11 +100,11 @@ export const HashtagAnalyzerWidget = ({ widget, instance, editMode, onToggleColl
     {results.length > 0 && (
      <>
       {/* Results Table */}
-      <div style={{ flex: 1, border: "2px solid #000", borderRadius: "8px", overflow: "hidden" }}>
-       <div style={{ display: "grid", gridTemplateColumns: "1fr 60px 60px 30px", padding: "4px 8px", background: "#000", color: "#fff", fontSize: "7px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", border: "2px solid #000", borderRadius: "8px", overflow: "hidden" }}>
+       <div style={{ flexShrink: 0, display: "grid", gridTemplateColumns: "1fr 60px 60px 30px", padding: "4px 8px", background: "#000", color: "#fff", fontSize: "7px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em" }}>
         <span>Tag</span><span>Reach</span><span>Comp.</span><span>📈</span>
        </div>
-       <div style={{ maxHeight: "140px", overflowY: "auto" }}>
+       <WidgetScrollArea ariaLabel="Hashtag analysis results">
         {results.map((r, i) => (
          <div key={i} style={{
           display: "grid", gridTemplateColumns: "1fr 60px 60px 30px", padding: "4px 8px",
@@ -118,7 +119,7 @@ export const HashtagAnalyzerWidget = ({ widget, instance, editMode, onToggleColl
           <TrendIcon trend={r.trending} />
          </div>
         ))}
-       </div>
+       </WidgetScrollArea>
       </div>
 
       {/* Optimal Combo */}

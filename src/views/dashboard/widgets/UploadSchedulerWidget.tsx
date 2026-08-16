@@ -122,7 +122,7 @@ export const UploadSchedulerWidget = ({ widget, instance, editMode, onToggleColl
    defaults.forEach((d, idx) => {
     const targetDate = new Date(today)
     targetDate.setDate(today.getDate() + d.dayOffset)
-    results.push({date: targetDate, dateKey: targetDate.toISOString().split("T")[0], dayName: DAY_NAMES[targetDate.getDay()], dateNum: targetDate.getDate(), timeLabel: d.label, avgViews: 0, rank: idx + 1, onDecSize, onCycleHeight, onDecHeight})
+    results.push({date: targetDate, dateKey: targetDate.toISOString().split("T")[0], dayName: DAY_NAMES[targetDate.getDay()], dateNum: targetDate.getDate(), timeLabel: d.label, avgViews: 0, rank: idx + 1})
    })
   }
 
@@ -149,7 +149,7 @@ export const UploadSchedulerWidget = ({ widget, instance, editMode, onToggleColl
   const files = Array.from(e.dataTransfer.files)
   const videoFiles = files.filter(f => f.type.startsWith("video/") || f.name.match(/\.(mp4|mov|avi|mkv|webm)$/i))
   if (videoFiles.length === 0) return
-  const newFiles: UploadedFile[] = videoFiles.map(f => ({name: f.name, size: f.size, addedAt: Date.now(), onDecSize, onCycleHeight, onDecHeight}))
+  const newFiles: UploadedFile[] = videoFiles.map(f => ({name: f.name, size: f.size, addedAt: Date.now()}))
   setUploadedFiles(prev => [...prev, ...newFiles])
   setView("times") // auto-advance to recommended times
  }, [])
@@ -157,7 +157,7 @@ export const UploadSchedulerWidget = ({ widget, instance, editMode, onToggleColl
  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
   const files = Array.from(e.target.files || [])
   if (files.length === 0) return
-  const newFiles: UploadedFile[] = files.map(f => ({name: f.name, size: f.size, addedAt: Date.now(), onDecSize, onCycleHeight, onDecHeight}))
+  const newFiles: UploadedFile[] = files.map(f => ({name: f.name, size: f.size, addedAt: Date.now()}))
   setUploadedFiles(prev => [...prev, ...newFiles])
   setView("times")
   if (fileInputRef.current) fileInputRef.current.value = ""
@@ -174,14 +174,14 @@ export const UploadSchedulerWidget = ({ widget, instance, editMode, onToggleColl
 
  // --- Navigate to Data Edit Widget ---
  const navigateToDataEdit = (videoTitle?: string) => {
-  // Dispatch a custom event that the dashboard can listen for to scroll to / focus the data-edit widget
+  // Dispatch a custom event that the dashboard can listen for to focus the dedicated uploader.
   window.dispatchEvent(new CustomEvent("vt_navigate_widget", {
-   detail: { targetWidget: "data-edit", videoTitle: videoTitle || uploadedFiles[0]?.name || "" }
+   detail: { targetWidget: "video-uploader", videoTitle: videoTitle || uploadedFiles[0]?.name || "" }
   }))
   // Also scroll to the widget if it exists in the DOM
-  const el = document.querySelector("[data-widget-id='data-edit']")
+  const el = document.querySelector("[data-widget-id='video-uploader']")
   if (el) {
-   el.scrollIntoView({behavior: "smooth", block: "center", onDecSize, onCycleHeight, onDecHeight})
+   el.scrollIntoView({ behavior: "smooth", block: "center" })
    // Flash highlight
    ;(el as HTMLElement).style.outline = "3px solid var(--widget-color, #FFD700)"
    setTimeout(() => { (el as HTMLElement).style.outline = "" }, 2000)
@@ -199,7 +199,7 @@ export const UploadSchedulerWidget = ({ widget, instance, editMode, onToggleColl
 
  return (
   <WidgetShell {...common} icon={<Calendar size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "6px", height: "100%" }}>
+   <div style={{ display: "flex", flexDirection: "column", gap: "6px", height: "100%", minHeight: 0 }}>
 
     {/* Tab Bar */}
     <div style={{ display: "flex", gap: "4px" }}>
@@ -242,6 +242,7 @@ export const UploadSchedulerWidget = ({ widget, instance, editMode, onToggleColl
       {/* Drop Zone */}
       {uploadedFiles.length === 0 && (
        <div
+        className={`widget-dropzone ${isDragOver ? "is-dragging" : ""}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -249,16 +250,12 @@ export const UploadSchedulerWidget = ({ widget, instance, editMode, onToggleColl
         style={{
          flex: 1,
          minHeight: "80px",
-         border: `2px dashed ${isDragOver ? "color-mix(in srgb, var(--widget-color, #FFD700) 60%, black)" : "rgba(0,0,0,0.15)"}`,
-         borderRadius: "10px",
          display: "flex",
          flexDirection: "column",
          alignItems: "center",
          justifyContent: "center",
          gap: "6px",
          cursor: "pointer",
-         background: isDragOver ? "color-mix(in srgb, var(--widget-color, #FFD700) 15%, white)" : "#fafafa",
-         transition: "all 0.2s ease",
          padding: "12px",
         }}
        >

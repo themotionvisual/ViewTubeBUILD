@@ -1,648 +1,529 @@
-import React, { useState, useEffect, useRef } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
+import {
+ FileVideo2,
+ ImagePlus,
+ BookOpen,
+ Loader2,
+ Pencil,
+ Plus,
+ RotateCcw,
+ Save,
+ ShieldCheck,
+ UploadCloud,
+} from "lucide-react"
+import {
+ fetchUserPlaylists,
+ fetchVideoCategories,
+ fetchVideoSnippetDetails,
+ fetchChannelPublishingDefaults,
+ updateVideoThumbnail,
+ updateVideo,
+ uploadVideo,
+} from "../../../services/youtubeService"
+import { generateEducationalTimestampQuestions } from "../../../services/gemini"
+import type { DashboardData } from "../useDashboardData"
+import type { CommonWidgetProps } from "../types"
+import {
+ WidgetChoice as Choice,
+ WidgetDisclosure as Module,
+ WidgetField as Field,
+ WidgetSelect as PortalSelect,
+  WidgetFooter,
+  WidgetMediaUploadAction,
+  WidgetMediaUploadFrame,
+  WidgetSplitButton,
+  WidgetTag,
+  WidgetWorkflowMain,
+ type WidgetSelectOption as SelectOption,
+} from "../WidgetPrimitives"
 import { WidgetShell } from "../WidgetShell"
-import { Pencil, Save, RotateCcw, ChevronDown, ChevronUp, ArrowRight, Settings, ShieldCheck, Upload, PlayCircle, Plus } from "lucide-react"
-import { fetchVideoSnippetDetails, updateVideo, fetchVideoCategories, fetchUserPlaylists, uploadVideo } from "../../../services/youtubeService"
+import { buildVideoAssetOptions } from "./videoAssetOptions"
+import { useUnifiedAccount } from "../../../context/UnifiedAccountContext"
 
 const STORAGE_KEY = "vt_data_edit_state"
+const TAG_CHARACTER_LIMIT = 500
 const YT_STANDARD_CATEGORY_IDS = new Set([
- "1","2","10","15","17","19","20","22","23","24","25","26","27","28","29",
+ "1", "2", "10", "15", "17", "19", "20", "22", "23", "24", "25", "26", "27", "28", "29",
 ])
 
-export const CustomDropdown = ({ value, onChange, options }: { value: string, onChange: (val: string) => void, options: {val: string, lbl: string}[] }) => {
- const [isOpen, setIsOpen] = useState(false)
- const currentLabel = options.find(o => o.val === value)?.lbl || "Select..."
+const FALLBACK_CATEGORIES = [
+ ["2", "Autos & Vehicles"], ["23", "Comedy"], ["27", "Education"], ["24", "Entertainment"],
+ ["1", "Film & Animation"], ["20", "Gaming"], ["26", "Howto & Style"], ["10", "Music"],
+ ["25", "News & Politics"], ["29", "Nonprofits & Activism"], ["22", "People & Blogs"],
+ ["15", "Pets & Animals"], ["28", "Science & Technology"], ["17", "Sports"], ["19", "Travel & Events"],
+] as const
 
- return (
-  <div className={`vt-dropdown ${isOpen ? "active" : ""}`} onMouseLeave={() => setIsOpen(false)}>
-   <div className="vt-dropdown-trigger" onClick={() => setIsOpen(!isOpen)}>
-    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentLabel}</span>
-    <ChevronDown size={14} strokeWidth={3} />
-   </div>
-   <div className="vt-dropdown-menu">
-    {options.map(o => (
-     <div key={o.val} className="vt-dropdown-item" onClick={() => { onChange(o.val); setIsOpen(false) }}>
-      {o.lbl}
-     </div>
-    ))}
-   </div>
-  </div>
- )
-}
+const AD_CATEGORIES = [
+ "Inappropriate language",
+ "Adult content",
+ "Violence",
+ "Shocking content",
+ "Harmful acts and unreliable claims",
+ "Recreational drugs content",
+ "Enabling dishonest behaviour",
+ "Hateful and derogatory content",
+ "Firearms-related content",
+ "Sensitive events",
+ "Controversial issues",
+] as const
 
-export const DataEditWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
- const common = {
-  widget,
-  instance,
-  editMode,
-  canEdit: true,
-  onToggleCollapse,
-  onCycleSize,
-  onRemove,
-  onDecSize,
-  onCycleHeight,
-  onDecHeight,
- }
- const videos = data.canonicalRows || []
- 
- // --- Modes & Navigation ---
- const [workflowMode, setWorkflowMode] = useState<"upload" | "edit">("upload")
- const [page, setPage] = useState<"main" | "options" | "suitability">("main")
+const limitTagsToCharacterBudget = (values: string[]) => values.reduce<string[]>((accepted, value) => {
+ const tag = value.trim()
+ if (!tag || accepted.includes(tag)) return accepted
+ return [...accepted, tag].join(", ").length <= TAG_CHARACTER_LIMIT ? [...accepted, tag] : accepted
+}, [])
 
- // --- Core Metadata (Main) ---
- const [selectedVideo, setSelectedVideo] = useState("") // videoId if edit, empty if upload
+// Compatibility surface for the title and retention widgets while dropdown behavior is centralized.
+export const CustomDropdown = ({ value, onChange, options }: {
+ value: string
+ onChange: (value: string) => void
+ options: { key?: string; val: string; lbl: string }[]
+}) => (
+ <PortalSelect
+  value={value}
+  onChange={onChange}
+  label="Select option"
+  options={options.map((option) => ({ value: option.val, label: option.lbl }))}
+ />
+)
+
+type WorkflowMode = "upload" | "manage"
+type WorkspacePage = "details" | "options" | "ads" | "timestamps"
+type WidgetProps = CommonWidgetProps & { data: DashboardData }
+
+const VideoMetadataWorkspace = ({ mode, data }: { mode: WorkflowMode; data: DashboardData }) => {
+ const account = useUnifiedAccount()
+ const videos = data.videoAssets
+ const [page, setPage] = useState<WorkspacePage>("details")
+ const [selectedVideoId, setSelectedVideoId] = useState("")
  const [videoSearch, setVideoSearch] = useState("")
+ const [videoFile, setVideoFile] = useState<File | null>(null)
  const [title, setTitle] = useState("")
  const [description, setDescription] = useState("")
  const [tags, setTags] = useState<string[]>([])
  const [newTag, setNewTag] = useState("")
  const [categoryId, setCategoryId] = useState("")
  const [privacyStatus, setPrivacyStatus] = useState("public")
- 
- // --- Additional Options ---
+ const [playlistId, setPlaylistId] = useState("")
+ const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
+ const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
  const [madeForKids, setMadeForKids] = useState("no")
  const [paidPromotion, setPaidPromotion] = useState(false)
  const [alteredContent, setAlteredContent] = useState("no")
  const [autoChapters, setAutoChapters] = useState(true)
- const [autoPlaces, setAutoPlaces] = useState(true)
- const [autoConcepts, setAutoConcepts] = useState(true)
  const [language, setLanguage] = useState("en")
  const [captionCert, setCaptionCert] = useState("none")
  const [recordingDate, setRecordingDate] = useState("")
  const [location, setLocation] = useState("")
  const [license, setLicense] = useState("youtube")
- const [distribution, setDistribution] = useState("everywhere")
  const [allowEmbedding, setAllowEmbedding] = useState(true)
  const [notifySubscribers, setNotifySubscribers] = useState(true)
- const [remixing, setRemixing] = useState("video_audio")
- const [commentsMode, setCommentsMode] = useState("on")
- const [showLikes, setShowLikes] = useState(true)
- const [playlistId, setPlaylistId] = useState("")
-
- // Category Specifics
- const [gameTitle, setGameTitle] = useState("")
- const [eduType, setEduType] = useState("None")
- const [eduProblems, setEduProblems] = useState("")
- const [eduSystem, setEduSystem] = useState("United States")
- const [eduLevel, setEduLevel] = useState("None")
- const [eduExam, setEduExam] = useState("")
-
- // --- Ad Suitability ---
  const [adSuitability, setAdSuitability] = useState<Record<string, string>>({})
  const [noneOfTheAbove, setNoneOfTheAbove] = useState(false)
- const [ratingSubmitted, setRatingSubmitted] = useState(false)
-
- // --- UI State ---
- const [originalData, setOriginalData] = useState<any>(null)
- const [expandedSection, setExpandedSection] = useState<string | null>("title")
+ const [categories, setCategories] = useState<SelectOption[]>(() => FALLBACK_CATEGORIES.map(([value, label]) => ({ value, label })))
+ const [playlists, setPlaylists] = useState<SelectOption[]>([])
  const [saving, setSaving] = useState(false)
  const [saved, setSaved] = useState(false)
- const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
- const [isDraggingThumb, setIsDraggingThumb] = useState(false)
- const [categories, setCategories] = useState<{id: string, title: string}[]>([])
- const [playlists, setPlaylists] = useState<{id: string, title: string}[]>([])
- const supportDataFetchedRef = useRef(false)
- const thumbInputRef = useRef<HTMLInputElement | null>(null)
+ const [error, setError] = useState("")
+ const [defaultsLoading, setDefaultsLoading] = useState<"description" | "tags" | null>(null)
+ const [timestampQuestions, setTimestampQuestions] = useState<string[]>([])
+ const [timestampsLoading, setTimestampsLoading] = useState(false)
+ const [originalData, setOriginalData] = useState({ title: "", description: "", tags: [] as string[], categoryId: "" })
+ const videoInputRef = useRef<HTMLInputElement>(null)
+ const thumbnailInputRef = useRef<HTMLInputElement>(null)
+ const tagInputRef = useRef<HTMLInputElement>(null)
+ const pageRef = useRef<HTMLDivElement>(null)
 
- // Listen for navigation from upload scheduler
+ const selectedAsset = useMemo(
+  () => videos.find((video) => video.videoId === selectedVideoId) || null,
+  [selectedVideoId, videos],
+ )
+
+ const filteredVideoOptions = useMemo(
+  () => buildVideoAssetOptions(videos, videoSearch, 60).slice(1).map((option) => ({ value: option.val, label: option.lbl })),
+  [videoSearch, videos],
+ )
+
  useEffect(() => {
-  const handleNav = (e: any) => {
-   if (e.detail?.targetWidget === "data-edit") {
-    setWorkflowMode("upload")
-    setPage("main")
-    if (e.detail.videoTitle) setTitle(e.detail.videoTitle)
+  if (!data.authState.isAuthenticated) return
+  Promise.allSettled([fetchVideoCategories(), fetchUserPlaylists()]).then(([categoryResult, playlistResult]) => {
+   if (categoryResult.status === "fulfilled") {
+    setCategories(categoryResult.value
+     .filter((category: { id: string }) => YT_STANDARD_CATEGORY_IDS.has(String(category.id)))
+     .map((category: { id: string; title: string }) => ({ value: String(category.id), label: category.title })))
    }
-  }
-  window.addEventListener("vt_navigate_widget", handleNav)
-  return () => window.removeEventListener("vt_navigate_widget", handleNav)
- }, [])
+   if (playlistResult.status === "fulfilled") {
+    setPlaylists(playlistResult.value.map((playlist: { id: string; title: string }) => ({ value: playlist.id, label: playlist.title })))
+   }
+  })
+ }, [data.authState.isAuthenticated])
 
  useEffect(() => {
-  const onBridge = (event: Event) => {
-   const payload = (event as CustomEvent<any>).detail
-   if (!payload?.imageUrl) return
-   if (payload.targetWidget && payload.targetWidget !== "data-edit") return
-   setThumbnailPreview(payload.imageUrl)
-  }
-  window.addEventListener("vt_dashboard_generated_image", onBridge as EventListener)
+  if (mode !== "upload") return
   try {
-   const cached = localStorage.getItem("vt_bridge_image_data-edit")
-   if (cached) {
-    const payload = JSON.parse(cached)
-    if (payload?.imageUrl) setThumbnailPreview(payload.imageUrl)
-   }
-  } catch {}
-  return () => window.removeEventListener("vt_dashboard_generated_image", onBridge as EventListener)
- }, [])
+   const cached = JSON.parse(localStorage.getItem("vt_bridge_image_video-uploader") || "null")
+   if (cached?.imageUrl) setThumbnailPreview(cached.imageUrl)
+  } catch {
+   // A corrupt optional bridge preview should never block the uploader.
+  }
+  const onNavigate = (event: Event) => {
+   const detail = (event as CustomEvent<{ targetWidget?: string; videoTitle?: string }>).detail
+   if (detail?.targetWidget !== "video-uploader" && detail?.targetWidget !== "data-edit") return
+   setPage("details")
+   if (detail.videoTitle) setTitle(detail.videoTitle)
+  }
+  const onImage = (event: Event) => {
+   const detail = (event as CustomEvent<{ targetWidget?: string; imageUrl?: string }>).detail
+   if (!detail?.imageUrl || (detail.targetWidget && detail.targetWidget !== "video-uploader")) return
+   setThumbnailPreview(detail.imageUrl)
+  }
+  window.addEventListener("vt_navigate_widget", onNavigate)
+  window.addEventListener("vt_dashboard_generated_image", onImage)
+  return () => {
+   window.removeEventListener("vt_navigate_widget", onNavigate)
+   window.removeEventListener("vt_dashboard_generated_image", onImage)
+  }
+ }, [mode])
 
- // Fetch categories/playlists once, and only for authenticated users.
  useEffect(() => {
-  if (!data?.authState?.isAuthenticated) return
-  if (supportDataFetchedRef.current) return
-  supportDataFetchedRef.current = true
-
-  fetchVideoCategories().then(c => setCategories(c.filter((cat: any) => YT_STANDARD_CATEGORY_IDS.has(String(cat.id))))).catch(() => {})
-  fetchUserPlaylists().then(p => setPlaylists(p)).catch(() => {})
- }, [data?.authState?.isAuthenticated])
-
- const handleSelect = async (vidId: string) => {
-  setSelectedVideo(vidId)
-  setSaved(false)
-  const vid = videos.find((v: any) => v.videoId === vidId)
-  const t = vid?.title || ""
-  const d = vid?.description || ""
-  setTitle(t)
-  setDescription(d)
-  
-  // Try to load cached extra data if exists
-  const localCache = JSON.parse(localStorage.getItem(STORAGE_KEY + "_" + vidId) || "{}")
-  setCategoryId(localCache.categoryId || "")
-  setPrivacyStatus(localCache.privacyStatus || "public")
-  
-  setOriginalData({title: t, description: d, tags: []})
-  try {
-   const details = await fetchVideoSnippetDetails([vidId])
-   const fetched = details[vidId]
-   if (fetched) {
-    setTags(fetched.tags || [])
-    setDescription(fetched.description || d)
-    setCategoryId(fetched.categoryId || localCache.categoryId || "")
-    setOriginalData({title: t, description: fetched.description || d, tags: fetched.tags || [], categoryId: fetched.categoryId})
+  if (mode !== "manage" || !selectedVideoId) return
+  const asset = videos.find((video) => video.videoId === selectedVideoId)
+  const base = { title: asset?.title || "", description: "", tags: [] as string[], categoryId: "" }
+  setTitle(base.title)
+  setDescription("")
+  setTags([])
+  setThumbnailPreview(asset?.thumbnailUrl || `https://img.youtube.com/vi/${selectedVideoId}/hqdefault.jpg`)
+  const cached = JSON.parse(localStorage.getItem(`${STORAGE_KEY}_${selectedVideoId}`) || "{}")
+  setCategoryId(cached.categoryId || "")
+  setPrivacyStatus(cached.privacyStatus || "public")
+  setOriginalData(base)
+  fetchVideoSnippetDetails([selectedVideoId]).then((details) => {
+   const detail = details[selectedVideoId]
+   if (!detail) return
+   const next = {
+    title: asset?.title || "",
+    description: detail.description || "",
+    tags: detail.tags || [],
+    categoryId: detail.categoryId || cached.categoryId || "",
    }
-  } catch { setTags([]) }
- }
+   setDescription(next.description)
+   setTags(next.tags)
+   setCategoryId(next.categoryId)
+   setOriginalData(next)
+  }).catch(() => undefined)
+ }, [mode, selectedVideoId, videos])
 
- const handleSave = async () => {
-  setSaving(true)
-  try {
-   const payload = {
-    title, description, tags, categoryId, privacyStatus,
-    madeForKids: madeForKids === "yes",
-    recordingDate, locationDescription: location, license
-   }
+ useEffect(() => {
+  pageRef.current?.scrollTo?.({ top: 0 })
+ }, [page])
 
-   if (workflowMode === "edit") {
-    if (selectedVideo) {
-     await updateVideo(selectedVideo, payload)
-     // Save extra local metadata
-     localStorage.setItem(STORAGE_KEY + "_" + selectedVideo, JSON.stringify({categoryId, privacyStatus, gameTitle, eduType, noneOfTheAbove, adSuitability}))
-    }
-   } else {
-    // Upload Mode (Mocked file upload since we don't have a real file object here, we just fake the API success)
-    await new Promise(r => setTimeout(r, 1500)) 
-    // In reality, we would pass a File object to uploadVideo(file, payload)
-   }
+ useEffect(() => {
+  if (categoryId !== "27" && page === "timestamps") setPage("details")
+ }, [categoryId, page])
 
-   setSaving(false)
-   setSaved(true)
-   setTimeout(() => setSaved(false), 3000)
-  } catch (e) {
-   console.error("Save failed", e)
-   setSaving(false)
-  }
- }
-
- const handleReset = () => {
-  if (!originalData) return
-  setTitle(originalData.title || "")
-  setDescription(originalData.description || "")
-  setTags(originalData.tags || [])
-  setCategoryId(originalData.categoryId || "")
+ const readThumbnail = (file?: File) => {
+  if (!file || !file.type.startsWith("image/")) return
+  setThumbnailFile(file)
+  const reader = new FileReader()
+  reader.onload = () => setThumbnailPreview(String(reader.result || ""))
+  reader.readAsDataURL(file)
  }
 
  const addTag = () => {
-  if (newTag.trim() && !tags.includes(newTag.trim())) {
-   setTags(prev => [...prev, newTag.trim()])
-   setNewTag("")
+  const next = newTag.trim()
+  if (!next || tags.includes(next)) return
+  if ([...tags, next].join(", ").length > TAG_CHARACTER_LIMIT) {
+   setError(`Tags are limited to ${TAG_CHARACTER_LIMIT} characters.`)
+   return
+  }
+  setTags((current) => [...current, next])
+  setNewTag("")
+ }
+
+ const tagCharacterCount = tags.join(", ").length
+ const tagDraftCharacterCount = tagCharacterCount + (newTag ? (tags.length ? 2 : 0) + newTag.length : 0)
+ const remainingTagInputLength = Math.max(0, TAG_CHARACTER_LIMIT - tagCharacterCount - (tags.length ? 2 : 0))
+
+ const applyChannelDefaults = async (target: "description" | "tags") => {
+  setDefaultsLoading(target)
+  setError("")
+  try {
+   const defaults = await fetchChannelPublishingDefaults()
+   if (target === "description") {
+    setDescription(defaults.description)
+    if (!defaults.description) setError("Your channel has no default description in YouTube branding settings.")
+   } else {
+    setTags(limitTagsToCharacterBudget(defaults.tags))
+    if (!defaults.tags.length) setError("Your channel has no default keywords in YouTube branding settings.")
+   }
+  } catch (cause) {
+   setError(cause instanceof Error ? cause.message : "Unable to load channel defaults.")
+  } finally {
+   setDefaultsLoading(null)
   }
  }
 
- const removeTag = (idx: number) => setTags(prev => prev.filter((_, i) => i !== idx))
-
- const Section = ({ id, label, color, children, defaultOpen = false }: any) => {
-  const isOpen = expandedSection === id
-  return (
-   <div style={{ border: "2px solid #000", borderRadius: "10px", overflow: "hidden", background: "#fff", marginBottom: "6px" }}>
-    <button onClick={() => setExpandedSection(isOpen ? null : id)} style={{
-     width: "100%", height: "32px", background: color, border: "none", borderBottom: isOpen ? "2px solid #000" : "none",
-     display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 10px",
-     fontSize: "10px", fontWeight: 1000, textTransform: "uppercase", cursor: "pointer",
-    }}>
-     {label}
-     {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-    </button>
-    {isOpen && <div style={{ padding: "10px", display: "flex", flexDirection: "column", gap: "8px" }}>{children}</div>}
-   </div>
-  )
+ const generateTimestampQuestions = async () => {
+  setTimestampsLoading(true)
+  setError("")
+  try {
+   setTimestampQuestions(await generateEducationalTimestampQuestions({ title, description, tags }, data.brain))
+  } catch (cause) {
+   setError(cause instanceof Error ? cause.message : "Unable to generate timestamp questions.")
+  } finally {
+   setTimestampsLoading(false)
+  }
  }
 
- // Render Helpers
- const renderInput = (val: string, setVal: any, placeholder: string) => (
-  <input value={val} onChange={(e) => setVal(e.target.value)} placeholder={placeholder} style={{
-   width: "100%", padding: "6px 8px", border: "2px solid #000", borderRadius: "6px", fontSize: "11px", fontWeight: 700, outline: "none",
-  }} />
- )
-
- const renderSelect = (val: string, setVal: any, options: {val: string, lbl: string}[]) => (
-  <CustomDropdown value={val} onChange={(newVal) => setVal(newVal)} options={options} />
- )
-
- const renderRadio = (name: string, val: string, setVal: any, options: {val: string, lbl: string}[]) => (
-  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-   {options.map(o => (
-    <label key={o.val} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: 700 }}>
-     <input type="radio" name={name} value={o.val} checked={val === o.val} onChange={(e) => setVal(e.target.value)} style={{ accentColor: "#000" }} />
-     {o.lbl}
-    </label>
-   ))}
-  </div>
- )
-
- const renderCheckbox = (lbl: string, val: boolean, setVal: any) => (
-  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: 700 }}>
-   <input type="checkbox" checked={val} onChange={(e) => setVal(e.target.checked)} style={{ accentColor: "#000", width: "14px", height: "14px" }} />
-   {lbl}
-  </label>
- )
-
- // --- Pages ---
- const renderMainPage = () => (
-   <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
-    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "6px", marginBottom: "6px" }}>
-     <div style={{ position: "relative" }}>
-      <input className="vt-input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Video Title" style={{
-       background: "#fff", paddingRight: "80px"
-      }} />
-       <div style={{ position: "absolute", right: "4px", top: "4px", bottom: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
-        <span style={{ fontSize: "8px", fontWeight: 900, opacity: 0.5, marginRight: "4px" }}>{title.length}/100</span>
-        <button className="vt-button secondary" style={{ height: "100%", fontSize: "9px" }}><Settings size={12} style={{ marginRight: "4px"}} /> AI Rewrite</button>
-       </div>
-     </div>
-     <div
-      style={{
-       border: "2px dashed #000",
-       borderRadius: "8px",
-       background: isDraggingThumb ? "rgba(87,154,255,0.2)" : "#f8f8f8",
-       minHeight: "52px",
-       padding: "4px",
-       display: "flex",
-       alignItems: "center",
-       justifyContent: "space-between",
-       gap: "4px",
-      }}
-      onDragOver={(e) => {
-       e.preventDefault()
-       setIsDraggingThumb(true)
-      }}
-      onDragLeave={() => setIsDraggingThumb(false)}
-      onDrop={(e) => {
-       e.preventDefault()
-       setIsDraggingThumb(false)
-       const file = e.dataTransfer.files?.[0]
-       if (!file || !file.type.startsWith("image/")) return
-       const reader = new FileReader()
-       reader.onload = () => setThumbnailPreview(reader.result as string)
-       reader.readAsDataURL(file)
-      }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "4px", minWidth: 0 }}>
-       {thumbnailPreview ? (
-        <img src={thumbnailPreview} alt="thumb" style={{ width: "52px", height: "28px", objectFit: "cover", borderRadius: "4px", border: "1px solid #000" }} />
-       ) : (
-        <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>Thumbnail</span>
-       )}
-      </div>
-      <div style={{ display: "flex", gap: "4px" }}>
-       <button className="vt-button secondary" style={{ height: "28px", fontSize: "8px", padding: "0 6px" }} onClick={() => thumbInputRef.current?.click()}>
-        <Upload size={10} /> Upload
-       </button>
-       <button
-        className="vt-button secondary"
-        style={{ height: "28px", fontSize: "8px", padding: "0 6px" }}
-        onClick={() => window.dispatchEvent(new CustomEvent("vt_navigate_widget", { detail: { targetWidget: "thumb-ai" } }))}>
-        Go Thumb AI
-       </button>
-      </div>
-      <input
-       ref={thumbInputRef}
-       type="file"
-       accept="image/*"
-       style={{ display: "none" }}
-       onChange={(e) => {
-        const file = e.target.files?.[0]
-        if (!file) return
-        const reader = new FileReader()
-        reader.onload = () => setThumbnailPreview(reader.result as string)
-       reader.readAsDataURL(file)
-       }}
-      />
-     </div>
-    </div>
-
-   <Section id="desc" label="Description" color="#4FFF5B">
-    <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} style={{
-     width: "100%", padding: "6px 8px", border: "2px solid #000", borderRadius: "6px",
-     fontSize: "11px", fontWeight: 700, outline: "none", resize: "none", fontFamily: "inherit",
-    }} />
-    <span style={{ fontSize: "8px", fontWeight: 900, opacity: 0.3 }}>{description.length}/5000</span>
-   </Section>
-
-   <Section id="tags" label={`Tags (${tags.length})`} color="#579AFF">
-    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "6px" }}>
-     {tags.map((tag, i) => (
-      <span key={i} onClick={() => removeTag(i)} style={{
-       padding: "2px 8px", background: "rgba(87,154,255,0.15)", border: "1px solid #000",
-       borderRadius: "999px", fontSize: "9px", fontWeight: 900, cursor: "pointer",
-      }}>{tag} ✕</span>
-     ))}
-    </div>
-    <div style={{ display: "flex", gap: "4px" }}>
-     <input value={newTag} onChange={(e) => setNewTag(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") addTag() }}
-      placeholder="New tag..." style={{ flex: 1, padding: "4px 8px", border: "2px solid #000", borderRadius: "6px", fontSize: "10px", outline: "none" }} />
-     <button onClick={addTag} className="vt-button" style={{ width: "28px", height: "28px", padding: 0 }}><Plus size={14} /></button>
-    </div>
-   </Section>
-
-    <div style={{ display: "flex", gap: "6px", marginBottom: "6px" }}>
-     <div style={{ flex: 1, minWidth: 0 }}>
-      <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6, marginBottom: "2px", display: "block" }}>Visibility</span>
-      {renderSelect(privacyStatus, setPrivacyStatus, [
-       {val: "public", lbl: "Public"}, {val: "unlisted", lbl: "Unlisted"}, {val: "private", lbl: "Private"}
-      ])}
-     </div>
-     <div style={{ flex: 1, minWidth: 0 }}>
-      <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6, marginBottom: "2px", display: "block" }}>Category</span>
-      {renderSelect(categoryId, setCategoryId, [
-       {val: "", lbl: "Select category..."},
-       {val: "2", lbl: "Autos & Vehicles"},
-       {val: "23", lbl: "Comedy"},
-       {val: "27", lbl: "Education"},
-       {val: "24", lbl: "Entertainment"},
-       {val: "1", lbl: "Film & Animation"},
-       {val: "20", lbl: "Gaming"},
-       {val: "26", lbl: "Howto & Style"},
-       {val: "10", lbl: "Music"},
-       {val: "25", lbl: "News & Politics"},
-       {val: "29", lbl: "Nonprofits & Activism"},
-       {val: "22", lbl: "People & Blogs"},
-       {val: "15", lbl: "Pets & Animals"},
-       {val: "28", lbl: "Science & Technology"},
-       {val: "17", lbl: "Sports"},
-       {val: "19", lbl: "Travel & Events"}
-      ])}
-     </div>
-     <div style={{ flex: 1, minWidth: 0 }}>
-      <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6, marginBottom: "2px", display: "block" }}>Playlist</span>
-      {renderSelect(playlistId, setPlaylistId, [
-       {val: "", lbl: "None"},
-       ...playlists.map(p => ({val: p.id, lbl: p.title}))
-      ])}
-     </div>
-    </div>
-   
-    <button className="vt-button primary" onClick={() => { setPage("options"); setExpandedSection("audience") }} style={{ marginTop: "8px", height: "36px" }}>
-     Additional Options <ArrowRight size={12} strokeWidth={3} />
-    </button>
-  </div>
- )
-
- const renderOptionsPage = () => {
-  const isGaming = categoryId === "20"
-  const isEdu = categoryId === "27"
-
-  return (
-   <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
-    <Section id="audience" label="Audience & Restrictions" color="#EAEAEA">
-     <span style={{ fontSize: "10px", fontWeight: 800 }}>Is this video made for kids?</span>
-     {renderRadio("kids", madeForKids, setMadeForKids, [{val: "yes", lbl: "Yes, it's made for kids"}, {val: "no", lbl: "No, it's not made for kids"}])}
-    </Section>
-
-    <Section id="disclosures" label="Disclosures & Altered Content" color="#EAEAEA">
-     <span style={{ fontSize: "10px", fontWeight: 800 }}>Paid promotion</span>
-     {renderCheckbox("My video contains paid promotion like a product placement, sponsorship, or endorsement", paidPromotion, setPaidPromotion)}
-     
-     <div style={{ height: "1px", background: "rgba(0,0,0,0.1)", margin: "8px 0" }} />
-     
-     <span style={{ fontSize: "10px", fontWeight: 800 }}>Altered content</span>
-     {renderRadio("altered", alteredContent, setAlteredContent, [{val: "yes", lbl: "Yes"}, {val: "no", lbl: "No"}])}
-    </Section>
-
-    <Section id="automatic" label="Automatic Concepts & Chapters" color="#EAEAEA">
-     {renderCheckbox("Allow automatic chapters and key moments", autoChapters, setAutoChapters)}
-     {renderCheckbox("Allow automatic places", autoPlaces, setAutoPlaces)}
-     {renderCheckbox("Allow automatic concepts", autoConcepts, setAutoConcepts)}
-    </Section>
-
-    <Section id="language" label="Language and captions certification" color="#EAEAEA">
-     <div style={{ display: "flex", gap: "6px" }}>
-      <div style={{ flex: 1 }}>
-       <span style={{ fontSize: "10px", fontWeight: 800, display: "block", marginBottom: "4px" }}>Video language</span>
-       {renderSelect(language, setLanguage, [
-        "Not applicable", "Abkhazian", "Afar", "Afrikaans", "Akan", "Akkadian", "Albanian", "American Sign Language", "Amharic", "Arabic", "Aramaic", "Armenian", "Arpitan", "Assamese", "Aymara", "Azerbaijani", "Bambara", "Bangla", "Bangla (India)", "Bashkir", "Basque", "Belarusian", "Bhojpuri", "Bislama", "Bodo", "Bosnian", "Breton", "Bulgarian", "Burmese", "Cantonese", "Cantonese (Hong Kong)", "Catalan", "Cherokee", "Chinese", "Chinese (China)", "Chinese (Hong Kong)", "Chinese (Simplified)", "Chinese (Singapore)", "Chinese (Taiwan)", "Chinese (Traditional)", "Choctaw", "Coptic", "Corsican", "Cree", "Croatian", "Czech", "Danish", "Dogri", "Dutch", "Dutch (Belgium)", "Dutch (Netherlands)", "Dzongkha", "English", "English (Australia)", "English (Canada)", "English (India)", "English (Ireland)", "English (United Kingdom)", "English (United States)", "Esperanto", "Estonian", "Ewe", "Faroese", "Fijian", "Filipino", "Finnish", "French", "French (Belgium)", "French (Canada)", "French (France)", "French (Switzerland)", "Fula", "Galician", "Ganda", "Georgian", "German", "German (Austria)", "German (Germany)", "German (Switzerland)", "Greek", "Guarani", "Gujarati", "Gusii", "Haitian Creole", "Hakka Chinese", "Hakka Chinese (Taiwan)", "Haryanvi", "Hausa", "Hawaiian", "Hebrew", "Hindi", "Hindi (Latin)", "Hiri Motu", "Hungarian", "Icelandic", "Igbo", "Indonesian", "Interlingua", "Interlingue", "Inuktitut", "Inupiaq", "Irish", "Italian", "Japanese", "Javanese", "Kalaallisut", "Kalenjin", "Kamba", "Kannada", "Kashmiri", "Kazakh", "Khmer", "Kikuyu", "Kinyarwanda", "Klingon", "Konkani", "Korean", "Kurdish", "Kyrgyz", "Ladino", "Lao", "Latin", "Latvian", "Lingala", "Lithuanian", "Lojban", "Lower Sorbian", "Luba-Katanga", "Luo", "Luxembourgish", "Luyia", "Macedonian", "Maithili", "Malagasy", "Malay", "Malay (Singapore)", "Malayalam", "Maltese", "Manipuri", "Māori", "Marathi", "Masai", "Meru", "Min Nan Chinese", "Min Nan Chinese (Taiwan)", "Mixe", "Mizo", "Mongolian", "Mongolian (Mongolian)", "Nauru", "Navajo", "Nepali", "Nigerian Pidgin", "North Ndebele", "Northern Sotho", "Norwegian", "Occitan", "Odia", "Oromo", "Papiamento", "Pashto", "Persian", "Persian (Afghanistan)", "Persian (Iran)", "Polish", "Portuguese", "Portuguese (Brazil)", "Portuguese (Portugal)", "Punjabi", "Quechua", "Romanian", "Romanian (Moldova)", "Romansh", "Rundi", "Russian", "Russian (Latin)", "Samoan", "Sango", "Sanskrit", "Santali", "Sardinian", "Scottish Gaelic", "Serbian", "Serbian (Cyrillic)", "Serbian (Latin)", "Serbo-Croatian", "Sherdukpen", "Shona", "Sicilian", "Sindhi", "Sinhala", "Slovak", "Slovenian", "Somali", "South Ndebele", "Southern Sotho", "Spanish", "Spanish (Latin America)", "Spanish (Mexico)", "Spanish (Spain)", "Spanish (United States)", "Sundanese", "Swahili", "Swati", "Swedish", "Tagalog", "Tajik", "Tamil", "Tatar", "Telugu", "Thai", "Tibetan", "Tigrinya", "Tok Pisin", "Toki Pona", "Tongan", "Tsonga", "Tswana", "Turkish", "Turkmen", "Twi", "Ukrainian", "Upper Sorbian", "Urdu", "Uyghur", "Uzbek", "Venda", "Vietnamese", "Volapük", "Võro", "Walloon", "Welsh", "Western Frisian", "Wolaytta", "Wolof", "Xhosa", "Yiddish", "Yoruba", "Zulu"
-       ].map(lang => ({val: lang, lbl: lang})))}
-      </div>
-      <div style={{ flex: 1 }}>
-       <span style={{ fontSize: "10px", fontWeight: 800, display: "block", marginBottom: "4px" }}>Caption certification</span>
-       {renderSelect(captionCert, setCaptionCert, [
-        {val: "none", lbl: "None"},
-        {val: "neverAired", lbl: "This content has never aired on television in the U.S."},
-        {val: "airedWithoutCaptions", lbl: "This content has only aired on television in the U.S. without captions"},
-        {val: "notAiredSince2012", lbl: "This content has not aired on U.S. television with captions since September 30, 2012."},
-        {val: "notOnlineProgramming", lbl: "This content does not fall within a category of online programming that requires captions under FCC regulations (47 C.F.R. § 79)."},
-        {val: "grantedExemption", lbl: "The FCC and/or U.S. Congress has granted an exemption from captioning requirements for this content."}
-       ])}
-      </div>
-     </div>
-    </Section>
-
-    <Section id="recording" label="Recording date and location" color="#EAEAEA">
-     <div style={{ display: "flex", gap: "6px" }}>
-      <div style={{ flex: 1 }}>
-       <span style={{ fontSize: "10px", fontWeight: 800, display: "block", marginBottom: "4px" }}>Recording date</span>
-       <input type="date" value={recordingDate} onChange={(e) => setRecordingDate(e.target.value)} style={{
-        width: "100%", padding: "6px 8px", border: "2px solid #000", borderRadius: "6px", fontSize: "11px", fontWeight: 700, outline: "none", background: "#fff"
-       }} />
-      </div>
-      <div style={{ flex: 1 }}>
-       <span style={{ fontSize: "10px", fontWeight: 800, display: "block", marginBottom: "4px" }}>Video location</span>
-       {renderInput(location, setLocation, "None")}
-      </div>
-     </div>
-    </Section>
-
-    <Section id="license" label="License & Distribution" color="#EAEAEA">
-     <div style={{ display: "flex", gap: "6px", marginBottom: "6px" }}>
-      <div style={{ flex: 1 }}>
-       <span style={{ fontSize: "10px", fontWeight: 800, display: "block", marginBottom: "4px" }}>License</span>
-       {renderSelect(license, setLicense, [{val: "youtube", lbl: "Standard YouTube License"}, {val: "creativeCommon", lbl: "Creative Commons - Attribution"}])}
-      </div>
-      <div style={{ flex: 1 }}>
-       <span style={{ fontSize: "10px", fontWeight: 800, display: "block", marginBottom: "4px" }}>Distribution</span>
-       {renderSelect(distribution, setDistribution, [{val: "everywhere", lbl: "Everywhere"}, {val: "monetized", lbl: "Make this video available only on monetized platforms"}])}
-      </div>
-     </div>
-     
-     {renderCheckbox("Allow embedding", allowEmbedding, setAllowEmbedding)}
-     {renderCheckbox("Publish to subscriptions feed and notify subscribers", notifySubscribers, setNotifySubscribers)}
-     
-     <div style={{ height: "1px", background: "rgba(0,0,0,0.1)", margin: "8px 0" }} />
-     
-     <span style={{ fontSize: "10px", fontWeight: 800 }}>Shorts remixing</span>
-     {renderRadio("remix", remixing, setRemixing, [{val: "video_audio", lbl: "Allow video and audio remixing"}, {val: "audio_only", lbl: "Allow only audio remixing"}, {val: "none", lbl: "Don't allow remixing"}])}
-    </Section>
-
-    {isGaming && (
-     <Section id="gaming" label="Gaming Metadata" color="#FF83EA">
-      <span style={{ fontSize: "10px", fontWeight: 800 }}>Game Title (optional)</span>
-      {renderInput(gameTitle, setGameTitle, "None")}
-     </Section>
-    )}
-
-    {isEdu && (
-     <Section id="education" label="Education Metadata" color="#FF83EA">
-      <span style={{ fontSize: "10px", fontWeight: 800 }}>Type</span>
-      {renderSelect(eduType, setEduType, [{val: "None", lbl: "None"}, {val: "Concept overview", lbl: "Concept overview"}, {val: "Problem walkthrough", lbl: "Problem walkthrough"}])}
-      
-      <span style={{ fontSize: "10px", fontWeight: 800, marginTop: "6px", display: "block" }}>Problems</span>
-      <textarea value={eduProblems} onChange={(e) => setEduProblems(e.target.value)} rows={3} placeholder="0:32 What is the top speed..." style={{
-       width: "100%", padding: "6px 8px", border: "2px solid #000", borderRadius: "6px", fontSize: "11px", fontWeight: 700, outline: "none", resize: "none", fontFamily: "inherit",
-      }} />
-
-      <span style={{ fontSize: "10px", fontWeight: 800, marginTop: "6px", display: "block" }}>Academic System</span>
-      {renderSelect(eduSystem, setEduSystem, [{val: "United States", lbl: "United States"}, {val: "United Kingdom", lbl: "United Kingdom"}])}
-     </Section>
-    )}
-
-    <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}>
-     <button className="vt-button" onClick={() => setPage("main")} style={{ flex: 1, height: "36px" }}>Back to Details</button>
-     <button className="vt-button primary" onClick={() => setPage("suitability")} style={{ flex: 1, height: "36px" }}>
-      Ad Suitability <ArrowRight size={12} strokeWidth={3} />
-     </button>
-    </div>
-   </div>
-  )
+ const reset = () => {
+  setTitle(originalData.title)
+  setDescription(originalData.description)
+  setTags(originalData.tags)
+  setCategoryId(originalData.categoryId)
+  setError("")
  }
 
- const renderSuitabilityPage = () => {
-  const categoriesList = [
-   "Inappropriate language", "Adult content", "Violence", "Shocking content", 
-   "Harmful acts and unreliable claims", "Recreational drugs content", 
-   "Enabling dishonest behaviour", "Hateful & derogatory content", 
-   "Firearms-related content", "Sensitive events", "Controversial issues"
-  ]
-
-  return (
-   <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
-    <div style={{ background: "#111", color: "#fff", padding: "10px", borderRadius: "10px", marginBottom: "8px", border: "2px solid #000" }}>
-     <h4 style={{ margin: 0, fontSize: "12px", display: "flex", alignItems: "center", gap: "6px" }}><ShieldCheck size={14} /> Ad Suitability</h4>
-     <p style={{ margin: "4px 0 0 0", fontSize: "9px", opacity: 0.7 }}>Does your video's content, title, description, or keywords contain any of the following?</p>
-    </div>
-
-    {categoriesList.map(cat => (
-     <div key={cat} style={{ padding: "8px 10px", border: "2px solid #000", borderRadius: "8px", marginBottom: "4px", background: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <span style={{ fontSize: "10px", fontWeight: 800 }}>{cat}</span>
-      <ChevronDown size={14} style={{ opacity: 0.4 }} />
-     </div>
-    ))}
-
-    <div style={{ marginTop: "8px", padding: "10px", border: "2px solid #000", borderRadius: "8px", background: noneOfTheAbove ? "color-mix(in srgb, #4FFF5B 20%, white)" : "#fff" }}>
-     {renderCheckbox("None of the above", noneOfTheAbove, setNoneOfTheAbove)}
-    </div>
-
-    {noneOfTheAbove && (
-     <div style={{ marginTop: "8px", padding: "10px", background: "#111", color: "#fff", borderRadius: "8px", border: "2px solid #000" }}>
-      <span style={{ fontSize: "9px", opacity: 0.7, display: "block" }}>How you rated your video overall:</span>
-      <span style={{ fontSize: "12px", fontWeight: 900, color: "#4FFF5B", display: "block", margin: "4px 0 8px 0" }}>Safe for ads</span>
-      <button 
-       className={`vt-button ${ratingSubmitted ? "" : "primary"}`}
-       onClick={() => setRatingSubmitted(true)}
-       disabled={ratingSubmitted}
-       style={{ width: "100%", height: "32px", fontSize: "10px" }}
-      >
-       {ratingSubmitted ? "Rating Submitted" : "Submit Rating"}
-      </button>
-     </div>
-    )}
-
-    <div style={{ display: "flex", gap: "6px", marginTop: "auto", paddingTop: "8px" }}>
-     <button className="vt-button" onClick={() => setPage("options")} style={{ flex: 1, height: "32px" }}>Back to Options</button>
-    </div>
-   </div>
-  )
+ const save = async () => {
+  if (mode === "manage" && !selectedVideoId) return setError("Select a published video first.")
+  if (mode === "upload" && !videoFile) return setError("Choose a video file before publishing.")
+  if (!title.trim()) return setError("Add a video title before continuing.")
+  const requiredCapability = mode === "upload" ? "youtube_upload" : "youtube_comments"
+  if (account.serverEnabled && !account.snapshot.grantedCapabilities.includes(requiredCapability)) {
+   setError("Reconnect Channel to grant YouTube management permission.")
+   void account.start("reconnect_channel", window.location.pathname)
+   return
+  }
+  setSaving(true)
+  setError("")
+  const payload = {
+   title: title.trim(), description, tags, categoryId, privacyStatus,
+   madeForKids: madeForKids === "yes", recordingDate, locationDescription: location,
+   license, embeddable: allowEmbedding, notifySubscribers,
+  }
+  try {
+   if (mode === "manage") {
+    await updateVideo(selectedVideoId, payload)
+    localStorage.setItem(`${STORAGE_KEY}_${selectedVideoId}`, JSON.stringify({ categoryId, privacyStatus, playlistId, adSuitability, noneOfTheAbove }))
+   } else {
+    const uploaded = await uploadVideo(videoFile!, payload) as { id?: string }
+    if (uploaded.id && thumbnailFile) await updateVideoThumbnail(uploaded.id, thumbnailFile)
+   }
+   setSaved(true)
+   window.setTimeout(() => setSaved(false), 3000)
+  } catch (reason) {
+   setError(reason instanceof Error ? reason.message : "The video could not be saved. Try again.")
+  } finally {
+   setSaving(false)
+  }
  }
+
+ const tabs: { id: WorkspacePage; label: string }[] = [
+  { id: "details", label: "Details" },
+  { id: "options", label: "Options" },
+  { id: "ads", label: "Ad suitability" },
+  ...(categoryId === "27" ? [{ id: "timestamps" as const, label: "Timestamps" }] : []),
+ ]
 
  return (
-  <WidgetShell {...common} icon={<Pencil size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%" }}>
-    
-    {/* Mode Toggle & Progress Bar */}
-    <div style={{ display: "flex", gap: "4px" }}>
-     <button onClick={() => { setWorkflowMode("upload"); setPage("main") }} className="vt-button" style={{
-      flex: 1, height: "28px", background: workflowMode === "upload" ? "#000" : "#fff", color: workflowMode === "upload" ? "#fff" : "#000",
-      fontSize: "9px"
-     }}>
-      <Upload size={12} strokeWidth={3} /> UPLOAD NEW
-     </button>
-     <button onClick={() => { setWorkflowMode("edit"); setPage("main") }} className="vt-button" style={{
-      flex: 1, height: "28px", background: workflowMode === "edit" ? "#000" : "#fff", color: workflowMode === "edit" ? "#fff" : "#000",
-      fontSize: "9px"
-     }}>
-      <PlayCircle size={12} strokeWidth={3} /> EDIT PUBLISHED
-     </button>
-    </div>
+  <div className="widget-workspace">
+   {mode === "manage" ? (
+    <section className="video-manager-selection" aria-label="Published video selection">
+     <input className="vt-input" value={videoSearch} onChange={(event) => setVideoSearch(event.target.value)} aria-label="Search published videos" placeholder="Search videos…" />
+     <PortalSelect value={selectedVideoId} onChange={(value) => { setSelectedVideoId(value); setPage("details"); setError("") }} options={filteredVideoOptions} label="Published video" placeholder="Select a published video…" />
+    </section>
+   ) : null}
+   <input ref={videoInputRef} hidden type="file" accept="video/*" onChange={(event) => setVideoFile(event.target.files?.[0] || null)} />
+   <input ref={thumbnailInputRef} hidden type="file" accept="image/*" onChange={(event) => readThumbnail(event.target.files?.[0])} />
 
-    {workflowMode === "edit" && page === "main" && (
-     <div style={{ display: "flex", gap: "4px" }}>
-      <div style={{ flex: 2 }}>
-       <CustomDropdown 
-        value={selectedVideo} 
-        onChange={handleSelect} 
-        options={[
-         { val: "", lbl: "Select a video..." },
-         ...videos.slice(0, 15).filter((v: any) => !videoSearch || (v.title || v.videoId)?.toLowerCase().includes(videoSearch.toLowerCase())).map((v: any) => ({val: v.videoId, lbl: v.title || v.videoId}))
-        ]} 
-       />
+   {mode === "manage" && !selectedAsset ? (
+    <div className="widget-empty-state"><FileVideo2 /><strong>Select a published video</strong><span>Its thumbnail and editable metadata will appear here.</span></div>
+   ) : (
+    <>
+     {mode === "manage" && selectedAsset ? (
+      <article className="widget-selection-card">
+       <img src={thumbnailPreview || selectedAsset.thumbnailUrl} alt={`Thumbnail for ${selectedAsset.title}`} />
+       <div><span>Editing published video</span><strong>{selectedAsset.title}</strong><small>{selectedAsset.videoId}</small></div>
+      </article>
+     ) : null}
+
+     <WidgetWorkflowMain className="widget-workspace-content">
+      {page === "details" ? (
+        <div className="widget-details-wrapper">
+          {mode === "upload" ? (
+            <>
+              <div className="video-uploader-title-row">
+                <div className="widget-uploader-input is-title">
+                  <input className="vt-input" aria-label="Video title" placeholder="Video title" value={title} maxLength={100} onChange={(event) => setTitle(event.target.value)} />
+                  <span className="widget-uploader-input-meta" aria-hidden="true"><span>Video title</span><small>{title.length}/100</small></span>
+                </div>
+                <WidgetMediaUploadAction className="video-upload-file-action" onClick={() => videoInputRef.current?.click()} title={videoFile?.name || "Choose a source video"}>
+                  {videoFile?.name || "Upload video"}
+                </WidgetMediaUploadAction>
+              </div>
+              <div className="video-uploader-description-row">
+                <div className="widget-uploader-input is-description">
+                  <textarea className="vt-textarea widget-description-textarea" aria-label="Description" placeholder="Description" value={description} maxLength={5000} onChange={(event) => setDescription(event.target.value)} rows={2} />
+                  <span className="widget-uploader-input-meta" aria-hidden="true"><span>Description</span><small>{description.length}/5000</small></span>
+                </div>
+                <div className="video-thumbnail-column">
+                  <WidgetMediaUploadFrame
+                    className="video-thumbnail-upload"
+                    icon={<ImagePlus />}
+                    title="Thumbnail"
+                    detail="Drop an image file here"
+                    hasValue={Boolean(thumbnailPreview)}
+                    preview={thumbnailPreview ? <img src={thumbnailPreview} alt="Thumbnail preview" /> : undefined}
+                    onBrowse={() => thumbnailInputRef.current?.click()}
+                    onDropFile={readThumbnail}
+                  />
+                  <WidgetMediaUploadAction onClick={() => thumbnailInputRef.current?.click()}>
+                    {thumbnailPreview ? "Replace thumbnail" : "Upload thumbnail"}
+                  </WidgetMediaUploadAction>
+                </div>
+              </div>
+              <div className="video-uploader-meta-row">
+                <div className="widget-tags-entry" aria-label={`Tags (${tags.length})`}>
+                  <div className="widget-tags-composer" role="group" aria-label={`Tags (${tags.length})`} onClick={() => tagInputRef.current?.focus()}>
+                    <div className="widget-tags-scroll">
+                      <div className="widget-tag-list">
+                        {tags.map((tag) => (
+                          <WidgetTag key={tag} onRemove={() => setTags((current) => current.filter((item) => item !== tag))}>{tag}</WidgetTag>
+                        ))}
+                      </div>
+                      <input ref={tagInputRef} className="widget-tags-composer-input" aria-label="Add tag" value={newTag} maxLength={remainingTagInputLength} onChange={(event) => setNewTag(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addTag() } }} placeholder={tags.length ? "Add tag…" : "Tags — add tag…"} />
+                      <span className="widget-tags-character-count" aria-live="polite">{Math.min(TAG_CHARACTER_LIMIT, tagDraftCharacterCount)}/{TAG_CHARACTER_LIMIT}</span>
+                    </div>
+                  </div>
+                  <div className="widget-tags-composer-actions">
+                    <button type="button" className="vt-button" disabled={defaultsLoading !== null} onClick={() => void applyChannelDefaults("description")}>{defaultsLoading === "description" ? "Loading…" : "Use default description"}</button>
+                    <button type="button" className="vt-button" disabled={defaultsLoading !== null} onClick={() => void applyChannelDefaults("tags")}>{defaultsLoading === "tags" ? "Loading…" : "Use default tags"}</button>
+                    <button className="vt-button primary" type="button" onClick={addTag} aria-label="Add tag"><Plus /></button>
+                  </div>
+                </div>
+                <div className="widget-details-selects video-uploader-selects">
+                  <PortalSelect value={privacyStatus} onChange={setPrivacyStatus} label="Visibility" options={[{ value: "public", label: "Public" }, { value: "unlisted", label: "Unlisted" }, { value: "private", label: "Private" }]} placeholder="Visibility" />
+                  <PortalSelect value={categoryId} onChange={setCategoryId} label="Category" options={categories} placeholder="Category" />
+                  <PortalSelect value={playlistId} onChange={setPlaylistId} label="Playlist" options={playlists} placeholder="Playlist" />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="widget-details-layout is-manage">
+                <WidgetMediaUploadFrame className="video-thumbnail-upload" icon={<ImagePlus />} title="Thumbnail" detail="Choose an image file" actionLabel={thumbnailPreview ? "Replace thumbnail" : "Upload thumbnail"} hasValue={Boolean(thumbnailPreview)} preview={thumbnailPreview ? <img src={thumbnailPreview} alt={selectedAsset ? `Current thumbnail for ${selectedAsset.title}` : "Thumbnail preview"} /> : undefined} onBrowse={() => thumbnailInputRef.current?.click()} onDropFile={readThumbnail} />
+              </div>
+              <Field label="Video title"><input className="vt-input" aria-label="Video title" value={title} maxLength={100} onChange={(event) => setTitle(event.target.value)} /><small className="widget-character-count">{title.length}/100</small></Field>
+              <div className="widget-details-bottom">
+                <Field label="Description"><textarea className="vt-textarea widget-description-textarea" aria-label="Description" value={description} maxLength={5000} onChange={(event) => setDescription(event.target.value)} rows={2} /><small className="widget-character-count">{description.length}/5000</small></Field>
+                <Module title={`Tags (${tags.length})`}>
+              <div className="widget-tag-list">
+                {tags.map((tag) => (
+                  <WidgetTag
+                    key={tag}
+                    onRemove={() => setTags((current) => current.filter((item) => item !== tag))}
+                  >
+                    {tag}
+                  </WidgetTag>
+                ))}
+              </div>
+              <div className="widget-inline-entry">
+                <input 
+                  className="vt-input-standard" 
+                  value={newTag} 
+                  onChange={(event) => setNewTag(event.target.value)} 
+                  onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addTag() } }} 
+                  placeholder="Add tag…" 
+                />
+                <button 
+                  className="vt-button primary" 
+                  type="button" 
+                  onClick={addTag} 
+                  aria-label="Add tag"
+                >
+                  <Plus />
+                </button>
+              </div>
+                </Module>
+                <div className="widget-control-grid is-three widget-details-selects">
+                <PortalSelect value={privacyStatus} onChange={setPrivacyStatus} label="Visibility" options={[{ value: "public", label: "Public" }, { value: "unlisted", label: "Unlisted" }, { value: "private", label: "Private" }]} placeholder="Visibility" />
+                <PortalSelect value={categoryId} onChange={setCategoryId} label="Category" options={categories} placeholder="Category" />
+                <PortalSelect value={playlistId} onChange={setPlaylistId} label="Playlist" options={playlists} placeholder="Playlist" />
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      ) : null}
+
+      {/* Options page and Ads page (re-wrapped to maintain scroll structure if needed by styles) */}
+      <div className={page !== "details" ? "widget-disclosure-list" : ""}>
+      {page === "options" ? (
+        <>
+        <Module title="Audience and restrictions"><Choice type="radio" name={`${mode}-kids`} value="yes" label="Yes, this video is made for kids" checked={madeForKids === "yes"} onChange={() => setMadeForKids("yes")} /><Choice type="radio" name={`${mode}-kids`} value="no" label="No, this video is not made for kids" checked={madeForKids === "no"} onChange={() => setMadeForKids("no")} /></Module>
+        <Module title="Disclosures and altered content"><Choice label="Contains paid promotion" checked={paidPromotion} onChange={() => setPaidPromotion((value) => !value)} /><Choice type="radio" name={`${mode}-altered`} value="yes" label="Contains realistic altered or synthetic content" checked={alteredContent === "yes"} onChange={() => setAlteredContent("yes")} /><Choice type="radio" name={`${mode}-altered`} value="no" label="Does not contain realistic altered content" checked={alteredContent === "no"} onChange={() => setAlteredContent("no")} /></Module>
+        <Module title="Automatic concepts and chapters"><Choice label="Allow automatic chapters and key moments" checked={autoChapters} onChange={() => setAutoChapters((value) => !value)} /></Module>
+        <Module title="Language and captions certification"><div className="widget-control-grid"><Field label="Video language"><PortalSelect value={language} onChange={setLanguage} label="Video language" options={[{ value: "en", label: "English" }, { value: "es", label: "Spanish" }, { value: "fr", label: "French" }, { value: "de", label: "German" }, { value: "none", label: "Not applicable" }]} /></Field><Field label="Caption certification"><PortalSelect value={captionCert} onChange={setCaptionCert} label="Caption certification" options={[{ value: "none", label: "None" }, { value: "neverAired", label: "Never aired on U.S. television" }, { value: "grantedExemption", label: "FCC exemption granted" }]} /></Field></div></Module>
+        <Module title="Recording date and location"><div className="widget-control-grid"><Field label="Recording date"><input className="vt-input-standard" type="date" value={recordingDate} onChange={(event) => setRecordingDate(event.target.value)} /></Field><Field label="Video location"><input className="vt-input-standard" value={location} onChange={(event) => setLocation(event.target.value)} placeholder="None" /></Field></div></Module>
+        <Module title="License and distribution"><div className="widget-control-grid"><Field label="License"><PortalSelect value={license} onChange={setLicense} label="License" options={[{ value: "youtube", label: "Standard YouTube license" }, { value: "creativeCommon", label: "Creative Commons - Attribution" }]} /></Field></div><Choice label="Allow embedding" checked={allowEmbedding} onChange={() => setAllowEmbedding((value) => !value)} /><Choice label="Notify subscribers" checked={notifySubscribers} onChange={() => setNotifySubscribers((value) => !value)} /></Module>
+        </>
+      ) : null}
+
+      {page === "ads" ? (
+       <div className="widget-section-workspace">
+        <header><ShieldCheck /><div><strong>Ad suitability</strong><span>Declare anything in the video, title, description, or keywords.</span></div></header>
+        <div className="widget-disclosure-grid">
+         {AD_CATEGORIES.map((category) => (
+          <Module title={category} key={category}>
+           <Choice type="radio" name={`${mode}-${category}`} value="none" label="None" checked={(adSuitability[category] || "none") === "none"} onChange={() => setAdSuitability((current) => ({ ...current, [category]: "none" }))} />
+           <Choice type="radio" name={`${mode}-${category}`} value="limited" label="Limited or contextual" checked={adSuitability[category] === "limited"} onChange={() => setAdSuitability((current) => ({ ...current, [category]: "limited" }))} />
+           <Choice type="radio" name={`${mode}-${category}`} value="strong" label="Strong or repeated" checked={adSuitability[category] === "strong"} onChange={() => setAdSuitability((current) => ({ ...current, [category]: "strong" }))} />
+          </Module>
+         ))}
+        </div>
+       <Choice label="None of the above applies" checked={noneOfTheAbove} onChange={() => setNoneOfTheAbove((value) => !value)} />
+       </div>
+      ) : null}
+      {page === "timestamps" ? (
+       <section className="widget-section-workspace video-timestamp-workspace">
+        <header><BookOpen /><div><strong>Educational timestamps</strong><span>Generate five teaching questions from the upload metadata.</span></div></header>
+        {timestampQuestions.length ? (
+         <ol className="video-timestamp-questions">
+          {timestampQuestions.map((question, index) => <li key={`${question}-${index}`}>{question}</li>)}
+         </ol>
+        ) : <p className="widget-empty-copy">No timestamp questions generated yet.</p>}
+        <button type="button" className="vt-button primary" disabled={timestampsLoading} onClick={() => void generateTimestampQuestions()}>
+         {timestampsLoading ? <><Loader2 className="is-spinning" /> Generating…</> : "Generate timestamp questions"}
+        </button>
+       </section>
+      ) : null}
       </div>
-      <input value={videoSearch} onChange={(e) => setVideoSearch(e.target.value)} placeholder="Search..." style={{
-       flex: 1, padding: "6px 8px", background: "#fff", border: "2px solid #000", borderRadius: "8px",
-       fontSize: "10px", fontWeight: 900, outline: "none", boxShadow: "2px 2px 0 0 rgba(0,0,0,0.15)",
-      }} />
-     </div>
-    )}
+     </WidgetWorkflowMain>
 
-    {/* Content Area */}
-    {workflowMode === "edit" && !selectedVideo ? (
-     <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", border: "2px dashed rgba(0,0,0,0.12)", borderRadius: "10px" }}>
-      <span style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", opacity: 0.2 }}>Select a video above to edit</span>
-     </div>
-    ) : (
-     <>
-      {/* Page Breadcrumbs */}
-      <div style={{ display: "flex", justifyContent: "space-between", padding: "0 4px" }}>
-       <span style={{ fontSize: "9px", fontWeight: 900, opacity: page === "main" ? 1 : 0.3, textTransform: "uppercase" }}>1. Details</span>
-       <span style={{ fontSize: "9px", fontWeight: 900, opacity: page === "options" ? 1 : 0.3, textTransform: "uppercase" }}>2. Options</span>
-       <span style={{ fontSize: "9px", fontWeight: 900, opacity: page === "suitability" ? 1 : 0.3, textTransform: "uppercase" }}>3. Monetization</span>
-      </div>
-
-      {page === "main" && renderMainPage()}
-      {page === "options" && renderOptionsPage()}
-      {page === "suitability" && renderSuitabilityPage()}
-
-      {/* Global Action Bar */}
-      <div style={{ display: "flex", gap: "6px", marginTop: "auto", borderTop: "2px solid rgba(0,0,0,0.1)", paddingTop: "8px" }}>
-       <button onClick={handleSave} disabled={saving} className="vt-button primary" style={{
-        flex: 1, height: "36px"
-       }}>
-        <Save size={12} /> {saved ? (workflowMode === "upload" ? "Published!" : "Saved!") : saving ? "Saving..." : (workflowMode === "upload" ? "Publish Video" : "Save Changes")}
-       </button>
-       <button onClick={handleReset} title="Revert Changes" className="vt-button" style={{
-        width: "36px", height: "36px", padding: 0
-       }}>
-        <RotateCcw size={12} strokeWidth={2.5} />
-       </button>
-      </div>
-     </>
-    )}
-
-   </div>
-  </WidgetShell>
+     {error ? <div className="widget-inline-error" role="alert">{error}</div> : null}
+     <WidgetFooter className="widget-toolbar widget-workflow-toolbar">
+      <nav className={`widget-workflow-buttons is-${tabs.length}-up`} aria-label={`${mode === "upload" ? "Upload" : "Video manager"} sections`}>
+       {tabs.map((tab) => (
+        <button key={tab.id} type="button" className={`vt-button ${page === tab.id ? "primary" : ""}`.trim()} aria-pressed={page === tab.id} onClick={() => setPage(tab.id)}>{tab.label}</button>
+       ))}
+      </nav>
+      <WidgetSplitButton type="button" tone="primary" width="full" icon={<Save />} disabled={saving} onClick={save}>
+       {saving ? "Saving…" : saved ? (mode === "upload" ? "Published" : "Saved") : (mode === "upload" ? "Publish video" : "Save changes")}
+      </WidgetSplitButton>
+      <button type="button" className="vt-button is-icon-only" onClick={reset} aria-label="Revert changes"><RotateCcw /></button>
+     </WidgetFooter>
+    </>
+   )}
+  </div>
  )
 }
+
+const VideoWorkflowWidget = ({ mode, data, ...common }: WidgetProps & { mode: WorkflowMode }) => (
+ <WidgetShell {...common} icon={mode === "upload" ? <UploadCloud size={22} /> : <Pencil size={22} />}>
+  <VideoMetadataWorkspace mode={mode} data={data} />
+ </WidgetShell>
+)
+
+export const VideoUploaderWidget = (props: WidgetProps) => <VideoWorkflowWidget {...props} mode="upload" />
+
+// Keep the established data-edit renderer identity so existing layouts migrate to the redesigned manager.
+export const DataEditWidget = (props: WidgetProps) => <VideoWorkflowWidget {...props} mode="manage" />

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react"
 import { WidgetShell } from "../WidgetShell"
+import { WidgetFooter, WidgetHeaderToggle, WidgetSelect, WidgetTooltip, WidgetWorkflowMain } from "../WidgetPrimitives"
 import {
   Users,
   FileText,
@@ -12,9 +13,8 @@ import {
   Calendar,
   Archive,
   Upload,
-  Link,
   Plus,
-  ArrowRight,
+  X,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { refineCommunityPost, generateInterestSeeding } from "../../../services/gemini"
@@ -53,21 +53,24 @@ export const CommunityPostWidget = ({
   const [viewMode, setViewMode] = useState<ViewMode>("write")
   const [postType, setPostType] = useState<PostType>("text")
   const [content, setContent] = useState("")
-  const [pollOptions, setPollOptions] = useState<string[]>(["", ""])
+  const [pollOptions, setPollOptions] = useState<string[]>(["", "", "", ""])
   const [imageUrl, setImageUrl] = useState("")
+  const [imagePollUrls, setImagePollUrls] = useState<string[]>(["", "", "", ""])
+  const [draggingImageTarget, setDraggingImageTarget] = useState<string | null>(null)
   const [videoSearch, setVideoSearch] = useState("")
   const [selectedVideo, setSelectedVideo] = useState("")
   
   // --- AI States ---
   const [prompt, setPrompt] = useState("")
+  const [postStyle, setPostStyle] = useState("Educational")
   const [isGenerating, setIsGenerating] = useState(false)
   
   // --- Utility States ---
   const [vault, setVault] = useState<any[]>([])
-  const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const imagePollInputRefs = useRef<(HTMLInputElement | null)[]>([])
 
-  const videos = data.canonicalRows || data.brain?.canonicalRows || []
+  const videos = data.videoAssets || []
 
   // --- Effects ---
   useEffect(() => {
@@ -126,7 +129,13 @@ export const CommunityPostWidget = ({
     try {
       const niche = data.brain?.channelProfile?.name || "Content Creation"
       const recentTitles = videos.slice(0, 5).map((v: any) => v.title)
-      const refined = await refineCommunityPost(content, niche, recentTitles, brain)
+      const mediaAttachments = [imageUrl, ...imagePollUrls].filter(Boolean)
+      const mediaContext = [
+        `Post format: ${postType}.`,
+        pollOptions.some(Boolean) ? `Poll options: ${pollOptions.filter(Boolean).join(" | ")}.` : "",
+        selectedVideo ? `Linked video: ${videos.find((video: any) => video.videoId === selectedVideo)?.title || selectedVideo}.` : "",
+      ].filter(Boolean).join("\n")
+      const refined = await refineCommunityPost(`${content}\n\n${mediaContext}`, niche, recentTitles, brain, mediaAttachments)
       setContent(refined)
       setViewMode("write") // Return to write view to see results
     } catch (e) {
@@ -144,7 +153,7 @@ export const CommunityPostWidget = ({
       const recentTitles = videos.slice(0, 5).map((v: any) => v.title)
       
       // Use existing service for now, passing prompt as context
-      const generated = await refineCommunityPost(prompt, niche, recentTitles, brain)
+      const generated = await refineCommunityPost(`${prompt}\n\nStyle: ${postStyle}.`, niche, recentTitles, brain)
       setContent(generated)
       setPrompt("")
       setViewMode("write")
@@ -155,223 +164,229 @@ export const CommunityPostWidget = ({
     }
   }
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    const file = e.dataTransfer.files[0]
-    if (file && file.type.startsWith("image/")) {
-      const reader = new FileReader()
-      reader.onload = (prev) => setImageUrl(prev.target?.result as string)
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+  const applyImageFile = (file: File | undefined, optionIndex?: number) => {
     if (file) {
       const reader = new FileReader()
-      reader.onload = (prev) => setImageUrl(prev.target?.result as string)
+      reader.onload = (prev) => {
+        const nextUrl = prev.target?.result as string
+        if (typeof optionIndex === "number") {
+          setImagePollUrls((current) => current.map((url, index) => index === optionIndex ? nextUrl : url))
+        } else {
+          setImageUrl(nextUrl)
+        }
+      }
       reader.readAsDataURL(file)
     }
   }
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, optionIndex?: number) => applyImageFile(e.target.files?.[0], optionIndex)
 
   // --- Sub-Components ---
-  const MediaModule = () => (
-    <div className="mt-2 space-y-2">
-      <div 
-        className={`relative border-2 border-dashed border-black rounded-lg p-4 flex flex-col items-center justify-center gap-2 transition-colors ${isDragging ? 'bg-yellow-100' : 'bg-gray-50'}`}
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={handleDrop}
+  const ImageFrame = ({ src, onBrowse, onClear, onFile, label = "Image", dragTarget = "image" }: { src: string; onBrowse: () => void; onClear?: () => void; onFile?: (file?: File) => void; label?: string; dragTarget?: string }) => (
+    <div className="community-image-column">
+      <button type="button" className="vt-button community-image-browse" onClick={onBrowse}><Upload size={15} />Browse files</button>
+      <div
+        className={`widget-upload-frame ${draggingImageTarget === dragTarget ? "is-dragging" : ""}`.trim()}
+        onDragOver={(event) => { event.preventDefault(); setDraggingImageTarget(dragTarget) }}
+        onDragLeave={() => setDraggingImageTarget(null)}
+        onDrop={(event) => { event.preventDefault(); setDraggingImageTarget(null); onFile?.(event.dataTransfer.files?.[0]) }}
       >
-        {imageUrl ? (
-          <div className="relative group w-full aspect-video rounded-md overflow-hidden border-2 border-black">
-            <img src={imageUrl} alt="Upload" className="w-full h-full object-cover" />
-            <button 
-              onClick={() => setImageUrl("")}
-              className="absolute top-2 right-2 p-1 bg-white border-2 border-black rounded-full shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
-            >
-              <ArrowRight className="rotate-45" size={14} />
-            </button>
+        {src ? <img src={src} alt={`${label} preview`} /> : <div className="community-image-placeholder"><ImageIcon size={22} /><span>{label}</span></div>}
+        {src && onClear ? <button type="button" className="vt-button is-icon-only community-image-clear" aria-label={`Remove ${label}`} onClick={onClear}><X size={14} /></button> : null}
+      </div>
+    </div>
+  )
+
+  const PollOptionMedia = ({ index }: { index: number }) => {
+    const src = imagePollUrls[index]
+    return (
+      <>
+        <input ref={(node) => { imagePollInputRefs.current[index] = node }} type="file" className="hidden" accept="image/*" onChange={(event) => handleFileChange(event, index)} />
+        <button
+          type="button"
+          className={`community-poll-media ${src ? "has-image" : ""} ${draggingImageTarget === `poll-${index}` ? "is-dragging" : ""}`.trim()}
+          aria-label={src ? `Replace image for option ${index + 1}` : `Upload image for option ${index + 1}`}
+          onClick={() => imagePollInputRefs.current[index]?.click()}
+          onDragOver={(event) => { event.preventDefault(); setDraggingImageTarget(`poll-${index}`) }}
+          onDragLeave={() => setDraggingImageTarget(null)}
+          onDrop={(event) => { event.preventDefault(); setDraggingImageTarget(null); applyImageFile(event.dataTransfer.files?.[0], index) }}
+        >
+          {src ? <img src={src} alt={`Option ${index + 1} preview`} /> : <><Upload size={14} aria-hidden="true" /><span>Upload image</span></>}
+        </button>
+      </>
+    )
+  }
+
+  const ImageMediaModule = () => (
+    <div className="community-image-workspace">
+      <div className="community-image-copy">
+        <textarea className="vt-textarea" value={content} onChange={(e) => setContent(e.target.value)} placeholder="What's on your mind? Draft your image post…" />
+        <input className="vt-input" placeholder="Paste image URL…" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+      </div>
+      <div>
+        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+        <ImageFrame src={imageUrl} label="Image" onBrowse={() => fileInputRef.current?.click()} onFile={applyImageFile} onClear={() => setImageUrl("")} />
+      </div>
+    </div>
+  )
+
+  const CreatePostFields = () => (
+    <>
+      {postType === "image" ? (
+        <div className="community-image-workspace">
+          <div className="community-image-copy">
+            <textarea className="vt-textarea" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Describe the image post you want to create…" />
+            <input className="vt-input" placeholder="Optional image URL…" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} />
           </div>
-        ) : (
-          <>
-            <div className="p-3 bg-white border-2 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <Upload size={24} />
-            </div>
-            <p className="text-[10px] font-black uppercase text-center">Drag Image or Click to Upload</p>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handleFileChange} 
-              className="hidden" 
-              accept="image/*"
-            />
-            <button 
-              onClick={() => fileInputRef.current?.click()}
-              className="vt-button text-[9px] h-6 px-3"
-            >
-              BROWSE FILES
-            </button>
-          </>
-        )}
-      </div>
-      <div className="flex gap-2 items-center">
-        <div className="flex-1 relative">
-          <Link className="absolute left-2 top-1/2 -translate-y-1/2 opacity-40" size={14} />
-          <input 
-            className="vt-input pl-8 text-[11px] h-8"
-            placeholder="Paste image URL..."
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-          />
+          <div>
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+            <ImageFrame src={imageUrl} label="Image" onBrowse={() => fileInputRef.current?.click()} onFile={applyImageFile} onClear={() => setImageUrl("")} dragTarget="create-image" />
+          </div>
         </div>
-      </div>
+      ) : postType === "video" ? (
+        <div className="community-video-workspace">
+          <textarea className="vt-textarea" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Describe the video post you want to create…" />
+          <div className="community-video-panel">
+            <input className="vt-input" placeholder="Search videos…" value={videoSearch} onChange={(event) => setVideoSearch(event.target.value)} />
+            <WidgetSelect
+              value={selectedVideo}
+              onChange={setSelectedVideo}
+              label="Link a video"
+              placeholder="Link a video…"
+              className="flex-1"
+              options={videos
+                .filter((video: any) => !videoSearch || video.title?.toLowerCase().includes(videoSearch.toLowerCase()) || video.videoId?.toLowerCase().includes(videoSearch.toLowerCase()))
+                .slice(0, 50)
+                .map((video: any) => ({ value: video.videoId, label: video.title || video.videoId }))}
+            />
+          </div>
+        </div>
+      ) : (
+        <textarea
+          className={`vt-textarea community-post-copy-input${postType.includes("poll") ? " is-compact" : ""}`}
+          value={prompt}
+          onChange={(event) => setPrompt(event.target.value)}
+          placeholder={`Describe the ${postType === "image-poll" ? "image poll" : postType} post you want to create…`}
+        />
+      )}
+
+      {postType.includes("poll") ? (
+        <div className={`community-poll-grid ${postType === "image-poll" ? "is-image-poll" : ""}`}>
+          {pollOptions.map((option, index) => (
+            <div key={index} className="community-poll-option">
+              <input
+                className="vt-input"
+                value={option}
+                onChange={(event) => setPollOptions((current) => current.map((item, itemIndex) => itemIndex === index ? event.target.value : item))}
+                placeholder={`Option ${index + 1}`}
+              />
+              {postType === "image-poll" ? <PollOptionMedia index={index} /> : null}
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </>
+  )
+
+  const PostTypeSelector = () => (
+    <div className="community-post-type-grid" aria-label="Post type">
+      {[
+        { id: "text", icon: FileText, label: "Text" },
+        { id: "image", icon: ImageIcon, label: "Image" },
+        { id: "poll", icon: CheckSquare, label: "Poll" },
+        { id: "image-poll", icon: MessageSquare, label: "Img Poll" },
+        { id: "video", icon: Video, label: "Video" },
+      ].map((type) => (
+        <button
+          key={type.id}
+          type="button"
+          onClick={() => setPostType(type.id as PostType)}
+          className={`widget-split-button is-small is-full ${postType === type.id ? "is-primary" : "is-soft"}`}
+          aria-pressed={postType === type.id}
+        >
+          <span className="widget-split-button-icon"><type.icon size={14} /></span>
+          <span className="widget-split-button-label">{type.label}</span>
+        </button>
+      ))}
     </div>
   )
 
   const headerContent = (
-    <div className="vt-tab-group" style={{ width: "110px", padding: "2px" }}>
-      <button
-        onClick={() => setViewMode("write")}
-        className={`vt-tab-btn ${viewMode === "write" ? 'active' : ''}`}
-        style={{ padding: "4px", fontSize: "9px" }}
-      >
-        WRITE
-      </button>
-      <button
-        onClick={() => setViewMode("create")}
-        className={`vt-tab-btn ${viewMode === "create" ? 'active' : ''}`}
-        style={{ padding: "4px", fontSize: "9px" }}
-      >
-        CREATE
-      </button>
-    </div>
+    <WidgetHeaderToggle
+      label="Community post mode"
+      value={viewMode}
+      onChange={setViewMode}
+      items={[{ id: "write", label: "Write" }, { id: "create", label: "Create" }]}
+    />
   )
 
   return (
     <WidgetShell {...common} headerContent={headerContent} icon={<Users size={22} />}>
-      <motion.div 
+      <motion.div
         layout
-        className="flex flex-col h-full gap-3 overflow-hidden"
+        className="widget-workspace community-post-workspace"
       >
 
+        <WidgetWorkflowMain className="community-post-main">
         <AnimatePresence mode="wait">
           {viewMode === "write" ? (
-            <motion.div 
+            <motion.div
               key="write"
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 10 }}
-              className="flex-1 flex flex-col gap-2 overflow-y-auto pr-1"
+              className="flex-1 flex flex-col gap-2 min-h-0"
             >
               {/* Type Selector */}
-              <div className="vt-tab-group min-h-[36px]">
-                {[
-                  { id: "text", icon: FileText, label: "Text" },
-                  { id: "image", icon: ImageIcon, label: "Image" },
-                  { id: "poll", icon: CheckSquare, label: "Poll" },
-                  { id: "image-poll", icon: MessageSquare, label: "Img Poll" },
-                  { id: "video", icon: Video, label: "Video" },
-                ].map((type) => (
-                  <button
-                    key={type.id}
-                    onClick={() => setPostType(type.id as PostType)}
-                    className={`vt-tab-btn ${postType === type.id ? 'active' : ''}`}
-                    style={{ flex: 1, height: "100%", padding: "0 4px" }}
-                  >
-                    <type.icon size={14} className="flex-shrink-0" />
-                    <span className="text-[9px] font-black uppercase truncate">{type.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Main Textarea */}
-              <textarea
-                className="vt-textarea flex-1 min-h-[80px] text-[12px] leading-tight"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder={`What's on your mind? Draft your ${postType} post...`}
-              />
+              <PostTypeSelector />
 
               {/* Dynamic Modules */}
-              {postType === "image" && <MediaModule />}
+              {postType === "image" ? <ImageMediaModule /> : postType === "video" ? null : (
+                <textarea
+                className={`vt-textarea community-post-copy-input${postType.includes("poll") ? " is-compact" : ""}`}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder={`What's on your mind? Draft your ${postType} post...`}
+                />
+              )}
               
               {postType.includes("poll") && (
-                <div className="space-y-2 p-2 bg-gray-50 border-2 border-black rounded-lg">
+                <div className={`community-poll-grid ${postType === "image-poll" ? "is-image-poll" : ""}`}>
                   {pollOptions.map((opt, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full border-2 border-black flex-shrink-0 ${opt.trim() ? 'bg-black' : 'bg-white'}`} />
+                    <div key={i} className="community-poll-option">
                       <input
-                        className="vt-input text-[11px] h-7 px-2 flex-1"
+                        className="vt-input"
                         value={opt}
                         onChange={(e) => {
                           const n = [...pollOptions]; n[i] = e.target.value; setPollOptions(n);
                         }}
                         placeholder={`Option ${i + 1}`}
                       />
+                      {postType === "image-poll" ? <PollOptionMedia index={i} /> : null}
                     </div>
                   ))}
-                  {pollOptions.length < 4 && (
-                    <button 
-                      onClick={() => setPollOptions([...pollOptions, ""])}
-                      className="w-full h-6 text-[9px] font-black uppercase border-2 border-black rounded bg-white hover:bg-gray-100"
-                    >
-                      + ADD OPTION
-                    </button>
-                  )}
-                  {postType === "image-poll" && <MediaModule />}
                 </div>
               )}
 
               {postType === "video" && (
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <select
-                      className="vt-select flex-1 h-8 text-[11px]"
+                <div className="community-video-workspace">
+                  <textarea className="vt-textarea" value={content} onChange={(e) => setContent(e.target.value)} placeholder="What's on your mind? Draft your video post…" />
+                  <div className="community-video-panel">
+                    <input className="vt-input" placeholder="Search videos…" value={videoSearch} onChange={(e) => setVideoSearch(e.target.value)} />
+                    <WidgetSelect
                       value={selectedVideo}
-                      onChange={(e) => setSelectedVideo(e.target.value)}
-                    >
-                      <option value="" disabled>Link a video...</option>
-                      {videos.slice(0, 10).map((v: any) => (
-                        <option key={v.videoId} value={v.videoId}>{v.title}</option>
-                      ))}
-                    </select>
-                    <input 
-                      className="vt-input w-24 h-8 text-[11px]"
-                      placeholder="Search..."
-                      value={videoSearch}
-                      onChange={(e) => setVideoSearch(e.target.value)}
+                      onChange={setSelectedVideo}
+                      label="Link a video"
+                      placeholder="Link a video…"
+                      className="flex-1"
+                      options={videos
+                        .filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase()) || v.videoId?.toLowerCase().includes(videoSearch.toLowerCase()))
+                        .slice(0, 50)
+                        .map((v: any) => ({ value: v.videoId, label: v.title || v.videoId }))}
                     />
                   </div>
                 </div>
               )}
 
-              {/* Action Toolbar */}
-              <div className="flex gap-2 mt-auto pt-2 border-t border-black/10">
-                <button 
-                  onClick={saveToVault}
-                  className="p-2 border-2 border-black rounded-lg hover:bg-gray-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
-                  title="Save to Vault"
-                >
-                  <Archive size={16} />
-                </button>
-                <button 
-                  className="p-2 border-2 border-black rounded-lg hover:bg-gray-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
-                  title="Schedule Post"
-                >
-                  <Calendar size={16} />
-                </button>
-                <button 
-                  onClick={async () => {
-                    await navigator.clipboard.writeText(content)
-                    console.log("Copied to clipboard")
-                  }}
-                  className="vt-button primary flex-1 h-9 gap-2 text-[11px]"
-                >
-                  <Send size={14} /> POST TO CHANNEL
-                </button>
-              </div>
             </motion.div>
           ) : (
             <motion.div 
@@ -379,52 +394,34 @@ export const CommunityPostWidget = ({
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
-              className="flex-1 flex flex-col gap-3"
+              className="flex-1 flex flex-col gap-2 min-h-0"
             >
-              <div className="flex-1 flex flex-col gap-2">
-                <label className="text-[10px] font-black uppercase opacity-60">AI Generation Prompt</label>
-                <textarea
-                  className="vt-textarea flex-1 min-h-[120px] text-[13px] border-[#FF83EA] focus:border-[#FF83EA] placeholder:opacity-30"
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="Describe the post you want to create... e.g. 'Write a hype poll about my upcoming gaming marathon, make it funny and uses emojis'"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={handleRefine}
-                  disabled={isGenerating || !content.trim()}
-                  className="vt-button secondary flex-1 flex-col gap-1 text-[10px]"
-                >
-                  <Sparkles size={16} />
-                  REFINE DRAFT
-                </button>
-                <button
-                  onClick={handleGenerateFromPrompt}
-                  disabled={isGenerating || !prompt.trim()}
-                  className="vt-button primary flex-1 flex-col gap-1 text-[10px]"
-                >
-                  {isGenerating ? (
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Plus size={16} />
-                  )}
-                  GENERATE NEW
-                </button>
-              </div>
-
-              <div className="p-3 bg-black/5 rounded-xl border border-black/10">
-                <h4 className="text-[9px] font-black uppercase mb-1 flex items-center gap-1">
-                  <Sparkles size={10} /> Pro Tip
-                </h4>
-                <p className="text-[10px] leading-tight opacity-70">
-                  Write a basic idea in <span className="font-bold">WRITE</span> mode, then come here and click <span className="font-bold">REFINE</span> to polish it with your channel's unique voice.
-                </p>
+              <PostTypeSelector />
+              <CreatePostFields />
+              <div className="community-create-styles" aria-label="Writing style">
+                {["Educational", "Conversational", "Hype", "Question", "Announcement"].map((style) => (
+                  <button key={style} type="button" aria-pressed={postStyle === style} onClick={() => setPostStyle(style)} className={`vt-button ${postStyle === style ? "primary" : ""}`.trim()}>{style}</button>
+                ))}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
+        </WidgetWorkflowMain>
+        <WidgetFooter divider={false} className="community-post-footer">
+          {viewMode === "write" ? (
+            <>
+              <WidgetTooltip content="Save draft to the post vault"><button onClick={saveToVault} className="vt-button is-icon-only" aria-label="Save draft"><Archive size={16} /></button></WidgetTooltip>
+              <WidgetTooltip content="Schedule this post"><button className="vt-button is-icon-only" aria-label="Schedule post"><Calendar size={16} /></button></WidgetTooltip>
+              <button onClick={handleRefine} disabled={isGenerating || !content.trim()} className="vt-button secondary"><Sparkles size={14} />{isGenerating ? "Refining…" : "Refine"}</button>
+              <button onClick={() => navigator.clipboard.writeText(content)} className="vt-button primary flex-1"><Send size={14} />Post to channel</button>
+            </>
+          ) : (
+            <>
+              <button onClick={handleRefine} disabled={isGenerating || !content.trim()} className="vt-button secondary flex-1"><Sparkles size={14} />Refine draft</button>
+              <button onClick={handleGenerateFromPrompt} disabled={isGenerating || !prompt.trim()} className="vt-button primary flex-1"><Plus size={14} />{isGenerating ? "Generating…" : "Generate post"}</button>
+            </>
+          )}
+        </WidgetFooter>
       </motion.div>
     </WidgetShell>
   )

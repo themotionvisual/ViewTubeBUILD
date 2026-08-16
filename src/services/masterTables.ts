@@ -20,8 +20,17 @@ const EMPTY_TABLES = (): Record<MasterTableType, DomainTableRow[]> => ({
  master_geography: [],
  master_traffic: [],
  master_device_playback: [],
+ master_device_os: [],
  master_retention: [],
+ master_video_retention: [],
  master_monetization: [],
+ master_ad_type: [],
+ master_content_type: [],
+ master_sharing_service: [],
+ master_subscription_status: [],
+ master_subscriber_source: [],
+ master_playlists: [],
+ master_traffic_by_day: [],
  master_external_signals: [],
  master_formula_metrics: [],
  master_coverage_registry: [],
@@ -312,6 +321,58 @@ export const buildMasterTableBundle = (
   ),
   "youtube",
   "device",
+ )
+
+ // ── Segment datasets ported from the VT-SYNC controller ─────────────────────
+ // Each raw Analytics report cached by SyncCoordinator.syncSegmentDatasets is
+ // flattened into its own displayable master table (query receipts).
+ tables.master_device_os = toDomainRows(
+  parseReportRows(ytCache.deviceOs),
+  "youtube",
+  "device",
+ )
+ tables.master_traffic_by_day = toDomainRows(
+  parseReportRows(ytCache.trafficDay),
+  "youtube",
+  "traffic",
+ )
+ tables.master_ad_type = toDomainRows(
+  parseReportRows(ytCache.adTypes),
+  "youtube",
+  "monetization",
+ )
+ tables.master_sharing_service = toDomainRows(
+  parseReportRows(ytCache.sharingService),
+  "youtube",
+  "traffic",
+ )
+ tables.master_subscription_status = toDomainRows(
+  parseReportRows(ytCache.subscriptionStatus),
+  "youtube",
+  "demographic",
+ )
+ tables.master_subscriber_source = toDomainRows(
+  [
+   ...parseReportRows(ytCache.subscriptionSource),
+   ...parseReportRows(ytCache.subscriberDetail),
+  ],
+  "youtube",
+  "traffic",
+ )
+ tables.master_content_type = toDomainRows(
+  parseReportRows(ytCache.creatorContentTypes),
+  "youtube",
+  "video_shared",
+ )
+ tables.master_playlists = toDomainRows(
+  parseReportRows(ytCache.playlistAnalytics),
+  "youtube",
+  "channel",
+ )
+ tables.master_video_retention = toDomainRows(
+  parseReportRows(ytCache.retentions),
+  "youtube",
+  "retention",
  )
 
  let ga4Cache: Record<string, unknown> = {}

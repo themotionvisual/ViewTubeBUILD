@@ -1,11 +1,12 @@
 import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { useEntitlement } from "../../../app/AppShell"
+import { useEntitlement } from "../../../context/entitlementContext"
 import { Type, Sparkles, Copy, Check, RefreshCw } from "lucide-react"
 import { useBrain } from "../../../context/useBrain"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { getAiTokenCost } from "../../../services/aiTokenCosts"
 import { CustomDropdown } from "./DataEditWidget"
+import { buildVideoAssetOptions } from "./videoAssetOptions"
 
 const STYLE_PRESETS = [
  { label: "Mr Beast", emoji: "🤯", desc: "Extreme, numbers-heavy" },
@@ -31,7 +32,7 @@ export const TitleRewriterWidget = ({ widget, instance, editMode, onToggleCollap
  const TITLE_REWRITE_COST = getAiTokenCost("titleRewrite")
  const entitlement = useEntitlement()
  const canAffordRewrite = canAffordAiTokensFromState(entitlement, TITLE_REWRITE_COST)
- const videos = data.canonicalRows || []
+ const videos = data.videoAssets || []
  const [selectedVideo, setSelectedVideo] = useState("")
  const [originalTitle, setOriginalTitle] = useState("")
  const [style, setStyle] = useState(0)
@@ -76,7 +77,7 @@ export const TitleRewriterWidget = ({ widget, instance, editMode, onToggleCollap
 
  return (
   <WidgetShell {...common} icon={<Type size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%" }}>
+   <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%", minHeight: 0 }}>
     <div style={{ display: "flex", gap: "4px", zIndex: 10 }}>
      <div style={{ flex: 2, minWidth: 0 }}>
       <CustomDropdown 
@@ -87,10 +88,7 @@ export const TitleRewriterWidget = ({ widget, instance, editMode, onToggleCollap
         const vid = videos.find((v: any) => v.videoId === val);
         setOriginalTitle(vid?.title || "");
        }} 
-       options={[
-        { val: "", lbl: "Select a video..." },
-        ...videos.slice(0, 15).filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase())).map((v: any) => ({val: v.videoId, lbl: v.title, onDecSize, onCycleHeight, onDecHeight}))
-       ]}
+       options={buildVideoAssetOptions(videos, videoSearch, 50)}
       />
      </div>
      <input className="vt-input" value={videoSearch} onChange={(e) => setVideoSearch(e.target.value)} placeholder="Search..." style={{

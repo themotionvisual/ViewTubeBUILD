@@ -6,7 +6,7 @@ const ProjectCalendarPage: React.FC = () => {
   return (
     <div className="flex flex-col gap-8 max-w-[1600px] mx-auto pb-24">
       <ProjectStudio />
-      <StoryboardStudio collapsible isOpenInitial={false} />
+      <StoryboardStudio collapsible isOpenInitial={false} paletteIndex={1} />
     </div>
   );
 };

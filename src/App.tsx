@@ -1,8 +1,14 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { BrowserRouter, useLocation } from "react-router-dom"
+import { SpeedInsights } from "@vercel/speed-insights/react"
 import { GlobalDataProvider } from "./context/GlobalDataContext"
+import { UnifiedAccountProvider } from "./context/UnifiedAccountContext"
+import { VideoAssetCatalogProvider } from "./context/VideoAssetCatalogContext"
+import { InitialChannelBootstrapProvider } from "./context/InitialChannelBootstrapContext"
+import { GeminiKeyProvider } from "./context/GeminiKeyContext"
 import { AppShell } from "./app/AppShell"
 import { AppRoutes } from "./app/AppRoutes"
+import { recordBootPhase } from "./app/onScreenDiagnostics"
 
 const DARK_THEME_CSS = `
   .dark-theme-override {
@@ -59,6 +65,10 @@ function AppInner() {
 }
 
 function App() {
+ // Boot-phase breadcrumb so the on-screen diagnostic log shows whether the
+ // App root actually mounted (as opposed to the whole thing crashing before
+ // React commits). Cheap: one log entry per session mount.
+ useEffect(() => { recordBootPhase("App mounted") }, [])
  const isDarkTheme = useMemo(
   () => localStorage.getItem("vt_dark_mode") === "true",
   [],
@@ -66,12 +76,30 @@ function App() {
 
  return (
   <div className={isDarkTheme ? "dark-theme-override" : undefined}>
-   <GlobalDataProvider>
-    <style>{DARK_THEME_CSS}</style>
-    <BrowserRouter>
-     <AppInner />
-    </BrowserRouter>
-   </GlobalDataProvider>
+   <UnifiedAccountProvider>
+    <GeminiKeyProvider>
+     <InitialChannelBootstrapProvider>
+      <VideoAssetCatalogProvider>
+       <GlobalDataProvider>
+        <style>{DARK_THEME_CSS}</style>
+        <BrowserRouter>
+         <AppInner />
+        </BrowserRouter>
+        {/*
+          Vercel Speed Insights — invisible reporter of Core Web Vitals
+          (LCP, INP, CLS, TTFB, FCP) from every real visitor's browser back
+          to the Vercel dashboard. No user-facing effect. Data appears under
+          Project → Speed Insights within ~1 hour of deploy, broken out by
+          route, device type, country, and connection. Also enable the
+          feature toggle in the Vercel dashboard's Speed Insights tab if it
+          isn't already on.
+        */}
+        {import.meta.env.PROD && <SpeedInsights />}
+       </GlobalDataProvider>
+      </VideoAssetCatalogProvider>
+     </InitialChannelBootstrapProvider>
+    </GeminiKeyProvider>
+   </UnifiedAccountProvider>
   </div>
  )
 }

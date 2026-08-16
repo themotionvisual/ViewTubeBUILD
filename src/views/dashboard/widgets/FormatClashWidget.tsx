@@ -2,6 +2,8 @@ import React, { useMemo } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { PieChart } from "lucide-react"
 import { metricCellValue } from "../../../services/analytics/Selectors"
+import { useInitialChannelBootstrap } from "../../../context/InitialChannelBootstrapContext"
+import { getVtSyncSnapshot } from "../../../features/vt-sync-local"
 
 export const FormatClashWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onCycleHeight, onDecSize, onDecHeight, onRemove, data }: any) => {
  const common = {
@@ -14,37 +16,48 @@ export const FormatClashWidget = ({ widget, instance, editMode, onToggleCollapse
   onCycleHeight,
   onRemove,
   onDecSize,
-  onCycleHeight,
   onDecHeight,
  }
 
+ const { snapshot: initialBootstrap } = useInitialChannelBootstrap()
+
  const stats = useMemo(() => {
-  const rows = data.canonicalRows || []
+  const snapshot = getVtSyncSnapshot()
+  const syncRows = snapshot?.videos || []
+  const hasViewsInSync = syncRows.length > 0 && typeof syncRows[0]?.metrics?.views === "number"
+  const rows = hasViewsInSync ? syncRows : (initialBootstrap?.videos || data.canonicalRows || data.brain?.canonicalRows || [])
+
   const s = {
    shorts: { views: 0, watch: 0, subs: 0, rev: 0 },
    longs: { views: 0, watch: 0, subs: 0, rev: 0 },
   }
 
   rows.forEach((row: any) => {
-   const isShort = row.format === "shorts"
+   const isShort = row.format === "shorts" || row.duration < 60 || row.duration === "shorts" || row.VideoType === "shorts"
    const target = isShort ? s.shorts : s.longs
 
    const v = row.metrics || {}
-   target.views += metricCellValue(v.views) || 0
-   target.watch += metricCellValue(v.watchHours) || 0
-   target.subs += metricCellValue(v.subscribersGained) || 0
-   target.rev += metricCellValue(v.revenue) || 0
+   const vByWindow = row.metricsByWindow?.lifetime || {}
+
+   // Try to get metrics from VT sync, fallback to canonical
+   target.views += metricCellValue(vByWindow.views) || metricCellValue(v.views) || Number(row.Views) || 0
+   target.watch += metricCellValue(vByWindow.watchTimeHours) || metricCellValue(v.watchHours) || Number(row["Watch time (hours)"]) || 0
+   target.subs += metricCellValue(vByWindow.subscribersGained) || metricCellValue(v.subscribersGained) || Number(row.Subscribers) || 0
+   target.rev += metricCellValue(vByWindow.estimatedRevenue) || metricCellValue(v.revenue) || Number(row["Your estimated revenue (USD)"]) || 0
   })
 
   return s
- }, [data.canonicalRows])
+ }, [data.canonicalRows, data.brain?.canonicalRows, initialBootstrap])
 
   const renderPie = (title: string, shortsVal: number, longsVal: number) => {
     const total = shortsVal + longsVal
     const pct = total > 0 ? (shortsVal / total) * 100 : 0
+    const shortsPct = pct.toFixed(1)
+    const longsPct = (100 - pct).toFixed(1)
 
     return (
       <div
+        className="tip"
         style={{
           display: "flex",
           alignItems: "center",
@@ -80,6 +93,16 @@ export const FormatClashWidget = ({ widget, instance, editMode, onToggleCollapse
             </span>
           </div>
         </div>
+        <div className="bub" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <div style={{ width: "8px", height: "8px", background: "#FF00FF", border: "1px solid #000" }} />
+            <span>SHORTS: {shortsPct}%</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <div style={{ width: "8px", height: "8px", background: "#00D2FF", border: "1px solid #000" }} />
+            <span>LONGS: {longsPct}%</span>
+          </div>
+        </div>
       </div>
     )
   }
@@ -87,17 +110,12 @@ export const FormatClashWidget = ({ widget, instance, editMode, onToggleCollapse
   return (
     <WidgetShell {...common} icon={<PieChart size={22} />}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-        {/* Header Key */}
-        <div style={{ 
-          display: "flex", 
-          justifyContent: "space-between", 
-          alignItems: "center", 
+        <div style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
           padding: "4px 8px"
         }}>
-          <div style={{ display: "flex", gap: "8px" }}>
-            <span style={{ fontSize: "8px", fontWeight: 1000, color: "#FF00FF" }}>■ SHORTS</span>
-            <span style={{ fontSize: "8px", fontWeight: 1000, color: "#00D2FF" }}>■ LONGS</span>
-          </div>
           <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.4 }}>All Time</div>
         </div>
 
@@ -117,6 +135,28 @@ export const FormatClashWidget = ({ widget, instance, editMode, onToggleCollapse
           {renderPie("Hours", stats.shorts.watch, stats.longs.watch)}
           {renderPie("Subs", stats.shorts.subs, stats.longs.subs)}
           {renderPie("Rev", stats.shorts.rev, stats.longs.rev)}
+        </div>
+
+        {/* Legend */}
+        <div
+         style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "8px",
+          justifyContent: "center",
+          borderTop: "2px solid #000",
+          paddingTop: "6px",
+          marginTop: "4px",
+          paddingBottom: "4px",
+         }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+           <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: "#FF00FF", border: "1px solid #000", flexShrink: 0 }} />
+           <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase" }}>SHORTS</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+           <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: "#00D2FF", border: "1px solid #000", flexShrink: 0 }} />
+           <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase" }}>LONGS</span>
+          </div>
         </div>
       </div>
     </WidgetShell>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   closestCenter,
   DndContext,
@@ -7,7 +7,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core"
-import type { DragEndEvent } from "@dnd-kit/core"
+import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core"
 import {
   SortableContext,
   sortableKeyboardCoordinates,
@@ -16,19 +16,9 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { Download, Edit3, Lock, LockOpen, RotateCcw, Upload, Layers, Settings, ChevronDown } from "lucide-react"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 import { DashboardBarrier } from "./DashboardBarrier"
 import { useDashboard } from "../../context/DashboardContext"
-import { useBrain } from "../../context/useBrain"
-import { useEntitlement } from "../../app/AppShell"
-import { hasCompletedAiBrainContext } from "../../services/aiBrainContext"
-import {
-  hasFirstSync,
-  isChecklistComplete,
-  readOnboardingState,
-  updateOnboardingState,
-} from "../../services/onboardingState"
 import { DASHBOARD_WIDGET_REGISTRY, DASHBOARD_WIDGET_BY_ID } from "./WidgetRegistry"
 import { WidgetPickerPanel } from "./WidgetPickerPanel"
 import {
@@ -48,45 +38,35 @@ import type { DashboardLayoutState } from "./types"
 import type { DashboardData } from "./useDashboardData"
 import { WidgetRenderer } from "./WidgetRenderer"
 import { WidgetErrorBoundary } from "./WidgetErrorBoundary"
-import type { WidgetDefinition } from "./types"
+import { resolveVisibleWidgetSpectrum } from "./spectrum"
+import { WidgetDragHandleProvider } from "./WidgetShell"
 
 interface DashboardCanvasProps {
   data: DashboardData
   onNavigate: (to: string) => void
 }
 
-const CANONICAL_WIDGET_THEME_SEQUENCE: Array<{ headerColor: string; iconRailColor: string }> = [
-  // Retro Palette #6 (18 swatches) with custom edits:
-  // - removed one duplicate pink
-  // - removed one duplicate blue
-  // - added solid yellow + solid purple
-  { headerColor: "#FF4081", iconRailColor: "#FF78AB" }, // 1 hot pink
-  { headerColor: "#FF3B8D", iconRailColor: "#FF76B4" }, // 2 pink-magenta
-  { headerColor: "#FF488F", iconRailColor: "#FF84B9" }, // 3 rose
-  { headerColor: "#FF698E", iconRailColor: "#FFA7BB" }, // 4 coral pink
-  { headerColor: "#FF865B", iconRailColor: "#FFB892" }, // 5 orange coral
-  { headerColor: "#FFB65B", iconRailColor: "#FFD39E" }, // 6 orange
-  { headerColor: "#FFD400", iconRailColor: "#FFE45F" }, // 7 solid yellow (added)
-  { headerColor: "#FFE950", iconRailColor: "#FFF28C" }, // 8 lemon
-  { headerColor: "#FFEB61", iconRailColor: "#FFF59B" }, // 9 light yellow
-  { headerColor: "#CBEE62", iconRailColor: "#E1F69D" }, // 10 lime
-  { headerColor: "#6CEB8C", iconRailColor: "#A7F3BE" }, // 11 mint green
-  { headerColor: "#29EBFF", iconRailColor: "#92F4FF" }, // 12 cyan
-  { headerColor: "#2979F6", iconRailColor: "#92BAFF" }, // 13 azure
-  { headerColor: "#2975E6", iconRailColor: "#8FAEFF" }, // 14 blue
-  { headerColor: "#2979FF", iconRailColor: "#9CB9FF" }, // 15 vivid blue
-  { headerColor: "#3F66E8", iconRailColor: "#A5B7FF" }, // 16 indigo-blue
-  { headerColor: "#7A2BFF", iconRailColor: "#B990FF" }, // 17 solid purple (added)
-  { headerColor: "#9B4DFF", iconRailColor: "#CAAFFF" }, // 18 violet
-]
+const DeferredDashboardWidget: React.FC<{ eager: boolean; children: React.ReactNode }> = ({ eager, children }) => {
+  const hostRef = useRef<HTMLDivElement | null>(null)
+  const [isVisible, setIsVisible] = useState(eager)
 
-const withCanonicalWidgetTheme = (widget: WidgetDefinition, position: number): WidgetDefinition => {
-  const theme = CANONICAL_WIDGET_THEME_SEQUENCE[position % CANONICAL_WIDGET_THEME_SEQUENCE.length]
-  return {
-    ...widget,
-    headerColor: theme.headerColor,
-    iconRailColor: theme.iconRailColor,
-  }
+  useEffect(() => {
+    if (eager || isVisible) return
+    const host = hostRef.current
+    if (!host || typeof IntersectionObserver === "undefined") {
+      setIsVisible(true)
+      return
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return
+      setIsVisible(true)
+      observer.disconnect()
+    }, { rootMargin: "700px 0px" })
+    observer.observe(host)
+    return () => observer.disconnect()
+  }, [eager, isVisible])
+
+  return <div ref={hostRef} className="h-full">{isVisible ? children : null}</div>
 }
 
 const SortableWidgetItem: React.FC<{
@@ -95,10 +75,12 @@ const SortableWidgetItem: React.FC<{
   className: string
   children: React.ReactNode
 }> = ({ id, disabled, className, children }) => {
+  const reduceMotion = useReducedMotion()
   const {
     attributes,
     listeners,
     setNodeRef,
+    setActivatorNodeRef,
     transform,
     isDragging,
   } = useSortable({ id, disabled })
@@ -113,17 +95,23 @@ const SortableWidgetItem: React.FC<{
     <motion.div 
       ref={setNodeRef} 
       layout
-      transition={{
+      transition={reduceMotion ? { duration: 0 } : {
         layout: { type: "spring", stiffness: 300, damping: 30 },
         opacity: { duration: 0.2 }
       }}
       style={style} 
-      className={`${className} ${isDragging ? 'opacity-60' : 'opacity-100'}`} 
-      data-widget-id={id} 
-      {...attributes} 
-      {...listeners}
+      className={`dashboard-widget-slot ${className} ${isDragging ? 'opacity-60' : 'opacity-100'}`}
+      data-widget-id={id}
+      inert={isDragging}
     >
-      {children}
+      <WidgetDragHandleProvider
+        attributes={attributes as unknown as React.ButtonHTMLAttributes<HTMLButtonElement>}
+        listeners={listeners as unknown as React.DOMAttributes<HTMLButtonElement>}
+        setActivatorNodeRef={setActivatorNodeRef as (node: HTMLButtonElement | null) => void}
+        disabled={disabled}
+      >
+        {children}
+      </WidgetDragHandleProvider>
     </motion.div>
   )
 }
@@ -131,50 +119,18 @@ const SortableWidgetItem: React.FC<{
 export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNavigate }) => {
   const { 
     editMode, setEditMode, 
-    isLocked, setIsLocked, 
+    setIsLocked,
     pickerOpen, setPickerOpen, 
     registerActions 
   } = useDashboard()
   const [layout, setLayout] = useState<DashboardLayoutState>(() => loadDashboardLayout())
-  const [isControlsOpen, setIsControlsOpen] = useState(false)
+  const [dragPreviewOrder, setDragPreviewOrder] = useState<string[] | null>(null)
+  const [recentlyRemovedId, setRecentlyRemovedId] = useState<string | null>(null)
   const [showWelcomeBanner, setShowWelcomeBanner] = useState<boolean>(() => {
     const params = new URLSearchParams(window.location.search)
     return params.get("onboarding") === "welcome"
   })
-  const entitlement = useEntitlement()
-  const { globalSyncData } = useBrain()
-  const onboarding = readOnboardingState()
-  const firstSyncDone = hasFirstSync({
-    isAuthenticated: data.authState.isAuthenticated,
-    syncedAt: data.lastSyncComplete,
-    fastAnalytics: data.authState.fastAnalytics || null,
-  })
-  const checklistDone = isChecklistComplete({
-    authConnected: data.authState.isAuthenticated,
-    hasFirstSync: firstSyncDone,
-    billingConfirmed: onboarding.billingConfirmed || entitlement.subscriptionPlanId !== "basic",
-    hasBrainIntake: hasCompletedAiBrainContext(),
-    firstToolOpened: onboarding.firstToolOpened,
-  })
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-
-  useEffect(() => {
-    registerActions({
-      exportLayout: handleExport,
-      importLayout: handleImportClick,
-      resetLayout: () => setLayout(resetDashboardLayout())
-    });
-  }, [layout]);
-
-  useEffect(() => {
-    setIsLocked(layout.locked);
-  }, [layout.locked]);
-
-  useEffect(() => {
-    if (isLocked !== layout.locked) {
-      setLayout(prev => ({ ...prev, locked: isLocked }));
-    }
-  }, [isLocked]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -188,27 +144,49 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
     [layout.order, hiddenSet],
   )
 
+  const displayedWidgetIds = dragPreviewOrder || visibleWidgetIds
+  const spectrumByWidgetId = useMemo(
+    () => resolveVisibleWidgetSpectrum(displayedWidgetIds, hiddenSet),
+    [displayedWidgetIds, hiddenSet],
+  )
+
   useEffect(() => {
     saveDashboardLayout(layout)
   }, [layout])
 
   const canDrag = editMode && !layout.locked
 
+  const handleDragStart = (event: DragStartEvent) => {
+    if (!canDrag) return
+    const activeId = String(event.active.id)
+    if (visibleWidgetIds.includes(activeId)) setDragPreviewOrder(visibleWidgetIds)
+  }
+
+  const handleDragOver = (event: DragOverEvent) => {
+    if (!canDrag || !event.over) return
+    setDragPreviewOrder((current) => {
+      const order = current || visibleWidgetIds
+      const oldIndex = order.indexOf(String(event.active.id))
+      const newIndex = order.indexOf(String(event.over?.id))
+      if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return order
+      return arrayMove(order, oldIndex, newIndex)
+    })
+  }
+
+  const handleDragCancel = () => {
+    setDragPreviewOrder(null)
+  }
+
   const handleDragEnd = (event: DragEndEvent) => {
     if (!canDrag) return
     const { active, over } = event
-    if (!over || active.id === over.id) return
-
-    const oldIndex = visibleWidgetIds.indexOf(String(active.id))
-    const newIndex = visibleWidgetIds.indexOf(String(over.id))
-    if (oldIndex < 0 || newIndex < 0) return
-
-    const movedVisible = arrayMove(visibleWidgetIds, oldIndex, newIndex)
-    const hidden = layout.order.filter((id) => hiddenSet.has(id))
+    const proposedOrder = dragPreviewOrder
+    setDragPreviewOrder(null)
+    if (!over || active.id === over.id || !proposedOrder) return
 
     setLayout((prev) => ({
       ...prev,
-      order: [...movedVisible, ...hidden],
+      order: [...proposedOrder, ...prev.order.filter((id) => prev.hidden.includes(id))],
     }))
   }
 
@@ -217,6 +195,11 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
       const hidden = new Set(prev.hidden)
       if (hidden.has(widgetId)) {
         hidden.delete(widgetId)
+        return {
+          ...prev,
+          order: [...prev.order.filter((id) => id !== widgetId), widgetId],
+          hidden: [...hidden],
+        }
       } else {
         hidden.add(widgetId)
       }
@@ -230,7 +213,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
       instances: {
         ...prev.instances,
         [widgetId]: {
-          ...(prev.instances[widgetId] || { collapsed: false, size: "quarter", pinned: false, focus: false }),
+          ...(prev.instances[widgetId] || { collapsed: false, size: "quarter", height: "medium" }),
           collapsed: !prev.instances[widgetId]?.collapsed,
         },
       },
@@ -311,10 +294,14 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
 
   const onRemoveWidget = (widgetId: string) => {
     if (!canDrag) return
-    toggleWidgetVisibility(widgetId)
+    setLayout((prev) => ({
+      ...prev,
+      hidden: prev.hidden.includes(widgetId) ? prev.hidden : [...prev.hidden, widgetId],
+    }))
+    setRecentlyRemovedId(widgetId)
   }
 
-  const handleExport = () => {
+  const handleExport = useCallback(() => {
     const json = exportDashboardLayout(layout)
     const blob = new Blob([json], { type: "application/json" })
     const url = URL.createObjectURL(blob)
@@ -325,11 +312,11 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
     a.click()
     a.remove()
     URL.revokeObjectURL(url)
-  }
+  }, [layout])
 
-  const handleImportClick = () => {
+  const handleImportClick = useCallback(() => {
     fileInputRef.current?.click()
-  }
+  }, [])
 
   const handleImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -341,6 +328,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
       try {
         const imported = importDashboardLayout(raw)
         setLayout(imported)
+        setIsLocked(imported.locked)
       } catch {
         window.alert("Invalid dashboard layout JSON. Keeping current layout.")
       }
@@ -350,9 +338,30 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
     event.target.value = ""
   }
 
+  const handleToggleLock = useCallback(() => {
+    const nextLocked = !layout.locked
+    setLayout((current) => ({ ...current, locked: nextLocked }))
+    setIsLocked(nextLocked)
+  }, [layout.locked, setIsLocked])
+
+  const handleReset = useCallback(() => {
+    const reset = resetDashboardLayout()
+    setLayout(reset)
+    setIsLocked(reset.locked)
+  }, [setIsLocked])
+
+  useEffect(() => {
+    registerActions({
+      exportLayout: handleExport,
+      importLayout: handleImportClick,
+      resetLayout: handleReset,
+      toggleLock: handleToggleLock,
+    })
+  }, [handleExport, handleImportClick, handleReset, handleToggleLock, registerActions])
+
   return (
     <DashboardBarrier>
-    <div className="w-full max-w-[1720px] mx-auto pb-24 px-4 md:px-6 xl:px-8">
+    <div className="w-full pb-24 px-3 sm:px-4 md:px-5 xl:px-6">
        <input
          ref={fileInputRef}
          type="file"
@@ -363,7 +372,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
 
 
       {showWelcomeBanner && (
-        <div className="mb-4 border-[3px] border-black rounded-2xl bg-[#4FFF5B] px-4 py-3 shadow-[4px_4px_0_0_#000] flex flex-wrap items-center justify-between gap-2">
+        <div className="mb-4 border-[3px] border-black rounded-2xl bg-[#3FEE56] px-4 py-3 shadow-[4px_4px_0_0_#000] flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm md:text-base font-black uppercase">You’re set. Next: Connect channel.</p>
           <button
             onClick={() => setShowWelcomeBanner(false)}
@@ -373,119 +382,78 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
           </button>
         </div>
       )}
-      {!onboarding.checklistDismissed && !checklistDone && (
-        <section className="mb-5 border-[3px] border-black rounded-2xl bg-white p-4 shadow-[4px_4px_0_0_#000]">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-lg md:text-xl font-black uppercase tracking-tight">Get Started</h2>
-            <button
-              onClick={() => updateOnboardingState({ checklistDismissed: true })}
-              className="border-[2px] border-black rounded-lg bg-[#f3f4f6] px-3 py-1 text-[10px] font-black uppercase"
-            >
-              Hide
-            </button>
-          </div>
-          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
-            <div className="border-[2px] border-black rounded-xl p-3 bg-[#f3f4f6]">
-              <p className="text-[10px] font-black uppercase">Connect channel</p>
-              <p className="text-xs font-bold mt-1">{data.authState.isAuthenticated ? "Connected" : "Not connected"}</p>
-              <button
-                onClick={() => onNavigate("/account#workspace-data")}
-                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#4FFF5B] px-2 py-1 text-[10px] font-black uppercase"
-              >
-                {data.authState.isAuthenticated ? "Open" : "Connect"}
-              </button>
-            </div>
-            <div className="border-[2px] border-black rounded-xl p-3 bg-[#f3f4f6]">
-              <p className="text-[10px] font-black uppercase">Run first sync</p>
-              <p className="text-xs font-bold mt-1">{firstSyncDone ? "Synced" : "Not synced"}</p>
-              <button
-                onClick={() => void globalSyncData({ batchMode: "initial" })}
-                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#40C6E9] px-2 py-1 text-[10px] font-black uppercase"
-              >
-                {firstSyncDone ? "Sync now" : "Run first sync"}
-              </button>
-            </div>
-            <div className="border-[2px] border-black rounded-xl p-3 bg-[#f3f4f6]">
-              <p className="text-[10px] font-black uppercase">Confirm billing/credits</p>
-              <p className="text-xs font-bold mt-1">{onboarding.billingConfirmed || entitlement.subscriptionPlanId !== "basic" ? "Billing active" : "Needs review"}</p>
-              <button
-                onClick={() => {
-                  updateOnboardingState({ billingConfirmed: true })
-                  onNavigate("/account?panel=billing")
-                }}
-                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#FFE357] px-2 py-1 text-[10px] font-black uppercase"
-              >
-                Open billing
-              </button>
-            </div>
-            <div className="border-[2px] border-black rounded-xl p-3 bg-[#f3f4f6]">
-              <p className="text-[10px] font-black uppercase">Complete AI Brain intake</p>
-              <p className="text-xs font-bold mt-1">{hasCompletedAiBrainContext() ? "Completed" : "Pending"}</p>
-              <button
-                onClick={() => onNavigate("/account#ai-brain-context")}
-                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#FF83EA] px-2 py-1 text-[10px] font-black uppercase"
-              >
-                Open intake
-              </button>
-            </div>
-            <div className="border-[2px] border-black rounded-xl p-3 bg-[#f3f4f6]">
-              <p className="text-[10px] font-black uppercase">Open first recommended tool</p>
-              <p className="text-xs font-bold mt-1">{onboarding.firstToolOpened ? "Done" : "Pending"}</p>
-              <button
-                onClick={() => {
-                  updateOnboardingState({ firstToolOpened: true })
-                  onNavigate(entitlement.subscriptionPlanId === "basic" ? "/studio" : "/performance")
-                }}
-                className="mt-2 w-full border-[2px] border-black rounded-lg bg-[#579AFF] text-white px-2 py-1 text-[10px] font-black uppercase"
-              >
-                Open tool
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
-
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragCancel={handleDragCancel}
+        onDragEnd={handleDragEnd}
+        accessibility={{
+          screenReaderInstructions: {
+            draggable: "Press space to pick up a widget. Use arrow keys to move it, then press space to drop or Escape to cancel.",
+          },
+          announcements: {
+            onDragStart: ({ active }) => `${DASHBOARD_WIDGET_BY_ID[String(active.id)]?.title || "Widget"} picked up.`,
+            onDragOver: ({ active, over }) => over
+              ? `${DASHBOARD_WIDGET_BY_ID[String(active.id)]?.title || "Widget"} will be position ${displayedWidgetIds.indexOf(String(over.id)) + 1} of ${displayedWidgetIds.length}.`
+              : undefined,
+            onDragEnd: ({ active, over }) => over
+              ? `${DASHBOARD_WIDGET_BY_ID[String(active.id)]?.title || "Widget"} moved to position ${displayedWidgetIds.indexOf(String(over.id)) + 1} of ${displayedWidgetIds.length}.`
+              : "Widget was not moved.",
+            onDragCancel: () => "Widget move cancelled.",
+          },
+        }}
+      >
         <SortableContext items={visibleWidgetIds} strategy={rectSortingStrategy}>
-           <div className="grid grid-cols-[repeat(24,minmax(0,1fr))] gap-4 md:gap-5">
-             {visibleWidgetIds.map((widgetId, visibleIndex) => {
+           <div className="grid grid-cols-[repeat(24,minmax(0,1fr))] gap-3 sm:gap-4 md:gap-5">
+             {visibleWidgetIds.map((widgetId) => {
                const widget = DASHBOARD_WIDGET_BY_ID[widgetId]
                const instance = layout.instances[widgetId]
                if (!widget || !instance) return null
-               const themedWidget = withCanonicalWidgetTheme(widget, visibleIndex)
+               const spectrum = spectrumByWidgetId[widgetId]
+               const themedWidget = spectrum ? {
+                 ...widget,
+                 headerColor: spectrum.headerColor,
+                 iconRailColor: spectrum.iconRailColor,
+               } : widget
 
                return (
                  <SortableWidgetItem
                    key={widgetId}
                    id={widgetId}
                    disabled={!canDrag}
-                   className={`${sizeBucketClassName(instance.size)} ${heightBucketClassName(instance.height)} transition-all duration-300`}>
-                    <WidgetErrorBoundary widgetId={widgetId}>
-                      <WidgetRenderer
-                        widget={themedWidget}
-                        instance={instance}
-                        editMode={editMode}
-                        canEdit={canDrag}
-                        data={data}
-                        onNavigate={onNavigate}
-                        onToggleCollapse={onToggleCollapse}
-                        onCycleSize={onCycleSize}
-                        onDecSize={onDecSize}
-                        onCycleHeight={onCycleHeight}
-                        onDecHeight={onDecHeight}
-                        onRemoveWidget={onRemoveWidget}
-                        dashboardControls={{
-                          editMode,
-                          setEditMode,
-                          locked: layout.locked,
-                          toggleLock: () => setLayout(prev => ({ ...prev, locked: !prev.locked })),
-                          openPicker: () => setPickerOpen(true),
-                          resetLayout: () => setLayout(resetDashboardLayout()),
-                          handleExport,
-                          handleImportClick
-                        }}
-                      />
-                    </WidgetErrorBoundary>
+                   className={`vt-dash-cell ${instance.collapsed ? "is-collapsed" : ""} ${sizeBucketClassName(instance.size)} ${instance.collapsed ? "h-[48px]" : heightBucketClassName(instance.height)}`}>
+                    <DeferredDashboardWidget eager={editMode}>
+                      <WidgetErrorBoundary widgetId={widgetId}>
+                        <Suspense fallback={null}>
+                          <WidgetRenderer
+                          widget={themedWidget}
+                          instance={instance}
+                          editMode={editMode}
+                          canEdit={canDrag}
+                          data={data}
+                          onNavigate={onNavigate}
+                          onToggleCollapse={onToggleCollapse}
+                          onCycleSize={onCycleSize}
+                          onDecSize={onDecSize}
+                          onCycleHeight={onCycleHeight}
+                          onDecHeight={onDecHeight}
+                          onRemoveWidget={onRemoveWidget}
+                          dashboardControls={{
+                            editMode,
+                            setEditMode,
+                            locked: layout.locked,
+                            toggleLock: handleToggleLock,
+                            openPicker: () => setPickerOpen(true),
+                            resetLayout: handleReset,
+                            handleExport,
+                            handleImportClick
+                          }}
+                          />
+                        </Suspense>
+                      </WidgetErrorBoundary>
+                    </DeferredDashboardWidget>
                  </SortableWidgetItem>
                )
              })}
@@ -500,6 +468,24 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
         onClose={() => setPickerOpen(false)}
         onToggleWidget={toggleWidgetVisibility}
       />
+      {recentlyRemovedId && (
+        <div className="widget-removal-toast" role="status" aria-live="polite">
+          <span>{DASHBOARD_WIDGET_BY_ID[recentlyRemovedId]?.title || "Widget"} removed.</span>
+          <button
+            type="button"
+            onClick={() => {
+              setLayout((prev) => ({
+                ...prev,
+                hidden: prev.hidden.filter((id) => id !== recentlyRemovedId),
+              }))
+              setRecentlyRemovedId(null)
+            }}
+          >
+            Undo
+          </button>
+          <button type="button" aria-label="Dismiss removal message" onClick={() => setRecentlyRemovedId(null)}>×</button>
+        </div>
+      )}
     </div>
     </DashboardBarrier>
   )

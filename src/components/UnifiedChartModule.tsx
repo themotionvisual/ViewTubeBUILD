@@ -1,4 +1,7 @@
 import React from "react"
+import { AnalyticsVisualIcon } from "./AnalyticsVisualIcon"
+import { useAnalyticsVisualStyle } from "./AnalyticsVisualStyleContext"
+import { useVtSyncVisualDataSourcePrefix } from "../features/vt-sync-local/shell/VtSyncVisualDataSourceContext"
 
 export interface ModuleStatItem {
   label: string
@@ -81,24 +84,35 @@ export const UnifiedChartModule: React.FC<UnifiedChartModuleProps> = ({
   variant = "default",
   metricBadges = [],
 }) => {
+  const sourcePrefix = useVtSyncVisualDataSourcePrefix()
+  const visualStyle = useAnalyticsVisualStyle()
+  const resolvedSubtitle = sourcePrefix ? `${sourcePrefix} · ${subtitle}` : subtitle
   const isShorts = variant === "shorts-retention"
-  const shadowColor = `${headerColor}55`
+  const resolvedHeaderColor = visualStyle?.headerColorPair?.title ?? headerColor
+  const resolvedIconColor = visualStyle?.headerColorPair?.icon ?? "#FFFFFF"
+  const resolvedHeaderIcon = visualStyle?.iconKey
+    ? <AnalyticsVisualIcon iconKey={visualStyle.iconKey} size={60} />
+    : headerIcon
+  const shadowColor = `${resolvedHeaderColor}55`
   return (
     <div
       className="bg-white border-[4px] border-black rounded-2xl overflow-hidden flex flex-col"
       style={{ boxShadow: `8px 8px 0px 0px ${shadowColor}` }}
     >
       <div
-        className="border-b-[4px] border-black px-4 py-2 flex items-center justify-between gap-3"
-        style={{ background: headerColor }}
+        className="min-h-[80px] border-b-[4px] border-black p-0 flex items-stretch justify-between gap-3"
+        style={{ background: resolvedHeaderColor }}
       >
-        <div className="flex items-center gap-3 min-w-0">
-          {headerIcon ? (
-            <span className="h-10 w-10 rounded-[8px] border-[3px] border-black bg-white inline-flex items-center justify-center text-[20px] leading-none shrink-0 [&_svg]:h-5 [&_svg]:w-5">
-              {headerIcon}
+        <div className="flex items-stretch gap-3 min-w-0">
+          {resolvedHeaderIcon ? (
+            <span
+              className="h-[80px] w-[80px] border-r-[4px] border-black inline-flex items-center justify-center text-[20px] leading-none shrink-0"
+              style={{ background: resolvedIconColor }}
+            >
+              {resolvedHeaderIcon}
             </span>
           ) : null}
-          <div className="min-w-0">
+          <div className="min-w-0 flex flex-col justify-center py-2 pr-3">
             <span
               className="block font-[1000] text-[38px] leading-[0.92] uppercase tracking-[-0.04em]"
               style={{
@@ -111,7 +125,7 @@ export const UnifiedChartModule: React.FC<UnifiedChartModuleProps> = ({
               {title}
             </span>
             <span className="block text-[13px] font-black opacity-75 uppercase tracking-[0.16em] mt-1 truncate">
-              {subtitle}
+              {resolvedSubtitle}
             </span>
           </div>
         </div>

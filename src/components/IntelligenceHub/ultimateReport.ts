@@ -531,7 +531,7 @@ const buildPreflightResult = (
   }
   if (!hasProfile) {
     blockers.push("missing_user_profile_auth_or_cache");
-    remediation.push("User profile not resolved. Sign in again or refresh profile cache via Sync Data.");
+    remediation.push("User profile not resolved. Connect again or refresh profile cache via Sync Data.");
   }
 
   return {

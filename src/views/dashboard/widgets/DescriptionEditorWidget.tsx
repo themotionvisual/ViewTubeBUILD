@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { WidgetShell } from "../WidgetShell"
+import { WidgetScrollArea } from "../WidgetPrimitives"
 import { FileText, Copy, Check } from "lucide-react"
 
 const FOOTER_KEY = "vt_desc_default_footer"
@@ -15,7 +16,6 @@ export const DescriptionEditorWidget = ({ widget, instance, editMode, onToggleCo
   onCycleHeight,
   onRemove,
   onDecSize,
-  onCycleHeight,
   onDecHeight,
  }
  const [description, setDescription] = useState("")
@@ -36,7 +36,7 @@ export const DescriptionEditorWidget = ({ widget, instance, editMode, onToggleCo
 
  return (
   <WidgetShell {...common} icon={<FileText size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px", overflowY: "auto" }}>
+   <WidgetScrollArea ariaLabel="Description editor" contentClassName="flex min-h-full flex-col gap-2">
     {/* Main Description */}
     <div style={{ display: "flex", flexDirection: "column", gap: "3px", flex: 1 }}>
      <label style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.5 }}>Video Description</label>
@@ -76,7 +76,7 @@ export const DescriptionEditorWidget = ({ widget, instance, editMode, onToggleCo
      {copied ? <Check size={14} /> : <Copy size={14} />}
      {copied ? "Copied!" : "Copy Full Description"}
     </button>
-   </div>
+   </WidgetScrollArea>
   </WidgetShell>
  )
 }

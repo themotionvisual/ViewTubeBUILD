@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { Image as ImageIcon, Sparkles, Download, Search, CheckCircle2, AlertTriangle, XCircle, ArrowRight } from "lucide-react"
+import { WidgetScrollArea, WidgetSelect } from "../WidgetPrimitives"
+import { Image as ImageIcon, Sparkles, Download, Search, CheckCircle2, AlertTriangle, ArrowRight } from "lucide-react"
 
 export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
   const common = {
@@ -33,7 +34,7 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
   const [isProcessing, setIsProcessing] = useState(false)
   const [result, setResult] = useState<any>(null)
 
-  const videos = data.canonicalRows || []
+  const videos = data.videoAssets || []
   
   // For fallback analysis mock
   const activeVideo = videos.find((v: any) => v.videoId === selectedVideo)
@@ -72,8 +73,8 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
 
   return (
     <WidgetShell {...common} icon={<ImageIcon size={22} />}>
-      <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px" }}>
-        
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px", minHeight: 0 }}>
+
         {/* Mode Tabs */}
         {!result && (
           <div style={{ display: "flex", gap: "4px", background: "#f5f5f5", padding: "4px", borderRadius: "8px", border: "2px solid #000" }}>
@@ -93,7 +94,7 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
         )}
 
         {/* Dynamic Content Area */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px", overflowY: "auto" }}>
+        <WidgetScrollArea ariaLabel="Thumbnail AI editor" contentClassName="flex min-h-full flex-col gap-2">
           
           {/* GENERATE MODE */}
           {!result && mode === "generate" && (
@@ -109,32 +110,23 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
                 <input value={smallText} onChange={(e) => setSmallText(e.target.value)} placeholder="Small text..." style={{ padding: "8px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "11px", fontWeight: 800, outline: "none" }} />
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "6px" }}>
-                <select value={stylePreset} onChange={(e) => setStylePreset(e.target.value)} style={{ padding: "6px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 800 }}>
-                  <option value="neo-brutalist">Style</option>
-                  <option value="neo-brutalist">Neo Brutalist</option>
-                  <option value="cinematic">Cinematic</option>
-                  <option value="minimal">Minimal</option>
-                  <option value="dramatic">Dramatic</option>
-                </select>
-                <select value={palette} onChange={(e) => setPalette(e.target.value)} style={{ padding: "6px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 800 }}>
-                  <option value="neon">Palette</option>
-                  <option value="neon">Neon</option>
-                  <option value="warm">Warm</option>
-                  <option value="cool">Cool</option>
-                  <option value="mono">Mono</option>
-                </select>
-                <select value={resolution} onChange={(e) => setResolution(e.target.value)} style={{ padding: "6px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 800 }}>
-                  <option value="1K">1K</option>
-                  <option value="2K">2K</option>
-                  <option value="4K">4K</option>
-                </select>
-                <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)} style={{ padding: "6px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "10px", fontWeight: 800 }}>
-                  <option value="16:9">16:9</option>
-                  <option value="1:1">1:1</option>
-                  <option value="9:16">9:16</option>
-                </select>
+                <WidgetSelect value={stylePreset} onChange={setStylePreset} label="Thumbnail style" options={[
+                  { value: "neo-brutalist", label: "Neo brutalist" }, { value: "cinematic", label: "Cinematic" },
+                  { value: "minimal", label: "Minimal" }, { value: "dramatic", label: "Dramatic" },
+                ]} />
+                <WidgetSelect value={palette} onChange={setPalette} label="Thumbnail palette" options={[
+                  { value: "neon", label: "Neon" }, { value: "warm", label: "Warm" },
+                  { value: "cool", label: "Cool" }, { value: "mono", label: "Mono" },
+                ]} />
+                <WidgetSelect value={resolution} onChange={setResolution} label="Thumbnail resolution" options={[
+                  { value: "1K", label: "1K" }, { value: "2K", label: "2K" }, { value: "4K", label: "4K" },
+                ]} />
+                <WidgetSelect value={aspectRatio} onChange={setAspectRatio} label="Thumbnail aspect ratio" options={[
+                  { value: "16:9", label: "16:9" }, { value: "1:1", label: "1:1" }, { value: "9:16", label: "9:16" },
+                ]} />
               </div>
               <div
+                className={`widget-upload-frame ${isDragImage ? "is-dragging" : ""}`}
                 onDragOver={(e) => {
                   e.preventDefault()
                   setIsDragImage(true)
@@ -150,10 +142,7 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
                   reader.readAsDataURL(file)
                 }}
                 style={{
-                  border: "2px dashed #000",
-                  borderRadius: "8px",
                   minHeight: "74px",
-                  background: isDragImage ? "rgba(0,210,255,0.15)" : "#f7f7f7",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -204,19 +193,17 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
           {!result && mode === "analyze" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%" }}>
               <div style={{ display: "flex", gap: "4px" }}>
-               <select
+               <WidgetSelect
                  value={selectedVideo}
-                 onChange={(e) => setSelectedVideo(e.target.value)}
+                 onChange={setSelectedVideo}
+                 label="Select a video to analyze"
+                 placeholder="Select a video to analyze…"
                  style={{ flex: 2, padding: "8px", background: "#fff", border: "2px solid #000", borderRadius: "8px", fontSize: "12px", fontWeight: 900, outline: "none" }}
-               >
-                 <option value="" disabled>Select a video to analyze...</option>
-                 {videos
+                 options={videos
                   .filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase()))
-                  .slice(0, 15)
-                  .map((v: any) => (
-                   <option key={v.videoId} value={v.videoId}>{v.title || v.id}</option>
-                 ))}
-               </select>
+                  .slice(0, 50)
+                  .map((v: any) => ({ value: v.videoId, label: v.title || v.id }))}
+               />
                <input
                 className="vt-input"
                 value={videoSearch}
@@ -299,7 +286,7 @@ export const ThumbAIWidget = ({ widget, instance, editMode, onToggleCollapse, on
             </div>
           )}
 
-        </div>
+        </WidgetScrollArea>
 
       </div>
     </WidgetShell>

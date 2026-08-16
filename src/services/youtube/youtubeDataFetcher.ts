@@ -10,6 +10,17 @@ import {
 } from "./youtubeApiClient"
 import { parseDurationSeconds } from "../dataUtils"
 import { getCanonicalAnalyticsCache } from "../analytics/DataStore"
+import {
+ isUnifiedYouTubeWriteTransportEnabled,
+ addUnifiedPlaylistItem,
+ postUnifiedCommentReply,
+ postUnifiedTopLevelComment,
+ removeUnifiedPlaylistItem,
+ updateUnifiedThumbnail,
+ updateUnifiedComment,
+ updateUnifiedVideo,
+ uploadUnifiedVideo,
+} from "./youtubeWriteTransport"
 
 /**
  * YouTube Data Fetcher
@@ -108,6 +119,41 @@ export const fetchChannelProfile = async (): Promise<ChannelProfile> => {
   publishedAt: channel.snippet.publishedAt,
   uploadsPlaylistId:
    channel.contentDetails?.relatedPlaylists?.uploads || undefined,
+ }
+}
+
+/** Channel-branding values that can safely seed a new upload. */
+export type ChannelPublishingDefaults = {
+ description: string
+ tags: string[]
+}
+
+export const fetchChannelPublishingDefaults = async (): Promise<ChannelPublishingDefaults> => {
+ const token = await refreshTokenIfExpired()
+ if (!token) {
+  throw new YouTubeApiError(
+   "Your YouTube session has expired or is invalid. Please reconnect your channel in Settings.",
+   401,
+   "authError",
+  )
+ }
+
+ const response = await proxyFetch(
+  "https://www.googleapis.com/youtube/v3/channels?part=brandingSettings&mine=true",
+  { headers: { Authorization: `Bearer ${token}` } },
+ )
+
+ if (!response.ok) await handleYouTubeApiError(response, "Failed to fetch channel publishing defaults")
+ const data = await response.json()
+ const branding = data.items?.[0]?.brandingSettings?.channel || {}
+ const rawKeywords = String(branding.keywords || "")
+ const tags = (rawKeywords.match(/"([^"]+)"|'([^']+)'|[^,\s]+/g) || [])
+  .map((tag) => tag.trim().replace(/^['"]|['"]$/g, "").trim())
+  .filter(Boolean)
+
+ return {
+  description: String(branding.description || "").trim(),
+  tags: Array.from(new Set(tags)),
  }
 }
 
@@ -652,6 +698,7 @@ export const fetchVideoDetails = async (videoId: string) => {
 }
 
 export const updateVideo = async (videoId: string, details: any) => {
+ if (isUnifiedYouTubeWriteTransportEnabled()) return updateUnifiedVideo(videoId, details)
  const token = await refreshTokenIfExpired()
  const body = {
   id: videoId,
@@ -683,6 +730,7 @@ export const updateVideoThumbnail = async (
  videoId: string,
  thumbnailFile: File,
 ) => {
+ if (isUnifiedYouTubeWriteTransportEnabled()) return updateUnifiedThumbnail(videoId, thumbnailFile)
  const token = await refreshTokenIfExpired()
  const response = await proxyFetch(
   `https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${videoId}`,
@@ -701,6 +749,12 @@ export const updateVideoThumbnail = async (
 }
 
 export const uploadVideo = async (file: File, details: any) => {
+ if (isUnifiedYouTubeWriteTransportEnabled()) {
+  return uploadUnifiedVideo(file, {
+   title: details.title || "Untitled Video", description: details.description || "", categoryId: details.categoryId || "22",
+   tags: details.tags || [], privacyStatus: details.privacyStatus || "private",
+  })
+ }
  const token = await refreshTokenIfExpired()
  if (!token) throw new Error("Unauthorized to upload video")
 
@@ -847,6 +901,7 @@ export const fetchVideoPlaylistMemberships = async (
 }
 
 export const addToPlaylist = async (playlistId: string, videoId: string) => {
+ if (isUnifiedYouTubeWriteTransportEnabled()) return addUnifiedPlaylistItem(playlistId, videoId)
  const token = await refreshTokenIfExpired()
  const response = await proxyFetch(`${BASE_URL}/playlistItems?part=snippet`, {
   method: "POST",
@@ -867,6 +922,7 @@ export const addToPlaylist = async (playlistId: string, videoId: string) => {
 }
 
 export const removeFromPlaylist = async (playlistItemId: string) => {
+ if (isUnifiedYouTubeWriteTransportEnabled()) return removeUnifiedPlaylistItem(playlistItemId)
  const token = await refreshTokenIfExpired()
  const response = await proxyFetch(
   `${BASE_URL}/playlistItems?id=${playlistItemId}`,
@@ -982,7 +1038,35 @@ export const fetchRetentionAnalytics = async (videoId: string) => {
  return response.json()
 }
 
-export const fetchAllCommentThreads = async (maxResults = 20, channelId?: string) => {
+const fetchCompleteCommentReplies = async (parentId: string, token: string) => {
+ const replies: any[] = []
+ let pageToken = ""
+
+ do {
+  const params = new URLSearchParams({ part: "snippet", parentId, maxResults: "100" })
+  if (pageToken) params.set("pageToken", pageToken)
+  const response = await proxyFetch(`${BASE_URL}/comments?${params.toString()}`, {
+   headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!response.ok) throw new Error("Failed to fetch complete comment replies")
+  const page = await response.json()
+  replies.push(...(page.items || []))
+  pageToken = page.nextPageToken || ""
+ } while (pageToken)
+
+ return replies
+}
+
+export interface CommentThreadFetchOptions {
+ initialNewCount?: number
+ onInitialResults?: (threads: any[]) => void | Promise<void>
+}
+
+export const fetchAllCommentThreads = async (
+ maxResults = 20,
+ channelId?: string,
+ options: CommentThreadFetchOptions = {},
+) => {
  const token = await refreshTokenIfExpired()
  if (!token) return []
 
@@ -1011,26 +1095,76 @@ export const fetchAllCommentThreads = async (maxResults = 20, channelId?: string
   return []
  }
 
- const response = await proxyFetch(
-  `${BASE_URL}/commentThreads?part=snippet,replies&allThreadsRelatedToChannelId=${resolvedChannelId}&maxResults=${maxResults}&order=time`,
-  { headers: { Authorization: `Bearer ${token}` } },
- )
+ const threads: any[] = []
+ let pageToken = ""
+ let initialResultsPublished = false
+ const initialNewCount = options.onInitialResults
+  ? Math.max(0, options.initialNewCount || 0)
+  : 0
+ const hydrateThreads = (pageThreads: any[]) => Promise.all(pageThreads.map(async (thread: any) => {
+  const includedReplies = thread.replies?.comments || []
+  const totalReplyCount = thread.snippet?.totalReplyCount || 0
+  const parentId = thread.snippet?.topLevelComment?.id
+  if (!parentId || includedReplies.length >= totalReplyCount) return thread
+
+  try {
+   const replies = await fetchCompleteCommentReplies(parentId, token)
+   return { ...thread, replies: { ...thread.replies, comments: replies } }
+  } catch (error) {
+   console.warn("Unable to load every reply for comment thread", error)
+   return { ...thread, repliesComplete: false }
+  }
+ }))
+
+ do {
+  const pageSize = !initialResultsPublished && initialNewCount > 0
+   ? initialNewCount
+   : Math.min(maxResults, 100)
+  const params = new URLSearchParams({
+   part: "snippet,replies",
+   allThreadsRelatedToChannelId: resolvedChannelId,
+   maxResults: String(pageSize),
+   order: "time",
+  })
+  if (pageToken) params.set("pageToken", pageToken)
+  const response = await proxyFetch(
+   `${BASE_URL}/commentThreads?${params.toString()}`,
+   { headers: { Authorization: `Bearer ${token}` } },
+  )
   if (!response.ok) {
    if (response.status === 403) {
     warnYouTubeDataAccessOnce(
      "comments403",
      "[YouTube Data] Comments denied (403). Continuing in degraded mode.",
-    )
-    return []
+   )
+   return []
    }
    await handleYouTubeApiError(response, "Failed to fetch comment threads")
   }
+  const page = await response.json()
+  const hydratedPage = await hydrateThreads(page.items || [])
+  threads.push(...hydratedPage)
+  pageToken = page.nextPageToken || ""
 
- const data = await response.json()
- return data.items || []
+  if (!initialResultsPublished && initialNewCount > 0 && options.onInitialResults) {
+   const initialThreads = threads.filter((thread: any) => {
+    if (thread.repliesComplete === false) return false
+    const replies = thread.replies?.comments || []
+    return !replies.some((reply: any) => reply.snippet?.authorChannelId?.value === resolvedChannelId)
+   }).slice(0, initialNewCount)
+
+   if (initialThreads.length >= initialNewCount || !pageToken) {
+    initialResultsPublished = true
+    await options.onInitialResults(initialThreads)
+   }
+  }
+ } while (pageToken)
+
+ return threads
 }
 
 export const postCommentReply = async (parentId: string, text: string) => {
+ if (isUnifiedYouTubeWriteTransportEnabled()) return postUnifiedCommentReply(parentId, text)
  const token = await refreshTokenIfExpired()
  if (!token) throw new Error("Unauthorized")
  const response = await proxyFetch(`${BASE_URL}/comments?part=snippet`, {
@@ -1050,7 +1184,29 @@ export const postCommentReply = async (parentId: string, text: string) => {
  return response.json()
 }
 
+export const postVideoTopLevelComment = async (videoId: string, text: string) => {
+ if (isUnifiedYouTubeWriteTransportEnabled()) return postUnifiedTopLevelComment(videoId, text)
+ const token = await refreshTokenIfExpired()
+ if (!token) throw new Error("Unauthorized")
+ const response = await proxyFetch(`${BASE_URL}/commentThreads?part=snippet`, {
+  method: "POST",
+  headers: {
+   Authorization: `Bearer ${token}`,
+   "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+   snippet: {
+    videoId,
+    topLevelComment: { snippet: { textOriginal: text } },
+   },
+  }),
+ })
+ if (!response.ok) await handleYouTubeApiError(response, "Failed to post top-level comment")
+ return response.json()
+}
+
 export const updateCommentText = async (commentId: string, text: string) => {
+ if (isUnifiedYouTubeWriteTransportEnabled()) return updateUnifiedComment(commentId, text)
  const token = await refreshTokenIfExpired()
  if (!token) throw new Error("Unauthorized")
  const response = await proxyFetch(`${BASE_URL}/comments?part=snippet`, {
@@ -1069,4 +1225,234 @@ export const updateCommentText = async (commentId: string, text: string) => {
  if (!response.ok)
   await handleYouTubeApiError(response, "Failed to update comment")
  return response.json()
+}
+
+// ============================================================================
+// COMMUNITY POST / ACTIVITIES API
+// ============================================================================
+
+export interface CommunityPostContent {
+ type: "text" | "poll" | "image" | "video"
+ text: string
+ pollOptions?: string[]
+ imageUrl?: string
+ videoId?: string
+}
+
+export interface ScheduledCommunityPost {
+ id: string
+ content: CommunityPostContent
+ scheduledAt: string
+ status: "scheduled" | "posted" | "failed" | "cancelled"
+ createdAt: string
+ postedAt?: string
+ error?: string
+}
+
+// Local storage key for scheduled posts
+const SCHEDULED_POSTS_KEY = "vt_scheduled_community_posts"
+
+/**
+ * Get all scheduled community posts from local storage
+ */
+export const getScheduledPosts = (): ScheduledCommunityPost[] => {
+ try {
+  const stored = localStorage.getItem(SCHEDULED_POSTS_KEY)
+  if (!stored) return []
+  return JSON.parse(stored)
+ } catch {
+  return []
+ }
+}
+
+/**
+ * Save scheduled posts to local storage
+ */
+const saveScheduledPosts = (posts: ScheduledCommunityPost[]) => {
+ localStorage.setItem(SCHEDULED_POSTS_KEY, JSON.stringify(posts))
+}
+
+/**
+ * Schedule a community post for later
+ */
+export const scheduleCommunityPost = (
+ content: CommunityPostContent,
+ scheduledAt: string
+): ScheduledCommunityPost => {
+ const post: ScheduledCommunityPost = {
+  id: `post_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+  content,
+  scheduledAt,
+  status: "scheduled",
+  createdAt: new Date().toISOString(),
+ }
+ 
+ const posts = getScheduledPosts()
+ posts.push(post)
+ saveScheduledPosts(posts)
+ 
+ return post
+}
+
+/**
+ * Update a scheduled post
+ */
+export const updateScheduledPost = (
+ postId: string,
+ updates: Partial<Pick<ScheduledCommunityPost, "content" | "scheduledAt" | "status">>
+): ScheduledCommunityPost | null => {
+ const posts = getScheduledPosts()
+ const idx = posts.findIndex(p => p.id === postId)
+ if (idx === -1) return null
+ 
+ posts[idx] = { ...posts[idx], ...updates }
+ saveScheduledPosts(posts)
+ 
+ return posts[idx]
+}
+
+/**
+ * Cancel a scheduled post
+ */
+export const cancelScheduledPost = (postId: string): boolean => {
+ const posts = getScheduledPosts()
+ const idx = posts.findIndex(p => p.id === postId)
+ if (idx === -1) return false
+ 
+ posts[idx].status = "cancelled"
+ saveScheduledPosts(posts)
+ 
+ return true
+}
+
+/**
+ * Delete a scheduled post
+ */
+export const deleteScheduledPost = (postId: string): boolean => {
+ const posts = getScheduledPosts()
+ const filtered = posts.filter(p => p.id !== postId)
+ if (filtered.length === posts.length) return false
+ 
+ saveScheduledPosts(filtered)
+ return true
+}
+
+/**
+ * Post a community post to YouTube
+ * Note: YouTube's Community Posts API (activities.insert) has limited support
+ * and may require specific permissions. This implementation provides the
+ * structure for when full API access is available.
+ * 
+ * Current workaround: Opens YouTube Studio in a new tab with pre-filled content
+ */
+export const postCommunityPost = async (
+ content: CommunityPostContent,
+ channelId?: string
+): Promise<{ success: boolean; method: "api" | "redirect"; url?: string; error?: string }> => {
+ const token = await refreshTokenIfExpired()
+ 
+ // Check if we have API access for community posts
+ // YouTube's activities.insert endpoint is deprecated/limited for community posts
+ // Most implementations redirect to YouTube Studio
+ 
+ // Build YouTube Studio URL with pre-populated content
+ const studioUrl = new URL("https://studio.youtube.com/channel/community")
+ 
+ // Unfortunately, YouTube Studio doesn't support deep linking with pre-filled content
+ // The best we can do is open the community tab
+ 
+ // Try the activities API first (may not work for community posts)
+ if (token) {
+  try {
+   // Note: This endpoint is limited and may not work for community posts
+   // YouTube deprecated direct community post creation via API
+   const response = await proxyFetch(`${BASE_URL}/activities?part=snippet,contentDetails`, {
+    method: "POST",
+    headers: {
+     Authorization: `Bearer ${token}`,
+     "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+     snippet: {
+      description: content.text,
+     },
+     contentDetails: {
+      bulletin: {
+       resourceId: content.videoId ? {
+        kind: "youtube#video",
+        videoId: content.videoId,
+       } : undefined,
+      },
+     },
+    }),
+   })
+   
+   if (response.ok) {
+    const result = await response.json()
+    return { success: true, method: "api" }
+   }
+  } catch (e) {
+   console.warn("[CommunityPost] API method failed, falling back to redirect", e)
+  }
+ }
+ 
+ // Fallback: Copy content to clipboard and open YouTube Studio
+ try {
+  await navigator.clipboard.writeText(content.text)
+ } catch {
+  // Clipboard access may fail in some contexts
+ }
+ 
+ return {
+  success: true,
+  method: "redirect",
+  url: "https://studio.youtube.com/channel/community",
+ }
+}
+
+/**
+ * Process scheduled posts that are due
+ */
+export const processScheduledPosts = async (): Promise<{
+ processed: string[]
+ failed: string[]
+}> => {
+ const posts = getScheduledPosts()
+ const now = new Date()
+ const processed: string[] = []
+ const failed: string[] = []
+ 
+ for (const post of posts) {
+  if (post.status !== "scheduled") continue
+  
+  const scheduledTime = new Date(post.scheduledAt)
+  if (scheduledTime > now) continue
+  
+  try {
+   const result = await postCommunityPost(post.content)
+   
+   if (result.success) {
+    post.status = "posted"
+    post.postedAt = now.toISOString()
+    processed.push(post.id)
+    
+    // If redirect method, open the URL
+    if (result.method === "redirect" && result.url) {
+     window.open(result.url, "_blank")
+    }
+   } else {
+    post.status = "failed"
+    post.error = result.error || "Unknown error"
+    failed.push(post.id)
+   }
+  } catch (e: any) {
+   post.status = "failed"
+   post.error = e.message || "Post failed"
+   failed.push(post.id)
+  }
+ }
+ 
+ saveScheduledPosts(posts)
+ 
+ return { processed, failed }
 }

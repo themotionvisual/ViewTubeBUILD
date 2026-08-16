@@ -309,7 +309,6 @@ const SeoGenerator: React.FC<{
       <SubToolbox
        title="Video Upload"
        icon={<Upload size={20} strokeWidth={3} />}
-       paletteIndex={basePalette + 1}
        collapsible
        isOpenInitial={true}>
        <StandardUploadBox 
@@ -322,7 +321,6 @@ const SeoGenerator: React.FC<{
       <SubToolbox
        title="Video Script"
        icon={<FileText size={20} strokeWidth={3} />}
-       paletteIndex={basePalette + 1}
        collapsible
        isOpenInitial={true}>
        <StandardTextArea
@@ -337,7 +335,6 @@ const SeoGenerator: React.FC<{
      <SubToolbox
       title="Video Info"
       icon={<Sparkles size={20} strokeWidth={3} />}
-      paletteIndex={basePalette + 3}
       collapsible
       isOpenInitial={true}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

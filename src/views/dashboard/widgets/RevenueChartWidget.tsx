@@ -64,7 +64,7 @@ export const RevenueChartWidget = ({ widget, instance, editMode, onToggleCollaps
  const months: { name: string; count: number }[] = []
  displayWeeks.forEach((w: any) => {
   if (months.length === 0 || months[months.length - 1].name !== w.month) {
-   months.push({name: w.month, count: 1, onDecSize, onCycleHeight, onDecHeight})
+   months.push({ name: w.month, count: 1 })
   } else {
    months[months.length - 1].count += 1
   }
@@ -252,7 +252,7 @@ export const RevenueChartWidget = ({ widget, instance, editMode, onToggleCollaps
           onMouseEnter={(e) => {
            const rect = e.currentTarget.getBoundingClientRect()
            const parent = e.currentTarget.closest("[style]")?.getBoundingClientRect()
-           setTooltip({x: rect.left - (parent?.left || 0) + rect.width / 2, y: rect.top - (parent?.top || 0), text: `$${rev.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2, onDecSize, onCycleHeight, onDecHeight})} — ${week.month} ${week.week}`,
+           setTooltip({x: rect.left - (parent?.left || 0) + rect.width / 2, y: rect.top - (parent?.top || 0), text: `$${rev.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} — ${week.month} ${week.week}`,
            })
           }}
           onMouseLeave={() => setTooltip(null)}

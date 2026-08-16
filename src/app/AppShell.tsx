@@ -1,40 +1,60 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Sidebar } from "../components/Sidebar";
-import { TopBar } from "../components/TopBar";
+import { AdaptiveNavigationShell } from "../components/navigation/AdaptiveNavigationShell";
 import { DashboardProvider } from "../context/DashboardContext";
+import { EntitlementProvider } from "../context/EntitlementProvider";
 import {
   ENTITLEMENT_CHANGED_EVENT,
+  applyPlanToEntitlement,
   entitlementStatesEqual,
   readCurrentEntitlement,
   syncEntitlementIfDrifted,
   type EntitlementState,
 } from "../services/billingEntitlement";
+import type { SubscriptionPlanId } from "../services/subscriptionPlans";
+import { useUnifiedAccount } from "../context/UnifiedAccountContext";
 
 interface AppShellProps {
   children: React.ReactNode;
 }
 
-const EntitlementContext = createContext<EntitlementState | null>(null);
-
-export const useEntitlement = (): EntitlementState => {
-  const context = useContext(EntitlementContext);
-  if (!context) return readCurrentEntitlement();
-  return context;
-};
-
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const location = useLocation();
-  const [entitlement, setEntitlement] = useState<EntitlementState>(() => readCurrentEntitlement());
-  const [sidebarHidden, setSidebarHidden] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem("vt_sidebar_hidden") === "1";
-  });
+  const account = useUnifiedAccount();
+  const [legacyEntitlement, setLegacyEntitlement] = useState<EntitlementState>(() => readCurrentEntitlement());
+
+  const entitlement = useMemo<EntitlementState>(() => {
+    if (!account.serverEnabled) return legacyEntitlement;
+    const current = readCurrentEntitlement();
+    const planId = (account.snapshot.billing.planId || "basic") as SubscriptionPlanId;
+    const planned = applyPlanToEntitlement(current, planId);
+    const status = account.snapshot.billing.status === "past_due"
+      ? "past_due"
+      : account.snapshot.billing.status === "active" || account.snapshot.billing.status === "trialing"
+        ? "active"
+        : account.snapshot.billing.status === "unavailable"
+          ? current.status
+          : "inactive";
+    const creditBalance = Math.max(0, Number(account.snapshot.ai.availableCredits || 0));
+    return {
+      ...planned,
+      status,
+      creditBalance,
+      tokenBalance: creditBalance,
+    };
+  }, [
+    account.serverEnabled,
+    account.snapshot.ai.availableCredits,
+    account.snapshot.billing.planId,
+    account.snapshot.billing.status,
+    legacyEntitlement,
+  ]);
 
   useEffect(() => {
+    if (account.serverEnabled) return;
     const sync = () => {
       const next = syncEntitlementIfDrifted();
-      setEntitlement((previous) =>
+      setLegacyEntitlement((previous) =>
         entitlementStatesEqual(previous, next) ? previous : next,
       );
     };
@@ -44,7 +64,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         sync();
         return;
       }
-      setEntitlement((previous) =>
+      setLegacyEntitlement((previous) =>
         entitlementStatesEqual(previous, detail) ? previous : detail,
       );
     };
@@ -55,45 +75,18 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       window.removeEventListener("storage", sync);
       window.removeEventListener(ENTITLEMENT_CHANGED_EVENT, onEntitlementChanged as EventListener);
     };
-  }, []);
+  }, [account.serverEnabled]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    localStorage.setItem("vt_sidebar_hidden", sidebarHidden ? "1" : "0");
-  }, [sidebarHidden]);
-
-  const isLarge = entitlement.tier === "large";
-  const isFree = entitlement.tier === "free";
   const isEditorSurface =
     location.pathname === "/editor" || location.pathname === "/editor-v1";
-  const tokenText =
-    isLarge ? "UNLIMITED" : `${Math.max(0, Math.floor(entitlement.creditBalance)).toLocaleString()} CREDITS`;
 
   return (
-    <DashboardProvider>
-      <div className="flex flex-col h-screen w-screen bg-[#f3f4f6] overflow-hidden font-sans">
-        <TopBar
-          sidebarHidden={sidebarHidden}
-          onToggleSidebar={() => setSidebarHidden((value) => !value)}
-        />
-        <div className="flex flex-1 h-0 w-full overflow-visible relative">
-          {!sidebarHidden ? <Sidebar onHide={() => setSidebarHidden(true)} /> : null}
-          <main
-            className={`flex-1 h-full overflow-y-auto overflow-x-hidden relative ${
-              isEditorSurface ? "p-2 pb-2" : "p-8 pb-96"
-            }`}
-          >
-            <EntitlementContext.Provider value={entitlement}>{children}</EntitlementContext.Provider>
-          </main>
-          {location.pathname === "/" && sidebarHidden && (
-            <div className="absolute bottom-4 left-4 z-50 flex gap-3 text-[10px] text-gray-500 font-semibold bg-white/80 backdrop-blur-sm px-2 py-1 rounded border border-black/10">
-              <a href="/privacy.html" className="hover:text-black underline">Privacy Policy</a>
-              <span>•</span>
-              <a href="/terms.html" className="hover:text-black underline">Terms of Service</a>
-            </div>
-          )}
-        </div>
-      </div>
-    </DashboardProvider>
+    <EntitlementProvider value={entitlement}>
+     <DashboardProvider>
+      <AdaptiveNavigationShell entitlement={entitlement} isEditorSurface={isEditorSurface}>
+       {children}
+      </AdaptiveNavigationShell>
+     </DashboardProvider>
+    </EntitlementProvider>
   );
 };

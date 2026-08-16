@@ -1,19 +1,103 @@
-import type { WidgetDefinition } from "./types"
+import { getDashboardWidgetPaletteColors } from "../../styles/toolboxPalette"
+import { HEIGHT_BUCKET_ORDER, SIZE_BUCKET_ORDER } from "./tokens"
+import type {
+ DashboardHeightBucket,
+ DashboardSizeBucket,
+ WidgetDefinition,
+ WidgetDefinitionBase,
+} from "./types"
 
-export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
+type DefaultDashboardSlot = Readonly<{
+ id: string
+ size: DashboardSizeBucket
+ height: DashboardHeightBucket
+}>
+
+export const DEFAULT_DASHBOARD_ROWS = [
+ [{ id: "app-verification-explainer", size: "full", height: "medium" }],
+ [
+  { id: "kpi-cluster", size: "third", height: "tall" },
+  { id: "community-post", size: "third", height: "tall" },
+  { id: "comment-replier", size: "third", height: "tall" },
+ ],
+ [
+  { id: "consistency-heatmap", size: "quarter", height: "medium" },
+  { id: "realtime-performance", size: "quarter", height: "medium" },
+  { id: "goals-tracker", size: "quarter", height: "medium" },
+  { id: "keyword-engine", size: "quarter", height: "medium" },
+ ],
+ [
+  { id: "daily-oracle", size: "third", height: "xtall" },
+  { id: "ask-me", size: "third", height: "xtall" },
+  { id: "ai-journal", size: "third", height: "xtall" },
+ ],
+ [
+  { id: "image-generator", size: "half", height: "xtall" },
+  { id: "video-uploader", size: "half", height: "xtall" },
+ ],
+ [
+  { id: "data-edit", size: "half", height: "xtall" },
+  { id: "traffic-sources", size: "half", height: "xtall" },
+ ],
+ [
+  { id: "shorts-vs-long", size: "third", height: "medium" },
+  { id: "publish-momentum", size: "third", height: "medium" },
+  { id: "audience-matrix", size: "third", height: "medium" },
+ ],
+ [
+  { id: "system-micro-stack", size: "quarter", height: "tall" },
+  { id: "keyword-overlap-intelligence", size: "half", height: "tall" },
+  { id: "retention-sim", size: "quarter", height: "tall" },
+ ],
+ [
+  { id: "upload-scheduler", size: "half", height: "xtall" },
+  { id: "brain-hub", size: "half", height: "xtall" },
+ ],
+ [
+  { id: "thumb-ai", size: "half", height: "medium" },
+  { id: "quick-actions", size: "quarter", height: "medium" },
+  { id: "ai-prompt-box", size: "quarter", height: "medium" },
+ ],
+ [
+  { id: "revenue-momentum", size: "third", height: "medium" },
+  { id: "title-rewriter", size: "third", height: "medium" },
+  { id: "description-editor", size: "third", height: "medium" },
+ ],
+ [{ id: "hashtag-analyzer", size: "full", height: "medium" }],
+] as const satisfies readonly (readonly DefaultDashboardSlot[])[]
+
+const defaultDashboardSlotById = new Map<string, DefaultDashboardSlot>(
+ DEFAULT_DASHBOARD_ROWS.flat().map((slot) => [slot.id, slot]),
+)
+
+const DASHBOARD_WIDGET_BASE_REGISTRY: WidgetDefinitionBase[] = [
+ {
+  id: "app-verification-explainer",
+  title: "About VIEWTUBE",
+  subtitle: "VIEWTUBE app purpose, Google sign-in, and YouTube data use",
+  category: "system",
+  defaultSize: "full",
+  minSize: "half",
+  maxSize: "full",
+  defaultHeight: "medium",
+  minHeight: "short",
+  maxHeight: "medium",
+  ...getDashboardWidgetPaletteColors(7),
+  dependency: ["none"],
+  status: "ready",
+ },
   {
   id: "kpi-cluster",
   title: "Channel Overview",
   subtitle: "Subscribers, views, hours, revenue, CTR, AVD",
   category: "core",
-  defaultSize: "third",
-  minSize: "quarter",
+  defaultSize: "half",
+  minSize: "third",
   maxSize: "full",
   defaultHeight: "tall",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#C9F830",
-  iconRailColor: "#FFE357",
+  ...getDashboardWidgetPaletteColors(0),
   dependency: ["youtube_analytics_v2"],
   status: "ready",
  },
@@ -28,8 +112,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FF83EA",
-  iconRailColor: "#FFB570",
+  ...getDashboardWidgetPaletteColors(1),
   dependency: ["youtube_data_v3"],
   status: "ready",
  },
@@ -44,8 +127,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FFB570",
-  iconRailColor: "#FFD8A8",
+  ...getDashboardWidgetPaletteColors(2),
   dependency: ["none"],
   status: "ready",
  },
@@ -60,8 +142,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FFB570",
-  iconRailColor: "#FFD8A8",
+  ...getDashboardWidgetPaletteColors(3),
   dependency: ["none"],
   status: "ready",
  },
@@ -76,8 +157,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#4FFF5B",
-  iconRailColor: "#B9FFBE",
+  ...getDashboardWidgetPaletteColors(4),
   dependency: ["none"],
   status: "ready",
  },
@@ -92,8 +172,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#579AFF",
-  iconRailColor: "#BBD4FF",
+  ...getDashboardWidgetPaletteColors(5),
   dependency: ["youtube_data_v3", "youtube_analytics_v2"],
   status: "ready",
  },
@@ -108,8 +187,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FF83EA",
-  iconRailColor: "#FFB3F0",
+  ...getDashboardWidgetPaletteColors(6),
   dependency: ["youtube_analytics_v2"],
   status: "ready",
  },
@@ -124,8 +202,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FF1744",
-  iconRailColor: "#FF8AAF",
+  ...getDashboardWidgetPaletteColors(7),
   dependency: ["none"],
   status: "ready",
  },
@@ -140,8 +217,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#40C6E9",
-  iconRailColor: "#579AFF",
+  ...getDashboardWidgetPaletteColors(8),
   dependency: ["none"],
   status: "prototype",
  },
@@ -156,8 +232,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#C9F830",
-  iconRailColor: "#FFB570",
+  ...getDashboardWidgetPaletteColors(9),
   dependency: ["youtube_analytics_v2"],
   status: "ready",
  },
@@ -172,8 +247,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FF3399",
-  iconRailColor: "#FFE357",
+  ...getDashboardWidgetPaletteColors(10),
   dependency: ["none"],
   status: "prototype",
  },
@@ -188,8 +262,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#00D2FF",
-  iconRailColor: "#FFB570",
+  ...getDashboardWidgetPaletteColors(11),
   dependency: ["none"],
   status: "ready",
  },
@@ -204,8 +277,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#4FFF5B",
-  iconRailColor: "#B9FFBE",
+  ...getDashboardWidgetPaletteColors(12),
   dependency: ["youtube_data_v3"],
   status: "ready",
  },
@@ -220,8 +292,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#C9F830",
-  iconRailColor: "#FFE357",
+  ...getDashboardWidgetPaletteColors(13),
   dependency: ["none"],
   status: "ready",
  },
@@ -236,8 +307,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FF1744",
-  iconRailColor: "#FFE357",
+  ...getDashboardWidgetPaletteColors(14),
   dependency: ["none"],
   status: "ready",
  },
@@ -252,8 +322,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#00D2FF",
-  iconRailColor: "#4FFF5B",
+  ...getDashboardWidgetPaletteColors(15),
   dependency: ["youtube_data_v3", "gemini_api"],
   status: "ready",
  },
@@ -268,8 +337,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#C9F830",
-  iconRailColor: "#FF1744",
+  ...getDashboardWidgetPaletteColors(16),
   dependency: ["youtube_analytics_v2"],
   status: "ready",
  },
@@ -284,8 +352,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "tall",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FF1744",
-  iconRailColor: "#FFB570",
+  ...getDashboardWidgetPaletteColors(17),
   dependency: ["youtube_data_v3", "gemini_api"],
   status: "ready",
  },
@@ -300,8 +367,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#00D2FF",
-  iconRailColor: "#FF83EA",
+  ...getDashboardWidgetPaletteColors(18),
   dependency: ["gemini_api"],
   status: "ready",
  },
@@ -316,8 +382,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FFB570",
-  iconRailColor: "#FFD8A8",
+  ...getDashboardWidgetPaletteColors(19),
   dependency: ["none"],
   status: "ready",
  },
@@ -332,8 +397,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#00D2FF",
-  iconRailColor: "#FF83EA",
+  ...getDashboardWidgetPaletteColors(20),
   dependency: ["none"],
   status: "ready",
  },
@@ -348,8 +412,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#4FFF5B",
-  iconRailColor: "#B9FFBE",
+  ...getDashboardWidgetPaletteColors(21),
   dependency: ["none"],
   status: "ready",
  },
@@ -364,8 +427,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "tall",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FF3399",
-  iconRailColor: "#24D3FF",
+  ...getDashboardWidgetPaletteColors(22),
   dependency: ["none"],
   status: "ready",
  },
@@ -380,8 +442,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FF00FF",
-  iconRailColor: "#FFB3F0",
+  ...getDashboardWidgetPaletteColors(23),
   dependency: ["none"],
   status: "ready",
  },
@@ -396,8 +457,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#00D2FF",
-  iconRailColor: "#FF00FF",
+  ...getDashboardWidgetPaletteColors(24),
   dependency: ["none"],
   status: "ready",
  },
@@ -412,8 +472,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#C9F830",
-  iconRailColor: "#FFE357",
+  ...getDashboardWidgetPaletteColors(25),
   dependency: ["none"],
   status: "ready",
  },
@@ -428,8 +487,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FF83EA",
-  iconRailColor: "#00D2FF",
+  ...getDashboardWidgetPaletteColors(26),
   dependency: ["none"],
   status: "ready",
  },
@@ -444,8 +502,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "tall",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FF83EA",
-  iconRailColor: "#4FFF5B",
+  ...getDashboardWidgetPaletteColors(27),
   dependency: ["youtube_data_v3", "gemini_api"],
   status: "ready",
  },
@@ -460,8 +517,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#00CCFF",
-  iconRailColor: "#CCFF00",
+  ...getDashboardWidgetPaletteColors(28),
   dependency: ["youtube_analytics_v2"],
   status: "ready",
  },
@@ -476,8 +532,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FF00FF",
-  iconRailColor: "#4FFF5B",
+  ...getDashboardWidgetPaletteColors(29),
   dependency: ["youtube_analytics_v2"],
   status: "ready",
  },
@@ -492,8 +547,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#C9F830",
-  iconRailColor: "#FFB570",
+  ...getDashboardWidgetPaletteColors(30),
   dependency: ["youtube_analytics_v2"],
   status: "ready",
  },
@@ -508,8 +562,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#40C6E9",
-  iconRailColor: "#000000",
+  ...getDashboardWidgetPaletteColors(31),
   dependency: ["youtube_analytics_v2"],
   status: "ready",
  },
@@ -524,8 +577,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FF83EA",
-  iconRailColor: "#CCFF00",
+  ...getDashboardWidgetPaletteColors(32),
   dependency: ["youtube_analytics_v2"],
   status: "ready",
  },
@@ -540,8 +592,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "xtall",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#40C6E9",
-  iconRailColor: "#579AFF",
+  ...getDashboardWidgetPaletteColors(33),
   dependency: ["none"],
   status: "ready",
  },
@@ -556,8 +607,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "xtall",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FF8AAF",
-  iconRailColor: "#FFFF61",
+  ...getDashboardWidgetPaletteColors(34),
   dependency: ["none"],
   status: "ready",
  },
@@ -572,8 +622,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#4FFF5B",
-  iconRailColor: "#FFE357",
+  ...getDashboardWidgetPaletteColors(35),
   dependency: ["none"],
   status: "ready",
  },
@@ -588,15 +637,14 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "xtall",
   minHeight: "medium",
   maxHeight: "massive",
-  headerColor: "#FF83EA",
-  iconRailColor: "#C9F830",
+  ...getDashboardWidgetPaletteColors(36),
   dependency: ["gemini_api"],
   status: "ready",
  },
  {
-  id: "data-edit",
-  title: "Video Manager",
-  subtitle: "Quick Metadata Editor",
+  id: "video-uploader",
+  title: "Video Uploader",
+  subtitle: "Upload and publish a new video",
   category: "creation",
   defaultSize: "half",
   minSize: "third",
@@ -604,8 +652,22 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "xtall",
   minHeight: "medium",
   maxHeight: "massive",
-  headerColor: "#FFFF61",
-  iconRailColor: "#4FFF5B",
+  ...getDashboardWidgetPaletteColors(37),
+  dependency: ["youtube_data_v3"],
+  status: "ready",
+ },
+ {
+  id: "data-edit",
+  title: "Video Manager",
+  subtitle: "Edit published video metadata",
+  category: "creation",
+  defaultSize: "half",
+  minSize: "third",
+  maxSize: "full",
+  defaultHeight: "xtall",
+  minHeight: "medium",
+  maxHeight: "massive",
+  ...getDashboardWidgetPaletteColors(37),
   dependency: ["none"],
   status: "ready",
  },
@@ -620,8 +682,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FF83EA",
-  iconRailColor: "#FFE357",
+  ...getDashboardWidgetPaletteColors(38),
   dependency: ["none"],
   status: "ready",
  },
@@ -636,8 +697,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#00D2FF",
-  iconRailColor: "#C9F830",
+  ...getDashboardWidgetPaletteColors(39),
   dependency: ["none"],
   status: "ready",
  },
@@ -652,8 +712,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FFE357",
-  iconRailColor: "#4FFF5B",
+  ...getDashboardWidgetPaletteColors(40),
   dependency: ["none"],
   status: "ready",
  },
@@ -668,8 +727,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#CC00FF",
-  iconRailColor: "#4FFF5B",
+  ...getDashboardWidgetPaletteColors(41),
   dependency: ["none"],
   status: "ready",
  },
@@ -684,8 +742,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
   defaultHeight: "medium",
   minHeight: "short",
   maxHeight: "xtall",
-  headerColor: "#FF1744",
-  iconRailColor: "#FFE357",
+  ...getDashboardWidgetPaletteColors(42),
   dependency: ["none"],
   status: "ready",
  },
@@ -700,8 +757,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
    defaultHeight: "medium",
    minHeight: "short",
    maxHeight: "xtall",
-   headerColor: "#FF83EA",
-   iconRailColor: "#4FFF5B",
+   ...getDashboardWidgetPaletteColors(43),
    dependency: ["gemini_api", "youtube_data_v3"],
    status: "ready",
   },
@@ -716,8 +772,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
     defaultHeight: "xtall",
     minHeight: "short",
     maxHeight: "xtall",
-    headerColor: "#B191FF",
-    iconRailColor: "#70FFCB",
+    ...getDashboardWidgetPaletteColors(44),
     dependency: ["gemini_api"],
     status: "ready",
   },
@@ -732,51 +787,287 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = [
     defaultHeight: "xtall",
     minHeight: "short",
     maxHeight: "xtall",
-    headerColor: "#FF3399",
-    iconRailColor: "#ccff00",
+    ...getDashboardWidgetPaletteColors(45),
     dependency: ["none"],
+    status: "ready",
+  },
+  {
+   id: "ui-reference-library",
+   title: "UI Reference Library",
+   subtitle: "Component library and scrollbar styles",
+   category: "system",
+   defaultSize: "half",
+   minSize: "quarter",
+   maxSize: "full",
+   defaultHeight: "xtall",
+   minHeight: "medium",
+   maxHeight: "xtall",
+   ...getDashboardWidgetPaletteColors(7),
+   dependency: ["none"],
+   status: "ready",
+  },
+  {
+    id: "video-autopsy",
+    title: "Video Autopsy",
+    subtitle: "Deep performance diagnosis",
+    category: "analytics",
+    defaultSize: "half",
+    minSize: "third",
+    maxSize: "full",
+    defaultHeight: "xtall",
+    minHeight: "medium",
+    maxHeight: "massive",
+    headerColor: "#FF1744",
+    iconRailColor: "#C9F830",
+    dependency: ["youtube_analytics_v2", "gemini_api"],
     status: "ready",
   },
 ]
 
-const prioritizedOrder = [
-  // Row 1 — Top shelf (all 1/3)
-  "kpi-cluster",
-  "community-post",
-  "comment-replier",
-  // Row 2 — Instrument panel (all 1/4)
-  "consistency-heatmap",
-  "realtime-performance",
-  "goals-tracker",
-  "keyword-engine",
-  // Row 3 — AI zone (all 1/3)
-  "daily-oracle",
-  "ask-me",
-  "ai-journal",
-  // Row 4 — Creation tools (all 1/2)
-  "data-edit",
-  "brain-hub",
-  // Remaining — analytics & tools
-  "revenue-chart",
-  "traffic-sources",
-  "recent-uploads",
-  "top-performer",
-  "reach-funnel",
-  "alerts-feed",
-  "channel-overview",
-  "thumb-ai",
-  "mini-calendar",
-  "task-stack",
-  "system-micro-stack",
-  "shorts-vs-long",
-  "collab-matchmaker",
- ];
+export const SUPPORTED_DASHBOARD_WIDGET_IDS = DEFAULT_DASHBOARD_ROWS
+ .flat()
+ .map((slot) => slot.id)
 
-export const DEFAULT_DASHBOARD_WIDGET_ORDER = [
-  ...prioritizedOrder,
-  ...DASHBOARD_WIDGET_REGISTRY.map((widget) => widget.id).filter(id => !prioritizedOrder.includes(id))
-]
+const supportedOrder = new Map<string, number>(
+ SUPPORTED_DASHBOARD_WIDGET_IDS.map((widgetId, index) => [widgetId, index]),
+)
+
+const inclusiveBucketRange = <T extends string>(
+ order: readonly T[],
+ minimum: T,
+ maximum: T,
+): readonly T[] => {
+ const minIndex = Math.max(0, order.indexOf(minimum))
+ const maxIndex = Math.max(minIndex, order.indexOf(maximum))
+ return order.slice(minIndex, maxIndex + 1)
+}
+
+export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = DASHBOARD_WIDGET_BASE_REGISTRY.map(
+ (widget, index) => {
+  const defaultSlot = defaultDashboardSlotById.get(widget.id)
+  const supportedSizes = inclusiveBucketRange<DashboardSizeBucket>(
+   SIZE_BUCKET_ORDER,
+   widget.minSize,
+   widget.maxSize,
+  )
+  const supportedHeights = inclusiveBucketRange<DashboardHeightBucket>(
+   HEIGHT_BUCKET_ORDER,
+   widget.minHeight,
+   widget.maxHeight,
+  )
+  return {
+   ...widget,
+   defaultSize: defaultSlot?.size ?? widget.defaultSize,
+   defaultHeight: defaultSlot?.height ?? widget.defaultHeight,
+   rendererKey: widget.id,
+   releaseTier: supportedOrder.has(widget.id) ? "supported" : "preview",
+   defaultVisible: supportedOrder.has(widget.id),
+   defaultOrder: supportedOrder.get(widget.id) ?? SUPPORTED_DASHBOARD_WIDGET_IDS.length + index,
+   supportedSizes,
+   supportedHeights,
+   supportedDimensions: supportedSizes.flatMap((size) =>
+    supportedHeights.map((height) => ({ size, height })),
+   ),
+   responsiveMode: supportedOrder.has(widget.id) ? "container" : "legacy",
+  }
+ },
+)
+
+export const DEFAULT_DASHBOARD_WIDGET_ORDER = [...DASHBOARD_WIDGET_REGISTRY]
+ .sort((left, right) => left.defaultOrder - right.defaultOrder)
+ .map((widget) => widget.id)
 
 export const DASHBOARD_WIDGET_BY_ID = Object.fromEntries(
  DASHBOARD_WIDGET_REGISTRY.map((widget) => [widget.id, widget]),
 )
+
+export const WIDGET_DESCRIPTIONS: Record<string, { short: string, detailed: string }> = {
+  "app-verification-explainer": {
+   short: "VIEWTUBE EXPLAINS ITS PURPOSE AND DATA USE BEFORE CHANNEL TOOLS.",
+   detailed: "This module is intentionally visible at the top of the dashboard so reviewers and creators can understand why the app requests Google and YouTube access."
+  },
+  "kpi-cluster": {
+   short: "REAL-TIME CHANNEL VITALS AND CORE GROWTH METRICS.",
+   detailed: "Monitor subscribers, views, and revenue in a dense, at-a-glance cluster. Best used for high-level health checks."
+  },
+  "channel-overview": {
+   short: "HIGH-LEVEL SUMMARY OF YOUR CHANNEL'S 28-DAY PERFORMANCE.",
+   detailed: "A holistic view of your channel's reach and engagement. Use this to identify long-term trends and seasonality."
+  },
+  "realtime-performance": {
+   short: "MONITOR LIVE CONCURRENT VIEWERS AND TRAFFIC VELOCITY.",
+   detailed: "See exactly who is watching and where they come from in real time. Perfect for monitoring the first 48 hours of a launch."
+  },
+  "alerts-feed": {
+   short: "INSTANT NOTIFICATIONS FOR MILESTONES AND CRITICAL EVENTS.",
+   detailed: "Stay updated on major subscriber jumps, revenue spikes, or policy alerts. Check daily to catch urgent channel changes."
+  },
+  "system-micro-stack": {
+   short: "MINIATURE CONTROL CENTER FOR QUICK CHANNEL ACTIONS.",
+   detailed: "A compact stack for toggling visibility or quick settings. Keep this pinned for rapid-fire channel management."
+  },
+  "recent-uploads": {
+   short: "PERFORMANCE AUDIT OF YOUR MOST RECENT VIDEO RELEASES.",
+   detailed: "Compare your latest videos side-by-side. Use this to spot which topics or thumbnails are currently resonating."
+  },
+  "consistency-heatmap": {
+   short: "VISUALIZE YOUR POSTING FREQUENCY AND CONSISTENCY.",
+   detailed: "A calendar-style heat map of your uploads. Use it to ensure you aren't leaving gaps that hurt algorithmic reach."
+  },
+  "task-stack": {
+   short: "TODO LIST FOR PRODUCTION MILESTONES AND CREATIVE GOALS.",
+   detailed: "Manage your production pipeline from ideation to publish. Best used to keep track of multiple edits simultaneously."
+  },
+  "community-post": {
+   short: "AI-POWERED GENERATOR FOR ENGAGING COMMUNITY UPDATES.",
+   detailed: "Draft polls, images, and text posts optimized for reach. Best used to prime the algorithm between major video uploads."
+  },
+  "description-editor": {
+   short: "STANDARDIZE AND REFINE YOUR VIDEO METADATA AT SCALE.",
+   detailed: "Bulk edit or template your descriptions with SEO-ready blocks. Use snippets to keep your links and socials consistent."
+  },
+  "tag-generator": {
+   short: "AI-EXTRACTED KEYWORD CLUSTERS FOR MAXIMUM SEO REACH.",
+   detailed: "Generate high-ranking tags based on your video content. Best used to discover niche keywords you might have missed."
+  },
+  "thumb-ai": {
+   short: "AI-DRIVEN THUMBNAIL ANALYSIS AND VARIATION GENERATOR.",
+   detailed: "Evaluate thumbnail CTR potential and generate variations. Use it to test different emotional hooks before you publish."
+  },
+  "top-performer": {
+   short: "DEEP DIVE INTO THE VIDEOS DRIVING YOUR CHANNEL GROWTH.",
+   detailed: "Analyze your #1 videos to find the 'secret sauce' of their success. Replicate these patterns in your future content."
+  },
+  "revenue-momentum": {
+   short: "ANALYZE EARNING VELOCITY AND FUTURE REVENUE PROJECTIONS.",
+   detailed: "Track how fast you're making money and where it peaks. Use this to plan high-budget productions around revenue spikes."
+  },
+  "revenue-chart": {
+   short: "DETAILED DAILY BREAKDOWN OF YOUR CHANNEL'S EARNINGS.",
+   detailed: "A granular chart of your RPM, CPM, and total revenue. Best used to track the impact of ad-friendly content shifts."
+  },
+  "keyword-engine": {
+   short: "SEARCH VOLUME AND COMPETITION ANALYSIS FOR NEW TOPICS.",
+   detailed: "Find what viewers are searching for before you hit record. Use it to pick high-demand, low-competition video ideas."
+  },
+  "traffic-sources": {
+   short: "MAP WHERE YOUR VIEWERS ARE DISCOVERING YOUR CONTENT.",
+   detailed: "Identify if your views come from Search, Suggested, or External. Use this to tailor your titles for specific surfaces."
+  },
+  "audience-retention": {
+   short: "DIAGNOSE EXACTLY WHERE VIEWERS STOP WATCHING VIDEOS.",
+   detailed: "View second-by-second drop-off points. Use these insights to fix pacing issues and improve your video hooks."
+  },
+  "shorts-vs-long": {
+   short: "COMPARE PERFORMANCE ACROSS DIFFERENT VIDEO FORMATS.",
+   detailed: "Analyze which format drives more subs vs more revenue. Use this to balance your content strategy for maximum growth."
+  },
+  "superfan-card": {
+   short: "IDENTIFY AND REWARD YOUR MOST LOYAL COMMUNITY MEMBERS.",
+   detailed: "Track your top 10% of commenters and subscribers. Use this to engage directly with your most valuable 'inner circle.'"
+  },
+  "comment-replier": {
+   short: "AI-ASSISTED REPLIES TO BOOST ENGAGEMENT AND RETENTION.",
+   detailed: "Craft provocative, algorithm-priming replies to comments. Use it to spark longer conversations in your comment section."
+  },
+  "ai-prompt-box": {
+   short: "DIRECT COMMAND LINE FOR CHANNEL-WIDE AI OPERATIONS.",
+   detailed: "Execute complex data queries or content tasks via text. Best used for advanced batch-processing or deep data analysis."
+  },
+  "ask-me": {
+   short: "NATURAL LANGUAGE CHAT FOR INSTANT CHANNEL INSIGHTS.",
+   detailed: "Ask anything about your data and get an immediate answer. Best used for 'Why?' questions that charts can't explain."
+  },
+  "daily-oracle": {
+   short: "STRATEGIC AI ADVICE TAILORED TO YOUR CURRENT GROWTH.",
+   detailed: "Receive a daily 'prediction' or strategic tip for your channel. Use this for a fresh perspective on your content direction."
+  },
+  "ai-journal": {
+   short: "CREATIVE LOG FOR TRACKING EXPERIMENTS AND STRATEGIES.",
+   detailed: "Document what works and what doesn't in your content journey. Best used to build a personalized 'Creator Playbook.'"
+  },
+  "mini-calendar": {
+   short: "PRODUCTION SCHEDULE AND UPCOMING MILESTONE TRACKER.",
+   detailed: "A compact view of your upcoming tasks and deadlines. Use it to plan your week and avoid production bottlenecks."
+  },
+  "quick-actions": {
+   short: "PRIMARY NAVIGATION LAUNCHERS FOR CORE TOOLS.",
+   detailed: "Quickly jump to the most common dashboard surfaces. Use this as your home base for navigating the ViewTube ecosystem."
+  },
+  "goals-tracker": {
+   short: "TRACK PROGRESS TOWARDS YOUR CHANNEL MILESTONES.",
+   detailed: "Set and monitor goals for subscribers, views, or revenue. Use it to stay motivated and hit your growth targets."
+  },
+  "alerts-ticker": {
+   short: "REAL-TIME TICKER OF CRITICAL CHANNEL EVENTS.",
+   detailed: "A scrolling feed of live alerts and performance spikes. Keep an eye on this for immediate algorithmic signals."
+  },
+  "publish-momentum": {
+   short: "HEATMAP ANALYSIS OF OPTIMAL PUBLISH TIMES.",
+   detailed: "Visualize when your audience is most active. Use this to time your uploads for maximum initial velocity."
+  },
+  "reach-funnel": {
+   short: "VISUALIZE YOUR CTR CONVERSION AND REACH EFFICIENCY.",
+   detailed: "Track how impressions turn into views and watch time. Use this to identify if your titles or thumbnails are leaking traffic."
+  },
+  "relative-retention-benchmark": {
+   short: "BENCHMARK YOUR PERFORMANCE AGAINST PLATFORM AVERAGES.",
+   detailed: "See how your video retention compares to similar channels. Use this to understand if you are beating the algorithm's expectations."
+  },
+  "ad-stack-intelligence": {
+   short: "ADVANCED MONETIZATION AND CPM ANALYSIS.",
+   detailed: "Deep dive into your ad performance and monetized playbacks. Use this to optimize your content for higher-paying demographics."
+  },
+  "audience-matrix": {
+   short: "MULTI-DIMENSIONAL VIEW OF YOUR VIEWERSHIP.",
+   detailed: "Analyze geo, device, and sharing data in a unified matrix. Use this to identify new international or mobile-first growth opportunities."
+  },
+  "bridge-efficiency": {
+   short: "MEASURE THE IMPACT OF CROSS-VIDEO PROMOTION.",
+   detailed: "Track how well your end screens and cards convert viewers. Use this to build a 'bridge' that keeps viewers on your channel."
+  },
+  "flight-check": {
+   short: "PRE-PUBLISH CHECKLIST FOR PERFECT UPLOADS.",
+   detailed: "Ensure every video has optimal SEO, links, and settings before going live. Use this as a final safety net for every release."
+  },
+  "data-edit": {
+   short: "EDIT PUBLISHED VIDEO METADATA AND MONETIZATION SETTINGS.",
+   detailed: "Select a published video, review its thumbnail, then update its title, description, tags, metadata, and ad suitability settings."
+  },
+  "video-uploader": {
+   short: "UPLOAD AND PUBLISH A NEW VIDEO.",
+   detailed: "Choose a source video and thumbnail, prepare metadata and publishing options, complete ad suitability, then publish."
+  },
+  "image-generator": {
+   short: "GENERATE THUMBNAIL + END SCREEN IMAGES WITH AI.",
+   detailed: "Create images with style controls and send outputs directly to Community Post, Comment Responder, Thumb AI, and Video Manager."
+  },
+  "title-rewriter": {
+   short: "AI-POWERED TITLE VARIATIONS AND CTR OPTIMIZATION.",
+   detailed: "Generate dozens of title alternatives based on your video's core hook. Use this to test different angles before settling on a winner."
+  },
+  "retention-sim": {
+   short: "SIMULATE VIEWERSHIP BEHAVIOR AND PREDICT DROPOFF.",
+   detailed: "Analyze potential 'danger zones' in your video's pacing. Use this during the edit to cut out boring segments before you publish."
+  },
+  "upload-scheduler": {
+   short: "7-DAY CONTENT PLANNER AND UPLOAD QUEUE.",
+   detailed: "Map out your next week of content and schedule your drops. Use this to maintain a consistent rhythm without the stress."
+  },
+  "hashtag-analyzer": {
+   short: "DEEP ANALYSIS OF HASHTAG REACH AND COMPETITION.",
+   detailed: "See which hashtags are trending and which are oversaturated. Use this to pick the perfect set of 3 tags for every video."
+  },
+  "burnout-monitor": {
+   short: "PACING TRACKER TO ENSURE CREATIVE LONGEVITY.",
+   detailed: "Monitor your output vs your recovery time. Use this to avoid 'creator burnout' by identifying when you need a break."
+  },
+  "collab-matchmaker": {
+   short: "FIND PEERS AND GENERATE COLLAB PITCHES.",
+   detailed: "Discover creators with similar audiences and get AI-drafted reach-out scripts. Use this to grow your community through partnership."
+  },
+  "brain-hub": {
+   short: "YOUR AI BRAIN'S MEMORY, DIRECTIVES, AND STRATEGIC ADVICE.",
+   detailed: "View the Brain's evolved understanding of your channel identity, content DNA, performance, and goals. Trigger reflection cycles to update the Brain's strategic OODA directive."
+  },
+ };

@@ -5,11 +5,36 @@ import {
  type AnalyticsSyncAction,
 } from "../../services/analytics/SyncPipeline"
 import { CSV_MAJOR_FAMILY_STYLES } from "../../services/csvTaxonomy"
+import {
+ SEGMENT_DATASET_IDS,
+ type SegmentDatasetId,
+} from "../../services/SyncCoordinator"
 
 type SyncOptions = {
  batchMode?: "initial" | "next"
  enrichmentMode?: "core" | "video_metrics" | "traffic" | "segments" | "all"
+ segmentDatasets?: SegmentDatasetId[]
 }
+
+// Per-dataset controls ported from the VT-SYNC SyncControllerModal. Each entry
+// maps to an exact YouTube Analytics query fetched by
+// SyncCoordinator.syncSegmentDatasets and can be synced individually.
+const SEGMENT_DATASET_CONTROLS: {
+ id: SegmentDatasetId
+ label: string
+ description: string
+}[] = [
+ { id: "device_os", label: "Device × OS", description: "Views and watch time by device and operating system." },
+ { id: "traffic_day", label: "Traffic Source × Day", description: "Traffic sources broken down day by day." },
+ { id: "ad_type", label: "Ad Type", description: "Gross revenue, CPM, and impressions by ad type." },
+ { id: "sharing_service", label: "Sharing Service", description: "Where viewers are sharing your videos." },
+ { id: "subscription_status", label: "Subscription Status", description: "Performance split by subscribed vs non-subscribed." },
+ { id: "subscription_source", label: "Subscription Source", description: "Subscribers gained/lost by traffic source." },
+ { id: "subscriber_detail", label: "Subscriber Detail", description: "Deep dive into views coming from subscribers." },
+ { id: "content_type", label: "Content Type / Format", description: "Performance by content type (VOD vs Shorts vs Live)." },
+ { id: "playlists", label: "Playlist Analytics", description: "Playlist views, saves, starts, and watch time." },
+ { id: "retention", label: "Video Retention", description: "Audience watch ratio and relative retention performance." },
+]
 
 type ChannelDataSyncControlsProps = {
  isSyncing: boolean
@@ -234,6 +259,53 @@ export const ChannelDataSyncControls: React.FC<ChannelDataSyncControlsProps> = (
       </div>
      </div>
     ))}
+   </div>
+
+   <div className="mt-5 border-[3px] border-black rounded-2xl bg-[#F8F8F8] p-3">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+     <div className="flex flex-col gap-1">
+      <span className="inline-flex w-fit items-center rounded-full border-[2px] border-black bg-[#FFE072] px-2 py-1 text-[8px] font-black uppercase tracking-[0.18em]">
+       Segment Datasets
+      </span>
+      <p className="text-[11px] font-bold leading-5 text-black/70 max-w-[720px]">
+       Sync a specific channel-level breakdown on its own. Each control runs the exact YouTube Analytics query and saves the result to its master table.
+      </p>
+     </div>
+     <button
+      onClick={() =>
+       globalSyncData({
+        enrichmentMode: "segments",
+        segmentDatasets: [...SEGMENT_DATASET_IDS],
+       })
+      }
+      disabled={isSyncing}
+      title="Sync every segment dataset in one pass."
+      className={`min-h-[44px] shrink-0 border-[3px] border-black rounded-xl px-3 py-2 font-[1000] uppercase tracking-tight text-[10px] flex items-center justify-center gap-2 bg-[#B14AED] text-white shadow-[4px_4px_0px_0px_black] transition-all ${buttonStateClass(isSyncing)}`}>
+      <Database size={14} strokeWidth={3} />
+      <span>Sync All Segments</span>
+     </button>
+    </div>
+    <div className="mt-3 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2">
+     {SEGMENT_DATASET_CONTROLS.map((dataset) => (
+      <button
+       key={dataset.id}
+       onClick={() =>
+        globalSyncData({
+         enrichmentMode: "segments",
+         segmentDatasets: [dataset.id],
+        })
+       }
+       disabled={isSyncing}
+       title={dataset.description}
+       className={`${actionClass} bg-white text-black ${buttonStateClass(isSyncing)}`}>
+       <RefreshCw size={14} strokeWidth={3} className={isSyncing ? "animate-spin" : ""} />
+       <span>{dataset.label}</span>
+       <span className="text-[9px] font-bold normal-case tracking-normal leading-4 opacity-75">
+        {dataset.description}
+       </span>
+      </button>
+     ))}
+    </div>
    </div>
   </div>
  )

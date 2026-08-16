@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { Users, Mail, Phone, ExternalLink, Sparkles, MessageCircle, ArrowRight, UserPlus } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
+import { WidgetScrollArea } from "../WidgetPrimitives"
 import { generateCollabOpportunities, type CollabPeer } from "../../../services/CollabEngine"
 import { isGeminiConfigured } from "../../../services/gemini"
 
@@ -15,7 +16,6 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
   onCycleHeight,
   onRemove,
   onDecSize,
-  onCycleHeight,
   onDecHeight,
  }
   const [peers, setPeers] = useState<CollabPeer[]>([])
@@ -50,7 +50,7 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
   }
 
   return (
-    <WidgetShell {...common} title="COLLAB MATCHMAKER" icon={<Users size={20} />}>
+    <WidgetShell {...common} icon={<Users size={20} />}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px", overflow: "hidden" }}>
         
         {/* Header Action */}
@@ -73,14 +73,7 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
 
         <div style={{ display: "flex", flex: 1, gap: "8px", overflow: "hidden" }}>
           {/* List Side */}
-          <div style={{ 
-            flex: 1, 
-            overflowY: "auto", 
-            paddingRight: "4px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "4px"
-          }}>
+          <WidgetScrollArea ariaLabel="Collaboration peer list" contentClassName="flex min-h-full flex-col gap-1">
             {peers.length === 0 && !loading && (
               <div style={{ padding: "20px", textAlign: "center", opacity: 0.5, fontSize: "12px" }}>
                 No peers found. Click refresh to scan.
@@ -123,7 +116,7 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
                 </div>
               </div>
             ))}
-          </div>
+          </WidgetScrollArea>
 
           {/* Details Side (Expanded) */}
           <div style={{ 
@@ -135,9 +128,10 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
             display: "flex",
             flexDirection: "column",
             gap: "8px",
-            overflowY: "auto",
+            overflow: "hidden",
             position: "relative"
           }}>
+            <WidgetScrollArea ariaLabel="Selected collaboration peer" contentClassName="flex min-h-full flex-col gap-2">
             {selectedPeer ? (
               <>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -217,6 +211,7 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
                 </div>
               </div>
             )}
+            </WidgetScrollArea>
           </div>
         </div>
       </div>

@@ -102,6 +102,9 @@ interface ToolboxProps {
   helpText?: React.ReactNode;
   helpGuide?: string[];
   disableCollapseAnimation?: boolean;
+  fillAvailable?: boolean;
+  /** Solid black shell shadow instead of the default header-tinted 45%-opacity shadow. */
+  hardShadow?: boolean;
 }
 
 export const Toolbox: React.FC<ToolboxProps> = ({
@@ -129,6 +132,8 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   embedded = false,
   children,
   disableCollapseAnimation = false,
+  fillAvailable = false,
+  hardShadow = false,
 }) => {
   const [internalOpen, setInternalOpen] = useState(isOpenInitial);
   const [showHelpRail, setShowHelpRail] = useState(false);
@@ -150,8 +155,8 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   const iconStyle = palette ? { backgroundColor: palette.icon } : undefined;
   const headerHex = palette?.header ?? extractHexFromBgClass(headerColor);
   
-  // Canonical colored shadow logic
-  const shadowColor = headerHex ? hexToRgba(headerHex, 0.45) : 'rgba(0,0,0,0.45)';
+  // Canonical colored shadow logic (opt out with hardShadow for a solid black shell shadow).
+  const shadowColor = hardShadow ? 'rgba(0,0,0,1)' : (headerHex ? hexToRgba(headerHex, 0.45) : 'rgba(0,0,0,0.45)');
   const shadowOffset = MAIN_TOOLBOX_SHADOW;
   
   // Stroke hierarchy: Scaffold = 4, Accordion = 3, Sub = 2
@@ -192,7 +197,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
     );
   }
 
-  const frameClass = `w-full bg-white overflow-hidden flex flex-col relative ${outerClassName}`;
+  const frameClass = `w-full bg-white overflow-hidden flex flex-col relative ${fillAvailable ? 'h-full min-h-0' : ''} ${outerClassName}`;
   const collapseTransitionClass = disableCollapseAnimation
     ? "duration-0 ease-linear"
     : "duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)]";
@@ -216,7 +221,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
 
   return (
     <PaletteCycleContext.Provider value={paletteCycleContextValue}>
-      <div className={`w-full ${shellClassName} ${outerClassName}`}>
+      <div className={`w-full ${fillAvailable ? 'h-full min-h-0' : ''} ${shellClassName} ${outerClassName}`}>
         <div
           className={frameClass}
           style={{
@@ -253,7 +258,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
               {variant === 'accordion' ? (
                 <h3 className="text-[32px] font-[900] uppercase tracking-tighter leading-none mt-0.5">{title}</h3>
               ) : (
-                <h1 className="text-[50px] font-[1000] uppercase tracking-tighter leading-none mt-1">{title}</h1>
+                <h1 className="max-w-full truncate text-[24px] font-[1000] uppercase leading-none mt-1 sm:text-[36px] xl:text-[50px]">{title}</h1>
               )}
             </div>
           </div>
@@ -325,13 +330,13 @@ export const Toolbox: React.FC<ToolboxProps> = ({
         )}
 
         <div
-          className={`grid transition-[grid-template-rows,opacity] ${collapseTransitionClass} ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+          className={`grid transition-[grid-template-rows,opacity] ${collapseTransitionClass} ${fillAvailable ? 'flex-1 min-h-0' : ''} ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
           style={{ marginTop: showHelpRail ? "0px" : `-${stroke}px` }}
         >
-          <div className="overflow-hidden min-h-0">
+          <div className={`overflow-hidden min-h-0 ${fillAvailable ? 'h-full' : ''}`}>
             {(!unmountWhenClosed || open) && (
               <main
-                className={`flex-1 min-h-0 bg-white vt-main-toolbox-content ${finalContentClass}`}
+                className={`flex-1 min-h-0 bg-white vt-main-toolbox-content ${fillAvailable ? 'h-full' : ''} ${finalContentClass}`}
                 style={
                   {
                     ["--vt-level1-stroke" as any]: "4px",
@@ -418,6 +423,7 @@ interface ToolboxScaffoldProps {
   onToggle?: () => void;
   unmountWhenClosed?: boolean;
   embedded?: boolean;
+  fillAvailable?: boolean;
   outerClassName?: string;
   shellClassName?: string;
   contentClassName?: string;
@@ -427,6 +433,7 @@ interface ToolboxScaffoldProps {
   helpTitle?: string;
   helpText?: React.ReactNode;
   helpGuide?: string[];
+  hardShadow?: boolean;
 }
 
 export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
@@ -442,6 +449,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
   onToggle,
   unmountWhenClosed = false,
   embedded = false,
+  fillAvailable = false,
   outerClassName = "",
   shellClassName = "",
   contentClassName = "",
@@ -451,6 +459,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
   helpTitle,
   helpText,
   helpGuide,
+  hardShadow = false,
 }) => (
   <Toolbox
     variant="scaffold"
@@ -466,6 +475,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
     onToggle={onToggle}
     unmountWhenClosed={unmountWhenClosed}
     embedded={embedded}
+    fillAvailable={fillAvailable}
     outerClassName={outerClassName}
     shellClassName={shellClassName}
     contentClassName={contentClassName || (embedded ? "p-0" : "p-8")}
@@ -475,6 +485,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
     helpTitle={helpTitle}
     helpText={helpText}
     helpGuide={helpGuide}
+    hardShadow={hardShadow}
   >
     {children}
   </Toolbox>
@@ -500,6 +511,7 @@ interface SubToolboxProps {
   heightMode?: "standard" | "compact";
   overflowVisible?: boolean;
   helpText?: React.ReactNode;
+  headerStyle?: React.CSSProperties;
 }
 
 export const SubToolbox: React.FC<SubToolboxProps> = ({
@@ -522,6 +534,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   heightMode = "standard",
   overflowVisible = false,
   helpText,
+  headerStyle,
 }) => {
   const paletteCycle = React.useContext(PaletteCycleContext);
   const allocatedPaletteRef = useRef<number | null>(null);
@@ -560,7 +573,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
 
   return (
     <div
-      className={`w-full bg-white relative flex flex-col transition-all duration-300 ${overflowVisible ? "" : "overflow-hidden"} ${shellClassName}`}
+      className={`w-full bg-white relative flex flex-col transition-all duration-300 ${collapsible && !open ? "self-start" : ""} ${overflowVisible ? "" : "overflow-hidden"} ${shellClassName}`}
       style={{
         border: `${SUB_TOOLBOX_STROKE}px solid black`,
         borderRadius: `16px`,
@@ -575,6 +588,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
           minHeight: `${CONTROL_SHELL.headerHeight}px`,
           backgroundColor: headerHex,
           borderBottom: `${SUB_TOOLBOX_INNER_STROKE}px solid black`,
+          ...headerStyle,
         }}
       >
         <div className="flex items-center h-full flex-1">

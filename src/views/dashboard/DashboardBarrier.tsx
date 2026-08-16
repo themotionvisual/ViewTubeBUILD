@@ -1,5 +1,6 @@
 import React from "react"
 import "./toolboxWidgetSystem.css"
+import "./widgetScrollbar.css"
 
 /**
  * DashboardBarrier — Invisible CSS containment wrapper that injects the
@@ -19,4 +20,3 @@ export const DashboardBarrier: React.FC<{ children: React.ReactNode }> = ({ chil
     </div>
   )
 }
-

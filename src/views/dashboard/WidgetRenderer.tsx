@@ -1,13 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Legacy inline renderers are being migrated behind typed registry contracts incrementally. */
 import React, { useState, useMemo } from "react"
 import {
   Activity,
   Bell,
   Bot,
   CalendarDays,
-  CheckSquare,
   Database,
   DollarSign,
-  Grip,
   Layers,
   Star,
   TrendingUp,
@@ -15,48 +14,33 @@ import {
   UserCircle2,
   Video,
   WandSparkles,
-  X,
   Edit3,
   Lock,
-  LockOpen,
-  RotateCcw,
-  Download,
   Settings,
-  MoreVertical,
-  Maximize2
+  Image as ImageIcon,
+  MessageSquare,
+  MessageCircle,
+  Monitor,
+  Rocket,
+  Magnet,
+  RefreshCw,
+  BookOpen,
  } from "lucide-react"
-import { useVideoComments, type VideoComment } from "./useVideoComments"
+import { useVideoComments } from "./useVideoComments"
 import type { DashboardData } from "./useDashboardData"
 import type {
+ CommonWidgetProps,
  WidgetDefinition,
  WidgetRenderCallbacks,
  WidgetInstanceState,
 } from "./types"
-import { TagGeneratorWidget } from "./widgets/TagGeneratorWidget"
-import { RevenueChartWidget } from "./widgets/RevenueChartWidget"
-import { CommunityPostWidget } from "./widgets/CommunityPostWidget"
-import { ThumbnailLabWidget } from "./widgets/ThumbnailLabWidget"
-import { RealtimePerformanceWidget } from "./widgets/RealtimePerformanceWidget"
-import { KeywordEngineWidget } from "./widgets/KeywordEngineWidget"
-import { KeywordOverlapWidget } from "./widgets/KeywordOverlapWidget"
-import { PublishMomentumWidget } from "./widgets/PublishMomentumWidget"
-import { TrafficSourcesWidget } from "./widgets/TrafficSourcesWidget"
-import { AskMeWidget } from "./widgets/AskMeWidget"
-import { DailyOracleWidget } from "./widgets/DailyOracleWidget"
-import { FlightCheckWidget } from "./widgets/FlightCheckWidget"
-import { DescriptionEditorWidget } from "./widgets/DescriptionEditorWidget"
-import { DataEditWidget } from "./widgets/DataEditWidget"
-import { TitleRewriterWidget } from "./widgets/TitleRewriterWidget"
-import { RetentionSimWidget } from "./widgets/RetentionSimWidget"
-import { UploadSchedulerWidget } from "./widgets/UploadSchedulerWidget"
-import { HashtagAnalyzerWidget } from "./widgets/HashtagAnalyzerWidget"
-import { BurnoutMonitorWidget } from "./widgets/BurnoutMonitorWidget"
-import { CollabMatchmakerWidget } from "./widgets/CollabMatchmakerWidget"
-import { BridgeEfficiencyWidget } from "./widgets/BridgeEfficiencyWidget"
-import { AudienceMatrixWidget } from "./widgets/AudienceMatrixWidget"
-import { GoalsTrackerWidget } from "./widgets/GoalsTrackerWidget"
-import { BrainHubWidget } from "./widgets/BrainHubWidget"
-import { ImageGeneratorWidget } from "./widgets/ImageGeneratorWidget"
+// Lazy-load like every other widget so the Dashboard chunk doesn't have to
+// carry this widget's ~328 lines up-front — Dashboard visitors who never
+// enable the Goals tracker widget skip downloading it entirely.
+const GoalsTrackerWidget = React.lazy(() =>
+ import("./widgets/GoalsTrackerWidget").then((module) => ({ default: module.GoalsTrackerWidget })),
+)
+
 const formatHumanNumber = (value: unknown): string => {
  const v = Number(value)
  if (isNaN(v)) return "0"
@@ -65,15 +49,72 @@ const formatHumanNumber = (value: unknown): string => {
  return v.toString()
 }
 
-// import { PublishingFormatClashChart } from "./PublishingFormatClashChart"
-const PublishingFormatClashChart = () => <div className="p-4 border-2 border-dashed border-black/20 rounded-xl text-[10px] font-black uppercase text-black/40 text-center">Format Clash Visualization Pending</div>
-
-import { AudienceRetentionWidget } from "./widgets/AudienceRetentionWidget"
-import { FormatClashWidget } from "./widgets/FormatClashWidget"
-import { CommentReplyWidget } from "./widgets/CommentReplyWidget"
-import { AIJournalWidget } from "./widgets/AIJournalWidget"
 import { WidgetShell } from "./WidgetShell"
-import { useBrain } from "../../context/useBrain"
+import { WidgetFooter, WidgetHeaderStepper, WidgetScrollArea, WidgetSelect } from "./WidgetPrimitives"
+import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
+
+const LAZY_WIDGET_RENDERERS: Record<string, React.LazyExoticComponent<React.ComponentType<any>>> = {
+ "tag-generator": React.lazy(() => import("./widgets/TagGeneratorWidget").then((module) => ({ default: module.TagGeneratorWidget }))),
+ "revenue-chart": React.lazy(() => import("./widgets/RevenueChartWidget").then((module) => ({ default: module.RevenueChartWidget }))),
+ "ui-reference-library": React.lazy(() => import("./widgets/UIReferenceLibraryWidget")),
+ "community-post": React.lazy(() => import("./widgets/CommunityPostWidget").then((module) => ({ default: module.CommunityPostWidget }))),
+ "thumb-ai": React.lazy(() => import("./widgets/ThumbnailLabWidget").then((module) => ({ default: module.ThumbnailLabWidget }))),
+ "realtime-performance": React.lazy(() => import("./widgets/RealtimePerformanceWidget").then((module) => ({ default: module.RealtimePerformanceWidget }))),
+ "keyword-engine": React.lazy(() => import("./widgets/KeywordEngineWidget").then((module) => ({ default: module.KeywordEngineWidget }))),
+ "keyword-overlap-intelligence": React.lazy(() => import("./widgets/KeywordOverlapWidget").then((module) => ({ default: module.KeywordOverlapWidget }))),
+ "publish-momentum": React.lazy(() => import("./widgets/PublishMomentumWidget").then((module) => ({ default: module.PublishMomentumWidget }))),
+ "traffic-sources": React.lazy(() => import("./widgets/TrafficSourcesWidget").then((module) => ({ default: module.TrafficSourcesWidget }))),
+ "ask-me": React.lazy(() => import("./widgets/AskMeWidget").then((module) => ({ default: module.AskMeWidget }))),
+ "daily-oracle": React.lazy(() => import("./widgets/DailyOracleWidget").then((module) => ({ default: module.DailyOracleWidget }))),
+ "flight-check": React.lazy(() => import("./widgets/FlightCheckWidget").then((module) => ({ default: module.FlightCheckWidget }))),
+ "description-editor": React.lazy(() => import("./widgets/DescriptionEditorWidget").then((module) => ({ default: module.DescriptionEditorWidget }))),
+ "data-edit": React.lazy(() => import("./widgets/DataEditWidget").then((module) => ({ default: module.DataEditWidget }))),
+ "title-rewriter": React.lazy(() => import("./widgets/TitleRewriterWidget").then((module) => ({ default: module.TitleRewriterWidget }))),
+ "retention-sim": React.lazy(() => import("./widgets/RetentionSimWidget").then((module) => ({ default: module.RetentionSimWidget }))),
+ "upload-scheduler": React.lazy(() => import("./widgets/UploadSchedulerWidget").then((module) => ({ default: module.UploadSchedulerWidget }))),
+ "hashtag-analyzer": React.lazy(() => import("./widgets/HashtagAnalyzerWidget").then((module) => ({ default: module.HashtagAnalyzerWidget }))),
+ "burnout-monitor": React.lazy(() => import("./widgets/BurnoutMonitorWidget").then((module) => ({ default: module.BurnoutMonitorWidget }))),
+ "collab-matchmaker": React.lazy(() => import("./widgets/CollabMatchmakerWidget").then((module) => ({ default: module.CollabMatchmakerWidget }))),
+ "bridge-efficiency": React.lazy(() => import("./widgets/BridgeEfficiencyWidget").then((module) => ({ default: module.BridgeEfficiencyWidget }))),
+ "audience-matrix": React.lazy(() => import("./widgets/AudienceMatrixWidget").then((module) => ({ default: module.AudienceMatrixWidget }))),
+ "brain-hub": React.lazy(() => import("./widgets/BrainHubWidget").then((module) => ({ default: module.BrainHubWidget }))),
+ "image-generator": React.lazy(() => import("./widgets/ImageGeneratorWidget").then((module) => ({ default: module.ImageGeneratorWidget }))),
+ "video-uploader": React.lazy(() => import("./widgets/DataEditWidget").then((module) => ({ default: module.VideoUploaderWidget }))),
+ "audience-retention": React.lazy(() => import("./widgets/AudienceRetentionWidget").then((module) => ({ default: module.AudienceRetentionWidget }))),
+ "shorts-vs-long": React.lazy(() => import("./widgets/FormatClashWidget").then((module) => ({ default: module.FormatClashWidget }))),
+ "comment-replier": React.lazy(() => import("./widgets/CommentReplyWidget").then((module) => ({ default: module.CommentReplyWidget }))),
+ "ai-journal": React.lazy(() => import("./widgets/AIJournalWidget").then((module) => ({ default: module.AIJournalWidget }))),
+ "video-autopsy": React.lazy(() => import("./widgets/VideoAutopsyWidget").then((module) => ({ default: module.VideoAutopsyWidget }))),
+}
+
+const INLINE_WIDGET_RENDERER_KEYS = [
+ "app-verification-explainer",
+ "reach-funnel",
+ "relative-retention-benchmark",
+ "consistency-heatmap",
+ "ad-stack-intelligence",
+ "kpi-cluster",
+ "channel-overview",
+ "mini-calendar",
+ "quick-actions",
+ "recent-uploads",
+ "top-performer",
+ "goals-tracker",
+ "alerts-feed",
+ "ai-prompt-box",
+ "revenue-momentum",
+ "superfan-card",
+ "system-micro-stack",
+ "task-stack",
+ "alerts-ticker",
+] as const
+
+// Renderer coverage is exported for registry certification without eagerly loading widget modules.
+// eslint-disable-next-line react-refresh/only-export-components
+export const DASHBOARD_WIDGET_RENDERER_KEYS = new Set<string>([
+ ...Object.keys(LAZY_WIDGET_RENDERERS),
+ ...INLINE_WIDGET_RENDERER_KEYS,
+])
 
  interface WidgetRendererProps extends WidgetRenderCallbacks {
   widget: WidgetDefinition
@@ -90,179 +131,67 @@ const formatUploadDate = (value: unknown): string => {
  return Number.isNaN(dt.getTime()) ? "Unknown date" : dt.toLocaleDateString()
 }
 
-const widgetControlClass =
- "h-8 bg-[#f3f4f6] border-[3px] border-black rounded-[12px] inline-flex items-center justify-center text-[9px] font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,0.45)] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,0.45)] transition-all"
-
-const statusBadge = (status: string, tone: string) => (
- <span
-  className="h-7 px-2 border-[3px] border-black rounded-md inline-flex items-center text-[9px] font-black uppercase tracking-[0.1em] shadow-[2px_2px_0px_0px_rgba(0,0,0,0.35)]"
-  style={{ backgroundColor: tone }}>
-  {status}
- </span>
-)
-
-const AlertsFeedWidget: React.FC<{
- commentsVideoId: string | null
- alerts: string[]
- subscriberCount: number
+const VerificationExplainerWidget: React.FC<{
  common: CommonWidgetProps
-}> = ({ commentsVideoId, alerts, subscriberCount, common }) => {
- const { comments } = useVideoComments(commentsVideoId)
- const recentComments = comments.slice(0, 3)
- const alertColors = ["#4FFF5B", "#FFE357", "#24D3FF", "#FF83EA", "#FFB570"]
+ onNavigate: (to: string) => void
+}> = ({ common, onNavigate }) => {
+ const handleNavigate = (event: React.MouseEvent<HTMLAnchorElement>, to: string) => {
+  event.preventDefault()
+  onNavigate(to)
+ }
+
+ const features: Array<{ Icon: typeof TrendingUp; title: string; desc: string; tone: string }> = [
+  { Icon: TrendingUp, title: "Track Performance", desc: "Views, watch time & revenue — unified.", tone: "cyan" },
+  { Icon: RefreshCw, title: "Sync Everything", desc: "Videos, metadata & analytics in one click.", tone: "lime" },
+  { Icon: CalendarDays, title: "Plan & Publish", desc: "Schedule uploads, titles & thumbnails.", tone: "orange" },
+  { Icon: Bot, title: "AI Brain", desc: "Ask your channel anything, grounded in your data.", tone: "magenta" },
+ ]
 
  return (
-  <WidgetShell {...common} icon={<Bell size={20} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "0", height: "100%", overflowY: "auto" }}>
-    {/* COMMENTS SECTION */}
-    {recentComments.length > 0 ?
-     recentComments.map((comment: VideoComment, idx: number) => (
-      <div
-       key={comment.id}
-       style={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: "6px",
-        padding: "10px 12px",
-        borderBottom: "2px solid #f0f0f0",
-       }}>
-       <div
-        style={{
-         width: "24px",
-         height: "24px",
-         borderRadius: "50%",
-         background: alertColors[idx % alertColors.length],
-         border: "2px solid #000",
-         display: "flex",
-         alignItems: "center",
-         justifyContent: "center",
-         flexShrink: 0,
-         fontSize: "10px",
-         fontWeight: 900,
-        }}>
-        @
-       </div>
-       <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-         style={{
-          fontSize: "11px",
-          fontWeight: 800,
-          textTransform: "uppercase",
-         }}>
-         {comment.author}
-        </div>
-        <div
-         style={{
-          fontSize: "10px",
-          fontWeight: 600,
-          opacity: 0.7,
-          lineHeight: 1.3,
-          marginTop: "2px",
-          overflow: "hidden",
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical" as any,
-         }}>
-         {comment.text}
-        </div>
-       </div>
-      </div>
-     ))
-    : <div
-      style={{
-       padding: "10px 12px",
-       fontSize: "10px",
-       fontWeight: 900,
-       textTransform: "uppercase",
-       opacity: 0.4,
-      }}>
-      No recent comments
+  <WidgetShell {...common} icon={<BookOpen size={22} aria-hidden="true" />}>
+   <section className="widget-verification-body" aria-label="VIEWTUBE app purpose and data use">
+    <div className="widget-verification-grid">
+     <div className="widget-verification-brand" translate="no">
+      <span>View</span>
+      <span>Tube</span>
      </div>
-    }
 
-    {/* SUBSCRIBER COUNT */}
-    <div
-     style={{
-      display: "flex",
-      alignItems: "center",
-      gap: "6px",
-      padding: "10px 12px",
-      borderBottom: "2px solid #f0f0f0",
-     }}>
-     <div
-      style={{
-       width: "24px",
-       height: "24px",
-       borderRadius: "50%",
-       background: "#FF3399",
-       border: "2px solid #000",
-       display: "flex",
-       alignItems: "center",
-       justifyContent: "center",
-       flexShrink: 0,
-      }}>
-      <UserCircle2 size={12} color="#fff" />
-     </div>
-     <div style={{ flex: 1 }}>
-      <div
-       style={{
-        fontSize: "11px",
-        fontWeight: 800,
-        textTransform: "uppercase",
-       }}>
-       New Subscribers
+     {features.map(({ Icon, title, desc, tone }) => (
+      <article key={title} className={`widget-verification-feature is-${tone}`}>
+       <header>
+        <Icon size={16} aria-hidden="true" />
+        <span>{title}</span>
+       </header>
+       <p>{desc}</p>
+      </article>
+     ))}
+
+     <section className="widget-verification-disclosure">
+      <div className="widget-verification-lock">
+       <Lock size={18} aria-hidden="true" />
       </div>
-      <div style={{ fontSize: "10px", fontWeight: 700, opacity: 0.5 }}>
-       {subscriberCount.toLocaleString()} total
+      <div>
+       <h3>Why sign-in helps</h3>
+       <p>
+        Signing in connects your YouTube account to show your channel, videos, comments &amp; analytics. Your data only powers your dashboard—it's never sold—and you can disconnect anytime.
+       </p>
       </div>
-     </div>
+     </section>
+
+     <nav className="widget-verification-actions" aria-label="VIEWTUBE account and help links">
+      <a href="/account/connect" onClick={event => handleNavigate(event, "/account/connect")} className="widget-verification-connect">
+        <Rocket size={16} aria-hidden="true" /> Connect your channel
+      </a>
+      <div className="widget-verification-links">
+       <a href="/about" onClick={event => handleNavigate(event, "/about")} className="is-cyan">About</a>
+       <a href="/user-guide" onClick={event => handleNavigate(event, "/user-guide")} className="is-yellow">User Guide</a>
+       <a href="/privacy.html" className="is-magenta">Privacy</a>
+       <a href="/terms.html" className="is-orange">Terms</a>
+      </div>
+     </nav>
+
     </div>
-
-    {/* SYSTEM ALERTS */}
-    {alerts.map((alert, idx) => (
-     <div
-      key={idx}
-      style={{
-       display: "flex",
-       alignItems: "center",
-       gap: "6px",
-       padding: "10px 12px",
-       borderBottom: idx < alerts.length - 1 ? "2px solid #f0f0f0" : "none",
-      }}>
-      <div
-       style={{
-        width: "24px",
-        height: "24px",
-        borderRadius: "50%",
-        background: alertColors[(idx + 3) % alertColors.length],
-        border: "2px solid #000",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-       }}>
-       <Activity size={10} />
-      </div>
-      <div style={{ flex: 1 }}>
-       <div
-        style={{
-         fontSize: "11px",
-         fontWeight: 900,
-         textTransform: "uppercase",
-        }}>
-        {alert}
-       </div>
-      </div>
-      <div
-       style={{
-        width: "6px",
-        height: "6px",
-        background: "#FF1744",
-        borderRadius: "50%",
-       }}></div>
-     </div>
-    ))}
-   </div>
+   </section>
   </WidgetShell>
  )
 }
@@ -296,7 +225,7 @@ const SuperfanCardWidget: React.FC<{
 
   return (
     <WidgetShell {...common} icon={<Star size={22} />}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+      <div className="vt-widget-fill" style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
         {loading ? (
           <div style={{ opacity: 0.3, fontSize: "10px", fontWeight: 900, textTransform: "uppercase" }}>Scanning for superfans...</div>
         ) : (
@@ -348,13 +277,14 @@ const RevenueMomentumWidget: React.FC<{
   common: CommonWidgetProps
 }> = ({ data, common }) => {
   const [metric, setMetric] = useState<"revenue" | "views" | "subscribers">("revenue")
+  const [renderedAt] = useState(() => Date.now())
   
   const weeklyData = useMemo(() => {
     // Basic 4-week simulation based on canonicalRows if direct week-buckets aren't available
     const weeks = [0, 0, 0, 0]
     data.canonicalRows.forEach(row => {
       const d = new Date(row.uploadDate)
-      const diff = (Date.now() - d.getTime()) / (1000 * 3600 * 24 * 7)
+      const diff = (renderedAt - d.getTime()) / (1000 * 3600 * 24 * 7)
       const weekIdx = Math.floor(diff)
       if (weekIdx < 4) {
         let val = 0
@@ -365,7 +295,7 @@ const RevenueMomentumWidget: React.FC<{
       }
     })
     return weeks
-  }, [data.canonicalRows, metric])
+  }, [data.canonicalRows, metric, renderedAt])
 
   const maxVal = Math.max(...weeklyData, 1)
 
@@ -374,16 +304,17 @@ const RevenueMomentumWidget: React.FC<{
       <div style={{ display: "flex", flexDirection: "column", gap: "4px", height: "100%" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontSize: "9px", fontWeight: 800, opacity: 0.4, textTransform: "uppercase" }}>Momentum Pulse</span>
-          <select 
+          <WidgetSelect
             value={metric} 
-            onChange={(e) => setMetric(e.target.value as any)}
-            className="brutal-input"
+            onChange={(value) => setMetric(value as typeof metric)}
+            label="Momentum metric"
             style={{ height: "24px", fontSize: "9px", padding: "0 4px", width: "auto" }}
-          >
-            <option value="revenue">REVENUE</option>
-            <option value="views">VIEWS</option>
-            <option value="subscribers">SUBS</option>
-          </select>
+            options={[
+              { value: "revenue", label: "Revenue" },
+              { value: "views", label: "Views" },
+              { value: "subscribers", label: "Subs" },
+            ]}
+          />
         </div>
         
         <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1, justifyContent: "center" }}>
@@ -420,19 +351,14 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   onCycleHeight,
   onDecHeight,
   onRemoveWidget,
-  dashboardControls
 }) => {
-  const { brain } = useBrain();
-
-  // FORCE ROW 1 WIDGETS TO BE TALL
-  const overrideInstance = {
-    ...instance,
-    height: ["kpi-cluster", "community-post", "comment-replier"].includes(widget.id) ? "tall" : instance.height
-  } as any;
+  const account = useUnifiedAccount();
+  const timeWindows = ["7 DAYS", "14 DAYS", "28 DAYS", "60 DAYS", "90 DAYS", "180 DAYS", "365 DAYS", "LIFETIME"];
+  const [kpiTimeWindowIdx, setKpiTimeWindowIdx] = useState(2);
 
   const common = {
   widget,
-  instance: overrideInstance,
+  instance,
   editMode,
   canEdit,
   onToggleCollapse: () => onToggleCollapse(widget.id),
@@ -443,73 +369,16 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   onRemove: () => onRemoveWidget(widget.id),
  }
 
- // 17. TAG GENERATOR
- if (widget.id === "tag-generator") {
-  return <TagGeneratorWidget {...common} data={data} editMode={editMode} />
+ if (widget.id === "app-verification-explainer") {
+  return <VerificationExplainerWidget common={common} onNavigate={onNavigate} />
  }
 
- // 18. REVENUE CHART
- if (widget.id === "revenue-chart") {
-  return <RevenueChartWidget {...common} data={data} editMode={editMode} />
+ const LazyWidgetRenderer = LAZY_WIDGET_RENDERERS[widget.rendererKey]
+ if (LazyWidgetRenderer) {
+  return <LazyWidgetRenderer {...common} data={data} editMode={editMode} />
  }
 
- // 19. COMMUNITY POST
- if (widget.id === "community-post") {
-  return <CommunityPostWidget {...common} data={data} editMode={editMode} />
- }
-
- // 20. THUMB AI
- if (widget.id === "thumb-ai") {
-  return <ThumbnailLabWidget {...common} data={data} editMode={editMode} />
- }
-
- // 21. REALTIME PERFORMANCE
- if (widget.id === "realtime-performance") {
-  return (
-   <RealtimePerformanceWidget {...common} data={data} editMode={editMode} />
-  )
- }
-
- // 22. KEYWORD ENGINE
- if (widget.id === "keyword-engine") {
-  return <KeywordEngineWidget {...common} data={data} editMode={editMode} />
- }
-
- // 22.5 KEYWORD OVERLAP
- if (widget.id === "keyword-overlap-intelligence") {
-  return <KeywordOverlapWidget {...common} data={data} editMode={editMode} />
- }
-
- // 23. PUBLISH MOMENTUM
- if (widget.id === "publish-momentum") {
-  return <PublishMomentumWidget {...common} data={data} editMode={editMode} />
- }
-
- // 24. TRAFFIC SOURCES
- if (widget.id === "traffic-sources") {
-  return <TrafficSourcesWidget {...common} data={data} editMode={editMode} />
- }
-
- // 25. AUDIENCE RETENTION
- if (widget.id === "audience-retention") {
-  return <AudienceRetentionWidget {...common} data={data} editMode={editMode} />
- }
-
- // 26. FORMAT CLASH
- if (widget.id === "shorts-vs-long") {
-  return <FormatClashWidget {...common} data={data} editMode={editMode} />
- }
-
- // 27. COMMENT REPLY
- if (widget.id === "comment-replier") {
-  return <CommentReplyWidget {...common} data={data} editMode={editMode} />
- }
-
-  if (widget.id === "ai-journal") {
-    return <AIJournalWidget {...common} editMode={editMode} />
-  }
-
- // 28. REACH FUNNEL
+  // 28. REACH FUNNEL
  if (widget.id === "reach-funnel") {
   return (
    <WidgetShell {...common} icon={<TrendingUp size={22} />}>
@@ -676,17 +545,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   )
  }
 
- // ADVANCED TELEMETRY (CONSOLIDATED)
- if (widget.id === "audience-matrix") return <AudienceMatrixWidget {...common} data={data} />
- if (widget.id === "bridge-efficiency") return <BridgeEfficiencyWidget {...common} data={data} />
-
- // 1. CHANNEL OVERVIEW
+  // 1. CHANNEL OVERVIEW
   if (widget.id === "kpi-cluster") {
-   const shellWidget = {
-    ...widget,
-    headerColor: "#d8d8d8",
-    iconRailColor: "#efefef",
-   }
    const avatar = data.avatarUrl || ""
    const isSmall = instance.size === "quarter" || instance.size === "third" || instance.size === "half"
    const rainbowKpiColors = [
@@ -701,110 +561,135 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
     "#3FE0C5", // turquoise
    ]
 
+   const timeWindowToggle = (
+    <WidgetHeaderStepper
+     label="Channel overview time window"
+     value={timeWindows[kpiTimeWindowIdx]}
+     onPrevious={() => setKpiTimeWindowIdx(prev => (prev > 0 ? prev - 1 : timeWindows.length - 1))}
+     onNext={() => setKpiTimeWindowIdx(prev => (prev + 1) % timeWindows.length)}
+    />
+   )
+
    return (
-    <WidgetShell {...common} widget={shellWidget} icon={<TrendingUp size={22} />}>
-     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-      <div style={{ display: "flex", gap: "6px", flex: 1, overflow: "hidden", padding: "2px" }}>
-       {/* Circular Avatar Sidebar */}
-       <div style={{ 
-         display: "flex", 
-         flexDirection: "column", 
-         alignItems: "center", 
-         justifyContent: "center", 
-         gap: "6px", 
-         flexShrink: 0, 
-         width: "160px",
-         marginRight: "4px",
-         paddingRight: "2px"
-       }}>
-        <div style={{ 
-          width: "120px", 
-          height: "120px", 
-          borderRadius: "50%", 
-          border: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)", 
-          overflow: "hidden", 
-          background: "#eee",
-          boxShadow: "4px 4px 0px 0px rgba(0,0,0,0.1)"
+    <WidgetShell {...common} icon={<TrendingUp size={22} />} headerContent={timeWindowToggle}>
+     <div className="channel-overview-layout">
+      <div className="kpi-cluster-row channel-overview-main">
+       {/* Circular Avatar Sidebar — replaced with a sign-up nudge when no account is connected */}
+       {!data.authState.isAuthenticated ? (
+        <div className="kpi-cluster-avatar" style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          gap: "8px",
+          flexShrink: 0,
+          width: "clamp(72px, 30vw, 222px)",
+          height: "clamp(72px, 30vw, 222px)",
         }}>
-         {avatar ? (
-           <img src={avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-         ) : (
-           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-             <TrendingUp size={isSmall ? 40 : 60} opacity={0.2} />
-           </div>
-         )}
+         <p style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.04em", lineHeight: 1.3, margin: "0 0 2px" }}>
+          Connect your channel to see real analytics here.
+         </p>
+         <button
+          onClick={() => void account.start(account.intent, window.location.pathname + window.location.search + window.location.hash)}
+          className="vt-button primary"
+         >
+          Join ViewTube — Free
+         </button>
+         <button
+          onClick={() => onNavigate("/about")}
+          className="vt-button"
+         >
+          About ViewTube
+         </button>
+         <button
+          onClick={() => onNavigate("/user-guide")}
+          className="vt-button"
+         >
+          User Guide
+         </button>
         </div>
-       </div>
+       ) : (
+        <div className="channel-overview-avatar">
+         <div className="channel-overview-avatar-frame">
+          {avatar ? (
+            <img src={avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <TrendingUp size={isSmall ? 40 : 60} opacity={0.2} />
+            </div>
+          )}
+         </div>
+        </div>
+       )}
 
        {/* Stats Grid - 3x2 on small, 6x1 on large */}
-       <div style={{
-         flex: 1,
-         display: "grid",
-         gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+       <div className="channel-overview-kpis" style={{
+         gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
          gridTemplateRows: "repeat(3, minmax(0, 1fr))",
          gap: "4px"
        }}>
-        {data.statBlocks.map((stat, idx) => {
-         const metricKey = stat.label.toLowerCase().includes("views") ? "views" : 
-                          stat.label.toLowerCase().includes("subscribers") ? "subscribersGained" :
-                          stat.label.toLowerCase().includes("hours") ? "watchHours" :
-                          stat.label.toLowerCase().includes("revenue") ? "revenue" : null
-         
-         let bars = [40, 60, 45, 80, 55, 90, 75]
-         if (metricKey && data.canonicalRows?.length) {
-           const recentValues = data.canonicalRows
-              .slice(0, 7)
-              .map(row => (row.metrics as any)[metricKey]?.value || 0)
-           const maxVal = Math.max(...recentValues, 1)
-           bars = recentValues.map(v => 30 + (v / maxVal) * 70).reverse()
-         }
+        {data.getKpiStatBlocks(timeWindows[kpiTimeWindowIdx] === "LIFETIME" ? 99999 : parseInt(timeWindows[kpiTimeWindowIdx])).map((stat: any, idx: number) => {
+          const bars = stat.bars || [40, 60, 45, 80, 55, 90, 75]
 
-         let cleanTrend = stat.trend || ""
-         if (cleanTrend) {
-          const match = cleanTrend.match(/([+-]?)(\d+(\.\d+)?)%/)
-          if (match) {
-            const sign = match[1]
-            const val = parseFloat(match[2])
-            cleanTrend = val >= 100 ? `${sign}${Math.round(val).toString().slice(0, 4)}%` : `${sign}${val.toFixed(1).slice(0, 4)}%`
+          let cleanTrend = stat.trend || ""
+          if (cleanTrend) {
+           const match = cleanTrend.match(/([+-]?)(\d+(\.\d+)?)%/)
+           if (match) {
+             const sign = match[1]
+             const val = parseFloat(match[2])
+             cleanTrend = val >= 100 ? `${sign}${Math.round(val).toString().slice(0, 4)}%` : `${sign}${val.toFixed(1).slice(0, 4)}%`
+           }
           }
-         }
 
-         const cardColor = rainbowKpiColors[idx % rainbowKpiColors.length]
+         const cardColor = stat.color || rainbowKpiColors[idx % rainbowKpiColors.length]
 
            return (
-            <div
+             <div
              key={idx}
              style={{
               background: "#fff",
-              border: "2px solid #000",
+              border: `2px solid black`,
               borderRadius: "8px",
-              overflow: "hidden",
+              boxShadow: `2px 2px 0px 0px rgba(0,0,0,0.1)`,
               display: "flex",
               flexDirection: "column",
               minHeight: 0,
-              boxShadow: `2px 2px 0px 0px ${cardColor}`
+              overflow: "hidden"
              }}>
              <div
               style={{
                background: cardColor,
-               borderBottom: "2px solid #000",
-               height: "20px",
+               borderBottom: "2px solid black",
+               height: "22px",
                display: "flex",
                justifyContent: "center",
                alignItems: "center",
+               padding: "0 4px",
               }}>
-              <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.02em", color: "#000" }}>
+              <span style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.02em", color: "#000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                {stat.label}
               </span>
              </div>
-             <div style={{ padding: "2px 2px 0px", display: "flex", alignItems: "baseline", justifyContent: "center", gap: "2px" }}>
-              <div style={{ fontSize: "22px", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1 }}>
-               {stat.value}
+              <div style={{ padding: "2px 4px 0px", display: "flex", alignItems: "baseline", justifyContent: (stat as any).secondaryValue ? "space-between" : "center", gap: "2px" }}>
+               <div style={{ fontSize: "22px", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1 }}>
+                {stat.value}
+               </div>
+               {(stat as any).secondaryValue != null ? (
+                 <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "2px", lineHeight: 1 }}>
+                   <span style={{ fontSize: "16px", fontWeight: 900, color: (stat as any).secondaryIsIncrease ? "#008B00" : "#D32F2F" }}>
+                     {(stat as any).secondaryValue}
+                   </span>
+                   <span style={{ fontSize: "10px", fontWeight: 900, color: (stat as any).secondaryIsIncrease ? "#008B00" : "#D32F2F" }}>
+                     {(stat as any).secondaryIsIncrease ? "▲" : "▼"}
+                   </span>
+                 </div>
+               ) : stat.trend ? (
+                 <span style={{ fontSize: "8px", fontWeight: 900, color: stat.trend.includes("▲") || stat.trend.includes("+") ? "#008B00" : "#D32F2F" }}>
+                   {cleanTrend} {stat.trend.includes("▲") || stat.trend.includes("+") ? "▲" : "▼"}
+                 </span>
+               ) : null}
               </div>
-              {stat.trend && <span style={{ fontSize: "8px", fontWeight: 900, color: stat.trend.includes("↑") ? "#008B00" : "#D32F2F" }}>{cleanTrend}</span>}
-             </div>
              <div style={{ display: "flex", alignItems: "flex-end", gap: "1px", padding: "0 2px 0", height: "14px", marginTop: "auto" }}>
-              {bars.map((h, i) => (
+              {bars.map((h: number, i: number) => (
                <div key={i} style={{ flex: 1, height: `${h}%`, background: cardColor, opacity: 0.4 + (h / 100) * 0.6, borderRadius: "1px 1px 0 0" }} />
               ))}
              </div>
@@ -812,24 +697,75 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
            )
         })}
        </div>
+
+       {/* Donuts + Stacked Bars Panel */}
+       <div className="channel-overview-breakdown">
+        {/* 4 Donut Charts */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "4px" }}>
+         {[
+          { color: "#FA618A", bg: `conic-gradient(#FA618A 0 82%, #528FFA 82% 95%, #3FEE56 95% 100%)`, icon: <><path d="M2.5 12s3.5-5 9.5-5 9.5 5 9.5 5-3.5 5-9.5 5-9.5-5-9.5-5Z"/><circle cx="12" cy="12" r="2.7"/></>, label: "Views" },
+          { color: "#FFA85C", bg: `conic-gradient(#FA618A 0 60%, #528FFA 60% 92%, #3FEE56 92% 100%)`, icon: <><circle cx="12" cy="7.2" r="3.2"/><path d="M5.3 20c0-4.1 2.8-6.3 6.7-6.3s6.7 2.2 6.7 6.3"/></>, label: "Subs" },
+          { color: "#FFDA47", bg: `conic-gradient(#FA618A 0 30%, #528FFA 30% 90%, #3FEE56 90% 100%)`, icon: <><circle cx="12" cy="12" r="8"/><path d="M12 7.2v5l3.2 2"/></>, label: "Hours" },
+          { color: "#528FFA", bg: `conic-gradient(#FA618A 0 20%, #528FFA 20% 95%, #3FEE56 95% 100%)`, icon: <><path d="M15 6.5c-.8-.8-1.8-1.2-3.1-1.2-1.9 0-3.1.8-3.1 2.2 0 3.2 6.5 1.4 6.5 5.2 0 1.7-1.4 2.8-3.5 2.8-1.6 0-2.9-.5-3.8-1.5"/><path d="M12 3v18"/></>, label: "Rev" },
+         ].map((d, i) => (
+          <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+           <div style={{ position: "relative", width: "100%", aspectRatio: "1/1", borderRadius: "50%", background: d.bg }}>
+            <div style={{ position: "absolute", inset: "29%", borderRadius: "50%", background: "#fff" }} />
+            <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: "29%", aspectRatio: "1/1", display: "grid", placeItems: "center", zIndex: 2 }}>
+             <svg viewBox="0 0 24 24" style={{ width: "100%", height: "100%", fill: "none", stroke: "#050505", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}>{d.icon}</svg>
+            </div>
+           </div>
+           <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.04em", color: "#050505", lineHeight: 1 }}>{d.label}</span>
+          </div>
+         ))}
+        </div>
+
+        {/* 3 Stacked Bar Charts */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+         {[
+          {
+           icon: <><circle cx="9" cy="8" r="3"/><path d="M3.8 20c0-4 2.3-6 5.2-6s5.2 2 5.2 6"/><path d="M17 5h4M19 3v4"/></>,
+           segs: [{ label: "Male", pct: "78%", bg: "#36E0F6" }, { label: "Female", pct: "22%", bg: "#FF7AC8" }],
+          },
+          {
+           icon: <><rect x="7" y="4" width="10" height="17" rx="2"/><circle cx="12" cy="8" r=".5"/><circle cx="12" cy="12" r=".5"/><circle cx="12" cy="16" r=".5"/></>,
+           segs: [{ label: "Shorts", pct: "35%", bg: "#FA618A" }, { label: "Browse", pct: "20%", bg: "#FFA85C" }, { label: "Search", pct: "20%", bg: "#FFDA47" }, { label: "Subs", pct: "15%", bg: "#4EE4BE" }, { label: "Ext", pct: "10%", bg: "#C0F240" }],
+          },
+          {
+           icon: <><circle cx="12" cy="12" r="8"/><path d="M14.8 8.1c-.7-.7-1.6-1.1-2.8-1.1-1.6 0-2.8.7-2.8 1.9 0 2.8 6 1.3 6 4.7 0 1.5-1.3 2.5-3.2 2.5-1.4 0-2.6-.5-3.4-1.3"/><path d="M12 5v14"/></>,
+           segs: [{ label: "Ads", pct: "52%", bg: "#528FFA" }, { label: "Premium", pct: "22%", bg: "#FA618A" }, { label: "Members", pct: "26%", bg: "#C0F240" }],
+          },
+         ].map((bar, i) => (
+          <div key={i} style={{ position: "relative" }}>
+           <div style={{ position: "absolute", left: "8px", top: 0, height: "100%", display: "flex", alignItems: "center", zIndex: 2, pointerEvents: "none" }}>
+            <svg viewBox="0 0 24 24" style={{ width: "18px", height: "18px", fill: "none", stroke: "#050505", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}>{bar.icon}</svg>
+           </div>
+           <div style={{ display: "flex", height: "28px", borderRadius: "3px", overflow: "hidden" }}>
+            {bar.segs.map((seg, j) => (
+             <div key={j} style={{ width: seg.pct, background: seg.bg, display: "flex", alignItems: "center", justifyContent: "center", paddingLeft: j === 0 ? "28px" : "0", overflow: "hidden" }}>
+              <span style={{ fontSize: "7px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.01em", whiteSpace: "nowrap", color: "#050505" }}>{seg.label}</span>
+             </div>
+            ))}
+           </div>
+          </div>
+         ))}
+        </div>
+       </div>
       </div>
 
       {/* Full Width Footer */}
-      <div style={{ 
-        borderTop: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)", 
-        background: "#eee", 
-        padding: "8px 12px", 
-        display: "flex", 
-        alignItems: "center", 
+      <WidgetFooter surface="subtle" className="channel-overview-footer" style={{
+        display: "flex",
+        alignItems: "center",
         justifyContent: "space-between",
-        marginTop: "auto"
-      }}>
+        marginTop: "6px",
+      } as React.CSSProperties}>
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ fontSize: "14px", fontWeight: 950, textTransform: "uppercase", tracking: "-0.02em" }}>
-            {data.brain?.channelProfile?.name || data.authState?.channelName || "Your Channel"}
+          <div style={{ fontSize: "18px", fontWeight: 950, textTransform: "uppercase", letterSpacing: "-0.02em" }}>
+            {data.channelTitle}
           </div>
-          <div style={{ fontSize: "10px", fontWeight: 800, opacity: 0.5 }}>
-            @{data.brain?.channelProfile?.channelHandle || data.authState?.channelHandle || "handle"}
+          <div style={{ fontSize: "12px", fontWeight: 800, opacity: 0.5 }}>
+            {data.channelCustomUrl.startsWith("@") ? data.channelCustomUrl : `@${data.channelCustomUrl}`}
           </div>
         </div>
         <a
@@ -850,7 +786,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
          >
           VISIT CHANNEL
         </a>
-      </div>
+      </WidgetFooter>
      </div>
     </WidgetShell>
    )
@@ -860,7 +796,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  if (widget.id === "channel-overview") {
   return (
    <WidgetShell {...common} icon={<UserCircle2 size={22} />}>
-    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+    <div className="vt-widget-fill" style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
      <div
       style={{
        display: "flex",
@@ -920,7 +856,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  if (widget.id === "mini-calendar") {
   return (
    <WidgetShell {...common} icon={<CalendarDays size={22} />}>
-    <div style={{ display: "flex", flexDirection: "column", gap: "4px", height: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "4px", height: "100%", minHeight: 0 }}>
      {/* Mini Calendar Grid */}
      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "3px" }}>
       {data.upcomingDays.map((day) => (
@@ -947,7 +883,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
      </div>
      
      {/* Task checklist integrated below */}
-     <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "4px", padding: "4px 0" }}>
+     <WidgetScrollArea ariaLabel="Daily checklist" contentClassName="flex min-h-full flex-col gap-1 py-1">
       <span style={{ fontSize: "8px", fontWeight: 800, opacity: 0.4, textTransform: "uppercase" }}>Daily Checklist</span>
       {(data.todayTasks.length > 0 ? data.todayTasks : [{text: "No tasks for today", completed: false}]).slice(0, 3).map((task: any, idx: number) => (
         <div
@@ -973,7 +909,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
          <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" }}>{task.text}</span>
         </div>
      ))}
-    </div>
+    </WidgetScrollArea>
     </div>
    </WidgetShell>
   )
@@ -983,31 +919,71 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  if (widget.id === "quick-actions") {
   return (
    <WidgetShell {...common} icon={<Layers size={22} />}>
-    <div
-     style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(2, 1fr)",
-      gap: "4px",
-     }}>
-     {data.quickActions.map((action, idx) => (
-      <button
-       key={idx}
-       onClick={() => onNavigate(action.to)}
-       style={{
-        height: "40px",
-        border: "2px solid #000",
-        borderRadius: "10px",
-        background: idx % 2 === 0 ? "#4FFF5B" : "#579AFF",
-        fontSize: "9px",
-        fontWeight: 900,
-        textTransform: "uppercase",
-        boxShadow: "2px 2px 0 0 #000",
-        cursor: "pointer",
-       }}>
-       {action.label}
-      </button>
-     ))}
-    </div>
+    {(() => {
+      const pages = data.quickActions.filter((a: any) => !a.isTool);
+      const tools = data.quickActions.filter((a: any) => a.isTool);
+
+      const renderAction = (action: any, idx: number) => {
+        let IconComponent = Layers;
+        if (action.icon === "Video") IconComponent = Video;
+        else if (action.icon === "Upload") IconComponent = Upload;
+        else if (action.icon === "Activity") IconComponent = Activity;
+        else if (action.icon === "Image") IconComponent = ImageIcon;
+        else if (action.icon === "MessageSquare") IconComponent = MessageSquare;
+        else if (action.icon === "MessageCircle") IconComponent = MessageCircle;
+        else if (action.icon === "Monitor") IconComponent = Monitor;
+        else if (action.icon === "Rocket") IconComponent = Rocket;
+        else if (action.icon === "Magnet") IconComponent = Magnet;
+        else if (action.icon === "WandSparkles") IconComponent = WandSparkles;
+        else if (action.icon === "Layers") IconComponent = Layers;
+        else if (action.icon === "CalendarDays") IconComponent = CalendarDays;
+        else if (action.icon === "Bot") IconComponent = Bot;
+        else if (action.icon === "RefreshCw") IconComponent = RefreshCw;
+        else if (action.icon === "Edit3") IconComponent = Edit3;
+        else if (action.icon === "Settings") IconComponent = Settings;
+        else if (action.icon === "BookOpen") IconComponent = BookOpen;
+
+        return (
+         <button
+          key={idx}
+          onClick={() => onNavigate(action.to)}
+          className={`vt-button split primary`}
+          style={{
+           "--widget-color": action.color || undefined,
+           fontSize: "12px",
+           border: action.isTool ? "2px solid #000" : undefined,
+           color: action.isTool ? "#000" : undefined,
+          } as React.CSSProperties}
+         >
+          <span className="split-icon" style={{
+              ...(action.iconColor ? { color: action.iconColor } : {}),
+              ...(action.isTool ? { color: "#000", borderRight: "2px solid #000" } : {})
+          }}>
+            <IconComponent size={18} strokeWidth={2.5} />
+          </span>
+          <span className="split-label">{action.label}</span>
+         </button>
+        )
+      }
+
+      return (
+        <div className="vt-widget-fill">
+          <div
+           style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gap: "4px",
+           }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              {pages.map((action: any, idx: number) => renderAction(action, idx))}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              {tools.map((action: any, idx: number) => renderAction(action, idx))}
+            </div>
+          </div>
+        </div>
+      )
+    })()}
    </WidgetShell>
   )
  }
@@ -1016,7 +992,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  if (widget.id === "recent-uploads") {
   return (
    <WidgetShell {...common} icon={<Upload size={22} />}>
-    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+    <div className="vt-widget-fill" style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
      {data.recentUploads.slice(0, 3).map((video) => (
       <div
        key={video.videoId}
@@ -1076,6 +1052,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
    <WidgetShell {...common} icon={<Video size={22} />}>
     {data.topPerformer ?
      <div
+      className="vt-widget-fill"
       style={{
        display: "flex",
        flexDirection: "column",
@@ -1136,7 +1113,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  }
 
 
- // 16. GOALS TRACKER
+ // 16. GOALS TRACKER — lazy-loaded like every other Dashboard widget; the
+ // per-widget <Suspense> boundary in DashboardCanvas handles the fallback.
   if (widget.id === "goals-tracker") {
     return <GoalsTrackerWidget data={data} commonProps={common} />
   }
@@ -1144,12 +1122,16 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  // 9. ALERTS FEED — comments + subscriber alerts + insights
  if (widget.id === "alerts-feed") {
   return (
-   <AlertsFeedWidget
-    commentsVideoId={data.topPerformer?.videoId || null}
-    alerts={data.alerts}
-    subscriberCount={data.brain?.recentMetrics?.currentSubscribers ?? 0}
-    common={common}
-   />
+   <WidgetShell {...common} icon={<Bell size={22} />}>
+    <div className="vt-widget-fill" style={{ gap: "var(--widget-component-gap)" }}>
+     {data.alerts.map((alert, index) => (
+      <div key={`${alert}-${index}`} className="widget-card-row">
+       <Bell size={16} aria-hidden="true" />
+       <span>{alert}</span>
+      </div>
+     ))}
+    </div>
+   </WidgetShell>
   )
  }
 
@@ -1159,7 +1141,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  if (widget.id === "ai-prompt-box") {
   return (
    <WidgetShell {...common} icon={<WandSparkles size={22} />}>
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+    <div className="vt-widget-fill" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
      <div
       style={{
        display: "flex",
@@ -1214,7 +1196,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  if (widget.id === "system-micro-stack") {
   const model = localStorage.getItem("GEMINI_MODEL") || "gemini-3.0-flash"
   const isConnected = data.authState.isAuthenticated
-  const lastSync = data.formatRelativeTime(data.lastSyncComplete)
+  const lastSyncTimestamp = data.lastSyncComplete ? Date.parse(data.lastSyncComplete) : null
+  const lastSync = data.formatRelativeTime(Number.isFinite(lastSyncTimestamp) ? lastSyncTimestamp : null)
   const planId = String(localStorage.getItem("vt_last_plan") || "basic").toUpperCase()
   const currentModelLabel =
    model === "gemini-3.1-pro-preview"
@@ -1287,20 +1270,18 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  // 15. NEWS TICKER (placeholder)
  // Alerts ticker removed (now implemented in DashboardHeader)
 
- if (widget.id === "ask-me") return <AskMeWidget {...common} data={data} />
- if (widget.id === "daily-oracle") return <DailyOracleWidget {...common} data={data} />
- if (widget.id === "flight-check") return <FlightCheckWidget {...common} data={data} />
- if (widget.id === "description-editor") return <DescriptionEditorWidget {...common} data={data} />
- if (widget.id === "data-edit") return <DataEditWidget {...common} data={data} />
- if (widget.id === "title-rewriter") return <TitleRewriterWidget {...common} data={data} />
- if (widget.id === "retention-sim") return <RetentionSimWidget {...common} data={data} />
- if (widget.id === "upload-scheduler") return <UploadSchedulerWidget {...common} data={data} />
- if (widget.id === "hashtag-analyzer") return <HashtagAnalyzerWidget {...common} data={data} />
- if (widget.id === "burnout-monitor") return <BurnoutMonitorWidget {...common} data={data} />
- if (widget.id === "image-generator") return <ImageGeneratorWidget {...common} data={data} />
-
- if (widget.id === "collab-matchmaker") return <CollabMatchmakerWidget {...common} data={data} />
- if (widget.id === "brain-hub") return <BrainHubWidget {...common} data={data} />
+ if (widget.id === "task-stack" || widget.id === "alerts-ticker") {
+  return (
+   <WidgetShell {...common} icon={widget.id === "alerts-ticker" ? <Bell size={20} /> : <Layers size={20} />}>
+    <div className="widget-state-panel is-empty" role="status">
+     <strong>Preview module</strong>
+     <p>{widget.id === "alerts-ticker"
+      ? "Live alerts now appear in the dashboard header. This legacy module remains available for layout compatibility."
+      : "Task Stack is preserved as a preview until its data and interaction certification is complete."}</p>
+    </div>
+   </WidgetShell>
+  )
+ }
 
  return (
   <WidgetShell {...common}>

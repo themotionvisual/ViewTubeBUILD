@@ -40,8 +40,7 @@ export const CommunityPostGenerator: React.FC = () => {
     <SubToolbox
      title="Schedule Details"
      headerColor="bg-[#FFDD00]"
-     textColor="text-black"
-     paletteIndex={0}>
+     textColor="text-black">
      <div className="space-y-2">
       <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
        Upcoming Uploads & Plans
@@ -69,7 +68,6 @@ export const CommunityPostGenerator: React.FC = () => {
       title="Generated Posts"
       headerColor="bg-[#FF3399]"
       textColor="text-black"
-      paletteIndex={1}
       actionButton={
        <button
         onClick={handleCopy}
@@ -85,7 +83,7 @@ export const CommunityPostGenerator: React.FC = () => {
       </div>
      </SubToolbox>
     ) : (
-     <div className="h-full min-h-[400px] flex flex-col items-center justify-center border-[4px] border-dashed border-black/20 rounded-[32px] bg-gray-50 p-8 text-center">
+     <div className="h-full min-h-[400px] flex flex-col items-center justify-center border-[2px] border-dashed border-black/20 rounded-[32px] bg-gray-50 p-8 text-center">
       <MessageSquare size={80} className="mb-6 text-black/20" />
       <h3 className="text-3xl font-[1000] text-black/40 uppercase tracking-tighter mb-2">
        Awaiting Input

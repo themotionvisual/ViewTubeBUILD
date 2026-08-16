@@ -1,8 +1,10 @@
 import React, { useState, useMemo, useEffect, useRef } from "react"
 import { WidgetShell } from "../WidgetShell"
+import { WidgetScrollArea } from "../WidgetPrimitives"
 import { BarChart3, AlertTriangle, Sparkles, Upload } from "lucide-react"
 import { CustomDropdown } from "./DataEditWidget"
 import { compressMediaForAnalysis } from "../../../services/analysisCompression"
+import { buildVideoAssetOptions } from "./videoAssetOptions"
 
 const STORAGE_KEY = "vt_retention_reports"
 
@@ -18,10 +20,8 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
   onDecHeight,
   onRemove,
   onDecSize,
-  onCycleHeight,
-  onDecHeight,
  }
- const videos = data.canonicalRows || []
+ const videos = data.videoAssets || []
  const [syntheticVideos, setSyntheticVideos] = useState<any[]>([])
  const [selectedVideo, setSelectedVideo] = useState("")
  const [videoSearch, setVideoSearch] = useState("")
@@ -54,7 +54,7 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
    // Natural decay with some random variation
    const base = 100 * Math.exp(-1.2 * t)
    const noise = (Math.sin(i * 3.7) * 8)
-   points.push({pct: t, value: Math.max(5, Math.min(100, base + noise)), time: Math.round(t * duration), onDecSize, onCycleHeight, onDecHeight})
+   points.push({pct: t, value: Math.max(5, Math.min(100, base + noise)), time: Math.round(t * duration)})
   }
   return points
  }, [selectedData])
@@ -114,7 +114,7 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
 
   return (
   <WidgetShell {...common} icon={<BarChart3 size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%", overflowY: "auto", paddingBottom: "8px" }}>
+   <WidgetScrollArea ariaLabel="Retention simulation" contentClassName="flex min-h-full flex-col gap-2">
      <div style={{ padding: "8px", border: "2px solid #000", borderRadius: "8px", background: "rgba(204,255,0,0.16)", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", lineHeight: 1.35 }}>
       Analysis-only upload policy active: local videos are compressed before analysis to reduce AI processing cost.
      </div>
@@ -138,10 +138,7 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
        <CustomDropdown 
         value={selectedVideo} 
         onChange={(val) => setSelectedVideo(val)} 
-        options={[
-         { val: "", lbl: "Select a video..." },
-         ...allVideos.slice(0, 15).filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase())).map((v: any) => ({val: v.videoId, lbl: v.title, onDecSize, onCycleHeight, onDecHeight}))
-        ]}
+        options={buildVideoAssetOptions(allVideos, videoSearch, 50)}
        />
       </div>
       <input 
@@ -224,7 +221,7 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
       )}
      </>
     )}
-   </div>
+   </WidgetScrollArea>
   </WidgetShell>
  )
 }

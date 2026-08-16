@@ -11,47 +11,125 @@ body,
   padding: 0;
 }
 
+html,
+body {
+  /* Belt-and-suspenders: the neo-brutalist layout was overflowing horizontally
+     on narrow viewports and producing a phantom horizontal scroll gutter on
+     mobile. AppShell already caps things with overflow-hidden but hardening
+     the root prevents any stray absolutely-positioned element from bringing
+     the sideways scroll bar back. */
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 * {
   box-sizing: border-box;
 }
 
-/* Custom Scrollbar for Neo-Brutalist UI */
-::-webkit-scrollbar {
-  width: 16px;
+/* Custom Scrollbar for Neo-Brutalist UI (desktop only).
+   Mobile browsers already draw overlay scrollbars — the 16 px chunky
+   version bled through as a black strip next to the widgets on phones. */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 16px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #fff;
+    border-left: 4px solid #000;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #000;
+    border: 4px solid #000;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #333;
+  }
+
+  /* Firefox support */
+  * {
+    scrollbar-width: auto;
+    scrollbar-color: #000 #fff;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: #fff;
-  border-left: 4px solid #000;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #000;
-  border: 4px solid #000;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #333;
-}
-
-/* Firefox support */
-* {
-  scrollbar-width: auto;
-  scrollbar-color: #000 #fff;
+@media (max-width: 767px) {
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+  * {
+    scrollbar-width: none;
+  }
 }
 /* Video manager description: hide scrollbar chrome while keeping scroll + resize handle */
 .vm-scrollless {
   overflow-y: auto;
-  scrollbar-width: none;
 }
 
-.vm-scrollless::-webkit-scrollbar {
+/* Shared scrollless viewport: preserves wheel, touch, and keyboard scrolling
+   without adding a second Neo-Brutalist border inside bounded tool panels. */
+.vm-scrollless,
+.vt-scrollless {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.vm-scrollless::-webkit-scrollbar,
+.vt-scrollless::-webkit-scrollbar {
+  display: none;
   width: 0;
   height: 0;
 }
 
+/* Brain conversation: visible Neo-Brutalist scrollbar with one stable gutter. */
+.brain-chat-scrollbar {
+  scrollbar-color: #36e0f6 #ffda47;
+  scrollbar-gutter: stable;
+  scrollbar-width: auto;
+}
+
+.brain-chat-scrollbar::-webkit-scrollbar {
+  width: 18px;
+}
+
+.brain-chat-scrollbar::-webkit-scrollbar-track {
+  background: #ffda47;
+  border-left: 2px solid #000;
+  box-shadow: inset 0 0 0 2px #000;
+}
+
+.brain-chat-scrollbar::-webkit-scrollbar-thumb {
+  background: #36e0f6;
+  border: 3px solid #000;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 2px #fff;
+}
+
+.brain-chat-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #ff7ac8;
+}
+
+.brain-chat-scrollbar::-webkit-scrollbar-button {
+  height: 14px;
+  background: #3fee56;
+  border: 2px solid #000;
+}
+
+/* Thermal Imaging heatmap: dark blue scroll track instead of the app-wide white default */
+.vt-thermal-scrollbar {
+  scrollbar-color: #000 #0a1f4d;
+}
+
+.vt-thermal-scrollbar::-webkit-scrollbar-track {
+  background: #0a1f4d;
+  border-left: 4px solid #000;
+}
+
 /* Canonical text input + textarea surface (matches Video Manager title/description style) */
-.vt-input-standard {
+.vt-input-standard:not(.dashboard-barrier .vt-input-standard) {
   width: 100%;
   background: color-mix(in srgb, var(--vt-subtoolbox-fill, #f6f6f6) 16%, #ffffff);
   border: 3px solid #000;
@@ -70,23 +148,25 @@ body,
     transform 0.12s ease;
 }
 
-.vt-input-standard[data-border-width="4"] {
+.vt-input-standard:not(.dashboard-barrier .vt-input-standard)[data-border-width="4"] {
   border-width: 4px;
 }
 
-.vt-input-standard:focus {
-  border-color: #24d3ff;
+.vt-input-standard:not(.dashboard-barrier .vt-input-standard):focus {
+  border-color: #000;
+  box-shadow: 2px 2px 0 0 rgba(0,0,0,1);
   background: color-mix(in srgb, var(--vt-subtoolbox-fill, #ffffff) 10%, #ffffff);
 }
 
-.vt-textarea-standard {
+.vt-textarea-standard:not(.dashboard-barrier .vt-textarea-standard) {
   min-height: 116px;
   padding: 1rem;
   resize: vertical;
 }
 
-.vt-textarea-standard:focus {
-  border-color: #24d3ff;
+.vt-textarea-standard:not(.dashboard-barrier .vt-textarea-standard):focus {
+  border-color: #000;
+  box-shadow: 2px 2px 0 0 rgba(0,0,0,1);
   background: #fff;
 }
 
@@ -129,27 +209,31 @@ body,
 }
 
 /* Global field normalization: unified placeholder + black-to-blue focus outline */
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
-textarea,
-select {
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(.dashboard-barrier input),
+textarea:not(.dashboard-barrier textarea),
+select:not(.dashboard-barrier select) {
   outline: none;
-  border-color: #000;
+  border: 2px solid var(--widget-color, #000);
+  background-color: #fff;
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background-color 0.2s ease;
+    border-color 0.15s ease,
+    box-shadow 0.25s ease,
+    background-color 0.25s ease;
+  caret-color: var(--widget-color, #000);
 }
 
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus,
-textarea:focus,
-select:focus {
-  border-color: #24d3ff !important;
-  box-shadow: 0 0 0 2px rgb(36 211 255 / 0.2);
-  background-color: var(--vt-field-bg, #fff) !important;
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(.dashboard-barrier input):focus,
+textarea:not(.dashboard-barrier textarea):focus,
+select:not(.dashboard-barrier select):focus {
+  border-color: var(--widget-color, #000);
+  background-color: color-mix(in srgb, var(--widget-color, #fff) 6%, white);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--widget-color, #000) 35%, transparent),
+    0 0 16px 2px color-mix(in srgb, var(--widget-color, #000) 55%, transparent);
 }
 
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"])::placeholder,
-textarea::placeholder {
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(.dashboard-barrier input)::placeholder,
+textarea:not(.dashboard-barrier textarea)::placeholder {
   color: rgb(0 0 0 / 0.35);
   font-weight: 700;
 }
@@ -204,4 +288,253 @@ textarea::placeholder {
 
 .vt-chart-interior [class*="shadow-"] {
   filter: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   VT-BUTTON BASE & V2 STYLES
+═══════════════════════════════════════════════════════════ */
+.dashboard-barrier .vt-button {
+  background: #ffffff;
+  border: 2px solid #000;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #000;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent);
+  transition: transform 0.1s, box-shadow 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 14px;
+}
+.dashboard-barrier .vt-button.primary { background: var(--widget-color, #4FFF5B); }
+.dashboard-barrier .vt-button.secondary { background: color-mix(in srgb, var(--widget-color, #000) 30%, white); }
+.dashboard-barrier .vt-button:hover { transform: translate(1px, 1px); box-shadow: 2px 2px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent); }
+.dashboard-barrier .vt-button:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent); }
+.dashboard-barrier .vt-button:disabled { opacity: 1; cursor: not-allowed; }
+
+/* v2 · square icon buttons — vt-button geometry, any of the 3 fills */
+.dashboard-barrier .vt-button.icon { width: 36px; height: 36px; padding: 0; flex-shrink: 0; font-size: 15px; }
+.dashboard-barrier .vt-button.icon.sm { width: 28px; height: 28px; font-size: 12px; }
+
+/* v2 · large size — bigger face, deeper 4px shadow, same press physics */
+.dashboard-barrier .vt-button.lg { padding: 12px 22px; font-size: 13px; border-radius: 8px;
+  box-shadow: 4px 4px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent); }
+.dashboard-barrier .vt-button.lg:hover { transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent); }
+.dashboard-barrier .vt-button.lg:active { transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent); }
+.dashboard-barrier .vt-button.icon.lg { width: 48px; height: 48px; padding: 0; font-size: 20px; }
+
+/* v2 · split-left — icon cell divided by an ink rule, echoes the header icon-rail */
+.dashboard-barrier .vt-button.split { padding: 0; overflow: hidden; text-align: left; align-items: stretch; gap: 0; }
+.dashboard-barrier .vt-button.split .split-icon {
+  width: 34px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  background: rgba(255,255,255,0.45);
+  border-right: 2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black);
+}
+.dashboard-barrier .vt-button.split:not(.primary):not(.secondary) .split-icon {
+  background: color-mix(in srgb, var(--widget-color, #000) 30%, white);
+}
+.dashboard-barrier .vt-button.split .split-label { padding: 9px 14px 9px 10px; flex: 1; display: flex; align-items: center; gap: 6px; }
+.dashboard-barrier .vt-button.split.lg .split-icon { width: 44px; font-size: 18px; }
+.dashboard-barrier .vt-button.split.lg .split-label { padding: 13px 18px 13px 12px; }
+
+/* Scrollbar Styles: 24px Width, Equal 4px Edge Spacing, Symmetrical 4px Inner Corner Radius & Module Black Border */
+
+/* Style 1: Solid Accent Rectangular Block + Module Black Border */
+.scrollbar-style-1::-webkit-scrollbar,
+.dashboard-barrier .scrollbar-style-1::-webkit-scrollbar { width: 24px !important; display: block !important; }
+.scrollbar-style-1::-webkit-scrollbar-track,
+.dashboard-barrier .scrollbar-style-1::-webkit-scrollbar-track { background: transparent !important; border: none !important; box-shadow: none !important; }
+.scrollbar-style-1::-webkit-scrollbar-thumb,
+.dashboard-barrier .scrollbar-style-1::-webkit-scrollbar-thumb {
+  background: var(--widget-color, #40C6E9) !important;
+  border: 4px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000 !important;
+  border-radius: 8px !important;
+}
+.scrollbar-style-1::-webkit-scrollbar-thumb:hover,
+.dashboard-barrier .scrollbar-style-1::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 80%, black) !important;
+  background-clip: padding-box !important;
+}
+
+/* Style 2: Crisp White Rectangular Block + Module Black Border */
+.scrollbar-style-2::-webkit-scrollbar,
+.dashboard-barrier .scrollbar-style-2::-webkit-scrollbar { width: 24px !important; display: block !important; }
+.scrollbar-style-2::-webkit-scrollbar-track,
+.dashboard-barrier .scrollbar-style-2::-webkit-scrollbar-track { background: transparent !important; border: none !important; box-shadow: none !important; }
+.scrollbar-style-2::-webkit-scrollbar-thumb,
+.dashboard-barrier .scrollbar-style-2::-webkit-scrollbar-thumb {
+  background: #ffffff !important;
+  border: 4px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000 !important;
+  border-radius: 8px !important;
+}
+.scrollbar-style-2::-webkit-scrollbar-thumb:hover,
+.dashboard-barrier .scrollbar-style-2::-webkit-scrollbar-thumb:hover {
+  background: var(--widget-color, #40C6E9) !important;
+  background-clip: padding-box !important;
+}
+
+/* Style 3: Dual-Tone Split Rectangular Block (White Top / Accent Bottom) */
+.scrollbar-style-3::-webkit-scrollbar,
+.dashboard-barrier .scrollbar-style-3::-webkit-scrollbar { width: 24px !important; display: block !important; }
+.scrollbar-style-3::-webkit-scrollbar-track,
+.dashboard-barrier .scrollbar-style-3::-webkit-scrollbar-track { background: transparent !important; border: none !important; box-shadow: none !important; }
+.scrollbar-style-3::-webkit-scrollbar-thumb,
+.dashboard-barrier .scrollbar-style-3::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    #ffffff 50%,
+    var(--widget-color, #40C6E9) 50%
+  ) !important;
+  border: 4px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000 !important;
+  border-radius: 8px !important;
+}
+.scrollbar-style-3::-webkit-scrollbar-thumb:hover,
+.dashboard-barrier .scrollbar-style-3::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    var(--widget-color, #40C6E9) 50%,
+    #000000 50%
+  ) !important;
+  background-clip: padding-box !important;
+}
+
+/* Style 4: Tactile Ridged Rectangular Fader (Accent & Black Ridges) */
+.scrollbar-style-4::-webkit-scrollbar,
+.dashboard-barrier .scrollbar-style-4::-webkit-scrollbar { width: 24px !important; display: block !important; }
+.scrollbar-style-4::-webkit-scrollbar-track,
+.dashboard-barrier .scrollbar-style-4::-webkit-scrollbar-track { background: transparent !important; border: none !important; box-shadow: none !important; }
+.scrollbar-style-4::-webkit-scrollbar-thumb,
+.dashboard-barrier .scrollbar-style-4::-webkit-scrollbar-thumb {
+  background: repeating-linear-gradient(
+    180deg,
+    var(--widget-color, #40C6E9) 0px,
+    var(--widget-color, #40C6E9) 6px,
+    #000000 6px,
+    #000000 10px
+  ) !important;
+  border: 4px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000 !important;
+  border-radius: 8px !important;
+}
+.scrollbar-style-4::-webkit-scrollbar-thumb:hover,
+.dashboard-barrier .scrollbar-style-4::-webkit-scrollbar-thumb:hover {
+  background: repeating-linear-gradient(
+    180deg,
+    #000000 0px,
+    #000000 6px,
+    var(--widget-color, #40C6E9) 6px,
+    var(--widget-color, #40C6E9) 10px
+  ) !important;
+  background-clip: padding-box !important;
+}
+
+/* Style 5: Industrial Hazard Rectangular Block (Black & Accent Stripes) */
+.scrollbar-style-5::-webkit-scrollbar,
+.dashboard-barrier .scrollbar-style-5::-webkit-scrollbar { width: 24px !important; display: block !important; }
+.scrollbar-style-5::-webkit-scrollbar-track,
+.dashboard-barrier .scrollbar-style-5::-webkit-scrollbar-track { background: transparent !important; border: none !important; box-shadow: none !important; }
+.scrollbar-style-5::-webkit-scrollbar-thumb,
+.dashboard-barrier .scrollbar-style-5::-webkit-scrollbar-thumb {
+  background: repeating-linear-gradient(
+    -45deg,
+    #000000 0px,
+    #000000 6px,
+    var(--widget-color, #FF5A5F) 6px,
+    var(--widget-color, #FF5A5F) 12px
+  ) !important;
+  border: 4px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000 !important;
+  border-radius: 8px !important;
+}
+.scrollbar-style-5::-webkit-scrollbar-thumb:hover,
+.dashboard-barrier .scrollbar-style-5::-webkit-scrollbar-thumb:hover {
+  background: repeating-linear-gradient(
+    -45deg,
+    #000000 0px,
+    #000000 6px,
+    #ffffff 6px,
+    #ffffff 12px
+  ) !important;
+  background-clip: padding-box !important;
+}
+
+/* Style 6: Double-Border Inset Box (Style 6 Frame + Style 8 Tint-to-Accent Hover Color Shift) */
+.scrollbar-style-6::-webkit-scrollbar,
+.dashboard-barrier .scrollbar-style-6::-webkit-scrollbar { width: 24px !important; display: block !important; }
+.scrollbar-style-6::-webkit-scrollbar-track,
+.dashboard-barrier .scrollbar-style-6::-webkit-scrollbar-track { background: transparent !important; border: none !important; box-shadow: none !important; }
+.scrollbar-style-6::-webkit-scrollbar-thumb,
+.dashboard-barrier .scrollbar-style-6::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 45%, white) !important;
+  border: 4px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000, inset 0 0 0 4px var(--widget-color, #40C6E9) !important;
+  border-radius: 8px !important;
+}
+.scrollbar-style-6::-webkit-scrollbar-thumb:hover,
+.dashboard-barrier .scrollbar-style-6::-webkit-scrollbar-thumb:hover {
+  background: var(--widget-color, #40C6E9) !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000 !important;
+}
+
+/* Style 7: Inverted Dual-Tone Rectangular Block (Accent Top / White Bottom) */
+.scrollbar-style-7::-webkit-scrollbar,
+.dashboard-barrier .scrollbar-style-7::-webkit-scrollbar { width: 24px !important; display: block !important; }
+.scrollbar-style-7::-webkit-scrollbar-track,
+.dashboard-barrier .scrollbar-style-7::-webkit-scrollbar-track { background: transparent !important; border: none !important; box-shadow: none !important; }
+.scrollbar-style-7::-webkit-scrollbar-thumb,
+.dashboard-barrier .scrollbar-style-7::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    var(--widget-color, #40C6E9) 50%,
+    #ffffff 50%
+  ) !important;
+  border: 4px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000 !important;
+  border-radius: 8px !important;
+}
+.scrollbar-style-7::-webkit-scrollbar-thumb:hover,
+.dashboard-barrier .scrollbar-style-7::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    #000000 50%,
+    var(--widget-color, #40C6E9) 50%
+  ) !important;
+  background-clip: padding-box !important;
+}
+
+/* Style 8: Full Tinted Rectangular Plate + Module Black Border */
+.scrollbar-style-8::-webkit-scrollbar,
+.dashboard-barrier .scrollbar-style-8::-webkit-scrollbar { width: 24px !important; display: block !important; }
+.scrollbar-style-8::-webkit-scrollbar-track,
+.dashboard-barrier .scrollbar-style-8::-webkit-scrollbar-track { background: transparent !important; border: none !important; box-shadow: none !important; }
+.scrollbar-style-8::-webkit-scrollbar-thumb,
+.dashboard-barrier .scrollbar-style-8::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 45%, white) !important;
+  border: 4px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow: inset 0 0 0 2px #000000 !important;
+  border-radius: 8px !important;
+}
+.scrollbar-style-8::-webkit-scrollbar-thumb:hover,
+.dashboard-barrier .scrollbar-style-8::-webkit-scrollbar-thumb:hover {
+  background: var(--widget-color, #40C6E9) !important;
+  background-clip: padding-box !important;
 }

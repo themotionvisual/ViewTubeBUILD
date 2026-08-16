@@ -118,7 +118,7 @@ export const ChannelDataGuidePanel: React.FC<ChannelDataGuidePanelProps> = ({
   title: row.title,
   status: row.speed,
   summary: row.bestFor,
-  source: row.needsLogin === "Yes" ? "Login required" : row.needsLogin === "Optional" ? "Optional login" : "Public or package-based",
+  source: row.needsLogin === "Yes" ? "Connection required" : row.needsLogin === "Optional" ? "Optional connection" : "Public or package-based",
   window: row.whenToUse,
  }))
 
@@ -151,7 +151,7 @@ export const ChannelDataGuidePanel: React.FC<ChannelDataGuidePanelProps> = ({
    id: "source_map" as const,
    title: "How To Get Stats Into ViewTube",
    status: `${sourceRows.length} source paths`,
-   summary: "What each source adds, whether login is required, and when to use it.",
+   summary: "What each source adds, whether a connection is required, and when to use it.",
    source: "API, public data, reporting, CSV",
    window: selectedWindowLabel,
   },
@@ -362,7 +362,7 @@ export const ChannelDataGuidePanel: React.FC<ChannelDataGuidePanelProps> = ({
                  <tr>
                   <th className="border-b-[2px] border-black bg-[#24D3FF] px-3 py-2 text-left text-[9px] font-[1000] uppercase tracking-[0.18em] text-black">Source</th>
                   <th className="border-b-[2px] border-black bg-[#24D3FF] px-3 py-2 text-left text-[9px] font-[1000] uppercase tracking-[0.18em] text-black">Best For</th>
-                  <th className="border-b-[2px] border-black bg-[#24D3FF] px-3 py-2 text-left text-[9px] font-[1000] uppercase tracking-[0.18em] text-black">Needs Login</th>
+                  <th className="border-b-[2px] border-black bg-[#24D3FF] px-3 py-2 text-left text-[9px] font-[1000] uppercase tracking-[0.18em] text-black">Needs Connection</th>
                   <th className="border-b-[2px] border-black bg-[#24D3FF] px-3 py-2 text-left text-[9px] font-[1000] uppercase tracking-[0.18em] text-black">Speed</th>
                   <th className="border-b-[2px] border-black bg-[#24D3FF] px-3 py-2 text-left text-[9px] font-[1000] uppercase tracking-[0.18em] text-black">What It Adds</th>
                   <th className="border-b-[2px] border-black bg-[#24D3FF] px-3 py-2 text-left text-[9px] font-[1000] uppercase tracking-[0.18em] text-black">When You Need It</th>

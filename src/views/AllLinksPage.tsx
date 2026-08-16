@@ -13,7 +13,7 @@ const sections: Array<{ title: string; items: Array<{ label: string; href: strin
   ],
  },
  {
-  title: "Billing + Signup",
+  title: "Billing + Connect",
   items: [
    { label: "Subscribe", href: "/subscribe", note: "Plan selection and checkout start" },
    { label: "Billing Panel Anchor", href: "/account?panel=billing", note: "Direct billing/meter section" },
@@ -49,7 +49,7 @@ const AllLinksPage: React.FC = () => {
     <Link2 size={28} strokeWidth={3} />
     <div>
      <h1 className="text-4xl font-black uppercase tracking-tight">All Links</h1>
-     <p className="text-sm font-bold uppercase tracking-wide">Quick-access map for signup, billing, account, and app routes.</p>
+     <p className="text-sm font-bold uppercase tracking-wide">Quick-access map for connection, billing, account, and app routes.</p>
     </div>
    </div>
 

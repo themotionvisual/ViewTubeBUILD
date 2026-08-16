@@ -39,7 +39,7 @@ export const PremiumPulseWidget = ({ widget, instance, editMode, onToggleCollaps
     
     {teaser && (
      <div className="absolute inset-2 bg-white border-[3px] border-black rounded-xl p-3 z-50 flex flex-col shadow-[4px_4px_0px_0px_#000]">
-      <span className="text-[10px] font-black uppercase border-b-[3px] border-black pb-1 mb-2">Member Teaser</span>
+      <span className="text-[10px] font-black uppercase border-b-[3px] border-[var(--widget-border,#000)] pb-1 mb-2">Member Teaser</span>
       <textarea className="flex-1 w-full bg-gray-50 border-2 border-black rounded p-2 text-[10px] font-bold font-mono outline-none resize-none" defaultValue={teaser} />
       <button onClick={() => setTeaser(null)} className="w-full mt-2 py-1 bg-[#4FFF5B] border-[3px] border-black rounded-lg font-black text-[10px] uppercase shadow-[2px_2px_0px_0px_#000]">Copy & Close</button>
      </div>

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { useEntitlement } from "../../../app/AppShell"
+import { useEntitlement } from "../../../context/entitlementContext"
 import { Image as ImageIcon, Sparkles, Download, Search, CheckCircle2, AlertTriangle, Upload, ArrowRight } from "lucide-react"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
+import { VideoAssetSelect } from "./VideoAssetSelect"
+import { WidgetScrollArea } from "../WidgetPrimitives"
 
 type TabMode = "generate" | "analyze" | "abtest"
 
@@ -17,7 +19,6 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   onCycleHeight,
   onRemove,
   onDecSize,
-  onCycleHeight,
   onDecHeight,
  }
 
@@ -37,7 +38,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   ])
   const [abAnalyzing, setAbAnalyzing] = useState(false)
 
-  const videos = data.canonicalRows || []
+  const videos = data.videoAssets || []
   const activeVideo = videos.find((v: any) => v.videoId === selectedVideo)
   const modeTokenCost = mode === "generate" ? 8 : 5
   const entitlement = useEntitlement()
@@ -57,7 +58,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   const handleGenerate = () => {
     setIsProcessing(true)
     setTimeout(() => {
-      setResult({type: "generation", imageUrl: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=600&auto=format&fit=crop", onDecSize, onCycleHeight, onDecHeight})
+      setResult({type: "generation", imageUrl: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=600&auto=format&fit=crop"})
       setIsProcessing(false)
     }, 2000)
   }
@@ -91,7 +92,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   const analyzeThumbnails = async () => {
     setAbAnalyzing(true)
     await new Promise(r => setTimeout(r, 1500))
-    setVariants(prev => prev.map(v => ({...v, score: v.image ? Math.round(30 + Math.random() * 65) : 0, onDecSize, onCycleHeight, onDecHeight})))
+    setVariants(prev => prev.map(v => ({...v, score: v.image ? Math.round(30 + Math.random() * 65) : 0})))
     setAbAnalyzing(false)
   }
 
@@ -153,19 +154,14 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   // Video dropdown (shared by analyze + abtest)
   const videoDropdown = (
     <div style={{ display: "flex", gap: "4px" }}>
-      <select
-        className="vt-select"
+      <VideoAssetSelect
+        assets={videos}
         value={selectedVideo}
-        onChange={(e) => setSelectedVideo(e.target.value)}
-        style={{ flex: 2 }}>
-        <option value="" disabled>Select a video...</option>
-        {videos
-         .filter((v: any) => !videoSearch || v.title?.toLowerCase().includes(videoSearch.toLowerCase()))
-         .slice(0, 15)
-         .map((v: any) => (
-          <option key={v.videoId} value={v.videoId}>{v.title || v.id}</option>
-        ))}
-      </select>
+        onChange={setSelectedVideo}
+        query={videoSearch}
+        limit={50}
+        style={{ flex: 2 }}
+      />
       <input
         className="vt-input"
         value={videoSearch}
@@ -181,7 +177,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
       {...common}
       icon={<ImageIcon size={22} />}
       headerContent={modeTabBar}>
-      <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px", overflowY: "auto" }}>
+      <WidgetScrollArea ariaLabel="Thumbnail laboratory" contentClassName="flex min-h-full flex-col gap-2">
 
         {/* GENERATE MODE */}
         {mode === "generate" && !result && (
@@ -263,9 +259,8 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
                       <span style={{ fontSize: "7px", fontWeight: 900, background: "#C9F830", border: "1px solid #000", borderRadius: "4px", padding: "1px 4px", textTransform: "uppercase" }}>AI Favored</span>
                     )}
                   </div>
-                  <label style={{
-                    width: "100%", aspectRatio: "16/9", border: v.image ? "2px solid #000" : "2px dashed #999",
-                    borderRadius: "8px", background: v.image ? "transparent" : "#f5f5f5",
+                  <label className="widget-upload-frame" style={{
+                    width: "100%", aspectRatio: "16/9",
                     display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
                     overflow: "hidden", position: "relative",
                   }}>
@@ -350,7 +345,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
           </div>
         )}
 
-      </div>
+      </WidgetScrollArea>
     </WidgetShell>
   )
 }

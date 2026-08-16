@@ -1,0 +1,750 @@
+:root {
+  --vt-nav-top-height: 85px;
+  --vt-nav-brand-width: 204px;
+  --vt-nav-wide-width: 204px;
+  --vt-nav-thin-width: 154px;
+  --vt-nav-stroke: 3px;
+  --vt-nav-control-stroke: 2px;
+  --vt-nav-radius: 9px;
+  --vt-nav-paper: #f3f4f6;
+  --vt-nav-ink: #000;
+  --vt-nav-focus: #528ffa;
+}
+
+.vt-adaptive-shell {
+  display: grid;
+  width: 100vw;
+  height: 100dvh;
+  min-width: 320px;
+  overflow: hidden;
+  background: var(--vt-nav-paper);
+  color: var(--vt-nav-ink);
+  font-family: Inter, Arial, sans-serif;
+  letter-spacing: 0;
+}
+
+.vt-app-scroll-track {
+  position: fixed;
+  z-index: 220;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 28px;
+  border-left: 2px solid #111;
+  background: #000;
+  user-select: none;
+  touch-action: none;
+}
+
+.vt-app-scroll-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  width: 26px;
+  min-height: 46px;
+  place-items: center;
+  border: 2px solid #111;
+  border-right-width: 0;
+  border-left-width: 0;
+  border-radius: 8px;
+  cursor: grab;
+  transform: translateY(var(--vt-window-thumb-y, 0));
+  will-change: transform;
+}
+
+.vt-app-scroll-thumb:active { cursor: grabbing; }
+
+.vt-adaptive-shell[data-layout="top"] .vt-app-scroll-track { top: var(--vt-nav-top-height); }
+/* Mobile uses native touch scrolling, so the custom draggable scroll rail (a
+   fixed 28px black bar) is hidden — it otherwise overlaps content on the right. */
+.vt-adaptive-shell[data-layout="mobile"] .vt-app-scroll-track { display: none; }
+
+.vt-adaptive-shell[data-layout="top"] {
+  grid-template: var(--vt-nav-top-height) minmax(0, 1fr) / minmax(0, 1fr);
+}
+
+.vt-adaptive-shell[data-layout="wide"] {
+  grid-template: minmax(0, 1fr) / var(--vt-nav-wide-width) minmax(0, 1fr);
+}
+
+.vt-adaptive-shell[data-layout="thin"] {
+  grid-template: minmax(0, 1fr) / var(--vt-nav-thin-width) minmax(0, 1fr);
+}
+
+.vt-adaptive-shell[data-layout="mobile"] {
+  grid-template: 70px minmax(0, 1fr) / minmax(0, 1fr);
+}
+
+.vt-adaptive-nav {
+  position: relative;
+  z-index: 120;
+  display: grid;
+  min-width: 0;
+  background: #fff;
+}
+
+.vt-adaptive-shell[data-layout="top"] > .vt-adaptive-nav {
+  grid-area: 1 / 1;
+  grid-template-columns: var(--vt-nav-brand-width) minmax(0, 1fr) auto;
+  height: var(--vt-nav-top-height);
+  background: var(--vt-nav-paper);
+}
+
+.vt-adaptive-shell[data-layout="wide"] > .vt-adaptive-nav,
+.vt-adaptive-shell[data-layout="thin"] > .vt-adaptive-nav {
+  grid-area: 1 / 1;
+  grid-template-rows: var(--vt-nav-top-height) auto auto minmax(0, 1fr);
+  width: 100%;
+  height: 100dvh;
+  background: var(--vt-nav-paper);
+}
+
+.vt-adaptive-nav__brand {
+  display: flex;
+  box-sizing: border-box;
+  width: var(--vt-nav-brand-width);
+  min-width: var(--vt-nav-brand-width);
+  align-items: center;
+  padding: 4px 8px 4px 10px;
+  overflow: hidden;
+}
+
+.vt-adaptive-nav__logo {
+  display: inline-flex;
+  box-sizing: border-box;
+  min-width: 0;
+  height: 100%;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #000;
+  line-height: 1;
+  text-transform: uppercase;
+  touch-action: manipulation;
+}
+
+.vt-adaptive-nav__logo span {
+  display: inline-block;
+  font-size: 38px;
+  font-weight: 950;
+  letter-spacing: 0;
+  transform: scaleX(.92) scaleY(1.08);
+  transform-origin: left center;
+}
+
+.vt-adaptive-nav__logo span:first-child { margin-right: -9px; }
+.vt-adaptive-nav__logo span:last-child { color: #36e0f6; }
+
+.vt-adaptive-nav__links {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(70px, 1fr));
+  min-width: 0;
+  gap: 5px;
+  align-items: center;
+  padding: 4px 8px 4px 4px;
+}
+
+.vt-adaptive-nav__link {
+  position: relative;
+  display: flex;
+  box-sizing: border-box;
+  min-width: 0;
+  height: 74px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0 6px;
+  border: var(--vt-nav-control-stroke) solid #000;
+  border-radius: var(--vt-nav-radius);
+  background: var(--vt-nav-color);
+  color: #000;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  touch-action: manipulation;
+  transition: transform 110ms ease, box-shadow 110ms ease;
+}
+
+.vt-adaptive-nav__link:hover { transform: translateY(-1px); box-shadow: 0 2px 0 #000; }
+.vt-adaptive-nav__link:active { transform: translateY(1px); box-shadow: none; }
+
+/* Selected state: the hover shine frozen near its right-side flash point. */
+.vt-adaptive-nav__link.active::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  right: 12px;
+  bottom: -2px;
+  width: 30px;
+  background: rgba(255, 255, 255, .76);
+  opacity: .82;
+  pointer-events: none;
+  transform: skewX(-20deg);
+  z-index: 0;
+}
+
+/* White shine sweeps across a nav button on hover/focus, and across a flight clone mid-animation. */
+.vt-adaptive-nav__link::before,
+.vt-nav-flight-clone::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, .78);
+  transform: translateX(-115%) skewX(-20deg);
+  opacity: .58;
+  transition: transform .45s cubic-bezier(.2, .8, .2, 1);
+  z-index: -1;
+  pointer-events: none;
+}
+.vt-adaptive-nav__link:hover::before,
+.vt-adaptive-nav__link:focus-visible::before,
+.vt-nav-flight-clone.is-shining::before {
+  transform: translateX(115%) skewX(-20deg);
+}
+.vt-adaptive-nav__link > * { position: relative; z-index: 1; }
+
+/* Flight-clone based morph animation between the topbar and sidebar layouts (see useNavLayoutMorph). */
+.vt-adaptive-shell.vt-nav-transitioning { pointer-events: none; }
+.vt-adaptive-shell.vt-nav-transitioning .vt-adaptive-nav { overflow: visible; }
+/* The page-content transform can momentarily place main-content's old top-left corner underneath the
+   nav chrome (e.g. sliding out from behind the topbar's height) — float it above the nav during the
+   transition so it's never clipped/hidden behind it, while the flight-layer (z-index 99999) still wins. */
+.vt-adaptive-shell.vt-nav-transitioning .vt-adaptive-main { position: relative; z-index: 130; }
+.vt-nav-flight-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  overflow: visible;
+  pointer-events: none;
+}
+.vt-nav-flight-clone {
+  position: fixed;
+  box-sizing: border-box;
+  margin: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: var(--vt-nav-control-stroke) solid #000;
+  border-radius: var(--vt-nav-radius);
+  color: #000;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+  isolation: isolate;
+  box-shadow: 0 2px 0 #000;
+  will-change: transform, width, height, left, top;
+  transition: color .35s ease, background-color .35s ease;
+}
+.vt-nav-flight-clone svg { flex-shrink: 0; }
+.vt-nav-source-hidden { visibility: hidden !important; }
+
+.vt-adaptive-nav__utilities {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 9px 4px 0;
+}
+
+.vt-adaptive-nav__enter-sidebar,
+.vt-adaptive-nav__layout-controls button,
+.vt-adaptive-nav__mobile-control,
+.vt-adaptive-nav__drawer-head button {
+  display: grid;
+  place-items: center;
+  border: var(--vt-nav-control-stroke) solid #000;
+  border-radius: var(--vt-nav-radius);
+  background: #4ee4be;
+  color: #000;
+  touch-action: manipulation;
+  transition: transform 110ms ease, box-shadow 110ms ease;
+}
+
+.vt-adaptive-nav__enter-sidebar {
+  width: 74px;
+  height: 74px;
+}
+
+.vt-adaptive-nav__enter-sidebar svg,
+.vt-adaptive-nav__layout-controls svg,
+.vt-adaptive-nav__mobile-control svg,
+.vt-adaptive-nav__drawer-head svg {
+  width: 23px;
+  height: 23px;
+  stroke-width: 2.5;
+}
+
+.vt-adaptive-nav__enter-sidebar:hover,
+.vt-adaptive-nav__layout-controls button:hover,
+.vt-adaptive-nav__mobile-control:hover,
+.vt-adaptive-nav__drawer-head button:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 #000;
+}
+
+.vt-adaptive-nav__layout-controls {
+  display: grid;
+  box-sizing: border-box;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  width: 100%;
+}
+
+.vt-adaptive-nav__layout-controls button {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  background: #fff;
+}
+
+.vt-adaptive-nav__layout-controls button[aria-pressed="true"] { background: #ffda47; }
+
+.vt-adaptive-nav__account-trigger {
+  display: grid;
+  box-sizing: border-box;
+  grid-template-columns: 48px minmax(0, 1fr) 22px;
+  width: clamp(246px, 20vw, 340px);
+  min-width: 0;
+  height: 74px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  overflow: hidden;
+  border: var(--vt-nav-control-stroke) solid #000;
+  border-radius: var(--vt-nav-radius);
+  background:
+    linear-gradient(90deg, #c0f240 0 58%, #fff 58% 61%, #c0f240 61% 100%);
+  color: #000;
+  text-align: left;
+  touch-action: manipulation;
+  cursor: pointer;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .1);
+  transition: transform 110ms ease, box-shadow 110ms ease;
+}
+.vt-adaptive-nav__account-trigger:hover { transform: translateY(-1px); box-shadow: 0 2px 0 #000, inset 0 -3px 0 rgba(0, 0, 0, .1); }
+.vt-adaptive-nav__account-trigger:active { transform: translateY(1px); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .12); }
+
+.vt-adaptive-nav__avatar {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  overflow: hidden;
+  border: var(--vt-nav-control-stroke) solid #000;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 2px 2px 0 #000;
+}
+
+.vt-adaptive-nav__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.vt-adaptive-nav__avatar svg { width: 23px; height: 23px; stroke-width: 2.2; }
+
+.vt-adaptive-nav__account-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  line-height: 1;
+}
+.vt-adaptive-nav__account-copy strong,
+.vt-adaptive-nav__account-copy span { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vt-adaptive-nav__account-copy strong {
+  font-size: 13px;
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+.vt-adaptive-nav__account-meta {
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  opacity: .72;
+}
+.vt-adaptive-nav__auth-status {
+  justify-self: start;
+  max-width: 100%;
+  padding: 3px 6px;
+  border: 2px solid #000;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 8px;
+  font-weight: 1000;
+  text-transform: uppercase;
+  box-shadow: 1px 1px 0 #000;
+}
+
+/* Plan/credit meter now lives only inside the opened menu's status card, not the always-visible trigger. */
+.vt-adaptive-nav__menu-meter { display: flex; min-width: 0; flex-direction: column; gap: 4px; width: 92px; }
+.vt-adaptive-nav__menu-meter > b { padding: 5px; border: 2px solid #000; border-radius: 5px; background: #ffda47; font-size: 8px; text-transform: uppercase; white-space: nowrap; text-align: center; overflow: hidden; text-overflow: ellipsis; }
+.vt-adaptive-nav__menu-meter > i { display: block; height: 7px; overflow: hidden; border: 2px solid #000; border-radius: 4px; background: #fff; }
+.vt-adaptive-nav__menu-meter > i > i { display: block; height: 100%; background: #3fee56; }
+
+/* Signed-out account trigger: a direct, one-tap sign-up CTA instead of an empty avatar + credits meter. */
+.vt-adaptive-nav__account-trigger--signup {
+  grid-template-columns: 48px minmax(0, 1fr) 22px;
+  background: linear-gradient(90deg, #c0f240 0 72%, rgba(255,255,255,.72) 72% 75%, #c0f240 75% 100%);
+}
+.vt-adaptive-nav__account-trigger--signup .vt-adaptive-nav__avatar { background: #000; color: #c0f240; flex-shrink: 0; }
+.vt-adaptive-nav__account-trigger--signup .vt-adaptive-nav__account-copy { flex: 1 1 auto; }
+.vt-adaptive-nav__account-chevron { width: 17px; height: 17px; stroke-width: 3; }
+
+.vt-adaptive-nav__account-menu {
+  position: absolute;
+  z-index: 160;
+  top: calc(100% + 7px);
+  right: 36px;
+  width: min(460px, calc(100vw - 18px));
+  max-height: calc(100dvh - 104px);
+  padding: 8px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: var(--vt-nav-stroke) solid #000;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 5px 5px 0 #000;
+  scrollbar-width: none;
+}
+.vt-adaptive-nav__account-menu::-webkit-scrollbar { display: none; }
+
+.vt-adaptive-nav__menu-status {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  padding: 7px;
+  border: 2px solid #000;
+  border-radius: 7px;
+  background: #f3f4f6;
+}
+.vt-adaptive-nav__menu-status > span:nth-child(2) { min-width: 0; }
+.vt-adaptive-nav__menu-status strong,
+.vt-adaptive-nav__menu-status small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase; }
+.vt-adaptive-nav__menu-status strong { font-size: 10px; }
+.vt-adaptive-nav__menu-status small { margin-top: 3px; font-size: 8px; font-weight: 800; opacity: .65; }
+
+.vt-adaptive-nav__connect-action,
+.vt-adaptive-nav__sign-out {
+  width: 100%;
+  min-height: 36px;
+  margin-top: 7px;
+  border: 2px solid #000;
+  border-radius: 7px;
+  background: #3fee56;
+  color: #000;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+/* Single scannable column instead of a dense 2-up grid — this is a short, user-facing menu now, not a
+   power-user control panel. */
+.vt-adaptive-nav__menu-groups { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.vt-adaptive-nav__menu-groups section { min-width: 0; padding: 6px; border: 2px solid #000; border-radius: 8px; }
+.vt-adaptive-nav__menu-groups h2 { margin: 2px 5px 5px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
+.vt-adaptive-nav__menu-groups section > button,
+.vt-adaptive-nav__submenu button {
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #000;
+  font-size: 10px;
+  font-weight: 900;
+  text-align: left;
+  text-transform: uppercase;
+}
+.vt-adaptive-nav__menu-groups section > button:hover,
+.vt-adaptive-nav__submenu button:hover { border-color: #000; background: #f3f4f6; }
+.vt-adaptive-nav__menu-groups button svg { width: 14px; height: 14px; flex: 0 0 auto; stroke-width: 3; }
+.vt-adaptive-nav__submenu { margin: 4px 0 2px; padding-left: 6px; border-left: 4px solid #36e0f6; }
+.vt-adaptive-nav__submenu button { min-height: 30px; font-size: 9px; }
+.vt-adaptive-nav__sign-out { background: #fa618a; }
+
+/* Advanced: collapsed by default so BYO-key / API-key options don't clutter the everyday menu. */
+.vt-adaptive-nav__menu-advanced-toggle {
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  color: rgba(0, 0, 0, .55);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+.vt-adaptive-nav__menu-advanced-toggle svg { width: 13px; height: 13px; stroke-width: 3; transition: transform 150ms ease; }
+.vt-adaptive-nav__menu-advanced-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+.vt-adaptive-nav__menu-advanced .vt-adaptive-nav__submenu { border-left-color: #c0c4cc; }
+
+.vt-adaptive-main {
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Right padding reserves room for the fixed .vt-app-scroll-track (28px wide) so content never
+     renders underneath it — matters most in wide/thin sidebar mode where the content column is
+     narrower and has less incidental margin than top mode's wider, auto-centered column. */
+  padding: 10px 38px 384px 10px;
+  scrollbar-width: none;
+  /* Coordinated settle for any box-model change while the nav layout morph animation runs. */
+  transition: margin .9s cubic-bezier(.22, .72, .18, 1), padding .9s cubic-bezier(.22, .72, .18, 1),
+    width .9s cubic-bezier(.22, .72, .18, 1), max-width .9s cubic-bezier(.22, .72, .18, 1);
+}
+.vt-adaptive-main::-webkit-scrollbar { display: none; }
+.vt-adaptive-main--editor { padding: 8px; }
+.vt-adaptive-main--brain {
+  overflow: hidden;
+  padding: 10px;
+}
+.vt-adaptive-shell[data-layout="top"] > .vt-adaptive-main { grid-area: 2 / 1; }
+.vt-adaptive-shell[data-layout="wide"] > .vt-adaptive-main,
+.vt-adaptive-shell[data-layout="thin"] > .vt-adaptive-main { grid-area: 1 / 2; }
+
+/* Keep the ViewTube logo anchored at the exact same top-left size in every desktop layout, so only the
+   nav buttons/utilities/page content need to animate between top and sidebar — the logo never moves. */
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__brand,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__brand {
+  width: var(--vt-nav-brand-width);
+  min-width: var(--vt-nav-brand-width);
+  height: var(--vt-nav-top-height);
+  padding: 4px 8px 4px 10px;
+  align-self: start;
+}
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__logo,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__logo { height: 100%; }
+
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__links,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
+  padding: 5px 7px 8px;
+}
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__link,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link {
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  font-size: 13px;
+}
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__link.active::after,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link.active::after {
+  top: -2px;
+  right: 11px;
+  bottom: -2px;
+  width: 28px;
+}
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link { font-size: 11px; }
+
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__utilities,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__utilities {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 2px 7px 8px;
+}
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__account-trigger,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-trigger {
+  grid-template-columns: 42px minmax(0, 1fr) 18px;
+  width: 100%;
+  height: 68px;
+  padding: 6px;
+}
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__avatar,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__avatar {
+  width: 42px;
+  height: 42px;
+}
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__account-copy strong {
+  font-size: 11px;
+}
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__auth-status {
+  max-width: 104px;
+}
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-copy { display: none; }
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__signup-cta { display: none; }
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-trigger { grid-template-columns: 42px 18px; justify-content: space-between; }
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__account-menu,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-menu {
+  position: fixed;
+  top: auto;
+  right: auto;
+  bottom: 12px;
+  left: calc(var(--vt-nav-wide-width) + 8px);
+  max-height: calc(100dvh - 24px);
+}
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-menu { left: calc(var(--vt-nav-thin-width) + 8px); }
+
+.vt-adaptive-nav--mobile {
+  grid-area: 1 / 1;
+  grid-template-columns: 50px minmax(0, 1fr) 50px;
+  align-items: center;
+  gap: 7px;
+  height: 70px;
+  padding: max(7px, env(safe-area-inset-top)) 8px 7px;
+  border-bottom: var(--vt-nav-stroke) solid #000;
+}
+.vt-adaptive-nav--mobile .vt-adaptive-nav__mobile-control { width: 50px; height: 50px; }
+.vt-adaptive-nav--mobile .vt-adaptive-nav__logo { justify-self: center; }
+.vt-adaptive-nav--mobile .vt-adaptive-nav__logo span { font-size: clamp(26px, 9vw, 35px); }
+.vt-adaptive-nav--mobile .vt-adaptive-nav__account-trigger { grid-template-columns: 38px; width: 50px; height: 50px; padding: 4px; }
+.vt-adaptive-nav--mobile .vt-adaptive-nav__avatar { width: 38px; height: 38px; box-shadow: none; }
+.vt-adaptive-nav--mobile .vt-adaptive-nav__account-copy,
+.vt-adaptive-nav--mobile .vt-adaptive-nav__account-chevron { display: none; }
+.vt-adaptive-nav--mobile .vt-adaptive-nav__account-menu { position: fixed; top: 77px; right: 36px; }
+.vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-main { grid-area: 2 / 1; padding: 20px 16px 300px; }
+.vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-main--editor { padding: 6px; }
+.vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-main--brain { overflow: hidden; padding: 6px; }
+
+.vt-adaptive-nav__drawer-backdrop {
+  position: fixed;
+  z-index: 145;
+  inset: 70px 0 0;
+  display: flex;
+  align-items: stretch;
+  background: rgba(0, 0, 0, .36);
+}
+.vt-adaptive-nav__drawer {
+  width: min(286px, calc(100vw - 34px));
+  height: 100%;
+  padding: 10px 10px max(10px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  border-right: var(--vt-nav-stroke) solid #000;
+  background: #f3f4f6;
+  box-shadow: 6px 0 0 rgba(0, 0, 0, .2);
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.vt-adaptive-nav__drawer::-webkit-scrollbar { display: none; }
+.vt-adaptive-nav__drawer-head { display: flex; height: 48px; align-items: center; justify-content: space-between; margin-bottom: 8px; padding-left: 8px; border-bottom: 3px solid #000; font-size: 14px; text-transform: uppercase; }
+.vt-adaptive-nav__drawer-head button { width: 38px; height: 38px; }
+.vt-adaptive-nav__drawer-links { display: flex; flex-direction: column; gap: 9px; padding: 2px; }
+/* Match the desktop top-bar buttons: full-width rounded palette pills with the
+   same border/radius and a hard neubrutalist shadow, instead of side tabs. */
+.vt-adaptive-nav__drawer-links .vt-adaptive-nav__link { width: 100%; height: 50px; border-radius: var(--vt-nav-radius); font-size: 14px; box-shadow: 3px 3px 0 #000; }
+.vt-adaptive-nav__drawer-links .vt-adaptive-nav__link:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 #000; }
+.vt-adaptive-nav__drawer-links .vt-adaptive-nav__link:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #000; }
+
+.vt-adaptive-legal { position: fixed; z-index: 20; bottom: 10px; left: 12px; display: flex; gap: 7px; padding: 4px 7px; background: rgba(255, 255, 255, .88); font-size: 9px; font-weight: 700; }
+.vt-adaptive-legal a { color: inherit; text-decoration: underline; }
+.vt-adaptive-announcement { position: fixed; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.vt-adaptive-nav button:focus-visible,
+.vt-adaptive-nav a:focus-visible,
+.vt-adaptive-nav__drawer button:focus-visible,
+.vt-adaptive-nav__drawer a:focus-visible {
+  outline: 3px solid var(--vt-nav-focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1600px) and (min-width: 761px) {
+  .vt-adaptive-shell[data-layout="top"] > .vt-adaptive-nav { grid-template-columns: var(--vt-nav-brand-width) minmax(0, 1fr) auto; }
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__links {
+    grid-template-columns: repeat(4, minmax(62px, 1fr));
+    grid-template-rows: repeat(2, 35px);
+    gap: 5px;
+  }
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__link { height: 35px; font-size: 11px; }
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__account-trigger {
+    grid-template-columns: 44px minmax(0, 1fr) 18px;
+    width: clamp(224px, 20vw, 270px);
+    padding: 5px 7px;
+  }
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__avatar {
+    width: 42px;
+    height: 42px;
+  }
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__account-copy strong {
+    font-size: 10px;
+  }
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__auth-status {
+    max-width: 118px;
+  }
+}
+
+@media (max-width: 1080px) and (min-width: 761px) {
+  .vt-adaptive-shell[data-layout="top"] > .vt-adaptive-nav { grid-template-columns: 176px minmax(0, 1fr) auto; }
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__brand {
+    width: 176px;
+    min-width: 176px;
+  }
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__brand { padding-inline: 8px; }
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__logo span { font-size: 29px; }
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__account-trigger { grid-template-columns: 38px; width: 52px; padding: 4px; }
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__account-copy,
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__account-chevron { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vt-adaptive-nav *,
+  .vt-adaptive-nav__drawer * { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+  .vt-nav-flight-layer { display: none; }
+}
+
+/* =========================================================
+   TOP-BAR FULL-WIDTH CONTENT
+   In top-bar mode there is no sidebar, so the content column already spans the
+   full viewport. Page shells that cap their width for the wide/thin sidebar
+   layouts (max-w-[1400px]..[1600px], max-w-7xl) would otherwise leave large
+   empty side margins here — let them fill the available width instead. Sidebar,
+   thin, and mobile layouts keep their caps, which keep those narrower columns
+   readable.
+   ========================================================= */
+.vt-adaptive-shell[data-layout="top"] .vt-adaptive-main [class*="max-w-[14"],
+.vt-adaptive-shell[data-layout="top"] .vt-adaptive-main [class*="max-w-[15"],
+.vt-adaptive-shell[data-layout="top"] .vt-adaptive-main [class*="max-w-[16"],
+.vt-adaptive-shell[data-layout="top"] .vt-adaptive-main .max-w-7xl {
+  max-width: 100% !important;
+}
+
+/* =====================================================================
+   MOBILE HORIZONTAL — EDITOR SURFACE
+   On landscape phones, the editor claims the entire viewport: nav bar
+   hides, main padding collapses to zero. Every other route keeps its
+   normal mobile chrome. The Adaptive shell's own mobile layout stays
+   intact for non-editor pages.
+   ===================================================================== */
+@media (max-height: 560px) and (orientation: landscape),
+       (max-width: 932px) and (orientation: landscape) {
+  /* Zero-out padding on the editor surface so VT_E1's own outer frame
+     wins the pixel budget. */
+  .vt-adaptive-main.vt-adaptive-main--editor { padding: 0 !important; }
+
+  /* Collapse the top nav row when the shell is in mobile layout AND the
+     editor is the surface — the nav row eats a full 70px of a ~390px
+     landscape viewport, which is 18% of the height for a navigation the
+     user isn't currently using. */
+  .vt-adaptive-shell[data-layout="mobile"]:has(.vt-adaptive-main--editor) {
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  }
+  .vt-adaptive-shell[data-layout="mobile"]:has(.vt-adaptive-main--editor) > .vt-adaptive-nav {
+    display: none;
+  }
+  .vt-adaptive-shell[data-layout="mobile"]:has(.vt-adaptive-main--editor) > .vt-adaptive-main {
+    grid-area: 1 / 1;
+  }
+}

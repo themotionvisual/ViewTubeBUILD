@@ -4,6 +4,7 @@ import React, {
  useCallback,
  useEffect,
  useRef,
+ startTransition,
 } from "react"
 import type { ReactNode } from "react"
 import type {
@@ -14,10 +15,18 @@ import type {
  VideoSyncBatchState,
  VideoRetentionCache,
  Project,
- BrainMemorySchema,
 } from "../types"
-import { unifiedAuth } from "../services/authSession"
-import { clearAnalyticsStateForFreshSync } from "../services/localDataReset"
+import { syncChannelBootstrap } from "../services/canonicalSync/channelBootstrapSync"
+import { unifiedAuth } from "../services/auth/authSession"
+import {
+ beginAccountIntent,
+ isAccountServerUnavailableError,
+ fetchUnifiedAccountSnapshot,
+ isUnifiedAccountServerEnabled,
+} from "../services/account/accountCoordinator"
+import { resolveAccountIntent } from "../services/account/accountContracts"
+import type { UnifiedAccountSnapshot } from "../services/account/accountContracts"
+import { requestGoogleOAuthTermsConsent } from "../services/googleOAuthConsent"
 import { readYouTubeAnalyticsCache } from "../services/analytics/DataStore"
 import {
  fetchDailyMetrics,
@@ -30,12 +39,173 @@ import {
  defaultAuthState,
  defaultSyncStatus,
  defaultSyncBatch,
+ defaultChannelIdentity,
+ defaultInitialDashboardHydrationStatus,
  GlobalDataContext,
 } from "./GlobalDataContextTypes"
-import type { GlobalDataContextProps } from "./GlobalDataContextTypes"
-import { emitSignal, consultBrain, getBrainMemory, reflectAndCompress, initializeBrain } from "../services/brain"
+import type { AnalyticsSyncAction } from "../services/analytics/SyncPipeline"
+import {
+ emitSignal,
+ consultBrain,
+ getBrainMemory,
+ reflectAndCompress,
+ initializeBrain,
+ runFirstRunBrainOnboardingBootstrap,
+ refreshToolContextPack,
+} from "../services/brain"
+// Import directly from the leaf modules rather than the feature barrel — the
+// barrel re-exports the entire vt-sync-local surface (localSyncEngine,
+// tableRegistry, adapters), which is ~120 kB of code that we do not want to
+// pay for on the first-paint entry chunk.
+import { applyVtSyncPrivacyFilters } from "../features/vt-sync-local/adapters/privacyPolicy"
+import { getVtSyncSnapshot } from "../features/vt-sync-local/adapters/snapshot"
+import { resolveChannelConnectionSnapshot } from "../services/connectionState"
+import type {
+ ChannelBootPhase,
+ ChannelIdentitySnapshot,
+ InitialDashboardHydrationStatus,
+} from "../types"
 
 let lastAuthAbortLogAt = 0
+
+const isPresent = (value: unknown) =>
+ value !== null && value !== undefined && String(value).trim() !== ""
+
+const isUnauthorizedError = (error: unknown): boolean => {
+ const candidate = error as { code?: unknown; message?: unknown } | null
+ const message = String(candidate?.message || error || "").toLowerCase()
+ return (
+  candidate?.code === 401 ||
+  message === "unauthorized" ||
+  message.includes("authorization expired") ||
+  message.includes("please reconnect your channel")
+ )
+}
+
+const isLoginAbortError = (error: unknown): boolean => {
+ const message = String((error as { message?: unknown } | null)?.message || error || "").toLowerCase()
+ return (
+  message.includes("popup") ||
+  message.includes("timed out") ||
+  message.includes("cancel") ||
+  message.includes("aborted")
+ )
+}
+
+const ensureLoginToken = (): string => {
+ const token = unifiedAuth.getAccessToken()
+ if (!token) {
+  throw Object.assign(
+   new Error("Channel authorization failed; reconnect required."),
+   { code: 401, stage: "login_token_validation" },
+  )
+ }
+ return token
+}
+
+const mergeDefined = <T,>(incoming: T | null | undefined, current: T | null | undefined) =>
+ incoming !== null && incoming !== undefined ? incoming : current
+
+const toFiniteNumber = (value: unknown): number | null => {
+ const parsed = Number(value)
+ return Number.isFinite(parsed) ? parsed : null
+}
+
+const preferNonZeroFinite = (
+ incoming: unknown,
+ fallback: unknown,
+): number | null => {
+ const nextValue = toFiniteNumber(incoming)
+ const fallbackValue = toFiniteNumber(fallback)
+ if (nextValue == null) return fallbackValue
+ if (nextValue === 0 && fallbackValue != null && fallbackValue > 0) return fallbackValue
+ return nextValue
+}
+
+const getSubscriberCountGranularity = (value: number | null): number => {
+ if (value == null) return 1
+ const absValue = Math.abs(value)
+ if (absValue >= 100000000) return 1000000
+ if (absValue >= 10000000) return 100000
+ if (absValue >= 1000000) return 10000
+ if (absValue >= 100000) return 1000
+ if (absValue >= 10000) return 100
+ if (absValue >= 1000) return 10
+ return 1
+}
+
+const preferPreciseSubscriberCount = (
+ incoming: unknown,
+ current: unknown,
+): number | null => {
+ const nextValue = toFiniteNumber(incoming)
+ const currentValue = toFiniteNumber(current)
+ if (nextValue == null) return currentValue
+ if (currentValue == null) return nextValue
+ if (nextValue === currentValue) return nextValue
+
+ const nextGranularity = getSubscriberCountGranularity(nextValue)
+ const currentGranularity = getSubscriberCountGranularity(currentValue)
+ const nextLooksRounded =
+  nextGranularity > 1 && Math.abs(nextValue % nextGranularity) < 1e-9
+ const currentLooksRounded =
+  currentGranularity > 1 && Math.abs(currentValue % currentGranularity) < 1e-9
+
+ if (
+  nextLooksRounded &&
+  !currentLooksRounded &&
+  Math.abs(nextValue - currentValue) < nextGranularity
+ ) {
+  return currentValue
+ }
+
+ return nextValue
+}
+
+const buildChannelIdentityFromSources = (
+ auth: AuthState,
+ cache?: Record<string, any> | null,
+): ChannelIdentitySnapshot => {
+ const profile = (cache?.profile || cache?.channelBaseline || {}) as Record<string, any>
+ const summary = (cache?.channelLifetimeSummary || {}) as Record<string, any>
+ const thumbnails = (profile.thumbnails || {}) as Record<string, { url?: string }>
+ const avatarUrl =
+  String(
+   thumbnails.medium?.url ||
+    thumbnails.high?.url ||
+    thumbnails.default?.url ||
+    profile.thumbnail ||
+    auth.channelThumbnail ||
+    "",
+  ).trim() || null
+ const name =
+  String(profile.title || auth.channelName || "").trim() || null
+ const handle =
+  String(profile.customUrl || auth.channelHandle || "").trim() || null
+ const channelId =
+  String(profile.id || profile.channelId || auth.channelId || "").trim() || null
+ const subscriberCount = preferPreciseSubscriberCount(
+  summary.currentSubscribers,
+  auth.subscriberCount,
+ )
+ const totalViews = preferNonZeroFinite(summary.lifetimeViews, auth.totalViews)
+ const videoCount = preferNonZeroFinite(summary.publicVideoCount, auth.videoCount)
+ const isVerified = Boolean(name && (handle || avatarUrl || subscriberCount !== null || totalViews !== null || videoCount !== null))
+ const hasAnyIdentity = Boolean(channelId || name || handle || avatarUrl)
+
+ return {
+  channelId,
+  name,
+  handle,
+  avatarUrl,
+  subscriberCount: Number.isFinite(Number(subscriberCount)) ? Number(subscriberCount) : null,
+  totalViews: Number.isFinite(Number(totalViews)) ? Number(totalViews) : null,
+  videoCount: Number.isFinite(Number(videoCount)) ? Number(videoCount) : null,
+  isVerified,
+  isPartial: hasAnyIdentity && !isVerified,
+  lastHydratedAt: String(profile.syncedAt || summary.syncedAt || auth.syncedAt || "").trim() || null,
+ }
+}
 
 const loadPersistedBrain = (): WorkspaceBrain => {
  try {
@@ -199,61 +369,332 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
  useEffect(() => {
   initializeBrain().catch(e => console.error("Brain initialization failed:", e));
  }, []);
- const [brain, setBrain] = useState<WorkspaceBrain>(loadPersistedBrain)
- const [authState, setAuthStateRaw] = useState<AuthState>(loadPersistedAuth)
+ // ── Phase 3: Defer heavy localStorage parsing off the critical render path ──
+ // Start with lightweight defaults so the first React commit is instant.
+ // Heavy JSON.parse of brain/auth/cache is scheduled via requestIdleCallback
+ // and merged in once ready. Users see a skeleton for 1-2 frames at most.
+ const [brain, setBrain] = useState<WorkspaceBrain>(defaultBrain)
+ const [authState, setAuthStateRaw] = useState<AuthState>(() => ({
+  ...defaultAuthState,
+  isAuthenticated: unifiedAuth.isAuthenticated(),
+ }))
+ const [isAuthorizing, setIsAuthorizing] = useState(false)
  const [isSyncing, setIsSyncing] = useState<boolean>(false)
- const [lastSyncComplete, setLastSyncComplete] = useState<string | null>(
-  localStorage.getItem("yt_analytics_last_sync") || null,
- )
+ const [channelIdentity, setChannelIdentity] = useState<ChannelIdentitySnapshot>(defaultChannelIdentity)
+ const [channelBootPhase, setChannelBootPhase] = useState<ChannelBootPhase>("idle")
+ const [initialDashboardHydrationStatus, setInitialDashboardHydrationStatus] =
+  useState<InitialDashboardHydrationStatus>(defaultInitialDashboardHydrationStatus)
+ const [lastSyncComplete, setLastSyncComplete] = useState<string | null>(null)
  const [syncStatus, setSyncStatus] =
   useState<ChannelAnalysisSyncStatus>(defaultSyncStatus)
- const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(() => {
+ const [activeSyncAction, setActiveSyncAction] =
+  useState<AnalyticsSyncAction | null>(null)
+ const [activeSyncButtonId, setActiveSyncButtonId] = useState<string | null>(null)
+ const [syncBatch, setSyncBatch] = useState<VideoSyncBatchState>(defaultSyncBatch)
+ const [aiModel, setAiModel] = useState<string>("gemini-3.1-flash-lite")
+ const loginBootPromiseRef = useRef<Promise<void> | null>(null)
+ const hydratedFromStorageRef = useRef(false)
+
+ // Deferred hydration: parse localStorage in an idle callback so the main
+ // thread isn't blocked during first paint. On mobile this saves 300-1500ms.
+ useEffect(() => {
+  if (hydratedFromStorageRef.current) return
+  hydratedFromStorageRef.current = true
+  const schedule = typeof window.requestIdleCallback === "function"
+   ? window.requestIdleCallback
+   : (cb: () => void) => setTimeout(cb, 0)
+  schedule(() => {
+   const persistedBrain = loadPersistedBrain()
+   const persistedAuth = loadPersistedAuth()
+   const cache = readYouTubeAnalyticsCache()
+   const identity = buildChannelIdentityFromSources(persistedAuth, cache)
+   setBrain(persistedBrain)
+   setAuthStateRaw(persistedAuth)
+   setChannelIdentity(identity)
+   setLastSyncComplete(localStorage.getItem("yt_analytics_last_sync") || null)
+   try {
+    const model = localStorage.getItem("vt_ai_model")
+    if (model) setAiModel(model)
+   } catch { /* ignore */ }
    try {
     const raw = localStorage.getItem("vt_video_sync_batch_state")
-    if (!raw) return defaultSyncBatch
-    return {
-     ...defaultSyncBatch,
-     ...(JSON.parse(raw) as Partial<VideoSyncBatchState>),
+    if (raw) {
+     const parsed = JSON.parse(raw) as Partial<VideoSyncBatchState>
+     const parsedInitialLimit =
+      typeof parsed.initialLimit === "number" && parsed.initialLimit > 500
+       ? parsed.initialLimit
+       : defaultSyncBatch.initialLimit
+     setSyncBatch({ ...defaultSyncBatch, ...parsed, initialLimit: parsedInitialLimit })
     }
-   } catch {
-    return defaultSyncBatch
-   }
+   } catch { /* ignore */ }
   })
-  const [aiModel, setAiModel] = useState<string>(() => localStorage.getItem("vt_ai_model") || "gemini-3.1-flash-lite")
-  const autoRestoreInFlightRef = useRef(false)
-  const lastAutoRestoreAtRef = useRef(0)
-
+ }, [])
   useEffect(() => {
     localStorage.setItem("vt_ai_model", aiModel)
   }, [aiModel])
 
- const globalSyncData = useCallback(
-  async (options?: { batchMode?: "initial" | "next" }) => {
+ const bootstrapFirstRunBrain = useCallback(
+  async (
+   cache?: Record<string, any>,
+   source: "auth_boot" | "manual_sync" | "event" = "manual_sync",
+  ) => {
+   try {
+    const snapshot = await runFirstRunBrainOnboardingBootstrap({
+     cache,
+     vtSyncSnapshot: applyVtSyncPrivacyFilters(getVtSyncSnapshot()),
+     source,
+    })
+    if (snapshot.toolContextPack) {
+     await refreshToolContextPack(snapshot.toolContextPack.channelId)
+    }
+    if (snapshot.run?.status === "complete") {
+     const run = snapshot.run
+     const completedAt = run.completedAt || new Date().toISOString()
+     setBrain((prev) => ({
+      ...prev,
+      contentDNA: snapshot.knowledgeModel?.niche?.[0]?.summary || prev.contentDNA,
+      performanceLedger:
+       snapshot.knowledgeModel?.growthOpportunities?.[0]?.summary ||
+       prev.performanceLedger,
+      futureStateMap:
+       "Use first-run channel evidence to personalize sitewide tools, then ask owner-confirmed questions before making strong claims.",
+      sitewideBrainContext:
+       snapshot.toolContextPack?.contextBlock || prev.sitewideBrainContext,
+      onboarding: {
+       lastRunId: run.id,
+       channelId: run.channelId,
+       status: run.status,
+       completedAt,
+      },
+     }))
+    }
+    return snapshot
+   } catch (error) {
+    console.warn("[BrainOnboarding] First-run bootstrap failed:", error)
+    return null
+   }
+  },
+  [],
+ )
+
+ const mergeChannelIdentity = useCallback((incoming: Partial<ChannelIdentitySnapshot>) => {
+  const lastHydratedAt =
+   String(incoming.lastHydratedAt || "").trim() || new Date().toISOString()
+  setChannelIdentity((prev) => ({
+   channelId: mergeDefined(incoming.channelId, prev.channelId) ?? null,
+   name: isPresent(incoming.name) ? String(incoming.name).trim() : prev.name,
+   handle: isPresent(incoming.handle) ? String(incoming.handle).trim() : prev.handle,
+   avatarUrl: isPresent(incoming.avatarUrl) ? String(incoming.avatarUrl).trim() : prev.avatarUrl,
+  subscriberCount:
+    preferPreciseSubscriberCount(incoming.subscriberCount, prev.subscriberCount),
+   totalViews:
+    incoming.totalViews !== null && incoming.totalViews !== undefined
+     ? Number(incoming.totalViews)
+     : prev.totalViews,
+   videoCount:
+    incoming.videoCount !== null && incoming.videoCount !== undefined
+     ? Number(incoming.videoCount)
+     : prev.videoCount,
+   isVerified: incoming.isVerified ?? prev.isVerified,
+   isPartial: incoming.isPartial ?? prev.isPartial,
+   lastHydratedAt,
+  }))
+ }, [])
+
+ const applyChannelIdentity = useCallback((nextIdentity: Partial<ChannelIdentitySnapshot>) => {
+  mergeChannelIdentity(nextIdentity)
+  setAuthStateRaw((prev) => ({
+   ...prev,
+   channelId: isPresent(nextIdentity.channelId) ? String(nextIdentity.channelId).trim() : prev.channelId,
+   channelName: isPresent(nextIdentity.name) ? String(nextIdentity.name).trim() : prev.channelName,
+   channelHandle: isPresent(nextIdentity.handle) ? String(nextIdentity.handle).trim() : prev.channelHandle,
+   channelThumbnail: isPresent(nextIdentity.avatarUrl) ? String(nextIdentity.avatarUrl).trim() : prev.channelThumbnail,
+   subscriberCount:
+    preferPreciseSubscriberCount(nextIdentity.subscriberCount, prev.subscriberCount),
+   totalViews:
+    nextIdentity.totalViews !== null && nextIdentity.totalViews !== undefined
+     ? Number(nextIdentity.totalViews)
+     : prev.totalViews,
+   videoCount:
+    nextIdentity.videoCount !== null && nextIdentity.videoCount !== undefined
+     ? Number(nextIdentity.videoCount)
+     : prev.videoCount,
+   syncedAt: String(nextIdentity.lastHydratedAt || prev.syncedAt || "").trim() || prev.syncedAt || null,
+  }))
+  setBrain((prev) => ({
+   ...prev,
+   channelProfile: {
+    ...(prev.channelProfile || {}),
+    id: isPresent(nextIdentity.channelId) ? String(nextIdentity.channelId).trim() : prev.channelProfile?.id,
+    name: isPresent(nextIdentity.name) ? String(nextIdentity.name).trim() : prev.channelProfile?.name,
+    title: isPresent(nextIdentity.name) ? String(nextIdentity.name).trim() : prev.channelProfile?.title,
+    channelHandle: isPresent(nextIdentity.handle) ? String(nextIdentity.handle).replace(/^@/, "").trim() : prev.channelProfile?.channelHandle,
+    customUrl: isPresent(nextIdentity.handle) ? String(nextIdentity.handle).replace(/^@/, "").trim() : prev.channelProfile?.customUrl,
+    thumbnail: isPresent(nextIdentity.avatarUrl) ? String(nextIdentity.avatarUrl).trim() : prev.channelProfile?.thumbnail,
+    thumbnails:
+     isPresent(nextIdentity.avatarUrl)
+      ? {
+         ...(prev.channelProfile?.thumbnails || {}),
+         medium: { url: String(nextIdentity.avatarUrl).trim() },
+         default: { url: String(nextIdentity.avatarUrl).trim() },
+        }
+      : prev.channelProfile?.thumbnails,
+   },
+  }))
+ }, [mergeChannelIdentity])
+
+ const hydrateAuthStateFromAnalyticsCache = useCallback(() => {
+ try {
+   const cache = readYouTubeAnalyticsCache()
+   const profile = ((cache?.profile || {}) as Record<string, any>)
+   const nextIdentity = buildChannelIdentityFromSources(authState, cache)
+   if (Object.keys(profile).length === 0 && !nextIdentity.name && !nextIdentity.avatarUrl && !nextIdentity.channelId) return false
+   const statistics = profile.statistics || {}
+    setAuthStateRaw((prev) => ({
+    ...prev,
+    isAuthenticated: prev.isAuthenticated || unifiedAuth.isAuthenticated(),
+    channelId: String(profile?.id || profile?.channelId || prev.channelId || "").trim() || prev.channelId || null,
+    channelName: profile.title || prev.channelName,
+    channelHandle: profile.customUrl || prev.channelHandle,
+    channelThumbnail: profile.thumbnail || prev.channelThumbnail,
+    subscriberCount:
+     preferPreciseSubscriberCount(
+      statistics.subscriberCount,
+      prev.subscriberCount,
+     ),
+    totalViews:
+     statistics.viewCount != null ? Number(statistics.viewCount) : prev.totalViews,
+    videoCount:
+     statistics.videoCount != null ?
+     Number(statistics.videoCount)
+     : prev.videoCount,
+   }))
+   applyChannelIdentity(nextIdentity)
+   return true
+  } catch (error) {
+   console.warn("[GlobalData] Failed to hydrate auth state from analytics cache:", error)
+   return false
+  }
+ }, [applyChannelIdentity, authState])
+
+ const applyUnifiedAccountSnapshot = useCallback((snapshot: UnifiedAccountSnapshot) => {
+  const authenticated = snapshot.authentication.status === "authenticated"
+  const googleConnected =
+   snapshot.google.status === "connected" ||
+   snapshot.google.youtubeScopesGranted ||
+   Boolean(snapshot.google.channelId)
+
+  if (!authenticated) {
+   setAuthStateRaw((prev) => ({
+    ...prev,
+    isAuthenticated: false,
+   }))
+   return
+  }
+
+  setAuthStateRaw((prev) => ({
+   ...prev,
+   isAuthenticated: true,
+   channelId: snapshot.google.channelId || prev.channelId || null,
+  }))
+  if (googleConnected) {
+   setChannelBootPhase((prev) => (prev === "idle" || prev === "oauth" ? "ready" : prev))
+  }
+  hydrateAuthStateFromAnalyticsCache()
+ }, [hydrateAuthStateFromAnalyticsCache])
+
+ useEffect(() => {
+  const handleAnalyticsSynced = (event: Event) => {
+   if (!unifiedAuth.isAuthenticated()) return
+   const detail = (event as CustomEvent<Record<string, any>>).detail
+   void bootstrapFirstRunBrain(detail || readYouTubeAnalyticsCache(), "event")
+  }
+  window.addEventListener("yt_analytics_synced", handleAnalyticsSynced as EventListener)
+  return () => {
+   window.removeEventListener("yt_analytics_synced", handleAnalyticsSynced as EventListener)
+  }
+ }, [bootstrapFirstRunBrain])
+
+ useEffect(() => {
+  const onUnifiedAccountSnapshotChanged = (event: Event) => {
+   const snapshot = (event as CustomEvent<UnifiedAccountSnapshot>).detail
+   if (!snapshot) return
+   applyUnifiedAccountSnapshot(snapshot)
+  }
+  const onAuthChanged = () => {
+   if (unifiedAuth.isAuthenticated()) {
+    setAuthStateRaw((prev) => ({ ...prev, isAuthenticated: true }))
+    hydrateAuthStateFromAnalyticsCache()
+    return
+   }
+   void fetchUnifiedAccountSnapshot().then(applyUnifiedAccountSnapshot).catch(() => {
+    setAuthStateRaw((prev) => ({ ...prev, isAuthenticated: false }))
+   })
+  }
+  window.addEventListener("vt_account_snapshot_changed", onUnifiedAccountSnapshotChanged as EventListener)
+  window.addEventListener("vt_auth_changed", onAuthChanged)
+  return () => {
+   window.removeEventListener("vt_account_snapshot_changed", onUnifiedAccountSnapshotChanged as EventListener)
+   window.removeEventListener("vt_auth_changed", onAuthChanged)
+  }
+ }, [applyUnifiedAccountSnapshot, hydrateAuthStateFromAnalyticsCache])
+
+  const globalSyncData = useCallback(
+  async (options?: {
+   batchMode?: "initial" | "next"
+   syncAction?:
+    | "core_video_data"
+    | "daily_metrics"
+    | "google_search"
+    | "video_metrics"
+    | "traffic"
+    | "geography"
+    | "audience"
+    | "surfaces_discovery"
+    | "revenue_monetization"
+   | "reporting_bulk"
+   | "comments"
+   | "deep_data"
+   syncButtonId?: string
+   enrichmentMode?: "core" | "video_metrics" | "traffic" | "segments" | "all"
+   segmentDatasets?: import("../services/SyncCoordinator").SegmentDatasetId[]
+  }) => {
    setIsSyncing(true)
+   setChannelBootPhase((prev) => (prev === "idle" ? "syncing" : prev === "ready" ? "syncing" : prev))
+   setActiveSyncAction(options?.syncAction || "core_video_data")
+   setActiveSyncButtonId(options?.syncButtonId || options?.syncAction || "core_video_data")
+   window.dispatchEvent(
+    new CustomEvent("vt_manual_sync_started", {
+     detail: {
+      batchMode: options?.batchMode || "initial",
+      syncAction: options?.syncAction || null,
+      syncButtonId: options?.syncButtonId || null,
+      enrichmentMode: options?.enrichmentMode || null,
+     },
+    }),
+   )
    try {
     if ((options?.batchMode || "initial") === "initial") {
      // await clearAnalyticsStateForFreshSync() // Stop depopulation, keep old data until new data arrives
     }
-    const { syncCoordinator } = await import("../services/SyncCoordinator")
-    await syncCoordinator.syncYouTube(true, {
-     batchMode: options?.batchMode || "initial",
-    })
+    const isFastLoginBoot =
+     options?.enrichmentMode === "core" || options?.syncAction === "core_video_data"
+    if (isFastLoginBoot) {
+     const { syncCoordinator } = await import("../services/SyncCoordinator")
+     await syncCoordinator.syncYouTube(true, {
+      batchMode: options?.batchMode || "initial",
+      syncAction: options?.syncAction,
+      enrichmentMode: options?.enrichmentMode,
+      segmentDatasets: options?.segmentDatasets,
+     })
+    } else {
+     const { runCanonicalDefaultSync } = await import("../services/canonicalSync")
+     await runCanonicalDefaultSync()
+    }
     setLastSyncComplete(new Date().toISOString())
      
      // Update auth state with latest channel stats from sync
-     try {
-       const cache = readYouTubeAnalyticsCache()
-       if (cache.profile?.statistics) {
-         setAuthStateRaw(prev => ({
-           ...prev,
-           subscriberCount: cache.profile.statistics.subscriberCount || prev.subscriberCount,
-           totalViews: cache.profile.statistics.viewCount || prev.totalViews,
-           videoCount: cache.profile.statistics.videoCount || prev.videoCount
-         }))
-       }
-     } catch (err) {
-       console.warn("Failed to update auth state from sync cache:", err)
-     }
+    hydrateAuthStateFromAnalyticsCache()
 
      try {
        const raw = localStorage.getItem("vt_video_sync_batch_state")
@@ -266,14 +707,30 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
     } catch {
      // no-op
     }
+    window.dispatchEvent(
+     new CustomEvent("vt_manual_sync_completed", {
+      detail: {
+       batchMode: options?.batchMode || "initial",
+       syncAction: options?.syncAction || null,
+       syncButtonId: options?.syncButtonId || null,
+       enrichmentMode: options?.enrichmentMode || null,
+      },
+     }),
+    )
+    if ((options?.batchMode || "initial") === "initial") {
+     await bootstrapFirstRunBrain(readYouTubeAnalyticsCache(), "manual_sync")
+    }
    } catch (e) {
     console.warn("Global sync failed:", e)
    } finally {
     setIsSyncing(false)
+    setChannelBootPhase((prev) => (prev === "error" ? prev : "ready"))
+    setActiveSyncAction(null)
+    setActiveSyncButtonId(null)
    }
   },
-  [],
- )
+  [bootstrapFirstRunBrain, hydrateAuthStateFromAnalyticsCache],
+)
 
  const updateBrain = useCallback((updates: Partial<WorkspaceBrain>) => {
   setBrain((prev) => ({ ...prev, ...updates }))
@@ -344,21 +801,60 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
       const detail = (event as CustomEvent<ChannelAnalysisSyncStatus>).detail
       if (!detail) return
       setSyncStatus(detail)
+      if (detail.phase === "complete") {
+        setChannelBootPhase("ready")
+      } else if (detail.phase === "error") {
+        setChannelBootPhase("error")
+      }
     }
     const onAuthMetadata = (event: Event) => {
       const detail = (event as CustomEvent<any>).detail
       if (!detail || !detail.statistics) return
       
       console.log("[GlobalData] Authoritative metadata received. Updating UI widgets.")
+      const handle = String(detail.customUrl || "").trim().replace(/^@/, "") || null
+      const avatarUrl =
+        String(
+          detail.thumbnail ||
+            detail.thumbnails?.medium?.url ||
+            detail.thumbnails?.default?.url ||
+            "",
+        ).trim() || null
+      applyChannelIdentity({
+        channelId: String(detail.id || detail.channelId || "").trim() || null,
+        name: String(detail.title || "").trim() || null,
+        handle,
+        avatarUrl,
+        subscriberCount: preferPreciseSubscriberCount(
+         detail.statistics.subscriberCount,
+         channelIdentity.subscriberCount,
+        ),
+        totalViews: Number(detail.statistics.viewCount || 0) || 0,
+        videoCount: Number(detail.statistics.videoCount || 0) || 0,
+        isVerified: true,
+        isPartial: false,
+        lastHydratedAt: String(detail.syncedAt || new Date().toISOString()),
+      })
       setAuthStateRaw(prev => ({
         ...prev,
+        isAuthenticated: true,
+        channelId: String(detail.id || detail.channelId || prev.channelId || "").trim() || prev.channelId || null,
         channelName: detail.title || prev.channelName,
-        channelHandle: detail.customUrl || prev.channelHandle,
-        channelThumbnail: detail.thumbnail || prev.channelThumbnail,
-        subscriberCount: Number(detail.statistics.subscriberCount),
+        channelHandle: handle || prev.channelHandle,
+        channelThumbnail: avatarUrl || prev.channelThumbnail,
+        subscriberCount: preferPreciseSubscriberCount(
+         detail.statistics.subscriberCount,
+         prev.subscriberCount,
+        ),
         totalViews: Number(detail.statistics.viewCount),
         videoCount: Number(detail.statistics.videoCount)
       }))
+      setInitialDashboardHydrationStatus((prev) => ({
+        ...prev,
+        identityReady: true,
+        lastUpdatedAt: String(detail.syncedAt || new Date().toISOString()),
+      }))
+      setChannelBootPhase((prev) => (prev === "idle" ? "ready" : prev))
     }
     const onFastAnalytics = (event: Event) => {
       const detail = (event as CustomEvent<any>).detail
@@ -368,6 +864,56 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
       setAuthStateRaw(prev => ({
         ...prev,
         fastAnalytics: detail
+      }))
+      setInitialDashboardHydrationStatus((prev) => ({
+        ...prev,
+        lifetimeReady: true,
+        lastUpdatedAt: String(detail.lastSyncedAt || new Date().toISOString()),
+      }))
+    }
+    const onLifetimeSummary = (event: Event) => {
+      const detail = (event as CustomEvent<any>).detail
+      if (!detail) return
+      setAuthStateRaw((prev) => ({
+        ...prev,
+        syncedAt: String(detail.syncedAt || new Date().toISOString()),
+        fastAnalytics: {
+          lifetimeRevenue: Number(detail.lifetimeRevenue || prev.fastAnalytics?.lifetimeRevenue || 0),
+          lifetimeWatchMinutes: Number(detail.lifetimeWatchMinutes || prev.fastAnalytics?.lifetimeWatchMinutes || 0),
+          lifetimeViews: Number(detail.lifetimeViews || prev.fastAnalytics?.lifetimeViews || 0),
+          subscribers28d: Number(prev.fastAnalytics?.subscribers28d || 0),
+          lastSyncedAt: String(detail.syncedAt || new Date().toISOString()),
+        },
+      }))
+      setBrain((prev) => ({
+        ...prev,
+        recentMetrics: {
+          ...(prev.recentMetrics || {}),
+          ...detail,
+          currentSubscribers:
+           preferPreciseSubscriberCount(
+            detail.currentSubscribers,
+            prev.recentMetrics?.currentSubscribers ??
+             channelIdentity.subscriberCount ??
+             authState.subscriberCount,
+           ) || 0,
+        },
+      }))
+      applyChannelIdentity({
+        subscriberCount: preferPreciseSubscriberCount(
+         detail.currentSubscribers,
+         channelIdentity.subscriberCount,
+        ),
+        totalViews: Number(detail.lifetimeViews || channelIdentity.totalViews || 0),
+        videoCount: Number(detail.publicVideoCount || channelIdentity.videoCount || 0),
+        isVerified: true,
+        isPartial: false,
+        lastHydratedAt: String(detail.syncedAt || new Date().toISOString()),
+      })
+      setInitialDashboardHydrationStatus((prev) => ({
+        ...prev,
+        lifetimeReady: true,
+        lastUpdatedAt: String(detail.syncedAt || new Date().toISOString()),
       }))
     }
     const onRecentVideos = (event: Event) => {
@@ -382,11 +928,18 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
           allData: detail // Initial snapshot
         }
       }))
+      setInitialDashboardHydrationStatus((prev) => ({
+        ...prev,
+        inventoryReady: true,
+        lastUpdatedAt: new Date().toISOString(),
+      }))
+      setChannelBootPhase((prev) => (prev === "inventory" ? "ready" : prev))
     }
 
     window.addEventListener("vt_channel_sync_status", onStatus as EventListener)
     window.addEventListener("yt_channel_metadata_synced", onAuthMetadata as EventListener)
     window.addEventListener("yt_fast_analytics_synced", onFastAnalytics as EventListener)
+    window.addEventListener("yt_channel_lifetime_summary_synced", onLifetimeSummary as EventListener)
     window.addEventListener("yt_recent_videos_synced", onRecentVideos as EventListener)
     const onDeepSegments = (event: Event) => {
       const detail = (event as CustomEvent<any>).detail
@@ -399,90 +952,143 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
         }
       }))
     }
+    const onChannelAuthInvalidated = () => {
+      setAuthStateRaw(defaultAuthState)
+      setSyncStatus(defaultSyncStatus)
+      setSyncBatch(defaultSyncBatch)
+      setIsSyncing(false)
+      setIsAuthorizing(false)
+      setChannelIdentity(defaultChannelIdentity)
+      setChannelBootPhase("idle")
+      setInitialDashboardHydrationStatus(defaultInitialDashboardHydrationStatus)
+      setActiveSyncAction(null)
+      setActiveSyncButtonId(null)
+      setLastSyncComplete(null)
+    }
     window.addEventListener("yt_deep_segments_synced", onDeepSegments as EventListener)
+    window.addEventListener("vt_channel_auth_invalidated", onChannelAuthInvalidated as EventListener)
     
     return () => {
       window.removeEventListener("vt_channel_sync_status", onStatus as EventListener)
       window.removeEventListener("yt_channel_metadata_synced", onAuthMetadata as EventListener)
       window.removeEventListener("yt_fast_analytics_synced", onFastAnalytics as EventListener)
+      window.removeEventListener("yt_channel_lifetime_summary_synced", onLifetimeSummary as EventListener)
       window.removeEventListener("yt_recent_videos_synced", onRecentVideos as EventListener)
       window.removeEventListener("yt_deep_segments_synced", onDeepSegments as EventListener)
+      window.removeEventListener("vt_channel_auth_invalidated", onChannelAuthInvalidated as EventListener)
     }
-  }, [])
-
-  // Auto-Restore Fast Boot Data (Step 1.5 & 1.7)
-  // Triggers if authenticated but missing financial totals or recent videos.
-  useEffect(() => {
-    if (!authState.isAuthenticated) return
-
-    const restoreFastBoot = async () => {
-      if (autoRestoreInFlightRef.current) return
-      const lastSync = authState.fastAnalytics?.lastSyncedAt || authState.syncedAt
-      const isStale = lastSync ? (Date.now() - new Date(lastSync).getTime() > 4 * 60 * 60 * 1000) : true
-      const hasFastAnalytics = !!authState.fastAnalytics
-      const hasRecentVideos = brain.channelyticsState.allData.length > 0
-
-      if (!hasFastAnalytics || !hasRecentVideos || isStale) {
-        const now = Date.now()
-        if (now - lastAutoRestoreAtRef.current < 60_000) return
-        autoRestoreInFlightRef.current = true
-        lastAutoRestoreAtRef.current = now
-        console.log(`♻️ AUTH RESTORE: Data is ${isStale ? "STALE" : "MISSING"}. Triggering Auto-Restore...`)
-        try {
-          const { syncAuthoritativeMetadata, syncFastAnalyticsTotals, syncRecentVideoSnapshot } = await import("../services/youtube/coreLifetimeSync")
-          const meta = await syncAuthoritativeMetadata()
-          await syncFastAnalyticsTotals()
-          if (meta.uploadsPlaylistId) {
-            await syncRecentVideoSnapshot(meta.uploadsPlaylistId)
-          }
-        } catch (err) {
-          console.warn("Auto-restore fast boot failed:", err)
-        } finally {
-          autoRestoreInFlightRef.current = false
-        }
-      }
-    }
-
-    restoreFastBoot()
-  }, [authState.isAuthenticated])
+  }, [applyChannelIdentity, channelIdentity.subscriberCount, channelIdentity.totalViews, channelIdentity.videoCount])
 
  useEffect(() => {
-  // Keep last sync timestamp in sync with any cache reset actions.
-  const onLocalDataChanged = () => {
+   // Keep last sync timestamp in sync with any cache reset actions.
+   const onLocalDataChanged = () => {
    try {
-    setLastSyncComplete(localStorage.getItem("yt_analytics_last_sync") || null)
-   } catch {
-    setLastSyncComplete(null)
-   }
-  }
-  window.addEventListener("vt_local_data_changed", onLocalDataChanged)
-  window.addEventListener("storage", onLocalDataChanged)
-  return () => {
-   window.removeEventListener("vt_local_data_changed", onLocalDataChanged)
-   window.removeEventListener("storage", onLocalDataChanged)
-  }
- }, [])
+     setLastSyncComplete(localStorage.getItem("yt_analytics_last_sync") || null)
+    } catch {
+     setLastSyncComplete(null)
+    }
+    try {
+      const cache = readYouTubeAnalyticsCache()
+      const hasCanonicalCache = Boolean(
+        Object.keys(cache || {}).length > 0 &&
+          (cache.profile || cache.channelBaseline || cache.channelLifetimeSummary || cache.videos),
+      )
+      if (hasCanonicalCache) {
+        const nextIdentity = buildChannelIdentityFromSources(authState, cache)
+        applyChannelIdentity(nextIdentity)
+        hydrateAuthStateFromAnalyticsCache()
+        return
+      }
 
- useEffect(() => {
-  try {
-   const persistable = { ...brain }
-   const toSave = {
-    ...persistable,
-    channelyticsState: { csvFiles: [], allData: [], analyticsResult: null },
-    researchLabState: { csvFiles: [], allData: [], analyticsResult: null },
+      if (!unifiedAuth.isAuthenticated()) {
+        setBrain(defaultBrain)
+        setAuthStateRaw(defaultAuthState)
+        setChannelIdentity(defaultChannelIdentity)
+        setChannelBootPhase("idle")
+        setInitialDashboardHydrationStatus(defaultInitialDashboardHydrationStatus)
+        setSyncStatus(defaultSyncStatus)
+        setSyncBatch(defaultSyncBatch)
+      }
+    } catch {
+      // no-op
+    }
    }
-   localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
-  } catch (e) {
-   console.warn("[Brain] Failed to persist state:", e)
+   const onIndexedDbCacheLoaded = (event: Event) => {
+    const detail = (event as CustomEvent<Record<string, any>>).detail
+    if (!detail) return
+    applyChannelIdentity(buildChannelIdentityFromSources(authState, detail))
+   }
+   window.addEventListener("vt_local_data_changed", onLocalDataChanged)
+   window.addEventListener("yt_analytics_cache_loaded", onIndexedDbCacheLoaded as EventListener)
+   window.addEventListener("storage", onLocalDataChanged)
+   return () => {
+    window.removeEventListener("vt_local_data_changed", onLocalDataChanged)
+    window.removeEventListener("yt_analytics_cache_loaded", onIndexedDbCacheLoaded as EventListener)
+    window.removeEventListener("storage", onLocalDataChanged)
+   }
+  }, [applyChannelIdentity, authState, hydrateAuthStateFromAnalyticsCache])
+
+ // Phase 5: Guard session verification against concurrent login boot.
+ // If connectChannel() is already running, skip — it handles its own
+ // token refresh and channel boot. Also wrap the cache hydration in
+ // startTransition so it doesn't block any pending user interaction.
+ useEffect(() => {
+  let cancelled = false
+  const verifyExistingSession = async () => {
+   if (!unifiedAuth.isAuthenticated()) return
+   // Skip if a login boot is already in progress — it handles everything.
+   if (loginBootPromiseRef.current) return
+   try {
+     const { refreshTokenIfExpired } = await import("../services/youtube/youtubeApiClient")
+     const token = await refreshTokenIfExpired()
+     if (!token || cancelled) return
+    setAuthStateRaw((prev) => ({ ...prev, isAuthenticated: true }))
+    startTransition(() => hydrateAuthStateFromAnalyticsCache())
+    setChannelBootPhase("ready")
+   } catch {
+    // auth invalidation is handled by the API client event path
+   }
   }
+  void verifyExistingSession()
+  return () => {
+   cancelled = true
+  }
+ }, [hydrateAuthStateFromAnalyticsCache])
+
+ // Phase 6: Debounce brain persistence. During login boot the brain state
+ // changes 10-20x in rapid succession; writing JSON.stringify on each one
+ // blocks the main thread for 50-200ms per call on mobile. A 2s trailing
+ // debounce coalesces the storm into a single write.
+ useEffect(() => {
+  // Don't persist until the deferred hydration has run, otherwise we'd
+  // overwrite the real persisted state with the empty defaults.
+  if (!hydratedFromStorageRef.current) return
+  const timer = setTimeout(() => {
+   try {
+    const toSave = {
+     ...brain,
+     channelyticsState: { csvFiles: [], allData: [], analyticsResult: null },
+     researchLabState: { csvFiles: [], allData: [], analyticsResult: null },
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
+   } catch (e) {
+    console.warn("[Brain] Failed to persist state:", e)
+   }
+  }, 2000)
+  return () => clearTimeout(timer)
  }, [brain])
 
+ // Debounce auth persistence with 1s trailing delay for the same reason.
  useEffect(() => {
-  try {
-   localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authState))
-  } catch (e) {
-   console.warn("[Auth] Failed to persist state:", e)
-  }
+  if (!hydratedFromStorageRef.current) return
+  const timer = setTimeout(() => {
+   try {
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authState))
+   } catch (e) {
+    console.warn("[Auth] Failed to persist state:", e)
+   }
+  }, 1000)
+  return () => clearTimeout(timer)
  }, [authState])
 
  const registerProvider = useCallback((tool: AppTool) => {
@@ -615,37 +1221,154 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
   setAuthStateRaw((prev) => ({ ...prev, ...updates }))
  }, [])
 
- const login = useCallback(async () => {
-  try {
-   await unifiedAuth.login()
-   setAuthStateRaw((prev) => ({ ...prev, isAuthenticated: true }))
-   // Fast Boot: Only sync channel metadata on login.
-    // Full video + analytics sync requires manual "Sync Data" click.
-    try {
-     const { syncAuthoritativeMetadata, syncFastAnalyticsTotals, syncRecentVideoSnapshot } = await import("../services/youtube/coreLifetimeSync")
-     const meta = await syncAuthoritativeMetadata()
-     await syncFastAnalyticsTotals()
-     
-     // Step 1.7: Recent Video Snapshot
-     if (meta.uploadsPlaylistId) {
-        await syncRecentVideoSnapshot(meta.uploadsPlaylistId)
-     }
-    } catch (metaErr) {
-    console.warn("Fast boot metadata sync failed:", metaErr)
-   }
-  } catch (err) {
-   const now = Date.now()
-   if (now - lastAuthAbortLogAt > 8000) {
-    lastAuthAbortLogAt = now
-    console.warn("User aborted login or auth failed", err)
+ const connectChannel = useCallback(async () => {
+  if (loginBootPromiseRef.current) return loginBootPromiseRef.current
+
+  if (isUnifiedAccountServerEnabled()) {
+   try {
+    const accountSnapshot = await fetchUnifiedAccountSnapshot()
+    await beginAccountIntent(resolveAccountIntent(accountSnapshot))
+    const nextAccountSnapshot = await fetchUnifiedAccountSnapshot()
+    applyUnifiedAccountSnapshot(nextAccountSnapshot)
+    window.dispatchEvent(new CustomEvent("vt_account_snapshot_changed", { detail: nextAccountSnapshot }))
+    window.dispatchEvent(new Event("vt_auth_changed"))
+    return
+   } catch (error) {
+    if (!isAccountServerUnavailableError(error)) throw error
+    console.warn("[GlobalDataContext] Unified account server unavailable, falling back to legacy login.")
    }
   }
- }, [])
 
- const logout = useCallback(() => {
+  const bootPromise = (async () => {
+   const acceptedTerms = await requestGoogleOAuthTermsConsent()
+   if (!acceptedTerms) return
+
+   setIsAuthorizing(true)
+   setChannelBootPhase("oauth")
+   setInitialDashboardHydrationStatus(defaultInitialDashboardHydrationStatus)
+   try {
+    await unifiedAuth.login()
+    ensureLoginToken()
+    setAuthStateRaw((prev) => ({ ...prev, isAuthenticated: true }))
+    setChannelBootPhase("identity")
+    const { channel: metadata } = await syncChannelBootstrap(`connect-channel::${Date.now()}`)
+    const metadataIdentity = {
+     channelId: String(metadata.channelId || "").trim() || null,
+     name: String(metadata.title || "").trim() || null,
+     handle: String(metadata.handle || "").trim().replace(/^@/, "") || null,
+     avatarUrl:
+      String(
+       metadata.thumbnails?.high?.url ||
+        metadata.thumbnails?.medium?.url ||
+        metadata.thumbnails?.default?.url ||
+        "",
+      ).trim() || null,
+     subscriberCount: preferPreciseSubscriberCount(
+      metadata.currentSubscribers,
+      authState.subscriberCount,
+     ),
+     totalViews: metadata.publicViewCount,
+     videoCount: metadata.publicVideoCount,
+     isVerified: true,
+     isPartial: false,
+     lastHydratedAt: String(metadata.syncedAt || new Date().toISOString()),
+    }
+    applyChannelIdentity(metadataIdentity)
+    setInitialDashboardHydrationStatus((prev) => ({
+      ...prev,
+      identityReady: true,
+      lastUpdatedAt: String(metadata.syncedAt || new Date().toISOString()),
+    }))
+
+    setInitialDashboardHydrationStatus({
+     identityReady: true,
+     lifetimeReady: false,
+     inventoryReady: false,
+     lastUpdatedAt: metadata.syncedAt,
+    })
+    hydrateAuthStateFromAnalyticsCache()
+    setChannelBootPhase("ready")
+
+    // Begin the core channel data sync immediately after first login so the
+    // dashboard overview (avatar + KPIs), the nav bar, and the analytics
+    // creator module hydrate without the user having to click "Sync". This runs
+    // inside the app-level context boot promise, so it keeps going even as the
+    // user navigates between pages. A sync failure must not tear down a
+    // successful connection, so it is isolated from the connect catch below.
+    try {
+     await globalSyncData({ batchMode: "initial" })
+    } catch (syncErr) {
+     console.warn("Post-login core sync failed; manual sync remains available.", syncErr)
+    }
+   } catch (err) {
+    if (isUnauthorizedError(err)) {
+     unifiedAuth.logout()
+     setAuthStateRaw(defaultAuthState)
+     setChannelIdentity(defaultChannelIdentity)
+     setInitialDashboardHydrationStatus(defaultInitialDashboardHydrationStatus)
+     setChannelBootPhase("idle")
+     console.warn("Channel authorization failed; reconnect required.", err)
+     return
+    }
+    setChannelBootPhase(isLoginAbortError(err) ? "idle" : "error")
+    const now = Date.now()
+    if (now - lastAuthAbortLogAt > 8000) {
+     lastAuthAbortLogAt = now
+     console.warn(
+      isLoginAbortError(err)
+       ? "Channel connection was cancelled or timed out."
+       : "Channel connection failed.",
+      err,
+     )
+    }
+   } finally {
+    setIsAuthorizing(false)
+    setIsSyncing(false)
+    loginBootPromiseRef.current = null
+   }
+  })()
+
+  loginBootPromiseRef.current = bootPromise
+  return bootPromise
+ }, [applyChannelIdentity, applyUnifiedAccountSnapshot, authState.subscriberCount, globalSyncData, hydrateAuthStateFromAnalyticsCache])
+
+ const disconnectChannel = useCallback(() => {
   setAuthStateRaw(defaultAuthState)
+  setSyncStatus(defaultSyncStatus)
+  setSyncBatch(defaultSyncBatch)
+  setLastSyncComplete(null)
+  setIsAuthorizing(false)
+  setIsSyncing(false)
+  setChannelIdentity(defaultChannelIdentity)
+  setChannelBootPhase("idle")
+  setInitialDashboardHydrationStatus(defaultInitialDashboardHydrationStatus)
   unifiedAuth.logout()
  }, [])
+
+ const syncChannelData = useCallback(
+  async (options?: {
+   batchMode?: "initial" | "next"
+   syncAction?: AnalyticsSyncAction
+   syncButtonId?: string
+   enrichmentMode?: "core" | "video_metrics" | "traffic" | "segments" | "all"
+  }) =>
+   globalSyncData({
+    batchMode: "initial",
+    ...options,
+   }),
+  [globalSyncData],
+ )
+
+ const login = connectChannel
+ const logout = disconnectChannel
+
+ const channelConnection = resolveChannelConnectionSnapshot({
+  authState,
+  channelIdentity,
+  isAuthorizing,
+  isSyncing,
+  syncStatus,
+ })
 
  return (
   <GlobalDataContext.Provider
@@ -670,11 +1393,21 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
     researchLabState: brain.researchLabState,
     login,
     logout,
+    connectChannel,
+    disconnectChannel,
     isSyncing,
+    isAuthorizing,
     lastSyncComplete,
     syncStatus,
     syncBatch,
+    activeSyncAction,
+    activeSyncButtonId,
+    channelConnection,
+    channelIdentity,
+    channelBootPhase,
+    initialDashboardHydrationStatus,
     globalSyncData,
+    syncChannelData,
     syncMetrics,
     addJournalEntry: (content: string, category: any) => {
      const entry = {

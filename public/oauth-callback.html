@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OAuth Callback</title>
+</head>
+<body>
+  <script>
+    // Simple script to parse the OAuth response and post it back to the opener
+    const hash = window.location.hash;
+    const search = window.location.search;
+
+    // Check for implicit grant token in hash fragment
+    if (hash && hash.includes('access_token')) {
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get('access_token');
+      const expiresIn = params.get('expires_in');
+      const error = params.get('error');
+
+      if (accessToken && window.opener) {
+        window.opener.postMessage({
+          type: 'OAUTH_IMPLICIT_SUCCESS',
+          access_token: accessToken,
+          expires_in: expiresIn || '3600',
+        }, '*');
+      } else if (error && window.opener) {
+        window.opener.postMessage({
+          type: 'OAUTH_IMPLICIT_ERROR',
+          error,
+        }, '*');
+      }
+      window.close();
+    }
+
+    // Handle legacy code-based redirects
+    const urlParams = new URLSearchParams(search);
+    const code = urlParams.get('code');
+    const queryError = urlParams.get('error');
+
+    if ((code || queryError) && window.opener) {
+      if (code) {
+        window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS', code }, '*');
+      }
+      if (queryError) {
+        window.opener.postMessage({ type: 'OAUTH_AUTH_ERROR', error: queryError }, '*');
+      }
+      window.close();
+    }
+  </script>
+</body>
+</html>

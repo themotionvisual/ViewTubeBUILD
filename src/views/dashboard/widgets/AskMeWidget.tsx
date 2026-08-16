@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { useEntitlement } from "../../../app/AppShell"
+import { WidgetScrollArea } from "../WidgetPrimitives"
+import { useEntitlement } from "../../../context/entitlementContext"
 import {
  MessageSquare,
  Send,
@@ -171,7 +172,7 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
  const scrollRef = useRef<HTMLDivElement>(null)
 
  useEffect(() => {
-  scrollRef.current?.scrollTo({top: scrollRef.current.scrollHeight, behavior: "smooth", onDecSize, onCycleHeight, onDecHeight})
+  scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
  }, [messages])
 
  useEffect(() => {
@@ -211,9 +212,9 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
 
  return (
   <WidgetShell {...common} icon={<MessageSquare size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px" }}>
+   <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px", minHeight: 0 }}>
     {/* Quick Topics */}
-   {messages.length === 0 && (
+    {messages.length === 0 && (
      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
       <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.4 }}>Quick Topics</span>
       <div
@@ -255,11 +256,11 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
     )}
 
     {/* Chat History */}
-    <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px", minHeight: "80px" }}>
+    <WidgetScrollArea viewportRef={scrollRef} ariaLabel="Ask Me conversation" className="min-h-[80px]" contentClassName="flex min-h-full flex-col gap-2 px-0.5 py-0.5">
      {messages.map((msg, i) => (
       <div key={i} style={{
        alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-       maxWidth: "85%", padding: "8px 10px",
+       maxWidth: "88%", padding: "8px 10px",
        background: msg.role === "user" ? "var(--widget-color, #579AFF)" : "#fff",
        color: msg.role === "user" ? "#fff" : "#000",
        border: `2px solid ${msg.role === "user" ? "#000" : "#000"}`,
@@ -280,7 +281,7 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
        <span style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>Analyzing...</span>
       </div>
      )}
-    </div>
+    </WidgetScrollArea>
 
     {/* Input */}
     <div style={{ display: "flex", gap: "6px", paddingTop: "8px" }}>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { WidgetShell } from "../WidgetShell"
+import { WidgetScrollArea } from "../WidgetPrimitives"
 import { Check, Rocket, RotateCcw } from "lucide-react"
 
 const STORAGE_KEY = "vt_flight_check"
@@ -43,7 +44,7 @@ export const FlightCheckWidget = ({ widget, instance, editMode, onToggleCollapse
 
  return (
   <WidgetShell {...common} icon={<Check size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%" }}>
+   <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%", minHeight: 0 }}>
     {/* Progress Bar */}
     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
      <div style={{ flex: 1, height: "14px", background: "#eee", borderRadius: "7px", border: "2px solid #000", overflow: "hidden" }}>
@@ -53,7 +54,7 @@ export const FlightCheckWidget = ({ widget, instance, editMode, onToggleCollapse
     </div>
 
     {/* Checklist */}
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
+    <WidgetScrollArea ariaLabel="Flight check items" contentClassName="flex min-h-full flex-col gap-1">
      {items.map((item: any, idx: number) => (
       <div
        key={idx}
@@ -77,7 +78,7 @@ export const FlightCheckWidget = ({ widget, instance, editMode, onToggleCollapse
        }}>{item.text}</span>
       </div>
      ))}
-    </div>
+    </WidgetScrollArea>
 
     {/* Actions */}
     <div style={{ display: "flex", gap: "6px" }}>

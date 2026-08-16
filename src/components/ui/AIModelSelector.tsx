@@ -6,9 +6,7 @@ import { getPaletteColor } from '../../styles/toolboxPalette'
 export const AIModelSelector: React.FC<{ compact?: boolean }> = ({ compact }) => {
   const { aiModel, setAiModel } = useBrain()
 
-  // Use palette colors for better integration
-  const accentColor = getPaletteColor(4) // Electric Green (#4FFF5B)
-  const hoverColor = getPaletteColor(5) // Sky Aqua (#40C6E9)
+  const accentColor = getPaletteColor(4)
 
   return (
     <div className={`flex items-center gap-2 ${compact ? '' : 'mb-2'}`}>
@@ -68,7 +66,10 @@ export const AIModelSelector: React.FC<{ compact?: boolean }> = ({ compact }) =>
                    <span className="text-[9px] font-black bg-black text-white px-2 py-0.5 rounded tracking-widest">
                      COST: {m.costMultiplier}X
                    </span>
-                   <span className={`text-[9px] font-black px-2 py-0.5 rounded tracking-widest border-2 border-black ${m.tier === 'pro' ? 'bg-[#FFFF61]' : 'bg-[#4FFF5B]'}`}>
+                   <span
+                    className="text-[9px] font-black px-2 py-0.5 rounded tracking-widest border-2 border-black"
+                    style={{ backgroundColor: m.tier === 'pro' ? getPaletteColor(3) : accentColor }}
+                   >
                      {m.tier.toUpperCase()}
                    </span>
                 </div>

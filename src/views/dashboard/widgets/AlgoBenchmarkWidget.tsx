@@ -21,7 +21,7 @@ export const AlgoBenchmarkWidget = ({ widget, instance, editMode, onToggleCollap
  return (
   <WidgetShell {...common} icon={<Activity size={22} />}>
    <div className="flex flex-col h-full gap-2 p-2">
-    <div className="flex justify-between items-baseline border-b-[3px] border-black pb-2">
+    <div className="flex justify-between items-baseline border-b-[3px] border-[var(--widget-border,#000)] pb-2">
      <span className="text-[10px] font-black uppercase opacity-40">
       Algo Benchmark
      </span>

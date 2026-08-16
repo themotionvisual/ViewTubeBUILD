@@ -1,15 +1,19 @@
 import {
  getAccessToken,
  logout,
- loginWithPkcePopup,
  getValidAccessToken,
  isAuthenticated,
  generateRandomString,
  generateCodeChallenge,
-} from "../authSession"
-import { clearAnalyticsStateForFreshSync } from "../localDataReset"
+} from "../auth/authSession"
 import { GoogleService } from "../googleService"
 import { YouTubeUploadService } from "./youtubeUploadService"
+import { isUnifiedAccountServerEnabled } from "../account/accountCoordinator"
+import {
+ authorizedGoogleRead,
+ SERVER_ACCOUNT_SESSION_TOKEN,
+} from "./googleReadTransport"
+import { postUnifiedCommentReply } from "./youtubeWriteTransport"
 
 export const BASE_URL = "https://www.googleapis.com/youtube/v3"
 export const ANALYTICS_URL = "https://youtubeanalytics.googleapis.com/v2"
@@ -24,6 +28,19 @@ export class YouTubeApiError extends Error {
   this.code = code
   this.reason = reason
  }
+}
+
+export const broadcastChannelAuthInvalidated = (detail?: {
+ code?: number
+ reason?: string
+ message?: string
+}) => {
+ if (typeof window === "undefined") return
+ window.dispatchEvent(
+  new CustomEvent("vt_channel_auth_invalidated", {
+   detail: detail || null,
+  }),
+ )
 }
 
 export const handleYouTubeApiError = async (
@@ -50,8 +67,33 @@ export const handleYouTubeApiError = async (
  }
 
  if (code === 401 || reason === "authError") {
+  logout()
+  broadcastChannelAuthInvalidated({
+   code,
+   reason,
+   message:
+    "Your YouTube connection is no longer active. Connect your channel again, then run the sync again.",
+  })
   throw new YouTubeApiError(
-   "Your YouTube session has expired or is invalid. Please reconnect your channel in Settings.",
+   "Your YouTube connection is no longer active. Connect your channel again, then run the sync again.",
+   code,
+   reason,
+  )
+ } else if (code === 400 && reason === "keyInvalid") {
+  throw new YouTubeApiError(
+   "The saved YouTube API key is invalid. Update the key in Settings, then retry the request.",
+   code,
+   reason,
+  )
+ } else if (code === 400) {
+  throw new YouTubeApiError(
+   "YouTube rejected this request because that report shape is not allowed for the selected metrics or breakdown. Try a different sync, use CSV import for this dataset, or retry after narrowing the request.",
+   code,
+   reason,
+  )
+ } else if (code === 402) {
+  throw new YouTubeApiError(
+   "This request could not continue because billing or quota access is not available for the current account or project. Check your billing and quota settings, then try again.",
    code,
    reason,
   )
@@ -60,7 +102,7 @@ export const handleYouTubeApiError = async (
   (reason === "quotaExceeded" || reason === "rateLimitExceeded")
  ) {
   throw new YouTubeApiError(
-   "YouTube API quota exceeded. Please try again later or check your Google Cloud Console billing/quotas.",
+   "YouTube is temporarily refusing more requests from this project because the daily quota or rate limit has been hit. Wait and try again later, or review your Google Cloud quota settings.",
    code,
    reason,
   )
@@ -69,13 +111,7 @@ export const handleYouTubeApiError = async (
   (reason === "forbidden" || reason === "insufficientPermissions")
  ) {
   throw new YouTubeApiError(
-   "Access forbidden. Ensure your API key is valid, has the YouTube Data API v3 enabled, and your account has sufficient permissions.",
-   code,
-   reason,
-  )
- } else if (code === 400 && reason === "keyInvalid") {
-  throw new YouTubeApiError(
-   "Invalid YouTube API key. Please check your API key in Settings or environment variables.",
+   "This channel or Google project does not have permission for that YouTube request. Check the connected account, enabled APIs, and access scopes, then try again.",
    code,
    reason,
   )
@@ -172,16 +208,34 @@ export const trackApiCall = (url: string) => {
 
 export const proxyFetch = async (url: string, options: RequestInit = {}) => {
  trackApiCall(url)
+ const method = String(options.method || "GET").toUpperCase()
+ if (isUnifiedAccountServerEnabled() && method === "GET") {
+  return authorizedGoogleRead(url, { signal: options.signal || undefined })
+ }
  return fetch(url, options)
 }
 
 export const connectChannel = async (): Promise<void> => {
- await loginWithPkcePopup()
- await clearAnalyticsStateForFreshSync()
+ throw new YouTubeApiError(
+  "AUTH_REQUIRED: Start channel authorization through the unified account coordinator.",
+  401,
+  "AUTH_REQUIRED",
+ )
 }
 
 export const refreshTokenIfExpired = async (): Promise<string | null> => {
- return getValidAccessToken()
+ if (isUnifiedAccountServerEnabled()) return SERVER_ACCOUNT_SESSION_TOKEN
+ const token = await getValidAccessToken()
+ if (!token && isAuthenticated()) {
+  logout()
+  broadcastChannelAuthInvalidated({
+   code: 401,
+   reason: "authError",
+   message:
+    "Your YouTube connection is no longer active. Connect your channel again, then run the sync again.",
+  })
+ }
+ return token
 }
 
 export const disconnectChannel = () => {
@@ -228,6 +282,7 @@ export class YouTubeApiClient extends GoogleService {
  }
 
  public async insertComment(parentId: string, text: string) {
+  if (isUnifiedAccountServerEnabled()) return postUnifiedCommentReply(parentId, text)
   return this.requestYouTube("/comments?part=snippet", {
    method: "POST",
    body: JSON.stringify({

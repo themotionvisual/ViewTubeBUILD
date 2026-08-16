@@ -6,7 +6,7 @@ import {
  ANALYTICS_URL,
  REPORTING_URL,
 } from "./youtubeApiClient"
-import { logout } from "../authSession"
+import { logout } from "../auth/authSession"
 import { AnalyticsWindow } from "../analytics/DataStore"
 import type { SyncDiagnostics } from "../productArchitecture"
 
@@ -65,6 +65,8 @@ const chunkArray = <T>(items: T[], chunkSize: number): T[][] => {
  return chunks
 }
 
+const joinUniqueAnalyticsMetrics = (metrics: readonly string[]): string =>
+ Array.from(new Set(metrics.filter(Boolean))).join(",")
 
 export interface YouTubeReportHeader {
  name: string;
@@ -172,15 +174,13 @@ export const buildVideoFilterCandidates = (
  return candidates
 }
 
-const END_SCREEN_ELEMENT_VIDEO_FILTER_METRICS = new Set<string>([
+const unsupportedVideoAnalyticsMetrics = new Set<string>()
+const CONDITIONALLY_AVAILABLE_VIDEO_ANALYTICS_METRICS = new Set<string>([
+ "rpm",
  "endScreenElementImpressions",
  "endScreenElementClicks",
  "endScreenElementClickRate",
 ])
-
-const unsupportedVideoAnalyticsMetrics = new Set<string>(
- END_SCREEN_ELEMENT_VIDEO_FILTER_METRICS,
-)
 const disabledAnalyticsGroups = new Set<AnalyticsMetricGroupName>()
 let creatorContentTypeFetchDisabled = false
 const metricCapabilityByMetric = new Map<
@@ -202,7 +202,8 @@ const VIDEO_METRIC_GROUPS: Record<AnalyticsMetricGroupName, string[]> = {
   "estimatedMinutesWatched",
   "averageViewDuration",
   "averageViewPercentage",
-  "subscribersGained",
+ "subscribersGained",
+  "redViews",
   "estimatedRevenue",
   "estimatedRedMinutesWatched",
  ],
@@ -215,6 +216,10 @@ const VIDEO_METRIC_GROUPS: Record<AnalyticsMetricGroupName, string[]> = {
   "dislikes",
   "videosAddedToPlaylists",
   "videosRemovedFromPlaylists",
+  "hypes",
+  "hypePoints",
+  "remixCount",
+  "remixViews",
  ],
  impressions_ctr: [
   "videoThumbnailImpressions",
@@ -223,6 +228,7 @@ const VIDEO_METRIC_GROUPS: Record<AnalyticsMetricGroupName, string[]> = {
  monetization: [
   "estimatedRevenue",
   "estimatedAdRevenue",
+  "transactionRevenue",
   "grossRevenue",
   "rpm",
   "cpm",
@@ -232,13 +238,6 @@ const VIDEO_METRIC_GROUPS: Record<AnalyticsMetricGroupName, string[]> = {
   "estimatedRedPartnerRevenue",
  ],
  audience_mix: [
-  "annotationClickThroughRate",
-  "annotationCloseRate",
-  "annotationImpressions",
-  "annotationClickableImpressions",
-  "annotationClosableImpressions",
-  "annotationClicks",
-  "annotationCloses",
   "cardClickRate",
   "cardImpressions",
   "cardClicks",
@@ -600,7 +599,7 @@ export const fetchAnalytics = async (
    const filterIds = parseVideoFilterIds(ids)
    if (
     allowSplitOn400 &&
-    status === 400 &&
+    status === 414 &&
     filterIds &&
     filterIds.length > 1 &&
     depth < 10
@@ -1090,6 +1089,25 @@ export const fetchAnalytics = async (
         outcome: metricStatus === 400 ? "quarantined" : "failed",
        });
        if (metricStatus === 400) {
+        if (CONDITIONALLY_AVAILABLE_VIDEO_ANALYTICS_METRICS.has(metric)) {
+         metricCapabilityByMetric.set(metric, {
+          status: "temporarily_blocked",
+          reasonCode:
+           metric === "rpm"
+            ? "monetization_or_request_shape_blocked"
+            : "long_form_only_or_request_shape_blocked",
+         })
+         runMetricCapabilities.set(metric, {
+          metric,
+          status: "temporarily_blocked",
+          reasonCode:
+           metric === "rpm"
+            ? "monetization_or_request_shape_blocked"
+            : "long_form_only_or_request_shape_blocked",
+          source: "api",
+         })
+         continue
+        }
         unsupportedVideoAnalyticsMetrics.add(metric);
         runDisabledMetrics.add(metric);
         metricCapabilityByMetric.set(metric, {
@@ -1440,7 +1458,7 @@ export const fetchTrafficSourceAnalytics = async (
  return response.json()
 }
 
-export const fetchDailyAnalytics = async (
+export const fetchTrafficSourceByGeographyAnalytics = async (
  startDate: string,
  endDate: string,
  channelId?: string,
@@ -1453,9 +1471,45 @@ export const fetchDailyAnalytics = async (
    "authError",
   )
  const idParam = channelId ? `channel==${channelId}` : "channel==MINE"
- // Base metrics compatible with dimensions=day
- const metrics =
-  "views,estimatedMinutesWatched,averageViewDuration,subscribersGained,subscribersLost,estimatedRevenue,likes,dislikes,comments,shares"
+ const url = `${ANALYTICS_URL}/reports?ids=${idParam}&startDate=${startDate}&endDate=${endDate}&metrics=views&dimensions=country,insightTrafficSourceType`
+ const response = await proxyFetch(url, {
+  headers: { Authorization: `Bearer ${token}` },
+ })
+ if (!response.ok)
+  await handleYouTubeApiError(
+   response,
+   "Failed to fetch traffic source by geography analytics",
+  )
+ return response.json()
+}
+
+export const fetchDailyAnalytics = async (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+) => {
+ const token = await refreshTokenIfExpired()
+ if (!token)
+  throw new YouTubeApiError(
+   "Your YouTube session has expired or is invalid. Please reconnect your channel in Settings.",
+   401,
+   "authError",
+ )
+ const idParam = channelId ? `channel==${channelId}` : "channel==MINE"
+ const metrics = joinUniqueAnalyticsMetrics([
+  "views",
+  "estimatedMinutesWatched",
+  "averageViewDuration",
+  "subscribersGained",
+  "subscribersLost",
+  "estimatedRevenue",
+  "likes",
+  "dislikes",
+  "comments",
+  "shares",
+  "engagedViews",
+  "videosAddedToPlaylists",
+ ])
  const url = `${ANALYTICS_URL}/reports?ids=${idParam}&startDate=${startDate}&endDate=${endDate}&metrics=${metrics}&dimensions=day`
  const response = await proxyFetch(url, {
   headers: { Authorization: `Bearer ${token}` },
@@ -1463,6 +1517,46 @@ export const fetchDailyAnalytics = async (
  if (!response.ok)
   await handleYouTubeApiError(response, "Failed to fetch daily analytics")
  const baseResult = await response.json()
+ const headerNames = Array.isArray(baseResult?.columnHeaders)
+  ? baseResult.columnHeaders.map((header: { name?: string }) =>
+     String(header?.name || ""),
+    )
+  : []
+ const columnIndex = (name: string): number => headerNames.indexOf(name)
+ baseResult._normalizedRows = Array.isArray(baseResult?.rows)
+  ? baseResult.rows.map((row: unknown) => {
+     const values = Array.isArray(row) ? row : []
+     const readNumber = (name: string): number => {
+      const idx = columnIndex(name)
+      if (idx < 0) return 0
+      const raw = values[idx]
+      return typeof raw === "number" ? raw : Number(raw || 0)
+     }
+     const views = readNumber("views")
+     const minutes = readNumber("estimatedMinutesWatched")
+     const revenue = readNumber("estimatedRevenue")
+     return {
+      date: String(values[columnIndex("day")] || ""),
+      views,
+      watchTime: Number((minutes / 60).toFixed(2)),
+      watchHours: Number((minutes / 60).toFixed(2)),
+      subsGained: readNumber("subscribersGained"),
+      subsLost: readNumber("subscribersLost"),
+      revenue,
+      shares: readNumber("shares"),
+      comments: readNumber("comments"),
+      likes: readNumber("likes"),
+      dislikes: readNumber("dislikes"),
+      averageViewDuration: readNumber("averageViewDuration"),
+      engagedViews: readNumber("engagedViews"),
+      saves: readNumber("videosAddedToPlaylists"),
+      rpm: views > 0 ? Number(((revenue / views) * 1000).toFixed(2)) : 0,
+      impressions: null,
+      ctr: null,
+      adImpressions: null,
+     }
+    })
+  : []
  baseResult._thumbnailMetrics = null
  baseResult._thumbnailMetricsStatus = {
   status: "unavailable",
@@ -1478,6 +1572,7 @@ export interface DailyMetricRow {
   date: string;
   views: number;
   watchTime: number; // Watch Hours (converted from minutes)
+  watchHours: number;
   subsGained: number;
   subsLost: number;
   revenue: number;
@@ -1486,8 +1581,11 @@ export interface DailyMetricRow {
   likes: number;
   dislikes: number;
   averageViewDuration: number;
-  impressions: number;
-  ctr: number;
+  engagedViews: number;
+  saves: number;
+  impressions: number | null;
+  ctr: number | null;
+  adImpressions?: number | null;
   rpm: number; // Calculated as (revenue / views) * 1000
 }
 
@@ -1507,7 +1605,7 @@ export async function fetchChannelDailySeries(channelId: string, days: number = 
 
     // CANONICAL METRICS LIST
     // We fetch 'estimatedRevenue' to calculate RPM and 'estimatedMinutesWatched' for Watch Hours
-    const metrics = [
+    const metrics = joinUniqueAnalyticsMetrics([
       "views",
       "estimatedMinutesWatched",
       "subscribersGained",
@@ -1517,8 +1615,10 @@ export async function fetchChannelDailySeries(channelId: string, days: number = 
       "comments",
       "likes",
       "dislikes",
-      "averageViewDuration"
-    ].join(",");
+      "averageViewDuration",
+      "engagedViews",
+      "videosAddedToPlaylists"
+    ]);
 
     const params = new URLSearchParams({
       ids: `channel==${channelId}`,
@@ -1552,11 +1652,13 @@ export async function fetchChannelDailySeries(channelId: string, days: number = 
       const views = row[1] || 0;
       const revenue = row[5] || 0;
       const minutes = row[2] || 0;
+      const watchHours = Number((minutes / 60).toFixed(2));
 
       return {
         date: row[0],
         views: views,
-        watchTime: Number((minutes / 60).toFixed(2)), // Convert to Watch Hours
+        watchTime: watchHours, // Convert to Watch Hours
+        watchHours,
         subsGained: row[3] || 0,
         subsLost: row[4] || 0,
         revenue: revenue,
@@ -1565,8 +1667,11 @@ export async function fetchChannelDailySeries(channelId: string, days: number = 
         likes: row[8] || 0,
         dislikes: row[9] || 0,
         averageViewDuration: row[10] || 0,
-        impressions: 0,
-        ctr: 0,
+        engagedViews: row[11] || 0,
+        saves: row[12] || 0,
+        impressions: null,
+        ctr: null,
+        adImpressions: null,
         // Calculate RPM: (Revenue / Views) * 1000
         rpm: views > 0 ? Number(((revenue / views) * 1000).toFixed(2)) : 0,
       };
@@ -1591,7 +1696,7 @@ export const fetchGlobalLifetimeAnalytics = async (
    "authError",
   )
  const idParam = channelId ? `channel==${channelId}` : "channel==MINE"
- const url = `${ANALYTICS_URL}/reports?ids=${idParam}&startDate=${startDate}&endDate=${endDate}&metrics=views,estimatedMinutesWatched,subscribersGained,subscribersLost,likes,comments,shares,estimatedRevenue`
+ const url = `${ANALYTICS_URL}/reports?ids=${idParam}&startDate=${startDate}&endDate=${endDate}&metrics=views,estimatedMinutesWatched,engagedViews,comments,likes,shares,averageViewDuration,averageViewPercentage,subscribersGained,subscribersLost,estimatedRevenue`
  const response = await proxyFetch(url, {
   headers: { Authorization: `Bearer ${token}` },
  })
@@ -1639,7 +1744,7 @@ export const fetchGeographyAnalytics = async (
  for (const metrics of metricGroups) {
   const url =
    `${ANALYTICS_URL}/reports?ids=${idParam}&startDate=${startDate}&endDate=${endDate}` +
-   `&metrics=${metrics.join(",")}&dimensions=country`
+   `&metrics=${joinUniqueAnalyticsMetrics(metrics)}&dimensions=country`
   const response = await proxyFetch(url, {
    headers: { Authorization: `Bearer ${token}` },
   })
@@ -1704,7 +1809,7 @@ export const fetchGeographyAnalytics = async (
 // --- Additional Analytics Methods from YouTubeService ---
 
 export const getChannelAnalytics = async (startDate: string, endDate: string) => {
- const metrics = [
+ const metrics = joinUniqueAnalyticsMetrics([
   "views",
   "estimatedMinutesWatched",
   "averageViewDuration",
@@ -1715,7 +1820,7 @@ export const getChannelAnalytics = async (startDate: string, endDate: string) =>
   "comments",
   "shares",
   "estimatedRevenue",
- ].join(",")
+ ])
 
  const url =
   `${ANALYTICS_URL}/reports?` +
@@ -1739,8 +1844,17 @@ export const getVideoAnalytics = async (
  startDate: string,
  endDate: string,
 ) => {
- const metrics =
-  "views,estimatedMinutesWatched,averageViewDuration,likes,subscribersGained,estimatedRevenue,videoThumbnailImpressions,videoThumbnailImpressionsClickRate,adImpressions,cpm,monetizedPlaybacks"
+ const metrics = joinUniqueAnalyticsMetrics([
+  "views",
+  "estimatedMinutesWatched",
+  "averageViewDuration",
+  "likes",
+  "subscribersGained",
+  "estimatedRevenue",
+  "adImpressions",
+  "cpm",
+  "monetizedPlaybacks",
+ ])
 
  const chunks = chunkArray(videoIds, 250);
  const results = await Promise.all(
@@ -1767,11 +1881,99 @@ export const getVideoAnalytics = async (
  return { rows: aggregatedRows };
 }
 
+const VIDEO_IMPRESSIONS_METRICS = [
+ "videoThumbnailImpressions",
+ "videoThumbnailImpressionsClickRate",
+] as const
+
+export type VideoImpressionsAnalyticsResult = YouTubeReportPayload & {
+ warnings: string[]
+ failedVideoIds: string[]
+}
+
+export const getVideoImpressionsAnalytics = async (
+ videoIds: string[],
+ startDate: string,
+ endDate: string,
+ options: {
+  chunkSize?: number
+  splitOn400?: boolean
+ } = {},
+): Promise<VideoImpressionsAnalyticsResult> => {
+ const chunkSize = Math.max(1, Math.min(options.chunkSize ?? 25, 50))
+ const splitOn400 = options.splitOn400 ?? true
+ const payloads: YouTubeReportPayload[] = []
+ const warnings: string[] = []
+ const failedVideoIds = new Set<string>()
+
+ const fetchChunk = async (chunk: string[], depth = 0): Promise<void> => {
+  if (chunk.length === 0) return
+  const url =
+   `${ANALYTICS_URL}/reports?` +
+   `ids=channel==MINE&` +
+   `startDate=${startDate}&` +
+   `endDate=${endDate}&` +
+   `metrics=${joinUniqueAnalyticsMetrics(VIDEO_IMPRESSIONS_METRICS)}&` +
+   `filters=${encodeURIComponent(`video==${chunk.join(",")}`)}&` +
+   `dimensions=video`
+
+  const token = await refreshTokenIfExpired()
+  const response = await proxyFetch(url, {
+   headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+
+  if (response.ok) {
+   const payload = await response.json()
+   if (payload && Array.isArray(payload.rows)) {
+    payloads.push(payload)
+   }
+   return
+  }
+
+  if (response.status === 401) {
+   await handleYouTubeApiError(response, "Failed to fetch video impressions analytics")
+  }
+
+  if (response.status === 400 && splitOn400 && chunk.length > 1 && depth < 10) {
+   const mid = Math.ceil(chunk.length / 2)
+   await fetchChunk(chunk.slice(0, mid), depth + 1)
+   await fetchChunk(chunk.slice(mid), depth + 1)
+   return
+  }
+
+  let message = response.statusText || `HTTP ${response.status}`
+  try {
+   const errorData = await response.json()
+   message =
+    errorData?.error?.message ||
+    errorData?.error_description ||
+    message
+  } catch {}
+
+  chunk.forEach((videoId) => failedVideoIds.add(videoId))
+  warnings.push(
+   `Thumbnail impressions/CTR unavailable for ${chunk.length} video(s): ${message}`,
+  )
+ }
+
+ const chunks = chunkArray(videoIds, chunkSize)
+ for (const chunk of chunks) {
+  await fetchChunk(chunk)
+ }
+
+ const merged = flattenReportPayloads(payloads)
+ return {
+  ...merged,
+  warnings,
+  failedVideoIds: Array.from(failedVideoIds),
+ }
+}
+
 export const fetchSingleVideoAnalytics = async (videoId: string) => {
  const endDate = new Date().toISOString().split("T")[0]
  const startDate = "2000-01-01"
  const metrics =
-  "shares,averageViewPercentage,annotationClickThroughRate,estimatedRevenue"
+  "shares,averageViewPercentage,cardClickRate,estimatedRevenue"
 
  try {
   const url = `${ANALYTICS_URL}/reports?ids=channel==MINE&filters=${encodeURIComponent(
@@ -1831,6 +2033,260 @@ export const fetchVideoRetention = async (videoId: string) => {
   console.warn(`Failed to fetch retention for video ${videoId}`, e)
  }
  return null
+}
+
+/**
+ * ── Segment Analytics Fetchers ───────────────────────────────────────────────
+ * One fetcher per channel-level segment dataset, each using the EXACT YouTube
+ * Analytics API query (metrics / dimensions / sort / filters) ported from the
+ * VT-SYNC reference implementation (src/App.tsx runBundle calls). Every fetcher
+ * returns a raw { columnHeaders, rows } report so the SyncCoordinator can commit
+ * it straight to the canonical ledger and master tables.
+ */
+
+export type SegmentAnalyticsReport = {
+ columnHeaders: YouTubeReportHeader[]
+ rows: (string | number)[][]
+}
+
+const EMPTY_SEGMENT_REPORT: SegmentAnalyticsReport = { columnHeaders: [], rows: [] }
+
+/**
+ * Runs a single YouTube Analytics API v2 report and returns the raw payload.
+ * Mirrors the VT-SYNC `runBundle` request shape (ids/startDate/endDate/metrics/
+ * dimensions/sort/maxResults/filters). A `maxResults` of 0 is omitted, matching
+ * VT-SYNC's `if (maxResults)` guard.
+ */
+export const fetchSegmentAnalyticsReport = async (
+ config: {
+  metrics: string
+  dimensions?: string
+  sort?: string
+  maxResults?: number
+  filters?: string
+  startDate: string
+  endDate: string
+  channelId?: string
+ },
+): Promise<SegmentAnalyticsReport> => {
+ const token = await refreshTokenIfExpired()
+ if (!token)
+  throw new YouTubeApiError(
+   "Your YouTube session has expired or is invalid. Please reconnect your channel in Settings.",
+   401,
+   "authError",
+  )
+ const idParam = config.channelId ? `channel==${config.channelId}` : "channel==MINE"
+ const search = new URLSearchParams({
+  ids: idParam,
+  startDate: config.startDate,
+  endDate: config.endDate,
+  metrics: config.metrics,
+ })
+ if (config.dimensions) search.set("dimensions", config.dimensions)
+ if (config.sort) search.set("sort", config.sort)
+ if (config.maxResults) search.set("maxResults", String(config.maxResults))
+ if (config.filters) search.set("filters", config.filters)
+
+ const response = await proxyFetch(`${ANALYTICS_URL}/reports?${search.toString()}`, {
+  headers: { Authorization: `Bearer ${token}` },
+ })
+ if (!response.ok)
+  await handleYouTubeApiError(response, "Failed to fetch segment analytics report")
+ const payload = await response.json()
+ return {
+  columnHeaders: Array.isArray(payload?.columnHeaders) ? payload.columnHeaders : [],
+  rows: Array.isArray(payload?.rows) ? payload.rows : [],
+ }
+}
+
+// Device x Operating System — deviceType,operatingSystem
+export const fetchDeviceOsAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics: "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage",
+  dimensions: "deviceType,operatingSystem",
+  sort: "-views",
+  maxResults: 200,
+  startDate,
+  endDate,
+  channelId,
+ })
+
+// Traffic Source x Day — insightTrafficSourceType,day
+export const fetchTrafficByDayAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics:
+   "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,engagedViews",
+  dimensions: "insightTrafficSourceType,day",
+  sort: "-day",
+  startDate,
+  endDate,
+  channelId,
+ })
+
+// Ad Type — adType
+export const fetchAdTypeAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics: "grossRevenue,cpm,adImpressions",
+  dimensions: "adType",
+  sort: "-grossRevenue",
+  maxResults: 50,
+  startDate,
+  endDate,
+  channelId,
+ })
+
+// Sharing Service — sharingService
+export const fetchSharingServiceAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics: "shares",
+  dimensions: "sharingService",
+  sort: "-shares",
+  maxResults: 50,
+  startDate,
+  endDate,
+  channelId,
+ })
+
+// Subscription Status — subscribedStatus
+export const fetchSubscriptionStatusAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics:
+   "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,engagedViews",
+  dimensions: "subscribedStatus",
+  sort: "-views",
+  maxResults: 50,
+  startDate,
+  endDate,
+  channelId,
+ })
+
+// Subscription Source — insightTrafficSourceType (subscribers gained/lost)
+export const fetchSubscriptionSourceAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics: "subscribersGained,subscribersLost",
+  dimensions: "insightTrafficSourceType",
+  sort: "-subscribersGained",
+  maxResults: 50,
+  startDate,
+  endDate,
+  channelId,
+ })
+
+// Subscriber Traffic Detail — insightTrafficSourceDetail filtered to SUBSCRIBER
+export const fetchSubscriberDetailAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics:
+   "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,engagedViews",
+  dimensions: "insightTrafficSourceDetail",
+  filters: "insightTrafficSourceType==SUBSCRIBER",
+  sort: "-views",
+  maxResults: 25,
+  startDate,
+  endDate,
+  channelId,
+ })
+
+// Content Type / Format — creatorContentType
+export const fetchCreatorContentTypeAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics:
+   "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,engagedViews",
+  dimensions: "creatorContentType",
+  sort: "-views",
+  maxResults: 50,
+  startDate,
+  endDate,
+  channelId,
+ })
+
+// Channel Playlist Analytics Metrics — playlist
+export const fetchPlaylistAnalytics = (
+ startDate: string,
+ endDate: string,
+ channelId?: string,
+): Promise<SegmentAnalyticsReport> =>
+ fetchSegmentAnalyticsReport({
+  metrics:
+   "playlistViews,playlistEstimatedMinutesWatched,playlistStarts,averageTimeInPlaylist,playlistSaves",
+  dimensions: "playlist",
+  sort: "-playlistViews",
+  maxResults: 50,
+  startDate,
+  endDate,
+  channelId,
+ })
+
+/**
+ * Video Retention — audienceWatchRatio + relativeRetentionPerformance across
+ * elapsedVideoTimeRatio, fetched per-video for the supplied target videos and
+ * flattened into a single report keyed by video. Ports the VT-SYNC retentions
+ * loop (top videos → per-video elapsedVideoTimeRatio report).
+ */
+export const fetchRetentionAnalyticsReport = async (
+ videoIds: string[],
+ startDate: string,
+ endDate: string,
+ topN = 25,
+): Promise<SegmentAnalyticsReport> => {
+ const targets = Array.from(
+  new Set(videoIds.map((id) => String(id || "").trim()).filter(Boolean)),
+ ).slice(0, Math.max(0, topN))
+ const rows: (string | number)[][] = []
+ for (const videoId of targets) {
+  const retention = await fetchVideoRetention(videoId)
+  if (!Array.isArray(retention)) continue
+  retention.forEach((point: any) => {
+   rows.push([
+    videoId,
+    point.elapsedVideoTimeRatio ?? 0,
+    point.audienceWatchRatio ?? 0,
+    point.relativeRetentionPerformance ?? 0,
+   ])
+  })
+ }
+ if (rows.length === 0) return EMPTY_SEGMENT_REPORT
+ return {
+  columnHeaders: [
+   { name: "video" },
+   { name: "elapsedVideoTimeRatio" },
+   { name: "audienceWatchRatio" },
+   { name: "relativeRetentionPerformance" },
+  ],
+  rows,
+ }
 }
 
 export const createReportingJob = async (
