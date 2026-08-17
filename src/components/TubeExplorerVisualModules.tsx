@@ -3247,7 +3247,37 @@ const ThermalImagingModuleInner: React.FC<{
   const rect = tr.getBoundingClientRect()
   const clickX = e.clientX - rect.left
   const ratio = clickX / rect.width
-  el.scrollLeft = ratio * (el.scrollWidth - el.clientWidth)
+  el.scrollTo({ left: ratio * (el.scrollWidth - el.clientWidth), behavior: 'smooth' })
+ }
+
+ const handleThumbPointerDown = (e: React.PointerEvent<HTMLSpanElement>) => {
+  e.preventDefault()
+  e.stopPropagation()
+  
+  const startX = e.clientX
+  const el = containerRef.current
+  const tr = trackRef.current
+  if (!el || !tr) return
+
+  const scrollStart = el.scrollLeft
+  const maxThumbTravel = tr.clientWidth - thumbWidth
+  if (maxThumbTravel <= 0) return
+
+  const maxScroll = el.scrollWidth - el.clientWidth
+
+  const onPointerMove = (moveEvent: PointerEvent) => {
+   const deltaX = moveEvent.clientX - startX
+   const deltaScroll = (deltaX / maxThumbTravel) * maxScroll
+   el.scrollLeft = scrollStart + deltaScroll
+  }
+
+  const onPointerUp = () => {
+   window.removeEventListener("pointermove", onPointerMove)
+   window.removeEventListener("pointerup", onPointerUp)
+  }
+
+  window.addEventListener("pointermove", onPointerMove)
+  window.addEventListener("pointerup", onPointerUp)
  }
 
  if (displayVideos.length === 0) return <Empty label="No videos match the selected filters" />
@@ -3305,38 +3335,35 @@ const ThermalImagingModuleInner: React.FC<{
     </div>
    </div>
 
-   {/* Combined Scrollbar + Legend Spectrum Row (Same Row!) */}
+  {/* Combined Scrollbar + Legend Spectrum Row */}
    <div className="flex items-center justify-between gap-3 border-t-[3px] border-black bg-[#080816] px-3 py-1.5 shrink-0">
-    {/* 1/2 Size vt-sync-scroll-controls */}
     <div className="flex-1 flex items-center min-w-0 pr-2">
      <div
       className="w-full flex items-stretch overflow-hidden border-[3px] border-black"
       style={{
-       height: 24,
+       height: 30,
        background: headerColorPair.title,
       }}
      >
-      {/* Previous / Left Arrow Button (Icon section bg color, NO corner radius!) */}
       <button
        type="button"
        aria-label="Previous metric group"
        onClick={() => {
-        if (containerRef.current) containerRef.current.scrollLeft -= 180
+        if (containerRef.current) containerRef.current.scrollBy({ left: -180, behavior: 'smooth' })
        }}
        className="flex items-center justify-center border-r-[3px] border-black cursor-pointer shrink-0 transition-opacity hover:opacity-90 active:opacity-75"
        style={{
-        width: 26,
+        width: 30,
         height: "100%",
         background: headerColorPair.icon,
         borderRadius: 0,
        }}
       >
-       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left" aria-hidden="true">
+       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left" aria-hidden="true">
         <path d="m15 18-6-6 6-6"></path>
        </svg>
       </button>
 
-      {/* Track & 2px Window Inset with 999px Area and Thumb Radius */}
       <div
        ref={trackRef}
        onClick={handleTrackClick}
@@ -3355,43 +3382,44 @@ const ThermalImagingModuleInner: React.FC<{
         }}
        >
         <span
-         className="absolute top-0 bottom-0 pointer-events-auto cursor-grab active:cursor-grabbing"
+         className="absolute top-0 bottom-0 pointer-events-auto cursor-grab active:cursor-grabbing hover:brightness-110"
+         onPointerDown={handleThumbPointerDown}
          style={{
           left: `${thumbLeft}px`,
           width: `${thumbWidth}px`,
           borderRadius: 999,
-          background: headerColorPair.title, // Title section bg color!
-          border: 0,                           // No stroke!
+          background: headerColorPair.title,
+          border: 0,
           minWidth: 20,
          }}
         />
        </span>
       </div>
 
-      {/* Next / Right Arrow Button (Icon section bg color, NO corner radius!) */}
       <button
        type="button"
        aria-label="Next metric group"
        onClick={() => {
-        if (containerRef.current) containerRef.current.scrollLeft += 180
+        if (containerRef.current) containerRef.current.scrollBy({ left: 180, behavior: 'smooth' })
        }}
        className="flex items-center justify-center border-l-[3px] border-black cursor-pointer shrink-0 transition-opacity hover:opacity-90 active:opacity-75"
        style={{
-        width: 26,
+        width: 30,
         height: "100%",
         background: headerColorPair.icon,
         borderRadius: 0,
        }}
       >
-       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right" aria-hidden="true">
+       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right" aria-hidden="true">
         <path d="m9 18 6-6-6-6"></path>
        </svg>
       </button>
      </div>
     </div>
 
+
     {/* Legend Spectrum Bar */}
-    <div className="flex items-center gap-2 shrink-0 bg-[#161622] px-3 py-1.5 rounded-lg border border-white/5">
+    <div className="flex items-center gap-2 shrink-0 h-[30px]">
      <span className="text-[10px] font-[1000] uppercase tracking-[0.15em] text-[#F3F4F6]/60 shrink-0">COLD</span>
      <div
       className="h-6 w-[180px] shrink-0 rounded-[4px] border-[1.5px] border-white/80"

@@ -3190,8 +3190,7 @@ const bucketLabelForChannelProgress = (
   const d = new Date(startMs)
 
 if (timeRange === "1y") {
-    const end = new Date(endMs)
-    return `${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${end.getDate()}`
+    return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" })
   }
 
   if (timeRange === "6m" || timeRange === "3m") {
@@ -3519,7 +3518,86 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
         onMouseLeave={() => setHoveredIdx(null)}
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-        <XAxis dataKey="name" tick={{ fontWeight: 900, fontSize: isIndividualGrid ? 8 : 10 }} axisLine={{ stroke: "#000", strokeWidth: 3 }} />
+      <XAxis 
+  dataKey="name" 
+  axisLine={{ stroke: "#000", strokeWidth: 3 }}
+  tick={(props: any) => {
+    const { x, y, payload, index } = props
+    const labelColor = mixChannelProgressTone(activeMetrics[0].tone, "#000000", 0.4)
+
+    // Custom label spanning for the 1-year view
+    if (timeRange === "1y") {
+      if (index % 2 !== 0) return <g /> 
+      
+      const d = new Date(chartData[index].start)
+      return (
+        <text 
+          x={x} 
+          y={y + 12} 
+          dx={isIndividualGrid ? 2 : 6} 
+          textAnchor="start" 
+          fill={labelColor} 
+          fontSize={isIndividualGrid ? 8 : 10} 
+          fontWeight={900}
+        >
+          {d.toLocaleDateString("en-US", { month: "short", year: "2-digit" })}
+        </text>
+      )
+    }
+
+    // Two-tier label spanning for the 6-month view
+    if (timeRange === "6m") {
+      const d = new Date(chartData[index].start)
+      const weekNum = (index % 4) + 1
+      const isSecondWeek = index % 4 === 1
+      
+      return (
+        <g transform={`translate(${x},${y})`}>
+          {/* Top Tier: Week Number */}
+          <text 
+            x={0} 
+            y={12} 
+            textAnchor="middle" 
+            fill={labelColor} 
+            fontSize={isIndividualGrid ? 7 : 9} 
+            fontWeight={900}
+          >
+            W{weekNum}
+          </text>
+          
+          {/* Bottom Tier: Month Label (Anchored to W2 to span across the 4 weeks) */}
+          {isSecondWeek && (
+            <text 
+              x={0} 
+              y={26} 
+              dx={isIndividualGrid ? 4 : 8}
+              textAnchor="start" 
+              fill={labelColor} 
+              fontSize={isIndividualGrid ? 9 : 11} 
+              fontWeight={900}
+            >
+              {d.toLocaleDateString("en-US", { month: "short" })}
+            </text>
+          )}
+        </g>
+      )
+    }
+
+    // Default centered label for all other time ranges
+    return (
+      <text 
+        x={x} 
+        y={y + 12} 
+        textAnchor="middle" 
+        fill={labelColor} 
+        fontSize={isIndividualGrid ? 8 : 10} 
+        fontWeight={900}
+      >
+        {payload.value}
+      </text>
+    )
+  }} 
+/>
         {metricsToRender.map((option, idx) => (
           <YAxis
             key={`yaxis-${option.value}`}

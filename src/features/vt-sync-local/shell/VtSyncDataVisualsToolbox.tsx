@@ -350,7 +350,6 @@ const PRIMARY_MODULE_IDS = new Set([
 const PRIMARY_VISUAL_MODULES: VtSyncVisualModuleDefinition[] = VISUAL_MODULES.filter((module) => PRIMARY_MODULE_IDS.has(module.id))
 const SECONDARY_VISUAL_MODULES: VtSyncVisualModuleDefinition[] = VISUAL_MODULES.filter((module) => !PRIMARY_MODULE_IDS.has(module.id))
 
-
 // Coarse-pointer devices (touch phones/tablets) tighten the reveal window so
 // mounting a chart doesn't cascade through every neighbour off-screen. Desktop
 // keeps the generous margin so no scroll flash appears.
