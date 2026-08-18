@@ -141,10 +141,6 @@ type Group = {
 }
 type CssVars = React.CSSProperties & Record<`--${string}`, string | number>
 
-const isCompactPreviewSnapshot = (snapshot: VtSyncSnapshot): boolean =>
- snapshot.storageMetadata?.storageMode === "compact_preview" ||
- snapshot.storageMetadata?.isCompacted === true
-
 export const resolveAnalyticsTableRows = ({
  tableId,
  snapshot,
@@ -160,21 +156,35 @@ export const resolveAnalyticsTableRows = ({
  recoveredRows?: VtSyncImportedRows[string]
  privacyFilters: VtSyncPrivacyFilters
 }): VtSyncTableRow[] => {
- if (importedRows) {
-  // API/snapshot rows remain row authority for every dataset. A table-local
-  // import fills missing fields and appends unmatched identities; it can never
-  // reduce the table to the size of the imported file.
-  return mergeVtSyncSupplementalTableRows<VtSyncTableRow>(tableId, snapshotRows, importedRows)
+ if (importedRows?.length) {
+  // Fresh CSV imports are additive: keep API/snapshot rows as the base,
+  // fill missing fields from the import, and append CSV-only identities.
+  return mergeVtSyncSupplementalTableRows<VtSyncTableRow>(
+   tableId,
+   snapshotRows,
+   importedRows,
+  )
  }
- const normalizedRecoveredRows = recoveredRows
+
+ const normalizedRecoveredRows = recoveredRows?.length
   ? normalizeVtSyncTableRows(tableId, recoveredRows)
   : []
+
  const visibleRecoveredRows = tableId === "videos"
   ? filterVtSyncVideos(normalizedRecoveredRows, privacyFilters)
   : normalizedRecoveredRows
- if (visibleRecoveredRows.length && (isCompactPreviewSnapshot(snapshot) || !snapshotRows.length)) {
-  return visibleRecoveredRows
+
+ if (visibleRecoveredRows.length) {
+  // Persisted CSV rows must use the same additive merge path as freshly
+  // imported rows. Otherwise a snapshot/state refresh can replace a
+  // successful mobile import immediately after the IndexedDB write.
+  return mergeVtSyncSupplementalTableRows<VtSyncTableRow>(
+   tableId,
+   snapshotRows,
+   visibleRecoveredRows,
+  )
  }
+
  return snapshotRows
 }
 
