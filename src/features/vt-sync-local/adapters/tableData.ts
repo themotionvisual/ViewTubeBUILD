@@ -346,11 +346,19 @@ const revenue = num(
   ...metrics,
   videoId,
   videoUrl: videoId ? `https://www.youtube.com/watch?v=${String(videoId)}` : firstValue(video.videoUrl, video.url),
-  publishedDay: video.publishedAt,
-  publishedTime: video.publishedAt,
+  publishedDay: firstValue(video.publishedDay, video.publishedAt),
+
+publishedTime: firstValue(
+ video.publishedTime,
+ video.publishedAt,
+),
   title: firstValue(video.title, "Metadata pending"),
   titleLength: String(firstValue(video.title, "") || "").length,
-  revenue: firstValue(metrics.revenue, (metrics as Row).estimatedRevenue),
+revenue: firstValue(
+ metrics.revenue,
+ (metrics as Row).estimatedRevenue,
+ video.revenue,
+ video.estimatedRevenue,),
   youtubePremiumRevenue: firstValue((metrics as Row).youtubePremiumRevenue, (metrics as Row).estimatedRedPartnerRevenue),
   youtubePremiumWatchTime: firstValue((metrics as Row).youtubePremiumWatchTime, num((metrics as Row).estimatedRedMinutesWatched) !== undefined ? numberOrZero((metrics as Row).estimatedRedMinutesWatched) / 60 : undefined),
   cardsShown: firstValue((metrics as Row).cardsShown, (metrics as Row).cardImpressions),
