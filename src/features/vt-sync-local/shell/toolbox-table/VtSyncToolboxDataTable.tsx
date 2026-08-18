@@ -175,9 +175,6 @@ export const resolveAnalyticsTableRows = ({
   : normalizedRecoveredRows
 
  if (visibleRecoveredRows.length) {
-  // Persisted CSV rows must use the same additive merge path as freshly
-  // imported rows. Otherwise a snapshot/state refresh can replace a
-  // successful mobile import immediately after the IndexedDB write.
   return mergeVtSyncSupplementalTableRows<VtSyncTableRow>(
    tableId,
    snapshotRows,
@@ -1069,28 +1066,41 @@ const [localPrivacyFilters, setLocalPrivacyFilters] =
  const activePrivacyFilters = privacyFilters || localPrivacyFilters
 
  useEffect(() => {
+  // CSV persistence is channel-scoped. Do not re-hydrate (and potentially
+  // clear) the active import every time the analytics snapshot changes.
+  // A manual import itself triggers a snapshot refresh, which was causing the
+  // freshly imported rows to flash briefly and then disappear.
+  if (!snapshot.channelId) return
+
   let cancelled = false
   void listVtSyncDatasetTableRows()
    .then((records) => {
     if (cancelled) return
+
     const manualRecords = records.filter(
      (record) =>
-      record.provenance === "csv" && record.id.startsWith("manual_import::") && !!snapshot.channelId && record.channelId === snapshot.channelId,
+      record.provenance === "csv" &&
+      record.id.startsWith("manual_import::") &&
+      record.channelId === snapshot.channelId,
     )
+
     setSavedCsvTableIds(
      new Set(manualRecords.map((record) => record.datasetId)),
     )
-    const active = manualRecords.filter((record) =>
-     isManualImportNewerThanApi(record, snapshot),
-    )
+
+    // Manual CSVs are supplemental data, not replacements for API rows.
+    // Keep every saved import for the active channel; the row merge helper
+    // preserves API/snapshot values and only fills missing fields / appends
+    // CSV-only identities. Do not discard a CSV merely because an API
+    // freshness timestamp is newer.
     setImported(
      Object.fromEntries(
-      active.map((record) => [record.datasetId, record.rows]),
+      manualRecords.map((record) => [record.datasetId, record.rows]),
      ),
     )
     setImportedAt(
      Object.fromEntries(
-      active.map((record) => [record.datasetId, record.capturedAt]),
+      manualRecords.map((record) => [record.datasetId, record.capturedAt]),
      ),
     )
     setCsvPersistenceWarning("")
@@ -1101,10 +1111,11 @@ const [localPrivacyFilters, setLocalPrivacyFilters] =
       "CSV imports are available for this session but cannot be retained after reload.",
      )
    })
+
   return () => {
    cancelled = true
   }
- }, [snapshot])
+ }, [snapshot.channelId])
  const updatePrivacyFilter = (
   key: keyof VtSyncPrivacyFilters,
   value: boolean,
