@@ -371,7 +371,13 @@ engagementRate: firstValue((metrics as Row).engagementRate, views !== undefined 
     netSubscribers: firstValue((metrics as Row).netSubscribers, gained !== undefined && lost !== undefined ? gained - lost : undefined),
    subRatio: firstValue((metrics as Row).subRatio, views !== undefined && views > 0 && gained !== undefined ? (gained / views) * 1000 : undefined),
    subRate: firstValue((metrics as Row).subRate, views !== undefined && views > 0 && gained !== undefined ? (gained / views) * 100 : undefined),
-   rpm: firstValue((metrics as Row).rpm, views !== undefined && views > 0 && revenue !== undefined ? (revenue / views) * 1000 : undefined),
+rpm: firstValue(
+ (metrics as Row).rpm,
+ video.rpm,
+ views !== undefined && views > 0 && revenue !== undefined
+  ? (revenue / views) * 1000
+  : undefined,
+),
    commentRate: firstValue((metrics as Row).commentRate, views !== undefined && views > 0 && comments !== undefined ? (comments / views) * 100 : undefined),
    shareRate: firstValue((metrics as Row).shareRate, views !== undefined && views > 0 && shares !== undefined ? (shares / views) * 100 : undefined),
    saveRate: firstValue((metrics as Row).saveRate, views !== undefined && views > 0 && saves !== undefined ? (saves / views) * 100 : undefined),
