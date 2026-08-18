@@ -914,7 +914,10 @@ export const VtSyncToolboxDataTable: React.FC<{
  snapshot: VtSyncSnapshot
  privacyFilters?: VtSyncPrivacyFilters
  onPrivacyFiltersChange?: (filters: VtSyncPrivacyFilters) => void
- onManualImportsChange?: () => void
+ onManualImportsChange?: (payload?: {
+ rowsByTableId: VtSyncImportedRows
+ capturedAt: string
+}) => void | Promise<void>
  videoCatalogCoverage?: VtSyncVideoCatalogCoverage
  storageStatus?: "loading" | "ready" | "failed"
  storageError?: string
@@ -5670,11 +5673,15 @@ const filteredRows = useMemo(() => {
             "CSV import is active for this session but could not be retained after reload.",
            )
           }
-          // Let the analytics page merge the fresh CSV into the snapshot so the
-          // DATA VISUALS toolbox can render off it right after import completes.
-          onManualImportsChange?.()
-          setSelectedKey(null)
-          setSort(table.defaultSort)
+         // Push the freshly parsed CSV directly to the analytics page.
+// Do not make DATA VISUALS wait for IndexedDB/channel recovery.
+void onManualImportsChange?.({
+ rowsByTableId: importedRows,
+ capturedAt: importedTimestamp,
+})
+
+setSelectedKey(null)
+setSort(table.defaultSort)
           showToast(
            `Imported ${entries.reduce((sum, [, rows]) => sum + rows.length, 0)} rows`,
           )
