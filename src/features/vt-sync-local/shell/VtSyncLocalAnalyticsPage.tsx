@@ -583,19 +583,77 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
   }
  }, [snapshot.channelId])
 
- const refreshManualImports = useCallback(async () => {
-  const channelId = snapshot.channelId
-  if (!channelId) {
-   setManualImports({ channelId: null, value: emptyManualImports })
-   return
-  }
-  try {
-   const next = await loadVtSyncManualImports(channelId)
-   setManualImports({ channelId, value: next })
-  } catch {
-   // IndexedDB may be unavailable (private browsing, quota exhaustion). Leave state as-is.
-  }
- }, [snapshot.channelId])
+const refreshManualImports = useCallback(async (payload?: {
+ rowsByTableId: Record<string, unknown[]>
+ capturedAt: string
+}) => {
+ const channelId = snapshot.channelId
+
+ // IMPORTANT:
+ // A fresh CSV import should immediately enter React state so DATA VISUALS
+ // can use it. It must not depend on authentication, channelId, IndexedDB,
+ // or a second async read.
+ if (payload) {
+  setManualImports((current) => {
+   const currentValue =
+    current.channelId === channelId
+     ? current.value
+     : emptyManualImports
+
+   const capturedAtByTableId = Object.fromEntries(
+    Object.keys(payload.rowsByTableId).map((tableId) => [
+     tableId,
+     payload.capturedAt,
+    ]),
+   )
+
+   return {
+    channelId,
+    value: {
+     rowsByTableId: {
+      ...currentValue.rowsByTableId,
+      ...payload.rowsByTableId,
+     },
+     capturedAtByTableId: {
+      ...currentValue.capturedAtByTableId,
+      ...capturedAtByTableId,
+     },
+    },
+   }
+  })
+
+  return
+ }
+
+ // No payload means we're doing normal persisted-import recovery.
+ // Don't erase active in-memory CSV data just because there is no channel yet.
+ if (!channelId) return
+
+ try {
+  const next = await loadVtSyncManualImports(channelId)
+
+  setManualImports((current) => ({
+   channelId,
+   value: {
+    rowsByTableId: {
+     ...(current.channelId === channelId
+      ? current.value.rowsByTableId
+      : {}),
+     ...next.rowsByTableId,
+    },
+    capturedAtByTableId: {
+     ...(current.channelId === channelId
+      ? current.value.capturedAtByTableId
+      : {}),
+     ...next.capturedAtByTableId,
+    },
+   },
+  }))
+ } catch {
+  // IndexedDB may be unavailable on mobile/private browsing.
+  // Keep the active in-memory CSV instead of clearing it.
+ }
+}, [snapshot.channelId])
 
  const refreshVideoInventory = useCallback(async (requestedChannelId?: string | null) => {
   const channelId = requestedChannelId ?? snapshot.channelId
