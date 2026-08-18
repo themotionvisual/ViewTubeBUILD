@@ -318,13 +318,26 @@ export const normalizeVtSyncVideoTableRows = (
  return sourceVideos.map((video) => {
  const metrics = asRecord(video.metrics)
  const videoId = firstValue(video.id, video.videoId)
- const views = num(metrics.views)
+ const views = num(firstValue(metrics.views, video.views))
  const engagedViews = num(metrics.engagedViews)
  const likes = num(metrics.likes)
  const dislikes = num(metrics.dislikes)
  const gained = num(metrics.subscribersGained)
  const lost = num(metrics.subscribersLost)
-const revenue = num(firstValue(metrics.revenue, metrics.estimatedRevenue))
+const revenue = num(
+
+ firstValue(
+
+  metrics.revenue,
+
+  metrics.estimatedRevenue,
+
+  video.revenue,
+
+  video.estimatedRevenue,
+
+ )
+)
   const comments = num(metrics.comments)
   const shares = num(metrics.shares)
   const saves = num(metrics.saves)
