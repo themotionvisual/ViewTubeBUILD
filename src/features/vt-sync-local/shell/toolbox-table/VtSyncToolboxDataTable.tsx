@@ -4012,13 +4012,23 @@ const filteredRows = useMemo(() => {
    ]),
   )
  }, [formatSubscriberDisplayColumns, sortedFormatSubscriberGroups])
- const retentionDisplayColumns = useMemo(() => {
-  const keys = ["audienceWatchRatio", "relativeRetentionPerformance"]
-  const byKey = new Map(orderedColumns.map((column) => [column.key, column]))
+const retentionDisplayColumns = useMemo(() => {
+  const keys = [
+    "audienceWatchRatio",
+    "relativeRetentionPerformance",
+    "startedWatching",
+    "stoppedWatching",
+    "totalSegmentImpressions",
+  ]
+
+  const byKey = new Map(
+    orderedColumns.map((column) => [column.key, column]),
+  )
+
   return keys
-   .map((key) => byKey.get(key))
-   .filter(Boolean) as VtSyncTableColumnDefinition[]
- }, [orderedColumns])
+    .map((key) => byKey.get(key))
+    .filter(Boolean) as VtSyncTableColumnDefinition[]
+}, [orderedColumns])
  const retentionNumericSorted = useMemo(() => {
   const metricRows = sortedRetentionVideoGroups.flatMap((group) => [
    group.summary,
