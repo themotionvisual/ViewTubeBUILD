@@ -37,7 +37,7 @@ import { SubToolboxChartModule, subToolboxChartPresets } from "./SubToolboxChart
 import type { ControllerRow, ControllerRankedByRow } from "./VisualModuleController"
 import { RankedByRow } from "./VisualModuleController"
 import { InsightMarquee } from "./InsightMarquee"
-import { HeroIntroBoundary, HeroAnimationPlayButton } from "./HeroIntroBoundary"
+import { HeroIntroBoundary, HeaderHeroPlayButton } from "./HeroIntroBoundary"
 import type { VtSyncVisualHeaderColorPair } from "../features/vt-sync-local/shell/VtSyncVisualFrame"
 import {
  VT_SPECTRUM_PALETTE_06,
@@ -2991,8 +2991,8 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
     leftTitle: "LONGFORM",
     leftStats: longStats,
     title: (
-     <div className="w-full h-full flex items-center justify-center">
-    <HeroAnimationPlayButton visualId="format-dominance" />
+     <div className="relative w-full h-full flex items-center justify-center">
+    <HeaderHeroPlayButton visualId="format-dominance" topPx={-2} rightPx={4} />
       <div className="flex items-center gap-8">
        <div className="flex items-center gap-1.5">
         <div className="w-4 h-4 rounded-full bg-[#00E5FF] border-[2px] border-black" />
@@ -4437,7 +4437,9 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
       }
     >
       <div ref={channelProgressRootRef} className="px-1 pt-2 pb-4 min-h-[400px] relative overflow-visible">
-       <HeroAnimationPlayButton visualId="channel-progress" />
+       {/* Header-anchored: negative topPx floats the button above the chart body
+           into the shell header row (parent has overflow-visible so it renders). */}
+       <HeaderHeroPlayButton visualId="channel-progress" topPx={-34} rightPx={12} />
         {layoutMode === "individual" && activeMetrics.length > 1 ? (
           <div className={`grid gap-1 h-[420px] ${activeMetrics.length === 2 ? 'grid-cols-1 grid-rows-2' : 'grid-cols-2 grid-rows-2'}`}>
             {activeMetrics.map((metricOpt, metricIndex) => {

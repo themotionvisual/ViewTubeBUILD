@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { HeroIntroBoundary, HeroAnimationPlayButton } from "./HeroIntroBoundary"
+import { HeroIntroBoundary, HeaderHeroPlayButton } from "./HeroIntroBoundary"
 import {
  Area,
  AreaChart,
@@ -3872,7 +3872,11 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
     ]}
    >
     <div className="relative h-full w-full bg-[#0a0a1a]">
-     <HeroAnimationPlayButton visualId="heat-matrix" />
+     {/* Header-anchored replay: sits at the canvas top-right corner (the
+         shell's ModuleFrame body clips overflow so a negative topPx isn't
+         safe here — kept as the extreme top-right of the canvas, out of
+         the way of the top-right controller row above). */}
+     <HeaderHeroPlayButton visualId="heat-matrix" topPx={8} rightPx={12} />
      <ThermalImagingModuleInner
       key={`heat-matrix-${heatMatrixReplayTick}`}
       displayVideos={displayVideos}

@@ -30,10 +30,43 @@ export type HeroVisualId =
 export interface HeroIntroOptions {
   mode?: HeroIntroMode
   seed?: string | number
+  /**
+   * Which per-visual animation variant to run. Values map per-visual to
+   * meaningfully different animations so a viewer can cycle through and
+   * compare them. Runners that don't offer variants ignore this value.
+   * Convention: 0 = default (shipping behavior).
+   */
+  variant?: number
+}
+
+/**
+ * How many distinct animation variants a given hero visual exposes. Consumers
+ * (e.g. `HeaderHeroPlayButton`) use this to know how far to cycle before
+ * wrapping around. A count of 1 means the visual has no variants — the play
+ * button will simply replay the single animation.
+ */
+export const HERO_VISUAL_VARIANT_COUNT: Record<HeroVisualId, number> = {
+  "traffic-source-evolution": 1,
+  "channel-progress": 3,
+  "heat-matrix": 3,
+  "shorts-retention": 1,
+  "channel-vital-signs": 1,
+  "clockburst": 1,
+  "title-keyword-network": 1,
+  "barcode-fingerprint": 1,
+  "geography-map": 1,
+  "engagement-pulse": 1,
+  "format-dominance": 1,
+  "keyword-venn": 1,
 }
 
 export interface HeroIntroController {
-  replay: () => void
+  /**
+   * Restart the intro animation. Pass a `variant` to render a different
+   * per-visual animation flavor for this run (the value overrides whatever
+   * variant was baked into the controller's initial options).
+   */
+  replay: (overrides?: { variant?: number }) => void
   reset: () => void
   destroy: () => void
 }
@@ -237,36 +270,46 @@ export const animateChannelProgress: AnimationRunner = (
     ".recharts-line-curve, [data-vt-channel-progress-line]",
   )
 
-  const animations: Animation[] = []
-  const barDuration = ms(620, options.mode)
-  const barStagger = ms(
-    boundedStagger(bars.length, 1800, 620, 20, 80),
-    options.mode,
-  )
+  // Variant tuning knobs. v0 = shipping behavior; v1 = quicker + softer easing;
+  // v2 = mirrored right-to-left sweep with a bigger overshoot.
+  const variant = ((options.variant ?? 0) % 3 + 3) % 3
+  const speedScale = variant === 1 ? 0.72 : 1
+  const easing = variant === 1 ? SOFT_OUT : SPRING
+  const overshoot = variant === 2 ? 1.18 : 1.08
 
+  const animations: Animation[] = []
+  const barDuration = ms(620 * speedScale, options.mode)
+  const baseStagger = boundedStagger(bars.length, 1800, 620, 20, 80) * speedScale
+  const barStagger = ms(baseStagger, options.mode)
+
+  const barCount = bars.length
   bars.forEach((bar, index) => {
     setTransformOrigin(bar, "center bottom")
+    // v2 reverses sweep direction so the wave enters from the right axis.
+    const orderedIndex = variant === 2 ? barCount - 1 - index : index
     animations.push(play(
       bar,
       [
         { transform: "scaleY(0.03)", opacity: 0.25 },
-        { transform: "scaleY(1.08)", opacity: 1, offset: 0.78 },
+        { transform: `scaleY(${overshoot})`, opacity: 1, offset: 0.78 },
         { transform: "scaleY(1)", opacity: 1 },
       ],
       {
         duration: barDuration,
-        delay: index * barStagger,
-        easing: SPRING,
+        delay: orderedIndex * barStagger,
+        easing,
       },
     ))
   })
 
   lines.forEach((line, index) => {
+    const lineDelayBase = variant === 1 ? 220 : 350
+    const perLineStep = variant === 1 ? 120 : 180
     const animation = drawSvgStroke(
       line,
-      ms(1000, options.mode),
-      ms(350 + index * 180, options.mode),
-      SOFT_OUT,
+      ms(1000 * speedScale, options.mode),
+      ms(lineDelayBase + index * perLineStep, options.mode),
+      variant === 2 ? SPRING : SOFT_OUT,
     )
     if (animation) animations.push(animation)
   })
@@ -301,21 +344,54 @@ const orderTilesBySerpentineColumns = (tiles: HTMLElement[]): HTMLElement[] => {
     })
 }
 
+/**
+ * Row-based serpentine ordering — a horizontal wave that snakes across the
+ * matrix row by row, instead of the default column-by-column wave.
+ */
+const orderTilesBySerpentineRows = (tiles: HTMLElement[]): HTMLElement[] => {
+  if (tiles.length <= 1) return tiles
+
+  const rows = new Map<number, HTMLElement[]>()
+  tiles.forEach((tile) => {
+    const rect = tile.getBoundingClientRect()
+    const key = Math.round(rect.top / 2) * 2
+    const bucket = rows.get(key) ?? []
+    bucket.push(tile)
+    rows.set(key, bucket)
+  })
+
+  return [...rows.entries()]
+    .sort(([a], [b]) => a - b)
+    .flatMap(([, row], rowIndex) => {
+      const sorted = [...row].sort(
+        (a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left,
+      )
+      return rowIndex % 2 === 0 ? sorted : sorted.reverse()
+    })
+}
+
 export const animateHeatMatrix: AnimationRunner = (
   root,
   options = {},
 ) => {
   if (options.mode === "none") return []
 
-  const tiles = orderTilesBySerpentineColumns(
-    queryAll<HTMLElement>(root, ".vt-heat-tile, [data-vt-heat-tile]"),
-  )
+  // Variant tuning knobs.
+  //   v0 = shipping column-serpentine spring
+  //   v1 = row-serpentine (horizontal wave)
+  //   v2 = row-serpentine, faster, with a taller peak bounce
+  const variant = ((options.variant ?? 0) % 3 + 3) % 3
+  const tiles = variant === 0
+    ? orderTilesBySerpentineColumns(queryAll<HTMLElement>(root, ".vt-heat-tile, [data-vt-heat-tile]"))
+    : orderTilesBySerpentineRows(queryAll<HTMLElement>(root, ".vt-heat-tile, [data-vt-heat-tile]"))
 
-  const duration = ms(470, options.mode)
+  const speedScale = variant === 2 ? 0.72 : 1
+  const duration = ms(470 * speedScale, options.mode)
   const stagger = ms(
-    boundedStagger(tiles.length, 3500, 470, 10, 52),
+    boundedStagger(tiles.length, 3500 * speedScale, 470 * speedScale, 10, 52),
     options.mode,
   )
+  const peak = variant === 2 ? 1.85 : 1.6
 
   return tiles.map((tile, index) => {
     setTransformOrigin(tile)
@@ -323,7 +399,7 @@ export const animateHeatMatrix: AnimationRunner = (
       tile,
       [
         { transform: "scale(0.12)", opacity: 0 },
-        { transform: "scale(1.6)", opacity: 1, offset: 0.52 },
+        { transform: `scale(${peak})`, opacity: 1, offset: 0.52 },
         { transform: "scale(0.91)", opacity: 1, offset: 0.78 },
         { transform: "scale(1)", opacity: 1 },
       ],
@@ -788,12 +864,15 @@ export const createHeroIntroController = (
     animations = []
   }
 
-  const replay = () => {
+  const replay = (overrides?: { variant?: number }) => {
     reset()
+    const effectiveOptions: HeroIntroOptions = overrides?.variant !== undefined
+      ? { ...options, variant: overrides.variant }
+      : options
     // Two frames guarantees layout is stable before geometry-based ordering.
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        animations = runHeroVisualIntro(id, root, options)
+        animations = runHeroVisualIntro(id, root, effectiveOptions)
       })
     })
   }
@@ -821,7 +900,10 @@ export const bindHeroIntroReplayEvent = (
   controller: HeroIntroController,
 ): (() => void) => {
   if (typeof window === "undefined") return () => undefined
-  const replay = () => controller.replay()
+  const replay = (event: Event) => {
+    const detail = (event as CustomEvent<{ variant?: number }>).detail
+    controller.replay(detail?.variant !== undefined ? { variant: detail.variant } : undefined)
+  }
   window.addEventListener("vt:replay-hero-intro", replay)
   return () => window.removeEventListener("vt:replay-hero-intro", replay)
 }
