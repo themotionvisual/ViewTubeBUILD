@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { HeroIntroBoundary, HeroAnimationPlayButton } from "./HeroIntroBoundary"
 import {
  Area,
  AreaChart,
@@ -24,6 +25,7 @@ import {
 import type { CanonicalVideoRow } from "../services/analytics/DataStore"
 import type { CsvFileWithTag } from "../types"
 import { AnalyticsVisualShell } from "./AnalyticsVisualShell"
+import { normalizeHeatMatrixContext } from "./analyticsVisualContextStyle"
 import { CustomIcon } from "./CustomIcon"
 import { StableChartFrame } from "./StableChartFrame"
 import type { SubToolboxChartModuleProps } from "./SubToolboxChartModule"
@@ -155,6 +157,10 @@ const ModuleFrame: React.FC<{
  children: React.ReactNode
 }> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], activeContext, controllerRows, visualStyle, insight, height = 320, flushShell = false, stableChartFrame = true, collapsible = false, isOpenInitial = true, children }) => {
  const resolvedStyle = visualStyle ?? resolveVtSyncVisualStyle(title)
+ const normalizedActiveContext = useMemo(
+  () => normalizeHeatMatrixContext(title, activeContext),
+  [title, activeContext],
+ )
  const headerPair = visualStyle?.headerColorPair ?? headerPairForColor(color)
  const resolvedIcon = visualStyle?.iconKey ?? resolvedStyle.iconKey ?? icon
  const boundedHeight = `${height}px`
@@ -165,7 +171,7 @@ const ModuleFrame: React.FC<{
   subtitle={subtitle}
   icon={typeof resolvedIcon === "string" ? <CustomIcon name={resolvedIcon as any} size={96} /> : resolvedIcon}
   headerColorPair={headerPair}
-  activeContext={activeContext}
+  activeContext={normalizedActiveContext}
   controllerSpec={{
    rows: controllerRows ?? [
     { type: "number", value: count, bgTone: color, fgTone: "#000000", isBig: false },
@@ -1293,6 +1299,8 @@ const BarcodeFingerprintAdvancedRenderer: React.FC<{
      return (
       <rect
        key={row.videoId}
+       className="vt-barcode-bar"
+       data-vt-barcode-bar={index}
        x={x}
        y={y}
        width={w}
@@ -2446,7 +2454,7 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
    : null
   let angle = -Math.PI / 2
   return (
-   <svg viewBox={`0 0 ${width} ${height}`} className="block h-full w-full" style={{ background: EXPLORER_BG }}>
+   <svg viewBox={`0 0 ${width} ${height}`} className="vt-clock-rotor block h-full w-full" data-vt-clock-rotor={hoverScope} style={{ background: EXPLORER_BG }}>
     {slices.map((slice, index) => {
      const fraction = slice.value / total
      // Preserve the reported percentage while giving sub-2% wedges enough area to inspect.
@@ -2465,6 +2473,8 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
      return (
       <g
        key={sliceKey}
+       className="vt-clock-sector"
+       data-vt-clock-sector={sliceKey}
        onMouseEnter={() => {
         setHoveredDonutSliceKey(sliceKey)
         setHoveredDonutSlice({ label: displayLabel, views: slice.value, color: slice.color, share: fraction * 100, scope: hoverScope })
@@ -2879,6 +2889,8 @@ const TitleWordNetworkCanvas: React.FC<{
        return (
          <line
           key={`edge-${index}`}
+          className="vt-network-edge"
+          data-vt-network-edge={index}
           x1={srcX}
           y1={srcY}
           x2={tgtX}
@@ -2907,6 +2919,8 @@ const TitleWordNetworkCanvas: React.FC<{
        return (
         <g
          key={node.id}
+         className="vt-network-node"
+         data-vt-network-node={node.id}
          tabIndex={0}
          role="button"
          aria-label={`${node.id}, ${metricLabel} ${node.totalViews}, ${node.videoCount} videos`}
@@ -3191,14 +3205,27 @@ const ThermalImagingModuleInner: React.FC<{
  rows: 5 | 8
  hoveredIdx: number | null
  lockedIdx: number | null
+ chronologicalMode: boolean
  onMouseEnterTile: (idx: number) => void
  onMouseLeaveTile: () => void
  onClickTile: (idx: number) => void
  heatColor: (t: number) => string
  headerColorPair?: { icon: string; title: string }
-}> = ({ displayVideos, rows, hoveredIdx, lockedIdx, onMouseEnterTile, onMouseLeaveTile, onClickTile, heatColor, headerColorPair = { icon: "#FFB158", title: "#FF7497" } }) => {
+}> = ({
+ displayVideos,
+ rows,
+ hoveredIdx,
+ lockedIdx,
+ chronologicalMode,
+ onMouseEnterTile,
+ onMouseLeaveTile,
+ onClickTile,
+ heatColor,
+ headerColorPair = { icon: "#FFB158", title: "#FF7497" },
+}) => {
  const containerRef = useRef<HTMLDivElement>(null)
  const trackRef = useRef<HTMLDivElement>(null)
+ const tileRefs = useRef<Array<HTMLDivElement | null>>([])
  const [thumbWidth, setThumbWidth] = useState(60)
  const [thumbLeft, setThumbLeft] = useState(0)
 
@@ -3206,6 +3233,159 @@ const ThermalImagingModuleInner: React.FC<{
  const cols = Math.ceil(displayVideos.length / ROWS)
  const TILE = rows === 5 ? 58 : 36
  const GAP = 2
+
+ // In chronological view only, keep the video with the highest selected-metric
+ // value visually identifiable even though the tiles themselves are date-ordered.
+ const rankOneIndex = useMemo(() => {
+  if (!chronologicalMode || displayVideos.length === 0) return -1
+  let bestIndex = 0
+  let bestValue = Number(displayVideos[0]?._metricVal) || 0
+  for (let index = 1; index < displayVideos.length; index += 1) {
+   const value = Number(displayVideos[index]?._metricVal) || 0
+   if (value > bestValue) {
+    bestValue = value
+    bestIndex = index
+   }
+  }
+  return bestIndex
+ }, [chronologicalMode, displayVideos])
+
+
+ const heatWaveKey = useMemo(
+  () => displayVideos
+   .map((video, index) => `${video.videoId ?? index}:${Number(video._metricVal ?? 0)}`)
+   .join("|"),
+  [displayVideos],
+ )
+
+ useLayoutEffect(() => {
+  const tiles = tileRefs.current.slice(0, displayVideos.length)
+  if (tiles.length === 0) return
+
+  const animations: Animation[] = []
+  const PRIMARY_DURATION = 1120
+  const PRIMARY_STAGGER = 30
+  const COLUMN_BREATH = 46
+  const REBOUND_DURATION = 860
+
+  const primaryOrderFor = (index: number) => {
+   const column = Math.floor(index / ROWS)
+   const row = index % ROWS
+   const rowOrder = column % 2 === 0 ? ROWS - 1 - row : row
+   return column * ROWS + rowOrder
+  }
+
+  const maxPrimaryOrder = Math.max(
+   0,
+   ...tiles.map((_, index) => primaryOrderFor(index)),
+  )
+  const primaryHeadArrival =
+   maxPrimaryOrder * PRIMARY_STAGGER +
+   Math.max(0, cols - 1) * COLUMN_BREATH
+
+  // Rebound is horizontal/right→left by row, creating a visibly different
+  // secondary wave instead of simply replaying the first pass backward.
+  const reboundStart = primaryHeadArrival + PRIMARY_DURATION + 120
+
+  tiles.forEach((tile, index) => {
+   if (!tile) return
+
+   const column = Math.floor(index / ROWS)
+   const row = index % ROWS
+   const primaryOrder = primaryOrderFor(index)
+   const primaryDelay =
+    primaryOrder * PRIMARY_STAGGER +
+    column * COLUMN_BREATH
+
+   tile.style.transformOrigin = "center"
+   tile.style.willChange = "transform, opacity"
+
+   const primary = tile.animate(
+    [
+     { transform: "scale(0.14)", opacity: 0.08, offset: 0 },
+     {
+      transform: "scale(1.5)",
+      opacity: 1,
+      offset: 0.34,
+      easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+     },
+     {
+      transform: "scale(0.75)",
+      opacity: 1,
+      offset: 0.56,
+      easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+     },
+     {
+      transform: "scale(1.075)",
+      opacity: 1,
+      offset: 0.88,
+      easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+     },
+     { transform: "scale(1)", opacity: 1, offset: 1 },
+    ],
+    {
+     duration: PRIMARY_DURATION,
+     delay: primaryDelay,
+     fill: "both",
+     easing: "linear",
+    },
+   )
+
+   primary.finished
+    .catch(() => undefined)
+    .then(() => {
+     try { primary.cancel() } catch { /* detached tile */ }
+    })
+   animations.push(primary)
+
+   const reverseColumn = cols - 1 - column
+   const reboundDelay =
+    reboundStart +
+    row * 85 +
+    reverseColumn * 42
+
+   const rebound = tile.animate(
+    [
+     { transform: "scale(1)", offset: 0 },
+     {
+      transform: "scale(1.22)",
+      offset: 0.27,
+      easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+     },
+     {
+      transform: "scale(0.84)",
+      offset: 0.49,
+      easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+     },
+     {
+      transform: "scale(1.045)",
+      offset: 0.82,
+      easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+     },
+     { transform: "scale(1)", offset: 1 },
+    ],
+    {
+     duration: REBOUND_DURATION,
+     delay: reboundDelay,
+     fill: "both",
+     easing: "linear",
+    },
+   )
+
+   rebound.finished
+    .catch(() => undefined)
+    .then(() => {
+     try { rebound.cancel() } catch { /* detached tile */ }
+    })
+   animations.push(rebound)
+  })
+
+  return () => {
+   animations.forEach((animation) => {
+    try { animation.cancel() } catch { /* detached tile */ }
+   })
+  }
+ }, [ROWS, cols, displayVideos.length, heatWaveKey])
 
  const updateThumb = useCallback(() => {
   const el = containerRef.current
@@ -3284,6 +3464,32 @@ const ThermalImagingModuleInner: React.FC<{
 
  return (
   <div className="flex flex-col overflow-hidden" style={{ background: "#080816" }}>
+   <style>{`
+    @keyframes vt-heat-rank-one-pulse {
+      0%, 100% { background-color: var(--vt-heat-color); }
+      50% { background-color: #ffffff; }
+    }
+
+    .vt-heat-tile {
+      position: relative;
+      transform: scale(1);
+      transform-origin: center;
+      transition:
+        transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+        outline-color 220ms ease,
+        outline-width 220ms ease;
+      will-change: transform;
+    }
+
+    .vt-heat-tile:hover {
+      transform: scale(1.055);
+      z-index: 10;
+    }
+
+    .vt-heat-tile.is-rank-one {
+      animation: vt-heat-rank-one-pulse 2s ease-in-out infinite;
+    }
+   `}</style>
    {/* Grid container */}
    <div className="flex flex-1 min-h-0 overflow-hidden">
     <div
@@ -3307,27 +3513,31 @@ const ThermalImagingModuleInner: React.FC<{
        const bg = heatColor(t)
        const isLocked = lockedIdx === i
        const isHovered = hoveredIdx === i
+       const isRankOne = chronologicalMode && rankOneIndex === i
        return (
         <div
          key={v.videoId || i}
+         ref={(element) => { tileRefs.current[i] = element }}
          title={v.title}
+         className={`vt-heat-tile${isRankOne ? " is-rank-one" : ""}`}
          onMouseEnter={() => onMouseEnterTile(i)}
          onMouseLeave={onMouseLeaveTile}
          onClick={() => onClickTile(i)}
          style={{
+          "--vt-heat-color": bg,
           background: bg,
           width: TILE,
           height: TILE,
-          border: isLocked
-           ? "2px solid #FFD400"
-           : isHovered
-            ? "2px solid #fff"
-            : "1px solid rgba(255,255,255,0.08)",
+          border: "none",
+          outline:
+           isLocked ? "2px solid #FFD400"
+           : isHovered ? "2px solid #FFFFFF"
+           : "0px solid transparent",
+          outlineOffset: 0,
           borderRadius: 2,
           cursor: "pointer",
-          transition: "border-color 80ms",
           boxSizing: "border-box",
-         }}
+         } as React.CSSProperties}
         />
        )
       })}
@@ -3451,6 +3661,7 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
  const dataset = useExplorerData(props)
 
  const [metric, setMetric] = useState<ThermalMetricKey>("views")
+ const [heatMatrixReplayTick, setHeatMatrixReplayTick] = useState(0)
  const [formatFilter, setFormatFilter] = useState<"all" | "shorts" | "long">("all")
  const [orderMode, setOrderMode] = useState<"chrono" | "rank">("chrono")
  const [rowCount, setRowCount] = useState<5 | 8>(8)
@@ -3594,6 +3805,17 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
 
  const METRIC_OPTIONS = THERMAL_METRICS.map(m => ({ label: m.label, value: m.key }))
 
+ useEffect(() => {
+  const replay = (event: Event) => {
+   const detail = (event as CustomEvent<{ visualId?: string }>).detail
+   if (detail?.visualId && detail.visualId !== "heat-matrix") return
+   setHeatMatrixReplayTick((value) => value + 1)
+  }
+  window.addEventListener("vt:replay-hero-intro", replay)
+  return () => window.removeEventListener("vt:replay-hero-intro", replay)
+ }, [])
+
+
  return (
   <ModuleFrame
    visualStyle={props.visualStyle}
@@ -3615,6 +3837,7 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
    controllerRows={[
     {
      type: "dropdown",
+     labelPrefix: "SHOW",
      value: formatFilter,
      options: [
       { label: "ALL CHANNEL VIDEOS", value: "all" },
@@ -3627,9 +3850,10 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
     },
     {
      type: "dropdown",
+     labelPrefix: "ORDERED",
      value: orderMode,
      options: [
-      { label: "IN CHRONOLOGICAL ORDER", value: "chrono" },
+      { label: "CHRONOLOGICAL", value: "chrono" },
       { label: "ORDERED BY RANK", value: "rank" },
      ],
      onSelect: (val) => setOrderMode(val as any),
@@ -3638,6 +3862,7 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
     },
     {
       type: "dropdown",
+      labelPrefix: "COLOR",
       value: metric,
       options: METRIC_OPTIONS,
       onSelect: (val) => setMetric(val as any),
@@ -3646,12 +3871,15 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
      },
     ]}
    >
-    <div className="h-full w-full bg-[#0a0a1a]">
+    <div className="relative h-full w-full bg-[#0a0a1a]">
+     <HeroAnimationPlayButton visualId="heat-matrix" />
      <ThermalImagingModuleInner
+      key={`heat-matrix-${heatMatrixReplayTick}`}
       displayVideos={displayVideos}
       rows={rowCount}
       hoveredIdx={hoveredIdx}
       lockedIdx={lockedIdx}
+      chronologicalMode={orderMode === "chrono"}
       onMouseEnterTile={handleTileMouseEnter}
       onMouseLeaveTile={handleTileMouseLeave}
       onClickTile={handleTileClick}
@@ -3719,6 +3947,12 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
  const [formatIndex, setFormatIndex] = useState<number>(0)
  const rowCount = VITAL_ROW_COUNTS[countIndex]
  const formatFilter = VITAL_FORMAT_MODES[formatIndex]
+ const scopedVideoCount = useMemo(
+  () => dataset.videos.filter((video) => (
+   formatFilter.value === "all" ? true : formatFilter.value === "shorts" ? video.format === "shorts" : video.format === "long"
+  )).length,
+  [dataset.videos, formatFilter],
+ )
  const rows = useMemo(() => {
   const scoped = dataset.videos.filter((video) => (
    formatFilter.value === "all" ? true : formatFilter.value === "shorts" ? video.format === "shorts" : video.format === "long"
@@ -3728,18 +3962,19 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
  }, [dataset.videos, formatFilter, rowCount])
  const hovered = hoveredIndex === null ? null : rows[hoveredIndex] || null
 
- // Legend doubles as the visibility control; hiding a metric drops its whole lane.
- const [hiddenMetrics, setHiddenMetrics] = useState<Set<VitalMetricKey>>(() => new Set())
+ // Uniform controller metric selector owns trace visibility.
+ const [selectedVitalMetrics, setSelectedVitalMetrics] = useState<VitalMetricKey[]>(
+  () => CHANNEL_VITAL_METRICS.map((metric) => metric.key),
+ )
  const toggleMetric = (key: VitalMetricKey) => {
-  setHiddenMetrics((current) => {
-   const next = new Set(current)
-   if (next.has(key)) next.delete(key)
-   else next.add(key)
-   // Never let the operator blank the chart entirely.
-   return next.size >= CHANNEL_VITAL_METRICS.length ? current : next
+  setSelectedVitalMetrics((current) => {
+   if (current.includes(key)) {
+    return current.length <= 1 ? current : current.filter((value) => value !== key)
+   }
+   return [...current, key]
   })
  }
- const visibleMetrics = CHANNEL_VITAL_METRICS.filter((metric) => !hiddenMetrics.has(metric.key))
+ const visibleMetrics = CHANNEL_VITAL_METRICS.filter((metric) => selectedVitalMetrics.includes(metric.key))
 
  const stepCount = (direction: 1 | -1) => {
   setCountIndex((current) => (current + direction + VITAL_ROW_COUNTS.length) % VITAL_ROW_COUNTS.length)
@@ -3753,7 +3988,7 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
  const controllerRows: SubToolboxChartModuleProps["controllerRows"] = [
   {
    type: "number",
-   value: rowCount === 0 ? "ALL VIDEOS" : rows.length < rowCount ? String(rows.length) : String(rowCount),
+   value: rowCount === 0 ? scopedVideoCount : rows.length < rowCount ? rows.length : rowCount,
    onPrev: () => stepCount(-1),
    onNext: () => stepCount(1),
    bgTone: "#FFEA00",
@@ -3761,13 +3996,27 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
   },
   {
    type: "text",
-   value: formatFilter.label,
+   value: formatFilter.value === "all" ? "VIDEOS" : formatFilter.value === "long" ? "LONGFORM" : "SHORTS",
+   widthValues: ["VIDEOS", "LONGFORM", "SHORTS"],
    onPrev: () => stepFormat(-1),
    onNext: () => stepFormat(1),
    bgTone: "#FF7497",
    fgTone: "#000000",
   },
-  { type: "label", value: "LIFETIME TOTALS", bgTone: "#000000", fgTone: "#FFFFFF" },
+  {
+   type: "metricMultiSelect",
+   options: CHANNEL_VITAL_METRICS.map((metric) => ({
+    label: metric.label,
+    value: metric.key,
+    color: metric.color,
+   })),
+   selectedValues: selectedVitalMetrics,
+   onToggleValue: (value) => toggleMetric(value as VitalMetricKey),
+   minimumSelected: 1,
+   maximumSelected: CHANNEL_VITAL_METRICS.length,
+   displayMode: "timeline",
+   fgTone: "#000000",
+  },
  ]
 
  const activeContext = useMemo(() => {
@@ -3775,8 +4024,16 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
   return {
    bgTone: "#080816",
    title: target ? videoShortTitle(target.title.toUpperCase(), 65) : "CHANNEL VITALS",
+   stats: target
+    ? visibleMetrics.map((metric) => ({
+       label: metric.label,
+       value: metric.format(Number(target[metric.key]) || 0),
+       tone: metric.color,
+       lockTone: true,
+      }))
+    : [],
   }
- }, [hovered, rows])
+ }, [hovered, rows, visibleMetrics])
 
  if (rows.length === 0) {
   return (
@@ -3870,7 +4127,7 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
         const top = PAD_T + trackIndex * (trackHeight + trackGap)
         const baseline = top + trackHeight
         return (
-         <g key={`lane-${metric.key}`}>
+         <g key={`lane-${metric.key}`} className="vt-vital-lane" data-vt-vital-lane={metric.key}>
           <rect x={PAD_L} y={top} width={plotWidth} height={trackHeight} fill="#05050c" stroke="#ffffff" strokeOpacity="0.09" strokeWidth="1" />
           <line x1={PAD_L} y1={baseline} x2={W - PAD_R} y2={baseline} stroke={metric.color} strokeOpacity="0.32" strokeWidth="1" />
          </g>
@@ -3878,6 +4135,8 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
        })}
        {visibleMetrics.map((metric, trackIndex) => (
         <polyline
+         className="vt-vital-trace"
+         data-vt-vital-trace={metric.key}
          key={`trace-${metric.key}`}
          points={rows.map((row, index) => `${xFor(index)},${yFor(metric, Number(row[metric.key]) || 0, trackIndex)}`).join(" ")}
          fill="none"
@@ -3947,35 +4206,34 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
        </div>
       </div>
      </div>
-     <div className="flex shrink-0 flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-white/10 px-2 py-3 bg-[#080816]">
-     {CHANNEL_VITAL_METRICS.map((metric) => {
-      const isOn = !hiddenMetrics.has(metric.key)
-      const target = hovered || rows[rows.length - 1]
-      const metricVal = target ? Number(target[metric.key]) || 0 : 0
-      return (
-       <button
-        key={metric.key}
-        type="button"
-        role="switch"
-        aria-checked={isOn}
-        aria-label={`Toggle ${metric.label} trace`}
-        onClick={() => toggleMetric(metric.key)}
-        className="flex items-center gap-1.5 border-none bg-transparent p-0 text-[10px] font-black uppercase tracking-[0.05em] leading-none"
-        style={{ color: metric.color, opacity: isOn ? 1 : 0.4, cursor: "pointer" }}
-       >
-        <span
-         className="h-3 w-3 shrink-0 rounded-[2px] border-[2px]"
-         style={{
-          background: isOn ? metric.color : "transparent",
-          borderColor: metric.color,
-         }}
-        />
-        {metric.label}
-        <span className="ml-1 font-[1000] text-white opacity-80">{metric.format(metricVal)}</span>
-       </button>
-      )
-     })}
-    </div>
+     <div className="flex shrink-0 flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t-[3px] border-white/10 bg-[#080816] px-3 py-2">
+      {CHANNEL_VITAL_METRICS.map((metric) => {
+       const isOn = selectedVitalMetrics.includes(metric.key)
+       return (
+        <button
+         key={metric.key}
+         type="button"
+         onClick={() => toggleMetric(metric.key)}
+         className="flex items-center gap-1.5 border-0 bg-transparent p-0 text-[10px] font-[1000] uppercase tracking-[0.05em] leading-none"
+         style={{ color: metric.color, opacity: isOn ? 1 : 0.35 }}
+         aria-pressed={isOn}
+        >
+         <svg width="27" height="11" viewBox="0 0 27 11" aria-hidden="true" className="shrink-0 overflow-visible">
+          <polyline
+           points="0,8 5,3 10,8 15,3 20,8 27,3"
+           fill="none"
+           stroke={metric.color}
+           strokeWidth="3"
+           strokeLinecap="round"
+           strokeLinejoin="round"
+          />
+         </svg>
+         <span>{metric.label}</span>
+        </button>
+       )
+      })}
+     </div>
+
    </div>
   </ModuleFrame>
  )
@@ -4070,35 +4328,32 @@ export const TubeExplorerBarcodeFingerprint: React.FC<TubeExplorerVisualProps> =
      fgTone: "#000000",
     },
     {
-     type: "dropdown",
-     value: `${orderMode}:${formatFilter}`,
-     options: [
-      { label: "GREATEST | ALL", value: "top:all" },
-      { label: "GREATEST | SHORTS", value: "top:shorts" },
-      { label: "GREATEST | LONGFORM", value: "top:long" },
-      { label: "LATEST | ALL", value: "recent:all" },
-      { label: "LATEST | SHORTS", value: "recent:shorts" },
-      { label: "LATEST | LONGFORM", value: "recent:long" },
-     ],
-     onSelect: (val) => {
-      const [o, f] = val.split(":")
-      setOrderMode(o as any)
-      setFormatFilter(f as any)
-     },
-     bgTone: "#FF7497",
-     fgTone: "#000000",
+     type: "split",
+     leftValue: orderMode === "recent" ? "LATEST" : "GREATEST",
+     rightValue: formatFilter === "all" ? "VIDEOS" : formatFilter === "long" ? "LONGFORM" : "SHORTS",
+     leftWidthValues: ["LATEST", "GREATEST"],
+     rightWidthValues: ["VIDEOS", "LONGFORM", "SHORTS"],
+     onPrev: () => setOrderMode((current) => current === "recent" ? "top" : "recent"),
+     onNext: () => setFormatFilter((current) => current === "all" ? "long" : current === "long" ? "shorts" : "all"),
+     leftBgTone: "#FF7497",
+     rightBgTone: "#33FF99",
+     leftFgTone: "#000000",
+     rightFgTone: "#000000",
     },
     {
      type: "dropdown",
+     labelPrefix: "RANKED BY",
      value: metric,
-     options: EXPLORER_METRIC_OPTIONS.map((entry) => ({ label: `RANKED BY: ${entry.label.toUpperCase()}`, value: entry.key })),
+     options: EXPLORER_METRIC_OPTIONS.map((entry) => ({ label: entry.label.toUpperCase(), value: entry.key })),
      onSelect: (value) => setMetric(value as ExplorerMetricKey),
      bgTone: "#00CCFF",
      fgTone: "#000000",
     },
    ]}
   >
-   <BarcodeFingerprintAdvancedRenderer rows={rows} metric={metric} orderLabel={orderLabel} onHover={setHovered} />
+   <HeroIntroBoundary visualId="barcode-fingerprint" replayKey={`${metric}-${orderMode}-${barCount}-${formatFilter}`}>
+    <BarcodeFingerprintAdvancedRenderer rows={rows} metric={metric} orderLabel={orderLabel} onHover={setHovered} />
+   </HeroIntroBoundary>
   </ModuleFrame>
  )
 }
@@ -4184,14 +4439,6 @@ export const TubeExplorerSubscriberWaterfall: React.FC<TubeExplorerVisualProps> 
    }}
    controllerRows={[
     {
-     type: "text",
-     value: activeDef.label,
-     onPrev: () => { setMetricIndex((i) => (i + WATERFALL_METRICS.length - 1) % WATERFALL_METRICS.length); setHovered(null) },
-     onNext: () => { setMetricIndex((i) => (i + 1) % WATERFALL_METRICS.length); setHovered(null) },
-     bgTone: activeDef.tone,
-     fgTone: "#000000",
-    },
-    {
      type: "number",
      value: limit === 0 || rows.length < limit ? String(rows.length) : String(limit),
      onPrev: () => { setCountIndex((i) => (i + WATERFALL_COUNTS.length - 1) % WATERFALL_COUNTS.length); setHovered(null) },
@@ -4200,19 +4447,25 @@ export const TubeExplorerSubscriberWaterfall: React.FC<TubeExplorerVisualProps> 
      fgTone: "#000000",
     },
     {
-     type: "text",
-     value: chrono ? "CHRONO" : "BY GAIN",
+     type: "split",
+     leftValue: chrono ? "LATEST" : "GREATEST",
+     rightValue: formatMode.value === "all" ? "VIDEOS" : formatMode.value === "long" ? "LONGFORM" : "SHORTS",
+     leftWidthValues: ["LATEST", "GREATEST"],
+     rightWidthValues: ["VIDEOS", "LONGFORM", "SHORTS"],
      onPrev: () => setOrderIndex((i) => (i + 1) % 2),
-     onNext: () => setOrderIndex((i) => (i + 1) % 2),
-     bgTone: "#00CCFF",
-     fgTone: "#000000",
+     onNext: () => { setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length); setHovered(null) },
+     leftBgTone: "#00CCFF",
+     rightBgTone: "#FF7497",
+     leftFgTone: "#000000",
+     rightFgTone: "#000000",
     },
     {
      type: "text",
-     value: formatMode.label,
-     onPrev: () => { setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length); setHovered(null) },
-     onNext: () => { setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length); setHovered(null) },
-     bgTone: "#FF7497",
+     labelPrefix: "RANKED BY",
+     value: activeDef.label,
+     onPrev: () => { setMetricIndex((i) => (i + WATERFALL_METRICS.length - 1) % WATERFALL_METRICS.length); setHovered(null) },
+     onNext: () => { setMetricIndex((i) => (i + 1) % WATERFALL_METRICS.length); setHovered(null) },
+     bgTone: activeDef.tone,
      fgTone: "#000000",
     },
    ]}
@@ -4263,16 +4516,17 @@ export const TubeExplorerShortsVsLongs: React.FC<TubeExplorerVisualProps> = (pro
      ],
    }}
    controllerRows={[
-    { type: "number", value: String(shorts.length + longs.length), bgTone: "#FFEA00", fgTone: "#000000" },
+    { type: "number", value: String(shorts.length + longs.length), unitLabel: "VIDEOS", bgTone: "#FFEA00", fgTone: "#000000" },
     {
      type: "text",
+     labelPrefix: "SHOW AS",
      value: average ? "AVERAGE" : "TOTAL",
      onPrev: () => setAverage((current) => !current),
      onNext: () => setAverage((current) => !current),
      bgTone: "#FF7497",
      fgTone: "#000000",
     },
-    { type: "label", value: "HEAD TO HEAD", bgTone: "#000000", fgTone: "#FFFFFF" },
+    { type: "label", value: "SHORTS VS LONGFORM", bgTone: "#000000", fgTone: "#FF7497" },
    ]}
   >
    <div className="h-full w-full bg-[#0a0a1a] flex items-center justify-center">
@@ -4478,18 +4732,20 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
     },
     {
      type: "text",
-     value: metric.label,
-     onPrev: () => setMetricIndex((i) => (i + TREEMAP_METRICS.length - 1) % TREEMAP_METRICS.length),
-     onNext: () => setMetricIndex((i) => (i + 1) % TREEMAP_METRICS.length),
-     bgTone: "#FF7497",
+     value: formatMode.value === "all" ? "VIDEOS" : formatMode.value === "long" ? "LONGFORM" : "SHORTS",
+     widthValues: ["VIDEOS", "LONGFORM", "SHORTS"],
+     onPrev: () => { setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length); setDrillWord(null) },
+     onNext: () => { setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length); setDrillWord(null) },
+     bgTone: "#00CCFF",
      fgTone: "#000000",
     },
     {
      type: "text",
-     value: formatMode.label,
-     onPrev: () => { setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length); setDrillWord(null) },
-     onNext: () => { setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length); setDrillWord(null) },
-     bgTone: "#00CCFF",
+     labelPrefix: "RANKED BY",
+     value: metric.label,
+     onPrev: () => setMetricIndex((i) => (i + TREEMAP_METRICS.length - 1) % TREEMAP_METRICS.length),
+     onNext: () => setMetricIndex((i) => (i + 1) % TREEMAP_METRICS.length),
+     bgTone: "#FF7497",
      fgTone: "#000000",
     },
    ]}
@@ -4651,7 +4907,9 @@ export const TubeExplorerEngagementRadar: React.FC<TubeExplorerVisualProps> = (p
     },
     {
      type: "text",
-     value: formatMode.label,
+     labelPrefix: "FROM",
+     value: formatMode.value === "all" ? "VIDEOS" : formatMode.value === "long" ? "LONGFORM" : "SHORTS",
+     widthValues: ["VIDEOS", "LONGFORM", "SHORTS"],
      onPrev: () => { setFormatIndex((i) => (i + RADAR_FORMAT_MODES.length - 1) % RADAR_FORMAT_MODES.length); setHovered(null) },
      onNext: () => { setFormatIndex((i) => (i + 1) % RADAR_FORMAT_MODES.length); setHovered(null) },
      bgTone: "#FF7497",
@@ -4718,11 +4976,12 @@ export const TubeExplorerRevenueEfficiencyMap: React.FC<TubeExplorerVisualProps>
     ],
    }}
    controllerRows={[
-    { type: "dropdown", labelPrefix: "X", value: xMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setXMetric(value as VideoPlotMetricKey), bgTone: "#00E5FF" },
-    { type: "dropdown", labelPrefix: "Y", value: yMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setYMetric(value as VideoPlotMetricKey), bgTone: "#FF83EA" },
+    { type: "dropdown", labelPrefix: "PLOT", value: xMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setXMetric(value as VideoPlotMetricKey), bgTone: "#00E5FF" },
+    { type: "dropdown", labelPrefix: "VERSUS", value: yMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setYMetric(value as VideoPlotMetricKey), bgTone: "#FF83EA" },
     { type: "dropdown", labelPrefix: "SIZE", value: sizeMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setSizeMetric(value as VideoPlotMetricKey), bgTone: "#FFFF61" },
     {
      type: "text",
+     labelPrefix: "FROM",
      value: formatMode.label,
      onPrev: () => setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length),
      onNext: () => setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length),
@@ -4775,9 +5034,10 @@ export const TubeExplorerLikeRateWaveform: React.FC<TubeExplorerVisualProps> = (
     ],
    }}
    controllerRows={[
-    { type: "dropdown", labelPrefix: "METRIC", value: metric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setMetric(value as VideoPlotMetricKey), bgTone: "#FF83EA" },
+    { type: "dropdown", labelPrefix: "TRACKING", value: metric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setMetric(value as VideoPlotMetricKey), bgTone: "#FF83EA" },
     {
      type: "text",
+     labelPrefix: "FROM",
      value: formatMode.label,
      onPrev: () => setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length),
      onNext: () => setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length),
@@ -4785,7 +5045,8 @@ export const TubeExplorerLikeRateWaveform: React.FC<TubeExplorerVisualProps> = (
     },
     {
      type: "text",
-     value: order === "recent" ? "RECENT" : "TOP",
+     labelPrefix: "ORDERED",
+     value: order === "recent" ? "NEWEST" : "TOP",
      onPrev: () => setOrder((current) => current === "recent" ? "top" : "recent"),
      onNext: () => setOrder((current) => current === "recent" ? "top" : "recent"),
      bgTone: "#FFFF61",
@@ -4833,15 +5094,16 @@ export const TubeExplorerSeasonalityRadar: React.FC<TubeExplorerVisualProps> = (
     ],
    }}
    controllerRows={[
-    { type: "dropdown", labelPrefix: "METRIC", value: metric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setMetric(value as VideoPlotMetricKey), bgTone: "#FFFF61" },
+    { type: "dropdown", labelPrefix: "BY", value: metric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setMetric(value as VideoPlotMetricKey), bgTone: "#FFFF61" },
     {
      type: "text",
+     labelPrefix: "FROM",
      value: formatMode.label,
      onPrev: () => setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length),
      onNext: () => setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length),
      bgTone: "#00E5FF",
     },
-    { type: "label", value: "7 WEEKDAYS", bgTone: "#000000", fgTone: "#FFFFFF" },
+    { type: "label", value: "ACROSS 7 WEEKDAYS", bgTone: "#000000", fgTone: "#FFFF61" },
    ]}
   >
    <div className="h-full bg-[#0a0a1a]">
@@ -4883,11 +5145,12 @@ export const TubeExplorerSearchBubbleUniverse: React.FC<TubeExplorerVisualProps>
     ],
    }}
    controllerRows={[
-    { type: "dropdown", labelPrefix: "X", value: xMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setXMetric(value as VideoPlotMetricKey), bgTone: "#00E5FF" },
-    { type: "dropdown", labelPrefix: "Y", value: yMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setYMetric(value as VideoPlotMetricKey), bgTone: "#579AFF" },
+    { type: "dropdown", labelPrefix: "PLOT", value: xMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setXMetric(value as VideoPlotMetricKey), bgTone: "#00E5FF" },
+    { type: "dropdown", labelPrefix: "VERSUS", value: yMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setYMetric(value as VideoPlotMetricKey), bgTone: "#579AFF" },
     { type: "dropdown", labelPrefix: "SIZE", value: sizeMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setSizeMetric(value as VideoPlotMetricKey), bgTone: "#FF83EA" },
     {
      type: "text",
+     labelPrefix: "FROM",
      value: formatMode.label,
      onPrev: () => setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length),
      onNext: () => setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length),
@@ -4944,9 +5207,10 @@ export const TubeExplorerRetentionCurveAtlas: React.FC<TubeExplorerVisualProps> 
     ],
    }}
    controllerRows={[
-    { type: "dropdown", labelPrefix: "SORT", value: sortMetric, options: RETENTION_SORT_OPTIONS, onSelect: (value) => setSortMetric(value as VideoPlotMetricKey), bgTone: "#579AFF" },
+    { type: "dropdown", labelPrefix: "RANKED BY", value: sortMetric, options: RETENTION_SORT_OPTIONS, onSelect: (value) => setSortMetric(value as VideoPlotMetricKey), bgTone: "#579AFF" },
     {
      type: "text",
+     labelPrefix: "FROM",
      value: formatMode.label,
      onPrev: () => setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length),
      onNext: () => setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length),
@@ -5081,6 +5345,7 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
    controllerRows={[
     {
      type: "dropdown",
+     labelPrefix: "BY",
      value: metric,
      options: PUBLISH_CLOCK_METRICS.map((entry) => ({ label: entry.label, value: entry.key })),
      onSelect: (value) => setMetric(value as PublishClockMetricKey),
@@ -5088,6 +5353,7 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
     },
     {
      type: "dropdown",
+     labelPrefix: "FROM",
      value: formatFilter,
      options: [
       { label: "ALL VIDEOS", value: "all" },
@@ -5097,7 +5363,7 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
      onSelect: (value) => setFormatFilter(value as "all" | "shorts" | "long"),
      bgTone: "#FF7497",
     },
-    { type: "label", value: `${scopedCount} VIDEOS`, bgTone: "#FFFFFF" },
+    { type: "label", value: `${scopedCount} VIDEOS`, bgTone: "#000000", fgTone: "#FFEA00" },
    ]}
   >
    <PublishOptimalClockRenderer
@@ -5162,9 +5428,10 @@ export const TubeExplorerTrafficDayRiverDelta: React.FC<TubeExplorerVisualProps>
      bgTone: "#FFEA00",
      fgTone: "#000000",
     },
-    { type: "label", value: "TOP SOURCES", bgTone: "#00CCFF", fgTone: "#000000" },
+    { type: "label", value: "TOP SOURCES", bgTone: "#000000", fgTone: "#00CCFF" },
     {
      type: "text",
+     labelPrefix: "ACROSS",
      value: grainSpec.label,
      onPrev: () => { setGrainIndex((i) => (i + RIVER_GRAINS.length - 1) % RIVER_GRAINS.length); setHighlight(null); setHovered(null) },
      onNext: () => { setGrainIndex((i) => (i + 1) % RIVER_GRAINS.length); setHighlight(null); setHovered(null) },
@@ -5252,7 +5519,7 @@ export const TubeExplorerSankeyRiverDelta: React.FC<TubeExplorerVisualProps> = (
     },
     {
      type: "dropdown",
-     labelPrefix: "GEO",
+     labelPrefix: "MINIMUM",
      value: String(minGeoViews),
      options: GEO_RIVER_MIN_VIEW_OPTIONS,
      onSelect: (value) => setMinGeoViews(Number(value)),
@@ -5288,7 +5555,7 @@ export const TubeExplorerClockRadialBurst: React.FC<TubeExplorerVisualProps> = (
     bgTone: "#080816",
     title: leadSlice ? `${trafficFocusLabel(leadSlice.kind)} • SOURCE DETAIL` : "CLOCK RADIAL BURST",
     stats: [
-     { label: `TOTAL ${metricOption.shortLabel}`, value: formatClockBurstMetricValue(totalValue, metric), tone: metricOption.tone, lockTone: true, compact: true },
+     { label: `TOTAL ${metricOption.shortLabel}`, value: compact(totalValue), compact: true },
      { label: "TOP SOURCE", value: leadSlice ? leadSlice.label : "—", tone: leadSlice?.color || "#FF7497", lockTone: true, compact: true },
      { label: "DETAIL ROWS", value: compact(selectedDetailRows.length), tone: "#00E5FF", lockTone: true, compact: true },
     ],
@@ -5296,7 +5563,7 @@ export const TubeExplorerClockRadialBurst: React.FC<TubeExplorerVisualProps> = (
    controllerRows={[
     {
      type: "dropdown",
-     labelPrefix: "METRIC",
+     labelPrefix: "SIZE",
      value: metric,
      options: CLOCK_BURST_METRIC_OPTIONS.map((option) => ({ label: option.label, value: option.key })),
      onSelect: (value) => setMetric(value as ClockBurstMetricKey),
@@ -5309,7 +5576,9 @@ export const TubeExplorerClockRadialBurst: React.FC<TubeExplorerVisualProps> = (
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
   >
-   <ClockRadialBurstRenderer dataset={dataset} metric={metric} />
+   <HeroIntroBoundary visualId="clockburst" replayKey={metric}>
+    <ClockRadialBurstRenderer dataset={dataset} metric={metric} />
+   </HeroIntroBoundary>
   </ModuleFrame>
  )
 }
@@ -5319,7 +5588,7 @@ export const TubeExplorerPerfectionQuadrant = createModule("PERFECT MIX", "Reten
 export const TubeExplorerDurationRetentionScatter = createModule("LENGTH CURVE", "Video length versus retention.", (d) => <VideoScatter rows={topVideos(d, "views", 120)} x="durationSec" y="retentionScore" />, { color: "#FFB158" })
 export const TubeExplorerBeeswarmLikeRate = createModule("LIKE CLOUD", "Like-rate clusters across the channel.", (d) => <VideoScatter rows={topVideos(d, "likes", 120)} x="views" y="likeRate" />, { color: "#B14AED" })
 export const TubeExplorerCalendarHeatSignature = createModule("CALENDAR HEAT", "Monthly uploads arranged as a calendar signature.", (d) => <HeatGrid cells={d.monthly.map((m) => ({ label: m.month, value: m.videos }))} empty="No monthly upload rows available" />, { color: "#42FF68" })
-export const TubeExplorerUSStateDotMap = createModule("GEO RANK", "Country, region, and city views sorted by reach.", (d) => <GeoBars dataset={d} />, { color: "#FF7497" })
+export const TubeExplorerUSStateDotMap = createModule("GEO RANK", "Country, region, and city views sorted by reach.", (d) => <HeroIntroBoundary visualId="geography-map"><GeoBars dataset={d} /></HeroIntroBoundary>, { color: "#FF7497" })
 export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (props) => {
  const dataset = useExplorerData(props)
  const [wordLimit, setWordLimit] = useState(30)
@@ -5397,7 +5666,7 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
     ? `${selectedRoots.length} WORDS SELECTED · ${selSharedVideos} SHARED VIDEOS · ${selectionEdges.length} CONNECTIONS BETWEEN THEM`
     : hoveredNode
     ? `"${hoveredNode.id.toUpperCase()}" · ${hoveredConnections} CO-WORDS · ${hoveredNode.videoCount} VIDEOS · AVG RET ${hoveredNode.avgAvp.toFixed(0)}% · AVG DUR ${(hoveredNode.avgDurSec / 60).toFixed(1)}m`
-    : `WORDS SIZED BY ${metric.toUpperCase()} · LINE THICKNESS = SHARED VIDEOS · SIMILAR COLOR = RELATED CLUSTER`}
+    : `WORDS SIZE ${metric.toUpperCase()} · LINE THICKNESS = SHARED VIDEOS · SIMILAR COLOR = RELATED CLUSTER`}
    iconKey={networkStyle.iconKey}
    headerColorPair={networkHeaderPair}
    activeContext={{
@@ -5412,9 +5681,8 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
      value: wordLimit,
      onPrev: () => setWordLimit((n) => Math.max(TITLE_NETWORK_MIN_WORDS, n - 1)),
      onNext: () => setWordLimit((n) => Math.min(TITLE_NETWORK_MAX_WORDS, n + 1)),
-     bgTone: "#FFFFFF",
     },
-    { type: "label", value: "WORDS SHOWN", bgTone: "#FFFFFF" },
+    { type: "label", value: "WORDS SHOWN",  },
     {
      type: "dropdown",
      value: metric,
@@ -5448,7 +5716,8 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
     <Empty label="Need multiple video titles with real views to build the title word network." />
    ) : (
     <div className="h-[545px] w-full">
-     <TitleWordNetworkCanvas
+     <HeroIntroBoundary visualId="title-keyword-network" replayKey={`${metric}-${wordLimit}`} seed={`title-network-${metric}-${wordLimit}`}>
+      <TitleWordNetworkCanvas
       graph={graph}
       community={graph.community}
       hovered={hovered}
@@ -5468,6 +5737,7 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
       }}
       onRecenter={(id) => setCenterNodeId((cur) => (cur === id ? null : id))}
      />
+     </HeroIntroBoundary>
     </div>
    )}
   </AnalyticsVisualShell>

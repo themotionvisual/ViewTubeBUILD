@@ -18,9 +18,9 @@
 
 <div class="container">
   <h1>Privacy Policy</h1>
-  <p class="updated">Last Updated: May 24, 2026</p>
+  <p class="updated">Last Updated: August 20, 2026</p>
 
-  <p class="intro">This Privacy Policy explains how ViewTube ("we," "us," or "our") collects, uses, stores, and discloses your information when you use the ViewTube web application at <a href="https://viewtube.live">https://viewtube.live</a> (the "Service"). By using the Service, you agree to the collection and use of information in accordance with this policy.</p>
+  <p class="intro">ViewTube ("ViewTube," "we," "us," or "our") operates the ViewTube service available at <a href="https://viewtube.live">https://viewtube.live</a> (the "Service"). This Privacy Policy explains how we access, use, store, process, share, and protect your information — including data obtained from Google APIs on your behalf. By using the Service, you agree to the collection and use of information in accordance with this policy.</p>
 
   <hr>
 
@@ -44,42 +44,49 @@
         <td>Identify your account</td>
       </tr>
       <tr>
-        <td>YouTube channel data</td>
+        <td>YouTube channel &amp; video data (read-only)</td>
         <td><code>youtube.readonly</code></td>
-        <td>Read channel metadata, video lists, playlists</td>
+        <td>Identify your channel and read channel/video metadata, playlists, and inventory used throughout the analytics dashboard and creator workspace.</td>
       </tr>
       <tr>
-        <td>YouTube account management</td>
-        <td><code>youtube</code> <code>youtube.force-ssl</code></td>
-        <td>Edit video metadata, upload videos</td>
+        <td>Comment Responder</td>
+        <td><code>youtube.force-ssl</code></td>
+        <td>Post creator-initiated replies to comments on your own YouTube content. YouTube's <code>comments.insert</code> operation requires this scope.</td>
       </tr>
       <tr>
-        <td>YouTube Analytics</td>
+        <td>Upload Manager</td>
+        <td><code>youtube.upload</code></td>
+        <td>Upload videos you initiate from ViewTube's Upload Manager to your own YouTube channel.</td>
+      </tr>
+      <tr>
+        <td>YouTube Analytics (read-only)</td>
         <td><code>yt-analytics.readonly</code></td>
-        <td>View performance analytics and reports</td>
+        <td>Retrieve performance metrics and dimensions — views, watch time, audience, engagement, and traffic sources — for dashboards and creator insights.</td>
       </tr>
       <tr>
-        <td>YouTube monetary analytics</td>
+        <td>YouTube monetary analytics (read-only)</td>
         <td><code>yt-analytics-monetary.readonly</code></td>
-        <td>View revenue and ad performance data</td>
+        <td>Retrieve your own revenue and monetization metrics (estimated revenue, RPM where available) for display in the analytics dashboard. ViewTube does not modify monetary information.</td>
       </tr>
     </tbody>
   </table>
 
   <h3>B. Locally Stored Data</h3>
-  <p>ViewTube is a <strong>client-side web application</strong>. All data processing occurs within your web browser. We store the following in your browser's local storage:</p>
+  <p>ViewTube renders most creator workflows in your web browser. The following are stored in your browser's local storage:</p>
   <ul>
     <li><strong>OAuth access tokens</strong> — Used to authenticate API requests to YouTube on your behalf. Tokens expire automatically (typically after 1 hour).</li>
     <li><strong>Cached analytics data</strong> — Your YouTube Analytics data may be cached in your browser to reduce API requests and improve performance.</li>
     <li><strong>User preferences</strong> — Settings such as your preferred Gemini API key, display preferences, and tool configurations.</li>
   </ul>
 
-  <h3>C. Information We Do NOT Collect</h3>
+  <h3>C. Server-Side Handling</h3>
+  <p>For features that require authenticated server operations — including the Authorization Code + PKCE OAuth flow and any user-initiated actions routed through ViewTube's servers — ViewTube may temporarily process Google-connected information on the server strictly to fulfill your request. Persisted OAuth credentials are encrypted at rest (see Section 5).</p>
+
+  <h3>D. Information We Do NOT Collect</h3>
   <ul>
-    <li>We do <strong>not</strong> operate backend servers that receive, store, or process your YouTube data.</li>
-    <li>We do <strong>not</strong> store your Google access tokens on any server.</li>
-    <li>We do <strong>not</strong> collect your browsing history, IP address, or device fingerprints.</li>
+    <li>We do <strong>not</strong> collect your browsing history or device fingerprints.</li>
     <li>We do <strong>not</strong> use cookies for tracking or advertising purposes.</li>
+    <li>We do <strong>not</strong> sell Google user data.</li>
   </ul>
 
   <hr>
@@ -88,14 +95,22 @@
   <p>We use the data accessed through Google APIs solely to:</p>
   <ul>
     <li><strong>Display your YouTube channel analytics</strong> in charts, dashboards, and reports within the Service.</li>
-    <li><strong>Enable video management</strong> features such as editing video metadata, uploading videos, and managing playlists.</li>
+    <li><strong>Perform user-initiated YouTube management actions.</strong> When you explicitly invoke ViewTube's YouTube management tools, ViewTube may act on your YouTube account on your behalf. This includes <strong>uploading videos through the Upload Manager</strong> and <strong>posting comment replies through the Comment Responder</strong>. ViewTube does not perform these actions without a user-initiated feature or instruction.</li>
     <li><strong>Provide content creation tools</strong> such as thumbnail analysis, hook generation, and content strategy features.</li>
+    <li><strong>Provide optional AI-powered creator features</strong> as described in Section 3.</li>
     <li><strong>Improve the Service</strong> by understanding which features are used (based on local usage data only, not transmitted to any server).</li>
   </ul>
 
   <hr>
 
-  <h2>3. Google API Services User Data Policy</h2>
+  <h2>3. AI-Powered Features</h2>
+  <p>ViewTube provides optional AI-powered creator features. When you intentionally invoke an AI feature, ViewTube may process relevant information from your connected YouTube account — including channel metadata, video metadata, analytics, comments, audience information, and monetary analytics where relevant — to produce the result you requested.</p>
+  <p>Depending on the selected ViewTube feature, information necessary to fulfill the request may be processed using Google AI services, including <strong>Gemini</strong> and supported Google generative media services such as <strong>Veo</strong> and <strong>Nano Banana</strong>.</p>
+  <p>ViewTube uses this processing <strong>only to provide prominent user-facing functionality you request</strong>. ViewTube does not sell Google user data, does not use it for advertising, and does not use Google user data to train a generalized AI or machine-learning model.</p>
+
+  <hr>
+
+  <h2>4. Google API Services User Data Policy</h2>
   <p>ViewTube's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
 
   <div class="callout">
@@ -112,30 +127,39 @@
 
   <hr>
 
-  <h2>4. Data Storage and Security</h2>
+  <h2>5. Data Protection and Security</h2>
 
-  <h3>Client-Side Architecture</h3>
-  <p>ViewTube operates entirely in your web browser. Your YouTube data:</p>
+  <p>ViewTube protects Google user data in transit and at rest using a defense-in-depth security architecture:</p>
+
+  <h3>OAuth &amp; Session Security</h3>
   <ul>
-    <li>Is fetched directly from Google's APIs by your browser.</li>
-    <li>Is processed and rendered locally in your browser.</li>
-    <li>Is cached in your browser's <code>localStorage</code> for performance.</li>
-    <li>Is <strong>never transmitted to ViewTube servers</strong> or any third-party servers.</li>
+    <li><strong>OAuth Authorization Code with PKCE (S256)</strong> for authorization requests.</li>
+    <li><strong>OAuth <code>state</code> and <code>nonce</code></strong> validation to prevent CSRF and replay.</li>
+    <li><strong>HttpOnly session cookies</strong> with <code>Secure</code> in production and <code>SameSite=Lax</code>.</li>
+    <li><strong>Trusted-origin validation</strong> on authorization callbacks.</li>
+    <li><strong>Google API destination allow-listing</strong> so authenticated requests can only be sent to Google endpoints.</li>
+    <li><strong><code>Cache-Control: no-store</code></strong> on responses that carry sensitive data, plus request timeouts.</li>
+    <li><strong>Server-side secret/environment separation</strong> — credentials and API keys are never exposed to the browser bundle.</li>
   </ul>
 
-  <h3>Access Token Security</h3>
+  <h3>Credential Storage</h3>
   <ul>
-    <li>OAuth access tokens are stored in your browser's <code>localStorage</code> and expire automatically.</li>
-    <li>Tokens are used only to make authenticated requests to Google APIs from your browser.</li>
-    <li>No refresh tokens are stored server-side.</li>
+    <li>Persisted Google OAuth credentials are encrypted at rest using <strong>AES-256-GCM</strong>, keyed by the production <code>ACCOUNT_TOKEN_ENCRYPTION_KEY</code>.</li>
+    <li>Short-lived OAuth access tokens used by browser-side flows are stored in your browser's <code>localStorage</code> and expire automatically (typically after 1 hour).</li>
+  </ul>
+
+  <h3>Revocation &amp; Deletion</h3>
+  <ul>
+    <li>ViewTube supports <strong>Google token revocation</strong> and <strong>account deletion</strong> flows so you can end ViewTube's access to your Google data.</li>
+    <li>You can also revoke ViewTube's access at any time from your <a href="https://myaccount.google.com/permissions">Google Account Permissions</a> page.</li>
   </ul>
 
   <h3>Third-Party API Keys</h3>
-  <p>If you provide a Gemini API key for AI-powered features, that key is stored only in your browser's <code>localStorage</code> and is sent directly from your browser to Google's Gemini API. ViewTube never transmits or stores your API keys on any server.</p>
+  <p>If you provide a Gemini API key for AI-powered features, that key is stored only in your browser's <code>localStorage</code> and is sent directly from your browser to Google's Gemini API.</p>
 
   <hr>
 
-  <h2>5. Data Sharing</h2>
+  <h2>6. Data Sharing</h2>
   <p>We do <strong>not</strong> sell, rent, or share your personal information or YouTube data with third parties. Data may only be disclosed:</p>
   <ul>
     <li><strong>With your explicit consent.</strong></li>
@@ -145,12 +169,13 @@
 
   <hr>
 
-  <h2>6. Data Retention and Deletion</h2>
-  <p>Since all data is stored locally in your browser:</p>
+  <h2>7. Data Retention and Deletion</h2>
+  <p>ViewTube retains account and Google-connected information for as long as necessary to provide the Service, maintain your authorized connection, comply with legal obligations, resolve disputes, and protect the Service. You may revoke ViewTube's Google authorization through your Google Account at any time, and you may contact ViewTube using the details in Section 11 with a privacy or deletion request.</p>
+
+  <h3>Local Browser Storage</h3>
   <ul>
-    <li><strong>You control your data.</strong> You can clear all ViewTube data at any time by clearing your browser's local storage for viewtube.live, or by using the "Disconnect" / "Logout" feature within the Service.</li>
-    <li><strong>Access tokens</strong> expire automatically (typically after 1 hour). Expired tokens are not usable.</li>
-    <li><strong>Cached analytics data</strong> persists in local storage until you clear it or log out.</li>
+    <li>Short-lived OAuth access tokens stored in your browser's <code>localStorage</code> expire automatically (typically after 1 hour).</li>
+    <li>Cached analytics data stored locally in your browser persists until you clear it or use the "Disconnect" / "Logout" feature.</li>
   </ul>
 
   <h3>Revoking Access</h3>
@@ -160,29 +185,29 @@
     <li>Find "ViewTube" in the list of apps with access to your account.</li>
     <li>Click "Remove Access."</li>
   </ol>
-  <p>This immediately invalidates all access tokens and prevents ViewTube from accessing your YouTube data.</p>
+  <p>This invalidates ViewTube's access tokens and prevents ViewTube from accessing your YouTube data going forward.</p>
 
   <hr>
 
-  <h2>7. Children's Privacy</h2>
+  <h2>8. Children's Privacy</h2>
   <p>The Service is not intended for use by anyone under the age of 13 (or the applicable age of digital consent in your jurisdiction). We do not knowingly collect personal information from children. If we become aware that a child has provided us with personal information, we will take steps to remove such information.</p>
 
   <hr>
 
-  <h2>8. YouTube Terms of Service</h2>
+  <h2>9. YouTube Terms of Service</h2>
   <p>By using ViewTube, you also agree to be bound by the <a href="https://www.youtube.com/t/terms">YouTube Terms of Service</a> and the <a href="https://policies.google.com/privacy">Google Privacy Policy</a>.</p>
 
   <hr>
 
-  <h2>9. Changes to This Privacy Policy</h2>
+  <h2>10. Changes to This Privacy Policy</h2>
   <p>We may update this Privacy Policy from time to time. When we make changes, we will update the "Last Updated" date at the top of this page. We encourage you to review this Privacy Policy periodically to stay informed about how we protect your information.</p>
 
   <hr>
 
-  <h2>10. Contact Us</h2>
+  <h2>11. Contact Us</h2>
   <div class="contact">
     <p>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us at:</p>
-    <p><strong>Email:</strong> <a href="mailto:webspade.site@gmail.com">webspade.site@gmail.com</a></p>
+    <p><strong>Email:</strong> <a href="mailto:cbrewsterart@live.com">cbrewsterart@live.com</a></p>
     <p><strong>Website:</strong> <a href="https://viewtube.live">https://viewtube.live</a></p>
   </div>
 </div>

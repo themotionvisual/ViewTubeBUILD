@@ -1,9 +1,9 @@
 import { GoogleService } from '../googleService';
-import { getAccessToken, logout } from '../authSession';
+import { getAccessToken, logout } from '../auth/authSession';
 import { vi, describe, beforeEach, afterEach, it, expect } from 'vitest';
 
 // Mock authSession
-vi.mock('../authSession', () => ({
+vi.mock('../auth/authSession', () => ({
   getAccessToken: vi.fn(),
   logout: vi.fn(),
 }));
