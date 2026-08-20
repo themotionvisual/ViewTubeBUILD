@@ -1,8 +1,8 @@
 import React, { useState } from "react"
-import { MessageCircle, Sparkles, Loader2, ExternalLink, ThumbsUp } from "lucide-react"
+import { MessageCircle, Sparkles, Loader2, ExternalLink, ThumbsUp, Film } from "lucide-react"
 import { PostActionReflection } from "./PostActionReflection"
-import { generateCommentResponses } from "../services/gemini"
-import { fetchAllCommentThreads } from "../services/youtubeService"
+import { generateCommentResponses, recommendVideoForComment } from "../services/gemini"
+import { fetchAllCommentThreads, getRecentVideos, fetchVideoDetails } from "../services/youtubeService"
 import Markdown from "react-markdown"
 import { SubToolbox } from "./Toolbox"
 import { buildYouTubeCommentUrl } from "../services/youtube/commentHandoff"
@@ -14,6 +14,11 @@ export const CommentResponder: React.FC = () => {
  const [fetching, setFetching] = useState(false)
  const [copied, setCopied] = useState(false)
  const [fetchedThreads, setFetchedThreads] = useState<any[]>([])
+ // Recommend-video state — tracks which fetched thread produced the reply so
+ // we can look up the source video the comment was actually left on.
+ const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
+ const [recommending, setRecommending] = useState(false)
+ const [recommendError, setRecommendError] = useState<string | null>(null)
 
  const handleGenerate = async () => {
   if (!comments) return
@@ -43,8 +48,93 @@ export const CommentResponder: React.FC = () => {
   }
  }
 
- const selectComment = (text: string) => {
+ const selectComment = (text: string, threadId?: string) => {
   setComments(text)
+  setSelectedThreadId(threadId ?? null)
+  setRecommendError(null)
+ }
+
+ // Analyze (a) the comment text and (b) the metadata of the video the comment
+ // was left on — then ask Gemini to pick the best video from the creator's
+ // catalog to recommend back to the viewer, and splice a bridge-phrase +
+ // YouTube URL into the generated reply so the recommendation lands INSIDE
+ // the comment the creator will post.
+ const handleRecommendVideo = async () => {
+  if (!comments) return
+  setRecommending(true)
+  setRecommendError(null)
+  try {
+   // Source video the comment was left on (best-effort — only if the user
+   // selected a fetched thread; pasted comments won't have one).
+   const sourceThread = selectedThreadId
+    ? fetchedThreads.find((t) => t.id === selectedThreadId)
+    : null
+   const sourceVideoId: string | undefined =
+    sourceThread?.snippet?.videoId ?? undefined
+
+   let sourceVideoContext = ""
+   if (sourceVideoId) {
+    try {
+     const details = await fetchVideoDetails(sourceVideoId)
+     sourceVideoContext = `\n\n### CONTEXT: THIS COMMENT WAS LEFT ON\nTitle: ${details.title}\nDescription: ${(details.description || "").slice(0, 400)}`
+    } catch {
+     // Non-fatal — we can still recommend from comment text alone.
+    }
+   }
+
+   // Creator's video catalog. Prefer the analytics cache (already-synced
+   // channel videos); fall back to a fresh recent-videos fetch.
+   const cache = JSON.parse(localStorage.getItem("yt_analytics_cache") || "{}")
+   let catalog: Array<{ id: string; title: string; description?: string; tags?: string[] }> =
+    Array.isArray(cache?.videos)
+     ? cache.videos
+        .map((v: any) => ({
+         id: v.videoId || v.id,
+         title: v.title || v.snippet?.title || "",
+         description: v.description || v.snippet?.description || "",
+         tags: v.tags || v.snippet?.tags || [],
+        }))
+        .filter((v: any) => v.id && v.title)
+     : []
+   if (catalog.length === 0) {
+    const recent = await getRecentVideos(50)
+    catalog = recent
+     .map((item: any) => ({
+      id: item.id?.videoId || item.id,
+      title: item.snippet?.title || "",
+      description: item.snippet?.description || "",
+      tags: item.snippet?.tags || [],
+     }))
+     .filter((v: any) => v.id && v.title)
+   }
+
+   if (catalog.length === 0) {
+    setRecommendError("No videos found in your catalog to recommend from.")
+    return
+   }
+
+   const rec = await recommendVideoForComment(
+    `${comments}${sourceVideoContext}`,
+    catalog,
+   )
+   if (!rec.recommendedVideoId) {
+    setRecommendError(rec.reason || "Gemini could not pick a matching video.")
+    return
+   }
+   const picked = catalog.find((v) => v.id === rec.recommendedVideoId)
+   const videoUrl = `https://youtu.be/${rec.recommendedVideoId}`
+   const bridge = rec.bridgePhrase?.trim() || `You might also enjoy "${picked?.title || "this video"}":`
+   const snippet = `\n\n**Recommended Video:** ${bridge} ${videoUrl}\n\n_Why this pick: ${rec.reason || `${rec.matchStrength}/100 match`}_`
+
+   // Splice into the reply so the recommendation is IN the comment. If no
+   // reply has been generated yet, seed the result with the recommendation.
+   setResult((prev) => (prev ? `${prev}${snippet}` : `${bridge} ${videoUrl}`))
+  } catch (e) {
+   console.error("Failed to recommend video:", e)
+   setRecommendError(e instanceof Error ? e.message : "Video recommendation failed.")
+  } finally {
+   setRecommending(false)
+  }
  }
 
  const handleCopy = () => {
@@ -89,7 +179,7 @@ export const CommentResponder: React.FC = () => {
            <div key={thread.id} className="p-2 rounded-lg border-2 border-transparent hover:border-black/10">
             <div className="flex items-start gap-2">
              <button
-              onClick={() => selectComment(text)}
+              onClick={() => selectComment(text, thread.id)}
               className="flex-1 min-w-0 text-left hover:bg-[#FF3399]/10 rounded-lg transition-colors"
              >
               <div className="text-[9px] font-black uppercase opacity-50">{author}</div>
@@ -135,13 +225,30 @@ export const CommentResponder: React.FC = () => {
         className="vt-textarea-standard h-40"
        />
       </div>
-     <button
-      onClick={handleGenerate}
-      disabled={loading || !comments}
-      className="w-full mt-6 bg-[#FFB158] text-black border-[2px] border-black p-4 font-black uppercase text-xl rounded-xl shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-3">
-      {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
-      Generate Replies
-     </button>
+     <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+      <button
+       onClick={handleGenerate}
+       disabled={loading || !comments}
+       className="flex-1 bg-[#FFB158] text-black border-[2px] border-black p-4 font-black uppercase text-xl rounded-xl shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-3">
+       {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
+       Generate Replies
+      </button>
+      <button
+       onClick={handleRecommendVideo}
+       disabled={recommending || !comments}
+       title={selectedThreadId
+        ? "Analyze the source video + this comment, then recommend one of your videos in the reply"
+        : "Recommend one of your videos in the reply (select a fetched comment first to also analyze the video it was left on)"}
+       className="flex-1 bg-[#00E9C6] text-black border-[2px] border-black p-4 font-black uppercase text-xl rounded-xl shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-3">
+       {recommending ? <Loader2 className="animate-spin" /> : <Film />}
+       Recommend Video
+      </button>
+     </div>
+     {recommendError ? (
+      <p className="mt-2 text-[11px] font-black uppercase tracking-wide text-red-600">
+       {recommendError}
+      </p>
+     ) : null}
     </SubToolbox>
    </div>
 
