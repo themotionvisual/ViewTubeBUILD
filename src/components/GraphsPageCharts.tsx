@@ -3700,8 +3700,9 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
           onToggleValue: toggleMetric,
           minimumSelected: 1,
           maximumSelected: 5,
-          maxLabels: 3,
-          bgTone: "#FF7497",
+          displayMode: "timeline",
+          bgTone: "#FFFFFF",
+          fgTone: "#000000",
         },
         {
           type: "text",
