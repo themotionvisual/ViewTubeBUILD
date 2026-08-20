@@ -1,6 +1,28 @@
 import { BrainSignal, ContextPacket, BrainMemorySchema } from "../../types"
-import { getAiClient, getActiveModel, executeWithRetry, cleanJsonString, hasGeminiKey } from "../gemini"
+import { getVaultKey } from "../keyVault"
 import * as db from "./Persistence"
+
+// Statically importing "../gemini" here dragged @google/genai into the entry
+// chunk (~50 kB gzip) and forced every route to preload the Gemini SDK before
+// first paint. The Brain only reaches for it inside `reflectAndCompress`, so
+// the SDK is dynamic-imported there. `hasGeminiKey` runs synchronously in the
+// hot `emitSignal` path, so we duplicate its lightweight localStorage probe
+// here instead of hopping back into the gemini module.
+const hasGeminiKey = (): boolean => {
+ if (typeof window === "undefined") return false
+ try {
+  const configured =
+   getVaultKey("gemini") ||
+   localStorage.getItem("yt_api_key") ||
+   localStorage.getItem("vt_gemini_api_key") ||
+   localStorage.getItem("gemini_api_key") ||
+   localStorage.getItem("google_api_key") ||
+   ""
+  return configured.trim().length > 0
+ } catch {
+  return false
+ }
+}
 
 let brainCache: BrainMemorySchema | null = null;
 
@@ -118,6 +140,10 @@ export const reflectAndCompress = async () => {
  `
 
  try {
+  // Dynamic import defers the ~50 kB Gemini SDK plus the ~30 kB gemini module
+  // until an actual reflection is triggered. Users who never reflect (fresh
+  // session, no analytics activity, no key) never download it.
+  const { getAiClient, getActiveModel, executeWithRetry, cleanJsonString } = await import("../gemini")
   const result = await executeWithRetry(async () => {
    const ai = getAiClient()
    const modelId = getActiveModel("analysis")

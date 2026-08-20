@@ -85,7 +85,7 @@ import {
  DropdownMenuDemo,
  AreaChartDemo,
 } from "./NativeUIKit"
-import { getPaletteColor } from "../styles/toolboxPalette"
+import { getPaletteColor, VT_VISUAL_METRIC_COLORS } from "../styles/toolboxPalette"
 
 const closeIcon21 = new URL(
  "../assets/icons/close_21dp_1F1F1F_FILL0_wght700_GRAD200_opsz20.png",
@@ -291,19 +291,19 @@ const RATIO_RULES = [
 ]
 
 const CHART_METRIC_COLORS = {
- likes: "#FF7497",
+ likes: VT_VISUAL_METRIC_COLORS.likes,
 
- comments: "#24D3FF",
+ comments: VT_VISUAL_METRIC_COLORS.comments,
 
- shares: "#FFE357",
+ shares: VT_VISUAL_METRIC_COLORS.shares,
 
- subs: "#C9F830",
+ subs: VT_VISUAL_METRIC_COLORS.subscribers,
 
- views: "#FCAF57",
+ views: VT_VISUAL_METRIC_COLORS.views,
 
  ctr: "#CC99FF",
 
- revenue: "#4ADE80",
+ revenue: VT_VISUAL_METRIC_COLORS.revenue,
 } as const
 
 const ENGAGEMENT_TITLES = [

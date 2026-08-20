@@ -1,0 +1,1522 @@
+import { readFileSync } from "node:fs"
+import { describe, expect, it } from "vitest"
+
+import { VT_SYNC_ACTIVE_TABLE_IDS, VT_SYNC_TABLE_DEFINITIONS, VT_SYNC_VISIBLE_TABLE_CATEGORIES, VT_SYNC_VISIBLE_TABLE_DEFINITIONS } from "../../upstream/tableRegistry"
+import { normalizeVtSyncSnapshot, toVtSyncRawAppExport } from "../../adapters/snapshot"
+import { buildVtSyncDemographicOverviewRows, getVtSyncContentTypeLabel, normalizeVtSyncTableRows } from "../../adapters/tableData"
+import { formatVtSyncFullMonthValue, formatVtSyncLocalMonthValue } from "../../adapters/tableFormatting"
+import { getVtSyncFormatBadgePresentation, isManualImportNewerThanApi, resolveAnalyticsTableRows } from "./VtSyncToolboxDataTable"
+import {
+ VT_SYNC_TOOLBOX_CATEGORIES,
+ VT_SYNC_WORKSPACE_DEFINITIONS,
+ VT_SYNC_SMALL_TABLE_COLORS,
+ VT_SYNC_ROW_BATCH_SIZE,
+ VT_SYNC_VIDEO_NON_COMPACT_WIDTHS,
+ buildVtSyncRetentionVisualModel,
+ buildVtSyncRetentionVideoGroups,
+ buildVtSyncFormatSubscriberGroups,
+ buildVtSyncTrafficDayGroups,
+ buildVtSyncTableViewModel,
+ clampVtSyncColumnWidth,
+ distributeVtSyncSparseColumnWidths,
+ exportVtSyncTableCsv,
+ formatVtSyncColumnValue,
+ getVtSyncApiValuePresentation,
+ getVtSyncCompositeIdentityPresentation,
+ getVtSyncAbsolutePercentRatio,
+ getVtSyncAlphabeticSpectrumColors,
+ getVtSyncBadgeValues,
+ getVtSyncCategoryBadgePresentation,
+ getVtSyncCategoryClickState,
+ getVtSyncCompactMenuLabel,
+ getVtSyncColumnSortedValues,
+ getVtSyncColumnStateKey,
+ getVtSyncCompactThumbnailWidth,
+ getVtSyncOppositeColor,
+ getVtSyncPresentationLabel,
+ getVtSyncNumericRank,
+ getVtSyncOrderedSpectrumColors,
+ getVtSyncRankColor,
+ getVtSyncRowHeight,
+ getVtSyncSparkFillStyle,
+ getVtSyncSparkGradient,
+ getVtSyncTableGeometry,
+ getVtSyncTrafficOverviewRowHeight,
+ createVtSyncWorkspaceUrlSearch,
+ resolveVtSyncWorkspaceUrlState,
+ getVtSyncTableProvenance,
+ getVtSyncVerticalScrollMetrics,
+ getVtSyncVideoTitleLayout,
+ getVisibleVtSyncColumns,
+ getVtSyncHoverScrollIntent,
+ indexVtSyncVideoRowsById,
+ getNextVtSyncCompositeSortState,
+ getNextVtSyncRowLimit,
+ getVtSyncPresentationColumns,
+ importVtSyncCsvFiles,
+ isVtSyncCompositeSortActive,
+ mapVtSyncCsvRowsToTable,
+ measureVtSyncCompactColumnWidths,
+ parseVtSyncCsvText,
+ resolveVtSyncColumnWidth,
+ reorderVtSyncColumnsWithinGroup,
+ stableSortVtSyncRows,
+ splitVtSyncSpecialCharacters,
+ totalVtSyncColumn,
+ type VtSyncSortState,
+} from "./vtSyncToolboxTableModel"
+
+const rendererSource = readFileSync(new URL("./VtSyncToolboxDataTable.tsx", import.meta.url), "utf8")
+const rendererCss = readFileSync(new URL("./VtSyncToolboxDataTable.css", import.meta.url), "utf8")
+const visualsSource = readFileSync(new URL("../VtSyncDataVisualsToolbox.tsx", import.meta.url), "utf8")
+
+describe("VT Sync toolbox data table", () => {
+ it("keeps full format labels and gives live badges their green presentation", () => {
+  expect(getVtSyncFormatBadgePresentation("shorts")).toEqual({
+   badgeClass: "is-short",
+   collapsedLabel: "S",
+   label: "SHORTS",
+  })
+  expect(getVtSyncFormatBadgePresentation("long-form")).toEqual({
+   badgeClass: "is-long",
+   collapsedLabel: "L",
+   label: "LONG-FORMAT",
+  })
+  expect(getVtSyncFormatBadgePresentation("live stream")).toEqual({
+   badgeClass: "is-live",
+   collapsedLabel: "L",
+   label: "LIVE STREAM",
+  })
+
+  const formatColumn = VT_SYNC_TABLE_DEFINITIONS
+   .find((table) => table.id === "videos")
+   ?.columns.find((column) => column.key === "format")
+  expect(formatColumn?.preferredWidth).toBeGreaterThanOrEqual(140)
+ })
+
+ it("normalizes recovered video identity, URL, and nested Data API statistics", () => {
+  const [row] = normalizeVtSyncTableRows("videos", [{
+   id: "abc123",
+   title: "Recovered video",
+   metrics: { views: 42, likes: 7, comments: 3 },
+  }])
+  expect(row).toMatchObject({
+   videoId: "abc123",
+   videoUrl: "https://www.youtube.com/watch?v=abc123",
+   views: 42,
+   likes: 7,
+   comments: 3,
+  })
+  expect(row.videoId).not.toBe(row.videoUrl)
+ })
+ it("uses literal percentage-of-audience widths for demographic sparklines", () => {
+  expect(getVtSyncAbsolutePercentRatio(3.1)).toBeCloseTo(0.031)
+  expect(getVtSyncAbsolutePercentRatio(25.8)).toBeCloseTo(0.258)
+  expect(getVtSyncAbsolutePercentRatio(100)).toBe(1)
+  expect(getVtSyncAbsolutePercentRatio(125)).toBe(1)
+ expect(getVtSyncAbsolutePercentRatio(undefined)).toBe(0)
+ })
+
+ it("renders one compact three-section demographic table without a numbered rail or duplicate age-total matrix column", () => {
+  expect(rendererSource).toContain('className="vt-sync-demographic-board"')
+  expect(rendererSource).toContain('id="vt-sync-gender-totals">Gender Totals</header>')
+  expect(rendererSource).toContain('id="vt-sync-age-groups">Age Groups</header>')
+  expect(rendererSource).toContain('id="vt-sync-age-gender-matrix">Age × Gender</header>')
+  expect(rendererSource).toContain('table.id === "demographics" ? renderDemographicTable()')
+  expect(rendererSource).not.toContain("setDemographicLayout")
+  expect(rendererSource).not.toContain('table.id !== "demographics" && <div className="vt-sync-row-rail-viewport"')
+  expect(rendererCss).toContain("grid-template-columns: 27.5% 27.5% 45%")
+  expect(rendererCss).toContain("border-top: 4px solid var(--vt-ink)")
+ })
+
+ it("shows source and synchronization time for every visible table", () => {
+  const snapshot = normalizeVtSyncSnapshot({
+   source: "vt-sync",
+   snapshotId: "run-42",
+   capturedAt: "2026-07-22T07:42:00.000Z",
+   selectedTimeWindow: "28d",
+   datasetFreshness: {
+    demographics: { runId: "run-42", source: "current_run", status: "synced", updatedAt: "2026-07-22T07:44:00.000Z" },
+   },
+  })
+  VT_SYNC_VISIBLE_TABLE_DEFINITIONS.forEach((definition) => {
+   const provenance = getVtSyncTableProvenance(snapshot, definition)
+   expect(provenance.sourceLabel).toBeTruthy()
+   expect(provenance.updatedAt).toBeTruthy()
+  })
+  const demographics = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((definition) => definition.id === "demographics")!
+  expect(getVtSyncTableProvenance(snapshot, demographics)).toMatchObject({
+   sourceLabel: "YouTube Analytics API",
+   updatedAt: "2026-07-22T07:44:00.000Z",
+   statusLabel: "Current",
+   windowLabel: "28-day window",
+   runId: "run-42",
+  })
+  expect(getVtSyncTableProvenance(snapshot, demographics, "2026-07-22T08:00:00.000Z")).toMatchObject({
+   sourceLabel: "Local CSV import",
+   updatedAt: "2026-07-22T08:00:00.000Z",
+   statusLabel: "Imported",
+  })
+  expect(rendererSource).toContain("vt-sync-table-footer-provenance")
+ })
+
+ it("activates a saved CSV only while it is newer than API freshness", () => {
+  const record = {
+   id: "manual_import::creator",
+   runId: "manual_import::creator",
+   datasetId: "creator",
+   phase: "manual_import",
+   capturedAt: "2026-07-28T07:00:00.000Z",
+   rows: [{ term: "Shorts", views: 4 }],
+   provenance: "csv" as const,
+   filenames: ["formats.csv"],
+  }
+  const snapshotAt = (updatedAt: string) => normalizeVtSyncSnapshot({
+   datasetFreshness: {
+    creator_content_type: {
+     runId: "api-run",
+     source: "current_run",
+     status: "synced",
+     rows: 3,
+     updatedAt,
+    },
+   },
+  })
+
+  expect(isManualImportNewerThanApi(record, snapshotAt("2026-07-28T06:00:00.000Z"))).toBe(true)
+  expect(isManualImportNewerThanApi(record, snapshotAt("2026-07-28T08:00:00.000Z"))).toBe(false)
+ })
+
+ it("uses recovered IndexedDB API rows instead of compact preview snapshot rows", () => {
+  const compactSnapshot = normalizeVtSyncSnapshot({
+   source: "vt-sync",
+   snapshotId: "compact-run",
+   capturedAt: "2026-08-12T12:00:00.000Z",
+   videos: [{ id: "preview-1", title: "Preview row" }],
+   storageMetadata: {
+    storageMode: "compact_preview",
+    isCompacted: true,
+    fullRowCountByField: { videos: 3 },
+    visiblePreviewRowCountByField: { videos: 1 },
+   },
+  })
+  const resolved = resolveAnalyticsTableRows({
+   tableId: "videos",
+   snapshot: compactSnapshot,
+   snapshotRows: [{ id: "preview-1", videoTitle: "Preview row" }],
+   recoveredRows: [
+    { id: "full-1", videoTitle: "Full row 1" },
+    { id: "full-2", videoTitle: "Full row 2" },
+    { id: "full-3", videoTitle: "Full row 3" },
+   ],
+   privacyFilters: {
+    excludePrivate: false,
+    excludeUnlisted: false,
+   },
+  })
+
+  expect(resolved).toHaveLength(3)
+  expect(resolved.map((row) => row.id)).toEqual(["full-1", "full-2", "full-3"])
+ })
+
+ it("supplements snapshot rows with imported CSV rows instead of replacing them", () => {
+  const resolved = resolveAnalyticsTableRows({
+   tableId: "creator",
+   snapshot: normalizeVtSyncSnapshot(),
+   snapshotRows: [{ term: "Snapshot", views: 1 }],
+   importedRows: [{ term: "Imported", views: 2 }],
+   recoveredRows: [{ term: "Recovered", views: 3 }],
+   privacyFilters: {
+    excludePrivate: false,
+    excludeUnlisted: false,
+   },
+  })
+
+  expect(resolved).toEqual([
+   { term: "Snapshot", views: 1 },
+   { term: "Imported", views: 2 },
+  ])
+ })
+
+ it("never lets a smaller Videos import replace the projected API catalog", () => {
+  const snapshotRows = Array.from({ length: 100 }, (_, index) => ({
+   videoId: `video-${index + 1}`,
+   title: `Video ${index + 1}`,
+  }))
+  const resolved = resolveAnalyticsTableRows({
+   tableId: "videos",
+   snapshot: normalizeVtSyncSnapshot(),
+   snapshotRows,
+   importedRows: Array.from({ length: 77 }, (_, index) => ({
+    videoId: `video-${index + 1}`,
+    title: `CSV ${index + 1}`,
+   })),
+   privacyFilters: { excludePrivate: false, excludeUnlisted: false },
+  })
+
+  expect(resolved).toHaveLength(100)
+  expect(resolved[0]).toEqual(expect.objectContaining({ title: "Video 1" }))
+ })
+
+ it("builds one demographic matrix from the combined age and gender report", () => {
+  const rows = buildVtSyncDemographicOverviewRows([
+   { ageGroup: "age13-17", gender: "male", viewerPercentage: 10 },
+   { ageGroup: "age13-17", gender: "female", viewerPercentage: 6 },
+   { ageGroup: "age13-17", gender: "user_specified", viewerPercentage: 1 },
+   { ageGroup: "age18-24", gender: "male", viewerPercentage: 20 },
+   { ageGroup: "age18-24", gender: "female", viewerPercentage: 15 },
+  ])
+
+  expect(rows).toEqual([
+   expect.objectContaining({
+    ageGroup: "age13-17",
+    ageGroupLabel: "Ages 13–17",
+    ageOrder: 0,
+    maleViewerPercentage: 10,
+    femaleViewerPercentage: 6,
+    otherViewerPercentage: 1,
+    viewerPercentage: 17,
+   }),
+   expect.objectContaining({
+    ageGroup: "age18-24",
+    ageGroupLabel: "Ages 18–24",
+    ageOrder: 1,
+    maleViewerPercentage: 20,
+    femaleViewerPercentage: 15,
+    otherViewerPercentage: undefined,
+    viewerPercentage: 35,
+   }),
+  ])
+ })
+
+ it("uses the matrix margins as age-only and gender-only viewer percentages", () => {
+  const snapshot = normalizeVtSyncSnapshot({
+   demographics: [
+    { ageGroup: "age13-17", gender: "male", viewerPercentage: 10 },
+    { ageGroup: "age13-17", gender: "female", viewerPercentage: 6 },
+    { ageGroup: "age18-24", gender: "male", viewerPercentage: 20 },
+    { ageGroup: "age18-24", gender: "female", viewerPercentage: 15 },
+   ],
+  })
+  const overview = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "demographics")!
+  const age = VT_SYNC_TABLE_DEFINITIONS.find((item) => item.id === "demog_age")!
+  const gender = VT_SYNC_TABLE_DEFINITIONS.find((item) => item.id === "demog_gender")!
+  const overviewRows = buildVtSyncTableViewModel(snapshot, overview).rows
+
+  expect(snapshot.demographics[0].watchTimePct).toBeUndefined()
+  expect(overview.columns.map((column) => column.label)).toEqual(["Age Group", "Male", "Female", "Other", "All Viewers"])
+  expect(overview.columns.every((column) => column.key !== "watchTimePct")).toBe(true)
+  expect(totalVtSyncColumn(overviewRows, overview.columns[1])).toMatchObject({ primary: "30%", secondary: "All ages" })
+  expect(totalVtSyncColumn(overviewRows, overview.columns[2])).toMatchObject({ primary: "21%", secondary: "All ages" })
+  expect(totalVtSyncColumn(overviewRows, overview.columns[4])).toMatchObject({ primary: "51%", secondary: "All ages" })
+  expect(buildVtSyncTableViewModel(snapshot, age).rows).toEqual([
+   expect.objectContaining({ cohort: "Ages 13–17", viewsPct: 16 }),
+   expect.objectContaining({ cohort: "Ages 18–24", viewsPct: 35 }),
+  ])
+  expect(buildVtSyncTableViewModel(snapshot, gender).rows).toEqual([
+   expect.objectContaining({ cohort: "Male", viewsPct: 30 }),
+   expect.objectContaining({ cohort: "Female", viewsPct: 21 }),
+  ])
+  expect(exportVtSyncTableCsv(overview, overviewRows).split("\n")[0]).toBe("Age Group,Male,Female,Other,All Viewers")
+ })
+
+ it("does not manufacture suppressed demographic intersections or renormalize partial reports", () => {
+  const [row] = buildVtSyncDemographicOverviewRows([
+   { ageGroup: "age25-34", gender: "male", viewerPercentage: 25.8 },
+  ])
+
+  expect(row).toMatchObject({ maleViewerPercentage: 25.8, viewerPercentage: 25.8 })
+  expect(row.femaleViewerPercentage).toBeUndefined()
+  expect(row.otherViewerPercentage).toBeUndefined()
+ })
+
+ it("uses deterministic alphabetic spectrum badges for video metadata", () => {
+  const library = ["APPLE", "DESIGN", "HISTORY", "NAPOLEON", "VIDEO"]
+  expect(getVtSyncAlphabeticSpectrumColors("APPLE", library)).toEqual({
+   stroke: "#FA618A",
+   fill: "rgba(250, 97, 138, 0.35)",
+  })
+  expect(getVtSyncAlphabeticSpectrumColors("VIDEO", library)).toEqual({
+   stroke: "#FF7AC8",
+   fill: "rgba(255, 122, 200, 0.35)",
+  })
+  expect(getVtSyncAlphabeticSpectrumColors("NAPOLEON", library)).toEqual(
+   getVtSyncAlphabeticSpectrumColors("napoleon", library),
+  )
+  expect(getVtSyncBadgeValues('["Knowledge","Military","knowledge"]')).toEqual(["Knowledge", "Military"])
+  expect(getVtSyncBadgeValues("Spline 3D, animation | tutorial")).toEqual(["Spline 3D", "animation", "tutorial"])
+
+  expect(getVtSyncCategoryBadgePresentation("Howto & Style")).toMatchObject({
+   label: "How to & Style",
+  })
+  expect(getVtSyncCategoryBadgePresentation("Howto & Style").colors).toEqual(
+   getVtSyncCategoryBadgePresentation("How to & Style").colors,
+  )
+  const videos = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((table) => table.id === "videos")!
+  const csv = exportVtSyncTableCsv(videos, [{
+   tags: ["Napoleon", "Cavalry"],
+   topics: ["Knowledge", "Military"],
+   category: "Film & Animation",
+  }])
+  expect(csv).toContain('"Napoleon, Cavalry"')
+  expect(csv).toContain('"Knowledge, Military"')
+  expect(csv).toContain("Film & Animation")
+  expect(csv).not.toContain("--vt-badge-stroke")
+  expect(rendererSource).toContain('className={`vt-sync-spectrum-list is-${kind}`}')
+  expect(rendererSource).toContain('className="vt-sync-category-badges"')
+  expect(rendererSource).toContain('<span className="vt-sync-category-badge">{presentation.label}</span>')
+  expect(rendererSource).not.toContain("presentation.segments")
+  expect(rendererCss).toContain(".vt-sync-spectrum-list { position: absolute;")
+  expect(rendererCss).toContain(".vt-sync-category-badges { position: absolute;")
+ })
+
+ it("captures resize state before scheduling a React state update", () => {
+  expect(rendererSource).toContain("const resize = resizeRef.current")
+  expect(rendererSource).toContain("[resize.key]: clampVtSyncColumnWidth(resize.width + event.clientX - resize.start)")
+  expect(rendererSource).not.toContain("[resizeRef.current!.key]")
+ })
+
+ it("presents API dimension values as friendly titles while preserving their raw values", () => {
+  const trafficLabels: Record<string, string> = {
+   SHORTS: "Shorts Feed", SUBSCRIBER: "Subscribers Feed", YT_SEARCH: "YouTube Search", EXT_URL: "External Websites",
+   YT_CHANNEL: "Channel Pages", RELATED_VIDEO: "Suggested Videos", YT_OTHER_PAGE: "Other YouTube Features",
+   PLAYLIST: "YouTube Playlists", NO_LINK_OTHER: "Direct / Unknown", NOTIFICATION: "Notifications",
+   SOUND_PAGE: "Audio Pages", SHORTS_CONTENT_LINKS: "Shorts Links", END_SCREEN: "End Screens",
+   HASHTAGS: "Hashtag Pages", ANNOTATION: "Annotations", IMMERSIVE_LIVE: "Live Streams",
+   ADVERTISING: "Advertising",
+  }
+  const playbackLabels: Record<string, string> = {
+   BROWSE: "Browsing Features", CHANNEL: "Channel Pages", EMBEDDED: "Embedded Players", EXTERNAL_APP: "External Apps",
+   MOBILE: "Mobile Website / Legacy Apps", SEARCH: "YouTube Search Results", WATCH: "YouTube Watch Page / Official Apps",
+   YT_OTHER: "Other YouTube Locations",
+  }
+  const adTypeLabels: Record<string, string> = {
+   auctionTrueviewInstream: "Auction Skippable Ad", auctionInstream: "Auction Non-Skippable Ad",
+   auctionBumperInstream: "Auction Bumper Ad", auctionDisplay: "Auction Display Ad",
+   reservedInstream: "Reserved Non-Skippable Ad", reservedInstreamSelect: "Reserved Skippable Ad",
+   reservedBumperInstream: "Reserved Bumper Ad", reservedDisplay: "Reserved Display Ad", unknown: "Unknown Ad Type",
+  }
+  const subscriberDetailLabels: Record<string, string> = {
+   explore: "Kids: Explore", learning: "Kids: Learning", music: "Music Feed", "my-history": "Watch History",
+   "my-subscriptions": "Subscriptions Page", "my-uploads": "My Uploads", podcasts: "Podcasts Page", shows: "Kids: Shows",
+   "watch-later": "Watch Later", "what-to-watch": "YouTube Home", activity: "Channel Activity Feed",
+   blogged: "Blog Links in Subscriptions", mychannel: "Likes, History & Watch Later",
+   sdig: "Subscription Update Emails", uploaded: "New Uploads Feed", "/": "YouTube Home",
+   "/my_subscriptions": "Subscriptions Page", PP: "Personalized Playlists",
+  }
+
+  Object.entries(trafficLabels).forEach(([apiValue, title]) => {
+   expect(getVtSyncApiValuePresentation("traffic", "source", apiValue)).toEqual({ title, apiValue })
+   expect(getVtSyncApiValuePresentation("traffic_day", "term", apiValue)).toEqual({ title, apiValue })
+  })
+  Object.entries(playbackLabels).forEach(([apiValue, title]) => {
+   expect(getVtSyncApiValuePresentation("locations", "location", apiValue)).toEqual({ title, apiValue })
+  })
+  Object.entries(adTypeLabels).forEach(([apiValue, title]) => {
+   expect(getVtSyncApiValuePresentation("ads", "adType", apiValue)).toEqual({ title, apiValue })
+  })
+  Object.entries(subscriberDetailLabels).forEach(([apiValue, title]) => {
+   expect(getVtSyncApiValuePresentation("traffic_subscribers", "term", apiValue)).toEqual({ title, apiValue })
+  })
+
+  expect(getVtSyncApiValuePresentation("traffic", "source", "shorts")).toEqual({ title: "Shorts Feed", apiValue: "shorts" })
+  expect(getVtSyncApiValuePresentation("traffic_subscribers", "term", "SUBSCRIBER.what-to-watch")).toEqual({ title: "YouTube Home", apiValue: "SUBSCRIBER.what-to-watch" })
+  expect(getVtSyncApiValuePresentation("videos", "source", "SHORTS")).toBeNull()
+  expect(getVtSyncApiValuePresentation("traffic", "source", "UNRECOGNIZED_SOURCE")).toBeNull()
+  const trafficTable = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((table) => table.id === "traffic")!
+  const sourceColumn = trafficTable.columns.find((column) => column.key === "source")!
+  expect(formatVtSyncColumnValue({ source: "SHORTS" }, sourceColumn)).toBe("SHORTS")
+  expect(exportVtSyncTableCsv(trafficTable, [{ source: "SHORTS" }])).toContain("SHORTS")
+  expect(exportVtSyncTableCsv(trafficTable, [{ source: "SHORTS" }])).not.toContain("Shorts Feed")
+  expect(rendererSource).toContain('table.id === "traffic" && column.key === "source" && !isMissingVtSyncValue(raw) ? renderTrafficSourceBadge')
+  const subscriberTable = VT_SYNC_TABLE_DEFINITIONS.find((table) => table.id === "traffic_subscribers")!
+  expect(exportVtSyncTableCsv(subscriberTable, [{ term: "what-to-watch" }])).toContain("what-to-watch")
+  expect(exportVtSyncTableCsv(subscriberTable, [{ term: "what-to-watch" }])).not.toContain("YouTube Home")
+  expect(rendererSource).toContain('className="vt-sync-api-value"')
+  expect(rendererCss).toContain(".vt-sync-api-value strong { font-size: 14px;")
+  expect(rendererCss).toContain(".vt-sync-api-value small { margin-top: 4px; font-size: 8px;")
+ })
+
+ it("groups traffic source x day rows without changing the flat table export contract", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((definition) => definition.id === "traffic_day")!
+  const rows = [
+   { term: "YT_SEARCH", day: "7/22/26", views: 100, engagedViews: 60, trafficViewShare: 10, watchTime: 2, trafficWatchTimeShare: 20, avgDuration: 30, avgPercentageViewed: 40 },
+   { term: "EXT_URL", day: "7/22/26", views: 50, engagedViews: 25, trafficViewShare: 5, watchTime: 1.5, trafficWatchTimeShare: 15, avgDuration: 60, avgPercentageViewed: 70 },
+   { term: "RELATED_VIDEO", day: "7/23/26", views: 300, engagedViews: 210, trafficViewShare: 30, watchTime: 9, trafficWatchTimeShare: 45, avgDuration: 90, avgPercentageViewed: 55 },
+   { term: "SHORTS", day: "7/23/26", views: 200, engagedViews: 180, trafficViewShare: 20, watchTime: 3, trafficWatchTimeShare: 15, avgDuration: 25, avgPercentageViewed: 80 },
+   { term: "SUBSCRIBER", day: "7/23/26", views: 40, engagedViews: 35, trafficViewShare: 4, watchTime: 1, trafficWatchTimeShare: 5, avgDuration: 50, avgPercentageViewed: 60 },
+  ]
+
+  const groups = buildVtSyncTrafficDayGroups(rows, table.columns)
+
+  expect(table.presentationMode).toBe("traffic-source-day")
+  expect(groups.map((group) => group.day)).toEqual(["7/23/26", "7/22/26"])
+  expect(groups[0].sources.map((source) => source.source)).toEqual(["RELATED_VIDEO", "SHORTS", "SUBSCRIBER"])
+  expect(groups[0].sources[0]).toMatchObject({ sourceLabel: "Suggested Videos", sourceApiValue: "RELATED_VIDEO" })
+  expect(groups[0].totals).toMatchObject({
+   day: "7/23/26",
+   views: 540,
+   engagedViews: 425,
+   trafficViewShare: 54,
+   watchTime: 13,
+   trafficWatchTimeShare: 65,
+  })
+  expect(groups[0].totals.avgDuration).toBeCloseTo(((90 * 300) + (25 * 200) + (50 * 40)) / 540)
+  expect(groups[0].totals.avgPercentageViewed).toBeCloseTo(((55 * 300) + (80 * 200) + (60 * 40)) / 540)
+  expect(groups[1].sources[0].row).toBe(rows[0])
+  expect(exportVtSyncTableCsv(table, rows)).toContain("Traffic Source,Day,Views,Engaged Views,% of Traffic Views,Watch Time,% of Traffic Watch Time,Average View Duration,Average Percentage Viewed (%)")
+  expect(exportVtSyncTableCsv(table, rows)).toContain("YT_SEARCH")
+  expect(exportVtSyncTableCsv(table, rows)).not.toContain("YouTube Search")
+ })
+
+ it("groups formats x subscriber status rows without changing the flat table export contract", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((definition) => definition.id === "formats_subscribers")!
+  const rows = buildVtSyncTableViewModel(normalizeVtSyncSnapshot({
+   formatSubscriberStatuses: [
+    { creatorContentType: "shorts", subscribedStatus: "SUBSCRIBED", views: 100, engagedViews: 60, estimatedMinutesWatched: 50, averageViewDuration: 20, averageViewPercentage: 40, redViews: 12, estimatedRedMinutesWatched: 9 },
+    { creatorContentType: "shorts", subscribedStatus: "UNSUBSCRIBED", views: 300, engagedViews: 210, estimatedMinutesWatched: 90, averageViewDuration: 30, averageViewPercentage: 60, redViews: 18, estimatedRedMinutesWatched: 21 },
+    { creatorContentType: "videoOnDemand", subscribedStatus: "SUBSCRIBED", views: 50, engagedViews: 25, estimatedMinutesWatched: 25, averageViewDuration: 40, averageViewPercentage: 70, redViews: 5, estimatedRedMinutesWatched: 6 },
+   ],
+  }), table).rows
+
+  const groups = buildVtSyncFormatSubscriberGroups(rows, table.columns)
+
+  expect(table.presentationMode).toBe("format-subscriber-status")
+  expect(groups.map((group) => group.formatLabel)).toEqual(["Shorts", "Long-Format"])
+  expect(groups[0].statuses.map((status) => status.statusLabel)).toEqual(["Unsubscribed", "Subscribed"])
+  expect(groups[0].totals).toMatchObject({
+   term: "Shorts",
+   views: 400,
+   engagedViews: 270,
+   watchTime: 140 / 60,
+   youtubePremiumViews: 30,
+   youtubePremiumWatchTime: 0.5,
+   channelViewShare: 400 / 450 * 100,
+   channelWatchTimeShare: (140 / 60) / (165 / 60) * 100,
+   channelPremiumViewShare: 30 / 35 * 100,
+   channelPremiumWatchTimeShare: 0.5 / 0.6 * 100,
+  })
+  expect(groups[0].totals.avgDuration).toBeCloseTo(((20 * 100) + (30 * 300)) / 400)
+  expect(groups[0].totals.avgPercentageViewed).toBeCloseTo(((40 * 100) + (60 * 300)) / 400)
+  expect(exportVtSyncTableCsv(table, rows)).toContain("Format,Subscriber Status,Views,Engaged Views,Watch Time,Avg Duration,Avg % Viewed,Premium Views,Premium Watch Time,% of Channel Views,% of Channel Watch Time,% of Channel Premium Views,% of Channel Premium Watch Time")
+  expect(exportVtSyncTableCsv(table, rows)).toContain("UNSUBSCRIBED")
+ })
+
+ it("renders traffic source x day with a grouped presentation shell", () => {
+  expect(rendererSource).toContain('table.presentationMode === "traffic-source-day" ? renderTrafficSourceDayTable()')
+  expect(rendererSource).toContain('className="vt-sync-traffic-day-table"')
+  expect(rendererSource).toContain("Expand visible days")
+  expect(rendererSource).toContain("Collapse all")
+  expect(rendererSource).toContain("data-traffic-day-parent")
+  expect(rendererSource).toContain("data-traffic-day-detail")
+  expect(rendererSource).toContain("source.sourceApiValue.toLocaleUpperCase()")
+  expect(rendererSource).not.toContain("<small>{source.sourceApiValue}</small>")
+  expect(rendererSource).toContain("buildVtSyncTrafficDayGroups(trafficDayReference.rows, trafficDayReference.columns)")
+  expect(rendererSource).toContain('table.id !== "traffic" && table.presentationMode !== "traffic-source-day"')
+  expect(rendererSource).toContain("newestGroup?.sources")
+  expect(rendererSource).toContain("trafficSourceBadgeColors.get(apiValue.toLocaleUpperCase())")
+  expect(rendererSource).toContain("return sortedTrafficDayGroups[0] ? new Set([sortedTrafficDayGroups[0].id]) : new Set()")
+  expect(rendererCss).toContain(".vt-sync-traffic-day-parent")
+  expect(rendererCss).toContain(".vt-sync-traffic-day-child td.is-day-source { display: flex;")
+  expect(rendererCss).toContain(".vt-sync-traffic-day-table td { position: relative; height: 54px; max-height: 54px;")
+  expect(rendererCss).toContain(".vt-sync-traffic-day-table tbody tr.vt-sync-traffic-day-child { height: 38px; max-height: 38px; }")
+  expect(rendererCss).toContain(".vt-sync-traffic-day-child td { height: 38px; max-height: 38px; }")
+  expect(rendererCss).toContain(".vt-sync-traffic-day-child .vt-sync-traffic-day-value { padding: 4px 6px 11px; font-size: 15px; }")
+  expect(rendererCss).toContain(".vt-sync-traffic-day-table .vt-sync-spark.shape-bar { right: 8px; bottom: 5px; left: 8px; height: 8px;")
+  expect(rendererCss).toContain(".vt-sync-traffic-day-scroll-shell { display: flex; width: 100%; max-height: 760px; overflow: hidden; border-top: 4px solid var(--vt-ink);")
+  expect(rendererCss).toContain(".vt-sync-traffic-day-viewport { flex: 1 1 auto; width: 100%; min-width: 0; max-height: 760px; overflow: auto;")
+  expect(rendererCss).toContain(".vt-sync-traffic-day-viewport::-webkit-scrollbar { width: 0; height: 0; display: none; }")
+  expect(rendererCss).toContain(".vt-sync-traffic-source-badge")
+ expect(rendererCss).toContain(".vt-sync-traffic-source-badge { width: 280px; min-width: 280px; max-width: 280px;")
+ expect(rendererCss).toContain("font-size: 15px; line-height: 1; font-weight: 1000;")
+  expect(rendererCss).toContain('.vt-sync-data-table td[data-column-key="source"] .vt-sync-traffic-source-badge { position: absolute;')
+ })
+
+ it("renders formats x subscriber status with the grouped traffic table shell", () => {
+  expect(rendererSource).toContain('table.presentationMode === "format-subscriber-status" ? renderFormatSubscriberTable()')
+  expect(rendererSource).toContain("Format / Subscriber Status")
+  expect(rendererSource).toContain("<FormatBadge value={group.formatCode} label={group.formatLabel} />")
+  expect(rendererSource).toContain("buildVtSyncFormatSubscriberGroups(sortedRows, orderedColumns)")
+  expect(rendererCss).toContain(".vt-sync-format-badge.is-inline")
+  expect(rendererSource).toContain("data-traffic-day-parent")
+  expect(rendererSource).toContain("flat format/status rows · CSV stays flat")
+ })
+
+ it("groups 100-point retention curves by video without changing the flat export contract", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((definition) => definition.id === "retentions")!
+  const rows = ["video-b", "video-a"].flatMap((videoId) => Array.from({ length: 100 }, (_, index) => ({
+   videoId,
+   elapsedVideoTimeRatio: (100 - index) / 100,
+   audienceWatchRatio: index / 100,
+   relativeRetentionPerformance: (index + 1) / 200,
+  })))
+
+  const groups = buildVtSyncRetentionVideoGroups(rows)
+
+  expect(table.presentationMode).toBe("retention-video")
+  expect(groups.map((group) => group.videoId)).toEqual(["video-a", "video-b"])
+  expect(groups.every((group) => group.points.length === 100)).toBe(true)
+  expect(groups[0].points.map((point) => point.elapsed)).toEqual(
+   [...groups[0].points.map((point) => point.elapsed)].sort((left, right) => (left ?? 0) - (right ?? 0)),
+  )
+  expect(groups[0].summary).toMatchObject({
+   videoId: "video-a",
+   audienceWatchRatio: 0.495,
+   relativeRetentionPerformance: 0.2525,
+  })
+  expect(groups[0].summary).not.toHaveProperty("elapsedVideoTimeRatio")
+  const importedRows = mapVtSyncCsvRowsToTable(table, parseVtSyncCsvText(
+   "Video ID,Elapsed Video Time Ratio,Audience Watch Ratio,Relative Retention Performance\nvideo-a,0.01%,0.94%,0.37%\nvideo-a,0.02%,0.91%,0.4%",
+  ))
+  expect(buildVtSyncRetentionVideoGroups(importedRows)[0]).toMatchObject({
+   videoId: "video-a",
+   points: [expect.objectContaining({ elapsed: 0.01 }), expect.objectContaining({ elapsed: 0.02 })],
+  })
+  const exported = exportVtSyncTableCsv(table, rows)
+  expect(exported.split("\n")).toHaveLength(201)
+  expect(exported).toContain("Video ID,Elapsed Video Time Ratio,Audience Watch Ratio,Relative Retention Performance")
+  expect(exported).not.toContain("Curve average")
+ })
+
+ it("renders retention points in collapsible video sections", () => {
+  expect(rendererSource).toContain('table.presentationMode === "retention-video" ? renderRetentionVideoTable()')
+  expect(rendererSource).toContain('className="vt-sync-traffic-day-table vt-sync-retention-video-table"')
+  expect(rendererSource).toContain("Expand visible videos")
+  expect(rendererSource).toContain("data-retention-video-parent")
+  expect(rendererSource).toContain("data-retention-point")
+  expect(rendererSource).toContain("video groups; export remains")
+  expect(rendererCss).toContain(".vt-sync-retention-video-table")
+ expect(rendererCss).toContain(".vt-sync-retention-point-badge")
+ })
+
+ it("derives one unified retention surface without treating elapsed position as a statistic", () => {
+  const group = buildVtSyncRetentionVideoGroups([
+   { videoId: "video-a", elapsedVideoTimeRatio: .01, audienceWatchRatio: .94, relativeRetentionPerformance: .37 },
+   { videoId: "video-a", elapsedVideoTimeRatio: .02, audienceWatchRatio: .84, relativeRetentionPerformance: .41 },
+   { videoId: "video-a", elapsedVideoTimeRatio: .03, audienceWatchRatio: .88, relativeRetentionPerformance: .56 },
+  ])[0]
+  const visual = buildVtSyncRetentionVisualModel(group, 600)
+
+  expect(visual.points).toEqual([
+   expect.objectContaining({ pointNumber: 1, timestampSeconds: 6, audienceRatio: .94, change: undefined }),
+   expect.objectContaining({ pointNumber: 2, timestampSeconds: 12, audienceRatio: .84 }),
+   expect.objectContaining({ pointNumber: 3, timestampSeconds: 18, audienceRatio: .88 }),
+  ])
+  expect(visual.points[1].change).toBeCloseTo(-.1)
+  expect(visual.points[2].change).toBeCloseTo(.04)
+  expect(visual.segments[0]).toMatchObject({ label: "Opening", startPoint: 1, endPoint: 20 })
+  expect(visual.events).toEqual([
+   expect.objectContaining({ pointNumber: 2, type: "drop" }),
+   expect.objectContaining({ pointNumber: 3, type: "replay" }),
+  ])
+  expect(rendererSource).toContain('const keys = ["audienceWatchRatio", "relativeRetentionPerformance"]')
+  expect(rendererSource).toContain("data-retention-visual-suite")
+  expect(rendererSource).toContain("Audience Retention · 100-Percentile Display System")
+  expect(rendererSource).toContain("Relative-to-typical delta")
+  expect(rendererSource).toContain("Percentile inspector")
+  expect(rendererSource).toContain("vt-sync-retention-video-thumbnail")
+  expect(rendererSource).toContain("vt-sync-retention-video-actions")
+  expect(rendererSource).toContain('className="vt-sync-retention-unified-surface"')
+  expect(rendererSource).not.toContain('className="vt-sync-retention-option')
+  expect(rendererCss).toContain(".vt-sync-retention-unified-surface")
+  expect(rendererCss).toMatch(/\.vt-sync-retention-delta-bars\s*\{[^}]*height:\s*clamp\(140px,\s*17vw,\s*190px\)/)
+  expect(rendererCss).toMatch(/\.vt-sync-retention-delta-bars\s*\{[^}]*padding:\s*0 10px/)
+  expect(rendererCss).toMatch(/\.vt-sync-retention-delta-bars i\s*\{[^}]*border-radius:\s*2px/)
+  expect(rendererCss).toMatch(/\.vt-sync-retention-fingerprint\s*\{[^}]*height:\s*66px/)
+  expect(rendererCss).toContain(".vt-sync-retention-fingerprint::before")
+  expect(rendererCss).toContain(".vt-sync-retention-progress-axis")
+  expect(rendererCss).toContain(".vt-sync-retention-readout")
+  expect(rendererCss).toContain(".vt-sync-retention-scroll-shell")
+  expect(rendererSource).toContain('<div className="vt-sync-retention-scroll-shell">')
+  expect(rendererSource).toContain("renderVerticalScrollbar()")
+  expect(rendererSource).toContain('<div className="vt-sync-retention-fingerprint-frame">')
+  expect(rendererCss).toContain(".vt-sync-retention-fingerprint")
+ })
+
+ it("matches retention video metadata from normalized video table identifiers", () => {
+  const byId = indexVtSyncVideoRowsById([
+   { videoId: "video-a", title: "Video A", thumbnail: "a.jpg" },
+   { id: "video-b", title: "Video B", thumbnail: "b.jpg" },
+   { videoUrl: "https://www.youtube.com/watch?v=video-c", title: "Video C", thumbnail: "c.jpg" },
+  ])
+  expect(byId.get("video-a")).toMatchObject({ title: "Video A", thumbnail: "a.jpg" })
+ expect(byId.get("video-b")).toMatchObject({ title: "Video B", thumbnail: "b.jpg" })
+  expect(byId.get("video-c")).toMatchObject({ title: "Video C", thumbnail: "c.jpg" })
+  expect(byId.get("VIDEO-A")).toBeUndefined()
+  expect(byId.get("video-a")).toMatchObject({ title: "Video A" })
+  expect(indexVtSyncVideoRowsById([{ videoId: "B7lD5nhETM4", title: "Cavalry" }]).get("b7ld5nhetm4")).toMatchObject({ title: "Cavalry" })
+  expect(indexVtSyncVideoRowsById([
+   { videoId: "B7lD5nhETM4", title: "Metadata pending" },
+   { videoId: "B7lD5nhETM4", title: "Napoleonic Cavalry", thumbnailUrl: "cavalry.jpg" },
+  ]).get("B7lD5nhETM4")).toMatchObject({ title: "Napoleonic Cavalry", thumbnailUrl: "cavalry.jpg" })
+  expect(rendererSource).toContain('buildVtSyncTableViewModel(snapshot, findVtSyncTable("videos"), activePrivacyFilters).rows')
+  expect(rendererSource).toContain("indexVtSyncVideoRowsById(videoRows)")
+  expect(rendererSource).toContain("snapshot.tableExports?.videos")
+ })
+
+ it("keeps sticky totals opaque above scrolling table cells", () => {
+  expect(rendererSource).toContain("getOpaqueVtSyncTint(color, .22)")
+  expect(rendererSource).not.toContain("backgroundColor: tableGeometry.mode === \"sparse\" ? `${color}33`")
+  expect(rendererCss).toContain(".vt-sync-total-row th::before { content: \"\"; position: absolute; inset: 0; z-index: 0; background: inherit; pointer-events: none; }")
+  expect(rendererCss).toContain(".vt-sync-total-row th > * { position: relative; z-index: 2; }")
+ })
+
+ it("does not include mock or random fallback data in the live renderer", () => {
+  expect(rendererSource).not.toContain("MOCK" + "_DATA")
+  expect(rendererSource).not.toContain("generate" + "MockMetrics")
+  expect(rendererSource).not.toContain("Math" + ".random")
+  expect(rendererSource).not.toContain("Mock " + "${")
+ })
+
+ it("exposes default-on private and unlisted exclusions in the settings panel", () => {
+  expect(rendererSource).toContain('label="Exclude Private"')
+  expect(rendererSource).toContain('label="Exclude Unlisted"')
+  expect(rendererSource).toContain('checked={activePrivacyFilters.excludePrivate}')
+  expect(rendererSource).toContain('checked={activePrivacyFilters.excludeUnlisted}')
+ })
+
+ it("exports active table CSV with registry headers", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "traffic")
+
+  expect(table).toBeTruthy()
+  expect(exportVtSyncTableCsv(table!, [{ source: "YouTube search", views: 10 }]).split("\n")[0]).toBe(
+   table!.columns.map((column) => column.label).join(","),
+  )
+ })
+
+ it("keeps visible tabs limited to successful table ids", () => {
+  const visibleIds = VT_SYNC_VISIBLE_TABLE_CATEGORIES.flatMap((category) => category.tabs.map((tab) => tab.id))
+
+  expect(visibleIds.sort()).toEqual([...VT_SYNC_ACTIVE_TABLE_IDS].sort())
+  expect(visibleIds).not.toContain("traffic_shorts")
+  expect(visibleIds).not.toContain("new_returning")
+  expect(visibleIds).not.toContain("traffic_yt_playlist_page")
+ })
+
+ it("covers every active registry table exactly once in creator workspaces", () => {
+  const mapped = VT_SYNC_WORKSPACE_DEFINITIONS.flatMap((workspace) =>
+   workspace.views.flatMap((view) => view.tableIds),
+  )
+  expect(mapped.sort()).toEqual([...VT_SYNC_ACTIVE_TABLE_IDS].sort())
+  expect(new Set(mapped).size).toBe(mapped.length)
+  const visibleCategoryIds = VT_SYNC_TOOLBOX_CATEGORIES.flatMap((category) => category.tableIds)
+  expect(visibleCategoryIds.sort()).toEqual([...VT_SYNC_ACTIVE_TABLE_IDS].sort())
+  expect(new Set(visibleCategoryIds).size).toBe(visibleCategoryIds.length)
+ })
+
+ it("maps every video column to the approved non-compact geometry", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "videos")!
+  const widths = table.columns.map((column, columnIndex) => resolveVtSyncColumnWidth({
+   tableId: table.id,
+   column,
+   columnIndex,
+   compact: false,
+   sparklines: true,
+  }))
+
+  expect(table.columns).toHaveLength(52)
+  // videoUrl uses preferredWidth (40) not the NON_COMPACT_WIDTHS array index
+  expect(widths[1]).toBe(325)
+  expect(widths[3]).toBe(40) // videoUrl: preferredWidth:36 → clamped to 40
+  expect(widths.reduce((sum, width) => sum + width, 0)).toBeGreaterThan(4_000)
+ })
+
+ it("combines video identity and publishing fields only in presentation", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "videos")!
+  const presentation = getVtSyncPresentationColumns(table.id, table.columns)
+  expect(presentation).toHaveLength(49)
+  expect(presentation.map((column) => column.key)).not.toEqual(expect.arrayContaining(["videoId", "publishedDay", "publishedTime"]))
+  expect(presentation.map((column) => column.key)).toEqual(expect.arrayContaining(["title", "publishedAt", "videoUrl"]))
+  expect(table.columns.map((column) => column.key)).toEqual(expect.arrayContaining(["videoId", "videoUrl", "publishedDay", "publishedTime"]))
+  expect(presentation.reduce((sum, column) => {
+   const columnIndex = table.columns.findIndex((candidate) => candidate.key === column.key)
+   return sum + resolveVtSyncColumnWidth({ tableId: table.id, column, columnIndex, compact: false, sparklines: true })
+  }, 0)).toBeGreaterThan(3_500)
+ })
+
+ it("uses the approved compact widths, row heights, and resize clamp", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "videos")!
+  const measured = measureVtSyncCompactColumnWidths(table, [{ videoId: "abc", descriptionSnippet: "Long description", views: 123 }], (value) => value.length * 10)
+  const width = (key: string, sparklines = true) => {
+   const columnIndex = table.columns.findIndex((column) => column.key === key)
+   return resolveVtSyncColumnWidth({ tableId: table.id, column: table.columns[columnIndex], columnIndex, compact: true, sparklines, compactWidths: measured })
+  }
+
+  expect(width("thumbnail")).toBe(52)
+  expect(width("thumbnail", false)).toBe(30)
+  expect(width("title")).toBe(120)
+  expect(width("descriptionSnippet")).toBe(150)
+  expect(width("views")).toBe(82)
+  expect(resolveVtSyncColumnWidth({ tableId: table.id, column: table.columns[1], columnIndex: 1, compact: false, sparklines: true, override: 12 })).toBe(40)
+  expect(resolveVtSyncColumnWidth({ tableId: table.id, column: table.columns[1], columnIndex: 1, compact: true, sparklines: false, override: 700 })).toBe(520)
+  expect(getVtSyncRowHeight(false, true)).toBe(48)
+  expect(getVtSyncRowHeight(true, true)).toBe(31)
+  expect(getVtSyncRowHeight(true, false)).toBe(19)
+  expect(getVtSyncCompactThumbnailWidth(true)).toBe(52)
+  expect(getVtSyncCompactThumbnailWidth(false)).toBe(30)
+  expect(clampVtSyncColumnWidth(12)).toBe(40)
+  expect(clampVtSyncColumnWidth(700)).toBe(520)
+ })
+
+ it("uses oracle sparse, grouped, and large table geometry", () => {
+  expect(getVtSyncTableGeometry(8, false, true)).toMatchObject({ mode: "sparse", useGroups: false, canPin: false, rowHeight: 64, totalsHeight: 64, columnHeaderHeight: 64 })
+  expect(getVtSyncTableGeometry(9, false, true)).toMatchObject({ mode: "grouped", useGroups: true, canPin: false, rowHeight: 48 })
+  expect(getVtSyncTableGeometry(10, false, true)).toMatchObject({ mode: "large", useGroups: true, canPin: true, rowHeight: 48 })
+  expect(getVtSyncTableGeometry(8, true, true)).toMatchObject({ rowHeight: 31, totalsHeight: 16, columnHeaderHeight: 84 })
+  expect(getVtSyncTableGeometry(8, true, false)).toMatchObject({ rowHeight: 19, totalsHeight: 16, columnHeaderHeight: 84 })
+  expect(VT_SYNC_SMALL_TABLE_COLORS).toHaveLength(12)
+ })
+
+ it("sorts dates chronologically and each duration unit by elapsed time", () => {
+  const dateColumn = { key: "date", label: "Date", group: "Time", format: "date" as const }
+  expect(stableSortVtSyncRows([
+   { id: "late", date: "7/10/26" },
+   { id: "early", date: "2026-01-02" },
+   { id: "middle", date: "2026-W10" },
+  ], { key: "date", direction: "asc" }, dateColumn).map((row) => row.id)).toEqual(["early", "middle", "late"])
+
+  const watchColumn = { key: "watchTime", label: "Watch Time", group: "Core Stats", format: "durationHours" as const }
+  expect(stableSortVtSyncRows([
+   { id: "long", watchTime: 2.5 },
+   { id: "short", watchTime: .25 },
+   { id: "middle", watchTime: 1 },
+  ], { key: "watchTime", direction: "desc" }, watchColumn).map((row) => row.id)).toEqual(["long", "middle", "short"])
+
+  const weekdayColumn = { key: "publishedDay", label: "Upload Day", group: "Video", format: "weekdayLocal" as const }
+  expect(stableSortVtSyncRows([
+   { id: "sunday", publishedDay: "2026-07-12T12:00:00" },
+   { id: "monday", publishedDay: "2026-07-13T12:00:00" },
+   { id: "friday", publishedDay: "2026-07-10T12:00:00" },
+  ], { key: "publishedDay", direction: "asc" }, weekdayColumn).map((row) => row.id)).toEqual(["monday", "friday", "sunday"])
+
+  const timeColumn = { key: "publishedTime", label: "Upload Time", group: "Video", format: "timeLocal" as const }
+  expect(stableSortVtSyncRows([
+   { id: "evening", publishedTime: "8:15 PM" },
+   { id: "morning", publishedTime: "7:30 AM" },
+   { id: "noon", publishedTime: "12:00 PM" },
+  ], { key: "publishedTime", direction: "asc" }, timeColumn).map((row) => row.id)).toEqual(["morning", "noon", "evening"])
+
+  expect(stableSortVtSyncRows([
+   { id: "december", publishedAt: "2026-12-02T12:00:00Z" },
+   { id: "january", publishedAt: "2026-01-02T12:00:00Z" },
+   { id: "july", publishedAt: "2026-07-02T12:00:00Z" },
+  ], { key: "publishedMonth", direction: "asc" }).map((row) => row.id)).toEqual(["january", "july", "december"])
+ })
+
+ it("splits special characters and trailing zero seconds in presentation", () => {
+  expect(splitVtSyncSpecialCharacters("925:09:00", "watchTime")).toEqual({ value: "925:09", suffix: ":00", isNegative: false, prefix: undefined })
+  expect(splitVtSyncSpecialCharacters("8:00", "youtubePremiumWatchTime")).toEqual({ value: "8", suffix: ":00", isNegative: false, prefix: undefined })
+  expect(splitVtSyncSpecialCharacters("1:02:00", "estimatedRedMinutesWatched")).toEqual({ value: "1:02", suffix: ":00", isNegative: false, prefix: undefined })
+  expect(splitVtSyncSpecialCharacters("12.35K h", "watchTime")).toEqual({ value: "12.35K h", isNegative: false, prefix: undefined, suffix: undefined })
+  expect(splitVtSyncSpecialCharacters("1:02:03", "watchTime")).toEqual({ value: "1:02:03", isNegative: false, prefix: undefined, suffix: undefined })
+  expect(splitVtSyncSpecialCharacters("12:30:00", "avgViewDuration")).toEqual({ value: "12:30:00", isNegative: false, prefix: undefined, suffix: undefined })
+  expect(splitVtSyncSpecialCharacters("$123", "estimatedRevenue")).toEqual({ value: "123", prefix: "$", isNegative: false, suffix: undefined })
+  expect(splitVtSyncSpecialCharacters("-$12.50", "estimatedRevenue")).toEqual({ value: "12.50", prefix: "$", isNegative: true, suffix: undefined })
+  expect(splitVtSyncSpecialCharacters("15%", "ctr")).toEqual({ value: "15", suffix: "%", isNegative: false, prefix: undefined })
+ })
+
+ it("cycles composite Video and Published sorting in the requested order", () => {
+  const unrelated = { key: "views", direction: "desc" as const }
+  const videoOne = getNextVtSyncCompositeSortState("videos", "title", unrelated)!
+  const videoTwo = getNextVtSyncCompositeSortState("videos", "title", videoOne)!
+  const videoThree = getNextVtSyncCompositeSortState("videos", "title", videoTwo)!
+  const videoFour = getNextVtSyncCompositeSortState("videos", "title", videoThree)!
+  expect([videoOne, videoTwo, videoThree, videoFour]).toEqual([
+   { key: "title", direction: "asc" },
+   { key: "videoId", direction: "asc" },
+   { key: "title", direction: "desc" },
+   { key: "videoId", direction: "desc" },
+  ])
+  let published: VtSyncSortState = unrelated
+  const publishedSequence = Array.from({ length: 8 }, () => {
+   published = getNextVtSyncCompositeSortState("videos", "publishedAt", published)!
+   return published
+  })
+  expect(publishedSequence).toEqual([
+   { key: "publishedAt", direction: "asc" },
+   { key: "publishedTime", direction: "asc" },
+   { key: "publishedDay", direction: "asc" },
+   { key: "publishedMonth", direction: "asc" },
+   { key: "publishedAt", direction: "desc" },
+   { key: "publishedTime", direction: "desc" },
+   { key: "publishedDay", direction: "desc" },
+   { key: "publishedMonth", direction: "desc" },
+  ])
+  expect(isVtSyncCompositeSortActive("videos", "title", videoTwo)).toBe(true)
+  expect(isVtSyncCompositeSortActive("videos", "publishedAt", publishedSequence[3])).toBe(true)
+ })
+
+ it("uses the requested video metric-group labels exactly once in order", () => {
+  const videos = VT_SYNC_TABLE_DEFINITIONS.find((table) => table.id === "videos")!
+  expect([...new Set(videos.columns.map((column) => column.group))]).toEqual([
+   "Video", "Details", "Format", "Core Stats", "Engagement", "Subscribers", "Revenue", "Advertising", "Premium", "Card Links",
+  ])
+  expect(videos.columns.find((column) => column.key === "watchTime")?.format).toBe("durationHours")
+  expect(videos.columns.find((column) => column.key === "youtubePremiumWatchTime")?.format).toBe("durationHours")
+ })
+
+ it("forces States and DMA into full-width normal sparse geometry", () => {
+  expect(getVtSyncTableGeometry(7, true, true, "sparse-full", "normal-only")).toMatchObject({
+   mode: "sparse",
+   useGroups: false,
+   canPin: false,
+   rowHeight: 64,
+   totalsHeight: 64,
+   columnHeaderHeight: 64,
+  })
+ })
+
+ it("changes compact palettes without reversing magnitude or bar direction", () => {
+  expect(getVtSyncOppositeColor("#F55EFC")).toBe("#3FEE56")
+  expect(getVtSyncOppositeColor("#F55EFC")).toBe("#3FEE56")
+  expect(getVtSyncRankColor(0, false)).toBe("#36E0F6")
+  expect(getVtSyncRankColor(1, false)).toBe("#FA618A")
+  expect(getVtSyncRankColor(0, true)).toBe("#FA618A")
+  expect(getVtSyncRankColor(1, true)).toBe("#36E0F6")
+  expect(getVtSyncSparkGradient(false)).toContain("#36E0F6 0%")
+  expect(getVtSyncSparkGradient(false)).toContain("#FFDA47 50%")
+  expect(getVtSyncSparkGradient(false)).toContain("#FA618A 100%")
+ expect(getVtSyncSparkGradient(true)).toContain("#FA618A 0%")
+  expect(getVtSyncSparkFillStyle(.2, getVtSyncSparkGradient(false), "spectrum")).toMatchObject({
+   width: "20%",
+   backgroundPosition: "left center",
+   backgroundRepeat: "no-repeat",
+   backgroundSize: "500% 100%",
+  })
+  expect(getVtSyncSparkFillStyle(.5, getVtSyncSparkGradient(false), "spectrum").backgroundSize).toBe("200% 100%")
+  expect(getVtSyncSparkFillStyle(1, getVtSyncSparkGradient(false), "spectrum").backgroundSize).toBe("100% 100%")
+  expect(getVtSyncSparkFillStyle(.5, "#3FEE56", "solid")).toEqual({ width: "50%", background: "#3FEE56" })
+  expect(rendererCss).not.toContain("transform: scaleX(-1)")
+ })
+
+ it("renders rows in deterministic 50-row scroll batches", () => {
+  expect(VT_SYNC_ROW_BATCH_SIZE).toBe(50)
+  expect(getNextVtSyncRowLimit(50, 1_447)).toBe(100)
+  expect(getNextVtSyncRowLimit(100, 1_447)).toBe(150)
+  expect(getNextVtSyncRowLimit(1_400, 1_447)).toBe(1_447)
+  expect(getNextVtSyncRowLimit(50, 34)).toBe(34)
+  expect(rendererSource).toContain("const [rowLimit, setRowLimit] = useState(VT_SYNC_ROW_BATCH_SIZE)")
+  expect(rendererSource).toContain("const renderedRows = sortedRows.slice(0, rowLimit)")
+  expect(rendererSource).toContain("remainingRowSpacerHeight")
+  expect(rendererSource).toContain('data-vt-row-spacer="true"')
+  expect(rendererCss).toContain(".vt-sync-row-spacer")
+  expect(rendererSource).toContain('table.presentationMode !== "retention-video"')
+  expect(rendererSource).toContain("getNextVtSyncRowLimit(current, sortedRows.length)")
+  expect(rendererSource).not.toContain("slice(0, 500)")
+ })
+
+ it("fills sparse desktop tables without changing explicit resize overrides", () => {
+  const expanded = distributeVtSyncSparseColumnWidths([
+   { key: "source", width: 112 },
+   { key: "views", width: 72 },
+   { key: "watch", width: 72 },
+  ], 1_000)
+  expect(Object.values(expanded).reduce((sum, width) => sum + width, 0)).toBe(942)
+
+  const withOverride = distributeVtSyncSparseColumnWidths([
+   { key: "source", width: 200, overridden: true },
+   { key: "views", width: 100 },
+  ], 500)
+  expect(withOverride).toEqual({ source: 200, views: 242 })
+
+  expect(distributeVtSyncSparseColumnWidths([
+   { key: "source", width: 200 },
+   { key: "views", width: 100 },
+  ], 300)).toEqual({ source: 200, views: 100 })
+ })
+
+ it("fills Traffic Overview without scrollbar controls while preserving its fixed source width", () => {
+  const trafficTable = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((table) => table.id === "traffic")!
+  const trafficDayTable = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((table) => table.id === "traffic_day")!
+  expect(trafficTable.columns.find((column) => column.key === "source")?.preferredWidth).toBe(300)
+  expect(trafficTable.verticalScrollMode).toBe("none")
+  expect(trafficTable.horizontalScrollMode).toBe("none")
+  expect(trafficDayTable.verticalScrollMode).toBe("custom")
+  expect(trafficDayTable.horizontalScrollMode).toBe("none")
+  expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.filter((table) => table.mainCategoryId === "traffic" && table.id !== "traffic").every((table) => table.verticalScrollMode === "custom")).toBe(true)
+  expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.filter((table) => table.mainCategoryId === "traffic").every((table) => table.horizontalScrollMode === "none")).toBe(true)
+  expect(getVtSyncTrafficOverviewRowHeight(18)).toBe(44)
+  expect(getVtSyncTrafficOverviewRowHeight(17)).toBe(46)
+  expect(getVtSyncTrafficOverviewRowHeight(12)).toBe(66)
+  expect(getVtSyncTrafficOverviewRowHeight(0)).toBe(44)
+  expect(rendererSource).toContain('table.horizontalScrollMode === "custom" && renderScrollbar("top")')
+  expect(rendererSource).toContain('table.verticalScrollMode === "custom" && renderVerticalScrollbar()')
+  expect(rendererSource).toContain('table.horizontalScrollMode === "custom" && renderScrollbar("bottom")')
+  expect(rendererSource).toContain('(table.id === "traffic" && column.key === "source")')
+  expect(rendererCss).toContain(".vt-sync-toolbox-table.is-traffic-overview .vt-sync-split-table { max-height: none; }")
+  expect(rendererCss).toContain(".vt-sync-toolbox-table.is-traffic-overview .vt-sync-row-rail-viewport,")
+  expect(rendererCss).toContain(".vt-sync-traffic-day-scroll-shell { display: flex;")
+  expect(rendererCss).toContain("border-top: 4px solid var(--vt-ink)")
+ })
+
+ it("maps vertical scrollbar pixels one-to-one with scroll progress", () => {
+  expect(getVtSyncVerticalScrollMetrics({
+   scrollTop: 450,
+   scrollHeight: 1_000,
+   clientHeight: 100,
+   trackHeight: 200,
+  })).toEqual({
+   thumbHeight: 44,
+   thumbTop: 78,
+   trackTravel: 156,
+   maxScroll: 900,
+  })
+  expect(getVtSyncVerticalScrollMetrics({
+   scrollTop: 500,
+   scrollHeight: 100,
+   clientHeight: 100,
+   trackHeight: 200,
+  })).toEqual({
+   thumbHeight: 200,
+   thumbTop: 0,
+   trackTravel: 0,
+   maxScroll: 0,
+  })
+  expect(getVtSyncVerticalScrollMetrics({
+   scrollTop: 9_999,
+   scrollHeight: 1_000,
+   clientHeight: 100,
+   trackHeight: 200,
+  }).thumbTop).toBe(156)
+ })
+
+ it("keeps every normal video row fixed while adapting title typography", () => {
+  expect(getVtSyncVideoTitleLayout("Short title", false, 180, 287)).toEqual({ fontSize: 16, lineCount: 1 })
+  expect(getVtSyncVideoTitleLayout("A long measured title", false, 288, 287)).toEqual({ fontSize: 10, lineCount: 2 })
+  expect(getVtSyncVideoTitleLayout("Any title", true)).toEqual({ fontSize: 10, lineCount: 1 })
+  expect(formatVtSyncLocalMonthValue("2026-07-15T12:00:00Z")).toBe("Jul")
+  expect(formatVtSyncFullMonthValue("2026-01")).toBe("January")
+  expect(formatVtSyncFullMonthValue("2026-07-01")).toBe("July")
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+  expect(getVtSyncOrderedSpectrumColors("January", months).stroke).toBe("#FA618A")
+  expect(getVtSyncOrderedSpectrumColors("December", months).stroke).toBe("#FF7AC8")
+  expect(new Set(months.map((month) => getVtSyncOrderedSpectrumColors(month, months).stroke)).size).toBe(12)
+  expect(rendererCss).toContain(".vt-sync-data-table tbody tr { height: var(--vt-row-height)")
+  expect(rendererCss).toContain(".vt-sync-cell-text { position: absolute; inset: 0;")
+  expect(rendererCss).toContain(".vt-sync-zero-seconds { display: inline-block; flex: 0 0 auto; font-size: 10px;")
+  expect(rendererCss).toContain(".vt-sync-vertical-scrollbar { position: relative; z-index: 70;")
+  expect(rendererCss).toContain(".vt-sync-data-table thead { position: relative; z-index: 100; }")
+  expect(rendererCss).toContain(".vt-sync-total-row th { top: var(--vt-group-header-height, 30px); z-index: 102;")
+  expect(rendererCss).toContain(".vt-sync-data-table td { position: relative; z-index: 1;")
+  expect(rendererCss).toContain(".vt-sync-video-identity-meta > small")
+  expect(rendererCss).toContain(".vt-sync-published-moment .vt-sync-date-badge")
+  expect(rendererCss).toContain("font-size: 14px;")
+  expect(rendererCss).toContain('td[data-column-key="topics"] .vt-sync-cell-text { display: -webkit-box;')
+  expect(rendererCss).toContain("-webkit-line-clamp: 2;")
+  expect(rendererCss).toContain('is-compact.no-spark .vt-sync-data-table td[data-column-key="topics"]')
+  expect(rendererCss).toContain("-webkit-line-clamp: 1;")
+ })
+
+ it("uses one settings trigger, the oracle option order, and a mounted collapse region", () => {
+  expect(rendererSource.match(/aria-label="Table settings"/g)).toHaveLength(2)
+  expect(rendererSource.match(/className="vt-sync-toolbar-action"/g)).toHaveLength(3)
+  expect(rendererSource).toContain("<AnimatedToggleIcon open={tableOpen}")
+  expect(rendererSource).toContain("const [tableOpen, setTableOpen] = useState(true)")
+  expect(rendererSource).toContain('id="vt-sync-table-content"')
+  expect(rendererSource).not.toContain("unmountWhenClosed")
+  const optionOrder = ["Dark Mode", "Compact", "Pin Columns", "Fullscreen", "Zebra Rows", "Format Rows", "Formula", "Hover Scroll", "Filters"]
+  optionOrder.reduce((position, option) => {
+   const next = rendererSource.indexOf(`label="${option}"`, position + 1)
+   expect(next).toBeGreaterThan(position)
+   return next
+  }, -1)
+  expect(rendererSource).not.toContain("Opposite Spark")
+  expect(rendererSource).not.toContain("All Columns")
+  expect(rendererSource).not.toContain("Highlight Max")
+  expect(rendererSource).toContain('className="vt-sync-effect-settings"')
+  expect(rendererSource).toContain('left="On" right="Off"')
+  expect(rendererSource).toContain('left="Pill" right="Bar"')
+  expect(rendererSource).toContain('left="Color" right="Invert"')
+  expect(rendererSource).toContain('left="Stroke" right="Off"')
+  expect(rendererSource).not.toContain("TriSwitch")
+  expect(rendererCss).toContain(".vt-sync-effect-settings { display: grid;")
+ })
+
+ it("paints opaque sticky seams inside every header cell", () => {
+  expect(rendererCss).toContain(".vt-sync-data-table thead th::after")
+  expect(rendererCss).toContain("height: 3px; background: var(--vt-ink)")
+  expect(rendererCss).toContain("background-clip: border-box")
+  expect(rendererCss).toContain(".vt-sync-total-row th.is-collapsed { background: #d5f2fa; }")
+  expect(rendererCss).toContain(".vt-sync-filter-row th.is-collapsed { background: var(--vt-ink); }")
+ })
+
+ it("uses only the two custom horizontal scrollbars and active left split menus", () => {
+  expect(rendererSource).toContain('{table.horizontalScrollMode === "custom" && renderScrollbar("top")}')
+  expect(rendererSource).toContain('{table.horizontalScrollMode === "custom" && renderScrollbar("bottom")}')
+  expect(rendererSource).not.toContain("item.tableIds.length > 1 && !isActive")
+  expect(rendererCss).toContain(".vt-sync-main-viewport::-webkit-scrollbar { width: 0; height: 0; display: none; }")
+  expect(rendererCss).toContain(".vt-sync-main-viewport { flex: 1 1 auto; min-width: 0; overflow: auto; scrollbar-width: none; }")
+  expect(rendererCss).toContain(".vt-sync-scrollbar.bottom { border-top: 4px solid var(--vt-ink)")
+  expect(rendererCss).toContain(".vt-sync-scrollbar.top { height: 32px; min-height: 32px")
+  expect(rendererCss).toContain(".vt-sync-scroll-track-window { position: absolute; inset: 2px;")
+  expect(rendererCss).toContain(".vt-sync-scroll-thumb { position: absolute; top: 0; bottom: 0;")
+  expect(rendererCss).toContain("box-sizing: border-box; border: 0;")
+  expect(rendererSource).not.toContain("<i /></span>")
+  expect(rendererCss).not.toContain(".vt-sync-scroll-thumb i")
+  expect(rendererCss).toContain(".vt-sync-scrollbar.top button svg { width: 22px; height: 22px; display: block;")
+  expect(rendererSource).toContain("const useSplitControl = isActive && hasTables")
+  expect(rendererSource).toContain('className="vt-sync-category-split-label">Set</span>')
+  expect(rendererSource).toContain('className="vt-sync-category-split-icon"><ChevronDown')
+  expect(rendererSource).toContain("isSelected ? <ChevronDown")
+  expect(rendererSource).not.toContain("{item.label} Data Set")
+  expect(rendererSource).not.toContain("{candidate.columns.length} columns")
+  expect(rendererCss).toContain(".vt-sync-category-icon.is-split { grid-template-rows: 1fr 1fr; }")
+  expect(rendererCss).toContain(".vt-sync-subset-menu button { width: 100%; min-height: 40px;")
+ })
+
+ it("fills the category rail and keeps an open category menu attached while scrolling", () => {
+  expect(rendererCss).toContain("grid-template-columns: repeat(var(--vt-category-count, 6), minmax(0, 1fr))")
+  expect(rendererCss).toContain("border-radius: 0 0 12px 12px")
+  expect(rendererSource).toContain('window.addEventListener("scroll", update, true)')
+  expect(rendererSource).toContain('window.removeEventListener("scroll", update, true)')
+  expect(rendererSource).toContain("top: bounds.bottom - 3")
+  expect(rendererSource).toContain('"--vt-category-count": VT_SYNC_TOOLBOX_CATEGORIES.length')
+ })
+
+ it("uses each category label color for its shadow", () => {
+  VT_SYNC_TOOLBOX_CATEGORIES.forEach((category) => {
+   const hex = category.colors.label.slice(1)
+   const rgb = [0, 2, 4].map((offset) => Number.parseInt(hex.slice(offset, offset + 2), 16)).join(",")
+   expect(category.colors.shadow).toBe(`rgba(${rgb},.52)`)
+  })
+ })
+
+ it("renders one fixed row rail outside every horizontally scrolling table", () => {
+  expect(rendererSource).toContain('className="vt-sync-row-rail-viewport" ref={rowRailScrollRef}')
+  expect(rendererSource).toContain('className="vt-sync-data-table vt-sync-row-rail-table"')
+  expect(rendererSource).toContain("rowRailScrollRef.current.scrollTop = node.scrollTop")
+  expect(rendererSource).toContain("})), viewportWidth, 0)")
+  expect(rendererSource).not.toContain("const showRowRail")
+  expect(rendererCss).toContain(".vt-sync-row-rail-viewport { position: relative; z-index: 60; flex: 0 0 58px;")
+  expect(rendererCss).toContain("box-shadow: inset -4px 0 0 var(--vt-ink)")
+  expect(rendererCss).not.toContain(".vt-sync-row-number { position: sticky")
+ })
+
+ it("uses category-style toolbar strokes, shadows, and binary effect toggles", () => {
+ expect(rendererCss).toContain(".vt-sync-toolbar-action { --vt-action-rail: #F55EFC; --vt-action-label: #FFDA47;")
+  expect(rendererCss).toContain("border: 3px solid var(--vt-ink); border-radius: 10px;")
+  expect(rendererCss).toContain("filter: drop-shadow(5px 5px 0 var(--vt-action-shadow))")
+  expect(rendererCss).toContain("background: var(--vt-action-label)")
+  expect(rendererCss).toContain("font-size: 19px; line-height: 1.5; font-weight: bolder;")
+  expect(rendererCss).toContain(".vt-sync-toolbar-action svg { width: 22px; height: 22px;")
+  expect(rendererCss).toContain(".vt-sync-binary-toggle { display: grid;")
+  expect(rendererCss).toContain(".vt-sync-binary-toggle button.active { background: var(--vt-binary-color)")
+ })
+
+ it("uses the oracle row states and explicit totals and stats rail labels", () => {
+  expect(rendererCss).toContain("rgba(10,10,10,.17)")
+  expect(rendererCss).toContain("tr.format-short:nth-child(odd)")
+  expect(rendererCss).toContain("tr.format-long:nth-child(even)")
+  expect(rendererCss).toContain("tr.format-live:nth-child(odd)")
+  expect(rendererCss).toContain("tr.is-selected td { background: rgba(54,224,246,.30) !important;")
+  expect(rendererCss).not.toContain("tr.is-selected td { outline: 3px")
+  expect(rendererSource).toContain('className="vt-sync-row-rail-head is-totals">Totals</th>')
+  expect(rendererSource).toContain('className="vt-sync-row-rail-head is-stats">Stats</th>')
+ })
+
+ it("keeps the standard data visuals toolbox collapsed and unmounted by default", () => {
+  expect(visualsSource).toContain("const [isOpen1, setIsOpen1] = useState(false)")
+  expect(visualsSource).toContain("<ToolboxScaffold")
+  expect(visualsSource).toContain("unmountWhenClosed")
+  expect(visualsSource.indexOf("buildVtSyncVisualPropsData")).toBeLessThan(visualsSource.indexOf("const [isOpen1, setIsOpen1]"))
+ })
+
+ it("scopes width state by table and keeps reordering inside a metric group", () => {
+  const videos = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "videos")!
+  const identity = videos.columns.filter((column) => column.group === videos.columns[0].group)
+  const reordered = reorderVtSyncColumnsWithinGroup(identity, identity[0].key, identity[1].key)
+
+  expect(getVtSyncColumnStateKey("videos", "title")).toBe("videos|title")
+  expect(getVtSyncColumnStateKey("playlists", "title")).toBe("playlists|title")
+  expect(reordered.map((column) => column.key).slice(0, 2)).toEqual([identity[1].key, identity[0].key])
+  expect(reorderVtSyncColumnsWithinGroup(videos.columns, videos.columns[0].key, videos.columns.at(-1)!.key)).toBe(videos.columns)
+ })
+
+ it("loads main datasets and opens split menus only for multi-table categories", () => {
+  const initial = { categoryId: "channel", tableId: "playlists", dropdownId: null }
+  const inactive = { categoryId: "not-selected", tableId: "none", dropdownId: null }
+  const traffic = VT_SYNC_TOOLBOX_CATEGORIES.find((category) => category.id === "traffic")!
+  const selectedTraffic = getVtSyncCategoryClickState(initial, traffic)
+  const toggledTraffic = getVtSyncCategoryClickState(selectedTraffic, traffic)
+  const revenue = VT_SYNC_TOOLBOX_CATEGORIES.find((category) => category.id === "revenue")!
+
+  expect(selectedTraffic).toEqual({ categoryId: "traffic", tableId: "traffic", dropdownId: "traffic" })
+  expect(toggledTraffic).toEqual({ categoryId: "traffic", tableId: "traffic", dropdownId: null })
+  expect(getVtSyncCategoryClickState(initial, revenue)).toEqual({ categoryId: "revenue", tableId: "revenue", dropdownId: "revenue" })
+  expect(Object.fromEntries(VT_SYNC_TOOLBOX_CATEGORIES.map((category) => [category.id, getVtSyncCategoryClickState(inactive, category).tableId]))).toEqual({
+   channel: "videos",
+   time: "daily",
+   traffic: "traffic",
+   audience: "demographics",
+   geographic: "geography",
+   revenue: "revenue",
+  })
+ })
+
+ it("uses compact owner-consent labels in category menus", () => {
+  expect(getVtSyncCompactMenuLabel("videos", "Video Catalog Analytics")).toBe("Videos")
+  expect(getVtSyncCompactMenuLabel("daily", "Daily Metrics")).toBe("Daily")
+  expect(getVtSyncCompactMenuLabel("traffic_day", "Traffic Source × Day")).toBe("Traffic × Day")
+ })
+
+ it("keeps presentation aliases separate from registry and export labels", () => {
+  const videos = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "videos")!
+  expect(getVtSyncPresentationLabel(videos.id, videos.label)).toBe("Video Catalog Analytics")
+  expect(getVtSyncPresentationLabel("creator", "Content Type")).toBe("Formats")
+  expect(getVtSyncPresentationLabel("geography", "Overview")).toBe("Countries")
+  expect(videos.label).toBe("Video Catalog Analytics")
+  expect(exportVtSyncTableCsv(videos, []).split("\n")[0]).toBe(videos.columns.map((column) => column.label).join(","))
+ })
+
+ it("round-trips workspace, table, filters, and expanded state through URL parameters", () => {
+  const search = createVtSyncWorkspaceUrlSearch("?unrelated=keep", {
+   workspaceId: "time",
+   viewId: "time-stats",
+   tableId: "traffic_day",
+   filter: "search",
+   columnFilters: { source: "YT_SEARCH" },
+   expandedIds: ["2026-07-29", "2026-07-28"],
+  })
+  const resolved = resolveVtSyncWorkspaceUrlState(`?${search}`)
+
+  expect(search).toContain("unrelated=keep")
+  expect(resolved).toEqual({
+   workspaceId: "time",
+   viewId: "time-stats",
+   tableId: "traffic_day",
+   filter: "search",
+   columnFilters: { source: "YT_SEARCH" },
+   expandedIds: ["2026-07-29", "2026-07-28"],
+  })
+  expect(resolveVtSyncWorkspaceUrlState(
+   "?vtWorkspace=all_data&vtView=all_data&vtTable=traffic_day",
+  )).toMatchObject({
+   workspaceId: "all_data",
+   viewId: "all_data",
+   tableId: "traffic_day",
+  })
+  expect(resolveVtSyncWorkspaceUrlState(
+   "?vtWorkspace=content&vtView=video-catalog&vtTable=search",
+  )).toMatchObject({
+   workspaceId: "traffic",
+   viewId: "traffic-details",
+   tableId: "traffic_detail_search_terms",
+  })
+ })
+
+ it("derives formulas without manufacturing values from missing inputs", () => {
+  const snapshot = normalizeVtSyncSnapshot({
+   videos: [
+    { id: "complete", title: "Complete", metrics: { views: 100, engagedViews: 25, likes: 9, dislikes: 1, subscribersGained: 3, subscribersLost: 1 } },
+    { id: "missing", title: "Missing", metrics: { views: 50, likes: 0, subscribersGained: 0 } },
+   ],
+  })
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "videos")!
+  const rows = buildVtSyncTableViewModel(snapshot, table).rows
+
+  expect(rows[0]).toMatchObject({ engagementRate: 25, likeRatio: 90, netSubscribers: 2, subRatio: 30, subRate: 3 })
+  expect(rows[1].engagementRate).toBeUndefined()
+  expect(rows[1].likeRatio).toBeUndefined()
+  expect(rows[1].netSubscribers).toBeUndefined()
+  expect(rows[1].subRatio).toBe(0)
+  expect(rows[1].subRate).toBe(0)
+  expect(getVisibleVtSyncColumns(table, rows, false, true).some((column) => column.isFormula)).toBe(false)
+ })
+
+ it("shows optional groups only when the snapshot contains meaningful values", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "videos")!
+  const emptyRevenue = buildVtSyncTableViewModel(normalizeVtSyncSnapshot({ videos: [{ id: "zero", title: "Zero", metrics: { views: 0, revenue: 0 } }] }), table).rows
+  const paidRevenue = buildVtSyncTableViewModel(normalizeVtSyncSnapshot({ videos: [{ id: "paid", title: "Paid", metrics: { views: 10, revenue: 1 } }] }), table).rows
+
+ expect(getVisibleVtSyncColumns(table, emptyRevenue, true, true).some((column) => column.group === "Revenue")).toBe(false)
+ expect(getVisibleVtSyncColumns(table, paidRevenue, true, true).some((column) => column.group === "Revenue")).toBe(true)
+ })
+
+ it("keeps video Card Links visible and expanded even before card values sync", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "videos")!
+  const rows = buildVtSyncTableViewModel(normalizeVtSyncSnapshot({ videos: [{ id: "zero-cards", title: "Zero cards", metrics: { views: 25 } }] }), table).rows
+  const cardColumns = table.columns.filter((column) => column.group === "Card Links")
+
+  expect(cardColumns.length).toBeGreaterThan(0)
+  expect(cardColumns.every((column) => column.visibility !== "whenMeaningful")).toBe(true)
+  expect(table.collapsedGroups).not.toContain("Card Links")
+  expect(getVisibleVtSyncColumns(table, rows, true, true).filter((column) => column.group === "Card Links").map((column) => column.key)).toEqual(cardColumns.map((column) => column.key))
+ })
+
+ it("keeps totals anchored when formulas are hidden", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "videos")!
+  const rows = buildVtSyncTableViewModel(normalizeVtSyncSnapshot({ videos: [{ id: "a", metrics: { views: 10 } }, { id: "b", metrics: { views: 5 } }] }), table).rows
+  const views = table.columns.find((column) => column.key === "views")!
+  expect(totalVtSyncColumn(rows, views).primary).toBe("15")
+  expect(getVisibleVtSyncColumns(table, rows, false, true).find((column) => column.key === "views")).toBe(views)
+ })
+
+ it("renders numeric zeroes as dashes without changing raw rows or CSV exports", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "videos")!
+  const views = table.columns.find((column) => column.key === "views")!
+  const duration = table.columns.find((column) => column.key === "duration")!
+  const caption = table.columns.find((column) => column.key === "caption")!
+  const row = { views: 0, duration: "PT0S", caption: "0" }
+
+  expect(formatVtSyncColumnValue(row, views)).toBe("-")
+  expect(formatVtSyncColumnValue(row, duration)).toBe("-")
+  expect(formatVtSyncColumnValue(row, caption)).toBe("No")
+  expect(row.views).toBe(0)
+  expect(exportVtSyncTableCsv(table, [row])).toContain(",0,")
+ })
+
+ it("excludes zeroes from averages and every visual ranking path", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "videos")!
+  const views = table.columns.find((column) => column.key === "views")!
+  const averageViewed = table.columns.find((column) => column.key === "averagePercentageViewed")!
+  const rows = [{ views: 0, averagePercentageViewed: 0 }, { views: 10, averagePercentageViewed: 50 }]
+
+  expect(totalVtSyncColumn(rows, views)).toMatchObject({ primary: "10", secondary: "Avg 10" })
+  expect(totalVtSyncColumn(rows, averageViewed)).toMatchObject({ primary: "50%", secondary: "Mean avg" })
+  expect(totalVtSyncColumn([{ views: 0 }], views)).toMatchObject({ primary: "-", kind: "muted" })
+  expect(getVtSyncColumnSortedValues(rows, views)).toEqual([10])
+  expect(getVtSyncNumericRank(0, [10])).toBe(0)
+  expect(getVtSyncNumericRank(undefined, [10])).toBe(0)
+  expect(getVtSyncNumericRank(10, [10])).toBe(1)
+ })
+
+ it("round-trips AI Studio-shaped JSON and placeholder inventory through one snapshot contract", () => {
+  const imported = normalizeVtSyncSnapshot({
+   videos: [{ id: "video-1", title: "Studio row", metrics: { views: 0, revenue: null } }],
+   dailyMetrics: [{ date: "2026-07-01", views: 4 }, { date: "2026-07-08", views: 6 }],
+   playlists: [{ playlistId: "pl-1", title: "Playlist", videoCount: 2 }],
+   tableExports: { uploads_playlist: [{ videoId: "upload-1" }] },
+  })
+  const roundTrip = normalizeVtSyncSnapshot(toVtSyncRawAppExport(imported))
+  expect(roundTrip.videos).toHaveLength(1)
+  expect(roundTrip.videos[0].metrics?.views).toBe(0)
+  expect(roundTrip.playlistsData[0]).toMatchObject({ playlistId: "pl-1", title: "Playlist" })
+  expect(buildVtSyncTableViewModel(roundTrip, VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "weekly")!).rows).toHaveLength(2)
+
+  const placeholder = normalizeVtSyncSnapshot({ tableExports: { uploads_playlist: [{ videoId: "upload-1" }] } })
+  expect(placeholder.videos[0]).toMatchObject({ id: "upload-1", vtSyncPlaceholder: true })
+ })
+
+ it("imports active-table and YouTube-style CSV headers without manufacturing missing zeroes", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "videos")!
+  const parsed = parseVtSyncCsvText('Video ID,Video Title,Views,Watch Time,Avg. View Dur.,Premium Watch,Description\nabc,"A title",0,925.15,1:32,8:00,"Line one\nLine two"\ndef,"Clock import",,1:30:00,bad,1:02:00,')
+  const rows = mapVtSyncCsvRowsToTable(table, parsed)
+
+  expect(rows[0]).toMatchObject({ videoId: "abc", title: "A title", views: 0, watchTime: 925.15, avgViewDuration: 92, youtubePremiumWatchTime: 8 / 60, descriptionSnippet: "Line one\nLine two" })
+  expect(rows[1]).toMatchObject({ videoId: "def", title: "Clock import", watchTime: 1.5, youtubePremiumWatchTime: 62 / 60 })
+  expect(rows[1]).not.toHaveProperty("views")
+  expect(rows[1]).not.toHaveProperty("avgViewDuration")
+ })
+
+ it("normalizes concatenated Formats CSV files once so share columns total 100%", async () => {
+  const csvFile = (name: string, text: string) => ({ name, text: async () => text }) as File
+  const imported = await importVtSyncCsvFiles([
+   csvFile("creator.csv", "Content Type,Views,Engaged Views,Watch Time\nSHORTS,30,20,12"),
+   csvFile("creator.csv", "Content Type,Views,Engaged Views,Watch Time\nVIDEO_ON_DEMAND,70,80,28"),
+  ])
+
+  expect(imported.creator).toHaveLength(2)
+  expect(imported.creator.map((row) => row.formatViewShare)).toEqual([30, 70])
+  expect(imported.creator.reduce((sum, row) => sum + Number(row.formatViewShare || 0), 0)).toBeCloseTo(100)
+  expect(imported.creator.reduce((sum, row) => sum + Number(row.formatEngagedViewShare || 0), 0)).toBeCloseTo(100)
+  expect(imported.creator.reduce((sum, row) => sum + Number(row.formatWatchTimeShare || 0), 0)).toBeCloseTo(100)
+ })
+
+ it("uses the unpinned viewport edge bands for normal and fast hover scrolling", () => {
+  expect(getVtSyncHoverScrollIntent(0, 1_000)).toEqual({ direction: -1, speed: 2 })
+  expect(getVtSyncHoverScrollIntent(120, 1_000)).toEqual({ direction: -1, speed: 1 })
+  expect(getVtSyncHoverScrollIntent(500, 1_000)).toEqual({ direction: 0, speed: 1 })
+  expect(getVtSyncHoverScrollIntent(880, 1_000)).toEqual({ direction: 1, speed: 1 })
+  expect(getVtSyncHoverScrollIntent(960, 1_000)).toEqual({ direction: 1, speed: 2 })
+ })
+
+ it("formats video metadata like the approved table and builds truthful URL actions", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "videos")!
+  const rows = buildVtSyncTableViewModel(normalizeVtSyncSnapshot({
+   channelName: "Test Channel",
+   videos: [{ id: "abc", title: "Video", publishedAt: "2026-06-16T12:00:00Z", duration: "PT12M30S", definition: "hd", privacyStatus: "public" }],
+  }), table).rows
+  const column = (key: string) => table.columns.find((item) => item.key === key)!
+
+  expect(rows[0].videoUrl).toBe("https://www.youtube.com/watch?v=abc")
+  expect(formatVtSyncColumnValue(rows[0], column("publishedAt"))).toBe("6/16/26")
+  expect(formatVtSyncColumnValue(rows[0], column("publishedDay"))).toMatch(/^[A-Za-z]+$/)
+  expect(formatVtSyncColumnValue(rows[0], column("publishedTime"))).toMatch(/^\d{1,2}:\d{2}(?:\s[AP]M)?$/i)
+  expect(formatVtSyncColumnValue(rows[0], column("duration"))).toBe("12:30")
+  expect(formatVtSyncColumnValue(rows[0], column("definition"))).toBe("1080p")
+  expect(totalVtSyncColumn(rows, column("title"), { channelName: "Test Channel" })).toMatchObject({ primary: "Test Channel", secondary: "Channel title", kind: "context" })
+  expect(totalVtSyncColumn(rows, column("duration"), {})).toMatchObject({ primary: "12:30", secondary: "Avg duration" })
+ })
+
+ it("enriches geography tables while keeping identity codes non-statistical", () => {
+  const snapshot = normalizeVtSyncSnapshot({
+   geography: [{ country: "US", views: 100 }],
+   cities: [{ country: "GB", city: "London", views: 25 }],
+   provinces: [{ province: "US-CA", views: 20 }],
+   dmaRegions: [{ dma: "803", views: 10 }, { dma: "999", views: 1 }],
+  })
+  const view = (tableId: string) => buildVtSyncTableViewModel(
+   snapshot,
+   VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((table) => table.id === tableId)!,
+  )
+
+  expect(view("geography").rows[0]).toMatchObject({ countryCode: "US", countryName: "United States", countryFlag: "us" })
+  expect(view("cities").rows[0]).toMatchObject({ city: "London", countryCode: "GB", countryName: "United Kingdom", countryFlag: "gb" })
+  expect(view("provinces").rows[0]).toMatchObject({ provinceCode: "US-CA", stateName: "California" })
+  expect(view("dma").rows[0]).toMatchObject({ dmaCode: "803", dmaName: "Los Angeles, CA" })
+  expect(view("dma").rows[1]).toMatchObject({ dmaCode: "999", dmaName: "Unmapped DMA" })
+
+  const dmaCode = view("dma").table.columns.find((column) => column.key === "dmaCode")!
+  expect(dmaCode).toMatchObject({ semanticRole: "identity", visualization: "none" })
+  expect(getVtSyncColumnSortedValues(view("dma").rows, dmaCode)).toEqual([])
+  expect(totalVtSyncColumn(view("dma").rows, dmaCode)).toEqual({ primary: "-", kind: "muted" })
+ })
+
+ it("uses the approved geography column sets and removes only the final country Revenue group", () => {
+  const table = (id: string) => VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === id)!
+  const keys = (id: string) => table(id).columns.map((column) => column.key)
+
+  expect(keys("geography").slice(0, 3)).toEqual(["countryFlag", "countryCode", "countryName"])
+  expect(keys("geography")).toEqual(expect.arrayContaining(["revenue", "estimatedAdRevenue", "youtubePremiumRevenue"]))
+  expect(keys("geography")).toEqual(expect.arrayContaining(["cpm", "grossRevenue", "monetizedPlaybacks", "playbackBasedCpm", "adImpressions"]))
+  expect(keys("cities")).toEqual(["countryFlag", "city", "countryName", "views", "engagedViews", "watchTime", "avgDuration", "avgPercentageViewed"])
+  expect(table("cities").columns.slice(0, 3).map((column) => column.preferredWidth)).toEqual([66, 150, 96])
+  expect(keys("provinces")).toEqual([
+   "provinceCode", "stateName", "views", "engagedViews", "watchTime", "avgDuration", "avgPercentageViewed",
+   "subscribersGained", "subscribersLost", "likes", "dislikes", "comments", "shares",
+  ])
+  expect(table("provinces").columns.filter((column) => column.group === "Unavailable by State")).toHaveLength(6)
+  expect(table("provinces").columns.filter((column) => column.group === "Unavailable by State").every((column) =>
+   column.availabilityNote === "Not available by state from the YouTube Analytics API."
+   && column.visualization === "none"
+   && column.totalMode === "none"
+  )).toBe(true)
+  expect(keys("dma")).toEqual(["dmaCode", "dmaName", "views", "engagedViews", "watchTime", "avgDuration", "avgPercentageViewed"])
+  expect(table("provinces")).toMatchObject({ layoutMode: "sparse-full", compactMode: "normal-only" })
+  expect(table("dma")).toMatchObject({ layoutMode: "sparse-full", compactMode: "normal-only" })
+  expect(rendererCss).toContain(".vt-sync-flag-thumbnail")
+  expect(rendererSource).toContain('import "flag-icons/css/flag-icons.min.css"')
+  expect(rendererSource).toContain('className={`fi fi-${text}`}')
+  expect(rendererCss).toContain("aspect-ratio: 16 / 9")
+  expect(rendererCss).toContain("border-radius: 0")
+ })
+
+ it("normalizes external referrer identities without changing their raw API values", () => {
+  expect(getVtSyncApiValuePresentation("ext_web", "term", "https://www.reddit.com/r/videos")).toEqual({ title: "Reddit", apiValue: "https://www.reddit.com/r/videos" })
+  expect(getVtSyncApiValuePresentation("ext_web", "term", "facebook.com/watch")).toEqual({ title: "Facebook", apiValue: "facebook.com/watch" })
+  expect(getVtSyncApiValuePresentation("ext_web", "term", "chatgpt.com")).toEqual({ title: "Chat GPT", apiValue: "chatgpt.com" })
+  expect(getVtSyncApiValuePresentation("ext_web", "term", "com.reddit.frontpage")).toEqual({ title: "Reddit Frontpage", apiValue: "com.reddit.frontpage" })
+  expect(getVtSyncApiValuePresentation("ext_web", "term", "com.google.android.apps.messaging")).toEqual({ title: "Google Msgs", apiValue: "com.google.android.apps.messaging" })
+ })
+
+ it("builds reusable channel, suggested-video, and playlist identities", () => {
+  expect(getVtSyncCompositeIdentityPresentation("suggested", { term: "abc123", title: "A suggested video", thumbnail: "https://img.test/abc.jpg" })).toEqual({
+   title: "A suggested video",
+   secondaryLabel: "Suggested video",
+   rawId: "abc123",
+   thumbnail: "https://img.test/abc.jpg",
+   url: "https://www.youtube.com/watch?v=abc123",
+  })
+  expect(getVtSyncCompositeIdentityPresentation("suggested", { term: "Unknown", title: "Video metadata unavailable" })).toEqual({
+   title: "Video metadata unavailable",
+   secondaryLabel: "Suggested video",
+   rawId: undefined,
+   thumbnail: undefined,
+   url: undefined,
+  })
+  expect(getVtSyncCompositeIdentityPresentation("chan_page", { term: "UC123", title: "Creator", handle: "creator" })).toMatchObject({
+   title: "Creator",
+   secondaryLabel: "@creator",
+   rawId: "UC123",
+  })
+  expect(getVtSyncCompositeIdentityPresentation("playlists", { playlistId: "PL123", title: "History", videoCount: 8 })).toEqual({
+   title: "History",
+   secondaryLabel: "8 videos",
+   rawId: "PL123",
+  })
+  expect(getVtSyncCompositeIdentityPresentation("playlists", { playlistId: "PL456", title: "Incomplete", videoCount: null })).toEqual({
+   title: "Incomplete",
+   secondaryLabel: undefined,
+   rawId: "PL456",
+  })
+ })
+
+ it("applies exact Playlist identity sizing without allowing long values to grow rows", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "playlists")!
+  const playlistId = table.columns.find((column) => column.key === "playlistId")!
+  const title = table.columns.find((column) => column.key === "title")!
+
+  expect(resolveVtSyncColumnWidth({ tableId: table.id, column: playlistId, columnIndex: 0, compact: false, sparklines: true })).toBe(190)
+  expect(resolveVtSyncColumnWidth({ tableId: table.id, column: title, columnIndex: 1, compact: false, sparklines: true })).toBe(325)
+  expect(resolveVtSyncColumnWidth({ tableId: table.id, column: title, columnIndex: 1, compact: false, sparklines: true, override: 275 })).toBe(275)
+  expect(playlistId.textSize).toBe(10)
+  expect(title.textSize).toBe(13)
+  expect(rendererCss).toContain('td[data-column-key="playlistId"] .vt-sync-cell-text.is-table-sized-text')
+  expect(rendererCss).toContain('td[data-column-key="title"] .vt-sync-cell-text.is-table-sized-text')
+ })
+
+ it("calculates playlist shares from the complete normalized dataset", () => {
+  const rows = normalizeVtSyncTableRows("playlists", [
+   { playlistId: "one", views: 25, playlistEstimatedMinutesWatched: 10 },
+   { playlistId: "two", views: 75, playlistEstimatedMinutesWatched: 30 },
+  ])
+  expect(rows.map((row) => row.playlistViewShare)).toEqual([25, 75])
+  expect(rows.map((row) => row.playlistWatchTimeShare)).toEqual([25, 75])
+  expect(rows.reduce((sum, row) => sum + Number(row.playlistViewShare), 0)).toBe(100)
+  expect(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "playlists")?.columns.find((column) => column.key === "playlistSaves")?.label).toBe("Playlist Saves (Net)")
+  expect(rendererSource).toContain("vt-sync-privacy-badge")
+ })
+
+ it("normalizes Formats aliases while preserving unknown raw labels and CSV output", () => {
+  expect(getVtSyncContentTypeLabel("shorts")).toBe("Shorts")
+  expect(getVtSyncContentTypeLabel("videoOnDemand")).toBe("Long-Format")
+  expect(getVtSyncContentTypeLabel("video_on_demand")).toBe("Long-Format")
+  expect(getVtSyncContentTypeLabel("vod")).toBe("Long-Format")
+  expect(getVtSyncContentTypeLabel("long")).toBe("Long-Format")
+  expect(getVtSyncContentTypeLabel("liveStream")).toBe("Live Stream")
+  expect(getVtSyncContentTypeLabel("live_stream")).toBe("Live Stream")
+  expect(getVtSyncContentTypeLabel("live")).toBe("Live Stream")
+  expect(getVtSyncContentTypeLabel("premiere")).toBe("premiere")
+
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "creator")!
+  const rows = buildVtSyncTableViewModel(normalizeVtSyncSnapshot({
+   creatorContentTypes: [
+    { creatorContentType: "videoOnDemand", views: 2, engagedViews: 1, watchTime: 10 },
+    { creatorContentType: "shorts", views: 6, engagedViews: 3, watchTime: 30 },
+   ],
+  }), table).rows
+  expect(rows[0]).toMatchObject({
+   contentTypeCode: "videoOnDemand",
+   term: "Long-Format",
+   formatViewShare: 25,
+   formatEngagedViewShare: 25,
+   formatWatchTimeShare: 25,
+  })
+  expect(rows[1]).toMatchObject({
+   contentTypeCode: "shorts",
+   term: "Shorts",
+   formatViewShare: 75,
+   formatEngagedViewShare: 75,
+   formatWatchTimeShare: 75,
+  })
+  expect(totalVtSyncColumn(rows, table.columns.find((column) => column.key === "formatViewShare")!)).toMatchObject({ primary: "100%" })
+  const exported = exportVtSyncTableCsv(table, rows)
+  expect(exported).toContain("% of Views")
+  expect(exported).toContain("Long-Format")
+  expect(exported).not.toContain("videoOnDemand")
+ })
+
+ it("keeps Formats share metrics missing when their meaningful totals are unavailable", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "creator")!
+  const rows = buildVtSyncTableViewModel(normalizeVtSyncSnapshot({
+   creatorContentTypes: [
+    { creatorContentType: "shorts", views: 0 },
+    { creatorContentType: "videoOnDemand" },
+   ],
+  }), table).rows
+
+  expect(rows.every((row) => row.formatViewShare === undefined)).toBe(true)
+  expect(rows.every((row) => row.formatEngagedViewShare === undefined)).toBe(true)
+  expect(rows.every((row) => row.formatWatchTimeShare === undefined)).toBe(true)
+ })
+})

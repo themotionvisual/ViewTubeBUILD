@@ -1,0 +1,29 @@
+/*
+ * Marquee track used by the DataVisuals-2 neo-brutalist ChartModule footer.
+ * Two identical runs of insight content sit side-by-side inside the same
+ * .vt-marquee-inner element; the animation slides the pair left by 50% so the
+ * loop appears seamless.
+ */
+
+.vt-marquee-inner {
+  display: inline-flex;
+  white-space: nowrap;
+  will-change: transform;
+  animation: vt-marquee-loop 32s linear infinite;
+}
+
+@keyframes vt-marquee-loop {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vt-marquee-inner {
+    animation: none;
+    transform: translateX(0);
+  }
+}

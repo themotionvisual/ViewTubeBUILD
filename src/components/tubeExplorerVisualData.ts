@@ -17,8 +17,11 @@ export interface TubeExplorerVideoPoint {
  dislikes: number
  comments: number
  shares: number
+ /** YouTube Playlist Saves, surfaced by Analytics as videosAddedToPlaylists. */
+ saves: number
  subscribersGained: number
  subscribersLost: number
+ subscribersNet: number
  revenue: number
  rpm: number
  cpm: number
@@ -46,9 +49,11 @@ export interface TubeExplorerKeywordPoint {
 }
 
 export interface TubeExplorerTrafficPoint {
+ datasetKind?: string
  sourceType: string
  sourceDetail: string
  sourceTitle: string
+ sourceHandle?: string
  views: number
  watchHours: number
  engagedViews: number
@@ -177,6 +182,37 @@ const normalizeKey = (value: string): string =>
 const metric = (row: CanonicalVideoRow, key: string): number =>
  resolveMetricNumber(row, key as any).value || 0
 
+const playlistSaves = (row: CanonicalVideoRow): number => {
+ const metricCell = (row.metrics as unknown as Record<string, { value?: unknown } | number | undefined>)
+  .videosAddedToPlaylists
+ if (typeof metricCell === "number") return metricCell
+ if (metricCell && typeof metricCell === "object" && metricCell.value !== null && metricCell.value !== undefined) {
+  return numeric(metricCell.value)
+ }
+
+ // Older imports and visual fixtures used the display-facing Playlist Saves
+ // names before normalization. Keep them readable without changing exports or
+ // the canonical YouTube Analytics metric key.
+ const originalMetrics = row.originalData && typeof row.originalData.metrics === "object"
+  ? row.originalData.metrics as Record<string, unknown>
+  : {}
+ return numeric(pick(
+  {
+   ...(row as unknown as Record<string, unknown>),
+   ...(row.originalData || {}),
+   ...originalMetrics,
+   ...(row.supplementalData || {}),
+  },
+  ["videosAddedToPlaylists", "playlistSaves", "playlistSavesAdded", "Playlist Saves", "saves"],
+ ))
+}
+
+const canonicalMetric = (row: Record<string, any>, key: string): number => {
+ const raw = row.metrics?.[key]
+ if (raw && typeof raw === "object" && "value" in raw) return numeric(raw.value)
+ return numeric(raw)
+}
+
 const normalizePercent = (value: number): number => {
  if (!Number.isFinite(value) || value <= 0) return 0
  return value <= 1 ? value * 100 : value
@@ -230,8 +266,10 @@ const toVideoPoint = (row: CanonicalVideoRow): TubeExplorerVideoPoint => {
   dislikes: metric(row, "dislikes"),
   comments,
   shares,
+  saves: playlistSaves(row),
   subscribersGained: metric(row, "subscribersGained"),
   subscribersLost: metric(row, "subscribersLost"),
+  subscribersNet: metric(row, "subscribersGained") - metric(row, "subscribersLost"),
   revenue,
   rpm: metric(row, "rpm"),
   cpm: metric(row, "cpm"),
@@ -279,8 +317,12 @@ const buildTrafficRows = (csvFiles: CsvFileWithTag[]): TubeExplorerTrafficPoint[
    const sourceTitle = String(pick(row, ["Source title", "Title", "Video title", "Traffic source", "Source"]) || sourceDetail || sourceType)
    const views = numeric(pick(row, ["Views", "views"]))
    const watchHours = numeric(pick(row, ["Watch time (hours)", "Watch Hrs", "watchHours", "Watch time"]));
-   const key = `${sourceType}::${sourceDetail || sourceTitle}`
+   const datasetKind = file.detectedCategory === "traffic_overview"
+    ? "traffic_summary"
+    : "traffic_detail"
+   const key = `${datasetKind}::${datasetKind === "traffic_summary" ? sourceTitle : sourceType + "::" + (sourceDetail || sourceTitle)}`
    mergeTraffic(map, key, {
+    datasetKind,
     sourceType,
     sourceDetail,
     sourceTitle,
@@ -415,10 +457,82 @@ const buildMonthly = (videos: TubeExplorerVideoPoint[]): TubeExplorerMonthlyPoin
 export const buildTubeExplorerVisualData = (
  rows: CanonicalVideoRow[],
  csvFiles: CsvFileWithTag[] = [],
+ trafficRows: any[] = [],
+ geographyRows: any[] = []
 ): TubeExplorerVisualDataset => {
  const videos = rows.map(toVideoPoint)
+ const trafficMap = new Map<string, TubeExplorerTrafficPoint>()
  const traffic = buildTrafficRows(csvFiles)
+ for (const r of traffic) {
+   const datasetKind = r.datasetKind || "legacy"
+   const key = `${datasetKind}::${datasetKind === "traffic_summary" ? r.sourceTitle : r.sourceType + "::" + (r.sourceDetail || r.sourceTitle)}`
+   trafficMap.set(key, r)
+ }
+ for (const r of trafficRows) {
+   const st = String(r.trafficSourceType || "Unknown")
+   const sd = String(r.trafficSourceDetail || "")
+   const datasetKind = String(r.datasetKind || "legacy")
+   const sourceTitle = String(r.sourceTitle || r.sourceLabel || sd || st)
+   const sourceHandle = String(r.resolvedEntityHandle || "")
+   const key = `${datasetKind}::${datasetKind === "traffic_summary" ? sourceTitle : st + "::" + (sd || sourceTitle)}`
+   const existing = trafficMap.get(key)
+   if (existing) {
+    // A manual CSV is the user-selected replacement for the corresponding
+    // dataset. Do not add an older/API copy on top of it.
+    if (existing.sourceOrigin === "csv") continue
+    existing.views += canonicalMetric(r, "views")
+     existing.watchHours += canonicalMetric(r, "watchHours")
+     existing.engagedViews += canonicalMetric(r, "engagedViews")
+     existing.impressions += canonicalMetric(r, "impressions")
+     existing.avp = Math.max(existing.avp, normalizePercent(canonicalMetric(r, "averagePercentageViewed")))
+     existing.ctr = Math.max(existing.ctr, normalizePercent(canonicalMetric(r, "ctr")))
+   } else {
+     trafficMap.set(key, {
+       datasetKind,
+       sourceType: st,
+       sourceDetail: sd,
+       sourceTitle,
+       sourceHandle,
+       views: canonicalMetric(r, "views"),
+       watchHours: canonicalMetric(r, "watchHours"),
+       engagedViews: canonicalMetric(r, "engagedViews"),
+       avp: normalizePercent(canonicalMetric(r, "averagePercentageViewed")),
+       impressions: canonicalMetric(r, "impressions"),
+       ctr: normalizePercent(canonicalMetric(r, "ctr")),
+       rowCount: 1, sourceOrigin: "cache"
+     })
+   }
+ }
+ const finalTraffic = [...trafficMap.values()].sort((a,b) => b.views - a.views)
+
+ const geoMap = new Map<string, TubeExplorerGeoPoint>()
  const geography = buildGeoRows(csvFiles)
+ for (const r of geography) {
+   geoMap.set(r.label, r)
+ }
+ for (const r of geographyRows) {
+   const label = String(r.geographyLabel || r.city || r.province || r.country || r.geography || "Unknown")
+   const existing = geoMap.get(label)
+   if (existing) {
+     existing.views += canonicalMetric(r, "views")
+     existing.watchHours += canonicalMetric(r, "watchHours")
+     existing.engagedViews += canonicalMetric(r, "engagedViews")
+     existing.subscribersGained += canonicalMetric(r, "subscribersGained")
+     existing.revenue += canonicalMetric(r, "revenue")
+   } else {
+     geoMap.set(label, {
+       label,
+       regionType: r.geographyType === "city" || r.city ? "city" : r.geographyType === "province" || r.geographyType === "dma" || r.province ? "state" : "country",
+       views: canonicalMetric(r, "views"),
+       watchHours: canonicalMetric(r, "watchHours"),
+       engagedViews: canonicalMetric(r, "engagedViews"),
+       subscribersGained: canonicalMetric(r, "subscribersGained"),
+       revenue: canonicalMetric(r, "revenue"),
+       rowCount: 1, sourceOrigin: "cache"
+     })
+   }
+ }
+ const finalGeography = [...geoMap.values()].sort((a,b) => b.views - a.views)
  const keywords = buildKeywords(videos, csvFiles)
  const monthly = buildMonthly(videos)
  const totals = videos.reduce(
@@ -453,14 +567,14 @@ export const buildTubeExplorerVisualData = (
   shorts: videos.filter((video) => video.format === "shorts"),
   longform: videos.filter((video) => video.format === "long"),
   keywords,
-  traffic,
-  geography,
+  traffic: finalTraffic,
+  geography: finalGeography,
   monthly,
   totals,
   coverage: {
    hasVideos: videos.length > 0,
-   hasTraffic: traffic.length > 0,
-   hasGeography: geography.length > 0,
+   hasTraffic: finalTraffic.length > 0,
+   hasGeography: finalGeography.length > 0,
    hasKeywords: keywords.length > 0,
    csvTrafficFiles: csvFiles.filter((file) => file.detectedCategory && TRAFFIC_CATEGORIES.has(file.detectedCategory)).length,
    csvGeoFiles: csvFiles.filter((file) => file.detectedCategory && GEO_CATEGORIES.has(file.detectedCategory)).length,

@@ -193,7 +193,7 @@ export const EndScreenTool: React.FC = () => {
                 setGeneratedImage(item.url)
                 setPrompt(item.prompt)
               }}
-              className="flex-shrink-0 w-44 h-28 border-[4px] border-black rounded-[20px] cursor-pointer hover:translate-y-[-4px] transition-all relative group bg-white overflow-hidden shadow-[6px_6px_0px_0px_black]">
+              className="flex-shrink-0 w-44 h-28 border-[2px] border-black rounded-[20px] cursor-pointer hover:translate-y-[-4px] transition-all relative group bg-white overflow-hidden shadow-[6px_6px_0px_0px_black]">
               <img
                 src={item.url}
                 className="w-full h-full object-cover"
@@ -211,7 +211,6 @@ export const EndScreenTool: React.FC = () => {
             collapsible
             title="Concept & Layout"
             icon={<CustomIcon name="!!!IDEA" size={20} />}
-            paletteIndex={9}
             isOpenInitial={true}>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -252,8 +251,7 @@ export const EndScreenTool: React.FC = () => {
           <SubToolbox
             collapsible
             title="Styles"
-            icon={<CustomIcon name="!!!COLLECTION" size={20} />}
-            paletteIndex={1}>
+            icon={<CustomIcon name="!!!COLLECTION" size={20} />}>
             <div className="grid grid-cols-3 gap-2">
               {END_SCREEN_STYLES.map((style) => (
                 <button
@@ -269,20 +267,19 @@ export const EndScreenTool: React.FC = () => {
           <SubToolbox
             collapsible
             title="Text & Copy"
-            icon={<CustomIcon name="!!!TEXT" size={20} />}
-            paletteIndex={0}>
+            icon={<CustomIcon name="!!!TEXT" size={20} />}>
             <div className="space-y-4">
               <input
                 value={largeText}
                 onChange={(e) => setLargeText(e.target.value)}
                 placeholder="TITLE (e.g. WATCH NEXT)"
-                className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase text-lg focus:bg-white focus:border-[#00CCFF] outline-none transition-all"
+                className="vt-input-standard w-full text-lg"
               />
               <input
                 value={smallText}
                 onChange={(e) => setSmallText(e.target.value)}
                 placeholder="SUBTITLE (e.g. Subscribe for more)"
-                className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase text-lg focus:bg-white focus:border-[#00CCFF] outline-none transition-all"
+                className="vt-input-standard w-full text-lg"
               />
             </div>
           </SubToolbox>
@@ -290,8 +287,7 @@ export const EndScreenTool: React.FC = () => {
           <SubToolbox
             collapsible
             title="Palette"
-            icon={<CustomIcon name="paint-bucket" size={20} />}
-            paletteIndex={4}>
+            icon={<CustomIcon name="paint-bucket" size={20} />}>
             <div className="flex justify-between items-start gap-3 py-2">
               {palette.map((c, i) => (
                 <div key={i} className="flex flex-col items-center gap-2 flex-1">
@@ -330,8 +326,7 @@ export const EndScreenTool: React.FC = () => {
           <SubToolbox
             collapsible
             title="Images"
-            icon={<CustomIcon name="image" size={20} />}
-            paletteIndex={5}>
+            icon={<CustomIcon name="image" size={20} />}>
             <div className="space-y-4">
               <StandardUploadBox
                 label="DROP FILES OR CLICK TO UPLOAD\nUpload Reference Images"
@@ -379,16 +374,16 @@ export const EndScreenTool: React.FC = () => {
 
         {/* Column 2: Canvas */}
         <div className="flex flex-col h-full gap-6 min-h-0">
-          <div className="flex-1 min-h-0 w-full border-[4px] border-black bg-[#f1f5f9] rounded-[48px] shadow-[12px_12px_0px_0px_black] relative flex items-center justify-center p-8 overflow-hidden transition-all duration-700">
+          <div className="flex-1 min-h-0 w-full border-[2px] border-black bg-[#f1f5f9] rounded-[48px] shadow-[12px_12px_0px_0px_black] relative flex items-center justify-center p-8 overflow-hidden transition-all duration-700">
             {generatedImage ? (
               <img
                 src={generatedImage}
                 alt="Gen"
-                className="max-w-full max-h-full object-contain border-[4px] border-black rounded-3xl shadow-[8px_8px_0px_0px_black]"
+                className="max-w-full max-h-full object-contain border-[2px] border-black rounded-3xl shadow-[8px_8px_0px_0px_black]"
               />
             ) : (
-              <div className="text-center p-12 bg-white border-[4px] border-black rounded-[48px] shadow-[8px_8px_0px_0px_black] w-full max-w-sm transform hover:scale-[1.02] transition-transform duration-500">
-                <div className="w-20 h-20 bg-[#FFB158] border-[4px] border-black rounded-full mx-auto mb-8 flex items-center justify-center shadow-[6px_6px_0px_0px_black] animate-pulse">
+              <div className="text-center p-12 bg-white border-[2px] border-black rounded-[48px] shadow-[8px_8px_0px_0px_black] w-full max-w-sm transform hover:scale-[1.02] transition-transform duration-500">
+                <div className="w-20 h-20 bg-[#FFB158] border-[2px] border-black rounded-full mx-auto mb-8 flex items-center justify-center shadow-[6px_6px_0px_0px_black] animate-pulse">
                   <CustomIcon name="!!!POST-VIDEO" size={32} />
                 </div>
                 <h3 className="text-4xl font-[1000] uppercase tracking-tighter text-black leading-none mb-4 italic">
@@ -404,7 +399,7 @@ export const EndScreenTool: React.FC = () => {
           {!hasGeminiKey() ? (
             <button
               onClick={() => (window.location.href = "/settings")}
-              className="w-full h-14 bg-black border-[4px] border-black rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-[1.01] active:scale-[0.98] shadow-[6px_6px_0px_0px_#FFDD00] hover:shadow-[6px_6px_0px_0px_white] translate-y-0 hover:translate-y-1 hover:translate-x-1">
+              className="w-full h-14 bg-black border-[2px] border-black rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-[1.01] active:scale-[0.98] shadow-[6px_6px_0px_0px_#FFDD00] hover:shadow-[6px_6px_0px_0px_white] translate-y-0 hover:translate-y-1 hover:translate-x-1">
               <CustomIcon name="zap" size={24} className="text-[#FFDD00]" />
               <span className="text-[20px] sm:text-[24px] font-[1000] uppercase tracking-tighter text-[#FFDD00] leading-none mt-[-2px]">
                 MISSING API KEY: SETTINGS
@@ -414,7 +409,7 @@ export const EndScreenTool: React.FC = () => {
             <button
               onClick={handleGenerate}
               disabled={genLoading || !prompt}
-              className="w-full h-14 bg-[#f3f4f6] border-[4px] border-black rounded-2xl overflow-hidden flex items-center group transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed shadow-[6px_6px_0px_0px_black] hover:shadow-none translate-y-0 hover:translate-y-1 hover:translate-x-1">
+              className="w-full h-14 bg-[#f3f4f6] border-[2px] border-black rounded-2xl overflow-hidden flex items-center group transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed shadow-[6px_6px_0px_0px_black] hover:shadow-none translate-y-0 hover:translate-y-1 hover:translate-x-1">
               <div className="bg-gray-200 h-full w-14 flex items-center justify-center border-r-[4px] border-black flex-shrink-0 group-hover:bg-[#FFB158] transition-colors">
                 <CustomIcon
                   name="zap"

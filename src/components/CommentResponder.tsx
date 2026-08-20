@@ -1,10 +1,11 @@
 import React, { useState } from "react"
-import { MessageCircle, Sparkles, Loader2, Copy, Check } from "lucide-react"
+import { MessageCircle, Sparkles, Loader2, ExternalLink, ThumbsUp } from "lucide-react"
 import { PostActionReflection } from "./PostActionReflection"
 import { generateCommentResponses } from "../services/gemini"
-import { youtubeApiClient } from "../services/youtubeService"
+import { fetchAllCommentThreads } from "../services/youtubeService"
 import Markdown from "react-markdown"
 import { SubToolbox } from "./Toolbox"
+import { buildYouTubeCommentUrl } from "../services/youtube/commentHandoff"
 
 export const CommentResponder: React.FC = () => {
  const [comments, setComments] = useState("")
@@ -34,8 +35,7 @@ export const CommentResponder: React.FC = () => {
  const handleFetchComments = async () => {
   setFetching(true)
   try {
-   const response = await youtubeApiClient.fetchCommentThreads({ allThreads: true })
-   setFetchedThreads(response.items || [])
+   setFetchedThreads(await fetchAllCommentThreads(100))
   } catch (e) {
    console.error("Failed to fetch comments:", e)
   } finally {
@@ -77,19 +77,52 @@ export const CommentResponder: React.FC = () => {
        </div>
 
        {fetchedThreads.length > 0 && (
-        <div className="max-h-48 overflow-y-auto border-[4px] border-black rounded-xl p-2 space-y-2 bg-gray-50 custom-scrollbar">
+        <div className="max-h-48 overflow-y-auto border-[2px] border-black rounded-xl p-2 space-y-2 bg-gray-50 custom-scrollbar">
          {fetchedThreads.map((thread) => {
-          const text = thread.snippet.topLevelComment.snippet.textDisplay
-          const author = thread.snippet.topLevelComment.snippet.authorDisplayName
+          const topLevelComment = thread.snippet?.topLevelComment
+          const text = topLevelComment?.snippet?.textDisplay || ""
+          const author = topLevelComment?.snippet?.authorDisplayName || "Unknown viewer"
+          const videoId = thread.snippet?.videoId
+          const commentUrl = buildYouTubeCommentUrl(videoId, topLevelComment?.id || thread.id)
+          const replies = thread.replies?.comments || []
           return (
-           <button
-            key={thread.id}
-            onClick={() => selectComment(text)}
-            className="w-full text-left p-2 hover:bg-[#FF3399]/10 rounded-lg transition-colors border-2 border-transparent hover:border-black/10"
-           >
-            <div className="text-[9px] font-black uppercase opacity-50">{author}</div>
-            <div className="text-xs font-bold line-clamp-2">{text}</div>
-           </button>
+           <div key={thread.id} className="p-2 rounded-lg border-2 border-transparent hover:border-black/10">
+            <div className="flex items-start gap-2">
+             <button
+              onClick={() => selectComment(text)}
+              className="flex-1 min-w-0 text-left hover:bg-[#FF3399]/10 rounded-lg transition-colors"
+             >
+              <div className="text-[9px] font-black uppercase opacity-50">{author}</div>
+              <div className="text-xs font-bold line-clamp-2">{text}</div>
+             </button>
+             {commentUrl && (
+              <a
+               href={commentUrl}
+               target="_blank"
+               rel="noreferrer"
+               title="Open this comment in YouTube to like it"
+               className="shrink-0 border-2 border-black bg-[#FFB158] p-1 text-black hover:bg-[#FF3399]"
+              >
+               <ThumbsUp size={13} aria-hidden="true" />
+               <span className="ml-1 text-[8px] font-black uppercase">Like on YouTube</span>
+              </a>
+             )}
+            </div>
+            {replies.length > 0 && (
+             <div className="mt-2 ml-2 space-y-1 border-l-2 border-black/20 pl-2">
+              <div className="text-[8px] font-black uppercase opacity-50">Previous replies</div>
+              {replies.map((reply: any) => {
+               const replyUrl = buildYouTubeCommentUrl(videoId, reply.id)
+               return (
+                <div key={reply.id || reply.snippet?.publishedAt} className="flex items-start gap-2 text-[10px] font-bold">
+                 <span className="flex-1 min-w-0 line-clamp-2">{reply.snippet?.textDisplay || ""}</span>
+                 {replyUrl && <a href={replyUrl} target="_blank" rel="noreferrer" title="Open this reply in YouTube to like it" className="shrink-0 text-[8px] font-black uppercase text-black/60 hover:text-[#FF3399]"><ExternalLink size={12} aria-hidden="true" className="inline mr-1" />Like on YouTube</a>}
+                </div>
+               )
+              })}
+             </div>
+            )}
+           </div>
           )
          })}
         </div>
@@ -105,7 +138,7 @@ export const CommentResponder: React.FC = () => {
      <button
       onClick={handleGenerate}
       disabled={loading || !comments}
-      className="w-full mt-6 bg-[#FFB158] text-black border-[4px] border-black p-4 font-black uppercase text-xl rounded-xl shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-3">
+      className="w-full mt-6 bg-[#FFB158] text-black border-[2px] border-black p-4 font-black uppercase text-xl rounded-xl shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-3">
       {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
       Generate Replies
      </button>
@@ -128,7 +161,7 @@ export const CommentResponder: React.FC = () => {
       </div>
      </SubToolbox>
      ) : (
-     <div className="h-full min-h-[400px] flex flex-col items-center justify-center border-[4px] border-dashed border-black/20 rounded-[32px] bg-gray-50 p-8 text-center">
+     <div className="h-full min-h-[400px] flex flex-col items-center justify-center border-[2px] border-dashed border-black/20 rounded-[32px] bg-gray-50 p-8 text-center">
       <MessageCircle size={80} className="mb-6 text-black/20" />
       <h3 className="text-3xl font-[1000] text-black/40 uppercase tracking-tighter mb-2">
        Awaiting Comments

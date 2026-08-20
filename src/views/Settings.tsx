@@ -20,7 +20,7 @@ import {
 } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { useBrain } from "../context/useBrain"
-import { unifiedAuth } from "../services/authSession"
+import { unifiedAuth } from "../services/auth/authSession"
 import { getVaultSnapshot, setVaultSnapshot } from "../services/keyVault"
 import { SubToolbox } from "../components/Toolbox"
 import { resolvePublicChannel } from "../services/publicHandleMode"

@@ -4,7 +4,7 @@
  * This completes the 4th pillar of the ViewTube analytics ecosystem.
  */
 
-import { getAccessToken, logout, isAuthenticated } from "./authSession"
+import { getAccessToken, logout, isAuthenticated } from "./auth/authSession"
 
 const GA4_BASE_URL = "https://analyticsdata.googleapis.com/v1beta"
 const GA4_ADMIN_URL = "https://analyticsadmin.googleapis.com/v1beta"
