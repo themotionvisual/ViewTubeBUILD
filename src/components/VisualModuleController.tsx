@@ -485,7 +485,7 @@ const MetricMultiSelectRow: React.FC<{ row: ControllerMetricMultiSelectRow; isLa
         ref={triggerRef}
         id={triggerId}
         type="button"
-        className={`group flex h-full w-full cursor-pointer items-stretch border-0 bg-transparent py-0 ${row.displayMode === "timeline" ? "gap-0 px-0" : "gap-1 px-2"}`}
+        className={`group flex h-full w-full cursor-pointer border-0 bg-transparent py-0 ${row.displayMode === "timeline" ? "items-stretch gap-0 px-0" : "items-center gap-1 px-2"}`}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={isOpen ? menuId : undefined}

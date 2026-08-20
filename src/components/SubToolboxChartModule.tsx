@@ -258,11 +258,11 @@ export const SubToolboxChartModule: React.FC<
           >
             <span className="[&_svg]:h-8 [&_svg]:w-8">{resolvedHeaderIcon}</span>
           </div>
-          <div className="min-w-0 flex-1 pl-3 pr-2 py-2 flex flex-col justify-center">
+          <div className="min-w-0 flex-1 pl-3 pr-2 py-2 flex flex-col justify-center text-black">
             <div className={`max-w-full font-[1000] uppercase tracking-[0em] ${header.titleClassName ?? "text-[clamp(20px,5vw,42px)] leading-[0.88]"}`}>
               {header.title}
             </div>
-            <div className="max-w-full text-[clamp(10px,2.2vw,14px)] font-black uppercase tracking-[0.069em] opacity-80 truncate">
+            <div className="max-w-full text-[clamp(10px,2.2vw,14px)] font-black uppercase tracking-[0.069em] text-black/80 truncate">
               {resolvedSubtitle}
             </div>
           </div>

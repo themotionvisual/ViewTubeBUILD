@@ -8,6 +8,7 @@ export const VT_SYNC_HALF_WIDTH_VISUAL_GRID_IDS = [
  "subscribers-gained",
  "watch-time-distribution",
  "revenue-distribution",
+ "tube-explorer-shorts-vs-longs",
 ] as const
 
 /**

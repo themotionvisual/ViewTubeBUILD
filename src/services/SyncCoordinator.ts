@@ -35,7 +35,7 @@ import { syncTrafficAnalytics } from "./youtube/trafficAnalyticsSync"
 import { SyncMachine } from "./SyncMachine";
 import { googleSearchConsoleService } from "./googleSearchConsoleService"
 import { ga4Service, type GA4Property } from "./ga4Service"
-import { upsertLedgerEntry, commitToLedger, type LedgerEntry } from "./analytics/DataStore"
+import { upsertLedgerEntry, type LedgerEntry } from "./analytics/DataStore"
 import { parseDurationSeconds } from "./dataUtils"
 import { ytApiQueue } from "../utils/RequestQueue"
 import {
@@ -472,7 +472,7 @@ export class SyncCoordinator {
    report: SegmentAnalyticsReport | null | undefined,
   ) => {
    if (!report || !Array.isArray(report.rows)) return
-   commitToLedger({
+   upsertLedgerEntry({
     source: "youtube_analytics_v2",
     context,
     dimensions,
