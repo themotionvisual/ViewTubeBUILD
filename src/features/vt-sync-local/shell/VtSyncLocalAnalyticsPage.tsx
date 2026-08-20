@@ -626,29 +626,43 @@ const refreshManualImports = useCallback(async (payload?: {
  }
 
  // No payload means we're doing normal persisted-import recovery.
- // Don't erase active in-memory CSV data just because there is no channel yet.
- if (!channelId) return
+ // We NO LONGER bail out when channelId is null — mobile boot restores
+ // IndexedDB before account/channel hydration finishes and a null channelId
+ // must not keep already-persisted CSV data invisible.
 
  try {
   const next = await loadVtSyncManualImports(channelId)
 
-  setManualImports((current) => ({
-   channelId,
-   value: {
-    rowsByTableId: {
-     ...(current.channelId === channelId
-      ? current.value.rowsByTableId
-      : {}),
-     ...next.rowsByTableId,
+  setManualImports((current) => {
+   const nextHasRows = Object.values(next.rowsByTableId)
+    .some((rows) => Array.isArray(rows) && rows.length > 0)
+   const currentHasRows = Object.values(current.value.rowsByTableId)
+    .some((rows) => Array.isArray(rows) && rows.length > 0)
+
+   // Never let an empty async hydration result erase known-good CSV rows.
+   // This is the race that makes mobile visuals appear, disappear, then
+   // sometimes reappear while account/channel state settles.
+   if (!nextHasRows && currentHasRows) return current
+
+   const canMergeCurrent =
+    current.channelId === channelId ||
+    current.channelId == null ||
+    channelId == null
+
+   return {
+    channelId,
+    value: {
+     rowsByTableId: {
+      ...(canMergeCurrent ? current.value.rowsByTableId : {}),
+      ...next.rowsByTableId,
+     },
+     capturedAtByTableId: {
+      ...(canMergeCurrent ? current.value.capturedAtByTableId : {}),
+      ...next.capturedAtByTableId,
+     },
     },
-    capturedAtByTableId: {
-     ...(current.channelId === channelId
-      ? current.value.capturedAtByTableId
-      : {}),
-     ...next.capturedAtByTableId,
-    },
-   },
-  }))
+   }
+  })
  } catch {
   // IndexedDB may be unavailable on mobile/private browsing.
   // Keep the active in-memory CSV instead of clearing it.
@@ -699,9 +713,16 @@ const refreshManualImports = useCallback(async (payload?: {
   setPrivacyFilters(readVtSyncPrivacyFilters())
  }, [])
 
- const activeManualImports = manualImports.channelId === snapshot.channelId
-  ? manualImports.value
-  : emptyManualImports
+ // Invariant: account/auth/channel hydration must never remove locally imported
+ // CSV data. Once the real channelId arrives, refreshManualImports re-reads the
+ // persisted records and upgrades the temporary unscoped state without an
+ // empty intermediate render.
+ const activeManualImports =
+  manualImports.channelId === snapshot.channelId ||
+  manualImports.channelId == null ||
+  snapshot.channelId == null
+   ? manualImports.value
+   : emptyManualImports
  const activePersistedApiRows = persistedApiRows.channelId === snapshot.channelId
   ? persistedApiRows.value
   : emptyPersistedApiRows

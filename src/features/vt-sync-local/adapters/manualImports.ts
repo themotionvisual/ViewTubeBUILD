@@ -336,9 +336,15 @@ export const toVtSyncManualImportState = (
 }
 
 export const loadVtSyncManualImports = async (channelId?: string | null): Promise<VtSyncManualImportState> => {
- if (!channelId) return { rowsByTableId: {}, capturedAtByTableId: {} }
  try {
-  return toVtSyncManualImportState(await listVtSyncDatasetTableRows(), channelId)
+  const records = await listVtSyncDatasetTableRows()
+
+  // Mobile boot can restore IndexedDB before account/channel hydration finishes.
+  // A temporary null channelId must not make already-persisted local CSV data
+  // disappear. When a channel is known, keep the normal channel filter. While
+  // it is unknown, recover the local manual-import records and reconcile them
+  // once channel identity arrives.
+  return toVtSyncManualImportState(records, channelId || undefined)
  } catch {
   return { rowsByTableId: {}, capturedAtByTableId: {} }
  }
