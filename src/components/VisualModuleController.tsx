@@ -69,6 +69,11 @@ export interface ControllerMetricMultiSelectRow extends ControllerRowBase {
   maxLabels?: number
   minimumSelected?: number
   maximumSelected?: number
+  /**
+   * "timeline" matches the Multi-Metric Timeline controller:
+   * selected metrics are full-height colored cells, not little badge pills.
+   */
+  displayMode?: "badges" | "timeline"
 }
 
 export interface ControllerToggleRow extends ControllerRowBase {
@@ -480,14 +485,38 @@ const MetricMultiSelectRow: React.FC<{ row: ControllerMetricMultiSelectRow; isLa
         ref={triggerRef}
         id={triggerId}
         type="button"
-        className="group flex h-full w-full cursor-pointer items-center gap-1 border-0 bg-transparent px-2 py-0"
+        className={`group flex h-full w-full cursor-pointer border-0 bg-transparent py-0 ${row.displayMode === "timeline" ? "items-stretch gap-0 px-0" : "items-center gap-1 px-2"}`}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={isOpen ? menuId : undefined}
         aria-label="Choose metrics"
         onClick={() => setIsOpen((open) => !open)}
       >
-        {selectedOptions.length === 0 ? (
+        {row.displayMode === "timeline" ? (
+          <>
+            <span className="grid min-w-0 flex-1 grid-flow-col auto-cols-fr overflow-hidden">
+              {selectedOptions.length === 0 ? (
+                <span className={`grid place-items-center bg-white font-[999] uppercase tracking-[-0.05em] ${controllerTextSizeClass}`}>
+                  SELECT
+                </span>
+              ) : (
+                selectedOptions.map((option, index) => (
+                  <span
+                    key={option.value}
+                    className={`grid min-w-0 place-items-center overflow-hidden px-1 text-[10px] font-[999] uppercase leading-none tracking-[0.02em] text-black ${index > 0 ? "border-l-[4px] border-black" : ""}`}
+                    style={{ background: option.color }}
+                    title={option.label}
+                  >
+                    <span className="max-w-full truncate">{option.label}</span>
+                  </span>
+                ))
+              )}
+            </span>
+            <span className={`inline-flex w-[28px] shrink-0 items-center justify-center border-l-[4px] border-black bg-white font-[999] leading-none rotate-90 transition-transform duration-100 group-hover:scale-125 ${controllerTextSizeClass}`}>
+              ►
+            </span>
+          </>
+        ) : selectedOptions.length === 0 ? (
           <span className={`font-[999] uppercase tracking-[-0.05em] ${controllerTextSizeClass}`}>SELECT</span>
         ) : showLabels ? (
           selectedOptions.map((option) => (
@@ -511,7 +540,9 @@ const MetricMultiSelectRow: React.FC<{ row: ControllerMetricMultiSelectRow; isLa
             ))}
           </span>
         )}
-        <span className={`ml-auto w-[24px] shrink-0 inline-flex items-center justify-center font-[999] leading-none rotate-90 transition-transform duration-100 group-hover:scale-125 ${controllerTextSizeClass}`}>►</span>
+        {row.displayMode !== "timeline" ? (
+          <span className={`ml-auto w-[24px] shrink-0 inline-flex items-center justify-center font-[999] leading-none rotate-90 transition-transform duration-100 group-hover:scale-125 ${controllerTextSizeClass}`}>►</span>
+        ) : null}
       </button>
       {isOpen && portalStyle && typeof document !== "undefined" ? createPortal(
         <div

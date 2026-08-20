@@ -4337,9 +4337,25 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
           onToggleValue: toggleMetric,
           minimumSelected: 1,
           maximumSelected: 5,
+          // Combined: keep the animation branch's `maxLabels: 2` cap with
+          // codex/unified-account-auth-billing's `bgTone` + time-range picker.
           maxLabels: 2,
           displayMode: "timeline",
+          bgTone: "#FFFFFF",
           fgTone: "#000000",
+        },
+        {
+          type: "text",
+          value: TIME_RANGE_OPTIONS.find((o) => o.value === timeRange)?.label || timeRange,
+          onPrev: () => {
+            const idx = TIME_RANGE_OPTIONS.findIndex((o) => o.value === timeRange)
+            setTimeRange(TIME_RANGE_OPTIONS[(idx - 1 + TIME_RANGE_OPTIONS.length) % TIME_RANGE_OPTIONS.length].value)
+          },
+          onNext: () => {
+            const idx = TIME_RANGE_OPTIONS.findIndex((o) => o.value === timeRange)
+            setTimeRange(TIME_RANGE_OPTIONS[(idx + 1) % TIME_RANGE_OPTIONS.length].value)
+          },
+          bgTone: "#FFEA00",
         },
         {
           type: "custom",
