@@ -117,15 +117,19 @@ export const loginWithImplicitPopup = async (): Promise<void> => {
     const redirectUri = `${window.location.origin}`;
     const state = generateRandomString(32);
 
+    // Canonical ViewTube OAuth scope set — must match Google Cloud Console and the
+    // consent screen shown during verification. Do not add broader scopes (e.g. the
+    // catch-all `youtube` scope) without an implemented, user-facing feature that
+    // requires them; Google's OAuth verification policy requires narrowest-fit scopes.
     const scopes = [
-      'https://www.googleapis.com/auth/youtube',
-      'https://www.googleapis.com/auth/youtube.readonly',
-      'https://www.googleapis.com/auth/youtube.force-ssl',
-      'https://www.googleapis.com/auth/yt-analytics.readonly',
-      'https://www.googleapis.com/auth/yt-analytics-monetary.readonly',
       'openid',
       'profile',
       'email',
+      'https://www.googleapis.com/auth/youtube.readonly',        // channel/video metadata
+      'https://www.googleapis.com/auth/youtube.force-ssl',       // Comment Responder (comments.insert)
+      'https://www.googleapis.com/auth/youtube.upload',          // Upload Manager (videos.insert)
+      'https://www.googleapis.com/auth/yt-analytics.readonly',   // analytics dashboards
+      'https://www.googleapis.com/auth/yt-analytics-monetary.readonly', // revenue analytics
     ].join(' ');
 
     const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
