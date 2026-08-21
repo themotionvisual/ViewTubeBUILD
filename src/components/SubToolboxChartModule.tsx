@@ -104,6 +104,13 @@ export interface SubToolboxChartModuleProps {
     height?: AnalyticsVisualContextBarHeight
     /** Allows dense two-line labels without clipping the subtitle rail. */
     minHeight?: number
+    /**
+     * Opts every stat card in this bar into the "dark canvas" treatment:
+     * #080816 value-zone fill with the metric's brand color as the number.
+     * Use on visuals whose preview canvas is dark so the subtitle row reads
+     * as part of the same surface (the Heat Matrix look).
+     */
+    darkStats?: boolean
   } | null
   layout?: {
     moduleWidth?: string
@@ -339,7 +346,7 @@ export const SubToolboxChartModule: React.FC<
                   )}
                   {activeContext.leftStats && (
                     <div className="flex items-stretch h-full border-r-[4px] border-black">
-                      <AnalyticsActiveStats stats={activeContext.leftStats} />
+                      <AnalyticsActiveStats stats={activeContext.leftStats} darkStats={activeContext.darkStats} />
                     </div>
                   )}
                 </div>
@@ -371,9 +378,9 @@ export const SubToolboxChartModule: React.FC<
                       {activeContext.rightTitle}
                     </div>
                   )}
-                  {activeContext.rightStats ? <AnalyticsActiveStats stats={activeContext.rightStats} /> : null}
+                  {activeContext.rightStats ? <AnalyticsActiveStats stats={activeContext.rightStats} darkStats={activeContext.darkStats} /> : null}
                   {!activeContext.rightStats && activeContext.stats && (
-                    <AnalyticsActiveStats stats={activeContext.stats} />
+                    <AnalyticsActiveStats stats={activeContext.stats} darkStats={activeContext.darkStats} />
                   )}
                 </div>
               </div>

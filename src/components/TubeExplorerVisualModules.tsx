@@ -3824,6 +3824,7 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
+    darkStats: true,
     title: hovered
      ? `${hovered.title.toUpperCase()}${lockedIdx !== null ? " LOCKED" : ""}`
      : `CHANNEL TOTALS (${formatFilter.toUpperCase()})`,
@@ -4021,6 +4022,7 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
   const target = hovered || rows[rows.length - 1]
   return {
    bgTone: "#080816",
+   darkStats: true,
    title: target ? videoShortTitle(target.title.toUpperCase(), 65) : "CHANNEL VITALS",
    stats: target
     ? visibleMetrics.map((metric) => ({
@@ -4315,6 +4317,7 @@ export const TubeExplorerBarcodeFingerprint: React.FC<TubeExplorerVisualProps> =
    isOpenInitial={props.isOpenInitial}
    activeContext={{
     bgTone: "#080816",
+    darkStats: true,
     title: hovered ? videoShortTitle(hovered.title, 52).toUpperCase() : `VIDEO BARCODE (${formatFilter.toUpperCase()})`,
     stats,
    }}
@@ -4421,6 +4424,7 @@ export const TubeExplorerSubscriberWaterfall: React.FC<TubeExplorerVisualProps> 
    isOpenInitial={props.isOpenInitial}
    activeContext={{
     bgTone: "#080816",
+    darkStats: true,
     title: hovered ? videoShortTitle(hovered.video.title, 54).toUpperCase() : `${activeDef.label} JOURNEY (${formatMode.label})`,
     stats: hovered
      ? [
@@ -4503,6 +4507,7 @@ export const TubeExplorerShortsVsLongs: React.FC<TubeExplorerVisualProps> = (pro
    activeContext={{
     title: hovered ? `${hovered.label} — ${winner} WIN` : `FORMAT DUEL (${mode})`,
     bgTone: "#080816",
+    darkStats: true,
     stats: hovered
      ? [
       { label: "SHORTS", value: hovered.format(hovered.shorts), tone: SHORTS_TONE, lockTone: true, compact: true },
@@ -5328,6 +5333,7 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
    isOpenInitial={props.isOpenInitial}
    activeContext={{
     bgTone: "#080816",
+    darkStats: true,
     title: hovered ? `${slotLabel(hovered)} • SLOT` : `PUBLISH GRID (${formatFilter.toUpperCase()})`,
     bgTone: "#080816",
     minHeight: 44,
@@ -5406,6 +5412,7 @@ export const TubeExplorerTrafficDayRiverDelta: React.FC<TubeExplorerVisualProps>
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
+    darkStats: true,
     title: hovered ? hovered.label.toUpperCase() : "TRAFFIC x DAY",
     stats: hovered
      ? [
@@ -5491,6 +5498,7 @@ export const TubeExplorerSankeyRiverDelta: React.FC<TubeExplorerVisualProps> = (
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
+    darkStats: true,
     title: "SOURCE TO GEO FLOW",
     stats: [
      { label: "TOTAL VIEWS", value: compact(totalViews), tone: leadSource ? TRAFFIC_COLORS[0] : "#00E5FF", lockTone: true, compact: true },
@@ -5553,6 +5561,7 @@ export const TubeExplorerClockRadialBurst: React.FC<TubeExplorerVisualProps> = (
    color="#FFE35A"
    activeContext={{
     bgTone: "#080816",
+    darkStats: true,
     title: leadSlice ? `${trafficFocusLabel(leadSlice.kind)} • SOURCE DETAIL` : "CLOCK RADIAL BURST",
     stats: [
      { label: `TOTAL ${metricOption.shortLabel}`, value: compact(totalValue), compact: true },
@@ -5670,6 +5679,7 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
    iconKey={networkStyle.iconKey}
    headerColorPair={networkHeaderPair}
    activeContext={{
+    darkStats: true,
     title: selectedRoots.length >= 2
      ? `GROUP: ${selectedRoots.map((w) => w.toUpperCase()).slice(0, 3).join(" + ")}${selectedRoots.length > 3 ? " +MORE" : ""}`
      : hovered ? `"${hovered.toUpperCase()}" WORD STATS` : "NETWORK OVERVIEW",

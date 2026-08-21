@@ -5121,13 +5121,16 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
  const hoveredBucket = hoveredBucketKey ? trafficTimeline.find((bucket) => bucket.bucket === hoveredBucketKey) || null : null
  const activeSourceTotals = hoveredBucket?.shares || windowTotals
  const activeSourceTotal = Math.max(1, Object.values(activeSourceTotals).reduce((sum, value) => sum + value, 0))
+ // Value/background tones are intentionally omitted so the dark-canvas
+ // convention (darkStats: true on the enclosing activeContext) can color the
+ // numbers with each source's tone on a #080816 fill, matching the Heat
+ // Matrix look. Individual stats can still opt back out by re-adding their
+ // own valueTone/backgroundTone here.
  const activeContextStats = [
   {
    label: hoveredBucket ? "DAY TOTAL" : "WINDOW TOTAL",
    value: formatCompact(activeSourceTotal),
    tone: "white" as any,
-   valueTone: "#000000",
-   backgroundTone: "#E5E7EB",
    labelText: hoveredBucket ? "DAY TOTAL" : "WINDOW TOTAL",
    lockTone: true,
    compact: true,
@@ -5136,8 +5139,6 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
    label: entry.subtitleLabel,
    value: `${(((activeSourceTotals[entry.key] || 0) / activeSourceTotal) * 100).toFixed(0)}%`,
    tone: entry.tone as any,
-   valueTone: "#000000",
-   backgroundTone: "#E5E7EB",
    labelText: trafficSourceLegendLines(entry.legendLabel).join("\n"),
    labelClassName: "whitespace-pre-line text-center text-[8px] leading-[8px] tracking-[0.03em]",
    minWidth: 84,
@@ -5216,7 +5217,9 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
    activeContext={{
     title: activeContextTitle,
     stats: activeContextStats,
-    bgTone: "#E5E7EB",
+    // Dark canvas below — flip the subtitle to match the #090b16 chart body.
+    bgTone: "#080816",
+    darkStats: true,
     height: "expanded",
    }}
   >
@@ -6659,6 +6662,7 @@ export const SignalMatrixModule: React.FC<GChartProps> = ({ data }) => {
     ]}
    activeContext={{
     bgTone: "#080816",
+    darkStats: true,
     title: hovered ? `${hovered.keyword.toUpperCase()} · ${hovered.metric.toUpperCase()}` : `SIGNAL MATRIX · ${topN} KEYWORDS`,
     stats: hovered
      ? (() => {
