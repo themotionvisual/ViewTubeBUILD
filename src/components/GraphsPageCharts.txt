@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useId, useMemo, useRef, useState } from "react"
 import "./marquee.css"
 import {
  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -13,31 +13,10 @@ import type { CsvFileWithTag } from "../types"
 import { CustomIcon } from "./CustomIcon"
 import { AnalyticsVisualIcon } from "./AnalyticsVisualIcon"
 import { StableChartFrame } from "./StableChartFrame"
-import {
- VIEWTUBE_CARTESIAN,
- ViewTubeScatterBubble,
- ViewTubeXAxisTick,
- ViewTubeYAxisTick,
- ViewTubeYAxisTitle,
- ViewTubeScatterYAxisTitle,
- formatRoundedAxisTick,
- getNiceScale,
- getBubbleSafePadding,
- getRelativeBarAxisMax,
- getRelativeBarMinPointSize,
- getRelativeBarScale,
- getRelativeScatterDomain,
- getRelativeScatterScale,
- viewTubeAxisLine,
- viewTubeCartesianMargin,
- viewTubeNumericXAxisProps,
- viewTubeNumericYAxisProps,
-} from "./ViewTubeCartesian"
 import { SubToolboxChartModule, subToolboxChartPresets } from "./SubToolboxChartModule"
 import type { ControllerRow, ControllerRankedByRow } from "./VisualModuleController"
 import { RankedByRow } from "./VisualModuleController"
 import { InsightMarquee } from "./InsightMarquee"
-import { HeroIntroBoundary, HeaderHeroPlayButton } from "./HeroIntroBoundary"
 import type { VtSyncVisualHeaderColorPair } from "../features/vt-sync-local/shell/VtSyncVisualFrame"
 import {
  VT_SPECTRUM_PALETTE_06,
@@ -198,7 +177,7 @@ const buildDistributionControllerRows = (config: {
   type: "custom" as const,
   render: () => (
    <div className="grid h-[52px] w-full grid-cols-[minmax(82px,.86fr)_minmax(104px,1.14fr)] overflow-hidden bg-white">
-    <div className="grid grid-cols-[22px_minmax(0,1fr)_22px] items-stretch bg-[var(--vt-controller-next)]">
+    <div className="grid grid-cols-[22px_minmax(0,1fr)_22px] items-stretch bg-[#33FF99]">
      <button
       type="button"
       onClick={config.onCountPrev}
@@ -247,6 +226,7 @@ const buildDistributionControllerRows = (config: {
   labelPrefix: "WINDOW",
   options: DISTRIBUTION_WINDOW_VALUES,
   onSelect: (value) => config.onWindowSelect(value as DistributionWindowKey),
+  bgTone: "#FFFFFF",
   fgTone: "#000000",
  },
 ]
@@ -290,7 +270,7 @@ const EngagementHoverDot: React.FC<any> = ({ cx, cy, stroke, metricIndex = 0 }) 
 
 const EngagementLeftAxisLabel: React.FC<{ viewBox?: { x: number; y: number; width: number; height: number } }> = ({ viewBox }) => {
  if (!viewBox) return null
- const x = viewBox.x - 24
+ const x = viewBox.x + 2
  const y = viewBox.y + viewBox.height / 2
  return (
   <g transform={`translate(${x},${y}) rotate(-90)`}>
@@ -311,7 +291,7 @@ const EngagementLeftAxisLabel: React.FC<{ viewBox?: { x: number; y: number; widt
 
 const EngagementRightAxisLabel: React.FC<{ viewBox?: { x: number; y: number; width: number; height: number } }> = ({ viewBox }) => {
  if (!viewBox) return null
- const x = viewBox.x + viewBox.width + 24
+ const x = viewBox.x + viewBox.width - 2
  const y = viewBox.y + viewBox.height / 2
  return (
   <g transform={`translate(${x},${y}) rotate(90)`}>
@@ -589,7 +569,7 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
    }}
    legendLayout={{
     center: (
-     <div className="min-w-0 justify-self-center flex items-center gap-3 whitespace-nowrap">
+     <div className="justify-self-center flex items-center gap-3">
       <span className="text-black font-[1000] text-[16px] leading-none">◀</span>
       <span className="uppercase tracking-[0.1em] text-black font-[1000] text-[14px]">
        CTR %
@@ -598,7 +578,7 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
      </div>
     ),
     right: (
-     <div className="min-w-0 flex items-center gap-2 justify-self-start">
+     <div className="flex items-center gap-2 justify-self-start">
       <div className="flex items-center gap-2">
        <div className="flex items-center justify-between w-[115px]">
         <span className="w-2 aspect-square shrink-0 box-border rounded-full bg-[#00CCFF] opacity-[0.75]" />
@@ -633,7 +613,7 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
    <div className="p-4 h-[420px] relative">
     <div className="h-[320px] relative">
      <StableChartFrame minHeightClassName="min-h-[320px]">
-       <ScatterChart margin={viewTubeCartesianMargin("scatter", 20)}>
+       <ScatterChart margin={{ top: 10, right: 8, bottom: 8, left: 8 }}>
         <ReferenceArea x1={0} x2={matrix.thresholds.ctr} y1={matrix.thresholds.retention} y2={matrix.retentionDomainMax} fill="#dbeafe" fillOpacity={0.16} />
         <ReferenceArea x1={matrix.thresholds.ctr} x2={matrix.ctrDomainMax} y1={matrix.thresholds.retention} y2={matrix.retentionDomainMax} fill="#dcfce7" fillOpacity={0.16} />
         <ReferenceArea x1={0} x2={matrix.thresholds.ctr} y1={0} y2={matrix.thresholds.retention} fill="#fee2e2" fillOpacity={0.16} />
@@ -645,11 +625,10 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
          name="CTR"
          unit="%"
          domain={[0, matrix.ctrDomainMax]}
-         tick={(props: any) => (
-          <ViewTubeXAxisTick {...props} formatter={(value: number) => formatRoundedAxisTick(value, { percent: true })} />
-         )}
+         tick={{ fontWeight: 1000, fontSize: 11, fill: "#000" }}
          tickLine={false}
-         axisLine={viewTubeAxisLine}
+         axisLine={{ stroke: "#000", strokeWidth: 3 }}
+         label={{ value: "CTR %", position: "insideBottom", offset: -4, style: { fontSize: 12, fontWeight: 1000 } }}
         />
         <YAxis
          type="number"
@@ -657,17 +636,11 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
          name="Retention"
          unit="%"
          domain={[0, matrix.retentionDomainMax]}
-         tick={{ fontWeight: 1000, fontSize: 11, fill: "#B8B8B8"}}
-       tickLine={false}
-       axisLine={viewTubeAxisLine}
+         tick={{ fontWeight: 1000, fontSize: 11, fill: "#000" }}
+         tickLine={false}
+         axisLine={{ stroke: "#000", strokeWidth: 3 }}
          label={{ value: "RETENTION %", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 1000 } }}
-        
-       mirror={true}
-      
-       tickMargin={6}
-      
-       width={1}
-      />
+        />
         <ZAxis type="number" dataKey="bubble" range={[80, 700]} />
         <ReferenceLine x={matrix.thresholds.ctr} stroke="#111827" strokeOpacity={0.75} strokeWidth={1.5} />
         <ReferenceLine y={matrix.thresholds.retention} stroke="#111827" strokeOpacity={0.75} strokeWidth={1.5} />
@@ -1199,20 +1172,10 @@ export const SubscribersGained: React.FC<GChartProps> = ({ data }) => {
   >
    <div className="h-[250px] px-3 pb-3 pt-1">
     <StableChartFrame minHeightClassName="min-h-[220px]">
-     <BarChart data={cd} margin={{top:10,right:4,left:4,bottom:40}}>
+     <BarChart data={cd} margin={{top:10,right:10,left:-20,bottom:40}}>
       <CartesianGrid strokeDasharray="3 3" vertical={false}/>
-      <XAxis dataKey="name" tick={{fontSize:8,fontWeight:900}} interval={0} angle={-45} textAnchor="end" axisLine={viewTubeAxisLine}/>
-      <YAxis tick={{fontSize:10,fontWeight:900,
-                      fill: "#B8B8B8",}}
-       axisLine={viewTubeAxisLine}
-       tickLine={false}
-      
-       mirror={true}
-      
-       tickMargin={6}
-      
-       width={1}
-      />
+      <XAxis dataKey="name" tick={{fontSize:8,fontWeight:900}} interval={0} angle={-45} textAnchor="end" axisLine={{ stroke: '#000', strokeWidth: 3 }}/>
+      <YAxis tick={{fontSize:10,fontWeight:900}} axisLine={{ stroke: '#000', strokeWidth: 3 }}/>
       <Tooltip content={<ChartTip/>}/>
       <Bar dataKey="value" fill="#00E5FF" radius={[4,4,0,0]}/>
      </BarChart>
@@ -1312,10 +1275,8 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
    : [...shorts].sort((a, b) => b.views - a.views)
 
   const top100 = ranked.slice(0, selectedCount)
-  const durationMax = Math.min(180, Math.max(1, ...top100.map((d) => d.dur)))
-  const avdMax = Math.max(1, ...top100.map((d) => d.avd))
-  const durationScale = getNiceScale([0, durationMax], { includeZero: true, targetIntervals: 6 })
-  const avdScale = getNiceScale([0, avdMax], { includeZero: true, targetIntervals: 5 })
+  const durationScale = buildAdaptiveZeroScale(top100.map((d) => d.dur), { fallbackMax: 180, hardMax: 180 })
+  const avdScale = buildAdaptiveZeroScale(top100.map((d) => d.avd), { fallbackMax: 300 })
   const revenuePercentiles = buildTieAwarePercentiles(
    top100.map((d) => d.revenueAvailable ? d.estIncome : null),
   )
@@ -1358,15 +1319,30 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
 
  const bubbleShape = (props: any) => {
   const { cx, cy, payload } = props
+  const isHover = hoveredKey === payload.key
+  const scale = isHover ? 1.25 : 1
   return (
-   <ViewTubeScatterBubble
+   <circle
     cx={cx}
     cy={cy}
-    radius={payload.radius}
+    r={payload.radius * scale}
     fill={payload.color}
-    isHovered={hoveredKey === payload.key}
-    onEnter={() => setHoveredKey(payload.key)}
-    onLeave={() => setHoveredKey(null)}
+    fillOpacity={isHover ? 0.72 : 0.55}
+    stroke={payload.color}
+    strokeWidth={isHover ? 2.5 : 1.5}
+    strokeOpacity={1}
+    style={{
+      transformBox: "fill-box",
+      transformOrigin: "center",
+      shapeRendering: "geometricPrecision",
+      mixBlendMode: "blend",
+      transitionProperty: "r, fill-opacity, stroke-width",
+      transitionDuration: isHover ? "750ms" : "350ms",
+      transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+      cursor: "pointer",
+    }}
+    onMouseEnter={() => setHoveredKey(payload.key)}
+    onMouseLeave={() => setHoveredKey(null)}
    />
   )
  }
@@ -1383,50 +1359,38 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
    }}
    controllerRows={[
     {
-     type: "number",
-     value: selectedCount,
-     onPrev: () => {
-      const values = [25, 50, 75, 100, 200, 400]
-      const index = values.indexOf(selectedCount)
-      setSelectedCount(values[(index - 1 + values.length) % values.length])
-     },
-     onNext: () => {
-      const values = [25, 50, 75, 100, 200, 400]
-      const index = values.indexOf(selectedCount)
-      setSelectedCount(values[(index + 1) % values.length])
-     },
+     type: "dropdown",
+     value: mode,
+     options: [{ label: "TOP PERFORMING", value: "top-performing" }, { label: "MOST RECENT", value: "most-recent" }],
+     onSelect: (v) => setMode(v as "top-performing" | "most-recent"),
      bgTone: "#CCFF00",
      fgTone: "#000000",
     },
     {
-     type: "split",
-     leftValue: mode === "most-recent" ? "LATEST" : "GREATEST",
-     rightValue: formatFilter === "All" ? "VIDEOS" : formatFilter === "Long" ? "LONGFORM" : "SHORTS",
-     leftWidthValues: ["LATEST", "GREATEST"],
-     rightWidthValues: ["VIDEOS", "LONGFORM", "SHORTS"],
-     onPrev: () => setMode((current) => current === "most-recent" ? "top-performing" : "most-recent"),
-     onNext: () => setFormatFilter((current) => current === "All" ? "Long" : current === "Long" ? "Shorts" : "All"),
-     leftBgTone: "#FF7497",
-     rightBgTone: "#33FF99",
-     leftFgTone: "#000000",
-     rightFgTone: "#000000",
+     type: "dropdown",
+     value: String(selectedCount),
+     options: [25, 50, 75, 100, 200, 400].map((n) => ({ label: `TOP ${n}`, value: String(n) })),
+     onSelect: (v) => setSelectedCount(Number(v)),
+     bgTone: "#33FF99",
+     fgTone: "#000000",
     },
     {
-     type: "label",
-     value: "RANKED BY AVD",
-     bgTone: "#000000",
-     fgTone: "#FFEA00",
+     type: "dropdown",
+     value: formatFilter,
+     options: ["All", "Shorts", "Long"].map((f) => ({ label: f.toUpperCase(), value: f })),
+     onSelect: (v) => setFormatFilter(v as "All" | "Shorts" | "Long"),
+     bgTone: "#FFEA00",
+     fgTone: "#000000",
     },
    ]}
    footer={
     <div className="px-5 pb-3 text-[10px] font-black uppercase opacity-70">Bubble size = Views \u00b7 Color = Estimated Income (Blue \u2192 Green)</div>
    }
   >
-   <HeroIntroBoundary visualId="shorts-retention" replayKey={`${mode}-${selectedCount}-${formatFilter}`} seed={`shorts-${mode}-${selectedCount}-${formatFilter}`}>
    <div className="flex-1 p-2 min-h-[300px]">
     <ResponsiveContainer width="100%" height={280} minWidth={1} minHeight={1}>
      <ScatterChart
-      margin={viewTubeCartesianMargin("scatter", 32)}
+      margin={{top:10,right:10,bottom:10,left:-10}}
       onMouseMove={(state: any) => {
        if (typeof state?.chartX === "number" && typeof state?.chartY === "number") {
         setMousePos({ x: state.chartX, y: state.chartY })
@@ -1440,12 +1404,8 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
        name="Duration (s)"
        domain={cd.durationScale.domain}
        ticks={cd.durationScale.ticks}
-       tick={(props: any) => (
-        <ViewTubeXAxisTick
-         {...props}
-         formatter={(value: number) => formatRoundedAxisTick(value, { unit: "s" })}
-        />
-       )}
+       tickFormatter={(value) => `${value}s`}
+       tick={{fontWeight:900,fontSize:10}}
       />
       <YAxis
        type="number"
@@ -1454,18 +1414,7 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
        domain={cd.avdScale.domain}
        ticks={cd.avdScale.ticks}
        tickFormatter={(value) => value === 0 ? "" : `${value}s`}
-       tick={{fontWeight:900,fontSize:10,
-                      fill: "#B8B8B8",}}
-      
-       axisLine={viewTubeAxisLine}
-      
-       tickLine={false}
-      
-       mirror={true}
-      
-       tickMargin={6}
-      
-       width={1}
+       tick={{fontWeight:900,fontSize:10}}
       />
       <Tooltip
        content={<ChartTip/>}
@@ -1510,7 +1459,6 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
      </ScatterChart>
     </ResponsiveContainer>
    </div>
-  </HeroIntroBoundary>
   </SubToolboxChartModule>
  )
 }
@@ -1524,7 +1472,6 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
  const [sortMetric, setSortMetric] = useState<"avd" | "estIncome" | "dur" | "views" | "watchHours">("avd")
  const [modeMenuOpen, setModeMenuOpen] = useState(false)
  const [activeKey, setActiveKey] = useState<string | null>(null)
- const [hoveredBubbleKey, setHoveredBubbleKey] = useState<string | null>(null)
  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
  const [selectedCount, setSelectedCount] = useState(100)
  const rafMouseRef = useRef<number | null>(null)
@@ -1565,10 +1512,8 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
    : [...mapped].sort((a, b) => b[sortMetric] - a[sortMetric])
 
   const top = ranked.slice(0, selectedCount)
-  const durationMax = Math.min(180, Math.max(1, ...top.map((d) => d.dur)))
-  const avdMax = Math.max(1, ...top.map((d) => d.avd))
-  const durationScale = getNiceScale([0, durationMax], { includeZero: true, targetIntervals: 6 })
-  const avdScale = getNiceScale([0, avdMax], { includeZero: true, targetIntervals: 5 })
+  const durationScale = buildAdaptiveZeroScale(top.map((d) => d.dur), { fallbackMax: 180, hardMax: 180 })
+  const avdScale = buildAdaptiveZeroScale(top.map((d) => d.avd), { fallbackMax: 300 })
   const revenuePercentiles = buildTieAwarePercentiles(
    top.map((d) => d.revenueAvailable ? d.estIncome : null),
   )
@@ -1625,18 +1570,27 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
 
  const bubbleShape = (props: any) => {
   const { cx, cy, payload } = props
+  const isActive = activeKey === payload.key
+  const scale = isActive ? 1.25 : 1
   return (
-   <ViewTubeScatterBubble
+   <circle
     cx={cx}
     cy={cy}
-    radius={payload.radius}
+    r={payload.radius * scale}
     fill={payload.color}
-    isHovered={hoveredBubbleKey === payload.key}
-    onEnter={() => {
-     setHoveredBubbleKey(payload.key)
-     setActiveKey(payload.key)
+    fillOpacity={isActive ? 0.72 : 0.55}
+    stroke={payload.color}
+    strokeWidth={isActive ? 2.5 : 1.5}
+    strokeOpacity={1}
+    onMouseEnter={() => setActiveKey(payload.key)}
+    style={{
+      shapeRendering: "geometricPrecision",
+      mixBlendMode: "normal" as any,
+      transitionProperty: "r, stroke-width, fill-opacity",
+      transitionDuration: isActive ? "750ms" : "350ms",
+      transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+      cursor: "pointer",
     }}
-    onLeave={() => setHoveredBubbleKey(null)}
    />
   )
  }
@@ -1664,7 +1618,7 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
       },
       options: [
         { value: "top-performing", label: sortMetric === "avd" ? "BEST BY AVD" : sortMetric === "estIncome" ? "BEST BY REVENUE" : sortMetric === "dur" ? "BEST BY LENGTH" : sortMetric === "watchHours" ? "BEST BY WATCH TIME" : "BEST BY VIEWS" },
-        { value: "most-recent", label: "NEWEST" },
+        { value: "most-recent", label: "LATEST PUBLISHED" },
       ],
     },
    }}
@@ -1693,13 +1647,12 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
     />
    }
   >
-   <div className="min-h-[400px] w-full min-w-0 max-w-full border-[0px] border-black rounded-none bg-white p-0 overflow-hidden flex flex-col">
-    <div className="h-[400px] min-h-[400px] flex flex-col overflow-hidden">
-     <div className="h-[360px] min-h-[360px] relative shrink-0 overflow-visible">
-      <StableChartFrame minHeightClassName="min-h-[360px]">
-       <ScatterChart
-       className="[&_svg]:outline-none [&_svg]:overflow-visible [&_*:focus]:outline-none [&_*:focus-visible]:outline-none"
-       margin={viewTubeCartesianMargin("scatter")}
+   <div className="min-h-[400px] w-full border-[0px] border-black rounded-none bg-white p-0 overflow-hidden flex flex-col">
+    <div className="h-[400px] relative">
+     <StableChartFrame minHeightClassName="min-h-[400px]">
+      <ScatterChart
+       className="[&_svg]:outline-none [&_*:focus]:outline-none [&_*:focus-visible]:outline-none"
+       margin={{ top: 20, right: 30, bottom: 28, left: 10 }}
        onMouseMove={(state: any) => {
         if (typeof state?.chartX !== "number" || typeof state?.chartY !== "number") return
         pendingMouseRef.current = { x: state.chartX, y: state.chartY }
@@ -1718,36 +1671,23 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
        <XAxis
         type="number"
         dataKey="dur"
-        {...viewTubeNumericXAxisProps}
         domain={cd.durationScale.domain}
         ticks={cd.durationScale.ticks}
-        tick={(props: any) => (
-         <ViewTubeXAxisTick
-          {...props}
-          formatter={(value: number) => formatRoundedAxisTick(value, { unit: "s" })}
-         />
-        )}
-        allowDataOverflow
+        tickFormatter={(value) => `${value}s`}
+        axisLine={{ stroke: '#000', strokeWidth: 3 }}
+        tickLine={false}
+        tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
        />
        <YAxis
         type="number"
         dataKey="avd"
-        {...viewTubeNumericYAxisProps("left")}
         domain={cd.avdScale.domain}
         ticks={cd.avdScale.ticks}
-        tick={(props: any) => (
-         <ViewTubeYAxisTick
-          {...props}
-          orientation="left"
-          formatter={(value: number) => formatRoundedAxisTick(value, { unit: "s" })}
-         />
-        )}
-        label={{
-         content: (props: any) => (
-          <ViewTubeYAxisTitle {...props} title="AVD (SECONDS)" orientation="left" />
-         ),
-        }}
-        allowDataOverflow
+        axisLine={{ stroke: '#000', strokeWidth: 3 }}
+        tickLine={false}
+        tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
+        tickFormatter={(value) => value === 0 ? '' : `${value}s`}
+        label={{ value: "AVD (SECONDS)", angle: -90, position: "insideLeft", offset: 15, style: { fontWeight: 1000, fontSize: 14, fill: '#000', letterSpacing: '0.1em', textAnchor: 'middle' } }}
        />
        <Scatter data={cd.points} shape={bubbleShape} name="Income Gradient" />
        <Customized component={({ offset, width }: any) => {
@@ -1758,6 +1698,8 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
          const snappedX = Math.round(mousePos.x) + 0.5; const snappedY = Math.round(mousePos.y) + 0.5
          return (
            <g pointerEvents="none">
+            <line x1={left} y1={top} x2={left} y2={0} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
+            <line x1={right} y1={bottom} x2={width} y2={bottom} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
             <line x1={left} y1={snappedY} x2={right} y2={snappedY} stroke="rgba(0,0,0,0.15)" strokeWidth={1} shapeRendering="crispEdges" />
             <line x1={snappedX} y1={top} x2={snappedX} y2={bottom} stroke="rgba(0,0,0,0.15)" strokeWidth={1} shapeRendering="crispEdges" />
            </g>
@@ -1765,18 +1707,17 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
         }} />
       </ScatterChart>
      </StableChartFrame>
-     </div>
-     <div className="h-[40px] min-h-[40px] shrink-0 px-[22px] grid grid-cols-[minmax(0,1fr)_minmax(190px,auto)_minmax(0,1fr)] gap-x-10 items-start pt-1 pointer-events-none bg-white">
-      <div className="min-w-0 flex items-center gap-2 justify-self-end">
+     <div className="absolute bottom-[0px] left-[14px] right-[14px] grid grid-cols-3 items-center pointer-events-none">
+      <div className="flex items-center gap-2 justify-self-end">
         <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Revenue</span>
         <div className="w-[155px] h-6 border-[2px] border-[#45DDB0] rounded-[2px] bg-gradient-to-r from-[#24BCFF] via-[#45DDB0] to-[#66FF8A]" />
       </div>
-      <div className="min-w-0 justify-self-center flex items-center gap-3 whitespace-nowrap px-5">
+      <div className="justify-self-center flex items-center gap-3">
         <span className="text-black font-[1000] text-[16px] leading-none">◀</span>
         <span className="uppercase tracking-[0.1em] text-black" style={{ fontWeight: 1000, fontSize: 14 }}>Duration</span>
         <span className="text-black font-[1000] text-[16px] leading-none">▶</span>
       </div>
-      <div className="min-w-0 flex items-center gap-2 justify-self-start">
+      <div className="flex items-center gap-2 justify-self-start">
         <div className="flex items-center justify-between w-[115px]">
           <span className="w-2 aspect-square shrink-0 rounded-full bg-[#24BCFF] opacity-[0.75]" />
           <span className="w-3 aspect-square shrink-0 rounded-full bg-[#2FC8EF] opacity-[0.75]" />
@@ -1853,15 +1794,25 @@ export const AlgorithmTriggerModule: React.FC<GChartProps> = ({ data }) => {
 
  const bubbleShape = (props: any) => {
   const { cx, cy, payload } = props
+  const isActive = hoveredKey === payload.key
+  const scale = isActive ? 1.25 : 1
   return (
-   <ViewTubeScatterBubble
+   <circle
     cx={cx}
     cy={cy}
-    radius={payload.radius}
+    r={payload.radius * scale}
     fill={payload.color}
-    isHovered={hoveredKey === payload.key}
-    onEnter={() => setHoveredKey(payload.key)}
-    onLeave={() => setHoveredKey(null)}
+    fillOpacity={0.75}
+    stroke={payload.color}
+    strokeWidth={isActive ? 2 : 0}
+    onMouseEnter={() => setHoveredKey(payload.key)}
+    style={{
+     shapeRendering: "geometricPrecision",
+     transitionProperty: "r, stroke-width, fill-opacity",
+     transitionDuration: isActive ? "750ms" : "350ms",
+     transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+     cursor: "pointer",
+    }}
    />
   )
  }
@@ -1924,14 +1875,12 @@ export const AlgorithmTriggerModule: React.FC<GChartProps> = ({ data }) => {
     />
    }
   >
-   <div className="min-h-[400px] w-full min-w-0 max-w-full border-[0px] border-black rounded-none bg-white p-0 overflow-hidden flex flex-col">
-    <div className="h-[400px] min-h-[400px] flex flex-col overflow-hidden">
-     <div className="h-[348px] min-h-[348px] relative shrink-0">
-      <ViewTubeScatterYAxisTitle title="EST. REVENUE ($)" />
-      <StableChartFrame minHeightClassName="min-h-[348px]">
+   <div className="min-h-[400px] w-full border-[0px] border-black rounded-none bg-white p-0 overflow-hidden flex flex-col">
+    <div className="h-[400px] relative">
+     <StableChartFrame minHeightClassName="min-h-[400px]">
        <ScatterChart
         className="[&_svg]:outline-none [&_*:focus]:outline-none [&_*:focus-visible]:outline-none"
-        margin={viewTubeCartesianMargin("scatter", 36)}
+        margin={{ top: 20, right: 30, bottom: 28, left: 10 }}
         onMouseLeave={() => setHoveredKey(null)}
        >
         <CartesianGrid stroke="rgba(0,0,0,0.06)" vertical={true} />
@@ -1939,26 +1888,19 @@ export const AlgorithmTriggerModule: React.FC<GChartProps> = ({ data }) => {
          type="number"
          dataKey="ctr"
          name="CTR %"
-         domain={getRelativeScatterDomain(cd.map((point) => point.ctr))}
-         padding={getBubbleSafePadding(36).x}
-         tick={(props: any) => (
-          <ViewTubeXAxisTick
-           {...props}
-           formatter={(value: number) => formatRoundedAxisTick(value, { percent: true })}
-          />
-         )}
-         axisLine={viewTubeAxisLine}
+         domain={[0, 25]}
+         tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
+         axisLine={{ stroke: '#000', strokeWidth: 3 }}
          tickLine={false}
+         tickFormatter={(v) => `${v}%`}
         />
         <YAxis
          type="number"
          dataKey="impressions"
          name="Impressions"
-         domain={getRelativeScatterDomain(cd.map((point) => point.impressions))}
-         padding={getBubbleSafePadding(36).y}
-         tick={{ fontWeight: 1000, fontSize: 10, fill: "#B8B8B8"}}
-       axisLine={viewTubeAxisLine}
-       tickLine={false}
+         tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
+         axisLine={{ stroke: '#000', strokeWidth: 3 }}
+         tickLine={false}
          tickFormatter={(v) => v >= 1000000 ? `${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v}
          label={{
           value: 'IMPRESSIONS',
@@ -1967,13 +1909,7 @@ export const AlgorithmTriggerModule: React.FC<GChartProps> = ({ data }) => {
           offset: 15,
           style: { fontWeight: 1000, fontSize: 14, fill: '#000', letterSpacing: '0.1em', textAnchor: 'middle' },
          }}
-        
-       mirror={true}
-      
-       tickMargin={6}
-      
-       width={1}
-      />
+        />
         <Tooltip content={<ChartTip />} />
         <Scatter data={cd} shape={bubbleShape} />
         <Customized component={({ offset, width }: any) => {
@@ -1984,22 +1920,21 @@ export const AlgorithmTriggerModule: React.FC<GChartProps> = ({ data }) => {
          const bottom = offset.top + offset.height
          return (
           <g pointerEvents="none">
-           <line x1={left} y1={top} x2={left} y2={0} stroke="#000" strokeWidth={2} strokeLinecap="round" shapeRendering="geometricPrecision" />
-           <line x1={right} y1={bottom} x2={width} y2={bottom} stroke="#000" strokeWidth={2} strokeLinecap="round" shapeRendering="geometricPrecision" />
+           <line x1={left} y1={top} x2={left} y2={0} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
+           <line x1={right} y1={bottom} x2={width} y2={bottom} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
           </g>
          )
         }} />
        </ScatterChart>
      </StableChartFrame>
-     </div>
-     <div className="h-[52px] min-h-[52px] shrink-0 px-[24px] grid grid-cols-[minmax(0,1fr)_minmax(200px,auto)_minmax(0,1fr)] gap-x-12 items-center pointer-events-none bg-white">
-      <div className="min-w-0 flex items-center gap-2 justify-self-end">
+     <div className="absolute bottom-[0px] left-[14px] right-[14px] grid grid-cols-3 items-center pointer-events-none">
+      <div className="flex items-center gap-2 justify-self-end">
        <div className="flex items-center gap-1.5">
         <div className="w-4 h-4 rounded-full bg-[#FF3399] border-[2px] border-black" />
         <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Long</span>
        </div>
       </div>
-      <div className="min-w-0 justify-self-center flex items-center gap-3 whitespace-nowrap">
+      <div className="justify-self-center flex items-center gap-3">
        <span className="text-black font-[1000] text-[16px] leading-none">◀</span>
        <span className="uppercase tracking-[0.1em] text-black" style={{ fontWeight: 1000, fontSize: 14, letterSpacing: "0.1em" }}>
         Click-Through Rate
@@ -2070,16 +2005,19 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
   }))
  }, [data, sortMetric, mode, format, selectedCount])
 
- // Fixed dual-axis: LEFT = comments/shares/subs, RIGHT = likes (always).
- // Both sides use the shared nice-scale generator so ticks are rounded,
- // evenly spaced, light gray, and never show a redundant zero label.
- const { leftScale, rightScale } = useMemo(() => {
+ // Fixed dual-axis: LEFT = comments/shares/subs, RIGHT = likes (always)
+ const { leftMax, rightMax } = useMemo(() => {
   const leftKeys = ["comments", "shares", "subscribersGained"]
-  const leftVals = cd.flatMap((d) => leftKeys.map((k) => Number((d as any)[k] ?? 0)))
-  const rightVals = cd.map((d) => Number(d.likes ?? 0))
+  const leftVals = cd.flatMap((d) => leftKeys.map((k) => (d as any)[k] as number))
+  const rightVals = cd.map((d) => d.likes)
+  const ceilNice = (v: number) => {
+   if (v <= 0) return 10
+   const mag = Math.pow(10, Math.floor(Math.log10(v)))
+   return Math.ceil(v / mag) * mag || 10
+  }
   return {
-   leftScale: getNiceScale(leftVals, { targetIntervals: 4, includeZero: true }),
-   rightScale: getNiceScale(rightVals, { targetIntervals: 4, includeZero: true }),
+   leftMax: ceilNice(Math.max(1, ...leftVals)),
+   rightMax: ceilNice(Math.max(1, ...rightVals)),
   }
  }, [cd])
 
@@ -2102,7 +2040,7 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
  }
 
  const sortLabel = ENGAGEMENT_METRICS.find((m) => m.key === sortMetric)?.label || "LIKES"
- const modeLabel = mode === "most-recent" ? "NEWEST" : "TOP"
+ const modeLabel = mode === "most-recent" ? "NEWEST" : "TOP PERFORMING"
  const formatLabel = format === "shorts" ? "SHORTS" : format === "longform" ? "LONGFORM" : "VIDEOS"
  const activeRow = hoveredIdx !== null ? cd[hoveredIdx] : cd[0]
  const renderOrder = useMemo(() => {
@@ -2152,7 +2090,7 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
    controllerRows={[{
     type: "custom",
     render: () => (
-<div className="grid h-full w-full grid-cols-[80px_1fr] grid-rows-[1fr_1fr_30px] bg-white">
+     <div className="grid h-full w-full grid-cols-[80px_1fr] grid-rows-[1fr_1fr_30px] bg-white">
       <button
        type="button"
        aria-label="Show fewer videos"
@@ -2187,7 +2125,7 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
          type: "rankedBy",
          label: "BY",
          value: sortMetric,
-         bgTone: "#B14AED",
+         bgTone: "#000000",
          open: rankMenuOpen,
          onToggle: () => setRankMenuOpen((prev) => !prev),
          options: ENGAGEMENT_METRICS.map((m) => ({
@@ -2228,13 +2166,12 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
     </div>
    }
   >
-   <HeroIntroBoundary visualId="engagement-pulse" replayKey={animKey}>
    <div className="min-h-[400px] w-full bg-white p-0 overflow-hidden flex flex-col">
     <div className="h-[400px] relative">
      <StableChartFrame minHeightClassName="min-h-[400px]">
        <LineChart
         data={cd}
-        margin={{ top: 10, right: 38, bottom: 10, left: 38 }}
+        margin={{ top: 20, right: 60, bottom: 20, left: 20 }}
         onMouseMove={(state: any) => {
          if (state?.activeTooltipIndex !== undefined) setHoveredIdx(state.activeTooltipIndex)
         }}
@@ -2244,38 +2181,27 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
         <XAxis
          dataKey="name"
          tick={false}
-         axisLine={viewTubeAxisLine}
+         axisLine={{ stroke: '#000', strokeWidth: 3 }}
          tickLine={false}
-         height={2}
+         height={8}
         />
         <YAxis
          yAxisId="left"
-         {...viewTubeNumericYAxisProps("left")}
-         domain={leftScale.domain}
-         ticks={leftScale.ticks}
-         tick={(props: any) => (
-          <ViewTubeYAxisTick
-           {...props}
-           orientation="left"
-           formatter={formatRoundedAxisTick}
-          />
-         )}
+         domain={[0, leftMax]}
+         tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
+         axisLine={{ stroke: '#000', strokeWidth: 3 }}
+         tickLine={false}
          label={{
           content: (props: any) => <EngagementLeftAxisLabel {...props} />,
          }}
         />
         <YAxis
          yAxisId="right"
-         {...viewTubeNumericYAxisProps("right")}
-         domain={rightScale.domain}
-         ticks={rightScale.ticks}
-         tick={(props: any) => (
-          <ViewTubeYAxisTick
-           {...props}
-           orientation="right"
-           formatter={formatRoundedAxisTick}
-          />
-         )}
+         orientation="right"
+         domain={[0, rightMax]}
+         tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
+         axisLine={{ stroke: '#000', strokeWidth: 3 }}
+         tickLine={false}
          label={{
           content: (props: any) => <EngagementRightAxisLabel {...props} />,
          }}
@@ -2308,11 +2234,23 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
           />
          ))}
         </g>
+        <Customized component={({ offset, width }: any) => {
+         if (!offset) return null
+         const left = offset.left
+         const right = offset.left + offset.width
+         const top = offset.top
+         const bottom = offset.top + offset.height
+         return (
+          <g pointerEvents="none">
+           <line x1={left} y1={top} x2={left} y2={0} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
+           <line x1={right} y1={bottom} x2={width} y2={bottom} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
+          </g>
+         )
+        }} />
        </LineChart>
      </StableChartFrame>
     </div>
    </div>
-  </HeroIntroBoundary>
   </SubToolboxChartModule>
  )
 }
@@ -2363,20 +2301,9 @@ export const Packaging: React.FC<GChartProps> = ({ data }) => {
     </div>
    }
   >
-   <ScatterChart margin={viewTubeCartesianMargin("scatter", 32)}>
+   <ScatterChart margin={{top:10,right:10,bottom:10,left:-10}}>
     <CartesianGrid strokeDasharray="3 3"/><XAxis type="number" dataKey="imp" name="Impressions" tick={{fontWeight:900,fontSize:10}} tickFormatter={v=>v>1000?`${(v/1000).toFixed(0)}K`:v}/>
-    <YAxis type="number" dataKey="ctr" name="CTR %" tick={{fontWeight:900,fontSize:10,
-                      fill: "#B8B8B8",}}
-       axisLine={viewTubeAxisLine}
-      
-       tickLine={false}
-      
-       mirror={true}
-      
-       tickMargin={6}
-      
-       width={1}
-      />
+    <YAxis type="number" dataKey="ctr" name="CTR %" tick={{fontWeight:900,fontSize:10}}/>
     <ZAxis type="number" dataKey="views" range={[100,1500]}/>
     <Tooltip content={<ChartTip/>}/>
     <Scatter data={cd.filter(d=>d.format==="shorts")} fill="#FF7497" name="Shorts"/>
@@ -2425,39 +2352,28 @@ export const EngagementMap: React.FC<GChartProps> = ({ data }) => {
    }}
    controllerRows={[
     {
-     type: "number",
-     value: selectedCount,
-     onPrev: () => {
-      const values = [10, 15, 20, 25, 50]
-      const index = values.indexOf(selectedCount)
-      setSelectedCount(values[(index - 1 + values.length) % values.length])
-     },
-     onNext: () => {
-      const values = [10, 15, 20, 25, 50]
-      const index = values.indexOf(selectedCount)
-      setSelectedCount(values[(index + 1) % values.length])
-     },
+     type: "dropdown",
+     value: sortBy,
+     options: [{ label: "BEST VIDEOS", value: "best" }, { label: "NEWEST FIRST", value: "newest" }],
+     onSelect: (v) => setSortBy(v as "best" | "newest"),
      bgTone: "#FF9900",
      fgTone: "#000000",
     },
     {
-     type: "split",
-     leftValue: sortBy === "newest" ? "LATEST" : "GREATEST",
-     rightValue: selectedFormat === "All" ? "VIDEOS" : selectedFormat === "Long" ? "LONGFORM" : "SHORTS",
-     leftWidthValues: ["LATEST", "GREATEST"],
-     rightWidthValues: ["VIDEOS", "LONGFORM", "SHORTS"],
-     onPrev: () => setSortBy((current) => current === "newest" ? "best" : "newest"),
-     onNext: () => setSelectedFormat((current) => current === "All" ? "Long" : current === "Long" ? "Shorts" : "All"),
-     leftBgTone: "#FF7497",
-     rightBgTone: "#33FF99",
-     leftFgTone: "#000000",
-     rightFgTone: "#000000",
+     type: "dropdown",
+     value: String(selectedCount),
+     options: [10, 15, 20, 25, 50].map((n) => ({ label: `TOP ${n}`, value: String(n) })),
+     onSelect: (v) => setSelectedCount(Number(v)),
+     bgTone: "#FFB158",
+     fgTone: "#000000",
     },
     {
-     type: "label",
-     value: "RANKED BY LIKES",
-     bgTone: "#000000",
-     fgTone: "#FFEA00",
+     type: "dropdown",
+     value: selectedFormat,
+     options: ["All", "Shorts", "Long"].map((f) => ({ label: f.toUpperCase(), value: f })),
+     onSelect: (v) => setSelectedFormat(v as "All" | "Shorts" | "Long"),
+     bgTone: "#FFEA00",
+     fgTone: "#000000",
     },
    ]}
    legendLayout={{ left: <span className="text-[10px] font-black uppercase text-black"><span className="inline-block w-3 h-3 bg-[#FF7497] border border-black mr-1" />LIKES</span>, center: <span className="text-[10px] font-black uppercase text-black"><span className="inline-block w-3 h-3 bg-[#00E5FF] border border-black mr-1" />COMMENTS</span>, right: <span className="text-[10px] font-black uppercase text-black"><span className="inline-block w-3 h-3 bg-[#CCFF00] border border-black mr-1" />SHARES</span> }}
@@ -2465,21 +2381,10 @@ export const EngagementMap: React.FC<GChartProps> = ({ data }) => {
   >
    <div className="p-4 h-[340px]">
     <StableChartFrame minHeightClassName="min-h-[300px]">
-     <BarChart data={cd} margin={{ top: 10, right: 4, left: 4, bottom: 40 }}>
+     <BarChart data={cd} margin={{ top: 10, right: 10, left: -20, bottom: 40 }}>
       <CartesianGrid strokeDasharray="3 3" vertical={false} />
       <XAxis dataKey="name" tick={{ fontSize: 8, fontWeight: 900 }} interval={0} angle={-45} textAnchor="end" />
-      <YAxis tick={{ fontSize: 10, fontWeight: 900,
-                      fill: "#B8B8B8",}} 
-       axisLine={viewTubeAxisLine}
-      
-       tickLine={false}
-      
-       mirror={true}
-      
-       tickMargin={6}
-      
-       width={1}
-      />
+      <YAxis tick={{ fontSize: 10, fontWeight: 900 }} />
       <Tooltip content={<ChartTip />} />
       <Bar dataKey="likes" name="Likes" fill="#FF7497" radius={[4, 4, 0, 0]} />
       <Bar dataKey="comments" name="Comments" fill="#00E5FF" radius={[4, 4, 0, 0]} />
@@ -2498,31 +2403,9 @@ export const PerformanceTrend: React.FC<GChartProps> = ({ data }) => {
    views: mv(r,"views"), subs: mv(r,"subscribersGained") })), [data])
  return (
   <Card title="PERFORMANCE TREND" subtitle="Views vs. Subscriber Trends" headerColor="#FFEA00">
-   <ComposedChart data={cd} margin={{top:10,right:4,left:4,bottom:0}}>
+   <ComposedChart data={cd} margin={{top:10,right:10,left:-10,bottom:0}}>
     <CartesianGrid strokeDasharray="3 3"/><XAxis dataKey="date" tick={{fontSize:9,fontWeight:900}}/>
-    <YAxis yAxisId="l" tick={{fontSize:10,fontWeight:900,
-                      fill: "#B8B8B8",}}
-       axisLine={viewTubeAxisLine}
-      
-       tickLine={false}
-      
-       mirror={true}
-      
-       tickMargin={6}
-      
-       width={1}
-      /><YAxis yAxisId="r" orientation="right" tick={{fontSize:10,fontWeight:900,
-                      fill: "#B8B8B8",}}
-       axisLine={viewTubeAxisLine}
-      
-       tickLine={false}
-      
-       mirror={true}
-      
-       tickMargin={6}
-      
-       width={1}
-      />
+    <YAxis yAxisId="l" tick={{fontSize:10,fontWeight:900}}/><YAxis yAxisId="r" orientation="right" tick={{fontSize:10,fontWeight:900}}/>
     <Tooltip content={<ChartTip/>}/>
     <Area yAxisId="l" type="monotone" dataKey="views" fill="#FF749730" stroke="#FF7497" strokeWidth={2} name="Views"/>
     <Line yAxisId="r" type="monotone" dataKey="subs" stroke="#00E5FF" strokeWidth={3} dot={false} name="Subscribers"/>
@@ -2538,20 +2421,9 @@ export const DurationSweetSpot: React.FC<GChartProps> = ({ data }) => {
  })).filter(d=>d.dur>0&&d.views>0), [data])
  return (
   <Card title="DURATION SWEET SPOT" subtitle="Video Length × Avg Views" headerColor="#CCFF00">
-   <ScatterChart margin={viewTubeCartesianMargin("scatter", 32)}>
+   <ScatterChart margin={{top:10,right:10,bottom:10,left:-10}}>
     <CartesianGrid strokeDasharray="3 3"/><XAxis type="number" dataKey="dur" name="Duration (min)" tick={{fontWeight:900,fontSize:10}}/>
-    <YAxis type="number" dataKey="views" name="Views" tick={{fontWeight:900,fontSize:10,
-                      fill: "#B8B8B8",}} tickFormatter={v=>v>1000?`${(v/1000).toFixed(0)}K`:v}
-       axisLine={viewTubeAxisLine}
-      
-       tickLine={false}
-      
-       mirror={true}
-      
-       tickMargin={6}
-      
-       width={1}
-      />
+    <YAxis type="number" dataKey="views" name="Views" tick={{fontWeight:900,fontSize:10}} tickFormatter={v=>v>1000?`${(v/1000).toFixed(0)}K`:v}/>
     <ZAxis type="number" dataKey="avp" range={[30,300]}/>
     <Tooltip content={<ChartTip/>}/><Scatter data={cd} fill="#FF7497" stroke="#000" strokeWidth={1}/></ScatterChart>
   </Card>
@@ -2567,18 +2439,7 @@ export const AudienceGrowth: React.FC<GChartProps> = ({ data }) => {
  return (
   <Card title="AUDIENCE GROWTH" subtitle="Discovery vs. Community" headerColor="#FF9900">
    <AreaChart data={cd} margin={{top:10,right:10,left:-10,bottom:0}}>
-    <CartesianGrid strokeDasharray="3 3"/><XAxis dataKey="date" tick={{fontSize:9,fontWeight:900}}/><YAxis tick={{fontSize:10,fontWeight:900,
-                      fill: "#B8B8B8",}}
-       axisLine={viewTubeAxisLine}
-      
-       tickLine={false}
-      
-       mirror={true}
-      
-       tickMargin={6}
-      
-       width={1}
-      />
+    <CartesianGrid strokeDasharray="3 3"/><XAxis dataKey="date" tick={{fontSize:9,fontWeight:900}}/><YAxis tick={{fontSize:10,fontWeight:900}}/>
     <Tooltip content={<ChartTip/>}/><Area type="monotone" dataKey="subs" fill="#CCFF00" stroke="#000" strokeWidth={2} name="Subscribers Gained"/></AreaChart>
   </Card>
  )
@@ -2660,10 +2521,10 @@ export const HookEffectiveness: React.FC<GChartProps> = ({ data }) => {
   >
    <div className="h-[340px] p-4">
     <StableChartFrame minHeightClassName="min-h-[300px]">
-     <BarChart data={cd} layout="vertical" margin={{top:10,right:4,left:4,bottom:5}}>
+     <BarChart data={cd} layout="vertical" margin={{top:10,right:30,left:10,bottom:5}}>
       <CartesianGrid strokeDasharray="3 3" horizontal={false}/>
-      <XAxis type="number" domain={[0,100]} unit="%" tick={{fontWeight:900,fontSize:11}} axisLine={viewTubeAxisLine}/>
-      <YAxis dataKey="name" type="category" tick={{fontWeight:900,fontSize:9}} width={120} axisLine={viewTubeAxisLine}/>
+      <XAxis type="number" domain={[0,100]} unit="%" tick={{fontWeight:900,fontSize:11}} axisLine={{ stroke: '#000', strokeWidth: 3 }}/>
+      <YAxis dataKey="name" type="category" tick={{fontWeight:900,fontSize:9}} width={120} axisLine={{ stroke: '#000', strokeWidth: 3 }}/>
       <Tooltip content={<ChartTip/>}/>
       <Bar dataKey="avp" fill="#33FF99" name="AVP %" radius={[0,4,4,0]}/>
      </BarChart>
@@ -2822,7 +2683,6 @@ export const GrowthPulse: React.FC<GChartProps> = ({ data }) => {
     },
     {
       type: "text",
-      labelPrefix: "PAST",
       value: TIME_RANGE_OPTIONS.find((o) => o.value === timeRange)?.label || timeRange,
       onPrev: () => {
        const idx = TIME_RANGE_OPTIONS.findIndex((o) => o.value === timeRange)
@@ -2851,7 +2711,7 @@ export const GrowthPulse: React.FC<GChartProps> = ({ data }) => {
     <StableChartFrame minHeightClassName="min-h-[260px]">
      <LineChart
       data={chartData}
-      margin={{ top: 10, right: 4, left: 4, bottom: 0 }}
+      margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
       onMouseMove={(state: any) => {
        if (typeof state?.activeTooltipIndex === "number") {
         setHoveredIdx(state.activeTooltipIndex)
@@ -2861,17 +2721,7 @@ export const GrowthPulse: React.FC<GChartProps> = ({ data }) => {
      >
       <CartesianGrid strokeDasharray="3 3" stroke="#333" />
       <XAxis dataKey="title" tick={{ fill: "#666", fontSize: 8, fontWeight: 900 }} />
-      <YAxis tick={{ fill: "#B8B8B8", fontSize: 10 }} 
-       axisLine={viewTubeAxisLine}
-      
-       tickLine={false}
-      
-       mirror={true}
-      
-       tickMargin={6}
-      
-       width={1}
-      />
+      <YAxis tick={{ fill: "#666", fontSize: 10 }} />
       <Tooltip content={<ChartTip />} />
       <Line type="monotone" dataKey="views" stroke="#FF7497" strokeWidth={3} dot={false} name="Views" />
       <Line type="monotone" dataKey="subs" stroke="#00E5FF" strokeWidth={3} dot={false} name="Subscribers" />
@@ -2890,7 +2740,6 @@ export const StackedEngagementPulse = EngagementLinesModule
 /* 16. Format Comparison Donuts */
 export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTypeRows }) => {
  const [aggregationMode, setAggregationMode] = useState<"total" | "average">("total")
- const [formatDominanceReplayTick, setFormatDominanceReplayTick] = useState(0)
 
  const filteredData = data
 
@@ -2962,17 +2811,6 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
   ...cd.map(m => ({ label: m.label.toUpperCase(), value: Math.round(m.data[1].value).toLocaleString(), tone: metricTone(m.key), lockTone: true })),
  ]
 
- useEffect(() => {
-  const replay = (event: Event) => {
-   const detail = (event as CustomEvent<{ visualId?: string }>).detail
-   if (detail?.visualId && detail.visualId !== "format-dominance") return
-   setFormatDominanceReplayTick((value) => value + 1)
-  }
-  window.addEventListener("vt:replay-hero-intro", replay)
-  return () => window.removeEventListener("vt:replay-hero-intro", replay)
- }, [])
-
-
  return (
   <SubToolboxChartModule
    header={{
@@ -2991,8 +2829,7 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
     leftTitle: "LONGFORM",
     leftStats: longStats,
     title: (
-     <div className="relative w-full h-full flex items-center justify-center">
-    <HeaderHeroPlayButton visualId="format-dominance" topPx={-2} rightPx={4} />
+     <div className="w-full h-full flex items-center justify-center">
       <div className="flex items-center gap-8">
        <div className="flex items-center gap-1.5">
         <div className="w-4 h-4 rounded-full bg-[#00E5FF] border-[2px] border-black" />
@@ -3009,9 +2846,9 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
     rightStats: shortsStats
    }}
    controllerRows={[
-    { type: "number", value: filteredData.length, unitLabel: "VIDEOS", bgTone: "#00E5FF" },
-    { type: "label", value: "LONGFORM VS SHORTS" },
-    { type: "toggle", labelPrefix: "SHOW AS", value: aggregationMode.toUpperCase(), options: ["TOTAL", "AVERAGE"], onSelect: (value) => setAggregationMode(value.toLowerCase() as "total" | "average"), bgTone: "#FFEA00", fgTone: "#000000" },
+    { type: "number", value: filteredData.length, bgTone: "#00E5FF" },
+    { type: "label", value: "LONG + SHORTS", bgTone: "#FF7497", fgTone: "#000000" },
+    { type: "toggle", value: aggregationMode.toUpperCase(), options: ["TOTAL", "AVERAGE"], onSelect: (value) => setAggregationMode(value.toLowerCase() as "total" | "average"), bgTone: "#FFEA00", fgTone: "#000000" },
    ]}
    footer={
     <InsightMarquee 
@@ -3028,7 +2865,6 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
        <StableChartFrame minHeightClassName="min-h-[300px]">
          <PieChart>
           <Pie
-         key={`format-dominance-${aggregationMode}-${formatDominanceReplayTick}`}
            data={metric.data}
            dataKey="value"
            nameKey="name"
@@ -3088,8 +2924,7 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
 const REVENUE_EFFICIENCY_COUNT_VALUES = [25, 50, 75, 100]
 
 export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
-  const [selectionMode, setSelectionMode] = useState<"recent" | "greatest">("greatest")
-  const [rankMetric, setRankMetric] = useState<"watch-hours" | "revenue" | "views">("revenue")
+  const [mode, setMode] = useState<"best-revenue" | "best-watch-hours" | "most-recent">("best-revenue")
   const [formatFilter, setFormatFilter] = useState<ShortsFormatFilter>("all")
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
   const [selectedCount, setSelectedCount] = useState(50)
@@ -3119,21 +2954,13 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
           uploadTs: new Date(String(r.uploadDate || "")).getTime() || 0,
         }
       })
-      .filter(d => {
-        if (d.wh <= 0) return false
-        if (selectionMode === "greatest" && rankMetric === "revenue") {
-          return d.revenueAvailable && d.rev > 0
-        }
-        return true
-      })
+      .filter(d => d.wh > 0 && (mode !== "best-revenue" || (d.revenueAvailable && d.rev > 0)))
 
-    const points = selectionMode === "recent"
+    const points = mode === "most-recent"
       ? [...raw].sort((a, b) => b.uploadTs - a.uploadTs).slice(0, selectedCount)
-      : rankMetric === "watch-hours"
+      : mode === "best-watch-hours"
         ? [...raw].sort((a, b) => b.wh - a.wh).slice(0, selectedCount)
-        : rankMetric === "views"
-          ? [...raw].sort((a, b) => b.views - a.views).slice(0, selectedCount)
-          : [...raw].sort((a, b) => b.rev - a.rev).slice(0, selectedCount)
+        : [...raw].sort((a, b) => b.rev - a.rev).slice(0, selectedCount)
 
     const revenuePercentiles = buildTieAwarePercentiles(
       points.map((point) => point.revenueAvailable ? point.rev : null),
@@ -3142,8 +2969,12 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
       minRadius: 4,
       maxRadius: 36,
     })
-    const watchHoursScale = { domain: getRelativeScatterDomain(points.map((point) => point.wh)), ticks: undefined }
-    const revScale = { domain: getRelativeScatterDomain(points.map((point) => point.rev)), ticks: undefined }
+    const watchHoursScale = buildAdaptiveZeroScale(points.map((point) => point.wh), {
+      fallbackMax: 100,
+    })
+    const revScale = buildAdaptiveZeroScale(points.map((point) => point.rev), {
+      fallbackMax: 100,
+    })
     const chartPoints = points.map((d, index) => {
       const key = `${d.title}-${d.uploadTs}-${d.rev}`
       const revenuePosition = revenuePercentiles[index]
@@ -3162,19 +2993,32 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
       watchHoursScale,
       revScale,
     }
-  }, [data, formatFilter, selectionMode, rankMetric, selectedCount])
+  }, [data, formatFilter, mode, selectedCount])
 
   const bubbleShape = (props: any) => {
     const { cx, cy, payload } = props
+    const isActive = hoveredKey === payload.key
+    const scale = isActive ? 1.25 : 1
     return (
-      <ViewTubeScatterBubble
+      <circle
         cx={cx}
         cy={cy}
-        radius={payload.radius}
+        r={payload.radius * scale}
         fill={payload.color}
-        isHovered={hoveredKey === payload.key}
-        onEnter={() => setHoveredKey(payload.key)}
-        onLeave={() => setHoveredKey(null)}
+        fillOpacity={isActive ? 0.72 : 0.55}
+        stroke={payload.color}
+        strokeWidth={isActive ? 2.5 : 1.5}
+        strokeOpacity={1}
+        onMouseEnter={() => setHoveredKey(payload.key)}
+        onMouseLeave={() => setHoveredKey(null)}
+        style={{
+          shapeRendering: "geometricPrecision",
+          mixBlendMode: "blend",
+          transitionProperty: "r, fill-opacity, stroke-width",
+          transitionDuration: "250ms",
+          transitionTimingFunction: "cubic-bezier(0.34,1.56,0.64,1)",
+          cursor: "pointer",
+        }}
       />
     )
   }
@@ -3196,75 +3040,25 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
       }}
       layout={{ moduleMinHeight: "420px", moduleWidth: "100%" }}
       controllerRows={[
+        { type: "number", value: selectedCount, onPrev: () => cycleCount(-1), onNext: () => cycleCount(1), bgTone: "#45DDB0" },
         {
-          type: "number",
-          value: selectedCount,
-          onPrev: () => cycleCount(-1),
-          onNext: () => cycleCount(1),
+          type: "dropdown",
+          value: mode,
+          options: [
+            { value: "best-revenue", label: "BEST BY EST. REVENUE" },
+            { value: "best-watch-hours", label: "BEST BY WATCH HOURS" },
+            { value: "most-recent", label: "LATEST PUBLISHED" },
+          ],
+          onSelect: (value) => setMode(value as "best-revenue" | "best-watch-hours" | "most-recent"),
+          bgTone: "#FF7497",
         },
-        ...(selectionMode === "recent"
-          ? [
-              {
-                type: "toggle" as const,
-                value: "RECENTLY PUBLISHED",
-                options: ["RECENTLY PUBLISHED", "GREATEST"] as const,
-                onSelect: (value: string) =>
-                  setSelectionMode(value === "GREATEST" ? "greatest" : "recent"),
-              },
-              {
-                type: "toggle" as const,
-                value:
-                  formatFilter === "all"
-                    ? "VIDEOS"
-                    : formatFilter === "shorts"
-                      ? "SHORTS"
-                      : "LONGFORM",
-                options: ["VIDEOS", "LONGFORM", "SHORTS"] as const,
-                onSelect: (value: string) =>
-                  setFormatFilter(
-                    value === "SHORTS"
-                      ? "shorts"
-                      : value === "LONGFORM"
-                        ? "longform"
-                        : "all",
-                  ),
-              },
-            ]
-          : [
-              {
-                type: "split" as const,
-                leftValue: "GREATEST",
-                rightValue:
-                  formatFilter === "all"
-                    ? "VIDEOS"
-                    : formatFilter === "shorts"
-                      ? "SHORTS"
-                      : "LONGFORM",
-                leftWidthValues: ["GREATEST", "RECENT"],
-                rightWidthValues: ["VIDEOS", "LONGFORM", "SHORTS"],
-                onPrev: () => setSelectionMode("recent"),
-                onNext: () =>
-                  setFormatFilter((current) =>
-                    current === "all"
-                      ? "longform"
-                      : current === "longform"
-                        ? "shorts"
-                        : "all",
-                  ),
-              },
-              {
-                type: "dropdown" as const,
-                labelPrefix: "RANKED BY",
-                value: rankMetric,
-                options: [
-                  { value: "watch-hours", label: "WATCH HOURS" },
-                  { value: "revenue", label: "REVENUE" },
-                  { value: "views", label: "VIEWS" },
-                ],
-                onSelect: (value: string) =>
-                  setRankMetric(value as "watch-hours" | "revenue" | "views"),
-              },
-            ]),
+        {
+          type: "toggle",
+          value: formatFilter === "all" ? "ALL VIDEOS" : formatFilter === "shorts" ? "SHORTS" : "LONG FORMAT",
+          options: ["ALL VIDEOS", "SHORTS", "LONG FORMAT"],
+          onSelect: (value) => setFormatFilter(value === "SHORTS" ? "shorts" : value === "LONG FORMAT" ? "longform" : "all"),
+          bgTone: "#26C7EC",
+        },
       ]}
       activeContext={{
         title: activePoint?.title?.toUpperCase() || "SELECT DATA POINT",
@@ -3281,12 +3075,11 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
         />
       }
     >
-      <div className="min-h-[400px] w-full min-w-0 max-w-full border-[0px] border-black rounded-none bg-white p-0 overflow-hidden flex flex-col">
-        <div className="h-[400px] min-h-[400px] flex flex-col overflow-hidden">
-     <div className="h-[348px] min-h-[348px] relative shrink-0">
-      <StableChartFrame minHeightClassName="min-h-[348px]">
-       <ScatterChart 
-                margin={viewTubeCartesianMargin("scatter", 36)}
+      <div className="min-h-[400px] w-full border-[0px] border-black rounded-none bg-white p-0 overflow-hidden flex flex-col">
+        <div className="h-[400px] relative">
+          <StableChartFrame minHeightClassName="min-h-[400px]">
+              <ScatterChart 
+                margin={{ top: 20, right: 30, bottom: 28, left: 10 }}
                 onMouseLeave={() => setHoveredKey(null)}
               >
                 <CartesianGrid stroke="rgba(0,0,0,0.06)" vertical={true} />
@@ -3295,14 +3088,10 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
                   dataKey="wh" 
                   name="Watch Hours" 
                   domain={cd.watchHoursScale.domain}
-                  padding={getBubbleSafePadding(36).x}
-                  tick={(props: any) => (
-                    <ViewTubeXAxisTick
-                      {...props}
-                      formatter={(value: number) => formatRoundedAxisTick(value, { unit: "h" })}
-                    />
-                  )}
-                  axisLine={viewTubeAxisLine}
+                  ticks={cd.watchHoursScale.ticks}
+                  tickFormatter={(value) => `${formatCompact(value)}h`}
+                  tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
+                  axisLine={{ stroke: '#000', strokeWidth: 3 }}
                   tickLine={false}
                 />
                 <YAxis 
@@ -3310,22 +3099,19 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
                   dataKey="rev"
                   name="Est. Revenue"
                   domain={cd.revScale.domain}
-                  padding={getBubbleSafePadding(36).y}
-       tick={(props: any) => (
-                    <ViewTubeYAxisTick
-                      {...props}
-                      formatter={(value: number) => formatRoundedAxisTick(value, { currency: true })}
-                    />
-                  )}
-                  axisLine={viewTubeAxisLine}
-       tickLine={false}
-                
-       mirror={true}
-      
-       tickMargin={6}
-      
-       width={1}
-      />
+                  ticks={cd.revScale.ticks}
+                  tickFormatter={(value) => `$${formatCompact(value)}`}
+                  tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
+                  axisLine={{ stroke: '#000', strokeWidth: 3 }}
+                  tickLine={false}
+                  label={{ 
+                    value: 'EST. REVENUE ($)',
+                    angle: -90, 
+                    position: 'insideLeft', 
+                    offset: 15, 
+                    style: { fontWeight: 1000, fontSize: 14, fill: '#000', letterSpacing: '0.1em', textAnchor: 'middle' } 
+                  }}
+                />
                 <Tooltip content={<ChartTip />} />
                 <Scatter data={cd.points} shape={bubbleShape} />
                 <Customized component={({ offset, width, height }: any) => {
@@ -3336,16 +3122,16 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
                   const bottom = offset.top + offset.height
                   return (
                     <g pointerEvents="none">
-                      <line x1={left} y1={top} x2={left} y2={0} stroke="#000" strokeWidth={2} strokeLinecap="round" shapeRendering="geometricPrecision" />
-                      <line x1={right} y1={bottom} x2={width} y2={bottom} stroke="#000" strokeWidth={2} strokeLinecap="round" shapeRendering="geometricPrecision" />
+                      <line x1={left} y1={top} x2={left} y2={0} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
+                      <line x1={right} y1={bottom} x2={width} y2={bottom} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
                     </g>
                   )
                 }} />
               </ScatterChart>
           </StableChartFrame>
-     </div>
-     <div className="h-[52px] min-h-[52px] shrink-0 px-[24px] grid grid-cols-[minmax(0,1fr)_minmax(200px,auto)_minmax(0,1fr)] gap-x-12 items-center pointer-events-none bg-white">
-            <div className="min-w-0 flex items-center gap-2 justify-self-end">
+          
+          <div className="absolute bottom-[0px] left-[14px] right-[14px] grid grid-cols-3 items-center pointer-events-none">
+            <div className="flex items-center gap-2 justify-self-end">
               <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Revenue</span>
               <div
                 className="w-36 h-6 border-[2px] border-[#B14AED] rounded-[2px]"
@@ -3359,7 +3145,7 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
               </span>
               <span className="text-black font-[1000] text-[16px] leading-none">▶</span>
             </div>
-            <div className="min-w-0 flex items-center gap-2 justify-self-start">
+            <div className="flex items-center gap-2 justify-self-start">
               <div className="flex items-center gap-2">
                 {[2, 3, 4, 5, 6].map((size, index) => (
                   <span
@@ -3404,7 +3190,8 @@ const bucketLabelForChannelProgress = (
   const d = new Date(startMs)
 
 if (timeRange === "1y") {
-    return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" })
+    const end = new Date(endMs)
+    return `${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${end.getDate()}`
   }
 
   if (timeRange === "6m" || timeRange === "3m") {
@@ -3440,89 +3227,12 @@ const mixChannelProgressTone = (hex: string, target: "#FFFFFF" | "#000000", amou
  return `#${channels.join("")}`.toUpperCase()
 }
 
-
-const CHANNEL_PROGRESS_OUTBOUND_SPAN_MS = 3300
-const CHANNEL_PROGRESS_BAR_SPRING_MS = 1350
-const CHANNEL_PROGRESS_RETURN_SPAN_MS = 1850
-const CHANNEL_PROGRESS_DOT_SPRING_MS = 760
-const CHANNEL_PROGRESS_LINE_TRAIL_MS = 220
-
-const channelProgressWaveSchedule = (
-  metricIndex: number,
-  metricCount: number,
-): { direction: "ltr" | "rtl"; startMs: number } => {
-  if (metricCount <= 1) return { direction: "ltr", startMs: 0 }
-
-  // Two metrics launch simultaneously from opposite edges.
-  if (metricCount === 2) {
-    return {
-      direction: metricIndex === 0 ? "ltr" : "rtl",
-      startMs: 0,
-    }
-  }
-
-  // Three metrics: LEFT at 0.0s, RIGHT at 0.3s, LEFT at 0.6s.
-  // 4+ metrics continue the same alternating 0.3s cadence.
-  return {
-    direction: metricIndex % 2 === 0 ? "ltr" : "rtl",
-    startMs: metricIndex * 300,
-  }
-}
-
-const channelProgressTravelDelay = (
-  index: number,
-  count: number,
-  direction: "ltr" | "rtl",
-  spanMs: number,
-) => {
-  if (count <= 1) return 0
-  const natural = index / (count - 1)
-  const travel = direction === "ltr" ? natural : 1 - natural
-
-  // < 1 exponent deliberately spends more time near the launch edge,
-  // then tightens the spacing so the wave gently gains speed.
-  return Math.pow(Math.max(0, Math.min(1, travel)), 0.62) * spanMs
-}
-
-const channelProgressSafePeakScale = (
-  element: SVGGraphicsElement,
-  travel: number,
-) => {
-  try {
-    const box = element.getBBox()
-    if (!Number.isFinite(box.height) || box.height <= 0) return 1.04
-
-    // Smooth bell-shaped overshoot: low at the edges, highest in the middle.
-    const bell = Math.sin(Math.PI * Math.max(0, Math.min(1, travel)))
-    const desired = 1.035 + bell * 0.13
-
-    // Never let the spring overshoot collide with the plot ceiling.
-    // Because the rect scales around its bottom edge, `box.y` is the available
-    // headroom above the bar.
-    const safe = 1 + Math.max(0, box.y - 5) / box.height
-    return Math.max(1.01, Math.min(desired, safe))
-  } catch {
-    return 1.04
-  }
-}
-
-const cancelAndRelease = (animation: Animation) => {
-  animation.finished
-    .catch(() => undefined)
-    .then(() => {
-      try { animation.cancel() } catch { /* detached node */ }
-    })
-  return animation
-}
-
 export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics, monthlyMetrics, visualStyle }) => {
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["views"])
   const [timeRange, setTimeRange] = useState<"lifetime" | "3y" | "2y" | "1y" | "6m" | "3m">("1y")
   const [viewMode, setViewMode] = useState<"progress" | "delta">("progress")
   const [layoutMode, setLayoutMode] = useState<"overlay" | "individual">("overlay")
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
-  const channelProgressRootRef = useRef<HTMLDivElement>(null)
-  const [channelProgressReplayTick, setChannelProgressReplayTick] = useState(0)
 
   const METRIC_OPTIONS = [
     { value: "subscribersGained", label: "SUBSCRIBERS", tone: VT_VISUAL_METRIC_COLORS.subscribers, isRevenue: false },
@@ -3761,194 +3471,6 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
 
   const activeMetrics = METRIC_OPTIONS.filter((option) => selectedMetrics.includes(option.value))
 
-  useEffect(() => {
-    const replay = (event: Event) => {
-      const detail = (event as CustomEvent<{ visualId?: string }>).detail
-      if (detail?.visualId && detail.visualId !== "channel-progress") return
-      setChannelProgressReplayTick((value) => value + 1)
-    }
-    window.addEventListener("vt:replay-hero-intro", replay)
-    return () => window.removeEventListener("vt:replay-hero-intro", replay)
-  }, [])
-
-
-
-  useLayoutEffect(() => {
-    const root = channelProgressRootRef.current
-    if (!root || viewMode !== "progress" || chartData.length === 0 || activeMetrics.length === 0) return
-
-    const animations: Animation[] = []
-    const metricCount = activeMetrics.length
-
-    // Make sure the graph itself never creates the "hit a ceiling" illusion.
-    root.querySelectorAll<SVGSVGElement>("svg").forEach((svg) => {
-      svg.style.overflow = "visible"
-    })
-
-    activeMetrics.forEach((option, metricIndex) => {
-      const schedule = channelProgressWaveSchedule(metricIndex, metricCount)
-      const outboundDirection = schedule.direction
-      const returnDirection: "ltr" | "rtl" = outboundDirection === "ltr" ? "rtl" : "ltr"
-
-      const barRects = Array.from(
-        root.querySelectorAll<SVGGraphicsElement>(
-          `.channel-progress-bar-${option.value} .recharts-rectangle`,
-        ),
-      )
-
-      barRects.forEach((bar, index) => {
-        const natural = barRects.length <= 1 ? 0.5 : index / (barRects.length - 1)
-        const travel = outboundDirection === "ltr" ? natural : 1 - natural
-        const delay =
-          schedule.startMs +
-          channelProgressTravelDelay(
-            index,
-            barRects.length,
-            outboundDirection,
-            CHANNEL_PROGRESS_OUTBOUND_SPAN_MS,
-          )
-
-        const peakScale = channelProgressSafePeakScale(bar, travel)
-        bar.style.transformBox = "fill-box"
-        bar.style.transformOrigin = "center bottom"
-        bar.style.willChange = "transform, opacity"
-
-        animations.push(cancelAndRelease(bar.animate(
-          [
-            { transform: "scaleY(0.08)", opacity: 0.18, offset: 0 },
-            {
-              transform: `scaleY(${peakScale})`,
-              opacity: 1,
-              offset: 0.46,
-              easing: "cubic-bezier(0.16, 1, 0.3, 1)",
-            },
-            {
-              transform: "scaleY(0.965)",
-              opacity: 1,
-              offset: 0.67,
-              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-            },
-            {
-              transform: "scaleY(1.018)",
-              opacity: 1,
-              offset: 0.86,
-              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-            },
-            { transform: "scaleY(1)", opacity: 1, offset: 1 },
-          ],
-          {
-            duration: CHANNEL_PROGRESS_BAR_SPRING_MS,
-            delay,
-            fill: "both",
-            easing: "linear",
-          },
-        )))
-      })
-
-      // The second half-wave begins as the outbound wave reaches the far axis.
-      // It returns in the opposite direction and carries the dots with it.
-      const returnStart =
-        schedule.startMs +
-        CHANNEL_PROGRESS_OUTBOUND_SPAN_MS +
-        160
-
-      const dots = Array.from(
-        root.querySelectorAll<SVGGraphicsElement>(
-          `.channel-progress-line-${option.value} .recharts-line-dot`,
-        ),
-      ).sort((a, b) => {
-        const ax = Number(a.getAttribute("cx") ?? 0)
-        const bx = Number(b.getAttribute("cx") ?? 0)
-        return ax - bx
-      })
-
-      dots.forEach((dot, index) => {
-        const delay =
-          returnStart +
-          channelProgressTravelDelay(
-            index,
-            dots.length,
-            returnDirection,
-            CHANNEL_PROGRESS_RETURN_SPAN_MS,
-          )
-
-        dot.style.transformBox = "fill-box"
-        dot.style.transformOrigin = "center"
-        dot.style.willChange = "transform, opacity"
-
-        animations.push(cancelAndRelease(dot.animate(
-          [
-            { transform: "scale(0)", opacity: 0, offset: 0 },
-            {
-              transform: "scale(1.38)",
-              opacity: 1,
-              offset: 0.48,
-              easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-            },
-            {
-              transform: "scale(0.9)",
-              opacity: 1,
-              offset: 0.7,
-              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-            },
-            {
-              transform: "scale(1.055)",
-              opacity: 1,
-              offset: 0.88,
-              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-            },
-            { transform: "scale(1)", opacity: 1, offset: 1 },
-          ],
-          {
-            duration: CHANNEL_PROGRESS_DOT_SPRING_MS,
-            delay,
-            fill: "both",
-            easing: "linear",
-          },
-        )))
-      })
-
-      // The line follows the dot-wave rather than leading it.
-      const path = root.querySelector<SVGPathElement>(
-        `.channel-progress-line-${option.value} .recharts-line-curve`,
-      )
-
-      if (path) {
-        const hiddenClip =
-          returnDirection === "rtl"
-            ? "inset(0 0 0 100%)"
-            : "inset(0 100% 0 0)"
-
-        animations.push(cancelAndRelease(path.animate(
-          [
-            { clipPath: hiddenClip, opacity: 0.18 },
-            { clipPath: "inset(0 0 0 0)", opacity: 1 },
-          ],
-          {
-            duration: CHANNEL_PROGRESS_RETURN_SPAN_MS + 520,
-            delay: returnStart + CHANNEL_PROGRESS_LINE_TRAIL_MS,
-            fill: "both",
-            easing: "cubic-bezier(0.16, 1, 0.3, 1)",
-          },
-        )))
-      }
-    })
-
-    return () => {
-      animations.forEach((animation) => {
-        try { animation.cancel() } catch { /* detached node */ }
-      })
-    }
-  }, [
-    activeMetrics,
-    chartData,
-    layoutMode,
-    selectedMetrics,
-    timeRange,
-    viewMode,
-    channelProgressReplayTick,
-  ])
-
   const CustomCandle = (props: any) => {
     const { x, y, width, height, payload, optionKey } = props
     const wick = payload[`candle_wick_${optionKey}`]
@@ -3983,31 +3505,12 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
     )
   }
 
-  const renderChartForMetrics = (metricsToRender: typeof METRIC_OPTIONS, isIndividualGrid = false, showXAxisLabels = true) => {
-    // Progress mode deliberately uses TWO DIFFERENT Y scales:
-    //   LEFT  = raw period values used by the bars
-    //   RIGHT = cumulative totals used by the progress line.
-    //
-    // Every selected metric still gets its own hidden pair of axes so metrics with
-    // wildly different units can overlay without flattening each other. Only the
-    // first selected metric exposes tick labels on the left/right edges.
-    const getPeriodAxisId = (metricKey: string) => `period-axis-${metricKey}`
-    const getTotalAxisId = (metricKey: string) => `total-axis-${metricKey}`
-
-    const getPeriodScale = (metricKey: string) =>
-      getRelativeBarScale(chartData.map((point) => Number(point[`period_${metricKey}`] ?? 0)))
-
-    const getTotalScale = (metricKey: string) =>
-      getNiceScale(
-        chartData.map((point) => Number(point[`total_${metricKey}`] ?? 0)),
-        { targetIntervals: 4, includeZero: true },
-      )
-
+  const renderChartForMetrics = (metricsToRender: typeof METRIC_OPTIONS, isIndividualGrid = false) => {
     return (
       <ComposedChart
         data={chartData}
-        margin={viewTubeCartesianMargin("composed")}
-        barGap={metricsToRender.length === 2 && !isIndividualGrid ? 0 : metricsToRender.length === 3 ? 2 : 3}
+        margin={{ top: 20, right: 30, bottom: 35, left: 10 }}
+        barGap={metricsToRender.length === 2 ? 5 : metricsToRender.length === 3 ? 3.5 : 4}
         onMouseMove={(state: any) => {
           if (typeof state?.activeTooltipIndex === "number") {
             setHoveredIdx(state.activeTooltipIndex)
@@ -4016,194 +3519,34 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
         onMouseLeave={() => setHoveredIdx(null)}
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-      <XAxis 
-  dataKey="name" 
-  axisLine={viewTubeAxisLine}
-  tick={(props: any) => {
-    if (!showXAxisLabels) return <g />
-    const { x, y, payload, index } = props
-    const labelColor = mixChannelProgressTone(activeMetrics[0].tone, "#000000", 0.4)
-
-    // Custom label spanning for the 1-year view
-    if (timeRange === "1y") {
-      if (index % 2 !== 0) return <g /> 
-      
-      const d = new Date(chartData[index].start)
-      return (
-        <text 
-          x={x} 
-          y={y + 12} 
-          dx={isIndividualGrid ? 2 : 6} 
-          textAnchor="start" 
-          fill={labelColor} 
-          fontSize={isIndividualGrid ? 8 : 10} 
-          fontWeight={900}
-        >
-          {d.toLocaleDateString("en-US", { month: "short", year: "2-digit" })}
-        </text>
-      )
-    }
-
-    // Two-tier label spanning for the 6-month view
-    if (timeRange === "6m") {
-      const d = new Date(chartData[index].start)
-      const weekNum = (index % 4) + 1
-      const isSecondWeek = index % 4 === 1
-      
-      return (
-        <g transform={`translate(${x},${y})`}>
-          {/* Top Tier: Week Number */}
-          <text 
-            x={0} 
-            y={12} 
-            textAnchor="middle" 
-            fill={labelColor} 
-            fontSize={isIndividualGrid ? 7 : 9} 
-            fontWeight={900}
-          >
-            W{weekNum}
-          </text>
-          
-          {/* Bottom Tier: Month Label (Anchored to W2 to span across the 4 weeks) */}
-          {isSecondWeek && (
-            <text 
-              x={0} 
-              y={26} 
-              dx={isIndividualGrid ? 4 : 8}
-              textAnchor="start" 
-              fill={labelColor} 
-              fontSize={isIndividualGrid ? 9 : 11} 
-              fontWeight={900}
-            >
-              {d.toLocaleDateString("en-US", { month: "short" })}
-            </text>
-          )}
-        </g>
-      )
-    }
-
-    // Default centered label for all other time ranges
-    return (
-      <text 
-        x={x} 
-        y={y + 12} 
-        textAnchor="middle" 
-        fill={labelColor} 
-        fontSize={isIndividualGrid ? 8 : 10} 
-        fontWeight={900}
-      >
-        {payload.value}
-      </text>
-    )
-  }} 
-/>
-
-        {viewMode === "progress" ? (
-          <>
-            {metricsToRender.map((option, idx) => {
-              const isPrimary = idx === 0
-              const periodScale = getPeriodScale(option.value)
-              const totalScale = getTotalScale(option.value)
-              const metricFormatter = (value: number) =>
-                value === 0 ? "" : formatMetricValue(option.value, Number(value))
-
-              return (
-                <React.Fragment key={`progress-axes-${option.value}`}>
-                  <YAxis
-                    yAxisId={getPeriodAxisId(option.value)}
-                    {...viewTubeNumericYAxisProps("left")}
-                    domain={periodScale.domain}
-                    ticks={periodScale.ticks}
-                    hide={!isPrimary}
-                    tick={(props: any) => (
-                      <ViewTubeYAxisTick {...props} orientation="left" formatter={metricFormatter} />
-                    )}
-                    label={isPrimary ? {
-                      content: (props: any) => (
-                        <ViewTubeYAxisTitle {...props} title={`${option.label} PERIOD`} orientation="left" />
-                      ),
-                    } : undefined}
-                    allowDecimals={option.value === "revenue" || option.value === "watchHours"}
-                  />
-                  <YAxis
-                    yAxisId={getTotalAxisId(option.value)}
-                    {...viewTubeNumericYAxisProps("right")}
-                    domain={totalScale.domain}
-                    ticks={totalScale.ticks}
-                    hide={!isPrimary}
-                    tick={(props: any) => (
-                      <ViewTubeYAxisTick {...props} orientation="right" formatter={metricFormatter} />
-                    )}
-                    label={isPrimary ? {
-                      content: (props: any) => (
-                        <ViewTubeYAxisTitle {...props} title={`${option.label} TOTAL`} orientation="right" />
-                      ),
-                    } : undefined}
-                    allowDecimals={option.value === "revenue" || option.value === "watchHours"}
-                  />
-                </React.Fragment>
-              )
-            })}
-          </>
-        ) : (
-          metricsToRender.map((option, idx) => {
-            const orientation = idx === 0 ? "left" : "right"
-            return (
-              <YAxis
-                key={`delta-axis-${option.value}`}
-                yAxisId={option.value}
-                {...viewTubeNumericYAxisProps(orientation)}
-                hide={idx > 1}
-                tick={(props: any) => (
-                  <ViewTubeYAxisTick
-                    {...props}
-                    orientation={orientation}
-                    formatter={(value: number) =>
-                      value === 0 ? "" : formatMetricValue(option.value, Number(value))
-                    }
-                  />
-                )}
-                label={idx < 2 ? {
-                  content: (props: any) => (
-                    <ViewTubeYAxisTitle {...props} title={`${option.label} DELTA`} orientation={orientation} />
-                  ),
-                } : undefined}
-              />
-            )
-          })
-        )}
-
+        <XAxis dataKey="name" tick={{ fontWeight: 900, fontSize: isIndividualGrid ? 8 : 10 }} axisLine={{ stroke: "#000", strokeWidth: 3 }} />
+        {metricsToRender.map((option, idx) => (
+          <YAxis
+            key={`yaxis-${option.value}`}
+            yAxisId={option.value}
+            orientation={idx === 0 ? "right" : "left"}
+            hide={idx > 1}
+            tick={{ 
+              fontWeight: 900, 
+              fontSize: isIndividualGrid ? 8 : 10,
+              fill: mixChannelProgressTone(option.tone, "#000000", 0.4)
+            }}
+            tickFormatter={(v) => formatCompact(v)}
+            axisLine={{ stroke: mixChannelProgressTone(option.tone, "#000000", 0.2), strokeWidth: 3 }}
+            width={45}
+          />
+        ))}
         <Tooltip content={channelProgressTooltip} />
-
         {metricsToRender.map((option) => {
           const lightTone = mixChannelProgressTone(option.tone, "#FFFFFF", 0.38)
           const darkTone = mixChannelProgressTone(option.tone, "#000000", 0.2)
-          const metricCount = Math.max(1, metricsToRender.length)
-          const isTwoMetricOverlay = metricCount === 2 && !isIndividualGrid
-          const darkLineWidth =
-            metricCount === 1 ? 8 :
-            metricCount === 2 ? 6 :
-            metricCount === 3 ? 4.5 :
-            metricCount === 4 ? 3.5 : 3
-          const lightLineWidth =
-            metricCount === 1 ? 5 :
-            metricCount === 2 ? 4 :
-            metricCount === 3 ? 3 :
-            metricCount === 4 ? 2.5 : 2
-          const dotRadius =
-            metricCount === 1 ? 6 :
-            metricCount === 2 ? 5 :
-            metricCount === 3 ? 4.5 :
-            metricCount === 4 ? 4 : 3.5
-          const dotStrokeWidth = metricCount <= 2 ? 3 : metricCount === 3 ? 2.5 : 2
-          const activeDotRadius = dotRadius + 1
           const barSize = isIndividualGrid
             ? 28
             : metricsToRender.length === 1
               ? 46
               : metricsToRender.length === 2
-                ? 23
-                : Math.max(3, Math.floor((48 - (metricsToRender.length - 1) * 2) / metricsToRender.length))
+                ? 20.5
+                : Math.max(3, Math.floor((46 - (metricsToRender.length - 1) * 3) / metricsToRender.length))
 
           if (viewMode === "delta") {
             return (
@@ -4227,54 +3570,24 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
           return (
             <React.Fragment key={option.value}>
               <Bar
-                yAxisId={getPeriodAxisId(option.value)}
+                yAxisId={option.value}
                 dataKey={`period_${option.value}`}
                 name={`${option.label} PERIOD`}
-                className={`channel-progress-bar-${option.value}`}
                 fill={lightTone}
-                stroke="none"
-                strokeWidth={0}
+                stroke={darkTone}
+                strokeWidth={2}
                 barSize={barSize}
-                radius={[4, 4, 0, 0]}
-                isAnimationActive={false}
-                // A 10–12px minimum keeps very small non-zero periods visible.
-                // At the normal Channel Progress plot heights this is roughly
-                // 3.5%+ of the usable chart area.
-                minPointSize={getRelativeBarMinPointSize(isIndividualGrid ? 285 : 340)}
+                radius={[3, 3, 0, 0]}
               />
-
-              {/* Cumulative line uses the light metric tone only. */}
               <Line
-                yAxisId={getTotalAxisId(option.value)}
+                yAxisId={option.value}
                 type="monotone"
                 dataKey={`total_${option.value}`}
                 name={`${option.label} TOTAL`}
-                className={`channel-progress-line-${option.value}`}
-                stroke={lightTone}
-                strokeWidth={isTwoMetricOverlay ? 4 : lightLineWidth}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                isAnimationActive={false}
-                dot={{
-                  r: isTwoMetricOverlay ? 5 : dotRadius,
-                  fill: lightTone,
-                  stroke: darkTone,
-                  strokeWidth: isTwoMetricOverlay ? 2 : dotStrokeWidth,
-                  style: {
-                    transition:
-                      "r 350ms cubic-bezier(0.22, 1, 0.36, 1), stroke-width 350ms ease, fill 350ms ease",
-                  },
-                }}
-                activeDot={{
-                  r: isTwoMetricOverlay ? 6 : activeDotRadius,
-                  fill: lightTone,
-                  stroke: darkTone,
-                  strokeWidth: isTwoMetricOverlay ? 2.5 : dotStrokeWidth,
-                  style: {
-                    transition:
-                      "r 750ms cubic-bezier(0.22, 1, 0.36, 1), stroke-width 750ms ease, fill 750ms ease",
-                  },
-                }}
+                stroke={darkTone}
+                strokeWidth={metricsToRender.length === 1 ? 3.5 : 2}
+                dot={{ r: metricsToRender.length === 1 ? 3.5 : 2, fill: lightTone, stroke: darkTone, strokeWidth: 4 }}
+                activeDot={{ r: 5, fill: "#FFFFFF", stroke: darkTone, strokeWidth: 5 }}
               />
             </React.Fragment>
           )
@@ -4287,47 +3600,19 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
     <SubToolboxChartModule
       header={{
         title: "CHANNEL PROGRESS",
-        subtitle: `DATA: ${usesMonthlyGrain ? "MONTHLY STATS" : "DAILY STATS"} • ${viewMode === "progress" ? "OVERALL" : "WINDOW CHANGE"} • RAW METRICS`,
+        subtitle: `DATA: ${usesMonthlyGrain ? "MONTHLY STATS" : "DAILY STATS"} • ${viewMode.toUpperCase()} VIEW • RAW METRICS`,
         icon: visualShellIcon(visualStyle, "calendar"),
       }}
       theme={visualShellTheme(visualStyle, "#FF82B0", "#26C7EC")}
-      controllerWidth={300}
       controllerRows={[
         {
-          type: "custom",
-          render: () => {
-            const modeLabel = viewMode === "progress" ? "PROGRESS TOTALS" : "PERFORMANCE CHANGES"
-            const cycleMode = () => setViewMode((mode) => (mode === "progress" ? "delta" : "progress"))
-            return (
-              <div className="flex h-[30px] min-h-[30px] w-full items-stretch">
-                <div className="flex min-w-[58px] shrink-0 items-center justify-center bg-black px-1">
-                  <span className="text-[15px] font-[999] uppercase leading-none tracking-[-0.05em] text-[var(--vt-controller-prev)]">
-                    CHANNEL
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={cycleMode}
-                  className="group flex min-w-0 flex-1 items-center border-0 border-l-[4px] border-black bg-[var(--vt-controller-prev)] px-0"
-                  aria-label="Change Channel Progress view"
-                >
-                  <span className="min-w-0 flex-1 truncate px-1 text-center text-[15px] font-[999] uppercase leading-none tracking-[-0.05em] text-black">
-                    {modeLabel}
-                  </span>
-                  <span
-                    className="mr-1 inline-flex w-[22px] shrink-0 items-center justify-center text-[15px] font-[999] leading-none text-black transition-transform duration-100 group-hover:scale-125"
-                    aria-hidden="true"
-                  >
-                    ►
-                  </span>
-                </button>
-              </div>
-            )
-          },
+          type: "label",
+          value: "METRICS",
+          bgTone: "#000000",
+          fgTone: "#CCFF00",
         },
         {
           type: "metricMultiSelect",
-          label: "FOR",
           options: METRIC_OPTIONS.map((option) => ({
             label: option.label,
             value: option.value,
@@ -4337,12 +3622,8 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
           onToggleValue: toggleMetric,
           minimumSelected: 1,
           maximumSelected: 5,
-          // Combined: keep the animation branch's `maxLabels: 2` cap with
-          // codex/unified-account-auth-billing's `bgTone` + time-range picker.
-          maxLabels: 2,
-          displayMode: "timeline",
-          bgTone: "#FFFFFF",
-          fgTone: "#000000",
+          maxLabels: 3,
+          bgTone: "#FF7497",
         },
         {
           type: "text",
@@ -4359,70 +3640,32 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
         },
         {
           type: "custom",
-          render: () => {
-            const timeLabel = TIME_RANGE_OPTIONS.find((option) => option.value === timeRange)?.label || timeRange
-            const layoutLabel = selectedMetrics.length >= 2
-              ? (layoutMode === "individual" ? "GRID" : "COMBO")
-              : "COMBO"
-
-            const cycleTime = () => {
-              const index = TIME_RANGE_OPTIONS.findIndex((option) => option.value === timeRange)
-              setTimeRange(TIME_RANGE_OPTIONS[(index - 1 + TIME_RANGE_OPTIONS.length) % TIME_RANGE_OPTIONS.length].value)
-            }
-
-            const cycleLayout = () => {
-              if (selectedMetrics.length < 2) return
-              setLayoutMode((mode) => (mode === "overlay" ? "individual" : "overlay"))
-            }
-
-            return (
-              <div className="flex h-[30px] min-h-[30px] w-full items-stretch">
-                <div className="flex min-w-0 flex-1 items-stretch bg-[#33FF99]">
-                  <button
-                    type="button"
-                    onClick={cycleTime}
-                    className="group flex w-[24px] shrink-0 appearance-none items-center justify-center border-0 bg-transparent outline-none focus:outline-none focus-visible:outline-none"
-                    style={{ WebkitTapHighlightColor: "transparent" }}
-                    aria-label="Previous time window"
-                  >
-                    <span className="inline-block rotate-180 text-[15px] font-[999] leading-none text-black transition-transform duration-100 group-hover:scale-125">
-                      ►
-                    </span>
-                  </button>
-                  <div className="flex min-w-0 flex-1 items-center justify-center truncate px-1 text-[15px] font-[999] uppercase leading-none tracking-[-0.05em] text-black">
-                    {timeLabel}
-                  </div>
-                </div>
-
-                <span className="w-[4px] shrink-0 bg-black" aria-hidden="true" />
-
-                <div className="flex min-w-0 flex-1 items-stretch bg-[var(--vt-controller-middle)]">
-                  <button
-                    type="button"
-                    onClick={cycleLayout}
-                    disabled={selectedMetrics.length < 2}
-                    className="flex min-w-0 flex-1 appearance-none items-center justify-center truncate border-0 bg-transparent px-1 text-[15px] font-[999] uppercase leading-none tracking-[-0.05em] text-black outline-none focus:outline-none focus-visible:outline-none disabled:cursor-default"
-                    style={{ WebkitTapHighlightColor: "transparent" }}
-                    aria-label="Change chart layout"
-                  >
-                    {layoutLabel}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={cycleLayout}
-                    disabled={selectedMetrics.length < 2}
-                    className="group flex w-[24px] shrink-0 appearance-none items-center justify-center border-0 bg-transparent outline-none focus:outline-none focus-visible:outline-none disabled:cursor-default disabled:opacity-30"
-                    style={{ WebkitTapHighlightColor: "transparent" }}
-                    aria-label="Next chart layout"
-                  >
-                    <span className="text-[15px] font-[999] leading-none text-black transition-transform duration-100 group-hover:scale-125">
-                      ►
-                    </span>
-                  </button>
-                </div>
-              </div>
-            )
-          },
+          render: () => (
+            <div className="flex h-full items-center gap-1 px-2 bg-[#FF7497]">
+              <button
+                type="button"
+                onClick={() => setViewMode((m) => (m === "progress" ? "delta" : "progress"))}
+                className="h-6 px-2 rounded-[4px] text-[9px] font-black uppercase border-[2px] border-black transition-colors"
+                style={{
+                  background: viewMode === "delta" ? "#000000" : "#FFFFFF",
+                  color: viewMode === "delta" ? "#3FEE56" : "#000000",
+                }}
+              >
+                {viewMode === "delta" ? "CANDLE DELTA" : "BAR PROGRESS"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setLayoutMode((m) => (m === "overlay" ? "individual" : "overlay"))}
+                className="h-6 px-2 rounded-[4px] text-[9px] font-black uppercase border-[2px] border-black transition-colors"
+                style={{
+                  background: layoutMode === "individual" ? "#000000" : "#FFFFFF",
+                  color: layoutMode === "individual" ? "#4EE4BE" : "#000000",
+                }}
+              >
+                {layoutMode === "individual" ? "GRID" : "OVERLAY"}
+              </button>
+            </div>
+          ),
         },
       ]}
       activeContext={{
@@ -4436,28 +3679,19 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
         />
       }
     >
-      <div ref={channelProgressRootRef} className="px-1 pt-2 pb-4 min-h-[400px] relative overflow-visible">
-       {/* Header-anchored: negative topPx floats the button above the chart body
-           into the shell header row (parent has overflow-visible so it renders). */}
-       <HeaderHeroPlayButton visualId="channel-progress" topPx={-34} rightPx={12} />
+      <div className="p-4 min-h-[400px] relative">
         {layoutMode === "individual" && activeMetrics.length > 1 ? (
-          <div className={`grid gap-1 h-[420px] ${activeMetrics.length === 2 ? 'grid-cols-1 grid-rows-2' : 'grid-cols-2 grid-rows-2'}`}>
-            {activeMetrics.map((metricOpt, metricIndex) => {
-              const isBottomChart =
-                activeMetrics.length === 2
-                  ? metricIndex === activeMetrics.length - 1
-                  : metricIndex >= Math.max(0, activeMetrics.length - 2)
-              return (
-                <div key={metricOpt.value} className="relative h-full min-h-0 bg-white">
-                  <div className="absolute top-0 left-2 z-10 text-[9px] font-black uppercase tracking-wider" style={{ color: metricOpt.tone }}>
-                    {metricOpt.label}
-                  </div>
-                  <StableChartFrame minHeightClassName="h-full">
-                    {renderChartForMetrics([metricOpt], true, isBottomChart)}
-                  </StableChartFrame>
+          <div className={`grid gap-3 h-[420px] ${activeMetrics.length === 2 ? 'grid-cols-1 grid-rows-2' : 'grid-cols-2 grid-rows-2'}`}>
+            {activeMetrics.map((metricOpt) => (
+              <div key={metricOpt.value} className="relative h-full rounded-lg border-2 border-black/20 bg-white/50 p-1">
+                <div className="absolute top-1 left-2 z-10 text-[9px] font-black uppercase tracking-wider" style={{ color: metricOpt.tone }}>
+                  {metricOpt.label}
                 </div>
-              )
-            })}
+                <StableChartFrame minHeightClassName="h-full">
+                  {renderChartForMetrics([metricOpt], true)}
+                </StableChartFrame>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="h-[400px]">
@@ -4467,7 +3701,6 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
           </div>
         )}
 
-        {layoutMode !== "individual" ? (
         <div className="pointer-events-none absolute bottom-0 left-[14px] right-[14px] flex h-8 items-center justify-center gap-3 overflow-hidden bg-white/90 px-2">
           {activeMetrics.map((option) => {
             const lightTone = mixChannelProgressTone(option.tone, "#FFFFFF", 0.38)
@@ -4481,7 +3714,6 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
             )
           })}
         </div>
-        ) : null}
       </div>
     </SubToolboxChartModule>
   )
@@ -5401,7 +4633,6 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
     height: "expanded",
    }}
   >
-   <HeroIntroBoundary visualId="traffic-source-evolution" replayKey={`${selectedWindow}-${visibleKeys.join("|")}`}>
    <div className="h-full min-h-[470px] w-full overflow-hidden bg-[#090b16]">
     {visibleKeys.length === 0 ? <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} /> : (
      <div className="flex h-full flex-col justify-center gap-2">
@@ -5522,7 +4753,6 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
      </div>
     )}
    </div>
-  </HeroIntroBoundary>
   </SubToolboxChartModule>
  )
 }
@@ -5945,11 +5175,10 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
    }}
    layout={{ moduleMinHeight: "680px", moduleWidth: "100%" }}
    controllerRows={[
-    { type: "label", value: "TITLE WORDS", bgTone: "#000000", fgTone: "#FF7497" },
-    { type: "label", value: "TOP VIDEOS", bgTone: "#000000", fgTone: "#CCFF00" },
+    { type: "label", value: "TOP PERFORMING", bgTone: "#FF7497" },
+    { type: "label", value: "TITLE KEYWORDS", bgTone: "#FFFFFF" },
     {
      type: "toggle",
-     labelPrefix: "USING",
      value: rankedByMode.toUpperCase(),
      options: supportsTotal ? ["AVERAGE", "TOTAL"] : ["AVERAGE"],
      onSelect: (value) => setRankedByMode(value.toLowerCase() as KeywordRankingMode),
@@ -5959,7 +5188,7 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
     {
      type: "dropdown",
      value: metricMode,
-     labelPrefix: "RANKED BY",
+     labelPrefix: "BY",
      options: KEYWORD_VENN_METRIC_OPTIONS.map((option) => ({ value: option, label: getKeywordMetricDefinition(option).label })),
      onSelect: (value) => setMetricMode(value as KeywordMetricKey),
      bgTone: "#FFE357",
@@ -6005,7 +5234,6 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
     />
    }
   >
-   <HeroIntroBoundary visualId="keyword-venn" replayKey={breakdownSelectionKey}>
    <div className="w-full bg-white p-2 flex flex-col">
     {topKeywords.length === 0 ? (
      <EmptyState missing={["keywords", "title_rows"]} rows={data.length} />
@@ -6053,9 +5281,9 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
         ) : null}
 
         {/* Base Circles */}
-        <circle className="vt-venn-circle" data-vt-venn-circle="0" cx={g0.cx} cy={g0.cy} r={g0.r} fill={KEYWORD_VENN_FILLS[0]} stroke={KEYWORD_VENN_STROKES[0]} strokeWidth={g0.r > 0 ? 5 : 0} opacity={g0.opacity} style={{ transition: vennTransition }} />
-        <circle className="vt-venn-circle" data-vt-venn-circle="1" cx={g1.cx} cy={g1.cy} r={g1.r} fill={KEYWORD_VENN_FILLS[1]} stroke={KEYWORD_VENN_STROKES[1]} strokeWidth={g1.r > 0 ? 5 : 0} opacity={g1.opacity} style={{ transition: vennTransition }} />
-        <circle className="vt-venn-circle" data-vt-venn-circle="2" cx={g2.cx} cy={g2.cy} r={g2.r} fill={KEYWORD_VENN_FILLS[2]} stroke={KEYWORD_VENN_STROKES[2]} strokeWidth={g2.r > 0 ? 5 : 0} opacity={g2.opacity} style={{ transition: vennTransition }} />
+        <circle cx={g0.cx} cy={g0.cy} r={g0.r} fill={KEYWORD_VENN_FILLS[0]} stroke={KEYWORD_VENN_STROKES[0]} strokeWidth={g0.r > 0 ? 5 : 0} opacity={g0.opacity} style={{ transition: vennTransition }} />
+        <circle cx={g1.cx} cy={g1.cy} r={g1.r} fill={KEYWORD_VENN_FILLS[1]} stroke={KEYWORD_VENN_STROKES[1]} strokeWidth={g1.r > 0 ? 5 : 0} opacity={g1.opacity} style={{ transition: vennTransition }} />
+        <circle cx={g2.cx} cy={g2.cy} r={g2.r} fill={KEYWORD_VENN_FILLS[2]} stroke={KEYWORD_VENN_STROKES[2]} strokeWidth={g2.r > 0 ? 5 : 0} opacity={g2.opacity} style={{ transition: vennTransition }} />
 
         {/* Overlaps */}
         <g clipPath={`url(#${vennId}-clip-0)`} opacity={Math.min(g0.opacity, g1.opacity)} style={{ transition: vennTransition }}>
@@ -6354,7 +5582,6 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
      </div>
     )}
    </div>
-  </HeroIntroBoundary>
   </SubToolboxChartModule>
  )
 }
@@ -6408,7 +5635,7 @@ export const ConversionFunnelModule: React.FC<GChartProps> = ({ data }) => {
     ) : (
      <div className="h-[340px] border-[3px] border-black rounded-xl bg-[#f5f5f0] p-2 overflow-hidden">
       <StableChartFrame minHeightClassName="min-h-[300px]">
-        <BarChart data={ds.funnelStages} layout="vertical" margin={{ left: 4, right: 4 }}>
+        <BarChart data={ds.funnelStages} layout="vertical" margin={{ left: 20, right: 20 }}>
          <CartesianGrid strokeDasharray="3 3" />
          <XAxis type="number" tick={{ fontWeight: 900, fontSize: 10 }} />
          <YAxis type="category" dataKey="name" tick={{ fontWeight: 900, fontSize: 10 }} width={92} />
@@ -6470,20 +5697,10 @@ export const LissajousWebModule: React.FC<GChartProps> = ({ data }) => {
     ) : (
      <div className="h-[340px] border-[3px] border-black rounded-xl bg-[#060A24] p-2 overflow-hidden">
       <StableChartFrame minHeightClassName="min-h-[300px]">
-        <ScatterChart margin={viewTubeCartesianMargin("scatter", 20)}>
+        <ScatterChart margin={{ top: 24, right: 24, left: 8, bottom: 8 }}>
          <CartesianGrid stroke="rgba(255,255,255,0.12)" />
          <XAxis type="number" dataKey="x" tick={{ fontWeight: 900, fontSize: 10, fill: "#9ca3af" }} />
-         <YAxis type="number" dataKey="y" tick={{ fontWeight: 900, fontSize: 10, fill: "#B8B8B8"}} 
-       axisLine={viewTubeAxisLine}
-      
-       tickLine={false}
-      
-       mirror={true}
-      
-       tickMargin={6}
-      
-       width={1}
-      />
+         <YAxis type="number" dataKey="y" tick={{ fontWeight: 900, fontSize: 10, fill: "#9ca3af" }} />
          <Tooltip content={<ChartTip />} />
          <Scatter data={ds.lissajous} fill="#00E5FF" fillOpacity={0.85} />
         </ScatterChart>
@@ -6625,15 +5842,28 @@ export const CustomScatterModule: React.FC<GChartProps> = ({ data }) => {
 
  const bubbleShape = (props: any) => {
   const { cx, cy, payload } = props
+  const isHov = hovered === payload.key
+  const scale = isHov ? 1.25 : 1
   return (
-   <ViewTubeScatterBubble
+   <circle
     cx={cx}
     cy={cy}
-    radius={payload.radius}
+    r={payload.radius * scale}
     fill={payload.color}
-    isHovered={hovered === payload.key}
-    onEnter={() => setHovered(payload.key)}
-    onLeave={() => setHovered(null)}
+    fillOpacity={isHov ? 0.72 : 0.55}
+    stroke={payload.color}
+    strokeWidth={isHov ? 2.5 : 1.5}
+    strokeOpacity={1}
+    onMouseEnter={() => setHovered(payload.key)}
+    onMouseLeave={() => setHovered(null)}
+    style={{
+     shapeRendering: "geometricPrecision",
+     mixBlendMode: "blend" as any,
+     transitionProperty: "r, fill-opacity, stroke-width",
+     transitionDuration: "2250ms",
+     transitionTimingFunction: "cubic-bezier(0.34,1.56,0.64,1)",
+     cursor: "pointer",
+    }}
    />
   )
  }
@@ -6666,7 +5896,7 @@ export const CustomScatterModule: React.FC<GChartProps> = ({ data }) => {
     {
      type: "dropdown" as const,
      value: xMetric,
-     labelPrefix: "PLOT",
+     labelPrefix: "X",
      options: CUSTOM_SCATTER_METRICS.map((m) => ({ label: m.label, value: m.key })),
      onSelect: (v: string) => setXMetric(v as CustomScatterMetricKey),
      bgTone: "#CCFF00",
@@ -6675,7 +5905,7 @@ export const CustomScatterModule: React.FC<GChartProps> = ({ data }) => {
     {
      type: "dropdown" as const,
      value: yMetric,
-     labelPrefix: "VERSUS",
+     labelPrefix: "Y",
      options: CUSTOM_SCATTER_METRICS.map((m) => ({ label: m.label, value: m.key })),
      onSelect: (v: string) => setYMetric(v as CustomScatterMetricKey),
      bgTone: "#00E5FF",
@@ -6722,7 +5952,7 @@ export const CustomScatterModule: React.FC<GChartProps> = ({ data }) => {
   >
    <div className="h-[420px] w-full bg-white relative overflow-hidden">
     <StableChartFrame minHeightClassName="min-h-[420px]">
-     <ScatterChart margin={viewTubeCartesianMargin("scatter", 20)}>
+     <ScatterChart margin={{ top: 20, right: 24, left: 10, bottom: 28 }}>
       <CartesianGrid stroke="rgba(0,0,0,0.06)" />
       <XAxis
        type="number"
@@ -6730,7 +5960,7 @@ export const CustomScatterModule: React.FC<GChartProps> = ({ data }) => {
        domain={cd.xScale.domain}
        ticks={cd.xScale.ticks}
        tickFormatter={formatCompact}
-       axisLine={viewTubeAxisLine}
+       axisLine={{ stroke: "#000", strokeWidth: 3 }}
        tickLine={false}
        tick={{ fontWeight: 1000, fontSize: 10, fill: "#000" }}
        label={{ value: metricLabel(xMetric), position: "insideBottom", offset: -10, style: { fontWeight: 1000, fontSize: 12, fill: "#000" } }}
@@ -6741,16 +5971,10 @@ export const CustomScatterModule: React.FC<GChartProps> = ({ data }) => {
        domain={cd.yScale.domain}
        ticks={cd.yScale.ticks}
        tickFormatter={formatCompact}
-       axisLine={viewTubeAxisLine}
+       axisLine={{ stroke: "#000", strokeWidth: 3 }}
        tickLine={false}
-       tick={{ fontWeight: 1000, fontSize: 10, fill: "#B8B8B8"}}
+       tick={{ fontWeight: 1000, fontSize: 10, fill: "#000" }}
        label={{ value: metricLabel(yMetric), angle: -90, position: "insideLeft", offset: 12, style: { fontWeight: 1000, fontSize: 12, fill: "#000", textAnchor: "middle" } }}
-      
-       mirror={true}
-      
-       tickMargin={6}
-      
-       width={1}
       />
       <Scatter data={cd.points} shape={bubbleShape} />
      </ScatterChart>
@@ -6830,7 +6054,7 @@ export const SignalMatrixModule: React.FC<GChartProps> = ({ data }) => {
     controllerRows={[
      {
       type: "dropdown",
-      labelPrefix: "SHOW",
+      labelPrefix: "TOP",
       value: topN.toString(),
       options: [10, 15, 20, 25, 30].map((n) => ({ label: `${n} KEYWORDS`, value: n.toString() })),
       onSelect: (val) => setTopN(parseInt(val, 10)),

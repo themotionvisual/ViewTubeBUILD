@@ -141,10 +141,6 @@ type Group = {
 }
 type CssVars = React.CSSProperties & Record<`--${string}`, string | number>
 
-const isCompactPreviewSnapshot = (snapshot: VtSyncSnapshot): boolean =>
- snapshot.storageMetadata?.storageMode === "compact_preview" ||
- snapshot.storageMetadata?.isCompacted === true
-
 export const resolveAnalyticsTableRows = ({
  tableId,
  snapshot,
@@ -160,21 +156,32 @@ export const resolveAnalyticsTableRows = ({
  recoveredRows?: VtSyncImportedRows[string]
  privacyFilters: VtSyncPrivacyFilters
 }): VtSyncTableRow[] => {
- if (importedRows) {
-  // API/snapshot rows remain row authority for every dataset. A table-local
-  // import fills missing fields and appends unmatched identities; it can never
-  // reduce the table to the size of the imported file.
-  return mergeVtSyncSupplementalTableRows<VtSyncTableRow>(tableId, snapshotRows, importedRows)
+ if (importedRows?.length) {
+  // Fresh CSV imports are additive: keep API/snapshot rows as the base,
+  // fill missing fields from the import, and append CSV-only identities.
+  return mergeVtSyncSupplementalTableRows<VtSyncTableRow>(
+   tableId,
+   snapshotRows,
+   importedRows,
+  )
  }
- const normalizedRecoveredRows = recoveredRows
+
+ const normalizedRecoveredRows = recoveredRows?.length
   ? normalizeVtSyncTableRows(tableId, recoveredRows)
   : []
+
  const visibleRecoveredRows = tableId === "videos"
   ? filterVtSyncVideos(normalizedRecoveredRows, privacyFilters)
   : normalizedRecoveredRows
- if (visibleRecoveredRows.length && (isCompactPreviewSnapshot(snapshot) || !snapshotRows.length)) {
-  return visibleRecoveredRows
+
+ if (visibleRecoveredRows.length) {
+  return mergeVtSyncSupplementalTableRows<VtSyncTableRow>(
+   tableId,
+   snapshotRows,
+   visibleRecoveredRows,
+  )
  }
+
  return snapshotRows
 }
 
@@ -907,7 +914,10 @@ export const VtSyncToolboxDataTable: React.FC<{
  snapshot: VtSyncSnapshot
  privacyFilters?: VtSyncPrivacyFilters
  onPrivacyFiltersChange?: (filters: VtSyncPrivacyFilters) => void
- onManualImportsChange?: () => void
+ onManualImportsChange?: (payload?: {
+ rowsByTableId: VtSyncImportedRows
+ capturedAt: string
+}) => void | Promise<void>
  videoCatalogCoverage?: VtSyncVideoCatalogCoverage
  storageStatus?: "loading" | "ready" | "failed"
  storageError?: string
@@ -1059,28 +1069,41 @@ const [localPrivacyFilters, setLocalPrivacyFilters] =
  const activePrivacyFilters = privacyFilters || localPrivacyFilters
 
  useEffect(() => {
+  // CSV persistence is channel-scoped. Do not re-hydrate (and potentially
+  // clear) the active import every time the analytics snapshot changes.
+  // A manual import itself triggers a snapshot refresh, which was causing the
+  // freshly imported rows to flash briefly and then disappear.
+  if (!snapshot.channelId) return
+
   let cancelled = false
   void listVtSyncDatasetTableRows()
    .then((records) => {
     if (cancelled) return
+
     const manualRecords = records.filter(
      (record) =>
-      record.provenance === "csv" && record.id.startsWith("manual_import::") && !!snapshot.channelId && record.channelId === snapshot.channelId,
+      record.provenance === "csv" &&
+      record.id.startsWith("manual_import::") &&
+      record.channelId === snapshot.channelId,
     )
+
     setSavedCsvTableIds(
      new Set(manualRecords.map((record) => record.datasetId)),
     )
-    const active = manualRecords.filter((record) =>
-     isManualImportNewerThanApi(record, snapshot),
-    )
+
+    // Manual CSVs are supplemental data, not replacements for API rows.
+    // Keep every saved import for the active channel; the row merge helper
+    // preserves API/snapshot values and only fills missing fields / appends
+    // CSV-only identities. Do not discard a CSV merely because an API
+    // freshness timestamp is newer.
     setImported(
      Object.fromEntries(
-      active.map((record) => [record.datasetId, record.rows]),
+      manualRecords.map((record) => [record.datasetId, record.rows]),
      ),
     )
     setImportedAt(
      Object.fromEntries(
-      active.map((record) => [record.datasetId, record.capturedAt]),
+      manualRecords.map((record) => [record.datasetId, record.capturedAt]),
      ),
     )
     setCsvPersistenceWarning("")
@@ -1091,10 +1114,11 @@ const [localPrivacyFilters, setLocalPrivacyFilters] =
       "CSV imports are available for this session but cannot be retained after reload.",
      )
    })
+
   return () => {
    cancelled = true
   }
- }, [snapshot])
+ }, [snapshot.channelId])
  const updatePrivacyFilter = (
   key: keyof VtSyncPrivacyFilters,
   value: boolean,
@@ -5659,11 +5683,15 @@ const retentionDisplayColumns = useMemo(() => {
             "CSV import is active for this session but could not be retained after reload.",
            )
           }
-          // Let the analytics page merge the fresh CSV into the snapshot so the
-          // DATA VISUALS toolbox can render off it right after import completes.
-          onManualImportsChange?.()
-          setSelectedKey(null)
-          setSort(table.defaultSort)
+         // Push the freshly parsed CSV directly to the analytics page.
+// Do not make DATA VISUALS wait for IndexedDB/channel recovery.
+void onManualImportsChange?.({
+ rowsByTableId: importedRows,
+ capturedAt: importedTimestamp,
+})
+
+setSelectedKey(null)
+setSort(table.defaultSort)
           showToast(
            `Imported ${entries.reduce((sum, [, rows]) => sum + rows.length, 0)} rows`,
           )

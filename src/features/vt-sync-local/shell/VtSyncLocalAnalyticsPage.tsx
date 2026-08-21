@@ -583,19 +583,91 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
   }
  }, [snapshot.channelId])
 
- const refreshManualImports = useCallback(async () => {
-  const channelId = snapshot.channelId
-  if (!channelId) {
-   setManualImports({ channelId: null, value: emptyManualImports })
-   return
-  }
-  try {
-   const next = await loadVtSyncManualImports(channelId)
-   setManualImports({ channelId, value: next })
-  } catch {
-   // IndexedDB may be unavailable (private browsing, quota exhaustion). Leave state as-is.
-  }
- }, [snapshot.channelId])
+const refreshManualImports = useCallback(async (payload?: {
+ rowsByTableId: Record<string, unknown[]>
+ capturedAt: string
+}) => {
+ const channelId = snapshot.channelId
+
+ // IMPORTANT:
+ // A fresh CSV import should immediately enter React state so DATA VISUALS
+ // can use it. It must not depend on authentication, channelId, IndexedDB,
+ // or a second async read.
+ if (payload) {
+  setManualImports((current) => {
+   const currentValue =
+    current.channelId === channelId
+     ? current.value
+     : emptyManualImports
+
+   const capturedAtByTableId = Object.fromEntries(
+    Object.keys(payload.rowsByTableId).map((tableId) => [
+     tableId,
+     payload.capturedAt,
+    ]),
+   )
+
+   return {
+    channelId,
+    value: {
+     rowsByTableId: {
+      ...currentValue.rowsByTableId,
+      ...payload.rowsByTableId,
+     },
+     capturedAtByTableId: {
+      ...currentValue.capturedAtByTableId,
+      ...capturedAtByTableId,
+     },
+    },
+   }
+  })
+
+  return
+ }
+
+ // No payload means we're doing normal persisted-import recovery.
+ // We NO LONGER bail out when channelId is null — mobile boot restores
+ // IndexedDB before account/channel hydration finishes and a null channelId
+ // must not keep already-persisted CSV data invisible.
+
+ try {
+  const next = await loadVtSyncManualImports(channelId)
+
+  setManualImports((current) => {
+   const nextHasRows = Object.values(next.rowsByTableId)
+    .some((rows) => Array.isArray(rows) && rows.length > 0)
+   const currentHasRows = Object.values(current.value.rowsByTableId)
+    .some((rows) => Array.isArray(rows) && rows.length > 0)
+
+   // Never let an empty async hydration result erase known-good CSV rows.
+   // This is the race that makes mobile visuals appear, disappear, then
+   // sometimes reappear while account/channel state settles.
+   if (!nextHasRows && currentHasRows) return current
+
+   const canMergeCurrent =
+    current.channelId === channelId ||
+    current.channelId == null ||
+    channelId == null
+
+   return {
+    channelId,
+    value: {
+     rowsByTableId: {
+      ...(canMergeCurrent ? current.value.rowsByTableId : {}),
+      ...next.rowsByTableId,
+     },
+     capturedAtByTableId: {
+      ...(canMergeCurrent ? current.value.capturedAtByTableId : {}),
+      ...next.capturedAtByTableId,
+     },
+    },
+   }
+  })
+ } catch {
+  // IndexedDB may be unavailable on mobile/private browsing.
+  // Keep the active in-memory CSV instead of clearing it.
+ }
+}, [snapshot.channelId])
 
  const refreshVideoInventory = useCallback(async (requestedChannelId?: string | null) => {
   const channelId = requestedChannelId ?? snapshot.channelId
@@ -641,9 +713,16 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
   setPrivacyFilters(readVtSyncPrivacyFilters())
  }, [])
 
- const activeManualImports = manualImports.channelId === snapshot.channelId
-  ? manualImports.value
-  : emptyManualImports
+ // Invariant: account/auth/channel hydration must never remove locally imported
+ // CSV data. Once the real channelId arrives, refreshManualImports re-reads the
+ // persisted records and upgrades the temporary unscoped state without an
+ // empty intermediate render.
+ const activeManualImports =
+  manualImports.channelId === snapshot.channelId ||
+  manualImports.channelId == null ||
+  snapshot.channelId == null
+   ? manualImports.value
+   : emptyManualImports
  const activePersistedApiRows = persistedApiRows.channelId === snapshot.channelId
   ? persistedApiRows.value
   : emptyPersistedApiRows

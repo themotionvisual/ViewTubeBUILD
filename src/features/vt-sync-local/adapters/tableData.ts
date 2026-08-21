@@ -318,13 +318,26 @@ export const normalizeVtSyncVideoTableRows = (
  return sourceVideos.map((video) => {
  const metrics = asRecord(video.metrics)
  const videoId = firstValue(video.id, video.videoId)
- const views = num(metrics.views)
+ const views = num(firstValue(metrics.views, video.views))
  const engagedViews = num(metrics.engagedViews)
  const likes = num(metrics.likes)
  const dislikes = num(metrics.dislikes)
  const gained = num(metrics.subscribersGained)
  const lost = num(metrics.subscribersLost)
-const revenue = num(firstValue(metrics.revenue, metrics.estimatedRevenue))
+const revenue = num(
+
+ firstValue(
+
+  metrics.revenue,
+
+  metrics.estimatedRevenue,
+
+  video.revenue,
+
+  video.estimatedRevenue,
+
+ )
+)
   const comments = num(metrics.comments)
   const shares = num(metrics.shares)
   const saves = num(metrics.saves)
@@ -333,11 +346,19 @@ const revenue = num(firstValue(metrics.revenue, metrics.estimatedRevenue))
   ...metrics,
   videoId,
   videoUrl: videoId ? `https://www.youtube.com/watch?v=${String(videoId)}` : firstValue(video.videoUrl, video.url),
-  publishedDay: video.publishedAt,
-  publishedTime: video.publishedAt,
+  publishedDay: firstValue(video.publishedDay, video.publishedAt),
+
+publishedTime: firstValue(
+ video.publishedTime,
+ video.publishedAt,
+),
   title: firstValue(video.title, "Metadata pending"),
   titleLength: String(firstValue(video.title, "") || "").length,
-  revenue: firstValue(metrics.revenue, (metrics as Row).estimatedRevenue),
+revenue: firstValue(
+ metrics.revenue,
+ (metrics as Row).estimatedRevenue,
+ video.revenue,
+ video.estimatedRevenue,),
   youtubePremiumRevenue: firstValue((metrics as Row).youtubePremiumRevenue, (metrics as Row).estimatedRedPartnerRevenue),
   youtubePremiumWatchTime: firstValue((metrics as Row).youtubePremiumWatchTime, num((metrics as Row).estimatedRedMinutesWatched) !== undefined ? numberOrZero((metrics as Row).estimatedRedMinutesWatched) / 60 : undefined),
   cardsShown: firstValue((metrics as Row).cardsShown, (metrics as Row).cardImpressions),
@@ -350,7 +371,13 @@ engagementRate: firstValue((metrics as Row).engagementRate, views !== undefined 
     netSubscribers: firstValue((metrics as Row).netSubscribers, gained !== undefined && lost !== undefined ? gained - lost : undefined),
    subRatio: firstValue((metrics as Row).subRatio, views !== undefined && views > 0 && gained !== undefined ? (gained / views) * 1000 : undefined),
    subRate: firstValue((metrics as Row).subRate, views !== undefined && views > 0 && gained !== undefined ? (gained / views) * 100 : undefined),
-   rpm: firstValue((metrics as Row).rpm, views !== undefined && views > 0 && revenue !== undefined ? (revenue / views) * 1000 : undefined),
+rpm: firstValue(
+ (metrics as Row).rpm,
+ video.rpm,
+ views !== undefined && views > 0 && revenue !== undefined
+  ? (revenue / views) * 1000
+  : undefined,
+),
    commentRate: firstValue((metrics as Row).commentRate, views !== undefined && views > 0 && comments !== undefined ? (comments / views) * 100 : undefined),
    shareRate: firstValue((metrics as Row).shareRate, views !== undefined && views > 0 && shares !== undefined ? (shares / views) * 100 : undefined),
    saveRate: firstValue((metrics as Row).saveRate, views !== undefined && views > 0 && saves !== undefined ? (saves / views) * 100 : undefined),
