@@ -9,6 +9,7 @@ import type {
   VtSyncVisualCanvasFitMode,
   VtSyncVisualHeaderColorPair,
 } from "../features/vt-sync-local/shell/VtSyncVisualFrame"
+import type { HeroVisualId } from "./heroVisualAnimations"
 
 export type AnalyticsVisualShellMode = "standard" | "vt2-preserved" | "compact-row"
 
@@ -31,6 +32,7 @@ export type AnalyticsVisualShellProps = React.PropsWithChildren<{
   activeContext?: SubToolboxChartModuleProps["activeContext"]
   canvasFitMode?: VtSyncVisualCanvasFitMode
   sourceTableIds?: readonly string[]
+  heroVisualId?: HeroVisualId
   standard?: Omit<SubToolboxChartModuleProps, "header" | "controllerRows" | "controllerWidth" | "controllerDensity" | "activeContext" | "children">
   vt2?: Omit<ChartModuleProps, "title" | "subtitle" | "icon" | "iconBg" | "titleBg" | "bodyFitMode" | "children">
 }>
@@ -80,58 +82,50 @@ export const AnalyticsVisualShell: React.FC<AnalyticsVisualShellProps> = ({
   standard,
   vt2,
   children,
+  heroVisualId,
 }) => {
   const resolvedIcon = iconNode(icon, iconKey)
   const rows = normalizedRows(controllerSpec, controllerExplanation)
 
   if (shellMode === "vt2-preserved") {
     return (
-      // data-vt-visual-module / .vt-visual-module: anchor for mobile
-      // orientation-position preservation (usePreserveOrientationPosition).
-      <div data-vt-visual-module className="vt-visual-module">
-        <ChartModule
-          {...vt2}
-          title={title}
-          subtitle={subtitle ?? controllerExplanation}
-          icon={resolvedIcon}
-          iconBg={headerColorPair.icon}
-          titleBg={headerColorPair.title}
-          bodyFitMode={canvasFitMode}
-        >
-          {children}
-        </ChartModule>
-      </div>
+      <ChartModule
+        {...vt2}
+        title={title}
+        subtitle={subtitle ?? controllerExplanation}
+        icon={resolvedIcon}
+        iconBg={headerColorPair.icon}
+        titleBg={headerColorPair.title}
+        bodyFitMode={canvasFitMode}
+      >
+        {children}
+      </ChartModule>
     )
   }
 
   return (
-    // data-vt-visual-module / .vt-visual-module: anchor for mobile
-    // orientation-position preservation (usePreserveOrientationPosition).
-    <div data-vt-visual-module className="vt-visual-module">
-      <UnifiedAnalyticsVisualModule
-        title={title}
-        subtitle={subtitle ?? controllerExplanation ?? ""}
-        icon={resolvedIcon}
-        iconKey={iconKey}
-        headerColorPair={headerColorPair}
-        activeContext={activeContext}
-        controllerRows={rows as ControllerRow[] | undefined}
-        controllerWidth={controllerSpec?.width}
-        controllerDensity={controllerSpec?.density}
-        theme={standard?.theme}
-        layout={standard?.layout}
-        footer={standard?.footer}
-        metricBadges={standard?.metricBadges}
-        collapsible={standard?.collapsible}
-        isOpenInitial={standard?.isOpenInitial}
-        canvasFitMode={canvasFitMode}
-      >
-        {/* .vt-visual-canvas: shared chart-body target for the mobile
-            aspect-ratio + landscape-fill rules in mobileOrientation.css */}
-        <div data-canvas-fit-mode={canvasFitMode} className="vt-visual-canvas vt-responsive-visual-body h-full w-full">
-          {children}
-        </div>
-      </UnifiedAnalyticsVisualModule>
-    </div>
+    <UnifiedAnalyticsVisualModule
+      title={title}
+      subtitle={subtitle ?? controllerExplanation ?? ""}
+      icon={resolvedIcon}
+      iconKey={iconKey}
+      headerColorPair={headerColorPair}
+      activeContext={activeContext}
+      controllerRows={rows as ControllerRow[] | undefined}
+      controllerWidth={controllerSpec?.width}
+      controllerDensity={controllerSpec?.density}
+      theme={standard?.theme}
+      layout={standard?.layout}
+      footer={standard?.footer}
+      metricBadges={standard?.metricBadges}
+      collapsible={standard?.collapsible}
+      isOpenInitial={standard?.isOpenInitial}
+      canvasFitMode={canvasFitMode}
+      heroVisualId={heroVisualId}
+    >
+      <div data-canvas-fit-mode={canvasFitMode} className="h-full w-full">
+        {children}
+      </div>
+    </UnifiedAnalyticsVisualModule>
   )
 }

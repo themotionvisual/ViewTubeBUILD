@@ -37,7 +37,7 @@ import { SubToolboxChartModule, subToolboxChartPresets } from "./SubToolboxChart
 import type { ControllerRow, ControllerRankedByRow } from "./VisualModuleController"
 import { RankedByRow } from "./VisualModuleController"
 import { InsightMarquee } from "./InsightMarquee"
-import { HeroIntroBoundary, HeaderHeroPlayButton } from "./HeroIntroBoundary"
+import { HeroIntroBoundary } from "./HeroIntroBoundary"
 import type { VtSyncVisualHeaderColorPair } from "../features/vt-sync-local/shell/VtSyncVisualFrame"
 import {
  VT_SPECTRUM_PALETTE_06,
@@ -1373,6 +1373,7 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
 
  return (
   <SubToolboxChartModule
+   heroVisualId="shorts-retention"
    header={{ title: "SHORTS RETENTION", subtitle: "AVD (s) \u00d7 DURATION \u00b7 BUBBLE = VIEWS", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#CCFF00", iconBlockBg: "#33FF99", shadowColor: "rgba(204,255,0,0.45)" }}
    activeContext={{
@@ -2129,6 +2130,7 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
 
  return (
   <SubToolboxChartModule
+   heroVisualId="engagement-pulse"
    header={{
    title: "ENGAGEMENT PULSE",
    subtitle: `TOP ${cd.length} ${mode === "most-recent" ? "RECENT" : "PERFORMING"} BY ${sortLabel}`,
@@ -2890,7 +2892,7 @@ export const StackedEngagementPulse = EngagementLinesModule
 /* 16. Format Comparison Donuts */
 export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTypeRows }) => {
  const [aggregationMode, setAggregationMode] = useState<"total" | "average">("total")
- // formatDominanceReplayTick removed; HeroIntroBoundary owns the animation lifecycle.
+ const [formatDominanceReplayTick, setFormatDominanceReplayTick] = useState(0)
 
  const filteredData = data
 
@@ -2962,12 +2964,20 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
   ...cd.map(m => ({ label: m.label.toUpperCase(), value: Math.round(m.data[1].value).toLocaleString(), tone: metricTone(m.key), lockTone: true })),
  ]
 
- // Bespoke format-dominance replay listener removed. HeroIntroBoundary now
- // handles both replay events and the three animateFormatDominance variants.
+ useEffect(() => {
+  const replay = (event: Event) => {
+   const detail = (event as CustomEvent<{ visualId?: string }>).detail
+   if (detail?.visualId && detail.visualId !== "format-dominance") return
+   setFormatDominanceReplayTick((value) => value + 1)
+  }
+  window.addEventListener("vt:replay-hero-intro", replay)
+  return () => window.removeEventListener("vt:replay-hero-intro", replay)
+ }, [])
 
 
  return (
   <SubToolboxChartModule
+   heroVisualId="format-dominance"
    header={{
     title: "FORMAT DOMINANCE",
     subtitle: `DATA: FORMATS • ${contentTypeTotals ? "CREATOR CONTENT TYPE" : "VIDEO CATALOG FALLBACK"} • HOW EACH FORMAT DRIVES CORE METRICS`,
@@ -2984,8 +2994,7 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
     leftTitle: "LONGFORM",
     leftStats: longStats,
     title: (
-     // Explicit play button removed — HeroIntroBoundary below auto-renders one.
-     <div className="w-full h-full flex items-center justify-center">
+     <div className="relative w-full h-full flex items-center justify-center">
       <div className="flex items-center gap-8">
        <div className="flex items-center gap-1.5">
         <div className="w-4 h-4 rounded-full bg-[#00E5FF] border-[2px] border-black" />
@@ -3014,7 +3023,6 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
    }
    footerBorderless
   >
-   <HeroIntroBoundary visualId="format-dominance" replayKey={aggregationMode}>
    <div className="flex flex-row items-stretch justify-center gap-0 p-0 bg-white h-[352px] overflow-hidden">
     {cd.map((metric) => (
      <div key={metric.key} className="flex-1 h-full min-w-0 relative bg-white flex flex-col">
@@ -3022,7 +3030,7 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
        <StableChartFrame minHeightClassName="min-h-[300px]">
          <PieChart>
           <Pie
-         key={`format-dominance-${aggregationMode}`}
+         key={`format-dominance-${aggregationMode}-${formatDominanceReplayTick}`}
            data={metric.data}
            dataKey="value"
            nameKey="name"
@@ -3072,7 +3080,6 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
      </div>
     ))}
    </div>
-   </HeroIntroBoundary>
   </SubToolboxChartModule>
  )
 }
@@ -3516,8 +3523,8 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
   const [viewMode, setViewMode] = useState<"progress" | "delta">("progress")
   const [layoutMode, setLayoutMode] = useState<"overlay" | "individual">("overlay")
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
-  // channelProgressRootRef + channelProgressReplayTick removed alongside the
-  // bespoke useLayoutEffect. HeroIntroBoundary now owns the animation lifecycle.
+  const channelProgressRootRef = useRef<HTMLDivElement>(null)
+  const [channelProgressReplayTick, setChannelProgressReplayTick] = useState(0)
 
   const METRIC_OPTIONS = [
     { value: "subscribersGained", label: "SUBSCRIBERS", tone: VT_VISUAL_METRIC_COLORS.subscribers, isRevenue: false },
@@ -3756,12 +3763,193 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
 
   const activeMetrics = METRIC_OPTIONS.filter((option) => selectedMetrics.includes(option.value))
 
-  // Bespoke channel-progress replay listener and useLayoutEffect animation
-  // orchestration removed (~186 lines). Animation is now driven by the
-  // standard HeroIntroBoundary + animateChannelProgress runner, which
-  // ships three variants (TRAVELING TIDE / ECHO WAVES / GROWTH IGNITION)
-  // cycled by the auto-rendered HeaderHeroPlayButton.
+  useEffect(() => {
+    const replay = (event: Event) => {
+      const detail = (event as CustomEvent<{ visualId?: string }>).detail
+      if (detail?.visualId && detail.visualId !== "channel-progress") return
+      setChannelProgressReplayTick((value) => value + 1)
+    }
+    window.addEventListener("vt:replay-hero-intro", replay)
+    return () => window.removeEventListener("vt:replay-hero-intro", replay)
+  }, [])
 
+
+
+  useLayoutEffect(() => {
+    const root = channelProgressRootRef.current
+    if (!root || viewMode !== "progress" || chartData.length === 0 || activeMetrics.length === 0) return
+
+    const animations: Animation[] = []
+    const metricCount = activeMetrics.length
+
+    // Make sure the graph itself never creates the "hit a ceiling" illusion.
+    root.querySelectorAll<SVGSVGElement>("svg").forEach((svg) => {
+      svg.style.overflow = "visible"
+    })
+
+    activeMetrics.forEach((option, metricIndex) => {
+      const schedule = channelProgressWaveSchedule(metricIndex, metricCount)
+      const outboundDirection = schedule.direction
+      const returnDirection: "ltr" | "rtl" = outboundDirection === "ltr" ? "rtl" : "ltr"
+
+      const barRects = Array.from(
+        root.querySelectorAll<SVGGraphicsElement>(
+          `.channel-progress-bar-${option.value} .recharts-rectangle`,
+        ),
+      )
+
+      barRects.forEach((bar, index) => {
+        const natural = barRects.length <= 1 ? 0.5 : index / (barRects.length - 1)
+        const travel = outboundDirection === "ltr" ? natural : 1 - natural
+        const delay =
+          schedule.startMs +
+          channelProgressTravelDelay(
+            index,
+            barRects.length,
+            outboundDirection,
+            CHANNEL_PROGRESS_OUTBOUND_SPAN_MS,
+          )
+
+        const peakScale = channelProgressSafePeakScale(bar, travel)
+        bar.style.transformBox = "fill-box"
+        bar.style.transformOrigin = "center bottom"
+        bar.style.willChange = "transform, opacity"
+
+        animations.push(cancelAndRelease(bar.animate(
+          [
+            { transform: "scaleY(0.08)", opacity: 0.18, offset: 0 },
+            {
+              transform: `scaleY(${peakScale})`,
+              opacity: 1,
+              offset: 0.46,
+              easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+            },
+            {
+              transform: "scaleY(0.965)",
+              opacity: 1,
+              offset: 0.67,
+              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+            },
+            {
+              transform: "scaleY(1.018)",
+              opacity: 1,
+              offset: 0.86,
+              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+            },
+            { transform: "scaleY(1)", opacity: 1, offset: 1 },
+          ],
+          {
+            duration: CHANNEL_PROGRESS_BAR_SPRING_MS,
+            delay,
+            fill: "both",
+            easing: "linear",
+          },
+        )))
+      })
+
+      // The second half-wave begins as the outbound wave reaches the far axis.
+      // It returns in the opposite direction and carries the dots with it.
+      const returnStart =
+        schedule.startMs +
+        CHANNEL_PROGRESS_OUTBOUND_SPAN_MS +
+        160
+
+      const dots = Array.from(
+        root.querySelectorAll<SVGGraphicsElement>(
+          `.channel-progress-line-${option.value} .recharts-line-dot`,
+        ),
+      ).sort((a, b) => {
+        const ax = Number(a.getAttribute("cx") ?? 0)
+        const bx = Number(b.getAttribute("cx") ?? 0)
+        return ax - bx
+      })
+
+      dots.forEach((dot, index) => {
+        const delay =
+          returnStart +
+          channelProgressTravelDelay(
+            index,
+            dots.length,
+            returnDirection,
+            CHANNEL_PROGRESS_RETURN_SPAN_MS,
+          )
+
+        dot.style.transformBox = "fill-box"
+        dot.style.transformOrigin = "center"
+        dot.style.willChange = "transform, opacity"
+
+        animations.push(cancelAndRelease(dot.animate(
+          [
+            { transform: "scale(0)", opacity: 0, offset: 0 },
+            {
+              transform: "scale(1.38)",
+              opacity: 1,
+              offset: 0.48,
+              easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+            },
+            {
+              transform: "scale(0.9)",
+              opacity: 1,
+              offset: 0.7,
+              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+            },
+            {
+              transform: "scale(1.055)",
+              opacity: 1,
+              offset: 0.88,
+              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+            },
+            { transform: "scale(1)", opacity: 1, offset: 1 },
+          ],
+          {
+            duration: CHANNEL_PROGRESS_DOT_SPRING_MS,
+            delay,
+            fill: "both",
+            easing: "linear",
+          },
+        )))
+      })
+
+      // The line follows the dot-wave rather than leading it.
+      const path = root.querySelector<SVGPathElement>(
+        `.channel-progress-line-${option.value} .recharts-line-curve`,
+      )
+
+      if (path) {
+        const hiddenClip =
+          returnDirection === "rtl"
+            ? "inset(0 0 0 100%)"
+            : "inset(0 100% 0 0)"
+
+        animations.push(cancelAndRelease(path.animate(
+          [
+            { clipPath: hiddenClip, opacity: 0.18 },
+            { clipPath: "inset(0 0 0 0)", opacity: 1 },
+          ],
+          {
+            duration: CHANNEL_PROGRESS_RETURN_SPAN_MS + 520,
+            delay: returnStart + CHANNEL_PROGRESS_LINE_TRAIL_MS,
+            fill: "both",
+            easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+          },
+        )))
+      }
+    })
+
+    return () => {
+      animations.forEach((animation) => {
+        try { animation.cancel() } catch { /* detached node */ }
+      })
+    }
+  }, [
+    activeMetrics,
+    chartData,
+    layoutMode,
+    selectedMetrics,
+    timeRange,
+    viewMode,
+    channelProgressReplayTick,
+  ])
 
   const CustomCandle = (props: any) => {
     const { x, y, width, height, payload, optionKey } = props
@@ -4099,6 +4287,7 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
 
   return (
     <SubToolboxChartModule
+      heroVisualId="channel-progress"
       header={{
         title: "CHANNEL PROGRESS",
         subtitle: `DATA: ${usesMonthlyGrain ? "MONTHLY STATS" : "DAILY STATS"} • ${viewMode === "progress" ? "OVERALL" : "WINDOW CHANGE"} • RAW METRICS`,
@@ -4250,14 +4439,7 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
         />
       }
     >
-      <div className="px-1 pt-2 pb-4 min-h-[400px] relative overflow-visible">
-       {/* HeroIntroBoundary owns the replay button (auto-rendered) and drives
-           the three animateChannelProgress variants (TRAVELING TIDE / ECHO
-           WAVES / GROWTH IGNITION). */}
-       <HeroIntroBoundary
-         visualId="channel-progress"
-         replayKey={`${viewMode}-${layoutMode}-${activeMetrics.map((m) => m.value).join(",")}-${timeRange}`}
-       >
+      <div ref={channelProgressRootRef} className="px-1 pt-2 pb-4 min-h-[400px] relative overflow-visible">
         {layoutMode === "individual" && activeMetrics.length > 1 ? (
           <div className={`grid gap-1 h-[420px] ${activeMetrics.length === 2 ? 'grid-cols-1 grid-rows-2' : 'grid-cols-2 grid-rows-2'}`}>
             {activeMetrics.map((metricOpt, metricIndex) => {
@@ -4300,7 +4482,6 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
           })}
         </div>
         ) : null}
-       </HeroIntroBoundary>
       </div>
     </SubToolboxChartModule>
   )
@@ -5121,16 +5302,13 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
  const hoveredBucket = hoveredBucketKey ? trafficTimeline.find((bucket) => bucket.bucket === hoveredBucketKey) || null : null
  const activeSourceTotals = hoveredBucket?.shares || windowTotals
  const activeSourceTotal = Math.max(1, Object.values(activeSourceTotals).reduce((sum, value) => sum + value, 0))
- // Value/background tones are intentionally omitted so the dark-canvas
- // convention (darkStats: true on the enclosing activeContext) can color the
- // numbers with each source's tone on a #080816 fill, matching the Heat
- // Matrix look. Individual stats can still opt back out by re-adding their
- // own valueTone/backgroundTone here.
  const activeContextStats = [
   {
    label: hoveredBucket ? "DAY TOTAL" : "WINDOW TOTAL",
    value: formatCompact(activeSourceTotal),
    tone: "white" as any,
+   valueTone: "#000000",
+   backgroundTone: "#E5E7EB",
    labelText: hoveredBucket ? "DAY TOTAL" : "WINDOW TOTAL",
    lockTone: true,
    compact: true,
@@ -5139,6 +5317,8 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
    label: entry.subtitleLabel,
    value: `${(((activeSourceTotals[entry.key] || 0) / activeSourceTotal) * 100).toFixed(0)}%`,
    tone: entry.tone as any,
+   valueTone: "#000000",
+   backgroundTone: "#E5E7EB",
    labelText: trafficSourceLegendLines(entry.legendLabel).join("\n"),
    labelClassName: "whitespace-pre-line text-center text-[8px] leading-[8px] tracking-[0.03em]",
    minWidth: 84,
@@ -5210,6 +5390,7 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
 
  return (
   <SubToolboxChartModule
+   heroVisualId="traffic-source-evolution"
    header={{ title: "TRAFFIC SOURCE EVOLUTION", subtitle: "SOURCE MIX OVER TIME", icon: <CustomIcon name="analytics" size={18} />, headerStyle: "subtoolbox" }}
    theme={{ headerBandBg: "#B8FF2C", iconBlockBg: "#24D3FF", shadowColor: "rgba(184,255,44,0.45)" }}
    layout={{ moduleMinHeight: "470px", moduleWidth: "100%" }}
@@ -5217,9 +5398,7 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
    activeContext={{
     title: activeContextTitle,
     stats: activeContextStats,
-    // Dark canvas below — flip the subtitle to match the #090b16 chart body.
-    bgTone: "#080816",
-    darkStats: true,
+    bgTone: "#E5E7EB",
     height: "expanded",
    }}
   >
@@ -5754,6 +5933,7 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
 
  return (
   <SubToolboxChartModule
+   heroVisualId="keyword-venn"
    header={{
     title: "KEYWORD VENN",
     subtitle: "MASTER TABLE TITLE OVERLAP × LIVE PERFORMANCE STATS",
@@ -6662,7 +6842,6 @@ export const SignalMatrixModule: React.FC<GChartProps> = ({ data }) => {
     ]}
    activeContext={{
     bgTone: "#080816",
-    darkStats: true,
     title: hovered ? `${hovered.keyword.toUpperCase()} · ${hovered.metric.toUpperCase()}` : `SIGNAL MATRIX · ${topN} KEYWORDS`,
     stats: hovered
      ? (() => {

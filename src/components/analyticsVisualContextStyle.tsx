@@ -1,20 +1,16 @@
-// Reconstructed shim.
-//
-// The recovered `TubeExplorerVisualModules.tsx` (2026-08-20 animation restore)
-// imports `normalizeHeatMatrixContext` from this module, but no copy of the
-// original module was in any of the restore archives, and it does not exist
-// on `origin/main`. On main, `TubeExplorerHubShell` forwards `activeContext`
-// straight through to `AnalyticsVisualShell` — so this shim ships the same
-// behavior (identity for the general case) while preserving the import.
-//
-// If a hand-authored version arrives later with real Heat-Matrix-specific
-// normalization, replace the body of `normalizeHeatMatrixContext` with the
-// intended logic. The signature below is the one the caller expects.
+import type { SubToolboxChartModuleProps, SubToolboxStat } from "./SubToolboxChartModule"
 
-// Structural type — mirrors what the caller currently passes through.
-// Kept `unknown`-tolerant on purpose so this file compiles even if the
-// upstream shape changes.
-type ActiveContext = unknown
+type ActiveContext = NonNullable<SubToolboxChartModuleProps["activeContext"]>
+
+const DARK_CONTEXT_TONE = "#080816"
+const DARK_VALUE_TONE = "#F3F4F6"
+
+const darkenStats = (stats: SubToolboxStat[] | undefined): SubToolboxStat[] | undefined =>
+  stats?.map((stat) => ({
+    ...stat,
+    backgroundTone: stat.backgroundTone ?? DARK_CONTEXT_TONE,
+    valueTone: stat.valueTone ?? DARK_VALUE_TONE,
+  }))
 
 /**
  * Return the active-context payload the visual should render, given its
@@ -24,7 +20,14 @@ type ActiveContext = unknown
  */
 export function normalizeHeatMatrixContext(
   _title: string,
-  activeContext: ActiveContext,
-): ActiveContext {
-  return activeContext
+  activeContext: ActiveContext | null | undefined,
+): ActiveContext | null | undefined {
+  if (!activeContext) return activeContext
+  return {
+    ...activeContext,
+    bgTone: activeContext.bgTone ?? DARK_CONTEXT_TONE,
+    stats: darkenStats(activeContext.stats),
+    leftStats: darkenStats(activeContext.leftStats),
+    rightStats: darkenStats(activeContext.rightStats),
+  }
 }

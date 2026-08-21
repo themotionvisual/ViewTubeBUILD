@@ -12,6 +12,8 @@ import {
   AnalyticsActiveStats,
   resolveAnalyticsVisualContextBarHeight,
 } from "./analyticsVisualContextBar"
+import { HeaderHeroPlayButton } from "./HeroIntroBoundary"
+import type { HeroVisualId } from "./heroVisualAnimations"
 
 export type UnifiedAnalyticsVisualHeightPolicy = "fixedBody" | "fillWidth" | "preserveRatio" | "compact"
 
@@ -39,6 +41,7 @@ export interface UnifiedAnalyticsVisualModuleProps {
   collapsible?: boolean
   isOpenInitial?: boolean
   canvasFitMode?: "balanced" | "fillWidth" | "preserveRatio"
+  heroVisualId?: HeroVisualId
   children: React.ReactNode
 }
 
@@ -59,6 +62,7 @@ export const UnifiedAnalyticsVisualModule: React.FC<UnifiedAnalyticsVisualModule
   isOpenInitial = true,
   canvasFitMode = "balanced",
   children,
+  heroVisualId,
 }) => {
   const sourcePrefix = useVtSyncVisualDataSourcePrefix()
   const visualStyle = useAnalyticsVisualStyle()
@@ -106,13 +110,16 @@ export const UnifiedAnalyticsVisualModule: React.FC<UnifiedAnalyticsVisualModule
               {resolvedIcon ?? <AnalyticsVisualIcon size={60} />}
             </span>
           </div>
-          <div className="flex min-w-0 flex-1 flex-col justify-center px-3 py-2">
-            <div className="max-w-full text-[clamp(20px,5vw,42px)] font-[1000] uppercase leading-[0.88] tracking-[0em] text-black">
-              {title}
+          <div className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2">
+            <div className="min-w-0 flex-1">
+              <div className="max-w-full text-[clamp(20px,5vw,42px)] font-[1000] uppercase leading-[0.88] tracking-[0em] text-black">
+                {title}
+              </div>
+              <div className="max-w-full truncate text-[clamp(10px,2.2vw,14px)] font-black uppercase tracking-[0.069em] text-black opacity-80">
+                {resolvedSubtitle}
+              </div>
             </div>
-            <div className="max-w-full truncate text-[clamp(10px,2.2vw,14px)] font-black uppercase tracking-[0.069em] text-black opacity-80">
-              {resolvedSubtitle}
-            </div>
+            {heroVisualId ? <HeaderHeroPlayButton visualId={heroVisualId} placement="header" /> : null}
           </div>
         </div>
         {controllerRows ? (
@@ -144,7 +151,7 @@ export const UnifiedAnalyticsVisualModule: React.FC<UnifiedAnalyticsVisualModule
                       {activeContext.leftTitle}
                     </div>
                   ) : null}
-                  {activeContext.leftStats ? <AnalyticsActiveStats stats={activeContext.leftStats} darkStats={activeContext.darkStats} /> : null}
+                  {activeContext.leftStats ? <AnalyticsActiveStats stats={activeContext.leftStats} /> : null}
                 </div>
                 <div className="flex h-full min-w-0 flex-1 items-stretch overflow-hidden" style={{ background: activeContext.bgTone ?? "#FFFFFF" }}>
                   {activeContext.title ? (
@@ -159,8 +166,8 @@ export const UnifiedAnalyticsVisualModule: React.FC<UnifiedAnalyticsVisualModule
                       {activeContext.rightTitle}
                     </div>
                   ) : null}
-                  {activeContext.rightStats ? <AnalyticsActiveStats stats={activeContext.rightStats} darkStats={activeContext.darkStats} /> : null}
-                  {!activeContext.rightStats && activeContext.stats ? <AnalyticsActiveStats stats={activeContext.stats} darkStats={activeContext.darkStats} /> : null}
+                  {activeContext.rightStats ? <AnalyticsActiveStats stats={activeContext.rightStats} /> : null}
+                  {!activeContext.rightStats && activeContext.stats ? <AnalyticsActiveStats stats={activeContext.stats} /> : null}
                 </div>
               </div>
             </div>

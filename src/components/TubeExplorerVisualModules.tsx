@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { HeroIntroBoundary, HeaderHeroPlayButton } from "./HeroIntroBoundary"
+import { HeroIntroBoundary } from "./HeroIntroBoundary"
+import type { HeroVisualId } from "./heroVisualAnimations"
 import {
  Area,
  AreaChart,
@@ -154,8 +155,9 @@ const ModuleFrame: React.FC<{
  stableChartFrame?: boolean
  collapsible?: boolean
  isOpenInitial?: boolean
+ heroVisualId?: HeroVisualId
  children: React.ReactNode
-}> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], activeContext, controllerRows, visualStyle, insight, height = 320, flushShell = false, stableChartFrame = true, collapsible = false, isOpenInitial = true, children }) => {
+}> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], activeContext, controllerRows, visualStyle, insight, height = 320, flushShell = false, stableChartFrame = true, collapsible = false, isOpenInitial = true, heroVisualId, children }) => {
  const resolvedStyle = visualStyle ?? resolveVtSyncVisualStyle(title)
  const normalizedActiveContext = useMemo(
   () => normalizeHeatMatrixContext(title, activeContext),
@@ -171,8 +173,11 @@ const ModuleFrame: React.FC<{
   subtitle={subtitle}
   icon={typeof resolvedIcon === "string" ? <CustomIcon name={resolvedIcon as any} size={96} /> : resolvedIcon}
   headerColorPair={headerPair}
+  heroVisualId={heroVisualId}
   activeContext={normalizedActiveContext}
   controllerSpec={{
+   width: 220,
+   density: "compact",
    rows: controllerRows ?? [
     { type: "number", value: count, bgTone: color, fgTone: "#000000", isBig: false },
     { type: "label", value: "VIDEOS", bgTone: color, fgTone: "#000000" },
@@ -188,7 +193,8 @@ const ModuleFrame: React.FC<{
   }}
  >
   <div
-   className={flushShell ? "mx-auto h-full w-full max-w-none" : "mx-auto w-full max-w-[1080px] border-[3px] border-black bg-white p-2"}
+   className={flushShell ? "mx-auto h-full w-full max-w-none bg-[#0a0a1a]" : "mx-auto w-full max-w-[1080px] border-[4px] border-black bg-[#0a0a1a] p-2"}
+   data-tube-insights-canvas="dark"
    style={{ height: boundedHeight }}>
    {stableChartFrame ? (
     <StableChartFrame minHeightClassName="min-h-[300px]">{children}</StableChartFrame>
@@ -3028,11 +3034,12 @@ const createModule = (
  title: string,
  subtitle: string,
  render: (dataset: TubeExplorerVisualDataset) => React.ReactNode,
- options: { color?: string; icon?: string; badges?: { label: string; tone?: any }[]; insight?: string; height?: number; flushShell?: boolean; activeContext?: (dataset: TubeExplorerVisualDataset) => SubToolboxChartModuleProps["activeContext"] } = {},
+ options: { color?: string; icon?: string; badges?: { label: string; tone?: any }[]; insight?: string; height?: number; flushShell?: boolean; heroVisualId?: HeroVisualId; activeContext?: (dataset: TubeExplorerVisualDataset) => SubToolboxChartModuleProps["activeContext"] } = {},
 ): React.FC<TubeExplorerVisualProps> => (props) => {
  const dataset = useExplorerData(props)
  return (
   <ModuleFrame
+   heroVisualId={options.heroVisualId}
    visualStyle={props.visualStyle}
    title={title}
    subtitle={subtitle}
@@ -3661,9 +3668,7 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
  const dataset = useExplorerData(props)
 
  const [metric, setMetric] = useState<ThermalMetricKey>("views")
- // Heat Matrix animation orchestration is now the standard HeroIntroBoundary
- // + animateHeatMatrix runner (3 variants: serpentine-column / row / row-fast).
- // No bespoke replay-tick state is needed.
+ const [heatMatrixReplayTick, setHeatMatrixReplayTick] = useState(0)
  const [formatFilter, setFormatFilter] = useState<"all" | "shorts" | "long">("all")
  const [orderMode, setOrderMode] = useState<"chrono" | "rank">("chrono")
  const [rowCount, setRowCount] = useState<5 | 8>(8)
@@ -3807,13 +3812,20 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
 
  const METRIC_OPTIONS = THERMAL_METRICS.map(m => ({ label: m.label, value: m.key }))
 
- // Bespoke heat-matrix replay listener removed. HeroIntroBoundary now owns
- // both the replay event handling and the animation, and cycles through the
- // three variants shipped in animateHeatMatrix.
+ useEffect(() => {
+  const replay = (event: Event) => {
+   const detail = (event as CustomEvent<{ visualId?: string }>).detail
+   if (detail?.visualId && detail.visualId !== "heat-matrix") return
+   setHeatMatrixReplayTick((value) => value + 1)
+  }
+  window.addEventListener("vt:replay-hero-intro", replay)
+  return () => window.removeEventListener("vt:replay-hero-intro", replay)
+ }, [])
 
 
  return (
   <ModuleFrame
+   heroVisualId="heat-matrix"
    visualStyle={props.visualStyle}
    title="HEAT MATRIX"
    subtitle="Ranks each video as a pixel by the selected metric and format."
@@ -3824,7 +3836,6 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
-    darkStats: true,
     title: hovered
      ? `${hovered.title.toUpperCase()}${lockedIdx !== null ? " LOCKED" : ""}`
      : `CHANNEL TOTALS (${formatFilter.toUpperCase()})`,
@@ -3869,10 +3880,8 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
     ]}
    >
     <div className="relative h-full w-full bg-[#0a0a1a]">
-     {/* HeroIntroBoundary handles both the replay button (auto-rendered)
-         and the three animateHeatMatrix variants. */}
-     <HeroIntroBoundary visualId="heat-matrix" replayKey={`${metric}-${orderMode}-${formatFilter}-${rowCount}`}>
      <ThermalImagingModuleInner
+      key={`heat-matrix-${heatMatrixReplayTick}`}
       displayVideos={displayVideos}
       rows={rowCount}
       hoveredIdx={hoveredIdx}
@@ -3883,7 +3892,6 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
       onClickTile={handleTileClick}
       heatColor={heatColor}
      />
-     </HeroIntroBoundary>
     </div>
    </ModuleFrame>
   )
@@ -4022,7 +4030,6 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
   const target = hovered || rows[rows.length - 1]
   return {
    bgTone: "#080816",
-   darkStats: true,
    title: target ? videoShortTitle(target.title.toUpperCase(), 65) : "CHANNEL VITALS",
    stats: target
     ? visibleMetrics.map((metric) => ({
@@ -4041,7 +4048,6 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
    visualStyle={props.visualStyle}
     title="CHANNEL VITAL SIGNS"
     subtitle="Independent channel metrics traced across upload order."
-    bgTone="#080816"
     count={0}
     color="#FF7497"
     activeContext={activeContext}
@@ -4081,10 +4087,10 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
 
  return (
   <ModuleFrame
+   heroVisualId="channel-vital-signs"
    visualStyle={props.visualStyle}
    title="CHANNEL VITAL SIGNS"
    subtitle="Twelve channel metrics traced together across upload order. Saves use YouTube Playlist Saves."
-   bgTone="#080816"
    count={rows.length}
    color="#FF7497"
    activeContext={activeContext}
@@ -4095,7 +4101,10 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
   >
-   <HeroIntroBoundary visualId="channel-vital-signs" replayKey={rows.length}>
+   <HeroIntroBoundary
+    visualId="channel-vital-signs"
+    replayKey={`${rowCount}-${formatFilter.value}-${selectedVitalMetrics.join("|")}`}
+   >
     <div className="flex h-full flex-col bg-[#090914]">
      <div className="relative flex-1 min-h-0">
       <svg
@@ -4305,6 +4314,7 @@ export const TubeExplorerBarcodeFingerprint: React.FC<TubeExplorerVisualProps> =
 
  return (
   <ModuleFrame
+   heroVisualId="barcode-fingerprint"
    visualStyle={props.visualStyle}
    title="BARCODE FINGERPRINT"
    subtitle="Ranked video bars centered on one horizontal spine."
@@ -4317,7 +4327,6 @@ export const TubeExplorerBarcodeFingerprint: React.FC<TubeExplorerVisualProps> =
    isOpenInitial={props.isOpenInitial}
    activeContext={{
     bgTone: "#080816",
-    darkStats: true,
     title: hovered ? videoShortTitle(hovered.title, 52).toUpperCase() : `VIDEO BARCODE (${formatFilter.toUpperCase()})`,
     stats,
    }}
@@ -4424,7 +4433,6 @@ export const TubeExplorerSubscriberWaterfall: React.FC<TubeExplorerVisualProps> 
    isOpenInitial={props.isOpenInitial}
    activeContext={{
     bgTone: "#080816",
-    darkStats: true,
     title: hovered ? videoShortTitle(hovered.video.title, 54).toUpperCase() : `${activeDef.label} JOURNEY (${formatMode.label})`,
     stats: hovered
      ? [
@@ -4507,7 +4515,6 @@ export const TubeExplorerShortsVsLongs: React.FC<TubeExplorerVisualProps> = (pro
    activeContext={{
     title: hovered ? `${hovered.label} — ${winner} WIN` : `FORMAT DUEL (${mode})`,
     bgTone: "#080816",
-    darkStats: true,
     stats: hovered
      ? [
       { label: "SHORTS", value: hovered.format(hovered.shorts), tone: SHORTS_TONE, lockTone: true, compact: true },
@@ -4715,7 +4722,6 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
    visualStyle={props.visualStyle}
    title="CONTENT TREEMAP"
    subtitle="Pillar area map · area = selected metric · click a pillar to zoom in."
-   bgTone="#080816"
    count={scoped.length}
    color="#FFB570"
    height={480}
@@ -5333,7 +5339,6 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
    isOpenInitial={props.isOpenInitial}
    activeContext={{
     bgTone: "#080816",
-    darkStats: true,
     title: hovered ? `${slotLabel(hovered)} • SLOT` : `PUBLISH GRID (${formatFilter.toUpperCase()})`,
     bgTone: "#080816",
     minHeight: 44,
@@ -5403,7 +5408,6 @@ export const TubeExplorerTrafficDayRiverDelta: React.FC<TubeExplorerVisualProps>
    visualStyle={props.visualStyle}
    title="RIVER DELTA"
    subtitle="Traffic source flow · sources on top, the selected time buckets below."
-   bgTone="#080816"
    count={rows.length || dataset.traffic.length}
    color="#42FF68"
    icon="analytics"
@@ -5412,7 +5416,6 @@ export const TubeExplorerTrafficDayRiverDelta: React.FC<TubeExplorerVisualProps>
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
-    darkStats: true,
     title: hovered ? hovered.label.toUpperCase() : "TRAFFIC x DAY",
     stats: hovered
      ? [
@@ -5498,7 +5501,6 @@ export const TubeExplorerSankeyRiverDelta: React.FC<TubeExplorerVisualProps> = (
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
-    darkStats: true,
     title: "SOURCE TO GEO FLOW",
     stats: [
      { label: "TOTAL VIEWS", value: compact(totalViews), tone: leadSource ? TRAFFIC_COLORS[0] : "#00E5FF", lockTone: true, compact: true },
@@ -5554,6 +5556,7 @@ export const TubeExplorerClockRadialBurst: React.FC<TubeExplorerVisualProps> = (
 
  return (
   <ModuleFrame
+   heroVisualId="clockburst"
    visualStyle={props.visualStyle}
    title="CLOCK BURST"
    subtitle="Traffic overview with traffic-detail drilldown; excludes Traffic Source × Day."
@@ -5561,7 +5564,6 @@ export const TubeExplorerClockRadialBurst: React.FC<TubeExplorerVisualProps> = (
    color="#FFE35A"
    activeContext={{
     bgTone: "#080816",
-    darkStats: true,
     title: leadSlice ? `${trafficFocusLabel(leadSlice.kind)} • SOURCE DETAIL` : "CLOCK RADIAL BURST",
     stats: [
      { label: `TOTAL ${metricOption.shortLabel}`, value: compact(totalValue), compact: true },
@@ -5597,7 +5599,7 @@ export const TubeExplorerPerfectionQuadrant = createModule("PERFECT MIX", "Reten
 export const TubeExplorerDurationRetentionScatter = createModule("LENGTH CURVE", "Video length versus retention.", (d) => <VideoScatter rows={topVideos(d, "views", 120)} x="durationSec" y="retentionScore" />, { color: "#FFB158" })
 export const TubeExplorerBeeswarmLikeRate = createModule("LIKE CLOUD", "Like-rate clusters across the channel.", (d) => <VideoScatter rows={topVideos(d, "likes", 120)} x="views" y="likeRate" />, { color: "#B14AED" })
 export const TubeExplorerCalendarHeatSignature = createModule("CALENDAR HEAT", "Monthly uploads arranged as a calendar signature.", (d) => <HeatGrid cells={d.monthly.map((m) => ({ label: m.month, value: m.videos }))} empty="No monthly upload rows available" />, { color: "#42FF68" })
-export const TubeExplorerUSStateDotMap = createModule("GEO RANK", "Country, region, and city views sorted by reach.", (d) => <HeroIntroBoundary visualId="geography-map"><GeoBars dataset={d} /></HeroIntroBoundary>, { color: "#FF7497" })
+export const TubeExplorerUSStateDotMap = createModule("GEO RANK", "Country, region, and city views sorted by reach.", (d) => <HeroIntroBoundary visualId="geography-map"><GeoBars dataset={d} /></HeroIntroBoundary>, { color: "#FF7497", heroVisualId: "geography-map" })
 export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (props) => {
  const dataset = useExplorerData(props)
  const [wordLimit, setWordLimit] = useState(30)
@@ -5668,6 +5670,7 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
 
  return (
   <AnalyticsVisualShell
+   heroVisualId="title-keyword-network"
    shellMode="standard"
    title="TITLE WORD NETWORK"
    bgTone="#080816"
@@ -5679,7 +5682,6 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
    iconKey={networkStyle.iconKey}
    headerColorPair={networkHeaderPair}
    activeContext={{
-    darkStats: true,
     title: selectedRoots.length >= 2
      ? `GROUP: ${selectedRoots.map((w) => w.toUpperCase()).slice(0, 3).join(" + ")}${selectedRoots.length > 3 ? " +MORE" : ""}`
      : hovered ? `"${hovered.toUpperCase()}" WORD STATS` : "NETWORK OVERVIEW",
