@@ -66,6 +66,16 @@ const waitForAccountPopupMessage = (
 ): Promise<void> => new Promise((resolve, reject) => {
   let settled = false
   let closedPoll: number | null = null
+  // Grace window (ms) between first observing `popup.closed === true` and
+  // rejecting with "closed before auth completed". A successful popup posts
+  // VT_UNIFIED_ACCOUNT_AUTH_SUCCESS and then closes itself — with COOP
+  // `same-origin-allow-popups`, cross-origin `popup.closed` reads while the
+  // popup is on accounts.google.com return false, but the instant the popup
+  // navigates back to our same-origin callback and closes, the poll can win
+  // the race against message delivery. Waiting one full poll cycle after the
+  // first `closed` observation lets any queued postMessage resolve us first.
+  const CLOSED_GRACE_MS = 600
+  let closedSeenAt: number | null = null
 
   const cleanup = () => {
     if (settled) return
@@ -105,9 +115,18 @@ const waitForAccountPopupMessage = (
   }
 
   closedPoll = window.setInterval(() => {
-    if (!popup.closed) return
+    if (settled) return
+    if (!popup.closed) {
+      closedSeenAt = null
+      return
+    }
+    if (closedSeenAt === null) {
+      closedSeenAt = Date.now()
+      return
+    }
+    if (Date.now() - closedSeenAt < CLOSED_GRACE_MS) return
     fail("Account popup closed before authorization completed.")
-  }, 400)
+  }, 200)
 
   window.addEventListener("message", handleMessage)
 })
