@@ -3661,9 +3661,7 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
  const dataset = useExplorerData(props)
 
  const [metric, setMetric] = useState<ThermalMetricKey>("views")
- // Heat Matrix animation orchestration is now the standard HeroIntroBoundary
- // + animateHeatMatrix runner (3 variants: serpentine-column / row / row-fast).
- // No bespoke replay-tick state is needed.
+ const [heatMatrixReplayTick, setHeatMatrixReplayTick] = useState(0)
  const [formatFilter, setFormatFilter] = useState<"all" | "shorts" | "long">("all")
  const [orderMode, setOrderMode] = useState<"chrono" | "rank">("chrono")
  const [rowCount, setRowCount] = useState<5 | 8>(8)
@@ -3807,9 +3805,15 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
 
  const METRIC_OPTIONS = THERMAL_METRICS.map(m => ({ label: m.label, value: m.key }))
 
- // Bespoke heat-matrix replay listener removed. HeroIntroBoundary now owns
- // both the replay event handling and the animation, and cycles through the
- // three variants shipped in animateHeatMatrix.
+ useEffect(() => {
+  const replay = (event: Event) => {
+   const detail = (event as CustomEvent<{ visualId?: string }>).detail
+   if (detail?.visualId && detail.visualId !== "heat-matrix") return
+   setHeatMatrixReplayTick((value) => value + 1)
+  }
+  window.addEventListener("vt:replay-hero-intro", replay)
+  return () => window.removeEventListener("vt:replay-hero-intro", replay)
+ }, [])
 
 
  return (
@@ -3868,10 +3872,13 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
     ]}
    >
     <div className="relative h-full w-full bg-[#0a0a1a]">
-     {/* HeroIntroBoundary handles both the replay button (auto-rendered)
-         and the three animateHeatMatrix variants. */}
-     <HeroIntroBoundary visualId="heat-matrix" replayKey={`${metric}-${orderMode}-${formatFilter}-${rowCount}`}>
+     {/* Header-anchored replay: sits at the canvas top-right corner (the
+         shell's ModuleFrame body clips overflow so a negative topPx isn't
+         safe here — kept as the extreme top-right of the canvas, out of
+         the way of the top-right controller row above). */}
+     <HeaderHeroPlayButton visualId="heat-matrix" topPx={8} rightPx={12} />
      <ThermalImagingModuleInner
+      key={`heat-matrix-${heatMatrixReplayTick}`}
       displayVideos={displayVideos}
       rows={rowCount}
       hoveredIdx={hoveredIdx}
@@ -3882,7 +3889,6 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
       onClickTile={handleTileClick}
       heatColor={heatColor}
      />
-     </HeroIntroBoundary>
     </div>
    </ModuleFrame>
   )
@@ -4093,7 +4099,6 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
   >
-   <HeroIntroBoundary visualId="channel-vital-signs" replayKey={rows.length}>
     <div className="flex h-full flex-col bg-[#090914]">
      <div className="relative flex-1 min-h-0">
       <svg
@@ -4234,7 +4239,6 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
      </div>
 
    </div>
-   </HeroIntroBoundary>
   </ModuleFrame>
  )
 }

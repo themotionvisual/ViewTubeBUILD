@@ -14,17 +14,6 @@ export interface HeroIntroBoundaryProps {
   mode?: HeroIntroMode
   className?: string
   children: React.ReactNode
-  /**
-   * Whether to render the standardized `HeaderHeroPlayButton` inside the
-   * boundary. Default `true` — every animated visual gets one replay
-   * control at the same relative position without callers having to place
-   * one themselves.
-   */
-  showHeaderPlayButton?: boolean
-  /** px offset from top of boundary root — overrides the default 8. */
-  playButtonTopPx?: number
-  /** px offset from right of boundary root — overrides the default 12. */
-  playButtonRightPx?: number
 }
 
 export const replayHeroVisual = (
@@ -351,9 +340,6 @@ export const HeroIntroBoundary: React.FC<
   mode,
   className,
   children,
-  showHeaderPlayButton = true,
-  playButtonTopPx = 8,
-  playButtonRightPx = 12,
 }) => {
   const rootRef =
     useRef<HTMLDivElement>(null)
@@ -457,13 +443,6 @@ export const HeroIntroBoundary: React.FC<
         visualId
       }
     >
-      {showHeaderPlayButton ? (
-        <HeaderHeroPlayButton
-          visualId={visualId}
-          topPx={playButtonTopPx}
-          rightPx={playButtonRightPx}
-        />
-      ) : null}
       {children}
     </div>
   )
