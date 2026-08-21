@@ -86,42 +86,52 @@ export const AnalyticsVisualShell: React.FC<AnalyticsVisualShellProps> = ({
 
   if (shellMode === "vt2-preserved") {
     return (
-      <ChartModule
-        {...vt2}
-        title={title}
-        subtitle={subtitle ?? controllerExplanation}
-        icon={resolvedIcon}
-        iconBg={headerColorPair.icon}
-        titleBg={headerColorPair.title}
-        bodyFitMode={canvasFitMode}
-      >
-        {children}
-      </ChartModule>
+      // data-vt-visual-module / .vt-visual-module: anchor for mobile
+      // orientation-position preservation (usePreserveOrientationPosition).
+      <div data-vt-visual-module className="vt-visual-module">
+        <ChartModule
+          {...vt2}
+          title={title}
+          subtitle={subtitle ?? controllerExplanation}
+          icon={resolvedIcon}
+          iconBg={headerColorPair.icon}
+          titleBg={headerColorPair.title}
+          bodyFitMode={canvasFitMode}
+        >
+          {children}
+        </ChartModule>
+      </div>
     )
   }
 
   return (
-    <UnifiedAnalyticsVisualModule
-      title={title}
-      subtitle={subtitle ?? controllerExplanation ?? ""}
-      icon={resolvedIcon}
-      iconKey={iconKey}
-      headerColorPair={headerColorPair}
-      activeContext={activeContext}
-      controllerRows={rows as ControllerRow[] | undefined}
-      controllerWidth={controllerSpec?.width}
-      controllerDensity={controllerSpec?.density}
-      theme={standard?.theme}
-      layout={standard?.layout}
-      footer={standard?.footer}
-      metricBadges={standard?.metricBadges}
-      collapsible={standard?.collapsible}
-      isOpenInitial={standard?.isOpenInitial}
-      canvasFitMode={canvasFitMode}
-    >
-      <div data-canvas-fit-mode={canvasFitMode} className="h-full w-full">
-        {children}
-      </div>
-    </UnifiedAnalyticsVisualModule>
+    // data-vt-visual-module / .vt-visual-module: anchor for mobile
+    // orientation-position preservation (usePreserveOrientationPosition).
+    <div data-vt-visual-module className="vt-visual-module">
+      <UnifiedAnalyticsVisualModule
+        title={title}
+        subtitle={subtitle ?? controllerExplanation ?? ""}
+        icon={resolvedIcon}
+        iconKey={iconKey}
+        headerColorPair={headerColorPair}
+        activeContext={activeContext}
+        controllerRows={rows as ControllerRow[] | undefined}
+        controllerWidth={controllerSpec?.width}
+        controllerDensity={controllerSpec?.density}
+        theme={standard?.theme}
+        layout={standard?.layout}
+        footer={standard?.footer}
+        metricBadges={standard?.metricBadges}
+        collapsible={standard?.collapsible}
+        isOpenInitial={standard?.isOpenInitial}
+        canvasFitMode={canvasFitMode}
+      >
+        {/* .vt-visual-canvas: shared chart-body target for the mobile
+            aspect-ratio + landscape-fill rules in mobileOrientation.css */}
+        <div data-canvas-fit-mode={canvasFitMode} className="vt-visual-canvas vt-responsive-visual-body h-full w-full">
+          {children}
+        </div>
+      </UnifiedAnalyticsVisualModule>
+    </div>
   )
 }

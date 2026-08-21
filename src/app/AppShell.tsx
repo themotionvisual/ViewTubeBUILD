@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { AdaptiveNavigationShell } from "../components/navigation/AdaptiveNavigationShell";
+import { usePreserveOrientationPosition } from "../hooks/usePreserveOrientationPosition";
 import { DashboardProvider } from "../context/DashboardContext";
 import { EntitlementProvider } from "../context/EntitlementProvider";
 import {
@@ -19,6 +20,11 @@ interface AppShellProps {
 }
 
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
+  // Global mobile orientation-position preservation: remember which visual
+  // module / toolbox / row the user was looking at before rotation, and
+  // restore it to ~10px below the top of the newly-sized viewport after.
+  usePreserveOrientationPosition();
+
   const location = useLocation();
   const account = useUnifiedAccount();
   const [legacyEntitlement, setLegacyEntitlement] = useState<EntitlementState>(() => readCurrentEntitlement());

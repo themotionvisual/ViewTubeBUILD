@@ -573,7 +573,8 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
 
   return (
     <div
-      className={`w-full bg-white relative flex flex-col transition-all duration-300 ${collapsible && !open ? "self-start" : ""} ${overflowVisible ? "" : "overflow-hidden"} ${shellClassName}`}
+      data-vt-toolbox
+      className={`vt-toolbox w-full bg-white relative flex flex-col transition-all duration-300 ${collapsible && !open ? "self-start" : ""} ${overflowVisible ? "" : "overflow-hidden"} ${shellClassName}`}
       style={{
         border: `${SUB_TOOLBOX_STROKE}px solid black`,
         borderRadius: `16px`,

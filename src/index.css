@@ -3,6 +3,10 @@
 @source not "./index.css.fullbak";
 @source not "./components/UIReferenceLibraryContent.tsx";
 
+/* Mobile orientation-preservation + responsive-visual layout. Loaded here so
+   the rules land in the global stylesheet regardless of which route mounts. */
+@import "./styles/mobileOrientation.css";
+
 html,
 body,
 #root {
