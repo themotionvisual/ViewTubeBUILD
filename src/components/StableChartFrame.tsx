@@ -30,10 +30,13 @@ export const StableChartFrame: React.FC<StableChartFrameProps> = ({
      return
     }
     const rect = host.getBoundingClientRect()
-    setSize({
-     width: Number.isFinite(rect.width) && rect.width > 1 ? rect.width : 0,
-     height: Number.isFinite(rect.height) && rect.height > 1 ? rect.height : 0,
-    })
+    const nextWidth = Number.isFinite(rect.width) && rect.width > 1 ? rect.width : 0
+    const nextHeight = Number.isFinite(rect.height) && rect.height > 1 ? rect.height : 0
+    setSize((current) =>
+     current.width === nextWidth && current.height === nextHeight
+      ? current
+      : { width: nextWidth, height: nextHeight },
+    )
    })
   }
 
@@ -43,11 +46,11 @@ export const StableChartFrame: React.FC<StableChartFrameProps> = ({
    observer = new ResizeObserver(update)
    observer.observe(host)
   }
-  window.addEventListener("resize", update)
+  if (!observer) window.addEventListener("resize", update)
   return () => {
    if (raf) cancelAnimationFrame(raf)
    observer?.disconnect()
-   window.removeEventListener("resize", update)
+   if (!observer) window.removeEventListener("resize", update)
   }
  }, [])
 

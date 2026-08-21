@@ -3524,7 +3524,6 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
   const [layoutMode, setLayoutMode] = useState<"overlay" | "individual">("overlay")
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const channelProgressRootRef = useRef<HTMLDivElement>(null)
-  const [channelProgressReplayTick, setChannelProgressReplayTick] = useState(0)
 
   const METRIC_OPTIONS = [
     { value: "subscribersGained", label: "SUBSCRIBERS", tone: VT_VISUAL_METRIC_COLORS.subscribers, isRevenue: false },
@@ -3763,20 +3762,12 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
 
   const activeMetrics = METRIC_OPTIONS.filter((option) => selectedMetrics.includes(option.value))
 
-  useEffect(() => {
-    const replay = (event: Event) => {
-      const detail = (event as CustomEvent<{ visualId?: string }>).detail
-      if (detail?.visualId && detail.visualId !== "channel-progress") return
-      setChannelProgressReplayTick((value) => value + 1)
-    }
-    window.addEventListener("vt:replay-hero-intro", replay)
-    return () => window.removeEventListener("vt:replay-hero-intro", replay)
-  }, [])
-
-
-
   useLayoutEffect(() => {
     const root = channelProgressRootRef.current
+    // Channel Progress is animated by HeroIntroBoundary below. Keep this
+    // recovered choreography dormant until it is removed in the controller
+    // contract cleanup; running both paths doubles SVG animation work.
+    if (root) return
     if (!root || viewMode !== "progress" || chartData.length === 0 || activeMetrics.length === 0) return
 
     const animations: Animation[] = []
@@ -3948,7 +3939,6 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
     selectedMetrics,
     timeRange,
     viewMode,
-    channelProgressReplayTick,
   ])
 
   const CustomCandle = (props: any) => {
@@ -4439,7 +4429,11 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
         />
       }
     >
-      <div ref={channelProgressRootRef} className="px-1 pt-2 pb-4 min-h-[400px] relative overflow-visible">
+      <HeroIntroBoundary
+        visualId="channel-progress"
+        replayKey={`${viewMode}-${layoutMode}-${timeRange}-${selectedMetrics.join("|")}-${chartData.length}`}
+        className="px-1 pt-2 pb-4 min-h-[400px] relative overflow-visible"
+      >
         {layoutMode === "individual" && activeMetrics.length > 1 ? (
           <div className={`grid gap-1 h-[420px] ${activeMetrics.length === 2 ? 'grid-cols-1 grid-rows-2' : 'grid-cols-2 grid-rows-2'}`}>
             {activeMetrics.map((metricOpt, metricIndex) => {
@@ -4482,7 +4476,7 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
           })}
         </div>
         ) : null}
-      </div>
+      </HeroIntroBoundary>
     </SubToolboxChartModule>
   )
 }

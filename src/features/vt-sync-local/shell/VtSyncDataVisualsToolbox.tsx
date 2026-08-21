@@ -366,7 +366,7 @@ const RevealOnView: React.FC<{
  delayMs?: number
  estimatedHeight?: number
  children: React.ReactNode
-}> = ({ delayMs = 0, estimatedHeight = 360, children }) => {
+}> = ({ delayMs: _delayMs = 0, estimatedHeight = 360, children }) => {
  const [visible, setVisible] = useState(false)
  const [node, setNode] = useState<HTMLDivElement | null>(null)
 
@@ -396,9 +396,6 @@ const RevealOnView: React.FC<{
    style={{
     minHeight: visible ? undefined : estimatedHeight,
     opacity: 1,
-    transform: visible ? "translateY(0px)" : "translateY(14px)",
-    transition: "opacity 420ms ease, transform 420ms ease",
-    transitionDelay: `${delayMs}ms`,
     contentVisibility: "auto",
     containIntrinsicSize: `${estimatedHeight}px`,
    } as React.CSSProperties}>

@@ -314,6 +314,18 @@ export const HeroIntroBoundary: React.FC<
         },
       )
 
+    let isInViewport = false
+    let hasPlayedIntro = false
+
+    const canAnimate = () =>
+      isInViewport && document.visibilityState !== "hidden"
+
+    const playIntroOnce = () => {
+      if (!canAnimate() || hasPlayedIntro) return
+      hasPlayedIntro = true
+      controller.replay({ variant: 0 })
+    }
+
     const replay = (
       event: Event,
     ) => {
@@ -331,6 +343,8 @@ export const HeroIntroBoundary: React.FC<
         return
       }
 
+      if (!canAnimate()) return
+
       controller.replay(
         detail?.variant !== undefined
           ? {
@@ -346,21 +360,46 @@ export const HeroIntroBoundary: React.FC<
       replay,
     )
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        controller.reset()
+        return
+      }
+      playIntroOnce()
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+
+    const viewportObserver = typeof IntersectionObserver === "undefined"
+      ? null
+      : new IntersectionObserver(
+          ([entry]) => {
+            isInViewport = Boolean(entry?.isIntersecting)
+            if (isInViewport) playIntroOnce()
+            else controller.reset()
+          },
+          { rootMargin: "80px 0px", threshold: 0.01 },
+        )
+
+    if (viewportObserver) viewportObserver.observe(root)
+    else {
+      isInViewport = true
+      playIntroOnce()
+    }
+
     /**
      * Automatic first animation.
      *
      * Starts with the CURRENT branch's
      * first/original variant.
      */
-    controller.replay({
-      variant: 0,
-    })
-
     return () => {
       window.removeEventListener(
         "vt:replay-hero-intro",
         replay,
       )
+
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+      viewportObserver?.disconnect()
 
       controller.destroy()
     }
