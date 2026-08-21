@@ -3661,7 +3661,9 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
  const dataset = useExplorerData(props)
 
  const [metric, setMetric] = useState<ThermalMetricKey>("views")
- const [heatMatrixReplayTick, setHeatMatrixReplayTick] = useState(0)
+ // Heat Matrix animation orchestration is now the standard HeroIntroBoundary
+ // + animateHeatMatrix runner (3 variants: serpentine-column / row / row-fast).
+ // No bespoke replay-tick state is needed.
  const [formatFilter, setFormatFilter] = useState<"all" | "shorts" | "long">("all")
  const [orderMode, setOrderMode] = useState<"chrono" | "rank">("chrono")
  const [rowCount, setRowCount] = useState<5 | 8>(8)
@@ -3805,15 +3807,9 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
 
  const METRIC_OPTIONS = THERMAL_METRICS.map(m => ({ label: m.label, value: m.key }))
 
- useEffect(() => {
-  const replay = (event: Event) => {
-   const detail = (event as CustomEvent<{ visualId?: string }>).detail
-   if (detail?.visualId && detail.visualId !== "heat-matrix") return
-   setHeatMatrixReplayTick((value) => value + 1)
-  }
-  window.addEventListener("vt:replay-hero-intro", replay)
-  return () => window.removeEventListener("vt:replay-hero-intro", replay)
- }, [])
+ // Bespoke heat-matrix replay listener removed. HeroIntroBoundary now owns
+ // both the replay event handling and the animation, and cycles through the
+ // three variants shipped in animateHeatMatrix.
 
 
  return (
@@ -3872,13 +3868,10 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
     ]}
    >
     <div className="relative h-full w-full bg-[#0a0a1a]">
-     {/* Header-anchored replay: sits at the canvas top-right corner (the
-         shell's ModuleFrame body clips overflow so a negative topPx isn't
-         safe here — kept as the extreme top-right of the canvas, out of
-         the way of the top-right controller row above). */}
-     <HeaderHeroPlayButton visualId="heat-matrix" topPx={8} rightPx={12} />
+     {/* HeroIntroBoundary handles both the replay button (auto-rendered)
+         and the three animateHeatMatrix variants. */}
+     <HeroIntroBoundary visualId="heat-matrix" replayKey={`${metric}-${orderMode}-${formatFilter}-${rowCount}`}>
      <ThermalImagingModuleInner
-      key={`heat-matrix-${heatMatrixReplayTick}`}
       displayVideos={displayVideos}
       rows={rowCount}
       hoveredIdx={hoveredIdx}
@@ -3889,6 +3882,7 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
       onClickTile={handleTileClick}
       heatColor={heatColor}
      />
+     </HeroIntroBoundary>
     </div>
    </ModuleFrame>
   )
