@@ -16,120 +16,324 @@ export interface HeroIntroBoundaryProps {
   children: React.ReactNode
 }
 
-/**
- * Ask every mounted HeroIntroBoundary of the given `visualId` to replay,
- * optionally at a specific `variant`. Consumed by `HeaderHeroPlayButton`
- * and any external showcase controls.
- */
-export const replayHeroVisual = (visualId: HeroVisualId, variant?: number) => {
+export const replayHeroVisual = (
+  visualId: HeroVisualId,
+  variant?: number,
+) => {
   if (typeof window === "undefined") return
+
   window.dispatchEvent(
     new CustomEvent("vt:replay-hero-intro", {
-      detail: { visualId, variant },
+      detail: {
+        visualId,
+        variant,
+      },
     }),
   )
 }
 
 /**
- * The old in-canvas play button. Kept as an export for compatibility, but no
- * longer used by the hero visuals — they now render `HeaderHeroPlayButton`
- * at the shell header level so the control is not inside the chart canvas.
+ * OLD IN-CANVAS BUTTON
  *
- * @deprecated Prefer `<HeaderHeroPlayButton>` at the visual header.
+ * Retained ONLY for compatibility with any old render sites.
+ * New hero visuals should use HeaderHeroPlayButton instead.
  */
 export const HeroAnimationPlayButton: React.FC<{
   visualId: HeroVisualId
   className?: string
-}> = ({ visualId, className = "" }) => (
-  <button
-    type="button"
-    aria-label="Replay visual animation"
-    title="Replay animation"
-    className={`absolute right-2 top-2 z-30 grid h-8 w-8 place-items-center rounded-md border-[2px] border-black bg-white text-[14px] font-black text-black shadow-none ${className}`}
-    onClick={(event) => {
-      event.preventDefault()
-      event.stopPropagation()
-      replayHeroVisual(visualId)
-    }}
-  >
-    ▶
-  </button>
-)
+}> = ({
+  visualId,
+  className = "",
+}) => {
+  return (
+    <button
+      type="button"
+      aria-label="Replay visual animation"
+      title="Replay animation"
+      className={`
+        absolute
+        right-2
+        top-2
+        z-30
+        grid
+        h-8
+        w-8
+        place-items-center
+        rounded-md
+        border-[2px]
+        border-black
+        bg-white
+        text-black
+        shadow-none
+        ${className}
+      `}
+      onClick={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+
+        replayHeroVisual(visualId)
+      }}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        className="h-[19px] w-[19px]"
+        aria-hidden="true"
+      >
+        <path
+          d="M20 11a8 8 0 1 1-2.34-5.66L20 7.68"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        <path
+          d="M20 3v4.68h-4.68"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </button>
+  )
+}
 
 /**
- * Header-anchored replay button. Renders itself absolutely inside a
- * `relative` parent (the visual's outer card), positioned at the top-right
- * of the header band and clear of the top-right controller row.
+ * MAIN HERO REPLAY CONTROL
  *
- * Each click cycles the animation variant (0 → 1 → … → n-1 → 0) and
- * dispatches a replay event carrying the new variant so any listening
- * `HeroIntroBoundary` with a matching `visualId` re-runs at that variant.
- * A brief "V·i / n" badge appears next to the button so the tester can see
- * which variant just fired.
+ * Keep ONE of these in the title/header area of each visual.
  *
- * Placement is chosen to sit LEFT of the shell's top-right controller row
- * without needing the shell to expose a slot for it. The `rightPx` prop
- * lets a caller nudge the offset if a particular visual has an unusually
- * wide controller stack.
+ * Existing animations remain first in the cycle.
+ * Added animations are appended after them.
+ *
+ * Example:
+ *
+ * Channel Progress:
+ * existing 0
+ * existing 1
+ * existing 2
+ * Traveling Tide
+ * Echo Waves
+ * Growth Ignition
+ *
+ * Heat Matrix:
+ * existing 0
+ * existing 1
+ * existing 2
+ * Horizontal Thermal Wave
+ * Heat Drop
+ * Digital Rain
  */
 export const HeaderHeroPlayButton: React.FC<{
   visualId: HeroVisualId
   className?: string
-  /** Distance in px from the right edge of the wrapping card. Default 80 clears the controller row. */
-  rightPx?: number
-  /** Distance in px from the top edge of the wrapping card. Default 10 sits inside the header band. */
-  topPx?: number
-}> = ({ visualId, className = "", rightPx = 80, topPx = 10 }) => {
-  const variantCount = HERO_VISUAL_VARIANT_COUNT[visualId] ?? 1
-  const [variant, setVariant] = useState(0)
-  const [badgeVisible, setBadgeVisible] = useState(false)
-  const badgeTimerRef = useRef<number | null>(null)
 
-  useEffect(() => () => {
-    if (badgeTimerRef.current !== null) window.clearTimeout(badgeTimerRef.current)
+  /**
+   * Distance from right side of visual card.
+   */
+  rightPx?: number
+
+  /**
+   * Distance from top of visual card.
+   */
+  topPx?: number
+}> = ({
+  visualId,
+  className = "",
+  rightPx = 80,
+  topPx = 10,
+}) => {
+  const variantCount =
+    HERO_VISUAL_VARIANT_COUNT[visualId] ?? 1
+
+  const [variant, setVariant] = useState(0)
+
+  const [badgeVisible, setBadgeVisible] =
+    useState(false)
+
+  const badgeTimerRef =
+    useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (badgeTimerRef.current !== null) {
+        window.clearTimeout(
+          badgeTimerRef.current,
+        )
+      }
+    }
   }, [])
 
-  const handleClick = (event: React.MouseEvent) => {
+  const handleClick = (
+    event: React.MouseEvent,
+  ) => {
     event.preventDefault()
     event.stopPropagation()
-    const next = variantCount > 1 ? (variant + 1) % variantCount : 0
+
+    /**
+     * IMPORTANT:
+     *
+     * Existing animation variants stay at
+     * their existing indices.
+     *
+     * New animations have simply increased
+     * HERO_VISUAL_VARIANT_COUNT.
+     */
+    const next =
+      variantCount > 1
+        ? (variant + 1) % variantCount
+        : 0
+
     setVariant(next)
-    replayHeroVisual(visualId, next)
+
+    replayHeroVisual(
+      visualId,
+      next,
+    )
+
     if (variantCount > 1) {
       setBadgeVisible(true)
-      if (badgeTimerRef.current !== null) window.clearTimeout(badgeTimerRef.current)
-      badgeTimerRef.current = window.setTimeout(() => setBadgeVisible(false), 1200)
+
+      if (
+        badgeTimerRef.current !== null
+      ) {
+        window.clearTimeout(
+          badgeTimerRef.current,
+        )
+      }
+
+      badgeTimerRef.current =
+        window.setTimeout(() => {
+          setBadgeVisible(false)
+        }, 1200)
     }
   }
 
-  const label = variantCount > 1
-    ? `Replay animation (cycles ${variantCount} variants)`
-    : "Replay animation"
+  const label =
+    variantCount > 1
+      ? `Replay animation — ${variantCount} variants`
+      : "Replay animation"
 
   return (
     <div
-      className={`pointer-events-none absolute z-40 flex items-center gap-2 ${className}`}
-      style={{ top: `${topPx}px`, right: `${rightPx}px` }}
+      className={`
+        pointer-events-none
+        absolute
+        z-40
+        flex
+        items-center
+        gap-2
+        ${className}
+      `}
+      style={{
+        top: `${topPx}px`,
+        right: `${rightPx}px`,
+      }}
     >
-      {variantCount > 1 && badgeVisible ? (
-        <span className="pointer-events-none inline-flex select-none items-center rounded-md border-[2px] border-black bg-[#C9FF18] px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-black shadow-[3px_3px_0_0_black]">
+      {variantCount > 1 &&
+      badgeVisible ? (
+        <span
+          className="
+            pointer-events-none
+            inline-flex
+            select-none
+            items-center
+            rounded-md
+            border-[2px]
+            border-black
+            bg-[#C9FF18]
+            px-2
+            py-0.5
+            text-[10px]
+            font-black
+            uppercase
+            tracking-wider
+            text-black
+            shadow-[3px_3px_0_0_black]
+          "
+        >
           V{variant + 1} / {variantCount}
         </span>
       ) : null}
+
       <button
         type="button"
         aria-label={label}
         title={label}
         onClick={handleClick}
-        className="pointer-events-auto grid h-8 w-8 place-items-center rounded-md border-[2px] border-black bg-white text-[14px] font-black text-black shadow-[3px_3px_0_0_black] transition-transform hover:-translate-y-0.5 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
+        className="
+          pointer-events-auto
+          grid
+          h-8
+          w-8
+          place-items-center
+          rounded-md
+          border-[2px]
+          border-black
+          bg-white
+          text-black
+          shadow-[3px_3px_0_0_black]
+          transition-transform
+          hover:-translate-y-0.5
+          active:translate-x-[1px]
+          active:translate-y-[1px]
+          active:shadow-none
+        "
       >
-        ▶
+        {/* Circular replay arrow */}
+        <svg
+          viewBox="0 0 24 24"
+          className="h-[19px] w-[19px]"
+          aria-hidden="true"
+        >
+          <path
+            d="
+              M20 11
+              a8 8 0 1 1
+              -2.34 -5.66
+              L20 7.68
+            "
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+
+          <path
+            d="
+              M20 3
+              v4.68
+              h-4.68
+            "
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </button>
     </div>
   )
 }
 
-export const HeroIntroBoundary: React.FC<HeroIntroBoundaryProps> = ({
+/**
+ * Wrap the animated portion of a visual with this.
+ *
+ * The controller is responsible for:
+ * - automatic intro
+ * - replay
+ * - animation variants
+ * - animation cleanup
+ * - reduced-motion handling
+ */
+export const HeroIntroBoundary: React.FC<
+  HeroIntroBoundaryProps
+> = ({
   visualId,
   replayKey = 0,
   seed,
@@ -137,44 +341,107 @@ export const HeroIntroBoundary: React.FC<HeroIntroBoundaryProps> = ({
   className,
   children,
 }) => {
-  const rootRef = useRef<HTMLDivElement>(null)
+  const rootRef =
+    useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const root = rootRef.current
+    const root =
+      rootRef.current
+
     if (!root) return
 
     const prefersReducedMotion =
       typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+      window.matchMedia?.(
+        "(prefers-reduced-motion: reduce)",
+      ).matches
 
-    const effectiveMode: HeroIntroMode =
-      prefersReducedMotion ? "none" : mode ?? readHeroIntroModeFromUrl("full")
+    const effectiveMode:
+      HeroIntroMode =
+      prefersReducedMotion
+        ? "none"
+        : mode ??
+          readHeroIntroModeFromUrl(
+            "full",
+          )
 
-    const controller = createHeroIntroController(visualId, root, {
-      mode: effectiveMode,
-      seed,
+    const controller =
+      createHeroIntroController(
+        visualId,
+        root,
+        {
+          mode: effectiveMode,
+          seed,
+        },
+      )
+
+    const replay = (
+      event: Event,
+    ) => {
+      const detail = (
+        event as CustomEvent<{
+          visualId?: HeroVisualId
+          variant?: number
+        }>
+      ).detail
+
+      if (
+        detail?.visualId &&
+        detail.visualId !== visualId
+      ) {
+        return
+      }
+
+      controller.replay(
+        detail?.variant !== undefined
+          ? {
+              variant:
+                detail.variant,
+            }
+          : undefined,
+      )
+    }
+
+    window.addEventListener(
+      "vt:replay-hero-intro",
+      replay,
+    )
+
+    /**
+     * Automatic first animation.
+     *
+     * Starts with the CURRENT branch's
+     * first/original variant.
+     */
+    controller.replay({
+      variant: 0,
     })
 
-    const replay = (event: Event) => {
-      const detail = (event as CustomEvent<{ visualId?: HeroVisualId; variant?: number }>).detail
-      if (detail?.visualId && detail.visualId !== visualId) return
-      controller.replay(detail?.variant !== undefined ? { variant: detail.variant } : undefined)
-    }
-
-    window.addEventListener("vt:replay-hero-intro", replay)
-    controller.replay()
-
     return () => {
-      window.removeEventListener("vt:replay-hero-intro", replay)
+      window.removeEventListener(
+        "vt:replay-hero-intro",
+        replay,
+      )
+
       controller.destroy()
     }
-  }, [visualId, replayKey, seed, mode])
+  }, [
+    visualId,
+    replayKey,
+    seed,
+    mode,
+  ])
 
   return (
     <div
       ref={rootRef}
-      className={`relative ${className ?? ""}`}
-      data-vt-hero-visual={visualId}
+      className={`
+        relative
+        ${className ?? ""}
+      `}
+      data-vt-hero-visual={
+        visualId
+      }
     >
       {children}
     </div>
