@@ -72,6 +72,31 @@ const modeScale = (mode?: HeroIntroMode) =>
 const ms = (value: number, mode?: HeroIntroMode) =>
   Math.max(1, Math.round(value * modeScale(mode)))
 
+/**
+ * Wrap `variant` into a valid index for the given visual. Uses the visual's
+ * declared count from HERO_VISUAL_VARIANT_COUNT so bumping a visual to 4+
+ * variants automatically flows through both the runner selection and the
+ * header replay button's cycle (which reads the same table).
+ *
+ * The `visualId`-less overload is kept because the internal animator runners
+ * still resolve their variant off `options.variant` before they know which
+ * table row they belong to — the caller's runner clamps to its own count.
+ */
+const normalizedVariantFor = (
+  visualId: HeroVisualId,
+  variant: number | undefined,
+): number => {
+  const count = Math.max(1, HERO_VISUAL_VARIANT_COUNT[visualId] ?? 1)
+  const raw = variant ?? 0
+  return ((raw % count) + count) % count
+}
+
+/**
+ * Legacy `% 3` clamp kept for the individual animator functions. Every
+ * built-in animator currently exposes exactly 3 variants (0/1/2). If an
+ * animator is extended, bump HERO_VISUAL_VARIANT_COUNT for that visual AND
+ * add the new `variant === N` branch here — no other change is needed.
+ */
 const normalizedVariant = (options?: HeroIntroOptions) =>
   (((options?.variant ?? 0) % 3) + 3) % 3
 
@@ -1157,7 +1182,7 @@ export const createHeroIntroController=(
 ):HeroIntroController=>{
   let animations:Animation[]=[]
   let destroyed=false
-  let currentVariant=normalizedVariant(options)
+  let currentVariant=normalizedVariantFor(visualId,options.variant)
 
   const stop=()=>{
     animations.forEach(animation=>{
@@ -1170,7 +1195,7 @@ export const createHeroIntroController=(
     if(destroyed) return
     stop()
     if(overrides?.variant!==undefined){
-      currentVariant=((overrides.variant%3)+3)%3
+      currentVariant=normalizedVariantFor(visualId,overrides.variant)
     }
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
       if(destroyed) return
@@ -1202,21 +1227,31 @@ export const readHeroIntroModeFromUrl=(fallback:HeroIntroMode="full"):HeroIntroM
   return fallback
 }
 
+/**
+ * Ordered display names for each visual's variants.
+ *
+ * When a visual gains a new variant, append its name here AND bump
+ * HERO_VISUAL_VARIANT_COUNT for that visual. The header replay button reads
+ * the count table to size its cycle, and this map to render the "V N / M"
+ * badge, so both stay in sync automatically.
+ */
+export const HERO_VARIANT_LABELS:Record<HeroVisualId,readonly string[]>={
+  "traffic-source-evolution":["LAYERED RIVER","SOURCE RACE","GEOLOGICAL FORMATION"],
+  "channel-progress":["TRAVELING TIDE","ECHO WAVES","GROWTH IGNITION"],
+  "heat-matrix":["HORIZONTAL THERMAL WAVE","HEAT DROP","DIGITAL RAIN"],
+  "shorts-retention":["POPCORN UNIVERSE","DATA CANNON","GRAVITY DROP"],
+  "channel-vital-signs":["ECG STARTUP","DEFIBRILLATOR","MULTI-MONITOR BOOT"],
+  "clockburst":["CLOCK WINDING","RADIAL EXPLOSION","TIME SWEEP"],
+  "title-keyword-network":["NEURAL NETWORK","MAGNETIC ASSEMBLY","SIGNAL TRANSMISSION"],
+  "barcode-fingerprint":["SCANNER","DNA ASSEMBLY","AUDIO DECODE"],
+  "geography-map":["GLOBAL SIGNAL","AUDIENCE CONSTELLATION","SATELLITE SWEEP"],
+  "engagement-pulse":["PULSE CHASE","SYNCHRONIZED HEARTBEAT","METRIC CONVERSATION"],
+  "format-dominance":["ORIGINAL VIEWTUBE","FORMAT TAKEOVER","CHAMPIONSHIP PODIUM"],
+  "keyword-venn":["COLLISION","COMBINATION BUILDER","ELASTIC ORBIT"],
+}
+
 export const getHeroVariantLabel=(visualId:HeroVisualId,variant:number)=>{
-  const v=((variant%3)+3)%3
-  const labels:Record<HeroVisualId,[string,string,string]>={
-    "traffic-source-evolution":["LAYERED RIVER","SOURCE RACE","GEOLOGICAL FORMATION"],
-    "channel-progress":["TRAVELING TIDE","ECHO WAVES","GROWTH IGNITION"],
-    "heat-matrix":["HORIZONTAL THERMAL WAVE","HEAT DROP","DIGITAL RAIN"],
-    "shorts-retention":["POPCORN UNIVERSE","DATA CANNON","GRAVITY DROP"],
-    "channel-vital-signs":["ECG STARTUP","DEFIBRILLATOR","MULTI-MONITOR BOOT"],
-    "clockburst":["CLOCK WINDING","RADIAL EXPLOSION","TIME SWEEP"],
-    "title-keyword-network":["NEURAL NETWORK","MAGNETIC ASSEMBLY","SIGNAL TRANSMISSION"],
-    "barcode-fingerprint":["SCANNER","DNA ASSEMBLY","AUDIO DECODE"],
-    "geography-map":["GLOBAL SIGNAL","AUDIENCE CONSTELLATION","SATELLITE SWEEP"],
-    "engagement-pulse":["PULSE CHASE","SYNCHRONIZED HEARTBEAT","METRIC CONVERSATION"],
-    "format-dominance":["ORIGINAL VIEWTUBE","FORMAT TAKEOVER","CHAMPIONSHIP PODIUM"],
-    "keyword-venn":["COLLISION","COMBINATION BUILDER","ELASTIC ORBIT"],
-  }
-  return labels[visualId][v]
+  const labels=HERO_VARIANT_LABELS[visualId]
+  const v=normalizedVariantFor(visualId,variant)
+  return labels[v] ?? `VARIANT ${v+1}`
 }
