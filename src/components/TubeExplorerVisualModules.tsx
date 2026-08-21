@@ -165,7 +165,6 @@ const ModuleFrame: React.FC<{
  stableChartFrame?: boolean
  collapsible?: boolean
  isOpenInitial?: boolean
- heroVisualId?: HeroVisualId
  /**
   * Opt into the shared dark Tube Insights canvas treatment: the chart body
   * gets a `#0a0a1a` background (matching Heat Matrix / Clockburst / Channel
@@ -173,10 +172,10 @@ const ModuleFrame: React.FC<{
   * the default white. Standardizing this via the shell instead of via
   * inline per-visual `bg-[#0a0a1a]` wrappers keeps the collection visually
   * consistent as new dark-canvas visuals get added.
- */
+  */
  insightDark?: boolean
  children: React.ReactNode
-}> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], activeContext, controllerRows, visualStyle, insight, height = 320, flushShell = false, stableChartFrame = true, collapsible = false, isOpenInitial = true, heroVisualId, insightDark = false, children }) => {
+}> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], activeContext, controllerRows, visualStyle, insight, height = 320, flushShell = false, stableChartFrame = true, collapsible = false, isOpenInitial = true, insightDark = false, children }) => {
  const resolvedStyle = visualStyle ?? resolveVtSyncVisualStyle(title)
  const normalizedActiveContext = useMemo(
   () => {
@@ -223,9 +222,8 @@ const ModuleFrame: React.FC<{
    className={
     flushShell
      ? `mx-auto h-full w-full max-w-none ${insightDark ? "bg-[#0a0a1a]" : ""}`
-     : `mx-auto w-full max-w-[1080px] border-[4px] border-black p-2 ${insightDark ? "bg-[#0a0a1a]" : "bg-white"}`
+     : `mx-auto w-full max-w-[1080px] border-[3px] border-black p-2 ${insightDark ? "bg-[#0a0a1a]" : "bg-white"}`
    }
-   data-tube-insights-canvas={insightDark ? "dark" : "light"}
    style={{ height: boundedHeight }}>
    {stableChartFrame ? (
     <StableChartFrame minHeightClassName="min-h-[300px]">{children}</StableChartFrame>
@@ -3080,7 +3078,7 @@ const TitleWordNetworkCanvas: React.FC<{
 const createModule = (
  title: string,
  subtitle: string,
- render: (dataset: TubeExplorerVisualDataset, props: TubeExplorerVisualProps) => React.ReactNode,
+ render: (dataset: TubeExplorerVisualDataset) => React.ReactNode,
  options: {
   color?: string
   icon?: string
@@ -3088,7 +3086,6 @@ const createModule = (
   insight?: string
   height?: number
   flushShell?: boolean
-  heroVisualId?: HeroVisualId
   activeContext?: (dataset: TubeExplorerVisualDataset) => SubToolboxChartModuleProps["activeContext"]
   /**
    * Opt into the shared dark Tube Insights canvas (see ModuleFrame's
