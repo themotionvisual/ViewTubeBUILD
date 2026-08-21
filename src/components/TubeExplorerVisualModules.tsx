@@ -4099,6 +4099,7 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
   >
+   <HeroIntroBoundary visualId="channel-vital-signs" replayKey={rows.length}>
     <div className="flex h-full flex-col bg-[#090914]">
      <div className="relative flex-1 min-h-0">
       <svg
@@ -4239,6 +4240,7 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
      </div>
 
    </div>
+   </HeroIntroBoundary>
   </ModuleFrame>
  )
 }
