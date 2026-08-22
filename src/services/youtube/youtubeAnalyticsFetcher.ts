@@ -181,6 +181,11 @@ const CONDITIONALLY_AVAILABLE_VIDEO_ANALYTICS_METRICS = new Set<string>([
  "endScreenElementClicks",
  "endScreenElementClickRate",
 ])
+const PER_VIDEO_FILTER_DISABLED_METRICS = [
+ "endScreenElementImpressions",
+ "endScreenElementClicks",
+ "endScreenElementClickRate",
+] as const
 const disabledAnalyticsGroups = new Set<AnalyticsMetricGroupName>()
 let creatorContentTypeFetchDisabled = false
 const metricCapabilityByMetric = new Map<
@@ -320,7 +325,7 @@ export const fetchAnalytics = async (
   batchMode?: "initial" | "next"
  } = {},
 ) => {
- const runDisabledMetrics = new Set<string>()
+ const runDisabledMetrics = new Set<string>(PER_VIDEO_FILTER_DISABLED_METRICS)
  const runMetricCapabilities = new Map<
   string,
  {

@@ -5,6 +5,10 @@ import { Image as ImageIcon, Sparkles, Download, Search, CheckCircle2, AlertTria
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { VideoAssetSelect } from "./VideoAssetSelect"
 import { WidgetScrollArea } from "../WidgetPrimitives"
+import {
+  firstYouTubeThumbnailCandidate,
+  nextYouTubeThumbnailCandidate,
+} from "../../../services/youtube/thumbnailFallback"
 
 type TabMode = "generate" | "analyze" | "abtest"
 
@@ -215,15 +219,11 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
             {activeVideo && (
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px", background: "#f5f5f5", border: "2px solid #000", borderRadius: "8px", overflow: "hidden" }}>
                 <img 
-                  src={activeVideo.thumbnailUrl || `https://i.ytimg.com/vi/${activeVideo.videoId}/maxresdefault.jpg`} 
+                  src={firstYouTubeThumbnailCandidate(activeVideo.videoId, [activeVideo.thumbnailUrl])}
                   alt="Preview" 
                   onError={(e) => {
-                    const target = e.currentTarget;
-                    if (target.src.includes('maxresdefault.jpg')) {
-                      target.src = target.src.replace('maxresdefault.jpg', 'hqdefault.jpg');
-                    } else if (target.src.includes('hqdefault.jpg')) {
-                      target.src = target.src.replace('hqdefault.jpg', 'mqdefault.jpg');
-                    }
+                    const target = e.currentTarget
+                    target.src = nextYouTubeThumbnailCandidate(activeVideo.videoId, target.src, [activeVideo.thumbnailUrl])
                   }}
                   style={{ width: "100%", height: "120px", objectFit: "cover", borderBottom: "2px solid #000" }} 
                 />

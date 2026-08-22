@@ -18,8 +18,8 @@ describe("youtubeAnalyticsFetcher video metric groups", () => {
   expect(groups.engagement).toContain("videosAddedToPlaylists")
   expect(groups.engagement).toContain("videosRemovedFromPlaylists")
   expect(groups.monetization).toContain("grossRevenue")
- expect(groups.audience_mix).toContain("annotationClickThroughRate")
- expect(groups.audience_mix).toContain("annotationCloseRate")
+ expect(groups.audience_mix).not.toContain("annotationClickThroughRate")
+ expect(groups.audience_mix).not.toContain("annotationCloseRate")
  expect(groups.audience_mix).toContain("cardClickRate")
  })
 
