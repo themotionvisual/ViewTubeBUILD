@@ -5138,7 +5138,8 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
    activeContext={{
     title: activeContextTitle,
     stats: activeContextStats,
-    bgTone: "#E5E7EB",
+    bgTone: "#080816",
+    darkStats: true,
     height: "expanded",
    }}
   >

@@ -178,8 +178,16 @@ const ModuleFrame: React.FC<{
 }> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], activeContext, controllerRows, visualStyle, insight, height = 320, flushShell = false, stableChartFrame = true, collapsible = false, isOpenInitial = true, heroVisualId, insightDark = false, children }) => {
  const resolvedStyle = visualStyle ?? resolveVtSyncVisualStyle(title)
  const normalizedActiveContext = useMemo(
-  () => normalizeHeatMatrixContext(title, activeContext),
-  [title, activeContext],
+  () => {
+   const normalized = normalizeHeatMatrixContext(title, activeContext)
+   if (!normalized || !insightDark) return normalized
+   return {
+    ...normalized,
+    bgTone: normalized.bgTone ?? "#080816",
+    darkStats: true,
+   }
+  },
+  [title, activeContext, insightDark],
  )
  const headerPair = visualStyle?.headerColorPair ?? headerPairForColor(color)
  const resolvedIcon = visualStyle?.iconKey ?? resolvedStyle.iconKey ?? icon
@@ -2482,7 +2490,7 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
    : null
   let angle = -Math.PI / 2
   return (
-   <svg viewBox={`0 0 ${width} ${height}`} className="vt-clock-rotor block h-full w-full" data-vt-clock-rotor={hoverScope} style={{ background: EXPLORER_BG }}>
+   <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMin meet" className="vt-clock-rotor block h-full w-full" data-vt-clock-rotor={hoverScope} style={{ background: EXPLORER_BG }}>
     {slices.map((slice, index) => {
      const fraction = slice.value / total
      // Preserve the reported percentage while giving sub-2% wedges enough area to inspect.
@@ -2551,15 +2559,15 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
        <div className="truncate text-[14px] font-black uppercase tracking-[0.04em] text-white">Traffic sources</div>
       </div>
      </div>
-     <div className="grid min-h-0 flex-1 grid-rows-[repeat(15,minmax(0,1fr))] gap-0.5 overflow-hidden">
+     <div className="grid min-h-0 flex-1 auto-rows-[minmax(25px,28px)] content-start gap-0.5 overflow-hidden">
       {overviewSlicesVisible.map((slice, index) => {
        const share = (slice.value / totalValue) * 100
        return (
         <div key={`${slice.kind}-${slice.label}-${index}`} className="flex w-full items-stretch overflow-hidden rounded-[6px] border border-black text-left shadow-[1px_1px_0px_0px_rgba(0,0,0,0.22)]">
-         <span className="flex w-[36px] shrink-0 items-center justify-center px-1 text-center text-[10px] font-[1000] uppercase leading-none text-black" style={{ background: slice.color }}>
+         <span className="flex w-[32px] shrink-0 items-center justify-center px-0.5 text-center text-[12px] font-[1000] uppercase leading-none tracking-[-0.04em] text-black" style={{ background: slice.color }}>
           {formatClockBurstShare(share)}
          </span>
-         <span className="flex min-w-0 flex-1 justify-between items-center bg-[#111321] px-2 py-0.5 text-black">
+         <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-1 bg-[#111321] px-1.5 py-0 text-black">
           <span className="block truncate text-[14px] font-black uppercase leading-tight" style={{ color: slice.color }}>{slice.label}</span>
           <div className="text-right shrink-0">
            <span className="block text-[12px] font-black text-white">{formatClockBurstMetricValue(slice.value, metric)}</span>
@@ -2575,9 +2583,9 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
     <div className="min-h-0 overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-0">
      <div className="h-full min-h-0 overflow-hidden rounded-[12px] border-[2px] border-black bg-[#050814] p-0">
       {renderDonut({
-       width: 420,
+       width: 380,
        height: 360,
-       cx: 210,
+       cx: 190,
        cy: 180,
        innerRadius: 70,
        outerRadius: 166,
@@ -2595,9 +2603,9 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
      <div className="h-full min-h-0 overflow-hidden rounded-[12px] border-[2px] border-black bg-[#050814] p-0">
       {detailSlices.length > 0 ? (
        renderDonut({
-        width: 420,
+        width: 380,
         height: 360,
-        cx: 210,
+        cx: 190,
         cy: 180,
         innerRadius: 70,
         outerRadius: 166,
@@ -2621,7 +2629,7 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
        <div className="truncate text-[14px] font-black uppercase tracking-[0.04em] text-white">{detailLabel}</div>
       </div>
      </div>
-     <div className="grid min-h-0 flex-1 grid-rows-[repeat(15,minmax(0,1fr))] gap-0.5 overflow-hidden">
+     <div className="grid min-h-0 flex-1 auto-rows-[minmax(25px,28px)] content-start gap-0.5 overflow-hidden">
       {detailRowsVisible.map((row, index) => {
        const share = (row.value / detailTotal) * 100
        const label = formatDonutSourceLabel(row.label)
@@ -2629,10 +2637,10 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
         <div
          key={`${row.label}-${index}`}
          className="flex w-full items-stretch overflow-hidden rounded-[6px] border border-black text-left shadow-[1px_1px_0px_0px_rgba(0,0,0,0.22)]">
-         <span className="flex w-[36px] shrink-0 items-center justify-center px-1 text-center text-[10px] font-[1000] uppercase leading-none text-black" style={{ background: row.color }}>
+         <span className="flex w-[32px] shrink-0 items-center justify-center px-0.5 text-center text-[12px] font-[1000] uppercase leading-none tracking-[-0.04em] text-black" style={{ background: row.color }}>
           {formatClockBurstShare(share)}
          </span>
-         <span className="flex min-w-0 flex-1 justify-between items-center bg-[#111321] px-2 py-0.5 text-black">
+         <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-1 bg-[#111321] px-1.5 py-0 text-black">
           <span className="block truncate text-[13px] font-black uppercase leading-tight" style={{ color: row.color }}>{label}</span>
           <div className="text-right shrink-0">
            <span className="block text-[11px] font-black text-white">{formatClockBurstMetricValue(row.value, metric)}</span>
@@ -4499,6 +4507,7 @@ export const TubeExplorerSubscriberWaterfall: React.FC<TubeExplorerVisualProps> 
    color={activeDef.tone}
    height={420}
    flushShell
+   insightDark
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
@@ -4506,7 +4515,7 @@ export const TubeExplorerSubscriberWaterfall: React.FC<TubeExplorerVisualProps> 
     title: hovered ? videoShortTitle(hovered.video.title, 54).toUpperCase() : `${activeDef.label} JOURNEY (${formatMode.label})`,
     stats: hovered
      ? [
-      { label: "PUBLISHED", value: formatShortDate(hovered.video.uploadDate), tone: "white" as const, valueTone: "#000000", lockTone: true, compact: true },
+      { label: "PUBLISHED", value: formatShortDate(hovered.video.uploadDate), tone: "white" as const, lockTone: true, compact: true },
       { label: activeDef.label, value: `${activeDef.prefix}${activeDef.format(Number(hovered.video[activeDef.key]) || 0)}`, tone: "lime" as const, lockTone: true, compact: true },
       { label: "RUNNING", value: `${activeDef.prefix}${activeDef.format(hovered.cumulative)}`, tone: "yellow" as const, lockTone: true, compact: true },
       { label: "VIEWS", value: compact(hovered.video.views), tone: "cyan" as const, lockTone: true, compact: true },
@@ -4796,6 +4805,7 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
    color="#FFB570"
    height={480}
    flushShell
+   insightDark
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
@@ -5405,21 +5415,21 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
    color="#CCFF00"
    height={420}
    flushShell
+   insightDark
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
     bgTone: "#080816",
     title: hovered ? `${slotLabel(hovered)} • SLOT` : `PUBLISH GRID (${formatFilter.toUpperCase()})`,
-    bgTone: "#080816",
     minHeight: 44,
     stats: [
      { label: "SLOT", value: slotLabel(activeCell), tone: "white" as const, minWidth: 126, lockTone: true, compact: true, backgroundTone: "#080816", valueTone: "#F3F4F6" },
-     { label: marked("AVG VIEWS", "views"), value: compact(per(summary.views)), tone: VT_VISUAL_METRIC_COLORS.views, minWidth: 94, lockTone: true, compact: true, backgroundTone: "#080816", valueTone: "#F3F4F6" },
-     { label: marked("AVG SUBSCRIBERS", "subscribersGained"), value: per(summary.subs).toFixed(1), tone: VT_VISUAL_METRIC_COLORS.subscribers, minWidth: 116, lockTone: true, compact: true, backgroundTone: "#080816", valueTone: "#F3F4F6" },
-     { label: marked("AVG REVENUE", "revenue"), value: `$${per(summary.revenue).toFixed(2)}`, tone: VT_VISUAL_METRIC_COLORS.revenue, minWidth: 104, lockTone: true, compact: true, backgroundTone: "#080816", valueTone: "#F3F4F6" },
-     { label: "AVG COMMENTS", value: per(summary.comments).toFixed(1), tone: VT_VISUAL_METRIC_COLORS.comments, minWidth: 106, lockTone: true, compact: true, backgroundTone: "#080816", valueTone: "#F3F4F6" },
-     { label: marked("AVG LIKES", "likes"), value: per(summary.likes).toFixed(1), tone: VT_VISUAL_METRIC_COLORS.likes, minWidth: 94, lockTone: true, compact: true, backgroundTone: "#080816", valueTone: "#F3F4F6" },
-     { label: marked("UPLOADS", "uploads"), value: `${summaryUploads}`, tone: VT_VISUAL_METRIC_COLORS.rpm, minWidth: 88, lockTone: true, compact: true, backgroundTone: "#080816", valueTone: "#F3F4F6" },
+     { label: marked("AVG VIEWS", "views"), value: compact(per(summary.views)), tone: VT_VISUAL_METRIC_COLORS.views, minWidth: 94, lockTone: true, compact: true },
+     { label: marked("AVG SUBSCRIBERS", "subscribersGained"), value: per(summary.subs).toFixed(1), tone: VT_VISUAL_METRIC_COLORS.subscribers, minWidth: 116, lockTone: true, compact: true },
+     { label: marked("AVG REVENUE", "revenue"), value: `$${per(summary.revenue).toFixed(2)}`, tone: VT_VISUAL_METRIC_COLORS.revenue, minWidth: 104, lockTone: true, compact: true },
+     { label: "AVG COMMENTS", value: per(summary.comments).toFixed(1), tone: VT_VISUAL_METRIC_COLORS.comments, minWidth: 106, lockTone: true, compact: true },
+     { label: marked("AVG LIKES", "likes"), value: per(summary.likes).toFixed(1), tone: VT_VISUAL_METRIC_COLORS.likes, minWidth: 94, lockTone: true, compact: true },
+     { label: marked("UPLOADS", "uploads"), value: `${summaryUploads}`, tone: VT_VISUAL_METRIC_COLORS.rpm, minWidth: 88, lockTone: true, compact: true },
      { label: "TOP SLOT", value: slotLabel(best), tone: "white" as const, minWidth: 126, lockTone: true, compact: true, backgroundTone: "#080816", valueTone: "#F3F4F6" },
     ],
    }}
@@ -5483,6 +5493,7 @@ export const TubeExplorerTrafficDayRiverDelta: React.FC<TubeExplorerVisualProps>
    icon="analytics"
    height={460}
    flushShell
+   insightDark
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
@@ -5563,11 +5574,11 @@ export const TubeExplorerSankeyRiverDelta: React.FC<TubeExplorerVisualProps> = (
    visualStyle={props.visualStyle}
    title="RIVER DELTA"
    subtitle="Traffic sources flowing into top geography ranks."
-   bgTone="#080816"
    count={sourceRows.length + geoRows.length}
    color="#42FF68"
    height={460}
    flushShell
+   insightDark
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
@@ -5744,7 +5755,6 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
    heroVisualId="title-keyword-network"
    shellMode="standard"
    title="TITLE WORD NETWORK"
-   bgTone="#080816"
    subtitle={selectedRoots.length >= 2
     ? `${selectedRoots.length} WORDS SELECTED · ${selSharedVideos} SHARED VIDEOS · ${selectionEdges.length} CONNECTIONS BETWEEN THEM`
     : hoveredNode
@@ -5753,6 +5763,8 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
    iconKey={networkStyle.iconKey}
    headerColorPair={networkHeaderPair}
    activeContext={{
+    bgTone: "#080816",
+    darkStats: true,
     title: selectedRoots.length >= 2
      ? `GROUP: ${selectedRoots.map((w) => w.toUpperCase()).slice(0, 3).join(" + ")}${selectedRoots.length > 3 ? " +MORE" : ""}`
      : hovered ? `"${hovered.toUpperCase()}" WORD STATS` : "NETWORK OVERVIEW",

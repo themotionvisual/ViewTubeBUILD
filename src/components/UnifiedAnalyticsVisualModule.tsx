@@ -151,7 +151,7 @@ export const UnifiedAnalyticsVisualModule: React.FC<UnifiedAnalyticsVisualModule
                       {activeContext.leftTitle}
                     </div>
                   ) : null}
-                  {activeContext.leftStats ? <AnalyticsActiveStats stats={activeContext.leftStats} /> : null}
+                  {activeContext.leftStats ? <AnalyticsActiveStats stats={activeContext.leftStats} darkStats={activeContext.darkStats} /> : null}
                 </div>
                 <div className="flex h-full min-w-0 flex-1 items-stretch overflow-hidden" style={{ background: activeContext.bgTone ?? "#FFFFFF" }}>
                   {activeContext.title ? (
@@ -166,8 +166,8 @@ export const UnifiedAnalyticsVisualModule: React.FC<UnifiedAnalyticsVisualModule
                       {activeContext.rightTitle}
                     </div>
                   ) : null}
-                  {activeContext.rightStats ? <AnalyticsActiveStats stats={activeContext.rightStats} /> : null}
-                  {!activeContext.rightStats && activeContext.stats ? <AnalyticsActiveStats stats={activeContext.stats} /> : null}
+                  {activeContext.rightStats ? <AnalyticsActiveStats stats={activeContext.rightStats} darkStats={activeContext.darkStats} /> : null}
+                  {!activeContext.rightStats && activeContext.stats ? <AnalyticsActiveStats stats={activeContext.stats} darkStats={activeContext.darkStats} /> : null}
                 </div>
               </div>
             </div>

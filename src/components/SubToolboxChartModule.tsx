@@ -104,6 +104,8 @@ export interface SubToolboxChartModuleProps {
     rightTitle?: string
     rightStats?: SubToolboxStat[]
     bgTone?: string
+    /** Use the shared dark-canvas value zone and metric-colored stat values. */
+    darkStats?: boolean
     height?: AnalyticsVisualContextBarHeight
     /** Allows dense two-line labels without clipping the subtitle rail. */
     minHeight?: number
@@ -346,7 +348,7 @@ export const SubToolboxChartModule: React.FC<
                   )}
                   {activeContext.leftStats && (
                     <div className="flex items-stretch h-full border-r-[4px] border-black">
-                      <AnalyticsActiveStats stats={activeContext.leftStats} />
+                      <AnalyticsActiveStats stats={activeContext.leftStats} darkStats={activeContext.darkStats} />
                     </div>
                   )}
                 </div>
@@ -378,9 +380,9 @@ export const SubToolboxChartModule: React.FC<
                       {activeContext.rightTitle}
                     </div>
                   )}
-                  {activeContext.rightStats ? <AnalyticsActiveStats stats={activeContext.rightStats} /> : null}
+                  {activeContext.rightStats ? <AnalyticsActiveStats stats={activeContext.rightStats} darkStats={activeContext.darkStats} /> : null}
                   {!activeContext.rightStats && activeContext.stats && (
-                    <AnalyticsActiveStats stats={activeContext.stats} />
+                    <AnalyticsActiveStats stats={activeContext.stats} darkStats={activeContext.darkStats} />
                   )}
                 </div>
               </div>
