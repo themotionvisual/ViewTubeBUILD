@@ -156,8 +156,17 @@ const ModuleFrame: React.FC<{
  collapsible?: boolean
  isOpenInitial?: boolean
  heroVisualId?: HeroVisualId
+ /**
+  * Opt into the shared dark Tube Insights canvas treatment: the chart body
+  * gets a `#0a0a1a` background (matching Heat Matrix / Clockburst / Channel
+  * Vital Signs / Barcode Fingerprint / Title Keyword Network) instead of
+  * the default white. Standardizing this via the shell instead of via
+  * inline per-visual `bg-[#0a0a1a]` wrappers keeps the collection visually
+  * consistent as new dark-canvas visuals get added.
+ */
+ insightDark?: boolean
  children: React.ReactNode
-}> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], activeContext, controllerRows, visualStyle, insight, height = 320, flushShell = false, stableChartFrame = true, collapsible = false, isOpenInitial = true, heroVisualId, children }) => {
+}> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], activeContext, controllerRows, visualStyle, insight, height = 320, flushShell = false, stableChartFrame = true, collapsible = false, isOpenInitial = true, heroVisualId, insightDark = false, children }) => {
  const resolvedStyle = visualStyle ?? resolveVtSyncVisualStyle(title)
  const normalizedActiveContext = useMemo(
   () => normalizeHeatMatrixContext(title, activeContext),
@@ -193,8 +202,12 @@ const ModuleFrame: React.FC<{
   }}
  >
   <div
-   className={flushShell ? "mx-auto h-full w-full max-w-none bg-[#0a0a1a]" : "mx-auto w-full max-w-[1080px] border-[4px] border-black bg-[#0a0a1a] p-2"}
-   data-tube-insights-canvas="dark"
+   className={
+    flushShell
+     ? `mx-auto h-full w-full max-w-none ${insightDark ? "bg-[#0a0a1a]" : ""}`
+     : `mx-auto w-full max-w-[1080px] border-[4px] border-black p-2 ${insightDark ? "bg-[#0a0a1a]" : "bg-white"}`
+   }
+   data-tube-insights-canvas={insightDark ? "dark" : "light"}
    style={{ height: boundedHeight }}>
    {stableChartFrame ? (
     <StableChartFrame minHeightClassName="min-h-[300px]">{children}</StableChartFrame>
@@ -3034,7 +3047,22 @@ const createModule = (
  title: string,
  subtitle: string,
  render: (dataset: TubeExplorerVisualDataset) => React.ReactNode,
- options: { color?: string; icon?: string; badges?: { label: string; tone?: any }[]; insight?: string; height?: number; flushShell?: boolean; heroVisualId?: HeroVisualId; activeContext?: (dataset: TubeExplorerVisualDataset) => SubToolboxChartModuleProps["activeContext"] } = {},
+ options: {
+  color?: string
+  icon?: string
+  badges?: { label: string; tone?: any }[]
+  insight?: string
+  height?: number
+  flushShell?: boolean
+  heroVisualId?: HeroVisualId
+  activeContext?: (dataset: TubeExplorerVisualDataset) => SubToolboxChartModuleProps["activeContext"]
+  /**
+   * Opt into the shared dark Tube Insights canvas (see ModuleFrame's
+   * `insightDark` prop). Applied to the visuals that are known to render
+   * against a dark background today (Heat Matrix / Clockburst family).
+   */
+  insightDark?: boolean
+ } = {},
 ): React.FC<TubeExplorerVisualProps> => (props) => {
  const dataset = useExplorerData(props)
  return (
@@ -3051,6 +3079,7 @@ const createModule = (
    insight={options.insight}
    height={options.height}
    flushShell={options.flushShell}
+   insightDark={options.insightDark}
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
   >
@@ -3833,6 +3862,7 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
    color="#FFB158"
    height={420}
    flushShell
+   insightDark
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
@@ -4055,6 +4085,7 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
     collapsible={props.collapsible}
     isOpenInitial={props.isOpenInitial}
     height={460}
+    insightDark
    >
     <Empty label="Need dated video rows with metrics to draw the vital signs monitor." />
    </ModuleFrame>
@@ -4098,6 +4129,7 @@ export const TubeExplorerChannelVitalSigns: React.FC<TubeExplorerVisualProps> = 
    insight="Each trace is normalized to its own observed range across upload order. Compare timing and shape, not raw height: aligned spikes reveal videos that performed broadly across the channel."
    height={460}
    flushShell
+   insightDark
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
   >
@@ -4323,6 +4355,7 @@ export const TubeExplorerBarcodeFingerprint: React.FC<TubeExplorerVisualProps> =
    color="#CCFF00"
    height={420}
    flushShell
+   insightDark
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
    activeContext={{
@@ -5584,6 +5617,7 @@ export const TubeExplorerClockRadialBurst: React.FC<TubeExplorerVisualProps> = (
    ]}
    height={460}
    flushShell
+   insightDark
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
   >
