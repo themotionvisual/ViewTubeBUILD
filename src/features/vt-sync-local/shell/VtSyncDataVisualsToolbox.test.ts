@@ -65,7 +65,7 @@ describe("VT-SYNC data visual module registry", () => {
   expect(source).toContain(
    "const SECONDARY_VISUAL_MODULES: VtSyncVisualModuleDefinition[] = VISUAL_MODULES.filter((module) => !PRIMARY_MODULE_IDS.has(module.id))",
   )
-  expect(source).toContain("snapshot={snapshot} modules={SECONDARY_VISUAL_MODULES}")
+  expect(source).toContain("modules={SECONDARY_VISUAL_MODULES}")
  })
 
  it("keeps Channel Progress and scatter controls aligned with the visual contract", () => {

@@ -91,7 +91,14 @@ const play = (
   element: Element,
   keyframes: Keyframe[],
   options: KeyframeAnimationOptions,
-) => release(element.animate(keyframes, { fill: "both", ...options }))
+) => {
+  const animation = release(element.animate(keyframes, { fill: "both", ...options }))
+  animation.finished.catch(() => undefined).then(() => {
+    const animatedElement = element as HTMLElement | SVGElement
+    animatedElement.style.willChange = ""
+  })
+  return animation
+}
 
 const setTransformOrigin = (element: Element, origin = "center center") => {
   const svg = element as SVGElement
@@ -1175,12 +1182,50 @@ export const createHeroIntroController=(
   let animations:Animation[]=[]
   let destroyed=false
   let currentVariant=normalizedVariant(options)
+  let scheduledFrame:number|null=null
+  let readinessObserver:MutationObserver|null=null
+  let readinessTimeout:number|null=null
+
+  const cancelReadinessWait=()=>{
+    if(scheduledFrame!==null){
+      cancelAnimationFrame(scheduledFrame)
+      scheduledFrame=null
+    }
+    readinessObserver?.disconnect()
+    readinessObserver=null
+    if(readinessTimeout!==null){
+      clearTimeout(readinessTimeout)
+      readinessTimeout=null
+    }
+  }
 
   const stop=()=>{
+    cancelReadinessWait()
     animations.forEach(animation=>{
       try { animation.cancel() } catch {}
     })
     animations=[]
+  }
+
+  const runWhenReady=()=>{
+    if(destroyed) return
+    const runner=HERO_ANIMATION_RUNNERS[visualId]
+    animations=runner(root,{...options,variant:currentVariant})
+    if(animations.length>0){
+      cancelReadinessWait()
+      return
+    }
+
+    if(typeof MutationObserver==="undefined"||readinessObserver) return
+    readinessObserver=new MutationObserver(()=>{
+      if(destroyed||scheduledFrame!==null) return
+      scheduledFrame=requestAnimationFrame(()=>{
+        scheduledFrame=null
+        runWhenReady()
+      })
+    })
+    readinessObserver.observe(root as Node,{childList:true,subtree:true})
+    readinessTimeout=setTimeout(cancelReadinessWait,2000) as unknown as number
   }
 
   const replay=(overrides?:{variant?:number})=>{
@@ -1189,11 +1234,12 @@ export const createHeroIntroController=(
     if(overrides?.variant!==undefined){
       currentVariant=((overrides.variant%3)+3)%3
     }
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      if(destroyed) return
-      const runner=HERO_ANIMATION_RUNNERS[visualId]
-      animations=runner(root,{...options,variant:currentVariant})
-    }))
+    scheduledFrame=requestAnimationFrame(()=>{
+      scheduledFrame=requestAnimationFrame(()=>{
+        scheduledFrame=null
+        runWhenReady()
+      })
+    })
   }
 
   return {

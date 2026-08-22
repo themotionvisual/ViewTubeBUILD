@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { ChevronDown, ChevronRight, Copy } from "lucide-react"
 import { useBrain } from "../../../context/useBrain"
@@ -38,14 +38,8 @@ import { getPaletteColor } from "../../../styles/toolboxPalette"
 import { VtSyncControllerPanel } from "./VtSyncControllerPanel"
 import { buildVtSyncCreatorHeroModel, VtSyncCreatorHero } from "./VtSyncCreatorHero"
 import { VtSyncToolboxDataTable } from "./toolbox-table/VtSyncToolboxDataTable"
+import { VtSyncDataVisualsGate } from "./VtSyncDataVisualsGate"
 import "./VtSyncLocalAnalyticsPage.css"
-// Lazy-load the DATA VISUALS toolbox: it pulls in ~24 Recharts modules and the
-// GraphsPageCharts library, none of which the user needs before the analytics
-// page finishes its first paint. Suspending it here trims the initial payload
-// on the mobile-critical /analytics landing route.
-const VtSyncDataVisualsToolbox = lazy(() =>
- import("./VtSyncDataVisualsToolbox").then((module) => ({ default: module.VtSyncDataVisualsToolbox })),
-)
 import { RetroLcd, RetroLedRow, RetroRivets, type RetroLedSpec } from "./VtSyncRetroChrome"
 
 const syncStatusLabel = (status?: string) => {
@@ -943,9 +937,7 @@ const refreshManualImports = useCallback(async (payload?: {
      storageStatus={videoInventory.channelId === snapshot.channelId ? videoInventory.status : "loading"}
      storageError={videoInventory.channelId === snapshot.channelId ? videoInventory.error : undefined}
     />
-    <Suspense fallback={<div className="min-h-[120px]" aria-hidden />}>
-     <VtSyncDataVisualsToolbox snapshot={consumerSnapshot} />
-    </Suspense>
+    <VtSyncDataVisualsGate snapshot={consumerSnapshot} />
    </div>
   </div>
  )
