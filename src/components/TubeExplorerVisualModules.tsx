@@ -4662,8 +4662,8 @@ const buildTreemapPillars = (
  const weightOf = (video: TubeExplorerVideoPoint) => Number(video[metric]) || 0
 
  // A video joins every pillar whose keyword appears in its title, so a title like
- // "Napoleon 1805: Battle of Austerlitz" is counted under NAPOLEON, BATTLE and
- // AUSTERLITZ alike. Pillars therefore overlap and their areas measure keyword
+ // "Alder 1805: Battle of Northbridge" is counted under alder, BATTLE and
+ // northbridge alike. Pillars therefore overlap and their areas measure keyword
  // reach rather than a partition of the channel.
  const grouped = new Map<string, TubeExplorerVideoPoint[]>()
  videos.forEach((video) => {

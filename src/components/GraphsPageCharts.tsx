@@ -67,7 +67,6 @@ import {
 } from "./chartScaleModel"
 import {
  buildChannelProgressBuckets,
- buildRelativeChannelProgressSeries,
  buildFormatDominanceContentTypeTotals,
  resolveChannelProgressDailyMetricValue,
  type ChannelProgressMetricKey,

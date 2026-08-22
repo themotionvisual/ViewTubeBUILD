@@ -133,17 +133,28 @@ export const MASTER_VIDEO_TABLE_HEADERS: string[] = getMasterVideoColumnHeaders(
 
 const MASTER_HEADER_ALIAS_LOOKUP = (() => {
  const map = new Map<string, string>()
- Object.entries(MASTER_HEADER_ALIASES).forEach(([canonical, aliases]) => {
-  map.set(canonicalDisplayKey(canonical), canonical)
-  aliases.forEach((alias) => map.set(canonicalDisplayKey(alias), canonical))
+Object.entries(MASTER_HEADER_ALIASES).forEach(([canonical, aliases]) => {
+  const canonicalKey = canonicalDisplayKey(canonical)
+  if (!map.has(canonicalKey)) map.set(canonicalKey, canonical)
+  aliases.forEach((alias) => {
+   const aliasKey = canonicalDisplayKey(alias)
+   if (!map.has(aliasKey)) map.set(aliasKey, canonical)
+  })
  })
  return map
 })()
 
 export const getCanonicalMasterHeader = (header: string): string => {
- if (MASTER_HEADER_ALIASES[header]) return header
- const strict = MASTER_HEADER_ALIAS_LOOKUP.get(canonicalDisplayKey(header))
+ const displayKey = canonicalDisplayKey(header)
+ if ([
+  "click-through rate (ctr)",
+  "ctr (%)",
+  "impressions click-through rate (%)",
+  "impressions click-through rate",
+ ].includes(displayKey)) return "CTR"
+ const strict = MASTER_HEADER_ALIAS_LOOKUP.get(displayKey)
  if (strict) return strict
+ if (MASTER_HEADER_ALIASES[header]) return header
  const normalized = canonicalKey(header)
  for (const [canonical, aliases] of Object.entries(MASTER_HEADER_ALIASES)) {
   if (aliases.includes(normalized)) return canonical

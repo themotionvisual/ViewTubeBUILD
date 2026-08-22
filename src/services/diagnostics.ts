@@ -31,7 +31,7 @@ const BEARER_TOKEN_PATTERN = /Bearer\s+[A-Za-z0-9._~+/=-]+/gi
 const SENSITIVE_QUERY_PATTERN = /([?&](?:access_token|refresh_token|api_key|key)=)[^&#\s]+/gi
 const buffer: DiagnosticEntry[] = []
 const bootTime = typeof performance !== "undefined" ? performance.now() : Date.now()
-let consoleFlushTimer: number | null = null
+let consoleFlushTimer: ReturnType<typeof globalThis.setTimeout> | null = null
 
 const now = (): number => typeof performance !== "undefined"
  ? Math.round(performance.now() - bootTime)
@@ -88,7 +88,8 @@ const flushConsoleSummary = () => {
 
 const scheduleConsoleSummary = () => {
  if (!isDeveloperDiagnosticsEnabled() || typeof window === "undefined" || consoleFlushTimer !== null) return
- consoleFlushTimer = window.setTimeout(flushConsoleSummary, 250)
+ const schedule = typeof window.setTimeout === "function" ? window.setTimeout.bind(window) : globalThis.setTimeout
+ consoleFlushTimer = schedule(flushConsoleSummary, 250)
 }
 
 export const recordDiagnostic = (level: DiagnosticLevel, tag: string, message: string): void => {

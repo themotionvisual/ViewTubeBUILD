@@ -79,6 +79,9 @@ function trimFlagIconsCss(): Plugin {
 // tuning uses Rolldown-native options (`advancedChunks`).
 export default defineConfig(() => ({
   plugins: [react(), tailwindcss(), stripDebugConsole(), trimFlagIconsCss()],
+  test: {
+    include: ['src/**/*.test.{ts,tsx}'],
+  },
   define: {
     __VT_BRANCH__: JSON.stringify(buildInfo.branch),
     __VT_COMMIT__: JSON.stringify(buildInfo.commit),

@@ -204,7 +204,7 @@ describe("VT Sync table contracts", () => {
    ],
    searchTerms: [
     { term: "kentucky derby", views: 60, watchTime: 24 },
-    { term: "napoleonic cavalry", views: 40, watchTime: 6 },
+    { term: "alderian cavalry", views: 40, watchTime: 6 },
    ],
   })
 

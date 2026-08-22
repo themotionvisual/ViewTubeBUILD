@@ -16,12 +16,12 @@ describe("Traffic Source Evolution overview-source boundary", () => {
  it("rejects traffic-detail identities", () => {
   expect(resolveTrafficOverviewSourceKey("Kentucky Derby 2025")).toBeNull()
   expect(resolveTrafficOverviewSourceKey("reddit.com")).toBeNull()
-  expect(resolveTrafficOverviewSourceKey("#napoleon")).toBeNull()
+  expect(resolveTrafficOverviewSourceKey("#alder")).toBeNull()
   expect(resolveTrafficOverviewSourceKey("The Motion Visual History")).toBeNull()
  })
 
  it("prefers a canonical source field when a later detail field is present", () => {
-  expect(resolveTrafficOverviewSourceKey("RELATED_VIDEO", "Napoleon's Cavalry Types")).toBe("RELATED_VIDEO")
+  expect(resolveTrafficOverviewSourceKey("RELATED_VIDEO", "Alder's Cavalry Types")).toBe("RELATED_VIDEO")
  })
 
  it("builds changing daily areas only from overview source families", () => {

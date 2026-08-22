@@ -90,8 +90,8 @@ describe("golden channel fixtures", () => {
   const militaryText = evidenceText(military)
 
   expect(restorationText).toContain("restoration")
-  expect(militaryText).toContain("napoleon")
-  expect(restorationText).not.toContain("napoleon")
+  expect(militaryText).toContain("alder")
+  expect(restorationText).not.toContain("alder")
   expect(militaryText).not.toContain("restoration")
  })
 

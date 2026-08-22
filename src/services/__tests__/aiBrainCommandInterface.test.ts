@@ -208,9 +208,9 @@ describe("aiBrainCommandInterface", () => {
    videos: [
     {
      id: "best-1",
-     title: "Napoleon Animation Breakdown",
+     title: "Alder Animation Breakdown",
      metrics: { views: 250000 },
-     tags: ["napoleon", "animation"],
+     tags: ["alder", "animation"],
     },
     {
      id: "best-2",
@@ -238,7 +238,7 @@ describe("aiBrainCommandInterface", () => {
   expect(bestVideo.headline).toBe("Analytics Diagnosis")
   expect(oracle.modules?.map((module) => module.title)).toEqual(["Daily Priority", "Quick Win", "Measurable Action"])
   expect(bestVideo.modules?.map((module) => module.title)).toContain("Best Video Autopsy")
-  expect(bestVideo.body).toContain("Napoleon Animation Breakdown")
+  expect(bestVideo.body).toContain("Alder Animation Breakdown")
   expect(`${oracle.body} ${bestVideo.body}`).not.toMatch(/I could not finish|Try asking for one specific goal/i)
  })
 

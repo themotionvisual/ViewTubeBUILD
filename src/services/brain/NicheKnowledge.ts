@@ -51,8 +51,8 @@ export const resolveCanonicalNiche = (input: {
  ], 8)
  const joined = candidates.join(" ").toLowerCase()
 
- if (/napoleon|napoleonic/.test(joined) && /military|history|cavalry|war/.test(joined)) {
-  return "Napoleonic military history"
+ if (/alder|alderian/.test(joined) && /military|history|cavalry|war/.test(joined)) {
+  return "Alderian military history"
  }
  if (/animation/.test(joined) && /history|historical/.test(joined)) {
   return "Animated history education"

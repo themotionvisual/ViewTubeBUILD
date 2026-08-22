@@ -22,8 +22,8 @@ const makeSnapshot = () => buildAIBrainContextSnapshot({
   snapshotId: "orchestrator-snapshot",
   channelName: "History Workshop",
   videos: [
-   { id: "best", title: "Napoleon's Cavalry Explained", tags: ["napoleon", "military", "history"], metrics: { views: 120000 } },
-   { id: "recent", title: "How Napoleonic Artillery Worked", tags: ["napoleonic", "history"], metrics: { views: 42000 } },
+   { id: "best", title: "Alder's Cavalry Explained", tags: ["alder", "military", "history"], metrics: { views: 120000 } },
+   { id: "recent", title: "How Alderian Artillery Worked", tags: ["alderian", "history"], metrics: { views: 42000 } },
   ],
  }),
  now: new Date("2026-07-22T12:00:00.000Z"),
@@ -32,13 +32,13 @@ const makeSnapshot = () => buildAIBrainContextSnapshot({
 const nicheProfile = {
  id: "niche-test",
  channelId: "orchestrator-channel",
- canonicalNiche: "Napoleonic military history",
+ canonicalNiche: "Alderian military history",
  evidenceFingerprint: "orchestrator-snapshot",
  createdAt: "2026-07-22T12:00:00.000Z",
  updatedAt: "2026-07-22T12:00:00.000Z",
  evergreenExpiresAt: "2026-08-22T12:00:00.000Z",
- summary: "Napoleonic military history covers campaigns, tactics, armies, and political consequences.",
- terminology: ["Napoleonic Wars"],
+ summary: "Alderian military history covers campaigns, tactics, armies, and political consequences.",
+ terminology: ["Alderian Wars"],
  majorSubtopics: ["Cavalry", "Artillery"],
  adjacentTopics: [],
  audienceQuestions: [],
@@ -60,11 +60,11 @@ describe("BrainOrchestrator", () => {
    nicheResolver: vi.fn(async () => nicheProfile),
    modelGenerator: vi.fn(async () => ({
     headline: "Build the artillery follow-up",
-    keyInsight: "Napoleon's Cavalry Explained proves that specific military systems are your strongest viewer promise.",
+    keyInsight: "Alder's Cavalry Explained proves that specific military systems are your strongest viewer promise.",
     body: "Create an artillery follow-up that keeps the same explanatory structure and makes the contrast visible in the title and thumbnail.",
     mode: "video_idea_sprint",
     modules: [
-     { title: "Repeat this pattern", body: "Use Napoleon's Cavalry Explained as the structural control and change the military system to artillery.", tone: "green", kind: "recommendation_stack" },
+     { title: "Repeat this pattern", body: "Use Alder's Cavalry Explained as the structural control and change the military system to artillery.", tone: "green", kind: "recommendation_stack" },
      { title: "Packaging test", body: "Test a cavalry versus artillery contrast against a single-system explainer.", tone: "yellow", kind: "packaging_board" },
     ],
     actions: ["Outline the artillery follow-up.", "Draft two title promises."],
@@ -127,7 +127,7 @@ describe("BrainOrchestrator", () => {
   expect(result.repaired).toBe(true)
   expect(result.repairOutcome.attempted).toBe(true)
   expect(modelGenerator).toHaveBeenCalledTimes(2)
-  expect(result.response.keyInsight).toMatch(/Napoleon|Cavalry/i)
+  expect(result.response.keyInsight).toMatch(/Alder|Cavalry/i)
   expect(result.turn.status).toBe("fallback")
   expect(result.generationPath).toBe("basic_guidance")
   expect(result.fallbackReason).toBe("validation_failed")
@@ -139,19 +139,19 @@ describe("BrainOrchestrator", () => {
   const modelGenerator = vi.fn()
    .mockResolvedValueOnce({
     headline: "Cavalry strategy",
-    keyInsight: "Napoleon's Cavalry Explained is your strongest signal.",
-    body: "Use Napoleon's Cavalry Explained to create an artillery follow-up.",
+    keyInsight: "Alder's Cavalry Explained is your strongest signal.",
+    body: "Use Alder's Cavalry Explained to create an artillery follow-up.",
     mode: "strategy_brief",
     modules: [{ title: "Next move", body: "Create the artillery follow-up.", tone: "green", kind: "recommendation_stack" }],
     actions: ["Create the artillery outline."],
    })
    .mockResolvedValueOnce({
     headline: "Cavalry follow-up",
-    keyInsight: "Napoleon's Cavalry Explained is the clearest evidence for another military-systems breakdown.",
+    keyInsight: "Alder's Cavalry Explained is the clearest evidence for another military-systems breakdown.",
     body: "Create an artillery follow-up using the same explanatory promise, then test a cavalry-versus-artillery title.",
     mode: "video_idea_sprint",
     modules: [
-     { title: "Draft the follow-up", body: "Outline the artillery story using Napoleon's Cavalry Explained as the control.", tone: "green", kind: "recommendation_stack" },
+     { title: "Draft the follow-up", body: "Outline the artillery story using Alder's Cavalry Explained as the control.", tone: "green", kind: "recommendation_stack" },
      { title: "Test the package", body: "Compare a direct artillery title with a cavalry-versus-artillery contrast.", tone: "yellow", kind: "packaging_board" },
     ],
     actions: ["Create the artillery outline."],
@@ -262,13 +262,13 @@ describe("BrainOrchestrator", () => {
   const response = {
    id: "audience-response",
    mode: "audience_insight" as const,
-   body: "Use Napoleon's Cavalry Explained as the control sample and make another video.",
+   body: "Use Alder's Cavalry Explained as the control sample and make another video.",
    evidenceIds: snapshot.evidencePack.evidenceIds,
    headline: "Audience Language Read",
-   keyInsight: "Napoleon's Cavalry Explained is your strongest topic.",
+   keyInsight: "Alder's Cavalry Explained is your strongest topic.",
    evidenceChips: [],
    modules: [],
-   actions: ["Make another Napoleon video."],
+   actions: ["Make another Alder video."],
    learningSummary: "",
    questions: [],
    confidence: "high" as const,

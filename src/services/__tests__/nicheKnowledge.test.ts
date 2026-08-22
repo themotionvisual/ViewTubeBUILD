@@ -17,15 +17,15 @@ const jsonResponse = (body: unknown) => ({
 describe("NicheKnowledge", () => {
  it("resolves noisy related clusters into a meaningful canonical niche", () => {
   expect(resolveCanonicalNiche({
-   niche: "napoleon",
-   topicClusters: ["napoleonic", "military", "history", "cavalry"],
-  })).toBe("Napoleonic military history")
+   niche: "alder",
+   topicClusters: ["alderian", "military", "history", "cavalry"],
+  })).toBe("Alderian military history")
  })
 
  it("caches Wikipedia-first public knowledge by channel fingerprint", async () => {
   const fetcher = vi.fn(async (url: string) => {
    if (url.includes("w/api.php")) {
-    return jsonResponse({ query: { search: [{ title: "Napoleonic Wars" }, { title: "Napoleon" }] } })
+    return jsonResponse({ query: { search: [{ title: "Alderian Wars" }, { title: "Alder" }] } })
    }
    const title = decodeURIComponent(url.split("/").at(-1) || "")
    return jsonResponse({
@@ -36,7 +36,7 @@ describe("NicheKnowledge", () => {
   })
   const input = {
    channelId: "channel-niche-cache",
-   niche: "Napoleon",
+   niche: "Alder",
    topicClusters: ["military", "history"],
    evidenceFingerprint: "fingerprint-a",
    fetcher: fetcher as unknown as typeof fetch,

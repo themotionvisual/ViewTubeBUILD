@@ -51,5 +51,5 @@ export const ANTI_BIAS_NOVEL_SPEC: GoldenChannelSpec = {
   { id: "b5", title: "One-Minute Hive Check", tags: ["beekeeping", "shorts"], format: "short", publishedAt: "2026-06-01", views: 300000, watchTime: 90000, ctr: null, retention: 80, subscribersGained: 500 },
  ],
  expectedEvidenceTokens: ["beekeeping"],
- forbiddenEvidenceTokens: ["napoleon", "restoration"],
+ forbiddenEvidenceTokens: ["alder", "restoration"],
 }

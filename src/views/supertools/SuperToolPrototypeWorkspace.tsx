@@ -1077,7 +1077,7 @@ const renderRetentionEngine = (cards: PrototypeWorkspaceCard[]) => (
   <BlueprintBlock label="Video queue" title="Video" tone="bg-[#00F0FF]">
    <MiniCardStack cards={cardsForLane(cards, "video-queue")} compact />
    <div className="rounded-[14px] border-[3px] border-black bg-[#CCFF00] p-3 text-xs font-black uppercase">
-    Selected: Brunswickers Napoleon 720p
+    Selected: Guardians Alder 720p
    </div>
    <MiniControlGrid items={["Retention 40.09%", "CTR N/A", "499 views", "Source: yt_analytics_cache"]} />
   </BlueprintBlock>

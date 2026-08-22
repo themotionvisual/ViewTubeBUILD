@@ -175,14 +175,7 @@ const detectTrafficCategory = (
  sample: string,
  headers: HeaderSet,
 ): CsvDetectedCategory => {
- const sourceTypeIndex = [
-  "yt_search.",
-  "ext_url.",
-  "yt_related.",
-  "shorts_content_links.",
-  "subscriber.",
- ]
- const haystack = [sample, ...sourceTypeIndex].join(" ")
+ const haystack = sample
  if (haystack.includes("yt_search.")) return "traffic_youtube_search"
  if (haystack.includes("ext_url.")) return "traffic_external"
  if (haystack.includes("yt_related.") || haystack.includes("related_video.")) {
@@ -192,10 +185,6 @@ const detectTrafficCategory = (
   return "traffic_shorts_feed"
  }
  if (
-  haystack.includes("subscriber.") ||
-  haystack.includes("browse features") ||
-  haystack.includes("channel pages") ||
-  haystack.includes("other youtube features") ||
   hasAnyHeader(headers, ["Source type", "Source title"])
  ) {
   return "traffic_youtube_features"
@@ -275,7 +264,7 @@ export const detectCsvImportProfile = (
   hasHeader(headers, "Viewer gender") &&
   hasHeader(headers, "Views (%)")
  ) {
-  return buildResult(filePath, "audience_age_gender", "high", "audience_age_gender_headers", warnings)
+  return buildResult(filePath, "audience_demographics", "high", "audience_age_gender_headers", warnings)
  }
 
  if (hasHeader(headers, "Viewer age") && hasHeader(headers, "Views (%)")) {
@@ -294,9 +283,9 @@ export const detectCsvImportProfile = (
   ])
   return buildResult(
    filePath,
-   detailedActivity ? "audience_retention_activity" : "audience_retention_curve",
+   detailedActivity ? "audience_retention_segment" : "audience_retention_single_video",
    "high",
-   detailedActivity ? "retention_activity_headers" : "retention_curve_headers",
+   detailedActivity ? "retention_segment_headers" : "retention_single_video_headers",
    warnings,
   )
  }
@@ -311,7 +300,7 @@ export const detectCsvImportProfile = (
   ]) &&
   hasHeader(headers, "Date")
  ) {
-  return buildResult(filePath, "audience_size_growth", "high", "audience_growth_date_metrics", warnings)
+  return buildResult(filePath, "audience_growth", "high", "audience_growth_date_metrics", warnings)
  }
 
  if (
@@ -364,12 +353,12 @@ export const detectCsvImportProfile = (
    "Clicks per card shown (%)",
   ])
   if (hasShortsSignal && !hasLongformSignal) {
-   return buildResult(filePath, "video_content_shorts", "high", "content_shorts_stw", warnings)
+   return buildResult(filePath, "content_shorts", "high", "content_shorts_stw", warnings)
   }
   if (hasLongformSignal && !hasShortsSignal) {
-   return buildResult(filePath, "video_content_longform", "high", "content_longform_cards_end_screens", warnings)
+   return buildResult(filePath, "content_longform", "high", "content_longform_cards_end_screens", warnings)
   }
-  return buildResult(filePath, "video_content_all", "high", "content_channel_headers", warnings)
+  return buildResult(filePath, "content_channel_all", "high", "content_channel_headers", warnings)
  }
 
  return buildResult(filePath, "unknown", "low", "no_matching_import_profile", [

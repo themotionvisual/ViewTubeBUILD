@@ -99,11 +99,11 @@ describe("authorizedGoogleRead", () => {
   )
  })
 
- it("returns an auth response instead of treating a missing token as an empty channel", async () => {
+ it("returns a structured reconnect failure instead of treating a missing token as an empty channel", async () => {
   mocks.token = null
   const fetchMock = vi.spyOn(globalThis, "fetch")
-  const response = await authorizedGoogleRead("https://www.googleapis.com/youtube/v3/videos?id=one")
-  expect(response.status).toBe(401)
+  await expect(authorizedGoogleRead("https://www.googleapis.com/youtube/v3/videos?id=one"))
+   .rejects.toMatchObject({ details: { code: "AUTH_REQUIRED", reconnectRequired: true, retryable: false } })
   expect(fetchMock).not.toHaveBeenCalled()
  })
 })

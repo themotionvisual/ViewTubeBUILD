@@ -766,11 +766,14 @@ export const resolveVtSyncColumnWidth = ({
   if (column.key === "videoUrl" || column.key === "playlistUrl" || column.key === "channelUrl") return 72
  }
 
+ // Compact video identity geometry is a deliberate density contract. Registry
+ // preferred widths describe the normal canvas and must not inflate compact
+ // thumbnails or titles.
+ if (tableId === "videos" && compact && columnIndex === 0) return getVtSyncCompactThumbnailWidth(sparklines)
+ if (tableId === "videos" && compact && columnIndex === 1) return 120
  if (column.preferredWidth !== undefined) return clampVtSyncColumnWidth(column.preferredWidth)
  if (tableId === "videos" && column.key === "publishedAt") return compact ? 112 : 132
  if (tableId === "videos" && !compact) return VT_SYNC_VIDEO_NON_COMPACT_WIDTHS[columnIndex] || 90
- if (tableId === "videos" && compact && columnIndex === 0) return getVtSyncCompactThumbnailWidth(sparklines)
- if (tableId === "videos" && compact && columnIndex === 1) return 120
  if (compact) return compactWidths[column.key] ?? 54
  return column.format === "text" || column.format === "json" ? 112 : 72
 }
@@ -1843,6 +1846,17 @@ export const totalVtSyncColumn = (
   }
   if (["privacyStatus", "definition", "caption"].includes(column.key)) return { primary: mode(rows.map((row) => formatVtSyncColumnValue(row, column))), secondary: "Most common", kind: "context" }
   if (isVtSyncDurationFormat(column.format)) {
+   if (column.key === "duration") {
+    const durationFormat = column.format as "duration" | "durationHours" | "durationMinutes"
+    const durations = rows
+     .map((row) => parseVtSyncDurationSeconds(row[column.key], durationFormat))
+     .filter((value): value is number => value !== undefined && value > 0)
+    return {
+     primary: durations.length ? formatVtSyncDurationSeconds(durations.reduce((sum, value) => sum + value, 0) / durations.length) : "-",
+     secondary: "Avg duration",
+     kind: durations.length ? "context" : "muted",
+    }
+   }
    const lifetimeValue = context.channelLifetime?.[column.key]
    if (!isMissingVtSyncValue(lifetimeValue)) {
     return { primary: formatVtSyncTableCellValue(lifetimeValue, column.format), secondary: "Lifetime analytics", kind: "context" }

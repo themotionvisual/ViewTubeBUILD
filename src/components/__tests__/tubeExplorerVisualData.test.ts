@@ -81,7 +81,7 @@ describe("buildTubeExplorerVisualData", () => {
 
  it("builds real video splits, totals, monthly rows, and title keyword points", () => {
   const dataset = buildTubeExplorerVisualData([
-   row("s1", "Napoleon Cavalry Charge", "shorts", {
+   row("s1", "Alder Cavalry Charge", "shorts", {
     views: 1000,
     watchHours: 12,
     likes: 80,
@@ -91,7 +91,7 @@ describe("buildTubeExplorerVisualData", () => {
     engagedViews: 700,
     avp: 75,
    }),
-   row("l1", "Napoleon Longform Cavalry History", "long", {
+   row("l1", "Alder Longform Cavalry History", "long", {
     views: 500,
     watchHours: 30,
     likes: 40,
@@ -108,7 +108,7 @@ describe("buildTubeExplorerVisualData", () => {
   expect(dataset.totals.views).toBe(1500)
   expect(dataset.totals.revenue).toBe(7)
   expect(dataset.monthly[0]).toMatchObject({ month: "2026-01", videos: 2 })
-  expect(dataset.keywords.some((keyword) => keyword.keyword === "napoleon")).toBe(true)
+  expect(dataset.keywords.some((keyword) => keyword.keyword === "alder")).toBe(true)
  expect(dataset.videos[0].retentionScore).toBe(75)
  })
 
@@ -135,7 +135,7 @@ describe("buildTubeExplorerVisualData", () => {
     tag: "traffic",
     detectedCategory: "traffic_youtube_search",
     data: [
-     { "Search term": "napoleon cavalry", Views: "1,200", "Watch time (hours)": "45", Impressions: "9,000", "CTR %": "5.5" },
+     { "Search term": "alder cavalry", Views: "1,200", "Watch time (hours)": "45", Impressions: "9,000", "CTR %": "5.5" },
     ],
    },
    {
@@ -154,19 +154,19 @@ describe("buildTubeExplorerVisualData", () => {
   expect(dataset.coverage.hasVideos).toBe(false)
   expect(dataset.coverage.hasTraffic).toBe(true)
   expect(dataset.coverage.hasGeography).toBe(true)
-  expect(dataset.traffic[0]).toMatchObject({ sourceDetail: "napoleon cavalry", views: 1200, watchHours: 45 })
+  expect(dataset.traffic[0]).toMatchObject({ sourceDetail: "alder cavalry", views: 1200, watchHours: 45 })
  expect(dataset.geography[0]).toMatchObject({ label: "United States", views: 800, watchHours: 30 })
  })
 
  it("keeps traffic overview and traffic details distinct for source/detail visuals", () => {
   const dataset = buildTubeExplorerVisualData([], [], [
    { datasetKind: "traffic_summary", trafficSourceType: "SUMMARY", trafficSourceDetail: "YT_SEARCH", sourceTitle: "YT_SEARCH", metrics: { views: cell(100) } },
-   { datasetKind: "traffic_detail", trafficSourceType: "YT_SEARCH", trafficSourceDetail: "napoleonic cavalry", sourceTitle: "napoleonic cavalry", metrics: { views: cell(80) } },
+   { datasetKind: "traffic_detail", trafficSourceType: "YT_SEARCH", trafficSourceDetail: "alderian cavalry", sourceTitle: "alderian cavalry", metrics: { views: cell(80) } },
   ])
 
   expect(dataset.traffic).toEqual(expect.arrayContaining([
    expect.objectContaining({ datasetKind: "traffic_summary", sourceTitle: "YT_SEARCH" }),
-   expect.objectContaining({ datasetKind: "traffic_detail", sourceDetail: "napoleonic cavalry" }),
+   expect.objectContaining({ datasetKind: "traffic_detail", sourceDetail: "alderian cavalry" }),
   ]))
  })
 

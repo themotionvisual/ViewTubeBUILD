@@ -216,7 +216,7 @@ export const VideoAutopsyWidget = ({
 
         {/* Video List / Selector */}
         {!selectedVideoId && (
-          <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "6px" }}>
             {filteredVideos.length === 0 ? (
               <div style={{ textAlign: "center", padding: "40px", opacity: 0.3, fontWeight: 900, fontSize: "11px" }}>
                 NO VIDEOS FOUND
@@ -271,7 +271,7 @@ export const VideoAutopsyWidget = ({
 
         {/* Selected Video Analysis */}
         {selectedVideoId && selectedVideo && (
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "10px", overflowY: "auto" }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "10px" }}>
             {/* Selected Video Header */}
             <div style={{
               display: "flex",

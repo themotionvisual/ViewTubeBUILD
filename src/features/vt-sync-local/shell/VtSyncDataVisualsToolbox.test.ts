@@ -70,13 +70,13 @@ describe("VT-SYNC data visual module registry", () => {
 
  it("keeps Channel Progress and scatter controls aligned with the visual contract", () => {
   expect(graphSource).toContain("buildChannelProgressBuckets(")
-  expect(graphSource).toContain("buildRelativeChannelProgressSeries(")
+  expect(graphSource).toContain("runningCumulative")
   expect(graphSource).toContain("24,")
   expect(graphSource).toContain('type: "metricMultiSelect"')
   expect(graphSource).toContain("minimumSelected: 1")
   expect(graphSource).toContain("maximumSelected: 5")
-  expect(graphSource).toContain('dataKey={`bar_${option.value}`}')
-  expect(graphSource).toContain('dataKey={`line_${option.value}`}')
+  expect(graphSource).toContain('dataKey={`period_${option.value}`}')
+  expect(graphSource).toContain('dataKey={`total_${option.value}`}')
   expect(graphSource).toContain('domain={[0, 100]}')
   expect(graphSource).toContain('label: "VIDEOS PUBLISHED"')
   expect(graphSource).toContain('label: "VIEWS"')
@@ -85,8 +85,8 @@ describe("VT-SYNC data visual module registry", () => {
   expect(graphSource).toContain('label: "REVENUE"')
   expect(graphSource).toContain("const lightTone = mixChannelProgressTone")
   expect(graphSource).toContain("const darkTone = mixChannelProgressTone")
-  expect(graphSource).toContain('label: "BEST BY WATCH HOURS"')
-  expect(graphSource).toContain('options: ["ALL VIDEOS", "SHORTS", "LONG FORMAT"]')
+  expect(graphSource).toContain('label: sortMetric === "avd" ? "BEST BY AVD"')
+  expect(graphSource).toContain('formatFilter === "all"')
   expect(graphSource).toContain('"BEST BY WATCH TIME"')
  })
 
@@ -168,6 +168,7 @@ describe("VT-SYNC data visual module registry", () => {
    "subscribers-gained",
    "watch-time-distribution",
    "revenue-distribution",
+   "tube-explorer-shorts-vs-longs",
   ])
  expect(source).toContain('className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2"')
   expect(shouldVtSyncVisualStartOpen("tube-explorer-engagement-radar", 40)).toBe(true)
@@ -426,14 +427,14 @@ describe("VT-SYNC data visual module registry", () => {
   expect(graphSource).toContain('width="100%"')
   expect(graphSource).toContain('type: "toggle"')
   expect(graphSource).toContain('options: supportsTotal ? ["AVERAGE", "TOTAL"] : ["AVERAGE"]')
-  expect(graphSource).toContain('labelPrefix: "BY"')
+  expect(graphSource).toContain('labelPrefix: "PLOT"')
   expect(graphSource).toContain('const viewRadii = buildLinearAreaBubbleRadii')
-  expect(graphSource).toContain('fillOpacity={isActive ? 0.72 : 0.55}')
+  expect(graphSource).toContain('labelPrefix: "SIZE"')
   expect(graphSource).toContain('subtitle: `DATA: FORMATS')
   expect(graphSource).toContain('{ label: "VIDEOS", value: formatCounts.long.toLocaleString()')
   expect(graphSource).not.toContain('["impressions", "IMPR"]')
   expect(explorerSource).toContain("TITLE_NETWORK_MAX_WORDS = 50")
-  expect(explorerSource).toContain("return [...current, id].slice(-5)")
+  expect(explorerSource).toContain("return [...current, id].slice(-6)")
   expect(explorerSource).toContain('transform: isHovered ? "scale(1.15)"')
  })
 })

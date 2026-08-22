@@ -13,20 +13,20 @@ describe("csvImportDetector", () => {
   })
 
   expect(result.detectedCategory).toBe("traffic_overview")
-  expect(result.mergeTargetDataset).toBe("traffic")
-  expect(result.mergeKeyStrategy).toBe("traffic_source")
+  expect(result.mergeTargetDataset).toBe("traffic_summary")
+  expect(result.mergeKeyStrategy).toBe("traffic_summary_source")
  })
 
  it("detects YouTube search traffic detail exports", () => {
   const result = detect({
-   "Traffic source": "YT_SEARCH.napoleon history",
+   "Traffic source": "YT_SEARCH.alder history",
    "Source type": "YT_SEARCH",
-   "Source title": "napoleon history",
+   "Source title": "alder history",
    Views: "200",
   })
 
   expect(result.detectedCategory).toBe("traffic_youtube_search")
-  expect(result.mergeKeyStrategy).toBe("traffic_source_detail")
+  expect(result.mergeKeyStrategy).toBe("traffic_detail_source_title")
  })
 
  it("detects external, suggested, features, and shorts traffic detail exports", () => {

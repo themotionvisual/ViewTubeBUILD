@@ -8,7 +8,7 @@ const read = (relativePath: string) => fs.readFileSync(path.join(root, relativeP
 describe("unified account surface governance", () => {
   it("uses popup-first copy in active application code", () => {
     const activeFiles = [
-      "src/components/navigation/AdaptiveNavigationShell.tsx",
+      "src/components/navigation/ApplicationAccountMenu.tsx",
       "src/views/Settings.tsx",
       "src/views/Subscribe.tsx",
       "src/views/VideoManager.tsx",
@@ -27,7 +27,6 @@ describe("unified account surface governance", () => {
       "src/views/Settings.tsx",
       "src/views/Subscribe.tsx",
       "src/views/VideoManager.tsx",
-      "src/views/dashboard/DashboardCanvas.tsx",
       "src/views/dashboard/DashboardHeader.tsx",
       "src/features/vt-sync-local/shell/VtSyncLocalAnalyticsPage.tsx",
     ]) {
@@ -37,7 +36,7 @@ describe("unified account surface governance", () => {
     }
     for (const relativePath of [
       "src/components/account/AccountActionButton.tsx",
-      "src/components/navigation/AdaptiveNavigationShell.tsx",
+      "src/components/navigation/ApplicationAccountMenu.tsx",
       "src/views/settings/UnifiedAccountSettingsSection.tsx",
     ]) {
       const source = read(relativePath)
@@ -47,7 +46,7 @@ describe("unified account surface governance", () => {
   })
 
   it("owns persistent account actions through the shared control", () => {
-    expect(read("src/components/navigation/AdaptiveNavigationShell.tsx")).toContain("AccountActionButton")
+    expect(read("src/components/navigation/ApplicationAccountMenu.tsx")).toContain("AccountActionButton")
     expect(read("src/views/settings/UnifiedAccountSettingsSection.tsx")).toContain("AccountActionButton")
     expect(read("src/app/AppRoutes.tsx")).toContain('path="/account/connect"')
   })

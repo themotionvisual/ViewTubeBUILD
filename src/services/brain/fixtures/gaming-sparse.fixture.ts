@@ -22,6 +22,6 @@ export const gamingSparseSpec: GoldenChannelSpec = {
   { id: "g4", title: "Trying a Roguelike for the First Time", tags: ["roguelike", "gameplay"], format: "short", publishedAt: "2026-05-04", views: 9200, retention: 58 },
  ],
  expectedEvidenceTokens: ["indie"],
- forbiddenEvidenceTokens: ["napoleon", "restoration", "rust"],
+ forbiddenEvidenceTokens: ["alder", "restoration", "rust"],
  missingEvidence: ["a stated one-month goal"],
 }

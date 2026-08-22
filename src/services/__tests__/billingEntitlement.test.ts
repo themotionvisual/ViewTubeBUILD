@@ -119,8 +119,8 @@ describe("billing entitlement runtime", () => {
   const plan = applyPlanToEntitlement(createDefaultEntitlement(now), "creator_plus", now)
   const stale = {
    ...plan,
-   tokenBalance: 100,
-   tokenLastAccrualIso: "2026-03-08T00:00:00.000Z",
+   creditBalance: 100,
+   currentPeriodEndIso: "2026-03-09T00:00:00.000Z",
   }
   writeStoredEntitlement(stale)
 
@@ -141,7 +141,7 @@ describe("billing entitlement runtime", () => {
   expect(canAffordAiTokensFromState(medium, 10)).toBe(true)
   const exhausted = {
    ...medium,
-   tokenBalance: 0,
+   creditBalance: 0,
    tokenDailyAccrual: 0,
    currentPeriodEndIso: "2099-01-01T00:00:00.000Z",
    tokenLastAccrualIso: new Date().toISOString(),
