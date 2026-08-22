@@ -896,7 +896,7 @@ const StationCard = ({
      {cfg.title === "Video Value Matrix" &&
       selectedSoloVideoId &&
       (() => {
-       const video = videoOnlyData.find((v) => v._id === selectedSoloVideoId)
+       const video = videoOnlyData.find((v: Record<string, unknown>) => v._id === selectedSoloVideoId)
        if (!video) return null
        const ctr = parseFloat(String(video[ctrKey]).replace(/,/g, "")) || 0
        const apv = parseFloat(String(video[apvKey]).replace(/,/g, "")) || 0
@@ -5317,7 +5317,7 @@ const GoogleChartsGallery: React.FC<{
                       const row =
                        e?.row ?? e?.eventArgs?.[0]?.row ?? e?.eventArgs?.row
                       if (row !== null && row !== undefined) {
-                       const item = currentData[row + 1]
+                       const item = Array.isArray(currentData) ? currentData[row + 1] : undefined
                        if (item) {
                         if (isPerformanceStack) {
                          setPieHoveredItem((prev) => ({
@@ -5412,7 +5412,8 @@ const GoogleChartsGallery: React.FC<{
 const ResearchLab: React.FC = () => {
  const { brain, setResearchLabState, updateBrain, lastSyncComplete } =
   useBrain()
- const { csvFiles, allData } = brain.researchLabState
+ const { allData } = brain.researchLabState
+ const csvFiles = brain.researchLabState.csvFiles ?? []
 
  const readGlobalExcludedIds = () => {
   try {
@@ -5593,10 +5594,10 @@ const ResearchLab: React.FC = () => {
    const result = await analyzeChannelData(csvContent, dataDateRange, (partialResult: any) => {
      setResearchLabState({
       analyticsResult: {
-       ...researchLabState.analyticsResult,
+       ...brain.researchLabState.analyticsResult,
        ...partialResult,
       },
-     }, brain)
+     })
     },
    )
    setResearchLabState({ analyticsResult: result })

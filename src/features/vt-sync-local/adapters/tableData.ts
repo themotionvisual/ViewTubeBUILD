@@ -463,7 +463,7 @@ const withTrafficShareColumns = (rows: Row[]): Row[] => {
 }
 
 const withFormatSubscriberChannelShareColumns = (rows: Row[]): Row[] => {
- const normalized = rows.map((row) => {
+ const normalized = rows.map<Row>((row) => {
   const youtubePremiumViews = firstValue(row.youtubePremiumViews, row.redViews)
   const youtubePremiumWatchTime = firstValue(
    row.youtubePremiumWatchTime,
@@ -722,7 +722,7 @@ export const aggregateVtSyncTimeRows = (rows: Row[], mode: "weekly" | "monthly")
   const adImpressions = num(out.adImpressions)
   const monetizedPlaybacks = num(out.monetizedPlaybacks)
   const weightedAverage = (field: string) => {
-   const weighted = bucket.reduce((state, row) => {
+   const weighted = bucket.reduce<{ sum: number; weight: number }>((state, row) => {
     const value = num(row[field])
     const weight = num(row.views)
     return value === undefined || weight === undefined

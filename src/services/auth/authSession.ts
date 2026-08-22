@@ -10,14 +10,14 @@ const KEY_VT_AUTH = 'vt_auth';
 const KEY_SESSION_LEGACY = 'vt_session';
 let cachedAuthObj: Record<string, unknown> | null = null;
 
-const getAuthObj = () => {
+const getAuthObj = (): Record<string, unknown> => {
   if (cachedAuthObj) return cachedAuthObj;
   try {
     cachedAuthObj = JSON.parse(localStorage.getItem(KEY_VT_AUTH) || '{}');
   } catch {
     cachedAuthObj = {};
   }
-  return cachedAuthObj;
+  return cachedAuthObj ?? {};
 };
 
 const updateAuthObj = (updates: any) => {

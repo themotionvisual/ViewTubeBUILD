@@ -6,12 +6,15 @@ import {
  refreshTokenIfExpired,
  YouTubeApiError,
 } from "./youtubeApiClient"
+import { enrichTrafficEntityRows, type TrafficEntityResolution } from "./trafficEntityResolver"
 
 export type TrafficTableType =
  | "traffic_overview"
  | "traffic_daily_by_type"
  | "traffic_video_by_type"
  | "traffic_detail_by_type"
+ | "playback_location_overview"
+ | "playback_location_daily_by_type"
  | "traffic_reporting_bulk"
  | "unknown"
 
@@ -23,7 +26,7 @@ export type TrafficSourceOrigin =
 
 export type TrafficDiagnosticSeverity = "info" | "warning" | "error"
 
-export type NormalizedTrafficRow = {
+export type NormalizedTrafficRow = TrafficEntityResolution & {
  trafficTableType: TrafficTableType
  date?: string
  videoId?: string
@@ -90,6 +93,8 @@ export type TrafficAnalyticsSyncResult = {
  trafficDailyByType: NormalizedTrafficRow[]
  trafficVideoByType: NormalizedTrafficRow[]
  trafficDetailByType: NormalizedTrafficRow[]
+ playbackLocationOverview: NormalizedTrafficRow[]
+ playbackLocationDailyByType: NormalizedTrafficRow[]
  trafficReportingBulk: NormalizedTrafficRow[]
  trafficDiagnostics: TrafficDiagnostics
  rawReports: {
@@ -98,6 +103,8 @@ export type TrafficAnalyticsSyncResult = {
   videoByType?: any
   searchDetails?: any[]
   externalDetails?: any[]
+  playbackLocationOverview?: any
+  playbackLocationDailyByType?: any
  }
 }
 
@@ -207,6 +214,7 @@ const mapCommonTrafficFields = (
  const trafficSourceType =
   normalizeTrafficSourceType(
    record.insightTrafficSourceType ||
+    record.insightPlaybackLocationType ||
     record.traffic_source_type ||
     record["Traffic source type"] ||
     record.trafficSourceType,
@@ -418,7 +426,9 @@ export const syncTrafficAnalytics = async (
  let trafficOverview: NormalizedTrafficRow[] = []
  let trafficDailyByType: NormalizedTrafficRow[] = []
  let trafficVideoByType: NormalizedTrafficRow[] = []
- const trafficDetailByType: NormalizedTrafficRow[] = []
+ let trafficDetailByType: NormalizedTrafficRow[] = []
+ let playbackLocationOverview: NormalizedTrafficRow[] = []
+ let playbackLocationDailyByType: NormalizedTrafficRow[] = []
  const trafficReportingBulk: NormalizedTrafficRow[] = []
 
  try {
@@ -461,6 +471,48 @@ export const syncTrafficAnalytics = async (
   )
  } catch (error) {
   captureFailure(diagnostics, "day,insightTrafficSourceType", error)
+ }
+
+ try {
+  rawReports.playbackLocationOverview = await fetchAnalyticsReport(
+   token,
+   {
+    ids: idParam,
+    startDate: options.startDate,
+    endDate: options.endDate,
+    metrics: "views,estimatedMinutesWatched",
+    dimensions: "insightPlaybackLocationType",
+    sort: "-views",
+   },
+   "Failed to fetch playback location overview",
+  )
+  playbackLocationOverview = normalizeAnalyticsTrafficPayload(
+   rawReports.playbackLocationOverview,
+   "playback_location_overview",
+  )
+ } catch (error) {
+  captureFailure(diagnostics, "insightPlaybackLocationType overview", error)
+ }
+
+ try {
+  rawReports.playbackLocationDailyByType = await fetchAnalyticsReport(
+   token,
+   {
+    ids: idParam,
+    startDate: options.startDate,
+    endDate: options.endDate,
+    metrics: "views,estimatedMinutesWatched",
+    dimensions: "day,insightPlaybackLocationType",
+    sort: "day",
+   },
+   "Failed to fetch playback location timeline",
+  )
+  playbackLocationDailyByType = normalizeAnalyticsTrafficPayload(
+   rawReports.playbackLocationDailyByType,
+   "playback_location_daily_by_type",
+  )
+ } catch (error) {
+  captureFailure(diagnostics, "day,insightPlaybackLocationType", error)
  }
 
  const targetVideoIds = Array.from(
@@ -559,6 +611,12 @@ export const syncTrafficAnalytics = async (
   rawReports.externalDetails = externalDetails
  }
 
+ try {
+  trafficDetailByType = await enrichTrafficEntityRows(token, trafficDetailByType)
+ } catch (error) {
+  captureFailure(diagnostics, "traffic detail entity enrichment", error)
+ }
+
  if (options.includeReporting) {
   const reportingJob = await discoverTrafficReportingJob(
    token,
@@ -589,6 +647,8 @@ export const syncTrafficAnalytics = async (
   trafficDailyByType.length +
   trafficVideoByType.length +
   trafficDetailByType.length
+  + playbackLocationOverview.length
+  + playbackLocationDailyByType.length
  diagnostics.sourceCoverage.reportingRows = trafficReportingBulk.length
  diagnostics.sourceCoverage.mergedRows =
   diagnostics.sourceCoverage.analyticsApiRows + trafficReportingBulk.length
@@ -598,6 +658,8 @@ export const syncTrafficAnalytics = async (
   trafficDailyByType,
   trafficVideoByType,
   trafficDetailByType,
+  playbackLocationOverview,
+  playbackLocationDailyByType,
   trafficReportingBulk,
   trafficDiagnostics: diagnostics,
   rawReports,

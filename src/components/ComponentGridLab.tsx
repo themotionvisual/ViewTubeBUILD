@@ -1,18 +1,20 @@
 import React, { useState } from "react"
 import {
  StyleChipRow,
- Toggle,
- Checkbox,
- RadioGroup,
  FormField,
  KPIStatRow,
  DailyStats,
  Sidebar,
  ChannelTree,
  Tooltip,
- Dialog,
  VideoCardGrid,
 } from "./ui"
+import {
+ ReferenceCheckbox as Checkbox,
+ ReferenceDialog as Dialog,
+ ReferenceRadio as RadioGroup,
+ ReferenceToggle as Toggle,
+} from "./ui/ReferenceControls"
 import {
  MainToolbox,
  SectionCard,
