@@ -30,7 +30,9 @@ import {
  X,
 } from "lucide-react"
 import { AnimatedToggleIcon } from "../../../../components/ToolboxUISystem"
+import { BUILD_INFO } from "../../../../config/buildInfo"
 import { VT_SYNC_CATEGORY_OPTIONS } from "../../upstream/syncCategoryRegistry"
+import { VT_SYNC_VISIBLE_TABLE_DEFINITIONS } from "../../upstream/tableRegistry"
 import type {
  VtSyncDatasetTableRowsRecord,
  VtSyncSnapshot,
@@ -38,6 +40,10 @@ import type {
 } from "../../adapters/contracts"
 import type { VtSyncVideoCatalogCoverage } from "../../adapters/videoCatalogProjection"
 import { mergeVtSyncSupplementalTableRows } from "../../adapters/manualImports"
+import {
+ createVtSyncAnalyticsBundle,
+ parseVtSyncAnalyticsBundle,
+} from "../../adapters/analyticsBundle"
 import {
  deleteVtSyncDatasetTableRows,
  listVtSyncDatasetTableRows,
@@ -387,6 +393,19 @@ const durationCompact = (value: unknown) =>
 const downloadCsv = (name: string, csv: string) => {
  const url = URL.createObjectURL(
   new Blob([csv], { type: "text/csv;charset=utf-8" }),
+ )
+ const anchor = document.createElement("a")
+ anchor.href = url
+ anchor.download = name
+ document.body.appendChild(anchor)
+ anchor.click()
+ anchor.remove()
+ window.setTimeout(() => URL.revokeObjectURL(url), 1_000)
+}
+
+const downloadJson = (name: string, value: unknown) => {
+ const url = URL.createObjectURL(
+  new Blob([JSON.stringify(value, null, 2)], { type: "application/json;charset=utf-8" }),
  )
  const anchor = document.createElement("a")
  anchor.href = url
@@ -1029,6 +1048,7 @@ const [localPrivacyFilters, setLocalPrivacyFilters] =
  const categoryButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({})
  const dragRectRef = useRef<HTMLDivElement | null>(null)
  const fileRef = useRef<HTMLInputElement | null>(null)
+ const bundleFileRef = useRef<HTMLInputElement | null>(null)
  const previousTableIdRef = useRef(table.id)
  const resizeRef = useRef<{
   key: string
@@ -2297,7 +2317,15 @@ const filteredRows = useMemo(() => {
   [],
  )
 
- useEffect(() => {
+ const stopHoverScrollFrame = () => {
+  if (hoverFrameRef.current) window.cancelAnimationFrame(hoverFrameRef.current)
+  hoverFrameRef.current = undefined
+  hoverLastTimeRef.current = 0
+  hoverCurrentSpeedRef.current = 0
+ }
+
+ const startHoverScrollFrame = () => {
+  if (hoverFrameRef.current || !hoverScroll || !hoverRef.current.direction) return
   const tick = (timestamp: number) => {
    const node = mainScrollRef.current
    if (!hoverLastTimeRef.current) hoverLastTimeRef.current = timestamp
@@ -2309,14 +2337,16 @@ const filteredRows = useMemo(() => {
     hoverCurrentSpeedRef.current +=
      (target - hoverCurrentSpeedRef.current) * 0.18
     node.scrollLeft += hoverCurrentSpeedRef.current * elapsed
-   } else hoverCurrentSpeedRef.current = 0
-   hoverFrameRef.current = window.requestAnimationFrame(tick)
+    hoverFrameRef.current = window.requestAnimationFrame(tick)
+   } else stopHoverScrollFrame()
   }
   hoverFrameRef.current = window.requestAnimationFrame(tick)
+ }
+
+ useEffect(() => {
+  if (!hoverScroll) stopHoverScrollFrame()
   return () => {
-   hoverLastTimeRef.current = 0
-   hoverCurrentSpeedRef.current = 0
-   if (hoverFrameRef.current) window.cancelAnimationFrame(hoverFrameRef.current)
+   stopHoverScrollFrame()
   }
  }, [hoverScroll])
 
@@ -2324,6 +2354,81 @@ const filteredRows = useMemo(() => {
   window.clearTimeout(toastTimerRef.current)
   setToast({ message, ok })
   toastTimerRef.current = window.setTimeout(() => setToast(null), 2_800)
+ }
+
+ const exportAnalyticsBundle = () => {
+  const datasets = Object.fromEntries(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((definition) => {
+   const snapshotRows = buildVtSyncTableViewModel(snapshot, definition, activePrivacyFilters).rows
+   const rows = resolveAnalyticsTableRows({
+    tableId: definition.id,
+    snapshot,
+    snapshotRows,
+    importedRows: definition.id === "traffic_day" ? undefined : imported[definition.id],
+    privacyFilters: activePrivacyFilters,
+   })
+   return [definition.id, rows]
+  }))
+  const bundle = createVtSyncAnalyticsBundle({
+   datasets,
+   channel: { id: snapshot.channelId || undefined, title: snapshot.channelName || undefined },
+   authenticatedAtExport: Boolean(snapshot.channelId),
+   appVersion: BUILD_INFO.version,
+   buildCommit: BUILD_INFO.commit,
+   defaultDataset: table.id,
+  })
+  downloadJson(`viewtube-analytics-${new Date().toISOString().slice(0, 10)}.json`, bundle)
+  const rowCount = Object.values(bundle.datasets).reduce((sum, dataset) => sum + dataset.rowCount, 0)
+  showToast(`Exported ${rowCount.toLocaleString()} rows across ${Object.keys(bundle.datasets).length} datasets`)
+ }
+
+ const importAnalyticsBundle = async (file: File) => {
+  const allowedDatasetIds = new Set(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((definition) => definition.id))
+  const bundle = parseVtSyncAnalyticsBundle(await file.text(), allowedDatasetIds)
+  const capturedAt = new Date().toISOString()
+  const records = await listVtSyncDatasetTableRows()
+  const incomingIds = Object.keys(bundle.datasets).map(manualImportId)
+  const previous = records.filter((record) => incomingIds.includes(record.id))
+  const recoveryPrefix = `manual_import_recovery::${capturedAt.replace(/[:.]/g, "-")}::`
+
+  try {
+   await Promise.all(previous.map((record) => putVtSyncDatasetTableRows({
+    ...record,
+    id: `${recoveryPrefix}${record.datasetId}`,
+    runId: `${recoveryPrefix}${record.datasetId}`,
+   })))
+   await Promise.all(Object.entries(bundle.datasets).map(([datasetId, dataset]) =>
+    putVtSyncDatasetTableRows({
+     id: manualImportId(datasetId),
+     runId: manualImportId(datasetId),
+     channelId: snapshot.channelId || undefined,
+     datasetId,
+     phase: "bundle_import",
+     capturedAt,
+     rows: dataset.rows,
+     provenance: "csv",
+     filenames: [file.name],
+    }),
+   ))
+  } catch (error) {
+   const previousById = new Map(previous.map((record) => [record.id, record]))
+   await Promise.all(incomingIds.map((id) => {
+    const record = previousById.get(id)
+    return record ? putVtSyncDatasetTableRows(record) : deleteVtSyncDatasetTableRows(id)
+   }))
+   throw error
+  }
+
+  const rowsByTableId = Object.fromEntries(
+   Object.entries(bundle.datasets).map(([datasetId, dataset]) => [datasetId, dataset.rows]),
+  )
+  setImported(rowsByTableId)
+  setImportedAt(Object.fromEntries(Object.keys(rowsByTableId).map((id) => [id, capturedAt])))
+  setSavedCsvTableIds(new Set(Object.keys(rowsByTableId)))
+  await onManualImportsChange?.({ rowsByTableId, capturedAt })
+  setSelectedKey(null)
+  setSort(table.defaultSort)
+  const rowCount = Object.values(bundle.datasets).reduce((sum, dataset) => sum + dataset.rowCount, 0)
+  showToast(`Imported ${rowCount.toLocaleString()} rows across ${Object.keys(bundle.datasets).length} datasets`)
  }
 
  useEffect(() => {
@@ -2656,6 +2761,7 @@ const filteredRows = useMemo(() => {
   const bounds = event.currentTarget.getBoundingClientRect()
   const relativeX = event.clientX - bounds.left
   hoverRef.current = getVtSyncHoverScrollIntent(relativeX, bounds.width)
+  startHoverScrollFrame()
  }
 
  const renderScrollbar = (position: "top" | "bottom") => (
@@ -5619,22 +5725,30 @@ const retentionDisplayColumns = useMemo(() => {
          </button>
         </>
        )}
-      <button
-       type="button"
-       className="vt-sync-toolbar-action"
-       style={
-        {
+      <details className="vt-sync-transfer-menu">
+       <summary
+        className="vt-sync-toolbar-action"
+        style={{
          "--vt-action-rail": "#4EE4BE",
          "--vt-action-label": "#FFA85C",
          "--vt-action-shadow": "rgba(78,228,190,.52)",
-        } as CssVars
-       }
-       onClick={() => fileRef.current?.click()}>
-       <span>
-        <Upload />
-       </span>
-       <strong>Import CSV</strong>
-      </button>
+        } as CssVars}>
+        <span><Upload /></span>
+        <strong>Import <ChevronDown size={14} /></strong>
+       </summary>
+       <div className="vt-sync-transfer-popover">
+        <small>Current data</small>
+        <button type="button" onClick={() => fileRef.current?.click()}>
+         <b>Import CSV to This Dataset</b>
+         <span>{table.label}</span>
+        </button>
+        <small>All data</small>
+        <button type="button" onClick={() => bundleFileRef.current?.click()}>
+         <b>Import ViewTube Analytics Bundle</b>
+         <span>Versioned JSON · login not required</span>
+        </button>
+       </div>
+      </details>
       <input
        ref={fileRef}
        hidden
@@ -5704,28 +5818,51 @@ setSort(table.defaultSort)
         }
        }}
       />
-      <button
-       type="button"
-       className="vt-sync-toolbar-action"
-       style={
-        {
+      <input
+       ref={bundleFileRef}
+       hidden
+       type="file"
+       accept=".json,application/json"
+       onChange={async (event) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+        try {
+         await importAnalyticsBundle(file)
+        } catch (error) {
+         console.error("Analytics bundle import failed", error)
+         showToast(error instanceof Error ? error.message : "Bundle import failed", false)
+        } finally {
+         event.currentTarget.value = ""
+        }
+       }}
+      />
+      <details className="vt-sync-transfer-menu">
+       <summary
+        className="vt-sync-toolbar-action"
+        style={{
          "--vt-action-rail": "#36E0F6",
          "--vt-action-label": "#FFDA47",
          "--vt-action-shadow": "rgba(54,224,246,.52)",
-        } as CssVars
-       }
-       onClick={() => {
-        downloadCsv(
-         table.exportName,
-         exportVtSyncTableCsv(table, sortedRows, orderedColumns),
-        )
-        showToast(`Exported ${sortedRows.length} ${table.id} rows`)
-       }}>
-       <span>
-        <Download />
-       </span>
-       <strong>Export CSV</strong>
-      </button>
+        } as CssVars}>
+        <span><Download /></span>
+        <strong>Export <ChevronDown size={14} /></strong>
+       </summary>
+       <div className="vt-sync-transfer-popover">
+        <small>Current data</small>
+        <button type="button" onClick={() => {
+         downloadCsv(table.exportName, exportVtSyncTableCsv(table, sortedRows, orderedColumns))
+         showToast(`Exported ${sortedRows.length} ${table.id} rows`)
+        }}>
+         <b>Export This Table · CSV</b>
+         <span>{sortedRows.length.toLocaleString()} visible rows</span>
+        </button>
+        <small>All data</small>
+        <button type="button" onClick={exportAnalyticsBundle}>
+         <b>Export All Analytics · JSON</b>
+         <span>Portable versioned backup · no secrets</span>
+        </button>
+       </div>
+      </details>
       <div ref={settingsRef} className="vt-sync-toolbar-settings">
        <button
         type="button"

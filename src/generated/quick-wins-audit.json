@@ -4,14 +4,14 @@
     "src/main.tsx"
   ],
   "summary": {
-    "sourceFiles": 660,
-    "productionReachable": 442,
-    "unreachableReviewCandidates": 218,
-    "unusedExportCandidates": 455,
+    "sourceFiles": 672,
+    "productionReachable": 447,
+    "unreachableReviewCandidates": 225,
+    "unusedExportCandidates": 457,
     "routes": 63,
     "missingVisibleRoutes": 0,
     "duplicateRoutePaths": 0,
-    "visualCandidates": 429,
+    "visualCandidates": 436,
     "htmlFiles": 9
   },
   "reachability": [
@@ -324,6 +324,11 @@
       "file": "src/components/heroShowcaseControls.ts",
       "reachable": false,
       "classification": "likely_orphan_review_required"
+    },
+    {
+      "file": "src/components/heroVisualAnimations.test.ts",
+      "reachable": false,
+      "classification": "test_or_fixture"
     },
     {
       "file": "src/components/heroVisualAnimations.ts",
@@ -1056,6 +1061,16 @@
       "classification": "production_reachable"
     },
     {
+      "file": "src/features/vt-sync-local/adapters/analyticsBundle.test.ts",
+      "reachable": false,
+      "classification": "test_or_fixture"
+    },
+    {
+      "file": "src/features/vt-sync-local/adapters/analyticsBundle.ts",
+      "reachable": true,
+      "classification": "production_reachable"
+    },
+    {
       "file": "src/features/vt-sync-local/adapters/brainContext.ts",
       "reachable": true,
       "classification": "production_reachable"
@@ -1234,6 +1249,16 @@
       "file": "src/features/vt-sync-local/shell/VtSyncDataTables.tsx",
       "reachable": false,
       "classification": "likely_orphan_review_required"
+    },
+    {
+      "file": "src/features/vt-sync-local/shell/VtSyncDataVisualsGate.test.ts",
+      "reachable": false,
+      "classification": "test_or_fixture"
+    },
+    {
+      "file": "src/features/vt-sync-local/shell/VtSyncDataVisualsGate.tsx",
+      "reachable": true,
+      "classification": "production_reachable"
     },
     {
       "file": "src/features/vt-sync-local/shell/VtSyncDataVisualsToolbox.test.ts",
@@ -1916,6 +1941,11 @@
       "classification": "production_reachable"
     },
     {
+      "file": "src/services/canonicalSync/query.metricSanitizer.test.ts",
+      "reachable": false,
+      "classification": "test_or_fixture"
+    },
+    {
       "file": "src/services/canonicalSync/query.ts",
       "reachable": true,
       "classification": "production_reachable"
@@ -2316,7 +2346,27 @@
       "classification": "production_reachable"
     },
     {
+      "file": "src/services/youtube/analyticsMetricSanitizer.test.ts",
+      "reachable": false,
+      "classification": "test_or_fixture"
+    },
+    {
+      "file": "src/services/youtube/analyticsMetricSanitizer.ts",
+      "reachable": true,
+      "classification": "production_reachable"
+    },
+    {
       "file": "src/services/youtube/apiCapabilityRegistry.ts",
+      "reachable": true,
+      "classification": "production_reachable"
+    },
+    {
+      "file": "src/services/youtube/commentAccess.test.ts",
+      "reachable": false,
+      "classification": "test_or_fixture"
+    },
+    {
+      "file": "src/services/youtube/commentAccess.ts",
       "reachable": true,
       "classification": "production_reachable"
     },
@@ -2347,6 +2397,16 @@
     },
     {
       "file": "src/services/youtube/googleReadTransport.ts",
+      "reachable": true,
+      "classification": "production_reachable"
+    },
+    {
+      "file": "src/services/youtube/thumbnailFallback.test.ts",
+      "reachable": false,
+      "classification": "test_or_fixture"
+    },
+    {
+      "file": "src/services/youtube/thumbnailFallback.ts",
       "reachable": true,
       "classification": "production_reachable"
     },
@@ -3895,6 +3955,14 @@
     },
     {
       "file": "src/features/vt-sync-local/adapters/manualImports.ts",
+      "symbol": "claimUnscopedVtSyncManualImports",
+      "kind": "variable",
+      "internalReferences": 0,
+      "externalReferences": 0,
+      "confidence": "medium"
+    },
+    {
+      "file": "src/features/vt-sync-local/adapters/manualImports.ts",
       "symbol": "loadVtSyncManualImports",
       "kind": "variable",
       "internalReferences": 0,
@@ -3959,7 +4027,15 @@
     },
     {
       "file": "src/features/vt-sync-local/shell/VtSyncDataVisualsToolbox.tsx",
-      "symbol": "VtSyncDataVisualsToolbox",
+      "symbol": "VtSyncPrimaryVisualsContent",
+      "kind": "variable",
+      "internalReferences": 0,
+      "externalReferences": 0,
+      "confidence": "medium"
+    },
+    {
+      "file": "src/features/vt-sync-local/shell/VtSyncDataVisualsToolbox.tsx",
+      "symbol": "VtSyncSecondaryVisualsContent",
       "kind": "variable",
       "internalReferences": 0,
       "externalReferences": 0,
@@ -7694,6 +7770,13 @@
       "hasReducedMotion": false
     },
     {
+      "file": "src/components/heroVisualAnimations.test.ts",
+      "reachable": false,
+      "renderer": "Recharts",
+      "hasAnimationBoundary": true,
+      "hasReducedMotion": false
+    },
+    {
       "file": "src/components/heroVisualAnimations.ts",
       "reachable": true,
       "renderer": "Recharts",
@@ -8149,6 +8232,13 @@
       "hasReducedMotion": false
     },
     {
+      "file": "src/features/vt-sync-local/adapters/analyticsBundle.ts",
+      "reachable": true,
+      "renderer": "Custom_or_shell",
+      "hasAnimationBoundary": false,
+      "hasReducedMotion": false
+    },
+    {
       "file": "src/features/vt-sync-local/adapters/brainContext.ts",
       "reachable": true,
       "renderer": "Custom_or_shell",
@@ -8360,6 +8450,20 @@
     },
     {
       "file": "src/features/vt-sync-local/shell/VtSyncCreatorHero.tsx",
+      "reachable": true,
+      "renderer": "Custom_or_shell",
+      "hasAnimationBoundary": false,
+      "hasReducedMotion": false
+    },
+    {
+      "file": "src/features/vt-sync-local/shell/VtSyncDataVisualsGate.test.ts",
+      "reachable": false,
+      "renderer": "Custom_or_shell",
+      "hasAnimationBoundary": false,
+      "hasReducedMotion": false
+    },
+    {
+      "file": "src/features/vt-sync-local/shell/VtSyncDataVisualsGate.tsx",
       "reachable": true,
       "renderer": "Custom_or_shell",
       "hasAnimationBoundary": false,
@@ -8975,6 +9079,13 @@
       "hasReducedMotion": false
     },
     {
+      "file": "src/services/canonicalSync/query.metricSanitizer.test.ts",
+      "reachable": false,
+      "renderer": "Custom_or_shell",
+      "hasAnimationBoundary": false,
+      "hasReducedMotion": false
+    },
+    {
       "file": "src/services/canonicalSync/query.ts",
       "reachable": true,
       "renderer": "Custom_or_shell",
@@ -9381,7 +9492,21 @@
       "hasReducedMotion": false
     },
     {
+      "file": "src/services/youtube/analyticsMetricSanitizer.ts",
+      "reachable": true,
+      "renderer": "Custom_or_shell",
+      "hasAnimationBoundary": false,
+      "hasReducedMotion": false
+    },
+    {
       "file": "src/services/youtube/coreLifetimeSync.ts",
+      "reachable": true,
+      "renderer": "Custom_or_shell",
+      "hasAnimationBoundary": false,
+      "hasReducedMotion": false
+    },
+    {
+      "file": "src/services/youtube/thumbnailFallback.ts",
       "reachable": true,
       "renderer": "Custom_or_shell",
       "hasAnimationBoundary": false,

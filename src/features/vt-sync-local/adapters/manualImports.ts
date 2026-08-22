@@ -6,7 +6,7 @@ import type {
 } from "./contracts"
 import { VT_SYNC_TABLE_DEFINITIONS } from "../upstream/tableRegistry"
 import { VT_SYNC_TRAFFIC_DETAIL_SOURCES } from "../upstream/trafficDetailRegistry"
-import { listVtSyncDatasetTableRows } from "./localDbRepository"
+import { listVtSyncDatasetTableRows, putVtSyncDatasetTableRows } from "./localDbRepository"
 import { normalizeVtSyncSnapshot } from "./snapshot"
 import { buildVtSyncVideoCatalogProjection } from "./videoCatalogProjection"
 
@@ -348,6 +348,18 @@ export const loadVtSyncManualImports = async (channelId?: string | null): Promis
  } catch {
   return { rowsByTableId: {}, capturedAtByTableId: {} }
  }
+}
+
+/** Assign anonymous local imports to the first connected channel that uses them. */
+export const claimUnscopedVtSyncManualImports = async (channelId: string): Promise<number> => {
+ const records = await listVtSyncDatasetTableRows()
+ const unscoped = records.filter((record) =>
+  record.provenance === "csv" &&
+  record.id.startsWith(MANUAL_IMPORT_ID_PREFIX) &&
+  !record.channelId,
+ )
+ await Promise.all(unscoped.map((record) => putVtSyncDatasetTableRows({ ...record, channelId })))
+ return unscoped.length
 }
 
 export const toVtSyncPersistedApiState = (

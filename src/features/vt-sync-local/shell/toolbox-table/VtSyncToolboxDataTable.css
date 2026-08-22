@@ -39,6 +39,17 @@
 .vt-sync-toolbox-content.is-closed { grid-template-rows: 0fr; opacity: 0; }
 .vt-sync-toolbox-content-inner { min-height: 0; overflow: hidden; }
 .vt-sync-toolbar-settings { position: relative; flex: 0 0 auto; }
+.vt-sync-transfer-menu { position: relative; flex: 0 0 auto; }
+.vt-sync-transfer-menu > summary { list-style: none; }
+.vt-sync-transfer-menu > summary::-webkit-details-marker { display: none; }
+.vt-sync-transfer-menu > summary > strong { grid-auto-flow: column; gap: 4px; }
+.vt-sync-transfer-popover { position: absolute; z-index: 120; top: calc(100% + 7px); left: 0; width: min(330px, 82vw); padding: 8px; border: 3px solid var(--vt-ink); border-radius: 10px; background: #fff; box-shadow: 7px 7px 0 var(--vt-ink); color: var(--vt-ink); }
+.vt-sync-transfer-menu:last-of-type .vt-sync-transfer-popover { right: 0; left: auto; }
+.vt-sync-transfer-popover small { display: block; padding: 5px 7px 3px; font-size: 9px; font-weight: 950; letter-spacing: .12em; text-transform: uppercase; opacity: .58; }
+.vt-sync-transfer-popover button { display: grid; width: 100%; gap: 3px; padding: 9px 10px; border: 2px solid transparent; border-radius: 7px; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+.vt-sync-transfer-popover button:hover, .vt-sync-transfer-popover button:focus-visible { border-color: var(--vt-ink); background: #dff8ff; outline: none; }
+.vt-sync-transfer-popover b { font-size: 12px; font-weight: 950; }
+.vt-sync-transfer-popover span { font-size: 9px; font-weight: 750; opacity: .65; }
 .vt-sync-settings-panel { position: absolute; z-index: 120; top: calc(100% + 8px); right: 0; width: min(520px, calc(100vw - 28px)); max-height: min(78vh, calc(100vh - 96px)); overflow: auto; padding: 12px; border: 3px solid var(--vt-ink); border-radius: 12px; background: #fff; color: #0a0a0a; filter: drop-shadow(7px 7px 0 var(--vt-active-shadow)); }
 .vt-sync-settings-heading { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 0 0 10px; border-bottom: 3px solid var(--vt-ink); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; }
 .vt-sync-settings-heading button { width: 32px; height: 32px; display: grid; place-items: center; border: 3px solid var(--vt-ink); border-radius: 8px; background: #F55EFC; }

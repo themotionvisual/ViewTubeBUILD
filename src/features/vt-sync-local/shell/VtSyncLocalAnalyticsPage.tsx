@@ -23,6 +23,7 @@ import {
  readVtSyncPrivacyFilters,
  type VtSyncPrivacyFilters,
  loadVtSyncManualImports,
+ claimUnscopedVtSyncManualImports,
  loadVtSyncPersistedApiRows,
  mergeVtSyncManualImportsIntoSnapshot,
  mergeVtSyncPersistedApiRowsIntoSnapshot,
@@ -625,6 +626,7 @@ const refreshManualImports = useCallback(async (payload?: {
  // must not keep already-persisted CSV data invisible.
 
  try {
+  if (channelId) await claimUnscopedVtSyncManualImports(channelId)
   const next = await loadVtSyncManualImports(channelId)
 
   setManualImports((current) => {
