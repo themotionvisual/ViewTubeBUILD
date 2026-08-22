@@ -424,6 +424,19 @@ const emptySnapshot = (): VtSyncSnapshot => ({
  },
 })
 
+export const clearVtSyncSnapshot = (): VtSyncSnapshot => {
+ memorySnapshot = normalizeVtSyncSnapshot(emptySnapshot())
+ if (typeof window !== "undefined") {
+  try {
+   window.localStorage.removeItem(VT_SYNC_LOCAL_SNAPSHOT_KEY)
+  } catch {
+   // The in-memory reset remains authoritative when localStorage is unavailable.
+  }
+  publishVtSyncSnapshotUpdate()
+ }
+ return memorySnapshot
+}
+
 export const normalizeVtSyncSnapshot = (input?: Partial<VtSyncSnapshot> | Record<string, unknown> | null): VtSyncSnapshot => {
  const raw = input && typeof input === "object" ? input as Record<string, unknown> : {}
  const tableExports = normalizeFormattedTableExports(raw.tableExports)

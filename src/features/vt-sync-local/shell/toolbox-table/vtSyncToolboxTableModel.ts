@@ -14,6 +14,7 @@ import {
 } from "../../adapters/tableFormatting"
 import { getVtSyncTrafficDetailTable, resolveVtSyncCanonicalTableId, VT_SYNC_VISIBLE_TABLE_DEFINITIONS } from "../../upstream/tableRegistry"
 import { VT_SYNC_ALL_CATEGORY_OPTIONS } from "../../upstream/syncCategoryRegistry"
+import { VT_SYNC_RETENTION_METRICS } from "../../adapters/retentionSelection"
 
 export type VtSyncTableRow = Record<string, unknown>
 export type VtSyncSortState = { key: string; direction: "asc" | "desc" }
@@ -36,6 +37,25 @@ export type VtSyncTableProvenance = {
  statusLabel: string
  windowLabel?: string
  runId?: string
+}
+
+export type VtSyncFormatBadgePresentation = {
+ badgeClass: "is-short" | "is-long" | "is-live"
+ collapsedLabel: "S" | "L"
+ label: "SHORTS" | "LONG-FORMAT" | "LIVE STREAM"
+}
+
+export const getVtSyncFormatBadgePresentation = (
+ raw: unknown,
+ row?: Record<string, unknown>,
+): VtSyncFormatBadgePresentation => {
+ const rawStr = String(raw ?? "").toLowerCase().trim()
+ const titleLower = String(row?.title ?? row?.videoTitle ?? row?.name ?? "").toLowerCase()
+ const isLive = rawStr === "live" || rawStr === "livestream" || rawStr.includes("live") || titleLower.includes("is live") || titleLower.includes("live highlight") || titleLower.includes("live stream")
+ const isShort = !isLive && (rawStr === "short" || rawStr === "shorts" || rawStr.includes("short"))
+ if (isLive) return { badgeClass: "is-live", collapsedLabel: "L", label: "LIVE STREAM" }
+ if (isShort) return { badgeClass: "is-short", collapsedLabel: "S", label: "SHORTS" }
+ return { badgeClass: "is-long", collapsedLabel: "L", label: "LONG-FORMAT" }
 }
 
 export const VT_SYNC_ROW_NUMBER_WIDTH = 58
@@ -920,6 +940,10 @@ export type VtSyncWorkspaceUrlState = {
  filter: string
  columnFilters: Record<string, string>
  expandedIds: string[]
+ rawTableIds?: string[]
+ analysisTableIds?: string[]
+ derivedColumnKeys?: string[]
+ retentionMode?: RetentionExplorerMode
 }
 
 export const resolveVtSyncWorkspaceUrlState = (
@@ -965,6 +989,12 @@ export const resolveVtSyncWorkspaceUrlState = (
   filter: params.get("vtFilter") || "",
   columnFilters,
   expandedIds: (params.get("vtExpanded") || "").split(",").filter(Boolean),
+  rawTableIds: (params.get("vtRawTables") || "").split(",").filter(Boolean),
+  analysisTableIds: (params.get("vtAnalysisTables") || "").split(",").filter(Boolean),
+ derivedColumnKeys: (params.get("vtDerivedColumns") || "").split(",").filter(Boolean),
+  retentionMode: (["overview", "timeline", "points", "raw"] as const).includes(params.get("vtRetentionMode") as RetentionExplorerMode)
+   ? params.get("vtRetentionMode") as RetentionExplorerMode
+   : "overview",
  }
 }
 
@@ -976,14 +1006,22 @@ export const createVtSyncWorkspaceUrlSearch = (
  params.set("vtWorkspace", state.workspaceId)
  params.set("vtView", state.viewId)
  params.set("vtTable", state.tableId)
- state.filter ? params.set("vtFilter", state.filter) : params.delete("vtFilter")
+ if (state.filter) params.set("vtFilter", state.filter)
+ else params.delete("vtFilter")
  const filters = Object.fromEntries(Object.entries(state.columnFilters).filter(([, value]) => Boolean(value)))
- Object.keys(filters).length
-  ? params.set("vtColumnFilters", JSON.stringify(filters))
-  : params.delete("vtColumnFilters")
- state.expandedIds.length
-  ? params.set("vtExpanded", state.expandedIds.join(","))
-  : params.delete("vtExpanded")
+ if (Object.keys(filters).length) params.set("vtColumnFilters", JSON.stringify(filters))
+ else params.delete("vtColumnFilters")
+ if (state.expandedIds.length) params.set("vtExpanded", state.expandedIds.join(","))
+ else params.delete("vtExpanded")
+ if (state.rawTableIds?.length) params.set("vtRawTables", state.rawTableIds.join(","))
+ else params.delete("vtRawTables")
+ params.delete("vtFormattedTables")
+ if (state.analysisTableIds?.length) params.set("vtAnalysisTables", state.analysisTableIds.join(","))
+ else params.delete("vtAnalysisTables")
+ if (state.derivedColumnKeys?.length) params.set("vtDerivedColumns", state.derivedColumnKeys.join(","))
+ else params.delete("vtDerivedColumns")
+ if (state.retentionMode && state.retentionMode !== "overview") params.set("vtRetentionMode", state.retentionMode)
+ else params.delete("vtRetentionMode")
  return params.toString()
 }
 
@@ -996,11 +1034,21 @@ export const buildVtSyncTableViewModel = (
  snapshot: VtSyncSnapshot,
  table: VtSyncTableDefinition,
  privacyFilters?: VtSyncPrivacyFilters,
-) => ({
- table,
- rows: tableRows(snapshot, table, privacyFilters),
- columns: table.columns,
-})
+) => {
+ const rows = tableRows(snapshot, table, privacyFilters)
+ const visibleRows = table.id === "retentions"
+  ? rows.map((row) => {
+   if (!Array.isArray(row.retentionMetricAvailability)) return row
+   const available = new Set(row.retentionMetricAvailability.map(String))
+   const visible = { ...row }
+   VT_SYNC_RETENTION_METRICS.forEach((metric) => {
+    if (!available.has(metric)) delete visible[metric]
+   })
+   return visible
+  })
+  : rows
+ return { table, rows: visibleRows, columns: table.columns }
+}
 
 export const isMissingVtSyncValue = (value: unknown): boolean => value === null || value === undefined || value === ""
 
@@ -1255,6 +1303,106 @@ export type VtSyncRetentionPointRow = {
  row: VtSyncTableRow
 }
 
+export type RetentionExplorerMode = "overview" | "timeline" | "points" | "raw"
+
+export type RetentionMetricDefinition = {
+ key: string
+ label: string
+ family: "hold" | "flow" | "exposure"
+ kind: "raw" | "derived"
+ unit: "ratio" | "count" | "rate" | "delta"
+ description: string
+ formula?: string
+ baseline?: number
+ missingBehavior: string
+}
+
+export const VT_SYNC_RETENTION_METRIC_DEFINITIONS: readonly RetentionMetricDefinition[] = [
+ { key: "audienceWatchRatio", label: "Audience watch ratio", family: "hold", kind: "raw", unit: "ratio", baseline: 1, description: "Times watched divided by video views at this playback position. Values above 100% indicate repeat viewing.", missingBehavior: "Unavailable when YouTube omits the value." },
+ { key: "relativeRetentionPerformance", label: "Relative retention performance", family: "hold", kind: "raw", unit: "ratio", baseline: .5, description: "Retention rank against YouTube videos of similar length; 50% is the median baseline.", missingBehavior: "Unavailable when YouTube omits the value." },
+ { key: "startedWatching", label: "Started watching", family: "flow", kind: "raw", unit: "count", description: "Playbacks whose first watched segment was this segment.", missingBehavior: "Unavailable is distinct from a genuine zero." },
+ { key: "stoppedWatching", label: "Stopped watching", family: "flow", kind: "raw", unit: "count", description: "Playbacks whose final watched segment was this segment.", missingBehavior: "Unavailable is distinct from a genuine zero." },
+ { key: "totalSegmentImpressions", label: "Segment impressions", family: "exposure", kind: "raw", unit: "count", description: "Number of times this segment was viewed, including repeat views.", missingBehavior: "Unavailable is distinct from a genuine zero." },
+ { key: "startsPerThousand", label: "Starts per 1,000", family: "flow", kind: "derived", unit: "rate", formula: "sum(startedWatching) / sum(totalSegmentImpressions) × 1,000", description: "Playback entries normalized by segment exposure.", missingBehavior: "Unavailable when starts or a positive impressions denominator is absent." },
+ { key: "stopsPerThousand", label: "Stops per 1,000", family: "flow", kind: "derived", unit: "rate", formula: "sum(stoppedWatching) / sum(totalSegmentImpressions) × 1,000", description: "Playback exits normalized by segment exposure.", missingBehavior: "Unavailable when stops or a positive impressions denominator is absent." },
+ { key: "netFlow", label: "Net flow", family: "flow", kind: "derived", unit: "delta", formula: "sum(startedWatching) − sum(stoppedWatching)", description: "Net playback entries minus exits.", missingBehavior: "Unavailable unless both count families are present." },
+ { key: "exposureShare", label: "Exposure share", family: "exposure", kind: "derived", unit: "ratio", formula: "phase segment impressions / video segment impressions", description: "Share of available segment impressions occurring in this phase.", missingBehavior: "Unavailable without a positive video impressions total." },
+] as const
+
+export type RetentionPhaseSummary = {
+ phase: "opening" | "early" | "middle" | "late" | "finish"
+ startRatio: number
+ endRatio: number
+ pointCount: number
+ metrics: Record<string, number | null>
+ strongestEvent: VtSyncRetentionVisualEvent | null
+}
+
+const sumCompleteRetentionValues = (rows: VtSyncTableRow[], key: string): number | null => {
+ const values = rows.map((row) => toVtSyncNumber(row[key]))
+ return values.length && values.every((value) => value !== undefined)
+  ? values.reduce((sum, value) => sum + (value as number), 0)
+  : null
+}
+
+const averageRetentionValues = (rows: VtSyncTableRow[], key: string): number | null => {
+ const values = rows.map((row) => toVtSyncNumber(row[key])).filter((value): value is number => value !== undefined)
+ return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null
+}
+
+const sumAvailableRetentionValues = (rows: VtSyncTableRow[], key: string): number | null => {
+ const values = rows.map((row) => toVtSyncNumber(row[key])).filter((value): value is number => value !== undefined)
+ return values.length ? values.reduce((sum, value) => sum + value, 0) : null
+}
+
+export const buildVtSyncRetentionPhaseSummaries = (
+ group: VtSyncRetentionVideoGroup,
+ durationSeconds?: number,
+): RetentionPhaseSummary[] => {
+ const visual = buildVtSyncRetentionVisualModel(group, durationSeconds)
+ const videoImpressions = sumAvailableRetentionValues(group.points.map((point) => point.row), "totalSegmentImpressions")
+ const phases = [
+  { phase: "opening", startRatio: 0, endRatio: .2 },
+  { phase: "early", startRatio: .2, endRatio: .4 },
+  { phase: "middle", startRatio: .4, endRatio: .6 },
+  { phase: "late", startRatio: .6, endRatio: .8 },
+  { phase: "finish", startRatio: .8, endRatio: 1 },
+ ] as const
+ return phases.map(({ phase, startRatio, endRatio }, phaseIndex) => {
+  const points = group.points.filter((point, index) => {
+   const elapsed = point.elapsed ?? (index + 1) / Math.max(1, group.points.length)
+   return phaseIndex === 0 ? elapsed >= startRatio && elapsed <= endRatio : elapsed > startRatio && elapsed <= endRatio
+  })
+  const rows = points.map((point) => point.row)
+  const starts = sumCompleteRetentionValues(rows, "startedWatching")
+  const stops = sumCompleteRetentionValues(rows, "stoppedWatching")
+  const impressions = sumCompleteRetentionValues(rows, "totalSegmentImpressions")
+  const events = visual.events.filter((event) => {
+   const ratio = event.pointNumber / 100
+   return phaseIndex === 0 ? ratio >= startRatio && ratio <= endRatio : ratio > startRatio && ratio <= endRatio
+  })
+  const strongestEvent = [...events].sort((left, right) => Math.abs(right.change) - Math.abs(left.change))[0] ?? null
+  return {
+   phase,
+   startRatio,
+   endRatio,
+   pointCount: points.length,
+   strongestEvent,
+   metrics: {
+    audienceWatchRatio: averageRetentionValues(rows, "audienceWatchRatio"),
+    relativeRetentionPerformance: averageRetentionValues(rows, "relativeRetentionPerformance"),
+    startedWatching: starts,
+    stoppedWatching: stops,
+    totalSegmentImpressions: impressions,
+    startsPerThousand: starts !== null && impressions !== null && impressions > 0 ? starts / impressions * 1000 : null,
+    stopsPerThousand: stops !== null && impressions !== null && impressions > 0 ? stops / impressions * 1000 : null,
+    netFlow: starts !== null && stops !== null ? starts - stops : null,
+    exposureShare: impressions !== null && videoImpressions !== null && videoImpressions > 0 ? impressions / videoImpressions : null,
+   },
+  }
+ })
+}
+
 export type VtSyncRetentionVideoGroup = {
  id: string
  videoId: string
@@ -1330,6 +1478,9 @@ export const buildVtSyncRetentionVideoGroups = (
     videoId,
     audienceWatchRatio: averageAvailableVtSyncValues(videoRows, "audienceWatchRatio"),
     relativeRetentionPerformance: averageAvailableVtSyncValues(videoRows, "relativeRetentionPerformance"),
+    startedWatching: averageAvailableVtSyncValues(videoRows, "startedWatching"),
+    stoppedWatching: averageAvailableVtSyncValues(videoRows, "stoppedWatching"),
+    totalSegmentImpressions: averageAvailableVtSyncValues(videoRows, "totalSegmentImpressions"),
    },
    points,
   }
@@ -1358,7 +1509,11 @@ export const buildVtSyncRetentionVisualModel = (
  const segments = segmentLabels.map((label, index): VtSyncRetentionVisualSegment => {
   const startPoint = index * 20 + 1
   const endPoint = (index + 1) * 20
-  const segmentPoints = points.filter((point) => point.pointNumber >= startPoint && point.pointNumber <= endPoint)
+  const startRatio = index * .2
+  const endRatio = (index + 1) * .2
+  const segmentPoints = points.filter((point) => index === 0
+   ? point.elapsedRatio >= startRatio && point.elapsedRatio <= endRatio
+   : point.elapsedRatio > startRatio && point.elapsedRatio <= endRatio)
   const average = (key: "audienceRatio" | "relativePerformance") => {
    const values = segmentPoints.map((point) => point[key]).filter((value): value is number => value !== undefined)
    return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : undefined
@@ -1477,6 +1632,11 @@ export const getVisibleVtSyncColumns = (
  return table.columns.filter((column) => {
   if (!showFormulas && column.isFormula) return false
   if (!showAllColumns && column.defaultVisible === false) return false
+  if (column.visibility === "whenAvailable" && !rows.some((row) => {
+   if (Array.isArray(row.retentionMetricAvailability))
+    return row.retentionMetricAvailability.map(String).includes(column.key)
+   return Object.hasOwn(row, column.key)
+  })) return false
   if (column.visibility === "whenMeaningful" && !meaningfulGroups.has(column.group)) return false
   return true
  })

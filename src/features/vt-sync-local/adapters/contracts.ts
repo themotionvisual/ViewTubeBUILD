@@ -66,8 +66,8 @@ export type VtSyncTableColumnDefinition = {
  pinned?: "left" | "right"
  defaultVisible?: boolean
  isFormula?: boolean
- visibility?: "always" | "whenMeaningful"
- format?: "text" | "number" | "percent" | "currency" | "duration" | "durationHours" | "durationMinutes" | "date" | "dateRange" | "dateLocal" | "weekdayLocal" | "timeLocal" | "thumbnail" | "flag" | "json"
+ visibility?: "always" | "whenMeaningful" | "whenAvailable"
+ format?: "text" | "number" | "percent" | "ratioPercent" | "currency" | "duration" | "durationHours" | "durationMinutes" | "date" | "dateRange" | "dateLocal" | "weekdayLocal" | "timeLocal" | "thumbnail" | "flag" | "json"
  semanticRole?: "identity" | "metric"
  visualization?: "none" | "metric"
  totalMode?: "sum" | "average" | "none"
@@ -95,6 +95,7 @@ export type VtSyncTableDefinition = {
  layoutMode?: "auto" | "sparse-full"
  compactMode?: "supported" | "normal-only"
  presentationMode?: "standard" | "traffic-source-day" | "format-subscriber-status" | "retention-video"
+ exportMode?: "formatted" | "raw"
  verticalScrollMode?: "custom" | "none"
  horizontalScrollMode?: "custom" | "none"
  summaryMode?: "selected-video" | "registry" | "primary-row"

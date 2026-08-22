@@ -8,7 +8,6 @@ import { useUnifiedAccount } from "../../../context/UnifiedAccountContext"
 import {
  getVtSyncSnapshot,
  runVtSyncLocalSync,
- type VtSyncCategoryDefinition,
  type VtSyncDatasetFreshness,
  type VtSyncLocalSyncProgress,
  type VtSyncSnapshot,
@@ -34,6 +33,12 @@ import {
  type VtSyncVideoCatalogCoverage,
  buildVtSyncVideoCatalogProjection,
  listVtSyncVideoInventory,
+ clearVtSyncLocalDb,
+ clearVtSyncSavedTableData,
+ clearVtSyncSnapshot,
+ clearVtSyncTableDataFromSnapshot,
+ removeVtSyncTableFromImportState,
+ saveVtSyncSnapshot,
 } from ".."
 import { ToolboxScaffold } from "../../../components/Toolbox"
 import { getPaletteColor } from "../../../styles/toolboxPalette"
@@ -43,6 +48,12 @@ import { VtSyncToolboxDataTable } from "./toolbox-table/VtSyncToolboxDataTable"
 import { VtSyncDataVisualsGate } from "./VtSyncDataVisualsGate"
 import "./VtSyncLocalAnalyticsPage.css"
 import { RetroLcd, RetroLedRow, RetroRivets, type RetroLedSpec } from "./VtSyncRetroChrome"
+import {
+ buildVtSyncUnifiedProgressRows,
+ claimVtSyncSyncRequest,
+ getVtSyncProgressQueueSummary,
+ type VtSyncUnifiedProgressRow,
+} from "./vtSyncProgressModel"
 
 const syncStatusLabel = (status?: string) => {
  switch (status) {
@@ -71,16 +82,6 @@ const syncStatusTone = (status?: string) => {
  return "#ffffff"
 }
 
-const freshnessStatusRank: Record<string, number> = { failed: 4, partial: 3, placeholder: 2, stale: 1, synced: 0 }
-
-const sourceApiLabel = (value: string) => ({
- youtube_data_v3: "YouTube Data API v3",
- youtube_analytics_v2: "YouTube Analytics API",
- google_workspace: "Google Workspace API",
- derived: "Derived locally",
- local_import: "Local import",
-}[value] || value.replace(/_/g, " "))
-
 const formatRelativeTime = (iso?: string): string => {
  if (!iso) return "Never"
  const ms = Date.now() - new Date(iso).getTime()
@@ -95,47 +96,8 @@ const formatRelativeTime = (iso?: string): string => {
  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" })
 }
 
-type DatasetStatusRow = {
- category: VtSyncCategoryDefinition
- status: string
- rows: number
- updatedAt?: string
- missingMetrics: string[]
- source: string
-}
-
-const summarizeDatasetFreshness = (
- freshness: VtSyncDatasetFreshness | undefined,
- category: VtSyncCategoryDefinition,
-): DatasetStatusRow => {
- const entries = Object.values(freshness || {}).filter((entry) => entry.phase === category.id)
- if (entries.length === 0) {
-  return {
-   category,
-   status: "never",
-   rows: 0,
-   updatedAt: undefined,
-   missingMetrics: [],
-   source: sourceApiLabel(category.sourceApi),
-  }
- }
- const status = entries.reduce((worst, entry) => {
-  const candidate = entry.status || "synced"
-  return (freshnessStatusRank[candidate] ?? -1) > (freshnessStatusRank[worst] ?? -1) ? candidate : worst
- }, entries[0].status || "synced")
- const updatedAt = entries.reduce<string | undefined>(
-  (latest, entry) => (entry.updatedAt && (!latest || entry.updatedAt > latest) ? entry.updatedAt : latest),
-  undefined,
- )
- return {
-  category,
-  status,
-  rows: Math.max(...entries.map((entry) => entry.rows || 0)),
-  updatedAt,
-  missingMetrics: entries.flatMap((entry) => entry.missingMetrics || []),
-  source: sourceApiLabel(category.sourceApi),
- }
-}
+const EMPTY_MANUAL_IMPORTS: VtSyncManualImportState = { rowsByTableId: {}, capturedAtByTableId: {} }
+const EMPTY_PERSISTED_API_ROWS: VtSyncPersistedApiState = { rowsByTableId: {}, capturedAtByTableId: {} }
 
 const writeClipboardText = async (text: string) => {
  if (navigator.clipboard?.writeText) {
@@ -151,90 +113,6 @@ const writeClipboardText = async (text: string) => {
  textarea.select()
  document.execCommand("copy")
  document.body.removeChild(textarea)
-}
-
-export type VtSyncUnifiedProgressRow = ReturnType<typeof summarizeDatasetFreshness> & {
- syncUnitId: string
- syncUnitLabel: string
- phaseLabel: string
- displayStatus: string
- displayRows: number
- message: string
-}
-
-export const claimVtSyncSyncRequest = (lock: { current: boolean }): boolean => {
- if (lock.current) return false
- lock.current = true
- return true
-}
-
-export const buildVtSyncUnifiedProgressRows = (
- progress: VtSyncLocalSyncProgress | null,
- datasetFreshness?: VtSyncDatasetFreshness,
-): VtSyncUnifiedProgressRow[] => {
- const liveByPhase = new Map((progress?.phases || []).map((phase) => [phase.id, phase]))
- const requested = new Set(progress?.requestedCategoryIds || [])
- const requestedPhaseCounts = new Map<string, number>()
- VT_SYNC_CATEGORY_OPTIONS.forEach((category) => {
-  if (!requested.has(category.id)) return
-  requestedPhaseCounts.set(category.runtimePhaseId, (requestedPhaseCounts.get(category.runtimePhaseId) || 0) + 1)
- })
- return VT_SYNC_CATEGORY_OPTIONS.map((category) => {
-  const syncUnit = VT_SYNC_SYNC_UNITS.find((unit) => unit.categoryIds.includes(category.id))
-  const stored = summarizeDatasetFreshness(datasetFreshness, category)
-  const live = liveByPhase.get(category.runtimePhaseId)
-  const isRunPhase = Boolean(progress && requested.has(category.id) && live)
-  const hasDedicatedLiveRowCount = requestedPhaseCounts.get(category.runtimePhaseId) === 1
-  const terminalFailedPhase = Boolean(progress?.status === "failed" && live?.status === "running")
-  const displayStatus = isRunPhase ? (terminalFailedPhase ? "failed" : live!.status) : stored.status
-  return {
-   ...stored,
-   syncUnitId: syncUnit?.id || category.id,
-   syncUnitLabel: syncUnit?.label || category.label,
-   phaseLabel: live?.label || category.phase.replace(/_/g, " "),
-   displayStatus,
-   displayRows: isRunPhase && hasDedicatedLiveRowCount ? live!.rows : stored.rows,
-   message: isRunPhase
-    ? live!.error || live!.message || (terminalFailedPhase ? "Sync ended before this query completed." : live!.status === "pending" ? "Waiting for prerequisite phases." : "Sync is active.")
-    : stored.missingMetrics.length
-     ? `Missing: ${stored.missingMetrics.join(", ")}`
-     : stored.updatedAt ? "Stored dataset is available." : "This dataset has not been synced yet.",
-  }
- })
-}
-
-export const getVtSyncProgressQueueSummary = (
- progress: VtSyncLocalSyncProgress | null,
- queuedCategoryIds: string[] = [],
-) => {
- const requestedRuntimePhaseIds = new Set(
-  (progress?.requestedCategoryIds || [])
-   .map((categoryId) => VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === categoryId)?.runtimePhaseId)
-   .filter(Boolean),
- )
- const requestedPhases = (progress?.phases || []).filter((phase) => requestedRuntimePhaseIds.has(phase.id))
- const currentPhase = progress?.status === "running"
-  ? requestedPhases.find((phase) => phase.status === "running")
-  : undefined
- const nextPhase = progress?.status === "running"
-  ? requestedPhases.find((phase) => phase.status === "pending")
-  : undefined
- const queuedCategory = queuedCategoryIds
-  .map((categoryId) => VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === categoryId))
-  .find(Boolean)
-
- return {
-  currentLabel: currentPhase?.currentQueryLabel || currentPhase?.label || (progress?.status === "running" ? "Preparing sync" : "Idle"),
-  currentMessage: currentPhase?.message || (currentPhase ? `${currentPhase.rows.toLocaleString()} rows received` : progress?.status === "running" ? "Resolving the first requested query." : "No query is currently running."),
-  nextLabel: currentPhase?.nextQueryLabel || nextPhase?.label || queuedCategory?.label || "No queued query",
-  nextMessage: currentPhase?.nextQueryLabel
-   ? "Waiting in the current query group."
-   : nextPhase
-   ? "Waiting in the current sync run."
-   : queuedCategory
-    ? "Waiting behind the current sync request."
-    : "The queue is clear.",
- }
 }
 
 export const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; datasetFreshness?: VtSyncDatasetFreshness; syncError?: string; queuedCategoryIds?: string[]; videoCatalogCoverage?: VtSyncVideoCatalogCoverage }> = ({ progress, datasetFreshness, syncError, queuedCategoryIds = [], videoCatalogCoverage }) => {
@@ -553,10 +431,8 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
  const [snapshot, setSnapshot] = useState<VtSyncSnapshot>(() => getVtSyncSnapshot())
  const snapshotRef = useRef(snapshot)
  const [privacyFilters, setPrivacyFilters] = useState<VtSyncPrivacyFilters>(() => readVtSyncPrivacyFilters())
- const emptyManualImports: VtSyncManualImportState = { rowsByTableId: {}, capturedAtByTableId: {} }
- const emptyPersistedApiRows: VtSyncPersistedApiState = { rowsByTableId: {}, capturedAtByTableId: {} }
- const [manualImports, setManualImports] = useState<{ channelId: string | null; value: VtSyncManualImportState }>({ channelId: null, value: emptyManualImports })
- const [persistedApiRows, setPersistedApiRows] = useState<{ channelId: string | null; value: VtSyncPersistedApiState }>({ channelId: null, value: emptyPersistedApiRows })
+ const [manualImports, setManualImports] = useState<{ channelId: string | null; value: VtSyncManualImportState }>({ channelId: null, value: EMPTY_MANUAL_IMPORTS })
+ const [persistedApiRows, setPersistedApiRows] = useState<{ channelId: string | null; value: VtSyncPersistedApiState }>({ channelId: null, value: EMPTY_PERSISTED_API_ROWS })
  const [videoInventory, setVideoInventory] = useState<{
   channelId: string | null
   status: "loading" | "ready" | "failed"
@@ -568,7 +444,7 @@ const VtSyncLocalAnalyticsPage: React.FC = () => {
  const refreshPersistedApiRows = useCallback(async (requestedChannelId?: string | null) => {
   const channelId = requestedChannelId ?? snapshot.channelId
   if (!channelId) {
-   setPersistedApiRows({ channelId: null, value: emptyPersistedApiRows })
+   setPersistedApiRows({ channelId: null, value: EMPTY_PERSISTED_API_ROWS })
    return
   }
   try {
@@ -594,7 +470,7 @@ const refreshManualImports = useCallback(async (payload?: {
    const currentValue =
     current.channelId === channelId
      ? current.value
-     : emptyManualImports
+     : EMPTY_MANUAL_IMPORTS
 
    const capturedAtByTableId = Object.fromEntries(
     Object.keys(payload.rowsByTableId).map((tableId) => [
@@ -666,6 +542,41 @@ const refreshManualImports = useCallback(async (payload?: {
  }
 }, [snapshot.channelId])
 
+ const clearSavedData = useCallback(async (
+  scope: { kind: "table"; tableId: string } | { kind: "all" },
+ ) => {
+  if (scope.kind === "all") {
+   await clearVtSyncLocalDb()
+   const next = clearVtSyncSnapshot()
+   snapshotRef.current = next
+   setSnapshot(next)
+   setManualImports({ channelId: null, value: EMPTY_MANUAL_IMPORTS })
+   setPersistedApiRows({ channelId: null, value: EMPTY_PERSISTED_API_ROWS })
+   setVideoInventory({ channelId: null, status: "ready", rows: [] })
+   setSyncProgress(null)
+   setSyncError("")
+   return
+  }
+
+  const channelId = snapshotRef.current.channelId ?? null
+  await clearVtSyncSavedTableData(scope.tableId, channelId)
+  const next = clearVtSyncTableDataFromSnapshot(snapshotRef.current, scope.tableId)
+  saveVtSyncSnapshot(next)
+  snapshotRef.current = next
+  setSnapshot(next)
+  setManualImports((current) => ({
+   ...current,
+   value: removeVtSyncTableFromImportState(current.value, scope.tableId),
+  }))
+  setPersistedApiRows((current) => ({
+   ...current,
+   value: removeVtSyncTableFromImportState(current.value, scope.tableId),
+  }))
+  if (scope.tableId === "videos") {
+   setVideoInventory({ channelId, status: "ready", rows: [] })
+  }
+ }, [])
+
  const refreshVideoInventory = useCallback(async (requestedChannelId?: string | null) => {
   const channelId = requestedChannelId ?? snapshot.channelId
   const generation = videoInventoryGenerationRef.current + 1
@@ -719,10 +630,10 @@ const refreshManualImports = useCallback(async (payload?: {
   manualImports.channelId == null ||
   snapshot.channelId == null
    ? manualImports.value
-   : emptyManualImports
+   : EMPTY_MANUAL_IMPORTS
  const activePersistedApiRows = persistedApiRows.channelId === snapshot.channelId
   ? persistedApiRows.value
-  : emptyPersistedApiRows
+  : EMPTY_PERSISTED_API_ROWS
 
  const rehydratedSnapshot = useMemo(
   () => mergeVtSyncPersistedApiRowsIntoSnapshot(snapshot, activePersistedApiRows),
@@ -943,7 +854,15 @@ const refreshManualImports = useCallback(async (payload?: {
        contentOwners={account.snapshot.google.contentOwners}
        activeContentOwnerId={account.snapshot.google.activeContentOwnerId}
        onSelectContentOwner={account.selectContentOwner}
-       videos={consumerSnapshot.videos.map((video) => ({ id: video.id, title: video.title, thumbnail: video.thumbnail, views: video.metrics?.views || 0 }))}
+       videos={consumerSnapshot.videos.map((video) => ({
+        id: video.id,
+        title: video.title,
+        thumbnail: video.thumbnail,
+        views: video.metrics?.views || 0,
+        format: video.format,
+        publishedAt: video.publishedAt,
+        privacyStatus: video.privacyStatus,
+       }))}
        onLogin={login}
        onStartSync={startSync}
       />
@@ -967,6 +886,8 @@ const refreshManualImports = useCallback(async (payload?: {
      privacyFilters={privacyFilters}
      onPrivacyFiltersChange={updatePrivacyFilters}
      onManualImportsChange={refreshManualImports}
+     onClearSavedData={clearSavedData}
+     savedDataClearDisabled={busy}
      videoCatalogCoverage={videoCatalogProjection.coverage}
      storageStatus={videoInventory.channelId === snapshot.channelId ? videoInventory.status : "loading"}
      storageError={videoInventory.channelId === snapshot.channelId ? videoInventory.error : undefined}

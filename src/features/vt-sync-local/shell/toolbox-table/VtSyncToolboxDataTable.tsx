@@ -39,7 +39,10 @@ import type {
  VtSyncTableColumnDefinition,
 } from "../../adapters/contracts"
 import type { VtSyncVideoCatalogCoverage } from "../../adapters/videoCatalogProjection"
-import { mergeVtSyncSupplementalTableRows } from "../../adapters/manualImports"
+import {
+ manualImportRecordId,
+ mergeVtSyncSupplementalTableRows,
+} from "../../adapters/manualImports"
 import {
  createVtSyncAnalyticsBundle,
  parseVtSyncAnalyticsBundle,
@@ -73,7 +76,9 @@ import {
  VT_SYNC_ROW_NUMBER_WIDTH,
  VT_SYNC_SMALL_TABLE_COLORS,
  VT_SYNC_TOOLBOX_CATEGORIES,
+ VT_SYNC_RETENTION_METRIC_DEFINITIONS,
  buildVtSyncRetentionVisualModel,
+ buildVtSyncRetentionPhaseSummaries,
  buildVtSyncRetentionVideoGroups,
  buildVtSyncTrafficDayGroups,
  buildVtSyncFormatSubscriberGroups,
@@ -91,6 +96,7 @@ import {
  getVtSyncAlphabeticSpectrumColors,
  getVtSyncBadgeValues,
  getVtSyncCategoryBadgePresentation,
+ getVtSyncFormatBadgePresentation,
  getVtSyncColumnSortedValues,
  getVtSyncColumnStateKey,
  getVtSyncCompositeIdentityPresentation,
@@ -130,6 +136,7 @@ import {
  type VtSyncImportedRows,
  type VtSyncRetentionVisualPoint,
  type VtSyncRetentionVideoGroup,
+ type RetentionExplorerMode,
  type VtSyncSortState,
  type VtSyncFormatSubscriberGroup,
  type VtSyncTrafficDayGroup,
@@ -285,6 +292,11 @@ const formatRetentionRatio = (value: unknown): string => {
  return `${percentage.toFixed(precision).replace(/\.?0+$/, "")}%`
 }
 
+const getRetentionMetricMeaning = (columnKey: string): string =>
+ VT_SYNC_RETENTION_METRIC_DEFINITIONS.find((definition) => definition.key === columnKey)?.description || "Value returned for this video position"
+const getRetentionFormula = (columnKey: string): string | undefined =>
+ VT_SYNC_RETENTION_METRIC_DEFINITIONS.find((definition) => definition.key === columnKey)?.formula
+
 const retentionPointColor = (
  relativePerformance: number | undefined,
 ): string => {
@@ -362,7 +374,7 @@ const moneyCompact = (value: unknown) => {
   )
 }
 
-const manualImportId = (tableId: string) => `manual_import::${tableId}`
+const manualImportId = manualImportRecordId
 
 export const isManualImportNewerThanApi = (
  record: VtSyncDatasetTableRowsRecord,
@@ -572,25 +584,6 @@ const CategoryBadge = ({ value }: { value: unknown }) => {
    <span className="vt-sync-category-badge">{presentation.label}</span>
   </span>
  )
-}
-
-type VtSyncFormatBadgePresentation = {
- badgeClass: "is-short" | "is-long" | "is-live"
- collapsedLabel: "S" | "L"
- label: "SHORTS" | "LONG-FORMAT" | "LIVE STREAM"
-}
-
-export const getVtSyncFormatBadgePresentation = (
- raw: unknown,
- row?: Record<string, any>,
-): VtSyncFormatBadgePresentation => {
- const rawStr = String(raw ?? "").toLowerCase().trim()
- const titleLower = String(row?.title ?? row?.videoTitle ?? row?.name ?? "").toLowerCase()
- const isLive = rawStr === "live" || rawStr === "livestream" || rawStr.includes("live") || titleLower.includes("is live") || titleLower.includes("live highlight") || titleLower.includes("live stream")
- const isShort = !isLive && (rawStr === "short" || rawStr === "shorts" || rawStr.includes("short"))
- if (isLive) return { badgeClass: "is-live", collapsedLabel: "L", label: "LIVE STREAM" }
- if (isShort) return { badgeClass: "is-short", collapsedLabel: "S", label: "SHORTS" }
- return { badgeClass: "is-long", collapsedLabel: "L", label: "LONG-FORMAT" }
 }
 
 const VtSyncFormatCellBadge = ({ raw, row }: { raw: unknown; row: Record<string, any> }) => {
@@ -936,11 +929,13 @@ export const VtSyncToolboxDataTable: React.FC<{
  onManualImportsChange?: (payload?: {
  rowsByTableId: VtSyncImportedRows
  capturedAt: string
-}) => void | Promise<void>
+ }) => void | Promise<void>
+ onClearSavedData?: (scope: { kind: "table"; tableId: string } | { kind: "all" }) => void | Promise<void>
+ savedDataClearDisabled?: boolean
  videoCatalogCoverage?: VtSyncVideoCatalogCoverage
  storageStatus?: "loading" | "ready" | "failed"
  storageError?: string
-}> = ({ snapshot, privacyFilters, onPrivacyFiltersChange, onManualImportsChange, videoCatalogCoverage, storageStatus = "ready", storageError }) => {
+}> = ({ snapshot, privacyFilters, onPrivacyFiltersChange, onManualImportsChange, onClearSavedData, savedDataClearDisabled = false, videoCatalogCoverage, storageStatus = "ready", storageError }) => {
  const initialWorkspaceState = useMemo(
   () => resolveVtSyncWorkspaceUrlState(typeof window === "undefined" ? "" : window.location.search),
   [],
@@ -989,7 +984,7 @@ export const VtSyncToolboxDataTable: React.FC<{
  const [zebra, setZebra] = useState(false)
  const [formatRows, setFormatRows] = useState(false)
 const [formulas, setFormulas] = useState(false)
-  const [formatFilter, setFormatFilter] = useState('')
+ const [formatFilter, setFormatFilter] = useState('')
   const [heatmapEnabled, setHeatmapEnabled] = useState(true)
  const [heatmapInverted, setHeatmapInverted] = useState(false)
  const [cellFillEnabled, setCellFillEnabled] = useState(false)
@@ -1005,6 +1000,11 @@ const [formulas, setFormulas] = useState(false)
  const [focus, setFocus] = useState(false)
 const [localPrivacyFilters, setLocalPrivacyFilters] =
    useState<VtSyncPrivacyFilters>(() => readVtSyncPrivacyFilters())
+
+ const retentionFormattedAnalysis = table.presentationMode === "retention-video"
+ const [retentionMode, setRetentionMode] = useState<RetentionExplorerMode>(
+  initialWorkspaceState.retentionMode || "overview",
+ )
 
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({
   Details: true,
@@ -1031,7 +1031,10 @@ const [localPrivacyFilters, setLocalPrivacyFilters] =
  )
  const [expandedRetentionVideos, setExpandedRetentionVideos] = useState<
   Set<string>
- >(new Set(initialWorkspaceState.expandedIds.filter((id) => id.startsWith("retention:")).map((id) => id.slice(10))))
+ >(() => {
+  const first = initialWorkspaceState.expandedIds.find((id) => id.startsWith("retention:"))
+  return new Set(first ? [first.slice(10)] : [])
+ })
  const [retentionInspectorPoints, setRetentionInspectorPoints] = useState<
   Record<string, number>
  >({})
@@ -1039,6 +1042,7 @@ const [localPrivacyFilters, setLocalPrivacyFilters] =
   Set<string>
  >(new Set(initialWorkspaceState.expandedIds.filter((id) => id.startsWith("device:")).map((id) => id.slice(7))))
  const [viewportWidth, setViewportWidth] = useState(0)
+ const [retentionHasOverflow, setRetentionHasOverflow] = useState(false)
  const mainScrollRef = useRef<HTMLDivElement | null>(null)
  const pinnedScrollRef = useRef<HTMLDivElement | null>(null)
  const rowRailScrollRef = useRef<HTMLDivElement | null>(null)
@@ -1488,13 +1492,13 @@ const filteredRows = useMemo(() => {
  const visibleFormatSubscriberGroups = sortedFormatSubscriberGroups.slice(0, rowLimit)
  const retentionVideoGroups = useMemo(
   () =>
-   table.presentationMode === "retention-video" ?
+   retentionFormattedAnalysis ?
     buildVtSyncRetentionVideoGroups(sortedRows)
    : [],
-  [sortedRows, table.presentationMode],
+  [retentionFormattedAnalysis, sortedRows],
  )
  const sortedRetentionVideoGroups = useMemo(() => {
-  if (table.presentationMode !== "retention-video") return []
+  if (!retentionFormattedAnalysis) return []
   const direction = sort.direction === "asc" ? 1 : -1
   const compare = (
    left: VtSyncRetentionVideoGroup,
@@ -1515,13 +1519,14 @@ const filteredRows = useMemo(() => {
    return left.videoId.localeCompare(right.videoId)
   }
   return [...retentionVideoGroups].sort(compare)
- }, [retentionVideoGroups, sort.direction, sort.key, table.presentationMode])
+ }, [retentionFormattedAnalysis, retentionVideoGroups, sort.direction, sort.key])
  const visibleRetentionVideoGroups = sortedRetentionVideoGroups
  const shouldRenderVerticalScrollbar =
   table.verticalScrollMode === "custom" &&
   (table.presentationMode === "traffic-source-day" ? visibleTrafficDayGroups.length > 15
    : table.presentationMode === "format-subscriber-status" ? visibleFormatSubscriberGroups.length > 15
-   : table.presentationMode === "retention-video" ? visibleRetentionVideoGroups.length > 15
+   : retentionFormattedAnalysis ?
+    retentionHasOverflow
    : sortedRows.length > 15)
  const retentionVideoMetadata = useMemo(() => {
   const importedVideoRows = imported.videos
@@ -2005,7 +2010,7 @@ const filteredRows = useMemo(() => {
   if (rowRailScrollRef.current)
    rowRailScrollRef.current.scrollTop = node.scrollTop
   const usesFlatRowBatches =
-   table.presentationMode !== "retention-video" &&
+   !retentionFormattedAnalysis &&
    table.presentationMode !== "traffic-source-day" &&
    table.presentationMode !== "format-subscriber-status"
   const spacer =
@@ -2060,6 +2065,7 @@ const filteredRows = useMemo(() => {
   )
   updateVerticalScrollThumb(node)
  }, [
+  retentionFormattedAnalysis,
   renderedRows.length,
   sortedRows.length,
   sortedFormatSubscriberGroups.length,
@@ -2119,6 +2125,7 @@ const filteredRows = useMemo(() => {
    filter: search,
    columnFilters,
    expandedIds,
+   retentionMode,
   })
   const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ""}${window.location.hash}`
   window.history.replaceState(window.history.state, "", nextUrl)
@@ -2128,10 +2135,27 @@ const filteredRows = useMemo(() => {
   expandedDeviceOsGroups,
   expandedRetentionVideos,
   expandedTrafficDays,
+  retentionMode,
   search,
   tableId,
   viewId,
  ])
+
+ useLayoutEffect(() => {
+  if (!retentionFormattedAnalysis) {
+   setRetentionHasOverflow(false)
+   return
+  }
+  const node = mainScrollRef.current
+  if (!node) return
+  const measure = () => setRetentionHasOverflow(node.scrollHeight > node.clientHeight + 1)
+  measure()
+  const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure)
+  observer?.observe(node)
+  const tableNode = node.querySelector("table")
+  if (tableNode) observer?.observe(tableNode)
+  return () => observer?.disconnect()
+ }, [expandedRetentionVideos, retentionFormattedAnalysis, retentionMode, visibleRetentionVideoGroups.length])
 
  useEffect(() => {
   if (table.presentationMode !== "traffic-source-day" && table.presentationMode !== "format-subscriber-status") return
@@ -2151,7 +2175,7 @@ const filteredRows = useMemo(() => {
  }, [table.presentationMode, sortedFormatSubscriberGroups, sortedTrafficDayGroups])
 
  useEffect(() => {
-  if (table.presentationMode !== "retention-video") return
+  if (!retentionFormattedAnalysis) return
   setExpandedRetentionVideos((current) => {
    const valid = new Set(sortedRetentionVideoGroups.map((group) => group.id))
    const kept = [...current].filter((id) => valid.has(id))
@@ -2160,7 +2184,7 @@ const filteredRows = useMemo(() => {
      new Set([sortedRetentionVideoGroups[0].id])
     : new Set()
   })
- }, [sortedRetentionVideoGroups, table.presentationMode])
+ }, [retentionFormattedAnalysis, sortedRetentionVideoGroups])
 
  useEffect(() => {
   setRowLimit(VT_SYNC_ROW_BATCH_SIZE)
@@ -2197,7 +2221,7 @@ const filteredRows = useMemo(() => {
  useLayoutEffect(() => {
   const pending = pendingRetentionAnchorRef.current
   const node = mainScrollRef.current
-  if (!node || table.presentationMode !== "retention-video") return
+  if (!node || !retentionFormattedAnalysis) return
   if (pending) {
    const anchor = [
     ...node.querySelectorAll<HTMLElement>("[data-retention-group-id]"),
@@ -2209,7 +2233,7 @@ const filteredRows = useMemo(() => {
   updateVerticalScrollThumb(node)
  }, [
   expandedRetentionVideos,
-  table.presentationMode,
+  retentionFormattedAnalysis,
   updateVerticalScrollThumb,
  ])
 
@@ -3438,7 +3462,9 @@ const filteredRows = useMemo(() => {
           )
          }
          const raw = row[column.key]
-         const text = formatVtSyncColumnValue(row, column)
+         const text = table.id === "retentions" && column.visibility === "whenAvailable" && isMissingVtSyncValue(raw)
+          ? "Unavailable"
+          : formatVtSyncColumnValue(row, column)
          const clockText = splitVtSyncSpecialCharacters(text, column.key)
          const badgeValues =
           (
@@ -4159,18 +4185,6 @@ const retentionDisplayColumns = useMemo(() => {
     .map((key) => byKey.get(key))
     .filter(Boolean) as VtSyncTableColumnDefinition[]
 }, [orderedColumns])
- const retentionNumericSorted = useMemo(() => {
-  const metricRows = sortedRetentionVideoGroups.flatMap((group) => [
-   group.summary,
-   ...group.points.map((point) => point.row),
-  ])
-  return Object.fromEntries(
-   retentionDisplayColumns.map((column) => [
-    column.key,
-    getVtSyncColumnSortedValues(metricRows, column),
-   ]),
-  )
- }, [retentionDisplayColumns, sortedRetentionVideoGroups])
  const toggleTrafficDay = (groupId: string, anchor?: HTMLElement) => {
   if (anchor)
    pendingTrafficDayAnchorRef.current = {
@@ -4192,12 +4206,9 @@ const retentionDisplayColumns = useMemo(() => {
     viewportTop: anchor.getBoundingClientRect().top,
    }
   setExpandedRetentionVideos((current) => {
-   const next = new Set(current)
-   if (next.has(groupId)) next.delete(groupId)
-   else next.add(groupId)
-   return next
+   return current.has(groupId) ? new Set() : new Set([groupId])
   })
- }
+}
 
  const renderTrafficDayMetricCell = (
   row: VtSyncTableRow,
@@ -4724,66 +4735,6 @@ const retentionDisplayColumns = useMemo(() => {
   )
  }
 
- const renderRetentionMetricCell = (
-  row: VtSyncTableRow,
-  column: VtSyncTableColumnDefinition,
-  keyPrefix: string,
-  summary = false,
- ) => {
-  const text = formatRetentionRatio(row[column.key])
-  const columnIndex = retentionDisplayColumns.findIndex(
-   (candidate) => candidate.key === column.key,
-  )
-  const color = GROUP_COLORS[(columnIndex + 1) % GROUP_COLORS.length]
-  const value = numericColumnValue(row, column)
-  const rank = getVtSyncNumericRank(value, retentionNumericSorted[column.key])
-  const colorRgb = (source: string) =>
-   source
-    .replace("#", "")
-    .match(/.{2}/g)
-    ?.map((part) => Number.parseInt(part, 16)) || [64, 198, 233]
-  const heatColor = heatmapInverted ? getVtSyncOppositeColor(color) : color
-  const fillColor = cellFillInverted ? getVtSyncOppositeColor(color) : color
-  const cellStyle: CssVars = {
-   "--vt-traffic-cell": color,
-   backgroundColor:
-    heatmapEnabled && rank > 0 ?
-     `rgba(${colorRgb(heatColor).join(",")},${0.16 + rank * 0.68})`
-    : undefined,
-   backgroundImage:
-    cellFillEnabled && rank > 0 ?
-     `linear-gradient(90deg, rgba(${colorRgb(fillColor).join(",")},.58) ${Math.round(rank * 100)}%, transparent ${Math.round(rank * 100)}%)`
-    : undefined,
-  }
-  return (
-   <td
-    key={`${keyPrefix}-${column.key}`}
-    data-column-key={column.key}
-    data-format={column.format}
-    className={`${heatmapEnabled && rank > 0 ? "has-heatmap" : ""} ${cellFillEnabled && rank > 0 ? "is-filled-cell" : ""}`}
-    style={cellStyle}>
-    <span className="vt-sync-traffic-day-value vt-sync-retention-value">
-     {text}
-     {summary && <small>Curve average</small>}
-    </span>
-    {sparklinesEnabled && rank > 0 && (
-     <span
-      className={`vt-sync-spark color-${sparkColorMode} shape-${sparkShape} ${sparkOpposite ? "is-opposite" : ""} ${sparkStroke ? "" : "no-stroke"}`}>
-      <i
-       style={getVtSyncSparkFillStyle(
-        rank,
-        sparkColorMode === "spectrum" ?
-         getVtSyncSparkGradient(sparkOpposite)
-        : getVtSyncSparkColor(color, rank, sparkColorMode, sparkOpposite),
-        sparkColorMode,
-       )}
-      />
-     </span>
-    )}
-   </td>
-  )
- }
-
  const renderRetentionVisualSuite = (group: VtSyncRetentionVideoGroup) => {
   const metadata =
    retentionVideoMetadata.get(group.videoId.toLocaleLowerCase()) ||
@@ -4913,6 +4864,11 @@ const retentionDisplayColumns = useMemo(() => {
            strokeLinejoin="round"
            vectorEffect="non-scaling-stroke"
           />
+          {selectedPoint && <line
+           x1={24 + (selectedIndex / Math.max(1, visual.points.length - 1)) * 852}
+           x2={24 + (selectedIndex / Math.max(1, visual.points.length - 1)) * 852}
+           y1="12" y2="168" stroke="#050505" strokeWidth="2" strokeDasharray="4 3" vectorEffect="non-scaling-stroke"
+          />}
          </svg>
          <div className="vt-sync-retention-legend">
           <span>
@@ -4941,15 +4897,18 @@ const retentionDisplayColumns = useMemo(() => {
         <div
          className="vt-sync-retention-delta-bars"
          aria-label="Relative retention difference from median">
-         {visual.points.map((point) => {
+         {visual.points.map((point, pointIndex) => {
           const delta = (point.relativePerformance ?? 0.5) - 0.5
           return (
-           <span
+           <button
+            type="button"
             key={`delta-${point.pointNumber}`}
-            className={delta >= 0 ? "is-positive" : "is-negative"}
+            className={`${delta >= 0 ? "is-positive" : "is-negative"} ${pointIndex === selectedIndex ? "is-selected" : ""}`}
+            aria-label={`Select percentile ${point.pointNumber}, ${delta >= 0 ? "above" : "below"} median by ${Math.abs(delta * 100).toFixed(1)} points`}
+            onClick={() => setRetentionInspectorPoints((current) => ({ ...current, [group.id]: pointIndex }))}
             title={`P${String(point.pointNumber).padStart(3, "0")} · ${delta >= 0 ? "+" : ""}${(delta * 100).toFixed(1)} points vs median`}>
             <i style={{ height: `${Math.min(50, Math.abs(delta) * 250)}%` }} />
-           </span>
+           </button>
           )
          })}
          <div className="vt-sync-retention-delta-key" aria-hidden="true">
@@ -4976,9 +4935,13 @@ const retentionDisplayColumns = useMemo(() => {
          <div
           className="vt-sync-retention-fingerprint"
           aria-label="100-point relative retention fingerprint">
-          {visual.points.map((point) => (
-           <span
+          {visual.points.map((point, pointIndex) => (
+           <button
+            type="button"
             key={`fingerprint-${point.pointNumber}`}
+            className={pointIndex === selectedIndex ? "is-selected" : ""}
+            aria-label={`Select percentile ${point.pointNumber}`}
+            onClick={() => setRetentionInspectorPoints((current) => ({ ...current, [group.id]: pointIndex }))}
             title={`P${String(point.pointNumber).padStart(3, "0")} · ${formatRetentionRatio(point.audienceRatio)} audience · ${formatRetentionRatio(point.relativePerformance)} relative`}
             style={{
              background: retentionPointColor(point.relativePerformance),
@@ -5105,7 +5068,7 @@ const retentionDisplayColumns = useMemo(() => {
              : formatVtSyncDurationSeconds(event.timestampSeconds)}
             </time>
             <span className={`is-${event.type}`}>
-             {event.type === "drop" ? "Drop" : "Replay"}
+             {event.type === "drop" ? "Drop" : "Rise signal"}
             </span>
             <p>
              Audience {event.change < 0 ? "falls" : "rises"}{" "}
@@ -5126,14 +5089,147 @@ const retentionDisplayColumns = useMemo(() => {
          </div>
         </div>
         <footer>
-         Five equal segments and the five largest local changes are computed
-         from the retained 100-point report. No chapter labels are inferred.
+         Five elapsed-video phases and the five largest local changes are computed
+         from the retained report. Audience rises are replay signals, not proof of a replay action.
         </footer>
        </section>
       </div>
      </section>
     </td>
    </tr>
+  )
+ }
+
+ const formatRetentionOptional = (value: number | null | undefined, kind: "ratio" | "count" | "rate" | "delta" = "count") => {
+  if (value === null || value === undefined) return "Unavailable"
+  if (kind === "ratio") return `${(value * 100).toFixed(value * 100 >= 100 ? 0 : 1)}%`
+  if (kind === "rate") return value.toFixed(1)
+  if (kind === "delta") return `${value >= 0 ? "+" : ""}${value.toLocaleString(undefined, { maximumFractionDigits: 1 })}`
+  return value.toLocaleString(undefined, { maximumFractionDigits: 2 })
+ }
+
+ const renderRetentionTabs = (group: VtSyncRetentionVideoGroup) => {
+  const modes: Array<{ id: RetentionExplorerMode; label: string }> = [
+   { id: "overview", label: "Overview" },
+   { id: "timeline", label: "Timeline" },
+   { id: "points", label: "Points" },
+   { id: "raw", label: "Raw API" },
+  ]
+  const moveTab = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+   let next = index
+   if (event.key === "ArrowRight") next = (index + 1) % modes.length
+   else if (event.key === "ArrowLeft") next = (index - 1 + modes.length) % modes.length
+   else if (event.key === "Home") next = 0
+   else if (event.key === "End") next = modes.length - 1
+   else return
+   event.preventDefault()
+   setRetentionMode(modes[next].id)
+   event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>("[role=tab]")[next]?.focus()
+  }
+  return (
+   <tr className="vt-sync-retention-explorer-nav-row">
+    <td colSpan={retentionDisplayColumns.length + 1}>
+     <div className="vt-sync-retention-tabs" role="tablist" aria-label={`Retention explorer for ${group.videoId}`}>
+      {modes.map((mode, index) => (
+       <button
+        id={`retention-tab-${group.id}-${mode.id}`}
+        key={mode.id}
+        type="button"
+        role="tab"
+        aria-selected={retentionMode === mode.id}
+        aria-controls={`retention-panel-${group.id}`}
+        tabIndex={retentionMode === mode.id ? 0 : -1}
+        onClick={() => setRetentionMode(mode.id)}
+        onKeyDown={(event) => moveTab(event, index)}>
+        {mode.label}
+       </button>
+      ))}
+     </div>
+    </td>
+   </tr>
+  )
+ }
+
+ const renderRetentionOverview = (group: VtSyncRetentionVideoGroup, durationSeconds?: number) => {
+  const phases = buildVtSyncRetentionPhaseSummaries(group, durationSeconds)
+  const visual = buildVtSyncRetentionVisualModel(group, durationSeconds)
+  const maxAudience = Math.max(1, ...visual.points.map((point) => point.audienceRatio ?? 0))
+  const curve = retentionPolyline(visual.points, "audienceRatio", maxAudience)
+  const strongestDrop = [...visual.events].filter((event) => event.change < 0).sort((a, b) => a.change - b.change)[0]
+  const strongestRise = [...visual.events].filter((event) => event.change > 0).sort((a, b) => b.change - a.change)[0]
+  const maxMetricPhase = (key: string) => [...phases].filter((phase) => phase.metrics[key] !== null).sort((a, b) => (b.metrics[key] || 0) - (a.metrics[key] || 0))[0]
+  const finish = phases[4]
+  return (
+   <tr className="vt-sync-retention-explorer-row">
+    <td colSpan={retentionDisplayColumns.length + 1}>
+     <section id={`retention-panel-${group.id}`} role="tabpanel" aria-labelledby={`retention-tab-${group.id}-overview`} className="vt-sync-retention-overview">
+      <div className="vt-sync-retention-overview-curve">
+       <svg viewBox="0 0 900 180" preserveAspectRatio="none" role="img" aria-label="Compact audience watch ratio curve with 100 percent replay threshold">
+        <line x1="24" x2="876" y1={16 + (1 - Math.min(1, 1 / maxAudience)) * 148} y2={16 + (1 - Math.min(1, 1 / maxAudience)) * 148} />
+        <polyline points={curve} />
+       </svg>
+       <span>100% replay threshold</span>
+      </div>
+      <div className="vt-sync-retention-insight-strip" aria-label="Video retention highlights">
+       <span><b>Largest cliff</b>{strongestDrop ? `P${String(strongestDrop.pointNumber).padStart(3, "0")} · ${(strongestDrop.change * 100).toFixed(1)} pts` : "Unavailable"}</span>
+       <span><b>Audience rise / replay signal</b>{strongestRise ? `P${String(strongestRise.pointNumber).padStart(3, "0")} · +${(strongestRise.change * 100).toFixed(1)} pts` : "Unavailable"}</span>
+       <span><b>Entry hotspot</b>{maxMetricPhase("startedWatching")?.phase || "Unavailable"}</span>
+       <span><b>Exit hotspot</b>{maxMetricPhase("stoppedWatching")?.phase || "Unavailable"}</span>
+       <span><b>Finish strength</b>{formatRetentionOptional(finish.metrics.audienceWatchRatio, "ratio")}</span>
+      </div>
+      <div className="vt-sync-retention-phase-grid" role="table" aria-label="Five elapsed-video retention phases">
+       <div className="vt-sync-retention-phase-head" role="row"><b role="columnheader">Phase</b><b role="columnheader">Audience hold</b><b role="columnheader">Playback flow</b><b role="columnheader">Segment exposure</b></div>
+       {phases.map((phase) => (
+        <div className="vt-sync-retention-phase-row" role="row" key={phase.phase}>
+         <strong role="rowheader">{phase.phase}<small>{Math.round(phase.startRatio * 100)}–{Math.round(phase.endRatio * 100)}% · {phase.pointCount} points</small></strong>
+         <span role="cell"><b>{formatRetentionOptional(phase.metrics.audienceWatchRatio, "ratio")}</b> hold · <b>{formatRetentionOptional(phase.metrics.relativeRetentionPerformance, "ratio")}</b> vs similar</span>
+         <span role="cell"><b>↗ {formatRetentionOptional(phase.metrics.startedWatching)}</b> / <b>↘ {formatRetentionOptional(phase.metrics.stoppedWatching)}</b><small title={`${getRetentionFormula("startsPerThousand")} · ${getRetentionFormula("stopsPerThousand")} · ${getRetentionFormula("netFlow")}`}><i>Derived</i> {formatRetentionOptional(phase.metrics.startsPerThousand, "rate")} / {formatRetentionOptional(phase.metrics.stopsPerThousand, "rate")} per 1k · net {formatRetentionOptional(phase.metrics.netFlow, "delta")}</small></span>
+         <span role="cell"><b>{formatRetentionOptional(phase.metrics.totalSegmentImpressions)}</b><small title={getRetentionFormula("exposureShare")}><i>Derived</i> {formatRetentionOptional(phase.metrics.exposureShare, "ratio")} of video exposure{phase.strongestEvent ? ` · ${phase.strongestEvent.type === "drop" ? "drop" : "rise signal"} at P${String(phase.strongestEvent.pointNumber).padStart(3, "0")}` : ""}</small></span>
+        </div>
+       ))}
+      </div>
+     </section>
+    </td>
+   </tr>
+  )
+ }
+
+ const renderRetentionPointExplorer = (group: VtSyncRetentionVideoGroup, durationSeconds: number | undefined, raw: boolean) => {
+  const rawMetricKeys = ["audienceWatchRatio", "relativeRetentionPerformance", "startedWatching", "stoppedWatching", "totalSegmentImpressions"]
+   .filter((key) => group.points.some((point) => point.row[key] !== undefined && point.row[key] !== null))
+  const rawLabels: Record<string, string> = {
+   audienceWatchRatio: "Audience Watch Ratio",
+   relativeRetentionPerformance: "Relative Retention Performance",
+   startedWatching: "Started Watching",
+   stoppedWatching: "Stopped Watching",
+   totalSegmentImpressions: "Segment Impressions",
+  }
+  return (
+  <tr className="vt-sync-retention-explorer-row">
+   <td colSpan={retentionDisplayColumns.length + 1}>
+    <section id={`retention-panel-${group.id}`} role="tabpanel" aria-labelledby={`retention-tab-${group.id}-${raw ? "raw" : "points"}`} className={`vt-sync-retention-${raw ? "raw" : "points"}`}>
+     <table aria-label={raw ? "Exact YouTube retention API response rows" : "Compact retention points by metric family"}>
+      <thead><tr>{(raw ? ["Video ID", "Elapsed Video Time Ratio", ...rawMetricKeys.map((key) => rawLabels[key])] : ["Playback position", "Audience hold", "Playback flow", "Segment exposure"]).map((label) => <th key={label}>{label}</th>)}</tr></thead>
+      <tbody>{group.points.map((point, index) => {
+       const elapsed = point.elapsed ?? (index + 1) / Math.max(1, group.points.length)
+       const percentile = `P${String(Math.max(1, Math.min(100, Math.round(elapsed * 100)))).padStart(3, "0")}`
+       if (raw) return <tr key={point.id}><td>{group.videoId}</td><td>{point.row.elapsedVideoTimeRatio === undefined || point.row.elapsedVideoTimeRatio === null ? "Unavailable" : String(point.row.elapsedVideoTimeRatio)}</td>{rawMetricKeys.map((key) => <td key={key}>{point.row[key] === undefined || point.row[key] === null ? "Unavailable" : String(point.row[key])}</td>)}</tr>
+       const impressions = toVtSyncNumber(point.row.totalSegmentImpressions)
+       const starts = toVtSyncNumber(point.row.startedWatching)
+       const stops = toVtSyncNumber(point.row.stoppedWatching)
+       const startRate = starts !== undefined && impressions !== undefined && impressions > 0 ? starts / impressions * 1000 : null
+       const stopRate = stops !== undefined && impressions !== undefined && impressions > 0 ? stops / impressions * 1000 : null
+       return <tr key={point.id}>
+        <th scope="row"><b>{percentile}</b><span>{Math.round(elapsed * 100)}%{durationSeconds !== undefined ? ` · ${formatVtSyncDurationSeconds(durationSeconds * elapsed)}` : ""}</span></th>
+        <td><b>{formatRetentionOptional(toVtSyncNumber(point.row.audienceWatchRatio), "ratio")}</b> hold <span className="vt-sync-retention-baseline">100% replay line</span><b>{formatRetentionOptional(toVtSyncNumber(point.row.relativeRetentionPerformance), "ratio")}</b> relative <span className="vt-sync-retention-baseline">50% median</span></td>
+        <td><b>↗ {formatRetentionOptional(starts)}</b> start · <b>↘ {formatRetentionOptional(stops)}</b> stop <small title={`${getRetentionFormula("startsPerThousand")} · ${getRetentionFormula("stopsPerThousand")}`}><i>Derived</i> {formatRetentionOptional(startRate, "rate")} / {formatRetentionOptional(stopRate, "rate")} per 1k</small></td>
+        <td><b>{formatRetentionOptional(impressions)}</b><span className="vt-sync-retention-exposure-bar"><i style={{ width: `${Math.min(100, Math.max(0, (impressions || 0) / Math.max(1, ...group.points.map((candidate) => toVtSyncNumber(candidate.row.totalSegmentImpressions) || 0)) * 100))}%` }} /></span></td>
+       </tr>
+      })}</tbody>
+     </table>
+    </section>
+   </td>
+  </tr>
   )
  }
 
@@ -5190,7 +5286,7 @@ const retentionDisplayColumns = useMemo(() => {
           }
           onClick={() => sortRetentionColumn(videoIdColumn)}
           onKeyDown={(event) => retentionHeaderKeyDown(event, videoIdColumn)}>
-          Video / Retention Point{retentionSortArrow("videoId")}
+          Video / Playback Position{retentionSortArrow("videoId")}
          </th>
          {retentionDisplayColumns.map((column, index) => {
           const [first, second] = splitHeader(
@@ -5216,7 +5312,7 @@ const retentionDisplayColumns = useMemo(() => {
             }
             onClick={() => sortRetentionColumn(column)}
             onKeyDown={(event) => retentionHeaderKeyDown(event, column)}>
-            <span>
+            <span title={getRetentionMetricMeaning(column.key)}>
              {first}
              {second && (
               <>
@@ -5224,6 +5320,13 @@ const retentionDisplayColumns = useMemo(() => {
                {second}
               </>
              )}
+             <small className="vt-sync-retention-header-meaning">
+              {column.key === "audienceWatchRatio" ? "Watches / views"
+               : column.key === "relativeRetentionPerformance" ? "Vs similar length"
+               : column.key === "startedWatching" ? "Entered here"
+               : column.key === "stoppedWatching" ? "Ended here"
+               : "Times viewed"}
+             </small>
             </span>
             {retentionSortArrow(column.key)}
            </th>
@@ -5243,6 +5346,9 @@ const retentionDisplayColumns = useMemo(() => {
            String(metadata.thumbnail || metadata.thumbnailUrl)
           : `https://i.ytimg.com/vi/${encodeURIComponent(group.videoId)}/mqdefault.jpg`
          const videoUrl = `https://www.youtube.com/watch?v=${encodeURIComponent(group.videoId)}`
+         const durationSeconds = metadata?.duration ?
+          parseVtSyncDurationSeconds(metadata.duration, "duration")
+         : undefined
          return (
           <React.Fragment key={group.id}>
            <tr
@@ -5306,39 +5412,18 @@ const retentionDisplayColumns = useMemo(() => {
              </span>
              <small>{group.points.length} points</small>
             </td>
-            {retentionDisplayColumns.map((column) =>
-             renderRetentionMetricCell(group.summary, column, group.id, true),
-            )}
+            <td className="vt-sync-retention-coverage-cell" colSpan={retentionDisplayColumns.length}>
+             <span className="vt-sync-retention-coverage-badge">
+              <b>{group.points.length} points</b>
+              <small>{retentionDisplayColumns.filter((column) => group.points.some((point) => toVtSyncNumber(point.row[column.key]) !== undefined)).length}/5 metrics</small>
+             </span>
+            </td>
            </tr>
-           {expanded && renderRetentionVisualSuite(group)}
-           {expanded &&
-            group.points.map((point, index) => (
-             <tr
-              className="vt-sync-traffic-day-child vt-sync-retention-video-child"
-              data-retention-point="true"
-              key={point.id}>
-              <td className="is-day-source">
-               <span className="vt-sync-retention-point-badge">
-                Point{" "}
-                {String(
-                 Math.max(
-                  1,
-                  Math.min(
-                   100,
-                   Math.round(
-                    (point.elapsed ?? (index + 1) / group.points.length) * 100,
-                   ),
-                  ),
-                 ),
-                ).padStart(3, "0")}
-               </span>
-               <small>{formatRetentionRatio(point.elapsed)} elapsed</small>
-              </td>
-              {retentionDisplayColumns.map((column) =>
-               renderRetentionMetricCell(point.row, column, point.id),
-              )}
-             </tr>
-            ))}
+           {expanded && renderRetentionTabs(group)}
+           {expanded && retentionMode === "overview" && renderRetentionOverview(group, durationSeconds)}
+           {expanded && retentionMode === "timeline" && renderRetentionVisualSuite(group)}
+           {expanded && retentionMode === "points" && renderRetentionPointExplorer(group, durationSeconds, false)}
+           {expanded && retentionMode === "raw" && renderRetentionPointExplorer(group, durationSeconds, true)}
           </React.Fragment>
          )
         })}
@@ -5685,7 +5770,7 @@ const retentionDisplayColumns = useMemo(() => {
             )}
           </div>
         )}
-{table.presentationMode === "retention-video" && (
+{retentionFormattedAnalysis && (
         <>
          <button
           type="button"
@@ -6000,41 +6085,58 @@ setSort(table.defaultSort)
           </SettingControl>
          </div>
          <div className="vt-sync-saved-csv-settings">
-          <button
-           type="button"
-           disabled={!savedCsvTableIds.has(table.id)}
-           onClick={async () => {
-            try {
-             await deleteVtSyncDatasetTableRows(manualImportId(table.id))
-             setImported((current) => {
-              const next = { ...current }
-              delete next[table.id]
-              return next
-             })
-             setImportedAt((current) => {
-              const next = { ...current }
-              delete next[table.id]
-              return next
-             })
-             setSavedCsvTableIds((current) => {
-              const next = new Set(current)
-              next.delete(table.id)
-              return next
-             })
-             onManualImportsChange?.()
-             showToast(
-              `Cleared saved CSV for ${getVtSyncPresentationLabel(table.id, table.label)}`,
-             )
-            } catch {
-             showToast("Could not clear the saved CSV", false)
-            }
-           }}>
-           Clear Saved CSV
-          </button>
+          <div className="vt-sync-saved-data-actions">
+           <button
+            type="button"
+            disabled={!onClearSavedData || savedDataClearDisabled}
+            onClick={async () => {
+             const label = getVtSyncPresentationLabel(table.id, table.label)
+             if (!window.confirm(`Clear all saved API and CSV data for ${label}? This cannot be undone.`)) return
+             try {
+              await onClearSavedData?.({ kind: "table", tableId: table.id })
+              setImported((current) => {
+               const next = { ...current }
+               delete next[table.id]
+               return next
+              })
+              setImportedAt((current) => {
+               const next = { ...current }
+               delete next[table.id]
+               return next
+              })
+              setSavedCsvTableIds((current) => {
+               const next = new Set(current)
+               next.delete(table.id)
+               return next
+              })
+              showToast(`Cleared saved data for ${label}`)
+             } catch {
+              showToast("Could not clear the saved table data", false)
+             }
+            }}>
+            Clear This Table
+           </button>
+           <button
+            type="button"
+            className="danger"
+            disabled={!onClearSavedData || savedDataClearDisabled}
+            onClick={async () => {
+             if (!window.confirm("Clear all saved VT-SYNC API data, CSV imports, inventory, and sync history from this browser? This cannot be undone.")) return
+             try {
+              await onClearSavedData?.({ kind: "all" })
+              setImported({})
+              setImportedAt({})
+              setSavedCsvTableIds(new Set())
+              showToast("Cleared all saved VT-SYNC data")
+             } catch {
+              showToast("Could not clear all saved data", false)
+             }
+            }}>
+            Clear All Data
+           </button>
+          </div>
           <span>
-           {savedCsvTableIds.has(table.id) ?
-            "Latest import retained for this table."
-           : "No saved import for this table."}
+           Clear only the table currently shown, or reset every VT-SYNC dataset saved in this browser. Your connected account is not removed.
           </span>
          </div>
          <div className="vt-sync-effect-settings">
@@ -6133,7 +6235,7 @@ setSort(table.defaultSort)
      : table.id === "device_os" ? renderDeviceOsTable()
      : table.presentationMode === "traffic-source-day" ? renderTrafficSourceDayTable()
      : table.presentationMode === "format-subscriber-status" ? renderFormatSubscriberTable()
-     : table.presentationMode === "retention-video" ? renderRetentionVideoTable()
+     : retentionFormattedAnalysis ? renderRetentionVideoTable()
      : <>
        <div className={`vt-sync-scroll-lattice ${shouldRenderVerticalScrollbar ? "has-vertical-rail" : ""}`}>
         <div
@@ -6186,7 +6288,7 @@ setSort(table.defaultSort)
          `Showing ${visibleTrafficDayGroups.length.toLocaleString()} of ${trafficDayGroups.length.toLocaleString()} day groups`
         : table.presentationMode === "format-subscriber-status" ?
          `Showing ${visibleFormatSubscriberGroups.length.toLocaleString()} of ${formatSubscriberGroups.length.toLocaleString()} format groups`
-        : table.presentationMode === "retention-video" ?
+        : retentionFormattedAnalysis ?
          `Showing ${visibleRetentionVideoGroups.length.toLocaleString()} of ${retentionVideoGroups.length.toLocaleString()} video groups`
         : table.id === "device_os" ?
          `Showing ${sortedDeviceOsGroups.length.toLocaleString()} of ${sortedDeviceOsGroups.length.toLocaleString()} OS groups`
@@ -6204,7 +6306,7 @@ setSort(table.defaultSort)
          `${sortedRows.length.toLocaleString()} flat source/day rows · CSV stays flat`
         : table.presentationMode === "format-subscriber-status" ?
          `${sortedRows.length.toLocaleString()} flat format/status rows · CSV stays flat`
-        : table.presentationMode === "retention-video" ?
+        : retentionFormattedAnalysis ?
          `${sortedRows.length.toLocaleString()} flat retention points · CSV stays flat`
         : `${presentationColumns.length} visible columns · ${pinCount ? `${pinCount} pinned` : "not pinned"}`
         }
@@ -6216,7 +6318,7 @@ setSort(table.defaultSort)
          table.id === "device_os"
         ) ?
          "Grouped on screen"
-        : table.presentationMode === "retention-video" ?
+        : retentionFormattedAnalysis ?
          "Grouped on screen"
         : table.id === "videos" && storageStatus === "loading" ?
          `Restoring ${videoCatalogCoverage?.catalogTotal.toLocaleString() || "stored"} catalog rows…`

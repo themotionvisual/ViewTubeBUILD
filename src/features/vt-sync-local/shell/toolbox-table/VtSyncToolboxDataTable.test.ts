@@ -5,14 +5,15 @@ import { VT_SYNC_ACTIVE_TABLE_IDS, VT_SYNC_TABLE_DEFINITIONS, VT_SYNC_VISIBLE_TA
 import { normalizeVtSyncSnapshot, toVtSyncRawAppExport } from "../../adapters/snapshot"
 import { buildVtSyncDemographicOverviewRows, getVtSyncContentTypeLabel, normalizeVtSyncTableRows } from "../../adapters/tableData"
 import { formatVtSyncFullMonthValue, formatVtSyncLocalMonthValue } from "../../adapters/tableFormatting"
-import { getVtSyncFormatBadgePresentation, isManualImportNewerThanApi, resolveAnalyticsTableRows } from "./VtSyncToolboxDataTable"
+import type { VtSyncSnapshot } from "../../adapters/contracts"
+import { isManualImportNewerThanApi, resolveAnalyticsTableRows } from "./VtSyncToolboxDataTable"
 import {
  VT_SYNC_TOOLBOX_CATEGORIES,
  VT_SYNC_WORKSPACE_DEFINITIONS,
  VT_SYNC_SMALL_TABLE_COLORS,
  VT_SYNC_ROW_BATCH_SIZE,
- VT_SYNC_VIDEO_NON_COMPACT_WIDTHS,
  buildVtSyncRetentionVisualModel,
+ buildVtSyncRetentionPhaseSummaries,
  buildVtSyncRetentionVideoGroups,
  buildVtSyncFormatSubscriberGroups,
  buildVtSyncTrafficDayGroups,
@@ -27,6 +28,7 @@ import {
  getVtSyncAlphabeticSpectrumColors,
  getVtSyncBadgeValues,
  getVtSyncCategoryBadgePresentation,
+ getVtSyncFormatBadgePresentation,
  getVtSyncCategoryClickState,
  getVtSyncCompactMenuLabel,
  getVtSyncColumnSortedValues,
@@ -580,15 +582,69 @@ describe("VT Sync toolbox data table", () => {
   expect(exported).not.toContain("Curve average")
  })
 
+ it("opens the layered retention explorer by default and keeps exact raw rows available", () => {
+  const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((definition) => definition.id === "retentions")!
+  const snapshot = {
+   retentions: [
+    {
+     videoId: "video-a",
+     elapsedVideoTimeRatio: 0.01,
+     audienceWatchRatio: 0.8,
+     relativeRetentionPerformance: 0.6,
+     startedWatching: 0,
+     stoppedWatching: 1,
+     totalSegmentImpressions: 100,
+     retentionMetricAvailability: [
+      "audienceWatchRatio",
+      "relativeRetentionPerformance",
+      "startedWatching",
+      "stoppedWatching",
+      "totalSegmentImpressions",
+     ],
+    },
+    {
+     videoId: "video-b",
+     elapsedVideoTimeRatio: 0.01,
+     audienceWatchRatio: 0.5,
+     startedWatching: 99,
+     retentionMetricAvailability: ["audienceWatchRatio"],
+    },
+   ],
+  } as unknown as VtSyncSnapshot
+  const rows = buildVtSyncTableViewModel(snapshot, table).rows
+  const visibleColumns = getVisibleVtSyncColumns(table, rows, false, true)
+
+  expect(rows[0]).toMatchObject({ startedWatching: 0, stoppedWatching: 1, totalSegmentImpressions: 100 })
+  expect(rows[1]).not.toHaveProperty("startedWatching")
+  expect(visibleColumns.map((column) => column.key)).toEqual([
+   "videoId",
+   "elapsedVideoTimeRatio",
+   "audienceWatchRatio",
+   "relativeRetentionPerformance",
+   "startedWatching",
+   "stoppedWatching",
+   "totalSegmentImpressions",
+  ])
+  expect(exportVtSyncTableCsv(table, rows, visibleColumns)).toContain("video-a,0.01,0.8,0.6,0,1,100")
+  expect(exportVtSyncTableCsv(table, rows, visibleColumns)).not.toContain("80%")
+  expect(rendererSource).toContain('retentionFormattedAnalysis ? renderRetentionVideoTable()')
+  expect(rendererSource).toContain('{ id: "overview", label: "Overview" }')
+  expect(rendererSource).toContain('{ id: "timeline", label: "Timeline" }')
+  expect(rendererSource).toContain('{ id: "points", label: "Points" }')
+  expect(rendererSource).toContain('{ id: "raw", label: "Raw API" }')
+  expect(rendererSource).toContain('retentionMode === "timeline" && renderRetentionVisualSuite(group)')
+  expect(rendererSource).not.toContain("Show Visual Reports")
+ })
+
  it("renders retention points in collapsible video sections", () => {
-  expect(rendererSource).toContain('table.presentationMode === "retention-video" ? renderRetentionVideoTable()')
+  expect(rendererSource).toContain('retentionFormattedAnalysis ? renderRetentionVideoTable()')
   expect(rendererSource).toContain('className="vt-sync-traffic-day-table vt-sync-retention-video-table"')
   expect(rendererSource).toContain("Expand visible videos")
   expect(rendererSource).toContain("data-retention-video-parent")
-  expect(rendererSource).toContain("data-retention-point")
+  expect(rendererSource).toContain("renderRetentionPointExplorer")
   expect(rendererSource).toContain("video groups`")
   expect(rendererCss).toContain(".vt-sync-retention-video-table")
- expect(rendererCss).toContain(".vt-sync-retention-point-badge")
+ expect(rendererCss).toContain("--vt-retention-point-row: 26px")
  })
 
  it("derives one unified retention surface without treating elapsed position as a statistic", () => {
@@ -633,7 +689,28 @@ describe("VT Sync toolbox data table", () => {
   expect(rendererSource).toContain('<div className="vt-sync-retention-scroll-shell">')
   expect(rendererSource).toContain("renderVerticalScrollbar()")
   expect(rendererSource).toContain('<div className="vt-sync-retention-fingerprint-frame">')
-  expect(rendererCss).toContain(".vt-sync-retention-fingerprint")
+ expect(rendererCss).toContain(".vt-sync-retention-fingerprint")
+ })
+
+ it("builds five elapsed-ratio phases and refuses incomplete derived rates", () => {
+  const group = buildVtSyncRetentionVideoGroups([
+   { videoId: "video-a", elapsedVideoTimeRatio: .1, audienceWatchRatio: 1.1, relativeRetentionPerformance: .6, startedWatching: 10, stoppedWatching: 2, totalSegmentImpressions: 100 },
+   { videoId: "video-a", elapsedVideoTimeRatio: .2, audienceWatchRatio: .9, relativeRetentionPerformance: .5, startedWatching: 0, stoppedWatching: 4, totalSegmentImpressions: 100 },
+   { videoId: "video-a", elapsedVideoTimeRatio: .21, audienceWatchRatio: .8, relativeRetentionPerformance: .4, stoppedWatching: 3, totalSegmentImpressions: 0 },
+   { videoId: "video-a", elapsedVideoTimeRatio: .57, audienceWatchRatio: .7, relativeRetentionPerformance: .55 },
+   { videoId: "video-a", elapsedVideoTimeRatio: .81, audienceWatchRatio: .3, relativeRetentionPerformance: .7, startedWatching: 1, stoppedWatching: 5, totalSegmentImpressions: 50 },
+  ])[0]
+  const phases = buildVtSyncRetentionPhaseSummaries(group, 100)
+  expect(phases).toHaveLength(5)
+  expect(phases.map((phase) => phase.phase)).toEqual(["opening", "early", "middle", "late", "finish"])
+  expect(phases[0]).toMatchObject({ pointCount: 2, startRatio: 0, endRatio: .2 })
+  expect(phases[1].pointCount).toBe(1)
+  expect(phases[2].pointCount).toBe(1)
+  expect(phases[3].pointCount).toBe(0)
+  expect(phases[0].metrics.startsPerThousand).toBe(50)
+  expect(phases[1].metrics.startsPerThousand).toBeNull()
+  expect(phases[1].metrics.netFlow).toBeNull()
+  expect(phases[4].metrics.exposureShare).toBe(.2)
  })
 
  it("matches retention video metadata from normalized video table identifiers", () => {
@@ -904,7 +981,7 @@ describe("VT Sync toolbox data table", () => {
   expect(rendererSource).toContain("remainingRowSpacerHeight")
   expect(rendererSource).toContain('data-vt-row-spacer="true"')
   expect(rendererCss).toContain(".vt-sync-row-spacer")
-  expect(rendererSource).toContain('table.presentationMode !== "retention-video"')
+  expect(rendererSource).toContain('!retentionFormattedAnalysis')
   expect(rendererSource).toContain("getNextVtSyncRowLimit(current, sortedRows.length)")
   expect(rendererSource).not.toContain("slice(0, 500)")
  })
@@ -1188,6 +1265,10 @@ describe("VT Sync toolbox data table", () => {
    filter: "search",
    columnFilters: { source: "YT_SEARCH" },
    expandedIds: ["2026-07-29", "2026-07-28"],
+   rawTableIds: ["retentions"],
+   analysisTableIds: ["retentions"],
+   derivedColumnKeys: ["retentions:audienceWatchRatio"],
+   retentionMode: "timeline",
   })
   const resolved = resolveVtSyncWorkspaceUrlState(`?${search}`)
 
@@ -1199,7 +1280,13 @@ describe("VT Sync toolbox data table", () => {
    filter: "search",
    columnFilters: { source: "YT_SEARCH" },
    expandedIds: ["2026-07-29", "2026-07-28"],
+   rawTableIds: ["retentions"],
+   analysisTableIds: ["retentions"],
+   derivedColumnKeys: ["retentions:audienceWatchRatio"],
+   retentionMode: "timeline",
   })
+  expect(search).toContain("vtRetentionMode=timeline")
+  expect(resolveVtSyncWorkspaceUrlState("?vtRetentionMode=invalid").retentionMode).toBe("overview")
   expect(resolveVtSyncWorkspaceUrlState(
    "?vtWorkspace=all_data&vtView=all_data&vtTable=traffic_day",
   )).toMatchObject({

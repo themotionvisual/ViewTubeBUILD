@@ -4,12 +4,14 @@ import type { VtSyncSnapshot } from "./contracts"
 import {
  getVtSyncSnapshotKeyForTable,
  getVtSyncTableIdForDataset,
+ clearVtSyncTableDataFromSnapshot,
  mergeVtSyncManualImportsIntoSnapshot,
  mergeVtSyncPersistedApiRowsIntoSnapshot,
  mergeVtSyncSupplementalTableRows,
  toVtSyncManualImportState,
  toVtSyncPersistedApiState,
  type VtSyncManualImportState,
+ removeVtSyncTableFromImportState,
 } from "./manualImports"
 import { getVtSyncSnapshot } from "./snapshot"
 
@@ -33,6 +35,30 @@ describe("VT-SYNC manual imports snapshot merge", () => {
   expect(getVtSyncTableIdForDataset("geography_country")).toBe("geography")
   expect(getVtSyncTableIdForDataset("daily_metrics")).toBe("daily")
   expect(getVtSyncTableIdForDataset("not-a-dataset")).toBeUndefined()
+ })
+
+ it("clears only the selected table from snapshot and import state", () => {
+  const snapshot = {
+   ...baseSnapshot(),
+   videos: [{ id: "video-a", title: "Video A", metrics: { views: 10 } }],
+   retentions: [{ videoId: "video-a", elapsedVideoTimeRatio: 0.5, audienceWatchRatio: 0.7 }],
+   datasetFreshness: {
+    retentions: { phase: "retention", status: "synced" as const, rows: 1 },
+    videos: { phase: "video_metadata", status: "synced" as const, rows: 1 },
+   },
+  }
+  const clearedSnapshot = clearVtSyncTableDataFromSnapshot(snapshot, "retentions")
+  const clearedImports = removeVtSyncTableFromImportState({
+   rowsByTableId: { retentions: [{ videoId: "video-a" }], videos: [{ id: "video-a" }] },
+   capturedAtByTableId: { retentions: "2026-08-22T00:00:00Z", videos: "2026-08-22T00:00:00Z" },
+  }, "retentions")
+
+  expect(clearedSnapshot.retentions).toEqual([])
+  expect(clearedSnapshot.videos).toHaveLength(1)
+  expect(clearedSnapshot.datasetFreshness?.retentions).toBeUndefined()
+  expect(clearedSnapshot.datasetFreshness?.videos).toBeDefined()
+  expect(clearedImports.rowsByTableId).toEqual({ videos: [{ id: "video-a" }] })
+  expect(clearedImports.capturedAtByTableId).toEqual({ videos: "2026-08-22T00:00:00Z" })
  })
 
  it("normalizes a persisted traffic_overview CSV import before visual merging", () => {

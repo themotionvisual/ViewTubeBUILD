@@ -8,10 +8,12 @@ import type { VtSyncLocalSyncProgress } from "../adapters/localSyncEngine"
 import { VT_SYNC_GROUP_ORDER } from "../upstream/syncUnitRegistry"
 import {
  ProgressRail,
+} from "./VtSyncLocalAnalyticsPage"
+import {
  buildVtSyncUnifiedProgressRows,
  claimVtSyncSyncRequest,
  getVtSyncProgressQueueSummary,
-} from "./VtSyncLocalAnalyticsPage"
+} from "./vtSyncProgressModel"
 
 const pageSource = readFileSync(new URL("./VtSyncLocalAnalyticsPage.tsx", import.meta.url), "utf8")
 const pageCss = readFileSync(new URL("./VtSyncLocalAnalyticsPage.css", import.meta.url), "utf8")
