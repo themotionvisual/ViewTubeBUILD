@@ -1,6 +1,15 @@
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { HeroIntroBoundary } from "./HeroIntroBoundary"
 import type { HeroVisualId } from "./heroVisualAnimations"
+// Bare-render hooks into the four "real" custom visuals in GraphsPageCharts.
+// See commit ledger — these Modules had hidden custom SVG/DIV art that Tube
+// Explorer wasn't previously calling; instead it used thin Recharts wrappers.
+import {
+ OrbitalModule as GraphsOrbitalModule,
+ UploadTimeHeatmapModule as GraphsUploadTimeHeatmapModule,
+ PerformanceGaugesModule as GraphsPerformanceGaugesModule,
+ KeywordTreemapModule as GraphsKeywordTreemapModule,
+} from "./GraphsPageCharts"
 import {
  Area,
  AreaChart,
@@ -3046,7 +3055,7 @@ const TitleWordNetworkCanvas: React.FC<{
 const createModule = (
  title: string,
  subtitle: string,
- render: (dataset: TubeExplorerVisualDataset) => React.ReactNode,
+ render: (dataset: TubeExplorerVisualDataset, props: TubeExplorerVisualProps) => React.ReactNode,
  options: {
   color?: string
   icon?: string
@@ -3083,12 +3092,20 @@ const createModule = (
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
   >
-   {render(dataset)}
+   {render(dataset, props)}
   </ModuleFrame>
  )
 }
 
-export const TubeExplorerKeywordTreemap = createModule("TOKEN FOREST", "Title words and search terms sized by channel reach.", (d) => <KeywordBlocks dataset={d} />, { color: "#CCFF00", badges: [{ label: "KEYWORDS", tone: "lime" }] })
+export const TubeExplorerKeywordTreemap = createModule(
+ "TOKEN FOREST",
+ "Title words and search terms sized by channel reach.",
+ // Reroute to the real custom-DIV KeywordTreemap art in GraphsPageCharts.
+ // The old <KeywordBlocks/> renderer stays exported and reachable for any
+ // callsite that specifically wants the compact grid variant.
+ (_dataset, props) => <GraphsKeywordTreemapModule data={props.data} renderBare />,
+ { color: "#CCFF00", badges: [{ label: "KEYWORDS", tone: "lime" }] },
+)
 export const TubeExplorerChannelHealthRadar = createModule("SIGNAL DIAL", "A balance check across views, retention, revenue, subscribers, and engagement.", (d) => {
  const rows = [
   { metric: "Views", value: d.totals.views },
@@ -3105,16 +3122,36 @@ export const TubeExplorerTrafficEvolution = createModule("TRAFFIC MIX", "Current
 export const TubeExplorerVideoValueMatrix = createModule("VALUE MAP", "Views versus revenue across the strongest videos.", (d) => <VideoScatter rows={topVideos(d, "valueScore", 80)} x="views" y="revenue" />, { color: "#CCFF00" })
 export const TubeExplorerSubNetFlow = createModule("NET SUBSCRIBERS", "Subscribers gained minus lost for each video.", (d) => <VideoBars rows={topVideos(d, "subscribersNet", 18, true)} metric="subscribersNet" color="#CCFF00" />, { color: "#FFEA00" })
 export const TubeExplorerContentDonut = createModule("FORMAT SPLIT", "How the channel breaks across Shorts, long-form, and everything else.", (d) => <Donut rows={[{ name: "Shorts", value: d.shorts.length }, { name: "Long", value: d.longform.length }, { name: "Other", value: d.videos.length - d.shorts.length - d.longform.length }]} />, { color: "#FFB158" })
-export const TubeExplorerPerformanceGauges = createModule("TOP VIEWS", "Ranked bars for the channel's highest-viewed videos.", (d) => <VideoBars rows={topVideos(d, "views", 12)} metric="views" color="#00CCFF" />, { color: "#B14AED" })
+export const TubeExplorerPerformanceGauges = createModule(
+ "PERFORMANCE GAUGES",
+ "Core health snapshot rendered as target-relative gauge bars.",
+ // Reroute to the real custom gauge-bar art in GraphsPageCharts.
+ (_dataset, props) => <GraphsPerformanceGaugesModule data={props.data} renderBare />,
+ { color: "#B14AED" },
+)
 export const TubeExplorerRevenueWaterfall = createModule("REVENUE TIDE", "Revenue and watch hours rising with publish month.", (d) => <MonthlyArea dataset={d} a="revenue" b="watchHours" />, { color: "#42FF68" })
 export const TubeExplorerConversionFunnel = createModule("FUNNEL FLOW", "Impressions, views, engagement, watch hours, and subscribers in order.", (d) => <FunnelStages dataset={d} />, { color: "#00CCFF" })
-export const TubeExplorerUploadHeatmap = createModule("UPLOAD GRID", "Views by day of week across the upload schedule.", (d) => <HeatGrid cells={["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((label) => ({ label, value: d.videos.filter((v) => v.dayKey === label).reduce((sum, v) => sum + v.views, 0) }))} empty="No dated rows available" />, { color: "#FF7497" })
+export const TubeExplorerUploadHeatmap = createModule(
+ "UPLOAD TIME HEATMAP",
+ "Weekday × hour density of upload activity, cell-shaded by count.",
+ // Reroute to the real 7×24 custom-DIV heatmap in GraphsPageCharts (was a
+ // simple 7-cell HeatGrid stand-in previously).
+ (_dataset, props) => <GraphsUploadTimeHeatmapModule data={props.data} renderBare />,
+ { color: "#FF7497" },
+)
 
 export const TubeExplorerECGVitalsMonitor = createModule("WATCH PULSE", "Watch hours tracked by publish month.", (d) => <MonthlyArea dataset={d} a="watchHours" b="engagement" />, { color: "#FF7497" })
 export const TubeExplorerChronoSpiral = createModule("TIME ORBIT", "Video ranks wrapped into date-based radial motion.", (d) => <SvgRadial rows={topVideos(d, "views", 32)} metric="views" />, { color: "#CCFF00" })
 export const TubeExplorerContentDNAGel = createModule("TOKEN GEL", "Keyword intensity strips across the channel.", (d) => <KeywordBlocks dataset={d} />, { color: "#B14AED" })
 export const TubeExplorerPerformanceWaveform = createModule("VIEW WAVE", "Views rising by publish month.", (d) => <MonthlyArea dataset={d} a="views" b="engagement" />, { color: "#00CCFF" })
-export const TubeExplorerOrbitalSystem = createModule("ORBIT SCORE", "Value-score rings arranged as a planetary system.", (d) => <SvgRadial rows={topVideos(d, "valueScore", 34)} metric="valueScore" />, { color: "#FFB158" })
+export const TubeExplorerOrbitalSystem = createModule(
+ "ORBITAL",
+ "Content categories arranged as planetary orbits around a central sun.",
+ // Reroute to the real custom-DIV orbital art in GraphsPageCharts.
+ // The previous <SvgRadial/> renderer stays exported and reachable.
+ (_dataset, props) => <GraphsOrbitalModule data={props.data} renderBare />,
+ { color: "#FFB158" },
+)
 export const TubeExplorerLissajousWeb = createModule("RETENTION WEB", "Retention plotted against engagement rate.", (d) => <VideoScatter rows={topVideos(d, "views", 90)} x="retentionScore" y="engagementRate" />, { color: "#42FF68" })
 export const TubeExplorerKeywordVennChart = createModule("OVERLAP BLOCKS", "Shared title and search terms arranged by reach.", (d) => <KeywordBlocks dataset={d} />, { color: "#FFE35A" })
 

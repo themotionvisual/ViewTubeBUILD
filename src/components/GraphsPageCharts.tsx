@@ -5268,15 +5268,19 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
  )
 }
 
-export const KeywordTreemapModule: React.FC<GChartProps> = ({ data }) => {
+export const KeywordTreemapModule: React.FC<GChartProps & { renderBare?: boolean }> = ({ data, renderBare = false }) => {
  const ds = useMemo(() => buildExpansionDatasets(data), [data])
+ const body = (
+  <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">{ds.keywordNodes.length === 0 ? <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} /> : (
+   <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 h-[340px] overflow-auto border-[3px] border-black rounded-xl p-2 bg-[#f7f7f7]">
+    {ds.keywordNodes.map((k, i) => <div key={k.keyword} className="border-[3px] border-black rounded-lg p-2" style={{ background: COLORS[i % COLORS.length], opacity: 0.9 }}><p className="text-[11px] font-black uppercase">{k.keyword}</p><p className="text-[13px] font-[1000]">{formatCompact(k.value)}</p></div>)}
+   </div>
+  )}</div>
+ )
+ if (renderBare) return body
  return (
   <SubToolboxChartModule header={{ title: "KEYWORD TREEMAP", subtitle: "TITLE TOKEN REACH WEIGHTING", icon: <CustomIcon name="target" size={18} /> }} theme={{ headerBandBg: "#00E5FF", iconBlockBg: "#FF7497", shadowColor: "rgba(0,229,255,0.45)" }}>
-   <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">{ds.keywordNodes.length === 0 ? <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} /> : (
-    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 h-[340px] overflow-auto border-[3px] border-black rounded-xl p-2 bg-[#f7f7f7]">
-     {ds.keywordNodes.map((k, i) => <div key={k.keyword} className="border-[3px] border-black rounded-lg p-2" style={{ background: COLORS[i % COLORS.length], opacity: 0.9 }}><p className="text-[11px] font-black uppercase">{k.keyword}</p><p className="text-[13px] font-[1000]">{formatCompact(k.value)}</p></div>)}
-    </div>
-   )}</div>
+   {body}
   </SubToolboxChartModule>
  )
 }
@@ -6101,38 +6105,43 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
  )
 }
 
-export const UploadTimeHeatmapModule: React.FC<GChartProps> = ({ data }) => {
+export const UploadTimeHeatmapModule: React.FC<GChartProps & { renderBare?: boolean }> = ({ data, renderBare = false }) => {
  const ds = useMemo(() => buildExpansionDatasets(data), [data])
  const max = Math.max(1, ...ds.heatmapBins.map((bin) => bin.value))
+
+ const body = (
+  <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">
+   {ds.heatmapBins.length === 0 ? (
+    <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} />
+   ) : (
+    <div className="grid grid-cols-24 gap-1 border-[3px] border-black rounded-xl p-2 bg-[#f7f7f7] h-[340px] overflow-auto">
+     {Array.from({ length: 7 * 24 }).map((_, index) => {
+      const dow = Math.floor(index / 24)
+      const hour = index % 24
+      const cell = ds.heatmapBins.find((bin) => bin.dow === dow && bin.hour === hour)
+      const value = cell?.value || 0
+      const alpha = value / max
+      return (
+       <div
+        key={index}
+        className="h-4 border border-black/20 rounded-[2px]"
+        title={`D${dow} ${hour}:00 — ${formatCompact(value)}`}
+        style={{ background: `rgba(0,229,255,${Math.max(0.08, alpha)})` }}
+       />
+      )
+     })}
+    </div>
+   )}
+  </div>
+ )
+
+ if (renderBare) return body
 
  return (
   <SubToolboxChartModule
    header={{ title: "UPLOAD TIME HEATMAP", subtitle: "WEEKDAY × HOUR DENSITY", icon: <CustomIcon name="calendar" size={18} /> }}
    theme={{ headerBandBg: "#FFEA00", iconBlockBg: "#24D3FF", shadowColor: "rgba(255,234,0,0.45)" }}>
-   <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">
-    {ds.heatmapBins.length === 0 ? (
-     <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} />
-    ) : (
-     <div className="grid grid-cols-24 gap-1 border-[3px] border-black rounded-xl p-2 bg-[#f7f7f7] h-[340px] overflow-auto">
-      {Array.from({ length: 7 * 24 }).map((_, index) => {
-       const dow = Math.floor(index / 24)
-       const hour = index % 24
-       const cell = ds.heatmapBins.find((bin) => bin.dow === dow && bin.hour === hour)
-       const value = cell?.value || 0
-       const alpha = value / max
-
-       return (
-        <div
-         key={index}
-         className="h-4 border border-black/20 rounded-[2px]"
-         title={`D${dow} ${hour}:00 — ${formatCompact(value)}`}
-         style={{ background: `rgba(0,229,255,${Math.max(0.08, alpha)})` }}
-        />
-       )
-      })}
-     </div>
-    )}
-   </div>
+   {body}
   </SubToolboxChartModule>
  )
 }
@@ -6167,34 +6176,39 @@ export const ConversionFunnelModule: React.FC<GChartProps> = ({ data }) => {
  )
 }
 
-export const PerformanceGaugesModule: React.FC<GChartProps> = ({ data }) => {
+export const PerformanceGaugesModule: React.FC<GChartProps & { renderBare?: boolean }> = ({ data, renderBare = false }) => {
  const ds = useMemo(() => buildExpansionDatasets(data), [data])
+
+ const body = (
+  <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">
+   {ds.gauges.length === 0 ? (
+    <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} />
+   ) : (
+    <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+     {ds.gauges.map((gauge) => {
+      const percentage = Math.max(0, Math.min(100, (gauge.value / Math.max(gauge.target, 1)) * 100))
+      return (
+       <div key={gauge.label} className="border-[3px] border-black rounded-xl p-3 bg-white">
+        <p className="text-[11px] font-black uppercase">{gauge.label}</p>
+        <div className="h-3 border-[2px] border-black rounded-full mt-3 overflow-hidden">
+         <div className="h-full" style={{ width: `${percentage}%`, backgroundColor: gauge.tone }} />
+        </div>
+        <p className="text-xl font-[1000] mt-2">{gauge.value.toFixed(2)}</p>
+       </div>
+      )
+     })}
+    </div>
+   )}
+  </div>
+ )
+
+ if (renderBare) return body
 
  return (
   <SubToolboxChartModule
    header={{ title: "PERFORMANCE GAUGES", subtitle: "CORE HEALTH SNAPSHOT", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#F5E44D", iconBlockBg: "#F06D98", shadowColor: "rgba(245,228,77,0.45)" }}>
-   <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">
-    {ds.gauges.length === 0 ? (
-     <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} />
-    ) : (
-     <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
-      {ds.gauges.map((gauge) => {
-       const percentage = Math.max(0, Math.min(100, (gauge.value / Math.max(gauge.target, 1)) * 100))
-
-       return (
-        <div key={gauge.label} className="border-[3px] border-black rounded-xl p-3 bg-white">
-         <p className="text-[11px] font-black uppercase">{gauge.label}</p>
-         <div className="h-3 border-[2px] border-black rounded-full mt-3 overflow-hidden">
-          <div className="h-full" style={{ width: `${percentage}%`, backgroundColor: gauge.tone }} />
-         </div>
-         <p className="text-xl font-[1000] mt-2">{gauge.value.toFixed(2)}</p>
-        </div>
-       )
-      })}
-     </div>
-    )}
-   </div>
+   {body}
   </SubToolboxChartModule>
  )
 }
@@ -6237,43 +6251,49 @@ export const LissajousWebModule: React.FC<GChartProps> = ({ data }) => {
  )
 }
 
-export const OrbitalModule: React.FC<GChartProps> = ({ data }) => {
+export const OrbitalModule: React.FC<GChartProps & { renderBare?: boolean }> = ({ data, renderBare = false }) => {
  const ds = useMemo(() => buildExpansionDatasets(data), [data])
+
+ const body = (
+  <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">
+   {ds.orbital.length === 0 ? (
+    <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} />
+   ) : (
+    <div className="h-[390px] border-[3px] border-black rounded-xl bg-[#020617] relative overflow-hidden">
+     {[80, 110, 140].map((radius) => (
+      <div
+       key={radius}
+       className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10"
+       style={{ width: `${radius * 2}px`, height: `${radius * 2}px` }}
+      />
+     ))}
+     <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#FFE857] shadow-[0_0_24px_8px_rgba(255,232,87,0.6)]" />
+     {ds.orbital.map((planet, index) => (
+      <div
+       key={`${planet.name}-${index}`}
+       className="absolute text-[9px] font-black uppercase px-2 py-1 rounded-full border-[2px] border-white text-white"
+       style={{
+        left: `calc(50% + ${planet.x}px)`,
+        top: `calc(50% + ${planet.y}px)`,
+        background: "rgba(2,6,23,0.8)",
+        boxShadow: `0 0 0 2px ${planet.tone}`,
+       }}
+       title={`${planet.name}: ${formatCompact(planet.value)}`}>
+       {planet.name}
+      </div>
+     ))}
+    </div>
+   )}
+  </div>
+ )
+
+ if (renderBare) return body
 
  return (
   <SubToolboxChartModule
    header={{ title: "ORBITAL", subtitle: "CONTENT CATEGORIES AS PLANETARY ORBITS", icon: <CustomIcon name="target" size={18} /> }}
    theme={{ headerBandBg: "#FF9900", iconBlockBg: "#B14AED", shadowColor: "rgba(180,74,237,0.45)" }}>
-   <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">
-    {ds.orbital.length === 0 ? (
-     <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} />
-    ) : (
-     <div className="h-[390px] border-[3px] border-black rounded-xl bg-[#020617] relative overflow-hidden">
-      {[80, 110, 140].map((radius) => (
-       <div
-        key={radius}
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10"
-        style={{ width: `${radius * 2}px`, height: `${radius * 2}px` }}
-       />
-      ))}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#FFE857] shadow-[0_0_24px_8px_rgba(255,232,87,0.6)]" />
-      {ds.orbital.map((planet, index) => (
-       <div
-        key={`${planet.name}-${index}`}
-        className="absolute text-[9px] font-black uppercase px-2 py-1 rounded-full border-[2px] border-white text-white"
-        style={{
-         left: `calc(50% + ${planet.x}px)`,
-         top: `calc(50% + ${planet.y}px)`,
-         background: "rgba(2,6,23,0.8)",
-         boxShadow: `0 0 0 2px ${planet.tone}`,
-        }}
-        title={`${planet.name}: ${formatCompact(planet.value)}`}>
-        {planet.name}
-       </div>
-      ))}
-     </div>
-    )}
-   </div>
+   {body}
   </SubToolboxChartModule>
  )
 }
