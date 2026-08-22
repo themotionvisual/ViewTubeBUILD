@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { withVerifiedPostgresSslMode } from "./account-store.mjs";
 import {
   PUBLIC_PLANS,
   GOOGLE_SCOPES,
+  GOOGLE_PROXY_ERROR_CODES,
+  classifyGoogleProxyResponse,
   decryptToken,
   encryptToken,
   isAllowedGoogleApiUrl,
@@ -12,6 +15,11 @@ import {
   sanitizeReturnTo,
   sendGoogleJson,
 } from "./account-auth.mjs";
+
+test("PostgreSQL connections explicitly verify the server identity", () => {
+  const secured = new URL(withVerifiedPostgresSslMode("postgres://user:pass@db.example/viewtube?sslmode=require"));
+  assert.equal(secured.searchParams.get("sslmode"), "verify-full");
+});
 
 test("account return destinations remain internal", () => {
   assert.equal(sanitizeReturnTo("/local-analytics?tab=sync#run"), "/local-analytics?tab=sync#run");
@@ -65,6 +73,32 @@ test("Google proxy accepts only read-only YouTube API hosts and paths", () => {
   assert.equal(isAllowedGoogleApiUrl("https://youtubeanalytics.googleapis.com/v2/reports?ids=channel%3D%3DMINE"), true);
   assert.equal(isAllowedGoogleApiUrl("https://www.googleapis.com/drive/v3/files"), false);
   assert.equal(isAllowedGoogleApiUrl("http://localhost:3000/internal"), false);
+});
+
+test("Google proxy failures use stable reconnect, scope, quota, rate, and upstream classifications", () => {
+  const reconnect = classifyGoogleProxyResponse(401, { error: { message: "Invalid Credentials" } });
+  assert.equal(reconnect.code, GOOGLE_PROXY_ERROR_CODES.GOOGLE_RECONNECT_REQUIRED);
+  assert.equal(reconnect.status, 409);
+  assert.equal(reconnect.reconnectRequired, true);
+  assert.equal(reconnect.retryable, false);
+
+  const scope = classifyGoogleProxyResponse(403, { error: { errors: [{ reason: "insufficientPermissions" }] } });
+  assert.equal(scope.code, GOOGLE_PROXY_ERROR_CODES.GOOGLE_SCOPE_REQUIRED);
+  assert.equal(scope.retryable, false);
+
+  const quota = classifyGoogleProxyResponse(403, { error: { errors: [{ reason: "quotaExceeded" }] } });
+  assert.equal(quota.code, GOOGLE_PROXY_ERROR_CODES.GOOGLE_QUOTA_EXHAUSTED);
+  assert.equal(quota.retryable, false);
+
+  const rate = classifyGoogleProxyResponse(403, { error: { errors: [{ reason: "userRateLimitExceeded" }] } });
+  assert.equal(rate.code, GOOGLE_PROXY_ERROR_CODES.GOOGLE_RATE_LIMITED);
+  assert.equal(rate.status, 429);
+  assert.equal(rate.retryable, true);
+
+  const upstream = classifyGoogleProxyResponse(500, { error: { message: "Backend error" } });
+  assert.equal(upstream.code, GOOGLE_PROXY_ERROR_CODES.GOOGLE_UPSTREAM_UNAVAILABLE);
+  assert.equal(upstream.status, 503);
+  assert.equal(upstream.retryable, true);
 });
 
 test("resumable upload session URLs stay pinned to YouTube uploads", () => {

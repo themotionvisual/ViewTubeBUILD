@@ -4,7 +4,7 @@ import ts from "typescript"
 
 const root = resolve(process.cwd())
 const srcRoot = resolve(root, "src")
-const outputRoot = resolve(srcRoot, "generated")
+const outputRoot = resolve(root, "artifacts", "audits")
 const checkMode = process.argv.includes("--check")
 
 const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]
@@ -267,9 +267,11 @@ const markdown = [
   ...htmlEntries.map((entry) => `| \`${entry.file}\` | ${entry.category} |`),
 ]
 
-mkdirSync(outputRoot, { recursive: true })
-writeFileSync(resolve(outputRoot, "quick-wins-audit.json"), `${JSON.stringify(report, null, 2)}\n`)
-writeFileSync(resolve(outputRoot, "quick-wins-audit.md"), `${markdown.join("\n")}\n`)
+if (!checkMode) {
+  mkdirSync(outputRoot, { recursive: true })
+  writeFileSync(resolve(outputRoot, "quick-wins-audit.json"), `${JSON.stringify(report, null, 2)}\n`)
+  writeFileSync(resolve(outputRoot, "quick-wins-audit.md"), `${markdown.join("\n")}\n`)
+}
 
 const highConfidenceViolations = [...missingVisibleRoutes, ...duplicateRoutePaths]
 if (checkMode && highConfidenceViolations.length) {

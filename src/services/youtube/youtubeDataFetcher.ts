@@ -395,6 +395,7 @@ const saveVideoDetailsCache = (
 
 export const fetchVideoSnippetDetails = async (
   videoIds: string[],
+  options: { signal?: AbortSignal } = {},
 ): Promise<
   Record<
     string,
@@ -468,7 +469,7 @@ export const fetchVideoSnippetDetails = async (
   const batch = needed.slice(i, i + 50)
   const response = await proxyFetch(
    `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${batch.join(",")}`,
-   { headers: { Authorization: `Bearer ${token}` } },
+   { headers: { Authorization: `Bearer ${token}` }, signal: options.signal },
   )
 
   if (!response.ok) {
@@ -1038,7 +1039,7 @@ export const fetchRetentionAnalytics = async (videoId: string) => {
  return response.json()
 }
 
-const fetchCompleteCommentReplies = async (parentId: string, token: string) => {
+const fetchCompleteCommentReplies = async (parentId: string, token: string, signal?: AbortSignal) => {
  const replies: any[] = []
  let pageToken = ""
 
@@ -1047,6 +1048,7 @@ const fetchCompleteCommentReplies = async (parentId: string, token: string) => {
   if (pageToken) params.set("pageToken", pageToken)
   const response = await proxyFetch(`${BASE_URL}/comments?${params.toString()}`, {
    headers: { Authorization: `Bearer ${token}` },
+   signal,
   })
   if (!response.ok) throw new Error("Failed to fetch complete comment replies")
   const page = await response.json()
@@ -1060,6 +1062,7 @@ const fetchCompleteCommentReplies = async (parentId: string, token: string) => {
 export interface CommentThreadFetchOptions {
  initialNewCount?: number
  onInitialResults?: (threads: any[]) => void | Promise<void>
+ signal?: AbortSignal
 }
 
 export const fetchAllCommentThreads = async (
@@ -1108,7 +1111,7 @@ export const fetchAllCommentThreads = async (
   if (!parentId || includedReplies.length >= totalReplyCount) return thread
 
   try {
-   const replies = await fetchCompleteCommentReplies(parentId, token)
+   const replies = await fetchCompleteCommentReplies(parentId, token, options.signal)
    return { ...thread, replies: { ...thread.replies, comments: replies } }
   } catch (error) {
    console.warn("Unable to load every reply for comment thread", error)
@@ -1129,7 +1132,7 @@ export const fetchAllCommentThreads = async (
   if (pageToken) params.set("pageToken", pageToken)
   const response = await proxyFetch(
    `${BASE_URL}/commentThreads?${params.toString()}`,
-   { headers: { Authorization: `Bearer ${token}` } },
+   { headers: { Authorization: `Bearer ${token}` }, signal: options.signal },
   )
   if (!response.ok) {
    if (response.status === 403) {

@@ -25,6 +25,11 @@ import {
  mapVtSyncAnalyticsMetricFields,
 } from "../upstream/analyticsMetricContract"
 import { getVtSyncAvailableTrafficDetailSources } from "../upstream/trafficDetailRegistry"
+import {
+ GoogleRequestError,
+ readGoogleProxyError,
+ requestGoogleWithRetry,
+} from "../../../services/youtube/googleProxyErrors"
 import type {
  VtSyncAnalyticsWindow,
  VtSyncInventorySyncResult,
@@ -54,6 +59,11 @@ export type VtSyncLocalSyncPhase = {
  completedAt?: string
  message?: string
  error?: string
+ failureCode?: string
+ retryable?: boolean
+ reconnectRequired?: boolean
+ requestId?: string
+ skippedReason?: string
  currentQueryLabel?: string
  nextQueryLabel?: string
 }
@@ -63,6 +73,10 @@ export type VtSyncLocalSyncProgress = {
  startedAt: string
  completedAt?: string
  status: "idle" | "running" | "complete" | "partial" | "failed"
+ failureCode?: string
+ retryable?: boolean
+ reconnectRequired?: boolean
+ requestId?: string
  requestedCategoryIds: string[]
  phases: VtSyncLocalSyncPhase[]
 }
@@ -210,6 +224,28 @@ const FULL_ANALYTICS_METRICS = [
  ...ANNOTATION_ANALYTICS_METRICS,
 ]
 
+const FALLBACK_BLOCKED_METRICS = new Set([
+ "estimatedRevenue",
+ "cpm",
+ "grossRevenue",
+ "monetizedPlaybacks",
+ "playbackBasedCpm",
+ "adImpressions",
+ "estimatedAdRevenue",
+ "estimatedRedPartnerRevenue",
+ "redViews",
+ "estimatedRedMinutesWatched",
+ "cardClicks",
+ "cardImpressions",
+ "cardClickRate",
+ "cardTeaserClicks",
+ "cardTeaserImpressions",
+ "cardTeaserClickRate",
+ "annotationClicks",
+ "annotationImpressions",
+ "annotationClickThroughRate",
+])
+
 const DAILY_ANALYTICS_METRIC_BUNDLES = [
  ...VT_SYNC_ANALYTICS_METRIC_BUNDLES,
  {
@@ -290,16 +326,11 @@ const fetchWithBackoff = async (url: string, token: string, maxRetries = 3): Pro
     body: JSON.stringify({ url }),
   })
   : fetch(url, { headers: { Authorization: `Bearer ${token}` } })
- let delayMs = 800
- let lastResponse: Response | null = null
- for (let attempt = 0; attempt < maxRetries; attempt += 1) {
-  const res = await request()
-  lastResponse = res
-  if (res.ok || (res.status !== 429 && res.status < 500)) return res
-  if (attempt < maxRetries - 1) await sleep(delayMs)
-  delayMs *= 2
+ let operation = "google-read"
+ try { operation = new URL(url).pathname } catch {
+  // Keep the generic operation label for malformed or relative diagnostic URLs.
  }
- return lastResponse || request()
+ return requestGoogleWithRetry(request, { maxAttempts: maxRetries, operation })
 }
 
 /**
@@ -368,8 +399,16 @@ const runAnalyticsBundle = async ({
  let activeMetrics = metrics
  let res = await request(activeMetrics)
  let firstError = ""
- if (!res.ok) firstError = await res.text().catch(() => "")
- if (!res.ok && allowFallback && (res.status === 400 || res.status === 401 || res.status === 403)) {
+ let firstFailureCode = ""
+ if (!res.ok) {
+  firstFailureCode = (await readGoogleProxyError(res))?.code || ""
+  firstError = await res.text().catch(() => "")
+ }
+ const blocksMetricFallback = firstFailureCode === "GOOGLE_SCOPE_REQUIRED"
+  || firstFailureCode === "GOOGLE_QUOTA_EXHAUSTED"
+  || firstFailureCode === "AUTH_REQUIRED"
+  || firstFailureCode === "GOOGLE_RECONNECT_REQUIRED"
+ if (!res.ok && !blocksMetricFallback && allowFallback && (res.status === 400 || res.status === 401 || res.status === 403)) {
   const coreMetrics = metrics.filter((metric) => !FALLBACK_BLOCKED_METRICS.has(metric))
   if (coreMetrics.length > 0 && coreMetrics.length !== metrics.length) {
    activeMetrics = coreMetrics
@@ -1785,6 +1824,10 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   started_at: startedAt,
   completed_at: null,
   stop_reason: null,
+  failure_code: null,
+  retryable: false,
+  reconnect_required: false,
+  request_id: null,
   bundles_completed: [],
   bundles_failed: [],
   diagnostics: [],
@@ -2917,8 +2960,13 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   return snapshot
  } catch (error) {
   const completedAt = new Date().toISOString()
+  const googleFailure = error instanceof GoogleRequestError ? error.details : null
   manifest.completed_at = completedAt
-  manifest.stop_reason = "failed"
+  manifest.stop_reason = googleFailure?.reconnectRequired ? "reconnect_required" : "failed"
+  manifest.failure_code = googleFailure?.code || "SYNC_FAILED"
+  manifest.retryable = googleFailure?.retryable || false
+  manifest.reconnect_required = googleFailure?.reconnectRequired || false
+  manifest.request_id = googleFailure?.requestId || null
   manifest.bundles_failed = [...(manifest.bundles_failed || []), {
    bundle_id: "fatal_error",
    family: "vt_sync_local",
@@ -2928,11 +2976,33 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    rows_written: 0,
    success: false,
    error_reason: error instanceof Error ? error.message : String(error),
+   failure_code: googleFailure?.code || "SYNC_FAILED",
+   retryable: googleFailure?.retryable || false,
+   reconnect_required: googleFailure?.reconnectRequired || false,
+   request_id: googleFailure?.requestId || null,
   }]
   snapshot = { ...snapshot, capturedAt: completedAt, syncManifest: manifest }
   commitSnapshot()
   progress.status = "failed"
   progress.completedAt = completedAt
+  progress.failureCode = googleFailure?.code || "SYNC_FAILED"
+  progress.retryable = googleFailure?.retryable || false
+  progress.reconnectRequired = googleFailure?.reconnectRequired || false
+  progress.requestId = googleFailure?.requestId
+  progress.phases = progress.phases.map((phase) => phase.status === "pending" || phase.status === "running"
+   ? {
+     ...phase,
+     status: "skipped",
+     completedAt,
+     failureCode: googleFailure?.code || "SYNC_FAILED",
+     retryable: googleFailure?.retryable || false,
+     reconnectRequired: googleFailure?.reconnectRequired || false,
+     requestId: googleFailure?.requestId,
+     skippedReason: googleFailure?.reconnectRequired
+      ? "Reconnect Google before this phase can run."
+      : "This phase was skipped after the sync stopped.",
+    }
+   : phase)
   onProgress?.({ ...progress, phases: [...progress.phases] })
   throw error
  }

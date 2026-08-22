@@ -5,8 +5,8 @@ import {
  markUnifiedAccountServerUnavailable,
 } from "../account/accountCoordinator"
 import { getValidAccessToken } from "../auth/authSession"
+import { requestGoogleWithRetry } from "./googleProxyErrors"
 
-const TRANSIENT_STATUSES = new Set([429, 500, 502, 503, 504])
 const MAX_ATTEMPTS = 3
 export const SERVER_ACCOUNT_SESSION_TOKEN = "__viewtube_server_account_session__"
 // Patterns that indicate the server host is present but its account surface
@@ -17,9 +17,6 @@ const ACCOUNT_PROXY_FALLBACK_PATTERNS = [
  "Request origin is not allowed",
  "Account request failed",
 ]
-
-const delay = (milliseconds: number) =>
- new Promise<void>((resolve) => setTimeout(resolve, milliseconds))
 
 const shouldFallbackFromAccountProxy = async (response: Response): Promise<boolean> => {
  // 404 means the /api/account/google-proxy route does not exist on this
@@ -75,10 +72,8 @@ export const authorizedGoogleRead = async (
  options: { signal?: AbortSignal; maxAttempts?: number } = {},
 ): Promise<Response> => {
  const maxAttempts = Math.max(1, options.maxAttempts || MAX_ATTEMPTS)
- let response = await runRequest(url, options.signal)
- for (let attempt = 1; attempt < maxAttempts && TRANSIENT_STATUSES.has(response.status); attempt += 1) {
-  await delay(400 * 2 ** (attempt - 1))
-  response = await runRequest(url, options.signal)
- }
- return response
+ return requestGoogleWithRetry(
+  () => runRequest(url, options.signal),
+  { maxAttempts, signal: options.signal, operation: new URL(url).pathname },
+ )
 }

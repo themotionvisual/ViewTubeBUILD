@@ -7,6 +7,7 @@ import {
  GEOGRAPHY_PROVINCE_SAFE_METRICS,
  VT_SYNC_TRAFFIC_DETAIL_FALLBACK_MAX_WINDOWS,
  VT_SYNC_PAGINATED_REPORT_MAX_PAGES,
+ VT_SYNC_SERVER_ACCOUNT_TOKEN,
  VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE,
  VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE,
  runVtSyncLocalSync,
@@ -45,6 +46,48 @@ afterEach(async () => {
 })
 
 describe("syncUploadsInventory", () => {
+ it("stops the run after one non-retryable reconnect failure and preserves the previous snapshot", async () => {
+  const fetchMock = vi.fn(async () => new Response(JSON.stringify({
+   error: {
+    code: "GOOGLE_RECONNECT_REQUIRED",
+    message: "Reconnect Google.",
+    retryable: false,
+    reconnectRequired: true,
+    requestId: "request-reconnect",
+   },
+  }), { status: 409, headers: { "Content-Type": "application/json" } }))
+  vi.stubGlobal("fetch", fetchMock)
+  const progress: Array<Record<string, any>> = []
+  let committed = normalizeVtSyncSnapshot({ videos: [] })
+  const previousSnapshot = normalizeVtSyncSnapshot({
+   channelId: "channel-a",
+   videos: [{ id: "video-a", title: "Preserved video", metrics: { views: 42 } }],
+  })
+
+  await expect(runVtSyncLocalSync({
+   token: VT_SYNC_SERVER_ACCOUNT_TOKEN,
+   selectedCategories: ["channel_metadata"],
+   previousSnapshot,
+   onProgress: (next) => progress.push(next),
+   onSnapshotCommit: (next) => { committed = next },
+  })).rejects.toMatchObject({ details: { code: "GOOGLE_RECONNECT_REQUIRED", reconnectRequired: true } })
+
+  expect(fetchMock).toHaveBeenCalledTimes(1)
+  expect(committed.videos[0]).toMatchObject({ id: "video-a", title: "Preserved video", metrics: { views: 42 } })
+  expect(committed.syncManifest).toMatchObject({
+   stop_reason: "reconnect_required",
+   failure_code: "GOOGLE_RECONNECT_REQUIRED",
+   reconnect_required: true,
+   request_id: "request-reconnect",
+  })
+  expect(progress.at(-1)).toMatchObject({
+   status: "failed",
+   failureCode: "GOOGLE_RECONNECT_REQUIRED",
+   reconnectRequired: true,
+  })
+  expect(progress.at(-1)?.phases.every((phase: any) => phase.status !== "pending" && phase.status !== "running")).toBe(true)
+ })
+
  it("does not carry a previous channel's catalog into the active channel", async () => {
   vi.stubGlobal("fetch", vi.fn(async (url: string) => {
    if (url.includes("youtube/v3/channels")) {

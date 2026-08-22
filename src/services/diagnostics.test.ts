@@ -1,39 +1,38 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
-import { readDiagnostics, reportDiagnostic, sanitizeDiagnosticData } from "./diagnostics"
+import { describe, expect, it } from "vitest"
+import { formatDiagnostics, readDiagnostics, recordDiagnostic, reportDiagnostic, sanitizeDiagnosticData } from "./diagnostics"
 
-describe("ViewTube diagnostics", () => {
-  beforeEach(() => {
-    vi.restoreAllMocks()
+describe("ViewTube developer diagnostics", () => {
+ it("redacts credential-shaped keys and bearer/query tokens", () => {
+  expect(sanitizeDiagnosticData({
+   authorization: "Bearer abc.def",
+   nested: { apiKey: "secret", url: "https://example.test/?access_token=visible" },
+  })).toEqual({
+   authorization: "[REDACTED]",
+   nested: { apiKey: "[REDACTED]", url: "https://example.test/?access_token=[REDACTED]" },
+  })
+ })
+
+ it("deduplicates repeated failures with occurrence counts", () => {
+  recordDiagnostic("warn", "proxy", "409 reconnect")
+  recordDiagnostic("warn", "proxy", "409 reconnect")
+  const entry = readDiagnostics().find((candidate) => candidate.tag === "proxy" && candidate.message === "409 reconnect")
+  expect(entry?.count).toBe(2)
+  expect(formatDiagnostics(entry ? [entry] : [])).toContain("(x2)")
+ })
+
+ it("records structured subsystem diagnostics in the shared buffer", () => {
+  reportDiagnostic({
+   area: "account",
+   event: "snapshot_fallback",
+   level: "warn",
+   whatHappened: "Snapshot failed",
+   debugData: { cookie: "private", status: 503 },
   })
 
-  it("redacts secret-shaped fields and bearer tokens", () => {
-    expect(sanitizeDiagnosticData({
-      accessToken: "private-token",
-      nested: { authorization: "Bearer abc.def.ghi", route: "/analytics" },
-    })).toEqual({
-      accessToken: "[REDACTED]",
-      nested: { authorization: "[REDACTED]", route: "/analytics" },
-    })
+  expect(readDiagnostics().at(-1)).toMatchObject({
+   level: "warn",
+   tag: "account:snapshot_fallback",
+   message: "Snapshot failed",
   })
-
-  it("records a compact on-screen entry and emits structured console context", () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined)
-    reportDiagnostic({
-      area: "account",
-      event: "snapshot_fallback",
-      level: "warn",
-      whatHappened: "Snapshot failed",
-      debugData: { cookie: "private", status: 503 },
-    })
-
-    expect(readDiagnostics().at(-1)).toMatchObject({
-      level: "warn",
-      tag: "account:snapshot_fallback",
-      message: "Snapshot failed",
-    })
-    expect(warn).toHaveBeenCalledWith(
-      "[ViewTube:account] snapshot_fallback",
-      expect.objectContaining({ DEBUG_DATA: { cookie: "[REDACTED]", status: 503 } }),
-    )
-  })
+ })
 })

@@ -220,13 +220,13 @@ export const CommentReplyWidget = ({
   const fetchedVideoDataRef = useRef<Record<string, any>>({})
   const metadataInFlightRef = useRef(new Set<string>())
 
-  const channelId = data.brain?.channelProfile?.id
-    || account.snapshot.google.channelId
+  const channelId = account.snapshot.google.channelId
+    || data.brain?.channelProfile?.id
     || data.authState?.channelId
     || ""
   const canonicalVideos = useMemo(() => data.videoAssets || [], [data.videoAssets])
 
-  const syncMetadata = async (threads: any[]) => {
+  const syncMetadata = async (threads: any[], signal?: AbortSignal) => {
     const requestedIds: string[] = []
     try {
       const videoIds = Array.from(new Set<string>(
@@ -246,7 +246,8 @@ export const CommentReplyWidget = ({
         requestedIds.push(...missingIds)
         missingIds.forEach((id) => metadataInFlightRef.current.add(id))
         console.info(`[CommentResponder] Fetching metadata for ${missingIds.length} missing videos...`)
-        const details = await fetchVideoSnippetDetails(missingIds as string[])
+        const details = await fetchVideoSnippetDetails(missingIds as string[], { signal })
+        if (signal?.aborted) return
         fetchedVideoDataRef.current = { ...fetchedVideoDataRef.current, ...details }
         setFetchedVideoData(prev => ({ ...prev, ...details }))
       }
@@ -259,11 +260,12 @@ export const CommentReplyWidget = ({
 
   useEffect(() => {
     let cancelled = false
+    const controller = new AbortController()
     if (!hasCommentsAccess || !channelId) {
       setLoading(false)
       setError(null)
       setAllThreads([])
-      return () => { cancelled = true }
+      return () => controller.abort()
     }
     const load = async () => {
       setLoading(true)
@@ -271,17 +273,18 @@ export const CommentReplyWidget = ({
       try {
         const threads = await fetchAllCommentThreads(100, channelId, {
           initialNewCount: 3,
+          signal: controller.signal,
           onInitialResults: (initialThreads) => {
             if (cancelled) return
             setAllThreads(initialThreads)
             setLoading(false)
-            void syncMetadata(initialThreads)
+            void syncMetadata(initialThreads, controller.signal)
           },
         })
         if (cancelled) return
         setAllThreads(threads)
         setLoading(false)
-        void syncMetadata(threads)
+        void syncMetadata(threads, controller.signal)
       } catch (e: any) {
         if (cancelled) return
         console.error("Comment fetch failed:", e)
@@ -291,7 +294,7 @@ export const CommentReplyWidget = ({
       }
     }
     void load()
-    return () => { cancelled = true }
+    return () => { cancelled = true; controller.abort() }
   }, [channelId, canonicalVideos.length, hasCommentsAccess])
 
   useEffect(() => {

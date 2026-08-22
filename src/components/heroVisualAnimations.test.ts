@@ -72,4 +72,24 @@ describe("hero visual animation readiness", () => {
       expect(new Set(labels).size).toBe(3)
     })
   })
+
+  it("cancels pending replay frames when a visual is reset or destroyed", () => {
+    let nextFrame = 0
+    const callbacks = new Map<number, FrameRequestCallback>()
+    const cancel = vi.fn((frame: number) => callbacks.delete(frame))
+    vi.stubGlobal("requestAnimationFrame", vi.fn((callback: FrameRequestCallback) => {
+      nextFrame += 1
+      callbacks.set(nextFrame, callback)
+      return nextFrame
+    }))
+    vi.stubGlobal("cancelAnimationFrame", cancel)
+    const root = { querySelectorAll: () => [] } as unknown as ParentNode
+    const controller = createHeroIntroController("heat-matrix", root)
+
+    controller.replay({ variant: 2 })
+    controller.destroy()
+
+    expect(cancel).toHaveBeenCalledWith(1)
+    expect(callbacks.size).toBe(0)
+  })
 })
