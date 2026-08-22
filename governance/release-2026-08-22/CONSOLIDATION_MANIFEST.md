@@ -15,6 +15,7 @@ authorized by this manifest.
 | Custom visual donor | `b4371317` | Reviewed equivalent in `6a21e1f5` |
 | Shared dark stats and Clock Burst layout | `799abdcc` | Direct ancestor |
 | Single replay ownership | `35e86fdf` | Direct ancestor |
+| Validated code checkpoint | `7030a02882a2045b6eef0eb66da52b3f12d8c874` | Local integration HEAD before this manifest-only update |
 
 The replacement PR must target `main` from
 `integration/advanced-superset-2026-08-22`. PR #11 may be closed as superseded
@@ -58,3 +59,25 @@ may be applied to the release branch.
   eventual production SHA must match at their respective gates.
 - The auth and quick-wins worktrees and branches remain available until a
   production release is verified and their removal is separately approved.
+
+## Local gate checkpoint
+
+At code checkpoint `7030a02882a2045b6eef0eb66da52b3f12d8c874`:
+
+| Gate | Result |
+| --- | --- |
+| Focused contracts | Pass: 12 files, 48 tests |
+| Full Vitest suite | Pass: 117 files, 680 tests |
+| Node release metadata tests | Pass: 2 tests |
+| Node account tests | Pass: 13 tests |
+| TypeScript | Pass: zero errors |
+| Source governance | Pass: routes, CSS, quarantine, source tree, privacy |
+| Production build | Pass |
+| Local smoke | Pass on API `:3000` and Vite `:5173` |
+| Canonical runtime lint | **Blocked:** 1,835 errors and 90 warnings across 222 files |
+| Authenticated visual acceptance | **Pending:** no authenticated fixture/session was available |
+
+The branch must not be pushed as a release candidate and the replacement PR
+must not be opened until canonical runtime lint reaches zero and authenticated
+acceptance is completed. Production, PR #11, GitHub protection, branch cleanup,
+and Vercel project configuration remain unchanged at this checkpoint.
