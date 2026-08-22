@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { HeroIntroBoundary } from "./HeroIntroBoundary"
-import type { HeroVisualId } from "./heroVisualAnimations"
+import { HeroIntroBoundary, HeaderHeroPlayButton } from "./HeroIntroBoundary"
 // Bare-render hooks into the four "real" custom visuals in GraphsPageCharts.
 // See commit ledger — these Modules had hidden custom SVG/DIV art that Tube
 // Explorer wasn't previously calling; instead it used thin Recharts wrappers.
@@ -3078,7 +3077,7 @@ const TitleWordNetworkCanvas: React.FC<{
 const createModule = (
  title: string,
  subtitle: string,
- render: (dataset: TubeExplorerVisualDataset) => React.ReactNode,
+ render: (dataset: TubeExplorerVisualDataset, props: TubeExplorerVisualProps) => React.ReactNode,
  options: {
   color?: string
   icon?: string
