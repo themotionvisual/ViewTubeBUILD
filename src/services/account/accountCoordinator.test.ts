@@ -96,6 +96,39 @@ describe("accountCoordinator runtime resolution", () => {
   expect(removeEventListener).toHaveBeenCalledWith("message", expect.any(Function))
  })
 
+ it("preserves an ordinary unauthenticated response without disabling the account server", async () => {
+  const popup = {
+   closed: false,
+   close: vi.fn(() => {
+    popup.closed = true
+   }),
+   location: { href: "about:blank" },
+  }
+  vi.stubGlobal("window", {
+   location: {
+    origin: "https://viewtube.live",
+    hostname: "viewtube.live",
+    pathname: "/",
+    search: "",
+    hash: "",
+   },
+   open: vi.fn(() => popup as unknown as Window),
+   dispatchEvent: vi.fn(),
+  } as unknown as Window)
+  vi.stubGlobal("fetch", vi.fn(async () => ({
+   ok: false,
+   status: 401,
+   json: async () => ({ error: "Sign in before connecting a YouTube channel." }),
+  })) as unknown as typeof fetch)
+
+  const { beginAccountIntent, isUnifiedAccountServerEnabled } = await import("./accountCoordinator")
+  await expect(beginAccountIntent("connect_channel", "/")).rejects.toThrow(
+   "Sign in before connecting a YouTube channel.",
+  )
+  expect(isUnifiedAccountServerEnabled("viewtube.live")).toBe(true)
+  expect(popup.close).toHaveBeenCalled()
+ })
+
  it("falls back to a valid snapshot instead of crashing when the server returns a malformed body", async () => {
   const store = new Map<string, string>()
   const localStorageStub = {

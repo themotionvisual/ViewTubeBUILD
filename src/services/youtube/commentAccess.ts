@@ -1,4 +1,8 @@
-import type { UnifiedAccountSnapshot } from "../account/accountContracts"
+import {
+  resolveAccountIntent,
+  type AccountIntent,
+  type UnifiedAccountSnapshot,
+} from "../account/accountContracts"
 
 export type CommentAccessState =
   | "ready"
@@ -29,3 +33,7 @@ export const resolveCommentAccessState = (
 
   return "requires_connection"
 }
+
+export const resolveCommentAccessIntent = (
+  snapshot: UnifiedAccountSnapshot,
+): AccountIntent => resolveAccountIntent(snapshot)

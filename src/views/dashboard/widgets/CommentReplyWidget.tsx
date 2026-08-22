@@ -19,7 +19,10 @@ import {
 import { generatePerfectReply } from "../../../services/gemini"
 import { useBrain } from "../../../context/useBrain"
 import { useUnifiedAccount } from "../../../context/UnifiedAccountContext"
-import { resolveCommentAccessState } from "../../../services/youtube/commentAccess"
+import {
+  resolveCommentAccessIntent,
+  resolveCommentAccessState,
+} from "../../../services/youtube/commentAccess"
 import {
   firstYouTubeThumbnailCandidate,
   nextYouTubeThumbnailCandidate,
@@ -385,12 +388,22 @@ export const CommentReplyWidget = ({
     }
   }
 
+  const requestCommentAccess = async () => {
+    setError(null)
+    try {
+      await account.start(
+        resolveCommentAccessIntent(account.snapshot),
+        window.location.pathname,
+      )
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Account authorization could not start.")
+    }
+  }
+
   const handleSend = async (commentId: string) => {
     if (!replyText[commentId]?.trim()) return
     if (!canPostReply) {
-      const intent = commentAccessState === "requires_connection" ? "connect_channel" : "reconnect_channel"
-      setError(`${intent === "connect_channel" ? "Connect" : "Reconnect"} Channel to grant comment-reply permission.`)
-      void account.start(intent, window.location.pathname)
+      await requestCommentAccess()
       return
     }
     setLoading(true)
@@ -537,10 +550,7 @@ export const CommentReplyWidget = ({
                 <button
                   className="vt-button primary"
                   type="button"
-                  onClick={() => void account.start(
-                    commentAccessState === "requires_reconnect" ? "reconnect_channel" : "connect_channel",
-                    window.location.pathname,
-                  )}
+                  onClick={() => void requestCommentAccess()}
                 >
                   {commentAccessState === "requires_reconnect" ? "RECONNECT CHANNEL" : "CONNECT CHANNEL"}
                 </button>

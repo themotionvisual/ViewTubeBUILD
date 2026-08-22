@@ -3,7 +3,10 @@ import {
   ANONYMOUS_ACCOUNT_SNAPSHOT,
   type UnifiedAccountSnapshot,
 } from "../account/accountContracts"
-import { resolveCommentAccessState } from "./commentAccess"
+import {
+  resolveCommentAccessIntent,
+  resolveCommentAccessState,
+} from "./commentAccess"
 
 const snapshotWith = (
   overrides: Omit<Partial<UnifiedAccountSnapshot>, "authentication" | "google"> & {
@@ -46,5 +49,30 @@ describe("resolveCommentAccessState", () => {
       authentication: { status: "authenticated" },
       google: { status: "connected", youtubeScopesGranted: true },
     }))).toBe("ready")
+  })
+
+  it("starts with ViewTube account authentication before requesting channel access", () => {
+    expect(resolveCommentAccessIntent(ANONYMOUS_ACCOUNT_SNAPSHOT)).toBe("sign_up")
+    expect(resolveCommentAccessIntent(snapshotWith({
+      viewtubeUserId: "viewtube-user",
+      authentication: { status: "anonymous", accountExists: true },
+    }))).toBe("log_in")
+    expect(resolveCommentAccessIntent(snapshotWith({
+      viewtubeUserId: "viewtube-user",
+      authentication: { status: "expired", accountExists: true },
+    }))).toBe("log_in")
+  })
+
+  it("requests channel connection only after the ViewTube account is authenticated", () => {
+    expect(resolveCommentAccessIntent(snapshotWith({
+      viewtubeUserId: "viewtube-user",
+      authentication: { status: "authenticated", accountExists: true },
+      google: { status: "disconnected", youtubeScopesGranted: false },
+    }))).toBe("connect_channel")
+    expect(resolveCommentAccessIntent(snapshotWith({
+      viewtubeUserId: "viewtube-user",
+      authentication: { status: "authenticated", accountExists: true },
+      google: { status: "revoked", youtubeScopesGranted: false },
+    }))).toBe("reconnect_channel")
   })
 })
