@@ -215,6 +215,12 @@ const ModuleFrame: React.FC<{
  collapsible?: boolean
  isOpenInitial?: boolean
  /**
+  * Forwarded to AnalyticsVisualShell so the shell can wire hero-intro
+  * animations for named visuals (heat-matrix, channel-vital-signs, etc).
+  * Passed through unchanged when set; omitted when undefined.
+  */
+ heroVisualId?: HeroVisualId
+ /**
   * Opt into the shared dark Tube Insights canvas treatment: the chart body
   * gets a `#0a0a1a` background (matching Heat Matrix / Clockburst / Channel
   * Vital Signs / Barcode Fingerprint / Title Keyword Network) instead of
@@ -224,7 +230,7 @@ const ModuleFrame: React.FC<{
   */
  insightDark?: boolean
  children: React.ReactNode
-}> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], activeContext, controllerRows, visualStyle, insight, height = 320, flushShell = false, stableChartFrame = true, collapsible = false, isOpenInitial = true, insightDark = false, children }) => {
+}> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], activeContext, controllerRows, visualStyle, insight, height = 320, flushShell = false, stableChartFrame = true, collapsible = false, isOpenInitial = true, heroVisualId, insightDark = false, children }) => {
  const resolvedStyle = visualStyle ?? resolveVtSyncVisualStyle(title)
  const normalizedActiveContext = useMemo(
   () => {
@@ -3131,7 +3137,7 @@ const createModule = (
  // can reach `props.data` for renderers that expect the CanonicalVideoRow[]
  // shape (e.g. GraphsPageCharts.* modules being called with `renderBare`).
  render: (dataset: TubeExplorerVisualDataset, props: TubeExplorerVisualProps) => React.ReactNode,
- options: { color?: string; icon?: string; badges?: { label: string; tone?: any }[]; insight?: string; height?: number; flushShell?: boolean; heroVisualId?: HeroVisualId; activeContext?: (dataset: TubeExplorerVisualDataset) => SubToolboxChartModuleProps["activeContext"] } = {},
+ options: { color?: string; icon?: string; badges?: { label: string; tone?: any }[]; insight?: string; height?: number; flushShell?: boolean; heroVisualId?: HeroVisualId; insightDark?: boolean; activeContext?: (dataset: TubeExplorerVisualDataset) => SubToolboxChartModuleProps["activeContext"] } = {},
 ): React.FC<TubeExplorerVisualProps> => (props) => {
  const dataset = useExplorerData(props)
  return (
