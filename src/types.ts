@@ -82,6 +82,8 @@ export type CsvMajorFamily =
 
 export type CsvUploadType = "auto" | CsvTag | Exclude<CsvMajorFamily, "unknown">
 
+export type CsvExportKind = "table_data" | "totals" | "chart" | "unknown"
+
 export type CsvDetectedCategory =
  | "content_performance"
  | "content_channel_all"
@@ -1838,6 +1840,66 @@ export type SuperToolId =
  | "retention-autopsy-experiment-engine"
  | "brain-command-center"
  | "workflow-chain-builder"
+
+export type SuperToolBuildState =
+ | "prototype_available"
+ | "vt_e1_editor_bound"
+ | "supporting_utility"
+ | "planned_or_embedded"
+
+export type SuperToolAgentGroup =
+ | "studio_projects"
+ | "editor_vt_e1"
+ | "analytics_shorts"
+ | "brain_workflow"
+ | "supporting_utility"
+
+export interface SuperToolRuntimePlanRecord {
+ toolId: SuperToolId
+ agentNumber?: number
+ docSlug?: string
+ verdict: string
+ modules: string[]
+ nextStep: string
+ buildState: SuperToolBuildState
+ agentGroup: SuperToolAgentGroup
+ currentRouteReality: string
+ runtimeBoundary: string
+ firstFunctionalAction: string
+ optimizationReportAnchor: string
+}
+
+export interface BrainCommandAction {
+ id: string
+ priority: "low" | "medium" | "high" | "urgent"
+ confidence: "low" | "medium" | "high"
+ sourceEvidence: string[]
+ targetToolId: SuperToolId
+ note: string
+ status: "queued" | "dispatched" | "resolved"
+ createdAt: number
+ source: "assistant" | "manual"
+ generationId: string | null
+ workflowId: string | null
+ assistantRequest: string | null
+ assistantResponse: string | null
+ targetRoute: string
+}
+
+export interface SuperToolActionPacket {
+ id: string
+ toolId: SuperToolId
+ moduleId: string
+ title: string
+ summary: string
+ inputs: Record<string, unknown>
+ outputs: Record<string, unknown>
+ confidence: "low" | "medium" | "high"
+ evidence: string[]
+ missingInputs: string[]
+ handoffTargets: string[]
+ createdAt: number
+}
 
 export type AIProviderId = "gemini" | "openai" | "mock"
 

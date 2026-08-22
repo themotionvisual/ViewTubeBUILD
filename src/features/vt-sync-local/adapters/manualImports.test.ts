@@ -222,7 +222,7 @@ describe("VT-SYNC manual imports snapshot merge", () => {
   ["device_os", [{ deviceType: "MOBILE", operatingSystem: "ANDROID" }, { deviceType: "MOBILE", operatingSystem: "IOS" }, { deviceType: "COMPUTER", operatingSystem: "WINDOWS" }], [{ device: "MOBILE", os: "ANDROID", views: 10 }]],
   ["playlists", [{ playlistId: "a" }, { playlistId: "b" }, { playlistId: "c" }], [{ id: "a", title: "Imported title" }]],
  ] as const)("never reduces the %s canonical table when an import is shorter", (tableId, apiRows, importedRows) => {
-  const merged = mergeVtSyncSupplementalTableRows(tableId, apiRows, importedRows)
+  const merged = mergeVtSyncSupplementalTableRows(tableId, [...apiRows], [...importedRows])
   expect(merged).toHaveLength(apiRows.length)
  })
 

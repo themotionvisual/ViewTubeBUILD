@@ -412,7 +412,7 @@ export const getVtSyncCompositeIdentityPresentation = (
    url: String(row.channelUrl || row.url || (handle ? `https://www.youtube.com/${handle}` : rawId ? `https://www.youtube.com/channel/${rawId}` : "")).trim() || undefined,
   }
  }
- if (tableId === "playlists" || trafficDetail?.family === "playlist") {
+ if (tableId === "playlists") {
   const rawId = String(row.playlistId || row.detail || row.id || "").trim()
   const videoCount = Number(row.videoCount)
   return {
@@ -829,7 +829,7 @@ export type VtSyncWorkspaceDefinition = {
 
 const visibleTableIdsFor = (...mainCategoryIds: string[]) =>
  VT_SYNC_VISIBLE_TABLE_DEFINITIONS
-  .filter((table) => mainCategoryIds.includes(table.mainCategoryId))
+  .filter((table) => Boolean(table.mainCategoryId) && mainCategoryIds.includes(table.mainCategoryId!))
   .map((table) => table.id)
 
 const tableIdsFor = (...ids: string[]) => ids.filter((id) => VT_SYNC_VISIBLE_TABLE_DEFINITIONS.some((table) => table.id === id))

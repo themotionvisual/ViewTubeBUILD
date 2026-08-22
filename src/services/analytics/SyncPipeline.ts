@@ -7,6 +7,7 @@ export type AnalyticsSyncSource = "youtube_analytics_api" | "youtube_reporting_a
 export type AnalyticsSyncAction =
  | "core_video_data"
  | "daily_metrics"
+ | "google_search"
  | "video_metrics"
  | "traffic"
  | "geography"
@@ -353,7 +354,6 @@ import {
   type CanonicalMetricKey,
 } from "./DataStore"
 import { DATA_COVERAGE_CATALOG } from "./MetricRegistry"
-import type { SyncDiagnostics } from "../productArchitecture"
 import { getMasterVideoColumnDefinition } from "../performanceHubTableRegistry"
 
 export type CapabilityScope =
@@ -554,7 +554,16 @@ export const getMasterColumnVisibilityRule = (
 
 export const getVideoMetricRuntimeStatus = (
  metric: string,
- diagnostics: SyncDiagnostics | null | undefined,
+ diagnostics: {
+  disabledMetrics?: string[]
+  failureReasons?: Array<{
+   metrics?: string[]
+   reason?: string
+   status?: number
+   requestClass?: string
+   outcome?: string
+  }>
+ } | null | undefined,
  options: {
   hasTargetVideoIds?: boolean
  } = {},
@@ -592,7 +601,7 @@ export const getVideoMetricRuntimeStatus = (
    failure.requestClass === "video_top_videos_channel_filter" &&
    (failure.status === 400 ||
     failure.outcome === "quarantined" ||
-    failure.reason.toLowerCase().includes("invalid")),
+    (failure.reason || "").toLowerCase().includes("invalid")),
  )
  if (requestShapeFailure) {
   return "temporarily_unavailable_due_to_request_shape"

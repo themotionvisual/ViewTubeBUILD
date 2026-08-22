@@ -71,6 +71,7 @@ export const acquireYouTubeAssets = async (input: {
         if (response.status === 404) continue
         throw new Error(lastError)
       }
+      if (!payload) throw new Error("YouTube acquisition returned no response.")
       return payload
     } catch (error) {
       lastError = error instanceof Error ? error.message : "Network failure"

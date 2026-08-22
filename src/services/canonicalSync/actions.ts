@@ -9,6 +9,7 @@ import {
  runCanonicalDefaultSync,
  runCanonicalDemographicsSync,
  runCanonicalGeographySync,
+ getCanonicalSyncOverview,
  runCanonicalPlaylistSync,
  runCanonicalRetentionSync,
  runCanonicalRevenueSync,
@@ -366,7 +367,8 @@ export const runCanonicalAction = async (
     if (dropdownOption === "search_console") {
      throw new Error("Canonical Search Console sync is not built yet.")
     }
-    return await runCanonicalTrafficSync()
+    await runCanonicalTrafficSync()
+    return await getCanonicalSyncOverview()
    case "audience":
     return await runCanonicalAudienceSync()
    case "demographics":

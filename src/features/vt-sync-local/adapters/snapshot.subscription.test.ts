@@ -16,7 +16,12 @@ describe("VT-SYNC snapshot subscriptions", () => {
   const storage = new Map<string, string>()
   const dispatchEvent = vi.fn()
   vi.stubGlobal("CustomEvent", class {
-   constructor(public type: string, public init?: unknown) {}
+   type: string
+   init?: unknown
+   constructor(type: string, init?: unknown) {
+    this.type = type
+    this.init = init
+   }
   })
   vi.stubGlobal("window", {
    localStorage: {

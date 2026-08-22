@@ -31,6 +31,7 @@ import {
 
 const Channelytics: React.FC = () => {
   const { brain, updateBrain, registerProvider, unregisterProvider, setResearchLabState } = useBrain();
+  const csvFiles = brain.channelyticsState.csvFiles ?? [];
 
   const [isUploading, setIsUploading] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'report' | 'data'>('dashboard');
@@ -156,7 +157,7 @@ const Channelytics: React.FC = () => {
   };
 
   const removeFile = (id: string) => {
-    const updatedFiles = brain.channelyticsState.csvFiles.filter(f => f.id !== id);
+    const updatedFiles = csvFiles.filter(f => f.id !== id);
     setUnifiedCsvFiles(updatedFiles);
   };
 
@@ -200,7 +201,7 @@ const Channelytics: React.FC = () => {
     return {
       totalViews: views.toLocaleString(),
       totalSubs: subs.toLocaleString(),
-      fileCount: brain.channelyticsState.csvFiles.length
+      fileCount: csvFiles.length
     };
   }, [parsedData, brain.channelyticsState.csvFiles]);
 
@@ -404,7 +405,7 @@ const Channelytics: React.FC = () => {
                   <>
                     {/* File List Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      {brain.channelyticsState.csvFiles.map(file => (
+                      {csvFiles.map(file => (
                         <div key={file.id} className={`border-[3px] border-black rounded-2xl p-6 flex flex-col shadow-[4px_4px_0px_0px_black] transition-all group relative ${getCategoryColorClass(file.tag || 'unknown')}`}>
                           <button
                             onClick={() => removeFile(file.id)}
@@ -427,7 +428,7 @@ const Channelytics: React.FC = () => {
                           </div>
                         </div>
                       ))}
-                      {brain.channelyticsState.csvFiles.length > 0 && (
+                      {csvFiles.length > 0 && (
                         <button
                           onClick={clearAll}
                           className="border-[4px] border-dashed border-black/10 rounded-2xl p-6 flex flex-col items-center justify-center text-black/20 hover:text-[#ff3399] hover:bg-red-50 hover:border-[#ff3399]/20 transition-all group"

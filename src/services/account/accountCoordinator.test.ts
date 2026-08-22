@@ -43,8 +43,8 @@ describe("accountCoordinator runtime resolution", () => {
     popup.closed = true
    }),
    location: { href: "about:blank" },
-  } as unknown as Window & { location: { href: string } }
-  const open = vi.fn(() => popup)
+  }
+  const open = vi.fn(() => popup as unknown as Window)
   const addEventListener = vi.fn((type: string, listener: (event: MessageEvent) => void) => {
    const set = listeners.get(type) || new Set()
    set.add(listener)

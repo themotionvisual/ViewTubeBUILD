@@ -417,6 +417,7 @@ interface ToolboxScaffoldProps {
   iconName?: string;
   headerColor?: string;
   iconBoxColor?: string;
+  textColor?: string;
   paletteIndex?: number;
   collapsible?: boolean;
   isOpen?: boolean;
@@ -443,6 +444,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
   iconName,
   headerColor = "bg-[#FFDD00]",
   iconBoxColor = "bg-[#FF3399]",
+  textColor = "text-black",
   paletteIndex,
   collapsible = false,
   isOpen = true,
@@ -469,6 +471,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
     iconName={iconName}
     headerColor={headerColor}
     iconBoxColor={iconBoxColor}
+    textColor={textColor}
     paletteIndex={paletteIndex}
     collapsible={collapsible}
     isOpen={isOpen}

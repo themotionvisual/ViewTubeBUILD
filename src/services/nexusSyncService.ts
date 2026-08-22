@@ -60,6 +60,9 @@ class NexusSyncService {
    * Sync a project to Google Calendar
    */
   public async pushToCalendar(project: Project) {
+    if (!project.publishDate) {
+      throw new Error("A publish date is required before syncing a project to Calendar.")
+    }
     const event = {
       summary: `🎬 [ViewTUBE] Publish: ${project.name}`,
       description: `Target Publish Protocol for ${project.name}.\nStatus: ${project.status}`,

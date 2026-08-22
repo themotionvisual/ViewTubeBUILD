@@ -17,7 +17,7 @@ type AnalyticsQueryParams = {
  metrics: string[]
  dimensions?: string[]
  filters?: string[]
- sort?: string[]
+ sort?: string | string[]
  maxResults?: number
  startIndex?: number
 }
@@ -57,7 +57,7 @@ const buildAnalyticsUrl = ({
  })
  if (dimensions.length > 0) params.set("dimensions", dimensions.join(","))
  if (filters.length > 0) params.set("filters", filters.join(";"))
- if (sort) params.set("sort", sort)
+ if (sort) params.set("sort", Array.isArray(sort) ? sort.join(",") : sort)
  if (typeof maxResults === "number" && maxResults > 0) {
   params.set("maxResults", String(maxResults))
  }
@@ -126,7 +126,7 @@ export const rowsToObjects = (payload: any): Record<string, unknown>[] => {
    })
    return out
   })
-  .filter((row): row is Record<string, unknown> => !!row)
+  .filter((row: Record<string, unknown> | null): row is Record<string, unknown> => !!row)
 }
 
 export const toMetricNumber = (value: unknown): number | null => {

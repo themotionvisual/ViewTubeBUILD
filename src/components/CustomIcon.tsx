@@ -29,6 +29,7 @@ interface CustomIconProps {
   size?: number;
   className?: string;
   animate?: boolean;
+  strokeWidth?: number;
 }
 
 const iconMap: Record<string, string> = {
@@ -102,7 +103,7 @@ export const resolveCustomIconSrc = (name: IconName, animate = true, hovered = f
   return iconUrlMap[fileName] || `/icons/${fileName}`
 }
 
-export const CustomIcon: React.FC<CustomIconProps> = ({ name, size = 24, className = "", animate = true }) => {
+export const CustomIcon: React.FC<CustomIconProps> = ({ name, size = 24, className = "", animate = true, strokeWidth }) => {
   const [hovered, setHovered] = useState(false);
   const finalPath = resolveCustomIconSrc(name, animate, hovered)
 
@@ -110,6 +111,7 @@ export const CustomIcon: React.FC<CustomIconProps> = ({ name, size = 24, classNa
     <img 
       src={finalPath} 
       alt={`${name} icon`} 
+      data-stroke-width={strokeWidth}
       style={{ width: size, height: size }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}

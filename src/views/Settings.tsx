@@ -287,7 +287,6 @@ const Settings: React.FC = () => {
    setBillingStatus("Creating secure checkout session...")
   const session = await createCheckoutSession({
     planId,
-    userId: "local-user",
     successUrl: `${window.location.origin}/account?panel=billing`,
     cancelUrl: `${window.location.origin}/account?panel=billing`,
    })
@@ -311,7 +310,6 @@ const Settings: React.FC = () => {
    setBillingStatus("Creating top-up checkout session...")
    const session = await createCheckoutSession({
     planId: "creator_plus",
-    userId: "local-user",
     successUrl: `${window.location.origin}/account?panel=billing`,
     cancelUrl: `${window.location.origin}/account?panel=billing`,
     mode: "topup",
@@ -343,7 +341,6 @@ const Settings: React.FC = () => {
    setBillingStatus("Creating custom top-up checkout session...")
    const session = await createCheckoutSession({
     planId: "creator_plus",
-    userId: "local-user",
     successUrl: `${window.location.origin}/account?panel=billing`,
     cancelUrl: `${window.location.origin}/account?panel=billing`,
     mode: "topup",

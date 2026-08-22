@@ -583,7 +583,7 @@ export const flattenSearchTermsForVt2 = (
     for (const v of videos) {
       const words = (v.title ?? "").replace(/[^\w\s]/g, "").split(/\s+/)
       const views = readMetric(v, "views")
-      const duration = readMetric(v, "durationSeconds")
+      const duration = Number(v.durationSeconds || 0)
       const minutes = (views * duration) / 60
       for (const w of words) {
         const clean = w.toLowerCase().trim()

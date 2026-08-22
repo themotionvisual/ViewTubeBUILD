@@ -452,6 +452,7 @@ const METRIC_ARBITRATION_POLICY: Record<CanonicalMetricKey, MasterMetricArbitrat
   dislikes: "api_authoritative",
   comments: "api_authoritative",
   shares: "api_authoritative",
+  saves: "api_authoritative",
   subscribersGained: "api_authoritative",
   subscribersLost: "api_authoritative",
   subscribersNet: "net_from_csv",
@@ -791,7 +792,14 @@ const getBundleForWindow = (
   }
 
   const bundle = cache.analyticsByWindow?.[window]
-  if (bundle?.report) return bundle
+  if (bundle?.report) return {
+    ...bundle,
+    window,
+    startDate: bundle.startDate ?? "",
+    endDate: bundle.endDate ?? "",
+    fetchedAt: bundle.fetchedAt ?? Date.now(),
+    report: bundle.report,
+  }
 
   if (window === "lifetime" && cache.analytics) {
     return {

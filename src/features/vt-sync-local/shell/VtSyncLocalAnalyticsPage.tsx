@@ -583,7 +583,7 @@ const refreshManualImports = useCallback(async (payload?: {
  rowsByTableId: Record<string, unknown[]>
  capturedAt: string
 }) => {
- const channelId = snapshot.channelId
+ const channelId = snapshot.channelId ?? null
 
  // IMPORTANT:
  // A fresh CSV import should immediately enter React state so DATA VISUALS

@@ -3083,7 +3083,7 @@ const filteredRows = useMemo(() => {
                minWidth: width,
                maxWidth: width,
                "--vt-total-cell-background": getOpaqueVtSyncTint(color, 0.22),
-              }}>
+              } as React.CSSProperties}>
               <div className="vt-sync-collapsed-format-totals">
                {total.badges.map((badge) => {
                 const presentation = getVtSyncFormatBadgePresentation(badge.value)
@@ -3107,7 +3107,7 @@ const filteredRows = useMemo(() => {
              minWidth: width,
              maxWidth: width,
              "--vt-total-cell-background": getOpaqueVtSyncTint(color, 0.22),
-            }}
+            } as React.CSSProperties}
            />
           )
          }
@@ -3126,7 +3126,7 @@ const filteredRows = useMemo(() => {
            minWidth: width,
            maxWidth: width,
             "--vt-total-cell-background": getOpaqueVtSyncTint(color, 0.22),
-           }}>
+           } as React.CSSProperties}>
 {total.badges?.length ?
             <div className="vt-sync-total-badges">
              {total.badges.map((badge) => {
@@ -3538,7 +3538,7 @@ const filteredRows = useMemo(() => {
              title={text}
              titleLayout={titleLayout}
             />
-           : (table.id === "playlists" || trafficDetailFamily === "playlist") && column.key === "title" ?
+           : table.id === "playlists" && column.key === "title" ?
             <PlaylistIdentityCell
              row={row}
              title={text}

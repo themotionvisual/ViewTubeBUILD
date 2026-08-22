@@ -22,7 +22,7 @@ const WidgetLabV2: React.FC = () => {
         iconName="layers"
         headerColor="bg-[#B14AED]"
         iconBoxColor="bg-[#CCFF00]"
-        defaultOpen={true}
+        isOpenInitial={true}
       >
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 p-6">
           {/* A. Widget Pipeline - SubToolbox */}
@@ -108,7 +108,7 @@ const WidgetLabV2: React.FC = () => {
         iconName="image"
         headerColor="bg-[#CCFF00]"
         iconBoxColor="bg-[#24D3FF]"
-        defaultOpen={false}
+        isOpenInitial={false}
       >
         <div className="p-6">
           <Toolbox variant="sub" title="Source Preview" iconName="sparkles" headerColor="bg-[#FFE357]">

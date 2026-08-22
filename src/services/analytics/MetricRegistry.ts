@@ -2358,7 +2358,7 @@ export const resolveMetricNumber = (
   row as unknown as Record<string, unknown>,
   METRIC_REGISTRY[metricKey]?.aliases || [],
  )
- if (fallbackFromRow !== undefined) {
+ if (fallbackFromRow !== undefined && fallbackFromRow !== null) {
   if (metricKey === "watchHours") {
    const looksLikeMinutes = fallbackFromRow > 24 * 365
    return {

@@ -17,7 +17,10 @@ import {
  type CanonicalRawAuditEntry,
   type CanonicalRetentionSeries,
   type CanonicalSyncOverview,
-  type CanonicalSyncRun,
+ type CanonicalSyncRun,
+ type CanonicalSyncSource,
+ type MetricAvailability,
+ type MetricConfidence,
  type CanonicalTrafficRow,
  type CanonicalVideoMetricMetaByWindow,
  type CanonicalVideoRecord,
@@ -54,10 +57,10 @@ const normalizeStoredVideoRecord = (
      }
      normalizedMetrics[metricKey] = legacyMetric.value ?? null
      normalizedMeta[metricKey] = {
-      source: legacyMetric.source || "analytics_api",
-      availability: legacyMetric.availability || "pending",
+      source: (legacyMetric.source || "analytics_api") as CanonicalSyncSource,
+      availability: (legacyMetric.availability || "pending") as MetricAvailability,
       reasonCode: legacyMetric.reasonCode,
-      confidence: legacyMetric.confidence || "raw_direct",
+      confidence: (legacyMetric.confidence || "raw_direct") as MetricConfidence,
       syncedAt: legacyMetric.syncedAt || record.syncedAt,
      }
      return

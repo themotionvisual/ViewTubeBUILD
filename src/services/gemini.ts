@@ -1686,6 +1686,7 @@ export interface StructuredBrainModelOutput {
   | "goal_coach"
   | "publishing_checklist"
   | "revenue_levers"
+  | "creator_asset_draft"
   | "audience_insight"
  modules: Array<{
   title: string

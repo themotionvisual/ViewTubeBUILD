@@ -202,7 +202,7 @@ type TopRow = {
 }
 
 type EngagementMapPoint = {
- key: string
+ key?: string
  index: number
  label: string
  videoId: string
@@ -215,6 +215,7 @@ type EngagementMapPoint = {
  comments: number
  shares: number
  subscribers: number
+ impressions?: number
 }
 
 type EngagementSortMetric = "comments" | "subscribers" | "shares" | "likes"
@@ -899,7 +900,7 @@ const PerformanceHub: React.FC = () => {
    return parsed.map((file) => ({
     ...file,
     byteSize:
-     numberFromUnknown((file as Record<string, unknown>).byteSize) ||
+     numberFromUnknown((file as unknown as Record<string, unknown>).byteSize) ||
      numberFromUnknown(file.file?.size) ||
      0,
    }))
@@ -1042,7 +1043,7 @@ const [cachedUploadFiles, setCachedUploadFiles] = useState<CsvFileWithTag[]>(
   }
  }, [canonicalMasterRows, masterTableRows])
  const selectedMetricSummary = useMemo(
-  () => getMetricSummary(analyticsWindow, dataSource, recognizedCsvFiles),
+  () => getMetricSummary(analyticsWindow, dataSource === "csv" ? "csv_table" : dataSource, recognizedCsvFiles),
   [lastSyncComplete, analyticsWindow, dataSource, recognizedCsvFiles],
  )
  const apiRows = useMemo(() => {
@@ -3525,14 +3526,14 @@ type AudienceDemographicsCsvRow = {
       "Estimated revenue (USD)",
       "Viewer %",
      ] as const
-     return statsToCheck.some((metric) => {
-      const raw = row[metric]
+    return statsToCheck.some((metric) => {
+      const raw = (row as Record<string, unknown>)[metric]
       if (typeof raw === "string") return textFromUnknown(raw).trim() !== "" && raw !== "-"
       const numeric = numberFromUnknown(raw)
       return Number.isFinite(numeric) && Math.abs(numeric) > 0
      })
     })
-    .sort((a, b) => numberFromUnknown(b["Views"]) - numberFromUnknown(a["Views"]))
+    .sort((a, b) => numberFromUnknown((b as Record<string, unknown>)["Views"]) - numberFromUnknown((a as Record<string, unknown>)["Views"]))
   }
 
   let deviceRows = normalizedReportRows(
@@ -5173,7 +5174,7 @@ const renderDataViz = () => {
       <StableChartFrame minHeightClassName="min-h-[1px]">
         <ScatterChart
          margin={{ top: 8, right: 20, bottom: 8, left: 8 }}
-         onMouseMove={(state: { activePayload?: Array<{ payload?: EngagementMapPoint }> }) => {
+         onMouseMove={(state: any) => {
           const point = state.activePayload?.[0]?.payload
           const nextId =
            point?.videoId ||
@@ -5193,7 +5194,7 @@ const renderDataViz = () => {
          <Tooltip
           cursor={{ stroke: "#111827", strokeOpacity: 0.38, strokeWidth: 1 }}
           contentStyle={{ border: "3px solid black", borderRadius: "12px", fontWeight: 900 }}
-          labelFormatter={(_label: unknown, payload: Array<{ payload?: EngagementMapPoint }>) =>
+          labelFormatter={(_label: unknown, payload: any) =>
            payload?.[0]?.payload?.title || ""
           }
           formatter={(value: unknown, key: unknown) => {

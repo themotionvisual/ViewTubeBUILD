@@ -34,7 +34,7 @@ const analyticsMock = (overrides?: Partial<CanonicalAnalyticsView>): CanonicalAn
     {
       id: "a",
       title: "A",
-      format: "long-form",
+      format: "long",
       views: 1000,
       likes: 100,
       comments: 40,
@@ -49,6 +49,7 @@ const analyticsMock = (overrides?: Partial<CanonicalAnalyticsView>): CanonicalAn
   formatBreakdown: [{ name: "long-form", value: 1000 }],
   timelineSeries: [{ date: "2026-04-01", views: 1000, watchHours: 500, revenue: 100, subscribers: 20 }],
   ...overrides,
+  channelDailySeries: overrides?.channelDailySeries ?? [],
 })
 
 describe("evaluateChartCapability40", () => {
@@ -81,4 +82,3 @@ describe("evaluateChartCapability40", () => {
     expect(status.readiness).toBe("unavailable")
   })
 })
-

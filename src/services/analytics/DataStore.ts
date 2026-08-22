@@ -401,6 +401,7 @@ export interface MetricCell {
  finalizedAt?: number
  fetchedAt?: number
  derivedAt?: number
+ importedAt?: number
  availabilityReason?: "available" | "unavailable" | "not_requested" | "auth_required"
 }
 

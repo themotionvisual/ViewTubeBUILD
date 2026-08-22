@@ -13,6 +13,7 @@ import type {
  CanonicalGeographyRow,
  CanonicalSyncOverview,
  CanonicalSyncRun,
+ CanonicalSyncStage,
  CanonicalTrafficRow,
  CanonicalTrafficVisualDataset,
  CanonicalVideoRecord,
@@ -977,7 +978,7 @@ export const runCanonicalTrafficReportingBackfill = async (
   reportingMode: "discover",
  })
  const syncedAt = new Date().toISOString()
- const rows = result.trafficReportingBulk.map((row) => ({
+ const rows: CanonicalTrafficRow[] = result.trafficReportingBulk.map((row) => ({
   channelId: resolvedChannelId,
   datasetKind: "traffic_reporting_bulk" as const,
   source: "reporting_api" as const,
@@ -1720,6 +1721,8 @@ export const buildCanonicalDataBundle = async (
   playlists,
   playlistWindowSummaries,
   retentionSeries,
+  trafficRows,
+  geographyRows,
   shadowDiffs,
   syncRuns,
   ownerModeEnabled: getCanonicalOwnerModeEnabled(),

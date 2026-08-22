@@ -1473,7 +1473,7 @@ export const mergeVideoAnalyticsRows = (
   const assignments = family === "long_format_cards"
    ? LONG_FORMAT_CARD_METRIC_ASSIGNMENTS
    : FULL_VIDEO_METRIC_ASSIGNMENTS
-  const analyticsProvenance = Object.fromEntries(assignments.flatMap((assignment) => {
+  const analyticsProvenance: Record<string, "youtube_analytics_v2" | "youtube_data_v3"> = Object.fromEntries(assignments.flatMap((assignment) => {
    const value = readIncomingMetric(stats, assignment.source)
    return value === undefined ? [] : [[assignment.target, "youtube_analytics_v2"]]
   }))
@@ -2079,9 +2079,10 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      }))
      if (bundle !== DAILY_ANALYTICS_METRIC_BUNDLES[DAILY_ANALYTICS_METRIC_BUNDLES.length - 1]) await sleep(75)
     }
-    const mergedBatchRows = batchRows.reduce(
-     (rows, row) => mergeRowsByKey(rows, [row], (candidate) => String(candidate.video || "")),
-     [] as Record<string, any>[],
+    const mergedBatchRows = mergeRowsByKey(
+     [],
+     batchRows,
+     (candidate) => String(candidate.video || ""),
     )
     if (mergedBatchRows.length) {
      mergedBatchRows.forEach((row) => {
@@ -2597,7 +2598,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
       error: bundleResults.map((bundle) => bundle.error).filter(Boolean).join(" | ") || undefined,
       status: bundleResults.find((bundle) => bundle.status)?.status,
      }
-     if (!result.rows.length && bundleResults.every((bundle) => !bundle.rows)) result.rows = null
+     if (!result.rows?.length && bundleResults.every((bundle) => !bundle.rows)) result.rows = null
     } else {
      result = await runAnalyticsBundle({ token, id: `${categoryId}_core`, metrics: [...metrics], dimensions, sort, maxResults, filters, startDate: channelStartDate, allowFallback: false })
     }

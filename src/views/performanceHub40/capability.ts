@@ -17,7 +17,7 @@ const hasMetric = (
     case "subscribers":
       return summary.totals.subscribersGained !== 0
     case "ctr":
-      return summary.averages.ctr > 0
+      return (summary.averages.ctr ?? 0) > 0
     case "impressions":
       return topRows.some((row) => row.ctr > 0)
     case "likes":
@@ -27,9 +27,9 @@ const hasMetric = (
     case "shares":
       return topRows.some((row) => row.shares > 0)
     case "avd":
-      return summary.averages.avd > 0
+      return (summary.averages.avdSeconds ?? 0) > 0
     case "avp":
-      return summary.averages.avp > 0
+      return (summary.averages.avp ?? 0) > 0
     case "engagedViews":
       return topRows.some((row) => row.views > 0 && row.avp > 0)
     case "country":
@@ -80,4 +80,3 @@ export const evaluateChartCapability40 = (
     missingSoft,
   }
 }
-
