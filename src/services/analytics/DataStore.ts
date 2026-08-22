@@ -14,7 +14,7 @@ export interface CanonicalMetricValue {
  }
 }
 
-export interface MetricCapability {
+export interface DatasetMetricCapability {
  metric: string
  status: "available" | "unsupported"
  reasonCode?: string
@@ -37,7 +37,7 @@ export interface CanonicalDataset {
  }
  videosLifetime: CanonicalVideoRow[]
  windows: Partial<Record<AnalyticsWindow, CanonicalDatasetWindow>>
- capabilities: Partial<Record<AnalyticsWindow, MetricCapability[]>>
+ capabilities: Partial<Record<AnalyticsWindow, DatasetMetricCapability[]>>
  syncMeta: {
   lastSynced: number | null
   source: MetricSource
@@ -95,7 +95,7 @@ export type RawAnalyticsCache = Record<string, unknown> & {
   >
  >
  metricCapabilitiesByWindow?: Partial<
-  Record<AnalyticsWindow, MetricCapability[]>
+  Record<AnalyticsWindow, DatasetMetricCapability[]>
  >
  videoContentType?: Record<string, string>
  videoContentTypeStatus?: {
@@ -333,6 +333,7 @@ export type CanonicalMetricKey =
  | "dislikes"
  | "comments"
  | "shares"
+ | "saves"
  | "subscribersGained"
  | "subscribersLost"
  | "subscribersNet"
@@ -392,6 +393,15 @@ export interface MetricCell {
  reasonCode?: string
  sourceField?: string
  windowScope?: AnalyticsWindow | "multi" | "unknown"
+ sourceClass?: "owner_analytics" | "manual_import" | "reporting_exports" | "derived" | "public_catalog"
+ authMode?: "channel_owner" | "content_owner" | "manual" | "reporting" | "unknown"
+ officialStatus?: "official" | "imported" | "derived"
+ estimatedStatus?: boolean
+ mergedStatus?: "finalized" | "estimated" | "blocked"
+ finalizedAt?: number
+ fetchedAt?: number
+ derivedAt?: number
+ availabilityReason?: "available" | "unavailable" | "not_requested" | "auth_required"
 }
 
 export interface CanonicalMetricDefinition {
@@ -539,6 +549,20 @@ export const METRIC_REGISTRY: Record<CanonicalMetricKey, CanonicalMetricDefiniti
     nickname: "Shares",
    },
    aliases: ["Shares", "shares", "shareCount"],
+   rawPolicy: "raw_preferred",
+   sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
+  },
+  saves: {
+   key: "saves",
+   label: "Playlist Saves",
+   unit: "count",
+   apiFieldName: "videosAddedToPlaylists",
+   displayVariants: {
+    tableHeader: "Playlist Saves",
+    commonName: "Playlist Saves",
+    nickname: "Saves",
+   },
+   aliases: ["Playlist Saves", "Saves", "saves", "videosAddedToPlaylists"],
    rawPolicy: "raw_preferred",
    sourceWindows: { api: ANALYTICS_WINDOWS, csv_table: ANALYTICS_WINDOWS, ga4: ANALYTICS_WINDOWS },
   },
@@ -1158,6 +1182,7 @@ export const canonicalMetricOrder: CanonicalMetricKey[] = [
  "watchHours",
  "comments",
  "shares",
+ "saves",
  "subscribersGained",
  "subscribersLost",
  "subscribersNet",
@@ -1278,43 +1303,44 @@ export const getMetricByAliases = (
 export const buildUnavailableMetricCell = (
  source: MetricSource,
  reasonCode?: string,
+ meta?: Partial<Omit<MetricCell, "value" | "status" | "source" | "availability" | "confidence" | "reasonCode">>,
 ): MetricCell => ({
+ ...meta,
  value: null,
  status: "unavailable",
  source,
  availability: "unavailable",
  confidence: "unavailable",
  reasonCode,
- windowScope: "unknown",
+ windowScope: meta?.windowScope ?? "unknown",
 })
 
 export const buildActualMetricCell = (
  value: number,
  source: MetricSource,
- meta?: Pick<MetricCell, "sourceField" | "windowScope">,
+ meta?: Partial<Omit<MetricCell, "value" | "status" | "source" | "availability" | "confidence">>,
 ): MetricCell => ({
+ ...meta,
  value,
  status: "actual",
  source,
  availability: "available",
  confidence: "raw_direct",
- sourceField: meta?.sourceField,
  windowScope: meta?.windowScope ?? "unknown",
 })
 
 export const buildDerivedMetricCell = (
  value: number,
  source: MetricSource,
- meta?: Pick<MetricCell, "sourceField" | "windowScope" | "reasonCode">,
+ meta?: Partial<Omit<MetricCell, "value" | "status" | "source" | "availability" | "confidence">>,
 ): MetricCell => ({
+ ...meta,
  value,
  status: "derived",
  source,
  availability: "available",
  confidence: "derived_exact",
- sourceField: meta?.sourceField,
  windowScope: meta?.windowScope ?? "unknown",
- reasonCode: meta?.reasonCode,
 })
 
 export const emptyMetricCells = (source: MetricSource): Record<CanonicalMetricKey, MetricCell> =>

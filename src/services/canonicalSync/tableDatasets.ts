@@ -1,5 +1,4 @@
 import type { AnalyticsWindow } from "../analytics/DataStore"
-import type { PerformanceHubTableDatasetId } from "../performanceHubTableRegistry"
 import { formatTrafficSourceNickname } from "../dataUtils"
 import { getCanonicalSyncOverview } from "./repository"
 import { selectRowsForWindow } from "./windowing"
@@ -25,8 +24,41 @@ export type CanonicalTableDatasetProvenance =
 
 export type CanonicalTableDatasetReadiness = "idle" | "pending" | "ready"
 
+export type CanonicalTableDatasetId =
+ | "master"
+ | "daily"
+ | "daily_statistics"
+ | "weekly_statistics"
+ | "monthly_statistics"
+ | "window_statistics"
+ | "traffic"
+ | "traffic_sources"
+ | "traffic_youtube_search_terms"
+ | "traffic_external_websites"
+ | "traffic_suggested_videos"
+ | "traffic_channel_pages"
+ | "traffic_playlists"
+ | "traffic_notifications"
+ | "traffic_end_screens"
+ | "traffic_cards_annotations"
+ | "traffic_hashtags"
+ | "traffic_sound_pages"
+ | "traffic_shorts_links"
+ | "traffic_advertising"
+ | "traffic_browse_features"
+ | "traffic_other_features"
+ | "audience"
+ | "demographics"
+ | "demographics_by_age"
+ | "demographics_by_gender"
+ | "country"
+ | "geography"
+ | "geography_city"
+ | "geography_province_us"
+ | "device"
+
 export type CanonicalTableDatasetSnapshot = {
- datasetId: PerformanceHubTableDatasetId
+ datasetId: CanonicalTableDatasetId
  rows: Array<Record<string, unknown>>
  provenance: CanonicalTableDatasetProvenance
  readiness: CanonicalTableDatasetReadiness
@@ -38,10 +70,10 @@ export type CanonicalTableDatasetSnapshot = {
 }
 
 export type CanonicalTableDatasetMap = Partial<
- Record<PerformanceHubTableDatasetId, CanonicalTableDatasetSnapshot>
+ Record<CanonicalTableDatasetId, CanonicalTableDatasetSnapshot>
 >
 
-const TRAFFIC_DATASET_IDS: PerformanceHubTableDatasetId[] = [
+const TRAFFIC_DATASET_IDS: CanonicalTableDatasetId[] = [
  "traffic",
  "traffic_sources",
  "traffic_youtube_search_terms",
@@ -60,14 +92,14 @@ const TRAFFIC_DATASET_IDS: PerformanceHubTableDatasetId[] = [
  "traffic_other_features",
 ]
 
-const DEMOGRAPHIC_DATASET_IDS: PerformanceHubTableDatasetId[] = [
+const DEMOGRAPHIC_DATASET_IDS: CanonicalTableDatasetId[] = [
  "audience",
  "demographics",
  "demographics_by_age",
  "demographics_by_gender",
 ]
 
-const GEOGRAPHY_DATASET_IDS: PerformanceHubTableDatasetId[] = [
+const GEOGRAPHY_DATASET_IDS: CanonicalTableDatasetId[] = [
  "country",
  "geography",
  "geography_city",
@@ -296,7 +328,7 @@ const buildWindowRows = (
  })
 }
 
-const normalizeTrafficCategory = (row: CanonicalTrafficRow): PerformanceHubTableDatasetId => {
+const normalizeTrafficCategory = (row: CanonicalTrafficRow): CanonicalTableDatasetId => {
  const type = String(row.trafficSourceType || "").toUpperCase()
  if (type === "YT_SEARCH") return "traffic_youtube_search_terms"
  if (type === "EXT_URL") return "traffic_external_websites"
@@ -382,7 +414,7 @@ const buildTrafficBaseRow = (row: CanonicalTrafficRow): Record<string, unknown> 
 
 const aggregateTrafficRows = (
  rows: CanonicalTrafficRow[],
- datasetId: PerformanceHubTableDatasetId,
+ datasetId: CanonicalTableDatasetId,
 ): Array<Record<string, unknown>> => {
  const filtered = rows.filter((row) => {
   if (row.entityType !== "channel") return false
@@ -391,7 +423,7 @@ const aggregateTrafficRows = (
   }
   return normalizeTrafficCategory(row) === datasetId
  })
- const prefersDetailTitle = new Set<PerformanceHubTableDatasetId>([
+ const prefersDetailTitle = new Set<CanonicalTableDatasetId>([
   "traffic_youtube_search_terms",
   "traffic_external_websites",
   "traffic_suggested_videos",
@@ -451,7 +483,7 @@ const aggregateTrafficRows = (
    current["Channel handle"] = base["Channel handle"]
  })
  return Array.from(grouped.values())
-  .map((row) => {
+  .map<Record<string, unknown>>((row) => {
    const views = getNumber(row.Views)
    const impressions = getNumber(row.Impressions)
    return {
@@ -461,7 +493,7 @@ const aggregateTrafficRows = (
      impressions > 0 ? (views / impressions) * 100 : getNumber(row["Impressions click-through rate (%)"]),
    }
   })
-  .map((row, _index, allRows) => {
+  .map<Record<string, unknown>>((row, _index, allRows) => {
    const totalViews = allRows.reduce((sum, entry) => sum + getNumber(entry.Views), 0)
    return {
     ...row,
@@ -484,7 +516,7 @@ const splitDemographicKey = (
 
 const buildDemographicRows = (
  rows: CanonicalAudienceSplitRow[],
- datasetId: PerformanceHubTableDatasetId,
+ datasetId: CanonicalTableDatasetId,
 ): Array<Record<string, unknown>> => {
  const filtered = rows.filter(
   (row) => row.entityType === "channel" && row.splitDimension === "demographic",
@@ -564,7 +596,7 @@ const buildDemographicRows = (
 
 const buildGeographyRows = (
  rows: CanonicalGeographyRow[],
- datasetId: PerformanceHubTableDatasetId,
+ datasetId: CanonicalTableDatasetId,
 ): Array<Record<string, unknown>> => {
  const filtered = rows.filter((row) => row.entityType === "channel")
  if (datasetId === "country" || datasetId === "geography") {

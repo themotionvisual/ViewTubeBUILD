@@ -18,6 +18,7 @@ export interface ControllerNumberRow extends ControllerRowBase {
   onPrev?: () => void
   onNext?: () => void
   isBig?: boolean
+  unitLabel?: string
 }
 
 export interface ControllerTextRow extends ControllerRowBase {
@@ -25,6 +26,8 @@ export interface ControllerTextRow extends ControllerRowBase {
   value: string
   onPrev?: () => void
   onNext?: () => void
+  labelPrefix?: string
+  widthValues?: readonly string[]
 }
 
 export interface ControllerLabelRow extends ControllerRowBase {
@@ -50,6 +53,8 @@ export interface ControllerSplitRow extends ControllerRowBase {
   rightFgTone?: string
   onPrev?: () => void
   onNext?: () => void
+  leftWidthValues?: readonly string[]
+  rightWidthValues?: readonly string[]
 }
 
 export interface ControllerRankedByRow extends ControllerRowBase {
@@ -74,6 +79,7 @@ export interface ControllerMetricMultiSelectRow extends ControllerRowBase {
    * selected metrics are full-height colored cells, not little badge pills.
    */
   displayMode?: "badges" | "timeline"
+  label?: string
 }
 
 export interface ControllerToggleRow extends ControllerRowBase {
@@ -81,6 +87,7 @@ export interface ControllerToggleRow extends ControllerRowBase {
   value: string
   options: readonly string[]
   onSelect: (value: string) => void
+  labelPrefix?: string
 }
 
 export interface ControllerStatementRow extends ControllerRowBase {
@@ -190,7 +197,7 @@ const applyControllerPalette = (
   row: ControllerRow,
   index: number,
   rows: ControllerRow[],
-  colors: ReturnType<typeof useAnalyticsVisualStyle>["controllerColors"],
+  colors: NonNullable<ReturnType<typeof useAnalyticsVisualStyle>>["controllerColors"],
 ): ControllerRow => {
   if (!colors || row.type === "custom") return row
   if (row.type === "statement") {

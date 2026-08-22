@@ -49,6 +49,7 @@ import type { VtSyncVisualHeaderColorPair } from "../features/vt-sync-local/shel
 import { resolveVtSyncVisualStyle } from "../styles/vtSyncVisualStyles"
 import {
  buildTubeExplorerVisualData,
+ type TubeExplorerTrafficPoint,
  type TubeExplorerVisualDataset,
  type TubeExplorerVideoPoint,
 } from "./tubeExplorerVisualData"
@@ -735,19 +736,35 @@ export const classifyTrafficFocus = (row: TubeExplorerTrafficPoint): TrafficFocu
 }
 
 const summarizeTrafficSlices = (rows: TubeExplorerTrafficPoint[]): TrafficFocusSlice[] => {
- const map = new Map<TrafficFocusKind, number>()
+ const map = new Map<TrafficFocusKind, Omit<TrafficFocusSlice, "kind" | "label" | "color" | "value"> & { avpWeighted: number; avpWeight: number }>()
  for (const row of rows) {
   if (!(row.views > 0)) continue
   const kind = classifyTrafficFocus(row)
-  map.set(kind, (map.get(kind) || 0) + row.views)
+  const current = map.get(kind) || { views: 0, watchHours: 0, engagedViews: 0, avp: 0, avdSeconds: 0, avpWeighted: 0, avpWeight: 0 }
+  current.views += row.views
+  current.watchHours += row.watchHours
+  current.engagedViews += row.engagedViews
+  if (row.avp > 0) {
+   current.avpWeighted += row.avp * Math.max(row.views, 1)
+   current.avpWeight += Math.max(row.views, 1)
+  }
+  map.set(kind, current)
  }
  return [...map.entries()]
-  .map(([kind, views]) => ({
-   kind,
-   label: trafficFocusLabel(kind),
-   views,
-   color: TRAFFIC_FOCUS_META[kind].tone,
-  }))
+  .map(([kind, totals]) => {
+   const avp = totals.avpWeight > 0 ? totals.avpWeighted / totals.avpWeight : 0
+   return {
+    kind,
+    label: trafficFocusLabel(kind),
+    views: totals.views,
+    watchHours: totals.watchHours,
+    engagedViews: totals.engagedViews,
+    avp,
+    avdSeconds: clockBurstAvdSeconds(totals.views, totals.watchHours),
+    value: totals.views,
+    color: TRAFFIC_FOCUS_META[kind].tone,
+   }
+  })
   .sort((a, b) => b.views - a.views)
 }
 
@@ -1415,7 +1432,7 @@ const WATERFALL_METRICS = [
  { key: "subscribersGained", label: "SUBSCRIBERS", prefix: "+", format: compact, tone: "#42FF68" as const },
  { key: "views", label: "VIEWS", prefix: "", format: compact, tone: "#2ED2E6" as const },
  { key: "watchHours", label: "WATCH TIME", prefix: "", format: (v: number) => compact(v) + "h", tone: "#FF7497" as const },
- { key: "revenue", label: "REVENUE", prefix: "$", format: (v: number) => compact(v, true), tone: "#FFEA00" as const },
+ { key: "revenue", label: "REVENUE", prefix: "$", format: (v: number) => compact(v), tone: "#FFEA00" as const },
 ] as const
 
 const SubscriberWaterfallRenderer: React.FC<{
@@ -1660,7 +1677,7 @@ const summarizeRadarAxis = (
    : 0
  }
  const total = videos.reduce((sum, video) => sum + axis.read(video), 0)
- return axis.summary === "average" ? total / videos.length : total
+ return String(axis.summary) === "average" ? total / videos.length : total
 }
 
 /**
