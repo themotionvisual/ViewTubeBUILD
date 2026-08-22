@@ -4,6 +4,7 @@ import {
   type AccountIntent,
   type UnifiedAccountSnapshot,
 } from "./accountContracts"
+import { reportDiagnostic } from "../diagnostics"
 
 const SNAPSHOT_CACHE_KEY = "vt_unified_account_snapshot_v1"
 const ACCOUNT_POPUP_NAME = "vt_unified_account_popup"
@@ -282,7 +283,16 @@ export const fetchUnifiedAccountSnapshot = async (): Promise<UnifiedAccountSnaps
     const snapshot = await readAccountSnapshotJson(response)
     cacheAccountSnapshot(snapshot)
     return snapshot
-  } catch {
+  } catch (error) {
+    reportDiagnostic({
+      area: "account",
+      event: "snapshot_fallback",
+      level: "warn",
+      whatHappened: "The unified account snapshot could not be loaded; ViewTube is using the safe local snapshot.",
+      whatItMeans: "The account API may be unavailable, misrouted, or returning an invalid response.",
+      whatToCheck: ["Account API deployment", "Vercel API rewrite", "Session cookie"],
+      error,
+    })
     markUnifiedAccountServerUnavailable()
     return readCachedAccountSnapshot()
   }
@@ -366,6 +376,16 @@ export const beginAccountIntent = async (
     popup.location.href = payload.authorizationUrl
     await waitForAccountPopupMessage(popup, sanitizedReturnTo)
   } catch (error) {
+    reportDiagnostic({
+      area: "account",
+      event: "auth_start_failed",
+      level: "error",
+      whatHappened: "The account authorization flow could not start or complete.",
+      whatItMeans: "ViewTube did not receive a usable authorization URL or popup completion message.",
+      whatToCheck: ["Popup permissions", "Account API deployment", "Google callback configuration"],
+      debugData: { intent, returnTo: sanitizedReturnTo, redirectMode: useRedirect },
+      error,
+    })
     if (popup) {
       try {
         popup.close()

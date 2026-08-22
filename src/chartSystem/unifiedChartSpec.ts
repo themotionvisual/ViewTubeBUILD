@@ -206,6 +206,10 @@ export const UNIFIED_CHART_SPECS: Record<UnifiedChartId, UnifiedChartSpec> =
   },
  });
 
+if (import.meta.env.DEV) {
+ assertUniqueIds(Object.values(UNIFIED_CHART_SPECS), (spec) => spec.id, "Unified chart specs");
+}
+
 const BY_TITLE: Record<string, UnifiedChartSpec> = Object.values(
  UNIFIED_CHART_SPECS,
 ).reduce((acc, spec) => {
@@ -219,3 +223,4 @@ export const getChartSpecById = (id: UnifiedChartId): UnifiedChartSpec =>
 export const getChartSpecByTitle = (
  title: string,
 ): UnifiedChartSpec | undefined => BY_TITLE[title.trim().toLowerCase()];
+import { assertUniqueIds } from "../services/registryAssertions";

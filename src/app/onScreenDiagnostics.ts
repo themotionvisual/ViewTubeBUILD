@@ -11,18 +11,18 @@
 //   - Timing markers we push manually from key hook init points
 //
 // Everything gets a monotonic timestamp relative to app boot so the sequence
-// is clear even when clocks skew.
+// is clear even when clocks skew. The shared service owns storage, redaction,
+// and formatting so app and subsystem diagnostics cannot drift apart.
+import {
+ recordDiagnostic,
+} from "../services/diagnostics"
 
-export interface DiagnosticEntry {
- t: number
- level: "error" | "warn" | "info"
- tag: string
- message: string
-}
-
-const BUFFER_LIMIT = 40
-const buffer: DiagnosticEntry[] = []
-const bootTime = typeof performance !== "undefined" ? performance.now() : Date.now()
+export {
+ formatDiagnostics,
+ readDiagnostics,
+ recordDiagnostic,
+} from "../services/diagnostics"
+export type { DiagnosticEntry } from "../services/diagnostics"
 
 // Same shape check as `lazyRoute.tsx#CHUNK_ERROR_REGEX`. Duplicated here so
 // this file has no dependency on lazyRoute (they both need it at boot).
@@ -48,26 +48,6 @@ const attemptAutoReload = (): void => {
  // location.replace() so the busted URL doesn't linger in history.
  window.setTimeout(() => window.location.replace(bustedUrl), 50)
 }
-
-const now = (): number =>
- typeof performance !== "undefined"
-  ? Math.round(performance.now() - bootTime)
-  : Math.round(Date.now() - bootTime)
-
-const push = (entry: DiagnosticEntry): void => {
- buffer.push(entry)
- if (buffer.length > BUFFER_LIMIT) buffer.shift()
-}
-
-export const recordDiagnostic = (
- level: DiagnosticEntry["level"],
- tag: string,
- message: string,
-): void => {
- push({ t: now(), level, tag, message: String(message).slice(0, 240) })
-}
-
-export const readDiagnostics = (): readonly DiagnosticEntry[] => buffer.slice()
 
 // ── Global installers ────────────────────────────────────────────────────────
 
@@ -132,17 +112,17 @@ export const installOnScreenDiagnostics = (): void => {
   window.fetch = async (...args) => {
    const url = typeof args[0] === "string" ? args[0] : (args[0] as Request).url || "<request>"
    const key = `${url}#${Date.now()}`
-   const started = now()
+   const started = performance.now()
    inFlight.set(key, started)
    try {
     const response = await originalFetch(...args)
     if (!response.ok) {
-     recordDiagnostic("warn", "fetch-nonok", `${response.status} ${url} (${now() - started}ms)`)
+     recordDiagnostic("warn", "fetch-nonok", `${response.status} ${url} (${Math.round(performance.now() - started)}ms)`)
     }
     return response
    } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    recordDiagnostic("error", "fetch-fail", `${message} ${url} (${now() - started}ms)`)
+    recordDiagnostic("error", "fetch-fail", `${message} ${url} (${Math.round(performance.now() - started)}ms)`)
     throw error
    } finally {
     inFlight.delete(key)
@@ -151,7 +131,7 @@ export const installOnScreenDiagnostics = (): void => {
 
   // Poll: any fetch that has been in flight for > 3 s gets flagged once.
   window.setInterval(() => {
-   const nowMs = now()
+   const nowMs = performance.now()
    inFlight.forEach((startedAt, key) => {
     const age = nowMs - startedAt
     if (age > 3000 && !flagged.has(key)) {
@@ -168,11 +148,4 @@ export const installOnScreenDiagnostics = (): void => {
 // on-screen log tells a coherent story instead of just being errors.
 export const recordBootPhase = (phase: string, detail?: string): void => {
  recordDiagnostic("info", "boot-phase", detail ? `${phase} — ${detail}` : phase)
-}
-
-export const formatDiagnostics = (entries: readonly DiagnosticEntry[]): string => {
- if (!entries.length) return "(no diagnostics captured)"
- return entries
-  .map((entry) => `[${entry.t.toString().padStart(5, " ")}ms] ${entry.level.toUpperCase()} ${entry.tag}: ${entry.message}`)
-  .join("\n")
 }

@@ -1,3 +1,5 @@
+import { assertUniqueIds } from "../../services/registryAssertions"
+
 export type ApplicationMenuGroupId = "create" | "insights" | "account" | "support"
 
 export type ApplicationMenuIconId =
@@ -169,6 +171,11 @@ export const APPLICATION_MENU_DESTINATIONS: readonly ApplicationMenuDestination[
     keywords: ["about", "product", "trust", "information"],
   },
 ] as const
+
+if (import.meta.env.DEV) {
+  assertUniqueIds(APPLICATION_MENU_GROUPS, (group) => group.id, "Application menu groups")
+  assertUniqueIds(APPLICATION_MENU_DESTINATIONS, (destination) => destination.id, "Application menu destinations")
+}
 
 const normalizeSearchText = (value: string): string =>
   value.trim().toLocaleLowerCase().replace(/\s+/g, " ")

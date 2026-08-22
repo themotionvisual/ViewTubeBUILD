@@ -1,4 +1,5 @@
 import { getDashboardWidgetPaletteColors } from "../../styles/toolboxPalette"
+import { assertUniqueIds } from "../../services/registryAssertions"
 import { HEIGHT_BUCKET_ORDER, SIZE_BUCKET_ORDER } from "./tokens"
 import type {
  DashboardHeightBucket,
@@ -872,6 +873,10 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = DASHBOARD_WIDGET_BA
   }
  },
 )
+
+if (import.meta.env.DEV) {
+ assertUniqueIds(DASHBOARD_WIDGET_REGISTRY, (widget) => widget.id, "Dashboard widget registry")
+}
 
 export const DEFAULT_DASHBOARD_WIDGET_ORDER = [...DASHBOARD_WIDGET_REGISTRY]
  .sort((left, right) => left.defaultOrder - right.defaultOrder)

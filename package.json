@@ -22,6 +22,8 @@
     "build:component-library": "node scripts/build-component-library-standalone.mjs",
     "generate:analytics-sync-backlog": "node scripts/generate-analytics-sync-backlog.mjs",
     "generate:chart-inventory": "node scripts/generate-chart-inventory.mjs",
+    "audit:quick-wins": "node scripts/audit-quick-wins.mjs",
+    "check:routes": "node scripts/audit-quick-wins.mjs --check",
     "generate:oracle-skill-pack": "node scripts/generate-oracle-skill-pack.mjs",
     "check:css": "node scripts/check-css-parse.mjs",
     "check:quarantine": "node scripts/check-quarantine-integrity.mjs",

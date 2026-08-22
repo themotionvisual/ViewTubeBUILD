@@ -1,4 +1,5 @@
 import type { SuperToolDefinition, SuperToolId, SuperToolSurface } from "@/types"
+import { assertUniqueIds } from "./registryAssertions"
 
 export const SUPER_TOOLS: SuperToolDefinition[] = [
  {
@@ -194,6 +195,10 @@ export const SUPER_TOOLS: SuperToolDefinition[] = [
   visibility: "internal_only",
  },
 ]
+
+if (import.meta.env.DEV) {
+ assertUniqueIds(SUPER_TOOLS, (tool) => tool.id, "Super-tool registry")
+}
 
 export const getSuperTool = (id: SuperToolId): SuperToolDefinition | undefined =>
  SUPER_TOOLS.find((tool) => tool.id === id)
