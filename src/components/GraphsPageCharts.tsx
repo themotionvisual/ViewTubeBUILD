@@ -2892,7 +2892,6 @@ export const StackedEngagementPulse = EngagementLinesModule
 /* 16. Format Comparison Donuts */
 export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTypeRows }) => {
  const [aggregationMode, setAggregationMode] = useState<"total" | "average">("total")
- const [formatDominanceReplayTick, setFormatDominanceReplayTick] = useState(0)
 
  const filteredData = data
 
@@ -2964,17 +2963,6 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
   ...cd.map(m => ({ label: m.label.toUpperCase(), value: Math.round(m.data[1].value).toLocaleString(), tone: metricTone(m.key), lockTone: true })),
  ]
 
- useEffect(() => {
-  const replay = (event: Event) => {
-   const detail = (event as CustomEvent<{ visualId?: string }>).detail
-   if (detail?.visualId && detail.visualId !== "format-dominance") return
-   setFormatDominanceReplayTick((value) => value + 1)
-  }
-  window.addEventListener("vt:replay-hero-intro", replay)
-  return () => window.removeEventListener("vt:replay-hero-intro", replay)
- }, [])
-
-
  return (
   <SubToolboxChartModule
    heroVisualId="format-dominance"
@@ -3023,14 +3011,14 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
    }
    footerBorderless
   >
-   <div className="flex flex-row items-stretch justify-center gap-0 p-0 bg-white h-[352px] overflow-hidden">
+   <HeroIntroBoundary visualId="format-dominance" replayKey={aggregationMode}>
+    <div className="flex flex-row items-stretch justify-center gap-0 p-0 bg-white h-[352px] overflow-hidden">
     {cd.map((metric) => (
      <div key={metric.key} className="flex-1 h-full min-w-0 relative bg-white flex flex-col">
       <div className="flex-1 min-h-0 relative">
        <StableChartFrame minHeightClassName="min-h-[300px]">
          <PieChart>
           <Pie
-         key={`format-dominance-${aggregationMode}-${formatDominanceReplayTick}`}
            data={metric.data}
            dataKey="value"
            nameKey="name"
@@ -3079,7 +3067,8 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
       </div>
      </div>
     ))}
-   </div>
+    </div>
+   </HeroIntroBoundary>
   </SubToolboxChartModule>
  )
 }

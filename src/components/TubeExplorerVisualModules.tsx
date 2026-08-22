@@ -3742,7 +3742,6 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
  const dataset = useExplorerData(props)
 
  const [metric, setMetric] = useState<ThermalMetricKey>("views")
- const [heatMatrixReplayTick, setHeatMatrixReplayTick] = useState(0)
  const [formatFilter, setFormatFilter] = useState<"all" | "shorts" | "long">("all")
  const [orderMode, setOrderMode] = useState<"chrono" | "rank">("chrono")
  const [rowCount, setRowCount] = useState<5 | 8>(8)
@@ -3886,17 +3885,6 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
 
  const METRIC_OPTIONS = THERMAL_METRICS.map(m => ({ label: m.label, value: m.key }))
 
- useEffect(() => {
-  const replay = (event: Event) => {
-   const detail = (event as CustomEvent<{ visualId?: string }>).detail
-   if (detail?.visualId && detail.visualId !== "heat-matrix") return
-   setHeatMatrixReplayTick((value) => value + 1)
-  }
-  window.addEventListener("vt:replay-hero-intro", replay)
-  return () => window.removeEventListener("vt:replay-hero-intro", replay)
- }, [])
-
-
  return (
   <ModuleFrame
    heroVisualId="heat-matrix"
@@ -3952,22 +3940,23 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
       bgTone: "#CCFF00",
       fgTone: "#000000",
      },
-    ]}
+   ]}
    >
-    <div className="relative h-full w-full bg-[#0a0a1a]">
-     <ThermalImagingModuleInner
-      key={`heat-matrix-${heatMatrixReplayTick}`}
-      displayVideos={displayVideos}
-      rows={rowCount}
-      hoveredIdx={hoveredIdx}
-      lockedIdx={lockedIdx}
-      chronologicalMode={orderMode === "chrono"}
-      onMouseEnterTile={handleTileMouseEnter}
-      onMouseLeaveTile={handleTileMouseLeave}
-      onClickTile={handleTileClick}
-      heatColor={heatColor}
-     />
-    </div>
+    <HeroIntroBoundary visualId="heat-matrix" replayKey={`${metric}-${formatFilter}-${orderMode}-${rowCount}`}>
+     <div className="relative h-full w-full bg-[#0a0a1a]">
+      <ThermalImagingModuleInner
+       displayVideos={displayVideos}
+       rows={rowCount}
+       hoveredIdx={hoveredIdx}
+       lockedIdx={lockedIdx}
+       chronologicalMode={orderMode === "chrono"}
+       onMouseEnterTile={handleTileMouseEnter}
+       onMouseLeaveTile={handleTileMouseLeave}
+       onClickTile={handleTileClick}
+       heatColor={heatColor}
+      />
+     </div>
+    </HeroIntroBoundary>
    </ModuleFrame>
   )
 }
