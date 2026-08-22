@@ -9,6 +9,7 @@ import type {
   VtSyncVisualCanvasFitMode,
   VtSyncVisualHeaderColorPair,
 } from "../features/vt-sync-local/shell/VtSyncVisualFrame"
+import type { HeroVisualId } from "./heroVisualAnimations"
 
 export type AnalyticsVisualShellMode = "standard" | "vt2-preserved" | "compact-row"
 
@@ -31,6 +32,7 @@ export type AnalyticsVisualShellProps = React.PropsWithChildren<{
   activeContext?: SubToolboxChartModuleProps["activeContext"]
   canvasFitMode?: VtSyncVisualCanvasFitMode
   sourceTableIds?: readonly string[]
+  heroVisualId?: HeroVisualId
   standard?: Omit<SubToolboxChartModuleProps, "header" | "controllerRows" | "controllerWidth" | "controllerDensity" | "activeContext" | "children">
   vt2?: Omit<ChartModuleProps, "title" | "subtitle" | "icon" | "iconBg" | "titleBg" | "bodyFitMode" | "children">
 }>
@@ -80,6 +82,7 @@ export const AnalyticsVisualShell: React.FC<AnalyticsVisualShellProps> = ({
   standard,
   vt2,
   children,
+  heroVisualId,
 }) => {
   const resolvedIcon = iconNode(icon, iconKey)
   const rows = normalizedRows(controllerSpec, controllerExplanation)
@@ -118,6 +121,7 @@ export const AnalyticsVisualShell: React.FC<AnalyticsVisualShellProps> = ({
       collapsible={standard?.collapsible}
       isOpenInitial={standard?.isOpenInitial}
       canvasFitMode={canvasFitMode}
+      heroVisualId={heroVisualId}
     >
       <div data-canvas-fit-mode={canvasFitMode} className="h-full w-full">
         {children}

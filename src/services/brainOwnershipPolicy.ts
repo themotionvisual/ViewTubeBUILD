@@ -79,9 +79,9 @@ export const getSuperToolBrainOwnershipIssues = (
 }
 
 export const isReviewOnlyBrainCommandAction = (
- action: Partial<BrainCommandAction> & Record<string, unknown>,
+ action: object,
 ): boolean => {
- if (!action || typeof action !== "object") return false
- if (action.status && !["queued", "dispatched", "resolved"].includes(String(action.status))) return false
- return FORBIDDEN_COMMAND_EXECUTION_KEYS.every((key) => action[key] !== true)
+ const flags = action as Partial<BrainCommandAction> & Record<string, unknown>
+ if (flags.status && !["queued", "dispatched", "resolved"].includes(String(flags.status))) return false
+ return FORBIDDEN_COMMAND_EXECUTION_KEYS.every((key) => flags[key] !== true)
 }

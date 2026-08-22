@@ -940,10 +940,10 @@ export const mergeMasterMetricCell = (
    }
    return chooseMostRecentAvailableCell(existing, incoming)
   case "prefer_derived": {
-   if (existing.status === "derived" && existing.status !== "unavailable") {
+   if (existing.status === "derived") {
     return existing
    }
-   if (incoming.status === "derived" && incoming.status !== "unavailable") {
+   if (incoming.status === "derived") {
     return incoming
    }
    return chooseFallbackAvailableCell(existing, incoming)

@@ -1043,7 +1043,7 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
      const token = await refreshTokenIfExpired()
      if (!token || cancelled) return
     setAuthStateRaw((prev) => ({ ...prev, isAuthenticated: true }))
-    startTransition(() => hydrateAuthStateFromAnalyticsCache())
+    startTransition(() => { hydrateAuthStateFromAnalyticsCache() })
     setChannelBootPhase("ready")
    } catch {
     // auth invalidation is handled by the API client event path

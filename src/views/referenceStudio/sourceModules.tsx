@@ -498,8 +498,8 @@ const CollapsibleTree: React.FC = () => {
 const VideoCardsLite: React.FC = () => (
  <div className="space-y-2">
   {[
-   "Austerlitz Bird's Eye View",
-   "1805 The Road to Austerlitz",
+   "Northbridge Bird's Eye View",
+   "1805 The Road to Northbridge",
   ].map((title, index) => (
    <div key={title} className="border-[3px] border-black rounded-xl overflow-hidden bg-white">
     <div className="h-8 px-3 border-b-[3px] border-black bg-[#24D3FF] text-[10px] font-black uppercase tracking-[0.12em] flex items-center">
@@ -961,7 +961,7 @@ const VideoManagerLite: React.FC = () => (
    Video Manager
   </div>
   <div className="space-y-1">
-   {["Austerlitz Bird's-Eye View", "The Road to Austerlitz", "Napoleonic History"].map((title) => (
+   {["Northbridge Bird's-Eye View", "The Road to Northbridge", "Alderian History"].map((title) => (
     <div key={title} className="h-9 border-[2px] border-black rounded-lg bg-white px-2 flex items-center justify-between">
      <span className="text-[9px] font-black uppercase tracking-[0.08em] truncate">{title}</span>
      <Edit size={12} />
@@ -1546,7 +1546,7 @@ const ustubeContracts = (): SourceComponentModule[] => [
   category: "Controls",
   title: "Keyword Research Toolbox",
   interactions: ["display"],
-  render: renderCard("ustube", "Keyword Research", <TagPills items={["napoleon", "history", "austerlitz", "warfare", "strategy"]} compact />),
+  render: renderCard("ustube", "Keyword Research", <TagPills items={["alder", "history", "northbridge", "warfare", "strategy"]} compact />),
  }),
  makeModule({
   id: "ustube_strategy_chat",

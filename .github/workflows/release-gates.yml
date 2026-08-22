@@ -1,0 +1,126 @@
+name: ViewTube release gates
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - main
+      - integration/**
+      - codex/**
+
+concurrency:
+  group: release-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  source_governance:
+    name: source-governance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: git diff --check
+      - run: npm run check:routes
+      - run: npm run check:css
+      - run: npm run check:quarantine
+      - run: npm run check:src-governance
+      - run: npm run check:privacy-src
+
+  focused_contracts:
+    name: focused-contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run test:focused
+      - run: npm run account:test
+
+  full_suite:
+    name: full-suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  static_quality:
+    name: static-quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint:runtime
+
+  production_build:
+    name: production-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Set build identity
+        run: |
+          echo "VT_BUILD_BRANCH=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}" >> "$GITHUB_ENV"
+          echo "VT_BUILD_COMMIT=${{ github.event.pull_request.head.sha || github.sha }}" >> "$GITHUB_ENV"
+          echo "VT_BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+      - run: npm run build
+
+  local_smoke:
+    name: local-smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Start ViewTube and run smoke checks
+        run: |
+          npm run dev > "$RUNNER_TEMP/viewtube-dev.log" 2>&1 &
+          DEV_PID=$!
+          trap 'kill "$DEV_PID" 2>/dev/null || true' EXIT
+          for attempt in {1..90}; do
+            if curl --fail --silent http://localhost:5173/api/release >/dev/null; then
+              break
+            fi
+            if ! kill -0 "$DEV_PID" 2>/dev/null; then
+              cat "$RUNNER_TEMP/viewtube-dev.log"
+              exit 1
+            fi
+            sleep 1
+          done
+          curl --fail --silent http://localhost:5173/api/release >/dev/null || {
+            cat "$RUNNER_TEMP/viewtube-dev.log"
+            exit 1
+          }
+          npm run smoke:local

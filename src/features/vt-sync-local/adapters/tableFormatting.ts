@@ -195,6 +195,10 @@ export const formatVtSyncTableCellValue = (
  if (Array.isArray(value) || (value && typeof value === "object")) return stringifyStructuredValue(value)
  if (typeof value === "number") {
   if (format === "currency") return `$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+  if (format === "ratioPercent") {
+   const percentage = value * 100
+   return `${percentage.toLocaleString(undefined, { maximumFractionDigits: Math.abs(percentage) >= 100 ? 0 : 2 })}%`
+  }
   if (format === "percent") return `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}%`
   return value.toLocaleString(undefined, { maximumFractionDigits: 2 })
  }

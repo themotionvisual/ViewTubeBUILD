@@ -24,6 +24,7 @@ import {
  replaceLatestVtSyncDatasetTableRows,
  replaceLatestVtSyncSyncRun,
 } from "./localDbRepository"
+import { clearVtSyncSavedTableData } from "./manualImports"
 
 afterEach(async () => {
  await clearVtSyncLocalDb()
@@ -64,6 +65,36 @@ describe("VT Sync local IndexedDB repository", () => {
 
   await deleteVtSyncDatasetTableRows("manual_import::creator")
   expect(await listVtSyncDatasetTableRows()).toEqual([])
+ })
+
+ it("clears every saved representation for one table without touching other tables", async () => {
+  await Promise.all([
+   putVtSyncDatasetTableRows({
+    id: "manual_import::retentions", runId: "manual-retention", channelId: "channel-a", datasetId: "retentions", phase: "manual_import",
+    capturedAt: "2026-08-22T00:00:00Z", rows: [{ videoId: "a" }], provenance: "csv",
+   }),
+   putVtSyncDatasetTableRows({
+    id: "manual_import::legacy-retention", runId: "legacy-retention", channelId: "channel-a", datasetId: "retention", phase: "manual_import",
+    capturedAt: "2026-08-21T00:00:00Z", rows: [{ videoId: "legacy" }], provenance: "csv",
+   }),
+   putVtSyncDatasetTableRows({
+    id: "api-retention", runId: "api-retention", channelId: "channel-a", datasetId: "retentions", phase: "retention",
+    capturedAt: "2026-08-22T00:00:00Z", rows: [{ videoId: "api" }], provenance: "api",
+   }),
+   putVtSyncDatasetTableRows({
+    id: "api-videos", runId: "api-videos", channelId: "channel-a", datasetId: "videos", phase: "video_metadata",
+    capturedAt: "2026-08-22T00:00:00Z", rows: [{ id: "video-a" }], provenance: "api",
+   }),
+   putVtSyncDatasetRawReport({
+    id: "raw-retention", runId: "raw-retention", channelId: "channel-a", datasetId: "retentions", phase: "retention",
+    capturedAt: "2026-08-22T00:00:00Z", columns: ["videoId"], rows: [{ videoId: "raw" }], source: "youtube_analytics_v2",
+   }),
+  ])
+
+  const result = await clearVtSyncSavedTableData("retentions", "channel-a")
+  expect(result).toMatchObject({ tableRecordsDeleted: 3, rawRecordsDeleted: 1 })
+  expect((await listVtSyncDatasetTableRows()).map((record) => record.id)).toEqual(["api-videos"])
+  expect(await listVtSyncDatasetRawReports()).toEqual([])
  })
 
  it("keeps only the latest API dataset for each channel while preserving CSV and other channels", async () => {

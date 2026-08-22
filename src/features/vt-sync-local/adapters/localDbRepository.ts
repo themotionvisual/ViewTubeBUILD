@@ -135,17 +135,40 @@ const getById = async <T>(storeName: VtSyncLocalDbStoreName, id: string): Promis
  return result || null
 }
 
-export const clearVtSyncLocalDb = async (): Promise<void> =>
- new Promise((resolve) => {
-  if (!hasIndexedDb()) {
-   resolve()
-   return
-  }
-  const request = indexedDB.deleteDatabase(VT_SYNC_LOCAL_DB_NAME)
-  request.onsuccess = () => resolve()
-  request.onerror = () => resolve()
-  request.onblocked = () => resolve()
- })
+export const clearVtSyncLocalDb = async (): Promise<void> => {
+ if (!hasIndexedDb()) return
+ try {
+  const db = await openVtSyncLocalDb()
+  await new Promise<void>((resolve, reject) => {
+   const storeNames = Object.values(VT_SYNC_LOCAL_STORE_NAMES)
+   const tx = db.transaction(storeNames, "readwrite")
+   storeNames.forEach((storeName) => tx.objectStore(storeName).clear())
+   tx.oncomplete = () => {
+    db.close()
+    resolve()
+   }
+   tx.onerror = () => {
+    db.close()
+    reject(tx.error)
+   }
+   tx.onabort = () => {
+    db.close()
+    reject(tx.error)
+   }
+  })
+ } catch {
+  // Reset remains best-effort on browsers that block or disable IndexedDB.
+ }
+}
+
+export const clearVtSyncVideoCatalogForChannel = async (channelId: string): Promise<void> => {
+ const records = await listVtSyncVideoInventory(channelId)
+ await Promise.all([
+  deleteMany(VT_SYNC_LOCAL_STORE_NAMES.videoInventory, records.map((record) => record.id)),
+  withStore(VT_SYNC_LOCAL_STORE_NAMES.channelIndex, "readwrite", (store) => store.delete(channelId)),
+  withStore(VT_SYNC_LOCAL_STORE_NAMES.syncCursors, "readwrite", (store) => store.delete(channelId)),
+ ])
+}
 
 export const putVtSyncChannelIndex = async (record: VtSyncChannelIndexRecord): Promise<void> =>
  putRecord(VT_SYNC_LOCAL_STORE_NAMES.channelIndex, record)
@@ -206,6 +229,10 @@ export const putVtSyncDatasetRawReport = async (record: VtSyncDatasetRawReportRe
 
 export const listVtSyncDatasetRawReports = async (): Promise<VtSyncDatasetRawReportRecord[]> =>
  getAll<VtSyncDatasetRawReportRecord>(VT_SYNC_LOCAL_STORE_NAMES.datasetRawReports)
+
+export const deleteVtSyncDatasetRawReport = async (id: string): Promise<void> => {
+ await withStore(VT_SYNC_LOCAL_STORE_NAMES.datasetRawReports, "readwrite", (store) => store.delete(id))
+}
 
 /**
  * Store the newest authoritative API report under a stable key, then remove

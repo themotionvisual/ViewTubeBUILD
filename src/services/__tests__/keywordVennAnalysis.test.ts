@@ -52,7 +52,7 @@ describe("tokenizeTitleKeywords", () => {
 
 describe("buildKeywordClustersFromMasterRows", () => {
   const rows = [
-    makeRow("Napoleon cavalry tactics", {
+    makeRow("Alder cavalry tactics", {
       views: 1000,
       impressions: 1500,
       engagedViews: 650,
@@ -65,7 +65,7 @@ describe("buildKeywordClustersFromMasterRows", () => {
       shares: 18,
       revenue: 4.5,
     }),
-    makeRow("Napoleon cavalry charge", {
+    makeRow("Alder cavalry charge", {
       views: 1200,
       impressions: 1700,
       engagedViews: 720,
@@ -78,7 +78,7 @@ describe("buildKeywordClustersFromMasterRows", () => {
       shares: 20,
       revenue: 5.25,
     }),
-    makeRow("Napoleon infantry tactics", {
+    makeRow("Alder infantry tactics", {
       views: 1100,
       impressions: 1600,
       engagedViews: 700,
@@ -97,10 +97,10 @@ describe("buildKeywordClustersFromMasterRows", () => {
     const clusters = buildKeywordClustersFromMasterRows(rows, "views", {
       minSupport: 2,
     })
-    const napoleon = clusters.find((item) => item.word === "napoleon")
-    expect(napoleon?.videoCount).toBe(3)
-    expect(napoleon?.metrics.views).toBe(3300)
-    expect(napoleon?.metrics.likes).toBe(247)
+    const alder = clusters.find((item) => item.word === "alder")
+    expect(alder?.videoCount).toBe(3)
+    expect(alder?.metrics.views).toBe(3300)
+    expect(alder?.metrics.likes).toBe(247)
   })
 
   it("averages duration/rate metrics for keyword clusters", () => {
@@ -151,7 +151,7 @@ describe("buildKeywordClustersFromMasterRows", () => {
 
 describe("buildKeywordCombinationStats", () => {
   const rows = [
-    makeRow("Black Brunswickers at Somosierra", {
+    makeRow("Black Guardians at Somosierra", {
       views: 7523,
       engagedViews: 4200,
       likes: 335,
@@ -163,7 +163,7 @@ describe("buildKeywordCombinationStats", () => {
       subscribersGained: 22,
       revenue: 12.4,
     }),
-    makeRow("Brunswick black legion", {
+    makeRow("guardian black legion", {
       views: 6935,
       engagedViews: 3800,
       likes: 305,
@@ -192,22 +192,22 @@ describe("buildKeywordCombinationStats", () => {
   it("returns single, pair, and triple combinations in selection order", () => {
     const combinations = buildKeywordCombinationStats(
       rows,
-      ["black", "brunswick", "legion"],
+      ["black", "guardian", "legion"],
       "views",
     )
 
     expect(combinations.map((item) => item.keywords.join("|"))).toEqual([
       "black",
-      "brunswick",
+      "guardian",
       "legion",
-      "black|brunswick",
+      "black|guardian",
       "black|legion",
-      "brunswick|legion",
-      "black|brunswick|legion",
+      "guardian|legion",
+      "black|guardian|legion",
     ])
 
     const triple = combinations.find(
-      (item) => item.keywords.join("|") === "black|brunswick|legion",
+      (item) => item.keywords.join("|") === "black|guardian|legion",
     )
     expect(triple?.videoCount).toBe(1)
     expect(triple?.metrics.views).toBe(6935)
@@ -216,7 +216,7 @@ describe("buildKeywordCombinationStats", () => {
   it("selection summary matches the exact current selection", () => {
     const summary = buildKeywordSelectionSummary(
       rows,
-      ["black", "brunswick"],
+      ["black", "guardian"],
       "likes",
     )
     expect(summary?.videoCount).toBe(2)
@@ -227,7 +227,7 @@ describe("buildKeywordCombinationStats", () => {
 describe("toggleKeywordSelection", () => {
   it("drops the least-recently selected keyword when adding a fourth", () => {
     expect(
-      toggleKeywordSelection(["types", "napoleonic", "napoleon"], "cavalry"),
-    ).toEqual(["napoleonic", "napoleon", "cavalry"])
+      toggleKeywordSelection(["types", "alderian", "alder"], "cavalry"),
+    ).toEqual(["alderian", "alder", "cavalry"])
   })
 })

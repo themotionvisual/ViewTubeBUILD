@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { describe, expect, it } from 'vitest';
 import { createRoot } from 'react-dom/client';
 import { ShortsRetentionChart } from '../ShortsRetentionChart';

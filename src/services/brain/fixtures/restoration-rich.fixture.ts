@@ -33,5 +33,5 @@ export const restorationRichSpec: GoldenChannelSpec = {
  ],
  expectedEvidenceTokens: ["restoration", "rust"],
  // Distinctive vocabulary from the other rich fixture's niche: must never appear here.
- forbiddenEvidenceTokens: ["napoleon", "cavalry", "battle", "empire", "military"],
+ forbiddenEvidenceTokens: ["alder", "cavalry", "battle", "empire", "military"],
 }

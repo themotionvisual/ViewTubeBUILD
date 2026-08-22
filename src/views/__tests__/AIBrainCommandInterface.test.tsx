@@ -147,7 +147,7 @@ describe("AIBrainCommandInterface", () => {
  })
 
  it("exposes persistent response rating states instead of inert icon buttons", () => {
-  const message = { id: "response-1", role: "model", text: "Answer", response: null } as const
+  const message = { id: "response-1", role: "model", text: "Answer", response: undefined } as const
   const html = renderToStaticMarkup(
    <BrainFeedbackControls message={message} onFeedback={async () => undefined} />,
   )

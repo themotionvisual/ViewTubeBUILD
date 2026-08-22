@@ -147,10 +147,25 @@ const DEFAULT_ONBOARDING_STATE: OnboardingState = {
 }
 
 const DEFAULT_AI_BRAIN_CONTEXT: AiBrainContext = {
+  channelDescription: "",
+  mainTopicFocus: "",
+  audienceDescription: "",
+  successDefinition: "",
+  mainYoutubeGoal: "",
+  recurringSeriesName: "",
+  recurringSeriesDescription: "",
+  biggestWeakness: "",
+  mostSuccessfulVideo: "",
+  signupReason: "",
   whatNext: "",
   primaryGoal: "views",
   audienceNiche: "",
+  oneMonthGoals: [],
   completedAt: null,
+  deferredAt: null,
+  updatedAt: null,
+  source: "system",
+  version: 2,
 }
 
 const nowIso = () => new Date().toISOString()
@@ -480,6 +495,7 @@ export const getBuiltInAccountSimulationPresets = (): AccountSimulationPreset[] 
         firstToolOpened: true,
       },
       aiBrainContext: {
+        ...DEFAULT_AI_BRAIN_CONTEXT,
         whatNext: "Build weekly content reports and improve retention.",
         primaryGoal: "retention",
         audienceNiche: "Creator education and growth systems",

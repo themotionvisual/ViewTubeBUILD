@@ -7,6 +7,7 @@ export type AnalyticsSyncSource = "youtube_analytics_api" | "youtube_reporting_a
 export type AnalyticsSyncAction =
  | "core_video_data"
  | "daily_metrics"
+ | "google_search"
  | "video_metrics"
  | "traffic"
  | "geography"
@@ -353,7 +354,6 @@ import {
   type CanonicalMetricKey,
 } from "./DataStore"
 import { DATA_COVERAGE_CATALOG } from "./MetricRegistry"
-import type { SyncDiagnostics } from "../productArchitecture"
 import { getMasterVideoColumnDefinition } from "../performanceHubTableRegistry"
 
 export type CapabilityScope =
@@ -554,7 +554,16 @@ export const getMasterColumnVisibilityRule = (
 
 export const getVideoMetricRuntimeStatus = (
  metric: string,
- diagnostics: SyncDiagnostics | null | undefined,
+ diagnostics: {
+  disabledMetrics?: string[]
+  failureReasons?: Array<{
+   metrics?: string[]
+   reason?: string
+   status?: number
+   requestClass?: string
+   outcome?: string
+  }>
+ } | null | undefined,
  options: {
   hasTargetVideoIds?: boolean
  } = {},
@@ -566,13 +575,24 @@ export const getVideoMetricRuntimeStatus = (
  const capability = METRIC_CAPABILITY_REGISTRY[metric]
 
  if (!isActive) return "missing_from_active_sync"
+ if (!hasTargetVideoIds) return "blocked_by_missing_video_ids"
+ const requestShapeFailure = (diagnostics?.failureReasons || []).find(
+  (failure) =>
+   (failure.metrics || []).includes(metric) &&
+   failure.requestClass === "video_top_videos_channel_filter" &&
+   (failure.status === 400 ||
+    failure.outcome === "quarantined" ||
+    (failure.reason || "").toLowerCase().includes("invalid")),
+ )
+ if (requestShapeFailure) {
+  return "temporarily_unavailable_due_to_request_shape"
+ }
  if (
   capability &&
   (!capability.enabled || !capability.allowedDimensions.includes("video"))
  ) {
   return "unsupported_at_video_scope"
  }
- if (!hasTargetVideoIds) return "blocked_by_missing_video_ids"
  if (!diagnostics) return "active_sync"
 
  const disabled = new Set(diagnostics.disabledMetrics || [])
@@ -584,18 +604,6 @@ export const getVideoMetricRuntimeStatus = (
     return "blocked_by_missing_video_ids"
   }
   return "unsupported_at_video_scope"
- }
-
- const requestShapeFailure = (diagnostics.failureReasons || []).find(
-  (failure) =>
-   (failure.metrics || []).includes(metric) &&
-   failure.requestClass === "video_top_videos_channel_filter" &&
-   (failure.status === 400 ||
-    failure.outcome === "quarantined" ||
-    failure.reason.toLowerCase().includes("invalid")),
- )
- if (requestShapeFailure) {
-  return "temporarily_unavailable_due_to_request_shape"
  }
 
  return "active_sync"

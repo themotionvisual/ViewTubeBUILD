@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useId, useMemo, useRef, useState } from "react"
 import "./marquee.css"
 import {
  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -37,7 +37,7 @@ import { SubToolboxChartModule, subToolboxChartPresets } from "./SubToolboxChart
 import type { ControllerRow, ControllerRankedByRow } from "./VisualModuleController"
 import { RankedByRow } from "./VisualModuleController"
 import { InsightMarquee } from "./InsightMarquee"
-import { HeroIntroBoundary, HeaderHeroPlayButton } from "./HeroIntroBoundary"
+import { HeroIntroBoundary } from "./HeroIntroBoundary"
 import type { VtSyncVisualHeaderColorPair } from "../features/vt-sync-local/shell/VtSyncVisualFrame"
 import {
  VT_SPECTRUM_PALETTE_06,
@@ -67,7 +67,6 @@ import {
 } from "./chartScaleModel"
 import {
  buildChannelProgressBuckets,
- buildRelativeChannelProgressSeries,
  buildFormatDominanceContentTypeTotals,
  resolveChannelProgressDailyMetricValue,
  type ChannelProgressMetricKey,
@@ -1373,6 +1372,7 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
 
  return (
   <SubToolboxChartModule
+   heroVisualId="shorts-retention"
    header={{ title: "SHORTS RETENTION", subtitle: "AVD (s) \u00d7 DURATION \u00b7 BUBBLE = VIEWS", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#CCFF00", iconBlockBg: "#33FF99", shadowColor: "rgba(204,255,0,0.45)" }}
    activeContext={{
@@ -2129,6 +2129,7 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
 
  return (
   <SubToolboxChartModule
+   heroVisualId="engagement-pulse"
    header={{
    title: "ENGAGEMENT PULSE",
    subtitle: `TOP ${cd.length} ${mode === "most-recent" ? "RECENT" : "PERFORMING"} BY ${sortLabel}`,
@@ -2890,7 +2891,6 @@ export const StackedEngagementPulse = EngagementLinesModule
 /* 16. Format Comparison Donuts */
 export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTypeRows }) => {
  const [aggregationMode, setAggregationMode] = useState<"total" | "average">("total")
- const [formatDominanceReplayTick, setFormatDominanceReplayTick] = useState(0)
 
  const filteredData = data
 
@@ -2962,19 +2962,9 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
   ...cd.map(m => ({ label: m.label.toUpperCase(), value: Math.round(m.data[1].value).toLocaleString(), tone: metricTone(m.key), lockTone: true })),
  ]
 
- useEffect(() => {
-  const replay = (event: Event) => {
-   const detail = (event as CustomEvent<{ visualId?: string }>).detail
-   if (detail?.visualId && detail.visualId !== "format-dominance") return
-   setFormatDominanceReplayTick((value) => value + 1)
-  }
-  window.addEventListener("vt:replay-hero-intro", replay)
-  return () => window.removeEventListener("vt:replay-hero-intro", replay)
- }, [])
-
-
  return (
   <SubToolboxChartModule
+   heroVisualId="format-dominance"
    header={{
     title: "FORMAT DOMINANCE",
     subtitle: `DATA: FORMATS • ${contentTypeTotals ? "CREATOR CONTENT TYPE" : "VIDEO CATALOG FALLBACK"} • HOW EACH FORMAT DRIVES CORE METRICS`,
@@ -2992,7 +2982,6 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
     leftStats: longStats,
     title: (
      <div className="relative w-full h-full flex items-center justify-center">
-    <HeaderHeroPlayButton visualId="format-dominance" topPx={-2} rightPx={4} />
       <div className="flex items-center gap-8">
        <div className="flex items-center gap-1.5">
         <div className="w-4 h-4 rounded-full bg-[#00E5FF] border-[2px] border-black" />
@@ -3021,14 +3010,14 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
    }
    footerBorderless
   >
-   <div className="flex flex-row items-stretch justify-center gap-0 p-0 bg-white h-[352px] overflow-hidden">
+   <HeroIntroBoundary visualId="format-dominance" replayKey={aggregationMode}>
+    <div className="flex flex-row items-stretch justify-center gap-0 p-0 bg-white h-[352px] overflow-hidden">
     {cd.map((metric) => (
      <div key={metric.key} className="flex-1 h-full min-w-0 relative bg-white flex flex-col">
       <div className="flex-1 min-h-0 relative">
        <StableChartFrame minHeightClassName="min-h-[300px]">
          <PieChart>
           <Pie
-         key={`format-dominance-${aggregationMode}-${formatDominanceReplayTick}`}
            data={metric.data}
            dataKey="value"
            nameKey="name"
@@ -3077,7 +3066,8 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
       </div>
      </div>
     ))}
-   </div>
+    </div>
+   </HeroIntroBoundary>
   </SubToolboxChartModule>
  )
 }
@@ -3441,88 +3431,12 @@ const mixChannelProgressTone = (hex: string, target: "#FFFFFF" | "#000000", amou
 }
 
 
-const CHANNEL_PROGRESS_OUTBOUND_SPAN_MS = 3300
-const CHANNEL_PROGRESS_BAR_SPRING_MS = 1350
-const CHANNEL_PROGRESS_RETURN_SPAN_MS = 1850
-const CHANNEL_PROGRESS_DOT_SPRING_MS = 760
-const CHANNEL_PROGRESS_LINE_TRAIL_MS = 220
-
-const channelProgressWaveSchedule = (
-  metricIndex: number,
-  metricCount: number,
-): { direction: "ltr" | "rtl"; startMs: number } => {
-  if (metricCount <= 1) return { direction: "ltr", startMs: 0 }
-
-  // Two metrics launch simultaneously from opposite edges.
-  if (metricCount === 2) {
-    return {
-      direction: metricIndex === 0 ? "ltr" : "rtl",
-      startMs: 0,
-    }
-  }
-
-  // Three metrics: LEFT at 0.0s, RIGHT at 0.3s, LEFT at 0.6s.
-  // 4+ metrics continue the same alternating 0.3s cadence.
-  return {
-    direction: metricIndex % 2 === 0 ? "ltr" : "rtl",
-    startMs: metricIndex * 300,
-  }
-}
-
-const channelProgressTravelDelay = (
-  index: number,
-  count: number,
-  direction: "ltr" | "rtl",
-  spanMs: number,
-) => {
-  if (count <= 1) return 0
-  const natural = index / (count - 1)
-  const travel = direction === "ltr" ? natural : 1 - natural
-
-  // < 1 exponent deliberately spends more time near the launch edge,
-  // then tightens the spacing so the wave gently gains speed.
-  return Math.pow(Math.max(0, Math.min(1, travel)), 0.62) * spanMs
-}
-
-const channelProgressSafePeakScale = (
-  element: SVGGraphicsElement,
-  travel: number,
-) => {
-  try {
-    const box = element.getBBox()
-    if (!Number.isFinite(box.height) || box.height <= 0) return 1.04
-
-    // Smooth bell-shaped overshoot: low at the edges, highest in the middle.
-    const bell = Math.sin(Math.PI * Math.max(0, Math.min(1, travel)))
-    const desired = 1.035 + bell * 0.13
-
-    // Never let the spring overshoot collide with the plot ceiling.
-    // Because the rect scales around its bottom edge, `box.y` is the available
-    // headroom above the bar.
-    const safe = 1 + Math.max(0, box.y - 5) / box.height
-    return Math.max(1.01, Math.min(desired, safe))
-  } catch {
-    return 1.04
-  }
-}
-
-const cancelAndRelease = (animation: Animation) => {
-  animation.finished
-    .catch(() => undefined)
-    .then(() => {
-      try { animation.cancel() } catch { /* detached node */ }
-    })
-  return animation
-}
-
 export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics, monthlyMetrics, visualStyle }) => {
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["views"])
   const [timeRange, setTimeRange] = useState<"lifetime" | "3y" | "2y" | "1y" | "6m" | "3m">("1y")
   const [viewMode, setViewMode] = useState<"progress" | "delta">("progress")
   const [layoutMode, setLayoutMode] = useState<"overlay" | "individual">("overlay")
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
-  const channelProgressRootRef = useRef<HTMLDivElement>(null)
-  const [channelProgressReplayTick, setChannelProgressReplayTick] = useState(0)
 
   const METRIC_OPTIONS = [
     { value: "subscribersGained", label: "SUBSCRIBERS", tone: VT_VISUAL_METRIC_COLORS.subscribers, isRevenue: false },
@@ -3760,194 +3674,6 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
   }
 
   const activeMetrics = METRIC_OPTIONS.filter((option) => selectedMetrics.includes(option.value))
-
-  useEffect(() => {
-    const replay = (event: Event) => {
-      const detail = (event as CustomEvent<{ visualId?: string }>).detail
-      if (detail?.visualId && detail.visualId !== "channel-progress") return
-      setChannelProgressReplayTick((value) => value + 1)
-    }
-    window.addEventListener("vt:replay-hero-intro", replay)
-    return () => window.removeEventListener("vt:replay-hero-intro", replay)
-  }, [])
-
-
-
-  useLayoutEffect(() => {
-    const root = channelProgressRootRef.current
-    if (!root || viewMode !== "progress" || chartData.length === 0 || activeMetrics.length === 0) return
-
-    const animations: Animation[] = []
-    const metricCount = activeMetrics.length
-
-    // Make sure the graph itself never creates the "hit a ceiling" illusion.
-    root.querySelectorAll<SVGSVGElement>("svg").forEach((svg) => {
-      svg.style.overflow = "visible"
-    })
-
-    activeMetrics.forEach((option, metricIndex) => {
-      const schedule = channelProgressWaveSchedule(metricIndex, metricCount)
-      const outboundDirection = schedule.direction
-      const returnDirection: "ltr" | "rtl" = outboundDirection === "ltr" ? "rtl" : "ltr"
-
-      const barRects = Array.from(
-        root.querySelectorAll<SVGGraphicsElement>(
-          `.channel-progress-bar-${option.value} .recharts-rectangle`,
-        ),
-      )
-
-      barRects.forEach((bar, index) => {
-        const natural = barRects.length <= 1 ? 0.5 : index / (barRects.length - 1)
-        const travel = outboundDirection === "ltr" ? natural : 1 - natural
-        const delay =
-          schedule.startMs +
-          channelProgressTravelDelay(
-            index,
-            barRects.length,
-            outboundDirection,
-            CHANNEL_PROGRESS_OUTBOUND_SPAN_MS,
-          )
-
-        const peakScale = channelProgressSafePeakScale(bar, travel)
-        bar.style.transformBox = "fill-box"
-        bar.style.transformOrigin = "center bottom"
-        bar.style.willChange = "transform, opacity"
-
-        animations.push(cancelAndRelease(bar.animate(
-          [
-            { transform: "scaleY(0.08)", opacity: 0.18, offset: 0 },
-            {
-              transform: `scaleY(${peakScale})`,
-              opacity: 1,
-              offset: 0.46,
-              easing: "cubic-bezier(0.16, 1, 0.3, 1)",
-            },
-            {
-              transform: "scaleY(0.965)",
-              opacity: 1,
-              offset: 0.67,
-              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-            },
-            {
-              transform: "scaleY(1.018)",
-              opacity: 1,
-              offset: 0.86,
-              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-            },
-            { transform: "scaleY(1)", opacity: 1, offset: 1 },
-          ],
-          {
-            duration: CHANNEL_PROGRESS_BAR_SPRING_MS,
-            delay,
-            fill: "both",
-            easing: "linear",
-          },
-        )))
-      })
-
-      // The second half-wave begins as the outbound wave reaches the far axis.
-      // It returns in the opposite direction and carries the dots with it.
-      const returnStart =
-        schedule.startMs +
-        CHANNEL_PROGRESS_OUTBOUND_SPAN_MS +
-        160
-
-      const dots = Array.from(
-        root.querySelectorAll<SVGGraphicsElement>(
-          `.channel-progress-line-${option.value} .recharts-line-dot`,
-        ),
-      ).sort((a, b) => {
-        const ax = Number(a.getAttribute("cx") ?? 0)
-        const bx = Number(b.getAttribute("cx") ?? 0)
-        return ax - bx
-      })
-
-      dots.forEach((dot, index) => {
-        const delay =
-          returnStart +
-          channelProgressTravelDelay(
-            index,
-            dots.length,
-            returnDirection,
-            CHANNEL_PROGRESS_RETURN_SPAN_MS,
-          )
-
-        dot.style.transformBox = "fill-box"
-        dot.style.transformOrigin = "center"
-        dot.style.willChange = "transform, opacity"
-
-        animations.push(cancelAndRelease(dot.animate(
-          [
-            { transform: "scale(0)", opacity: 0, offset: 0 },
-            {
-              transform: "scale(1.38)",
-              opacity: 1,
-              offset: 0.48,
-              easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-            },
-            {
-              transform: "scale(0.9)",
-              opacity: 1,
-              offset: 0.7,
-              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-            },
-            {
-              transform: "scale(1.055)",
-              opacity: 1,
-              offset: 0.88,
-              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-            },
-            { transform: "scale(1)", opacity: 1, offset: 1 },
-          ],
-          {
-            duration: CHANNEL_PROGRESS_DOT_SPRING_MS,
-            delay,
-            fill: "both",
-            easing: "linear",
-          },
-        )))
-      })
-
-      // The line follows the dot-wave rather than leading it.
-      const path = root.querySelector<SVGPathElement>(
-        `.channel-progress-line-${option.value} .recharts-line-curve`,
-      )
-
-      if (path) {
-        const hiddenClip =
-          returnDirection === "rtl"
-            ? "inset(0 0 0 100%)"
-            : "inset(0 100% 0 0)"
-
-        animations.push(cancelAndRelease(path.animate(
-          [
-            { clipPath: hiddenClip, opacity: 0.18 },
-            { clipPath: "inset(0 0 0 0)", opacity: 1 },
-          ],
-          {
-            duration: CHANNEL_PROGRESS_RETURN_SPAN_MS + 520,
-            delay: returnStart + CHANNEL_PROGRESS_LINE_TRAIL_MS,
-            fill: "both",
-            easing: "cubic-bezier(0.16, 1, 0.3, 1)",
-          },
-        )))
-      }
-    })
-
-    return () => {
-      animations.forEach((animation) => {
-        try { animation.cancel() } catch { /* detached node */ }
-      })
-    }
-  }, [
-    activeMetrics,
-    chartData,
-    layoutMode,
-    selectedMetrics,
-    timeRange,
-    viewMode,
-    channelProgressReplayTick,
-  ])
 
   const CustomCandle = (props: any) => {
     const { x, y, width, height, payload, optionKey } = props
@@ -4285,6 +4011,7 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
 
   return (
     <SubToolboxChartModule
+      heroVisualId="channel-progress"
       header={{
         title: "CHANNEL PROGRESS",
         subtitle: `DATA: ${usesMonthlyGrain ? "MONTHLY STATS" : "DAILY STATS"} • ${viewMode === "progress" ? "OVERALL" : "WINDOW CHANGE"} • RAW METRICS`,
@@ -4436,10 +4163,11 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
         />
       }
     >
-      <div ref={channelProgressRootRef} className="px-1 pt-2 pb-4 min-h-[400px] relative overflow-visible">
-       {/* Header-anchored: negative topPx floats the button above the chart body
-           into the shell header row (parent has overflow-visible so it renders). */}
-       <HeaderHeroPlayButton visualId="channel-progress" topPx={-34} rightPx={12} />
+      <HeroIntroBoundary
+        visualId="channel-progress"
+        replayKey={`${viewMode}-${layoutMode}-${timeRange}-${selectedMetrics.join("|")}-${chartData.length}`}
+        className="px-1 pt-2 pb-4 min-h-[400px] relative overflow-visible"
+      >
         {layoutMode === "individual" && activeMetrics.length > 1 ? (
           <div className={`grid gap-1 h-[420px] ${activeMetrics.length === 2 ? 'grid-cols-1 grid-rows-2' : 'grid-cols-2 grid-rows-2'}`}>
             {activeMetrics.map((metricOpt, metricIndex) => {
@@ -4482,7 +4210,7 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
           })}
         </div>
         ) : null}
-      </div>
+      </HeroIntroBoundary>
     </SubToolboxChartModule>
   )
 }
@@ -5390,6 +5118,7 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
 
  return (
   <SubToolboxChartModule
+   heroVisualId="traffic-source-evolution"
    header={{ title: "TRAFFIC SOURCE EVOLUTION", subtitle: "SOURCE MIX OVER TIME", icon: <CustomIcon name="analytics" size={18} />, headerStyle: "subtoolbox" }}
    theme={{ headerBandBg: "#B8FF2C", iconBlockBg: "#24D3FF", shadowColor: "rgba(184,255,44,0.45)" }}
    layout={{ moduleMinHeight: "470px", moduleWidth: "100%" }}
@@ -5397,7 +5126,8 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
    activeContext={{
     title: activeContextTitle,
     stats: activeContextStats,
-    bgTone: "#E5E7EB",
+    bgTone: "#080816",
+    darkStats: true,
     height: "expanded",
    }}
   >
@@ -5527,15 +5257,19 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
  )
 }
 
-export const KeywordTreemapModule: React.FC<GChartProps> = ({ data }) => {
+export const KeywordTreemapModule: React.FC<GChartProps & { renderBare?: boolean }> = ({ data, renderBare = false }) => {
  const ds = useMemo(() => buildExpansionDatasets(data), [data])
+ const body = (
+  <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">{ds.keywordNodes.length === 0 ? <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} /> : (
+   <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 h-[340px] overflow-auto border-[3px] border-black rounded-xl p-2 bg-[#f7f7f7]">
+    {ds.keywordNodes.map((k, i) => <div key={k.keyword} className="border-[3px] border-black rounded-lg p-2" style={{ background: COLORS[i % COLORS.length], opacity: 0.9 }}><p className="text-[11px] font-black uppercase">{k.keyword}</p><p className="text-[13px] font-[1000]">{formatCompact(k.value)}</p></div>)}
+   </div>
+  )}</div>
+ )
+ if (renderBare) return body
  return (
   <SubToolboxChartModule header={{ title: "KEYWORD TREEMAP", subtitle: "TITLE TOKEN REACH WEIGHTING", icon: <CustomIcon name="target" size={18} /> }} theme={{ headerBandBg: "#00E5FF", iconBlockBg: "#FF7497", shadowColor: "rgba(0,229,255,0.45)" }}>
-   <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">{ds.keywordNodes.length === 0 ? <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} /> : (
-    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 h-[340px] overflow-auto border-[3px] border-black rounded-xl p-2 bg-[#f7f7f7]">
-     {ds.keywordNodes.map((k, i) => <div key={k.keyword} className="border-[3px] border-black rounded-lg p-2" style={{ background: COLORS[i % COLORS.length], opacity: 0.9 }}><p className="text-[11px] font-black uppercase">{k.keyword}</p><p className="text-[13px] font-[1000]">{formatCompact(k.value)}</p></div>)}
-    </div>
-   )}</div>
+   {body}
   </SubToolboxChartModule>
  )
 }
@@ -5932,6 +5666,7 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
 
  return (
   <SubToolboxChartModule
+   heroVisualId="keyword-venn"
    header={{
     title: "KEYWORD VENN",
     subtitle: "MASTER TABLE TITLE OVERLAP × LIVE PERFORMANCE STATS",
@@ -6359,38 +6094,37 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
  )
 }
 
-export const UploadTimeHeatmapModule: React.FC<GChartProps> = ({ data }) => {
+export const UploadTimeHeatmapModule: React.FC<GChartProps & { renderBare?: boolean }> = ({ data, renderBare = false }) => {
  const ds = useMemo(() => buildExpansionDatasets(data), [data])
  const max = Math.max(1, ...ds.heatmapBins.map((bin) => bin.value))
-
+ const body = (
+  <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">
+   {ds.heatmapBins.length === 0 ? (
+    <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} />
+   ) : (
+    <div className="grid grid-cols-24 gap-1 border-[3px] border-black rounded-xl p-2 bg-[#f7f7f7] h-[340px] overflow-auto">
+     {Array.from({ length: 7 * 24 }).map((_, index) => {
+      const dow = Math.floor(index / 24)
+      const hour = index % 24
+      const cell = ds.heatmapBins.find((bin) => bin.dow === dow && bin.hour === hour)
+      const value = cell?.value || 0
+      const alpha = value / max
+      return (
+       <div key={index} className="h-4 border border-black/20 rounded-[2px]"
+        title={`D${dow} ${hour}:00 — ${formatCompact(value)}`}
+        style={{ background: `rgba(0,229,255,${Math.max(0.08, alpha)})` }} />
+      )
+     })}
+    </div>
+   )}
+  </div>
+ )
+ if (renderBare) return body
  return (
   <SubToolboxChartModule
    header={{ title: "UPLOAD TIME HEATMAP", subtitle: "WEEKDAY × HOUR DENSITY", icon: <CustomIcon name="calendar" size={18} /> }}
    theme={{ headerBandBg: "#FFEA00", iconBlockBg: "#24D3FF", shadowColor: "rgba(255,234,0,0.45)" }}>
-   <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">
-    {ds.heatmapBins.length === 0 ? (
-     <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} />
-    ) : (
-     <div className="grid grid-cols-24 gap-1 border-[3px] border-black rounded-xl p-2 bg-[#f7f7f7] h-[340px] overflow-auto">
-      {Array.from({ length: 7 * 24 }).map((_, index) => {
-       const dow = Math.floor(index / 24)
-       const hour = index % 24
-       const cell = ds.heatmapBins.find((bin) => bin.dow === dow && bin.hour === hour)
-       const value = cell?.value || 0
-       const alpha = value / max
-
-       return (
-        <div
-         key={index}
-         className="h-4 border border-black/20 rounded-[2px]"
-         title={`D${dow} ${hour}:00 — ${formatCompact(value)}`}
-         style={{ background: `rgba(0,229,255,${Math.max(0.08, alpha)})` }}
-        />
-       )
-      })}
-     </div>
-    )}
-   </div>
+   {body}
   </SubToolboxChartModule>
  )
 }
@@ -6425,34 +6159,36 @@ export const ConversionFunnelModule: React.FC<GChartProps> = ({ data }) => {
  )
 }
 
-export const PerformanceGaugesModule: React.FC<GChartProps> = ({ data }) => {
+export const PerformanceGaugesModule: React.FC<GChartProps & { renderBare?: boolean }> = ({ data, renderBare = false }) => {
  const ds = useMemo(() => buildExpansionDatasets(data), [data])
-
+ const body = (
+  <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">
+   {ds.gauges.length === 0 ? (
+    <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} />
+   ) : (
+    <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+     {ds.gauges.map((gauge) => {
+      const percentage = Math.max(0, Math.min(100, (gauge.value / Math.max(gauge.target, 1)) * 100))
+      return (
+       <div key={gauge.label} className="border-[3px] border-black rounded-xl p-3 bg-white">
+        <p className="text-[11px] font-black uppercase">{gauge.label}</p>
+        <div className="h-3 border-[2px] border-black rounded-full mt-3 overflow-hidden">
+         <div className="h-full" style={{ width: `${percentage}%`, backgroundColor: gauge.tone }} />
+        </div>
+        <p className="text-xl font-[1000] mt-2">{gauge.value.toFixed(2)}</p>
+       </div>
+      )
+     })}
+    </div>
+   )}
+  </div>
+ )
+ if (renderBare) return body
  return (
   <SubToolboxChartModule
    header={{ title: "PERFORMANCE GAUGES", subtitle: "CORE HEALTH SNAPSHOT", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#F5E44D", iconBlockBg: "#F06D98", shadowColor: "rgba(245,228,77,0.45)" }}>
-   <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">
-    {ds.gauges.length === 0 ? (
-     <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} />
-    ) : (
-     <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
-      {ds.gauges.map((gauge) => {
-       const percentage = Math.max(0, Math.min(100, (gauge.value / Math.max(gauge.target, 1)) * 100))
-
-       return (
-        <div key={gauge.label} className="border-[3px] border-black rounded-xl p-3 bg-white">
-         <p className="text-[11px] font-black uppercase">{gauge.label}</p>
-         <div className="h-3 border-[2px] border-black rounded-full mt-3 overflow-hidden">
-          <div className="h-full" style={{ width: `${percentage}%`, backgroundColor: gauge.tone }} />
-         </div>
-         <p className="text-xl font-[1000] mt-2">{gauge.value.toFixed(2)}</p>
-        </div>
-       )
-      })}
-     </div>
-    )}
-   </div>
+   {body}
   </SubToolboxChartModule>
  )
 }
@@ -6495,43 +6231,35 @@ export const LissajousWebModule: React.FC<GChartProps> = ({ data }) => {
  )
 }
 
-export const OrbitalModule: React.FC<GChartProps> = ({ data }) => {
+export const OrbitalModule: React.FC<GChartProps & { renderBare?: boolean }> = ({ data, renderBare = false }) => {
  const ds = useMemo(() => buildExpansionDatasets(data), [data])
-
+ const body = (
+  <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">
+   {ds.orbital.length === 0 ? (
+    <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} />
+   ) : (
+    <div className="h-[390px] border-[3px] border-black rounded-xl bg-[#020617] relative overflow-hidden">
+     {[80, 110, 140].map((radius) => (
+      <div key={radius} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10"
+       style={{ width: `${radius * 2}px`, height: `${radius * 2}px` }} />
+     ))}
+     <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#FFE857] shadow-[0_0_24px_8px_rgba(255,232,87,0.6)]" />
+     {ds.orbital.map((planet, index) => (
+      <div key={`${planet.name}-${index}`}
+       className="absolute text-[9px] font-black uppercase px-2 py-1 rounded-full border-[2px] border-white text-white"
+       style={{ left: `calc(50% + ${planet.x}px)`, top: `calc(50% + ${planet.y}px)`, background: "rgba(2,6,23,0.8)", boxShadow: `0 0 0 2px ${planet.tone}` }}
+       title={`${planet.name}: ${formatCompact(planet.value)}`}>{planet.name}</div>
+     ))}
+    </div>
+   )}
+  </div>
+ )
+ if (renderBare) return body
  return (
   <SubToolboxChartModule
    header={{ title: "ORBITAL", subtitle: "CONTENT CATEGORIES AS PLANETARY ORBITS", icon: <CustomIcon name="target" size={18} /> }}
    theme={{ headerBandBg: "#FF9900", iconBlockBg: "#B14AED", shadowColor: "rgba(180,74,237,0.45)" }}>
-   <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">
-    {ds.orbital.length === 0 ? (
-     <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} />
-    ) : (
-     <div className="h-[390px] border-[3px] border-black rounded-xl bg-[#020617] relative overflow-hidden">
-      {[80, 110, 140].map((radius) => (
-       <div
-        key={radius}
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10"
-        style={{ width: `${radius * 2}px`, height: `${radius * 2}px` }}
-       />
-      ))}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#FFE857] shadow-[0_0_24px_8px_rgba(255,232,87,0.6)]" />
-      {ds.orbital.map((planet, index) => (
-       <div
-        key={`${planet.name}-${index}`}
-        className="absolute text-[9px] font-black uppercase px-2 py-1 rounded-full border-[2px] border-white text-white"
-        style={{
-         left: `calc(50% + ${planet.x}px)`,
-         top: `calc(50% + ${planet.y}px)`,
-         background: "rgba(2,6,23,0.8)",
-         boxShadow: `0 0 0 2px ${planet.tone}`,
-        }}
-        title={`${planet.name}: ${formatCompact(planet.value)}`}>
-        {planet.name}
-       </div>
-      ))}
-     </div>
-    )}
-   </div>
+   {body}
   </SubToolboxChartModule>
  )
 }

@@ -22,7 +22,7 @@ const col = (
  format: VtSyncTableColumnDefinition["format"] = "text",
  defaultVisible = true,
  pinned?: "left" | "right",
- options: Partial<Pick<VtSyncTableColumnDefinition, "isFormula" | "semanticRole" | "visualization" | "totalMode" | "preferredWidth" | "textSize" | "availabilityNote">> = {},
+ options: Partial<Pick<VtSyncTableColumnDefinition, "isFormula" | "visibility" | "semanticRole" | "visualization" | "totalMode" | "preferredWidth" | "textSize" | "availabilityNote">> = {},
 ): VtSyncTableColumnDefinition => ({
  key,
  label,
@@ -31,9 +31,9 @@ const col = (
  defaultVisible,
  pinned,
  isFormula: options.isFormula ?? (["engagementRate", "likeRatio", "subRatio", "subRate", "playlistViewShare", "playlistWatchTimeShare"].includes(key) || undefined),
- visibility: "always",
- semanticRole: options.semanticRole ?? (["number", "percent", "currency", "duration", "durationHours", "durationMinutes"].includes(format || "") ? "metric" : "identity"),
- visualization: options.visualization ?? (["number", "percent", "currency", "duration", "durationHours", "durationMinutes"].includes(format || "") ? "metric" : "none"),
+ visibility: options.visibility ?? "always",
+ semanticRole: options.semanticRole ?? (["number", "percent", "ratioPercent", "currency", "duration", "durationHours", "durationMinutes"].includes(format || "") ? "metric" : "identity"),
+ visualization: options.visualization ?? (["number", "percent", "ratioPercent", "currency", "duration", "durationHours", "durationMinutes"].includes(format || "") ? "metric" : "none"),
  totalMode: options.totalMode,
  preferredWidth: options.preferredWidth,
  textSize: options.textSize,
@@ -57,6 +57,7 @@ const table = ({
  layoutMode = "auto",
  compactMode = "supported",
  presentationMode = "standard",
+ exportMode = "formatted",
  summaryMode = id === "videos" ? "selected-video" : "registry",
  summaryColumns = [],
  summaryPrimaryRow,
@@ -79,6 +80,7 @@ const table = ({
  layoutMode?: VtSyncTableDefinition["layoutMode"]
  compactMode?: VtSyncTableDefinition["compactMode"]
  presentationMode?: VtSyncTableDefinition["presentationMode"]
+ exportMode?: VtSyncTableDefinition["exportMode"]
  summaryMode?: VtSyncTableDefinition["summaryMode"]
  summaryColumns?: string[]
  summaryPrimaryRow?: VtSyncTableDefinition["summaryPrimaryRow"]
@@ -102,6 +104,7 @@ const table = ({
  layoutMode,
  compactMode,
  presentationMode,
+ exportMode,
  summaryMode,
  summaryColumns,
  summaryPrimaryRow,
@@ -467,14 +470,19 @@ export const VT_SYNC_TABLE_DEFINITIONS: VtSyncTableDefinition[] = [
    col("provinceCode", "State Code", "Identity", "text", true, "left", { preferredWidth: 112 }),
    col("stateName", "State Name", "Identity", "text", true, "left", { preferredWidth: 180 }),
    ...shortMetricColumns,
-   col("youtubePremiumViews", "Premium Views", "Premium", "number"),
-   col("youtubePremiumWatchTime", "Premium Watch", "Premium", "durationHours"),
-   col("cardClickRate", "Card Click Rate", "Cards", "percent"),
-   col("cardTeaserClickRate", "Teaser Click Rate", "Cards", "percent"),
-   col("cardImpressions", "Card Impressions", "Cards", "number"),
-   col("cardTeaserImpressions", "Teaser Impressions", "Cards", "number"),
-   col("cardClicks", "Card Clicks", "Cards", "number"),
-   col("cardTeaserClicks", "Teaser Clicks", "Cards", "number"),
+   ...[
+    ["subscribersGained", "Subscribers Gained"],
+    ["subscribersLost", "Subscribers Lost"],
+    ["likes", "Likes"],
+    ["dislikes", "Dislikes"],
+    ["comments", "Comments"],
+    ["shares", "Shares"],
+   ].map(([key, label]) => col(key, label, "Unavailable by State", "number", true, undefined, {
+    semanticRole: "metric",
+    visualization: "none",
+    totalMode: "none",
+    availabilityNote: "Not available by state from the YouTube Analytics API.",
+   })),
   ], datasetId: "provinces", layoutMode: "sparse-full", compactMode: "normal-only" }),
  table({ id: "dma", mainCategoryId: "geography", label: "Regions (DMA)", description: "DMA geography rows.", snapshotKeys: ["dmaRegions"], categoryIds: ["geography_dma"], columns: [
   col("dmaCode", "DMA Code", "Identity", "text", true, "left", { preferredWidth: 112 }),
@@ -524,7 +532,7 @@ table({
   id: "retentions",
   mainCategoryId: "content",
   label: "Retentions",
-  description: "100-point audience-retention curves grouped by video.",
+  description: "Audience-retention points grouped by video for reading; raw API rows and values remain available for inspection and export.",
   snapshotKeys: ["retentions"],
   categoryIds: ["retention"],
   columns: [
@@ -534,48 +542,64 @@ table({
       "elapsedVideoTimeRatio",
       "Elapsed Video Time Ratio",
       "Retention Point",
-      "percent"
+      "ratioPercent"
     ),
 
     col(
       "audienceWatchRatio",
       "Audience Watch Ratio",
       "Retention",
-      "percent"
+      "ratioPercent",
+      true,
+      undefined,
+      { visibility: "whenAvailable" }
     ),
 
     col(
       "relativeRetentionPerformance",
       "Relative Retention Performance",
       "Retention",
-      "percent"
+      "ratioPercent",
+      true,
+      undefined,
+      { visibility: "whenAvailable" }
     ),
 
     col(
       "startedWatching",
       "Started Watching",
       "Segment Activity",
-      "number"
+      "number",
+      true,
+      undefined,
+      { visibility: "whenAvailable" }
     ),
 
     col(
       "stoppedWatching",
       "Stopped Watching",
       "Segment Activity",
-      "number"
+      "number",
+      true,
+      undefined,
+      { visibility: "whenAvailable" }
     ),
 
     col(
       "totalSegmentImpressions",
       "Segment Impressions",
       "Segment Activity",
-      "number"
+      "number",
+      true,
+      undefined,
+      { visibility: "whenAvailable" }
     ),
   ],
 
   defaultSort: { key: "videoId", direction: "asc" },
   datasetId: "retentions",
   presentationMode: "retention-video",
+  exportMode: "raw",
 }),
  table({ id: "shares", mainCategoryId: "content", label: "Sharing Services", description: "Sharing service rows.", snapshotKeys: ["sharingService"], categoryIds: ["sharing_service"], columns: [col("term", "Sharing Service", "Identity", "text", true, "left"), col("shares", "Shares", "Engagement", "number"), col("shareLinkShare", "% of Shared Links", "Engagement", "percent", true, undefined, { totalMode: "sum" })], defaultSort: { key: "shares", direction: "desc" }, datasetId: "shares" }),
  table({ id: "playlists", mainCategoryId: "playlists", label: "Playlist Statistics", description: "Playlist statistics rows.", snapshotKeys: ["playlistsData"], categoryIds: ["playlists_analytics"], columns: [

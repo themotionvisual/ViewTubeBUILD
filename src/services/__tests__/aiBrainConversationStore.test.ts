@@ -16,6 +16,8 @@ const responseFixture: CreatorBrainResponse = {
  mode: "strategy_brief",
  headline: "Strategy Brief",
  keyInsight: "Improve one title and thumbnail around the clearest viewer promise.",
+ body: "Build the next upload around one clear viewer promise.",
+ evidenceIds: [],
  evidenceChips: [],
  sections: [],
  modules: [

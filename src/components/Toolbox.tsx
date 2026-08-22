@@ -417,6 +417,7 @@ interface ToolboxScaffoldProps {
   iconName?: string;
   headerColor?: string;
   iconBoxColor?: string;
+  textColor?: string;
   paletteIndex?: number;
   collapsible?: boolean;
   isOpen?: boolean;
@@ -443,6 +444,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
   iconName,
   headerColor = "bg-[#FFDD00]",
   iconBoxColor = "bg-[#FF3399]",
+  textColor = "text-black",
   paletteIndex,
   collapsible = false,
   isOpen = true,
@@ -469,6 +471,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
     iconName={iconName}
     headerColor={headerColor}
     iconBoxColor={iconBoxColor}
+    textColor={textColor}
     paletteIndex={paletteIndex}
     collapsible={collapsible}
     isOpen={isOpen}
@@ -573,7 +576,8 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
 
   return (
     <div
-      className={`w-full bg-white relative flex flex-col transition-all duration-300 ${collapsible && !open ? "self-start" : ""} ${overflowVisible ? "" : "overflow-hidden"} ${shellClassName}`}
+      data-vt-toolbox
+      className={`vt-toolbox w-full bg-white relative flex flex-col transition-all duration-300 ${collapsible && !open ? "self-start" : ""} ${overflowVisible ? "" : "overflow-hidden"} ${shellClassName}`}
       style={{
         border: `${SUB_TOOLBOX_STROKE}px solid black`,
         borderRadius: `16px`,

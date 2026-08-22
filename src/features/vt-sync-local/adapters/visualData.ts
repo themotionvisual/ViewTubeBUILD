@@ -17,6 +17,7 @@ type CanonicalMetricKey =
  | "dislikes"
  | "comments"
  | "shares"
+ | "saves"
  | "subscribersGained"
  | "subscribersLost"
  | "subscribersNet"
@@ -98,6 +99,7 @@ const canonicalMetricOrder: CanonicalMetricKey[] = [
  "watchHours",
  "comments",
  "shares",
+ "saves",
  "subscribersGained",
  "subscribersLost",
  "subscribersNet",
@@ -357,6 +359,7 @@ const buildVideoMetrics = (
   dislikes: [raw.dislikes, "metrics.dislikes"],
   comments: [raw.comments, "metrics.comments"],
   shares: [raw.shares, "metrics.shares"],
+  saves: [raw.videosAddedToPlaylists, "metrics.videosAddedToPlaylists"],
   subscribersGained: [raw.subscribersGained, "metrics.subscribersGained"],
   subscribersLost: [raw.subscribersLost, "metrics.subscribersLost"],
   impressions: [firstValue(raw.impressions, raw.adImpressions), "metrics.impressions"],

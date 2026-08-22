@@ -105,10 +105,16 @@ export const listBrainCommandActions = (): BrainCommandAction[] =>
   .sort((a, b) => b.createdAt - a.createdAt)
 
 export const createBrainCommandAction = (
- input: Omit<BrainCommandAction, "id" | "createdAt" | "status"> & {
+ input: Omit<BrainCommandAction, "id" | "createdAt" | "status" | "source" | "generationId" | "workflowId" | "assistantRequest" | "assistantResponse" | "targetRoute"> & {
   status?: BrainCommandAction["status"]
   id?: string
   createdAt?: number
+  source?: BrainCommandAction["source"]
+  generationId?: string | null
+  workflowId?: string | null
+  assistantRequest?: string | null
+  assistantResponse?: string | null
+  targetRoute?: string
  },
 ): BrainCommandAction => {
  const id = input.id || crypto.randomUUID()

@@ -76,7 +76,7 @@ export const sumLastTwoCompleteDaysViews = (
  if (values.length < 2 || values.some((value) => value === null || value === undefined)) {
   return null
  }
- return values.reduce((sum, value) => sum + Number(value), 0)
+ return values.reduce<number>((sum, value) => sum + Number(value), 0)
 }
 
 export const syncRecentCompleteDailyViews = async (

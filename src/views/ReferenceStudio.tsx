@@ -729,8 +729,8 @@ const ReferenceStudio: React.FC = () => {
     prompt,
     aspectRatio,
     imageSize,
-    largeText,
-    smallText, brain,)
+    [largeText, smallText].filter(Boolean).join(" "),
+   )
    setGeneratedImage(img)
    setHistory([
     {
@@ -755,7 +755,10 @@ const ReferenceStudio: React.FC = () => {
    const reader = new FileReader()
    reader.onloadend = async () => {
     const base64String = (reader.result as string).split(",")[1]
-    const res = await rateThumbnail(base64String, analysisFile.type, brain)
+    const res = await rateThumbnail(base64String, analysisFile.type, {
+     concept: brain.coreConcept || "General Project",
+     niche: brain.targetNiche || "General",
+    })
     setAnalysisResult(res)
     setAnalyzeLoading(false)
    }

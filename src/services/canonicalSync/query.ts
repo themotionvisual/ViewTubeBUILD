@@ -4,6 +4,11 @@ import {
  refreshTokenIfExpired,
 } from "../youtube/youtubeApiClient"
 import type { AnalyticsWindow } from "./contracts"
+import { reportDiagnostic } from "../diagnostics"
+import {
+ sanitizeAnalyticsMetrics,
+ resolveAnalyticsQueryScope,
+} from "../youtube/analyticsMetricSanitizer"
 
 type AnalyticsQueryParams = {
  ids?: string
@@ -12,7 +17,7 @@ type AnalyticsQueryParams = {
  metrics: string[]
  dimensions?: string[]
  filters?: string[]
- sort?: string[]
+ sort?: string | string[]
  maxResults?: number
  startIndex?: number
 }
@@ -52,7 +57,7 @@ const buildAnalyticsUrl = ({
  })
  if (dimensions.length > 0) params.set("dimensions", dimensions.join(","))
  if (filters.length > 0) params.set("filters", filters.join(";"))
- if (sort) params.set("sort", sort)
+ if (sort) params.set("sort", Array.isArray(sort) ? sort.join(",") : sort)
  if (typeof maxResults === "number" && maxResults > 0) {
   params.set("maxResults", String(maxResults))
  }
@@ -66,11 +71,37 @@ export const fetchCanonicalAnalyticsReport = async (
  params: AnalyticsQueryParams,
  failureContext: string,
 ): Promise<any> => {
+ const sanitized = sanitizeAnalyticsMetrics(params.metrics, {
+  scope: resolveAnalyticsQueryScope(params.ids),
+  dimensions: params.dimensions,
+ })
+ if (sanitized.skipped.length) {
+  reportDiagnostic({
+   area: "youtube-analytics",
+   event: "metrics_sanitized",
+   level: "warn",
+   whatHappened: "Unsupported metrics were removed before a YouTube Analytics request.",
+   whatItMeans: "Video-level reach metrics cannot be requested in a dimensionless channel summary.",
+   whatToCheck: ["Requested dimensions", "Metric source layer", "Video report shape"],
+   debugData: {
+    scope: resolveAnalyticsQueryScope(params.ids),
+    dimensions: params.dimensions || [],
+    skipped: sanitized.skipped,
+   },
+  })
+ }
+ if (!sanitized.allowed.length) {
+  return {
+   columnHeaders: [],
+   rows: [],
+   skippedMetrics: sanitized.skipped,
+  }
+ }
  const token = await refreshTokenIfExpired()
  if (!token) {
   throw new Error("Missing valid YouTube token for canonical analytics query.")
  }
- const response = await proxyFetch(buildAnalyticsUrl(params), {
+ const response = await proxyFetch(buildAnalyticsUrl({ ...params, metrics: sanitized.allowed }), {
   headers: { Authorization: `Bearer ${token}` },
  })
  if (!response.ok) {
@@ -95,7 +126,7 @@ export const rowsToObjects = (payload: any): Record<string, unknown>[] => {
    })
    return out
   })
-  .filter((row): row is Record<string, unknown> => !!row)
+  .filter((row: Record<string, unknown> | null): row is Record<string, unknown> => !!row)
 }
 
 export const toMetricNumber = (value: unknown): number | null => {

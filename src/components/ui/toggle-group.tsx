@@ -5,7 +5,7 @@ import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group"
 import { type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
-import { toggleVariants } from "@/components/ui/toggle"
+import { toggleVariants } from "@/components/ui/Toggle"
 
 const ToggleGroupContext = React.createContext<
   VariantProps<typeof toggleVariants>
@@ -14,12 +14,17 @@ const ToggleGroupContext = React.createContext<
   variant: "default",
 })
 
+// Radix exposes discriminated union components. JSX loses that discrimination
+// once our wrapper adds visual variants, so render through neutral aliases.
+const ToggleGroupRoot = ToggleGroupPrimitive.Root as React.ElementType
+const ToggleGroupItemRoot = ToggleGroupPrimitive.Item as React.ElementType
+
 const ToggleGroup = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> &
     VariantProps<typeof toggleVariants>
 >(({ className, variant, size, children, ...props }, ref) => (
-  <ToggleGroupPrimitive.Root
+  <ToggleGroupRoot
     ref={ref}
     className={cn("flex items-center justify-center gap-1", className)}
     {...props}
@@ -27,7 +32,7 @@ const ToggleGroup = React.forwardRef<
     <ToggleGroupContext.Provider value={{ variant, size }}>
       {children}
     </ToggleGroupContext.Provider>
-  </ToggleGroupPrimitive.Root>
+  </ToggleGroupRoot>
 ))
 
 ToggleGroup.displayName = ToggleGroupPrimitive.Root.displayName
@@ -40,7 +45,7 @@ const ToggleGroupItem = React.forwardRef<
   const context = React.useContext(ToggleGroupContext)
 
   return (
-    <ToggleGroupPrimitive.Item
+    <ToggleGroupItemRoot
       ref={ref}
       className={cn(
         toggleVariants({
@@ -52,7 +57,7 @@ const ToggleGroupItem = React.forwardRef<
       {...props}
     >
       {children}
-    </ToggleGroupPrimitive.Item>
+    </ToggleGroupItemRoot>
   )
 })
 

@@ -1,4 +1,4 @@
-import type { CsvFileWithTag } from "../types"
+import type { CsvFileWithTag } from "../../types"
 import { buildCsvFilesWithTags } from "../csvPackageIngestion"
 import type {
  AnalyticsWindow,

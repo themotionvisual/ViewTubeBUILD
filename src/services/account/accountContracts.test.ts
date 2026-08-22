@@ -11,7 +11,12 @@ import {
   type UnifiedAccountSnapshot,
 } from "./accountContracts"
 
-const snapshot = (overrides: Partial<UnifiedAccountSnapshot>): UnifiedAccountSnapshot => ({
+type SnapshotOverrides = Omit<Partial<UnifiedAccountSnapshot>, "authentication" | "google"> & {
+  authentication?: Partial<UnifiedAccountSnapshot["authentication"]>
+  google?: Partial<UnifiedAccountSnapshot["google"]>
+}
+
+const snapshot = (overrides: SnapshotOverrides): UnifiedAccountSnapshot => ({
   ...ANONYMOUS_ACCOUNT_SNAPSHOT,
   ...overrides,
   authentication: {

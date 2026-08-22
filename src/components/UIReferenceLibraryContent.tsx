@@ -55,18 +55,20 @@ import {
 } from "../data/liveCanvasRegistry"
 import {
  StyleChipRow,
- Toggle,
- Checkbox,
- RadioGroup,
  FormField,
  KPIStatRow,
  DailyStats,
  Sidebar,
  ChannelTree,
  Tooltip,
- Dialog,
  VideoCardGrid,
 } from "./ui"
+import {
+ ReferenceCheckbox as Checkbox,
+ ReferenceDialog as Dialog,
+ ReferenceRadio as RadioGroup,
+ ReferenceToggle as Toggle,
+} from "./ui/ReferenceControls"
 import { StandardInput } from "./StandardInput"
 import { StandardDropdown } from "./StandardDropdown"
 import { StandardKPI } from "./StandardKPI"

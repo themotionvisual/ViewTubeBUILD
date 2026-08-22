@@ -244,6 +244,10 @@ export interface CoreVideoBaseline {
   /** Analytics API row for this video, or null if analytics haven't processed yet */
   analytics: any[] | null
   analyticsMetrics?: Partial<Record<CoreMetric, number>>
+  analyticsFetchedAt?: string
+  analyticsFetchedAtLocal?: string
+  channelId?: string
+  channelTitle?: string
 
 }
 
@@ -765,7 +769,8 @@ export const syncAuthoritativeMetadata = async (): Promise<any> => {
     })
   )
 
-  console.log(`✅ Authoritative metadata synced: ${officialStats.statistics.subscriberCount} subs.`)
+  const statistics = officialStats.statistics as Record<string, unknown>
+  console.log(`✅ Authoritative metadata synced: ${String(statistics.subscriberCount ?? 0)} subs.`)
   return officialStats
 }
 
@@ -931,7 +936,7 @@ export const syncRecentVideoSnapshot = async (uploadsPlaylistId: string): Promis
   if (Object.keys(categoryTaxonomy).length === 0) {
     try {
       const cats = await fetchVideoCategories()
-      categoryTaxonomy = Object.fromEntries(cats.map((c) => [String(c.id), String(c.title)]))
+      categoryTaxonomy = Object.fromEntries(cats.map((c: { id: string; title: string }) => [String(c.id), String(c.title)]))
       localStorage.setItem("vt_video_category_taxonomy_us", JSON.stringify(categoryTaxonomy))
     } catch (e) {
       console.warn("[CoreSync] Failed to fetch categories for snapshot:", e)
@@ -1346,7 +1351,7 @@ export const syncCoreLifetimeData = async (
         video.duration > 180
           ? false
           : (video.duration > 0 && video.duration <= 180) || isInShortsPlaylist || video.isShort
-      video.format = video.isShort ? "short" : "long"
+      video.format = video.isShort ? "shorts" : "long"
     })
   } catch (e) {
     console.warn("[CoreSync] Shorts playlist cross-ref failed, using duration+aspect only:", e)

@@ -25,6 +25,7 @@ export type MetricKey40 =
   | "device"
   | "trafficSource"
   | "contentType"
+  | "day"
 
 export type ChartReadiness40 = "ready" | "limited" | "unavailable"
 

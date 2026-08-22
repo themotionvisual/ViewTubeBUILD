@@ -1,4 +1,4 @@
-import { ContextPacket } from "../types"
+import type { ContextPacket } from "../../types"
 import { getBrainMemory } from "./Core"
 
 export const consultBrainSync = (toolId: string): ContextPacket => {

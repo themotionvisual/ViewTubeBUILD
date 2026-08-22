@@ -351,6 +351,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   onCycleHeight,
   onDecHeight,
   onRemoveWidget,
+  dashboardControls,
 }) => {
   const account = useUnifiedAccount();
   const timeWindows = ["7 DAYS", "14 DAYS", "28 DAYS", "60 DAYS", "90 DAYS", "180 DAYS", "365 DAYS", "LIFETIME"];
@@ -1234,6 +1235,17 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
        <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", border: "2px solid #000", borderRadius: "6px", padding: "1px 6px", background: "#f3f4f6" }}>{planId}</span>
       </div>
      </div>
+
+     <button
+      type="button"
+      className="vt-button"
+      aria-pressed={Boolean(dashboardControls?.editMode)}
+      style={{ width: "100%", minHeight: "34px", fontSize: "9px", background: dashboardControls?.editMode ? "#C9F830" : "#fff" }}
+      onClick={() => dashboardControls?.setEditMode((previous: boolean) => !previous)}
+     >
+      <Edit3 size={14} aria-hidden="true" />
+      {dashboardControls?.editMode ? "HIDE DASHBOARD CONTROLS" : "SHOW DASHBOARD CONTROLS"}
+     </button>
 
      <div style={{ display: "flex", gap: "6px", marginTop: "auto" }}>
       <button

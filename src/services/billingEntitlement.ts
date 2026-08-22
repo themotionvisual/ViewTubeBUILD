@@ -385,6 +385,38 @@ export const reconcileEntitlementWindow = (
  })
 }
 
+/** Pure entitlement transition used by tests and non-persisting previews. */
+export const consumeEntitlementTokens = (
+ state: EntitlementState,
+ units: number,
+ now = new Date(),
+): { next: EntitlementState; allowed: boolean } => {
+ const current = reconcileEntitlementWindow(state, now)
+ if (current.tier === "large") return { next: current, allowed: true }
+ const debit = Math.max(1, Math.floor(units))
+ if (current.tier === "free" || current.creditBalance < debit) {
+  return { next: current, allowed: false }
+ }
+ return {
+  allowed: true,
+  next: ensureCompatibilityFields({
+   ...current,
+   creditBalance: current.creditBalance - debit,
+   updatedAtIso: now.toISOString(),
+  }),
+ }
+}
+
+export const registerReferralConversion = (
+ state: EntitlementState,
+ now = new Date(),
+): EntitlementState => ensureCompatibilityFields({
+ ...state,
+ referralsConverted: state.referralsConverted + 1,
+ freeMonthsEarned: state.freeMonthsEarned + 1,
+ updatedAtIso: now.toISOString(),
+})
+
 const serializeEntitlement = (state: EntitlementState): string => JSON.stringify(state)
 
 const buildEntitlementFromRaw = (raw: string | null): EntitlementState => {

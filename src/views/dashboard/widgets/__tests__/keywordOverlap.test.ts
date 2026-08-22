@@ -28,14 +28,14 @@ describe("tokenizeTitleKeywords", () => {
 
 describe("buildKeywordConstellationDataset", () => {
   const rows = [
-    makeRow("Napoleon cavalry tactics", 1000, 80, 18, 12),
-    makeRow("Napoleon cavalry charge", 1200, 90, 20, 10),
-    makeRow("Napoleon infantry tactics", 1100, 70, 16, 8),
+    makeRow("Alder cavalry tactics", 1000, 80, 18, 12),
+    makeRow("Alder cavalry charge", 1200, 90, 20, 10),
+    makeRow("Alder infantry tactics", 1100, 70, 16, 8),
     makeRow("Cavalry infantry drill", 900, 65, 14, 9),
     makeRow("Infantry tactics strategy", 1300, 75, 22, 11),
-    makeRow("Napoleon strategy empire", 1400, 95, 24, 13),
-    makeRow("Brunswick black lancers", 2544, 52, 8, 1),
-    makeRow("The black brunswickers", 7523, 335, 12, 9),
+    makeRow("Alder strategy empire", 1400, 95, 24, 13),
+    makeRow("guardian black lancers", 2544, 52, 8, 1),
+    makeRow("The black guardians", 7523, 335, 12, 9),
     makeRow("Charge of the polish lancers", 4265, 137, 9, 5),
   ]
 
@@ -66,10 +66,10 @@ describe("buildKeywordConstellationDataset", () => {
 
 describe("buildKeywordSelectionSummary", () => {
   const rows = [
-    makeRow("Black Brunswickers at Somosierrra", 7523, 335, 12, 9),
-    makeRow("Brunswick black legion", 6935, 305, 11, 8),
+    makeRow("Black Guardians at Somosierrra", 7523, 335, 12, 9),
+    makeRow("guardian black legion", 6935, 305, 11, 8),
     makeRow("Charge of polish lancers", 4265, 137, 9, 5),
-    makeRow("Brunswick siege order", 2544, 52, 8, 1),
+    makeRow("guardian siege order", 2544, 52, 8, 1),
   ]
 
   it("single keyword selection matches all containing videos", () => {
@@ -79,13 +79,13 @@ describe("buildKeywordSelectionSummary", () => {
   })
 
   it("two keyword selection matches AND combination", () => {
-    const summary = buildKeywordSelectionSummary(rows, ["brunswick", "black"], "views")
+    const summary = buildKeywordSelectionSummary(rows, ["guardian", "black"], "views")
     expect(summary).not.toBeNull()
     expect(summary?.videoCount).toBe(2)
   })
 
   it("selection is capped logically at 3 keywords", () => {
-    const summary = buildKeywordSelectionSummary(rows, ["brunswick", "black", "legion", "extra"], "views")
+    const summary = buildKeywordSelectionSummary(rows, ["guardian", "black", "legion", "extra"], "views")
     expect(summary).not.toBeNull()
     expect(summary?.keywords.length).toBe(3)
   })

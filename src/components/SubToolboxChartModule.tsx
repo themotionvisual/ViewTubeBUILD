@@ -11,6 +11,8 @@ import {
   resolveAnalyticsVisualContextBarHeight,
   type AnalyticsVisualContextBarHeight,
 } from "./analyticsVisualContextBar"
+import { HeaderHeroPlayButton } from "./HeroIntroBoundary"
+import type { HeroVisualId } from "./heroVisualAnimations"
 
 type Tone = "pink" | "cyan" | "lime" | "yellow" | "purple" | "orange" | "white"
 
@@ -59,6 +61,7 @@ export interface SubToolboxMetricBadge {
 }
 
 export interface SubToolboxChartModuleProps {
+  heroVisualId?: HeroVisualId
   header: {
     title: string
     subtitle: string
@@ -101,6 +104,8 @@ export interface SubToolboxChartModuleProps {
     rightTitle?: string
     rightStats?: SubToolboxStat[]
     bgTone?: string
+    /** Use the shared dark-canvas value zone and metric-colored stat values. */
+    darkStats?: boolean
     height?: AnalyticsVisualContextBarHeight
     /** Allows dense two-line labels without clipping the subtitle rail. */
     minHeight?: number
@@ -186,6 +191,7 @@ export const SubToolboxChartModule: React.FC<
   collapsible = false,
   isOpenInitial = true,
   insight,
+  heroVisualId,
 }) => {
   const sourcePrefix = useVtSyncVisualDataSourcePrefix()
   const visualStyle = useAnalyticsVisualStyle()
@@ -258,13 +264,16 @@ export const SubToolboxChartModule: React.FC<
           >
             <span className="[&_svg]:h-8 [&_svg]:w-8">{resolvedHeaderIcon}</span>
           </div>
-          <div className="min-w-0 flex-1 pl-3 pr-2 py-2 flex flex-col justify-center text-black">
-            <div className={`max-w-full font-[1000] uppercase tracking-[0em] ${header.titleClassName ?? "text-[clamp(20px,5vw,42px)] leading-[0.88]"}`}>
-              {header.title}
+          <div className="flex min-w-0 flex-1 items-center gap-3 py-2 pl-3 pr-3 text-black">
+            <div className="min-w-0 flex-1">
+              <div className={`max-w-full font-[1000] uppercase tracking-[0em] ${header.titleClassName ?? "text-[clamp(20px,5vw,42px)] leading-[0.88]"}`}>
+                {header.title}
+              </div>
+              <div className="max-w-full truncate text-[clamp(10px,2.2vw,14px)] font-black uppercase tracking-[0.069em] text-black/80">
+                {resolvedSubtitle}
+              </div>
             </div>
-            <div className="max-w-full text-[clamp(10px,2.2vw,14px)] font-black uppercase tracking-[0.069em] text-black/80 truncate">
-              {resolvedSubtitle}
-            </div>
+            {heroVisualId ? <HeaderHeroPlayButton visualId={heroVisualId} placement="header" /> : null}
           </div>
         </div>
 
@@ -339,7 +348,7 @@ export const SubToolboxChartModule: React.FC<
                   )}
                   {activeContext.leftStats && (
                     <div className="flex items-stretch h-full border-r-[4px] border-black">
-                      <AnalyticsActiveStats stats={activeContext.leftStats} />
+                      <AnalyticsActiveStats stats={activeContext.leftStats} darkStats={activeContext.darkStats} />
                     </div>
                   )}
                 </div>
@@ -371,9 +380,9 @@ export const SubToolboxChartModule: React.FC<
                       {activeContext.rightTitle}
                     </div>
                   )}
-                  {activeContext.rightStats ? <AnalyticsActiveStats stats={activeContext.rightStats} /> : null}
+                  {activeContext.rightStats ? <AnalyticsActiveStats stats={activeContext.rightStats} darkStats={activeContext.darkStats} /> : null}
                   {!activeContext.rightStats && activeContext.stats && (
-                    <AnalyticsActiveStats stats={activeContext.stats} />
+                    <AnalyticsActiveStats stats={activeContext.stats} darkStats={activeContext.darkStats} />
                   )}
                 </div>
               </div>

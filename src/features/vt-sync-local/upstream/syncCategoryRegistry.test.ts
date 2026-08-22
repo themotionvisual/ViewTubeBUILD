@@ -43,14 +43,18 @@ describe("VT Sync category registry", () => {
 
  it("recursively expands dependencies once and keeps prerequisites first", () => {
   const expanded = expandVtSyncCategoryDependencies(["retention", "videos_analytics"])
+  const retentionOnly = expandVtSyncCategoryDependencies(["retention"])
+  const dailyOnly = expandVtSyncCategoryDependencies(["daily_metrics"])
 
   expect(expanded).toContain("uploads_playlist")
   expect(expanded).toContain("video_metadata")
   expect(expanded).toContain("videos_analytics")
   expect(expanded).toContain("retention")
   expect(expanded.indexOf("uploads_playlist")).toBeLessThan(expanded.indexOf("video_metadata"))
-  expect(expanded.indexOf("video_metadata")).toBeLessThan(expanded.indexOf("retention"))
+  expect(expanded.indexOf("video_metadata")).toBeLessThan(expanded.indexOf("videos_analytics"))
   expect(new Set(expanded).size).toBe(expanded.length)
+  expect(retentionOnly).toEqual(["retention"])
+  expect(dailyOnly).toEqual(["daily_metrics"])
  })
 
  it("keeps hidden categories in code as disabled_unvalidated", () => {

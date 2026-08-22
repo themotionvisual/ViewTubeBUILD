@@ -7,6 +7,7 @@ import {
  GEOGRAPHY_PROVINCE_SAFE_METRICS,
  VT_SYNC_TRAFFIC_DETAIL_FALLBACK_MAX_WINDOWS,
  VT_SYNC_PAGINATED_REPORT_MAX_PAGES,
+ VT_SYNC_SERVER_ACCOUNT_TOKEN,
  VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE,
  VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE,
  runVtSyncLocalSync,
@@ -45,6 +46,245 @@ afterEach(async () => {
 })
 
 describe("syncUploadsInventory", () => {
+ it("syncs the balanced top five long-form and top five Shorts retention baseline without deleting cached rows", async () => {
+  const requestedVideoIds: string[] = []
+  const requestedMetricSets: string[] = []
+  vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+   if (url.includes("youtube/v3/channels")) {
+    return new Response(JSON.stringify({
+     items: [{
+      id: "channel-a",
+      snippet: { title: "Channel A", publishedAt: "2020-01-01T00:00:00Z", thumbnails: {} },
+      statistics: { subscriberCount: "10", videoCount: "14", viewCount: "1000" },
+      contentDetails: { relatedPlaylists: {} },
+     }],
+    }), { status: 200 })
+   }
+   if (!url.includes("youtubeanalytics.googleapis.com/v2/reports")) {
+    return new Response(JSON.stringify({ items: [] }), { status: 200 })
+   }
+   const parsed = new URL(url)
+   const videoId = (parsed.searchParams.get("filters") || "").replace("video==", "")
+   requestedVideoIds.push(videoId)
+   requestedMetricSets.push(parsed.searchParams.get("metrics") || "")
+   if (videoId === "short-5") {
+    return new Response(JSON.stringify({ error: { message: "retention unavailable" } }), { status: 400 })
+   }
+   return new Response(JSON.stringify({
+    columnHeaders: [
+     { name: "elapsedVideoTimeRatio" },
+     { name: "audienceWatchRatio" },
+     { name: "relativeRetentionPerformance" },
+     { name: "startedWatching" },
+     { name: "stoppedWatching" },
+     { name: "totalSegmentImpressions" },
+    ],
+    rows: [[0.5, 0.75, 0.6, 2, 1, 90]],
+   }), { status: 200 })
+  }))
+
+  const longVideos = Array.from({ length: 7 }, (_, index) => ({
+   id: `long-${index}`,
+   title: `Long ${index}`,
+   format: "long" as const,
+   publishedAt: `2026-01-${String(index + 1).padStart(2, "0")}T00:00:00Z`,
+   privacyStatus: "public",
+   metrics: { views: index * 100 },
+  }))
+  const shortVideos = Array.from({ length: 7 }, (_, index) => ({
+   id: `short-${index}`,
+   title: `Short ${index}`,
+   format: "short" as const,
+   publishedAt: `2026-02-${String(index + 1).padStart(2, "0")}T00:00:00Z`,
+   privacyStatus: "public",
+   metrics: { views: index * 100 },
+  }))
+  const previousSnapshot = normalizeVtSyncSnapshot({
+   channelId: "channel-a",
+   channelPublishedAt: "2020-01-01T00:00:00Z",
+   videos: [...longVideos, ...shortVideos],
+   retentions: [
+    { videoId: "legacy", elapsedVideoTimeRatio: 0.5, audienceWatchRatio: 0.4 },
+    { videoId: "short-5", elapsedVideoTimeRatio: 0.5, audienceWatchRatio: 0.55 },
+   ],
+  })
+
+  const snapshot = await runVtSyncLocalSync({
+   token: "token",
+   selectedCategories: ["retention"],
+   previousSnapshot,
+  })
+
+  const primaryRequestedVideoIds = requestedVideoIds.filter((_, index) =>
+   requestedMetricSets[index] === "audienceWatchRatio,relativeRetentionPerformance,startedWatching,stoppedWatching,totalSegmentImpressions",
+  )
+  expect(primaryRequestedVideoIds).toEqual([
+   "long-6", "long-5", "long-4", "long-3", "long-2",
+   "short-6", "short-5", "short-4", "short-3", "short-2",
+  ])
+  expect(requestedMetricSets.filter((_, index) => requestedVideoIds[index] === "short-5")).toEqual([
+   "audienceWatchRatio,relativeRetentionPerformance,startedWatching,stoppedWatching,totalSegmentImpressions",
+   "audienceWatchRatio,relativeRetentionPerformance",
+   "startedWatching,stoppedWatching,totalSegmentImpressions",
+  ])
+  expect(snapshot.retentions.find((row) => row.videoId === "legacy")).toMatchObject({ audienceWatchRatio: 0.4 })
+  expect(snapshot.retentions.find((row) => row.videoId === "short-5")).toMatchObject({
+   audienceWatchRatio: 0.55,
+   retentionStatus: "failed",
+  })
+  expect(snapshot.retentions.find((row) => row.videoId === "long-6")).toMatchObject({
+   audienceWatchRatio: 0.75,
+   relativeRetentionPerformance: 0.6,
+   startedWatching: 2,
+   stoppedWatching: 1,
+   totalSegmentImpressions: 90,
+   retentionStatus: "complete",
+   retentionSource: "youtube_analytics_v2",
+  })
+  expect(snapshot.syncManifest?.diagnostics?.find((entry) => entry.phase === "retention_selection")).toMatchObject({
+   selectionMode: "top_by_views_by_format",
+   selectedCounts: { long: 5, short: 5 },
+   estimatedRequests: 10,
+  })
+  expect(snapshot.datasetFreshness?.retentions).toMatchObject({ status: "partial", rows: 11 })
+ })
+
+ it("requests only a missing retention family and preserves exact granular values", async () => {
+  const requestedMetricSets: string[] = []
+  vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+   if (url.includes("youtube/v3/channels")) {
+    return new Response(JSON.stringify({
+     items: [{
+      id: "channel-a",
+      snippet: { title: "Channel A", publishedAt: "2020-01-01T00:00:00Z", thumbnails: {} },
+      statistics: { subscriberCount: "10", videoCount: "1", viewCount: "1000" },
+      contentDetails: { relatedPlaylists: {} },
+     }],
+    }), { status: 200 })
+   }
+   const parsed = new URL(url)
+   const metrics = parsed.searchParams.get("metrics") || ""
+   requestedMetricSets.push(metrics)
+   if (metrics === "startedWatching,stoppedWatching,totalSegmentImpressions") {
+    return new Response(JSON.stringify({
+     columnHeaders: [
+      { name: "elapsedVideoTimeRatio" },
+      { name: "startedWatching" },
+      { name: "stoppedWatching" },
+      { name: "totalSegmentImpressions" },
+     ],
+     rows: [[0.01, 0, 1, 100], [0.02, 2, 0, null]],
+    }), { status: 200 })
+   }
+   return new Response(JSON.stringify({
+    columnHeaders: [
+     { name: "elapsedVideoTimeRatio" },
+     { name: "audienceWatchRatio" },
+     { name: "relativeRetentionPerformance" },
+    ],
+    rows: [[0.01, 0.8, 0.6], [0.02, 0.7, 0.55]],
+   }), { status: 200 })
+  }))
+
+  const snapshot = await runVtSyncLocalSync({
+   token: "token",
+   selectedCategories: ["retention"],
+   retentionVideoIds: ["video-a"],
+   previousSnapshot: normalizeVtSyncSnapshot({
+    channelId: "channel-a",
+    channelPublishedAt: "2020-01-01T00:00:00Z",
+    videos: [{
+     id: "video-a",
+     title: "Video A",
+     format: "long",
+     privacyStatus: "public",
+     publishedAt: "2026-01-01T00:00:00Z",
+     metrics: { views: 1000 },
+    }],
+    retentions: [],
+   }),
+  })
+
+  expect(requestedMetricSets).toEqual([
+   "audienceWatchRatio,relativeRetentionPerformance,startedWatching,stoppedWatching,totalSegmentImpressions",
+   "startedWatching,stoppedWatching,totalSegmentImpressions",
+  ])
+  expect(snapshot.retentions).toEqual([
+   expect.objectContaining({
+    videoId: "video-a",
+    elapsedVideoTimeRatio: 0.01,
+    audienceWatchRatio: 0.8,
+    relativeRetentionPerformance: 0.6,
+    startedWatching: 0,
+    stoppedWatching: 1,
+    totalSegmentImpressions: 100,
+   }),
+   expect.objectContaining({
+    videoId: "video-a",
+    elapsedVideoTimeRatio: 0.02,
+    startedWatching: 2,
+    stoppedWatching: 0,
+    totalSegmentImpressions: null,
+   }),
+  ])
+  expect(snapshot.syncManifest?.diagnostics?.find((entry) => entry.phase === "retention_video")).toMatchObject({
+   status: "complete",
+   requestedMetrics: [
+    "audienceWatchRatio",
+    "relativeRetentionPerformance",
+    "startedWatching",
+    "stoppedWatching",
+    "totalSegmentImpressions",
+   ],
+   fallbackRequests: [expect.objectContaining({
+    id: "granular",
+    requestedMetrics: ["startedWatching", "stoppedWatching", "totalSegmentImpressions"],
+   })],
+  })
+ })
+
+ it("stops the run after one non-retryable reconnect failure and preserves the previous snapshot", async () => {
+  const fetchMock = vi.fn(async () => new Response(JSON.stringify({
+   error: {
+    code: "GOOGLE_RECONNECT_REQUIRED",
+    message: "Reconnect Google.",
+    retryable: false,
+    reconnectRequired: true,
+    requestId: "request-reconnect",
+   },
+  }), { status: 409, headers: { "Content-Type": "application/json" } }))
+  vi.stubGlobal("fetch", fetchMock)
+  const progress: Array<Record<string, any>> = []
+  let committed = normalizeVtSyncSnapshot({ videos: [] })
+  const previousSnapshot = normalizeVtSyncSnapshot({
+   channelId: "channel-a",
+   videos: [{ id: "video-a", title: "Preserved video", metrics: { views: 42 } }],
+  })
+
+  await expect(runVtSyncLocalSync({
+   token: VT_SYNC_SERVER_ACCOUNT_TOKEN,
+   selectedCategories: ["channel_metadata"],
+   previousSnapshot,
+   onProgress: (next) => progress.push(next),
+   onSnapshotCommit: (next) => { committed = next },
+  })).rejects.toMatchObject({ details: { code: "GOOGLE_RECONNECT_REQUIRED", reconnectRequired: true } })
+
+  expect(fetchMock).toHaveBeenCalledTimes(1)
+  expect(committed.videos[0]).toMatchObject({ id: "video-a", title: "Preserved video", metrics: { views: 42 } })
+  expect(committed.syncManifest).toMatchObject({
+   stop_reason: "reconnect_required",
+   failure_code: "GOOGLE_RECONNECT_REQUIRED",
+   reconnect_required: true,
+   request_id: "request-reconnect",
+  })
+  expect(progress.at(-1)).toMatchObject({
+   status: "failed",
+   failureCode: "GOOGLE_RECONNECT_REQUIRED",
+   reconnectRequired: true,
+  })
+  expect(progress.at(-1)?.phases.every((phase: any) => phase.status !== "pending" && phase.status !== "running")).toBe(true)
+ })
+
  it("does not carry a previous channel's catalog into the active channel", async () => {
   vi.stubGlobal("fetch", vi.fn(async (url: string) => {
    if (url.includes("youtube/v3/channels")) {
@@ -156,7 +396,15 @@ describe("syncUploadsInventory", () => {
   expect(snapshot.videos[0]).toMatchObject({ title: "Established title", thumbnail: "https://example.test/cover.jpg" })
   expect(snapshot.videos[0].metrics).toMatchObject({ views: 123, likes: 9, comments: 4 })
   expect(snapshot.videos[0].metricProvenance).toMatchObject({ views: "youtube_data_v3", likes: "youtube_data_v3", comments: "youtube_data_v3" })
-  expect(snapshot.datasetFreshness?.videos).toMatchObject({
+ expect(snapshot.datasetFreshness?.videos).toMatchObject({
+   status: expect.stringMatching(/synced|partial/),
+  })
+  expect(snapshot.datasetFreshness?.video_metadata).toMatchObject({
+   phase: "video_metadata",
+   status: "synced",
+  })
+  expect(snapshot.datasetFreshness?.videos_analytics).toMatchObject({
+   phase: "videos_analytics",
    status: expect.stringMatching(/synced|partial/),
   })
   expect(metadataWasVisibleBeforeAnalytics).toBe(true)

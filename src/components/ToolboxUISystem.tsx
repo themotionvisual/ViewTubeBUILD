@@ -2030,7 +2030,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
            <StandardButton label="Action" onClick={() => {}} />
            <StandardInput placeholder="Enter text..." onChange={() => {}} />
            <StandardDropdown
-            options={["Option 1", "Option 2"]}
+            options={[{ label: "Option 1", value: "option-1" }, { label: "Option 2", value: "option-2" }]}
             onChange={() => {}}
            />
            <StandardKPI label="Engagement" value="95%" />
@@ -2049,7 +2049,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
            <StandardButton label="Action" onClick={() => {}} />
            <StandardInput placeholder="Enter text..." onChange={() => {}} />
            <StandardDropdown
-            options={["Option 1", "Option 2"]}
+            options={[{ label: "Option 1", value: "option-1" }, { label: "Option 2", value: "option-2" }]}
             onChange={() => {}}
            />
            <StandardKPI label="Engagement" value="95%" />

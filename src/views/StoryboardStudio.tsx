@@ -148,10 +148,9 @@ const StoryboardStudio: React.FC<StoryboardStudioProps> = ({
   setIsGeneratingStoryboard(true)
   try {
     const generatedScenes = await generateStoryboard(
-      brain.coreConcept || "General Project",
-      brain.targetNiche || "Education",
       fullScript,
-      brain
+      brain.coreConcept || "General Project",
+      brain,
     )
     
     // Merge or replace scenes

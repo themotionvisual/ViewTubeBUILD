@@ -30,7 +30,30 @@ export interface AnalyticsVisualStat {
 export interface AnalyticsVisualContextBarConfig {
   height?: AnalyticsVisualContextBarHeight
   minHeight?: number
+  /**
+   * When true, every stat in this bar renders with the "dark canvas" treatment:
+   * a near-black (#080816) value-zone fill and the metric's resolved brand color
+   * as the number's foreground. Use on any visual whose preview canvas is dark
+   * so the subtitle stat row matches the canvas instead of a light gray card.
+   *
+   * The Heat Matrix look. Applied uniformly wherever the flag is set — a stat
+   * can still override `backgroundTone`/`valueTone` per-item to opt out.
+   */
+  darkStats?: boolean
 }
+
+/**
+ * Near-black fill used by every dark-canvas visual's stat cards. Matches the
+ * Heat Matrix canvas so the subtitle row reads as part of the same surface.
+ */
+export const ANALYTICS_DARK_STATS_BACKGROUND = "#080816"
+
+/**
+ * Foreground used when the stat's label doesn't resolve to a known metric
+ * color (e.g. "SLOT", "TOP SLOT"): keeps the number legible without borrowing
+ * an unrelated brand hue.
+ */
+export const ANALYTICS_DARK_STATS_NEUTRAL_VALUE = "#F3F4F6"
 
 const TONE_HEX: Record<Tone, string> = {
   pink: "#FF7497",
@@ -102,37 +125,55 @@ export const resolveAnalyticsVisualContextBarHeight = (
   return ANALYTICS_VISUAL_CONTEXT_BAR_HEIGHTS.standard
 }
 
-const statButtonClass = (clickable: boolean): string =>
+const statButtonClass = (clickable: boolean, dark: boolean): string =>
   `h-full w-auto flex-none px-0 inline-flex flex-col items-stretch justify-start tabular-nums leading-none overflow-hidden transition-colors ${
-    clickable ? "cursor-pointer hover:bg-gray-50" : "cursor-default"
+    clickable
+      ? (dark ? "cursor-pointer hover:brightness-125" : "cursor-pointer hover:bg-gray-50")
+      : "cursor-default"
   }`
 
-const statButtonStyle = (item: AnalyticsVisualStat): React.CSSProperties => ({
-  background: item.backgroundTone ?? "#EDEDED",
+const statButtonStyle = (
+  item: AnalyticsVisualStat,
+  dark: boolean,
+): React.CSSProperties => ({
+  background: item.backgroundTone ?? (dark ? ANALYTICS_DARK_STATS_BACKGROUND : "#EDEDED"),
   minWidth: item.minWidth ?? (item.compact ? 68 : 76),
 })
 
+export const resolveAnalyticsStatValueColor = (
+  item: AnalyticsVisualStat,
+  dark: boolean,
+  resolvedTone: string | undefined,
+): string => {
+  // Per-item override always wins so opt-outs stay possible.
+  if (item.valueTone) return item.valueTone
+  if (!dark) return "#000000"
+  // On dark rows the number takes the metric's brand color; unresolved
+  // labels fall back to a light neutral so they stay readable.
+  return resolvedTone ?? ANALYTICS_DARK_STATS_NEUTRAL_VALUE
+}
+
 export const AnalyticsActiveStats: React.FC<{
   stats: readonly AnalyticsVisualStat[]
-}> = ({ stats }) => (
+  darkStats?: boolean
+}> = ({ stats, darkStats = false }) => (
   <div className="flex h-full items-stretch divide-x-[4px] divide-black">
     {stats.map((item, index) => {
       const label = item.labelText ?? item.label
-      const resolvedTone = item.lockTone
-        ? resolveAnalyticsMetricTone(label, item.tone ?? item.bg)
-        : resolveAnalyticsMetricTone(label, item.tone ?? item.bg)
+      const resolvedTone = resolveAnalyticsMetricTone(label, item.tone ?? item.bg)
+      const valueColor = resolveAnalyticsStatValueColor(item, darkStats, resolvedTone)
 
       return (
         <button
           key={`${item.label}-${index}`}
           onClick={item.onClick}
           disabled={!item.onClick}
-          className={statButtonClass(Boolean(item.onClick))}
-          style={statButtonStyle(item)}
+          className={statButtonClass(Boolean(item.onClick), darkStats)}
+          style={statButtonStyle(item, darkStats)}
         >
           <span
-            className="inline-flex h-[55%] items-center justify-center whitespace-nowrap px-1 text-[13px] font-[900] leading-none tracking-[0] text-black"
-            style={{ color: item.valueTone ?? "#000000" }}
+            className="inline-flex h-[55%] items-center justify-center whitespace-nowrap px-1 text-[13px] font-[900] leading-none tracking-[0]"
+            style={{ color: valueColor }}
           >
             {item.value}
           </span>

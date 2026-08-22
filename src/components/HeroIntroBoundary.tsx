@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react"
 import {
   createHeroIntroController,
+  getHeroVariantLabel,
   HERO_VISUAL_VARIANT_COUNT,
   readHeroIntroModeFromUrl,
   type HeroIntroMode,
@@ -33,75 +34,6 @@ export const replayHeroVisual = (
 }
 
 /**
- * OLD IN-CANVAS BUTTON
- *
- * Retained ONLY for compatibility with any old render sites.
- * New hero visuals should use HeaderHeroPlayButton instead.
- */
-export const HeroAnimationPlayButton: React.FC<{
-  visualId: HeroVisualId
-  className?: string
-}> = ({
-  visualId,
-  className = "",
-}) => {
-  return (
-    <button
-      type="button"
-      aria-label="Replay visual animation"
-      title="Replay animation"
-      className={`
-        absolute
-        right-2
-        top-2
-        z-30
-        grid
-        h-8
-        w-8
-        place-items-center
-        rounded-md
-        border-[2px]
-        border-black
-        bg-white
-        text-black
-        shadow-none
-        ${className}
-      `}
-      onClick={(event) => {
-        event.preventDefault()
-        event.stopPropagation()
-
-        replayHeroVisual(visualId)
-      }}
-    >
-      <svg
-        viewBox="0 0 24 24"
-        className="h-[19px] w-[19px]"
-        aria-hidden="true"
-      >
-        <path
-          d="M20 11a8 8 0 1 1-2.34-5.66L20 7.68"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-
-        <path
-          d="M20 3v4.68h-4.68"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </button>
-  )
-}
-
-/**
  * MAIN HERO REPLAY CONTROL
  *
  * Keep ONE of these in the title/header area of each visual.
@@ -130,6 +62,7 @@ export const HeroAnimationPlayButton: React.FC<{
 export const HeaderHeroPlayButton: React.FC<{
   visualId: HeroVisualId
   className?: string
+  placement?: "header" | "overlay"
 
   /**
    * Distance from right side of visual card.
@@ -143,6 +76,7 @@ export const HeaderHeroPlayButton: React.FC<{
 }> = ({
   visualId,
   className = "",
+  placement = "overlay",
   rightPx = 80,
   topPx = 10,
 }) => {
@@ -216,22 +150,24 @@ export const HeaderHeroPlayButton: React.FC<{
     variantCount > 1
       ? `Replay animation — ${variantCount} variants`
       : "Replay animation"
+  const cycleLabel = ["OPENER", "QUICK REPLAY", "CREATIVE ALT"][variant] ?? "REPLAY"
 
   return (
     <div
       className={`
         pointer-events-none
-        absolute
         z-40
         flex
+        shrink-0
         items-center
         gap-2
+        ${placement === "overlay" ? "absolute" : "relative"}
         ${className}
       `}
-      style={{
+      style={placement === "overlay" ? {
         top: `${topPx}px`,
         right: `${rightPx}px`,
-      }}
+      } : undefined}
     >
       {variantCount > 1 &&
       badgeVisible ? (
@@ -255,7 +191,7 @@ export const HeaderHeroPlayButton: React.FC<{
             shadow-[3px_3px_0_0_black]
           "
         >
-          V{variant + 1} / {variantCount}
+          {cycleLabel} · {getHeroVariantLabel(visualId, variant)}
         </span>
       ) : null}
 
@@ -275,11 +211,14 @@ export const HeaderHeroPlayButton: React.FC<{
           border-black
           bg-white
           text-black
-          shadow-[3px_3px_0_0_black]
-          transition-transform
-          hover:-translate-y-0.5
-          active:translate-x-[1px]
-          active:translate-y-[1px]
+          shadow-[4px_4px_0_0_black]
+          transition-all
+          duration-200
+          hover:translate-x-[2px]
+          hover:translate-y-[2px]
+          hover:shadow-[2px_2px_0_0_black]
+          active:translate-x-[4px]
+          active:translate-y-[4px]
           active:shadow-none
         "
       >
@@ -375,6 +314,18 @@ export const HeroIntroBoundary: React.FC<
         },
       )
 
+    let isInViewport = false
+    let hasPlayedIntro = false
+
+    const canAnimate = () =>
+      isInViewport && document.visibilityState !== "hidden"
+
+    const playIntroOnce = () => {
+      if (!canAnimate() || hasPlayedIntro) return
+      hasPlayedIntro = true
+      controller.replay({ variant: 0 })
+    }
+
     const replay = (
       event: Event,
     ) => {
@@ -392,6 +343,8 @@ export const HeroIntroBoundary: React.FC<
         return
       }
 
+      if (!canAnimate()) return
+
       controller.replay(
         detail?.variant !== undefined
           ? {
@@ -407,21 +360,46 @@ export const HeroIntroBoundary: React.FC<
       replay,
     )
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        controller.reset()
+        return
+      }
+      playIntroOnce()
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+
+    const viewportObserver = typeof IntersectionObserver === "undefined"
+      ? null
+      : new IntersectionObserver(
+          ([entry]) => {
+            isInViewport = Boolean(entry?.isIntersecting)
+            if (isInViewport) playIntroOnce()
+            else controller.reset()
+          },
+          { rootMargin: "80px 0px", threshold: 0.01 },
+        )
+
+    if (viewportObserver) viewportObserver.observe(root)
+    else {
+      isInViewport = true
+      playIntroOnce()
+    }
+
     /**
      * Automatic first animation.
      *
      * Starts with the CURRENT branch's
      * first/original variant.
      */
-    controller.replay({
-      variant: 0,
-    })
-
     return () => {
       window.removeEventListener(
         "vt:replay-hero-intro",
         replay,
       )
+
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+      viewportObserver?.disconnect()
 
       controller.destroy()
     }

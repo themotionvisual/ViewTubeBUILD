@@ -6,7 +6,14 @@ import type {
 } from "./contracts"
 import { VT_SYNC_TABLE_DEFINITIONS } from "../upstream/tableRegistry"
 import { VT_SYNC_TRAFFIC_DETAIL_SOURCES } from "../upstream/trafficDetailRegistry"
-import { listVtSyncDatasetTableRows } from "./localDbRepository"
+import {
+ clearVtSyncVideoCatalogForChannel,
+ deleteVtSyncDatasetRawReport,
+ deleteVtSyncDatasetTableRows,
+ listVtSyncDatasetRawReports,
+ listVtSyncDatasetTableRows,
+ putVtSyncDatasetTableRows,
+} from "./localDbRepository"
 import { normalizeVtSyncSnapshot } from "./snapshot"
 import { buildVtSyncVideoCatalogProjection } from "./videoCatalogProjection"
 
@@ -25,6 +32,13 @@ export type VtSyncManualImportState = {
 }
 
 export type VtSyncPersistedApiState = VtSyncManualImportState
+
+export type VtSyncSavedTableClearResult = {
+ tableId: string
+ tableRecordsDeleted: number
+ rawRecordsDeleted: number
+ videoCatalogCleared: boolean
+}
 
 export const manualImportRecordId = (tableId: string): string =>
  `${MANUAL_IMPORT_ID_PREFIX}${tableId}`
@@ -309,6 +323,94 @@ export const getVtSyncSnapshotKeyForTable = (tableId: string): string | undefine
 export const getVtSyncTableIdForDataset = (datasetId: string): string | undefined =>
  DATASET_ID_TO_TABLE_ID.get(datasetId)
 
+const datasetBelongsToTable = (tableId: string, datasetId: string): boolean => {
+ const table = VT_SYNC_TABLE_DEFINITIONS.find((definition) => definition.id === tableId)
+ if (!table) return datasetId === tableId
+ const ownedIds = new Set([
+  table.id,
+  table.performanceHubDatasetId,
+  ...(table.snapshotKeys || []),
+  ...table.categoryIds,
+ ])
+ return ownedIds.has(datasetId) || getVtSyncTableIdForDataset(datasetId) === tableId
+}
+
+const recordMatchesChannel = (
+ recordChannelId: string | undefined,
+ channelId?: string | null,
+): boolean => !channelId || !recordChannelId || recordChannelId === channelId
+
+/** Delete every persisted API/CSV representation owned by one visible table. */
+export const clearVtSyncSavedTableData = async (
+ tableId: string,
+ channelId?: string | null,
+): Promise<VtSyncSavedTableClearResult> => {
+ const [tableRecords, rawRecords] = await Promise.all([
+  listVtSyncDatasetTableRows(),
+  listVtSyncDatasetRawReports(),
+ ])
+ const ownedTableRecords = tableRecords.filter((record) =>
+  recordMatchesChannel(record.channelId, channelId) && datasetBelongsToTable(tableId, record.datasetId),
+ )
+ const ownedRawRecords = rawRecords.filter((record) =>
+  recordMatchesChannel(record.channelId, channelId) && datasetBelongsToTable(tableId, record.datasetId),
+ )
+ await Promise.all([
+  ...ownedTableRecords.map((record) => deleteVtSyncDatasetTableRows(record.id)),
+  ...ownedRawRecords.map((record) => deleteVtSyncDatasetRawReport(record.id)),
+  ...(tableId === "videos" && channelId ? [clearVtSyncVideoCatalogForChannel(channelId)] : []),
+ ])
+ return {
+  tableId,
+  tableRecordsDeleted: ownedTableRecords.length,
+  rawRecordsDeleted: ownedRawRecords.length,
+  videoCatalogCleared: tableId === "videos" && Boolean(channelId),
+ }
+}
+
+export const removeVtSyncTableFromImportState = (
+ state: VtSyncManualImportState,
+ tableId: string,
+): VtSyncManualImportState => {
+ const rowsByTableId = { ...state.rowsByTableId }
+ const capturedAtByTableId = { ...state.capturedAtByTableId }
+ delete rowsByTableId[tableId]
+ delete capturedAtByTableId[tableId]
+ return { rowsByTableId, capturedAtByTableId }
+}
+
+export const clearVtSyncTableDataFromSnapshot = (
+ snapshot: VtSyncSnapshot,
+ tableId: string,
+): VtSyncSnapshot => {
+ const table = VT_SYNC_TABLE_DEFINITIONS.find((definition) => definition.id === tableId)
+ if (!table) return snapshot
+ const snapshotKeys = table.snapshotKeys?.length
+  ? table.snapshotKeys
+  : tableId === "videos" ? ["videos"] : []
+ const next = { ...snapshot } as VtSyncSnapshot & Record<string, unknown>
+ snapshotKeys.forEach((key) => {
+  if (key === "trafficDetails" && TRAFFIC_DETAIL_SOURCE_BY_TABLE_ID[tableId]) {
+   const sourceType = TRAFFIC_DETAIL_SOURCE_BY_TABLE_ID[tableId]
+   next.trafficDetails = snapshot.trafficDetails.filter((row) => row.sourceType !== sourceType)
+  } else if (Array.isArray(next[key])) {
+   next[key] = []
+  }
+ })
+
+ const tableExports = { ...(snapshot.tableExports || {}) }
+ Object.keys(tableExports).forEach((datasetId) => {
+  if (datasetBelongsToTable(tableId, datasetId)) delete tableExports[datasetId]
+ })
+ const datasetFreshness = { ...(snapshot.datasetFreshness || {}) }
+ Object.keys(datasetFreshness).forEach((datasetId) => {
+  if (datasetBelongsToTable(tableId, datasetId)) delete datasetFreshness[datasetId]
+ })
+ next.tableExports = tableExports
+ next.datasetFreshness = datasetFreshness
+ return normalizeVtSyncSnapshot(next)
+}
+
 export const toVtSyncManualImportState = (
  records: VtSyncDatasetTableRowsRecord[],
  channelId?: string | null,
@@ -348,6 +450,18 @@ export const loadVtSyncManualImports = async (channelId?: string | null): Promis
  } catch {
   return { rowsByTableId: {}, capturedAtByTableId: {} }
  }
+}
+
+/** Assign anonymous local imports to the first connected channel that uses them. */
+export const claimUnscopedVtSyncManualImports = async (channelId: string): Promise<number> => {
+ const records = await listVtSyncDatasetTableRows()
+ const unscoped = records.filter((record) =>
+  record.provenance === "csv" &&
+  record.id.startsWith(MANUAL_IMPORT_ID_PREFIX) &&
+  !record.channelId,
+ )
+ await Promise.all(unscoped.map((record) => putVtSyncDatasetTableRows({ ...record, channelId })))
+ return unscoped.length
 }
 
 export const toVtSyncPersistedApiState = (

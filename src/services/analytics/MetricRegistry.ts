@@ -2358,7 +2358,7 @@ export const resolveMetricNumber = (
   row as unknown as Record<string, unknown>,
   METRIC_REGISTRY[metricKey]?.aliases || [],
  )
- if (fallbackFromRow !== undefined) {
+ if (fallbackFromRow !== undefined && fallbackFromRow !== null) {
   if (metricKey === "watchHours") {
    const looksLikeMinutes = fallbackFromRow > 24 * 365
    return {
@@ -2440,7 +2440,7 @@ export const ANALYTICS_DATASET_FAMILY_REGISTRY: AnalyticsDatasetFamilyRegistryRo
   const subtableIds = Array.from(
    new Set(familyDefs.map((definition) => definition.subtableId)),
   ) as CsvSubtableId[]
-  const syncActionLabels = ANALYTICS_SYNC_REGISTRY.filter(
+  const syncActionLabels = (ANALYTICS_SYNC_REGISTRY || []).filter(
    (row) => row.datasetFamily === majorFamily,
   ).map((row) => row.label)
 

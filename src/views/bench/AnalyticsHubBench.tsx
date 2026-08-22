@@ -10,11 +10,11 @@ const AnalyticsHubBench: React.FC = () => {
 
   // Select a mix of important charts for the hub
   const dashboardCharts = [
-    CHART_CARD_DEFINITIONS.find(c => c.key === 'views-trend'),
-    CHART_CARD_DEFINITIONS.find(c => c.key === 'watch-hours-trend'),
-    CHART_CARD_DEFINITIONS.find(c => c.key === 'subscriber-growth'),
-    CHART_CARD_DEFINITIONS.find(c => c.key === 'revenue-distribution'),
-    CHART_CARD_DEFINITIONS.find(c => c.key === 'performance-matrix'),
+    CHART_CARD_DEFINITIONS.find(c => c.key === 'area'),
+    CHART_CARD_DEFINITIONS.find(c => c.key === 'line'),
+    CHART_CARD_DEFINITIONS.find(c => c.key === 'bar'),
+    CHART_CARD_DEFINITIONS.find(c => c.key === 'donut'),
+    CHART_CARD_DEFINITIONS.find(c => c.key === 'scatter'),
   ].filter(Boolean) as typeof CHART_CARD_DEFINITIONS;
 
   return (

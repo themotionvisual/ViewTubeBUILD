@@ -216,7 +216,7 @@ const buildTrafficReportRows = (
   })
 
  return Array.from(grouped.values())
-  .map((row) => {
+  .map((row: Record<string, unknown>): Record<string, unknown> => {
    const views = getNumber(row.Views)
    const impressions = getNumber(row.Impressions)
    return {

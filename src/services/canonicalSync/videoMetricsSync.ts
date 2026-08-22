@@ -64,7 +64,7 @@ const rowsToObjects = (payload: any): Record<string, unknown>[] => {
    })
    return out
   })
-  .filter((row): row is Record<string, unknown> => !!row)
+  .filter((row: Record<string, unknown> | null): row is Record<string, unknown> => !!row)
 }
 
 const toMetricNumber = (value: unknown): number | null => {

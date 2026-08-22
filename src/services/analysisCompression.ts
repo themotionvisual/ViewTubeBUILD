@@ -56,8 +56,8 @@ export const compressMediaForAnalysis = async (file: File): Promise<AnalysisComp
           const maxOutBytes = Number(payload?.maxOutputBytes || 0)
           const maxOutMb = maxOutBytes > 0 ? Math.round(maxOutBytes / 1024 / 1024) : null
           message = maxOutMb
-            ? `Compressed file is still too large for analysis (${maxOutMb}MB max). Use a shorter source clip and retry.`
-            : "Compressed file is still too large for analysis. Use a shorter source clip and retry."
+            ? `COMPRESSED_FILE_TOO_LARGE: Compressed file exceeds the ${maxOutMb}MB analysis limit. Use a shorter source clip and retry.`
+            : "COMPRESSED_FILE_TOO_LARGE: Compressed file is still too large for analysis. Use a shorter source clip and retry."
         } else if (payload?.message) {
           message = String(payload.message)
         } else if (payload?.error) {

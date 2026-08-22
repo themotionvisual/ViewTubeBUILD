@@ -1,3 +1,5 @@
+import { assertUniqueIds } from "../../services/registryAssertions"
+
 export type NavigationLayout = "top" | "wide" | "thin"
 
 export const NAVIGATION_STORAGE_KEY = "vt_navigation_layout"
@@ -15,3 +17,7 @@ export const PRIMARY_NAV_ITEMS = [
   { id: "SETTINGS", path: "/settings", label: "Settings", paletteIndex: 6 },
   { id: "USER_GUIDE", path: "/user-guide", label: "User Guide", paletteIndex: 7 },
 ] as const
+
+if (import.meta.env.DEV) {
+  assertUniqueIds(PRIMARY_NAV_ITEMS, (item) => item.id, "Primary navigation")
+}

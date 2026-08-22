@@ -140,6 +140,8 @@ describe("VT Sync table contracts", () => {
 
  it("formats percent values consistently at render/export time", () => {
   expect(formatVtSyncTableCellValue(12.3456, "percent")).toBe("12.35%")
+  expect(formatVtSyncTableCellValue(0.01, "ratioPercent")).toBe("1%")
+  expect(formatVtSyncTableCellValue(1.21, "ratioPercent")).toBe("121%")
  })
 
  it("formats every time unit as a clock value", () => {
@@ -204,7 +206,7 @@ describe("VT Sync table contracts", () => {
    ],
    searchTerms: [
     { term: "kentucky derby", views: 60, watchTime: 24 },
-    { term: "napoleonic cavalry", views: 40, watchTime: 6 },
+    { term: "alderian cavalry", views: 40, watchTime: 6 },
    ],
   })
 

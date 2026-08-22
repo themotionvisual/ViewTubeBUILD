@@ -1049,7 +1049,7 @@ const resolveBestAnalyticsSnapshot = (): {
 
   for (const window of PREFERRED_WINDOWS) {
     for (const sourceMode of sourceModes) {
-      const summary = getMetricSummary(window, sourceMode, []);
+      const summary = getMetricSummary(window, sourceMode === "csv" ? "csv_table" : sourceMode, []);
       const rows = getMasterRows(window, sourceMode, []);
       const score =
         Number(summary.totals.views || 0) +

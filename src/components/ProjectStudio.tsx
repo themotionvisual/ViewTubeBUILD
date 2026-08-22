@@ -151,7 +151,12 @@ export const ProjectStudio: React.FC = () => {
         if (!activeProject) return;
         setIsGenerating(true);
         try {
-            const plan = await generateProjectStrategy(activeProject, brain.targetNiche, brain.coreConcept);
+            const plan = await generateProjectStrategy(
+                activeProject.concept || activeProject.name,
+                activeProject.niche || brain.targetNiche,
+                activeProject.description || "Channel audience",
+                brain,
+            );
             updateProject(activeProject.id, { plan });
         } catch (error) {
             console.error('Failed to generate strategy:', error);

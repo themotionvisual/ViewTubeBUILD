@@ -44,14 +44,14 @@ describe("BrainKpiModule", () => {
    code: "Top 3",
    data: {
     items: [
-     { title: "Napoleon's Cavalry", detail: "480K views · 5.0% CTR" },
+     { title: "Alder's Cavalry", detail: "480K views · 5.0% CTR" },
      { title: "Forging a Knife", detail: "210K views" },
     ],
    },
   })
 
   expect(html).toContain("What I ranked this on")
-  expect(html).toContain("Napoleon&#x27;s Cavalry")
+  expect(html).toContain("Alder&#x27;s Cavalry")
   expect(html).toContain("480K views")
   // Position markers 1 and 2 for the two rows.
   expect(html).toContain(">1<")

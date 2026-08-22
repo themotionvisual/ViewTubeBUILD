@@ -122,7 +122,7 @@ const CreatorVaultOS: React.FC = () => {
         value={assetName}
         onChange={(event) => setAssetName(event.target.value)}
         className="h-12 rounded-[14px] border-[4px] border-black px-4 text-sm font-bold uppercase tracking-[0.08em] text-black"
-        placeholder="Napoleon hero image"
+        placeholder="Alder hero image"
        />
       </label>
       <label className="flex flex-col gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-black/60">

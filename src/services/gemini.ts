@@ -39,6 +39,7 @@ import {
  ALGORITHM_ARCHITECT_INSTRUCTIONS,
  KEYWORD_LAB_INSTRUCTIONS,
  END_SCREEN_CONCEPT_INSTRUCTIONS,
+ INTEREST_SEEDING_INSTRUCTIONS,
 } from "@/services/prompts"
 import { geminiQueue } from "../utils/RequestQueue"
 import { getVaultKey } from "./keyVault"
@@ -1339,9 +1340,9 @@ export const generateKeywordAnalysis = async (
     ${journalContext}
 
     INPUT PARAMETERS:
-    - Concept/Topic: "${script}"
+    - Concept/Topic: "${concept}"
     - Niche: "${niche}"
-    - Stats: "${stats}"
+    - Project Plan: ${plan ? JSON.stringify(plan) : "Not provided"}
   `
 
  return await executeWithRetry(async () => {
@@ -1532,7 +1533,7 @@ export const generateSpeech = async (
    response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data
   if (!base64Audio) throw new Error("No audio generated")
   return `data:audio/wav;base64,${base64Audio}`
- }, { tokenCost: 2 })
+ })
 }
 
 export const transcribeAudio = async (
@@ -1560,7 +1561,7 @@ export const transcribeAudio = async (
    ],
   })
   return response.text || ""
- }, { tokenCost: 2 })
+ })
 }
 
 export const generateVideo = async (
@@ -1578,7 +1579,6 @@ let operation = await queueGeminiTask(() =>
     aspectRatio: aspectRatio,
    },
   }),
-  { tokenCost: 25 },
  )
 
  while (!operation.done) {
@@ -1615,7 +1615,7 @@ export const analyzeImage = async (
    },
   })
   return response.text || ""
- }, { tokenCost: 5 })
+ })
 }
 
 export const generateImage = async (
@@ -1638,13 +1638,13 @@ export const generateImage = async (
    },
   })
 
-  for (const part of response.candidates[0].content.parts) {
+  for (const part of response.candidates?.[0]?.content?.parts ?? []) {
    if (part.inlineData) {
     return `data:image/png;base64,${part.inlineData.data}`
    }
   }
   throw new Error("No image generated")
- }, { tokenCost: 8 })
+ })
 }
 
 export const generateChatResponse = async (
@@ -1686,6 +1686,7 @@ export interface StructuredBrainModelOutput {
   | "goal_coach"
   | "publishing_checklist"
   | "revenue_levers"
+  | "creator_asset_draft"
   | "audience_insight"
  modules: Array<{
   title: string

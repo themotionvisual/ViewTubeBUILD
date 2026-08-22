@@ -30,5 +30,9 @@
     "noUncheckedSideEffectImports": true
   },
   "include": ["src"],
-  "exclude": ["src/_parking/**/*", "_quarantine/**/*"]
+  "exclude": [
+    "src/_parking/**/*",
+    "_quarantine/**/*",
+    "src/remotion-editor/remotion.config.ts"
+  ]
 }

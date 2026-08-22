@@ -238,7 +238,7 @@ const readMetric = (
 ): number => {
   const definition = DEFINITIONS[metricKey]
   if (definition.canonicalMetricKey && row.metrics) {
-    const canonicalLike = row as CanonicalVideoRow
+    const canonicalLike = row as unknown as CanonicalVideoRow
     const resolved = resolveMetricNumber(canonicalLike, definition.canonicalMetricKey)
     if (typeof resolved.value === "number" && Number.isFinite(resolved.value)) {
       return resolved.value

@@ -13,6 +13,8 @@
 !/api/
 !/scripts/
 !/tests/
+!/.github/
+!/governance/
 
 # Essential root configuration files
 !/package.json
@@ -59,6 +61,7 @@ public/*.html
 !public/oauth-callback.html
 src/archive/
 src/standalone/
+src/generated/
 src/fix_*.py
 src/remove_subtoolbox*.py
 
@@ -97,3 +100,4 @@ pnpm-debug.log*
 
 .gemini/
 gha-creds-*.json
+.env.local

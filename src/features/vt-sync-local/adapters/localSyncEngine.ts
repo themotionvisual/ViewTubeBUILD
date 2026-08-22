@@ -1,5 +1,11 @@
 import { normalizeVtSyncSnapshot, saveVtSyncSnapshot } from "./snapshot"
 import { normalizeVtSyncVideoPrivacyFormat, resolveVtSyncVideoFormat } from "./privacyPolicy"
+import {
+ selectVtSyncRetentionTargets,
+ VT_SYNC_RETENTION_CURVE_METRICS,
+ VT_SYNC_RETENTION_GRANULAR_METRICS,
+ VT_SYNC_RETENTION_METRICS,
+} from "./retentionSelection"
 import { normalizeVtSyncVideoTableRows } from "./tableData"
 import {
  buildVtSyncInventoryId,
@@ -25,6 +31,11 @@ import {
  mapVtSyncAnalyticsMetricFields,
 } from "../upstream/analyticsMetricContract"
 import { getVtSyncAvailableTrafficDetailSources } from "../upstream/trafficDetailRegistry"
+import {
+ GoogleRequestError,
+ readGoogleProxyError,
+ requestGoogleWithRetry,
+} from "../../../services/youtube/googleProxyErrors"
 import type {
  VtSyncAnalyticsWindow,
  VtSyncInventorySyncResult,
@@ -54,6 +65,11 @@ export type VtSyncLocalSyncPhase = {
  completedAt?: string
  message?: string
  error?: string
+ failureCode?: string
+ retryable?: boolean
+ reconnectRequired?: boolean
+ requestId?: string
+ skippedReason?: string
  currentQueryLabel?: string
  nextQueryLabel?: string
 }
@@ -63,6 +79,10 @@ export type VtSyncLocalSyncProgress = {
  startedAt: string
  completedAt?: string
  status: "idle" | "running" | "complete" | "partial" | "failed"
+ failureCode?: string
+ retryable?: boolean
+ reconnectRequired?: boolean
+ requestId?: string
  requestedCategoryIds: string[]
  phases: VtSyncLocalSyncPhase[]
 }
@@ -71,7 +91,7 @@ export type VtSyncLocalSyncOptions = {
  token: string
  selectedCategories: string[]
  previousSnapshot: VtSyncSnapshot
- /** Specific video IDs to sync retention for. Falls back to the top 25 videos by views when omitted/empty. */
+ /** Specific video IDs for a manual/deep retention sync. The balanced 5 long + 5 Shorts baseline is used when omitted/empty. */
  retentionVideoIds?: string[]
  /** Explicit operator action; normal catalog runs fetch only missing/incomplete metadata. */
  forceFullVideoMetadata?: boolean
@@ -210,6 +230,28 @@ const FULL_ANALYTICS_METRICS = [
  ...ANNOTATION_ANALYTICS_METRICS,
 ]
 
+const FALLBACK_BLOCKED_METRICS = new Set([
+ "estimatedRevenue",
+ "cpm",
+ "grossRevenue",
+ "monetizedPlaybacks",
+ "playbackBasedCpm",
+ "adImpressions",
+ "estimatedAdRevenue",
+ "estimatedRedPartnerRevenue",
+ "redViews",
+ "estimatedRedMinutesWatched",
+ "cardClicks",
+ "cardImpressions",
+ "cardClickRate",
+ "cardTeaserClicks",
+ "cardTeaserImpressions",
+ "cardTeaserClickRate",
+ "annotationClicks",
+ "annotationImpressions",
+ "annotationClickThroughRate",
+])
+
 const DAILY_ANALYTICS_METRIC_BUNDLES = [
  ...VT_SYNC_ANALYTICS_METRIC_BUNDLES,
  {
@@ -290,16 +332,11 @@ const fetchWithBackoff = async (url: string, token: string, maxRetries = 3): Pro
     body: JSON.stringify({ url }),
   })
   : fetch(url, { headers: { Authorization: `Bearer ${token}` } })
- let delayMs = 800
- let lastResponse: Response | null = null
- for (let attempt = 0; attempt < maxRetries; attempt += 1) {
-  const res = await request()
-  lastResponse = res
-  if (res.ok || (res.status !== 429 && res.status < 500)) return res
-  if (attempt < maxRetries - 1) await sleep(delayMs)
-  delayMs *= 2
+ let operation = "google-read"
+ try { operation = new URL(url).pathname } catch {
+  // Keep the generic operation label for malformed or relative diagnostic URLs.
  }
- return lastResponse || request()
+ return requestGoogleWithRetry(request, { maxAttempts: maxRetries, operation })
 }
 
 /**
@@ -368,8 +405,16 @@ const runAnalyticsBundle = async ({
  let activeMetrics = metrics
  let res = await request(activeMetrics)
  let firstError = ""
- if (!res.ok) firstError = await res.text().catch(() => "")
- if (!res.ok && allowFallback && (res.status === 400 || res.status === 401 || res.status === 403)) {
+ let firstFailureCode = ""
+ if (!res.ok) {
+  firstFailureCode = (await readGoogleProxyError(res))?.code || ""
+  firstError = await res.text().catch(() => "")
+ }
+ const blocksMetricFallback = firstFailureCode === "GOOGLE_SCOPE_REQUIRED"
+  || firstFailureCode === "GOOGLE_QUOTA_EXHAUSTED"
+  || firstFailureCode === "AUTH_REQUIRED"
+  || firstFailureCode === "GOOGLE_RECONNECT_REQUIRED"
+ if (!res.ok && !blocksMetricFallback && allowFallback && (res.status === 400 || res.status === 401 || res.status === 403)) {
   const coreMetrics = metrics.filter((metric) => !FALLBACK_BLOCKED_METRICS.has(metric))
   if (coreMetrics.length > 0 && coreMetrics.length !== metrics.length) {
    activeMetrics = coreMetrics
@@ -522,6 +567,23 @@ export const mergeVtSyncRowsPreservingDefined = (
  return [...merged.values()]
 }
 
+const mergeVtSyncRowsPreservingExactIncomingFields = (
+ existingRows: Record<string, unknown>[],
+ incomingRows: Record<string, unknown>[],
+ keyOf: (row: Record<string, unknown>) => string,
+) => {
+ const merged = new Map(existingRows.map((row) => [keyOf(row), { ...row }]))
+ incomingRows.forEach((row) => {
+  const key = keyOf(row)
+  if (!key) return
+  // Unlike the general supplemental merge, a retention response owns every
+  // field it actually returned, including null and zero. Omitted fields remain
+  // cached but are hidden by retentionMetricAvailability in the table view.
+  merged.set(key, { ...(merged.get(key) || {}), ...row })
+ })
+ return [...merged.values()]
+}
+
 /**
  * Segment queries can have more than one dimension. Preserve the complete
  * dimension tuple so male 18-24 and male 25-34 never replace each other.
@@ -579,6 +641,92 @@ const runAnalyticsBundleWithMetricSplit = async (
   columns: [...new Set(successful.flatMap((result) => result.columns))],
   error: errors.length ? `${options.id}: ${errors.length} metric request(s) unavailable. ${errors.join(" | ")}` : undefined,
   status: results.find((result) => !result.rows)?.status || combined.status,
+ }
+}
+
+type RetentionFallbackRequest = {
+ id: string
+ requestedMetrics: string[]
+ returnedHeaders: string[]
+ rows: number
+ status?: number
+ error?: string
+}
+
+type RetentionBundleResult = BundleResult & {
+ requestedMetrics: string[]
+ returnedHeaders: string[]
+ fallbackRequests: RetentionFallbackRequest[]
+}
+
+/**
+ * Fetch the canonical five-column retention report first. YouTube documents the
+ * curve and granular metrics as one compatible report, but some channels return
+ * only one metric family. In that case request only the missing family and
+ * merge the exact response fields by elapsed point.
+ */
+const runRetentionAnalyticsBundle = async (
+ options: Omit<Parameters<typeof runAnalyticsBundle>[0], "metrics" | "allowFallback">,
+): Promise<RetentionBundleResult> => {
+ const requestedMetrics = [...VT_SYNC_RETENTION_METRICS]
+ const combined = await runAnalyticsBundle({
+  ...options,
+  metrics: requestedMetrics,
+  allowFallback: false,
+ })
+ const returnedHeaders = new Set(combined.columns)
+ const fallbackRequests: RetentionFallbackRequest[] = []
+ let rows = combined.rows ? combined.rows.map((row) => ({ ...row })) : []
+ const errors: string[] = combined.rows ? [] : [combined.error || `${options.id}: combined retention report failed`]
+ let failureStatus = combined.rows ? undefined : combined.status
+
+ const mergeExactRows = (incoming: Record<string, unknown>[]) => {
+  const byPoint = new Map(rows.map((row) => [String(row.elapsedVideoTimeRatio ?? ""), row]))
+  incoming.forEach((row) => {
+   const key = String(row.elapsedVideoTimeRatio ?? "")
+   if (!key) return
+   byPoint.set(key, { ...(byPoint.get(key) || {}), ...row })
+  })
+  rows = [...byPoint.values()]
+ }
+
+ for (const [familyId, familyMetrics] of [
+  ["curve", VT_SYNC_RETENTION_CURVE_METRICS],
+  ["granular", VT_SYNC_RETENTION_GRANULAR_METRICS],
+ ] as const) {
+  const missingMetrics = familyMetrics.filter((metric) => !returnedHeaders.has(metric))
+  if (!missingMetrics.length) continue
+  const fallback = await runAnalyticsBundle({
+   ...options,
+   id: `${options.id}_${familyId}`,
+   metrics: [...missingMetrics],
+   allowFallback: false,
+  })
+  fallback.columns.forEach((column) => returnedHeaders.add(column))
+  if (fallback.rows) mergeExactRows(fallback.rows)
+  else {
+   errors.push(fallback.error || `${options.id}: ${familyId} retention report failed`)
+   failureStatus ||= fallback.status
+  }
+  fallbackRequests.push({
+   id: familyId,
+   requestedMetrics: [...missingMetrics],
+   returnedHeaders: fallback.columns,
+   rows: fallback.rows?.length || 0,
+   status: fallback.status,
+   error: fallback.error,
+  })
+ }
+
+ const hasSuccessfulResponse = Boolean(combined.rows) || fallbackRequests.some((request) => !request.error)
+ return {
+  rows: hasSuccessfulResponse ? rows : null,
+  columns: [...returnedHeaders],
+  returnedHeaders: [...returnedHeaders],
+  requestedMetrics,
+  fallbackRequests,
+  status: failureStatus,
+  error: errors.length ? errors.join(" | ") : undefined,
  }
 }
 
@@ -1434,7 +1582,7 @@ export const mergeVideoAnalyticsRows = (
   const assignments = family === "long_format_cards"
    ? LONG_FORMAT_CARD_METRIC_ASSIGNMENTS
    : FULL_VIDEO_METRIC_ASSIGNMENTS
-  const analyticsProvenance = Object.fromEntries(assignments.flatMap((assignment) => {
+  const analyticsProvenance: Record<string, "youtube_analytics_v2" | "youtube_data_v3"> = Object.fromEntries(assignments.flatMap((assignment) => {
    const value = readIncomingMetric(stats, assignment.source)
    return value === undefined ? [] : [[assignment.target, "youtube_analytics_v2"]]
   }))
@@ -1785,6 +1933,10 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   started_at: startedAt,
   completed_at: null,
   stop_reason: null,
+  failure_code: null,
+  retryable: false,
+  reconnect_required: false,
+  request_id: null,
   bundles_completed: [],
   bundles_failed: [],
   diagnostics: [],
@@ -1952,7 +2104,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     ? `${videos.length.toLocaleString()} of ${metadataCandidateIds.length.toLocaleString()} metadata records returned; ${unresolvedCount.toLocaleString()} remain unresolved.`
     : undefined
    addManifestResult(manifest, "video_metadata", unresolvedCount === 0, videos.length, ["snippet", "contentDetails", "statistics"], metadataIssue)
-   markFreshness(["videos"], "video_metadata", snapshot.videos.length, unresolvedCount ? "partial" : "synced", unresolvedCount ? ["metadataRecordsMissing"] : [])
+   markFreshness(["video_metadata", "videos"], "video_metadata", snapshot.videos.length, unresolvedCount ? "partial" : "synced", unresolvedCount ? ["metadataRecordsMissing"] : [])
    updatePhase(progress, "video_metadata", { status: unresolvedCount ? "partial" : "complete", rows: videos.length, message: metadataIssue || (forceFullVideoMetadata ? `${metadataCandidateIds.length.toLocaleString()} catalog record(s) fully refreshed.` : `${metadataCandidateIds.length.toLocaleString()} new, pending, or incomplete video record(s) checked.`), error: metadataIssue, completedAt: new Date().toISOString() }, onProgress)
    const tableReadyVideoRows = normalizeVtSyncVideoTableRows(snapshot.videos as unknown as Array<Record<string, unknown>>)
    const metadataPersistence = await persistDatasetRows({
@@ -1967,7 +2119,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    if (!metadataPersistence.ok) {
     const persistenceIssue = `Video metadata was received but durable storage failed: ${metadataPersistence.error}`
     addManifestResult(manifest, "video_metadata_persistence", false, 0, ["videos"], persistenceIssue)
-    markFreshness(["videos"], "video_metadata", snapshot.videos.length, "partial", ["durableStorage"])
+    markFreshness(["video_metadata", "videos"], "video_metadata", snapshot.videos.length, "partial", ["durableStorage"])
     updatePhase(progress, "video_metadata", {
      status: "partial",
      rows: videos.length,
@@ -1984,7 +2136,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   }
   if (channel && metadataCandidateIds.length === 0 && shouldSync(selected, "video_metadata")) {
    addManifestResult(manifest, "video_metadata", true, 0, ["snippet", "contentDetails", "statistics"])
-   markFreshness(["videos"], "video_metadata", snapshot.videos.length, "synced")
+   markFreshness(["video_metadata", "videos"], "video_metadata", snapshot.videos.length, "synced")
    updatePhase(progress, "video_metadata", { status: "complete", rows: 0, message: "Catalog metadata is complete; no records needed refreshing.", completedAt: new Date().toISOString() }, onProgress)
    commitSnapshot()
    await sleep(0)
@@ -2036,9 +2188,10 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      }))
      if (bundle !== DAILY_ANALYTICS_METRIC_BUNDLES[DAILY_ANALYTICS_METRIC_BUNDLES.length - 1]) await sleep(75)
     }
-    const mergedBatchRows = batchRows.reduce(
-     (rows, row) => mergeRowsByKey(rows, [row], (candidate) => String(candidate.video || "")),
-     [] as Record<string, any>[],
+    const mergedBatchRows = mergeRowsByKey(
+     [],
+     batchRows,
+     (candidate) => String(candidate.video || ""),
     )
     if (mergedBatchRows.length) {
      mergedBatchRows.forEach((row) => {
@@ -2091,7 +2244,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     if (index + VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE < longIds.length) await sleep(300)
    }
    if (longRows.length) snapshot = { ...snapshot, videos: mergeLongFormatCardMetrics(snapshot.videos, longRows) }
-   markFreshness(["videos"], "videos_analytics", snapshot.videos.length, failures ? "partial" : "synced", failures ? ["someVideoAnalyticsBundles"] : [])
+   markFreshness(["videos_analytics", "videos"], "videos_analytics", snapshot.videos.length, failures ? "partial" : "synced", failures ? ["someVideoAnalyticsBundles"] : [])
    commitSnapshot()
    updatePhase(progress, "videos_analytics", {
     status: failures ? "partial" : "complete",
@@ -2554,7 +2707,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
       error: bundleResults.map((bundle) => bundle.error).filter(Boolean).join(" | ") || undefined,
       status: bundleResults.find((bundle) => bundle.status)?.status,
      }
-     if (!result.rows.length && bundleResults.every((bundle) => !bundle.rows)) result.rows = null
+     if (!result.rows?.length && bundleResults.every((bundle) => !bundle.rows)) result.rows = null
     } else {
      result = await runAnalyticsBundle({ token, id: `${categoryId}_core`, metrics: [...metrics], dimensions, sort, maxResults, filters, startDate: channelStartDate, allowFallback: false })
     }
@@ -2858,22 +3011,44 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
 
   if (shouldSync(selected, "retention")) {
    updatePhase(progress, "retention", { status: "running", startedAt: new Date().toISOString() }, onProgress)
-   const knownVideoIds = new Set(snapshot.videos.map((video) => video.id))
-   const selectedVideoIds = (retentionVideoIds || []).filter((id) => knownVideoIds.has(id))
-   const topVideoIds = selectedVideoIds.length > 0
-    ? selectedVideoIds
-    : [...snapshot.videos]
-     .sort((a, b) => numberOrZero(b.metrics?.views) - numberOrZero(a.metrics?.views))
-     .slice(0, 25)
-     .map((video) => video.id)
-     .filter(Boolean)
+   const targetSelection = selectVtSyncRetentionTargets(snapshot.videos, retentionVideoIds)
+   const { baseline: baselineSelection, selectionMode, targetVideoIds } = targetSelection
+   const selectionMessage = selectionMode === "explicit_manual"
+    ? `${targetVideoIds.length} manually selected video${targetVideoIds.length === 1 ? "" : "s"}`
+    : `${baselineSelection.selectedCounts.long} long-form + ${baselineSelection.selectedCounts.short} Shorts`
+   manifest.diagnostics = [
+    ...(manifest.diagnostics || []),
+    {
+     phase: "retention_selection",
+     selectionMode,
+     profile: baselineSelection.profile,
+     selectedVideoIds: targetVideoIds,
+     eligibleCounts: baselineSelection.eligibleCounts,
+     selectedCounts: selectionMode === "explicit_manual" ? undefined : baselineSelection.selectedCounts,
+     shortages: selectionMode === "explicit_manual" ? undefined : baselineSelection.shortages,
+     estimatedRequests: targetVideoIds.length,
+     message: selectionMessage,
+    },
+   ]
+   updatePhase(progress, "retention", {
+    message: selectionMessage,
+    currentQueryLabel: `Retention · ${selectionMessage}`,
+   }, onProgress)
    const retentionRows: Array<Record<string, unknown>> = []
+   const retentionAttemptedAt = new Date().toISOString()
+   const succeededMetrics = new Set<string>()
+   const failedVideoIds = new Set<string>()
+   const failureCodeByVideoId = new Map<string, string>()
+   let partialVideos = 0
    let retentionFailures = 0
-   for (const videoId of topVideoIds) {
-    const result = await runAnalyticsBundle({
+   for (const [videoIndex, videoId] of targetVideoIds.entries()) {
+    updatePhase(progress, "retention", {
+     currentQueryLabel: `Retention ${videoIndex + 1}/${targetVideoIds.length} · ${videoId}`,
+     nextQueryLabel: targetVideoIds[videoIndex + 1] ? `Retention ${videoIndex + 2}/${targetVideoIds.length} · ${targetVideoIds[videoIndex + 1]}` : undefined,
+    }, onProgress)
+    const result = await runRetentionAnalyticsBundle({
      token,
      id: `retention_${videoId}`,
-     metrics: ["audienceWatchRatio", "relativeRetentionPerformance"],
      dimensions: "elapsedVideoTimeRatio",
      sort: "elapsedVideoTimeRatio",
      maxResults: 500,
@@ -2881,28 +3056,107 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      startDate: channelStartDate,
     })
     if (result.rows) {
-     retentionRows.push(...result.rows.map((row) => ({
+     const availableMetrics = VT_SYNC_RETENTION_METRICS.filter((metric) => result.columns.includes(metric))
+     availableMetrics.forEach((metric) => succeededMetrics.add(metric))
+     const retentionStatus = availableMetrics.length === VT_SYNC_RETENTION_METRICS.length ? "complete" : "partial"
+     if (retentionStatus === "partial") partialVideos += 1
+     retentionRows.push(...result.rows.map((row) => {
+      const pointAvailability = VT_SYNC_RETENTION_METRICS.filter((metric) => Object.hasOwn(row, metric))
+      return {
+       ...row,
+       videoId,
+       retentionStatus,
+       retentionSource: "youtube_analytics_v2",
+       retentionLastAttemptAt: retentionAttemptedAt,
+       retentionFailureCode: "",
+       retentionMetricAvailability: pointAvailability,
+      }
+     }))
+     manifest.diagnostics = [...(manifest.diagnostics || []), {
+      phase: "retention_video",
       videoId,
-      elapsedVideoTimeRatio: numberOrZero(row.elapsedVideoTimeRatio),
-      audienceWatchRatio: numberOrZero(row.audienceWatchRatio),
-      relativeRetentionPerformance: numberOrZero(row.relativeRetentionPerformance),
-     })))
+      status: retentionStatus,
+      source: "youtube_analytics_v2",
+      lastAttemptAt: retentionAttemptedAt,
+      metricAvailability: availableMetrics,
+      requestedMetrics: result.requestedMetrics,
+      returnedHeaders: result.returnedHeaders,
+      fallbackRequests: result.fallbackRequests,
+      rows: result.rows.length,
+      error: result.error,
+     }]
     } else {
      retentionFailures += 1
+     failedVideoIds.add(videoId)
+     const failureCode = result.status === 429
+      ? "quota_exhausted"
+      : result.status === 401 || result.status === 403
+       ? "auth_or_permission"
+       : (result.status || 0) >= 500
+        ? "upstream_unavailable"
+        : "request_failed"
+     failureCodeByVideoId.set(videoId, failureCode)
+     manifest.diagnostics = [...(manifest.diagnostics || []), {
+      phase: "retention_video",
+      videoId,
+      status: "failed",
+      source: "youtube_analytics_v2",
+      lastAttemptAt: retentionAttemptedAt,
+      failureCode,
+      httpStatus: result.status,
+      metricAvailability: [],
+      error: result.error,
+     }]
     }
    }
+   const cachedRowsWithAttemptStatus = snapshot.retentions.map((row) =>
+    failedVideoIds.has(String(row.videoId || ""))
+     ? {
+       ...row,
+       retentionStatus: "failed",
+       retentionSource: row.retentionSource || "youtube_analytics_v2",
+       retentionLastAttemptAt: retentionAttemptedAt,
+       retentionFailureCode: failureCodeByVideoId.get(String(row.videoId || "")) || "request_failed",
+       retentionMetricAvailability: [],
+      }
+     : row,
+   )
    snapshot = {
     ...snapshot,
-    retentions: mergeVtSyncRowsPreservingDefined(
-     snapshot.retentions as Array<Record<string, any>>,
+    retentions: mergeVtSyncRowsPreservingExactIncomingFields(
+     cachedRowsWithAttemptStatus,
      retentionRows,
      (row) => `${String(row.videoId || "")}|${String(row.elapsedVideoTimeRatio || "")}`,
     ) as VtSyncSnapshot["retentions"],
    }
-   addManifestResult(manifest, "retention", retentionRows.length > 0, retentionRows.length, ["audienceWatchRatio", "relativeRetentionPerformance"], retentionFailures > 0 ? `${retentionFailures} of ${topVideoIds.length} video retention requests failed` : undefined)
-   if (retentionRows.length) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: "retentions", phase: "retention", rawRows: retentionRows, tableRows: retentionRows, columns: ["videoId", "elapsedVideoTimeRatio", "audienceWatchRatio", "relativeRetentionPerformance"] })
-   markFreshness(["retentions"], "retention", retentionRows.length, retentionRows.length > 0 ? (retentionFailures > 0 ? "partial" : "synced") : "failed")
-   updatePhase(progress, "retention", { status: retentionRows.length > 0 ? (retentionFailures > 0 ? "partial" : "complete") : "failed", rows: retentionRows.length, error: retentionFailures > 0 ? `${retentionFailures} of ${topVideoIds.length} video retention requests failed` : undefined, completedAt: new Date().toISOString() }, onProgress)
+   const retentionIssue = retentionFailures > 0
+    ? `${retentionFailures} of ${targetVideoIds.length} video retention requests failed`
+    : partialVideos > 0
+     ? `${partialVideos} of ${targetVideoIds.length} videos returned partial retention metrics`
+     : undefined
+   const retentionHadTargets = targetVideoIds.length > 0
+   addManifestResult(manifest, "retention", !retentionHadTargets || retentionRows.length > 0, retentionRows.length, retentionHadTargets ? [...VT_SYNC_RETENTION_METRICS] : [], retentionIssue, [...succeededMetrics])
+   if (retentionRows.length) await persistDatasetRows({
+    runId,
+    channelId: snapshot.channelId || undefined,
+    datasetId: "retentions",
+    phase: "retention",
+    rawRows: retentionRows,
+    tableRows: snapshot.retentions as Array<Record<string, unknown>>,
+    columns: ["videoId", "elapsedVideoTimeRatio", ...VT_SYNC_RETENTION_METRICS],
+   })
+   const retentionIsPartial = retentionFailures > 0 || partialVideos > 0
+   markFreshness(["retentions"], "retention", snapshot.retentions.length, !retentionHadTargets ? "stale" : retentionRows.length > 0 ? (retentionIsPartial ? "partial" : "synced") : "failed", VT_SYNC_RETENTION_METRICS.filter((metric) => !succeededMetrics.has(metric)))
+   updatePhase(progress, "retention", {
+    status: !retentionHadTargets ? "skipped" : retentionRows.length > 0 ? (retentionIsPartial ? "partial" : "complete") : "failed",
+    rows: retentionRows.length,
+    message: selectionMessage,
+    currentQueryLabel: `Retention · ${selectionMessage}`,
+    nextQueryLabel: undefined,
+    error: retentionIssue,
+    skippedReason: !retentionHadTargets ? "No eligible long-form videos or Shorts were available for retention sync." : undefined,
+    completedAt: new Date().toISOString(),
+   }, onProgress)
    commitSnapshot()
   }
 
@@ -2917,8 +3171,13 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   return snapshot
  } catch (error) {
   const completedAt = new Date().toISOString()
+  const googleFailure = error instanceof GoogleRequestError ? error.details : null
   manifest.completed_at = completedAt
-  manifest.stop_reason = "failed"
+  manifest.stop_reason = googleFailure?.reconnectRequired ? "reconnect_required" : "failed"
+  manifest.failure_code = googleFailure?.code || "SYNC_FAILED"
+  manifest.retryable = googleFailure?.retryable || false
+  manifest.reconnect_required = googleFailure?.reconnectRequired || false
+  manifest.request_id = googleFailure?.requestId || null
   manifest.bundles_failed = [...(manifest.bundles_failed || []), {
    bundle_id: "fatal_error",
    family: "vt_sync_local",
@@ -2928,11 +3187,33 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    rows_written: 0,
    success: false,
    error_reason: error instanceof Error ? error.message : String(error),
+   failure_code: googleFailure?.code || "SYNC_FAILED",
+   retryable: googleFailure?.retryable || false,
+   reconnect_required: googleFailure?.reconnectRequired || false,
+   request_id: googleFailure?.requestId || null,
   }]
   snapshot = { ...snapshot, capturedAt: completedAt, syncManifest: manifest }
   commitSnapshot()
   progress.status = "failed"
   progress.completedAt = completedAt
+  progress.failureCode = googleFailure?.code || "SYNC_FAILED"
+  progress.retryable = googleFailure?.retryable || false
+  progress.reconnectRequired = googleFailure?.reconnectRequired || false
+  progress.requestId = googleFailure?.requestId
+  progress.phases = progress.phases.map((phase) => phase.status === "pending" || phase.status === "running"
+   ? {
+     ...phase,
+     status: "skipped",
+     completedAt,
+     failureCode: googleFailure?.code || "SYNC_FAILED",
+     retryable: googleFailure?.retryable || false,
+     reconnectRequired: googleFailure?.reconnectRequired || false,
+     requestId: googleFailure?.requestId,
+     skippedReason: googleFailure?.reconnectRequired
+      ? "Reconnect Google before this phase can run."
+      : "This phase was skipped after the sync stopped.",
+    }
+   : phase)
   onProgress?.({ ...progress, phases: [...progress.phases] })
   throw error
  }

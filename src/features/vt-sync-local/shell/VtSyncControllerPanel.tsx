@@ -4,6 +4,7 @@ import { ToolboxScaffold } from "../../../components/Toolbox"
 import { getPaletteColor } from "../../../styles/toolboxPalette"
 import { RetroRivets } from "./VtSyncRetroChrome"
 import type { VtSyncCategoryGroup, VtSyncDatasetFreshness } from "../adapters/contracts"
+import { selectVtSyncBaseRetentionVideos } from "../adapters/retentionSelection"
 import {
  expandVtSyncCategoryDependencies,
  filterVtSyncVisibleCategoryIds,
@@ -21,6 +22,9 @@ export type VtSyncRetentionVideoOption = {
  title: string
  thumbnail?: string
  views?: number
+ format?: string
+ publishedAt?: string
+ privacyStatus?: string
 }
 
 const GROUP_COLORS: Record<string, string> = Object.fromEntries(VT_SYNC_GROUP_ORDER.map((group, index) => [group, getPaletteColor(index * 2)]))
@@ -66,6 +70,15 @@ export const VtSyncControllerPanel: React.FC<{
  const activeCategorySet = useMemo(() => new Set(activeCategoryIds), [activeCategoryIds])
  const queuedCategorySet = useMemo(() => new Set(queuedCategoryIds), [queuedCategoryIds])
  const sortedVideos = useMemo(() => [...videos].sort((a, b) => (b.views || 0) - (a.views || 0)), [videos])
+ const baselineRetentionSelection = useMemo(() => selectVtSyncBaseRetentionVideos(videos.map((video) => ({
+  id: video.id,
+  title: video.title,
+  thumbnail: video.thumbnail,
+  format: video.format,
+  publishedAt: video.publishedAt,
+  privacyStatus: video.privacyStatus,
+  metrics: { views: video.views },
+ }))), [videos])
  const filteredVideos = useMemo(() => {
   const query = videoSearch.trim().toLowerCase()
   if (!query) return sortedVideos
@@ -328,12 +341,13 @@ export const VtSyncControllerPanel: React.FC<{
             <div>
              <span className="text-[12px] font-black uppercase tracking-[0.02em]">Retention Videos</span>
              <span className="ml-2 text-[10px] font-bold uppercase tracking-[0.02em] text-black/45">
-              {retentionVideoIds.length > 0 ? `${retentionVideoIds.length} selected` : "None selected — defaults to top 25 by views"}
+              {retentionVideoIds.length > 0
+               ? `${retentionVideoIds.length} manually selected`
+               : `Base sync — ${baselineRetentionSelection.selectedCounts.long} long-form + ${baselineRetentionSelection.selectedCounts.short} Shorts by views`}
              </span>
             </div>
             <div className="flex items-center gap-2">
-             <button type="button" onClick={() => setRetentionVideoIds(sortedVideos.slice(0, 25).map((video) => video.id))} className="rounded-full border-[2px] border-black bg-[#FFDA47] px-2.5 py-1 text-[9.5px] font-black uppercase shadow-[2px_2px_0_0_#000]">Top 25</button>
-             <button type="button" onClick={() => setRetentionVideoIds([])} className="rounded-full border-[2px] border-black bg-white px-2.5 py-1 text-[9.5px] font-black uppercase shadow-[2px_2px_0_0_#000]">Clear</button>
+             <button type="button" onClick={() => setRetentionVideoIds([])} className="rounded-full border-[2px] border-black bg-[#FFDA47] px-2.5 py-1 text-[9.5px] font-black uppercase shadow-[2px_2px_0_0_#000]">Use Balanced Default</button>
             </div>
            </div>
            <div className="border-b-[3px] border-black bg-white px-3.5 py-2.5">

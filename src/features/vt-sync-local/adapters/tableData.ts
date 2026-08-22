@@ -359,8 +359,18 @@ revenue: firstValue(
  (metrics as Row).estimatedRevenue,
  video.revenue,
  video.estimatedRevenue,),
-  youtubePremiumRevenue: firstValue((metrics as Row).youtubePremiumRevenue, (metrics as Row).estimatedRedPartnerRevenue),
-  youtubePremiumWatchTime: firstValue((metrics as Row).youtubePremiumWatchTime, num((metrics as Row).estimatedRedMinutesWatched) !== undefined ? numberOrZero((metrics as Row).estimatedRedMinutesWatched) / 60 : undefined),
+  youtubePremiumRevenue: firstValue(
+   (metrics as Row).youtubePremiumRevenue,
+   (metrics as Row).estimatedRedPartnerRevenue,
+   video.youtubePremiumRevenue,
+   video.estimatedRedPartnerRevenue,
+  ),
+  youtubePremiumWatchTime: firstValue(
+   (metrics as Row).youtubePremiumWatchTime,
+   num((metrics as Row).estimatedRedMinutesWatched) !== undefined ? numberOrZero((metrics as Row).estimatedRedMinutesWatched) / 60 : undefined,
+   video.youtubePremiumWatchTime,
+   num(video.estimatedRedMinutesWatched) !== undefined ? numberOrZero(video.estimatedRedMinutesWatched) / 60 : undefined,
+  ),
   cardsShown: firstValue((metrics as Row).cardsShown, (metrics as Row).cardImpressions),
   clicksPerCardShown: firstValue((metrics as Row).clicksPerCardShown, (metrics as Row).cardClickRate),
   cardTeasersShown: firstValue((metrics as Row).cardTeasersShown, (metrics as Row).cardTeaserImpressions),
@@ -463,7 +473,7 @@ const withTrafficShareColumns = (rows: Row[]): Row[] => {
 }
 
 const withFormatSubscriberChannelShareColumns = (rows: Row[]): Row[] => {
- const normalized = rows.map((row) => {
+ const normalized = rows.map<Row>((row) => {
   const youtubePremiumViews = firstValue(row.youtubePremiumViews, row.redViews)
   const youtubePremiumWatchTime = firstValue(
    row.youtubePremiumWatchTime,
@@ -722,7 +732,7 @@ export const aggregateVtSyncTimeRows = (rows: Row[], mode: "weekly" | "monthly")
   const adImpressions = num(out.adImpressions)
   const monetizedPlaybacks = num(out.monetizedPlaybacks)
   const weightedAverage = (field: string) => {
-   const weighted = bucket.reduce((state, row) => {
+   const weighted = bucket.reduce<{ sum: number; weight: number }>((state, row) => {
     const value = num(row[field])
     const weight = num(row.views)
     return value === undefined || weight === undefined

@@ -542,9 +542,9 @@ export function MultiMetricTimeline({
   data = [],
   dailyMetrics = [],
 }: MultiMetricTimelineProps) {
-  const vt2ThemeMode = useVt2Theme()
+  useVt2Theme()
   const [darkState, setDarkState] = useState(true)
-  const dark = vt2ThemeMode === "adapted" ? darkState : darkState
+  const dark = darkState
   const toggleDark = () => setDarkState(prev => !prev)
 
   const [gran, setGran] = useState<Gran>("WEEKS")
@@ -672,7 +672,7 @@ export function MultiMetricTimeline({
       headerColorPair={{ icon: "#FFE500", title: "#FFE500" }}
       title="MULTI-METRIC TIMELINE — CHANNEL & VIDEO DATA"
       subtitle={controllerExplanation}
-      bodyFitMode="fillWidth"
+      canvasFitMode="fillWidth"
       vt2={{
         controlBlock: (
           <Controller
@@ -692,7 +692,7 @@ export function MultiMetricTimeline({
         ),
         hovTitle: modeLabel,
         stats: nSel > 0 && dataMain.length > 0 ? selArr.map(k => ({
-          value: METRIC_DEFS[k]?.fmt(dataMain[dataMain.length - 1]?.[k] ?? 0) ?? "0",
+          value: METRIC_DEFS[k]?.fmt(((dataMain[dataMain.length - 1] as Record<string, unknown> | undefined)?.[k] as number | undefined) ?? 0) ?? "0",
           label: METRIC_DEFS[k]?.label ?? k,
           bg: METRIC_DEFS[k]?.color ?? "#FFE500",
           color: "#000",

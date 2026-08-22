@@ -5,6 +5,7 @@ import {
   buildUnifiedLedger,
   buildWindowSignature,
   buildYouTubeStyleProjection,
+  emptyMetricCells,
   selectAuthoritativeOwnerRows,
 } from "../analytics/DataStore"
 
@@ -25,6 +26,7 @@ const baseRow = (overrides: Partial<CanonicalVideoRow>): CanonicalVideoRow => ({
   durationSeconds: 120,
   sourceMode: "api",
   metrics: {
+    ...emptyMetricCells("api"),
     views: cell(100),
     watchHours: cell(3),
     likes: cell(5),

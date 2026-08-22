@@ -2,6 +2,24 @@ import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
+import { execFileSync } from 'node:child_process'
+
+const readBuildValue = (environmentName: string, gitArgs: string[], fallback: string): string => {
+  const configured = String(process.env[environmentName] || '').trim()
+  if (configured) return configured
+  try {
+    return execFileSync('git', gitArgs, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || fallback
+  } catch {
+    return fallback
+  }
+}
+
+const buildInfo = {
+  branch: readBuildValue('VT_BUILD_BRANCH', ['branch', '--show-current'], 'unknown'),
+  commit: readBuildValue('VT_BUILD_COMMIT', ['rev-parse', '--short=12', 'HEAD'], 'unknown'),
+  builtAt: String(process.env.VT_BUILD_TIME || new Date().toISOString()),
+  version: String(process.env.npm_package_version || '0.0.0'),
+}
 
 /**
  * Build-only plugin that neutralises developer-noise logging
@@ -61,6 +79,15 @@ function trimFlagIconsCss(): Plugin {
 // tuning uses Rolldown-native options (`advancedChunks`).
 export default defineConfig(() => ({
   plugins: [react(), tailwindcss(), stripDebugConsole(), trimFlagIconsCss()],
+  test: {
+    include: ['src/**/*.test.{ts,tsx}'],
+  },
+  define: {
+    __VT_BRANCH__: JSON.stringify(buildInfo.branch),
+    __VT_COMMIT__: JSON.stringify(buildInfo.commit),
+    __VT_BUILD_TIME__: JSON.stringify(buildInfo.builtAt),
+    __VT_VERSION__: JSON.stringify(buildInfo.version),
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -133,10 +160,6 @@ export default defineConfig(() => ({
       'react-router-dom',
       'lucide-react',
     ],
-  },
-  esbuild: {
-    // Strip legal comments; every kilobyte counts on mobile.
-    legalComments: 'none',
   },
   server: {
     headers: {

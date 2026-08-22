@@ -52,19 +52,19 @@ describe("billing entitlement runtime", () => {
   const jan2 = new Date("2026-01-02T10:00:00.000Z")
   const state = applyPlanToEntitlement(createDefaultEntitlement(jan2), "creator_plus", jan2)
 
-  const consumed = consumeEntitlementTokens(state, 11_500, new Date("2026-01-03T10:00:00.000Z"))
+  const consumed = consumeEntitlementTokens(state, 1_500, new Date("2026-01-03T10:00:00.000Z"))
   expect(consumed.allowed).toBe(true)
   expect(consumed.next.tokenBalance).toBe(500)
 
   const feb2 = reconcileEntitlementWindow(consumed.next, new Date("2026-02-02T10:00:00.000Z"))
-  expect(feb2.tokenBalance).toBe(feb2.tokenMonthlyLimit)
-  expect(feb2.tokenMonthlyLimit).toBe(12_000)
+  expect(feb2.tokenBalance).toBe(2_500)
+  expect(feb2.tokenMonthlyLimit).toBe(2_000)
  })
 
- it("applies daily accrual without exceeding monthly cap", () => {
+ it("preserves credits until the monthly refill without daily accrual", () => {
   const start = new Date("2026-03-01T08:00:00.000Z")
   const state = applyPlanToEntitlement(createDefaultEntitlement(start), "creator_pro", start)
-  const drained = consumeEntitlementTokens(state, 11_900, new Date("2026-03-01T09:00:00.000Z"))
+  const drained = consumeEntitlementTokens(state, 3_900, new Date("2026-03-01T09:00:00.000Z"))
 
   expect(drained.next.tokenBalance).toBe(100)
 
@@ -72,19 +72,19 @@ describe("billing entitlement runtime", () => {
    drained.next,
    new Date("2026-03-03T10:00:00.000Z"),
   )
-  expect(afterTwoDays.tokenBalance).toBe(900)
+  expect(afterTwoDays.tokenBalance).toBe(100)
 
   const afterMonthLater = reconcileEntitlementWindow(
    afterTwoDays,
    new Date("2026-04-01T10:00:00.000Z"),
   )
-  expect(afterMonthLater.tokenBalance).toBe(afterMonthLater.tokenMonthlyLimit)
+  expect(afterMonthLater.tokenBalance).toBe(4_100)
  })
 
  it("allows unlimited usage on large tier", () => {
   const state = applyPlanToEntitlement(
    createDefaultEntitlement(new Date("2026-03-10T00:00:00.000Z")),
-   "creator_pro",
+   "executive",
    new Date("2026-03-10T00:00:00.000Z"),
   )
 
@@ -119,8 +119,8 @@ describe("billing entitlement runtime", () => {
   const plan = applyPlanToEntitlement(createDefaultEntitlement(now), "creator_plus", now)
   const stale = {
    ...plan,
-   tokenBalance: 100,
-   tokenLastAccrualIso: "2026-03-08T00:00:00.000Z",
+   creditBalance: 100,
+   currentPeriodEndIso: "2026-03-09T00:00:00.000Z",
   }
   writeStoredEntitlement(stale)
 
@@ -141,7 +141,7 @@ describe("billing entitlement runtime", () => {
   expect(canAffordAiTokensFromState(medium, 10)).toBe(true)
   const exhausted = {
    ...medium,
-   tokenBalance: 0,
+   creditBalance: 0,
    tokenDailyAccrual: 0,
    currentPeriodEndIso: "2099-01-01T00:00:00.000Z",
    tokenLastAccrualIso: new Date().toISOString(),
@@ -157,7 +157,7 @@ describe("billing entitlement runtime", () => {
 
   expect(next.referralCode).toBe("THEMOTIONVISUAL")
   expect(next.referralCodeLocked).toBe(false)
-  expect(getCurrentEntitlement(now).referralCode).toBe("THEMOTIONVISUAL")
+  expect(getCurrentEntitlement().referralCode).toBe("THEMOTIONVISUAL")
  })
 
  it("does not overwrite a locked custom referral code from the channel handle", () => {

@@ -217,7 +217,7 @@ const toNumber = (value: number | null | undefined): number | null =>
  typeof value === "number" && Number.isFinite(value) ? value : null
 
 const sum = (values: Array<number | null | undefined>): number =>
- values.reduce((total, value) => total + (toNumber(value) || 0), 0)
+ values.reduce<number>((total, value) => total + (toNumber(value) || 0), 0)
 
 const average = (values: Array<number | null | undefined>): number | null => {
  const numeric = values.filter((value): value is number => typeof value === "number")
@@ -444,7 +444,7 @@ const buildCanonicalMasterHeatmapRows = (
  videos: CanonicalVideoRecord[],
 ): CanonicalMasterHeatmapRow[] =>
  videos
-  .map((record) => {
+  .map<CanonicalMasterHeatmapRow>((record) => {
    const views = getMetricWithMeta(record, "views")
    const minutesWatched = getMetricWithMeta(record, "estimatedMinutesWatched")
    const averageViewDuration = getMetricWithMeta(record, "averageViewDuration")
@@ -778,7 +778,7 @@ const buildVideoRows = (
  })
 
  return videos
-  .map((record) => {
+  .map<CanonicalVideoTableRow>((record) => {
    const exportRow = deriveVideoExportRow(record)
    const lifetimeImpressions = getMetricValue(record, "lifetime", "videoThumbnailImpressions")
    const window28dImpressions = getMetricValue(record, "28d", "videoThumbnailImpressions")

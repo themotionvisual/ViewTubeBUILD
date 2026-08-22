@@ -1,6 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { ChartNoAxesCombined } from "lucide-react"
-import { ToolboxScaffold } from "../../../components/Toolbox"
 import type { TubeExplorerVisualProps } from "../../../components/TubeExplorerVisualModules"
 import { TUBE_EXPLORER_VISUAL_MODULES } from "../../../components/TubeExplorerVisualModules"
 import {
@@ -366,7 +364,7 @@ const RevealOnView: React.FC<{
  delayMs?: number
  estimatedHeight?: number
  children: React.ReactNode
-}> = ({ delayMs = 0, estimatedHeight = 360, children }) => {
+}> = ({ delayMs: _delayMs = 0, estimatedHeight = 360, children }) => {
  const [visible, setVisible] = useState(false)
  const [node, setNode] = useState<HTMLDivElement | null>(null)
 
@@ -396,9 +394,6 @@ const RevealOnView: React.FC<{
    style={{
     minHeight: visible ? undefined : estimatedHeight,
     opacity: 1,
-    transform: visible ? "translateY(0px)" : "translateY(14px)",
-    transition: "opacity 420ms ease, transform 420ms ease",
-    transitionDelay: `${delayMs}ms`,
     contentVisibility: "auto",
     containIntrinsicSize: `${estimatedHeight}px`,
    } as React.CSSProperties}>
@@ -544,45 +539,27 @@ const Vt2ThemeToggle: React.FC<{
  )
 }
 
-export const VtSyncDataVisualsToolbox: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snapshot }) => {
- const [isOpen1, setIsOpen1] = useState(false)
- const [isOpen2, setIsOpen2] = useState(false)
+export const VtSyncPrimaryVisualsContent: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snapshot }) => (
+ <VtSyncDataVisualsContent
+  key={`t1:${snapshot.snapshotId}:${snapshot.capturedAt}`}
+  snapshot={snapshot}
+  modules={PRIMARY_VISUAL_MODULES}
+ />
+)
+
+export const VtSyncSecondaryVisualsContent: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snapshot }) => {
  const [vt2Theme, setVt2Theme] = useState<Vt2ThemeMode>("preserved")
 
  return (
-  <div className="vt-sync-data-visuals flex flex-col gap-6">
-   <ToolboxScaffold
-    title="DATA VISUALS"
-    subtitle="Primary intelligence visual modules powered by the local Annalytics snapshot."
-    icon={<ChartNoAxesCombined />}
-    paletteIndex={0}
-    headerColor="bg-[#36E0F6]"
-    iconBoxColor="bg-[#F55EFC]"
-    collapsible
-    isOpen={isOpen1}
-    onToggle={() => setIsOpen1((open) => !open)}
-    unmountWhenClosed
-    contentClassName="bg-[#f4f1eb] p-6">
-    <VtSyncDataVisualsContent key={`t1:${snapshot.snapshotId}:${snapshot.capturedAt}`} snapshot={snapshot} modules={PRIMARY_VISUAL_MODULES} />
-   </ToolboxScaffold>
-
-   <ToolboxScaffold
-    title="DATA VISUALS 2"
-    subtitle="Extended Tube Explorer & Visual Lab modules powered by the local Annalytics snapshot."
-    icon={<ChartNoAxesCombined />}
-    paletteIndex={3}
-    headerColor="bg-[#FFDA47]"
-    iconBoxColor="bg-[#3FEE56]"
-    collapsible
-    isOpen={isOpen2}
-    onToggle={() => setIsOpen2((open) => !open)}
-    unmountWhenClosed
-    contentClassName="bg-[#f4f1eb] p-6">
-    <Vt2ThemeToggle mode={vt2Theme} onChange={setVt2Theme} />
-    <Vt2ThemeContext.Provider value={vt2Theme}>
-     <VtSyncDataVisualsContent key={`t2:${snapshot.snapshotId}:${snapshot.capturedAt}:${vt2Theme}`} snapshot={snapshot} modules={SECONDARY_VISUAL_MODULES} />
-    </Vt2ThemeContext.Provider>
-   </ToolboxScaffold>
-  </div>
+  <>
+   <Vt2ThemeToggle mode={vt2Theme} onChange={setVt2Theme} />
+   <Vt2ThemeContext.Provider value={vt2Theme}>
+    <VtSyncDataVisualsContent
+     key={`t2:${snapshot.snapshotId}:${snapshot.capturedAt}:${vt2Theme}`}
+     snapshot={snapshot}
+     modules={SECONDARY_VISUAL_MODULES}
+    />
+   </Vt2ThemeContext.Provider>
+  </>
  )
 }

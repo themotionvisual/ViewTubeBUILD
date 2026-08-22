@@ -5,7 +5,7 @@ vi.mock("@/services/gemini", () => ({
   generateOracleReport: vi.fn(),
   generateKeywordResearch: vi.fn(),
 }));
-vi.mock("@/services/analyticsSelectors", () => ({
+vi.mock("@/services/analytics/Selectors", () => ({
   getMetricSummary: vi.fn(() => ({
     totals: { views: 1200, revenue: 15, subscribersGained: 12, watchHours: 95 },
     averages: { ctr: 0, rpm: 0 },

@@ -20,7 +20,7 @@ import {
 } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { useBrain } from "../context/useBrain"
-import { unifiedAuth } from "../services/auth/authSession"
+import { useUnifiedAccount } from "../context/UnifiedAccountContext"
 import { getVaultSnapshot, setVaultSnapshot } from "../services/keyVault"
 import { SubToolbox } from "../components/Toolbox"
 import { resolvePublicChannel } from "../services/publicHandleMode"
@@ -136,8 +136,9 @@ const isTopupStripeConfigError = (message: string): boolean => {
 const Settings: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const account = useUnifiedAccount()
   const { authState, updateBrain } = useBrain()
-  const isAuth = authState.isAuthenticated
+  const isAuth = account.snapshot.authentication.status === "authenticated"
 
   const [geminiKey, setGeminiKey] = useState("")
   const [showKey, setShowKey] = useState(false)
@@ -196,7 +197,7 @@ const Settings: React.FC = () => {
 
  useEffect(() => {
   const syncBilling = async () => {
-   const authReady = isAuth && unifiedAuth.isAuthenticated()
+   const authReady = isAuth
    if (!authReady) {
     setBillingStatus("Sign in to sync billing entitlements.")
     return
@@ -287,7 +288,6 @@ const Settings: React.FC = () => {
    setBillingStatus("Creating secure checkout session...")
   const session = await createCheckoutSession({
     planId,
-    userId: "local-user",
     successUrl: `${window.location.origin}/account?panel=billing`,
     cancelUrl: `${window.location.origin}/account?panel=billing`,
    })
@@ -311,7 +311,6 @@ const Settings: React.FC = () => {
    setBillingStatus("Creating top-up checkout session...")
    const session = await createCheckoutSession({
     planId: "creator_plus",
-    userId: "local-user",
     successUrl: `${window.location.origin}/account?panel=billing`,
     cancelUrl: `${window.location.origin}/account?panel=billing`,
     mode: "topup",
@@ -343,7 +342,6 @@ const Settings: React.FC = () => {
    setBillingStatus("Creating custom top-up checkout session...")
    const session = await createCheckoutSession({
     planId: "creator_plus",
-    userId: "local-user",
     successUrl: `${window.location.origin}/account?panel=billing`,
     cancelUrl: `${window.location.origin}/account?panel=billing`,
     mode: "topup",
@@ -897,7 +895,7 @@ const Settings: React.FC = () => {
       </p>
       {isAuth ? (
        <button
-        onClick={() => unifiedAuth.logout()}
+        onClick={() => void account.signOut()}
         className={`${canonicalButtonClass} bg-black text-white px-8 py-4 text-sm w-full`}>
         Disconnect Channel
        </button>
@@ -905,7 +903,7 @@ const Settings: React.FC = () => {
        <button
         onClick={async () => {
          await clearAnalyticsStateForFreshSync()
-         await unifiedAuth.login()
+         await account.start(account.intent, `${location.pathname}${location.search}${location.hash}`)
         }}
         className={`${canonicalButtonClass} bg-[#FFFF61] text-black px-8 py-4 text-sm w-full`}>
         Connect Channel

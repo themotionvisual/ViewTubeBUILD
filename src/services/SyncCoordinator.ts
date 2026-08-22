@@ -346,7 +346,8 @@ export class SyncCoordinator {
   }
   const firstRow = report.rows[0]
   if (!Array.isArray(firstRow)) return {}
-  return report.columnHeaders.reduce<Record<string, number>>((acc, header: any, index: number) => {
+  const headers = report.columnHeaders as Array<{ name?: unknown }>
+  return headers.reduce<Record<string, number>>((acc, header, index) => {
    const name = String(header?.name || "")
    if (!name) return acc
    const value = Number(firstRow[index])
@@ -472,14 +473,14 @@ export class SyncCoordinator {
    report: SegmentAnalyticsReport | null | undefined,
   ) => {
    if (!report || !Array.isArray(report.rows)) return
-   upsertLedgerEntry({
+   Object.assign(cacheData, upsertLedgerEntry(cacheData, {
     source: "youtube_analytics_v2",
     context,
     dimensions,
     metrics: (report.columnHeaders || []).map((header: any) => header.name),
     payload: report,
     window: "lifetime",
-   })
+   }))
    cacheData[cacheKey] = report
   }
 

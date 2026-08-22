@@ -24,7 +24,7 @@ const niceStep = (rawStep: number) => {
   if (!Number.isFinite(rawStep) || rawStep <= 0) return 1
   const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)))
   const normalized = rawStep / magnitude
-  let factor = NICE_FACTORS[0]
+  let factor: number = NICE_FACTORS[0]
   let bestDistance = Infinity
   for (const candidate of NICE_FACTORS) {
     const distance = Math.abs(candidate - normalized)

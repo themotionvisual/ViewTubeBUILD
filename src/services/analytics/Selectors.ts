@@ -386,6 +386,7 @@ const resolveCanonicalVideoFormatEvidence = (
     return { format: "shorts", evidence, confidence: "high" }
   }
   if (shortsPlaylistSignal) return { format: "shorts", evidence: ["shorts_playlist_signal"], confidence: "high" }
+  if (durationSeconds > 180) return { format: "long", evidence: ["duration_gt_180"], confidence: "high" }
   if (aspectBucket === "portrait") return { format: "shorts", evidence: ["portrait_aspect_ratio"], confidence: "medium" }
   if (metadataShortSignal) return { format: "shorts", evidence: ["metadata_short_signal"], confidence: "medium" }
   if (normalizedHint.includes("short")) return { format: "shorts", evidence: ["tag_hint_short"], confidence: "medium" }
@@ -400,7 +401,6 @@ const resolveCanonicalVideoFormatEvidence = (
   if (normalizedHint.includes("live")) return { format: "live", evidence: ["tag_hint_live"], confidence: "medium" }
   if (normalizedHint.includes("story")) return { format: "story", evidence: ["tag_hint_story"], confidence: "medium" }
 
-  if (durationSeconds > 180) return { format: "long", evidence: ["duration_gt_180"], confidence: "low" }
   if (durationSeconds > 0 && durationSeconds <= 70) {
     return { format: "shorts", evidence: ["duration_lte_70"], confidence: "low" }
   }
@@ -452,6 +452,7 @@ const METRIC_ARBITRATION_POLICY: Record<CanonicalMetricKey, MasterMetricArbitrat
   dislikes: "api_authoritative",
   comments: "api_authoritative",
   shares: "api_authoritative",
+  saves: "api_authoritative",
   subscribersGained: "api_authoritative",
   subscribersLost: "api_authoritative",
   subscribersNet: "net_from_csv",
@@ -791,7 +792,14 @@ const getBundleForWindow = (
   }
 
   const bundle = cache.analyticsByWindow?.[window]
-  if (bundle?.report) return bundle
+  if (bundle?.report) return {
+    ...bundle,
+    window,
+    startDate: bundle.startDate ?? "",
+    endDate: bundle.endDate ?? "",
+    fetchedAt: bundle.fetchedAt ?? Date.now(),
+    report: bundle.report,
+  }
 
   if (window === "lifetime" && cache.analytics) {
     return {
