@@ -7,6 +7,7 @@ import {
   getAccountSnapshotData,
   getGoogleCredentialRecord,
   getSessionUserId,
+  markGoogleConnectionExpired,
   markGoogleConnectionRevoked,
   resolveGoogleAccount,
   revokeAccountSession,
@@ -27,6 +28,78 @@ const VALID_INTENTS = new Set(["sign_up", "log_in", "connect_channel", "reconnec
 const VALID_ONBOARDING_STATUS = new Set(["not_started", "in_progress", "complete"]);
 const FREE_PLAN_IDS = new Set(["basic", "beta"]);
 const tokenRefreshes = new Map();
+export const GOOGLE_PROXY_ERROR_CODES = Object.freeze({
+  AUTH_REQUIRED: "AUTH_REQUIRED",
+  INVALID_DESTINATION: "INVALID_DESTINATION",
+  GOOGLE_RECONNECT_REQUIRED: "GOOGLE_RECONNECT_REQUIRED",
+  GOOGLE_SCOPE_REQUIRED: "GOOGLE_SCOPE_REQUIRED",
+  GOOGLE_QUOTA_EXHAUSTED: "GOOGLE_QUOTA_EXHAUSTED",
+  GOOGLE_RATE_LIMITED: "GOOGLE_RATE_LIMITED",
+  GOOGLE_UPSTREAM_UNAVAILABLE: "GOOGLE_UPSTREAM_UNAVAILABLE",
+  GOOGLE_PROXY_TIMEOUT: "GOOGLE_PROXY_TIMEOUT",
+});
+
+class GoogleProxyFailure extends Error {
+  constructor(code, message, options = {}) {
+    super(message);
+    this.name = "GoogleProxyFailure";
+    this.code = code;
+    this.status = Number(options.status || 500);
+    this.retryable = Boolean(options.retryable);
+    this.reconnectRequired = Boolean(options.reconnectRequired);
+    this.upstreamStatus = options.upstreamStatus;
+  }
+}
+
+const googleProxyErrorBody = (failure, requestId) => ({
+  error: {
+    code: failure.code,
+    message: failure.message,
+    retryable: failure.retryable,
+    reconnectRequired: failure.reconnectRequired,
+    ...(Number.isFinite(failure.upstreamStatus) ? { upstreamStatus: failure.upstreamStatus } : {}),
+    requestId,
+  },
+});
+
+const isTimeoutError = (error) => error?.name === "TimeoutError" || error?.name === "AbortError";
+
+const googleErrorReason = (payload) => String(
+  payload?.error?.errors?.[0]?.reason || payload?.error?.status || payload?.error?.reason || "",
+).toLowerCase();
+
+export const classifyGoogleProxyResponse = (status, payload = {}) => {
+  const reason = googleErrorReason(payload);
+  const message = String(payload?.error?.message || payload?.error_description || "Google API request failed.");
+  if (status === 401) {
+    return new GoogleProxyFailure(GOOGLE_PROXY_ERROR_CODES.GOOGLE_RECONNECT_REQUIRED, "Google authorization expired; reconnect required.", {
+      status: 409, reconnectRequired: true, upstreamStatus: status,
+    });
+  }
+  if (status === 429 || reason.includes("ratelimit") || reason.includes("userratelimit")) {
+    return new GoogleProxyFailure(GOOGLE_PROXY_ERROR_CODES.GOOGLE_RATE_LIMITED, message, {
+      status: 429, retryable: true, upstreamStatus: status,
+    });
+  }
+  if (reason.includes("quota") || reason.includes("dailylimit")) {
+    return new GoogleProxyFailure(GOOGLE_PROXY_ERROR_CODES.GOOGLE_QUOTA_EXHAUSTED, message, {
+      status: 403, upstreamStatus: status,
+    });
+  }
+  if (status === 403) {
+    return new GoogleProxyFailure(GOOGLE_PROXY_ERROR_CODES.GOOGLE_SCOPE_REQUIRED, message, {
+      status: 403, upstreamStatus: status,
+    });
+  }
+  if (status >= 500) {
+    return new GoogleProxyFailure(GOOGLE_PROXY_ERROR_CODES.GOOGLE_UPSTREAM_UNAVAILABLE, message, {
+      status: 503, retryable: true, upstreamStatus: status,
+    });
+  }
+  return new GoogleProxyFailure(GOOGLE_PROXY_ERROR_CODES.GOOGLE_UPSTREAM_UNAVAILABLE, message, {
+    status, upstreamStatus: status,
+  });
+};
 const contentOwnerDiscoveryEnabled = () => process.env.YOUTUBE_CONTENT_OWNER_DISCOVERY_ENABLED === "true";
 export const GOOGLE_SCOPES = [
   "openid",
@@ -230,7 +303,7 @@ const buildSnapshot = async (userId) => {
   const expired = youtubeScopesGranted && record.tokenExpiresAt &&
     Date.parse(record.tokenExpiresAt) <= Date.now() && !record.hasRefreshToken;
   const googleStatus = record.connectionStatus === "revoked" ? "revoked"
-    : expired ? "expired"
+    : record.connectionStatus === "expired" || expired ? "expired"
       : youtubeScopesGranted && record.channelId ? "connected" : "disconnected";
   const monetaryScopeGranted = scopes.has("https://www.googleapis.com/auth/yt-analytics-monetary.readonly");
   const nextIntent = resolveGoogleNextIntent({ googleStatus, monetaryScopeGranted });
@@ -310,24 +383,54 @@ const getServerGoogleAccessToken = async (userId) => {
   if (existingRefresh) return existingRefresh;
   const task = (async () => {
     const credential = await getGoogleCredentialRecord(userId);
-    if (!credential) throw new Error("Google connection is not available.");
+    if (!credential || credential.connectionStatus === "expired" || credential.connectionStatus === "revoked") {
+      throw new GoogleProxyFailure(
+        GOOGLE_PROXY_ERROR_CODES.GOOGLE_RECONNECT_REQUIRED,
+        "Google authorization expired; reconnect required.",
+        { status: 409, reconnectRequired: true },
+      );
+    }
     const expiresAt = Date.parse(credential.tokenExpiresAt || "");
     if (credential.accessTokenCiphertext && Number.isFinite(expiresAt) && expiresAt > Date.now() + 60_000) {
       return decryptToken(credential.accessTokenCiphertext);
     }
     const refreshToken = decryptToken(credential.refreshTokenCiphertext);
-    if (!refreshToken) throw new Error("Google authorization expired; reconnect required.");
-    const response = await fetch(GOOGLE_TOKEN_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ client_id: clientId(), client_secret: clientSecret(),
-        refresh_token: refreshToken, grant_type: "refresh_token" }),
-      signal: AbortSignal.timeout(15_000),
-    });
+    if (!refreshToken) {
+      await markGoogleConnectionExpired(userId);
+      throw new GoogleProxyFailure(
+        GOOGLE_PROXY_ERROR_CODES.GOOGLE_RECONNECT_REQUIRED,
+        "Google authorization expired; reconnect required.",
+        { status: 409, reconnectRequired: true },
+      );
+    }
+    let response;
+    try {
+      response = await fetch(GOOGLE_TOKEN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ client_id: clientId(), client_secret: clientSecret(),
+          refresh_token: refreshToken, grant_type: "refresh_token" }),
+        signal: AbortSignal.timeout(15_000),
+      });
+    } catch (error) {
+      if (isTimeoutError(error)) {
+        throw new GoogleProxyFailure(GOOGLE_PROXY_ERROR_CODES.GOOGLE_PROXY_TIMEOUT, "Google token refresh timed out.", {
+          status: 504, retryable: true,
+        });
+      }
+      throw error;
+    }
     const payload = await response.json();
     if (!response.ok) {
-      await markGoogleConnectionRevoked(userId);
-      throw new Error("Google authorization expired; reconnect required.");
+      if (response.status === 400 || response.status === 401) {
+        await markGoogleConnectionExpired(userId);
+        throw new GoogleProxyFailure(
+          GOOGLE_PROXY_ERROR_CODES.GOOGLE_RECONNECT_REQUIRED,
+          "Google authorization expired; reconnect required.",
+          { status: 409, reconnectRequired: true, upstreamStatus: response.status },
+        );
+      }
+      throw classifyGoogleProxyResponse(response.status, payload);
     }
     await saveGoogleConnection(userId, credential.googleSubject, {
       accessTokenCiphertext: encryptToken(payload.access_token), refreshTokenCiphertext: null,
@@ -705,17 +808,43 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
   }
 
   if (method === "POST" && pathname === "/api/account/google-proxy") {
+    const requestId = crypto.randomUUID();
     const userId = await sessionUserId(req);
-    if (!userId) return json(res, 401, { error: "Authentication required." }), true;
+    if (!userId) {
+      const failure = new GoogleProxyFailure(GOOGLE_PROXY_ERROR_CODES.AUTH_REQUIRED, "Authentication required.", { status: 401 });
+      return json(res, failure.status, googleProxyErrorBody(failure, requestId)), true;
+    }
     const payload = await readJsonBody(req, readBody);
-    if (!isAllowedGoogleApiUrl(payload.url)) return json(res, 400, { error: "Google API destination is not allowed." }), true;
-    const accessToken = await getServerGoogleAccessToken(userId);
-    const response = await fetch(payload.url, { headers: { Authorization: `Bearer ${accessToken}` }, signal: AbortSignal.timeout(30_000) });
+    if (!isAllowedGoogleApiUrl(payload.url)) {
+      const failure = new GoogleProxyFailure(GOOGLE_PROXY_ERROR_CODES.INVALID_DESTINATION, "Google API destination is not allowed.", { status: 400 });
+      return json(res, failure.status, googleProxyErrorBody(failure, requestId)), true;
+    }
+    let response;
+    try {
+      const accessToken = await getServerGoogleAccessToken(userId);
+      response = await fetch(payload.url, { headers: { Authorization: `Bearer ${accessToken}` }, signal: AbortSignal.timeout(30_000) });
+    } catch (error) {
+      const failure = error instanceof GoogleProxyFailure
+        ? error
+        : isTimeoutError(error)
+          ? new GoogleProxyFailure(GOOGLE_PROXY_ERROR_CODES.GOOGLE_PROXY_TIMEOUT, "Google API request timed out.", { status: 504, retryable: true })
+          : new GoogleProxyFailure(GOOGLE_PROXY_ERROR_CODES.GOOGLE_UPSTREAM_UNAVAILABLE, "Google API request failed.", { status: 503, retryable: true });
+      return json(res, failure.status, googleProxyErrorBody(failure, requestId)), true;
+    }
     const body = await response.text();
+    if (!response.ok) {
+      let upstreamPayload = {};
+      try { upstreamPayload = JSON.parse(body || "{}"); }
+      catch { upstreamPayload = { error: { message: body.slice(0, 500) } }; }
+      const failure = classifyGoogleProxyResponse(response.status, upstreamPayload);
+      if (failure.reconnectRequired) await markGoogleConnectionExpired(userId);
+      if (response.headers.get("retry-after")) res.setHeader("Retry-After", response.headers.get("retry-after"));
+      return json(res, failure.status, googleProxyErrorBody(failure, requestId)), true;
+    }
     res.writeHead(response.status, {
       "Content-Type": response.headers.get("content-type") || "application/json; charset=utf-8",
       "Access-Control-Allow-Origin": process.env.BILLING_ORIGIN || "http://localhost:5173",
-      "Access-Control-Allow-Credentials": "true", "Cache-Control": "no-store",
+      "Access-Control-Allow-Credentials": "true", "Cache-Control": "no-store", "X-ViewTube-Request-Id": requestId,
     });
     res.end(body);
     return true;

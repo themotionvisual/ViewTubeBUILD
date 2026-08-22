@@ -1,8 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import './index.css'
-// Install error/rejection/fetch capture BEFORE anything else runs so we
-// don't miss the very first failure — the whole point of the on-screen
-// diagnostics is to be there when nothing else works.
+// Install developer-console error/rejection capture before anything else runs.
+// Verbose request and long-task diagnostics stay disabled for normal users.
 import { installOnScreenDiagnostics } from './app/onScreenDiagnostics'
 installOnScreenDiagnostics()
 // Eagerly evaluate authSession so its OAuth redirect hash listener fires

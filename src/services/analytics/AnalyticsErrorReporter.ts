@@ -1,3 +1,5 @@
+import { reportDiagnostic } from "../diagnostics"
+
 /**
  * Simple JSON logger for sync diagnostics.
  * Writes a file under `reports/diagnostics/latest.json` (in the app's root).
@@ -8,6 +10,14 @@ const DIAGNOSTIC_FILE = "reports/diagnostics/latest.json";
  * Append an error message to the diagnostics log.
  */
 export const reportSyncError = (msg: string) => {
+  reportDiagnostic({
+    area: "analytics-sync",
+    event: "sync_error",
+    level: "error",
+    whatHappened: msg,
+    whatItMeans: "An analytics sync phase could not complete normally.",
+    whatToCheck: ["Connection state", "Requested metric bundle", "Stored snapshot freshness"],
+  })
   try {
     const existing = typeof window !== "undefined" && window.localStorage
       ? window.localStorage.getItem(DIAGNOSTIC_FILE)

@@ -1175,10 +1175,18 @@ export const createHeroIntroController=(
   let animations:Animation[]=[]
   let destroyed=false
   let currentVariant=normalizedVariant(options)
+  let outerFrame:number|null=null
+  let innerFrame:number|null=null
 
   const stop=()=>{
+    if(outerFrame!==null) cancelAnimationFrame(outerFrame)
+    if(innerFrame!==null) cancelAnimationFrame(innerFrame)
+    outerFrame=null
+    innerFrame=null
     animations.forEach(animation=>{
-      try { animation.cancel() } catch {}
+      try { animation.cancel() } catch {
+        // A detached visual may already have released its Web Animation handle.
+      }
     })
     animations=[]
   }
@@ -1189,11 +1197,15 @@ export const createHeroIntroController=(
     if(overrides?.variant!==undefined){
       currentVariant=((overrides.variant%3)+3)%3
     }
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      if(destroyed) return
-      const runner=HERO_ANIMATION_RUNNERS[visualId]
-      animations=runner(root,{...options,variant:currentVariant})
-    }))
+    outerFrame=requestAnimationFrame(()=>{
+      outerFrame=null
+      innerFrame=requestAnimationFrame(()=>{
+        innerFrame=null
+        if(destroyed) return
+        const runner=HERO_ANIMATION_RUNNERS[visualId]
+        animations=runner(root,{...options,variant:currentVariant})
+      })
+    })
   }
 
   return {

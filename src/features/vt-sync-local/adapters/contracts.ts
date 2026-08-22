@@ -228,6 +228,10 @@ export type VtSyncSyncManifest = {
  started_at?: string
  completed_at?: string | null
  stop_reason?: string | null
+ failure_code?: string | null
+ retryable?: boolean
+ reconnect_required?: boolean
+ request_id?: string | null
  bundles_completed?: Array<Record<string, unknown>>
  bundles_failed?: Array<Record<string, unknown>>
  diagnostics?: Array<Record<string, unknown>>

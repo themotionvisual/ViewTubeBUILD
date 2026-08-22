@@ -1,7 +1,7 @@
 import React, { Suspense } from "react"
 
 import { Spinner } from "../components/ui/spinner"
-import { formatDiagnostics, readDiagnostics, recordBootPhase } from "./onScreenDiagnostics"
+import { recordBootPhase } from "./onScreenDiagnostics"
 
 // After a Vercel redeploy, cached index.html can point at chunk hashes that
 // no longer exist. Vite/Rolldown's dynamic imports then reject with a
@@ -204,90 +204,6 @@ const RouteLoadingIndicator: React.FC = () => {
      Sign out &amp; clear cache
     </button>
    </div>
-   {/* On-screen diagnostics: mobile users can't open chrome://inspect from
-       their phone, so surface captured errors + failed requests directly in
-       the stuck UI. Screenshot-friendly. */}
-   <DiagnosticPanel />
-  </div>
- )
-}
-
-const DiagnosticPanel: React.FC = () => {
- // Always render the log inline. The previous version hid it behind a
- // "Show diagnostics" toggle button that some mobile Safari sessions
- // wouldn't respond to (a bad touch-target hit test inside a
- // role="status" container can silently swallow onClick). No toggle =
- // nothing to fail. The user just screenshots what's on screen.
- const [text, setText] = React.useState(() => formatDiagnostics(readDiagnostics()))
- const [copied, setCopied] = React.useState(false)
-
- // Refresh the log every second while this panel is mounted — new errors
- // arrive after the hang started and we want to capture them too.
- React.useEffect(() => {
-  const timer = window.setInterval(() => {
-   setText(formatDiagnostics(readDiagnostics()))
-  }, 1000)
-  return () => window.clearInterval(timer)
- }, [])
-
- const copyToClipboard = () => {
-  const info = [
-   `location: ${window.location.href}`,
-   `ua: ${navigator.userAgent}`,
-   `hangCount: ${readHangCount()}`,
-   "",
-   text || formatDiagnostics(readDiagnostics()),
-  ].join("\n")
-  const doCopy = navigator.clipboard?.writeText
-  if (doCopy) {
-   doCopy.call(navigator.clipboard, info)
-    .then(() => {
-     setCopied(true)
-     window.setTimeout(() => setCopied(false), 2000)
-    })
-    .catch(() => { /* ignore */ })
-   return
-  }
-  // Fallback for browsers without clipboard API — select the pre and
-  // let the user long-press → copy manually.
-  const pre = document.getElementById("vt-diagnostic-log")
-  if (pre) {
-   const range = document.createRange()
-   range.selectNodeContents(pre)
-   const sel = window.getSelection()
-   sel?.removeAllRanges()
-   sel?.addRange(range)
-  }
- }
-
- return (
-  <div className="mt-6 w-full max-w-lg" style={{ touchAction: "manipulation" }}>
-   <div className="rounded-[12px] border-[3px] border-black bg-[#0f172a] p-3 text-left shadow-[4px_4px_0_0_#000]">
-    <div className="mb-2 flex items-center justify-between gap-2">
-     <span className="text-[10px] font-black uppercase tracking-[0.14em] text-[#C0F240]">
-      Runtime log
-     </span>
-     <button
-      type="button"
-      className="rounded-full border-[2px] border-[#C0F240] bg-transparent px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#C0F240] active:bg-[#C0F240] active:text-black"
-      style={{ touchAction: "manipulation" }}
-      onClick={copyToClipboard}
-      onPointerUp={copyToClipboard}
-     >
-      {copied ? "Copied" : "Copy log"}
-     </button>
-    </div>
-    <pre
-     id="vt-diagnostic-log"
-     className="max-h-[45vh] overflow-auto whitespace-pre-wrap break-words font-mono text-[10px] leading-[1.5] text-white/85"
-    >
-{text || "(no diagnostics captured — the app hasn't logged any errors yet. This is by itself a useful signal: the failure is happening silently, likely a hook awaiting a promise that never settles.)"}
-    </pre>
-    <p className="mt-2 text-[9px] font-mono text-white/50">
-     Tap “Copy log” or screenshot this panel and share it — it tells us
-     exactly what the page tried to do.
-    </p>
-   </div>
   </div>
  )
 }
@@ -367,10 +283,6 @@ export class RouteErrorBoundary extends React.Component<
       </button>
      </div>
     </div>
-    {/* Show the runtime log inline so users on mobile (no chrome://inspect
-        access) can screenshot the actual error context — request URLs, HTTP
-        statuses, prior warnings — without needing another tap. */}
-    <DiagnosticPanel />
    </div>
   )
  }

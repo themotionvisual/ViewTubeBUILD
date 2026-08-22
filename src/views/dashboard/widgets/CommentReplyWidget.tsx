@@ -19,6 +19,7 @@ import {
 import { generatePerfectReply } from "../../../services/gemini"
 import { useBrain } from "../../../context/useBrain"
 import { useUnifiedAccount } from "../../../context/UnifiedAccountContext"
+import { resolveCommentAccessState } from "../../../services/youtube/commentAccess"
 import {
   findLargestFittingFontSize,
   fitThumbnailTitle,
@@ -188,7 +189,10 @@ export const CommentReplyWidget = ({
 }: any) => {
   const { brain } = useBrain()
   const account = useUnifiedAccount()
-  const canPostReply = !account.serverEnabled || account.snapshot.grantedCapabilities.includes("youtube_comments")
+  const commentAccessState = resolveCommentAccessState(account.snapshot)
+  const hasCommentsAccess = commentAccessState === "ready"
+  const canPostReply = hasCommentsAccess
+    && (!account.serverEnabled || account.snapshot.grantedCapabilities.includes("youtube_comments"))
   const common = {
     widget,
     instance,
@@ -215,10 +219,13 @@ export const CommentReplyWidget = ({
   const fetchedVideoDataRef = useRef<Record<string, any>>({})
   const metadataInFlightRef = useRef(new Set<string>())
 
-  const channelId = data.brain?.channelProfile?.id || data.authState?.channelId || ""
+  const channelId = data.brain?.channelProfile?.id
+    || account.snapshot.google.channelId
+    || data.authState?.channelId
+    || ""
   const canonicalVideos = useMemo(() => data.videoAssets || [], [data.videoAssets])
 
-  const syncMetadata = async (threads: any[]) => {
+  const syncMetadata = async (threads: any[], signal?: AbortSignal) => {
     const requestedIds: string[] = []
     try {
       const videoIds = Array.from(new Set<string>(
@@ -238,7 +245,8 @@ export const CommentReplyWidget = ({
         requestedIds.push(...missingIds)
         missingIds.forEach((id) => metadataInFlightRef.current.add(id))
         console.info(`[CommentResponder] Fetching metadata for ${missingIds.length} missing videos...`)
-        const details = await fetchVideoSnippetDetails(missingIds as string[])
+        const details = await fetchVideoSnippetDetails(missingIds as string[], { signal })
+        if (signal?.aborted) return
         fetchedVideoDataRef.current = { ...fetchedVideoDataRef.current, ...details }
         setFetchedVideoData(prev => ({ ...prev, ...details }))
       }
@@ -251,23 +259,31 @@ export const CommentReplyWidget = ({
 
   useEffect(() => {
     let cancelled = false
+    const controller = new AbortController()
+    if (!hasCommentsAccess || !channelId) {
+      setLoading(false)
+      setError(null)
+      setAllThreads([])
+      return () => controller.abort()
+    }
     const load = async () => {
       setLoading(true)
       setError(null)
       try {
         const threads = await fetchAllCommentThreads(100, channelId, {
           initialNewCount: 3,
+          signal: controller.signal,
           onInitialResults: (initialThreads) => {
             if (cancelled) return
             setAllThreads(initialThreads)
             setLoading(false)
-            void syncMetadata(initialThreads)
+            void syncMetadata(initialThreads, controller.signal)
           },
         })
         if (cancelled) return
         setAllThreads(threads)
         setLoading(false)
-        void syncMetadata(threads)
+        void syncMetadata(threads, controller.signal)
       } catch (e: any) {
         if (cancelled) return
         console.error("Comment fetch failed:", e)
@@ -277,8 +293,8 @@ export const CommentReplyWidget = ({
       }
     }
     void load()
-    return () => { cancelled = true }
-  }, [channelId, canonicalVideos.length])
+    return () => { cancelled = true; controller.abort() }
+  }, [channelId, canonicalVideos.length, hasCommentsAccess])
 
   useEffect(() => {
     const applyImage = (payload: any) => {
@@ -371,8 +387,9 @@ export const CommentReplyWidget = ({
   const handleSend = async (commentId: string) => {
     if (!replyText[commentId]?.trim()) return
     if (!canPostReply) {
-      setError("Reconnect Channel to grant comment-reply permission.")
-      void account.start("reconnect_channel", window.location.pathname)
+      const intent = commentAccessState === "requires_connection" ? "connect_channel" : "reconnect_channel"
+      setError(`${intent === "connect_channel" ? "Connect" : "Reconnect"} Channel to grant comment-reply permission.`)
+      void account.start(intent, window.location.pathname)
       return
     }
     setLoading(true)
@@ -505,7 +522,29 @@ export const CommentReplyWidget = ({
         )}
 
         <WidgetScrollArea ariaLabel="Comment responder conversation" edge="inset" className="comment-responder-scroll-area" enabled={tab === "history"}>
-          {loading && allThreads.length === 0 ? (
+          {!hasCommentsAccess ? (
+            <div style={{ display: "grid", placeItems: "center", alignContent: "center", gap: "12px", minHeight: "190px", padding: "24px", textAlign: "center" }}>
+              {commentAccessState === "pending" ? <Loader2 size={24} className="animate-spin" /> : <MessageSquare size={28} />}
+              <div style={{ maxWidth: "280px", fontSize: "11px", fontWeight: 900, lineHeight: 1.45 }}>
+                {commentAccessState === "pending"
+                  ? "CONNECTING YOUR CHANNEL…"
+                  : commentAccessState === "requires_reconnect"
+                    ? "RECONNECT YOUR YOUTUBE CHANNEL TO LOAD AND REPLY TO COMMENTS."
+                    : "CONNECT YOUR YOUTUBE CHANNEL TO LOAD AND REPLY TO COMMENTS."}
+              </div>
+              {commentAccessState !== "pending" && (
+                <button
+                  className="vt-button primary"
+                  type="button"
+                  onClick={() => void account.start(
+                    commentAccessState === "requires_reconnect" ? "reconnect_channel" : "connect_channel",
+                    window.location.pathname,
+                  )}>
+                  {commentAccessState === "requires_reconnect" ? "RECONNECT CHANNEL" : "CONNECT CHANNEL"}
+                </button>
+              )}
+            </div>
+          ) : loading && allThreads.length === 0 ? (
             <div className="comment-responder-sync-state" aria-live="polite">
               <div className="comment-responder-sync-thread">
                 <div className="comment-responder-sync-thumbnail" />

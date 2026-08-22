@@ -1,8 +1,9 @@
-import React, { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { ChevronDown, ChevronRight, Copy } from "lucide-react"
 import { useBrain } from "../../../context/useBrain"
 import { legacyAccountBridge } from "../../../services/account/legacyAccountBridge"
+import { isGoogleReconnectRequiredError } from "../../../services/youtube/googleProxyErrors"
 import { useUnifiedAccount } from "../../../context/UnifiedAccountContext"
 import {
  getVtSyncSnapshot,
@@ -38,14 +39,8 @@ import { getPaletteColor } from "../../../styles/toolboxPalette"
 import { VtSyncControllerPanel } from "./VtSyncControllerPanel"
 import { buildVtSyncCreatorHeroModel, VtSyncCreatorHero } from "./VtSyncCreatorHero"
 import { VtSyncToolboxDataTable } from "./toolbox-table/VtSyncToolboxDataTable"
+import { VtSyncDataVisualsGate } from "./VtSyncDataVisualsGate"
 import "./VtSyncLocalAnalyticsPage.css"
-// Lazy-load the DATA VISUALS toolbox: it pulls in ~24 Recharts modules and the
-// GraphsPageCharts library, none of which the user needs before the analytics
-// page finishes its first paint. Suspending it here trims the initial payload
-// on the mobile-critical /analytics landing route.
-const VtSyncDataVisualsToolbox = lazy(() =>
- import("./VtSyncDataVisualsToolbox").then((module) => ({ default: module.VtSyncDataVisualsToolbox })),
-)
 import { RetroLcd, RetroLedRow, RetroRivets, type RetroLedSpec } from "./VtSyncRetroChrome"
 
 const syncStatusLabel = (status?: string) => {
@@ -762,6 +757,8 @@ const refreshManualImports = useCallback(async (payload?: {
   [catalogSnapshot, privacyFilters],
  )
  const [syncProgress, setSyncProgress] = useState<VtSyncLocalSyncProgress | null>(null)
+ const pendingSyncProgressRef = useRef<VtSyncLocalSyncProgress | null>(null)
+ const syncProgressTimerRef = useRef<number | null>(null)
  const [syncError, setSyncError] = useState<string>("")
  const [busy, setBusy] = useState(false)
  const [authTick, setAuthTick] = useState(0)
@@ -771,6 +768,28 @@ const refreshManualImports = useCallback(async (payload?: {
  const syncRequestActiveRef = useRef(false)
  const syncQueueRef = useRef<Array<{ categoryIds: string[]; retentionVideoIds?: string[]; forceFullVideoMetadata?: boolean }>>([])
  const [queuedCategoryIds, setQueuedCategoryIds] = useState<string[]>([])
+
+ const publishSyncProgress = useCallback((next: VtSyncLocalSyncProgress) => {
+  pendingSyncProgressRef.current = next
+  if (next.status !== "running") {
+   if (syncProgressTimerRef.current !== null) window.clearTimeout(syncProgressTimerRef.current)
+   syncProgressTimerRef.current = null
+   pendingSyncProgressRef.current = null
+   setSyncProgress(next)
+   return
+  }
+  if (syncProgressTimerRef.current !== null) return
+  syncProgressTimerRef.current = window.setTimeout(() => {
+   syncProgressTimerRef.current = null
+   const pending = pendingSyncProgressRef.current
+   pendingSyncProgressRef.current = null
+   if (pending) setSyncProgress(pending)
+  }, 100)
+ }, [])
+
+ useEffect(() => () => {
+  if (syncProgressTimerRef.current !== null) window.clearTimeout(syncProgressTimerRef.current)
+ }, [])
 
  useLayoutEffect(() => {
   const node = controllerPanelRef.current
@@ -865,7 +884,7 @@ const refreshManualImports = useCallback(async (payload?: {
     forceFullVideoMetadata: request.forceFullVideoMetadata,
     contentOwnerId: account.snapshot.google.activeContentOwnerId || undefined,
     previousSnapshot: snapshotRef.current,
-   onProgress: setSyncProgress,
+   onProgress: publishSyncProgress,
    onSnapshotCommit: publishSnapshot,
    })
    publishSnapshot(next)
@@ -878,7 +897,14 @@ const refreshManualImports = useCallback(async (payload?: {
     note: "Local Annalytics page sync only. No canonical sink or Performance Hub writes.",
    })
   } catch (error) {
-   setSyncError(error instanceof Error ? error.message : String(error))
+   if (isGoogleReconnectRequiredError(error)) {
+    syncQueueRef.current = []
+    updateQueuedCategories()
+    setSyncError("Reconnect Google to continue syncing.")
+    void account.refresh()
+   } else {
+    setSyncError(error instanceof Error ? error.message : String(error))
+   }
   } finally {
    syncRequestActiveRef.current = false
    setBusy(false)
@@ -943,9 +969,7 @@ const refreshManualImports = useCallback(async (payload?: {
      storageStatus={videoInventory.channelId === snapshot.channelId ? videoInventory.status : "loading"}
      storageError={videoInventory.channelId === snapshot.channelId ? videoInventory.error : undefined}
     />
-    <Suspense fallback={<div className="min-h-[120px]" aria-hidden />}>
-     <VtSyncDataVisualsToolbox snapshot={consumerSnapshot} />
-    </Suspense>
+    <VtSyncDataVisualsGate snapshot={consumerSnapshot} />
    </div>
   </div>
  )

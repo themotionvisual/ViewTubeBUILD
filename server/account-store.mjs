@@ -15,6 +15,19 @@ const DATABASE_URL = String(process.env.DATABASE_URL || "").trim();
 const NODE_ENV = String(process.env.NODE_ENV || "development");
 const SESSION_TTL_MS = Math.max(15 * 60 * 1000, Number(process.env.ACCOUNT_SESSION_TTL_MS || 30 * 24 * 60 * 60 * 1000));
 
+export const withVerifiedPostgresSslMode = (connectionString) => {
+  const value = String(connectionString || "").trim();
+  if (!value || process.env.DATABASE_SSL === "false") return value;
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "postgres:" && parsed.protocol !== "postgresql:") return value;
+    parsed.searchParams.set("sslmode", "verify-full");
+    return parsed.toString();
+  } catch {
+    return value;
+  }
+};
+
 const emptyFileDb = () => ({
   users: {}, googleIdentities: {}, sessions: {}, oauthStates: {},
   onboarding: {}, subscriptions: {}, aiLedger: [], webhookEvents: {},
@@ -111,7 +124,7 @@ export const initAccountStore = async () => {
     return;
   }
   const candidatePool = new Pool({
-    connectionString: DATABASE_URL,
+    connectionString: withVerifiedPostgresSslMode(DATABASE_URL),
     ssl: process.env.DATABASE_SSL === "false" ? false : { rejectUnauthorized: process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== "false" },
     max: Math.max(2, Number(process.env.DATABASE_POOL_SIZE || 8)),
   });
@@ -271,7 +284,7 @@ export const getGoogleCredentialRecord = async (userId) => {
   await initAccountStore();
   if (usePostgres()) {
     const result = await pool.query(
-      `SELECT google_subject,access_token_ciphertext,refresh_token_ciphertext,token_expires_at,scopes
+      `SELECT google_subject,access_token_ciphertext,refresh_token_ciphertext,token_expires_at,scopes,connection_status
        FROM viewtube_google_identities WHERE viewtube_user_id=$1 LIMIT 1`, [userId],
     );
     if (!result.rowCount) return null;
@@ -279,10 +292,30 @@ export const getGoogleCredentialRecord = async (userId) => {
     return { googleSubject: row.google_subject, accessTokenCiphertext: row.access_token_ciphertext,
       refreshTokenCiphertext: row.refresh_token_ciphertext,
       tokenExpiresAt: row.token_expires_at ? new Date(row.token_expires_at).toISOString() : null,
-      scopes: row.scopes || [] };
+      scopes: row.scopes || [], connectionStatus: row.connection_status || "disconnected" };
   }
   const db = await readFileDb();
   return Object.values(db.googleIdentities).find((item) => item.viewtubeUserId === userId) || null;
+};
+
+export const markGoogleConnectionExpired = async (userId) => {
+  await initAccountStore();
+  if (usePostgres()) {
+    await pool.query(
+      `UPDATE viewtube_google_identities SET access_token_ciphertext=NULL,refresh_token_ciphertext=NULL,
+       token_expires_at=NULL,connection_status='expired',updated_at=NOW() WHERE viewtube_user_id=$1`, [userId],
+    );
+  } else {
+    await updateFileDb((db) => {
+      const entry = Object.values(db.googleIdentities).find((item) => item.viewtubeUserId === userId);
+      if (!entry) return;
+      entry.accessTokenCiphertext = null;
+      entry.refreshTokenCiphertext = null;
+      entry.tokenExpiresAt = null;
+      entry.connectionStatus = "expired";
+      entry.updatedAt = nowIso();
+    });
+  }
 };
 
 export const markGoogleConnectionRevoked = async (userId) => {
