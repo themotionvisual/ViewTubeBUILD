@@ -1,14 +1,64 @@
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { HeroIntroBoundary, HeaderHeroPlayButton } from "./HeroIntroBoundary"
-// Bare-render hooks into the four "real" custom visuals in GraphsPageCharts.
-// See commit ledger — these Modules had hidden custom SVG/DIV art that Tube
-// Explorer wasn't previously calling; instead it used thin Recharts wrappers.
+import { HeroIntroBoundary } from "./HeroIntroBoundary"
+import type { HeroVisualId } from "./heroVisualAnimations"
+// Hidden custom-DIV visuals living in GraphsPageCharts that were never wired
+// into the Tube Explorer collection. Each supports `renderBare` — returns
+// just the chart body so it can be dropped into Tube Explorer's own
+// ModuleFrame without producing a nested SubToolboxChartModule header.
 import {
  OrbitalModule as GraphsOrbitalModule,
  UploadTimeHeatmapModule as GraphsUploadTimeHeatmapModule,
  PerformanceGaugesModule as GraphsPerformanceGaugesModule,
  KeywordTreemapModule as GraphsKeywordTreemapModule,
 } from "./GraphsPageCharts"
+
+/**
+ * Per-visual toggle for A/B-testing the original Tube Explorer renderer
+ * vs the rich custom-art version from GraphsPageCharts. Renders a small
+ * top-right pill that flips between the two, with the active mode stored
+ * in localStorage so the choice survives reload.
+ */
+const VisualVersionToggle: React.FC<{
+ storageKey: string
+ defaultMode?: "custom" | "compact"
+ labelA?: string
+ labelB?: string
+ renderCustom: () => React.ReactNode
+ renderCompact: () => React.ReactNode
+}> = ({
+ storageKey,
+ defaultMode = "custom",
+ labelA = "CUSTOM",
+ labelB = "COMPACT",
+ renderCustom,
+ renderCompact,
+}) => {
+ const [mode, setMode] = useState<"custom" | "compact">(() => {
+  try {
+   const stored = typeof window !== "undefined" ? window.localStorage.getItem(storageKey) : null
+   return stored === "compact" || stored === "custom" ? stored : defaultMode
+  } catch { return defaultMode }
+ })
+ useEffect(() => {
+  try { if (typeof window !== "undefined") window.localStorage.setItem(storageKey, mode) } catch { /* no-op */ }
+ }, [storageKey, mode])
+ return (
+  <div className="relative h-full w-full">
+   <button
+    type="button"
+    aria-label={`Toggle visual version (current: ${mode === "custom" ? labelA : labelB})`}
+    title={`Toggle visual version — click for ${mode === "custom" ? labelB : labelA}`}
+    onClick={() => setMode((m) => (m === "custom" ? "compact" : "custom"))}
+    className="absolute right-2 top-2 z-30 inline-flex items-center gap-1 rounded-md border-[2px] border-black bg-white px-2 py-1 text-[10px] font-black uppercase tracking-wider text-black shadow-[3px_3px_0_0_black] transition-transform hover:-translate-y-0.5 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none">
+    <span>{mode === "custom" ? labelA : labelB}</span>
+    <span aria-hidden="true">⇄</span>
+   </button>
+   <div className="h-full w-full">
+    {mode === "custom" ? renderCustom() : renderCompact()}
+   </div>
+  </div>
+ )
+}
 import {
  Area,
  AreaChart,
@@ -3077,22 +3127,11 @@ const TitleWordNetworkCanvas: React.FC<{
 const createModule = (
  title: string,
  subtitle: string,
+ // Render callback receives the derived dataset AND the raw props so callers
+ // can reach `props.data` for renderers that expect the CanonicalVideoRow[]
+ // shape (e.g. GraphsPageCharts.* modules being called with `renderBare`).
  render: (dataset: TubeExplorerVisualDataset, props: TubeExplorerVisualProps) => React.ReactNode,
- options: {
-  color?: string
-  icon?: string
-  badges?: { label: string; tone?: any }[]
-  insight?: string
-  height?: number
-  flushShell?: boolean
-  activeContext?: (dataset: TubeExplorerVisualDataset) => SubToolboxChartModuleProps["activeContext"]
-  /**
-   * Opt into the shared dark Tube Insights canvas (see ModuleFrame's
-   * `insightDark` prop). Applied to the visuals that are known to render
-   * against a dark background today (Heat Matrix / Clockburst family).
-   */
-  insightDark?: boolean
- } = {},
+ options: { color?: string; icon?: string; badges?: { label: string; tone?: any }[]; insight?: string; height?: number; flushShell?: boolean; heroVisualId?: HeroVisualId; activeContext?: (dataset: TubeExplorerVisualDataset) => SubToolboxChartModuleProps["activeContext"] } = {},
 ): React.FC<TubeExplorerVisualProps> => (props) => {
  const dataset = useExplorerData(props)
  return (
@@ -3121,10 +3160,13 @@ const createModule = (
 export const TubeExplorerKeywordTreemap = createModule(
  "TOKEN FOREST",
  "Title words and search terms sized by channel reach.",
- // Reroute to the real custom-DIV KeywordTreemap art in GraphsPageCharts.
- // The old <KeywordBlocks/> renderer stays exported and reachable for any
- // callsite that specifically wants the compact grid variant.
- (_dataset, props) => <GraphsKeywordTreemapModule data={props.data} renderBare />,
+ (dataset, props) => (
+  <VisualVersionToggle
+   storageKey="vt.tube-insight-toggle.keyword-treemap"
+   renderCustom={() => <GraphsKeywordTreemapModule data={props.data} renderBare />}
+   renderCompact={() => <KeywordBlocks dataset={dataset} />}
+  />
+ ),
  { color: "#CCFF00", badges: [{ label: "KEYWORDS", tone: "lime" }] },
 )
 export const TubeExplorerChannelHealthRadar = createModule("SIGNAL DIAL", "A balance check across views, retention, revenue, subscribers, and engagement.", (d) => {
@@ -3144,20 +3186,37 @@ export const TubeExplorerVideoValueMatrix = createModule("VALUE MAP", "Views ver
 export const TubeExplorerSubNetFlow = createModule("NET SUBSCRIBERS", "Subscribers gained minus lost for each video.", (d) => <VideoBars rows={topVideos(d, "subscribersNet", 18, true)} metric="subscribersNet" color="#CCFF00" />, { color: "#FFEA00" })
 export const TubeExplorerContentDonut = createModule("FORMAT SPLIT", "How the channel breaks across Shorts, long-form, and everything else.", (d) => <Donut rows={[{ name: "Shorts", value: d.shorts.length }, { name: "Long", value: d.longform.length }, { name: "Other", value: d.videos.length - d.shorts.length - d.longform.length }]} />, { color: "#FFB158" })
 export const TubeExplorerPerformanceGauges = createModule(
- "PERFORMANCE GAUGES",
- "Core health snapshot rendered as target-relative gauge bars.",
- // Reroute to the real custom gauge-bar art in GraphsPageCharts.
- (_dataset, props) => <GraphsPerformanceGaugesModule data={props.data} renderBare />,
+ "TOP VIEWS",
+ "Ranked bars for the channel's highest-viewed videos.",
+ (dataset, props) => (
+  <VisualVersionToggle
+   storageKey="vt.tube-insight-toggle.performance-gauges"
+   renderCustom={() => <GraphsPerformanceGaugesModule data={props.data} renderBare />}
+   renderCompact={() => <VideoBars rows={topVideos(dataset, "views", 12)} metric="views" color="#00CCFF" />}
+  />
+ ),
  { color: "#B14AED" },
 )
 export const TubeExplorerRevenueWaterfall = createModule("REVENUE TIDE", "Revenue and watch hours rising with publish month.", (d) => <MonthlyArea dataset={d} a="revenue" b="watchHours" />, { color: "#42FF68" })
 export const TubeExplorerConversionFunnel = createModule("FUNNEL FLOW", "Impressions, views, engagement, watch hours, and subscribers in order.", (d) => <FunnelStages dataset={d} />, { color: "#00CCFF" })
 export const TubeExplorerUploadHeatmap = createModule(
- "UPLOAD TIME HEATMAP",
- "Weekday × hour density of upload activity, cell-shaded by count.",
- // Reroute to the real 7×24 custom-DIV heatmap in GraphsPageCharts (was a
- // simple 7-cell HeatGrid stand-in previously).
- (_dataset, props) => <GraphsUploadTimeHeatmapModule data={props.data} renderBare />,
+ "UPLOAD GRID",
+ "Views by day of week across the upload schedule.",
+ (dataset, props) => (
+  <VisualVersionToggle
+   storageKey="vt.tube-insight-toggle.upload-heatmap"
+   renderCustom={() => <GraphsUploadTimeHeatmapModule data={props.data} renderBare />}
+   renderCompact={() => (
+    <HeatGrid
+     cells={["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((label) => ({
+      label,
+      value: dataset.videos.filter((v) => v.dayKey === label).reduce((sum, v) => sum + v.views, 0),
+     }))}
+     empty="No dated rows available"
+    />
+   )}
+  />
+ ),
  { color: "#FF7497" },
 )
 
@@ -3166,11 +3225,15 @@ export const TubeExplorerChronoSpiral = createModule("TIME ORBIT", "Video ranks 
 export const TubeExplorerContentDNAGel = createModule("TOKEN GEL", "Keyword intensity strips across the channel.", (d) => <KeywordBlocks dataset={d} />, { color: "#B14AED" })
 export const TubeExplorerPerformanceWaveform = createModule("VIEW WAVE", "Views rising by publish month.", (d) => <MonthlyArea dataset={d} a="views" b="engagement" />, { color: "#00CCFF" })
 export const TubeExplorerOrbitalSystem = createModule(
- "ORBITAL",
- "Content categories arranged as planetary orbits around a central sun.",
- // Reroute to the real custom-DIV orbital art in GraphsPageCharts.
- // The previous <SvgRadial/> renderer stays exported and reachable.
- (_dataset, props) => <GraphsOrbitalModule data={props.data} renderBare />,
+ "ORBIT SCORE",
+ "Value-score rings arranged as a planetary system.",
+ (dataset, props) => (
+  <VisualVersionToggle
+   storageKey="vt.tube-insight-toggle.orbital-system"
+   renderCustom={() => <GraphsOrbitalModule data={props.data} renderBare />}
+   renderCompact={() => <SvgRadial rows={topVideos(dataset, "valueScore", 34)} metric="valueScore" />}
+  />
+ ),
  { color: "#FFB158" },
 )
 export const TubeExplorerLissajousWeb = createModule("RETENTION WEB", "Retention plotted against engagement rate.", (d) => <VideoScatter rows={topVideos(d, "views", 90)} x="retentionScore" y="engagementRate" />, { color: "#42FF68" })
