@@ -13,6 +13,8 @@
 !/api/
 !/scripts/
 !/tests/
+!/.github/
+!/governance/
 
 # Essential root configuration files
 !/package.json

@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { handleCompressAnalysisRoute } from "./media-compression.mjs";
 import { handleYouTubeAcquireRoute } from "./youtube-acquisition.mjs";
+import { getReleaseMetadata } from "./release-metadata.mjs";
 import { getAuthenticatedViewtubeUserId, handleAccountRoute } from "./account-auth.mjs";
 import {
   appendAiCreditLedgerEntry,
@@ -712,6 +713,10 @@ const server = http.createServer(async (req, res) => {
 
     if (await handleAccountRoute({ req, res, method, pathname, parsedUrl, json, readBody })) {
       return;
+    }
+
+    if (method === "GET" && pathname === "/api/release") {
+      return json(res, 200, getReleaseMetadata());
     }
 
     if (method === "GET" && pathname === "/api/projects") {
