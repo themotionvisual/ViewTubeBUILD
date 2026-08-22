@@ -1,23 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ChevronDown,
-  ChevronRight,
-  Download,
-  Edit3,
-  Layers,
-  Lock,
-  LockOpen,
   Menu,
   PanelLeft,
   PanelTop,
-  RotateCcw,
   Sparkles,
-  Upload,
   UserRound,
   X,
 } from "lucide-react"
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
-import { useDashboard } from "../../context/DashboardContext"
 import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
 import { useBrain } from "../../context/useBrain"
 // Direct import — the feature barrel would drag in the entire VT-SYNC engine
@@ -26,10 +17,12 @@ import { useBrain } from "../../context/useBrain"
 import { getVtSyncSnapshot } from "../../features/vt-sync-local/adapters/snapshot"
 import { isOwnerEmail, type EntitlementState } from "../../services/billingEntitlement"
 import { resolveAccountChipLabel } from "../../services/account/accountContracts"
+import { listGenerationRecords } from "../../services/generationStore"
 import { formatSyncLabel, getSyncTimestamp } from "../../services/onboardingState"
+import { getSuperTool } from "../../services/superToolRegistry"
 import { getNavPaletteColor, VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
-import { AccountActionButton } from "../account/AccountActionButton"
 import { GeminiKeySettings } from "../GeminiKeySettings"
+import { ApplicationAccountMenu, type ApplicationMenuRecentItem } from "./ApplicationAccountMenu"
 import {
   NAVIGATION_STORAGE_KEY,
   PRIMARY_NAV_ITEMS,
@@ -256,7 +249,6 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
 }) => {
   const location = useLocation()
   const navigate = useNavigate()
-  const dashboard = useDashboard()
   const account = useUnifiedAccount()
   const {
     brain,
@@ -275,7 +267,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   const [mobile, setMobile] = useState(isMobileViewport)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
-  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [geminiSettingsOpen, setGeminiSettingsOpen] = useState(false)
   const [announcement, setAnnouncement] = useState("")
   const accountButtonRef = useRef<HTMLButtonElement | null>(null)
   const accountMenuRef = useRef<HTMLDivElement | null>(null)
@@ -340,12 +332,48 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     ? 100
     : Math.max(0, Math.min(100, Math.round((Math.max(0, entitlement.creditBalance) / creditCap) * 100)))
   const canSeeApiKeys = entitlement.subscriptionPlanId === "executive" || isOwnerEmail(knownEmail())
+  const applicationMenuRecentItems = useMemo<ApplicationMenuRecentItem[]>(() => {
+    if (!accountOpen) return []
+
+    const items: ApplicationMenuRecentItem[] = []
+    const activeProject = brain.projects.find((project) => project.id === brain.activeProjectId)
+    if (activeProject) {
+      items.push({
+        id: `project-${activeProject.id}`,
+        label: activeProject.name || activeProject.videoTitle || "Current project",
+        description: "Current project workspace",
+        path: "/projects",
+        kind: "project",
+      })
+    }
+
+    const recentGeneration = listGenerationRecords().find((record) => record.status === "complete" && record.provider !== "mock")
+    const recentTool = recentGeneration ? getSuperTool(recentGeneration.toolId) : undefined
+    const publicSurfacePaths: Record<string, string> = {
+      studio: "/studio",
+      projects: "/projects",
+      editor: "/editor",
+      analytics: "/graphs",
+      brain: "/ai-brain",
+    }
+    const generationPath = recentTool?.visibility === "public" ? publicSurfacePaths[recentTool.surface] : undefined
+    if (recentGeneration && recentTool && generationPath) {
+      items.push({
+        id: `generation-${recentGeneration.id}`,
+        label: recentTool.title,
+        description: `Completed ${new Date(recentGeneration.updatedAt).toLocaleDateString()}`,
+        path: generationPath,
+        kind: "generation",
+      })
+    }
+
+    return items
+  }, [accountOpen, brain.activeProjectId, brain.projects])
   const shellLayout = mobile ? "mobile" : layout
   const isBrainWorkspace = location.pathname === "/ai-brain"
 
   const closeAccountMenu = (restoreFocus = false) => {
     setAccountOpen(false)
-    setAdvancedOpen(false)
     if (restoreFocus) requestAnimationFrame(() => accountButtonRef.current?.focus())
   }
 
@@ -383,6 +411,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     const onPointerDown = (event: MouseEvent) => {
       const target = event.target as Node
       if (accountMenuRef.current?.contains(target) || accountButtonRef.current?.contains(target)) return
+      if (target instanceof Element && target.closest('[data-state="open"]')) return
       closeAccountMenu()
     }
     document.addEventListener("mousedown", onPointerDown)
@@ -398,29 +427,6 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
       document.body.style.overflow = previousOverflow
     }
   }, [drawerOpen])
-
-  const onAccountMenuKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "Escape") {
-      event.preventDefault()
-      closeAccountMenu(true)
-      return
-    }
-    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return
-    const items = Array.from(
-      accountMenuRef.current?.querySelectorAll<HTMLElement>("[data-nav-menu-item]:not([disabled])") || [],
-    )
-    if (!items.length) return
-    event.preventDefault()
-    const currentIndex = items.indexOf(document.activeElement as HTMLElement)
-    const nextIndex = event.key === "Home"
-      ? 0
-      : event.key === "End"
-        ? items.length - 1
-        : event.key === "ArrowDown"
-          ? (currentIndex + 1 + items.length) % items.length
-          : (currentIndex - 1 + items.length) % items.length
-    items[nextIndex]?.focus()
-  }
 
   const onDrawerKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Escape") {
@@ -460,13 +466,6 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   const go = (path: string) => {
     closeAccountMenu()
     navigate(path)
-  }
-
-  const isDashboardRoute = location.pathname === "/"
-
-  const runDashboardMenuAction = (action: () => void) => {
-    closeAccountMenu()
-    action()
   }
 
   const renderPrimaryNavigation = (mobileDrawer = false) => (
@@ -513,9 +512,8 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
       onClick={() => {
         const willOpen = !accountOpen
         setAccountOpen(willOpen)
-        if (willOpen) requestAnimationFrame(() => accountMenuRef.current?.querySelector<HTMLElement>("[data-nav-menu-item]")?.focus())
       }}
-      aria-haspopup="menu"
+      aria-haspopup="dialog"
       aria-expanded={accountOpen}
       aria-controls="vt-adaptive-account-menu"
     >
@@ -552,9 +550,8 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
       onClick={() => {
         const willOpen = !accountOpen
         setAccountOpen(willOpen)
-        if (willOpen) requestAnimationFrame(() => accountMenuRef.current?.querySelector<HTMLElement>("[data-nav-menu-item]")?.focus())
       }}
-      aria-haspopup="menu"
+      aria-haspopup="dialog"
       aria-expanded={accountOpen}
       aria-controls="vt-adaptive-account-menu"
     >
@@ -571,124 +568,35 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   )
 
   const accountMenu = accountOpen ? (
-    <div
+    <ApplicationAccountMenu
       ref={accountMenuRef}
-      id="vt-adaptive-account-menu"
-      className="vt-adaptive-nav__account-menu"
-      role="menu"
-      aria-label="Account and workspace menu"
-      onKeyDown={onAccountMenuKeyDown}
-    >
-      <div className="vt-adaptive-nav__menu-status">
-        <span className="vt-adaptive-nav__avatar">
-          {channelAvatar ? <img src={channelAvatar} alt="" width="38" height="38" referrerPolicy="no-referrer" /> : (
-            (() => {
-            const initials = accountInitials(channelName)
-              return (
-                <span className="grid size-[38px] place-items-center rounded-full border-[2px] border-black bg-white text-[10px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0_0_#000]">
-                  {initials || <UserRound className="size-5 opacity-70" aria-hidden="true" />}
-                </span>
-              )
-            })()
-          )}
+      avatarNode={channelAvatar ? (
+        <img src={channelAvatar} alt="" width="38" height="38" referrerPolicy="no-referrer" />
+      ) : (
+        <span className="grid size-[38px] place-items-center rounded-full border-[2px] border-black bg-white text-[10px] font-black uppercase tracking-[0.08em] shadow-[2px_2px_0_0_#000]">
+          {accountInitials(channelName) || <UserRound className="size-5 opacity-70" aria-hidden="true" />}
         </span>
-        <span><strong>{channelName}</strong><small>{accountAuthenticated ? `${accountMeta} | ${syncLabel}` : "Popup login opens from any connect action"}</small></span>
-        <span className="vt-adaptive-nav__menu-meter">
-          <b>{label} · {credits}</b>
-          <i><i style={{ width: `${creditPercent}%` }} /></i>
-        </span>
-      </div>
-
-      <AccountActionButton
-        data-nav-menu-item
-        role="menuitem"
-        surface="topbar"
-        channelSyncing={channelConnection.state === "syncing"}
-        onConnected={() => go("/account#workspace-data")}
-        onLegacyAction={onLegacyAccountAction}
-        className="vt-adaptive-nav__connect-action"
-      />
-
-      <div className="vt-adaptive-nav__menu-groups">
-        <section aria-label="Account">
-          <h2>Account</h2>
-          <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/account")}><span>Account Settings</span><ChevronRight aria-hidden="true" /></button>
-          <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/account?panel=billing")}><span>Billing & Credits</span><ChevronRight aria-hidden="true" /></button>
-        </section>
-
-        {isDashboardRoute ? (
-          <section aria-label="Dashboard layout">
-            <h2>Dashboard Layout</h2>
-            <button
-              data-nav-menu-item
-              role="menuitem"
-              type="button"
-              onClick={() => runDashboardMenuAction(() => dashboard.setEditMode((prev) => !prev))}
-            >
-              <span>{dashboard.editMode ? "Exit Rearrange Mode" : "Rearrange Widgets"}</span>
-              <Edit3 aria-hidden="true" />
-            </button>
-            <button
-              data-nav-menu-item
-              role="menuitem"
-              type="button"
-              onClick={() => runDashboardMenuAction(dashboard.toggleLock)}
-            >
-              <span>{dashboard.isLocked ? "Unlock Layout" : "Lock Layout"}</span>
-              {dashboard.isLocked ? <LockOpen aria-hidden="true" /> : <Lock aria-hidden="true" />}
-            </button>
-            <button data-nav-menu-item role="menuitem" type="button" onClick={() => runDashboardMenuAction(() => dashboard.setPickerOpen(true))}>
-              <span>Add Or Hide Widgets</span>
-              <Layers aria-hidden="true" />
-            </button>
-            <button data-nav-menu-item role="menuitem" type="button" onClick={() => runDashboardMenuAction(dashboard.exportLayout)}>
-              <span>Export Layout</span>
-              <Download aria-hidden="true" />
-            </button>
-            <button data-nav-menu-item role="menuitem" type="button" onClick={() => runDashboardMenuAction(dashboard.importLayout)}>
-              <span>Import Layout</span>
-              <Upload aria-hidden="true" />
-            </button>
-            <button data-nav-menu-item role="menuitem" type="button" onClick={() => runDashboardMenuAction(dashboard.resetLayout)}>
-              <span>Reset Layout</span>
-              <RotateCcw aria-hidden="true" />
-            </button>
-          </section>
-        ) : null}
-
-        <section aria-label="Help">
-          <h2>Help</h2>
-          <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/user-guide")}><span>User Guide</span><ChevronRight aria-hidden="true" /></button>
-          <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/about")}><span>About ViewTube</span><ChevronRight aria-hidden="true" /></button>
-        </section>
-
-        <section aria-label="Advanced" className="vt-adaptive-nav__menu-advanced">
-          <button
-            type="button"
-            className="vt-adaptive-nav__menu-advanced-toggle"
-            aria-expanded={advancedOpen}
-            onClick={() => setAdvancedOpen((value) => !value)}
-          >
-            <span>Advanced</span>
-            <ChevronDown aria-hidden="true" />
-          </button>
-          {advancedOpen ? (
-            <div className="vt-adaptive-nav__submenu">
-              <GeminiKeySettings trigger={
-                <button data-nav-menu-item role="menuitem" type="button"><span>Use Your Own AI Key</span><ChevronRight aria-hidden="true" /></button>
-              } />
-              {canSeeApiKeys ? (
-                <button data-nav-menu-item role="menuitem" type="button" onClick={() => go("/account")}><span>API Keys</span><ChevronRight aria-hidden="true" /></button>
-              ) : null}
-            </div>
-          ) : null}
-        </section>
-      </div>
-
-      {accountAuthenticated || isConnected ? (
-        <button data-nav-menu-item role="menuitem" type="button" className="vt-adaptive-nav__sign-out" onClick={() => void onSignOut()}>Sign Out</button>
-      ) : null}
-    </div>
+      )}
+      channelName={channelName}
+      accountMeta={accountMeta}
+      syncLabel={syncLabel}
+      accountAuthenticated={accountAuthenticated}
+      planLabel={label}
+      creditsLabel={credits}
+      creditPercent={creditPercent}
+      channelSyncing={channelConnection.state === "syncing"}
+      recentItems={applicationMenuRecentItems}
+      canSeeApiKeys={canSeeApiKeys}
+      onConnected={() => go("/account#workspace-data")}
+      onLegacyAccountAction={onLegacyAccountAction}
+      onOpenGeminiSettings={() => {
+        closeAccountMenu()
+        setGeminiSettingsOpen(true)
+      }}
+      onNavigate={go}
+      onSignOut={onSignOut}
+      onRequestClose={closeAccountMenu}
+    />
   ) : null
 
   const logo = (
@@ -767,6 +675,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
         <div className="vt-adaptive-legal"><a href="/privacy.html">Privacy Policy</a><span>|</span><a href="/terms.html">Terms of Service</a></div>
       ) : null}
       <span className="vt-adaptive-announcement" role="status" aria-live="polite">{announcement}</span>
+      <GeminiKeySettings open={geminiSettingsOpen} onOpenChange={setGeminiSettingsOpen} />
     </div>
   )
 }
