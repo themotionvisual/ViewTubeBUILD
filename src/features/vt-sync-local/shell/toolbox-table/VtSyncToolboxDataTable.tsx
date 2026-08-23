@@ -6,6 +6,9 @@ import React, {
  useRef,
  useState,
 } from "react"
+// QW#11 export scrubber: strip token/apiKey/cookie/session keys from any
+// exported payload so secrets never leave the browser inside a downloaded file.
+import { stringifyForExport } from "../../../../services/exports/sanitizeForExport"
 import {
  Activity,
  ChevronDown,
@@ -416,8 +419,10 @@ const downloadCsv = (name: string, csv: string) => {
 }
 
 const downloadJson = (name: string, value: unknown) => {
+ // QW#11 — scrub secret-shaped keys (tokens, api keys, cookies, session ids)
+ // before the payload leaves the browser. See services/exports/sanitizeForExport.
  const url = URL.createObjectURL(
-  new Blob([JSON.stringify(value, null, 2)], { type: "application/json;charset=utf-8" }),
+  new Blob([stringifyForExport(value, 2)], { type: "application/json;charset=utf-8" }),
  )
  const anchor = document.createElement("a")
  anchor.href = url
