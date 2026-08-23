@@ -4,7 +4,7 @@ export type VtSyncVisualStyleSpec = {
 
 export const VT_SYNC_VISUAL_STYLE_REGISTRY: Readonly<Record<string, VtSyncVisualStyleSpec>> = Object.freeze({
   "combo-channel-progress": { iconKey: "center_focus_weak_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48" },
-  "engagement-lines": { iconKey: "!!!A:B-TESTING" },
+  "engagement-lines": { iconKey: "AB-TESTING" },
   "top-performers-trio": { iconKey: "video" },
   "format-comparison-donuts": { iconKey: "layers" },
   "shorts-retention-widget": { iconKey: "video" },
@@ -17,7 +17,7 @@ export const VT_SYNC_VISUAL_STYLE_REGISTRY: Readonly<Record<string, VtSyncVisual
   "watch-time-distribution": { iconKey: "volume" },
   "video-value-matrix": { iconKey: "database" },
   "growth-pulse": { iconKey: "cloud" },
-  "signal-matrix": { iconKey: "!!!A:B-TESTING" },
+  "signal-matrix": { iconKey: "AB-TESTING" },
   "custom-scatter": { iconKey: "!!!POST-IMAGE" },
   "traffic-source-evolution": { iconKey: "!!!TRAFIC" },
   "keyword-treemap": { iconKey: "!!!TEXT" },
@@ -34,7 +34,7 @@ export const VT_SYNC_VISUAL_STYLE_REGISTRY: Readonly<Record<string, VtSyncVisual
   "vt2-video-fingerprint": { iconKey: "database" },
   "vt2-channel-big-bang": { iconKey: "cloud" },
   "vt2-trajectory-forecaster": { iconKey: "zap" },
-  "vt2-multi-metric-timeline": { iconKey: "!!!A:B-TESTING" },
+  "vt2-multi-metric-timeline": { iconKey: "AB-TESTING" },
 
   "tube-explorer-clock-radial-burst": { iconKey: "calendar" },
   "tube-explorer-barcode-fingerprint": { iconKey: "database" },
@@ -52,7 +52,7 @@ export const VT_SYNC_VISUAL_STYLE_REGISTRY: Readonly<Record<string, VtSyncVisual
   "tube-explorer-publish-optimal-clock": { iconKey: "calendar" },
   "tube-explorer-sankey-river-delta": { iconKey: "!!!TRAFIC" },
   "tube-explorer-title-word-network": { iconKey: "!!!TEXT" },
-  "tube-explorer-channel-vital-signs": { iconKey: "!!!A:B-TESTING" },
+  "tube-explorer-channel-vital-signs": { iconKey: "AB-TESTING" },
   "tube-explorer-thermal-imaging": { iconKey: "!!!PALETTE" },
   "tube-explorer-keyword-treemap": { iconKey: "!!!TEXT" },
   "tube-explorer-channel-health-radar": { iconKey: "headset" },

@@ -85,7 +85,7 @@ const VISUAL_ICON_MAP: Readonly<Record<string, LucideIcon>> = Object.freeze({
   "center-focus": Target,
   wand: WandSparkles,
   "!!!REVENUE": CircleDollarSign,
-  "!!!A:B-TESTING": Binary,
+  "AB-TESTING": Binary,
   "!!!SUBSCRIBERS": Users,
   "!!!TRAFIC": Share2,
   "!!!TEXT": FileText,
