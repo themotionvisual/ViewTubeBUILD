@@ -166,3 +166,42 @@
     line-height: 1 !important;
   }
 }
+
+/* -------------------------------------------------------------------- */
+/* HARD CAP: outer toolbox height on mobile to satisfy "2-3 visible"    */
+/* -------------------------------------------------------------------- */
+/*
+ * The previous rules on `data-vt-chart-body` shrank the CHART BODY DIV
+ * but the visual's own content (Heat Matrix's tile grid + COLD/HOT bar
+ * + "HOW TO READ" legend, and analogous parts of other visuals) still
+ * overflowed past that div — those elements have their own intrinsic
+ * heights that our chart-body cap cannot override without breaking
+ * their internal layout.
+ *
+ * Cap the OUTER `.vt-toolbox` (every visual card renders with this
+ * class + `data-vt-toolbox`) so the card itself is at most ~44svh in
+ * portrait / ~70svh in landscape. Anything the visual would render
+ * taller gets clipped by `overflow: hidden`. This guarantees the
+ * "2-3 per portrait screen" spec regardless of what each visual's
+ * internal layout does.
+ *
+ * A small `data-vt-toolbox-uncapped` escape hatch skips the cap for any
+ * toolbox where clipping is unacceptable (e.g. data tables, chat).
+ *
+ * NB: this is a stopgap. The proper fix is per-visual responsive
+ * layouts (smaller tiles, hidden legends, collapsed metric rows) so
+ * the visual fits into the frame naturally. That's tracked as a
+ * follow-up per-component pass.
+ */
+@media (max-width: 767px) and (orientation: portrait) {
+  .vt-toolbox:not([data-vt-toolbox-uncapped]) {
+    max-height: 44svh !important;
+    overflow: hidden !important;
+  }
+}
+@media (max-width: 900px) and (orientation: landscape) {
+  .vt-toolbox:not([data-vt-toolbox-uncapped]) {
+    max-height: 70svh !important;
+    overflow: hidden !important;
+  }
+}
