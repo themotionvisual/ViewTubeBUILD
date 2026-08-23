@@ -60,6 +60,16 @@
    fixed 28px black bar) is hidden — it otherwise overlaps content on the right. */
 .vt-adaptive-shell[data-layout="mobile"] .vt-app-scroll-track { display: none; }
 
+/* QW#6 — Suppress the custom scrollbar on any coarse-pointer / touch-first
+   device (iPad, touch laptop, kiosk display), not only when the layout mode
+   is `mobile`. Users on those devices have overlay scrollbars and finger
+   scrolling; a 28 px draggable rail wastes real estate and eats touches. */
+@media (hover: none) and (pointer: coarse) {
+  .vt-app-scroll-track {
+    display: none !important;
+  }
+}
+
 .vt-adaptive-shell[data-layout="top"] {
   grid-template: var(--vt-nav-top-height) minmax(0, 1fr) / minmax(0, 1fr);
 }
