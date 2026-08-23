@@ -1,4 +1,7 @@
 // src/context/GlobalDataContext.tsx
+// isLoginAbortError now lives in services/auth/loginErrors so VtSyncControllerPanel
+// (and any other login catch site) can classify aborts the same way.
+import { isLoginAbortError } from "../services/auth/loginErrors"
 import React, {
  useState,
  useCallback,
@@ -82,15 +85,6 @@ const isUnauthorizedError = (error: unknown): boolean => {
  )
 }
 
-const isLoginAbortError = (error: unknown): boolean => {
- const message = String((error as { message?: unknown } | null)?.message || error || "").toLowerCase()
- return (
-  message.includes("popup") ||
-  message.includes("timed out") ||
-  message.includes("cancel") ||
-  message.includes("aborted")
- )
-}
 
 const ensureLoginToken = (): string => {
  const token = unifiedAuth.getAccessToken()
