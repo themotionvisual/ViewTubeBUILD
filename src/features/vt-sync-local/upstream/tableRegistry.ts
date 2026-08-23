@@ -638,12 +638,26 @@ export const VT_SYNC_LEGACY_TABLE_REDIRECTS: Readonly<Record<string, string>> = 
  chan_page: "traffic_detail_channel_pages",
  other_feat: "traffic_detail_other_features",
  traffic_subscribers: "traffic_detail_traffic_subscribers",
- traffic_campaign_card: "traffic_detail_traffic_campaign_card",
- traffic_notification: "traffic_detail_traffic_notification",
- traffic_end_screen: "traffic_detail_traffic_end_screen",
- traffic_live_redirect: "traffic_detail_traffic_live_redirect",
- traffic_playlist: "traffic_detail_traffic_playlist",
- traffic_yt_playlist_page: "traffic_detail_traffic_yt_playlist_page",
+ // The six entries below originally pointed at `traffic_detail_traffic_*`
+ // tables that only exist when the source's `reportAvailability` is `"channel"`
+ // AND its `requiredCapability` (if any) is satisfied. Five of those sources
+ // are marked `unsupported_channel_report` / `per_video_unvalidated`, and
+ // `traffic_campaign_card` requires a content-owner grant that's disabled by
+ // default (`VITE_YOUTUBE_CONTENT_OWNER_DISCOVERY_ENABLED !== "true"`). The
+ // build filter in `trafficDetailRegistry.getVtSyncAvailableTrafficDetailSources`
+ // strips them, so the specific `traffic_detail_traffic_*` targets aren't
+ // generated in `VT_SYNC_TABLE_DEFINITIONS` — the redirects landed on
+ // undefined tables. Redirect them to the generic `traffic_details` catch-all
+ // so persisted UI state / bookmarks with these legacy IDs still resolve to a
+ // valid, always-defined table instead of blowing up downstream.
+ //
+ // Regression: covered by tableRegistryMapping.audit.test.ts (vt-2643).
+ traffic_campaign_card: "traffic_details",
+ traffic_notification: "traffic_details",
+ traffic_end_screen: "traffic_details",
+ traffic_live_redirect: "traffic_details",
+ traffic_playlist: "traffic_details",
+ traffic_yt_playlist_page: "traffic_details",
 }
 
 export const resolveVtSyncCanonicalTableId = (tableId: string): string =>
