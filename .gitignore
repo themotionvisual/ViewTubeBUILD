@@ -27,6 +27,7 @@
 !/index.html
 !/.gitignore
 !/README.md
+!/CLAUDE.md
 !/.env.billing.example
 !/.vercelignore
 !/skills-lock.json
