@@ -7,6 +7,10 @@
    the rules land in the global stylesheet regardless of which route mounts. */
 @import "./styles/mobileOrientation.css";
 
+/* Quick-wins performance utilities: content-visibility for offscreen modules
+   (QW#8) and container-query density tokens (QW#10). */
+@import "./styles/perf.css";
+
 html,
 body,
 #root {

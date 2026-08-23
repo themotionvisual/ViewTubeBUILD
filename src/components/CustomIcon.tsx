@@ -56,7 +56,7 @@ const iconMap: Record<string, string> = {
   eye: '!!!GENERATE1.svg',
   'eye-off': '!!!DELETE.svg',
   audio: 'mic_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',
-  '!!!A:B-TESTING': '!!!A:B-TESTING.svg',
+  'AB-TESTING': 'AB-TESTING.svg',
   '!!!TRAFIC': '!!!TRAFIC.svg',
   '!!!REVENUE': '!!!REVENUE.svg',
   '!!!SUBSCRIBERS': '!!!SUBSCRIBERS.svg',

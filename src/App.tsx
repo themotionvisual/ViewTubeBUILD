@@ -8,6 +8,7 @@ import { InitialChannelBootstrapProvider } from "./context/InitialChannelBootstr
 import { GeminiKeyProvider } from "./context/GeminiKeyContext"
 import { AppShell } from "./app/AppShell"
 import { AppRoutes } from "./app/AppRoutes"
+import { ScrollToTop } from "./app/ScrollToTop"
 import { recordBootPhase } from "./app/onScreenDiagnostics"
 
 const DARK_THEME_CSS = `
@@ -58,9 +59,13 @@ function AppInner() {
  }
 
  return (
-  <AppShell>
-   <AppRoutes />
-  </AppShell>
+  <>
+   {/* QW#7 — reset scroll position on route change (hash navigation exempted). */}
+   <ScrollToTop />
+   <AppShell>
+    <AppRoutes />
+   </AppShell>
+  </>
  )
 }
 

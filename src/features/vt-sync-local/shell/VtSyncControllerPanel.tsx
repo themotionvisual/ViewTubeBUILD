@@ -5,6 +5,9 @@ import { getPaletteColor } from "../../../styles/toolboxPalette"
 import { RetroRivets } from "./VtSyncRetroChrome"
 import type { VtSyncCategoryGroup, VtSyncDatasetFreshness } from "../adapters/contracts"
 import { selectVtSyncBaseRetentionVideos } from "../adapters/retentionSelection"
+// QW#2 — classify LOGIN_ABORTED / AbortError / popup-closed rejections so
+// mid-flow user cancels don't propagate as unhandled promise rejections.
+import { isLoginAbortError } from "../../../services/auth/loginErrors"
 import {
  expandVtSyncCategoryDependencies,
  filterVtSyncVisibleCategoryIds,
@@ -119,12 +122,25 @@ export const VtSyncControllerPanel: React.FC<{
  }
 
  const start = async () => {
-  if (!isAuthenticated) await onLogin()
+  if (!isAuthenticated) {
+   try { await onLogin() } catch (error) {
+    if (isLoginAbortError(error)) return
+    throw error
+   }
+   // Post-login auth check — user may have cancelled mid-flow.
+   if (!isAuthenticated) return
+  }
   await onStartSync(expandVtSyncCategoryDependencies(filterVtSyncVisibleCategoryIds(selected)), retentionEnabled ? retentionVideoIds : undefined)
  }
 
  const startCategories = async (categoryIds: string[], includeRetentionVideoIds = false, forceFullVideoMetadata = false) => {
-  if (!isAuthenticated) await onLogin()
+  if (!isAuthenticated) {
+   try { await onLogin() } catch (error) {
+    if (isLoginAbortError(error)) return
+    throw error
+   }
+   if (!isAuthenticated) return
+  }
   const expanded = expandVtSyncCategoryDependencies(categoryIds)
   await onStartSync(expanded, includeRetentionVideoIds ? retentionVideoIds : undefined, forceFullVideoMetadata)
  }

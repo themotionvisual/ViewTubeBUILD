@@ -33,6 +33,6 @@
   "exclude": [
     "src/_parking/**/*",
     "_quarantine/**/*",
-    "src/remotion-editor/remotion.config.ts"
+    "src/remotion-editor/**/*"
   ]
 }
