@@ -1,0 +1,89 @@
+/* Performance utilities from the quick-wins doc.
+   Loaded from index.css so the rules land globally. */
+
+/* -------------------------------------------------------------------- */
+/* QW#8 — content-visibility for offscreen analytics modules            */
+/* -------------------------------------------------------------------- */
+/*
+ * `content-visibility: auto` skips layout + paint work for elements that
+ * are offscreen, then re-runs it when they scroll into view. On a page
+ * with many heavy modules (Performance Hub, Reference Studio, the Tube
+ * Explorer visuals grid) this cuts initial paint work dramatically.
+ *
+ * `contain-intrinsic-size` is required — it tells the layout engine what
+ * size to reserve for the skipped element so the scrollbar stays stable.
+ * Wrong estimates cause visible jumps as content scrolls in; the values
+ * below are calibrated to the average module height observed in the app.
+ *
+ * Applied to `.vt-toolbox` because every Toolbox scaffold outer wrapper
+ * already carries that class + `data-vt-toolbox` attribute. Toolboxes
+ * are self-contained with `overflow-hidden` (unless overflowVisible was
+ * requested), so content-visibility is safe here.
+ *
+ * The narrow-viewport skip is deliberate: on phones, sticky headers and
+ * short scroll heights make content-visibility less useful and more
+ * likely to cause jank. Desktop is where the win is.
+ */
+@media (min-width: 768px) {
+  .vt-toolbox {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 420px;
+  }
+  /* Explicit opt-in classes for callers that know their module is bigger
+     or is a data table (both need a taller reservation to avoid jumps). */
+  .vt-cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 420px;
+  }
+  .vt-cv-auto--large {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 620px;
+  }
+  .vt-cv-auto--table {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 700px;
+  }
+  /* Opt OUT for a single Toolbox where content-visibility hides sticky
+     descendants or breaks layout. Add `data-vt-cv-opt-out` on the
+     Toolbox element and this rule wins. */
+  .vt-toolbox[data-vt-cv-opt-out] {
+    content-visibility: visible;
+    contain-intrinsic-size: none;
+  }
+}
+
+/* -------------------------------------------------------------------- */
+/* QW#10 — container-query density tokens                               */
+/* -------------------------------------------------------------------- */
+/*
+ * Modules that opt in via `.vt-density-container` become their own
+ * container-query root. Density variables shrink as the container
+ * narrows — regardless of viewport width. That's what you want on a
+ * dashboard where a wide viewport still has a narrow column.
+ *
+ * Consumers use the tokens via `var(--vt-control-height)` etc. Existing
+ * hard-coded values continue to work; adopting tokens is opt-in per
+ * component so this rollout is zero-risk.
+ */
+.vt-density-container {
+  container-type: inline-size;
+  --vt-control-height: 34px;
+  --vt-header-size: 15px;
+  --vt-gap: 10px;
+}
+
+@container (max-width: 520px) {
+  .vt-density-container {
+    --vt-control-height: 30px;
+    --vt-header-size: 13px;
+    --vt-gap: 7px;
+  }
+}
+
+@container (max-width: 360px) {
+  .vt-density-container {
+    --vt-control-height: 27px;
+    --vt-header-size: 12px;
+    --vt-gap: 5px;
+  }
+}
