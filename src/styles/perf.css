@@ -205,3 +205,39 @@
     overflow: hidden !important;
   }
 }
+
+/* -------------------------------------------------------------------- */
+/* HARD CAP: RevealOnView per-visual card on the VT-Sync analytics page */
+/* -------------------------------------------------------------------- */
+/*
+ * The `.vt-toolbox` cap above only affects Toolbox scaffolds. On the VT-Sync
+ * local analytics page (viewtube.live/local-analytics), each visual is
+ * wrapped in a `RevealOnView` div — NOT a `.vt-toolbox`. That wrapper had
+ * only inline styles and no class, so nothing CSS-side could reach it.
+ *
+ * VtSyncDataVisualsToolbox.tsx now tags every RevealOnView wrapper with
+ * `data-vt-visual-card`. Cap those directly here.
+ *
+ * Portrait mobile: max 44svh per card, overflow hidden. Landscape: 70svh.
+ * Also override the inline `min-height: 360px` estimatedHeight that
+ * RevealOnView sets before content loads — on mobile the reserved space
+ * would otherwise still leave every card starting at 360px minimum.
+ */
+@media (max-width: 767px) and (orientation: portrait) {
+  [data-vt-visual-card] {
+    max-height: 44svh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    /* Cancel the containIntrinsicSize reservation too, or the browser
+       still leaves that much room for skipped (offscreen) cards. */
+    contain-intrinsic-size: 44svh !important;
+  }
+}
+@media (max-width: 900px) and (orientation: landscape) {
+  [data-vt-visual-card] {
+    max-height: 70svh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    contain-intrinsic-size: 70svh !important;
+  }
+}

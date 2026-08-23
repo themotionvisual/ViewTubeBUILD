@@ -391,6 +391,11 @@ const RevealOnView: React.FC<{
  return (
   <div
    ref={setNode}
+   /* data-vt-visual-card is the CSS handle used by styles/perf.css to cap
+      each analytics visual to a fraction of the viewport on mobile so 2-3
+      fit per portrait screen. Without a stable data attribute, the mobile
+      cap couldn't reach this wrapper — it has no class. */
+   data-vt-visual-card
    style={{
     minHeight: visible ? undefined : estimatedHeight,
     opacity: 1,
