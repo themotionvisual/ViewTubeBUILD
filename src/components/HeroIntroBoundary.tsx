@@ -150,7 +150,18 @@ export const HeaderHeroPlayButton: React.FC<{
     variantCount > 1
       ? `Replay animation — ${variantCount} variants`
       : "Replay animation"
-  const cycleLabel = ["OPENER", "QUICK REPLAY", "CREATIVE ALT"][variant] ?? "REPLAY"
+  // Extended to 7 slots for visuals that carry 4 additional variants beyond
+  // the original opener/replay/alt triad. Baseline (3-variant) visuals still
+  // only surface the first three labels.
+  const cycleLabel = [
+    "OPENER",
+    "QUICK REPLAY",
+    "CREATIVE ALT",
+    "PHYSICS ALT",
+    "STYLE ALT",
+    "MOTION ALT",
+    "FLOURISH",
+  ][variant] ?? "REPLAY"
 
   return (
     <div

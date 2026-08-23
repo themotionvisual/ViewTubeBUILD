@@ -101,3 +101,7 @@ pnpm-debug.log*
 .gemini/
 gha-creds-*.json
 .env.local
+
+# Inventory outputs generated on demand by scripts/inventory/source-inventory.mjs.
+# They are for manual review, not for git history.
+scripts/inventory/reports/
