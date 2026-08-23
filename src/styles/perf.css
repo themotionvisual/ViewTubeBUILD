@@ -111,23 +111,58 @@
  * a preference. Consumers who want to opt out can add
  * `data-vt-chart-body-fixed` to skip the override.
  */
-@media (max-width: 767px) {
+/* Portrait phone: user requirement is "2-3 visuals visible per screen
+   height". A typical portrait viewport is ~800svh; each visual eats:
+       header  ~50px  +  3 controllers ~90px stacked  +  stat row ~40px
+     + chart body  +  legend/footer ~20px  ≈  200 + chart body.
+   Aim for chart body ~150-170px so total ~350-370px, fitting ~2 cards
+   comfortably (with header of the next one peeking in). The floor rises
+   with viewport to keep tablets useful. */
+@media (max-width: 767px) and (orientation: portrait) {
   [data-vt-chart-body]:not([data-vt-chart-body-fixed]) {
     height: auto !important;
     aspect-ratio: 16 / 10;
-    min-height: 220px !important;
-    max-height: 60svh !important;
+    min-height: 140px !important;
+    max-height: 28svh !important;
+  }
+  /* Also override the StableChartFrame min-h-[300px] Tailwind rule that
+     otherwise re-inflates the chart body. Any descendant with a min-h-[…]
+     Tailwind arbitrary height loses that floor on portrait mobile. */
+  [data-vt-chart-body] [class*="min-h-["] {
+    min-height: 0 !important;
   }
 }
 
-/* Landscape orientation on phones typically means < 500px tall total. The
-   plain 60svh cap is still often too tall — half the screen makes it hard
-   to see the shell chrome that surrounds it. Tighten to 82svh of the
-   short-axis so the controllers and stat row above stay visible. */
+/* Landscape phone: the whole viewport height is smaller (~400-500 CSS
+   px), so a 28svh chart would be tiny AND the shell chrome now competes
+   for the same height. Chart takes ~55% of viewport height, cap by width
+   so it never grows wider than 90vw. */
 @media (max-width: 900px) and (orientation: landscape) {
   [data-vt-chart-body]:not([data-vt-chart-body-fixed]) {
-    aspect-ratio: 16 / 8;
-    max-height: 82svh !important;
-    min-height: 180px !important;
+    height: auto !important;
+    aspect-ratio: 16 / 7;
+    min-height: 140px !important;
+    max-height: 55svh !important;
+  }
+  [data-vt-chart-body] [class*="min-h-["] {
+    min-height: 0 !important;
+  }
+}
+
+/* Also shrink the whole ModuleFrame shell on portrait phones so the
+   header + controllers + stat row don't eat 200 px per visual: reduce
+   header type, tighten controller vertical padding, drop the stat row
+   line-height. All limited to `.vt-toolbox` inside a mobile viewport so
+   nothing bleeds to desktop. */
+@media (max-width: 767px) and (orientation: portrait) {
+  .vt-toolbox header {
+    /* Tightens the 74-90 px header row that ships out of the box. */
+    min-height: 44px !important;
+    height: 44px !important;
+  }
+  .vt-toolbox header h3,
+  .vt-toolbox header h1 {
+    font-size: 20px !important;
+    line-height: 1 !important;
   }
 }
