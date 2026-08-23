@@ -87,3 +87,47 @@
     --vt-gap: 5px;
   }
 }
+
+/* -------------------------------------------------------------------- */
+/* QW#9 — Responsive Tube Explorer chart-body heights on mobile         */
+/* -------------------------------------------------------------------- */
+/*
+ * Tube Explorer visuals (Heat Matrix, Barcode, Clock Burst, etc.) render
+ * their chart body inside a `<div data-vt-chart-body style="height:XXXpx">`
+ * with a fixed pixel height that ModuleFrame receives via its `height`
+ * prop (default 320, some visuals pass 400+).
+ *
+ * On mobile that fixed height, added to the shell chrome (header + 3
+ * dropdown controllers + stat row + legend/footer), consumed roughly the
+ * whole viewport — every visual read as "too tall" and forced the user
+ * to scroll past a single card per screen in both portrait AND landscape.
+ *
+ * Override the inline pixel height on narrow viewports with an
+ * aspect-ratio-first sizing: chart is 16/10 of its width, clamped by
+ * a floor (so it never collapses on very narrow phones) and a ceiling
+ * (so it never exceeds a share of the viewport height on the given
+ * orientation). Uses !important because the inline `style="height:…"`
+ * would otherwise win, and the sizing is a real accessibility fix, not
+ * a preference. Consumers who want to opt out can add
+ * `data-vt-chart-body-fixed` to skip the override.
+ */
+@media (max-width: 767px) {
+  [data-vt-chart-body]:not([data-vt-chart-body-fixed]) {
+    height: auto !important;
+    aspect-ratio: 16 / 10;
+    min-height: 220px !important;
+    max-height: 60svh !important;
+  }
+}
+
+/* Landscape orientation on phones typically means < 500px tall total. The
+   plain 60svh cap is still often too tall — half the screen makes it hard
+   to see the shell chrome that surrounds it. Tighten to 82svh of the
+   short-axis so the controllers and stat row above stay visible. */
+@media (max-width: 900px) and (orientation: landscape) {
+  [data-vt-chart-body]:not([data-vt-chart-body-fixed]) {
+    aspect-ratio: 16 / 8;
+    max-height: 82svh !important;
+    min-height: 180px !important;
+  }
+}

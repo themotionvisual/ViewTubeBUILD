@@ -46,9 +46,28 @@ export const InitialChannelBootstrapProvider: React.FC<{ children: React.ReactNo
  // Connected creators get channel overview immediately. A later first real
  // action on each local calendar day forces fresh overview/totals without
  // repeatedly starting work for every click.
+ //
+ // Mobile freeze fix (2026-08-23): the immediate post-login refresh(false)
+ // used to fire synchronously as soon as `authorized` flipped true, which
+ // on mobile blocked the main thread hard enough to freeze the hamburger
+ // menu and every other interactive element for the several hundred ms of
+ // network + parse. Defer via requestIdleCallback (matching the same-day
+ // manual-refresh path below) so the login-success UI animation, the
+ // channel-chip render, and the drawer / tool buttons stay tappable while
+ // the bootstrap does its thing in the background.
  useEffect(() => {
   if (!enabled || !authorized) return
-  void refresh(false)
+  const defer = typeof window !== "undefined" && typeof window.requestIdleCallback === "function"
+   ? window.requestIdleCallback
+   : (cb: () => void) => setTimeout(cb, 0)
+  const handle = defer(() => void refresh(false))
+  return () => {
+   if (typeof window !== "undefined" && typeof window.cancelIdleCallback === "function" && typeof handle === "number") {
+    window.cancelIdleCallback(handle)
+   } else if (typeof handle === "number") {
+    clearTimeout(handle)
+   }
+  }
  }, [authorized, channelId, enabled, refresh])
 
  useEffect(() => {
