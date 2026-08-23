@@ -9,6 +9,9 @@ import React, {
 // QW#11 export scrubber: strip token/apiKey/cookie/session keys from any
 // exported payload so secrets never leave the browser inside a downloaded file.
 import { stringifyForExport } from "../../../../services/exports/sanitizeForExport"
+// vt-2508/vt-2217 — shared YouTube thumbnail helper with fallback chain +
+// per-session failed-URL dedup registry.
+import { firstYouTubeThumbnailCandidate } from "../../../../services/youtube/thumbnailFallback"
 import {
  Activity,
  ChevronDown,
@@ -5346,10 +5349,14 @@ const retentionDisplayColumns = useMemo(() => {
           retentionVideoMetadata.get(group.videoId.toLocaleLowerCase()) ||
           retentionVideoMetadata.get(group.videoId)
          const metadataTitle = metadata?.title ? String(metadata.title) : ""
+         // vt-2508/vt-2217 — route through the shared thumbnail fallback so a
+         // failed maxres/hq720 URL falls through to hqdefault/mqdefault instead
+         // of showing a broken image, and dedupes against the shared failed-URL
+         // registry so we don't refetch the same broken URL every render.
          const metadataThumbnail =
           metadata?.thumbnail || metadata?.thumbnailUrl ?
            String(metadata.thumbnail || metadata.thumbnailUrl)
-          : `https://i.ytimg.com/vi/${encodeURIComponent(group.videoId)}/mqdefault.jpg`
+          : firstYouTubeThumbnailCandidate(group.videoId)
          const videoUrl = `https://www.youtube.com/watch?v=${encodeURIComponent(group.videoId)}`
          const durationSeconds = metadata?.duration ?
           parseVtSyncDurationSeconds(metadata.duration, "duration")
