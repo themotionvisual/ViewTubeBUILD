@@ -279,7 +279,13 @@ const ModuleFrame: React.FC<{
      ? `mx-auto h-full w-full max-w-none ${insightDark ? "bg-[#0a0a1a]" : ""}`
      : `mx-auto w-full max-w-[1080px] border-[3px] border-black p-2 ${insightDark ? "bg-[#0a0a1a]" : "bg-white"}`
    }
-   style={{ height: boundedHeight }}>
+   /* Mobile responsive height: chart body uses a natural 16/10 aspect ratio
+      up to the desktop `boundedHeight`, and never taller than 70vh on any
+      viewport. Prevents the "too tall in both orientations" mobile look
+      that made every visual eat the entire screen. See styles/perf.css for
+      the media-query rules. */
+   data-vt-chart-body
+   style={{ height: boundedHeight, '--vt-chart-max-height': boundedHeight } as React.CSSProperties}>
    {stableChartFrame ? (
     <StableChartFrame minHeightClassName="min-h-[300px]">{children}</StableChartFrame>
    ) : (
