@@ -44,13 +44,17 @@ export interface HeroIntroController {
 }
 
 export const HERO_VISUAL_VARIANT_COUNT: Record<HeroVisualId, number> = {
-  "traffic-source-evolution": 3,
-  "channel-progress": 3,
-  "heat-matrix": 3,
-  "shorts-retention": 3,
+  // Extended set (7 variants) — 4 new animations per visual added on top of
+  // the original 3-variant baseline. Variants 3–6 are unique mechanics that
+  // deliberately do NOT share a physics model with 0–2 or with each other.
+  "traffic-source-evolution": 7,
+  "channel-progress": 7,
+  "heat-matrix": 7,
+  "shorts-retention": 7,
+  "title-keyword-network": 7,
+  // Baseline 3-variant visuals — unchanged pending their extension pass.
   "channel-vital-signs": 3,
   "clockburst": 3,
-  "title-keyword-network": 3,
   "barcode-fingerprint": 3,
   "geography-map": 3,
   "engagement-pulse": 3,
@@ -72,8 +76,13 @@ const modeScale = (mode?: HeroIntroMode) =>
 const ms = (value: number, mode?: HeroIntroMode) =>
   Math.max(1, Math.round(value * modeScale(mode)))
 
-const normalizedVariant = (options?: HeroIntroOptions) =>
-  (((options?.variant ?? 0) % 3) + 3) % 3
+// The mod-count defaults to 3 so untouched runners keep their existing
+// behavior. Extended runners pass their own count (typically 7) so higher
+// variant slots wrap correctly.
+const normalizedVariant = (options?: HeroIntroOptions, count = 3) => {
+  const safeCount = Math.max(1, count | 0)
+  return (((options?.variant ?? 0) % safeCount) + safeCount) % safeCount
+}
 
 const queryAll = <T extends Element = Element>(
   root: ParentNode,
@@ -185,7 +194,7 @@ const sortedY = <T extends Element>(items: T[]) => [...items].sort((a,b) => y(a)
 
 export const animateTrafficSourceEvolution: AnimationRunner = (root, options={}) => {
   if (options.mode === "none") return []
-  const variant = normalizedVariant(options)
+  const variant = normalizedVariant(options, 7)
   const areas = queryAll<SVGGElement>(
     root,
     ".tse-plot .recharts-area,[class*='tse-area-'].recharts-area,.recharts-area",
@@ -225,17 +234,132 @@ export const animateTrafficSourceEvolution: AnimationRunner = (root, options={})
     return animations
   }
 
-  // GEOLOGICAL FORMATION
-  areas.forEach((area,index) => {
-    setTransformOrigin(area,"center bottom")
-    animations.push(play(area,[
-      {transform:"scaleY(.001)",opacity:.08},
-      {transform:"scaleY(1.04)",opacity:1,offset:.87},
-      {transform:"scaleY(1)",opacity:1},
+  if (variant === 2) {
+    // GEOLOGICAL FORMATION
+    areas.forEach((area,index) => {
+      setTransformOrigin(area,"center bottom")
+      animations.push(play(area,[
+        {transform:"scaleY(.001)",opacity:.08},
+        {transform:"scaleY(1.04)",opacity:1,offset:.87},
+        {transform:"scaleY(1)",opacity:1},
+      ],{
+        duration:ms(1200,options.mode),
+        delay:ms(index*360,options.mode),
+        easing:GLIDE,
+      }))
+    })
+    return animations
+  }
+
+  if (variant === 3) {
+    // TIDAL BLOOM — radial expansion + soft blur bloom, then sharpen. Origin
+    // is the middle of the plot so the flood reads as a shockwave outward
+    // from the center rather than a horizontal wipe.
+    areas.forEach((area,index) => {
+      setTransformOrigin(area,"center center")
+      animations.push(play(area,[
+        {transform:"scale(.05)",opacity:0,filter:"blur(18px) saturate(2)"},
+        {transform:"scale(1.18)",opacity:1,offset:.55,filter:"blur(4px) saturate(1.35)"},
+        {transform:"scale(.98)",opacity:1,offset:.82,filter:"blur(0) saturate(1)"},
+        {transform:"scale(1)",opacity:1,filter:"blur(0) saturate(1)"},
+      ],{
+        duration:ms(1500,options.mode),
+        delay:ms(index*140,options.mode),
+        easing:SOFT_SPRING,
+      }))
+    })
+    return animations
+  }
+
+  if (variant === 4) {
+    // STROBE STACK — sharp flashes from top layer downward. Each area starts
+    // over-bright, snaps to normal after a brief hold. Reverse order because
+    // stacked areas paint bottom→top in most Recharts fills.
+    const order=[...areas].reverse()
+    const flashStep=ms(160,options.mode)
+    order.forEach((area,index) => {
+      setTransformOrigin(area,"center center")
+      animations.push(play(area,[
+        {transform:"scale(1)",opacity:0,filter:"brightness(2.4)"},
+        {transform:"scale(1.015)",opacity:1,offset:.12,filter:"brightness(1.85)"},
+        {transform:"scale(1)",opacity:1,offset:.28,filter:"brightness(1.15)"},
+        {transform:"scale(1)",opacity:1,filter:"brightness(1)"},
+      ],{
+        duration:ms(720,options.mode),
+        delay:index*flashStep,
+        easing:LINEAR,
+      }))
+    })
+    return animations
+  }
+
+  if (variant === 5) {
+    // CARBON DATE — bottom-up strata reveal using clipPath inset. Each area
+    // exposes from its baseline upward, evoking a geological x-ray one layer
+    // at a time.
+    const stepBeat=ms(430,options.mode)
+    areas.forEach((area,index) => {
+      area.style.transformBox="fill-box"
+      area.style.transformOrigin="center bottom"
+      area.style.clipPath="inset(100% 0 0 0)"
+      area.style.willChange="clip-path,opacity"
+      animations.push(play(area,[
+        {clipPath:"inset(100% 0 0 0)",opacity:.15},
+        {clipPath:"inset(0 0 0 0)",opacity:1,offset:.92},
+        {clipPath:"inset(0 0 0 0)",opacity:1},
+      ],{
+        duration:ms(1100,options.mode),
+        delay:index*stepBeat,
+        easing:SOFT_OUT,
+      }))
+    })
+    return animations
+  }
+
+  // variant === 6 — PULSE MESH: only the top stroke of every layer draws,
+  // simultaneously, on a shared dash-offset pulse. The fill itself remains
+  // visible from the previous state; this is the flourish that reads as the
+  // sources electrifying at once.
+  const strokes:SVGGeometryElement[]=[]
+  areas.forEach(area => {
+    const curve=area.querySelector<SVGGeometryElement>(".recharts-area-curve, path.recharts-curve")
+    if (curve) strokes.push(curve)
+  })
+  if (!strokes.length) {
+    // Fall back to a light glimmer on the fills so the flourish never
+    // silently no-ops when the sub-paths cannot be identified.
+    areas.forEach((area,index) => {
+      setTransformOrigin(area,"center center")
+      animations.push(play(area,[
+        {opacity:1,filter:"brightness(1)"},
+        {opacity:1,filter:"brightness(1.4)",offset:.35},
+        {opacity:1,filter:"brightness(1)"},
+      ],{
+        duration:ms(950,options.mode),
+        delay:ms(index*60,options.mode),
+        easing:LINEAR,
+      }))
+    })
+    return animations
+  }
+  const pulseStagger=ms(80,options.mode)
+  strokes.forEach((stroke,index) => {
+    const anim=drawSvgStroke(
+      stroke,
+      ms(1300,options.mode),
+      index*pulseStagger,
+      SOFT_OUT,
+    )
+    if (anim) animations.push(anim)
+    // Follow-up glimmer so the mesh feels charged after the trace lands.
+    animations.push(play(stroke,[
+      {opacity:1,filter:"brightness(1)",offset:0},
+      {opacity:1,filter:"brightness(1.7) saturate(1.5)",offset:.45},
+      {opacity:1,filter:"brightness(1)",offset:1},
     ],{
-      duration:ms(1200,options.mode),
-      delay:ms(index*360,options.mode),
-      easing:GLIDE,
+      duration:ms(720,options.mode),
+      delay:ms(1300,options.mode)+index*pulseStagger,
+      easing:LINEAR,
     }))
   })
   return animations
@@ -382,31 +506,175 @@ const runChannelTide = (
 
 export const animateChannelProgress: AnimationRunner = (root,options={}) => {
   if (options.mode==="none") return []
-  const variant=normalizedVariant(options)
+  const variant=normalizedVariant(options, 7)
   if (variant===0) return runChannelTide(root,options,1)       // TRAVELING TIDE
   if (variant===1) return runChannelTide(root,options,3)       // ECHO WAVES
 
-  // GROWTH IGNITION
+  if (variant===2) {
+    // GROWTH IGNITION
+    const bars=channelBars(root)
+    const lines=channelLines(root)
+    const animations:Animation[]=[]
+    const stagger=ms(boundedStagger(bars.length,3700,900,25,105),options.mode)
+    bars.forEach((bar,index)=>{
+      setTransformOrigin(bar,"center bottom")
+      const progress=bars.length<=1?0:index/(bars.length-1)
+      animations.push(play(bar,[
+        {transform:"scaleY(.04)",opacity:.15},
+        {transform:`scaleY(${1.035+progress*.08})`,opacity:1,offset:.72},
+        {transform:"scaleY(.97)",opacity:1,offset:.86},
+        {transform:"scaleY(1)",opacity:1},
+      ],{
+        duration:ms(900-progress*120,options.mode),
+        delay:index*stagger,
+        easing:SOFT_SPRING,
+      }))
+    })
+    lines.forEach((line,index)=>{
+      const a=drawSvgStroke(line,ms(1700,options.mode),ms(3150+index*180,options.mode),SOFT_OUT)
+      if (a) animations.push(a)
+    })
+    return animations
+  }
+
+  if (variant===3) {
+    // METRONOME MARCH — 3D domino flip. Bars start rotated back on the
+    // X axis (invisible edge to the viewer) and flip forward one by one.
+    // Reads as clean rhythmic reveal, no scale bounce.
+    const bars=channelBars(root)
+    const lines=channelLines(root)
+    const animations:Animation[]=[]
+    const dominoStep=ms(boundedStagger(bars.length,3200,650,32,140),options.mode)
+    bars.forEach((bar,index)=>{
+      setTransformOrigin(bar,"center bottom")
+      // Perspective sits on the parent chart; setting on the bar keeps the
+      // rotation local so bars don't shear each other.
+      bar.style.perspective="600px"
+      animations.push(play(bar,[
+        {transform:"perspective(600px) rotateX(-92deg)",opacity:0},
+        {transform:"perspective(600px) rotateX(6deg)",opacity:1,offset:.75},
+        {transform:"perspective(600px) rotateX(-3deg)",opacity:1,offset:.9},
+        {transform:"perspective(600px) rotateX(0)",opacity:1},
+      ],{
+        duration:ms(650,options.mode),
+        delay:index*dominoStep,
+        easing:SPRING,
+      }))
+    })
+    // Lines drape in AFTER the dominoes settle.
+    const linesStart=ms(400,options.mode)+bars.length*dominoStep
+    lines.forEach((line,index)=>{
+      const a=drawSvgStroke(line,ms(1400,options.mode),linesStart+ms(index*160,options.mode),SOFT_OUT)
+      if (a) animations.push(a)
+    })
+    return animations
+  }
+
+  if (variant===4) {
+    // STAIRCASE ASCENT — bars pause at prior bar's height first, then jump
+    // to their real value. Reads as a rising staircase where each step
+    // "catches up" to the next. Directionally left→right, escalating.
+    const bars=channelBars(root)
+    const lines=channelLines(root)
+    const animations:Animation[]=[]
+    const stepBeat=ms(boundedStagger(bars.length,3600,720,50,180),options.mode)
+    bars.forEach((bar,index)=>{
+      setTransformOrigin(bar,"center bottom")
+      // Percentage-of-final-height that acts as the "prior step" landing pad.
+      // First bar starts small; later bars catch closer to their final size.
+      const priorFraction=bars.length<=1?.2:Math.min(.85,.15+(index/(bars.length-1))*.6)
+      animations.push(play(bar,[
+        {transform:"scaleY(.02)",opacity:0},
+        {transform:`scaleY(${priorFraction})`,opacity:1,offset:.4,easing:SOFT_OUT},
+        {transform:`scaleY(${priorFraction})`,opacity:1,offset:.55},
+        {transform:"scaleY(1.04)",opacity:1,offset:.85,easing:SPRING},
+        {transform:"scaleY(1)",opacity:1},
+      ],{
+        duration:ms(720,options.mode),
+        delay:index*stepBeat,
+        easing:LINEAR,
+      }))
+    })
+    lines.forEach((line,index)=>{
+      const a=drawSvgStroke(
+        line,
+        ms(1600,options.mode),
+        ms(200,options.mode)+bars.length*stepBeat+ms(index*160,options.mode),
+        SOFT_OUT,
+      )
+      if (a) animations.push(a)
+    })
+    return animations
+  }
+
+  if (variant===5) {
+    // QUANTUM COLLAPSE — all bars appear at once as translucent probability
+    // clouds across their full expected height range, then collapse
+    // simultaneously to their real values. Reads sci-fi.
+    const bars=channelBars(root)
+    const lines=channelLines(root)
+    const animations:Animation[]=[]
+    bars.forEach((bar,index)=>{
+      setTransformOrigin(bar,"center bottom")
+      const jitter=(((index*97)%13)-6)*.008 // deterministic per-bar wobble
+      animations.push(play(bar,[
+        {transform:`scaleY(1.15) translateY(${jitter*20}px)`,opacity:0,filter:"blur(6px)"},
+        {transform:`scaleY(1.15) translateY(${jitter*20}px)`,opacity:.34,offset:.24,filter:"blur(6px)"},
+        {transform:"scaleY(1.05)",opacity:.75,offset:.55,filter:"blur(2px)"},
+        {transform:"scaleY(.97)",opacity:1,offset:.82,filter:"blur(0)"},
+        {transform:"scaleY(1)",opacity:1,filter:"blur(0)"},
+      ],{
+        duration:ms(1500,options.mode),
+        delay:ms(120,options.mode), // all bars share one collapse — no stagger
+        easing:SOFT_OUT,
+      }))
+    })
+    lines.forEach((line,index)=>{
+      const a=drawSvgStroke(line,ms(1400,options.mode),ms(1150+index*160,options.mode),SOFT_OUT)
+      if (a) animations.push(a)
+    })
+    return animations
+  }
+
+  // variant === 6 — HELIX RIBBON: bars pop up bottom-up quickly, then the
+  // lines draw as if unspooling from a rotating ribbon (rotation via a
+  // parent group transform). The lines get an initial spin that decays into
+  // the true trace shape.
   const bars=channelBars(root)
   const lines=channelLines(root)
   const animations:Animation[]=[]
-  const stagger=ms(boundedStagger(bars.length,3700,900,25,105),options.mode)
+  const barStagger=ms(boundedStagger(bars.length,1800,500,15,60),options.mode)
   bars.forEach((bar,index)=>{
     setTransformOrigin(bar,"center bottom")
-    const progress=bars.length<=1?0:index/(bars.length-1)
     animations.push(play(bar,[
-      {transform:"scaleY(.04)",opacity:.15},
-      {transform:`scaleY(${1.035+progress*.08})`,opacity:1,offset:.72},
-      {transform:"scaleY(.97)",opacity:1,offset:.86},
+      {transform:"scaleY(.06)",opacity:.2},
+      {transform:"scaleY(1.03)",opacity:1,offset:.78},
       {transform:"scaleY(1)",opacity:1},
     ],{
-      duration:ms(900-progress*120,options.mode),
-      delay:index*stagger,
+      duration:ms(500,options.mode),
+      delay:index*barStagger,
       easing:SOFT_SPRING,
     }))
   })
+  const linesStart=ms(300,options.mode)+bars.length*barStagger
   lines.forEach((line,index)=>{
-    const a=drawSvgStroke(line,ms(1700,options.mode),ms(3150+index*180,options.mode),SOFT_OUT)
+    // Parent-group ribbon spin. Applying transform-origin to the line's
+    // own bounding box gives us a swirl that unwinds into the trace.
+    line.style.transformBox="fill-box"
+    line.style.transformOrigin="left center"
+    line.style.willChange="transform,opacity"
+    // Preserve initial state so stroke draw can also target it.
+    animations.push(play(line,[
+      {transform:"rotate(-14deg) scaleY(.4)",opacity:.4},
+      {transform:"rotate(6deg) scaleY(1.1)",opacity:.85,offset:.55},
+      {transform:"rotate(-2deg) scaleY(1)",opacity:1,offset:.82},
+      {transform:"rotate(0) scaleY(1)",opacity:1},
+    ],{
+      duration:ms(1350,options.mode),
+      delay:linesStart+ms(index*200,options.mode),
+      easing:SPRING,
+    }))
+    const a=drawSvgStroke(line,ms(1200,options.mode),linesStart+ms(index*200,options.mode),SOFT_OUT)
     if (a) animations.push(a)
   })
   return animations
@@ -450,7 +718,7 @@ const heatSpringFrames=(peak=1.5):Keyframe[]=>[
 
 export const animateHeatMatrix: AnimationRunner = (root,options={}) => {
   if (options.mode==="none") return []
-  const variant=normalizedVariant(options)
+  const variant=normalizedVariant(options, 7)
   const tiles=queryAll<HTMLElement>(root,".vt-heat-tile,[data-vt-heat-tile]")
   if (!tiles.length) return []
   const animations:Animation[]=[]
@@ -513,15 +781,140 @@ export const animateHeatMatrix: AnimationRunner = (root,options={}) => {
     return animations
   }
 
-  // DIGITAL RAIN
-  const columns=groupTilesIntoColumns(tiles)
-  columns.forEach((column,colIndex)=>{
-    column.forEach((tile,rowIndex)=>{
+  if (variant===2) {
+    // DIGITAL RAIN
+    const columns=groupTilesIntoColumns(tiles)
+    columns.forEach((column,colIndex)=>{
+      column.forEach((tile,rowIndex)=>{
+        setTransformOrigin(tile)
+        animations.push(play(tile,heatSpringFrames(1.44),{
+          duration:ms(980,options.mode),
+          delay:ms(colIndex*95+rowIndex*80,options.mode),
+          easing:SPRING,
+        }))
+      })
+    })
+    return animations
+  }
+
+  if (variant===3) {
+    // QUENCH FLASH — all tiles flash white simultaneously, then colors bleed
+    // in with a soft brightness decay. Reads as a lens exposure or a
+    // thermal-quench moment.
+    tiles.forEach((tile,index)=>{
       setTransformOrigin(tile)
-      animations.push(play(tile,heatSpringFrames(1.44),{
-        duration:ms(980,options.mode),
-        delay:ms(colIndex*95+rowIndex*80,options.mode),
+      const microJitter=((index%7)-3)*.006 // subtle per-tile timing spread
+      animations.push(play(tile,[
+        {transform:"scale(1)",opacity:0,filter:"brightness(3.4) saturate(0)"},
+        {transform:"scale(1.04)",opacity:1,offset:.14,filter:"brightness(2.6) saturate(0)"},
+        {transform:"scale(1)",opacity:1,offset:.36,filter:"brightness(1.6) saturate(.55)"},
+        {transform:"scale(1)",opacity:1,offset:.7,filter:"brightness(1.12) saturate(1)"},
+        {transform:"scale(1)",opacity:1,filter:"brightness(1) saturate(1)"},
+      ],{
+        duration:ms(1400,options.mode),
+        delay:ms(20+microJitter*400,options.mode),
+        easing:SOFT_OUT,
+      }))
+    })
+    return animations
+  }
+
+  if (variant===4) {
+    // CRYSTAL LATTICE — checkerboard fill. Even-parity tiles pop first,
+    // then the odd tiles fill the gaps. Feels like a lattice crystallizing.
+    const rows=groupTilesIntoRows(tiles)
+    const evens:HTMLElement[]=[]
+    const odds:HTMLElement[]=[]
+    rows.forEach((row,rowIndex)=>{
+      row.forEach((tile,colIndex)=>{
+        if ((rowIndex+colIndex)%2===0) evens.push(tile)
+        else odds.push(tile)
+      })
+    })
+    const evenStagger=ms(boundedStagger(evens.length,1200,520,8,32),options.mode)
+    const oddStart=ms(700,options.mode)
+    const oddStagger=ms(boundedStagger(odds.length,1200,520,8,32),options.mode)
+    evens.forEach((tile,index)=>{
+      setTransformOrigin(tile)
+      animations.push(play(tile,heatSpringFrames(1.35),{
+        duration:ms(520,options.mode),
+        delay:index*evenStagger,
         easing:SPRING,
+      }))
+    })
+    odds.forEach((tile,index)=>{
+      setTransformOrigin(tile)
+      animations.push(play(tile,heatSpringFrames(1.35),{
+        duration:ms(520,options.mode),
+        delay:oddStart+index*oddStagger,
+        easing:SPRING,
+      }))
+    })
+    return animations
+  }
+
+  if (variant===5) {
+    // RIPPLE POND — concentric rings expand outward from the hottest tile.
+    // Hottest = the one marked rank-one (see ThermalImagingModuleInner). If
+    // no rank-one marker exists, use the geometric center as the source.
+    const rankOne=tiles.find(tile=>tile.classList.contains("is-rank-one"))??tiles[0]
+    const source=rankOne.getBoundingClientRect()
+    const sx=source.left+source.width/2
+    const sy=source.top+source.height/2
+    // Bucket tiles into ripple rings by rounded distance so groups of tiles
+    // pop together per ring, giving the effect real thickness.
+    const withDistance=tiles.map(tile=>{
+      const rect=tile.getBoundingClientRect()
+      const d=Math.hypot((rect.left+rect.width/2)-sx,(rect.top+rect.height/2)-sy)
+      return {tile,d}
+    })
+    // Ring bucketing: quantize to a coarse ring width proportional to a tile
+    // size so adjacent-distance tiles land in the same ring.
+    const ringWidth=Math.max(28,source.width*.9)
+    const rings=new Map<number,HTMLElement[]>()
+    withDistance.forEach(({tile,d})=>{
+      const key=Math.round(d/ringWidth)
+      const bucket=rings.get(key)??[]; bucket.push(tile); rings.set(key,bucket)
+    })
+    const sortedRings=[...rings.entries()].sort(([a],[b])=>a-b).map(([,r])=>r)
+    const ringBeat=ms(140,options.mode)
+    sortedRings.forEach((ring,ringIndex)=>{
+      ring.forEach((tile,indexInRing)=>{
+        setTransformOrigin(tile)
+        // A small intra-ring jitter keeps the ring from looking robotic.
+        const jitter=(indexInRing%3)*ms(30,options.mode)
+        animations.push(play(tile,heatSpringFrames(ringIndex===0?1.72:1.42),{
+          duration:ms(760,options.mode),
+          delay:ringIndex*ringBeat+jitter,
+          easing:SPRING,
+        }))
+      })
+    })
+    return animations
+  }
+
+  // variant === 6 — NIGHT VISION SWEEP: dark canvas, a horizontal green
+  // scanline sweeps top→bottom. Tiles ignite as the line crosses them. All
+  // tiles start invisible with a green pre-glow; each ignites when its own
+  // row's scan tick arrives. Bottom rows fire last.
+  const rows=groupTilesIntoRows(tiles)
+  const rowBeat=ms(180,options.mode)
+  rows.forEach((row,rowIndex)=>{
+    // Small left-to-right ripple inside the row so the scan feels like it
+    // has micro-fine granularity rather than a hard row flash.
+    row.forEach((tile,colIndex)=>{
+      setTransformOrigin(tile)
+      const intraDelay=ms(colIndex*22,options.mode)
+      animations.push(play(tile,[
+        {transform:"scale(.85)",opacity:0,filter:"brightness(.35) saturate(0) hue-rotate(90deg)"},
+        {transform:"scale(1.32)",opacity:1,offset:.16,filter:"brightness(3.2) saturate(2.4) hue-rotate(80deg)"},
+        {transform:"scale(1.08)",opacity:1,offset:.42,filter:"brightness(2) saturate(1.6) hue-rotate(45deg)"},
+        {transform:"scale(1)",opacity:1,offset:.72,filter:"brightness(1.35) saturate(1.15) hue-rotate(12deg)"},
+        {transform:"scale(1)",opacity:1,filter:"brightness(1) saturate(1) hue-rotate(0)"},
+      ],{
+        duration:ms(900,options.mode),
+        delay:rowIndex*rowBeat+intraDelay,
+        easing:SOFT_OUT,
       }))
     })
   })
@@ -537,7 +930,7 @@ const scatterTargets=(root:ParentNode)=>{
 
 export const animateScatterBubbles: AnimationRunner=(root,options={})=>{
   if(options.mode==="none") return []
-  const variant=normalizedVariant(options)
+  const variant=normalizedVariant(options, 7)
   const bubbles=scatterTargets(root)
   const animations:Animation[]=[]
   if(!bubbles.length) return animations
@@ -580,17 +973,139 @@ export const animateScatterBubbles: AnimationRunner=(root,options={})=>{
     return animations
   }
 
-  // GRAVITY DROP
-  bubbles.forEach((bubble,index)=>{
+  if(variant===2){
+    // GRAVITY DROP
+    bubbles.forEach((bubble,index)=>{
+      setTransformOrigin(bubble)
+      animations.push(play(bubble,[
+        {transform:"translateY(-120px) scale(.75)",opacity:0},
+        {transform:"translateY(12px) scale(1.05)",opacity:1,offset:.72},
+        {transform:"translateY(-5px) scale(.98)",opacity:1,offset:.86},
+        {transform:"translateY(0) scale(1)",opacity:1},
+      ],{
+        duration:ms(1100,options.mode),
+        delay:ms(index*30,options.mode),
+        easing:SPRING,
+      }))
+    })
+    return animations
+  }
+
+  // Shared helper for radial vectors relative to the plot center.
+  const plotRect=(root as Element).getBoundingClientRect?.() ?? {left:0,top:0,width:0,height:0} as DOMRect
+  const cx=plotRect.left+plotRect.width/2
+  const cy=plotRect.top+plotRect.height/2
+
+  if(variant===3){
+    // CENTRIFUGE — every bubble starts collapsed at the plot's center and
+    // flies out on its own radial vector to its true position. Overshoots
+    // slightly before settling to convey momentum.
+    const shuffled=seededShuffle(bubbles,options.seed??"viewtube-centrifuge")
+    const spin=ms(1050,options.mode)
+    shuffled.forEach((bubble,index)=>{
+      setTransformOrigin(bubble)
+      const rect=bubble.getBoundingClientRect()
+      const bx=rect.left+rect.width/2
+      const by=rect.top+rect.height/2
+      const dx=cx-bx
+      const dy=cy-by
+      // Small tangent kick so bubbles arc out rather than moving perfectly
+      // radial — deterministic per bubble.
+      const swirl=((index%5)-2)*.35
+      animations.push(play(bubble,[
+        {transform:`translate(${dx}px,${dy}px) scale(0) rotate(${swirl*180}deg)`,opacity:0},
+        {transform:`translate(${dx*.35}px,${dy*.35}px) scale(1.28) rotate(${swirl*60}deg)`,opacity:1,offset:.55},
+        {transform:`translate(${dx*-.06}px,${dy*-.06}px) scale(.92) rotate(0)`,opacity:1,offset:.82},
+        {transform:"translate(0,0) scale(1) rotate(0)",opacity:1},
+      ],{
+        duration:spin,
+        delay:ms(index*22,options.mode),
+        easing:SOFT_SPRING,
+      }))
+    })
+    return animations
+  }
+
+  if(variant===4){
+    // SLING SHOT — bubbles arc in from the nearest off-screen edge on
+    // parabolic paths. Each bubble picks its edge based on the quadrant it
+    // lives in. Reads as projectile motion, not orbital.
+    const shuffled=seededShuffle(bubbles,options.seed??"viewtube-slingshot")
+    shuffled.forEach((bubble,index)=>{
+      setTransformOrigin(bubble)
+      const rect=bubble.getBoundingClientRect()
+      const bx=rect.left+rect.width/2
+      const by=rect.top+rect.height/2
+      // Pick the nearest edge; travel a couple hundred pixels beyond it.
+      const distances={
+        left:bx-plotRect.left,
+        right:(plotRect.left+plotRect.width)-bx,
+        top:by-plotRect.top,
+        bottom:(plotRect.top+plotRect.height)-by,
+      }
+      const min=Math.min(distances.left,distances.right,distances.top,distances.bottom)
+      const edge=(Object.keys(distances) as (keyof typeof distances)[]).find(k=>distances[k]===min)!
+      const throwDistance=180
+      let fromX=0,fromY=0,peakX=0,peakY=0
+      if(edge==="left"){fromX=-(distances.left+throwDistance);fromY=-40;peakX=fromX*.5;peakY=-90}
+      else if(edge==="right"){fromX=distances.right+throwDistance;fromY=-40;peakX=fromX*.5;peakY=-90}
+      else if(edge==="top"){fromY=-(distances.top+throwDistance);fromX=-40;peakY=fromY*.5;peakX=-90}
+      else{fromY=distances.bottom+throwDistance;fromX=-40;peakY=fromY*.5;peakX=-90}
+      animations.push(play(bubble,[
+        {transform:`translate(${fromX}px,${fromY}px) scale(.6)`,opacity:0},
+        {transform:`translate(${peakX}px,${peakY}px) scale(.9)`,opacity:.9,offset:.55},
+        {transform:"translate(0,0) scale(1.14)",opacity:1,offset:.82},
+        {transform:"translate(0,0) scale(1)",opacity:1},
+      ],{
+        duration:ms(1200,options.mode),
+        delay:ms(index*30,options.mode),
+        easing:SOFT_OUT,
+      }))
+    })
+    return animations
+  }
+
+  if(variant===5){
+    // CONSTELLATION FORM — bubbles fade in dim, brighten to full, then a
+    // brief bloom pulse fires across the whole set as if constellations
+    // wired together and lit briefly.
+    const beat=ms(30,options.mode)
+    bubbles.forEach((bubble,index)=>{
+      setTransformOrigin(bubble)
+      animations.push(play(bubble,[
+        {transform:"scale(.4)",opacity:0,filter:"brightness(.6)"},
+        {transform:"scale(1.1)",opacity:.6,offset:.4,filter:"brightness(1.4)"},
+        {transform:"scale(1)",opacity:1,offset:.7,filter:"brightness(1)"},
+        {transform:"scale(1.05)",opacity:1,offset:.86,filter:"brightness(2.2) saturate(1.5)"},
+        {transform:"scale(1)",opacity:1,filter:"brightness(1) saturate(1)"},
+      ],{
+        duration:ms(1200,options.mode),
+        delay:index*beat,
+        easing:SOFT_OUT,
+      }))
+    })
+    return animations
+  }
+
+  // variant === 6 — SHUFFLE DECK: bubbles slide in from the top-left corner
+  // in a shuffled order, snapping into position one by one. Reads as cards
+  // being dealt at speed.
+  const shuffled=seededShuffle(bubbles,options.seed??"viewtube-shuffle-deck")
+  const dealBeat=ms(38,options.mode)
+  const dealOrigin={x:plotRect.left-140,y:plotRect.top-140}
+  shuffled.forEach((bubble,index)=>{
     setTransformOrigin(bubble)
+    const rect=bubble.getBoundingClientRect()
+    const dx=(dealOrigin.x-(rect.left+rect.width/2))
+    const dy=(dealOrigin.y-(rect.top+rect.height/2))
     animations.push(play(bubble,[
-      {transform:"translateY(-120px) scale(.75)",opacity:0},
-      {transform:"translateY(12px) scale(1.05)",opacity:1,offset:.72},
-      {transform:"translateY(-5px) scale(.98)",opacity:1,offset:.86},
-      {transform:"translateY(0) scale(1)",opacity:1},
+      {transform:`translate(${dx}px,${dy}px) scale(.85) rotate(-25deg)`,opacity:0},
+      {transform:`translate(${dx*.25}px,${dy*.25}px) scale(1) rotate(-8deg)`,opacity:1,offset:.55},
+      {transform:"translate(0,0) scale(1.08) rotate(4deg)",opacity:1,offset:.82},
+      {transform:"translate(0,0) scale(1) rotate(0)",opacity:1},
     ],{
-      duration:ms(1100,options.mode),
-      delay:ms(index*30,options.mode),
+      duration:ms(700,options.mode),
+      delay:index*dealBeat,
       easing:SPRING,
     }))
   })
@@ -745,7 +1260,7 @@ export const animateClockburst:AnimationRunner=(root,options={})=>{
 
 export const animateTitleKeywordNetwork:AnimationRunner=(root,options={})=>{
   if(options.mode==="none") return []
-  const variant=normalizedVariant(options)
+  const variant=normalizedVariant(options, 7)
   const nodes=queryAll<SVGGraphicsElement>(
     root,
     "[data-vt-network-node],.vt-network-node,.title-network-node,circle",
@@ -808,22 +1323,191 @@ export const animateTitleKeywordNetwork:AnimationRunner=(root,options={})=>{
     return animations
   }
 
-  // SIGNAL TRANSMISSION
-  nodes.forEach((node,index)=>{
+  if(variant===2){
+    // SIGNAL TRANSMISSION
+    nodes.forEach((node,index)=>{
+      setTransformOrigin(node)
+      animations.push(play(node,[
+        {transform:"scale(.55)",opacity:.25},
+        {transform:"scale(1.24)",opacity:1,offset:.65},
+        {transform:"scale(1)",opacity:1},
+      ],{
+        duration:ms(650,options.mode),
+        delay:ms(index*95,options.mode),
+        easing:SPRING,
+      }))
+    })
+    edges.forEach((edge,index)=>{
+      const a=drawSvgStroke(edge,ms(900,options.mode),ms(index*55,options.mode),LINEAR)
+      if(a) animations.push(a)
+    })
+    return animations
+  }
+
+  if(variant===3){
+    // INK DIFFUSION — nodes bloom outward with `filter: blur` fading to
+    // sharp; edges draw as ink spreading (dash-offset draw with a soft
+    // easing). Reads as ink drops hitting paper.
+    const shuffled=seededShuffle(nodes,options.seed??"vt-ink-diffusion")
+    shuffled.forEach((node,index)=>{
+      setTransformOrigin(node)
+      animations.push(play(node,[
+        {transform:"scale(.05)",opacity:0,filter:"blur(14px) saturate(1.6)"},
+        {transform:"scale(1.32)",opacity:1,offset:.42,filter:"blur(6px) saturate(1.4)"},
+        {transform:"scale(.96)",opacity:1,offset:.72,filter:"blur(2px) saturate(1.15)"},
+        {transform:"scale(1)",opacity:1,filter:"blur(0) saturate(1)"},
+      ],{
+        duration:ms(1100,options.mode),
+        delay:ms(index*60,options.mode),
+        easing:SOFT_OUT,
+      }))
+    })
+    // Edges follow, drawing left-to-right like ink spreading through fibers.
+    const edgeStart=ms(500,options.mode)
+    edges.forEach((edge,index)=>{
+      const a=drawSvgStroke(
+        edge,
+        ms(1300,options.mode),
+        edgeStart+ms(index*40,options.mode),
+        SOFT_OUT,
+      )
+      if(a) animations.push(a)
+    })
+    return animations
+  }
+
+  if(variant===4){
+    // GRAVITY WELL — nodes fall from above the canvas on a gravity easing
+    // then compress on impact. Edges snap in only after everything lands.
+    nodes.forEach((node,index)=>{
+      setTransformOrigin(node)
+      // Deterministic per-node horizontal drift so nodes don't fall in a
+      // perfect line.
+      const drift=((index*47)%13)-6
+      animations.push(play(node,[
+        {transform:`translate(${drift}px,-260px) scale(.95)`,opacity:0},
+        {transform:`translate(${drift*.3}px,-40px) scale(1)`,opacity:1,offset:.6},
+        {transform:`translate(0,10px) scale(1.14) scaleY(.8)`,opacity:1,offset:.75},
+        {transform:"translate(0,-3px) scale(.96) scaleY(1.05)",opacity:1,offset:.86},
+        {transform:"translate(0,0) scale(1)",opacity:1},
+      ],{
+        duration:ms(1400,options.mode),
+        delay:ms(index*44,options.mode),
+        // Custom cubic that accelerates then decelerates hard (gravity+impact).
+        easing:"cubic-bezier(0.6, 0, 0.35, 1.4)",
+      }))
+    })
+    const edgeStart=ms(700,options.mode)+nodes.length*ms(44,options.mode)
+    edges.forEach((edge,index)=>{
+      const a=drawSvgStroke(edge,ms(700,options.mode),edgeStart+ms(index*22,options.mode),GLIDE)
+      if(a) animations.push(a)
+    })
+    return animations
+  }
+
+  if(variant===5){
+    // NETWORK BOOT — deterministic sequential scan like a computer booting.
+    // Nodes flip on in fixed index order with a green terminal-style glow,
+    // decaying to normal. Edges illuminate in-between passes.
+    nodes.forEach((node,index)=>{
+      setTransformOrigin(node)
+      animations.push(play(node,[
+        {transform:"scale(.4)",opacity:0,filter:"brightness(2.6) saturate(0) hue-rotate(90deg)"},
+        {transform:"scale(1.42)",opacity:1,offset:.18,filter:"brightness(2.8) saturate(1.6) hue-rotate(80deg)"},
+        {transform:"scale(.9)",opacity:1,offset:.5,filter:"brightness(1.65) saturate(1.2) hue-rotate(30deg)"},
+        {transform:"scale(1)",opacity:1,filter:"brightness(1) saturate(1) hue-rotate(0)"},
+      ],{
+        duration:ms(500,options.mode),
+        delay:ms(index*80,options.mode), // strict order — no shuffle
+        easing:SOFT_OUT,
+      }))
+    })
+    // Edges scan on after all nodes settle.
+    const edgeStart=ms(200,options.mode)+nodes.length*ms(80,options.mode)
+    edges.forEach((edge,index)=>{
+      const a=drawSvgStroke(edge,ms(400,options.mode),edgeStart+ms(index*28,options.mode),LINEAR)
+      if(a) animations.push(a)
+    })
+    return animations
+  }
+
+  // variant === 6 — QUANTUM ENTANGLEMENT: connected pairs of nodes appear
+  // simultaneously; unconnected nodes stay dark until the very last beat.
+  // Edges are the source of pairing; each edge's endpoints get an entangled
+  // synchronized reveal.
+  // Step 1: index all nodes by center point so we can match edge endpoints.
+  const nodeCenterKey=(node:SVGGraphicsElement)=>{
+    try { const b=node.getBBox(); return `${Math.round(b.x+b.width/2)}:${Math.round(b.y+b.height/2)}` }
+    catch { return `n${nodes.indexOf(node)}` }
+  }
+  const nodesByCenter=new Map<string,SVGGraphicsElement>()
+  nodes.forEach(node=>nodesByCenter.set(nodeCenterKey(node),node))
+  // Step 2: build entangled pairs by matching each edge's endpoints to
+  // known nodes. Endpoint queries fall back gracefully for arbitrary paths.
+  const readEdgeEndpoints=(edge:SVGGeometryElement):[string,string]|null=>{
+    try {
+      const l=edge.getTotalLength?.()
+      if(!l||!edge.getPointAtLength) return null
+      const p0=edge.getPointAtLength(0)
+      const p1=edge.getPointAtLength(l)
+      return [`${Math.round(p0.x)}:${Math.round(p0.y)}`,`${Math.round(p1.x)}:${Math.round(p1.y)}`]
+    } catch { return null }
+  }
+  const seen=new Set<SVGGraphicsElement>()
+  const pairs:Array<[SVGGraphicsElement,SVGGraphicsElement,SVGGeometryElement]>=[]
+  edges.forEach(edge=>{
+    const endpoints=readEdgeEndpoints(edge)
+    if(!endpoints) return
+    // Try exact match, then nearest-center within a small radius.
+    const findNearest=(key:string)=>{
+      const [ex,ey]=key.split(":").map(Number)
+      let best:SVGGraphicsElement|null=null; let bestDist=Number.POSITIVE_INFINITY
+      for (const node of nodes) {
+        const k=nodeCenterKey(node); const [nx,ny]=k.split(":").map(Number)
+        const d=Math.hypot(ex-nx,ey-ny)
+        if(d<bestDist){bestDist=d; best=node}
+      }
+      return bestDist<40?best:null
+    }
+    const a=nodesByCenter.get(endpoints[0])??findNearest(endpoints[0])
+    const b=nodesByCenter.get(endpoints[1])??findNearest(endpoints[1])
+    if(a && b && a!==b && !seen.has(a) && !seen.has(b)) {
+      pairs.push([a,b,edge]); seen.add(a); seen.add(b)
+    }
+  })
+  const pairBeat=ms(300,options.mode)
+  pairs.forEach(([a,b,edge],pairIndex)=>{
+    const delay=pairIndex*pairBeat
+    ;[a,b].forEach(node=>{
+      setTransformOrigin(node)
+      animations.push(play(node,[
+        {transform:"scale(.02)",opacity:0,filter:"blur(8px) hue-rotate(45deg)"},
+        {transform:"scale(1.42)",opacity:1,offset:.5,filter:"blur(0) hue-rotate(0)"},
+        {transform:"scale(.94)",opacity:1,offset:.78},
+        {transform:"scale(1)",opacity:1},
+      ],{
+        duration:ms(650,options.mode),
+        delay,
+        easing:SPRING,
+      }))
+    })
+    const strokeAnim=drawSvgStroke(edge,ms(650,options.mode),delay,SOFT_OUT)
+    if(strokeAnim) animations.push(strokeAnim)
+  })
+  // Unpaired nodes light up at the end, dim, so pairs stay the visual story.
+  const unpaired=nodes.filter(node=>!seen.has(node))
+  const tailStart=Math.max(0,pairs.length*pairBeat-ms(120,options.mode))+ms(280,options.mode)
+  unpaired.forEach((node,index)=>{
     setTransformOrigin(node)
     animations.push(play(node,[
-      {transform:"scale(.55)",opacity:.25},
-      {transform:"scale(1.24)",opacity:1,offset:.65},
+      {transform:"scale(.4)",opacity:0},
+      {transform:"scale(1.08)",opacity:.75,offset:.7},
       {transform:"scale(1)",opacity:1},
     ],{
-      duration:ms(650,options.mode),
-      delay:ms(index*95,options.mode),
-      easing:SPRING,
+      duration:ms(500,options.mode),
+      delay:tailStart+ms(index*30,options.mode),
+      easing:SOFT_OUT,
     }))
-  })
-  edges.forEach((edge,index)=>{
-    const a=drawSvgStroke(edge,ms(900,options.mode),ms(index*55,options.mode),LINEAR)
-    if(a) animations.push(a)
   })
   return animations
 }
@@ -1266,20 +1950,26 @@ export const readHeroIntroModeFromUrl=(fallback:HeroIntroMode="full"):HeroIntroM
 }
 
 export const getHeroVariantLabel=(visualId:HeroVisualId,variant:number)=>{
-  const v=((variant%3)+3)%3
-  const labels:Record<HeroVisualId,[string,string,string]>={
-    "traffic-source-evolution":["LAYERED RIVER","SOURCE RACE","GEOLOGICAL FORMATION"],
-    "channel-progress":["TRAVELING TIDE","ECHO WAVES","GROWTH IGNITION"],
-    "heat-matrix":["HORIZONTAL THERMAL WAVE","HEAT DROP","DIGITAL RAIN"],
-    "shorts-retention":["POPCORN UNIVERSE","DATA CANNON","GRAVITY DROP"],
+  // Labels are indexed by variant. Extended visuals carry 7 labels; baseline
+  // visuals still carry 3. The variant is wrapped by the visual's actual
+  // slot count so a caller can safely feed any integer.
+  const labels:Record<HeroVisualId,readonly string[]>={
+    "traffic-source-evolution":["LAYERED RIVER","SOURCE RACE","GEOLOGICAL FORMATION","TIDAL BLOOM","STROBE STACK","CARBON DATE","PULSE MESH"],
+    "channel-progress":["TRAVELING TIDE","ECHO WAVES","GROWTH IGNITION","METRONOME MARCH","STAIRCASE ASCENT","QUANTUM COLLAPSE","HELIX RIBBON"],
+    "heat-matrix":["HORIZONTAL THERMAL WAVE","HEAT DROP","DIGITAL RAIN","QUENCH FLASH","CRYSTAL LATTICE","RIPPLE POND","NIGHT VISION SWEEP"],
+    "shorts-retention":["POPCORN UNIVERSE","DATA CANNON","GRAVITY DROP","CENTRIFUGE","SLING SHOT","CONSTELLATION FORM","SHUFFLE DECK"],
+    "title-keyword-network":["NEURAL NETWORK","MAGNETIC ASSEMBLY","SIGNAL TRANSMISSION","INK DIFFUSION","GRAVITY WELL","NETWORK BOOT","QUANTUM ENTANGLEMENT"],
+    // Baseline (3 variants) — extension pending.
     "channel-vital-signs":["ECG STARTUP","DEFIBRILLATOR","MULTI-MONITOR BOOT"],
     "clockburst":["CLOCK WINDING","RADIAL EXPLOSION","TIME SWEEP"],
-    "title-keyword-network":["NEURAL NETWORK","MAGNETIC ASSEMBLY","SIGNAL TRANSMISSION"],
     "barcode-fingerprint":["SCANNER","DNA ASSEMBLY","AUDIO DECODE"],
     "geography-map":["GLOBAL SIGNAL","AUDIENCE CONSTELLATION","SATELLITE SWEEP"],
     "engagement-pulse":["PULSE CHASE","SYNCHRONIZED HEARTBEAT","METRIC CONVERSATION"],
     "format-dominance":["ORIGINAL VIEWTUBE","FORMAT TAKEOVER","CHAMPIONSHIP PODIUM"],
     "keyword-venn":["COLLISION","COMBINATION BUILDER","ELASTIC ORBIT"],
   }
-  return labels[visualId][v]
+  const slots=labels[visualId]
+  const count=Math.max(1,slots.length)
+  const v=((variant%count)+count)%count
+  return slots[v]
 }
