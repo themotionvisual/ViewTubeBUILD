@@ -289,8 +289,16 @@ export const login = async (mode?: 'popup' | 'redirect'): Promise<void> => {
   });
 };
 
-// Keep old export name for compatibility
-export const loginWithPkcePopup = login;
+// vt-2199 — Removed the `loginWithPkcePopup` alias. It described this
+// implementation as "PKCE Popup" but `login` runs the OAuth 2.0 **implicit**
+// grant (`response_type=token`), which is not PKCE. The alias is a security
+// documentation hazard: an auditor reading `loginWithPkcePopup(...)` in a
+// call site would incorrectly conclude PKCE is in use. Governance test
+// `accountSurfaceGovernance.test.ts` already asserts no source file
+// references the old name, so the alias has no callers and is safe to drop.
+//
+// If PKCE is later implemented, add a new export with an accurate name
+// (e.g. `loginWithGooglePkcePopup`) — do not resurrect the misleading name.
 
 export const getAccessToken = (): string | null => {
   migrateLegacySessionIfNeeded();

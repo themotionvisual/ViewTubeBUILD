@@ -252,6 +252,41 @@ describe("VT-SYNC table registry — mapping audit (vt-2643)", () => {
   })
  })
 
+ describe("vt-2641 — Channel table Engagement/Revenue group dedup", () => {
+  /*
+   * Regression: an earlier refactor put netSubscribers and impressions BOTH into
+   * their own duplicate Engagement/Revenue group headers on the far right of
+   * the Channel Totals table (visible as two "Engagement" sections instead of
+   * one). Fix landed by placing them adjacent to their canonical metric
+   * families. This test locks it in.
+   *
+   *   netSubscribers  → Engagement group (single occurrence)
+   *   impressions     → Revenue    group (single occurrence)
+   *
+   * If someone later moves either metric into a different group OR duplicates
+   * them so more than one instance carries the same key, this fails loudly.
+   */
+  const channelTotals = VT_SYNC_TABLE_DEFINITIONS.find((d) => d.id === "channel_totals")
+
+  it("channel_totals has exactly one netSubscribers column, in Engagement", () => {
+   const netSubs = channelTotals?.columns.filter((c) => c.key === "netSubscribers") ?? []
+   expect(netSubs.length, "expected exactly one netSubscribers column in channel_totals").toBe(1)
+   expect(netSubs[0]?.group).toBe("Engagement")
+  })
+
+  it("channel_totals has exactly one impressions column, in Revenue", () => {
+   const imps = channelTotals?.columns.filter((c) => c.key === "impressions") ?? []
+   expect(imps.length, "expected exactly one impressions column in channel_totals").toBe(1)
+   expect(imps[0]?.group).toBe("Revenue")
+  })
+
+  it("channel_totals has no duplicate column keys across the full table", () => {
+   const keys = (channelTotals?.columns ?? []).map((c) => c.key)
+   const dupes = keys.filter((k, i) => keys.indexOf(k) !== i)
+   expect(dupes, "duplicate column keys in channel_totals").toEqual([])
+  })
+ })
+
  describe("Explicit anchors — the specific mappings August refactors bounced (vt-2643)", () => {
   /*
    * These are the individual table→dataset bindings the roadmap explicitly
