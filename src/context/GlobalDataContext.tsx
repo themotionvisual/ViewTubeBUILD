@@ -1283,17 +1283,35 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
     hydrateAuthStateFromAnalyticsCache()
     setChannelBootPhase("ready")
 
-    // Begin the core channel data sync immediately after first login so the
+    // Begin the core channel data sync AFTER the login flow settles so the
     // dashboard overview (avatar + KPIs), the nav bar, and the analytics
-    // creator module hydrate without the user having to click "Sync". This runs
-    // inside the app-level context boot promise, so it keeps going even as the
-    // user navigates between pages. A sync failure must not tear down a
-    // successful connection, so it is isolated from the connect catch below.
-    try {
-     await globalSyncData({ batchMode: "initial" })
-    } catch (syncErr) {
-     console.warn("Post-login core sync failed; manual sync remains available.", syncErr)
-    }
+    // creator module hydrate without the user having to click "Sync".
+    //
+    // Mobile freeze fix (2026-08-24): this used to `await globalSyncData(...)`
+    // INSIDE the login boot promise. That meant the login flow — which the
+    // click handler is awaiting — didn't resolve until the entire initial
+    // sync finished (many parallel fetches + heavy response parsing + a
+    // cascade of React state updates). On mobile the main thread stayed
+    // pegged the whole time, so the hamburger, buttons, and links appeared
+    // completely unresponsive right after login.
+    //
+    // Fix: SCHEDULE the sync via requestIdleCallback (with a setTimeout
+    // fallback) so the login promise resolves immediately after the auth
+    // exchange, the UI thread yields, and the sync runs when the browser
+    // is idle. The dashboard still hydrates without user action; it just
+    // does so a few hundred ms later — after the click's visual feedback
+    // and any navigation the user does have had a chance to render.
+    //
+    // We do not await this — the login flow is done once the auth exchange
+    // succeeds. Failures still land in a warn log via the inner catch.
+    const scheduleDeferredSync = typeof window !== "undefined" && typeof window.requestIdleCallback === "function"
+     ? (cb: () => void) => window.requestIdleCallback(cb, { timeout: 2000 })
+     : (cb: () => void) => setTimeout(cb, 200)
+    scheduleDeferredSync(() => {
+     void globalSyncData({ batchMode: "initial" }).catch((syncErr) => {
+      console.warn("Post-login core sync failed; manual sync remains available.", syncErr)
+     })
+    })
    } catch (err) {
     if (isUnauthorizedError(err)) {
      unifiedAuth.logout()
