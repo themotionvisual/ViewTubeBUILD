@@ -20,6 +20,11 @@ import {
  type VideoAsset,
  type VideoAssetCatalogSnapshot,
 } from "../services/videoAssets"
+import { recordDiagnostic } from "../services/diagnostics"
+
+// Module-scoped render counter — see GlobalDataProvider counter for rationale.
+let vacpRenderCount = 0
+let vacpFirstRenderTs: number | null = null
 
 interface EnsureVideoAssetCatalogOptions {
  force?: boolean
@@ -43,6 +48,14 @@ const resolveLegacyChannelId = (): string | null => {
 }
 
 export const VideoAssetCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+ vacpRenderCount += 1
+ if (vacpFirstRenderTs === null) vacpFirstRenderTs = typeof performance !== "undefined" ? performance.now() : Date.now()
+ if (vacpRenderCount === 1 || vacpRenderCount === 10 || vacpRenderCount === 50
+     || vacpRenderCount === 100 || vacpRenderCount === 500 || vacpRenderCount === 1000) {
+  const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+  const elapsed = Math.round(now - (vacpFirstRenderTs ?? now))
+  recordDiagnostic("warn", "render-storm", `VideoAssetCatalogProvider render #${vacpRenderCount} (${elapsed}ms since first)`)
+ }
  const account = useUnifiedAccount()
  const initialBootstrap = useInitialChannelBootstrap()
  const [snapshot, setSnapshot] = useState<VideoAssetCatalogSnapshot>(EMPTY_VIDEO_ASSET_CATALOG)

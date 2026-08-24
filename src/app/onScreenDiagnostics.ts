@@ -111,9 +111,18 @@ export const installOnScreenDiagnostics = (): void => {
 
  if (!isDeveloperDiagnosticsEnabled() || typeof window.fetch !== "function") return
  const originalFetch = window.fetch
+ // Fetch volume counter — reveals API polling storms. Records at milestones
+ // (10, 50, 100, 500, 1000 fetches) so a runaway sync loop shows up as a
+ // rapid succession of these entries. Individual slow/failed fetches keep
+ // their own entries below.
+ let fetchCount = 0
  window.fetch = async (...args) => {
   const url = typeof args[0] === "string" ? args[0] : (args[0] as Request).url || "<request>"
   const requestId = `browser-${++requestSequence}`
+  fetchCount += 1
+  if (fetchCount === 10 || fetchCount === 50 || fetchCount === 100 || fetchCount === 500 || fetchCount === 1000) {
+   recordDiagnostic("warn", "fetch-volume", `${fetchCount} fetches so far — most recent: ${url.slice(0, 80)}`)
+  }
   const started = performance.now()
   const slowTimer = window.setTimeout(() => {
    recordDiagnostic("warn", "fetch-slow", `${requestId} ${url} still pending after 3000ms`)
