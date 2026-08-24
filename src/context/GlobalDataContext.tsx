@@ -807,6 +807,7 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
     const onStatus = (event: Event) => {
       const detail = (event as CustomEvent<ChannelAnalysisSyncStatus>).detail
       if (!detail) return
+      recordDiagnostic("info", "listener-fire", `vt_channel_sync_status phase=${detail.phase}`)
       setSyncStatus(detail)
       if (detail.phase === "complete") {
         setChannelBootPhase("ready")
@@ -989,6 +990,7 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
  useEffect(() => {
    // Keep last sync timestamp in sync with any cache reset actions.
    const onLocalDataChanged = () => {
+    recordDiagnostic("info", "listener-fire", "vt_local_data_changed / storage")
    try {
      setLastSyncComplete(localStorage.getItem("yt_analytics_last_sync") || null)
     } catch {
