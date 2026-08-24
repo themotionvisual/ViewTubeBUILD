@@ -15,11 +15,6 @@
  * Wrong estimates cause visible jumps as content scrolls in; the values
  * below are calibrated to the average module height observed in the app.
  *
- * Applied to `.vt-toolbox` because every Toolbox scaffold outer wrapper
- * already carries that class + `data-vt-toolbox` attribute. Toolboxes
- * are self-contained with `overflow-hidden` (unless overflowVisible was
- * requested), so content-visibility is safe here.
- *
  * The narrow-viewport skip is deliberate: on phones, sticky headers and
  * short scroll heights make content-visibility less useful and more
  * likely to cause jank. Desktop is where the win is.
@@ -29,8 +24,6 @@
     content-visibility: auto;
     contain-intrinsic-size: auto 420px;
   }
-  /* Explicit opt-in classes for callers that know their module is bigger
-     or is a data table (both need a taller reservation to avoid jumps). */
   .vt-cv-auto {
     content-visibility: auto;
     contain-intrinsic-size: auto 420px;
@@ -43,9 +36,6 @@
     content-visibility: auto;
     contain-intrinsic-size: auto 700px;
   }
-  /* Opt OUT for a single Toolbox where content-visibility hides sticky
-     descendants or breaks layout. Add `data-vt-cv-opt-out` on the
-     Toolbox element and this rule wins. */
   .vt-toolbox[data-vt-cv-opt-out] {
     content-visibility: visible;
     contain-intrinsic-size: none;
@@ -55,23 +45,12 @@
 /* -------------------------------------------------------------------- */
 /* QW#10 — container-query density tokens                               */
 /* -------------------------------------------------------------------- */
-/*
- * Modules that opt in via `.vt-density-container` become their own
- * container-query root. Density variables shrink as the container
- * narrows — regardless of viewport width. That's what you want on a
- * dashboard where a wide viewport still has a narrow column.
- *
- * Consumers use the tokens via `var(--vt-control-height)` etc. Existing
- * hard-coded values continue to work; adopting tokens is opt-in per
- * component so this rollout is zero-risk.
- */
 .vt-density-container {
   container-type: inline-size;
   --vt-control-height: 34px;
   --vt-header-size: 15px;
   --vt-gap: 10px;
 }
-
 @container (max-width: 520px) {
   .vt-density-container {
     --vt-control-height: 30px;
@@ -79,7 +58,6 @@
     --vt-gap: 7px;
   }
 }
-
 @container (max-width: 360px) {
   .vt-density-container {
     --vt-control-height: 27px;
@@ -88,156 +66,183 @@
   }
 }
 
-/* -------------------------------------------------------------------- */
-/* QW#9 — Responsive Tube Explorer chart-body heights on mobile         */
-/* -------------------------------------------------------------------- */
+/* ==================================================================== */
+/* MOBILE VISUAL-MODULE RESHAPE (2026-08-23) — the real fix             */
+/* ==================================================================== */
 /*
- * Tube Explorer visuals (Heat Matrix, Barcode, Clock Burst, etc.) render
- * their chart body inside a `<div data-vt-chart-body style="height:XXXpx">`
- * with a fixed pixel height that ModuleFrame receives via its `height`
- * prop (default 320, some visuals pass 400+).
+ * Previous attempts capped `.vt-toolbox` and `[data-vt-visual-card]` at
+ * 44svh/70svh with overflow:hidden. That CLIPPED content instead of
+ * fitting it — user reported "still cut off" on every following deploy.
  *
- * On mobile that fixed height, added to the shell chrome (header + 3
- * dropdown controllers + stat row + legend/footer), consumed roughly the
- * whole viewport — every visual read as "too tall" and forced the user
- * to scroll past a single card per screen in both portrait AND landscape.
+ * Cause: each analytics visual card ships with a huge amount of shell
+ * chrome before the chart body even starts:
  *
- * Override the inline pixel height on narrow viewports with an
- * aspect-ratio-first sizing: chart is 16/10 of its width, clamped by
- * a floor (so it never collapses on very narrow phones) and a ceiling
- * (so it never exceeds a share of the viewport height on the given
- * orientation). Uses !important because the inline `style="height:…"`
- * would otherwise win, and the sizing is a real accessibility fix, not
- * a preference. Consumers who want to opt out can add
- * `data-vt-chart-body-fixed` to skip the override.
+ *   80px  icon box (aspect-square + min-w-[80px])
+ *   +     giant title (clamp 20-42px + subtitle) inside 80px header
+ *   +    ~130px controller stack (each row 42px, 3 rows stacked)
+ *   +    ~44px "active-context" stat row
+ *   +     chart body
+ *   +     legend / how-to-read footer
+ *   =    ~250px of chrome before ~300px chart body
+ *
+ * The right fix is not to hide the chart body — it's to SHRINK THE CHROME
+ * on mobile so the chart body gets room to render naturally, without
+ * clipping and without the user needing to scroll each card individually.
+ *
+ * Below: mobile-only overrides that (1) shrink the header block to ~44px,
+ * (2) shrink the icon box to a rectangle (aspect-square dropped), (3)
+ * scale down the title, (4) flip the controller stack from vertical to
+ * a single horizontal scroll band, and (5) REMOVE the earlier
+ * max-height clips so content flows naturally.
  */
-/* Portrait phone: user requirement is "2-3 visuals visible per screen
-   height". A typical portrait viewport is ~800svh; each visual eats:
-       header  ~50px  +  3 controllers ~90px stacked  +  stat row ~40px
-     + chart body  +  legend/footer ~20px  ≈  200 + chart body.
-   Aim for chart body ~150-170px so total ~350-370px, fitting ~2 cards
-   comfortably (with header of the next one peeking in). The floor rises
-   with viewport to keep tablets useful. */
-@media (max-width: 767px) and (orientation: portrait) {
-  [data-vt-chart-body]:not([data-vt-chart-body-fixed]) {
-    height: auto !important;
-    aspect-ratio: 16 / 10;
-    min-height: 140px !important;
-    max-height: 28svh !important;
-  }
-  /* Also override the StableChartFrame min-h-[300px] Tailwind rule that
-     otherwise re-inflates the chart body. Any descendant with a min-h-[…]
-     Tailwind arbitrary height loses that floor on portrait mobile. */
-  [data-vt-chart-body] [class*="min-h-["] {
-    min-height: 0 !important;
-  }
-}
 
-/* Landscape phone: the whole viewport height is smaller (~400-500 CSS
-   px), so a 28svh chart would be tiny AND the shell chrome now competes
-   for the same height. Chart takes ~55% of viewport height, cap by width
-   so it never grows wider than 90vw. */
-@media (max-width: 900px) and (orientation: landscape) {
-  [data-vt-chart-body]:not([data-vt-chart-body-fixed]) {
-    height: auto !important;
-    aspect-ratio: 16 / 7;
-    min-height: 140px !important;
-    max-height: 55svh !important;
-  }
-  [data-vt-chart-body] [class*="min-h-["] {
-    min-height: 0 !important;
-  }
-}
-
-/* Also shrink the whole ModuleFrame shell on portrait phones so the
-   header + controllers + stat row don't eat 200 px per visual: reduce
-   header type, tighten controller vertical padding, drop the stat row
-   line-height. All limited to `.vt-toolbox` inside a mobile viewport so
-   nothing bleeds to desktop. */
-@media (max-width: 767px) and (orientation: portrait) {
-  .vt-toolbox header {
-    /* Tightens the 74-90 px header row that ships out of the box. */
+/* ---- (1) Header wrapper: min-h-[80px] -> 44 on portrait, 36 on landscape */
+@media (max-width: 767px) {
+  .vt-toolbox [class~="min-h-[80px]"] {
     min-height: 44px !important;
-    height: 44px !important;
   }
-  .vt-toolbox header h3,
-  .vt-toolbox header h1 {
-    font-size: 20px !important;
+}
+@media (max-width: 900px) and (orientation: landscape) {
+  .vt-toolbox [class~="min-h-[80px]"] {
+    min-height: 36px !important;
+  }
+}
+
+/* ---- (2) Icon box: aspect-square + min-w-[80px] -> compact rectangle */
+@media (max-width: 767px) {
+  .vt-toolbox [class~="aspect-square"][class~="min-w-[80px]"] {
+    min-width: 44px !important;
+    width: 44px !important;
+    aspect-ratio: unset !important;
+    align-self: stretch;
+  }
+  /* Shrink the icon SVG that lives inside — the source uses
+     `[&_svg]:h-[60px] [&_svg]:w-[60px]` which forces a 60×60 SVG. */
+  .vt-toolbox [class~="aspect-square"][class~="min-w-[80px]"] svg {
+    width: 28px !important;
+    height: 28px !important;
+  }
+}
+@media (max-width: 900px) and (orientation: landscape) {
+  .vt-toolbox [class~="aspect-square"][class~="min-w-[80px]"] {
+    min-width: 36px !important;
+    width: 36px !important;
+  }
+  .vt-toolbox [class~="aspect-square"][class~="min-w-[80px]"] svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+}
+
+/* ---- (3) Title + subtitle: shrink font, kill responsive giant sizes.
+       Source uses `text-[clamp(20px,5vw,42px)]` for title and
+       `text-[clamp(10px,2.2vw,14px)]` for subtitle. Force fixed small
+       values on mobile so the header stays compact regardless of viewport
+       width variation. */
+@media (max-width: 767px) {
+  .vt-toolbox [class~="text-[clamp(20px,5vw,42px)]"] {
+    font-size: 16px !important;
+    line-height: 1 !important;
+  }
+  .vt-toolbox [class~="text-[clamp(10px,2.2vw,14px)]"] {
+    font-size: 9px !important;
     line-height: 1 !important;
   }
 }
 
-/* -------------------------------------------------------------------- */
-/* HARD CAP: outer toolbox height on mobile to satisfy "2-3 visible"    */
-/* -------------------------------------------------------------------- */
-/*
- * The previous rules on `data-vt-chart-body` shrank the CHART BODY DIV
- * but the visual's own content (Heat Matrix's tile grid + COLD/HOT bar
- * + "HOW TO READ" legend, and analogous parts of other visuals) still
- * overflowed past that div — those elements have their own intrinsic
- * heights that our chart-body cap cannot override without breaking
- * their internal layout.
- *
- * Cap the OUTER `.vt-toolbox` (every visual card renders with this
- * class + `data-vt-toolbox`) so the card itself is at most ~44svh in
- * portrait / ~70svh in landscape. Anything the visual would render
- * taller gets clipped by `overflow: hidden`. This guarantees the
- * "2-3 per portrait screen" spec regardless of what each visual's
- * internal layout does.
- *
- * A small `data-vt-toolbox-uncapped` escape hatch skips the cap for any
- * toolbox where clipping is unacceptable (e.g. data tables, chat).
- *
- * NB: this is a stopgap. The proper fix is per-visual responsive
- * layouts (smaller tiles, hidden legends, collapsed metric rows) so
- * the visual fits into the frame naturally. That's tracked as a
- * follow-up per-component pass.
- */
-@media (max-width: 767px) and (orientation: portrait) {
-  .vt-toolbox:not([data-vt-toolbox-uncapped]) {
-    max-height: 44svh !important;
-    overflow: hidden !important;
+/* ---- (4) Controller stack: flip flex-col -> flex-row horizontal scroll.
+       Each row (SHOW ALL CHANNEL VIDEOS, ORDERED CHRONOLOGICAL, COLOR
+       VIEWS, etc.) becomes a fixed-width chip in a single horizontal band.
+       Users swipe the band left/right if there are more rows than fit. */
+@media (max-width: 767px) {
+  .vt-toolbox [data-controller-root] {
+    /* Override the JS-computed width and flex-col direction. */
+    flex-direction: row !important;
+    height: 34px !important;
+    max-height: 34px !important;
+    min-height: 34px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    border-left: none !important;
+    border-top: 4px solid black !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Each row inside the controller becomes a horizontal chip. */
+  .vt-toolbox [data-controller-root] > * {
+    height: 34px !important;
+    min-height: 34px !important;
+    /* Rows use border-b for vertical separation — swap to border-r. */
+    border-bottom: none !important;
+    border-right: 4px solid black !important;
+    /* The JS gives each row min-width via estimateRowMinWidth; enforce
+       a floor so the chip doesn't collapse below readable size. */
+    min-width: 130px !important;
+    flex: 0 0 auto !important;
+    /* Kill the "flex-1" that the LAST row inherits (which would stretch
+       it to fill vertical space in flex-col; now horizontally it would
+       stretch to fill the band, forcing everything else to compress). */
+  }
+  /* Kill inline label/number font-size that the source hard-codes (38px
+     for number rows) so nothing overflows the 34px band. */
+  .vt-toolbox [data-controller-root] span[style*="font-size: 38px"] {
+    font-size: 15px !important;
   }
 }
 @media (max-width: 900px) and (orientation: landscape) {
-  .vt-toolbox:not([data-vt-toolbox-uncapped]) {
-    max-height: 70svh !important;
-    overflow: hidden !important;
+  /* In landscape the band can be even shorter without hurting readability. */
+  .vt-toolbox [data-controller-root] {
+    height: 30px !important;
+    max-height: 30px !important;
+    min-height: 30px !important;
+  }
+  .vt-toolbox [data-controller-root] > * {
+    height: 30px !important;
+    min-height: 30px !important;
+    min-width: 110px !important;
   }
 }
 
-/* -------------------------------------------------------------------- */
-/* HARD CAP: RevealOnView per-visual card on the VT-Sync analytics page */
-/* -------------------------------------------------------------------- */
-/*
- * The `.vt-toolbox` cap above only affects Toolbox scaffolds. On the VT-Sync
- * local analytics page (viewtube.live/local-analytics), each visual is
- * wrapped in a `RevealOnView` div — NOT a `.vt-toolbox`. That wrapper had
- * only inline styles and no class, so nothing CSS-side could reach it.
- *
- * VtSyncDataVisualsToolbox.tsx now tags every RevealOnView wrapper with
- * `data-vt-visual-card`. Cap those directly here.
- *
- * Portrait mobile: max 44svh per card, overflow hidden. Landscape: 70svh.
- * Also override the inline `min-height: 360px` estimatedHeight that
- * RevealOnView sets before content loads — on mobile the reserved space
- * would otherwise still leave every card starting at 360px minimum.
- */
+/* ---- (5) Remove the earlier max-height clips.
+       With the chrome now ~80px instead of ~250px, the chart body gets
+       ~170px of extra vertical room per card without needing artificial
+       caps. The visuals themselves may still be tall on some pages;
+       users scroll the page, not each card. */
 @media (max-width: 767px) and (orientation: portrait) {
-  [data-vt-visual-card] {
-    max-height: 44svh !important;
+  [data-vt-chart-body]:not([data-vt-chart-body-fixed]) {
+    /* Was: max-height: 28svh. Now: no cap — let content decide. */
+    max-height: none !important;
+  }
+  [data-vt-chart-body] [class*="min-h-["] {
     min-height: 0 !important;
-    overflow: hidden !important;
-    /* Cancel the containIntrinsicSize reservation too, or the browser
-       still leaves that much room for skipped (offscreen) cards. */
-    contain-intrinsic-size: 44svh !important;
+  }
+  .vt-toolbox:not([data-vt-toolbox-uncapped]) {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  [data-vt-visual-card] {
+    max-height: none !important;
+    overflow: visible !important;
+    /* Keep a modest reserved height for offscreen cards so the scrollbar
+       doesn't lie about page length, but not so much it blocks 2-3-per-screen. */
+    contain-intrinsic-size: 260px !important;
   }
 }
 @media (max-width: 900px) and (orientation: landscape) {
-  [data-vt-visual-card] {
-    max-height: 70svh !important;
+  [data-vt-chart-body]:not([data-vt-chart-body-fixed]) {
+    max-height: none !important;
+  }
+  [data-vt-chart-body] [class*="min-h-["] {
     min-height: 0 !important;
-    overflow: hidden !important;
-    contain-intrinsic-size: 70svh !important;
+  }
+  .vt-toolbox:not([data-vt-toolbox-uncapped]) {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  [data-vt-visual-card] {
+    max-height: none !important;
+    overflow: visible !important;
+    contain-intrinsic-size: 220px !important;
   }
 }
