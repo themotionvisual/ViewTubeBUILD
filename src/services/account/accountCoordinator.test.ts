@@ -163,3 +163,64 @@ describe("accountCoordinator runtime resolution", () => {
   expect(store.get("vt_unified_account_snapshot_v1")).not.toBe("null")
  })
 })
+
+// Real-world mobile screenshot showed /api/account/auth/start hanging
+// 22+ seconds on iOS 5G then failing with WebKit "Load failed". The
+// error message didn't match ACCOUNT_SERVER_UNAVAILABLE_ERROR so the
+// legacy-fallback branch never fired and the user stayed stuck in
+// "CONNECTING...". These tests pin down the fix: network failures are
+// normalized to ACCOUNT_SERVER_UNAVAILABLE_ERROR so the caller's
+// existing fallback branch works.
+describe("accountFetch failure normalization", () => {
+ beforeEach(() => {
+  vi.resetModules()
+  vi.stubGlobal("window", {
+   location: {
+    origin: "https://viewtube.live",
+    hostname: "viewtube.live",
+   },
+  } as unknown as Window)
+  const store = new Map<string, string>()
+  vi.stubGlobal("localStorage", {
+   getItem: (k: string) => store.get(k) ?? null,
+   setItem: (k: string, v: string) => void store.set(k, v),
+   removeItem: (k: string) => void store.delete(k),
+   clear: () => store.clear(),
+  } as unknown as Storage)
+ })
+
+ it("fetchUnifiedAccountSnapshot treats WebKit 'Load failed' as server-unavailable and returns cached snapshot", async () => {
+  vi.stubGlobal(
+   "fetch",
+   vi.fn(async () => {
+    throw new TypeError("Load failed")
+   }) as unknown as typeof fetch,
+  )
+  const { fetchUnifiedAccountSnapshot, isUnifiedAccountServerEnabled } =
+   await import("./accountCoordinator")
+  const snapshot = await fetchUnifiedAccountSnapshot()
+  expect(snapshot).toBeTruthy()
+  // After a network failure the server-unavailable flag flips so
+  // subsequent calls skip the API entirely.
+  expect(isUnifiedAccountServerEnabled("viewtube.live")).toBe(false)
+ })
+
+ it("fetchUnifiedAccountSnapshot treats Chromium 'Failed to fetch' the same way", async () => {
+  vi.stubGlobal(
+   "fetch",
+   vi.fn(async () => {
+    throw new TypeError("Failed to fetch")
+   }) as unknown as typeof fetch,
+  )
+  const { fetchUnifiedAccountSnapshot } = await import("./accountCoordinator")
+  const snapshot = await fetchUnifiedAccountSnapshot()
+  expect(snapshot).toBeTruthy()
+  expect(snapshot.authentication.status).toBe("anonymous")
+ })
+
+ // beginAccountIntent's full auth-start path also runs through accountFetch,
+ // so it inherits the same normalization. Direct coverage of that call
+ // path requires stubbing shouldPreferAccountRedirect + window.open —
+ // out of scope for this file. The snapshot tests above prove the
+ // helper does the right thing.
+})
