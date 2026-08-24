@@ -150,57 +150,105 @@
   }
 }
 
-/* ---- (4) Controller stack: flip flex-col -> flex-row horizontal scroll.
-       Each row (SHOW ALL CHANNEL VIDEOS, ORDERED CHRONOLOGICAL, COLOR
-       VIEWS, etc.) becomes a fixed-width chip in a single horizontal band.
-       Users swipe the band left/right if there are more rows than fit. */
+/* ---- (4) One-row header + 2×2 controller grid on mobile.
+   Design pattern from the user's mock: on a phone, the whole header is
+   a single horizontal band:
+
+     [icon 44] [title flex-1 ellipsis] [2×2 controller grid 170] [reset 28]
+
+   Currently the source stacks title-over-controllers on mobile
+   (`flex-col sm:flex-row`) and the controller card is a vertical stack
+   (`flex-col`) that's easily 130+px tall. This override:
+
+     (a) forces the header wrapper to stay horizontal on mobile
+         (kills the `flex-col` layer);
+     (b) makes the controller container a fixed-width auto-height 2×2
+         GRID with wrapping so 1-4 rows all lay out sensibly;
+     (c) sizes each row cell to fit the grid instead of the 42px flex-col
+         stripe pattern the JS assumed.
+
+   4 controllers → 2×2 grid, 5-6 → 2×3, 3 → 2×2 with one blank slot,
+   2 → 1×2, 1 → single cell. The wrapping is automatic. */
+
 @media (max-width: 767px) {
-  .vt-toolbox [data-controller-root] {
-    /* Override the JS-computed width and flex-col direction. */
+  /* (4a) Header wrapper — kill the mobile `flex-col` so title + controllers
+     sit on ONE row. Source class: `flex min-h-[80px] flex-col sm:flex-row …`.
+     Match by the min-h-[80px] class we already override for its height. */
+  .vt-toolbox [class~="min-h-[80px]"] {
     flex-direction: row !important;
-    height: 34px !important;
-    max-height: 34px !important;
-    min-height: 34px !important;
-    width: 100% !important;
-    max-width: 100vw !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
+    align-items: stretch !important;
+  }
+
+  /* (4b) Controllers container — the wrapper that holds data-controller-root.
+     Source: `flex w-full shrink-0 items-stretch overflow-x-auto border-t-[4px]
+     border-black sm:w-auto sm:border-t-0`. On mobile it takes full width and
+     puts a top border (because the header wrapper stacked). Force it to be a
+     RIGHT-side sibling with a LEFT border and its own compact width. */
+  .vt-toolbox [class~="min-h-[80px]"] > [class~="border-t-[4px]"] {
+    width: auto !important;
+    max-width: 60% !important;
+    border-top: none !important;
+    border-left: 4px solid #000 !important;
+    overflow: visible !important;
+  }
+
+  /* (4c) data-controller-root itself: swap flex-col for a 2-column grid
+     that auto-wraps rows into a 2×2 (or 2×3 for 5-6 rows) block. */
+  .vt-toolbox [data-controller-root] {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    grid-auto-rows: 30px !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 44px !important;
+    width: 170px !important;
+    max-width: 170px !important;
+    overflow: hidden !important;
     border-left: none !important;
-    border-top: 4px solid black !important;
-    -webkit-overflow-scrolling: touch;
   }
-  /* Each row inside the controller becomes a horizontal chip. */
+  /* Each row cell — override the source's 42px flex-col stripe + border-b
+     pattern so the cells sit in the grid cleanly. */
   .vt-toolbox [data-controller-root] > * {
-    height: 34px !important;
-    min-height: 34px !important;
-    /* Rows use border-b for vertical separation — swap to border-r. */
-    border-bottom: none !important;
-    border-right: 4px solid black !important;
-    /* The JS gives each row min-width via estimateRowMinWidth; enforce
-       a floor so the chip doesn't collapse below readable size. */
-    min-width: 130px !important;
-    flex: 0 0 auto !important;
-    /* Kill the "flex-1" that the LAST row inherits (which would stretch
-       it to fill vertical space in flex-col; now horizontally it would
-       stretch to fill the band, forcing everything else to compress). */
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
+    min-width: 0 !important;
+    padding: 0 3px !important;
+    border-bottom: 2px solid #000 !important;
+    border-right: 2px solid #000 !important;
+    flex: unset !important;
+    font-size: 8px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
-  /* Kill inline label/number font-size that the source hard-codes (38px
-     for number rows) so nothing overflows the 34px band. */
+  /* Kill the border on the last cell of each row and the bottom row so the
+     grid doesn't have redundant outside borders. */
+  .vt-toolbox [data-controller-root] > *:nth-child(2n) {
+    border-right: none !important;
+  }
+  .vt-toolbox [data-controller-root] > *:nth-last-child(-n+2) {
+    border-bottom: none !important;
+  }
+  /* Kill the inline 38px number-row font that the source hard-codes so it
+     fits the 30px cells. */
   .vt-toolbox [data-controller-root] span[style*="font-size: 38px"] {
-    font-size: 15px !important;
+    font-size: 12px !important;
   }
 }
 @media (max-width: 900px) and (orientation: landscape) {
-  /* In landscape the band can be even shorter without hurting readability. */
+  /* Landscape: shorter cells, slightly wider grid block. */
   .vt-toolbox [data-controller-root] {
-    height: 30px !important;
-    max-height: 30px !important;
-    min-height: 30px !important;
+    grid-auto-rows: 26px !important;
+    min-height: 40px !important;
+    width: 190px !important;
+    max-width: 190px !important;
   }
   .vt-toolbox [data-controller-root] > * {
-    height: 30px !important;
-    min-height: 30px !important;
-    min-width: 110px !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    max-height: 26px !important;
   }
 }
 
