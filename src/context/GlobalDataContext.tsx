@@ -392,6 +392,17 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
   ...defaultAuthState,
   isAuthenticated: unifiedAuth.isAuthenticated(),
  }))
+ // authStateRef exists so useCallbacks like hydrateAuthStateFromAnalyticsCache
+ // can read the LATEST authState without having authState in their dep array.
+ // With authState in the dep array, the callback identity changes on every
+ // authState mutation → any useEffect depending on the callback re-runs →
+ // if that useEffect calls setState, it triggers a self-perpetuating loop.
+ // Diagnostic screenshots confirmed exactly this at line 1069:
+ // GlobalDataProvider was hitting 1,000+ renders in 3.7s because
+ // verifyExistingSession() → setAuthStateRaw → new hydrate ref → useEffect
+ // re-runs → verifyExistingSession() again.
+ const authStateRef = useRef(authState)
+ authStateRef.current = authState
  const [isAuthorizing, setIsAuthorizing] = useState(false)
  const [isSyncing, setIsSyncing] = useState<boolean>(false)
  const [channelIdentity, setChannelIdentity] = useState<ChannelIdentitySnapshot>(defaultChannelIdentity)
@@ -561,7 +572,12 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
  try {
    const cache = readYouTubeAnalyticsCache()
    const profile = ((cache?.profile || {}) as Record<string, any>)
-   const nextIdentity = buildChannelIdentityFromSources(authState, cache)
+   // Read authState via ref so this callback stays stable across authState
+   // mutations — the ONLY reason authState is used here is to feed the
+   // buildChannelIdentityFromSources helper. Reading it live via ref avoids
+   // recreating this callback on every authState change (see authStateRef
+   // comment near its declaration for the storm this prevents).
+   const nextIdentity = buildChannelIdentityFromSources(authStateRef.current, cache)
    if (Object.keys(profile).length === 0 && !nextIdentity.name && !nextIdentity.avatarUrl && !nextIdentity.channelId) return false
    const statistics = profile.statistics || {}
     setAuthStateRaw((prev) => ({
@@ -589,7 +605,13 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
    console.warn("[GlobalData] Failed to hydrate auth state from analytics cache:", error)
    return false
   }
- }, [applyChannelIdentity, authState])
+  // authState is intentionally NOT in the dep array — it's read via
+  // authStateRef.current above so this callback stays stable across
+  // authState mutations. See the render-storm loop this prevents at
+  // the line-1069 useEffect (verifyExistingSession → setAuthStateRaw
+  // → new hydrate ref → useEffect re-runs → verify again). Removing
+  // authState from deps is the whole point of the fix.
+ }, [applyChannelIdentity])
 
  const applyUnifiedAccountSnapshot = useCallback((snapshot: UnifiedAccountSnapshot) => {
   const authenticated = snapshot.authentication.status === "authenticated"
