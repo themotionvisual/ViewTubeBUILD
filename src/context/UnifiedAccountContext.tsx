@@ -71,10 +71,13 @@ export const UnifiedAccountProvider: React.FC<{ children: React.ReactNode }> = (
   }, [commitSnapshot])
 
   useEffect(() => {
-    if (isUnifiedAccountServerEnabled()) {
-      void refresh()
-      return
-    }
+    // Legacy path — sourced from the local OAuth token. Used both when the
+    // account server is disabled up-front AND as the fallback after the
+    // server refresh() marks itself unavailable. Without the second path
+    // the snapshot stays "anonymous" even when the token is valid — the
+    // exact split-brain state where the nav shell shows "SIGNED IN" while
+    // the AccountActionButton renders "SIGN UP" and widgets prompt to
+    // connect a channel.
     const syncLegacy = () => {
       if (!isLegacyAuthenticated()) {
         setSnapshot(readCachedAccountSnapshot())
@@ -87,6 +90,21 @@ export const UnifiedAccountProvider: React.FC<{ children: React.ReactNode }> = (
         nextIntent: "manage_account",
         error: null,
       }))
+    }
+
+    if (isUnifiedAccountServerEnabled()) {
+      // Try the server first. If it fails and marks itself unavailable,
+      // fall through to the legacy path so a valid local OAuth token
+      // still gets reflected as an authenticated snapshot.
+      void refresh().then(() => {
+        if (!isUnifiedAccountServerEnabled()) syncLegacy()
+      })
+      // Also subscribe to vt_auth_changed so a fresh login / logout via
+      // the legacy popup updates the snapshot even in server mode. The
+      // syncLegacy body is a no-op when the token is absent + snapshot
+      // is already anonymous, so this is cheap.
+      window.addEventListener("vt_auth_changed", syncLegacy)
+      return () => window.removeEventListener("vt_auth_changed", syncLegacy)
     }
     syncLegacy()
     window.addEventListener("vt_auth_changed", syncLegacy)
