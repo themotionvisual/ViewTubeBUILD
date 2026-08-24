@@ -9,7 +9,9 @@ import { GeminiKeyProvider } from "./context/GeminiKeyContext"
 import { AppShell } from "./app/AppShell"
 import { AppRoutes } from "./app/AppRoutes"
 import { ScrollToTop } from "./app/ScrollToTop"
+import { DiagnosticOverlay } from "./app/DiagnosticOverlay"
 import { recordBootPhase } from "./app/onScreenDiagnostics"
+import { isDeveloperDiagnosticsEnabled } from "./services/diagnostics"
 
 const DARK_THEME_CSS = `
   .dark-theme-override {
@@ -53,9 +55,18 @@ const DARK_THEME_CSS = `
 function AppInner() {
  const location = useLocation()
  const isBareRoute = location.pathname.startsWith("/render-bench")
+ // Diagnostic overlay renders only when the user explicitly enabled it via
+ // ?vtDiagnostics=1 or localStorage vt_diagnostics=1. Computed once per mount
+ // (URL param check is stable; localStorage toggles across sessions).
+ const showDiag = useMemo(() => isDeveloperDiagnosticsEnabled(), [])
 
  if (isBareRoute) {
-  return <AppRoutes />
+  return (
+   <>
+    <AppRoutes />
+    {showDiag ? <DiagnosticOverlay /> : null}
+   </>
+  )
  }
 
  return (
@@ -65,6 +76,7 @@ function AppInner() {
    <AppShell>
     <AppRoutes />
    </AppShell>
+   {showDiag ? <DiagnosticOverlay /> : null}
   </>
  )
 }
