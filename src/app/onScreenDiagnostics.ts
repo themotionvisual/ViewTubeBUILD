@@ -59,6 +59,30 @@ const installLongTaskDiagnostics = () => {
  }
 }
 
+/**
+ * Fires a small "still alive" pulse every ~500ms via setInterval.
+ * setInterval callbacks queue while the main thread is blocked and only run
+ * when it unblocks — so if we see a large gap between successive ticks, the
+ * main thread was frozen for that long. We only RECORD a diagnostic when
+ * the observed gap exceeds ~700ms (a 200ms tolerance over the nominal
+ * 500ms interval), so a healthy session produces no noise and only real
+ * freezes leave a trail.
+ */
+const installMainThreadHeartbeat = () => {
+ if (!isDeveloperDiagnosticsEnabled() || typeof window === "undefined") return
+ const INTERVAL_MS = 500
+ const REPORT_GAP_MS = 700
+ let lastTick = performance.now()
+ window.setInterval(() => {
+  const now = performance.now()
+  const gap = now - lastTick
+  lastTick = now
+  if (gap > REPORT_GAP_MS) {
+   recordDiagnostic("warn", "main-thread-stall", `${Math.round(gap)}ms since last tick (expected ~${INTERVAL_MS}ms)`)
+  }
+ }, INTERVAL_MS)
+}
+
 export const installOnScreenDiagnostics = (): void => {
  if (installed || typeof window === "undefined") return
  installed = true
@@ -83,6 +107,7 @@ export const installOnScreenDiagnostics = (): void => {
 
  recordDiagnostic("info", "boot", navigator.userAgent.slice(0, 100))
  installLongTaskDiagnostics()
+ installMainThreadHeartbeat()
 
  if (!isDeveloperDiagnosticsEnabled() || typeof window.fetch !== "function") return
  const originalFetch = window.fetch
