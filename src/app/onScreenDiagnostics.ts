@@ -71,12 +71,18 @@ const installLongTaskDiagnostics = () => {
 const installMainThreadHeartbeat = () => {
  if (!isDeveloperDiagnosticsEnabled() || typeof window === "undefined") return
  const INTERVAL_MS = 500
- const REPORT_GAP_MS = 700
+ // iOS mobile browsers throttle setInterval to ~1Hz for backgrounded/inactive
+ // tabs, so a gap of ~1000ms is normal and NOT a real freeze. Only flag gaps
+ // above ~1600ms — that's beyond mere throttling and points at genuine
+ // main-thread blocking. Also skip flagging when the page reports itself as
+ // hidden, so a briefly-swapped-away tab doesn't produce noise.
+ const REPORT_GAP_MS = 1600
  let lastTick = performance.now()
  window.setInterval(() => {
   const now = performance.now()
   const gap = now - lastTick
   lastTick = now
+  if (typeof document !== "undefined" && document.visibilityState === "hidden") return
   if (gap > REPORT_GAP_MS) {
    recordDiagnostic("warn", "main-thread-stall", `${Math.round(gap)}ms since last tick (expected ~${INTERVAL_MS}ms)`)
   }
