@@ -13,6 +13,54 @@ const ACCOUNT_POPUP_FEATURES = "popup=yes,width=560,height=720,menubar=no,toolba
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"])
 const ACCOUNT_SERVER_UNAVAILABLE_ERROR = "ACCOUNT_SERVER_UNAVAILABLE"
 
+// Timeout for account-API fetches. Real diagnostic screenshots showed
+// /api/account/auth/start hanging 22+ seconds on iOS 5G before WebKit
+// gave up with "Load failed". Without an explicit timeout the user
+// stays stuck in "CONNECTING..." for the full duration, and even then
+// the WebKit failure doesn't match ACCOUNT_SERVER_UNAVAILABLE_ERROR so
+// the legacy Google-popup fallback never fires. Ten seconds is plenty
+// for a warm Vercel serverless function; anything longer means the
+// endpoint is broken/undeployed and the user should get the legacy
+// path immediately.
+const ACCOUNT_FETCH_TIMEOUT_MS = 10_000
+
+/**
+ * fetch() wrapper with an AbortController-based timeout. On timeout
+ * throws an Error with message ACCOUNT_SERVER_UNAVAILABLE_ERROR so the
+ * caller's existing "server unavailable → legacy fallback" branch
+ * fires. Network-layer failures (DNS, TLS, TCP reset, WebKit
+ * "Load failed") are similarly normalized to ACCOUNT_SERVER_UNAVAILABLE_ERROR
+ * so callers don't have to special-case each WebKit variant.
+ */
+const accountFetch = async (
+ input: string,
+ init: RequestInit = {},
+ timeoutMs: number = ACCOUNT_FETCH_TIMEOUT_MS,
+): Promise<Response> => {
+ const controller = typeof AbortController !== "undefined" ? new AbortController() : null
+ const timer = controller
+  ? setTimeout(() => controller.abort(), timeoutMs)
+  : null
+ try {
+  return await fetch(input, { ...init, signal: controller?.signal })
+ } catch (error) {
+  const message = error instanceof Error ? error.message : String(error)
+  // AbortError = our timeout. Network failures on WebKit surface as
+  // "Load failed" and on Chromium as "Failed to fetch" / "NetworkError".
+  // All three mean the caller should treat the account server as down
+  // and fall back to the legacy flow.
+  if (
+   controller?.signal.aborted
+   || /Load failed|Failed to fetch|NetworkError|AbortError/i.test(message)
+  ) {
+   throw new Error(ACCOUNT_SERVER_UNAVAILABLE_ERROR)
+  }
+  throw error
+ } finally {
+  if (timer !== null) clearTimeout(timer)
+ }
+}
+
 let unifiedAccountServerUnavailable = false
 
 export const markUnifiedAccountServerUnavailable = (): void => {
@@ -325,7 +373,7 @@ export const clearCachedAccountSession = (): void => {
 export const fetchUnifiedAccountSnapshot = async (): Promise<UnifiedAccountSnapshot> => {
   if (!isUnifiedAccountServerEnabled()) return readCachedAccountSnapshot()
   try {
-    const response = await fetch(accountUrl("/api/account/snapshot"), {
+    const response = await accountFetch(accountUrl("/api/account/snapshot"), {
       credentials: "include",
       headers: { Accept: "application/json" },
     })
@@ -397,7 +445,7 @@ export const beginAccountIntent = async (
   const useRedirect = shouldPreferAccountRedirect()
   const popup = useRedirect ? null : openAccountPopup()
   try {
-    const response = await fetch(accountUrl("/api/account/auth/start"), {
+    const response = await accountFetch(accountUrl("/api/account/auth/start"), {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
