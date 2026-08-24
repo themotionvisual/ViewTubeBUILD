@@ -49,9 +49,14 @@ node_modules/
 # Local ViewTube planning/reference material
 # These belong in the parent workspace under /Users/cwb/Downloads/viewtube/docs/
 # or /Users/cwb/Downloads/viewtube/standalone-html/, not in the launchable app repo.
-docs/
-# Repo-authored migration guides are the one docs/ subtree we DO commit.
+# Ignore user-download docs (a Downloads-path standalone-html bundle etc.),
+# but keep the door open for repo-authored subtrees below. Using `docs/*`
+# (not `docs/`) is deliberate — git cannot re-include a file whose parent
+# DIRECTORY is excluded, only whose children are excluded.
+docs/*
+# Repo-authored migration guides — see docs/migration/README.md.
 !docs/migration/
+!docs/migration/**
 _quarantine/
 _migration_hub/
 sources/
