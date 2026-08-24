@@ -2,6 +2,10 @@
 // isLoginAbortError now lives in services/auth/loginErrors so VtSyncControllerPanel
 // (and any other login catch site) can classify aborts the same way.
 import { isLoginAbortError } from "../services/auth/loginErrors"
+// recordDiagnostic writes into the buffer the DiagnosticOverlay reads — used
+// for the post-login boot-timing markers so mobile users can see exactly
+// where the freeze lands without a Mac + USB DevTools session.
+import { recordDiagnostic } from "../services/diagnostics"
 import React, {
  useState,
  useCallback,
@@ -616,11 +620,20 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
    applyUnifiedAccountSnapshot(snapshot)
   }
   const onAuthChanged = () => {
+   const evtTs = typeof performance !== "undefined" ? performance.now() : Date.now()
    if (unifiedAuth.isAuthenticated()) {
+    recordDiagnostic("info", "boot-timing", "vt_auth_changed → hydrating from analytics cache")
     setAuthStateRaw((prev) => ({ ...prev, isAuthenticated: true }))
     hydrateAuthStateFromAnalyticsCache()
+    const afterHydrateTs = typeof performance !== "undefined" ? performance.now() : Date.now()
+    recordDiagnostic(
+     "info",
+     "boot-timing",
+     `hydrateAuthStateFromAnalyticsCache took ${Math.round(afterHydrateTs - evtTs)}ms`,
+    )
     return
    }
+   recordDiagnostic("info", "boot-timing", "vt_auth_changed → logged out, refreshing snapshot")
    void fetchUnifiedAccountSnapshot().then(applyUnifiedAccountSnapshot).catch(() => {
     setAuthStateRaw((prev) => ({ ...prev, isAuthenticated: false }))
    })
@@ -1307,10 +1320,31 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
     const scheduleDeferredSync = typeof window !== "undefined" && typeof window.requestIdleCallback === "function"
      ? (cb: () => void) => window.requestIdleCallback(cb, { timeout: 2000 })
      : (cb: () => void) => setTimeout(cb, 200)
+    // Instrumentation for on-screen diagnostic overlay (?vtDiagnostics=1) so
+    // we can measure exactly where the post-login work lands. Fires
+    // independently of the sync scheduling — the marks are cheap.
+    const loginTs = typeof performance !== "undefined" ? performance.now() : Date.now()
+    recordDiagnostic("info", "boot-timing", `login exchange done, scheduling initial sync`)
     scheduleDeferredSync(() => {
-     void globalSyncData({ batchMode: "initial" }).catch((syncErr) => {
-      console.warn("Post-login core sync failed; manual sync remains available.", syncErr)
-     })
+     const startTs = typeof performance !== "undefined" ? performance.now() : Date.now()
+     recordDiagnostic(
+      "info",
+      "boot-timing",
+      `initial sync starting (${Math.round(startTs - loginTs)}ms after login)`,
+     )
+     void globalSyncData({ batchMode: "initial" })
+      .then(() => {
+       const doneTs = typeof performance !== "undefined" ? performance.now() : Date.now()
+       recordDiagnostic(
+        "info",
+        "boot-timing",
+        `initial sync complete (${Math.round(doneTs - startTs)}ms sync, ${Math.round(doneTs - loginTs)}ms total since login)`,
+       )
+      })
+      .catch((syncErr) => {
+       console.warn("Post-login core sync failed; manual sync remains available.", syncErr)
+       recordDiagnostic("warn", "boot-timing", `initial sync failed: ${String(syncErr?.message || syncErr)}`)
+      })
     })
    } catch (err) {
     if (isUnauthorizedError(err)) {

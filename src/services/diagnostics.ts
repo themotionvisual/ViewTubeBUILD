@@ -65,8 +65,19 @@ export const sanitizeDiagnosticData = (value: Record<string, unknown> | undefine
 export const isDeveloperDiagnosticsEnabled = (): boolean => {
  if (typeof window === "undefined") return Boolean(import.meta.env?.DEV)
  if (import.meta.env?.DEV) return true
+ // ?vtDiagnostics=1 enables AND persists so a mobile user who lands with the
+ // param once keeps the overlay on across every subsequent navigation.
+ // Passing ?vtDiagnostics=0 turns it back off.
  const params = new URLSearchParams(window.location.search)
- if (params.get("vtDiagnostics") === "1") return true
+ const paramValue = params.get("vtDiagnostics")
+ if (paramValue === "1") {
+  try { window.localStorage.setItem("vt_diagnostics", "1") } catch { /* no-op */ }
+  return true
+ }
+ if (paramValue === "0") {
+  try { window.localStorage.removeItem("vt_diagnostics") } catch { /* no-op */ }
+  return false
+ }
  try { return window.localStorage.getItem("vt_diagnostics") === "1" } catch { return false }
 }
 
