@@ -66,6 +66,12 @@ const iconMap: Record<string, string> = {
   '!!!IDEA': 'lightbulb_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',
   '!!!ANALYTICS': '!!!TRAFIC.svg',
   '!!!PALETTE': 'palette_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',
+  // The Palette sub-toolboxes in ThumbnailStudio and EndScreenTool pass
+  // `paint-bucket` as the icon name; there is no paint-bucket asset in
+  // src/assets/icons, so the resolver was falling through to
+  // /icons/paint-bucket.svg which 404s. Map to the existing Material
+  // palette svg — semantically identical for a color-palette rail.
+  'paint-bucket': 'palette_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',
   '!!!TEXT': 'format_shapes_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',
   '!!!COLLECTION': 'view_cozy_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',
   '!!!CLOUD': 'cloud_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',

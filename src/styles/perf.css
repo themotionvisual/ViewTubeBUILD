@@ -294,3 +294,108 @@
     contain-intrinsic-size: 220px !important;
   }
 }
+
+/* -------------------------------------------------------------------- */
+/* Studio Hub sub-toolbox mobile fit                                    */
+/* -------------------------------------------------------------------- */
+/*
+ * The ToolboxScaffold header (used by every StudioHub sub-tool + the
+ * dashboard analytics widgets) hardcodes:
+ *   - headerHeight: 56px  (via CONTROL_SHELL)
+ *   - IconRail width matching header height
+ *   - Title text: text-[32px] on mobile (sm+ ramps to 40px)
+ *   - Border: 4px stroke, radius 16px, shadow 6px
+ *
+ * On a 375px viewport that leaves ~200px for the title after subtracting
+ * the 56px icon rail, ~120px of right-side action chrome (help + toggle +
+ * padding), and 4px+4px borders. A phrase like "COMMUNITY POSTS" at 32px
+ * either wraps to two lines (blowing header height way past 56px because
+ * min-height stays at 56) or forces horizontal overflow. Fix by shrinking
+ * every axis of the header on portrait phones so the natural rhythm still
+ * works.
+ *
+ * These rules only apply to the OUTER scaffold header — they do not touch
+ * the visual-card widget headers inside the analytics dashboard, which
+ * already got their own compact rules in the section above.
+ */
+@media (max-width: 767px) and (orientation: portrait) {
+  /* Header + icon rail height come down together to keep the icon centered. */
+  .vt-toolbox > header {
+    height: 44px !important;
+    min-height: 44px !important;
+  }
+  /* IconRail is the first child inside header; its width matches header height.
+     Aspect-square by construction, so shrinking width is enough. */
+  .vt-toolbox > header > div:first-child > div:first-child {
+    width: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+  }
+  /* Icon SVG inside the rail — was size=40, shrink to 24 so it clears the
+     44px rail with margin. */
+  .vt-toolbox > header > div:first-child > div:first-child svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  /* Title — was text-[32px] on mobile via the source's ramp. Cap at 18px
+     and tighten tracking so multi-word titles ("COMMUNITY POSTS",
+     "COMMENT RESPONDER") stay on one line. */
+  .vt-toolbox > header h3 {
+    font-size: 18px !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  /* Help/toggle buttons on the right stay their existing size but tighten
+     the padding so the whole right cluster consumes less of the row. */
+  .vt-toolbox > header > div:last-child {
+    padding-right: 6px !important;
+    gap: 4px !important;
+  }
+  /* Outer stroke/shadow/radius — shrink the neo-brutalist chrome so the
+     toolbox looks proportional to its now-compact header. */
+  .vt-toolbox[data-vt-toolbox] {
+    border-width: 3px !important;
+    border-radius: 12px !important;
+    box-shadow: 4px 4px 0 0 currentColor !important;
+  }
+
+  /* Studio Hub page title — text-7xl (72px) is 2× too big for a 375px
+     viewport. Cap on mobile so "STUDIO HUB" fits on one line. */
+  .flex.flex-col > .mb-10 > h2.text-7xl {
+    font-size: 40px !important;
+    line-height: 1 !important;
+  }
+}
+@media (max-width: 900px) and (orientation: landscape) {
+  /* Landscape phones — same intent as portrait, slightly less aggressive
+     shrinking since horizontal room isn't the constraint. */
+  .vt-toolbox > header {
+    height: 44px !important;
+    min-height: 44px !important;
+  }
+  .vt-toolbox > header > div:first-child > div:first-child {
+    width: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+  }
+  .vt-toolbox > header > div:first-child > div:first-child svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  .vt-toolbox > header h3 {
+    font-size: 20px !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  .vt-toolbox[data-vt-toolbox] {
+    border-width: 3px !important;
+    border-radius: 12px !important;
+    box-shadow: 4px 4px 0 0 currentColor !important;
+  }
+}
