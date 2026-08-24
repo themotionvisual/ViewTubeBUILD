@@ -15,6 +15,10 @@
 !/tests/
 !/.github/
 !/governance/
+# Repo-authored docs (migration guides, phase plans). Only /docs/migration/
+# is tracked; other subtrees under /docs/ are user-download reference
+# material and remain ignored by the docs/* rule further down.
+!/docs/
 
 # Essential root configuration files
 !/package.json
