@@ -9,6 +9,12 @@ export type GoogleProxyErrorCode =
  | "GOOGLE_RATE_LIMITED"
  | "GOOGLE_UPSTREAM_UNAVAILABLE"
  | "GOOGLE_PROXY_TIMEOUT"
+ // The proxy handler itself rejected the request (misconfigured origin
+ // allowlist, static-only deployment, dead route). Distinct from
+ // GOOGLE_SCOPE_REQUIRED — the user's OAuth scopes are irrelevant here,
+ // the fix is either to redeploy the proxy or bypass it and call
+ // Google directly with the user's own token.
+ | "PROXY_ORIGIN_REJECTED"
 
 export interface GoogleProxyErrorDetails {
  code: GoogleProxyErrorCode
@@ -28,7 +34,22 @@ const KNOWN_CODES = new Set<GoogleProxyErrorCode>([
  "GOOGLE_RATE_LIMITED",
  "GOOGLE_UPSTREAM_UNAVAILABLE",
  "GOOGLE_PROXY_TIMEOUT",
+ "PROXY_ORIGIN_REJECTED",
 ])
+
+// Bodies that indicate the proxy handler itself is refusing the
+// request (misconfigured origin allowlist, dead route, static-only
+// deployment). Real user-visible example: "Request origin is not
+// allowed." served with 401/403. Callers can catch PROXY_ORIGIN_REJECTED
+// and retry via the direct Google endpoint with the user's own OAuth
+// token instead of giving up on the sync.
+const ORIGIN_REJECTION_BODY_PATTERNS = [
+ "Request origin is not allowed",
+ "Account request failed",
+]
+
+const looksLikeOriginRejection = (bodyText: string): boolean =>
+ ORIGIN_REJECTION_BODY_PATTERNS.some((pattern) => bodyText.includes(pattern))
 
 const fallbackDetails = (response: Response): GoogleProxyErrorDetails => {
  if (response.status === 401) {
@@ -52,9 +73,23 @@ const fallbackDetails = (response: Response): GoogleProxyErrorDetails => {
 export const readGoogleProxyError = async (response: Response): Promise<GoogleProxyErrorDetails | null> => {
  if (response.ok) return null
  const fallback = fallbackDetails(response)
- const payload = await response.clone().json().catch(() => null) as {
-  error?: string | Partial<GoogleProxyErrorDetails> & { message?: string }
- } | null
+ // Read the body once as text so both the JSON parse AND the origin-
+ // rejection sniff share the same bytes. Origin-rejection bodies are
+ // usually plain strings ("Request origin is not allowed.") — misclassified
+ // as GOOGLE_SCOPE_REQUIRED by the 403 fallback, which sends callers down
+ // a "reconnect Google" branch that will never help. We detect and remap
+ // to PROXY_ORIGIN_REJECTED so callers can bypass the proxy instead.
+ const bodyText = await response.clone().text().catch(() => "")
+ if (looksLikeOriginRejection(bodyText)) {
+  return {
+   code: "PROXY_ORIGIN_REJECTED",
+   message: bodyText.trim() || "The account proxy rejected this request; falling back to a direct Google call.",
+   retryable: true,
+   reconnectRequired: false,
+  }
+ }
+ let payload: { error?: string | Partial<GoogleProxyErrorDetails> & { message?: string } } | null = null
+ try { payload = bodyText ? JSON.parse(bodyText) : null } catch { payload = null }
  const error = payload?.error
  if (!error || typeof error === "string") {
   return { ...fallback, message: typeof error === "string" && error ? error : fallback.message }

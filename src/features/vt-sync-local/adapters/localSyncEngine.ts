@@ -324,14 +324,52 @@ const parseDurationSeconds = (duration: unknown): number => {
 }
 
 const fetchWithBackoff = async (url: string, token: string, maxRetries = 3): Promise<Response> => {
- const request = () => token === VT_SYNC_SERVER_ACCOUNT_TOKEN
-  ? fetch("/api/account/google-proxy", {
+ // fallbackTokenRef holds the direct Google OAuth token discovered lazily
+ // when a proxy request fails with PROXY_ORIGIN_REJECTED. Once the proxy
+ // has been proven dead we keep using the direct token for the rest of
+ // this sync run, so subsequent bundles inside the same run don't each
+ // pay the "hit the broken proxy first" penalty.
+ let fallbackToken: string | null = null
+
+ const request = async (): Promise<Response> => {
+  const effectiveToken = fallbackToken || token
+  if (effectiveToken === VT_SYNC_SERVER_ACCOUNT_TOKEN) {
+   const proxyResponse = await fetch("/api/account/google-proxy", {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ url }),
-  })
-  : fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+   })
+   if (proxyResponse.ok) return proxyResponse
+   // Detect the specific "proxy handler refused us" body so we can
+   // immediately retry via a direct Google call with the user's own
+   // token. Without this the sync gives up on the whole bundle and
+   // the sync controller misleadingly reports "done".
+   const details = await readGoogleProxyError(proxyResponse)
+   if (details?.code === "PROXY_ORIGIN_REJECTED") {
+    try {
+     const [{ getValidAccessToken }, { markUnifiedAccountServerUnavailable }] = await Promise.all([
+      import("../../../services/auth/authSession"),
+      import("../../../services/account/accountCoordinator"),
+     ])
+     // Flip the module-level flag so subsequent bundles in this run
+     // (and future syncs) go straight to direct-token, skipping the
+     // broken proxy entirely.
+     markUnifiedAccountServerUnavailable()
+     const direct = await getValidAccessToken()
+     if (direct) {
+      fallbackToken = direct
+      return fetch(url, { headers: { Authorization: `Bearer ${direct}` } })
+     }
+    } catch {
+     // If the direct-token grab itself fails we let the proxy response
+     // propagate so requestGoogleWithRetry classifies it normally.
+    }
+   }
+   return proxyResponse
+  }
+  return fetch(url, { headers: { Authorization: `Bearer ${effectiveToken}` } })
+ }
  let operation = "google-read"
  try { operation = new URL(url).pathname } catch {
   // Keep the generic operation label for malformed or relative diagnostic URLs.
