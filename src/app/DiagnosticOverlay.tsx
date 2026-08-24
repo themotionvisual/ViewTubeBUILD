@@ -28,10 +28,34 @@ const fmtTime = (ms: number): string => {
  return `${(ms / 1000).toFixed(1)}s`
 }
 
+const EXPANDED_STORAGE_KEY = "vt_diagnostics_expanded"
+
+const readInitialExpanded = (): boolean => {
+ // Default to EXPANDED so a user who can't tap (main-thread freeze) still sees
+ // the log and can screenshot it. Users who prefer the compact chip can tap to
+ // collapse — the choice persists.
+ if (typeof window === "undefined") return true
+ try {
+  const stored = window.localStorage.getItem(EXPANDED_STORAGE_KEY)
+  if (stored === "0") return false
+  return true
+ } catch {
+  return true
+ }
+}
+
 export const DiagnosticOverlay: React.FC = () => {
  const [entries, setEntries] = useState<readonly DiagnosticEntry[]>([])
- const [expanded, setExpanded] = useState(false)
+ const [expanded, setExpandedState] = useState(readInitialExpanded)
  const [copyState, setCopyState] = useState<"idle" | "copied">("idle")
+
+ const setExpanded = (next: boolean | ((prev: boolean) => boolean)) => {
+  setExpandedState((prev) => {
+   const value = typeof next === "function" ? next(prev) : next
+   try { window.localStorage.setItem(EXPANDED_STORAGE_KEY, value ? "1" : "0") } catch { /* no-op */ }
+   return value
+  })
+ }
 
  useEffect(() => {
   const tick = () => setEntries(readDiagnostics())
@@ -68,24 +92,28 @@ export const DiagnosticOverlay: React.FC = () => {
   }
  }
 
+ // Anchored to the TOP so Safari's bottom URL bar / gesture area can't cover
+ // it. Left-aligned so screenshots (which trim right-side content less on
+ // most phones) always capture the log. Full-width on mobile when expanded.
  const containerStyle: React.CSSProperties = {
   position: "fixed",
-  right: 8,
-  bottom: 8,
+  left: 6,
+  top: "max(6px, env(safe-area-inset-top))",
+  right: expanded ? 6 : "auto",
   zIndex: 2147483000, // above everything else in the app
   fontFamily: "ui-monospace, 'SF Mono', 'Menlo', monospace",
-  fontSize: 11,
+  fontSize: 12,
   lineHeight: 1.3,
   color: "#e8eaf0",
-  background: "rgba(11,13,19,0.92)",
-  border: "1px solid rgba(140,140,155,0.35)",
+  background: "rgba(11,13,19,0.94)",
+  border: "1px solid rgba(140,140,155,0.4)",
   borderRadius: 8,
-  boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+  boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
   backdropFilter: "blur(6px)",
   WebkitBackdropFilter: "blur(6px)",
   pointerEvents: "auto",
-  maxWidth: expanded ? "min(94vw, 460px)" : "160px",
-  maxHeight: expanded ? "min(70vh, 480px)" : "36px",
+  maxWidth: expanded ? "min(98vw, 640px)" : "160px",
+  maxHeight: expanded ? "min(80vh, 620px)" : "36px",
   transition: "max-width 160ms ease, max-height 160ms ease",
   display: "flex",
   flexDirection: "column",
@@ -160,7 +188,7 @@ export const DiagnosticOverlay: React.FC = () => {
        WebkitOverflowScrolling: "touch",
        padding: "6px 10px 10px",
        display: "flex",
-       flexDirection: "column-reverse",
+       flexDirection: "column",
        gap: 4,
       }}
       onClick={(e) => e.stopPropagation()}
