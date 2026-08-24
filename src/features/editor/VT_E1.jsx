@@ -2476,8 +2476,10 @@ import JSZip from 'jszip';
     const durationOf = (clip) => Math.max(0.05, clip.end - clip.start);
     const isVideoLikeUrl = (url) => /\.(mp4|webm|mov|m4v|ogg)(\?|#|$)/i.test(String(url || ''));
     const isImageLikeUrl = (url) => /\.(png|jpe?g|gif|webp|svg|avif)(\?|#|$)/i.test(String(url || ''));
+    const isAudioLikeUrl = (url) => /\.(mp3|wav|m4a|aac|flac|oga|ogg|opus)(\?|#|$)/i.test(String(url || ''));
     const isVideoMimeLike = (mime) => String(mime || '').toLowerCase().startsWith('video/');
     const isImageMimeLike = (mime) => String(mime || '').toLowerCase().startsWith('image/');
+    const isAudioMimeLike = (mime) => String(mime || '').toLowerCase().startsWith('audio/');
     const isVideoPayload = (payload = {}) => (
       payload.mediaKind === 'video'
       || isVideoMimeLike(payload.mediaMime)
@@ -2489,6 +2491,12 @@ import JSZip from 'jszip';
       || isImageMimeLike(payload.mediaMime)
       || isImageLikeUrl(payload.mediaUrl)
       || isImageLikeUrl(payload.mediaName)
+    );
+    const isAudioPayload = (payload = {}) => (
+      payload.mediaKind === 'audio'
+      || isAudioMimeLike(payload.mediaMime)
+      || isAudioLikeUrl(payload.mediaUrl)
+      || isAudioLikeUrl(payload.mediaName)
     );
     const isGifLikeUrl = (url) => /\.(gif|webp)(\?|#|$)/i.test(String(url || ''));
     const getTransitionWindow = (transition, leftClip, rightClip) => {
@@ -7073,7 +7081,7 @@ ${failure}`);
         applyMediaSourceToLayerClips(selectedLayer.id, measured);
       };
 
-      const addAudioToSelected = (url, srcType = 'file') => {
+      const addAudioToSelected = (url, srcType = 'file', metadata = {}) => {
         const verdict = assertStandaloneSafeMediaUrl(url, 'Audio source');
         if (verdict.blocked) return;
         if (!selectedLayer) return;
@@ -7083,7 +7091,12 @@ ${failure}`);
         }
         updateLayerPayload(selectedLayer.id, {
           mediaUrl: url,
-          mediaName: url ? (url.split('/').pop() || 'URL_AUDIO') : '',
+          mediaName: metadata.mediaName || (url ? (url.split('/').pop() || 'URL_AUDIO') : ''),
+          mediaKind: 'audio',
+          mediaMime: metadata.mediaMime || '',
+          sourceDurationSec: metadata.durationSec || undefined,
+          mediaDurationSec: metadata.durationSec || undefined,
+          sourceDurationUnknown: !metadata.durationSec,
           audioSrcType: srcType,
           fillColor: COLORS.blue,
           strokeWidth: 0
@@ -7153,37 +7166,61 @@ ${failure}`);
           return;
         }
         const url = URL.createObjectURL(file);
-        if (selectedLayer && selectedLayer.type === 'audio') {
-          setSelectedLayerUrlMode((prev) => ({ ...prev, [selectedLayer.id]: false }));
-          addAudioToSelected(url, 'file');
-          return;
-        }
-        setProject((prev) => {
-          const tracks = normalizeTracksWithAudio(prev.tracks || []);
-          const audioTrack = tracks.find((t) => t.kind === AUDIO_TRACK_KIND);
-          if (!audioTrack) return prev;
-          const layer = createLayer('audio', audioTrack.id, prev.layers.length);
-          layer.payload.layerName = file.name || `AUDIO_${prev.layers.length + 1}`;
-          layer.payload.mediaUrl = url;
-          layer.payload.mediaName = file.name || '';
-          layer.payload.audioSrcType = 'file';
-          layer.payload.fillColor = COLORS.blue;
-          layer.payload.strokeWidth = 0;
-          const len = 4;
-          const start = nearestFreeStart(prev.clips, audioTrack.id, playhead, len, null);
-          const end = start + len;
-          const clip = createClip(audioTrack.id, layer.id, start, end, COLORS.blue);
-          setSelectedLayerId(layer.id);
-          setSelectedClipId(clip.id);
-          setSelectedClipIds([clip.id]);
-          return {
-            ...prev,
-            tracks,
-            layers: [...prev.layers, layer],
-            clips: [...prev.clips, clip],
-            meta: { ...prev.meta, durationSec: Math.max(prev.meta.durationSec, end + 1) }
+        const apply = (durationSec = 0) => {
+          const metadata = {
+            mediaName: file.name || '',
+            mediaMime: file.type || '',
+            durationSec: Number.isFinite(durationSec) && durationSec > 0 ? durationSec : 0
           };
-        });
+          if (selectedLayer && selectedLayer.type === 'audio') {
+            setSelectedLayerUrlMode((prev) => ({ ...prev, [selectedLayer.id]: false }));
+            addAudioToSelected(url, 'file', metadata);
+            return;
+          }
+          setProject((prev) => {
+            const tracks = normalizeTracksWithAudio(prev.tracks || []);
+            const audioTrack = tracks.find((t) => t.kind === AUDIO_TRACK_KIND);
+            if (!audioTrack) return prev;
+            const layer = createLayer('audio', audioTrack.id, prev.layers.length);
+            layer.payload.layerName = file.name || `AUDIO_${prev.layers.length + 1}`;
+            layer.payload.mediaUrl = url;
+            layer.payload.mediaName = file.name || '';
+            layer.payload.mediaKind = 'audio';
+            layer.payload.mediaMime = file.type || '';
+            layer.payload.sourceDurationSec = metadata.durationSec || undefined;
+            layer.payload.mediaDurationSec = metadata.durationSec || undefined;
+            layer.payload.sourceDurationUnknown = !metadata.durationSec;
+            layer.payload.audioSrcType = 'file';
+            layer.payload.fillColor = COLORS.blue;
+            layer.payload.strokeWidth = 0;
+            const len = clamp(metadata.durationSec || 4, 0.25, Math.max(4, prev.meta.durationSec || 30));
+            const start = nearestFreeStart(prev.clips, audioTrack.id, playhead, len, null);
+            const end = start + len;
+            const clip = createClip(audioTrack.id, layer.id, start, end, COLORS.blue);
+            clip.sourceInSec = 0;
+            clip.sourceOutSec = metadata.durationSec || len;
+            clip.sourceDurationSec = metadata.durationSec || undefined;
+            clip.sourceDurationUnknown = !metadata.durationSec;
+            setSelectedLayerId(layer.id);
+            setSelectedClipId(clip.id);
+            setSelectedClipIds([clip.id]);
+            return {
+              ...prev,
+              tracks,
+              layers: [...prev.layers, layer],
+              clips: [...prev.clips, clip],
+              meta: { ...prev.meta, durationSec: Math.max(prev.meta.durationSec, end + 1) }
+            };
+          });
+        };
+        const probe = document.createElement('audio');
+        probe.preload = 'metadata';
+        probe.onloadedmetadata = () => apply(Number(probe.duration || 0));
+        probe.onerror = () => {
+          setProviderStatus({ mode: 'error', message: `${file.name || 'Audio file'} could not be decoded by this browser. It was added with unknown duration.` });
+          apply(0);
+        };
+        probe.src = url;
       };
       const normalizeShortsExtractorConfig = (config = {}) => ({
         ...SHORTS_EXTRACTOR_DEFAULT_CONFIG,
@@ -10231,11 +10268,9 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
       const audioClips = useMemo(() => (
         project.layers
           .filter((layer) => layer.type === 'audio' && layer.payload?.mediaUrl)
-          .map((layer) => {
-            const clip = project.clips.find((c) => c.layerId === layer.id);
-            if (!clip) return null;
-            return { layer, clip };
-          })
+          .flatMap((layer) => (project.clips || [])
+            .filter((clip) => clip.layerId === layer.id)
+            .map((clip) => ({ layer, clip })))
           .filter(Boolean)
       ), [project.layers, project.clips]);
 
@@ -10243,12 +10278,14 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
         activeAudioClips.forEach(({ clip, payload }) => {
           const node = audioNodeMapRef.current.get(clip.id);
           if (!node) return;
-          const localT = clipAbsToLocal(clip, previewSec);
+          const localT = sourceTimeForClipAt(project, clip, previewSec);
           const vol = clamp(Number(payload.volume ?? 0.6), 0, 1);
           node.muted = Boolean(payload.muted);
           node.volume = vol;
           if (Math.abs((node.currentTime || 0) - localT) > 0.22) node.currentTime = localT;
-          if (isPlaying) node.play().catch(() => {});
+          if (isPlaying) node.play().catch((error) => {
+            setProviderStatus({ mode: 'error', message: `Audio playback failed: ${error?.message || String(error)}` });
+          });
           else node.pause();
         });
 
@@ -10266,8 +10303,12 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
           const fpsOverride = Number(payload.mediaFps ?? 0);
           const rate = fpsOverride > 0 ? clamp(fpsOverride / Math.max(1, Number(project.meta.fps || 30)), 0.1, 4) : 1;
           node.playbackRate = rate;
+          node.muted = !isPlaying || Boolean(payload.muted);
+          node.volume = clamp(Number(payload.volume ?? 1), 0, 1);
           if (Math.abs((node.currentTime || 0) - localT) > 0.16) node.currentTime = localT;
-          if (isPlaying || playWhilePaused) node.play().catch(() => {});
+          if (isPlaying || playWhilePaused) node.play().catch((error) => {
+            if (isPlaying) setProviderStatus({ mode: 'error', message: `Video playback failed: ${error?.message || String(error)}` });
+          });
           else node.pause();
         });
         videoNodeMapRef.current.forEach((node, clipId) => {
@@ -11489,9 +11530,17 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
       const shellSidebarWidth = Math.min(rawSidebarWidth, mobileSidebarCap);
       const shellGutterSize = 12;
       const shellOuterPadding = 16;
-      const shellGridColumns = `${shellSidebarWidth}px ${shellGutterSize}px minmax(0, 1fr)`;
       const shellFrameHeight = Math.max(340, shellViewportHeight - 14);
       const shellRowsBudget = Math.max(240, shellFrameHeight - shellOuterPadding - shellGutterSize);
+      const isPortraitPreviewColumn = isVerticalAspect;
+      const portraitPreviewColumnWidth = (() => {
+        const available = Math.max(220, shellViewport.w - shellSidebarWidth - (shellGutterSize * 3) - (shellOuterPadding * 2) - 260);
+        const ideal = Math.round((shellFrameHeight - shellOuterPadding) * (9 / 16));
+        return clamp(Math.min(ideal, available), 220, 620);
+      })();
+      const shellGridColumns = isPortraitPreviewColumn
+        ? `${shellSidebarWidth}px ${shellGutterSize}px minmax(0, 1fr) ${shellGutterSize}px ${portraitPreviewColumnWidth}px`
+        : `${shellSidebarWidth}px ${shellGutterSize}px minmax(0, 1fr)`;
       const preferredTopHeight = clamp(Math.round(shellRowsBudget * 0.64), 180, 450);
       const optimalTimelineHeight = (typeof timelineRowsHeight !== 'undefined' ? timelineRowsHeight : 150) + 72;
       const timelineContentHeight = cameraTrackHeight + MARKER_LANES_HEIGHT + timelineRowsHeight;
@@ -11507,12 +11556,12 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
       const timelineHeight = clamp(requestedTimelineHeight, timelineMinHeight, Math.min(620, timelineMaxForFrame));
       const shellTopHeight = Math.max(120, shellRowsBudget - timelineHeight);
       const shellGridRows = `minmax(0, 1fr) ${shellGutterSize}px ${timelineHeight}px`;
-      const previewGridColumn = '3 / 4';
-      const previewGridRow = '1 / 2';
-      const timelineGridColumn = isSplitColumnLayout ? '3 / 4' : '1 / 4';
+      const previewGridColumn = isPortraitPreviewColumn ? '5 / 6' : '3 / 4';
+      const previewGridRow = isPortraitPreviewColumn ? '1 / 4' : '1 / 2';
+      const timelineGridColumn = isPortraitPreviewColumn ? '3 / 4' : (isSplitColumnLayout ? '3 / 4' : '1 / 4');
       const timelineGridRow = '3 / 4';
-      const sidebarGridRow = isSplitColumnLayout ? '1 / 4' : '1 / 2';
-      const timelineResizeGridColumn = isSplitColumnLayout ? '3 / 4' : '1 / -1';
+      const sidebarGridRow = (isSplitColumnLayout || isPortraitPreviewColumn) ? '1 / 4' : '1 / 2';
+      const timelineResizeGridColumn = (isSplitColumnLayout || isPortraitPreviewColumn) ? '3 / 4' : '1 / -1';
       const previewPanelPadding = 0;
       const stageAspectRatioValue = isVerticalAspect ? (9 / 16) : (16 / 9);
       const previewSectionStyle = {
@@ -11821,14 +11870,15 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
               src={src}
               className={className}
               style={style}
-              muted
+              muted={!isPlaying || Boolean(payload.muted)}
               loop
               autoPlay={isPlaying || Boolean(payload.playWhilePaused ?? true)}
               playsInline
               preload="metadata"
+              onError={() => setProviderStatus({ mode: 'error', message: `${payload.mediaName || payload.layerName || 'Video'} could not be decoded by this browser.` })}
             />
           )
-          : <img src={src} alt={payload.layerName || 'media'} className={className} style={style} />
+          : <img src={src} alt={payload.layerName || 'media'} className={className} style={style} onError={() => setProviderStatus({ mode: 'error', message: `${payload.mediaName || payload.layerName || 'Image'} could not be loaded.` })} />
       );
       const renderShortsBrowserMedia = (payload, clip) => {
         const src = String(payload.mediaUrl || '');

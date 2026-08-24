@@ -239,6 +239,19 @@ const sanitizeJob = (job) => ({
 });
 
 const isProbablyVideo = (value) => /\.(mp4|webm|mov|m4v|ogg)(\?|#|$)/i.test(String(value || ''));
+const isProbablyAudio = (value) => /\.(mp3|wav|m4a|aac|flac|oga|ogg|opus)(\?|#|$)/i.test(String(value || ''));
+const isVideoPayload = (payload = {}) => (
+  payload?.mediaKind === 'video'
+  || String(payload?.mediaMime || '').toLowerCase().startsWith('video/')
+  || isProbablyVideo(payload?.mediaUrl)
+  || isProbablyVideo(payload?.mediaName)
+);
+const isAudioPayload = (payload = {}) => (
+  payload?.mediaKind === 'audio'
+  || String(payload?.mediaMime || '').toLowerCase().startsWith('audio/')
+  || isProbablyAudio(payload?.mediaUrl)
+  || isProbablyAudio(payload?.mediaName)
+);
 const isBlockedAssetUrl = (value) => {
   const url = String(value || '').trim().toLowerCase();
   return !url || url.startsWith('blob:') || url.startsWith('data:');
@@ -255,7 +268,7 @@ const transitionWindow = (transition, leftClip, rightClip) => {
 const layerForClip = (project, clip) => (project?.layers || []).find((layer) => layer.id === clip?.layerId) || null;
 const isVideoClip = (project, clip) => {
   const layer = layerForClip(project, clip);
-  return layer?.type === 'media' && isProbablyVideo(layer?.payload?.mediaUrl);
+  return layer?.type === 'media' && isVideoPayload(layer?.payload);
 };
 const videoSourceInfo = (project, clip) => {
   const layer = layerForClip(project, clip);
@@ -272,6 +285,10 @@ const videoSourceInfo = (project, clip) => {
     sourceDurationSec,
     sourceDurationUnknown: Boolean(clip?.sourceDurationUnknown) || !Number.isFinite(sourceDurationSec),
   };
+};
+const sourceTimeForClipAt = (project, clip, sec) => {
+  const source = videoSourceInfo(project, clip);
+  return Math.max(0, Number(source.sourceInSec || 0) + Math.max(0, Number(sec || 0) - Number(clip?.start || 0)));
 };
 const transitionHandleErrors = (project, transition, leftClip, rightClip) => {
   const errors = [];
@@ -389,7 +406,9 @@ const validateRenderPayload = (payload) => {
       layerName: layer?.payload?.layerName || layer.id,
       type: layer.type,
       src: String(layer?.payload?.mediaUrl || '').trim(),
-      mediaKind: isProbablyVideo(layer?.payload?.mediaUrl) ? 'video' : 'still-or-audio',
+      mediaKind: isVideoPayload(layer?.payload)
+        ? 'video'
+        : (isAudioPayload(layer?.payload) ? 'audio' : 'still'),
     }));
 
   return {
@@ -834,7 +853,9 @@ const buildAudioFilterGraph = (inputs = []) => {
   activeInputs.forEach((entry, index) => {
     const delayMs = Math.max(0, Math.round(Number(entry.delaySec || 0) * 1000));
     const volume = clamp(Number(entry.volume ?? 1), 0, 2);
-    filterParts.push(`[${index + 1}:a]adelay=${delayMs}|${delayMs},volume=${volume}[a${index}]`);
+    const sourceInSec = Math.max(0, Number(entry.sourceInSec || 0));
+    const durationSec = Math.max(0.01, Number(entry.durationSec || 0));
+    filterParts.push(`[${index + 1}:a]atrim=start=${sourceInSec}:duration=${durationSec},asetpts=PTS-STARTPTS,adelay=${delayMs}|${delayMs},volume=${volume}[a${index}]`);
     mixRefs.push(`[a${index}]`);
   });
   filterParts.push(`${mixRefs.join('')}amix=inputs=${mixRefs.length}:normalize=0[aout]`);
@@ -996,17 +1017,41 @@ const runSvgFrameRender = async (job) => {
     '-movflags', '+faststart',
     silentOutputPath,
   ]);
+  const tracks = Array.isArray(project.tracks) ? project.tracks : [];
+  const soloTrackIds = tracks.filter((track) => track?.solo).map((track) => track.id);
+  const activeTrackIds = tracks.length
+    ? new Set(
+      (soloTrackIds.length
+        ? tracks.filter((track) => soloTrackIds.includes(track.id))
+        : tracks.filter((track) => !track?.muted))
+        .filter((track) => track?.visible !== false)
+        .map((track) => track.id),
+    )
+    : null;
+  const clipsByLayer = new Map();
+  (project.clips || []).forEach((clip) => {
+    if (!clipsByLayer.has(clip.layerId)) clipsByLayer.set(clip.layerId, []);
+    clipsByLayer.get(clip.layerId).push(clip);
+  });
   const audioInputs = (project.layers || [])
-    .filter((layer) => layer?.type === 'audio' && String(layer?.payload?.mediaUrl || '').trim())
-    .map((layer) => {
-      const clip = (project.clips || []).find((entry) => entry.layerId === layer.id);
-      return clip ? {
-        src: resolveLocalAssetPath(layer.payload.mediaUrl),
-        delaySec: Number(clip.start || 0),
-        volume: Number(layer?.payload?.volume ?? 1),
-      } : null;
+    .filter((layer) => {
+      const payload = layer?.payload || {};
+      if (!String(payload.mediaUrl || '').trim()) return false;
+      if (layer?.visible === false || payload.muted) return false;
+      if (activeTrackIds && !activeTrackIds.has(layer?.trackId)) return false;
+      return layer?.type === 'audio' || (layer?.type === 'media' && isVideoPayload(payload) && payload.audioEnabled !== false);
     })
-    .filter(Boolean);
+    .flatMap((layer) => {
+      const payload = layer?.payload || {};
+      return (clipsByLayer.get(layer.id) || []).map((clip) => ({
+        src: resolveLocalAssetPath(payload.mediaUrl),
+        delaySec: Number(clip.start || 0),
+        sourceInSec: sourceTimeForClipAt(project, clip, Number(clip.start || 0)),
+        durationSec: clipDuration(clip),
+        volume: Number(payload.volume ?? (layer?.type === 'audio' ? 0.6 : 1)),
+      }));
+    })
+    .filter((entry) => entry.durationSec > 0);
   if (!audioInputs.length) return silentOutputPath;
   const outputPath = path.join(OUTPUT_DIR, `${job.jobId}.mp4`);
   const args = ['-y', '-i', silentOutputPath];

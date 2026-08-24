@@ -41,6 +41,9 @@ type VTTransition = {
 type VTTrack = {
   id: string;
   order?: number;
+  visible?: boolean;
+  muted?: boolean;
+  solo?: boolean;
 };
 
 type RenderJob = {
@@ -579,6 +582,14 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
   const project = renderJob?.project || { meta: {}, tracks: [], layers: [], clips: [], transitions: [] };
   const tracks = useMemo(() => sortTracks(Array.isArray(project.tracks) ? project.tracks : []), [project]);
   const orderedTrackIds = tracks.map((track) => track.id);
+  const activeTrackIds = useMemo(() => {
+    if (!tracks.length) return null;
+    const soloTrackIds = tracks.filter((track) => track.solo).map((track) => track.id);
+    const activeTracks = soloTrackIds.length
+      ? tracks.filter((track) => soloTrackIds.includes(track.id))
+      : tracks.filter((track) => !track.muted);
+    return new Set(activeTracks.filter((track) => track.visible !== false).map((track) => track.id));
+  }, [tracks]);
   const layers = Array.isArray(project.layers) ? project.layers : [];
   const clips = Array.isArray(project.clips) ? project.clips : [];
   const currentSec = frame / Math.max(1, fps);
@@ -588,6 +599,7 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
       {[...clips].sort((a, b) => Number(a.start || 0) - Number(b.start || 0)).map((clip) => {
         const layer = layers.find((entry) => entry.id === clip.layerId);
         if (!layer || layer.visible === false) return null;
+        if (activeTrackIds && !activeTrackIds.has(layer.trackId)) return null;
         const basePayload = (layer.payload || {}) as Record<string, unknown>;
 
         const bounds = sequenceBoundsForClip(project, clip);
@@ -628,7 +640,11 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
           const startFrom = toFrame(Math.max(0, sourceTimeForClipAt(project, clip, bounds.startSec)), fps);
           return (
             <Sequence key={clip.id} from={from} durationInFrames={durationInFrames}>
-              <Audio src={src} startFrom={startFrom} />
+              <Audio
+                src={src}
+                startFrom={startFrom}
+                volume={Boolean(payload.muted) ? 0 : clamp(Number(payload.volume ?? 0.6), 0, 1)}
+              />
             </Sequence>
           );
         }
@@ -693,7 +709,13 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
                 {payload.shortsExtractor ? (
                   renderShortsExtractorMedia(src, startFrom, payload, sourceSeconds)
                 ) : isVideoPayload(payload) ? (
-                  <OffthreadVideo src={src} startFrom={startFrom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <OffthreadVideo
+                    src={src}
+                    startFrom={startFrom}
+                    muted={Boolean(payload.muted)}
+                    volume={Boolean(payload.muted) ? 0 : clamp(Number(payload.volume ?? 1), 0, 1)}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
                 ) : (
                   <Img src={src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 )}
