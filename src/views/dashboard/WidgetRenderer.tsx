@@ -371,6 +371,15 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  }
 
  if (widget.id === "app-verification-explainer") {
+  // Only show the sign-in helper when the user actually needs to
+  // connect. A signed-in user with YouTube linked would otherwise see
+  // a persistent "Connect your channel" prompt right next to widgets
+  // full of their own data — the mixed-message state the mobile
+  // auth-fragmentation bug surfaced. Hide entirely once google.status
+  // is "connected" so the layout collapses cleanly.
+  const isConnected = account.snapshot.google.status === "connected"
+   || account.snapshot.google.youtubeScopesGranted
+  if (isConnected) return null
   return <VerificationExplainerWidget common={common} onNavigate={onNavigate} />
  }
 
