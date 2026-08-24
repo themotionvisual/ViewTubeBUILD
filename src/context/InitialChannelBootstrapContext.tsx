@@ -7,6 +7,11 @@ import {
  subscribeInitialChannelBootstrap,
 } from "../services/initialChannelBootstrap"
 import { useUnifiedAccount } from "./UnifiedAccountContext"
+import { recordDiagnostic } from "../services/diagnostics"
+
+// Module-scoped render counter — same rationale as other providers.
+let icbpRenderCount = 0
+let icbpFirstRenderTs: number | null = null
 
 type InitialChannelBootstrapContextValue = {
  snapshot: InitialChannelBootstrapSnapshot | null
@@ -25,6 +30,14 @@ const dailyBootstrapStorageKey = (channelId?: string | null) =>
  `viewtube:initial-channel-bootstrap:first-action:${channelId || "mine"}`
 
 export const InitialChannelBootstrapProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+ icbpRenderCount += 1
+ if (icbpFirstRenderTs === null) icbpFirstRenderTs = typeof performance !== "undefined" ? performance.now() : Date.now()
+ if (icbpRenderCount === 1 || icbpRenderCount === 10 || icbpRenderCount === 50
+     || icbpRenderCount === 100 || icbpRenderCount === 500 || icbpRenderCount === 1000) {
+  const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+  const elapsed = Math.round(now - (icbpFirstRenderTs ?? now))
+  recordDiagnostic("warn", "render-storm", `InitialChannelBootstrapProvider render #${icbpRenderCount} (${elapsed}ms since first)`)
+ }
  const account = useUnifiedAccount()
  const enabled = isInitialChannelBootstrapEnabled()
  const [snapshot, setSnapshot] = useState<InitialChannelBootstrapSnapshot | null>(() =>

@@ -361,9 +361,25 @@ const loadPersistedAuth = (): AuthState => {
 
 // ... moved fallbackContext to types file ...
 
+// Module-scoped render counter for GlobalDataProvider. If this ticks in
+// lockstep with DashboardRebuild renders, the fanout comes from setState
+// inside this provider. If DashboardRebuild loops but this stays quiet,
+// the loop lives in a downstream context (VideoAssetCatalog, Bootstrap,
+// vt-sync snapshot subscription, or an inner hook).
+let gdpRenderCount = 0
+let gdpFirstRenderTs: number | null = null
+
 export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
  children,
 }) => {
+ gdpRenderCount += 1
+ if (gdpFirstRenderTs === null) gdpFirstRenderTs = typeof performance !== "undefined" ? performance.now() : Date.now()
+ if (gdpRenderCount === 1 || gdpRenderCount === 10 || gdpRenderCount === 50
+     || gdpRenderCount === 100 || gdpRenderCount === 500 || gdpRenderCount === 1000) {
+  const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+  const elapsed = Math.round(now - (gdpFirstRenderTs ?? now))
+  recordDiagnostic("warn", "render-storm", `GlobalDataProvider render #${gdpRenderCount} (${elapsed}ms since first)`)
+ }
  useEffect(() => {
   initializeBrain().catch(e => console.error("Brain initialization failed:", e));
  }, []);
@@ -603,6 +619,7 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
 
  useEffect(() => {
   const handleAnalyticsSynced = (event: Event) => {
+   recordDiagnostic("info", "listener-fire", "yt_analytics_synced")
    if (!unifiedAuth.isAuthenticated()) return
    const detail = (event as CustomEvent<Record<string, any>>).detail
    void bootstrapFirstRunBrain(detail || readYouTubeAnalyticsCache(), "event")
@@ -615,6 +632,7 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
 
  useEffect(() => {
   const onUnifiedAccountSnapshotChanged = (event: Event) => {
+   recordDiagnostic("info", "listener-fire", "vt_account_snapshot_changed")
    const snapshot = (event as CustomEvent<UnifiedAccountSnapshot>).detail
    if (!snapshot) return
    applyUnifiedAccountSnapshot(snapshot)
@@ -816,6 +834,7 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
       }
     }
     const onAuthMetadata = (event: Event) => {
+      recordDiagnostic("info", "listener-fire", "yt_channel_metadata_synced")
       const detail = (event as CustomEvent<any>).detail
       if (!detail || !detail.statistics) return
       
@@ -865,9 +884,10 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
       setChannelBootPhase((prev) => (prev === "idle" ? "ready" : prev))
     }
     const onFastAnalytics = (event: Event) => {
+      recordDiagnostic("info", "listener-fire", "yt_fast_analytics_synced")
       const detail = (event as CustomEvent<any>).detail
       if (!detail) return
-      
+
       console.log("[GlobalData] Fast analytics received. Updating revenue widgets.")
       setAuthStateRaw(prev => ({
         ...prev,
@@ -880,6 +900,7 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
       }))
     }
     const onLifetimeSummary = (event: Event) => {
+      recordDiagnostic("info", "listener-fire", "yt_channel_lifetime_summary_synced")
       const detail = (event as CustomEvent<any>).detail
       if (!detail) return
       setAuthStateRaw((prev) => ({
@@ -925,6 +946,7 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
       }))
     }
     const onRecentVideos = (event: Event) => {
+      recordDiagnostic("info", "listener-fire", "yt_recent_videos_synced")
       const detail = (event as CustomEvent<any>).detail
       if (!Array.isArray(detail)) return
       
@@ -950,6 +972,7 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
     window.addEventListener("yt_channel_lifetime_summary_synced", onLifetimeSummary as EventListener)
     window.addEventListener("yt_recent_videos_synced", onRecentVideos as EventListener)
     const onDeepSegments = (event: Event) => {
+      recordDiagnostic("info", "listener-fire", "yt_deep_segments_synced")
       const detail = (event as CustomEvent<any>).detail
       console.log(`[GlobalData] Deep segments received. Updating brain.`)
       setBrain(prev => ({
@@ -961,6 +984,7 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
       }))
     }
     const onChannelAuthInvalidated = () => {
+      recordDiagnostic("warn", "listener-fire", "vt_channel_auth_invalidated")
       setAuthStateRaw(defaultAuthState)
       setSyncStatus(defaultSyncStatus)
       setSyncBatch(defaultSyncBatch)
@@ -1023,6 +1047,7 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
     }
    }
    const onIndexedDbCacheLoaded = (event: Event) => {
+    recordDiagnostic("info", "listener-fire", "yt_analytics_cache_loaded")
     const detail = (event as CustomEvent<Record<string, any>>).detail
     if (!detail) return
     applyChannelIdentity(buildChannelIdentityFromSources(authState, detail))
