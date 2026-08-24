@@ -234,6 +234,74 @@ const unnavigatedRoutes = routePaths
   .filter(({ path }) => path !== "*" && !path.includes(":") && !navigatedPaths.has(path))
   .map(({ path, component }) => ({ path, component }))
 
+/* -------------------------------------- vt-2257 visual/component inventory */
+
+/**
+ * Scan every source file for probable visualization component declarations
+ * — hidden Chart/Graph/Heatmap/Network/Radar/Matrix/Scatter/Treemap/Sankey/
+ * Waterfall/Gauge/Timeline/Ring/Orbital etc renderers, plus inline <svg>
+ * blocks, <canvas> renderers, and Recharts / Google Charts wrappers.
+ *
+ * The point is to surface visuals that DO exist somewhere in src/ but are
+ * not registered in a Visual Registry yet — the same pattern that had
+ * GraphsPageCharts shipping several "hidden custom art" implementations
+ * (KeywordTreemap, OrbitalModule, UploadTimeHeatmap, PerformanceGauges)
+ * that no Tube Explorer entry was calling until the animation-lock branch
+ * wired them up.
+ *
+ * Output is a shortlist for MANUAL review, same policy as the other three:
+ * false positives (utility helpers that happen to match a keyword) are
+ * fine because deletion is never automated.
+ */
+const VISUAL_TOKEN_PATTERN = new RegExp(
+  [
+    "Chart", "Graph", "Heatmap", "HeatMap", "Network", "Radar",
+    "Matrix", "Scatter", "Treemap", "Sankey", "Waterfall", "Gauge",
+    "Timeline", "Sparkline", "Ring", "Orbital", "Barcode", "Fingerprint",
+    "Progress", "Pulse", "Clockburst", "Retention", "Funnel", "Donut",
+    "Pie", "Bar", "Line", "Area",
+  ].join("|"),
+  "i",
+)
+
+// Only care about component-like declarations, not any random mention.
+const COMPONENT_DECL_PATTERN =
+  /(?:^export\s+(?:const|function|class)\s+([A-Z][A-Za-z0-9_]*)|^const\s+([A-Z][A-Za-z0-9_]*)\s*[:=])/gm
+
+// Rendering primitives that signal an actual visualization instead of a
+// utility function that just happens to have "Chart" in its name.
+const RENDERING_PRIMITIVES = /(?:<svg\b|<canvas\b|<ResponsiveContainer|from\s+["']recharts["']|from\s+["']react-google-charts["']|<PieChart|<BarChart|<LineChart|<AreaChart|<ComposedChart|<ScatterChart|<RadarChart)/
+
+const visualInventory = []
+for (const f of allSourceFiles) {
+  const src = readFileSync(f, "utf8")
+  const usesRenderingPrimitives = RENDERING_PRIMITIVES.test(src)
+  const norm = f.replace(/\\/g, "/")
+  // Consider files whose name OR body indicates a visual — plus a body signal.
+  const nameLooksVisual = VISUAL_TOKEN_PATTERN.test(
+    norm.split("/").pop().replace(/\.(?:tsx?|jsx?)$/, ""),
+  )
+  const bodyLooksVisual = VISUAL_TOKEN_PATTERN.test(src) && usesRenderingPrimitives
+
+  if (!nameLooksVisual && !bodyLooksVisual) continue
+
+  // Pull the exported component names that themselves match a visual token.
+  const components = []
+  for (const m of src.matchAll(COMPONENT_DECL_PATTERN)) {
+    const name = m[1] || m[2]
+    if (!name) continue
+    if (VISUAL_TOKEN_PATTERN.test(name)) components.push(name)
+  }
+  if (components.length === 0 && !nameLooksVisual) continue
+
+  visualInventory.push({
+    file: relative(ROOT, f),
+    components,
+    usesRenderingPrimitives,
+    detectedBy: nameLooksVisual ? (bodyLooksVisual ? "name+body" : "name") : "body",
+  })
+}
+
 /* -------------------------------------------------------------- write */
 
 mkdirSync(OUT, { recursive: true })
@@ -276,6 +344,20 @@ writeFileSync(
     2,
   ) + "\n",
 )
+writeFileSync(
+  join(OUT, "visual-inventory.json"),
+  JSON.stringify(
+    {
+      task: "vt-2257",
+      generatedAt: timestamp,
+      count: visualInventory.length,
+      totalComponents: visualInventory.reduce((sum, f) => sum + f.components.length, 0),
+      visuals: visualInventory,
+    },
+    null,
+    2,
+  ) + "\n",
+)
 
 console.log(`
 ✓ Inventory generated under scripts/inventory/reports/
@@ -284,6 +366,7 @@ console.log(`
   vt-2254 unused-exports.json          ${unusedExports.length} candidate exports
   vt-2255 page-route-inventory.json    ${pageInventory.length} page files (${pageInventory.filter((p) => !p.isReferencedInRoutes).length} unreferenced)
   vt-2256 unnavigated-routes.json      ${unnavigatedRoutes.length} routes with no <NavLink to>/navigate() reference
+  vt-2257 visual-inventory.json        ${visualInventory.length} candidate visual files (${visualInventory.reduce((s, f) => s + f.components.length, 0)} named visual components)
 
 These outputs are for MANUAL review. Static analysis is a shortlist, not proof —
 false positives (dynamic imports, string-composed paths, lazy-loaded pages)
