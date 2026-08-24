@@ -67,22 +67,52 @@ const waitForAccountPopupMessage = (
 ): Promise<void> => new Promise((resolve, reject) => {
   let settled = false
   let closedPoll: number | null = null
-  // Grace window (ms) between first observing `popup.closed === true` and
-  // rejecting with "closed before auth completed". A successful popup posts
-  // VT_UNIFIED_ACCOUNT_AUTH_SUCCESS and then closes itself — with COOP
-  // `same-origin-allow-popups`, cross-origin `popup.closed` reads while the
-  // popup is on accounts.google.com return false, but the instant the popup
-  // navigates back to our same-origin callback and closes, the poll can win
-  // the race against message delivery. Waiting one full poll cycle after the
-  // first `closed` observation lets any queued postMessage resolve us first.
-  const CLOSED_GRACE_MS = 600
+  let overallTimeout: number | null = null
+  // vt-2650 — COOP polish for the desktop/local popup lifecycle.
+  //
+  // Historical behavior (still in place):
+  //   * COOP `same-origin-allow-popups` means cross-origin `popup.closed`
+  //     reads log a Chrome warning while the popup is on accounts.google.com.
+  //     We can't suppress the warning from JS, but we can read `popup.closed`
+  //     less often, which cuts the warning count proportionally.
+  //   * The 600ms grace after first observing `closed === true` remains
+  //     because a successful popup posts VT_UNIFIED_ACCOUNT_AUTH_SUCCESS
+  //     and then closes itself — the message can lose the race against
+  //     the closed-poll unless we wait a poll cycle.
+  //
+  // Changes this pass:
+  //   * Poll interval 200ms → 500ms (fewer COOP warnings, still detects
+  //     manual cancels in ≤ 1.5s including the grace window).
+  //   * Grace window 600 → 800ms to keep total detect-cancel latency in
+  //     the same ballpark as before despite the slower poll.
+  //   * OVERALL_TIMEOUT_MS — after 3 minutes without a completion signal,
+  //     resolve the wait as a soft abort so a walked-away user doesn't
+  //     leave a polling interval running forever if the OS reclaims the
+  //     popup without our closed-poll noticing.
+  //   * popup.closed read wrapped in try/catch — no known implementation
+  //     throws here today, but defence-in-depth for future browser
+  //     changes to COOP semantics.
+  //   * Focus-based fast path — when the parent window regains focus, we
+  //     do ONE immediate closed-check instead of waiting the next poll,
+  //     so users who close the popup and swipe back to our tab see the
+  //     abort fire immediately.
+  const POLL_INTERVAL_MS = 500
+  const CLOSED_GRACE_MS = 800
+  const OVERALL_TIMEOUT_MS = 3 * 60 * 1000
   let closedSeenAt: number | null = null
 
   const cleanup = () => {
     if (settled) return
     settled = true
     window.removeEventListener("message", handleMessage)
+    window.removeEventListener("focus", handleFocus)
     if (closedPoll !== null) window.clearInterval(closedPoll)
+    if (overallTimeout !== null) {
+      // Mirror the setTimeout guard above so cleanup works in stripped-down
+      // test environments too.
+      const clear = typeof window.clearTimeout === "function" ? window.clearTimeout : globalThis.clearTimeout
+      clear(overallTimeout)
+    }
     try {
       popup.close()
     } catch {
@@ -115,9 +145,19 @@ const waitForAccountPopupMessage = (
     }
   }
 
-  closedPoll = window.setInterval(() => {
+  const checkPopupClosed = (): boolean => {
+    try {
+      return popup.closed
+    } catch {
+      // Some future COOP tightening could throw here; treat as "still open"
+      // rather than falsely rejecting.
+      return false
+    }
+  }
+
+  const evaluateClosedState = () => {
     if (settled) return
-    if (!popup.closed) {
+    if (!checkPopupClosed()) {
       closedSeenAt = null
       return
     }
@@ -127,9 +167,22 @@ const waitForAccountPopupMessage = (
     }
     if (Date.now() - closedSeenAt < CLOSED_GRACE_MS) return
     fail("Account popup closed before authorization completed.")
-  }, 200)
+  }
+
+  // Fast path: parent window regained focus → check right away instead of
+  // waiting up to POLL_INTERVAL_MS for the next poll.
+  const handleFocus = () => evaluateClosedState()
+
+  closedPoll = window.setInterval(evaluateClosedState, POLL_INTERVAL_MS)
+  // Use globalThis.setTimeout so tests that stub `window` (without a full
+  // browser environment) don't hit TypeError: window.setTimeout is not a
+  // function. In real browsers `globalThis.setTimeout === window.setTimeout`.
+  overallTimeout = (typeof window.setTimeout === "function" ? window.setTimeout : globalThis.setTimeout)(() => {
+    fail("Account popup timed out waiting for authorization to complete.")
+  }, OVERALL_TIMEOUT_MS) as unknown as number
 
   window.addEventListener("message", handleMessage)
+  window.addEventListener("focus", handleFocus)
 })
 
 const readJson = async <T>(response: Response): Promise<T> => {
