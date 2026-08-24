@@ -50,6 +50,8 @@ node_modules/
 # These belong in the parent workspace under /Users/cwb/Downloads/viewtube/docs/
 # or /Users/cwb/Downloads/viewtube/standalone-html/, not in the launchable app repo.
 docs/
+# Repo-authored migration guides are the one docs/ subtree we DO commit.
+!docs/migration/
 _quarantine/
 _migration_hub/
 sources/
