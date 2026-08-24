@@ -1,5 +1,13 @@
 import { useMemo, useSyncExternalStore } from "react"
 import { useBrain } from "../../context/useBrain"
+// analytics-canon = the canonical read path over vt-sync (see
+// docs/migration/README.md). Legacy Selectors/DataStore imports below
+// remain only as a graceful fallback while consumers migrate; Phase 5
+// deletes both once every consumer is off them.
+import {
+  useCanonicalMetricSummary,
+  useCanonicalRows,
+} from "../../services/analytics-canon"
 import { getMasterRows, getMetricSummary, metricCellValue } from "../../services/analytics/Selectors"
 import { readYouTubeAnalyticsCache } from "../../services/analytics/DataStore"
 import { reportToRows } from "../performanceHubUtils"
@@ -53,8 +61,22 @@ export const useDashboardData = () => {
   const { snapshot: initialBootstrap } = useInitialChannelBootstrap()
   const channelHandle = authState.channelHandle
 
-  const summary28d = useMemo(() => getMetricSummary("28d", "hybrid", brain.csvFiles || []), [lastSyncComplete, channelHandle, brain.csvFiles])
-  const summaryLifetime = useMemo(() => getMetricSummary("lifetime", "hybrid", brain.csvFiles || []), [lastSyncComplete, channelHandle, brain.csvFiles])
+  // analytics-canon reads (Phase 1 cutover). Legacy hybrid selectors kept
+  // as fallback because they merge CSV imports the CSV pipeline hasn't
+  // been extracted from PerformanceHub yet — see Phase 3b in the
+  // migration doc. Once the CSV pipeline lands inside /analytics, this
+  // fallback goes away entirely and the canonical hooks become the sole
+  // source.
+  const canonical28d = useCanonicalMetricSummary("28d")
+  const canonicalLifetime = useCanonicalMetricSummary("lifetime")
+  const summary28d = useMemo(() => {
+    if (canonical28d.rowCount > 0) return canonical28d
+    return getMetricSummary("28d", "hybrid", brain.csvFiles || [])
+  }, [canonical28d, lastSyncComplete, channelHandle, brain.csvFiles])
+  const summaryLifetime = useMemo(() => {
+    if (canonicalLifetime.rowCount > 0) return canonicalLifetime
+    return getMetricSummary("lifetime", "hybrid", brain.csvFiles || [])
+  }, [canonicalLifetime, lastSyncComplete, channelHandle, brain.csvFiles])
   
   const vtSyncSnapshotVersion = useSyncExternalStore(
     subscribeToVtSyncSnapshot,
