@@ -1007,6 +1007,22 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
     }
     const onChannelAuthInvalidated = () => {
       recordDiagnostic("warn", "listener-fire", "vt_channel_auth_invalidated")
+      // CRITICAL: clear the actual token before resetting local state.
+      // Without this call the token stays in localStorage, so the very
+      // next code path that checks `unifiedAuth.isAuthenticated()` (there
+      // are ~8 of them across this file, plus verifyExistingSession)
+      // sees a "valid" token and immediately flips state back to
+      // authenticated. Result: the user clicks a widget, gets a 401, the
+      // handler resets local state, a re-render reads the token, state
+      // flips back to signed-in, next click → 401 again. Loop.
+      // unifiedAuth.logout() removes the token and dispatches
+      // vt_auth_changed so UnifiedAccountContext also transitions to
+      // anonymous and stays there until the user explicitly re-connects.
+      try {
+       unifiedAuth.logout()
+      } catch (error) {
+       console.warn("[GlobalData] logout during auth invalidation failed:", error)
+      }
       setAuthStateRaw(defaultAuthState)
       setSyncStatus(defaultSyncStatus)
       setSyncBatch(defaultSyncBatch)
