@@ -165,12 +165,16 @@ export const isTrustedAccountOrigin = (originValue) => {
   if (!origin) return process.env.NODE_ENV !== "production";
   try {
     const requestUrl = new URL(origin);
-    const configuredUrl = new URL(publicOrigin());
-    return (
-      requestUrl.protocol === configuredUrl.protocol &&
-      normalizePort(requestUrl) === normalizePort(configuredUrl) &&
-      normalizeTrustedHostname(requestUrl.hostname) === normalizeTrustedHostname(configuredUrl.hostname)
-    );
+    const configuredOrigins = [
+      publicOrigin(),
+      ...String(process.env.ACCOUNT_TRUSTED_ORIGINS || "").split(",").map(cleanOrigin).filter(Boolean),
+    ];
+    return configuredOrigins.some((configuredOrigin) => {
+      const configuredUrl = new URL(configuredOrigin);
+      return requestUrl.protocol === configuredUrl.protocol &&
+        normalizePort(requestUrl) === normalizePort(configuredUrl) &&
+        normalizeTrustedHostname(requestUrl.hostname) === normalizeTrustedHostname(configuredUrl.hostname);
+    });
   } catch {
     return false;
   }
@@ -313,6 +317,7 @@ const buildSnapshot = async (userId) => {
   if (monetaryScopeGranted) grantedCapabilities.push("youtube_monetary_read");
   if (scopes.has("https://www.googleapis.com/auth/youtube.upload")) grantedCapabilities.push("youtube_upload");
   if (scopes.has("https://www.googleapis.com/auth/youtube.force-ssl")) grantedCapabilities.push("youtube_comments");
+  if (scopes.has("https://www.googleapis.com/auth/youtube.force-ssl")) grantedCapabilities.push("youtube_video_manage");
   if (contentOwnerDiscoveryEnabled() && googleStatus === "connected" && record.activeContentOwnerId && (record.contentOwners || []).some((owner) => owner.id === record.activeContentOwnerId)) grantedCapabilities.push("youtube_content_owner");
   if (scopes.has("https://www.googleapis.com/auth/webmasters.readonly")) grantedCapabilities.push("search_console_read");
   return {

@@ -48,6 +48,65 @@ type IntelligenceHubProps = {
  embedded?: boolean
 }
 
+const REPORT_BLOCK_VISUALS: Record<
+ NonNullable<UltimateChannelReport["blocks"][number]["styleVariant"]>,
+ { header: string; body: string; shadow: string; badge: string; label: string }
+> = {
+ executive: {
+  header: "bg-[#CCFF00] text-black",
+  body: "bg-[#F8FFE8]",
+  shadow: "shadow-[6px_6px_0px_0px_#CCFF00]",
+  badge: "bg-black text-white",
+  label: "Command",
+ },
+ forensic: {
+  header: "bg-[#FFDD00] text-black",
+  body: "bg-[#FFF9D9]",
+  shadow: "shadow-[6px_6px_0px_0px_#FFDD00]",
+  badge: "bg-black text-white",
+  label: "Evidence",
+ },
+ trend: {
+  header: "bg-[#00CCFF] text-black",
+  body: "bg-[#E5FAFF]",
+  shadow: "shadow-[6px_6px_0px_0px_#00CCFF]",
+  badge: "bg-black text-white",
+  label: "Momentum",
+ },
+ audience: {
+  header: "bg-[#FF7497] text-black",
+  body: "bg-[#FFF0F4]",
+  shadow: "shadow-[6px_6px_0px_0px_#FF7497]",
+  badge: "bg-black text-white",
+  label: "Audience",
+ },
+ finance: {
+  header: "bg-[#B14AED] text-white",
+  body: "bg-[#F7EAFF]",
+  shadow: "shadow-[6px_6px_0px_0px_#B14AED]",
+  badge: "bg-white text-black",
+  label: "Revenue",
+ },
+ ops: {
+  header: "bg-[#FFB158] text-black",
+  body: "bg-[#FFF1E3]",
+  shadow: "shadow-[6px_6px_0px_0px_#FFB158]",
+  badge: "bg-black text-white",
+  label: "Action",
+ },
+}
+
+const reportBlockVisual = (styleVariant?: UltimateChannelReport["blocks"][number]["styleVariant"]) =>
+ REPORT_BLOCK_VISUALS[styleVariant || "forensic"]
+
+const sectionStatusClass = (status: ReportSectionState["status"] | SectionGenerationEvent["status"]) => {
+ if (status === "complete") return "bg-[#CCFF00] text-black"
+ if (status === "degraded") return "bg-[#FFDD00] text-black"
+ if (status === "failed") return "bg-[#FF7497] text-black"
+ if (status === "running") return "bg-[#00CCFF] text-black"
+ return "bg-white text-black"
+}
+
 const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
  buildEvidence,
  analyticsContext,
@@ -612,7 +671,7 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
        <span className="text-[10px] font-black opacity-60 tracking-widest uppercase">{new Date(ultimateReport.meta.generatedAt).toLocaleString()}</span>
       </div>
      </div>
-     <div className="p-6 md:p-8 bg-[#f5f5f5] space-y-6">
+     <div className="p-4 md:p-8 bg-[#111111] space-y-6">
       {generationStatus && (
        <div className="border-3 border-black rounded-2xl bg-[#FFF2A8] px-4 py-3">
         <p className="text-[11px] font-black uppercase tracking-[0.12em] text-black">{generationStatus}</p>
@@ -633,8 +692,8 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
         </ul>
        </div>
       )}
-      <div className="border-3 border-black bg-white rounded-2xl p-4 md:p-6">
-       <h3 className="text-xl font-[1000] uppercase mb-2">
+      <div className="border-3 border-black bg-[#00CCFF] rounded-2xl p-4 md:p-6 shadow-[6px_6px_0px_0px_#CCFF00]">
+       <h3 className="text-xl md:text-2xl font-[1000] uppercase mb-2">
         Executive Command Snapshot
        </h3>
        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-black/45 mb-2">
@@ -645,7 +704,7 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
         {ultimateReport.executiveSummary}
        </p>
        {(ultimateReport.meta.overallStatus || sessionMeta?.overallStatus) && (
-        <div className="mt-4 border-2 border-black rounded-xl bg-[#f8f8f8] p-3">
+        <div className="mt-4 border-2 border-black rounded-xl bg-white p-3">
          <p className="text-[10px] font-black uppercase tracking-[0.12em]">
           Run Health · {(ultimateReport.meta.overallStatus || sessionMeta?.overallStatus || "running").toUpperCase()}
          </p>
@@ -657,28 +716,28 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
       </div>
       {sectionStates.length > 0 && (
        <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
-        <aside className="xl:col-span-3 border-3 border-black rounded-2xl bg-white p-4">
+        <aside className="xl:col-span-3 border-3 border-black rounded-2xl bg-[#FFDD00] p-4 shadow-[5px_5px_0px_0px_#FF7497]">
          <h4 className="font-[1000] uppercase text-sm mb-3">Section Timeline</h4>
          <div className="space-y-2 max-h-[420px] overflow-auto pr-1">
           {sectionStates.map((section) => (
-           <div key={`timeline-${section.id}`} className="border-2 border-black rounded-lg p-2 bg-[#f8f8f8]">
+           <div key={`timeline-${section.id}`} className="border-2 border-black rounded-lg p-2 bg-white">
             <div className="flex items-center justify-between gap-2">
              <span className="text-[10px] font-black uppercase">{section.order}. {section.title}</span>
-             <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded border border-black">{section.status}</span>
+             <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border border-black ${sectionStatusClass(section.status)}`}>{section.status}</span>
             </div>
            </div>
           ))}
          </div>
         </aside>
-        <aside className="xl:col-span-9 border-3 border-black rounded-2xl bg-white p-4">
+        <aside className="xl:col-span-9 border-3 border-black rounded-2xl bg-[#00CCFF] p-4 shadow-[5px_5px_0px_0px_#CCFF00]">
          <h4 className="font-[1000] uppercase text-sm mb-3">Generation Stream</h4>
          <div className="space-y-2 max-h-[420px] overflow-auto pr-1">
           {generationEvents.length === 0 ? (
            <p className="text-xs font-bold text-black/50">No section events yet.</p>
           ) : (
            generationEvents.map((event, idx) => (
-            <div key={`event-${idx}`} className="border-2 border-black rounded-lg p-2 bg-[#f8f8f8]">
-             <p className="text-[9px] font-black uppercase">{event.sectionId} · {event.status}</p>
+            <div key={`event-${idx}`} className="border-2 border-black rounded-lg p-2 bg-white">
+             <p className={`inline-block border border-black px-2 py-0.5 text-[9px] font-black uppercase ${sectionStatusClass(event.status)}`}>{event.sectionId} · {event.status}</p>
              <p className="text-[10px] font-bold">{event.note}</p>
             </div>
            ))
@@ -688,11 +747,13 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
        </div>
       )}
       <div className="grid grid-cols-1 gap-5">
-       {ultimateReport.blocks.map((block) => (
+       {ultimateReport.blocks.map((block) => {
+        const visual = reportBlockVisual(block.styleVariant)
+        return (
         <section
          key={block.id}
-         className="border-3 border-black rounded-2xl bg-white overflow-hidden">
-         <header className="px-4 py-3 border-b-3 border-black bg-[#efefef] flex items-center justify-between">
+         className={`border-3 border-black rounded-2xl overflow-hidden ${visual.body} ${visual.shadow}`}>
+         <header className={`px-4 py-3 border-b-3 border-black flex items-center justify-between gap-3 ${visual.header}`}>
           <div>
            <h4 className="font-[1000] uppercase tracking-tight text-sm md:text-base">
             {block.id}. {block.title}
@@ -703,8 +764,8 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
             </p>
            : null}
           </div>
-          <span className="text-[10px] font-black opacity-50 uppercase">
-           Auto Generated
+          <span className={`shrink-0 border-2 border-black px-2 py-1 text-[9px] font-black uppercase ${visual.badge}`}>
+           {visual.label}
           </span>
          </header>
          <div className="p-4 md:p-5 space-y-4">
@@ -713,7 +774,7 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
           </p>
           {renderPayload(block.payload)}
           {block.chartSuggestion && (
-           <div className="border-2 border-black rounded-xl bg-gray-50 p-4 overflow-x-auto">
+           <div className="border-2 border-black rounded-xl bg-white p-4 overflow-x-auto">
             {(() => {
              const sectionChartData = deriveChartData(block.title, block.tableSpec, block.chartSuggestion)
              if (!sectionChartData.length) {
@@ -765,17 +826,22 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
            </div>
           )}
           {block.recommendations.length > 0 && (
-           <ul className="space-y-1">
+           <div className="border-t-2 border-black pt-3">
+            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em]">Next moves</p>
+            <ul className="grid gap-2 md:grid-cols-2">
             {block.recommendations.map((item, idx) => (
-             <li key={`${block.id}-rec-${idx}`} className="text-sm font-bold">
-              {idx + 1}. {item}
+             <li key={`${block.id}-rec-${idx}`} className="border-2 border-black bg-white p-3 text-sm font-bold">
+              <span className={`mr-2 inline-flex h-6 w-6 items-center justify-center border-2 border-black text-[10px] font-black ${visual.header}`}>{idx + 1}</span>
+              {item}
              </li>
             ))}
-           </ul>
+            </ul>
+           </div>
           )}
          </div>
         </section>
-       ))}
+        )
+       })}
       </div>
      </div>
     </div>

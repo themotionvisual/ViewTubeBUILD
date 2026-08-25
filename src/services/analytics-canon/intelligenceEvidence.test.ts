@@ -45,6 +45,24 @@ describe("canonical intelligence evidence", () => {
   expect(catalog.find((dataset) => dataset.id === "ads")?.status).toBe("unavailable")
  })
 
+ it("does not let stale zero-count metadata hide canonical rows", () => {
+  const preservedRowsSnapshot = normalizeVtSyncSnapshot({
+   ...snapshot,
+   retentions: [{ videoId: "video-1", elapsedVideoTimeRatio: 0.5, audienceWatchRatio: 0.72 }],
+   storageMetadata: {
+    storageMode: "compact_preview",
+    isCompacted: true,
+    fullRowCountByField: { retentions: 0 },
+   },
+  })
+  const retention = getCanonicalIntelligenceDatasetCatalog(preservedRowsSnapshot, 1)
+   .find((dataset) => dataset.id === "retentions")!
+
+  expect(retention.sampleRows).toHaveLength(1)
+  expect(retention.rowCount).toBe(1)
+  expect(retention.status).toBe("available")
+ })
+
  it("pins channel and snapshot identity and bounds report context", () => {
   const evidence = buildCanonicalIntelligenceEvidence(snapshot, {
    sectionIds: ["executive-summary"],
@@ -58,5 +76,36 @@ describe("canonical intelligence evidence", () => {
   expect(evidence.contextText.length).toBeLessThanOrEqual(1_600)
   expect(evidence.contextText).toContain("DATASET videos")
   expect(evidence.contextText).not.toContain("DATASET revenue")
+ })
+
+ it("reserves context space for every selected dataset before adding row detail", () => {
+  const denseSnapshot = normalizeVtSyncSnapshot({
+   ...snapshot,
+   videos: Array.from({ length: 8 }, (_, index) => ({
+    id: `video-${index}`,
+    title: `Dense real video ${index} ${"x".repeat(280)}`,
+    description: "y".repeat(280),
+    tags: Array.from({ length: 8 }, (__, tagIndex) => `tag-${tagIndex}-${"z".repeat(40)}`),
+    metrics: {
+     views: 10_000 + index,
+     impressions: 20_000 + index,
+     likes: 500 + index,
+     comments: 50 + index,
+     shares: 25 + index,
+     watchTime: 900 + index,
+     ctr: 4.2,
+    },
+   })),
+  })
+  const evidence = buildCanonicalIntelligenceEvidence(denseSnapshot, {
+   maximumRowsPerDataset: 8,
+   maximumCharacters: 6_000,
+  })
+
+  expect(evidence.contextText.length).toBeLessThanOrEqual(6_000)
+  expect(evidence.omittedDatasetIds).toEqual([])
+  VT_SYNC_VISIBLE_TABLE_DEFINITIONS.forEach((dataset) => {
+   expect(evidence.contextText).toContain(`DATASET ${dataset.id}`)
+  })
  })
 })

@@ -232,7 +232,7 @@ const normalizeOracleReport = (input: unknown, csvContext = ""): OracleReport =>
   const analysisMode = detectAnalysisMode(raw, csvContext);
 
   return {
-    executiveSummary: String(raw.executiveSummary || raw.summary || ""),
+    executiveSummary: String(raw.executiveSummary || raw.summary || mergedSections[0]?.content || ""),
     sections: mergedSections,
     stats,
     miniSpreadsheets,

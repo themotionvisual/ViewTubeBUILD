@@ -9,23 +9,11 @@ import { requestGoogleWithRetry } from "./googleProxyErrors"
 
 const MAX_ATTEMPTS = 3
 export const SERVER_ACCOUNT_SESSION_TOKEN = "__viewtube_server_account_session__"
-// Patterns that indicate the server host is present but its account surface
-// is not usable at all (misconfigured origin allowlist, dead proxy handler).
-// Anonymous-user 401s are handled separately below — "Authentication required"
-// means "sign in via the server flow", not "server broken".
-const ACCOUNT_PROXY_FALLBACK_PATTERNS = [
- "Request origin is not allowed",
- "Account request failed",
-]
-
 const shouldFallbackFromAccountProxy = async (response: Response): Promise<boolean> => {
  // 404 means the /api/account/google-proxy route does not exist on this
  // deployment (static-only, or handler unregistered). Definite fallback.
  if (response.status === 404) return true
- if (response.status !== 401 && response.status !== 403) return false
-
- const bodyText = await response.clone().text().catch(() => "")
- return ACCOUNT_PROXY_FALLBACK_PATTERNS.some((pattern) => bodyText.includes(pattern))
+ return false
 }
 
 const runRequest = async (url: string, signal?: AbortSignal): Promise<Response> => {

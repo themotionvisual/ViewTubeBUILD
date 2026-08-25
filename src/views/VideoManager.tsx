@@ -19,6 +19,7 @@ import type {
  PlaylistMembership,
 } from "../services/youtubeService"
 import { useUnifiedAccount } from "../context/UnifiedAccountContext"
+import { useAccountStatus } from "../services/auth-canon"
 import { useVideoAssetCatalog } from "../context/VideoAssetCatalogContext"
 import { useNavigate } from "react-router-dom"
 // Removed isChannelConnected import
@@ -226,12 +227,13 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  paletteIndex,
 }) => {
  const account = useUnifiedAccount()
+ const accountStatus = useAccountStatus()
  const {
   snapshot: catalogSnapshot,
-  connected,
   ensure: ensureCatalog,
   search: searchCatalog,
  } = useVideoAssetCatalog()
+ const connected = accountStatus.canReadYouTube
  const navigate = useNavigate()
  const basePalette = paletteIndex ?? 0
  const [videos, setVideos] = useState<VideoSnippet[]>(() =>
@@ -252,6 +254,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  const [dropdownOpen, setDropdownOpen] = useState(false)
  const dropdownRef = useRef<HTMLDivElement>(null)
  const lastSearchRef = useRef("")
+ const activeChannelIdRef = useRef(accountStatus.channelId)
 
  // Edit State
  const [editTitle, setEditTitle] = useState("")
@@ -312,6 +315,20 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       ...(videoDetails ?? {}),
      } as VideoSnippet & Partial<VideoDetails>)
    : null
+ useEffect(() => {
+  if (activeChannelIdRef.current === accountStatus.channelId) return
+  activeChannelIdRef.current = accountStatus.channelId
+  setSelectedVideoId(null)
+  setVideoDetails(null)
+  setVideoStats(null)
+  setVideoAnalytics(null)
+  setUserPlaylists([])
+  setCurrentPlaylists([])
+  setSelectedPlaylistIds([])
+  setHasLoadedInitialData(false)
+  hasTriggeredInitialLoadRef.current = false
+ }, [accountStatus.channelId])
+
  useEffect(() => {
   const handleClickOutside = (event: MouseEvent) => {
    if (
@@ -611,7 +628,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
 
  const handleSave = async () => {
   if (!selectedVideoId) return
-  if (account.serverEnabled && !account.snapshot.grantedCapabilities.includes("youtube_comments")) {
+  if (!accountStatus.canManageVideos) {
    setError("Reconnect Channel to grant YouTube video-management permission.")
    void account.start("reconnect_channel", "/video-manager")
    return
@@ -967,11 +984,14 @@ const VideoManager: React.FC<VideoManagerProps> = ({
      </div>
      <div className="space-y-4 max-w-md">
       <h2 className="text-4xl font-[1000] uppercase tracking-tighter">
-       Channel Offline
+       {accountStatus.status === "connecting" ? "Connecting Channel" : accountStatus.status === "needs_reconnect" ? "Reconnect Channel" : "Channel Offline"}
       </h2>
       <p className="text-gray-600 font-bold">
-       Connect your YouTube channel in Settings to manage assets, optimize
-       metadata, and run AI tag analysis.
+       {accountStatus.status === "connecting"
+        ? "ViewTube is confirming your signed-in channel and permissions."
+        : accountStatus.status === "needs_reconnect"
+         ? "Your ViewTube account is signed in, but YouTube permission must be refreshed."
+         : "Connect your YouTube channel in Settings to manage assets, optimize metadata, and run AI tag analysis."}
       </p>
       <button
        onClick={() => void account.start(account.intent, "/video-manager")}

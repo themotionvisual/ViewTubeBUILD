@@ -67,4 +67,13 @@ describe("unified account surface governance", () => {
   it("does not use placeholder billing identity in the active server", () => {
     expect(read("server/billing-server.mjs")).not.toContain("local-user")
   })
+
+  it("keeps paid plan and credit grants server-owned when checkout is unavailable", () => {
+    const settingsSource = read("src/views/Settings.tsx")
+
+    expect(settingsSource).not.toContain("updatePlanEntitlement(")
+    expect(settingsSource).not.toContain("applyTopupCredits(")
+    expect(settingsSource).not.toContain("applyCustomTopupCredits(")
+    expect(settingsSource).not.toContain("applied locally")
+  })
 })

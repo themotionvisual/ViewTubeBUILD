@@ -160,7 +160,10 @@ export const getCanonicalIntelligenceDatasetCatalog = (
  return VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((table) => {
   const rows = tableRows(snapshot, table, privacyFilters)
   const freshness = resolveFreshness(snapshot.datasetFreshness, table)
-  const rowCount = snapshot.storageMetadata?.fullRowCountByField?.[table.id] ?? freshness?.rows ?? rows.length
+  const recordedRowCounts = freshnessCandidates(table)
+   .map((key) => snapshot.storageMetadata?.fullRowCountByField?.[key])
+   .filter((value): value is number => typeof value === "number" && Number.isFinite(value))
+  const rowCount = Math.max(rows.length, freshness?.rows || 0, ...recordedRowCounts, 0)
   const sampleRows = rows.slice(0, Math.max(0, maximumRowsPerDataset)).map((row) =>
    Object.fromEntries(table.columns.map((column) => [column.key, safeCell(row[column.key])])),
   )
@@ -206,20 +209,20 @@ const selectedDatasetIds = (sectionIds: string[]): Set<string> => {
  return ids
 }
 
-const datasetContext = (dataset: CanonicalIntelligenceDatasetManifest): string => {
+const datasetHeaderContext = (dataset: CanonicalIntelligenceDatasetManifest): string => [
+ `DATASET ${dataset.id} (${dataset.label})`,
+ `status=${dataset.status}; rows=${dataset.rowCount}; sources=${dataset.sources.join(",")}; updated=${dataset.updatedAt || "unknown"}`,
+ dataset.missingMetrics.length ? `missingMetrics=${dataset.missingMetrics.join(",")}` : "",
+].filter(Boolean).join("\n")
+
+const datasetDetailLines = (dataset: CanonicalIntelligenceDatasetManifest): string[] => {
  const metricLines = Object.entries(dataset.metrics).slice(0, 12).map(([key, value]) =>
-  `${key}: count=${value.count}; sum=${value.sum}; avg=${value.average}; min=${value.minimum}; max=${value.maximum}`,
+  `${key}: n=${value.count}; sum=${value.sum}; avg=${value.average}; min=${value.minimum}; max=${value.maximum}`,
  )
  const rowLines = dataset.sampleRows.map((row, index) =>
   `${dataset.evidenceRefs[index]} ${JSON.stringify(row)}`,
  )
- return [
-  `DATASET ${dataset.id} (${dataset.label})`,
-  `status=${dataset.status}; rows=${dataset.rowCount}; sources=${dataset.sources.join(",")}; updated=${dataset.updatedAt || "unknown"}`,
-  dataset.missingMetrics.length ? `missingMetrics=${dataset.missingMetrics.join(",")}` : "",
-  ...metricLines,
-  ...rowLines,
- ].filter(Boolean).join("\n")
+ return [...metricLines, ...rowLines]
 }
 
 export const buildCanonicalIntelligenceEvidence = (
@@ -231,20 +234,45 @@ export const buildCanonicalIntelligenceEvidence = (
  const requestedSectionIds = [...(request.sectionIds || [])]
  const selectedIds = selectedDatasetIds(requestedSectionIds)
  const datasets = getCanonicalIntelligenceDatasetCatalog(snapshot, maximumRowsPerDataset)
+ const selectedDatasets = datasets.filter((dataset) => selectedIds.has(dataset.id))
  const contextParts: string[] = []
  const omittedDatasetIds: string[] = []
- let usedCharacters = 0
+ const separatorsLength = Math.max(0, selectedDatasets.length - 1) * 2
+ const headerCharacters = selectedDatasets.reduce(
+  (total, dataset) => total + datasetHeaderContext(dataset).length,
+  0,
+ )
 
- datasets.forEach((dataset) => {
-  if (!selectedIds.has(dataset.id)) return
-  const part = datasetContext(dataset)
-  if (usedCharacters + part.length > maximumCharacters) {
-   omittedDatasetIds.push(dataset.id)
-   return
+ if (headerCharacters + separatorsLength <= maximumCharacters) {
+  selectedDatasets.forEach((dataset) => contextParts.push(datasetHeaderContext(dataset)))
+  const detailQueues = selectedDatasets.map((dataset) => datasetDetailLines(dataset))
+  let remainingCharacters = maximumCharacters - headerCharacters - separatorsLength
+  let hasPendingDetails = true
+  while (hasPendingDetails && remainingCharacters > 1) {
+   hasPendingDetails = false
+   detailQueues.forEach((queue, index) => {
+    const line = queue.shift()
+    if (line === undefined) return
+    hasPendingDetails = true
+    const addition = `\n${line}`
+    if (addition.length > remainingCharacters) return
+    contextParts[index] += addition
+    remainingCharacters -= addition.length
+   })
   }
-  contextParts.push(part)
-  usedCharacters += part.length
- })
+ } else {
+  let usedCharacters = 0
+  selectedDatasets.forEach((dataset) => {
+   const header = datasetHeaderContext(dataset)
+   const separatorLength = contextParts.length ? 2 : 0
+   if (usedCharacters + separatorLength + header.length > maximumCharacters) {
+    omittedDatasetIds.push(dataset.id)
+    return
+   }
+   contextParts.push(header)
+   usedCharacters += separatorLength + header.length
+  })
+ }
 
  return {
   version: CANONICAL_INTELLIGENCE_EVIDENCE_VERSION,

@@ -6,6 +6,8 @@
 // legacy `useBrain().authState.isAuthenticated` path is retired,
 // nothing that imports from this module needs to change.
 
+import type { AccountCapability } from "../account/accountContracts"
+
 export type {
  UnifiedAccountSnapshot,
  AccountIntent,
@@ -56,4 +58,11 @@ export interface AccountStatusPayload {
  channelHandle: string | null
  /** Channel id (YouTube UC-prefixed) if linked. */
  channelId: string | null
+ /** Active credential owner for YouTube requests. */
+ transportMode: "server" | "legacy"
+ grantedCapabilities: AccountCapability[]
+ canReadYouTube: boolean
+ canManageVideos: boolean
+ canUploadVideos: boolean
+ canPostComments: boolean
 }

@@ -35,6 +35,15 @@ describe("ultimateReport normalization", () => {
     expect(normalized.stats.ctr).toBe(2.5);
   });
 
+  it("uses the first substantive section when the model omits executiveSummary", () => {
+    const normalized = __test__.normalizeOracleReport({
+      executiveSummary: "",
+      sections: [{ title: "Executive Summary", content: "Evidence-backed channel direction." }],
+    });
+
+    expect(normalized.executiveSummary).toBe("Evidence-backed channel direction.");
+  });
+
   it("coerces malformed sections into safe section entries", () => {
     const normalized = __test__.normalizeOracleReport({
       sections: [

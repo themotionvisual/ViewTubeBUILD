@@ -63,13 +63,13 @@ describe("hero visual animation readiness", () => {
     controller.destroy()
   })
 
-  it("keeps three distinct replay modes for every registered visual", () => {
+  it("keeps every registered variant slot distinctly labeled", () => {
     Object.entries(HERO_VISUAL_VARIANT_COUNT).forEach(([visualId, count]) => {
-      expect(count).toBe(3)
-      const labels = [0, 1, 2].map((variant) =>
+      expect(count).toBeGreaterThanOrEqual(3)
+      const labels = Array.from({ length: count }, (_, variant) =>
         getHeroVariantLabel(visualId as HeroVisualId, variant),
       )
-      expect(new Set(labels).size).toBe(3)
+      expect(new Set(labels).size).toBe(count)
     })
   })
 

@@ -8,6 +8,7 @@ import {
  mergeVtSyncManualImportsIntoSnapshot,
  mergeVtSyncPersistedApiRowsIntoSnapshot,
  mergeVtSyncSupplementalTableRows,
+ manualImportRecordId,
  toVtSyncManualImportState,
  toVtSyncPersistedApiState,
  type VtSyncManualImportState,
@@ -20,6 +21,31 @@ const emptyImports = (): VtSyncManualImportState => ({ rowsByTableId: {}, captur
 const baseSnapshot = (): VtSyncSnapshot => getVtSyncSnapshot()
 
 describe("VT-SYNC manual imports snapshot merge", () => {
+ it("scopes persisted manual-import identities and hydration to one resolved channel", () => {
+  expect(manualImportRecordId("videos", "channel-a")).toBe("manual_import::channel-a::videos")
+
+  const records = [
+   {
+    id: "manual_import::channel-a::videos", runId: "manual_import::channel-a::videos", channelId: "channel-a",
+    datasetId: "videos", phase: "manual_import", provenance: "csv" as const,
+    capturedAt: "2026-08-24T00:00:00.000Z", rows: [{ id: "video-a" }],
+   },
+   {
+    id: "manual_import::channel-b::videos", runId: "manual_import::channel-b::videos", channelId: "channel-b",
+    datasetId: "videos", phase: "manual_import", provenance: "csv" as const,
+    capturedAt: "2026-08-24T00:00:00.000Z", rows: [{ id: "video-b" }],
+   },
+   {
+    id: "manual_import::videos", runId: "manual_import::videos",
+    datasetId: "videos", phase: "manual_import", provenance: "csv" as const,
+    capturedAt: "2026-08-24T00:00:00.000Z", rows: [{ id: "unscoped" }],
+   },
+  ]
+
+  expect(toVtSyncManualImportState(records, "channel-a").rowsByTableId.videos).toEqual([{ id: "video-a" }])
+  expect(toVtSyncManualImportState(records, null)).toEqual(emptyImports())
+ })
+
  it("maps toolbox table ids to the primary snapshot key from the registry", () => {
   expect(getVtSyncSnapshotKeyForTable("videos")).toBe("videos")
   expect(getVtSyncSnapshotKeyForTable("traffic")).toBe("trafficSources")
@@ -66,13 +92,14 @@ describe("VT-SYNC manual imports snapshot merge", () => {
    {
     id: "manual_import::traffic_overview",
     runId: "manual_import::traffic_overview",
+    channelId: "channel-a",
     datasetId: "traffic_overview",
     phase: "manual_import",
     provenance: "csv",
     capturedAt: "2026-08-11T02:00:00.000Z",
     rows: [{ source: "SHORTS", views: 720189 }],
    },
-  ])
+  ], "channel-a")
   expect(imports.rowsByTableId.traffic).toEqual([{ source: "SHORTS", views: 720189 }])
   expect(imports.capturedAtByTableId.traffic).toBe("2026-08-11T02:00:00.000Z")
  })

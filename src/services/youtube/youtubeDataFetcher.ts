@@ -1134,16 +1134,7 @@ export const fetchAllCommentThreads = async (
    `${BASE_URL}/commentThreads?${params.toString()}`,
    { headers: { Authorization: `Bearer ${token}` }, signal: options.signal },
   )
-  if (!response.ok) {
-   if (response.status === 403) {
-    warnYouTubeDataAccessOnce(
-     "comments403",
-     "[YouTube Data] Comments denied (403). Continuing in degraded mode.",
-   )
-   return []
-   }
-   await handleYouTubeApiError(response, "Failed to fetch comment threads")
-  }
+  if (!response.ok) await handleYouTubeApiError(response, "Failed to fetch comment threads")
   const page = await response.json()
   const hydratedPage = await hydrateThreads(page.items || [])
   threads.push(...hydratedPage)

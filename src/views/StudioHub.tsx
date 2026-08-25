@@ -18,8 +18,8 @@ const StudioHub: React.FC = () => {
   comments: false,
   endscreen: false,
  })
- const toggle = (id: string) =>
-  setStates((prev) => ({ ...prev, [id]: !(prev as any)[id] }))
+ const toggle = (id: keyof typeof states) =>
+  setStates((prev) => ({ ...prev, [id]: !prev[id] }))
 
  return (
   <div className="flex flex-col space-y-6 max-w-[1500px] mx-auto pb-24">
@@ -42,6 +42,7 @@ const StudioHub: React.FC = () => {
     <ThumbnailStudio collapsible isOpenInitial={false} paletteIndex={3} />
 
     {/* Community + comment modules use dashboard-grade widget feature set */}
+    <div id="community-posts" className="scroll-mt-24">
     <ToolboxScaffold
      title="Community Posts"
      subtitle="Create polls + community updates to keep viewers engaged between uploads"
@@ -52,12 +53,15 @@ const StudioHub: React.FC = () => {
      collapsible={true}
      isOpen={states.posts}
      onToggle={() => toggle("posts")}
+     unmountWhenClosed
      helpText="Generate community tab posts to promote your video and keep engagement active.">
      <div className="bg-white rounded-2xl">
       <CommunityPostGenerator />
      </div>
     </ToolboxScaffold>
+    </div>
 
+    <div id="comment-responder" className="scroll-mt-24">
     <ToolboxScaffold
      title="Comment Responder"
      subtitle="Draft on-brand replies + pinned comments to boost engagement + watch time"
@@ -68,11 +72,13 @@ const StudioHub: React.FC = () => {
      collapsible={true}
      isOpen={states.comments}
      onToggle={() => toggle("comments")}
+     unmountWhenClosed
      helpText="Draft fast, on-brand replies to comments and plan a strong pinned comment.">
      <div className="bg-white rounded-2xl">
       <CommentResponder />
      </div>
     </ToolboxScaffold>
+    </div>
 
     <ToolboxScaffold
      title="End-Screen Architect"

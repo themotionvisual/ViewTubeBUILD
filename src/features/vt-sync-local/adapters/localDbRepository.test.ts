@@ -85,6 +85,14 @@ describe("VT Sync local IndexedDB repository", () => {
     id: "api-videos", runId: "api-videos", channelId: "channel-a", datasetId: "videos", phase: "video_metadata",
     capturedAt: "2026-08-22T00:00:00Z", rows: [{ id: "video-a" }], provenance: "api",
    }),
+   putVtSyncDatasetTableRows({
+    id: "channel-b-retention", runId: "channel-b-retention", channelId: "channel-b", datasetId: "retentions", phase: "retention",
+    capturedAt: "2026-08-22T00:00:00Z", rows: [{ videoId: "channel-b" }], provenance: "api",
+   }),
+   putVtSyncDatasetTableRows({
+    id: "unscoped-retention", runId: "unscoped-retention", datasetId: "retentions", phase: "manual_import",
+    capturedAt: "2026-08-22T00:00:00Z", rows: [{ videoId: "unscoped" }], provenance: "csv",
+   }),
    putVtSyncDatasetRawReport({
     id: "raw-retention", runId: "raw-retention", channelId: "channel-a", datasetId: "retentions", phase: "retention",
     capturedAt: "2026-08-22T00:00:00Z", columns: ["videoId"], rows: [{ videoId: "raw" }], source: "youtube_analytics_v2",
@@ -93,7 +101,11 @@ describe("VT Sync local IndexedDB repository", () => {
 
   const result = await clearVtSyncSavedTableData("retentions", "channel-a")
   expect(result).toMatchObject({ tableRecordsDeleted: 3, rawRecordsDeleted: 1 })
-  expect((await listVtSyncDatasetTableRows()).map((record) => record.id)).toEqual(["api-videos"])
+  expect((await listVtSyncDatasetTableRows()).map((record) => record.id).sort()).toEqual([
+   "api-videos",
+   "channel-b-retention",
+   "unscoped-retention",
+  ])
   expect(await listVtSyncDatasetRawReports()).toEqual([])
  })
 

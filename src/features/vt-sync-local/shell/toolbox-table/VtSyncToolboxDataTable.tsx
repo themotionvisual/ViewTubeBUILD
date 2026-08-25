@@ -1105,6 +1105,9 @@ const [localPrivacyFilters, setLocalPrivacyFilters] =
   // clear) the active import every time the analytics snapshot changes.
   // A manual import itself triggers a snapshot refresh, which was causing the
   // freshly imported rows to flash briefly and then disappear.
+  setSavedCsvTableIds(new Set())
+  setImported({})
+  setImportedAt({})
   if (!snapshot.channelId) return
 
   let cancelled = false
@@ -2417,37 +2420,44 @@ const filteredRows = useMemo(() => {
   const allowedDatasetIds = new Set(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((definition) => definition.id))
   const bundle = parseVtSyncAnalyticsBundle(await file.text(), allowedDatasetIds)
   const capturedAt = new Date().toISOString()
-  const records = await listVtSyncDatasetTableRows()
-  const incomingIds = Object.keys(bundle.datasets).map(manualImportId)
-  const previous = records.filter((record) => incomingIds.includes(record.id))
-  const recoveryPrefix = `manual_import_recovery::${capturedAt.replace(/[:.]/g, "-")}::`
+  const channelId = snapshot.channelId || null
 
-  try {
-   await Promise.all(previous.map((record) => putVtSyncDatasetTableRows({
-    ...record,
-    id: `${recoveryPrefix}${record.datasetId}`,
-    runId: `${recoveryPrefix}${record.datasetId}`,
-   })))
-   await Promise.all(Object.entries(bundle.datasets).map(([datasetId, dataset]) =>
-    putVtSyncDatasetTableRows({
-     id: manualImportId(datasetId),
-     runId: manualImportId(datasetId),
-     channelId: snapshot.channelId || undefined,
-     datasetId,
-     phase: "bundle_import",
-     capturedAt,
-     rows: dataset.rows,
-     provenance: "csv",
-     filenames: [file.name],
-    }),
-   ))
-  } catch (error) {
-   const previousById = new Map(previous.map((record) => [record.id, record]))
-   await Promise.all(incomingIds.map((id) => {
-    const record = previousById.get(id)
-    return record ? putVtSyncDatasetTableRows(record) : deleteVtSyncDatasetTableRows(id)
-   }))
-   throw error
+  if (channelId) {
+   const records = await listVtSyncDatasetTableRows()
+   const incomingIds = Object.keys(bundle.datasets).map((datasetId) => manualImportId(datasetId, channelId))
+   const previous = records.filter((record) => incomingIds.includes(record.id))
+   const recoveryPrefix = `manual_import_recovery::${capturedAt.replace(/[:.]/g, "-")}::`
+
+   try {
+    await Promise.all(previous.map((record) => putVtSyncDatasetTableRows({
+     ...record,
+     id: `${recoveryPrefix}${record.datasetId}`,
+     runId: `${recoveryPrefix}${record.datasetId}`,
+    })))
+    await Promise.all(Object.entries(bundle.datasets).map(([datasetId, dataset]) => {
+     const id = manualImportId(datasetId, channelId)
+     return putVtSyncDatasetTableRows({
+      id,
+      runId: id,
+      channelId,
+      datasetId,
+      phase: "bundle_import",
+      capturedAt,
+      rows: dataset.rows,
+      provenance: "csv",
+      filenames: [file.name],
+     })
+    }))
+   } catch (error) {
+    const previousById = new Map(previous.map((record) => [record.id, record]))
+    await Promise.all(incomingIds.map((id) => {
+     const record = previousById.get(id)
+     return record ? putVtSyncDatasetTableRows(record) : deleteVtSyncDatasetTableRows(id)
+    }))
+    throw error
+   }
+  } else {
+   setCsvPersistenceWarning("Connect a channel to retain imported analytics after reload.")
   }
 
   const rowsByTableId = Object.fromEntries(
@@ -2455,7 +2465,7 @@ const filteredRows = useMemo(() => {
   )
   setImported(rowsByTableId)
   setImportedAt(Object.fromEntries(Object.keys(rowsByTableId).map((id) => [id, capturedAt])))
-  setSavedCsvTableIds(new Set(Object.keys(rowsByTableId)))
+  setSavedCsvTableIds(channelId ? new Set(Object.keys(rowsByTableId)) : new Set())
   await onManualImportsChange?.({ rowsByTableId, capturedAt })
   setSelectedKey(null)
   setSort(table.defaultSort)
@@ -5869,30 +5879,34 @@ const retentionDisplayColumns = useMemo(() => {
             entries.map(([id]) => [id, importedTimestamp]),
            ),
           }))
-          try {
-           await Promise.all(
-            entries.map(([id, rows]) =>
-             putVtSyncDatasetTableRows({
-             id: manualImportId(id),
-             runId: manualImportId(id),
-             channelId: snapshot.channelId || undefined,
-              datasetId: id,
+          if (!snapshot.channelId) {
+           setCsvPersistenceWarning("Connect a channel to retain CSV imports after reload.")
+          } else {
+           const channelId = snapshot.channelId
+           try {
+            await Promise.all(entries.map(([datasetId, rows]) => {
+             const id = manualImportId(datasetId, channelId)
+             return putVtSyncDatasetTableRows({
+              id,
+              runId: id,
+              channelId,
+              datasetId,
               phase: "manual_import",
               capturedAt: importedTimestamp,
               rows,
               provenance: "csv",
               filenames: files.map((file) => file.name),
-             }),
-            ),
-           )
-           setSavedCsvTableIds(
-            (current) => new Set([...current, ...entries.map(([id]) => id)]),
-           )
-           setCsvPersistenceWarning("")
-          } catch {
-           setCsvPersistenceWarning(
-            "CSV import is active for this session but could not be retained after reload.",
-           )
+             })
+            }))
+            setSavedCsvTableIds(
+             (current) => new Set([...current, ...entries.map(([id]) => id)]),
+            )
+            setCsvPersistenceWarning("")
+           } catch {
+            setCsvPersistenceWarning(
+             "CSV import is active for this session but could not be retained after reload.",
+            )
+           }
           }
          // Push the freshly parsed CSV directly to the analytics page.
 // Do not make DATA VISUALS wait for IndexedDB/channel recovery.

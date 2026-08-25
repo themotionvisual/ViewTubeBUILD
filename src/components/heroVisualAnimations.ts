@@ -7,7 +7,7 @@
  * Drop-in replacement for:
  *   src/components/heroVisualAnimations.ts
  *
- * 12 visuals × 3 variants = 36 deterministic replayable animations.
+ * 12 visuals with 3-7 deterministic replayable animation variants.
  *
  * Variant convention:
  *   0 = INTRO

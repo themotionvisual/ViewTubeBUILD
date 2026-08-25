@@ -74,7 +74,7 @@ describe("Google proxy failure contract", () => {
   })
   const details = await readGoogleProxyError(response)
   expect(details?.code).toBe("PROXY_ORIGIN_REJECTED")
-  expect(details?.retryable).toBe(true)
+  expect(details?.retryable).toBe(false)
   expect(details?.reconnectRequired).toBe(false)
  })
 
