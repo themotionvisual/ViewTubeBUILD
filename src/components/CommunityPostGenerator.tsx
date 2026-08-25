@@ -1,100 +1,78 @@
-import React, { useState } from "react"
-import { MessageSquare, Sparkles, Loader2, Copy, Check } from "lucide-react"
-import { PostActionReflection } from "./PostActionReflection"
-import { generateCommunityPosts } from "../services/gemini"
-import Markdown from "react-markdown"
-import { SubToolbox } from "./Toolbox"
+import React, { useRef } from "react"
+import { Archive, CheckSquare, ExternalLink, FileText, Image, MessageSquare, Sparkles, Trash2, Upload, Video } from "lucide-react"
+import { StandardInput, StandardTextArea, SubToolbox, SubToolboxDropdownControl, SubToolboxGridActionButton, SubToolboxInnerActionButton } from "./Toolbox"
+import { useCommunityPostController, useCreatorEngagementContext, type CommunityPostType } from "../features/creator-engagement"
+
+const POST_TYPES: Array<{ id: CommunityPostType; label: string; icon: React.ComponentType<{ size?: number }> }> = [
+ { id: "text", label: "Text", icon: FileText }, { id: "image", label: "Image", icon: Image },
+ { id: "poll", label: "Poll", icon: CheckSquare }, { id: "image-poll", label: "Image Poll", icon: MessageSquare },
+ { id: "video", label: "Video", icon: Video },
+]
 
 export const CommunityPostGenerator: React.FC = () => {
- const [schedule, setSchedule] = useState("")
- const [result, setResult] = useState("")
- const [loading, setLoading] = useState(false)
- const [copied, setCopied] = useState(false)
+ const context = useCreatorEngagementContext()
+ const post = useCommunityPostController(context)
+ const imageInput = useRef<HTMLInputElement>(null)
+ const pollInputs = useRef<Array<HTMLInputElement | null>>([])
 
- const handleGenerate = async () => {
-  if (!schedule) return
-  setLoading(true)
-  try {
-   const cache = JSON.parse(localStorage.getItem("yt_analytics_cache") || "{}")
-   const context = cache.profile
-    ? JSON.stringify(cache.profile)
-    : "General YouTube Channel"
-   const res = await generateCommunityPosts(schedule, context)
-   setResult(res)
-  } catch (e) {
-   console.error(e)
-  } finally {
-   setLoading(false)
-  }
- }
+ return <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start w-full p-4 sm:p-6 lg:p-8 bg-white">
+  <div className="flex flex-col gap-6 min-w-0">
+   <SubToolbox title="Post Workspace" icon={<MessageSquare />} collapsible isOpenInitial>
+    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2" aria-label="Post type">
+     {POST_TYPES.map(({ id, label, icon: Icon }) => <button key={id} type="button" aria-pressed={post.postType === id} onClick={() => post.setPostType(id)} className={`min-h-12 border-[3px] border-black rounded-xl px-2 py-2 font-black uppercase text-[10px] flex items-center justify-center gap-2 shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-[transform,box-shadow,background-color] ${post.postType === id ? "bg-[#FFE357]" : "bg-white"}`}><Icon size={15} aria-hidden="true" />{label}</button>)}
+    </div>
+    <div className="grid grid-cols-2 gap-2 mt-4" aria-label="Community post mode">
+     <SubToolboxInnerActionButton label="Write" iconName="edit" tone={post.mode === "write" ? "pink" : "cyan"} onClick={() => post.setMode("write")} />
+     <SubToolboxInnerActionButton label="Create" iconName="sparkles" tone={post.mode === "create" ? "pink" : "cyan"} onClick={() => post.setMode("create")} />
+    </div>
+   </SubToolbox>
 
- const handleCopy = () => {
-  navigator.clipboard.writeText(result)
-  setCopied(true)
-  setTimeout(() => setCopied(false), 2000)
- }
+   <SubToolbox title={post.mode === "write" ? "Write Post" : "AI Creator"} icon={<Sparkles />} collapsible isOpenInitial>
+    <label htmlFor="community-post-copy" className="text-[10px] font-black uppercase tracking-wider">{post.mode === "write" ? "Post Copy" : "Creation Prompt"}</label>
+    <StandardTextArea id="community-post-copy" name="communityPostCopy" value={post.mode === "write" ? post.content : post.prompt} onChange={(event) => post.mode === "write" ? post.setContent(event.target.value) : post.setPrompt(event.target.value)} placeholder={post.mode === "write" ? "Write your community post…" : "Describe the community post you want to create…"} minHeight="180px" className="mt-2" />
+    {post.mode === "create" && <div className="mt-4"><SubToolboxDropdownControl label="Writing Style" value={post.style} options={["Educational", "Conversational", "Hype", "Question", "Announcement"]} onChange={post.setStyle} tone="yellow" /></div>}
+    <div className="mt-4"><SubToolboxGridActionButton label={post.isGenerating ? "Working…" : post.mode === "write" ? "Refine Post" : "Generate Post"} iconName="sparkles" tone="pink" disabled={post.isGenerating || !(post.mode === "write" ? post.content.trim() : post.prompt.trim())} onClick={post.mode === "write" ? post.refine : post.generate} /></div>
+   </SubToolbox>
 
- return (
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full p-8 animate-fade-in bg-white">
-   <div className="flex flex-col h-full space-y-6">
-    <SubToolbox
-     title="Schedule Details"
-     headerColor="bg-[#FFDD00]"
-     textColor="text-black">
-     <div className="space-y-2">
-      <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
-       Upcoming Uploads & Plans
-      </label>
-      <textarea
-       value={schedule}
-       onChange={(e) => setSchedule(e.target.value)}
-       placeholder="E.G. UPLOADING A MINECRAFT VIDEO FRIDAY..."
-       className="vt-textarea-standard h-40 border-[5px] focus:bg-[#FFDD00]/10"
-      />
-     </div>
-     <button
-      onClick={handleGenerate}
-      disabled={loading || !schedule}
-      className="w-full mt-6 bg-[#FF3399] text-white border-[5px] border-black p-4 font-black uppercase text-xl rounded-xl shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-3">
-      {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
-      Generate Schedule
-     </button>
-    </SubToolbox>
-   </div>
+   {post.postType.includes("poll") && <SubToolbox title="Poll Options" icon={<CheckSquare />} collapsible isOpenInitial>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{post.pollOptions.map((option, index) => <div key={index} className="min-w-0">
+     <label htmlFor={`community-poll-${index}`} className="text-[9px] font-black uppercase">Option {index + 1}</label>
+     <StandardInput id={`community-poll-${index}`} name={`communityPollOption${index + 1}`} value={option} onChange={(event) => post.setPollOption(index, event.target.value)} placeholder={`Option ${index + 1}…`} />
+     {post.postType === "image-poll" && <><input ref={(node) => { pollInputs.current[index] = node }} className="hidden" type="file" accept="image/*" onChange={(event) => post.applyImageFile(event.target.files?.[0], index)} /><button type="button" className="mt-2 w-full min-h-11 border-[3px] border-black rounded-xl bg-[#73DEFF] font-black uppercase text-[9px] flex items-center justify-center gap-2" onClick={() => pollInputs.current[index]?.click()}><Upload size={14} aria-hidden="true" />{post.imagePollUrls[index] ? "Replace Image" : "Add Image"}</button></>}
+    </div>)}</div>
+   </SubToolbox>}
+  </div>
 
-   <div className="flex flex-col h-full space-y-6">
-    {result ? (
-     <SubToolbox
-      title="Generated Posts"
-      headerColor="bg-[#FF3399]"
-      textColor="text-black"
-      actionButton={
-       <button
-        onClick={handleCopy}
-        className="p-2 bg-black text-white rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_black] hover:translate-y-1 hover:shadow-none transition-all">
-        {copied ? <Check size={16} /> : <Copy size={16} />}
-       </button>
-      }>
-      <div className="prose prose-sm max-w-none font-bold text-black/80 prose-headings:font-black prose-headings:uppercase overflow-y-auto max-h-[400px] custom-scrollbar pr-4">
-       <Markdown>{result}</Markdown>
-      </div>
-      <div className="mt-8 pt-6 border-t-[4px] border-black/10 animate-in slide-in-from-bottom-4 duration-700">
-       <PostActionReflection toolId="COMMUNITY_POST_GENERATOR" />
-      </div>
-     </SubToolbox>
-    ) : (
-     <div className="h-full min-h-[400px] flex flex-col items-center justify-center border-[2px] border-dashed border-black/20 rounded-[32px] bg-gray-50 p-8 text-center">
-      <MessageSquare size={80} className="mb-6 text-black/20" />
-      <h3 className="text-3xl font-[1000] text-black/40 uppercase tracking-tighter mb-2">
-       Awaiting Input
-      </h3>
-      <p className="text-black/30 font-bold max-w-sm uppercase">
-       Provide your schedule on the left to generate 7 days of community
-       content.
-      </p>
-     </div>
-    )}
+  <div className="flex flex-col gap-6 min-w-0">
+   {(post.postType === "image" || post.postType === "image-poll") && <SubToolbox title="Post Media" icon={<Image />} collapsible isOpenInitial>
+    <input ref={imageInput} className="hidden" type="file" accept="image/*" onChange={(event) => post.applyImageFile(event.target.files?.[0])} />
+    <label htmlFor="community-image-url" className="text-[10px] font-black uppercase">Image URL</label>
+    <StandardInput id="community-image-url" name="communityImageUrl" type="url" value={post.imageUrl} onChange={(event) => post.setImageUrl(event.target.value)} placeholder="https://example.com/image.jpg…" />
+    <button type="button" onClick={() => imageInput.current?.click()} className="mt-3 w-full min-h-12 border-[3px] border-black rounded-xl bg-[#73DEFF] font-black uppercase flex items-center justify-center gap-2 shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"><Upload size={17} aria-hidden="true" />Browse Files</button>
+    {post.imageUrl && <img src={post.imageUrl} alt="Community post preview" width={640} height={360} className="mt-4 w-full aspect-video object-cover border-[3px] border-black rounded-xl" />}
+   </SubToolbox>}
+
+   {post.postType === "video" && <SubToolbox title="Linked Video" icon={<Video />} collapsible isOpenInitial>
+    <label htmlFor="community-video-search" className="text-[10px] font-black uppercase">Search Videos</label>
+    <StandardInput id="community-video-search" name="communityVideoSearch" type="search" autoComplete="off" value={post.videoSearch} onChange={(event) => post.setVideoSearch(event.target.value)} placeholder="Search titles or video IDs…" />
+    <div className="mt-3 max-h-56 overflow-y-auto border-[3px] border-black rounded-xl p-2 space-y-2" style={{ contentVisibility: "auto" }}>{post.filteredVideos.map((video) => <button type="button" key={video.videoId} aria-pressed={post.selectedVideoId === video.videoId} onClick={() => post.setSelectedVideoId(video.videoId)} className={`w-full text-left border-[2px] border-black rounded-lg p-2 text-[10px] font-black ${post.selectedVideoId === video.videoId ? "bg-[#FFE357]" : "bg-white"}`}>{video.title || video.videoId}</button>)}{!post.filteredVideos.length && <p className="p-4 text-center text-[10px] font-black uppercase opacity-50">No videos found.</p>}</div>
+   </SubToolbox>}
+
+   <SubToolbox title="Post Preview" icon={<FileText />} collapsible isOpenInitial>
+    <div className="min-h-48 border-[3px] border-black rounded-xl bg-[#FFF9E8] p-5 whitespace-pre-wrap break-words text-sm font-bold">{post.content || <span className="opacity-35 uppercase">Your post preview will appear here.</span>}</div>
+    <div role="status" aria-live="polite" className="min-h-5 mt-2 text-[10px] font-black uppercase">{post.clipboardStatus === "copied" ? "Post copied." : post.clipboardStatus === "error" ? "Copy failed." : ""}</div>
+    {post.error && <div role="alert" className="border-[3px] border-black bg-[#FFB158] p-3 rounded-xl text-xs font-black">{post.error}</div>}
+   </SubToolbox>
+
+   <SubToolbox title={`Draft Vault · ${post.vault.length}`} icon={<Archive />} collapsible isOpenInitial={false}>
+    <div className="max-h-64 overflow-y-auto space-y-2" style={{ contentVisibility: "auto" }}>{post.vault.map((draft) => <div key={draft.id} className="grid grid-cols-[1fr_auto] gap-2 border-[2px] border-black rounded-lg p-2"><button type="button" className="text-left min-w-0" onClick={() => post.loadFromVault(draft.id)}><span className="block text-[9px] font-black uppercase opacity-50">{draft.type}</span><span className="block truncate text-xs font-black">{draft.content || "Untitled draft"}</span></button><button type="button" aria-label="Delete draft" onClick={() => post.removeFromVault(draft.id)} className="size-10 border-[2px] border-black rounded-lg grid place-items-center bg-[#FF77D6]"><Trash2 size={15} aria-hidden="true" /></button></div>)}{!post.vault.length && <p className="p-4 text-center text-[10px] font-black uppercase opacity-50">No saved drafts.</p>}</div>
+   </SubToolbox>
+
+   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <SubToolboxGridActionButton label="Save Draft" iconName="archive" tone="yellow" disabled={!post.content.trim()} onClick={post.saveToVault} />
+    <SubToolboxGridActionButton label={post.clipboardStatus === "copied" ? "Copied" : "Copy Post"} iconName={post.clipboardStatus === "copied" ? "check" : "copy"} tone="green" disabled={!post.content.trim()} onClick={post.copyPost} />
+    {post.channelCommunityUrl ? <a href={post.channelCommunityUrl} target="_blank" rel="noreferrer" className="min-h-14 border-[4px] border-black rounded-[16px] bg-[#86B5FF] shadow-[5px_5px_0_0_#3979DB] font-black uppercase text-lg flex items-center justify-center gap-2 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"><ExternalLink size={19} aria-hidden="true" />Go to Channel</a> : <SubToolboxGridActionButton label="Connect Channel" iconName="link" tone="blue" onClick={context.reconnect} />}
    </div>
   </div>
- )
+ </div>
 }

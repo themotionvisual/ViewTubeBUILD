@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from "react"
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { WidgetFooter, WidgetHeaderStepper, WidgetHeaderToggle, WidgetScrollArea, WidgetSplitButton, WidgetTooltip } from "../WidgetPrimitives"
 import {
@@ -12,22 +12,6 @@ import {
   Link2,
 } from "lucide-react"
 import {
-  postCommentReply,
-  fetchAllCommentThreads,
-  fetchVideoSnippetDetails
-} from "../../../services/youtubeService"
-import { generatePerfectReply } from "../../../services/gemini"
-import { useBrain } from "../../../context/useBrain"
-import { useUnifiedAccount } from "../../../context/UnifiedAccountContext"
-import {
-  resolveCommentAccessIntent,
-  resolveCommentAccessState,
-} from "../../../services/youtube/commentAccess"
-import {
-  firstYouTubeThumbnailCandidate,
-  nextYouTubeThumbnailCandidate,
-} from "../../../services/youtube/thumbnailFallback"
-import {
   findLargestFittingFontSize,
   fitThumbnailTitle,
   THUMBNAIL_TITLE_MIN_SIZE,
@@ -35,6 +19,7 @@ import {
   THUMBNAIL_TITLE_LETTER_SPACING_EM,
   type ThumbnailTitleLayout,
 } from "./commentResponderUtils"
+import { useCommentResponderController, useCreatorEngagementContext } from "../../../features/creator-engagement"
 
 const htmlDecode = (input: string) => {
   const doc = new DOMParser().parseFromString(input, "text/html")
@@ -106,7 +91,10 @@ const CommentVideoThumbnail = ({ title, videoId, thumbnailUrl }: { title: string
 
   const handleThumbnailError = (event: React.SyntheticEvent<HTMLImageElement>) => {
     const image = event.currentTarget
-    image.src = nextYouTubeThumbnailCandidate(videoId, image.src, [thumbnailUrl])
+    if (image.src.includes("maxresdefault.jpg")) image.src = `https://img.youtube.com/vi/${videoId}/sddefault.jpg`
+    else if (image.src.includes("sddefault.jpg")) image.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+    else if (image.src.includes("hqdefault.jpg")) image.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
+    else image.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 180'%3E%3Crect width='320' height='180' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23111' font-family='Arial' font-size='16'%3EThumbnail unavailable%3C/text%3E%3C/svg%3E"
   }
 
   return (
@@ -191,12 +179,9 @@ export const CommentReplyWidget = ({
   onRemove,
   data,
 }: any) => {
-  const { brain } = useBrain()
-  const account = useUnifiedAccount()
-  const commentAccessState = resolveCommentAccessState(account.snapshot)
-  const hasCommentsAccess = commentAccessState === "ready"
-  const canPostReply = hasCommentsAccess
-    && (!account.serverEnabled || account.snapshot.grantedCapabilities.includes("youtube_comments"))
+  const engagement = useCreatorEngagementContext()
+  const sharedController = useCommentResponderController(engagement)
+  const canPostReply = sharedController.canPostReply
   const common = {
     widget,
     instance,
@@ -220,85 +205,21 @@ export const CommentReplyWidget = ({
   const [fetchedVideoData, setFetchedVideoData] = useState<Record<string, any>>({})
   const [inboundImageUrl, setInboundImageUrl] = useState<string | null>(null)
   const replyTextareaRef = useRef<HTMLTextAreaElement | null>(null)
-  const fetchedVideoDataRef = useRef<Record<string, any>>({})
-  const metadataInFlightRef = useRef(new Set<string>())
-
-  const channelId = account.snapshot.google.channelId
-    || data.brain?.channelProfile?.id
-    || data.authState?.channelId
-    || ""
-  const canonicalVideos = useMemo(() => data.videoAssets || [], [data.videoAssets])
-
-  const syncMetadata = async (threads: any[], signal?: AbortSignal) => {
-    const requestedIds: string[] = []
-    try {
-      const videoIds = Array.from(new Set<string>(
-        threads
-          .map((thread: any) => thread.snippet.videoId)
-          .filter((videoId: unknown): videoId is string => typeof videoId === "string" && videoId.length > 0),
-      ))
-      const missingIds = videoIds.filter(id => {
-        const inCanonical = canonicalVideos.find((v: any) => v.videoId === id)
-        const inFetched = fetchedVideoDataRef.current[id]
-        return (!inCanonical || !inCanonical.title || inCanonical.title === "Unknown Video") &&
-               (!inFetched || !inFetched.title || inFetched.title === "Unknown Video") &&
-               !metadataInFlightRef.current.has(id)
-      })
-
-      if (missingIds.length > 0) {
-        requestedIds.push(...missingIds)
-        missingIds.forEach((id) => metadataInFlightRef.current.add(id))
-        console.info(`[CommentResponder] Fetching metadata for ${missingIds.length} missing videos...`)
-        const details = await fetchVideoSnippetDetails(missingIds as string[], { signal })
-        if (signal?.aborted) return
-        fetchedVideoDataRef.current = { ...fetchedVideoDataRef.current, ...details }
-        setFetchedVideoData(prev => ({ ...prev, ...details }))
-      }
-    } catch (e) {
-      console.warn("[CommentResponder] Metadata sync failed", e)
-    } finally {
-      requestedIds.forEach((id) => metadataInFlightRef.current.delete(id))
-    }
-  }
+  const channelId = engagement.channelId
+  const canonicalVideos = engagement.videoAssets
 
   useEffect(() => {
-    let cancelled = false
-    const controller = new AbortController()
-    if (!hasCommentsAccess || !channelId) {
-      setLoading(false)
-      setError(null)
-      setAllThreads([])
-      return () => controller.abort()
+    setAllThreads(sharedController.threads)
+    setLoading(sharedController.loading)
+    setError(sharedController.error)
+    setFetchedVideoData(sharedController.fetchedVideoData)
+    setInboundImageUrl(sharedController.inboundImageUrl)
+    const activeId = sharedController.currentThread?.id
+    if (activeId) {
+      setReplyText((current) => ({ ...current, [activeId]: sharedController.replyText }))
+      setIsGenerating((current) => ({ ...current, [activeId]: sharedController.generating }))
     }
-    const load = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const threads = await fetchAllCommentThreads(100, channelId, {
-          initialNewCount: 3,
-          signal: controller.signal,
-          onInitialResults: (initialThreads) => {
-            if (cancelled) return
-            setAllThreads(initialThreads)
-            setLoading(false)
-            void syncMetadata(initialThreads, controller.signal)
-          },
-        })
-        if (cancelled) return
-        setAllThreads(threads)
-        setLoading(false)
-        void syncMetadata(threads, controller.signal)
-      } catch (e: any) {
-        if (cancelled) return
-        console.error("Comment fetch failed:", e)
-        setError(e.message || "Failed to load comments")
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-    void load()
-    return () => { cancelled = true; controller.abort() }
-  }, [channelId, canonicalVideos.length, hasCommentsAccess])
+  }, [sharedController.error, sharedController.fetchedVideoData, sharedController.generating, sharedController.inboundImageUrl, sharedController.loading, sharedController.replyText, sharedController.threads, sharedController.currentThread?.id])
 
   useEffect(() => {
     const applyImage = (payload: any) => {
@@ -339,110 +260,15 @@ export const CommentReplyWidget = ({
   }, [tab])
 
   const handleMagicDraft = async (commentId: string) => {
-    setIsGenerating(prev => ({ ...prev, [commentId]: true }))
-    try {
-      const available = canonicalVideos.map((r: any) => ({ title: r.title, id: r.videoId }))
-      const thread = allThreads.find(t => t.id === commentId)
-      const comment = thread.snippet.topLevelComment
-      const existingReply = replyText[commentId]?.trim() || ""
-      const draft = await generatePerfectReply(
-        comment.snippet.textOriginal,
-        comment.snippet.authorDisplayName.replace(/@/g, ""),
-        data.brain?.channelProfile?.name || "Content Creation",
-        available,
-        brain,
-        existingReply,
-      )
-      let finalReply = draft.reply
-      if (draft.suggestedVideoId) finalReply += `\n\nCheck this out for more details: https://youtu.be/${draft.suggestedVideoId}`
-      setReplyText(prev => ({ ...prev, [commentId]: finalReply }))
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setIsGenerating(prev => ({ ...prev, [commentId]: false }))
-    }
+    await sharedController.draftReply()
   }
 
   const handleSuggestVideo = async (commentId: string) => {
-    setIsGenerating(prev => ({ ...prev, [commentId]: true }))
-    try {
-      const thread = allThreads.find(t => t.id === commentId)
-      const comment = thread?.snippet?.topLevelComment
-      if (!comment) return
-      const available = canonicalVideos.map((video: any) => ({ title: video.title, id: video.videoId }))
-      const recommendation = await generatePerfectReply(
-        comment.snippet.textOriginal,
-        comment.snippet.authorDisplayName.replace(/@/g, ""),
-        data.brain?.channelProfile?.name || "Content Creation",
-        available,
-        brain,
-        replyText[commentId]?.trim() || "",
-      )
-      if (!recommendation.suggestedVideoId) return
-      const url = `https://youtu.be/${recommendation.suggestedVideoId}`
-      setReplyText(previous => ({ ...previous, [commentId]: `${previous[commentId]?.trim() ? `${previous[commentId].trim()}\n\n` : ""}You might also enjoy this related video: ${url}` }))
-    } catch (error) {
-      console.error(error)
-    } finally {
-      setIsGenerating(prev => ({ ...prev, [commentId]: false }))
-    }
-  }
-
-  const requestCommentAccess = async () => {
-    setError(null)
-    try {
-      await account.start(
-        resolveCommentAccessIntent(account.snapshot),
-        window.location.pathname,
-      )
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Account authorization could not start.")
-    }
+    await sharedController.suggestVideo()
   }
 
   const handleSend = async (commentId: string) => {
-    if (!replyText[commentId]?.trim()) return
-    if (!canPostReply) {
-      await requestCommentAccess()
-      return
-    }
-    setLoading(true)
-    setError(null)
-    try {
-      const thread = allThreads.find(t => t.id === commentId)
-      const parentCommentId = thread?.snippet?.topLevelComment?.id || commentId
-      const text = replyText[commentId]
-      const postedReply = await postCommentReply(parentCommentId, text)
-      setReplyText(prev => { const next = { ...prev }; delete next[commentId]; return next })
-      setAllThreads(prev => prev.map(t => {
-        if (t.id !== commentId) return t
-        return {
-          ...t,
-          replies: {
-            ...t.replies,
-            comments: [...(t.replies?.comments || []), {
-              id: postedReply?.id,
-              snippet: {
-                ...postedReply?.snippet,
-                authorChannelId: postedReply?.snippet?.authorChannelId || { value: channelId },
-                authorDisplayName: postedReply?.snippet?.authorDisplayName || data.brain?.channelProfile?.name || "You",
-                authorProfileImageUrl: postedReply?.snippet?.authorProfileImageUrl || data.brain?.channelProfile?.thumbnail,
-                textDisplay: postedReply?.snippet?.textDisplay || text,
-                publishedAt: postedReply?.snippet?.publishedAt || new Date().toISOString(),
-              },
-            }],
-          },
-        }
-      }))
-      setTab("history")
-      setCurrentIndex(0)
-    } catch (sendError: any) {
-      const message = sendError?.message || "Failed to post reply. Reconnect the channel and try again."
-      console.error("Comment reply failed:", sendError)
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
+    await sharedController.postReply()
   }
 
   const displayComments = tab === "unreplied" ? unreplied : replied
@@ -464,7 +290,7 @@ export const CommentReplyWidget = ({
       <WidgetHeaderToggle
         label="Comment responder view"
         value={tab}
-        onChange={setTab}
+        onChange={(next) => { setTab(next); sharedController.setTab(next) }}
         items={[{ id: "unreplied", label: "New" }, { id: "history", label: "Old" }]}
       />
       {displayComments.length > 0 && (
@@ -473,8 +299,8 @@ export const CommentReplyWidget = ({
           value={`${safeIndex + 1} / ${displayComments.length}`}
           canPrevious={safeIndex > 0}
           canNext={safeIndex < displayComments.length - 1}
-          onPrevious={() => setCurrentIndex(i => Math.max(0, i - 1))}
-          onNext={() => setCurrentIndex(i => Math.min(displayComments.length - 1, i + 1))}
+          onPrevious={() => { const next = Math.max(0, safeIndex - 1); setCurrentIndex(next); sharedController.setCurrentIndex(next) }}
+          onNext={() => { const next = Math.min(displayComments.length - 1, safeIndex + 1); setCurrentIndex(next); sharedController.setCurrentIndex(next) }}
         />
       )}
     </div>
@@ -486,7 +312,7 @@ export const CommentReplyWidget = ({
         ref={replyTextareaRef}
         className="vt-textarea"
         value={activeReplyText}
-        onChange={(event) => setReplyText((previous) => ({ ...previous, [currentThread.id]: event.target.value }))}
+        onChange={(event) => { setReplyText((previous) => ({ ...previous, [currentThread.id]: event.target.value })); sharedController.setReplyText(event.target.value) }}
         onInput={(event) => autosizeReplyInput(event.currentTarget)}
         placeholder={tab === "history" ? "ADD FOLLOW-UP REPLY..." : "REPLY..."}
       />
@@ -536,27 +362,7 @@ export const CommentReplyWidget = ({
         )}
 
         <WidgetScrollArea ariaLabel="Comment responder conversation" edge="inset" className="comment-responder-scroll-area" enabled={tab === "history"}>
-          {!hasCommentsAccess ? (
-            <div style={{ display: "grid", placeItems: "center", alignContent: "center", gap: "12px", minHeight: "190px", padding: "24px", textAlign: "center" }}>
-              {commentAccessState === "pending" ? <Loader2 size={24} className="animate-spin" /> : <MessageSquare size={28} />}
-              <div style={{ maxWidth: "280px", fontSize: "11px", fontWeight: 900, lineHeight: 1.45 }}>
-                {commentAccessState === "pending"
-                  ? "CONNECTING YOUR CHANNEL…"
-                  : commentAccessState === "requires_reconnect"
-                    ? "RECONNECT YOUR YOUTUBE CHANNEL TO LOAD AND REPLY TO COMMENTS."
-                    : "CONNECT YOUR YOUTUBE CHANNEL TO LOAD AND REPLY TO COMMENTS."}
-              </div>
-              {commentAccessState !== "pending" && (
-                <button
-                  className="vt-button primary"
-                  type="button"
-                  onClick={() => void requestCommentAccess()}
-                >
-                  {commentAccessState === "requires_reconnect" ? "RECONNECT CHANNEL" : "CONNECT CHANNEL"}
-                </button>
-              )}
-            </div>
-          ) : loading && allThreads.length === 0 ? (
+          {loading && allThreads.length === 0 ? (
             <div className="comment-responder-sync-state" aria-live="polite">
               <div className="comment-responder-sync-thread">
                 <div className="comment-responder-sync-thumbnail" />
@@ -583,12 +389,7 @@ export const CommentReplyWidget = ({
             const videoCandidate = canonicalVideos.find((v: any) => v.videoId === videoId)
             const fetched = fetchedVideoData[videoId]
             const video = (fetched && fetched.title && fetched.title !== "Unknown Video") ? fetched : videoCandidate
-            const thumbnailUrl = firstYouTubeThumbnailCandidate(videoId, [
-              video?.thumbnails?.maxres?.url,
-              video?.snippet?.thumbnails?.maxres?.url,
-              video?.thumbnailUrl,
-              video?.thumbnail,
-            ])
+            const thumbnailUrl = video?.thumbnails?.maxres?.url || video?.snippet?.thumbnails?.maxres?.url || video?.thumbnailUrl || video?.thumbnail || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
             const existingChannelReplies = thread.replies?.comments || []
             const replyCountNumber = Number(thread.snippet.totalReplyCount ?? existingChannelReplies.length ?? 0)
             const replyCount = replyCountNumber.toLocaleString()
