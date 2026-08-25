@@ -15,11 +15,16 @@ type DefaultDashboardSlot = Readonly<{
 }>
 
 export const DEFAULT_DASHBOARD_ROWS = [
- [{ id: "app-verification-explainer", size: "full", height: "medium" }],
+ // Top row — Channel Overview (left half) + About VIEWTUBE hero (right half).
+ // The About panel doubles as a sign-in / sign-up CTA on new sessions and
+ // stays hidden for connected users (see WidgetRenderer's gate).
  [
-  { id: "kpi-cluster", size: "third", height: "tall" },
-  { id: "community-post", size: "third", height: "tall" },
-  { id: "comment-replier", size: "third", height: "tall" },
+  { id: "kpi-cluster", size: "half", height: "medium" },
+  { id: "app-verification-explainer", size: "half", height: "medium" },
+ ],
+ [
+  { id: "community-post", size: "half", height: "tall" },
+  { id: "comment-replier", size: "half", height: "tall" },
  ],
  [
   { id: "consistency-heatmap", size: "quarter", height: "medium" },
