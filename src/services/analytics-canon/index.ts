@@ -23,4 +23,12 @@ export {
  useCanonicalMetricSummary,
  useCanonicalWindowTotals,
  useCanonicalChannelIdentity,
+ useCanonicalIntelligenceCatalog,
 } from "./useAnalytics"
+export {
+ CANONICAL_INTELLIGENCE_DATASET_COUNT,
+ CANONICAL_INTELLIGENCE_EVIDENCE_VERSION,
+ INTELLIGENCE_SECTION_DATASETS,
+ getCanonicalIntelligenceDatasetCatalog,
+ buildCanonicalIntelligenceEvidence,
+} from "./intelligenceEvidence"

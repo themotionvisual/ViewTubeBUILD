@@ -14,6 +14,8 @@
 //    the source of truth for TYPES only. It must never re-export runtime
 //    functions from there — those come from selectors.ts and use VT Sync.
 
+import type { AnalyticsWindow } from "../analytics/DataStore"
+
 export type {
  AnalyticsWindow,
  CanonicalVideoRow,
@@ -53,3 +55,75 @@ export const CANONICAL_ANALYTICS_WINDOWS = [
  */
 export const CANON_SOURCE_MARKER = "vt-sync" as const
 export type CanonSourceMarker = typeof CANON_SOURCE_MARKER
+
+export type CanonicalIntelligenceDatasetStatus =
+ | "available"
+ | "partial"
+ | "stale"
+ | "failed"
+ | "unavailable"
+
+export type CanonicalIntelligenceSource =
+ | "youtube_data_v3"
+ | "youtube_analytics_v2"
+ | "youtube_reporting_v1"
+ | "manual_import"
+ | "derived"
+ | "google_workspace"
+ | "unknown"
+
+export type CanonicalIntelligenceMetricSummary = {
+ count: number
+ sum: number
+ average: number
+ minimum: number
+ maximum: number
+}
+
+export type CanonicalIntelligenceDatasetManifest = {
+ id: string
+ label: string
+ description: string
+ categoryIds: string[]
+ status: CanonicalIntelligenceDatasetStatus
+ rowCount: number
+ updatedAt?: string
+ sources: CanonicalIntelligenceSource[]
+ missingMetrics: string[]
+ columns: Array<{ key: string; label: string; format?: string }>
+ evidenceRefs: string[]
+ metrics: Record<string, CanonicalIntelligenceMetricSummary>
+ sampleRows: Array<Record<string, string | number | boolean | null>>
+}
+
+export type IntelligenceDatasetCoverage = {
+ total: number
+ available: number
+ partial: number
+ stale: number
+ failed: number
+ unavailable: number
+ represented: number
+}
+
+export type IntelligenceEvidenceRequest = {
+ window?: AnalyticsWindow
+ sectionIds?: string[]
+ maximumRowsPerDataset?: number
+ maximumCharacters?: number
+}
+
+export type CanonicalIntelligenceEvidenceBundle = {
+ version: "vt-intelligence-evidence-v1"
+ snapshotId: string
+ channelId: string | null
+ channelName: string | null
+ capturedAt: string
+ selectedWindow: AnalyticsWindow
+ generatedAt: string
+ coverage: IntelligenceDatasetCoverage
+ datasets: CanonicalIntelligenceDatasetManifest[]
+ requestedSectionIds: string[]
+ omittedDatasetIds: string[]
+ contextText: string
+}

@@ -3,7 +3,10 @@ import {
   generateKeywordResearch,
   generateOracleReport,
 } from "@/services/gemini";
-import { getMetricSummary, getMasterRows } from "@/services/analytics/Selectors";
+import {
+  INTELLIGENCE_SECTION_DATASETS,
+  type CanonicalIntelligenceEvidenceBundle,
+} from "@/services/analytics-canon";
 import {
   DATA_ANALYSIS_SYSTEM_PROMPT,
   DATA_HANDLING_INSTRUCTIONS,
@@ -17,7 +20,7 @@ import type {
   ContextSourceSnapshot,
   FusionReport,
   GenerationDiagnostics,
-  GenerationRecord,
+  IntelligenceReportGenerationRecord,
   KeywordAnalysis,
   OracleSection,
   OracleReport,
@@ -36,9 +39,12 @@ import type {
 } from "./types";
 
 type GenerateUltimateReportInput = {
+  evidence: CanonicalIntelligenceEvidenceBundle;
+  brainContext?: string;
   manualIntent?: string;
   autoContext?: string;
   dataSources?: string[];
+  signal?: AbortSignal;
   onSessionUpdate?: (meta: {
     generationId: string;
     startedAt: string;
@@ -79,13 +85,26 @@ const ULTIMATE_SECTION_ORDER = [
   "Risk Flags & Guardrails",
   "Execution Queue + Progress Delta",
 ] as const;
+const ULTIMATE_SECTION_EVIDENCE_KEYS = [
+  "executive-summary",
+  "algorithm-diagnosis",
+  "strategy-engine",
+  "sculpting-engine",
+  "channel-pulse",
+  "comparative-analysis",
+  "keyword-matrix",
+  "engagement-matrix",
+  "retention-burnout",
+  "revenue-dynamics",
+  "risk-guardrails",
+  "execution-queue",
+] as const;
 const SECTION_TIMEOUTS_MS = {
   diagnosis: 18000,
   keyword: 18000,
   stageA: 42000,
   stageB: 42000,
 } as const;
-const PREFERRED_WINDOWS = ["28d", "90d", "365d", "lifetime", "7d"] as const;
 const warningOnce = new Set<string>();
 
 const toRecord = (value: unknown): Record<string, unknown> =>
@@ -395,60 +414,6 @@ const payloadFrom = (bullets: string[] = [], notes: string[] = []): ReportSectio
   notes: notes.slice(0, 4),
 });
 
-const readLocalStorageSafe = (key: string): string => {
-  try {
-    return localStorage.getItem(key) || "";
-  } catch {
-    return "";
-  }
-};
-
-const readJsonLocalStorageSafe = (key: string): Record<string, unknown> => {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : {};
-  } catch {
-    return {};
-  }
-};
-
-const assembleContextSources = (manualIntent: string, autoContext: string, analyticsSnapshot: string): ContextSourceSnapshot => {
-  const brainContext =
-    readLocalStorageSafe("vt_ultimate_tool_context_pack_v1") ||
-    readLocalStorageSafe("vt_brain_context_v1") ||
-    "Brain context unavailable.";
-  const masterDataSnapshot = analyticsSnapshot || "Master table snapshot unavailable.";
-  const apiSnapshot =
-    readLocalStorageSafe("yt_analytics_cache") ||
-    readLocalStorageSafe("vt_api_storage_snapshot_v1") ||
-    "API snapshot unavailable.";
-  const aiJournalContext =
-    readLocalStorageSafe("vt_ai_journal_entries_v1") ||
-    readLocalStorageSafe("vt_journal_entries") ||
-    "AI Journal context unavailable.";
-  const userProfileContext =
-    manualIntent ||
-    autoContext ||
-    readLocalStorageSafe("vt_channel_profile_context_v1") ||
-    "User profile context unavailable.";
-
-  return {
-    brainContext,
-    masterDataSnapshot,
-    apiSnapshot,
-    aiJournalContext,
-    userProfileContext,
-  };
-};
-
-const toIsoIfValid = (value: unknown): string | undefined => {
-  if (typeof value !== "string" || !value.trim()) return undefined;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
-};
-
 const freshnessFrom = (iso?: string): "fresh" | "stale" | "unknown" => {
   if (!iso) return "unknown";
   const ts = new Date(iso).getTime();
@@ -458,32 +423,14 @@ const freshnessFrom = (iso?: string): "fresh" | "stale" | "unknown" => {
 
 const buildPreflightResult = (
   sourceSnapshot: ContextSourceSnapshot,
-  bestSnapshot: { window: "lifetime" | "365d" | "90d" | "28d" | "7d"; sourceMode: "hybrid" | "api" | "csv"; summary: ReturnType<typeof getMetricSummary>; rows: ReturnType<typeof getMasterRows> },
+  evidence: CanonicalIntelligenceEvidenceBundle,
 ): ReportPreflightResult => {
-  const ytCache = readJsonLocalStorageSafe("yt_analytics_cache");
-  const authState = readJsonLocalStorageSafe("vt_auth_state");
-  const cacheProfile = toRecord(ytCache.profile);
-  const authIsAuthenticated = Boolean((authState as { isAuthenticated?: unknown }).isAuthenticated);
-  const cacheProfileId = String(cacheProfile.id || "").trim();
-  const cacheUpdatedAt =
-    toIsoIfValid((ytCache as { lastSynced?: unknown }).lastSynced) ||
-    toIsoIfValid((ytCache as { syncedAt?: unknown }).syncedAt) ||
-    toIsoIfValid((ytCache as { updatedAt?: unknown }).updatedAt);
-  const hasApiPayload = Boolean(
-    Array.isArray((ytCache as { videos?: unknown }).videos) ||
-    Array.isArray((ytCache as { dailyAnalytics?: unknown }).dailyAnalytics) ||
-    Array.isArray((ytCache as { channelAnalytics?: unknown }).channelAnalytics) ||
-    Array.isArray((ytCache as { globalAnalytics?: unknown }).globalAnalytics),
-  );
-  const masterRowsCount = bestSnapshot.rows.length;
-  const hasMasterCoverage =
-    masterRowsCount > 0 &&
-    (
-      Number(bestSnapshot.summary.totals.views || 0) > 0 ||
-      Number(bestSnapshot.summary.totals.watchHours || 0) > 0 ||
-      Number(bestSnapshot.summary.totals.subscribersGained || 0) > 0
-    );
-  const hasProfile = authIsAuthenticated || cacheProfileId.length > 0;
+  const coreIds = new Set(["videos", "daily", "weekly", "monthly", "channel_totals"]);
+  const coreDatasets = evidence.datasets.filter((dataset) => coreIds.has(dataset.id));
+  const coreRows = coreDatasets.reduce((total, dataset) => total + dataset.rowCount, 0);
+  const hasMasterCoverage = coreRows > 0;
+  const hasCanonicalPayload = evidence.coverage.available + evidence.coverage.partial + evidence.coverage.stale > 0;
+  const hasProfile = Boolean(evidence.channelId);
   const brainPresent = sourceSnapshot.brainContext.trim().length > 0 && !/unavailable|missing/i.test(sourceSnapshot.brainContext);
 
   const requiredSources: ReportPreflightResult["requiredSources"] = [
@@ -497,25 +444,26 @@ const buildPreflightResult = (
     {
       key: "master_table",
       present: hasMasterCoverage,
-      freshness: "fresh",
-      detail: "Master table requires non-empty canonical rows with KPI coverage.",
-      evidence: `rows=${masterRowsCount};window=${bestSnapshot.window};sourceMode=${bestSnapshot.sourceMode}`,
+      freshness: freshnessFrom(evidence.capturedAt),
+      lastUpdatedAt: evidence.capturedAt,
+      detail: "VT-SYNC core channel/time datasets require at least one real row.",
+      evidence: `core_rows=${coreRows};window=${evidence.selectedWindow};snapshot=${evidence.snapshotId}`,
     },
     {
       key: "api",
-      present: hasApiPayload,
-      freshness: freshnessFrom(cacheUpdatedAt),
-      lastUpdatedAt: cacheUpdatedAt,
-      detail: "API cache requires parseable analytics payload and sync timestamp.",
-      evidence: `cache_payload=${hasApiPayload};cache_ts=${cacheUpdatedAt || "none"}`,
+      present: hasCanonicalPayload,
+      freshness: freshnessFrom(evidence.capturedAt),
+      lastUpdatedAt: evidence.capturedAt,
+      detail: "Canonical VT-SYNC evidence must contain at least one available, partial, or preserved stale dataset.",
+      evidence: `available=${evidence.coverage.available};partial=${evidence.coverage.partial};stale=${evidence.coverage.stale}`,
     },
     {
       key: "user_profile",
       present: hasProfile,
-      freshness: freshnessFrom(cacheUpdatedAt),
-      lastUpdatedAt: cacheUpdatedAt,
-      detail: "User profile passes when auth state is authenticated OR cache profile id exists.",
-      evidence: `auth=${authIsAuthenticated};cache_profile_id=${cacheProfileId || "none"};source=${authIsAuthenticated ? "auth" : cacheProfileId ? "cache" : "none"}`,
+      freshness: freshnessFrom(evidence.capturedAt),
+      lastUpdatedAt: evidence.capturedAt,
+      detail: "A channel-scoped VT-SYNC snapshot is required to prevent cross-channel report writes.",
+      evidence: `channel_id=${evidence.channelId || "none"};channel_name=${evidence.channelName || "none"}`,
     },
   ];
 
@@ -525,20 +473,20 @@ const buildPreflightResult = (
     blockers.push("missing_master_table_rows");
     remediation.push("Master table missing or empty for selected window. Run data sync and verify canonical rows are populated.");
   }
-  if (!hasApiPayload) {
-    blockers.push("missing_api_cache");
-    remediation.push("API cache missing analytics payload. Reconnect data source and run sync to refresh yt_analytics_cache.");
+  if (!hasCanonicalPayload) {
+    blockers.push("missing_vt_sync_evidence");
+    remediation.push("No canonical VT-SYNC datasets are available. Sync or import channel data, then retry.");
   }
   if (!hasProfile) {
-    blockers.push("missing_user_profile_auth_or_cache");
-    remediation.push("User profile not resolved. Connect again or refresh profile cache via Sync Data.");
+    blockers.push("missing_channel_identity");
+    remediation.push("Connect a channel or wait for VT-SYNC channel identity to resolve before generating.");
   }
 
   return {
     ok: blockers.length === 0,
     checkedAt: new Date().toISOString(),
-    sourceWindow: bestSnapshot.window,
-    sourceMode: bestSnapshot.sourceMode,
+    sourceWindow: evidence.selectedWindow,
+    sourceMode: "vt-sync",
     requiredSources,
     blockers,
     remediation,
@@ -649,22 +597,50 @@ const fuseStageReports = (stageA: OracleReport, stageB: OracleReport): FusionRep
 const toSectionStates = (
   report: UltimateChannelReport,
   sourceSnapshot: ContextSourceSnapshot,
+  evidence: CanonicalIntelligenceEvidenceBundle,
 ): ReportSectionState[] => {
   const byOrder = report.blocks.slice(0, ULTIMATE_SECTION_ORDER.length);
   return byOrder.map((block, idx) => {
     const payload = block.payload || {};
-    const sourceLabels = payload.sourceLabels?.length
-      ? payload.sourceLabels
-      : ["brain", "master_table", "api", "journal", "user_profile"];
-    const evidenceRefs = payload.evidenceRefs?.length
-      ? payload.evidenceRefs
-      : [
+    const evidenceKey = ULTIMATE_SECTION_EVIDENCE_KEYS[idx];
+    const configuredDatasetIds = INTELLIGENCE_SECTION_DATASETS[evidenceKey] || [];
+    const dependentDatasets = configuredDatasetIds.length
+      ? evidence.datasets.filter((dataset) => configuredDatasetIds.includes(dataset.id))
+      : evidence.datasets;
+    const unavailableDatasets = dependentDatasets.filter(
+      (dataset) => dataset.status === "unavailable" || dataset.status === "failed",
+    );
+    const limitedDatasets = dependentDatasets.filter(
+      (dataset) => dataset.status === "partial" || dataset.status === "stale",
+    );
+    const sourceLabels = Array.from(new Set([
+      ...(payload.sourceLabels?.length
+        ? payload.sourceLabels
+        : ["brain", "vt-sync", "user_profile"]),
+      ...dependentDatasets.flatMap((dataset) => dataset.sources),
+    ]));
+    const evidenceRefs = Array.from(new Set([
+      ...(payload.evidenceRefs?.length
+        ? payload.evidenceRefs
+        : [
           `brain:${sourceSnapshot.brainContext ? "available" : "missing"}`,
-          `master_table:${sourceSnapshot.masterDataSnapshot ? "available" : "missing"}`,
-          `api:${sourceSnapshot.apiSnapshot ? "available" : "missing"}`,
+          `vt-sync:${evidence.snapshotId}`,
           `journal:${sourceSnapshot.aiJournalContext ? "available" : "missing"}`,
           `profile:${sourceSnapshot.userProfileContext ? "available" : "missing"}`,
-        ];
+        ]),
+      ...dependentDatasets.flatMap((dataset) =>
+        dataset.evidenceRefs.length
+          ? dataset.evidenceRefs
+          : [`${evidence.snapshotId}:${dataset.id}:${dataset.status}`],
+      ),
+    ]));
+    const qualityFlags = [
+      ...unavailableDatasets.map((dataset) => `dataset_${dataset.status}:${dataset.id}`),
+      ...limitedDatasets.map((dataset) => `dataset_${dataset.status}:${dataset.id}`),
+    ];
+    const datasetNotes = unavailableDatasets.length
+      ? [`Unavailable evidence: ${unavailableDatasets.map((dataset) => dataset.label).join(", ")}.`]
+      : [];
 
     return {
       id: block.id,
@@ -675,11 +651,11 @@ const toSectionStates = (
       summary: block.summary,
       bullets: payload.bullets || [],
       metrics: payload.metrics || [],
-      notes: payload.notes || [],
+      notes: [...(payload.notes || []), ...datasetNotes],
       sourceLabels,
       evidenceRefs,
-      confidence: payload.confidence ?? 82,
-      qualityFlags: [],
+      confidence: Math.max(0, (payload.confidence ?? 82) - unavailableDatasets.length * 6 - limitedDatasets.length * 2),
+      qualityFlags,
       actions: payload.actions || block.recommendations || [],
       chartSpec: block.chartSuggestion,
       tableSpec: block.tableSpec,
@@ -950,34 +926,84 @@ const buildToolContextPack = (
   diagnosis: AlgorithmDiagnosis,
   report: OracleReport,
   analysisMode: "channel" | "retention",
+  generationId: string,
+  evidence: CanonicalIntelligenceEvidenceBundle,
 ): ToolContextPack => ({
-  version: ULTIMATE_PROMPT_PACK_VERSION,
-  generatedAt: new Date().toISOString(),
-  promptInjection: [
+  id: `${generationId}:intelligence-context`,
+  runId: generationId,
+  channelId: evidence.channelId,
+  createdAt: new Date().toISOString(),
+  sourceSnapshotId: evidence.snapshotId,
+  evidenceFingerprint: `${evidence.snapshotId}:${evidence.datasets.map((dataset) => `${dataset.id}:${dataset.rowCount}:${dataset.status}`).join("|")}`,
+  promptVersion: ULTIMATE_PROMPT_PACK_VERSION,
+  summary: report.executiveSummary.slice(0, 600),
+  contextBlock: [
     `MODE: ${analysisMode}`,
     `CLUSTER: ${diagnosis.clusterCenter}`,
     `AUTHORITY: ${diagnosis.nicheAuthority}%`,
     `EXEC_SUMMARY: ${report.executiveSummary.slice(0, 280)}`,
   ].join("\n"),
+  evidenceIds: evidence.datasets.flatMap((dataset) => dataset.evidenceRefs).slice(0, 160),
+  confidence: diagnosis.nicheAuthority >= 70 ? "high" : diagnosis.nicheAuthority >= 40 ? "medium" : "low",
+  unavailableInputs: evidence.datasets.filter((dataset) => dataset.status === "unavailable" || dataset.status === "failed").map((dataset) => dataset.id),
 });
 
 const buildChannelKnowledgeModel = (
   diagnosis: AlgorithmDiagnosis,
   report: OracleReport,
   riskFlags: string[],
+  generationId: string,
+  evidence: CanonicalIntelligenceEvidenceBundle,
 ): ChannelKnowledgeModel => ({
-  profile: diagnosis.clusterCenter || "Unknown cluster",
-  strategyPosture: report.executiveSummary || diagnosis.hiddenStory || "No strategy posture generated.",
-  confidence: Math.max(0, Math.min(100, diagnosis.nicheAuthority || 0)),
-  guardrails: riskFlags.slice(0, 4),
+  id: `${generationId}:channel-knowledge`,
+  runId: generationId,
+  channelId: evidence.channelId,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  sourceSnapshotId: evidence.snapshotId,
+  evidenceFingerprint: `${evidence.snapshotId}:${evidence.coverage.available}:${evidence.coverage.partial}`,
+  niche: diagnosis.clusterCenter ? [{
+    id: `${generationId}:niche`,
+    label: diagnosis.clusterCenter,
+    summary: diagnosis.hiddenStory || report.executiveSummary,
+    confidence: diagnosis.nicheAuthority >= 70 ? "high" : diagnosis.nicheAuthority >= 40 ? "medium" : "low",
+    evidenceIds: evidence.datasets.find((dataset) => dataset.id === "videos")?.evidenceRefs.slice(0, 12) || [],
+  }] : [],
+  contentFormats: [],
+  audience: diagnosis.audienceDNA.slice(0, 8).map((item, index) => ({
+    id: `${generationId}:audience:${index + 1}`,
+    label: item.interest,
+    summary: `${item.overlap}% audience overlap reported by the current diagnosis.`,
+    confidence: item.overlap >= 70 ? "high" : item.overlap >= 40 ? "medium" : "low",
+    evidenceIds: evidence.datasets.find((dataset) => dataset.id === "demographics")?.evidenceRefs.slice(0, 8) || [],
+  })),
+  visualIdentity: [],
+  creatorCommunication: [],
+  growthOpportunities: report.sections.slice(0, 6).map((section, index) => ({
+    id: `${generationId}:growth:${index + 1}`,
+    label: section.title,
+    summary: section.content,
+    confidence: "medium",
+    evidenceIds: evidence.datasets.flatMap((dataset) => dataset.evidenceRefs).slice(index * 3, index * 3 + 3),
+  })),
+  contradictions: riskFlags.slice(0, 6).map((risk, index) => ({
+    id: `${generationId}:risk:${index + 1}`,
+    label: `Guardrail ${index + 1}`,
+    summary: risk,
+    confidence: "medium",
+    evidenceIds: [],
+  })),
+  summary: report.executiveSummary || diagnosis.hiddenStory,
+  confidence: diagnosis.nicheAuthority >= 70 ? "high" : diagnosis.nicheAuthority >= 40 ? "medium" : "low",
 });
 
-const persistGenerationRecord = (record: GenerationRecord): void => {
+const persistGenerationRecord = (record: IntelligenceReportGenerationRecord): void => {
   try {
-    const raw = localStorage.getItem(ULTIMATE_REPORT_HISTORY_KEY);
-    const existing = raw ? (JSON.parse(raw) as GenerationRecord[]) : [];
+    const key = `${ULTIMATE_REPORT_HISTORY_KEY}:${record.report.meta.channelId}`;
+    const raw = localStorage.getItem(key);
+    const existing = raw ? (JSON.parse(raw) as IntelligenceReportGenerationRecord[]) : [];
     const next = [record, ...existing].slice(0, 40);
-    localStorage.setItem(ULTIMATE_REPORT_HISTORY_KEY, JSON.stringify(next));
+    localStorage.setItem(key, JSON.stringify(next));
   } catch (error) {
     console.warn("[UltimateReport] Failed to persist generation record", error);
   }
@@ -1032,79 +1058,45 @@ const sectionHasRenderableContent = (section: ReportSectionState): boolean =>
   (section.actions?.length || 0) > 0 ||
   (section.bullets?.length || 0) > 0;
 
-const resolveBestAnalyticsSnapshot = (): {
-  window: "lifetime" | "365d" | "90d" | "28d" | "7d";
-  sourceMode: "hybrid" | "api" | "csv";
-  summary: ReturnType<typeof getMetricSummary>;
-  rows: ReturnType<typeof getMasterRows>;
-} => {
-  const sourceModes: Array<"hybrid" | "api" | "csv"> = ["hybrid", "api", "csv"];
-  let best: {
-    window: "lifetime" | "365d" | "90d" | "28d" | "7d";
-    sourceMode: "hybrid" | "api" | "csv";
-    summary: ReturnType<typeof getMetricSummary>;
-    rows: ReturnType<typeof getMasterRows>;
-    score: number;
-  } | null = null;
-
-  for (const window of PREFERRED_WINDOWS) {
-    for (const sourceMode of sourceModes) {
-      const summary = getMetricSummary(window, sourceMode === "csv" ? "csv_table" : sourceMode, []);
-      const rows = getMasterRows(window, sourceMode, []);
-      const score =
-        Number(summary.totals.views || 0) +
-        Number(summary.totals.watchHours || 0) * 5 +
-        Number(summary.totals.subscribersGained || 0) * 50 +
-        Number(summary.totals.revenue || 0) * 20;
-      if (!best || score > best.score) {
-        best = { window, sourceMode, summary, rows, score };
-      }
-    }
-  }
-
-  if (best) return { window: best.window, sourceMode: best.sourceMode, summary: best.summary, rows: best.rows };
-  const fallbackSummary = getMetricSummary("lifetime", "api", []);
-  const fallbackRows = getMasterRows("lifetime", "api", []);
-  return { window: "lifetime", sourceMode: "api", summary: fallbackSummary, rows: fallbackRows };
-};
-
 export async function generateUltimateChannelReport(
-  input: GenerateUltimateReportInput = {},
+  input: GenerateUltimateReportInput,
 ): Promise<{
   report: UltimateChannelReport;
   diagnosis: AlgorithmDiagnosis;
   oracle: OracleReport;
   keyword: KeywordAnalysis;
   resolvedContext: string;
-  generationRecord: GenerationRecord;
+  generationRecord: IntelligenceReportGenerationRecord;
 }> {
+  input.signal?.throwIfAborted();
   const manualIntent = input.manualIntent?.trim() || "";
   const autoContext = input.autoContext?.trim() || "";
   const startedAt = new Date().toISOString();
-
-  const bestSnapshot = resolveBestAnalyticsSnapshot();
-  const summary = bestSnapshot.summary;
-  const topRows = bestSnapshot.rows.slice(0, 18);
-
-  const analyticsSnapshot = `
-[CHANNEL SUMMARY DATA]
-Window: ${bestSnapshot.window}
-Views: ${summary.totals.views}
-Revenue: ${summary.totals.revenue}
-Subscribers: ${summary.totals.subscribersGained}
-Watch Hours: ${summary.totals.watchHours}
-Averages: CTR: ${summary.averages.ctr}%, RPM: ${summary.averages.rpm}
-
-[TOP PERFORMING VIDEOS]
-${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.metrics.ctr.value}%`).join("\n")}
-`;
+  const evidence = input.evidence;
+  const analyticsSnapshot = evidence.contextText;
 
   const modeHint = /retention|drop[- ]off|audience retention|hook/i.test(`${manualIntent} ${autoContext}`)
     ? "retention"
     : "channel";
 
-  const sourceSnapshot = assembleContextSources(manualIntent, autoContext, analyticsSnapshot);
-  const preflight = buildPreflightResult(sourceSnapshot, bestSnapshot);
+  const sourceSnapshot: ContextSourceSnapshot = {
+    brainContext: input.brainContext?.trim() || "Brain context unavailable.",
+    masterDataSnapshot: analyticsSnapshot || "VT-SYNC evidence unavailable.",
+    apiSnapshot: JSON.stringify({
+      snapshotId: evidence.snapshotId,
+      capturedAt: evidence.capturedAt,
+      coverage: evidence.coverage,
+      datasets: evidence.datasets.map((dataset) => ({
+        id: dataset.id,
+        status: dataset.status,
+        rows: dataset.rowCount,
+        sources: dataset.sources,
+      })),
+    }),
+    aiJournalContext: "AI Journal is not a required analytics source.",
+    userProfileContext: manualIntent || autoContext || evidence.channelName || evidence.channelId || "User profile unavailable.",
+  };
+  const preflight = buildPreflightResult(sourceSnapshot, evidence);
 
   if (!preflight.ok) {
     const generationId = crypto.randomUUID();
@@ -1129,16 +1121,16 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
   const resolvedContext = [
     manualIntent && `USER STRATEGIC INTENT: ${manualIntent}`,
     autoContext && `AUTO-DETECTED CONTEXT: ${autoContext}`,
-    `REAL-TIME ANALYTICS SNAPSHOT:\n${analyticsSnapshot}`,
+    `VT-SYNC CANONICAL EVIDENCE:\n${analyticsSnapshot}`,
     `[BRAIN SOURCE]\n${sourceSnapshot.brainContext.slice(0, 900)}`,
-    `[MASTER DATA TABLES]\n${sourceSnapshot.masterDataSnapshot.slice(0, 900)}`,
-    `[API STORAGE SNAPSHOT]\n${sourceSnapshot.apiSnapshot.slice(0, 900)}`,
+    `[VT-SYNC COVERAGE MANIFEST]\n${sourceSnapshot.apiSnapshot.slice(0, 4000)}`,
     `[AI JOURNAL]\n${sourceSnapshot.aiJournalContext.slice(0, 900)}`,
     `[USER CHANNEL PROFILE]\n${sourceSnapshot.userProfileContext.slice(0, 900)}`,
     buildFusionPromptContext(modeHint),
   ]
     .filter(Boolean)
     .join("\n\n");
+  input.signal?.throwIfAborted();
 
   const contextMode = manualIntent && autoContext ? "hybrid" : manualIntent ? "manual" : "auto";
   const stageAStartReason = "Stage A (legacy analysis) started.";
@@ -1179,6 +1171,7 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
       "keyword research",
     ),
   ]);
+  input.signal?.throwIfAborted();
 
   const stageAOracle = normalizeOracleReport(stageAStep.value, resolvedContext);
   const stageA: StageAReport = {
@@ -1239,6 +1232,7 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
     SECTION_TIMEOUTS_MS.stageB,
     "stage B report",
   );
+  input.signal?.throwIfAborted();
   const stageBOracle = normalizeOracleReport(stageBStep.value, resolvedContext);
   const stageB: StageBRefinement = {
     ...sanitizeOracleReport(stageBOracle),
@@ -1290,11 +1284,13 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
     degradedCount: 0,
     totalCount: totalSections,
   });
-  const toolContextPack = buildToolContextPack(diagnosis, oracle, analysisMode);
-  const channelKnowledge = buildChannelKnowledgeModel(diagnosis, oracle, riskFlags);
+  input.signal?.throwIfAborted();
+  const toolContextPack = buildToolContextPack(diagnosis, oracle, analysisMode, generationId, evidence);
+  const channelKnowledge = buildChannelKnowledgeModel(diagnosis, oracle, riskFlags, generationId, evidence);
   const brainUpdate: BrainUpdateResult = {
-    updated: true,
-    notes: ["Generation captured and queued for Brain reflection."],
+    status: "pending",
+    updated: false,
+    notes: ["Report generated; canonical Brain persistence is pending."],
     qualityFlags: oracle.sections.length ? [] : ["oracle_sections_recovered"],
   };
 
@@ -1331,11 +1327,15 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
       generationId,
       generatedAt: new Date().toISOString(),
       startedAt,
-      dataSources: input.dataSources?.length ? input.dataSources : ["omni-brain", "analytics-cache", "api"],
+      dataSources: input.dataSources?.length ? input.dataSources : ["vt-sync", "analytics-canon", "ai-brain"],
       contextMode,
       analysisMode,
       promptPackVersion: ULTIMATE_PROMPT_PACK_VERSION,
-      authoritativeSurface: "/performance",
+      authoritativeSurface: "/analytics",
+      channelId: evidence.channelId,
+      snapshotId: evidence.snapshotId,
+      datasetCoverage: evidence.coverage,
+      omittedDatasetIds: evidence.omittedDatasetIds,
       aliases: ["performance hub", "analytics", "channel intelligence lab"],
       diagnostics: {
         modelRecoveryApplied:
@@ -1367,12 +1367,13 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
     },
   };
 
-  const sectionStates = toSectionStates(report, sourceSnapshot);
+  const sectionStates = toSectionStates(report, sourceSnapshot, evidence);
   const generationEvents: SectionGenerationEvent[] = [];
   let completedCount = 0;
   let failedCount = 0;
   let degradedCount = 0;
   for (const section of sectionStates) {
+    input.signal?.throwIfAborted();
     const running: ReportSectionState = { ...section, status: "running" };
     const runningEvent: SectionGenerationEvent = {
       sectionId: section.id,
@@ -1398,7 +1399,7 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
       nextStatus = "failed";
       nextFlags.push("source_stage_failed");
       failedCount += 1;
-    } else if (stageAFailed || stageBFailed || section.sourceLabels.length < 3) {
+    } else if (stageAFailed || stageBFailed || section.sourceLabels.length < 3 || section.qualityFlags.length > 0) {
       nextStatus = "degraded";
       nextFlags.push(stageAFailed || stageBFailed ? "source_stage_partial" : "partial_sources");
       degradedCount += 1;
@@ -1409,7 +1410,7 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
     const completeSection: ReportSectionState = {
       ...section,
       status: nextStatus,
-      qualityFlags: nextFlags,
+      qualityFlags: [...section.qualityFlags, ...nextFlags],
     };
     const completeEvent: SectionGenerationEvent = {
       sectionId: section.id,
@@ -1451,7 +1452,7 @@ ${topRows.map((r) => `${r.title} | Views: ${r.metrics.views.value} | CTR: ${r.me
   report.meta.degradedCount = degradedCount;
   report.meta.partialRender = failedCount > 0 || degradedCount > 0;
 
-  const generationRecord: GenerationRecord = {
+  const generationRecord: IntelligenceReportGenerationRecord = {
     id: generationId,
     generatedAt: report.meta.generatedAt,
     promptPackVersion: ULTIMATE_PROMPT_PACK_VERSION,

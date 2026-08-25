@@ -153,7 +153,6 @@ import {
  getVideoMetricRuntimeStatus,
 } from "../services/analytics/SyncPipeline"
 import { PerformanceHubChartRollout } from "./performanceHub40/PerformanceHubChartRollout"
-import IntelligenceReportGenerator from "../components/IntelligenceHub/IntelligenceHub"
 const PerformanceHubVisualLabPanel = lazy(
  () => import("./components/PerformanceHubVisualLabPanel"),
 )
@@ -1155,48 +1154,6 @@ const [cachedUploadFiles, setCachedUploadFiles] = useState<CsvFileWithTag[]>(
   }
  return cache.analyticsByWindow?.[analyticsWindow]?.syncDiagnostics || null
  }, [lastSyncComplete, analyticsWindow, readYouTubeAnalyticsCache])
-
- const ultimateAutoContext = useMemo(() => {
-  const topRows = effectiveCanonicalRows.slice(0, 12)
-  const rowSummary = topRows
-   .map((row, index) => {
-    const title = textFromUnknown(row.title || row.videoId || `video-${index + 1}`)
-    const views = getViews(row as unknown as UnifiedRow)
-    const ctr = getCtr(row as unknown as UnifiedRow)
-    const avp = getAvpPercent(row as unknown as UnifiedRow)
-    return `${index + 1}. ${title} | views=${Math.round(views)} | ctr=${ctr.toFixed(2)} | avp=${avp.toFixed(2)}`
-   })
-   .join("\n")
-  const metricSummary = selectedMetricSummary
-   ? JSON.stringify(selectedMetricSummary).slice(0, 1800)
-   : "none"
-  const diagnosticsSummary = analyticsSyncDiagnostics
-   ? JSON.stringify(analyticsSyncDiagnostics).slice(0, 1800)
-   : "none"
-  return [
-   `Window: ${analyticsWindow}`,
-   `Data source mode: ${dataSource}`,
-   `Canonical rows: ${effectiveCanonicalRows.length}`,
-   `CSV files: ${csvFiles.length}`,
-   `Top canonical rows:\n${rowSummary}`,
-   `Metric summary:\n${metricSummary}`,
-   `Sync diagnostics:\n${diagnosticsSummary}`,
-   "Generate a complete 14-block creator-focused channel analysis report with actionable recommendations.",
-  ].join("\n\n")
- }, [
-  effectiveCanonicalRows,
-  selectedMetricSummary,
-  analyticsSyncDiagnostics,
-  analyticsWindow,
-  dataSource,
-  csvFiles.length,
- ])
- const ultimateDataSources = useMemo(() => {
-  const sources = ["youtube-analytics-cache", "canonical-master-rows", "ultimate-report-engine"]
-  if (csvFiles.length > 0) sources.push("csv-uploads")
-  if (syncSourceMode === "api_analytics" || syncSourceMode === "both") sources.push("youtube-api")
-  return sources
- }, [csvFiles.length, syncSourceMode])
 
  const creatorContentTypeDiagnostic = useMemo(() => {
   const cache = readYouTubeAnalyticsCache() as {
@@ -5675,12 +5632,19 @@ const renderDataViz = () => {
      disableCollapseAnimation
      contentClassName="bg-white p-4 md:p-6 lg:p-8">
      {openTools.has("intelligence-hub") && (
-     <IntelligenceReportGenerator
-       mode="ultimate"
-       embedded
-       autoContext={ultimateAutoContext}
-       dataSources={ultimateDataSources}
-      />
+      <div className="border-[3px] border-black bg-white p-5 md:p-7">
+       <p className="text-[11px] font-black uppercase tracking-[0.14em] text-black/55">Canonical intelligence surface</p>
+       <h3 className="mt-2 text-2xl font-[1000] uppercase tracking-tight">Intelligence Hub now runs from Analytics</h3>
+       <p className="mt-3 max-w-3xl text-sm font-bold leading-relaxed">
+        Generate the Executive Channel Report from the complete 34-dataset VT-SYNC snapshot and save its learning to the channel-scoped AI Brain.
+       </p>
+       <a
+        href="/analytics#intelligence"
+        className="mt-5 inline-flex items-center gap-2 border-[3px] border-black bg-[#F3F25B] px-5 py-3 text-sm font-[1000] uppercase tracking-wide shadow-[4px_4px_0_0_#000] transition-transform hover:-translate-y-0.5">
+        Open Intelligence Hub in Analytics
+        <ExternalLink size={16} strokeWidth={3} />
+       </a>
+      </div>
      )}
     </ToolboxScaffold>
 

@@ -17,29 +17,41 @@ import type {
  ReportPreflightResult,
  ReportSectionState,
  SectionGenerationEvent,
+ IntelligenceReportGenerationRecord,
 } from "./types"
+import type { CanonicalIntelligenceEvidenceBundle } from "../../services/analytics-canon"
 import { IntelligenceChart } from "./IntelligenceChart"
 import { emitSignal } from "../../services/brain"
 import { generateUltimateChannelReport } from "./ultimateReport"
+import { loadIntelligenceBrainContext, persistIntelligenceBrainArtifacts } from "./brainIntegration"
 
 const ULTIMATE_REPORT_STORAGE_KEY = "vt_ultimate_channel_report_v1"
-const ULTIMATE_REPORT_CONTEXT_KEY = "vt_ultimate_tool_context_pack_v1"
+const ULTIMATE_REPORT_HISTORY_KEY = "vt_ultimate_generation_history_v1"
 const ULTIMATE_REPORT_EVENT = "vt_generate_ultimate_report"
 
 type IntelligenceHubProps = {
- autoContext?: string
+ buildEvidence: () => CanonicalIntelligenceEvidenceBundle
+ analyticsContext: {
+  channelId: string | null
+  channelName: string | null
+  snapshotId: string
+  selectedWindow: string
+  capturedAt: string
+ }
  dataSources?: string[]
  mode?: "full" | "ultimate"
  embedded?: boolean
 }
 
 const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
- autoContext = "",
+ buildEvidence,
+ analyticsContext,
  dataSources = [],
  mode = "full",
  embedded = false,
 }) => {
  const triggerRef = useRef<() => Promise<void>>(async () => {})
+ const abortRef = useRef<AbortController | null>(null)
  const [loading, setLoading] = useState(false)
  const [diagnosis, setDiagnosis] = useState<AlgorithmDiagnosis | null>(null)
  const [report, setReport] = useState<OracleReport | null>(null)
@@ -47,18 +59,21 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
  const [ultimateReport, setUltimateReport] =
   useState<UltimateChannelReport | null>(() => {
    try {
-    const raw = localStorage.getItem(ULTIMATE_REPORT_STORAGE_KEY)
+    const scopedKey = analyticsContext.channelId ? `${ULTIMATE_REPORT_STORAGE_KEY}:${analyticsContext.channelId}` : ""
+    const raw = (scopedKey && localStorage.getItem(scopedKey)) || localStorage.getItem(ULTIMATE_REPORT_STORAGE_KEY)
     return raw ? (JSON.parse(raw) as UltimateChannelReport) : null
    } catch {
     return null
    }
   })
+ const [history, setHistory] = useState<IntelligenceReportGenerationRecord[]>([])
 const [nexusContext, setNexusContext] = useState("")
 const [activeSectionIdx, setActiveSectionIdx] = useState(0)
  const [generationStatus, setGenerationStatus] = useState<string | null>(null)
  const [sectionStates, setSectionStates] = useState<ReportSectionState[]>([])
  const [generationEvents, setGenerationEvents] = useState<SectionGenerationEvent[]>([])
  const [preflight, setPreflight] = useState<ReportPreflightResult | null>(null)
+ const [activeEvidence, setActiveEvidence] = useState<CanonicalIntelligenceEvidenceBundle | null>(null)
  const [sessionMeta, setSessionMeta] = useState<{
   generationId: string
   startedAt: string
@@ -71,26 +86,49 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
  } | null>(null)
  const showFullSurface = mode === "full"
 
+ const readHistory = (channelId: string | null) => {
+  try {
+   const raw = localStorage.getItem(`${ULTIMATE_REPORT_HISTORY_KEY}:${channelId}`)
+   const parsed = raw ? JSON.parse(raw) : []
+   setHistory(Array.isArray(parsed) ? parsed as IntelligenceReportGenerationRecord[] : [])
+  } catch {
+   setHistory([])
+  }
+ }
+
  const runOmniBrain = async () => {
+  abortRef.current?.abort()
+  const controller = new AbortController()
+  abortRef.current = controller
   setLoading(true)
   setGenerationStatus("Generating report...")
   setGenerationEvents([])
   setSectionStates([])
   setSessionMeta(null)
   setPreflight(null)
-  emitSignal("omni-brain", "SYNC_DNA_RUN", {
-   context: nexusContext || autoContext || "AUTO_CONTEXT",
-  }).catch(console.error)
   try {
+   const evidence = buildEvidence()
+   setActiveEvidence(evidence)
+   const brainContext = await loadIntelligenceBrainContext(evidence.channelId || "")
+   controller.signal.throwIfAborted()
+   emitSignal("intelligence-hub", "ULTIMATE_REPORT_STARTED", {
+    generationSurface: "/analytics",
+    channelId: evidence.channelId,
+    snapshotId: evidence.snapshotId,
+    datasetCoverage: evidence.coverage,
+   }).catch(console.error)
    const {
     report: unifiedReport,
     diagnosis: diagRes,
     oracle: oracleRes,
     keyword: kwRes,
    } = await generateUltimateChannelReport({
+    evidence,
+    brainContext: brainContext.contextText,
     manualIntent: nexusContext,
-    autoContext,
+    autoContext: evidence.channelName || "",
     dataSources,
+    signal: controller.signal,
     onSessionUpdate: (meta) => setSessionMeta(meta),
     onSectionUpdate: (section, event) => {
       setSectionStates((prev) => {
@@ -104,6 +142,9 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
       setGenerationEvents((prev) => [event, ...prev].slice(0, 100))
     },
    })
+   controller.signal.throwIfAborted()
+   const brainUpdate = await persistIntelligenceBrainArtifacts(unifiedReport, evidence, brainContext.contextText)
+   controller.signal.throwIfAborted()
    setDiagnosis(diagRes)
    setReport(oracleRes)
    setKeywordData(kwRes)
@@ -116,26 +157,23 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
    setSectionStates(unifiedReport.sectionStates || [])
    setGenerationEvents(unifiedReport.generationEvents || [])
    setPreflight(unifiedReport.meta.diagnostics.preflight || null)
-   localStorage.setItem(
-    ULTIMATE_REPORT_STORAGE_KEY,
-    JSON.stringify(unifiedReport),
-   )
-   if (unifiedReport.toolContextPack) {
-    localStorage.setItem(
-     ULTIMATE_REPORT_CONTEXT_KEY,
-     JSON.stringify(unifiedReport.toolContextPack),
-    )
-   }
-   emitSignal("ORACLE_REPORT", "ULTIMATE_REPORT_GENERATED", {
+   localStorage.setItem(`${ULTIMATE_REPORT_STORAGE_KEY}:${evidence.channelId}`, JSON.stringify(unifiedReport))
+   readHistory(evidence.channelId)
+   emitSignal("intelligence-hub", brainUpdate.status === "persisted" ? "ULTIMATE_REPORT_GENERATED" : "ULTIMATE_REPORT_BRAIN_DEGRADED", {
     generationId: unifiedReport.meta.generationId,
     analysisMode: unifiedReport.meta.analysisMode,
     promptPackVersion: unifiedReport.meta.promptPackVersion,
     contextMode: unifiedReport.meta.contextMode,
     actionPlan: unifiedReport.actionPlan.slice(0, 5),
     riskFlags: unifiedReport.riskFlags.slice(0, 5),
+    brainStatus: brainUpdate.status,
    }).catch(console.error)
    setActiveSectionIdx(0)
   } catch (e) {
+   if (e instanceof DOMException && e.name === "AbortError") {
+    setGenerationStatus("Generation cancelled.")
+    return
+   }
    console.error(e)
    const msg = e instanceof Error ? e.message : "Ultimate report generation failed."
    if (msg.startsWith("REPORT_PREFLIGHT_BLOCKED::")) {
@@ -152,11 +190,44 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
    } else {
     setGenerationStatus(msg)
    }
+   emitSignal("intelligence-hub", "ULTIMATE_REPORT_FAILED", { message: msg, surface: "/analytics" }).catch(console.error)
   } finally {
-   setLoading(false)
+   if (abortRef.current === controller) {
+    abortRef.current = null
+    setLoading(false)
+   }
   }
  }
  triggerRef.current = runOmniBrain
+
+ const cancelGeneration = () => abortRef.current?.abort()
+
+ const retryBrainSave = async () => {
+  if (!ultimateReport || !activeEvidence) return
+  if (
+   activeEvidence.channelId !== analyticsContext.channelId
+   || activeEvidence.snapshotId !== analyticsContext.snapshotId
+  ) {
+   setGenerationStatus("Channel or snapshot changed. Regenerate before saving this report to AI Brain.")
+   return
+  }
+  setGenerationStatus("Retrying AI Brain persistence…")
+  const brainContext = await loadIntelligenceBrainContext(activeEvidence.channelId || "")
+  const result = await persistIntelligenceBrainArtifacts(ultimateReport, activeEvidence, brainContext.contextText)
+  setUltimateReport({ ...ultimateReport, brainUpdate: result })
+  setGenerationStatus(result.status === "persisted" ? "AI Brain persistence completed." : result.notes.join(" "))
+ }
+
+ const exportReport = () => {
+  if (!ultimateReport) return
+  const blob = new Blob([JSON.stringify(ultimateReport, null, 2)], { type: "application/json" })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement("a")
+  anchor.href = url
+  anchor.download = `viewtube-intelligence-report-${ultimateReport.meta.generationId}.json`
+  anchor.click()
+  URL.revokeObjectURL(url)
+ }
 
  useEffect(() => {
   const handleGenerateEvent = () => {
@@ -168,6 +239,23 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
   return () =>
    window.removeEventListener(ULTIMATE_REPORT_EVENT, handleGenerateEvent)
  }, [])
+
+ useEffect(() => () => abortRef.current?.abort(), [])
+
+ useEffect(() => {
+  abortRef.current?.abort()
+ }, [analyticsContext.channelId, analyticsContext.snapshotId])
+
+ useEffect(() => {
+  readHistory(analyticsContext.channelId)
+  try {
+   const scopedKey = analyticsContext.channelId ? `${ULTIMATE_REPORT_STORAGE_KEY}:${analyticsContext.channelId}` : ""
+   const scoped = scopedKey ? localStorage.getItem(scopedKey) : null
+   if (scoped) setUltimateReport(JSON.parse(scoped) as UltimateChannelReport)
+  } catch {
+   // Keep the currently visible report when scoped history cannot be read.
+  }
+ }, [analyticsContext.channelId])
 
  const isGenerated = diagnosis && report && keywordData
  const renderPayload = (payload?: ReportSectionPayload) => {
@@ -310,6 +398,12 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
    className={`animate-fade-in max-w-[1500px] mx-auto ${
     embedded ? "pb-0" : "pb-24"
    }`}>
+   <div className="mb-4 grid gap-2 border-[3px] border-black bg-black p-3 text-white sm:grid-cols-2 lg:grid-cols-4">
+    <div><span className="block text-[9px] font-black uppercase tracking-[0.14em] text-white/55">Channel</span><strong className="text-sm">{analyticsContext.channelName || analyticsContext.channelId || "Not connected"}</strong></div>
+    <div><span className="block text-[9px] font-black uppercase tracking-[0.14em] text-white/55">Window</span><strong className="text-sm uppercase">{analyticsContext.selectedWindow}</strong></div>
+    <div><span className="block text-[9px] font-black uppercase tracking-[0.14em] text-white/55">Snapshot</span><strong className="text-sm">{new Date(analyticsContext.capturedAt).toLocaleString()}</strong></div>
+    <div><span className="block text-[9px] font-black uppercase tracking-[0.14em] text-white/55">Dataset coverage</span><strong className="text-sm">{activeEvidence ? `${activeEvidence.coverage.available + activeEvidence.coverage.partial + activeEvidence.coverage.stale} / ${activeEvidence.coverage.total}` : "34 registered · run preflight"}</strong></div>
+   </div>
    {showFullSurface ?
     <div className="border-4 border-black bg-white rounded-3xl overflow-hidden shadow-[8px_8px_0px_0px_black] mb-12">
      <div className="bg-[#00CCFF] border-b-4 border-black px-6 py-4 flex items-center justify-between">
@@ -339,9 +433,10 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
        {loading ?
         <>
          <Loader2 className="animate-spin" size={24} /> CALIBRATING...
-        </>
+       </>
        : "SYNC DNA"}
       </button>
+      {loading && <button type="button" onClick={cancelGeneration} className="border-2 border-black bg-white px-5 py-3 text-sm font-black uppercase">Cancel</button>}
      </div>
     </div>
    : <div
@@ -379,9 +474,10 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
        {loading ?
         <>
          <Loader2 className="animate-spin" size={24} /> GENERATING...
-        </>
+       </>
        : "CONNECT TO CREATE"}
       </button>
+      {loading && <button type="button" onClick={cancelGeneration} className="border-2 border-black bg-white px-5 py-3 text-sm font-black uppercase">Cancel</button>}
      </div>
     </div>
    }
@@ -392,17 +488,39 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
       <div className="flex items-center gap-3">
        <TrendingUp size={24} className="text-black" />
        <span className="text-2xl font-[1000] uppercase tracking-tight text-black">
-        Ultimate Channel Report · /performance
+        Ultimate Channel Report · /analytics
        </span>
       </div>
-      <span className="text-[10px] font-black opacity-60 tracking-widest uppercase">
-       {new Date(ultimateReport.meta.generatedAt).toLocaleString()}
-      </span>
+      <div className="flex flex-wrap items-center justify-end gap-2">
+       {history.length > 0 && (
+        <select
+         aria-label="Report history"
+         className="max-w-[220px] border-2 border-black bg-white px-2 py-1 text-[9px] font-black uppercase"
+         value={ultimateReport.meta.generationId}
+         onChange={(event) => {
+          const selected = history.find((record) => record.id === event.target.value)
+          if (selected) setUltimateReport(selected.report)
+         }}>
+         {!history.some((record) => record.id === ultimateReport.meta.generationId) && <option value={ultimateReport.meta.generationId}>Current report</option>}
+         {history.map((record) => <option key={record.id} value={record.id}>{new Date(record.generatedAt).toLocaleString()}</option>)}
+        </select>
+       )}
+       <button type="button" onClick={exportReport} className="border-2 border-black bg-white px-2 py-1 text-[9px] font-black uppercase">Export JSON</button>
+       {ultimateReport.brainUpdate?.status === "degraded" || ultimateReport.brainUpdate?.status === "failed" ? (
+        <button type="button" onClick={() => { void retryBrainSave() }} className="border-2 border-black bg-[#FF7497] px-2 py-1 text-[9px] font-black uppercase">Retry Brain Save</button>
+       ) : null}
+       <span className="text-[10px] font-black opacity-60 tracking-widest uppercase">{new Date(ultimateReport.meta.generatedAt).toLocaleString()}</span>
+      </div>
      </div>
      <div className="p-6 md:p-8 bg-[#f5f5f5] space-y-6">
       {generationStatus && (
        <div className="border-3 border-black rounded-2xl bg-[#FFF2A8] px-4 py-3">
         <p className="text-[11px] font-black uppercase tracking-[0.12em] text-black">{generationStatus}</p>
+       </div>
+      )}
+      {!ultimateReport.meta.snapshotId && (
+       <div className="border-3 border-black rounded-2xl bg-[#FFDA47] px-4 py-3">
+        <p className="text-[11px] font-black uppercase tracking-[0.12em] text-black">Legacy unscoped report · readable only · regenerate to attach current VT-SYNC evidence and Brain ownership</p>
        </div>
       )}
       {preflight && !preflight.ok && (

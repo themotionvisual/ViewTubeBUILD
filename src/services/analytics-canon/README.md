@@ -30,6 +30,7 @@ The `brain.csvFiles` argument is gone. Under the legacy path CSVs were a separat
 | --- | --- |
 | `contracts.ts` | Type re-exports. Consumers depend on THESE types, not the legacy ones. When the legacy files are deleted, only the runtime disappears — the types keep their canonical home here. |
 | `vtSyncAdapter.ts` | Pure, side-effect-free reshape of `VtSyncSnapshot` into `CanonicalVideoRow[]` / `MetricSummary` / `WindowTotals`. Safe to call from anywhere (tests, workers, AI code). |
+| `intelligenceEvidence.ts` | Registry-driven manifest and bounded report-evidence builder for all 34 active VT-SYNC datasets. Preserves availability, freshness, source provenance, zero values, and evidence references. |
 | `useAnalytics.ts` | React hooks — `useCanonicalRows`, `useCanonicalMetricSummary`, `useCanonicalWindowTotals`, `useCanonicalChannelIdentity`. Each subscribes to the vt-sync snapshot version and memoizes per-window so `React.memo` boundaries stay stable. |
 | `vtSyncAdapter.test.ts` | Shape parity tests — proves the adapter emits every field legacy consumers expect. |
 | `index.ts` | Public barrel — the ONLY entry point. If it's not re-exported here, it's not part of the canonical API. |
@@ -57,6 +58,13 @@ The `brain.csvFiles` argument is gone. Under the legacy path CSVs were a separat
 3. Add a hook in `useAnalytics.ts` if consumers will read it directly.
 4. Add a test in `vtSyncAdapter.test.ts` that asserts the shape.
 5. Re-export from `index.ts`.
+
+## Intelligence Hub evidence rule
+
+- Every active entry in `VT_SYNC_VISIBLE_TABLE_DEFINITIONS` must appear exactly once in the intelligence manifest; the current contract count is 34.
+- Report prompts receive bounded summaries and samples, not complete raw tables.
+- Missing, failed, stale, partial, and available are separate states. A numeric zero remains a real value.
+- Intelligence consumers import these contracts and builders from `services/analytics-canon`; they do not read VT-SYNC stores, legacy selectors, or `yt_analytics_cache` directly.
 
 ## When you migrate a consumer
 

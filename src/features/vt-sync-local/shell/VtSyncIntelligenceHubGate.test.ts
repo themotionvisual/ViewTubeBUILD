@@ -13,13 +13,13 @@ describe("VT-SYNC Intelligence Hub migration boundary", () => {
   expect(gateSource).toContain("{isOpen ? (")
  })
 
- it("mounts the Intelligence Hub between the table and Data Visuals", () => {
+ it("mounts the Intelligence Hub before the table and Data Visuals", () => {
   const tableIndex = pageSource.indexOf("<VtSyncToolboxDataTable")
   const intelligenceIndex = pageSource.indexOf("<VtSyncIntelligenceHubGate")
   const visualsIndex = pageSource.indexOf("<VtSyncDataVisualsGate")
   expect(tableIndex).toBeGreaterThan(-1)
-  expect(intelligenceIndex).toBeGreaterThan(tableIndex)
-  expect(visualsIndex).toBeGreaterThan(intelligenceIndex)
+  expect(intelligenceIndex).toBeLessThan(tableIndex)
+  expect(visualsIndex).toBeGreaterThan(tableIndex)
  })
 
  it("removes duplicate Performance Hub generation and legacy analytics reads", () => {

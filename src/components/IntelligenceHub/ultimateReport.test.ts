@@ -5,24 +5,21 @@ vi.mock("@/services/gemini", () => ({
   generateOracleReport: vi.fn(),
   generateKeywordResearch: vi.fn(),
 }));
-vi.mock("@/services/analytics/Selectors", () => ({
-  getMetricSummary: vi.fn(() => ({
-    totals: { views: 1200, revenue: 15, subscribersGained: 12, watchHours: 95 },
-    averages: { ctr: 0, rpm: 0 },
-  })),
-  getMasterRows: vi.fn(() => [
-    {
-      title: "Video A",
-      metrics: {
-        views: { value: 1200 },
-        ctr: { value: 4.5 },
-      },
-    },
-  ]),
-}));
 
 import { generateArchitectDiagnosis, generateKeywordResearch, generateOracleReport } from "@/services/gemini";
+import { buildCanonicalIntelligenceEvidence } from "@/services/analytics-canon";
+import { normalizeVtSyncSnapshot } from "@/features/vt-sync-local/adapters/snapshot";
 import { __test__, generateUltimateChannelReport } from "./ultimateReport";
+
+const buildEvidence = (overrides: Record<string, unknown> = {}) => buildCanonicalIntelligenceEvidence(normalizeVtSyncSnapshot({
+  source: "vt-sync",
+  snapshotId: "report-snapshot",
+  capturedAt: new Date().toISOString(),
+  channelId: "chan_1",
+  channelName: "Test Channel",
+  videos: [{ id: "v1", title: "Video A", metrics: { views: 1200, ctr: 4.5 } }],
+  ...overrides,
+}), { maximumRowsPerDataset: 1 });
 
 describe("ultimateReport normalization", () => {
   it("normalizes oracle payload when sections are missing", () => {
@@ -119,32 +116,23 @@ describe("ultimateReport generation integration", () => {
       formatRoi: [],
     });
 
-    const result = await generateUltimateChannelReport({ autoContext: "ctx" });
+    const result = await generateUltimateChannelReport({ evidence: buildEvidence(), autoContext: "ctx" });
     expect(result.report.blocks).toHaveLength(14);
     expect(result.report.executiveSummary).toBe("Executive summary only");
     expect(result.oracle.sections).toHaveLength(9);
   });
 
   it("blocks generation when required sources are missing", async () => {
-    globalThis.localStorage.removeItem("vt_ultimate_tool_context_pack_v1");
-    globalThis.localStorage.removeItem("yt_analytics_cache");
-    globalThis.localStorage.removeItem("vt_auth_state");
-    await expect(generateUltimateChannelReport({ autoContext: "ctx" })).rejects.toThrow(
+    await expect(generateUltimateChannelReport({ evidence: buildEvidence({ channelId: null, videos: [] }), autoContext: "ctx" })).rejects.toThrow(
       /REPORT_PREFLIGHT_BLOCKED::/,
     );
   });
 
-  it("passes user_profile check via auth state when cache profile is missing", async () => {
-    globalThis.localStorage.setItem(
-      "yt_analytics_cache",
-      JSON.stringify({
-        videos: [{ id: "v1" }],
-        lastSynced: new Date().toISOString(),
-      }),
-    );
-    globalThis.localStorage.setItem("vt_auth_state", JSON.stringify({ isAuthenticated: true }));
-    const result = await generateUltimateChannelReport({ autoContext: "ctx" });
+  it("passes the user_profile check from channel-scoped VT-SYNC identity", async () => {
+    const result = await generateUltimateChannelReport({ evidence: buildEvidence(), autoContext: "ctx" });
     const profileGate = result.report.meta.diagnostics.preflight?.requiredSources.find((item) => item.key === "user_profile");
     expect(profileGate?.present).toBe(true);
+    expect(result.report.meta.authoritativeSurface).toBe("/analytics");
+    expect(result.report.meta.snapshotId).toBe("report-snapshot");
   });
 });

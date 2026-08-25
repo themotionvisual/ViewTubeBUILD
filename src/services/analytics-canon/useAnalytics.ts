@@ -27,6 +27,7 @@ import {
  getMetricSummaryFromVtSync,
  getWindowTotalsFromVtSync,
 } from "./vtSyncAdapter"
+import { getCanonicalIntelligenceDatasetCatalog } from "./intelligenceEvidence"
 
 /**
  * Live subscription to the VT Sync snapshot version — every consumer
@@ -99,4 +100,14 @@ export const useCanonicalChannelIdentity = () => {
   }
   // eslint-disable-next-line react-hooks/exhaustive-deps
  }, [version])
+}
+
+/** Lightweight 34-dataset coverage metadata. Row compaction remains on-demand. */
+export const useCanonicalIntelligenceCatalog = () => {
+ const version = useVtSyncSnapshotVersion()
+ return useMemo(
+  () => getCanonicalIntelligenceDatasetCatalog(getVtSyncSnapshot(), 0),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [version],
+ )
 }

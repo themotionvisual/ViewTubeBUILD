@@ -1,3 +1,13 @@
+import type {
+ BrainGenerationRecord,
+ ChannelKnowledgeModel as CanonicalChannelKnowledgeModel,
+ ToolContextPack as CanonicalToolContextPack,
+} from "../../types"
+import type {
+ CanonicalIntelligenceEvidenceBundle,
+ IntelligenceDatasetCoverage,
+} from "../../services/analytics-canon"
+
 export interface ChartConfig {
   type: 'bar' | 'line' | 'scatter' | 'radar' | 'pie' | 'bubble' | 'quadrant' | 'frequency' | 'geo' | 'table' | 'combo' | 'steppedArea';
   title: string;
@@ -126,7 +136,7 @@ export interface ReportPreflightResult {
   ok: boolean;
   checkedAt: string;
   sourceWindow?: "lifetime" | "365d" | "90d" | "28d" | "7d";
-  sourceMode?: "hybrid" | "api" | "csv";
+  sourceMode?: "vt-sync";
   requiredSources: Array<{
     key: "brain" | "master_table" | "api" | "user_profile";
     present: boolean;
@@ -161,7 +171,7 @@ export interface FusionReport extends OracleReport {
   decisions: SectionFusionDecision[];
 }
 
-export interface GenerationRecord {
+export interface IntelligenceReportGenerationRecord {
   id: string;
   generatedAt: string;
   promptPackVersion: string;
@@ -173,21 +183,16 @@ export interface GenerationRecord {
   sourceSnapshot?: ContextSourceSnapshot;
 }
 
-export interface ChannelKnowledgeModel {
-  profile: string;
-  strategyPosture: string;
-  confidence: number;
-  guardrails: string[];
-}
+export type ChannelKnowledgeModel = CanonicalChannelKnowledgeModel
 
-export interface ToolContextPack {
-  version: string;
-  promptInjection: string;
-  generatedAt: string;
-}
+export type ToolContextPack = CanonicalToolContextPack
 
 export interface BrainUpdateResult {
+  status: "pending" | "persisted" | "degraded" | "failed";
   updated: boolean;
+  generationRecordId?: string;
+  knowledgeModelId?: string;
+  toolContextPackId?: string;
   notes: string[];
   qualityFlags: string[];
 }
@@ -207,7 +212,12 @@ export interface UltimateChannelReport {
     contextMode: "auto" | "manual" | "hybrid";
     analysisMode: "channel" | "retention";
     promptPackVersion: string;
-    authoritativeSurface: "/performance";
+    authoritativeSurface: "/analytics";
+    channelId: string | null;
+    snapshotId: string;
+    datasetCoverage: IntelligenceDatasetCoverage;
+    omittedDatasetIds: string[];
+    brainGenerationRecord?: BrainGenerationRecord;
     aliases: string[];
     diagnostics: {
       modelRecoveryApplied: boolean;
@@ -233,6 +243,7 @@ export interface UltimateChannelReport {
     stageB?: StageBRefinement;
     fusion?: FusionReport;
   };
+  evidenceBundle?: CanonicalIntelligenceEvidenceBundle;
 }
 
 export interface GenerationDiagnostics {
