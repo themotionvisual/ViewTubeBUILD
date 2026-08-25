@@ -22,8 +22,13 @@ import type {
 import type { CanonicalIntelligenceEvidenceBundle } from "../../services/analytics-canon"
 import { IntelligenceChart } from "./IntelligenceChart"
 import { emitSignal } from "../../services/brain"
+import { isGeminiConfigured } from "../../services/gemini"
 import { generateUltimateChannelReport } from "./ultimateReport"
 import { loadIntelligenceBrainContext, persistIntelligenceBrainArtifacts } from "./brainIntegration"
+import {
+ IntelligenceGenerationError,
+ resolveIntelligenceGenerationReadiness,
+} from "./generationPolicy"
 
 const ULTIMATE_REPORT_STORAGE_KEY = "vt_ultimate_channel_report_v1"
 const ULTIMATE_REPORT_HISTORY_KEY = "vt_ultimate_generation_history_v1"
@@ -52,6 +57,9 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
 }) => {
  const triggerRef = useRef<() => Promise<void>>(async () => {})
  const abortRef = useRef<AbortController | null>(null)
+ const brainSaveAbortRef = useRef<AbortController | null>(null)
+ const progressTimerRef = useRef<number | null>(null)
+ const pendingSectionUpdatesRef = useRef(new Map<string, { section: ReportSectionState; event: SectionGenerationEvent }>())
  const [loading, setLoading] = useState(false)
  const [diagnosis, setDiagnosis] = useState<AlgorithmDiagnosis | null>(null)
  const [report, setReport] = useState<OracleReport | null>(null)
@@ -85,6 +93,41 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
   totalCount: number
  } | null>(null)
  const showFullSurface = mode === "full"
+ const readiness = resolveIntelligenceGenerationReadiness({
+  aiConfigured: isGeminiConfigured(),
+  channelId: analyticsContext.channelId,
+ })
+
+ const applySectionUpdate = (section: ReportSectionState, event: SectionGenerationEvent) => {
+  setSectionStates((prev) => {
+   const next = [...prev]
+   const idx = next.findIndex((entry) => entry.id === section.id)
+   if (idx >= 0) next[idx] = section
+   else next.push(section)
+   next.sort((a, b) => a.order - b.order)
+   return next
+  })
+  setGenerationEvents((prev) => [event, ...prev].slice(0, 100))
+ }
+
+ const flushPendingSectionUpdates = () => {
+  progressTimerRef.current = null
+  const updates = [...pendingSectionUpdatesRef.current.values()]
+  pendingSectionUpdatesRef.current.clear()
+  updates.forEach(({ section, event }) => applySectionUpdate(section, event))
+ }
+
+ const publishSectionUpdate = (section: ReportSectionState, event: SectionGenerationEvent) => {
+  if (section.status !== "running") {
+   pendingSectionUpdatesRef.current.delete(section.id)
+   applySectionUpdate(section, event)
+   return
+  }
+  pendingSectionUpdatesRef.current.set(section.id, { section, event })
+  if (progressTimerRef.current === null) {
+   progressTimerRef.current = window.setTimeout(flushPendingSectionUpdates, 100)
+  }
+ }
 
  const readHistory = (channelId: string | null) => {
   try {
@@ -97,8 +140,13 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
  }
 
  const runOmniBrain = async () => {
+  if (!readiness.ready) {
+   setGenerationStatus(readiness.message || "Intelligence Hub is not ready to generate a report.")
+   return
+  }
   abortRef.current?.abort()
   const controller = new AbortController()
+  const generationId = crypto.randomUUID()
   abortRef.current = controller
   setLoading(true)
   setGenerationStatus("Generating report...")
@@ -109,14 +157,15 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
   try {
    const evidence = buildEvidence()
    setActiveEvidence(evidence)
-   const brainContext = await loadIntelligenceBrainContext(evidence.channelId || "")
-   controller.signal.throwIfAborted()
    emitSignal("intelligence-hub", "ULTIMATE_REPORT_STARTED", {
+    generationId,
     generationSurface: "/analytics",
     channelId: evidence.channelId,
     snapshotId: evidence.snapshotId,
     datasetCoverage: evidence.coverage,
    }).catch(console.error)
+   const brainContext = await loadIntelligenceBrainContext(evidence.channelId || "")
+   controller.signal.throwIfAborted()
    const {
     report: unifiedReport,
     diagnosis: diagRes,
@@ -124,35 +173,28 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
     keyword: kwRes,
    } = await generateUltimateChannelReport({
     evidence,
+    generationId,
     brainContext: brainContext.contextText,
     manualIntent: nexusContext,
     autoContext: evidence.channelName || "",
     dataSources,
     signal: controller.signal,
     onSessionUpdate: (meta) => setSessionMeta(meta),
-    onSectionUpdate: (section, event) => {
-      setSectionStates((prev) => {
-       const next = [...prev]
-       const idx = next.findIndex((entry) => entry.id === section.id)
-       if (idx >= 0) next[idx] = section
-       else next.push(section)
-       next.sort((a, b) => a.order - b.order)
-       return next
-      })
-      setGenerationEvents((prev) => [event, ...prev].slice(0, 100))
-    },
+    onSectionUpdate: publishSectionUpdate,
    })
    controller.signal.throwIfAborted()
-   const brainUpdate = await persistIntelligenceBrainArtifacts(unifiedReport, evidence, brainContext.contextText)
+   const brainUpdate = await persistIntelligenceBrainArtifacts(unifiedReport, evidence, brainContext.contextText, controller.signal)
    controller.signal.throwIfAborted()
    setDiagnosis(diagRes)
    setReport(oracleRes)
    setKeywordData(kwRes)
    setUltimateReport(unifiedReport)
    setGenerationStatus(
-    unifiedReport.meta.overallStatus === "degraded" || unifiedReport.meta.overallStatus === "failed"
-     ? "Report generated in partial/degraded mode. Review failed sections in timeline."
-     : "Report generated successfully."
+    brainUpdate.status === "degraded" || brainUpdate.status === "failed"
+     ? "Report generated successfully, but AI Brain persistence needs attention."
+     : unifiedReport.meta.overallStatus === "degraded"
+      ? "Report generated in degraded mode. Review unavailable sections in the timeline."
+      : "Report generated successfully."
    )
    setSectionStates(unifiedReport.sectionStates || [])
    setGenerationEvents(unifiedReport.generationEvents || [])
@@ -176,7 +218,11 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
    }
    console.error(e)
    const msg = e instanceof Error ? e.message : "Ultimate report generation failed."
-   if (msg.startsWith("REPORT_PREFLIGHT_BLOCKED::")) {
+   if (e instanceof IntelligenceGenerationError) {
+    const details = e.details && typeof e.details === "object" ? e.details as { preflight?: ReportPreflightResult } : null
+    setGenerationStatus(e.failure.message)
+    setPreflight(details?.preflight || null)
+   } else if (msg.startsWith("REPORT_PREFLIGHT_BLOCKED::")) {
     try {
      const parsed = JSON.parse(msg.replace("REPORT_PREFLIGHT_BLOCKED::", "")) as {
       message?: string
@@ -190,7 +236,13 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
    } else {
     setGenerationStatus(msg)
    }
-   emitSignal("intelligence-hub", "ULTIMATE_REPORT_FAILED", { message: msg, surface: "/analytics" }).catch(console.error)
+   emitSignal("intelligence-hub", "ULTIMATE_REPORT_FAILED", {
+    generationId,
+    message: msg,
+    failureCode: e instanceof IntelligenceGenerationError ? e.failure.code : "AI_UNKNOWN",
+    retryable: e instanceof IntelligenceGenerationError ? e.failure.retryable : false,
+    surface: "/analytics",
+   }).catch(console.error)
   } finally {
    if (abortRef.current === controller) {
     abortRef.current = null
@@ -202,6 +254,18 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
 
  const cancelGeneration = () => abortRef.current?.abort()
 
+ const handlePrimaryAction = () => {
+  if (readiness.action === "configure_ai") {
+   window.location.assign("/settings")
+   return
+  }
+  if (readiness.action === "connect_channel") {
+   window.location.assign("/account/connect")
+   return
+  }
+  void runOmniBrain()
+ }
+
  const retryBrainSave = async () => {
   if (!ultimateReport || !activeEvidence) return
   if (
@@ -211,11 +275,26 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
    setGenerationStatus("Channel or snapshot changed. Regenerate before saving this report to AI Brain.")
    return
   }
+  brainSaveAbortRef.current?.abort()
+  const controller = new AbortController()
+  brainSaveAbortRef.current = controller
   setGenerationStatus("Retrying AI Brain persistence…")
-  const brainContext = await loadIntelligenceBrainContext(activeEvidence.channelId || "")
-  const result = await persistIntelligenceBrainArtifacts(ultimateReport, activeEvidence, brainContext.contextText)
-  setUltimateReport({ ...ultimateReport, brainUpdate: result })
-  setGenerationStatus(result.status === "persisted" ? "AI Brain persistence completed." : result.notes.join(" "))
+  try {
+   const brainContext = await loadIntelligenceBrainContext(activeEvidence.channelId || "")
+   controller.signal.throwIfAborted()
+   const result = await persistIntelligenceBrainArtifacts(ultimateReport, activeEvidence, brainContext.contextText, controller.signal)
+   controller.signal.throwIfAborted()
+   const updatedReport = { ...ultimateReport, brainUpdate: result }
+   setUltimateReport(updatedReport)
+   localStorage.setItem(`${ULTIMATE_REPORT_STORAGE_KEY}:${activeEvidence.channelId}`, JSON.stringify(updatedReport))
+   setGenerationStatus(result.status === "persisted" ? "AI Brain persistence completed." : result.notes.join(" "))
+  } catch (error) {
+   if (!(error instanceof DOMException && error.name === "AbortError")) {
+    setGenerationStatus("AI Brain persistence retry failed. The report remains available.")
+   }
+  } finally {
+   if (brainSaveAbortRef.current === controller) brainSaveAbortRef.current = null
+  }
  }
 
  const exportReport = () => {
@@ -240,10 +319,16 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
    window.removeEventListener(ULTIMATE_REPORT_EVENT, handleGenerateEvent)
  }, [])
 
- useEffect(() => () => abortRef.current?.abort(), [])
+ useEffect(() => () => {
+  abortRef.current?.abort()
+  brainSaveAbortRef.current?.abort()
+  if (progressTimerRef.current !== null) window.clearTimeout(progressTimerRef.current)
+  pendingSectionUpdatesRef.current.clear()
+ }, [])
 
  useEffect(() => {
   abortRef.current?.abort()
+  brainSaveAbortRef.current?.abort()
  }, [analyticsContext.channelId, analyticsContext.snapshotId])
 
  useEffect(() => {
@@ -427,14 +512,14 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
        disabled={loading}
       />
       <button
-       onClick={runOmniBrain}
+       onClick={handlePrimaryAction}
        disabled={loading}
        className="bg-[#00CCFF] text-black font-[1000] text-xl uppercase px-12 py-4 rounded-xl border-2 border-black hover:bg-white hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
        {loading ?
         <>
          <Loader2 className="animate-spin" size={24} /> CALIBRATING...
        </>
-       : "SYNC DNA"}
+       : readiness.buttonLabel}
       </button>
       {loading && <button type="button" onClick={cancelGeneration} className="border-2 border-black bg-white px-5 py-3 text-sm font-black uppercase">Cancel</button>}
      </div>
@@ -468,19 +553,34 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
        disabled={loading}
       />
       <button
-       onClick={runOmniBrain}
+       onClick={handlePrimaryAction}
        disabled={loading}
        className="bg-[#CCFF00] text-black font-[1000] text-xl uppercase px-12 py-4 rounded-xl border-2 border-[#CCFF00] hover:bg-white hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
        {loading ?
         <>
          <Loader2 className="animate-spin" size={24} /> GENERATING...
        </>
-       : "CONNECT TO CREATE"}
+       : readiness.buttonLabel}
       </button>
       {loading && <button type="button" onClick={cancelGeneration} className="border-2 border-black bg-white px-5 py-3 text-sm font-black uppercase">Cancel</button>}
      </div>
-    </div>
+   </div>
    }
+
+   {!ultimateReport && generationStatus && (
+    <div className="mb-6 border-3 border-black rounded-2xl bg-[#FFF2A8] px-4 py-3">
+     <p className="text-[11px] font-black uppercase tracking-[0.12em] text-black">{generationStatus}</p>
+    </div>
+   )}
+
+   {!ultimateReport && preflight && !preflight.ok && (
+    <div className="mb-6 border-3 border-black rounded-2xl bg-[#FFE3E8] px-4 py-3 space-y-2">
+     <p className="text-[11px] font-black uppercase tracking-[0.12em] text-black">Generation Blocked</p>
+     <ul className="text-xs font-bold list-disc ml-5">
+      {preflight.blockers.map((blocker) => <li key={blocker}>{blocker}</li>)}
+     </ul>
+    </div>
+   )}
 
    {ultimateReport && (
     <div className="border-4 border-black bg-white rounded-3xl overflow-hidden shadow-[8px_8px_0px_0px_black] mb-12">

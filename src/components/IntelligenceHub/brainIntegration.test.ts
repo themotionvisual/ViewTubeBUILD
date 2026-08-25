@@ -93,4 +93,20 @@ describe("Intelligence Hub Brain integration", () => {
   expect(result.status).toBe("failed")
   expect(brainMocks.saveGenerationRecordDB).not.toHaveBeenCalled()
  })
+
+ it("rejects all Brain writes for an unusable failed report", async () => {
+  const failed = { ...report, meta: { ...report.meta, overallStatus: "failed" as const } }
+  const result = await persistIntelligenceBrainArtifacts(failed, evidence, "brain context")
+  expect(result.status).toBe("failed")
+  expect(brainMocks.saveGenerationRecordDB).not.toHaveBeenCalled()
+  expect(brainMocks.saveChannelKnowledgeModelDB).not.toHaveBeenCalled()
+  expect(brainMocks.saveToolContextPackDB).not.toHaveBeenCalled()
+ })
+
+ it("cancels before any Brain write when the generation signal is aborted", async () => {
+  const controller = new AbortController()
+  controller.abort()
+  await expect(persistIntelligenceBrainArtifacts(report, evidence, "brain context", controller.signal)).rejects.toMatchObject({ name: "AbortError" })
+  expect(brainMocks.saveGenerationRecordDB).not.toHaveBeenCalled()
+ })
 })

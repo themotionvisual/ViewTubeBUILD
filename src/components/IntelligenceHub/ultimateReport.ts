@@ -2,6 +2,7 @@ import {
   generateArchitectDiagnosis,
   generateKeywordResearch,
   generateOracleReport,
+  isGeminiConfigured,
 } from "@/services/gemini";
 import {
   INTELLIGENCE_SECTION_DATASETS,
@@ -37,9 +38,16 @@ import type {
   UltimateReportBlock,
   UnifiedTableSpec,
 } from "./types";
+import {
+  classifyIntelligenceAiFailure,
+  IntelligenceGenerationError,
+  resolveIntelligenceReportStatus,
+  type IntelligenceAiFailure,
+} from "./generationPolicy";
 
 type GenerateUltimateReportInput = {
   evidence: CanonicalIntelligenceEvidenceBundle;
+  generationId?: string;
   brainContext?: string;
   manualIntent?: string;
   autoContext?: string;
@@ -65,12 +73,14 @@ type ReportStepResult = {
   reason?: string;
   elapsedMs?: number;
   retryCount?: number;
+  failure?: IntelligenceAiFailure;
 };
 
 const ULTIMATE_PROMPT_PACK_VERSION = "ultimate_fusion_v1";
 const LEGACY_PROMPT_VERSION = "legacy_data_analysis_v1";
 const ORACLE_REFINEMENT_VERSION = "oracle_refinement_v1";
 const ULTIMATE_REPORT_HISTORY_KEY = "vt_ultimate_generation_history_v1";
+const ULTIMATE_REPORT_FAILURE_HISTORY_KEY = "vt_ultimate_generation_failures_v1";
 const ULTIMATE_SECTION_ORDER = [
   "Executive Summary + Channel Metrics",
   "Algorithm Diagnosis",
@@ -424,6 +434,7 @@ const freshnessFrom = (iso?: string): "fresh" | "stale" | "unknown" => {
 const buildPreflightResult = (
   sourceSnapshot: ContextSourceSnapshot,
   evidence: CanonicalIntelligenceEvidenceBundle,
+  aiConfigured = true,
 ): ReportPreflightResult => {
   const coreIds = new Set(["videos", "daily", "weekly", "monthly", "channel_totals"]);
   const coreDatasets = evidence.datasets.filter((dataset) => coreIds.has(dataset.id));
@@ -434,6 +445,13 @@ const buildPreflightResult = (
   const brainPresent = sourceSnapshot.brainContext.trim().length > 0 && !/unavailable|missing/i.test(sourceSnapshot.brainContext);
 
   const requiredSources: ReportPreflightResult["requiredSources"] = [
+    {
+      key: "ai",
+      present: aiConfigured,
+      freshness: "unknown",
+      detail: "A configured Gemini key is required before any report generation request starts.",
+      evidence: aiConfigured ? "gemini_configured" : "gemini_not_configured",
+    },
     {
       key: "brain",
       present: brainPresent,
@@ -469,6 +487,10 @@ const buildPreflightResult = (
 
   const blockers: string[] = [];
   const remediation: string[] = [];
+  if (!aiConfigured) {
+    blockers.push("missing_gemini_configuration");
+    remediation.push("Add a Gemini API key in Settings before generating an intelligence report.");
+  }
   if (!hasMasterCoverage) {
     blockers.push("missing_master_table_rows");
     remediation.push("Master table missing or empty for selected window. Run data sync and verify canonical rows are populated.");
@@ -1009,26 +1031,59 @@ const persistGenerationRecord = (record: IntelligenceReportGenerationRecord): vo
   }
 };
 
-const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<ReportStepResult> => {
+const persistFailedGenerationAttempt = (attempt: {
+  id: string;
+  generatedAt: string;
+  channelId: string | null;
+  snapshotId: string;
+  failure: IntelligenceAiFailure;
+  completedCount: number;
+  degradedCount: number;
+  failedCount: number;
+}): void => {
+  try {
+    const key = `${ULTIMATE_REPORT_FAILURE_HISTORY_KEY}:${attempt.channelId || "unscoped"}`;
+    const raw = localStorage.getItem(key);
+    const existing = raw ? JSON.parse(raw) : [];
+    const next = [attempt, ...(Array.isArray(existing) ? existing : [])].slice(0, 20);
+    localStorage.setItem(key, JSON.stringify(next));
+  } catch (error) {
+    console.warn("[UltimateReport] Failed to persist failed-attempt diagnostics", error);
+  }
+};
+
+const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, label: string, signal?: AbortSignal): Promise<ReportStepResult> => {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let abortHandler: (() => void) | null = null;
   const startedAt = Date.now();
   try {
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => reject(new Error(`${label} timed out after ${timeoutMs}ms`)), timeoutMs);
     });
-    const value = await Promise.race([promise, timeoutPromise]);
+    const abortPromise = new Promise<never>((_, reject) => {
+      if (!signal) return;
+      abortHandler = () => reject(new DOMException("Generation cancelled.", "AbortError"));
+      if (signal.aborted) abortHandler();
+      else signal.addEventListener("abort", abortHandler, { once: true });
+    });
+    const value = await Promise.race([promise, timeoutPromise, abortPromise]);
     if (timeoutId) clearTimeout(timeoutId);
+    if (signal && abortHandler) signal.removeEventListener("abort", abortHandler);
     return { value, timedOut: false, failed: false, elapsedMs: Date.now() - startedAt, retryCount: 0 };
   } catch (error) {
     if (timeoutId) clearTimeout(timeoutId);
+    if (signal && abortHandler) signal.removeEventListener("abort", abortHandler);
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
     const reason = error instanceof Error ? error.message : String(error);
+    const failure = classifyIntelligenceAiFailure(error);
     return {
       value: null,
       timedOut: /timed out/i.test(reason),
       failed: true,
-      reason,
+      reason: failure.message,
       elapsedMs: Date.now() - startedAt,
       retryCount: 0,
+      failure,
     };
   }
 };
@@ -1037,10 +1092,14 @@ const withTimeoutRetry = async <T>(
   producer: (compact: boolean) => Promise<T>,
   timeoutMs: number,
   label: string,
+  signal?: AbortSignal,
 ): Promise<ReportStepResult> => {
-  const first = await withTimeout(producer(false), timeoutMs, label);
+  signal?.throwIfAborted();
+  const first = await withTimeout(producer(false), timeoutMs, label, signal);
   if (!first.failed) return first;
-  const second = await withTimeout(producer(true), Math.floor(timeoutMs * 0.7), `${label} retry`);
+  if (!first.failure?.retryable) return first;
+  signal?.throwIfAborted();
+  const second = await withTimeout(producer(true), Math.floor(timeoutMs * 0.7), `${label} retry`, signal);
   if (!second.failed) return { ...second, retryCount: 1 };
   return {
     ...second,
@@ -1072,6 +1131,7 @@ export async function generateUltimateChannelReport(
   const manualIntent = input.manualIntent?.trim() || "";
   const autoContext = input.autoContext?.trim() || "";
   const startedAt = new Date().toISOString();
+  const generationId = input.generationId || crypto.randomUUID();
   const evidence = input.evidence;
   const analyticsSnapshot = evidence.contextText;
 
@@ -1096,10 +1156,9 @@ export async function generateUltimateChannelReport(
     aiJournalContext: "AI Journal is not a required analytics source.",
     userProfileContext: manualIntent || autoContext || evidence.channelName || evidence.channelId || "User profile unavailable.",
   };
-  const preflight = buildPreflightResult(sourceSnapshot, evidence);
+  const preflight = buildPreflightResult(sourceSnapshot, evidence, isGeminiConfigured());
 
   if (!preflight.ok) {
-    const generationId = crypto.randomUUID();
     input.onSessionUpdate?.({
       generationId,
       startedAt,
@@ -1110,12 +1169,15 @@ export async function generateUltimateChannelReport(
       degradedCount: 0,
       totalCount: ULTIMATE_SECTION_ORDER.length,
     });
-    throw new Error(
-      `REPORT_PREFLIGHT_BLOCKED::${JSON.stringify({
-        message: "Required report sources are missing. Sync required sources and retry.",
-        preflight,
-      })}`,
-    );
+    const missingAi = preflight.blockers.includes("missing_gemini_configuration");
+    throw new IntelligenceGenerationError({
+      code: missingAi ? "AI_NOT_CONFIGURED" : "AI_GENERATION_FAILED",
+      message: missingAi
+        ? "Gemini is not configured. Add a Gemini API key in Settings before generating a report."
+        : "Required report sources are missing. Sync required sources and retry.",
+      retryable: false,
+      recoveryAction: missingAi ? "configure_ai" : "inspect_request",
+    }, generationId, { preflight });
   }
 
   const resolvedContext = [
@@ -1159,16 +1221,19 @@ export async function generateUltimateChannelReport(
       async (compact) => generateArchitectDiagnosis(compact ? buildSlimContext(resolvedContext) : resolvedContext),
       SECTION_TIMEOUTS_MS.diagnosis,
       "architect diagnosis",
+      input.signal,
     ),
     withTimeoutRetry(
       async (compact) => generateOracleReport(buildStageAContext(compact ? buildSlimContext(resolvedContext) : resolvedContext)),
       SECTION_TIMEOUTS_MS.stageA,
       "stage A report",
+      input.signal,
     ),
     withTimeoutRetry(
       async (compact) => generateKeywordResearch(compact ? buildSlimContext(resolvedContext) : resolvedContext, "YouTube Channel"),
       SECTION_TIMEOUTS_MS.keyword,
       "keyword research",
+      input.signal,
     ),
   ]);
   input.signal?.throwIfAborted();
@@ -1231,6 +1296,7 @@ export async function generateUltimateChannelReport(
       ),
     SECTION_TIMEOUTS_MS.stageB,
     "stage B report",
+    input.signal,
   );
   input.signal?.throwIfAborted();
   const stageBOracle = normalizeOracleReport(stageBStep.value, resolvedContext);
@@ -1273,7 +1339,6 @@ export async function generateUltimateChannelReport(
   const analysisMode = oracle.analysisMode || modeHint;
   const actionPlan = buildExecutionQueue(diagnosis, oracle);
   const riskFlags = buildRiskFlags(oracle);
-  const generationId = crypto.randomUUID();
   const totalSections = ULTIMATE_SECTION_ORDER.length;
   input.onSessionUpdate?.({
     generationId,
@@ -1369,6 +1434,7 @@ export async function generateUltimateChannelReport(
 
   const sectionStates = toSectionStates(report, sourceSnapshot, evidence);
   const generationEvents: SectionGenerationEvent[] = [];
+  const finalSectionStates: ReportSectionState[] = [];
   let completedCount = 0;
   let failedCount = 0;
   let degradedCount = 0;
@@ -1424,26 +1490,18 @@ export async function generateUltimateChannelReport(
             : `${section.title} failed.`,
     };
     generationEvents.push(completeEvent);
+    finalSectionStates.push(completeSection);
     input.onSectionUpdate?.(completeSection, completeEvent);
   }
 
   const finishedAt = new Date().toISOString();
-  const overallStatus: "complete" | "degraded" | "failed" =
-    failedCount > 0 ? "failed" : degradedCount > 0 || report.meta.diagnostics.warningCount > 0 ? "degraded" : "complete";
-  report.sectionStates = sectionStates.map((section) => {
-    const perSectionEvents = generationEvents.filter((event) => event.sectionId === section.id);
-    const finalEvent = perSectionEvents[perSectionEvents.length - 1];
-    return {
-      ...section,
-      status: (finalEvent?.status as SectionGenerationStatus) || "queued",
-      qualityFlags:
-        finalEvent?.status === "degraded"
-          ? ["partial_sources"]
-          : finalEvent?.status === "failed"
-            ? ["failed_invalid_payload"]
-            : [],
-    };
+  const overallStatus = resolveIntelligenceReportStatus({
+    completedCount,
+    degradedCount,
+    failedCount,
+    warningCount: report.meta.diagnostics.warningCount,
   });
+  report.sectionStates = finalSectionStates;
   report.generationEvents = generationEvents;
   report.meta.finishedAt = finishedAt;
   report.meta.overallStatus = overallStatus;
@@ -1463,6 +1521,44 @@ export async function generateUltimateChannelReport(
     sectionStates: report.sectionStates,
     sourceSnapshot,
   };
+
+  if (overallStatus === "failed") {
+    const failedSteps = [stageAStep, stageBStep, diagnosisStep, keywordStep].filter((step) => step.failed);
+    const failure = failedSteps.find((step) => step.failure && !step.failure.retryable)?.failure
+      || failedSteps.find((step) => step.failure)?.failure
+      || {
+        code: "AI_GENERATION_FAILED" as const,
+        message: "Intelligence Hub could not produce any usable report sections.",
+        retryable: false,
+        recoveryAction: "inspect_request" as const,
+      };
+    persistFailedGenerationAttempt({
+      id: generationId,
+      generatedAt: report.meta.generatedAt,
+      channelId: evidence.channelId,
+      snapshotId: evidence.snapshotId,
+      failure,
+      completedCount,
+      degradedCount,
+      failedCount,
+    });
+    input.onSessionUpdate?.({
+      generationId,
+      startedAt,
+      finishedAt,
+      overallStatus,
+      completedCount,
+      failedCount,
+      degradedCount,
+      totalCount: totalSections,
+    });
+    throw new IntelligenceGenerationError(failure, generationId, {
+      preflight,
+      completedCount,
+      degradedCount,
+      failedCount,
+    });
+  }
 
   persistGenerationRecord(generationRecord);
 
@@ -1499,4 +1595,5 @@ export const __test__ = {
   sectionByMatch,
   detectAnalysisMode,
   buildPreflightResult,
+  withTimeoutRetry,
 };

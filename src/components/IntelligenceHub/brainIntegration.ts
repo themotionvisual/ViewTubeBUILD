@@ -20,6 +20,10 @@ export type IntelligenceBrainContext = {
 
 const clip = (value: string, maximum: number): string => value.slice(0, Math.max(0, maximum))
 
+const rethrowAbort = (error: unknown) => {
+ if (error instanceof DOMException && error.name === "AbortError") throw error
+}
+
 export const loadIntelligenceBrainContext = async (
  channelId: string,
 ): Promise<IntelligenceBrainContext> => {
@@ -68,7 +72,19 @@ export const persistIntelligenceBrainArtifacts = async (
  report: UltimateChannelReport,
  evidence: CanonicalIntelligenceEvidenceBundle,
  contextText: string,
+ signal?: AbortSignal,
 ): Promise<BrainUpdateResult> => {
+ signal?.throwIfAborted()
+ if (report.meta.overallStatus === "failed") {
+  const result: BrainUpdateResult = {
+   status: "failed",
+   updated: false,
+   notes: ["Brain write rejected because the generation did not produce a usable report."],
+   qualityFlags: ["brain_report_generation_failed"],
+  }
+  report.brainUpdate = result
+  return result
+ }
  if (!evidence.channelId || report.meta.channelId !== evidence.channelId || report.meta.snapshotId !== evidence.snapshotId) {
   const result: BrainUpdateResult = {
    status: "failed",
@@ -83,21 +99,27 @@ export const persistIntelligenceBrainArtifacts = async (
  const generationRecord = createBrainGenerationRecord(report, evidence, contextText)
  const failures: string[] = []
  try {
+  signal?.throwIfAborted()
   await saveGenerationRecordDB(generationRecord)
- } catch {
+ } catch (error) {
+  rethrowAbort(error)
   failures.push("generation_record")
  }
  if (report.channelKnowledge) {
   try {
+   signal?.throwIfAborted()
    await saveChannelKnowledgeModelDB(report.channelKnowledge)
-  } catch {
+  } catch (error) {
+   rethrowAbort(error)
    failures.push("channel_knowledge")
   }
  }
  if (report.toolContextPack) {
   try {
+   signal?.throwIfAborted()
    await saveToolContextPackDB(report.toolContextPack)
-  } catch {
+  } catch (error) {
+   rethrowAbort(error)
    failures.push("tool_context_pack")
   }
  }

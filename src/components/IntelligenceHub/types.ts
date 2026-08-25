@@ -138,7 +138,7 @@ export interface ReportPreflightResult {
   sourceWindow?: "lifetime" | "365d" | "90d" | "28d" | "7d";
   sourceMode?: "vt-sync";
   requiredSources: Array<{
-    key: "brain" | "master_table" | "api" | "user_profile";
+    key: "ai" | "brain" | "master_table" | "api" | "user_profile";
     present: boolean;
     freshness: "fresh" | "stale" | "unknown";
     lastUpdatedAt?: string;
