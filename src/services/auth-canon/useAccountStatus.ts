@@ -54,8 +54,8 @@ export const useAccountStatus = (): AccountStatusPayload => {
  }, [])
 
  return useMemo(
-  () => reconcileAccountStatus({ snapshot: account.snapshot, tokenPresent }),
-  [account.snapshot, tokenPresent],
+  () => reconcileAccountStatus({ snapshot: account.snapshot, tokenPresent, serverEnabled: account.serverEnabled }),
+  [account.serverEnabled, account.snapshot, tokenPresent],
  )
 }
 

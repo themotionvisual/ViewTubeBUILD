@@ -12,8 +12,7 @@ export type GoogleProxyErrorCode =
  // The proxy handler itself rejected the request (misconfigured origin
  // allowlist, static-only deployment, dead route). Distinct from
  // GOOGLE_SCOPE_REQUIRED — the user's OAuth scopes are irrelevant here,
- // the fix is either to redeploy the proxy or bypass it and call
- // Google directly with the user's own token.
+ // the fix is to correct the deployed account origin configuration.
  | "PROXY_ORIGIN_REJECTED"
 
 export interface GoogleProxyErrorDetails {
@@ -41,8 +40,8 @@ const KNOWN_CODES = new Set<GoogleProxyErrorCode>([
 // request (misconfigured origin allowlist, dead route, static-only
 // deployment). Real user-visible example: "Request origin is not
 // allowed." served with 401/403. Callers can catch PROXY_ORIGIN_REJECTED
-// and retry via the direct Google endpoint with the user's own OAuth
-// token instead of giving up on the sync.
+// and report deployment configuration instead of incorrectly asking the
+// signed-in user to reconnect or bypassing the server-owned session.
 const ORIGIN_REJECTION_BODY_PATTERNS = [
  "Request origin is not allowed",
  "Account request failed",
@@ -83,8 +82,8 @@ export const readGoogleProxyError = async (response: Response): Promise<GooglePr
  if (looksLikeOriginRejection(bodyText)) {
   return {
    code: "PROXY_ORIGIN_REJECTED",
-   message: bodyText.trim() || "The account proxy rejected this request; falling back to a direct Google call.",
-   retryable: true,
+   message: bodyText.trim() || "The account proxy rejected this request origin.",
+   retryable: false,
    reconnectRequired: false,
   }
  }

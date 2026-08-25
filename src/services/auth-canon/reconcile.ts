@@ -33,6 +33,7 @@ import type {
 export interface ReconcileInputs {
  snapshot: UnifiedAccountSnapshot | null
  tokenPresent: boolean
+ serverEnabled?: boolean
 }
 
 const pickStatus = (
@@ -59,6 +60,7 @@ const pickStatus = (
 export const reconcileAccountStatus = ({
  snapshot,
  tokenPresent,
+ serverEnabled = false,
 }: ReconcileInputs): AccountStatusPayload => {
  const authStatus = snapshot?.authentication.status ?? "anonymous"
  const googleStatus = snapshot?.google.status ?? "disconnected"
@@ -75,7 +77,12 @@ export const reconcileAccountStatus = ({
   Boolean(snapshot) && authStatus !== "anonymous"
  )
 
- const status = pickStatus(accountAuthenticated, googleConnected, tokenPresent, pending, hadAccount)
+ const channelId = snapshot?.google.channelId ?? null
+ const credentialReady = serverEnabled ? Boolean(channelId) : tokenPresent
+ const status = pickStatus(accountAuthenticated, googleConnected, credentialReady, pending, hadAccount)
+ const grantedCapabilities = snapshot?.grantedCapabilities ?? []
+ const hasCapability = (capability: UnifiedAccountSnapshot["grantedCapabilities"][number]) =>
+  !serverEnabled || grantedCapabilities.includes(capability)
 
  return {
   status,
@@ -86,7 +93,13 @@ export const reconcileAccountStatus = ({
   displayName: snapshot?.profile.displayName ?? null,
   avatarUrl: snapshot?.profile.avatarUrl ?? snapshot?.google.channelThumbnail ?? null,
   channelHandle: snapshot?.google.channelHandle ?? null,
-  channelId: snapshot?.google.channelId ?? null,
+  channelId,
+  transportMode: serverEnabled ? "server" : "legacy",
+  grantedCapabilities,
+  canReadYouTube: status === "ready" && hasCapability("youtube_read"),
+  canManageVideos: status === "ready" && hasCapability("youtube_video_manage"),
+  canUploadVideos: status === "ready" && hasCapability("youtube_upload"),
+  canPostComments: status === "ready" && hasCapability("youtube_comments"),
  }
 }
 

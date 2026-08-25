@@ -23,6 +23,7 @@ export type AccountCapability =
   | "youtube_monetary_read"
   | "youtube_upload"
   | "youtube_comments"
+  | "youtube_video_manage"
   | "youtube_content_owner"
   | "search_console_read"
 

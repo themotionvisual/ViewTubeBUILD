@@ -40,8 +40,8 @@ export type VtSyncSavedTableClearResult = {
  videoCatalogCleared: boolean
 }
 
-export const manualImportRecordId = (tableId: string): string =>
- `${MANUAL_IMPORT_ID_PREFIX}${tableId}`
+export const manualImportRecordId = (tableId: string, channelId?: string | null): string =>
+ `${MANUAL_IMPORT_ID_PREFIX}${channelId ? `${encodeURIComponent(channelId)}::` : ""}${tableId}`
 
 // A few high-traffic tables (like `videos`) merge data from multiple
 // categories and don't declare `snapshotKeys` in the registry, so map them
@@ -338,7 +338,7 @@ const datasetBelongsToTable = (tableId: string, datasetId: string): boolean => {
 const recordMatchesChannel = (
  recordChannelId: string | undefined,
  channelId?: string | null,
-): boolean => !channelId || !recordChannelId || recordChannelId === channelId
+): boolean => channelId ? recordChannelId === channelId : !recordChannelId
 
 /** Delete every persisted API/CSV representation owned by one visible table. */
 export const clearVtSyncSavedTableData = async (
@@ -416,10 +416,11 @@ export const toVtSyncManualImportState = (
  channelId?: string | null,
 ): VtSyncManualImportState => {
  const state: VtSyncManualImportState = { rowsByTableId: {}, capturedAtByTableId: {} }
+ if (!channelId) return state
  for (const record of records) {
   if (record.provenance !== "csv") continue
   if (!record.id.startsWith(MANUAL_IMPORT_ID_PREFIX)) continue
-  if (channelId && record.channelId !== channelId) continue
+  if (record.channelId !== channelId) continue
   const rows = Array.isArray(record.rows) ? (record.rows as unknown[]) : []
   if (!rows.length) continue
   // Imports saved by older sync/table flows use a category id (for example
@@ -438,30 +439,13 @@ export const toVtSyncManualImportState = (
 }
 
 export const loadVtSyncManualImports = async (channelId?: string | null): Promise<VtSyncManualImportState> => {
+ if (!channelId) return { rowsByTableId: {}, capturedAtByTableId: {} }
  try {
   const records = await listVtSyncDatasetTableRows()
-
-  // Mobile boot can restore IndexedDB before account/channel hydration finishes.
-  // A temporary null channelId must not make already-persisted local CSV data
-  // disappear. When a channel is known, keep the normal channel filter. While
-  // it is unknown, recover the local manual-import records and reconcile them
-  // once channel identity arrives.
-  return toVtSyncManualImportState(records, channelId || undefined)
+  return toVtSyncManualImportState(records, channelId)
  } catch {
   return { rowsByTableId: {}, capturedAtByTableId: {} }
  }
-}
-
-/** Assign anonymous local imports to the first connected channel that uses them. */
-export const claimUnscopedVtSyncManualImports = async (channelId: string): Promise<number> => {
- const records = await listVtSyncDatasetTableRows()
- const unscoped = records.filter((record) =>
-  record.provenance === "csv" &&
-  record.id.startsWith(MANUAL_IMPORT_ID_PREFIX) &&
-  !record.channelId,
- )
- await Promise.all(unscoped.map((record) => putVtSyncDatasetTableRows({ ...record, channelId })))
- return unscoped.length
 }
 
 export const toVtSyncPersistedApiState = (

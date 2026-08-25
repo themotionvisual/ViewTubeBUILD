@@ -122,3 +122,15 @@ test("trusted account origins accept the www and apex production hostnames", () 
   assert.equal(isTrustedAccountOrigin("https://evil.viewtube.live"), false);
   process.env.ACCOUNT_PUBLIC_ORIGIN = previousOrigin;
 });
+
+test("trusted account origins accept only explicitly configured preview hosts", () => {
+  const previousOrigin = process.env.ACCOUNT_PUBLIC_ORIGIN;
+  const previousTrusted = process.env.ACCOUNT_TRUSTED_ORIGINS;
+  process.env.ACCOUNT_PUBLIC_ORIGIN = "https://viewtube.live";
+  process.env.ACCOUNT_TRUSTED_ORIGINS = "https://viewtube-git-preview.vercel.app,http://localhost:5173";
+  assert.equal(isTrustedAccountOrigin("https://viewtube-git-preview.vercel.app"), true);
+  assert.equal(isTrustedAccountOrigin("http://localhost:5173"), true);
+  assert.equal(isTrustedAccountOrigin("https://unlisted-preview.vercel.app"), false);
+  process.env.ACCOUNT_PUBLIC_ORIGIN = previousOrigin;
+  process.env.ACCOUNT_TRUSTED_ORIGINS = previousTrusted;
+});

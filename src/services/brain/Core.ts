@@ -25,6 +25,8 @@ const hasGeminiKey = (): boolean => {
 }
 
 let brainCache: BrainMemorySchema | null = null;
+let reflectionScheduled = false
+let reflectionInFlight: Promise<void> | null = null
 
 const DEFAULT_SCHEMA: BrainMemorySchema = {
  identityAndAspirations: "User is a YouTube creator exploring their niche.",
@@ -44,7 +46,7 @@ export const initializeBrain = async () => {
  try {
   const saved = await db.getBrainSchemaDB();
   brainCache = saved ? { ...DEFAULT_SCHEMA, ...saved } : DEFAULT_SCHEMA;
- } catch (e) {
+ } catch {
   brainCache = DEFAULT_SCHEMA;
  }
 }
@@ -54,7 +56,7 @@ export const saveBrainMemory = async (schema: BrainMemorySchema) => {
  await db.saveBrainSchemaDB(schema);
 }
 
-export const emitSignal = async (toolId: string, action: string, payload: any) => {
+export const emitSignal = async (toolId: string, action: string, payload: unknown) => {
  const schema = { ...getBrainMemory(), tools: [...getBrainMemory().tools] }
  
  if (!schema.tools.includes(toolId)) {
@@ -79,13 +81,21 @@ export const emitSignal = async (toolId: string, action: string, payload: any) =
   if (!hasGeminiKey()) {
    return
   }
+  if (reflectionScheduled || reflectionInFlight) return
+  reflectionScheduled = true
   setTimeout(() => {
+   reflectionScheduled = false
    reflectAndCompress().catch(e => console.error("Reflection background task failed:", e))
   }, 0)
  }
 }
 
-export const consultBrain = async (toolId: string, requestDetails?: any): Promise<ContextPacket> => {
+export const consultBrain = async (
+ toolId: string,
+ requestDetails?: unknown,
+): Promise<ContextPacket> => {
+ void toolId
+ void requestDetails
  const schema = getBrainMemory()
  
  const packet: ContextPacket = {
@@ -100,7 +110,7 @@ export const consultBrain = async (toolId: string, requestDetails?: any): Promis
  return packet
 }
 
-export const reflectAndCompress = async () => {
+const runReflection = async (): Promise<void> => {
  const signals = await db.getBrainSignalsDB();
  if (signals.length === 0) return
 
@@ -173,4 +183,12 @@ export const reflectAndCompress = async () => {
   }
   console.error("[BrainEngine] Reflection failed:", error)
  }
+}
+
+export const reflectAndCompress = (): Promise<void> => {
+ if (reflectionInFlight) return reflectionInFlight
+ reflectionInFlight = runReflection().finally(() => {
+  reflectionInFlight = null
+ })
+ return reflectionInFlight
 }

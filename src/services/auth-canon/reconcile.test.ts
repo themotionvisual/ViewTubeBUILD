@@ -63,6 +63,18 @@ describe("reconcileAccountStatus", () => {
   expect(result.tokenPresent).toBe(false)
  })
 
+ it("server session is ready without exposing a browser OAuth token", () => {
+  const s = snap("authenticated", "connected")
+  s.grantedCapabilities = ["youtube_read", "youtube_comments", "youtube_video_manage", "youtube_upload"]
+  const result = reconcileAccountStatus({ snapshot: s, tokenPresent: false, serverEnabled: true })
+  expect(result.status).toBe("ready")
+  expect(result.transportMode).toBe("server")
+  expect(result.canReadYouTube).toBe(true)
+  expect(result.canManageVideos).toBe(true)
+  expect(result.canUploadVideos).toBe(true)
+  expect(result.canPostComments).toBe(true)
+ })
+
  it("authenticated + google disconnected + token present → needs_reconnect", () => {
   const result = reconcileAccountStatus({
    snapshot: snap("authenticated", "disconnected"),

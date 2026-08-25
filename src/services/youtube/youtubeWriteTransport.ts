@@ -8,6 +8,22 @@ export type UploadMetadata = {
  privacyStatus?: "public" | "private" | "unlisted"
 }
 
+export class YouTubeWriteError extends Error {
+ readonly code: string
+ readonly status: number
+ readonly retryable: boolean
+ readonly reconnectRequired: boolean
+
+ constructor(message: string, options: { code?: string; status: number; retryable?: boolean; reconnectRequired?: boolean }) {
+  super(message)
+  this.name = "YouTubeWriteError"
+  this.code = options.code || "YOUTUBE_WRITE_FAILED"
+  this.status = options.status
+  this.retryable = options.retryable === true
+  this.reconnectRequired = options.reconnectRequired === true || options.status === 401
+ }
+}
+
 const request = async (path: string, init: RequestInit = {}): Promise<Response> => {
  const headers = new Headers(init.headers)
  if (!headers.has("Accept")) headers.set("Accept", "application/json")
@@ -15,10 +31,15 @@ const request = async (path: string, init: RequestInit = {}): Promise<Response> 
 }
 
 const parseError = async (response: Response, fallback: string): Promise<never> => {
- const payload = await response.json().catch(() => null) as { error?: { message?: string } | string } | null
+ const payload = await response.json().catch(() => null) as { error?: { code?: string; message?: string; retryable?: boolean; reconnectRequired?: boolean } | string } | null
  const error = payload?.error
  const message = typeof error === "string" ? error : error?.message
- throw new Error(message || fallback)
+ throw new YouTubeWriteError(message || fallback, {
+  code: typeof error === "object" ? error?.code : undefined,
+  status: response.status,
+  retryable: typeof error === "object" && error?.retryable,
+  reconnectRequired: typeof error === "object" && error?.reconnectRequired,
+ })
 }
 
 export const isUnifiedYouTubeWriteTransportEnabled = () => isUnifiedAccountServerEnabled()

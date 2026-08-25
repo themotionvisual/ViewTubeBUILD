@@ -7,7 +7,7 @@ vi.mock("../account/accountCoordinator", () => ({
  isUnifiedAccountServerEnabled: () => mocks.unified,
 }))
 
-import { postUnifiedCommentReply, uploadUnifiedVideo } from "./youtubeWriteTransport"
+import { postUnifiedCommentReply, uploadUnifiedVideo, YouTubeWriteError } from "./youtubeWriteTransport"
 
 describe("youtubeWriteTransport", () => {
  beforeEach(() => {
@@ -38,5 +38,17 @@ describe("youtubeWriteTransport", () => {
    "https://viewtube.test/api/account/youtube/uploads/opaque-session",
   ])
   expect(new Headers(fetchMock.mock.calls[1]?.[1]?.headers).get("Content-Range")).toBe("bytes 0-3/8")
+ })
+
+ it("preserves structured reconnect details from server write failures", async () => {
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({
+   error: { code: "GOOGLE_RECONNECT_REQUIRED", message: "Reconnect Google.", retryable: false, reconnectRequired: true },
+  }), { status: 409, headers: { "Content-Type": "application/json" } }))
+
+  const request = postUnifiedCommentReply("comment123", "Thanks!")
+  await expect(request).rejects.toBeInstanceOf(YouTubeWriteError)
+  await expect(request).rejects.toMatchObject({
+   code: "GOOGLE_RECONNECT_REQUIRED", status: 409, retryable: false, reconnectRequired: true,
+  })
  })
 })
