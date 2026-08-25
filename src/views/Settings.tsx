@@ -792,7 +792,13 @@ const Settings: React.FC = () => {
       className="self-start text-xs font-black uppercase underline underline-offset-2">
       API Key Setup Help
     </button>
-    <form onSubmit={(e) => e.preventDefault()} className="relative">
+    <form
+     onSubmit={(e) => {
+      e.preventDefault()
+      handleSave()
+     }}
+     className="flex flex-col gap-3"
+    >
      <input
       type="text"
       autoComplete="username"
@@ -802,20 +808,41 @@ const Settings: React.FC = () => {
       value="gemini-user"
       readOnly
      />
-     <input
-     type={showKey ? "text" : "password"}
-      autoComplete="new-password"
-      value={geminiKey}
-      onChange={(e) => setGeminiKey(e.target.value)}
-      placeholder="Enter your Gemini API Key..."
-      className="w-full p-4 text-lg font-bold border-[4px] border-black rounded-xl shadow-[4px_4px_0px_0px_black] outline-none pr-12"
-     />
-     <button
-      type="button"
-      onClick={() => setShowKey(!showKey)}
-      className="absolute right-4 top-1/2 -translate-y-1/2 text-black">
-      {showKey ? <EyeOff size={20} /> : <Eye size={20} />}
-     </button>
+     <div className="relative">
+      <input
+       type={showKey ? "text" : "password"}
+       autoComplete="new-password"
+       value={geminiKey}
+       onChange={(e) => setGeminiKey(e.target.value)}
+       placeholder="Enter your Gemini API Key…"
+       className="w-full p-4 text-lg font-bold border-[4px] border-black rounded-xl shadow-[4px_4px_0px_0px_black] outline-none pr-12"
+      />
+      <button
+       type="button"
+       onClick={() => setShowKey(!showKey)}
+       aria-label={showKey ? "Hide API key" : "Show API key"}
+       className="absolute right-4 top-1/2 -translate-y-1/2 text-black">
+       {showKey ? <EyeOff size={20} /> : <Eye size={20} />}
+      </button>
+     </div>
+     {/* Inline Save/Enter — the global 'Save All Settings' button lives
+       ~250 lines below in the page footer, so users had no visual cue
+       that hitting Enter or clicking anything would persist the key
+       they just typed. Both submit paths (Enter in input, click on
+       button) route through the existing handleSave so the vault write
+       + 'Settings Saved!' toast stay consistent with the footer button. */}
+     <div className="flex items-center gap-3">
+      <button
+       type="submit"
+       className={`${canonicalButtonClass} bg-[#C0F240] text-black px-6 py-3 text-sm flex items-center justify-center gap-2`}
+      >
+       {saveStatus ? <Check size={18} /> : <KeyRound size={18} />}
+       {saveStatus || "Save API Key"}
+      </button>
+      <p className="text-xs font-bold text-gray-600">
+       Press <kbd className="px-1.5 py-0.5 border-2 border-black rounded text-[10px] bg-white">Enter</kbd> to save.
+      </p>
+     </div>
     </form>
    </SubToolbox>
    </div>
