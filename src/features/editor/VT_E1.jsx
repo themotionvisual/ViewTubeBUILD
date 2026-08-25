@@ -3,6 +3,29 @@ import './VT_E1.css';
 window.__VT_E1_STANDALONE_BUILD__ = false;
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import JSZip from 'jszip';
+import {
+  SHORTS_EXTRACTOR_DEFAULT_CONFIG as SHARED_SHORTS_EXTRACTOR_DEFAULT_CONFIG,
+  SHORTS_EXTRACTOR_ASPECTS as SHARED_SHORTS_EXTRACTOR_ASPECTS,
+  SHORTS_EXTRACTOR_TRANSITIONS as SHARED_SHORTS_EXTRACTOR_TRANSITIONS,
+  normalizeShortsExtractorConfig as normalizeSharedShortsExtractorConfig,
+  interpolateShortsConfig as interpolateSharedShortsConfig,
+  getShortsCropMetrics as getSharedShortsCropMetrics,
+  getShortsCropStyle as getSharedShortsCropStyle,
+  smoothShortsKeyframes as smoothSharedShortsKeyframes,
+} from '../../shared/vtE1Shorts';
+import {
+  sourceTimeAtTimelineSec,
+  transitionWindowFor,
+  validateTransitionSeam,
+  normalizeRenderOutputFormat,
+  renderOutputLabel,
+} from '../../shared/vtE1TimelineContract.js';
+import {
+  rippleDeleteTimelineClips,
+  slideTimelineClip,
+  slipTimelineClip,
+  splitTimelineClip,
+} from '../../shared/vtE1TimelineOperations.js';
     import { createRoot } from 'react-dom/client';
     import * as LucideIcons from 'lucide-react';
     import {
@@ -67,10 +90,10 @@ import JSZip from 'jszip';
       altDragDuplicate: true,
       holdToGrab: true,
       edgeTrimGhostReadout: true,
-      slipEditMode: false,
-      slideEditMode: false,
+      slipEditMode: true,
+      slideEditMode: true,
       rippleDeleteGapClose: true,
-      splitDeleteVariants: false,
+      splitDeleteVariants: true,
       snapToggleOverride: true,
       markerTracks: true,
       markerNotes: false,
@@ -174,7 +197,7 @@ import JSZip from 'jszip';
       { id: 'transitions', label: 'Transitions', shortLabel: 'TRANSITIONS', icon: ArrowRightLeft, color: COLORS.purple, toolId: 'transitions-effects', fallbackTab: 'transitions', description: 'Transition seams, presets, timing, and transition diagnostics.' },
       { id: 'effects', label: 'FX Studio', shortLabel: 'FX STUDIO', icon: Wand2, color: COLORS.cyan, toolId: 'transitions-effects', fallbackTab: 'interactive', description: 'Advanced FX Studio, generated overlays, deterministic effect sessions, and preview tuning.' },
       { id: 'clip-effects', label: 'Clip Effects', shortLabel: 'CLIP FX', icon: Filter, color: COLORS.green, toolId: 'transitions-effects', fallbackTab: 'effects', description: 'Legacy clip-effect wall, filter stack, and per-layer effect controls.' },
-      { id: 'dev', label: 'Dev Console', shortLabel: 'DEV', icon: Terminal, color: COLORS.yellow, toolId: 'dev', fallbackTab: 'code', description: 'Developer console, build toggles, audits, render diagnostics, code workspace, and raw project JSON.' }
+      { id: 'dev', label: 'Build & Diagnostics', shortLabel: 'BUILD', icon: Terminal, color: COLORS.yellow, toolId: 'dev', fallbackTab: 'code', description: 'Export readiness, project checks, and advanced diagnostics.' }
     ]);
     const PAGE_REGISTRY_BY_ID = Object.freeze(PAGE_REGISTRY.reduce((acc, page) => {
       acc[page.id] = page;
@@ -235,6 +258,8 @@ import JSZip from 'jszip';
       if (layoutMode === 'portrait' || layoutMode === 'portrait-focus' || layoutMode === '9:16-focus') return 'split-column';
       return 'split-column';
     };
+    // Bump this whenever persisted shell geometry becomes incompatible.
+    const SHELL_LAYOUT_REVISION = 'portrait-grid-v2';
     const MODULE_SPAN_REGISTRY = Object.freeze({
       'projects:search': 'half',
       'clips:search': 'half',
@@ -383,7 +408,7 @@ import JSZip from 'jszip';
     const FEATURE_EXPANSION_TRACKER = Object.freeze({
       planned: 100,
       implemented: 38,
-      focusNow: ['navigation-layout-hardening', 'topbar-guide-sync', 'timeline-ux-parity', 'module-page-separation', 'export-diagnostics']
+      focusNow: ['navigation-layout-hardening', 'topbar-guide-sync', 'timeline-ux-parity', 'module-page-separation', 'export-diagnostics', 'VT_E1 101: Shorts Extractor Contract and Parity']
     });
     const CLIP_FX_CATEGORY_ORDER = Object.freeze(['color', 'analog-distortion', 'stylize', 'blur-glow', 'mirror-composite', 'utility']);
     const CLIP_FX_CATEGORY_META = Object.freeze({
@@ -632,38 +657,15 @@ import JSZip from 'jszip';
       { id: 'rotate_fade', label: 'Rotate + Fade', steps: [{ type: 'rotate', params: { intensity: 1.2, rotateDeg: 65 } }, { type: 'fade', params: { intensity: 1 } }], durationSec: 0.4 },
       { id: 'vortex_pulse', label: 'Vortex + Pulse', steps: [{ type: 'vortex', params: { intensity: 1.1, amount: 1.1 } }, { type: 'pulse', params: { intensity: 1.2, amount: 1 } }], durationSec: 0.5 }
     ]);
-    const SHORTS_EXTRACTOR_DEFAULT_CONFIG = Object.freeze({
-      mode: 'single',
-      aspectPreset: '9:16',
-      xPosition: 0.5,
-      yPosition: 0.5,
-      zoom: 1,
-      splitRatio: 0.55,
-      closeupPosition: 'top',
-      closeupZoom: 2.2,
-      closeupX: 0.5,
-      transition: 'ease-in-out',
-      smoothing: 0.45
-    });
+    const SHORTS_EXTRACTOR_DEFAULT_CONFIG = SHARED_SHORTS_EXTRACTOR_DEFAULT_CONFIG;
     const SHORTS_CROP_ZOOM_CONTROL_MIN = 0;
     const SHORTS_CROP_ZOOM_CONTROL_MAX = 4;
     const SHORTS_CROP_ZOOM_NEUTRAL_MULTIPLIER = 1;
     const SHORTS_CROP_ZOOM_MULTIPLIER_MAX = SHORTS_CROP_ZOOM_NEUTRAL_MULTIPLIER + SHORTS_CROP_ZOOM_CONTROL_MAX;
     const cropZoomControlToMultiplier = (value) => clamp(Number(value || 0) + SHORTS_CROP_ZOOM_NEUTRAL_MULTIPLIER, SHORTS_CROP_ZOOM_NEUTRAL_MULTIPLIER, SHORTS_CROP_ZOOM_MULTIPLIER_MAX);
     const cropZoomMultiplierToControl = (value) => clamp(Number(value ?? SHORTS_CROP_ZOOM_NEUTRAL_MULTIPLIER) - SHORTS_CROP_ZOOM_NEUTRAL_MULTIPLIER, SHORTS_CROP_ZOOM_CONTROL_MIN, SHORTS_CROP_ZOOM_CONTROL_MAX);
-    const SHORTS_EXTRACTOR_ASPECTS = Object.freeze({
-      '9:16': { width: 1080, height: 1920, ratio: 9 / 16 },
-      '1:1': { width: 1080, height: 1080, ratio: 1 },
-      '4:5': { width: 1080, height: 1350, ratio: 4 / 5 }
-    });
-    const SHORTS_EXTRACTOR_TRANSITIONS = Object.freeze([
-      { id: 'pan', label: 'Linear' },
-      { id: 'ease-in', label: 'Ease In' },
-      { id: 'ease-out', label: 'Ease Out' },
-      { id: 'ease-in-out', label: 'Ease I/O' },
-      { id: 'bell', label: 'Bell' },
-      { id: 'cut', label: 'Cut' }
-    ]);
+    const SHORTS_EXTRACTOR_ASPECTS = SHARED_SHORTS_EXTRACTOR_ASPECTS;
+    const SHORTS_EXTRACTOR_TRANSITIONS = SHARED_SHORTS_EXTRACTOR_TRANSITIONS;
     const VT_E1_RENDER_ENDPOINTS = Object.freeze({
       finalMp4: '/api/vt-e1/render',
       capabilities: '/api/vt-e1/render/capabilities',
@@ -1662,8 +1664,269 @@ import JSZip from 'jszip';
         defaultBindings: {
           cards: 'I kept the receipt because it proved the night was real. | M. | #f7efe7\nThe second draft was better because it remembered the room. | M. | #efe6d4'
         }
+      },
+      {
+        id: 'kineticText',
+        name: 'Kinetic Text',
+        family: 'kinetic',
+        lane: 'vintage-carousel',
+        compositionId: 'KineticText',
+        source: 'Vintage Carousel Effect',
+        renderSupport: 'preview-only',
+        previewTheme: 'kinetic',
+        aspectRatio: '9:16',
+        width: 1080,
+        height: 1920,
+        durationSec: 9,
+        accent: '#FF83EA',
+        description: 'Five-word kinetic typography sequence with an editorial accent field.',
+        slots: [
+          { id: 'words', label: 'Words', hint: 'One word per line. Five words recommended.' },
+          { id: 'accentColor', label: 'Accent Color', hint: 'CSS color, for example #FF83EA.' },
+          { id: 'bgColor', label: 'Background Color', hint: 'CSS color, for example #171822.' }
+        ],
+        defaultBindings: { words: 'MAKE\nSOMETHING\nRADICAL\nWITH\nVIEWTUBE', accentColor: '#FF83EA', bgColor: '#171822' }
+      },
+      {
+        id: 'gradientSlides',
+        name: 'Gradient Slides',
+        family: 'slides',
+        lane: 'vintage-carousel',
+        compositionId: 'GradientSlides',
+        source: 'Vintage Carousel Effect',
+        renderSupport: 'preview-only',
+        previewTheme: 'gradient',
+        aspectRatio: '9:16',
+        width: 1080,
+        height: 1920,
+        durationSec: 12,
+        accent: '#40C6E9',
+        description: 'Three fast editorial slides with configurable copy and dual-color gradients.',
+        slots: [
+          { id: 'slides', label: 'Slides', hint: 'One line: headline | subtext | tag | color A | color B.' }
+        ],
+        defaultBindings: { slides: 'Build in public | Ship the work, then show the work. | DAY 01 | #40C6E9 | #AA7FFF\nMake it useful | Systems beat vague intentions. | NOTES | #5DFF8A | #40C6E9\nKeep moving | Edit the next version now. | GO | #FF83EA | #FFB347' }
+      },
+      {
+        id: 'splitReveal',
+        name: 'Split Reveal',
+        family: 'reveal',
+        lane: 'vintage-carousel',
+        compositionId: 'SplitReveal',
+        source: 'Vintage Carousel Effect',
+        renderSupport: 'preview-only',
+        previewTheme: 'split',
+        aspectRatio: '9:16',
+        width: 1080,
+        height: 1920,
+        durationSec: 15,
+        accent: '#FFFF61',
+        description: 'Image-led split panels that open into titles and subtitles.',
+        slots: [
+          { id: 'scenes', label: 'Reveal Scenes', hint: 'One line: image URL | title | subtitle.' },
+          { id: 'accentColor', label: 'Accent Color', hint: 'CSS color for the split edge.' }
+        ],
+        defaultBindings: { scenes: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop | FIND THE ANGLE | The story starts before the cut.\nhttps://images.unsplash.com/photo-1500534623283-312aade485b7?q=80&w=1200&auto=format&fit=crop | HOLD THE FRAME | Give the moment room to land.', accentColor: '#FFFF61' }
+      },
+      {
+        id: 'neonNight',
+        name: 'Neon Night',
+        family: 'neon',
+        lane: 'vintage-carousel',
+        compositionId: 'NeonNight',
+        source: 'Vintage Carousel Effect',
+        renderSupport: 'preview-only',
+        previewTheme: 'neon',
+        aspectRatio: '9:16',
+        width: 1080,
+        height: 1920,
+        durationSec: 12,
+        accent: '#AA7FFF',
+        description: 'High-contrast neon panel sequence for bold two-line statements.',
+        slots: [
+          { id: 'panels', label: 'Neon Panels', hint: 'One line: first line | second line.' },
+          { id: 'primaryColor', label: 'Primary Color', hint: 'CSS color.' },
+          { id: 'secondaryColor', label: 'Secondary Color', hint: 'CSS color.' }
+        ],
+        defaultBindings: { panels: 'MAKE NOISE | WITH INTENT\nCUT HARDER | SAY LESS\nKEEP GOING | UNTIL IT LANDS', primaryColor: '#AA7FFF', secondaryColor: '#40C6E9' }
+      },
+      {
+        id: 'motionZoom',
+        name: 'Motion Zoom',
+        family: 'zoom',
+        lane: 'vintage-carousel',
+        compositionId: 'MotionZoom',
+        source: 'Vintage Carousel Effect',
+        renderSupport: 'preview-only',
+        previewTheme: 'zoom',
+        aspectRatio: '9:16',
+        width: 1080,
+        height: 1920,
+        durationSec: 9,
+        accent: '#5DFF8A',
+        description: 'Three zoom-cut scenes for image or video-led social recaps.',
+        slots: [
+          { id: 'scenes', label: 'Zoom Scenes', hint: 'One line: media URL | title | subtitle.' },
+          { id: 'accentColor', label: 'Accent Color', hint: 'CSS color.' }
+        ],
+        defaultBindings: { scenes: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1200&auto=format&fit=crop | FIRST LOOK | Open on impact.\nhttps://images.unsplash.com/photo-1519608487953-e999c86e7452?q=80&w=1200&auto=format&fit=crop | SECOND BEAT | Keep the energy.', accentColor: '#5DFF8A' }
+      },
+      {
+        id: 'counterReveal',
+        name: 'Counter Reveal',
+        family: 'stats',
+        lane: 'vintage-carousel',
+        compositionId: 'CounterReveal',
+        source: 'Vintage Carousel Effect',
+        renderSupport: 'preview-only',
+        previewTheme: 'counter',
+        aspectRatio: '9:16',
+        width: 1080,
+        height: 1920,
+        durationSec: 16,
+        accent: '#FFB347',
+        description: 'Metric reveal cards with value, suffix, label, and supporting copy.',
+        slots: [
+          { id: 'stats', label: 'Stats', hint: 'One line: value | label | suffix | description.' },
+          { id: 'accentColor', label: 'Accent Color', hint: 'CSS color.' },
+          { id: 'bgColor', label: 'Background Color', hint: 'CSS color.' }
+        ],
+        defaultBindings: { stats: '42 | Videos | K | Ideas published this year.\n9.8 | Watch time | % | Better retention this month.\n3 | Systems | X | Faster editing passes.', accentColor: '#FFB347', bgColor: '#15151B' }
+      },
+      {
+        id: 'storySlides',
+        name: 'Story Slides',
+        family: 'story',
+        lane: 'vintage-carousel',
+        compositionId: 'StorySlides',
+        source: 'Vintage Carousel Effect',
+        renderSupport: 'preview-only',
+        previewTheme: 'story',
+        aspectRatio: '9:16',
+        width: 1080,
+        height: 1920,
+        durationSec: 12,
+        accent: '#40C6E9',
+        description: 'Emoji-led story cards with playful gradient color assignments.',
+        slots: [
+          { id: 'slides', label: 'Story Slides', hint: 'One line: headline | body | emoji | color A | color B.' }
+        ],
+        defaultBindings: { slides: 'The first cut | Make the opening unavoidable. | ✦ | #40C6E9 | #AA7FFF\nThe middle | Keep the promise moving. | → | #5DFF8A | #40C6E9\nThe close | Leave one clear next action. | ! | #FF83EA | #FFB347' }
+      },
+      {
+        id: 'viewtubePulse',
+        name: 'ViewTube Pulse',
+        family: 'viewtube-original',
+        lane: 'viewtube-original',
+        compositionId: 'ViewTubePulse',
+        source: 'ViewTube original design',
+        renderSupport: 'preview-only',
+        previewTheme: 'pulse',
+        aspectRatio: '9:16',
+        width: 1080,
+        height: 1920,
+        durationSec: 10,
+        accent: '#40C6E9',
+        description: 'An electric brand pulse for short-form launches and channel announcements.',
+        slots: [
+          { id: 'headline', label: 'Headline', hint: 'Primary vertical headline.' },
+          { id: 'subline', label: 'Subline', hint: 'Short supporting line.' }
+        ],
+        defaultBindings: { headline: 'MAKE SOMETHING RADICAL', subline: 'VIEWTUBE STUDIO' }
+      },
+      {
+        id: 'radicalOpener',
+        name: 'Radical Opener',
+        family: 'viewtube-original',
+        lane: 'viewtube-original',
+        compositionId: 'RadicalOpener',
+        source: 'ViewTube original design',
+        renderSupport: 'preview-only',
+        previewTheme: 'radical',
+        aspectRatio: '16:9',
+        width: 1920,
+        height: 1080,
+        durationSec: 8,
+        accent: '#FF83EA',
+        description: 'Landscape opener with a radical graphic field and editorial wordmark.',
+        slots: [
+          { id: 'headline', label: 'Headline', hint: 'Main opener statement.' },
+          { id: 'subline', label: 'Subline', hint: 'Supporting statement.' },
+          { id: 'accentColor', label: 'Accent Color', hint: 'CSS color.' }
+        ],
+        defaultBindings: { headline: 'DON’T MAKE CONTENT. MAKE A SIGNAL.', subline: 'A VIEWTUBE ORIGINAL', accentColor: '#FF83EA' }
+      },
+      {
+        id: 'creatorChecklist',
+        name: 'Creator Checklist',
+        family: 'viewtube-original',
+        lane: 'viewtube-original',
+        compositionId: 'CreatorChecklist',
+        source: 'ViewTube original design',
+        renderSupport: 'preview-only',
+        previewTheme: 'checklist',
+        aspectRatio: '9:16',
+        width: 1080,
+        height: 1920,
+        durationSec: 12,
+        accent: '#5DFF8A',
+        description: 'A progress-driven checklist designed for process and launch updates.',
+        slots: [
+          { id: 'items', label: 'Checklist Items', hint: 'One checklist item per line.' },
+          { id: 'title', label: 'Title', hint: 'Checklist title.' }
+        ],
+        defaultBindings: { items: 'Choose the promise\nCut the first 10 seconds\nAdd the proof\nPublish the next version', title: 'TODAY’S BUILD' }
+      },
+      {
+        id: 'commentHighlight',
+        name: 'Comment Highlight',
+        family: 'viewtube-original',
+        lane: 'viewtube-original',
+        compositionId: 'CommentHighlight',
+        source: 'ViewTube original design',
+        renderSupport: 'preview-only',
+        previewTheme: 'comment',
+        aspectRatio: '9:16',
+        width: 1080,
+        height: 1920,
+        durationSec: 10,
+        accent: '#FFFF61',
+        description: 'A glossy audience-reply card for comments, feedback, and community proof.',
+        slots: [
+          { id: 'comment', label: 'Comment', hint: 'Featured comment text.' },
+          { id: 'author', label: 'Author', hint: 'Comment author or handle.' },
+          { id: 'reply', label: 'Reply', hint: 'Creator reply.' }
+        ],
+        defaultBindings: { comment: 'This is exactly the workflow I needed.', author: '@creator', reply: 'Then the next version is for you.' }
+      },
+      {
+        id: 'launchCountdown',
+        name: 'Launch Countdown',
+        family: 'viewtube-original',
+        lane: 'viewtube-original',
+        compositionId: 'LaunchCountdown',
+        source: 'ViewTube original design',
+        renderSupport: 'preview-only',
+        previewTheme: 'countdown',
+        aspectRatio: '16:9',
+        width: 1920,
+        height: 1080,
+        durationSec: 10,
+        accent: '#AA7FFF',
+        description: 'A bold countdown board for launches, premieres, and campaign drops.',
+        slots: [
+          { id: 'number', label: 'Countdown Number', hint: 'Number or countdown copy.' },
+          { id: 'headline', label: 'Headline', hint: 'Launch headline.' },
+          { id: 'date', label: 'Date / CTA', hint: 'Date or call to action.' }
+        ],
+        defaultBindings: { number: '03', headline: 'DAYS UNTIL THE DROP', date: 'FRIDAY · 8PM ET' }
       }
-    ]);
+    ].map((entry) => ({
+      renderSupport: 'preview-only',
+      source: entry.lane === 'replit' ? 'Vintage Carousel Effect' : 'ViewTube Template Studio',
+      previewTheme: entry.family || 'template',
+      ...entry
+    })));
     const TEMPLATE_STUDIO_LIBRARY_BY_ID = Object.freeze(TEMPLATE_STUDIO_LIBRARY.reduce((acc, entry) => {
       acc[entry.id] = entry;
       return acc;
@@ -2160,86 +2423,31 @@ import JSZip from 'jszip';
       const tracks = [
         { id: uid('track'), name: 'V1', order: 0, visible: true, kind: 'visual', locked: false, solo: false, muted: false },
         { id: uid('track'), name: 'V2', order: 1, visible: true, kind: 'visual', locked: false, solo: false, muted: false },
-        { id: uid('track'), name: AUDIO_TRACK_NAME, order: 2, visible: true, kind: AUDIO_TRACK_KIND, locked: false, solo: false, muted: false }
+        { id: uid('track'), name: 'V3', order: 2, visible: true, kind: 'visual', locked: false, solo: false, muted: false },
+        { id: uid('track'), name: 'V4', order: 3, visible: true, kind: 'visual', locked: false, solo: false, muted: false },
+        { id: uid('track'), name: AUDIO_TRACK_NAME, order: 4, visible: true, kind: AUDIO_TRACK_KIND, locked: false, solo: false, muted: false }
       ];
-
-      const shapeLayer = {
-        id: uid('layer'),
-        trackId: tracks[0].id,
-        type: 'shape',
-        visible: true,
-        payload: {
-          ...basePayload('shape', 0),
-          layerName: 'VIEWTUBE_BG',
-          x: 0,
-          y: 0,
-          width: 76,
-          height: 26,
-          cornerRadius: 8,
-          shape: 'rect',
-          fillColor: '#40C6E9',
-          strokeColor: '#111111',
-          strokeWidth: 2
-        }
-      };
-      const textLayer = {
-        id: uid('layer'),
-        trackId: tracks[1].id,
-        type: 'text',
-        visible: true,
-        payload: {
-          ...basePayload('text', 1),
-          layerName: 'VIEWTUBE_TEXT',
-          text: 'VIEWTUBE',
-          x: 0,
-          y: 0,
-          fontSize: 64,
-          fillColor: '#000000',
-          strokeWidth: 0,
-          fontFamily: 'Outfit'
-        }
-      };
-      const layers = [shapeLayer, textLayer];
-      const clips = [
-        createClip(tracks[0].id, shapeLayer.id, 0, 3, '#40C6E9'),
-        createClip(tracks[1].id, textLayer.id, 0, 3, '#40C6E9')
+      const starter = (trackIndex, type, name, payload, color) => ({
+        id: uid('layer'), trackId: tracks[trackIndex].id, type, visible: true,
+        payload: { ...basePayload(type, trackIndex), layerName: name, ...payload },
+        color
+      });
+      const layers = [
+        starter(0, 'shape', 'VT_DARK_STAGE', { x: 0, y: 0, width: 100, height: 100, shape: 'rect', fillColor: '#10152a', strokeColor: '#10152a', strokeWidth: 0, cornerRadius: 0 }, '#1d2444'),
+        starter(1, 'shape', 'VT_CYAN_FIELD', { x: -24, y: -14, width: 58, height: 62, shape: 'rect', fillColor: '#40C6E9', strokeColor: '#40C6E9', strokeWidth: 0, cornerRadius: 22, rotation: -18, opacity: 0.92 }, '#40C6E9'),
+        starter(2, 'shape', 'VT_PINK_FIELD', { x: 28, y: 20, width: 46, height: 54, shape: 'circle', fillColor: '#FF00FF', strokeColor: '#FFFF61', strokeWidth: 3, cornerRadius: 99, opacity: 0.9 }, '#FF00FF'),
+        starter(3, 'text', 'VIEWTUBE_STARTER_COPY', { text: 'VIEWTUBE\nMAKE SOMETHING RADICAL', x: 0, y: 0, width: 86, height: 40, fontSize: 46, fillColor: '#ffffff', strokeWidth: 0, fontFamily: 'Outfit', fontWeight: 900, textAlign: 'center' }, '#FFFF61')
       ];
-
+      const clips = layers.map((layer) => createClip(layer.trackId, layer.id, 0, 4, layer.color));
       return {
         schemaVersion: SCHEMA_VERSION,
         meta: {
-          projectName: 'UNTITLED PROJECT',
-          durationSec: 30,
-          durationSecInput: '0:00:30',
-          fps: 30,
-          resolution: '4K',
-          zoom: 1,
-          aspectRatio: '16:9',
-          exportProfile: '1080',
-          chromaEnabled: false,
-          chromaColor: '#00ff00',
-          visualDNA: 'neo-brutalist',
-          startupPhase: 'ready'
+          projectName: 'VIEWTUBE STARTER SCENE', durationSec: 12, durationSecInput: '0:00:12', fps: 30,
+          resolution: '4K', zoom: 1, aspectRatio: '16:9', exportProfile: '1080', chromaEnabled: false,
+          chromaColor: '#00ff00', visualDNA: 'viewtube-radical-v1', starterScene: 'viewtube-radical-v1', startupPhase: 'ready'
         },
-        camera: {
-          x: 0,
-          y: 0,
-          z: 0,
-          scale: 1,
-          rotate: 0,
-          keyframes: []
-        },
-        tracks,
-        layers,
-        clips,
-        transitions: [],
-        seamLinks: [],
-        trackUiState: {},
-        templatesBuiltIn: defaultBuiltInTemplates(),
-        templatesCustom: [],
-        aiJobs: [],
-        libraryItems: [],
-        captions: []
+        camera: { x: 0, y: 0, z: 0, scale: 1, rotate: 0, keyframes: [] },
+        tracks, layers, clips, transitions: [], seamLinks: [], trackUiState: {}, templatesBuiltIn: defaultBuiltInTemplates(), templatesCustom: [], aiJobs: [], libraryItems: [], captions: []
       };
     };
 
@@ -2369,7 +2577,8 @@ import JSZip from 'jszip';
         muted: Boolean(src.muted),
         audioSrcType: typeof src.audioSrcType === 'string' ? src.audioSrcType : defaults.audioSrcType,
         mediaName: typeof src.mediaName === 'string' ? src.mediaName : defaults.mediaName,
-        playWhilePaused: src.playWhilePaused !== false,
+        // Video and audio must remain at the authoritative playhead while paused.
+        playWhilePaused: Boolean(src.playWhilePaused),
         mediaFps: safeNumber(src.mediaFps, 0, 0, 120),
         overlayQuality: ['draft', 'balanced', 'full'].includes(src.overlayQuality) ? src.overlayQuality : 'balanced',
         motionAsset: src.motionAsset ? normalizeMotionAsset(src.motionAsset) : null,
@@ -2598,22 +2807,8 @@ import JSZip from 'jszip';
       return status.blockers[0] || 'Blocked';
     };
     const sourceTimeForClipAt = (sourceProject, clip, sec) => {
-      const layer = getLayerForClip(sourceProject, clip);
       const source = getVideoSourceInfo(sourceProject, clip);
-      const transition = (sourceProject.transitions || []).find((t) => t.leftClipId === clip.id || t.rightClipId === clip.id);
-      if (!transition || layer?.type !== 'media') return Math.max(0, Number(source.sourceInSec || 0) + Math.max(0, sec - Number(clip.start || 0)));
-      const left = (sourceProject.clips || []).find((candidate) => candidate.id === transition.leftClipId);
-      const right = (sourceProject.clips || []).find((candidate) => candidate.id === transition.rightClipId);
-      if (!left || !right) return Math.max(0, Number(source.sourceInSec || 0) + Math.max(0, sec - Number(clip.start || 0)));
-      const windowInfo = getTransitionWindow(transition, left, right);
-      const isLeft = clip.id === left.id;
-      if (isLeft && sec > left.end && sec <= windowInfo.endSec) {
-        return Math.max(0, Number(source.sourceOutSec ?? (source.sourceInSec + durationOf(clip))) + (sec - left.end));
-      }
-      if (!isLeft && sec < right.start && sec >= windowInfo.startSec) {
-        return Math.max(0, Number(source.sourceInSec || 0) - (right.start - sec));
-      }
-      return Math.max(0, Number(source.sourceInSec || 0) + Math.max(0, sec - Number(clip.start || 0)));
+      return clamp(sourceTimeAtTimelineSec(sourceProject, clip, sec), 0, Number(source.sourceDurationSec || Infinity));
     };
 
     const clipLocalToAbs = (clip, offsetSec) => clip.start + offsetSec;
@@ -2794,9 +2989,11 @@ import JSZip from 'jszip';
         activeTool: 'clips-media',
         railCollapsed: false,
         panelWidth: 560,
+        portraitPreviewWidth: 420,
         timelineHeight: 0,
         panelMode: 'ready',
         layoutMode: 'split-column',
+        layoutRevision: SHELL_LAYOUT_REVISION,
         lastPanelByTool: {}
       }));
       const [mediaSearchQuery, setMediaSearchQuery] = useState('');
@@ -2938,16 +3135,20 @@ import JSZip from 'jszip';
       const [shortsExtractorSegments, setShortsExtractorSegments] = useState(() => ([
         { id: uid('shortseg'), label: 'Short 1', start: 0, end: 30 }
       ]));
+      const [selectedShortsSegmentId, setSelectedShortsSegmentId] = useState(null);
       const [shortsExtractorStatus, setShortsExtractorStatus] = useState({ mode: 'idle', message: 'Upload a landscape source video to start reframing.' });
       const [shortsPreviewTimeSec, setShortsPreviewTimeSec] = useState(0);
       const [shortsPreviewPlaying, setShortsPreviewPlaying] = useState(false);
       const [shortsLiveMode, setShortsLiveMode] = useState(false);
       const [shortsSafeZone, setShortsSafeZone] = useState('none');
+      const [shortsTrackingProposal, setShortsTrackingProposal] = useState({ status: 'idle', keyframes: [], progress: 0, message: '' });
+      const [shortsStoryboard, setShortsStoryboard] = useState({ status: 'idle', frames: [], message: '' });
+      const [shortsUploadDragging, setShortsUploadDragging] = useState(false);
       const shortsSourceVideoRef = useRef(null);
       const shortsSourceStageRef = useRef(null);
       const shortsDragRef = useRef(false);
       const [renderJobState, setRenderJobState] = useState({ status: 'idle', jobId: null, progress: 0, error: '', downloadUrl: '', warnings: [] });
-      const [renderServerInfo, setRenderServerInfo] = useState({ status: 'idle', service: '', origin: '', executor: '', primaryFormat: '', blocked: [], rendererInstalled: null, error: '' });
+      const [renderServerInfo, setRenderServerInfo] = useState({ status: 'idle', service: '', origin: '', executor: '', primaryFormat: '', supportedFormats: [], blocked: [], rendererInstalled: null, error: '' });
       const [effectSession, setEffectSession] = useState({
         activeEffectId: 'digital-glitch-rgb',
         targetMode: 'selected-clip', // selected-clip | new-overlay-clip | generated-asset
@@ -3288,8 +3489,10 @@ import JSZip from 'jszip';
             ...prev,
             ...clone(snapshot.editorShellState),
             panelWidth: Math.max(560, Number(snapshot.editorShellState.panelWidth || prev.panelWidth || 560)),
+            portraitPreviewWidth: Number(snapshot.editorShellState.portraitPreviewWidth || prev.portraitPreviewWidth || 420),
             timelineHeight: Number(snapshot.editorShellState.timelineHeight) === 312 ? 0 : Number(snapshot.editorShellState.timelineHeight || prev.timelineHeight || 0),
-            layoutMode: normalizeLayoutModeId(snapshot.editorShellState.layoutMode || prev.layoutMode)
+            layoutMode: normalizeLayoutModeId(snapshot.editorShellState.layoutMode || prev.layoutMode),
+            layoutRevision: snapshot.editorShellState.layoutRevision || 'legacy'
           }));
         }
         setContextMenu(null);
@@ -3789,6 +3992,18 @@ import JSZip from 'jszip';
           aspectRatio: project.meta.aspectRatio === '9:16' ? '9:16' : '16:9'
         };
         fresh.meta = nextMeta;
+        setProject(fresh);
+        setPlayhead(0);
+        setSelectedClipId(null);
+        setSelectedClipIds([]);
+        setSelectedLayerId(null);
+      };
+      const startBlankProject = () => {
+        markHistoryAction('Start Blank');
+        const fresh = defaultProject();
+        fresh.layers = [];
+        fresh.clips = [];
+        fresh.meta = { ...fresh.meta, projectName: 'UNTITLED PROJECT', starterScene: null };
         setProject(fresh);
         setPlayhead(0);
         setSelectedClipId(null);
@@ -4723,6 +4938,24 @@ import JSZip from 'jszip';
         }
       };
 
+      const rippleDeleteSelectedClips = () => {
+        const ids = selectedClipIds.length ? selectedClipIds : (selectedClipId ? [selectedClipId] : []);
+        if (!ids.length) return;
+        markHistoryAction(ids.length > 1 ? 'Ripple Delete Selected Clips' : 'Ripple Delete Selected Clip');
+        const removed = new Set(ids);
+        setProject((prev) => {
+          const removedClips = prev.clips.filter((clip) => removed.has(clip.id));
+          const removedLayerIds = new Set(removedClips.map((clip) => clip.layerId));
+          return {
+            ...prev,
+            clips: rippleDeleteTimelineClips(prev.clips, ids),
+            layers: prev.layers.filter((layer) => !removedLayerIds.has(layer.id)),
+            transitions: (prev.transitions || []).filter((transition) => !removed.has(transition.leftClipId) && !removed.has(transition.rightClipId))
+          };
+        });
+        clearClipSelection();
+      };
+
       useEffect(() => {
         setProject((prev) => {
           // Keep unused visual tracks for stable timeline editing; no auto-pruning.
@@ -4733,27 +4966,21 @@ import JSZip from 'jszip';
       const splitClipAt = (clip, cutTimeAbs, mode) => {
         if (cutTimeAbs <= clip.start || cutTimeAbs >= clip.end) return;
         markHistoryAction(mode === 'keep-left' ? 'Split Keep Left' : mode === 'keep-right' ? 'Split Keep Right' : 'Split Clip');
-        const cutOffset = clipAbsToLocal(clip, cutTimeAbs);
 
         setProject((prev) => {
+          const sourceClip = prev.clips.find((entry) => entry.id === clip.id);
+          const split = splitTimelineClip(sourceClip, cutTimeAbs);
+          if (!split) return prev;
           const others = prev.clips.filter((c) => c.id !== clip.id);
-
           const left = {
-            ...clip,
+            ...split.left,
             id: uid('clipL'),
-            end: cutTimeAbs,
-            keyframes: clip.keyframes
-              .filter((kf) => kf.offsetSec <= cutOffset)
-              .map((kf) => ({ ...kf, id: uid('kf') }))
+            keyframes: (split.left.keyframes || []).map((kf) => ({ ...kf, id: uid('kf') }))
           };
-
           const right = {
-            ...clip,
+            ...split.right,
             id: uid('clipR'),
-            start: cutTimeAbs,
-            keyframes: clip.keyframes
-              .filter((kf) => kf.offsetSec >= cutOffset)
-              .map((kf) => ({ ...kf, id: uid('kf'), offsetSec: kf.offsetSec - cutOffset }))
+            keyframes: (split.right.keyframes || []).map((kf) => ({ ...kf, id: uid('kf') }))
           };
 
           const next = mode === 'keep-left' ? [left] : mode === 'keep-right' ? [right] : [left, right];
@@ -4865,6 +5092,11 @@ import JSZip from 'jszip';
         const rightNow = project.clips.find((c) => c.id === rightClipId);
         const existingNow = (project.transitions || []).find((t) => t.leftClipId === leftClipId && t.rightClipId === rightClipId);
         if (!leftNow || !rightNow) return;
+        const seam = validateTransitionSeam(leftNow, rightNow);
+        if (!seam.valid) {
+          setProviderStatus({ mode: 'disabled', message: seam.reason });
+          return;
+        }
         const maxDurNow = Math.max(0.05, Math.min(durationOf(leftNow), durationOf(rightNow), 8));
         const candidateNow = {
           ...(existingNow || makeTransition(leftClipId, rightClipId, patch.type || 'fade', 0.35, {})),
@@ -4872,7 +5104,7 @@ import JSZip from 'jszip';
           leftClipId,
           rightClipId,
           seamId: existingNow?.seamId || `seam:${leftClipId}:${rightClipId}`,
-          nominalSeamSec: (leftNow.end + rightNow.start) / 2,
+          nominalSeamSec: transitionWindowFor({ durationSec: 0.05 }, leftNow, rightNow).seamSec,
           durationSec: clamp(Number(patch.durationSec ?? existingNow?.durationSec ?? 0.35), 0.05, maxDurNow),
           params: normalizeTransitionParams({ ...(existingNow?.params || {}), ...(patch.params || {}) })
         };
@@ -4885,7 +5117,7 @@ import JSZip from 'jszip';
         setProject((prev) => {
           const left = prev.clips.find((c) => c.id === leftClipId);
           const right = prev.clips.find((c) => c.id === rightClipId);
-          if (!left || !right) return prev;
+          if (!left || !right || !validateTransitionSeam(left, right).valid) return prev;
           const maxDur = Math.max(0.05, Math.min(durationOf(left), durationOf(right), 8));
           const existing = prev.transitions.find((t) => t.leftClipId === leftClipId && t.rightClipId === rightClipId);
           if (existing) {
@@ -5255,6 +5487,37 @@ import JSZip from 'jszip';
         }
         if (!dragEnabled) return;
 
+        if (timelineEditMode === 'slip') {
+          const source = getVideoSourceInfo(project, clip);
+          markHistoryAction('Slip Clip Source');
+          dragRef.current = {
+            type: 'clip-slip',
+            clipId: clip.id,
+            anchorTimeSec: clickT,
+            originalClip: { ...clip },
+            sourceDurationSec: Number(source.sourceDurationSec || Number.POSITIVE_INFINITY)
+          };
+          setDragState({ type: 'clip-slip' });
+          return;
+        }
+
+        if (timelineEditMode === 'slide') {
+          const outcome = slideTimelineClip(project.clips, clip.id, 0);
+          if (outcome.reason) {
+            setProviderStatus({ mode: 'disabled', message: outcome.reason });
+            return;
+          }
+          markHistoryAction('Slide Clip');
+          dragRef.current = {
+            type: 'clip-slide',
+            clipId: clip.id,
+            anchorTimeSec: clickT,
+            originalClips: project.clips.map((entry) => ({ ...entry }))
+          };
+          setDragState({ type: 'clip-slide' });
+          return;
+        }
+
         const initialIds = (activeClipIds && activeClipIds.length)
           ? activeClipIds.filter((id) => project.clips.some((c) => c.id === id))
           : [clip.id];
@@ -5479,6 +5742,24 @@ import JSZip from 'jszip';
             return;
           }
 
+          if (ds.type === 'clip-slip') {
+            const deltaSec = t - ds.anchorTimeSec;
+            const nextClip = slipTimelineClip(ds.originalClip, deltaSec, ds.sourceDurationSec);
+            if (!nextClip) return;
+            setProject((prev) => ({
+              ...prev,
+              clips: prev.clips.map((clip) => clip.id === ds.clipId ? nextClip : clip)
+            }));
+            return;
+          }
+
+          if (ds.type === 'clip-slide') {
+            const outcome = slideTimelineClip(ds.originalClips, ds.clipId, t - ds.anchorTimeSec);
+            if (!outcome.appliedDeltaSec && outcome.reason) return;
+            setProject((prev) => ({ ...prev, clips: outcome.clips }));
+            return;
+          }
+
           if (ds.type === 'trim') {
             const clip = project.clips.find((c) => c.id === ds.clipId);
             if (!clip) return;
@@ -5631,7 +5912,7 @@ import JSZip from 'jszip';
           window.removeEventListener('pointermove', onMove);
           window.removeEventListener('pointerup', onUp);
         };
-      }, [project.clips, project.layers, project.meta.durationSec, project.tracks, sortedTracks, mods, snapEnabled, trackLayout, selectedClipIds, timelineContentWidth, cameraTrackHeight, timelineRowsHeight, dragPreview, trackLayoutById]);
+      }, [project.clips, project.layers, project.meta.durationSec, project.tracks, sortedTracks, mods, snapEnabled, timelineEditMode, trackLayout, selectedClipIds, timelineContentWidth, cameraTrackHeight, timelineRowsHeight, dragPreview, trackLayoutById]);
 
       useEffect(() => {
         setProject((prev) => {
@@ -5691,6 +5972,13 @@ import JSZip from 'jszip';
         setProject((prev) => ({
           ...prev,
           clips: prev.clips.map((c) => c.id === clipId ? { ...c, color } : c)
+        }));
+      };
+
+      const setClipVisualStyle = (clipId, visualStyle) => {
+        setProject((prev) => ({
+          ...prev,
+          clips: prev.clips.map((c) => c.id === clipId ? { ...c, visualStyle } : c)
         }));
       };
 
@@ -5756,6 +6044,15 @@ import JSZip from 'jszip';
           }
           const handleStatus = getVideoTransitionHandleStatus(sourceProject, transition, left, right);
           handleStatus.blockers.forEach((blocker) => errors.push(`Transition ${transition.id || transition.type || 'unknown'}: ${blocker}`));
+        });
+        (sourceProject.layers || []).forEach((layer) => {
+          if (layer?.type !== 'template') return;
+          const payload = layer.payload || {};
+          if (payload.templateRenderSupport !== 'final-render-supported') {
+            const name = payload.layerName || payload.motionAsset?.title || layer.id || 'Template';
+            const compositionId = payload.templateCompositionId || payload.templateManifestId || 'unknown composition';
+            errors.push(`${name}: ${compositionId} is preview-only until its Remotion composition adapter is installed.`);
+          }
         });
         const blocked = REMOTION_SKILL_RULE_STATUS.filter((rule) => rule.status === 'blocked');
         blocked.forEach((rule) => warnings.push(`${rule.id}: ${rule.note}`));
@@ -5892,7 +6189,8 @@ import JSZip from 'jszip';
         return base ? `${base}${VT_E1_RENDER_ENDPOINTS.finalMp4}` : `same-origin ${VT_E1_RENDER_ENDPOINTS.finalMp4}`;
       };
 
-      const getFinalRenderUnavailableReason = (info = renderServerInfo) => {
+      const getFinalRenderUnavailableReason = (format = 'mp4', info = renderServerInfo) => {
+        const outputFormat = normalizeRenderOutputFormat(format);
         if (!runtimeCapabilities.renderBridgeEnabled) return runtimeCapabilities.reasonByCapability.renderBridge;
         if (info?.status === 'degraded') {
           return info.error || 'Hosted Remotion renderer responded, but readiness checks are degraded. Final MP4 is disabled until capabilities report ready.';
@@ -5903,11 +6201,14 @@ import JSZip from 'jszip';
         if (info.rendererInstalled === false) {
           return info.error || 'Hosted render API responded, but the Remotion renderer is not installed.';
         }
+        if (Array.isArray(info.supportedFormats) && info.supportedFormats.length > 0 && !info.supportedFormats.includes(outputFormat)) {
+          return `Hosted renderer does not support Final ${outputFormat.toUpperCase()} yet. This format requires FFmpeg on the render worker.`;
+        }
         return '';
       };
 
       const isFinalRenderBusy = () => ['preparing', 'submitting', 'queued', 'rendering'].includes(renderJobState.status);
-      const isFinalRenderDisabled = () => isFinalRenderBusy() || Boolean(getFinalRenderUnavailableReason());
+      const isFinalRenderDisabled = (format = 'mp4') => isFinalRenderBusy() || Boolean(getFinalRenderUnavailableReason(format));
 
       const inspectStandaloneMediaUrl = (value) => {
         const raw = String(value || '').trim();
@@ -6001,6 +6302,7 @@ ${verdict.reason}`);
               origin: apiBase,
               executor: data?.capabilities?.executor || '',
               primaryFormat: data?.capabilities?.primaryFormat || '',
+              supportedFormats: Array.isArray(data?.capabilities?.supportedFormats) ? data.capabilities.supportedFormats : [],
               blocked: Array.isArray(data?.capabilities?.blocked?.readiness) ? data.capabilities.blocked.readiness : [],
               rendererInstalled: false,
               error: data?.renderer?.error || data?.error || 'Render capabilities check failed.'
@@ -6022,6 +6324,7 @@ ${verdict.reason}`);
             origin: data?.origin || apiBase,
             executor: capabilities.executor || '',
             primaryFormat: capabilities.primaryFormat || 'mp4',
+            supportedFormats: Array.isArray(capabilities.supportedFormats) ? capabilities.supportedFormats : [],
             blocked,
             rendererInstalled: Boolean(data?.renderer?.installed),
             error: data?.renderer?.error || (!ready && readinessBlocks.length ? `Readiness blocked by: ${readinessBlocks.join(', ')}` : '')
@@ -6301,7 +6604,7 @@ ${validation.errors.join('\n')}`);
         }
         setSvgFrameZipConvertStatus({ status: 'checking', message: 'Checking SVG-frame renderer...' });
         const serverInfo = await fetchRenderServerCapabilities();
-        const unavailable = getFinalRenderUnavailableReason(serverInfo);
+        const unavailable = getFinalRenderUnavailableReason('mp4', serverInfo);
         if (unavailable) {
           const failure = serverInfo?.error || unavailable || 'SVG-frame MP4 renderer is unavailable.';
           setSvgFrameZipConvertStatus({ status: 'failed', message: failure });
@@ -6355,7 +6658,7 @@ ${validation.errors.join('\n')}`);
           return;
         }
         const serverInfo = await fetchRenderServerCapabilities();
-        const unavailable = getFinalRenderUnavailableReason(serverInfo);
+        const unavailable = getFinalRenderUnavailableReason('mp4', serverInfo);
         if (unavailable) {
           const failure = serverInfo?.error || unavailable || 'Render server is reachable but the SVG frame executor is not installed.';
           setRenderJobState({ status: 'failed', jobId: null, progress: 1, error: failure, downloadUrl: '', warnings: [] });
@@ -6439,7 +6742,8 @@ ${validation.errors.join('\n')}`);
         return queueRenderMp4();
       };
 
-      const queueRenderMp4 = async () => {
+      const queueRenderMp4 = async (requestedFormat = 'mp4') => {
+        const outputFormat = normalizeRenderOutputFormat(requestedFormat);
         if (!runtimeCapabilities.renderBridgeEnabled) {
           const failure = runtimeCapabilities.reasonByCapability.renderBridge;
           setRenderJobState({ status: 'failed', jobId: null, progress: 1, error: failure, downloadUrl: '', warnings: [] });
@@ -6458,13 +6762,13 @@ ${failure}`);
           return;
         }
         const serverInfo = await fetchRenderServerCapabilities();
-        const unavailable = getFinalRenderUnavailableReason(serverInfo);
+        const unavailable = getFinalRenderUnavailableReason(outputFormat, serverInfo);
         if (unavailable) {
           const failure = serverInfo?.error || unavailable || 'Render server is reachable but the Remotion renderer is not installed.';
           setRenderJobState({ status: 'failed', jobId: null, progress: 1, error: failure, downloadUrl: '', warnings: [] });
           return;
         }
-        const { validation } = buildRenderJobPayload('mp4');
+        const { validation } = buildRenderJobPayload(outputFormat);
         if (!validation.valid) {
           alert(`Render blocked:
 ${validation.errors.join('\n')}`);
@@ -6484,7 +6788,7 @@ ${validation.errors.join('\n')}`);
 ${message}`);
           return;
         }
-        const { payload } = buildRenderJobPayload('mp4', 'RemotionRenderJobV1', preparedProject);
+        const { payload } = buildRenderJobPayload(outputFormat, 'RemotionRenderJobV1', preparedProject);
         if (!validation.valid || !payload) {
           alert(`Render blocked:
 ${validation.errors.join('\n')}`);
@@ -6522,7 +6826,7 @@ ${failure}`);
             error: '',
             downloadUrl: '',
             warnings: [
-              ...(stagedCount > 0 ? [`Staged ${stagedCount} local asset${stagedCount === 1 ? '' : 's'} for final render.`] : []),
+              ...(stagedCount > 0 ? [`Staged ${stagedCount} local asset${stagedCount === 1 ? '' : 's'} for ${renderOutputLabel(outputFormat)}.`] : []),
               ...(Array.isArray(job.warnings) ? job.warnings : [])
             ]
           });
@@ -7038,14 +7342,18 @@ ${failure}`);
       });
 
       const applyMediaSourceToLayerClips = (layerId, measured) => {
-        setProject((prev) => ({
-          ...prev,
-          clips: prev.clips.map((clip) => (
-            clip.layerId === layerId
-              ? { ...clip, ...buildVideoSourcePatch(measured.durationSec, measured.isVideo) }
-              : clip
-          ))
-        }));
+        setProject((prev) => {
+          let latestEnd = Number(prev.meta.durationSec || 0);
+          const clips = prev.clips.map((clip) => {
+            if (clip.layerId !== layerId) return clip;
+            const end = measured.isVideo && Number(measured.durationSec) > 0
+              ? Number(clip.start || 0) + Number(measured.durationSec)
+              : Number(clip.end || 0);
+            latestEnd = Math.max(latestEnd, end);
+            return { ...clip, ...buildVideoSourcePatch(measured.durationSec, measured.isVideo), end };
+          });
+          return { ...prev, clips, meta: { ...prev.meta, durationSec: latestEnd } };
+        });
       };
 
       const addMediaToSelected = async (url, knownMeta = {}) => {
@@ -7075,7 +7383,7 @@ ${failure}`);
           height: size.height,
           fillColor: '#222',
           strokeWidth: 0,
-          playWhilePaused: true,
+          playWhilePaused: false,
           mediaFps: 0
         });
         applyMediaSourceToLayerClips(selectedLayer.id, measured);
@@ -7129,7 +7437,7 @@ ${failure}`);
             height: size.height,
             strokeWidth: 0,
             fillColor: '#111',
-            playWhilePaused: true,
+            playWhilePaused: false,
             mediaFps: 0
           });
           applyMediaSourceToLayerClips(selectedLayer.id, { durationSec, isVideo });
@@ -7154,7 +7462,7 @@ ${failure}`);
           mediaName: file.name || '',
           mediaKind: 'unknown',
           mediaMime: file.type || '',
-          playWhilePaused: true,
+          playWhilePaused: false,
           mediaFps: 0
         });
       };
@@ -7222,20 +7530,7 @@ ${failure}`);
         };
         probe.src = url;
       };
-      const normalizeShortsExtractorConfig = (config = {}) => ({
-        ...SHORTS_EXTRACTOR_DEFAULT_CONFIG,
-        ...config,
-        mode: ['single', 'split'].includes(config.mode) ? config.mode : SHORTS_EXTRACTOR_DEFAULT_CONFIG.mode,
-        aspectPreset: SHORTS_EXTRACTOR_ASPECTS[config.aspectPreset] ? config.aspectPreset : SHORTS_EXTRACTOR_DEFAULT_CONFIG.aspectPreset,
-        xPosition: clamp(Number(config.xPosition ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.xPosition), 0, 1),
-        yPosition: clamp(Number(config.yPosition ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.yPosition), 0, 1),
-        zoom: clamp(Number(config.zoom ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.zoom), SHORTS_CROP_ZOOM_NEUTRAL_MULTIPLIER, SHORTS_CROP_ZOOM_MULTIPLIER_MAX),
-        splitRatio: clamp(Number(config.splitRatio ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.splitRatio), 0.15, 0.85),
-        closeupZoom: clamp(Number(config.closeupZoom ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.closeupZoom), 1, 6),
-        closeupX: clamp(Number(config.closeupX ?? config.xPosition ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.closeupX), 0, 1),
-        smoothing: clamp(Number(config.smoothing ?? SHORTS_EXTRACTOR_DEFAULT_CONFIG.smoothing), 0, 1),
-        transition: SHORTS_EXTRACTOR_TRANSITIONS.some((entry) => entry.id === config.transition) ? config.transition : SHORTS_EXTRACTOR_DEFAULT_CONFIG.transition
-      });
+      const normalizeShortsExtractorConfig = (config = {}) => normalizeSharedShortsExtractorConfig(config);
       const createShortsKeyframe = (config, time, id = uid('shortkf')) => {
         const normalized = normalizeShortsExtractorConfig(config);
         return {
@@ -7261,11 +7556,12 @@ ${failure}`);
         setShortsExtractorConfig((prev) => normalizeShortsExtractorConfig({ ...prev, ...patch }));
         setShortsExtractorKeyframes((prev) => {
           const keyframes = Array.isArray(prev) ? prev : [];
-          const hasKeyframeSystem = keyframes.length > 0;
-          const shouldWriteKeyframe = Boolean(options.writeKeyframe ?? (shortsLiveMode || hasKeyframeSystem));
+          const selectedKeyframe = keyframes.find((item) => item.id === selectedKeyframeId);
+          // Manual edits intentionally remain a working frame unless a keyframe is selected.
+          // Live mode is the only automatic write-at-playhead behavior.
+          const shouldWriteKeyframe = Boolean(options.writeKeyframe ?? shortsLiveMode);
           if (shouldWriteKeyframe) {
             const existingAtTime = keyframes.find((item) => Math.abs(Number(item.time || 0) - time) <= SHORTS_EXTRACTOR_KEYFRAME_TOLERANCE_SEC);
-            const selectedKeyframe = keyframes.find((item) => item.id === selectedKeyframeId);
             const selectedIsAtTime = selectedKeyframe && Math.abs(Number(selectedKeyframe.time || 0) - time) <= SHORTS_EXTRACTOR_KEYFRAME_TOLERANCE_SEC;
             const base = existingAtTime || (selectedIsAtTime ? selectedKeyframe : null) || getShortsPreviewConfig(time);
             const keyframe = createShortsKeyframe({ ...base, ...patch }, time, existingAtTime?.id || (selectedIsAtTime ? selectedKeyframe.id : uid('shortkf')));
@@ -7273,77 +7569,22 @@ ${failure}`);
             return [...keyframes.filter((item) => item.id !== keyframe.id && Math.abs(Number(item.time || 0) - time) > SHORTS_EXTRACTOR_KEYFRAME_TOLERANCE_SEC), keyframe]
               .sort((a, b) => Number(a.time || 0) - Number(b.time || 0));
           }
-          if (options.updateSelectedKeyframe && selectedKeyframeId) {
+          if ((options.updateSelectedKeyframe !== false && selectedKeyframeId && selectedKeyframe)) {
             return keyframes.map((item) => (item.id === selectedKeyframeId ? createShortsKeyframe({ ...item, ...patch }, item.time, item.id) : item));
           }
           if (options.applyToAll === true) return keyframes.map((item) => createShortsKeyframe({ ...item, ...patch }, item.time, item.id));
           return keyframes;
         });
       };
-      const getShortsPreviewConfig = (timeSec = shortsPreviewTimeSec) => {
-        const keyframes = [...(shortsExtractorKeyframes || [])].sort((a, b) => Number(a.time || 0) - Number(b.time || 0));
-        if (!keyframes.length) return { ...shortsExtractorConfig };
-        const time = Number(timeSec || 0);
-        const first = keyframes[0];
-        const last = keyframes[keyframes.length - 1];
-        if (time <= Number(first.time || 0)) return { ...shortsExtractorConfig, ...first };
-        if (time >= Number(last.time || 0)) return { ...shortsExtractorConfig, ...last };
-        const right = keyframes.find((entry) => Number(entry.time || 0) >= time) || last;
-        const rightIndex = keyframes.indexOf(right);
-        const left = keyframes[Math.max(0, rightIndex - 1)] || first;
-        const span = Math.max(0.0001, Number(right.time || 0) - Number(left.time || 0));
-        const rawT = clamp((time - Number(left.time || 0)) / span, 0, 1);
-        const easedT = right.transition === 'cut' ? 0 : right.transition === 'ease-in' ? rawT * rawT : right.transition === 'ease-out' ? 1 - Math.pow(1 - rawT, 2) : right.transition === 'bell' ? (1 - Math.cos(rawT * Math.PI)) / 2 : rawT;
-        const lerp = (a, b) => Number(a || 0) + (Number(b || 0) - Number(a || 0)) * easedT;
-        return {
-          ...shortsExtractorConfig,
-          ...right,
-          xPosition: lerp(left.xPosition ?? shortsExtractorConfig.xPosition, right.xPosition ?? shortsExtractorConfig.xPosition),
-          yPosition: lerp(left.yPosition ?? shortsExtractorConfig.yPosition, right.yPosition ?? shortsExtractorConfig.yPosition),
-          zoom: lerp(left.zoom ?? shortsExtractorConfig.zoom, right.zoom ?? shortsExtractorConfig.zoom),
-          splitRatio: lerp(left.splitRatio ?? shortsExtractorConfig.splitRatio, right.splitRatio ?? shortsExtractorConfig.splitRatio),
-          closeupZoom: lerp(left.closeupZoom ?? shortsExtractorConfig.closeupZoom, right.closeupZoom ?? shortsExtractorConfig.closeupZoom),
-          closeupX: lerp(left.closeupX ?? shortsExtractorConfig.closeupX ?? 0.5, right.closeupX ?? shortsExtractorConfig.closeupX ?? 0.5)
-        };
-      };
-      const getShortsCropMetricsForAspects = (config = shortsExtractorConfig, sourceAspect = 16 / 9, outputAspect = 9 / 16, regionHeightRatio = 1, closeup = false) => {
-        const normalized = normalizeShortsExtractorConfig(config);
-        const zoom = Math.max(1, Number(closeup ? normalized.closeupZoom || normalized.zoom : normalized.zoom));
-        const targetAspect = outputAspect / Math.max(0.05, Number(regionHeightRatio || 1));
-        let cropHeightPct = 100 / zoom;
-        let cropWidthPct = (targetAspect / Math.max(0.05, sourceAspect) / zoom) * 100;
-        if (cropWidthPct > 100) {
-          cropWidthPct = 100;
-          cropHeightPct = Math.min(100, (sourceAspect / targetAspect) * 100);
-        }
-        const xPosition = clamp(Number(closeup ? normalized.closeupX ?? normalized.xPosition : normalized.xPosition), 0, 1);
-        const yPosition = clamp(Number(normalized.yPosition), 0, 1);
-        const leftPct = xPosition * (100 - cropWidthPct);
-        const topPct = yPosition * (100 - cropHeightPct);
-        return { sourceAspect, outputAspect, zoom, cropWidthPct, cropHeightPct, leftPct, topPct };
-      };
+      const getShortsPreviewConfig = (timeSec = shortsPreviewTimeSec) => interpolateSharedShortsConfig(shortsExtractorConfig, shortsExtractorKeyframes, Number(timeSec || 0));
+      const getShortsCropMetricsForAspects = (config = shortsExtractorConfig, sourceAspect = 16 / 9, outputAspect = 9 / 16, regionHeightRatio = 1, closeup = false) => getSharedShortsCropMetrics(config, sourceAspect, outputAspect, regionHeightRatio, closeup);
       const getShortsCropMetrics = (config = shortsExtractorConfig) => {
         const sourceAspect = Number(shortsExtractorSource?.aspectRatio || 16 / 9);
         const outputAspect = Number((SHORTS_EXTRACTOR_ASPECTS[config.aspectPreset] || SHORTS_EXTRACTOR_ASPECTS['9:16']).ratio || 9 / 16);
         return getShortsCropMetricsForAspects(config, sourceAspect, outputAspect);
       };
       const getShortsVerticalMediaStyleForSource = (config = shortsExtractorConfig, sourceAspect = 16 / 9, outputAspect = 9 / 16, closeup = false, regionHeightRatio = 1) => {
-        const { cropWidthPct, cropHeightPct, leftPct, topPct } = getShortsCropMetricsForAspects(config, sourceAspect, outputAspect, regionHeightRatio, closeup);
-        const sourceWidthPct = 10000 / Math.max(1, cropWidthPct);
-        const sourceHeightPct = 10000 / Math.max(1, cropHeightPct);
-        return {
-          width: `${sourceWidthPct}%`,
-          height: `${sourceHeightPct}%`,
-          left: `${-(leftPct / Math.max(1, cropWidthPct)) * 100}%`,
-          top: `${-(topPct / Math.max(1, cropHeightPct)) * 100}%`,
-          right: 'auto',
-          bottom: 'auto',
-          transform: 'none',
-          transformOrigin: 'top left',
-          objectFit: 'fill',
-          maxWidth: 'none',
-          maxHeight: 'none'
-        };
+        return getSharedShortsCropStyle(config, sourceAspect, outputAspect, regionHeightRatio, closeup);
       };
       const getShortsVerticalMediaStyle = (config = shortsExtractorConfig, closeup = false, regionHeightRatio = 1) => {
         const { sourceAspect, outputAspect } = getShortsCropMetrics(config);
@@ -7387,6 +7628,46 @@ ${failure}`);
           setShortsPreviewPlaying(true);
         } catch (error) {
           setShortsExtractorStatus({ mode: 'error', message: error?.message || 'Browser blocked source preview playback.' });
+        }
+      };
+      const generateShortsStoryboard = async () => {
+        if (!shortsExtractorSource?.url) {
+          setShortsStoryboard({ status: 'error', frames: [], message: 'Upload a source video before generating a storyboard.' });
+          return;
+        }
+        const keyframes = [...shortsExtractorKeyframes].sort((a, b) => Number(a.time || 0) - Number(b.time || 0)).slice(0, 12);
+        if (!keyframes.length) return;
+        setShortsStoryboard({ status: 'loading', frames: [], message: 'Capturing keyframe thumbnails locally...' });
+        try {
+          const video = document.createElement('video');
+          video.muted = true;
+          video.playsInline = true;
+          video.preload = 'auto';
+          video.src = shortsExtractorSource.url;
+          await new Promise((resolve, reject) => {
+            video.onloadedmetadata = resolve;
+            video.onerror = () => reject(new Error('Source video could not be decoded for storyboard capture.'));
+          });
+          const canvas = document.createElement('canvas');
+          canvas.width = 240;
+          canvas.height = 135;
+          const context = canvas.getContext('2d');
+          if (!context) throw new Error('Storyboard canvas is unavailable in this browser.');
+          const frames = [];
+          for (const keyframe of keyframes) {
+            await new Promise((resolve, reject) => {
+              const onSeeked = () => { video.removeEventListener('seeked', onSeeked); resolve(); };
+              const onError = () => { video.removeEventListener('error', onError); reject(new Error('A storyboard frame could not be decoded.')); };
+              video.addEventListener('seeked', onSeeked, { once: true });
+              video.addEventListener('error', onError, { once: true });
+              video.currentTime = clamp(Number(keyframe.time || 0), 0, Math.max(0, Number(video.duration || 0) - 0.01));
+            });
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            frames.push({ id: keyframe.id, time: keyframe.time, transition: keyframe.transition, image: canvas.toDataURL('image/jpeg', 0.82) });
+          }
+          setShortsStoryboard({ status: 'ready', frames, message: `${frames.length} local storyboard cards captured.` });
+        } catch (error) {
+          setShortsStoryboard({ status: 'error', frames: [], message: error?.message || 'Storyboard generation failed.' });
         }
       };
       const commitShortsLiveConfig = (patch) => updateShortsExtractorConfig(patch);
@@ -7442,31 +7723,21 @@ ${failure}`);
         setSelectedShortsKeyframeId((prev) => (prev === keyframeId ? null : prev));
       };
       const smoothShortsKeyframes = (keyframes, effectiveness = 0.45) => {
-        const sorted = [...(keyframes || [])].sort((a, b) => Number(a.time || 0) - Number(b.time || 0));
-        if (sorted.length < 3) return sorted;
-        const radius = Math.max(1, Math.round(clamp(Number(effectiveness || 0.45), 0, 1) * 3));
-        return sorted.map((keyframe, index) => {
-          let sumX = 0;
-          let sumY = 0;
-          let count = 0;
-          for (let cursor = Math.max(0, index - radius); cursor <= Math.min(sorted.length - 1, index + radius); cursor += 1) {
-            sumX += Number(sorted[cursor].xPosition ?? 0.5);
-            sumY += Number(sorted[cursor].yPosition ?? 0.5);
-            count += 1;
-          }
-          return {
-            ...keyframe,
-            xPosition: count ? sumX / count : Number(keyframe.xPosition ?? 0.5),
-            yPosition: count ? sumY / count : Number(keyframe.yPosition ?? 0.5)
-          };
-        });
+        return smoothSharedShortsKeyframes(keyframes || [], effectiveness);
+      };
+      const applyShortsKeyframeSmoothing = () => {
+        const beforeCount = shortsExtractorKeyframes.length;
+        const smoothed = smoothShortsKeyframes(shortsExtractorKeyframes, shortsExtractorConfig.smoothing);
+        setShortsExtractorKeyframes(smoothed);
+        setShortsExtractorStatus({ mode: 'ready', message: `Smoothed ${beforeCount} keyframes. Segment endpoint keyframes were preserved.` });
       };
       const runShortsMotionTracking = async () => {
         if (!shortsExtractorSource?.url) {
           setShortsExtractorStatus({ mode: 'error', message: 'Upload a source video before running motion tracking.' });
           return;
         }
-        setShortsExtractorStatus({ mode: 'loading', message: 'Analyzing motion and generating draft crop keyframes...' });
+        setShortsTrackingProposal({ status: 'running', keyframes: [], progress: 0, message: 'Analyzing source frames locally...' });
+        setShortsExtractorStatus({ mode: 'loading', message: 'Analyzing motion and preparing reviewable draft keyframes...' });
         try {
           const video = document.createElement('video');
           video.muted = true;
@@ -7533,6 +7804,7 @@ ${failure}`);
                 }
               }
               previous = frame.data;
+              setShortsTrackingProposal((prev) => ({ ...prev, progress: Math.round(((index + 1) / Math.max(1, steps + 1)) * 100) }));
             }
           }
           const anchors = [
@@ -7540,18 +7812,37 @@ ${failure}`);
             { id: uid('shortkf'), time: duration, ...shortsExtractorConfig }
           ];
           const merged = smoothShortsKeyframes([...anchors, ...generated], shortsExtractorConfig.smoothing);
-          setShortsExtractorKeyframes(merged);
-          setSelectedShortsKeyframeId(merged[0]?.id || null);
-          setShortsExtractorStatus({ mode: 'ready', message: `Generated ${generated.length} draft motion keyframe${generated.length === 1 ? '' : 's'}. Review and insert when ready.` });
+          setShortsTrackingProposal({ status: 'ready', keyframes: merged, progress: 100, message: `${merged.length} reviewable draft keyframes are ready.` });
+          setShortsExtractorStatus({ mode: 'ready', message: `Generated ${generated.length} draft motion keyframe${generated.length === 1 ? '' : 's'}. Apply or discard the proposal.` });
         } catch (error) {
+          setShortsTrackingProposal({ status: 'error', keyframes: [], progress: 0, message: error?.message || 'Motion tracking failed.' });
           setShortsExtractorStatus({ mode: 'error', message: error?.message || 'Motion tracking failed.' });
         }
+      };
+      const applyShortsTrackingProposal = (mode = 'append') => {
+        const proposal = shortsTrackingProposal.keyframes || [];
+        if (!proposal.length) return;
+        const rangeStart = Math.min(...shortsExtractorSegments.map((segment) => Number(segment.start || 0)));
+        const rangeEnd = Math.max(...shortsExtractorSegments.map((segment) => Number(segment.end || 0)));
+        setShortsExtractorKeyframes((prev) => {
+          const retained = mode === 'replace-range'
+            ? prev.filter((keyframe) => Number(keyframe.time || 0) < rangeStart || Number(keyframe.time || 0) > rangeEnd)
+            : prev;
+          return [...retained, ...proposal]
+            .sort((a, b) => Number(a.time || 0) - Number(b.time || 0))
+            .filter((keyframe, index, list) => index === 0 || Math.abs(Number(keyframe.time || 0) - Number(list[index - 1].time || 0)) > SHORTS_EXTRACTOR_KEYFRAME_TOLERANCE_SEC);
+        });
+        setSelectedShortsKeyframeId(proposal[0]?.id || null);
+        setShortsTrackingProposal({ status: 'applied', keyframes: [], progress: 100, message: `Motion proposal applied as ${mode === 'replace-range' ? 'a replacement for the selected segment range' : 'new keyframes'}.` });
+        setShortsExtractorStatus({ mode: 'ready', message: 'Motion proposal applied. Review the keyframes before inserting Shorts clips.' });
       };
       const addShortsExtractorSegment = () => {
         const duration = Math.max(1, Number(shortsExtractorSource?.durationSec || project.meta.durationSec || 30));
         const start = clamp(playhead, 0, duration - 0.1);
         const end = clamp(start + 15, start + 0.1, duration);
-        setShortsExtractorSegments((prev) => [...prev, { id: uid('shortseg'), label: `Short ${prev.length + 1}`, start, end }]);
+        const nextSegment = { id: uid('shortseg'), label: `Short ${shortsExtractorSegments.length + 1}`, start, end };
+        setShortsExtractorSegments((prev) => [...prev, nextSegment]);
+        setSelectedShortsSegmentId(nextSegment.id);
       };
       const updateShortsExtractorSegment = (segmentId, patch) => {
         setShortsExtractorSegments((prev) => prev.map((segment) => {
@@ -7564,6 +7855,7 @@ ${failure}`);
       };
       const removeShortsExtractorSegment = (segmentId) => {
         setShortsExtractorSegments((prev) => prev.filter((segment) => segment.id !== segmentId));
+        setSelectedShortsSegmentId((prev) => (prev === segmentId ? null : prev));
       };
       const onUploadShortsSource = async (file) => {
         if (!file) return;
@@ -7573,6 +7865,14 @@ ${failure}`);
         }
         const url = URL.createObjectURL(file);
         const measured = await resolveMediaDimensionsFromUrl(url);
+        if (!measured.width || !measured.height) {
+          URL.revokeObjectURL(url);
+          setShortsExtractorStatus({ mode: 'error', message: `${file.name || 'This video'} could not be decoded by this browser. Try H.264 MP4 or a browser-supported MOV codec.` });
+          return;
+        }
+        const previousUrl = shortsExtractorSource?.url;
+        const isReferencedByTimeline = previousUrl && project.layers.some((layer) => layer?.payload?.mediaUrl === previousUrl);
+        if (previousUrl?.startsWith('blob:') && !isReferencedByTimeline) URL.revokeObjectURL(previousUrl);
         const durationSec = Math.max(0, Number(measured.durationSec || 0));
         const source = {
           id: uid('shortsrc'),
@@ -7580,6 +7880,9 @@ ${failure}`);
           name: file.name || 'landscape-source-video',
           mimeType: file.type || '',
           mediaKind: 'video',
+          mediaMime: file.type || '',
+          mediaName: file.name || 'landscape-source-video',
+          decodeState: durationSec > 0 ? 'ready' : 'duration-unknown',
           width: measured.width || 1920,
           height: measured.height || 1080,
           durationSec,
@@ -7590,6 +7893,7 @@ ${failure}`);
         const lastKeyframeId = uid('shortkf');
         setShortsExtractorSource(source);
         setShortsExtractorSegments([{ id: uid('shortseg'), label: 'Short 1', start: 0, end: segmentEnd }]);
+        setSelectedShortsSegmentId(null);
         setShortsExtractorKeyframes([
           { id: firstKeyframeId, time: 0, ...SHORTS_EXTRACTOR_DEFAULT_CONFIG },
           { id: lastKeyframeId, time: Math.max(0.1, segmentEnd), ...SHORTS_EXTRACTOR_DEFAULT_CONFIG }
@@ -7597,6 +7901,8 @@ ${failure}`);
         setSelectedShortsKeyframeId(firstKeyframeId);
         setShortsExtractorConfig({ ...SHORTS_EXTRACTOR_DEFAULT_CONFIG });
         setShortsPreviewTimeSec(0);
+        setShortsTrackingProposal({ status: 'idle', keyframes: [], progress: 0, message: '' });
+        setShortsStoryboard({ status: 'idle', frames: [], message: '' });
         setShortsExtractorStatus({ mode: 'ready', message: `${file.name || 'Video'} loaded. Configure framing, then insert segments into the timeline.` });
       };
       useEffect(() => {
@@ -7683,7 +7989,7 @@ ${failure}`);
             layer.payload.sourceDurationSec = shortsExtractorSource.durationSec || undefined;
             layer.payload.mediaDurationSec = shortsExtractorSource.durationSec || undefined;
             layer.payload.sourceDurationUnknown = !shortsExtractorSource.durationSec;
-            layer.payload.playWhilePaused = true;
+            layer.payload.playWhilePaused = false;
             layer.payload.shortsExtractor = {
               version: 'VT_E1ShortsExtractorV1',
               source: {
@@ -7698,6 +8004,10 @@ ${failure}`);
               segment: { id: segment.id, label: segment.label, start: segment.start, end: segment.end },
               output: { aspectPreset: shortsExtractorConfig.aspectPreset, width: aspect.width, height: aspect.height }
             };
+            layer.payload.shortsExtractor.version = 'VT_E1ShortsExtractorV2';
+            layer.payload.shortsExtractor.safeZone = shortsSafeZone;
+            layer.payload.shortsExtractor.source.mediaKind = shortsExtractorSource.mediaKind || 'video';
+            layer.payload.shortsExtractor.source.mediaMime = shortsExtractorSource.mimeType || '';
             const start = cursor;
             const end = start + len;
             const clip = createClip(targetTrack.id, layer.id, start, end, COLORS.orange);
@@ -8421,8 +8731,10 @@ ${failure}`);
               ...prev,
               ...clone(parsed.editorShellState),
               panelWidth: Math.max(560, Number(parsed.editorShellState.panelWidth || prev.panelWidth || 560)),
+              portraitPreviewWidth: Number(parsed.editorShellState.portraitPreviewWidth || prev.portraitPreviewWidth || 420),
               timelineHeight: Number(parsed.editorShellState.timelineHeight) === 312 ? 0 : Number(parsed.editorShellState.timelineHeight || prev.timelineHeight || 0),
-              layoutMode: normalizeLayoutModeId(parsed.editorShellState.layoutMode || prev.layoutMode)
+              layoutMode: normalizeLayoutModeId(parsed.editorShellState.layoutMode || prev.layoutMode),
+              layoutRevision: parsed.editorShellState.layoutRevision || 'legacy'
             }));
           }
           if (parsed?.renderProfile === 'draft' || parsed?.renderProfile === 'final') setRenderProfile(parsed.renderProfile);
@@ -8496,6 +8808,11 @@ ${failure}`);
 
       const selectedTemplateStudio = TEMPLATE_STUDIO_LIBRARY_BY_ID[templateStudioId] || TEMPLATE_STUDIO_LIBRARY[0];
       const selectedTemplateStudioBindings = templateStudioBindings[templateStudioId] || { ...(selectedTemplateStudio?.defaultBindings || {}) };
+      const templatePreviewCopy = String(Object.values(selectedTemplateStudioBindings)[0] || selectedTemplateStudio?.name || 'VIEWTUBE')
+        .split(/\n|\|/)
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .slice(0, 3);
 
       const updateTemplateStudioBinding = (slotId, value) => {
         setTemplateStudioBindings((prev) => ({
@@ -8546,6 +8863,10 @@ ${failure}`);
           };
           layer.payload.templateBundleId = bundleId;
           layer.payload.templateManifestId = selectedTemplateStudio.id;
+          layer.payload.templateCompositionId = selectedTemplateStudio.compositionId || selectedTemplateStudio.id;
+          layer.payload.templateRenderSupport = selectedTemplateStudio.renderSupport || 'preview-only';
+          layer.payload.templateSource = selectedTemplateStudio.source || 'ViewTube Template Studio';
+          layer.payload.templatePreviewTheme = selectedTemplateStudio.previewTheme || selectedTemplateStudio.family;
           layer.payload.templateAspectRatio = selectedTemplateStudio.aspectRatio;
           layer.payload.templateSlots = clone(selectedTemplateStudioBindings);
           layer.payload.templateNodes = selectedTemplateStudio.slots.map((slot, idx) => ({
@@ -8567,6 +8888,8 @@ ${failure}`);
           clip.isTemplateCompound = true;
           clip.templateBundleId = bundleId;
           clip.templateManifestId = selectedTemplateStudio.id;
+          clip.templateCompositionId = layer.payload.templateCompositionId;
+          clip.templateRenderSupport = layer.payload.templateRenderSupport;
 
           p.layers = [...p.layers, layer];
           p.clips = [...p.clips, clip];
@@ -10299,14 +10622,13 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
           const node = videoNodeMapRef.current.get(clip.id);
           if (!node) return;
           const localT = sourceTimeForClipAt(project, clip, previewSec);
-          const playWhilePaused = Boolean(payload.playWhilePaused ?? true);
           const fpsOverride = Number(payload.mediaFps ?? 0);
           const rate = fpsOverride > 0 ? clamp(fpsOverride / Math.max(1, Number(project.meta.fps || 30)), 0.1, 4) : 1;
           node.playbackRate = rate;
           node.muted = !isPlaying || Boolean(payload.muted);
           node.volume = clamp(Number(payload.volume ?? 1), 0, 1);
           if (Math.abs((node.currentTime || 0) - localT) > 0.16) node.currentTime = localT;
-          if (isPlaying || playWhilePaused) node.play().catch((error) => {
+          if (isPlaying) node.play().catch((error) => {
             if (isPlaying) setProviderStatus({ mode: 'error', message: `Video playback failed: ${error?.message || String(error)}` });
           });
           else node.pause();
@@ -11069,8 +11391,14 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
         : '';
       const timelineCommandRegistry = [
         { id: 'split-selected', group: 'split-trim', label: 'Split Selected at Playhead', icon: Scissors, pages: ['clips'], enabled: selectedCommandClipIds.length > 0 && !selectionLockReason, disabledReason: selectionLockReason || 'Select at least one clip.', run: () => splitSelectedAtPlayhead() },
+        { id: 'split-keep-left', group: 'split-trim', label: 'Cut at Playhead and Keep Left', icon: Scissors, pages: ['clips'], enabled: Boolean(selectedClip && playhead > selectedClip.start && playhead < selectedClip.end) && !selectionLockReason, disabledReason: selectionLockReason || 'Place the playhead inside one selected clip.', run: () => selectedClip && splitClipAt(selectedClip, playhead, 'keep-left') },
+        { id: 'split-keep-right', group: 'split-trim', label: 'Cut at Playhead and Keep Right', icon: Scissors, pages: ['clips'], enabled: Boolean(selectedClip && playhead > selectedClip.start && playhead < selectedClip.end) && !selectionLockReason, disabledReason: selectionLockReason || 'Place the playhead inside one selected clip.', run: () => selectedClip && splitClipAt(selectedClip, playhead, 'keep-right') },
         { id: 'duplicate-selected', group: 'duplicate-move', label: 'Duplicate Selected Clip(s)', icon: Copy, pages: ['clips'], enabled: selectedCommandClipIds.length > 0 && !selectionLockReason, disabledReason: selectionLockReason || 'Select at least one clip.', run: () => duplicateSelectedClips() },
         { id: 'delete-selected', group: 'delete', label: 'Delete Selected Clip(s)', icon: Trash2, pages: ['clips'], enabled: selectedCommandClipIds.length > 0 && !selectionLockReason, disabledReason: selectionLockReason || 'Select at least one clip.', run: () => removeClipsAndLayers(selectedCommandClipIds) },
+        { id: 'ripple-delete-selected', group: 'delete', label: 'Ripple Delete Selected Clip(s)', icon: Trash2, pages: ['clips'], enabled: selectedCommandClipIds.length > 0 && !selectionLockReason, disabledReason: selectionLockReason || 'Select at least one clip.', run: () => rippleDeleteSelectedClips() },
+        { id: 'edit-mode-normal', group: 'slip-slide', label: 'Timeline Move Mode', icon: ArrowRightLeft, pages: ['clips'], enabled: timelineEditMode !== 'normal', disabledReason: 'Move mode is already active.', run: () => setTimelineEditMode('normal') },
+        { id: 'edit-mode-slip', group: 'slip-slide', label: 'Slip Edit Mode', icon: SlidersHorizontal, pages: ['clips'], enabled: featureFlags.slipEditMode && timelineEditMode !== 'slip', disabledReason: featureFlags.slipEditMode ? 'Slip mode is already active.' : 'Slip editing is disabled in feature flags.', run: () => setTimelineEditMode('slip') },
+        { id: 'edit-mode-slide', group: 'slip-slide', label: 'Slide Edit Mode', icon: ArrowRightLeft, pages: ['clips'], enabled: featureFlags.slideEditMode && timelineEditMode !== 'slide', disabledReason: featureFlags.slideEditMode ? 'Slide mode is already active.' : 'Slide editing is disabled in feature flags.', run: () => setTimelineEditMode('slide') },
         { id: 'group-selected', group: 'merge-group', label: 'Group / Ungroup Selected Clips', icon: Link, pages: ['clips'], enabled: selectedCommandClipIds.length > 1 && !selectionLockReason, disabledReason: selectionLockReason || 'Select two or more clips.', run: () => toggleGroupClips() },
         { id: 'toggle-visibility', group: 'selection', label: 'Toggle Selected Clip Visibility', icon: selectedClip?.visible === false ? EyeOff : Eye, pages: ['clips'], enabled: Boolean(selectedClip) && !selectionLockReason, disabledReason: selectionLockReason || 'Select a clip.', run: () => selectedClip && setClipVisible(selectedClip.id, selectedClip.visible === false) },
         { id: 'route-layer', group: 'selection', label: 'Route Selected Layer', icon: Layers, pages: ['clips'], enabled: Boolean(selectedClip), disabledReason: 'Select a clip.', run: () => selectedClip && setSelectedLayerId(selectedClip.layerId) },
@@ -11084,7 +11412,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
         { id: 'fit-selection', group: 'zoom-view', label: 'Fit Timeline to Selection', icon: Crosshair, pages: ['clips'], enabled: selectedCommandClipIds.length > 0, disabledReason: 'Select at least one clip.', run: () => fitTimelineToSelection() },
         { id: 'toggle-snap', group: 'zoom-view', label: `Snap ${snapEnabled ? 'Off' : 'On'}`, icon: Magnet, pages: ['clips'], enabled: true, disabledReason: '', run: () => setSnapEnabled((v) => !v) }
       ];
-      const selectedClipActionCommandIds = ['split-selected', 'duplicate-selected', 'delete-selected', 'group-selected', 'toggle-visibility', 'route-layer', 'copy-keyframe', 'paste-keyframe'];
+      const selectedClipActionCommandIds = ['split-selected', 'split-keep-left', 'split-keep-right', 'duplicate-selected', 'delete-selected', 'ripple-delete-selected', 'group-selected', 'toggle-visibility', 'route-layer', 'copy-keyframe', 'paste-keyframe'];
       const selectedClipActionCommands = selectedClipActionCommandIds.map((id) => timelineCommandRegistry.find((command) => command.id === id)).filter(Boolean);
       const selectedClipActionLabels = {
         'split-selected': 'Split at playhead',
@@ -11175,6 +11503,31 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
         if (!layout) return;
         setEditorShellState((prev) => ({ ...prev, layoutMode: layout.id }));
       };
+      const resetPortraitLayout = () => {
+        setEditorShellState((prev) => ({
+          ...prev,
+          layoutMode: 'split-column',
+          panelWidth: 560,
+          portraitPreviewWidth: 420,
+          timelineHeight: 0,
+          layoutRevision: SHELL_LAYOUT_REVISION
+        }));
+      };
+      const applyAspectRatio = (aspectRatio) => {
+        updateMeta({ aspectRatio });
+        if (aspectRatio !== '9:16') return;
+        setEditorShellState((prev) => {
+          if (prev.layoutRevision === SHELL_LAYOUT_REVISION) return prev;
+          return {
+            ...prev,
+            layoutMode: 'split-column',
+            panelWidth: 560,
+            portraitPreviewWidth: 420,
+            timelineHeight: 0,
+            layoutRevision: SHELL_LAYOUT_REVISION
+          };
+        });
+      };
       const setActiveToolTab = (tabId) => {
         const pageEntry = PAGE_REGISTRY_BY_ID[tabId];
         const rawTargetId = pageEntry?.toolId || tabId;
@@ -11204,6 +11557,10 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
       const activePageId = resolvePageIdFromState(editorShellState.activeTool, activeTab);
       const activePage = PAGE_REGISTRY_BY_ID[activePageId] || PAGE_REGISTRY[1];
       const activeLayout = LAYOUT_REGISTRY_BY_ID[normalizeLayoutModeId(editorShellState.layoutMode)] || LAYOUT_REGISTRY[0];
+      useEffect(() => {
+        if (project.meta.aspectRatio !== '9:16' || editorShellState.layoutRevision === SHELL_LAYOUT_REVISION) return;
+        resetPortraitLayout();
+      }, [project.meta.aspectRatio, editorShellState.layoutRevision]);
       const activeTopbarButtons = TOPBAR_BUTTONS_BY_PAGE[activePageId] || TOPBAR_BUTTONS_BY_PAGE[editorShellState.activeTool] || TOPBAR_BUTTONS_BY_PAGE.clips;
       const hasTopbarButton = (buttonId) => activeTopbarButtons.includes(buttonId);
       const isProjectsPage = activePageId === 'projects';
@@ -11330,6 +11687,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
         const startX = event.clientX;
         const startY = event.clientY;
         const startPanelWidth = Number(editorShellState.panelWidth || 560);
+        const startPortraitPreviewWidth = Number(editorShellState.portraitPreviewWidth || 420);
         const startTimelineHeight = Number(editorShellState.timelineHeight || 312);
         const effectiveMode = mode === 'sidebar' ? 'panel' : mode;
         const timelineMin = 248;
@@ -11343,6 +11701,16 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
               return;
             }
             const deltaX = moveEvent.clientX - startX;
+            if (project.meta.aspectRatio === '9:16') {
+              const leftWorkspaceMin = editorShellState.railCollapsed ? 180 : 320;
+              const previewMax = Math.max(260, shellViewport.w - leftWorkspaceMin - 40);
+              setEditorShellState((prev) => ({
+                ...prev,
+                portraitPreviewWidth: clamp(startPortraitPreviewWidth - deltaX, 260, previewMax),
+                layoutRevision: SHELL_LAYOUT_REVISION
+              }));
+              return;
+            }
             setEditorShellState((prev) => ({
               ...prev,
               panelWidth: clamp(startPanelWidth + deltaX, 280, 760)
@@ -11372,11 +11740,14 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
         const gaussian = Math.exp(-(dist * dist) / 0.82);
         const scale = !near ? 0.56 : 0.84 + (gaussian * 0.24);
         const tx = !near ? -33 : -14 + (gaussian * 28);
+        const baseShadow = 'inset 0 2px 0 rgba(255,255,255,0.64), inset 0 -3px 0 rgba(17,17,17,0.24), 2px 2px 0 rgba(17,17,17,0.22)';
+        const selectedShadow = isActive ? '0 0 0 3px rgba(45,140,255,0.96), 0 0 14px rgba(45,140,255,0.64)' : '';
+        const hoverShadow = near ? `0 0 0 2px rgba(255,255,255,0.98), 0 0 ${8 + gaussian * 10}px rgba(255,255,255,0.98)` : '';
         return {
           backgroundColor: color,
-          outline: isActive ? '1px solid #1a1a1a' : 'none',
+          outline: 'none',
           transform: `translateX(${tx}px) scale(${scale})`,
-          boxShadow: near ? `0 0 0 2px rgba(255,255,255,0.98), 0 0 ${8 + gaussian * 10}px rgba(255,255,255,0.98)` : 'none',
+          boxShadow: [baseShadow, selectedShadow, hoverShadow].filter(Boolean).join(', '),
           zIndex: near ? Math.round(8 + gaussian * 20) : 3
         };
       };
@@ -11533,13 +11904,15 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
       const shellFrameHeight = Math.max(340, shellViewportHeight - 14);
       const shellRowsBudget = Math.max(240, shellFrameHeight - shellOuterPadding - shellGutterSize);
       const isPortraitPreviewColumn = isVerticalAspect;
+      const portraitLeftWorkspaceMin = editorShellState.railCollapsed ? 180 : 320;
       const portraitPreviewColumnWidth = (() => {
-        const available = Math.max(220, shellViewport.w - shellSidebarWidth - (shellGutterSize * 3) - (shellOuterPadding * 2) - 260);
+        const available = Math.max(260, shellViewport.w - portraitLeftWorkspaceMin - (shellGutterSize * 2) - (shellOuterPadding * 2));
         const ideal = Math.round((shellFrameHeight - shellOuterPadding) * (9 / 16));
-        return clamp(Math.min(ideal, available), 220, 620);
+        const requested = Number(editorShellState.portraitPreviewWidth || ideal);
+        return clamp(requested, 260, Math.min(720, available));
       })();
       const shellGridColumns = isPortraitPreviewColumn
-        ? `${shellSidebarWidth}px ${shellGutterSize}px minmax(0, 1fr) ${shellGutterSize}px ${portraitPreviewColumnWidth}px`
+        ? `minmax(${portraitLeftWorkspaceMin}px, 1fr) ${shellGutterSize}px ${portraitPreviewColumnWidth}px`
         : `${shellSidebarWidth}px ${shellGutterSize}px minmax(0, 1fr)`;
       const preferredTopHeight = clamp(Math.round(shellRowsBudget * 0.64), 180, 450);
       const optimalTimelineHeight = (typeof timelineRowsHeight !== 'undefined' ? timelineRowsHeight : 150) + 72;
@@ -11556,12 +11929,12 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
       const timelineHeight = clamp(requestedTimelineHeight, timelineMinHeight, Math.min(620, timelineMaxForFrame));
       const shellTopHeight = Math.max(120, shellRowsBudget - timelineHeight);
       const shellGridRows = `minmax(0, 1fr) ${shellGutterSize}px ${timelineHeight}px`;
-      const previewGridColumn = isPortraitPreviewColumn ? '5 / 6' : '3 / 4';
+      const previewGridColumn = '3 / 4';
       const previewGridRow = isPortraitPreviewColumn ? '1 / 4' : '1 / 2';
-      const timelineGridColumn = isPortraitPreviewColumn ? '3 / 4' : (isSplitColumnLayout ? '3 / 4' : '1 / 4');
+      const timelineGridColumn = isPortraitPreviewColumn ? '1 / 2' : (isSplitColumnLayout ? '3 / 4' : '1 / 4');
       const timelineGridRow = '3 / 4';
-      const sidebarGridRow = (isSplitColumnLayout || isPortraitPreviewColumn) ? '1 / 4' : '1 / 2';
-      const timelineResizeGridColumn = (isSplitColumnLayout || isPortraitPreviewColumn) ? '3 / 4' : '1 / -1';
+      const sidebarGridRow = isPortraitPreviewColumn ? '1 / 2' : (isSplitColumnLayout ? '1 / 4' : '1 / 2');
+      const timelineResizeGridColumn = isPortraitPreviewColumn ? '1 / 2' : (isSplitColumnLayout ? '3 / 4' : '1 / -1');
       const previewPanelPadding = 0;
       const stageAspectRatioValue = isVerticalAspect ? (9 / 16) : (16 / 9);
       const previewSectionStyle = {
@@ -11650,15 +12023,22 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
               </select>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <button className="neo-btn" style={{ background: project.meta.aspectRatio === '16:9' ? '#111' : COLORS.white, color: project.meta.aspectRatio === '16:9' ? '#fff' : '#111' }} onClick={() => updateMeta({ aspectRatio: '16:9' })}>16:9</button>
-              <button className="neo-btn" style={{ background: project.meta.aspectRatio === '9:16' ? '#111' : COLORS.white, color: project.meta.aspectRatio === '9:16' ? '#fff' : '#111' }} onClick={() => updateMeta({ aspectRatio: '9:16' })}>9:16</button>
+              <button className="neo-btn" style={{ background: project.meta.aspectRatio === '16:9' ? '#111' : COLORS.white, color: project.meta.aspectRatio === '16:9' ? '#fff' : '#111' }} onClick={() => applyAspectRatio('16:9')}>16:9</button>
+              <button className="neo-btn" style={{ background: project.meta.aspectRatio === '9:16' ? '#111' : COLORS.white, color: project.meta.aspectRatio === '9:16' ? '#fff' : '#111' }} onClick={() => applyAspectRatio('9:16')}>9:16</button>
             </div>
+            {project.meta.aspectRatio === '9:16' ? (
+              <button className="neo-btn w-full" style={{ background: COLORS.white }} onClick={resetPortraitLayout}>
+                Reset Portrait Layout
+              </button>
+            ) : null}
             <div className="border-2 border-black rounded-md p-2 bg-white text-[10px] font-black">
               <div>Resolved: {dims.width}x{dims.height} @ {project.meta.fps || 30} FPS</div>
               <div>Duration: {formatHMS(project.meta.durationSec || 0)} · Clips: {project.clips.length}</div>
+              <div>Shell: {editorShellState.layoutRevision || 'legacy'} · {project.meta.aspectRatio === '9:16' ? 'portrait right-column' : 'landscape'}</div>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <button className="neo-btn" style={{ background: COLORS.yellow }} onClick={startNewProjectFromMeta}><Plus size={14} /> New Project</button>
+              <button className="neo-btn" style={{ background: COLORS.yellow }} onClick={startNewProjectFromMeta}><Sparkles size={14} /> Starter Scene</button>
+              <button className="neo-btn" style={{ background: COLORS.white }} onClick={startBlankProject}><Plus size={14} /> Start Blank</button>
               <button className="neo-btn" style={{ background: COLORS.cyan }} onClick={saveManualSession}><Save size={14} /> Save Local Project</button>
               <button className="neo-btn bg-white" onClick={restoreManualSession}><Upload size={14} /> Restore Local Project</button>
               <button className="neo-btn" style={{ background: COLORS.magenta }} onClick={clearManualSession}><Trash2 size={14} /> Clear Local Save</button>
@@ -11677,8 +12057,8 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                 <Upload size={14} /> Load Project JSON
                 <input type="file" accept="application/json" className="hidden" onChange={(e) => importJson(e.target.files?.[0])} />
               </label>
-              <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.pink }} onClick={exportSvg}><FileCode size={14} /> SVG Debug</button>
-              <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.purple, color: '#fff' }} onClick={exportHtml}><Code2 size={14} /> HTML Debug</button>
+              <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.pink }} onClick={exportSvg}><FileCode size={14} /> SVG Snapshot</button>
+              <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.purple, color: '#fff' }} onClick={exportHtml}><Code2 size={14} /> HTML Snapshot</button>
             </div>
             <div className="border-2 border-black rounded-md p-2 bg-white text-[10px] font-black leading-5">
               <div>Session contract: VT_E1.ManualSession.v3</div>
@@ -11726,6 +12106,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
             <div>Status: {String(renderServerInfo.status || 'idle').toUpperCase()}</div>
             <div>Executor: {renderServerInfo.executor || 'checking'}</div>
             <div>Primary Format: {(renderServerInfo.primaryFormat || 'mp4').toUpperCase()}</div>
+            <div>Hosted Formats: {renderServerInfo.supportedFormats?.length ? renderServerInfo.supportedFormats.map((format) => format.toUpperCase()).join(', ') : 'checking'}</div>
             <div>Browser Route: {getRenderBrowserRouteLabel()}</div>
             <div>Worker Route: server proxy via VT_E1_RENDER_SERVICE_URL</div>
             {renderServerInfo.origin ? <div>Worker Origin: {renderServerInfo.origin}</div> : null}
@@ -11746,16 +12127,17 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
             <div>Final MP4 - Remotion: {VT_E1_RENDER_ENDPOINTS.finalMp4}</div>
             <div>Final MP4 - SVG Frames: {VT_E1_RENDER_ENDPOINTS.svgFrames}</div>
             <div>SVG ZIP -&gt; MP4: {VT_E1_RENDER_ENDPOINTS.svgFramesFromZip}</div>
-            <div>Preview Capture: browser WebM/MOV only, not final parity MP4.</div>
+            <div>Final formats are hosted Remotion renders. Browser capture is preview-only.</div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: renderMode === 'remotion-mp4' ? COLORS.green : COLORS.white }} onClick={() => setRenderMode('remotion-mp4')}>Final MP4 - Remotion</button>
             <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: renderMode === 'svg-frames-mp4' ? COLORS.green : COLORS.white }} onClick={() => setRenderMode('svg-frames-mp4')}>Final MP4 - SVG Frames</button>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: isFinalRenderDisabled() ? '#ddd' : COLORS.orange }} onClick={queueSelectedFinalRender} disabled={isFinalRenderDisabled()} title={getFinalRenderUnavailableReason() || 'Queue hosted final MP4 render'}><Download size={14} /> {renderJobState.status === 'preparing' ? 'Preparing Render' : renderJobState.status === 'submitting' ? 'Submitting' : (renderJobState.status === 'queued' || renderJobState.status === 'rendering') ? 'Rendering MP4' : (renderMode === 'svg-frames-mp4' ? 'Final MP4 - SVG Frames' : 'Final MP4 - Remotion')}</button>
-            <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.green }} disabled={isCapturing} onClick={capturePreviewWebm}><Video size={14} /> Preview WEBM</button>
-            <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.yellow }} disabled={isCapturing} onClick={() => capturePreviewVideo('mov')}><Download size={14} /> Preview MOV</button>
+            <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: isFinalRenderDisabled() ? '#ddd' : COLORS.orange }} onClick={queueSelectedFinalRender} disabled={isFinalRenderDisabled()} title={getFinalRenderUnavailableReason() || 'Queue hosted final MP4 render'}><Download size={14} /> {renderJobState.status === 'preparing' ? 'Preparing Render' : renderJobState.status === 'submitting' ? 'Submitting' : (renderJobState.status === 'queued' || renderJobState.status === 'rendering') ? 'Rendering' : (renderMode === 'svg-frames-mp4' ? 'Final MP4 - SVG Frames' : 'Final MP4')}</button>
+            <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: isFinalRenderDisabled('mov') ? '#ddd' : COLORS.blue }} onClick={() => queueRenderMp4('mov')} disabled={isFinalRenderDisabled('mov')} title={getFinalRenderUnavailableReason('mov') || 'Render MP4 then transcode Final MOV on the hosted worker'}><Download size={14} /> Final MOV</button>
+            <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: isFinalRenderDisabled('webm') ? '#ddd' : COLORS.green }} onClick={() => queueRenderMp4('webm')} disabled={isFinalRenderDisabled('webm')} title={getFinalRenderUnavailableReason('webm') || 'Render MP4 then transcode Final WebM on the hosted worker'}><Video size={14} /> Final WebM</button>
+            <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.white }} disabled={isCapturing} onClick={capturePreviewWebm} title="Browser preview capture only; not final-render parity"><Video size={14} /> Preview Capture</button>
           </div>
           <div className="border-2 border-black rounded-md p-2 bg-white space-y-2">
             <div className="flex items-center justify-between gap-2">
@@ -11821,43 +12203,14 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
           )}
           {renderJobState.downloadUrl ? (
             <a className="neo-btn inline-flex items-center justify-center gap-1 w-full" style={{ background: COLORS.green }} href={renderJobState.downloadUrl} download>
-              <Download size={14} /> Download MP4
+              <Download size={14} /> Download Final File
             </a>
           ) : null}
         </div>
       );
       const getShortsPayloadPreviewConfig = (payload = {}, sourceSeconds = 0) => {
         const extractor = payload.shortsExtractor || {};
-        const base = {
-          ...SHORTS_EXTRACTOR_DEFAULT_CONFIG,
-          ...(extractor.config || {})
-        };
-        const keyframes = Array.isArray(extractor.keyframes)
-          ? [...extractor.keyframes].sort((a, b) => Number(a.time || 0) - Number(b.time || 0))
-          : [];
-        if (!keyframes.length) return base;
-        const time = Number(sourceSeconds || 0);
-        const first = keyframes[0];
-        const last = keyframes[keyframes.length - 1];
-        if (time <= Number(first.time || 0)) return { ...base, ...first };
-        if (time >= Number(last.time || 0)) return { ...base, ...last };
-        const right = keyframes.find((entry) => Number(entry.time || 0) >= time) || last;
-        const rightIndex = keyframes.indexOf(right);
-        const left = keyframes[Math.max(0, rightIndex - 1)] || first;
-        const span = Math.max(0.0001, Number(right.time || 0) - Number(left.time || 0));
-        const rawT = clamp((time - Number(left.time || 0)) / span, 0, 1);
-        const easedT = right.transition === 'cut' ? 0 : right.transition === 'ease-in' ? rawT * rawT : right.transition === 'ease-out' ? 1 - Math.pow(1 - rawT, 2) : right.transition === 'bell' ? (1 - Math.cos(rawT * Math.PI)) / 2 : rawT;
-        const lerp = (a, b) => Number(a || 0) + (Number(b || 0) - Number(a || 0)) * easedT;
-        return {
-          ...base,
-          ...right,
-          xPosition: lerp(left.xPosition ?? base.xPosition, right.xPosition ?? base.xPosition),
-          yPosition: lerp(left.yPosition ?? base.yPosition, right.yPosition ?? base.yPosition),
-          zoom: lerp(left.zoom ?? base.zoom, right.zoom ?? base.zoom),
-          splitRatio: lerp(left.splitRatio ?? base.splitRatio, right.splitRatio ?? base.splitRatio),
-          closeupZoom: lerp(left.closeupZoom ?? base.closeupZoom, right.closeupZoom ?? base.closeupZoom),
-          closeupX: lerp(left.closeupX ?? base.closeupX ?? 0.5, right.closeupX ?? base.closeupX ?? 0.5)
-        };
+        return interpolateSharedShortsConfig(extractor.config || SHORTS_EXTRACTOR_DEFAULT_CONFIG, extractor.keyframes || [], Number(sourceSeconds || 0));
       };
       const renderStageMediaNode = (src, payload, clip, style, className = '') => (
         isVideoPayload(payload)
@@ -11872,7 +12225,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
               style={style}
               muted={!isPlaying || Boolean(payload.muted)}
               loop
-              autoPlay={isPlaying || Boolean(payload.playWhilePaused ?? true)}
+              autoPlay={isPlaying}
               playsInline
               preload="metadata"
               onError={() => setProviderStatus({ mode: 'error', message: `${payload.mediaName || payload.layerName || 'Video'} could not be decoded by this browser.` })}
@@ -11940,10 +12293,12 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                     key={segment.id}
                     type="button"
                     className="vt-shorts-reframe-segment"
-                    style={{ left: `${startPct}%`, width: `${Math.max(1, widthPct)}%` }}
+                    style={{ left: `${startPct}%`, width: `${Math.max(1, widthPct)}%`, boxShadow: selectedShortsSegmentId === segment.id ? `0 0 0 3px ${COLORS.purple}, 2px 2px 0 rgba(0,0,0,0.2)` : undefined }}
                     title={`${segment.label || 'Short'} · ${formatHMS(segment.start)} to ${formatHMS(segment.end)}`}
                     onClick={(event) => {
                       event.stopPropagation();
+                      setSelectedShortsSegmentId(segment.id);
+                      seekShortsPreview(segment.start);
                     }}
                   >
                     {segment.label || 'Short'}
@@ -12013,6 +12368,9 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                 </button>
                 <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: shortsExtractorConfig.mode === 'single' ? COLORS.cyan : COLORS.white }} onClick={() => updateShortsExtractorConfig({ mode: 'single' })}>Single</button>
                 <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: shortsExtractorConfig.mode === 'split' ? COLORS.cyan : COLORS.white }} onClick={() => updateShortsExtractorConfig({ mode: 'split' })}>Split</button>
+                <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: shortsStoryboard.status === 'ready' ? COLORS.yellow : COLORS.white }} onClick={generateShortsStoryboard}>
+                  Storyboard
+                </button>
               </div>
             </div>
             <div className="vt-shorts-preview-grid vt-shorts-preview-grid-stage">
@@ -12029,6 +12387,14 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                   onPointerUp={onShortsSourcePointerUp}
                   onPointerCancel={onShortsSourcePointerUp}
                   onWheel={onShortsSourceWheel}
+                  onDragOver={(event) => { event.preventDefault(); setShortsUploadDragging(true); }}
+                  onDragLeave={() => setShortsUploadDragging(false)}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    setShortsUploadDragging(false);
+                    onUploadShortsSource(event.dataTransfer?.files?.[0]);
+                  }}
+                  data-drop-active={shortsUploadDragging ? 'true' : 'false'}
                   title="Drag to move the crop frame. Scroll to zoom."
                 >
                   {shortsExtractorSource?.url ? (
@@ -12041,6 +12407,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                       preload="metadata"
                       onLoadedMetadata={updateSourceMetadata}
                       onPause={() => setShortsPreviewPlaying(false)}
+                      onError={() => setShortsExtractorStatus({ mode: 'error', message: `${shortsExtractorSource.name || 'Source video'} cannot be decoded by this browser.` })}
                     />
                   ) : (
                     <div className="vt-shorts-source-empty">Upload a landscape clip</div>
@@ -12108,6 +12475,30 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
               </section>
             </div>
             {renderShortsReframeTimeline(duration)}
+            {shortsStoryboard.status !== 'idle' ? (
+              <div className="vt-shorts-storyboard" aria-live="polite">
+                <div className="vt-shorts-storyboard-head">
+                  <span>Storyboard · {shortsStoryboard.status === 'ready' ? `${shortsStoryboard.frames.length} frames` : shortsStoryboard.status}</span>
+                  <span>{shortsStoryboard.message}</span>
+                </div>
+                {shortsStoryboard.frames.length ? (
+                  <div className="vt-shorts-storyboard-strip">
+                    {shortsStoryboard.frames.map((frame, index) => (
+                      <React.Fragment key={frame.id}>
+                        {index > 0 ? <span className="vt-shorts-storyboard-transition">{frame.transition || 'pan'}</span> : null}
+                        <button className={`vt-shorts-storyboard-card${selectedShortsKeyframeId === frame.id ? ' is-selected' : ''}`} onClick={() => {
+                          const keyframe = shortsExtractorKeyframes.find((entry) => entry.id === frame.id);
+                          if (keyframe) applyShortsKeyframeToConfig(keyframe);
+                        }} title={`Seek to ${formatHMS(frame.time)}`}>
+                          <img src={frame.image} alt={`Storyboard at ${formatHMS(frame.time)}`} />
+                          <span>{formatHMS(frame.time)}</span>
+                        </button>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         );
       };
@@ -12167,7 +12558,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
       return (
         <div
           ref={shellRootRef}
-          className="vt-editor-shell w-full p-2 grid gap-0 no-scrollbar overflow-hidden"
+          className={`vt-editor-shell${isPortraitPreviewColumn ? ' vt-editor-shell--portrait' : ''} w-full p-2 grid gap-0 no-scrollbar overflow-hidden`}
           style={{ gridTemplateColumns: shellGridColumns, gridTemplateRows: shellGridRows, height: '100%', minHeight: 0, maxHeight: '100%', background: '#111' }}
           onClick={(e) => {
             if (Date.now() - contextMenuOpenedAtRef.current < 260) return;
@@ -12175,7 +12566,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
             setContextMenu(null);
           }}
         >
-          <aside className="neo-card outer-frame h-full min-h-0 overflow-hidden flex flex-col" style={{ gridColumn: '1 / 2', gridRow: sidebarGridRow, height: '100%', minHeight: 0 }} onMouseMove={handleDockVicinityMove} onMouseLeave={handleDockMouseLeave}>
+          <aside className="neo-card outer-frame vt-controller-module h-full min-h-0 overflow-hidden flex flex-col" style={{ gridColumn: '1 / 2', gridRow: sidebarGridRow, height: '100%', minHeight: 0 }} onMouseMove={handleDockVicinityMove} onMouseLeave={handleDockMouseLeave}>
             <div className="p-3 border-b-4 border-black bg-white w-full">
               {!editorShellState.railCollapsed && <div className="viewtube-logo text-[32px] mb-0">VIEWTUBE<span className="studio">studio</span></div>}
               <div className="mt-2 flex items-center gap-2 justify-between">
@@ -12201,18 +12592,28 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                       <button
                         className="neo-btn !min-h-0 px-2 py-1"
                         style={{ background: project.meta.aspectRatio === '16:9' ? '#111' : COLORS.white, color: project.meta.aspectRatio === '16:9' ? '#fff' : '#111' }}
-                        onClick={() => updateMeta({ aspectRatio: '16:9' })}
+                        onClick={() => applyAspectRatio('16:9')}
                       >
                         16:9
                       </button>
                       <button
                         className="neo-btn !min-h-0 px-2 py-1"
                         style={{ background: project.meta.aspectRatio === '9:16' ? '#111' : COLORS.white, color: project.meta.aspectRatio === '9:16' ? '#fff' : '#111' }}
-                        onClick={() => updateMeta({ aspectRatio: '9:16' })}
+                        onClick={() => applyAspectRatio('9:16')}
                       >
                         9:16
                       </button>
                     </div>
+                    {isVerticalAspect && (
+                      <button
+                        className="neo-btn"
+                        style={{ background: COLORS.white, padding: '4px 8px', minHeight: '0px' }}
+                        onClick={resetPortraitLayout}
+                        title="Restore the canonical portrait shell without changing project content"
+                      >
+                        Reset Portrait
+                      </button>
+                    )}
                     <button className="neo-btn" style={{ background: COLORS.cyan, padding: '4px 8px', minHeight: '0px' }} onClick={() => setShowOnboarding(true)} title="Open the editor guide">Guide</button>
                     <button className="neo-btn" style={{ background: COLORS.yellow, padding: '4px 8px', minHeight: '0px' }} onClick={() => setShowCommandPalette(true)} title="Open command palette">/ Commands</button>
                   </div>
@@ -12359,10 +12760,23 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                           <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.cyan }} onClick={addShortsExtractorKeyframe}><Crosshair size={12} />Add KF</button>
                           <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.yellow }} onClick={runShortsMotionTracking}><ScanLine size={12} />Track Motion</button>
                         </div>
+                        {shortsTrackingProposal.status !== 'idle' ? (
+                          <div className="rounded-md border-2 border-black bg-[#f4f4f7] p-2 space-y-2 text-[9px] font-black uppercase">
+                            <div>{shortsTrackingProposal.status === 'running' ? `Tracking ${shortsTrackingProposal.progress}%` : shortsTrackingProposal.message}</div>
+                            {shortsTrackingProposal.status === 'ready' ? (
+                              <div className="grid grid-cols-3 gap-1">
+                                <button className="neo-btn !min-h-0 px-1 py-1 text-[8px]" style={{ background: COLORS.cyan }} onClick={() => applyShortsTrackingProposal('append')}>Apply New</button>
+                                <button className="neo-btn !min-h-0 px-1 py-1 text-[8px]" style={{ background: COLORS.yellow }} onClick={() => applyShortsTrackingProposal('replace-range')}>Replace Range</button>
+                                <button className="neo-btn !min-h-0 px-1 py-1 text-[8px]" style={{ background: COLORS.pink }} onClick={() => setShortsTrackingProposal({ status: 'idle', keyframes: [], progress: 0, message: '' })}>Discard</button>
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : null}
                         <div className="grid grid-cols-2 gap-2">
                           <SpringToggle label="Smooth" min={0} max={1} step={0.05} value={shortsExtractorConfig.smoothing} onChange={(v) => updateShortsExtractorConfig({ smoothing: Number(v) })} onReset={() => updateShortsExtractorConfig({ smoothing: 0.45 })} speed={1} compact />
                           <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.green }} onClick={insertShortsSegmentsToTimeline}><Scissors size={12} />Insert Shorts</button>
                         </div>
+                        <button className="neo-btn w-full !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.white }} onClick={applyShortsKeyframeSmoothing}>Smooth Current Keyframes ({shortsExtractorKeyframes.length})</button>
                         <div className="max-h-[180px] overflow-y-auto neo-scroll space-y-1">
                           {[...shortsExtractorKeyframes].sort((a, b) => Number(a.time || 0) - Number(b.time || 0)).map((keyframe) => (
                             <button
@@ -12722,10 +13136,10 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                           <div className="grid grid-cols-2 gap-2">
                             <button
                               className="neo-btn !min-h-0 px-2 py-1 text-[10px]"
-                              style={{ background: (selectedLayer.payload.playWhilePaused ?? true) ? COLORS.green : COLORS.white }}
-                              onClick={() => updateLayerPayload(selectedLayer.id, { playWhilePaused: !(selectedLayer.payload.playWhilePaused ?? true) })}
+                              style={{ background: Boolean(selectedLayer.payload.playWhilePaused) ? COLORS.green : COLORS.white }}
+                              onClick={() => updateLayerPayload(selectedLayer.id, { playWhilePaused: !Boolean(selectedLayer.payload.playWhilePaused) })}
                             >
-                              {selectedLayer.payload.playWhilePaused ?? true ? 'Anim While Paused: ON' : 'Anim While Paused: OFF'}
+                              {selectedLayer.payload.playWhilePaused ? 'Animate While Paused: ON' : 'Animate While Paused: OFF'}
                             </button>
                             <button
                               className="neo-btn !min-h-0 px-2 py-1 text-[10px]"
@@ -13091,7 +13505,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                               <div className="w-full text-[9px] font-bold uppercase opacity-80 truncate">{entry.description}</div>
                               <div className="w-full flex items-center justify-between">
                                 <span className="text-[8px] font-black uppercase opacity-70">{entry.family}</span>
-                                <span className="text-[8px] font-black uppercase opacity-70">{entry.slots.length} slot{entry.slots.length === 1 ? '' : 's'}</span>
+                                <span className="text-[8px] font-black uppercase opacity-70">{entry.renderSupport === 'final-render-supported' ? 'MP4 ready' : 'preview only'}</span>
                               </div>
                             </button>
                           ))}
@@ -13106,8 +13520,12 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                           </div>
                           <div className="text-[10px] font-bold uppercase opacity-80">{selectedTemplateStudio?.description}</div>
                           <div className="flex-1 rounded-xl border-2 border-black bg-white/95 p-3 flex flex-col gap-2">
-                            <div className="text-[10px] font-black uppercase opacity-70">Manifest</div>
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="text-[10px] font-black uppercase opacity-70">Composition manifest</div>
+                              <span className="text-[8px] font-black uppercase px-2 py-1 border-2 border-black rounded bg-yellow-100">{selectedTemplateStudio?.renderSupport === 'final-render-supported' ? 'MP4 ready' : 'preview only'}</span>
+                            </div>
                             <div className="text-[11px] font-black uppercase">{selectedTemplateStudio?.family}</div>
+                            <div className="text-[10px] font-bold uppercase opacity-80">{selectedTemplateStudio?.compositionId || selectedTemplateStudio?.id} · {selectedTemplateStudio?.source || 'ViewTube Template Studio'}</div>
                             <div className="text-[10px] font-bold uppercase opacity-80">Aspect {selectedTemplateStudio?.aspectRatio} · {selectedTemplateStudio?.width}x{selectedTemplateStudio?.height}</div>
                             <div className="flex flex-wrap gap-2 pt-1">
                               {(selectedTemplateStudio?.slots || []).map((slot) => (
@@ -13116,14 +13534,29 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                                 </span>
                               ))}
                             </div>
-                            <div className="flex-1 rounded-lg border-2 border-dashed border-black/30 bg-[linear-gradient(135deg,rgba(17,17,17,0.03),rgba(17,17,17,0.08))] flex items-center justify-center text-center px-4">
-                              <div>
-                                <div className="text-[10px] font-black uppercase tracking-[0.16em]">Preview / Export parity placeholder</div>
-                                <div className="text-[10px] font-bold uppercase opacity-70 mt-1">Bind your own assets in the slot editor, then insert the template as a single timeline unit.</div>
+                            <div
+                              className="flex-1 rounded-lg border-2 border-black overflow-hidden p-3 flex flex-col justify-between text-white"
+                              style={{
+                                background: `linear-gradient(135deg, ${selectedTemplateStudio?.accent || COLORS.cyan} 0%, #171822 48%, ${selectedTemplateStudio?.previewTheme === 'neon' ? '#AA7FFF' : '#111'} 100%)`
+                              }}
+                            >
+                              <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-[0.14em] opacity-80">
+                                <span>Live design proxy</span>
+                                <span>{selectedTemplateStudio?.aspectRatio}</span>
+                              </div>
+                              <div className="space-y-1">
+                                {templatePreviewCopy.map((line, index) => (
+                                  <div key={`${line}-${index}`} className="font-black uppercase leading-[0.92]" style={{ fontSize: `${Math.max(14, 26 - index * 4)}px`, color: index === 1 ? (selectedTemplateStudio?.accent || COLORS.cyan) : '#fff' }}>{line}</div>
+                                ))}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="h-3 flex-1 border-2 border-white/70 rounded-sm" />
+                                <span className="w-8 h-8 rounded-full border-2 border-white bg-white/20" />
                               </div>
                             </div>
                           </div>
-                          <button className="neo-btn" style={{ background: COLORS.green }} onClick={applyTemplateStudioSelection}>Insert Template to Timeline</button>
+                          <div className="text-[9px] font-bold uppercase opacity-80">Preview proxy only. Exact final MP4 requires a composition adapter for this manifest.</div>
+                          <button className="neo-btn" style={{ background: COLORS.green }} onClick={applyTemplateStudioSelection}>Insert Editable Template Unit</button>
                         </div>
                       </div>
                       <div className="space-y-2">
@@ -14386,7 +14819,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                     );
                   })()}
                   <div className="border-t-4 border-black pt-2 mt-2" />
-                  <div className="text-xs font-black uppercase">Export + Import</div>
+                  <div className="text-xs font-black uppercase">Export Center</div>
                   <div className="text-xs font-black uppercase">Render Profile</div>
                   <div className="grid grid-cols-2 gap-2">
                     <button className="neo-btn !min-h-0 px-2 py-1" style={{ background: renderProfile === 'draft' ? COLORS.green : COLORS.white }} onClick={() => setRenderProfile('draft')}>Draft</button>
@@ -14399,7 +14832,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                   <div className="text-[10px] font-black border-2 border-black rounded-md p-2 bg-white">
                     <div>Render service: {getRenderServiceStatusLabel()}</div>
                     <div>Final export path: {renderMode === 'svg-frames-mp4' ? 'Hosted SVG frames + FFmpeg MP4 assembly' : 'Hosted Remotion MP4 API'}</div>
-                    <div>Preview Capture: browser-side WebM / MOV only, not final parity MP4</div>
+                    <div>Preview Capture: browser-side WebM only, not final parity.</div>
                   </div>
                   <div className="text-xs font-black uppercase">Export Resolution</div>
                   <div className="grid grid-cols-5 gap-1">
@@ -14507,8 +14940,8 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                     >
                       <Download size={14} /> {renderJobState.status === 'preparing' ? 'Preparing Render' : renderJobState.status === 'submitting' ? 'Submitting' : (renderJobState.status === 'queued' || renderJobState.status === 'rendering') ? 'Rendering MP4' : (renderMode === 'svg-frames-mp4' ? 'Final MP4 (SVG Frames)' : 'Final MP4')}
                     </button>
-                    <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.yellow }} onClick={() => capturePreviewVideo('mov')}>
-                      <Download size={14} /> Preview Capture MOV
+                    <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: isFinalRenderDisabled('mov') ? '#ddd' : COLORS.blue }} onClick={() => queueRenderMp4('mov')} disabled={isFinalRenderDisabled('mov')} title={getFinalRenderUnavailableReason('mov') || 'Render MP4 then transcode Final MOV on the hosted worker'}>
+                      <Download size={14} /> Final MOV
                     </button>
                     <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.cyan }} onClick={saveManualSession}>
                       <Save size={14} /> Save Local Project
@@ -14554,7 +14987,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                       ) : null}
                       {renderJobState.downloadUrl ? (
                         <a className="neo-btn inline-flex items-center justify-center gap-1 w-full" style={{ background: COLORS.green }} href={renderJobState.downloadUrl} download>
-                          <Download size={14} /> Download MP4
+                          <Download size={14} /> Download Final File
                         </a>
                       ) : null}
                     </div>
@@ -14623,17 +15056,17 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
           </aside>
           <div
             className="panel-hitzone panel-hitzone-vertical"
-            style={{ gridColumn: '2 / 3', gridRow: '1 / 2' }}
+            style={{ gridColumn: '2 / 3', gridRow: isPortraitPreviewColumn ? '1 / 4' : '1 / 2' }}
             onPointerDown={(e) => startShellResize('panel', e)}
             aria-hidden="true"
           />
 
-            <section className="neo-card outer-frame p-0 overflow-hidden flex flex-col min-h-0 bg-white" style={previewSectionStyle}>
-              <div ref={previewViewportRef} className="w-full h-full flex overflow-hidden justify-center items-center" style={{ background: '#ffffff', borderRadius: '8px', padding: '18px' }}>
+            <section className="neo-card outer-frame vt-preview-module p-0 overflow-hidden flex flex-col min-h-0 bg-white" style={previewSectionStyle}>
+              <div ref={previewViewportRef} className="vt-preview-viewport w-full h-full flex overflow-hidden justify-center items-center" style={{ background: '#ffffff', borderRadius: '8px', padding: '18px' }}>
                 {activePageId === 'shorts-extractor' ? renderShortsExtractorPreviewWorkspace() : (
                 <div className="w-full h-full flex items-center justify-center" style={{ background: '#ffffff', borderRadius: '8px' }}>
                 <div
-                  className={`relative ${project.meta.chromaEnabled ? '' : 'checker'}`}
+                  className={`vt-composition-stage relative ${project.meta.chromaEnabled ? '' : 'checker'}`}
                   style={stageFrameStyle}
                   onPointerDown={(e) => {
                     if (e.target !== e.currentTarget) return;
@@ -15485,7 +15918,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
               aria-hidden="true"
             />
 
-            <section className="neo-card outer-frame overflow-hidden flex flex-col min-h-0" style={{ gridColumn: timelineGridColumn, gridRow: timelineGridRow, height: '100%', minHeight: 0 }}>
+            <section className="neo-card outer-frame vt-timeline-module overflow-hidden flex flex-col min-h-0" style={{ gridColumn: timelineGridColumn, gridRow: timelineGridRow, height: '100%', minHeight: 0 }}>
               <div className="vt-timeline-toolbar p-2 border-b-4 border-black grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                 <div className="flex items-center gap-2 justify-start">
                   {hasTopbarButton('undo') && <button className="neo-btn" style={{ background: canUndo ? COLORS.white : '#e7e7e7', opacity: canUndo ? 1 : 0.45 }} onClick={undoProject} disabled={!canUndo} title="Undo (Cmd/Ctrl+Z)"><Undo2 size={14} /></button>}
@@ -15901,6 +16334,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                         {project.clips.filter((c) => c.trackId === track.id).map((clip) => {
                           const layer = project.layers.find((l) => l.id === clip.layerId);
                           const selected = selectedClipIds.includes(clip.id) || clip.id === selectedClipId;
+                          const isPrimarySelection = selected && (clip.id === selectedClipId || selectedClipIds[0] === clip.id);
                           const flatLeft = connectedAtLeft(clip);
                           const flatRight = connectedAtRight(clip);
                           const rowVisualHeight = rowMeta.height;
@@ -15908,10 +16342,14 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                           const visualRow = Math.max(2, rowVisualHeight);
                           const clipTop = rowTop;
                           const isSourcePlaceholder = Boolean(dragPreview?.type === 'clip-move' && dragPreview.sourceClipIds?.includes(clip.id));
+                          const clipSurfaceKind = layer?.type === 'audio' ? 'audio' : layer?.type === 'text' ? 'text' : layer?.type === 'media' ? 'media' : 'shape';
                           return (
                             <div
                               key={clip.id}
+                              className={`vt-timeline-clip vt-timeline-clip--${clipSurfaceKind}${clip.visualStyle === 'spectrum' ? ' vt-timeline-clip--spectrum' : ''}${selected ? ` is-selected ${isPrimarySelection ? 'is-selected-primary' : 'is-selected-secondary'}` : ''}${isSourcePlaceholder ? ' is-source-placeholder' : ''}`}
                               style={{
+                                '--vt-clip-color': clip.color,
+                                '--vt-clip-gradient-end': ({ media: '#528FFA', audio: '#F55EFC', text: '#528FFA', shape: '#FF7F6B' }[clipSurfaceKind] || '#3FEE56'),
                                 position: 'absolute',
                                 left: `${timeToPx(clip.start)}px`,
                                 top: `${clipTop}px`,
@@ -15995,11 +16433,12 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                               }}
                             >
                               <div
+                                className="vt-timeline-clip__trim vt-timeline-clip__trim--left"
                                 style={{ position: 'absolute', left: '-4px', top: '-4px', bottom: '-4px', width: '10px', cursor: 'ew-resize', background: 'transparent' }}
                                 onPointerDown={(e) => { e.stopPropagation(); startTrim(clip, 'left'); }}
                               />
 
-                              <span style={{ position: 'absolute', top: 3, left: 6, right: 6, pointerEvents: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <span className="vt-timeline-clip__label" style={{ position: 'absolute', top: 3, left: 6, right: 6, pointerEvents: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {layer?.payload?.layerName || layer?.type || 'Layer'}
                               </span>
 
@@ -16081,6 +16520,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                               )}
 
                               <div
+                                className="vt-timeline-clip__trim vt-timeline-clip__trim--right"
                                 style={{ position: 'absolute', right: '-4px', top: '-4px', bottom: '-4px', width: '10px', cursor: 'ew-resize', background: 'transparent' }}
                                 onPointerDown={(e) => { e.stopPropagation(); startTrim(clip, 'right'); }}
                               />
@@ -16093,30 +16533,40 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                           const seamLink = seamLinkMap.get(`${seam.leftClipId}_${seam.rightClipId}`);
                           if (!transition && !seamLink && seam.gap > 0.02) return null;
                           const label = seamLink?.mode === 'group' ? 'group' : (transition?.type || 'cut');
-                          const badgeWidth = Math.max(38, Math.min((transition?.durationSec || 0.35) * pxPerSec, 260));
+                          const leftClip = project.clips.find((clip) => clip.id === seam.leftClipId);
+                          const rightClip = project.clips.find((clip) => clip.id === seam.rightClipId);
+                          const transitionWindow = transition
+                            ? getTransitionWindow(transition, leftClip, rightClip)
+                            : null;
+                          const isGroupedSeam = seamLink?.mode === 'group';
+                          const transitionSurface = isGroupedSeam
+                            ? 'group-rail'
+                            : (transition ? 'temporal-envelope' : 'cut');
+                          const badgeWidth = transitionWindow
+                            ? Math.max(38, Math.min((transitionWindow.endSec - transitionWindow.startSec) * pxPerSec, 260))
+                            : (isGroupedSeam ? 38 : 6);
+                          const seamLeft = transitionWindow
+                            ? timeToPx(transitionWindow.startSec)
+                            : timeToPx(seam.seamTime) - (badgeWidth / 2);
                           return (
                             <button
                               key={seam.id}
                               type="button"
-                              className="neo-btn"
+                              className={`vt-timeline-seam vt-timeline-seam--${transitionSurface}${selectedTransitionId === transition?.id ? ' is-selected' : ''}`}
                               style={{
+                                '--vt-seam-left': leftClip?.color || COLORS.cyan,
+                                '--vt-seam-right': rightClip?.color || COLORS.pink,
                                 position: 'absolute',
-                                left: `${timeToPx(seam.seamTime) - (badgeWidth / 2)}px`,
-                                top: `${Math.max(2, (rowMeta.height / 2) - 12)}px`,
+                                left: `${seamLeft}px`,
+                                top: `${Math.max(1, (rowMeta.height / 2) - Math.min(22, rowMeta.height / 2))}px`,
                                 width: `${badgeWidth}px`,
-                                padding: '2px 6px',
-                                height: '24px',
+                                padding: 0,
+                                height: `${Math.max(2, Math.min(rowMeta.height - 2, 44))}px`,
                                 minWidth: '38px',
-                                background: seamLink?.mode === 'group'
-                                  ? COLORS.purple
-                                  : 'repeating-linear-gradient(-45deg, rgba(64,198,233,0.95) 0 6px, rgba(153,235,255,0.95) 6px 12px)',
-                                border: '2px solid #111',
-                                borderRadius: '8px',
-                                boxShadow: 'inset 0 0 0 1px rgba(87,154,255,0.9)',
                                 zIndex: 26,
                                 fontSize: '10px',
-                                overflow: 'visible',
-                                whiteSpace: 'normal'
+                                overflow: 'hidden',
+                                whiteSpace: 'nowrap'
                               }}
                               onPointerDown={(e) => e.stopPropagation()}
                               onClick={(e) => {
@@ -16132,9 +16582,17 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                                 }
                                 setSelectedTransitionId(transition.id);
                               }}
-                              title="Click seam to edit transition, Shift+Click toggles group seam"
+                              aria-label={`${label} ${transition ? 'transition shared-time interval' : 'seam'}. Click to edit. Shift+Click toggles grouping.`}
+                              title={transition
+                                ? `${label} transition: ${transitionWindow?.durationSec.toFixed(2)}s shared time. Click to edit; Shift+Click toggles grouping.`
+                                : 'Click seam to create a transition. Shift+Click toggles grouping.'}
                             >
-                              {label}
+                              {transition && <>
+                                <span className="vt-timeline-seam__tail vt-timeline-seam__tail--out" aria-hidden="true" />
+                                <span className="vt-timeline-seam__tail vt-timeline-seam__tail--in" aria-hidden="true" />
+                                <span className="vt-timeline-seam__midpoint" aria-hidden="true" />
+                              </>}
+                              <span className="vt-timeline-seam__label">{label}</span>
                             </button>
                           );
                         })}
@@ -16251,6 +16709,30 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                     }}
                   />
                 ))}
+              </div>
+              <div className="grid grid-cols-2 gap-1 mb-2">
+                <button
+                  type="button"
+                  className="neo-btn h-8 text-[9px]"
+                  style={{ background: COLORS.white }}
+                  onClick={() => {
+                    setClipVisualStyle(contextMenu.clipId, 'default');
+                    setContextMenu(null);
+                  }}
+                >
+                  Single Gradient
+                </button>
+                <button
+                  type="button"
+                  className="neo-btn h-8 text-[9px]"
+                  style={{ background: 'linear-gradient(90deg, #FA618A, #FFDA47, #3FEE56, #36E0F6, #A467F4, #F55EFC)' }}
+                  onClick={() => {
+                    setClipVisualStyle(contextMenu.clipId, 'spectrum');
+                    setContextMenu(null);
+                  }}
+                >
+                  Spectrum
+                </button>
               </div>
               <div className="flex items-center justify-center gap-1">
                 <button className="neo-btn w-12 h-12 p-0 inline-flex items-center justify-center" style={{ borderWidth: '2px', background: COLORS.cyan }} onClick={() => {

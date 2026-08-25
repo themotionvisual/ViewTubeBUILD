@@ -1,5 +1,14 @@
 import React, { useMemo } from 'react';
 import { AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, interpolate, spring, useCurrentFrame } from 'remotion';
+import {
+  getShortsCropStyle as getSharedShortsCropStyle,
+  interpolateShortsConfig as interpolateSharedShortsConfig,
+} from '../../shared/vtE1Shorts';
+import {
+  sourceTimeAtTimelineSec as sharedSourceTimeAtTimelineSec,
+  transitionWindowFor as sharedTransitionWindowFor,
+  validateTransitionSeam as sharedValidateTransitionSeam,
+} from '../../shared/vtE1TimelineContract.js';
 
 type LayerType = 'text' | 'shape' | 'media' | 'audio' | 'svg-overlay' | 'generative-shape';
 
@@ -77,30 +86,17 @@ const toFrame = (seconds: number, fps: number) => Math.max(0, Math.round(seconds
 const sortTracks = (tracks: VTTrack[]) => [...tracks].sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
 const durationOf = (clip: VTClip) => Math.max(0.05, Number(clip.end || 0) - Number(clip.start || 0));
 const transitionWindow = (transition: VTTransition, leftClip: VTClip, rightClip: VTClip) => {
-  const durationSec = clamp(Number(transition.durationSec || 0.35), 0.05, 8);
-  const halfDurationSec = durationSec / 2;
-  const nominal = Number(transition.nominalSeamSec);
-  const seamSec = Number.isFinite(nominal) ? nominal : ((Number(leftClip.end || 0) + Number(rightClip.start || 0)) / 2);
-  return { seamSec, durationSec, halfDurationSec, startSec: seamSec - halfDurationSec, endSec: seamSec + halfDurationSec };
+  return sharedTransitionWindowFor(transition, leftClip, rightClip);
 };
 const sourceTimeForClipAt = (project: NonNullable<RenderJob['project']>, clip: VTClip, sec: number) => {
-  const sourceInSec = Math.max(0, Number(clip.sourceInSec || 0));
-  const sourceOutSec = Number.isFinite(Number(clip.sourceOutSec)) ? Number(clip.sourceOutSec) : sourceInSec + durationOf(clip);
-  const transition = (project.transitions || []).find((entry) => entry.leftClipId === clip.id || entry.rightClipId === clip.id);
-  if (!transition) return Math.max(0, sourceInSec + Math.max(0, sec - Number(clip.start || 0)));
-  const left = (project.clips || []).find((entry) => entry.id === transition.leftClipId);
-  const right = (project.clips || []).find((entry) => entry.id === transition.rightClipId);
-  if (!left || !right) return Math.max(0, sourceInSec + Math.max(0, sec - Number(clip.start || 0)));
-  const win = transitionWindow(transition, left, right);
-  if (clip.id === left.id && sec > left.end && sec <= win.endSec) return Math.max(0, sourceOutSec + (sec - left.end));
-  if (clip.id === right.id && sec < right.start && sec >= win.startSec) return Math.max(0, sourceInSec - (right.start - sec));
-  return Math.max(0, sourceInSec + Math.max(0, sec - Number(clip.start || 0)));
+  return sharedSourceTimeAtTimelineSec(project, clip, sec);
 };
 const transitionInfluenceAt = (project: NonNullable<RenderJob['project']>, transition: VTTransition | undefined, clip: VTClip, sec: number) => {
   if (!transition) return { opacity: 1, transformExtra: '', filterExtra: '' };
   const left = (project.clips || []).find((entry) => entry.id === transition.leftClipId);
   const right = (project.clips || []).find((entry) => entry.id === transition.rightClipId);
   if (!left || !right) return { opacity: 1, transformExtra: '', filterExtra: '' };
+  if (!sharedValidateTransitionSeam(left, right).valid) return { opacity: 1, transformExtra: '', filterExtra: '' };
   const win = transitionWindow(transition, left, right);
   if (sec < win.startSec || sec > win.endSec) return { opacity: 1, transformExtra: '', filterExtra: '' };
   const p = clamp((sec - win.startSec) / win.durationSec, 0, 1);
@@ -241,92 +237,13 @@ const layerFilter = (payload: Record<string, unknown>) => {
   ].filter(Boolean).join(' ');
 };
 
-const shortsEase = (type: string, t: number) => {
-  if (type === 'cut') return t < 1 ? 0 : 1;
-  if (type === 'ease-in') return t * t;
-  if (type === 'ease-out') return 1 - (1 - t) * (1 - t);
-  if (type === 'ease-in-out') return t < 0.5 ? 2 * t * t : 1 - 2 * (1 - t) * (1 - t);
-  if (type === 'bell') return 0.5 * (1 - Math.cos(Math.PI * t));
-  return t;
-};
-
-const interpolateShortsConfig = (payload: Record<string, unknown>, sourceSeconds: number) => {
+const getShortsRenderConfig = (payload: Record<string, unknown>, sourceSeconds: number) => {
   const extractor = (payload.shortsExtractor || {}) as Record<string, unknown>;
-  const base = {
-    mode: 'single',
-    aspectPreset: '9:16',
-    xPosition: 0.5,
-    yPosition: 0.5,
-    zoom: 1.65,
-    splitRatio: 0.55,
-    closeupPosition: 'top',
-    closeupZoom: 2.2,
-    closeupX: 0.5,
-    transition: 'ease-in-out',
-    ...((extractor.config || {}) as Record<string, unknown>),
-  };
-  const keyframes = Array.isArray(extractor.keyframes)
-    ? [...extractor.keyframes].map((entry) => entry as Record<string, unknown>).sort((a, b) => Number(a.time || 0) - Number(b.time || 0))
-    : [];
-  if (!keyframes.length) return base;
-  if (sourceSeconds <= Number(keyframes[0].time || 0)) return { ...base, ...keyframes[0] };
-  const last = keyframes[keyframes.length - 1];
-  if (sourceSeconds >= Number(last.time || 0)) return { ...base, ...last };
-
-  let left = keyframes[0];
-  let right = last;
-  for (let index = 0; index < keyframes.length - 1; index += 1) {
-    if (sourceSeconds >= Number(keyframes[index].time || 0) && sourceSeconds <= Number(keyframes[index + 1].time || 0)) {
-      left = keyframes[index];
-      right = keyframes[index + 1];
-      break;
-    }
-  }
-  const span = Number(right.time || 0) - Number(left.time || 0) || 1;
-  const t = shortsEase(String(right.transition || base.transition || 'pan'), clamp((sourceSeconds - Number(left.time || 0)) / span, 0, 1));
-  const lerp = (key: string, fallback: number) => Number(left[key] ?? fallback) + (Number(right[key] ?? fallback) - Number(left[key] ?? fallback)) * t;
-  return {
-    ...base,
-    mode: t < 0.5 ? (left.mode || base.mode) : (right.mode || base.mode),
-    xPosition: lerp('xPosition', Number(base.xPosition || 0.5)),
-    yPosition: lerp('yPosition', Number(base.yPosition || 0.5)),
-    zoom: lerp('zoom', Number(base.zoom || 1.65)),
-    splitRatio: lerp('splitRatio', Number(base.splitRatio || 0.55)),
-    closeupX: lerp('closeupX', Number(base.closeupX || 0.5)),
-    closeupZoom: lerp('closeupZoom', Number(base.closeupZoom || 2.2)),
-    closeupPosition: t < 0.5 ? (left.closeupPosition || base.closeupPosition) : (right.closeupPosition || base.closeupPosition),
-  };
-};
-
-const getShortsCropStyle = (
-  config: Record<string, unknown>,
-  sourceAspect: number,
-  outputAspect: number,
-  regionHeightRatio = 1,
-  closeup = false,
-): React.CSSProperties => {
-  const zoom = clamp(Number(closeup ? config.closeupZoom ?? 2.2 : config.zoom ?? 1.65), 1, 6);
-  const targetAspect = outputAspect / Math.max(0.05, regionHeightRatio);
-  let cropHeightPct = 100 / zoom;
-  let cropWidthPct = (targetAspect / Math.max(0.05, sourceAspect) / zoom) * 100;
-  if (cropWidthPct > 100) {
-    cropWidthPct = 100;
-    cropHeightPct = Math.min(100, (sourceAspect / targetAspect) * 100);
-  }
-  const xPos = clamp(Number(closeup ? config.closeupX ?? 0.5 : config.xPosition ?? 0.5), 0, 1);
-  const yPos = clamp(Number(config.yPosition ?? 0.5), 0, 1);
-  const sourceWidthPct = 10000 / Math.max(1, cropWidthPct);
-  const sourceHeightPct = 10000 / Math.max(1, cropHeightPct);
-  return {
-    position: 'absolute',
-    width: `${sourceWidthPct}%`,
-    height: `${sourceHeightPct}%`,
-    left: `${-xPos * (sourceWidthPct - 100)}%`,
-    top: `${-yPos * (sourceHeightPct - 100)}%`,
-    objectFit: 'fill',
-    maxWidth: 'none',
-    maxHeight: 'none',
-  };
+  return interpolateSharedShortsConfig(
+    (extractor.config || {}) as Record<string, never>,
+    Array.isArray(extractor.keyframes) ? extractor.keyframes as Array<{ time: number }> : [],
+    sourceSeconds,
+  );
 };
 
 const renderShortsExtractorMedia = (
@@ -338,7 +255,7 @@ const renderShortsExtractorMedia = (
   const extractor = (payload.shortsExtractor || {}) as Record<string, unknown>;
   const source = (extractor.source || {}) as Record<string, unknown>;
   const sourceAspect = Number(source.aspectRatio || (Number(source.width || 1920) / Math.max(1, Number(source.height || 1080))) || 16 / 9);
-  const config = interpolateShortsConfig(payload, sourceSeconds);
+  const config = getShortsRenderConfig(payload, sourceSeconds);
   const aspectPreset = String(config.aspectPreset || '9:16');
   const outputAspect = aspectPreset === '1:1' ? 1 : aspectPreset === '4:5' ? 4 / 5 : 9 / 16;
   const Media = isVideo(src) ? OffthreadVideo : Img;
@@ -347,7 +264,7 @@ const renderShortsExtractorMedia = (
   if (String(config.mode || 'single') !== 'split') {
     return (
       <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#000' }}>
-        <Media src={src} {...mediaProps} style={getShortsCropStyle(config, sourceAspect, outputAspect)} />
+        <Media src={src} {...mediaProps} style={getSharedShortsCropStyle(config, sourceAspect, outputAspect)} />
       </div>
     );
   }
@@ -356,7 +273,7 @@ const renderShortsExtractorMedia = (
   const closeupOnTop = String(config.closeupPosition || 'top') === 'top';
   const closeupHeight = closeupOnTop ? splitRatio : 1 - splitRatio;
   const wideHeight = 1 - closeupHeight;
-  const closeupStyle = getShortsCropStyle(config, sourceAspect, outputAspect, closeupHeight, true);
+  const closeupStyle = getSharedShortsCropStyle(config, sourceAspect, outputAspect, closeupHeight, true);
   const wideStyle: React.CSSProperties = { width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#000' };
   const closeup = (
     <div style={{ position: 'relative', height: `${closeupHeight * 100}%`, overflow: 'hidden', backgroundColor: '#000' }}>
