@@ -80,6 +80,12 @@ export const AppRoutes: React.FC = () => {
     <Route path="/local-analytics" element={<VtSyncLocalAnalyticsPage />} />
     <Route path="/analytics" element={<VtSyncLocalAnalyticsPage />} />
     <Route path="/vt-sync-local" element={<VtSyncLocalAnalyticsPage />} />
+    {/* Phase 3a — Intelligence Hub gets its own top-level destination so
+        bookmarks / nav links / AI-suggested URLs can jump straight to
+        the toolbox instead of buried in /analytics. Redirects to the
+        hash anchor VtSyncIntelligenceHubGate already listens on, which
+        opens the toolbox and scrolls it into view. */}
+    <Route path="/intelligence" element={<Navigate to="/analytics#intelligence" replace />} />
 
     <Route path="/shorts" element={<Navigate to="/editor" replace />} />
     <Route path="/editor" element={<EditorV1Page />} />

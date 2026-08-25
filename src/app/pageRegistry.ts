@@ -82,6 +82,7 @@ export const PAGE_REGISTRY: readonly PageRegistryEntry[] = Object.freeze([
  { path: "/local-analytics", title: "Analytics", section: "analytics", navigationVisibility: "top-nav", lifecycle: "production", aliases: ["/analytics", "/vt-sync-local"] },
  { path: "/analytics", title: "Analytics (alias)", section: "analytics", navigationVisibility: "hidden", lifecycle: "production" },
  { path: "/vt-sync-local", title: "VT Sync Local (alias)", section: "analytics", navigationVisibility: "hidden", lifecycle: "production" },
+ { path: "/intelligence", title: "Intelligence Hub", section: "analytics", navigationVisibility: "drawer", lifecycle: "production" },
  { path: "/shorts", title: "Shorts (redirect)", section: "editor", navigationVisibility: "hidden", lifecycle: "legacy" },
  { path: "/editor", title: "Editor", section: "editor", navigationVisibility: "top-nav", lifecycle: "production" },
  { path: "/editor-v1", title: "Editor V1 (redirect)", section: "editor", navigationVisibility: "hidden", lifecycle: "legacy" },

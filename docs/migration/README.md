@@ -8,7 +8,7 @@ This document is the north star. Every migration PR is scoped from here. Every f
 
 | Track | Foundation | Consumers migrated | Legacy retired |
 | --- | --- | --- | --- |
-| **analytics-canon** | ✅ Phase 0 shipped ([PR #34](https://github.com/themotionvisual/ViewTubeBUILD/pull/34)) | 0 / 32 | — |
+| **analytics-canon** | ✅ Phase 0 shipped ([PR #34](https://github.com/themotionvisual/ViewTubeBUILD/pull/34)) | Intelligence Hub migrated locally; 34 legacy-importing files remain | — |
 | **auth-canon** | ✅ Phase 0 shipped ([PR #36](https://github.com/themotionvisual/ViewTubeBUILD/pull/36)) | 0 / 48 | — |
 
 Surgical unblock fixes already shipped so mobile users can keep using the app during the migration:
@@ -24,7 +24,7 @@ Each track has the same structure. Consumer migration is the long tail — plan 
 | 0 — Foundation | ✅ `src/services/analytics-canon/` | ✅ `src/services/auth-canon/` |
 | 1 — Dashboard | `useDashboardData` + `DashboardCanvas` widgets | `AppShell`, `AdaptiveNavigationShell`, `DashboardHeader` |
 | 2 — Provider adapter | `GlobalDataContext.hydrateAuthStateFromAnalyticsCache` → vt-sync | `GlobalDataContext.authState.isAuthenticated` sourced from auth-canon |
-| 3a — **Intelligence Hub extraction** | Give IntelligenceHub its own route, rewire its data source to analytics-canon; preserve every report subtype | — |
+| 3a — **Intelligence Hub extraction** | ✅ Embedded at `/analytics#intelligence` (own `ToolboxScaffold`), top-level `/intelligence` route + pageRegistry entry, canonical 34-dataset evidence + Brain persistence, PerformanceHub mount removed (governance test enforces) | — |
 | 3b — **CSV pipeline extraction** | Surface CSV upload/detect/merge inside `/analytics`; preserve auto-detection UX | — |
 | 3c — Tool views | Channelytics, MediaAnalyzer, HookGenerator, ThumbnailStudio, VideoPublisher, SEOGenerator, Subscribe, Settings | All 48 useBrain() consumers |
 | 4 — AI / brain | `bootstrapFirstRunBrain`, `AIBrainCommandInterface`, `BrainCommandCenter`, `DailyAdviceWidget` | Same set — auth signals from auth-canon |
@@ -35,7 +35,7 @@ Each track has the same structure. Consumer migration is the long tail — plan 
 Real numbers from `rg` over `src/`:
 
 - **48 files** call `useBrain()` (GlobalDataContext consumers → auth-canon targets)
-- **32 files** import from `services/analytics/{Selectors,DataStore}.ts` (analytics-canon targets)
+- **34 files** still import from `services/analytics/{Selectors,DataStore}.ts` after the Intelligence Hub cutover (analytics-canon targets; recounted 2026-08-24)
 - Overlap is significant — a file often needs both migrations, so grouping them per PR is efficient.
 
 Priority order (from user-visible impact to internals):
@@ -88,12 +88,16 @@ Discovered by reading `src/views/PerformanceHub.tsx` (5,855 lines) and comparing
 
 Both of these live inside PerformanceHub today. Retiring PerformanceHub without extracting them first would kill core features. These become their own migration phases, not consumer PRs.
 
-**A — Intelligence Hub** (`src/components/IntelligenceHub/IntelligenceHub.tsx`, 833 lines)
+**A — Intelligence Hub** (`src/components/IntelligenceHub/IntelligenceHub.tsx`)
 - The AI-powered report generator. **This is where "Oracle", "Executive Summary", "Channel Report", "Algorithm Diagnosis", and "Keyword Analysis" actually live** — types in `IntelligenceHub/types.ts` include `OracleReport`, `AlgorithmDiagnosis`, `KeywordAnalysis`, `UltimateChannelReport`.
-- Currently only mounted at [`PerformanceHub.tsx:5678`](src/views/PerformanceHub.tsx:5678). No other route reaches it.
-- Storage keys used: `vt_ultimate_channel_report_v1`, `vt_ultimate_tool_context_pack_v1`.
+- Canonical owner is now the lazy, closed-by-default toolbox at `/analytics#intelligence`, mounted after the VT-SYNC data table and before Data Visuals.
+- The Analytics boundary derives exactly 34 active datasets from `VT_SYNC_VISIBLE_TABLE_DEFINITIONS`, preserves source/freshness/unavailable states, and builds bounded evidence only when generation is requested.
+- Scoped report history uses `vt_ultimate_channel_report_v1:{channelId}` and `vt_ultimate_generation_history_v1:{channelId}`. The old unscoped report key remains readable as a legacy artifact but is never attached to a channel or written into Brain automatically.
 - Emit signal: `vt_generate_ultimate_report`.
-- **Migration phase:** Give it its own route (`/intelligence` or embed at `/analytics`). Rewire its data source to `analytics-canon`. Preserve every existing report subtype.
+- Report generation no longer imports `services/analytics/Selectors` or reads `yt_analytics_cache`. It consumes one pinned `CanonicalIntelligenceEvidenceBundle`, preserves the 12-section generation lifecycle and 14 rendered report blocks, and marks `/analytics` as authoritative.
+- Before generation it consults channel-scoped Brain context; after generation it persists `BrainGenerationRecord`, `ChannelKnowledgeModel`, and `ToolContextPack`. Channel/snapshot mismatch rejects the write while retaining the report.
+- Performance Hub no longer mounts a duplicate report generator; its Intelligence toolbox is a compatibility handoff to `/analytics#intelligence` while the rest of the monolith remains available.
+- **Remaining gate:** authenticated real-data browser run and protected preview validation. Production promotion is manual.
 
 **B — CSV Upload / Type Detector / Merge System** (5 files, 2,289 lines)
 - [`csvImportDetector.ts`](src/services/csvImportDetector.ts) — 403 lines. Auto-detects CSV category from headers, returns `CsvImportDetection` with confidence + merge target.
@@ -134,6 +138,7 @@ The types `OracleState`, `ChannelOraclePromptVersion`, `ExecutiveSummary`, `Chan
 
 ## History
 
+- 2026-08-24 — Intelligence Hub Phase 3a implemented locally: 34-dataset analytics-canon evidence, `/analytics#intelligence` lazy toolbox, channel-scoped Brain loop, and Performance Hub compatibility handoff. Focused tests and production build pass; authenticated preview remains open.
 - 2026-08-24 — [PR #36](https://github.com/themotionvisual/ViewTubeBUILD/pull/36): auth-canon Phase 0 foundation (`useAccountStatus()`).
 - 2026-08-24 — [PR #34](https://github.com/themotionvisual/ViewTubeBUILD/pull/34): analytics-canon Phase 0 foundation.
 - 2026-08-24 — [PR #35](https://github.com/themotionvisual/ViewTubeBUILD/pull/35): surgical fix — auth invalidation clears token; VerificationExplainerWidget gated by connection state.
