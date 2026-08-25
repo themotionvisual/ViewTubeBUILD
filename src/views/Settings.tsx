@@ -1,1115 +1,411 @@
-import React, { useMemo, useState, useEffect } from "react"
-import {
- Check,
- Zap,
- Settings as SettingsIcon,
- Eye,
- EyeOff,
- Link2,
- KeyRound,
- Trash2,
- Download,
- ShieldCheck,
- Lock,
- Sparkles,
- BookOpen,
- User,
- Mail,
- Bell,
- Coins,
-} from "lucide-react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
+import { Check, Settings as SettingsIcon, ShieldCheck, X } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { useBrain } from "../context/useBrain"
 import { useUnifiedAccount } from "../context/UnifiedAccountContext"
-import { getVaultSnapshot, setVaultSnapshot } from "../services/keyVault"
-import { SubToolbox } from "../components/Toolbox"
-import { resolvePublicChannel } from "../services/publicHandleMode"
-import { AIModelSelector } from "../components/ui/AIModelSelector"
 import {
- getStoredIngestMode,
- setStoredIngestMode,
- type IngestMode,
-} from "../services/productArchitecture"
-import { downloadExportBundle } from "../services/dataExport"
-import {
- clearAnalyticsStateForFreshSync,
- clearCachedDataSoft,
- factoryResetAll,
-} from "../services/localDataReset"
-import type { SubscriptionPlanId } from "../services/subscriptionPlans"
-import { googleService } from "../services/googleService"
-import {
- applyCustomTopupCredits,
- applyTopupCredits,
- createCheckoutSession,
- getCurrentEntitlement,
-  getReferralCode,
-  getReferralRedemptionCode,
- isOwnerEmail,
- saveReferralRedemptionCode,
- setCustomReferralCodeOnce,
- simulateMeterRefill,
- simulateMeterUsage,
- TOPUP_DEFINITIONS,
- updatePlanEntitlement,
- fetchEntitlementFromServer,
+  createBillingPortalSession,
+  createCheckoutSession,
+  fetchEntitlementFromServer,
+  getCurrentEntitlement,
+  isOwnerEmail,
+  setCustomReferralCodeOnce,
+  syncReferralCodeToChannelHandle,
 } from "../services/billingEntitlement"
-import { GUIDE_LAST_UPDATED, GUIDE_PROTOCOL_VERSION } from "../content/userGuideContent"
+import { loadAiBrainContext } from "../services/aiBrainContext"
+import { downloadExportBundle } from "../services/dataExport"
+import { googleService } from "../services/googleService"
+import { getVaultSnapshot, setVaultSnapshot } from "../services/keyVault"
 import {
-  loadAiBrainContext,
-  saveAiBrainContext,
-  type BrainPrimaryGoal,
-} from "../services/aiBrainContext"
+  clearAnalyticsStateForFreshSync,
+  clearCachedDataSoft,
+  factoryResetAll,
+} from "../services/localDataReset"
+import {
+  getStoredIngestMode,
+  setStoredIngestMode,
+  type IngestMode,
+} from "../services/productArchitecture"
+import { resolvePublicChannel } from "../services/publicHandleMode"
+import type { SubscriptionPlanId } from "../services/subscriptionPlans"
+import { SettingsHelpSection } from "./settings/SettingsHelpSection"
+import { UnifiedAccountSettingsSection } from "./settings/UnifiedAccountSettingsSection"
+import {
+  resolveSettingsPanel,
+  resolveSettingsReadiness,
+  type SettingsPanel,
+} from "./settings/settingsControlDeck"
 
-const SUBSCRIPTION_PLANS_UI: {
- id: SubscriptionPlanId
- tierLabel: string
- price: string
- bullets: string[]
- cta: string
-}[] = [
- {
-  id: "basic",
-  tierLabel: "Basic",
-  price: "$0",
-  bullets: ["Core tools", "Manual sync", "Basic analytics"],
-  cta: "Upgrade",
- },
- {
-  id: "beta",
-  tierLabel: "Beta (BYOK)",
-  price: "$0",
-  bullets: ["Unlimited AI (BYOK)", "Full strategy stack", "Community-driven"],
-  cta: "Switch to Beta",
- },
- {
-  id: "creator",
-  tierLabel: "Creator",
-  price: "$9.99/mo",
-  bullets: ["48-hour trial", "Included AI credits", "Advanced dashboards"],
-  cta: "Upgrade",
- },
- {
-  id: "creator_plus",
-  tierLabel: "Creator Plus",
-  price: "$19.99/mo",
-  bullets: ["48-hour trial", "More included AI credits", "Priority generation capacity"],
-  cta: "Upgrade",
- },
- {
-  id: "creator_pro",
-  tierLabel: "Creator Pro",
-  price: "$39.99/mo",
-  bullets: ["48-hour trial", "Highest capped creator credits", "Full strategy stack"],
-  cta: "Upgrade",
- },
- {
-  id: "executive",
-  tierLabel: "Executive",
-  price: "$69.99/mo",
-  bullets: ["48-hour trial", "Unlimited AI generation", "Executive priority"],
-  cta: "Upgrade",
- },
-]
-
-const PLAN_THEME: Record<SubscriptionPlanId, { accent: string; shadow: string; tint: string }> = {
- basic: { accent: "#C9F830", shadow: "rgba(201, 248, 48, 0.45)", tint: "#F4FFD0" },
- beta: { accent: "#FF5733", shadow: "rgba(255, 87, 51, 0.45)", tint: "#FFD5CC" },
- creator: { accent: "#40C6E9", shadow: "rgba(64, 198, 233, 0.45)", tint: "#D9F6FF" },
- creator_plus: { accent: "#FFE357", shadow: "rgba(255, 227, 87, 0.45)", tint: "#FFF7CC" },
- creator_pro: { accent: "#FFB570", shadow: "rgba(255, 181, 112, 0.45)", tint: "#FFE9D2" },
- executive: { accent: "#FF83EA", shadow: "rgba(255, 131, 234, 0.45)", tint: "#FFDDF7" },
-}
-
-const canonicalButtonClass =
- "rounded-xl border-[3px] border-black shadow-[3px_3px_0px_0px_black] hover:translate-y-0.5 hover:shadow-[1.5px_1.5px_0px_0px_black] transition-all font-black uppercase"
+type ConfirmationKind = "cache" | "factory" | "delete"
 
 const isTopupStripeConfigError = (message: string): boolean => {
- const lower = String(message || "").toLowerCase()
- return (
-  lower.includes("missing stripe price env for top-up") ||
-  lower.includes("missing stripe price env for topup") ||
-  lower.includes("no such price")
- )
+  const lower = String(message || "").toLowerCase()
+  return lower.includes("missing stripe price env for top-up") || lower.includes("missing stripe price env for topup") || lower.includes("no such price")
 }
 
 const Settings: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const account = useUnifiedAccount()
-  const { authState, updateBrain } = useBrain()
-  const isAuth = account.snapshot.authentication.status === "authenticated"
+  const { authState, channelConnection, connectChannel, disconnectChannel } = useBrain()
+  const isAuth = account.snapshot.authentication.status === "authenticated" || authState.isAuthenticated
 
   const [geminiKey, setGeminiKey] = useState("")
   const [showKey, setShowKey] = useState(false)
-  const [saveStatus, setSaveStatus] = useState<string | null>(null)
+  const [settingsSaveStatus, setSettingsSaveStatus] = useState<string | null>(null)
   const [handleInput, setHandleInput] = useState("")
   const [handleStatus, setHandleStatus] = useState<string | null>(null)
-  const [ingestMode, setIngestMode] = useState<IngestMode>(getStoredIngestMode())
+  const [ingestMode, setIngestMode] = useState<IngestMode>(() => getStoredIngestMode())
   const [exportStatus, setExportStatus] = useState<string | null>(null)
   const [dataResetStatus, setDataResetStatus] = useState<string | null>(null)
   const [loadingPlan, setLoadingPlan] = useState<SubscriptionPlanId | null>(null)
   const [billingStatus, setBillingStatus] = useState<string | null>(null)
   const [currentEmail, setCurrentEmail] = useState("")
-  const [profileName, setProfileName] = useState("")
-  const [profileHandle, setProfileHandle] = useState("")
-  const [notifyBilling, setNotifyBilling] = useState(true)
- const [referralInput, setReferralInput] = useState("")
- const [customReferralCode, setCustomReferralCode] = useState("")
- const [customTopupAmount, setCustomTopupAmount] = useState("50")
- const [brainWhatNext, setBrainWhatNext] = useState("")
- const [brainPrimaryGoal, setBrainPrimaryGoal] = useState<BrainPrimaryGoal>("views")
- const [brainAudienceNiche, setBrainAudienceNiche] = useState("")
+  const [customReferralCode, setCustomReferralCode] = useState("")
+  const [customTopupAmount, setCustomTopupAmount] = useState("50")
+  const [notifyBilling, setNotifyBilling] = useState(() => localStorage.getItem("vt.settings.billing-alerts") !== "off")
+  const [confirmation, setConfirmation] = useState<ConfirmationKind | null>(null)
+  const [confirmationText, setConfirmationText] = useState("")
+  const confirmationTriggerRef = useRef<HTMLElement | null>(null)
 
   const query = new URLSearchParams(location.search)
- const activePanel = query.get("panel")
- const highlightBilling = activePanel === "billing"
- const entitlement = getCurrentEntitlement()
- const canViewGeminiKey = entitlement.tier === "large" || isOwnerEmail(currentEmail)
- const isBasicPlan = entitlement.subscriptionPlanId === "basic"
- const meterTotal = useMemo(
-  () =>
-   Math.max(
-    1,
-    Math.floor(
-     entitlement.rolloverCap || entitlement.monthlyCreditGrant || entitlement.creditBalance || 1,
-    ),
-   ),
-  [entitlement.creditBalance, entitlement.monthlyCreditGrant, entitlement.rolloverCap],
- )
- const meterLeft = useMemo(
-  () => Math.max(0, Math.floor(entitlement.creditBalance || 0)),
-  [entitlement.creditBalance],
- )
- const meterUsed = Math.max(0, meterTotal - meterLeft)
- const meterPct = entitlement.tier === "large" ? 100 : Math.max(0, Math.min(100, Math.round((meterLeft / meterTotal) * 100)))
-
- useEffect(() => {
-  const vault = getVaultSnapshot()
-  setGeminiKey(vault.gemini || "")
-  setProfileName(authState.channelName || "")
-  setProfileHandle(authState.channelHandle || "")
+  const activePanel = resolveSettingsPanel(query.get("panel"))
+  const entitlement = getCurrentEntitlement()
+  const isBasicPlan = entitlement.subscriptionPlanId === "basic"
+  const canViewGeminiKey = entitlement.tier === "large" || isOwnerEmail(currentEmail)
+  const showInternalOpsLink = isOwnerEmail(currentEmail)
+  const profileName = account.snapshot.profile.displayName || authState.channelName || ""
+  const profileHandle = account.snapshot.google.channelHandle || authState.channelHandle || ""
+  const displayedChannelHandle = handleInput
+  const connected = account.snapshot.google.status === "connected" || channelConnection.isConnected
   const brainContext = loadAiBrainContext()
-  setBrainWhatNext(brainContext.whatNext)
-  setBrainPrimaryGoal(brainContext.primaryGoal)
-  setBrainAudienceNiche(brainContext.audienceNiche)
- }, [authState.channelHandle, authState.channelName])
+  const readiness = resolveSettingsReadiness(
+    account.snapshot,
+    connected,
+    Boolean(brainContext.completedAt || brainContext.audienceNiche || brainContext.whatNext),
+  )
 
- useEffect(() => {
-  const syncBilling = async () => {
-   const authReady = isAuth
-   if (!authReady) {
-    setBillingStatus("Sign in to sync billing entitlements.")
-    return
-   }
-   try {
-     const userInfo = await googleService.getUserInfo()
-     setCurrentEmail((userInfo.email || "").toLowerCase())
-     await fetchEntitlementFromServer(userInfo.email)
-     setBillingStatus("Entitlements synced with server.")
-   } catch (e) {
-    const message = e instanceof Error ? e.message : String(e)
-    if (message.toLowerCase().includes("not authenticated")) {
-     console.info("Billing sync skipped: not authenticated.")
-     setBillingStatus("Sign in to sync billing entitlements.")
-     return
+  const meterTotal = useMemo(
+    () => Math.max(1, Math.floor(entitlement.rolloverCap || entitlement.monthlyCreditGrant || entitlement.creditBalance || 1)),
+    [entitlement.creditBalance, entitlement.monthlyCreditGrant, entitlement.rolloverCap],
+  )
+  const meterLeft = useMemo(() => Math.max(0, Math.floor(entitlement.creditBalance || 0)), [entitlement.creditBalance])
+  const meterUsed = Math.max(0, meterTotal - meterLeft)
+  const meterPct = entitlement.tier === "large" ? 100 : Math.max(0, Math.min(100, Math.round((meterLeft / meterTotal) * 100)))
+
+  useEffect(() => {
+    setGeminiKey(getVaultSnapshot().gemini || "")
+  }, [])
+
+  useEffect(() => {
+    const snapshotEmail = account.snapshot.profile.email?.toLowerCase()
+    if (snapshotEmail) setCurrentEmail(snapshotEmail)
+  }, [account.snapshot.profile.email])
+
+  useEffect(() => {
+    if (!authState.channelHandle) return
+    syncReferralCodeToChannelHandle(authState.channelHandle)
+  }, [authState.channelHandle])
+
+  useEffect(() => {
+    if (!profileHandle) return
+    setHandleInput((current) => current || `@${String(profileHandle).replace(/^@+/, "")}`)
+  }, [profileHandle])
+
+  useEffect(() => {
+    const syncBilling = async () => {
+      if (!isAuth) {
+        setBillingStatus("Connect to sync billing entitlements.")
+        return
+      }
+      try {
+        if (!account.serverEnabled) {
+          const userInfo = await googleService.getUserInfo()
+          setCurrentEmail((userInfo.email || "").toLowerCase())
+        }
+        await fetchEntitlementFromServer()
+        setBillingStatus("Entitlements synced with server.")
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        if (message.toLowerCase().includes("not authenticated")) {
+          setBillingStatus("Connect to sync billing entitlements.")
+          return
+        }
+        console.error("Billing sync failed", error)
+        setBillingStatus("Failed to sync billing.")
+      }
     }
-    console.error("Billing sync failed", e)
-    setBillingStatus("Failed to sync billing.")
-   }
-  }
-  syncBilling()
- }, [isAuth])
+    void syncBilling()
+  }, [account.serverEnabled, isAuth])
 
- useEffect(() => {
-  setReferralInput(getReferralRedemptionCode())
- }, [])
-
- // ... existing code ...
-
-
- const handleSave = () => {
-  setVaultSnapshot({
-   gemini: geminiKey,
-  })
-  setSaveStatus("Settings Saved!")
-  setTimeout(() => setSaveStatus(null), 2500)
-  window.dispatchEvent(new Event("yt_settings_updated"))
- }
-
- const handlePublicResolve = async () => {
-  setHandleStatus("Resolving channel...")
-  try {
-   const result = await resolvePublicChannel(handleInput)
-   if (!result.resolvedChannelId) {
-    setHandleStatus(result.reason || "Channel not resolved.")
-    return
-   }
-   setHandleStatus(
-    `Resolved: ${result.channelTitle || "Unknown Channel"} (${result.resolvedChannelId})`,
-   )
-   setIngestMode("public_handle")
-   setStoredIngestMode("public_handle")
-   localStorage.setItem("vt_public_channel_id", result.resolvedChannelId)
-   if (result.resolvedHandle) {
-    localStorage.setItem("vt_public_channel_handle", result.resolvedHandle)
-   }
-  } catch (error) {
-   const message = error instanceof Error ? error.message : String(error)
-   setHandleStatus(`Resolve failed: ${message}`)
-  }
- }
-
- const handleExport = async () => {
-  setExportStatus("Building export bundle...")
-  try {
-   const manifest = await downloadExportBundle(ingestMode, "lifetime")
-   setExportStatus(`Export complete at ${manifest.generatedAt}.`)
-  } catch (error) {
-   const message = error instanceof Error ? error.message : String(error)
-   setExportStatus(`Export failed: ${message}`)
-  }
- }
-
- const switchMode = (mode: IngestMode) => {
-  setIngestMode(mode)
-  setStoredIngestMode(mode)
- }
-
- const handleChoosePlan = async (planId: SubscriptionPlanId) => {
-  if (planId === "basic") {
-   updatePlanEntitlement("basic")
-   setBillingStatus("Free plan active. You can browse normally.")
-   return
+  const changePanel = (panel: SettingsPanel) => {
+    const next = new URLSearchParams(location.search)
+    next.set("panel", panel)
+    navigate(`${location.pathname}?${next.toString()}${location.hash}`, { replace: true })
+    requestAnimationFrame(() => document.getElementById(`settings-panel-${panel}`)?.focus())
   }
 
-  try {
-   setLoadingPlan(planId)
-   setBillingStatus("Creating secure checkout session...")
-  const session = await createCheckoutSession({
-    planId,
-    successUrl: `${window.location.origin}/account?panel=billing`,
-    cancelUrl: `${window.location.origin}/account?panel=billing`,
-   })
-
-   window.location.href = session.checkoutUrl
-  } catch (error) {
-   const message = error instanceof Error ? error.message : String(error)
-   if (message.includes("not configured") || message.includes("failed (404)")) {
-    updatePlanEntitlement(planId)
-    setBillingStatus("Demo checkout applied locally (billing server not connected).")
-   } else {
-    setBillingStatus(`Checkout failed: ${message}`)
-   }
-  } finally {
-   setLoadingPlan(null)
+  const handleAccountAction = async () => {
+    if (account.serverEnabled) {
+      if (account.intent !== "manage_account") await account.start(account.intent, `${location.pathname}${location.search}${location.hash}`)
+      return
+    }
+    await clearAnalyticsStateForFreshSync()
+    await connectChannel()
   }
- }
 
- const handleTopup = async (topupSku: string) => {
-  try {
-   setBillingStatus("Creating top-up checkout session...")
-   const session = await createCheckoutSession({
-    planId: "creator_plus",
-    successUrl: `${window.location.origin}/account?panel=billing`,
-    cancelUrl: `${window.location.origin}/account?panel=billing`,
-    mode: "topup",
-    topupSku,
-   })
-   window.location.href = session.checkoutUrl
-  } catch (error) {
-   const message = error instanceof Error ? error.message : String(error)
-   if (isTopupStripeConfigError(message)) {
-    setBillingStatus("Top-up checkout is not configured yet. Add Stripe top-up price IDs in billing env.")
-    return
-   }
-   if (message.includes("not configured") || message.includes("failed (404)")) {
-    applyTopupCredits(topupSku)
-    setBillingStatus("Demo top-up applied locally (billing server not connected).")
-   } else {
-    setBillingStatus(`Top-up failed: ${message}`)
-   }
+  const handleDisconnectAccountChannel = async () => {
+    if (account.serverEnabled) await account.disconnectGoogle()
+    disconnectChannel()
   }
- }
 
- const handleCustomTopup = async () => {
-  const amountUsd = Math.max(0, Number(customTopupAmount) || 0)
-  if (amountUsd <= 0) {
-   setBillingStatus("Enter a valid top-up amount.")
-   return
+  const handleSaveGeminiKey = () => {
+    setVaultSnapshot({ gemini: geminiKey })
+    setSettingsSaveStatus("API key saved.")
+    setTimeout(() => setSettingsSaveStatus(null), 2500)
+    window.dispatchEvent(new Event("yt_settings_updated"))
   }
-  try {
-   setBillingStatus("Creating custom top-up checkout session...")
-   const session = await createCheckoutSession({
-    planId: "creator_plus",
-    successUrl: `${window.location.origin}/account?panel=billing`,
-    cancelUrl: `${window.location.origin}/account?panel=billing`,
-    mode: "topup",
-    topupSku: `custom_${amountUsd.toFixed(2)}`,
-   })
-   window.location.href = session.checkoutUrl
-  } catch (error) {
-   const message = error instanceof Error ? error.message : String(error)
-   if (isTopupStripeConfigError(message)) {
-    setBillingStatus("Custom top-up checkout is not configured yet. Add Stripe top-up price IDs in billing env.")
-    return
-   }
-   if (message.includes("not configured") || message.includes("failed (404)")) {
-    const result = applyCustomTopupCredits(amountUsd)
-    const bonusLabel = result.bonusCredits > 0 ? ` (+${result.bonusCredits.toLocaleString()} bonus)` : ""
-    setBillingStatus(
-     `Demo custom top-up applied: ${result.creditsGranted.toLocaleString()} credits${bonusLabel}.`,
-    )
-   } else {
-    setBillingStatus(`Custom top-up failed: ${message}`)
-   }
+
+  const handlePublicResolve = async () => {
+    setHandleStatus("Resolving channel...")
+    try {
+      const result = await resolvePublicChannel(handleInput)
+      if (!result.resolvedChannelId) {
+        setHandleStatus(result.reason || "Channel not resolved.")
+        return
+      }
+      setHandleStatus(`Resolved: ${result.channelTitle || "Unknown Channel"} (${result.resolvedChannelId})`)
+      setIngestMode("public_handle")
+      setStoredIngestMode("public_handle")
+      localStorage.setItem("vt_public_channel_id", result.resolvedChannelId)
+      if (result.resolvedHandle) localStorage.setItem("vt_public_channel_handle", result.resolvedHandle)
+    } catch (error) {
+      setHandleStatus(`Resolve failed: ${error instanceof Error ? error.message : String(error)}`)
+    }
   }
- }
 
- const handleSaveBrainContext = () => {
-  const saved = saveAiBrainContext({
-   whatNext: brainWhatNext,
-   primaryGoal: brainPrimaryGoal,
-   audienceNiche: brainAudienceNiche,
-  })
-  updateBrain({
-   creatorPreferences: {
-    what_next_goal: saved.whatNext,
-    primary_channel_goal: saved.primaryGoal,
-    audience_niche: saved.audienceNiche,
-   },
-  })
-  setSaveStatus("AI Brain context saved.")
-  setTimeout(() => setSaveStatus(null), 2500)
- }
+  const handleExport = async () => {
+    setExportStatus("Building export bundle...")
+    try {
+      const manifest = await downloadExportBundle(ingestMode, "lifetime")
+      setExportStatus(`Export complete at ${manifest.generatedAt}.`)
+    } catch (error) {
+      setExportStatus(`Export failed: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
 
- return (
-  <div className="max-w-[1400px] mx-auto pb-32 animate-fade-in px-4 space-y-14">
-   <div className="flex justify-between items-end border-b-[4px] border-black pb-4">
-    <div>
-     <h1 className="text-5xl font-black uppercase tracking-tighter text-black">
-      Account Settings
-     </h1>
-     <p className="font-bold text-gray-700 uppercase tracking-wide text-xs mt-1">
-      Unified account, billing, workspace, and data controls
-     </p>
-    </div>
-   <div className="bg-[#FF83EA] text-black p-3 rounded-xl border-[4px] border-black shadow-[4px_4px_0px_0px_black] rotate-2">
-     <SettingsIcon size={32} />
-   </div>
-  </div>
+  const handleChoosePlan = async (planId: SubscriptionPlanId) => {
+    if (planId === "basic") {
+      setBillingStatus("Downgrades are managed securely through the billing portal.")
+      return
+    }
+    try {
+      setLoadingPlan(planId)
+      setBillingStatus("Creating secure checkout session...")
+      const session = await createCheckoutSession({
+        planId,
+        successUrl: `${window.location.origin}/account?panel=billing`,
+        cancelUrl: `${window.location.origin}/account?panel=billing`,
+      })
+      window.location.href = session.checkoutUrl
+    } catch (error) {
+      setBillingStatus(`Checkout failed: ${error instanceof Error ? error.message : String(error)}`)
+    } finally {
+      setLoadingPlan(null)
+    }
+  }
 
-   <div id="account-profile" className="pt-1">
-   <SubToolbox
-    title="Account Profile"
-    icon={<User size={20} strokeWidth={3} className="text-black" />}
-    paletteIndex={5}
-    contentClassName="p-6 space-y-4">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-     <div className="space-y-2">
-      <label className="text-xs font-black uppercase tracking-wider">Display Name</label>
-      <input
-       value={profileName}
-       readOnly
-       className="w-full p-3 border-[3px] border-black rounded-xl font-bold bg-[#f3f4f6] text-gray-700"
-       placeholder="Loaded from YouTube"
-      />
-     </div>
-     <div className="space-y-2">
-      <label className="text-xs font-black uppercase tracking-wider">Channel Handle</label>
-      <input
-       value={profileHandle}
-       readOnly
-       className="w-full p-3 border-[3px] border-black rounded-xl font-bold bg-[#f3f4f6] text-gray-700"
-       placeholder="Loaded from YouTube"
-      />
-     </div>
-    </div>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-     <div className="space-y-2">
-      <label className="text-xs font-black uppercase tracking-wider">Email</label>
-      <div className="w-full p-3 border-[3px] border-black rounded-xl font-bold bg-white flex items-center gap-2">
-       <Mail size={15} />
-       {currentEmail || "Sign in to load email"}
-      </div>
-     </div>
-     <div className="space-y-2">
-      <label className="text-xs font-black uppercase tracking-wider">Notifications</label>
-      <button
-       onClick={() => setNotifyBilling((prev) => !prev)}
-       className={`${canonicalButtonClass} w-full py-3 text-sm ${notifyBilling ? "bg-[#CCFF00]" : "bg-white"}`}>
-       <Bell size={14} className="inline mr-2" />
-       {notifyBilling ? "Billing alerts on" : "Billing alerts off"}
-      </button>
-     </div>
-    </div>
-    <p className="text-[11px] font-black uppercase tracking-[0.1em] text-gray-600">
-     Channel title and handle are read-only and synced from your connected YouTube identity.
-    </p>
-   </SubToolbox>
-   </div>
+  const handleOpenBillingPortal = async () => {
+    try {
+      setBillingStatus("Opening secure billing portal...")
+      const { portalUrl } = await createBillingPortalSession(`${window.location.origin}/account?panel=billing`)
+      window.location.assign(portalUrl)
+    } catch (error) {
+      setBillingStatus(`Billing portal failed: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
 
-   <div id="ai-brain-context" className="pt-1">
-    <SubToolbox
-     title="AI Brain Context"
-     icon={<Zap size={20} strokeWidth={3} className="text-black" />}
-     paletteIndex={1}
-     contentClassName="p-6 space-y-4">
-     <p className="font-bold text-gray-700">
-      Set your immediate channel goals so the AI tools start with relevant context.
-     </p>
-     <div className="space-y-2">
-      <label className="text-xs font-black uppercase tracking-wider">What are you trying to achieve next?</label>
-      <textarea
-       value={brainWhatNext}
-       onChange={(event) => setBrainWhatNext(event.target.value)}
-       placeholder="Example: increase average views per upload and improve retention."
-       className="w-full min-h-[90px] p-3 border-[3px] border-black rounded-xl font-bold"
-      />
-     </div>
-     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="space-y-2">
-       <label className="text-xs font-black uppercase tracking-wider">Primary channel goal</label>
-       <select
-        value={brainPrimaryGoal}
-        onChange={(event) => setBrainPrimaryGoal(event.target.value as BrainPrimaryGoal)}
-        className="w-full h-11 px-3 border-[3px] border-black rounded-xl bg-white font-black uppercase">
-        <option value="views">Views</option>
-        <option value="subscribers">Subscribers</option>
-        <option value="revenue">Revenue</option>
-        <option value="retention">Retention</option>
-        <option value="consistency">Consistency</option>
-       </select>
-      </div>
-      <div className="space-y-2">
-       <label className="text-xs font-black uppercase tracking-wider">Audience + niche</label>
-       <input
-        value={brainAudienceNiche}
-        onChange={(event) => setBrainAudienceNiche(event.target.value)}
-        placeholder="Example: educational history audience, 18-34."
-        className="w-full h-11 px-3 border-[3px] border-black rounded-xl font-bold"
-       />
-      </div>
-     </div>
-     <div className="flex justify-end">
-      <button
-       onClick={handleSaveBrainContext}
-       className={`${canonicalButtonClass} bg-[#4FFF5B] px-4 py-3 text-sm`}>
-       Save Brain Context
-      </button>
-     </div>
-    </SubToolbox>
-   </div>
+  const handleTopup = async (topupSku: string) => {
+    try {
+      setBillingStatus("Creating top-up checkout session...")
+      const session = await createCheckoutSession({
+        planId: "creator_plus",
+        successUrl: `${window.location.origin}/account?panel=billing`,
+        cancelUrl: `${window.location.origin}/account?panel=billing`,
+        mode: "topup",
+        topupSku,
+      })
+      window.location.href = session.checkoutUrl
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      setBillingStatus(isTopupStripeConfigError(message) ? "Top-up checkout is not configured yet." : `Top-up failed: ${message}`)
+    }
+  }
 
-   <div id="guide-protocols" className="pt-1">
-   <SubToolbox
-    title="User Guide & Protocols"
-    icon={<BookOpen size={20} strokeWidth={3} className="text-black" />}
-    paletteIndex={6}
-    contentClassName="p-6 space-y-4">
-    <p className="font-bold text-gray-700">
-     Step-by-step help for launch-critical tasks: account setup, billing and credits, sync/data sources, and graph troubleshooting.
-    </p>
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-     <button
-      onClick={() => navigate("/user-guide")}
-      className={`${canonicalButtonClass} bg-[#40C6E9] text-black px-4 py-4 text-sm w-full`}>
-      Open Full User Guide
-     </button>
-     <button
-      onClick={() => navigate("/user-guide#billing")}
-      className={`${canonicalButtonClass} bg-white text-black px-4 py-4 text-xs w-full`}>
-      Billing + Credits Help
-     </button>
-     <button
-      onClick={() => navigate("/user-guide#sync")}
-      className={`${canonicalButtonClass} bg-white text-black px-4 py-4 text-xs w-full`}>
-      Connect + Sync Data Help
-     </button>
-     <button
-      onClick={() => navigate("/user-guide#graphs")}
-      className={`${canonicalButtonClass} bg-white text-black px-4 py-4 text-xs w-full`}>
-      Graph QA + Troubleshooting
-     </button>
-    </div>
-    <p className="text-xs font-black uppercase tracking-[0.15em] text-gray-600">
-     Protocol {GUIDE_PROTOCOL_VERSION} • Updated {GUIDE_LAST_UPDATED}
-    </p>
-   </SubToolbox>
-   </div>
+  const handleCustomTopup = async () => {
+    const amountUsd = Math.max(0, Number(customTopupAmount) || 0)
+    if (amountUsd <= 0) {
+      setBillingStatus("Enter a valid top-up amount.")
+      return
+    }
+    try {
+      setBillingStatus("Creating custom top-up checkout session...")
+      const session = await createCheckoutSession({
+        planId: "creator_plus",
+        successUrl: `${window.location.origin}/account?panel=billing`,
+        cancelUrl: `${window.location.origin}/account?panel=billing`,
+        mode: "topup",
+        topupSku: `custom_${amountUsd.toFixed(2)}`,
+      })
+      window.location.href = session.checkoutUrl
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      setBillingStatus(isTopupStripeConfigError(message) ? "Custom top-up checkout is not configured yet." : `Custom top-up failed: ${message}`)
+    }
+  }
 
-   <div id="billing-meter" className="pt-1">
-   <SubToolbox
-    title="Billing & Subscription"
-    icon={<Lock size={20} strokeWidth={3} className="text-black" />}
-    paletteIndex={0}
-    contentClassName={`p-8 space-y-12 ${highlightBilling ? "ring-4 ring-[#CCFF00]" : ""}`}>
-    <div className="space-y-7">
-     <div className="flex flex-wrap items-start justify-between gap-4">
-      <div className="space-y-2">
-       <h2 className="text-[30px] leading-none font-black uppercase tracking-tight">Subscription Controls</h2>
-       <p className="text-sm font-bold text-gray-700">
-        Manage plans, credits, referral rewards, and one-time top-ups from one place.
-       </p>
-      </div>
-      <div className="flex gap-2">
-       <button
-        onClick={() => navigate("/user-guide#billing")}
-        className="px-4 py-2 border-[2px] border-black rounded-xl bg-white font-black uppercase text-xs shadow-[2px_2px_0px_0px_black]">
-        Billing Help
-       </button>
-       <button
-        onClick={() => navigate("/account?panel=billing")}
-        className="px-4 py-2 border-[3px] border-black rounded-xl bg-[#CCFF00] font-black uppercase shadow-[3px_3px_0px_0px_black]">
-        Billing Panel
-       </button>
-      </div>
-     </div>
+  const openConfirmation = (kind: ConfirmationKind) => {
+    confirmationTriggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    setConfirmationText("")
+    setConfirmation(kind)
+  }
 
-    </div>
+  const closeConfirmation = () => {
+    setConfirmation(null)
+    setConfirmationText("")
+    requestAnimationFrame(() => confirmationTriggerRef.current?.focus())
+  }
 
-    <div className="border-[4px] border-black rounded-2xl bg-white p-6 shadow-[4px_4px_0px_0px_black] space-y-5">
-     <div className="flex flex-wrap items-start justify-between gap-4">
-      <div className="min-w-[260px]">
-       <p className="text-xs font-black uppercase tracking-[0.14em] text-gray-700">Credit Meter</p>
-       <h3 className="text-3xl font-black uppercase tracking-tight">
-        {entitlement.tier === "large" ? "Unlimited" : `${meterLeft.toLocaleString()} left`}
-       </h3>
-      </div>
-      <div className="flex flex-wrap justify-end gap-2">
-       <div className="border-[2px] border-black rounded-xl px-3 py-2 min-w-[120px]" style={{ backgroundColor: "#D9F6FF", boxShadow: "3px 3px 0px 0px rgba(64, 198, 233, 0.45)" }}>
-        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-gray-700">Plan</p>
-        <p className="text-sm font-black uppercase">{entitlement.subscriptionPlanId}</p>
-       </div>
-       <div className="border-[2px] border-black rounded-xl px-3 py-2 min-w-[100px]" style={{ backgroundColor: "#FFDDF7", boxShadow: "3px 3px 0px 0px rgba(255, 131, 234, 0.45)" }}>
-        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-gray-700">Tier</p>
-        <p className="text-sm font-black uppercase">{entitlement.tier}</p>
-       </div>
-       <div className="border-[2px] border-black rounded-xl px-3 py-2 min-w-[120px]" style={{ backgroundColor: "#FFF7CC", boxShadow: "3px 3px 0px 0px rgba(255, 227, 87, 0.45)" }}>
-        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-gray-700">Refill</p>
-        <p className="text-sm font-black uppercase">
-         {Math.max(0, Math.floor(entitlement.monthlyCreditGrant || 0)).toLocaleString()}
-        </p>
-       </div>
-       <div className="border-[2px] border-black rounded-xl px-3 py-2 min-w-[120px]" style={{ backgroundColor: "#FFE9D2", boxShadow: "3px 3px 0px 0px rgba(255, 181, 112, 0.45)" }}>
-        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-gray-700">Next</p>
-        <p className="text-sm font-black uppercase">
-         {entitlement.nextRefillIso ? new Date(entitlement.nextRefillIso).toLocaleDateString() : "N/A"}
-        </p>
-       </div>
-       <div className="border-[2px] border-black rounded-xl px-3 py-2 min-w-[100px] text-right" style={{ backgroundColor: "#F4FFD0", boxShadow: "3px 3px 0px 0px rgba(201, 248, 48, 0.45)" }}>
-        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-gray-700">Total</p>
-        <p className="text-lg font-black">{entitlement.tier === "large" ? "∞" : meterTotal.toLocaleString()}</p>
-       </div>
-      </div>
-     </div>
-     <div className="h-6 border-[3px] border-black rounded-full bg-[#e5e7eb] overflow-hidden">
-      <div
-       style={{
-        width: `${meterPct}%`,
-        height: "100%",
-        transition: "width 280ms ease",
-        background:
-         entitlement.tier === "large"
-          ? "#4FFF5B"
-          : meterPct > 65
-            ? "#4FFF5B"
-            : meterPct > 30
-              ? "#FFE357"
-              : "#FF8AAF",
-       }}
-      />
-     </div>
-     <div className="flex items-center justify-between text-xs font-black uppercase tracking-wide text-gray-700">
-      <span>{entitlement.tier === "large" ? "Unlimited Plan Active" : `${meterUsed.toLocaleString()} used`}</span>
-      <span>{entitlement.tier === "large" ? "100%" : `${meterPct}% remaining`}</span>
-     </div>
-     <div className="grid grid-cols-1 xl:grid-cols-[1fr_auto] gap-3 pt-1 items-start">
-      <div className="flex flex-wrap gap-3">
-       {TOPUP_DEFINITIONS.map((topup) => (
-        <button
-         key={`meter-topup-${topup.sku}`}
-         onClick={() => handleTopup(topup.sku)}
-         className="border-[3px] border-black rounded-xl px-4 py-3 bg-[#40C6E9] font-black uppercase text-sm shadow-[3px_3px_0px_0px_black]">
-         ${topup.priceUsd} • {topup.creditAmount.toLocaleString()} credits
-        </button>
-       ))}
-      </div>
-      <div className="flex flex-wrap xl:flex-nowrap items-center gap-2">
-       <input
-        type="number"
-        min={1}
-        step="1"
-        value={customTopupAmount}
-        onChange={(event) => setCustomTopupAmount(event.target.value)}
-        className="w-[140px] border-[3px] border-black rounded-xl px-3 py-3 font-black text-sm bg-white"
-        placeholder="Amount USD"
-       />
-       <button
-        onClick={handleCustomTopup}
-        className="border-[3px] border-black rounded-xl px-4 py-3 bg-[#CCFF00] font-black uppercase text-sm shadow-[3px_3px_0px_0px_black] whitespace-nowrap">
-        Custom top-up (+25% on $50+)
-       </button>
-      </div>
-     </div>
-     {isOwnerEmail(currentEmail) ? (
-      <div className="flex flex-wrap gap-2">
-       <button
-        onClick={() => {
-         simulateMeterUsage(2500)
-         setBillingStatus("Meter simulation: consumed 2,500 credits.")
-        }}
-        className="border-[2px] border-black rounded-xl px-3 py-2 bg-[#FFE357] font-black uppercase text-xs shadow-[2px_2px_0px_0px_black]">
-        Test Drain
-       </button>
-       <button
-        onClick={() => {
-         simulateMeterRefill(10000)
-         setBillingStatus("Meter simulation: added 10,000 credits.")
-        }}
-        className="border-[2px] border-black rounded-xl px-3 py-2 bg-[#4FFF5B] font-black uppercase text-xs shadow-[2px_2px_0px_0px_black]">
-        Test Refill
-       </button>
-      </div>
-     ) : null}
-    </div>
+  const runConfirmedAction = async () => {
+    const kind = confirmation
+    if (!kind) return
+    closeConfirmation()
+    try {
+      if (kind === "cache") {
+        await clearCachedDataSoft()
+        setDataResetStatus("Site data and cached analytics cleared.")
+      } else if (kind === "factory") {
+        await factoryResetAll()
+        setDataResetStatus("Factory reset complete.")
+      } else {
+        await account.deleteAccount()
+        await clearCachedDataSoft()
+        navigate("/", { replace: true })
+      }
+    } catch (error) {
+      setDataResetStatus(`Action failed: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
 
-    <div className="space-y-4">
-     <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-600">Choose Plan</p>
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-7 items-stretch">
-     {SUBSCRIPTION_PLANS_UI.map((plan) => {
-      const active = entitlement.subscriptionPlanId === plan.id
-      const loading = loadingPlan === plan.id
-      const theme = PLAN_THEME[plan.id]
-      return (
-       <div
-        key={plan.id}
-        className="h-full min-w-0 border-[4px] border-black rounded-2xl bg-white p-5 flex flex-col gap-4"
-        style={{
-         boxShadow: `6px 6px 0px 0px ${theme.shadow}`,
-        }}>
-        <div
-         className="border-[2px] border-black rounded-xl px-3 py-2 flex items-center justify-between"
-         style={{ backgroundColor: theme.tint }}>
-         <p className="text-xs font-black uppercase tracking-[0.2em]">{plan.tierLabel}</p>
-         {active ? <Check size={18} strokeWidth={3} /> : null}
-        </div>
-        <h3 className="text-[2.05rem] leading-none font-black uppercase tracking-tight whitespace-nowrap">
-         {plan.price}
-        </h3>
-        <ul className="space-y-2">
-         {plan.bullets.map((bullet) => (
-          <li key={bullet} className="font-bold text-[0.95rem] uppercase">• {bullet}</li>
-         ))}
-        </ul>
-        <button
-         onClick={() => handleChoosePlan(plan.id)}
-         disabled={loading}
-         className="mt-auto border-[3px] border-black rounded-xl px-4 py-3 font-black uppercase text-sm disabled:opacity-60"
-         style={{
-          backgroundColor: theme.accent,
-          boxShadow: `4px 4px 0px 0px ${theme.shadow}`,
-         }}>
-         {loading ? "Working..." : plan.cta}
-        </button>
-       </div>
-      )
-     })}
-    </div>
-    </div>
+  const confirmationRequiredText = confirmation === "delete" ? "DELETE" : confirmation === "factory" ? "RESET" : "CLEAR"
+  const confirmationReady = confirmationText.trim().toUpperCase() === confirmationRequiredText
 
-    <div className="border-[3px] border-black rounded-xl bg-[#E5E7EB] p-4 font-bold space-y-3 mt-4">
-      <div className="flex items-center gap-2 text-sm uppercase">
-        <Sparkles size={16} /> Referral rewards
-      </div>
-     <p className="mt-2 text-sm">
-      Generate your referral code and share it. New users can enter a referral code at signup.
-     </p>
-     <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-      <div className="border-[2px] border-black rounded-xl bg-white px-3 py-2">
-       <p className="text-[10px] font-black uppercase tracking-[0.12em] text-gray-600">Your referral code</p>
-       <p className="text-lg font-black tracking-[0.08em]">{getReferralCode()}</p>
-       <p className="text-[10px] font-black uppercase tracking-[0.1em] text-gray-500 mt-1">
-        {entitlement.referralCodeLocked ? "Locked permanently" : "You can set this once"}
-       </p>
-      </div>
-      <div className="flex gap-2">
-       <input
-        value={referralInput}
-        onChange={(event) => setReferralInput(event.target.value.toUpperCase())}
-        placeholder="Enter referral code"
-        className="flex-1 border-[2px] border-black rounded-xl px-3 py-2 font-black uppercase bg-white"
-       />
-       <button
-        onClick={() => {
-         saveReferralRedemptionCode(referralInput)
-         setBillingStatus("Referral code saved for signup.")
-        }}
-        className="border-[2px] border-black rounded-xl px-3 py-2 bg-[#CCFF00] font-black uppercase text-xs shadow-[2px_2px_0px_0px_black]">
-        Save
-       </button>
-      </div>
-     </div>
-     {!entitlement.referralCodeLocked ? (
-      <div className="flex flex-wrap items-center gap-2">
-       <input
-        value={customReferralCode}
-        onChange={(event) => setCustomReferralCode(event.target.value.toUpperCase())}
-        placeholder="Set your own referral code (one-time)"
-        className="w-full md:w-[360px] border-[2px] border-black rounded-xl px-3 py-2 font-black uppercase bg-white"
-       />
-       <button
-        onClick={() => {
-         const result = setCustomReferralCodeOnce(customReferralCode)
-         setBillingStatus(result.ok ? "Referral code set and locked." : result.reason || "Could not set referral code.")
-        }}
-        className="border-[2px] border-black rounded-xl px-3 py-2 bg-[#CCFF00] font-black uppercase text-xs shadow-[2px_2px_0px_0px_black]">
-        Set Code
-       </button>
-      </div>
-     ) : null}
-    </div>
-
-   {billingStatus && !billingStatus.toLowerCase().includes("entitlements synced with server")
-    ? <p className="text-sm font-black uppercase">{billingStatus}</p>
-    : null}
-   </SubToolbox>
-   </div>
-
-   {/* Gemini API Key */}
-   {canViewGeminiKey ? (
-   <div id="api-keys">
-   <SubToolbox
-    title="Gemini API Key"
-    icon={<KeyRound size={20} strokeWidth={3} className="text-black" />}
-    paletteIndex={2}
-    contentClassName="p-6 flex flex-col gap-4">
-    <p className="font-bold text-gray-700">
-     Use your own key so generations run on your quota and billing.
-    </p>
-    <button
-      onClick={() => navigate("/user-guide#sync")}
-      className="self-start text-xs font-black uppercase underline underline-offset-2">
-      API Key Setup Help
-    </button>
-    <form
-     onSubmit={(e) => {
-      e.preventDefault()
-      handleSave()
-     }}
-     className="flex flex-col gap-3"
-    >
-     <input
-      type="text"
-      autoComplete="username"
-      tabIndex={-1}
-      aria-hidden="true"
-      className="absolute h-0 w-0 opacity-0 pointer-events-none"
-      value="gemini-user"
-      readOnly
-     />
-     <div className="relative">
-      <input
-       type={showKey ? "text" : "password"}
-       autoComplete="new-password"
-       value={geminiKey}
-       onChange={(e) => setGeminiKey(e.target.value)}
-       placeholder="Enter your Gemini API Key…"
-       className="w-full p-4 text-lg font-bold border-[4px] border-black rounded-xl shadow-[4px_4px_0px_0px_black] outline-none pr-12"
-      />
-      <button
-       type="button"
-       onClick={() => setShowKey(!showKey)}
-       aria-label={showKey ? "Hide API key" : "Show API key"}
-       className="absolute right-4 top-1/2 -translate-y-1/2 text-black">
-       {showKey ? <EyeOff size={20} /> : <Eye size={20} />}
-      </button>
-     </div>
-     {/* Inline Save/Enter — the global 'Save All Settings' button lives
-       ~250 lines below in the page footer, so users had no visual cue
-       that hitting Enter or clicking anything would persist the key
-       they just typed. Both submit paths (Enter in input, click on
-       button) route through the existing handleSave so the vault write
-       + 'Settings Saved!' toast stay consistent with the footer button. */}
-     <div className="flex items-center gap-3">
-      <button
-       type="submit"
-       className={`${canonicalButtonClass} bg-[#C0F240] text-black px-6 py-3 text-sm flex items-center justify-center gap-2`}
-      >
-       {saveStatus ? <Check size={18} /> : <KeyRound size={18} />}
-       {saveStatus || "Save API Key"}
-      </button>
-      <p className="text-xs font-bold text-gray-600">
-       Press <kbd className="px-1.5 py-0.5 border-2 border-black rounded text-[10px] bg-white">Enter</kbd> to save.
-      </p>
-     </div>
-    </form>
-   </SubToolbox>
-   </div>
-   ) : null}
-
-     <SubToolbox
-      title="AI Model Orchestration"
-      icon={<Zap size={20} strokeWidth={3} className="text-black" />}
-      paletteIndex={7}
-      contentClassName="p-6 space-y-8">
-      <div className="space-y-4">
-        <p className="font-bold text-gray-700">
-          Select your primary brain. Pro models provide maximum reasoning for complex creative tasks, while Flash models optimize speed and minimize credit depletion.
-        </p>
-        <AIModelSelector />
-      </div>
-
-      {/* Credit Usage Explanation Module */}
-      <div className="bg-gray-50 border-[3px] border-black rounded-2xl p-6 shadow-[4px_4px_0_0_rgba(0,0,0,0.1)]">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-[#FFFF61] border-2 border-black p-2 rounded-lg">
-            <Coins size={20} strokeWidth={3} />
+  return (
+    <div className="mx-auto flex max-w-[1600px] flex-col gap-8 px-4 pb-32 animate-fade-in">
+      <header className="overflow-hidden rounded-[24px] border-[5px] border-black bg-[#111] text-white shadow-[12px_12px_0_0_#FF4FD8]">
+        <div className="grid gap-6 p-6 md:p-8 xl:grid-cols-[1fr_auto] xl:items-end">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.3em] text-[#CCFF00]">Creator control deck</p>
+            <h1 className="mt-3 text-5xl font-[1000] uppercase leading-[0.9] tracking-[-0.06em] md:text-7xl">Settings</h1>
+            <p className="mt-4 max-w-3xl text-sm font-bold leading-6 text-white/65">Account, YouTube, AI, billing, analytics sources, privacy, and recovery—organized around the next action that matters.</p>
           </div>
-          <h3 className="text-xl font-black uppercase tracking-tighter">Credit Economy Guide</h3>
+          <div className="grid min-w-[240px] gap-3 rounded-2xl border-[3px] border-white/25 bg-white/5 p-4">
+            <div className="flex items-center justify-between gap-4"><span className="text-xs font-black uppercase tracking-[0.14em] text-white/55">System readiness</span><span className="text-3xl font-[1000] text-[#CCFF00]">{readiness.completed}/{readiness.items.length}</span></div>
+            <div role="progressbar" aria-label="Settings readiness" aria-valuemin={0} aria-valuemax={readiness.items.length} aria-valuenow={readiness.completed} className="h-3 overflow-hidden rounded-full border-2 border-white/30 bg-black"><div className="h-full bg-[#CCFF00] motion-safe:transition-[width]" style={{ width: `${(readiness.completed / readiness.items.length) * 100}%` }} /></div>
+          </div>
         </div>
+        <div className="flex items-center gap-3 border-t-[4px] border-black bg-[#00F0FF] px-5 py-3 text-black"><SettingsIcon size={20} strokeWidth={3} aria-hidden="true" /><p className="text-xs font-black uppercase tracking-[0.14em]">{readiness.nextLabel}</p></div>
+      </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-           {[
-             { label: '3.0 FLASH', multiplier: '1.0X', desc: 'Baseline Efficiency', color: 'bg-white' },
-             { label: '3.1 FLASH', multiplier: '1.5X', desc: 'Balanced IQ', color: 'bg-[#C9F830]' },
-             { id: '3.0-PRO', label: '3.0 PRO', multiplier: '10.0X', desc: 'Heavy Reasoning', color: 'bg-[#FFDD00]' },
-             { id: '3.1-PRO', label: '3.1 PRO', multiplier: '15.0X', desc: 'Elite Intelligence', color: 'bg-[#FF3399]', textColor: 'text-white' }
-           ].map((m) => (
-             <div key={m.label} className={`p-4 border-[3px] border-black rounded-xl shadow-[3px_3px_0_0_black] ${m.color} ${m.textColor || 'text-black'}`}>
-               <p className="text-[10px] font-black uppercase tracking-widest opacity-60">{m.label}</p>
-               <p className="text-2xl font-[1000] tracking-tighter leading-none mt-1">{m.multiplier}</p>
-               <p className="text-[9px] font-bold uppercase mt-2 opacity-50">{m.desc}</p>
-             </div>
-           ))}
-        </div>
-
-        <div className="space-y-4">
-           <div className="flex items-start gap-3">
-              <div className="mt-1"><Zap size={14} className="text-black" /></div>
-              <p className="text-xs font-bold text-gray-600 uppercase leading-relaxed">
-                Credits are consumed based on the model tier and the length of generation. Using a <span className="text-black font-black">Pro</span> model for simple tasks like title generation will deplete your balance <span className="text-[#FF3399] font-black">10-15x faster</span> than Flash models.
-              </p>
-           </div>
-           <div className="flex items-start gap-3">
-              <div className="mt-1"><Coins size={14} className="text-black" /></div>
-              <p className="text-xs font-bold text-gray-600 uppercase leading-relaxed">
-                Tokens are calculated per <span className="text-black font-black">1,000 characters</span>. Input context (like your channel DNA) and Output generation (like scripts) both contribute to the final quote.
-              </p>
-           </div>
-        </div>
-      </div>
-     </SubToolbox>
-
-   {/* Combined Advanced Workspace & Data Module */}
-   <div id="workspace-data" className="pt-1">
-   <SubToolbox
-    title="Advanced Workspace & Data"
-    icon={<ShieldCheck size={20} strokeWidth={3} className="text-black" />}
-    paletteIndex={1}
-    contentClassName="p-8 space-y-12">
-    
-    {/* Row 1: Channel Link + Public Handle */}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-     {/* YouTube Workspace Link */}
-     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-       <Link2 size={20} strokeWidth={3} />
-       <h2 className="text-2xl font-black uppercase tracking-tighter">Workspace Link</h2>
-      </div>
-      <p className="text-sm font-bold text-gray-600">
-       Connect your workspace channel to unlock uploads, analytics, and metadata controls.
-      </p>
-      {isAuth ? (
-       <button
-        onClick={() => void account.signOut()}
-        className={`${canonicalButtonClass} bg-black text-white px-8 py-4 text-sm w-full`}>
-        Disconnect Channel
-       </button>
-      ) : (
-       <button
-        onClick={async () => {
-         await clearAnalyticsStateForFreshSync()
-         await account.start(account.intent, `${location.pathname}${location.search}${location.hash}`)
+      <UnifiedAccountSettingsSection
+        activePanel={activePanel}
+        billingStatus={billingStatus}
+        canResolvePublicHandle={isBasicPlan}
+        canViewGeminiKey={canViewGeminiKey}
+        channelConnection={{ ...channelConnection, isConnected: connected, settingsLabel: account.label, state: account.pending ? "authorizing" : channelConnection.state }}
+        currentEmail={currentEmail}
+        currentHandleValue={displayedChannelHandle}
+        customReferralCode={customReferralCode}
+        customTopupAmount={customTopupAmount}
+        dataResetStatus={dataResetStatus}
+        entitlement={entitlement}
+        exportStatus={exportStatus}
+        geminiKey={geminiKey}
+        ingestMode={ingestMode}
+        loadingPlan={loadingPlan}
+        meterLeft={meterLeft}
+        meterPct={meterPct}
+        meterTotal={meterTotal}
+        meterUsed={meterUsed}
+        notifyBilling={notifyBilling}
+        onChoosePlan={handleChoosePlan}
+        onConnectChannel={handleAccountAction}
+        onCustomReferralCodeChange={setCustomReferralCode}
+        onCustomTopup={handleCustomTopup}
+        onCustomTopupAmountChange={setCustomTopupAmount}
+        onDeleteAccount={() => openConfirmation("delete")}
+        onDisconnectChannel={() => void handleDisconnectAccountChannel()}
+        onExport={() => void handleExport()}
+        onHandleInputChange={setHandleInput}
+        onIngestModeChange={(mode) => { setIngestMode(mode); setStoredIngestMode(mode) }}
+        onOpenAiBrainIntake={() => navigate("/ai-brain?intake=1")}
+        onOpenBillingPortal={() => void handleOpenBillingPortal()}
+        onOpenTransparencyCenter={() => navigate("/data-transparency")}
+        onPanelChange={changePanel}
+        onPublicResolve={() => void handlePublicResolve()}
+        onRunFactoryReset={() => openConfirmation("factory")}
+        onRunSoftReset={() => openConfirmation("cache")}
+        onSaveGeminiKey={handleSaveGeminiKey}
+        onSetCustomReferralCode={() => {
+          const result = setCustomReferralCodeOnce(customReferralCode)
+          setBillingStatus(result.ok ? "Referral code set and locked." : result.reason || "Could not set referral code.")
         }}
-        className={`${canonicalButtonClass} bg-[#FFFF61] text-black px-8 py-4 text-sm w-full`}>
-        Connect Channel
-       </button>
-      )}
-     </div>
+        onToggleNotifyBilling={() => setNotifyBilling((current) => { const next = !current; localStorage.setItem("vt.settings.billing-alerts", next ? "on" : "off"); return next })}
+        onToggleShowKey={() => setShowKey((current) => !current)}
+        onTopup={(sku) => void handleTopup(sku)}
+        onUpdateGeminiKey={setGeminiKey}
+        profileName={profileName}
+        readiness={readiness}
+        resolveStatus={handleStatus}
+        settingsSaveStatus={settingsSaveStatus}
+        showInternalOpsLink={showInternalOpsLink}
+        showKey={showKey}
+      />
 
-     {/* Public Handle Mode */}
-     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-       <Eye size={20} strokeWidth={3} />
-       <h2 className="text-2xl font-black uppercase tracking-tighter">Public Handle</h2>
-      </div>
-     <p className="text-sm font-bold text-gray-600">
-       {isBasicPlan
-        ? "Basic plan can load public-only analytics without OAuth by resolving a channel handle or URL."
-        : "Public handle mode is reserved for Basic plan. Creator plans should use connected sync."}
-      </p>
-      <div className="flex gap-3">
-       <input
-        value={handleInput}
-        onChange={(event) => setHandleInput(event.target.value)}
-        placeholder="@channelhandle or channel URL"
-        disabled={!isBasicPlan}
-        className="flex-1 p-4 border-[3px] border-black rounded-xl font-bold outline-none disabled:bg-[#ececec] disabled:text-gray-500"
-       />
-       <button
-        onClick={handlePublicResolve}
-        disabled={!isBasicPlan}
-        className={`${canonicalButtonClass} bg-[#96F5A6] text-black px-6 py-4 text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed`}>
-        Resolve
-       </button>
-      </div>
-      {!isBasicPlan ? (
-       <p className="text-xs font-black uppercase tracking-wide text-gray-600">
-        Switch to Basic plan to use public-handle-only mode.
-       </p>
+      {activePanel === "help" ? <SettingsHelpSection onNavigate={navigate} /> : null}
+
+      {confirmation ? (
+        <div className="fixed inset-0 z-[200] grid place-items-center bg-black/70 p-4" role="presentation" onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            closeConfirmation()
+            return
+          }
+          if (event.key !== "Tab") return
+          const dialog = event.currentTarget.querySelector<HTMLElement>("[role='dialog']")
+          const focusable = Array.from(dialog?.querySelectorAll<HTMLElement>("button:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex='-1'])") || [])
+          if (!focusable.length) return
+          const first = focusable[0]
+          const last = focusable[focusable.length - 1]
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault()
+            last.focus()
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault()
+            first.focus()
+          }
+        }} onMouseDown={(event) => { if (event.target === event.currentTarget) closeConfirmation() }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="settings-confirm-title" className="w-full max-w-xl overflow-hidden rounded-[22px] border-[5px] border-black bg-white shadow-[10px_10px_0_0_#FF4FD8]">
+            <header className="flex items-center justify-between gap-4 border-b-[4px] border-black bg-[#FF8AAF] p-5"><div><p className="text-xs font-black uppercase tracking-[0.16em]">Danger zone</p><h2 id="settings-confirm-title" className="mt-1 text-3xl font-[1000] uppercase tracking-[-0.04em]">Confirm {confirmation === "cache" ? "local data clear" : confirmation === "factory" ? "factory reset" : "account deletion"}</h2></div><button type="button" onClick={closeConfirmation} aria-label="Cancel and close confirmation" className="grid size-11 place-items-center rounded-xl border-[3px] border-black bg-white shadow-[3px_3px_0_0_#000] focus-visible:outline focus-visible:outline-4"><X size={20} /></button></header>
+            <div className="grid gap-5 p-5">
+              <div className="rounded-xl border-[3px] border-black bg-[#f8f7f1] p-4 text-sm font-bold leading-6">{confirmation === "cache" ? "Clears all ViewTube data stored on this device, including local settings, API keys, authentication cookies, cached analytics, IndexedDB, and service-worker caches. Your server account is not deleted, but you may be signed out. Export first if you need a recovery copy." : confirmation === "factory" ? "Clears all local ViewTube data, settings, keys, and authentication from this device. Export first if you need a recovery copy." : "Permanently deletes the ViewTube account and its server-side onboarding and AI-credit records. Active subscriptions must be canceled first."}</div>
+              {confirmationRequiredText ? <div><label htmlFor="settings-confirm-text" className="text-xs font-black uppercase tracking-[0.14em]">Type {confirmationRequiredText} to continue</label><input id="settings-confirm-text" autoFocus value={confirmationText} onChange={(event) => setConfirmationText(event.target.value)} className="mt-2 min-h-12 w-full rounded-xl border-[3px] border-black px-4 font-black uppercase outline-none focus-visible:ring-4 focus-visible:ring-[#00F0FF]" /></div> : null}
+              <div className="grid gap-3 sm:grid-cols-2"><button type="button" onClick={closeConfirmation} className="inline-flex min-h-12 items-center justify-center rounded-xl border-[3px] border-black bg-white px-4 font-black uppercase shadow-[3px_3px_0_0_#000] focus-visible:outline focus-visible:outline-4"><ShieldCheck size={18} className="mr-2" /> Cancel</button><button type="button" disabled={!confirmationReady} onClick={() => void runConfirmedAction()} className="inline-flex min-h-12 items-center justify-center rounded-xl border-[3px] border-black bg-[#FF1744] px-4 font-black uppercase text-white shadow-[3px_3px_0_0_#000] focus-visible:outline focus-visible:outline-4 disabled:opacity-50"><Check size={18} className="mr-2" /> Confirm action</button></div>
+            </div>
+          </section>
+        </div>
       ) : null}
-      {handleStatus ? <p className="text-sm font-bold text-gray-700">{handleStatus}</p> : null}
-     </div>
     </div>
-
-    {/* Row 2: Ingest Mode */}
-    <div className="space-y-4 border-t-[3px] border-black pt-10">
-     <div className="flex items-center gap-2">
-      <Zap size={20} strokeWidth={3} />
-      <h3 className="text-xl font-black uppercase tracking-tighter">Ingest Mode</h3>
-     </div>
-    <p className="font-bold text-gray-700 text-sm">
-      Select how ViewTube should source data for analytics and master tables.
-     </p>
-     <button
-      onClick={() => navigate("/user-guide#sync")}
-      className="self-start text-xs font-black uppercase underline underline-offset-2">
-      Ingest Mode Help
-     </button>
-     <div className="flex flex-wrap gap-3">
-      {(["connected", "import", "hybrid", "public_handle"] as IngestMode[]).map(
-       (mode) => (
-        <button
-         key={mode}
-         onClick={() => switchMode(mode)}
-         className={`px-6 py-3 border-[3px] border-black rounded-xl text-sm font-black uppercase transition-all ${
-          ingestMode === mode
-           ? "bg-[#CCFF00] shadow-[3px_3px_0px_0px_black] -translate-y-0.5"
-           : "bg-white hover:bg-gray-50 shadow-[1px_1px_0px_0px_black]"
-         }`}>
-         {mode}
-        </button>
-       ),
-      )}
-     </div>
-    </div>
-
-    {/* Row 3: Data Management + Trust/Export */}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t-[3px] border-black pt-10">
-     {/* Data Management */}
-     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-       <Trash2 size={20} strokeWidth={3} />
-       <h3 className="text-xl font-black uppercase tracking-tighter">Data Management</h3>
-      </div>
-      <p className="font-bold text-gray-700 text-sm">
-       Control local storage. Safe clear for caches, or factory reset for a full wipe.
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-       <button
-        onClick={() => {
-         if (!confirm("Clear cached analytics + uploads + GA4 data on this device? (Keeps keys/preferences/auth)")) return
-         clearCachedDataSoft()
-         setDataResetStatus("Cached data cleared.")
-         setTimeout(() => setDataResetStatus(null), 3500)
-        }}
-        className="flex items-center justify-center gap-2 bg-[#FFB570] text-black px-4 py-4 rounded-xl border-[3px] border-black shadow-[3px_3px_0px_0px_black] hover:translate-y-0.5 hover:shadow-[1.5px_1.5px_0px_0px_black] transition-all font-black uppercase text-[10px]">
-        Clear Cache
-       </button>
-       <button
-        onClick={async () => {
-         if (!confirm("FACTORY RESET EVERYTHING? Clears ALL keys and auth.")) return
-         await factoryResetAll()
-         setDataResetStatus("Factory reset complete.")
-         setTimeout(() => setDataResetStatus(null), 3500)
-        }}
-        className="flex items-center justify-center gap-2 bg-black text-white px-4 py-4 rounded-xl border-[3px] border-black shadow-[3px_3px_0px_0px_black] hover:translate-y-0.5 hover:shadow-[1.5px_1.5px_0px_0px_black] transition-all font-black uppercase text-[10px]">
-        Factory Reset
-       </button>
-      </div>
-      {dataResetStatus ? <p className="text-xs font-black text-gray-700">{dataResetStatus}</p> : null}
-     </div>
-
-     {/* Trust + Export */}
-     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-       <Download size={20} strokeWidth={3} />
-       <h3 className="text-xl font-black uppercase tracking-tighter">Trust + Export</h3>
-      </div>
-      <p className="font-bold text-gray-700 text-sm">
-       Transparency docs and one-click canonical export bundle.
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-       <button
-        onClick={() => navigate("/data-transparency")}
-        className="flex items-center justify-center gap-2 bg-[#40C6E9] text-black px-4 py-4 rounded-xl border-[3px] border-black shadow-[3px_3px_0px_0px_black] hover:translate-y-0.5 hover:shadow-[1.5px_1.5px_0px_0px_black] transition-all font-black uppercase text-[10px]">
-        Docs Center
-       </button>
-       <button
-        onClick={handleExport}
-        className="flex items-center justify-center gap-2 bg-[#FFB570] text-black px-4 py-4 rounded-xl border-[3px] border-black shadow-[3px_3px_0px_0px_black] hover:translate-y-0.5 hover:shadow-[1.5px_1.5px_0px_0px_black] transition-all font-black uppercase text-[10px]">
-        Export All
-       </button>
-      </div>
-      {exportStatus ? <p className="text-xs font-bold text-gray-700">{exportStatus}</p> : null}
-     </div>
-    </div>
-
-    {/* Row 4: Save Settings - Centered */}
-    <div className="border-t-[3px] border-black pt-10 flex justify-center">
-     <button
-      onClick={handleSave}
-      className={`${canonicalButtonClass} bg-[#FFFF61] text-black px-16 py-5 text-2xl w-full md:w-auto flex items-center justify-center gap-4`}>
-      {saveStatus ? <Check size={28} /> : <Zap size={28} />}
-     {saveStatus || "Save All Settings"}
-     </button>
-    </div>
-
-    <div className="border-t-[3px] border-black pt-8 space-y-3">
-     <h3 className="text-xl font-black uppercase tracking-tighter">Account & Billing Links</h3>
-     <p className="text-sm font-bold text-gray-700">
-      Open quick-access pages for signup flows, billing actions, and public route checks.
-     </p>
-     <button
-      onClick={() => navigate("/all-links")}
-      className={`${canonicalButtonClass} bg-[#40C6E9] text-black px-8 py-4 text-sm`}>
-      Open All Links Page
-     </button>
-    </div>
-
-    <div className="border-t-[3px] border-black pt-8 space-y-3">
-     <h3 className="text-xl font-black uppercase tracking-tighter">Legal & Policies</h3>
-     <p className="text-sm font-bold text-gray-700">
-      View our privacy policy and terms of service.
-     </p>
-     <div className="flex gap-4">
-      <a
-       href="/privacy.html"
-       className={`${canonicalButtonClass} bg-white text-black px-8 py-4 text-sm inline-block`}>
-       Privacy Policy
-      </a>
-      <a
-       href="/terms.html"
-       className={`${canonicalButtonClass} bg-white text-black px-8 py-4 text-sm inline-block`}>
-       Terms of Service
-      </a>
-     </div>
-    </div>
-   </SubToolbox>
-   </div>
-  </div>
- )
+  )
 }
 
 export default Settings
