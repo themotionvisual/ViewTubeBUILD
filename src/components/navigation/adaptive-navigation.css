@@ -152,9 +152,30 @@
   display: grid;
   grid-template-columns: repeat(8, minmax(70px, 1fr));
   min-width: 0;
-  gap: 5px;
+  gap: 6px;
   align-items: center;
   padding: 4px 8px 4px 4px;
+}
+
+/* Sidebar layouts (wide/thin) — bleed the left edge of every button off the
+   viewport so the nav reads as a chunky rail cut off by the browser chrome,
+   not a boxed panel. Only the RIGHT side of each button + its offset shadow
+   are visible; the left border becomes an implicit vertical bleed line. */
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__link,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link,
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__account-trigger,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-trigger {
+  margin-left: -18px;
+  padding-left: 22px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left-width: 0;
+}
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__links,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__links,
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__utilities,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__utilities {
+  overflow: visible;
 }
 
 .vt-adaptive-nav__link {
@@ -162,17 +183,22 @@
   display: flex;
   box-sizing: border-box;
   min-width: 0;
-  height: 74px;
+  /* Height matches the sidebar-layout button (was 74px). This makes the top-
+     bar and sidebar reads as the same button system at different orientations
+     instead of two different button metaphors. */
+  height: 44px;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  padding: 0 6px;
-  border: var(--vt-nav-control-stroke) solid #000;
+  padding: 0 10px;
+  border: 3px solid #000;
   border-radius: var(--vt-nav-radius);
   background: var(--vt-nav-color);
   color: #000;
-  font-size: 12px;
-  font-weight: 900;
+  /* Sidebar rhythm — bigger uppercase title, tighter tracking. */
+  font-size: 15px;
+  font-weight: 1000;
+  letter-spacing: -.045em;
   line-height: 1;
   text-align: center;
   text-decoration: none;
@@ -181,10 +207,19 @@
   white-space: nowrap;
   touch-action: manipulation;
   transition: transform 110ms ease, box-shadow 110ms ease;
+  /* Toolbox-style colored offset shadow — the button's own color darkened
+     so it reads as a chunky raised chip on any background. */
+  box-shadow: 4px 4px 0 0 color-mix(in srgb, var(--vt-nav-color) 55%, #000);
 }
 
-.vt-adaptive-nav__link:hover { transform: translateY(-1px); box-shadow: 0 2px 0 #000; }
-.vt-adaptive-nav__link:active { transform: translateY(1px); box-shadow: none; }
+.vt-adaptive-nav__link:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0 0 color-mix(in srgb, var(--vt-nav-color) 55%, #000);
+}
+.vt-adaptive-nav__link:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 0 color-mix(in srgb, var(--vt-nav-color) 55%, #000);
+}
 
 /* Selected state: the hover shine frozen near its right-side flash point. */
 .vt-adaptive-nav__link.active::after {
@@ -325,27 +360,62 @@
 .vt-adaptive-nav__account-trigger {
   display: grid;
   box-sizing: border-box;
-  grid-template-columns: 48px minmax(0, 1fr) 22px;
-  width: clamp(246px, 20vw, 340px);
+  /* Signed-in state — avatar + channel title ONLY. Meta text and auth-status
+     chip are hidden below via display:none so this is the entire cluster. */
+  grid-template-columns: 34px minmax(0, 1fr) 16px;
+  width: clamp(220px, 18vw, 300px);
   min-width: 0;
-  height: 74px;
+  /* Matches the sidebar-layout link height so the top bar reads as one
+     coherent button row instead of a tall pill next to short chips. */
+  height: 44px;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
+  padding: 4px 8px;
   overflow: hidden;
-  border: var(--vt-nav-control-stroke) solid #000;
+  border: 3px solid #000;
   border-radius: var(--vt-nav-radius);
+  /* Next stop in the VT palette after the sidebar's warm slots: Royal Purple
+     (#A467F4). Slight highlight sweep keeps it in the same neo-brutalist
+     language as the other nav chips. */
   background:
-    linear-gradient(90deg, #c0f240 0 58%, #fff 58% 61%, #c0f240 61% 100%);
+    linear-gradient(90deg, #A467F4 0 60%, color-mix(in srgb, #A467F4 78%, #fff) 60% 100%);
   color: #000;
   text-align: left;
   touch-action: manipulation;
   cursor: pointer;
-  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .1);
+  /* Toolbox-style colored offset shadow, purple. */
+  box-shadow: 4px 4px 0 0 color-mix(in srgb, #A467F4 55%, #000);
   transition: transform 110ms ease, box-shadow 110ms ease;
 }
-.vt-adaptive-nav__account-trigger:hover { transform: translateY(-1px); box-shadow: 0 2px 0 #000, inset 0 -3px 0 rgba(0, 0, 0, .1); }
-.vt-adaptive-nav__account-trigger:active { transform: translateY(1px); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .12); }
+.vt-adaptive-nav__account-trigger:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0 0 color-mix(in srgb, #A467F4 55%, #000);
+}
+.vt-adaptive-nav__account-trigger:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 0 color-mix(in srgb, #A467F4 55%, #000);
+}
+/* Simplified content — only avatar + channel title. Meta/plan/auth-status
+   move into the drop-down menu, which is where the density belongs. */
+.vt-adaptive-nav__account-trigger .vt-adaptive-nav__account-meta,
+.vt-adaptive-nav__account-trigger .vt-adaptive-nav__auth-status { display: none; }
+.vt-adaptive-nav__account-trigger .vt-adaptive-nav__account-copy strong {
+  font-size: 13px;
+  font-weight: 1000;
+  letter-spacing: -.03em;
+  text-transform: uppercase;
+}
+/* Avatar scaled to the compact 34px slot; the base 46px avatar would overflow
+   the smaller trigger. Only applies inside the account trigger — free-standing
+   avatar uses remain at the original size. */
+.vt-adaptive-nav__account-trigger .vt-adaptive-nav__avatar {
+  width: 32px;
+  height: 32px;
+}
+.vt-adaptive-nav__account-trigger .vt-adaptive-nav__avatar svg {
+  width: 16px;
+  height: 16px;
+}
 
 .vt-adaptive-nav__avatar {
   display: grid;
@@ -668,10 +738,21 @@
 }
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__account-trigger,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-trigger {
-  grid-template-columns: 42px minmax(0, 1fr) 18px;
+  grid-template-columns: 32px minmax(0, 1fr) 16px;
   width: 100%;
-  height: 68px;
-  padding: 6px;
+  /* Same 44px rhythm as the sidebar links — one row of buttons, one height. */
+  height: 44px;
+  padding: 4px 8px;
+}
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__account-trigger .vt-adaptive-nav__avatar,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-trigger .vt-adaptive-nav__avatar {
+  width: 32px;
+  height: 32px;
+}
+.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__account-trigger .vt-adaptive-nav__avatar svg,
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-trigger .vt-adaptive-nav__avatar svg {
+  width: 18px;
+  height: 18px;
 }
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__avatar,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__avatar {

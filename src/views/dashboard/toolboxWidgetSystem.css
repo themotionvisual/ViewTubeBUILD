@@ -414,6 +414,244 @@
   .dashboard-barrier .widget-verification-actions { grid-template-columns: 1fr; grid-template-rows: auto auto; }
 }
 
+/* ============================================================================ */
+/*  Widget: About VIEWTUBE (new).                                               */
+/*                                                                              */
+/*  A magnetic sign-in / sign-up half-widget that sits top-right next to        */
+/*  Channel Overview. Design goals: brand-forward, high-density, no wasted      */
+/*  white space, and every colored surface anchored to a VT-palette stop        */
+/*  (cyan / lime / orange / yellow / magenta / royal). Uses the same            */
+/*  neo-brutalist stroke + offset-shadow language as the toolbox chrome so it   */
+/*  reads as part of the same design system, not a marketing appendage.        */
+/* ============================================================================ */
+
+.dashboard-barrier .widget-about {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
+  padding: 12px;
+  background:
+    radial-gradient(1200px 240px at 12% -40%, rgba(54, 224, 246, .22), transparent 60%),
+    radial-gradient(900px 200px at 88% -30%, rgba(245, 94, 252, .18), transparent 60%),
+    #f7f4ef;
+}
+
+/* --- Hero ------------------------------------------------------------------- */
+.dashboard-barrier .widget-about__hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 3px solid #000;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 4px 4px 0 0 #000;
+}
+.dashboard-barrier .widget-about__hero-brand {
+  display: inline-flex;
+  align-items: center;
+  font-size: clamp(24px, 2.8vw, 34px);
+  font-weight: 1000;
+  letter-spacing: -.06em;
+  line-height: .82;
+  text-transform: uppercase;
+}
+.dashboard-barrier .widget-about__hero-brand span:first-child { color: #000; margin-right: -3px; }
+.dashboard-barrier .widget-about__hero-brand span:last-child  { color: #36e0f6; text-shadow: 2px 2px 0 #000; }
+.dashboard-barrier .widget-about__hero-tagline {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  line-height: 1;
+}
+.dashboard-barrier .widget-about__hero-tagline b {
+  font-size: clamp(13px, 1.35vw, 16px);
+  font-weight: 1000;
+  letter-spacing: -.02em;
+  text-transform: uppercase;
+  color: #000;
+}
+.dashboard-barrier .widget-about__hero-tagline em {
+  font-style: normal;
+  font-size: clamp(10px, 1.05vw, 12px);
+  font-weight: 700;
+  color: color-mix(in srgb, #000 62%, transparent);
+}
+
+/* Magnetic CTA */
+.dashboard-barrier .widget-about__hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 3px solid #000;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #c0f240, #4ee4be);
+  color: #000;
+  font-size: 14px;
+  font-weight: 1000;
+  letter-spacing: -.01em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: 4px 4px 0 0 #000;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.dashboard-barrier .widget-about__hero-cta:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0 0 #000;
+}
+.dashboard-barrier .widget-about__hero-cta:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 0 #000;
+}
+
+/* --- Feature matrix (6 palette-anchored chips) ----------------------------- */
+.dashboard-barrier .widget-about__features {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-height: 0;
+}
+.dashboard-barrier .widget-about__feature {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  row-gap: 3px;
+  padding: 8px 10px;
+  border: 3px solid #000;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 3px 3px 0 0 var(--about-tone, #000);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.dashboard-barrier .widget-about__feature:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 0 var(--about-tone, #000);
+}
+.dashboard-barrier .widget-about__feature-icon {
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid #000;
+  border-radius: 6px;
+  background: var(--about-tone, #fff);
+  color: #000;
+}
+.dashboard-barrier .widget-about__feature b {
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 1000;
+  letter-spacing: -.02em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: #000;
+}
+.dashboard-barrier .widget-about__feature p {
+  margin: 0;
+  min-width: 0;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: color-mix(in srgb, #000 78%, transparent);
+}
+.dashboard-barrier .widget-about__feature.is-cyan    { --about-tone: #36e0f6; }
+.dashboard-barrier .widget-about__feature.is-lime    { --about-tone: #c0f240; }
+.dashboard-barrier .widget-about__feature.is-orange  { --about-tone: #ffa85c; }
+.dashboard-barrier .widget-about__feature.is-magenta { --about-tone: #f55efc; }
+.dashboard-barrier .widget-about__feature.is-yellow  { --about-tone: #ffda47; }
+.dashboard-barrier .widget-about__feature.is-royal   { --about-tone: #528ffa; }
+
+/* --- Trust panel ------------------------------------------------------------ */
+.dashboard-barrier .widget-about__trust {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 2px solid #000;
+  border-radius: 10px;
+  background: color-mix(in srgb, #ffff, transparent 60%);
+  backdrop-filter: blur(4px);
+}
+.dashboard-barrier .widget-about__trust-lock {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border: 2px solid #000;
+  border-radius: 7px;
+  background: #000;
+  color: #c0f240;
+}
+.dashboard-barrier .widget-about__trust p {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #000;
+}
+.dashboard-barrier .widget-about__trust b {
+  font-weight: 1000;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+
+/* --- Secondary links row ---------------------------------------------------- */
+.dashboard-barrier .widget-about__links {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.dashboard-barrier .widget-about__links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 4px;
+  border: 2px solid #000;
+  border-radius: 7px;
+  background: #fff;
+  color: #000;
+  font-size: 10px;
+  font-weight: 1000;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: 2px 2px 0 0 #000;
+  transition: transform 100ms ease, box-shadow 100ms ease, background 100ms ease;
+}
+.dashboard-barrier .widget-about__links a:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 0 #000;
+}
+.dashboard-barrier .widget-about__links a.is-cyan:hover    { background: #36e0f6; }
+.dashboard-barrier .widget-about__links a.is-yellow:hover  { background: #ffda47; }
+.dashboard-barrier .widget-about__links a.is-magenta:hover { background: #f55efc; }
+.dashboard-barrier .widget-about__links a.is-orange:hover  { background: #ffa85c; }
+
+/* --- Narrow container fallback (about widget as narrower slot) -------------- */
+@container (max-width: 560px) {
+  .dashboard-barrier .widget-about__hero { grid-template-columns: minmax(0, 1fr) auto; }
+  .dashboard-barrier .widget-about__hero-brand { grid-column: 1 / -1; justify-self: start; }
+  .dashboard-barrier .widget-about__hero-tagline { grid-column: 1; }
+  .dashboard-barrier .widget-about__features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container (max-width: 380px) {
+  .dashboard-barrier .widget-about { padding: 8px; gap: 8px; }
+  .dashboard-barrier .widget-about__hero { padding: 8px; }
+  .dashboard-barrier .widget-about__hero-cta { padding: 8px 10px; font-size: 12px; }
+  .dashboard-barrier .widget-about__features { grid-template-columns: 1fr; }
+  .dashboard-barrier .widget-about__links { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 @container (max-width: 420px) {
   .dashboard-barrier .community-post-type-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .dashboard-barrier .community-poll-grid.is-image-poll .community-poll-option { grid-template-columns: minmax(0, 1fr) 82px; gap: 4px; }
