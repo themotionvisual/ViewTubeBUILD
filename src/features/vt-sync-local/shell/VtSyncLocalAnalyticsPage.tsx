@@ -23,7 +23,6 @@ import {
  readVtSyncPrivacyFilters,
  type VtSyncPrivacyFilters,
  loadVtSyncManualImports,
- claimUnscopedVtSyncManualImports,
  loadVtSyncPersistedApiRows,
  mergeVtSyncManualImportsIntoSnapshot,
  mergeVtSyncPersistedApiRowsIntoSnapshot,
@@ -46,6 +45,7 @@ import { VtSyncControllerPanel } from "./VtSyncControllerPanel"
 import { buildVtSyncCreatorHeroModel, VtSyncCreatorHero } from "./VtSyncCreatorHero"
 import { VtSyncToolboxDataTable } from "./toolbox-table/VtSyncToolboxDataTable"
 import { VtSyncDataVisualsGate } from "./VtSyncDataVisualsGate"
+import { VtSyncIntelligenceHubGate } from "./VtSyncIntelligenceHubGate"
 import "./VtSyncLocalAnalyticsPage.css"
 import { RetroLcd, RetroLedRow, RetroRivets, type RetroLedSpec } from "./VtSyncRetroChrome"
 import {
@@ -497,13 +497,11 @@ const refreshManualImports = useCallback(async (payload?: {
   return
  }
 
- // No payload means we're doing normal persisted-import recovery.
- // We NO LONGER bail out when channelId is null — mobile boot restores
- // IndexedDB before account/channel hydration finishes and a null channelId
- // must not keep already-persisted CSV data invisible.
+ // Persisted imports are account data. Wait for a resolved channel rather than
+ // hydrating or assigning anonymous records to whichever account appears first.
+ if (!channelId) return
 
  try {
-  if (channelId) await claimUnscopedVtSyncManualImports(channelId)
   const next = await loadVtSyncManualImports(channelId)
 
   setManualImports((current) => {
@@ -517,10 +515,7 @@ const refreshManualImports = useCallback(async (payload?: {
    // sometimes reappear while account/channel state settles.
    if (!nextHasRows && currentHasRows) return current
 
-   const canMergeCurrent =
-    current.channelId === channelId ||
-    current.channelId == null ||
-    channelId == null
+   const canMergeCurrent = current.channelId === channelId
 
    return {
     channelId,
@@ -621,14 +616,10 @@ const refreshManualImports = useCallback(async (payload?: {
   setPrivacyFilters(readVtSyncPrivacyFilters())
  }, [])
 
- // Invariant: account/auth/channel hydration must never remove locally imported
- // CSV data. Once the real channelId arrives, refreshManualImports re-reads the
- // persisted records and upgrades the temporary unscoped state without an
- // empty intermediate render.
+ // Anonymous imports are session-only. Once account hydration resolves a
+ // channel, only that channel's persisted or freshly imported rows are active.
  const activeManualImports =
-  manualImports.channelId === snapshot.channelId ||
-  manualImports.channelId == null ||
-  snapshot.channelId == null
+  manualImports.channelId === snapshot.channelId
    ? manualImports.value
    : EMPTY_MANUAL_IMPORTS
  const activePersistedApiRows = persistedApiRows.channelId === snapshot.channelId
@@ -881,6 +872,14 @@ const refreshManualImports = useCallback(async (payload?: {
       />
      </div>
     </section>
+    {/* Intelligence Hub moved ABOVE the data table so it is actually
+      visible without scrolling past 5,000 lines of tabular rows. Users
+      reported "I don't see the module on the Analytics page" — the
+      gate WAS mounted, just buried. Sync controller → Intelligence
+      Hub → data table → visuals is the natural reading order because
+      the Hub answers "what does this data mean?" and the table +
+      visuals are "here is the raw data." */}
+    <VtSyncIntelligenceHubGate snapshot={consumerSnapshot} />
     <VtSyncToolboxDataTable
      snapshot={catalogSnapshot}
      privacyFilters={privacyFilters}
