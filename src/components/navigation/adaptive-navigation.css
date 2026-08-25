@@ -9,6 +9,13 @@
   --vt-nav-paper: #f3f4f6;
   --vt-nav-ink: #000;
   --vt-nav-focus: #528ffa;
+  /* Sidebar-button rhythm — ported from viewtubeX so top-layout and
+     sidebar layouts share one button metaphor. Both consumers
+     (wide/thin sidebar link override AND top-layout link override
+     inside the narrow media query) resolve their height + width from
+     these tokens. */
+  --vt-nav-sidebar-button-width: 75%;
+  --vt-nav-sidebar-button-height: 33px;
 }
 
 .vt-adaptive-shell {
@@ -157,26 +164,10 @@
   padding: 4px 8px 4px 4px;
 }
 
-/* Sidebar layouts (wide/thin) — bleed the left edge of every button off the
-   viewport so the nav reads as a chunky rail cut off by the browser chrome,
-   not a boxed panel. Only the RIGHT side of each button + its offset shadow
-   are visible; the left border becomes an implicit vertical bleed line. */
-.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__link,
-.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link,
-.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__account-trigger,
-.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-trigger {
-  margin-left: -18px;
-  padding-left: 22px;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  border-left-width: 0;
-}
-.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__links,
-.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__links,
-.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__utilities,
-.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__utilities {
-  overflow: visible;
-}
+/* NOTE — the "left bleed" idea from an earlier iteration is removed here.
+   Screenshotting the live viewtubeX sidebar showed the buttons cleanly
+   centered inside the rail (via width: 75%), not bleeding past the
+   viewport. Keeping them centered matches viewtubeX 1:1. */
 
 .vt-adaptive-nav__link {
   position: relative;
@@ -715,10 +706,17 @@
 }
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__link,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link {
-  width: 100%;
-  height: 44px;
-  min-height: 44px;
-  font-size: 13px;
+  /* Sidebar link rhythm — ported straight from viewtubeX so the two
+     working trees converge on one button metaphor. Width is 75% of the
+     sidebar column (centered by align-items on the flex column), so
+     each button reads as a chunky pill inside the rail. */
+  width: var(--vt-nav-sidebar-button-width);
+  height: var(--vt-nav-sidebar-button-height);
+  min-height: var(--vt-nav-sidebar-button-height);
+  padding-inline: 5px;
+  font-size: 18px;
+  font-weight: 1000;
+  letter-spacing: -.045em;
 }
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__link.active::after,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link.active::after {
@@ -862,7 +860,19 @@
     grid-template-rows: repeat(2, 35px);
     gap: 5px;
   }
-  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__link { height: 35px; font-size: 11px; }
+  /* Top-nav link now matches the sidebar-layout button metaphor —
+     same 33px height, 18px uppercase weight-1000 letter-tight text —
+     so the two orientations read as one system instead of two
+     different button chips. User asked for this parity explicitly
+     after seeing the sidebar-mode buttons live. */
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__link {
+    height: var(--vt-nav-sidebar-button-height);
+    min-height: var(--vt-nav-sidebar-button-height);
+    padding-inline: 5px;
+    font-size: 18px;
+    font-weight: 1000;
+    letter-spacing: -.045em;
+  }
   .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__account-trigger {
     grid-template-columns: 44px minmax(0, 1fr) 18px;
     width: clamp(224px, 20vw, 270px);
