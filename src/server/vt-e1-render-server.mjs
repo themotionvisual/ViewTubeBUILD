@@ -332,7 +332,7 @@ const validateRenderPayload = (payload) => {
 
   if (payload?.schemaVersion !== RENDER_JOB_SCHEMA_VERSION) errors.push(`schemaVersion must be ${RENDER_JOB_SCHEMA_VERSION}.`);
   if (payload?.kind !== 'remotionRender') errors.push('kind must be remotionRender.');
-  if (outputFormat !== 'mp4') errors.push('Phase 1 renderer supports mp4 only.');
+  if (!['mp4', 'mov', 'webm'].includes(outputFormat)) errors.push('outputFormat must be mp4, mov, or webm.');
   if (!Number.isFinite(fps) || fps <= 0) errors.push('compositionMeta.fps must be > 0.');
   if (!Number.isFinite(width) || width <= 0) errors.push('compositionMeta.width must be > 0.');
   if (!Number.isFinite(height) || height <= 0) errors.push('compositionMeta.height must be > 0.');
@@ -351,6 +351,15 @@ const validateRenderPayload = (payload) => {
     const rightClip = clips.find((clip) => clip.id === transition?.rightClipId);
     if (!leftClip || !rightClip) {
       errors.push(`Transition ${transition?.id || 'unknown'} references missing seam clips.`);
+      return;
+    }
+    if (leftClip.trackId !== rightClip.trackId) {
+      errors.push(`Transition ${transition?.id || 'unknown'} requires neighboring clips on the same visual track.`);
+      return;
+    }
+    const seamGap = Number(rightClip.start || 0) - Number(leftClip.end || 0);
+    if (Math.abs(seamGap) > 0.05) {
+      errors.push(`Transition ${transition?.id || 'unknown'} has a ${seamGap.toFixed(2)}s gap; trim clips to a shared seam before rendering.`);
       return;
     }
     transitionHandleErrors(project, transition, leftClip, rightClip).forEach((error) => errors.push(error));
@@ -497,6 +506,7 @@ const buildRendererReadiness = async () => {
   const blocked = [];
   let rendererInstalled = false;
   let svgFramesInstalled = false;
+  let ffmpegInstalled = false;
 
   try {
     await ensureStore();
@@ -518,6 +528,7 @@ const buildRendererReadiness = async () => {
   try {
     await ensureFfmpegInstalled();
     svgFramesInstalled = true;
+    ffmpegInstalled = true;
     checks.push({ id: 'ffmpeg', ok: true, path: FFMPEG_BIN });
   } catch (error) {
     checks.push({ id: 'ffmpeg', ok: false, path: FFMPEG_BIN, error: error instanceof Error ? error.message : String(error) });
@@ -561,8 +572,15 @@ const buildRendererReadiness = async () => {
       remotionBin: REMOTION_BIN,
       ffmpegBin: FFMPEG_BIN,
     },
+    ffmpegInstalled,
   };
 };
+
+const normalizeOutputFormat = (value) => {
+  const format = String(value || 'mp4').trim().toLowerCase();
+  return ['mp4', 'mov', 'webm'].includes(format) ? format : 'mp4';
+};
+const outputMimeType = (format) => ({ mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm' })[normalizeOutputFormat(format)];
 
 const renderCapabilities = (readiness = {}) => ({
   service: 'vt-e1-render-server',
@@ -570,7 +588,7 @@ const renderCapabilities = (readiness = {}) => ({
   ready: Boolean(readiness.ready),
   status: readiness.status || 'unavailable',
   primaryFormat: 'mp4',
-  supportedFormats: ['mp4'],
+  supportedFormats: readiness.ffmpegInstalled ? ['mp4', 'mov', 'webm'] : ['mp4'],
   previewFormats: ['webm', 'mov'],
   executor: 'remotion-hosted-worker',
   renderModes: ['remotion-mp4', 'svg-frames-mp4'],
@@ -586,7 +604,7 @@ const renderCapabilities = (readiness = {}) => ({
     transitions: true,
     overlayFx: true,
     blobDataUrls: true,
-    outputFormats: ['mov', 'gif', 'png-sequence', 'wav'],
+    outputFormats: readiness.ffmpegInstalled ? ['gif', 'png-sequence', 'wav'] : ['mov', 'webm', 'gif', 'png-sequence', 'wav'],
     readiness: Array.isArray(readiness.blocked) ? readiness.blocked : [],
   },
   queue: readiness.queue || { activeJobId: null, totalJobs: 0, queuedJobs: 0, renderingJobs: 0, completedJobs: 0, failedJobs: 0 },
@@ -622,7 +640,7 @@ const createJobRecord = ({ payload, validation }) => {
     kind: String(payload?.kind || 'remotionRender'),
     renderMode: String(payload?.renderMode || 'remotion-mp4'),
     status: 'queued',
-    outputFormat: 'mp4',
+    outputFormat: normalizeOutputFormat(payload?.outputFormat || payload?.targetFormat),
     createdAt,
     updatedAt: createdAt,
     startedAt: null,
@@ -712,6 +730,17 @@ const runCommand = async (command, args, options = {}) => {
       return reject(new Error((stderr || stdout || `${command} exited with code ${code}.`).trim()));
     });
   });
+};
+const transcodeRenderedMp4 = async (inputPath, job) => {
+  const format = normalizeOutputFormat(job.outputFormat);
+  if (format === 'mp4') return inputPath;
+  await ensureFfmpegInstalled();
+  const outputPath = path.join(OUTPUT_DIR, `${job.jobId}.${format}`);
+  const codecArgs = format === 'mov'
+    ? ['-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-c:a', 'aac']
+    : ['-c:v', 'libvpx-vp9', '-crf', '30', '-b:v', '0', '-c:a', 'libopus'];
+  await runCommand(FFMPEG_BIN, ['-y', '-i', inputPath, ...codecArgs, outputPath]);
+  return outputPath;
 };
 const sortTracks = (project) => [...(project?.tracks || [])].sort((a, b) => Number(a?.order || 0) - Number(b?.order || 0));
 const valueFromKeyframes = (base, keyframes, prop, localT) => {
@@ -1081,11 +1110,14 @@ const processQueue = async () => {
       progress: 0.2,
       failureReason: null,
     }));
-    const outputPath = next.kind === 'svgFrameZipRender'
+    const canonicalOutputPath = next.kind === 'svgFrameZipRender'
       ? await runSvgFrameZipRender(next)
       : next.kind === 'svgFrameRender'
         ? await runSvgFrameRender(next)
         : await runRemotionRender(next);
+    const outputPath = next.kind === 'remotionRender'
+      ? await transcodeRenderedMp4(canonicalOutputPath, next)
+      : canonicalOutputPath;
     await updateJob(next.jobId, (job) => ({
       ...job,
       status: 'succeeded',
@@ -1292,8 +1324,8 @@ const handleDownloadJob = async (res, jobId) => {
     return sendJson(res, 404, { error: 'RENDER_OUTPUT_MISSING' });
   }
   res.writeHead(200, {
-    'Content-Type': 'video/mp4',
-    'Content-Disposition': `attachment; filename="${job.jobId}.mp4"`,
+    'Content-Type': outputMimeType(job.outputFormat),
+    'Content-Disposition': `attachment; filename="${job.jobId}.${normalizeOutputFormat(job.outputFormat)}"`,
     'Access-Control-Allow-Origin': ORIGIN,
   });
   return createReadStream(job.outputPath).pipe(res);
