@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ChevronDown,
+  ChevronsLeft,
+  ChevronsRight,
   Menu,
   PanelLeft,
   PanelTop,
@@ -8,6 +10,7 @@ import {
   UserRound,
   X,
 } from "lucide-react"
+import { NavIcon } from "./navIcons"
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
 import { useBrain } from "../../context/useBrain"
@@ -380,7 +383,30 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   const setLayout = (nextLayout: NavigationLayout) => {
     setLayoutState(nextLayout)
     closeAccountMenu()
-    setAnnouncement(`${nextLayout === "top" ? "Top bar" : nextLayout === "wide" ? "Wide sidebar" : "Thin sidebar"} navigation active`)
+    const label =
+      nextLayout === "top" ? "Top bar"
+      : nextLayout === "wide" ? "Wide sidebar"
+      : nextLayout === "thin" ? "Thin sidebar"
+      : "Icon rail"
+    setAnnouncement(`${label} navigation active`)
+  }
+  // Toggle between the current sidebar mode and the collapsed "rail" mode —
+  // one-tap way to reclaim the full-width viewport for the page content and
+  // then bring the sidebar back at the same wideness.
+  const previousSidebarLayoutRef = useRef<Extract<NavigationLayout, "wide" | "thin">>(
+    layout === "wide" || layout === "thin" ? layout : "wide"
+  )
+  useEffect(() => {
+    if (layout === "wide" || layout === "thin") previousSidebarLayoutRef.current = layout
+  }, [layout])
+  const toggleRail = () => {
+    if (layout === "rail") {
+      setLayout(previousSidebarLayoutRef.current)
+    } else {
+      // Only meaningful from a sidebar mode; from "top" this collapses the
+      // top bar into a rail too (sidebar shell + icon-only column).
+      setLayout("rail")
+    }
   }
 
   const { shellRef, registerLink, registerControl, animateToSidebar, animateToTop } = useNavLayoutMorph({
@@ -489,8 +515,10 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
           onFocus={() => prefetchRoute(item.path)}
           className="vt-adaptive-nav__link"
           style={{ "--vt-nav-color": getNavPaletteColor(item.paletteIndex) } as React.CSSProperties}
+          title={item.label}
         >
-          {item.label}
+          <NavIcon id={item.iconId} size={22} cutFill={getNavPaletteColor(item.paletteIndex)} className="vt-adaptive-nav__icon" />
+          <span className="vt-adaptive-nav__link-label">{item.label}</span>
         </NavLink>
       ))}
     </nav>
@@ -500,6 +528,19 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     <div ref={registerControl} className="vt-adaptive-nav__layout-controls" role="group" aria-label="Navigation layout">
       <button type="button" onClick={animateToTop} aria-label="Use top bar" title="Top bar">
         <PanelTop aria-hidden="true" />
+      </button>
+      {/* Rail toggle — one tap to collapse the sidebar to icon-only so the
+          page reclaims full width; tapping again restores the previous
+          wideness. Uses ChevronsLeft/Right so the button also indicates
+          which direction it will move. */}
+      <button
+        type="button"
+        onClick={toggleRail}
+        aria-label={layout === "rail" ? "Expand navigation" : "Collapse to icon rail"}
+        aria-pressed={layout === "rail"}
+        title={layout === "rail" ? "Expand" : "Collapse to rail"}
+      >
+        {layout === "rail" ? <ChevronsRight aria-hidden="true" /> : <ChevronsLeft aria-hidden="true" />}
       </button>
     </div>
   )
