@@ -154,3 +154,15 @@ lives at in this repository. Grouped by the ten categories in the spec.
 | 100 | Serverless thumbnails | `cloud/cloud.ts` → `renderStillOnLambda` |
 | 101 | Shared asset cache | `cloud/cloud.ts` → `markCloudAssetUsed`, `snapshotAssetCache` |
 | 102 | Concurrency auto-scaler | `cloud/cloud.ts` → `pickConcurrency` |
+
+## Extensions
+
+Beyond the 100-feature spec, the following modules are built on top of the
+engine and follow the same design constraints:
+
+| Module | Purpose | Location |
+|---|---|---|
+| Transitions | `<TransitionSeries>` primitive with fade/slide/wipe/iris/flip/clock-wipe presentations and linear / spring timings — parity with `@remotion/transitions`. | `transitions/transitions.tsx` |
+| Kinetic text | `StaggeredText`, `TypewriterText`, `KineticCaption` for per-word / per-character reveals wired to the frame clock and captions parser. | `text/kinetics.tsx` |
+| Tests | Self-contained Node test runner suite covering `clamp`, `interpolate`, `Easing`, `spring`, `measureSpring`, `getLength`, `getBoundingBox`, `evolvePath`, the schema builder, `parseSrt`, and `codecMatrix`. Run with `node --test src/remotion-editor/src/engine/tests/engine.test.mjs`. | `tests/engine.test.mjs` |
+| Demo composition | `<DemoComposition>` — a four-scene walk-through wired through `TransitionSeries` and registered in `Root.tsx` as `id="EngineDemo"`. | `examples/DemoComposition.tsx` |

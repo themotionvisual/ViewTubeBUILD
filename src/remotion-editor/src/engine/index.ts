@@ -175,3 +175,25 @@ export type {
 } from './cloud/cloud';
 export { Player, useThumbnail } from './cloud/player';
 export type { PlayerProps, PlayerRef } from './cloud/player';
+
+/* Extensions — transitions & kinetic text */
+export {
+  TransitionSeries,
+  presentations,
+  linearTiming,
+  springTiming,
+} from './transitions/transitions';
+export type { PresentationProps, PresentationSpec, TimingSpec } from './transitions/transitions';
+export {
+  splitText,
+  StaggeredText,
+  TypewriterText,
+  KineticCaption,
+} from './text/kinetics';
+export type {
+  SplitUnit,
+  SplitToken,
+  StaggeredTextProps,
+  TypewriterTextProps,
+  KineticCaptionProps,
+} from './text/kinetics';

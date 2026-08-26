@@ -2,6 +2,7 @@ import './index.css';
 import React from 'react';
 import { Composition } from 'remotion';
 import { MyComposition } from './Composition';
+import { DemoComposition, DEMO_DURATION_IN_FRAMES } from './engine/examples/DemoComposition';
 
 type CompositionMeta = {
   fps: number;
@@ -50,26 +51,37 @@ const defaultRenderJob: RootRenderJob = {
 
 export const RemotionRoot: React.FC = () => {
   return (
-    <Composition
-      id="VTE1Renderer"
-      component={MyComposition}
-      durationInFrames={defaultCompositionMeta.durationInFrames}
-      fps={defaultCompositionMeta.fps}
-      width={defaultCompositionMeta.width}
-      height={defaultCompositionMeta.height}
-      defaultProps={{ renderJob: defaultRenderJob }}
-      calculateMetadata={({ props }: { props: RootRenderJobProps }) => {
-        const meta = {
-          ...defaultCompositionMeta,
-          ...(props?.renderJob?.compositionMeta || {}),
-        };
-        return {
-          durationInFrames: Math.max(1, Number(meta.durationInFrames || defaultCompositionMeta.durationInFrames)),
-          fps: Math.max(1, Number(meta.fps || defaultCompositionMeta.fps)),
-          width: Math.max(1, Number(meta.width || defaultCompositionMeta.width)),
-          height: Math.max(1, Number(meta.height || defaultCompositionMeta.height)),
-        };
-      }}
-    />
+    <>
+      <Composition
+        id="VTE1Renderer"
+        component={MyComposition}
+        durationInFrames={defaultCompositionMeta.durationInFrames}
+        fps={defaultCompositionMeta.fps}
+        width={defaultCompositionMeta.width}
+        height={defaultCompositionMeta.height}
+        defaultProps={{ renderJob: defaultRenderJob }}
+        calculateMetadata={({ props }: { props: RootRenderJobProps }) => {
+          const meta = {
+            ...defaultCompositionMeta,
+            ...(props?.renderJob?.compositionMeta || {}),
+          };
+          return {
+            durationInFrames: Math.max(1, Number(meta.durationInFrames || defaultCompositionMeta.durationInFrames)),
+            fps: Math.max(1, Number(meta.fps || defaultCompositionMeta.fps)),
+            width: Math.max(1, Number(meta.width || defaultCompositionMeta.width)),
+            height: Math.max(1, Number(meta.height || defaultCompositionMeta.height)),
+          };
+        }}
+      />
+      {/* Engine demo — showcases the 100-feature engine live in the studio. */}
+      <Composition
+        id="EngineDemo"
+        component={DemoComposition}
+        durationInFrames={DEMO_DURATION_IN_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+    </>
   );
 };
