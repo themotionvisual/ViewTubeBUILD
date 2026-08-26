@@ -742,8 +742,10 @@
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link:not(.active):hover {
   transform: translateX(10px);
 }
-/* Icon inside the link — inherits `currentColor`, sits before the label. */
-.vt-adaptive-nav__icon { flex: 0 0 auto; }
+/* Icon inside the link — inherits `currentColor`, sits before the label.
+   HIDDEN by default so wide/thin/top all show text-only chips. The rail
+   layout further down re-enables the icon and hides the label. */
+.vt-adaptive-nav__icon { display: none; flex: 0 0 auto; }
 .vt-adaptive-nav__link-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 /* Sidebar __links container needs `overflow: visible` so bleed + hover
    translates don't get clipped, and no left padding so the negative
@@ -798,6 +800,11 @@
   transition: transform 140ms cubic-bezier(.2, .8, .2, 1);
 }
 .vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__link-label { display: none; }
+.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__icon { display: inline-flex; }
+/* Small-viewport top-layout also gets icons when labels are hidden */
+@media (max-width: 1100px) {
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__icon { display: inline-flex; }
+}
 .vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__link.active {
   transform: translateX(0);
   box-shadow: 3px 3px 0 0 color-mix(in srgb, var(--vt-nav-color) 55%, #000);
