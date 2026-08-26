@@ -788,19 +788,31 @@
   width: 52px;
   height: 44px;
   min-height: 44px;
-  padding: 0;
-  border-radius: var(--vt-nav-radius);
+  padding: 0 6px 0 14px;
   gap: 0;
   justify-content: center;
-  margin-left: 0;
-  border-left-width: 2px;
-  border-top-left-radius: var(--vt-nav-radius);
-  border-bottom-left-radius: var(--vt-nav-radius);
+  /* Bleed off the viewport's left edge exactly like the expanded sidebar
+     buttons — user asked the collapsed rail to hang off too. Same recipe:
+     negative margin, no left border, squared left corners. */
+  margin-left: -14px;
+  border-left-width: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-right-radius: var(--vt-nav-radius);
+  border-bottom-right-radius: var(--vt-nav-radius);
   font-size: 0; /* hide the label text; NavIcon keeps its own dimensions */
   transition: transform 140ms cubic-bezier(.2, .8, .2, 1);
 }
 .vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__link-label { display: none; }
 .vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__icon { display: inline-flex; }
+/* Phosphor renders a real <svg>, not a <use>-referenced symbol — target it
+   for the extra-bold visual weight so the rail icons match the density of
+   the reference photos. */
+.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__icon svg,
+.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__icon {
+  width: 26px !important;
+  height: 26px !important;
+}
 /* Small-viewport top-layout also gets icons when labels are hidden */
 @media (max-width: 1100px) {
   .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__icon { display: inline-flex; }
@@ -812,15 +824,32 @@
 .vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__link:not(.active):hover {
   transform: translateX(2px);
 }
+/* Account chip in rail — profile picture takes the icon slot, hangs off
+   the left edge with the same recipe as the icon buttons above. Nothing
+   else visible (no copy, no chevron, no auth-status pill). */
 .vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__account-trigger {
-  grid-template-columns: 40px !important;
+  grid-template-columns: 32px !important;
   width: 52px !important;
   height: 44px !important;
   padding: 0 !important;
   place-items: center;
+  justify-content: center;
+  margin-left: -14px !important;
+  padding-left: 14px !important;
+  border-left-width: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  border-top-right-radius: var(--vt-nav-radius);
+  border-bottom-right-radius: var(--vt-nav-radius);
 }
 .vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__account-copy,
 .vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__account-chevron { display: none; }
+.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__account-trigger .vt-adaptive-nav__avatar {
+  /* Slightly bigger than the default 32px so the pp reads as an icon-scale
+     glyph, not a tiny thumbnail — matches the 26px filled icons above. */
+  width: 30px !important;
+  height: 30px !important;
+}
 .vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__utilities {
   display: flex;
   flex-direction: column;
