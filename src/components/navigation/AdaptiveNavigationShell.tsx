@@ -517,7 +517,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
           style={{ "--vt-nav-color": getNavPaletteColor(item.paletteIndex) } as React.CSSProperties}
           title={item.label}
         >
-          <NavIcon id={item.iconId} size={22} cutFill={getNavPaletteColor(item.paletteIndex)} className="vt-adaptive-nav__icon" />
+          <NavIcon id={item.iconId} size={22} weight="fill" className="vt-adaptive-nav__icon" />
           <span className="vt-adaptive-nav__link-label">{item.label}</span>
         </NavLink>
       ))}
