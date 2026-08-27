@@ -9,6 +9,11 @@ import { readGoogleProxyError, requestGoogleWithRetry } from "./googleProxyError
 
 const MAX_ATTEMPTS = 3
 export const SERVER_ACCOUNT_SESSION_TOKEN = "__viewtube_server_account_session__"
+const ACCOUNT_PROXY_FALLBACK_PATTERNS = [
+ "Request origin is not allowed",
+ "Authentication required",
+ "Account request failed",
+]
 
 // Keep the Google-read proxy circuit breaker local to this transport. Do not
 // mark the entire unified account server unavailable just because one proxy
@@ -18,8 +23,15 @@ let accountProxyDisabledForSession = false
 
 const shouldFallbackFromAccountProxy = async (response: Response): Promise<boolean> => {
  if (response.status === 404) return true
+ if (response.status !== 401 && response.status !== 403) return false
+
  const details = await readGoogleProxyError(response)
- return details?.code === "PROXY_ORIGIN_REJECTED"
+ if (details?.code === "PROXY_ORIGIN_REJECTED" || details?.code === "AUTH_REQUIRED") return true
+
+ // Compatibility with the working ViewTubeX server, which returns the older
+ // plain error shape instead of the structured google-proxy error envelope.
+ const bodyText = await response.clone().text().catch(() => "")
+ return ACCOUNT_PROXY_FALLBACK_PATTERNS.some((pattern) => bodyText.includes(pattern))
 }
 
 const runDirectRequest = async (url: string, signal?: AbortSignal): Promise<Response> => {
@@ -51,6 +63,11 @@ const runRequest = async (url: string, signal?: AbortSignal): Promise<Response> 
 
    if (await shouldFallbackFromAccountProxy(response)) {
     accountProxyDisabledForSession = true
+    // Match the known-good ViewTubeX behavior: once the production proxy has
+    // rejected this browser session, switch the whole app to the valid legacy
+    // OAuth transport instead of leaving UI state in "server connected" mode.
+    markUnifiedAccountServerUnavailable()
+    if (typeof window !== "undefined") window.dispatchEvent(new Event("vt_auth_changed"))
     return runDirectRequest(url, signal)
    }
 
