@@ -40,9 +40,9 @@ export interface BrainCapabilityBinding {
 }
 
 /**
- * Phase-One map to the ACTUAL main-branch ViewTube systems.
- * This intentionally points Brain at existing canonical services instead of
- * duplicating analytics/projects/studio/vault/publishing state.
+ * Phase-One map to the ACTUAL production ViewTube systems on the integration
+ * branch. Brain points at existing canonical services rather than duplicating
+ * analytics/projects/studio/vault state.
  */
 export const PHASE_ONE_BRAIN_BINDINGS: BrainCapabilityBinding[] = [
  {
@@ -68,7 +68,7 @@ export const PHASE_ONE_BRAIN_BINDINGS: BrainCapabilityBinding[] = [
   routes: ["/studio"],
   sourceOfTruth: "features/creator-engagement/useCommentResponderController + youtubeService",
   reads: ["comment thread", "source video metadata", "creator video catalog", "Brain profile"],
-  writes: ["reply draft"],
+  writes: ["reply draft", "manual comment reply"],
   externalSideEffect: true,
   status: "wired",
  },
@@ -93,11 +93,11 @@ export const PHASE_ONE_BRAIN_BINDINGS: BrainCapabilityBinding[] = [
  {
   id: "publisher",
   routes: ["/video-publisher"],
-  sourceOfTruth: "views/VideoPublisher.tsx + YouTube publishing services",
-  reads: ["project", "metadata", "asset packet"],
-  writes: ["publish draft", "publish action"],
+  sourceOfTruth: "views/VideoPublisher.tsx + sheetsService + nexusSyncService",
+  reads: ["Brain project/channel context", "video concept", "script", "SEO metadata result"],
+  writes: ["SEO metadata draft", "Google Sheets export", "Drive/Vault SEO sync", "local ZIP export"],
   externalSideEffect: true,
-  status: "integration-ready",
+  status: "wired",
  },
  {
   id: "editor",
