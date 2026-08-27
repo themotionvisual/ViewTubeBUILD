@@ -1,0 +1,175 @@
+import { createGenerationRecord, updateGenerationRecord } from "./generationStore"
+import { ingestGenerationArtifacts } from "./vaultAdapter"
+
+export type ViewTubeToolKind =
+ | "studio-tool"
+ | "widget"
+ | "analytics"
+ | "project"
+ | "vault"
+ | "editor"
+ | "brain"
+ | "super-tool"
+ | "system"
+
+export type ViewTubePayloadKind =
+ | "video"
+ | "thumbnail"
+ | "image"
+ | "script"
+ | "storyboard"
+ | "metadata"
+ | "comment"
+ | "community-post"
+ | "poll"
+ | "analysis"
+ | "tactic"
+ | "hook"
+ | "project"
+ | "calendar-item"
+ | "timeline"
+ | "asset"
+ | "evidence"
+ | "json"
+
+export interface ViewTubeToolCapability {
+ id: string
+ label: string
+ kind: ViewTubeToolKind
+ route: string
+ accepts: ViewTubePayloadKind[]
+ produces: ViewTubePayloadKind[]
+ status: "ready" | "partial" | "planned"
+ description: string
+}
+
+export interface ViewTubeActionPacket<T = unknown> {
+ id: string
+ version: 1
+ sourceToolId: string
+ sourceKind: ViewTubeToolKind
+ payloadKind: ViewTubePayloadKind
+ title: string
+ summary: string
+ payload: T
+ projectId?: string | null
+ channelId?: string | null
+ videoId?: string | null
+ evidence: string[]
+ provenance: string[]
+ suggestedTargets: string[]
+ createdAt: number
+}
+
+export interface ViewTubeToolChainStep {
+ toolId: string
+ purpose: string
+ optional?: boolean
+}
+
+export interface ViewTubeSuggestedToolChain {
+ id: string
+ title: string
+ description: string
+ startsWith: string[]
+ steps: ViewTubeToolChainStep[]
+ outcome: string
+}
+
+/**
+ * Canonical capability registry for handoffs. This intentionally includes the
+ * Studio Hub tools that are already usable today. Super Tools can join the
+ * same protocol as they become production-ready; they do not own the protocol.
+ */
+export const VIEWTUBE_TOOL_CAPABILITIES: ViewTubeToolCapability[] = [
+ { id: "video-manager", label: "Video Manager", kind: "studio-tool", route: "/studio", accepts: ["video", "thumbnail", "metadata", "asset"], produces: ["video", "metadata"], status: "ready", description: "Select and manage canonical creator videos and their assets." },
+ { id: "video-publisher", label: "Video Publisher", kind: "studio-tool", route: "/studio", accepts: ["video", "thumbnail", "metadata", "script", "asset"], produces: ["metadata", "asset"], status: "ready", description: "Assemble publish-ready metadata and creator deliverables." },
+ { id: "content-analysis", label: "Content Analysis", kind: "studio-tool", route: "/studio", accepts: ["video", "script", "metadata", "evidence"], produces: ["analysis", "tactic", "hook"], status: "ready", description: "Analyze creator content and turn evidence into actionable findings." },
+ { id: "thumbnail-studio", label: "Thumbnail Studio", kind: "studio-tool", route: "/studio", accepts: ["video", "image", "metadata", "analysis", "hook"], produces: ["thumbnail", "image", "asset"], status: "ready", description: "Create and analyze thumbnail packaging." },
+ { id: "community-posts", label: "Community Posts", kind: "studio-tool", route: "/studio#community-posts", accepts: ["image", "video", "metadata", "analysis", "poll"], produces: ["community-post", "poll", "asset"], status: "ready", description: "Create community updates and image/poll concepts from creator assets." },
+ { id: "comment-responder", label: "Comment Responder", kind: "studio-tool", route: "/studio#comment-responder", accepts: ["comment", "video", "metadata", "analysis"], produces: ["comment", "analysis", "video"], status: "ready", description: "Draft replies and recommend relevant creator videos." },
+ { id: "end-screen-architect", label: "End-Screen Architect", kind: "studio-tool", route: "/studio", accepts: ["video", "analysis", "metadata"], produces: ["metadata", "script", "video"], status: "ready", description: "Design next-video end-screen flows and outro copy." },
+ { id: "pre-launch-priming", label: "Pre-Launch Priming", kind: "studio-tool", route: "/studio", accepts: ["video", "thumbnail", "metadata", "analysis"], produces: ["tactic", "metadata", "project"], status: "ready", description: "Turn a prepared upload into a pre-launch execution plan." },
+ { id: "hook-generator", label: "Hook Generator", kind: "studio-tool", route: "/studio", accepts: ["script", "video", "analysis", "tactic", "metadata"], produces: ["hook", "script"], status: "ready", description: "Generate opening hooks from context, evidence and strategy." },
+ { id: "tactics-engine", label: "Tactics Engine", kind: "studio-tool", route: "/studio", accepts: ["analysis", "evidence", "video", "metadata"], produces: ["tactic", "project"], status: "ready", description: "Convert channel evidence and strategy into concrete creator actions." },
+ { id: "project-calendar", label: "Projects + Calendar", kind: "project", route: "/projects", accepts: ["script", "storyboard", "project", "calendar-item", "tactic", "asset"], produces: ["project", "calendar-item"], status: "ready", description: "Schedule and organize production work." },
+ { id: "storyboard-studio", label: "Storyboard Studio", kind: "project", route: "/storyboard-studio", accepts: ["script", "project", "image", "asset"], produces: ["storyboard", "image", "asset"], status: "ready", description: "Turn scripts and project context into visual scene plans." },
+ { id: "vault", label: "Creator Vault", kind: "vault", route: "/vault", accepts: ["thumbnail", "image", "script", "storyboard", "metadata", "asset", "json"], produces: ["asset"], status: "ready", description: "Persist reusable creator assets with provenance." },
+ { id: "video-editor", label: "VT_E1 Video Editor", kind: "editor", route: "/editor", accepts: ["video", "script", "storyboard", "image", "thumbnail", "asset", "timeline"], produces: ["timeline", "video", "asset"], status: "partial", description: "Assemble creator assets and plans on the canonical editing timeline." },
+ { id: "ai-brain", label: "ViewTube Brain", kind: "brain", route: "/ai-brain", accepts: ["analysis", "evidence", "video", "script", "metadata", "comment", "project", "asset", "json"], produces: ["analysis", "tactic", "hook", "project", "json"], status: "ready", description: "Reason across channel context and recommend or orchestrate next actions." },
+]
+
+export const VIEWTUBE_SUGGESTED_TOOL_CHAINS: ViewTubeSuggestedToolChain[] = [
+ { id: "thumbnail-to-publish", title: "Thumbnail → Publish", description: "Move approved packaging into the upload workflow without re-entering it.", startsWith: ["thumbnail-studio"], steps: [{ toolId: "thumbnail-studio", purpose: "Create or approve the thumbnail" }, { toolId: "video-publisher", purpose: "Attach the thumbnail to the publish-ready package" }, { toolId: "video-manager", purpose: "Associate the approved asset with the canonical video", optional: true }], outcome: "A publish-ready video package with its approved thumbnail attached." },
+ { id: "generated-image-to-community-poll", title: "Generated Image → Community Poll", description: "Reuse an image created anywhere in ViewTube as the visual basis of a community poll.", startsWith: ["thumbnail-studio", "vault", "ai-brain"], steps: [{ toolId: "vault", purpose: "Preserve the generated image and provenance", optional: true }, { toolId: "community-posts", purpose: "Use the image in a community post or image poll" }], outcome: "A community post draft that reuses an existing creator asset." },
+ { id: "script-to-production", title: "Script → Production", description: "Turn a generated script into a scheduled, visualized and editable production.", startsWith: ["ai-brain", "hook-generator"], steps: [{ toolId: "project-calendar", purpose: "Attach the script to a project and production date" }, { toolId: "storyboard-studio", purpose: "Break the script into scenes and visual requirements" }, { toolId: "video-editor", purpose: "Create or populate the editing timeline" }, { toolId: "vault", purpose: "Preserve script, storyboard and generated assets", optional: true }], outcome: "A script becomes an organized production with a storyboard and editor handoff." },
+ { id: "analysis-to-packaging", title: "Analysis → Packaging", description: "Turn evidence about a video or channel into stronger hooks and packaging.", startsWith: ["content-analysis", "ai-brain"], steps: [{ toolId: "content-analysis", purpose: "Identify evidence-backed strengths, weaknesses and opportunities" }, { toolId: "hook-generator", purpose: "Generate opening-hook directions from the analysis" }, { toolId: "thumbnail-studio", purpose: "Create packaging directions using the same analysis" }, { toolId: "pre-launch-priming", purpose: "Prepare the chosen package for launch" }], outcome: "One evidence trail connects analysis, hook, thumbnail and launch plan." },
+ { id: "comment-to-content", title: "Audience Request → Content", description: "Convert useful audience demand into a planned creator project.", startsWith: ["comment-responder"], steps: [{ toolId: "comment-responder", purpose: "Identify a useful request or recurring audience question" }, { toolId: "ai-brain", purpose: "Assess channel fit and supporting evidence" }, { toolId: "project-calendar", purpose: "Create and schedule the content project" }, { toolId: "storyboard-studio", purpose: "Develop the production plan", optional: true }], outcome: "A viewer request becomes a traceable content project." },
+ { id: "video-to-next-video", title: "Video → Next Video Funnel", description: "Use the creator catalog and analysis to create a deliberate viewer path.", startsWith: ["video-manager", "content-analysis"], steps: [{ toolId: "video-manager", purpose: "Choose the source video" }, { toolId: "content-analysis", purpose: "Determine viewer intent and strongest related content" }, { toolId: "end-screen-architect", purpose: "Design the next-video handoff and outro" }, { toolId: "video-manager", purpose: "Associate the resulting end-screen plan with the video" }], outcome: "A source video gets an evidence-backed next-video path." },
+ { id: "tactic-to-experiment", title: "Tactic → Creative Experiment", description: "Turn strategic advice into something the creator can actually test.", startsWith: ["tactics-engine", "ai-brain"], steps: [{ toolId: "tactics-engine", purpose: "Select a concrete tactic" }, { toolId: "hook-generator", purpose: "Create a hook variant for the tactic", optional: true }, { toolId: "thumbnail-studio", purpose: "Create a packaging variant for the tactic", optional: true }, { toolId: "project-calendar", purpose: "Track the experiment and its deadline" }], outcome: "A recommendation becomes a measurable creator experiment." },
+ { id: "asset-to-editor", title: "Vault Asset → Editor", description: "Send reusable creator assets directly into production.", startsWith: ["vault"], steps: [{ toolId: "vault", purpose: "Select the source asset" }, { toolId: "video-editor", purpose: "Insert or stage the asset in the active edit" }], outcome: "A Vault asset arrives in the editor with provenance intact." },
+]
+
+export const getViewTubeToolCapability = (id: string) =>
+ VIEWTUBE_TOOL_CAPABILITIES.find((tool) => tool.id === id) || null
+
+export const getCompatibleHandoffTargets = (packet: Pick<ViewTubeActionPacket, "sourceToolId" | "payloadKind">) =>
+ VIEWTUBE_TOOL_CAPABILITIES.filter((tool) =>
+  tool.id !== packet.sourceToolId && tool.accepts.includes(packet.payloadKind),
+ )
+
+export const getSuggestedChainsForTool = (toolId: string) =>
+ VIEWTUBE_SUGGESTED_TOOL_CHAINS.filter((chain) =>
+  chain.startsWith.includes(toolId) || chain.steps.some((step) => step.toolId === toolId),
+ )
+
+export const createViewTubeActionPacket = <T,>(input: Omit<ViewTubeActionPacket<T>, "id" | "version" | "createdAt" | "suggestedTargets"> & { suggestedTargets?: string[] }): ViewTubeActionPacket<T> => {
+ const compatible = VIEWTUBE_TOOL_CAPABILITIES
+  .filter((tool) => tool.id !== input.sourceToolId && tool.accepts.includes(input.payloadKind))
+  .map((tool) => tool.id)
+ return {
+  ...input,
+  id: crypto.randomUUID(),
+  version: 1,
+  suggestedTargets: input.suggestedTargets || compatible,
+  createdAt: Date.now(),
+ }
+}
+
+/** Persist a universal handoff as a normal GenerationRecord + Vault artifact.
+ * This reuses ViewTube's existing provenance system instead of inventing a
+ * second workflow database. Destination tools can later consume the packet by
+ * id or through project/workflow context.
+ */
+export const persistViewTubeActionPacket = <T,>(packet: ViewTubeActionPacket<T>) => {
+ const record = createGenerationRecord({
+  toolId: packet.sourceToolId as never,
+  provider: "mock",
+  model: "viewtube-action-packet-v1",
+  prompt: JSON.stringify({ sourceToolId: packet.sourceToolId, payloadKind: packet.payloadKind }),
+  status: "running",
+  artifacts: [],
+  metadata: { actionPacketId: packet.id, universalToolHandoff: true },
+ })
+ const artifact = {
+  id: crypto.randomUUID(),
+  kind: "json" as const,
+  label: `${packet.title} handoff`,
+  sourceRecordId: record.id,
+  metadata: packet as unknown as Record<string, unknown>,
+ }
+ updateGenerationRecord(record.id, {
+  status: "complete",
+  outputText: packet.summary,
+  outputJson: packet as unknown as Record<string, unknown>,
+  artifacts: [artifact],
+  usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+  estimatedCostCents: 0,
+ })
+ ingestGenerationArtifacts([artifact], {
+  toolId: packet.sourceToolId as never,
+  generationId: record.id,
+  tags: [packet.sourceToolId, packet.payloadKind, "viewtube-action-packet"],
+ })
+ return { packet, recordId: record.id, artifactId: artifact.id }
+}
