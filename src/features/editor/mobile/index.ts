@@ -1,8 +1,8 @@
 /**
  * Mobile editor — public barrel.
  */
-export { MobileEditor, ResponsiveEditorShell } from './MobileEditor';
-export type { MobileEditorProps, ResponsiveEditorShellProps } from './MobileEditor';
+export { MobileEditor, MobileEditorSurface, ResponsiveEditorShell } from './MobileEditor';
+export type { MobileEditorProps, MobileEditorSurfaceProps, ResponsiveEditorShellProps } from './MobileEditor';
 
 export {
   useEditorState,
