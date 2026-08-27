@@ -35,13 +35,14 @@ const storageAvailable = () =>
 const cleanChannelId = (value?: string | null): string =>
  String(value || "").trim()
 
-const activeChannelId = (): string => {
- if (!storageAvailable()) return ""
- return cleanChannelId(localStorage.getItem(BRAIN_ACTIVE_CONTROL_CHANNEL_KEY))
+export const getActiveBrainControlChannel = (): string | null => {
+ if (!storageAvailable()) return null
+ const value = cleanChannelId(localStorage.getItem(BRAIN_ACTIVE_CONTROL_CHANNEL_KEY))
+ return value || null
 }
 
 const keyForChannel = (channelId?: string | null): string => {
- const id = cleanChannelId(channelId) || activeChannelId()
+ const id = cleanChannelId(channelId) || getActiveBrainControlChannel() || ""
  return id ? `${BRAIN_USER_CONTROLS_STORAGE_KEY}:${id}` : BRAIN_USER_CONTROLS_STORAGE_KEY
 }
 
