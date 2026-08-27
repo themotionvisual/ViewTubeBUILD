@@ -114,6 +114,17 @@ test("Google write-route responses use the injected JSON responder", async () =>
   assert.deepEqual(result, { res: "response", status: 200, payload: { id: "reply-id" } });
 });
 
+test("production public origin falls back to viewtube.live when env is absent", async () => {
+  const previousOrigin = process.env.ACCOUNT_PUBLIC_ORIGIN;
+  const previousNodeEnv = process.env.NODE_ENV;
+  delete process.env.ACCOUNT_PUBLIC_ORIGIN;
+  process.env.NODE_ENV = "production";
+  assert.equal(isTrustedAccountOrigin("https://viewtube.live"), true);
+  assert.equal(isTrustedAccountOrigin("https://www.viewtube.live"), true);
+  process.env.ACCOUNT_PUBLIC_ORIGIN = previousOrigin;
+  process.env.NODE_ENV = previousNodeEnv;
+});
+
 test("trusted account origins accept the www and apex production hostnames", () => {
   const previousOrigin = process.env.ACCOUNT_PUBLIC_ORIGIN;
   process.env.ACCOUNT_PUBLIC_ORIGIN = "https://viewtube.live";
