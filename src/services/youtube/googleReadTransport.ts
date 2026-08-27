@@ -10,11 +10,13 @@ import { readGoogleProxyError, requestGoogleWithRetry } from "./googleProxyError
 const MAX_ATTEMPTS = 3
 export const SERVER_ACCOUNT_SESSION_TOKEN = "__viewtube_server_account_session__"
 
+// Keep the Google-read proxy circuit breaker local to this transport. Do not
+// mark the entire unified account server unavailable just because one proxy
+// route rejected the request; doing that flips auth mode globally and can turn
+// a fallback Google 401 into a full ViewTube logout.
+let accountProxyDisabledForSession = false
+
 const shouldFallbackFromAccountProxy = async (response: Response): Promise<boolean> => {
- // A missing route and a deployment-level origin rejection both mean the
- // server proxy cannot serve this browser session. They are not Google OAuth
- // failures, so fail over once to the existing browser token path instead of
- // making every widget independently report "reconnect channel".
  if (response.status === 404) return true
  const details = await readGoogleProxyError(response)
  return details?.code === "PROXY_ORIGIN_REJECTED"
@@ -37,7 +39,7 @@ const runDirectRequest = async (url: string, signal?: AbortSignal): Promise<Resp
 }
 
 const runRequest = async (url: string, signal?: AbortSignal): Promise<Response> => {
- if (isUnifiedAccountServerEnabled()) {
+ if (isUnifiedAccountServerEnabled() && !accountProxyDisabledForSession) {
   try {
    const response = await fetch(accountUrl("/api/account/google-proxy"), {
     method: "POST",
@@ -46,16 +48,17 @@ const runRequest = async (url: string, signal?: AbortSignal): Promise<Response> 
     body: JSON.stringify({ url }),
     signal,
    })
+
    if (await shouldFallbackFromAccountProxy(response)) {
-    // Circuit-break the broken proxy for the rest of this session. This is
-    // intentionally global: Comment Responder, Video Manager, realtime,
-    // analytics, playlists and the Studio Hub all share this transport.
-    markUnifiedAccountServerUnavailable()
+    accountProxyDisabledForSession = true
     return runDirectRequest(url, signal)
    }
+
    return response
   } catch (error) {
    if (isAccountServerUnavailableError(error) || error instanceof Error && error.message === "ACCOUNT_SERVER_UNAVAILABLE") {
+    // A true account-server outage may still disable the unified server mode,
+    // preserving the existing legacy fallback behavior.
     markUnifiedAccountServerUnavailable()
    } else {
     throw error
