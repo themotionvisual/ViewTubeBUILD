@@ -1,6 +1,10 @@
 import { BrainSignal, ContextPacket, BrainMemorySchema } from "../../types"
 import { getVaultKey } from "../keyVault"
 import * as db from "./Persistence"
+import {
+ readBrainUserControls,
+ shouldBrainLearnFromInteraction,
+} from "./BrainUserControls"
 
 // Statically importing "../gemini" here dragged @google/genai into the entry
 // chunk (~50 kB gzip) and forced every route to preload the Gemini SDK before
@@ -57,6 +61,9 @@ export const saveBrainMemory = async (schema: BrainMemorySchema) => {
 }
 
 export const emitSignal = async (toolId: string, action: string, payload: unknown) => {
+ const controls = readBrainUserControls()
+ if (!shouldBrainLearnFromInteraction(controls)) return
+
  const schema = { ...getBrainMemory(), tools: [...getBrainMemory().tools] }
  
  if (!schema.tools.includes(toolId)) {
@@ -96,21 +103,31 @@ export const consultBrain = async (
 ): Promise<ContextPacket> => {
  void toolId
  void requestDetails
- const schema = getBrainMemory()
+ const controls = readBrainUserControls()
+ const schema = controls.enabled && controls.personalization
+  ? getBrainMemory()
+  : DEFAULT_SCHEMA
  
  const packet: ContextPacket = {
   identityAndAspirations: schema.identityAndAspirations,
   contentDNA: schema.contentDNA,
-  performanceLedger: schema.performanceLedger,
+  performanceLedger: controls.allowAnalytics
+   ? schema.performanceLedger
+   : "Channel analytics access is disabled by the creator.",
   futureStateMap: schema.futureStateMap,
-  learnedPreferences: "Data extracted from recent interactions.",
-  strategicAdvice: schema.strategicAdvice
+  learnedPreferences: controls.personalization
+   ? "Data extracted from recent creator-approved interactions."
+   : "Personalization is disabled by the creator.",
+  strategicAdvice: controls.enabled ? schema.strategicAdvice : undefined
  }
  
  return packet
 }
 
 const runReflection = async (): Promise<void> => {
+ const controls = readBrainUserControls()
+ if (!shouldBrainLearnFromInteraction(controls)) return
+
  const signals = await db.getBrainSignalsDB();
  if (signals.length === 0) return
 
@@ -124,7 +141,7 @@ const runReflection = async (): Promise<void> => {
   ${JSON.stringify({
    identityAndAspirations: schema.identityAndAspirations,
    contentDNA: schema.contentDNA,
-   performanceLedger: schema.performanceLedger,
+   performanceLedger: controls.allowAnalytics ? schema.performanceLedger : "Analytics access disabled",
    futureStateMap: schema.futureStateMap
   }, null, 2)}
   
@@ -132,6 +149,11 @@ const runReflection = async (): Promise<void> => {
   ${JSON.stringify(signals, null, 2)}
   
   Identify user preference patterns and update the state.
+  
+  CRITICAL USER-CONTROL RULES:
+  - Do not reconstruct or infer private analytics when analytics access is disabled.
+  - Do not promote tool interactions into creator memory when personalization or learning is disabled.
+  - User corrections and explicit preferences outrank inferred patterns.
   
   CRITICAL: Look for "Conflict Signals":
   - If user stated goals (Aspirations) clash with current performance (Ledger), suggest a pivot in futureStateMap.
@@ -146,7 +168,7 @@ const runReflection = async (): Promise<void> => {
   - strategicAdvice (A 1-sentence "OODA Loop" directive for the user)
   
   Make the summaries dense, strategic, and highly actionable for AI agents.
-  Use a "Hard-Sharp" tone: direct, unsentimental, and data-driven.
+  Use a direct, evidence-aware tone.
  `
 
  try {
