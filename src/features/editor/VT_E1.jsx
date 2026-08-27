@@ -12587,7 +12587,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
         );
       };
 
-      const mobileEditorProject = useMemo(() => ({
+      const mobileEditorProject = {
         ...project,
         durationSec: Number(project.meta?.durationSec || 0),
         tracks: [...(project.tracks || [])]
@@ -12597,7 +12597,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
             kind: track.kind === AUDIO_TRACK_KIND ? 'audio' : 'video',
             hidden: track.visible === false
           }))
-      }), [project]);
+      };
 
       const mobileEditorDispatch = (action) => {
         if (!action || typeof action.type !== 'string') return;
