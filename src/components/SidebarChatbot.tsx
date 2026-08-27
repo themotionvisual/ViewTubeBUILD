@@ -19,6 +19,11 @@ import {
  type BrainUserControls,
 } from "../services/brain/BrainUserControls"
 import { parseBrainSurfaceContextFromLocation } from "../services/brain/BrainSurfaceContext"
+import {
+ BRAIN_SURFACE_SELECTION_EVENT,
+ readBrainSurfaceSelection,
+ type BrainSurfaceSelection,
+} from "../services/brain/BrainSurfaceSelection"
 import type { AIBrainConversationTurn } from "../types"
 import { BrainAnswerModuleGrid } from "./brain/BrainAnswerModules"
 import { BrainEvidenceDrawer } from "./brain/BrainEvidenceDrawer"
@@ -30,6 +35,9 @@ export const SidebarChatbot: React.FC = () => {
  const [busy, setBusy] = useState(false)
  const [turns, setTurns] = useState<AIBrainConversationTurn[]>([])
  const [activeTurn, setActiveTurn] = useState<AIBrainConversationTurn | null>(null)
+ const [selection, setSelection] = useState<BrainSurfaceSelection | null>(() =>
+  readBrainSurfaceSelection(location.pathname),
+ )
  const channelId = authState.channelHandle || authState.channelId || null
  const [controls, setControls] = useState<BrainUserControls>(() => readBrainUserControls(channelId))
 
@@ -64,13 +72,25 @@ export const SidebarChatbot: React.FC = () => {
  }, [channelId])
 
  useEffect(() => {
+  setSelection(readBrainSurfaceSelection(location.pathname))
+ }, [location.pathname])
+
+ useEffect(() => {
   const onControls = (event: Event) => {
    const detail = (event as CustomEvent<BrainUserControls>).detail
    setControls(detail || readBrainUserControls(channelId))
   }
+  const onSelection = (event: Event) => {
+   const detail = (event as CustomEvent<BrainSurfaceSelection | null>).detail
+   setSelection(detail?.route === location.pathname ? detail : null)
+  }
   window.addEventListener("vt_brain_user_controls_changed", onControls as EventListener)
-  return () => window.removeEventListener("vt_brain_user_controls_changed", onControls as EventListener)
- }, [channelId])
+  window.addEventListener(BRAIN_SURFACE_SELECTION_EVENT, onSelection as EventListener)
+  return () => {
+   window.removeEventListener("vt_brain_user_controls_changed", onControls as EventListener)
+   window.removeEventListener(BRAIN_SURFACE_SELECTION_EVENT, onSelection as EventListener)
+  }
+ }, [channelId, location.pathname])
 
  const handleSend = async () => {
   const userText = input.trim()
@@ -82,6 +102,13 @@ export const SidebarChatbot: React.FC = () => {
    route: surface.route,
    capabilityIds: surface.capabilityIds,
    superToolIds: surface.superToolIds,
+   selectedItem: selection ? {
+    sourceId: selection.sourceId,
+    label: selection.label,
+    videoId: selection.videoId,
+    commentId: selection.commentId,
+    projectId: selection.projectId,
+   } : null,
   })
   try {
    const baseSystemPrompt = buildAIBrainSystemPrompt({
@@ -94,15 +121,22 @@ export const SidebarChatbot: React.FC = () => {
    })
    const systemPrompt = `${baseSystemPrompt}\n\nCURRENT VIEWTUBE SURFACE CONTEXT\n${JSON.stringify({
     route: surface.route,
-    projectId: surface.projectId,
-    videoId: surface.videoId,
-    commentId: surface.commentId,
-    dateRange: surface.dateRange,
+    projectId: selection?.projectId ?? surface.projectId,
+    videoId: selection?.videoId ?? surface.videoId,
+    commentId: selection?.commentId ?? surface.commentId,
+    dateRange: selection?.dateRange ?? surface.dateRange,
+    selectedItem: selection ? {
+     sourceId: selection.sourceId,
+     label: selection.label,
+     evidenceIds: selection.evidenceIds || [],
+     context: selection.context || {},
+     updatedAt: selection.updatedAt,
+    } : null,
     availableCapabilities: surface.capabilityIds,
     matchingSuperTools: surface.superToolIds,
     sourcesOfTruth: surface.sourceOfTruth,
     blockedCapabilities: surface.blockedCapabilities,
-   }, null, 2)}\nUse this surface context to understand references such as "this chart", "this project", "this comment", or "this tool". Never use a blocked capability.`
+   }, null, 2)}\nUse this surface context to understand references such as "this chart", "this project", "this comment", "this video", or "this tool". Never use a blocked capability. Treat selected-item context as current UI context, not automatically as durable channel memory.`
 
    const result = await runBrainTurn({
     channelId,
@@ -133,6 +167,13 @@ export const SidebarChatbot: React.FC = () => {
     <span className="inline-flex items-center gap-2 text-[10px] font-[1000] uppercase tracking-[0.08em]"><Brain size={15} />ViewTube Copilot</span>
     <Link to="/ai-brain" className="inline-flex items-center gap-1 text-[9px] font-black uppercase">Open Hub <ArrowRight size={11} /></Link>
    </header>
+
+   {selection ? (
+    <div className="shrink-0 border-b-[2px] border-black bg-[#36E0F6]/25 px-3 py-1.5">
+     <p className="truncate text-[8px] font-[1000] uppercase text-black/55">Current selection</p>
+     <p className="truncate text-[10px] font-black">{selection.label}</p>
+    </div>
+   ) : null}
 
    <div className="grid min-h-[132px] flex-1 content-start gap-2 overflow-y-auto p-3">
     {activeTurn?.response ? (
