@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { generatePerfectReply } from "../../services/gemini"
-import { fetchAllCommentThreads, fetchVideoSnippetDetails, postCommentReply } from "../../services/youtubeService"
+import { fetchVideoSnippetDetails } from "../../services/youtubeService"
+import { fetchSimpleCommentThreads, postSimpleCommentReply } from "../../services/simpleYouTubeApi"
 import type { CommentResponderController, CommentResponderTab, CreatorEngagementContext } from "./types"
 
 export const resolveSuggestedVideoId = (
@@ -64,19 +65,11 @@ export const useCommentResponderController = (context: CreatorEngagementContext)
   setLoading(true)
   setError(null)
   try {
-   const result = await fetchAllCommentThreads(100, context.channelId, {
-   initialNewCount: 3,
-    signal: abortController.signal,
-    onInitialResults: (initial) => {
-     if (generation !== requestGeneration.current) return
-     setThreads(initial)
-     setLoading(false)
-     void syncMetadata(initial)
-    },
-   })
+   const result = await fetchSimpleCommentThreads(100)
    if (generation !== requestGeneration.current) return
-   setThreads(result)
-   void syncMetadata(result)
+   const nextThreads = Array.isArray(result?.items) ? result.items : []
+   setThreads(nextThreads)
+   void syncMetadata(nextThreads)
   } catch (cause) {
    if (generation !== requestGeneration.current) return
    if (cause instanceof DOMException && cause.name === "AbortError") return
@@ -173,7 +166,7 @@ export const useCommentResponderController = (context: CreatorEngagementContext)
   try {
    const parentId = currentThread.snippet?.topLevelComment?.id || currentId
    const text = replyText[currentId]
-   const posted = await postCommentReply(parentId, text)
+   const posted = await postSimpleCommentReply(parentId, text)
    setReplyTextById((current) => { const next = { ...current }; delete next[currentId]; return next })
    setThreads((current) => current.map((thread) => thread.id !== currentId ? thread : ({ ...thread, replies: { ...thread.replies, comments: [...(thread.replies?.comments || []), { ...posted, snippet: { ...posted?.snippet, authorChannelId: posted?.snippet?.authorChannelId || { value: context.channelId }, authorDisplayName: posted?.snippet?.authorDisplayName || context.channelName, authorProfileImageUrl: posted?.snippet?.authorProfileImageUrl || context.channelThumbnail, textDisplay: posted?.snippet?.textDisplay || text, publishedAt: posted?.snippet?.publishedAt || new Date().toISOString() } }] } })))
    setTab("history")
