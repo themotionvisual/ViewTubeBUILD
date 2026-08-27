@@ -1,0 +1,1 @@
+export const STUDIO_HUB_ICON_DATA: Record<string,string> = PLACEHOLDER;
