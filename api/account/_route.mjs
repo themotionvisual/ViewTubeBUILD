@@ -44,14 +44,17 @@ const json = (res, status, payload) => {
 // arbitrary cross-origin callers.
 const canonicalizeVerifiedSameOrigin = (req) => {
   const origin = String(req.headers.origin || "").trim();
+  const directHost = String(req.headers.host || "").trim();
   const forwardedHost = String(req.headers["x-forwarded-host"] || "").split(",")[0].trim();
-  const host = forwardedHost || String(req.headers.host || "").trim();
-  if (!origin || !host) return;
+  if (!origin || (!directHost && !forwardedHost)) return;
 
   try {
     const originUrl = new URL(origin);
-    const requestHost = host.toLowerCase();
-    if (originUrl.host.toLowerCase() !== requestHost) return;
+    const originHost = originUrl.host.toLowerCase();
+    const candidateHosts = [directHost, forwardedHost]
+      .map((value) => value.toLowerCase())
+      .filter(Boolean);
+    if (!candidateHosts.includes(originHost)) return;
 
     const configuredOrigin = String(process.env.ACCOUNT_PUBLIC_ORIGIN || "").trim().replace(/\/$/, "");
     if (configuredOrigin) req.headers.origin = configuredOrigin;
