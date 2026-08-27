@@ -1,5 +1,6 @@
 import React from "react"
-import { Info } from "lucide-react"
+import { Info, ArrowUpRight } from "lucide-react"
+import { Link } from "react-router-dom"
 import type { AIBrainEvidencePack } from "../../types"
 
 const numberText = (value: number | null | undefined): string =>
@@ -21,6 +22,8 @@ export const BrainEvidenceDrawer: React.FC<{
  confidence?: "low" | "medium" | "high" | number | null
  inference?: boolean
  caveats?: string[]
+ sourceRoute?: string | null
+ sourceLabel?: string
 }> = ({
  evidencePack,
  summaryLabel = "Why this recommendation",
@@ -29,6 +32,8 @@ export const BrainEvidenceDrawer: React.FC<{
  confidence = null,
  inference = true,
  caveats = [],
+ sourceRoute = "/analytics",
+ sourceLabel = "Open source in Analytics",
 }) => {
  const topVideos = evidencePack.topVideos.slice(0, 4)
  const searchTerms = evidencePack.searchTerms.slice(0, 4)
@@ -133,6 +138,15 @@ export const BrainEvidenceDrawer: React.FC<{
        {caveats.slice(0, 4).map((item) => <li key={item} className="text-xs font-bold leading-5 text-black/60">{item}</li>)}
       </ul>
      </section>
+    ) : null}
+
+    {sourceRoute && sourceCount ? (
+     <Link
+      to={sourceRoute}
+      className="inline-flex w-fit items-center gap-1 rounded-[7px] border-[2px] border-black bg-white px-2 py-1 text-[8px] font-[1000] uppercase shadow-[2px_2px_0_0_#000] transition hover:bg-[#36E0F6]"
+     >
+      {sourceLabel}<ArrowUpRight size={11} />
+     </Link>
     ) : null}
    </div>
   </details>
