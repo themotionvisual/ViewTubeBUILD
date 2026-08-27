@@ -1,6 +1,7 @@
 import type { BrainCapabilityDefinition } from "../../types"
 import type { AIBrainContextSnapshot } from "../aiBrainCommandInterface"
 import { resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"
+import { readBrainUserControls } from "./BrainUserControls"
 
 export const BRAIN_CAPABILITY_REGISTRY: BrainCapabilityDefinition[] = [
  { id: "channel-profile", label: "Channel profile", description: "Uses inferred niche, pillars, formats, and creator goals.", intents: ["strategy", "audience", "content_analysis"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
@@ -23,23 +24,39 @@ export const inferBrainIntent = (userText: string): BrainCapabilityDefinition["i
 const timelyRequest = (userText: string): boolean =>
  /\b(today|current|currently|latest|recent news|trend|trending|competitor|search behavior|this week|this month|202[5-9])\b/i.test(userText)
 
+const capabilityAllowedByCreator = (
+ capability: BrainCapabilityDefinition,
+ controls: ReturnType<typeof readBrainUserControls>,
+): boolean => {
+ if (!controls.enabled) return false
+ if (!controls.personalization && ["channel-profile", "journal-memory", "goal-coach"].includes(capability.id)) return false
+ if (!controls.allowAnalytics && ["analytics-diagnosis", "top-performer-mining"].includes(capability.id)) return false
+ return true
+}
+
 export const selectBrainCapabilities = (input: {
  userText: string
  snapshot: AIBrainContextSnapshot
  maximum?: number
 }): BrainCapabilityDefinition[] => {
+ const controls = readBrainUserControls()
+ if (!controls.enabled) return []
+
  const intent = inferBrainIntent(input.userText)
  const maximum = Math.max(1, Math.min(8, input.maximum || 6))
  const selected = BRAIN_CAPABILITY_REGISTRY.filter((capability) => {
+  if (!capabilityAllowedByCreator(capability, controls)) return false
   if (capability.requiresCurrentResearch && !timelyRequest(input.userText)) return false
   if (capability.requiresChannelData && input.snapshot.inferredProfile.videoCount === 0) return false
   return capability.intents.includes(intent)
  })
- if (!selected.some((capability) => capability.id === "goal-coach")) {
-  selected.push(BRAIN_CAPABILITY_REGISTRY.find((capability) => capability.id === "goal-coach")!)
+ if (controls.personalization && !selected.some((capability) => capability.id === "goal-coach")) {
+  const goalCoach = BRAIN_CAPABILITY_REGISTRY.find((capability) => capability.id === "goal-coach")
+  if (goalCoach && capabilityAllowedByCreator(goalCoach, controls)) selected.push(goalCoach)
  }
  if (input.snapshot.inferredProfile.status !== "missing" && !selected.some((capability) => capability.id === "niche-knowledge")) {
-  selected.push(BRAIN_CAPABILITY_REGISTRY.find((capability) => capability.id === "niche-knowledge")!)
+  const nicheKnowledge = BRAIN_CAPABILITY_REGISTRY.find((capability) => capability.id === "niche-knowledge")
+  if (nicheKnowledge && capabilityAllowedByCreator(nicheKnowledge, controls)) selected.push(nicheKnowledge)
  }
  return selected.filter(Boolean).slice(0, maximum)
 }
