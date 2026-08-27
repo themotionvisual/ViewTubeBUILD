@@ -64,13 +64,7 @@ const accountFetch = async (
 let unifiedAccountServerUnavailable = false
 
 export const markUnifiedAccountServerUnavailable = (): void => {
-  if (unifiedAccountServerUnavailable) return
   unifiedAccountServerUnavailable = true
-  // Reconcile connection/tool UI immediately when the app falls back from the
-  // unified account server to the working local OAuth session.
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new Event("vt_auth_changed"))
-  }
 }
 
 export const isAccountServerUnavailableError = (error: unknown): boolean => {
