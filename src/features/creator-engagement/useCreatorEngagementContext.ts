@@ -16,27 +16,15 @@ export const useCreatorEngagementContext = (): CreatorEngagementContext => {
    account.snapshot.google.channelId || catalog.snapshot.channelId || authState.channelId || brain.channelProfile?.id || "",
   )
   const channelHandle = String(account.snapshot.google.channelHandle || authState.channelHandle || brain.channelProfile?.handle || "").replace(/^@/, "")
-  // Comment loading is a read-only capability. Prefer the canonical status,
-  // but preserve the known-good ViewTubeX/local OAuth path when the server
-  // account proxy is unavailable on mobile.
-  const readConnected = Boolean(
-   accountStatus.canReadYouTube ||
-   catalog.connected ||
-   authState.isAuthenticated
-  )
-  const canPostComments = Boolean(
-   accountStatus.canPostComments ||
-   (!account.serverEnabled && readConnected)
-  )
   return {
    channelId,
    channelName: String(account.snapshot.google.channelTitle || authState.channelName || brain.channelProfile?.name || "Your Channel"),
    channelHandle,
    channelThumbnail: String(account.snapshot.google.channelThumbnail || authState.channelThumbnail || brain.channelProfile?.thumbnail || ""),
-   connected: readConnected,
-   connectionState: readConnected ? "ready" : accountStatus.status,
-   canReadYouTube: readConnected,
-   canPostComments,
+   connected: accountStatus.canReadYouTube,
+   connectionState: accountStatus.status,
+   canReadYouTube: accountStatus.canReadYouTube,
+   canPostComments: accountStatus.canPostComments,
    reconnect: async () => {
     await account.start("reconnect_channel", window.location.pathname)
     await account.refresh()
@@ -44,5 +32,5 @@ export const useCreatorEngagementContext = (): CreatorEngagementContext => {
    videoAssets: catalog.snapshot.items,
    brain,
   }
- }, [account, accountStatus, authState, brain, catalog.connected, catalog.snapshot.channelId, catalog.snapshot.items])
+ }, [account, accountStatus, authState, brain, catalog.snapshot.channelId, catalog.snapshot.items])
 }
