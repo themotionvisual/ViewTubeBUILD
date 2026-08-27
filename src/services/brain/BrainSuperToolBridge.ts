@@ -1,6 +1,7 @@
 import type { SuperToolId } from "../../types"
 import { createSuperToolActionPacket } from "../superToolActionPackets"
 import { getSuperTool } from "../superToolRegistry"
+import { emitSignal } from "./Core"
 import { readBrainUserControls } from "./BrainUserControls"
 
 export interface BrainSuperToolHandoffInput {
@@ -19,11 +20,15 @@ export interface BrainSuperToolHandoffInput {
  * Brain-to-tool handoffs intentionally reuse the canonical SuperTool action
  * packet / generation / Vault / workflow systems. This is a convenience
  * adapter, not a second handoff format.
+ *
+ * Every persisted handoff is also emitted back into the existing Brain signal
+ * loop. Core.ts applies the creator's learning controls before that signal can
+ * affect durable memory.
  */
-export const createBrainSuperToolHandoff = (
+export const createBrainSuperToolHandoff = async (
  input: BrainSuperToolHandoffInput,
 ) => {
- const controls = readBrainUserControls()
+ const controls = readBrainUserControls(input.channelId)
  if (!controls.enabled) throw new Error("ViewTube Brain is disabled in User Controls.")
 
  const sourceTool = getSuperTool(input.sourceToolId)
@@ -31,7 +36,7 @@ export const createBrainSuperToolHandoff = (
  if (!sourceTool) throw new Error(`Unknown source Super Tool: ${input.sourceToolId}`)
  if (!destinationTool) throw new Error(`Unknown destination Super Tool: ${input.destinationToolId}`)
 
- return createSuperToolActionPacket({
+ const result = createSuperToolActionPacket({
   toolId: input.sourceToolId,
   moduleId: "brain-handoff",
   title: `${sourceTool.title} → ${destinationTool.title}`,
@@ -67,4 +72,18 @@ export const createBrainSuperToolHandoff = (
   ],
   tags: ["brain-handoff", input.destinationToolId],
  })
+
+ await emitSignal(input.sourceToolId, "BRAIN_HANDOFF_CREATED", {
+  channelId: input.channelId ?? null,
+  projectId: input.projectId ?? null,
+  destinationToolId: input.destinationToolId,
+  objective: input.objective,
+  evidenceIds: input.evidenceIds ?? [],
+  creatorDecisions: input.creatorDecisions ?? [],
+  actionPacketId: result.packet.id,
+  generationRecordId: result.recordId,
+  workflowId: result.chain.id,
+ })
+
+ return result
 }
