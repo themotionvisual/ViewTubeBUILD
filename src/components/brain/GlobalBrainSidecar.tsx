@@ -2,8 +2,10 @@ import React, { useEffect, useMemo, useState } from "react"
 import { Brain, ChevronDown, Settings2 } from "lucide-react"
 import { useLocation } from "react-router-dom"
 import { SidebarChatbot } from "../SidebarChatbot"
+import { useBrain } from "../../context/useBrain"
 import {
  readBrainUserControls,
+ setActiveBrainControlChannel,
  type BrainUserControls,
 } from "../../services/brain/BrainUserControls"
 import { parseBrainSurfaceContextFromLocation } from "../../services/brain/BrainSurfaceContext"
@@ -16,18 +18,25 @@ const readInitialOpen = () =>
 
 export const GlobalBrainSidecar: React.FC = () => {
  const location = useLocation()
+ const { authState } = useBrain()
+ const channelId = authState.channelHandle || authState.channelId || null
  const [open, setOpen] = useState(readInitialOpen)
- const [controls, setControls] = useState<BrainUserControls>(() => readBrainUserControls())
+ const [controls, setControls] = useState<BrainUserControls>(() => readBrainUserControls(channelId))
  const [showControls, setShowControls] = useState(false)
+
+ useEffect(() => {
+  setActiveBrainControlChannel(channelId)
+  setControls(readBrainUserControls(channelId))
+ }, [channelId])
 
  useEffect(() => {
   const onControls = (event: Event) => {
    const detail = (event as CustomEvent<BrainUserControls>).detail
-   setControls(detail || readBrainUserControls())
+   setControls(detail || readBrainUserControls(channelId))
   }
   window.addEventListener("vt_brain_user_controls_changed", onControls as EventListener)
   return () => window.removeEventListener("vt_brain_user_controls_changed", onControls as EventListener)
- }, [])
+ }, [channelId])
 
  const surface = useMemo(
   () => parseBrainSurfaceContextFromLocation(location, controls),
@@ -52,7 +61,7 @@ export const GlobalBrainSidecar: React.FC = () => {
     </button>
     {showControls ? (
      <aside className="fixed bottom-3 right-3 z-[100] h-[min(680px,calc(100dvh-24px))] w-[min(440px,calc(100vw-24px))] overflow-hidden rounded-[16px] border-[3px] border-black bg-white shadow-[8px_8px_0_0_#000]">
-      <BrainUserControlPanel open onClose={() => setShowControls(false)} onChange={setControls} />
+      <BrainUserControlPanel open channelId={channelId} onClose={() => setShowControls(false)} onChange={setControls} />
      </aside>
     ) : null}
    </>
@@ -86,6 +95,7 @@ export const GlobalBrainSidecar: React.FC = () => {
 
    <div className="flex flex-wrap gap-1 border-b-[2px] border-black bg-[#f7f7f3] px-2 py-1.5">
     <span className="max-w-[180px] truncate rounded-full border-[1.5px] border-black bg-white px-2 py-0.5 text-[7px] font-[1000] uppercase">{location.pathname}</span>
+    {channelId ? <span className="max-w-[160px] truncate rounded-full border-[1.5px] border-black bg-[#C0F240] px-2 py-0.5 text-[7px] font-[1000] uppercase">{channelId}</span> : null}
     {surface.superToolIds.slice(0, 2).map((id) => <span key={id} className="max-w-[160px] truncate rounded-full border-[1.5px] border-black bg-[#36E0F6] px-2 py-0.5 text-[7px] font-[1000] uppercase">{id}</span>)}
     {surface.blockedCapabilities.length ? <span className="rounded-full border-[1.5px] border-black bg-[#FF7497] px-2 py-0.5 text-[7px] font-[1000] uppercase">{surface.blockedCapabilities.length} blocked</span> : null}
    </div>
@@ -94,7 +104,7 @@ export const GlobalBrainSidecar: React.FC = () => {
     <SidebarChatbot />
    </div>
 
-   <BrainUserControlPanel open={showControls} onClose={() => setShowControls(false)} onChange={setControls} />
+   <BrainUserControlPanel open={showControls} channelId={channelId} onClose={() => setShowControls(false)} onChange={setControls} />
   </aside>
  )
 }
