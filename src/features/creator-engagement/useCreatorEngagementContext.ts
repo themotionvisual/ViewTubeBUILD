@@ -1,36 +1,35 @@
 import { useMemo } from "react"
 import { useBrain } from "../../context/useBrain"
-import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
 import { useVideoAssetCatalog } from "../../context/VideoAssetCatalogContext"
-import { useAccountStatus } from "../../services/auth-canon"
+import { useSimpleAuth } from "../../auth/AuthProvider"
 import type { CreatorEngagementContext } from "./types"
 
 export const useCreatorEngagementContext = (): CreatorEngagementContext => {
- const { brain, authState } = useBrain()
- const account = useUnifiedAccount()
- const accountStatus = useAccountStatus()
+ const { brain } = useBrain()
  const catalog = useVideoAssetCatalog()
+ const auth = useSimpleAuth()
+ const session = auth.session
 
  return useMemo(() => {
-  const channelId = String(
-   account.snapshot.google.channelId || catalog.snapshot.channelId || authState.channelId || brain.channelProfile?.id || "",
-  )
-  const channelHandle = String(account.snapshot.google.channelHandle || authState.channelHandle || brain.channelProfile?.handle || "").replace(/^@/, "")
+  const channelId = String(session.channel?.id || "")
+  const connected = session.status === "ready" && session.capabilities.youtubeRead
+  const connectionState: CreatorEngagementContext["connectionState"] =
+   session.status === "ready" ? "ready" :
+   session.status === "reconnect_required" ? "needs_reconnect" :
+   auth.loading ? "connecting" : "anonymous"
+
   return {
    channelId,
-   channelName: String(account.snapshot.google.channelTitle || authState.channelName || brain.channelProfile?.name || "Your Channel"),
-   channelHandle,
-   channelThumbnail: String(account.snapshot.google.channelThumbnail || authState.channelThumbnail || brain.channelProfile?.thumbnail || ""),
-   connected: accountStatus.canReadYouTube,
-   connectionState: accountStatus.status,
-   canReadYouTube: accountStatus.canReadYouTube,
-   canPostComments: accountStatus.canPostComments,
-   reconnect: async () => {
-    await account.start("reconnect_channel", window.location.pathname)
-    await account.refresh()
-   },
+   channelName: String(session.channel?.title || "Your Channel"),
+   channelHandle: String(session.channel?.handle || "").replace(/^@/, ""),
+   channelThumbnail: String(session.channel?.thumbnail || ""),
+   connected,
+   connectionState,
+   canReadYouTube: connected,
+   canPostComments: session.status === "ready" && session.capabilities.youtubeWrite,
+   reconnect: async () => { auth.login(window.location.pathname + window.location.search + window.location.hash) },
    videoAssets: catalog.snapshot.items,
    brain,
   }
- }, [account, accountStatus, authState, brain, catalog.snapshot.channelId, catalog.snapshot.items])
+ }, [auth, brain, catalog.snapshot.items, session])
 }

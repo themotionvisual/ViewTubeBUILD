@@ -12,6 +12,7 @@ import { ScrollToTop } from "./app/ScrollToTop"
 import { DiagnosticOverlay } from "./app/DiagnosticOverlay"
 import { recordBootPhase } from "./app/onScreenDiagnostics"
 import { isDeveloperDiagnosticsEnabled } from "./services/diagnostics"
+import { SimpleAuthProvider } from "./auth/AuthProvider"
 
 const DARK_THEME_CSS = `
   .dark-theme-override {
@@ -101,8 +102,9 @@ function App() {
 
  return (
   <div className={isDarkTheme ? "dark-theme-override" : undefined}>
-   <UnifiedAccountProvider>
-    <GeminiKeyProvider>
+   <SimpleAuthProvider>
+    <UnifiedAccountProvider>
+     <GeminiKeyProvider>
      <InitialChannelBootstrapProvider>
       <VideoAssetCatalogProvider>
        <GlobalDataProvider>
@@ -123,8 +125,9 @@ function App() {
        </GlobalDataProvider>
       </VideoAssetCatalogProvider>
      </InitialChannelBootstrapProvider>
-    </GeminiKeyProvider>
-   </UnifiedAccountProvider>
+     </GeminiKeyProvider>
+    </UnifiedAccountProvider>
+   </SimpleAuthProvider>
   </div>
  )
 }
