@@ -124,7 +124,7 @@ export const PUBLIC_PLANS = [
 ];
 
 const cleanOrigin = (value) => String(value || "").replace(/\/$/, "");
-const publicOrigin = () => cleanOrigin(process.env.ACCOUNT_PUBLIC_ORIGIN || "http://localhost:5173");
+const publicOrigin = () => cleanOrigin(process.env.ACCOUNT_PUBLIC_ORIGIN || (process.env.NODE_ENV === "production" ? "https://viewtube.live" : "http://localhost:5173"));
 const callbackUrl = () => String(process.env.GOOGLE_OAUTH_REDIRECT_URI || `${publicOrigin()}/api/account/auth/callback`);
 const clientId = () => String(process.env.GOOGLE_OAUTH_CLIENT_ID || "").trim();
 const clientSecret = () => String(process.env.GOOGLE_OAUTH_CLIENT_SECRET || "").trim();
@@ -275,7 +275,7 @@ const decodeUploadSession = (sessionId, userId) => {
 
 const sessionUserId = async (req) => getSessionUserId(parseCookies(req)[SESSION_COOKIE] || "");
 const hasTrustedOrigin = (req) => {
-  return isTrustedAccountOrigin(req.headers.origin);
+  return isTrustedAccountOrigin(req.headers.origin || req.headers.referer || "");
 };
 
 export const resolveGoogleNextIntent = ({ googleStatus, monetaryScopeGranted }) => {
