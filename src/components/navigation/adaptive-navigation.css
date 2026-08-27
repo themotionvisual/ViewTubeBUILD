@@ -764,7 +764,12 @@
   grid-template: minmax(0, 1fr) / 60px minmax(0, 1fr);
 }
 .vt-adaptive-shell[data-layout="rail"] > .vt-adaptive-nav {
-  grid-template-rows: 60px auto minmax(0, 1fr);
+  /* Brand at top (fixed), links flex-fill in the middle, utilities anchored
+     to the bottom. Previously used `auto` for links which collapsed its own
+     box to 60px while children overflowed to y=360 — utilities then painted
+     UNDER the icons. Swapping links → minmax(0, 1fr) and utilities → auto
+     puts the account chip + layout controls where they belong. */
+  grid-template-rows: 60px minmax(0, 1fr) auto;
   grid-template-columns: minmax(0, 1fr);
   padding: 6px 4px;
   gap: 4px;
@@ -781,8 +786,12 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 4px 4px;
+  padding: 0;
   overflow: visible;
+  /* Grow to fill the middle row; utilities is now `auto`-sized at the
+     bottom, so links owns whatever's left after brand + utilities. */
+  min-height: 0;
+  align-content: flex-start;
 }
 .vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__link {
   width: 52px;
