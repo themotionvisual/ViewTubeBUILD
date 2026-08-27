@@ -10,8 +10,8 @@ import {
  getLatestChannelKnowledgeModelDB,
  getLatestNicheKnowledgeProfileDB,
  getLatestToolContextPackDB,
- listBrainMemoryClaimsDB,
 } from "./Persistence"
+import { listActiveBrainMemoryClaims } from "./BrainMemoryClaims"
 import { readBrainUserControls } from "./BrainUserControls"
 
 export interface BrainChannelProfileBundle {
@@ -57,7 +57,7 @@ export const loadBrainChannelProfile = async (
    getLatestToolContextPackDB(channelId),
    controls.allowAnalytics ? getLatestChannelEvidencePacketDB(channelId) : Promise.resolve(null),
    getLatestNicheKnowledgeProfileDB(channelId),
-   listBrainMemoryClaimsDB(channelId),
+   listActiveBrainMemoryClaims(channelId),
   ])
 
  return {
@@ -68,7 +68,7 @@ export const loadBrainChannelProfile = async (
   toolContextPack,
   evidencePacket,
   nicheKnowledge,
-  memoryClaims: memoryClaims.filter((claim) => claim.status !== "retired"),
+  memoryClaims,
   loadedAt: new Date().toISOString(),
  }
 }
@@ -113,7 +113,7 @@ export const buildToolChannelProfileContext = async (input: {
   channelId: input.channelId,
   toolId: input.toolId,
   profileSummary: summaryParts.join("\n").slice(0, 2600) || "No channel profile has been learned yet.",
-  learnedClaims: profile.memoryClaims.slice(0, 12).map((claim) => claim.statement),
+  learnedClaims: profile.memoryClaims.slice(0, 12).map((claim) => claim.value),
   analyticsAvailable: profile.analyticsEnabled && Boolean(profile.evidencePacket),
  }
 }
