@@ -58,6 +58,13 @@ describe("creator engagement contracts", () => {
   expect(resolveSuggestedVideoId(undefined, catalog)).toBeNull()
  })
 
+ it("never recommends the video the viewer is already commenting on", () => {
+  const catalog = [{ videoId: "source-video" }, { videoId: "related-video" }]
+
+  expect(resolveSuggestedVideoId("source-video", catalog, "source-video")).toBeNull()
+  expect(resolveSuggestedVideoId("related-video", catalog, "source-video")).toBe("related-video")
+ })
+
  it("builds community URLs from channel ID before handle", () => {
   expect(buildChannelCommunityUrl({ channelId: "UC123", channelHandle: "creator" })).toBe("https://www.youtube.com/channel/UC123/community")
   expect(buildChannelCommunityUrl({ channelId: "", channelHandle: "@creator" })).toBe("https://www.youtube.com/@creator/community")
