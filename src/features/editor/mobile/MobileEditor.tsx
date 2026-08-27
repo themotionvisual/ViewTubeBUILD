@@ -34,14 +34,17 @@ export interface MobileEditorProps {
   layout?: 'auto' | 'portrait' | 'landscape';
 }
 
-export const MobileEditor: React.FC<MobileEditorProps> = ({
-  seed,
+export interface MobileEditorSurfaceProps {
+  store: EditorStore;
+  renderPreview?: MobileEditorProps['renderPreview'];
+  layout?: 'auto' | 'portrait' | 'landscape';
+}
+
+export const MobileEditorSurface: React.FC<MobileEditorSurfaceProps> = ({
+  store,
   renderPreview,
-  externalStore,
   layout = 'auto',
 }) => {
-  const internal = useEditorState(seed);
-  const store = externalStore ?? internal;
   const viewport = useViewport();
   const rootRef = React.useRef<HTMLDivElement>(null);
   useSuppressBrowserZoom(rootRef);
@@ -67,6 +70,17 @@ export const MobileEditor: React.FC<MobileEditorProps> = ({
       )}
     </div>
   );
+};
+
+export const MobileEditor: React.FC<MobileEditorProps> = ({
+  seed,
+  renderPreview,
+  externalStore,
+  layout = 'auto',
+}) => {
+  const internal = useEditorState(seed);
+  const store = externalStore ?? internal;
+  return <MobileEditorSurface store={store} renderPreview={renderPreview} layout={layout} />;
 };
 
 /* ------------------------------------------------------------------ */
