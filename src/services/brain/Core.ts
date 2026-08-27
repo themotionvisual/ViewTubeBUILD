@@ -2,9 +2,11 @@ import { BrainSignal, ContextPacket, BrainMemorySchema } from "../../types"
 import { getVaultKey } from "../keyVault"
 import * as db from "./Persistence"
 import {
+ getActiveBrainControlChannel,
  readBrainUserControls,
  shouldBrainLearnFromInteraction,
 } from "./BrainUserControls"
+import { buildToolChannelProfileContext } from "./ChannelProfileAdapter"
 
 // Statically importing "../gemini" here dragged @google/genai into the entry
 // chunk (~50 kB gzip) and forced every route to preload the Gemini SDK before
@@ -101,12 +103,21 @@ export const consultBrain = async (
  toolId: string,
  requestDetails?: unknown,
 ): Promise<ContextPacket> => {
- void toolId
  void requestDetails
  const controls = readBrainUserControls()
  const schema = controls.enabled && controls.personalization
   ? getBrainMemory()
   : DEFAULT_SCHEMA
+ const activeChannelId = getActiveBrainControlChannel()
+ const toolProfile = controls.enabled && controls.personalization && activeChannelId
+  ? await buildToolChannelProfileContext({ channelId: activeChannelId, toolId }).catch(() => null)
+  : null
+ const profileContext = toolProfile
+  ? [toolProfile.profileSummary, ...toolProfile.learnedClaims.map((claim) => `Learned: ${claim}`)]
+    .filter(Boolean)
+    .join("\n")
+    .slice(0, 3200)
+  : ""
  
  const packet: ContextPacket = {
   identityAndAspirations: schema.identityAndAspirations,
@@ -116,7 +127,7 @@ export const consultBrain = async (
    : "Channel analytics access is disabled by the creator.",
   futureStateMap: schema.futureStateMap,
   learnedPreferences: controls.personalization
-   ? "Data extracted from recent creator-approved interactions."
+   ? profileContext || "No channel-specific profile context is available yet."
    : "Personalization is disabled by the creator.",
   strategicAdvice: controls.enabled ? schema.strategicAdvice : undefined
  }
