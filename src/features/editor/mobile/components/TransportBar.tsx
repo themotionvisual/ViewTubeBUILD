@@ -12,11 +12,12 @@ export interface TransportBarProps {
 
 export const TransportBar: React.FC<TransportBarProps> = ({ store, compact }) => {
   const { state, dispatch, canUndo, canRedo } = store;
-  const size = compact ? 40 : 48;
+  const size = compact ? 38 : 46;
   const btn = (extra?: React.CSSProperties): React.CSSProperties => ({
     width: size,
     height: size,
-    borderRadius: 12,
+    minWidth: size,
+    borderRadius: 10,
     background: '#1f2937',
     color: '#f8fafc',
     border: 'none',
@@ -24,6 +25,7 @@ export const TransportBar: React.FC<TransportBarProps> = ({ store, compact }) =>
     placeItems: 'center',
     cursor: 'pointer',
     touchAction: 'manipulation',
+    padding: 0,
     ...extra,
   });
   const step = 1 / 30; // one frame at 30fps
@@ -32,16 +34,18 @@ export const TransportBar: React.FC<TransportBarProps> = ({ store, compact }) =>
     <div
       style={{
         display: 'flex',
-        gap: 6,
+        gap: 4,
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '8px 10px',
+        padding: '6px 8px',
         background: '#0f172a',
-        borderRadius: 16,
+        borderRadius: 14,
         border: '1px solid #1e293b',
+        overflow: 'hidden',
+        height: '100%',
       }}
     >
-      <div style={{ display: 'flex', gap: 6 }}>
+      <div style={{ display: 'flex', gap: 4 }}>
         <button
           style={btn({ opacity: canUndo ? 1 : 0.35 })}
           disabled={!canUndo}
@@ -60,7 +64,7 @@ export const TransportBar: React.FC<TransportBarProps> = ({ store, compact }) =>
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 4 }}>
         <button
           style={btn()}
           onClick={() => dispatch({ type: 'setPlayhead', sec: state.playheadSec - state.playbackRate })}
@@ -69,7 +73,7 @@ export const TransportBar: React.FC<TransportBarProps> = ({ store, compact }) =>
           <RewindIcon />
         </button>
         <button
-          style={btn({ background: '#22d3ee', color: '#0f172a', width: size + 12 })}
+          style={btn({ background: '#22d3ee', color: '#0f172a', width: size + 10, minWidth: size + 10 })}
           onClick={() => dispatch({ type: 'togglePlaying' })}
           aria-label={state.playing ? 'Pause' : 'Play'}
         >
@@ -91,19 +95,23 @@ export const TransportBar: React.FC<TransportBarProps> = ({ store, compact }) =>
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
         <select
           value={state.playbackRate}
           onChange={(e) => dispatch({ type: 'setPlaybackRate', rate: Number(e.target.value) })}
           style={{
             height: size,
-            padding: '0 10px',
-            borderRadius: 12,
+            padding: '0 6px',
+            borderRadius: 10,
             background: '#1f2937',
             color: '#f8fafc',
             border: 'none',
             fontWeight: 700,
+            fontSize: 12,
             fontVariantNumeric: 'tabular-nums',
+            appearance: 'none',
+            WebkitAppearance: 'none',
+            minWidth: 52,
           }}
         >
           {[0.25, 0.5, 1, 1.5, 2, 4].map((v) => (

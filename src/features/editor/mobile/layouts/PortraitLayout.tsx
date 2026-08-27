@@ -58,17 +58,19 @@ export const PortraitLayout: React.FC<PortraitLayoutProps> = ({ store, renderPre
         background: '#020617',
         color: '#f8fafc',
         display: 'grid',
-        gridTemplateRows: 'auto auto auto 1fr',
+        // Preview takes ~38% of the viewport; transport + dock are their own
+        // rows; timeline gets the remainder above the peeking panel sheet.
+        gridTemplateRows: `${Math.round(containerHeight * 0.38)}px 60px 68px minmax(0, 1fr)`,
         gap: 8,
         padding: 8,
-        paddingBottom: 8,
+        paddingBottom: 70, // reserve space for the sheet's peek strip
         boxSizing: 'border-box',
         overflow: 'hidden',
         touchAction: 'manipulation',
       }}
     >
       {/* 1. Preview */}
-      <div style={{ maxHeight: '50vh', minHeight: 200 }}>
+      <div style={{ minHeight: 0 }}>
         <PreviewPane store={store} renderPreview={renderPreview} aspect={9 / 16} />
       </div>
 
@@ -79,7 +81,7 @@ export const PortraitLayout: React.FC<PortraitLayoutProps> = ({ store, renderPre
       <ToolDock store={store} orientation="row" />
 
       {/* 4. Timeline (fills remaining space above the sheet) */}
-      <div style={{ minHeight: 0, paddingBottom: 62 /* room for peeking sheet */ }}>
+      <div style={{ minHeight: 0, overflow: 'hidden' }}>
         <TimelineStrip
           store={store}
           onClipContextMenu={(clip, at) => setMenu({ items: clipMenuFor(clip), at, title: String(clip.id) })}

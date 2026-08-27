@@ -59,13 +59,13 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
       style={{
         position: 'relative',
         width: '100%',
+        height: '100%',
         background: '#000',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
         overflow: 'hidden',
         borderRadius: 12,
+        minHeight: 140,
       }}
+      data-aspect={aspect}
     >
       <div
         ref={surfaceRef}
@@ -81,7 +81,6 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
         onPointerUp={(ev) => {
           pinchHandlers.onPointerUp(ev);
           scrub.onPointerUp(ev);
-          // Tap detection — small movement + short duration → toggle play.
           if (tapStart.current) {
             const dx = Math.abs(ev.clientX - tapStart.current.x);
             const dy = Math.abs(ev.clientY - tapStart.current.y);
@@ -96,16 +95,16 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
           tapStart.current = null;
         }}
         style={{
-          position: 'relative',
-          aspectRatio: String(aspect),
-          width: '100%',
-          maxHeight: '100%',
+          position: 'absolute',
+          inset: 0,
           background: '#111',
           touchAction: 'none',
           userSelect: 'none',
           transform: pinch.active ? `scale(${pinch.scale})` : undefined,
           transformOrigin: 'center',
           transition: pinch.active ? 'none' : 'transform 200ms ease',
+          display: 'grid',
+          placeItems: 'center',
         }}
       >
         {renderPreview ? (

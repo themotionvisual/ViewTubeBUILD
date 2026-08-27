@@ -55,7 +55,8 @@ export const TimelineStrip: React.FC<TimelineStripProps> = ({
 
   const tracks = state.project.tracks.filter((t) => !t.hidden);
   const bodyHeight = tracks.length * TRACK_HEIGHT + HEADER_HEIGHT + 8;
-  const rendered = height ?? bodyHeight;
+  // Default: fill our container. Consumers can override with an explicit height.
+  const rendered: number | string = height ?? '100%';
 
   return (
     <div
@@ -65,6 +66,7 @@ export const TimelineStrip: React.FC<TimelineStripProps> = ({
         border: '1px solid #1e293b',
         overflow: 'hidden',
         height: rendered,
+        minHeight: Math.min(bodyHeight, 130),
         position: 'relative',
       }}
     >

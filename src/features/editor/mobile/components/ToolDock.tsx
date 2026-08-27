@@ -39,19 +39,25 @@ const defaultTools: Tool[] = ['select', 'text', 'audio', 'transitions', 'effects
 export const ToolDock: React.FC<ToolDockProps> = ({ store, orientation, tools = defaultTools }) => {
   const { state, dispatch } = store;
   const isRow = orientation === 'row';
+  const btnSize = isRow ? 54 : 56;
 
   return (
     <div
       style={{
         display: 'flex',
         flexDirection: isRow ? 'row' : 'column',
-        gap: 6,
-        padding: 6,
+        gap: 4,
+        padding: 4,
         background: '#0f172a',
-        borderRadius: 14,
+        borderRadius: 12,
         border: '1px solid #1e293b',
-        overflow: isRow ? 'auto' : 'hidden',
+        overflowX: isRow ? 'auto' : 'hidden',
+        overflowY: isRow ? 'hidden' : 'auto',
         WebkitOverflowScrolling: 'touch',
+        scrollbarWidth: 'none',
+        height: isRow ? '100%' : 'auto',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
       }}
     >
       {tools.map((t) => {
@@ -68,9 +74,11 @@ export const ToolDock: React.FC<ToolDockProps> = ({ store, orientation, tools = 
               }
             }}
             style={{
-              width: 52,
-              height: 52,
-              borderRadius: 12,
+              width: btnSize,
+              height: btnSize,
+              minWidth: btnSize,
+              minHeight: btnSize,
+              borderRadius: 10,
               border: 'none',
               background: active ? '#22d3ee' : '#1e293b',
               color: active ? '#0f172a' : '#e2e8f0',
@@ -81,10 +89,11 @@ export const ToolDock: React.FC<ToolDockProps> = ({ store, orientation, tools = 
               cursor: 'pointer',
               touchAction: 'manipulation',
               flex: '0 0 auto',
+              padding: 0,
             }}
           >
-            <span style={{ fontSize: 18, lineHeight: 1 }}>{TOOL_ICONS[t]}</span>
-            <span style={{ fontSize: 8.5, fontWeight: 800, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <span style={{ fontSize: 20, lineHeight: 1 }}>{TOOL_ICONS[t]}</span>
+            <span style={{ fontSize: 9, fontWeight: 800, marginTop: 3, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {TOOL_LABELS[t]}
             </span>
           </button>

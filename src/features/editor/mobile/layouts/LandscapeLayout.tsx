@@ -55,10 +55,12 @@ export const LandscapeLayout: React.FC<LandscapeLayoutProps> = ({ store, renderP
         background: '#020617',
         color: '#f8fafc',
         display: 'grid',
-        gridTemplateColumns: '68px 1fr',
-        gridTemplateRows: '1fr auto auto',
+        gridTemplateColumns: '72px minmax(0, 1fr)',
+        // preview gets the top ~55%, transport is compact, timeline eats the rest.
+        gridTemplateRows: `minmax(0, 1fr) 54px ${Math.round(containerHeight * 0.32)}px`,
         gap: 6,
         padding: 6,
+        paddingBottom: 66,
         boxSizing: 'border-box',
         overflow: 'hidden',
         touchAction: 'manipulation',
@@ -80,10 +82,9 @@ export const LandscapeLayout: React.FC<LandscapeLayoutProps> = ({ store, renderP
       </div>
 
       {/* Timeline — bottom row */}
-      <div style={{ gridColumn: 2, minHeight: 100 }}>
+      <div style={{ gridColumn: 2, minHeight: 0, overflow: 'hidden' }}>
         <TimelineStrip
           store={store}
-          height={Math.min(220, Math.max(140, containerHeight * 0.32))}
           onClipContextMenu={(clip, at) => setMenu({ items: clipMenuFor(clip), at, title: String(clip.id) })}
           onEmptyContextMenu={(at) => setMenu({ items: emptyMenu, at, title: 'Timeline' })}
         />
