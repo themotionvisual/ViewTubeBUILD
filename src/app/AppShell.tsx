@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { AdaptiveNavigationShell } from "../components/navigation/AdaptiveNavigationShell";
+import { GlobalBrainSidecar } from "../components/brain/GlobalBrainSidecar";
 import { usePreserveOrientationPosition } from "../hooks/usePreserveOrientationPosition";
 import { DashboardProvider } from "../context/DashboardContext";
 import { EntitlementProvider } from "../context/EntitlementProvider";
@@ -92,6 +93,12 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       <AdaptiveNavigationShell entitlement={entitlement} isEditorSurface={isEditorSurface}>
        {children}
       </AdaptiveNavigationShell>
+      {/*
+       Phase-One Brain lives at the shell level rather than inside a route.
+       This keeps the same conversation surface alive while the creator moves
+       between Analytics, Projects, Studio Hub, Vault, Editor and Publisher.
+      */}
+      <GlobalBrainSidecar />
      </DashboardProvider>
     </EntitlementProvider>
   );
