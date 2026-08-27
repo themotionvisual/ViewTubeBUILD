@@ -16,7 +16,7 @@ import {
  VT_SYNC_GROUP_LABELS,
  VT_SYNC_GROUP_ORDER,
  VT_SYNC_SYNC_UNITS,
- expandVtSyncCategoryDependencies,
+ resolveVtSyncRequestedCategoryIds,
  getVtSyncDefaultUnitIds,
  getVtSyncUnitCategoryIds,
  applyVtSyncPrivacyFilters,
@@ -780,7 +780,7 @@ const refreshManualImports = useCallback(async (payload?: {
     setAuthTick((tick) => tick + 1)
    }
    if (!token) throw new Error("No valid Google access token is available after authorization.")
-   const requestedCategoryIds = expandVtSyncCategoryDependencies(request.categoryIds)
+   const requestedCategoryIds = resolveVtSyncRequestedCategoryIds(request.categoryIds)
    const next = await runVtSyncLocalSync({
     token,
     selectedCategories: requestedCategoryIds,
@@ -817,7 +817,7 @@ const refreshManualImports = useCallback(async (payload?: {
  }
 
  const startSync = async (categoryIds: string[], retentionVideoIds?: string[], forceFullVideoMetadata = false) => {
-  const requestedCategoryIds = expandVtSyncCategoryDependencies(categoryIds)
+  const requestedCategoryIds = resolveVtSyncRequestedCategoryIds(categoryIds)
   syncQueueRef.current.push({ categoryIds: requestedCategoryIds, retentionVideoIds, forceFullVideoMetadata })
   updateQueuedCategories()
   void runQueuedSyncs()

@@ -35,6 +35,13 @@ describe("accountCoordinator runtime resolution", () => {
   expect(accountUrl("/api/account/snapshot")).toBe("http://localhost:5173/api/account/snapshot")
  })
 
+ it("uses a full-page redirect on local hosts so the callback session lands in the main tab", async () => {
+  const { shouldPreferAccountRedirect } = await import("./accountCoordinator")
+  expect(shouldPreferAccountRedirect("localhost")).toBe(true)
+  expect(shouldPreferAccountRedirect("127.0.0.1")).toBe(true)
+  expect(shouldPreferAccountRedirect("viewtube.local")).toBe(true)
+ })
+
  it("opens popup auth and resolves on opener message", async () => {
   const listeners = new Map<string, Set<(event: MessageEvent) => void>>()
   const popup = {
@@ -84,13 +91,17 @@ describe("accountCoordinator runtime resolution", () => {
 
   const { beginAccountIntent } = await import("./accountCoordinator")
   const promise = beginAccountIntent("sign_up", "/account")
+  const duplicatePromise = beginAccountIntent("sign_up", "/account")
+  expect(duplicatePromise).toBe(promise)
   await new Promise((resolve) => setTimeout(resolve, 0))
   expect(open).toHaveBeenCalled()
-  expect(fetchMock).toHaveBeenCalled()
+  expect(open).toHaveBeenCalledTimes(1)
+  expect(fetchMock).toHaveBeenCalledTimes(1)
 
   dispatchMessage({ type: "VT_UNIFIED_ACCOUNT_AUTH_SUCCESS", returnTo: "https://viewtube.live/account" })
 
   await expect(promise).resolves.toBeUndefined()
+  await expect(duplicatePromise).resolves.toBeUndefined()
   expect(popup.close).toHaveBeenCalled()
   expect(addEventListener).toHaveBeenCalledWith("message", expect.any(Function))
   expect(removeEventListener).toHaveBeenCalledWith("message", expect.any(Function))

@@ -1483,7 +1483,7 @@ const createPlaceholderVideos = (videoIds: string[], runId: string): VtSyncVideo
   vtSyncRunId: runId,
  } as VtSyncVideoItem))
 
-const mergeVideoMetadataById = (existingVideos: VtSyncVideoItem[], metadataVideos: VtSyncVideoItem[]): VtSyncVideoItem[] => {
+export const mergeVideoMetadataById = (existingVideos: VtSyncVideoItem[], metadataVideos: VtSyncVideoItem[]): VtSyncVideoItem[] => {
  const mergeMeaningfulMetadata = (existing: VtSyncVideoItem, incoming: VtSyncVideoItem): VtSyncVideoItem => {
   const merged: Record<string, unknown> = { ...existing }
   Object.entries(incoming).forEach(([key, value]) => {
@@ -1492,12 +1492,22 @@ const mergeVideoMetadataById = (existingVideos: VtSyncVideoItem[], metadataVideo
    if (value === undefined || value === null || (typeof value === "string" && !value.trim())) return
    merged[key] = value
   })
+  const incomingMetrics = Object.fromEntries(
+   Object.entries(incoming.metrics || {}).filter(([metric]) =>
+    existing.metricProvenance?.[metric] !== "youtube_analytics_v2"),
+  )
+  const incomingMetricProvenance = Object.fromEntries(
+   Object.entries(incoming.metricProvenance || {}).filter(([metric]) =>
+    existing.metricProvenance?.[metric] !== "youtube_analytics_v2"),
+  )
   return {
    ...merged,
-   metrics: mergeVtSyncDefinedFields(existing.metrics || {}, incoming.metrics || {}),
+   // Metadata refreshes may add public Data API statistics, but must never
+   // replace metrics already owned by the Analytics API or clear omitted data.
+   metrics: mergeVtSyncDefinedFields(existing.metrics || {}, incomingMetrics),
    metricProvenance: {
     ...(existing.metricProvenance || {}),
-    ...(incoming.metricProvenance || {}),
+    ...incomingMetricProvenance,
    },
   } as VtSyncVideoItem
  }

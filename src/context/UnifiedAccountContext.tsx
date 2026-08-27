@@ -46,7 +46,6 @@ export const UnifiedAccountProvider: React.FC<{ children: React.ReactNode }> = (
     setSnapshot(next)
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("vt_account_snapshot_changed", { detail: next }))
-      window.dispatchEvent(new Event("vt_auth_changed"))
     }
     return next
   }, [])
@@ -99,12 +98,10 @@ export const UnifiedAccountProvider: React.FC<{ children: React.ReactNode }> = (
       void refresh().then(() => {
         if (!isUnifiedAccountServerEnabled()) syncLegacy()
       })
-      // Also subscribe to vt_auth_changed so a fresh login / logout via
-      // the legacy popup updates the snapshot even in server mode. The
-      // syncLegacy body is a no-op when the token is absent + snapshot
-      // is already anonymous, so this is cheap.
-      window.addEventListener("vt_auth_changed", syncLegacy)
-      return () => window.removeEventListener("vt_auth_changed", syncLegacy)
+      // Server snapshots are authoritative in this mode. Do not feed them
+      // through the legacy token event: an HttpOnly server session has no
+      // browser token for syncLegacy to find, so that loop falsely logs out.
+      return
     }
     syncLegacy()
     window.addEventListener("vt_auth_changed", syncLegacy)

@@ -38,8 +38,9 @@ const unit = (
 
 /**
  * The controller owns user-facing sync outcomes, not implementation phases.
- * Dependencies may run underneath another unit, but each named query is displayed
- * under one owning unit in the controller and progress rail.
+ * Each named query is displayed and executed under one owning unit in the
+ * controller and progress rail. Internal phases may share one table-level
+ * switch, but selecting another unit must not auto-run those phases.
  */
 export const VT_SYNC_SYNC_UNITS: VtSyncSyncUnitDefinition[] = [
  { id: "channel_overview_windows", label: "Channel Overview + Windows", description: "Channel identity, public counts, and lifetime and rolling channel totals.", group: "channel", tableCategoryId: "channel_totals", tableId: "channel_totals", categoryIds: ["channel_metadata", "channel_totals"], defaultEnabled: true, refreshPolicy: "each_run" },

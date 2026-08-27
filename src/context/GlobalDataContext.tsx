@@ -660,6 +660,11 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
    applyUnifiedAccountSnapshot(snapshot)
   }
   const onAuthChanged = () => {
+   if (isUnifiedAccountServerEnabled()) {
+    recordDiagnostic("info", "boot-timing", "vt_auth_changed -> refreshing canonical account snapshot")
+    void fetchUnifiedAccountSnapshot().then(applyUnifiedAccountSnapshot).catch(() => undefined)
+    return
+   }
    const evtTs = typeof performance !== "undefined" ? performance.now() : Date.now()
    if (unifiedAuth.isAuthenticated()) {
     recordDiagnostic("info", "boot-timing", "vt_auth_changed → hydrating from analytics cache")
@@ -1303,7 +1308,6 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
     const nextAccountSnapshot = await fetchUnifiedAccountSnapshot()
     applyUnifiedAccountSnapshot(nextAccountSnapshot)
     window.dispatchEvent(new CustomEvent("vt_account_snapshot_changed", { detail: nextAccountSnapshot }))
-    window.dispatchEvent(new Event("vt_auth_changed"))
     return
    } catch (error) {
     if (!isAccountServerUnavailableError(error)) throw error

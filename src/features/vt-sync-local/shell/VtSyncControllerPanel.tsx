@@ -9,8 +9,7 @@ import { selectVtSyncBaseRetentionVideos } from "../adapters/retentionSelection"
 // mid-flow user cancels don't propagate as unhandled promise rejections.
 import { isLoginAbortError } from "../../../services/auth/loginErrors"
 import {
- expandVtSyncCategoryDependencies,
- filterVtSyncVisibleCategoryIds,
+ resolveVtSyncRequestedCategoryIds,
 } from "../upstream/syncCategoryRegistry"
 import {
  VT_SYNC_GROUP_LABELS,
@@ -130,7 +129,7 @@ export const VtSyncControllerPanel: React.FC<{
    // Post-login auth check — user may have cancelled mid-flow.
    if (!isAuthenticated) return
   }
-  await onStartSync(expandVtSyncCategoryDependencies(filterVtSyncVisibleCategoryIds(selected)), retentionEnabled ? retentionVideoIds : undefined)
+  await onStartSync(resolveVtSyncRequestedCategoryIds(selected), retentionEnabled ? retentionVideoIds : undefined)
  }
 
  const startCategories = async (categoryIds: string[], includeRetentionVideoIds = false, forceFullVideoMetadata = false) => {
@@ -141,8 +140,8 @@ export const VtSyncControllerPanel: React.FC<{
    }
    if (!isAuthenticated) return
   }
-  const expanded = expandVtSyncCategoryDependencies(categoryIds)
-  await onStartSync(expanded, includeRetentionVideoIds ? retentionVideoIds : undefined, forceFullVideoMetadata)
+  const requested = resolveVtSyncRequestedCategoryIds(categoryIds)
+  await onStartSync(requested, includeRetentionVideoIds ? retentionVideoIds : undefined, forceFullVideoMetadata)
  }
 
  // Track category-specific completion
