@@ -26,6 +26,7 @@ import {
   slipTimelineClip,
   splitTimelineClip,
 } from '../../shared/vtE1TimelineOperations.js';
+import { MobileEditorSurface } from './mobile/MobileEditor';
     import { createRoot } from 'react-dom/client';
     import * as LucideIcons from 'lucide-react';
     import {
@@ -2980,6 +2981,11 @@ import {
       const [lastSavedHash, setLastSavedHash] = useState('');
       const [playhead, setPlayhead] = useState(0);
       const [isPlaying, setIsPlaying] = useState(false);
+      const [mobileEditorUi, setMobileEditorUi] = useState(() => ({
+        playbackRate: 1,
+        tool: 'select',
+        panel: { open: false, id: 'select', height: 0.55 }
+      }));
       const [transportModule] = useState('neon-slab');
       const SHUTTLE_SPEEDS = [1, 2, 4, 8, 16, 32];
       const [rewShuttleSpeed, setRewShuttleSpeed] = useState(1);
@@ -12554,6 +12560,285 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
           </div>
         );
       };
+
+      const mobileEditorProject = useMemo(() => ({
+        ...project,
+        durationSec: Number(project.meta?.durationSec || 0),
+        tracks: [...(project.tracks || [])]
+          .sort((a, b) => Number(a.order || 0) - Number(b.order || 0))
+          .map((track) => ({
+            ...track,
+            kind: track.kind === AUDIO_TRACK_KIND ? 'audio' : 'video',
+            hidden: track.visible === false
+          }))
+      }), [project]);
+
+      const mobileEditorDispatch = (action) => {
+        if (!action || typeof action.type !== 'string') return;
+        switch (action.type) {
+          case 'setPlayhead':
+            setPlayhead(clamp(Number(action.sec || 0), 0, Number(project.meta?.durationSec || 0)));
+            return;
+          case 'setPlaying':
+            setIsPlaying(Boolean(action.playing));
+            return;
+          case 'togglePlaying':
+            setIsPlaying((prev) => !prev);
+            return;
+          case 'setPlaybackRate':
+            setMobileEditorUi((prev) => ({ ...prev, playbackRate: clamp(Number(action.rate || 1), 0.1, 4) }));
+            return;
+          case 'setZoom':
+            markHistoryAction('Mobile Timeline Zoom');
+            setProject((prev) => ({
+              ...prev,
+              meta: {
+                ...prev.meta,
+                zoom: clamp(Number(action.pxPerSec || BASE_PX_PER_SEC) / BASE_PX_PER_SEC, 0.2, 8)
+              }
+            }));
+            return;
+          case 'selectClip': {
+            const id = String(action.id || '');
+            if (!id) return;
+            if (action.additive) {
+              setSelectedClipIds((prev) => prev.includes(id) ? prev.filter((entry) => entry !== id) : [...prev, id]);
+            } else {
+              setSelectedClipIds([id]);
+            }
+            setSelectedClipId(id);
+            const clip = project.clips.find((entry) => entry.id === id);
+            if (clip?.layerId) setSelectedLayerId(clip.layerId);
+            return;
+          }
+          case 'selectTrack':
+            if (action.id) {
+              const firstClip = project.clips.find((clip) => clip.trackId === action.id);
+              if (firstClip) {
+                setSelectedClipId(firstClip.id);
+                setSelectedClipIds([firstClip.id]);
+                setSelectedLayerId(firstClip.layerId || null);
+              }
+            }
+            return;
+          case 'selectTransition':
+            setSelectedTransitionId(action.id || null);
+            return;
+          case 'clearSelection':
+            clearClipSelection();
+            setSelectedTransitionId(null);
+            return;
+          case 'setTool':
+            setMobileEditorUi((prev) => ({ ...prev, tool: action.tool }));
+            return;
+          case 'openPanel':
+            setMobileEditorUi((prev) => ({
+              ...prev,
+              tool: action.id,
+              panel: { open: true, id: action.id, height: Number(action.height ?? prev.panel.height) }
+            }));
+            return;
+          case 'closePanel':
+            setMobileEditorUi((prev) => ({ ...prev, panel: { ...prev.panel, open: false } }));
+            return;
+          case 'setPanelHeight':
+            setMobileEditorUi((prev) => ({ ...prev, panel: { ...prev.panel, height: clamp(Number(action.height || 0.55), 0.15, 1) } }));
+            return;
+          case 'setPanelId':
+            setMobileEditorUi((prev) => ({ ...prev, panel: { ...prev.panel, id: action.id } }));
+            return;
+          case 'addClip': {
+            const incoming = action.clip || {};
+            const requestedTrack = project.tracks.find((track) => track.id === incoming.trackId);
+            const targetTrack = requestedTrack && requestedTrack.kind !== AUDIO_TRACK_KIND
+              ? requestedTrack
+              : project.tracks.find((track) => track.kind !== AUDIO_TRACK_KIND);
+            if (!targetTrack) return;
+            const isText = Boolean(incoming.text);
+            const layerId = uid('layer');
+            const clipId = incoming.id || uid('clip');
+            const start = clamp(Number(incoming.start ?? playhead), 0, Number(project.meta?.durationSec || 0));
+            const end = Math.max(start + 0.1, Number(incoming.end ?? (start + 2)));
+            markHistoryAction(isText ? 'Add Mobile Text Clip' : 'Add Mobile Clip');
+            setProject((prev) => ({
+              ...prev,
+              layers: [
+                ...prev.layers,
+                {
+                  id: layerId,
+                  trackId: targetTrack.id,
+                  type: isText ? 'text' : 'shape',
+                  visible: true,
+                  payload: {
+                    ...basePayload(isText ? 'text' : 'shape', Number(targetTrack.order || 0)),
+                    layerName: isText ? 'MOBILE_TEXT' : 'MOBILE_CLIP',
+                    ...(isText ? { text: String(incoming.text || 'TEXT') } : {})
+                  },
+                  color: isText ? COLORS.yellow : COLORS.cyan
+                }
+              ],
+              clips: [
+                ...prev.clips,
+                {
+                  ...incoming,
+                  id: clipId,
+                  layerId,
+                  trackId: targetTrack.id,
+                  start,
+                  end,
+                  keyframes: Array.isArray(incoming.keyframes) ? incoming.keyframes : []
+                }
+              ],
+              meta: { ...prev.meta, durationSec: Math.max(Number(prev.meta?.durationSec || 0), end + 1) }
+            }));
+            setSelectedClipId(clipId);
+            setSelectedClipIds([clipId]);
+            setSelectedLayerId(layerId);
+            return;
+          }
+          case 'updateClip':
+            markHistoryAction('Update Mobile Clip');
+            setProject((prev) => ({
+              ...prev,
+              clips: prev.clips.map((clip) => clip.id === action.id ? { ...clip, ...(action.patch || {}) } : clip)
+            }));
+            return;
+          case 'moveClip':
+            markFallbackHistoryAction('Move Mobile Clip');
+            setProject((prev) => ({
+              ...prev,
+              clips: prev.clips.map((clip) => {
+                if (clip.id !== action.id) return clip;
+                const duration = Math.max(0.05, clip.end - clip.start);
+                const start = Math.max(0, clip.start + Number(action.deltaSec || 0));
+                return { ...clip, start, end: start + duration };
+              })
+            }));
+            return;
+          case 'trimClip':
+            markFallbackHistoryAction('Trim Mobile Clip');
+            setProject((prev) => ({
+              ...prev,
+              clips: prev.clips.map((clip) => {
+                if (clip.id !== action.id) return clip;
+                if (action.side === 'left') return { ...clip, start: Math.min(clip.end - 0.05, Math.max(0, Number(action.sec || 0))) };
+                return { ...clip, end: Math.max(clip.start + 0.05, Number(action.sec || clip.end)) };
+              })
+            }));
+            return;
+          case 'splitClipAtPlayhead': {
+            const clip = project.clips.find((entry) => entry.id === action.id);
+            if (clip) splitClipAt(clip, playhead, 'split');
+            return;
+          }
+          case 'deleteClips':
+            removeClipsAndLayers(action.ids || []);
+            return;
+          case 'duplicateClip':
+            markHistoryAction('Duplicate Mobile Clip');
+            duplicateClipAndLayer(action.id);
+            return;
+          case 'muteTrack':
+            markHistoryAction('Toggle Mobile Track Mute');
+            setProject((prev) => ({
+              ...prev,
+              tracks: prev.tracks.map((track) => track.id === action.id ? { ...track, muted: action.muted ?? !track.muted } : track)
+            }));
+            return;
+          case 'lockTrack':
+            markHistoryAction('Toggle Mobile Track Lock');
+            setProject((prev) => ({
+              ...prev,
+              tracks: prev.tracks.map((track) => track.id === action.id ? { ...track, locked: action.locked ?? !track.locked } : track)
+            }));
+            return;
+          case 'hideTrack':
+            markHistoryAction('Toggle Mobile Track Visibility');
+            setProject((prev) => ({
+              ...prev,
+              tracks: prev.tracks.map((track) => track.id === action.id ? { ...track, visible: action.hidden === undefined ? track.visible === false : !action.hidden } : track)
+            }));
+            return;
+          case 'addTransition': {
+            const transition = action.transition;
+            if (!transition) return;
+            const left = project.clips.find((clip) => clip.id === transition.leftClipId);
+            const right = project.clips.find((clip) => clip.id === transition.rightClipId);
+            if (!left || !right || !validateTransitionSeam(left, right).valid) {
+              setProviderStatus({ mode: 'error', message: 'Mobile transition requires two clips sharing the same timeline seam.' });
+              return;
+            }
+            const presentation = String(transition.presentation || transition.type || 'fade');
+            markHistoryAction('Add Mobile Transition');
+            setProject((prev) => ({
+              ...prev,
+              transitions: [
+                ...(prev.transitions || []),
+                {
+                  ...transition,
+                  id: transition.id || uid('transition'),
+                  type: presentation === 'clockWipe' ? 'clock-wipe' : presentation,
+                  presentation: presentation === 'clockWipe' ? 'clock-wipe' : presentation,
+                  nominalSeamSec: Number(transition.nominalSeamSec ?? left.end)
+                }
+              ]
+            }));
+            return;
+          }
+          case 'removeTransition':
+            markHistoryAction('Remove Mobile Transition');
+            setProject((prev) => ({
+              ...prev,
+              transitions: (prev.transitions || []).filter((transition) => String(transition.id || '') !== String(action.id || ''))
+            }));
+            if (String(selectedTransitionId || '') === String(action.id || '')) setSelectedTransitionId(null);
+            return;
+          case 'undo':
+            undoProject();
+            return;
+          case 'redo':
+            redoProject();
+            return;
+          default:
+            return;
+        }
+      };
+
+      const mobileEditorStore = {
+        state: {
+          project: mobileEditorProject,
+          playheadSec: playhead,
+          playing: isPlaying,
+          playbackRate: mobileEditorUi.playbackRate,
+          zoomPxPerSec: BASE_PX_PER_SEC * Math.max(0.2, Number(project.meta?.zoom) || 1),
+          selection: {
+            clipIds: selectedClipIds.length ? selectedClipIds : (selectedClipId ? [selectedClipId] : []),
+            trackId: selectedClipId ? (project.clips.find((clip) => clip.id === selectedClipId)?.trackId || null) : null,
+            transitionId: selectedTransitionId
+          },
+          tool: mobileEditorUi.tool,
+          panel: mobileEditorUi.panel,
+          history: { past: [], future: [] }
+        },
+        dispatch: mobileEditorDispatch,
+        selectedClips: project.clips.filter((clip) => (selectedClipIds.length ? selectedClipIds : [selectedClipId]).filter(Boolean).includes(clip.id)),
+        trackById: (id) => mobileEditorProject.tracks.find((track) => track.id === id),
+        clipsOnTrack: (trackId) => project.clips.filter((clip) => clip.trackId === trackId).sort((a, b) => a.start - b.start),
+        activeClipAtPlayhead: (trackId) => project.clips.find((clip) => playhead >= clip.start && playhead < clip.end && (!trackId || clip.trackId === trackId)),
+        canUndo,
+        canRedo
+      };
+
+      const useTouchFirstMobileEditor = shellViewport.w < 1024;
+
+      if (useTouchFirstMobileEditor) {
+        return (
+          <MobileEditorSurface
+            store={mobileEditorStore}
+            layout="auto"
+          />
+        );
+      }
 
       return (
         <div
