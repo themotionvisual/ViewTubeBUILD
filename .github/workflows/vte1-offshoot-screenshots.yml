@@ -44,7 +44,7 @@ jobs:
       - name: Capture desktop and mobile
         run: |
           mkdir -p artifacts/vte1-screens
-          cat > /tmp/capture-vte1.mjs <<'EOF'
+          cat > capture-vte1.mjs <<'EOF'
           import { chromium } from 'playwright';
 
           const browser = await chromium.launch({ headless: true });
@@ -75,7 +75,7 @@ jobs:
 
           await browser.close();
           EOF
-          node /tmp/capture-vte1.mjs
+          node capture-vte1.mjs
 
       - name: Upload screenshots
         uses: actions/upload-artifact@v4
