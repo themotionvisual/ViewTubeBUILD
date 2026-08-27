@@ -35,6 +35,31 @@ const json = (res, status, payload) => {
   res.end(JSON.stringify(payload));
 };
 
+// Vercel can serve the same production function behind a custom domain while
+// ACCOUNT_PUBLIC_ORIGIN still reflects a deployment/project origin. Preserve
+// CSRF protection by accepting only a browser Origin that exactly matches the
+// request Host, then canonicalize that already-verified same-origin request to
+// the account server's configured public origin before its allow-list check.
+// This fixes viewtube.live + www.viewtube.live without trusting preview hosts or
+// arbitrary cross-origin callers.
+const canonicalizeVerifiedSameOrigin = (req) => {
+  const origin = String(req.headers.origin || "").trim();
+  const forwardedHost = String(req.headers["x-forwarded-host"] || "").split(",")[0].trim();
+  const host = forwardedHost || String(req.headers.host || "").trim();
+  if (!origin || !host) return;
+
+  try {
+    const originUrl = new URL(origin);
+    const requestHost = host.toLowerCase();
+    if (originUrl.host.toLowerCase() !== requestHost) return;
+
+    const configuredOrigin = String(process.env.ACCOUNT_PUBLIC_ORIGIN || "").trim().replace(/\/$/, "");
+    if (configuredOrigin) req.headers.origin = configuredOrigin;
+  } catch {
+    // Leave malformed/cross-origin values untouched so account-auth rejects them.
+  }
+};
+
 export const routeAccountRequest = async (req, res) => {
   const method = String(req.method || "GET").toUpperCase();
   const parsedUrl = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
@@ -49,6 +74,8 @@ export const routeAccountRequest = async (req, res) => {
     res.end();
     return;
   }
+
+  canonicalizeVerifiedSameOrigin(req);
 
   let handled;
   try {
