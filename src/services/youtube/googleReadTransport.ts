@@ -5,41 +5,22 @@ import {
  markUnifiedAccountServerUnavailable,
 } from "../account/accountCoordinator"
 import { getValidAccessToken } from "../auth/authSession"
-import { requestGoogleWithRetry } from "./googleProxyErrors"
+import { readGoogleProxyError, requestGoogleWithRetry } from "./googleProxyErrors"
 
 const MAX_ATTEMPTS = 3
 export const SERVER_ACCOUNT_SESSION_TOKEN = "__viewtube_server_account_session__"
+
 const shouldFallbackFromAccountProxy = async (response: Response): Promise<boolean> => {
- // 404 means the /api/account/google-proxy route does not exist on this
- // deployment (static-only, or handler unregistered). Definite fallback.
+ // A missing route and a deployment-level origin rejection both mean the
+ // server proxy cannot serve this browser session. They are not Google OAuth
+ // failures, so fail over once to the existing browser token path instead of
+ // making every widget independently report "reconnect channel".
  if (response.status === 404) return true
- return false
+ const details = await readGoogleProxyError(response)
+ return details?.code === "PROXY_ORIGIN_REJECTED"
 }
 
-const runRequest = async (url: string, signal?: AbortSignal): Promise<Response> => {
- if (isUnifiedAccountServerEnabled()) {
-  try {
-   const response = await fetch(accountUrl("/api/account/google-proxy"), {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ url }),
-    signal,
-   })
-   if (await shouldFallbackFromAccountProxy(response)) {
-    markUnifiedAccountServerUnavailable()
-    throw new Error("ACCOUNT_SERVER_UNAVAILABLE")
-   }
-   return response
-  } catch (error) {
-   if (isAccountServerUnavailableError(error) || error instanceof Error && error.message === "ACCOUNT_SERVER_UNAVAILABLE") {
-    markUnifiedAccountServerUnavailable()
-   } else {
-    throw error
-   }
-  }
- }
-
+const runDirectRequest = async (url: string, signal?: AbortSignal): Promise<Response> => {
  const token = await getValidAccessToken()
  if (!token) {
   return new Response(JSON.stringify({ error: { message: "YouTube authorization is required." } }), {
@@ -53,6 +34,36 @@ const runRequest = async (url: string, signal?: AbortSignal): Promise<Response> 
   headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
   signal,
  })
+}
+
+const runRequest = async (url: string, signal?: AbortSignal): Promise<Response> => {
+ if (isUnifiedAccountServerEnabled()) {
+  try {
+   const response = await fetch(accountUrl("/api/account/google-proxy"), {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ url }),
+    signal,
+   })
+   if (await shouldFallbackFromAccountProxy(response)) {
+    // Circuit-break the broken proxy for the rest of this session. This is
+    // intentionally global: Comment Responder, Video Manager, realtime,
+    // analytics, playlists and the Studio Hub all share this transport.
+    markUnifiedAccountServerUnavailable()
+    return runDirectRequest(url, signal)
+   }
+   return response
+  } catch (error) {
+   if (isAccountServerUnavailableError(error) || error instanceof Error && error.message === "ACCOUNT_SERVER_UNAVAILABLE") {
+    markUnifiedAccountServerUnavailable()
+   } else {
+    throw error
+   }
+  }
+ }
+
+ return runDirectRequest(url, signal)
 }
 
 export const authorizedGoogleRead = async (
