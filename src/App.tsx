@@ -58,7 +58,15 @@ function AppInner() {
  // Diagnostic overlay renders only when the user explicitly enabled it via
  // ?vtDiagnostics=1 or localStorage vt_diagnostics=1. Computed once per mount
  // (URL param check is stable; localStorage toggles across sessions).
- const showDiag = useMemo(() => isDeveloperDiagnosticsEnabled(), [])
+ const showDiag = useMemo(() => {
+  if (isDeveloperDiagnosticsEnabled()) return true
+  if (typeof window === "undefined" || !window.matchMedia) return false
+  try {
+   return window.matchMedia("(pointer: coarse)").matches || window.matchMedia("(max-width: 760px)").matches
+  } catch {
+   return false
+  }
+ }, [])
 
  if (isBareRoute) {
   return (
