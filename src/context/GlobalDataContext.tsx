@@ -1303,7 +1303,6 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({
     const nextAccountSnapshot = await fetchUnifiedAccountSnapshot()
     applyUnifiedAccountSnapshot(nextAccountSnapshot)
     window.dispatchEvent(new CustomEvent("vt_account_snapshot_changed", { detail: nextAccountSnapshot }))
-    window.dispatchEvent(new Event("vt_auth_changed"))
     return
    } catch (error) {
     if (!isAccountServerUnavailableError(error)) throw error
