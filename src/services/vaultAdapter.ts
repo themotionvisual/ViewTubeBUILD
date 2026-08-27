@@ -25,6 +25,54 @@ const writeAssets = (assets: VaultAsset[]) => {
 export const listVaultAssets = (): VaultAsset[] =>
  readAssets().sort((a, b) => b.updatedAt - a.updatedAt)
 
+export interface VaultAssetSearchInput {
+ query?: string
+ projectId?: string | null
+ projectName?: string | null
+ toolId?: SuperToolId | null
+ kind?: VaultAssetKind | null
+ generationId?: string | null
+ tags?: string[]
+ limit?: number
+}
+
+/**
+ * Canonical local Vault search used by creator surfaces and Brain adapters.
+ * This searches existing Vault metadata only; it does not create a parallel
+ * Brain asset index.
+ */
+export const searchVaultAssets = (input: VaultAssetSearchInput = {}): VaultAsset[] => {
+ const query = String(input.query || "").trim().toLowerCase()
+ const tags = (input.tags || []).map((tag) => tag.trim().toLowerCase()).filter(Boolean)
+ const limit = Math.max(1, Math.min(100, input.limit || 25))
+
+ return listVaultAssets()
+  .filter((asset) => {
+   if (input.projectId != null && asset.projectId !== input.projectId) return false
+   if (input.projectName != null && asset.projectName !== input.projectName) return false
+   if (input.toolId != null && asset.toolId !== input.toolId) return false
+   if (input.kind != null && asset.kind !== input.kind) return false
+   if (input.generationId != null && asset.generationId !== input.generationId) return false
+   if (tags.length) {
+    const assetTags = (asset.tags || []).map((tag) => String(tag).toLowerCase())
+    if (!tags.every((tag) => assetTags.includes(tag))) return false
+   }
+   if (query) {
+    const haystack = [
+     asset.name,
+     asset.projectName,
+     asset.toolId,
+     asset.kind,
+     ...(asset.tags || []),
+     JSON.stringify(asset.metadata || {}),
+    ].filter(Boolean).join(" ").toLowerCase()
+    if (!haystack.includes(query)) return false
+   }
+   return true
+  })
+  .slice(0, limit)
+}
+
 export const addVaultAsset = (
  input: Omit<VaultAsset, "id" | "createdAt" | "updatedAt">,
 ): VaultAsset => {
