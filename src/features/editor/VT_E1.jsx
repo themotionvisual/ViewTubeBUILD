@@ -9945,25 +9945,37 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
           const opacity = transition.type === 'fade' && !isLeft ? 1 : opacityBase;
           const dir = isLeft ? -1 : 1;
           const amt = (1 - p) * intensity * amount;
+          const visibleProgress = isLeft ? 1 - p : p;
           const effectForType = (type) => {
             switch (type) {
               case 'cut': return { opacity: isLeft ? 1 : 0, transformExtra: '', filterExtra: '' };
               case 'fade':
               case 'crossfade': return { opacity, transformExtra: '', filterExtra: '' };
               case 'dipToColor': return { opacity: Math.max(0.15, opacity), transformExtra: '', filterExtra: '' };
-              case 'wipeLeft': return { opacity, transformExtra: ` translateX(${dirSignX * amt * 24}px)`, filterExtra: '' };
-              case 'wipeRight': return { opacity, transformExtra: ` translateX(${dirSignX * -amt * 24}px)`, filterExtra: '' };
+              case 'wipe':
+              case 'wipeLeft': return { opacity: 1, transformExtra: '', filterExtra: '', clipPath: `inset(0 ${(1 - visibleProgress) * 100}% 0 0)` };
+              case 'wipeRight': return { opacity: 1, transformExtra: '', filterExtra: '', clipPath: `inset(0 0 0 ${(1 - visibleProgress) * 100}%)` };
               case 'slideLeft':
               case 'slide': return { opacity, transformExtra: ` translateX(${dirSignX * amt * 40}px)`, filterExtra: '' };
               case 'slideRight': return { opacity, transformExtra: ` translateX(${dirSignX * -amt * 40}px)`, filterExtra: '' };
               case 'slideDiagonal': return { opacity, transformExtra: ` translate(${dirSignX * amt * 32}px, ${dirSignY * amt * 18}px)`, filterExtra: '' };
               case 'slideLong': return { opacity, transformExtra: ` translateX(${dirSignX * amt * 72}px)`, filterExtra: '' };
+              case 'iris': return { opacity: 1, transformExtra: '', filterExtra: '', clipPath: `circle(${Math.max(0.001, visibleProgress * 72)}% at 50% 50%)` };
+              case 'clockWipe':
+              case 'clock-wipe': {
+                const degrees = Math.max(0.001, visibleProgress * 360);
+                const maskImage = `conic-gradient(#000 0deg ${degrees}deg, transparent ${degrees}deg 360deg)`;
+                return { opacity: 1, transformExtra: '', filterExtra: '', maskImage, WebkitMaskImage: maskImage };
+              }
               case 'zoom': return { opacity, transformExtra: ` scale(${isLeft ? 1 + (p * 0.2 * intensity) : 0.86 + (p * 0.14 * intensity)})`, filterExtra: '' };
               case 'scale':
               case 'expand': return { opacity, transformExtra: ` scale(${isLeft ? 1 + (p * 0.12 * intensity) : 0.88 + (p * 0.12 * intensity)})`, filterExtra: '' };
               case 'squeeze': return { opacity, transformExtra: ` scale(${1 - p * 0.12 * intensity})`, filterExtra: '' };
               case 'bounce': return { opacity, transformExtra: ` translateY(${Math.sin(p * Math.PI * 2.2) * (14 * (1 - p) * intensity)}px) scale(${0.96 + p * 0.08})`, filterExtra: '' };
-              case 'flip': return { opacity, transformExtra: ` rotateY(${(isLeft ? -1 : 1) * (1 - p) * 90 * intensity}deg)`, filterExtra: '' };
+              case 'flip': {
+                const deg = isLeft ? p * 90 : -90 + p * 90;
+                return { opacity: 1, transformExtra: ` perspective(1200px) rotateY(${deg}deg)`, filterExtra: '' };
+              }
               case 'roll':
               case 'rotate': return { opacity, transformExtra: ` rotate(${(isLeft ? -1 : 1) * (1 - p) * params.rotateDeg * intensity}deg)`, filterExtra: '' };
               case 'spin':
@@ -10108,25 +10120,37 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
           const opacity = transition.type === 'fade' && !isLeft ? 1 : opacityBase;
           const dir = isLeft ? -1 : 1;
           const amt = (1 - p) * intensity * amount;
+          const visibleProgress = isLeft ? 1 - p : p;
           const effectForType = (type) => {
             switch (type) {
               case 'cut': return { opacity: isLeft ? 1 : 0, transformExtra: '', filterExtra: '' };
               case 'fade':
               case 'crossfade': return { opacity, transformExtra: '', filterExtra: '' };
               case 'dipToColor': return { opacity: Math.max(0.15, opacity), transformExtra: '', filterExtra: '' };
-              case 'wipeLeft': return { opacity, transformExtra: ` translateX(${dirSignX * amt * 24}px)`, filterExtra: '' };
-              case 'wipeRight': return { opacity, transformExtra: ` translateX(${dirSignX * -amt * 24}px)`, filterExtra: '' };
+              case 'wipe':
+              case 'wipeLeft': return { opacity: 1, transformExtra: '', filterExtra: '', clipPath: `inset(0 ${(1 - visibleProgress) * 100}% 0 0)` };
+              case 'wipeRight': return { opacity: 1, transformExtra: '', filterExtra: '', clipPath: `inset(0 0 0 ${(1 - visibleProgress) * 100}%)` };
               case 'slideLeft':
               case 'slide': return { opacity, transformExtra: ` translateX(${dirSignX * amt * 40}px)`, filterExtra: '' };
               case 'slideRight': return { opacity, transformExtra: ` translateX(${dirSignX * -amt * 40}px)`, filterExtra: '' };
               case 'slideDiagonal': return { opacity, transformExtra: ` translate(${dirSignX * amt * 32}px, ${dirSignY * amt * 18}px)`, filterExtra: '' };
               case 'slideLong': return { opacity, transformExtra: ` translateX(${dirSignX * amt * 72}px)`, filterExtra: '' };
+              case 'iris': return { opacity: 1, transformExtra: '', filterExtra: '', clipPath: `circle(${Math.max(0.001, visibleProgress * 72)}% at 50% 50%)` };
+              case 'clockWipe':
+              case 'clock-wipe': {
+                const degrees = Math.max(0.001, visibleProgress * 360);
+                const maskImage = `conic-gradient(#000 0deg ${degrees}deg, transparent ${degrees}deg 360deg)`;
+                return { opacity: 1, transformExtra: '', filterExtra: '', maskImage, WebkitMaskImage: maskImage };
+              }
               case 'zoom': return { opacity, transformExtra: ` scale(${isLeft ? 1 + (p * 0.2 * intensity) : 0.86 + (p * 0.14 * intensity)})`, filterExtra: '' };
               case 'scale':
               case 'expand': return { opacity, transformExtra: ` scale(${isLeft ? 1 + (p * 0.12 * intensity) : 0.88 + (p * 0.12 * intensity)})`, filterExtra: '' };
               case 'squeeze': return { opacity, transformExtra: ` scale(${1 - p * 0.12 * intensity})`, filterExtra: '' };
               case 'bounce': return { opacity, transformExtra: ` translateY(${Math.sin(p * Math.PI * 2.2) * (14 * (1 - p) * intensity)}px) scale(${0.96 + p * 0.08})`, filterExtra: '' };
-              case 'flip': return { opacity, transformExtra: ` rotateY(${(isLeft ? -1 : 1) * (1 - p) * 90 * intensity}deg)`, filterExtra: '' };
+              case 'flip': {
+                const deg = isLeft ? p * 90 : -90 + p * 90;
+                return { opacity: 1, transformExtra: ` perspective(1200px) rotateY(${deg}deg)`, filterExtra: '' };
+              }
               case 'roll':
               case 'rotate': return { opacity, transformExtra: ` rotate(${(isLeft ? -1 : 1) * (1 - p) * params.rotateDeg * intensity}deg)`, filterExtra: '' };
               case 'spin':
@@ -10241,6 +10265,8 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                 height: Number(payload.height || 0),
                 resolvedOpacity: clamp(Number(payload.opacity || 1) * (transFx.opacity ?? 1) * (animFx.opacity ?? 1), 0, 1),
                 resolvedFilter: `${buildEffectFilter(payload, sourceProject.meta.visualDNA)} ${transFx.filterExtra || ''}`.trim(),
+                resolvedClipPath: transFx.clipPath || '',
+                resolvedMaskImage: transFx.maskImage || '',
                 resolvedRotation: Number(payload.rotation || 0) + extraRotate,
                 resolvedScale: Number(payload.scale || 1) * extraScale,
                 transformExtras,
@@ -15495,6 +15521,9 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                         transform: `translate(calc(-50% + ${payload.x || 0}px), calc(-50% + ${payload.y || 0}px)) scale(${payload.scale || 1}) rotate(${payload.rotation || 0}deg)${transFx.transformExtra || ''}${animFx.transformExtra || ''}${motionTransform}`,
                         opacity: clamp((payload.opacity ?? 1) * (transFx.opacity ?? 1) * (animFx.opacity ?? 1) * motionOpacity, 0, 1),
                         filter: `${buildEffectFilter(payload, project.meta.visualDNA)} ${transFx.filterExtra || ''}${motionFilter}${depthBlurAmount > 0 ? ` blur(${depthBlurAmount}px)` : ''}`.trim(),
+                        clipPath: transFx.clipPath,
+                        maskImage: transFx.maskImage,
+                        WebkitMaskImage: transFx.WebkitMaskImage,
                         boxShadow: selectedLayerId === layer.id && layer.type === 'media'
                           ? '0 0 0 1px rgba(87,154,255,0.95), 0 0 8px rgba(87,154,255,0.55)'
                           : undefined,
