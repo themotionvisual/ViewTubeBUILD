@@ -1,15 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { generatePerfectReply } from "../../services/gemini"
+import { generatePerfectReply, recommendVideoForComment } from "../../services/gemini"
 import { fetchAllCommentThreads, fetchVideoSnippetDetails, postCommentReply } from "../../services/youtubeService"
+import { readBrainUserControls } from "../../services/brain/BrainUserControls"
 import type { CommentResponderController, CommentResponderTab, CreatorEngagementContext } from "./types"
 
 export const resolveSuggestedVideoId = (
  suggestedVideoId: unknown,
  videos: ReadonlyArray<{ videoId: string }>,
+ excludedVideoId?: string | null,
 ): string | null => {
  const candidate = typeof suggestedVideoId === "string" ? suggestedVideoId.trim() : ""
- return candidate && videos.some((video) => video.videoId === candidate) ? candidate : null
+ if (!candidate || (excludedVideoId && candidate === excludedVideoId)) return null
+ return videos.some((video) => video.videoId === candidate) ? candidate : null
 }
 
 export const partitionCommentThreads = (threads: any[], channelId: string) => {
@@ -129,22 +132,39 @@ export const useCommentResponderController = (context: CreatorEngagementContext)
   return next
  })
 
+ const sourceVideoContext = () => {
+  const sourceVideoId = String(currentThread?.snippet?.videoId || "")
+  const canonical = context.videoAssets.find((video) => video.videoId === sourceVideoId)
+  const fetched = fetchedVideoData[sourceVideoId] || fetchedRef.current[sourceVideoId]
+  const sourceTitle = canonical?.title || fetched?.title || "the current video"
+  const candidateVideos = context.videoAssets.filter((video) => video.videoId !== sourceVideoId)
+  return { sourceVideoId, sourceTitle, candidateVideos }
+ }
+
  const draftReply = async () => {
   if (!currentThread) return
+  const controls = readBrainUserControls()
+  if (!controls.allowComments) {
+   setError("Comment context is disabled in Brain User Controls.")
+   return
+  }
   setGenerating(currentId, true)
   setError(null)
   try {
    const comment = currentThread.snippet.topLevelComment.snippet
+   const { sourceVideoId, sourceTitle, candidateVideos } = sourceVideoContext()
    const result = await generatePerfectReply(
-    comment.textOriginal,
+    `${comment.textOriginal}\n\nThis comment was left on: "${sourceTitle}". If recommending another video, choose a DIFFERENT video and only when it genuinely helps the viewer.`,
     comment.authorDisplayName.replace(/@/g, ""),
     context.channelName || "Content Creation",
-    context.videoAssets.map((video) => ({ title: video.title, id: video.videoId })),
+    candidateVideos.map((video) => ({ title: video.title, id: video.videoId })),
     context.brain,
     replyText[currentId]?.trim() || "",
    )
-   const suggestedVideoId = resolveSuggestedVideoId(result.suggestedVideoId, context.videoAssets)
-   const reply = suggestedVideoId ? `${result.reply}\n\nCheck this out for more details: https://youtu.be/${suggestedVideoId}` : result.reply
+   const suggestedVideoId = resolveSuggestedVideoId(result.suggestedVideoId, candidateVideos, sourceVideoId)
+   const reply = suggestedVideoId
+    ? `${result.reply}\n\nCheck this out for more details: https://youtu.be/${suggestedVideoId}`
+    : result.reply
    setReplyTextById((current) => ({ ...current, [currentId]: reply }))
   } catch (cause) {
    setError(cause instanceof Error ? cause.message : "ViewTube could not draft a reply. Try again.")
@@ -153,13 +173,39 @@ export const useCommentResponderController = (context: CreatorEngagementContext)
 
  const suggestVideo = async () => {
   if (!currentThread) return
+  const controls = readBrainUserControls()
+  if (!controls.allowComments) {
+   setError("Comment context is disabled in Brain User Controls.")
+   return
+  }
   setGenerating(currentId, true)
   setError(null)
   try {
    const comment = currentThread.snippet.topLevelComment.snippet
-   const result = await generatePerfectReply(comment.textOriginal, comment.authorDisplayName.replace(/@/g, ""), context.channelName, context.videoAssets.map((video) => ({ title: video.title, id: video.videoId })), context.brain, replyText[currentId]?.trim() || "")
-   const suggestedVideoId = resolveSuggestedVideoId(result.suggestedVideoId, context.videoAssets)
-   if (suggestedVideoId) setReplyTextById((current) => ({ ...current, [currentId]: `${current[currentId]?.trim() ? `${current[currentId].trim()}\n\n` : ""}You might also enjoy this related video: https://youtu.be/${suggestedVideoId}` }))
+   const { sourceVideoId, sourceTitle, candidateVideos } = sourceVideoContext()
+   if (!candidateVideos.length) {
+    setError("No other channel videos are available to recommend.")
+    return
+   }
+   const recommendation = await recommendVideoForComment(
+    `${comment.textOriginal}\n\nSOURCE VIDEO: "${sourceTitle}". Recommend a DIFFERENT creator-owned video only if it meaningfully answers or extends what this viewer wants.`,
+    candidateVideos.map((video) => ({ title: video.title, id: video.videoId })),
+    context.brain,
+   )
+   const suggestedVideoId = resolveSuggestedVideoId(
+    recommendation.recommendedVideoId,
+    candidateVideos,
+    sourceVideoId,
+   )
+   if (!suggestedVideoId) {
+    setError("Brain did not find a different channel video relevant enough to recommend.")
+    return
+   }
+   const bridge = recommendation.bridgePhrase?.trim() || "You might also enjoy this related video:"
+   setReplyTextById((current) => ({
+    ...current,
+    [currentId]: `${current[currentId]?.trim() ? `${current[currentId].trim()}\n\n` : ""}${bridge} https://youtu.be/${suggestedVideoId}`,
+   }))
   } catch (cause) {
    setError(cause instanceof Error ? cause.message : "ViewTube could not suggest a video. Try again.")
   } finally { setGenerating(currentId, false) }
