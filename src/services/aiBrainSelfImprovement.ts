@@ -18,8 +18,13 @@ import {
 import {
  promoteBrainClaim,
  rebuildAffectedToolContextPacks,
+ undoBrainMemoryClaim,
 } from "./brain/BrainMemoryClaims"
 import { resolveBrainTaskProfile } from "./brain/BrainTaskProfileRegistry"
+import {
+ readBrainUserControls,
+ shouldBrainLearnFromInteraction,
+} from "./brain/BrainUserControls"
 
 const nowIso = () => new Date().toISOString()
 
@@ -43,6 +48,46 @@ const confidenceRank: Record<BrainConfidenceLevel, number> = {
 const isHighEnoughForPromotion = (entry: AIBrainLearningEntry): boolean =>
  entry.confidence === "high" || entry.recurrenceCount >= 3
 
+const creatorInitiatedLearning = (metadata?: Record<string, unknown>): boolean =>
+ metadata?.creatorInitiated === true || metadata?.confirmed === true
+
+const blockedLearningEntry = (input: {
+ channelId?: string | null
+ source: AIBrainLearningEntry["source"]
+ summary: string
+ detail?: string
+ category?: AIBrainLearningCategory
+ confidence?: BrainConfidenceLevel
+ evidence?: string[]
+ metadata?: Record<string, unknown>
+}): AIBrainLearningEntry => {
+ const createdAt = nowIso()
+ const category = input.category || classifyAIBrainLearningEvent({
+  text: `${input.summary} ${input.detail || ""}`,
+  source: input.source,
+  metadata: input.metadata,
+ })
+ return {
+  id: makeId("learning_blocked"),
+  channelId: input.channelId || null,
+  category,
+  source: input.source,
+  summary: normalizeText(input.summary) || "Brain learning disabled",
+  detail: normalizeText(input.detail || input.summary),
+  evidence: (input.evidence || []).map(normalizeText).filter(Boolean),
+  confidence: input.confidence || "low",
+  status: "dismissed",
+  createdAt,
+  updatedAt: createdAt,
+  recurrenceCount: 1,
+  relatedEntryIds: [],
+  metadata: {
+   ...(input.metadata || {}),
+   blockedByUserControls: true,
+  },
+ }
+}
+
 export const listAIBrainSkillResources = (): AIBrainSkillResource[] => [
  {
   id: "self-improvement-ledger",
@@ -54,6 +99,7 @@ export const listAIBrainSkillResources = (): AIBrainSkillResource[] => [
    "Classify sync failures as observations, not facts.",
    "Promote only repeated or high-confidence learnings into durable memory.",
    "Keep feature requests separate from confirmed channel facts.",
+   "Honor the creator's Brain personalization and learning controls before storing anything durable.",
   ],
   docPath: "docs/VT Brain/AI_BRAIN_SELF_IMPROVEMENT_WORKFLOWS.md",
   status: "active",
@@ -209,6 +255,12 @@ export const captureAIBrainLearningEvent = async (input: {
  evidence?: string[]
  metadata?: Record<string, unknown>
 }): Promise<AIBrainLearningEntry> => {
+ const controls = readBrainUserControls(input.channelId)
+ const explicitCreatorAction = creatorInitiatedLearning(input.metadata)
+ if (!controls.enabled || !controls.personalization || (!controls.learnFromInteractions && !explicitCreatorAction)) {
+  return blockedLearningEntry(input)
+ }
+
  const createdAt = nowIso()
  const category = input.category || classifyAIBrainLearningEvent({
   text: `${input.summary} ${input.detail || ""}`,
@@ -272,6 +324,19 @@ export const promoteAIBrainLearning = async (
   }
  }
 
+ const controls = readBrainUserControls(entry.channelId)
+ const explicitCreatorAction = creatorInitiatedLearning(entry.metadata)
+ if (!controls.enabled || !controls.personalization || (!controls.learnFromInteractions && !explicitCreatorAction)) {
+  return {
+   entryId: entry.id,
+   target: "brain_memory",
+   reason: "Creator User Controls currently block durable Brain learning.",
+   allowed: false,
+   confidence: entry.confidence,
+   blockedBy: ["user_controls_block_learning"],
+  }
+ }
+
  const promotedClaim = await promoteBrainClaim(entry)
  const blockedBy: string[] = promotedClaim.claim ? [] : [
   promotedClaim.decision.decision === "ask_user" ? "confidence_below_promotion_threshold" : "feedback_requires_confirmation",
@@ -305,6 +370,63 @@ export const promoteAIBrainLearning = async (
  await saveAIBrainLearningEntryDB(promoted)
  return candidate
 }
+
+/** Explicit creator teaching can be promoted even when passive learning is off. */
+export const teachAIBrainExplicitly = async (input: {
+ channelId?: string | null
+ summary: string
+ detail?: string
+ category?: AIBrainLearningCategory
+ evidence?: string[]
+}) => {
+ const controls = readBrainUserControls(input.channelId)
+ if (!controls.enabled || !controls.personalization) {
+  throw new Error("Enable Brain personalization before teaching a durable channel rule.")
+ }
+ const entry = await captureAIBrainLearningEvent({
+  channelId: input.channelId || null,
+  source: "journal",
+  summary: input.summary,
+  detail: input.detail,
+  category: input.category,
+  confidence: "high",
+  evidence: input.evidence,
+  metadata: { confirmed: true, creatorInitiated: true },
+ })
+ const promotion = await promoteAIBrainLearning(entry)
+ return { entry, promotion }
+}
+
+export const saveAIBrainChannelRule = (input: {
+ channelId?: string | null
+ rule: string
+ evidence?: string[]
+}) => teachAIBrainExplicitly({
+ channelId: input.channelId,
+ summary: input.rule,
+ detail: input.rule,
+ category: /never|avoid|do not|don't/i.test(input.rule) ? "anti_pattern" : "preference",
+ evidence: input.evidence,
+})
+
+/** Prevent one captured learning from being promoted in the future. */
+export const dismissAIBrainLearning = async (
+ entryId: string,
+): Promise<AIBrainLearningEntry | null> => {
+ const entry = await getAIBrainLearningEntryDB(entryId)
+ if (!entry) return null
+ const dismissed: AIBrainLearningEntry = {
+  ...entry,
+  status: "dismissed",
+  updatedAt: nowIso(),
+  metadata: { ...(entry.metadata || {}), dismissedByCreator: true },
+ }
+ await saveAIBrainLearningEntryDB(dismissed)
+ return dismissed
+}
+
+/** Undo a durable promoted memory claim from the existing Learning Ledger. */
+export const forgetAIBrainClaim = (claimId: string) => undoBrainMemoryClaim(claimId)
 
 export const buildAIBrainSelfImprovementPrompt = (
  entries: AIBrainLearningEntry[],
