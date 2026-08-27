@@ -275,6 +275,13 @@ After targeted-query parity:
 - Add compatibility mapping from the existing 34 visible datasets.
 - Exit gate: every current table maps exactly once and no currently stable dataset changes behavior.
 
+Implementation checkpoint (2026-08-27):
+
+- Registry version 1 and its 34-table compatibility freeze are implemented in `src/features/vt-sync-local/upstream/analyticsReportRegistry.ts`.
+- The audit covers exact table ownership, sync-unit alignment, checked-in matrix references, the existing 200-video batch contract, 25-row detail pagination, and redacted probe records.
+- Query execution remains on the existing sync engine in Phase 0, so this checkpoint changes no runtime fetch, persistence, switch, or table behavior.
+- Real-account probe evidence is still pending because the local account snapshot was unauthenticated during validation. No capability result was fabricated.
+
 ### Phase 1 — shared window system
 
 - Add `custom` to the window contract.
