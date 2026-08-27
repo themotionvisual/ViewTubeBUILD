@@ -1,177 +1,81 @@
-import React, { useState } from "react"
-import { MessageCircle, Sparkles, Loader2, ExternalLink, ThumbsUp } from "lucide-react"
-import { PostActionReflection } from "./PostActionReflection"
-import { generateCommentResponses } from "../services/gemini"
-import { fetchAllCommentThreads } from "../services/youtubeService"
-import Markdown from "react-markdown"
-import { SubToolbox } from "./Toolbox"
+import React from "react"
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ExternalLink, Link2, Loader2, MessageCircle, MessagesSquare, RefreshCw, Sparkles, ThumbsUp } from "lucide-react"
 import { buildYouTubeCommentUrl } from "../services/youtube/commentHandoff"
+import { StandardTextArea, SubToolbox, SubToolboxGridActionButton, SubToolboxInnerActionButton } from "./Toolbox"
+import { useCommentResponderController, useCreatorEngagementContext } from "../features/creator-engagement"
+
+const plainText = (value: string) => {
+ if (typeof document === "undefined") return value
+ return new DOMParser().parseFromString(value, "text/html").documentElement.textContent || value
+}
 
 export const CommentResponder: React.FC = () => {
- const [comments, setComments] = useState("")
- const [result, setResult] = useState("")
- const [loading, setLoading] = useState(false)
- const [fetching, setFetching] = useState(false)
- const [copied, setCopied] = useState(false)
- const [fetchedThreads, setFetchedThreads] = useState<any[]>([])
+ const context = useCreatorEngagementContext()
+ const comments = useCommentResponderController(context)
+ const thread = comments.currentThread
+ const snippet = thread?.snippet?.topLevelComment?.snippet
+ const videoId = String(thread?.snippet?.videoId || "")
+ const canonicalVideo = context.videoAssets.find((video) => video.videoId === videoId)
+ const fetchedVideo = comments.fetchedVideoData[videoId]
+ const videoTitle = fetchedVideo?.title || canonicalVideo?.title || videoId || "Unknown video"
+ const thumbnail = fetchedVideo?.thumbnails?.maxres?.url || canonicalVideo?.thumbnailUrl || (videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : "")
+ const replies = thread?.replies?.comments || []
+ const commentUrl = thread ? buildYouTubeCommentUrl(videoId, thread.snippet?.topLevelComment?.id || thread.id) : null
 
- const handleGenerate = async () => {
-  if (!comments) return
-  setLoading(true)
-  try {
-   const cache = JSON.parse(localStorage.getItem("yt_analytics_cache") || "{}")
-   const context = cache.profile
-    ? JSON.stringify(cache.profile)
-    : "General YouTube Channel"
-   const res = await generateCommentResponses(comments, context)
-   setResult(res)
-  } catch (e) {
-   console.error(e)
-  } finally {
-   setLoading(false)
-  }
- }
-
- const handleFetchComments = async () => {
-  setFetching(true)
-  try {
-   setFetchedThreads(await fetchAllCommentThreads(100))
-  } catch (e) {
-   console.error("Failed to fetch comments:", e)
-  } finally {
-   setFetching(false)
-  }
- }
-
- const selectComment = (text: string) => {
-  setComments(text)
- }
-
- const handleCopy = () => {
-  navigator.clipboard.writeText(result)
-  setCopied(true)
-  setTimeout(() => setCopied(false), 2000)
- }
-
- return (
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full p-8 animate-fade-in bg-white">
-   <div className="flex flex-col h-full space-y-6">
-    <SubToolbox
-     title="Input Comments"
-     icon={<MessageCircle size={24} />}
-     headerColor="bg-[#FF3399]"
-     collapsible
-     isOpenInitial={true}>
-      <div className="space-y-4">
-       <div className="flex items-center justify-between">
-        <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
-         Paste Recent Comments
-        </label>
-        <button 
-         onClick={handleFetchComments}
-         disabled={fetching}
-         className="text-[10px] font-black underline uppercase tracking-widest text-[#FF3399] hover:text-[#FF3399]/70 disabled:opacity-50"
-        >
-         {fetching ? "FETCHING..." : "FETCH REAL COMMENTS"}
-        </button>
-       </div>
-
-       {fetchedThreads.length > 0 && (
-        <div className="max-h-48 overflow-y-auto border-[2px] border-black rounded-xl p-2 space-y-2 bg-gray-50 custom-scrollbar">
-         {fetchedThreads.map((thread) => {
-          const topLevelComment = thread.snippet?.topLevelComment
-          const text = topLevelComment?.snippet?.textDisplay || ""
-          const author = topLevelComment?.snippet?.authorDisplayName || "Unknown viewer"
-          const videoId = thread.snippet?.videoId
-          const commentUrl = buildYouTubeCommentUrl(videoId, topLevelComment?.id || thread.id)
-          const replies = thread.replies?.comments || []
-          return (
-           <div key={thread.id} className="p-2 rounded-lg border-2 border-transparent hover:border-black/10">
-            <div className="flex items-start gap-2">
-             <button
-              onClick={() => selectComment(text)}
-              className="flex-1 min-w-0 text-left hover:bg-[#FF3399]/10 rounded-lg transition-colors"
-             >
-              <div className="text-[9px] font-black uppercase opacity-50">{author}</div>
-              <div className="text-xs font-bold line-clamp-2">{text}</div>
-             </button>
-             {commentUrl && (
-              <a
-               href={commentUrl}
-               target="_blank"
-               rel="noreferrer"
-               title="Open this comment in YouTube to like it"
-               className="shrink-0 border-2 border-black bg-[#FFB158] p-1 text-black hover:bg-[#FF3399]"
-              >
-               <ThumbsUp size={13} aria-hidden="true" />
-               <span className="ml-1 text-[8px] font-black uppercase">Like on YouTube</span>
-              </a>
-             )}
-            </div>
-            {replies.length > 0 && (
-             <div className="mt-2 ml-2 space-y-1 border-l-2 border-black/20 pl-2">
-              <div className="text-[8px] font-black uppercase opacity-50">Previous replies</div>
-              {replies.map((reply: any) => {
-               const replyUrl = buildYouTubeCommentUrl(videoId, reply.id)
-               return (
-                <div key={reply.id || reply.snippet?.publishedAt} className="flex items-start gap-2 text-[10px] font-bold">
-                 <span className="flex-1 min-w-0 line-clamp-2">{reply.snippet?.textDisplay || ""}</span>
-                 {replyUrl && <a href={replyUrl} target="_blank" rel="noreferrer" title="Open this reply in YouTube to like it" className="shrink-0 text-[8px] font-black uppercase text-black/60 hover:text-[#FF3399]"><ExternalLink size={12} aria-hidden="true" className="inline mr-1" />Like on YouTube</a>}
-                </div>
-               )
-              })}
-             </div>
-            )}
-           </div>
-          )
-         })}
-        </div>
-       )}
-
-       <textarea
-        value={comments}
-        onChange={(e) => setComments(e.target.value)}
-        placeholder="PASTE COMMENTS HERE OR FETCH REAL ONES..."
-        className="vt-textarea-standard h-40"
-       />
-      </div>
-     <button
-      onClick={handleGenerate}
-      disabled={loading || !comments}
-      className="w-full mt-6 bg-[#FFB158] text-black border-[2px] border-black p-4 font-black uppercase text-xl rounded-xl shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-3">
-      {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
-      Generate Replies
-     </button>
-    </SubToolbox>
-   </div>
-
-     <div className="flex flex-col h-full space-y-6">
-     {result ? (
-     <SubToolbox
-      title="Generated Replies"
-      icon={<Sparkles size={24} />}
-      headerColor="bg-[#FFB158]"
-      collapsible
-      isOpenInitial={true}>
-      <div className="prose prose-sm max-w-none font-bold text-black/80 prose-headings:font-black prose-headings:uppercase overflow-y-auto max-h-[400px] custom-scrollbar pr-4">
-       <Markdown>{result}</Markdown>
-      </div>
-      <div className="mt-8 pt-6 border-t-[4px] border-black/10 animate-in slide-in-from-bottom-4 duration-700">
-       <PostActionReflection toolId="COMMENT_RESPONDER" />
-      </div>
-     </SubToolbox>
-     ) : (
-     <div className="h-full min-h-[400px] flex flex-col items-center justify-center border-[2px] border-dashed border-black/20 rounded-[32px] bg-gray-50 p-8 text-center">
-      <MessageCircle size={80} className="mb-6 text-black/20" />
-      <h3 className="text-3xl font-[1000] text-black/40 uppercase tracking-tighter mb-2">
-       Awaiting Comments
-      </h3>
-      <p className="text-black/30 font-bold max-w-sm uppercase">
-       Paste audience comments to generate branded, engaging responses.
-      </p>
+ return <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start w-full p-4 sm:p-6 lg:p-8 bg-white">
+  <div className="flex flex-col gap-6 min-w-0">
+   <SubToolbox title="Comment Queue" icon={<MessagesSquare />} collapsible isOpenInitial>
+    <div className="grid grid-cols-2 gap-2" aria-label="Comment queue view">
+     <SubToolboxInnerActionButton label={`New · ${comments.tab === "unreplied" ? comments.displayThreads.length : ""}`} iconName="message" tone={comments.tab === "unreplied" ? "pink" : "cyan"} onClick={() => comments.setTab("unreplied")} />
+     <SubToolboxInnerActionButton label={`History · ${comments.tab === "history" ? comments.displayThreads.length : ""}`} iconName="history" tone={comments.tab === "history" ? "pink" : "cyan"} onClick={() => comments.setTab("history")} />
+    </div>
+    <div className="grid grid-cols-[1fr_auto] gap-2 mt-4">
+     <div className="grid grid-cols-2 gap-2">
+      <button type="button" aria-label="Previous comment" disabled={comments.currentIndex === 0} onClick={() => comments.setCurrentIndex(Math.max(0, comments.currentIndex - 1))} className="min-h-11 border-[3px] border-black rounded-xl bg-white font-black disabled:opacity-40">Previous</button>
+      <button type="button" aria-label="Next comment" disabled={comments.currentIndex >= comments.displayThreads.length - 1} onClick={() => comments.setCurrentIndex(Math.min(comments.displayThreads.length - 1, comments.currentIndex + 1))} className="min-h-11 border-[3px] border-black rounded-xl bg-white font-black disabled:opacity-40">Next</button>
      </div>
-    )}
+     <button type="button" aria-label="Refresh comments" onClick={comments.refresh} disabled={comments.loading} className="size-11 border-[3px] border-black rounded-xl bg-[#73DEFF] grid place-items-center"><RefreshCw size={17} className={comments.loading ? "animate-spin" : ""} aria-hidden="true" /></button>
+    </div>
+    <div role="status" aria-live="polite" className="mt-3 min-h-5 text-[10px] font-black uppercase">{comments.loading ? "Syncing comments…" : comments.displayThreads.length ? `${comments.currentIndex + 1} of ${comments.displayThreads.length}` : "No comments found."}</div>
+   </SubToolbox>
+
+   <SubToolbox title="Video Context" icon={<MessageCircle />} collapsible isOpenInitial>
+    {thread ? <div className="grid grid-cols-[120px_1fr] gap-4 min-w-0">
+     <div className="aspect-video border-[3px] border-black rounded-xl overflow-hidden bg-gray-100">{thumbnail ? <img src={thumbnail} width={320} height={180} alt={`Thumbnail for ${videoTitle}`} className="w-full h-full object-cover" /> : <div className="w-full h-full grid place-items-center"><Loader2 className="animate-spin" /></div>}</div>
+     <div className="min-w-0"><p className="text-[9px] font-black uppercase opacity-45">Commented On</p><h3 className="font-black text-base leading-tight break-words">{videoTitle}</h3>{commentUrl && <a href={commentUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-[10px] font-black uppercase underline"><ExternalLink size={13} aria-hidden="true" />Go to Comment</a>}</div>
+    </div> : <p className="p-6 text-center font-black uppercase opacity-35">Select a comment to see its video.</p>}
+   </SubToolbox>
+
+   {comments.inboundImageUrl && <SubToolbox title="Received Image" icon={<Link2 />} collapsible isOpenInitial={false}><div className="flex items-center gap-3"><StandardTextArea readOnly value={comments.inboundImageUrl} aria-label="Received image URL" minHeight="72px" /><button type="button" onClick={() => navigator.clipboard.writeText(comments.inboundImageUrl || "")} className="min-h-12 border-[3px] border-black rounded-xl px-4 bg-[#FFE357] font-black uppercase">Copy URL</button></div></SubToolbox>}
+  </div>
+
+  <div className="flex flex-col gap-6 min-w-0">
+   <SubToolbox title="Current Comment" icon={<MessageCircle />} collapsible isOpenInitial>
+    {snippet ? <div className="border-[3px] border-black rounded-2xl bg-[#FFF9E8] p-5">
+     <div className="flex items-center justify-between gap-3"><strong className="min-w-0 truncate text-sm">{plainText(snippet.authorDisplayName || "Viewer")}</strong><span className="shrink-0 text-[9px] font-black uppercase opacity-45">{Number(snippet.likeCount || 0).toLocaleString()} Likes</span></div>
+     <p className="mt-4 whitespace-pre-wrap break-words text-base font-bold leading-snug">{plainText(snippet.textDisplay || snippet.textOriginal || "")}</p>
+    </div> : <div className="min-h-44 grid place-items-center border-[3px] border-dashed border-black rounded-2xl opacity-35 font-black uppercase text-center p-6">{context.connected ? "No comment selected." : "Connect your channel to load comments."}</div>}
+    {comments.error && <div role="alert" className="mt-4 border-[3px] border-black bg-[#FFB158] p-3 rounded-xl text-xs font-black">{comments.error}</div>}
+   </SubToolbox>
+
+   {replies.length > 0 && <SubToolbox title={`Reply History · ${replies.length}`} icon={<MessagesSquare />} collapsible isOpenInitial={comments.tab === "history"}>
+    <div className="max-h-64 overflow-y-auto space-y-2" style={{ contentVisibility: "auto" }}>{replies.map((reply: any, index: number) => <div key={reply.id || index} className="border-[2px] border-black rounded-xl p-3 bg-white"><div className="text-[9px] font-black uppercase opacity-45">{plainText(reply.snippet?.authorDisplayName || "Reply")}</div><p className="mt-1 text-xs font-bold whitespace-pre-wrap break-words">{plainText(reply.snippet?.textDisplay || "")}</p></div>)}</div>
+   </SubToolbox>}
+
+   <SubToolbox title={comments.tab === "history" ? "Follow-Up Reply" : "Reply Composer"} icon={<Sparkles />} collapsible isOpenInitial>
+    <label htmlFor="comment-reply-copy" className="text-[10px] font-black uppercase">Reply</label>
+    <StandardTextArea id="comment-reply-copy" name="commentReply" value={comments.replyText} onChange={(event) => comments.setReplyText(event.target.value)} placeholder={comments.tab === "history" ? "Add a follow-up reply…" : "Write or generate a reply…"} minHeight="150px" className="mt-2" />
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+     <SubToolboxInnerActionButton label={comments.generating ? "Working…" : comments.replyText.trim() ? "Refine" : "Draft"} iconName="sparkles" tone="yellow" disabled={!thread || comments.generating} onClick={comments.draftReply} />
+     <SubToolboxInnerActionButton label="Suggest Video" iconName="link" tone="cyan" disabled={!thread || comments.generating} onClick={comments.suggestVideo} />
+    </div>
+   </SubToolbox>
+
+   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    {commentUrl ? <a href={commentUrl} target="_blank" rel="noreferrer" className="min-h-14 border-[4px] border-black rounded-[16px] bg-[#FFC587] shadow-[5px_5px_0_0_#F59E46] font-black uppercase text-lg flex items-center justify-center gap-2 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"><ThumbsUp size={18} aria-hidden="true" />Open on YouTube</a> : <SubToolboxGridActionButton label="Open Comment" iconName="external-link" tone="orange" disabled onClick={() => {}} />}
+    <SubToolboxGridActionButton label={comments.canPostReply ? "Post Reply" : "Reconnect Channel"} iconName={comments.canPostReply ? "send" : "link"} tone="green" disabled={comments.canPostReply && (!thread || !comments.replyText.trim() || comments.loading)} onClick={comments.canPostReply ? comments.postReply : comments.reconnect} />
    </div>
   </div>
- )
+ </div>
 }

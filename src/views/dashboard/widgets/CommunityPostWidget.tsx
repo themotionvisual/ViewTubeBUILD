@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useRef } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { WidgetFooter, WidgetHeaderToggle, WidgetSelect, WidgetTooltip, WidgetWorkflowMain } from "../WidgetPrimitives"
 import {
@@ -15,10 +15,10 @@ import {
   Upload,
   Plus,
   X,
+  ExternalLink,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { refineCommunityPost, generateInterestSeeding } from "../../../services/gemini"
-import { useBrain } from "../../../context/useBrain"
+import { useCommunityPostController, useCreatorEngagementContext } from "../../../features/creator-engagement"
 
 type PostType = "text" | "image" | "poll" | "image-poll" | "video"
 type ViewMode = "write" | "create"
@@ -35,7 +35,8 @@ export const CommunityPostWidget = ({
   onRemove,
   data,
 }: any) => {
-  const { brain } = useBrain()
+  const engagement = useCreatorEngagementContext()
+  const community = useCommunityPostController(engagement)
   const common = {
     widget,
     instance,
@@ -50,134 +51,49 @@ export const CommunityPostWidget = ({
   }
 
   // --- Core States ---
-  const [viewMode, setViewMode] = useState<ViewMode>("write")
-  const [postType, setPostType] = useState<PostType>("text")
-  const [content, setContent] = useState("")
-  const [pollOptions, setPollOptions] = useState<string[]>(["", "", "", ""])
-  const [imageUrl, setImageUrl] = useState("")
-  const [imagePollUrls, setImagePollUrls] = useState<string[]>(["", "", "", ""])
+  const viewMode = community.mode
+  const setViewMode = community.setMode
+  const postType = community.postType
+  const setPostType = community.setPostType
+  const content = community.content
+  const setContent = community.setContent
+  const pollOptions = community.pollOptions
+  const setPollOptions = (next: string[] | ((current: string[]) => string[])) => {
+    const resolved = typeof next === "function" ? next(pollOptions) : next
+    resolved.forEach((value, index) => community.setPollOption(index, value))
+  }
+  const imageUrl = community.imageUrl
+  const setImageUrl = community.setImageUrl
+  const imagePollUrls = community.imagePollUrls
+  const setImagePollUrls = (next: string[] | ((current: string[]) => string[])) => {
+    const resolved = typeof next === "function" ? next(imagePollUrls) : next
+    resolved.forEach((value, index) => community.setImagePollUrl(index, value))
+  }
   const [draggingImageTarget, setDraggingImageTarget] = useState<string | null>(null)
-  const [videoSearch, setVideoSearch] = useState("")
-  const [selectedVideo, setSelectedVideo] = useState("")
+  const videoSearch = community.videoSearch
+  const setVideoSearch = community.setVideoSearch
+  const selectedVideo = community.selectedVideoId
+  const setSelectedVideo = community.setSelectedVideoId
   
   // --- AI States ---
-  const [prompt, setPrompt] = useState("")
-  const [postStyle, setPostStyle] = useState("Educational")
-  const [isGenerating, setIsGenerating] = useState(false)
+  const prompt = community.prompt
+  const setPrompt = community.setPrompt
+  const postStyle = community.style
+  const setPostStyle = community.setStyle
+  const isGenerating = community.isGenerating
   
   // --- Utility States ---
-  const [vault, setVault] = useState<any[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imagePollInputRefs = useRef<(HTMLInputElement | null)[]>([])
 
-  const videos = data.videoAssets || []
-
-  // --- Effects ---
-  useEffect(() => {
-    const savedVault = localStorage.getItem("viewtube_post_vault")
-    if (savedVault) {
-      try {
-        setVault(JSON.parse(savedVault))
-      } catch (e) {
-        console.error("Failed to load vault", e)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    const applyImage = (payload: any) => {
-      if (!payload?.imageUrl) return
-      setViewMode("write")
-      setPostType("image")
-      setImageUrl(payload.imageUrl)
-      if (payload.prompt && !content.trim()) setContent(`Generated concept: ${payload.prompt}`)
-    }
-
-    const onBridge = (event: Event) => {
-      const detail = (event as CustomEvent<any>).detail
-      if (!detail || detail.targetWidget !== "community-post") return
-      applyImage(detail)
-    }
-
-    window.addEventListener("vt_dashboard_generated_image", onBridge as EventListener)
-    try {
-      const cached = localStorage.getItem("vt_bridge_image_community-post")
-      if (cached) applyImage(JSON.parse(cached))
-    } catch {}
-    return () => window.removeEventListener("vt_dashboard_generated_image", onBridge as EventListener)
-  }, [content])
+  const videos = engagement.videoAssets
 
   // --- Handlers ---
-  const saveToVault = () => {
-    if (!content.trim()) return
-    const newPost = {
-      id: Date.now(),
-      type: postType,
-      content,
-      pollOptions: postType.includes("poll") ? pollOptions : undefined,
-      imageUrl: postType === "image" || postType === "image-poll" ? imageUrl : undefined,
-      timestamp: new Date().toISOString(),
-    }
-    const updatedVault = [newPost, ...vault]
-    setVault(updatedVault)
-    localStorage.setItem("viewtube_post_vault", JSON.stringify(updatedVault))
-  }
+  const saveToVault = community.saveToVault
+  const handleRefine = community.refine
+  const handleGenerateFromPrompt = community.generate
 
-  const handleRefine = async () => {
-    if (!content.trim()) return
-    setIsGenerating(true)
-    try {
-      const niche = data.brain?.channelProfile?.name || "Content Creation"
-      const recentTitles = videos.slice(0, 5).map((v: any) => v.title)
-      const mediaAttachments = [imageUrl, ...imagePollUrls].filter(Boolean)
-      const mediaContext = [
-        `Post format: ${postType}.`,
-        pollOptions.some(Boolean) ? `Poll options: ${pollOptions.filter(Boolean).join(" | ")}.` : "",
-        selectedVideo ? `Linked video: ${videos.find((video: any) => video.videoId === selectedVideo)?.title || selectedVideo}.` : "",
-      ].filter(Boolean).join("\n")
-      const refined = await refineCommunityPost(`${content}\n\n${mediaContext}`, niche, recentTitles, brain, mediaAttachments)
-      setContent(refined)
-      setViewMode("write") // Return to write view to see results
-    } catch (e) {
-      console.error("AI Refinement failed:", e)
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-
-  const handleGenerateFromPrompt = async () => {
-    if (!prompt.trim()) return
-    setIsGenerating(true)
-    try {
-      const niche = data.brain?.channelProfile?.name || "Content Creation"
-      const recentTitles = videos.slice(0, 5).map((v: any) => v.title)
-      
-      // Use existing service for now, passing prompt as context
-      const generated = await refineCommunityPost(`${prompt}\n\nStyle: ${postStyle}.`, niche, recentTitles, brain)
-      setContent(generated)
-      setPrompt("")
-      setViewMode("write")
-    } catch (e) {
-      console.error("AI Generation failed:", e)
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-
-  const applyImageFile = (file: File | undefined, optionIndex?: number) => {
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (prev) => {
-        const nextUrl = prev.target?.result as string
-        if (typeof optionIndex === "number") {
-          setImagePollUrls((current) => current.map((url, index) => index === optionIndex ? nextUrl : url))
-        } else {
-          setImageUrl(nextUrl)
-        }
-      }
-      reader.readAsDataURL(file)
-    }
-  }
+  const applyImageFile = community.applyImageFile
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, optionIndex?: number) => applyImageFile(e.target.files?.[0], optionIndex)
 
   // --- Sub-Components ---
@@ -413,7 +329,8 @@ export const CommunityPostWidget = ({
               <WidgetTooltip content="Save draft to the post vault"><button onClick={saveToVault} className="vt-button is-icon-only" aria-label="Save draft"><Archive size={16} /></button></WidgetTooltip>
               <WidgetTooltip content="Schedule this post"><button className="vt-button is-icon-only" aria-label="Schedule post"><Calendar size={16} /></button></WidgetTooltip>
               <button onClick={handleRefine} disabled={isGenerating || !content.trim()} className="vt-button secondary"><Sparkles size={14} />{isGenerating ? "Refining…" : "Refine"}</button>
-              <button onClick={() => navigator.clipboard.writeText(content)} className="vt-button primary flex-1"><Send size={14} />Post to channel</button>
+              <button onClick={community.copyPost} disabled={!content.trim()} className="vt-button primary flex-1"><Send size={14} />{community.clipboardStatus === "copied" ? "Copied" : "Copy Post"}</button>
+              {community.channelCommunityUrl ? <a href={community.channelCommunityUrl} target="_blank" rel="noreferrer" className="vt-button secondary flex-1"><ExternalLink size={14} />Go to Channel</a> : <button onClick={engagement.reconnect} className="vt-button secondary flex-1"><ExternalLink size={14} />Connect Channel</button>}
             </>
           ) : (
             <>
