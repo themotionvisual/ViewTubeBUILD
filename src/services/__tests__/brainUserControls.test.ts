@@ -6,6 +6,7 @@ import {
  canBrainShareResearchData,
  canBrainUseCapability,
  readBrainUserControls,
+ setActiveBrainControlChannel,
  shouldBrainLearnFromInteraction,
  writeBrainUserControls,
 } from "../brain/BrainUserControls"
@@ -37,6 +38,20 @@ describe("Brain user controls", () => {
   expect(localStorage.getItem(BRAIN_USER_CONTROLS_STORAGE_KEY)).toContain('"allowAnalytics":false')
   expect(listener).toHaveBeenCalledTimes(1)
   window.removeEventListener("vt_brain_user_controls_changed", listener)
+ })
+
+ it("supports different control profiles for different connected channels", () => {
+  writeBrainUserControls({ ...DEFAULT_BRAIN_USER_CONTROLS, allowAnalytics: false }, "channel-a")
+  writeBrainUserControls({ ...DEFAULT_BRAIN_USER_CONTROLS, allowAnalytics: true, allowComments: false }, "channel-b")
+
+  expect(readBrainUserControls("channel-a").allowAnalytics).toBe(false)
+  expect(readBrainUserControls("channel-b").allowAnalytics).toBe(true)
+  expect(readBrainUserControls("channel-b").allowComments).toBe(false)
+
+  setActiveBrainControlChannel("channel-a")
+  expect(readBrainUserControls().allowAnalytics).toBe(false)
+  setActiveBrainControlChannel("channel-b")
+  expect(readBrainUserControls().allowComments).toBe(false)
  })
 
  it("does not let a disabled capability through", () => {
