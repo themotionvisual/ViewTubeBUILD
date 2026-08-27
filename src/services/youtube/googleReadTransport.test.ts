@@ -16,6 +16,7 @@ vi.mock("../auth/authSession", () => ({
  getValidAccessToken: async () => mocks.token,
 }))
 
+import { markUnifiedAccountServerUnavailable } from "../account/accountCoordinator"
 import { authorizedGoogleRead } from "./googleReadTransport"
 
 describe("authorizedGoogleRead", () => {
@@ -39,7 +40,7 @@ describe("authorizedGoogleRead", () => {
     body: JSON.stringify({ url: "https://www.googleapis.com/youtube/v3/videos?id=one" }),
    }),
   )
- expect(JSON.stringify(fetchMock.mock.calls[0])).not.toContain("legacy-token")
+  expect(JSON.stringify(fetchMock.mock.calls[0])).not.toContain("legacy-token")
  })
 
  it("falls back to the legacy bearer path when the server proxy is missing", async () => {
@@ -49,8 +50,9 @@ describe("authorizedGoogleRead", () => {
    .mockResolvedValueOnce(new Response("not found", { status: 404 }))
    .mockResolvedValueOnce(new Response("{}", { status: 200 }))
 
-  await authorizedGoogleRead("https://www.googleapis.com/youtube/v3/videos?id=one")
+  const response = await authorizedGoogleRead("https://www.googleapis.com/youtube/v3/videos?id=one")
 
+  expect(response.status).toBe(200)
   expect(fetchMock).toHaveBeenNthCalledWith(
    2,
    "https://www.googleapis.com/youtube/v3/videos?id=one",
@@ -59,9 +61,10 @@ describe("authorizedGoogleRead", () => {
     headers: expect.objectContaining({ Authorization: "Bearer legacy-token" }),
    }),
   )
+  expect(markUnifiedAccountServerUnavailable).toHaveBeenCalled()
  })
 
- it("keeps origin failures on the server-owned session instead of leaking into legacy auth", async () => {
+ it("recovers from proxy origin rejection through the shared direct transport", async () => {
   mocks.unified = true
   const fetchMock = vi
    .spyOn(globalThis, "fetch")
@@ -71,6 +74,35 @@ describe("authorizedGoogleRead", () => {
      headers: { "Content-Type": "application/json" },
     }),
    )
+   .mockResolvedValueOnce(new Response("{}", { status: 200 }))
+
+  const response = await authorizedGoogleRead("https://www.googleapis.com/youtube/v3/videos?id=one")
+
+  expect(response.status).toBe(200)
+  expect(fetchMock).toHaveBeenCalledTimes(2)
+  expect(fetchMock).toHaveBeenNthCalledWith(
+   2,
+   "https://www.googleapis.com/youtube/v3/videos?id=one",
+   expect.objectContaining({
+    method: "GET",
+    headers: expect.objectContaining({ Authorization: "Bearer legacy-token" }),
+   }),
+  )
+  expect(markUnifiedAccountServerUnavailable).toHaveBeenCalled()
+ })
+
+ it("does not bypass the server for a genuine Google scope failure", async () => {
+  mocks.unified = true
+  const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+   new Response(JSON.stringify({
+    error: {
+     code: "GOOGLE_SCOPE_REQUIRED",
+     message: "Reconnect Google to grant the required capability.",
+     retryable: false,
+     reconnectRequired: false,
+    },
+   }), { status: 403, headers: { "Content-Type": "application/json" } }),
+  )
 
   const response = await authorizedGoogleRead("https://www.googleapis.com/youtube/v3/videos?id=one")
 
