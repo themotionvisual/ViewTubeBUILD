@@ -16542,8 +16542,10 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                           const transitionSurface = isGroupedSeam
                             ? 'group-rail'
                             : (transition ? 'temporal-envelope' : 'cut');
+                          // The envelope width is the actual shared render interval. Do not
+                          // turn it into a fixed-size badge at different timeline zoom levels.
                           const badgeWidth = transitionWindow
-                            ? Math.max(38, Math.min((transitionWindow.endSec - transitionWindow.startSec) * pxPerSec, 260))
+                            ? Math.max(6, (transitionWindow.endSec - transitionWindow.startSec) * pxPerSec)
                             : (isGroupedSeam ? 38 : 6);
                           const seamLeft = transitionWindow
                             ? timeToPx(transitionWindow.startSec)
@@ -16562,7 +16564,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                                 width: `${badgeWidth}px`,
                                 padding: 0,
                                 height: `${Math.max(2, Math.min(rowMeta.height - 2, 44))}px`,
-                                minWidth: '38px',
+                                minWidth: transition ? '6px' : `${badgeWidth}px`,
                                 zIndex: 26,
                                 fontSize: '10px',
                                 overflow: 'hidden',
