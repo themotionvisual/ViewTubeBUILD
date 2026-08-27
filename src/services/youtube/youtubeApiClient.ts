@@ -67,15 +67,25 @@ export const handleYouTubeApiError = async (
  }
 
  if (code === 401 || reason === "authError") {
-  logout()
-  broadcastChannelAuthInvalidated({
-   code,
-   reason,
-   message:
-    "Your YouTube connection is no longer active. Connect your channel again, then run the sync again.",
-  })
+  // In unified-account mode the durable Google authorization lives in the
+  // HttpOnly server session. A failed individual Google request (or a temporary
+  // proxy/fallback failure) must not erase the client auth state and make the
+  // whole app sign out. Let the account coordinator remain the source of truth;
+  // it can explicitly invalidate/reconnect the channel when the server session
+  // itself is no longer authorized.
+  if (!isUnifiedAccountServerEnabled()) {
+   logout()
+   broadcastChannelAuthInvalidated({
+    code,
+    reason,
+    message:
+     "Your YouTube connection is no longer active. Connect your channel again, then run the sync again.",
+   })
+  }
   throw new YouTubeApiError(
-   "Your YouTube connection is no longer active. Connect your channel again, then run the sync again.",
+   isUnifiedAccountServerEnabled()
+    ? "The YouTube request could not be authorized through the current account session. ViewTube kept you signed in; retry after the account connection recovers."
+    : "Your YouTube connection is no longer active. Connect your channel again, then run the sync again.",
    code,
    reason,
   )
@@ -236,135 +246,4 @@ export const refreshTokenIfExpired = async (): Promise<string | null> => {
   })
  }
  return token
-}
-
-export const disconnectChannel = () => {
- logout()
-}
-
-export const isChannelConnected = (): boolean => {
- return isAuthenticated()
-}
-
-export { generateRandomString, generateCodeChallenge }
-
-export class YouTubeApiClient extends GoogleService {
- public async requestYouTube(endpoint: string, options: RequestInit = {}) {
-  return this.request(BASE_URL, endpoint, options)
- }
-
- public async requestAnalytics(endpoint: string, options: RequestInit = {}) {
-  return this.request(ANALYTICS_URL, endpoint, options)
- }
-
- public async fetchCommentThreads(options: { videoId?: string; allThreads?: boolean } = {}) {
-  const params = new URLSearchParams({
-   part: "snippet,replies",
-   maxResults: "50",
-  });
-  if (options.videoId) params.append("videoId", options.videoId);
-  else if (options.allThreads) params.append("allThreadsRelatedToChannelId", "");
-
-  return this.requestYouTube(`/commentThreads?${params.toString()}`);
- }
-
- public async searchVideos(query: string, options: { location?: string; locationRadius?: string } = {}) {
-  const params = new URLSearchParams({
-   part: "snippet",
-   q: query,
-   type: "video",
-   maxResults: "25",
-  });
-  if (options.location) params.append("location", options.location);
-  if (options.locationRadius) params.append("locationRadius", options.locationRadius);
-
-  return this.requestYouTube(`/search?${params.toString()}`);
- }
-
- public async insertComment(parentId: string, text: string) {
-  if (isUnifiedAccountServerEnabled()) return postUnifiedCommentReply(parentId, text)
-  return this.requestYouTube("/comments?part=snippet", {
-   method: "POST",
-   body: JSON.stringify({
-    snippet: {
-     parentId: parentId,
-     textOriginal: text
-    }
-   })
-  });
- }
-
- public async uploadVideo(file: Blob, metadata: { title: string; description: string; privacyStatus?: "public" | "private" | "unlisted" }, onProgress?: (p: number) => void) {
-  return YouTubeUploadService.uploadVideo(file, metadata, onProgress);
- }
-}
-
-export const youtubeApiClient = new YouTubeApiClient()
-
-// --- Core Types ---
-export interface ChannelProfile {
- id: string
- name: string
- channelHandle?: string | null
- subscriberCount: string
- totalViews: string
- totalVideos: string
- profilePictureUrl: string
- publishedAt: string
- uploadsPlaylistId?: string
-}
-
-export interface VideoDetails {
- videoId: string
- title: string
- description: string
- publishedAt: string
- thumbnail: string
- tags: string[]
- categoryId: string
- privacyStatus: string
-}
-
-export interface VideoSnippet {
- videoId: string
- title: string
- publishedAt: string
- thumbnail: string
-}
-
-export interface VideoStats {
- videoId: string
- views: string
- likes: string
- comments: string
- duration: string
- durationSeconds?: number
- durationRaw?: string
- isShort?: boolean
- privacyStatus?: string
- title?: string
- description?: string
- tags?: string[]
-}
-
-export interface SingleVideoAnalytics {
- shares: string
- averageViewPercentage: string
- clickThroughRate: string
- estimatedRevenue: string
-}
-
-export interface VideoCategory {
- id: string
- title: string
-}
-
-export interface Playlist {
- id: string
- title: string
-}
-
-export interface PlaylistMembership {
- playlistId: string
- playlistItemId: string
 }
