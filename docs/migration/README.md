@@ -2,6 +2,8 @@
 
 **Purpose.** ViewTube's analytics data, auth signals, and legacy Performance-Hub-era tools currently live across three parallel systems. This directory tracks the migration to a single source of truth: **VT Sync Local (`/analytics`)** for data, and a single unified auth signal for identity.
 
+Dataset expansion planning for playback details, playback locations, traffic-source parity, selected-video deep dives, standard time windows, and content-owner uploader filters lives in [`docs/analytics/YOUTUBE_ANALYTICS_DATASET_EXPANSION_PLAN.md`](../analytics/YOUTUBE_ANALYTICS_DATASET_EXPANSION_PLAN.md). Its machine-readable implementation inventory is [`docs/analytics/youtube-analytics-dataset-expansion-matrix.csv`](../analytics/youtube-analytics-dataset-expansion-matrix.csv).
+
 This document is the north star. Every migration PR is scoped from here. Every feature we discover during migration gets logged here so nothing gets dropped by accident.
 
 ## Status snapshot (2026-08-24)
