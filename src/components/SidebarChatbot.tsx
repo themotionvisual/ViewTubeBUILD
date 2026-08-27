@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 import { ArrowRight, Brain, Send, Zap } from "lucide-react"
 import { useBrain } from "../context/useBrain"
 import { hasGeminiKey } from "../services/gemini"
@@ -18,12 +18,14 @@ import {
  setActiveBrainControlChannel,
  type BrainUserControls,
 } from "../services/brain/BrainUserControls"
+import { parseBrainSurfaceContextFromLocation } from "../services/brain/BrainSurfaceContext"
 import type { AIBrainConversationTurn } from "../types"
 import { BrainAnswerModuleGrid } from "./brain/BrainAnswerModules"
 import { BrainEvidenceDrawer } from "./brain/BrainEvidenceDrawer"
 
 export const SidebarChatbot: React.FC = () => {
  const { brain, authState, channelConnection, emitSignal, getBrainMemory } = useBrain()
+ const location = useLocation()
  const [input, setInput] = useState("")
  const [busy, setBusy] = useState(false)
  const [turns, setTurns] = useState<AIBrainConversationTurn[]>([])
@@ -31,6 +33,10 @@ export const SidebarChatbot: React.FC = () => {
  const channelId = authState.channelHandle || authState.channelId || null
  const [controls, setControls] = useState<BrainUserControls>(() => readBrainUserControls(channelId))
 
+ const surface = useMemo(
+  () => parseBrainSurfaceContextFromLocation(location, controls),
+  [location.pathname, location.search, controls],
+ )
  const snapshot = useMemo(() => buildAIBrainContextSnapshot({
   brain,
   authState,
@@ -71,9 +77,14 @@ export const SidebarChatbot: React.FC = () => {
   if (!userText || busy || !controls.enabled) return
   setInput("")
   setBusy(true)
-  void emitSignal("VIEWTUBE_COPILOT", "USER_MESSAGE", { text: userText })
+  void emitSignal("VIEWTUBE_COPILOT", "USER_MESSAGE", {
+   text: userText,
+   route: surface.route,
+   capabilityIds: surface.capabilityIds,
+   superToolIds: surface.superToolIds,
+  })
   try {
-   const systemPrompt = buildAIBrainSystemPrompt({
+   const baseSystemPrompt = buildAIBrainSystemPrompt({
     brain,
     authState,
     channelConnection,
@@ -81,6 +92,18 @@ export const SidebarChatbot: React.FC = () => {
     recentConversationTurns: controls.personalization ? turns : [],
     creatorGrowthContext: growthContext,
    })
+   const systemPrompt = `${baseSystemPrompt}\n\nCURRENT VIEWTUBE SURFACE CONTEXT\n${JSON.stringify({
+    route: surface.route,
+    projectId: surface.projectId,
+    videoId: surface.videoId,
+    commentId: surface.commentId,
+    dateRange: surface.dateRange,
+    availableCapabilities: surface.capabilityIds,
+    matchingSuperTools: surface.superToolIds,
+    sourcesOfTruth: surface.sourceOfTruth,
+    blockedCapabilities: surface.blockedCapabilities,
+   }, null, 2)}\nUse this surface context to understand references such as "this chart", "this project", "this comment", or "this tool". Never use a blocked capability.`
+
    const result = await runBrainTurn({
     channelId,
     userText,
