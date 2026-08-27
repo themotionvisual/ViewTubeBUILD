@@ -6736,10 +6736,9 @@ ${validation.errors.join('\n')}`);
         }
       };
       const queueSelectedFinalRender = () => {
-        if (renderMode === 'svg-frames-mp4') {
-          return queueSvgFrameRenderMp4();
-        }
-        return queueRenderMp4();
+        // Final delivery always starts with the canonical Remotion composition.
+        // SVG frames remain an explicit utility workflow, not a competing MP4 lane.
+        return queueRenderMp4('mp4');
       };
 
       const queueRenderMp4 = async (requestedFormat = 'mp4') => {
@@ -6938,11 +6937,6 @@ ${failure}`);
         const determinism = getDeterminismDiagnostics(project);
         determinism.issues.forEach((issue) => issues.push(`Determinism: ${issue}`));
         determinism.warnings.forEach((warning) => warnings.push(`Determinism: ${warning}`));
-        if (renderMode === 'svg-frames-mp4') {
-          const svgPreflight = buildSvgRenderPreflight(project, svgRenderPolicy);
-          svgPreflight.blockers.forEach((issue) => issues.push(`SVG lane: ${issue}`));
-          svgPreflight.warnings.forEach((warning) => warnings.push(`SVG lane: ${warning}`));
-        }
         (project.clips || []).forEach((clip) => {
           if (!layerIds.has(clip.layerId)) issues.push(`Clip ${clip.id}: missing layer`);
           if (!trackIds.has(clip.trackId)) issues.push(`Clip ${clip.id}: missing track`);
@@ -12098,43 +12092,30 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
       );
       const RenderServiceStatusPanel = () => (
         <div className="neo-card p-3 space-y-2">
-          <div className="text-xs font-black uppercase">Render Service Status</div>
+          <div className="text-xs font-black uppercase">Final Video Service</div>
           <button className="neo-btn w-full !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.cyan }} onClick={() => void fetchRenderServerCapabilities()}>Recheck Renderer</button>
           <div className="border-2 border-black rounded-md p-2 bg-white text-[10px] font-black leading-5">
-            <div>Service: {getRenderServiceStatusLabel()}</div>
-            <div>Mode: {getRenderRouteModeLabel()}</div>
-            <div>Status: {String(renderServerInfo.status || 'idle').toUpperCase()}</div>
-            <div>Executor: {renderServerInfo.executor || 'checking'}</div>
-            <div>Primary Format: {(renderServerInfo.primaryFormat || 'mp4').toUpperCase()}</div>
-            <div>Hosted Formats: {renderServerInfo.supportedFormats?.length ? renderServerInfo.supportedFormats.map((format) => format.toUpperCase()).join(', ') : 'checking'}</div>
-            <div>Browser Route: {getRenderBrowserRouteLabel()}</div>
-            <div>Worker Route: server proxy via VT_E1_RENDER_SERVICE_URL</div>
-            {renderServerInfo.origin ? <div>Worker Origin: {renderServerInfo.origin}</div> : null}
-            {Array.isArray(renderServerInfo.blocked) && renderServerInfo.blocked.length > 0 ? <div>Blocks: {renderServerInfo.blocked.join(', ')}</div> : null}
-            {renderServerInfo.error ? <div className="text-red-700">{renderServerInfo.error}</div> : null}
+            <div>Final video: {getRenderServiceStatusLabel()}</div>
+            <div>Canonical render: Remotion MP4</div>
+            <div>Available downloads: {renderServerInfo.supportedFormats?.length ? renderServerInfo.supportedFormats.map((format) => format.toUpperCase()).join(', ') : 'Checking'}</div>
+            {renderServerInfo.error ? <div className="text-red-700">{renderServerInfo.error}</div> : <div className="opacity-70">Final video jobs run on the hosted worker. Preview Capture stays in this browser.</div>}
           </div>
         </div>
       );
       const ProjectRenderPanel = () => (
         <div className="neo-card p-3 space-y-2">
-          <div className="text-xs font-black uppercase">Project Render Controls</div>
+          <div className="text-xs font-black uppercase">Export Video</div>
           <div className="grid grid-cols-2 gap-2">
             <button className="neo-btn !min-h-0 px-2 py-1" style={{ background: renderProfile === 'draft' ? COLORS.green : COLORS.white }} onClick={() => setRenderProfile('draft')}>Draft</button>
             <button className="neo-btn !min-h-0 px-2 py-1" style={{ background: renderProfile === 'final' ? COLORS.green : COLORS.white }} onClick={() => setRenderProfile('final')}>Final</button>
           </div>
           <div className="border-2 border-black rounded-md p-2 bg-white text-[10px] font-black leading-5">
-            <div>Render service: {getRenderServiceStatusLabel()}</div>
-            <div>Final MP4 - Remotion: {VT_E1_RENDER_ENDPOINTS.finalMp4}</div>
-            <div>Final MP4 - SVG Frames: {VT_E1_RENDER_ENDPOINTS.svgFrames}</div>
-            <div>SVG ZIP -&gt; MP4: {VT_E1_RENDER_ENDPOINTS.svgFramesFromZip}</div>
-            <div>Final formats are hosted Remotion renders. Browser capture is preview-only.</div>
+            <div>Final MP4 is the canonical Remotion render.</div>
+            <div>MOV and WebM are server-side transcodes of that MP4.</div>
+            <div>Preview Capture is browser-only and is not parity-final output.</div>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: renderMode === 'remotion-mp4' ? COLORS.green : COLORS.white }} onClick={() => setRenderMode('remotion-mp4')}>Final MP4 - Remotion</button>
-            <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: renderMode === 'svg-frames-mp4' ? COLORS.green : COLORS.white }} onClick={() => setRenderMode('svg-frames-mp4')}>Final MP4 - SVG Frames</button>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: isFinalRenderDisabled() ? '#ddd' : COLORS.orange }} onClick={queueSelectedFinalRender} disabled={isFinalRenderDisabled()} title={getFinalRenderUnavailableReason() || 'Queue hosted final MP4 render'}><Download size={14} /> {renderJobState.status === 'preparing' ? 'Preparing Render' : renderJobState.status === 'submitting' ? 'Submitting' : (renderJobState.status === 'queued' || renderJobState.status === 'rendering') ? 'Rendering' : (renderMode === 'svg-frames-mp4' ? 'Final MP4 - SVG Frames' : 'Final MP4')}</button>
+            <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: isFinalRenderDisabled() ? '#ddd' : COLORS.orange }} onClick={() => queueRenderMp4('mp4')} disabled={isFinalRenderDisabled()} title={getFinalRenderUnavailableReason() || 'Queue hosted final MP4 render'}><Download size={14} /> {renderJobState.status === 'preparing' ? 'Preparing Render' : renderJobState.status === 'submitting' ? 'Submitting' : (renderJobState.status === 'queued' || renderJobState.status === 'rendering') ? 'Rendering' : 'Final MP4'}</button>
             <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: isFinalRenderDisabled('mov') ? '#ddd' : COLORS.blue }} onClick={() => queueRenderMp4('mov')} disabled={isFinalRenderDisabled('mov')} title={getFinalRenderUnavailableReason('mov') || 'Render MP4 then transcode Final MOV on the hosted worker'}><Download size={14} /> Final MOV</button>
             <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: isFinalRenderDisabled('webm') ? '#ddd' : COLORS.green }} onClick={() => queueRenderMp4('webm')} disabled={isFinalRenderDisabled('webm')} title={getFinalRenderUnavailableReason('webm') || 'Render MP4 then transcode Final WebM on the hosted worker'}><Video size={14} /> Final WebM</button>
             <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: COLORS.white }} disabled={isCapturing} onClick={capturePreviewWebm} title="Browser preview capture only; not final-render parity"><Video size={14} /> Preview Capture</button>
@@ -14365,10 +14346,6 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                         <button className="neo-btn !min-h-0 px-2 py-2 text-[10px]" style={{ background: COLORS.cyan }} onClick={() => loadRenderAcceptanceProject('3s-audio')}>Load 3s MP4 + Audio Smoke</button>
                         <button className="neo-btn !min-h-0 px-2 py-2 text-[10px]" style={{ background: COLORS.yellow }} onClick={() => loadRenderAcceptanceProject('15s-mixed')}>Load 15s MP4 Smoke</button>
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: renderMode === 'remotion-mp4' ? COLORS.green : COLORS.white }} onClick={() => setRenderMode('remotion-mp4')}>Final MP4: Remotion</button>
-                        <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: renderMode === 'svg-frames-mp4' ? COLORS.green : COLORS.white }} onClick={() => setRenderMode('svg-frames-mp4')}>Final MP4: SVG Frames</button>
-                      </div>
                       <div className="grid grid-cols-3 gap-2">
                         {['exact-svg', 'hybrid-raster', 'best-effort'].map((policy) => (
                           <button
@@ -14382,13 +14359,13 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                         ))}
                       </div>
                       <div className="text-[10px] font-black border-2 border-black rounded-md p-2 bg-[#f8f8fb] leading-5">
-                        <div>Selected final lane: {renderMode === 'svg-frames-mp4' ? 'SVG frames -> FFmpeg MP4' : 'Remotion MP4 bridge'}</div>
+                        <div>Final lane: Remotion MP4 bridge</div>
                         <div>Preview WebM: browser-side only</div>
                         <div>Preview MOV: browser-side only</div>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.yellow }} onClick={runSvgRenderPreflight}>SVG Render Preflight</button>
-                        <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.orange }} onClick={queueSelectedFinalRender}>Queue Selected Final Render</button>
+                        <button className="neo-btn !min-h-0 px-2 py-1 text-[10px]" style={{ background: COLORS.orange }} onClick={() => queueRenderMp4('mp4')}>Queue Final MP4</button>
                       </div>
                     </div>
                   </div>
@@ -14831,7 +14808,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                   </div>
                   <div className="text-[10px] font-black border-2 border-black rounded-md p-2 bg-white">
                     <div>Render service: {getRenderServiceStatusLabel()}</div>
-                    <div>Final export path: {renderMode === 'svg-frames-mp4' ? 'Hosted SVG frames + FFmpeg MP4 assembly' : 'Hosted Remotion MP4 API'}</div>
+                    <div>Final export path: Hosted Remotion MP4 API</div>
                     <div>Preview Capture: browser-side WebM only, not final parity.</div>
                   </div>
                   <div className="text-xs font-black uppercase">Export Resolution</div>
@@ -14934,11 +14911,11 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                     <button
                       className="neo-btn w-full inline-flex items-center justify-center gap-1"
                       style={{ background: isFinalRenderDisabled() ? '#ddd' : COLORS.orange }}
-                      onClick={queueSelectedFinalRender}
+                      onClick={() => queueRenderMp4('mp4')}
                       disabled={isFinalRenderDisabled()}
                       title={getFinalRenderUnavailableReason() || 'Queue hosted final MP4 render'}
                     >
-                      <Download size={14} /> {renderJobState.status === 'preparing' ? 'Preparing Render' : renderJobState.status === 'submitting' ? 'Submitting' : (renderJobState.status === 'queued' || renderJobState.status === 'rendering') ? 'Rendering MP4' : (renderMode === 'svg-frames-mp4' ? 'Final MP4 (SVG Frames)' : 'Final MP4')}
+                      <Download size={14} /> {renderJobState.status === 'preparing' ? 'Preparing Render' : renderJobState.status === 'submitting' ? 'Submitting' : (renderJobState.status === 'queued' || renderJobState.status === 'rendering') ? 'Rendering MP4' : 'Final MP4'}
                     </button>
                     <button className="neo-btn w-full inline-flex items-center justify-center gap-1" style={{ background: isFinalRenderDisabled('mov') ? '#ddd' : COLORS.blue }} onClick={() => queueRenderMp4('mov')} disabled={isFinalRenderDisabled('mov')} title={getFinalRenderUnavailableReason('mov') || 'Render MP4 then transcode Final MOV on the hosted worker'}>
                       <Download size={14} /> Final MOV

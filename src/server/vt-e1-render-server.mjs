@@ -10,7 +10,9 @@ import { chromium } from 'playwright';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, '../..');
-const DATA_DIR = path.join(ROOT, '.vt-e1-render');
+// Keep worker data outside the source tree in production. Mount this path to
+// durable storage; local development can continue using the repository folder.
+const DATA_DIR = path.resolve(process.env.VT_E1_RENDER_DATA_DIR || path.join(ROOT, '.vt-e1-render'));
 const JOBS_FILE = path.join(DATA_DIR, 'jobs.json');
 const JOB_PAYLOAD_DIR = path.join(DATA_DIR, 'payloads');
 const OUTPUT_DIR = path.join(DATA_DIR, 'output');
@@ -20,11 +22,12 @@ const AI_ASSET_DIR = path.join(DATA_DIR, 'ai-assets');
 const RENDER_ASSET_DIR = path.join(DATA_DIR, 'render-assets');
 const REMOTION_APP_DIR = path.join(ROOT, 'src', 'remotion-editor');
 const REMOTION_BIN = path.join(REMOTION_APP_DIR, 'node_modules', '.bin', 'remotion');
-const FFMPEG_BIN = process.env.FFMPEG_BIN || '/opt/homebrew/bin/ffmpeg';
+const FFMPEG_BIN = process.env.FFMPEG_BIN || 'ffmpeg';
 
-const PORT = Number(process.env.VT_E1_RENDER_PORT || 3001);
+const PORT = Number(process.env.PORT || process.env.VT_E1_RENDER_PORT || 3001);
 const ORIGIN = process.env.VT_E1_RENDER_ORIGIN || '*';
 const SHARED_SECRET = String(process.env.VT_E1_RENDER_SHARED_SECRET || '').trim();
+const PERSISTENT_STORAGE = String(process.env.VT_E1_RENDER_PERSISTENT_STORAGE || '').toLowerCase() === 'true';
 const RENDER_JOB_SCHEMA_VERSION = 'RemotionRenderJobV1';
 const SVG_RENDER_JOB_SCHEMA_VERSION = 'SvgFrameRenderJobV1';
 const SVG_ZIP_RENDER_JOB_SCHEMA_VERSION = 'SvgFrameZipRenderJobV1';
@@ -559,7 +562,7 @@ const buildRendererReadiness = async () => {
     queue,
     storage: {
       strategy: 'local-worker-disk',
-      persistent: false,
+      persistent: PERSISTENT_STORAGE,
       writable: storageReady,
       dataDir: DATA_DIR,
       outputDir: OUTPUT_DIR,
@@ -622,9 +625,9 @@ const ensureRendererInstalled = async () => {
 };
 const ensureFfmpegInstalled = async () => {
   try {
-    await fs.access(FFMPEG_BIN);
-  } catch {
-    throw new Error(`FFmpeg is missing at ${FFMPEG_BIN}.`);
+    await runCommand(FFMPEG_BIN, ['-version']);
+  } catch (error) {
+    throw new Error(`FFmpeg is unavailable (${FFMPEG_BIN}): ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
@@ -670,6 +673,22 @@ const updateJob = async (jobId, updater) => {
   return next;
 };
 
+const recoverInterruptedJobs = async () => {
+  const db = await readJobsDb();
+  let changed = false;
+  Object.values(db.records || {}).forEach((job) => {
+    if (job?.status !== 'rendering') return;
+    // A render process can be restarted by its hosting platform. Requeue the
+    // deterministic job rather than leaving it permanently stuck as rendering.
+    job.status = 'queued';
+    job.progress = 0;
+    job.failureReason = null;
+    job.updatedAt = nowIso();
+    changed = true;
+  });
+  if (changed) await writeJobsDb(db);
+};
+
 const runRemotionRender = async (job) => {
   await ensureRendererInstalled();
   const payloadPath = path.join(JOB_PAYLOAD_DIR, `${job.jobId}.json`);
@@ -681,6 +700,8 @@ const runRemotionRender = async (job) => {
     job.compositionId,
     outputPath,
     '--gl=angle',
+    '--codec=h264',
+    '--pixel-format=yuv420p',
     '--props',
     JSON.stringify({ renderJob: job.payload }),
   ];
@@ -1552,5 +1573,7 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, async () => {
   await ensureStore();
-  console.log(`[vt-e1-render] listening on http://localhost:${PORT}`);
+  await recoverInterruptedJobs();
+  void processQueue();
+  console.log(`[vt-e1-render] listening on port ${PORT}`);
 });
