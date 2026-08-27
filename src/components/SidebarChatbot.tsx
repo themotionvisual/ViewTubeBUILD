@@ -15,6 +15,7 @@ import {
 import { runBrainTurn } from "../services/brain/BrainOrchestrator"
 import {
  readBrainUserControls,
+ setActiveBrainControlChannel,
  type BrainUserControls,
 } from "../services/brain/BrainUserControls"
 import type { AIBrainConversationTurn } from "../types"
@@ -27,8 +28,8 @@ export const SidebarChatbot: React.FC = () => {
  const [busy, setBusy] = useState(false)
  const [turns, setTurns] = useState<AIBrainConversationTurn[]>([])
  const [activeTurn, setActiveTurn] = useState<AIBrainConversationTurn | null>(null)
- const [controls, setControls] = useState<BrainUserControls>(() => readBrainUserControls())
  const channelId = authState.channelHandle || authState.channelId || null
+ const [controls, setControls] = useState<BrainUserControls>(() => readBrainUserControls(channelId))
 
  const snapshot = useMemo(() => buildAIBrainContextSnapshot({
   brain,
@@ -50,15 +51,20 @@ export const SidebarChatbot: React.FC = () => {
   }
  }
 
- useEffect(() => { void restore() }, [channelId])
+ useEffect(() => {
+  setActiveBrainControlChannel(channelId)
+  setControls(readBrainUserControls(channelId))
+  void restore()
+ }, [channelId])
+
  useEffect(() => {
   const onControls = (event: Event) => {
    const detail = (event as CustomEvent<BrainUserControls>).detail
-   setControls(detail || readBrainUserControls())
+   setControls(detail || readBrainUserControls(channelId))
   }
   window.addEventListener("vt_brain_user_controls_changed", onControls as EventListener)
   return () => window.removeEventListener("vt_brain_user_controls_changed", onControls as EventListener)
- }, [])
+ }, [channelId])
 
  const handleSend = async () => {
   const userText = input.trim()
