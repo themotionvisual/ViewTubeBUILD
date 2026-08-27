@@ -34,7 +34,7 @@ export const SidebarChatbot: React.FC = () => {
   brain,
   authState,
   channelConnection,
-  brainMemory: controls.personalization ? getBrainMemory() : [],
+  brainMemory: controls.personalization ? getBrainMemory() : null,
   recentConversationTurns: controls.personalization ? turns : [],
  }), [brain, authState, channelConnection, turns, controls.personalization])
  const growthContext = useMemo(() => buildCreatorGrowthContext(snapshot, turns, []), [snapshot, turns])
@@ -71,7 +71,7 @@ export const SidebarChatbot: React.FC = () => {
     brain,
     authState,
     channelConnection,
-    brainMemory: controls.personalization ? getBrainMemory() : [],
+    brainMemory: controls.personalization ? getBrainMemory() : null,
     recentConversationTurns: controls.personalization ? turns : [],
     creatorGrowthContext: growthContext,
    })
