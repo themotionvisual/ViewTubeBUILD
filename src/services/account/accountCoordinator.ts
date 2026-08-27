@@ -415,7 +415,11 @@ export const selectUnifiedContentOwner = async (ownerId: string): Promise<Unifie
 // popups, open them as detached tabs, or lose window.opener before postMessage
 // can arrive. Full-page redirects avoid the whole handshake — the server's
 // returnTo lands the user back on the page that started the intent.
-const shouldPreferAccountRedirect = (): boolean => {
+export const shouldPreferAccountRedirect = (
+  runtimeHostname = typeof window !== "undefined" ? window.location.hostname : "",
+): boolean => {
+  const normalizedHostname = runtimeHostname.trim().toLowerCase()
+  if (LOCAL_HOSTS.has(normalizedHostname) || normalizedHostname.endsWith(".local")) return true
   if (typeof window === "undefined" || !window.matchMedia) return false
   try {
     const coarsePointer = window.matchMedia("(pointer: coarse)").matches
@@ -426,11 +430,11 @@ const shouldPreferAccountRedirect = (): boolean => {
   }
 }
 
-export const beginAccountIntent = async (
+let activeAccountIntent: Promise<void> | null = null
+
+const runAccountIntent = async (
   intent: AccountIntent,
-  returnTo = typeof window !== "undefined"
-    ? `${window.location.pathname}${window.location.search}${window.location.hash}`
-    : "/account",
+  returnTo: string,
 ): Promise<void> => {
   if (intent === "manage_account") {
     if (typeof window !== "undefined") window.location.assign("/account")
@@ -503,6 +507,21 @@ export const beginAccountIntent = async (
     }
     throw error
   }
+}
+
+export const beginAccountIntent = (
+  intent: AccountIntent,
+  returnTo = typeof window !== "undefined"
+    ? `${window.location.pathname}${window.location.search}${window.location.hash}`
+    : "/account",
+): Promise<void> => {
+  if (intent === "manage_account") return runAccountIntent(intent, returnTo)
+  if (activeAccountIntent) return activeAccountIntent
+
+  activeAccountIntent = runAccountIntent(intent, returnTo).finally(() => {
+    activeAccountIntent = null
+  })
+  return activeAccountIntent
 }
 
 export const signOutUnifiedAccount = async (): Promise<void> => {

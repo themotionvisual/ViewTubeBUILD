@@ -175,6 +175,12 @@ export const filterVtSyncVisibleCategoryIds = (categoryIds: string[]): string[] 
  return categoryIds.filter((id) => visibleIds.has(id))
 }
 
+// User-facing switches own exactly the categories declared by their sync unit.
+// Dependency expansion remains available for internal compatibility, but must
+// not make one dataset switch silently run another dataset/table process.
+export const resolveVtSyncRequestedCategoryIds = (categoryIds: string[]): string[] =>
+ [...new Set(filterVtSyncVisibleCategoryIds(categoryIds))]
+
 export const expandVtSyncCategoryDependencies = (categoryIds: string[]): string[] => {
  const byId = new Map(VT_SYNC_CATEGORY_OPTIONS.map((category) => [category.id, category]))
  const ordered: string[] = []

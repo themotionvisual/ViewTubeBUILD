@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import type { VtSyncVideoItem } from "./contracts"
-import { mergeVideoAnalyticsRows, mergeVtSyncRowsPreservingDefined, vtSyncSegmentRowKey } from "./localSyncEngine"
+import { mergeVideoAnalyticsRows, mergeVideoMetadataById, mergeVtSyncRowsPreservingDefined, vtSyncSegmentRowKey } from "./localSyncEngine"
 
 const longVideo = (metrics: VtSyncVideoItem["metrics"] = {}): VtSyncVideoItem => ({
  id: "long-1",
@@ -11,6 +11,35 @@ const longVideo = (metrics: VtSyncVideoItem["metrics"] = {}): VtSyncVideoItem =>
 })
 
 describe("mergeVideoAnalyticsRows", () => {
+ it("does not let a metadata refresh clear or replace Analytics-owned video cells", () => {
+  const [merged] = mergeVideoMetadataById(
+   [{
+    ...longVideo({ views: 41_292, watchTime: 925.12, revenue: 18.45 }),
+    title: "Existing title",
+    metricProvenance: {
+     views: "youtube_analytics_v2",
+     watchTime: "youtube_analytics_v2",
+     revenue: "youtube_analytics_v2",
+    },
+   }],
+   [{
+    ...longVideo({ views: 25 }),
+    title: "Updated title",
+    descriptionSnippet: "Updated metadata",
+    metricProvenance: { views: "youtube_data_v3" },
+   }],
+  )
+
+  expect(merged.title).toBe("Updated title")
+  expect(merged.descriptionSnippet).toBe("Updated metadata")
+  expect(merged.metrics).toMatchObject({ views: 41_292, watchTime: 925.12, revenue: 18.45 })
+  expect(merged.metricProvenance).toMatchObject({
+   views: "youtube_analytics_v2",
+   watchTime: "youtube_analytics_v2",
+   revenue: "youtube_analytics_v2",
+  })
+ })
+
  it("keeps every age × gender row when a later sync refreshes one cohort", () => {
   const merged = mergeVtSyncRowsPreservingDefined(
    [

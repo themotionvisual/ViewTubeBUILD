@@ -8,6 +8,7 @@ import {
  filterVtSyncVisibleCategoryIds,
  getVtSyncDefaultCategoryIds,
  getVtSyncVisibleCategoryIds,
+ resolveVtSyncRequestedCategoryIds,
 } from "./syncCategoryRegistry"
 import { VT_SYNC_SYNC_UNITS } from "./syncUnitRegistry"
 import { VT_SYNC_TABLE_CATEGORIES, VT_SYNC_TABLE_DEFINITIONS } from "./tableRegistry"
@@ -55,6 +56,24 @@ describe("VT Sync category registry", () => {
   expect(new Set(expanded).size).toBe(expanded.length)
   expect(retentionOnly).toEqual(["retention"])
   expect(dailyOnly).toEqual(["daily_metrics"])
+ })
+
+ it("keeps user-requested dataset execution exact instead of expanding dependencies", () => {
+  expect(resolveVtSyncRequestedCategoryIds(["videos_analytics"])).toEqual(["videos_analytics"])
+  expect(resolveVtSyncRequestedCategoryIds(["daily_metrics", "daily_metrics", "traffic_shorts"])).toEqual([
+   "daily_metrics",
+  ])
+ })
+
+ it("keeps video catalog phases owned by its one switch and out of every other unit", () => {
+  const videoCategoryIds = ["uploads_playlist", "video_metadata", "videos_analytics"]
+  const videoUnit = VT_SYNC_SYNC_UNITS.find((unit) => unit.id === "video_catalog")
+  const otherUnits = VT_SYNC_SYNC_UNITS.filter((unit) => unit.id !== "video_catalog")
+
+  expect(resolveVtSyncRequestedCategoryIds(videoUnit?.categoryIds || [])).toEqual(videoCategoryIds)
+  expect(otherUnits.every((unit) =>
+   resolveVtSyncRequestedCategoryIds(unit.categoryIds).every((id) => !videoCategoryIds.includes(id)),
+  )).toBe(true)
  })
 
  it("keeps hidden categories in code as disabled_unvalidated", () => {
