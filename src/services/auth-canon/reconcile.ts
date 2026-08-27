@@ -67,7 +67,7 @@ export const reconcileAccountStatus = ({
  const scopes = Boolean(snapshot?.google.youtubeScopesGranted)
 
  const accountAuthenticated = authStatus === "authenticated"
- const googleConnected = googleStatus === "connected" || scopes
+ const googleConnected = googleStatus === "connected" || scopes || tokenPresent
  const pending = authStatus === "pending"
  // "Had an account" = the snapshot carries any evidence that this
  // browser has been logged in before (viewtubeUserId set, or an
@@ -78,11 +78,12 @@ export const reconcileAccountStatus = ({
  )
 
  const channelId = snapshot?.google.channelId ?? null
- const credentialReady = serverEnabled ? Boolean(channelId) : tokenPresent
+ const serverCredentialReady = serverEnabled && Boolean(channelId) && googleStatus === "connected"
+ const credentialReady = serverCredentialReady || tokenPresent
  const status = pickStatus(accountAuthenticated, googleConnected, credentialReady, pending, hadAccount)
  const grantedCapabilities = snapshot?.grantedCapabilities ?? []
  const hasCapability = (capability: UnifiedAccountSnapshot["grantedCapabilities"][number]) =>
-  !serverEnabled || grantedCapabilities.includes(capability)
+  !serverCredentialReady || grantedCapabilities.includes(capability)
 
  return {
   status,
@@ -94,7 +95,7 @@ export const reconcileAccountStatus = ({
   avatarUrl: snapshot?.profile.avatarUrl ?? snapshot?.google.channelThumbnail ?? null,
   channelHandle: snapshot?.google.channelHandle ?? null,
   channelId,
-  transportMode: serverEnabled ? "server" : "legacy",
+  transportMode: serverCredentialReady ? "server" : "legacy",
   grantedCapabilities,
   canReadYouTube: status === "ready" && hasCapability("youtube_read"),
   canManageVideos: status === "ready" && hasCapability("youtube_video_manage"),
