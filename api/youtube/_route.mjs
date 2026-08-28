@@ -1,5 +1,5 @@
 import { queryAnalytics } from "../../server/simple-analytics.mjs";
-import { createReportingJob, getReportingReport, listReportingJobs, listReportingReports, listReportTypes, streamReportingReport } from "../../server/simple-reporting.mjs";
+import { createReportingJob, deleteReportingJob, getReportingReport, listReportingJobs, listReportingReports, listReportTypes, streamReportingReport } from "../../server/simple-reporting.mjs";
 import { addVideoToPlaylist, getOwnedVideo, listCommentThreads, listOwnedVideos, listPlaylists, listVideoPlaylistMemberships, markCommentAsSpam, moderateComment, patchOwnedVideo, postCommentReply, postTopLevelComment, removeVideoFromPlaylist, setVideoThumbnail, toApiError } from "../../server/simple-youtube.mjs";
 
 const json = (res, status, payload) => {
@@ -24,6 +24,10 @@ export const routeSimpleYouTube = async (req, res) => {
     }
     if (method === "POST" && pathname === "/api/youtube/reporting/jobs") {
       return json(res, 200, await createReportingJob({ req }));
+    }
+    const reportingJobMatch = pathname.match(/^\/api\/youtube\/reporting\/jobs\/([^/]+)$/);
+    if (reportingJobMatch && method === "DELETE") {
+      return json(res, 200, await deleteReportingJob({ req, jobId: decodeURIComponent(reportingJobMatch[1]) }));
     }
     const reportsMatch = pathname.match(/^\/api\/youtube\/reporting\/jobs\/([^/]+)\/reports$/);
     if (reportsMatch && method === "GET") {
