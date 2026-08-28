@@ -4,6 +4,7 @@
  * button is a 44x44 hit target and opens the corresponding PanelSheet tab.
  */
 import React from 'react';
+import { MousePointer2, Scissors, Type, Music2, Shuffle, Sparkles, Upload, Split } from 'lucide-react';
 import { EditorStore, Tool } from '../state/editorState';
 
 interface ToolDockProps {
@@ -12,15 +13,15 @@ interface ToolDockProps {
   tools?: Tool[];
 }
 
-const TOOL_ICONS: Record<Tool, string> = {
-  select: '☰',
-  trim: '✂',
-  split: '⤴',
-  text: 'T',
-  audio: '♪',
-  transitions: '↔',
-  effects: '✧',
-  export: '⇪',
+const TOOL_ICONS: Record<Tool, React.ComponentType<{ size?: number }>> = {
+  select: MousePointer2,
+  trim: Scissors,
+  split: Split,
+  text: Type,
+  audio: Music2,
+  transitions: Shuffle,
+  effects: Sparkles,
+  export: Upload,
 };
 
 const TOOL_LABELS: Record<Tool, string> = {
@@ -48,9 +49,9 @@ export const ToolDock: React.FC<ToolDockProps> = ({ store, orientation, tools = 
         flexDirection: isRow ? 'row' : 'column',
         gap: 4,
         padding: 4,
-        background: '#0f172a',
-        borderRadius: 12,
-        border: '1px solid #1e293b',
+        background: '#ffffff',
+        borderRadius: 8,
+        border: '2px solid #111',
         overflowX: isRow ? 'auto' : 'hidden',
         overflowY: isRow ? 'hidden' : 'auto',
         WebkitOverflowScrolling: 'touch',
@@ -78,10 +79,10 @@ export const ToolDock: React.FC<ToolDockProps> = ({ store, orientation, tools = 
               height: btnSize,
               minWidth: btnSize,
               minHeight: btnSize,
-              borderRadius: 10,
-              border: 'none',
-              background: active ? '#22d3ee' : '#1e293b',
-              color: active ? '#0f172a' : '#e2e8f0',
+              borderRadius: 6,
+              border: '2px solid #111',
+              background: active ? '#40c6e9' : '#ffffff',
+              color: '#111',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -92,7 +93,7 @@ export const ToolDock: React.FC<ToolDockProps> = ({ store, orientation, tools = 
               padding: 0,
             }}
           >
-            <span style={{ fontSize: 20, lineHeight: 1 }}>{TOOL_ICONS[t]}</span>
+            {React.createElement(TOOL_ICONS[t], { size: 20 })}
             <span style={{ fontSize: 9, fontWeight: 800, marginTop: 3, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {TOOL_LABELS[t]}
             </span>
