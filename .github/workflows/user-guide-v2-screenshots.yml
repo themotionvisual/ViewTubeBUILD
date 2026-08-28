@@ -60,6 +60,18 @@ jobs:
             })
             const page = await context.newPage()
             await page.goto("http://localhost:5173/user-guide", { waitUntil: "networkidle" })
+            await page.evaluate(() => {
+              for (const el of Array.from(document.querySelectorAll("body *"))) {
+                const text = (el.textContent || "").trim()
+                const style = getComputedStyle(el)
+                if (style.position === "fixed" && text.includes("DIAG") && text.includes("render-storm")) {
+                  el.style.display = "none"
+                }
+              }
+              document.documentElement.style.overflowX = "hidden"
+              document.body.style.overflowX = "hidden"
+            })
+            await page.waitForTimeout(150)
             await page.screenshot({ path: `screenshots/${capture.name}`, fullPage: true })
             await context.close()
           }
