@@ -201,17 +201,7 @@ const UserGuide: React.FC = () => {
             <p className="mt-4 font-bold">The guide reads the same visible dataset registry as Analytics. When canonical tables change, the encyclopedia changes with them instead of drifting into a second list.</p>
             <Link to="/local-analytics" className="mt-6 inline-flex items-center gap-2 rounded-xl border-[3px] border-black bg-white px-4 py-3 text-sm font-black uppercase shadow-[3px_3px_0_0_#000]">Open Analytics <ArrowRight size={17} /></Link>
           </div>
-          <div id="datasets" className="rounded-2xl border-[4px] border-black bg-white p-4 shadow-[6px_6px_0_0_#000]">
-            <div className="flex items-center justify-between"><h3 className="text-xl font-black uppercase">Dataset encyclopedia</h3><span className="font-black">{GUIDE_DATASETS.length}</span></div>
-            <div className="mt-3 max-h-[340px] overflow-auto rounded-xl border-[3px] border-black">
-              {GUIDE_DATASETS.slice(0, 24).map((dataset) => (
-                <div key={dataset.id} className="border-b-2 border-black p-3 last:border-b-0">
-                  <strong className="text-sm font-black uppercase">{dataset.label}</strong>
-                  <p className="mt-1 text-xs font-bold text-black/60">{dataset.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          <div id="datasets" className="lg:col-span-2"><GuideDatasetExplorer /></div>
         </div>
       </section>
 
