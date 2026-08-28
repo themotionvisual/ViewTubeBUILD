@@ -121,11 +121,13 @@ export const streamReportingReport = async ({ req, res, jobId, reportId }) => {
     throw error;
   }
   const body = Buffer.from(await upstream.arrayBuffer());
-  res.writeHead(200, {
+  const headers = {
     "Content-Type": upstream.headers.get("content-type") || "text/csv",
-    "Content-Encoding": upstream.headers.get("content-encoding") || undefined,
     "Cache-Control": "no-store",
     "Content-Length": String(body.length),
-  });
+  };
+  const contentEncoding = upstream.headers.get("content-encoding");
+  if (contentEncoding) headers["Content-Encoding"] = contentEncoding;
+  res.writeHead(200, headers);
   res.end(body);
 };
