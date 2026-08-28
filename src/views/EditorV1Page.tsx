@@ -1,5 +1,6 @@
 import React from "react";
 import VTE1Editor from "../features/editor/VT_E1.jsx";
+import { ResponsiveEditorShell } from "../features/editor/mobile";
 
 interface EditorRouteBoundaryState {
   error: Error | null;
@@ -48,12 +49,25 @@ class EditorRouteBoundary extends React.Component<React.PropsWithChildren, Edito
 }
 
 /**
- * VT_E1 editor host. On desktop we keep the framed "card" look; on landscape
- * phones (and short viewports) we drop the border/rounded corners so the
- * embedded editor gets every pixel — the editor's own outer-frame becomes
- * the visible edge.
+ * VT_E1 editor host.
+ *
+ * `ResponsiveEditorShell` picks the layout by viewport:
+ *   - < 1024px wide  → mobile editor (portrait or landscape branch)
+ *   - ≥ 1024px wide  → desktop VT_E1
+ *
+ * The desktop path keeps the framed "card" look; on landscape phones and
+ * short viewports we drop the border/rounded corners so whichever editor is
+ * hosting gets every pixel. A URL flag lets contributors force either mode
+ * for testing without spinning up a real phone (?editor=mobile / ?editor=desktop).
  */
 const EditorV1Page: React.FC = () => {
+  const forced = React.useMemo(() => {
+    if (typeof window === "undefined") return "auto" as const;
+    const v = new URLSearchParams(window.location.search).get("editor");
+    if (v === "mobile" || v === "desktop") return v;
+    return "auto" as const;
+  }, []);
+
   return (
     <section
       className="
@@ -64,7 +78,10 @@ const EditorV1Page: React.FC = () => {
       "
     >
       <EditorRouteBoundary>
-        <VTE1Editor />
+        <ResponsiveEditorShell
+          mode={forced}
+          desktop={<VTE1Editor />}
+        />
       </EditorRouteBoundary>
     </section>
   );
