@@ -52,8 +52,8 @@ export const LandscapeLayout: React.FC<LandscapeLayoutProps> = ({ store, renderP
         position: 'relative',
         width: '100%',
         height: containerHeight,
-        background: '#020617',
-        color: '#f8fafc',
+        background: '#ffffff',
+        color: '#111111',
         display: 'grid',
         gridTemplateColumns: '72px minmax(0, 1fr)',
         // preview gets the top ~55%, transport is compact, timeline eats the rest.
