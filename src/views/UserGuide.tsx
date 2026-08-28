@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 import { GuideArticlePanel } from "../components/guide/GuideArticlePanel"
 import { GuideDatasetExplorer } from "../components/guide/GuideDatasetExplorer"
 import { GuideMetricExplorer } from "../components/guide/GuideMetricExplorer"
+import { GuideWidgetExplorer } from "../components/guide/GuideWidgetExplorer"
 import {
   ArrowRight,
   BarChart3,
@@ -25,13 +26,14 @@ import {
   GUIDE_METRICS,
   GUIDE_PAGES,
   GUIDE_TOOLS,
+  GUIDE_WIDGETS,
   type GuideDomain,
   type GuideLifecycle,
 } from "../content/guide-v2"
 
 type SearchItem = {
   id: string
-  kind: "Guide" | "Feature" | "Dataset" | "Metric" | "Tool"
+  kind: "Guide" | "Feature" | "Dataset" | "Metric" | "Tool" | "Widget"
   title: string
   description: string
   href?: string
@@ -88,6 +90,10 @@ const UserGuide: React.FC = () => {
     ...GUIDE_TOOLS.map((tool) => ({
       id: `tool:${tool.id}`, kind: "Tool" as const, title: tool.title,
       description: tool.summary, href: tool.routes[0], domain: undefined,
+    })),
+    ...GUIDE_WIDGETS.map((widget) => ({
+      id: `widget:${widget.id}`, kind: "Widget" as const, title: widget.title,
+      description: widget.detailedDescription, href: "#widgets", domain: "start" as const,
     })),
   ], [])
 
@@ -190,15 +196,20 @@ const UserGuide: React.FC = () => {
         </div>
       </section>
 
+      <section id="widgets" className="mt-10 scroll-mt-28">
+        <SectionTitle eyebrow="03 · Widgets" title="Dashboard module encyclopedia" icon={Boxes} />
+        <GuideWidgetExplorer />
+      </section>
+
       <section className="mt-10">
-        <SectionTitle eyebrow="03 · Deep guides" title="Choose how deep to go" icon={BookOpen} />
+        <SectionTitle eyebrow="04 · Deep guides" title="Choose how deep to go" icon={BookOpen} />
         <div className="grid gap-4">
           {GUIDE_ARTICLES.map((article) => <GuideArticlePanel key={article.pageId} article={article} />)}
         </div>
       </section>
 
       <section id="analytics" className="mt-10 scroll-mt-28">
-        <SectionTitle eyebrow="04 · Analytics" title="Data you can trace" icon={Database} />
+        <SectionTitle eyebrow="05 · Analytics" title="Data you can trace" icon={Database} />
         <div className="grid gap-4 lg:grid-cols-[.8fr_1.2fr]">
           <div className="rounded-2xl border-[4px] border-black bg-[#40C6E9] p-5 shadow-[6px_6px_0_0_#000]">
             <h3 className="text-3xl font-black uppercase leading-none">VT-SYNC is the data spine.</h3>
@@ -210,12 +221,12 @@ const UserGuide: React.FC = () => {
       </section>
 
       <section id="metrics" className="mt-10 scroll-mt-28">
-        <SectionTitle eyebrow="05 · Reference" title="Metric dictionary" icon={BookOpen} />
+        <SectionTitle eyebrow="06 · Reference" title="Metric dictionary" icon={BookOpen} />
         <GuideMetricExplorer />
       </section>
 
       <section id="create" className="mt-10 scroll-mt-28">
-        <SectionTitle eyebrow="06 · Workflows" title="Create → edit → publish" icon={Upload} />
+        <SectionTitle eyebrow="07 · Workflows" title="Create → edit → publish" icon={Upload} />
         <div className="rounded-2xl border-[4px] border-black bg-white p-4 shadow-[6px_6px_0_0_#000]">
           <div className="grid gap-3 md:grid-cols-3">
             <FlowCard number="1" title="Create" copy="Ideas, audience signals, projects, hooks, thumbnails and storyboards." className="bg-[#FF8AAF]" />
@@ -226,7 +237,7 @@ const UserGuide: React.FC = () => {
       </section>
 
       <section id="connect" className="mt-10 scroll-mt-28">
-        <SectionTitle eyebrow="07 · Connection" title="Simple channel setup" icon={Gauge} />
+        <SectionTitle eyebrow="08 · Connection" title="Simple channel setup" icon={Gauge} />
         <div className="rounded-2xl border-[4px] border-black bg-[#CCFF00] p-5 shadow-[6px_6px_0_0_#000]">
           <div className="grid gap-3 md:grid-cols-3">
             {["Connect Google", "Confirm your YouTube channel", "Run the datasets you need"].map((step, index) => (
@@ -240,7 +251,7 @@ const UserGuide: React.FC = () => {
       </section>
 
       <section id="help" className="mt-10 scroll-mt-28">
-        <SectionTitle eyebrow="08 · Help" title="Find the broken layer" icon={CircleHelp} />
+        <SectionTitle eyebrow="09 · Help" title="Find the broken layer" icon={CircleHelp} />
         <div className="grid gap-3 md:grid-cols-4">
           {["Connection", "Sync & data", "Tool output", "Editor & render"].map((title, index) => (
             <div key={title} className="rounded-2xl border-[3px] border-black bg-white p-4">
