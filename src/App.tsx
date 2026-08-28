@@ -56,18 +56,9 @@ const DARK_THEME_CSS = `
 function AppInner() {
  const location = useLocation()
  const isBareRoute = location.pathname.startsWith("/render-bench")
- // Diagnostic overlay renders only when the user explicitly enabled it via
- // ?vtDiagnostics=1 or localStorage vt_diagnostics=1. Computed once per mount
- // (URL param check is stable; localStorage toggles across sessions).
- const showDiag = useMemo(() => {
-  if (isDeveloperDiagnosticsEnabled()) return true
-  if (typeof window === "undefined" || !window.matchMedia) return false
-  try {
-   return window.matchMedia("(pointer: coarse)").matches || window.matchMedia("(max-width: 760px)").matches
-  } catch {
-   return false
-  }
- }, [])
+ // Diagnostics are intentionally visible by default during the current
+ // auth/API stabilization period. ?vtDiagnostics=0 is the explicit opt-out.
+ const showDiag = useMemo(() => isDeveloperDiagnosticsEnabled(), [])
 
  if (isBareRoute) {
   return (
