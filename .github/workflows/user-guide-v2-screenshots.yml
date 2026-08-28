@@ -73,6 +73,16 @@ jobs:
             })
             await page.waitForTimeout(150)
             await page.screenshot({ path: `screenshots/${capture.name}`, fullPage: true })
+            for (const sectionId of ["widgets", "analytics", "metrics"]) {
+              const section = page.locator(`#${sectionId}`)
+              if (await section.count()) {
+                await section.scrollIntoViewIfNeeded()
+                await page.waitForTimeout(100)
+                await section.screenshot({
+                  path: `screenshots/${capture.name.replace(".png", `-${sectionId}.png`)}`,
+                })
+              }
+            }
             await context.close()
           }
           await browser.close()
