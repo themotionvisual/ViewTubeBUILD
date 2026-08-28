@@ -16,6 +16,42 @@ export interface GuideArticleDefinition {
 
 export const GUIDE_ARTICLES: readonly GuideArticleDefinition[] = Object.freeze([
  {
+  pageId: "start",
+  quick: "ViewTube is organized around a creator loop: connect your channel, sync trustworthy data, understand what is happening, turn that understanding into creative decisions, produce the video, publish it, then learn from the outcome.",
+  learn: [
+   { heading: "Connect", body: "Start by connecting the Google account that owns or manages the YouTube channel you want ViewTube to understand." },
+   { heading: "Sync", body: "Run the VT-SYNC datasets you need. Analytics, dashboards and AI systems become more useful as their canonical data coverage improves." },
+   { heading: "Understand", body: "Use Analytics, Graphs, Intelligence Hub and AI Brain to identify patterns instead of staring at isolated numbers." },
+   { heading: "Create and produce", body: "Move useful findings into Studio, Projects, Vault and the Editor so analysis turns into an actual video." },
+   { heading: "Publish and learn", body: "Package and publish the video, then bring its performance back through Analytics to improve the next decision." },
+  ],
+ },
+ {
+  pageId: "app-map",
+  quick: "Think of ViewTube as one connected creator system, not a pile of tools: Dashboard is the home surface, Analytics is the data layer, Studio and Brain turn evidence into decisions, Projects and Vault hold work in progress, Editor produces the video, and publishing tools complete the loop.",
+  learn: [
+   { heading: "Home", body: "Dashboard surfaces the creator's current state through configurable widgets, fast actions and status modules." },
+   { heading: "Analyze", body: "Analytics, Graphs and Intelligence Hub inspect canonical VT-SYNC data and expose the evidence behind performance." },
+   { heading: "Create", body: "Studio, Strategy, AI Brain, Hook Generator, Thumbnail Studio and Storyboard Studio help turn evidence into content decisions." },
+   { heading: "Organize", body: "Projects and Vault keep planning state, assets and reusable creator material connected to the work." },
+   { heading: "Produce and publish", body: "The Editor handles timeline composition; SEO Generator and Video Publisher complete packaging and upload preparation." },
+  ],
+ },
+ {
+  pageId: "data",
+  quick: "ViewTube separates account connection, canonical analytics storage and user-facing interpretation. The normal user should be able to see what data exists, where it came from, whether it is fresh, and why a metric or dataset may be unavailable.",
+  learn: [
+   { heading: "Connection is not the dataset", body: "Google authorization establishes who ViewTube can read for. VT-SYNC then performs the actual dataset collection and normalization work." },
+   { heading: "Canonical storage", body: "VT-SYNC stores normalized channel, video, time-series, traffic, audience, geography, device, revenue, playlist and retention data for the rest of ViewTube to consume." },
+   { heading: "Provenance matters", body: "When possible, ViewTube should show the source, freshness and availability state instead of silently replacing missing upstream data with guesses." },
+   { heading: "Privacy and transparency", body: "Use Data & Privacy to understand what ViewTube reads, why it is used, and how local/canonical data participates in the product." },
+  ],
+  technical: [
+   { heading: "Source APIs", body: "Canonical dataset contracts distinguish YouTube Data API, YouTube Analytics API, derived data, local import and workspace sources." },
+   { heading: "Compatibility paths", body: "Legacy caches and Performance Hub compatibility reads may still exist during migration, but new guide content should describe VT-SYNC and server-owned account state as the north-star architecture." },
+  ],
+ },
+ {
   pageId: "connect",
   quick: "Connect Google once, confirm the YouTube channel ViewTube found, then run the analytics datasets you want. The normal user flow should not require copying tokens, managing browser credentials, or understanding OAuth internals.",
   learn: [
