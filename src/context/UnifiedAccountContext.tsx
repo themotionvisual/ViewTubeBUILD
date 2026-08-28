@@ -1,26 +1,19 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
+import React, { createContext, useCallback, useContext, useMemo } from "react"
 import {
   ANONYMOUS_ACCOUNT_SNAPSHOT,
-  isAccountActionPending,
   resolveAccountActionLabel,
   resolveAccountIntent,
-  sanitizeInternalReturnTo,
+  type AccountCapability,
   type AccountIntent,
   type UnifiedAccountSnapshot,
 } from "../services/account/accountContracts"
 import {
-  beginAccountIntent,
   deleteUnifiedAccount,
-  fetchUnifiedAccountSnapshot,
-  isAccountServerUnavailableError,
-  isUnifiedAccountServerEnabled,
-  normalizeAccountSnapshot,
   readCachedAccountSnapshot,
   revokeUnifiedGoogleConnection,
   selectUnifiedContentOwner,
-  signOutUnifiedAccount,
 } from "../services/account/accountCoordinator"
-import { isAuthenticated as isLegacyAuthenticated, login as legacyLogin } from "../services/auth/authSession"
+import { useSimpleAuth } from "../auth/AuthProvider"
 
 interface UnifiedAccountContextValue {
   snapshot: UnifiedAccountSnapshot
@@ -36,167 +29,133 @@ interface UnifiedAccountContextValue {
   selectContentOwner: (ownerId: string) => Promise<void>
 }
 
+/**
+ * Compatibility adapter for legacy ViewTube surfaces.
+ *
+ * Authentication is no longer owned here. The only auth truth is
+ * SimpleAuthProvider -> GET /api/auth/session. This context translates the
+ * simple session into the older UnifiedAccountSnapshot shape until every
+ * consumer is migrated and this adapter can be deleted.
+ *
+ * It deliberately does NOT:
+ * - read browser Google tokens
+ * - listen for vt_auth_changed
+ * - hydrate auth from analytics/localStorage
+ * - call beginAccountIntent
+ * - choose between "server" and "legacy" auth modes
+ * - emit account/auth events
+ */
 const UnifiedAccountContext = createContext<UnifiedAccountContextValue | null>(null)
 
+const capabilitiesFromSession = (
+  capabilities: ReturnType<typeof useSimpleAuth>["session"]["capabilities"],
+): AccountCapability[] => {
+  const result: AccountCapability[] = []
+  if (capabilities.youtubeRead) result.push("youtube_read")
+  if (capabilities.analyticsRead) result.push("youtube_analytics_read")
+  if (capabilities.monetaryRead) result.push("youtube_monetary_read")
+  if (capabilities.upload) result.push("youtube_upload")
+  if (capabilities.youtubeWrite) {
+    result.push("youtube_comments")
+    result.push("youtube_video_manage")
+  }
+  return result
+}
+
+const snapshotFromSimpleAuth = (
+  auth: ReturnType<typeof useSimpleAuth>,
+): UnifiedAccountSnapshot => {
+  const cached = readCachedAccountSnapshot()
+  const session = auth.session
+  const ready = session.status === "ready"
+  const reconnect = session.status === "reconnect_required"
+
+  return {
+    ...ANONYMOUS_ACCOUNT_SNAPSHOT,
+    onboarding: cached.onboarding || ANONYMOUS_ACCOUNT_SNAPSHOT.onboarding,
+    billing: cached.billing || ANONYMOUS_ACCOUNT_SNAPSHOT.billing,
+    ai: cached.ai || ANONYMOUS_ACCOUNT_SNAPSHOT.ai,
+
+    viewtubeUserId: session.user?.id || null,
+    profile: {
+      email: session.user?.email || null,
+      displayName: session.user?.name || null,
+      avatarUrl: session.user?.avatar || session.channel?.thumbnail || null,
+    },
+    authentication: {
+      status: auth.loading ? "pending" : ready || reconnect ? "authenticated" : "anonymous",
+      accountExists: Boolean(session.user?.id),
+    },
+    google: {
+      status: ready ? "connected" : reconnect ? "expired" : "disconnected",
+      youtubeScopesGranted: Boolean(session.capabilities.youtubeRead),
+      channelId: session.channel?.id || null,
+      channelTitle: session.channel?.title || null,
+      channelHandle: session.channel?.handle || null,
+      channelThumbnail: session.channel?.thumbnail || null,
+      contentOwners: [],
+      activeContentOwnerId: null,
+      contentOwnerSelectionRequired: false,
+    },
+    grantedCapabilities: capabilitiesFromSession(session.capabilities),
+    nextIntent: auth.loading
+      ? null
+      : ready
+        ? "manage_account"
+        : reconnect
+          ? "reconnect_channel"
+          : session.user?.id
+            ? "connect_channel"
+            : "sign_up",
+    error: null,
+  }
+}
+
 export const UnifiedAccountProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [snapshot, setSnapshot] = useState<UnifiedAccountSnapshot>(() => readCachedAccountSnapshot())
+  const auth = useSimpleAuth()
+  const snapshot = useMemo(() => snapshotFromSimpleAuth(auth), [auth.loading, auth.session])
 
-  const commitSnapshot = useCallback((nextSnapshot: UnifiedAccountSnapshot) => {
-    const next = normalizeAccountSnapshot(nextSnapshot)
-    setSnapshot(next)
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("vt_account_snapshot_changed", { detail: next }))
-    }
-    return next
-  }, [])
+  const refresh = useCallback(async (): Promise<UnifiedAccountSnapshot> => {
+    const next = await auth.refresh()
+    return snapshotFromSimpleAuth({ ...auth, session: next, loading: false })
+  }, [auth])
 
-  const refresh = useCallback(async () => {
-    try {
-      const next = await fetchUnifiedAccountSnapshot()
-      return commitSnapshot(next)
-    } catch (error) {
-      const cached = readCachedAccountSnapshot()
-      const next: UnifiedAccountSnapshot = {
-        ...cached,
-        billing: { ...cached.billing, status: cached.billing.status === "active" ? "unavailable" : cached.billing.status },
-        error: {
-          code: "ACCOUNT_SNAPSHOT_UNAVAILABLE",
-          message: error instanceof Error ? error.message : "Account service unavailable.",
-          recoverable: true,
-        },
-      }
-      return commitSnapshot(next)
-    }
-  }, [commitSnapshot])
-
-  useEffect(() => {
-    // Legacy path — sourced from the local OAuth token. Used both when the
-    // account server is disabled up-front AND as the fallback after the
-    // server refresh() marks itself unavailable. Without the second path
-    // the snapshot stays "anonymous" even when the token is valid — the
-    // exact split-brain state where the nav shell shows "SIGNED IN" while
-    // the AccountActionButton renders "SIGN UP" and widgets prompt to
-    // connect a channel.
-    const syncLegacy = () => {
-      if (!isLegacyAuthenticated()) {
-        setSnapshot(readCachedAccountSnapshot())
-        return
-      }
-      setSnapshot((current) => ({
-        ...current,
-        authentication: { status: "authenticated", accountExists: true },
-        google: { ...current.google, status: "connected", youtubeScopesGranted: true },
-        nextIntent: "manage_account",
-        error: null,
-      }))
-    }
-
-    if (isUnifiedAccountServerEnabled()) {
-      // Try the server first. If it fails and marks itself unavailable,
-      // fall through to the legacy path so a valid local OAuth token
-      // still gets reflected as an authenticated snapshot.
-      void refresh().then(() => {
-        if (!isUnifiedAccountServerEnabled()) syncLegacy()
-      })
-      // Server snapshots are authoritative in this mode. Do not feed them
-      // through the legacy token event: an HttpOnly server session has no
-      // browser token for syncLegacy to find, so that loop falsely logs out.
-      return
-    }
-    syncLegacy()
-    window.addEventListener("vt_auth_changed", syncLegacy)
-    return () => window.removeEventListener("vt_auth_changed", syncLegacy)
-  }, [refresh])
-
-  useEffect(() => {
-    const onSnapshotChanged = (event: Event) => {
-      const next = (event as CustomEvent<UnifiedAccountSnapshot>).detail
-      if (next) setSnapshot(next)
-    }
-    window.addEventListener("vt_account_snapshot_changed", onSnapshotChanged)
-    return () => window.removeEventListener("vt_account_snapshot_changed", onSnapshotChanged)
-  }, [])
-
-  const intent = resolveAccountIntent(snapshot)
-  const start = useCallback(async (requestedIntent?: AccountIntent, returnTo?: string) => {
-    const nextIntent = requestedIntent || resolveAccountIntent(snapshot)
-    setSnapshot((current) => ({
-      ...current,
-      authentication: { ...current.authentication, status: "pending" },
-      nextIntent,
-      error: null,
-    }))
-    try {
-      await beginAccountIntent(nextIntent, returnTo)
-      await refresh()
-    } catch (error) {
-      if (isAccountServerUnavailableError(error)) {
-        await legacyLogin()
-        commitSnapshot({
-          ...snapshot,
-          authentication: { status: "authenticated", accountExists: true },
-          google: { ...snapshot.google, status: "connected", youtubeScopesGranted: true },
-          nextIntent: "manage_account",
-          error: null,
-        })
-        return
-      }
-      setSnapshot((current) => ({
-        ...current,
-        authentication: {
-          ...current.authentication,
-          status: current.viewtubeUserId ? "expired" : "anonymous",
-        },
-        error: {
-          code: error instanceof Error ? error.message : "ACCOUNT_ACTION_FAILED",
-          message: error instanceof Error ? error.message : "Account action failed.",
-          recoverable: true,
-        },
-      }))
-      throw error
-    }
-  }, [commitSnapshot, refresh, snapshot])
+  const start = useCallback(async (_intent?: AccountIntent, returnTo?: string) => {
+    auth.login(returnTo || `${window.location.pathname}${window.location.search}${window.location.hash}`)
+  }, [auth])
 
   const signOut = useCallback(async () => {
-    await signOutUnifiedAccount()
-    commitSnapshot({
-      ...ANONYMOUS_ACCOUNT_SNAPSHOT,
-      viewtubeUserId: snapshot.viewtubeUserId,
-      authentication: {
-        status: "anonymous",
-        accountExists: Boolean(snapshot.viewtubeUserId),
-      },
-      nextIntent: snapshot.viewtubeUserId ? "log_in" : "sign_up",
-    })
-  }, [commitSnapshot, snapshot.viewtubeUserId])
+    await auth.logout()
+  }, [auth])
 
   const disconnectGoogle = useCallback(async () => {
-    if (!isUnifiedAccountServerEnabled()) return
-    commitSnapshot(await revokeUnifiedGoogleConnection())
-  }, [commitSnapshot])
+    await revokeUnifiedGoogleConnection()
+    await auth.refresh()
+  }, [auth])
 
   const deleteAccount = useCallback(async () => {
     await deleteUnifiedAccount()
-    commitSnapshot(ANONYMOUS_ACCOUNT_SNAPSHOT)
-  }, [commitSnapshot])
+    await auth.logout()
+  }, [auth])
 
   const selectContentOwner = useCallback(async (ownerId: string) => {
-    commitSnapshot(await selectUnifiedContentOwner(ownerId))
-  }, [commitSnapshot])
+    await selectUnifiedContentOwner(ownerId)
+  }, [])
 
+  const intent = resolveAccountIntent(snapshot)
   const value = useMemo<UnifiedAccountContextValue>(() => ({
     snapshot,
     label: resolveAccountActionLabel(snapshot),
     intent,
-    pending: isAccountActionPending(snapshot),
-    serverEnabled: isUnifiedAccountServerEnabled(),
+    pending: auth.loading,
+    serverEnabled: true,
     refresh,
     start,
     signOut,
     disconnectGoogle,
     deleteAccount,
     selectContentOwner,
-  }), [deleteAccount, disconnectGoogle, intent, refresh, selectContentOwner, signOut, snapshot, start])
+  }), [auth.loading, deleteAccount, disconnectGoogle, intent, refresh, selectContentOwner, signOut, snapshot, start])
 
   return <UnifiedAccountContext.Provider value={value}>{children}</UnifiedAccountContext.Provider>
 }
