@@ -17,6 +17,7 @@ import {
   WandSparkles,
 } from "lucide-react"
 import {
+  GUIDE_ARTICLES,
   GUIDE_DATASETS,
   GUIDE_FEATURES,
   GUIDE_METRICS,
