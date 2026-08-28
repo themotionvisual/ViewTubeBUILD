@@ -14,6 +14,12 @@ export interface GuideWidgetDefinition {
  defaultVisible: boolean
  shortDescription: string
  detailedDescription: string
+ rendererKey: string
+ responsiveMode: string
+ defaultSize: string
+ defaultHeight: string
+ supportedSizes: readonly string[]
+ supportedHeights: readonly string[]
 }
 
 export const GUIDE_WIDGETS: readonly GuideWidgetDefinition[] = Object.freeze(
@@ -30,6 +36,12 @@ export const GUIDE_WIDGETS: readonly GuideWidgetDefinition[] = Object.freeze(
    defaultVisible: widget.defaultVisible,
    shortDescription: descriptions?.short || widget.subtitle,
    detailedDescription: descriptions?.detailed || widget.subtitle,
+   rendererKey: widget.rendererKey,
+   responsiveMode: widget.responsiveMode,
+   defaultSize: widget.defaultSize,
+   defaultHeight: widget.defaultHeight,
+   supportedSizes: widget.supportedSizes,
+   supportedHeights: widget.supportedHeights,
   }
  }),
 )
