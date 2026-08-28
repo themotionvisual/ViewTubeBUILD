@@ -95,9 +95,30 @@ jobs:
               if (await section.count()) {
                 await section.scrollIntoViewIfNeeded()
                 await page.waitForTimeout(100)
+                const hidden = await page.evaluate((id) => {
+                  const target = document.getElementById(id)
+                  const changed = []
+                  if (!target) return changed
+                  for (const el of Array.from(document.querySelectorAll("body *"))) {
+                    if (target.contains(el) || el.contains(target)) continue
+                    const style = getComputedStyle(el)
+                    if (style.position === "fixed" || style.position === "sticky") {
+                      changed.push([el, el.style.visibility])
+                      el.style.visibility = "hidden"
+                    }
+                  }
+                  return changed.length
+                }, sectionId)
                 await section.screenshot({
                   path: `screenshots/${capture.name.replace(".png", `-${sectionId}.png`)}`,
                 })
+                if (hidden) {
+                  await page.evaluate(() => {
+                    for (const el of Array.from(document.querySelectorAll("body *"))) {
+                      if (el.style.visibility === "hidden") el.style.visibility = ""
+                    }
+                  })
+                }
               }
             }
             await context.close()
