@@ -17,10 +17,10 @@ export const TransportBar: React.FC<TransportBarProps> = ({ store, compact }) =>
     width: size,
     height: size,
     minWidth: size,
-    borderRadius: 10,
-    background: '#1f2937',
-    color: '#f8fafc',
-    border: 'none',
+    borderRadius: 6,
+    background: '#ffffff',
+    color: '#111111',
+    border: '2px solid #111',
     display: 'grid',
     placeItems: 'center',
     cursor: 'pointer',
@@ -38,9 +38,9 @@ export const TransportBar: React.FC<TransportBarProps> = ({ store, compact }) =>
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '6px 8px',
-        background: '#0f172a',
-        borderRadius: 14,
-        border: '1px solid #1e293b',
+        background: '#ffffff',
+        borderRadius: 8,
+        border: '2px solid #111',
         overflow: 'hidden',
         height: '100%',
       }}
@@ -73,7 +73,7 @@ export const TransportBar: React.FC<TransportBarProps> = ({ store, compact }) =>
           <RewindIcon />
         </button>
         <button
-          style={btn({ background: '#22d3ee', color: '#0f172a', width: size + 10, minWidth: size + 10 })}
+          style={btn({ background: '#40c6e9', color: '#111', width: size + 10, minWidth: size + 10 })}
           onClick={() => dispatch({ type: 'togglePlaying' })}
           aria-label={state.playing ? 'Pause' : 'Play'}
         >
@@ -103,9 +103,9 @@ export const TransportBar: React.FC<TransportBarProps> = ({ store, compact }) =>
             height: size,
             padding: '0 6px',
             borderRadius: 10,
-            background: '#1f2937',
-            color: '#f8fafc',
-            border: 'none',
+            background: '#ffd84d',
+            color: '#111',
+            border: '2px solid #111',
             fontWeight: 700,
             fontSize: 12,
             fontVariantNumeric: 'tabular-nums',
