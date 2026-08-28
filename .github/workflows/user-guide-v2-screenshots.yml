@@ -1,0 +1,71 @@
+name: User Guide V2 screenshots
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/views/UserGuide.tsx"
+      - "src/components/guide/**"
+      - "src/content/guide-v2/**"
+      - "src/app/AppShell.tsx"
+      - ".github/workflows/user-guide-v2-screenshots.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: user-guide-v2-screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Start ViewTube
+        run: |
+          npm run dev > "$RUNNER_TEMP/viewtube-guide.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/viewtube-guide.pid"
+          for attempt in {1..90}; do
+            if curl --fail --silent http://localhost:5173/user-guide >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/viewtube-guide.log"
+          exit 1
+      - name: Capture desktop and mobile
+        run: |
+          mkdir -p screenshots
+          node --input-type=module <<'NODE'
+          import { chromium } from "playwright"
+          const browser = await chromium.launch({ headless: true })
+          const captures = [
+            { name: "user-guide-desktop.png", viewport: { width: 1440, height: 1100 } },
+            { name: "user-guide-mobile.png", viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true },
+          ]
+          for (const capture of captures) {
+            const context = await browser.newContext({
+              viewport: capture.viewport,
+              isMobile: capture.isMobile || false,
+              hasTouch: capture.hasTouch || false,
+              deviceScaleFactor: 1,
+            })
+            const page = await context.newPage()
+            await page.goto("http://localhost:5173/user-guide", { waitUntil: "networkidle" })
+            await page.screenshot({ path: `screenshots/${capture.name}`, fullPage: true })
+            await context.close()
+          }
+          await browser.close()
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: user-guide-v2-screenshots
+          path: screenshots/*.png
+          if-no-files-found: error
