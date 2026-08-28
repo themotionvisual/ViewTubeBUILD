@@ -105,3 +105,68 @@ export const patchSimpleOwnedVideo = async (
   });
   return readApiJson(response);
 };
+
+
+export interface SimplePlaylist {
+  id: string;
+  title: string;
+  description?: string;
+  itemCount?: number;
+}
+
+export interface SimplePlaylistMembership {
+  playlistId: string;
+  playlistItemId: string;
+}
+
+export const fetchSimplePlaylists = async (): Promise<SimplePlaylist[]> => {
+  const response = await fetch("/api/youtube/playlists", {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  const payload = await readApiJson(response);
+  return Array.isArray(payload?.items) ? payload.items : [];
+};
+
+export const fetchSimpleVideoPlaylistMemberships = async (
+  videoId: string,
+  playlistIds: string[],
+): Promise<SimplePlaylistMembership[]> => {
+  const response = await fetch(`/api/youtube/playlists/memberships?videoId=${encodeURIComponent(videoId)}`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ playlistIds }),
+  });
+  const payload = await readApiJson(response);
+  return Array.isArray(payload?.items) ? payload.items : [];
+};
+
+export const addSimpleVideoToPlaylist = async (playlistId: string, videoId: string) => {
+  const response = await fetch("/api/youtube/playlists/items", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ playlistId, videoId }),
+  });
+  return readApiJson(response);
+};
+
+export const removeSimpleVideoFromPlaylist = async (playlistItemId: string) => {
+  const response = await fetch(`/api/youtube/playlists/items/${encodeURIComponent(playlistItemId)}`, {
+    method: "DELETE",
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  return readApiJson(response);
+};
+
+export const setSimpleVideoThumbnail = async (videoId: string, file: File) => {
+  const response = await fetch(`/api/youtube/videos/${encodeURIComponent(videoId)}/thumbnail`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": file.type || "image/jpeg", Accept: "application/json" },
+    body: file,
+  });
+  return readApiJson(response);
+};
