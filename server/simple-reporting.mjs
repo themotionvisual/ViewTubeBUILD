@@ -131,3 +131,22 @@ export const streamReportingReport = async ({ req, res, jobId, reportId }) => {
   res.writeHead(200, headers);
   res.end(body);
 };
+
+
+export const deleteReportingJob = async ({ req, jobId }) => {
+  const userId = await requireUser(req);
+  const token = await getServerGoogleAccessToken(userId);
+  const response = await fetch(`${BASE}/jobs/${encodeURIComponent(jobId)}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(20_000),
+  });
+  if (response.status === 401) throw new ReconnectRequiredError();
+  if (!response.ok && response.status !== 204) {
+    const payload = await response.json().catch(() => ({}));
+    const error = new Error(payload?.error?.message || `Reporting job deletion failed (${response.status}).`);
+    error.statusCode = response.status;
+    throw error;
+  }
+  return { success: true };
+};
