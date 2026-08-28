@@ -380,3 +380,13 @@ export const fetchSimpleSingleVideoAnalytics = async (
     estimatedRevenue: Number.isFinite(revenue) ? revenue.toFixed(2) : "0.00",
   };
 };
+
+
+export const deleteSimpleReportingJob = async (jobId: string) => {
+  const response = await fetch(`/api/youtube/reporting/jobs/${encodeURIComponent(jobId)}`, {
+    method: "DELETE",
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  return readApiJson(response);
+};
