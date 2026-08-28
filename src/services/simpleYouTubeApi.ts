@@ -244,7 +244,9 @@ export const fetchSimpleVideoInventory = async (): Promise<{
   const payload = await fetchSimpleOwnedVideos();
   const rawItems = Array.isArray(payload?.items) ? payload.items : [];
   return {
-    videos: rawItems.map(toSimpleVideoSnippet).filter((video) => video.videoId),
+    videos: rawItems
+      .map(toSimpleVideoSnippet)
+      .filter((video: SimpleVideoSnippet) => video.videoId),
     rawItems,
   };
 };
