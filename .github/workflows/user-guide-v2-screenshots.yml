@@ -59,9 +59,22 @@ jobs:
               deviceScaleFactor: 1,
             })
             const page = await context.newPage()
+            page.on("pageerror", (error) => console.error("PAGE_ERROR", error.stack || error.message))
+            page.on("console", (message) => {
+              if (message.type() === "error" || message.type() === "warning") {
+                console.error("BROWSER_CONSOLE", message.type(), message.text())
+              }
+            })
+            page.on("requestfailed", (request) => console.error("REQUEST_FAILED", request.url(), request.failure()?.errorText))
             await page.goto("http://localhost:5173/user-guide", { waitUntil: "domcontentloaded" })
-            await page.getByRole("heading", { name: /learn viewtube by doing/i }).waitFor({ state: "visible", timeout: 30000 })
-            await page.locator("#start").waitFor({ state: "visible", timeout: 30000 })
+            try {
+              await page.getByRole("heading", { name: /learn viewtube by doing/i }).waitFor({ state: "visible", timeout: 30000 })
+              await page.locator("#start").waitFor({ state: "visible", timeout: 30000 })
+            } catch (error) {
+              console.error("GUIDE_CAPTURE_URL", page.url())
+              console.error("GUIDE_CAPTURE_BODY", (await page.locator("body").innerText()).slice(0, 5000))
+              throw error
+            }
             await page.evaluate(() => {
               for (const el of Array.from(document.querySelectorAll("body *"))) {
                 const text = (el.textContent || "").trim()
