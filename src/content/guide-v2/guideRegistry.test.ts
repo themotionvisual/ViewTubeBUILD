@@ -1,0 +1,62 @@
+import { describe, expect, it } from "vitest"
+import { PAGE_REGISTRY } from "../../app/pageRegistry"
+import {
+ GUIDE_DATASETS,
+ GUIDE_FEATURES,
+ GUIDE_PAGES,
+ GUIDE_WIDGETS,
+} from "./index"
+
+const expectUnique = (values: readonly string[]) => {
+ expect(new Set(values).size).toBe(values.length)
+}
+
+describe("User Guide V2 registry governance", () => {
+ it("keeps documentation registry IDs unique", () => {
+  expectUnique(GUIDE_FEATURES.map((item) => item.id))
+  expectUnique(GUIDE_DATASETS.map((item) => item.id))
+  expectUnique(GUIDE_WIDGETS.map((item) => item.id))
+  expectUnique(GUIDE_PAGES.map((item) => item.id))
+  expectUnique(GUIDE_PAGES.map((item) => item.slug))
+ })
+
+ it("maps every production navigation surface into the Guide feature registry", () => {
+  const documentedRoutes = new Set(GUIDE_FEATURES.flatMap((feature) => feature.routes))
+  const missing = PAGE_REGISTRY
+   .filter((page) => page.lifecycle === "production")
+   .filter((page) => page.navigationVisibility !== "hidden")
+   .filter((page) => !documentedRoutes.has(page.path))
+   .map((page) => page.path)
+
+  expect(missing).toEqual([])
+ })
+
+ it("only references known Guide features from Guide pages", () => {
+  const featureIds = new Set(GUIDE_FEATURES.map((feature) => feature.id))
+  const missing = GUIDE_PAGES.flatMap((page) =>
+   page.featureIds
+    .filter((featureId) => !featureIds.has(featureId))
+    .map((featureId) => `${page.id} -> ${featureId}`),
+  )
+  expect(missing).toEqual([])
+ })
+
+ it("derives every visible VT-SYNC dataset with canonical identity metadata", () => {
+  for (const dataset of GUIDE_DATASETS) {
+   expect(dataset.id).toBeTruthy()
+   expect(dataset.canonicalDatasetId).toBeTruthy()
+   expect(dataset.exportName).toBeTruthy()
+   expect(dataset.columnCount).toBeGreaterThan(0)
+   expect(dataset.metricColumnCount).toBeGreaterThanOrEqual(0)
+  }
+ })
+
+ it("keeps dashboard widget documentation linked to release and dependency truth", () => {
+  for (const widget of GUIDE_WIDGETS) {
+   expect(widget.title).toBeTruthy()
+   expect(widget.releaseTier).toBeTruthy()
+   expect(widget.dependency.length).toBeGreaterThan(0)
+   expect(widget.detailedDescription).toBeTruthy()
+  }
+ })
+})
