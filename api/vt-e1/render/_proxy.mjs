@@ -39,6 +39,14 @@ const resolveRenderServiceUrl = () => String(
   ''
 ).trim().replace(/\/+$/, '');
 
+const RENDER_PROXY_TIMEOUT_MS = Math.max(1000, Number(process.env.VT_E1_RENDER_PROXY_TIMEOUT_MS || 15000));
+
+export const getRenderProxyConfig = () => ({
+  serviceUrl: resolveRenderServiceUrl(),
+  timeoutMs: RENDER_PROXY_TIMEOUT_MS,
+  hasSharedSecret: Boolean(String(process.env.VT_E1_RENDER_SHARED_SECRET || '').trim()),
+});
+
 export const proxyVtE1RenderRequest = async (req, res) => {
   const method = String(req.method || 'GET').toUpperCase();
 
@@ -52,13 +60,19 @@ export const proxyVtE1RenderRequest = async (req, res) => {
     return;
   }
 
-  const serviceUrl = resolveRenderServiceUrl();
+  const { serviceUrl, timeoutMs } = getRenderProxyConfig();
   if (!serviceUrl) {
-    writeJson(res, 502, {
+    writeJson(res, 503, {
       ok: false,
-      error: 'VT_E1_RENDER_SERVICE_URL_MISSING',
-      message: 'Hosted VT_E1 render worker is not configured. Set VT_E1_RENDER_SERVICE_URL in the production environment.',
-      mode: 'hosted-proxy',
+      error: 'RENDERER_NOT_CONFIGURED',
+      message: 'Final video export is not configured for this deployment. Configure VT_E1_RENDER_SERVICE_URL on the web app and deploy the VT_E1 render worker.',
+      capabilities: {
+        online: false,
+        ready: false,
+        status: 'unavailable',
+        primaryFormat: 'mp4',
+        supportedFormats: [],
+      },
     });
     return;
   }
@@ -74,16 +88,28 @@ export const proxyVtE1RenderRequest = async (req, res) => {
   const body = ['GET', 'HEAD'].includes(method) ? undefined : await readBody(req);
 
   let upstream;
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(() => abortController.abort(), timeoutMs);
   try {
-    upstream = await fetch(targetUrl, { method, headers, body, redirect: 'manual' });
+    upstream = await fetch(targetUrl, { method, headers, body, redirect: 'manual', signal: abortController.signal });
   } catch (error) {
     writeJson(res, 502, {
       ok: false,
       error: 'VT_E1_RENDER_SERVICE_UNREACHABLE',
-      message: `Hosted VT_E1 render worker could not be reached: ${error instanceof Error ? error.message : String(error)}`,
-      target: serviceUrl,
+      message: error instanceof Error && error.name === 'AbortError'
+        ? `Hosted render worker did not respond within ${Math.round(timeoutMs / 1000)} seconds.`
+        : 'Hosted render worker could not be reached. Check the worker deployment and VT_E1_RENDER_SERVICE_URL.',
+      capabilities: {
+        online: false,
+        ready: false,
+        status: 'unavailable',
+        primaryFormat: 'mp4',
+        supportedFormats: [],
+      },
     });
     return;
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   const responseHeaders = {};
