@@ -1,0 +1,132 @@
+name: User Guide V2 screenshots
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/views/UserGuide.tsx"
+      - "src/components/guide/**"
+      - "src/content/guide-v2/**"
+      - "src/app/AppShell.tsx"
+      - "src/auth/**"
+      - "src/context/UnifiedAccountContext.tsx"
+      - ".github/workflows/user-guide-v2-screenshots.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: user-guide-v2-screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run src/content/guide-v2/guideRegistry.test.ts
+      - run: npx playwright install --with-deps chromium
+      - name: Start ViewTube
+        run: |
+          npm run dev > "$RUNNER_TEMP/viewtube-guide.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/viewtube-guide.pid"
+          for attempt in {1..90}; do
+            if curl --fail --silent http://localhost:5173/user-guide >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/viewtube-guide.log"
+          exit 1
+      - name: Capture desktop and mobile
+        run: |
+          mkdir -p screenshots
+          node --input-type=module <<'NODE'
+          import { chromium } from "playwright"
+          const browser = await chromium.launch({ headless: true })
+          const captures = [
+            { name: "user-guide-desktop.png", viewport: { width: 1440, height: 1100 } },
+            { name: "user-guide-mobile.png", viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true },
+          ]
+          for (const capture of captures) {
+            const context = await browser.newContext({
+              viewport: capture.viewport,
+              isMobile: capture.isMobile || false,
+              hasTouch: capture.hasTouch || false,
+              deviceScaleFactor: 1,
+            })
+            const page = await context.newPage()
+            page.on("pageerror", (error) => console.error("PAGE_ERROR", error.stack || error.message))
+            page.on("console", (message) => {
+              if (message.type() === "error" || message.type() === "warning") {
+                console.error("BROWSER_CONSOLE", message.type(), message.text())
+              }
+            })
+            page.on("requestfailed", (request) => console.error("REQUEST_FAILED", request.url(), request.failure()?.errorText))
+            await page.goto("http://localhost:5173/user-guide", { waitUntil: "domcontentloaded" })
+            try {
+              await page.getByRole("heading", { name: /learn viewtube by doing/i }).waitFor({ state: "visible", timeout: 30000 })
+              await page.locator("#start").waitFor({ state: "visible", timeout: 30000 })
+            } catch (error) {
+              console.error("GUIDE_CAPTURE_URL", page.url())
+              console.error("GUIDE_CAPTURE_BODY", (await page.locator("body").innerText()).slice(0, 5000))
+              throw error
+            }
+            await page.evaluate(() => {
+              for (const el of Array.from(document.querySelectorAll("body *"))) {
+                const text = (el.textContent || "").trim()
+                const style = getComputedStyle(el)
+                if (style.position === "fixed" && text.includes("DIAG") && text.includes("render-storm")) {
+                  el.style.display = "none"
+                }
+              }
+              document.documentElement.style.overflowX = "hidden"
+              document.body.style.overflowX = "hidden"
+            })
+            await page.waitForTimeout(150)
+            await page.screenshot({ path: `screenshots/${capture.name}`, fullPage: true })
+            for (const sectionId of ["widgets", "analytics", "metrics"]) {
+              const section = page.locator(`#${sectionId}`)
+              if (await section.count()) {
+                await section.scrollIntoViewIfNeeded()
+                await page.waitForTimeout(100)
+                const hidden = await page.evaluate((id) => {
+                  const target = document.getElementById(id)
+                  const changed = []
+                  if (!target) return changed
+                  for (const el of Array.from(document.querySelectorAll("body *"))) {
+                    if (target.contains(el) || el.contains(target)) continue
+                    const style = getComputedStyle(el)
+                    if (style.position === "fixed" || style.position === "sticky") {
+                      changed.push([el, el.style.visibility])
+                      el.style.visibility = "hidden"
+                    }
+                  }
+                  return changed.length
+                }, sectionId)
+                await section.screenshot({
+                  path: `screenshots/${capture.name.replace(".png", `-${sectionId}.png`)}`,
+                })
+                if (hidden) {
+                  await page.evaluate(() => {
+                    for (const el of Array.from(document.querySelectorAll("body *"))) {
+                      if (el.style.visibility === "hidden") el.style.visibility = ""
+                    }
+                  })
+                }
+              }
+            }
+            await context.close()
+          }
+          await browser.close()
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: user-guide-v2-screenshots
+          path: screenshots/*.png
+          if-no-files-found: error
