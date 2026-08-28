@@ -75,3 +75,33 @@ export const markSimpleCommentAsSpam = async (id: string) => {
   });
   return readApiJson(response);
 };
+
+
+export const fetchSimpleOwnedVideos = async () => {
+  const response = await fetch("/api/youtube/videos", {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  return readApiJson(response);
+};
+
+export const fetchSimpleOwnedVideo = async (videoId: string) => {
+  const response = await fetch(`/api/youtube/videos/${encodeURIComponent(videoId)}`, {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  return readApiJson(response);
+};
+
+export const patchSimpleOwnedVideo = async (
+  videoId: string,
+  patch: { snippet?: Record<string, unknown>; status?: Record<string, unknown> },
+) => {
+  const response = await fetch(`/api/youtube/videos/${encodeURIComponent(videoId)}`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(patch),
+  });
+  return readApiJson(response);
+};
