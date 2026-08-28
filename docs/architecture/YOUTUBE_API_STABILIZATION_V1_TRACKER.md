@@ -13,6 +13,8 @@
 
 ## Wave A — Auth + comments + capability model
 
+- [x] Legacy UnifiedAccountContext is now a compatibility projection of SimpleAuthProvider; it no longer owns login, legacy OAuth fallback, or auth events.
+
 - [x] Canonical server-owned session introduced.
 - [x] Comment Responder reads through typed server endpoint.
 - [x] Comment replies through typed server endpoint.
