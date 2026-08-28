@@ -3,6 +3,7 @@ import { PAGE_REGISTRY } from "../../app/pageRegistry"
 import {
  GUIDE_ANALYTICS_VISUALS,
  GUIDE_DATASETS,
+ GUIDE_VISUAL_ENCODINGS,
  GUIDE_FEATURES,
  GUIDE_METRICS,
  GUIDE_METRIC_RELATIONSHIPS,
@@ -54,6 +55,17 @@ describe("User Guide V2 registry governance", () => {
    expect(dataset.exportName).toBeTruthy()
    expect(dataset.columnCount).toBeGreaterThan(0)
    expect(dataset.metricColumnCount).toBeGreaterThanOrEqual(0)
+  }
+ })
+
+ it("documents visual encodings and provenance for every analytics visual", () => {
+  const visualIds = new Set(GUIDE_ANALYTICS_VISUALS.map((visual) => visual.id))
+  expect(GUIDE_VISUAL_ENCODINGS.length).toBe(GUIDE_ANALYTICS_VISUALS.length)
+  for (const encoding of GUIDE_VISUAL_ENCODINGS) {
+   expect(visualIds.has(encoding.visualId)).toBe(true)
+   expect(encoding.encodings.length).toBeGreaterThan(0)
+   expect(encoding.datasetSearchTerms.length).toBeGreaterThan(0)
+   expect(encoding.provenance.length).toBeGreaterThan(20)
   }
  })
 
