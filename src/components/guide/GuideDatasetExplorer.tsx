@@ -19,8 +19,8 @@ export const GuideDatasetExplorer: React.FC = () => {
  const selected = GUIDE_DATASETS.find((dataset) => dataset.id === selectedId) || filtered[0] || null
 
  return (
-  <div className="grid gap-4 lg:grid-cols-[.9fr_1.1fr]">
-   <div className="rounded-2xl border-[4px] border-black bg-white p-4 shadow-[6px_6px_0_0_#000]">
+  <div className="grid min-w-0 gap-4 lg:grid-cols-[.9fr_1.1fr]">
+   <div className="min-w-0 rounded-2xl border-[4px] border-black bg-white p-4 shadow-[6px_6px_0_0_#000]">
     <div className="flex items-center justify-between gap-3">
      <div>
       <p className="text-[10px] font-black uppercase tracking-[.18em] text-black/45">Canonical VT-SYNC registry</p>
@@ -62,15 +62,15 @@ const DatasetDetail: React.FC<{ dataset: GuideDatasetDefinition | null }> = ({ d
  }
 
  return (
-  <article className="rounded-2xl border-[4px] border-black bg-[#40C6E9] p-5 shadow-[6px_6px_0_0_#000]">
+  <article className="min-w-0 overflow-hidden rounded-2xl border-[4px] border-black bg-[#40C6E9] p-5 shadow-[6px_6px_0_0_#000]">
    <div className="flex items-start justify-between gap-4">
     <Database size={30} strokeWidth={3} />
     <span className="rounded-lg border-[3px] border-black bg-white px-2 py-1 text-[10px] font-black uppercase">{dataset.id}</span>
    </div>
-   <h3 className="mt-8 text-3xl font-black uppercase leading-none">{dataset.label}</h3>
+   <h3 className="mt-8 break-words text-2xl font-black uppercase leading-none sm:text-3xl">{dataset.label}</h3>
    <p className="mt-3 text-base font-bold leading-relaxed">{dataset.description}</p>
 
-   <div className="mt-6 grid gap-3 sm:grid-cols-2">
+   <div className="mt-6 grid min-w-0 gap-3 sm:grid-cols-2">
     <DetailCell label="Table registry ID" value={dataset.id} />
     <DetailCell label="Canonical dataset ID" value={dataset.canonicalDatasetId} />
     <DetailCell label="Sync unit" value={dataset.syncUnitId || "Shared / registry-owned"} />
@@ -83,7 +83,7 @@ const DatasetDetail: React.FC<{ dataset: GuideDatasetDefinition | null }> = ({ d
     <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide"><TableProperties size={16} strokeWidth={3} /> Categories</div>
     <div className="mt-3 flex flex-wrap gap-2">
      {dataset.categoryIds.map((category) => (
-      <span key={category} className="rounded-lg border-2 border-black bg-[#F3F4F6] px-2 py-1 text-[10px] font-black uppercase">{category}</span>
+      <span key={category} className="max-w-full break-all rounded-lg border-2 border-black bg-[#F3F4F6] px-2 py-1 text-[10px] font-black uppercase">{category}</span>
      ))}
     </div>
    </div>
@@ -97,7 +97,7 @@ const DatasetDetail: React.FC<{ dataset: GuideDatasetDefinition | null }> = ({ d
 }
 
 const DetailCell = ({ label, value }: { label: string; value: string }) => (
- <div className="rounded-xl border-[3px] border-black bg-white p-3">
+ <div className="min-w-0 rounded-xl border-[3px] border-black bg-white p-3">
   <p className="text-[10px] font-black uppercase tracking-wide text-black/45">{label}</p>
   <p className="mt-1 break-all text-sm font-black">{value}</p>
  </div>
