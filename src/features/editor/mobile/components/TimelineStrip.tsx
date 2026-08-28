@@ -9,7 +9,7 @@
  *   - Tap a clip to select; tap empty space to clear.
  *   - Playhead line stays visible; scrolls into view when playing.
  */
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EditorStore } from '../state/editorState';
 import { useDragScrub, useLongPress, usePinchZoom } from '../hooks/gestures';
 import type { VtE1Clip } from '../../../../shared/vtE1TimelineContract';
@@ -35,6 +35,20 @@ export const TimelineStrip: React.FC<TimelineStripProps> = ({
   const zoom = state.zoomPxPerSec;
   const totalPx = Math.max(state.project.durationSec * zoom, 400);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [viewport, setViewport] = useState({ scrollLeft: 0, clientWidth: 1 });
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const sync = () => setViewport({ scrollLeft: el.scrollLeft, clientWidth: Math.max(1, el.clientWidth) });
+    sync();
+    el.addEventListener('scroll', sync, { passive: true });
+    window.addEventListener('resize', sync, { passive: true });
+    return () => {
+      el.removeEventListener('scroll', sync);
+      window.removeEventListener('resize', sync);
+    };
+  }, []);
 
   /* Pinch — apply exponential zoom */
   const pinch = usePinchZoom({
@@ -61,13 +75,16 @@ export const TimelineStrip: React.FC<TimelineStripProps> = ({
   return (
     <div
       style={{
-        background: '#0b1220',
-        borderRadius: 14,
-        border: '1px solid #1e293b',
+        background: '#f8f8f8',
+        borderRadius: 10,
+        border: '2px solid #111',
         overflow: 'hidden',
         height: rendered,
-        minHeight: Math.min(bodyHeight, 130),
+        minHeight: Math.min(bodyHeight + 42, 176),
         position: 'relative',
+        boxShadow: '3px 3px 0 rgba(17,17,17,0.18)',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       {/* Zoom controls (visible affordance beyond the pinch) */}
@@ -83,11 +100,13 @@ export const TimelineStrip: React.FC<TimelineStripProps> = ({
         onPointerUp={pinch.handlers.onPointerUp}
         onPointerCancel={pinch.handlers.onPointerCancel}
         style={{
-          height: '100%',
+          flex: 1,
+          minHeight: 0,
           overflowX: 'auto',
           overflowY: 'auto',
           WebkitOverflowScrolling: 'touch',
           scrollbarWidth: 'thin',
+          background: '#f8f8f8',
         }}
       >
         <div style={{ position: 'relative', width: totalPx + LABEL_WIDTH, minHeight: '100%' }}>
@@ -114,6 +133,15 @@ export const TimelineStrip: React.FC<TimelineStripProps> = ({
           />
         </div>
       </div>
+
+      <TimelineMinimap
+        store={store}
+        tracks={tracks}
+        scrollRef={scrollRef}
+        totalPx={totalPx}
+        labelWidth={LABEL_WIDTH}
+        viewport={viewport}
+      />
     </div>
   );
 };
@@ -133,7 +161,7 @@ const Ruler: React.FC<{ pxPerSec: number; durationSec: number }> = ({ pxPerSec, 
   for (let t = 0; t <= durationSec; t += spacing) ticks.push(+t.toFixed(2));
 
   return (
-    <div style={{ position: 'sticky', top: 0, height: HEADER_HEIGHT, background: '#0f172a', zIndex: 2, marginLeft: LABEL_WIDTH }}>
+    <div style={{ position: 'sticky', top: 0, height: HEADER_HEIGHT, background: '#ffffff', zIndex: 2, marginLeft: LABEL_WIDTH, borderBottom: '2px solid #111' }}>
       {ticks.map((t) => (
         <div
           key={t}
@@ -143,11 +171,11 @@ const Ruler: React.FC<{ pxPerSec: number; durationSec: number }> = ({ pxPerSec, 
             top: 0,
             bottom: 0,
             paddingLeft: 4,
-            borderLeft: '1px solid #334155',
-            color: '#94a3b8',
+            borderLeft: '1px solid rgba(17,17,17,0.35)',
+            color: '#111',
             fontSize: 10,
             fontVariantNumeric: 'tabular-nums',
-            fontWeight: 700,
+            fontWeight: 900,
           }}
         >
           {t}s
@@ -203,9 +231,9 @@ const TrackRow: React.FC<TrackRowProps> = ({
           position: 'sticky',
           left: 0,
           width: LABEL_WIDTH,
-          background: '#111827',
+          background: '#ffffff',
           zIndex: 2,
-          borderRight: '1px solid #1e293b',
+          borderRight: '2px solid #111',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -214,19 +242,19 @@ const TrackRow: React.FC<TrackRowProps> = ({
           fontWeight: 800,
           textTransform: 'uppercase',
           letterSpacing: 0.5,
-          color: rowColor,
+          color: '#111',
         }}
       >
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track.name}</span>
         <div style={{ display: 'flex', gap: 3 }}>
           <button
             onClick={() => dispatch({ type: 'muteTrack', id: track.id })}
-            style={miniBtn(track.muted ? '#ef4444' : '#334155')}
+            style={miniBtn(track.muted ? '#ff5d73' : '#ffffff')}
             aria-label={track.muted ? 'Unmute' : 'Mute'}
           >M</button>
           <button
             onClick={() => dispatch({ type: 'lockTrack', id: track.id })}
-            style={miniBtn(track.locked ? '#f59e0b' : '#334155')}
+            style={miniBtn(track.locked ? '#ffd84d' : '#ffffff')}
             aria-label={track.locked ? 'Unlock' : 'Lock'}
           >L</button>
         </div>
@@ -237,8 +265,8 @@ const TrackRow: React.FC<TrackRowProps> = ({
         style={{
           position: 'relative',
           width: totalPx,
-          background: '#0f172a',
-          borderBottom: '1px solid #111827',
+          background: '#f8f8f8',
+          borderBottom: '1px solid rgba(17,17,17,0.18)',
           touchAction: 'pan-x pan-y',
         }}
       >
@@ -259,10 +287,10 @@ const TrackRow: React.FC<TrackRowProps> = ({
 };
 
 const miniBtn = (bg: string): React.CSSProperties => ({
-  width: 18, height: 18, borderRadius: 4,
-  border: 'none', background: bg, color: '#fff',
-  fontSize: 9, fontWeight: 800,
-  cursor: 'pointer',
+  width: 20, height: 20, borderRadius: 4,
+  border: '2px solid #111', background: bg, color: '#111',
+  fontSize: 9, fontWeight: 900,
+  cursor: 'pointer', padding: 0,
 });
 
 /* ------------------------------------------------------------------ */
@@ -317,10 +345,10 @@ const ClipBlock: React.FC<ClipBlockProps> = ({ clip, selected, color, pxPerSec, 
         left,
         width,
         borderRadius: 8,
-        background: `linear-gradient(180deg, ${color}, ${color}cc)`,
-        border: selected ? '2px solid #f8fafc' : '1px solid rgba(0,0,0,0.2)',
-        boxShadow: selected ? '0 0 0 2px #0f172a, 0 0 0 4px #22d3ee' : 'none',
-        color: '#0f172a',
+        background: clip.color || color,
+        border: '2px solid #111',
+        boxShadow: selected ? 'inset 0 0 0 2px #fff, 0 0 0 2px #528FFA' : 'none',
+        color: '#111',
         padding: '4px 8px',
         fontSize: 11,
         fontWeight: 800,
@@ -373,7 +401,7 @@ const TrimHandle: React.FC<{ side: 'left' | 'right'; clip: VtE1Clip; store: Edit
           width: 4,
           height: 16,
           borderRadius: 2,
-          background: 'rgba(15,23,42,0.55)',
+          background: 'rgba(17,17,17,0.62)',
         }}
       />
     </div>
@@ -396,12 +424,12 @@ const Playhead: React.FC<{ playheadSec: number; pxPerSec: number; height: number
         top: HEADER_HEIGHT - 6,
         height: height + 12,
         width: 2,
-        background: '#f43f5e',
+        background: '#ff5d73',
         pointerEvents: 'none',
-        boxShadow: '0 0 6px rgba(244,63,94,0.7)',
+        boxShadow: '0 0 0 1px #fff',
       }}
     >
-      <div style={{ position: 'absolute', top: -6, left: -6, width: 14, height: 14, borderRadius: 7, background: '#f43f5e' }} />
+      <div style={{ position: 'absolute', top: -6, left: -6, width: 14, height: 14, borderRadius: 7, background: '#ff5d73', border: '2px solid #111' }} />
     </div>
   );
 };
@@ -419,23 +447,131 @@ const ZoomControls: React.FC<{ pxPerSec: number; onZoom: (v: number) => void }> 
       zIndex: 3,
       display: 'flex',
       gap: 4,
-      background: 'rgba(15,23,42,0.85)',
-      borderRadius: 8,
-      padding: 3,
+      background: '#ffffff',
+      borderRadius: 6,
+      border: '2px solid #111',
+      padding: 2,
     }}
   >
     <button
       onClick={() => onZoom(pxPerSec / 1.4)}
-      style={{ width: 26, height: 22, borderRadius: 5, border: 'none', background: '#334155', color: '#fff', fontWeight: 800 }}
+      style={{ width: 26, height: 22, borderRadius: 5, border: 'none', background: '#ffd84d', color: '#111', border: '2px solid #111', fontWeight: 800 }}
       aria-label="Zoom out timeline"
     >−</button>
-    <div style={{ color: '#cbd5e1', fontSize: 10, alignSelf: 'center', minWidth: 40, textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
+    <div style={{ color: '#111', fontSize: 10, alignSelf: 'center', minWidth: 40, textAlign: 'center', fontVariantNumeric: 'tabular-nums', fontWeight: 900 }}>
       {Math.round(pxPerSec)}px/s
     </div>
     <button
       onClick={() => onZoom(pxPerSec * 1.4)}
-      style={{ width: 26, height: 22, borderRadius: 5, border: 'none', background: '#334155', color: '#fff', fontWeight: 800 }}
+      style={{ width: 26, height: 22, borderRadius: 5, border: 'none', background: '#ffd84d', color: '#111', border: '2px solid #111', fontWeight: 800 }}
       aria-label="Zoom in timeline"
     >+</button>
   </div>
 );
+
+interface TimelineMinimapProps {
+  store: EditorStore;
+  tracks: EditorStore['state']['project']['tracks'];
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+  totalPx: number;
+  labelWidth: number;
+  viewport: { scrollLeft: number; clientWidth: number };
+}
+
+const TimelineMinimap: React.FC<TimelineMinimapProps> = ({
+  store, tracks, scrollRef, totalPx, labelWidth, viewport,
+}) => {
+  const duration = Math.max(0.001, store.state.project.durationSec);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapHeight = Math.max(13, tracks.length * 7 + 4);
+  const timelineViewportPx = Math.max(1, totalPx);
+  const visibleStartPx = Math.max(0, viewport.scrollLeft - labelWidth);
+  const visibleWidthPx = Math.min(timelineViewportPx, viewport.clientWidth);
+  const leftPct = Math.max(0, Math.min(100, (visibleStartPx / timelineViewportPx) * 100));
+  const widthPct = Math.max(1.2, Math.min(100 - leftPct, (visibleWidthPx / timelineViewportPx) * 100));
+
+  const seekMap = (clientX: number, grabRatio = 0.5) => {
+    const map = mapRef.current;
+    const scroller = scrollRef.current;
+    if (!map || !scroller) return;
+    const rect = map.getBoundingClientRect();
+    const local = Math.max(0, Math.min(rect.width, clientX - rect.left));
+    const visibleSec = (visibleWidthPx / timelineViewportPx) * duration;
+    const centerSec = (local / Math.max(1, rect.width)) * duration;
+    const desiredStart = Math.max(0, Math.min(duration - visibleSec, centerSec - visibleSec * grabRatio));
+    scroller.scrollLeft = Math.max(0, desiredStart / duration * timelineViewportPx);
+  };
+
+  return (
+    <div
+      ref={mapRef}
+      className="vt-mobile-timeline-minimap"
+      style={{
+        flex: '0 0 auto',
+        height: mapHeight,
+        position: 'relative',
+        background: '#fff',
+        borderTop: '2px solid #111',
+        overflow: 'hidden',
+        touchAction: 'none',
+        cursor: 'pointer',
+      }}
+      onPointerDown={(event) => {
+        const target = event.currentTarget;
+        const rect = target.getBoundingClientRect();
+        const localPct = ((event.clientX - rect.left) / Math.max(1, rect.width)) * 100;
+        const inside = localPct >= leftPct && localPct <= leftPct + widthPct;
+        const grabRatio = inside ? Math.max(0, Math.min(1, (localPct - leftPct) / Math.max(0.01, widthPct))) : 0.5;
+        target.setPointerCapture?.(event.pointerId);
+        seekMap(event.clientX, grabRatio);
+        const move = (ev: PointerEvent) => seekMap(ev.clientX, grabRatio);
+        const end = (ev: PointerEvent) => {
+          target.releasePointerCapture?.(ev.pointerId);
+          target.removeEventListener('pointermove', move);
+          target.removeEventListener('pointerup', end);
+          target.removeEventListener('pointercancel', end);
+        };
+        target.addEventListener('pointermove', move);
+        target.addEventListener('pointerup', end);
+        target.addEventListener('pointercancel', end);
+      }}
+      aria-label="Timeline minimap"
+    >
+      {tracks.map((track, trackIndex) =>
+        store.clipsOnTrack(track.id).map((clip) => {
+          const left = Math.max(0, Math.min(100, (clip.start / duration) * 100));
+          const width = Math.max(0.15, Math.min(100 - left, ((clip.end - clip.start) / duration) * 100));
+          return (
+            <div
+              key={`mini-${clip.id}`}
+              style={{
+                position: 'absolute',
+                top: 2 + trackIndex * 7,
+                left: `${left}%`,
+                width: `${width}%`,
+                height: 5,
+                background: clip.color || '#528FFA',
+                borderRadius: 1,
+                pointerEvents: 'none',
+              }}
+            />
+          );
+        })
+      )}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          bottom: 0,
+          left: `${leftPct}%`,
+          width: `${widthPct}%`,
+          border: '2px solid #111',
+          background: 'rgba(255,255,255,0.34)',
+          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.75)',
+          pointerEvents: 'none',
+          zIndex: 5,
+        }}
+      />
+    </div>
+  );
+};
