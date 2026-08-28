@@ -3,6 +3,8 @@ import { PAGE_REGISTRY } from "../../app/pageRegistry"
 import {
  GUIDE_DATASETS,
  GUIDE_FEATURES,
+ GUIDE_METRICS,
+ GUIDE_METRIC_RELATIONSHIPS,
  GUIDE_PAGES,
  GUIDE_WIDGETS,
  guideWidgetTeaching,
@@ -49,6 +51,15 @@ describe("User Guide V2 registry governance", () => {
    expect(dataset.exportName).toBeTruthy()
    expect(dataset.columnCount).toBeGreaterThan(0)
    expect(dataset.metricColumnCount).toBeGreaterThanOrEqual(0)
+  }
+ })
+
+ it("keeps metric relationship links valid", () => {
+  const metricIds = new Set(GUIDE_METRICS.map((metric) => metric.id))
+  for (const relationship of GUIDE_METRIC_RELATIONSHIPS) {
+   expect(metricIds.has(relationship.metricId)).toBe(true)
+   expect(relationship.pairWith.length).toBeGreaterThan(0)
+   for (const relatedId of relationship.pairWith) expect(metricIds.has(relatedId)).toBe(true)
   }
  })
 
