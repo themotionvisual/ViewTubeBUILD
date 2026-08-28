@@ -332,7 +332,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  }, [])
 
 
- const loadInitialData = useCallback(async () => {
+ const loadInitialData = useCallback(async (_force = false) => {
   setVideoListLoadState("loading")
   setLoading(true)
   setError(null)
