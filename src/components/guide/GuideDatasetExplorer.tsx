@@ -10,7 +10,7 @@ export const GuideDatasetExplorer: React.FC = () => {
   const needle = query.trim().toLowerCase()
   if (!needle) return GUIDE_DATASETS
   return GUIDE_DATASETS.filter((dataset) =>
-   `${dataset.label} ${dataset.description} ${dataset.categoryIds.join(" ")} ${dataset.id}`
+   `${dataset.label} ${dataset.description} ${dataset.categoryIds.join(" ")} ${dataset.id} ${dataset.canonicalDatasetId} ${dataset.syncUnitId || ""}`
     .toLowerCase()
     .includes(needle),
   )
@@ -71,8 +71,12 @@ const DatasetDetail: React.FC<{ dataset: GuideDatasetDefinition | null }> = ({ d
    <p className="mt-3 text-base font-bold leading-relaxed">{dataset.description}</p>
 
    <div className="mt-6 grid gap-3 sm:grid-cols-2">
-    <DetailCell label="Registry ID" value={dataset.id} />
-    <DetailCell label="Dataset owner" value={dataset.datasetId || "VT-SYNC"} />
+    <DetailCell label="Table registry ID" value={dataset.id} />
+    <DetailCell label="Canonical dataset ID" value={dataset.canonicalDatasetId} />
+    <DetailCell label="Sync unit" value={dataset.syncUnitId || "Shared / registry-owned"} />
+    <DetailCell label="Export" value={dataset.exportName} />
+    <DetailCell label="Columns" value={String(dataset.columnCount)} />
+    <DetailCell label="Metric columns" value={String(dataset.metricColumnCount)} />
    </div>
 
    <div className="mt-3 rounded-xl border-[3px] border-black bg-white p-4">
@@ -85,8 +89,8 @@ const DatasetDetail: React.FC<{ dataset: GuideDatasetDefinition | null }> = ({ d
    </div>
 
    <div className="mt-3 rounded-xl border-[3px] border-black bg-white p-4">
-    <p className="text-xs font-black uppercase tracking-wide">How to use this entry</p>
-    <p className="mt-2 text-sm font-bold text-black/65">Use the dataset name and category to find the matching Analytics table. This entry is generated from the same visible table registry, so it stays aligned with the actual selectable VT-SYNC surface.</p>
+    <p className="text-xs font-black uppercase tracking-wide">Why this stays accurate</p>
+    <p className="mt-2 text-sm font-bold text-black/65">This entry is generated directly from the visible VT-SYNC table definition. Table ownership, export identity, category membership, and column counts therefore come from the same contract the Analytics interface uses.</p>
    </div>
   </article>
  )
