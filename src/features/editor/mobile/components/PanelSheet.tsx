@@ -79,15 +79,15 @@ export const PanelSheet: React.FC<PanelSheetProps> = ({
         position: 'absolute',
         left: 0, right: 0, bottom: 0,
         height: heightPx,
-        background: '#0f172a',
-        borderTop: '1px solid #1e293b',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
+        background: '#ffffff',
+        borderTop: '2px solid #111',
+        borderTopLeftRadius: 10,
+        borderTopRightRadius: 10,
         transition: dragStart.current ? 'none' : 'height 220ms cubic-bezier(0.2, 0.8, 0.2, 1)',
         display: 'flex',
         flexDirection: 'column',
         zIndex: 30,
-        boxShadow: '0 -12px 28px rgba(0,0,0,0.35)',
+        boxShadow: '0 -4px 0 rgba(17,17,17,0.16)',
       }}
     >
       {/* Drag handle */}
@@ -101,7 +101,7 @@ export const PanelSheet: React.FC<PanelSheetProps> = ({
           touchAction: 'none',
         }}
       >
-        <div style={{ width: 44, height: 4, borderRadius: 2, background: '#475569' }} />
+        <div style={{ width: 44, height: 4, borderRadius: 2, background: '#111' }} />
       </div>
 
       {/* Tabs */}
@@ -129,10 +129,10 @@ export const PanelSheet: React.FC<PanelSheetProps> = ({
             style={{
               flex: '0 0 auto',
               padding: '6px 12px',
-              borderRadius: 999,
-              border: 'none',
-              background: state.panel.id === t ? '#22d3ee' : '#1e293b',
-              color: state.panel.id === t ? '#0f172a' : '#e2e8f0',
+              borderRadius: 6,
+              border: '2px solid #111',
+              background: state.panel.id === t ? '#40c6e9' : '#ffffff',
+              color: '#111',
               fontSize: 12,
               fontWeight: 800,
               textTransform: 'uppercase',
@@ -153,8 +153,8 @@ export const PanelSheet: React.FC<PanelSheetProps> = ({
             flex: 1,
             overflowY: 'auto',
             padding: 14,
-            borderTop: '1px solid #1e293b',
-            color: '#e2e8f0',
+            borderTop: '2px solid #111',
+            color: '#111',
             WebkitOverflowScrolling: 'touch',
           }}
         >
