@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { GuideArticlePanel } from "../components/guide/GuideArticlePanel"
+import { GuideDatasetExplorer } from "../components/guide/GuideDatasetExplorer"
+import { GuideMetricExplorer } from "../components/guide/GuideMetricExplorer"
 import {
   ArrowRight,
   BarChart3,
