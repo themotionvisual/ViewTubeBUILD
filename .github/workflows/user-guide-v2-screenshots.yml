@@ -8,6 +8,8 @@ on:
       - "src/components/guide/**"
       - "src/content/guide-v2/**"
       - "src/app/AppShell.tsx"
+      - "src/auth/**"
+      - "src/context/UnifiedAccountContext.tsx"
       - ".github/workflows/user-guide-v2-screenshots.yml"
 
 permissions:
