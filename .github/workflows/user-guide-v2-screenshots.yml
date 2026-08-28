@@ -27,6 +27,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npx vitest run src/content/guide-v2/guideRegistry.test.ts
       - run: npx playwright install --with-deps chromium
       - name: Start ViewTube
         run: |
