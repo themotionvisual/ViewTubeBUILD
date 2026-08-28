@@ -1,5 +1,5 @@
 import { getSessionUserId, getAccountSnapshotData } from "./account-store.mjs";
-import { googleJson, ReconnectRequiredError } from "./simple-google-client.mjs";
+import { getServerGoogleAccessToken, googleJson, ReconnectRequiredError } from "./simple-google-client.mjs";
 
 const SESSION_COOKIE = "vt_session";
 const BASE = "https://www.googleapis.com/youtube/v3";
@@ -388,7 +388,7 @@ export const addVideoToPlaylist = async ({ req }) => {
 
 export const removeVideoFromPlaylist = async ({ req, playlistItemId }) => {
   const userId = await requireUser(req);
-  const token = await (await import("./simple-google-client.mjs")).getServerGoogleAccessToken(userId);
+  const token = await getServerGoogleAccessToken(userId);
   const response = await fetch(`${BASE}/playlistItems?id=${encodeURIComponent(playlistItemId)}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
@@ -421,7 +421,7 @@ export const setVideoThumbnail = async ({ req, videoId }) => {
     error.statusCode = 400;
     throw error;
   }
-  const token = await (await import("./simple-google-client.mjs")).getServerGoogleAccessToken(userId);
+  const token = await getServerGoogleAccessToken(userId);
   const response = await fetch(
     `https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${encodeURIComponent(videoId)}`,
     {
