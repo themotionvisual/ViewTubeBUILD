@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { PAGE_REGISTRY } from "../../app/pageRegistry"
 import {
+ GUIDE_ANALYTICS_VISUALS,
  GUIDE_DATASETS,
  GUIDE_FEATURES,
  GUIDE_METRICS,
@@ -17,6 +18,8 @@ const expectUnique = (values: readonly string[]) => {
 describe("User Guide V2 registry governance", () => {
  it("keeps documentation registry IDs unique", () => {
   expectUnique(GUIDE_FEATURES.map((item) => item.id))
+  expectUnique(GUIDE_ANALYTICS_VISUALS.map((item) => item.id))
+  expectUnique(GUIDE_ANALYTICS_VISUALS.map((item) => item.exportName))
   expectUnique(GUIDE_DATASETS.map((item) => item.id))
   expectUnique(GUIDE_WIDGETS.map((item) => item.id))
   expectUnique(GUIDE_PAGES.map((item) => item.id))
@@ -51,6 +54,17 @@ describe("User Guide V2 registry governance", () => {
    expect(dataset.exportName).toBeTruthy()
    expect(dataset.columnCount).toBeGreaterThan(0)
    expect(dataset.metricColumnCount).toBeGreaterThanOrEqual(0)
+  }
+ })
+
+ it("keeps analytics visual metric and comparison links valid", () => {
+  const metricIds = new Set(GUIDE_METRICS.map((metric) => metric.id))
+  const visualIds = new Set(GUIDE_ANALYTICS_VISUALS.map((visual) => visual.id))
+  for (const visual of GUIDE_ANALYTICS_VISUALS) {
+   expect(visual.read.length).toBeGreaterThan(20)
+   expect(visual.patterns.length).toBeGreaterThan(0)
+   for (const metricId of visual.metricIds) expect(metricIds.has(metricId)).toBe(true)
+   for (const visualId of visual.compareWith) expect(visualIds.has(visualId)).toBe(true)
   }
  })
 
