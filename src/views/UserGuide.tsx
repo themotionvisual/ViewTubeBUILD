@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 import { GuideArticlePanel } from "../components/guide/GuideArticlePanel"
 import { GuideDatasetExplorer } from "../components/guide/GuideDatasetExplorer"
 import { GuideMetricExplorer } from "../components/guide/GuideMetricExplorer"
+import { GuideAnalyticsVisualExplorer } from "../components/guide/GuideAnalyticsVisualExplorer"
 import { GuideWidgetExplorer } from "../components/guide/GuideWidgetExplorer"
 import { GuideTaskNavigator } from "../components/guide/GuideTaskNavigator"
 import {
@@ -226,13 +227,18 @@ const UserGuide: React.FC = () => {
         </div>
       </section>
 
+      <section id="visuals" className="mt-10 scroll-mt-28">
+        <SectionTitle eyebrow="07 · Analytics" title="Visual module encyclopedia" icon={BarChart3} />
+        <GuideAnalyticsVisualExplorer />
+      </section>
+
       <section id="metrics" className="mt-10 scroll-mt-28">
-        <SectionTitle eyebrow="07 · Reference" title="Metric dictionary" icon={BookOpen} />
+        <SectionTitle eyebrow="08 · Reference" title="Metric dictionary" icon={BookOpen} />
         <GuideMetricExplorer />
       </section>
 
       <section id="create" className="mt-10 scroll-mt-28">
-        <SectionTitle eyebrow="08 · Workflows" title="Create → edit → publish" icon={Upload} />
+        <SectionTitle eyebrow="09 · Workflows" title="Create → edit → publish" icon={Upload} />
         <div className="rounded-2xl border-[4px] border-black bg-white p-4 shadow-[6px_6px_0_0_#000]">
           <div className="grid gap-3 md:grid-cols-3">
             <FlowCard number="1" title="Create" copy="Ideas, audience signals, projects, hooks, thumbnails and storyboards." className="bg-[#FF8AAF]" />
