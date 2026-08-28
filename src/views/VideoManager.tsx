@@ -1,9 +1,8 @@
 import React, { useCallback, useState, useEffect, useRef } from "react"
-import { fetchSingleVideoAnalytics } from "../services/youtubeService"
-import type { SingleVideoAnalytics } from "../services/youtubeService"
 import {
  addSimpleVideoToPlaylist,
  fetchSimplePlaylists,
+ fetchSimpleSingleVideoAnalytics,
  fetchSimpleVideoBundle,
  fetchSimpleVideoInventory,
  fetchSimpleVideoPlaylistMemberships,
@@ -15,6 +14,7 @@ import {
  type SimpleVideoDetails as VideoDetails,
  type SimpleVideoSnippet as VideoSnippet,
  type SimpleVideoStats as VideoStats,
+ type SimpleSingleVideoAnalytics as SingleVideoAnalytics,
 } from "../services/simpleYouTubeApi"
 import { useSimpleAuth } from "../auth/AuthProvider"
 import { useNavigate } from "react-router-dom"
@@ -414,7 +414,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   try {
    const [videoBundle, analytics] = await Promise.all([
     fetchSimpleVideoBundle(videoId),
-    fetchSingleVideoAnalytics(videoId),
+    fetchSimpleSingleVideoAnalytics(videoId),
    ])
    const details = videoBundle.details
    setVideoDetails(details)
