@@ -209,15 +209,7 @@ const UserGuide: React.FC = () => {
 
       <section id="metrics" className="mt-10 scroll-mt-28">
         <SectionTitle eyebrow="05 · Reference" title="Metric dictionary" icon={BookOpen} />
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {GUIDE_METRICS.map((metric) => (
-            <article key={metric.id} className="rounded-2xl border-[3px] border-black bg-white p-4">
-              <div className="flex justify-between gap-3"><h3 className="font-black uppercase">{metric.label}</h3><span className="text-[10px] font-black uppercase text-black/45">{metric.format}</span></div>
-              <p className="mt-2 text-sm font-bold text-black/65">{metric.definition}</p>
-              <p className="mt-3 text-[10px] font-black uppercase tracking-wide">{metric.source}</p>
-            </article>
-          ))}
-        </div>
+        <GuideMetricExplorer />
       </section>
 
       <section id="create" className="mt-10 scroll-mt-28">
