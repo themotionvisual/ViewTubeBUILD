@@ -261,3 +261,70 @@ export const fetchSimpleVideoBundle = async (videoId: string): Promise<{
     raw,
   };
 };
+
+
+export interface SimpleAnalyticsQuery {
+  ids?: string;
+  startDate: string;
+  endDate: string;
+  metrics: string[];
+  dimensions?: string[];
+  filters?: string;
+  sort?: string;
+  currency?: string;
+  maxResults?: number;
+  startIndex?: number;
+  includeHistoricalChannelData?: boolean;
+}
+
+export const querySimpleAnalytics = async (query: SimpleAnalyticsQuery) => {
+  const response = await fetch("/api/youtube/analytics/query", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(query),
+  });
+  return readApiJson(response);
+};
+
+export const fetchSimpleReportingTypes = async () => {
+  const response = await fetch("/api/youtube/reporting/types", {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  return readApiJson(response);
+};
+
+export const fetchSimpleReportingJobs = async () => {
+  const response = await fetch("/api/youtube/reporting/jobs", {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  return readApiJson(response);
+};
+
+export const createSimpleReportingJob = async (reportTypeId: string, name?: string) => {
+  const response = await fetch("/api/youtube/reporting/jobs", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ reportTypeId, name }),
+  });
+  return readApiJson(response);
+};
+
+export const fetchSimpleReportingReports = async (
+  jobId: string,
+  options: { createdAfter?: string; startTimeAtOrAfter?: string; startTimeBefore?: string } = {},
+) => {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(options)) if (value) params.set(key, value);
+  const response = await fetch(
+    `/api/youtube/reporting/jobs/${encodeURIComponent(jobId)}/reports?${params.toString()}`,
+    { credentials: "include", headers: { Accept: "application/json" } },
+  );
+  return readApiJson(response);
+};
+
+export const simpleReportingDownloadUrl = (jobId: string, reportId: string) =>
+  `/api/youtube/reporting/jobs/${encodeURIComponent(jobId)}/reports/${encodeURIComponent(reportId)}/download`;
