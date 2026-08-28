@@ -5,20 +5,11 @@ on:
     branches:
       - themotionvisual/feat/brain-phase-five-production-chains
   workflow_dispatch:
-    inputs:
-      preview_url:
-        description: 'Vercel preview URL to capture'
-        required: false
-        type: string
-      share_url:
-        description: 'Temporary Vercel share URL for protected previews'
-        required: false
-        type: string
 
 jobs:
   screenshots:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,10 +18,22 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - name: Capture authenticated desktop and mobile UI
+      - name: Build exact branch
+        run: npm run build
+      - name: Start local ViewTube preview
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/viewtube-preview.log 2>&1 &
+          echo $! > /tmp/viewtube-preview.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/viewtube-preview.log
+          exit 1
+      - name: Capture actual desktop and mobile UI
         env:
-          PREVIEW_URL: ${{ inputs.preview_url || 'https://viewtube-cjldmx5do-cbrewsterart-1584s-projects.vercel.app' }}
-          VERCEL_SHARE_URL: ${{ inputs.share_url || 'https://viewtube-cjldmx5do-cbrewsterart-1584s-projects.vercel.app/?_vercel_share=UngRhJUAW6bUb9a8A4aSve5p0AgF8Lxd' }}
+          PREVIEW_URL: http://127.0.0.1:4173
+          VERCEL_SHARE_URL: ''
         run: node scripts/capture-phase5-built-ui.mjs
       - uses: actions/upload-artifact@v4
         if: always()
