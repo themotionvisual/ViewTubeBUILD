@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react"
 import { BookOpen, Search } from "lucide-react"
-import { GUIDE_METRICS, type GuideMetricDefinition } from "../../content/guide-v2"
+import { GUIDE_METRICS, guideMetricById, guideMetricRelationship, type GuideMetricDefinition } from "../../content/guide-v2"
 
 export const GuideMetricExplorer: React.FC = () => {
  const [query, setQuery] = useState("")
@@ -46,6 +46,7 @@ export const GuideMetricExplorer: React.FC = () => {
 
 const MetricDetail: React.FC<{ metric: GuideMetricDefinition | null }> = ({ metric }) => {
  if (!metric) return <div className="rounded-2xl border-[4px] border-black bg-[#F3F4F6] p-5 font-black">No matching metric.</div>
+ const relationship = guideMetricRelationship(metric)
  return (
   <article className="min-w-0 overflow-hidden rounded-2xl border-[4px] border-black bg-[#FFB86B] p-5 shadow-[6px_6px_0_0_#000]">
    <BookOpen size={30} strokeWidth={3} />
@@ -67,6 +68,18 @@ const MetricDetail: React.FC<{ metric: GuideMetricDefinition | null }> = ({ metr
     <Detail label="Format" value={metric.format} />
     <Detail label="Source" value={metric.source} />
    </div>
+   {relationship ? (
+    <div className="mt-3 rounded-xl border-[3px] border-black bg-[#CFF7E8] p-4">
+     <p className="text-[10px] font-black uppercase tracking-wide text-black/45">Pair this metric with</p>
+     <div className="mt-2 flex flex-wrap gap-2">
+      {relationship.pairWith.map((metricId) => {
+       const related = guideMetricById(metricId)
+       return <span key={metricId} className="rounded-lg border-2 border-black bg-white px-2 py-1 text-[10px] font-black uppercase">{related?.label || metricId}</span>
+      })}
+     </div>
+     <p className="mt-3 text-sm font-bold leading-relaxed">{relationship.why}</p>
+    </div>
+   ) : null}
    {metric.aliases?.length ? (
     <div className="mt-3 rounded-xl border-[3px] border-black bg-white p-4">
      <p className="text-[10px] font-black uppercase tracking-wide text-black/45">Also called</p>
