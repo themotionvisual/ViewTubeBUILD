@@ -66,6 +66,15 @@ jobs:
             page.on('pageerror', err => console.log(`[${c.name}] pageerror:`, err.message));
             await page.goto('http://127.0.0.1:4173/editor', { waitUntil: 'networkidle', timeout: 60000 });
             await page.waitForTimeout(2500);
+            if (c.isMobile) {
+              try {
+                const diag = page.getByText('DIAG', { exact: true }).first();
+                if (await diag.isVisible({ timeout: 1000 })) {
+                  await diag.click();
+                  await page.waitForTimeout(350);
+                }
+              } catch {}
+            }
             await page.screenshot({
               path: `artifacts/vte1-screens/${c.name}.png`,
               fullPage: false,
