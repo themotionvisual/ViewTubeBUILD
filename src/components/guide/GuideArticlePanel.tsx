@@ -22,7 +22,7 @@ export const GuideArticlePanel: React.FC<{ article: GuideArticleDefinition }> = 
  const technical = article.technical || []
 
  return (
-  <article id={page.id} className="scroll-mt-28 overflow-hidden rounded-2xl border-[4px] border-black bg-white shadow-[6px_6px_0_0_#000]">
+  <article id={`guide-${page.id}`} className="scroll-mt-28 overflow-hidden rounded-2xl border-[4px] border-black bg-white shadow-[6px_6px_0_0_#000]">
    <div className="flex flex-wrap items-center justify-between gap-3 border-b-[4px] border-black bg-[#F3F4F6] p-4">
     <div>
      <p className="text-[10px] font-black uppercase tracking-[.18em] text-black/45">{page.domain} guide</p>
